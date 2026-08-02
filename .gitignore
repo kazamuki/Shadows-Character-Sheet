@@ -1,0 +1,15 @@
+# Dependencies (tests only — the app itself has none)
+node_modules/
+
+# Build output — the shippable single file is attached to Releases, not committed
+dist/
+
+# Player data. Never commit someone's character.
+*.shadows.json
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

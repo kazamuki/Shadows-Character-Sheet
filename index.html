@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadows — Character Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/styles/shadows.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">Shadows <span class="x">//</span> <span class="ctx" id="brandctx">Character Intake</span></div>
+    <nav class="topnav" id="topnav" aria-label="Character sheet sections"></nav>
+    <div class="hdr-actions" id="hdractions"></div>
+  </header>
+  <nav class="ledger" id="ledger" aria-label="Creation steps"></nav>
+  <main id="main"></main>
+  <aside class="vitals" id="vitals" aria-label="Live character readout"></aside>
+</div>
+<div class="vdrawer-scrim" id="vscrim"></div>
+<div class="vdrawer" id="vdrawer" aria-label="Vitals" aria-hidden="true"></div>
+<footer class="footer collapsed" id="footer"></footer>
+<script src="src/data/shadows-data.js"></script>
+<script src="src/data/shadows-icons.js"></script>
+<script src="src/engine/engine.js"></script>
+<script src="src/ui/app.js"></script>
+</body>
+</html>
