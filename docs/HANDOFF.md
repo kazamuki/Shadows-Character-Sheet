@@ -1,8 +1,8 @@
 # Handoff — Shadows Digital Character Sheet
 
 **As of:** 2026-08-02
-**Build:** Phase 3.3 · character schema `0.4` · game data `0.2` · ruleset target **CRB v4 (WIP)**
-**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized; no behavior changes.
+**Build:** Phase 3.4 · character schema `0.4` · game data `0.2` · ruleset target **CRB v4 (WIP)**
+**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized; no behavior changes. Docs re-verified against the code and corrected 2026-08-02 — see §10.
 
 If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 54 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
 
@@ -142,3 +142,34 @@ Doing 2→3 before 4 means Biomech is the first archetype authored entirely thro
 > Continue the Shadows character sheet build. The repo is in project knowledge — read `docs/HANDOFF.md`, then `docs/SCHEMA.md`. Run `npm run verify` before and after any change.
 
 Close every session by updating `SCHEMA.md` (decisions, flags, roadmap) and this file in the same commit as the code.
+
+---
+
+## 10. Session log
+
+### 2026-08-02 — handoff verification & doc reconciliation (PR #1)
+
+First session run from the restructured repo rather than from project knowledge. **No application code was touched.** The purpose was to confirm the handoff actually lands cold, and it does.
+
+**Verified, not assumed:**
+
+- `npm run verify` → **20 passing, 2 todo, 0 failing**, matching §4 exactly. Requires `npm install` first — `node_modules` is not committed.
+- Both `todo`s are the right two. A1 fails with the precise signature §5 records (`36 !== 0` — six `[data-spec]` + six `[data-aber]`).
+- Every finding spot-checked against source is real and at the cited line: **B2** `engine.js:201`, **B7** `engine.js:579`, **B1** `app.js:493`, **B5** `app.js:21`, **B4** `engine.js:317`.
+- `index.html` is a 31-line shell with script order data → icons → engine → ui, as §3 claims.
+- CI (`.github/workflows/verify.yml`) confirmed working end to end — green on `pull_request` and on the post-merge push to `main`.
+
+**Corrected — four stale facts, all in docs:**
+
+- `SCHEMA.md` header read schema `0.3`; Decision 53 bumped it to `0.4`.
+- `SCHEMA.md` §1 architecture table still described `index.html` as the whole app; Decision 54 split it into `src/`. Table now lists the six real source files.
+- `SCHEMA.md` §1 ship path described manual inlining; it is `npm run build` now.
+- Decision count read 53 in three places (this file ×2, `docs/README.md`); §4 lists 54.
+
+No decision number assigned — reconciling docs to Decisions 53 and 54 is not itself a decision.
+
+**Standing caution for the next session:** the drift above was all in the direction of *docs lagging the code*, and `SCHEMA.md` was stale in its own summary line while remaining the designated authority. Spot-check the claim you are about to rely on. Line numbers in §5 were accurate; the version stamps were not.
+
+**Unrelated note:** `index.html` loads three typefaces from Google Fonts. `tools/build.mjs` inlines *local* assets only, so a GM opening the folder offline gets system-font fallback. Not a defect — flagged because "hand a player a folder and it works" is load-bearing and the typography is brand.
+
+**Position unchanged.** Phase 4 sequence stands as §7 describes it: clear F8, build `picks`/`excludes`/`requires`, retrofit A3, then Biomech. Quick wins B2/B4/B5 remain mechanical and unclaimed; **B1** touches player-facing copy and wants a voice pass rather than a straight deletion.
