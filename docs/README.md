@@ -2,7 +2,7 @@
 
 | File | What it is | When to read it |
 |---|---|---|
-| `SCHEMA.md` | The project's memory: architecture, game-data schema, character schema, 53 numbered decisions, open flags, phase roadmap. | Before touching anything. |
+| `SCHEMA.md` | The project's memory: architecture, game-data schema, character schema, 54 numbered decisions, open flags, phase roadmap. | Before touching anything. |
 | `HANDOFF.md` | Where the build stands right now and what happens next. | Starting a session. |
 | `audits/` | Dated whole-app audits. Findings are referenced by id (A1, B2, C3) everywhere else. | When picking up cleanup work. |
 
