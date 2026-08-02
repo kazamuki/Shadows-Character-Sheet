@@ -4,7 +4,7 @@
 **Build:** Phase 3.3 · character schema `0.4` · game data `0.2` · ruleset target **CRB v4 (WIP)**
 **Repo state:** restructured from a single `index.html` into a source tree; test suite formalized; no behavior changes.
 
-If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 53 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
+If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 54 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
 
 ---
 
@@ -133,7 +133,7 @@ Doing 2→3 before 4 means Biomech is the first archetype authored entirely thro
 - **Store inputs, compute everything else.** A character stores `BOD = 7`, never the modifier, the Health Levels, or the HP. This is why audit/undo could be a generic structural diff instead of per-action inverse handlers, and why a formula change updates every existing character on next load.
 - **IDs are immutable.** Display names are free.
 - **Design questions are not resolved in code.** They get a `flagged: true` entry, a line in `SCHEMA.md` §5, and an issue on the `design-flag` template. The app surfaces the uncertainty at the table rather than hiding a guess.
-- **Decisions are numbered.** `SCHEMA.md` §4 is at 53. A decision that isn't numbered didn't happen.
+- **Decisions are numbered.** `SCHEMA.md` §4 is at 54. A decision that isn't numbered didn't happen.
 - **Prose edits belong in the markdown source first**, then flow into the data file; structural or mechanical changes go directly into the `.js` or through a structured changelist. Wholesale regeneration overwrites machine-readable metadata.
 - **Player-facing copy is in-world writing**, not UI microcopy. It follows `GUIDE_Shadows_Voice.md` — the app speaks as NYTE City, not as a rulebook author instructing the reader.
 

@@ -1,6 +1,6 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · Phase 3.1 (sheet UX + iconography) complete · Phase 3.2 (sheet fit & finish) complete** · Character schema 0.3 (game data 0.2) · Ruleset target: CRB v4 (WIP)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.4 (game data 0.2) · Ruleset target: CRB v4 (WIP)
 Last updated: 2026-08-02 (Phase 3.4 — repository restructure)
 
 This document is the project's memory. It defines the file architecture, the two
@@ -12,13 +12,18 @@ should start by reading this file.
 
 ## 1. Architecture
 
-Three pieces, designed so game data can change without touching the app:
+Content, rules, and presentation are separated so game data can change without
+touching the app. Since Phase 3.4 (Decision 54) these live as separate files
+under `src/`, loaded by a shell in fixed order: data → icons → engine → ui.
 
 | File | Role | Who edits it |
 |---|---|---|
-| `shadows-data.js` | All game content: stats, skills, adv/disadv, power levels, archetypes. JSON wrapped in `window.SHADOWS_DATA = { ... }` (the wrapper exists because browsers block `fetch()` of local `.json` files when an HTML file is opened from disk) | Designers, in any text editor |
-| `shadows-icons.js` | All iconography as inline-SVG strings on `window.SHADOWS_ICONS` (`stats` = brand set keyed by stat/derived id; `ui` = free-to-use chrome icons keyed by name). Same `<script>`-wrapper reason as the data file (see below) | Asset pipeline / designers |
-| `index.html` | The app: creation wizard, sheet view, session tracking. Reads `SHADOWS_DATA` + `SHADOWS_ICONS`, never hardcodes content | Build process only |
+| `src/data/shadows-data.js` | All game content: stats, skills, adv/disadv, power levels, archetypes. JSON wrapped in `window.SHADOWS_DATA = { ... }` (the wrapper exists because browsers block `fetch()` of local `.json` files when an HTML file is opened from disk) | Designers, in any text editor |
+| `src/data/shadows-icons.js` | All iconography as inline-SVG strings on `window.SHADOWS_ICONS` (`stats` = brand set keyed by stat/derived id; `ui` = free-to-use chrome icons keyed by name). Same `<script>`-wrapper reason as the data file (see below) | Asset pipeline / designers |
+| `src/engine/engine.js` | The pure rules engine. Reads `SHADOWS_DATA`, returns values, **never touches the DOM** — it is loaded in a bare VM by the test suite | App maintainers |
+| `src/ui/app.js` | The app: creation wizard, sheet view, session tracking. Renders off the engine, never hardcodes content | App maintainers |
+| `src/styles/shadows.css` | Brand tokens and all styling | App maintainers |
+| `index.html` | A 31-line shell — markup and `<script src>` tags only. No inline logic, no inline styles | Structural changes only |
 | `*.shadows.json` | One character per file. Exported/imported through the app. Portable, player-owned | The app (players via UI) |
 
 **Why icons are a `.js` file, not loose `.svg` files (Phase 3.1 decision).** Three
@@ -45,9 +50,11 @@ compares the character's `gamedataVersion` to the loaded game data and surfaces
 mismatches (e.g., a skill the character has that no longer exists) instead of
 failing silently.
 
-**Ship path:** for the "concrete" release, the contents of `shadows-data.js`
-and `shadows-icons.js` get embedded into `index.html` — one distributable file,
-same architecture.
+**Ship path:** `npm run build` inlines every local asset — data, icons, engine,
+ui, styles — back into a single `dist/shadows-character-sheet.html`. One
+distributable file, same architecture. This was a manual step until Phase 3.4
+made it a command (Decision 54); `npm run check` verifies the inline without
+writing.
 
 ---
 
