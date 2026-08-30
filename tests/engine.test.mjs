@@ -119,7 +119,9 @@ test("every skill references a stat that exists (guards the BODY/BOD class of bu
   const ids = new Set(D.stats.map(s => s.id));
   const bad = [];
   for (const s of D.skills || []) {
-    for (const key of ["primary", "primaryStat", "stat"]) {
+    // synergyStat is the field the engine actually reads (engine.js skillLine);
+    // it was absent from this list, so the synergy half of the guard never ran.
+    for (const key of ["primary", "primaryStat", "stat", "synergyStat"]) {
       if (s[key] && !ids.has(s[key])) bad.push(`${s.id}.${key} → ${s[key]}`);
     }
     for (const syn of s.synergy || []) {

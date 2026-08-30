@@ -5,7 +5,7 @@ Standing instructions for this repository. Read this first, every session.
 ## Orientation — before touching anything
 
 1. `docs/HANDOFF.md` — where the build stands right now, known defects, open flags, what's next.
-2. `docs/SCHEMA.md` — the project's memory: architecture, both schemas, 54 numbered decisions, the flag table, the phase roadmap. It is the authority. If this file and SCHEMA disagree, SCHEMA wins and this file needs fixing.
+2. `docs/SCHEMA.md` — the project's memory: architecture, both schemas, 58 numbered decisions, the flag table, the phase roadmap. It is the authority. If this file and SCHEMA disagree, SCHEMA wins and this file needs fixing.
 3. `docs/audits/` — findings are referenced by id (A1, B2, C3) throughout. Look up the id before working on it.
 
 Do not start editing before reading 1 and 2. Most mistakes on this project are made by someone who had the local picture but not the design picture.
