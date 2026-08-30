@@ -45,10 +45,10 @@ window.SHADOWS_DATA = {
      UPDATE: bump `schemaVersion` on a structural change; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "schemaVersion": "0.2",
+    "schemaVersion": "0.3",
     "rulesetVersion": "CRB v4 WIP",
-    "updated": "2026-06-11",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts."
+    "updated": "2026-08-29",
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. Schema 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3, which versionCheck surfaces on load."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -1545,7 +1545,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "NYTE City will make you bleed. This makes it count.\n\nAny damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a First Aid Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.\n\nUsing Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a First Aid Skill Check.",
       "flagged": true,
-      "flagNote": "F16: CRB v4 text calls for a 'First Aid Skill Check'; the catalog skill is 'Medical'. Field Medic's half of this was resolved in the same pass, so only the disadvantage side (and a Professional milestone) still names First Aid."
+      "flagNote": "F16: CRB v4 text calls for a 'First Aid Skill Check'; the catalog skill is 'Medical'. Field Medic's half of this was resolved in the same pass, Hemophiliac is now the only entry naming a First Aid *check*; a Professional milestone lists 'First Aid' among tool/kit examples, which is prose, not a skill reference."
     },
     {
       "id": "minor-insanity",
@@ -2073,7 +2073,7 @@ window.SHADOWS_DATA = {
               "Athletics",
               "Awareness",
               "Combat Sense",
-              "Handgun",
+              "Handguns",
               "1 Additional Combat Skill"
             ],
             "tweak": {
@@ -2099,7 +2099,7 @@ window.SHADOWS_DATA = {
               "Athletics",
               "Combat Sense",
               "Intuition",
-              "Occult",
+              "Occult Lore",
               "Stealth",
               "Survival",
               "Tracking"
@@ -2108,7 +2108,7 @@ window.SHADOWS_DATA = {
               "name": "Hunter's Calling",
               "description": "Knowledge and instinct honed against the things that hunt in the dark.",
               "benefits": [
-                "When facing a supernatural enemy, gain a +1d6 kicker die to combat checks against those targets. This applies to Occult and Tracking skills as well when hunting your quarry.",
+                "When facing a supernatural enemy, gain a +1d6 kicker die to combat checks against those targets. This applies to Occult Lore and Tracking skills as well when hunting your quarry.",
                 "Opposed or Extended WILL Essence Checks used to defend against psychic, magical, or supernatural attacks have Automatic Hits equal to your EMP bonus."
               ]
             }
@@ -2126,7 +2126,7 @@ window.SHADOWS_DATA = {
               "Combat Sense",
               "Intuition",
               "Martial Arts",
-              "Occult"
+              "Occult Lore"
             ],
             "tweak": {
               "name": "Power Style",
