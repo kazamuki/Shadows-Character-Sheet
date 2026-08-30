@@ -11,7 +11,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -53,7 +53,14 @@ export function buildHtml(root = ROOT) {
   return out;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run-as-CLI guard. `file://${process.argv[1]}` looked right but never matched:
+// argv[1] is whatever was typed on the command line, so `node tools/build.mjs`
+// yields "file://tools/build.mjs" while import.meta.url is a fully-resolved
+// absolute URL. The comparison silently failed on every platform, which made
+// `npm run build` and `npm run check` no-ops that exited 0 — no dist/, nothing
+// checked, and a release tag that would have failed at the upload step.
+// pathToFileURL resolves against cwd and produces the same href to compare.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const html = buildHtml();
   const check = process.argv.includes("--check");
   if (!check) {

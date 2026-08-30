@@ -8,8 +8,9 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { spawnSync } from "node:child_process";
 import { buildHtml, ROOT } from "../tools/build.mjs";
 
 const BROWSER_JS = [
@@ -63,4 +64,34 @@ test("script order in the shell is data → icons → engine → ui", () => {
 test("no stray build artifacts committed under src/", () => {
   const stray = readdirSync(join(ROOT, "src")).filter(f => f.endsWith(".html"));
   assert.deepEqual(stray, []);
+});
+
+// The rest of this file imports buildHtml() directly, so it kept passing while
+// the CLI itself was dead: the run-as-CLI guard compared import.meta.url against
+// `file://${process.argv[1]}`, which never matched, so `npm run build` and
+// `npm run check` exited 0 having done nothing. Nothing was written to dist/,
+// nothing was checked, and the release workflow's upload step would have failed
+// on a missing file. These two spawn the CLI the way npm does.
+test("`node tools/build.mjs --check` actually runs and reports", () => {
+  const r = spawnSync(process.execPath, ["tools/build.mjs", "--check"],
+    { cwd: ROOT, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /build ok/,
+    "CLI produced no output — the run-as-CLI guard did not fire");
+});
+
+test("`node tools/build.mjs` writes the shippable single file", () => {
+  const out = join(ROOT, "dist", "shadows-character-sheet.html");
+  rmSync(out, { force: true });
+  const r = spawnSync(process.execPath, ["tools/build.mjs"], { cwd: ROOT, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(existsSync(out), "dist/shadows-character-sheet.html was not written");
+  // buildHtml() already throws on an unresolved local asset, so this only has to
+  // confirm the payload landed on disk. Don't grep the output for `<script src>`
+  // to prove self-containment — shadows-icons.js documents its own loading in a
+  // comment, and inlining that comment looks exactly like a surviving reference.
+  const html = readFileSync(out, "utf8");
+  assert.ok(html.includes("window.SHADOWS_DATA"), "game data was not inlined");
+  assert.ok(html.includes("/*ENGINE-START*/"), "engine was not inlined");
+  assert.ok(html.length > 100_000, `built file suspiciously small (${html.length} bytes)`);
 });
