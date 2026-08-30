@@ -960,9 +960,7 @@ window.SHADOWS_DATA = {
         "Physical tracking of people or creatures",
         "Digital and data-based tracking",
         "Interpreting signs, patterns, and residual evidence"
-      ],
-      "flagged": true,
-      "flagNote": "F15: CRB v4 Skills section lists Tracking as (INT / INT); a self-synergy is unique in the catalog and adds INT score + INT modifier to the same check. Retaining INT/EMP pending a ruling."
+      ]
     }
   ],
   // REVIEW (F10 - affects subtype skill picks): the catalog half is now closed --

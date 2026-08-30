@@ -89,7 +89,7 @@ Still open, unchanged from the audit: **A2** (the sheet's Specialization section
 
 ## 6. Open design flags
 
-Full table in `SCHEMA.md` §5. Thirteen open flags, twelve entries in `shadows-data.js` carrying `flagged: true`. The CRB v4 pass closed **F10** outright and three quarters of **F5**, and opened **F15** and **F16**. Grouped by who unblocks them:
+Full table in `SCHEMA.md` §5. Twelve open flags, eleven entries in `shadows-data.js` carrying `flagged: true`. The CRB v4 pass closed **F10** outright, three quarters of **F5**, and **F15** (raised and resolved the same day); it opened **F16**. Grouped by who unblocks them:
 
 **Deighton rules these:**
 - **F8 — Stat Point roll conflict. The only wizard-blocking flag.** WIP says a flat `3d10+30` for all power levels; REF scales by level (`30+2d10` … `60+5d10`). The data file uses the scaled table pending a ruling. When ruled, this is a **four-number data edit** — no code change, because the wizard reads `statPoints` off the power-level entry.
@@ -99,7 +99,6 @@ Full table in `SCHEMA.md` §5. Thirteen open flags, twelve entries in `shadows-d
 - F14 — Skill IP cost at rank 0: "5 × current rank" prices learning a new skill at zero; the app charges rank 1 (5 IP; Focused 3), flagged in the Progression UI
 
 **Docs/reconciliation (Ken):**
-- **F15 — Tracking is listed as (INT / INT)** in the CRB Skills section. Self-synergy is unique in the catalog and would add INT score *and* INT modifier to one check. Data retains INT/EMP pending a ruling.
 - F16 — Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is **Medical**. The last real one — Field Medic's half was fixed in the same pass.
 - F9 — are "General Milestones" shared across archetypes or Professional-only? (data treats them as shared)
 - F11 — Quick Study milestone requires an "Intuition Advantage"; Intuition is a *Skill*
@@ -199,10 +198,12 @@ Merged from the CRB sources — `042_Skills.docx`, `043_Advantages.docx`, `044_D
 
 **Two things the source docs are still carrying:**
 
-- **Tracking reads "(INT / INT)"** in the Skills section. Every other skill pairs two different stats, and a self-synergy would add INT's score and INT's modifier to the same check. Not applied — the entry retains INT/EMP and is flagged (F15).
-- **Age read "BODY Max: 5"**. Dwarf, Giant and Hemophiliac were corrected to `BOD` in the same CRB pass and Age was missed. Corrected here per Ken; **the CRB doc still says BODY** and should be fixed at source.
+Both were resolved at source the same day and re-verified against the saved docs:
 
-Also worth a look: `044_Disadvantages.docx` did not carry an edit Ken believed he had made (the Age fix), and its mtime was unchanged. Possibly an unsaved file or a OneDrive sync lag — worth confirming no other edits to that file went missing.
+- **Tracking read "(INT / INT)"** — a slip made while correcting Occult Lore and Survival off their derived-attribute synergies. Ken confirmed **INT/EMP** and fixed the CRB. The data had carried INT/EMP throughout, so F15 opened and closed without a data change.
+- **Age read "BODY Max: 5"** while Dwarf, Giant and Hemophiliac had been corrected to `BOD`. Fixed in the CRB.
+
+The first read of `044_Disadvantages.docx` missed the Age fix because the file was still open in Word — the edit had not been flushed to disk, and its mtime was unchanged. Worth remembering: **re-extract the sources after the author says they are saved and closed**, and diff, rather than trusting the first read. Doing that here confirmed the committed data matched the saved docs with zero differences.
 
 **Deferred on purpose.** Rank tables render as labelled bullets rather than structured `rankTable` (Decision 57), and none of the `picks` machinery the CRB now specifies is encoded (Decision 58). Both belong with the Phase 4 renderer work, not in a content merge.
 
