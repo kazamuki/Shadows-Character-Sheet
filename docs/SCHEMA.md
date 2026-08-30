@@ -751,7 +751,12 @@ together. **F5 is three-quarters closed**: Field Medic now names the catalog's
 is ruled at 3; only Cyber-Prophetical still carries `flagged: true`, and it
 waits on the Biomech rewrite (F6).
 
-Twelve entries in `shadows-data.js` carry `flagged: true` — was thirteen: three
+~~F15~~ closed the same day it opened: Ken confirmed Tracking is **INT/EMP** — the
+CRB's "(INT / INT)" was a slip made while correcting Occult Lore and Survival off
+their derived-attribute synergies — and corrected the CRB. The data had carried
+INT/EMP all along, so nothing changed but the flag.
+
+Eleven entries in `shadows-data.js` carry `flagged: true` — was thirteen: four
 cleared, two opened.
 
 | # | Item | Owner | Blocking? |
@@ -767,7 +772,6 @@ cleared, two opened.
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
-| F15 | **Tracking is listed as (INT / INT)** in the CRB v4 Skills section. A self-synergy is unique in the catalog and would add INT's score *and* INT's modifier to the same check. Data retains INT/EMP pending a ruling — flagged on the entry | Ken/D | No |
 | F16 | **Hemophiliac calls for a "First Aid Skill Check"**; the catalog skill is **Medical**. Field Medic's half was fixed in the same pass, so this is the last real one. (A Professional milestone lists "First Aid" among tool/kit examples — prose, not a skill reference) | Ken → docs | No |
 
 ## 6. Roadmap
@@ -781,7 +785,7 @@ cleared, two opened.
   (Arcanist draft, Professional draft w/ 7 subtypes, Werewolf draft w/
   Trueborn origin, Cyborg tbd, Vampire tbd), 5 minor + 25 major milestones,
   IP rules, creation flow. 13 flagged items carried `flagged: true` inline
-  (12 as of Decision 55).
+  (11 as of Decision 55).
 - **Phase 2 — App shell + Creation Wizard** ✅ — `index.html`, single file,
   no build step. Three-pane layout: Intake Ledger step rail · step panel ·
   live Vitals rail (TOL/WILL/SAN/HP/pools recompute on every input). Full
@@ -879,8 +883,9 @@ cleared, two opened.
   Skills, Advantages and Disadvantages re-merged from CRB sections 042/043/044
   (Decisions 55-58). Skills 34 → 36 with flavor lines throughout; every
   adv/disadv id preserved; three disadvantage point values changed; game data
-  → **0.3**. Closed **F10** outright and three quarters of **F5**; opened
-  **F15** (Tracking INT/INT) and **F16** (Hemophiliac's First Aid reference).
+  → **0.3**. Closed **F10** outright and three quarters of **F5**; surfaced
+  **F15** (Tracking INT/INT, confirmed a CRB slip and closed the same day) and
+  opened **F16** (Hemophiliac's First Aid reference).
   Also closed a real gap in the test suite: the stat-id guard looped over a
   `synergy` array the data does not have, so it had never checked
   `synergyStat` — the field the engine actually reads, and the one carrying
