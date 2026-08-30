@@ -385,7 +385,7 @@ window.SHADOWS_DATA = {
     "flagged": true,
     "flagNote": "F8: WIP 'Rolling Stat Points' says a flat 'Roll 3d10 + 30' for all levels; the REF table scales stat point rolls by power level (30+2d10 / 40+3d10 / 50+4d10 / 60+5d10). Data file uses the scaled REF table pending confirmation. Note: explosions do NOT happen on creation rolls."
   },
-  /* SKILLS -- the 34-skill catalog (combat / utility / general). Each entry's
+  /* SKILLS -- the 36-skill catalog (11 combat / 9 utility / 16 general). Each entry's
      `primaryStat` and `synergyStat` MUST be valid stat ids (a wrong id -- e.g.
      legacy "BODY" -- is auto-normalized where known and otherwise flagged, not
      crashed; Decision 22). `category` drives table grouping on the sheet.
@@ -400,6 +400,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "COOL",
+      "flavorLine": "Archery is older than the LINK. That's not a weakness.",
       "description": "The ability to use bows, crossbows, slings, and slingshots effectively.",
       "covers": [
         "Targeted shots with bows or slings",
@@ -413,11 +414,14 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "TECH",
+      "flavorLine": "Energy doesn’t care about cover. Neither does the person holding it.",
       "description": "The ability to operate weapons that fire energy, including continuous beams or pulsed energy projectiles.",
       "covers": [
-        "Laser rifles and plasma pistols",
-        "Energy pulse projectors",
-        "Maintaining aim and control under recoil or energy discharge",
+        "Attacking with Laser rifles and plasma pistols",
+        "Working with Energy pulse projectors",
+        "Maintaining aim and control under recoil or energy discharge"
+      ],
+      "notes": [
         "Does not include magical energy or supernatural powers."
       ]
     },
@@ -427,6 +431,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "INT",
+      "flavorLine": "The half-second between noticing and reacting is where most people die.",
       "description": "The ability to perceive and react to threats in combat. Used to determine initiative and situational awareness.",
       "covers": [
         "Recognizing threats and prioritizing targets",
@@ -440,6 +445,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "MOB",
+      "flavorLine": "Everyone thinks they can dodge. They're right, once.",
       "description": "The ability to avoid attacks or evade damage from traps and environmental hazards.",
       "covers": [
         "Sidestepping strikes",
@@ -453,6 +459,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "COOL",
+      "flavorLine": "Everyone in NYTE City has one. Not everyone knows what to do after the first shot.",
       "description": "The ability to use semi-automatic, single-handed firearms, including pistols, revolvers, and small-caliber wrist-mounted weapons.",
       "covers": [
         "Accurate single-handed shooting",
@@ -466,6 +473,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "BOD",
+      "flavorLine": "The conversation’s already over. This is the punctuation.",
       "description": "The ability to operate large-caliber and mounted weapons, including vehicle-mounted guns, grenade launchers, and rocket launchers.",
       "covers": [
         "Maintaining aim with heavy recoil",
@@ -479,17 +487,46 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "BOD",
-      "description": "The ability to fight unarmed or with specialized techniques, including strikes, holds, and maneuvers. Each character may choose up to two Martial Arts styles at creation.",
+      "flavorLine": "A weapon can be taken. A form can't.",
+      "description": "The ability to fight unarmed or with specialized techniques, including strikes, holds, and maneuvers.",
       "covers": [
         "Hand-to-hand combat techniques",
         "Defensive maneuvers, parries, and grapples",
-        "Use of specialized weapons integral to a Martial Art",
-        "**Commando** --- +1 Stun",
-        "**Escrima** --- +1 Disarm",
-        "**Jujitsu** --- +1 Grapple",
-        "**Karate** --- +1 Stun",
-        "**Krav Maga** --- +1 Disarm",
-        "**Kung Fu** --- +1 Knockdown"
+        "Use of specialized weapons integral to a Martial Art"
+      ],
+      "notes": [
+        "Choose up to two Martial Arts styles at creation. You may train additional styles later in play.",
+        "Each style trained grants its own bonus."
+      ],
+      "styles": [
+        {
+          "name": "Commando",
+          "bonus": "+1 Stun"
+        },
+        {
+          "name": "Escrima",
+          "bonus": "+1 Disarm"
+        },
+        {
+          "name": "Jujitsu",
+          "bonus": "+1 Grapple"
+        },
+        {
+          "name": "Karate",
+          "bonus": "+1 Stun"
+        },
+        {
+          "name": "Krav Maga",
+          "bonus": "+1 Disarm"
+        },
+        {
+          "name": "Kung Fu",
+          "bonus": "+1 Knockdown"
+        },
+        {
+          "name": "Custom Style",
+          "bonus": "Talk with GM to determine bonus"
+        }
       ]
     },
     {
@@ -498,6 +535,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "BOD",
+      "flavorLine": "When the gun jams, the knife doesn't.",
       "description": "The ability to use handheld, improvised, and thrown weapons effectively, including knives, clubs, chair legs, shuriken, grenades, and similar items. Also used when taking the Parry action.",
       "covers": [
         "Close-quarters combat with melee weapons",
@@ -511,6 +549,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "COOL",
+      "flavorLine": "Distance is a luxury. Patience is a skill.",
       "description": "The ability to operate rifles, including urban combat rifles, shotguns, and sniper rifles.",
       "covers": [
         "Accurate long-range shooting",
@@ -524,6 +563,7 @@ window.SHADOWS_DATA = {
       "category": "combat",
       "primaryStat": "REF",
       "synergyStat": "COOL",
+      "flavorLine": "Close. Fast. Loud. In that order.",
       "description": "The ability to operate submachine guns, covering weapons capable of burst or full-automatic fire.",
       "covers": [
         "Maintaining control during automatic fire",
@@ -532,11 +572,30 @@ window.SHADOWS_DATA = {
       ]
     },
     {
+      "id": "tactics",
+      "name": "Tactics",
+      "category": "combat",
+      "primaryStat": "INT",
+      "synergyStat": "EMP",
+      "flavorLine": "Positioning wins fights. Everything else just decides how long they take.",
+      "description": "Applied understanding of combat strategy and positioning.",
+      "covers": [
+        "Assessing combat situations",
+        "Identifying advantages and weaknesses",
+        "Determining effective courses of action"
+      ],
+      "notes": [
+        "Awareness identifies the situation; Tactics determines how to act on it.",
+        "The GM may provide guidance based on available information."
+      ]
+    },
+    {
       "id": "basic-tech",
       "name": "Basic Tech",
       "category": "utility",
       "primaryStat": "INT",
       "synergyStat": "TECH",
+      "flavorLine": "Everything in NYTE City is held together by someone who knows which wire not to pull.",
       "description": "General knowledge and practical use of mechanical, vehicular, and common technologies.",
       "covers": [
         "Repair and maintenance of everyday devices",
@@ -550,11 +609,12 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "TECH",
       "synergyStat": "INT",
+      "flavorLine": "The body is hardware. Cybernetics is the warranty work.",
       "description": "Knowledge and manipulation of cybernetic implants, limbs, and integrated systems.",
       "covers": [
         "Installation, removal, and modification of cyberware",
         "Diagnosing cybernetic malfunctions",
-        "Understanding implant--system interactions"
+        "Understanding implant–system interactions"
       ]
     },
     {
@@ -563,12 +623,15 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "TECH",
       "synergyStat": "COOL",
+      "flavorLine": "The placement is everything. The rest is just timing.",
       "description": "The creation, placement, and disarming of explosive devices.",
       "covers": [
         "Plastic explosives, IEDs, and industrial explosives",
         "Timers, detonators, and triggering mechanisms",
-        "Safe neutralization of explosive threats",
-        "Does not include grenade or rocket launchers (see Combat Skills)"
+        "Safe neutralization of explosive threats"
+      ],
+      "notes": [
+        "Does not include grenade or rocket launchers (see Heavy Weapons Skill)"
       ]
     },
     {
@@ -577,6 +640,7 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "TECH",
       "synergyStat": "INT",
+      "flavorLine": "Basic Tech fixes what’s broken. Engineering decides what gets built next.",
       "description": "Advanced technical expertise in the design and manipulation of complex systems.",
       "covers": [
         "Advanced electronics and circuitry",
@@ -590,11 +654,12 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "INT",
       "synergyStat": "TECH",
-      "description": "Direct interaction with the LINK through a neural interface.",
+      "flavorLine": "NYTE City has a second skin. Most people live on the surface.",
+      "description": "Direct interaction with the LINK through a tactile or neural interface.",
       "covers": [
         "Navigation of digital environments",
         "Espionage, intrusion, and data extraction",
-        "LINK-based actions performed by Net Runners"
+        "LINK-based actions performed by digilantes"
       ]
     },
     {
@@ -603,6 +668,7 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "TECH",
       "synergyStat": "COOL",
+      "flavorLine": "Field medicine isn't about saving lives. It's about buying time.",
       "description": "Training in diagnosing and treating injuries and illnesses.",
       "covers": [
         "Trauma care and emergency stabilization",
@@ -616,6 +682,7 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "INT",
       "synergyStat": "TECH",
+      "flavorLine": "Code doesn't argue. It does exactly what you wrote, including the mistakes.",
       "description": "The creation and modification of software systems.",
       "covers": [
         "Writing and altering programs",
@@ -629,11 +696,12 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "TECH",
       "synergyStat": "INT",
+      "flavorLine": "They don’t get tired. They don’t get scared. Someone still has to tell them what to do.",
       "description": "Knowledge of robotic systems combining mechanics, electronics, and software.",
       "covers": [
         "Construction and modification of robots",
         "Disabling or reprogramming robotic systems",
-        "Autonomous and semi-autonomous machines"
+        "Working with autonomous (Drones) and semi-autonomous machines"
       ]
     },
     {
@@ -642,6 +710,7 @@ window.SHADOWS_DATA = {
       "category": "utility",
       "primaryStat": "REF",
       "synergyStat": "INT",
+      "flavorLine": "Every security system was designed by someone. That someone had assumptions.",
       "description": "Understanding and exploitation of security measures.",
       "covers": [
         "Physical security layouts and guard procedures",
@@ -650,24 +719,12 @@ window.SHADOWS_DATA = {
       ]
     },
     {
-      "id": "streetwise",
-      "name": "Streetwise",
-      "category": "utility",
-      "primaryStat": "INT",
-      "synergyStat": "EMP",
-      "description": "Knowledge of the criminal and underground landscape of NYTE City.",
-      "covers": [
-        "Gray and black markets",
-        "Pawn shops, fixers, and safe houses",
-        "The Labyrinth and other shadow networks"
-      ]
-    },
-    {
       "id": "acrobatics",
       "name": "Acrobatics",
       "category": "general",
       "primaryStat": "REF",
       "synergyStat": "BOD",
+      "flavorLine": "Falling is easy. Falling and landing somewhere useful takes practice.",
       "description": "Physical agility, balance, and coordination.",
       "covers": [
         "Tumbling and balance",
@@ -681,6 +738,7 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "BOD",
       "synergyStat": "REF",
+      "flavorLine": "NYTE City is vertical, hostile, and fast. Athletics is the tax you pay to move through it.",
       "description": "Physical strength, stamina, and gross motor capability.",
       "covers": [
         "Running, climbing, and jumping",
@@ -694,6 +752,7 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "INT",
       "synergyStat": "EMP",
+      "flavorLine": "What you don't notice doesn't care.",
       "description": "Perceptiveness and attention to detail.",
       "covers": [
         "Visual, auditory, and sensory observation",
@@ -707,14 +766,17 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "MAG",
       "synergyStat": "INT",
+      "flavorLine": "Everyone's working with a version of the truth. Deception is authoring theirs.",
       "description": "The ability to mislead, misdirect, or lie to influence others' perceptions.",
       "covers": [
         "Lying, bluffing, and maintaining cover stories",
         "Creating false impressions or misleading narratives",
         "Concealing true intentions",
-        "Recognizing and resisting deception",
+        "Recognizing and resisting deception"
+      ],
+      "notes": [
         "Outcomes reflect the degree of confusion, doubt, or misperception, not forced actions",
-        "Can be opposed by the target's Deception skill"
+        "Can be opposed by the target’s Deception skill"
       ]
     },
     {
@@ -723,6 +785,7 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "COOL",
       "synergyStat": "MAG",
+      "flavorLine": "The face you were born with is one option.",
       "description": "The ability to convincingly appear as another person.",
       "covers": [
         "Altering physical appearance",
@@ -736,14 +799,17 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "COOL",
       "synergyStat": "MAG",
+      "flavorLine": "Not everyone needs to be convinced. Some people just need to understand the cost.",
       "description": "The ability to influence others through fear, threat, or presence.",
       "covers": [
         "Creating hesitation, uncertainty, or caution in others",
         "Using posture, tone, or reputation to assert dominance",
-        "Reading and exploiting others' fear responses",
-        "Recognizing and resisting Intimidation",
+        "Reading and exploiting others’ fear responses",
+        "Recognizing and resisting Intimidation"
+      ],
+      "notes": [
         "Outcomes reflect increased leverage, temporary compliance, or hesitation, not forced actions",
-        "Can be opposed by the target's Intimidation skill"
+        "Can be opposed by the target’s Intimidation skill"
       ]
     },
     {
@@ -752,6 +818,7 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "EMP",
       "synergyStat": "INT",
+      "flavorLine": "By the time you can explain it, it's already too late to act on it.",
       "description": "Instinctive understanding of people and situations.",
       "covers": [
         "Reading body language and tone",
@@ -765,13 +832,25 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "INT",
       "synergyStat": "TECH",
+      "flavorLine": "Everything leaves a trace. Investigation is knowing which ones matter.",
       "description": "Systematic gathering and analysis of information.",
       "covers": [
         "Research and data analysis",
         "Interviews and questioning",
-        "Digital searches and information tracing",
+        "Digital searches and information tracing"
+      ]
+    },
+    {
+      "id": "occult-lore",
+      "name": "Occult Lore",
+      "category": "general",
+      "primaryStat": "INT",
+      "synergyStat": "COOL",
+      "flavorLine": "Most people are happier not knowing. Most people also don't survive long enough for it to matter.",
+      "description": "Knowledge of supernatural phenomena and hidden truths.",
+      "covers": [
         "True magic and occult practices",
-        "Monsters and otherworldly entities",
+        "Knowledge of Monsters and otherworldly entities",
         "Supernatural classifications and myths"
       ]
     },
@@ -781,14 +860,17 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "MAG",
       "synergyStat": "COOL",
+      "flavorLine": "People do what they want to do. Persuasion is making them want to do something else.",
       "description": "The ability to influence others through reasoned argument, negotiation, or appeal.",
       "covers": [
         "Convincing others to consider your point of view",
         "Shaping decisions, opinions, or cooperation through dialogue",
         "Anticipating objections and countering them effectively",
-        "Recognizing and resisting Persuasion",
+        "Recognizing and resisting Persuasion"
+      ],
+      "notes": [
         "Outcomes reflect increased willingness, openness, or temporary cooperation, not forced actions",
-        "Can be opposed by the target's Persuasion skill"
+        "Can be opposed by the target’s Persuasion skill"
       ]
     },
     {
@@ -797,7 +879,8 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "REF",
       "synergyStat": "INT",
-      "description": "Competency in operating vehicles.",
+      "flavorLine": "The vehicle does what physics allows. The pilot decides what that means.",
+      "description": "The ability to operate any vehicle, mech, or steerable machine at speed and under pressure.",
       "covers": [
         "Cycles, grounders, and jumpers",
         "Watercraft and specialized transports",
@@ -810,14 +893,17 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "MAG",
       "synergyStat": "EMP",
+      "flavorLine": "The most dangerous thing in the room is rarely armed.",
       "description": "The ability to influence others through charm, allure, and personal presence.",
       "covers": [
         "Creating attraction or interest that can sway choices",
         "Leveraging appearance, personality, or body language",
         "Reading social cues and emotional responses",
-        "Recognizing and resisting Seduction",
+        "Recognizing and resisting Seduction"
+      ],
+      "notes": [
         "Outcomes reflect temporary influence, attention, or willingness, not forced actions",
-        "Can be opposed by the target's Seduction skill"
+        "Can be opposed by the target’s Seduction skill"
       ]
     },
     {
@@ -826,29 +912,40 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "REF",
       "synergyStat": "COOL",
+      "flavorLine": "Presence is a choice. So is absence.",
       "description": "Avoiding detection through concealment and quiet movement.",
       "covers": [
         "Hiding and shadowing",
         "Silent movement",
-        "Evading visual, auditory, or sensor-based detection",
-        "Locating food, water, and shelter",
-        "Navigating wilderness or ruined areas",
-        "Avoiding environmental hazards and predators"
+        "Evading visual, auditory, or sensor-based detection"
       ]
     },
     {
-      "id": "tactics",
-      "name": "Tactics",
+      "id": "streetwise",
+      "name": "Streetwise",
       "category": "general",
       "primaryStat": "INT",
       "synergyStat": "EMP",
-      "description": "Applied understanding of combat strategy and positioning.",
+      "flavorLine": "Every city has an official map. NYTE City has another one underneath.",
+      "description": "Knowledge of the criminal and underground landscape of NYTE City.",
       "covers": [
-        "Assessing combat situations",
-        "Identifying advantages and weaknesses",
-        "Determining effective courses of action",
-        "Awareness identifies the situation; Tactics determines how to act on it.",
-        "The GM may provide guidance based on available information."
+        "Gray and black markets",
+        "Pawn shops, fixers, and safe houses",
+        "The Labyrinth and other shadow networks"
+      ]
+    },
+    {
+      "id": "survival",
+      "name": "Survival",
+      "category": "general",
+      "primaryStat": "BOD",
+      "synergyStat": "INT",
+      "flavorLine": "Comfort is a city concept. Survival is what's left when the city isn't.",
+      "description": "Endurance and self-sufficiency in hostile environments.",
+      "covers": [
+        "Locating food, water, and shelter",
+        "Navigating wilderness or ruined areas",
+        "Avoiding environmental hazards and predators"
       ]
     },
     {
@@ -857,22 +954,25 @@ window.SHADOWS_DATA = {
       "category": "general",
       "primaryStat": "INT",
       "synergyStat": "EMP",
+      "flavorLine": "In NYTE City, nothing disappears. It just moves.",
       "description": "Following trails to locate a target.",
       "covers": [
         "Physical tracking of people or creatures",
         "Digital and data-based tracking",
         "Interpreting signs, patterns, and residual evidence"
-      ]
+      ],
+      "flagged": true,
+      "flagNote": "F15: CRB v4 Skills section lists Tracking as (INT / INT); a self-synergy is unique in the catalog and adds INT score + INT modifier to the same check. Retaining INT/EMP pending a ruling."
     }
   ],
-  // REVIEW (F10 - affects subtype skill picks): Professional Focused Skills name
-  // "Occult" and "Survival", which are NOT in the catalog above, and use
-  // "Handgun" vs the catalog's "Handguns". Either add those skills here or fix
-  // the references in archetypes.professional. Catalog has no flavor lines yet
-  // (Ken's revised v4 Skills section merges in later). See SCHEMA.md section 5.
+  // REVIEW (F10 - affects subtype skill picks): the catalog half is now closed --
+  // "Occult Lore" and "Survival" both exist above as of the CRB v4 pass. What
+  // remains is naming: archetypes.professional still says "Occult" (catalog:
+  // "Occult Lore") and "Handgun" (catalog: "Handguns"), and the app matches
+  // focused skills by NAME, not id. See SCHEMA.md section 5.
   "skillsFlags": {
     "flagged": true,
-    "flagNote": "F10: Professional Focused Skills reference 'Occult' and 'Survival', which do not exist in the skills catalog. Also 'Handgun' (subtype text) vs 'Handguns' (catalog) naming. Catalog skill list has no flavor lines yet - Ken's revised v4 Skills section to be merged when available."
+    "flagNote": "F10: partially resolved by the CRB v4 Skills pass - 'Occult Lore' and 'Survival' now exist in the catalog and every skill carries a flavorLine. Remaining: archetypes.professional names 'Occult' (catalog 'Occult Lore') and 'Handgun' (catalog 'Handguns'); focused-skill matching is by name, so these must be reconciled."
   },
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
