@@ -1,10 +1,10 @@
 # Handoff — Shadows Digital Character Sheet
 
-**As of:** 2026-08-02
-**Build:** Phase 3.4 · character schema `0.4` · game data `0.2` · ruleset target **CRB v4 (WIP)**
-**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized; no behavior changes. Docs re-verified against the code and corrected 2026-08-02 — see §10.
+**As of:** 2026-08-29
+**Build:** Phase 3.4 + CRB v4 content pass · character schema `0.4` · game data `0.3` · ruleset target **CRB v4 (WIP)**
+**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized. Skills, Advantages and Disadvantages re-merged from the CRB on 2026-08-29 — **data only, no app code touched** — see §10. Suite has held at 20 passing / 2 todo / 0 failing across both sessions.
 
-If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 54 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
+If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 58 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
 
 ---
 
@@ -89,17 +89,17 @@ Still open, unchanged from the audit: **A2** (the sheet's Specialization section
 
 ## 6. Open design flags
 
-Full table in `SCHEMA.md` §5. Fourteen flags, thirteen entries in `shadows-data.js` carrying `flagged: true`. Grouped by who unblocks them:
+Full table in `SCHEMA.md` §5. Twelve open flags, eleven entries in `shadows-data.js` carrying `flagged: true`. The CRB v4 pass closed **F10** outright, three quarters of **F5**, and **F15** (raised and resolved the same day); it opened **F16**. Grouped by who unblocks them:
 
 **Deighton rules these:**
 - **F8 — Stat Point roll conflict. The only wizard-blocking flag.** WIP says a flat `3d10+30` for all power levels; REF scales by level (`30+2d10` … `60+5d10`). The data file uses the scaled table pending a ruling. When ruled, this is a **four-number data edit** — no code change, because the wizard reads `statPoints` off the power-level entry.
 - F1 — LUCK buy-up cost in CP per point (stubbed 1:1)
 - F2 — CP boost exchange rate across skills/stats/powers (stubbed 1:1)
-- F5 — Adv/Disadv audit flags (Poverty, Combat Paralysis, Field Medic, Cyber-Prophetical)
+- F5 — Adv/Disadv audit flags. **Three of four closed by the CRB v4 pass** (Field Medic now names "Medical"; Combat Paralysis is unambiguous; Poverty Max Rank ruled at 3). Only Cyber-Prophetical remains, and it waits on F6
 - F14 — Skill IP cost at rank 0: "5 × current rank" prices learning a new skill at zero; the app charges rank 1 (5 IP; Focused 3), flagged in the Progression UI
 
 **Docs/reconciliation (Ken):**
-- F10 — Professional Focused Skills reference **Occult** and **Survival**, neither of which exists in the 34-skill catalog; plus "Handgun" vs "Handguns". *Affects subtype selection in the wizard.*
+- F16 — Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is **Medical**. The last real one — Field Medic's half was fixed in the same pass.
 - F9 — are "General Milestones" shared across archetypes or Professional-only? (data treats them as shared)
 - F11 — Quick Study milestone requires an "Intuition Advantage"; Intuition is a *Skill*
 - F12 — Minor Milestones pool sourced from REF v3.5; WIP defers to an unwritten Advancement Section
@@ -126,14 +126,14 @@ Doing 2→3 before 4 means Biomech is the first archetype authored entirely thro
 
 **When to decompose `src/ui/app.js`.** Not yet, and not as a standalone chore. The natural moment is *during* step 2, when `renderCP`, `renderArchetype`, and `renderShTraits` are already being rewritten. The mechanism: introduce one explicit namespace object (`const SH = {}`) holding the shared state and helpers, move the leaf renderers out first (sheet tabs — they mostly read `S` and call `update`), and leave `bindMain` / `bindSheet` / `boot` in a core file until last. Do it one file at a time with `npm run verify` between each. Do not attempt it in the same commit as a behavior change.
 
-**Also pending:** the `shadows-data.js` update pass from the Thursday meeting resolutions. **ID immutability is the contract** — ids in the data are referenced by saved `.shadows.json` files, so a regen or large edit must preserve every existing id. Names may change; ids may not.
+**Done 2026-08-29:** the `shadows-data.js` content pass for Skills, Advantages and Disadvantages (§10). ID immutability held — every existing id survived, so no `migrate()` step was needed. Still pending from the same meeting: the archetype sections (041) and anything downstream of the Biomech rewrite.
 
 ## 8. Conventions a new session must not break
 
 - **Store inputs, compute everything else.** A character stores `BOD = 7`, never the modifier, the Health Levels, or the HP. This is why audit/undo could be a generic structural diff instead of per-action inverse handlers, and why a formula change updates every existing character on next load.
 - **IDs are immutable.** Display names are free.
 - **Design questions are not resolved in code.** They get a `flagged: true` entry, a line in `SCHEMA.md` §5, and an issue on the `design-flag` template. The app surfaces the uncertainty at the table rather than hiding a guess.
-- **Decisions are numbered.** `SCHEMA.md` §4 is at 54. A decision that isn't numbered didn't happen.
+- **Decisions are numbered.** `SCHEMA.md` §4 is at 58. A decision that isn't numbered didn't happen.
 - **Prose edits belong in the markdown source first**, then flow into the data file; structural or mechanical changes go directly into the `.js` or through a structured changelist. Wholesale regeneration overwrites machine-readable metadata.
 - **Player-facing copy is in-world writing**, not UI microcopy. It follows `GUIDE_Shadows_Voice.md` — the app speaks as NYTE City, not as a rulebook author instructing the reader.
 
@@ -173,3 +173,38 @@ No decision number assigned — reconciling docs to Decisions 53 and 54 is not i
 **Unrelated note:** `index.html` loads three typefaces from Google Fonts. `tools/build.mjs` inlines *local* assets only, so a GM opening the folder offline gets system-font fallback. Not a defect — flagged because "hand a player a folder and it works" is load-bearing and the typography is brand.
 
 **Position unchanged.** Phase 4 sequence stands as §7 describes it: clear F8, build `picks`/`excludes`/`requires`, retrofit A3, then Biomech. Quick wins B2/B4/B5 remain mechanical and unclaimed; **B1** touches player-facing copy and wants a voice pass rather than a straight deletion.
+
+
+### 2026-08-29 — CRB v4 content pass: Skills, Advantages & Disadvantages
+
+**No application code was touched.** Data and docs only. `npm run verify` ran before the first change and after every batch: **20 passing, 2 todo, 0 failing** throughout, matching §4.
+
+Merged from the CRB sources — `042_Skills.docx`, `043_Advantages.docx`, `044_Disadvantages.docx` — as Decisions 55-58.
+
+**What moved:**
+
+- **Skills 34 → 36.** New: `occult-lore` (INT/COOL), `survival` (BOD/INT). Recategorised: `tactics` general → combat, `streetwise` utility → general. Now 11 combat / 9 utility / 16 general. Every skill carries a `flavorLine`; eight carry `notes`; Martial Arts carries `styles`.
+- **Advantages 57, Disadvantages 30 — every id preserved.** No renames, no removals, so no `migrate()` step and no risk to saved `.shadows.json` files.
+- **Numeric changes:** Poverty 2→4 CP and Max Rank 1→3; Gullible 3→5; Passive 3→4; `universal: true` added to Followers/Minion and Time Sense.
+- **Game data 0.2 → 0.3.** Verified empirically: a new character stamps `gamedataVersion: "0.3"`, and a 0.2 character reports the mismatch through `versionCheck`. Character schema stays 0.4, untouched.
+
+**Mechanical drift worth knowing about at the table.** Most of the rewriting is voice, but real mechanics moved inside it. One change is systemic and clearly deliberate: **absolute Target Numbers became relative TN modifiers** across nine entries (Iron Will, Machindo, Animal Ken, True Faith, Weak Willed, Fanatic, Terminal Disease, Berserker, Addiction). Individually: Field Medic and Hyper Vigilance swap kicker-die *escalation* for a flat stacking die; **Favored Skill inverts whether LUCK may modify the re-roll**; Coward drops to Target 9 / Threshold 2 with a per-turn retry; Long-Lived now grants Milestones and is creation-only; Machindo adds Pilot; Blood Lust moves a natural 1 from auto-fail to botch; Terminal Disease gains a death clock.
+
+**Fixed in passing by the CRB text:** `time-sense`'s stored description was truncated mid-word ("once per game sessio"); `lightning-calculator` referenced "Advanced Tech", a skill that does not exist (now Engineering); Ghost TAG referenced "Electronic Security" (now Security); Dwarf, Giant and Hemophiliac said `BODY`.
+
+**Flags:** **F10 closed outright** — both halves. The catalog gained Occult Lore and Survival, *and* the Professional subtype references were renamed to match, which mattered because focused-skill matching is by **name**, not id. **F5 is three-quarters closed**; only Cyber-Prophetical remains, waiting on F6. Opened **F15** (Tracking) and **F16** (Hemophiliac) — see §6.
+
+**One real test-suite defect found and fixed.** The "every skill references a stat that exists" guard looped over a `synergy` array that the data does not have, and never checked `synergyStat` — the field `skillLine()` actually reads. It had therefore never guarded the synergy half at all, and would not have caught either invalid synergy stat this pass turned up. One-line fix; suite still 20/2/0.
+
+**Two things the source docs are still carrying:**
+
+Both were resolved at source the same day and re-verified against the saved docs:
+
+- **Tracking read "(INT / INT)"** — a slip made while correcting Occult Lore and Survival off their derived-attribute synergies. Ken confirmed **INT/EMP** and fixed the CRB. The data had carried INT/EMP throughout, so F15 opened and closed without a data change.
+- **Age read "BODY Max: 5"** while Dwarf, Giant and Hemophiliac had been corrected to `BOD`. Fixed in the CRB.
+
+The first read of `044_Disadvantages.docx` missed the Age fix because the file was still open in Word — the edit had not been flushed to disk, and its mtime was unchanged. Worth remembering: **re-extract the sources after the author says they are saved and closed**, and diff, rather than trusting the first read. Doing that here confirmed the committed data matched the saved docs with zero differences.
+
+**Deferred on purpose.** Rank tables render as labelled bullets rather than structured `rankTable` (Decision 57), and none of the `picks` machinery the CRB now specifies is encoded (Decision 58). Both belong with the Phase 4 renderer work, not in a content merge.
+
+**Position unchanged.** Phase 4 sequence still stands: clear F8, build `picks`/`excludes`/`requires`, retrofit A3, then Biomech. What changed is that step 2 now has a written requirement set and a ~15-entry test corpus instead of a sketch.
