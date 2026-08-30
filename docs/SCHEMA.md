@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.4 (game data 0.2) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-08-02 (Phase 3.4 — repository restructure)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.4 (game data 0.3) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-08-29 (CRB v4 content pass — Skills, Advantages, Disadvantages)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -66,7 +66,7 @@ Top-level shape. Every content entry supports an optional `"flagged": true` +
 ```js
 window.SHADOWS_DATA = {
   meta: {
-    schemaVersion: "0.2",
+    schemaVersion: "0.3",
     rulesetVersion: "CRB v4 WIP",
     updated: "2026-06-11"
   },
@@ -157,9 +157,13 @@ window.SHADOWS_DATA = {
     { id: "athletics", name: "Athletics",
       category: "general",            // general | combat | utility
       primaryStat: "BOD", synergyStat: "REF",
-      flavorLine: "...",              // per the Skills section convention
-      description: "..." }
-    // ... full list extracted in Phase 1 from WIP Skills section
+      flavorLine: "...",              // the CRB's one-line hook; populated in 0.3
+      description: "...",
+      covers: [ "..." ],              // bullets behind the skill's "?" expander
+      notes: [ "..." ],               // (0.3) optional; the CRB's "Notes" block
+      styles: [ { name: "Karate", bonus: "+1 Stun" } ]  // (0.3) Martial Arts only
+    }
+    // 36 skills: 11 combat / 9 utility / 16 general
   ],
 
   // ── Advantages & Disadvantages ───────────────────────────
@@ -664,6 +668,66 @@ No cascade logic to maintain — it falls out of the architecture.
     functions sharing state, and that refactor belongs with the Phase 4 renderer
     rewrites, not with a file move. (Ken, 2026-08-02)
 
+55. **(CRB v4 content pass)** **Skills, Advantages and Disadvantages re-merged
+    from the CRB.** Sections 042/043/044 are authoritative and were merged whole
+    rather than patched. Skills go **34 → 36** (new: `occult-lore` INT/COOL,
+    `survival` BOD/INT); two move category (`tactics` general → combat,
+    `streetwise` utility → general), giving 11/9/16. Every skill gains the
+    `flavorLine` that §2 always documented but the catalog never carried, plus
+    an optional `notes` array. Advantages and disadvantages keep **every id** —
+    no renames, no removals, so no `migrate()` step. Numeric changes: Poverty
+    2→4 CP and Max Rank 1→3, Gullible 3→5, Passive 3→4, and `universal: true`
+    on Followers/Minion and Time Sense. A systemic change runs through nine
+    entries: absolute Target Numbers became **relative TN modifiers** (Iron
+    Will, Machindo, Animal Ken, True Faith, Weak Willed, Fanatic, Terminal
+    Disease, Berserker, Addiction). Game data schema **0.2 → 0.3**: the shape
+    changed, and because three disadvantage grants moved, a character saved
+    against 0.2 was granted different CP than the same character under 0.3 —
+    `versionCheck` surfaces that on load, which is the reason to bump. (Ken,
+    2026-08-29)
+
+56. **(CRB v4 content pass)** **Martial Arts: two styles at creation, more
+    trainable in play.** The CRB said both "may choose up to two Martial Arts
+    styles at creation" and "You can train multiple martial arts styles" in the
+    same entry. Ken's ruling: two at creation is the cap; additional styles may
+    be trained later. Styles ship as a `styles` array on the skill. **Salut**
+    is held out of that array until it has a bonus — the CRB lists it as "Salut
+    (SPELLING)" with `<TBD>`, and an absent entry is better than a selectable
+    one with no effect. The data wording here was authored from Ken's ruling
+    rather than lifted from the CRB, so the CRB entry should be updated to match
+    before the two drift. (Ken, 2026-08-29)
+
+57. **(CRB v4 content pass)** **Rank tables stay prose; `rankTable` waits for
+    the renderer.** Five entries now ship tables — Danger Sense, Long-Lived,
+    Rapid Healing, Addiction, and Martial Arts styles — and they do not agree on
+    a shape: rank→value, rank→prose, rank→three columns, rank→columns *plus* a
+    Milestone grant, and style→bonus, which is not rank-indexed at all.
+    Designing a schema from five disagreeing examples, with no renderer to test
+    it against, would commit the data to a shape Phase 4 then has to honour or
+    migrate. They render as labelled bullets meanwhile — faithful to every
+    source value, no interpretation. Structured `rankTable` lands **with** the
+    Phase 4 renderer work, as an additive field on five entries. (Ken,
+    2026-08-29)
+
+58. **(CRB v4 content pass)** **The Phase 4 selection system is now specified by
+    the rulebook rather than proposed — and none of it is encoded yet.** The rev
+    9 audit §4 sketched `picks`/`excludes`/`requires` from a feature request;
+    the CRB now *requires* it. Choose from a fixed list: Common Sense (1 of 4
+    named skills). Choose from a category: Favored Skill, Refined Skill, Martial
+    Arts (2 styles). Free text + GM approval: Immunity, Followers/Minion,
+    Cursed, Fanatic, Pact, Minor Insanity, Addiction, Enemies, Notorious,
+    Defect/Flaw. A different choice **per rank**: Common Sense, Favored Skill,
+    Refined Skill, Defect/Flaw. Two requirement types the audit did **not**
+    anticipate: a **creation-only** constraint (Long-Lived, "may only purchase
+    this Advantage during character creation") and a **`grants`** concept
+    sitting beside picks (Long-Lived grants Milestones; Educated +10 Skill
+    Points per rank; Hard to Kill +1 max HP per Health Level; Thick Skin +1
+    Natural Armor; Lucky/Unlucky modify LUCK spend costs). None of it is in the
+    data: encoding a schema with no renderer and no `validate()` hooks would
+    make one commit both a content update *and* a new subsystem, which is the
+    one thing this project has consistently refused to do. These ~15 entries
+    become the **test corpus** when the machinery lands. (Ken, 2026-08-29)
+
 
 ## 5. Open Flags
 
@@ -678,20 +742,33 @@ now also tolerates legacy aliases (Decision 22). F8 needs no code change when
 ruled: the wizard reads `statPoints` off the power-level entry, so the ruling
 is a four-number data edit.
 
+Resolved in the CRB v4 content pass (2026-08-29): ~~F10~~ — both halves closed.
+`occult-lore` and `survival` now exist in the catalog, and the Professional
+subtype references were renamed to match ("Occult" → "Occult Lore", "Handgun" →
+"Handguns"). Focused-skill matching is by **name**, so those two had to move
+together. **F5 is three-quarters closed**: Field Medic now names the catalog's
+"Medical", Combat Paralysis' text is no longer ambiguous, and Poverty's Max Rank
+is ruled at 3; only Cyber-Prophetical still carries `flagged: true`, and it
+waits on the Biomech rewrite (F6).
+
+Twelve entries in `shadows-data.js` carry `flagged: true` — was thirteen: three
+cleared, two opened.
+
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F1 | LUCK buy-up cost in CP per point (stubbed 1:1, flagged in data) | Deighton | No |
 | F2 | CP boost exchange rate across skills/stats/powers (stubbed 1:1, flagged) | Deighton | No |
-| F5 | Adv/Disadv audit flags (Poverty, Combat Paralysis, Field Medic, Cyber-Prophetical) — imported with `flagged: true` | Deighton | No |
+| F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Biomech rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD | Ken → docs | No |
 | F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
-| F10 | Professional Focused Skills reference **Occult** and **Survival** — neither exists in the 34-skill catalog. Also "Handgun" vs "Handguns" naming | Ken → docs | Wizard (subtype selection) |
 | F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
+| F15 | **Tracking is listed as (INT / INT)** in the CRB v4 Skills section. A self-synergy is unique in the catalog and would add INT's score *and* INT's modifier to the same check. Data retains INT/EMP pending a ruling — flagged on the entry | Ken/D | No |
+| F16 | **Hemophiliac calls for a "First Aid Skill Check"**; the catalog skill is **Medical**. Field Medic's half was fixed in the same pass, so this is the last real one. (A Professional milestone lists "First Aid" among tool/kit examples — prose, not a skill reference) | Ken → docs | No |
 
 ## 6. Roadmap
 
@@ -699,10 +776,12 @@ is a four-number data edit.
 - **Phase 1 — `shadows-data.js`** ✅ — contains: 8 stats + modifier curve,
   3 derived attributes, resources (Health/Pain Levels, Luck w/ spend costs,
   Çredits, SFR, Exhaustion), 4 power levels, 34 skills (10 combat / 10
-  utility / 14 general), 57 advantages, 30 disadvantages, 5 archetypes
+  utility / 14 general — **36 as of Decision 55**), 57 advantages, 30
+  disadvantages, 5 archetypes
   (Arcanist draft, Professional draft w/ 7 subtypes, Werewolf draft w/
   Trueborn origin, Cyborg tbd, Vampire tbd), 5 minor + 25 major milestones,
-  IP rules, creation flow. 13 flagged items carry `flagged: true` inline.
+  IP rules, creation flow. 13 flagged items carried `flagged: true` inline
+  (12 as of Decision 55).
 - **Phase 2 — App shell + Creation Wizard** ✅ — `index.html`, single file,
   no build step. Three-pane layout: Intake Ledger step rail · step panel ·
   live Vitals rail (TOL/WILL/SAN/HP/pools recompute on every input). Full
@@ -795,6 +874,18 @@ is a four-number data edit.
   worse than recorded — `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` both resolve
   to ids that do not exist (real ids are `MOB` / `MAG`). No schema bump; engine
   untouched.
+
+- **CRB v4 content pass** ✅ *(2026-08-29 — a data merge, not a phase)* —
+  Skills, Advantages and Disadvantages re-merged from CRB sections 042/043/044
+  (Decisions 55-58). Skills 34 → 36 with flavor lines throughout; every
+  adv/disadv id preserved; three disadvantage point values changed; game data
+  → **0.3**. Closed **F10** outright and three quarters of **F5**; opened
+  **F15** (Tracking INT/INT) and **F16** (Hemophiliac's First Aid reference).
+  Also closed a real gap in the test suite: the stat-id guard looped over a
+  `synergy` array the data does not have, so it had never checked
+  `synergyStat` — the field the engine actually reads, and the one carrying
+  both invalid stats this pass turned up. No app code changed; the suite held
+  at 20 passing / 2 todo / 0 failing throughout.
 
 - **Phase 4 — Selection & constraint system** ⏭ — build `picks` / `excludes` /
   `requires` for advantages & disadvantages (rev 9 audit §4), then retrofit
