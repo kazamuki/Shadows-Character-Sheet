@@ -46,7 +46,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 1 | Engine totality & CRB conformance | ✅ merged (#5) | B3, B6–B10, stale F10 · Decisions 62–68 |
 | 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
 | — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
-| 3 | Selection & constraint system | ✅ **PR #7, in review** | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
+| 3 | Selection & constraint system | ✅ merged (#7) | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
 | 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Thick Skin, Lucky/Unlucky, Long-Lived |
 | — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
 | 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
@@ -156,12 +156,19 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**Batch 3 is PR #7, green, in review.** It carries three version bumps (app
-`0.6.0`, game data `0.4`, character schema `0.5`) — an existing `.shadows.json`
-upgrades through `migrate()` on load and reports the game-data mismatch, which
-is correct. The five defects an adversarial review found are fixed on the same
-branch; the three remaining findings are in §4 and none is reachable with
-current data.
+**Nothing in flight.** `main` is at PR #7, the branch is merged and deleted, and
+`npm run verify` is green on it. Batch 3 landed on 2026-09-03 with three version
+bumps (app `0.6.0`, game data `0.4`, character schema `0.5`) — an existing
+`.shadows.json` upgrades through `migrate()` on load and reports the game-data
+mismatch, which is correct.
+
+**Batch 3b — `grants` — is next**, and it needs one ruling before it can start:
+**does buying Educated at step 7 reopen the step-6 Skill Point pool, or apply
+only going forward?** Everything else in 3b (Hard to Kill, Thick Skin,
+Lucky/Unlucky, Long-Lived) is mechanical once that is settled.
+
+If you want a session with no dependencies at all, the five doc-reconciliation
+flags in §3 have now waited through five batches.
 
 After it merges, **Batch 3b (`grants`)** is next and needs a ruling on Educated's
 step ordering before it can be built.
