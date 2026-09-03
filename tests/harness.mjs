@@ -61,6 +61,14 @@ export function boot({ storage = null } = {}) {
 /**
  * Load ONLY the engine — no DOM, no UI. Proves the engine stayed pure:
  * if engine.js ever touches `document`, this throws.
+ *
+ * REALM WARNING. The engine and the data run inside a `vm` context, so every
+ * object they return carries THAT realm's prototypes. `assert.deepEqual` is
+ * strict here and compares prototypes, so an array from the engine never
+ * matches a literal `[]` written in the test file — you get "not equal" with
+ * two identical-looking values and no visible difference. Spread engine arrays
+ * into local ones (`[...engineArray]`) on BOTH sides of a deepEqual, or assert
+ * on `.length` instead.
  */
 export function loadEngine() {
   const data = readFileSync(join(ROOT, "src/data/shadows-data.js"), "utf8");

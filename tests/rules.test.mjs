@@ -163,3 +163,90 @@ test("Milestone Points per session come from the data, not a hardcode (B9)", () 
   ch.sessions[1].milestonePoint = false;          // per-session opt-out, Decision 23
   assert.equal(Engine.milestoneState(ch).sessionMP, 2);
 });
+
+// ── Selection & constraint system (Decision 58's corpus) ──────────────
+// Source: `043_Advantages.docx` / `044_Disadvantages.docx`, CRB v4 (WIP).
+// Decision 58 named these ~15 entries as the test corpus for the machinery.
+// Each assertion below pins a sentence the CRB states outright.
+
+test('CRB: Common Sense — "Choose one of the following skills: Investigation, Awareness, Basic Tech, Intuition"', () => {
+  const [pick] = Engine.advById("common-sense").picks;
+  const ch = subject();
+  ch.advantages = [{ id: "common-sense", rank: 1, notes: "" }];
+  const [st] = Engine.picksFor(ch, "advantage", "common-sense");
+  assert.deepEqual([...st.options.map(o => o.id)].sort(),
+    ["awareness", "basic-tech", "intuition", "investigation"],
+    "the four named skills are not the offered list");
+  assert.equal(st.options.every(o => !o.missing), true, "a named skill is not in the catalog");
+  assert.equal(pick.perRank, true);
+});
+
+test('CRB: "Choose a different Skill for each rank" — four entries say it, all four enforce it', () => {
+  // Common Sense, Favored Skill, Refined Skill and Defect/Flaw each state some
+  // version of this. A rank-2 entry must offer two slots and refuse a repeat.
+  for (const [kind, id] of [["advantage", "common-sense"], ["advantage", "favored-skill"],
+                            ["advantage", "refined-skill"], ["disadvantage", "defect-flaw"]]) {
+    const ch = subject();
+    const entry = { id, rank: 2, notes: "" };
+    if (kind === "advantage") ch.advantages = [entry]; else ch.disadvantages = [entry];
+    const st = Engine.picksFor(ch, kind, id).find(x => x.pick.type === "skill");
+    assert.ok(st, `${id} has no skill pick`);
+    assert.equal(st.need, 2, `${id} did not offer one slot per rank`);
+    const first = st.options[0].id, second = st.options[1].id;
+    assert.equal(Engine.setSelection(ch, kind, id, st.pick.id, 0, first).ok, true, id);
+    assert.equal(Engine.setSelection(ch, kind, id, st.pick.id, 1, first).ok, false,
+      `${id} allowed the same Skill twice`);
+    assert.equal(Engine.setSelection(ch, kind, id, st.pick.id, 1, second).ok, true, id);
+  }
+});
+
+test('CRB: Martial Arts — "Choose UP TO two Martial Arts styles at creation"', () => {
+  // "Up to" is the whole ruling (Decision 56): two is a cap, not a demand, so a
+  // trained Martial Artist with no style declared is still a legal character.
+  const ch = subject();
+  ch.creation.rolls.skillPoints = 30;
+  ch.skills["martial-arts"] = { rank: 2, ipe: 0 };
+  const [st] = Engine.picksFor(ch, "skill", "martial-arts");
+  assert.equal(st.need, 2, "the style cap is not two");
+  assert.equal(st.pick.perRank, undefined, "styles must not scale with skill rank");
+  assert.equal(st.complete, true, "an undeclared style is blocking the character");
+  assert.equal(Engine.validate("skills", ch).some(i => /Martial Arts/.test(i.msg)), false);
+
+  // The offered styles ARE the entry's own `styles` array — one list, not two.
+  const styles = Engine.skillById("martial-arts").styles;
+  assert.deepEqual([...st.options.map(o => o.id)], [...styles.map(s => s.id)]);
+  assert.deepEqual([...st.options.map(o => o.description)], [...styles.map(s => s.bonus)]);
+
+  // Distinct still holds: you cannot spend both slots on Karate.
+  assert.equal(Engine.setSelection(ch, "skill", "martial-arts", "style", 0, "karate").ok, true);
+  assert.equal(Engine.setSelection(ch, "skill", "martial-arts", "style", 1, "karate").ok, false);
+});
+
+test('CRB: Long-Lived — "You may only purchase this Advantage during character creation"', () => {
+  assert.equal(Engine.advById("long-lived").creationOnly, true,
+    "the creation-only restriction is not in the data");
+  // Nothing else in the catalog claims it, so a stray true is a typo, not a rule.
+  const claimed = [...D.advantages.filter(a => a.creationOnly).map(a => a.id)];
+  assert.deepEqual(claimed, ["long-lived"]);
+});
+
+test('CRB: the entries that say "with your GM" ask for text and never block the lock', () => {
+  // Immunity, Followers/Minion, Cursed, Fanatic, Pact, Minor Insanity,
+  // Addiction, Enemies, Notorious and Defect/Flaw all defer to the table.
+  const expected = ["immunity", "followers-minion", "cursed", "fanatic", "pact",
+                    "minor-insanity", "addiction", "enemies", "notorious", "defect-flaw"];
+  for (const id of expected) {
+    const def = Engine.advById(id) || Engine.disById(id);
+    const kind = Engine.advById(id) ? "advantage" : "disadvantage";
+    const text = (def.picks || []).find(p => p.type === "text");
+    assert.ok(text, `${id} has no freeform pick`);
+    assert.equal(text.gmApproval, true, `${id} does not defer to the GM`);
+
+    const ch = subject();
+    const entry = { id, rank: 1, notes: "" };
+    if (kind === "advantage") ch.advantages = [entry]; else ch.disadvantages = [entry];
+    const about = Engine.validate("character-points", ch).filter(i => i.msg.startsWith(def.name));
+    assert.equal(about.length, 1, `${id}: ${about.map(i => i.msg).join(" | ")}`);
+    assert.equal(about[0].level, "warn", `${id} blocks the lock on an unwritten detail`);
+  }
+});

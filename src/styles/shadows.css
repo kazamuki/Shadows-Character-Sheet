@@ -148,6 +148,16 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .pick .toggle{background:var(--panel-2); border:1px solid var(--frame); border-radius:4px;
   color:var(--text); padding:4px 12px; font-size:.76rem}
 .pick.selected .toggle{border-color:var(--green); color:var(--green)}
+/* Batch 3 — the inputs a trait or skill demands once it is taken. Sits inside
+   the card it belongs to, indented off a rule so it reads as consequence of
+   the choice above rather than a new section. */
+.picks{margin-top:10px; padding-left:12px; border-left:2px solid var(--frame);
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.picks-label{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--violet-hi); flex-basis:100%}
+.picks select,.picks input[type=text]{font-size:.8rem; padding:5px 8px; min-width:180px}
+.picks .field{flex:1 1 100%; margin:0}
+.picks .step-note{flex-basis:100%; margin-top:2px}
 .search{margin-bottom:12px}
 details.group{margin-bottom:8px}
 details.group>summary{cursor:pointer; font-family:var(--mono); font-size:.74rem;
