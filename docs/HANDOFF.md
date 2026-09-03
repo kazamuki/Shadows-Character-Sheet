@@ -1,10 +1,10 @@
 # Handoff — Shadows Digital Character Sheet
 
-**As of:** 2026-08-29
-**Build:** Phase 3.4 + CRB v4 content pass · character schema `0.4` · game data `0.3` · ruleset target **CRB v4 (WIP)**
-**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized. Skills, Advantages and Disadvantages re-merged from the CRB on 2026-08-29 — **data only, no app code touched** — see §10. Suite has held at 20 passing / 2 todo / 0 failing across both sessions.
+**As of:** 2026-09-02
+**Build:** Phase 3.4 + CRB v4 content pass + quick-win pass + Batch 1 · character schema `0.4` · game data `0.3` · ruleset target **CRB v4 (WIP)**
+**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized. Skills, Advantages and Disadvantages re-merged from the CRB on 2026-08-29 — **data only, no app code touched** — see §10. Two passes landed on 2026-09-02: the quick wins (**B2, B4, B5** — Decisions 59-61) and **Batch 1** of the debt ledger (**B3, B6, B7, B8, B9, B10** and the stale **F10** flag — Decisions 62-68). Suite now **45 passing / 1 todo / 0 failing**.
 
-If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 58 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
+If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 68 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
 
 ---
 
@@ -19,10 +19,10 @@ It runs from `file://` with no server and no build step. That constraint drives 
 ```
 index.html              Shell: markup + script tags. 31 lines. No logic, no styles.
 src/
-  data/shadows-data.js     All game content (2,839 lines). Designers edit this.
+  data/shadows-data.js     All game content (2,940 lines). Designers edit this.
   data/shadows-icons.js    Brand stat icons + Lucide UI icons as inline SVG strings.
-  engine/engine.js         Pure rules engine (714 lines). No DOM. 56 exported functions.
-  ui/app.js                Wizard + sheet (1,910 lines). One IIFE. Renders off the engine.
+  engine/engine.js         Pure rules engine (771 lines). No DOM. 55 exported functions.
+  ui/app.js                Wizard + sheet (1,921 lines). One IIFE. Renders off the engine.
   styles/shadows.css       Brand tokens + all styling (448 lines).
 docs/
   SCHEMA.md                Project memory. Read before touching anything.
@@ -32,6 +32,7 @@ tests/
   harness.mjs              jsdom boot + a bare-VM engine loader.
   engine.test.mjs          Engine units, run with no DOM present.
   smoke.test.mjs           Boot, wizard, all nine sheet tabs.
+  rules.test.mjs           CRB conformance — the rulebook's worked examples.
   build.test.mjs           Architecture guards (no ES modules, shell stays a shell, script order).
 tools/build.mjs            Inlines everything into dist/shadows-character-sheet.html.
 ```
@@ -62,30 +63,43 @@ npm run build    # → dist/shadows-character-sheet.html (the file players get)
 
 ## 4. Test suite — current results
 
-**20 passing, 2 `todo`, 0 failing.**
+**45 passing, 1 `todo`, 0 failing** (46 tests, four files).
 
-The two `todo` tests are not aspirational; they are the two confirmed defects below, written as failing assertions so they flip green the moment they're fixed. This is where the audit findings live now — in code, not only in markdown.
+**A1 is the only `todo` left.** It is not aspirational — it is a confirmed defect written as a failing assertion so it flips green the moment A3 lands in Batch 3. B7's `todo` was promoted to a real assertion in Batch 1.
+
+*Count history, because this line has drifted twice and is worth watching:* 20 at the restructure → 22 when PR #4 added two build-entrypoint tests (docs not updated) → 26 with the quick-win guards → 45 with Batch 1.
 
 | Suite | Covers |
 |---|---|
 | `engine.test.mjs` | Engine loads with no DOM · `newCharacter` shape vs schema 0.4 · derived values computed and never stored · health follows BOD · `validate` returns issues for every step · audit record/undo round-trip · `diffChar` reports only changes · `migrate` 0.3→0.4 seeds `audit` · `versionCheck` surfaces mismatch · every skill references a stat that exists (guards the `BODY`/`BOD` class of bug) |
 | `smoke.test.mjs` | Boots clean on Home · New character opens step 1 · a locked character resumes from storage and all nine tabs render with zero errors · the sheet survives a data change |
-| `build.test.mjs` | The five architecture constraints in §3 |
+| `build.test.mjs` | The five architecture constraints in §3 · `build.mjs` actually runs and writes when invoked as a CLI (PR #4) |
+| `rules.test.mjs` | **New in Batch 1.** CRB conformance — the rulebook's worked examples, each quoting its source line. Health/HL, the BOD-above-10 rate, Pain Level thresholds and stacking penalties, the two Pain floors, Luck costs, the modifier curve, the milestone cadence |
+
+Added by the quick-win pass: every declared stat alias resolves to a live stat id (source-level, so new aliases are covered) · a legacy stat name resolves and an unresolvable one warns instead of throwing · the generic undo reverses an IP spend and `undoIP` is gone · the review step is numbered off the data.
+
+Added by Batch 1: **`migrate()` returns every field `newCharacter()` has** (with three load-bearing exemptions) · **no exported reader throws on any character `migrate()` can return** — six degenerate characters × twenty-seven readers × every `validate` step, which is the guard that would have caught B2, B6 and B7 together and found B10 on its first run · the sheet states the CRB's pain floors · an orphaned skill id still renders.
 
 ## 5. Known defects — verified against the current build
 
-The rev 9 audit (`docs/audits/2026-06-16_rev9-whole-app-audit.md`) is the reference. **Every finding in it is still open in this build.** Whatever earlier fixes were made, they are not in the file that was handed over. Two were re-confirmed empirically here, not just by reading:
+The rev 9 audit (`docs/audits/2026-06-16_rev9-whole-app-audit.md`) is the reference. **Six of its findings are now closed** — B2, B3, B4, B5, B6 and B7, all on 2026-09-02. Batch 1 also opened and closed three findings the audit never had: **B8**, **B9** and **B10**.
 
 - **A1 — Arcanist renders its aberrations twice, both required. [verified 2026-08-02]** Driving a draft to the archetype step produces **6 `[data-spec]` buttons + 6 `[data-aber]` buttons** for the same six aberrations. A player must pick one up top *and* N below to clear validation. Tracked by a `todo` test in `smoke.test.mjs`.
-- **B2 — the two dead stat aliases are worse than the audit recorded. [verified 2026-08-02]** The real stat ids are `BOD, REF, MOB, INT, TECH, COOL, MAG, EMP`. `STAT_ALIASES` maps `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` — *neither target exists*. Should be `MOB` and `MAG`, or dropped if no legacy data uses those names.
+- ~~**B2 — the two dead stat aliases.**~~ **Closed 2026-09-02, Decision 59.** Worse a third time than recorded: because `normStat` returned its alias target unchecked, an unresolvable alias came back truthy and `skillLine` **threw** on `t[pri].value` rather than raising its `dataWarning` — confirmed empirically, `TypeError: Cannot read properties of undefined (reading 'value')`. Targets corrected to `MOB`/`MAG` and `normStat` now verifies them.
 
-Still open, unchanged from the audit: **A2** (the sheet's Specialization section can't see non-Arcanist picks), **A3** (the unification that fixes A1+A2), **B1** (stale "Session tracking arrives in Phase 3" copy at `app.js:493`), **B3** (`levelsPerBOD` is an authoritative-looking data knob the engine ignores), **B4** (`Engine.undoIP` is dead code, superseded by `undoLastAction`), **B5** (review step number hardcoded as `n:8`), **B6** (unlocked-draft import is a shallow merge), **C1–C3** (forward notes, not bugs).
+Also closed 2026-09-02: **B4** (`Engine.undoIP` deleted, Decision 60), **B5** (review step number derived, Decision 61), **B3** (`levelsPerBOD` deleted — the CRB settles it, Decision 64), **B6** (the `migrate()` completeness invariant, Decision 63) and **B7** (`validate` made total, Decision 62).
 
-**New finding from this session:**
+**Found and closed in Batch 1, not in the audit:**
 
-- **B7 — `validate` is not total.** `validate("stats", ch)` throws `TypeError: Cannot read properties of null (reading 'roll')` at `engine.js:579` when the character has no power level, because `statPool()` returns null. The wizard gates this so it is not live, but a corrupt import or an admin edit reaches it. `validate` should report an issue, never throw. Tracked by a `todo` test in `engine.test.mjs`.
+- **B8 — the two Pain Level floors were never surfaced.** The CRB floors Essence Checks at 1 die and Breaker at 10% "to prevent automatic loss"; both lived in the data as an unread prose `notes` string and the sheet showed bare penalties. A player at Pain Level 3 read "−3 Essence die" with nothing saying where it stops. Decision 66.
+- **B9 — the milestone cadence was stated twice and connected never.** Prose in the data beside arithmetic in the engine, plus an inert `milestonePointsPerSession`. They agreed on the day it was found, which is the only reason it was not already a bug. Decision 67.
+- **B10 — an orphaned skill id crashed the review screen.** `skillLine` dereferenced a definition that `skillById` no longer returns — a case `versionCheck` *explicitly reports as supported*. **Found by the new totality guard on its first run**, which is the clearest argument for the guard existing.
 
-**Quick wins, no design input needed:** B1, B2, B4, B5. **B3** and **B6** want a one-line "is this intended?" first.
+Still open, unchanged from the audit: **A2** (the sheet's Specialization section can't see non-Arcanist picks), **A3** (the unification that fixes A1+A2), **B1** (stale "Session tracking arrives in Phase 3" copy at `app.js:493`), **B3** (`levelsPerBOD` is an authoritative-looking data knob the engine ignores), **B6** (unlocked-draft import is a shallow merge), **C1–C3** (forward notes, not bugs).
+
+**Standing observation for the next session.** `statMod()` extrapolates +1 per point above 10, carrying an in-code comment reading "FLAG: confirm with D." `statRules.beyondHumanLimits` says the opposite — *"Once a stat passes 10, gains slow down."* Those disagree, and **this flag exists only as a code comment: it has no F-number and is not in the table.** That is the same drift class Batch 1 closed elsewhere. Not fixed here because it is a genuine rules question, not a data-honesty one — it belongs in the grouped Deighton ask.
+
+**Everything mechanical is now closed.** What remains is Batch 2 (voice and the `playerNote` split), Batch 3 (picks/excludes/requires, then A3), and the flags. **B1** is Batch 2 — player-facing copy, and it turned out to be one of ten leak sites, not one string.
 
 ## 6. Open design flags
 
@@ -133,7 +147,7 @@ Doing 2→3 before 4 means Biomech is the first archetype authored entirely thro
 - **Store inputs, compute everything else.** A character stores `BOD = 7`, never the modifier, the Health Levels, or the HP. This is why audit/undo could be a generic structural diff instead of per-action inverse handlers, and why a formula change updates every existing character on next load.
 - **IDs are immutable.** Display names are free.
 - **Design questions are not resolved in code.** They get a `flagged: true` entry, a line in `SCHEMA.md` §5, and an issue on the `design-flag` template. The app surfaces the uncertainty at the table rather than hiding a guess.
-- **Decisions are numbered.** `SCHEMA.md` §4 is at 58. A decision that isn't numbered didn't happen.
+- **Decisions are numbered.** `SCHEMA.md` §4 is at 68. A decision that isn't numbered didn't happen.
 - **Prose edits belong in the markdown source first**, then flow into the data file; structural or mechanical changes go directly into the `.js` or through a structured changelist. Wholesale regeneration overwrites machine-readable metadata.
 - **Player-facing copy is in-world writing**, not UI microcopy. It follows `GUIDE_Shadows_Voice.md` — the app speaks as NYTE City, not as a rulebook author instructing the reader.
 
@@ -208,3 +222,125 @@ The first read of `044_Disadvantages.docx` missed the Age fix because the file w
 **Deferred on purpose.** Rank tables render as labelled bullets rather than structured `rankTable` (Decision 57), and none of the `picks` machinery the CRB now specifies is encoded (Decision 58). Both belong with the Phase 4 renderer work, not in a content merge.
 
 **Position unchanged.** Phase 4 sequence still stands: clear F8, build `picks`/`excludes`/`requires`, retrofit A3, then Biomech. What changed is that step 2 now has a written requirement set and a ~15-entry test corpus instead of a sketch.
+
+
+### 2026-09-02 — quick-win pass: B2, B4, B5
+
+The first application-code change since the restructure. Three named audit
+findings, no design input needed, no schema bump, no data change, no id moved.
+`npm run verify` before: **22 passing / 2 todo / 0 failing**. After: **26 / 2 / 0**.
+
+**Closed as Decisions 59-61.**
+
+- **B2 — stat aliases.** Targets corrected to `MOB`/`MAG`, *and* `normStat`
+  now verifies that its alias target is a live stat id.
+- **B4 — `undoIP`.** Deleted from the engine and its export list, with a
+  comment at the site naming what superseded it.
+- **B5 — review step number.** `n: D.creationFlow.steps.length + 1`.
+
+**B2 was worse than two rounds of documentation recorded.** The audit said a
+bad alias "would still trip the unknown-stat flag"; the 2026-08-02 re-check
+said the targets don't exist. Neither noticed that `normStat` returned the
+alias target *without checking it*, so an unresolvable alias came back truthy,
+`skillLine` skipped its `dataWarning` branch and dereferenced `t["MA"].value`.
+Confirmed by running it: `TypeError: Cannot read properties of undefined
+(reading 'value')`. A skill authored against "Movement" or "Attractiveness"
+would have taken down the whole Skills tab, not shown a gold flag. This also
+means **Decision 22's stated guarantee — "degrades gracefully on unknown ids
+instead of crashing" — was untrue for precisely the case it was written for.**
+It is true now.
+
+Worth keeping in view: the alias map is the *pre-Shadows* stat vocabulary
+(`BODY`, `REF`, `INT`, `TECH`, `COOL`, `EMP`, `MA`, `ATTR`). The two broken
+entries had the old system's own abbreviation on the target side — a
+copy-of-the-source-column slip, not a guess at a Shadows id.
+
+**Four new guards, each mutation-tested.** Every one was run against the
+pre-fix code to confirm it actually fails there — a guard that passes both
+before and after is decoration. The alias guard reads the `STAT_ALIASES`
+literal out of `engine.js` rather than restating it, so an alias added later
+is covered without touching the test.
+
+**No data currently exercises any alias.** Every `primaryStat`/`synergyStat`
+in `shadows-data.js` is already a canonical id, and git history shows `ATTR`
+and `MA` were never stat ids in this repo. The map is pure tolerance for a
+designer typing a long name — which is exactly why a silent throw in it could
+have sat there indefinitely.
+
+**One doc drift corrected in passing.** §4 claimed 20 passing; the real count
+was 22 — PR #4 added two build-entrypoint tests and the docs were not updated.
+Same failure mode the 2026-08-02 session flagged as a standing caution, two
+sessions running. §4 now carries the count history so the next drift is visible.
+
+**Position unchanged.** Phase 4 sequence stands: clear F8, build
+`picks`/`excludes`/`requires`, retrofit A3, then Biomech. Of the quick wins,
+only **B1** remains, and it is player-facing copy — it wants a voice pass, not
+a deletion. **B3** and **B6** still want a one-line "is this intended?" first.
+
+
+### 2026-09-02 — Batch 1: engine totality & CRB conformance
+
+The first batch of the debt-ledger plan. Decisions 62-68. Before: **26 passing /
+2 todo / 0 failing**. After: **45 passing / 1 todo / 0 failing** (46 tests).
+**A1 is the only `todo` left.**
+
+**Closed:** B3, B6, B7, B8, B9, B10, and the stale F10 flag.
+
+#### The finding that reframed the batch
+
+Three findings raised in three different sessions — **B2** (`normStat` threw),
+**B7** (`validate` threw), **B6** (`migrate` left holes the engine threw
+through) — were filed as unrelated items in two severity buckets. They are one
+defect: **Decision 22 stated a contract and nothing enforced it.** Every time
+someone looked, they found another violation.
+
+So Batch 1 fixed the *class*. The contract is now written exactly — every
+exported reader is total on anything `migrate()` returns — and a guard runs six
+degenerate characters through twenty-seven readers, every `validate` step and
+`skillLine`. **It found a fourth violation on its first run** (B10: an orphaned
+skill id crashed the review screen, a case `versionCheck` explicitly reports as
+supported). That is the argument for the guard, made by the guard.
+
+#### What the CRB settled
+
+`030_Core_Mechanics.docx` was read into the project for the first time, and it
+closed **B3** in the opposite direction from the previous session's
+recommendation. The engine reproduces both of the rulebook's worked examples
+exactly — BOD 4 → 20 HP, and a Werewolf at BOD 11 → 10 HL × 6 HP = 60 HP — so
+`levelsPerBOD` was redundant, not undecided. It also exposed **B8**: two floors
+the CRB states plainly, sitting in the data as unread prose while the sheet
+displayed bare penalties.
+
+That produced **Mechanism 3**: `tests/rules.test.mjs`, where every assertion
+quotes the CRB line it pins. **If that file and the CRB disagree, the CRB wins
+and the file is the bug report.**
+
+#### Verification, not assertion
+
+- Every guard was **mutation-tested** against the pre-fix code. A guard that
+  passes before and after is decoration.
+- The data changes were proved inert by **diffing sixty computed outputs** —
+  health at six BOD values, pain at four damage levels, milestones at ten MP
+  totals — before and after. Byte-identical, which is why no version bumped
+  (Decision 68 writes that rule down).
+- B6's fix was checked against the original crash reproduction: all four paths
+  that threw now return, `gamedataVersion` is *not* masked, and `versionCheck`
+  still reports the mismatch.
+
+#### Watch out for this
+
+Writing regexes into test files through a shell heredoc **silently eats one
+backslash level** — `\(` becomes `(`, a word boundary becomes a backspace
+character. It bit three times this session and every failure looked like a
+logic bug. Use the editor for anything containing escapes.
+
+The data also lives in a **VM realm** (`loadEngine`), so its arrays carry another
+`Array.prototype` and `deepStrictEqual` rejects them on identity alone. Spread
+into a local array first. Both are noted in `rules.test.mjs`.
+
+#### Position
+
+**Batch 2 next** — voice and the `playerNote` / `flagNote` split, both approved.
+Do it before Batch 3 so the picks subsystem is authored under the copy standard
+instead of retrofitted into it. Full plan, ownership split and the grouped
+Deighton ask: the **Shadows Sheet Debt Ledger** artifact.

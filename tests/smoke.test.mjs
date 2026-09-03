@@ -85,3 +85,50 @@ test("Arcanist offers exactly one set of aberration controls",
     const aber = app.$$("[data-aber]").length;
     assert.equal(spec * aber, 0, `aberrations rendered twice: ${spec} [data-spec] + ${aber} [data-aber]`);
   });
+
+test("the review step is numbered off the data, not hardcoded (B5)", () => {
+  // STEPS appended {id:"review", n:8} and assumed creationFlow.steps had exactly
+  // seven entries. Add or remove a step in the data and the number desynced.
+  const app = boot();
+  const btn = app.$$("#main button").find(b => /New character/.test(b.textContent));
+  btn.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const rows = app.$$("#ledger [data-goto]");
+  const expected = D.creationFlow.steps.length + 1;
+  assert.equal(rows.length, expected, "ledger row count does not match the data");
+  assert.equal(rows[rows.length - 1].querySelector(".n").textContent, String(expected));
+  assert.deepEqual(app.errors, []);
+});
+
+test("the sheet states the CRB's pain floors, not just the penalties (B8)", () => {
+  // A player at Pain Level 3 reading a bare "-3 Essence die" rolls nothing.
+  // The CRB floors that at 1 die and Breaker at 10% "to prevent automatic loss".
+  const ch = lockedCharacter();
+  ch.stats.BOD.base = 10;          // 10 HL x 5 HP = 50 HP
+  ch.trackers.damage = 40;         // 8 HL lost -> Pain Level 3
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "trackers" } } });
+  const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
+  open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="trackers"]');
+  const text = app.$("#main").textContent;
+  assert.match(text, /Essence dice \(min 1\)/, "Essence floor missing from the sheet");
+  assert.match(text, /Breaker \(min 10%\)/, "Breaker floor missing from the sheet");
+  assert.deepEqual(app.errors, []);
+});
+
+test("a character holding a skill the data no longer defines still renders (B10)", () => {
+  // versionCheck explicitly reports this case, so every reader must survive it.
+  // Found by the totality guard on its first run: review iterates ch.skills
+  // directly and died dereferencing an orphaned definition.
+  const ch = lockedCharacter();
+  ch.skills["skill-that-was-removed"] = { rank: 3, ipe: 0 };
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "skills" } } });
+  const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
+  open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  for (const sec of ["main", "skills", "progression"]) {
+    app.click(`[data-sec="${sec}"]`);
+    assert.deepEqual(app.errors, [], `orphaned skill broke the ${sec} tab`);
+  }
+  const line = app.Engine.skillLine(ch, "skill-that-was-removed");
+  assert.match(line.dataWarning, /no longer in the game data/);
+  assert.equal(line.rank, 3);
+});

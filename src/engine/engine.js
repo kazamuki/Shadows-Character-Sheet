@@ -197,13 +197,20 @@ const Engine = (() => {
     if (e.times===0) ch.creation.boosts = ch.creation.boosts.filter(b=>b!==e);
   }
 
-  // Normalize stat ids referenced by skills (tolerates legacy aliases like "BODY")
-  const STAT_ALIASES = { BODY:"BOD", REFLEX:"REF", REFLEXES:"REF", INTELLIGENCE:"INT", EMPATHY:"EMP", TECHNIQUE:"TECH", ATTRACTIVENESS:"ATTR", MOVEMENT:"MA" };
+  // Normalize stat ids referenced by skills (tolerates legacy aliases like "BODY").
+  // The keys are the pre-Shadows stat vocabulary; every value must be a live id in
+  // `stats`. B2: ATTRACTIVENESS and MOVEMENT pointed at "ATTR"/"MA" — the old
+  // system's own abbreviations, not Shadows ids — and an unresolvable alias came
+  // back truthy, so skillLine threw on `t[pri].value` instead of raising its
+  // dataWarning. The target is now verified, so a stale alias degrades to null.
+  const STAT_ALIASES = { BODY:"BOD", REFLEX:"REF", REFLEXES:"REF", INTELLIGENCE:"INT", EMPATHY:"EMP", TECHNIQUE:"TECH", ATTRACTIVENESS:"MAG", MOVEMENT:"MOB" };
   function normStat(id){
     if (!id) return null;
+    const known = v => D().stats.some(s=>s.id===v);
     const u = String(id).toUpperCase();
-    if (D().stats.some(s=>s.id===u)) return u;
-    return STAT_ALIASES[u] || null;
+    if (known(u)) return u;
+    const alias = STAT_ALIASES[u];
+    return (alias && known(alias)) ? alias : null;
   }
 
   // Effective skill data for display: rank incl. boosts + IPE; check preview.
@@ -211,7 +218,16 @@ const Engine = (() => {
   // carried in the breakdown so the sheet can show *why* a total is modified.
   function skillLine(ch, id){
     const def = skillById(id);
-    const rank = (ch.skills[id] ? ch.skills[id].rank + ch.skills[id].ipe : 0) + boostsFor(ch,"skill",id);
+    const rank = ((ch.skills||{})[id] ? ch.skills[id].rank + ch.skills[id].ipe : 0) + boostsFor(ch,"skill",id);
+    // B10: a saved character can hold a skill id the game data no longer
+    // defines — versionCheck reports exactly that case, so every reader has to
+    // survive it. Found by the totality guard on its first run: the review
+    // screen iterates ch.skills directly and died on an orphaned id.
+    if (!def) return { def:{ id, name:id, category:"", description:"", flavorLine:"",
+                             primaryStat:null, synergyStat:null },
+                       rank, trained:rank>0, checkBonus:0,
+                       breakdown:{ rank, primary:{id:null,value:0}, synergy:{id:null,mod:0}, pain:0 },
+                       dataWarning:`Skill "${id}" is no longer in the game data.` };
     const t = statTable(ch);
     const pri = normStat(def.primaryStat), syn = normStat(def.synergyStat);
     const priVal = pri ? t[pri].value : 0;
@@ -235,9 +251,16 @@ const Engine = (() => {
     for (const p of hl.painLevels) if (hlLost >= p.hlLostThreshold) lvl = p;
     const pen = hl.painPenaltiesPerLevel;
     return { hlLost, level: lvl.level, label: lvl.label, description: lvl.description,
-             skillPenalty:   lvl.level * pen.skillChecks,
-             essencePenalty: lvl.level * pen.essenceCheckDice,
-             breakerPenalty: lvl.level * pen.breakerCheckPercent,
+             // `|| 0` normalises the -0 that `0 * -1` produces at Pain Level 0.
+             skillPenalty:   lvl.level * pen.skillChecks || 0,
+             essencePenalty: lvl.level * pen.essenceCheckDice || 0,
+             breakerPenalty: lvl.level * pen.breakerCheckPercent || 0,
+             // B8: the CRB floors these two "to prevent automatic loss". The
+             // engine cannot APPLY them -- it never sees the player's dice pool
+             // or target number -- so it carries them out to be displayed
+             // beside the penalty. They lived in the data as unread prose.
+             essenceFloor:   pen.essenceCheckDiceFloor,
+             breakerFloor:   pen.breakerCheckPercentFloor,
              penaltyNotes: pen.notes,
              hpLeft: Math.max(0, h.total - dmg), down: h.total>0 && dmg >= h.total };
   }
@@ -314,28 +337,22 @@ const Engine = (() => {
     ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"grant", amount, note:note||"" });
     return {ok:true};
   }
-  function undoIP(ch){
-    const log = ch.progression.ip.log||[];
-    if (!log.length) return {ok:false, why:"Journal is empty."};
-    const e = log[log.length-1];
-    if (e.kind!=="grant"){
-      if (e.targetType==="stat") ch.stats[e.targetId].ipe = Math.max(0, ch.stats[e.targetId].ipe-1);
-      else if (ch.skills[e.targetId]){
-        ch.skills[e.targetId].ipe = Math.max(0, ch.skills[e.targetId].ipe-1);
-        if (ch.skills[e.targetId].rank===0 && ch.skills[e.targetId].ipe===0) delete ch.skills[e.targetId];
-      }
-    }
-    log.pop();
-    return {ok:true, undone:e};
-  }
+  // undoIP was retired by Decision 49 and removed by B4: every IP mutation goes
+  // through commit() -> recordAction(), so undoLastAction reverses it structurally.
 
   // ── Milestones ────────────────────────────────────────────────────────
   // Minor unlock at 5, 15, 25… MP; Major at 10, 20, 30… MP.
   function milestoneState(ch){
-    const sessionMP = (ch.sessions||[]).filter(s=>s.milestonePoint!==false).length;
-    const mp = sessionMP + (ch.progression.milestonePoints||0);
-    const minorAvail = mp>=5 ? Math.floor((mp+5)/10) : 0;
-    const majorAvail = Math.floor(mp/10);
+    // B9: the cadence used to be stated twice -- as prose in the data ("5, 15,
+    // 25...") and as arithmetic here -- with nothing connecting them, and
+    // milestonePointsPerSession was inert. Both now come from the data.
+    const r = D().milestones.rules;
+    const per = r.milestonePointsPerSession==null ? 1 : r.milestonePointsPerSession;
+    const sessionMP = (ch.sessions||[]).filter(s=>s.milestonePoint!==false).length * per;
+    const mp = sessionMP + ((ch.progression||{}).milestonePoints||0);
+    const avail = (first, every) => (every>0 && mp>=first) ? Math.floor((mp-first)/every)+1 : 0;
+    const minorAvail = avail(r.minorFirstAt, r.minorEvery);
+    const majorAvail = avail(r.majorFirstAt, r.majorEvery);
     const minorTaken = ch.progression.milestones.minor||[];
     const majorTaken = ch.progression.milestones.major||[];
     return { mp, sessionMP, manualMP: ch.progression.milestonePoints||0,
@@ -545,8 +562,38 @@ const Engine = (() => {
     return { ok:true, undone:entry };
   }
 
-  // ── Migration: fill Phase 3 fields on older character files ──────────
+  // ── Migration: fill missing fields on older character files ──────────
+  // B6: migrate() is version-agnostic — it backfills unconditionally rather
+  // than stepping 0.1 -> 0.2 -> 0.3 -> 0.4. That makes its COMPLETENESS the
+  // migration guarantee: every field newCharacter() has ever grown must be
+  // reachable here, or an old file opens with holes and the engine throws
+  // straight through them. archetypeChoices arrived in 0.2 and never got a
+  // backfill, so a pre-0.2 character crashed statValue() on the first render
+  // and the sheet could not open at all.
+  //
+  // _fillDefaults walks the CURRENT shape, so a field added tomorrow is
+  // covered by construction instead of by remembering to add a line here.
+  function _fillDefaults(target, shape){
+    for (const k of Object.keys(shape)){
+      const d = shape[k];
+      if (Array.isArray(d)){
+        if (!Array.isArray(target[k])) target[k] = _clone(d);
+      } else if (d && typeof d === "object"){
+        if (!target[k] || typeof target[k] !== "object" || Array.isArray(target[k])) target[k] = _clone(d);
+        else _fillDefaults(target[k], d);
+      } else if (target[k] === undefined){
+        target[k] = d;
+      }
+    }
+    return target;
+  }
+
   function migrate(c){
+    if (!c || typeof c !== "object") c = {};
+    // meta is filled explicitly below: seeding gamedataVersion from the current
+    // data would mask the exact mismatch versionCheck exists to report.
+    const shape = newCharacter(); delete shape.meta;
+    _fillDefaults(c, shape);
     const t = c.trackers = Object.assign({damage:0, exhaustion:0}, c.trackers||{});
     t.luck    = Object.assign({bonus:0, spent:0}, t.luck);
     t.san     = Object.assign({loss:0}, t.san);
@@ -564,7 +611,10 @@ const Engine = (() => {
     c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.powers=c.powers||[];
     if (typeof c.notes!=="string") c.notes="";
     if (!Array.isArray(c.audit)) c.audit=[];      // Phase 3.3
-    if (c.meta) c.meta.schemaVersion="0.4";
+    // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
+    // from the loaded data would mask the mismatch versionCheck must report.
+    if (!c.meta || typeof c.meta!=="object") c.meta = {};
+    c.meta.schemaVersion = "0.4";
     return c;
   }
 
@@ -573,10 +623,14 @@ const Engine = (() => {
     const out = [], pl = powerLevel(ch), a = archetype(ch);
     const E=(m)=>out.push({level:"error",msg:m}), W=(m)=>out.push({level:"warn",msg:m});
     if (stepId==="power-level"){ if (!pl) E("Choose a Campaign Power Level."); }
-    if (stepId==="concept"){ if (!ch.identity.name.trim()) E("Your character needs a name."); }
+    if (stepId==="concept"){ if (!String((ch.identity||{}).name||"").trim()) E("Your character needs a name."); }
     if (stepId==="stats"){
+      // B7: the pools are null until a power level is chosen. validate() must
+      // report that, never throw — a corrupt import or an admin edit gets here
+      // even though the wizard gates it.
       const p = statPool(ch);
-      if (p.roll==null) E(`Enter your ${p.rollDie} Stat Point roll.`);
+      if (!p) E("Choose a Campaign Power Level before assigning Stat Points.");
+      else if (p.roll==null) E(`Enter your ${p.rollDie} Stat Point roll.`);
       else {
         const left = p.total - statSpent(ch);
         if (left < 0) E(`Stat Points overspent by ${-left}.`);
@@ -634,7 +688,8 @@ const Engine = (() => {
     }
     if (stepId==="skills"){
       const p = skillPool(ch);
-      if (p.roll==null) E(`Enter your ${p.rollDie} Skill Point roll.`);
+      if (!p) E("Choose a Campaign Power Level before assigning Skill Points.");
+      else if (p.roll==null) E(`Enter your ${p.rollDie} Skill Point roll.`);
       else {
         const left = p.total - skillSpent(ch);
         if (left < 0) E(`Skill Points overspent by ${-left}.`);
@@ -643,7 +698,8 @@ const Engine = (() => {
     }
     if (stepId==="character-points"){
       const bal = cp(ch);
-      if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
+      if (!bal) E("Choose a Campaign Power Level before spending Character Points.");
+      else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
       if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.notes!=="natural"))
         E(`${a.name}s cannot purchase Advantages.`);
@@ -670,8 +726,9 @@ const Engine = (() => {
 
   function versionCheck(c){
     const issues = [];
-    if (c.meta.gamedataVersion !== D().meta.schemaVersion)
-      issues.push(`Character was saved against game data ${c.meta.gamedataVersion}; loaded data is ${D().meta.schemaVersion}.`);
+    const saved = (c.meta||{}).gamedataVersion;
+    if (saved !== D().meta.schemaVersion)
+      issues.push(`Character was saved against game data ${saved==null?"(unrecorded)":saved}; loaded data is ${D().meta.schemaVersion}.`);
     for (const id of Object.keys(c.skills||{}))
       if (!skillById(id)) issues.push(`Skill "${id}" no longer exists in game data.`);
     for (const a of c.advantages||[])
@@ -705,7 +762,7 @@ const Engine = (() => {
            skillLine, validate, buildExport, versionCheck,
            // Phase 3
            adjFor, painState, luckState, sanState, focusedSkillIds,
-           ipState, ipCost, spendIP, grantIP, undoIP,
+           ipState, ipCost, spendIP, grantIP,
            milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
            logSession, addCredits, archPanels, panelMax, disciplineRanks, migrate,
            // Phase 3.3 — audit trail & undo
