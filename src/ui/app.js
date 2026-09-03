@@ -18,7 +18,7 @@
 
   // ── State ─────────────────────────────────────────────────────────────
   const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, label:s.label, note:s.note}))
-    .concat([{id:"review", n:8, label:"Review, lock, and export"}]);
+    .concat([{id:"review", n:D.creationFlow.steps.length+1, label:"Review, lock, and export"}]);
   const SHEET_SECTIONS = [
     {id:"main",        label:"Main",        ui:"tab_main"},
     {id:"skills",      label:"Skills",      ui:"tab_skills"},
@@ -150,6 +150,17 @@
   function issuesHtml(list){
     if (!list.length) return "";
     return `<ul class="issues">`+list.map(i=>`<li class="${i.level}">${esc(i.msg)}</li>`).join("")+`</ul>`;
+  }
+  // B8: the CRB floors Essence dice at 1 and Breaker at 10% "to prevent
+  // automatic loss". The app can't apply them — it never sees the dice pool or
+  // the target number — so it states them next to the penalty. Without this a
+  // player at Pain Level 3 reads "-3 Essence die" and rolls nothing.
+  function painPenaltyLine(pain, long){
+    const e = pain.essenceFloor==null ? "" : ` (min ${pain.essenceFloor})`;
+    const b = pain.breakerFloor==null ? "" : ` (min ${pain.breakerFloor}%)`;
+    return `${pain.skillPenalty} ${long?"Skill checks":"skill"}`
+         + ` · ${pain.essencePenalty} ${long?"Essence dice":"Essence"}${e}`
+         + ` · ${pain.breakerPenalty}% Breaker${b}`;
   }
   function flagHtml(note){ return `<div class="flag"><div><b>Design flag</b> — ${esc(note)}</div></div>`; }
   function wizNav(stepId){
@@ -526,7 +537,7 @@
           const c=Engine.migrate(JSON.parse(rd.result));
           const issues=Engine.versionCheck(c);
           if (c.creation && c.creation.locked) S={screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:"main", importIssues:issues};
-          else S={screen:"wizard", ch:Object.assign(Engine.newCharacter(), c), step:0, maxReached:STEPS.length-1, section:"main", importIssues:issues};
+          else S={screen:"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main", importIssues:issues};
           update();
         }catch(err){ alert("That file didn't parse as a character: "+err.message); } };
       rd.readAsText(f);
@@ -740,7 +751,7 @@
     h += cond(`hp ${pain.down?"danger":""}`,"Health","health",
       `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch));
     h += cond(`${pain.level?"danger":""}`,"Pain","pain",
-      pain.level?`Lv ${pain.level}`:"—", pain.level?`${pain.skillPenalty} skill · ${pain.essencePenalty} Essence · ${pain.breakerPenalty}% Breaker`:"no penalties", null);
+      pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false):"no penalties", null);
     h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
       `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max));
     h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
@@ -918,7 +929,7 @@
       return `<div class="hl ${gone?"gone":""}"><div class="fill" style="transform:scaleX(${(lvlDmg/hp.hpPer).toFixed(2)})"></div><span>${gone?"✕":(hp.hpPer-lvlDmg)+"/"+hp.hpPer}</span></div>`;
     }).join("") + `</div>`;
     h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
-      ${pain.level?`<span class="cost">${pain.skillPenalty} Skill checks · ${pain.essencePenalty} Essence die · ${pain.breakerPenalty}% Breaker</span>`:'<span class="cost grant">no penalties</span>'}</div>
+      ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
       <div class="desc">${esc(pain.description)}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
     // SAN

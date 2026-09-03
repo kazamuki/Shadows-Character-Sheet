@@ -728,6 +728,130 @@ No cascade logic to maintain — it falls out of the architecture.
     one thing this project has consistently refused to do. These ~15 entries
     become the **test corpus** when the machinery lands. (Ken, 2026-08-29)
 
+59. **(B2)** **Legacy stat aliases point at live stat ids, and `normStat`
+    verifies its own target.** The alias map is the pre-Shadows stat vocabulary
+    — `BODY`, `REF`, `INT`, `TECH`, `COOL`, `EMP`, plus `MA` and `ATTR`. Two
+    entries had the *source* abbreviation on the target side: `MOVEMENT→"MA"`
+    and `ATTRACTIVENESS→"ATTR"`, neither of which is a Shadows id. They now
+    resolve to `MOB` and `MAG`. The deeper fault was that `normStat` returned
+    the alias target without checking it existed, so an unresolvable alias came
+    back *truthy* and `skillLine` threw on `t[pri].value` — taking the Skills
+    tab down rather than raising the `dataWarning` it already carries.
+    **Decision 22's "degrades gracefully instead of crashing" was therefore
+    untrue for exactly the case it was written for**, and is now true: the
+    target is verified, and a stale alias degrades to `null`. Guarded two ways
+    — a source-level check that every declared alias target is a live stat id,
+    so a future alias is covered without editing the test, and a behavioural
+    check that an unresolvable stat warns instead of throwing. (Ken, 2026-09-02)
+
+60. **`Engine.undoIP` is removed, not deprecated.** Decision 49 replaced the
+    ad-hoc IP undo with the global structural undo; the function stayed defined
+    and exported for two phases without a single caller. Every IP mutation in
+    the UI runs through `commit()` → `recordAction()`, so `undoLastAction`
+    already reverses an IP raise — both the IPE and the journal entry — via the
+    generic patch. Keeping a second, divergent undo path on the public API
+    invited someone to call the wrong one. Deleted, with a comment at the site
+    saying what superseded it, and a test that asserts both halves: `undoIP` is
+    gone, and the generic undo does the job. (Ken, 2026-09-02)
+
+61. **(B5)** **The review step's number derives from `creationFlow.steps`.**
+    `STEPS` appended `{id:"review", n:8}`, hardcoding the assumption that the
+    data holds exactly seven steps. The count in "Step 8 of 8" was already
+    derived, so adding or removing a step in the data would have desynced the
+    two halves of the same sentence. Now `n: D.creationFlow.steps.length + 1`.
+    This is the "adding content should require zero app changes" contract
+    applied to the flow itself. (Ken, 2026-09-02)
+
+62. **(Batch 1)** **The engine has a totality contract, and now something
+    enforces it.** Decision 22 promised the engine "degrades gracefully on
+    unknown ids... instead of crashing." Nothing tested that, and three
+    separate sessions each rediscovered a violation independently: **B2**
+    (`normStat` returned an unresolvable alias truthy and `skillLine` threw),
+    **B7** (`validate` threw on a character with no power level), **B6**
+    (`migrate` left holes and the engine threw straight through them). They
+    were filed as three unrelated findings in two severity buckets. They are
+    one defect: an unenforced promise. The contract is now stated exactly —
+    **every exported reader is total on anything `migrate()` returns** — and
+    enforced by a guard that runs six degenerate characters through
+    twenty-seven readers, every `validate` step, and `skillLine`. It found a
+    fourth violation (**B10**) on its first run. (Ken, 2026-09-02)
+
+63. **(B6)** **`migrate()`'s completeness *is* the migration guarantee.**
+    `migrate` is version-agnostic — it backfills unconditionally rather than
+    stepping 0.1 → 0.2 → 0.3 → 0.4. That is a good design, idempotent and
+    simple, but it means every field `newCharacter()` has ever grown must be
+    reachable there or old files open with holes. `archetypeChoices` arrived in
+    schema 0.2 and never got a backfill; two schema versions later a pre-0.2
+    character threw in `statValue()` on the first render and **the sheet could
+    not open at all**. The locked import path never even had the shallow
+    `Object.assign` that half-protected the unlocked one. `migrate` now walks
+    the *current* shape, so a field added tomorrow is covered by construction
+    rather than by remembering. Three fields are exempt, and the exemptions are
+    load-bearing: `meta.gamedataVersion` (seeding it would mask the exact
+    mismatch `versionCheck` exists to report) and `meta.created` / `meta.updated`
+    (inventing timestamps fabricates history). With the shape guaranteed on
+    both paths, the redundant `Object.assign(newCharacter(), c)` in the import
+    handler is deleted — two backfill mechanisms disagreeing about who owns
+    defaults was the same *two parallel models* disease as A1/A2, in miniature.
+    (Ken, 2026-09-02)
+
+64. **(B3)** **1 Health Level per BOD is an invariant, not a tunable.**
+    `resources.healthLevels.levelsPerBOD: 1` sat in the data for four schema
+    versions looking like a live knob; `health()` always hardcoded the 1:1 rate.
+    The rev 9 audit offered a binary — honour it or remove it — and **both
+    branches hide a rules assumption**, because `maxLevels: 10` and
+    `bodAbove10Rule` are written assuming 1:1 and become meaningless at any
+    other rate. `030_Core_Mechanics.docx` settles it: *"For every point of BOD
+    you have, you gain 1 HL"*, capped at ten, and above 10 the **base HP per
+    level** rises instead — which the engine already implemented correctly,
+    cybernetics included. So it is not a knob awaiting a ruling and not a
+    Biomech dependency; it is a redundant field describing a law. Deleted, and
+    both of the CRB's worked examples are pinned as tests. (Ken, 2026-09-02)
+
+65. **(Mechanism 3)** **The rulebook's worked examples run as tests.**
+    `tests/rules.test.mjs` pins every number the CRB states outright and quotes
+    the line it comes from: BOD 4 → 4 HL × 5 HP = 20 HP; a Werewolf at BOD 11 →
+    10 HL × 6 HP = 60 HP; Pain Levels at 0–1 / 2+ / 5+ / 8+ HL lost with −1
+    Skill, −1 Essence die and −5% Breaker stacking per level; Luck at 2 to
+    boost and 3 to explode; the modifier curve's −1-below-4 / +1-above-6 shape.
+    A rules change the app misses now **fails the build** instead of surviving
+    to the table, and a data field nobody reads is caught the moment someone
+    claims it is authoritative. If this file and the CRB disagree, the CRB wins
+    and the file is the bug report. (Ken, 2026-09-02)
+
+66. **(B8)** **The two Pain Level floors are numbers the engine carries and the
+    sheet states.** The CRB floors Essence Checks at 1 die and Breaker Checks
+    at 10% *"to prevent automatic loss."* Both existed in the data only inside
+    an unread prose `notes` string, and the sheet displayed bare penalties — a
+    player at Pain Level 3 read "−3 Essence die" with nothing telling them where
+    it stops. The engine cannot *apply* these: it never sees the dice pool or
+    the target number, and that is correct. It now carries them out of
+    `painState` as `essenceFloor` / `breakerFloor`, sourced from two new data
+    fields, and one shared helper renders both readouts so they cannot drift
+    apart. This is the general shape of the fix for prose-that-is-actually-a-rule:
+    **promote it to a number, read it, display it.** (Ken, 2026-09-02)
+
+67. **(B9)** **The milestone cadence comes from the data, once.** The cadence
+    was stated twice — as prose in `milestones.rules` ("Unlocked at 5, 15,
+    25...") and as arithmetic in `milestoneState` — with nothing connecting
+    them, and `milestonePointsPerSession` was inert beside a hardcoded 1. They
+    agreed on the day this was found, which is the only reason it was not
+    already a bug. Now `minorFirstAt` / `minorEvery` / `majorFirstAt` /
+    `majorEvery` and `milestonePointsPerSession` are all read, and the cadence
+    is pinned by the CRB conformance suite. (Ken, 2026-09-02)
+
+68. **When `gamedataVersion` bumps — and when it must not.** Batch 1 removed a
+    data field, added four, and closed a flag, and bumped **nothing**: no
+    player-observable value moved, verified by diffing sixty computed outputs
+    across health, pain and milestone states before and after. The rule, written
+    down because it had been improvised: **bump when a character's computed
+    values or available choices can change** — content added or removed, a cost
+    or cap altered, an id retired. **Do not bump for changes no character can
+    observe** — a field the engine never read, a new field with no effect on
+    existing data, a corrected comment, a closed flag. Bumping on a no-op makes
+    every saved character report a mismatch for nothing, and a warning that
+    cries wolf stops being read. (Ken, 2026-09-02)
+
 
 ## 5. Open Flags
 
@@ -743,6 +867,13 @@ ruled: the wizard reads `statPoints` off the power-level entry, so the ruling
 is a four-number data edit.
 
 Resolved in the CRB v4 content pass (2026-08-29): ~~F10~~ — both halves closed.
+**The flag itself outlived the work by four days.** The renames landed on
+2026-08-29 and the docs recorded F10 as closed, but `skillsFlags.flagged` stayed
+`true` in the data and kept rendering a Design flag to players for finished
+work. Cleared 2026-09-02 (Batch 1) — the block was removed rather than set to
+`false`, because dead data that looks live is the defect class Batch 1 exists to
+close. Closing a flag is now two edits, not one: the docs *and* the `flagged`
+field.
 `occult-lore` and `survival` now exist in the catalog, and the Professional
 subtype references were renamed to match ("Occult" → "Occult Lore", "Handgun" →
 "Handguns"). Focused-skill matching is by **name**, so those two had to move
@@ -874,10 +1005,12 @@ cleared, two opened.
   tests so they flip green when fixed — **A1** (Arcanist aberrations render
   twice; re-verified 2026-08-02 as 6 `[data-spec]` + 6 `[data-aber]` buttons)
   and **B7** (new: `validate("stats", ch)` throws instead of reporting when the
-  character has no power level, `engine.js:579`). Also re-confirmed: **B2** is
+  character has no power level, `engine.js:574` as of Decision 60). Also re-confirmed: **B2** is
   worse than recorded — `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` both resolve
   to ids that do not exist (real ids are `MOB` / `MAG`). No schema bump; engine
-  untouched.
+  untouched. *(B2 closed 2026-09-02 by Decision 59 — and it was worse again
+  than this line records: the bad alias did not merely fail to resolve, it
+  threw.)*
 
 - **CRB v4 content pass** ✅ *(2026-08-29 — a data merge, not a phase)* —
   Skills, Advantages and Disadvantages re-merged from CRB sections 042/043/044
@@ -891,6 +1024,27 @@ cleared, two opened.
   `synergyStat` — the field the engine actually reads, and the one carrying
   both invalid stats this pass turned up. No app code changed; the suite held
   at 20 passing / 2 todo / 0 failing throughout.
+
+- **Quick-win pass** ✅ *(2026-09-02 — three audit findings, not a phase)* —
+  **B2**, **B4** and **B5** closed as Decisions 59-61: the two dead stat
+  aliases now resolve (and `normStat` verifies its target, so the class of bug
+  cannot return silently), the superseded `Engine.undoIP` is deleted, and the
+  review step numbers itself off the data. Engine and UI both touched; no
+  schema bump, no data change, no id moved. Suite **28 passing assertions + 2
+  tracked `todo`s** — four new guards, each mutation-tested against the
+  pre-fix code to confirm it actually fails there. **A1** and **B7** remain the
+  two `todo`s.
+
+- **Batch 1 — Engine totality & CRB conformance** ✅ *(2026-09-02)* — the first
+  batch of the debt-ledger plan. Decisions 62-68. **B6, B7, B8, B9, B10** and
+  **B3** closed; the stale **F10** flag cleared. The engine's promise from
+  Decision 22 is now a written contract with a guard behind it, `migrate()`
+  guarantees its own completeness, and `tests/rules.test.mjs` turns the CRB's
+  worked examples into build-breaking assertions. Suite **45 passing + 1 tracked
+  `todo`** across four files — up from 26 + 2. No schema bump and no
+  gamedataVersion bump (Decision 68): sixty computed outputs were diffed before
+  and after and every one was identical. **A1** is now the only `todo`, and it
+  closes with A3 in Batch 3.
 
 - **Phase 4 — Selection & constraint system** ⏭ — build `picks` / `excludes` /
   `requires` for advantages & disadvantages (rev 9 audit §4), then retrofit
