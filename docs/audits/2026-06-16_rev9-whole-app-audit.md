@@ -51,13 +51,13 @@ The data already points at the unification: the Arcanist's specialization carrie
 
 - [x] **B2 — Two dead stat aliases.** *(Closed 2026-09-02, Decision 59 — and the consequence was a throw, not a flag: `normStat` returned the unresolvable target truthy, so `skillLine` died on `t[pri].value`.)* `STAT_ALIASES` maps `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` (678), but the real ids are `MOB` (Mobility) and `MAG` (Magnetism). Both aliases resolve to ids that don't exist, so a skill referencing "Movement"/"Attractiveness" would still trip the unknown-stat flag. Point them at `MOB`/`MAG`, or drop them if no legacy data uses those names.
 
-- [ ] **B3 — `levelsPerBOD` is an authoritative-looking knob the engine ignores.** `health()` hardcodes 1 HL per BOD via `Math.min(bod, maxLevels)` (591); `resources.healthLevels.levelsPerBOD: 1` in the data does nothing. If a designer ever set it to 2, the sheet wouldn't budge. Either honor it in `health()` or remove it from the data so it doesn't read as a live setting.
+- [x] **B3 — `levelsPerBOD` is an authoritative-looking knob the engine ignores.** *(Closed 2026-09-02, Decision 64. The binary offered here was false — both branches hide a rules assumption, because `maxLevels` and `bodAbove10Rule` are written assuming 1:1. `030_Core_Mechanics.docx` states the 1:1 rate as a law and the above-10 case was already correct, so the field was redundant, not undecided.)* `health()` hardcodes 1 HL per BOD via `Math.min(bod, maxLevels)` (591); `resources.healthLevels.levelsPerBOD: 1` in the data does nothing. If a designer ever set it to 2, the sheet wouldn't budge. Either honor it in `health()` or remove it from the data so it doesn't read as a live setting.
 
 - [x] **B4 — `Engine.undoIP` is now dead.** *(Closed 2026-09-02, Decision 60 — deleted.)* Decision 49 retired the ad-hoc IP undo for the global undo; `undoIP` (794–807) is still defined and exported (1185) but never called. Safe to delete, or leave a one-line "superseded by undoLastAction" note.
 
 - [x] **B5 — Review step number is hardcoded.** *(Closed 2026-09-02, Decision 61 — derived.)* `STEPS` appends `{id:"review", n:8}` (1215) and assumes `creationFlow.steps` has exactly 7 entries. It does today, so "Step 8 of 8" is correct — but if a step is ever added/removed in the data, the number desyncs. Derive it: `n: D.creationFlow.steps.length + 1`.
 
-- [ ] **B6 — Unlocked-draft import is a shallow merge.** `Object.assign(Engine.newCharacter(), c)` (1723) lets a *partial* nested object from an old draft survive — e.g. an `archetypeChoices` missing `disciplines` would replace the full default and could throw in `renderArchetype`. `migrate()` backfills trackers/progression but not `archetypeChoices`/`creation` sub-objects. Low likelihood (only pre-0.2 drafts), cheap to harden: deep-default `archetypeChoices` in `migrate()`.
+- [x] **B6 — Unlocked-draft import is a shallow merge.** *(Closed 2026-09-02, Decision 63. Worse than recorded: the **locked** path had no backfill at all, so a pre-0.2 locked character threw in `statValue()` and the sheet could not open. Fixed in `migrate()` — where every path already funnels — rather than at the one call site.)* `Object.assign(Engine.newCharacter(), c)` (1723) lets a *partial* nested object from an old draft survive — e.g. an `archetypeChoices` missing `disciplines` would replace the full default and could throw in `renderArchetype`. `migrate()` backfills trackers/progression but not `archetypeChoices`/`creation` sub-objects. Low likelihood (only pre-0.2 drafts), cheap to harden: deep-default `archetypeChoices` in `migrate()`.
 
 ---
 
@@ -143,3 +143,34 @@ A specialization option *is* a constrained pick: `selectMode:"single"` ≈ one `
 Doing 2→3 before 4 means Biomech is the first archetype authored *entirely* through the generic system — which is the real test of whether the rulebook can run without Deighton in the room. If a designer can describe Biomech in `shadows-data.js` and the app just renders it, that's the whole project's thesis proven.
 
 Quick wins to clear whenever (low risk, no design input needed): **B1, B2, B4, B5.** **B3** and **B6** want a one-line "is this intended?" before touching.
+
+
+---
+
+## Addendum — findings raised after this audit
+
+The rev 9 audit is the reference for A1–A3, B1–B6 and C1–C3. Three further
+findings were raised against the same build and are recorded here so the ids
+stay in one place.
+
+- [x] **B7 — `validate` was not total.** `validate("stats", ch)` threw when the
+  character had no power level, because `statPool()` returns null. Raised
+  2026-08-02, closed 2026-09-02 (Decision 62). Three call sites, not one:
+  `stats`, `skills` and `character-points` all dereferenced a null pool.
+
+- [x] **B8 — the two Pain Level floors were never surfaced.** The CRB floors
+  Essence Checks at 1 die and Breaker Checks at 10% "to prevent automatic loss".
+  Both lived in the data only inside an unread prose `notes` string, and the
+  sheet displayed bare penalties. Raised and closed 2026-09-02 (Decision 66).
+
+- [x] **B9 — the milestone cadence was stated twice, connected never.** "Unlocked
+  at 5, 15, 25..." as prose in the data, the same cadence as arithmetic in
+  `milestoneState`, and `milestonePointsPerSession` inert beside a hardcoded 1.
+  Raised and closed 2026-09-02 (Decision 67).
+
+- [x] **B10 — an orphaned skill id crashed the review screen.** `skillLine`
+  dereferenced a definition `skillById` no longer returns; the review screen
+  iterates `ch.skills` directly, so a character holding a skill that game data
+  dropped could not reach review. `versionCheck` reports exactly this case, so
+  the app expects it to happen. **Found by the Batch 1 totality guard on its
+  first run.** Raised and closed 2026-09-02 (Decision 62).
