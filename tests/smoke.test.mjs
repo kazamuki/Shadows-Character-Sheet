@@ -85,3 +85,16 @@ test("Arcanist offers exactly one set of aberration controls",
     const aber = app.$$("[data-aber]").length;
     assert.equal(spec * aber, 0, `aberrations rendered twice: ${spec} [data-spec] + ${aber} [data-aber]`);
   });
+
+test("the review step is numbered off the data, not hardcoded (B5)", () => {
+  // STEPS appended {id:"review", n:8} and assumed creationFlow.steps had exactly
+  // seven entries. Add or remove a step in the data and the number desynced.
+  const app = boot();
+  const btn = app.$$("#main button").find(b => /New character/.test(b.textContent));
+  btn.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const rows = app.$$("#ledger [data-goto]");
+  const expected = D.creationFlow.steps.length + 1;
+  assert.equal(rows.length, expected, "ledger row count does not match the data");
+  assert.equal(rows[rows.length - 1].querySelector(".n").textContent, String(expected));
+  assert.deepEqual(app.errors, []);
+});

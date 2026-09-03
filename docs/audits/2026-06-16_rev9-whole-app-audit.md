@@ -49,13 +49,13 @@ The data already points at the unification: the Arcanist's specialization carrie
 
 - [ ] **B1 — Stale copy. [verified by reading]** `renderReview` ends with "Session tracking arrives in Phase 3." (1687) — Phase 3 shipped three sub-phases ago. Drop or update.
 
-- [ ] **B2 — Two dead stat aliases.** `STAT_ALIASES` maps `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` (678), but the real ids are `MOB` (Mobility) and `MAG` (Magnetism). Both aliases resolve to ids that don't exist, so a skill referencing "Movement"/"Attractiveness" would still trip the unknown-stat flag. Point them at `MOB`/`MAG`, or drop them if no legacy data uses those names.
+- [x] **B2 — Two dead stat aliases.** *(Closed 2026-09-02, Decision 59 — and the consequence was a throw, not a flag: `normStat` returned the unresolvable target truthy, so `skillLine` died on `t[pri].value`.)* `STAT_ALIASES` maps `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` (678), but the real ids are `MOB` (Mobility) and `MAG` (Magnetism). Both aliases resolve to ids that don't exist, so a skill referencing "Movement"/"Attractiveness" would still trip the unknown-stat flag. Point them at `MOB`/`MAG`, or drop them if no legacy data uses those names.
 
 - [ ] **B3 — `levelsPerBOD` is an authoritative-looking knob the engine ignores.** `health()` hardcodes 1 HL per BOD via `Math.min(bod, maxLevels)` (591); `resources.healthLevels.levelsPerBOD: 1` in the data does nothing. If a designer ever set it to 2, the sheet wouldn't budge. Either honor it in `health()` or remove it from the data so it doesn't read as a live setting.
 
-- [ ] **B4 — `Engine.undoIP` is now dead.** Decision 49 retired the ad-hoc IP undo for the global undo; `undoIP` (794–807) is still defined and exported (1185) but never called. Safe to delete, or leave a one-line "superseded by undoLastAction" note.
+- [x] **B4 — `Engine.undoIP` is now dead.** *(Closed 2026-09-02, Decision 60 — deleted.)* Decision 49 retired the ad-hoc IP undo for the global undo; `undoIP` (794–807) is still defined and exported (1185) but never called. Safe to delete, or leave a one-line "superseded by undoLastAction" note.
 
-- [ ] **B5 — Review step number is hardcoded.** `STEPS` appends `{id:"review", n:8}` (1215) and assumes `creationFlow.steps` has exactly 7 entries. It does today, so "Step 8 of 8" is correct — but if a step is ever added/removed in the data, the number desyncs. Derive it: `n: D.creationFlow.steps.length + 1`.
+- [x] **B5 — Review step number is hardcoded.** *(Closed 2026-09-02, Decision 61 — derived.)* `STEPS` appends `{id:"review", n:8}` (1215) and assumes `creationFlow.steps` has exactly 7 entries. It does today, so "Step 8 of 8" is correct — but if a step is ever added/removed in the data, the number desyncs. Derive it: `n: D.creationFlow.steps.length + 1`.
 
 - [ ] **B6 — Unlocked-draft import is a shallow merge.** `Object.assign(Engine.newCharacter(), c)` (1723) lets a *partial* nested object from an old draft survive — e.g. an `archetypeChoices` missing `disciplines` would replace the full default and could throw in `renderArchetype`. `migrate()` backfills trackers/progression but not `archetypeChoices`/`creation` sub-objects. Low likelihood (only pre-0.2 drafts), cheap to harden: deep-default `archetypeChoices` in `migrate()`.
 
