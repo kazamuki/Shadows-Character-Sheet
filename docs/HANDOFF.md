@@ -1,10 +1,10 @@
 # Handoff — Shadows Digital Character Sheet
 
 **As of:** 2026-09-02
-**Build:** Phase 3.4 + CRB v4 content pass + quick-win pass + Batch 1 · character schema `0.4` · game data `0.3` · ruleset target **CRB v4 (WIP)**
-**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized. Skills, Advantages and Disadvantages re-merged from the CRB on 2026-08-29 — **data only, no app code touched** — see §10. Two passes landed on 2026-09-02: the quick wins (**B2, B4, B5** — Decisions 59-61) and **Batch 1** of the debt ledger (**B3, B6, B7, B8, B9, B10** and the stale **F10** flag — Decisions 62-68). Suite now **45 passing / 1 todo / 0 failing**.
+**Build:** Phase 3.4 + CRB v4 content pass + quick-win pass + Batches 1-2 · character schema `0.4` · game data `0.3` · ruleset target **CRB v4 (WIP)**
+**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized. Skills, Advantages and Disadvantages re-merged from the CRB on 2026-08-29 — **data only, no app code touched** — see §10. Two passes landed on 2026-09-02: the quick wins (**B2, B4, B5** — Decisions 59-61) and **Batch 1** of the debt ledger (**B3, B6, B7, B8, B9, B10** and the stale **F10** flag — Decisions 62-68). **Batch 2** followed (voice, the `playerNote` split, `appCopy` — Decisions 69-73). Suite now **51 passing / 1 todo / 0 failing**.
 
-If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 68 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
+If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 73 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
 
 ---
 
@@ -19,20 +19,23 @@ It runs from `file://` with no server and no build step. That constraint drives 
 ```
 index.html              Shell: markup + script tags. 31 lines. No logic, no styles.
 src/
-  data/shadows-data.js     All game content (2,940 lines). Designers edit this.
+  data/shadows-data.js     All game content (2,972 lines). Designers edit this.
   data/shadows-icons.js    Brand stat icons + Lucide UI icons as inline SVG strings.
-  engine/engine.js         Pure rules engine (771 lines). No DOM. 55 exported functions.
-  ui/app.js                Wizard + sheet (1,921 lines). One IIFE. Renders off the engine.
+  engine/engine.js         Pure rules engine (776 lines). No DOM. 55 exported functions.
+  ui/app.js                Wizard + sheet (1,937 lines). One IIFE. Renders off the engine.
   styles/shadows.css       Brand tokens + all styling (448 lines).
 docs/
   SCHEMA.md                Project memory. Read before touching anything.
   HANDOFF.md               This file.
+  VOICE-APP.md             City voice vs tool voice, for UI strings.
+  reference/               Mirrors of CRB-project docs. Never edited here.
   audits/                  Dated whole-app audits; findings referenced by id (A1, B2, C3).
 tests/
   harness.mjs              jsdom boot + a bare-VM engine loader.
   engine.test.mjs          Engine units, run with no DOM present.
   smoke.test.mjs           Boot, wizard, all nine sheet tabs.
   rules.test.mjs           CRB conformance — the rulebook's worked examples.
+  voice.test.mjs           Maintainer content must not reach a player.
   build.test.mjs           Architecture guards (no ES modules, shell stays a shell, script order).
 tools/build.mjs            Inlines everything into dist/shadows-character-sheet.html.
 ```
@@ -63,17 +66,18 @@ npm run build    # → dist/shadows-character-sheet.html (the file players get)
 
 ## 4. Test suite — current results
 
-**45 passing, 1 `todo`, 0 failing** (46 tests, four files).
+**51 passing, 1 `todo`, 0 failing** (52 tests, five files).
 
 **A1 is the only `todo` left.** It is not aspirational — it is a confirmed defect written as a failing assertion so it flips green the moment A3 lands in Batch 3. B7's `todo` was promoted to a real assertion in Batch 1.
 
-*Count history, because this line has drifted twice and is worth watching:* 20 at the restructure → 22 when PR #4 added two build-entrypoint tests (docs not updated) → 26 with the quick-win guards → 45 with Batch 1.
+*Count history, because this line has drifted twice and is worth watching:* 20 at the restructure → 22 when PR #4 added two build-entrypoint tests (docs not updated) → 26 with the quick-win guards → 45 with Batch 1 → 51 with Batch 2.
 
 | Suite | Covers |
 |---|---|
 | `engine.test.mjs` | Engine loads with no DOM · `newCharacter` shape vs schema 0.4 · derived values computed and never stored · health follows BOD · `validate` returns issues for every step · audit record/undo round-trip · `diffChar` reports only changes · `migrate` 0.3→0.4 seeds `audit` · `versionCheck` surfaces mismatch · every skill references a stat that exists (guards the `BODY`/`BOD` class of bug) |
 | `smoke.test.mjs` | Boots clean on Home · New character opens step 1 · a locked character resumes from storage and all nine tabs render with zero errors · the sheet survives a data change |
 | `build.test.mjs` | The five architecture constraints in §3 · `build.mjs` actually runs and writes when invoked as a CLI (PR #4) |
+| `voice.test.mjs` | **New in Batch 2.** Renders all nine tabs and every wizard step for all five archetypes, then asserts no `flagNote` is on screen, no roadmap vocabulary appears, and no element prints a raw `status` |
 | `rules.test.mjs` | **New in Batch 1.** CRB conformance — the rulebook's worked examples, each quoting its source line. Health/HL, the BOD-above-10 rate, Pain Level thresholds and stacking penalties, the two Pain floors, Luck costs, the modifier curve, the milestone cadence |
 
 Added by the quick-win pass: every declared stat alias resolves to a live stat id (source-level, so new aliases are covered) · a legacy stat name resolves and an unresolvable one warns instead of throwing · the generic undo reverses an IP spend and `undoIP` is gone · the review step is numbered off the data.
@@ -99,7 +103,7 @@ Still open, unchanged from the audit: **A2** (the sheet's Specialization section
 
 **Standing observation for the next session.** `statMod()` extrapolates +1 per point above 10, carrying an in-code comment reading "FLAG: confirm with D." `statRules.beyondHumanLimits` says the opposite — *"Once a stat passes 10, gains slow down."* Those disagree, and **this flag exists only as a code comment: it has no F-number and is not in the table.** That is the same drift class Batch 1 closed elsewhere. Not fixed here because it is a genuine rules question, not a data-honesty one — it belongs in the grouped Deighton ask.
 
-**Everything mechanical is now closed.** What remains is Batch 2 (voice and the `playerNote` split), Batch 3 (picks/excludes/requires, then A3), and the flags. **B1** is Batch 2 — player-facing copy, and it turned out to be one of ten leak sites, not one string.
+**Everything mechanical is now closed, and so is the voice work.** **B1** closed in Batch 2 — it turned out to be one of ten leak sites, not one string. What remains is **Batch 3** (picks/excludes/requires, then A3) and the flags.
 
 ## 6. Open design flags
 
@@ -147,9 +151,9 @@ Doing 2→3 before 4 means Biomech is the first archetype authored entirely thro
 - **Store inputs, compute everything else.** A character stores `BOD = 7`, never the modifier, the Health Levels, or the HP. This is why audit/undo could be a generic structural diff instead of per-action inverse handlers, and why a formula change updates every existing character on next load.
 - **IDs are immutable.** Display names are free.
 - **Design questions are not resolved in code.** They get a `flagged: true` entry, a line in `SCHEMA.md` §5, and an issue on the `design-flag` template. The app surfaces the uncertainty at the table rather than hiding a guess.
-- **Decisions are numbered.** `SCHEMA.md` §4 is at 68. A decision that isn't numbered didn't happen.
+- **Decisions are numbered.** `SCHEMA.md` §4 is at 73. A decision that isn't numbered didn't happen.
 - **Prose edits belong in the markdown source first**, then flow into the data file; structural or mechanical changes go directly into the `.js` or through a structured changelist. Wholesale regeneration overwrites machine-readable metadata.
-- **Player-facing copy is in-world writing**, not UI microcopy. It follows `GUIDE_Shadows_Voice.md` — the app speaks as NYTE City, not as a rulebook author instructing the reader.
+- **Player-facing copy is in-world writing**, not UI microcopy — *except* where the player is stuck, which is tool voice. See `docs/VOICE-APP.md`; the guide it derives from is mirrored at `docs/reference/GUIDE_Shadows_Voice.md`. Three files generate player copy, and one of them surprises people: `app.js`, **`engine.js` (`validate()`)**, and the data.
 
 ## 9. Starting a session
 
@@ -344,3 +348,65 @@ into a local array first. Both are noted in `rules.test.mjs`.
 Do it before Batch 3 so the picks subsystem is authored under the copy standard
 instead of retrofitted into it. Full plan, ownership split and the grouped
 Deighton ask: the **Shadows Sheet Debt Ledger** artifact.
+
+### 2026-09-02 — Batch 2: app voice & status copy
+
+Decisions 69-73. Before: **45 passing / 1 todo**. After: **51 passing / 1 todo /
+0 failing** (52 tests). No schema or gamedataVersion bump — no computed value
+moved.
+
+**Ken's diagnosis was right and worth restating**, because it explains the whole
+class: the app was built as a demo for Deighton and Scott, so it *narrated its
+own roadmap*. A finished app would just have session tracking; this one told the
+player it was "arriving in Phase 3". Ten sites in all.
+
+But the second cause was the expensive one: **the data file mixed machine-read
+fields, player-facing prose, and maintainer notes with nothing marking which was
+which**, and the app rendered the last two down the same path.
+
+#### What changed
+
+- **`flagNote` can no longer render.** `flagHtml()` takes the **entry**, not a
+  string, and reads only `playerNote` — passing a raw note is not expressible
+  any more. `flagNote` keeps every id, field path and "confirm with D" intact.
+- **`playerNote` is optional.** All eleven flags stopped leaking on day one via
+  one fallback line; specific copy was written for the four a player actually
+  meets during creation (F1, F2, F8, F14).
+- **`appCopy`** holds every player-facing string the app generates for a state,
+  so **changing the voice is a data edit**. Raw statuses render through
+  `statusLabel`, so nobody reads "tbd".
+- **F14 moved out of the UI** into `ip`, where every other flag lives. It had
+  been a hardcoded `<b>F14</b>` block in the Progression tab.
+- **The lock screen lost its fourth sentence** and is better for it. The three
+  before it were already a closing cadence landing on "bring it to the table".
+
+#### The one that got away from the manual comb
+
+`validate()` **writes player-facing copy**, and that is where the last
+build-state sentence was hiding: *"Cyborg ships as TBD — rules pending."*
+Nobody looks for prose in a rules engine. The manual grep missed it; the
+enforcement test found it in seconds, because it **renders the app** instead of
+reading the source. Its other twenty-odd messages are the best tool voice in the
+codebase and were left alone.
+
+#### Testing rendered copy — three things that cost time
+
+1. **`body.textContent` includes the inlined data `<script>`.** The first
+   version of the test "failed" on flag notes nobody could see. Strip
+   `script`/`style` before reading.
+2. **Corpus scanning cannot localise a regression** when three sites render the
+   same label — reverting one leaves the others on screen. And banning the bare
+   word "draft" fires on the home screen's legitimate "Resume draft". Raw
+   statuses are caught by a DOM check on **leaf elements** instead.
+3. **The fixture was named "Draft"** and tripped its own assertion.
+
+#### Position
+
+**Batch 3 next** — `picks` / `excludes` / `requires`, then retrofit
+specialization (A3), which closes A1 and A2 and flips the last `todo`. The
+subsystem will now be authored under the copy standard rather than retrofitted
+into it, which was the reason for doing Batch 2 first.
+
+Still open for Deighton, unchanged and still grouped: **F8** (four numbers, the
+only wizard-blocker), **F1**, **F2**, **F14** — plus the `statMod` above-10
+conflict noted in §5, which still has no F-number.

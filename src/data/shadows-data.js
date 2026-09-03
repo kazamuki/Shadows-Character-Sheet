@@ -46,7 +46,7 @@ window.SHADOWS_DATA = {
      and `updated` whenever content changes. */
   "meta": {
     "schemaVersion": "0.3",
-    "rulesetVersion": "CRB v4 WIP",
+    "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-08-29",
     "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. Schema 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3, which versionCheck surfaces on load."
   },
@@ -240,6 +240,7 @@ window.SHADOWS_DATA = {
       "exemptFromBoostCap": true,
       "flagged": true,
       "flagNote": "F1: CP cost per LUCK point stubbed at 1 — confirm with D.",
+    "playerNote": "What a point of LUCK costs isn't settled. The sheet charges 1 Character Point; your GM sets the real price.",
       "spend": [
         {
           "action": "Boost the roll",
@@ -384,6 +385,7 @@ window.SHADOWS_DATA = {
   // edit to `powerLevels[*].statPoints` -- no app change. See SCHEMA.md section 5.
   "powerLevelFlags": {
     "flagged": true,
+    "playerNote": "How many Stat Points you roll isn't settled. The sheet uses the table that scales with your Campaign Power Level.",
     "flagNote": "F8: WIP 'Rolling Stat Points' says a flat 'Roll 3d10 + 30' for all levels; the REF table scales stat point rolls by power level (30+2d10 / 40+3d10 / 50+4d10 / 60+5d10). Data file uses the scaled REF table pending confirmation. Note: explosions do NOT happen on creation rolls."
   },
   /* SKILLS -- the 36-skill catalog (11 combat / 9 utility / 16 general). Each entry's
@@ -2847,7 +2849,36 @@ window.SHADOWS_DATA = {
      REVIEW (F14): at rank 0 the "5 * currentRank" formula prices learning a NEW
      skill (0->1) at zero. The app currently charges it as rank 1 (5 IP; Focused
      3) pending D.'s ruling, and flags it in the Progression UI. SCHEMA.md sec 5. */
+  /* APP COPY -- player-facing strings the app generates for a *state*, as
+     opposed to prose that belongs to a rule. Rewriting the app's voice is a
+     data edit: nothing here requires touching code (Decision 71).
+
+     These follow docs/VOICE-APP.md. Two rules do the remembering for you:
+       - Maintainer text NEVER renders. `flagNote` is for you and Deighton;
+         `playerNote` is the only thing a player can see. A test enforces it.
+       - "Not finished" is a STATE, not a sentence. Set `flagged` or a
+         `status` and the app says the right thing on its own.
+
+     Say what isn't settled and hand the table its authority. Never name a
+     phase, a flag id, a field path, or a person. The app makes no promises
+     about its own future. */
+  "appCopy": {
+    "unsettledLabel": "Not settled yet",
+    "unsettledRule": "This rule is still being written. Until it is, it's your GM's call.",
+    "houseRuleLabel": "How this works",
+    "statusLabel": {
+      "draft": "in progress",
+      "tbd": "not written yet"
+    },
+    "archetypeUnwritten": "{name}'s rules aren't finished yet. You can build one — your GM fills the gaps.",
+    "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
+    "applyFromText": "Apply these from their text.",
+    "ranksAdvanceInPlay": "Ranks advance through play."
+  },
   "ip": {
+    "flagged": true,
+    "flagNote": "F14: 'Skill IP cost = 5 x current rank' prices rank 0 -> 1 at zero IP. The app charges the rank-1 price instead (5 IP; Focused 3) pending a ruling from D. Was hardcoded into the Progression tab as a literal 'F14' block until Batch 2.",
+    "playerNote": "What it costs to learn a brand-new skill isn't settled. The sheet charges the first rank's price; your GM may rule otherwise.",
     "perSession": 10,
     "statIncreaseCost": {
       "formula": "currentValue * 10",
@@ -2925,6 +2956,7 @@ window.SHADOWS_DATA = {
       "cpCostPerPoint": 1,
       "flagged": true,
       "flagNote": "F2: CP boost exchange rate stubbed at 1:1 across target types - confirm with D.",
+    "playerNote": "The exchange rate for boosts isn't settled. The sheet trades 1 for 1 across skills, stats and powers.",
       "maxBoostPerTarget": "powerLevel.maxBoost",
       "exemptions": [
         "luck"
