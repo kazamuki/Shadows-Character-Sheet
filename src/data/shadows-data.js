@@ -195,7 +195,6 @@ window.SHADOWS_DATA = {
      numbers here and the tracker UI follows. */
   "resources": {
     "healthLevels": {
-      "levelsPerBOD": 1,
       "hpPerLevel": 5,
       "maxLevels": 10,
       "bodAbove10Rule": "For each point of BOD above 10, the base HP of each Health Level goes up by 1 (HL count stays capped at 10).",
@@ -226,6 +225,8 @@ window.SHADOWS_DATA = {
         }
       ],
       "painPenaltiesPerLevel": {
+        "essenceCheckDiceFloor": 1,
+        "breakerCheckPercentFloor": 10,
         "skillChecks": -1,
         "essenceCheckDice": -1,
         "breakerCheckPercent": -5,
@@ -963,15 +964,12 @@ window.SHADOWS_DATA = {
       ]
     }
   ],
-  // REVIEW (F10 - affects subtype skill picks): the catalog half is now closed --
-  // "Occult Lore" and "Survival" both exist above as of the CRB v4 pass. What
-  // remains is naming: archetypes.professional still says "Occult" (catalog:
-  // "Occult Lore") and "Handgun" (catalog: "Handguns"), and the app matches
-  // focused skills by NAME, not id. See SCHEMA.md section 5.
-  "skillsFlags": {
-    "flagged": true,
-    "flagNote": "F10: partially resolved by the CRB v4 Skills pass - 'Occult Lore' and 'Survival' now exist in the catalog and every skill carries a flavorLine. Remaining: archetypes.professional names 'Occult' (catalog 'Occult Lore') and 'Handgun' (catalog 'Handguns'); focused-skill matching is by name, so these must be reconciled."
-  },
+  // F10 closed 2026-09-02. Both halves are done: the catalog gained Occult Lore
+  // and Survival in the CRB v4 pass, and archetypes.professional was renamed to
+  // match in the same pass -- which mattered, because focused-skill matching is
+  // by NAME, not id. The flag outlived the work it described and was still
+  // rendering to players; the whole block is removed rather than set to false,
+  // because dead data that looks live is the defect class this batch closes.
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
      marks traits any archetype may take. Multi-rank scaling lives in the prose
@@ -2421,6 +2419,10 @@ window.SHADOWS_DATA = {
   "milestones": {
     "rules": {
       "milestonePointsPerSession": 1,
+      "minorFirstAt": 5,
+      "minorEvery": 10,
+      "majorFirstAt": 10,
+      "majorEvery": 10,
       "minor": "Unlocked at 5, 15, 25... Milestone Points. All characters share the same pool; may not duplicate until each Minor Milestone has been selected.",
       "major": "Unlocked at 10, 20, 30... Milestone Points. Taken only once each, in any order, subject to prerequisites. Divided into General (open to all) and Archetype (limited to that Archetype).",
       "source": "Cadence from REF_CRB Advancement + WIP Professional Growth section."
