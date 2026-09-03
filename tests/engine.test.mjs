@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.4");
+  assert.equal(ch.meta.schemaVersion, "0.5");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.4");
+  assert.equal(old.meta.schemaVersion, "0.5");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -231,7 +231,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.4");
+  assert.equal(bare.meta.schemaVersion, "0.5");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -242,6 +242,7 @@ test("no exported reader throws on any character migrate() can return", () => {
                    "statPool","statSpent","skillPool","skillSpent","advSpent","disGranted",
                    "luckSpent","boostSpent","disciplineSpent","cp","painState","luckState",
                    "sanState","focusedSkillIds","ipState","milestoneState","archPanels",
+                   "specializationNeed","specializationIds","specializationChosen","specializationLabel",
                    "disciplineRanks","buildExport","versionCheck"];
   const failures = [];
   for (const [label, ch] of Object.entries(degenerates())){
@@ -257,4 +258,173 @@ test("no exported reader throws on any character migrate() can return", () => {
     }
   }
   assert.deepEqual(failures, []);
+});
+
+// ── Batch 3: selection & constraint system ────────────────────────────
+// The CRB names no mutually exclusive pair yet, so `excludes` and `requires`
+// are exercised against a synthetic entry pushed into the loaded data rather
+// than against a real one. Inventing a lock in the data to make a test pass
+// would be resolving a rules question in code, which this project does not do.
+function withFixture(fn){
+  const adv = { id:"__fixture-a", name:"Fixture A", cost:1, maxRank:2,
+                description:"", excludes:["__fixture-b"],
+                requires:{ stats:{REF:6}, skills:{ any:[["handguns",2]] } },
+                picks:[{ id:"skill", label:"Skill", type:"skill",
+                         from:{ category:"combat" }, count:1, perRank:true, distinct:true }] };
+  const dis = { id:"__fixture-b", name:"Fixture B", pointsGranted:1, maxRank:1, description:"" };
+  D.advantages.push(adv); D.disadvantages.push(dis);
+  try { return fn(adv, dis); }
+  finally { D.advantages.pop(); D.disadvantages.pop(); }
+}
+
+test("optionLock is symmetric — the rule is declared once, both sides honour it", () => {
+  withFixture(() => {
+    const ch = subject();
+    ch.advantages = [{ id:"__fixture-a", rank:1, notes:"" }];
+    ch.disadvantages = [{ id:"__fixture-b", rank:1, notes:"" }];
+    // A declares the exclusion...
+    assert.equal(Engine.optionLock(ch, "advantage", "__fixture-a").locked, true);
+    // ...and B, which says nothing at all, is locked by it anyway.
+    const back = Engine.optionLock(ch, "disadvantage", "__fixture-b");
+    assert.equal(back.locked, true, "the exclusion did not reach back the other way");
+    assert.equal(back.by, "Fixture A");
+    // Drop A and B is free again.
+    ch.advantages = [];
+    assert.equal(Engine.optionLock(ch, "disadvantage", "__fixture-b").locked, false);
+  });
+});
+
+test("requirementState reports what is missing, with the number the player has", () => {
+  withFixture(() => {
+    const ch = subject({ base: 4 });
+    ch.advantages = [{ id:"__fixture-a", rank:1, notes:"" }];
+    const bad = Engine.requirementState(ch, "advantage", "__fixture-a");
+    assert.equal(bad.ok, false);
+    assert.ok(bad.unmet.some(u => /REF 6 \(you have 4\)/.test(u)), bad.unmet.join(" | "));
+    ch.stats.REF.base = 6;
+    ch.skills.handguns = { rank:2, ipe:0 };
+    assert.equal(Engine.requirementState(ch, "advantage", "__fixture-a").ok, true);
+  });
+});
+
+test("picksFor scales the slot count with rank and setSelection refuses a duplicate", () => {
+  withFixture(() => {
+    const ch = subject();
+    ch.advantages = [{ id:"__fixture-a", rank:2, notes:"" }];
+    const [st] = Engine.picksFor(ch, "advantage", "__fixture-a");
+    assert.equal(st.need, 2, "perRank did not scale with rank");
+    assert.equal(st.complete, false);
+    assert.ok(st.options.every(o => Engine.skillById(o.id).category === "combat"),
+      "the category filter let a non-combat skill through");
+
+    assert.equal(Engine.setSelection(ch, "advantage", "__fixture-a", "skill", 0, "handguns").ok, true);
+    const dup = Engine.setSelection(ch, "advantage", "__fixture-a", "skill", 1, "handguns");
+    assert.equal(dup.ok, false, "distinct let the same skill be chosen twice");
+    assert.match(dup.why, /different one for each rank/);
+    assert.equal(Engine.setSelection(ch, "advantage", "__fixture-a", "skill", 1, "melee").ok, true);
+    assert.equal(Engine.picksFor(ch, "advantage", "__fixture-a")[0].complete, true);
+
+    // Beyond the last slot there is nothing to write to.
+    assert.equal(Engine.setSelection(ch, "advantage", "__fixture-a", "skill", 2, "archery").ok, false);
+  });
+});
+
+test("trimSelections drops the slots a rank drop took away", () => {
+  withFixture(() => {
+    const ch = subject();
+    ch.advantages = [{ id:"__fixture-a", rank:2, notes:"" }];
+    Engine.setSelection(ch, "advantage", "__fixture-a", "skill", 0, "handguns");
+    Engine.setSelection(ch, "advantage", "__fixture-a", "skill", 1, "melee");
+    ch.advantages[0].rank = 1;
+    Engine.trimSelections(ch, "advantage", "__fixture-a");
+    assert.deepEqual([...ch.advantages[0].selections.skill], ["handguns"]);
+  });
+});
+
+test("validate reports locks, unmet gates and unfilled picks on the CP step", () => {
+  withFixture(() => {
+    const ch = subject({ base: 4 });
+    ch.advantages = [{ id:"__fixture-a", rank:1, notes:"" }];
+    ch.disadvantages = [{ id:"__fixture-b", rank:1, notes:"" }];
+    const msgs = Engine.validate("character-points", ch)
+      .filter(i => i.level === "error").map(i => i.msg);
+    assert.ok(msgs.some(m => /can.t be taken together/.test(m)), msgs.join(" | "));
+    assert.ok(msgs.some(m => /Fixture A requires/.test(m)), msgs.join(" | "));
+    assert.ok(msgs.some(m => /Choose 1 Skill for Fixture A \(0\/1\)/.test(m)), msgs.join(" | "));
+  });
+});
+
+test("a freeform GM-approval pick warns, it never blocks the lock", () => {
+  // The mechanical picks are the app's business, the fiction is the table's. A
+  // player who has not had the GM conversation yet must still be able to
+  // finish a character.
+  const ch = subject();
+  ch.disadvantages = [{ id:"cursed", rank:1, notes:"" }];
+  const issues = Engine.validate("character-points", ch);
+  const about = issues.filter(i => /Cursed/.test(i.msg));
+  assert.equal(about.length, 1, `expected one Cursed issue, got: ${issues.map(i=>i.msg).join(" | ")}`);
+  assert.equal(about[0].level, "warn", "an unwritten curse is blocking the lock");
+});
+
+test("the new readers are total on every character migrate() can return", () => {
+  const failures = [];
+  for (const [label, ch] of Object.entries(degenerates())){
+    for (const kind of ["advantage", "disadvantage", "skill"]){
+      for (const id of ["common-sense", "cursed", "martial-arts", "no-such-id"]){
+        for (const fn of ["optionLock", "requirementState", "picksFor"]){
+          try { Engine[fn](ch, kind, id); }
+          catch (e) { failures.push(`${fn}(${label}, ${kind}, ${id}) -> ${e.message}`); }
+        }
+        try { Engine.setSelection(ch, kind, id, "skill", 0, "handguns"); }
+        catch (e) { failures.push(`setSelection(${label}, ${kind}, ${id}) -> ${e.message}`); }
+        try { Engine.trimSelections(ch, kind, id); }
+        catch (e) { failures.push(`trimSelections(${label}, ${kind}, ${id}) -> ${e.message}`); }
+      }
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test("migrate folds the three old specialization fields into one array (A3)", () => {
+  // Schema 0.5. The three fields all meant "the required pick"; two parallel
+  // models were the root of A1 and A2.
+  const arc = Engine.migrate({ identity:{ archetype:"arcanist" },
+                               archetypeChoices:{ aberrations:["arcane-fortitude","unshakable-mind"] } });
+  assert.deepEqual([...arc.archetypeChoices.specialization], ["arcane-fortitude","unshakable-mind"]);
+
+  const prof = Engine.migrate({ identity:{ archetype:"professional" },
+                                archetypeChoices:{ subtype:"cleaner" } });
+  assert.deepEqual([...prof.archetypeChoices.specialization], ["cleaner"]);
+
+  const old = Engine.migrate({ identity:{ archetype:"werewolf", specialization:"trueborn" } });
+  assert.deepEqual([...old.archetypeChoices.specialization], ["trueborn"]);
+
+  // The retired fields are gone, not merely ignored — leaving them would let a
+  // reader drift back onto the old path.
+  for (const c of [arc, prof, old]){
+    assert.equal(c.archetypeChoices.aberrations, undefined);
+    assert.equal(c.archetypeChoices.subtype, undefined);
+    assert.equal(c.identity.specialization, undefined);
+    assert.equal(c.meta.schemaVersion, "0.5");
+  }
+  // Idempotent: migrating twice must not empty what the first pass moved.
+  assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
+                   ["arcane-fortitude","unshakable-mind"]);
+});
+
+test("specializationNeed comes from the data, not from the archetype's name", () => {
+  const ch = Engine.newCharacter();
+  ch.identity.archetype = "arcanist";
+  const arc = D.archetypes.find(a => a.id === "arcanist");
+  for (const pl of D.powerLevels){
+    ch.creation.powerLevel = pl.id;
+    assert.equal(Engine.specializationNeed(ch),
+                 arc.campaignPowerScaling.byPowerLevel[pl.id].aberrations,
+                 `arcanist at ${pl.id}`);
+  }
+  // No countBy means exactly one — the silence is the declaration.
+  for (const id of ["professional", "werewolf"]){
+    ch.identity.archetype = id;
+    assert.equal(Engine.specializationNeed(ch), 1, id);
+  }
 });

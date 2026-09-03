@@ -50,10 +50,10 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.3",
+    "gamedataVersion": "0.4",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-08-29",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. Schema 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3, which versionCheck surfaces on load."
+    "updated": "2026-09-03",
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -491,6 +491,18 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "martial-arts",
+      "picks": [
+        {
+          "id": "style",
+          "label": "Martial Arts style",
+          "type": "option",
+          "count": 2,
+          "optional": true,
+          "distinct": true,
+          "note": "Up to two at creation. More may be trained later in play (Decision 56).",
+          "from": { "optionsFrom": "styles" }
+        }
+      ],
       "name": "Martial Arts",
       "category": "combat",
       "primaryStat": "REF",
@@ -508,30 +520,37 @@ window.SHADOWS_DATA = {
       ],
       "styles": [
         {
+          "id": "commando",
           "name": "Commando",
           "bonus": "+1 Stun"
         },
         {
+          "id": "escrima",
           "name": "Escrima",
           "bonus": "+1 Disarm"
         },
         {
+          "id": "jujitsu",
           "name": "Jujitsu",
           "bonus": "+1 Grapple"
         },
         {
+          "id": "karate",
           "name": "Karate",
           "bonus": "+1 Stun"
         },
         {
+          "id": "krav-maga",
           "name": "Krav Maga",
           "bonus": "+1 Disarm"
         },
         {
+          "id": "kung-fu",
           "name": "Kung Fu",
           "bonus": "+1 Knockdown"
         },
         {
+          "id": "custom",
           "name": "Custom Style",
           "bonus": "Talk with GM to determine bonus"
         }
@@ -1043,6 +1062,18 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "common-sense",
+      "picks": [
+        {
+          "id": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "from": { "ids": ["investigation", "awareness", "basic-tech", "intuition"] },
+          "count": 1,
+          "perRank": true,
+          "distinct": true,
+          "note": "Take 6 on the selected Skill."
+        }
+      ],
       "name": "Common Sense",
       "cost": 4,
       "maxRank": 4,
@@ -1120,6 +1151,16 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "favored-skill",
+      "picks": [
+        {
+          "id": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "count": 1,
+          "perRank": true,
+          "distinct": true
+        }
+      ],
       "name": "Favored Skill",
       "cost": 5,
       "maxRank": 5,
@@ -1142,6 +1183,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "followers-minion",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Name your followers, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Followers/Minion",
       "cost": 5,
       "maxRank": 3,
@@ -1187,6 +1236,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "immunity",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Name what you are immune to, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Immunity",
       "cost": 10,
       "maxRank": 1,
@@ -1223,6 +1280,7 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "long-lived",
+      "creationOnly": true,
       "name": "Long-Lived",
       "cost": 5,
       "maxRank": 3,
@@ -1302,6 +1360,16 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "refined-skill",
+      "picks": [
+        {
+          "id": "skill",
+          "label": "Skill",
+          "type": "skill",
+          "count": 1,
+          "perRank": true,
+          "distinct": true
+        }
+      ],
       "name": "Refined Skill",
       "cost": 8,
       "maxRank": 5,
@@ -1417,6 +1485,14 @@ window.SHADOWS_DATA = {
   "disadvantages": [
     {
       "id": "addiction",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Name the substance",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Addiction",
       "pointsGranted": 3,
       "maxRank": 3,
@@ -1459,6 +1535,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "cursed",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Work out the curse, and how it lifts, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Cursed",
       "pointsGranted": 5,
       "maxRank": 3,
@@ -1473,6 +1557,23 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "defect-flaw",
+      "picks": [
+        {
+          "id": "skill",
+          "label": "Skill it hurts",
+          "type": "skill",
+          "count": 1,
+          "perRank": true,
+          "distinct": true,
+          "note": "Checks with the selected Skill suffer -2."
+        },
+        {
+          "id": "detail",
+          "label": "Name the defect, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Defect/Flaw",
       "pointsGranted": 2,
       "maxRank": 4,
@@ -1501,6 +1602,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "enemies",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Name who wants you dead, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Enemies",
       "pointsGranted": 1,
       "maxRank": 4,
@@ -1508,6 +1617,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "fanatic",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Name what you are fanatical about, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Fanatic",
       "pointsGranted": 4,
       "maxRank": 1,
@@ -1552,6 +1669,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "minor-insanity",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Name the traits this expresses, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Minor Insanity",
       "pointsGranted": 1,
       "maxRank": 5,
@@ -1566,6 +1691,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "notorious",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Name what earned the reputation, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Notorious",
       "pointsGranted": 1,
       "maxRank": 3,
@@ -1573,6 +1706,14 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "pact",
+      "picks": [
+        {
+          "id": "detail",
+          "label": "Work out the pact, and its terms of release, with your GM",
+          "type": "text",
+          "gmApproval": true
+        }
+      ],
       "name": "Pact",
       "pointsGranted": 15,
       "maxRank": 1,

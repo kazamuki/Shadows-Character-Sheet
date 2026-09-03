@@ -6,20 +6,22 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.4", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.5", gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
+      // No `specialization` here: schema 0.5 stores it once, in
+      // archetypeChoices.specialization, and derives the display string (A3).
       identity:{ name:"", age:null, build:"", hair:"", eyes:"", skin:"",
-                 archetype:null, specialization:"", history:"" },
+                 archetype:null, history:"" },
       creation:{ powerLevel:null,
                  rolls:{ statPoints:null, skillPoints:null, credits:null },
                  boosts:[], locked:false },
       // Archetype-specific creation inputs (schema 0.2 addition; see SCHEMA.md §3)
       archetypeChoices:{ rolls:{}, focusAllocation:{}, statBonusAllocation:{},
-                         aberrations:[], subtype:null, focusedSkillPicks:[],
+                         specialization:[], focusedSkillPicks:[],
                          naturalAdvantages:[], disciplines:{} },
       stats: Object.fromEntries(D().stats.map(s=>[s.id,{base:1, ipe:0}])),
       skills:{},                       // id -> {rank, ipe}
-      advantages:[], disadvantages:[], // {id, rank, notes}
+      advantages:[], disadvantages:[], // {id, rank, notes, selections?}
       trackers:{ damage:0, luck:{bonus:0, spent:0}, san:{loss:0},
                  exhaustion:0, sfr:{spent:0},
                  credits:{current:0, ledger:[]},
@@ -285,7 +287,7 @@ const Engine = (() => {
   function focusedSkillIds(ch){
     const a = archetype(ch);
     if (!a || a.id!=="professional") return [];
-    const sub = ((a.specialization||{}).options||[]).find(o=>o.id===ch.archetypeChoices.subtype);
+    const sub = ((a.specialization||{}).options||[]).find(o=>o.id===((ch.archetypeChoices||{}).specialization||[])[0]);
     const ids = new Set(ch.archetypeChoices.focusedSkillPicks||[]);
     const norm = s => String(s).toLowerCase().replace(/[^a-z]/g,"").replace(/s$/,"");
     if (sub) for (const fname of (sub.focusedSkills||[])){
@@ -611,13 +613,218 @@ const Engine = (() => {
     c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.powers=c.powers||[];
     if (typeof c.notes!=="string") c.notes="";
     if (!Array.isArray(c.audit)) c.audit=[];      // Phase 3.3
+    // Schema 0.5 (A3): ONE specialization array replaces the three fields that
+    // used to hold the same idea — identity.specialization (single-select),
+    // archetypeChoices.subtype (its duplicate) and archetypeChoices.aberrations
+    // (multi-select). Two parallel models were the root of A1 and A2.
+    // _fillDefaults ran above against the current shape, so it has already
+    // seeded an empty array; only a pre-0.5 file has anything to move.
+    const ac = c.archetypeChoices;
+    if (!Array.isArray(ac.specialization)) ac.specialization = [];
+    if (!ac.specialization.length){
+      const legacy = Array.isArray(ac.aberrations) && ac.aberrations.length ? ac.aberrations.slice()
+                   : ac.subtype ? [ac.subtype]
+                   : ((c.identity||{}).specialization ? [c.identity.specialization] : []);
+      ac.specialization = legacy.filter(Boolean);
+    }
+    delete ac.aberrations; delete ac.subtype;
+    if (c.identity && typeof c.identity==="object") delete c.identity.specialization;
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.4";
+    c.meta.schemaVersion = "0.5";
     return c;
   }
 
+
+  // ════ BATCH 3 — SELECTION & CONSTRAINT SYSTEM ═════════════════════════
+  // One system, three jobs: mutual locks and gating on advantages and
+  // disadvantages, the inputs an entry demands when it is taken (a skill, an
+  // option, a line of text), and the archetype specialization pick. The rev 9
+  // audit §1 traced A1 and A2 to two parallel models for "the required pick";
+  // this is the one model. Entries declare `excludes` / `requires` / `picks`;
+  // a character stores `selections` on the entry that owns them.
+
+  // Three kinds host picks: "advantage", "disadvantage" and "skill" (Martial
+  // Arts styles). A skill's entry is a map value rather than an array element,
+  // which is the only difference the rest of the system ever sees.
+  const defFor = (kind, id) => kind==="disadvantage" ? disById(id)
+                             : kind==="skill"        ? skillById(id)
+                             : advById(id);
+  const listFor  = (ch, kind) => (kind==="disadvantage" ? ch.disadvantages : ch.advantages) || [];
+  const entryFor = (ch, kind, id) => kind==="skill"
+    ? (((ch||{}).skills||{})[id] || null)
+    : (listFor(ch, kind).find(x=>x && x.id===id) || null);
+  const traitName = id => (advById(id) || disById(id) || {name:id}).name;
+  const heldIds = ch => [...(ch.advantages||[]), ...(ch.disadvantages||[])]
+    .filter(x=>x && x.rank>0).map(x=>x.id);
+
+  // Mutual lock. Symmetric by construction: A excluding B locks B against A
+  // even though B's entry says nothing, so the rule is stated once in the data.
+  function optionLock(ch, kind, id){
+    const def = defFor(kind, id);
+    if (!def) return { locked:false, by:null };
+    const held = heldIds(ch).filter(h=>h!==id);
+    for (const other of (def.excludes||[]))
+      if (held.includes(other)) return { locked:true, by:traitName(other) };
+    for (const h of held){
+      const d = advById(h) || disById(h);
+      if (d && (d.excludes||[]).includes(id)) return { locked:true, by:traitName(h) };
+    }
+    return { locked:false, by:null };
+  }
+
+  // Gating. Deliberately the same vocabulary as milestone prerequisites, so
+  // there is one way to say "you need REF 6" in this data file, not two.
+  function requirementState(ch, kind, id){
+    const def = defFor(kind, id), met = [], unmet = [];
+    const p = (def||{}).requires;
+    if (!p) return { met, unmet, ok:true };
+    const skillName = sid => (skillById(sid)||{name:sid}).name;
+    if (p.stats) for (const [sid, need] of Object.entries(p.stats)){
+      const norm = normStat(sid);
+      const have = norm ? statValue(ch, norm) : 0;
+      (have>=need ? met : unmet).push(`${sid} ${need} (you have ${have})`);
+    }
+    if (p.skills){
+      if (p.skills.any){
+        const ok = p.skills.any.some(([sid,r])=> skillById(sid) && skillLine(ch,sid).rank>=r);
+        (ok?met:unmet).push("Skill: "+p.skills.any.map(([sid,r])=>`${skillName(sid)} ${r}+`).join(" or "));
+      }
+      if (p.skills.all){
+        const ok = p.skills.all.every(([sid,r])=> skillById(sid) && skillLine(ch,sid).rank>=r);
+        (ok?met:unmet).push("Skills: "+p.skills.all.map(([sid,r])=>`${skillName(sid)} ${r}+`).join(" and "));
+      }
+    }
+    if (p.advantages && p.advantages.all){
+      const ok = p.advantages.all.every(([tid,r])=>(ch.advantages||[]).some(x=>x.id===tid && x.rank>=r));
+      (ok?met:unmet).push("Advantages: "+p.advantages.all.map(([tid,r])=>traitName(tid)+(r>1?" "+r+"+":"")).join(", "));
+    }
+    return { met, unmet, ok: unmet.length===0 };
+  }
+
+  // The option list a pick draws from. `from.ids` is a fixed list (Common
+  // Sense's four named skills), `from.category` a skill category, and an absent
+  // `from` on a skill pick means the whole catalog. For option picks,
+  // `from.optionsFrom` names a list the OWNING entry already carries — Martial
+  // Arts styles point at `styles` rather than restating it, which is the whole
+  // lesson of A1: one list, or the two drift.
+  function pickOptions(pick, def){
+    const f = pick.from || {};
+    if (pick.type==="skill"){
+      const src = f.ids ? f.ids.map(id=>skillById(id) || {id, name:id, missing:true})
+                : f.category ? D().skills.filter(s=>s.category===f.category)
+                : D().skills;
+      return src.map(s=>({ id:s.id, name:s.name, missing:s.missing===true }));
+    }
+    if (pick.type==="option"){
+      const src = f.optionsFrom ? ((def||{})[f.optionsFrom] || []) : (f.options||[]);
+      return src.map(o=>({ id:o.id, name:o.name,
+                           description:o.description || o.bonus || "" }));
+    }
+    return [];
+  }
+
+  // Everything the UI needs about one entry's picks, resolved once here so the
+  // renderer never re-derives a count. Total: an entry that is not taken, or
+  // carries no `selections`, reports need vs. nothing chosen.
+  function picksFor(ch, kind, id){
+    const def = defFor(kind, id);
+    if (!def || !Array.isArray(def.picks)) return [];
+    const entry = entryFor(ch, kind, id);
+    const rank  = entry ? Math.max(0, entry.rank||0) : 0;
+    const sel   = (entry && entry.selections && typeof entry.selections==="object") ? entry.selections : {};
+    return def.picks.map(pick=>{
+      const per  = pick.count==null ? 1 : pick.count;
+      // Rank 0 means the entry is not held, so it asks for nothing.
+      const need = rank<=0 ? 0
+                 : pick.type==="text" ? 1
+                 : (pick.perRank ? per*rank : per);
+      const raw  = sel[pick.id];
+      const text = pick.type==="text";
+      const chosen = text ? (typeof raw==="string" ? raw : "")
+                          : (Array.isArray(raw) ? raw.slice(0, need) : []);
+      const filled = text ? (chosen.trim() ? 1 : 0)
+                          : chosen.filter(v=>v!=null && v!=="").length;
+      return { pick, need, chosen, filled, options: pickOptions(pick, def),
+               // `optional` means the slots are a CAP, not a demand: the CRB
+               // says "up to two Martial Arts styles", and one style, or none,
+               // is a legal character.
+               complete: pick.optional===true || filled >= need,
+               // A freeform pick the CRB hands to the table ("work out the
+               // details with your GM") warns; it never blocks the lock.
+               gmApproval: pick.gmApproval===true };
+    });
+  }
+
+  // Mutator, following addBoost: distinctness and the slot cap are rules, and
+  // rules live next to the rules, not next to the DOM.
+  function setSelection(ch, kind, id, pickId, index, value){
+    const def = defFor(kind, id), entry = entryFor(ch, kind, id);
+    if (!def || !entry) return { ok:false, why:"That trait is not taken." };
+    const pick = (def.picks||[]).find(p=>p.id===pickId);
+    if (!pick) return { ok:false, why:"No such choice on that trait." };
+    if (!entry.selections || typeof entry.selections!=="object") entry.selections = {};
+    if (pick.type==="text"){
+      entry.selections[pickId] = value==null ? "" : String(value);
+      return { ok:true };
+    }
+    const state = picksFor(ch, kind, id).find(s=>s.pick.id===pickId);
+    const i = Math.max(0, Number(index)||0);
+    if (i >= state.need) return { ok:false, why:"No slot for that choice." };
+    const v = (value==null || value==="") ? null : String(value);
+    const list = Array.isArray(entry.selections[pickId]) ? entry.selections[pickId].slice() : [];
+    if (v && pick.distinct && list.some((x,j)=>x===v && j!==i)){
+      const nm = (state.options.find(o=>o.id===v)||{name:v}).name;
+      return { ok:false, why:`${nm} is already chosen — this trait takes a different one for each rank.` };
+    }
+    while (list.length < state.need) list.push(null);
+    list[i] = v;
+    entry.selections[pickId] = list.slice(0, state.need);
+    return { ok:true };
+  }
+
+  // Rank went down: drop the slots that no longer exist. Called after any rank
+  // change so a saved character never carries selections it cannot show.
+  function trimSelections(ch, kind, id){
+    const entry = entryFor(ch, kind, id);
+    if (!entry || !entry.selections) return ch;
+    for (const st of picksFor(ch, kind, id)){
+      if (st.pick.type==="text") continue;
+      const list = entry.selections[st.pick.id];
+      if (Array.isArray(list) && list.length > st.need) entry.selections[st.pick.id] = list.slice(0, st.need);
+      if (st.need === 0) delete entry.selections[st.pick.id];
+    }
+    if (!Object.keys(entry.selections).length) delete entry.selections;
+    return ch;
+  }
+
+  // ── A3: one specialization model ─────────────────────────────────────
+  // How many the archetype asks for. `countBy` is a path — "campaignPowerScaling.
+  // aberrations" resolves against the current power level's scaling row. Its
+  // ABSENCE means exactly one, which is what four of the five archetypes need,
+  // so no data entry has to say what its silence already says.
+  function specializationNeed(ch){
+    const a = archetype(ch);
+    const spec = a && a.specialization;
+    if (!spec || !(spec.options||[]).length) return 0;
+    if (!spec.countBy) return 1;
+    const path = String(spec.countBy).split(".");
+    let node = path[0]==="campaignPowerScaling" ? scalingRow(ch) : a;
+    const from = path[0]==="campaignPowerScaling" ? 1 : 0;
+    for (let i=from; i<path.length && node!=null; i++) node = node[path[i]];
+    return typeof node==="number" ? node : 1;
+  }
+  const specializationIds = ch => (((ch||{}).archetypeChoices||{}).specialization) || [];
+  // Resolved option objects, in the order chosen. Orphans (an id the data no
+  // longer defines) come back name-only rather than disappearing.
+  function specializationChosen(ch){
+    const a = archetype(ch);
+    const opts = ((a||{}).specialization||{}).options || [];
+    return specializationIds(ch).map(id => opts.find(o=>o.id===id) || { id, name:id, missing:true });
+  }
+  // The display string that identity.specialization used to store.
+  const specializationLabel = ch => specializationChosen(ch).map(o=>o.name).join(" · ");
 
   function validate(stepId, ch){
     const out = [], pl = powerLevel(ch), a = archetype(ch);
@@ -639,8 +846,16 @@ const Engine = (() => {
     }
     if (stepId==="archetype"){
       if (!a) { E("Choose an Archetype."); return out; }
-      if (a.specialization && a.specialization.required && a.specialization.options.length){
-        if (!ch.identity.specialization) E(`Choose a ${a.specialization.label}.`);
+      // A3: one rule for every archetype. The count comes from the data
+      // (`countBy`, or 1 by default), so an archetype that wants three picks
+      // needs no app change — which is the point of unifying the two models.
+      if (a.specialization && (a.specialization.options||[]).length){
+        const need = specializationNeed(ch), have = specializationIds(ch).length;
+        const label = a.specialization.label || "Specialization";
+        if (a.specialization.required !== false && have < need)
+          E(need>1 ? `Choose ${need} ${label}s (${have}/${need}).` : `Choose a ${label}.`);
+        if (have > need)
+          E(need>1 ? `Too many ${label}s chosen (${have}/${need}).` : `Choose only one ${label}.`);
       }
       // Player-facing: the engine writes copy as well as the UI. Pulled from
       // appCopy so the voice stays a data edit (Decision 71).
@@ -657,9 +872,6 @@ const Engine = (() => {
           if (used > r) E(`Focus Stat bonus overspent by ${used-r}.`);
           else if (used < r) W(`${r-used} Focus Stat bonus points unallocated.`);
         }
-        const need = row.aberrations||0, have = ch.archetypeChoices.aberrations.length;
-        if (have < need) E(`Choose ${need} Aberration${need>1?"s":""} (${have}/${need}).`);
-        if (have > need) E(`Too many Aberrations chosen (${have}/${need}).`);
       }
       if (row && row.statBonusRoll){
         const r = ch.archetypeChoices.rolls.statBonus;
@@ -671,7 +883,7 @@ const Engine = (() => {
         }
       }
       if (a.id==="professional"){
-        const sub = (a.specialization.options||[]).find(o=>o.id===ch.archetypeChoices.subtype);
+        const sub = (a.specialization.options||[]).find(o=>o.id===specializationIds(ch)[0]);
         if (sub && sub.requiredStats){
           for (const [sid,req] of Object.entries(sub.requiredStats)){
             if (statValue(ch,sid) < req) E(`${sub.name} requires ${sid} ${req} (you have ${statValue(ch,sid)}).`);
@@ -700,6 +912,15 @@ const Engine = (() => {
         if (left < 0) E(`Skill Points overspent by ${-left}.`);
         else if (left > 0) W(`${left} Skill Points unspent.`);
       }
+      // Skills host picks too (Martial Arts styles). Same rule, same voice.
+      for (const id of Object.keys(ch.skills||{})){
+        const def = skillById(id);
+        if (!def || !Array.isArray(def.picks)) continue;
+        for (const st of picksFor(ch, "skill", id)){
+          if (st.complete) continue;
+          E(`Choose ${st.need} ${st.pick.label||"option"}${st.need>1?"s":""} for ${def.name} (${st.filled}/${st.need}).`);
+        }
+      }
     }
     if (stepId==="character-points"){
       const bal = cp(ch);
@@ -708,6 +929,33 @@ const Engine = (() => {
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
       if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.notes!=="natural"))
         E(`${a.name}s cannot purchase Advantages.`);
+      // Batch 3 — locks, gates, and the inputs a trait demands. Reported once
+      // per taken entry, in the order the player sees them.
+      for (const [kind, list] of [["advantage", ch.advantages||[]], ["disadvantage", ch.disadvantages||[]]]){
+        for (const entry of list){
+          if (!entry || !(entry.rank>0)) continue;
+          const def = defFor(kind, entry.id);
+          if (!def) continue;                       // versionCheck reports orphans
+          const lock = optionLock(ch, kind, entry.id);
+          if (lock.locked) E(`${def.name} and ${lock.by} can't be taken together.`);
+          const req = requirementState(ch, kind, entry.id);
+          if (!req.ok) E(`${def.name} requires ${req.unmet.join("; ")}.`);
+          for (const st of picksFor(ch, kind, entry.id)){
+            if (st.complete) continue;
+            const label = st.pick.label || def.name;
+            if (st.pick.type==="text"){
+              // The mechanical picks are the app's business; the fiction is the
+              // table's. A player who has not had the GM conversation yet is
+              // warned, never blocked out of locking their character.
+              const m = `${def.name} — ${label}${/[.!?]$/.test(label)?"":"."}`;
+              st.gmApproval ? W(m) : E(m);
+            } else {
+              const noun = st.pick.type==="skill" ? "Skill" : "option";
+              E(`Choose ${st.need} ${noun}${st.need>1?"s":""} for ${def.name} (${st.filled}/${st.need}).`);
+            }
+          }
+        }
+      }
     }
     if (stepId==="review"){
       if (ch.creation.rolls.credits==null) W(`Enter your starting Çredits roll (${pl?pl.startingCredits.roll+" × "+pl.startingCredits.multiplier:""}).`);
@@ -771,6 +1019,9 @@ const Engine = (() => {
            milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
            logSession, addCredits, archPanels, panelMax, disciplineRanks, migrate,
            // Phase 3.3 — audit trail & undo
-           diffChar, recordAction, undoLastAction };
+           diffChar, recordAction, undoLastAction,
+           // Batch 3 — selection & constraint system
+           optionLock, requirementState, picksFor, setSelection, trimSelections,
+           specializationNeed, specializationIds, specializationChosen, specializationLabel };
 })();
 /*ENGINE-END*/

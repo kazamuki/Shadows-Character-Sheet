@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.4 (game data 0.3) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-08-29 (CRB v4 content pass — Skills, Advantages, Disadvantages)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.5 (game data 0.4) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-03 (Batch 3 — selection & constraint system, A3)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -161,7 +161,11 @@ window.SHADOWS_DATA = {
       description: "...",
       covers: [ "..." ],              // bullets behind the skill's "?" expander
       notes: [ "..." ],               // (0.3) optional; the CRB's "Notes" block
-      styles: [ { name: "Karate", bonus: "+1 Stun" } ]  // (0.3) Martial Arts only
+      styles: [ { id: "karate", name: "Karate", bonus: "+1 Stun" } ],  // Martial Arts only
+      // (0.4) Skills host `picks` on the same terms as adv/disadv. Martial Arts
+      // points at its own `styles` array rather than restating it — one list.
+      picks: [ { id: "style", type: "option", count: 2, optional: true,
+                 distinct: true, from: { optionsFrom: "styles" } } ]
     }
     // 36 skills: 11 combat / 9 utility / 16 general
   ],
@@ -170,14 +174,41 @@ window.SHADOWS_DATA = {
   advantages: [
     { id: "rapid-healing", name: "Rapid Healing",
       cost: 5, maxRank: 3, universal: false,
-      description: "...", rankNotes: ["x2", "x3", "x4"] }
-    // ...
+      description: "...", rankNotes: ["x2", "x3", "x4"] },
+
+    // (0.4) Selection & constraint fields — ALL optional. An entry without
+    // them behaves exactly as it always did. See Decisions 77-78.
+    { id: "common-sense", name: "Common Sense", cost: 4, maxRank: 4,
+      description: "...",
+      creationOnly: true,              // may only be bought during creation
+      excludes: ["some-other-id"],     // symmetric: stated once, locks both ways
+      requires: {                      // same vocabulary as milestone prereqs
+        stats: { REF: 6 },
+        skills: { any: [["handguns", 2]], all: [] },
+        advantages: { all: [["combat-cunning", 1]] }
+      },
+      picks: [
+        { id: "skill",                 // key inside the character's `selections`
+          label: "Skill",              // player-facing label on the control
+          type: "skill",               // "skill" | "option" | "text"
+          from: { ids: [...] },        // fixed list. or { category: "combat" },
+                                       // or omitted = the whole skill catalog.
+                                       // option picks: { options: [...] } or
+                                       // { optionsFrom: "styles" } — a list the
+                                       // OWNING entry already carries
+          count: 1,                    // slots (per rank when perRank)
+          perRank: true,               // need = count x rank
+          distinct: true,              // no repeats across slots
+          optional: true,              // slots are a CAP, not a demand
+          gmApproval: true,            // text picks: warns, never blocks
+          note: "..." }                // shown under the control
+      ] }
   ],
   disadvantages: [
     { id: "paranoia", name: "Paranoia",
       pointsGranted: 3, maxRank: 1,
       description: "..." }
-    // ...
+    // Same optional selection fields as advantages.
   ],
 
   // ── Archetypes (generic, designer-fillable) ─────────────
@@ -205,6 +236,10 @@ window.SHADOWS_DATA = {
       specialization: {
         label: "Aberration",          // "Subtype", "Chrome Loadout", "Bloodline"...
         required: true,
+        // How many to pick. A path resolved against the power-level scaling row.
+        // ABSENT means exactly one — four of the five archetypes say nothing and
+        // that silence IS the declaration (Decision 79).
+        countBy: "campaignPowerScaling.aberrations",
         options: [
           { id: "...", name: "...", description: "...", grants: [] }
         ]
@@ -280,14 +315,16 @@ on un-modeled rules.
 ```js
 {
   meta: {
-    schemaVersion: "0.4",
-    gamedataVersion: "0.2",          // version of shadows-data.js at save time
+    schemaVersion: "0.5",
+    gamedataVersion: "0.4",          // version of shadows-data.js at save time
     created: "...", updated: "..."
   },
 
   identity: {
     name: "", age: null, build: "", hair: "", eyes: "", skin: "",
-    archetype: "arcanist", specialization: "",
+    archetype: "arcanist",
+    // NO `specialization` since 0.5 — it lives once, in archetypeChoices, and
+    // is derived for display via Engine.specializationLabel() (Decision 79).
     history: ""                      // creation step 5: what shaped them
   },
 
@@ -311,8 +348,12 @@ on un-modeled rules.
     rolls: { focusStatBonus: null }, // physical dice for archetype scaling (e.g. Arcanist 2d4)
     focusAllocation: {},             // Arcanist: { INT: 3, EMP: 2 } — focus bonus spread (may exceed 10)
     statBonusAllocation: {},         // Werewolf: 1d4(+N) bonus spread (cap 10)
-    aberrations: [],                 // Arcanist: chosen aberration ids
-    subtype: null,                   // Professional subtype id (mirrors identity.specialization)
+    // (0.5) THE specialization. One array for every archetype — Aberrations,
+    // Subtype, Origin, Bloodline, Chrome Loadout. Length is whatever
+    // specializationNeed() resolves from the data (1 unless `countBy` says
+    // otherwise). Replaces identity.specialization + subtype + aberrations,
+    // which were three fields for one idea and the root of A1/A2.
+    specialization: [],
     focusedSkillPicks: [],           // Professional: "chosen at creation" focused skill ids
     naturalAdvantages: [],           // Professional: [{ id, rank }] — also mirrored into
                                      // `advantages` with notes:"natural", cost 0 CP
@@ -324,8 +365,15 @@ on un-modeled rules.
   stats:  { BOD: { base: 5, ipe: 0 }, REF: { base: 6, ipe: 0 } /* ... */ },
   skills: { handgun: { rank: 4, ipe: 0 } /* trained skills only */ },
 
-  advantages:    [ { id: "rapid-healing", rank: 1, notes: "" } ],
-  disadvantages: [ { id: "paranoia", rank: 1, notes: "" } ],
+  // `selections` (0.5) answers the entry's `picks`, keyed by pick id. Skill and
+  // option picks store an ARRAY of ids, one per slot; text picks store a string.
+  // Absent means nothing chosen yet, which every reader tolerates.
+  advantages:    [ { id: "favored-skill", rank: 2, notes: "",
+                     selections: { skill: ["handguns", "melee"] } } ],
+  disadvantages: [ { id: "cursed", rank: 1, notes: "",
+                     selections: { detail: "The mark answers to no drug." } } ],
+  // Skills carry them too: skills: { "martial-arts": { rank: 3, ipe: 0,
+  //   selections: { style: ["karate", "jujitsu"] } } }
 
   // Current-state trackers (max values are computed, never stored)
   trackers: {
@@ -984,6 +1032,93 @@ No cascade logic to maintain — it falls out of the architecture.
     player stuck right now?** Stuck means tool voice: clear, short, out of the
     way. Not stuck means the city can speak. (Ken, 2026-09-02)
 
+77. **(Batch 3)** **One selection system, three hosts.** Advantages,
+    disadvantages and skills now declare `picks` / `excludes` / `requires`, and
+    a character stores its answers as `selections` on the entry that asked. The
+    rev 9 audit §4 sketched this from a feature request; Decision 58 recorded
+    that the CRB had turned the sketch into a requirement and named ~15 entries
+    as the corpus. All fifteen are encoded, plus Martial Arts styles.
+
+    Three shapes, deliberately small: a **fixed list** (`from.ids` — Common
+    Sense's four named skills), a **category** (`from.category`), and **free
+    text** (`type: "text"`). `perRank` scales the slot count with rank and
+    `distinct` refuses a repeat, which together express the sentence four
+    entries share — *"Choose a different Skill for each rank."* `optional`
+    marks slots that are a **cap rather than a demand**, which is what Martial
+    Arts' *"up to two styles"* actually says, and without it a trained martial
+    artist who had not picked a style could not lock their character.
+
+    `optionLock` is **symmetric**: declaring `excludes` on one entry locks the
+    other even though it says nothing, so a mutual lock is stated once in the
+    data and cannot half-exist. `requires` deliberately reuses the milestone
+    prerequisite vocabulary rather than inventing a second way to say "REF 6".
+
+    **No entry declares `excludes` or `requires` yet**, because the CRB names
+    no pair. Both are exercised against a synthetic fixture pushed into the
+    loaded data by the test. Writing a lock into the data to give the machinery
+    something to chew on would be resolving a rules question in code, and one
+    invented mutual exclusion is exactly the kind of thing that reads as
+    authoritative six months later. (Ken, 2026-09-03)
+
+78. **(Batch 3)** **The mechanical picks are the app's business; the fiction is
+    the table's.** Ten entries — Immunity, Followers/Minion, Cursed, Fanatic,
+    Pact, Minor Insanity, Addiction, Enemies, Notorious, Defect/Flaw — say some
+    version of *"work out the details with your GM."* Treating an empty text
+    field as an error like any other would **block a player from locking a
+    character** because a conversation had not happened yet, at session zero,
+    which is precisely when it has not happened. So a pick marked `gmApproval`
+    produces a **warning**; a pick with a fixed list, a category or a per-rank
+    count produces an **error**. The line is not "text vs. list", it is *can the
+    app tell whether this is right?* Where it cannot, it says so and gets out of
+    the way — the same principle as Decision 66's floors, which the engine
+    carries and displays but never applies. (Ken, 2026-09-03)
+
+79. **(A3 — closes A1 and A2)** **One specialization model, and the count comes
+    from the data.** There were three fields for one idea:
+    `identity.specialization`, `archetypeChoices.subtype` (its duplicate) and
+    `archetypeChoices.aberrations` (the multi-select). Two renderers each
+    special-cased a subset, which is why the Arcanist rendered its aberrations
+    **twice and required both** (A1) and why the sheet showed a Professional
+    "none chosen" under a header naming the very subtype it could not see (A2).
+    Both were symptoms; the parallel models were the disease.
+
+    **Character schema 0.4 → 0.5.** `archetypeChoices.specialization: [ids]` is
+    the only storage; `identity.specialization` and `subtype` are **derived for
+    display** and deleted by `migrate()`, which folds all three into the array
+    in that precedence order. Deleting rather than ignoring them is the point —
+    a field left lying around is a path a future reader drifts back onto.
+
+    The count needed **no new data field.** The audit proposed
+    `selectMode: "single" | "count"`; the Arcanist already carried
+    `specialization.countBy: "campaignPowerScaling.aberrations"`, and the other
+    four archetypes carried nothing, which *is* "exactly one". `countBy` present
+    → resolve the path; absent → 1. Adding `selectMode` would have meant editing
+    five entries to state what their silence already stated. Biomech's Chrome
+    Loadout is now a data entry rather than a fourth branch, which was the
+    reason to unify in the first place. (Ken, 2026-09-03)
+
+80. **(Batch 3)** **Two realms, one trap, written down.** `loadEngine()` runs
+    the engine and the data inside a `vm` context, so every array they return
+    carries **that** realm's `Array.prototype`. `assert.deepEqual` is strict and
+    compares prototypes, so an engine array never matches a literal `[]` written
+    in a test file: the failure prints two identical-looking values, says "not
+    equal", and shows no difference at all. It cost two debugging rounds in this
+    batch. Spread engine arrays into local ones on **both** sides of a
+    `deepEqual`, or assert on `.length`. The warning now sits on `loadEngine()`
+    itself, where the next session meets it before writing the assertion rather
+    than after. (Ken, 2026-09-03)
+
+81. **(Batch 3)** **A stale `natural` advantage no longer survives a subtype
+    change.** Found while rewriting the specialization handler, not looked for.
+    Professional Natural Advantages are stored in
+    `archetypeChoices.naturalAdvantages` **and mirrored** into `ch.advantages`
+    with `notes: "natural"`. Changing subtype cleared the first and left the
+    second, so a player who switched from Cleaner to Enforcer kept the Cleaner's
+    free advantages — invisibly, because the pool readout counts the ledger and
+    not the mirror. Both sides are cleared together now. This is the same
+    two-parallel-models fault as A1/A2, one layer down, and the general lesson
+    holds: **a mirror needs one writer.** (Ken, 2026-09-03)
+
 
 ## 5. Open Flags
 
@@ -1188,12 +1323,34 @@ cleared, two opened.
   app and reading every string a player can see. No schema or gamedataVersion
   bump (Decision 68): no computed value moved.
 
-- **Phase 4 — Selection & constraint system** ⏭ — build `picks` / `excludes` /
-  `requires` for advantages & disadvantages (rev 9 audit §4), then retrofit
-  archetype specialization onto it (A3), which retires the Arcanist/Professional/
-  Werewolf branches and fixes A1 + A2 as a side effect. Biomech (F6) then lands
-  as data rather than a fourth special case. Clear **F8** first — it is a
-  four-number data edit and the only wizard-blocking flag.
+- **Batch 3 — Selection & constraint system** ✅ *(2026-09-03)* — Decisions
+  77-81. `picks` / `excludes` / `requires` built once and hosted by three
+  things: advantages, disadvantages and skills. All ~15 entries Decision 58
+  named are encoded, plus Martial Arts styles. **A3** retrofitted archetype
+  specialization onto one model, which retired the Arcanist / Professional /
+  Werewolf branches in `renderArchetype` and the aberration-only branch in
+  `renderShArchetype` — **A1 and A2 closed as a side effect and the suite's
+  last `todo` flipped green.** Character schema **0.4 → 0.5** (one
+  specialization array replaces three fields, with a `migrate()` step);
+  game data **0.3 → 0.4** (fifteen entries now demand an input they did not
+  before); app **0.5.0 → 0.6.0**. A stale-mirror defect in the Professional
+  natural-advantage pool was found and fixed in passing (Decision 81).
+
+- **Batch 3b — `grants`** ⏭ — the other half of Decision 58, deliberately
+  split out: Educated (+10 Skill Points/rank), Hard to Kill (+1 max HP per
+  Health Level), Thick Skin (Natural Armor, which the engine does not model at
+  all yet), Lucky / Unlucky (LUCK spend costs) and Long-Lived (Milestones).
+  Unlike `picks`, these reach into five readers that currently compute cleanly
+  from stats alone, and **Educated forces a wizard-flow ruling**: it is bought
+  at step 7 and grows the step-6 pool retroactively, so a player who finished
+  Skills with nothing left silently reopens with ten points and a warning they
+  already walked past. That is a design question, not a data edit.
+
+- **Then: decompose `src/ui/app.js`** (Decision 54's deferred refactor) on its
+  own branch, with zero behaviour change, now that the renderers it touches
+  have landed green. Then Biomech (F6) as data rather than a fourth special
+  case. Clear **F8** on its own track — it is a four-number data edit and the
+  only wizard-blocking flag.
 
 **Session handoff protocol:** every phase ends with current files +
 this document updated. Ken adds the latest versions to project knowledge.
