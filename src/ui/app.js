@@ -153,6 +153,22 @@
   }
 
   // ── Shared widgets ───────────────────────────────────────────────────
+  // Changing archetype invalidates every archetype-specific choice. Both change
+  // handlers say so in their warning text; only this function makes it true.
+  // The natural-advantage MIRROR is the easy half to forget: free advantages
+  // live in archetypeChoices.naturalAdvantages AND as notes:"natural" rows in
+  // ch.advantages, so clearing one side strands the other. A mirror needs one
+  // writer (Decision 81).
+  function resetArchetypeChoices(ch){
+    ch.archetypeChoices = { rolls:{}, focusAllocation:{}, statBonusAllocation:{},
+      specialization:[], focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
+    const a = Engine.archetype(ch);
+    // Free advantages belonged to the archetype being left, so they go either
+    // way. A supernatural archetype cannot purchase at all, so it keeps none.
+    ch.advantages = (a && a.canPurchaseAdvantages===false)
+      ? [] : ch.advantages.filter(x=>x.notes!=="natural");
+  }
+
   function stepper(val, dataAttr, downOk, upOk){
     return `<div class="stepper">
       <button data-step="${dataAttr}|-1" ${downOk?"":"disabled"} aria-label="decrease">−</button>
@@ -413,7 +429,8 @@
             return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h4>${esc(def?def.name:p.advantageId)}</h4>
               <span class="cost grant">max rank ${p.maxRank}</span>
               <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks)}</div></div>
-              <div class="desc">${esc(def?def.description:"")}</div></div>`;
+              <div class="desc">${esc(def?def.description:"")}</div>
+              ${cur>0?picksHtml("advantage",p.advantageId):""}</div>`;
           }).join("");
         }
       }
@@ -504,7 +521,7 @@
           ${constraintHtml("advantage",ad.id)}
           <div class="controls">${canBuyAdv?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok):"<span class='cost'>locked</span>"}</div></div>
           <div class="desc">${esc(ad.description)}</div>
-          ${cur>0?picksHtml("advantage",ad.id):""}</div>`;
+          ${(cur>0||(natural&&natural.rank>0))?picksHtml("advantage",ad.id):""}</div>`;
       }).join("") + `</details>`;
 
     // LUCK
@@ -601,7 +618,10 @@
         <input type="file" id="file-import" accept=".json,.shadows.json" style="display:none">
       </div></div>`;
     $("btn-new").onclick=()=>{ S={screen:"wizard", ch:Engine.newCharacter(), step:0, maxReached:0, section:"main"}; update(); };
-    const r=$("btn-resume"); if(r) r.onclick=()=>{ S={screen:"wizard", ch:draft.ch, step:draft.step, maxReached:draft.maxReached, section:"main"}; update(); };
+    // Resume must migrate like the other two load paths. It did not, so a draft
+    // saved under an older schema came back with its data in fields no current
+    // reader looks at — the choice vanished with no warning.
+    const r=$("btn-resume"); if(r) r.onclick=()=>{ S={screen:"wizard", ch:Engine.migrate(draft.ch), step:draft.step, maxReached:draft.maxReached, section:"main"}; update(); };
     const ac=$("btn-active"); if(ac) ac.onclick=()=>{
       const c=Engine.migrate(active.ch);
       S={screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:normSection(active.section), importIssues:Engine.versionCheck(c)};
@@ -1534,10 +1554,7 @@
     main.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
       if (ch.identity.archetype!==b.dataset.arch){
         ch.identity.archetype=b.dataset.arch;
-        ch.archetypeChoices={ rolls:{}, focusAllocation:{}, statBonusAllocation:{}, specialization:[],
-          focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
-        const a=Engine.archetype(ch);
-        if (a && a.canPurchaseAdvantages===false) ch.advantages=ch.advantages.filter(x=>x.notes==="natural");
+        resetArchetypeChoices(ch);
       }
       update();
     });
@@ -1850,10 +1867,7 @@
       const nm = v ? (D.archetypes.find(a=>a.id===v)||{name:v}).name : "none";
       commit("admin", `Admin: archetype → ${nm}`, ()=>{
         ch.identity.archetype=v;
-        ch.archetypeChoices={ rolls:{}, focusAllocation:{}, statBonusAllocation:{}, specialization:[],
-          focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
-        const a=Engine.archetype(ch);
-        if (a && a.canPurchaseAdvantages===false) ch.advantages=ch.advantages.filter(x=>x.notes==="natural");
+        resetArchetypeChoices(ch);
       });
     });
     main.querySelectorAll("[data-admin-stat]").forEach(b=>b.onclick=()=>{
@@ -1964,9 +1978,19 @@
       if (!e) return;
       e.rank=Math.max(0,e.rank+delta);
       if (e.rank===0) ch.archetypeChoices.naturalAdvantages=list.filter(n=>n!==e);
-      // mirror into advantages with notes:"natural"
+      // Mirror into advantages with notes:"natural". The mirror is rebuilt from
+      // the ledger each time, so any `selections` the row was carrying have to
+      // be carried across — dropping them would silently wipe a player's picks
+      // on every rank change.
+      const keep = new Map(ch.advantages.filter(x=>x.notes==="natural" && x.selections)
+                                        .map(x=>[x.id, x.selections]));
       ch.advantages=ch.advantages.filter(x=>x.notes!=="natural")
-        .concat(ch.archetypeChoices.naturalAdvantages.map(n=>({id:n.id, rank:n.rank, notes:"natural"})));
+        .concat(ch.archetypeChoices.naturalAdvantages.map(n=>{
+          const row={id:n.id, rank:n.rank, notes:"natural"};
+          if (keep.has(n.id)) row.selections=keep.get(n.id);
+          return row;
+        }));
+      Engine.trimSelections(ch,"advantage",id);
     }
     if (kind==="adv"){
       let e=ch.advantages.find(x=>x.id===id && x.notes!=="natural");

@@ -3,7 +3,7 @@
 **Updated:** 2026-09-03
 **Versions:** app `0.6.0` · game data `0.4` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **77 passing, 0 todo, 0 failing** (77 tests, six files)
+**Suite:** `npm run verify` → **85 passing, 0 todo, 0 failing** (85 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -28,9 +28,11 @@ and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, the session log,
 loadout, and an undo-able audit trail of every action. The engine reproduces the
 CRB's own worked examples (`tests/rules.test.mjs`).
 
-**There is no known defect.** A1 and A2 closed with Batch 3, and the suite has
-no `todo` for the first time since the ledger was written. The next `todo` that
-appears should be a newly *found* defect, not a survivor.
+**No known player-facing defect.** A1 and A2 closed with Batch 3, and the suite
+has no `todo` for the first time since the ledger was written. Three
+machinery gaps found by the PR #7 review are open in §4 — none is reachable
+with current data, so none can bite a player today. The next `todo` that appears
+should be a newly *found* defect, not a survivor.
 
 ---
 
@@ -44,7 +46,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 1 | Engine totality & CRB conformance | ✅ merged (#5) | B3, B6–B10, stale F10 · Decisions 62–68 |
 | 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
 | — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
-| 3 | Selection & constraint system | ✅ **on `feat/picks-system`** | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–81 |
+| 3 | Selection & constraint system | ✅ **PR #7, in review** | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
 | 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Thick Skin, Lucky/Unlucky, Long-Lived |
 | — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
 | 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
@@ -58,6 +60,17 @@ encoded, plus Martial Arts styles. A3 put archetype specialization onto the same
 footing: **one array, `archetypeChoices.specialization`,** with the count read
 from the data (`countBy`, or 1). Three fields became one, and both renderers
 lost their per-archetype branches.
+
+**An adversarial review ran against PR #7** (a separate model, fresh context, no
+access to this session's reasoning). Eight findings; all eight verified against
+the code before anything was changed. **Five were real defects and are fixed**
+(Decision 82) — a trait held both free and purchased addressed by id alone, a
+free-only trait demanding picks with no control to fill them, `Resume draft`
+skipping `migrate()`, the natural-advantage mirror surviving an archetype
+change, and `specializationNeed` inventing a requirement on a corrupt import.
+Two of the guards written for them passed *before* the fix and had to be
+tightened — worth knowing that a failing-first check is the only proof a guard
+guards anything. **Three findings are open and recorded in §4.**
 
 **Two things a next session should know.**
 
@@ -126,14 +139,29 @@ an id there before working on it. **A1, A2, A3 and B1–B10 are all closed.**
 | C2 | Admin mode can't reach `archetypeChoices` | Now much easier — one array to edit |
 | C3 | SFR / form-toggle copy — re-read after F6 and F7 land | Forward note |
 
+### Open from the PR #7 adversarial review
+
+Real gaps, none reachable with current data — no entry declares `excludes` or
+`requires`, and no skill declares `excludes`. Fixing them means designing
+against no example, which is exactly what Decision 57 declined to do. They land
+when the first entry needs them.
+
+| What | Where |
+|---|---|
+| `requirementState` reimplements the milestone-prerequisite check rather than calling it, so `majorCount`, `milestones`, `gear`, `note` and `gmApproval` in a `requires` block would be **silently treated as satisfied** | `engine.js` — merge with `majorPrereqs` |
+| The Professional stat gate is still `if (a.id==="professional")` with its own stat-check code, duplicating `requirementState` — the per-archetype special-casing A3 set out to end | `engine.js` `validate()` — express as `requires` data on the subtype |
+| `optionLock` reads only advantages and disadvantages, so a skill can never take part in an `excludes` pair even though skills host `picks` | `engine.js` `heldIds` |
+
 ---
 
 ## 5. Where to start
 
-**Batch 3 is on `feat/picks-system`, green, not yet merged.** Review it, then
-open the PR. It carries three version bumps (app `0.6.0`, game data `0.4`,
-character schema `0.5`) — an existing `.shadows.json` upgrades through
-`migrate()` on load and reports the game-data mismatch, which is correct.
+**Batch 3 is PR #7, green, in review.** It carries three version bumps (app
+`0.6.0`, game data `0.4`, character schema `0.5`) — an existing `.shadows.json`
+upgrades through `migrate()` on load and reports the game-data mismatch, which
+is correct. The five defects an adversarial review found are fixed on the same
+branch; the three remaining findings are in §4 and none is reachable with
+current data.
 
 After it merges, **Batch 3b (`grants`)** is next and needs a ruling on Educated's
 step ordering before it can be built.
