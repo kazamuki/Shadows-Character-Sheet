@@ -7,11 +7,26 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.5.0
+## [Unreleased] — app 0.6.0
 
-Character schema **0.4** · game data **0.3** · ruleset CRB v4 (in progress).
+Character schema **0.5** · game data **0.4** · ruleset CRB v4 (in progress).
 
 **Player-visible**
+
+- Advantages, Disadvantages and Skills can now ask you for something when you take them:
+  a Skill from a named list (Common Sense), any Skill and a different one per rank
+  (Favored Skill, Refined Skill), up to two Martial Arts styles, or a line of text for the
+  ones the rulebook hands to your GM (Cursed, Pact, Immunity and seven more).
+- An entry the table has to settle — "work out the curse with your GM" — **warns** rather
+  than blocking. You can finish a character before that conversation happens.
+- Long-Lived is marked creation-only, as the CRB says.
+- One specialization block per archetype. The Arcanist used to render its Aberrations twice
+  and demand a pick from each; a Professional's Subtype and a Werewolf's Origin never showed
+  up on the sheet at all. Both fixed.
+- Resuming an in-progress draft now upgrades it like every other load path, so a draft saved
+  under an older version keeps its choices.
+
+**Earlier in this release**
 
 - The sheet now states the CRB's Pain Level floors — "−3 Essence dice (min 1) · −15% Breaker
   (min 10%)" — instead of bare penalties a player could read down to zero dice.
@@ -30,7 +45,16 @@ Character schema **0.4** · game data **0.3** · ruleset CRB v4 (in progress).
   misses fails the build.
 - Test suite: engine units (no DOM), CRB conformance, voice enforcement, jsdom smoke,
   architecture guards, doc consistency.
-- **A1** (Arcanist aberrations render twice) is the only remaining `todo`; it closes with A3.
+- One selection & constraint system — `picks` / `excludes` / `requires` — hosted by
+  advantages, disadvantages and skills. Archetype specialization runs on it too (**A3**),
+  which retired the per-archetype renderer branches and closed **A1** and **A2**.
+- Character schema **0.4 → 0.5**: one `archetypeChoices.specialization` array replaces
+  `identity.specialization`, `subtype` and `aberrations`, with a `migrate()` step. Game data
+  **0.3 → 0.4**: fifteen entries now ask for an input they did not before.
+- The suite has **no `todo` for the first time**. An independent adversarial review of the
+  Batch 3 PR found five further defects, all fixed before merge (Decision 82).
+- Docs guards extended: `package-lock.json` and `README.md`'s version line are now checked
+  against `APP_VERSION`, both having drifted a full version unnoticed.
 
 ## v0.4.0-phase-3.3
 
