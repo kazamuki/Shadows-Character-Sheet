@@ -23,6 +23,7 @@ const read = p => readFileSync(join(ROOT, p), "utf8");
 const STATE = read("docs/STATE.md");
 const SCHEMA = read("docs/SCHEMA.md");
 const CLAUDE = read("CLAUDE.md");
+const INDEX  = read("docs/INDEX.md");
 
 test("STATE.md reports the real suite result", () => {
   // Counted from source rather than by running the suite — this test IS the
@@ -172,3 +173,38 @@ test("STATE.md is short enough that a cold session actually reads it", () => {
   const lines = STATE.split("\n").length;
   assert.ok(lines < 200, `STATE.md is ${lines} lines — move history to docs/log/, reference to SCHEMA.md`);
 });
+
+test("INDEX.md lists every decision and every open flag, exactly once", () => {
+  // An index nobody maintains is worse than no index — it sends the next
+  // session to the wrong place with confidence. So it is generated from the
+  // ledger and checked against it: add a decision without indexing it, or close
+  // a flag without removing its row, and the build fails.
+  const sec  = SCHEMA.slice(SCHEMA.indexOf("## 4. Locked Decisions"), SCHEMA.indexOf("## 5. Open Flags"));
+  const ledger = [...sec.matchAll(/^(\d{1,3})\. /gm)].map(m => Number(m[1]));
+  assert.ok(ledger.length > 50, `parsed only ${ledger.length} decisions — did §4's format change?`);
+
+  const topics = INDEX.slice(INDEX.indexOf("## 3. Decisions by topic"));
+  const listed = [...topics.matchAll(/^- \*\*(\d{1,3})\*\*/gm)].map(m => Number(m[1]));
+
+  const dupes = listed.filter((n, i) => listed.indexOf(n) !== i);
+  assert.deepEqual([...new Set(dupes)], [], "INDEX.md lists a decision under more than one topic");
+
+  const set = new Set(listed);
+  const unindexed = ledger.filter(n => !set.has(n));
+  assert.deepEqual(unindexed, [],
+    "decisions exist in SCHEMA §4 with no row in INDEX.md §3 — add them to the topic list");
+
+  const phantom = listed.filter(n => !ledger.includes(n));
+  assert.deepEqual(phantom, [], "INDEX.md lists a decision number that SCHEMA §4 does not have");
+
+  // Every flag still open in §5 needs a row in the id registry, and nothing else.
+  const fsec = SCHEMA.slice(SCHEMA.indexOf("## 5. Open Flags"), SCHEMA.indexOf("## 6."));
+  const open = [...new Set([...fsec.matchAll(/^\| (F\d+) \|/gm)].map(m => m[1]))];
+  const registry = INDEX.slice(INDEX.indexOf("### Open flags"), INDEX.indexOf("## 3."));
+  const indexed = [...new Set([...registry.matchAll(/^\| `(F\d+)` \|/gm)].map(m => m[1]))];
+  assert.deepEqual(open.filter(f => !indexed.includes(f)), [],
+    "an open flag in SCHEMA §5 has no row in INDEX.md §2");
+  assert.deepEqual(indexed.filter(f => !open.includes(f)), [],
+    "INDEX.md lists a flag that SCHEMA §5 no longer carries — closing a flag is now three edits");
+});
+
