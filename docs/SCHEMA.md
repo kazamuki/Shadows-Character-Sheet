@@ -1119,6 +1119,50 @@ No cascade logic to maintain — it falls out of the architecture.
     two-parallel-models fault as A1/A2, one layer down, and the general lesson
     holds: **a mirror needs one writer.** (Ken, 2026-09-03)
 
+82. **(Batch 3, post-review)** **A trait held twice is still one trait — and an
+    adversarial review found it.** PR #7 was reviewed by a separate model in a
+    fresh context with no access to the reasoning that produced it. Eight
+    findings, all eight verified against the code before anything was changed;
+    five were real and are fixed here.
+
+    **The substantive one.** A Professional can hold the *same* advantage on two
+    ledger rows: once free through the Natural Advantages pool
+    (`notes: "natural"`) and once bought with CP. `entryFor` addressed a trait by
+    id alone, so `picksFor` / `setSelection` / `trimSelections` read and wrote
+    **whichever row came first** — which depended on allocation order, silently.
+    `favored-skill` is in that pool *and* carries picks, so this was reachable
+    with shipped data on the day it merged. The fix states the model rather than
+    patching the symptom: **two rows, one trait.** Ranks add up, the purchased
+    row owns the store, and `setSelection` deletes any store on the other row so
+    the two cannot drift apart — which is A1's disease again, one layer down and
+    for the third time (see also Decision 81).
+
+    **The other four.** A free-only trait demanded picks that had no control to
+    fill them, because the CP step rendered a control only when the *purchased*
+    rank was above zero — an error a player could not clear. `Resume draft`
+    loaded straight from `localStorage` while both other load paths called
+    `migrate()`, so a draft written under schema 0.4 came back with its
+    specialization in a field no reader looks at any more. Decision 81's mirror
+    fix was wired into the *subtype* handler only, leaving both *archetype*
+    change handlers stranding the same rows — both already warned that they
+    cleared natural advantages, and now they do, through one shared
+    `resetArchetypeChoices`. And `specializationNeed` fell back to 1 when a
+    declared `countBy` could not resolve, inventing a requirement on a corrupt
+    import where `main` had raised none.
+
+    A sixth defect surfaced while fixing the first: the natural-advantage mirror
+    is rebuilt from the ledger on every rank change, which threw away the
+    `selections` the free row had just been given. Found by asking what else
+    wrote to the row that had become a store.
+
+    **What the process is worth recording for.** Two of the guards written for
+    these findings **passed before the fix** — one refused for the wrong reason
+    (no slot, not a duplicate), one tested an engine path that was already
+    correct when the bug was entirely in the UI. Both were tightened until they
+    failed first. A review that hands you a finding does not hand you a guard,
+    and *"the test passes"* is not evidence until it has been seen to fail.
+    Eight mutations, eight caught. (Ken, 2026-09-03)
+
 
 ## 5. Open Flags
 

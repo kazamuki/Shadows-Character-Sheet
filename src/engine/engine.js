@@ -655,6 +655,25 @@ const Engine = (() => {
   const entryFor = (ch, kind, id) => kind==="skill"
     ? (((ch||{}).skills||{})[id] || null)
     : (listFor(ch, kind).find(x=>x && x.id===id) || null);
+
+  // A character can hold the SAME advantage on two ledger rows — once free
+  // through the Professional Natural Advantages pool (notes:"natural") and once
+  // bought with CP. They are two rows for ONE trait: the ranks add up, and the
+  // choices the trait demands belong to the trait rather than to a row.
+  // `favored-skill` sits in that pool AND carries picks, so this is reachable
+  // with shipped data. A plain `.find(id)` returned whichever row came first,
+  // so reads and writes landed on different rows depending on allocation order.
+  const entryCopies = (ch, kind, id) => kind==="skill"
+    ? (entryFor(ch, kind, id) ? [entryFor(ch, kind, id)] : [])
+    : listFor(ch, kind).filter(x=>x && x.id===id);
+  // The purchased row owns the store when there is one, so the address is
+  // stable however the rows happen to be ordered.
+  function canonicalEntry(ch, kind, id){
+    const copies = entryCopies(ch, kind, id);
+    return copies.find(x=>x.notes!=="natural") || copies[0] || null;
+  }
+  const heldRank = (ch, kind, id) =>
+    entryCopies(ch, kind, id).reduce((s,x)=>s + Math.max(0, x.rank||0), 0);
   const traitName = id => (advById(id) || disById(id) || {name:id}).name;
   const heldIds = ch => [...(ch.advantages||[]), ...(ch.disadvantages||[])]
     .filter(x=>x && x.rank>0).map(x=>x.id);
@@ -731,8 +750,8 @@ const Engine = (() => {
   function picksFor(ch, kind, id){
     const def = defFor(kind, id);
     if (!def || !Array.isArray(def.picks)) return [];
-    const entry = entryFor(ch, kind, id);
-    const rank  = entry ? Math.max(0, entry.rank||0) : 0;
+    const entry = canonicalEntry(ch, kind, id);
+    const rank  = heldRank(ch, kind, id);          // both rows, one trait
     const sel   = (entry && entry.selections && typeof entry.selections==="object") ? entry.selections : {};
     return def.picks.map(pick=>{
       const per  = pick.count==null ? 1 : pick.count;
@@ -760,11 +779,14 @@ const Engine = (() => {
   // Mutator, following addBoost: distinctness and the slot cap are rules, and
   // rules live next to the rules, not next to the DOM.
   function setSelection(ch, kind, id, pickId, index, value){
-    const def = defFor(kind, id), entry = entryFor(ch, kind, id);
+    const def = defFor(kind, id), entry = canonicalEntry(ch, kind, id);
     if (!def || !entry) return { ok:false, why:"That trait is not taken." };
     const pick = (def.picks||[]).find(p=>p.id===pickId);
     if (!pick) return { ok:false, why:"No such choice on that trait." };
     if (!entry.selections || typeof entry.selections!=="object") entry.selections = {};
+    // One trait, one store. A second row must never grow its own, or the two
+    // drift apart exactly the way A1/A2 did.
+    for (const other of entryCopies(ch, kind, id)) if (other!==entry) delete other.selections;
     if (pick.type==="text"){
       entry.selections[pickId] = value==null ? "" : String(value);
       return { ok:true };
@@ -787,7 +809,8 @@ const Engine = (() => {
   // Rank went down: drop the slots that no longer exist. Called after any rank
   // change so a saved character never carries selections it cannot show.
   function trimSelections(ch, kind, id){
-    const entry = entryFor(ch, kind, id);
+    const entry = canonicalEntry(ch, kind, id);
+    for (const other of entryCopies(ch, kind, id)) if (other!==entry) delete other.selections;
     if (!entry || !entry.selections) return ch;
     for (const st of picksFor(ch, kind, id)){
       if (st.pick.type==="text") continue;
@@ -813,7 +836,10 @@ const Engine = (() => {
     let node = path[0]==="campaignPowerScaling" ? scalingRow(ch) : a;
     const from = path[0]==="campaignPowerScaling" ? 1 : 0;
     for (let i=from; i<path.length && node!=null; i++) node = node[path[i]];
-    return typeof node==="number" ? node : 1;
+    // An entry that DECLARES a count and cannot resolve one asks for nothing.
+    // Falling back to 1 invented a requirement the data never stated — on a
+    // corrupt import with no power level, main raised nothing here.
+    return typeof node==="number" ? node : 0;
   }
   const specializationIds = ch => (((ch||{}).archetypeChoices||{}).specialization) || [];
   // Resolved option objects, in the order chosen. Orphans (an id the data no

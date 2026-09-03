@@ -428,3 +428,96 @@ test("specializationNeed comes from the data, not from the archetype's name", ()
     assert.equal(Engine.specializationNeed(ch), 1, id);
   }
 });
+
+// ── Adversarial review of PR #7 — the findings, as guards ─────────────
+// A Professional can hold the SAME advantage twice: once free through the
+// Natural Advantages pool (notes:"natural") and once bought with CP
+// (notes:""). `favored-skill` is in that pool AND carries picks, so this is
+// reachable with shipped data, not a hypothetical.
+
+/** A Professional holding favored-skill both free and purchased. */
+function doubleHeld({ natural = 2, purchased = 1 } = {}){
+  const ch = subject();
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["cleaner"];
+  ch.archetypeChoices.naturalAdvantages = [{ id: "favored-skill", rank: natural }];
+  ch.advantages = [];
+  if (natural)   ch.advantages.push({ id: "favored-skill", rank: natural, notes: "natural" });
+  if (purchased) ch.advantages.push({ id: "favored-skill", rank: purchased, notes: "" });
+  return ch;
+}
+
+test("a trait held both free and purchased is ONE trait, counted once (review #1)", () => {
+  // entryFor's .find() had no `notes` filter, so picksFor/setSelection/
+  // trimSelections read and wrote whichever copy happened to come first —
+  // silently, and differently depending on allocation order.
+  const ch = doubleHeld({ natural: 2, purchased: 1 });
+  const [st] = Engine.picksFor(ch, "advantage", "favored-skill");
+  assert.equal(st.need, 3, "the two copies are not being counted as one trait");
+
+  // A write must land somewhere a read can see it, whichever copy is first.
+  Engine.setSelection(ch, "advantage", "favored-skill", "skill", 0, "handguns");
+  assert.equal(Engine.picksFor(ch, "advantage", "favored-skill")[0].chosen[0], "handguns",
+    "the write went to a copy the read cannot see");
+
+  // Order must not change the answer.
+  const flipped = doubleHeld({ natural: 2, purchased: 1 });
+  flipped.advantages.reverse();
+  Engine.setSelection(flipped, "advantage", "favored-skill", "skill", 0, "handguns");
+  assert.equal(Engine.picksFor(flipped, "advantage", "favored-skill")[0].chosen[0], "handguns",
+    "the answer depends on which copy is stored first");
+  assert.equal(Engine.picksFor(flipped, "advantage", "favored-skill")[0].need, 3);
+
+  // Exactly one copy carries the store — two would drift apart again.
+  const carriers = ch.advantages.filter(a => a.selections && a.selections.skill);
+  assert.equal(carriers.length, 1, "both copies grew their own selections");
+});
+
+test("distinctness spans a trait held both free and purchased (review #1)", () => {
+  // Assert the REASON, not just the refusal: before the fix slot 1 did not
+  // exist at all (need came from one copy's rank), so this refused with
+  // "no slot" and passed while testing nothing.
+  const ch = doubleHeld({ natural: 1, purchased: 1 });
+  assert.equal(Engine.picksFor(ch, "advantage", "favored-skill")[0].need, 2,
+    "the two rows are not adding up to one trait of rank 2");
+  assert.equal(Engine.setSelection(ch, "advantage", "favored-skill", "skill", 0, "handguns").ok, true);
+  const dup = Engine.setSelection(ch, "advantage", "favored-skill", "skill", 1, "handguns");
+  assert.equal(dup.ok, false, "the same Skill was accepted twice across the two rows");
+  assert.match(dup.why, /different one for each rank/,
+    `refused for the wrong reason: ${dup.why}`);
+});
+
+test("a free-only trait demands its picks and clears when they are filled", () => {
+  // The engine half of review #2 was already right: a natural-mirrored entry
+  // does demand its picks. The bug was entirely in the UI, which rendered no
+  // control for it — guarded in tests/smoke.test.mjs. This pins the invariant
+  // the UI fix has to satisfy.
+  const ch = doubleHeld({ natural: 2, purchased: 0 });
+  const [st] = Engine.picksFor(ch, "advantage", "favored-skill");
+  assert.equal(st.need, 2, "a free-only trait asks for nothing");
+  const errs = Engine.validate("character-points", ch)
+    .filter(i => i.level === "error" && /Favored Skill/.test(i.msg));
+  assert.equal(errs.length, 1, "the demand disappeared instead of being made fillable");
+
+  for (const [i, id] of ["handguns", "melee"].entries())
+    Engine.setSelection(ch, "advantage", "favored-skill", "skill", i, id);
+  assert.equal(Engine.validate("character-points", ch)
+    .filter(i => i.level === "error" && /Favored Skill/.test(i.msg)).length, 0,
+    "filling every slot did not clear the error");
+});
+
+test("specializationNeed asks for nothing when it cannot resolve a count (review #6)", () => {
+  // main gated the aberration requirement behind a live scaling row. Falling
+  // back to 1 makes a corrupt import demand a pick the data never asked for.
+  const ch = Engine.newCharacter();
+  ch.identity.archetype = "arcanist";          // declares countBy
+  ch.creation.powerLevel = null;               // ...which cannot be resolved
+  assert.equal(Engine.specializationNeed(ch), 0,
+    "an unresolvable countBy invented a requirement");
+  assert.equal(Engine.validate("archetype", ch)
+    .filter(i => i.level === "error" && /Aberration/.test(i.msg)).length, 0);
+
+  // An archetype with no countBy still means exactly one — unchanged.
+  ch.identity.archetype = "professional";
+  assert.equal(Engine.specializationNeed(ch), 1);
+});

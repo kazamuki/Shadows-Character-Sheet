@@ -238,3 +238,140 @@ test("an unmet pick blocks the lock, an unwritten GM detail does not", () => {
   ch.disadvantages = [{ id: "pact", rank: 1, notes: "" }];
   assert.equal(errs().some(i => /Pact/.test(i.msg)), false, "an unwritten pact is blocking the lock");
 });
+
+// ── Adversarial review of PR #7 — the UI half ─────────────────────────
+
+test("Resume draft migrates the draft, like every other load path (review #3)", () => {
+  // Open sheet and file import both call Engine.migrate. Resume did not, so a
+  // draft saved under schema 0.4 came back with its specialization still in
+  // archetypeChoices.aberrations — a field no reader looks at any more. The
+  // player's choice vanished with no warning.
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const legacy = Engine.newCharacter();
+  legacy.identity.name = "Probe";
+  legacy.identity.archetype = "arcanist";
+  legacy.creation.powerLevel = D.powerLevels[0].id;
+  legacy.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(legacy.stats)) legacy.stats[id].base = 5;
+  // Put it back into the pre-0.5 shape the old app would have written.
+  delete legacy.archetypeChoices.specialization;
+  legacy.archetypeChoices.aberrations = ["arcane-fortitude"];
+  legacy.meta.schemaVersion = "0.4";
+
+  const app = boot({ storage: { "shadows.draft.v1": { ch: legacy, step: steps.indexOf("archetype"), maxReached: steps.length - 1 } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.deepEqual(app.errors, []);
+
+  const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
+    "the resumed draft lost its specialization");
+  assert.equal(resumed.meta.schemaVersion, "0.5");
+  // And the choice is visibly selected, not merely stored.
+  assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
+});
+
+test("changing archetype clears the natural-advantage mirror (review #4)", () => {
+  // The PR fixed this for a SUBTYPE change and left the two ARCHETYPE change
+  // handlers alone — so a full swap still stranded the old archetype's free
+  // advantages in ch.advantages forever. Both handlers already warn that they
+  // clear natural advantages; now they do.
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "professional";
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
+  ch.archetypeChoices.specialization = ["cleaner"];
+  ch.archetypeChoices.naturalAdvantages = [{ id: "iron-will", rank: 1 }];
+  ch.advantages = [{ id: "iron-will", rank: 1, notes: "natural" },
+                   { id: "ambidextrous", rank: 1, notes: "" }];
+
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("archetype"), maxReached: steps.length - 1 } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+
+  // Arcanist can purchase advantages, so the bought one survives...
+  app.click('[data-arch="arcanist"]');
+  assert.deepEqual(app.errors, []);
+  let now = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  assert.equal(now.advantages.some(a => a.notes === "natural"), false,
+    "the Professional's free advantages survived the archetype change");
+  assert.equal(now.advantages.some(a => a.id === "ambidextrous"), true,
+    "a legitimately purchased advantage was thrown away");
+  assert.deepEqual([...now.archetypeChoices.naturalAdvantages], []);
+
+  // ...and a supernatural archetype, which cannot purchase at all, keeps none.
+  app.click('[data-arch="werewolf"]');
+  now = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  assert.deepEqual([...now.advantages], [],
+    "a Werewolf kept advantages it cannot hold");
+});
+
+test("a free-only pick-bearing advantage is fillable on the step that demands it (review #2)", () => {
+  // The error is raised on the Character Points step, so the control has to be
+  // there too — a player cannot clear an error whose control lives elsewhere.
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "professional";
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
+  ch.archetypeChoices.specialization = ["cleaner"];
+  ch.archetypeChoices.naturalAdvantages = [{ id: "favored-skill", rank: 2 }];
+  ch.advantages = [{ id: "favored-skill", rank: 2, notes: "natural" }];
+
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("character-points"), maxReached: steps.length - 1 } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.deepEqual(app.errors, []);
+
+  const slots = app.$$('select[data-sel^="advantage|favored-skill|skill|"]');
+  assert.equal(slots.length, 2,
+    `a free-only trait demanded picks with ${slots.length} controls to fill them`);
+
+  // And the allocator on the Archetype step offers them too, where the ranks
+  // are actually spent.
+  const arch = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("archetype"), maxReached: steps.length - 1 } } });
+  arch.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+      .dispatchEvent(new arch.window.MouseEvent("click", { bubbles: true }));
+  assert.ok(arch.$$('select[data-sel^="advantage|favored-skill|skill|"]').length >= 2,
+    "the Natural Advantages allocator does not offer the picks it grants");
+  assert.deepEqual(arch.errors, []);
+});
+
+test("raising a free advantage's rank does not wipe the picks already made", () => {
+  // The natural-advantage mirror is rebuilt from the ledger on every rank
+  // change. Since the free row is where a free-only trait stores its choices,
+  // rebuilding it naively threw them away one keystroke after they were made.
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "professional";
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
+  ch.archetypeChoices.specialization = ["cleaner"];
+  ch.archetypeChoices.naturalAdvantages = [{ id: "favored-skill", rank: 1 }];
+  ch.advantages = [{ id: "favored-skill", rank: 1, notes: "natural" }];
+
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("archetype"), maxReached: steps.length - 1 } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+
+  const slot = app.$('select[data-sel="advantage|favored-skill|skill|0"]');
+  assert.ok(slot, "the free advantage offers no pick control");
+  slot.value = "handguns";
+  slot.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+
+  // Now bump the free rank — the choice above must survive.
+  app.click('[data-step="natadv|favored-skill|1"]');
+  assert.deepEqual(app.errors, []);
+  const after = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  const row = after.advantages.find(a => a.id === "favored-skill");
+  assert.equal(row.rank, 2, "the rank did not go up");
+  assert.equal((row.selections || {}).skill && row.selections.skill[0], "handguns",
+    "raising the rank wiped the skill already chosen");
+});
