@@ -852,6 +852,138 @@ No cascade logic to maintain — it falls out of the architecture.
     every saved character report a mismatch for nothing, and a warning that
     cries wolf stops being read. (Ken, 2026-09-02)
 
+69. **(Batch 2)** **The Voice & Style Guide is mirrored into this repo, and the
+    CRB copy stays the master.** `docs/reference/GUIDE_Shadows_Voice.md` carries
+    a provenance header — source file, source project, date pulled — and a line
+    saying the CRB wins on conflict. It is a **mirror, not a second master**:
+    re-pull it rather than editing in place. The reason it is here at all is
+    that player-facing strings live in *this* repo, and a session judging one
+    could not check the standard without cross-project context. That made every
+    copy question a round-trip through Ken, which is the same bottleneck F8 has
+    been for two sessions. The risk accepted is drift, and the mitigation is
+    that a dated mirror is honest about being stale. (Ken, 2026-09-02)
+
+70. **(Batch 2)** **Two audiences, two fields — and the maintainer one cannot
+    render.** `flagNote` is written for Ken and Deighton: flag ids, data-file
+    field paths, "confirm with D". The app rendered it verbatim to players, so
+    someone buying LUCK read *"F1: CP cost per LUCK point stubbed at 1 — confirm
+    with D."* The obvious fix — rewrite the notes to sound nicer — is the wrong
+    one, because the id and the precision are the whole value of the flag table.
+    Instead the entry gains an optional `playerNote`, and `flagHtml()` was
+    changed to take **the entry, not a string**, reading only `playerNote` with
+    a fallback to `appCopy`. Passing a raw note is no longer expressible.
+    `playerNote` is optional on purpose: eleven flags stopped leaking on day one
+    without eleven pieces of copy being owed, and specific lines were written
+    only for the four a player meets during creation (F1, F2, F8, F14). The
+    precedent generalises — **maintainer content and player content are
+    different fields, everywhere, from here on.** (Ken, 2026-09-02)
+
+71. **(Batch 2)** **"Not finished" is a state the app renders, not a sentence
+    someone remembers to delete.** The app was built to be demonstrated, so it
+    narrated its own roadmap: *"Session tracking arrives in Phase 3"*, *"this
+    archetype ships as TBD"*, a hardcoded `<b>F14</b>` block, and a footer
+    announcing "app phase 3.3". Ten sites in all. Every player-facing string the
+    app generates for a *state* now lives in one `appCopy` block, so **changing
+    the app's voice is a data edit** — no code is touched. Raw `status` values
+    render through `appCopy.statusLabel`, so nobody reads "tbd"; `meta.rulesetVersion`
+    became "CRB v4 (in progress)" rather than "CRB v4 WIP". F14 moved out of the
+    UI into `ip` alongside every other flag. The lock screen simply lost its
+    fourth sentence: the three before it were already a closing cadence, and the
+    roadmap note was stepping on the ending. (Ken, 2026-09-02)
+
+72. **(Batch 2)** **`validate()` writes player-facing copy, and that is where a
+    build-state sentence hid longest.** Every wizard error and warning a player
+    reads is composed in the **engine**, not the UI — `validate()` produced
+    *"Cyborg ships as TBD — rules pending. The sheet will carry the flag."*
+    Nobody looks for prose in a rules engine, which is exactly why it survived
+    the manual comb that found the other nine sites; the enforcement test found
+    it in seconds because it renders the app rather than reading the source.
+    Its other twenty-odd messages are the **best tool voice in the codebase** —
+    *"Pick 3 Combat Skills for your Focused Skills (1/3)"* names the problem,
+    the fix, and the distance to done — and they were left exactly as they are.
+    `docs/VOICE-APP.md` now records all three places player copy lives: `app.js`,
+    `engine.js`, and the data. (Ken, 2026-09-02)
+
+73. **(Batch 2)** **The voice standard is enforced by rendering the app, not by
+    reading the source.** `tests/voice.test.mjs` drives all nine sheet tabs and
+    every wizard step for all five archetypes, then asserts that no `flagNote`
+    is on screen, that no roadmap vocabulary appears, and that no element renders
+    a raw `status` as its own text. Three things this cost, worth recording
+    because they are the general shape of testing rendered copy:
+    **(a)** `body.textContent` includes the inlined data `<script>`, so the
+    first version "failed" on notes nobody could see — strip `script`/`style`
+    first. **(b)** Corpus scanning cannot localise a regression when three sites
+    render the same label, and banning the bare word "draft" fires on the home
+    screen's legitimate "Resume draft" — so raw statuses are caught by a DOM
+    check on leaf elements instead. **(c)** The test fixture was named "Draft"
+    and tripped its own assertion. Every guard was mutation-tested against the
+    pre-fix code. (Ken, 2026-09-02)
+
+74. **(Docs)** **`HANDOFF.md` is retired, and volatile facts live in exactly one
+    place.** HANDOFF had become two documents jammed together: about a hundred
+    and sixty lines of current position, and two hundred and forty-five lines of
+    append-only session log that pushed the useful part below the fold. Worse,
+    the same volatile numbers were restated across `CLAUDE.md`, `HANDOFF.md`
+    and `docs/README.md`, and every one of them had gone stale — the file a cold
+    session reads **first** was telling it the suite was "20 passing, 2 todo"
+    when it was 51/1, and that the decision ledger was "at 54" when it was at 73.
+    Three sessions started from a wrong picture. So: current position moves to
+    **`docs/STATE.md`**, which is *rewritten and never appended* and carries the
+    batch board; history moves to **`docs/log/2026.md`**, append-only and never
+    revised, because figures stated as-of-a-session are history and history does
+    not drift; `CLAUDE.md` carries **no counts at all** and points at STATE for
+    them. A stub remains at `docs/HANDOFF.md` so saved prompts still land.
+    **The orientation path went from ~1,300 lines to ~250** — `SCHEMA.md` stays
+    the authority but is explicitly not read front to back.
+
+    Enforced, because a convention that relies on remembering is the thing that
+    just failed: `tests/docs.test.mjs` checks STATE's suite line against the
+    real test count, rejects a count reappearing in `CLAUDE.md`, requires the
+    decision ledger's numbering to be unbroken, requires every document
+    `CLAUDE.md` references to exist, caps STATE's length, and — the F10 case —
+    **cross-checks the §5 flag table against `flagged: true` in the data**, so
+    closing a flag in one place but not the other fails the build. Its first
+    version counted `todo` tests by reading only the `test(` line, missed the
+    one real `todo` whose `{ todo: }` sits on the next line, and *agreed with an
+    updater script carrying the identical bug* — a guard validating its own
+    blind spot. All five checks were mutation-tested afterwards.
+    (Ken, 2026-09-02)
+
+75. **(Versioning)** **Four versions, four triggers — and `schemaVersion` stopped
+    meaning two things.** The project had three version numbers and no way for
+    Ken and Claude to confirm they were looking at the same build: `package.json`
+    sat at 0.4.0 with nothing reading it, and Batch 2 had just *removed* the only
+    user-visible indicator (the footer's "app phase 3.3", correctly — it was
+    roadmap vocabulary aimed at a player). The app now carries **`APP_VERSION`**
+    in `src/ui/app.js`, mirrored in `package.json`, printed in the footer, and
+    bumped **when a player can see a difference**. Set to **0.5.0**: Batches 1
+    and 2 both changed visible behaviour.
+
+    The naming collision mattered more than the missing number. `meta.schemaVersion`
+    meant the **game data's content version** inside `shadows-data.js` and the
+    **character file's schema version** inside a character — two different things,
+    one name, and no way to tell which you were reading. The data key is renamed
+    to **`gamedataVersion`**, matching exactly the field it stamps onto
+    characters, so `c.meta.gamedataVersion !== D().meta.gamedataVersion` now reads
+    as what it is. No character file stores the key *name*, so no `migrate()`
+    step was needed.
+
+    The data file's own versioning comment was also wrong: it said to bump only
+    on *shape* changes, which is not what anyone has ever done — the CRB v4 pass
+    bumped 0.2 → 0.3 for content, correctly, and Decision 68 codified that rule
+    afterwards. The comment now matches practice. `tests/docs.test.mjs` fails the
+    build if `APP_VERSION`, `package.json` and `STATE.md` disagree, if the footer
+    stops rendering the constant, or if the data file reverts to calling its
+    version `schemaVersion`. (Ken, 2026-09-02)
+
+76. **(Voice)** **`docs/VOICE-APP.md` is adopted, not draft.** Ken reviewed and
+    accepted it. It is the standard for every string a player reads in the app,
+    it derives from `reference/GUIDE_Shadows_Voice.md` (which stays the master
+    for rulebook prose), and it is enforced by `tests/voice.test.mjs` rather than
+    by anyone remembering it. The operative rule is one question — **is the
+    player stuck right now?** Stuck means tool voice: clear, short, out of the
+    way. Not stuck means the city can speak. (Ken, 2026-09-02)
+
 
 ## 5. Open Flags
 
@@ -1045,6 +1177,16 @@ cleared, two opened.
   gamedataVersion bump (Decision 68): sixty computed outputs were diffed before
   and after and every one was identical. **A1** is now the only `todo`, and it
   closes with A3 in Batch 3.
+
+- **Batch 2 — App voice & status copy** ✅ *(2026-09-02)* — Decisions 69-73.
+  The app stopped narrating its own build state. Ten leak sites closed across
+  `app.js`, `engine.js` and the data; `flagNote` can no longer render;
+  player-facing state copy consolidated into one `appCopy` block, so the voice
+  is a data edit. `docs/VOICE-APP.md` records the city-voice / tool-voice split
+  and the test for which you are in — *is the player stuck right now?* Suite
+  **51 passing + 1 `todo`**, with `tests/voice.test.mjs` rendering the whole
+  app and reading every string a player can see. No schema or gamedataVersion
+  bump (Decision 68): no computed value moved.
 
 - **Phase 4 — Selection & constraint system** ⏭ — build `picks` / `excludes` /
   `requires` for advantages & disadvantages (rev 9 audit §4), then retrofit
