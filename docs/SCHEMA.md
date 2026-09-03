@@ -852,6 +852,73 @@ No cascade logic to maintain — it falls out of the architecture.
     every saved character report a mismatch for nothing, and a warning that
     cries wolf stops being read. (Ken, 2026-09-02)
 
+69. **(Batch 2)** **The Voice & Style Guide is mirrored into this repo, and the
+    CRB copy stays the master.** `docs/reference/GUIDE_Shadows_Voice.md` carries
+    a provenance header — source file, source project, date pulled — and a line
+    saying the CRB wins on conflict. It is a **mirror, not a second master**:
+    re-pull it rather than editing in place. The reason it is here at all is
+    that player-facing strings live in *this* repo, and a session judging one
+    could not check the standard without cross-project context. That made every
+    copy question a round-trip through Ken, which is the same bottleneck F8 has
+    been for two sessions. The risk accepted is drift, and the mitigation is
+    that a dated mirror is honest about being stale. (Ken, 2026-09-02)
+
+70. **(Batch 2)** **Two audiences, two fields — and the maintainer one cannot
+    render.** `flagNote` is written for Ken and Deighton: flag ids, data-file
+    field paths, "confirm with D". The app rendered it verbatim to players, so
+    someone buying LUCK read *"F1: CP cost per LUCK point stubbed at 1 — confirm
+    with D."* The obvious fix — rewrite the notes to sound nicer — is the wrong
+    one, because the id and the precision are the whole value of the flag table.
+    Instead the entry gains an optional `playerNote`, and `flagHtml()` was
+    changed to take **the entry, not a string**, reading only `playerNote` with
+    a fallback to `appCopy`. Passing a raw note is no longer expressible.
+    `playerNote` is optional on purpose: eleven flags stopped leaking on day one
+    without eleven pieces of copy being owed, and specific lines were written
+    only for the four a player meets during creation (F1, F2, F8, F14). The
+    precedent generalises — **maintainer content and player content are
+    different fields, everywhere, from here on.** (Ken, 2026-09-02)
+
+71. **(Batch 2)** **"Not finished" is a state the app renders, not a sentence
+    someone remembers to delete.** The app was built to be demonstrated, so it
+    narrated its own roadmap: *"Session tracking arrives in Phase 3"*, *"this
+    archetype ships as TBD"*, a hardcoded `<b>F14</b>` block, and a footer
+    announcing "app phase 3.3". Ten sites in all. Every player-facing string the
+    app generates for a *state* now lives in one `appCopy` block, so **changing
+    the app's voice is a data edit** — no code is touched. Raw `status` values
+    render through `appCopy.statusLabel`, so nobody reads "tbd"; `meta.rulesetVersion`
+    became "CRB v4 (in progress)" rather than "CRB v4 WIP". F14 moved out of the
+    UI into `ip` alongside every other flag. The lock screen simply lost its
+    fourth sentence: the three before it were already a closing cadence, and the
+    roadmap note was stepping on the ending. (Ken, 2026-09-02)
+
+72. **(Batch 2)** **`validate()` writes player-facing copy, and that is where a
+    build-state sentence hid longest.** Every wizard error and warning a player
+    reads is composed in the **engine**, not the UI — `validate()` produced
+    *"Cyborg ships as TBD — rules pending. The sheet will carry the flag."*
+    Nobody looks for prose in a rules engine, which is exactly why it survived
+    the manual comb that found the other nine sites; the enforcement test found
+    it in seconds because it renders the app rather than reading the source.
+    Its other twenty-odd messages are the **best tool voice in the codebase** —
+    *"Pick 3 Combat Skills for your Focused Skills (1/3)"* names the problem,
+    the fix, and the distance to done — and they were left exactly as they are.
+    `docs/VOICE-APP.md` now records all three places player copy lives: `app.js`,
+    `engine.js`, and the data. (Ken, 2026-09-02)
+
+73. **(Batch 2)** **The voice standard is enforced by rendering the app, not by
+    reading the source.** `tests/voice.test.mjs` drives all nine sheet tabs and
+    every wizard step for all five archetypes, then asserts that no `flagNote`
+    is on screen, that no roadmap vocabulary appears, and that no element renders
+    a raw `status` as its own text. Three things this cost, worth recording
+    because they are the general shape of testing rendered copy:
+    **(a)** `body.textContent` includes the inlined data `<script>`, so the
+    first version "failed" on notes nobody could see — strip `script`/`style`
+    first. **(b)** Corpus scanning cannot localise a regression when three sites
+    render the same label, and banning the bare word "draft" fires on the home
+    screen's legitimate "Resume draft" — so raw statuses are caught by a DOM
+    check on leaf elements instead. **(c)** The test fixture was named "Draft"
+    and tripped its own assertion. Every guard was mutation-tested against the
+    pre-fix code. (Ken, 2026-09-02)
+
 
 ## 5. Open Flags
 
@@ -1045,6 +1112,16 @@ cleared, two opened.
   gamedataVersion bump (Decision 68): sixty computed outputs were diffed before
   and after and every one was identical. **A1** is now the only `todo`, and it
   closes with A3 in Batch 3.
+
+- **Batch 2 — App voice & status copy** ✅ *(2026-09-02)* — Decisions 69-73.
+  The app stopped narrating its own build state. Ten leak sites closed across
+  `app.js`, `engine.js` and the data; `flagNote` can no longer render;
+  player-facing state copy consolidated into one `appCopy` block, so the voice
+  is a data edit. `docs/VOICE-APP.md` records the city-voice / tool-voice split
+  and the test for which you are in — *is the player stuck right now?* Suite
+  **51 passing + 1 `todo`**, with `tests/voice.test.mjs` rendering the whole
+  app and reading every string a player can see. No schema or gamedataVersion
+  bump (Decision 68): no computed value moved.
 
 - **Phase 4 — Selection & constraint system** ⏭ — build `picks` / `excludes` /
   `requires` for advantages & disadvantages (rev 9 audit §4), then retrofit

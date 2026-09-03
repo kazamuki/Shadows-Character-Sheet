@@ -642,7 +642,12 @@ const Engine = (() => {
       if (a.specialization && a.specialization.required && a.specialization.options.length){
         if (!ch.identity.specialization) E(`Choose a ${a.specialization.label}.`);
       }
-      if (a.status==="tbd") W(`${a.name} ships as TBD — rules pending. The sheet will carry the flag.`);
+      // Player-facing: the engine writes copy as well as the UI. Pulled from
+      // appCopy so the voice stays a data edit (Decision 71).
+      if (a.status==="tbd"){
+        const t = ((D().appCopy||{}).archetypeUnwritten) || "{name}'s rules aren't finished yet.";
+        W(t.replace("{name}", a.name));
+      }
       const row = scalingRow(ch);
       if (row && row.focusStatBonusRoll){
         const r = ch.archetypeChoices.rolls.focusStatBonus;

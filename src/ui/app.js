@@ -162,7 +162,23 @@
          + ` · ${pain.essencePenalty} ${long?"Essence dice":"Essence"}${e}`
          + ` · ${pain.breakerPenalty}% Breaker${b}`;
   }
-  function flagHtml(note){ return `<div class="flag"><div><b>Design flag</b> — ${esc(note)}</div></div>`; }
+  // Batch 2 / Decision 70 — two audiences, two fields. `flagNote` is written for
+  // Ken and Deighton: flag ids, field paths, "confirm with D". It must never
+  // reach a player, so flagHtml takes the ENTRY and reads only `playerNote`,
+  // falling back to one line in D.appCopy. Passing a raw string is not possible
+  // any more, which is the point — a maintainer note can no longer leak by
+  // accident. Enforced by a test that scans rendered HTML for flagNote text.
+  const copy = k => (D.appCopy||{})[k] || "";
+  function noticeHtml(label, text){
+    return `<div class="flag"><div><b>${esc(label)}</b> — ${esc(text)}</div></div>`;
+  }
+  function flagHtml(entry){
+    return noticeHtml(copy("unsettledLabel"), (entry && entry.playerNote) || copy("unsettledRule"));
+  }
+  // A settled rule that happens to constrain the player is NOT a design flag —
+  // it reuses the panel but says so, rather than implying the rule is in doubt.
+  function ruleHtml(text){ return noticeHtml(copy("houseRuleLabel"), text); }
+  const statusLabel = s => ((D.appCopy||{}).statusLabel||{})[s] || s;
   function wizNav(stepId){
     const issues = Engine.validate(stepId, S.ch);
     const blocked = issues.some(i=>i.level==="error");
@@ -182,7 +198,7 @@
 
   function renderPowerLevel(){
     const ch=S.ch;
-    let h = D.powerLevelFlags && D.powerLevelFlags.flagged ? flagHtml(D.powerLevelFlags.flagNote) : "";
+    let h = D.powerLevelFlags && D.powerLevelFlags.flagged ? flagHtml(D.powerLevelFlags) : "";
     h += `<div class="cards two">` + D.powerLevels.map(p=>`
       <button class="card ${ch.creation.powerLevel===p.id?"selected":""}" data-pl="${p.id}">
         <h3>${esc(p.name)}</h3>
@@ -236,13 +252,13 @@
     const ch=S.ch, ac=ch.archetypeChoices, sel=Engine.archetype(ch);
     let h = `<div class="cards two">` + D.archetypes.map(a=>`
       <button class="card ${ch.identity.archetype===a.id?"selected":""}" data-arch="${a.id}">
-        <span class="badge ${a.status}">${a.status}</span>
+        <span class="badge ${a.status}">${esc(statusLabel(a.status))}</span>
         <h3>${esc(a.name)}</h3>
         <div class="sub">${(a.primaryStats||[]).join(" · ")||""}</div>
         <p>${esc(a.summary||"")}</p>
       </button>`).join("") + `</div>`;
     if (!sel) return h;
-    if (sel.flagged && sel.flagNote) h += flagHtml(sel.flagNote);
+    if (sel.flagged) h += flagHtml(sel);
     if (sel.gameplayStyle) h += `<p class="step-note" style="margin-top:16px">${esc(sel.gameplayStyle)}</p>`;
 
     const row = Engine.scalingRow(ch);
@@ -277,7 +293,7 @@
       }).join("");
     } else if (sel.specialization && sel.specialization.required){
       h += `<div class="sect">${esc(sel.specialization.label)}</div>
-        <p class="step-note">No ${esc(sel.specialization.label)} options exist yet — this archetype ships as TBD. The character file will carry the flag.</p>`;
+        <p class="step-note">${esc(copy("specializationUnwritten").replace("{label}", sel.specialization.label))}</p>`;
     }
 
     // Arcanist creation inputs
@@ -302,7 +318,7 @@
           <div class="controls"><button class="toggle" data-aber="${o.id}">${on?"Chosen":"Choose"}</button></div></div>
           <div class="desc">${esc(o.description||"")} ${o.benefit?"— "+esc(o.benefit):""}</div></div>`;
       }).join("");
-      h += `<p class="step-note">Aberration benefits apply per their text — structured automation lands with the Powers panels in Phase 3. Evocation starts at rank ${row.evocationStartingRank}; Common Spells (${esc(row.commonSpells)}) are chosen from the Magic section in play.</p>`;
+      h += `<p class="step-note">${esc(copy("applyFromText"))} Evocation starts at rank ${row.evocationStartingRank}; Common Spells (${esc(row.commonSpells)}) are chosen from the Magic section in play.</p>`;
     }
 
     // Werewolf creation inputs
@@ -328,7 +344,7 @@
         if (chooseN.length){
           const m=/^(\d+)/.exec(chooseN[0]); const need=m?Number(m[1]):2;
           h += `<div class="sect">Focused Skills — pick ${need} Combat Skills</div>`;
-          if (D.skillsFlags && D.skillsFlags.flagged) h += flagHtml(D.skillsFlags.flagNote);
+          if (D.skillsFlags && D.skillsFlags.flagged) h += flagHtml(D.skillsFlags);
           h += D.skills.filter(s=>s.category==="combat").map(s=>{
             const on = ac.focusedSkillPicks.includes(s.id);
             return `<div class="pick ${on?"selected":""}"><div class="head"><h4>${esc(s.name)}</h4>
@@ -402,14 +418,14 @@
     let h = `<div class="roll-entry">
       <span class="pool" style="margin-left:0">Base <b>${bal.base}</b> + Disadvantages <b>${bal.granted}</b> = Budget <b>${bal.budget}</b> · Spent <b>${bal.spent}</b> · <span style="color:${bal.left<0?"var(--magenta)":"var(--gold)"}">Remaining <b>${bal.left}</b></span></span>
       <span class="dice-note">${esc(D.creationFlow.steps.find(s=>s.id==="character-points").note||"")}</span></div>`;
-    if (!canBuyAdv) h += flagHtml(`${a.name}s are Supernatural — unable to purchase Advantages. Disadvantages, LUCK, and boosts remain open.`);
+    if (!canBuyAdv) h += ruleHtml(`${a.name}s are Supernatural — unable to purchase Advantages. Disadvantages, LUCK, and boosts remain open.`);
 
     // Disadvantages
     h += `<div class="sect">Disadvantages — grant Character Points (no cap)</div>`;
     h += `<details class="group" open><summary>${D.disadvantages.length} available</summary>` +
       D.disadvantages.map(dd=>{
         const cur = (ch.disadvantages.find(x=>x.id===dd.id)||{rank:0}).rank;
-        return `<div class="pick ${cur>0?"selected":""}">${dd.flagged?flagHtml(dd.flagNote||"flagged for D"):""}
+        return `<div class="pick ${cur>0?"selected":""}">${dd.flagged?flagHtml(dd):""}
           <div class="head"><h4>${esc(dd.name)}</h4><span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
           <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank)}</div></div>
           <div class="desc">${esc(dd.description)}</div></div>`;
@@ -422,7 +438,7 @@
         const cur = (ch.advantages.find(x=>x.id===ad.id && x.notes!=="natural")||{rank:0}).rank;
         const natural = ch.advantages.find(x=>x.id===ad.id && x.notes==="natural");
         const affordable = bal.left>=ad.cost;
-        return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad.flagNote||"flagged for D"):""}
+        return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad):""}
           <div class="head"><h4>${esc(ad.name)}</h4><span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
           ${natural?`<span class="cost grant">natural ×${natural.rank}</span>`:""}
           <div class="controls">${canBuyAdv?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable):"<span class='cost'>locked</span>"}</div></div>
@@ -432,7 +448,7 @@
     // LUCK
     const luck = D.resources.luck;
     h += `<div class="sect">LUCK</div>`;
-    if (luck.flagged) h += flagHtml(luck.flagNote);
+    if (luck.flagged) h += flagHtml(luck);
     h += `<div class="pick"><div class="head"><h4>Buy up LUCK</h4>
       <span class="cost">${luck.cpCostPerPoint} CP/point · exempt from Max Boost</span>
       <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, bal.left>=luck.cpCostPerPoint)}</div></div>
@@ -456,7 +472,7 @@
 
     // Boosts
     h += `<div class="sect">Boosts — leftover CP on Stats &amp; Skills · max ${pl.maxBoost}× per target</div>`;
-    if (D.creationFlow.boostRules.flagged) h += flagHtml(D.creationFlow.boostRules.flagNote);
+    if (D.creationFlow.boostRules.flagged) h += flagHtml(D.creationFlow.boostRules);
     h += `<div class="alloc">`;
     for (const s of D.stats){
       const times = Engine.boostsFor(ch,"stat",s.id);
@@ -486,7 +502,7 @@
       <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
       <span class="pool">Starting Ç <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
     h += `<div class="review-block"><h3>${esc(ch.identity.name)||"Unnamed"}</h3><div class="kv">
-      <span class="k">Archetype</span><span class="v">${a?esc(a.name):"—"}${ch.identity.specialization?" · "+esc(ch.identity.specialization):""}${a&&a.status!=="final"?" ["+a.status+"]":""}</span>
+      <span class="k">Archetype</span><span class="v">${a?esc(a.name):"—"}${ch.identity.specialization?" · "+esc(ch.identity.specialization):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
       <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
       <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
       <span class="k">Derived</span><span class="v">TOL ${der.TOL} · WILL ${der.WILL} · SAN ${der.SAN}% · ${hp.levels} HL / ${hp.total} HP · LUCK ${D.resources.luck.startingValue+ch.trackers.luck.bonus}</span>
@@ -501,7 +517,7 @@
       <button class="btn" data-export="draft">Export draft</button>
       <button class="btn go" data-lock="1" ${blocked?"disabled":""}>Lock &amp; Export</button>
     </div>
-    <p class="step-note" style="margin-top:12px">Locking finalizes creation. The exported <span style="font-family:var(--mono)">.shadows.json</span> is the character — keep it, share it, bring it to the table. Session tracking arrives in Phase 3.</p>`;
+    <p class="step-note" style="margin-top:12px">Locking finalizes creation. The exported <span style="font-family:var(--mono)">.shadows.json</span> is the character — keep it, share it, bring it to the table.</p>`;
     return h;
   }
 
@@ -852,7 +868,7 @@
   function renderShArchetype(){
     const ch=S.ch, a=Engine.archetype(ch);
     if (!a) return sheetHeader("Archetype","No archetype selected.");
-    const badge = a.status!=="final"?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${a.status}</span>`:"";
+    const badge = a.status!=="final"?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${esc(statusLabel(a.status))}</span>`:"";
     let h = sheetHeader(a.name+(ch.identity.specialization?" · "+ch.identity.specialization:""),
       a.summary||a.gameplayStyle||"");
 
@@ -1039,7 +1055,7 @@
     if (!trained.length) h += `<p class="step-note">No trained skills yet.</p>`;
     h += `</div>`;
     h += `<details class="group" style="margin-left:14px"><summary>Learn a new skill (${untrained.length})</summary>
-      <div class="flag"><div><b>F14</b> — "5 × current rank" prices rank 0→1 at zero. Costed as rank 1 (5 IP, Focused 3) pending a ruling from D.</div></div><div class="alloc">` +
+      ${D.ip.flagged?flagHtml(D.ip):""}<div class="alloc">` +
       untrained.map(s=>{
         const c=Engine.ipCost(ch,"skill",s.id);
         return `<div class="alloc-row"><div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} <small>${esc(s.description)}</small></div>
@@ -1096,7 +1112,7 @@
       const reqs = pre.met.map(x=>`<span class="chip ok">${esc(x)}</span>`)
         .concat(pre.unmet.filter(x=>!/Already taken/.test(x)).map(x=>`<span class="chip pain">${esc(x)}</span>`))
         .concat(pre.manual.map(x=>`<span class="chip gold">GM: ${esc(x)}</span>`)).join("");
-      return `<div class="pick ms ${taken?"taken":""} ${canTake||taken?"":"locked-ms"}">${m.flagged?flagHtml(m.flagNote||"flagged"):""}
+      return `<div class="pick ms ${taken?"taken":""} ${canTake||taken?"":"locked-ms"}">${m.flagged?flagHtml(m):""}
         <div class="head"><h4>${esc(m.name)}${taken?' <span class="chip ok">taken</span>':""}</h4>
         <div class="controls"><button class="toggle" data-takemajor="${m.id}" data-gm="${pre.manual.length?1:0}" ${canTake?"":"disabled"}
           title="${esc(canTake?"":(taken?"Once each.":pre.unmet.concat(ms.majorLeft<=0?["No Major unlocked."]:[]).join(" ")))}">Take</button></div></div>
@@ -1197,7 +1213,7 @@
           h += `<table class="ref"><tbody>` + ranks.map(d=>
             `<tr><td>${esc(d.name)}</td><td class="num">rank ${d.rank}</td>
              <td style="font-size:.76rem;color:var(--dim)">${esc(d.description||"")}</td></tr>`).join("") + `</tbody></table>
-            <p class="step-note">Ranks advance through play — IP rules for Powers are pending the Magic section.</p>`;
+            <p class="step-note">${esc(copy("ranksAdvanceInPlay"))}</p>`;
         } else h += `<p class="step-note">Nothing here yet.</p>`;
       }
       if (p.type==="table"){
@@ -1218,7 +1234,7 @@
         const cur = ch.panelData[p.id] || p.options[0];
         h += `<div class="form-toggle">` + p.options.map(o=>
           `<button class="${cur===o?"on":""}" data-ptoggle="${p.id}|${esc(o)}">${esc(o)}</button>`).join("") + `</div>
-          <p class="step-note">Form effects apply per the archetype text — automation lands with the ${esc(a?a.name:"archetype")} rules.</p>`;
+          <p class="step-note">${esc(copy("applyFromText"))}</p>`;
       }
     }
     return h;
@@ -1891,7 +1907,7 @@
     const f=$("footer"); if (!f) return;
     const collapsed = footerCollapsed();
     f.classList.toggle("collapsed", collapsed);
-    f.innerHTML = `<span class="fmeta">NYTE CITY REGISTRY · GET DANGEROUS GAMES · data <b>${esc(D.meta.schemaVersion)}</b> · ${esc(D.meta.rulesetVersion)} · app <b>phase 3.3</b></span>
+    f.innerHTML = `<span class="fmeta">NYTE CITY REGISTRY · GET DANGEROUS GAMES · data <b>${esc(D.meta.schemaVersion)}</b> · ${esc(D.meta.rulesetVersion)}</span>
       <button class="ftoggle" data-ftoggle>${collapsed?"GDG ▴":"Hide ▾"}</button>`;
     f.querySelector("[data-ftoggle]").onclick=()=>{
       const nowCollapsed = !f.classList.contains("collapsed");
