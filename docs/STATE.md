@@ -42,8 +42,8 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 |---|---|---|---|
 | — | Quick wins | ✅ merged (#5) | B2, B4, B5 · Decisions 59–61 |
 | 1 | Engine totality & CRB conformance | ✅ merged (#5) | B3, B6, B7, B8, B9, B10, stale F10 · Decisions 62–68 |
-| 2 | App voice & status copy | ✅ in review | B1 + nine sibling leak sites · Decisions 69–73 |
-| — | Docs restructure + versioning | ✅ in review | STATE replaces HANDOFF; four-version model; VOICE-APP adopted · Decisions 74–76 |
+| 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
+| — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model; VOICE-APP adopted · Decisions 74–76 |
 | 3 | **Selection & constraint system** | ⏭ **next** | `picks` / `excludes` / `requires`, then retrofit A3 → closes A1, A2 and the last `todo` |
 | 4 | Biomech as data | ⏳ after 3 | F6 lands as a data entry, not a fourth special case |
 
@@ -123,14 +123,13 @@ an id there before working on it. **B1–B10 are all closed.**
 
 ---
 
-## 5. Branches in flight
+## 5. Where to start
 
-| Branch | State |
-|---|---|
-| `fix/batch-1-engine-totality` | **Merged** into `main` as PR #5 on 2026-09-02, with the quick-wins commit |
-| `feat/batch-2-app-voice` | Pushed, PR open against `main`. Three commits: Batch 2, the docs restructure, and the versioning model. Merges cleanly |
+**Nothing in flight.** `main` is at PR #6, every branch is merged and deleted, and
+`npm run verify` is green on it. Batches 1 and 2, the docs restructure and the
+versioning model all landed on 2026-09-02 as PRs #5 and #6.
 
-Nothing else is in flight. Start Batch 3 from `main` once this merges.
+**Start Batch 3 from `main`.** Branch it `feat/picks-system`.
 
 ---
 
