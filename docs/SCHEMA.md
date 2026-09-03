@@ -919,6 +919,36 @@ No cascade logic to maintain — it falls out of the architecture.
     and tripped its own assertion. Every guard was mutation-tested against the
     pre-fix code. (Ken, 2026-09-02)
 
+74. **(Docs)** **`HANDOFF.md` is retired, and volatile facts live in exactly one
+    place.** HANDOFF had become two documents jammed together: about a hundred
+    and sixty lines of current position, and two hundred and forty-five lines of
+    append-only session log that pushed the useful part below the fold. Worse,
+    the same volatile numbers were restated across `CLAUDE.md`, `HANDOFF.md`
+    and `docs/README.md`, and every one of them had gone stale — the file a cold
+    session reads **first** was telling it the suite was "20 passing, 2 todo"
+    when it was 51/1, and that the decision ledger was "at 54" when it was at 73.
+    Three sessions started from a wrong picture. So: current position moves to
+    **`docs/STATE.md`**, which is *rewritten and never appended* and carries the
+    batch board; history moves to **`docs/log/2026.md`**, append-only and never
+    revised, because figures stated as-of-a-session are history and history does
+    not drift; `CLAUDE.md` carries **no counts at all** and points at STATE for
+    them. A stub remains at `docs/HANDOFF.md` so saved prompts still land.
+    **The orientation path went from ~1,300 lines to ~250** — `SCHEMA.md` stays
+    the authority but is explicitly not read front to back.
+
+    Enforced, because a convention that relies on remembering is the thing that
+    just failed: `tests/docs.test.mjs` checks STATE's suite line against the
+    real test count, rejects a count reappearing in `CLAUDE.md`, requires the
+    decision ledger's numbering to be unbroken, requires every document
+    `CLAUDE.md` references to exist, caps STATE's length, and — the F10 case —
+    **cross-checks the §5 flag table against `flagged: true` in the data**, so
+    closing a flag in one place but not the other fails the build. Its first
+    version counted `todo` tests by reading only the `test(` line, missed the
+    one real `todo` whose `{ todo: }` sits on the next line, and *agreed with an
+    updater script carrying the identical bug* — a guard validating its own
+    blind spot. All five checks were mutation-tested afterwards.
+    (Ken, 2026-09-02)
+
 
 ## 5. Open Flags
 
