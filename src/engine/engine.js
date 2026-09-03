@@ -197,13 +197,20 @@ const Engine = (() => {
     if (e.times===0) ch.creation.boosts = ch.creation.boosts.filter(b=>b!==e);
   }
 
-  // Normalize stat ids referenced by skills (tolerates legacy aliases like "BODY")
-  const STAT_ALIASES = { BODY:"BOD", REFLEX:"REF", REFLEXES:"REF", INTELLIGENCE:"INT", EMPATHY:"EMP", TECHNIQUE:"TECH", ATTRACTIVENESS:"ATTR", MOVEMENT:"MA" };
+  // Normalize stat ids referenced by skills (tolerates legacy aliases like "BODY").
+  // The keys are the pre-Shadows stat vocabulary; every value must be a live id in
+  // `stats`. B2: ATTRACTIVENESS and MOVEMENT pointed at "ATTR"/"MA" — the old
+  // system's own abbreviations, not Shadows ids — and an unresolvable alias came
+  // back truthy, so skillLine threw on `t[pri].value` instead of raising its
+  // dataWarning. The target is now verified, so a stale alias degrades to null.
+  const STAT_ALIASES = { BODY:"BOD", REFLEX:"REF", REFLEXES:"REF", INTELLIGENCE:"INT", EMPATHY:"EMP", TECHNIQUE:"TECH", ATTRACTIVENESS:"MAG", MOVEMENT:"MOB" };
   function normStat(id){
     if (!id) return null;
+    const known = v => D().stats.some(s=>s.id===v);
     const u = String(id).toUpperCase();
-    if (D().stats.some(s=>s.id===u)) return u;
-    return STAT_ALIASES[u] || null;
+    if (known(u)) return u;
+    const alias = STAT_ALIASES[u];
+    return (alias && known(alias)) ? alias : null;
   }
 
   // Effective skill data for display: rank incl. boosts + IPE; check preview.
@@ -314,20 +321,8 @@ const Engine = (() => {
     ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"grant", amount, note:note||"" });
     return {ok:true};
   }
-  function undoIP(ch){
-    const log = ch.progression.ip.log||[];
-    if (!log.length) return {ok:false, why:"Journal is empty."};
-    const e = log[log.length-1];
-    if (e.kind!=="grant"){
-      if (e.targetType==="stat") ch.stats[e.targetId].ipe = Math.max(0, ch.stats[e.targetId].ipe-1);
-      else if (ch.skills[e.targetId]){
-        ch.skills[e.targetId].ipe = Math.max(0, ch.skills[e.targetId].ipe-1);
-        if (ch.skills[e.targetId].rank===0 && ch.skills[e.targetId].ipe===0) delete ch.skills[e.targetId];
-      }
-    }
-    log.pop();
-    return {ok:true, undone:e};
-  }
+  // undoIP was retired by Decision 49 and removed by B4: every IP mutation goes
+  // through commit() -> recordAction(), so undoLastAction reverses it structurally.
 
   // ── Milestones ────────────────────────────────────────────────────────
   // Minor unlock at 5, 15, 25… MP; Major at 10, 20, 30… MP.
@@ -705,7 +700,7 @@ const Engine = (() => {
            skillLine, validate, buildExport, versionCheck,
            // Phase 3
            adjFor, painState, luckState, sanState, focusedSkillIds,
-           ipState, ipCost, spendIP, grantIP, undoIP,
+           ipState, ipCost, spendIP, grantIP,
            milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
            logSession, addCredits, archPanels, panelMax, disciplineRanks, migrate,
            // Phase 3.3 — audit trail & undo

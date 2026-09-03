@@ -728,6 +728,40 @@ No cascade logic to maintain — it falls out of the architecture.
     one thing this project has consistently refused to do. These ~15 entries
     become the **test corpus** when the machinery lands. (Ken, 2026-08-29)
 
+59. **(B2)** **Legacy stat aliases point at live stat ids, and `normStat`
+    verifies its own target.** The alias map is the pre-Shadows stat vocabulary
+    — `BODY`, `REF`, `INT`, `TECH`, `COOL`, `EMP`, plus `MA` and `ATTR`. Two
+    entries had the *source* abbreviation on the target side: `MOVEMENT→"MA"`
+    and `ATTRACTIVENESS→"ATTR"`, neither of which is a Shadows id. They now
+    resolve to `MOB` and `MAG`. The deeper fault was that `normStat` returned
+    the alias target without checking it existed, so an unresolvable alias came
+    back *truthy* and `skillLine` threw on `t[pri].value` — taking the Skills
+    tab down rather than raising the `dataWarning` it already carries.
+    **Decision 22's "degrades gracefully instead of crashing" was therefore
+    untrue for exactly the case it was written for**, and is now true: the
+    target is verified, and a stale alias degrades to `null`. Guarded two ways
+    — a source-level check that every declared alias target is a live stat id,
+    so a future alias is covered without editing the test, and a behavioural
+    check that an unresolvable stat warns instead of throwing. (Ken, 2026-09-02)
+
+60. **`Engine.undoIP` is removed, not deprecated.** Decision 49 replaced the
+    ad-hoc IP undo with the global structural undo; the function stayed defined
+    and exported for two phases without a single caller. Every IP mutation in
+    the UI runs through `commit()` → `recordAction()`, so `undoLastAction`
+    already reverses an IP raise — both the IPE and the journal entry — via the
+    generic patch. Keeping a second, divergent undo path on the public API
+    invited someone to call the wrong one. Deleted, with a comment at the site
+    saying what superseded it, and a test that asserts both halves: `undoIP` is
+    gone, and the generic undo does the job. (Ken, 2026-09-02)
+
+61. **(B5)** **The review step's number derives from `creationFlow.steps`.**
+    `STEPS` appended `{id:"review", n:8}`, hardcoding the assumption that the
+    data holds exactly seven steps. The count in "Step 8 of 8" was already
+    derived, so adding or removing a step in the data would have desynced the
+    two halves of the same sentence. Now `n: D.creationFlow.steps.length + 1`.
+    This is the "adding content should require zero app changes" contract
+    applied to the flow itself. (Ken, 2026-09-02)
+
 
 ## 5. Open Flags
 
@@ -874,10 +908,12 @@ cleared, two opened.
   tests so they flip green when fixed — **A1** (Arcanist aberrations render
   twice; re-verified 2026-08-02 as 6 `[data-spec]` + 6 `[data-aber]` buttons)
   and **B7** (new: `validate("stats", ch)` throws instead of reporting when the
-  character has no power level, `engine.js:579`). Also re-confirmed: **B2** is
+  character has no power level, `engine.js:574` as of Decision 60). Also re-confirmed: **B2** is
   worse than recorded — `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` both resolve
   to ids that do not exist (real ids are `MOB` / `MAG`). No schema bump; engine
-  untouched.
+  untouched. *(B2 closed 2026-09-02 by Decision 59 — and it was worse again
+  than this line records: the bad alias did not merely fail to resolve, it
+  threw.)*
 
 - **CRB v4 content pass** ✅ *(2026-08-29 — a data merge, not a phase)* —
   Skills, Advantages and Disadvantages re-merged from CRB sections 042/043/044
@@ -891,6 +927,16 @@ cleared, two opened.
   `synergyStat` — the field the engine actually reads, and the one carrying
   both invalid stats this pass turned up. No app code changed; the suite held
   at 20 passing / 2 todo / 0 failing throughout.
+
+- **Quick-win pass** ✅ *(2026-09-02 — three audit findings, not a phase)* —
+  **B2**, **B4** and **B5** closed as Decisions 59-61: the two dead stat
+  aliases now resolve (and `normStat` verifies its target, so the class of bug
+  cannot return silently), the superseded `Engine.undoIP` is deleted, and the
+  review step numbers itself off the data. Engine and UI both touched; no
+  schema bump, no data change, no id moved. Suite **28 passing assertions + 2
+  tracked `todo`s** — four new guards, each mutation-tested against the
+  pre-fix code to confirm it actually fails there. **A1** and **B7** remain the
+  two `todo`s.
 
 - **Phase 4 — Selection & constraint system** ⏭ — build `picks` / `excludes` /
   `requires` for advantages & disadvantages (rev 9 audit §4), then retrofit

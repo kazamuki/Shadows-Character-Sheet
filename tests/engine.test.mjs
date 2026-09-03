@@ -8,7 +8,10 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
+import { ROOT } from "../tools/build.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -130,4 +133,46 @@ test("every skill references a stat that exists (guards the BODY/BOD class of bu
     }
   }
   assert.deepEqual(bad, []);
+});
+
+test("every legacy stat alias points at a live stat id (B2)", () => {
+  // The alias map is the pre-Shadows stat vocabulary. Two entries used to name
+  // the OLD system's abbreviations ("ATTR", "MA") as their targets, so they
+  // resolved to nothing. Read the literal so a newly added alias is guarded too.
+  const ids = new Set(D.stats.map(s => s.id));
+  const literal = /const STAT_ALIASES = \{([^}]*)\}/.exec(readFileSync(join(ROOT, "src/engine/engine.js"), "utf8"));
+  assert.ok(literal, "STAT_ALIASES literal not found — did normStat move?");
+  const pairs = [...literal[1].matchAll(/(\w+)\s*:\s*"([^"]+)"/g)];
+  assert.ok(pairs.length >= 8, `expected the full alias map, parsed ${pairs.length}`);
+  assert.deepEqual(pairs.filter(p => !ids.has(p[2])).map(p => `${p[1]} → ${p[2]}`), []);
+});
+
+test("a legacy stat name resolves, and an unresolvable one warns instead of throwing (B2)", () => {
+  const ch = subject();
+  const probe = primaryStat => {
+    D.skills.push({ id: "__probe", name: "Probe", primaryStat, synergyStat: "INT" });
+    try { return Engine.skillLine(ch, "__probe"); } finally { D.skills.pop(); }
+  };
+  assert.equal(probe("Movement").breakdown.primary.id, "MOB");
+  assert.equal(probe("Attractiveness").breakdown.primary.id, "MAG");
+  assert.equal(probe("Movement").dataWarning, null);
+  // Before the fix this threw on t[pri].value, taking the Skills tab down with it.
+  const bad = probe("Nonesuch");
+  assert.equal(bad.breakdown.primary.id, null);
+  assert.match(bad.dataWarning, /unknown stat/);
+});
+
+test("the generic undo reverses an IP spend, so no bespoke IP undo is needed (B4)", () => {
+  assert.equal(Engine.undoIP, undefined, "undoIP was superseded by undoLastAction (Decision 49)");
+  const ch = subject();
+  ch.progression.ip.earned = 500;
+  const id = D.skills[0].id;
+  const before = JSON.parse(JSON.stringify(ch));
+  assert.ok(Engine.spendIP(ch, "skill", id, "").ok, "spendIP refused a funded raise");
+  assert.equal(ch.skills[id].ipe, 1);
+  assert.equal(ch.progression.ip.log.length, 1);
+  Engine.recordAction(ch, "ip", `IP raise: ${id}`, before);
+  assert.ok(Engine.undoLastAction(ch).ok);
+  assert.equal((ch.skills[id] || { ipe: 0 }).ipe, 0, "IPE survived the undo");
+  assert.equal(ch.progression.ip.log.length, 0, "IP journal entry survived the undo");
 });

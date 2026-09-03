@@ -18,7 +18,7 @@
 
   // ── State ─────────────────────────────────────────────────────────────
   const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, label:s.label, note:s.note}))
-    .concat([{id:"review", n:8, label:"Review, lock, and export"}]);
+    .concat([{id:"review", n:D.creationFlow.steps.length+1, label:"Review, lock, and export"}]);
   const SHEET_SECTIONS = [
     {id:"main",        label:"Main",        ui:"tab_main"},
     {id:"skills",      label:"Skills",      ui:"tab_skills"},

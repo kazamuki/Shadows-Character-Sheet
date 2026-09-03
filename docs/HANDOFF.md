@@ -1,10 +1,10 @@
 # Handoff — Shadows Digital Character Sheet
 
-**As of:** 2026-08-29
-**Build:** Phase 3.4 + CRB v4 content pass · character schema `0.4` · game data `0.3` · ruleset target **CRB v4 (WIP)**
-**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized. Skills, Advantages and Disadvantages re-merged from the CRB on 2026-08-29 — **data only, no app code touched** — see §10. Suite has held at 20 passing / 2 todo / 0 failing across both sessions.
+**As of:** 2026-09-02
+**Build:** Phase 3.4 + CRB v4 content pass + quick-win pass · character schema `0.4` · game data `0.3` · ruleset target **CRB v4 (WIP)**
+**Repo state:** restructured from a single `index.html` into a source tree; test suite formalized. Skills, Advantages and Disadvantages re-merged from the CRB on 2026-08-29 — **data only, no app code touched** — see §10. The quick-win pass on 2026-09-02 closed **B2, B4 and B5** (Decisions 59-61) — the first app-code change since the restructure. Suite now **26 passing / 2 todo / 0 failing**.
 
-If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 58 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
+If you are a new session picking this up: read this file, then `docs/SCHEMA.md`. SCHEMA is the authority on architecture, both schemas, the 61 numbered decisions, and the open flags. This file is the *current position* — what works, what's broken, and what happens next.
 
 ---
 
@@ -19,9 +19,9 @@ It runs from `file://` with no server and no build step. That constraint drives 
 ```
 index.html              Shell: markup + script tags. 31 lines. No logic, no styles.
 src/
-  data/shadows-data.js     All game content (2,839 lines). Designers edit this.
+  data/shadows-data.js     All game content (2,938 lines). Designers edit this.
   data/shadows-icons.js    Brand stat icons + Lucide UI icons as inline SVG strings.
-  engine/engine.js         Pure rules engine (714 lines). No DOM. 56 exported functions.
+  engine/engine.js         Pure rules engine (709 lines). No DOM. 55 exported functions.
   ui/app.js                Wizard + sheet (1,910 lines). One IIFE. Renders off the engine.
   styles/shadows.css       Brand tokens + all styling (448 lines).
 docs/
@@ -62,30 +62,36 @@ npm run build    # → dist/shadows-character-sheet.html (the file players get)
 
 ## 4. Test suite — current results
 
-**20 passing, 2 `todo`, 0 failing.**
+**26 passing, 2 `todo`, 0 failing** (28 tests).
 
 The two `todo` tests are not aspirational; they are the two confirmed defects below, written as failing assertions so they flip green the moment they're fixed. This is where the audit findings live now — in code, not only in markdown.
+
+*Count history, because this line has drifted twice:* 20 at the restructure → 22 when PR #4 added two build-entrypoint tests (the docs were not updated) → 26 with the four guards added by the quick-win pass.
 
 | Suite | Covers |
 |---|---|
 | `engine.test.mjs` | Engine loads with no DOM · `newCharacter` shape vs schema 0.4 · derived values computed and never stored · health follows BOD · `validate` returns issues for every step · audit record/undo round-trip · `diffChar` reports only changes · `migrate` 0.3→0.4 seeds `audit` · `versionCheck` surfaces mismatch · every skill references a stat that exists (guards the `BODY`/`BOD` class of bug) |
 | `smoke.test.mjs` | Boots clean on Home · New character opens step 1 · a locked character resumes from storage and all nine tabs render with zero errors · the sheet survives a data change |
-| `build.test.mjs` | The five architecture constraints in §3 |
+| `build.test.mjs` | The five architecture constraints in §3 · `build.mjs` actually runs and writes when invoked as a CLI (PR #4) |
+
+Added by the quick-win pass: every declared stat alias resolves to a live stat id (source-level, so new aliases are covered) · a legacy stat name resolves and an unresolvable one warns instead of throwing · the generic undo reverses an IP spend and `undoIP` is gone · the review step is numbered off the data.
 
 ## 5. Known defects — verified against the current build
 
-The rev 9 audit (`docs/audits/2026-06-16_rev9-whole-app-audit.md`) is the reference. **Every finding in it is still open in this build.** Whatever earlier fixes were made, they are not in the file that was handed over. Two were re-confirmed empirically here, not just by reading:
+The rev 9 audit (`docs/audits/2026-06-16_rev9-whole-app-audit.md`) is the reference. **Three of its findings are now closed** — B2, B4 and B5, on 2026-09-02. The rest are still open in this build; whatever earlier fixes were claimed, they are not in the file that was handed over.
 
 - **A1 — Arcanist renders its aberrations twice, both required. [verified 2026-08-02]** Driving a draft to the archetype step produces **6 `[data-spec]` buttons + 6 `[data-aber]` buttons** for the same six aberrations. A player must pick one up top *and* N below to clear validation. Tracked by a `todo` test in `smoke.test.mjs`.
-- **B2 — the two dead stat aliases are worse than the audit recorded. [verified 2026-08-02]** The real stat ids are `BOD, REF, MOB, INT, TECH, COOL, MAG, EMP`. `STAT_ALIASES` maps `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` — *neither target exists*. Should be `MOB` and `MAG`, or dropped if no legacy data uses those names.
+- ~~**B2 — the two dead stat aliases.**~~ **Closed 2026-09-02, Decision 59.** Worse a third time than recorded: because `normStat` returned its alias target unchecked, an unresolvable alias came back truthy and `skillLine` **threw** on `t[pri].value` rather than raising its `dataWarning` — confirmed empirically, `TypeError: Cannot read properties of undefined (reading 'value')`. Targets corrected to `MOB`/`MAG` and `normStat` now verifies them.
 
-Still open, unchanged from the audit: **A2** (the sheet's Specialization section can't see non-Arcanist picks), **A3** (the unification that fixes A1+A2), **B1** (stale "Session tracking arrives in Phase 3" copy at `app.js:493`), **B3** (`levelsPerBOD` is an authoritative-looking data knob the engine ignores), **B4** (`Engine.undoIP` is dead code, superseded by `undoLastAction`), **B5** (review step number hardcoded as `n:8`), **B6** (unlocked-draft import is a shallow merge), **C1–C3** (forward notes, not bugs).
+Also closed 2026-09-02: **B4** (`Engine.undoIP` deleted, Decision 60) and **B5** (review step number derived, Decision 61).
+
+Still open, unchanged from the audit: **A2** (the sheet's Specialization section can't see non-Arcanist picks), **A3** (the unification that fixes A1+A2), **B1** (stale "Session tracking arrives in Phase 3" copy at `app.js:493`), **B3** (`levelsPerBOD` is an authoritative-looking data knob the engine ignores), **B6** (unlocked-draft import is a shallow merge), **C1–C3** (forward notes, not bugs).
 
 **New finding from this session:**
 
-- **B7 — `validate` is not total.** `validate("stats", ch)` throws `TypeError: Cannot read properties of null (reading 'roll')` at `engine.js:579` when the character has no power level, because `statPool()` returns null. The wizard gates this so it is not live, but a corrupt import or an admin edit reaches it. `validate` should report an issue, never throw. Tracked by a `todo` test in `engine.test.mjs`.
+- **B7 — `validate` is not total.** `validate("stats", ch)` throws `TypeError: Cannot read properties of null (reading 'roll')` at `engine.js:574` when the character has no power level, because `statPool()` returns null. The wizard gates this so it is not live, but a corrupt import or an admin edit reaches it. `validate` should report an issue, never throw. Tracked by a `todo` test in `engine.test.mjs`.
 
-**Quick wins, no design input needed:** B1, B2, B4, B5. **B3** and **B6** want a one-line "is this intended?" first.
+**Quick wins remaining:** **B1** only, and it is not mechanical — it is player-facing copy and wants a voice pass rather than a straight deletion. **B3** and **B6** want a one-line "is this intended?" from Deighton first.
 
 ## 6. Open design flags
 
@@ -208,3 +214,57 @@ The first read of `044_Disadvantages.docx` missed the Age fix because the file w
 **Deferred on purpose.** Rank tables render as labelled bullets rather than structured `rankTable` (Decision 57), and none of the `picks` machinery the CRB now specifies is encoded (Decision 58). Both belong with the Phase 4 renderer work, not in a content merge.
 
 **Position unchanged.** Phase 4 sequence still stands: clear F8, build `picks`/`excludes`/`requires`, retrofit A3, then Biomech. What changed is that step 2 now has a written requirement set and a ~15-entry test corpus instead of a sketch.
+
+
+### 2026-09-02 — quick-win pass: B2, B4, B5
+
+The first application-code change since the restructure. Three named audit
+findings, no design input needed, no schema bump, no data change, no id moved.
+`npm run verify` before: **22 passing / 2 todo / 0 failing**. After: **26 / 2 / 0**.
+
+**Closed as Decisions 59-61.**
+
+- **B2 — stat aliases.** Targets corrected to `MOB`/`MAG`, *and* `normStat`
+  now verifies that its alias target is a live stat id.
+- **B4 — `undoIP`.** Deleted from the engine and its export list, with a
+  comment at the site naming what superseded it.
+- **B5 — review step number.** `n: D.creationFlow.steps.length + 1`.
+
+**B2 was worse than two rounds of documentation recorded.** The audit said a
+bad alias "would still trip the unknown-stat flag"; the 2026-08-02 re-check
+said the targets don't exist. Neither noticed that `normStat` returned the
+alias target *without checking it*, so an unresolvable alias came back truthy,
+`skillLine` skipped its `dataWarning` branch and dereferenced `t["MA"].value`.
+Confirmed by running it: `TypeError: Cannot read properties of undefined
+(reading 'value')`. A skill authored against "Movement" or "Attractiveness"
+would have taken down the whole Skills tab, not shown a gold flag. This also
+means **Decision 22's stated guarantee — "degrades gracefully on unknown ids
+instead of crashing" — was untrue for precisely the case it was written for.**
+It is true now.
+
+Worth keeping in view: the alias map is the *pre-Shadows* stat vocabulary
+(`BODY`, `REF`, `INT`, `TECH`, `COOL`, `EMP`, `MA`, `ATTR`). The two broken
+entries had the old system's own abbreviation on the target side — a
+copy-of-the-source-column slip, not a guess at a Shadows id.
+
+**Four new guards, each mutation-tested.** Every one was run against the
+pre-fix code to confirm it actually fails there — a guard that passes both
+before and after is decoration. The alias guard reads the `STAT_ALIASES`
+literal out of `engine.js` rather than restating it, so an alias added later
+is covered without touching the test.
+
+**No data currently exercises any alias.** Every `primaryStat`/`synergyStat`
+in `shadows-data.js` is already a canonical id, and git history shows `ATTR`
+and `MA` were never stat ids in this repo. The map is pure tolerance for a
+designer typing a long name — which is exactly why a silent throw in it could
+have sat there indefinitely.
+
+**One doc drift corrected in passing.** §4 claimed 20 passing; the real count
+was 22 — PR #4 added two build-entrypoint tests and the docs were not updated.
+Same failure mode the 2026-08-02 session flagged as a standing caution, two
+sessions running. §4 now carries the count history so the next drift is visible.
+
+**Position unchanged.** Phase 4 sequence stands: clear F8, build
+`picks`/`excludes`/`requires`, retrofit A3, then Biomech. Of the quick wins,
+only **B1** remains, and it is player-facing copy — it wants a voice pass, not
+a deletion. **B3** and **B6** still want a one-line "is this intended?" first.
