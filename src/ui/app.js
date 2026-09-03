@@ -1,5 +1,17 @@
 /*UI-START*/
 (() => {
+  // THE APP VERSION. Single source of truth — `package.json` mirrors it and
+  // `tests/docs.test.mjs` fails the build if the two drift, or if `STATE.md`
+  // disagrees. It renders in the footer so Ken and Claude can confirm they are
+  // looking at the same build before debugging anything.
+  //
+  // Bump it when a PLAYER can see a difference (Decision 75):
+  //   patch — a visible fix, nothing new
+  //   minor — a capability a player can use that wasn't there before
+  //   major — existing character files or the workflow break
+  // The other three versions have their own triggers; see CLAUDE.md.
+  const APP_VERSION = "0.5.0";
+
   const D = window.SHADOWS_DATA;
   const $ = id => document.getElementById(id);
   const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -1907,7 +1919,7 @@
     const f=$("footer"); if (!f) return;
     const collapsed = footerCollapsed();
     f.classList.toggle("collapsed", collapsed);
-    f.innerHTML = `<span class="fmeta">NYTE CITY REGISTRY · GET DANGEROUS GAMES · data <b>${esc(D.meta.schemaVersion)}</b> · ${esc(D.meta.rulesetVersion)}</span>
+    f.innerHTML = `<span class="fmeta">NYTE CITY REGISTRY · GET DANGEROUS GAMES · app <b>${esc(APP_VERSION)}</b> · data <b>${esc(D.meta.gamedataVersion)}</b> · ${esc(D.meta.rulesetVersion)}</span>
       <button class="ftoggle" data-ftoggle>${collapsed?"GDG ▴":"Hide ▾"}</button>`;
     f.querySelector("[data-ftoggle]").onclick=()=>{
       const nowCollapsed = !f.classList.contains("collapsed");

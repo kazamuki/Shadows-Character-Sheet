@@ -2,11 +2,14 @@
 
 How the Shadows voice applies to a *user interface*.
 
-**Status: draft, 2026-09-02.** Written by Claude from `reference/GUIDE_Shadows_Voice.md`
-and submitted to Ken for correction. The structure is settled; the example
-sentences are proposals. Every player-facing string it governs lives in
-`shadows-data.js` under `appCopy`, so rewriting them is a data edit — you never
-have to touch code to change the app's voice.
+**Adopted 2026-09-02 by Ken** (Decision 76). Derived from
+`reference/GUIDE_Shadows_Voice.md`, which stays the master for rulebook prose.
+This is the standard for anything a player reads in the app, and it is enforced
+by `tests/voice.test.mjs`.
+
+Every player-facing string it governs lives in `shadows-data.js` under
+`appCopy`, so **rewriting the app's voice is a data edit** — you never have to
+touch code to change a word of it.
 
 ---
 
@@ -126,6 +129,8 @@ The shape that works: **state the gap, then hand the table its authority.**
 > The Bloodlines aren't written yet. Your character file remembers that.
 
 > This rule is still being written. Until it is, it's your GM's call.
+
+> Cyborg's rules aren't finished yet. You can build one — your GM fills the gaps.
 
 The guide backs this — *"Reassurance Without Softness"*: acknowledge the
 uncertainty, don't apologise for it. The city doesn't apologise for being

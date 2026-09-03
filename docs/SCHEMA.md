@@ -949,6 +949,41 @@ No cascade logic to maintain — it falls out of the architecture.
     blind spot. All five checks were mutation-tested afterwards.
     (Ken, 2026-09-02)
 
+75. **(Versioning)** **Four versions, four triggers — and `schemaVersion` stopped
+    meaning two things.** The project had three version numbers and no way for
+    Ken and Claude to confirm they were looking at the same build: `package.json`
+    sat at 0.4.0 with nothing reading it, and Batch 2 had just *removed* the only
+    user-visible indicator (the footer's "app phase 3.3", correctly — it was
+    roadmap vocabulary aimed at a player). The app now carries **`APP_VERSION`**
+    in `src/ui/app.js`, mirrored in `package.json`, printed in the footer, and
+    bumped **when a player can see a difference**. Set to **0.5.0**: Batches 1
+    and 2 both changed visible behaviour.
+
+    The naming collision mattered more than the missing number. `meta.schemaVersion`
+    meant the **game data's content version** inside `shadows-data.js` and the
+    **character file's schema version** inside a character — two different things,
+    one name, and no way to tell which you were reading. The data key is renamed
+    to **`gamedataVersion`**, matching exactly the field it stamps onto
+    characters, so `c.meta.gamedataVersion !== D().meta.gamedataVersion` now reads
+    as what it is. No character file stores the key *name*, so no `migrate()`
+    step was needed.
+
+    The data file's own versioning comment was also wrong: it said to bump only
+    on *shape* changes, which is not what anyone has ever done — the CRB v4 pass
+    bumped 0.2 → 0.3 for content, correctly, and Decision 68 codified that rule
+    afterwards. The comment now matches practice. `tests/docs.test.mjs` fails the
+    build if `APP_VERSION`, `package.json` and `STATE.md` disagree, if the footer
+    stops rendering the constant, or if the data file reverts to calling its
+    version `schemaVersion`. (Ken, 2026-09-02)
+
+76. **(Voice)** **`docs/VOICE-APP.md` is adopted, not draft.** Ken reviewed and
+    accepted it. It is the standard for every string a player reads in the app,
+    it derives from `reference/GUIDE_Shadows_Voice.md` (which stays the master
+    for rulebook prose), and it is enforced by `tests/voice.test.mjs` rather than
+    by anyone remembering it. The operative rule is one question — **is the
+    player stuck right now?** Stuck means tool voice: clear, short, out of the
+    way. Not stuck means the city can speak. (Ken, 2026-09-02)
+
 
 ## 5. Open Flags
 

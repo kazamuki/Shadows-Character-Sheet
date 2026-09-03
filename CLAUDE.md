@@ -83,6 +83,33 @@ Constraints 2–5 are enforced by `tests/build.test.mjs` and `tests/engine.test.
 8 by `tests/engine.test.mjs`; 9 by `tests/voice.test.mjs`. If a test fails on one
 of them, the test is right.
 
+## Versions — four of them, four different triggers
+
+Four numbers move independently. Bumping the wrong one, or none, is how a
+session ends up debugging a build the other person isn't looking at. Current
+values are in `docs/STATE.md`; the app renders its own in the footer, so **the
+first move when something looks wrong is to compare the footer against STATE**.
+
+| Version | Lives in | Bump it when |
+|---|---|---|
+| **App** `0.5.0` | `APP_VERSION` at the top of `src/ui/app.js`, mirrored in `package.json` | **A player can see a difference.** patch = visible fix · minor = new capability · major = existing character files or the workflow break |
+| **Game data** `0.3` | `meta.gamedataVersion` in `shadows-data.js` | **A character's computed values or available choices can change** — content added or removed, a cost or cap altered, an id retired. *Never* for a change no character can observe (Decision 68) |
+| **Character schema** `0.4` | `meta.schemaVersion` on the character, stamped by `newCharacter()` and `migrate()` | **The shape of a saved `.shadows.json` changes.** Always needs a `migrate()` step in the same commit |
+| **Ruleset** | `meta.rulesetVersion` in `shadows-data.js` | The CRB moves. Not ours to bump on a whim — it tracks Ken's document |
+
+Two traps worth knowing:
+
+- **Don't bump on a no-op.** Batch 1 removed a data field and added four, and
+  bumped nothing: sixty computed outputs were diffed before and after and every
+  one was identical. A version that cries wolf stops being read.
+- **`schemaVersion` used to mean two different things** — the data file's own
+  content version *and* the character file's schema version. The data key was
+  renamed to `gamedataVersion` (Decision 75) to match the field it stamps onto
+  characters. If you see `meta.schemaVersion`, you are looking at a character.
+
+`tests/docs.test.mjs` fails the build if `APP_VERSION`, `package.json` and
+`STATE.md` disagree.
+
 ## Layout
 
 ```

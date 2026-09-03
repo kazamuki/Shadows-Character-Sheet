@@ -96,6 +96,40 @@ test("closing a flag is two edits: the SCHEMA table AND the data", () => {
   assert.deepEqual(stale, []);
 });
 
+test("the app version agrees across app.js, package.json and STATE.md", () => {
+  // The point of the app version is that Ken and Claude can confirm they are
+  // looking at the same build. Three places state it, so all three must agree
+  // or it is worse than having none — the footer would be quietly lying.
+  const inApp = /const APP_VERSION = "([\d.]+)"/.exec(read("src/ui/app.js"));
+  assert.ok(inApp, "APP_VERSION is missing from src/ui/app.js");
+
+  const inPkg = JSON.parse(read("package.json")).version;
+  assert.equal(inPkg, inApp[1], "package.json and APP_VERSION disagree");
+
+  const inState = /\*\*Versions:\*\* app `([\d.]+)`/.exec(STATE);
+  assert.ok(inState, "STATE.md's Versions line is missing or reworded");
+  assert.equal(inState[1], inApp[1], "STATE.md and APP_VERSION disagree");
+
+  // The footer is what Ken actually reads, so prove it renders the constant
+  // rather than a literal that could drift on its own.
+  assert.match(read("src/ui/app.js"), /app <b>\$\{esc\(APP_VERSION\)\}<\/b>/,
+    "the footer is not rendering APP_VERSION");
+});
+
+test("the game-data and character-schema versions agree with the docs", () => {
+  // These two used to share the name `meta.schemaVersion` and mean different
+  // things (Decision 75). Pin both so the rename cannot silently regress.
+  const m = /game data `([\d.]+)` · character schema `([\d.]+)`/.exec(STATE);
+  assert.ok(m, "STATE.md's Versions line lost its data/schema numbers");
+  assert.equal(D.meta.gamedataVersion, m[1], "STATE.md's game data version is stale");
+  assert.equal(D.meta.schemaVersion, undefined,
+    "the data file is back to calling its version `schemaVersion` — that name means the CHARACTER schema");
+
+  const { Engine } = loadEngine();
+  assert.equal(Engine.newCharacter().meta.schemaVersion, m[2],
+    "STATE.md's character schema version is stale");
+});
+
 test("every document CLAUDE.md points at exists", () => {
   const refs = [...CLAUDE.matchAll(/`(docs\/[\w./-]+\.md|docs\/[\w-]+\/)`/g)].map(m => m[1]);
   assert.ok(refs.length > 4, `only found ${refs.length} doc references — did CLAUDE.md change shape?`);

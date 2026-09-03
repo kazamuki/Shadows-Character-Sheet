@@ -6,7 +6,7 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.4", gamedataVersion:D().meta.schemaVersion,
+      meta:{ schemaVersion:"0.4", gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       identity:{ name:"", age:null, build:"", hair:"", eyes:"", skin:"",
                  archetype:null, specialization:"", history:"" },
@@ -720,7 +720,7 @@ const Engine = (() => {
   function buildExport(ch){
     const c = JSON.parse(JSON.stringify(ch));
     c.meta.updated = new Date().toISOString();
-    c.meta.gamedataVersion = D().meta.schemaVersion;
+    c.meta.gamedataVersion = D().meta.gamedataVersion;
     const pl = powerLevel(ch);
     // Seed starting Çredits from the creation roll — but never overwrite a
     // tracked total once play transactions exist (Phase 3).
@@ -732,8 +732,8 @@ const Engine = (() => {
   function versionCheck(c){
     const issues = [];
     const saved = (c.meta||{}).gamedataVersion;
-    if (saved !== D().meta.schemaVersion)
-      issues.push(`Character was saved against game data ${saved==null?"(unrecorded)":saved}; loaded data is ${D().meta.schemaVersion}.`);
+    if (saved !== D().meta.gamedataVersion)
+      issues.push(`Character was saved against game data ${saved==null?"(unrecorded)":saved}; loaded data is ${D().meta.gamedataVersion}.`);
     for (const id of Object.keys(c.skills||{}))
       if (!skillById(id)) issues.push(`Skill "${id}" no longer exists in game data.`);
     for (const a of c.advantages||[])
