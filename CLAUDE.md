@@ -190,5 +190,6 @@ in `tests/rules.test.mjs`.
 
 ## What's next
 
-See the board in `docs/STATE.md` §2. Batch 3 — the selection & constraint system
-— is next, and it is not blocked on Deighton.
+See the board in `docs/STATE.md` §2. Batch 3b — `grants` — is next. It needs one
+ruling from Ken before it can be built (Educated is bought at step 7 and grows
+the step-6 Skill Point pool retroactively), so read §2 before starting it.
