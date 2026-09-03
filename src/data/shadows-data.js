@@ -34,18 +34,23 @@
 //     reading the source; delete them once the question is settled. Every open
 //     flag from SCHEMA.md section 5 is surfaced at its relevant section below.
 //
-// VERSIONING: bump `meta.schemaVersion` only when the SHAPE changes (new fields,
-// renamed keys). Bump `meta.rulesetVersion` / `meta.updated` for content edits.
+// VERSIONING: bump `meta.gamedataVersion` when a character's computed values or
+// available choices can change -- content added or removed, a cost or cap
+// altered, an id retired. Do NOT bump for a change no character can observe: a
+// field the engine never read, a new field with no effect, a corrected comment,
+// a closed flag. See Decision 68; the four-version model is in CLAUDE.md.
+// (This comment used to say "shape changes only", which is not what anyone has
+// ever done -- the CRB v4 pass bumped 0.2 -> 0.3 for content, correctly.)
 // ============================================================================
 window.SHADOWS_DATA = {
 
   /* META -- version stamps. The app compares a character's saved
      `gamedataVersion` against this on load and surfaces mismatches (e.g. a skill
      the character has that no longer exists) instead of failing silently.
-     UPDATE: bump `schemaVersion` on a structural change; set `rulesetVersion`
+     UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "schemaVersion": "0.3",
+    "gamedataVersion": "0.3",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-08-29",
     "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. Schema 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3, which versionCheck surfaces on load."

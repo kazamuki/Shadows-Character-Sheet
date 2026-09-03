@@ -36,7 +36,7 @@ test("engine loads without a DOM", () => {
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
   assert.equal(ch.meta.schemaVersion, "0.4");
-  assert.equal(ch.meta.gamedataVersion, D.meta.schemaVersion);
+  assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
     assert.ok(k in ch, `missing top-level key: ${k}`);
