@@ -44,7 +44,7 @@ src/
   styles/shadows.css    Brand tokens and all styling.
 docs/
   SCHEMA.md             Architecture, both schemas, locked decisions, open flags, roadmap.
-  HANDOFF.md            Current status and what happens next. Start here in a new session.
+  STATE.md              Current status, the batch board, what happens next. Start here.
   audits/               Whole-app audits, dated.
 tests/                  Engine units, jsdom smoke, build/architecture guards.
 tools/build.mjs         Inlines everything into dist/.
