@@ -1380,15 +1380,32 @@ cleared, two opened.
   before); app **0.5.0 → 0.6.0**. A stale-mirror defect in the Professional
   natural-advantage pool was found and fixed in passing (Decision 81).
 
-- **Batch 3b — `grants`** ⏭ — the other half of Decision 58, deliberately
-  split out: Educated (+10 Skill Points/rank), Hard to Kill (+1 max HP per
-  Health Level), Thick Skin (Natural Armor, which the engine does not model at
-  all yet), Lucky / Unlucky (LUCK spend costs) and Long-Lived (Milestones).
-  Unlike `picks`, these reach into five readers that currently compute cleanly
-  from stats alone, and **Educated forces a wizard-flow ruling**: it is bought
-  at step 7 and grows the step-6 pool retroactively, so a player who finished
-  Skills with nothing left silently reopens with ten points and a warning they
-  already walked past. That is a design question, not a data edit.
+- **Batch 3a — the ledger attention state** ⏭ — `renderLedger` marks a passed
+  step done when it has no *errors*, ignoring warnings entirely, so a player who
+  walks past Skills with ten unspent points gets a green tick. That is shipped
+  behaviour for every step and every player, not an Educated problem. A third row
+  state — done / active / needs attention — driven by warnings on a step already
+  passed, plus a callout linking back. The rows are already clickable and
+  `validate()` already emits the warnings. **It goes first because it is the
+  thing that makes `grants` safe to land.**
+
+- **Batch 3b — `grants`** ⏳ — the other half of Decision 58: Educated (+10 Skill
+  Points/rank), Hard to Kill (+1 max HP per Health Level), Lucky / Unlucky (LUCK
+  spend costs) and Long-Lived (Milestones). Unlike `picks`, these reach into
+  readers that currently compute cleanly from stats alone. **Educated needed a
+  wizard-flow ruling** — bought at step 7, it grows the step-6 pool
+  retroactively — and 3a settles it by construction: surfacing the unspent points
+  and letting the player go back means the points are usable at creation, and the
+  app says so rather than reopening a step in silence.
+
+  **Thick Skin is deliberately not in 3b.** It grants Natural Armor, the armor
+  design is still in flux, and **four separate places in the data already grant
+  Natural Armor in prose** — Thick Skin, the Iron Shirt Martial Arts style, an
+  archetype effect, and an archetype benefit. Four sources for one quantity is
+  the Decision 66 shape (*promote it to a number, read it, display it*), so
+  Natural Armor becomes a real derived value with its own reader when the design
+  lands — not a Thick Skin special case bolted on early. Until then it ships as
+  reference text, like every other un-modeled rule.
 
 - **Then: decompose `src/ui/app.js`** (Decision 54's deferred refactor) on its
   own branch, with zero behaviour change, now that the renderers it touches
