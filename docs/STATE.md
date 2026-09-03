@@ -1,9 +1,9 @@
 # State of the build
 
-**Updated:** 2026-09-02
-**Versions:** app `0.5.0` · game data `0.3` · character schema `0.4` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-03
+**Versions:** app `0.6.0` · game data `0.4` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **58 passing, 1 todo, 0 failing** (59 tests, six files)
+**Suite:** `npm run verify` → **77 passing, 0 todo, 0 failing** (77 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -28,9 +28,9 @@ and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, the session log,
 loadout, and an undo-able audit trail of every action. The engine reproduces the
 CRB's own worked examples (`tests/rules.test.mjs`).
 
-**The one known defect:** `A1` — the Arcanist renders its aberrations twice, and
-validation demands both. Tracked as the suite's single `todo`. It closes in
-Batch 3 as a side effect of `A3`, not on its own.
+**There is no known defect.** A1 and A2 closed with Batch 3, and the suite has
+no `todo` for the first time since the ledger was written. The next `todo` that
+appears should be a newly *found* defect, not a survivor.
 
 ---
 
@@ -41,28 +41,35 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | # | Batch | Status | What it is |
 |---|---|---|---|
 | — | Quick wins | ✅ merged (#5) | B2, B4, B5 · Decisions 59–61 |
-| 1 | Engine totality & CRB conformance | ✅ merged (#5) | B3, B6, B7, B8, B9, B10, stale F10 · Decisions 62–68 |
+| 1 | Engine totality & CRB conformance | ✅ merged (#5) | B3, B6–B10, stale F10 · Decisions 62–68 |
 | 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
-| — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model; VOICE-APP adopted · Decisions 74–76 |
-| 3 | **Selection & constraint system** | ⏭ **next** | `picks` / `excludes` / `requires`, then retrofit A3 → closes A1, A2 and the last `todo` |
-| 4 | Biomech as data | ⏳ after 3 | F6 lands as a data entry, not a fourth special case |
+| — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
+| 3 | Selection & constraint system | ✅ **on `feat/picks-system`** | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–81 |
+| 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Thick Skin, Lucky/Unlucky, Long-Lived |
+| — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
+| 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
 
-**Batch 3 in detail.** The shape is specified in the rev 9 audit §4 and the CRB
-now *requires* it — Decision 58 lists the ~15 entries that become the test
-corpus. Order within the batch:
+**What Batch 3 built.** One selection system with three hosts — advantages,
+disadvantages and skills. An entry declares `picks` (a fixed list, a category,
+or free text), `excludes` (a symmetric mutual lock) and `requires` (the
+milestone-prerequisite vocabulary); a character stores its answers as
+`selections` on the entry that asked. All ~15 entries Decision 58 named are
+encoded, plus Martial Arts styles. A3 put archetype specialization onto the same
+footing: **one array, `archetypeChoices.specialization`,** with the count read
+from the data (`countBy`, or 1). Three fields became one, and both renderers
+lost their per-archetype branches.
 
-1. Build `picks` / `excludes` / `requires` for advantages and disadvantages.
-   Self-contained, high value at the table: mutual locks, freeform prompts,
-   per-rank skill picks.
-2. Retrofit archetype specialization onto it (`A3`). Delete the
-   `arcanist` / `professional` / `werewolf` branches in `renderArchetype` and the
-   aberration-only branch in `renderShArchetype`. `A1` and `A2` fix themselves.
-3. This is also **when `src/ui/app.js` gets decomposed** — during the renderer
-   rewrites, never as a standalone chore. Mechanism in `log/2026.md`, the
-   2026-08-02 entry.
+**Two things a next session should know.**
 
-**F8 is not a gate on Batch 3.** It blocks a player finishing the stats step; it
-does not block building the selection system. Chase it on its own track.
+- **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
+  Both are tested against a synthetic fixture. Adding a real one is a rules
+  question for Deighton, not a data edit (Decision 77).
+- **`grants` was deliberately split out of Batch 3** (Batch 3b). It touches five
+  readers that currently compute from stats alone, and Educated forces a
+  wizard-flow ruling — bought at step 7, it grows the step-6 pool retroactively.
+
+**F8 is not a gate on any of this.** It blocks a player finishing the stats step.
+Chase it on its own track.
 
 ---
 
@@ -78,7 +85,7 @@ does not block building the selection system. Chase it on its own track.
 | F13 | Vampire `canPurchaseAdvantages: false` — assumed from the Werewolf baseline, confirm |
 | F16 | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is **Medical** |
 
-These five are doc reconciliation and have sat through three sessions of work
+These five are doc reconciliation and have sat through four sessions of work
 that could not touch them. Good candidate for a low-friction session.
 
 ### Needs Deighton — ask these together, not one at a time
@@ -92,6 +99,7 @@ four separate context-loads.
 | F1 | LUCK buy-up cost in CP per point (stubbed 1:1) |
 | F2 | CP boost exchange rate across skills / stats / powers (stubbed 1:1) |
 | F14 | Skill IP at rank 0 — "5 × current rank" prices a new skill at zero; the app charges the rank-1 price |
+| *(new)* | Does any Advantage or Disadvantage **lock out** another? The machinery is built and tested; nothing in the CRB names a pair, and inventing one would be resolving a rules question in code |
 | *(unnumbered)* | `statMod()` extrapolates **+1 per point above 10**, but `statRules.beyondHumanLimits` says gains *"slow down"* past 10. These disagree, and this flag exists only as a code comment — it has no F-number and is not in the table |
 
 ### Design work — Ken with Deighton and Scott
@@ -110,26 +118,25 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 ## 4. Still open from the rev 9 audit
 
 The audit (`audits/2026-06-16_rev9-whole-app-audit.md`) is the reference; look up
-an id there before working on it. **B1–B10 are all closed.**
+an id there before working on it. **A1, A2, A3 and B1–B10 are all closed.**
 
 | Id | What | Where it lands |
 |---|---|---|
-| A1 | Arcanist aberrations render twice, both required | Batch 3 (via A3) |
-| A2 | The sheet's Specialization section can't see non-Arcanist picks | Batch 3 (via A3) |
-| A3 | Unify the two selection models — the actual fix | Batch 3 |
 | C1 | If any sheet number field moves to live `oninput`, it inherits Decision 41's caret fix | Forward note |
-| C2 | Admin mode can't reach `archetypeChoices` | Easier after A3 |
+| C2 | Admin mode can't reach `archetypeChoices` | Now much easier — one array to edit |
 | C3 | SFR / form-toggle copy — re-read after F6 and F7 land | Forward note |
 
 ---
 
 ## 5. Where to start
 
-**Nothing in flight.** `main` is at PR #6, every branch is merged and deleted, and
-`npm run verify` is green on it. Batches 1 and 2, the docs restructure and the
-versioning model all landed on 2026-09-02 as PRs #5 and #6.
+**Batch 3 is on `feat/picks-system`, green, not yet merged.** Review it, then
+open the PR. It carries three version bumps (app `0.6.0`, game data `0.4`,
+character schema `0.5`) — an existing `.shadows.json` upgrades through
+`migrate()` on load and reports the game-data mismatch, which is correct.
 
-**Start Batch 3 from `main`.** Branch it `feat/picks-system`.
+After it merges, **Batch 3b (`grants`)** is next and needs a ruling on Educated's
+step ordering before it can be built.
 
 ---
 

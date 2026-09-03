@@ -41,8 +41,15 @@ test("STATE.md reports the real suite result", () => {
       if (/\{\s*todo:/.test(head)) todo++;
     }
   }
-  assert.ok(todo > 0 || !/\{\s*todo:/.test(files.map(f => read(join("tests", f))).join("")),
-    "a { todo: } exists in the tests but the counter found none — the parser is broken");
+  // The parser's own sanity check: if the sentinel appears anywhere in the test
+  // sources but the counter found none, the counter is broken rather than the
+  // suite being clean. THIS file is excluded from that scan, because the
+  // assertion message below contains the sentinel itself — with it included the
+  // check could never pass at zero todos, which is exactly the state Batch 3
+  // reached. A guard that cannot express "all clear" is not a guard.
+  const others = files.filter(f => f !== "docs.test.mjs").map(f => read(join("tests", f))).join("");
+  assert.ok(todo > 0 || !/\{\s*todo:/.test(others),
+    "a todo option exists in the tests but the counter found none — the parser is broken");
   const passing = total - todo;
 
   const m = /\*\*(\d+) passing, (\d+) todo, (\d+) failing\*\* \((\d+) tests, (\w+) files\)/.exec(STATE);
@@ -105,6 +112,15 @@ test("the app version agrees across app.js, package.json and STATE.md", () => {
 
   const inPkg = JSON.parse(read("package.json")).version;
   assert.equal(inPkg, inApp[1], "package.json and APP_VERSION disagree");
+
+  // Batch 3 found the lockfile a full version behind (0.4.0 while the app said
+  // 0.5.0) because nothing here looked at it, and `npm install` rewrites it
+  // from package.json — so the drift only surfaces as a stray diff in someone
+  // else's commit. Both places it states the version are checked.
+  const lock = JSON.parse(read("package-lock.json"));
+  assert.equal(lock.version, inApp[1], "package-lock.json and APP_VERSION disagree");
+  assert.equal(lock.packages[""].version, inApp[1],
+    "package-lock.json's root package entry and APP_VERSION disagree");
 
   const inState = /\*\*Versions:\*\* app `([\d.]+)`/.exec(STATE);
   assert.ok(inState, "STATE.md's Versions line is missing or reworded");

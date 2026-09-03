@@ -10,7 +10,7 @@
   //   minor — a capability a player can use that wasn't there before
   //   major — existing character files or the workflow break
   // The other three versions have their own triggers; see CLAUDE.md.
-  const APP_VERSION = "0.5.0";
+  const APP_VERSION = "0.6.0";
 
   const D = window.SHADOWS_DATA;
   const $ = id => document.getElementById(id);
@@ -159,6 +159,43 @@
       <span class="val">${val}</span>
       <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="increase">+</button></div>`;
   }
+  // Batch 3 — the controls for one entry's picks. Rendered off Engine.picksFor,
+  // which has already resolved how many slots exist and what may go in them, so
+  // this function knows nothing about ranks, categories or archetypes. Used by
+  // the Character Points step and the Skills step alike.
+  function picksHtml(kind, id){
+    const states = Engine.picksFor(S.ch, kind, id);
+    if (!states.length) return "";
+    return states.map(st=>{
+      const p = st.pick, key = `${kind}|${id}|${p.id}`;
+      if (p.type==="text"){
+        return `<div class="picks"><label class="field"><span>${esc(p.label||"Detail")}</span>
+          <input type="text" data-sel="${esc(key)}|0" value="${esc(st.chosen)}"
+            placeholder="${esc(p.gmApproval?"Settle this with your GM":"")}"></label>
+          ${p.note?`<p class="step-note">${esc(p.note)}</p>`:""}</div>`;
+      }
+      if (!st.need) return "";
+      const slots = Array.from({length:st.need}, (_,i)=>{
+        const cur = st.chosen[i] || "";
+        return `<select data-sel="${esc(key)}|${i}" aria-label="${esc(p.label||"choice")} ${i+1}">
+          <option value="">— choose —</option>` +
+          st.options.map(o=>`<option value="${esc(o.id)}" ${o.id===cur?"selected":""}>${esc(o.name)}${o.description?" — "+esc(o.description):""}</option>`).join("") +
+          `</select>`;
+      }).join("");
+      return `<div class="picks"><div class="picks-label">${esc(p.label||"Choose")}${st.need>1?` — ${st.filled}/${st.need}`:""}${p.optional?" (optional)":""}</div>
+        ${slots}${p.note?`<p class="step-note">${esc(p.note)}</p>`:""}</div>`;
+    }).join("");
+  }
+  // The lock/gate line for one entry: why a stepper is disabled, in words.
+  function constraintHtml(kind, id){
+    const lock = Engine.optionLock(S.ch, kind, id);
+    const req  = Engine.requirementState(S.ch, kind, id);
+    let h = "";
+    if (lock.locked) h += `<span class="cost" title="${esc(lock.by)}">⛔ locked by ${esc(lock.by)}</span>`;
+    if (req.unmet.length) h += `<span class="cost">requires ${esc(req.unmet.join(", "))}</span>`;
+    else if (req.met.length) h += `<span class="cost grant">requires ${esc(req.met.join(", "))}</span>`;
+    return h;
+  }
   function issuesHtml(list){
     if (!list.length) return "";
     return `<ul class="issues">`+list.map(i=>`<li class="${i.level}">${esc(i.msg)}</li>`).join("")+`</ul>`;
@@ -282,12 +319,18 @@
       if (sel.campaignPowerScaling.notes) h += `<p class="step-note">${esc(sel.campaignPowerScaling.notes)}</p>`;
     }
 
-    // Specialization
-    if (sel.specialization && sel.specialization.options && sel.specialization.options.length){
-      h += `<div class="sect">${esc(sel.specialization.label)}</div>`;
+    // Specialization — ONE block for every archetype (A3). How many to pick
+    // comes from the data (`countBy`, or 1); the app does not know or care
+    // which archetype it is rendering. This replaces the generic single-select
+    // block AND the Arcanist-only aberration block that used to run beside it.
+    if (sel.specialization && (sel.specialization.options||[]).length){
+      const need = Engine.specializationNeed(ch);
+      const picked = Engine.specializationIds(ch);
+      h += `<div class="sect">${esc(sel.specialization.label)}${need>1?` — choose ${need}`:""}</div>`;
       if (sel.specialization.intro) h += `<p class="step-note">${esc(sel.specialization.intro)}</p>`;
+      if (need>1) h += `<p class="step-note"><em>${picked.length}/${need} chosen.</em></p>`;
       h += sel.specialization.options.map(o=>{
-        const seld = ch.identity.specialization===o.id;
+        const seld = picked.includes(o.id);
         let req = "";
         if (o.requiredStats){
           const unmet = Object.entries(o.requiredStats).filter(([sid,r])=>Engine.statValue(ch,sid)<r);
@@ -295,7 +338,7 @@
         }
         return `<div class="pick ${seld?"selected":""}">
           <div class="head"><h4>${esc(o.name)}</h4>${req}
-            <div class="controls"><button class="toggle" data-spec="${o.id}">${seld?"Selected":"Select"}</button></div></div>
+            <div class="controls"><button class="toggle" data-spec="${o.id}">${need>1?(seld?"Chosen":"Choose"):(seld?"Selected":"Select")}</button></div></div>
           <div class="desc">${esc(o.description||"")}</div>
           ${o.focusedSkills?`<div class="desc"><b>Focused Skills:</b> ${o.focusedSkills.map(esc).join(", ")}</div>`:""}
           ${o.tweak?`<div class="desc"><b>Tweak — ${esc(o.tweak.name)}:</b> ${esc(o.tweak.description)} ${(o.tweak.benefits||[]).map(esc).join(" ")}</div>`:""}
@@ -322,14 +365,9 @@
           ${stepper(v,"focus|"+sid, v>0, used<total)}<span class="mod"></span></div>`;
       }).join("") + `</div>`;
 
-      const need = row.aberrations||0;
-      h += `<div class="sect">Aberrations — choose ${need}</div>`;
-      h += sel.specialization.options.map(o=>{
-        const on = ac.aberrations.includes(o.id);
-        return `<div class="pick ${on?"selected":""}"><div class="head"><h4>${esc(o.name)}</h4>
-          <div class="controls"><button class="toggle" data-aber="${o.id}">${on?"Chosen":"Choose"}</button></div></div>
-          <div class="desc">${esc(o.description||"")} ${o.benefit?"— "+esc(o.benefit):""}</div></div>`;
-      }).join("");
+      // A1 closed here: the aberration list used to render a SECOND time in
+      // this block, with its own [data-aber] buttons and its own validate rule.
+      // It is the specialization block above, and always was.
       h += `<p class="step-note">${esc(copy("applyFromText"))} Evocation starts at rank ${row.evocationStartingRank}; Common Spells (${esc(row.commonSpells)}) are chosen from the Magic section in play.</p>`;
     }
 
@@ -350,7 +388,7 @@
 
     // Professional creation inputs
     if (sel.id==="professional"){
-      const sub = (sel.specialization.options||[]).find(o=>o.id===ac.subtype);
+      const sub = (sel.specialization.options||[]).find(o=>o.id===Engine.specializationIds(ch)[0]);
       if (sub){
         const chooseN = (sub.focusedSkills||[]).filter(f=>/chosen at creation/i.test(f));
         if (chooseN.length){
@@ -417,6 +455,9 @@
           ${stepper(rank, "skill|"+s.id, rank>0, rank<pl.maxSkillRank && left>0 && pool.total!=null)}
           <span class="mod ${line.trained?"pos":""}" title="check bonus">+${line.checkBonus}</span>
         </div>`;
+        // A trained skill may demand choices of its own — Martial Arts styles
+        // are the first, and the machinery is the same one the traits use.
+        if (rank>0) h += picksHtml("skill", s.id);
       }
       h += `</div>`;
     }
@@ -437,10 +478,14 @@
     h += `<details class="group" open><summary>${D.disadvantages.length} available</summary>` +
       D.disadvantages.map(dd=>{
         const cur = (ch.disadvantages.find(x=>x.id===dd.id)||{rank:0}).rank;
+        const lock = Engine.optionLock(ch,"disadvantage",dd.id);
+        const req  = Engine.requirementState(ch,"disadvantage",dd.id);
         return `<div class="pick ${cur>0?"selected":""}">${dd.flagged?flagHtml(dd):""}
           <div class="head"><h4>${esc(dd.name)}</h4><span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
-          <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank)}</div></div>
-          <div class="desc">${esc(dd.description)}</div></div>`;
+          ${constraintHtml("disadvantage",dd.id)}
+          <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank && !lock.locked && req.ok)}</div></div>
+          <div class="desc">${esc(dd.description)}</div>
+          ${cur>0?picksHtml("disadvantage",dd.id):""}</div>`;
       }).join("") + `</details>`;
 
     // Advantages
@@ -450,11 +495,16 @@
         const cur = (ch.advantages.find(x=>x.id===ad.id && x.notes!=="natural")||{rank:0}).rank;
         const natural = ch.advantages.find(x=>x.id===ad.id && x.notes==="natural");
         const affordable = bal.left>=ad.cost;
+        const lock = Engine.optionLock(ch,"advantage",ad.id);
+        const req  = Engine.requirementState(ch,"advantage",ad.id);
         return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad):""}
           <div class="head"><h4>${esc(ad.name)}</h4><span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
           ${natural?`<span class="cost grant">natural ×${natural.rank}</span>`:""}
-          <div class="controls">${canBuyAdv?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable):"<span class='cost'>locked</span>"}</div></div>
-          <div class="desc">${esc(ad.description)}</div></div>`;
+          ${ad.creationOnly?`<span class="cost">creation only</span>`:""}
+          ${constraintHtml("advantage",ad.id)}
+          <div class="controls">${canBuyAdv?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok):"<span class='cost'>locked</span>"}</div></div>
+          <div class="desc">${esc(ad.description)}</div>
+          ${cur>0?picksHtml("advantage",ad.id):""}</div>`;
       }).join("") + `</details>`;
 
     // LUCK
@@ -514,7 +564,7 @@
       <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
       <span class="pool">Starting Ç <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
     h += `<div class="review-block"><h3>${esc(ch.identity.name)||"Unnamed"}</h3><div class="kv">
-      <span class="k">Archetype</span><span class="v">${a?esc(a.name):"—"}${ch.identity.specialization?" · "+esc(ch.identity.specialization):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
+      <span class="k">Archetype</span><span class="v">${a?esc(a.name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
       <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
       <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
       <span class="k">Derived</span><span class="v">TOL ${der.TOL} · WILL ${der.WILL} · SAN ${der.SAN}% · ${hp.levels} HL / ${hp.total} HP · LUCK ${D.resources.luck.startingValue+ch.trackers.luck.bonus}</span>
@@ -857,21 +907,28 @@
   function renderShTraits(){
     const ch=S.ch;
     let h = sheetHeader("Traits", "Advantages bought with Character Points and the disadvantages that paid for them. Tap a trait to read what it does.");
-    const traitCard = (name, costHtml, desc) =>
+    const traitCard = (name, costHtml, desc, selHtml) =>
       `<details class="pick trait"><summary><span class="th">${esc(name)}</span>${costHtml}</summary>
-        <div class="desc">${esc(desc||"No description on file.")}</div></details>`;
+        <div class="desc">${esc(desc||"No description on file.")}</div>${selHtml||""}</details>`;
+    // What the player actually chose, resolved to names. Without this the sheet
+    // states "Favored Skill ×2" and never says which skills.
+    const selHtml = (kind, id) => Engine.picksFor(ch, kind, id).map(st=>{
+      const vals = st.pick.type==="text" ? (st.chosen ? [st.chosen] : [])
+        : st.chosen.filter(Boolean).map(v=>(st.options.find(o=>o.id===v)||{name:v}).name);
+      return vals.length ? `<div class="desc"><b>${esc(st.pick.label||"Chosen")}:</b> ${esc(vals.join(", "))}</div>` : "";
+    }).join("");
     h += `<div class="sect">Advantages</div>`;
     const advs = ch.advantages.map(x=>{ const d2=Engine.advById(x.id);
       const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
       const cost=x.notes==="natural" ? '<span class="cost grant">natural</span>'
         : (d2?`<span class="cost">${d2.cost*(x.rank||1)} CP</span>`:"");
-      return traitCard(name, cost, d2?d2.description:""); }).join("");
+      return traitCard(name, cost, d2?d2.description:"", selHtml("advantage",x.id)); }).join("");
     h += advs || `<p class="step-note">No advantages.</p>`;
     h += `<div class="sect">Disadvantages</div>`;
     const diss = ch.disadvantages.map(x=>{ const d2=Engine.disById(x.id);
       const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
       const cost=d2?`<span class="cost grant">+${d2.pointsGranted*(x.rank||1)} CP</span>`:"";
-      return traitCard(name, cost, d2?d2.description:""); }).join("");
+      return traitCard(name, cost, d2?d2.description:"", selHtml("disadvantage",x.id)); }).join("");
     h += diss || `<p class="step-note">No disadvantages.</p>`;
     return h;
   }
@@ -881,7 +938,8 @@
     const ch=S.ch, a=Engine.archetype(ch);
     if (!a) return sheetHeader("Archetype","No archetype selected.");
     const badge = a.status!=="final"?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${esc(statusLabel(a.status))}</span>`:"";
-    let h = sheetHeader(a.name+(ch.identity.specialization?" · "+ch.identity.specialization:""),
+    const specLabel = Engine.specializationLabel(ch);
+    let h = sheetHeader(a.name+(specLabel?" · "+specLabel:""),
       a.summary||a.gameplayStyle||"");
 
     if (a.coreMechanic){
@@ -896,15 +954,15 @@
           <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join("");
     }
 
-    // Specialization — chosen options
-    const aber = (ch.archetypeChoices.aberrations||[]);
+    // Specialization — chosen options. A2 closed here: this read only
+    // `aberrations`, so a Professional's subtype or a Werewolf's Origin showed
+    // "none chosen" while the header above it displayed the very same pick.
+    const chosen = Engine.specializationChosen(ch);
     if (a.specialization && a.specialization.options){
-      h += `<div class="sect">${esc(a.specialization.label||"Specialization")}${aber.length?"":" <span class='chip'>none chosen</span>"}</div>`;
-      if (aber.length){
-        h += aber.map(oid=>{ const o=a.specialization.options.find(x=>x.id===oid);
-          return o?`<div class="pick selected"><div class="head"><h4>${esc(o.name)}</h4></div>
-            <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}</div></div>`:""; }).join("");
-      }
+      h += `<div class="sect">${esc(a.specialization.label||"Specialization")}${chosen.length?"":" <span class='chip'>none chosen</span>"}</div>`;
+      h += chosen.map(o=>`<div class="pick selected"><div class="head"><h4>${esc(o.name)}</h4>
+        ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div></div>`).join("");
     }
 
     // Disciplines (computed ranks: scaling base + CP-bought), read-only
@@ -1237,7 +1295,7 @@
         h += f.length ? `<p class="step-note">${f.map(esc).join(" · ")} — advance at 3× current rank.</p>` : `<p class="step-note">None.</p>`;
       }
       if (p.type==="text" && p.id==="tweak" && a){
-        const sub = ((a.specialization||{}).options||[]).find(o=>o.id===ch.archetypeChoices.subtype);
+        const sub = ((a.specialization||{}).options||[]).find(o=>o.id===Engine.specializationIds(ch)[0]);
         h += sub && sub.tweak ? `<div class="pick"><div class="head"><h4>${esc(sub.tweak.name)}</h4></div>
           <div class="desc">${esc(sub.tweak.description||"")}${(sub.tweak.benefits||[]).length?"\n• "+sub.tweak.benefits.map(esc).join("\n• "):""}</div></div>`
           : `<p class="step-note">No Tweak on record.</p>`;
@@ -1291,7 +1349,7 @@
       <span class="sub">Changes every cap (Max Skill/Power Rank, Max Boost) and the CP budget. Stored values don't move, so the sheet may read "over" until you adjust them.</span></div>`;
     h += `<div class="trk"><h4>Archetype</h4>
       <select data-admin-arch><option value="">— none —</option>${D.archetypes.map(a=>`<option value="${a.id}" ${ch.identity.archetype===a.id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>
-      <span class="sub" style="color:var(--magenta)">⚠ Changing archetype clears every archetype-specific choice — focus / stat-bonus allocations, subtype, disciplines, natural advantages, aberrations. One undo brings it all back.</span></div>`;
+      <span class="sub" style="color:var(--magenta)">⚠ Changing archetype clears every archetype-specific choice — focus / stat-bonus allocations, specialization, disciplines, natural advantages. One undo brings it all back.</span></div>`;
 
     // Stats — base + IP
     h += `<div class="sect">Stats — base + IP</div><div class="alloc">`;
@@ -1475,24 +1533,50 @@
     main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ ch.creation.powerLevel=b.dataset.pl; update(); });
     main.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
       if (ch.identity.archetype!==b.dataset.arch){
-        ch.identity.archetype=b.dataset.arch; ch.identity.specialization="";
-        ch.archetypeChoices={ rolls:{}, focusAllocation:{}, statBonusAllocation:{}, aberrations:[],
-          subtype:null, focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
+        ch.identity.archetype=b.dataset.arch;
+        ch.archetypeChoices={ rolls:{}, focusAllocation:{}, statBonusAllocation:{}, specialization:[],
+          focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
         const a=Engine.archetype(ch);
         if (a && a.canPurchaseAdvantages===false) ch.advantages=ch.advantages.filter(x=>x.notes==="natural");
       }
       update();
     });
+    // One handler for every archetype's specialization (A3). Single-select
+    // replaces; multi-select toggles. Over-picking is deliberately allowed —
+    // validate() says "Too many", and an error you can read beats a click that
+    // silently does nothing.
     main.querySelectorAll("[data-spec]").forEach(b=>b.onclick=()=>{
-      ch.identity.specialization=b.dataset.spec;
-      ch.archetypeChoices.subtype=b.dataset.spec;
-      ch.archetypeChoices.focusedSkillPicks=[]; ch.archetypeChoices.naturalAdvantages=[];
+      const id=b.dataset.spec, ac=ch.archetypeChoices;
+      if (!Array.isArray(ac.specialization)) ac.specialization=[];
+      const before = ac.specialization[0];
+      if (Engine.specializationNeed(ch) <= 1) ac.specialization=[id];
+      else {
+        const i=ac.specialization.indexOf(id);
+        if (i>=0) ac.specialization.splice(i,1); else ac.specialization.push(id);
+      }
+      // The Professional's focused-skill and natural-advantage pools hang off
+      // the subtype, so changing it invalidates both — including the entries
+      // natural advantages mirror into ch.advantages, which the old
+      // single-select handler cleared on one side only.
+      if (ac.specialization[0]!==before){
+        ac.focusedSkillPicks=[]; ac.naturalAdvantages=[];
+        ch.advantages=ch.advantages.filter(x=>x.notes!=="natural");
+      }
       update();
     });
-    main.querySelectorAll("[data-aber]").forEach(b=>b.onclick=()=>{
-      const id=b.dataset.aber, list=ch.archetypeChoices.aberrations;
-      const i=list.indexOf(id); if(i>=0) list.splice(i,1); else list.push(id);
-      update();
+    // Pick controls. `data-sel` is "<kind>|<entryId>|<pickId>|<slot>"; the
+    // engine owns distinctness and the slot cap, so a refusal comes back with a
+    // reason and the control simply re-renders to what is actually stored.
+    const applySel = (el, val) => {
+      const [kind, entryId, pickId, slot] = el.dataset.sel.split("|");
+      const r = Engine.setSelection(ch, kind, entryId, pickId, Number(slot), val);
+      if (!r.ok && r.why) el.title = r.why;
+      return r;
+    };
+    main.querySelectorAll("select[data-sel]").forEach(el=>el.onchange=()=>{ applySel(el, el.value); update(); });
+    main.querySelectorAll("input[data-sel]").forEach(el=>el.oninput=()=>{
+      applySel(el, el.value);
+      update(false); refreshNav();
     });
     main.querySelectorAll("[data-fskill]").forEach(b=>b.onclick=()=>{
       const id=b.dataset.fskill, list=ch.archetypeChoices.focusedSkillPicks;
@@ -1762,12 +1846,12 @@
     });
     main.querySelectorAll("[data-admin-arch]").forEach(sel=>sel.onchange=()=>{
       const v=sel.value||null; if (ch.identity.archetype===v) return;
-      if (!confirm("Change archetype? This clears all archetype-specific choices (focus/stat-bonus allocations, subtype, disciplines, natural advantages, aberrations). It's logged, so a single undo restores everything.")){ sel.value=ch.identity.archetype||""; return; }
+      if (!confirm("Change archetype? This clears all archetype-specific choices (focus/stat-bonus allocations, specialization, disciplines, natural advantages). It's logged, so a single undo restores everything.")){ sel.value=ch.identity.archetype||""; return; }
       const nm = v ? (D.archetypes.find(a=>a.id===v)||{name:v}).name : "none";
       commit("admin", `Admin: archetype → ${nm}`, ()=>{
-        ch.identity.archetype=v; ch.identity.specialization="";
-        ch.archetypeChoices={ rolls:{}, focusAllocation:{}, statBonusAllocation:{}, aberrations:[],
-          subtype:null, focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
+        ch.identity.archetype=v;
+        ch.archetypeChoices={ rolls:{}, focusAllocation:{}, statBonusAllocation:{}, specialization:[],
+          focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
         const a=Engine.archetype(ch);
         if (a && a.canPurchaseAdvantages===false) ch.advantages=ch.advantages.filter(x=>x.notes==="natural");
       });
@@ -1856,7 +1940,12 @@
       const cur=ch.skills[id]?ch.skills[id].rank:0, v=cur+delta;
       const pl=Engine.powerLevel(ch);
       if (v<0||v>pl.maxSkillRank) return;
-      if (v===0) delete ch.skills[id]; else ch.skills[id]={rank:v, ipe:(ch.skills[id]?ch.skills[id].ipe:0)};
+      if (v===0) delete ch.skills[id];
+      else {
+        const prev = ch.skills[id] || {};
+        ch.skills[id] = Object.assign({}, prev, {rank:v, ipe:prev.ipe||0});
+        Engine.trimSelections(ch,"skill",id);
+      }
     }
     if (kind==="focus"){
       const cur=ch.archetypeChoices.focusAllocation[id]||0, v=cur+delta;
@@ -1885,6 +1974,7 @@
       if (!e) return;
       e.rank=Math.max(0,e.rank+delta);
       if (e.rank===0) ch.advantages=ch.advantages.filter(x=>x!==e);
+      else Engine.trimSelections(ch,"advantage",id);
     }
     if (kind==="disadv"){
       let e=ch.disadvantages.find(x=>x.id===id);
@@ -1892,6 +1982,7 @@
       if (!e) return;
       e.rank=Math.max(0,e.rank+delta);
       if (e.rank===0) ch.disadvantages=ch.disadvantages.filter(x=>x!==e);
+      else Engine.trimSelections(ch,"disadvantage",id);
     }
     if (kind==="luck"){ ch.trackers.luck.bonus=Math.max(0, ch.trackers.luck.bonus+delta); }
     if (kind==="disc"){
