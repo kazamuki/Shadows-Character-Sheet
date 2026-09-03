@@ -3,7 +3,7 @@
 **Updated:** 2026-09-03
 **Versions:** app `0.6.0` · game data `0.4` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **85 passing, 0 todo, 0 failing** (85 tests, six files)
+**Suite:** `npm run verify` → **86 passing, 0 todo, 0 failing** (86 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -11,8 +11,9 @@ of date it is a bug. History lives in `log/2026.md`; the authority on
 architecture, schemas, decisions and flags is `SCHEMA.md`.
 
 > **Starting a session?** Read `CLAUDE.md`, then this file. That is enough to
-> begin. Open `SCHEMA.md` at the section you need when you need it — do not read
-> it front to back.
+> begin. When you need a decision, an `A`/`B`/`C`/`F` id, or the reasoning behind
+> a batch, go through **`INDEX.md`** — it maps each to the section that holds it.
+> Never read `SCHEMA.md` front to back.
 
 ---
 
@@ -47,39 +48,28 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
 | — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
 | 3 | Selection & constraint system | ✅ merged (#7) | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
-| 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Thick Skin, Lucky/Unlucky, Long-Lived |
+| 3a | Ledger attention state | ⏭ **next** | A passed step with unspent points shows ✓ today. Generic, and it makes 3b safe |
+| 3b | `grants` | ⏳ after 3a | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived. **Thick Skin waits on armor** |
 | — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
 | 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
 
-**What Batch 3 built.** One selection system with three hosts — advantages,
-disadvantages and skills. An entry declares `picks` (a fixed list, a category,
-or free text), `excludes` (a symmetric mutual lock) and `requires` (the
-milestone-prerequisite vocabulary); a character stores its answers as
-`selections` on the entry that asked. All ~15 entries Decision 58 named are
-encoded, plus Martial Arts styles. A3 put archetype specialization onto the same
-footing: **one array, `archetypeChoices.specialization`,** with the count read
-from the data (`countBy`, or 1). Three fields became one, and both renderers
-lost their per-archetype branches.
-
-**An adversarial review ran against PR #7** (a separate model, fresh context, no
-access to this session's reasoning). Eight findings; all eight verified against
-the code before anything was changed. **Five were real defects and are fixed**
-(Decision 82) — a trait held both free and purchased addressed by id alone, a
-free-only trait demanding picks with no control to fill them, `Resume draft`
-skipping `migrate()`, the natural-advantage mirror surviving an archetype
-change, and `specializationNeed` inventing a requirement on a corrupt import.
-Two of the guards written for them passed *before* the fix and had to be
-tightened — worth knowing that a failing-first check is the only proof a guard
-guards anything. **Three findings are open and recorded in §4.**
+**Batch 3 is merged.** One selection system — `picks` / `excludes` / `requires` —
+hosted by advantages, disadvantages and skills, with archetype specialization on
+the same model (A3). Decisions 77–82; reasoning in `SCHEMA.md` §6, session detail
+in `log/2026.md`. An independent adversarial review of the PR found five further
+defects, all fixed before merge (Decision 82); three machinery gaps from it are
+open in §4 and none is reachable with current data.
 
 **Two things a next session should know.**
 
 - **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
   Both are tested against a synthetic fixture. Adding a real one is a rules
   question for Deighton, not a data edit (Decision 77).
-- **`grants` was deliberately split out of Batch 3** (Batch 3b). It touches five
-  readers that currently compute from stats alone, and Educated forces a
-  wizard-flow ruling — bought at step 7, it grows the step-6 pool retroactively.
+- **Thick Skin is held out of 3b.** It grants Natural Armor, the armor design is
+  still in flux, and **four places in the data already grant Natural Armor in
+  prose** — Thick Skin, the Iron Shirt Martial Arts style, an archetype effect
+  and an archetype benefit. That makes it a real derived value when it lands, not
+  a Thick Skin special case. Until then it ships as reference text.
 
 **F8 is not a gate on any of this.** It blocks a player finishing the stats step.
 Chase it on its own track.
@@ -128,16 +118,11 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ---
 
-## 4. Still open from the rev 9 audit
+## 4. Open engineering work
 
-The audit (`audits/2026-06-16_rev9-whole-app-audit.md`) is the reference; look up
-an id there before working on it. **A1, A2, A3 and B1–B10 are all closed.**
-
-| Id | What | Where it lands |
-|---|---|---|
-| C1 | If any sheet number field moves to live `oninput`, it inherits Decision 41's caret fix | Forward note |
-| C2 | Admin mode can't reach `archetypeChoices` | Now much easier — one array to edit |
-| C3 | SFR / form-toggle copy — re-read after F6 and F7 land | Forward note |
+**Every `A` and `B` finding from the rev 9 audit is closed.** `C1`–`C3` remain as
+forward notes — one line each in `INDEX.md` §2, which is where you look up what
+any id means and whether it is still live.
 
 ### Open from the PR #7 adversarial review
 
@@ -162,10 +147,17 @@ bumps (app `0.6.0`, game data `0.4`, character schema `0.5`) — an existing
 `.shadows.json` upgrades through `migrate()` on load and reports the game-data
 mismatch, which is correct.
 
-**Batch 3b — `grants` — is next**, and it needs one ruling before it can start:
-**does buying Educated at step 7 reopen the step-6 Skill Point pool, or apply
-only going forward?** Everything else in 3b (Hard to Kill, Thick Skin,
-Lucky/Unlucky, Long-Lived) is mechanical once that is settled.
+**Batch 3a — the ledger attention state — is next, and nothing blocks it.**
+`renderLedger` marks a passed step ✓ when it has no *errors*, ignoring warnings.
+So a player who walks past Skills with ten unspent points gets a green tick
+saying they are done — shipped behaviour today, every step, every player. The fix
+is a third row state (done / active / **needs attention**) driven by warnings on
+a step already passed, plus a callout linking back. The rows are already
+clickable and `validate()` already emits the warnings, so most of it exists.
+
+**Then 3b — `grants`.** 3a settles the Educated ruling by construction: if the
+app surfaces the unspent points and lets the player go back, the points are
+usable at creation, so Educated grows the step-6 pool and says so out loud.
 
 If you want a session with no dependencies at all, the five doc-reconciliation
 flags in §3 have now waited through five batches.

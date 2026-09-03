@@ -6,7 +6,8 @@ Read in this order. The first two are enough to start work.
 |---|---|---|
 | `../CLAUDE.md` | Standing instructions: hard constraints, conventions, how we work. No live numbers — those drift. | First, every session. |
 | `STATE.md` | Where the build stands, the batch board, who can clear what, branches in flight. **Rewritten, never appended.** | Second, every session. Read it whole. |
-| `SCHEMA.md` | The authority: architecture, both schemas, the numbered decision ledger, the flag table, the roadmap. | **Not front to back.** Open the section you need. |
+| `INDEX.md` | **The map.** Where every kind of thing is written down, what every `A`/`B`/`C`/`F` id means, and all decisions grouped by topic. | When you know *what* you want and not *where* it is. |
+| `SCHEMA.md` | The authority: architecture, both schemas, the numbered decision ledger, the flag table, the roadmap. | **Not front to back.** Open the section you need — `INDEX.md` tells you which. |
 | `VOICE-APP.md` | City voice vs tool voice, for player-facing strings. | Before writing any string a player reads. |
 | `log/` | Session history, append-only. Why something was done, what it cost, what to watch for. | When you need the reasoning behind a past change. |
 | `audits/` | Dated whole-app audits. Findings referenced by id (A1, B2, C3) everywhere else. | Look up the id before working on it. |
@@ -17,10 +18,11 @@ Read in this order. The first two are enough to start work.
 
 ## Update rules
 
-- **A decision is not made until it is numbered** in `SCHEMA.md` §4.
-- **A flag is not tracked** until it is in `SCHEMA.md` §5. Closing one is *two*
-  edits — the table **and** `flagged` in the data. F10 stayed live to players for
-  four days because only the first was done.
+- **A decision is not made until it is numbered** in `SCHEMA.md` §4, and it is
+  not findable until it is in `INDEX.md` §3. The build checks the second.
+- **A flag is not tracked** until it is in `SCHEMA.md` §5. Closing one is now *three*
+  edits — the table, `flagged` in the data, and its row in `INDEX.md` §2. F10 stayed
+  live to players for four days because only the first was done.
 - **Volatile facts — suite results, decision counts — live in `STATE.md` and
   nowhere else.** Log entries state figures as of that session and are never
   revised.

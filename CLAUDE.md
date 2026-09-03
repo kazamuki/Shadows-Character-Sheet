@@ -14,7 +14,10 @@ and a cold session read them as current. Live numbers are in `docs/STATE.md`.
    decision ledger, the flag table, the roadmap. **Do not read it front to back.**
    Open the section you need. If it and this file disagree, SCHEMA wins and this
    file needs fixing.
-3. **`docs/audits/`** — findings are referenced by id (A1, B2, C3) throughout.
+3. **`docs/INDEX.md`** — the map. Where each kind of thing is written down, what
+   every `A`/`B`/`C`/`F` id means and whether it is closed, and every decision
+   grouped by topic. Use it instead of grepping; it is checked against the ledger.
+4. **`docs/audits/`** — findings are referenced by id (A1, B2, C3) throughout.
    Look up the id before working on it.
 
 Also here when relevant: `docs/VOICE-APP.md` (player-facing copy),
@@ -92,9 +95,9 @@ first move when something looks wrong is to compare the footer against STATE**.
 
 | Version | Lives in | Bump it when |
 |---|---|---|
-| **App** `0.5.0` | `APP_VERSION` at the top of `src/ui/app.js`, mirrored in `package.json` | **A player can see a difference.** patch = visible fix · minor = new capability · major = existing character files or the workflow break |
-| **Game data** `0.3` | `meta.gamedataVersion` in `shadows-data.js` | **A character's computed values or available choices can change** — content added or removed, a cost or cap altered, an id retired. *Never* for a change no character can observe (Decision 68) |
-| **Character schema** `0.4` | `meta.schemaVersion` on the character, stamped by `newCharacter()` and `migrate()` | **The shape of a saved `.shadows.json` changes.** Always needs a `migrate()` step in the same commit |
+| **App** | `APP_VERSION` at the top of `src/ui/app.js`, mirrored in `package.json` | **A player can see a difference.** patch = visible fix · minor = new capability · major = existing character files or the workflow break |
+| **Game data** | `meta.gamedataVersion` in `shadows-data.js` | **A character's computed values or available choices can change** — content added or removed, a cost or cap altered, an id retired. *Never* for a change no character can observe (Decision 68) |
+| **Character schema** | `meta.schemaVersion` on the character, stamped by `newCharacter()` and `migrate()` | **The shape of a saved `.shadows.json` changes.** Always needs a `migrate()` step in the same commit |
 | **Ruleset** | `meta.rulesetVersion` in `shadows-data.js` | The CRB moves. Not ours to bump on a whim — it tracks Ken's document |
 
 Two traps worth knowing:
@@ -107,8 +110,10 @@ Two traps worth knowing:
   renamed to `gamedataVersion` (Decision 75) to match the field it stamps onto
   characters. If you see `meta.schemaVersion`, you are looking at a character.
 
-`tests/docs.test.mjs` fails the build if `APP_VERSION`, `package.json` and
-`STATE.md` disagree.
+`tests/docs.test.mjs` fails the build if `APP_VERSION`, `package.json`,
+`package-lock.json`, `README.md` and `STATE.md` disagree. **The numbers above are
+deliberately absent from this table** — all three were written here once and all
+three went stale. `docs/STATE.md` is the only place they live.
 
 ## Layout
 
@@ -118,7 +123,7 @@ src/data/               Game content + icons. Designers edit these.
 src/engine/engine.js    Pure rules engine. No DOM.
 src/ui/app.js           Wizard + sheet. One IIFE, ~90 functions sharing state.
 src/styles/shadows.css  Brand tokens + styling.
-docs/                   STATE, SCHEMA, VOICE-APP, log, audits, reference.
+docs/                   INDEX, STATE, SCHEMA, VOICE-APP, log, audits, reference.
 tests/                  Engine units, CRB conformance, voice, smoke, architecture guards.
 tools/build.mjs         Inlines everything into dist/.
 ```
