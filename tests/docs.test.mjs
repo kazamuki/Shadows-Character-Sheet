@@ -144,6 +144,17 @@ test("the game-data and character-schema versions agree with the docs", () => {
   const { Engine } = loadEngine();
   assert.equal(Engine.newCharacter().meta.schemaVersion, m[2],
     "STATE.md's character schema version is stale");
+
+  // README.md is the first thing anyone outside the project reads, and it had
+  // been claiming game data 0.2 since the CRB v4 pass took it to 0.3 — nothing
+  // was checking it. All three numbers now come from the same source of truth.
+  const readme = read("README.md");
+  const r = /\*\*Status:\*\* app `([\d.]+)` · character schema `([\d.]+)` · game data `([\d.]+)`/.exec(readme);
+  assert.ok(r, "README.md's Status line is missing or reworded — keep the format so this can check it");
+  const app = /const APP_VERSION = "([\d.]+)"/.exec(read("src/ui/app.js"))[1];
+  assert.equal(r[1], app, "README.md's app version is stale");
+  assert.equal(r[2], m[2], "README.md's character schema version is stale");
+  assert.equal(r[3], m[1], "README.md's game data version is stale");
 });
 
 test("every document CLAUDE.md points at exists", () => {
