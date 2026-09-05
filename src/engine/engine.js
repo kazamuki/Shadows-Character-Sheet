@@ -67,6 +67,32 @@ const Engine = (() => {
   const adjFor = (ch, target) => (ch.trackers.adjustments||[])
     .reduce((s,a)=>s + (a.target===target ? a.amount : 0), 0);
 
+  // Batch 3b — an advantage/disadvantage's `grants` array is a static
+  // mechanical effect, not a player choice (unlike `picks`): Educated's +10
+  // Skill Points/rank, Hard to Kill's +1 HP/Health Level/rank, Lucky/Unlucky's
+  // LUCK spend-cost deltas, Long-Lived's Milestone slots. Computed fresh from
+  // held advantages/disadvantages every call — nothing is written back onto
+  // the character (constraint #7), so buying/selling one just changes what
+  // this returns next render.
+  function grants(ch){
+    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0 };
+    const scan = (list, lookup) => (list||[]).forEach(entry=>{
+      const def = lookup(entry.id);
+      for (const g of (def && def.grants) || []){
+        if (g.type==="skillPoints") out.skillPoints += (g.perRank||0) * entry.rank;
+        else if (g.type==="hpPerLevel") out.hpPerLevel += (g.perRank||0) * entry.rank;
+        else if (g.type==="luckCost") out.luckCost[g.spendId] = (out.luckCost[g.spendId]||0) + (g.delta||0);
+        else if (g.type==="milestone" && entry.rank >= (g.atRank||1)){
+          if (g.kind==="minor") out.minorMilestones++;
+          else if (g.kind==="major") out.majorMilestones++;
+        }
+      }
+    });
+    scan(ch.advantages, advById);
+    scan(ch.disadvantages, disById);
+    return out;
+  }
+
   // Final stat value = creation base + archetype bonus + CP boosts + IPE + adjustments
   function statValue(ch, id){
     return ch.stats[id].base + archStatBonus(ch,id)
@@ -114,7 +140,8 @@ const Engine = (() => {
     const hl = D().resources.healthLevels;
     const bod = statValue(ch,"BOD");
     const levels = Math.min(bod, hl.maxLevels);
-    const hpPer  = hl.hpPerLevel + Math.max(0, bod - hl.maxLevels); // BOD>10 rule
+    const hpPer  = hl.hpPerLevel + Math.max(0, bod - hl.maxLevels) // BOD>10 rule
+                 + grants(ch).hpPerLevel;                          // Hard to Kill
     return { levels, hpPer, total: levels*hpPer + adjFor(ch,"HP") };
   }
 
@@ -141,7 +168,7 @@ const Engine = (() => {
     if (!pl) return null;
     const r = ch.creation.rolls.skillPoints;
     return { base:pl.skillPoints.base, roll:r, rollDie:pl.skillPoints.roll,
-             total: r==null ? null : pl.skillPoints.base + r };
+             total: r==null ? null : pl.skillPoints.base + r + grants(ch).skillPoints };
   }
   const skillSpent = ch => Object.values(ch.skills).reduce((s,k)=>s + k.rank, 0);
 
@@ -271,8 +298,12 @@ const Engine = (() => {
     const L = D().resources.luck;
     const max = L.startingValue + ch.trackers.luck.bonus + adjFor(ch,"LUCK");
     const spent = ch.trackers.luck.spent||0;
+    // Lucky/Unlucky shift what each spend action costs; never below 0.
+    const costDelta = grants(ch).luckCost;
+    const spendActions = (L.spend||[]).map(sa=>
+      ({ ...sa, cost: Math.max(0, sa.cost + (costDelta[sa.id]||0)) }));
     return { max, spent, current: Math.max(0, max - spent),
-             spendActions: L.spend||[], refresh: L.refresh };
+             spendActions, refresh: L.refresh };
   }
 
   function sanState(ch){
@@ -353,8 +384,11 @@ const Engine = (() => {
     const sessionMP = (ch.sessions||[]).filter(s=>s.milestonePoint!==false).length * per;
     const mp = sessionMP + ((ch.progression||{}).milestonePoints||0);
     const avail = (first, every) => (every>0 && mp>=first) ? Math.floor((mp-first)/every)+1 : 0;
-    const minorAvail = avail(r.minorFirstAt, r.minorEvery);
-    const majorAvail = avail(r.majorFirstAt, r.majorEvery);
+    const g = grants(ch);
+    // Long-Lived's Milestone grants land as extra unlocked slots, not an
+    // auto-picked Milestone — the existing pick lists handle the rest.
+    const minorAvail = avail(r.minorFirstAt, r.minorEvery) + g.minorMilestones;
+    const majorAvail = avail(r.majorFirstAt, r.majorEvery) + g.majorMilestones;
     const minorTaken = ch.progression.milestones.minor||[];
     const majorTaken = ch.progression.milestones.major||[];
     return { mp, sessionMP, manualMP: ch.progression.milestonePoints||0,
@@ -1041,6 +1075,8 @@ const Engine = (() => {
            skillLine, validate, buildExport, versionCheck,
            // Phase 3
            adjFor, painState, luckState, sanState, focusedSkillIds,
+           // Batch 3b — grants
+           grants,
            ipState, ipCost, spendIP, grantIP,
            milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
            logSession, addCredits, archPanels, panelMax, disciplineRanks, migrate,

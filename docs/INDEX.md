@@ -83,6 +83,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F13` | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline… | Ken |
 | `F14` | Skill IP cost at rank 0: "5 × current rank" prices learning a new skill (0→1) at zero. Ap… | Deighton |
 | `F16` | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is Medical. Field Medi… | Ken |
+| `F17` | Long-Lived's rank table reads "Effect" per row; implemented as stacking, needs Deighton's sign-off | Deighton |
 
 There is also one **unnumbered** flag, which is why it is easy to lose: `statMod()`
 extrapolates +1 per point above 10 while `statRules.beyondHumanLimits` says gains
@@ -167,6 +168,8 @@ Promises the engine makes and the guards behind them.
 - **80** *(Batch 3)* — Two realms, one trap, written down.
 - **81** *(Batch 3)* — A stale natural advantage no longer survives a subtype change.
 - **82** *(Batch 3, post-review)* — A trait held twice is still one trait — and an adversarial review found it.
+- **87** *(Batch 3b)* — The other half of Decision 58 lands: a `grants` array gives an advantage/disadvantage a static mechanical effect.
+- **88** *(Batch 3b, F17)* — Long-Lived's ranks stack.
 
 ### Sheet & play tracking
 
