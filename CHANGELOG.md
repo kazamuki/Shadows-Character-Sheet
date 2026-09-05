@@ -7,12 +7,16 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.6.0
+## [Unreleased] — app 0.7.0
 
 Character schema **0.5** · game data **0.4** · ruleset CRB v4 (in progress).
 
 **Player-visible**
 
+- The intake ledger tells the difference between "done" and "passed, but something's
+  still open." A step you've walked past with unspent points or an unresolved pick now
+  shows a gold `!` instead of a green checkmark, and a callout below the ledger jumps you
+  back to the first one.
 - Advantages, Disadvantages and Skills can now ask you for something when you take them:
   a Skill from a named list (Common Sense), any Skill and a different one per rank
   (Favored Skill, Refined Skill), up to two Martial Arts styles, or a line of text for the

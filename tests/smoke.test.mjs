@@ -146,6 +146,29 @@ test("the review step is numbered off the data, not hardcoded (B5)", () => {
   assert.deepEqual(app.errors, []);
 });
 
+test("a passed step with unspent points shows attention, not a plain checkmark (Batch 3a)", () => {
+  // renderLedger used to mark a passed step done whenever validate() had no
+  // ERRORS, ignoring warnings entirely — so a player who walked past Stats with
+  // points still unspent got a green ✓ claiming they were finished.
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls.statPoints = 40;   // nothing spent yet: statSpent(ch) stays 0
+  const statsIndex = D.creationFlow.steps.findIndex(s => s.id === "stats");
+  assert.ok(statsIndex >= 0, "no 'stats' step in creationFlow — did the step list change?");
+
+  const app = boot({ storage: { "shadows.draft.v1": {
+    ch, step: statsIndex + 1, maxReached: statsIndex + 1
+  } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+
+  const row = app.$$("#ledger [data-goto]")[statsIndex];
+  assert.ok(row.className.includes("attn"), `stats row should be "attn", got "${row.className}"`);
+  assert.equal(row.querySelector(".n").textContent, "!", "attention row should not show a plain checkmark");
+  assert.ok(app.$("#ledger .ledger-callout"), "no callout pointing back at the flagged step");
+  assert.deepEqual(app.errors, []);
+});
+
 test("the sheet states the CRB's pain floors, not just the penalties (B8)", () => {
   // A player at Pain Level 3 reading a bare "-3 Essence die" rolls nothing.
   // The CRB floors that at 1 die and Breaker at 10% "to prevent automatic loss".
