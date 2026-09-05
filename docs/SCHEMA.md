@@ -1179,6 +1179,33 @@ No cascade logic to maintain — it falls out of the architecture.
     row level. Guard: `tests/smoke.test.mjs`, confirmed failing against the
     pre-fix renderer before being kept. (Ken + Claude, 2026-09-04)
 
+84. **(Docs)** **Nine CRB v4 chapters are mirrored into `docs/reference/crb/`,
+    following the pattern Decision 69 set for the Voice & Style Guide.** Same
+    deal: a mirror, not a second master — the live document wins on conflict,
+    and a stale copy is re-pulled rather than reconciled in place. The
+    difference from 69 is scale, so the shared provenance header moved to one
+    `docs/reference/crb/README.md` instead of repeating it in each file.
+    Chosen chapters are the ones that gate engine formulas, merged data, or an
+    open flag today: `020_Synergy_System`, `030_Core_Mechanics`,
+    `040_Character_Creation`, `041_Archetypes`, `042_Skills`, `043_Advantages`,
+    `044_Disadvantages`, `054_Conditions_and_Recovery`, `Gear`. Pulling them
+    confirmed — but did not resolve — F1, F2, F8, F9, F11, F13, F16 and the
+    unnumbered beyond-10 flag: the WIP text still says what the existing
+    `flagNote`s already recorded, so nothing here is a ruling. The remaining
+    seven chapters (onboarding, the three encounter chapters, Downtime) stay
+    unmirrored until they actually gate a batch — `055_Downtime` in particular
+    is short in the source because the Advancement section F12 needs hasn't
+    been written yet. (Ken + Claude, 2026-09-04)
+
+85. **(Docs)** **`GUIDE_Shadows_Voice.md` is re-pulled with pandoc.** Its first
+    pull (Decision 69, 2026-09-02) predates pandoc being available in-session
+    and used a cruder extraction that flattened all bold/italic emphasis and
+    every blockquote to plain text — a real loss on a *style* guide, where
+    which line is a worked quote versus body prose is part of what it's
+    teaching. No wording changed, only which characters carry emphasis; the
+    re-pull note is in the file's own header rather than a second entry here.
+    (Ken + Claude, 2026-09-04)
+
 
 ## 5. Open Flags
 
