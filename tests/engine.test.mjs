@@ -521,3 +521,76 @@ test("specializationNeed asks for nothing when it cannot resolve a count (review
   ch.identity.archetype = "professional";
   assert.equal(Engine.specializationNeed(ch), 1);
 });
+
+// ── Batch 3b — grants (Decisions 87-88) ────────────────────────────────
+
+test("Educated adds 10 Skill Points per rank to the pool (grants)", () => {
+  const ch = subject();
+  ch.creation.rolls.skillPoints = 30;
+  const before = Engine.skillPool(ch).total;
+  ch.advantages.push({ id: "educated", rank: 2, notes: "" });
+  assert.equal(Engine.skillPool(ch).total, before + 20);
+});
+
+test("Hard to Kill adds 1 HP per Health Level per rank (grants)", () => {
+  const ch = subject({ bod: 5 });
+  const before = Engine.health(ch).hpPer;
+  ch.advantages.push({ id: "hard-to-kill", rank: 3, notes: "" });
+  assert.equal(Engine.health(ch).hpPer, before + 3);
+});
+
+test("Lucky and Unlucky shift LUCK spend costs, and cancel out if both are held (grants)", () => {
+  const ch = subject();
+  const costsById = c => Object.fromEntries(Engine.luckState(c).spendActions.map(sa => [sa.id, sa.cost]));
+  const base = costsById(ch);
+  assert.equal(base.boost, 2);
+  assert.equal(base.explode, 3);
+
+  ch.advantages.push({ id: "lucky", rank: 1, notes: "" });
+  const lucky = costsById(ch);
+  assert.equal(lucky.boost, 1, "Boost should cost 1 with Lucky");
+  assert.equal(lucky.explode, 2, "Explode should cost 2 with Lucky");
+
+  ch.disadvantages.push({ id: "unlucky", rank: 1, notes: "" });
+  const both = costsById(ch);
+  assert.equal(both.boost, base.boost, "Lucky + Unlucky did not cancel back to base");
+  assert.equal(both.explode, base.explode, "Lucky + Unlucky did not cancel back to base");
+});
+
+test("a LUCK spend cost never drops below 0 (grants floor)", () => {
+  const ch = subject();
+  // Pathological — Lucky is maxRank 1 — but the floor has to hold
+  // structurally regardless of how a future grant stacks discounts.
+  ch.advantages.push({ id: "lucky", rank: 1, notes: "" });
+  ch.advantages.push({ id: "lucky", rank: 1, notes: "second" });
+  for (const sa of Engine.luckState(ch).spendActions) assert.ok(sa.cost >= 0, `${sa.id} went negative`);
+});
+
+test("Long-Lived's Milestone grants stack across ranks (F17, Decision 88)", () => {
+  const ch = subject();
+  assert.equal(Engine.milestoneState(ch).minorAvail, 0);
+  assert.equal(Engine.milestoneState(ch).majorAvail, 0);
+
+  ch.advantages.push({ id: "long-lived", rank: 3, notes: "" });
+  const ms = Engine.milestoneState(ch);
+  assert.equal(ms.minorAvail, 2, "rank 3 should still carry rank 1's and rank 2's Minor grants");
+  assert.equal(ms.majorAvail, 1);
+  assert.equal(ms.minorLeft, 2);
+  assert.equal(ms.majorLeft, 1);
+});
+
+test("Long-Lived below rank 2 grants only what its rank has reached", () => {
+  const ch = subject();
+  ch.advantages.push({ id: "long-lived", rank: 1, notes: "" });
+  const ms = Engine.milestoneState(ch);
+  assert.equal(ms.minorAvail, 1);
+  assert.equal(ms.majorAvail, 0);
+});
+
+test("grants() is computed live off held traits, never stored on the character", () => {
+  const ch = subject();
+  ch.advantages.push({ id: "educated", rank: 1, notes: "" });
+  assert.equal(Engine.grants(ch).skillPoints, 10);
+  ch.advantages = [];
+  assert.equal(Engine.grants(ch).skillPoints, 0, "a removed advantage's effect survived");
+});

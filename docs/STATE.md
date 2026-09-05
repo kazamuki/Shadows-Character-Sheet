@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-05
-**Versions:** app `0.7.0` · game data `0.4` · character schema `0.5` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.8.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **87 passing, 0 todo, 0 failing** (87 tests, six files)
+**Suite:** `npm run verify` → **94 passing, 0 todo, 0 failing** (94 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -51,9 +51,9 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 3a | Ledger attention state | ✅ merged (#10) | Third row state (done/active/attention) + callout · Decision 83 |
 | — | Dev-preview tooling | ✅ merged (#11) | `tools/devserver.mjs` for browser-tool UI verification. Not app-related, own branch |
 | — | CRB v4 reference mirror | ✅ merged (#13) | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85. Not app-related, own branch |
-| — | Decompose `src/ui/app.js` | ✅ on branch, not yet merged | Decision 54's deferred refactor, done ahead of 3b · Decision 86 |
-| 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived. **Thick Skin waits on armor** |
-| 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
+| — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor, done ahead of 3b · Decision 86 |
+| 3b | `grants` | ✅ on branch, not yet merged | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
+| 4 | Biomech as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
 
 **Batch 3 is merged.** One selection system — `picks` / `excludes` / `requires` —
 hosted by advantages, disadvantages and skills, with archetype specialization on
@@ -71,19 +71,20 @@ validation — it just stops discarding the warnings `validate()` already emits.
 Decision 83; a jsdom test confirmed failing against the pre-fix renderer before
 being kept.
 
-**A dev-preview server also landed (#11), unrelated to the app itself.**
+**A dev-preview server also landed (#11), unrelated to the app itself:**
 `tools/devserver.mjs` serves the repo over plain HTTP so a browser tool can
-execute the app's scripts — opening `index.html` via bare `file://` renders
-inert (no script execution) in some embedded browsers, which is what visually
-verifying 3a ran into. `.claude/launch.json` wires it up; `CLAUDE.md` points at
-it next to the other commands.
+execute the app's scripts (bare `file://` renders inert in some embedded
+browsers). `.claude/launch.json` wires it up.
 
-**Nine CRB v4 chapters are now mirrored in-repo (#13), also unrelated to app
-code.** `docs/reference/crb/` — the chapters gating engine formulas, merged
-data, or an open flag, plus a README on source/re-pull. Same contract as the
-Voice guide (Decision 69); Decisions 84–85, the latter a pandoc re-pull of
-the Voice guide itself. Confirmed but did not resolve F1/F2/F8/F9/F11/F13/F16
-and the unnumbered beyond-10 flag.
+**Nine CRB v4 chapters are mirrored in-repo (#13), also unrelated to app
+code:** `docs/reference/crb/`, same re-pull contract as the Voice guide
+(Decisions 84–85). Confirmed but did not resolve F1/F2/F8/F9/F11/F13/F16 or
+the unnumbered beyond-10 flag.
+
+**Batch 3b (`grants`) is done, on branch, not yet merged.** Educated, Hard to
+Kill, Lucky, Unlucky and Long-Lived now have real mechanical effects via a new
+`grants` array (Decisions 87–88). Long-Lived's rank-stacking is a flagged
+assumption (F17) pending Deighton, not a settled rule.
 
 **Two things a next session should know.**
 
@@ -127,6 +128,7 @@ four separate context-loads.
 | F1 | LUCK buy-up cost in CP per point (stubbed 1:1) |
 | F2 | CP boost exchange rate across skills / stats / powers (stubbed 1:1) |
 | F14 | Skill IP at rank 0 — "5 × current rank" prices a new skill at zero; the app charges the rank-1 price |
+| F17 | Long-Lived's rank table reads "Effect" per row, not "gain another" — implemented as stacking (rank 3 = 2 Minor + 1 Major), confirmed with Ken, needs Deighton's sign-off as rules authority |
 | *(new)* | Does any Advantage or Disadvantage **lock out** another? The machinery is built and tested; nothing in the CRB names a pair, and inventing one would be resolving a rules question in code |
 | *(unnumbered)* | `statMod()` extrapolates **+1 per point above 10**, but `statRules.beyondHumanLimits` says gains *"slow down"* past 10. These disagree, and this flag exists only as a code comment — it has no F-number and is not in the table |
 
@@ -166,18 +168,16 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**Nothing in flight on `main`.** PR #13 landed everything through the CRB v4
-reference mirror; `npm run verify` is green (87 passing, 0 todo). Branch
-`refactor/decompose-app-js` (Decision 86) splits `app.js` into four files —
-zero behaviour change, done ahead of 3b since 3b's blocker didn't touch it.
+**`main` is caught up through PR #15** — the CRB v4 reference mirror and the
+`app.js` decomposition (Decision 86) have both landed; `npm run verify` is
+green (94 passing, 0 todo).
 
-**Batch 3b — `grants` — is next, and unblocked.** 3a already settled the
-Educated ruling by construction: surfacing unspent points and letting the
-player go back makes them usable at creation, so Educated grows the step-6
-pool and says so out loud.
+**Batch 3b (`grants`) is done, on branch `feat/batch-3b-grants`, not yet
+merged** (see §2). **Batch 4 (Biomech) is next**, but needs the design ruling
+from Ken + Deighton + Scott before there's data to encode (F6, §3).
 
 If you want a session with no dependencies at all, the five doc-reconciliation
-flags in §3 have now waited through five batches.
+flags in §3 have now waited through six batches.
 
 ---
 
