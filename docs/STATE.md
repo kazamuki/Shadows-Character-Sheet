@@ -50,6 +50,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 3 | Selection & constraint system | ✅ merged (#7) | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
 | 3a | Ledger attention state | ✅ merged (#10) | Third row state (done/active/attention) + callout · Decision 83 |
 | — | Dev-preview tooling | ✅ merged (#11) | `tools/devserver.mjs` for browser-tool UI verification. Not app-related, own branch |
+| — | CRB v4 reference mirror | ✅ merged (#13) | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85. Not app-related, own branch |
 | 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived. **Thick Skin waits on armor** |
 | — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
 | 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
@@ -76,6 +77,13 @@ execute the app's scripts — opening `index.html` via bare `file://` renders
 inert (no script execution) in some embedded browsers, which is what visually
 verifying 3a ran into. `.claude/launch.json` wires it up; `CLAUDE.md` points at
 it next to the other commands.
+
+**Nine CRB v4 chapters are now mirrored in-repo (#13), also unrelated to app
+code.** `docs/reference/crb/` — the chapters gating engine formulas, merged
+data, or an open flag, plus a README on source/re-pull. Same contract as the
+Voice guide (Decision 69); Decisions 84–85, the latter a pandoc re-pull of
+the Voice guide itself. Confirmed but did not resolve F1/F2/F8/F9/F11/F13/F16
+and the unnumbered beyond-10 flag.
 
 **Two things a next session should know.**
 
@@ -158,8 +166,9 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**Nothing in flight.** `main` is at PR #11. Batches 3a and the dev-preview
-tooling both landed, `npm run verify` is green on it (87 passing, 0 todo).
+**Nothing in flight.** `main` is at PR #13. Batch 3a, the dev-preview
+tooling, and the CRB v4 reference mirror have all landed, `npm run verify` is
+green on it (87 passing, 0 todo).
 
 **Batch 3b — `grants` — is next.** 3a settles the Educated ruling by
 construction: if the app surfaces the unspent points and lets the player go
