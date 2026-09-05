@@ -1163,6 +1163,22 @@ No cascade logic to maintain — it falls out of the architecture.
     and *"the test passes"* is not evidence until it has been seen to fail.
     Eight mutations, eight caught. (Ken, 2026-09-03)
 
+83. **(Batch 3a)** **The ledger's ✓ meant "no errors," not "nothing left to
+    do."** `renderLedger` marked a passed step done whenever `validate()` came
+    back with no *errors*, which is also true of a step sitting on open
+    *warnings* — a player who walked past Stats or Skills with points still
+    unspent got the same green checkmark as a player who had spent every one.
+    Nothing was blocking them; nothing was telling them either.
+
+    A passed step now renders one of three states: **done** (no errors, no
+    warnings), **active** (the current step), or **attention** (passed, but
+    `validate()` still has something to say) — shown as `!` in gold rather than
+    a checkmark. A callout beneath the ledger names how many steps are in that
+    state and jumps to the first one. No new validation was written; this reads
+    the warnings `validate()` already produced and stops discarding them at the
+    row level. Guard: `tests/smoke.test.mjs`, confirmed failing against the
+    pre-fix renderer before being kept. (Ken + Claude, 2026-09-04)
+
 
 ## 5. Open Flags
 

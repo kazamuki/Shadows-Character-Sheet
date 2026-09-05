@@ -60,10 +60,16 @@ nav.ledger{border-right:1px solid var(--frame); padding:20px 0 28px; background:
 .step-row .n{font-family:var(--mono); font-size:.72rem; width:1.4em; color:var(--frame)}
 .step-row.done{color:var(--text)}
 .step-row.done .n{color:var(--green)}
+.step-row.attn{color:var(--text)}
+.step-row.attn .n{color:var(--gold)}
 .step-row.active{color:var(--text); border-left-color:var(--cyan); background:rgba(27,187,196,.07)}
 .step-row.active .n{color:var(--cyan)}
 .step-row:disabled{cursor:default; opacity:.55}
 .step-row:not(:disabled):hover{background:rgba(32,63,123,.25)}
+.ledger-callout{display:block; width:calc(100% - 24px); margin:10px 12px 0; text-align:left;
+  background:rgba(216,168,64,.1); border:1px solid var(--gold); border-radius:4px;
+  color:var(--gold); padding:8px 10px; font-size:.78rem; line-height:1.4}
+.ledger-callout:hover{background:rgba(216,168,64,.18)}
 
 /* ── Main column ────────────────────────────────────────────────────── */
 main{padding:26px 30px 80px; max-width:920px; min-width:0}
