@@ -15,6 +15,9 @@ import { buildHtml, ROOT } from "../tools/build.mjs";
 
 const BROWSER_JS = [
   "src/engine/engine.js",
+  "src/ui/shared.js",
+  "src/ui/wizard.js",
+  "src/ui/sheet.js",
   "src/ui/app.js",
   "src/data/shadows-data.js",
   "src/data/shadows-icons.js",
@@ -57,6 +60,9 @@ test("script order in the shell is data → icons → engine → ui", () => {
     "src/data/shadows-data.js",
     "src/data/shadows-icons.js",
     "src/engine/engine.js",
+    "src/ui/shared.js",
+    "src/ui/wizard.js",
+    "src/ui/sheet.js",
     "src/ui/app.js",
   ]);
 });

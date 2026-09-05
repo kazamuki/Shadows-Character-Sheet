@@ -1,6 +1,6 @@
 # State of the build
 
-**Updated:** 2026-09-04
+**Updated:** 2026-09-05
 **Versions:** app `0.7.0` · game data `0.4` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` → **87 passing, 0 todo, 0 failing** (87 tests, six files)
@@ -51,8 +51,8 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 3a | Ledger attention state | ✅ merged (#10) | Third row state (done/active/attention) + callout · Decision 83 |
 | — | Dev-preview tooling | ✅ merged (#11) | `tools/devserver.mjs` for browser-tool UI verification. Not app-related, own branch |
 | — | CRB v4 reference mirror | ✅ merged (#13) | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85. Not app-related, own branch |
+| — | Decompose `src/ui/app.js` | ✅ on branch, not yet merged | Decision 54's deferred refactor, done ahead of 3b · Decision 86 |
 | 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived. **Thick Skin waits on armor** |
-| — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
 | 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
 
 **Batch 3 is merged.** One selection system — `picks` / `excludes` / `requires` —
@@ -166,15 +166,15 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**Nothing in flight.** `main` is at PR #13. Batch 3a, the dev-preview
-tooling, and the CRB v4 reference mirror have all landed, `npm run verify` is
-green on it (87 passing, 0 todo).
+**Nothing in flight on `main`.** PR #13 landed everything through the CRB v4
+reference mirror; `npm run verify` is green (87 passing, 0 todo). Branch
+`refactor/decompose-app-js` (Decision 86) splits `app.js` into four files —
+zero behaviour change, done ahead of 3b since 3b's blocker didn't touch it.
 
-**Batch 3b — `grants` — is next.** 3a settles the Educated ruling by
-construction: if the app surfaces the unspent points and lets the player go
-back, the points are usable at creation, so Educated grows the step-6 pool and
-says so out loud. Needs a ruling on Educated's step ordering before it can be
-built (see §3).
+**Batch 3b — `grants` — is next, and unblocked.** 3a already settled the
+Educated ruling by construction: surfacing unspent points and letting the
+player go back makes them usable at creation, so Educated grows the step-6
+pool and says so out loud.
 
 If you want a session with no dependencies at all, the five doc-reconciliation
 flags in §3 have now waited through five batches.
