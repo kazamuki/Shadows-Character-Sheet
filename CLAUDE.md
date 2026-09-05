@@ -55,6 +55,15 @@ If `npm run verify` fails, fix the code, not the test. The exception: a test
 encoding an outdated decision, in which case update `docs/SCHEMA.md` in the same
 change.
 
+**Seeing a UI change run, not just pass tests:** opening `index.html` straight
+from `file://` renders inert in some embedded/automated browsers — the markup
+shows but no script executes, so nothing is clickable. `tools/devserver.mjs` is
+a zero-dependency static file server (not shipped, not part of the app or its
+build) that serves the repo over plain HTTP so a browser tool can actually run
+it: `node tools/devserver.mjs` → `http://localhost:8420`. `.claude/launch.json`
+wires it up as `shadows-dev-preview` for Claude Code's browser tool to start on
+its own. Check before reaching for a different one or building it again.
+
 ## Hard constraints — breaking any of these breaks the app for players
 
 1. **The app runs from `file://` with no server and no build step.** A GM hands a
