@@ -22,6 +22,7 @@ Generated summaries are one line each and deliberately lossy — they are for
 | What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
 | What a past session cost, and what to watch for | `docs/log/2026.md` |
 | Whether a string is allowed to say that | `VOICE-APP.md` |
+| Whether the current WIP text already answers an open flag | `docs/reference/crb/README.md` |
 | What shipped in a release | `../CHANGELOG.md` — backward-looking only |
 | How to work on this repo at all | `../CLAUDE.md` |
 
@@ -128,6 +129,7 @@ Where game text comes from and how it is merged.
 - **56** *(CRB v4 content pass)* — Martial Arts: two styles at creation, more trainable in play.
 - **57** *(CRB v4 content pass)* — Rank tables stay prose; rankTable waits for the renderer.
 - **65** *(Mechanism 3)* — The rulebook's worked examples run as tests.
+- **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`.
 
 ### Archetypes & specialization
 
@@ -213,6 +215,7 @@ Every string a player reads, and what enforces it.
 - **72** *(Batch 2)* — validate() writes player-facing copy, and that is where a build-state sentence hid longest.
 - **73** *(Batch 2)* — The voice standard is enforced by rendering the app, not by reading the source.
 - **76** *(Voice)* — docs/VOICE-APP.md is adopted, not draft.
+- **85** *(Docs)* — GUIDE_Shadows_Voice.md is re-pulled with pandoc.
 
 ### Repository & docs
 
