@@ -1206,6 +1206,23 @@ No cascade logic to maintain — it falls out of the architecture.
     re-pull note is in the file's own header rather than a second entry here.
     (Ken + Claude, 2026-09-04)
 
+86. **(Repository)** **Decision 54's deferred refactor lands: `src/ui/app.js`
+    splits into four classic scripts.** `shared.js` (state, persistence, the
+    commit/render loop, cross-cutting render helpers), `wizard.js` (the eight
+    creation-step renderers), `sheet.js` (the nine locked-sheet renderers),
+    and a trimmed `app.js` (chrome, event wiring, boot) — loaded in that order
+    after `engine.js`. No namespace object: classic `<script>` tags in one
+    document already share a single global scope executed in order (the same
+    mechanism `Engine` and `window.SHADOWS_DATA` already rely on), so the
+    split needed zero renames — every identifier moved verbatim. Pulled ahead
+    of Batch 3b rather than after it (the original order in SCHEMA §6) because
+    3b turned out to be blocked on Educated's step-ordering ruling, which this
+    branch never touches; 3a had already resolved that ruling by construction,
+    so nothing here waits on it either way. Zero behaviour change: the suite
+    holds at 87 passing / 0 todo, and `index.html`'s script order and
+    `tests/build.test.mjs`'s manifest both grew by three entries, nothing else.
+    (Ken + Claude, 2026-09-05)
+
 
 ## 5. Open Flags
 
@@ -1450,9 +1467,9 @@ cleared, two opened.
   lands — not a Thick Skin special case bolted on early. Until then it ships as
   reference text, like every other un-modeled rule.
 
-- **Then: decompose `src/ui/app.js`** (Decision 54's deferred refactor) on its
-  own branch, with zero behaviour change, now that the renderers it touches
-  have landed green. Then Biomech (F6) as data rather than a fourth special
+- **Decompose `src/ui/app.js`** (Decision 54's deferred refactor) ✅ — done on
+  `refactor/decompose-app-js`, ahead of 3b rather than after it (Decision 86).
+  Then Biomech (F6) as data rather than a fourth special
   case. Clear **F8** on its own track — it is a four-number data edit and the
   only wizard-blocking flag.
 

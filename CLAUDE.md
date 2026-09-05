@@ -127,10 +127,12 @@ three went stale. `docs/STATE.md` is the only place they live.
 ## Layout
 
 ```
-index.html              Shell. 31 lines.
+index.html              Shell. 34 lines.
 src/data/               Game content + icons. Designers edit these.
 src/engine/engine.js    Pure rules engine. No DOM.
-src/ui/app.js           Wizard + sheet. One IIFE, ~90 functions sharing state.
+src/ui/                 Wizard + sheet, as four classic scripts sharing one
+                        global scope (shared, wizard, sheet, then app for
+                        chrome/boot) — no namespace object, see Decision 86.
 src/styles/shadows.css  Brand tokens + styling.
 docs/                   INDEX, STATE, SCHEMA, VOICE-APP, log, audits, reference.
 tests/                  Engine units, CRB conformance, voice, smoke, architecture guards.
@@ -179,9 +181,10 @@ the decision in the same change as the code it describes.
 **Player-facing copy follows `docs/VOICE-APP.md`.** The app speaks as NYTE City —
 except where the player is stuck, which is tool voice: clear, short, out of the
 way. Three files generate player copy and one of them surprises people:
-`src/ui/app.js`, **`src/engine/engine.js` (`validate()` writes every wizard error
-and warning)**, and the data. When a string is doing real narrative work, flag it
-for a voice pass rather than shipping a guess.
+`src/ui/` (wizard/sheet renderers, split across `shared.js`/`wizard.js`/
+`sheet.js`/`app.js` — Decision 86), **`src/engine/engine.js` (`validate()`
+writes every wizard error and warning)**, and the data. When a string is doing
+real narrative work, flag it for a voice pass rather than shipping a guess.
 
 **Watch for mechanical drift.** Rewording an entry can quietly change what it
 does — an absolute floor becoming a relative modifier, a cost shifting, a
