@@ -50,7 +50,7 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.4",
+    "gamedataVersion": "0.5",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-03",
     "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump."
@@ -248,11 +248,13 @@ window.SHADOWS_DATA = {
     "playerNote": "What a point of LUCK costs isn't settled. The sheet charges 1 Character Point; your GM sets the real price.",
       "spend": [
         {
+          "id": "boost",
           "action": "Boost the roll",
           "cost": 2,
           "effect": "Increase the face result of a die by 1. Can turn a Botch into a plain failure, or boost a 9 to a 10 to explode the die."
         },
         {
+          "id": "explode",
           "action": "Explode the roll",
           "cost": 3,
           "effect": "Roll the die again and add the new result to the total."
@@ -1140,7 +1142,8 @@ window.SHADOWS_DATA = {
       "cost": 5,
       "maxRank": 5,
       "description": "Each rank grants 10 additional Skill Points.",
-      "universal": true
+      "universal": true,
+      "grants": [{ "type": "skillPoints", "perRank": 10 }]
     },
     {
       "id": "eidetic-memory",
@@ -1225,7 +1228,8 @@ window.SHADOWS_DATA = {
       "cost": 4,
       "maxRank": 4,
       "description": "NYTE City hasn't finished with you yet. It may need to try harder.\n\nGain +1 max HP to all Health Levels per Rank.",
-      "universal": true
+      "universal": true,
+      "grants": [{ "type": "hpPerLevel", "perRank": 1 }]
     },
     {
       "id": "hyper-vigilance",
@@ -1284,7 +1288,15 @@ window.SHADOWS_DATA = {
       "name": "Long-Lived",
       "cost": 5,
       "maxRank": 3,
-      "description": "NYTE City has been here a long time. So have you.\n\nYou have an exceptionally long life span. You are older than you seem.\n\n- Rank 1 — Minimum Age: 70 · Maximum Age: 140 years · Effect: 1 Minor Milestone\n\n- Rank 2 — Minimum Age: 110 · Maximum Age: 220 years · Effect: 1 Minor Milestone\n\n- Rank 3 — Minimum Age: 150 · Maximum Age: 300 years · Effect: 1 Major Milestone\n\nYou may only purchase this Advantage during character creation."
+      "description": "NYTE City has been here a long time. So have you.\n\nYou have an exceptionally long life span. You are older than you seem.\n\n- Rank 1 — Minimum Age: 70 · Maximum Age: 140 years · Effect: 1 Minor Milestone\n\n- Rank 2 — Minimum Age: 110 · Maximum Age: 220 years · Effect: 1 Minor Milestone\n\n- Rank 3 — Minimum Age: 150 · Maximum Age: 300 years · Effect: 1 Major Milestone\n\nYou may only purchase this Advantage during character creation.",
+      "grants": [
+        { "type": "milestone", "kind": "minor", "atRank": 1 },
+        { "type": "milestone", "kind": "minor", "atRank": 2 },
+        { "type": "milestone", "kind": "major", "atRank": 3 }
+      ],
+      "flagged": true,
+      "flagNote": "F17: the CRB table gives an 'Effect' per rank row rather than 'gain another' -- confirmed with Ken that ranks stack (rank 3 = 2 Minor + 1 Major total), pending Deighton's confirmation as the rules-authority sign-off.",
+      "playerNote": "How Long-Lived's ranks add up isn't fully settled. The sheet grants a Minor Milestone slot at ranks 1 and 2, and a Major at rank 3, all stacking."
     },
     {
       "id": "lucky",
@@ -1292,7 +1304,11 @@ window.SHADOWS_DATA = {
       "cost": 3,
       "maxRank": 1,
       "description": "Luck doesn't care about odds. Neither do you.\n\nLuck point costs are reduced.\n\n- Boost now costs 1 point (down from 2)\n\n- Explode now costs 2 points (down from 3)",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "luckCost", "spendId": "boost", "delta": -1 },
+        { "type": "luckCost", "spendId": "explode", "delta": -1 }
+      ]
     },
     {
       "id": "machindo",
@@ -1759,7 +1775,11 @@ window.SHADOWS_DATA = {
       "name": "Unlucky",
       "pointsGranted": 5,
       "maxRank": 1,
-      "description": "Luck point costs are increased.\n\n- Boosts cost 3 points (up from 2)\n\n- Explode costs 4 points (up from 3)"
+      "description": "Luck point costs are increased.\n\n- Boosts cost 3 points (up from 2)\n\n- Explode costs 4 points (up from 3)",
+      "grants": [
+        { "type": "luckCost", "spendId": "boost", "delta": 1 },
+        { "type": "luckCost", "spendId": "explode", "delta": 1 }
+      ]
     },
     {
       "id": "weak-willed",

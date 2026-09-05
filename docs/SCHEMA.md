@@ -1223,6 +1223,39 @@ No cascade logic to maintain — it falls out of the architecture.
     `tests/build.test.mjs`'s manifest both grew by three entries, nothing else.
     (Ken + Claude, 2026-09-05)
 
+87. **(Batch 3b)** **The other half of Decision 58 lands: a `grants` array
+    gives an advantage/disadvantage a static mechanical effect.** Unlike
+    `picks`, nothing here is a player choice — `grants: [{type, ...}]` on the
+    entry, read fresh every call by one new engine function, `Engine.grants(ch)`,
+    which scans held advantages and disadvantages and sums by type. Four
+    existing readers now add it in rather than computing cleanly off stats
+    alone: `skillPool()` (Educated, `skillPoints`/`perRank`), `health()` (Hard
+    to Kill, `hpPerLevel`/`perRank`, applied to `hpPer` so it lands on every
+    Health Level as the CRB says), `luckState()` (Lucky/Unlucky, `luckCost`
+    keyed by a new stable `id` on each `resources.luck.spend[]` entry —
+    `boost`/`explode` — rather than string-matching the prose `action` field),
+    and `milestoneState()` (Long-Lived, `milestone`/`kind`/`atRank`, added
+    straight onto `minorAvail`/`majorAvail` as extra unlocked slots so the
+    existing pick-list UI needs no changes). Educated growing the Skill Point
+    pool retroactively at the CP step needed no new wizard-flow code either —
+    Batch 3a's attention-state ledger already re-validates a passed step
+    live, so it just starts firing once `skillPool()` is grants-aware. Thick
+    Skin stays out per the existing Batch 3b scope note (armor design in
+    flux). `gamedataVersion` **0.4 → 0.5** (a held character's computed
+    pools/costs change); `APP_VERSION` **0.7.0 → 0.8.0** minor (a player can
+    see a difference); no character-schema bump — nothing new is stored on
+    the character. (Ken + Claude, 2026-09-05)
+
+88. **(Batch 3b, F17)** **Long-Lived's ranks stack.** The CRB gives an
+    "Effect" per rank row rather than "gain another," so whether rank 3 grants
+    2 Minor + 1 Major Milestone slots (stacking) or replaces ranks 1-2's
+    effect with just 1 Major was genuinely ambiguous — a rules call, not an
+    app one. Ken confirmed stacking; implemented that way and flagged
+    (`flagged: true`, F17) pending Deighton's sign-off as the rules authority,
+    rather than treated as fully settled on Ken's word alone. Stacking was
+    also the safer default regardless — an over-grant is easy to spot and
+    correct at the table, a silent under-grant is not. (Ken + Claude, 2026-09-05)
+
 
 ## 5. Open Flags
 
@@ -1258,8 +1291,8 @@ CRB's "(INT / INT)" was a slip made while correcting Occult Lore and Survival of
 their derived-attribute synergies — and corrected the CRB. The data had carried
 INT/EMP all along, so nothing changed but the flag.
 
-Eleven entries in `shadows-data.js` carry `flagged: true` — was thirteen: four
-cleared, two opened.
+Twelve entries in `shadows-data.js` carry `flagged: true` — Batch 3b added
+Long-Lived (F17).
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
@@ -1275,6 +1308,7 @@ cleared, two opened.
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
 | F16 | **Hemophiliac calls for a "First Aid Skill Check"**; the catalog skill is **Medical**. Field Medic's half was fixed in the same pass, so this is the last real one. (A Professional milestone lists "First Aid" among tool/kit examples — prose, not a skill reference) | Ken → docs | No |
+| F17 | **Long-Lived's rank table reads as "Effect" per row, not "gain another"** — ambiguous whether ranks stack. Implemented as stacking (rank 3 = 2 Minor + 1 Major Milestone slots total), confirmed with Ken; needs Deighton's sign-off as the rules-authority call | Deighton | No |
 
 ## 6. Roadmap
 
@@ -1440,7 +1474,7 @@ cleared, two opened.
   before); app **0.5.0 → 0.6.0**. A stale-mirror defect in the Professional
   natural-advantage pool was found and fixed in passing (Decision 81).
 
-- **Batch 3a — the ledger attention state** ⏭ — `renderLedger` marks a passed
+- **Batch 3a — the ledger attention state** ✅ — `renderLedger` marks a passed
   step done when it has no *errors*, ignoring warnings entirely, so a player who
   walks past Skills with ten unspent points gets a green tick. That is shipped
   behaviour for every step and every player, not an Educated problem. A third row
@@ -1449,14 +1483,16 @@ cleared, two opened.
   `validate()` already emits the warnings. **It goes first because it is the
   thing that makes `grants` safe to land.**
 
-- **Batch 3b — `grants`** ⏳ — the other half of Decision 58: Educated (+10 Skill
-  Points/rank), Hard to Kill (+1 max HP per Health Level), Lucky / Unlucky (LUCK
-  spend costs) and Long-Lived (Milestones). Unlike `picks`, these reach into
-  readers that currently compute cleanly from stats alone. **Educated needed a
-  wizard-flow ruling** — bought at step 7, it grows the step-6 pool
-  retroactively — and 3a settles it by construction: surfacing the unspent points
-  and letting the player go back means the points are usable at creation, and the
-  app says so rather than reopening a step in silence.
+- **Batch 3b — `grants`** ✅ *(2026-09-05)* — the other half of Decision 58:
+  Educated (+10 Skill Points/rank), Hard to Kill (+1 max HP per Health Level),
+  Lucky / Unlucky (LUCK spend costs) and Long-Lived (Milestones), via a new
+  `grants` array consumed by `skillPool`/`health`/`luckState`/`milestoneState`
+  (Decision 87). **Educated needed a wizard-flow ruling** — bought at step 7,
+  it grows the step-6 pool retroactively — and 3a settled it by construction:
+  surfacing the unspent points and letting the player go back means the points
+  are usable at creation, and the app says so rather than reopening a step in
+  silence. Long-Lived's rank-stacking ambiguity flagged rather than guessed
+  (F17, Decision 88). Game data **0.4 → 0.5**; app **0.7.0 → 0.8.0**.
 
   **Thick Skin is deliberately not in 3b.** It grants Natural Armor, the armor
   design is still in flux, and **four separate places in the data already grant
