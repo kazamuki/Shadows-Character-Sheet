@@ -207,6 +207,7 @@ in `tests/rules.test.mjs`.
 
 ## What's next
 
-See the board in `docs/STATE.md` §2. Batch 3b — `grants` — is next. It needs one
-ruling from Ken before it can be built (Educated is bought at step 7 and grows
-the step-6 Skill Point pool retroactively), so read §2 before starting it.
+The board in `docs/STATE.md` §2 is the only source for this — batch order,
+status, and what's blocked on whom change every session. This section stays
+generic rather than naming a batch, because naming one is exactly how the
+last version of this section went stale twice in a row.
