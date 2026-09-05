@@ -48,7 +48,8 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
 | — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
 | 3 | Selection & constraint system | ✅ merged (#7) | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
-| 3a | Ledger attention state | 🔍 **built, awaiting PR** | Third row state (done/active/attention) + callout · Decision 83 · branch `feat/ledger-attention-state` |
+| 3a | Ledger attention state | ✅ merged (#10) | Third row state (done/active/attention) + callout · Decision 83 |
+| — | Dev-preview tooling | ✅ merged (#11) | `tools/devserver.mjs` for browser-tool UI verification. Not app-related, own branch |
 | 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived. **Thick Skin waits on armor** |
 | — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
 | 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
@@ -60,15 +61,21 @@ in `log/2026.md`. An independent adversarial review of the PR found five further
 defects, all fixed before merge (Decision 82); three machinery gaps from it are
 open in §4 and none is reachable with current data.
 
-**Batch 3a is built, not yet merged.** `renderLedger` marked a passed step ✓
-whenever `validate()` had no *errors*, ignoring warnings — a player who walked
-past Stats or Skills with points unspent got the same green check as one who
-had spent everything. Passed steps now render one of three states (done /
-active / attention), with a callout that jumps to the first flagged one. No new
+**Batch 3a is merged.** `renderLedger` marked a passed step ✓ whenever
+`validate()` had no *errors*, ignoring warnings — a player who walked past
+Stats or Skills with points unspent got the same green check as one who had
+spent everything. Passed steps now render one of three states (done / active /
+attention), with a callout that jumps to the first flagged one. No new
 validation — it just stops discarding the warnings `validate()` already emits.
 Decision 83; a jsdom test confirmed failing against the pre-fix renderer before
-being kept. Sitting on `feat/ledger-attention-state`, one commit, `npm run
-verify` green — open the PR when ready.
+being kept.
+
+**A dev-preview server also landed (#11), unrelated to the app itself.**
+`tools/devserver.mjs` serves the repo over plain HTTP so a browser tool can
+execute the app's scripts — opening `index.html` via bare `file://` renders
+inert (no script execution) in some embedded browsers, which is what visually
+verifying 3a ran into. `.claude/launch.json` wires it up; `CLAUDE.md` points at
+it next to the other commands.
 
 **Two things a next session should know.**
 
@@ -151,15 +158,14 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**One thing in flight.** `main` is at PR #9. Batch 3a (the ledger attention
-state) is built on `feat/ledger-attention-state` — one commit, `npm run verify`
-green, not yet a PR. Open it, or fold it into whatever lands next; nothing else
-depends on the branch existing.
+**Nothing in flight.** `main` is at PR #11. Batches 3a and the dev-preview
+tooling both landed, `npm run verify` is green on it (87 passing, 0 todo).
 
-**Then 3b — `grants`.** 3a settles the Educated ruling by construction: if the
-app surfaces the unspent points and lets the player go back, the points are
-usable at creation, so Educated grows the step-6 pool and says so out loud.
-Needs a ruling on Educated's step ordering before it can be built (see §3).
+**Batch 3b — `grants` — is next.** 3a settles the Educated ruling by
+construction: if the app surfaces the unspent points and lets the player go
+back, the points are usable at creation, so Educated grows the step-6 pool and
+says so out loud. Needs a ruling on Educated's step ordering before it can be
+built (see §3).
 
 If you want a session with no dependencies at all, the five doc-reconciliation
 flags in §3 have now waited through five batches.
