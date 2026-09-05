@@ -10,7 +10,7 @@
   //   minor — a capability a player can use that wasn't there before
   //   major — existing character files or the workflow break
   // The other three versions have their own triggers; see CLAUDE.md.
-  const APP_VERSION = "0.6.0";
+  const APP_VERSION = "0.7.0";
 
   const D = window.SHADOWS_DATA;
   const $ = id => document.getElementById(id);
@@ -77,16 +77,30 @@
   }
 
   // ── Ledger ───────────────────────────────────────────────────────────
+  // Batch 3a — a passed step with open warnings (e.g. unspent Skill Points) used
+  // to render the same ✓ as one with nothing left to fix. "done" now means no
+  // errors AND no warnings; a passed step that still has warnings is its own
+  // "attn" state, and the callout jumps back to the first one.
   function renderLedger(){
     const el = $("ledger");
     if (S.screen==="sheet"){ el.innerHTML=""; return; }   // nav moved to the top tab bar
     if (S.screen!=="wizard"){ el.innerHTML=""; return; }
-    el.innerHTML = `<h2>Intake Ledger</h2>` + STEPS.map((st,i)=>{
-      const done = i < S.step && Engine.validate(st.id,S.ch).every(x=>x.level!=="error");
-      const cls = ["step-row", i===S.step?"active":"", done?"done":""].join(" ");
+    let firstAttn = -1, attnCount = 0;
+    const rows = STEPS.map((st,i)=>{
+      let state = "";
+      if (i < S.step){
+        const flagged = Engine.validate(st.id,S.ch).some(x=>x.level==="error"||x.level==="warn");
+        state = flagged ? "attn" : "done";
+        if (flagged){ attnCount++; if (firstAttn<0) firstAttn=i; }
+      }
+      const icon = state==="attn" ? "!" : state==="done" ? "✓" : st.n;
+      const cls = ["step-row", i===S.step?"active":"", state].join(" ");
       const dis = i>S.maxReached ? "disabled":"";
-      return `<button class="${cls}" data-goto="${i}" ${dis}><span class="n">${done?"✓":st.n}</span>${esc(st.label.split(":")[0].split(" - ")[0])}</button>`;
+      return `<button class="${cls}" data-goto="${i}" ${dis}><span class="n">${icon}</span>${esc(st.label.split(":")[0].split(" - ")[0])}</button>`;
     }).join("");
+    const callout = attnCount ? `<button class="ledger-callout" data-goto="${firstAttn}">
+      ⚠ ${attnCount} step${attnCount>1?"s":""} could still use a second look</button>` : "";
+    el.innerHTML = `<h2>Intake Ledger</h2>` + rows + callout;
     el.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>{ S.step=Number(b.dataset.goto); update(); });
   }
 

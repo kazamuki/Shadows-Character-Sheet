@@ -192,6 +192,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **45** *(Phase 3.2)* — Traits collapsible.
 - **46** *(Phase 3.2)* — Progression collapsible.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.
+- **83** *(Batch 3a)* — The ledger's ✓ meant "no errors," not "nothing left to do."
 
 ### Audit trail, undo & admin
 

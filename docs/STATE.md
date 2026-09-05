@@ -1,9 +1,9 @@
 # State of the build
 
-**Updated:** 2026-09-03
-**Versions:** app `0.6.0` · game data `0.4` · character schema `0.5` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-04
+**Versions:** app `0.7.0` · game data `0.4` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **86 passing, 0 todo, 0 failing** (86 tests, six files)
+**Suite:** `npm run verify` → **87 passing, 0 todo, 0 failing** (87 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -48,8 +48,8 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
 | — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
 | 3 | Selection & constraint system | ✅ merged (#7) | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
-| 3a | Ledger attention state | ⏭ **next** | A passed step with unspent points shows ✓ today. Generic, and it makes 3b safe |
-| 3b | `grants` | ⏳ after 3a | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived. **Thick Skin waits on armor** |
+| 3a | Ledger attention state | 🔍 **built, awaiting PR** | Third row state (done/active/attention) + callout · Decision 83 · branch `feat/ledger-attention-state` |
+| 3b | `grants` | ⏭ **next** | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived. **Thick Skin waits on armor** |
 | — | Decompose `src/ui/app.js` | ⏳ after 3b | Decision 54's deferred refactor, own branch, zero behaviour change |
 | 4 | Biomech as data | ⏳ after that | F6 lands as a data entry, not a fourth special case |
 
@@ -59,6 +59,16 @@ the same model (A3). Decisions 77–82; reasoning in `SCHEMA.md` §6, session de
 in `log/2026.md`. An independent adversarial review of the PR found five further
 defects, all fixed before merge (Decision 82); three machinery gaps from it are
 open in §4 and none is reachable with current data.
+
+**Batch 3a is built, not yet merged.** `renderLedger` marked a passed step ✓
+whenever `validate()` had no *errors*, ignoring warnings — a player who walked
+past Stats or Skills with points unspent got the same green check as one who
+had spent everything. Passed steps now render one of three states (done /
+active / attention), with a callout that jumps to the first flagged one. No new
+validation — it just stops discarding the warnings `validate()` already emits.
+Decision 83; a jsdom test confirmed failing against the pre-fix renderer before
+being kept. Sitting on `feat/ledger-attention-state`, one commit, `npm run
+verify` green — open the PR when ready.
 
 **Two things a next session should know.**
 
@@ -141,29 +151,18 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**Nothing in flight.** `main` is at PR #7, the branch is merged and deleted, and
-`npm run verify` is green on it. Batch 3 landed on 2026-09-03 with three version
-bumps (app `0.6.0`, game data `0.4`, character schema `0.5`) — an existing
-`.shadows.json` upgrades through `migrate()` on load and reports the game-data
-mismatch, which is correct.
-
-**Batch 3a — the ledger attention state — is next, and nothing blocks it.**
-`renderLedger` marks a passed step ✓ when it has no *errors*, ignoring warnings.
-So a player who walks past Skills with ten unspent points gets a green tick
-saying they are done — shipped behaviour today, every step, every player. The fix
-is a third row state (done / active / **needs attention**) driven by warnings on
-a step already passed, plus a callout linking back. The rows are already
-clickable and `validate()` already emits the warnings, so most of it exists.
+**One thing in flight.** `main` is at PR #9. Batch 3a (the ledger attention
+state) is built on `feat/ledger-attention-state` — one commit, `npm run verify`
+green, not yet a PR. Open it, or fold it into whatever lands next; nothing else
+depends on the branch existing.
 
 **Then 3b — `grants`.** 3a settles the Educated ruling by construction: if the
 app surfaces the unspent points and lets the player go back, the points are
 usable at creation, so Educated grows the step-6 pool and says so out loud.
+Needs a ruling on Educated's step ordering before it can be built (see §3).
 
 If you want a session with no dependencies at all, the five doc-reconciliation
 flags in §3 have now waited through five batches.
-
-After it merges, **Batch 3b (`grants`)** is next and needs a ruling on Educated's
-step ordering before it can be built.
 
 ---
 
