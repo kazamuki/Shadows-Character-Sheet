@@ -224,6 +224,7 @@ How the project itself is organised.
 - **54** *(Phase 3.4)* — The app becomes a repository.
 - **61** *(B5)* — The review step's number derives from creationFlow.steps.
 - **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place.
+- **86** *(Repository)* — Decision 54's deferred refactor lands: `src/ui/app.js` splits into four classic scripts.
 
 ---
 
