@@ -1,0 +1,96 @@
+/* ── Print sheet ─────────────────────────────────────────────────────
+ * A separate visual system from shadows.css's dark app theme: white paper,
+ * black ink, brand purple as the only accent — matching the physical
+ * character sheets this mirrors, not the on-screen UI. Applies only under
+ * media="print" (see index.html); #printSheet is hidden on screen by a rule
+ * in shadows.css, since a media="print" stylesheet's own rules never apply
+ * on screen at all.
+ *
+ * Populated on demand by Sheet.renderPrintView() right before window.print()
+ * — see src/ui/sheet.js and the header "Print" / "Blank sheet" actions in
+ * src/ui/app.js.
+ */
+@page{ size: letter landscape; margin: 10mm; }
+
+#printSheet{
+  --p-ink:#111111; --p-dim:#5b5b66; --p-violet:#712B8C; --p-magenta:#BC489A;
+  --p-line:#111111; --p-rule:#c9c2d6;
+  color:var(--p-ink); background:#fff; font-family:'Inter',system-ui,sans-serif;
+  font-size:9.5pt; line-height:1.35;
+}
+#printSheet .p-page{ page-break-after:always }
+#printSheet .p-page:last-child{ page-break-after:auto }
+
+/* Wordmark + build tag, once per page, top-left */
+#printSheet .p-wordmark{ font-family:'Chakra Petch',sans-serif; font-weight:700;
+  font-size:15pt; letter-spacing:.04em; color:var(--p-violet); text-transform:uppercase }
+#printSheet .p-wordmark small{ display:block; font-family:'Inter',sans-serif; font-weight:500;
+  font-size:6.5pt; letter-spacing:.12em; color:var(--p-dim); text-transform:uppercase }
+/* The version/build tag — a small HUD-style stamp, not the wordmark itself.
+   Reads like firmware: exactly the numbers that change when this layout does
+   (APP_VERSION) or the character's own content does (gamedataVersion). */
+#printSheet .p-buildtag{ font-family:'Roboto Mono',ui-monospace,monospace; font-size:6.5pt;
+  color:var(--p-dim); letter-spacing:.03em; margin-top:2px }
+#printSheet .p-buildtag b{ color:var(--p-violet); font-weight:700 }
+
+#printSheet .p-head{ display:flex; justify-content:space-between; align-items:flex-start;
+  border-bottom:1.5pt solid var(--p-violet); padding-bottom:5px; margin-bottom:10px }
+#printSheet .p-head .p-name{ text-align:right }
+#printSheet .p-head .p-name .p-line{ min-width:220px; font-size:12pt; font-weight:600 }
+
+#printSheet .p-section{ font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:9pt;
+  text-transform:uppercase; letter-spacing:.06em; color:#fff; background:var(--p-violet);
+  padding:2px 8px; margin:10px 0 6px }
+#printSheet .p-page > .p-section:first-of-type{ margin-top:0 }
+
+/* Blank/filled write-in line — the one atom both a live and a blank print
+   share: a value renders on the line when present, the line alone otherwise. */
+#printSheet .p-line{ display:inline-block; min-width:2.2em; border-bottom:.75pt solid var(--p-line);
+  padding:0 3px 1px; line-height:1.3 }
+#printSheet .p-field{ display:flex; align-items:baseline; gap:5px; margin:0 14px 5px 0 }
+#printSheet .p-field .p-label{ color:var(--p-dim); font-size:8pt; white-space:nowrap }
+#printSheet .p-field .p-line{ flex:1 1 auto }
+#printSheet .p-fieldrow{ display:flex; flex-wrap:wrap; margin-bottom:2px }
+
+#printSheet .p-cols3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:0 16px }
+#printSheet .p-cols2{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px }
+
+/* Stats: Score/Bonus and Base/Current blocks */
+#printSheet table.p-stats{ width:100%; border-collapse:collapse; margin-bottom:8px }
+#printSheet table.p-stats th{ text-align:left; font-size:7.5pt; color:var(--p-dim); font-weight:600;
+  border-bottom:.75pt solid var(--p-rule); padding:1px 4px }
+#printSheet table.p-stats td{ padding:2px 4px; border-bottom:.5pt solid var(--p-rule) }
+#printSheet table.p-stats td.num{ text-align:center; width:30% }
+
+/* Combat skill / defense quick-ref cells — a row of small labeled boxes */
+#printSheet .p-cellrow{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px }
+#printSheet .p-skillcell{ border:.75pt solid var(--p-rule); border-radius:3px; padding:3px 6px;
+  min-width:64px; text-align:center }
+#printSheet .p-skillcell .p-label{ display:block; font-size:6.8pt; color:var(--p-dim);
+  text-transform:uppercase; letter-spacing:.03em }
+#printSheet .p-skillcell .p-line{ display:block; min-width:auto; border-bottom:0; font-weight:600;
+  font-size:9.5pt; padding:1px 0 0 }
+
+/* Health Levels ladder */
+#printSheet .p-hlrow{ display:flex; gap:5px; margin-bottom:8px }
+#printSheet .p-hl{ flex:1; border:.75pt solid var(--p-rule); border-radius:3px; text-align:center;
+  padding:4px 2px; font-size:7.5pt }
+#printSheet .p-hl b{ display:block; font-size:9pt }
+#printSheet .p-hl.gone{ background:#efe7f2 }
+
+/* Reference tables: full Skills page, Weapons, Gear, Advantages, Disadvantages */
+#printSheet table.p-table{ width:100%; border-collapse:collapse; margin-bottom:10px }
+#printSheet table.p-table th{ text-align:left; font-size:7.5pt; color:#fff; background:var(--p-magenta);
+  font-weight:600; padding:3px 5px }
+#printSheet table.p-table td{ border-bottom:.5pt solid var(--p-rule); padding:3px 5px; vertical-align:top }
+#printSheet table.p-table tr.p-cat td{ background:#f4f0f8; font-weight:600; color:var(--p-violet);
+  border-bottom:.75pt solid var(--p-rule) }
+#printSheet table.p-table td.num{ text-align:center; white-space:nowrap }
+
+#printSheet .p-notes{ border:.75pt solid var(--p-rule); border-radius:3px; min-height:150mm;
+  background-image:repeating-linear-gradient(to bottom, transparent, transparent 6.5mm, var(--p-rule) 6.5mm, var(--p-rule) calc(6.5mm + .5pt));
+  padding:6px 8px }
+#printSheet .p-notes.small{ min-height:40mm }
+
+#printSheet .p-note{ font-size:8pt; color:var(--p-dim); margin:0 0 8px }
+#printSheet .p-blankrows td{ height:16px }
