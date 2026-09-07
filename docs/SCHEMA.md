@@ -1256,6 +1256,26 @@ No cascade logic to maintain — it falls out of the architecture.
     also the safer default regardless — an over-grant is easy to spot and
     correct at the table, a silent under-grant is not. (Ken + Claude, 2026-09-05)
 
+89. **A printable sheet is a second rendering path, not a second data model.**
+    `Sheet.renderPrintView(ch?)` renders a universal three-page paper layout
+    (Character Info/Stats/Combat/Health/Defense, full Skills, Weapons/Gear/
+    Advantages/Disadvantages/Notes) styled by a new `print.css` — its own
+    white/violet paper theme, independent of the app's dark on-screen UI.
+    `ch` is optional: present, it reads the same engine outputs the live sheet
+    already uses; absent, it renders a blank fillable template from
+    `SHADOWS_DATA` alone, since every label on a blank sheet is game data, not
+    a character. Defense prints blank either way — the app has no armor model
+    yet (F18) — with plain-language copy rather than inventing one to fill
+    the layout. Reachable as "Print sheet" in the sheet header for a live
+    character, and "Print a blank character sheet" on Home for a
+    physical-only player who never opens the wizard.
+    A second build artifact, `dist/shadows-blank-sheet.html`
+    (`tools/build.mjs`'s `buildBlankSheetHtml()`), boots the real app in
+    jsdom and calls the same `renderPrintView(null)` there, so a standalone
+    download link can never drift from what the live app renders — no
+    hand-maintained second template. No schema bump, no `gamedataVersion`
+    bump (no computed value changed); `APP_VERSION` **0.8.0 → 0.9.0** minor
+    (a player can now do something new). (Ken + Claude, 2026-09-07)
 
 ## 5. Open Flags
 
