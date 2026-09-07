@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.9.0";
+const APP_VERSION = "0.10.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -594,6 +594,25 @@ function exportChar(){
   setTimeout(()=>URL.revokeObjectURL(url),2000);
 }
 
+// ── Light/dark theme toggle (Decision 90) ─────────────────────────────
+// theme-init.js already applied any stored choice before first paint; this
+// just wires the button. The button is static markup in index.html (never
+// wiped by renderTopChrome's per-screen re-renders), so a one-time listener
+// is enough — no re-wiring on route change, unlike every other header button.
+const THEME_KEY = "shadows.theme";
+function wireThemeToggle(){
+  const btn=$("themeToggle"); if (!btn) return;
+  const current=()=>document.documentElement.getAttribute("data-theme")==="light" ? "light" : "dark";
+  const sync=()=>btn.setAttribute("aria-pressed", current()==="light" ? "true" : "false");
+  sync();
+  btn.onclick=()=>{
+    const next = current()==="light" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+    sync();
+  };
+}
+
 // ── Footer (registry / version chrome, collapsible) ──────────────────
 const FOOTER_KEY = "shadows.footer";
 function footerCollapsed(){ try{ return localStorage.getItem(FOOTER_KEY)!=="open"; }catch(e){ return true; } }
@@ -619,6 +638,7 @@ function boot(){
     return;
   }
   renderFooter();
+  wireThemeToggle();
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{
     if (e.key==="Escape"){ const dr=$("vdrawer"); if (dr && dr.classList.contains("open")) closeVitals(); closeMenu(); }
