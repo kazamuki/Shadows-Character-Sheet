@@ -499,8 +499,11 @@ function renderHome(){
       ${draft?`<button class="btn primary" id="btn-resume">Resume draft${draft.ch.identity.name?" — "+esc(draft.ch.identity.name):""}</button>`:""}
       <button class="btn" id="btn-import">Import .shadows.json</button>
       <input type="file" id="file-import" accept=".json,.shadows.json" style="display:none">
-    </div></div>`;
+    </div>
+    <p class="step-note" style="margin-top:14px">Playing at the table instead? <button class="btn sm" id="btn-print-blank">Print a blank character sheet</button></p>
+    </div>`;
   $("btn-new").onclick=()=>{ S={screen:"wizard", ch:Engine.newCharacter(), step:0, maxReached:0, section:"main"}; update(); };
+  $("btn-print-blank").onclick=()=>printSheet(null);
   // Resume must migrate like the other two load paths. It did not, so a draft
   // saved under an older schema came back with its data in fields no current
   // reader looks at — the choice vanished with no warning.
