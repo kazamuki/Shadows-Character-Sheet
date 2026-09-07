@@ -14,6 +14,7 @@ import { spawnSync } from "node:child_process";
 import { buildHtml, buildBlankSheetHtml, ROOT } from "../tools/build.mjs";
 
 const BROWSER_JS = [
+  "src/ui/theme-init.js",
   "src/engine/engine.js",
   "src/ui/shared.js",
   "src/ui/wizard.js",
@@ -53,10 +54,15 @@ test("every local asset is inlined by the build", () => {
   assert.match(html, /\/\*UI-START\*\//);
 });
 
-test("script order in the shell is data → icons → engine → ui", () => {
+test("script order in the shell is theme-init → data → icons → engine → ui", () => {
+  // theme-init.js runs first and alone, in <head> before the shadows.css
+  // <link> — it has to beat first paint (Decision 90), which is a different
+  // concern from the data → icons → engine → ui pipeline that follows it in
+  // <body>. Everything after it must keep that original order.
   const shell = readFileSync(join(ROOT, "index.html"), "utf8");
   const order = [...shell.matchAll(/<script[^>]*src=["']([^"']+)["']/g)].map(m => m[1]);
   assert.deepEqual(order, [
+    "src/ui/theme-init.js",
     "src/data/shadows-data.js",
     "src/data/shadows-icons.js",
     "src/engine/engine.js",

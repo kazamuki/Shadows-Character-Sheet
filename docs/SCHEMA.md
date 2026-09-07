@@ -1277,6 +1277,40 @@ No cascade logic to maintain — it falls out of the architecture.
     bump (no computed value changed); `APP_VERSION` **0.8.0 → 0.9.0** minor
     (a player can now do something new). (Ken + Claude, 2026-09-07)
 
+90. **A light theme toggle, ported as a mechanism rather than a token set.**
+    `getdangerousgames.com` and `shadowsrpg.com` share a `theme.css` /
+    `theme-init.js` / `theme-toggle.js` trio built on their own semantic
+    tokens (`--bg-page`, `--card-bg`, `--text-primary`...), which don't exist
+    here — `shadows.css` names its tokens after the brand palette directly
+    (`--ground`, `--panel`, `--frame`, `--cyan`, `--gold`...) and is referenced
+    by name in ~230 places. Rewriting the stylesheet onto the shared token
+    names would touch all of them for zero player-visible difference, so this
+    keeps the app's own token names and ports the *mechanism* instead: an
+    `html[data-theme]` attribute, a blocking pre-paint script, `localStorage`
+    persistence, and a sun/moon toggle button — same architecture, this app's
+    variable names.
+    `--frame` (Deep Circuit) and `--violet` (Aether Pulse) already pass WCAG
+    text contrast against the light ground and stay fixed across both themes,
+    same as the brand-constant split the other two sites use. `--cyan`,
+    `--green`, `--gold` and `--magenta` were tuned for the dark ground only
+    (1.5–2.2:1 against `#F5F4F2` as text, all failing AA) and fold onto
+    whichever constant already carries that role on the other two sites:
+    cyan/green → `--frame`, gold/magenta → `--violet`. `--ink` flips too —
+    it exists to put dark text on a bright button (`.btn.go`), and in light
+    mode that button's background is a folded (now dark-navy) token, so the
+    text needs to go light instead.
+    The toggle button is static markup in `index.html`, sitting beside
+    `#hdractions` rather than inside it, because `renderTopChrome()` clears
+    `#hdractions` on every screen change (home/wizard/sheet) and the theme
+    preference is global, not sheet-only — a dynamically-rendered button
+    would vanish the moment the screen changed. `theme-init.js` runs as its
+    own `<script src>`, first in `<head>` before the `shadows.css` `<link>`,
+    which is a different concern from the data → icons → engine → ui load
+    order that follows it in `<body>` — both orders are enforced by
+    `tests/build.test.mjs`. No schema bump, no `gamedataVersion` bump (no
+    computed value changed); `APP_VERSION` **0.9.0 → 0.10.0** minor (a player
+    can now do something new). (Ken + Claude, 2026-09-07)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
