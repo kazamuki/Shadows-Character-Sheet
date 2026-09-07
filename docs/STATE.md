@@ -53,7 +53,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | — | CRB v4 reference mirror | ✅ merged (#13) | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85. Not app-related, own branch |
 | — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor, done ahead of 3b · Decision 86 |
 | 3b | `grants` | ✅ on branch, not yet merged | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
-| 4 | Biomech as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
+| 4 | Cyborg as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
 
 **Batch 3 is merged.** One selection system — `picks` / `excludes` / `requires` —
 hosted by advantages, disadvantages and skills, with archetype specialization on
@@ -91,11 +91,10 @@ assumption (F17) pending Deighton, not a settled rule.
 - **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
   Both are tested against a synthetic fixture. Adding a real one is a rules
   question for Deighton, not a data edit (Decision 77).
-- **Thick Skin is held out of 3b.** It grants Natural Armor, the armor design is
-  still in flux, and **four places in the data already grant Natural Armor in
-  prose** — Thick Skin, the Iron Shirt Martial Arts style, an archetype effect
-  and an archetype benefit. That makes it a real derived value when it lands, not
-  a Thick Skin special case. Until then it ships as reference text.
+- **Thick Skin is held out of 3b.** It grants Natural Armor; four places in the
+  data already grant Natural Armor in prose (Thick Skin, Iron Shirt, an archetype
+  effect, an archetype benefit) — one real derived value, not a Thick Skin
+  special case, once the armor system (F18) lands. Until then it ships as text.
 
 **F8 is not a gate on any of this.** It blocks a player finishing the stats step.
 Chase it on its own track.
@@ -136,8 +135,9 @@ four separate context-loads.
 
 | Item | What |
 |---|---|
-| F6 | Biomech / Cyborg rewrite — NCI tiers, Set Bonuses, Kicker Dice, TOL pressure. Ships as `status: "tbd"`. Batch 4 |
+| F6 | Cyborg rewrite — NCI tiers, Set Bonuses, Kicker Dice, TOL pressure. Ships as `status: "tbd"`. Batch 4 |
 | F7 | SFR per archetype — Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool open |
+| F18 | Weapons/Armor/Defense — `053_Combat Encounters.docx` gives a first real pass (rolled PROT, static RES, consumable Integrity, AP/Massive/Withering rules). Needs `Gear.docx` for actual item stats before it's engine-ready. Printable sheet's Defense panel ships blank until then |
 | F5 | Cyber-Prophetical (SAN vs TOL) — the last quarter of F5. Waits on F6; don't ask separately |
 
 Archetype status in the data: `arcanist: draft · professional: draft ·
@@ -173,7 +173,7 @@ when the first entry needs them.
 green (94 passing, 0 todo).
 
 **Batch 3b (`grants`) is done, on branch `feat/batch-3b-grants`, not yet
-merged** (see §2). **Batch 4 (Biomech) is next**, but needs the design ruling
+merged** (see §2). **Batch 4 (Cyborg rewrite) is next**, but needs the design ruling
 from Ken + Deighton + Scott before there's data to encode (F6, §3).
 
 If you want a session with no dependencies at all, the five doc-reconciliation
