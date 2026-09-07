@@ -74,7 +74,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F1` | LUCK buy-up cost in CP per point (stubbed 1:1, flagged in data) | Deighton |
 | `F2` | CP boost exchange rate across skills/stats/powers (stubbed 1:1, flagged) | Deighton |
 | `F5` | Adv/Disadv audit flags — three of four closed by the CRB v4 pass. Remaining: Cyber-Prophe… | Design (after F6) |
-| `F6` | Biomech rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
+| `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
 | `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD | Design |
 | `F8` | Stat Point roll conflict: WIP says flat "3d10+30" for all levels; REF table scales by pow… | Deighton — **wizard-blocking** |
 | `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
@@ -84,6 +84,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F14` | Skill IP cost at rank 0: "5 × current rank" prices learning a new skill (0→1) at zero. Ap… | Deighton |
 | `F16` | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is Medical. Field Medi… | Ken |
 | `F17` | Long-Lived's rank table reads "Effect" per row; implemented as stacking, needs Deighton's sign-off | Deighton |
+| `F18` | Weapons/Armor/Defense — `053_Combat Encounters.docx` gives a first real pass: rolled PROT, static RES, consumable Integrity | Design (needs Gear.docx) |
 
 There is also one **unnumbered** flag, which is why it is easy to lose: `statMod()`
 extrapolates +1 per point above 10 while `statRules.beyondHumanLimits` says gains
@@ -198,6 +199,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **46** *(Phase 3.2)* — Progression collapsible.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.
 - **83** *(Batch 3a)* — The ledger's ✓ meant "no errors," not "nothing left to do."
+- **89** *(Print view)* — A printable sheet is a second rendering path, not a second data model.
 
 ### Audit trail, undo & admin
 

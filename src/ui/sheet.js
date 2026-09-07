@@ -802,6 +802,130 @@ function renderShAdmin(){
   return h;
 }
 
+// ── Print view — a universal three-page sheet (Character Info/Stats/Combat/
+// Health, full Skills, Weapons/Gear/Advantages/Disadvantages/Notes), styled
+// entirely by print.css. `ch` is optional: present renders live values via
+// the engine; absent renders a blank fillable template built from game data
+// alone — no character needed, since every label on a blank sheet comes from
+// SHADOWS_DATA, not a character. Defense ships blank either way: the app
+// doesn't model armor/defense yet (open design flag, see SCHEMA.md §5).
+function pLine(v){ return `<span class="p-line">${v==null||v===""?"":esc(v)}</span>`; }
+function pField(label, v){ return `<div class="p-field"><span class="p-label">${esc(label)}</span>${pLine(v)}</div>`; }
+function pBuildTag(){
+  // A small HUD-style build stamp, not the wordmark — the two numbers that
+  // actually change when this layout does (APP_VERSION) or a character's
+  // available content does (gamedataVersion), same pair the footer shows.
+  return `<div class="p-buildtag">app <b>${esc(APP_VERSION)}</b> &middot; data <b>${esc(D.meta.gamedataVersion)}</b></div>`;
+}
+function pHead(ch, title){
+  return `<div class="p-head">
+    <div><div class="p-wordmark">Shadows<small>Adventures in NYTE City</small></div>${pBuildTag()}</div>
+    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}</div>
+  </div>`;
+}
+function pStatsHtml(ch){
+  const t = ch ? Engine.statTable(ch) : null;
+  let h = `<table class="p-stats"><thead><tr><th>Stat</th><th>Score</th><th>Bonus</th></tr></thead><tbody>` +
+    D.stats.map(s=>{
+      const row = t ? t[s.id] : null;
+      const mod = row ? (row.mod>=0?"+":"")+row.mod : null;
+      return `<tr><td>${esc(s.id)}</td><td class="num">${pLine(row&&row.value)}</td><td class="num">${pLine(mod)}</td></tr>`;
+    }).join("") + `</tbody></table>`;
+  const der = ch ? Engine.derived(ch) : null, luck = ch ? Engine.luckState(ch) : null, san = ch ? Engine.sanState(ch) : null;
+  h += `<table class="p-stats"><thead><tr><th></th><th>Base</th><th>Current</th></tr></thead><tbody>` +
+    `<tr><td>WILL</td><td class="num">${pLine(der&&der.WILL)}</td><td class="num">${pLine(der&&der.WILL)}</td></tr>` +
+    `<tr><td>TOL</td><td class="num">${pLine(der&&der.TOL)}</td><td class="num">${pLine(der&&der.TOL)}</td></tr>` +
+    `<tr><td>LUCK</td><td class="num">${pLine(luck&&luck.max)}</td><td class="num">${pLine(luck&&luck.current)}</td></tr>` +
+    `<tr><td>SAN %</td><td class="num">${pLine(san&&san.max)}</td><td class="num">${pLine(san&&san.current)}</td></tr>` +
+    `</tbody></table>`;
+  return h;
+}
+function pSkillCellsHtml(ch, category){
+  return `<div class="p-cellrow">` + D.skills.filter(s=>s.category===category).map(s=>{
+    const line = ch ? Engine.skillLine(ch, s.id) : null;
+    return `<div class="p-skillcell"><span class="p-label">${esc(s.name)}</span>${pLine(line && "1d10+"+line.checkBonus)}</div>`;
+  }).join("") + `</div>`;
+}
+function pHealthHtml(ch){
+  const hp = ch ? Engine.health(ch) : null;
+  // Health Levels cap at 10 regardless of character (Decision 64) — a safe,
+  // always-correct box count for the blank template, same as the reference sheet.
+  const levels = hp ? hp.levels : 10;
+  const dmg = ch ? (ch.trackers.damage||0) : 0;
+  let h = `<div class="p-hlrow">`;
+  for (let i=0;i<levels;i++){
+    const label = i===0 ? "0" : "&minus;"+i;
+    if (hp){
+      const lvlDmg = Math.max(0, Math.min(hp.hpPer, dmg - i*hp.hpPer)), gone = lvlDmg>=hp.hpPer;
+      h += `<div class="p-hl${gone?" gone":""}"><b>${label}</b>${gone?"&mdash;":(hp.hpPer-lvlDmg)+"/"+hp.hpPer}</div>`;
+    } else {
+      h += `<div class="p-hl"><b>${label}</b>${pLine(null)}</div>`;
+    }
+  }
+  h += `</div><div class="p-fieldrow">${pField("Health Levels", hp&&hp.levels)}${pField("Total HP", hp&&hp.total)}${pField("Current HP", hp?Math.max(0,hp.total-dmg):null)}</div>`;
+  return h;
+}
+function pDefenseHtml(){
+  let h = `<table class="p-table"><thead><tr><th>Location</th><th>Res</th><th>Int</th><th>Nat</th><th>Prot</th></tr></thead><tbody>` +
+    ["Head","Torso","R Arm","L Arm","R Leg","L Leg"].map(l=>
+      `<tr><td>${esc(l)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(null)}</td></tr>`
+    ).join("") + `</tbody></table>`;
+  h += `<div class="p-fieldrow">${pField("Components",null)}${pField("Features",null)}${pField("Warding",null)}</div>`;
+  h += `<p class="p-note">Armor and defense aren't tracked digitally yet — use this section to keep score by hand.</p>`;
+  return h;
+}
+function pSkillsTableHtml(ch){
+  let body = "";
+  for (const [cid,cname] of [["combat","Combat"],["utility","Utility"],["general","General"]]){
+    body += `<tr class="p-cat"><td colspan="4">${esc(cname)}</td></tr>`;
+    body += D.skills.filter(s=>s.category===cid).map(s=>{
+      const line = ch ? Engine.skillLine(ch, s.id) : null;
+      const rank = !line ? null : (line.trained ? line.rank : "—");
+      const check = line ? "1d10+"+line.checkBonus : null;
+      return `<tr><td>${esc(s.name)}</td><td class="num">${pLine(rank)}</td><td class="num">${pLine(check)}</td><td></td></tr>`;
+    }).join("");
+  }
+  return `<table class="p-table"><thead><tr><th>Skill</th><th>Rank</th><th>Check</th><th>Notes</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+function pRowsTableHtml(rows, cols, labels, blankRows){
+  const data = rows && rows.length ? rows : Array.from({length:blankRows},()=>({}));
+  return `<table class="p-table"><thead><tr>${labels.map(l=>`<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>` +
+    data.map(r=>`<tr>${cols.map(c=>`<td>${pLine(r[c])}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+}
+function pTraitsTableHtml(list, lookupFn, label, blankRows){
+  const rows = (list && list.length) ? list.map(x=>{
+    const d = lookupFn(x.id) || {name:x.id, description:""};
+    return `<tr><td>${pLine(d.name)}</td><td class="num">${pLine(x.rank||1)}</td><td>${pLine(d.description)}</td></tr>`;
+  }) : Array.from({length:blankRows},()=>`<tr><td>${pLine(null)}</td><td class="num">${pLine(null)}</td><td>${pLine(null)}</td></tr>`);
+  return `<table class="p-table"><thead><tr><th>${esc(label)}</th><th>Rank</th><th>Description</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+}
+function renderPrintView(ch){
+  const pl = ch ? Engine.powerLevel(ch) : null, arch = ch ? Engine.archetype(ch) : null;
+  const ip = ch ? Engine.ipState(ch) : null, id = ch ? ch.identity : {};
+
+  let p1 = pHead(ch, "Character Sheet");
+  p1 += `<div class="p-section">Character Info</div>`;
+  p1 += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&arch.name)}${pField("Power Level", pl&&pl.name)}</div>`;
+  p1 += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch&&ch.trackers.credits.current)}</div>`;
+  p1 += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}</div>`;
+  p1 += `<div class="p-section">Stats</div>${pStatsHtml(ch)}`;
+  p1 += `<div class="p-section">Combat Skills</div>${pSkillCellsHtml(ch,"combat")}`;
+  p1 += `<div class="p-section">Health Levels</div>${pHealthHtml(ch)}`;
+  p1 += `<div class="p-section">Defense</div>${pDefenseHtml()}`;
+
+  let p2 = pHead(ch, "Skills");
+  p2 += `<div class="p-section">Skills</div>${pSkillsTableHtml(ch)}`;
+
+  let p3 = pHead(ch, "Loadout");
+  p3 += `<div class="p-section">Weapons</div>${pRowsTableHtml(ch&&ch.weapons, WEAPON_COLS, ["Weapon","Type","Damage","RoF","Capacity","Ammo","Features","Notes"], 5)}`;
+  p3 += `<div class="p-section">Gear</div>${pRowsTableHtml(ch&&ch.gear, GEAR_COLS, ["Item","Type","Notes"], 5)}`;
+  p3 += `<div class="p-cols2"><div><div class="p-section">Advantages</div>${pTraitsTableHtml(ch&&ch.advantages, Engine.advById, "Advantage", 5)}</div>` +
+        `<div><div class="p-section">Disadvantages</div>${pTraitsTableHtml(ch&&ch.disadvantages, Engine.disById, "Disadvantage", 5)}</div></div>`;
+  p3 += `<div class="p-section">Notes</div><div class="p-notes small">${ch&&ch.notes?esc(ch.notes):""}</div>`;
+
+  return `<div class="p-page">${p1}</div><div class="p-page">${p2}</div><div class="p-page">${p3}</div>`;
+}
+
 const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, traits:renderShTraits,
   archetype:renderShArchetype, trackers:renderShTrackers,
   progression:renderShProgression, sessions:renderShSessions,

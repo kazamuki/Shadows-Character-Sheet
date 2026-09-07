@@ -20,6 +20,10 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scrollbar-color:var(--frame) var(--ground)}
+/* Print output lives in its own container, styled entirely by print.css
+   (media="print"). On screen it never shows — hidden here, not there,
+   because a media="print" stylesheet's rules don't apply on screen at all. */
+#printSheet{display:none}
 body{
   background:var(--ground); color:var(--text); font-family:var(--body);
   font-size:15px; line-height:1.55; min-height:100vh;

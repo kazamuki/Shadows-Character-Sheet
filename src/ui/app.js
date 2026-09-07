@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.9.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -30,6 +30,7 @@ function renderTopChrome(){
         <div class="hdr-menu" id="hdrmenu" hidden>
           <button data-admin="1">${S.admin?"Exit admin mode":"Admin mode (free edit)"}</button>
           <button data-export="1">Export .shadows.json</button>
+          <button data-print="1">Print sheet</button>
           <button data-home="1">Home</button>
         </div>`;
       const menu=$("hdrmenu"), kb=act.querySelector("[data-menu-toggle]");
@@ -40,6 +41,7 @@ function renderTopChrome(){
         window.scrollTo(0,0); update();
       });
       act.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>{ menu.hidden=true; exportChar(); });
+      act.querySelectorAll("[data-print]").forEach(b=>b.onclick=()=>{ menu.hidden=true; printSheet(S.ch); });
       act.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{ S={screen:"home",ch:null,step:0,maxReached:0,section:"main",admin:false}; renderHome(); });
     }
   } else if (S.screen==="wizard"){
@@ -570,6 +572,16 @@ function applyStep(key, delta){
     if (v===0) delete ch.archetypeChoices.disciplines[id];
   }
   if (kind==="boost"){ const [type,tid]=[rest[0],rest.slice(1).join("|")]; Engine.addBoost(ch,type,tid,delta); }
+}
+
+// Populates the print-only container (hidden on screen, styled by print.css)
+// and hands off to the browser's native print dialog. `ch` is optional — pass
+// none for the blank fillable template, reachable from Home with no character
+// loaded at all.
+function printSheet(ch){
+  const el=$("printSheet"); if (!el) return;
+  el.innerHTML = renderPrintView(ch);
+  window.print();
 }
 
 function exportChar(){
