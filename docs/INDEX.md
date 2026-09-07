@@ -200,6 +200,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.
 - **83** *(Batch 3a)* — The ledger's ✓ meant "no errors," not "nothing left to do."
 - **89** *(Print view)* — A printable sheet is a second rendering path, not a second data model.
+- **90** *(Light theme)* — A light theme toggle, ported as a mechanism rather than a token set.
 
 ### Audit trail, undo & admin
 

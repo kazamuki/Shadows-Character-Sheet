@@ -18,6 +18,29 @@
   --mono:'Roboto Mono',ui-monospace,monospace;
   --rail-w:218px; --vitals-w:248px; --header-h:56px;
 }
+/* ── Light theme (Decision 90) ──────────────────────────────────────────
+   --frame (Deep Circuit) and --violet (Aether Pulse) already pass WCAG text
+   contrast on a light ground and stay fixed across both themes, same as the
+   brand-constant split on getdangerousgames.com and shadowsrpg.com. --cyan,
+   --green, --gold and --magenta only work as *text* on the dark ground they
+   were tuned for (1.5–2.2:1 against #F5F4F2, all failing) so light mode folds
+   them onto whichever brand constant already carries that role for cyan/green
+   vs gold/magenta on the other two sites. --ink flips too: it exists only to
+   put dark text on a bright button (.btn.go), and that button's background is
+   one of the folded tokens, so the text it sits on is dark navy in light mode
+   instead of bright cyan — it needs to go light, not stay dark. */
+:root[data-theme="light"]{
+  --ground:#F5F4F2;
+  --panel:#FFFFFF;
+  --panel-2:#EDEBE7;
+  --text:#111111;
+  --dim:#5B6472;
+  --ink:#FFFFFF;
+  --cyan:var(--frame);
+  --green:var(--frame);
+  --gold:var(--violet);
+  --magenta:var(--violet);
+}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scrollbar-color:var(--frame) var(--ground)}
 /* Print output lives in its own container, styled entirely by print.css
@@ -117,6 +140,8 @@ input[type=text],input[type=number],input[type=date],textarea,select{
 input[type=number]{font-family:var(--mono)}
 input[type=date]{font-family:var(--mono); color-scheme:dark}
 input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.75)}
+:root[data-theme="light"] input[type=date]{color-scheme:light}
+:root[data-theme="light"] input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--cyan); outline-offset:1px}
 textarea{min-height:150px; resize:vertical; line-height:1.6}
 .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:0 18px}
@@ -417,6 +442,18 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .skill-desc td{background:rgba(32,63,123,.12); border-bottom:1px solid rgba(32,63,123,.35)}
 .skill-desc-body{padding:5px 4px 7px; font-size:.82rem; color:var(--text); line-height:1.5; white-space:normal}
 .skill-desc-body .covers{margin-top:5px; font-family:var(--mono); font-size:.72rem; color:var(--dim)}
+
+/* Light/dark toggle — always present in the header, unlike .hdr-actions which
+   the sheet/wizard/home renders clear on every screen change (Decision 90). */
+.theme-toggle{width:30px; height:30px; border-radius:50%; border:1px solid var(--frame);
+  background:none; color:var(--dim); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex:0 0 auto; margin-left:8px; transition:color .15s, border-color .15s}
+.theme-toggle:hover{color:var(--gold); border-color:var(--gold)}
+.theme-toggle svg{width:16px; height:16px; fill:none; stroke:currentColor}
+.theme-toggle-icon--sun{display:none}
+.theme-toggle-icon--moon{display:block}
+:root[data-theme="light"] .theme-toggle-icon--sun{display:block}
+:root[data-theme="light"] .theme-toggle-icon--moon{display:none}
 
 /* Header overflow (actions) menu */
 .hdr-actions{position:relative; display:flex; align-items:center}

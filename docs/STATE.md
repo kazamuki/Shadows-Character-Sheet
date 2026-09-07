@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-07
-**Versions:** app `0.9.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.10.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` → **96 passing, 0 todo, 0 failing** (96 tests, six files)
 
@@ -53,6 +53,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor · Decision 86 |
 | 3b | `grants` | ✅ merged (#16) | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
 | — | Printable sheet + demo hosting | ✅ merged (#17) | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
+| — | Light theme toggle | ✅ on branch, not yet a PR | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
 | 4 | Cyborg as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
 
 **Printable sheet + demo hosting (#17) is merged.** `Sheet.renderPrintView(ch?)`
@@ -69,6 +70,15 @@ someone download just the blank sheet with no app in the loop, and a new
 to "GitHub Actions", add the custom domain, and add the matching Squarespace
 DNS record for `charactersheet.shadowsrpg.com`. The Shadows-RPG-Site link is
 deliberately not added until that resolves.
+
+**Light theme toggle is done on this branch, not yet opened as a PR.** Same
+`data-theme` mechanism as getdangerousgames.com and shadowsrpg.com — blocking
+pre-paint script, localStorage persistence, sun/moon header button — ported
+onto this app's own token names rather than their shared token set (Decision
+90 explains why). `dist/shadows-character-sheet.html` inherits it automatically
+since the build just inlines whatever `index.html` references; the blank-sheet
+print artifact was deliberately left alone, since it's a print preview meant
+to always look like paper.
 
 **Two things a next session should know.**
 
