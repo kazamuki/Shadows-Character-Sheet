@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { JSDOM } from "jsdom";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -53,6 +54,52 @@ export function buildHtml(root = ROOT) {
   return out;
 }
 
+/**
+ * A second, standalone artifact: the blank fillable sheet, for a link on
+ * shadowsrpg.com or anywhere else that shouldn't require the wizard first.
+ * `Sheet.renderPrintView(null)` is a pure function of game data once no
+ * character is passed — it never touches the DOM — but it's easiest to reach
+ * by booting the real app in jsdom (the same trick tests/harness.mjs uses)
+ * and calling it there, so this can never drift from what the live app
+ * actually renders. print.css is inlined WITHOUT its media="print" gate, so
+ * the page looks like the finished sheet immediately, not only once printed.
+ */
+export function buildBlankSheetHtml(root = ROOT) {
+  const dom = new JSDOM(buildHtml(root), { runScripts: "dangerously", url: "https://shadows.invalid/" });
+  let body;
+  try {
+    body = dom.window.eval("renderPrintView(null)");
+  } finally {
+    dom.window.close();
+  }
+  const printCss = readFileSync(join(root, "src/styles/print.css"), "utf8");
+  assertInlineSafe("src/styles/print.css", printCss, "style");
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadows — Blank Character Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{background:#fff;margin:0}
+.p-print-btn{position:fixed;top:10px;right:10px;z-index:10;font:600 13px 'Inter',system-ui,sans-serif;
+  background:#712B8C;color:#fff;border:0;border-radius:4px;padding:8px 14px;cursor:pointer}
+@media print{ .p-print-btn{display:none} }
+${printCss.trimEnd()}
+</style>
+</head>
+<body>
+<button class="p-print-btn" onclick="window.print()">Print this sheet</button>
+<div id="printSheet">${body}</div>
+</body>
+</html>
+`;
+}
+
 // Run-as-CLI guard. `file://${process.argv[1]}` looked right but never matched:
 // argv[1] is whatever was typed on the command line, so `node tools/build.mjs`
 // yields "file://tools/build.mjs" while import.meta.url is a fully-resolved
@@ -62,13 +109,18 @@ export function buildHtml(root = ROOT) {
 // pathToFileURL resolves against cwd and produces the same href to compare.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const html = buildHtml();
+  const blank = buildBlankSheetHtml();
   const check = process.argv.includes("--check");
   if (!check) {
     mkdirSync(join(ROOT, "dist"), { recursive: true });
     const out = join(ROOT, "dist", "shadows-character-sheet.html");
     writeFileSync(out, html, "utf8");
     console.log(`built ${out}  (${(html.length / 1024).toFixed(0)} KB)`);
+    const blankOut = join(ROOT, "dist", "shadows-blank-sheet.html");
+    writeFileSync(blankOut, blank, "utf8");
+    console.log(`built ${blankOut}  (${(blank.length / 1024).toFixed(0)} KB)`);
   } else {
     console.log(`build ok  (${(html.length / 1024).toFixed(0)} KB, nothing written)`);
+    console.log(`blank sheet ok  (${(blank.length / 1024).toFixed(0)} KB, nothing written)`);
   }
 }

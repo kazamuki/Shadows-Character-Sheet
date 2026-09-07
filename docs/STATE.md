@@ -1,9 +1,9 @@
 # State of the build
 
-**Updated:** 2026-09-05
-**Versions:** app `0.8.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-07
+**Versions:** app `0.9.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **94 passing, 0 todo, 0 failing** (94 tests, six files)
+**Suite:** `npm run verify` → **96 passing, 0 todo, 0 failing** (96 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -26,14 +26,13 @@ architecture and is enforced by tests.
 
 **Working and covered by tests:** the whole wizard, all nine sheet tabs, damage
 and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, the session log,
-loadout, and an undo-able audit trail of every action. The engine reproduces the
-CRB's own worked examples (`tests/rules.test.mjs`).
+loadout, `grants`, an undo-able audit trail, and now a printable sheet — filled
+or blank — for a player who wants paper. The engine reproduces the CRB's own
+worked examples (`tests/rules.test.mjs`).
 
-**No known player-facing defect.** A1 and A2 closed with Batch 3, and the suite
-has no `todo` for the first time since the ledger was written. Three
-machinery gaps found by the PR #7 review are open in §4 — none is reachable
-with current data, so none can bite a player today. The next `todo` that appears
-should be a newly *found* defect, not a survivor.
+**No known player-facing defect.** Three machinery gaps found by the PR #7
+review are open in §4 — none is reachable with current data, so none can bite
+a player today.
 
 ---
 
@@ -49,53 +48,37 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
 | 3 | Selection & constraint system | ✅ merged (#7) | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
 | 3a | Ledger attention state | ✅ merged (#10) | Third row state (done/active/attention) + callout · Decision 83 |
-| — | Dev-preview tooling | ✅ merged (#11) | `tools/devserver.mjs` for browser-tool UI verification. Not app-related, own branch |
-| — | CRB v4 reference mirror | ✅ merged (#13) | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85. Not app-related, own branch |
-| — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor, done ahead of 3b · Decision 86 |
-| 3b | `grants` | ✅ on branch, not yet merged | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
-| 4 | Biomech as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
+| — | Dev-preview tooling | ✅ merged (#11) | `tools/devserver.mjs` for browser-tool UI verification |
+| — | CRB v4 reference mirror | ✅ merged (#13) | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85 |
+| — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor · Decision 86 |
+| 3b | `grants` | ✅ merged (#16) | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
+| — | Printable sheet + demo hosting | ✅ merged (#17) | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
+| 4 | Cyborg as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
 
-**Batch 3 is merged.** One selection system — `picks` / `excludes` / `requires` —
-hosted by advantages, disadvantages and skills, with archetype specialization on
-the same model (A3). Decisions 77–82; reasoning in `SCHEMA.md` §6, session detail
-in `log/2026.md`. An independent adversarial review of the PR found five further
-defects, all fixed before merge (Decision 82); three machinery gaps from it are
-open in §4 and none is reachable with current data.
-
-**Batch 3a is merged.** `renderLedger` marked a passed step ✓ whenever
-`validate()` had no *errors*, ignoring warnings — a player who walked past
-Stats or Skills with points unspent got the same green check as one who had
-spent everything. Passed steps now render one of three states (done / active /
-attention), with a callout that jumps to the first flagged one. No new
-validation — it just stops discarding the warnings `validate()` already emits.
-Decision 83; a jsdom test confirmed failing against the pre-fix renderer before
-being kept.
-
-**A dev-preview server also landed (#11), unrelated to the app itself:**
-`tools/devserver.mjs` serves the repo over plain HTTP so a browser tool can
-execute the app's scripts (bare `file://` renders inert in some embedded
-browsers). `.claude/launch.json` wires it up.
-
-**Nine CRB v4 chapters are mirrored in-repo (#13), also unrelated to app
-code:** `docs/reference/crb/`, same re-pull contract as the Voice guide
-(Decisions 84–85). Confirmed but did not resolve F1/F2/F8/F9/F11/F13/F16 or
-the unnumbered beyond-10 flag.
-
-**Batch 3b (`grants`) is done, on branch, not yet merged.** Educated, Hard to
-Kill, Lucky, Unlucky and Long-Lived now have real mechanical effects via a new
-`grants` array (Decisions 87–88). Long-Lived's rank-stacking is a flagged
-assumption (F17) pending Deighton, not a settled rule.
+**Printable sheet + demo hosting (#17) is merged.** `Sheet.renderPrintView(ch?)`
+renders the universal three pages — Character Info/Stats/Combat/Health/Defense,
+full Skills, Weapons/Gear/Advantages/Disadvantages/Notes — from a live
+character, or with none passed, a blank fillable template built from game data
+alone. Defense ships blank either way with a plain note, not a guess: the app
+has no armor model yet, tracked now as **F18** (a real first design pass
+exists in `053_Combat Encounters.docx`, but it needs `Gear.docx` before it's
+engine-ready). A second build artifact, `dist/shadows-blank-sheet.html`, lets
+someone download just the blank sheet with no app in the loop, and a new
+`deploy-demo.yml` workflow publishes both `dist/` files to GitHub Pages on tag.
+**Demo hosting isn't live yet** — it needs Ken to set the GitHub Pages source
+to "GitHub Actions", add the custom domain, and add the matching Squarespace
+DNS record for `charactersheet.shadowsrpg.com`. The Shadows-RPG-Site link is
+deliberately not added until that resolves.
 
 **Two things a next session should know.**
 
 - **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
   Both are tested against a synthetic fixture. Adding a real one is a rules
   question for Deighton, not a data edit (Decision 77).
-- **Thick Skin is held out of 3b.** It grants Natural Armor, the armor design is
-  still in flux, and **four places in the data already grant Natural Armor in
-  prose** — Thick Skin, the Iron Shirt Martial Arts style, an archetype effect
-  and an archetype benefit. That makes it a real derived value when it lands, not
-  a Thick Skin special case. Until then it ships as reference text.
+- **Thick Skin is held out.** It grants Natural Armor; four places in the
+  data already grant Natural Armor in prose (Thick Skin, Iron Shirt, an archetype
+  effect, an archetype benefit) — one real derived value, not a Thick Skin
+  special case, once the armor system (F18) lands. Until then it ships as text.
 
 **F8 is not a gate on any of this.** It blocks a player finishing the stats step.
 Chase it on its own track.
@@ -114,7 +97,7 @@ Chase it on its own track.
 | F13 | Vampire `canPurchaseAdvantages: false` — assumed from the Werewolf baseline, confirm |
 | F16 | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is **Medical** |
 
-These five are doc reconciliation and have sat through four sessions of work
+These five are doc reconciliation and have sat through several sessions of work
 that could not touch them. Good candidate for a low-friction session.
 
 ### Needs Deighton — ask these together, not one at a time
@@ -136,8 +119,9 @@ four separate context-loads.
 
 | Item | What |
 |---|---|
-| F6 | Biomech / Cyborg rewrite — NCI tiers, Set Bonuses, Kicker Dice, TOL pressure. Ships as `status: "tbd"`. Batch 4 |
+| F6 | Cyborg rewrite — NCI tiers, Set Bonuses, Kicker Dice, TOL pressure. Ships as `status: "tbd"`. Batch 4 |
 | F7 | SFR per archetype — Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool open |
+| F18 | Weapons/Armor/Defense — `053_Combat Encounters.docx` gives a first real pass (rolled PROT, static RES, consumable Integrity, AP/Massive/Withering rules). Needs `Gear.docx` for actual item stats before it's engine-ready. Printable sheet's Defense panel ships blank until then |
 | F5 | Cyber-Prophetical (SAN vs TOL) — the last quarter of F5. Waits on F6; don't ask separately |
 
 Archetype status in the data: `arcanist: draft · professional: draft ·
@@ -168,16 +152,16 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**`main` is caught up through PR #15** — the CRB v4 reference mirror and the
-`app.js` decomposition (Decision 86) have both landed; `npm run verify` is
-green (94 passing, 0 todo).
+**`main` is caught up through PR #17** — `grants` (3b), the Cyborg/Biomech docs
+fix, and the printable sheet + demo-hosting work have all landed; `npm run
+verify` is green (96 passing, 0 todo).
 
-**Batch 3b (`grants`) is done, on branch `feat/batch-3b-grants`, not yet
-merged** (see §2). **Batch 4 (Biomech) is next**, but needs the design ruling
-from Ken + Deighton + Scott before there's data to encode (F6, §3).
+**Batch 4 (Cyborg rewrite) is next**, but needs the design ruling from Ken +
+Deighton + Scott before there's data to encode (F6, §3). Demo hosting needs
+Ken's GitHub Pages / DNS setup before the Shadows-RPG-Site link can go in (§2).
 
 If you want a session with no dependencies at all, the five doc-reconciliation
-flags in §3 have now waited through six batches.
+flags in §3 have now waited through several batches.
 
 ---
 

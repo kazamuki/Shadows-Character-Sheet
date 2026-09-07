@@ -299,7 +299,7 @@ Archetypes differ wildly in what their sheet needs — a grimoire, an augment
 manifest, forms, a blood pool. Rather than hardcoding a Cyborg page and an
 Arcanist page, each archetype's `coreMechanic.panels` *declares* what UI it
 needs from a small set of panel types (`rankedList`, `table`, `tracker`,
-`text`). The app renders whatever is declared. When the Biomech rewrite lands,
+`text`). The app renders whatever is declared. When the Cyborg rewrite lands,
 you describe its NCI tiers and augment slots as panel declarations in the data
 file — no app changes.
 
@@ -1256,6 +1256,26 @@ No cascade logic to maintain — it falls out of the architecture.
     also the safer default regardless — an over-grant is easy to spot and
     correct at the table, a silent under-grant is not. (Ken + Claude, 2026-09-05)
 
+89. **A printable sheet is a second rendering path, not a second data model.**
+    `Sheet.renderPrintView(ch?)` renders a universal three-page paper layout
+    (Character Info/Stats/Combat/Health/Defense, full Skills, Weapons/Gear/
+    Advantages/Disadvantages/Notes) styled by a new `print.css` — its own
+    white/violet paper theme, independent of the app's dark on-screen UI.
+    `ch` is optional: present, it reads the same engine outputs the live sheet
+    already uses; absent, it renders a blank fillable template from
+    `SHADOWS_DATA` alone, since every label on a blank sheet is game data, not
+    a character. Defense prints blank either way — the app has no armor model
+    yet (F18) — with plain-language copy rather than inventing one to fill
+    the layout. Reachable as "Print sheet" in the sheet header for a live
+    character, and "Print a blank character sheet" on Home for a
+    physical-only player who never opens the wizard.
+    A second build artifact, `dist/shadows-blank-sheet.html`
+    (`tools/build.mjs`'s `buildBlankSheetHtml()`), boots the real app in
+    jsdom and calls the same `renderPrintView(null)` there, so a standalone
+    download link can never drift from what the live app renders — no
+    hand-maintained second template. No schema bump, no `gamedataVersion`
+    bump (no computed value changed); `APP_VERSION` **0.8.0 → 0.9.0** minor
+    (a player can now do something new). (Ken + Claude, 2026-09-07)
 
 ## 5. Open Flags
 
@@ -1284,7 +1304,7 @@ subtype references were renamed to match ("Occult" → "Occult Lore", "Handgun" 
 together. **F5 is three-quarters closed**: Field Medic now names the catalog's
 "Medical", Combat Paralysis' text is no longer ambiguous, and Poverty's Max Rank
 is ruled at 3; only Cyber-Prophetical still carries `flagged: true`, and it
-waits on the Biomech rewrite (F6).
+waits on the Cyborg rewrite (F6).
 
 ~~F15~~ closed the same day it opened: Ken confirmed Tracking is **INT/EMP** — the
 CRB's "(INT / INT)" was a slip made while correcting Occult Lore and Survival off
@@ -1299,7 +1319,7 @@ Long-Lived (F17).
 | F1 | LUCK buy-up cost in CP per point (stubbed 1:1, flagged in data) | Deighton | No |
 | F2 | CP boost exchange rate across skills/stats/powers (stubbed 1:1, flagged) | Deighton | No |
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
-| F6 | Biomech rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
+| F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD | Ken → docs | No |
 | F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
@@ -1309,6 +1329,7 @@ Long-Lived (F17).
 | F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
 | F16 | **Hemophiliac calls for a "First Aid Skill Check"**; the catalog skill is **Medical**. Field Medic's half was fixed in the same pass, so this is the last real one. (A Professional milestone lists "First Aid" among tool/kit examples — prose, not a skill reference) | Ken → docs | No |
 | F17 | **Long-Lived's rank table reads as "Effect" per row, not "gain another"** — ambiguous whether ranks stack. Implemented as stacking (rank 3 = 2 Minor + 1 Major Milestone slots total), confirmed with Ken; needs Deighton's sign-off as the rules-authority call | Deighton | No |
+| F18 | **Weapons/Armor/Defense system** — `053_Combat Encounters.docx` (CRB v4) gives a first full pass: rolled PROT (armor's own defense roll), static RES added when damage type allows it (armor-piercing skips RES; enemy armor is static), a consumable Integrity pool (−1 per hit fully absorbed, plus a post-fight wear roll of 1d4–1d10), and separate Massive/Withering damage rules. Needs `Gear.docx` for actual item stats before it's engine-ready — direction exists now, a ruling doesn't yet | Ken/D/Scott | No |
 
 ## 6. Roadmap
 
@@ -1505,7 +1526,7 @@ Long-Lived (F17).
 
 - **Decompose `src/ui/app.js`** (Decision 54's deferred refactor) ✅ — done on
   `refactor/decompose-app-js`, ahead of 3b rather than after it (Decision 86).
-  Then Biomech (F6) as data rather than a fourth special
+  Then Cyborg (F6) as data rather than a fourth special
   case. Clear **F8** on its own track — it is a four-number data edit and the
   only wizard-blocking flag.
 
