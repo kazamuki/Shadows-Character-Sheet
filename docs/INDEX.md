@@ -171,6 +171,7 @@ Promises the engine makes and the guards behind them.
 - **82** *(Batch 3, post-review)* — A trait held twice is still one trait — and an adversarial review found it.
 - **87** *(Batch 3b)* — The other half of Decision 58 lands: a `grants` array gives an advantage/disadvantage a static mechanical effect.
 - **88** *(Batch 3b, F17)* — Long-Lived's ranks stack.
+- **91** *(PR #7 review, closed)* — One prerequisite vocabulary, checked in one place: `requirementState`/`majorPrereqs` share `checkPrereqs`, the Professional stat gate reads `requires` data, `heldIds` reaches skills.
 
 ### Sheet & play tracking
 

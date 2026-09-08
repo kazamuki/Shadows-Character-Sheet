@@ -3,7 +3,7 @@
 **Updated:** 2026-09-07
 **Versions:** app `0.10.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **96 passing, 0 todo, 0 failing** (96 tests, six files)
+**Suite:** `npm run verify` → **98 passing, 0 todo, 0 failing** (98 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -30,9 +30,9 @@ loadout, `grants`, an undo-able audit trail, and now a printable sheet — fille
 or blank — for a player who wants paper. The engine reproduces the CRB's own
 worked examples (`tests/rules.test.mjs`).
 
-**No known player-facing defect.** Three machinery gaps found by the PR #7
-review are open in §4 — none is reachable with current data, so none can bite
-a player today.
+**No known player-facing defect.** The three machinery gaps the PR #7 review
+found are closed (Decision 91) — none was reachable with current data, so none
+ever bit a player.
 
 ---
 
@@ -53,7 +53,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor · Decision 86 |
 | 3b | `grants` | ✅ merged (#16) | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
 | — | Printable sheet + demo hosting | ✅ merged (#17) | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
-| — | Light theme toggle | ✅ on branch, not yet a PR | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
+| — | Light theme toggle | ✅ merged (#18) | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
 | 4 | Cyborg as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
 
 **Printable sheet + demo hosting (#17) is merged.** `Sheet.renderPrintView(ch?)`
@@ -71,7 +71,7 @@ to "GitHub Actions", add the custom domain, and add the matching Squarespace
 DNS record for `charactersheet.shadowsrpg.com`. The Shadows-RPG-Site link is
 deliberately not added until that resolves.
 
-**Light theme toggle is done on this branch, not yet opened as a PR.** Same
+**Light theme toggle is merged (#18).** Same
 `data-theme` mechanism as getdangerousgames.com and shadowsrpg.com — blocking
 pre-paint script, localStorage persistence, sun/moon header button — ported
 onto this app's own token names rather than their shared token set (Decision
@@ -145,26 +145,32 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 forward notes — one line each in `INDEX.md` §2, which is where you look up what
 any id means and whether it is still live.
 
-### Open from the PR #7 adversarial review
+### PR #7 adversarial review — closed (Decision 91)
 
-Real gaps, none reachable with current data — no entry declares `excludes` or
-`requires`, and no skill declares `excludes`. Fixing them means designing
-against no example, which is exactly what Decision 57 declined to do. They land
-when the first entry needs them.
-
-| What | Where |
-|---|---|
-| `requirementState` reimplements the milestone-prerequisite check rather than calling it, so `majorCount`, `milestones`, `gear`, `note` and `gmApproval` in a `requires` block would be **silently treated as satisfied** | `engine.js` — merge with `majorPrereqs` |
-| The Professional stat gate is still `if (a.id==="professional")` with its own stat-check code, duplicating `requirementState` — the per-archetype special-casing A3 set out to end | `engine.js` `validate()` — express as `requires` data on the subtype |
-| `optionLock` reads only advantages and disadvantages, so a skill can never take part in an `excludes` pair even though skills host `picks` | `engine.js` `heldIds` |
+All three machinery gaps are fixed. `requirementState` and `majorPrereqs` now
+share one `checkPrereqs(ch, p)` core, so a `requires`/`prerequisites` block's
+`majorCount`, `milestones`, `gear`, `note` and `gmApproval` are read the same
+way everywhere instead of being silently treated as satisfied wherever the
+duplicate check hadn't caught up. The Professional stat gate reads
+`sub.requires.stats` through the same core instead of its own loop — the
+subtype data was renamed from `requiredStats` (8 sites) to `requires: {
+stats: {...} }`, and `wizard.js`'s display of that gate follows. `heldIds` now
+scans held skills too, so a skill can sit on either side of an `excludes`
+pair, matching the advantages/disadvantages it was missing next to. No entry
+in the data uses any of this yet — no `excludes`/`requires` pair beyond the
+test fixtures, per Decision 57 — so this closes real debt without being
+player-visible today. Two new fixture-based tests in `engine.test.mjs` prove
+each fix against the pre-fix code (mutation-tested), not just that the suite
+still passes.
 
 ---
 
 ## 5. Where to start
 
-**`main` is caught up through PR #17** — `grants` (3b), the Cyborg/Biomech docs
-fix, and the printable sheet + demo-hosting work have all landed; `npm run
-verify` is green (96 passing, 0 todo).
+**`main` is caught up through PR #18** — `grants` (3b), the printable sheet +
+demo-hosting work, and the light theme toggle have all landed. The PR #7
+machinery-gap fixes (Decision 91, §4) are done on this branch, not yet a PR.
+`npm run verify` is green (98 passing, 0 todo).
 
 **Batch 4 (Cyborg rewrite) is next**, but needs the design ruling from Ken +
 Deighton + Scott before there's data to encode (F6, §3). Demo hosting needs
