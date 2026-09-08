@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-07
-**Versions:** app `0.10.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.10.0` · game data `0.6` · character schema `0.5` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **98 passing, 0 todo, 0 failing** (98 tests, six files)
+**Suite:** `npm run verify` → **99 passing, 0 todo, 0 failing** (99 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -54,6 +54,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | 3b | `grants` | ✅ merged (#16) | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
 | — | Printable sheet + demo hosting | ✅ merged (#17) | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
 | — | Light theme toggle | ✅ merged (#18) | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
+| — | PR #7 machinery gaps + flag reconciliation | 🔵 open (#19) | `checkPrereqs` merge, Professional stat gate, `heldIds` skills · Decision 91; five Ken-alone flags closed · Decision 92, `gamedataVersion` 0.6 |
 | 4 | Cyborg as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
 
 **Printable sheet + demo hosting (#17) is merged.** `Sheet.renderPrintView(ch?)`
@@ -99,16 +100,14 @@ Chase it on its own track.
 
 ### Ken alone — no external input
 
-| Item | What |
-|---|---|
-| F9 | Are "General Milestones" shared across archetypes, or Professional-only? Data treats them as shared |
-| F11 | Quick Study requires an "Intuition Advantage" — Intuition is a *Skill* |
-| F12 | Minor Milestones sourced from REF v3.5; the WIP defers to an unwritten Advancement section |
-| F13 | Vampire `canPurchaseAdvantages: false` — assumed from the Werewolf baseline, confirm |
-| F16 | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is **Medical** |
-
-These five are doc reconciliation and have sat through several sessions of work
-that could not touch them. Good candidate for a low-friction session.
+**Empty.** F9, F11, F12, F13 and F16 — the five doc-reconciliation flags that
+had sat through several sessions — were all ruled in one sitting (Decision 92).
+General Major Milestones are shared across every archetype; Quick Study now
+requires the Intuition *Skill* instead of a nonexistent Advantage (it was
+previously unobtainable); the v3.5 Minor Milestones are final; Vampire's
+`canPurchaseAdvantages: false` is confirmed; Hemophiliac says "Medical Skill
+Check". Nothing is queued here right now — the next thing that lands in this
+row is whatever comes up organically.
 
 ### Needs Deighton — ask these together, not one at a time
 
@@ -169,15 +168,16 @@ still passes.
 
 **`main` is caught up through PR #18** — `grants` (3b), the printable sheet +
 demo-hosting work, and the light theme toggle have all landed. The PR #7
-machinery-gap fixes (Decision 91, §4) are done on this branch, not yet a PR.
-`npm run verify` is green (98 passing, 0 todo).
+machinery-gap fixes (Decision 91, §4) are open as PR #19, not yet merged. The
+five Ken-alone flag rulings (Decision 92, §3) are on the same branch, not yet
+a separate PR. `npm run verify` is green (99 passing, 0 todo).
 
 **Batch 4 (Cyborg rewrite) is next**, but needs the design ruling from Ken +
 Deighton + Scott before there's data to encode (F6, §3). Demo hosting needs
 Ken's GitHub Pages / DNS setup before the Shadows-RPG-Site link can go in (§2).
 
-If you want a session with no dependencies at all, the five doc-reconciliation
-flags in §3 have now waited through several batches.
+The zero-dependency doc-reconciliation flags in §3 are cleared out — the next
+session without dependencies is whatever's next on the board.
 
 ---
 

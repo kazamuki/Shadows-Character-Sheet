@@ -50,10 +50,10 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.5",
+    "gamedataVersion": "0.6",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-09-03",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump."
+    "updated": "2026-09-07",
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 (Decision 92, F11) fixes Quick Study's prerequisite: it named an 'Intuition Advantage' that doesn't exist in the catalog, making the milestone permanently unobtainable; it now requires the Intuition Skill instead, so a character can actually earn it."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -1010,8 +1010,8 @@ window.SHADOWS_DATA = {
      Field Medic now names the catalog's "Medical"; Combat Paralysis' text is no
      longer ambiguous; Poverty's Max Rank is ruled at 3. Only Cyber-Prophetical
      (SAN/TOL) still carries "flagged":true, and it waits on the Biomech rewrite
-     (F6). Hemophiliac picked up a new flag (F16) for the surviving "First Aid"
-     reference. See SCHEMA.md section 5. */
+     (F6). Hemophiliac's "First Aid" reference (F16) is resolved -- Decision 92.
+     See SCHEMA.md section 5. */
   "advantages": [
     {
       "id": "ambidextrous",
@@ -1679,9 +1679,7 @@ window.SHADOWS_DATA = {
       "name": "Hemophiliac",
       "pointsGranted": 10,
       "maxRank": 1,
-      "description": "NYTE City will make you bleed. This makes it count.\n\nAny damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a First Aid Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.\n\nUsing Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a First Aid Skill Check.",
-      "flagged": true,
-      "flagNote": "F16: CRB v4 text calls for a 'First Aid Skill Check'; the catalog skill is 'Medical'. Field Medic's half of this was resolved in the same pass, Hemophiliac is now the only entry naming a First Aid *check*; a Professional milestone lists 'First Aid' among tool/kit examples, which is prose, not a skill reference."
+      "description": "NYTE City will make you bleed. This makes it count.\n\nAny damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a Medical Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.\n\nUsing Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a Medical Skill Check."
     },
     {
       "id": "minor-insanity",
@@ -1816,10 +1814,8 @@ window.SHADOWS_DATA = {
      yet stay prose and display as reference.
 
      REVIEW (F7 - SFR per archetype): Werewolf SFR is defined (WILL*3+N w/ RoU,
-       in its scaling table); Vampire Blood Pool is still TBD.
-     REVIEW (F13 - Vampire): vampire `canPurchaseAdvantages` is ASSUMED from the
-       Werewolf supernatural baseline -- confirm with D. (see vampire entry).
-     See SCHEMA.md section 5 for both. */
+       in its scaling table); Vampire Blood Pool is still TBD. See SCHEMA.md
+       section 5. F13 (Vampire canPurchaseAdvantages) is resolved -- Decision 92. */
   "archetypes": [
     {
       "id": "arcanist",
@@ -1994,7 +1990,7 @@ window.SHADOWS_DATA = {
       "vulnerabilities": [],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": [],
+        "majorMilestones": "shared",
         "flagged": true,
         "flagNote": "Arcanist Powers and Growth & Milestones sections are empty in the WIP. Arcanist Major Milestones exist in REF_CRB (e.g., Aetheric Potency) - extract on request."
       }
@@ -2052,7 +2048,7 @@ window.SHADOWS_DATA = {
       "vulnerabilities": [],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": []
+        "majorMilestones": "shared"
       }
     },
     {
@@ -2354,7 +2350,7 @@ window.SHADOWS_DATA = {
       "vulnerabilities": [],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": "general",
+        "majorMilestones": "shared",
         "cadence": [
           "Every session completed grants 10 Improvement Points (IP).",
           "Every 5 sessions: pick a Minor Milestone.",
@@ -2362,8 +2358,8 @@ window.SHADOWS_DATA = {
         ]
       }
     },
-    // REVIEW (F13): `canPurchaseAdvantages:false` below is ASSUMED from the
-    // Werewolf supernatural baseline; confirm with D. (also noted in data field).
+    // F13 (resolved, Decision 92): `canPurchaseAdvantages:false` below was
+    // assumed from the Werewolf supernatural baseline -- confirmed with Ken.
     {
       "id": "vampire",
       "name": "Vampire",
@@ -2380,7 +2376,7 @@ window.SHADOWS_DATA = {
       "lore": "In NYTE City, Vampires thrive in the shadows, concealed by the chaos of urban decay. While they remain hidden from public knowledge, Vampires are not hiding. They are waiting. The Unseen Court, a secretive governing body, ensures their kind stays in the shadows while exerting influence over corporations, criminal syndicates, and political figures. You are undead. You consume blood to survive. Sunlight kills you - and NYTE City, to its credit, never fully sees the sun. Whatever path you choose, feeding is not optional.",
       "supernatural": true,
       "canPurchaseAdvantages": false,
-      "canPurchaseAdvantagesNote": "Assumed per the supernatural baseline established in the Werewolf section - confirm.",
+      "canPurchaseAdvantagesNote": "Confirmed (Decision 92, F13) — Vampire follows the same supernatural restriction as Werewolf.",
       "campaignPowerScaling": {
         "byPowerLevel": {}
       },
@@ -2406,7 +2402,7 @@ window.SHADOWS_DATA = {
       "vulnerabilities": [],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": []
+        "majorMilestones": "shared"
       }
     },
     {
@@ -2561,7 +2557,7 @@ window.SHADOWS_DATA = {
       "vulnerabilities": [],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": []
+        "majorMilestones": "shared"
       }
     }
   ],
@@ -2578,12 +2574,12 @@ window.SHADOWS_DATA = {
        note / skills.note        -> PROSE the app surfaces as a "GM:" confirm chip
      Use real catalog ids in prerequisites; prose `note` is for rules that aren't
      machine-checkable yet.
-     REVIEW (F9): `majorGeneral` is treated as shared across all archetypes (REF
-       says General Majors are open to all; WIP lists them under Professional).
-       Confirm with D. -- see `majorGeneralNote` near the end of this section.
-     REVIEW (F12): `minorShared` is sourced from REF_CRB v3.5; the WIP refers to
-       an Advancement Section not yet written. Confirm for v4 (see
-       `minorSharedSource`). Both flags are in SCHEMA.md section 5. */
+     F9 (resolved, Decision 92): `majorGeneral` is shared across all archetypes
+       -- confirmed with Ken, matching REF's "open to all" and the app's own
+       behavior all along. Every archetype's `growth.majorMilestones` says
+       "shared" now instead of the mixed "general"/[] it carried before.
+     F12 (resolved, Decision 92): `minorShared` is sourced from REF_CRB v3.5,
+       confirmed final -- see `minorSharedSource`. */
   "milestones": {
     "rules": {
       "milestonePointsPerSession": 1,
@@ -2622,7 +2618,7 @@ window.SHADOWS_DATA = {
         "benefit": "Gain and place a single Stat point, applicable to any Stat including WILL, LUCK, or TOL."
       }
     ],
-    "minorSharedSource": "REF_CRB (v3.5) - WIP refers to an Advancement Section not yet written. Flagged for v4 confirmation.",
+    "minorSharedSource": "REF_CRB (v3.5), confirmed final (Decision 92). The WIP refers to an Advancement Section that doesn't exist yet, but there's no reason to think these five changed.",
     "majorGeneral": [
       {
         "id": "specialist",
@@ -2812,6 +2808,11 @@ window.SHADOWS_DATA = {
         "id": "quick-study",
         "name": "Quick Study",
         "flavor": "You're fast at gauging a situation and knowing what's needed to move forward.",
+        // F11 (resolved, Decision 92): the CRB text names an "Intuition
+        // Advantage", but Intuition is a Skill in the catalog, not an
+        // Advantage -- confirmed with Ken this meant the Skill, rank 1+
+        // (matching Danger Sense's own threshold), not a nonexistent
+        // Advantage id that could never be satisfied.
         "prerequisites": {
           "majorCount": 1,
           "advantages": {
@@ -2819,16 +2820,17 @@ window.SHADOWS_DATA = {
               [
                 "danger-sense",
                 1
-              ],
+              ]
+            ]
+          },
+          "skills": {
+            "all": [
               [
                 "intuition",
                 1
               ]
             ]
-          },
-          "flagged": true,
-          // REVIEW (F11): see SCHEMA.md section 5.
-          "flagNote": "Prerequisite lists an 'Intuition Advantage' - Intuition is a Skill in the catalog, not an Advantage. Confirm."
+          }
         },
         "benefit": "When making a Combat Sense Skill Check, you may Take 6."
       },
@@ -3003,7 +3005,7 @@ window.SHADOWS_DATA = {
         "benefit": "Upgrade it: +1 Mod Slot (total 4), +1 Upgrade (total 3). Signature Effect: a cinematic combat move or reactive ability once per session (work with GM; e.g. Vampiric weapon, Phasing attack, Surestrike). Attunement: bound to your identity - anyone else using it suffers significant penalties unless ritually attuned or part of your legacy."
       }
     ],
-    "majorGeneralNote": "Listed under the Professional's Growth & Milestones in the WIP, but REF_CRB defines General Major Milestones as open to all archetypes. Treated as shared - flagged for confirmation (F9)."
+    "majorGeneralNote": "Listed under the Professional's Growth & Milestones in the WIP, but REF_CRB defines General Major Milestones as open to all archetypes. Confirmed shared across every archetype (Decision 92, F9)."
   },
   /* IMPROVEMENT POINTS (IP) -- post-creation advancement costs (Decision 14).
      `perSession` is the default grant (overridable per session, Decision 23).
@@ -3132,7 +3134,7 @@ window.SHADOWS_DATA = {
         "maxPowerRank",
         "statRules.max"
       ],
-      "supernaturalRestriction": "Archetypes with canPurchaseAdvantages=false cannot buy Advantages (Werewolf confirmed; Vampire assumed)."
+      "supernaturalRestriction": "Archetypes with canPurchaseAdvantages=false cannot buy Advantages (Werewolf and Vampire both confirmed, Decision 92)."
     }
   }
 };

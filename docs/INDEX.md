@@ -77,12 +77,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
 | `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD | Design |
 | `F8` | Stat Point roll conflict: WIP says flat "3d10+30" for all levels; REF table scales by pow… | Deighton — **wizard-blocking** |
-| `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
-| `F11` | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the cat… | Ken |
-| `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
-| `F13` | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline… | Ken |
 | `F14` | Skill IP cost at rank 0: "5 × current rank" prices learning a new skill (0→1) at zero. Ap… | Deighton |
-| `F16` | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is Medical. Field Medi… | Ken |
 | `F17` | Long-Lived's rank table reads "Effect" per row; implemented as stacking, needs Deighton's sign-off | Deighton |
 | `F18` | Weapons/Armor/Defense — `053_Combat Encounters.docx` gives a first real pass: rolled PROT, static RES, consumable Integrity | Design (needs Gear.docx) |
 
@@ -132,6 +127,7 @@ Where game text comes from and how it is merged.
 - **57** *(CRB v4 content pass)* — Rank tables stay prose; rankTable waits for the renderer.
 - **65** *(Mechanism 3)* — The rulebook's worked examples run as tests.
 - **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`.
+- **92** *(Flag reconciliation, closes F9/F11/F12/F13/F16)* — Five "Ken alone" flags ruled in one sitting: shared General Major Milestones, Quick Study's Intuition Skill fix, the v3.5 Minor Milestones confirmed final, Vampire's Advantage restriction confirmed, Hemophiliac's Medical Skill wording.
 
 ### Archetypes & specialization
 

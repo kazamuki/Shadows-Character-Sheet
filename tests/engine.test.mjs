@@ -355,6 +355,26 @@ test("optionLock reaches skills on both sides of an exclusion (Decision 91)", ()
   } finally { D.skills.pop(); D.advantages.pop(); }
 });
 
+// F11 (Decision 92): Quick Study's prerequisite named an "Intuition
+// Advantage", but Intuition is a Skill in the catalog — no character could
+// ever hold an advantage id that doesn't exist, so the milestone was
+// permanently unobtainable. Exercised against the real catalog entry, not a
+// fixture, since this was a live data defect rather than untested machinery.
+test("Quick Study is obtainable once Intuition is checked as a Skill, not an Advantage (F11)", () => {
+  const m = D.milestones.majorGeneral.find(x => x.id === "quick-study");
+  assert.ok(m, "quick-study dropped from the catalog — update this test");
+  const ch = subject();
+  ch.progression.milestones.major.push({ id:"__any", date:new Date().toISOString() });
+  ch.advantages = [{ id:"danger-sense", rank:1, notes:"" }];
+
+  const missingIntuition = Engine.majorPrereqs(ch, m);
+  assert.equal(missingIntuition.ok, false, "should still gate on Intuition");
+
+  ch.skills.intuition = { rank:1, ipe:0 };
+  const withIntuition = Engine.majorPrereqs(ch, m);
+  assert.equal(withIntuition.ok, true, withIntuition.unmet.join(" | "));
+});
+
 test("picksFor scales the slot count with rank and setSelection refuses a duplicate", () => {
   withFixture(() => {
     const ch = subject();

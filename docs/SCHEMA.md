@@ -1340,6 +1340,37 @@ No cascade logic to maintain — it falls out of the architecture.
     skill-exclusion directions, mutation-tested against the pre-fix code
     (both failed there, both pass now) rather than only against post-fix
     behavior. (Ken + Claude, 2026-09-07)
+92. **(Flag reconciliation, closes F9/F11/F12/F13/F16)** **Five "Ken alone"
+    flags, ruled in one sitting.** These had sat through several batches
+    because none needed Deighton, only Ken's own call, and this session went
+    through them together instead of leaving them for a future one-off pass.
+    General Major Milestones are shared across every archetype (F9) — the
+    app already behaved this way (`sheet.js` never checked `growth.
+    majorMilestones` before offering `majorGeneral`), so this made the
+    per-archetype field honest (`"shared"` everywhere) rather than changing
+    behavior. Quick Study's prerequisite (F11) named an "Intuition Advantage"
+    that doesn't exist in the catalog — Intuition is a Skill — which made the
+    milestone permanently unobtainable; it now requires Intuition Skill rank
+    1+, alongside the existing Danger Sense Advantage requirement. The five
+    shared Minor Milestones (F12) are confirmed final at their REF_CRB v3.5
+    values rather than waiting on an unwritten Advancement section. Vampire's
+    `canPurchaseAdvantages: false` (F13) is confirmed, not merely inherited
+    from the Werewolf baseline — both supernatural archetypes share the
+    restriction. Hemophiliac's flavor text (F16) now says "Medical Skill
+    Check" instead of "First Aid", matching the Field Medic fix from the CRB
+    v4 content pass. All five are pure `shadows-data.js` edits — no engine or
+    UI code changed — since F9 and F11, the only two with mechanical weight,
+    were already read through generic machinery (`sheet.js`'s single
+    `majorGeneral` list; `checkPrereqs`, Decision 91). `engine.test.mjs`
+    gained a test exercising the real Quick Study catalog entry end to end
+    (not a synthetic fixture, since this was a live defect rather than
+    untested machinery), mutation-tested against the pre-fix data. No schema
+    bump, no `gamedataVersion` bump for F9/F12/F13/F16 (no computed value
+    changes for any character that could already take these entries) — F11
+    does change what's computable: Quick Study goes from never-takeable to
+    takeable, which is a `gamedataVersion` bump (Decision 68: content that
+    changes what a character can do). `APP_VERSION` untouched — nothing here
+    needed the app to change. (Ken + Claude, 2026-09-07)
 
 ## 5. Open Flags
 
@@ -1375,8 +1406,33 @@ CRB's "(INT / INT)" was a slip made while correcting Occult Lore and Survival of
 their derived-attribute synergies — and corrected the CRB. The data had carried
 INT/EMP all along, so nothing changed but the flag.
 
-Twelve entries in `shadows-data.js` carry `flagged: true` — Batch 3b added
-Long-Lived (F17).
+~~F9~~, ~~F11~~, ~~F12~~, ~~F13~~, ~~F16~~ closed in one sitting (Decision 92,
+the five "Ken alone" doc-reconciliation flags that had sat through several
+batches). **F9**: General Major Milestones are confirmed shared across every
+archetype — matching what the app already did, since `sheet.js` offered the
+same `majorGeneral` list to every archetype regardless of what each
+archetype's `growth.majorMilestones` said. That field carried a misleading mix
+("general" for Professional, `[]` for everyone else) that nothing ever read;
+it's `"shared"` everywhere now. **F11**: Quick Study's prerequisite named an
+"Intuition Advantage" that doesn't exist, so the milestone was permanently
+unobtainable — confirmed it meant the Intuition *Skill*, rank 1+, moved from
+`prerequisites.advantages.all` to `prerequisites.skills.all`. **F12**: the five
+shared Minor Milestones (Skilled, Improved, Talented, Redeemed, Honed),
+sourced from REF_CRB v3.5, are confirmed final rather than waiting on an
+Advancement section that doesn't exist yet in CRB v4. **F13**: Vampire's
+`canPurchaseAdvantages: false` is confirmed, not merely assumed from the
+Werewolf baseline — both supernatural archetypes carry the same restriction.
+**F16**: Hemophiliac's "First Aid Skill Check" is reworded to "Medical Skill
+Check", matching the Field Medic fix from the CRB v4 pass. None of these
+touched app code — F9 and F11 are the only two with mechanical weight, and
+both were already read generically (`checkPrereqs`, `sheet.js`'s
+`majorGeneral` list), so the fix in each case is entirely in `shadows-data.js`.
+`engine.test.mjs` gained a test exercising the real Quick Study entry (not a
+fixture), mutation-tested against the pre-fix data.
+
+Ten entries in `shadows-data.js` carry `flagged: true` — down from twelve:
+Decision 92 removed the two (Quick Study, Hemophiliac) that were fully
+resolved rather than merely reworded.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
@@ -1386,12 +1442,7 @@ Long-Lived (F17).
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD | Ken → docs | No |
 | F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling | Ken/D | **Wizard** |
-| F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
-| F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
-| F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
-| F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
-| F16 | **Hemophiliac calls for a "First Aid Skill Check"**; the catalog skill is **Medical**. Field Medic's half was fixed in the same pass, so this is the last real one. (A Professional milestone lists "First Aid" among tool/kit examples — prose, not a skill reference) | Ken → docs | No |
 | F17 | **Long-Lived's rank table reads as "Effect" per row, not "gain another"** — ambiguous whether ranks stack. Implemented as stacking (rank 3 = 2 Minor + 1 Major Milestone slots total), confirmed with Ken; needs Deighton's sign-off as the rules-authority call | Deighton | No |
 | F18 | **Weapons/Armor/Defense system** — `053_Combat Encounters.docx` (CRB v4) gives a first full pass: rolled PROT (armor's own defense roll), static RES added when damage type allows it (armor-piercing skips RES; enemy armor is static), a consumable Integrity pool (−1 per hit fully absorbed, plus a post-fight wear roll of 1d4–1d10), and separate Massive/Withering damage rules. Needs `Gear.docx` for actual item stats before it's engine-ready — direction exists now, a ruling doesn't yet | Ken/D/Scott | No |
 
