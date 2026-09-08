@@ -408,19 +408,28 @@ const Engine = (() => {
       return {ok:false, why:"May not repeat a Minor until each has been selected once."};
     return {ok:true};
   }
-  // Major prerequisites: machine-checkable parts are enforced; prose parts are
-  // surfaced for the table to adjudicate (returned in `manual`).
-  function majorPrereqs(ch, m){
-    const st = milestoneState(ch);
+  // One prerequisite vocabulary, one place it's checked (Decision 91). Milestone
+  // `prerequisites`, an advantage/disadvantage/skill's `requires`, and a
+  // Professional subtype's stat gate all speak the same shape; before this they
+  // were three copies that inevitably drifted (`requirementState` never learned
+  // `majorCount`/`milestones`/`gear`/`note`/`gmApproval`, so those fields in a
+  // `requires` block were silently treated as satisfied). Machine-checkable
+  // parts land in `met`/`unmet`; prose parts are surfaced for the table to
+  // adjudicate, in `manual`.
+  function checkPrereqs(ch, p){
     const met=[], unmet=[], manual=[];
-    if (st.majorTaken.some(t=>t.id===m.id)) unmet.push("Already taken — Majors are once each.");
-    const p = m.prerequisites||{};
+    if (!p) return { met, unmet, manual, ok:true };
+    if (p.stats) for (const [sid, need] of Object.entries(p.stats)){
+      const norm = normStat(sid);
+      const have = norm ? statValue(ch, norm) : 0;
+      (have>=need ? met : unmet).push(`${sid} ${need} (you have ${have})`);
+    }
     if (p.majorCount){
+      const st = milestoneState(ch);
       (st.majorTaken.length>=p.majorCount ? met : unmet)
         .push(`${p.majorCount} Major Milestone${p.majorCount>1?"s":""} taken`);
     }
     const skillName = id => (skillById(id)||{name:id}).name;
-    const advName   = id => (advById(id)||{name:id}).name;
     if (p.skills){
       if (p.skills.any){
         const ok = p.skills.any.some(([id,r])=> skillById(id) && skillLine(ch,id).rank>=r);
@@ -436,12 +445,12 @@ const Engine = (() => {
       if (p.advantages.all){
         const ok = p.advantages.all.every(([id,r])=>
           (ch.advantages||[]).some(a=>a.id===id && a.rank>=r));
-        (ok?met:unmet).push("Advantages: "+p.advantages.all.map(([id,r])=>`${advName(id)}${r>1?" "+r+"+":""}`).join(", "));
+        (ok?met:unmet).push("Advantages: "+p.advantages.all.map(([id,r])=>`${traitName(id)}${r>1?" "+r+"+":""}`).join(", "));
       }
       if (p.advantages.note) manual.push(p.advantages.note);
     }
     if (p.milestones){
-      const ok = p.milestones.every(id=>st.majorTaken.some(t=>t.id===id));
+      const ok = p.milestones.every(id=>milestoneState(ch).majorTaken.some(t=>t.id===id));
       const names = p.milestones.map(id=>((D().milestones.majorGeneral||[]).find(x=>x.id===id)||{name:id}).name);
       (ok?met:unmet).push("Milestone: "+names.join(", "));
     }
@@ -449,6 +458,14 @@ const Engine = (() => {
     if (p.note) manual.push(p.note);
     if (p.gmApproval) manual.push("Requires GM approval");
     return { met, unmet, manual, ok: unmet.length===0 };
+  }
+  // Major prerequisites: everything from checkPrereqs, plus the once-each rule
+  // that's about the milestone's own identity rather than its prerequisites.
+  function majorPrereqs(ch, m){
+    const already = milestoneState(ch).majorTaken.some(t=>t.id===m.id);
+    const r = checkPrereqs(ch, m.prerequisites||{});
+    const unmet = already ? ["Already taken — Majors are once each.", ...r.unmet] : r.unmet;
+    return { met:r.met, unmet, manual:r.manual, ok: unmet.length===0 };
   }
   function takeMilestone(ch, tier, id){
     if (tier==="minor"){
@@ -708,9 +725,13 @@ const Engine = (() => {
   }
   const heldRank = (ch, kind, id) =>
     entryCopies(ch, kind, id).reduce((s,x)=>s + Math.max(0, x.rank||0), 0);
-  const traitName = id => (advById(id) || disById(id) || {name:id}).name;
+  const traitName = id => (advById(id) || disById(id) || skillById(id) || {name:id}).name;
+  // Skills host picks (Martial Arts styles) same as advantages/disadvantages, so
+  // they belong in the held set too — otherwise a skill can never take part in
+  // an excludes/requires pair (Decision 91, engine.js heldIds).
   const heldIds = ch => [...(ch.advantages||[]), ...(ch.disadvantages||[])]
-    .filter(x=>x && x.rank>0).map(x=>x.id);
+    .filter(x=>x && x.rank>0).map(x=>x.id)
+    .concat(Object.entries(ch.skills||{}).filter(([,l])=>l && l.rank>0).map(([id])=>id));
 
   // Mutual lock. Symmetric by construction: A excluding B locks B against A
   // even though B's entry says nothing, so the rule is stated once in the data.
@@ -721,39 +742,18 @@ const Engine = (() => {
     for (const other of (def.excludes||[]))
       if (held.includes(other)) return { locked:true, by:traitName(other) };
     for (const h of held){
-      const d = advById(h) || disById(h);
+      const d = advById(h) || disById(h) || skillById(h);
       if (d && (d.excludes||[]).includes(id)) return { locked:true, by:traitName(h) };
     }
     return { locked:false, by:null };
   }
 
   // Gating. Deliberately the same vocabulary as milestone prerequisites, so
-  // there is one way to say "you need REF 6" in this data file, not two.
+  // there is one way to say "you need REF 6" in this data file, not two
+  // (Decision 91 — routes through checkPrereqs).
   function requirementState(ch, kind, id){
-    const def = defFor(kind, id), met = [], unmet = [];
-    const p = (def||{}).requires;
-    if (!p) return { met, unmet, ok:true };
-    const skillName = sid => (skillById(sid)||{name:sid}).name;
-    if (p.stats) for (const [sid, need] of Object.entries(p.stats)){
-      const norm = normStat(sid);
-      const have = norm ? statValue(ch, norm) : 0;
-      (have>=need ? met : unmet).push(`${sid} ${need} (you have ${have})`);
-    }
-    if (p.skills){
-      if (p.skills.any){
-        const ok = p.skills.any.some(([sid,r])=> skillById(sid) && skillLine(ch,sid).rank>=r);
-        (ok?met:unmet).push("Skill: "+p.skills.any.map(([sid,r])=>`${skillName(sid)} ${r}+`).join(" or "));
-      }
-      if (p.skills.all){
-        const ok = p.skills.all.every(([sid,r])=> skillById(sid) && skillLine(ch,sid).rank>=r);
-        (ok?met:unmet).push("Skills: "+p.skills.all.map(([sid,r])=>`${skillName(sid)} ${r}+`).join(" and "));
-      }
-    }
-    if (p.advantages && p.advantages.all){
-      const ok = p.advantages.all.every(([tid,r])=>(ch.advantages||[]).some(x=>x.id===tid && x.rank>=r));
-      (ok?met:unmet).push("Advantages: "+p.advantages.all.map(([tid,r])=>traitName(tid)+(r>1?" "+r+"+":"")).join(", "));
-    }
-    return { met, unmet, ok: unmet.length===0 };
+    const def = defFor(kind, id);
+    return checkPrereqs(ch, (def||{}).requires);
   }
 
   // The option list a pick draws from. `from.ids` is a fixed list (Common
@@ -944,10 +944,11 @@ const Engine = (() => {
       }
       if (a.id==="professional"){
         const sub = (a.specialization.options||[]).find(o=>o.id===specializationIds(ch)[0]);
-        if (sub && sub.requiredStats){
-          for (const [sid,req] of Object.entries(sub.requiredStats)){
-            if (statValue(ch,sid) < req) E(`${sub.name} requires ${sid} ${req} (you have ${statValue(ch,sid)}).`);
-          }
+        // Decision 91: the subtype's stat gate is requires data, not its own
+        // special-cased check — same vocabulary checkPrereqs already speaks.
+        if (sub && sub.requires){
+          const r = checkPrereqs(ch, sub.requires);
+          for (const u of r.unmet) E(`${sub.name} requires ${u}.`);
         }
         if (sub){
           const chooseN = (sub.focusedSkills||[]).filter(f=>/chosen at creation/i.test(f));
@@ -1000,6 +1001,9 @@ const Engine = (() => {
           if (lock.locked) E(`${def.name} and ${lock.by} can't be taken together.`);
           const req = requirementState(ch, kind, entry.id);
           if (!req.ok) E(`${def.name} requires ${req.unmet.join("; ")}.`);
+          // Prose prerequisites (gear/note/gmApproval) are the table's call, same
+          // as a milestone's manual prereqs — warned, never blocked (Decision 91).
+          for (const m of req.manual) W(`${def.name} — ${m}`);
           for (const st of picksFor(ch, kind, entry.id)){
             if (st.complete) continue;
             const label = st.pick.label || def.name;
