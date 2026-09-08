@@ -53,7 +53,7 @@ Work is organised in batches. Each is a coherent unit with its own branch.
 | — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor · Decision 86 |
 | 3b | `grants` | ✅ merged (#16) | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
 | — | Printable sheet + demo hosting | ✅ merged (#17) | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
-| — | Light theme toggle | ✅ on branch, not yet a PR | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
+| — | Light theme toggle | ✅ merged (#18) | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
 | 4 | Cyborg as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
 
 **Printable sheet + demo hosting (#17) is merged.** `Sheet.renderPrintView(ch?)`
@@ -71,7 +71,7 @@ to "GitHub Actions", add the custom domain, and add the matching Squarespace
 DNS record for `charactersheet.shadowsrpg.com`. The Shadows-RPG-Site link is
 deliberately not added until that resolves.
 
-**Light theme toggle is done on this branch, not yet opened as a PR.** Same
+**Light theme toggle is merged (#18).** Same
 `data-theme` mechanism as getdangerousgames.com and shadowsrpg.com — blocking
 pre-paint script, localStorage persistence, sun/moon header button — ported
 onto this app's own token names rather than their shared token set (Decision
@@ -162,8 +162,8 @@ when the first entry needs them.
 
 ## 5. Where to start
 
-**`main` is caught up through PR #17** — `grants` (3b), the Cyborg/Biomech docs
-fix, and the printable sheet + demo-hosting work have all landed; `npm run
+**`main` is caught up through PR #18** — `grants` (3b), the printable sheet +
+demo-hosting work, and the light theme toggle have all landed; `npm run
 verify` is green (96 passing, 0 todo).
 
 **Batch 4 (Cyborg rewrite) is next**, but needs the design ruling from Ken +
