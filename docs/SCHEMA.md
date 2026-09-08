@@ -1310,6 +1310,36 @@ No cascade logic to maintain — it falls out of the architecture.
     `tests/build.test.mjs`. No schema bump, no `gamedataVersion` bump (no
     computed value changed); `APP_VERSION` **0.9.0 → 0.10.0** minor (a player
     can now do something new). (Ken + Claude, 2026-09-07)
+91. **(PR #7 review, closed)** **One prerequisite vocabulary, checked in one
+    place.** The rev-9 adversarial review found `requirementState` (an
+    advantage/disadvantage/skill's `requires`) reimplementing `majorPrereqs`
+    (a milestone's `prerequisites`) rather than sharing it, so fields the
+    milestone side already understood — `majorCount`, `milestones`, `gear`,
+    `note`, `gmApproval` — were silently treated as satisfied in a `requires`
+    block, because `requirementState` never read them at all. Both now call a
+    single `checkPrereqs(ch, p)`; `majorPrereqs` adds only the "already
+    taken" check, which is about the milestone's identity, not its
+    prerequisites.
+    The same review found the Professional stat gate special-cased as its own
+    `if (a.id==="professional")` stat loop, duplicating `requirementState`
+    instead of using it — exactly the per-archetype special-casing Decision
+    79 (A3) set out to end. Fixed by renaming the subtype field from
+    `requiredStats` to `requires: { stats: {...} }` (8 sites in
+    `shadows-data.js`) and routing the gate through `checkPrereqs`; the
+    `if (a.id==="professional")` branch itself stays, since Professional is
+    still the only archetype with a specialization-level gate to check, but
+    the stat-check code inside it is gone.
+    Third: `optionLock`'s `heldIds` scanned only advantages and disadvantages,
+    so a skill could never appear on either side of an `excludes` pair even
+    though skills host `picks` the same way. `heldIds` now folds in held
+    skills, and `traitName` and the exclusion lookup resolve skill ids too.
+    No entry in the data declares `excludes`/`requires`/`prerequisites`
+    beyond the synthetic test fixtures (Decision 77), so none of this was
+    reachable by a player — it closes debt, not a live bug. Two new tests in
+    `engine.test.mjs` exercise the previously-ignored fields and the
+    skill-exclusion directions, mutation-tested against the pre-fix code
+    (both failed there, both pass now) rather than only against post-fix
+    behavior. (Ken + Claude, 2026-09-07)
 
 ## 5. Open Flags
 

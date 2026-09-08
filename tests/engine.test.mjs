@@ -307,6 +307,54 @@ test("requirementState reports what is missing, with the number the player has",
   });
 });
 
+// Decision 91: requirementState used to reimplement majorPrereqs's checks
+// rather than share them, so a `requires` block naming `majorCount`,
+// `milestones`, `gear`, `note` or `gmApproval` was silently treated as met —
+// none of those fields were even read. Both machine-checkable (majorCount,
+// blocking) and prose (gmApproval, non-blocking but surfaced) fields are
+// exercised here so a regression to the old per-function duplication shows up
+// as a real assertion failure, not a passing test that never looked.
+test("requirementState checks the full prerequisite vocabulary, not just stats/skills/advantages", () => {
+  const adv = { id:"__fixture-c", name:"Fixture C", cost:1, maxRank:1, description:"",
+                requires:{ majorCount:1, gmApproval:true } };
+  D.advantages.push(adv);
+  try {
+    const ch = subject();
+    const before = Engine.requirementState(ch, "advantage", "__fixture-c");
+    assert.equal(before.ok, false, "majorCount:1 must gate with zero Majors taken");
+    assert.ok(before.unmet.some(u => /1 Major Milestone taken/.test(u)), before.unmet.join(" | "));
+    assert.ok(before.manual.includes("Requires GM approval"), before.manual.join(" | "));
+
+    ch.progression.milestones.major.push({ id:"__any", date:new Date().toISOString() });
+    const after = Engine.requirementState(ch, "advantage", "__fixture-c");
+    assert.equal(after.ok, true, "one Major taken should satisfy majorCount:1");
+    assert.ok(after.manual.includes("Requires GM approval"), "gmApproval stays a manual note, not a block");
+  } finally { D.advantages.pop(); }
+});
+
+// Decision 91: heldIds only scanned advantages/disadvantages, so a skill could
+// never appear on either side of an excludes pair even though skills host
+// picks the same way. Exercise both directions with a real fixture skill.
+test("optionLock reaches skills on both sides of an exclusion (Decision 91)", () => {
+  const skill = { id:"__fixture-skill", name:"Fixture Skill", category:"combat",
+                   primaryStat:"REF", description:"", excludes:["__fixture-a"] };
+  const adv = { id:"__fixture-a", name:"Fixture A", cost:1, maxRank:2, description:"" };
+  D.skills.push(skill); D.advantages.push(adv);
+  try {
+    const ch = subject();
+    ch.skills["__fixture-skill"] = { rank:1, ipe:0 };
+    // Direction: the advantage says nothing, but the held skill excludes it.
+    const lockA = Engine.optionLock(ch, "advantage", "__fixture-a");
+    assert.equal(lockA.locked, true, "a held skill's excludes must lock the other side");
+    assert.equal(lockA.by, "Fixture Skill");
+    // Direction: the skill's own excludes fires when the advantage is held.
+    ch.advantages = [{ id:"__fixture-a", rank:1, notes:"" }];
+    const lockSkill = Engine.optionLock(ch, "skill", "__fixture-skill");
+    assert.equal(lockSkill.locked, true, "a skill's own excludes must fire against a held advantage");
+    assert.equal(lockSkill.by, "Fixture A");
+  } finally { D.skills.pop(); D.advantages.pop(); }
+});
+
 test("picksFor scales the slot count with rank and setSelection refuses a duplicate", () => {
   withFixture(() => {
     const ch = subject();
