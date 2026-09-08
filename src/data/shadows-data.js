@@ -2060,7 +2060,7 @@ window.SHADOWS_DATA = {
       "name": "Professional",
       "status": "draft",
       "primaryStats": [],
-      "primaryStatsNote": "Varies by profession Subtype (see requiredStats per subtype).",
+      "primaryStatsNote": "Varies by profession Subtype (see requires.stats per subtype).",
       "summary": "The quintessential human. Focusing on adaptability, Professionals make a living working in NYTE City and have become experts at surviving. They bring skills, techniques and Tweaks to situations that expect a mundane human; Professionals teach them otherwise.",
       "gameplayStyle": "Professionals thrive on preparation and precision. Where others rely on supernatural gifts or tech, you rely on training, foresight, and execution. You excel in skill-driven play, turning planning, equipment, and expertise into decisive advantages.",
       "lore": "No bloodline. No implants rewriting their nervous system. No covenant with forces older than language. Just a person who decided that wasn't going to be enough of a reason to lose. They are not the most powerful thing in any room. They are frequently the most dangerous.",
@@ -2137,10 +2137,10 @@ window.SHADOWS_DATA = {
             "id": "cleaner",
             "name": "Cleaner",
             "description": "Cleaners are killers. No other way to say it. A lucrative vocation, but only for those who can remain unseen and undetected.",
-            "requiredStats": {
+            "requires": { "stats": {
               "BOD": 6,
               "REF": 8
-            },
+            } },
             "focusedSkills": [
               "Acrobatics",
               "Combat Sense",
@@ -2161,11 +2161,11 @@ window.SHADOWS_DATA = {
             "id": "enforcer",
             "name": "Enforcer",
             "description": "Policeman, thug, bodyguard, or vigilante - you ply your trade dealing with threats in a calculated way, looking for a weakness to exploit. Your teacher was life itself.",
-            "requiredStats": {
+            "requires": { "stats": {
               "REF": 5,
               "MOB": 7,
               "BOD": 8
-            },
+            } },
             "focusedSkills": [
               "Athletics",
               "Combat Sense",
@@ -2186,10 +2186,10 @@ window.SHADOWS_DATA = {
             "id": "fence",
             "name": "Fence",
             "description": "You have a network of people who bring you things you can't get anywhere else - and the people of this world trust you. As part of the underworld economy, you can purchase extremely rare, high quality items.",
-            "requiredStats": {
+            "requires": { "stats": {
               "INT": 7,
               "MAG": 7
-            },
+            } },
             "focusedSkills": [
               "Awareness",
               "Combat Sense",
@@ -2210,10 +2210,10 @@ window.SHADOWS_DATA = {
             "id": "jack-of-all-trades",
             "name": "Jack of All Trades",
             "description": "You've adapted to a way of life that allows you to pick up skills quickly - the quality of being a genius with the capacity for comprehending even complex skills.",
-            "requiredStats": {
+            "requires": { "stats": {
               "INT": 9,
               "COOL": 7
-            },
+            } },
             "focusedSkills": [],
             "tweak": {
               "name": "Master of None",
@@ -2229,10 +2229,10 @@ window.SHADOWS_DATA = {
             "id": "mercenary",
             "name": "Mercenary",
             "description": "People who sell their talent for the craft of combat to the highest bidder. An abundance of training and mental conditioning makes them a good commodity.",
-            "requiredStats": {
+            "requires": { "stats": {
               "BOD": 6,
               "REF": 7
-            },
+            } },
             "focusedSkills": [
               "Athletics",
               "Awareness",
@@ -2254,11 +2254,11 @@ window.SHADOWS_DATA = {
             "id": "slayer",
             "name": "Slayer",
             "description": "Slayers dedicate themselves to killing the supernatural forces of darkness. They learn how they operate, who they feed on, and how to kill them efficiently.",
-            "requiredStats": {
+            "requires": { "stats": {
               "INT": 7,
               "BOD": 5,
               "EMP": 7
-            },
+            } },
             "focusedSkills": [
               "Athletics",
               "Combat Sense",
@@ -2281,10 +2281,10 @@ window.SHADOWS_DATA = {
             "id": "true-warrior",
             "name": "True Warrior",
             "description": "A life spent in practice and training. The body isn't just physical, but spiritual: True Warriors draw upon their own life force, Chi, to perform incredible feats.",
-            "requiredStats": {
+            "requires": { "stats": {
               "BOD": 8,
               "REF": 7
-            },
+            } },
             "focusedSkills": [
               "Acrobatics",
               "Combat Sense",
@@ -2309,10 +2309,10 @@ window.SHADOWS_DATA = {
             "id": "wheelman",
             "name": "Wheelman",
             "description": "A calling to live on the edge of the world with nothing but skill and adrenaline - and a kinship with machines that can push any vehicle beyond normal limits.",
-            "requiredStats": {
+            "requires": { "stats": {
               "BOD": 6,
               "REF": 9
-            },
+            } },
             "focusedSkills": [
               "Athletics",
               "Awareness",

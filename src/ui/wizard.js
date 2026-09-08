@@ -231,9 +231,9 @@ function renderArchetype(){
     h += sel.specialization.options.map(o=>{
       const seld = picked.includes(o.id);
       let req = "";
-      if (o.requiredStats){
-        const unmet = Object.entries(o.requiredStats).filter(([sid,r])=>Engine.statValue(ch,sid)<r);
-        req = `<span class="cost ${unmet.length?"":"grant"}">requires ${Object.entries(o.requiredStats).map(([s,r])=>s+" "+r).join(", ")}</span>`;
+      if (o.requires && o.requires.stats){
+        const unmet = Object.entries(o.requires.stats).filter(([sid,r])=>Engine.statValue(ch,sid)<r);
+        req = `<span class="cost ${unmet.length?"":"grant"}">requires ${Object.entries(o.requires.stats).map(([s,r])=>s+" "+r).join(", ")}</span>`;
       }
       return `<div class="pick ${seld?"selected":""}">
         <div class="head"><h4>${esc(o.name)}</h4>${req}
