@@ -1,9 +1,9 @@
 # State of the build
 
-**Updated:** 2026-09-07
-**Versions:** app `0.10.0` · game data `0.5` · character schema `0.5` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-12
+**Versions:** app `0.10.0` · game data `0.6` · character schema `0.6` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **98 passing, 0 todo, 0 failing** (98 tests, six files)
+**Suite:** `npm run verify` → **101 passing, 0 todo, 0 failing** (101 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -28,7 +28,8 @@ architecture and is enforced by tests.
 and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, the session log,
 loadout, `grants`, an undo-able audit trail, and now a printable sheet — filled
 or blank — for a player who wants paper. The engine reproduces the CRB's own
-worked examples (`tests/rules.test.mjs`).
+worked examples (`tests/rules.test.mjs`). Game data now also carries a full
+weapons/ammunition/armor catalog (Decision 92) — not yet wired to any UI.
 
 **No known player-facing defect.** The three machinery gaps the PR #7 review
 found are closed (Decision 91) — none was reachable with current data, so none
@@ -36,49 +37,34 @@ ever bit a player.
 
 ---
 
-## 2. The board
+## 2. The board — shipped work
 
-Work is organised in batches. Each is a coherent unit with its own branch.
+History, not a queue: each row already merged (or is done on this branch,
+awaiting a PR). **What's not yet done is organized by topic in §3, not by
+batch number** — "Batch 4" meant Cyborg specifically from Batch 3 onward,
+which read oddly once other work queued ahead of it. Ken flagged this
+2026-09-12; §3 is the fix.
 
-| # | Batch | Status | What it is |
+| # | Batch | Merged | What it is |
 |---|---|---|---|
-| — | Quick wins | ✅ merged (#5) | B2, B4, B5 · Decisions 59–61 |
-| 1 | Engine totality & CRB conformance | ✅ merged (#5) | B3, B6–B10, stale F10 · Decisions 62–68 |
-| 2 | App voice & status copy | ✅ merged (#6) | B1 + nine sibling leak sites · Decisions 69–73 |
-| — | Docs restructure + versioning | ✅ merged (#6) | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
-| 3 | Selection & constraint system | ✅ merged (#7) | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
-| 3a | Ledger attention state | ✅ merged (#10) | Third row state (done/active/attention) + callout · Decision 83 |
-| — | Dev-preview tooling | ✅ merged (#11) | `tools/devserver.mjs` for browser-tool UI verification |
-| — | CRB v4 reference mirror | ✅ merged (#13) | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85 |
-| — | Decompose `src/ui/app.js` | ✅ merged (#15) | Decision 54's deferred refactor · Decision 86 |
-| 3b | `grants` | ✅ merged (#16) | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
-| — | Printable sheet + demo hosting | ✅ merged (#17) | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
-| — | Light theme toggle | ✅ merged (#18) | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
-| 4 | Cyborg as data | ⏭ **next** | F6 lands as a data entry, not a fourth special case. Needs the design ruling first |
+| — | Quick wins | #5 | B2, B4, B5 · Decisions 59–61 |
+| 1 | Engine totality & CRB conformance | #5 | B3, B6–B10, stale F10 · Decisions 62–68 |
+| 2 | App voice & status copy | #6 | B1 + nine sibling leak sites · Decisions 69–73 |
+| — | Docs restructure + versioning | #6 | STATE replaces HANDOFF; four-version model · Decisions 74–76 |
+| 3 | Selection & constraint system | #7 | `picks`/`excludes`/`requires` + A3 → closed A1, A2, the last `todo` · Decisions 77–82 |
+| 3a | Ledger attention state | #10 | Third row state (done/active/attention) + callout · Decision 83 |
+| — | Dev-preview tooling | #11 | `tools/devserver.mjs` for browser-tool UI verification |
+| — | CRB v4 reference mirror | #13 | `docs/reference/crb/` + voice guide re-pull · Decisions 84–85 |
+| — | Decompose `src/ui/app.js` | #15 | Decision 54's deferred refactor · Decision 86 |
+| 3b | `grants` | #16 | Educated, Hard to Kill, Lucky/Unlucky, Long-Lived · Decisions 87–88, F17 |
+| — | Printable sheet + demo hosting | #17 | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
+| — | Light theme toggle | #18 | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
+| — | PR #7 adversarial review | #19 | Decision 91 — machinery gaps closed, not player-visible (§4) |
+| — | Weapons, Ammo & Armor (data) | this branch | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
 
-**Printable sheet + demo hosting (#17) is merged.** `Sheet.renderPrintView(ch?)`
-renders the universal three pages — Character Info/Stats/Combat/Health/Defense,
-full Skills, Weapons/Gear/Advantages/Disadvantages/Notes — from a live
-character, or with none passed, a blank fillable template built from game data
-alone. Defense ships blank either way with a plain note, not a guess: the app
-has no armor model yet, tracked now as **F18** (a real first design pass
-exists in `053_Combat Encounters.docx`, but it needs `Gear.docx` before it's
-engine-ready). A second build artifact, `dist/shadows-blank-sheet.html`, lets
-someone download just the blank sheet with no app in the loop, and a new
-`deploy-demo.yml` workflow publishes both `dist/` files to GitHub Pages on tag.
-**Demo hosting isn't live yet** — it needs Ken to set the GitHub Pages source
-to "GitHub Actions", add the custom domain, and add the matching Squarespace
-DNS record for `charactersheet.shadowsrpg.com`. The Shadows-RPG-Site link is
-deliberately not added until that resolves.
-
-**Light theme toggle is merged (#18).** Same
-`data-theme` mechanism as getdangerousgames.com and shadowsrpg.com — blocking
-pre-paint script, localStorage persistence, sun/moon header button — ported
-onto this app's own token names rather than their shared token set (Decision
-90 explains why). `dist/shadows-character-sheet.html` inherits it automatically
-since the build just inlines whatever `index.html` references; the blank-sheet
-print artifact was deliberately left alone, since it's a print preview meant
-to always look like paper.
+**Demo hosting isn't live yet** (Printable sheet + demo hosting, #17) — needs
+Ken's GitHub Pages source set to "GitHub Actions" plus the Squarespace DNS
+record for `charactersheet.shadowsrpg.com`.
 
 **Two things a next session should know.**
 
@@ -88,51 +74,36 @@ to always look like paper.
 - **Thick Skin is held out.** It grants Natural Armor; four places in the
   data already grant Natural Armor in prose (Thick Skin, Iron Shirt, an archetype
   effect, an archetype benefit) — one real derived value, not a Thick Skin
-  special case, once the armor system (F18) lands. Until then it ships as text.
-
-**F8 is not a gate on any of this.** It blocks a player finishing the stats step.
-Chase it on its own track.
+  special case, once the armor engine (§3, Gear & Combat) lands. Until then
+  it ships as text.
 
 ---
 
-## 3. Who can clear what
+## 3. Areas of work
 
-### Ken alone — no external input
+Grouped by what part of the app or ruleset they touch, not by who owns
+them — a status and what's blocking it travel with the topic, so picking up
+work as a flag resolves doesn't mean re-deriving which batch it belonged to.
+This is the pick-up-work view; `SCHEMA.md` §5 is the authority on a flag's
+full text.
 
-| Item | What |
-|---|---|
-| F9 | Are "General Milestones" shared across archetypes, or Professional-only? Data treats them as shared |
-| F11 | Quick Study requires an "Intuition Advantage" — Intuition is a *Skill* |
-| F12 | Minor Milestones sourced from REF v3.5; the WIP defers to an unwritten Advancement section |
-| F13 | Vampire `canPurchaseAdvantages: false` — assumed from the Werewolf baseline, confirm |
-| F16 | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is **Medical** |
+**Legend:** ✅ done · ⏭ ready (nothing external blocks starting) · 🔶 partial/stable · ⏸ blocked
 
-These five are doc reconciliation and have sat through several sessions of work
-that could not touch them. Good candidate for a low-friction session.
+| Area | Status | Waiting on |
+|---|---|---|
+| **Gear & Combat** | ✅ catalog merged (Decision 92) · ⏭ engine + Loadout UI ready | Nothing external. MD1/2/3 ratings (Design, small) don't block starting the engine half |
+| **Creation-pool economics** — F1, F2, F8, F14 | 🔶 stubbed/scaled, working | Deighton. **F8 is the only wizard-blocker**; ask F1/F2/F8/F14 together, one context-load |
+| **Milestones & doc reconciliation** — F9, F11, F12, F13, F16 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
+| **Advantages/Disadvantages fine print** — F17, the lock-out question | 🔶 mostly settled | Deighton. F17 needs sign-off as rules authority; nothing in the CRB names an `excludes` pair yet, so none is invented |
+| **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
+| **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
+| **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
+| **Arcanist / Magic** | ⏸ blocked · `status: "draft"` · no F-number yet | Deighton + Scott + Bill + Ken — subtypes/spheres/implements open per the 2026-09-10 meeting; waits on the four-way question comparison its own action items call for |
+| **Engine internals** — unnumbered statMod flag | 🔶 known disagreement | Deighton. `statMod()` extrapolates +1/point past 10; `beyondHumanLimits` text says gains "slow down" — code-comment only, no F-number |
 
-### Needs Deighton — ask these together, not one at a time
-
-One philosophical answer often clears several, and asking separately invites
-four separate context-loads.
-
-| Item | Question |
-|---|---|
-| **F8** | Stat Point roll — flat `3d10+30` at every level, or the REF table that scales (`30+2d10` … `60+5d10`)? Data uses the scaled table. **The only wizard-blocker**, and four numbers either way |
-| F1 | LUCK buy-up cost in CP per point (stubbed 1:1) |
-| F2 | CP boost exchange rate across skills / stats / powers (stubbed 1:1) |
-| F14 | Skill IP at rank 0 — "5 × current rank" prices a new skill at zero; the app charges the rank-1 price |
-| F17 | Long-Lived's rank table reads "Effect" per row, not "gain another" — implemented as stacking (rank 3 = 2 Minor + 1 Major), confirmed with Ken, needs Deighton's sign-off as rules authority |
-| *(new)* | Does any Advantage or Disadvantage **lock out** another? The machinery is built and tested; nothing in the CRB names a pair, and inventing one would be resolving a rules question in code |
-| *(unnumbered)* | `statMod()` extrapolates **+1 per point above 10**, but `statRules.beyondHumanLimits` says gains *"slow down"* past 10. These disagree, and this flag exists only as a code comment — it has no F-number and is not in the table |
-
-### Design work — Ken with Deighton and Scott
-
-| Item | What |
-|---|---|
-| F6 | Cyborg rewrite — NCI tiers, Set Bonuses, Kicker Dice, TOL pressure. Ships as `status: "tbd"`. Batch 4 |
-| F7 | SFR per archetype — Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool open |
-| F18 | Weapons/Armor/Defense — `053_Combat Encounters.docx` gives a first real pass (rolled PROT, static RES, consumable Integrity, AP/Massive/Withering rules). Needs `Gear.docx` for actual item stats before it's engine-ready. Printable sheet's Defense panel ships blank until then |
-| F5 | Cyber-Prophetical (SAN vs TOL) — the last quarter of F5. Waits on F6; don't ask separately |
+F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
+Advantages/Disadvantages item and wholly waits on Cyborg's ruling; don't ask
+it separately.
 
 Archetype status in the data: `arcanist: draft · professional: draft ·
 werewolf: draft · cyborg: tbd · vampire: tbd`.
@@ -147,37 +118,26 @@ any id means and whether it is still live.
 
 ### PR #7 adversarial review — closed (Decision 91)
 
-All three machinery gaps are fixed. `requirementState` and `majorPrereqs` now
-share one `checkPrereqs(ch, p)` core, so a `requires`/`prerequisites` block's
-`majorCount`, `milestones`, `gear`, `note` and `gmApproval` are read the same
-way everywhere instead of being silently treated as satisfied wherever the
-duplicate check hadn't caught up. The Professional stat gate reads
-`sub.requires.stats` through the same core instead of its own loop — the
-subtype data was renamed from `requiredStats` (8 sites) to `requires: {
-stats: {...} }`, and `wizard.js`'s display of that gate follows. `heldIds` now
-scans held skills too, so a skill can sit on either side of an `excludes`
-pair, matching the advantages/disadvantages it was missing next to. No entry
-in the data uses any of this yet — no `excludes`/`requires` pair beyond the
-test fixtures, per Decision 57 — so this closes real debt without being
-player-visible today. Two new fixture-based tests in `engine.test.mjs` prove
-each fix against the pre-fix code (mutation-tested), not just that the suite
-still passes.
+All three machinery gaps (`requirementState`/`majorPrereqs` duplication, the
+Professional stat gate's own stat loop, `heldIds` missing skills) are fixed
+and mutation-tested. Full account in `log/2026.md` and `SCHEMA.md` Decision
+91. Not player-visible today — no entry uses `excludes`/`requires` beyond the
+test fixtures (Decision 57).
 
 ---
 
 ## 5. Where to start
 
-**`main` is caught up through PR #18** — `grants` (3b), the printable sheet +
-demo-hosting work, and the light theme toggle have all landed. The PR #7
-machinery-gap fixes (Decision 91, §4) are done on this branch, not yet a PR.
-`npm run verify` is green (98 passing, 0 todo).
+**`main` is caught up through PR #19** — `grants` (3b), the printable sheet +
+demo-hosting work, the light theme toggle, and the PR #7 machinery-gap fixes
+(Decision 91) have all landed. The Weapons/Ammo/Armor data batch (Decision
+92, §2) is done on this branch, not yet a PR. `npm run verify` is green
+(101 passing, 0 todo).
 
-**Batch 4 (Cyborg rewrite) is next**, but needs the design ruling from Ken +
-Deighton + Scott before there's data to encode (F6, §3). Demo hosting needs
-Ken's GitHub Pages / DNS setup before the Shadows-RPG-Site link can go in (§2).
-
-If you want a session with no dependencies at all, the five doc-reconciliation
-flags in §3 have now waited through several batches.
+**Two areas in §3 have no external block right now:** Gear & Combat (the
+engine + Loadout UI half — the natural continuation of what just merged) and
+Milestones & doc reconciliation (Ken alone, zero-dependency). Cyborg, Vampire
+and Arcanist/Magic all wait on people outside this session.
 
 ---
 
@@ -194,5 +154,10 @@ telling cold sessions "20 passing, 2 todo" when the real figure was 51/1, and
   this file are checked against reality, the flag table is checked against
   `flagged: true` in the data (which is how F10 stayed live for four days after
   the docs closed it), and every file `CLAUDE.md` points at must exist.
+- **§3 is organized by topic, not by sequence, on purpose (2026-09-12).** A
+  batch number implies "next in line"; several areas here are blocked on
+  different people and resolve in whatever order those people answer. Don't
+  reintroduce a `#` column to §3 — if a strict next-up order is ever needed
+  again, say so in prose rather than implying it with numbering.
 - **Close a session by rewriting §1–§5 here** and appending to `log/2026.md`, in
   the same commit as the code.
