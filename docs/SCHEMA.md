@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.5 (game data 0.4) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-03 (Batch 3 — selection & constraint system, A3)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.6 (game data 0.6) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-12 (Weapons, Ammo & Armor data batch)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -289,7 +289,59 @@ window.SHADOWS_DATA = {
     skillCost: "5 * currentRank",     // focused skills: 3 * currentRank (WIP Professional)
     rankCap: 10,                      // skills & powers cap at 10 via IP
     cannotRaiseDirectly: ["WILL", "TOL"]
-  }
+  },
+
+  // ── Gear: weapons, ammunition, armor (0.6) ────────────────
+  // Merged from the CRB v4 equipment chapter (docs/reference/crb/Gear.md).
+  // One flat `weapons` array with a `category` discriminator, same shape as
+  // `skills` — a new weapon needs zero app changes. Tags/Features are stored
+  // as the exact strings the book prints (including any "(Xm)" parameter)
+  // rather than forced into a fixed id set; *Glossary arrays give the
+  // base-name definition for display. A few tags used in weapon tables have
+  // no formal CRB definition (Suppression, Blast, Anti-Materiel, "Reach" as
+  // a tag) and carry `flagged: true` rather than an invented rule.
+  weapons: [
+    { id: "combat-knife", name: "Combat Knife", category: "melee", skill: "melee",
+      damage: "BOD+3", style: "Blade", reach: "1m", parry: null, damageType: "Normal",
+      availability: "Common", cost: 100, tags: ["Conceal"], features: [],
+      flavorLine: "..." }
+    // 54 entries: melee/martialArts/handguns/smgs/grenades/urbanRifles/
+    // shotguns/sniperRifles/heavyWeapons/beamSidearms/beamLongarms/
+    // beamSpecialist/beamHeavy/archery. Ranged categories use acc/range/rof/
+    // capacity/mods instead of style/reach/parry/damageType; grenades use
+    // radius instead of acc/range/rof/capacity.
+  ],
+  weaponTagGlossary: [ { id: "AP", description: "..." } ],       // 29 entries
+  weaponFeatureGlossary: [ { id: "Scope", description: "..." } ], // 6 entries
+  weaponModGlossary: [ { id: "Silencer", slots: 1, description: "..." } ], // 7 entries
+  ammunition: [ { id: "handgun-rounds", name: "Handgun Rounds", weaponType: "Handgun",
+    availability: "Common", cost: "15Ç/mag", flavorLine: "..." } ],       // 9 entries
+  arrowheads: [ { id: "barbed-tip", name: "Barbed Tip", effect: "Base weapon DMG",
+    tags: ["Bleeding"], availability: "Uncommon", cost: "100Ç/6" } ],     // 11 entries
+
+  // PROT is a die the player rolls physically (Decision 11 — the app never
+  // rolls dice); RES is a flat reduction; INT is a depleting resource.
+  // `armorRules` documents the mechanic as reference text/formulas the way
+  // ip.statCost documents IP math — no engine code executes any of it yet
+  // (that lands with the engine batch). Head/Hand armor doesn't roll PROT or
+  // track INT at all; it grants a named `feature` instead.
+  armorRules: {
+    protNote: "...", resNote: "...", integrityNote: "...",
+    integrityLossByDifficulty: { easy: "1d4", medium: "1d6", hard: "1d8", legendary: "1d10" },
+    compromisedNote: "...", repairNote: "..."
+  },
+  armorFeatureGlossary: [ { id: "Concealable", description: "..." } ],  // 10 entries
+  armorUpgradeGlossary: [ { id: "Tri-Weave", minQuality: "Mid", description: "..." } ], // 6 entries
+  armor: [
+    { id: "kevlar-vest", name: "Kevlar Vest", slot: "body", coverage: "light",
+      prot: "1d6", res: 2, integrity: 20, quality: "Mid", material: "Light",
+      availability: "Common", mods: 1, cost: 500, flavorLine: "..." },
+    { id: "motorcycle-helmet", name: "Motorcycle Helmet", slot: "head",
+      quality: "Low", material: "Light", availability: "Common", cost: 150,
+      feature: "Headshot Defense", flavorLine: "..." }
+    // 37 entries: 8 light + 8 medium + 9 full body coverage, 6 head, 6 hand.
+    // slot:"body" always carries prot/res/integrity; slot:"head"/"hand" never do.
+  ]
 };
 ```
 
@@ -315,8 +367,8 @@ on un-modeled rules.
 ```js
 {
   meta: {
-    schemaVersion: "0.5",
-    gamedataVersion: "0.4",          // version of shadows-data.js at save time
+    schemaVersion: "0.6",
+    gamedataVersion: "0.6",          // version of shadows-data.js at save time
     created: "...", updated: "..."
   },
 
@@ -395,8 +447,21 @@ on un-modeled rules.
   panelData: { grimoire: [ { "Spell Name": "...", "Discipline": "..." } ], form: "Human" },
 
   powers:  [ /* instances with per-character notes */ ],
-  gear:    [ { name, type, notes } ],
-  weapons: [ { name, type, damage, rof, capacity, ammo, features, notes } ],
+  gear:    [ { name, type, notes } ],          // still free-entry; the general
+                                                // Equipment chapter is not yet merged
+  // (0.6) A weapon entry is EITHER a catalog reference (`id` into the new
+  // `weapons` game-data array, `notes` only — stats read from the catalog)
+  // OR freeform (`custom: true`, every field preserved as typed, same shape
+  // as before 0.6). migrate() tags every pre-0.6 entry `custom: true` rather
+  // than guessing which catalog weapon a free-typed name meant. No UI writes
+  // a catalog reference yet (Loadout still edits the old free-text columns) —
+  // this batch is the data and the schema, not the picker (see log/2026.md).
+  weapons: [ { id: "combat-knife", notes: "" },
+             { custom: true, name, type, damage, rof, capacity, ammo, features, notes } ],
+  // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
+  // trackers.damage), not derived — max Integrity comes from the catalog.
+  armor:   [ { id: "kevlar-vest", integrityLoss: 0, notes: "" },
+             { custom: true, name, prot, res, integrity, integrityLoss, notes } ],
 
   progression: {
     ip: {
@@ -1341,6 +1406,40 @@ No cascade logic to maintain — it falls out of the architecture.
     (both failed there, both pass now) rather than only against post-fix
     behavior. (Ken + Claude, 2026-09-07)
 
+92. **(Weapons, Ammo & Armor — data)** **The equipment chapter merges as
+    catalogs, not as engine logic.** `docs/reference/crb/Gear.md` (mirrored
+    2026-09-04, re-confirmed byte-identical to Ken's 2026-09-12 re-attachment)
+    turned out to already be a complete, populated catalog rather than the
+    placeholder F18 had assumed — every earlier session apparently stopped
+    reading after the introduction. Merged as seven new game-data arrays
+    (`weapons` 54, `ammunition` 9, `arrowheads` 11, `armor` 37) plus five
+    reference glossaries (`weaponTagGlossary`, `weaponFeatureGlossary`,
+    `weaponModGlossary`, `armorFeatureGlossary`, `armorUpgradeGlossary`) and
+    `armorRules`, which documents the PROT/RES/Integrity mechanic as
+    reference text the same way `ip.statCost` documents IP math — no engine
+    code executes any of it. Tags and Features are stored as the exact
+    strings the book prints, including per-weapon parameters like
+    "Area (5m)", rather than forced into a fixed id set; a handful of tags
+    used in weapon tables have no formal CRB definition at all (Suppression,
+    Blast, Anti-Materiel, "Reach" as a tag distinct from the Reach column)
+    and carry `flagged: true` rather than an invented rule.
+    Character schema **0.5 → 0.6**: a `weapons` entry is now either a catalog
+    reference (`id` + `notes`, stats read from the catalog) or freeform
+    (`custom: true`, every field preserved exactly as the old free-text shape
+    stored it); `migrate()` tags every pre-0.6 entry `custom: true` rather
+    than guessing which catalog weapon a player's free-typed name meant. A
+    new `armor` field follows the same split, with `integrityLoss` as
+    current-state input (same category as `trackers.damage`) rather than a
+    derived value. Game data **0.5 → 0.6** for the new content itself.
+    Deliberately **not** built this batch: the Loadout tab's UI still edits
+    the old free-text columns (no picker references the new catalogs yet),
+    there is no Conditions system, and Massive damage math is reference text
+    only — those are a second, engine-focused batch by design, so the two
+    kinds of risk (content transcription vs. new engine machinery) don't ship
+    in the same review. See `log/2026.md` for the full account, including the
+    session's own correction of an F20 flag opened in error two entries
+    earlier. (Ken + Claude, 2026-09-12)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -1384,7 +1483,7 @@ Long-Lived (F17).
 | F2 | CP boost exchange rate across skills/stats/powers (stubbed 1:1, flagged) | Deighton | No |
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
-| F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD | Ken → docs | No |
+| F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked | Ken → docs | No |
 | F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
 | F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
@@ -1393,7 +1492,8 @@ Long-Lived (F17).
 | F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
 | F16 | **Hemophiliac calls for a "First Aid Skill Check"**; the catalog skill is **Medical**. Field Medic's half was fixed in the same pass, so this is the last real one. (A Professional milestone lists "First Aid" among tool/kit examples — prose, not a skill reference) | Ken → docs | No |
 | F17 | **Long-Lived's rank table reads as "Effect" per row, not "gain another"** — ambiguous whether ranks stack. Implemented as stacking (rank 3 = 2 Minor + 1 Major Milestone slots total), confirmed with Ken; needs Deighton's sign-off as the rules-authority call | Deighton | No |
-| F18 | **Weapons/Armor/Defense system** — `053_Combat Encounters.docx` (CRB v4) gives a first full pass: rolled PROT (armor's own defense roll), static RES added when damage type allows it (armor-piercing skips RES; enemy armor is static), a consumable Integrity pool (−1 per hit fully absorbed, plus a post-fight wear roll of 1d4–1d10), and separate Massive/Withering damage rules. Needs `Gear.docx` for actual item stats before it's engine-ready — direction exists now, a ruling doesn't yet | Ken/D/Scott | No |
+| F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). What's left: assigning MD ratings across the gear list (Design, small), and the engine/UI half — PROT/RES/Integrity math, a Conditions system (Injured/Maimed live there, per `054_Conditions_and_Recovery.md`), Massive damage application, and Loadout pickers — deliberately deferred to a second batch (Decision 92) | Ken/D/Scott | No |
+| F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 
 ## 6. Roadmap
 

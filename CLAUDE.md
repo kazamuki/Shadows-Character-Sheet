@@ -8,8 +8,10 @@ and a cold session read them as current. Live numbers are in `docs/STATE.md`.
 
 ## Orientation — before touching anything
 
-1. **`docs/STATE.md`** — where the build stands, the batch board, what is blocked
-   on whom, what is next. Short by design. Read it whole.
+1. **`docs/STATE.md`** — where the build stands, what shipped, and what's next
+   grouped by area with its status and what's blocking it — not by a batch
+   sequence, since different areas wait on different people and resolve in
+   whatever order those people answer. Short by design. Read it whole.
 2. **`docs/SCHEMA.md`** — the authority: architecture, both schemas, the numbered
    decision ledger, the flag table, the roadmap. **Do not read it front to back.**
    Open the section you need. If it and this file disagree, SCHEMA wins and this
@@ -207,7 +209,9 @@ in `tests/rules.test.mjs`.
 
 ## What's next
 
-The board in `docs/STATE.md` §2 is the only source for this — batch order,
-status, and what's blocked on whom change every session. This section stays
-generic rather than naming a batch, because naming one is exactly how the
-last version of this section went stale twice in a row.
+`docs/STATE.md` §3 is the only source for this — grouped by area, with a
+status and what's blocked on whom, since those change every session and
+different areas resolve in whatever order the people they wait on answer, not
+in a fixed sequence. This section stays generic rather than naming an area,
+because naming one is exactly how the last version of this section went
+stale twice in a row.

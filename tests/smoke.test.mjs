@@ -289,7 +289,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.5");
+  assert.equal(resumed.meta.schemaVersion, "0.6");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
