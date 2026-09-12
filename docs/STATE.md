@@ -62,9 +62,12 @@ which read oddly once other work queued ahead of it. Ken flagged this
 | — | PR #7 adversarial review | #19 | Decision 91 — machinery gaps closed, not player-visible (§4) |
 | — | Weapons, Ammo & Armor (data) | this branch | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
 
-**Demo hosting isn't live yet** (Printable sheet + demo hosting, #17) — needs
-Ken's GitHub Pages source set to "GitHub Actions" plus the Squarespace DNS
-record for `charactersheet.shadowsrpg.com`.
+**Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
+GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
+`charactersheet.shadowsrpg.com` (2026-09-12). It only redeploys on a `v*` tag
+push (`deploy-demo.yml`), not on every merge to `main` — the live site is
+currently on app `0.9.0`, so `main`'s `0.10.0` work (light theme, printable
+sheet, this batch) won't reach it until the next tag.
 
 **Two things a next session should know.**
 
