@@ -14,7 +14,7 @@ Generated summaries are one line each and deliberately lossy — they are for
 
 | I want to know | Go to |
 |---|---|
-| What's next, what's blocked, who can clear it | **`STATE.md`** §2 and §3 |
+| What's next, what's blocked, who can clear it | **`STATE.md`** §3 (§2 is shipped history only) |
 | Why a past decision was made | `SCHEMA.md` §4 — find the number in §3 below |
 | What an id like `A1` / `B7` / `C2` means | §2 below |
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
@@ -75,7 +75,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F2` | CP boost exchange rate across skills/stats/powers (stubbed 1:1, flagged) | Deighton |
 | `F5` | Adv/Disadv audit flags — three of four closed by the CRB v4 pass. Remaining: Cyber-Prophe… | Design (after F6) |
 | `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
-| `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD | Design |
+| `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD — 2026-09-10 meeting added unlocked direction | Design |
 | `F8` | Stat Point roll conflict: WIP says flat "3d10+30" for all levels; REF table scales by pow… | Deighton — **wizard-blocking** |
 | `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
 | `F11` | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the cat… | Ken |
@@ -84,7 +84,8 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F14` | Skill IP cost at rank 0: "5 × current rank" prices learning a new skill (0→1) at zero. Ap… | Deighton |
 | `F16` | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is Medical. Field Medi… | Ken |
 | `F17` | Long-Lived's rank table reads "Effect" per row; implemented as stacking, needs Deighton's sign-off | Deighton |
-| `F18` | Weapons/Armor/Defense — `053_Combat Encounters.docx` gives a first real pass: rolled PROT, static RES, consumable Integrity | Design (needs Gear.docx) |
+| `F18` | Weapons/Armor/Defense — catalog merged (Decision 92); PROT/RES/Integrity math, Conditions, Massive damage application and Loadout pickers are a second, engine-focused batch | Design (small gap) + engine batch |
+| `F19` | Cyborg install cost mechanism — Sanity erosion vs. temporary Health Level cost, still undecided (Scott unsure which) | Design |
 
 There is also one **unnumbered** flag, which is why it is easy to lose: `statMod()`
 extrapolates +1 per point above 10 while `statRules.beyondHumanLimits` says gains
@@ -157,6 +158,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **63** *(B6)* — migrate()'s completeness is the migration guarantee.
 - **68** — When gamedataVersion bumps — and when it must not.
 - **75** *(Versioning)* — Four versions, four triggers — and schemaVersion stopped meaning two things.
+- **92** *(Weapons, Ammo & Armor — data)* — The equipment chapter merges as catalogs, not as engine logic; character schema 0.5 → 0.6.
 
 ### Engine contracts
 

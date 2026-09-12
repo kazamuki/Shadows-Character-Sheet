@@ -6,7 +6,7 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.5", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.6", gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -28,7 +28,7 @@ const Engine = (() => {
                  adjustments:[],               // Phase 3: manual adjustments ledger
                  panel:{} },                   // Phase 3: generic archetype tracker panels
       panelData:{},                            // Phase 3: archetype table/toggle panel content
-      powers:[], gear:[], weapons:[],
+      powers:[], gear:[], weapons:[], armor:[],
       progression:{ ip:{earned:0, log:[]}, milestonePoints:0,
                     milestones:{minor:[], major:[]} },
       sessions:[], notes:"",
@@ -661,7 +661,13 @@ const Engine = (() => {
     if (!Array.isArray(pr.ip.log)) pr.ip.log=[];
     pr.milestones = Object.assign({minor:[], major:[]}, pr.milestones);
     if (!Array.isArray(c.sessions)) c.sessions=[];
-    c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.powers=c.powers||[];
+    c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.powers=c.powers||[]; c.armor=c.armor||[];
+    // Schema 0.6 (Weapons/Ammo/Armor data batch): a weapons entry may now
+    // reference the gear catalog by id (notes only, stats computed from the
+    // catalog) or stay freeform (custom:true, every field preserved as typed).
+    // A pre-0.6 entry has neither marker -- tag it custom rather than guess
+    // which catalog weapon a free-typed name was supposed to mean.
+    c.weapons.forEach(w => { if (w && !w.id && !w.custom) w.custom = true; });
     if (typeof c.notes!=="string") c.notes="";
     if (!Array.isArray(c.audit)) c.audit=[];      // Phase 3.3
     // Schema 0.5 (A3): ONE specialization array replaces the three fields that
@@ -683,7 +689,7 @@ const Engine = (() => {
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.5";
+    c.meta.schemaVersion = "0.6";
     return c;
   }
 
