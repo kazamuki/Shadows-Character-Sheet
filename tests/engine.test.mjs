@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.5");
+  assert.equal(ch.meta.schemaVersion, "0.6");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.5");
+  assert.equal(old.meta.schemaVersion, "0.6");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -137,6 +137,50 @@ test("every skill references a stat that exists (guards the BODY/BOD class of bu
     }
   }
   assert.deepEqual(bad, []);
+});
+
+test("every weapon references a skill that exists (Weapons/Ammo/Armor batch)", () => {
+  // Built with a plain loop/push, not .filter/.map on a VM-realm array — the
+  // VM context engine.js loads in (see file header) gives D.weapons its own
+  // Array constructor, and assert/strict's deepStrictEqual treats that
+  // cross-realm array as unequal to a same-realm `[]` even when both are
+  // empty. Every other bad-list check in this file follows the same shape.
+  const skillIds = new Set(D.skills.map(s => s.id));
+  const bad = [];
+  for (const w of D.weapons || []) if (!skillIds.has(w.skill)) bad.push(`${w.id} → ${w.skill}`);
+  assert.deepEqual(bad, []);
+});
+
+test("every weapon and armor id is unique, and armor slots are valid", () => {
+  const dupes = list => { const seen = new Set(), out = []; for (const x of list) { if (seen.has(x.id)) out.push(x.id); seen.add(x.id); } return out; };
+  assert.deepEqual(dupes(D.weapons || []), []);
+  assert.deepEqual(dupes(D.armor || []), []);
+  assert.deepEqual(dupes(D.ammunition || []), []);
+  assert.deepEqual(dupes(D.arrowheads || []), []);
+  const slots = new Set(["body", "head", "hand"]);
+  const badSlots = [], badBody = [];
+  for (const a of D.armor || []) {
+    if (!slots.has(a.slot)) badSlots.push(`${a.id} → ${a.slot}`);
+    // Body armor rolls PROT/RES/Integrity; head/hand grant a named feature
+    // instead (armorRules.protNote/resNote — see SCHEMA.md §2). Catching a
+    // body entry missing its numbers is cheaper than catching it from a
+    // blank Defense panel later.
+    if (a.slot === "body" && (!a.prot || a.res == null || a.integrity == null)) badBody.push(a.id);
+  }
+  assert.deepEqual(badSlots, []);
+  assert.deepEqual(badBody, []);
+});
+
+test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6)", () => {
+  const old = subject();
+  old.meta.schemaVersion = "0.5";
+  old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
+  delete old.armor;
+  Engine.migrate(old);
+  assert.equal(old.meta.schemaVersion, "0.6");
+  assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
+  assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
+  assert.ok(Array.isArray(old.armor), "armor was not seeded");
 });
 
 test("every legacy stat alias points at a live stat id (B2)", () => {
@@ -231,7 +275,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.5");
+  assert.equal(bare.meta.schemaVersion, "0.6");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -453,7 +497,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.5");
+    assert.equal(c.meta.schemaVersion, "0.6");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
