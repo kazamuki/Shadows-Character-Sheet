@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.11.0";
+const APP_VERSION = "0.12.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -249,6 +249,37 @@ function bindSheet(){
   const ds=main.querySelector("[data-dmgset]");
   if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ ch.trackers.damage=v; }); };
   main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ ch.trackers.damage=0; }));
+
+  // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
+  // body-part picker only shows for a Condition that needs one.
+  const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
+    return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
+  main.querySelectorAll("[data-condadd-id]").forEach(sel=>sel.onchange=()=>{
+    const def=Engine.conditionById(sel.value), loc=sel.parentNode.querySelector("[data-condadd-loc]");
+    if (loc) loc.hidden = !(def && def.location);
+  });
+  main.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
+    const box=b.parentNode, id=(box.querySelector("[data-condadd-id]")||{}).value;
+    const location=(box.querySelector("[data-condadd-loc]")||{}).value;
+    if (!id) return;
+    const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
+    if (!r.ok){ alert(r.why); return; }
+    commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
+  });
+  main.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
+    commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
+  });
+  main.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
+    const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];
+    const d=Engine.conditionById(e&&e.id);
+    commit("condition", `${d&&d.counter?d.counter.label:"Marks"} → ${n}`, ()=>{ Engine.setConditionMarks(ch, i, n); });
+  });
+  main.querySelectorAll("[data-condnote]").forEach(inp=>inp.onchange=()=>{
+    const i=Number(inp.dataset.condnote), e=ch.trackers.conditions[i];
+    if (!e) return;
+    commit("condition", `Note on ${condLabel(e)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
+  });
 
   // SAN
   main.querySelectorAll("[data-san]").forEach(b=>b.onclick=()=>{

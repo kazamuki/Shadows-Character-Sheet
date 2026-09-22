@@ -72,8 +72,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 
 | Id | What | Needs |
 |---|---|---|
-| `F1` | LUCK buy-up cost in CP per point (stubbed 1:1, flagged in data) | Deighton |
-| `F2` | CP boost exchange rate across skills/stats/powers (stubbed 1:1, flagged) | Deighton |
 | `F5` | Adv/Disadv audit flags — three of four closed by the CRB v4 pass. Remaining: Cyber-Prophe… | Design (after F6) |
 | `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
 | `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD — 2026-09-10 meeting added unlocked direction | Design |
@@ -82,14 +80,10 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F11` | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the cat… | Ken |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F13` | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline… | Ken |
-| `F14` | Skill IP cost at rank 0: "5 × current rank" prices learning a new skill (0→1) at zero. Ap… | Deighton |
-| `F17` | Long-Lived's rank table reads "Effect" per row; implemented as stacking, needs Deighton's sign-off | Deighton |
-| `F18` | Weapons/Armor/Defense — catalog merged (Decision 92); PROT/RES/Integrity math, Conditions, Massive damage application and Loadout pickers are a second, engine-focused batch | Design (small gap) + engine batch |
+| `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96); PROT/RES/Integrity math, Massive damage application and Loadout pickers are plan Sessions 3–4 | Design (small gap) + engine sessions |
 | `F19` | Cyborg install cost mechanism — Sanity erosion vs. temporary Health Level cost, still undecided (Scott unsure which) | Design |
 
-There is also one **unnumbered** flag, which is why it is easy to lose: `statMod()`
-extrapolates +1 per point above 10 while `statRules.beyondHumanLimits` says gains
-"slow down" past 10. It exists only as a code comment in `engine.js`.
+The one **unnumbered** flag (the stat curve past 10) closed with Decision 98.
 
 ---
 
@@ -123,6 +117,9 @@ What a number *is*. Change one of these and characters change.
 - **64** *(B3)* — 1 Health Level per BOD is an invariant, not a tunable.
 - **66** *(B8)* — The two Pain Level floors are numbers the engine carries and the sheet states.
 - **67** *(B9)* — The milestone cadence comes from the data, once.
+- **98** *(Design-team rulings, part 2)* — Stats past 10: +5 at 11–15, +1 per 5 after. F20–F22 closed: Skill Checks only, a −8 cap on one roll, only Injured/Maimed take a body part. Plan CQ4–CQ7/CQ10 answered for Session 3.
+- **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open.
+- **96** *(Conditions — the numbers)* — Pain = HL band + Condition Pain, clamped 0–3; a flat Condition penalty lands on every Skill Check; attack/defense and conditional penalties are shown, never summed.
 
 ### Content & the CRB
 
@@ -160,6 +157,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **75** *(Versioning)* — Four versions, four triggers — and schemaVersion stopped meaning two things.
 - **92** *(Weapons, Ammo & Armor — data)* — The equipment chapter merges as catalogs, not as engine logic; character schema 0.5 → 0.6.
 - **93** *(Magic — archetype-independent half, data)* — The Magic chapter splits into a universal Spellcraft system and an archetype question (Origins); only the first merges, and it corrects a live mechanical error along the way. Character schema 0.6 → 0.7.
+- **95** *(Conditions — catalog and schema 0.8)* — Conditions are a data catalog with structured hooks; active ones are inputs, one per id (per body part for location-bearing ones); game data 0.7 → 0.8, character schema 0.7 → 0.8, with the plan's damage and armor fields landed in the same migration.
 
 ### Engine contracts
 

@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.7");
+  assert.equal(ch.meta.schemaVersion, "0.8");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.7");
+  assert.equal(old.meta.schemaVersion, "0.8");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.7");
+  assert.equal(old.meta.schemaVersion, "0.8");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -203,7 +203,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.7");
+  assert.equal(old.meta.schemaVersion, "0.8");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -268,6 +268,8 @@ function degenerates(){
     "partial sub-objects": Engine.migrate({ archetypeChoices:{aberrations:["x"]}, trackers:{damage:3}, progression:{} }),
     "unknown ids":         Engine.migrate({ identity:{archetype:"no-such-archetype"}, skills:{"no-such-skill":{rank:2,ipe:0}},
                                             advantages:[{id:"no-such-adv",rank:1}] }),
+    "junk conditions":     Engine.migrate({ trackers:{ conditions:[null, {id:"no-such-condition"}, {id:"dying", marks:"lots"},
+                                            {id:"injured", location:"nowhere"}], massiveLevels:"x" } }),
   };
 }
 
@@ -301,7 +303,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.7");
+  assert.equal(bare.meta.schemaVersion, "0.8");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -310,7 +312,7 @@ test("no exported reader throws on any character migrate() can return", () => {
   // its own test. Named here so adding an export is a deliberate choice.
   const readers = ["powerLevel","archetype","statTable","scalingRow","derived","health","sfr",
                    "statPool","statSpent","skillPool","skillSpent","advSpent","disGranted",
-                   "luckSpent","boostSpent","disciplineSpent","cp","painState","luckState",
+                   "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","luckState",
                    "sanState","focusedSkillIds","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
                    "disciplineRanks","buildExport","versionCheck"];
@@ -523,7 +525,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.7");
+    assert.equal(c.meta.schemaVersion, "0.8");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -711,4 +713,196 @@ test("grants() is computed live off held traits, never stored on the character",
   assert.equal(Engine.grants(ch).skillPoints, 10);
   ch.advantages = [];
   assert.equal(Engine.grants(ch).skillPoints, 0, "a removed advantage's effect survived");
+});
+
+// ── Conditions (Decisions 95–96) ──────────────────────────────────────
+
+test("the Conditions catalog is well-formed: unique ids, typed hooks, real locations", () => {
+  const ids = D.conditions.map(c => c.id);
+  assert.equal(new Set(ids).size, ids.length, "duplicate condition id");
+  for (const c of D.conditions) {
+    for (const k of ["id", "name", "short", "effect", "recovery"])
+      assert.equal(typeof c[k], "string", `${c.id}.${k}`);
+    for (const k of ["painLevels", "rollPenalty", "attackDefense"])
+      if (k in c) assert.equal(typeof c[k], "number", `${c.id}.${k}`);
+    if (c.counter) assert.ok(c.counter.max > 0 && c.counter.label, `${c.id}.counter`);
+  }
+  // Every row of 054's table, plus Dying (plan CQ9).
+  assert.equal(D.conditions.length, 20);
+  assert.ok(D.bodyLocations.length >= 6);
+});
+
+test("a Condition's flat penalty lands on every Skill Check, and only there (F20, Decision 98)", () => {
+  const ch = subject();
+  const before = Engine.skillLine(ch, "handguns").checkBonus;
+  Engine.addCondition(ch, { id: "disoriented" });
+  const line = Engine.skillLine(ch, "handguns");
+  assert.equal(line.checkBonus, before - 1);
+  assert.equal(line.breakdown.conditions, -1);
+  assert.equal(line.breakdown.pain, 0, "a roll penalty is not Pain");
+  const p = Engine.painState(ch);
+  assert.equal(p.level, 0);
+  assert.equal(p.essencePenalty, 0, "just Skill Checks — Essence is untouched");
+  assert.equal(D.conditionRules.rollPenalty.appliesTo, "skillChecks");
+});
+
+test("different Conditions' penalties stack; conditional and attack/defense ones are not summed (F21, Decision 98)", () => {
+  const ch = subject();
+  for (const id of ["burning", "disoriented", "frightened", "blinded", "prone"]) Engine.addCondition(ch, { id });
+  const st = Engine.conditionState(ch);
+  assert.equal(st.rollPenalty, -2, "Burning + Disoriented");
+  assert.equal(st.conditional.length, 1, "Frightened is shown, not summed");
+  assert.equal(st.attackDefense.map(a => a.value).join(","), "-5,-3");
+  assert.equal(Engine.skillLine(ch, "handguns").breakdown.conditions, -2);
+});
+
+test("a location-bearing Condition is one per body part and demands one (F22, Decision 98)", () => {
+  const ch = subject();
+  assert.equal(Engine.addCondition(ch, { id: "injured" }).ok, false, "no body part was accepted");
+  assert.equal(Engine.addCondition(ch, { id: "injured", location: "elbow" }).ok, false);
+  assert.equal(Engine.addCondition(ch, { id: "injured", location: "left-arm" }).ok, true);
+  assert.equal(Engine.addCondition(ch, { id: "injured", location: "right-leg" }).ok, true);
+  assert.equal(Engine.addCondition(ch, { id: "injured", location: "left-arm" }).ok, false);
+  assert.equal(Engine.conditionState(ch).active.map(a => a.label).join(" | "),
+               "Injured (Left Arm) | Injured (Right Leg)");
+  // A location on a Condition that has none is ignored, not a second key.
+  Engine.addCondition(ch, { id: "bleeding", location: "torso" });
+  assert.equal(Engine.addCondition(ch, { id: "bleeding", location: "head" }).ok, false);
+  assert.equal(ch.trackers.conditions.find(e => e.id === "bleeding").location, undefined);
+});
+
+test("Conditions are inputs: nothing derived is written to the character", () => {
+  const ch = subject();
+  Engine.addCondition(ch, { id: "agonized" });
+  Engine.addCondition(ch, { id: "stunned" });
+  Engine.painState(ch); Engine.skillLine(ch, "handguns"); Engine.conditionState(ch);
+  assert.deepEqual(JSON.parse(JSON.stringify(ch.trackers.conditions)),
+                   [{ id: "agonized" }, { id: "stunned" }]);
+});
+
+test("adding and removing a Condition is undoable through the generic audit trail", () => {
+  const ch = subject();
+  let before = JSON.parse(JSON.stringify(ch));
+  Engine.addCondition(ch, { id: "bleeding" });
+  Engine.recordAction(ch, "condition", "Bleeding", before);
+  before = JSON.parse(JSON.stringify(ch));
+  Engine.removeCondition(ch, 0);
+  Engine.recordAction(ch, "condition", "Bleeding cleared", before);
+  Engine.undoLastAction(ch);
+  assert.equal(ch.trackers.conditions.length, 1);
+  Engine.undoLastAction(ch);
+  assert.equal(ch.trackers.conditions.length, 0);
+});
+
+test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields", () => {
+  const old = subject();
+  old.meta.schemaVersion = "0.7";
+  delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
+  old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
+  Engine.migrate(old);
+  assert.equal(old.meta.schemaVersion, "0.8");
+  assert.ok(Array.isArray(old.trackers.conditions));
+  assert.equal(old.trackers.massiveLevels, 0);
+  assert.equal(old.trackers.witheringDamage, 0);
+  for (const a of old.armor) {
+    assert.equal(a.worn, false); assert.equal(a.scrapped, false);
+    assert.ok(Array.isArray(a.upgrades));
+  }
+  assert.equal(old.armor[0].integrityLoss, 3, "migrate must not touch existing armor state");
+});
+
+test("migrate drops junk and duplicate Conditions, keeping the first of each", () => {
+  const c = Engine.migrate({ trackers: { conditions: [
+    null, "bleeding", { id: 7 }, { id: "bleeding" }, { id: "bleeding", note: "second" },
+    { id: "injured", location: "left-arm" }, { id: "injured", location: "right-arm" },
+    { id: "injured", location: "left-arm" } ], massiveLevels: "2", witheringDamage: -4 } });
+  assert.equal(c.trackers.conditions.map(e => e.id + (e.location ? "@" + e.location : "")).join(","),
+               "bleeding,injured@left-arm,injured@right-arm");
+  assert.equal(c.trackers.conditions[0].note, undefined, "kept the duplicate instead of the first");
+  assert.equal(c.trackers.massiveLevels, 2);
+  assert.equal(c.trackers.witheringDamage, 0);
+});
+
+test("a character round-trips through export and migrate with its Conditions intact", () => {
+  const ch = subject();
+  Engine.addCondition(ch, { id: "dying" });
+  Engine.setConditionMarks(ch, 0, 2);
+  Engine.addCondition(ch, { id: "maimed", location: "left-leg", note: "the train" });
+  const back = Engine.migrate(JSON.parse(JSON.stringify(Engine.buildExport(ch))));
+  assert.deepEqual(JSON.parse(JSON.stringify(back.trackers.conditions)),
+                   JSON.parse(JSON.stringify(ch.trackers.conditions)));
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrate(Engine.newCharacter()).trackers)),
+                   JSON.parse(JSON.stringify(Engine.newCharacter().trackers)));
+});
+
+test("conditionState and versionCheck survive a Condition the data no longer defines", () => {
+  const ch = Engine.migrate({ trackers: { conditions: [{ id: "no-such-condition" }, { id: "dying", marks: "lots" }] } });
+  const st = Engine.conditionState(ch);
+  assert.equal(st.active[0].missing, true);
+  assert.equal(st.active[0].name, "no-such-condition");
+  assert.equal(st.active[1].marks, 0, "a non-numeric mark count became something other than 0");
+  assert.equal(st.painLevels, 0);
+  assert.ok(Engine.versionCheck(ch).some(i => /Condition "no-such-condition"/.test(i)));
+});
+
+// ── Design-team rulings, 2026-09-22 (Decision 97) ─────────────────────
+
+test("learning a new skill after creation costs a flat 25 IP, not the rank-1 price (F14)", () => {
+  const ch = subject();
+  const fresh = Engine.ipCost(ch, "skill", "handguns");
+  assert.equal(fresh.ok, true);
+  assert.equal(fresh.from, 0);
+  assert.equal(fresh.cost, 25);
+  assert.equal(D.ip.skillIncreaseCost.newSkill, 25, "the price lives in the data");
+  // Past rank 0 the formula is unchanged: 5 × current rank.
+  ch.skills.handguns = { rank: 1, ipe: 0 };
+  assert.equal(Engine.ipCost(ch, "skill", "handguns").cost, 5);
+  ch.skills.handguns = { rank: 4, ipe: 0 };
+  assert.equal(Engine.ipCost(ch, "skill", "handguns").cost, 20);
+});
+
+test("a Focused skill keeps its 3× rate past rank 0, and a new one is 25 IP too (F14, literal reading)", () => {
+  const ch = subject();
+  ch.identity.archetype = "professional";
+  const sub = Engine.archetype(ch).specialization.options.find(o => (o.focusedSkills || []).length);
+  ch.archetypeChoices.specialization = [sub.id];
+  const id = Engine.focusedSkillIds(ch)[0];
+  assert.ok(id, "no Focused skill resolved for the fixture");
+  delete ch.skills[id];
+  assert.equal(Engine.ipCost(ch, "skill", id).cost, 25);
+  ch.skills[id] = { rank: 2, ipe: 0 };
+  const c = Engine.ipCost(ch, "skill", id);
+  assert.equal(c.focused, true);
+  assert.equal(c.cost, 6);
+});
+
+test("closed flags stay closed: LUCK and boosts are 1:1 CP, Long-Lived stacks (F1, F2, F17)", () => {
+  assert.equal(D.resources.luck.cpCostPerPoint, 1);
+  assert.equal(D.resources.luck.flagged, undefined);
+  assert.equal(D.creationFlow.boostRules.cpCostPerPoint, 1);
+  assert.equal(D.creationFlow.boostRules.flagged, undefined);
+  assert.equal(Engine.advById("long-lived").flagged, undefined);
+  assert.equal(D.ip.flagged, undefined);
+});
+
+test("different Conditions' penalties stop at the -8 cap (F21, Decision 98)", () => {
+  assert.equal(D.conditionRules.penaltyStacking.cap, -8);
+  D.conditions.push({ id: "__fixture-a", name: "A", rollPenalty: -5 }, { id: "__fixture-b", name: "B", rollPenalty: -5 });
+  try {
+    const ch = subject();
+    ch.trackers.conditions = [{ id: "__fixture-a" }, { id: "__fixture-b" }];
+    assert.equal(Engine.conditionState(ch).rollPenalty, -8);
+    assert.equal(Engine.skillLine(ch, "handguns").breakdown.conditions, -8);
+  } finally { D.conditions.splice(-2, 2); }
+});
+
+test("only Injured and Maimed are body-part Conditions (F22, Decision 98)", () => {
+  assert.deepEqual([...D.conditions.filter(c => c.location).map(c => c.id)], ["injured", "maimed"]);
+  const ch = subject();
+  assert.equal(Engine.addCondition(ch, { id: "desynced" }).ok, true, "DeSynced still demands a body part");
+});
+
+test("the Conditions rules carry no open flag any more (F20–F22 closed)", () => {
+  for (const k of ["rollPenalty", "penaltyStacking", "locationStacking"])
+    assert.equal(D.conditionRules[k].flagged, undefined, k);
 });

@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-22
-**Versions:** app `0.11.0` · game data `0.7` · character schema `0.7` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.12.0` · game data `0.8` · character schema `0.8` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **103 passing, 0 todo, 0 failing** (103 tests, six files)
+**Suite:** `npm run verify` → **132 passing, 0 todo, 0 failing** (132 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -25,45 +25,37 @@ The app is a browser character creator and live play sheet for **Shadows**
 architecture and is enforced by tests.
 
 **Working and covered by tests:** the whole wizard, all nine sheet tabs, damage
-and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, the session log,
-loadout, `grants`, an undo-able audit trail, and a printable sheet — filled
-or blank — for a player who wants paper. The engine reproduces the CRB's own
-worked examples (`tests/rules.test.mjs`). Game data now also carries a full
+and Pain Levels, Conditions, Sanity, Luck, Çredits, IP and Milestones, the
+session log, loadout, `grants`, an undo-able audit trail, and a printable
+sheet, filled or blank. The engine reproduces the CRB's own worked examples
+(`tests/rules.test.mjs`). Game data now also carries a full
 weapons/ammunition/armor catalog (Decision 92) and the archetype-independent
 half of the Magic chapter — domains, the full spell catalog, Spellcraft rules
 as reference text, Enchantment/Alchemy materials (Decision 93) — neither yet
 wired to any UI beyond the Arcanist's existing Grimoire/Disciplines panels.
 
-**The print sheet had two real defects this session, both closed:** the
-in-app "Print a blank character sheet" button printed whatever screen was up
-instead of the sheet (`#printSheet` was never un-hidden for print media), and
-a pre-existing Loadout-page overflow clipped the Notes box across a page
-break. The front page was also redesigned — a case-file layout, Health
-Levels grouped into Pain Level bands, a two-panel Skills page — and now
-draws its border/texture from Scott's real Affinity artwork rather than an
-invented approximation (Decision 94).
+**Conditions landed (combat plan Session 2, Decisions 95–96).** All 19 of
+054's Conditions plus Dying are a data catalog; the active ones are inputs on
+the character (schema 0.8). Agonized raises the Pain Level (clamped 0–3);
+Disoriented/Burning/Shocked take 1 off every Skill Check total; attack/defense
+and "while the source is present" penalties are shown beside the totals, not
+summed into them. Main shows chips, Trackers shows full cards with recovery
+text, Helpless gets a banner, Dying gets Death Mark pips, and the print
+sheet's front page has a Conditions tick list. Three rules are stubbed and
+flagged for Deighton (F20–F22) and say so in the app when they're in play.
 
-**The CRB mirror was two weeks stale and is re-pulled (2026-09-22)** —
-Core Mechanics' Exhaustion text and the Arcanist's Origins had moved; Combat,
-Downtime, Magic, the spell appendix and the new Aberrations appendix are now
-mirrored too. The spell catalog was checked against the live appendix: every
-spell and its TN/TH matches.
-
-**One known player-facing defect:** that same frame/texture decoration
-renders correctly on screen but not in Chrome's actual print/PDF output
-(Decision 94) — cosmetic only, nothing else on the page is affected.
-Otherwise no known defect; the three machinery gaps the PR #7 review found
-are closed (Decision 91) and none was reachable with current data.
+**The print front page is now full** — the Conditions card leaves ~2px on a
+filled sheet (measured, not tested: jsdom has no layout). Anything more there
+breaks to a second page (Decision 96). **One known defect:** the print
+sheet's frame/texture decoration shows on screen but not in Chrome's actual
+print/PDF output (Decision 94) — cosmetic only. Otherwise none known.
 
 ---
 
 ## 2. The board — shipped work
 
-History, not a queue: each row already merged (or is done on this branch,
-awaiting a PR). **What's not yet done is organized by topic in §3, not by
-batch number** — "Batch 4" meant Cyborg specifically from Batch 3 onward,
-which read oddly once other work queued ahead of it. Ken flagged this
-2026-09-12; §3 is the fix.
+History, not a queue: each row is merged or done on this branch. **What's not
+yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 
 | # | Batch | Merged | What it is |
 |---|---|---|---|
@@ -83,13 +75,15 @@ which read oddly once other work queued ahead of it. Ken flagged this
 | — | Weapons, Ammo & Armor (data) | #22 | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
 | — | Magic — archetype-independent half (data) | #22 | 96 spells across 5 domains/4 tiers, Spellcraft rules as reference text, Enchantment/Alchemy materials · Decision 93 |
 | — | Print sheet — visual redesign | #23 | Blank-print + Notes-clipping bug fixes; case-file front page, Pain Level bands, two-panel Skills, Scott's real frame/texture assets · Decision 94 |
+| — | CRB mirror re-pull + combat plan | #24 | Mirror refreshed and extended, F16 closed, `plans/combat-and-conditions.md` |
+| — | Conditions (combat plan Session 2) | this branch | Catalog, schema 0.8, Pain folding, Skill Check penalties, sheet + print · Decisions 95–96, F20–F22 |
+| — | Design-team rulings | this branch | F1, F2, F14, F17, F20–F22 and the stat-curve flag closed; new skill = 25 IP; stats past 10 +1 per 5 · Decisions 97–98 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com` (2026-09-12). It only redeploys on a `v*` tag
 push (`deploy-demo.yml`), not on every merge to `main` — the live site is
-currently on app `0.9.0`, so `main`'s `0.10.0` work (light theme, printable
-sheet, this batch) won't reach it until the next tag.
+currently on app `0.9.0`; everything since waits for the next tag.
 
 **Two things a next session should know.**
 
@@ -116,15 +110,14 @@ full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Gear & Combat** — Conditions, damage, armor | ✅ catalog merged (Decision 92) · 📋 **planned** in `plans/combat-and-conditions.md` — Sessions 2–4 | Ken's sign-off on the plan's §3. Session 2 (Conditions) is otherwise unblocked; Session 3 wants CQ4/CQ6 from Deighton (stubbable). MD1/2/3 ratings (Design, small) block nothing |
-| **Creation-pool economics** — F1, F2, F8, F14 | 🔶 stubbed/scaled, working | Deighton. **F8 is the only wizard-blocker**; ask F1/F2/F8/F14 together, one context-load |
+| **Gear & Combat** — Conditions, damage, armor | ✅ catalog (Decision 92) · ✅ **Conditions** (Session 2, Decisions 95–96) · 📋 Sessions 3–4 in `plans/combat-and-conditions.md` (plan §3 signed off 2026-09-22) | ⏭ Session 3 (taking a hit) is unblocked, and all its rules questions are answered (Decision 98) — no stubs needed. MD1/2/3 ratings (Design, small) block nothing |
+| **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
 | **Milestones & doc reconciliation** — F9, F11, F12, F13 · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
-| **Advantages/Disadvantages fine print** — F17, the lock-out question | 🔶 mostly settled | Deighton. F17 needs sign-off as rules authority; nothing in the CRB names an `excludes` pair yet, so none is invented |
+| **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
 | **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ⏭ Cascade + Aberration tables now written in the CRB, not yet encoded (plan's side session) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
-| **Engine internals** — unnumbered statMod flag | 🔶 known disagreement | Deighton. `statMod()` extrapolates +1/point past 10; `beyondHumanLimits` text says gains "slow down" — code-comment only, no F-number |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a complete, finished export — his current file is a two-page **portrait** WIP with only Stats built, in two competing styles (hex-dial sidebar vs. plain table). Portrait-vs-landscape is a real decision once that lands, not yet made. Separately: the frame/texture layer doesn't print in Chrome's actual output yet (screen-only) — not blocked on anyone, just not chased down |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
@@ -154,13 +147,18 @@ test fixtures (Decision 57).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #23** (the print sheet redesign, Decision 94).
-This branch is docs + one data-text sync: the CRB mirror re-pull, F16 closed,
-and the combat plan. `npm run verify` is green (103 passing, 0 todo).
+**`main` is caught up through PR #24** (CRB re-pull + the combat plan). This
+branch is combat plan Session 2 — Conditions (Decisions 95–96): data, engine,
+schema 0.8, sheet and print — plus the design-team rulings (Decisions 97–98). `npm run verify` is green (132 passing, 0 todo).
 
-**Next up is Session 2 of `plans/combat-and-conditions.md` (Conditions)** —
-once Ken has signed off on that plan's §3 (P1–P9). The plan lists its own
-sessions, tests to pin, and open questions (CQ1–CQ11); read it before starting.
+**Next up is Session 3 of `plans/combat-and-conditions.md` (Taking a hit)** —
+`resolveHit()`/`armorState()`, the "Take a hit" dialog, Shock and At-Zero
+prompts that add Unconscious/Prone/Dying through Session 2's Conditions. The
+schema it needs (`massiveLevels`, `witheringDamage`, armor `worn`/`scrapped`/
+`upgrades`) is already in 0.8, so it should need no migration. Its rules are
+settled (Decision 98): Siege is Massive, only Massive causes Injured/Maimed,
+Massive HL count toward Pain, one worn body piece, Shock at half max HL rounded
+up. Read the plan first.
 
 **Also unblocked:** the plan's Magic-tables side session (Cascade + Aberration
 tables, independent of combat) and Milestones & doc reconciliation (Ken alone;
@@ -169,9 +167,12 @@ under General Milestones in `041_Archetypes` — not in the Advantages chapter).
 Cyborg, Vampire, and the print sheet's remaining visual work wait on people
 outside a session.
 
-**Waiting on Deighton, asked as one packet:** F8 (the only wizard-blocker), F1,
-F2, F14, F17, the unnumbered `statMod` past-10 question, and the plan's CQ1–CQ7
-and CQ10.
+**Waiting on the design team:** only F8 (the wizard-blocker — being
+playtested) from the old packet; every combat-plan rules question is answered
+(Decisions 97–98). **Ken's CRB fixes:** Gear's Conditions table → a pointer at
+054 (CQ8, agreed); Gear's Siege tag → Massive damage (CQ4); 053's Called Shot
+→ only Massive causes Injured/Maimed (CQ5); the 25 IP new-skill price and the
+stat curve past 10 into the CRB; a Dying row in 054 (CQ9); CQ11.
 
 ---
 

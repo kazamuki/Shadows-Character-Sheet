@@ -50,10 +50,10 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.7",
+    "gamedataVersion": "0.8",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-09-20",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3)."
+    "updated": "2026-09-22",
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98)."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -126,8 +126,9 @@ window.SHADOWS_DATA = {
       "9": 3,
       "10": 4
     },
+    "beyondTen": { "stepEvery": 5 },
     "modifierRuleText": "For each point below 4, a -1 penalty for skills or synergies. For each point above 6, a +1 bonus for skills or synergies.",
-    "beyondHumanLimits": "Some Archetypes (Vampires, Werewolves) are not bound by normal human ceilings; their Basic Stats can exceed 10. Once a stat passes 10, gains slow down.",
+    "beyondHumanLimits": "Some Archetypes (Vampires, Werewolves) are not bound by normal human ceilings; their Basic Stats can exceed 10. Once a stat passes 10, gains slow down: 11-15 is +5, 16-20 is +6, 21-25 is +7, and another +1 for every 5 points after that.",
     "ranges": [
       {
         "range": "3 or lower",
@@ -245,9 +246,6 @@ window.SHADOWS_DATA = {
       "buyUpWith": "characterPoints",
       "cpCostPerPoint": 1,
       "exemptFromBoostCap": true,
-      "flagged": true,
-      "flagNote": "F1: CP cost per LUCK point stubbed at 1 — confirm with D.",
-    "playerNote": "What a point of LUCK costs isn't settled. The sheet charges 1 Character Point; your GM sets the real price.",
       "spend": [
         {
           "id": "boost",
@@ -1292,10 +1290,7 @@ window.SHADOWS_DATA = {
         { "type": "milestone", "kind": "minor", "atRank": 1 },
         { "type": "milestone", "kind": "minor", "atRank": 2 },
         { "type": "milestone", "kind": "major", "atRank": 3 }
-      ],
-      "flagged": true,
-      "flagNote": "F17: the CRB table gives an 'Effect' per rank row rather than 'gain another' -- confirmed with Ken that ranks stack (rank 3 = 2 Minor + 1 Major total), pending Deighton's confirmation as the rules-authority sign-off.",
-      "playerNote": "How Long-Lived's ranks add up isn't fully settled. The sheet grants a Minor Milestone slot at ranks 1 and 2, and a Major at rank 3, all stacking."
+      ]
     },
     {
       "id": "lucky",
@@ -3004,9 +2999,11 @@ window.SHADOWS_DATA = {
      3 * currentRank. `rankCap` caps skills/powers at 10 via IP. WILL and TOL are
      in `cannotRaiseDirectly` -- they only move via their input stats or manual
      adjustments. IPE = IP-purchased enhancement, tracked per target on the sheet.
-     REVIEW (F14): at rank 0 the "5 * currentRank" formula prices learning a NEW
-     skill (0->1) at zero. The app currently charges it as rank 1 (5 IP; Focused
-     3) pending D.'s ruling, and flags it in the Progression UI. SCHEMA.md sec 5. */
+     Learning a NEW skill after creation (rank 0 -> 1) is a flat
+     `skillIncreaseCost.newSkill` -- the formula would price it at zero. At
+     creation the same step costs 1 Skill Point, which is why a point in any
+     skill you expect to want is worth it (it also switches on Synergy).
+     Design-team ruling 2026-09-22, closed F14 (Decision 97). */
   /* APP COPY -- player-facing strings the app generates for a *state*, as
      opposed to prose that belongs to a rule. Rewriting the app's voice is a
      data edit: nothing here requires touching code (Decision 71).
@@ -3034,9 +3031,6 @@ window.SHADOWS_DATA = {
     "ranksAdvanceInPlay": "Ranks advance through play."
   },
   "ip": {
-    "flagged": true,
-    "flagNote": "F14: 'Skill IP cost = 5 x current rank' prices rank 0 -> 1 at zero IP. The app charges the rank-1 price instead (5 IP; Focused 3) pending a ruling from D. Was hardcoded into the Progression tab as a literal 'F14' block until Batch 2.",
-    "playerNote": "What it costs to learn a brand-new skill isn't settled. The sheet charges the first rank's price; your GM may rule otherwise.",
     "perSession": 10,
     "statIncreaseCost": {
       "formula": "currentValue * 10",
@@ -3044,7 +3038,8 @@ window.SHADOWS_DATA = {
     },
     "skillIncreaseCost": {
       "formula": "5 * currentRank",
-      "focusedFormula": "3 * currentRank"
+      "focusedFormula": "3 * currentRank",
+      "newSkill": 25
     },
     "rankCap": 10,
     "statCapNote": "Stats are generally capped at 10 for Humans but may be increased via magical or mechanical enhancements, items, etc.",
@@ -3086,7 +3081,7 @@ window.SHADOWS_DATA = {
     { "id": "No Recoil", "description": "Produces no recoil on discharge. The ACC bonus applies to both Single and Burst fire, not just Single." },
     { "id": "Non-lethal", "description": "Designed for incapacitation rather than harm. Descriptor only -- the weapon's damage value (or lack of one) determines the mechanical effect." },
     { "id": "Payload", "description": "The weapon's effect is determined by the equipped arrowhead or bolt type rather than the platform itself." },
-    { "id": "Siege", "description": "Deals Massive damage. Against hardened targets (vehicles, structures, fortifications, mechs) deals regular damage; against soft targets (people, unarmored personnel) deals double damage." },
+    { "id": "Siege", "description": "Deals Massive damage, to vehicles and structures and to people alike." },
     { "id": "Silent", "description": "Produces no ballistic or acoustic signature detectable by standard means. Firing from hidden does not automatically reveal the attacker; the ambush bonus applies every round they remain undetected." },
     { "id": "Smoke", "description": "Creates an obscurement cloud blocking line of sight within its area for a GM-determined number of rounds." },
     { "id": "Spread", "description": "Discharges across a cone, affecting multiple targets with one roll. Treated as an Area attack; no ACC bonus." },
@@ -3292,6 +3287,129 @@ window.SHADOWS_DATA = {
     { "id": "hacking-gloves", "name": "Hacking Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2500, "notes": "+2 to electronic interface and hacking checks", "flavorLine": "Embedded sensor arrays and haptic feedback enhance interaction with electronic systems." },
     { "id": "smartlink-gloves", "name": "SMARTLink Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2800, "notes": "+2 ACC when using SMARTLink-compatible weapons", "flavorLine": "Extends a weapon's SMARTLink targeting system through the grip." },
     { "id": "precisiongrip-gloves", "name": "PrecisionGrip Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2500, "notes": "+2 to precision skill checks", "flavorLine": "High-sensitivity haptic gloves for surgery, lockpicking, or any margin measured in millimeters." }
+  ],
+
+  /* CONDITIONS -- one entry per row of the Conditions table in
+     `054_Conditions_and_Recovery.md`, plus Dying (054 treats it as a Condition
+     in prose and recovery but gives it no table row -- plan CQ9, a CRB doc fix).
+     Gear's older Conditions table disagrees with 054 in five places (plan CQ8);
+     054 is the one this follows. `effect`/`recovery` are display text; `short`
+     is the chip label. The engine computes ONLY the structured hooks below, and
+     everything else stays text on the chip (Decision 95):
+       painLevels        adds to Pain Level before the 0-3 clamp (Agonized)
+       rollPenalty       flat, applied to every Skill Check total and nothing
+                         else; different ones stack to `penaltyStacking.cap`
+       rollPenaltyWhen   conditional -- shown beside the totals, never summed
+       attackDefense     shown on the Combat lines, never summed (the CRB
+                         states it for attack/defense, not every check)
+       helpless          "any attack roll of 2 or better hits" banner
+       ongoing           { hp, per } fixed, or { source: true } entered at Turn
+                         Reset -- display only until the Turn Reset helper lands
+       location          needs a body part from `bodyLocations` -- Injured and
+                         Maimed only (Decision 98)
+       counter           { max, label, atMax } -- Dying's Death Marks
+     Adding a condition is a data edit with zero app changes. */
+  "conditionRules": {
+    "noStacking": "You have it or you don't. A Condition doesn't stack with itself, but different Conditions stack with each other.",
+    "helpless": "Helpless — you can't move or react. Any attack roll of 2 or better hits you.",
+    "painClamp": "Pain Level never goes below 0 or above 3.",
+    "rollPenalty": {
+      "appliesTo": "skillChecks",
+      "text": "A Condition's penalty comes off Skill Checks only. It doesn't cost Essence dice or Breaker percentage."
+    },
+    "penaltyStacking": {
+      "stacks": true,
+      "cap": -8,
+      "text": "Different Conditions stack. All the penalties on one roll together (Conditions, range, cover, visibility) never go past -8."
+    },
+    "locationStacking": {
+      "perLocation": true
+    }
+  },
+  "bodyLocations": [
+    { "id": "head",      "name": "Head" },
+    { "id": "torso",     "name": "Torso" },
+    { "id": "right-arm", "name": "Right Arm" },
+    { "id": "left-arm",  "name": "Left Arm" },
+    { "id": "right-leg", "name": "Right Leg" },
+    { "id": "left-leg",  "name": "Left Leg" }
+  ],
+  "conditions": [
+    { "id": "agonized", "name": "Agonized", "short": "+1 Pain Level",
+      "effect": "Operate at 1 Pain Level higher, to a max of Pain Level 3.",
+      "recovery": "Medical (Difficulty 15) or a Nanomed Kit.",
+      "painLevels": 1 },
+    { "id": "bleeding", "name": "Bleeding", "short": "-1 HP each round",
+      "effect": "-1 HP per round.",
+      "recovery": "BOD Essence TN 8 TH 1, Medical (Difficulty 15), or a Nanomed Kit.",
+      "ongoing": { "hp": 1, "per": "round" } },
+    { "id": "blinded", "name": "Blinded", "short": "can't see · -5 attack/defense",
+      "effect": "Can't see. Autofail any check requiring sight. Attack/Defense at -5.",
+      "recovery": "BOD Essence TN 8 TH 1, or end of scene if temporary.",
+      "attackDefense": -5 },
+    { "id": "burning", "name": "Burning", "short": "damage each round · -1 to rolls",
+      "effect": "Ongoing damage based on the source. -1 to all rolls.",
+      "recovery": "Remove the source, then treat as Bleeding.",
+      "rollPenalty": -1, "ongoing": { "source": true, "per": "round" } },
+    { "id": "deafened", "name": "Deafened", "short": "can't hear",
+      "effect": "Can't hear. Autofail any check requiring hearing. Can't hear instructions or comms.",
+      "recovery": "BOD Essence TN 8 TH 1, or end of scene if temporary." },
+    { "id": "desynced", "name": "DeSynced", "short": "cyberware offline",
+      "effect": "Cybernetic systems in a body part (limbs, head, torso) aren't talking, or are offline. Note which.",
+      "recovery": "TECH Essence TN 8 TH 2, or 1d4 rounds for a system reboot." },
+    { "id": "disarmed", "name": "Disarmed", "short": "weapon dropped",
+      "effect": "You aren't holding your weapon and can't use it.",
+      "recovery": "Recover the weapon, spending a Move, Fast, or Standard action." },
+    { "id": "disoriented", "name": "Disoriented", "short": "-1 to rolls",
+      "effect": "-1 to all rolls.",
+      "recovery": "BOD Essence TN 8 TH 1, or end of scene if temporary.",
+      "rollPenalty": -1 },
+    { "id": "frightened", "name": "Frightened", "short": "-1 near the source",
+      "effect": "-1 to all rolls while the source is present. Can't willingly move toward the source.",
+      "recovery": "Remove the source, or WILL Essence TN 8 TH 2 with the source present.",
+      "rollPenaltyWhen": { "amount": -1, "when": "while the source is present" } },
+    { "id": "grappled", "name": "Grappled", "short": "-5 to fine movement",
+      "effect": "-5 to anything requiring sophisticated movement.",
+      "recovery": "Remove the source, or a BOD or REF Essence Check opposed by the grappler (your choice)." },
+    { "id": "injured", "name": "Injured", "short": "out of action",
+      "effect": "This body part is damaged and doesn't work.",
+      "recovery": "Focused Healing, or 1 week of downtime.",
+      "location": true },
+    { "id": "maimed", "name": "Maimed", "short": "gone",
+      "effect": "This body part is gone.",
+      "recovery": "Buy or build a replacement.",
+      "location": true },
+    { "id": "paralyzed", "name": "Paralyzed", "short": "helpless",
+      "effect": "Helpless.",
+      "recovery": "Remove the source, or a Nanomed Kit.",
+      "helpless": true },
+    { "id": "poisoned", "name": "Poisoned", "short": "per the poison",
+      "effect": "Inflicts a Condition based on the specific poison. Note which one.",
+      "recovery": "BOD Essence TN 8 TH 2-4 (depending on the poison), an antidote, or a Nanomed Kit." },
+    { "id": "prone", "name": "Prone", "short": "half move · -3 attack/defense",
+      "effect": "Movement halved. Attack/Defense at -3.",
+      "recovery": "Spend a Move to stand.",
+      "attackDefense": -3 },
+    { "id": "restrained", "name": "Restrained", "short": "can't move · -5 · no Dodge",
+      "effect": "Movement reduced to 0. -5 to all Actions. Cannot Dodge.",
+      "recovery": "Remove the source, or BOD or REF Essence TN 8 TH 2 (your choice).",
+      "attackDefense": -5 },
+    { "id": "shocked", "name": "Shocked", "short": "damage each round · -1 to rolls",
+      "effect": "Ongoing damage based on the source. -1 to all rolls.",
+      "recovery": "Remove the source, then treat as Bleeding.",
+      "rollPenalty": -1, "ongoing": { "source": true, "per": "round" } },
+    { "id": "stunned", "name": "Stunned", "short": "helpless",
+      "effect": "Helpless.",
+      "recovery": "BOD Essence TN 8 TH 2.",
+      "helpless": true },
+    { "id": "unconscious", "name": "Unconscious", "short": "helpless",
+      "effect": "Helpless.",
+      "recovery": "Depends on what put you down. From a Shock Check, it ends at the start of your next turn. At zero Health Levels, you're down until you regain health.",
+      "helpless": true },
+    { "id": "dying", "name": "Dying", "short": "helpless · Death Marks",
+      "effect": "Helpless. Make a WILL Essence Check TN 8 TH 2 at every Reset, and Pain doesn't apply to it. A failure, or any damage you take, is a Death Mark. Three Death Marks and you die.",
+      "recovery": "Medical (Difficulty 20) or a Nanomed Kit ends it. Death Marks clear when you're no longer Dying.",
+      "helpless": true, "counter": { "max": 3, "label": "Death Marks", "atMax": "Three Death Marks. You're dead, and your options are seriously limited." } }
   ],
 
   /* MAGIC -- merged from the CRB v4 Magic chapter (docs/reference/crb/Magic.md),
@@ -3544,9 +3662,6 @@ window.SHADOWS_DATA = {
         "luck"
       ],
       "cpCostPerPoint": 1,
-      "flagged": true,
-      "flagNote": "F2: CP boost exchange rate stubbed at 1:1 across target types - confirm with D.",
-    "playerNote": "The exchange rate for boosts isn't settled. The sheet trades 1 for 1 across skills, stats and powers.",
       "maxBoostPerTarget": "powerLevel.maxBoost",
       "exemptions": [
         "luck"

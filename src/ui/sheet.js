@@ -27,6 +27,59 @@ function sheetHeader(title, note){
 const painChip = pain => pain.level
   ? ` <span class="chip pain">Pain Lv ${pain.level} · ${pain.skillPenalty} skill</span>` : "";
 
+// ── Conditions (Decision 95) — one renderer, two densities: Main shows chips,
+// Trackers shows each Condition's effect and recovery text. Everything shown
+// comes from Engine.conditionState() and the catalog; nothing is decided here.
+const signed = n => (n>0?"+":n<0?"−":"")+Math.abs(n);
+function conditionAddHtml(){
+  const opts = D.conditions.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  const locs = D.bodyLocations.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("");
+  return `<div class="cond-add">
+    <select data-condadd-id aria-label="Condition"><option value="">Add a Condition…</option>${opts}</select>
+    <select data-condadd-loc aria-label="Body part" hidden><option value="">Body part…</option>${locs}</select>
+    <button class="btn sm" data-condadd="1">Add</button></div>`;
+}
+function conditionCounterHtml(c){
+  let pips = "";
+  for (let n=1;n<=c.max;n++)
+    pips += `<button class="pip${n<=c.marks?" on":""}" data-condmarks="${c.index}|${n<=c.marks?n-1:n}" aria-label="${esc(c.label)} ${n}" aria-pressed="${n<=c.marks}"></button>`;
+  return `<div class="cond-counter${c.full?" full":""}"><span class="k">${esc(c.label)}</span>${pips}
+    <span class="v">${c.marks} / ${c.max}</span>${c.full&&c.atMax?`<span class="at-max">${esc(c.atMax)}</span>`:""}</div>`;
+}
+function conditionsHtml(ch, full){
+  const st = Engine.conditionState(ch), R = D.conditionRules||{};
+  let h = "";
+  if (st.isHelpless)
+    h += `<div class="cond-alert" role="status"><b>${esc(st.helpless.join(" · "))}</b> — ${esc(R.helpless||"")}</div>`;
+  for (const c of st.counters) h += conditionCounterHtml(c);
+  if (!st.active.length) h += `<p class="step-note cond-none">No Conditions. ${full?esc(R.noStacking||""):""}</p>`;
+  else if (!full){
+    h += `<div class="cond-chips">` + st.active.map(a=>`<span class="cond-chip${a.def&&a.def.helpless?" bad":""}" title="${esc(a.def?a.def.effect:"")}">
+      <b>${esc(a.label)}</b>${a.def?` <small>${esc(a.def.short)}</small>`:""}
+      <button class="x" data-condrm="${a.index}" aria-label="Clear ${esc(a.label)}" title="Clear">✕</button></span>`).join("") + `</div>`;
+  } else {
+    h += st.active.map(a=>`<div class="pick cond-card"><div class="head"><h4>${esc(a.label)}</h4>
+      ${a.def?`<span class="cost">${esc(a.def.short)}</span>`:""}
+      <div class="controls"><button class="btn sm" data-condrm="${a.index}">Clear</button></div></div>
+      <div class="desc">${a.def?esc(a.def.effect)+"\n<b>Recovery:</b> "+esc(a.def.recovery):"This Condition isn't in the game data any more."}</div>
+      <input type="text" class="cond-note" data-condnote="${a.index}" value="${esc(a.note)}" placeholder="note — source, poison, who did it" aria-label="${esc(a.label)} note"></div>`).join("");
+    // How the penalties add up, shown only when one is in play.
+    const penalised = st.active.filter(a=>a.def && typeof a.def.rollPenalty==="number");
+    if (penalised.length) h += ruleHtml([(R.rollPenalty||{}).text, (R.penaltyStacking||{}).text].filter(Boolean).join(" "));
+  }
+  return h + conditionAddHtml();
+}
+// What a Condition does to the numbers on this tab, in one line. Flat penalties
+// are already in the totals; attack/defense and conditional ones are not.
+function conditionTotalsNote(ch, combat){
+  const st = Engine.conditionState(ch), bits = [];
+  if (st.rollPenalty) bits.push(`Conditions take ${signed(st.rollPenalty)}; totals include it.`);
+  if (combat && st.attackDefense.length)
+    bits.push(`Attack/Defense: ${st.attackDefense.map(a=>`${a.name} ${signed(a.value)}`).join(" · ")} — not in the totals.`);
+  for (const c of st.conditional) bits.push(`${c.name}: ${signed(c.amount)} ${c.when} — not in the totals.`);
+  return bits.length ? `<p class="step-note cond-note-line">${esc(bits.join(" "))}</p>` : "";
+}
+
 // Phase 3.3 — persistent reminder + jump-to-editor while admin mode is on.
 function adminBannerHtml(){
   return `<div class="admin-banner"><span class="dot"></span><b>ADMIN MODE</b>
@@ -119,6 +172,8 @@ function sheetVitalsBar(ch){
   let h=`<div class="vbar" aria-label="Vitals">`;
   h+=pill(pain.down?"hp danger":"hp","health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`);
   h+=pill(pain.level?"danger":"","pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"));
+  const cs=Engine.conditionState(ch);
+  if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`);
   h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`);
   h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`);
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
@@ -184,6 +239,7 @@ function skillRowPair(ch, l, {withRank=true}={}){
        `${b.synergy.mod>=0?"+":"−"}${Math.abs(b.synergy.mod)} ${b.synergy.id||"?"} syn`]
     : [`${b.primary.id} ${b.primary.value}`, `<span style="color:var(--dim)">untrained</span>`];
   if (b.pain) parts.push(`<span style="color:var(--magenta)">${b.pain} pain</span>`);
+  if (b.conditions) parts.push(`<span style="color:var(--magenta)">${b.conditions} conditions</span>`);
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   let tr = `<tr class="skill-line"${l.trained?"":' style="opacity:.72"'}>`;
@@ -219,7 +275,7 @@ function renderShMain(){
   h += cond(`hp ${pain.down?"danger":""}`,"Health","health",
     `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch));
   h += cond(`${pain.level?"danger":""}`,"Pain","pain",
-    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false):"no penalties", null);
+    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(pain.fromConditions?` · ${signed(pain.fromConditions)} Lv from Conditions`:""):"no penalties", null);
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
     `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max));
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
@@ -230,6 +286,7 @@ function renderShMain(){
   }
   h += cond("cred","Çredits","credits", `Ç${ch.trackers.credits.current}`, "", null);
   h += `</div>`;
+  h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
   // Two-column command console: stats on the left, combat on the right
   h += `<div class="main-grid">`;
@@ -240,6 +297,7 @@ function renderShMain(){
   // ── right: combat skills + weapons ──
   h += `<section class="main-combat"><div class="sect">Combat${painChip(pain)}</div>`;
   if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
+  h += conditionTotalsNote(ch, true);
   h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
   if (ch.weapons && ch.weapons.length){
     h += `<div class="sect">Weapons</div>
@@ -270,6 +328,7 @@ function renderShSkills(){
   S.openSkills = S.openSkills || new Set();
   let h = sheetHeader("Skills", "Every skill, grouped by category. Trained skills roll 1d10 + Rank + Primary Stat + Synergy; untrained roll 1d10 + Primary Stat only. Tap <b>?</b> on any skill for what it covers.");
   if (pain.level) h += `<p class="step-note">${esc(pain.label)} — all skill checks take ${pain.skillPenalty}; the totals below already include it.${painChip(pain)}</p>`;
+  h += conditionTotalsNote(ch, false);
   // One table, category subheader rows — columns stay aligned across all three.
   let body="";
   for (const [cid,cname] of [["combat","Combat"],["utility","Utility"],["general","General"]]){
@@ -406,7 +465,10 @@ function renderShTrackers(){
   }).join("") + `</div>`;
   h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
-    <div class="desc">${esc(pain.description)}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
+    <div class="desc">${esc(pain.description)}${pain.fromConditions?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; Conditions add ${signed(pain.fromConditions)}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
+
+  // Conditions (Decision 95)
+  h += `<div class="sect">Conditions</div>${conditionsHtml(ch, true)}`;
 
   // SAN
   h += `<div class="trk"><h4>Sanity</h4>
@@ -504,7 +566,7 @@ function renderShProgression(){
   const focused = Engine.focusedSkillIds(ch);
   const trained = D.skills.filter(s=>Engine.skillLine(ch,s.id).trained);
   const untrained = D.skills.filter(s=>!Engine.skillLine(ch,s.id).trained);
-  h += `<details class="group" open><summary>Raise a Skill — 5 × current rank · Focused 3 × · cap ${D.ip.rankCap}</summary><div class="alloc">`;
+  h += `<details class="group" open><summary>Raise a Skill — 5 × current rank · Focused 3 × · new skill ${D.ip.skillIncreaseCost.newSkill} · cap ${D.ip.rankCap}</summary><div class="alloc">`;
   for (const s of trained){
     const line=Engine.skillLine(ch,s.id), c=Engine.ipCost(ch,"skill",s.id);
     h += `<div class="alloc-row"><div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} <small>rank ${line.rank}</small></div>
@@ -631,7 +693,7 @@ function renderShSessions(){
 }
 // Maps an audit entry's kind to a chip colour.
 function auditChip(kind){
-  if (kind==="damage"||kind==="pain"||kind==="san") return "pain";
+  if (kind==="damage"||kind==="pain"||kind==="san"||kind==="condition") return "pain";
   if (kind==="ip"||kind==="skill"||kind==="stat") return "cyan";
   if (kind==="admin") return "gold";
   if (kind==="milestone") return "ok";
@@ -899,6 +961,30 @@ function pHealthHtml(ch){
     : `<p class="p-note">Border weight marks the Pain Level band (thresholds at 2, 5, 8 HL lost).</p>`;
   return h;
 }
+// Conditions (Decision 95): the whole catalog as a tick list, so a paper
+// player can mark what they have. Filled prints tick the active ones and name
+// the body part. Death Marks get their own boxes — a counter, not a tick.
+function pConditionsHtml(ch){
+  const st = ch ? Engine.conditionState(ch) : null;
+  const box = on => `<span class="p-box${on?" on":""}"></span>`;
+  const row = c => {
+    const hits = st ? st.active.filter(a=>a.id===c.id) : [];
+    const where = c.location ? hits.map(a=>a.locationName).join(", ") : null;
+    let marks = "";
+    if (c.counter){
+      const n = hits.length ? (hits[0].marks||0) : 0;
+      marks = `<span class="p-counter"><span class="p-label">${esc(c.counter.label)}</span>`;
+      for (let i=1;i<=c.counter.max;i++) marks += box(i<=n);
+      marks += `</span>`;
+    }
+    return `<li>${box(hits.length)}<span>${esc(c.name)}</span>${where!=null?pLine(where):""}${marks}</li>`;
+  };
+  // A body part or a counter needs a full-width row — a paper player writes
+  // "left arm" in pen, and Death Marks are boxes, not a tick.
+  const wide = c => c.location || c.counter;
+  return `<ul class="p-condlist">${D.conditions.filter(c=>!wide(c)).map(row).join("")}</ul>`
+       + `<ul class="p-condlist p-condloc">${D.conditions.filter(wide).map(row).join("")}</ul>`;
+}
 function pDefenseHtml(){
   let h = `<table class="p-table"><thead><tr><th>Location</th><th>Res</th><th>Int</th><th>Nat</th><th>Prot</th></tr></thead><tbody>` +
     ["Head","Torso","R Arm","L Arm","R Leg","L Leg"].map(l=>
@@ -969,7 +1055,7 @@ function renderPrintView(ch){
   p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch&&ch.trackers.credits.current)}</div>`;
   p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}</div>`;
   p1main += `<div class="p-frontbody">`;
-  p1main += `<div class="p-frontleft">${pCard("Stats", pStatsHtml(ch))}</div>`;
+  p1main += `<div class="p-frontleft">${pCard("Stats", pStatsHtml(ch))}${pCard("Conditions", pConditionsHtml(ch), "magenta p-condcard")}</div>`;
   p1main += `<div class="p-frontright">` +
     pCard("Combat Quick-Ref", pSkillCellsHtml(ch,"combat"), "magenta") +
     pCard("Health Levels", pHealthHtml(ch)) +

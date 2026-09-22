@@ -250,3 +250,98 @@ test('CRB: the entries that say "with your GM" ask for text and never block the 
     assert.equal(about[0].level, "warn", `${id} blocks the lock on an unwritten detail`);
   }
 });
+
+// ── Conditions and Pain (054_Conditions_and_Recovery.md, pulled 2026-09-22) ──
+
+test('CRB 054: "A high BOD character on Pain Level 3 will experience -3 ... -3 die ... -15%"', () => {
+  const ch = subject({ bod: 10 });
+  ch.trackers.damage = 40;                       // 8 of 10 HL lost
+  const p = Engine.painState(ch);
+  assert.equal(p.level, 3);
+  assert.equal(p.skillPenalty, -3);
+  assert.equal(p.essencePenalty, -3);
+  assert.equal(p.breakerPenalty, -15);
+});
+
+test('CRB 054: Agonized — "Operate at 1 Pain Level higher, to a max PL 3"', () => {
+  const ch = subject({ bod: 10 });
+  assert.equal(Engine.addCondition(ch, { id: "agonized" }).ok, true);
+  const at = dmg => { ch.trackers.damage = dmg; return Engine.painState(ch); };
+  assert.equal(at(0).level, 1, "Agonized at Pain Level 0 gives 1");
+  assert.equal(at(0).skillPenalty, -1, "condition Pain carries the full per-level penalty");
+  assert.equal(at(10).level, 2, "Agonized at Pain Level 1 gives 2");
+  assert.equal(at(40).level, 3, "Agonized at Pain Level 3 stays 3");
+  assert.equal(at(40).fromHealth, 3);
+  assert.equal(at(40).fromConditions, 1);
+});
+
+test('CRB 054: Pain "never falls below 0 or climbs above 3"', () => {
+  // Drive condition Pain past the clamp with synthetic entries, rather than
+  // inventing a second Pain-raising Condition in the real data.
+  D.conditions.push({ id: "__fixture-pain", name: "Fixture", painLevels: 5 },
+                    { id: "__fixture-relief", name: "Relief", painLevels: -9 });
+  try {
+    const ch = subject({ bod: 10 });
+    ch.trackers.conditions.push({ id: "__fixture-pain" });
+    assert.equal(Engine.painState(ch).level, 3);
+    ch.trackers.conditions = [{ id: "__fixture-relief" }];
+    ch.trackers.damage = 40;
+    assert.equal(Engine.painState(ch).level, 0);
+  } finally { D.conditions.splice(-2, 2); }
+});
+
+test("CRB 054: a Condition doesn't stack with itself — but Blinded, Disoriented and Burning together", () => {
+  const ch = subject();
+  assert.equal(Engine.addCondition(ch, { id: "burning" }).ok, true);
+  const again = Engine.addCondition(ch, { id: "burning" });
+  assert.equal(again.ok, false, "a second Burning was accepted");
+  assert.match(again.why, /doesn't stack/);
+  assert.equal(Engine.addCondition(ch, { id: "blinded" }).ok, true);
+  assert.equal(Engine.addCondition(ch, { id: "disoriented" }).ok, true);
+  assert.equal(ch.trackers.conditions.length, 3);
+});
+
+test('CRB 054: Helpless — "Any attack roll of 2 or better is a guaranteed hit"', () => {
+  for (const id of ["paralyzed", "stunned", "unconscious", "dying"]) {
+    const ch = subject();
+    Engine.addCondition(ch, { id });
+    assert.equal(Engine.conditionState(ch).isHelpless, true, `${id} is not Helpless`);
+  }
+  const ch = subject();
+  Engine.addCondition(ch, { id: "prone" });
+  assert.equal(Engine.conditionState(ch).isHelpless, false, "Prone is not Helpless");
+  assert.match(D.conditionRules.helpless, /2 or better/);
+});
+
+test('CRB 054: "After three Death Marks against you, you die"', () => {
+  const ch = subject();
+  Engine.addCondition(ch, { id: "dying" });
+  const i = ch.trackers.conditions.findIndex(e => e.id === "dying");
+  assert.equal(ch.trackers.conditions[i].marks, 0);
+  Engine.setConditionMarks(ch, i, 2);
+  assert.equal(Engine.conditionState(ch).counters[0].full, false);
+  Engine.setConditionMarks(ch, i, 3);
+  assert.equal(Engine.conditionState(ch).counters[0].full, true);
+  Engine.setConditionMarks(ch, i, 7);
+  assert.equal(ch.trackers.conditions[i].marks, 3, "Death Marks ran past three");
+  // "Accumulated Death Marks reset when you are no longer Dying" — the marks
+  // live on the Condition, so clearing it clears them.
+  Engine.removeCondition(ch, i);
+  Engine.addCondition(ch, { id: "dying" });
+  assert.equal(ch.trackers.conditions[0].marks, 0);
+});
+
+// ── Design-team rulings, 2026-09-22 (Decision 98) ─────────────────────
+// Not CRB text yet — the designers' own table, pinned the same way.
+
+test('Design ruling: stats past 10 — "11-15 = +5, 16-20 = +6, 21-25 = +7, etc every 5"', () => {
+  const table = { 1: -3, 2: -2, 3: -1, 4: 0, 6: 0, 7: 1, 10: 4,
+                  11: 5, 15: 5, 16: 6, 20: 6, 21: 7, 25: 7, 26: 8 };
+  for (const [v, mod] of Object.entries(table)) assert.equal(Engine.statMod(Number(v)), mod, `stat ${v}`);
+});
+
+test('Design ruling: "For BOD above 10, you gain 1 HP per HL (max is 10 HLs)"', () => {
+  const h = Engine.health(subject({ bod: 16 }));
+  assert.equal(h.levels, 10);
+  assert.equal(h.hpPer, 11);
+});
