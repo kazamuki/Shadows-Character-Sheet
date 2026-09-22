@@ -3,6 +3,11 @@
 // everything else is computed here (SCHEMA.md core principle).
 const Engine = (() => {
   const D = () => window.SHADOWS_DATA;
+  // A catalog lookup by id — one shape for every table, null when absent.
+  const byId = key => id => (D()[key]||[]).find(x=>x && x.id===id) || null;
+  // A stored count (damage, Integrity lost, a typed RES…) read as a whole
+  // number ≥ 0. Anything unreadable is 0: the engine is total (constraint 8).
+  const nonNegInt = v => Math.max(0, Math.floor(Number(v)||0));
 
   function newCharacter(){
     return {
@@ -283,8 +288,8 @@ const Engine = (() => {
   // ── Conditions (Decision 95) ─────────────────────────────────────────
   // The character stores which Conditions are active; everything they DO is
   // read here from the catalog's structured hooks. Nothing is written back.
-  const conditionById = id => (D().conditions||[]).find(c=>c.id===id) || null;
-  const locationById  = id => (D().bodyLocations||[]).find(l=>l.id===id) || null;
+  const conditionById = byId("conditions");
+  const locationById  = byId("bodyLocations");
   // "You have it or you don't" — one entry per id, except a location-bearing
   // Condition, which is one per body part (F22 stub: an Injured arm and an
   // Injured leg are two entries).
@@ -375,7 +380,7 @@ const Engine = (() => {
     const h = health(ch);
     const t = (ch && ch.trackers) || {};
     const pick = k => (over && over[k]!=null) ? over[k] : t[k];
-    const damage  = Math.max(0, Math.floor(Number(pick("damage"))||0));
+    const damage  = nonNegInt(pick("damage"));
     const massive = Math.max(0, Math.min(h.levels, Math.floor(Number(pick("massiveLevels"))||0)));
     const emptied = h.hpPer>0 ? Math.max(0, Math.min(h.levels - massive, Math.floor(damage / h.hpPer))) : 0;
     const capacity = Math.max(0, h.total - massive*h.hpPer);
@@ -418,10 +423,11 @@ const Engine = (() => {
   // The engine never rolls (plan P1): the player enters the PROT die. Every
   // number here is read from `armorRules`, `damageTypes`, `damageRules` and
   // the upgrade/feature glossaries, so a new upgrade or damage type is data.
-  const armorDefById = id => (D().armor||[]).find(a=>a.id===id) || null;
-  const upgradeById  = id => (D().armorUpgradeGlossary||[]).find(u=>u.id===id) || null;
-  const featureById  = id => (D().armorFeatureGlossary||[]).find(f=>f.id===id) || null;
-  const damageTypeById = id => (D().damageTypes||[]).find(t=>t.id===id) || null;
+  const armorDefById   = byId("armor");
+  const upgradeById    = byId("armorUpgradeGlossary");
+  const featureById    = byId("armorFeatureGlossary");
+  const damageTypeById = byId("damageTypes");
+  const damageCategoryById = byId("damageCategories");
   const dieMax = s => { const m = /^\s*1?d(\d+)\s*$/i.exec(String(s||"")); return m ? Number(m[1]) : null; };
 
   function armorPiece(entry, index){
@@ -434,7 +440,7 @@ const Engine = (() => {
     // Head and hand pieces don't roll PROT or track INT — features only (Gear).
     const tracks = slot==="body";
     const integrityMax = tracks ? (Number(src.integrity)||0) + bonus : 0;
-    const integrityLoss = Math.max(0, Math.floor(Number(entry.integrityLoss)||0));
+    const integrityLoss = nonNegInt(entry.integrityLoss);
     const integrity = Math.max(0, integrityMax - integrityLoss);
     const resAgainst = [...(R.baseResAgainst||[]),
                         ...upgrades.map(u=>(upgradeById(u)||{}).resAgainst).filter(Boolean)];
@@ -467,116 +473,142 @@ const Engine = (() => {
     return { worn: wornBody[0] || null, pieces, redirects, problems };
   }
 
+  // resolveHit's stages, in the order a hit happens. Each takes what it needs
+  // and returns plain values, so Session 4 can change one without the rest.
+
+  // Which armor answers: the worn piece, or the stand-in typed into the panel
+  // when the sheet holds none (base Kinetic, covers the hit, no wear tracked).
+  function hitArmor(as, hit){
+    if (as.worn) return Object.assign({ source:"worn" }, as.worn);
+    if (!hit.manual || typeof hit.manual!=="object") return null;
+    const mi = hit.manual.integrity;
+    const integrity = (mi==null || mi==="") ? null : nonNegInt(mi);
+    return { source:"manual", name:"Your armor", prot:null, protMax:null,
+             res: nonNegInt(hit.manual.res), resAgainst: (D().armorRules||{}).baseResAgainst || [],
+             coverage:null, integrity, compromised: integrity===0, scrapped:false };
+  }
+
+  // Where it lands: the part aimed at, moved by a worn redirect (Headshot
+  // Defense: head → torso). Everything downstream — coverage AND the body part
+  // a Condition lands on — uses `location`, never `aimed`.
+  function hitLocation(as, hit){
+    const aimed = locationById(hit.location) ? hit.location : ((D().armorRules||{}).defaultHitLocation || "torso");
+    const rd = as.redirects.find(r=>r.from===aimed) || null;
+    return { aimed, location: rd ? rd.to : aimed, redirectedBy: rd };
+  }
+
+  // 053 Massive: skips PROT and RES; strips INT equal to the damage; 1 HL per
+  // 10; +1 if the armor ends at 0 or there was none. Ending at 0 is scrap.
+  function mitigateBypass(damage, armor, covered){
+    const M = (D().damageRules||{}).massive || {};
+    const intBefore = covered ? armor.integrity : null;
+    if (covered && armor.source==="manual" && intBefore==null)
+      return { ok:false, why:"Enter your armor's Integrity before the hit. Massive damage strips it." };
+    const integrityLost = covered ? Math.min(damage, intBefore) : 0;
+    const gone = !covered || intBefore - integrityLost <= 0;
+    return { ok:true, prot:0, res:0, resSkipped:null, absorbed:0, through:0, soaked:false, integrityLost,
+             levelsLost: damage>0 ? Math.floor(damage / (M.damagePerLevel||10)) + (gone ? (M.extraLevelWhenArmorGone||0) : 0) : 0,
+             scrap: covered && damage>0 && gone };
+  }
+
+  // 053 regular: PROT (the die rolled) + RES if the type matches and the hit
+  // isn't AP and the armor isn't Compromised/scrap. Fully soaked costs INT.
+  function mitigateArmor(damage, type, hit, armor, covered){
+    let prot = 0, res = 0, resSkipped = null;
+    if (covered){
+      const roll = Math.floor(Number(hit.protRoll));
+      if (hit.protRoll==null || hit.protRoll==="" || !(roll>=1)) return { ok:false, why:"Enter the PROT die you rolled." };
+      if (armor.protMax && roll>armor.protMax)
+        return { ok:false, why:`${armor.name} rolls ${armor.prot} for PROT, so the roll can't be more than ${armor.protMax}.` };
+      prot = roll;
+      if (hit.ap) resSkipped = "ap";
+      else if (armor.compromised || armor.scrapped) resSkipped = "compromised";
+      else if (!(armor.resAgainst||[]).includes(type.resClass)) resSkipped = "type";
+      else res = armor.res;
+    }
+    const absorbed = Math.min(damage, prot + res), through = damage - absorbed;
+    const soaked = covered && damage>0 && through===0;
+    const intBefore = covered ? armor.integrity : null;
+    const integrityLost = soaked && intBefore!=null
+      ? Math.min(Number((D().armorRules||{}).soakedIntegrityLoss)||0, intBefore) : 0;
+    return { ok:true, prot, res, resSkipped, absorbed, through, soaked, integrityLost, levelsLost:0, scrap:false };
+  }
+
+  // 054's consequences: Shock, At Zero, the Death Mark while Dying, and the
+  // Conditions this hit can cause (its type's `inflicts` + its category's).
+  function hitPrompts(ch, type, cat, before, after){
+    const DR = D().damageRules || {};
+    const lostThisHit = after.lost - before.lost;
+    const tookDamage = after.damage>before.damage || after.massive>before.massive;
+    const shockAt = Math.ceil(before.levels * ((DR.shock||{}).fractionOfMaxLevels ?? 0.5));
+    const dyingId = (DR.whileDying||{}).condition;
+    const dying = !!dyingId && (((ch||{}).trackers||{}).conditions||[]).some(e=>e && e.id===dyingId);
+    const freePass = (DR.atZero||{}).freePass;
+    const offered = tookDamage ? [...new Set([...(type.inflicts||[]), ...(cat.inflicts||[])])].filter(id=>conditionById(id)) : [];
+    return { lostThisHit, tookDamage, dying, prompts: {
+      shock: tookDamage && !after.down && shockAt>0 && lostThisHit >= shockAt
+        ? Object.assign({ threshold: shockAt }, DR.shock) : null,
+      atZero: tookDamage && after.down && !dying
+        ? Object.assign({}, DR.atZero, { freePassHeld: !!(freePass && ((ch||{}).advantages||[]).some(a=>a && a.id===freePass.advantage)) })
+        : null,
+      deathMark: tookDamage && dying ? DR.whileDying : null,
+      conditions: offered, always: (type.always||[]).filter(id=>offered.includes(id))
+    } };
+  }
+
   // Pure: what a hit WOULD do (plan P6). Returns the breakdown, the patch and
   // the prompts; applyHit() is the only thing that writes. `hit`:
-  //   { damage, damageType, category: regular|withering|massive, ap,
-  //     location, protRoll, manual: { res, integrity } }
-  // `manual` stands in for armor the sheet doesn't hold yet (no worn piece):
-  // treated as base Kinetic armor covering the hit, with no INT tracked.
+  //   { damage, damageType, category, ap, location, protRoll, manual: { res, integrity } }
+  // How a category resolves is data: `bypassesArmor` takes the Massive path,
+  // `recordsWithering` marks what got through, `inflicts` adds Conditions.
   function resolveHit(ch, hit){
     hit = hit || {};
-    const R = D().armorRules || {}, DR = D().damageRules || {};
     const damage = Math.floor(Number(hit.damage));
     if (hit.damage==null || hit.damage==="" || !(damage>=0)) return { ok:false, why:"Enter the damage." };
     const type = damageTypeById(hit.damageType);
     if (!type) return { ok:false, why:"Choose a damage type." };
     const category = hit.category || "regular";
-    if (!(D().damageCategories||[]).some(c=>c.id===category))
-      return { ok:false, why:"Choose Regular, Withering or Massive." };
-    const massive = category==="massive";
+    const cat = damageCategoryById(category);
+    if (!cat) return { ok:false, why:"Choose Regular, Withering or Massive." };
 
     const as = armorState(ch);
-    let armor = null;
-    if (as.worn) armor = Object.assign({ source:"worn" }, as.worn);
-    else if (hit.manual && typeof hit.manual==="object"){
-      const mi = hit.manual.integrity;
-      const integrity = (mi==null || mi==="") ? null : Math.max(0, Math.floor(Number(mi)||0));
-      armor = { source:"manual", name:"Your armor", prot:null, protMax:null,
-                res: Math.max(0, Math.floor(Number(hit.manual.res)||0)),
-                resAgainst: R.baseResAgainst || [], coverage:null,
-                integrity, compromised: integrity===0, scrapped:false };
-    }
-    const aimed = locationById(hit.location) ? hit.location : (R.defaultHitLocation || "torso");
-    let location = aimed, redirectedBy = null;
-    const rd = as.redirects.find(r=>r.from===aimed);
-    if (rd){ location = rd.to; redirectedBy = rd; }
-    const covered = !!armor && (armor.coverage==null || armor.coverage.includes(location));
-
-    let prot = 0, res = 0, resSkipped = null, integrityLost = 0, levelsLost = 0, scrap = false;
-    let absorbed = 0, through = 0, soaked = false;
-    const intBefore = covered ? armor.integrity : null;
-    if (massive){
-      // 053: skips PROT and RES; strips INT equal to the damage; 1 HL per 10;
-      // +1 if the armor ends at 0 or there was none.
-      if (covered && armor.source==="manual" && intBefore==null)
-        return { ok:false, why:"Enter your armor's Integrity before the hit. Massive damage strips it." };
-      const M = DR.massive || {};
-      integrityLost = covered ? Math.min(damage, intBefore) : 0;
-      const gone = !covered || intBefore - integrityLost <= 0;
-      if (damage>0) levelsLost = Math.floor(damage / (M.damagePerLevel||10)) + (gone ? (M.extraLevelWhenArmorGone||0) : 0);
-      scrap = covered && damage>0 && intBefore - integrityLost <= 0;
-    } else {
-      if (covered){
-        const roll = Math.floor(Number(hit.protRoll));
-        if (hit.protRoll==null || hit.protRoll==="" || !(roll>=1)) return { ok:false, why:"Enter the PROT die you rolled." };
-        if (armor.protMax && roll>armor.protMax)
-          return { ok:false, why:`${armor.name} rolls ${armor.prot} for PROT, so the roll can't be more than ${armor.protMax}.` };
-        prot = roll;
-        if (hit.ap) resSkipped = "ap";
-        else if (armor.compromised || armor.scrapped) resSkipped = "compromised";
-        else if (!(armor.resAgainst||[]).includes(type.resClass)) resSkipped = "type";
-        else res = armor.res;
-      }
-      absorbed = Math.min(damage, prot + res);
-      through = damage - absorbed;
-      soaked = covered && damage>0 && through===0;
-      if (soaked && intBefore!=null) integrityLost = Math.min(Number(R.soakedIntegrityLoss)||0, intBefore);
-    }
+    const armor = hitArmor(as, hit);
+    const where = hitLocation(as, hit);
+    const covered = !!armor && (armor.coverage==null || armor.coverage.includes(where.location));
+    const m = cat.bypassesArmor ? mitigateBypass(damage, armor, covered)
+                                : mitigateArmor(damage, type, hit, armor, covered);
+    if (!m.ok) return m;
 
     const before = hlState(ch);
-    const after = hlState(ch, { damage: before.damage + through,
-                                massiveLevels: Math.min(before.levels, before.massive + levelsLost) });
-    const lostThisHit = after.lost - before.lost;
-    const tookDamage = through>0 || after.massive>before.massive;
-    const shockAt = Math.ceil(before.levels * ((DR.shock||{}).fractionOfMaxLevels ?? 0.5));
-    const dyingId = (DR.whileDying||{}).condition;
-    const dying = !!dyingId && (((ch||{}).trackers||{}).conditions||[]).some(e=>e && e.id===dyingId);
-    const freePass = (DR.atZero||{}).freePass;
-    const offered = tookDamage ? [...new Set([...(type.inflicts||[]), ...(massive ? ((DR.massive||{}).inflicts||[]) : [])])]
-                                 .filter(id=>conditionById(id)) : [];
+    const after = hlState(ch, { damage: before.damage + m.through,
+                                massiveLevels: Math.min(before.levels, before.massive + m.levelsLost) });
+    const c = hitPrompts(ch, type, cat, before, after);
     const notes = [];
     if (type.flagged && type.playerNote) notes.push(type.playerNote);
     if (covered && armor.source==="worn") armor.upgrades.forEach(u=>{
       const g = upgradeById(u); if (g && g.flagged && g.playerNote && !notes.includes(g.playerNote)) notes.push(g.playerNote);
     });
 
+    const intBefore = covered ? armor.integrity : null;
     const t = ((ch||{}).trackers) || {};
-    const wornPatch = covered && armor.source==="worn" && (integrityLost>0 || scrap)
-      ? { index: armor.index, integrityLoss: armor.integrityLoss + integrityLost, scrapped: armor.scrapped || scrap }
-      : null;
     return {
-      ok: true, damage, type, category, massive, ap: !!hit.ap,
-      location, aimed, redirectedBy, covered,
+      ok: true, damage, type, category, cat, bypassesArmor: !!cat.bypassesArmor, ap: !!hit.ap,
+      location: where.location, aimed: where.aimed, redirectedBy: where.redirectedBy, covered,
       armor: armor ? { source: armor.source, name: armor.name, prot: armor.prot, res: armor.res,
-                       integrityBefore: intBefore, integrityAfter: intBefore==null ? null : intBefore - integrityLost,
+                       integrityBefore: intBefore, integrityAfter: intBefore==null ? null : intBefore - m.integrityLost,
                        integrityMax: armor.integrityMax ?? null, compromised: !!armor.compromised } : null,
-      prot, res, resSkipped, absorbed, through, soaked, integrityLost, levelsLost, scrap,
-      before, after, lostThisHit, tookDamage,
+      prot: m.prot, res: m.res, resSkipped: m.resSkipped, absorbed: m.absorbed, through: m.through,
+      soaked: m.soaked, integrityLost: m.integrityLost, levelsLost: m.levelsLost, scrap: m.scrap,
+      before, after, lostThisHit: c.lostThisHit, tookDamage: c.tookDamage,
       patch: {
         damage: after.damage, massiveLevels: after.massive,
-        witheringDamage: Math.max(0, Math.floor(Number(t.witheringDamage)||0)) + (category==="withering" ? through : 0),
-        armor: wornPatch,
-        deathMark: tookDamage && dying
-      },
-      prompts: {
-        shock: tookDamage && !after.down && shockAt>0 && lostThisHit >= shockAt
-          ? Object.assign({ threshold: shockAt }, DR.shock) : null,
-        atZero: tookDamage && after.down && !dying
-          ? Object.assign({}, DR.atZero, { freePassHeld: !!(freePass && ((ch||{}).advantages||[]).some(a=>a && a.id===freePass.advantage)) })
+        witheringDamage: nonNegInt(t.witheringDamage) + (cat.recordsWithering ? m.through : 0),
+        armor: covered && armor.source==="worn" && (m.integrityLost>0 || m.scrap)
+          ? { index: armor.index, integrityLoss: armor.integrityLoss + m.integrityLost, scrapped: armor.scrapped || m.scrap }
           : null,
-        deathMark: tookDamage && dying ? DR.whileDying : null,
-        conditions: offered, always: (type.always||[]).filter(id=>offered.includes(id))
+        deathMark: c.tookDamage && c.dying
       },
+      prompts: c.prompts,
       notes
     };
   }
@@ -599,9 +631,12 @@ const Engine = (() => {
     if (r.prompts.shock && choices.shock==="fail") want.push(...(r.prompts.shock.onFail||[]));
     if (r.prompts.atZero && choices.atZero==="pass") want.push(...(r.prompts.atZero.onPass||[]));
     if (r.prompts.atZero && choices.atZero==="fail") want.push(...(r.prompts.atZero.onFail||[]));
+    // A body-part Condition from a hit lands where the HIT landed — after any
+    // redirect — whatever the caller passed. The engine owns that, not the UI.
     (choices.conditions||[]).forEach(c=>{
-      const e = typeof c==="string" ? { id:c } : c;
-      if (e && r.prompts.conditions.includes(e.id)) want.push(e);
+      const id = typeof c==="string" ? c : (c && c.id);
+      if (!r.prompts.conditions.includes(id)) return;
+      want.push((conditionById(id)||{}).location ? { id, location: r.location } : { id });
     });
     const added = [], skipped = [];
     for (const w of want){
@@ -687,7 +722,7 @@ const Engine = (() => {
     return {ok:true, cost:c.cost};
   }
   function grantIP(ch, amount, note){
-    amount = Math.max(0, Math.floor(Number(amount)||0));
+    amount = nonNegInt(amount);
     if (!amount) return {ok:false, why:"Enter an IP amount."};
     ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"grant", amount, note:note||"" });
     return {ok:true};
@@ -992,7 +1027,7 @@ const Engine = (() => {
       seen.add(k); return true;
     });
     for (const k of ["massiveLevels","witheringDamage"])
-      t[k] = Math.max(0, Math.floor(Number(t[k])||0));
+      t[k] = nonNegInt(t[k]);
     if (!c.panelData || typeof c.panelData!=="object") c.panelData={};
     const pr = c.progression = Object.assign({milestonePoints:0}, c.progression||{});
     pr.ip = Object.assign({earned:0, log:[]}, pr.ip);
@@ -1438,7 +1473,7 @@ const Engine = (() => {
            // Conditions (Decision 95)
            conditionById, locationById, conditionState, addCondition, removeCondition, setConditionMarks,
            // Taking a hit (Decision 99)
-           hlState, armorState, resolveHit, applyHit, damageTypeById,
+           hlState, armorState, resolveHit, applyHit, damageTypeById, damageCategoryById,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,

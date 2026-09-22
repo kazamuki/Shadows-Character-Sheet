@@ -479,6 +479,20 @@ test("Gear: attacks on uncovered areas bypass armor; Headshot Defense turns a he
   assert.deepEqual([r.location, r.covered, r.through], ["torso", true, 3]);
 });
 
+test("Gear: Headshot Defense treats a head shot as a torso hit — so a Maimed from it lands on the torso", () => {
+  // PR #26 review, finding 1: the Condition used the part aimed at, not the
+  // part hit, so a helmeted head shot recorded "Maimed (Head)".
+  const ch = wearing(wearing(subject({ bod: 10 })), "motorcycle-helmet");
+  const hit = { damage: 30, damageType: "ballistic", category: "massive", location: "head" };
+  const r = Engine.applyHit(ch, hit, { conditions: [{ id: "maimed", location: "head" }] });
+  assert.equal(r.added.join(","), "maimed");
+  assert.equal(ch.trackers.conditions[0].location, "torso", "the caller's location doesn't override where the hit landed");
+  // Without the helmet, the head is where it lands.
+  const bare = subject({ bod: 10 });
+  Engine.applyHit(bare, hit, { conditions: ["maimed"] });
+  assert.equal(bare.trackers.conditions[0].location, "head");
+});
+
 test("Design ruling (CQ5): only Massive damage offers Injured and Maimed", () => {
   const reg = Engine.resolveHit(subject({ bod: 10 }), { damage: 8, damageType: "ballistic" });
   assert.ok(!reg.prompts.conditions.includes("injured"));
