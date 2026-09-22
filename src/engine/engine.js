@@ -6,7 +6,7 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.6", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.7", gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -23,7 +23,7 @@ const Engine = (() => {
       skills:{},                       // id -> {rank, ipe}
       advantages:[], disadvantages:[], // {id, rank, notes, selections?}
       trackers:{ damage:0, luck:{bonus:0, spent:0}, san:{loss:0},
-                 exhaustion:0, sfr:{spent:0},
+                 sfr:{spent:0},
                  credits:{current:0, ledger:[]},
                  adjustments:[],               // Phase 3: manual adjustments ledger
                  panel:{} },                   // Phase 3: generic archetype tracker panels
@@ -647,7 +647,11 @@ const Engine = (() => {
     // data would mask the exact mismatch versionCheck exists to report.
     const shape = newCharacter(); delete shape.meta;
     _fillDefaults(c, shape);
-    const t = c.trackers = Object.assign({damage:0, exhaustion:0}, c.trackers||{});
+    const t = c.trackers = Object.assign({damage:0}, c.trackers||{});
+    // Schema 0.7 (Decision 93): Exhaustion was never its own resource -- it's
+    // TOL at zero, a condition, not something tracked alongside TOL. Drop a
+    // pre-0.7 character's old accrual rather than migrate it forward.
+    delete t.exhaustion;
     t.luck    = Object.assign({bonus:0, spent:0}, t.luck);
     t.san     = Object.assign({loss:0}, t.san);
     t.sfr     = Object.assign({spent:0}, t.sfr);
@@ -689,7 +693,7 @@ const Engine = (() => {
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.6";
+    c.meta.schemaVersion = "0.7";
     return c;
   }
 

@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.6 (game data 0.6) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-12 (Weapons, Ammo & Armor data batch)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.7 (game data 0.7) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-20 (Magic — archetype-independent half, data batch)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -341,6 +341,48 @@ window.SHADOWS_DATA = {
       feature: "Headshot Defense", flavorLine: "..." }
     // 37 entries: 8 light + 8 medium + 9 full body coverage, 6 head, 6 hand.
     // slot:"body" always carries prot/res/integrity; slot:"head"/"hand" never do.
+  ],
+
+  // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
+  // Merged from docs/reference/crb/Magic.md. Origins (Book/Blood/Bound) are
+  // deliberately NOT here — that's the Arcanist subtype question, still
+  // blocked on the archetype four-way comparison (STATE.md §3). Everything
+  // below applies to any caster regardless of subtype.
+  domains: [
+    { id: "elements", name: "Elements", glyphs: ["Fire", "Lightning", "Water", "Air", "Earth"],
+      description: "..." }
+    // force, matter, mind, soul — 5 total.
+  ],
+  spellTiers: [ { id: "cantrip", name: "Cantrip", tn: 7, th: 1, description: "..." } ], // 4: cantrip/standard/advanced/superior
+  spellTagGlossary: [ { id: "AOE", description: "..." } ], // 8 entries, incl. one flagged (AP — not in the WIP's own tag list)
+  // `spellcraftRules` documents the roll, the five outcomes (Overflow/
+  // Manifest/Fizzle/Rupture/Cascade), Concentration, Sovereign Soul,
+  // Charging, and the Improvised → Known → Mastered progression as
+  // reference text — the same role `armorRules` plays. No engine code
+  // executes any of it (Decision 11: the app never rolls dice).
+  spellcraftRules: { rollNote: "...", outcomes: { overflow: "...", manifest: "...", fizzle: "...", rupture: "...", cascade: "..." },
+    exhaustion: "...", charging: { standardAction: true, tnReductionPerTurn: 1, maxTurns: 3, floorTN: 5, breakCheck: "..." },
+    concentration: "...", sovereignSoul: { willingConscious: "No modifier", unconsciousAlly: "+1 TH", unwilling: "+3 TH" },
+    castingRequiresVoice: "...", progression: { improvised: "...", known: "...", mastered: "..." },
+    teaching: { taught: "...", copiedCold: "..." } },
+  enchantmentMaterialCategories: [ { id: "once-living", examples: ["Wood", "Bone", "Leather"], charges: 3,
+    onDepletion: "...", onRupture: "...", recharging: "..." } ], // 3: degradable/once-living/inorganic-durable
+  enchantmentTimeTable: [ { tier: "cantrip", evocationTH: 1, enchantmentTH: 3, enchantmentMinTime: "3 hours",
+    alchemyTH: 6, alchemyMinTime: "6 days" } ], // one row per spell tier
+  enchantmentExtendedTime: { note: "...", reductionCapByRank: { "1": 1, "2": 2, "3": 3, "4": 4, "5": 5 } },
+  // `spells` is the full Known-spell catalog: id + tier + domain + glyph +
+  // tn/th/range/spellType/damageType/target/effect/defending/overflow/tags.
+  // Overflow keeps the WIP's own `[X]` placeholders verbatim — unresolved
+  // balance magnitudes, not a transcription gap.
+  spells: [
+    { id: "firebolt", name: "Firebolt", tier: "standard", domain: "elements", glyph: "Fire",
+      tn: 8, th: 2, range: "Short", spellType: "offensive", damageType: "elemental",
+      target: "1 person or object", effect: "SP Damage", defending: "Dodge",
+      overflow: { "1x": "Damage increases by [X].", "2x+": "Damage increases, and the target is Burning." },
+      tags: ["Fire"], flavorLine: "..." }
+    // 96 entries: 18 Cantrip + 47 Standard + 17 Advanced + 14 Superior, across
+    // the 5 domains. A handful (e.g. Counterspell) have th:null/overflow:null
+    // and a `notes` field instead — no Threshold, no Overflow, by design.
   ]
 };
 ```
@@ -367,8 +409,8 @@ on un-modeled rules.
 ```js
 {
   meta: {
-    schemaVersion: "0.6",
-    gamedataVersion: "0.6",          // version of shadows-data.js at save time
+    schemaVersion: "0.7",
+    gamedataVersion: "0.7",          // version of shadows-data.js at save time
     created: "...", updated: "..."
   },
 
@@ -432,8 +474,10 @@ on un-modeled rules.
     damage: 0,                       // total HP damage taken
     luck:   { bonus: 0, spent: 0 },  // bonus = CP/advantage buy-ups
     san:    { loss: 0 },             // current SAN = computed max − loss
-    exhaustion: 0,
     sfr:    { spent: 0 },
+    // (0.7) No `exhaustion` field: it was never its own resource. A Rupture
+    // spends TOL directly; Exhausted is what 0 TOL is called, not a second
+    // tracked value (Decision 93).
     credits: { current: 800, ledger: [ { date, amount, note } ] },
     // (0.3) Manual adjustments — milestone benefits & un-modeled effects.
     // Stat-id targets cascade like any input; TOL/WILL/SAN/LUCK/HP apply flat.
@@ -1439,6 +1483,63 @@ No cascade logic to maintain — it falls out of the architecture.
     in the same review. See `log/2026.md` for the full account, including the
     session's own correction of an F20 flag opened in error two entries
     earlier. (Ken + Claude, 2026-09-12)
+
+93. **(Magic — archetype-independent half, data)** **The Magic chapter splits
+    cleanly into a universal Spellcraft system and an archetype question
+    (Origins), and only the first merges here.** `Magic.md` (Ken's WIP,
+    reviewed 2026-09-20) puts Origins (Book/Blood/Bound) explicitly in "the
+    Arcanist chapter" — that's the subtypes/spheres/implements question
+    STATE.md §3 already had waiting on the four-way Deighton/Scott/Bill/Ken
+    comparison, so it stays out. Everything else — the Spellcraft roll,
+    Domains/Glyphs, the four spell tiers, Concentration, Sovereign Soul,
+    Charging, the Known/Mastered progression, Enchantment/Alchemy's
+    materials and time rules — applies to any caster regardless of subtype,
+    and merges as five new game-data structures: `domains` (5), `spells`
+    (96, the full Known-spell catalog across Cantrip/Standard/Advanced/
+    Superior), `spellTiers`, `spellcraftRules` (reference text, the same
+    role `armorRules` plays — no engine code executes any of it, matching
+    Decision 11), and `enchantmentMaterialCategories`/`enchantmentTimeTable`/
+    `enchantmentExtendedTime`. `spellTagGlossary` follows the same pattern
+    Decision 92 used for undefined weapon tags: `AP` appears on one spell
+    but isn't in the WIP's own tag list, so it's `flagged: true` rather than
+    assumed. Overflow text keeps the WIP's own `[X]` placeholders verbatim —
+    those are unresolved balance magnitudes, not a transcription gap, and
+    none was invented to fill one.
+    **This also corrects a live mechanical error, not just adds content.**
+    The Arcanist's `coreMechanic.description` previously described Rupture
+    as "Duds accumulate into an Exhaustion pool separate from TOL, and a Dud
+    that pushes Exhaustion past TOL causes a Rupture" — a mechanic the WIP
+    never specified this way. The corrected rule (confirmed directly with
+    Scott, 2026-09-20): a Rupture is a per-roll outcome (Duds exceed Hits
+    *that roll*) and spends TOL directly, by the Rupture's degree.
+    Exhausted is what a character is at 0 TOL — a condition, not a second
+    tracked resource layered on top of it. The TOL formula itself
+    (`derived.TOL` inputs INT/COOL/EMP) was independently re-checked against
+    the WIP during this session and needed no change; a candidate
+    discrepancy (INT/BOD/COOL) traced back to a misreading, not a real
+    drift, and Scott confirmed the formula on record before anything here
+    was touched — worth naming because Decision 9 could otherwise have been
+    "corrected" on a bad read.
+    **Schema consequence:** the Arcanist's `exhaustion` tracker panel
+    (`type: "tracker", max: "TOL"`) is removed, and so is the special-cased
+    `trackers.exhaustion` field it was hand-wired to in `app.js`/`sheet.js`
+    (pre-dating the generic `trackers.panel[id]` mechanism Decision 26/87
+    established and never migrated onto it). `migrate()` drops a pre-0.7
+    character's `trackers.exhaustion` value outright rather than carrying it
+    forward under a new name — there is nothing to preserve, since the old
+    field never meant what the corrected rule needs tracked. Character
+    schema **0.6 → 0.7**. The Grimoire panel gains an `Overflow` column.
+    Game data **0.6 → 0.7** for the new content and the corrected
+    description text. App **0.10.0 → 0.10.1** (patch): an existing Arcanist
+    draft renders a different tracker panel and different Discipline/Magic
+    copy, which is a player-visible difference even though the archetype is
+    still `status: "draft"`.
+    Deliberately **not** built this batch: Origins/subtypes (blocked, see
+    above), wiring the Grimoire table to reference `spells` by id (still
+    free-entry — an engine+UI batch, same split Decision 92 drew for the
+    Loadout picker), and the Tools of the Trade pricing tables (every row is
+    still `[X] Ç` in the WIP, not ready to merge as a finished catalog the
+    way the equipment chapter's pricing was). (Ken + Claude, 2026-09-20)
 
 ## 5. Open Flags
 

@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.6");
+  assert.equal(ch.meta.schemaVersion, "0.7");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,8 +112,20 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.6");
+  assert.equal(old.meta.schemaVersion, "0.7");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
+});
+
+test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", () => {
+  // Pre-0.7 characters tracked Exhaustion as its own accruing resource. It's
+  // now just TOL at zero -- a condition, not a stored value -- so migrate()
+  // must not carry the old field forward.
+  const old = subject();
+  old.meta.schemaVersion = "0.6";
+  old.trackers.exhaustion = 3;
+  Engine.migrate(old);
+  assert.equal(old.meta.schemaVersion, "0.7");
+  assert.equal(old.trackers.exhaustion, undefined);
 });
 
 test("versionCheck surfaces a game-data mismatch instead of failing silently", () => {
@@ -171,13 +183,27 @@ test("every weapon and armor id is unique, and armor slots are valid", () => {
   assert.deepEqual(badBody, []);
 });
 
+test("every spell id is unique and references a real domain (Magic batch, Decision 93)", () => {
+  const dupes = list => { const seen = new Set(), out = []; for (const x of list) { if (seen.has(x.id)) out.push(x.id); seen.add(x.id); } return out; };
+  assert.deepEqual(dupes(D.spells || []), []);
+  const domainIds = new Set((D.domains || []).map(d => d.id));
+  const tierIds = new Set((D.spellTiers || []).map(t => t.id));
+  const badDomain = [], badTier = [];
+  for (const s of D.spells || []) {
+    if (!domainIds.has(s.domain)) badDomain.push(`${s.id} → ${s.domain}`);
+    if (!tierIds.has(s.tier)) badTier.push(`${s.id} → ${s.tier}`);
+  }
+  assert.deepEqual(badDomain, []);
+  assert.deepEqual(badTier, []);
+});
+
 test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6)", () => {
   const old = subject();
   old.meta.schemaVersion = "0.5";
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.6");
+  assert.equal(old.meta.schemaVersion, "0.7");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -275,7 +301,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.6");
+  assert.equal(bare.meta.schemaVersion, "0.7");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -497,7 +523,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.6");
+    assert.equal(c.meta.schemaVersion, "0.7");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
