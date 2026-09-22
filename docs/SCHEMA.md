@@ -1829,12 +1829,22 @@ No cascade logic to maintain — it falls out of the architecture.
       damage type *can* cause (`damageTypes[].inflicts`, from Gear's Damage
       Types) are offered as ticks; Gear's "always" ones (Burning → Agonized,
       Burning) come pre-ticked. Injured and Maimed are offered only on
-      Massive (CQ5), on the body part aimed at. `applyHit` refuses a
-      Condition the hit didn't offer.
+      Massive (CQ5), on the body part the hit **landed** on, after any
+      redirect. A helmeted head shot that Headshot Defense turns into a
+      torso hit maims the torso, not the head. `applyHit` sets that location
+      itself, whatever the caller passes, and refuses a Condition the hit
+      didn't offer. (The first cut used the part aimed at; the PR #26
+      review caught it.)
     - **Data (game data 0.8, unshipped — folded in, no bump).**
       `damageTypes` (Blade, Blunt, Ballistic, Electric, Energy, Burning,
       Magical), `damageCategories`, `damageRules` (Massive, Shock, At Zero,
-      Dying), and on `armorRules`: `baseResAgainst`, `coverageLocations`,
+      Dying). **How a category resolves is on the category, not keyed on its
+      id:** `bypassesArmor` (Massive's path: skip PROT/RES, strip Integrity,
+      remove Health Levels by `damageRules.massive`), `recordsWithering`,
+      and `inflicts` (Conditions the category adds to its type's: Massive's
+      Injured/Maimed). The engine, the panel and the audit label all read
+      those flags, so no code compares against the literal `"massive"`
+      (PR #26 review). Also and on `armorRules`: `baseResAgainst`, `coverageLocations`,
       `defaultCoverage`, `defaultHitLocation`, `soakedIntegrityLoss`. Upgrade
       and feature glossary entries gained `resAgainst`, `integrityBonus` and
       `redirect`. A new damage type or upgrade is a data edit.

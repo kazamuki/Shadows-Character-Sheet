@@ -3,7 +3,7 @@
 **Updated:** 2026-09-22
 **Versions:** app `0.13.0` · game data `0.8` · character schema `0.8` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **155 passing, 0 todo, 0 failing** (155 tests, six files)
+**Suite:** `npm run verify` → **157 passing, 0 todo, 0 failing** (157 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -147,7 +147,7 @@ test fixtures (Decision 57).
 rulings). This branch is combat plan Session 3, Taking a hit (Decision 99):
 engine, the Take a hit panel, and Massive levels on every HL track. No schema
 change; game data 0.8 (still unshipped) absorbed the damage and armor data.
-`npm run verify` is green (155 passing, 0 todo).
+`npm run verify` is green (157 passing, 0 todo).
 
 **Next up is Session 4 of `plans/combat-and-conditions.md` (Loadout &
 recovery):** armor/weapon pickers and the worn toggle (which make the hit

@@ -463,23 +463,23 @@ function hitInput(st){
            location: st.location || undefined, protRoll: st.protRoll,
            manual: st.manual ? { res: st.manualRes, integrity: st.manualInt } : undefined };
 }
+// Condition ids only: the engine puts a body-part Condition where the hit
+// landed (after any Headshot Defense redirect), not where it was aimed.
 function hitChoices(st, r){
   const on = id => st.conds[id]!==undefined ? st.conds[id] : r.prompts.always.includes(id);
-  return { shock: st.shock, atZero: st.atZero,
-           conditions: r.prompts.conditions.filter(on).map(id=>{
-             const d=Engine.conditionById(id);
-             return d && d.location ? { id, location: r.aimed } : id;
-           }) };
+  return { shock: st.shock, atZero: st.atZero, conditions: r.prompts.conditions.filter(on) };
 }
 function hitLabel(r){
-  const kind = r.category==="regular" ? "" : " "+((D.damageCategories.find(c=>c.id===r.category)||{}).name||"");
+  const kind = r.cat.bypassesArmor || r.cat.recordsWithering ? " "+r.cat.name : "";
   return `Hit: ${r.damage} ${r.type.name}${kind} → ` +
-    (r.massive ? `${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} removed` : `${r.through} through`);
+    (r.bypassesArmor ? `${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} removed` : `${r.through} through`);
 }
 function hitPanelHtml(ch){
   const st=S.hit, as=Engine.armorState(ch), r=Engine.resolveHit(ch, hitInput(st));
   const opt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
-  const massive=st.category==="massive", cat=D.damageCategories.find(c=>c.id===st.category)||{};
+  // How the chosen category resolves is data (Decision 99): one that
+  // bypasses armor asks for Integrity instead of a PROT roll, and has no AP.
+  const cat=Engine.damageCategoryById(st.category)||{}, bypass=!!cat.bypassesArmor;
   const locName=id=>((Engine.locationById(id)||{}).name||"").toLowerCase();
   const field=(label, inner)=>`<label class="field"><span>${label}</span>${inner}</label>`;
   const num=(k, label, extra="")=>field(label, `<input type="number" min="0" data-hit="${k}" value="${esc(st[k])}" ${extra}>`);
@@ -491,7 +491,7 @@ function hitPanelHtml(ch){
       ${field("Type",`<select data-hit="damageType">${D.damageTypes.map(t=>opt(t.id,t.name,t.id===st.damageType)).join("")}</select>`)}
       ${field("Kind",`<select data-hit="category">${D.damageCategories.map(c=>opt(c.id,c.name,c.id===st.category)).join("")}</select>`)}
       ${field("Where",`<select data-hit="location">${opt("","Center mass",!st.location)}${D.bodyLocations.map(l=>opt(l.id,l.name,l.id===st.location)).join("")}</select>`)}
-      ${massive?"":`<label class="check"><input type="checkbox" data-hit="ap" ${st.ap?"checked":""}> Armor-piercing</label>`}
+      ${bypass?"":`<label class="check"><input type="checkbox" data-hit="ap" ${st.ap?"checked":""}> Armor-piercing</label>`}
     </div>
     <p class="hitnote">${esc(cat.text||"")}</p>`;
 
@@ -500,10 +500,10 @@ function hitPanelHtml(ch){
   if (as.worn){
     const w=as.worn;
     h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
-      ${!massive && (!r.ok || r.covered) ? num("protRoll","PROT roll",`max="${w.protMax||""}"`) : ""}</div>`;
+      ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll",`max="${w.protMax||""}"`) : ""}</div>`;
   } else {
     h+=`<div class="hitrow"><label class="check"><input type="checkbox" data-hit="manual" ${st.manual?"checked":""}> I'm wearing armor that isn't on the sheet yet</label>
-      ${st.manual ? (massive ? num("manualInt","Its Integrity now") : num("protRoll","PROT roll")+num("manualRes","RES")) : ""}</div>`;
+      ${st.manual ? (bypass ? num("manualInt","Its Integrity now") : num("protRoll","PROT roll")+num("manualRes","RES")) : ""}</div>`;
   }
   as.problems.forEach(p=>{ h+=`<p class="hitnote">${esc(p)}</p>`; });
 
@@ -513,7 +513,7 @@ function hitPanelHtml(ch){
     const lines=[];
     if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
     if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}. Nothing answers the hit.`);
-    if (r.massive){
+    if (r.bypassesArmor){
       if (r.covered) lines.push(`Strips ${r.integrityLost} Integrity from ${r.armor.name}${r.scrap?". It's scrap now, and can't be repaired":""}.`);
       lines.push(`Removes ${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} outright.`);
     } else if (r.covered){
@@ -536,7 +536,7 @@ function hitPanelHtml(ch){
       h+=`<div class="hitconds"><span>Conditions this hit can cause. Tick what your GM rules:</span>` +
         P.conditions.map(id=>{ const d=Engine.conditionById(id);
           return `<label class="check"><input type="checkbox" data-hitcond="${esc(id)}" ${on(id)?"checked":""}> ${esc(d.name)}${
-            d.location?` (${esc(locName(r.aimed))})`:""}</label>`; }).join("") + `</div>`;
+            d.location?` (${esc(locName(r.location))})`:""}</label>`; }).join("") + `</div>`;
     }
   }
   h+=`<div class="hitrow"><button class="btn primary" data-hitapply="1" ${r.ok?"":"disabled"}>Apply hit</button>

@@ -988,6 +988,20 @@ test("resolveHit refuses a PROT roll the worn die can't produce", () => {
   assert.equal(Engine.resolveHit(ch, { damage: 8, damageType: "blade", protRoll: 6 }).ok, true);
 });
 
+test("how a damage category resolves is data, not its id (PR #26 review, findings 2–3)", () => {
+  // A synthetic category, the way the Batch 3 fixtures work: if the engine
+  // still keyed on the literal "massive", this one would resolve as regular.
+  const fixture = { id: "__fixture-siege", name: "Fixture", bypassesArmor: true, inflicts: ["deafened"], text: "" };
+  D.damageCategories.push(fixture);
+  try {
+    const r = Engine.resolveHit(subject({ bod: 10 }), { damage: 20, damageType: "blunt", category: fixture.id });
+    assert.equal(r.bypassesArmor, true);
+    assert.equal(r.levelsLost, 3, "20 bypassing damage, no armor: 2 + 1");
+    assert.ok(r.prompts.conditions.includes("deafened"), "the category's own inflicts weren't offered");
+    assert.ok(!r.prompts.conditions.includes("injured"), "Massive's inflicts leaked onto another category");
+  } finally { D.damageCategories.pop(); }
+});
+
 test("F23 surfaces where it bites: an Electric hit carries the stub's player note", () => {
   const r = Engine.resolveHit(subject(), { damage: 5, damageType: "electric" });
   assert.equal(r.notes.length, 1);

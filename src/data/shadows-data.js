@@ -3363,8 +3363,12 @@ window.SHADOWS_DATA = {
      dialog, never forced); `always` are the ones Gear says it always causes
      (pre-ticked, still the player's call). Electric and Burning have no stated
      RES class (F23) and are stubbed as Energy. `damageCategories` is Gear's
-     Regular/Withering/Massive; `damageRules` holds 053/054's Massive, Shock,
-     At Zero and Dying numbers. */
+     Regular/Withering/Massive, and each says how it resolves:
+     `bypassesArmor` (skip PROT/RES, strip Integrity, remove Health Levels by
+     `damageRules.massive`), `recordsWithering` (what gets through can't
+     regenerate), `inflicts` (Conditions the category adds to the type's --
+     Injured/Maimed only on Massive, CQ5). `damageRules` holds 053/054's
+     Massive, Shock, At Zero and Dying numbers. */
   "damageTypes": [
     { "id": "blade",     "name": "Blade",     "resClass": "kinetic", "inflicts": ["bleeding"] },
     { "id": "blunt",     "name": "Blunt",     "resClass": "kinetic", "inflicts": ["stunned", "disoriented", "unconscious"] },
@@ -3380,15 +3384,15 @@ window.SHADOWS_DATA = {
   ],
   "damageCategories": [
     { "id": "regular",   "name": "Regular",   "text": "The everyday kind. Armor answers, and what gets through heals the usual ways." },
-    { "id": "withering", "name": "Withering", "text": "Armor answers as normal. What gets through won't regenerate. It heals only with rest and medicine, once you're clear of the source." },
-    { "id": "massive",   "name": "Massive",   "text": "Siege weapons, vehicle guns, big explosives. Skips PROT and RES, strips Integrity equal to the damage, and takes Health Levels away outright." }
+    { "id": "withering", "name": "Withering", "recordsWithering": true, "text": "Armor answers as normal. What gets through won't regenerate. It heals only with rest and medicine, once you're clear of the source." },
+    { "id": "massive",   "name": "Massive",   "bypassesArmor": true, "inflicts": ["injured", "maimed"],
+      "text": "Siege weapons, vehicle guns, big explosives. Skips PROT and RES, strips Integrity equal to the damage, and takes Health Levels away outright." }
   ],
   "damageRules": {
     "massive": {
       "damagePerLevel": 10,
       "extraLevelWhenArmorGone": 1,
-      "text": "Massive strips Integrity equal to the damage and removes 1 Health Level per 10 points of it, plus one more if the armor ends at 0 or there was none. Those Levels are gone, not emptied. Rest and chems don't bring them back. It takes Focused Healing and a replacement: a prosthetic, or something stranger.",
-      "inflicts": ["injured", "maimed"]
+      "text": "Massive strips Integrity equal to the damage and removes 1 Health Level per 10 points of it, plus one more if the armor ends at 0 or there was none. Those Levels are gone, not emptied. Rest and chems don't bring them back. It takes Focused Healing and a replacement: a prosthetic, or something stranger."
     },
     "shock": {
       "fractionOfMaxLevels": 0.5,
