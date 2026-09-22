@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.10.0";
+const APP_VERSION = "0.10.1";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -267,12 +267,11 @@ function bindSheet(){
     if ((ch.trackers.luck.spent||0)>0) commit("luck","LUCK regained +1",()=>{ ch.trackers.luck.spent=Math.max(0,ch.trackers.luck.spent-1); });
   });
 
-  // Generic archetype trackers (SFR / Exhaustion / panel trackers)
+  // Generic archetype trackers (SFR / panel trackers)
   main.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
     const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
     commit("tracker", `${pid.toUpperCase()} ${delta>0?"+":""}${delta}`, ()=>{
       if (pid==="sfr") ch.trackers.sfr.spent=Math.max(0,(ch.trackers.sfr.spent||0)+delta);
-      else if (pid==="exhaustion") ch.trackers.exhaustion=Math.max(0,(ch.trackers.exhaustion||0)+delta);
       else { const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.value=Math.max(0,(e.value||0)+delta); }
     });
   });

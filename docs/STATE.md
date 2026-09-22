@@ -1,9 +1,9 @@
 # State of the build
 
-**Updated:** 2026-09-12
-**Versions:** app `0.10.0` · game data `0.6` · character schema `0.6` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-20
+**Versions:** app `0.10.1` · game data `0.7` · character schema `0.7` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **101 passing, 0 todo, 0 failing** (101 tests, six files)
+**Suite:** `npm run verify` → **103 passing, 0 todo, 0 failing** (103 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -29,7 +29,10 @@ and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, the session log,
 loadout, `grants`, an undo-able audit trail, and now a printable sheet — filled
 or blank — for a player who wants paper. The engine reproduces the CRB's own
 worked examples (`tests/rules.test.mjs`). Game data now also carries a full
-weapons/ammunition/armor catalog (Decision 92) — not yet wired to any UI.
+weapons/ammunition/armor catalog (Decision 92) and the archetype-independent
+half of the Magic chapter — domains, the full spell catalog, Spellcraft rules
+as reference text, Enchantment/Alchemy materials (Decision 93) — neither yet
+wired to any UI beyond the Arcanist's existing Grimoire/Disciplines panels.
 
 **No known player-facing defect.** The three machinery gaps the PR #7 review
 found are closed (Decision 91) — none was reachable with current data, so none
@@ -61,6 +64,7 @@ which read oddly once other work queued ahead of it. Ken flagged this
 | — | Light theme toggle | #18 | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
 | — | PR #7 adversarial review | #19 | Decision 91 — machinery gaps closed, not player-visible (§4) |
 | — | Weapons, Ammo & Armor (data) | this branch | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
+| — | Magic — archetype-independent half (data) | this branch | 96 spells across 5 domains/4 tiers, Spellcraft rules as reference text, Enchantment/Alchemy materials · Decision 93 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
@@ -101,7 +105,7 @@ full text.
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | ⏸ blocked · `status: "draft"` · no F-number yet | Deighton + Scott + Bill + Ken — subtypes/spheres/implements open per the 2026-09-10 meeting; waits on the four-way question comparison its own action items call for |
+| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · Origins/subtypes still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
 | **Engine internals** — unnumbered statMod flag | 🔶 known disagreement | Deighton. `statMod()` extrapolates +1/point past 10; `beyondHumanLimits` text says gains "slow down" — code-comment only, no F-number |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
@@ -134,13 +138,16 @@ test fixtures (Decision 57).
 **`main` is caught up through PR #19** — `grants` (3b), the printable sheet +
 demo-hosting work, the light theme toggle, and the PR #7 machinery-gap fixes
 (Decision 91) have all landed. The Weapons/Ammo/Armor data batch (Decision
-92, §2) is done on this branch, not yet a PR. `npm run verify` is green
-(101 passing, 0 todo).
+92, §2) and the Magic archetype-independent-half data batch (Decision 93, §2)
+are both done on this branch, not yet a PR. `npm run verify` is green
+(103 passing, 0 todo).
 
 **Two areas in §3 have no external block right now:** Gear & Combat (the
 engine + Loadout UI half — the natural continuation of what just merged) and
-Milestones & doc reconciliation (Ken alone, zero-dependency). Cyborg, Vampire
-and Arcanist/Magic all wait on people outside this session.
+Milestones & doc reconciliation (Ken alone, zero-dependency). A third,
+Arcanist/Magic, is now unblocked for engine/UI work too — wiring the Grimoire
+to reference the new `spells` catalog by id doesn't touch Origins. Cyborg and
+Vampire still wait on people outside this session.
 
 ---
 

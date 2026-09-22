@@ -428,7 +428,6 @@ function renderShTrackers(){
     const max = Engine.panelMax(ch, p);
     let val;
     if (p.id==="sfr") val = ch.trackers.sfr.spent||0;
-    else if (p.id==="exhaustion") val = ch.trackers.exhaustion||0;
     else val = (ch.trackers.panel[p.id]||{}).value||0;
     const manualMax = max==null ? ((ch.trackers.panel[p.id]||{}).max??"") : null;
     const effMax = max!=null ? max : (manualMax===""?null:Number(manualMax));

@@ -159,6 +159,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **68** — When gamedataVersion bumps — and when it must not.
 - **75** *(Versioning)* — Four versions, four triggers — and schemaVersion stopped meaning two things.
 - **92** *(Weapons, Ammo & Armor — data)* — The equipment chapter merges as catalogs, not as engine logic; character schema 0.5 → 0.6.
+- **93** *(Magic — archetype-independent half, data)* — The Magic chapter splits into a universal Spellcraft system and an archetype question (Origins); only the first merges, and it corrects a live mechanical error along the way. Character schema 0.6 → 0.7.
 
 ### Engine contracts
 
