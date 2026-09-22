@@ -380,6 +380,31 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .cond.danger .big{color:var(--magenta)} .cond.danger .meter i{background:var(--magenta)}
 .cond .corner{position:absolute; top:9px; right:11px; opacity:.16; width:34px; height:34px; color:var(--text)}
 .cond .corner svg{width:100%; height:100%; display:block}
+/* Conditions (Decision 95) — chips on Main, cards on Trackers, one add row */
+.main-conditions{margin:14px 0 4px}
+.cond-chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px}
+.cond-chip{display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--magenta);
+  border-radius:4px; padding:4px 6px 4px 9px; font-size:.8rem}
+.cond-chip b{font-weight:600; color:var(--magenta)}
+.cond-chip small{font-family:var(--mono); font-size:.66rem; color:var(--dim)}
+.cond-chip.bad{background:rgba(188,72,154,.14)}
+.cond-chip .x, .cond-card .x{background:none; border:0; color:var(--dim); cursor:pointer; font-size:.85rem; padding:0 2px}
+.cond-chip .x:hover{color:var(--magenta)}
+.cond-none{margin-bottom:10px}
+.cond-alert{border:1px solid var(--magenta); background:rgba(188,72,154,.14); border-radius:5px;
+  padding:9px 13px; margin-bottom:10px; font-size:.84rem}
+.cond-alert b{color:var(--magenta); font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase}
+.cond-counter{display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-bottom:10px; font-family:var(--mono); font-size:.74rem}
+.cond-counter .k{color:var(--dim); letter-spacing:.12em; text-transform:uppercase}
+.cond-counter .pip{width:20px; height:20px; border-radius:50%; border:1px solid var(--magenta); background:transparent; cursor:pointer; padding:0}
+.cond-counter .pip.on{background:var(--magenta)}
+.cond-counter .at-max{color:var(--magenta); font-family:var(--body); font-size:.8rem; flex-basis:100%}
+.cond-card{border-color:var(--magenta)}
+.cond-card .desc b{color:var(--text); font-weight:600}
+.cond-card .cond-note{width:100%; margin-top:8px}
+.cond-add{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px}
+.cond-add select{max-width:220px}
+.cond-note-line{margin-bottom:10px}
 
 /* horizontal vitals bar — replaces the right rail on every tab except Main
    (Main carries the larger condition strip instead). Sits below the tab bar. */

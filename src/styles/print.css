@@ -105,7 +105,21 @@
   letter-spacing:.13em; text-transform:uppercase; white-space:nowrap }
 #printSheet .p-frontmain{ flex:1; padding-left:10px; min-width:0 }
 #printSheet .p-frontbody{ display:flex; gap:14px; margin-top:6px }
-#printSheet .p-frontleft{ flex:0 0 180px }
+#printSheet .p-frontleft{ flex:0 0 180px; display:flex; flex-direction:column; gap:9px }
+
+/* Conditions tick list (Decision 95) — sits under Stats in the narrow left
+ * column, the one place on the front page with height to spare. Two columns
+ * of names; a location Condition carries a short line for the body part. */
+#printSheet .p-condlist{ list-style:none; margin:0 0 3px; padding:0; columns:2; column-gap:8px; font-size:6.6pt; line-height:1.05 }
+#printSheet .p-condlist li{ display:flex; align-items:center; gap:3px; break-inside:avoid; padding:0; min-width:0 }
+#printSheet .p-condlist li > span:not(.p-box){ white-space:nowrap }
+#printSheet .p-condlist .p-line{ flex:1; min-width:10px; font-size:6pt; padding:0; line-height:1 }
+#printSheet .p-card.p-condcard .p-card-body{ padding:5px 8px }
+#printSheet .p-condlist.p-condloc{ columns:1 }
+#printSheet .p-box{ display:inline-block; flex:0 0 auto; width:6pt; height:6pt; border:.75pt solid var(--p-rule) }
+#printSheet .p-box.on{ background:var(--p-magenta); border-color:var(--p-magenta) }
+#printSheet .p-counter{ display:inline-flex; align-items:center; gap:3px; margin-left:auto }
+#printSheet .p-counter .p-label{ margin-right:2px; color:var(--p-dim) }
 #printSheet .p-frontright{ flex:1; display:flex; flex-direction:column; gap:9px; min-width:0 }
 
 /* Chamfered "case-file" card — cut top-right corner. Deliberately not the

@@ -6,7 +6,7 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.7", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.8", gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -24,6 +24,11 @@ const Engine = (() => {
       advantages:[], disadvantages:[], // {id, rank, notes, selections?}
       trackers:{ damage:0, luck:{bonus:0, spent:0}, san:{loss:0},
                  sfr:{spent:0},
+                 // Schema 0.8 (Decision 95). Active Conditions are inputs;
+                 // their Pain, penalties and the Helpless banner are derived.
+                 conditions:[],                // { id, location?, marks?, note? }
+                 massiveLevels:0,              // HL removed by Massive damage (read from Session 3)
+                 witheringDamage:0,            // the part of `damage` that can't regenerate
                  credits:{current:0, ledger:[]},
                  adjustments:[],               // Phase 3: manual adjustments ledger
                  panel:{} },                   // Phase 3: generic archetype tracker panels
@@ -42,11 +47,13 @@ const Engine = (() => {
   const advById    = id => D().advantages.find(a=>a.id===id);
   const disById    = id => D().disadvantages.find(d=>d.id===id);
 
-  // Modifier curve. Values above 10 (Arcanist focus bonus) extrapolate the
-  // linear top of the curve (+1 per point). FLAG: confirm with D.
+  // Modifier curve. Past 10 (Arcanist focus bonus, supernaturals) gains slow
+  // down: +1 more for every `stepEvery` points, so 11-15 = +5, 16-20 = +6
+  // (design-team ruling, Decision 98).
   function statMod(v){
     const m = D().statRules.modifiers;
-    if (v > 10) return m["10"] + (v - 10);
+    const step = ((D().statRules.beyondTen)||{}).stepEvery || 5;
+    if (v > 10) return m["10"] + Math.ceil((v - 10) / step);
     if (v < 1) v = 1;
     return m[String(v)];
   }
@@ -255,31 +262,126 @@ const Engine = (() => {
     if (!def) return { def:{ id, name:id, category:"", description:"", flavorLine:"",
                              primaryStat:null, synergyStat:null },
                        rank, trained:rank>0, checkBonus:0,
-                       breakdown:{ rank, primary:{id:null,value:0}, synergy:{id:null,mod:0}, pain:0 },
+                       breakdown:{ rank, primary:{id:null,value:0}, synergy:{id:null,mod:0}, pain:0, conditions:0 },
                        dataWarning:`Skill "${id}" is no longer in the game data.` };
     const t = statTable(ch);
     const pri = normStat(def.primaryStat), syn = normStat(def.synergyStat);
     const priVal = pri ? t[pri].value : 0;
     const synMod = syn ? t[syn].mod : 0;
     const pain = painState(ch).skillPenalty;        // 0 or negative
+    // Decision 96: a Condition's flat "-1 to all rolls" lands on the Skill
+    // Check total, separately from Pain so the breakdown can say why (F20/F21).
+    const conditions = conditionState(ch).rollPenalty;
     const base = rank>0 ? rank + priVal + synMod : priVal;
-    return { def, rank, trained:rank>0, checkBonus: base + pain,
-             breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain },
+    return { def, rank, trained:rank>0, checkBonus: base + pain + conditions,
+             breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain, conditions },
              dataWarning: (pri && syn) ? null : `Skill "${def.name}" references an unknown stat (${!pri?def.primaryStat:def.synergyStat}).` };
   }
 
   // ════ PHASE 3 — CONDITION, PROGRESSION, SESSIONS ══════════════════════
 
-  // Pain Level from damage taken. HL lost = full Health Levels of HP gone.
+  // ── Conditions (Decision 95) ─────────────────────────────────────────
+  // The character stores which Conditions are active; everything they DO is
+  // read here from the catalog's structured hooks. Nothing is written back.
+  const conditionById = id => (D().conditions||[]).find(c=>c.id===id) || null;
+  const locationById  = id => (D().bodyLocations||[]).find(l=>l.id===id) || null;
+  // "You have it or you don't" — one entry per id, except a location-bearing
+  // Condition, which is one per body part (F22 stub: an Injured arm and an
+  // Injured leg are two entries).
+  const conditionKey = e => {
+    const def = conditionById(e && e.id);
+    return String(e && e.id) + (def && def.location ? "@" + String(e.location||"") : "");
+  };
+
+  function conditionState(ch){
+    const list = (((ch||{}).trackers||{}).conditions) || [];
+    const active = [];
+    let painLevels = 0, rollPenalty = 0;
+    const conditional = [], attackDefense = [], helpless = [], ongoing = [], counters = [];
+    list.forEach((e, index)=>{
+      if (!e || typeof e!=="object") return;
+      const def = conditionById(e.id);
+      const loc = e.location ? locationById(e.location) : null;
+      const name = def ? def.name : String(e.id);
+      const label = name + (loc ? ` (${loc.name})` : (e.location ? ` (${e.location})` : ""));
+      const row = { index, id:e.id, def, name, label, location:e.location||null,
+                    locationName: loc ? loc.name : (e.location||null),
+                    note: typeof e.note==="string" ? e.note : "",
+                    missing: !def };
+      if (def && def.counter){
+        const max = def.counter.max||0;
+        row.marks = Math.max(0, Math.min(max, Math.floor(Number(e.marks)||0)));
+        row.counter = def.counter;
+      }
+      active.push(row);
+      if (!def) return;                 // versionCheck reports the orphan
+      if (typeof def.painLevels==="number") painLevels += def.painLevels;
+      if (typeof def.rollPenalty==="number") rollPenalty += def.rollPenalty;
+      if (def.rollPenaltyWhen) conditional.push({ name, ...def.rollPenaltyWhen });
+      if (typeof def.attackDefense==="number") attackDefense.push({ name, value:def.attackDefense });
+      if (def.helpless) helpless.push(name);
+      if (def.ongoing) ongoing.push({ name, ...def.ongoing });
+      if (def.counter) counters.push({ name, index, marks:row.marks, max:def.counter.max,
+                                       label:def.counter.label, full: row.marks >= def.counter.max,
+                                       atMax:def.counter.atMax||"" });
+    });
+    // Different Conditions stack, but every penalty on one roll tops out at
+    // the cap (Decision 98). Conditions alone can't reach it today; range and
+    // cover, which the sheet never sees, are what usually push a roll there.
+    const cap = (((D().conditionRules||{}).penaltyStacking)||{}).cap;
+    if (typeof cap==="number") rollPenalty = Math.max(cap, rollPenalty);
+    return { active, painLevels, rollPenalty, conditional, attackDefense,
+             helpless, ongoing, counters, isHelpless: helpless.length>0 };
+  }
+
+  // Mutators, following addBoost: the no-duplicates rule lives next to the
+  // rules, not next to the DOM.
+  function addCondition(ch, entry){
+    const def = conditionById(entry && entry.id);
+    if (!def) return { ok:false, why:"Choose a Condition." };
+    const e = { id:def.id };
+    if (def.location){
+      if (!locationById(entry.location)) return { ok:false, why:`${def.name} needs a body part.` };
+      e.location = entry.location;
+    }
+    if (def.counter) e.marks = 0;
+    if (entry.note) e.note = String(entry.note);
+    const list = ch.trackers.conditions;
+    if (list.some(x=>conditionKey(x)===conditionKey(e)))
+      return { ok:false, why: def.location
+        ? `${def.name} is already on that body part.` : `Already ${def.name} — it doesn't stack with itself.` };
+    list.push(e);
+    return { ok:true };
+  }
+  function removeCondition(ch, index){
+    const list = ch.trackers.conditions;
+    if (!(index>=0 && index<list.length)) return { ok:false, why:"No such Condition." };
+    list.splice(index, 1);
+    return { ok:true };
+  }
+  function setConditionMarks(ch, index, marks){
+    const e = ch.trackers.conditions[index], def = conditionById(e && e.id);
+    if (!def || !def.counter) return { ok:false, why:"That Condition has no counter." };
+    e.marks = Math.max(0, Math.min(def.counter.max, Math.floor(Number(marks)||0)));
+    return { ok:true };
+  }
+
+  // Pain Level = the band for Health Levels lost, plus any Condition Pain
+  // (Agonized), clamped to the table — "never below 0 or above 3" (054).
   function painState(ch){
     const hl = D().resources.healthLevels;
     const h = health(ch);
     const dmg = Math.max(0, ch.trackers.damage||0);
     const hlLost = h.hpPer>0 ? Math.min(h.levels, Math.floor(dmg / h.hpPer)) : 0;
-    let lvl = hl.painLevels[0];
-    for (const p of hl.painLevels) if (hlLost >= p.hlLostThreshold) lvl = p;
+    let band = hl.painLevels[0];
+    for (const p of hl.painLevels) if (hlLost >= p.hlLostThreshold) band = p;
+    const fromConditions = conditionState(ch).painLevels;
+    const top = hl.painLevels.reduce((m,p)=>Math.max(m,p.level), 0);
+    const target = Math.max(0, Math.min(top, band.level + fromConditions));
+    const lvl = hl.painLevels.find(p=>p.level===target) || band;
     const pen = hl.painPenaltiesPerLevel;
     return { hlLost, level: lvl.level, label: lvl.label, description: lvl.description,
+             fromHealth: band.level, fromConditions,
              // `|| 0` normalises the -0 that `0 * -1` produces at Pain Level 0.
              skillPenalty:   lvl.level * pen.skillChecks || 0,
              essencePenalty: lvl.level * pen.essenceCheckDice || 0,
@@ -350,8 +452,9 @@ const Engine = (() => {
     const cur = line.rank;
     if (cur >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
     const focused = focusedSkillIds(ch).includes(targetId);
-    // F14: "5 × current rank" makes rank 0→1 free — costed as rank 1 pending ruling.
-    const cost = (focused?3:5) * Math.max(1, cur);
+    // Decision 97: "5 × current rank" would price rank 0→1 at zero; a new skill
+    // after creation is a flat price from the data instead.
+    const cost = cur===0 ? D().ip.skillIncreaseCost.newSkill : (focused?3:5) * cur;
     return {ok:true, cost, from:cur, to:cur+1, focused};
   }
   function spendIP(ch, targetType, targetId, note){
@@ -659,6 +762,18 @@ const Engine = (() => {
     if (!Array.isArray(t.credits.ledger)) t.credits.ledger=[];
     if (!Array.isArray(t.adjustments)) t.adjustments=[];
     if (!t.panel || typeof t.panel!=="object") t.panel={};
+    // Schema 0.8 (Decision 95): Conditions, plus the two damage inputs the hit
+    // resolver writes. A hand-edited file can hold junk or a duplicate; keep
+    // the first of each ("you have it or you don't"), drop what isn't an entry.
+    const seen = new Set();
+    t.conditions = t.conditions.filter(e=>{
+      if (!e || typeof e!=="object" || typeof e.id!=="string") return false;
+      const k = conditionKey(e);
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+    for (const k of ["massiveLevels","witheringDamage"])
+      t[k] = Math.max(0, Math.floor(Number(t[k])||0));
     if (!c.panelData || typeof c.panelData!=="object") c.panelData={};
     const pr = c.progression = Object.assign({milestonePoints:0}, c.progression||{});
     pr.ip = Object.assign({earned:0, log:[]}, pr.ip);
@@ -672,6 +787,16 @@ const Engine = (() => {
     // A pre-0.6 entry has neither marker -- tag it custom rather than guess
     // which catalog weapon a free-typed name was supposed to mean.
     c.weapons.forEach(w => { if (w && !w.id && !w.custom) w.custom = true; });
+    // Schema 0.8 (plan P5, landed now so there's one migration): `worn` marks
+    // the body piece that rolls PROT, `scrapped` is the one state
+    // integrityLoss can't express (driven to 0 by Massive), `upgrades` holds
+    // armorUpgradeGlossary ids. Compromised is derived, never stored.
+    c.armor.forEach(a => {
+      if (!a || typeof a!=="object") return;
+      if (typeof a.worn!=="boolean") a.worn = false;
+      if (typeof a.scrapped!=="boolean") a.scrapped = false;
+      if (!Array.isArray(a.upgrades)) a.upgrades = [];
+    });
     if (typeof c.notes!=="string") c.notes="";
     if (!Array.isArray(c.audit)) c.audit=[];      // Phase 3.3
     // Schema 0.5 (A3): ONE specialization array replaces the three fields that
@@ -693,7 +818,7 @@ const Engine = (() => {
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.7";
+    c.meta.schemaVersion = "0.8";
     return c;
   }
 
@@ -1062,6 +1187,8 @@ const Engine = (() => {
       if (!advById(a.id)) issues.push(`Advantage "${a.id}" no longer exists in game data.`);
     for (const d of c.disadvantages||[])
       if (!disById(d.id)) issues.push(`Disadvantage "${d.id}" no longer exists in game data.`);
+    for (const e of ((c.trackers||{}).conditions)||[])
+      if (e && !conditionById(e.id)) issues.push(`Condition "${e.id}" no longer exists in game data.`);
     // Phase 3: milestone ids + IP journal vs. IPE consistency
     for (const t of ((c.progression||{}).milestones||{}).minor||[])
       if (!(D().milestones.minorShared||[]).some(m=>m.id===t.id))
@@ -1089,6 +1216,8 @@ const Engine = (() => {
            skillLine, validate, buildExport, versionCheck,
            // Phase 3
            adjFor, painState, luckState, sanState, focusedSkillIds,
+           // Conditions (Decision 95)
+           conditionById, locationById, conditionState, addCondition, removeCondition, setConditionMarks,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,
