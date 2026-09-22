@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
     "gamedataVersion": "0.8",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-22",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98)."
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99)."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -3222,7 +3222,25 @@ window.SHADOWS_DATA = {
     "integrityNote": "A resource, not a fixed stat. After any encounter where hits were taken, roll a die by encounter difficulty and subtract from the armor's INT pool.",
     "integrityLossByDifficulty": { "easy": "1d4", "medium": "1d6", "hard": "1d8", "legendary": "1d10" },
     "compromisedNote": "At 0 INT the armor is Compromised: PROT still rolls, but RES no longer applies until repaired.",
-    "repairNote": "A Field Repair Kit restores 1d6 INT with roughly an hour of work. Armor with the Rapid Repair feature restores INT as an Action instead."
+    "repairNote": "A Field Repair Kit restores 1d6 INT with roughly an hour of work. Armor with the Rapid Repair feature restores INT as an Action instead.",
+    /* Read by Engine.armorState()/resolveHit() (combat plan Session 3,
+       Decision 99). Base armor is Kinetic; an upgrade's `resAgainst` extends
+       RES to another class, `integrityBonus` raises max INT per install.
+       Coverage says which body parts a piece protects -- a hit anywhere else
+       bypasses it entirely (Gear, Armor Properties). A custom piece with no
+       `coverage` is treated as "light": all body armor covers the torso
+       (Decision 98, CQ7). */
+    "baseResAgainst": ["kinetic"],
+    "coverageLocations": {
+      "light":  ["torso"],
+      "medium": ["torso", "right-arm", "left-arm"],
+      "full":   ["torso", "right-arm", "left-arm", "right-leg", "left-leg"]
+    },
+    "defaultCoverage": "light",
+    "defaultHitLocation": "torso",
+    "soakedIntegrityLoss": 1,
+    "soakedNote": "A hit the armor stops completely still costs it 1 Integrity.",
+    "scrapNote": "Armor driven to 0 Integrity by Massive damage is scrap. It can't be repaired."
   },
   "armorFeatureGlossary": [
     { "id": "Concealable", "description": "Thin and lightweight enough to wear discreetly beneath a hoodie or blazer without printing. Standard visual security checks don't detect it; specialized scanning or a Perception check against a threshold may." },
@@ -3231,18 +3249,20 @@ window.SHADOWS_DATA = {
     { "id": "Magnetic Stow Point", "description": "High-strength magnetic mounting points for hands-free storage of metallic objects. Items stored this way can be drawn as a free action." },
     { "id": "Rapid Repair", "description": "Modular panels can be swapped in the field. A Field Repair Kit on armor with this feature is an Action rather than requiring extended downtime." },
     { "id": "Self-Healing", "description": "After each encounter, roll 1d4 -- on a 3 or higher the armor regains 1d4 INT without a repair kit or armorer, up to its maximum." },
-    { "id": "Headshot Defense", "description": "Called shots to the head are treated as hits to the torso for damage purposes; the body armor (if any) still applies normally." },
+    { "id": "Headshot Defense", "redirect": { "from": "head", "to": "torso" }, "description": "Called shots to the head are treated as hits to the torso for damage purposes; the body armor (if any) still applies normally." },
     { "id": "Gas / Sonic / Dazzle Immunity", "description": "The sealed environment of the helmet provides complete immunity to atmospheric effects, sonic disruption, and visual dazzle weapons." },
     { "id": "Augmentable Senses", "description": "The helmet's sensor suite can be configured for infrared, ultraviolet, or thermal imaging; switching modes is a free action." },
     { "id": "Elemental Immunity", "description": "Full immunity to the glove's damage type for exposures under six seconds; sustained exposure beyond six seconds reduces to 50% damage reduction. Rated for the hands only." }
   ],
   "armorUpgradeGlossary": [
-    { "id": "Ablative Plating", "minQuality": "Mid", "description": "Grants the armor's full RES bonus against Energy damage in addition to its standard Kinetic application." },
+    { "id": "Ablative Plating", "minQuality": "Mid", "resAgainst": "energy", "description": "Grants the armor's full RES bonus against Energy damage in addition to its standard Kinetic application." },
     { "id": "EMP Shielding", "description": "Grants +10% EMP resistance. Reduces cascade failure risk for characters with significant cyberware when hit by EMP sources." },
     { "id": "HUDsync", "description": "Paired with a HUDsync-compatible helmet, displays real-time armor status, weapon systems, and linked device information in the visor." },
-    { "id": "Resistance", "description": "Specialized lining granting 50% damage reduction against a specified environmental type (Thermal / Electric / Freezing). Each installation covers one type; multiple can be installed in separate slots." },
-    { "id": "Tri-Weave", "minQuality": "Mid", "description": "Grants +10 INT to the armor's integrity pool. Can be installed multiple times in separate slots for cumulative effect." },
-    { "id": "Warding", "minQuality": "Mid", "availability": "By Practice", "description": "Extends the armor's RES bonus to magical damage. Requires finding a practitioner willing to perform the work; cannot be bought with Çredits alone." }
+    { "id": "Resistance", "description": "Specialized lining granting 50% damage reduction against a specified environmental type (Thermal / Electric / Freezing). Each installation covers one type; multiple can be installed in separate slots.",
+      "flagged": true, "flagNote": "F23 -- where the 50% reduction sits against PROT and RES is unstated. The hit resolver does not apply it; it reminds the player instead.",
+      "playerNote": "The hit calculator doesn't take this lining's 50% off for you yet. Work it out with your GM and adjust the damage by hand." },
+    { "id": "Tri-Weave", "minQuality": "Mid", "integrityBonus": 10, "description": "Grants +10 INT to the armor's integrity pool. Can be installed multiple times in separate slots for cumulative effect." },
+    { "id": "Warding", "minQuality": "Mid", "resAgainst": "magical", "availability": "By Practice", "description": "Extends the armor's RES bonus to magical damage. Requires finding a practitioner willing to perform the work; cannot be bought with Çredits alone." }
   ],
 
   "armor": [
@@ -3334,6 +3354,60 @@ window.SHADOWS_DATA = {
     { "id": "right-leg", "name": "Right Leg" },
     { "id": "left-leg",  "name": "Left Leg" }
   ],
+
+  /* DAMAGE -- what a hit is made of, read by Engine.resolveHit() (combat plan
+     Session 3, Decision 99). `damageTypes` are Gear's six types plus Magical
+     (the one the RES rules name); `resClass` decides whether RES answers --
+     base armor is Kinetic, Ablative Plating adds Energy, Warding adds Magical.
+     `inflicts` are the Conditions a type CAN cause (offered in the hit
+     dialog, never forced); `always` are the ones Gear says it always causes
+     (pre-ticked, still the player's call). Electric and Burning have no stated
+     RES class (F23) and are stubbed as Energy. `damageCategories` is Gear's
+     Regular/Withering/Massive; `damageRules` holds 053/054's Massive, Shock,
+     At Zero and Dying numbers. */
+  "damageTypes": [
+    { "id": "blade",     "name": "Blade",     "resClass": "kinetic", "inflicts": ["bleeding"] },
+    { "id": "blunt",     "name": "Blunt",     "resClass": "kinetic", "inflicts": ["stunned", "disoriented", "unconscious"] },
+    { "id": "ballistic", "name": "Ballistic", "resClass": "kinetic", "inflicts": ["bleeding"] },
+    { "id": "electric",  "name": "Electric",  "resClass": "energy",  "inflicts": ["stunned", "shocked", "paralyzed"],
+      "flagged": true, "flagNote": "F23 -- the CRB names Kinetic RES (Blade/Blunt/Ballistic) and Energy/Magical via upgrades, but never says which Electric falls under. Stubbed as Energy: no RES without Ablative Plating.",
+      "playerNote": "Whether armor's RES stops Electric damage is still being settled. For now it counts as Energy, so only Ablative Plating lets RES answer it." },
+    { "id": "energy",    "name": "Energy",    "resClass": "energy",  "inflicts": ["agonized"] },
+    { "id": "burning",   "name": "Burning",   "resClass": "energy",  "inflicts": ["agonized", "burning"], "always": ["agonized", "burning"],
+      "flagged": true, "flagNote": "F23 -- as Electric: no stated RES class for Burning. Stubbed as Energy (no RES without Ablative Plating).",
+      "playerNote": "Whether armor's RES stops fire is still being settled. For now it counts as Energy, so only Ablative Plating lets RES answer it." },
+    { "id": "magical",   "name": "Magical",   "resClass": "magical", "inflicts": [] }
+  ],
+  "damageCategories": [
+    { "id": "regular",   "name": "Regular",   "text": "The everyday kind. Armor answers, and what gets through heals the usual ways." },
+    { "id": "withering", "name": "Withering", "text": "Armor answers as normal. What gets through won't regenerate. It heals only with rest and medicine, once you're clear of the source." },
+    { "id": "massive",   "name": "Massive",   "text": "Siege weapons, vehicle guns, big explosives. Skips PROT and RES, strips Integrity equal to the damage, and takes Health Levels away outright." }
+  ],
+  "damageRules": {
+    "massive": {
+      "damagePerLevel": 10,
+      "extraLevelWhenArmorGone": 1,
+      "text": "Massive strips Integrity equal to the damage and removes 1 Health Level per 10 points of it, plus one more if the armor ends at 0 or there was none. Those Levels are gone, not emptied. Rest and chems don't bring them back. It takes Focused Healing and a replacement: a prosthetic, or something stranger.",
+      "inflicts": ["injured", "maimed"]
+    },
+    "shock": {
+      "fractionOfMaxLevels": 0.5,
+      "check": "BOD Essence Check TN 8 TH 2",
+      "onFail": ["unconscious", "prone"],
+      "text": "That hit took half your Health Levels or more. Fail and you're Unconscious and Prone until the start of your next turn."
+    },
+    "atZero": {
+      "check": "WILL Essence Check TN 8 TH 2",
+      "onPass": ["unconscious", "prone"],
+      "onFail": ["dying"],
+      "text": "Your last Health Level is gone. Pain doesn't apply to this check. Pass and you're Unconscious and Prone. Fail and you're Dying.",
+      "freePass": { "advantage": "nine-lives", "text": "Nine Lives can pass this check for you without a roll." }
+    },
+    "whileDying": {
+      "condition": "dying",
+      "text": "Damage while Dying is an automatic Death Mark."
+    }
+  },
   "conditions": [
     { "id": "agonized", "name": "Agonized", "short": "+1 Pain Level",
       "effect": "Operate at 1 Pain Level higher, to a max of Pain Level 3.",

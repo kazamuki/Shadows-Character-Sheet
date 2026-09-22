@@ -177,6 +177,7 @@
 #printSheet .p-hlband.p-pain-3 .p-hl{ border-color:#a11d1d; border-width:1.25pt }
 #printSheet .p-hl b{ display:block; font-size:9pt }
 #printSheet .p-hl.gone{ background:#efe7f2 }
+#printSheet .p-hl.massive{ border-style:dashed }   /* removed by Massive damage (Decision 99) */
 
 /* Skills page: two panels side by side instead of one full-width table — a
  * single table on a landscape page leaves the Notes column mostly empty air. */
