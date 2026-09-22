@@ -24,6 +24,7 @@ and a cold session read them as current. Live numbers are in `docs/STATE.md`.
 
 Also here when relevant: `docs/VOICE-APP.md` (player-facing copy),
 `docs/log/2026.md` (session history — why something was done),
+`docs/plans/` (multi-session plans in flight — sessions, open questions),
 `docs/reference/` (mirrors of CRB-project documents; never edited here).
 
 Do not start editing before reading 1 and 2. Most mistakes on this project are
