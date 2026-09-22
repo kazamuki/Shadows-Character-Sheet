@@ -20,6 +20,7 @@ Generated summaries are one line each and deliberately lossy — they are for
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The shape of the game data or a character file | `SCHEMA.md` §2 and §3 |
 | What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
+| A multi-session plan still in flight — its sessions, open questions (`CQ`_n_) | `plans/` — currently `plans/combat-and-conditions.md` |
 | What a past session cost, and what to watch for | `docs/log/2026.md` |
 | Whether a string is allowed to say that | `VOICE-APP.md` |
 | Whether the current WIP text already answers an open flag | `docs/reference/crb/README.md` |
@@ -82,7 +83,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F13` | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline… | Ken |
 | `F14` | Skill IP cost at rank 0: "5 × current rank" prices learning a new skill (0→1) at zero. Ap… | Deighton |
-| `F16` | Hemophiliac calls for a "First Aid Skill Check"; the catalog skill is Medical. Field Medi… | Ken |
 | `F17` | Long-Lived's rank table reads "Effect" per row; implemented as stacking, needs Deighton's sign-off | Deighton |
 | `F18` | Weapons/Armor/Defense — catalog merged (Decision 92); PROT/RES/Integrity math, Conditions, Massive damage application and Loadout pickers are a second, engine-focused batch | Design (small gap) + engine batch |
 | `F19` | Cyborg install cost mechanism — Sanity erosion vs. temporary Health Level cost, still undecided (Scott unsure which) | Design |

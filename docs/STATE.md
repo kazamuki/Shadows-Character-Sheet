@@ -1,6 +1,6 @@
 # State of the build
 
-**Updated:** 2026-09-21
+**Updated:** 2026-09-22
 **Versions:** app `0.11.0` · game data `0.7` · character schema `0.7` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` → **103 passing, 0 todo, 0 failing** (103 tests, six files)
@@ -43,6 +43,12 @@ Levels grouped into Pain Level bands, a two-panel Skills page — and now
 draws its border/texture from Scott's real Affinity artwork rather than an
 invented approximation (Decision 94).
 
+**The CRB mirror was two weeks stale and is re-pulled (2026-09-22)** —
+Core Mechanics' Exhaustion text and the Arcanist's Origins had moved; Combat,
+Downtime, Magic, the spell appendix and the new Aberrations appendix are now
+mirrored too. The spell catalog was checked against the live appendix: every
+spell and its TN/TH matches.
+
 **One known player-facing defect:** that same frame/texture decoration
 renders correctly on screen but not in Chrome's actual print/PDF output
 (Decision 94) — cosmetic only, nothing else on the page is affected.
@@ -76,7 +82,7 @@ which read oddly once other work queued ahead of it. Ken flagged this
 | — | PR #7 adversarial review | #19 | Decision 91 — machinery gaps closed, not player-visible (§4) |
 | — | Weapons, Ammo & Armor (data) | #22 | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
 | — | Magic — archetype-independent half (data) | #22 | 96 spells across 5 domains/4 tiers, Spellcraft rules as reference text, Enchantment/Alchemy materials · Decision 93 |
-| — | Print sheet — visual redesign | this branch | Blank-print + Notes-clipping bug fixes; case-file front page, Pain Level bands, two-panel Skills, Scott's real frame/texture assets · Decision 94 |
+| — | Print sheet — visual redesign | #23 | Blank-print + Notes-clipping bug fixes; case-file front page, Pain Level bands, two-panel Skills, Scott's real frame/texture assets · Decision 94 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
@@ -106,18 +112,18 @@ work as a flag resolves doesn't mean re-deriving which batch it belonged to.
 This is the pick-up-work view; `SCHEMA.md` §5 is the authority on a flag's
 full text.
 
-**Legend:** ✅ done · ⏭ ready (nothing external blocks starting) · 🔶 partial/stable · ⏸ blocked
+**Legend:** ✅ done · ⏭ ready (nothing external blocks starting) · 📋 planned (a plan doc exists) · 🔶 partial/stable · ⏸ blocked
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Gear & Combat** | ✅ catalog merged (Decision 92) · ⏭ engine + Loadout UI ready | Nothing external. MD1/2/3 ratings (Design, small) don't block starting the engine half |
+| **Gear & Combat** — Conditions, damage, armor | ✅ catalog merged (Decision 92) · 📋 **planned** in `plans/combat-and-conditions.md` — Sessions 2–4 | Ken's sign-off on the plan's §3. Session 2 (Conditions) is otherwise unblocked; Session 3 wants CQ4/CQ6 from Deighton (stubbable). MD1/2/3 ratings (Design, small) block nothing |
 | **Creation-pool economics** — F1, F2, F8, F14 | 🔶 stubbed/scaled, working | Deighton. **F8 is the only wizard-blocker**; ask F1/F2/F8/F14 together, one context-load |
-| **Milestones & doc reconciliation** — F9, F11, F12, F13, F16 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
+| **Milestones & doc reconciliation** — F9, F11, F12, F13 · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — F17, the lock-out question | 🔶 mostly settled | Deighton. F17 needs sign-off as rules authority; nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · Origins/subtypes still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
+| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ⏭ Cascade + Aberration tables now written in the CRB, not yet encoded (plan's side session) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
 | **Engine internals** — unnumbered statMod flag | 🔶 known disagreement | Deighton. `statMod()` extrapolates +1/point past 10; `beyondHumanLimits` text says gains "slow down" — code-comment only, no F-number |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a complete, finished export — his current file is a two-page **portrait** WIP with only Stats built, in two competing styles (hex-dial sidebar vs. plain table). Portrait-vs-landscape is a real decision once that lands, not yet made. Separately: the frame/texture layer doesn't print in Chrome's actual output yet (screen-only) — not blocked on anyone, just not chased down |
 
@@ -148,23 +154,24 @@ test fixtures (Decision 57).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #22** — `grants` (3b), the printable sheet +
-demo-hosting work, the light theme toggle, the PR #7 machinery-gap fixes
-(Decision 91), the Weapons/Ammo/Armor data batch (Decision 92), and the
-Magic archetype-independent-half data batch (Decision 93) have all landed.
-(This line itself was stale before this session started — §2's board had
-both marked "this branch" when they were already on `main`; worth a glance
-here before trusting "this branch" elsewhere.) The print sheet visual
-redesign (Decision 94, §2) is done on this branch, not yet a PR. `npm run
-verify` is green (103 passing, 0 todo).
+**`main` is caught up through PR #23** (the print sheet redesign, Decision 94).
+This branch is docs + one data-text sync: the CRB mirror re-pull, F16 closed,
+and the combat plan. `npm run verify` is green (103 passing, 0 todo).
 
-**Two areas in §3 have no external block right now:** Gear & Combat (the
-engine + Loadout UI half — the natural continuation of what just merged) and
-Milestones & doc reconciliation (Ken alone, zero-dependency). A third,
-Arcanist/Magic, is now unblocked for engine/UI work too — wiring the Grimoire
-to reference the new `spells` catalog by id doesn't touch Origins. Cyborg,
-Vampire, and the print sheet's remaining visual work all wait on people
-outside this session (Deighton/Scott, and Scott again).
+**Next up is Session 2 of `plans/combat-and-conditions.md` (Conditions)** —
+once Ken has signed off on that plan's §3 (P1–P9). The plan lists its own
+sessions, tests to pin, and open questions (CQ1–CQ11); read it before starting.
+
+**Also unblocked:** the plan's Magic-tables side session (Cascade + Aberration
+tables, independent of combat) and Milestones & doc reconciliation (Ken alone;
+note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
+under General Milestones in `041_Archetypes` — not in the Advantages chapter).
+Cyborg, Vampire, and the print sheet's remaining visual work wait on people
+outside a session.
+
+**Waiting on Deighton, asked as one packet:** F8 (the only wizard-blocker), F1,
+F2, F14, F17, the unnumbered `statMod` past-10 question, and the plan's CQ1–CQ7
+and CQ10.
 
 ---
 

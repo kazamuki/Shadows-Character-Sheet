@@ -1009,8 +1009,8 @@ window.SHADOWS_DATA = {
      Field Medic now names the catalog's "Medical"; Combat Paralysis' text is no
      longer ambiguous; Poverty's Max Rank is ruled at 3. Only Cyber-Prophetical
      (SAN/TOL) still carries "flagged":true, and it waits on the Biomech rewrite
-     (F6). Hemophiliac picked up a new flag (F16) for the surviving "First Aid"
-     reference. See SCHEMA.md section 5. */
+     (F6). Hemophiliac's "First Aid" reference (F16) was corrected to Medical in the
+     CRB and re-synced 2026-09-22. See SCHEMA.md section 5. */
   "advantages": [
     {
       "id": "ambidextrous",
@@ -1678,9 +1678,7 @@ window.SHADOWS_DATA = {
       "name": "Hemophiliac",
       "pointsGranted": 10,
       "maxRank": 1,
-      "description": "NYTE City will make you bleed. This makes it count.\n\nAny damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a First Aid Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.\n\nUsing Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a First Aid Skill Check.",
-      "flagged": true,
-      "flagNote": "F16: CRB v4 text calls for a 'First Aid Skill Check'; the catalog skill is 'Medical'. Field Medic's half of this was resolved in the same pass, Hemophiliac is now the only entry naming a First Aid *check*; a Professional milestone lists 'First Aid' among tool/kit examples, which is prose, not a skill reference."
+      "description": "NYTE City will make you bleed. This makes it count.\n\nAny damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a Medical Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.\n\nUsing Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a Medical Skill Check."
     },
     {
       "id": "minor-insanity",
