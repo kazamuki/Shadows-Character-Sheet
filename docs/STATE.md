@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-09-20
-**Versions:** app `0.10.1` · game data `0.7` · character schema `0.7` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-21
+**Versions:** app `0.11.0` · game data `0.7` · character schema `0.7` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` → **103 passing, 0 todo, 0 failing** (103 tests, six files)
 
@@ -26,7 +26,7 @@ architecture and is enforced by tests.
 
 **Working and covered by tests:** the whole wizard, all nine sheet tabs, damage
 and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, the session log,
-loadout, `grants`, an undo-able audit trail, and now a printable sheet — filled
+loadout, `grants`, an undo-able audit trail, and a printable sheet — filled
 or blank — for a player who wants paper. The engine reproduces the CRB's own
 worked examples (`tests/rules.test.mjs`). Game data now also carries a full
 weapons/ammunition/armor catalog (Decision 92) and the archetype-independent
@@ -34,9 +34,20 @@ half of the Magic chapter — domains, the full spell catalog, Spellcraft rules
 as reference text, Enchantment/Alchemy materials (Decision 93) — neither yet
 wired to any UI beyond the Arcanist's existing Grimoire/Disciplines panels.
 
-**No known player-facing defect.** The three machinery gaps the PR #7 review
-found are closed (Decision 91) — none was reachable with current data, so none
-ever bit a player.
+**The print sheet had two real defects this session, both closed:** the
+in-app "Print a blank character sheet" button printed whatever screen was up
+instead of the sheet (`#printSheet` was never un-hidden for print media), and
+a pre-existing Loadout-page overflow clipped the Notes box across a page
+break. The front page was also redesigned — a case-file layout, Health
+Levels grouped into Pain Level bands, a two-panel Skills page — and now
+draws its border/texture from Scott's real Affinity artwork rather than an
+invented approximation (Decision 94).
+
+**One known player-facing defect:** that same frame/texture decoration
+renders correctly on screen but not in Chrome's actual print/PDF output
+(Decision 94) — cosmetic only, nothing else on the page is affected.
+Otherwise no known defect; the three machinery gaps the PR #7 review found
+are closed (Decision 91) and none was reachable with current data.
 
 ---
 
@@ -65,6 +76,7 @@ which read oddly once other work queued ahead of it. Ken flagged this
 | — | PR #7 adversarial review | #19 | Decision 91 — machinery gaps closed, not player-visible (§4) |
 | — | Weapons, Ammo & Armor (data) | this branch | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
 | — | Magic — archetype-independent half (data) | this branch | 96 spells across 5 domains/4 tiers, Spellcraft rules as reference text, Enchantment/Alchemy materials · Decision 93 |
+| — | Print sheet — visual redesign | this branch | Blank-print + Notes-clipping bug fixes; case-file front page, Pain Level bands, two-panel Skills, Scott's real frame/texture assets · Decision 94 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
@@ -107,6 +119,7 @@ full text.
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
 | **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · Origins/subtypes still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
 | **Engine internals** — unnumbered statMod flag | 🔶 known disagreement | Deighton. `statMod()` extrapolates +1/point past 10; `beyondHumanLimits` text says gains "slow down" — code-comment only, no F-number |
+| **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a complete, finished export — his current file is a two-page **portrait** WIP with only Stats built, in two competing styles (hex-dial sidebar vs. plain table). Portrait-vs-landscape is a real decision once that lands, not yet made. Separately: the frame/texture layer doesn't print in Chrome's actual output yet (screen-only) — not blocked on anyone, just not chased down |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
 Advantages/Disadvantages item and wholly waits on Cyborg's ruling; don't ask
@@ -138,16 +151,17 @@ test fixtures (Decision 57).
 **`main` is caught up through PR #19** — `grants` (3b), the printable sheet +
 demo-hosting work, the light theme toggle, and the PR #7 machinery-gap fixes
 (Decision 91) have all landed. The Weapons/Ammo/Armor data batch (Decision
-92, §2) and the Magic archetype-independent-half data batch (Decision 93, §2)
-are both done on this branch, not yet a PR. `npm run verify` is green
-(103 passing, 0 todo).
+92, §2), the Magic archetype-independent-half data batch (Decision 93, §2),
+and the print sheet visual redesign (Decision 94, §2) are all done on this
+branch, not yet a PR. `npm run verify` is green (103 passing, 0 todo).
 
 **Two areas in §3 have no external block right now:** Gear & Combat (the
 engine + Loadout UI half — the natural continuation of what just merged) and
 Milestones & doc reconciliation (Ken alone, zero-dependency). A third,
 Arcanist/Magic, is now unblocked for engine/UI work too — wiring the Grimoire
-to reference the new `spells` catalog by id doesn't touch Origins. Cyborg and
-Vampire still wait on people outside this session.
+to reference the new `spells` catalog by id doesn't touch Origins. Cyborg,
+Vampire, and the print sheet's remaining visual work all wait on people
+outside this session (Deighton/Scott, and Scott again).
 
 ---
 

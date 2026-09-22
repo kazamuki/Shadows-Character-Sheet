@@ -1541,6 +1541,54 @@ No cascade logic to maintain — it falls out of the architecture.
     still `[X] Ç` in the WIP, not ready to merge as a finished catalog the
     way the equipment chapter's pricing was). (Ken + Claude, 2026-09-20)
 
+94. **(Print sheet — visual redesign, app)** **The printable sheet's front
+    page moves from a linear stack of full-width sections to a case-file
+    layout — a spine tab strip plus chamfered cards, Stats narrow left,
+    everything else stacked right — and starts drawing from Scott's real
+    Affinity artwork instead of an invented approximation.** Scott exported
+    SVGs of his in-progress character-sheet redesign (the page frame, a
+    circuit-trace/hex background texture, and a stat "combo dial" concept);
+    the frame's exact chamfer/notch path and its color (`#722B8D`) come from
+    that file's real coordinates, traced via the browser's own transform
+    math, not eyeballed. `print.css` carries both as data-URI custom
+    properties (`--p-frame`, `--p-texture`) drawn as a stroke/background
+    overlay — deliberately **not** a `clip-path` on the content itself: a
+    first attempt clip-path'ed real page content to the frame's outline and
+    silently deleted the "SHADOWS" wordmark, because that notch is a
+    separate protruding tab in Scott's design, not empty space cut from a
+    rectangle. **Known limitation, left open:** the overlay renders
+    correctly on screen (confirmed by force-enabling the print stylesheet)
+    but not yet in Chrome's actual print/PDF output — most likely a
+    print-pipeline quirk specific to `background-image` on generated
+    (`::before`/`::after`) content, since ordinary `background-color`
+    elements print fine. Kept rather than reverted because it fails inert
+    (no layout break, nothing hidden) and Scott's source is itself a
+    work-in-progress two-page **portrait** spread with only Stats built (in
+    two competing styles — a vertical hex-dial sidebar vs. a plain ruled
+    table) — a second, complete handoff is expected, at which point
+    portrait-vs-landscape becomes a real decision rather than an assumption;
+    the print sheet stays landscape until then.
+    Two more changes from the same pass, independent of the Scott assets:
+    the Health Levels ladder now groups its cells into Pain Level bands — a
+    gap plus a border-weight/color step at each threshold, read live from
+    `D.resources.healthLevels.painLevels` so a data change to the bands
+    moves the rendering automatically, never hardcoded. (A first version
+    gave each band its own labeled row; that added roughly 190px and pushed
+    the front page onto a second physical sheet — the same session also
+    fixed a real bug where the printed page never showed content at all
+    (`#printSheet` was never un-hidden for print media) and a pre-existing
+    overflow on the Loadout page that clipped the Notes box across a page
+    break; see `log/2026.md` for both. Shipped health-ladder version is one
+    row, grouped by spacing and border weight only.) And the Skills page
+    moved from one full-width
+    table to two panels split by category row-count rather than a fixed
+    proportion, each skill row now carrying its Primary/Synergy stat as an
+    icon badge (the same brand icon set the live sheet already ships)
+    instead of a bare text column.
+    App **0.10.1 → 0.11.0** (minor): a materially different look for an
+    existing capability, not a bug fix and not new data. No game-data or
+    character-schema change. (Ken + Scott + Claude, 2026-09-21)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
