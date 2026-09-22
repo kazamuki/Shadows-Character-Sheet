@@ -51,7 +51,7 @@ on screen but not in Chrome's print/PDF output (Decision 94). Cosmetic only.
 
 ## 2. The board — shipped work
 
-History, not a queue: each row is merged or done on this branch. **What's not
+History, not a queue: each row is merged. **What's not
 yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 
 | # | Batch | Merged | What it is |
@@ -75,13 +75,13 @@ yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 | — | CRB mirror re-pull + combat plan | #24 | Mirror refreshed and extended, F16 closed, `plans/combat-and-conditions.md` |
 | — | Conditions (combat plan Session 2) | #25 | Catalog, schema 0.8, Pain folding, Skill Check penalties, sheet + print · Decisions 95–96, F20–F22 |
 | — | Design-team rulings | #25 | F1, F2, F14, F17, F20–F22 and the stat-curve flag closed; new skill = 25 IP; stats past 10 +1 per 5 · Decisions 97–98 |
-| — | Taking a hit (combat plan Session 3) | this branch | `hlState`/`armorState`/`resolveHit`/`applyHit`, the Take a hit panel, Massive levels on every HL track · Decision 99, F23 |
+| — | Taking a hit (combat plan Session 3) | #26 | `hlState`/`armorState`/`resolveHit`/`applyHit`, the Take a hit panel, Massive levels on every HL track · Decision 99, F23 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com` (2026-09-12). It only redeploys on a `v*` tag
-push (`deploy-demo.yml`), not on every merge to `main` — the live site is
-currently on app `0.9.0`; everything since waits for the next tag.
+push (`deploy-demo.yml`), not on every merge to `main`. **Live: app `0.13.0`,
+game data `0.8`** (tag `v0.13.0`, deployed and checked 2026-09-22).
 
 **Two things a next session should know.**
 
@@ -143,10 +143,10 @@ test fixtures (Decision 57).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #25** (Conditions + the design-team
-rulings). This branch is combat plan Session 3, Taking a hit (Decision 99):
-engine, the Take a hit panel, and Massive levels on every HL track. No schema
-change; game data 0.8 (still unshipped) absorbed the damage and armor data.
+**`main` is caught up through PR #26** (combat plan Session 3, Taking a hit,
+Decision 99, with the PR's adversarial review folded in). It's tagged
+`v0.13.0` and live on the demo site. Game data 0.8 has shipped, so the next
+change a character can observe needs a `gamedataVersion` bump (Decision 68).
 `npm run verify` is green (157 passing, 0 todo).
 
 **Next up is Session 4 of `plans/combat-and-conditions.md` (Loadout &
