@@ -1623,8 +1623,15 @@ CRB's "(INT / INT)" was a slip made while correcting Occult Lore and Survival of
 their derived-attribute synergies — and corrected the CRB. The data had carried
 INT/EMP all along, so nothing changed but the flag.
 
-Twelve entries in `shadows-data.js` carry `flagged: true` — Batch 3b added
-Long-Lived (F17).
+~~F16~~ closed 2026-09-22: Ken corrected Hemophiliac in the CRB to call for a
+**Medical** Skill Check (both mentions), and the data entry was re-synced to
+match and its flag dropped. Text-only — no computed value or available choice
+moved, so no `gamedataVersion` bump (Decision 68).
+
+Sixteen objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
+(a recursive count, not twelve as this line used to say — it had drifted before
+F16 closed). `tests/docs.test.mjs` is what keeps the table below honest, not this
+sentence.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
@@ -1639,7 +1646,6 @@ Long-Lived (F17).
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
-| F16 | **Hemophiliac calls for a "First Aid Skill Check"**; the catalog skill is **Medical**. Field Medic's half was fixed in the same pass, so this is the last real one. (A Professional milestone lists "First Aid" among tool/kit examples — prose, not a skill reference) | Ken → docs | No |
 | F17 | **Long-Lived's rank table reads as "Effect" per row, not "gain another"** — ambiguous whether ranks stack. Implemented as stacking (rank 3 = 2 Minor + 1 Major Milestone slots total), confirmed with Ken; needs Deighton's sign-off as the rules-authority call | Deighton | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). What's left: assigning MD ratings across the gear list (Design, small), and the engine/UI half — PROT/RES/Integrity math, a Conditions system (Injured/Maimed live there, per `054_Conditions_and_Recovery.md`), Massive damage application, and Loadout pickers — deliberately deferred to a second batch (Decision 92) | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
@@ -1842,6 +1848,12 @@ Long-Lived (F17).
   Then Cyborg (F6) as data rather than a fourth special
   case. Clear **F8** on its own track — it is a four-number data edit and the
   only wizard-blocking flag.
+
+- **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in
+  `docs/plans/combat-and-conditions.md`: Conditions first (Session 2), then hit
+  resolution through armor (Session 3), then Loadout pickers and recovery actions
+  (Session 4). The plan holds the sequencing rationale and the open questions
+  (`CQ`n); decisions get numbered here as each session lands.
 
 **Session handoff protocol:** every phase ends with current files +
 this document updated. Ken adds the latest versions to project knowledge.
