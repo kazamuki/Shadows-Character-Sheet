@@ -345,3 +345,143 @@ test('Design ruling: "For BOD above 10, you gain 1 HP per HL (max is 10 HLs)"', 
   assert.equal(h.levels, 10);
   assert.equal(h.hpPer, 11);
 });
+
+// ── Taking a hit (053 Damage and Armor, 054 Going Down — Decision 99) ──
+
+/** Wear one catalog piece. Kevlar Vest: PROT 1d6, RES +2, INT 20, torso. */
+function wearing(ch, id = "kevlar-vest", extra = {}) {
+  ch.armor.push(Object.assign({ id, integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] }, extra));
+  return ch;
+}
+
+test('CRB 053: Massive "strips Integrity equal to the weapon\'s damage and takes 1 Health Level per 10 points"', () => {
+  // With a Kevlar Vest (INT 20): the +1 only lands when the vest is driven to 0.
+  for (const [dmg, levels, intLeft] of [[9, 0, 11], [10, 1, 10], [25, 3, 0]]) {
+    const r = Engine.resolveHit(wearing(subject({ bod: 10 })), { damage: dmg, damageType: "ballistic", category: "massive" });
+    assert.equal(r.levelsLost, levels, `${dmg} Massive into a vest`);
+    assert.equal(r.armor.integrityAfter, intLeft, `${dmg} Massive strips ${dmg} INT`);
+    assert.equal(r.through, 0, "Massive never goes onto the damage total");
+    assert.equal(r.scrap, intLeft === 0, "driven to 0 by Massive is scrap");
+  }
+  // "— or there was nothing there to begin with — take an additional Health Level."
+  for (const [dmg, levels] of [[9, 1], [10, 2], [25, 3]]) {
+    const r = Engine.resolveHit(subject({ bod: 10 }), { damage: dmg, damageType: "ballistic", category: "massive" });
+    assert.equal(r.levelsLost, levels, `${dmg} Massive, no armor`);
+  }
+});
+
+test('CRB 053: Massive Health Levels "are gone rather than emptied", and count toward Pain (CQ6)', () => {
+  const ch = subject({ bod: 5 });
+  Engine.applyHit(ch, { damage: 10, damageType: "ballistic", category: "massive" });
+  assert.equal(ch.trackers.massiveLevels, 2);
+  assert.equal(ch.trackers.damage, 0, "no HP damage: the levels are removed");
+  const p = Engine.painState(ch);
+  assert.equal(p.hlLost, 2);
+  assert.equal(p.level, 1, "2 HL lost is Pain Level 1");
+  assert.equal(p.hpLeft, 15, "three levels of 5 HP left");
+});
+
+test('CRB 053: "Armor-piercing skips RES entirely, though PROT still rolls"', () => {
+  const hit = { damage: 10, damageType: "ballistic", protRoll: 3 };
+  const plain = Engine.resolveHit(wearing(subject()), hit);
+  assert.deepEqual([plain.prot, plain.res, plain.through], [3, 2, 5]);
+  const ap = Engine.resolveHit(wearing(subject()), { ...hit, ap: true });
+  assert.deepEqual([ap.prot, ap.res, ap.through, ap.resSkipped], [3, 0, 7, "ap"]);
+});
+
+test('CRB 053: "At Integrity 0 ... RES is gone until somebody repairs it, and PROT remains"', () => {
+  const ch = wearing(subject(), "kevlar-vest", { integrityLoss: 20 });
+  assert.equal(Engine.armorState(ch).worn.compromised, true);
+  const r = Engine.resolveHit(ch, { damage: 10, damageType: "ballistic", protRoll: 4 });
+  assert.deepEqual([r.prot, r.res, r.through, r.resSkipped], [4, 0, 6, "compromised"]);
+});
+
+test('CRB 053: "A hit that armor soaks entirely still costs the armor 1 integrity"', () => {
+  const ch = wearing(subject());
+  const soaked = Engine.resolveHit(ch, { damage: 5, damageType: "ballistic", protRoll: 3 });
+  assert.equal(soaked.soaked, true);
+  assert.equal(soaked.integrityLost, 1);
+  Engine.applyHit(ch, { damage: 5, damageType: "ballistic", protRoll: 3 });
+  assert.equal(ch.armor[0].integrityLoss, 1);
+  assert.equal(ch.trackers.damage, 0);
+  // A hit that gets through costs nothing in the moment; that's the after-fight wear roll.
+  const through = Engine.resolveHit(wearing(subject()), { damage: 9, damageType: "ballistic", protRoll: 3 });
+  assert.equal(through.integrityLost, 0);
+});
+
+test("Gear: RES answers only the damage it matches. Kinetic by default, Energy with Ablative Plating, Magical with Warding", () => {
+  const hit = { damage: 10, damageType: "energy", protRoll: 2 };
+  const bare = Engine.resolveHit(wearing(subject()), hit);
+  assert.deepEqual([bare.res, bare.through, bare.resSkipped], [0, 8, "type"]);
+  const ablative = Engine.resolveHit(wearing(subject(), "kevlar-vest", { upgrades: ["Ablative Plating"] }), hit);
+  assert.deepEqual([ablative.res, ablative.through], [2, 6]);
+  const warded = Engine.resolveHit(wearing(subject(), "kevlar-vest", { upgrades: ["Warding"] }),
+                                   { ...hit, damageType: "magical" });
+  assert.equal(warded.res, 2);
+  // Tri-Weave: "+10 INT to the armor's integrity pool", per install.
+  const tw = Engine.armorState(wearing(subject(), "kevlar-vest", { upgrades: ["Tri-Weave", "Tri-Weave"] }));
+  assert.equal(tw.worn.integrityMax, 40);
+});
+
+test('CRB 053 Playing it Out: "PROT: 2, plus RES 3. That\'s 5 defended of 15 ... 10 gets through. That\'s two Health Levels ... Pain Level 1"', () => {
+  const ch = subject({ bod: 5 });
+  const hit = { damage: 15, damageType: "ballistic", protRoll: 2, manual: { res: 3 } };
+  const r = Engine.resolveHit(ch, hit);
+  assert.deepEqual([r.absorbed, r.through, r.lostThisHit], [5, 10, 2]);
+  Engine.applyHit(ch, hit);
+  assert.equal(Engine.painState(ch).level, 1);
+});
+
+test('CRB 054 Shock: "A single hit that takes half your Health Levels or more", half of max rounded up (CQ10)', () => {
+  // BOD 5: 5 HL of 5 HP, so the threshold is 3 HL.
+  assert.equal(Engine.resolveHit(subject({ bod: 5 }), { damage: 15, damageType: "blunt" }).prompts.shock.threshold, 3);
+  assert.equal(Engine.resolveHit(subject({ bod: 5 }), { damage: 14, damageType: "blunt" }).prompts.shock, null, "2 HL isn't half");
+  // It counts the levels THIS hit emptied: 4 HP already in, 11 more empties three.
+  const ch = subject({ bod: 5 }); ch.trackers.damage = 4;
+  assert.ok(Engine.resolveHit(ch, { damage: 11, damageType: "blunt" }).prompts.shock);
+  // The ruling's own examples: 3 HL → 2, 2 HL → 1.
+  assert.equal(Engine.resolveHit(subject({ bod: 3 }), { damage: 10, damageType: "blunt" }).prompts.shock.threshold, 2);
+  assert.equal(Engine.resolveHit(subject({ bod: 2 }), { damage: 5, damageType: "blunt" }).prompts.shock.threshold, 1);
+  // Failing it: "Unconscious and Prone until the start of your next turn".
+  const f = subject({ bod: 5 });
+  Engine.applyHit(f, { damage: 15, damageType: "blunt" }, { shock: "fail" });
+  assert.equal(f.trackers.conditions.map(c => c.id).join(","), ["unconscious", "prone"].join(","));
+});
+
+test('CRB 054: "If a hit drops you to zero Health Levels ... you skip the Shock check entirely"', () => {
+  const r = Engine.resolveHit(subject({ bod: 5 }), { damage: 25, damageType: "blunt" });
+  assert.equal(r.prompts.shock, null);
+  assert.ok(r.prompts.atZero, "At Zero instead");
+  const pass = subject({ bod: 5 });
+  Engine.applyHit(pass, { damage: 25, damageType: "blunt" }, { atZero: "pass" });
+  assert.equal(pass.trackers.conditions.map(c => c.id).join(","), ["unconscious", "prone"].join(","));
+  const fail = subject({ bod: 5 });
+  Engine.applyHit(fail, { damage: 25, damageType: "blunt" }, { atZero: "fail" });
+  assert.equal(fail.trackers.conditions.map(c => c.id).join(","), ["dying"].join(","));
+  // "and again every time you take damage until you've regained health"
+  assert.ok(Engine.resolveHit(pass, { damage: 1, damageType: "blunt" }).prompts.atZero);
+});
+
+test('CRB 054: "Any damage you take while Dying is an automatic failure and a mark against you"', () => {
+  const ch = subject({ bod: 5 });
+  Engine.applyHit(ch, { damage: 25, damageType: "blunt" }, { atZero: "fail" });
+  const r = Engine.resolveHit(ch, { damage: 3, damageType: "blade" });
+  assert.equal(r.prompts.atZero, null, "no check: it's automatic");
+  Engine.applyHit(ch, { damage: 3, damageType: "blade" });
+  assert.equal(ch.trackers.conditions.find(c => c.id === "dying").marks, 1);
+});
+
+test("Gear: attacks on uncovered areas bypass armor; Headshot Defense turns a head shot into a torso hit", () => {
+  const leg = Engine.resolveHit(wearing(subject()), { damage: 8, damageType: "ballistic", location: "left-leg" });
+  assert.deepEqual([leg.covered, leg.through], [false, 8], "a vest doesn't cover legs, so no PROT is asked");
+  const head = wearing(wearing(subject()), "motorcycle-helmet");
+  const r = Engine.resolveHit(head, { damage: 8, damageType: "ballistic", location: "head", protRoll: 3 });
+  assert.deepEqual([r.location, r.covered, r.through], ["torso", true, 3]);
+});
+
+test("Design ruling (CQ5): only Massive damage offers Injured and Maimed", () => {
+  const reg = Engine.resolveHit(subject({ bod: 10 }), { damage: 8, damageType: "ballistic" });
+  assert.ok(!reg.prompts.conditions.includes("injured"));
+  const mas = Engine.resolveHit(subject({ bod: 10 }), { damage: 10, damageType: "ballistic", category: "massive" });
+  assert.ok(mas.prompts.conditions.includes("injured") && mas.prompts.conditions.includes("maimed"));
+});

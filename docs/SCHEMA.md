@@ -509,9 +509,11 @@ on un-modeled rules.
     // migrate() drops junk entries and keeps the first of any duplicate.
     conditions: [ { id: "injured", location: "left-arm", note: "" },
                   { id: "dying", marks: 1 } ],
-    // (0.8) Plan P4. Health Levels removed by Massive damage, and the part of
-    // `damage` that can't regenerate. Carried now so there's one migration;
-    // nothing reads them until the hit resolver (plan Session 3).
+    // (0.8) Plan P4. Health Levels removed by Massive damage (drawn from the
+    // right of the track, counted as lost, so they feed Pain), and the part
+    // of `damage` that can't regenerate. Written by applyHit (Decision 99);
+    // hlState() reads massiveLevels, and nothing reads witheringDamage until
+    // an archetype regenerates.
     massiveLevels: 0,
     witheringDamage: 0,
     // (0.3) Manual adjustments — milestone benefits & un-modeled effects.
@@ -541,7 +543,8 @@ on un-modeled rules.
   // trackers.damage), not derived — max Integrity comes from the catalog.
   // (0.8, plan P5) worn: the one body piece that rolls PROT (CQ7) · scrapped:
   // driven to 0 by Massive, which integrityLoss alone can't say · upgrades:
-  // armorUpgradeGlossary ids. Compromised is derived. Unread until Session 3.
+  // armorUpgradeGlossary ids. Compromised is derived. Read by armorState()
+  // and resolveHit() (Decision 99); nothing writes `worn` until Session 4.
   armor:   [ { id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] },
              { custom: true, name, prot, res, integrity, integrityLoss, notes, worn, scrapped, upgrades } ],
 
@@ -1773,6 +1776,96 @@ No cascade logic to maintain — it falls out of the architecture.
     absorbs the stat curve, the DeSynced change and the Siege text; no
     separate bump. (Ken + Scott + Deighton + Claude, 2026-09-22)
 
+99. **(Taking a hit — combat plan Session 3, data + engine + app)** **A hit
+    is resolved by a pure engine function and applied as one audited,
+    undoable action. Massive damage removes Health Levels from the right of
+    the track, and those count as lost.** Ken approved the Session 3
+    proposal on 2026-09-22; this locks plan P6 and the parts of P4/P5 that
+    Session 2 only stored.
+    - **Engine.** `hlState(ch)` is the Health Level picture every track
+      draws: `damage` empties levels left to right; `trackers.massiveLevels`
+      removes them from the right. Both count as HL lost, so both feed Pain
+      (CQ6), and HP left = (levels − Massive) × HP per level − damage.
+      `painState()` now reads it; with no Massive levels it computes exactly
+      what it did before. `armorState(ch)` reads the worn body piece (the
+      first with `worn: true` if a hand-edited file has two — reported, not
+      thrown): max Integrity = catalog INT + each upgrade's `integrityBonus`
+      (Tri-Weave +10 per install), Compromised = Integrity 0, RES classes =
+      `armorRules.baseResAgainst` (Kinetic) + each upgrade's `resAgainst`
+      (Ablative → Energy, Warding → Magical), coverage from
+      `armorRules.coverageLocations`. Head and hand pieces never roll PROT;
+      a worn one's feature can carry a `redirect` (Headshot Defense: head →
+      torso). `resolveHit(ch, hit)` is pure and returns the breakdown, the
+      patch and the prompts; `applyHit(ch, hit, choices)` is the only writer
+      and **re-resolves from the same inputs**, so a stale preview can't
+      write stale numbers. The UI wraps it in `commit()`: damage, Massive
+      levels, Withering, armor wear and any Conditions undo as one step.
+    - **The rules as built.** Regular and Withering: PROT (the die the player
+      rolled, checked against the die size) + RES if the damage type's
+      `resClass` is one the armor answers and the hit isn't AP and the armor
+      isn't Compromised or scrap. A hit the armor stops completely costs
+      `soakedIntegrityLoss` (1). Nothing else costs Integrity in the moment:
+      the after-fight wear roll is Session 4. Massive (053): skips PROT and
+      RES, strips Integrity equal to the damage, removes ⌊damage ÷ 10⌋ HL,
+      +1 if the armor ends at 0 or there was none. Armor a Massive hit
+      leaves at 0 is marked `scrapped`, which covers armor that was already
+      Compromised: a tank round finishes it. **Scrap still rolls PROT with
+      no RES**, the same as Compromised. 053 says scrap can't be repaired,
+      not that it stops protecting. A hit location the worn piece doesn't
+      cover bypasses it entirely. The default location is center mass
+      (`armorRules.defaultHitLocation`, torso).
+    - **Consequences (054).** Shock is due when the levels *this hit* took
+      (after − before, Massive included) reach ⌈max HL × ½⌉ (CQ10). It
+      counts levels, not raw damage: 4 HP already in plus an 11-point hit
+      empties three levels at BOD 5 and triggers it. A hit that reaches zero
+      skips Shock and asks the At Zero check instead. It asks again on every
+      hit while you're at zero and not Dying. While Dying, damage is an
+      automatic Death Mark and no check is asked. The player enters
+      pass/fail and the engine adds the Conditions from `damageRules`
+      (Shock fail → Unconscious + Prone; At Zero pass → Unconscious + Prone,
+      fail → Dying) through `addCondition()`, so the no-duplicates rule
+      holds. Nine Lives is named beside the check when the character holds
+      it. It's a pass the player chooses, not an automation. Conditions a
+      damage type *can* cause (`damageTypes[].inflicts`, from Gear's Damage
+      Types) are offered as ticks; Gear's "always" ones (Burning → Agonized,
+      Burning) come pre-ticked. Injured and Maimed are offered only on
+      Massive (CQ5), on the body part aimed at. `applyHit` refuses a
+      Condition the hit didn't offer.
+    - **Data (game data 0.8, unshipped — folded in, no bump).**
+      `damageTypes` (Blade, Blunt, Ballistic, Electric, Energy, Burning,
+      Magical), `damageCategories`, `damageRules` (Massive, Shock, At Zero,
+      Dying), and on `armorRules`: `baseResAgainst`, `coverageLocations`,
+      `defaultCoverage`, `defaultHitLocation`, `soakedIntegrityLoss`. Upgrade
+      and feature glossary entries gained `resAgainst`, `integrityBonus` and
+      `redirect`. A new damage type or upgrade is a data edit.
+    - **New stub, F23.** The CRB gives Kinetic RES to Blade/Blunt/Ballistic
+      and extends it to Energy (Ablative) and Magical (Warding), but never
+      says where **Electric** or **Burning** fall. Both are stubbed as
+      Energy: no RES without Ablative Plating. Where the **Resistance**
+      upgrade's 50% sits against PROT/RES is also unstated, so it isn't
+      applied. The panel shows the stub's `playerNote` only on a hit it
+      governs. This contradicted STATE's "no stubs needed". Ken saw the gap
+      in the proposal before it was built.
+    - **No armor on the sheet yet.** Nothing writes `ch.armor[]` until
+      Session 4's pickers, so when no body piece is worn the panel offers
+      "armor that isn't on the sheet yet". It takes a PROT roll and RES
+      (or, for Massive, its current Integrity), is treated as base Kinetic
+      armor covering the hit, and tracks no wear. Session 4 makes it
+      automatic.
+    - **Withering** adds what gets through to `trackers.witheringDamage` as
+      well as `damage`. Lowering `damage` by hand, or Heal all, trims it to
+      match, so it never exceeds the damage. Heal all never touches Massive
+      levels; a separate **Restore a Massive level** button is the explicit
+      action CQ6 asks for (one level per press, audited).
+    - **App.** "Take a hit" panel on Trackers, with a live breakdown, the
+      checks it asks for, Condition ticks and Apply/Cancel. Massive levels
+      are drawn hatched and dashed on the Trackers track, Main's mini-track
+      and the print ladder. The damage card states Massive and Withering.
+      The plain damage buttons and the number field still edit `damage`
+      directly (P7). App **0.12.0 → 0.13.0** (minor, new capability).
+      Character schema unchanged (0.8 already carried every field).
+      (Ken + Claude, 2026-09-22)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -1812,9 +1905,10 @@ INT/EMP all along, so nothing changed but the flag.
 match and its flag dropped. Text-only — no computed value or available choice
 moved, so no `gamedataVersion` bump (Decision 68).
 
-Twelve objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
+Fifteen objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
 (a recursive count: sixteen, plus F20–F22 opened by the Conditions session,
-minus F1, F2, F14, F17 and F20–F22, closed by Decisions 97–98).
+minus F1, F2, F14, F17 and F20–F22, closed by Decisions 97–98, plus the
+three F23 entries opened by the hit resolver, Decision 99).
 
 ~~F1~~, ~~F2~~, ~~F14~~ and ~~F17~~ closed 2026-09-22 on a design-team ruling
 (Decision 97). F1/F2/F17 confirmed what the app already did; F14 moved a price.
@@ -1832,8 +1926,9 @@ sentence.
 | F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
-| F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small), and the rest of the engine/UI half — PROT/RES/Integrity math, Massive damage application, and Loadout pickers — planned as Sessions 3–4 of `plans/combat-and-conditions.md` | Ken/D/Scott | No |
+| F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small), and Loadout pickers, weapon lines, the worn toggle and the recovery actions — plan Session 4 of `plans/combat-and-conditions.md` | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
+| F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and Magical (Warding), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
 
 ## 6. Roadmap
 

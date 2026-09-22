@@ -270,6 +270,9 @@ function degenerates(){
                                             advantages:[{id:"no-such-adv",rank:1}] }),
     "junk conditions":     Engine.migrate({ trackers:{ conditions:[null, {id:"no-such-condition"}, {id:"dying", marks:"lots"},
                                             {id:"injured", location:"nowhere"}], massiveLevels:"x" } }),
+    "junk armor":          Engine.migrate({ armor:[null, 7, {id:"no-such-armor", worn:true, integrityLoss:"x"},
+                                            {custom:true, worn:true, prot:"junk", integrity:"lots", upgrades:["no-such-upgrade"]}],
+                                            trackers:{ massiveLevels: 999, witheringDamage: -4 } }),
   };
 }
 
@@ -312,7 +315,7 @@ test("no exported reader throws on any character migrate() can return", () => {
   // its own test. Named here so adding an export is a deliberate choice.
   const readers = ["powerLevel","archetype","statTable","scalingRow","derived","health","sfr",
                    "statPool","statSpent","skillPool","skillSpent","advSpent","disGranted",
-                   "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","luckState",
+                   "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","luckState",
                    "sanState","focusedSkillIds","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
                    "disciplineRanks","buildExport","versionCheck"];
@@ -905,4 +908,88 @@ test("only Injured and Maimed are body-part Conditions (F22, Decision 98)", () =
 test("the Conditions rules carry no open flag any more (F20–F22 closed)", () => {
   for (const k of ["rollPenalty", "penaltyStacking", "locationStacking"])
     assert.equal(D.conditionRules[k].flagged, undefined, k);
+});
+
+// ── Taking a hit (Decision 99) ────────────────────────────────────────
+// The CRB's numbers are pinned in rules.test.mjs; these guard the machinery.
+
+test("resolveHit and applyHit are total: every degenerate character, every kind of hit", () => {
+  const hits = [
+    {}, { damage: "x" }, { damage: 5 }, { damage: 5, damageType: "nope" },
+    { damage: 12, damageType: "ballistic", protRoll: 3 },
+    { damage: 12, damageType: "ballistic", protRoll: 3, manual: { res: "x", integrity: "y" } },
+    { damage: 30, damageType: "blunt", category: "massive", location: "nowhere" },
+    { damage: 30, damageType: "energy", category: "withering", ap: true, manual: {} },
+  ];
+  const failures = [];
+  for (const [label, ch] of Object.entries(degenerates())){
+    hits.forEach((hit, i)=>{
+      try {
+        Engine.resolveHit(ch, hit);
+        Engine.applyHit(ch, hit, { shock: "fail", atZero: "fail", conditions: ["bleeding", { id: "injured", location: "torso" }] });
+      } catch (e) { failures.push(`hit #${i} on ${label} -> ${e.message}`); }
+    });
+  }
+  assert.deepEqual(failures, []);
+});
+
+test("resolveHit is pure: it reports a patch and writes nothing", () => {
+  const ch = subject();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const before = JSON.stringify(ch);
+  const r = Engine.resolveHit(ch, { damage: 25, damageType: "ballistic", category: "massive" });
+  assert.equal(JSON.stringify(ch), before);
+  assert.equal(r.patch.armor.scrapped, true);
+});
+
+test("a hit is one undoable action, armor and Conditions included (plan P6)", () => {
+  const ch = subject();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const snap = JSON.parse(JSON.stringify(ch));
+  Engine.applyHit(ch, { damage: 30, damageType: "ballistic", category: "massive" },
+                  { conditions: [{ id: "maimed", location: "left-arm" }], atZero: "fail" });
+  Engine.recordAction(ch, "damage", "Took a hit", snap);
+  assert.ok(ch.trackers.massiveLevels > 0 && ch.armor[0].scrapped && ch.trackers.conditions.length > 0);
+  assert.ok(Engine.undoLastAction(ch).ok);
+  const strip = c => JSON.stringify({ ...c, audit: [] });
+  assert.equal(strip(ch), strip(snap));
+});
+
+test("applyHit re-resolves from its inputs, so a stale preview can't write stale numbers", () => {
+  const ch = subject();
+  const hit = { damage: 6, damageType: "blade" };
+  Engine.resolveHit(ch, hit);                // the dialog's preview
+  ch.trackers.damage = 10;                   // something else changed meanwhile
+  Engine.applyHit(ch, hit);
+  assert.equal(ch.trackers.damage, 16);
+});
+
+test("applyHit only adds Conditions the hit offered (no Injured from a regular hit, CQ5)", () => {
+  const ch = subject({ bod: 10 });
+  const r = Engine.applyHit(ch, { damage: 8, damageType: "ballistic" },
+                            { conditions: ["bleeding", { id: "injured", location: "left-arm" }] });
+  assert.equal(r.added.join(","), "bleeding");
+});
+
+test("Withering is recorded as the part of the damage that got through", () => {
+  const ch = subject({ bod: 10 });
+  Engine.applyHit(ch, { damage: 9, damageType: "ballistic", category: "withering", protRoll: 2, manual: { res: 3 } });
+  assert.equal(ch.trackers.damage, 4);
+  assert.equal(ch.trackers.witheringDamage, 4);
+  Engine.applyHit(ch, { damage: 3, damageType: "blade" });
+  assert.equal(ch.trackers.witheringDamage, 4, "a regular hit adds none");
+});
+
+test("resolveHit refuses a PROT roll the worn die can't produce", () => {
+  const ch = subject();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  assert.equal(Engine.resolveHit(ch, { damage: 8, damageType: "blade", protRoll: 7 }).ok, false, "1d6 can't roll 7");
+  assert.equal(Engine.resolveHit(ch, { damage: 8, damageType: "blade" }).ok, false, "PROT is required when armor answers");
+  assert.equal(Engine.resolveHit(ch, { damage: 8, damageType: "blade", protRoll: 6 }).ok, true);
+});
+
+test("F23 surfaces where it bites: an Electric hit carries the stub's player note", () => {
+  const r = Engine.resolveHit(subject(), { damage: 5, damageType: "electric" });
+  assert.equal(r.notes.length, 1);
+  assert.equal(Engine.resolveHit(subject(), { damage: 5, damageType: "blade" }).notes.length, 0);
 });

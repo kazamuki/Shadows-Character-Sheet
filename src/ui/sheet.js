@@ -154,13 +154,20 @@ function groupedStatBlockHtml(ch){
 function hlMiniHtml(ch){
   const hp=Engine.health(ch);
   if (hp.levels<=0 || hp.hpPer<=0) return "";
-  let s=`<div class="hl-mini" aria-hidden="true">`;
-  for (let i=0;i<hp.levels;i++){
-    const lvlDmg=Math.max(0, Math.min(hp.hpPer, (ch.trackers.damage||0) - i*hp.hpPer));
-    const gone=lvlDmg>=hp.hpPer, frac=(lvlDmg/hp.hpPer);
-    s+=`<span class="seg ${gone?"gone":""}"><i style="transform:scaleX(${frac.toFixed(2)})"></i></span>`;
-  }
-  return s+`</div>`;
+  return `<div class="hl-mini" aria-hidden="true">` + hlCells(ch).map(c=>
+    `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
+  ).join("") + `</div>`;
+}
+
+// One entry per Health Level, the way every track draws it (Decision 99):
+// damage empties levels from the left, Massive removes them from the right.
+function hlCells(ch){
+  const hs=Engine.hlState(ch);
+  return Array.from({length:hs.levels}, (_,i)=>{
+    if (i >= hs.levels - hs.massive) return { massive:true, gone:true, dmg:hs.hpPer, left:0, frac:1 };
+    const dmg=Math.max(0, Math.min(hs.hpPer, hs.damage - i*hs.hpPer));
+    return { massive:false, gone:dmg>=hs.hpPer, dmg, left:hs.hpPer-dmg, frac: hs.hpPer ? dmg/hs.hpPer : 0 };
+  });
 }
 
 // Horizontal vitals bar — the locked sheet's at-a-glance readout, shown
@@ -442,9 +449,106 @@ function renderShArchetype(){
 }
 
 // ── Sheet: trackers ──────────────────────────────────────────────────
+// ── Take a hit (combat plan Session 3, Decision 99) ──────────────────
+// The panel is a guided path onto the same inputs the damage buttons edit
+// (plan P7): the engine resolves the hit, the player answers the checks it
+// asks for, and Apply is one commit(), so the whole hit undoes in one step.
+// S.hit holds the form while it's open; nothing is saved until Apply.
+function newHitForm(){
+  return { damage:"", damageType:"ballistic", category:"regular", ap:false, location:"",
+           protRoll:"", manual:false, manualRes:"", manualInt:"", shock:"", atZero:"", conds:{} };
+}
+function hitInput(st){
+  return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap,
+           location: st.location || undefined, protRoll: st.protRoll,
+           manual: st.manual ? { res: st.manualRes, integrity: st.manualInt } : undefined };
+}
+function hitChoices(st, r){
+  const on = id => st.conds[id]!==undefined ? st.conds[id] : r.prompts.always.includes(id);
+  return { shock: st.shock, atZero: st.atZero,
+           conditions: r.prompts.conditions.filter(on).map(id=>{
+             const d=Engine.conditionById(id);
+             return d && d.location ? { id, location: r.aimed } : id;
+           }) };
+}
+function hitLabel(r){
+  const kind = r.category==="regular" ? "" : " "+((D.damageCategories.find(c=>c.id===r.category)||{}).name||"");
+  return `Hit: ${r.damage} ${r.type.name}${kind} → ` +
+    (r.massive ? `${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} removed` : `${r.through} through`);
+}
+function hitPanelHtml(ch){
+  const st=S.hit, as=Engine.armorState(ch), r=Engine.resolveHit(ch, hitInput(st));
+  const opt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
+  const massive=st.category==="massive", cat=D.damageCategories.find(c=>c.id===st.category)||{};
+  const locName=id=>((Engine.locationById(id)||{}).name||"").toLowerCase();
+  const field=(label, inner)=>`<label class="field"><span>${label}</span>${inner}</label>`;
+  const num=(k, label, extra="")=>field(label, `<input type="number" min="0" data-hit="${k}" value="${esc(st[k])}" ${extra}>`);
+  const passFail=k=>`<select data-hit="${k}" aria-label="result">${opt("","Did you pass?",!st[k])}${opt("pass","Passed",st[k]==="pass")}${opt("fail","Failed",st[k]==="fail")}</select>`;
+
+  let h=`<div class="hitpanel" data-hitpanel><h4>Take a hit</h4>
+    <div class="hitrow">
+      ${num("damage","Damage")}
+      ${field("Type",`<select data-hit="damageType">${D.damageTypes.map(t=>opt(t.id,t.name,t.id===st.damageType)).join("")}</select>`)}
+      ${field("Kind",`<select data-hit="category">${D.damageCategories.map(c=>opt(c.id,c.name,c.id===st.category)).join("")}</select>`)}
+      ${field("Where",`<select data-hit="location">${opt("","Center mass",!st.location)}${D.bodyLocations.map(l=>opt(l.id,l.name,l.id===st.location)).join("")}</select>`)}
+      ${massive?"":`<label class="check"><input type="checkbox" data-hit="ap" ${st.ap?"checked":""}> Armor-piercing</label>`}
+    </div>
+    <p class="hitnote">${esc(cat.text||"")}</p>`;
+
+  // Armor: the worn piece when the sheet has one; otherwise a stand-in the
+  // player types (Loadout's pickers are Session 4).
+  if (as.worn){
+    const w=as.worn;
+    h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
+      ${!massive && (!r.ok || r.covered) ? num("protRoll","PROT roll",`max="${w.protMax||""}"`) : ""}</div>`;
+  } else {
+    h+=`<div class="hitrow"><label class="check"><input type="checkbox" data-hit="manual" ${st.manual?"checked":""}> I'm wearing armor that isn't on the sheet yet</label>
+      ${st.manual ? (massive ? num("manualInt","Its Integrity now") : num("protRoll","PROT roll")+num("manualRes","RES")) : ""}</div>`;
+  }
+  as.problems.forEach(p=>{ h+=`<p class="hitnote">${esc(p)}</p>`; });
+
+  if (!r.ok){
+    h+=`<p class="hitwhy">${esc(r.why)}</p>`;
+  } else {
+    const lines=[];
+    if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
+    if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}. Nothing answers the hit.`);
+    if (r.massive){
+      if (r.covered) lines.push(`Strips ${r.integrityLost} Integrity from ${r.armor.name}${r.scrap?". It's scrap now, and can't be repaired":""}.`);
+      lines.push(`Removes ${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} outright.`);
+    } else if (r.covered){
+      const why={ ap:"Armor-piercing skips RES.", compromised:"The armor is Compromised, so no RES.",
+                  type:`RES doesn't answer ${r.type.name} damage.` }[r.resSkipped]||"";
+      lines.push(`PROT ${r.prot}${r.res?` + RES ${r.res}`:""} stops ${r.absorbed}. ${why}`.trim());
+      lines.push(r.soaked ? `Nothing gets through${r.integrityLost?`, but the armor loses ${r.integrityLost} Integrity`:""}.` : `${r.through} gets through.`);
+    } else lines.push(`${r.through} gets through.`);
+    if (r.tookDamage) lines.push(`Health Levels lost: ${r.before.lost} → ${r.after.lost}. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
+    h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
+    r.notes.forEach(n=>{ h+=noticeHtml(copy("unsettledLabel"), n); });
+
+    const P=r.prompts;
+    if (P.shock) h+=`<div class="hitcheck"><b>Shock Check</b> · ${esc(P.shock.check)}<p>${esc(P.shock.text)}</p>${passFail("shock")}</div>`;
+    if (P.atZero) h+=`<div class="hitcheck bad"><b>At zero</b> · ${esc(P.atZero.check)}<p>${esc(P.atZero.text)}${
+      P.atZero.freePassHeld?" "+esc(P.atZero.freePass.text):""}</p>${passFail("atZero")}</div>`;
+    if (P.deathMark) h+=`<div class="hitcheck bad"><b>Dying</b><p>${esc(P.deathMark.text)}</p></div>`;
+    if (P.conditions.length){
+      const on=id=>st.conds[id]!==undefined ? st.conds[id] : P.always.includes(id);
+      h+=`<div class="hitconds"><span>Conditions this hit can cause. Tick what your GM rules:</span>` +
+        P.conditions.map(id=>{ const d=Engine.conditionById(id);
+          return `<label class="check"><input type="checkbox" data-hitcond="${esc(id)}" ${on(id)?"checked":""}> ${esc(d.name)}${
+            d.location?` (${esc(locName(r.aimed))})`:""}</label>`; }).join("") + `</div>`;
+    }
+  }
+  h+=`<div class="hitrow"><button class="btn primary" data-hitapply="1" ${r.ok?"":"disabled"}>Apply hit</button>
+    <button class="btn" data-hitcancel="1">Cancel</button></div></div>`;
+  return h;
+}
+
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
+  if (S.hit && S.hit.owner!==ch) S.hit=null;     // a different character was loaded
+  const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
   // Damage
@@ -457,12 +561,15 @@ function renderShTrackers(){
     <button class="btn sm" data-dmg="1">+1</button>
     <button class="btn sm" data-dmg="5">+5</button>
     <button class="btn sm danger" data-dmgheal="1">Heal all</button>
-    <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.</span></div>`;
-  h += `<div class="hl-track">` + Array.from({length:hp.levels},(_,i)=>{
-    const lvlDmg = Math.max(0, Math.min(hp.hpPer, ch.trackers.damage - i*hp.hpPer));
-    const gone = lvlDmg>=hp.hpPer;
-    return `<div class="hl ${gone?"gone":""}"><div class="fill" style="transform:scaleX(${(lvlDmg/hp.hpPer).toFixed(2)})"></div><span>${gone?"✕":(hp.hpPer-lvlDmg)+"/"+hp.hpPer}</span></div>`;
-  }).join("") + `</div>`;
+    <button class="btn sm primary" data-hitopen="1" ${S.hit?"disabled":""}>Take a hit</button>
+    <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
+      hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied, so resting and Heal all don't bring them back.`:""}${
+      withering?` ${withering} of the damage is Withering and won't regenerate.`:""}</span>
+    ${hs.massive?`<button class="btn sm" data-massiverestore="1" title="${esc(D.damageRules.massive.text)}">Restore a Massive level</button>`:""}</div>`;
+  h += `<div class="hl-track">` + hlCells(ch).map(c=>
+    `<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hp.hpPer}</span></div>`
+  ).join("") + `</div>`;
+  if (S.hit) h += hitPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
     <div class="desc">${esc(pain.description)}${pain.fromConditions?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; Conditions add ${signed(pain.fromConditions)}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
@@ -927,7 +1034,7 @@ function pHealthHtml(ch){
   // Health Levels cap at 10 regardless of character (Decision 64) — a safe,
   // always-correct box count for the blank template, same as the reference sheet.
   const levels = hp ? hp.levels : 10;
-  const dmg = ch ? (ch.trackers.damage||0) : 0;
+  const hlc = ch ? hlCells(ch) : [];
 
   // Group consecutive HL indices sharing a Pain Level into bands, so the
   // ladder reads as "these boxes hurt the same" instead of one flat row.
@@ -946,15 +1053,15 @@ function pHealthHtml(ch){
     const cells = band.indices.map(i=>{
       const label = i===0 ? "0" : "&minus;"+i;
       if (hp){
-        const lvlDmg = Math.max(0, Math.min(hp.hpPer, dmg - i*hp.hpPer)), gone = lvlDmg>=hp.hpPer;
-        return `<div class="p-hl${gone?" gone":""}"><b>${label}</b>${gone?"&mdash;":(hp.hpPer-lvlDmg)+"/"+hp.hpPer}</div>`;
+        const c = hlc[i];
+        return `<div class="p-hl${c.gone?" gone":""}${c.massive?" massive":""}"><b>${label}</b>${c.massive?"&times;":c.gone?"&mdash;":c.left+"/"+hp.hpPer}</div>`;
       }
       return `<div class="p-hl"><b>${label}</b>${pLine(null)}</div>`;
     }).join("");
     return `<div class="p-hlband p-pain-${band.level}">${cells}</div>`;
   }).join("") + `</div>`;
 
-  h += `<div class="p-fieldrow">${pField("Health Levels", hp&&hp.levels)}${pField("Total HP", hp&&hp.total)}${pField("Current HP", hp?Math.max(0,hp.total-dmg):null)}</div>`;
+  h += `<div class="p-fieldrow">${pField("Health Levels", hp&&hp.levels)}${pField("Total HP", hp&&hp.total)}${pField("Current HP", hp?Engine.hlState(ch).hpLeft:null)}</div>`;
   const pain = ch ? Engine.painState(ch) : null;
   h += pain && pain.level>0
     ? `<p class="p-note">${esc(pain.label)} — ${esc(pain.description)}</p>`
