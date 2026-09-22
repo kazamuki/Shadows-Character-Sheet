@@ -822,28 +822,43 @@ function pHead(ch, title){
     <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}</div>
   </div>`;
 }
+function pStatIcon(id){
+  const svg = iconSvg(id);
+  return svg ? `<td class="p-staticon">${svg}</td>` : `<td class="p-staticon"></td>`;
+}
 function pStatsHtml(ch){
   const t = ch ? Engine.statTable(ch) : null;
-  let h = `<table class="p-stats"><thead><tr><th>Stat</th><th>Score</th><th>Bonus</th></tr></thead><tbody>` +
+  let h = `<table class="p-stats"><thead><tr><th></th><th>Stat</th><th>Score</th><th>Bonus</th></tr></thead><tbody>` +
     D.stats.map(s=>{
       const row = t ? t[s.id] : null;
       const mod = row ? (row.mod>=0?"+":"")+row.mod : null;
-      return `<tr><td>${esc(s.id)}</td><td class="num">${pLine(row&&row.value)}</td><td class="num">${pLine(mod)}</td></tr>`;
+      return `<tr>${pStatIcon(s.id)}<td>${esc(s.id)}</td><td class="num">${pLine(row&&row.value)}</td><td class="num">${pLine(mod)}</td></tr>`;
     }).join("") + `</tbody></table>`;
   const der = ch ? Engine.derived(ch) : null, luck = ch ? Engine.luckState(ch) : null, san = ch ? Engine.sanState(ch) : null;
-  h += `<table class="p-stats"><thead><tr><th></th><th>Base</th><th>Current</th></tr></thead><tbody>` +
-    `<tr><td>WILL</td><td class="num">${pLine(der&&der.WILL)}</td><td class="num">${pLine(der&&der.WILL)}</td></tr>` +
-    `<tr><td>TOL</td><td class="num">${pLine(der&&der.TOL)}</td><td class="num">${pLine(der&&der.TOL)}</td></tr>` +
-    `<tr><td>LUCK</td><td class="num">${pLine(luck&&luck.max)}</td><td class="num">${pLine(luck&&luck.current)}</td></tr>` +
-    `<tr><td>SAN %</td><td class="num">${pLine(san&&san.max)}</td><td class="num">${pLine(san&&san.current)}</td></tr>` +
+  h += `<table class="p-stats"><thead><tr><th></th><th></th><th>Base</th><th>Current</th></tr></thead><tbody>` +
+    `<tr>${pStatIcon("WILL")}<td>WILL</td><td class="num">${pLine(der&&der.WILL)}</td><td class="num">${pLine(der&&der.WILL)}</td></tr>` +
+    `<tr>${pStatIcon("TOL")}<td>TOL</td><td class="num">${pLine(der&&der.TOL)}</td><td class="num">${pLine(der&&der.TOL)}</td></tr>` +
+    `<tr>${pStatIcon("LUCK")}<td>LUCK</td><td class="num">${pLine(luck&&luck.max)}</td><td class="num">${pLine(luck&&luck.current)}</td></tr>` +
+    `<tr>${pStatIcon("SAN")}<td>SAN %</td><td class="num">${pLine(san&&san.max)}</td><td class="num">${pLine(san&&san.current)}</td></tr>` +
     `</tbody></table>`;
   return h;
 }
 function pSkillCellsHtml(ch, category){
   return `<div class="p-cellrow">` + D.skills.filter(s=>s.category===category).map(s=>{
     const line = ch ? Engine.skillLine(ch, s.id) : null;
-    return `<div class="p-skillcell"><span class="p-label">${esc(s.name)}</span>${pLine(line && "1d10+"+line.checkBonus)}</div>`;
+    const icon = iconSvg(s.primaryStat);
+    return `<div class="p-skillcell">${icon?`<span class="p-scicon">${icon}</span>`:""}<span class="p-label">${esc(s.name)}</span>${pLine(line && "1d10+"+line.checkBonus)}</div>`;
   }).join("") + `</div>`;
+}
+// Which Pain Level band a given HL-lost count falls into — the same lookup
+// Engine.painState() does per-character, but by index so the blank ladder
+// (no character, no damage) can still show the bands. Thresholds come from
+// game data (never hardcoded), so a data edit to the bands moves this too.
+function pPainBandFor(hlLost){
+  const levels = D.resources.healthLevels.painLevels;
+  let lvl = levels[0];
+  for (const p of levels) if (hlLost >= p.hlLostThreshold) lvl = p;
+  return lvl;
 }
 function pHealthHtml(ch){
   const hp = ch ? Engine.health(ch) : null;
@@ -851,17 +866,37 @@ function pHealthHtml(ch){
   // always-correct box count for the blank template, same as the reference sheet.
   const levels = hp ? hp.levels : 10;
   const dmg = ch ? (ch.trackers.damage||0) : 0;
-  let h = `<div class="p-hlrow">`;
+
+  // Group consecutive HL indices sharing a Pain Level into bands, so the
+  // ladder reads as "these boxes hurt the same" instead of one flat row.
+  const bands = [];
   for (let i=0;i<levels;i++){
-    const label = i===0 ? "0" : "&minus;"+i;
-    if (hp){
-      const lvlDmg = Math.max(0, Math.min(hp.hpPer, dmg - i*hp.hpPer)), gone = lvlDmg>=hp.hpPer;
-      h += `<div class="p-hl${gone?" gone":""}"><b>${label}</b>${gone?"&mdash;":(hp.hpPer-lvlDmg)+"/"+hp.hpPer}</div>`;
-    } else {
-      h += `<div class="p-hl"><b>${label}</b>${pLine(null)}</div>`;
-    }
+    const band = pPainBandFor(i);
+    const last = bands[bands.length-1];
+    if (!last || last.level!==band.level) bands.push({level:band.level, indices:[i]});
+    else last.indices.push(i);
   }
-  h += `</div><div class="p-fieldrow">${pField("Health Levels", hp&&hp.levels)}${pField("Total HP", hp&&hp.total)}${pField("Current HP", hp?Math.max(0,hp.total-dmg):null)}</div>`;
+
+  // One row, grouped into bands by a gap + the border-weight/color step
+  // already on .p-hl — NOT a labeled row per band, which is what blew the
+  // front page past one printed page the first time this was tried.
+  let h = `<div class="p-hlbands">` + bands.map(band=>{
+    const cells = band.indices.map(i=>{
+      const label = i===0 ? "0" : "&minus;"+i;
+      if (hp){
+        const lvlDmg = Math.max(0, Math.min(hp.hpPer, dmg - i*hp.hpPer)), gone = lvlDmg>=hp.hpPer;
+        return `<div class="p-hl${gone?" gone":""}"><b>${label}</b>${gone?"&mdash;":(hp.hpPer-lvlDmg)+"/"+hp.hpPer}</div>`;
+      }
+      return `<div class="p-hl"><b>${label}</b>${pLine(null)}</div>`;
+    }).join("");
+    return `<div class="p-hlband p-pain-${band.level}">${cells}</div>`;
+  }).join("") + `</div>`;
+
+  h += `<div class="p-fieldrow">${pField("Health Levels", hp&&hp.levels)}${pField("Total HP", hp&&hp.total)}${pField("Current HP", hp?Math.max(0,hp.total-dmg):null)}</div>`;
+  const pain = ch ? Engine.painState(ch) : null;
+  h += pain && pain.level>0
+    ? `<p class="p-note">${esc(pain.label)} — ${esc(pain.description)}</p>`
+    : `<p class="p-note">Border weight marks the Pain Level band (thresholds at 2, 5, 8 HL lost).</p>`;
   return h;
 }
 function pDefenseHtml(){
@@ -873,18 +908,42 @@ function pDefenseHtml(){
   h += `<p class="p-note">Armor and defense aren't tracked digitally yet — use this section to keep score by hand.</p>`;
   return h;
 }
-function pSkillsTableHtml(ch){
-  let body = "";
-  for (const [cid,cname] of [["combat","Combat"],["utility","Utility"],["general","General"]]){
-    body += `<tr class="p-cat"><td colspan="4">${esc(cname)}</td></tr>`;
-    body += D.skills.filter(s=>s.category===cid).map(s=>{
+function pSkillIcons(s){
+  const pri = iconSvg(s.primaryStat), syn = iconSvg(s.synergyStat);
+  return `<td class="p-skicons">` +
+    (pri ? `<span class="p-skicon" title="${esc(s.primaryStat)}">${pri}</span>` : "") +
+    (syn ? `<span class="p-skicon p-skicon-syn" title="${esc(s.synergyStat)}">${syn}</span>` : "") +
+    `</td>`;
+}
+function pSkillRowsHtml(ch, groups){
+  return groups.map(g=>{
+    const rows = g.skills.map(s=>{
       const line = ch ? Engine.skillLine(ch, s.id) : null;
       const rank = !line ? null : (line.trained ? line.rank : "—");
       const check = line ? "1d10+"+line.checkBonus : null;
-      return `<tr><td>${esc(s.name)}</td><td class="num">${pLine(rank)}</td><td class="num">${pLine(check)}</td><td></td></tr>`;
+      return `<tr><td>${esc(s.name)}</td>${pSkillIcons(s)}<td class="num">${pLine(rank)}</td><td class="num">${pLine(check)}</td><td></td></tr>`;
     }).join("");
-  }
-  return `<table class="p-table"><thead><tr><th>Skill</th><th>Rank</th><th>Check</th><th>Notes</th></tr></thead><tbody>${body}</tbody></table>`;
+    return `<tr class="p-cat"><td colspan="5">${esc(g.cname)}</td></tr>${rows}`;
+  }).join("");
+}
+// Two side-by-side panels instead of one full-width table — a blank
+// landscape page mostly wastes width on an empty Notes column otherwise.
+// The category/skill split is computed from row counts, not hardcoded, so
+// a data-only category addition still balances the two panels.
+function pSkillsTableHtml(ch){
+  const cats = [["combat","Combat"],["utility","Utility"],["general","General"]];
+  const groups = cats.map(([cid,cname])=>({cname, skills:D.skills.filter(s=>s.category===cid)}))
+    .filter(g=>g.skills.length);
+  const totalRows = groups.reduce((n,g)=>n+g.skills.length+1,0);
+  const half = totalRows/2;
+  let running=0, left=[], right=[];
+  groups.forEach(g=>{
+    (running<half ? left : right).push(g);
+    running += g.skills.length+1;
+  });
+  const thead = `<thead><tr><th>Skill</th><th>Stats</th><th>Rank</th><th>Check</th><th>Notes</th></tr></thead>`;
+  const table = rows => `<table class="p-table p-skilltable">${thead}<tbody>${rows}</tbody></table>`;
+  return `<div class="p-skillcols">${table(pSkillRowsHtml(ch,left))}${table(pSkillRowsHtml(ch,right))}</div>`;
 }
 function pRowsTableHtml(rows, cols, labels, blankRows){
   const data = rows && rows.length ? rows : Array.from({length:blankRows},()=>({}));
@@ -898,19 +957,27 @@ function pTraitsTableHtml(list, lookupFn, label, blankRows){
   }) : Array.from({length:blankRows},()=>`<tr><td>${pLine(null)}</td><td class="num">${pLine(null)}</td><td>${pLine(null)}</td></tr>`);
   return `<table class="p-table"><thead><tr><th>${esc(label)}</th><th>Rank</th><th>Description</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
 }
+function pCard(label, bodyHtml, variant){
+  return `<div class="p-card${variant?" "+variant:""}"><div class="p-card-head">${esc(label)}</div><div class="p-card-body">${bodyHtml}</div></div>`;
+}
 function renderPrintView(ch){
   const pl = ch ? Engine.powerLevel(ch) : null, arch = ch ? Engine.archetype(ch) : null;
   const ip = ch ? Engine.ipState(ch) : null, id = ch ? ch.identity : {};
 
-  let p1 = pHead(ch, "Character Sheet");
-  p1 += `<div class="p-section">Character Info</div>`;
-  p1 += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&arch.name)}${pField("Power Level", pl&&pl.name)}</div>`;
-  p1 += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch&&ch.trackers.credits.current)}</div>`;
-  p1 += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}</div>`;
-  p1 += `<div class="p-section">Stats</div>${pStatsHtml(ch)}`;
-  p1 += `<div class="p-section">Combat Skills</div>${pSkillCellsHtml(ch,"combat")}`;
-  p1 += `<div class="p-section">Health Levels</div>${pHealthHtml(ch)}`;
-  p1 += `<div class="p-section">Defense</div>${pDefenseHtml()}`;
+  let p1main = pHead(ch, "Character Sheet");
+  p1main += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&arch.name)}${pField("Power Level", pl&&pl.name)}</div>`;
+  p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch&&ch.trackers.credits.current)}</div>`;
+  p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}</div>`;
+  p1main += `<div class="p-frontbody">`;
+  p1main += `<div class="p-frontleft">${pCard("Stats", pStatsHtml(ch))}</div>`;
+  p1main += `<div class="p-frontright">` +
+    pCard("Combat Quick-Ref", pSkillCellsHtml(ch,"combat"), "magenta") +
+    pCard("Health Levels", pHealthHtml(ch)) +
+    pCard("Defense", pDefenseHtml(), "magenta") +
+    `</div>`;
+  p1main += `</div>`;
+  let p1 = `<div class="p-frontpage"><div class="p-tabstrip"><span>Character Sheet — Front</span></div>` +
+    `<div class="p-frontmain">${p1main}</div></div>`;
 
   let p2 = pHead(ch, "Skills");
   p2 += `<div class="p-section">Skills</div>${pSkillsTableHtml(ch)}`;
