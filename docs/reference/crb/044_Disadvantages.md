@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-04. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
 
 ### Disadvantages
 
@@ -252,9 +252,9 @@ Hallucinations last 1d4 rounds. What you see might even be pleasant. That was ne
 
 *NYTE City will make you bleed. This makes it count.*
 
-Any damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a First Aid Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.
+Any damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a Medical Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.
 
-Using Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a First Aid Skill Check.
+Using Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a Medical Skill Check.
 
 **Minor Insanity**
 

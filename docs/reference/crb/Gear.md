@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-04. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
 
 # Introduction
 
@@ -135,7 +135,7 @@ Conditions are temporary game states imposed by weapons, substances, and environ
 Full condition rules, recovery mechanics, and interactions are covered in the **Combat** chapter.
 
 |  |  |  |
-|:--:|----|----|
+|:--:|:--:|:--:|
 | **Condition** | **Effect** | **Recovery** |
 | **Bleeding** | −1 HP per round | BOD Essence TN8 TH1, First Aid, or Nanomed Kit |
 | **Burning** | Ongoing damage, −1 to all rolls | Extinguish source, then treat as Bleeding |
@@ -189,6 +189,8 @@ Tags on ammunition work the same way. A weapon loaded with AP rounds gains the A
 
 **Spread** — The weapon discharges across a cone rather than at a single target, affecting multiple targets simultaneously. Treated as an Area attack — the attacker makes one roll against the group. ACC bonus does not apply. The cone's extent is determined by the weapon's effective range.
 
+**Suppression** — The weapon lays sustained fire across an area rather than at a target. Declare the zone. Until the start of the firer's next turn, that ground is Difficult Terrain. No attack roll and no damage — the rounds are aimed at the space, not at anyone in it. Whether a target gets hit is a matter of cover and line of sight, same as ever. What suppression costs them is the ability to get anywhere useful.
+
 **Stunning** — The weapon causes the Stunned/Shocked condition on a successful hit.
 
 **UV Burst (Undead)** — The weapon emits a burst of ultraviolet radiation that deals Withering damage specifically to undead and vampiric targets. Non-supernatural targets in range are unaffected by the UV component.
@@ -200,7 +202,7 @@ Tags on ammunition work the same way. A weapon loaded with AP rounds gains the A
 ##### *Volatile Misfire Table (1d4):*
 
 | Roll | Result |
-|:--:|----|
+|----|----|
 | 1 | **No Effect** — The shot goes wide. The weapon functions normally. |
 | 2–3 | **Jam** — The weapon cannot fire until cleared. Clearing takes one Action. |
 | 4 | **Misfire** — The weapon discharges in hand. Take 5 damage, ignoring armor. The weapon then jams and must be cleared. |
@@ -232,7 +234,7 @@ Weapons with available mod slots can be customized through attachments and modif
 The number of mod slots on a weapon is fixed at purchase. Slots cannot be added after manufacture.
 
 | Mod | Slots | Effect |
-|:--:|----|----|
+|----|----|----|
 | Silencer | 1 | Grants the Silent tag. Subsonic fire only — cannot be applied to shotguns or heavy weapons. Requires subsonic ammunition. Anyone within 6m may make a Combat Sense check to locate the source. |
 | Laser Sight | 1 | +1 ACC on aimed shots, stacking with other accuracy bonuses. Green lasers can cause Disoriented on direct unprotected eye contact. |
 | Holo Sight | 1 | +1 ACC on aimed shots, stacking with other accuracy bonuses. Does not stack with SMART Targeting. Displays magazine count in the sight picture. |
@@ -1837,28 +1839,28 @@ Four classes of package exist. Higher classes add capability rather than replaci
 #### Package Class Summary
 
 |                      |             |              |               |              |
-|----------------------|-------------|--------------|---------------|--------------|
+|----------------------|:-----------:|:------------:|:-------------:|:------------:|
 | **Feature**          | **Class I** | **Class II** | **Class III** | **Class IV** |
-| Basic HUD            | ✓           | ✓            | ✓             | ✓            |
-| Emergency Beacon     | ✓           | ✓            | ✓             | ✓            |
-| Tracking System      | ✓           | ✓            | ✓             | ✓            |
-| Trans-Communications | ✓           | ✓            | ✓             | ✓            |
-| Compartments         | ✓           | ✓            | ✓             | ✓            |
-| Night Vision         | ✓           | ✓            | ✓             | ✓            |
-| Land NAV             | —           | ✓            | ✓             | ✓            |
-| Magnetic Stow Points | —           | ✓            | ✓             | ✓            |
-| Rainbow Sights       | —           | ✓            | ✓             | ✓            |
-| Readout: Marquis     | —           | ✓            | ✓             | ✓            |
-| Advanced HUD         | —           | —            | ✓             | ✓            |
-| Audio Dampers        | —           | —            | ✓             | ✓            |
-| Flash Down           | —           | —            | ✓             | ✓            |
-| Motion Detector      | —           | —            | ✓             | ✓            |
-| SMART Link           | —           | —            | ✓             | ✓            |
-| Threat Assessment    | —           | —            | ✓             | ✓            |
-| Enhanced Audio       | —           | —            | —             | ✓            |
-| Readout: Vitals      | —           | —            | —             | ✓            |
-| Telescopics          | —           | —            | —             | ✓            |
-| Land NAV (Enhanced)  | —           | —            | —             | ✓            |
+| Basic HUD            |      ✓      |      ✓       |       ✓       |      ✓       |
+| Emergency Beacon     |      ✓      |      ✓       |       ✓       |      ✓       |
+| Tracking System      |      ✓      |      ✓       |       ✓       |      ✓       |
+| Trans-Communications |      ✓      |      ✓       |       ✓       |      ✓       |
+| Compartments         |      ✓      |      ✓       |       ✓       |      ✓       |
+| Night Vision         |      ✓      |      ✓       |       ✓       |      ✓       |
+| Land NAV             |      —      |      ✓       |       ✓       |      ✓       |
+| Magnetic Stow Points |      —      |      ✓       |       ✓       |      ✓       |
+| Rainbow Sights       |      —      |      ✓       |       ✓       |      ✓       |
+| Readout: Marquis     |      —      |      ✓       |       ✓       |      ✓       |
+| Advanced HUD         |      —      |      —       |       ✓       |      ✓       |
+| Audio Dampers        |      —      |      —       |       ✓       |      ✓       |
+| Flash Down           |      —      |      —       |       ✓       |      ✓       |
+| Motion Detector      |      —      |      —       |       ✓       |      ✓       |
+| SMART Link           |      —      |      —       |       ✓       |      ✓       |
+| Threat Assessment    |      —      |      —       |       ✓       |      ✓       |
+| Enhanced Audio       |      —      |      —       |       —       |      ✓       |
+| Readout: Vitals      |      —      |      —       |       —       |      ✓       |
+| Telescopics          |      —      |      —       |       —       |      ✓       |
+| Land NAV (Enhanced)  |      —      |      —       |       —       |      ✓       |
 
 #### Feature Definitions
 

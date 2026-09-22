@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-04. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
 
 # Section III – Core Mechanics
 
@@ -205,52 +205,17 @@ While trying to dead lift this car, your foot slips and you hear a snap as your 
 
 #### Casting Magic
 
-Aether infuses the entire universe. Those who learn to wield it do not command it from a distance - they channel it through their own bodies. Every spell is an act of strain, focus, and risk.
+Aether infuses the entire universe. Those who learn to wield it do not command it from a distance — they channel it through their own bodies. Every spell is an act of strain, focus, and risk.
+
+Casting magic is still an **Essence Check** — called a Spellcraft roll. You roll dice equal to your rank in the Discipline, you count Hits against a Target Number, and Duds cancel Hits as always.
+
+What makes magic different is what a Dud costs. On an ordinary check, a Dud is a die that didn’t help. On a Spellcraft roll, Duds that outnumber your Hits mean the Aether you were shaping collapses back through you — and your body absorbs the difference. Push far enough and you stop being able to cast at all. Push even further, and the Aether gets out.
 
 The only limits are what you’ve learned to channel and what your body can survive. The world won’t stop you, it simply keeps score.
 
-Casting magic is still an **Essence Check**, but the difference is the volatile Aether you channel. It resists being shaped, and it pushes back when forced.
+Magic is the most volatile power a human can wield. Those who use it are not seen as gifted. They're seen as unpredictable — which in NYTE City amounts to the same thing.
 
-**Exhaustion, Tolerance, and Rupture**
-
-When casting magic, each Dud generates 1 point of **Exhaustion**. **Exhaustion** represents your body recoiling from a failed attempt to contain Aether. Your **Tolerance** **(TOL)** determines how much **Exhaustion** you can endure before containment begins to fail.
-
-As long as your **Exhaustion** remains at or below your **TOL**, your body can safely contain Aether.
-
-If a casting causes your **Exhaustion** to exceed your **TOL**, a **Rupture** occurs. This can happen even if the spell successfully manifests. When a **Rupture** occurs, the body can no longer contain Aether. The boundary between caster and spell collapses, releasing uncontrolled, but typically temporary arcane fallout. If you Botch and Rupture in a single cast, this causes a **Catastrophic Rupture** which are almost always permanent.
-
-Once your **Exhaustion** exceeds your **TOL**, your body can no longer safely contain Aether and you’re unable to weave magic again until you have recovered. The only way to recover from Exhaustion is to **rest or meditate for at least 1** **hour** per Exhaustion point. Resting or meditating can only happen outside of an encounter. If you are interrupted, the Exhaustion point is not recovered.
-
-*Example: Pushing Too Far*
-
-You have an **Evocation** rank of 3 and attempt to cast a Fireball. The spell has a **TN** 8 and a **TH** 2. Your **TOL** is 2.
-
-You roll 3d10 and get: 1, 9, 2\
-*1 Hit, 1 Duds, 0 Explosions*
-
-The single Dud generates 1 point of **Exhaustion**. With your **TOL** of 2, you can suffer up to 2 more Duds.
-
-Despite the warning signs, on your next turn you push forward and attempt the spell again. Here are some possible outcomes:
-
-- **Critical Success**: 10 9 10 **10** **2 3** (additional dice came from explosions)\
-  *4 Hits, 0 Duds, 3 Explosions*\
-  Drawing Aether cleanly through your body, the fireball manifests larger and more destructive than expected.
-
-- **Success**: 8 9 3\
-  *2 Hits, 0 Duds, 0 Explosions*\
-  You grit through the Exhaustion and hurl a blazing fireball at your target.
-
-- **Fizzle**: 8, 1, 3\
-  *1 Hit, 1 Dud, 0 Explosions*\
-  Your body feels the pushback from the Aether but holds as your exhaustion reaches the limits of your Tolerance. The spell collapses before it can form.
-
-- **Botch** (Causing a Rupture): 1, 1, 7\
-  *0 Hits, 2 Duds, 0 Explosions\*
-  You force Aether into your body despite every warning. It arcs out of control, burning glowing (but harmless) runes into your flesh – proof that sometimes the universe is merciful compared to what could have happened.
-
-Magic is the most volatile power a human can wield. Those who use it are not seen as gifted. They're seen as unpredictable -- which in NYTE City amounts to the same thing.
-
-This is the shape of it. The full depth of what Aether does to the city (and to the people foolish enough to channel it) lives in the Magic section.
+This is the shape of it. Tolerance, Rupture, Exhaustion, and everything else the Aether does to the people foolish enough to channel it lives in the **Magic** section.
 
 ### Breaking Point Risk: Breaker Checks
 
@@ -450,4 +415,4 @@ Unlike Health, **Luck**, **Credits** or **SFR**, situational resources don’t c
 
 **A Note on Exhaustion**
 
-Some resources in *Shadows* are tied to specific forms of power. For Arcanists, repeated or reckless spellcasting builds **Exhaustion** as **Tolerance** is strained. **Exhaustion** is not spent like a resource, accumulates through risk and failure, and is recovered through rest and recovery. Full rules for **Exhaustion** and **Tolerance** are covered in the Magic section.
+Some resources in *Shadows* are tied to specific forms of power. For Arcanists, that resource is **Tolerance** — spent by every Rupture, and recovered through rest and recovery. Full rules for **Exhaustion** and **Tolerance** are covered in the Magic section.

@@ -48,15 +48,18 @@ comment at the top afterward and bump the pull date in the table below.
 | [041_Archetypes.md](041_Archetypes.md) | Ch.4.1 — archetypes, Milestones | F5, F6, F7, F9, F13 |
 | [042_Skills.md](042_Skills.md) | Ch.4.2 — skill catalog | source of the merged data (Decision 55); cross-check for F11 |
 | [043_Advantages.md](043_Advantages.md) | Ch.4.3 — advantages | source of the merged data (Decision 55); cross-check for F11 |
-| [044_Disadvantages.md](044_Disadvantages.md) | Ch.4.4 — disadvantages | source of the merged data (Decision 55); cross-check for F16 |
+| [044_Disadvantages.md](044_Disadvantages.md) | Ch.4.4 — disadvantages | source of the merged data (Decision 55) |
 | [054_Conditions_and_Recovery.md](054_Conditions_and_Recovery.md) | Ch.5.4 — conditions, recovery | Pain Levels, damage, recovery — already on the sheet |
-| [Gear.md](Gear.md) | equipment chapter | future loadout data; the open Natural Armor / Thick Skin question |
+| [Gear.md](Gear.md) | equipment chapter | weapons/armor catalog (Decision 92); the open Natural Armor / Thick Skin question |
+| [053_Combat_Encounters.md](053_Combat_Encounters.md) | Ch.5.3 — combat | the damage → PROT/RES → Health Level pipeline, Massive/Withering, Integrity wear (`docs/plans/combat-and-conditions.md`) |
+| [055_Downtime.md](055_Downtime.md) | Ch.5.5 — downtime | Natural/Focused Healing, TOL recovery |
+| [Magic.md](Magic.md) | magic chapter | Spellcraft, TOL/Exhaustion/Cascade, spell progression (Decision 93) |
+| [Appendix_Book_of_Known_Spells.md](Appendix_Book_of_Known_Spells.md) | spell appendix | source of the `spells` catalog (Decision 93) |
+| [Appendix_Aberrations.md](Appendix_Aberrations.md) | aberrations appendix | the Good/Neutral/Bad lists a Cascade rolls on |
 
-Not mirrored (lower value for data/engine work as of this pull): `010_Onboarding`
-(lore/voice, not mechanics), `050_Playing_the_Game`, `051_Social_Encounters`,
-`052_Environmental_Encounters`, `053_Combat_Encounters` (GM procedure, not yet
-reflected in sheet mechanics), `055_Downtime` (currently 43 lines — thin
-because the Advancement section it would need, F12, hasn't been written yet).
-Pull one of these the same way, the day it actually gates work.
+Not mirrored (lower value for data/engine work as of this pull): `000_Index`,
+`010_Onboarding` (lore/voice, not mechanics), `050_Playing_the_Game`,
+`051_Social_Encounters`, `052_Environmental_Encounters`, and the GM chapters
+(`200`–`213`). Pull one of these the same way, the day it actually gates work.
 
-**Pulled 2026-09-04.** Converted with `pandoc -f docx -t gfm --wrap=preserve`.
+**Pulled 2026-09-22** (all files; the first nine were first pulled 2026-09-04). Converted with `pandoc -f docx -t gfm --wrap=preserve`. File names swap the source's spaces and ` - ` for underscores.

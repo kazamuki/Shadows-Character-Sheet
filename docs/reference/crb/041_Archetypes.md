@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-04. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
 
 ## Archetypes
 
@@ -64,9 +64,11 @@ The Aether leaves marks. Arcanists wear them.
 
 An Arcanist doesn't find magic. Magic finds the people who were already looking for it - who felt something underneath the surface of the world and couldn't stop pulling at it until it came loose in their hands.
 
-You have devoted yourself to that pull. Whether you were trained by a mentor, stumbled into the arcane through obsession, or were shown the ways of the Aether by something that decided you were worthy. You are past the point of going back. Magic is not a tool you carry. It is a language you now think in.
+How it found you shapes everything that follows. Some studied until the Aether had no choice but to answer. Some never had to ask, because it was already there — inherited, awakened, or simply present since the first breath. And some made a bargain, or had one made on their behalf by something that decided they were worth the trouble. These are the three Origins — Book, Blood, and Bound — and they are covered in full later in this section.
 
-Your power is immense. It is also genuinely dangerous - not just to your enemies, but to yourself and everything around you. Every spell is a negotiation with forces that do not care whether you survive the conversation. Push too hard, chain too many glyphs, and the Aether stops listening and starts pushing back.
+Whichever way it happened, you are past the point of going back. Magic is not a tool you carry. It is a language you now think in.
+
+Your power is immense. It is also genuinely dangerous — not just to your enemies, but to yourself and everything around you. Every spell is a negotiation with forces that do not care whether you survive the conversation. Push too hard, chain too many glyphs, and the Aether stops listening and starts pushing back.
 
 Control is not a suggestion. In NYTE City, an Arcanist without control is just the next unexplained disaster waiting to be blamed on something else.
 
@@ -74,16 +76,20 @@ Control is not a suggestion. In NYTE City, an Arcanist without control is just t
 
 The following table represents the Arcanist Campaign Power Scaling:
 
-| **Power Level** | **Focus Stat Bonus Points** | **TOL Bonus** | **Aberration** | **Evocation Starting Rank** | **Common Spells** |
+| **Power Level** | **Focus Stat Bonus Points** | **TOL Bonus** | **Aberration** | **Evocation Starting Rank** | **Known** **Spells** |
 |----|----|----|----|----|----|
 | Street Level | 1d4 | 0 | 1 | 1 | TOL + 1d4 |
 | Heroic | 2d4 | +1 | 2 | 2 | TOL + 2d4 |
 | Shadows | 3d4 | +2 | 3 | 3 | TOL + 3d4 |
 | World Coming Down | 4d4 | +5 | 4 | 4 | TOL + 4d4 |
 
+Your Base Known spells are shown above; choose them from **Appendix X: Book of Known Spells**.
+
 The Focus Stats for the Arcanist are **INT**, **COOL**, and **EMP. Bonus stats can push a base stat beyond 10.**
 
-**Example**: if you are starting at Street level, you would roll 1d4, if the result is 2. You have two points you can use to add to either **INT**, **COOL**, or **EMP** stats.
+All three feed **TOL,** and **INT** and **EMP** also feed **WILL**, which caps your Discipline ranks. **BOD** contributes to **WILL** as well, but bonus points can’t reach it.
+
+**Example**: A Street Level Arcanist rolls 1d4 and gets a result of 2. This means you have two points to spend increasing either the **INT**, **COOL**, or **EMP** stats.
 
 #### Baseline Traits
 
@@ -92,65 +98,139 @@ Those who find themselves steeped in Aether are on the very precipice of the unk
 - **Aetheric Attunement**: Through study and exposure, your body has become sensitive to Aether. You perceive active magical effects, lingering enchantments, and unstable distortions as shifts in light, pressure, or atmosphere.\
   *Benefit***:** You automatically recognize the presence of active magic within range of your Awareness checks and gain a +5 modifier when attempting to identify or detect magical effects within meters equal to your WILL.
 
-- **Arcane Conduit**: Your body acts as a living channel for Aether. You do not require SFR to cast spells; instead, your magic is fueled through personal containment and risk (see Casting Magic). Without this trait, Aether cannot be channeled safely.
+- **Arcane Conduit**: Your body acts as a living channel for Aether. You do not require SFR to cast spells; instead, your magic is fueled through personal containment and risk (see Magic). Without this trait, Aether cannot be channeled safely.
 
-#### Archetype Specialization (Aberration)
+- **Resonance:** Aetheric radiation naturally emitted during spellcraft manifests visibly — as light, vapor, shifts in atmosphere, or changes in the immediate environment. The nature and intensity of the Resonance is unique to each caster. See the Magic chapter for detailed descriptions of Resonance effects.
 
-Through the extended exposure to Aether over time, cosmic energies have subtly altered your body. These are known as Aberrations. Depending on the Campaign Power level, you can pick up to 4 from this list.
+#### Archetype Specialization (Origin & Aberrations)
+
+Every Arcanist comes to magic in one of three ways. The Origin doesn’t limit what you can learn — any Arcanist can reach any Domain, use any Glyph, and learn any Discipline. What it shapes is the relationship between you and the Aether: how it answers when you call, what it costs, and what it exacts in return.
+
+At character creation, choose your Origin and your Unique Aberrations.
+
+##### Book — Arcane Education
+
+“Magic is Knowledge”
+
+You learned magic the hard way. Forbidden texts, obsessive research, and years spent unraveling patterns most people never realize even exist. Somewhere in all of that, you stopped being a person who *studies* the Aether, and became a person who *speaks* to it.
+
+You arrive prepared. You’ve read more, catalogued more, and written down more than anyone else at the table. Your grimoire is not a working journal — it is a body of work.
+
+That discipline follows you into ritual work. Your tidy script and precise inscription mean every Enchantment is more efficient. You accomplish the same as your colleagues and spend less of your night doing it.
+
+What you haven’t done is Improvise. The formula is where your power lives, and when the situation falls outside anything you’ve studied, you’re working without the thing you rely on most.
+
+**Features**
+
+- **Starting spells:** Base + 3 Known spells
+
+- **Improvised spells:** TH + 1
+
+- **Spell Mastery:** 25 IP × TH
+
+- **Ritual work:** Enchantment rituals gain 1 free hour of extended time.
+
+- **Between the Lines:** When copying from another Arcanist’s grimoire, make an immediate second attempt if the first Fizzles.
+
+##### Blood — Natural Talent
+
+“Magic is Instinct”
+
+Magic has always been part of you, passed down from a distant relative and dormant until that first triggering event. The connection was there before you understood there was anything to understand. You did not *learn* the Aether, you *noticed* it.
+
+In chaos, under pressure, when preparation has already failed and everyone else is reaching for Plan B, you are the one still moving. What you do in that moment is not something other Arcanists can replicate, and they know it.
+
+The same instinct shows up in ritual work, though it takes longer to notice. You do not inscribe more carefully than anyone else. You resonate with what you are working — the wood, the bone, the crystal — and the Aether settles deeper into it than it has any business doing. Your Talismans hold more than they should.
+
+Your grimoire is lighter than your colleagues’, but no matter — your instinctual comprehension of the Aether is all you need in the moment.
+
+**Features**
+
+- **Starting spells:** Base – 2 Known spells
+
+- **Improvised spells:** TH - 1
+
+- **Spell Mastery:** 35 IP × TH
+
+- **Ritual work:** +1 charge on Once-Living and Inorganic Durable Talismans
+
+- **Feel the Flow:** When an Improvised spell Overflows, you can choose the effect — damage, targets, range, area, or duration.
+
+##### Bound — Cosmic Intervention
+
+“Magic is Debt”
+
+Your powe came from a bargain. You made it, someone made it for you, or some cosmic entity decided you were worthy of their attention. The details are up to you, but the arrangement is non-negotiable.
+
+You have a patron who grants you access to the Aether, and more. Establish with the GM who or what this entity is. They are not a spell and not a resource, they are a relationship. Like any relationship, they have opinions about how they are treated.
+
+You are never alone when you cast a spell. Something is always paying attention.
+
+**Features**
+
+- **Starting spells:** Base Known spells
+
+- **Spell Mastery:** 30 IP × TH
+
+- **Cosmic Intervention:** Spend TOL to ask your patron to intervene. This is a voluntary Rupture.
+
+| **TOL Cost** | **Intervention** | **Effect** |
+|:--:|----|----|
+| 2 | Nudge | +3 to the next Skill Check · Force a reroll · Recharge a Talisman fully |
+| 4 | Aid | \+ 3 automatic Hits on an Essence Check or Spellcraft roll for you or an ally |
+| 6 | Act | Remove an obstacle · create an opening · turn a success into something more. |
+| 8 | Command | Invoke a major narrative shift in the situation. Something that should not have been possible suddenly happens. |
+| 10 | Save | You or an ally is pulled back from Death. A Cascade immediately follows, regardless of your current TOL. |
+
+Spending TOL to zero leaves you Exhausted like any other Arcanist. Spending past zero triggers a Cascade.
+
+##### Unique Aberrations
+
+Through extended exposure to the Aether, cosmic energies have subtly altered your body. These changes are known as Aberrations, and the group below is unique to Arcanists. Choose up to the number shown in the Campaign Power Scaling table.
+
+- **Aethereal Link:** You're linked to the cosmos in a way that is utterly different from most. When animals are close you are able to understand them at a telepathic level.\
+  *Benefit:* Gain the ability to hear the thoughts of animals around you within a number of meters equal to your WILL. With a successful WILL Essence Check (TN 9 TH 1), you gain the ability to communicate telepathically with a single animal in range for as long as you maintain concentration.
+
+- **Aetheric Magnetism:** Small things always seem to be easy to acquire or happen to be available when you need them. As though destiny is watching and giving little nudges towards you as you go through life.\
+  *Benefit:* Rolling a Breaker Check and getting under 35% will grant you a small boon or allow you to find something that gives a +1 to all General and Utility Skill checks for the rest of the Encounter.
 
 - **Arcane Fortitude**: You're more tolerant of the cosmic forces that you manipulate on a daily basis.\
   *Benefit:* Gain +2 to TOL
 
+- **Resonant Whispers**: Magic is reactive to some people. When they touch things, it allows them to hear the whispers of magic within. At times, this will give them a faint understanding of what it is they have made contact with as the object illuminates and shows the threading of spells within like a low glowing lamp.\
+  *Benefit:* Gain +3 to any Occult check to discern the properties of any talisman or artifact. You must make physical contact with the object for at least one minute, and the effect has audible and visual side effects that everyone can see/hear.
+
+- **Thaumaturgical Sight:** Magic is chained, linked, and threaded through evocations, talismans and alchemical artifacts. With this Aberration you can see the resonance a spell leaves, even if you have no other sight.\
+  *Benefit:* Gain +2 for any Occult Check when analyzing magic; what you see is only visible to you.
+
 - **Unshakable Mind:** The Arcanist can peer into the depths of alternate realms, see through the veil, or encounter the terrifying realities of the world itself.\
   *Benefit:* Gain +10% bonus to any Sanity Breaker Check
 
-- **Thaumaturgical Sight:** Magic is chained, linked, and threaded through evocations, charms and alchemical artifacts. With this Aberration you can see the threading a weave of a spell creates, even if you have no other sight.\
-  *Benefit:* Gain +2 for any Occult Check; what you see is only visible to you.
+- 
 
-- **Aethereal Link:** You're linked to the cosmos in a way that is utterly different from most. When animals are close you are able to understand them at a telepathic level.\
-  *Benefit:* Gain the ability to hear the thoughts of creatures around you within a number of meters equal to your WILL. With a successful WILL Essence Check (TN 9 TH 1), you gain the ability to communicate telepathically with a single creature in range for as long as you maintain concentration.
+- 
 
-- **Resonant Whispers**: Magic is reactive to some people. When they touch things, it allows them to hear the whispers of magic within. At times, this will give them a faint understanding of what it is they have made contact with as the object illuminates and shows the threading of spells within like a low glowing lamp.\
-  *Benefit:* Gain +3 to any Occult check to discern the properties of any charm, talisman, or artifact. You must make physical contact with the object for at least one minute, and the effect has audible and visual side effects that everyone can see/hear.
+- 
 
-- **Aetheric Magnetism:** Small things always seem to be easy to acquire or happen to be available when you need them. As though destiny is watching and giving little nudges towards you as you go through life.\
-  *Benefit:* Rolling a Breaker Check and getting under 35% will grant you a small boon or allow you to find something that gives a +1 to all General and Utility skill Skill checks for the rest of the Encounter.
+- 
+
+- 
+
+- 
 
 #### Core Mechanic (Magic)
 
-The Core Mechanic of the Arcanist is channeling the flow of Aether through your body. All magic is done through Evocation Essence Checks. As a refresher, when casting magic, you take your Evocation Rank to determine the number of Dice to roll. You are aiming to have your dice Hit the Target Number (TN) enough times to meet or beat the Threshold (TH). For ever Dud you roll, you gain a point of Exhaustion. If a Dud causes your Exhaustion to surpass your Tolerance (TOL), you not only cause a Rupture, but you are also unable to cast until you have recovered from your Exhaustion.
+The Core Mechanic of the Arcanist is channeling the flow of Aether through your body through the Disciplines of **Evocation**, **Enchantment**, and **Alchemy**. **Evocation** is where every Arcanist begins, and the only one available at character creation.
 
-In the sprawling depths of NYTE City, magic lies dormant beneath the surface, hidden yet woven into the very fabric of existence. The old boundaries between reality and the arcane are fraying, with once-powerful factions who safeguarded the Veil now silent. What was once guarded against discovery now threatens the world in a different way - through unchecked, untrained magic. The real danger comes not from others knowing magic exists, but from those who wield it carelessly, as reckless spellcraft or inflated ego can lead to catastrophic results.
+All magic is cast with a Spellcraft roll. You roll dice equal to your **Evocation** rank, aiming to Hit the Target Number (TN) enough times to meet or beat the Threshold (TH). Every Dud cancels a Hit.
 
-At the heart of this power is Aether, the essence of creation, an ethereal force that infuses every aspect of life - living beings, inanimate objects, even the very air. For those attuned to Aether, the world becomes malleable, but manipulating it requires great discipline and focus. To bend reality is no small task.
+If your Duds outnumber your Hits, the spell Ruptures and you lose TOL equal to the difference. At 0 TOL you are Exhausted and cannot cast until you recover. If a Rupture drives your TOL below 0, it becomes a Cascade.
 
-Depending on the Campaign Power Level, you will start with Evocation discipline at a specific rank. This Power Level also assigns a maximum rank of your disciplines:
+Full rules for Spellcraft, Tolerance, Rupture, and Cascades are in the Magic chapter.
 
-- Street Level: 2
+#### 
 
-- Heroic: 3
-
-- Shadows: 4
-
-- World Coming Down: 5
-
-Let’s cover the 3 disciplines of magic that is studied in NYTE City
-
-#### Arcanist Disciplines
-
-Magic manifests through three primary disciplines: **Evocation**, **Enchantment**, and **Alchemy**. Each discipline shapes reality in different ways, from the quick and dangerous, temporary tools, and methodical, permanent creations.
-
-**Evocation** is the fastest, most dangerous form of spellcraft, relying on the caster’s ability to weave Aether into glyphs on the fly. This form of magic requires precise movements, spoken incantations, and nerves of steel. Once an Arcanist
-
-Arcanists live on the edge, conjuring spells at a moment’s notice to unlock doors, disable machines, or turn the tide of battle. Their magic is volatile, powerful, and often unpredictable. Improvising spellcraft in the heat of the moment is a rare skill, mastered only by the most talented—or the most reckless.
-
-For those seeking stability and control, **Enchantment** offers a more measured approach. Enchanters prepare their spells in advance, weaving magic into objects like talismans, weapons, or protective garments. These enchanted items carry temporary spells, ready to be activated when needed. Enchantment is reliable and precise, the tools of the streetwise Arcanist who knows that careful preparation is often the key to survival in the city’s dangerous underworld.
-
-At the pinnacle of spellcraft lies **Alchemy**, the ancient art of permanently transforming objects into magical artifacts. Alchemy is slow and methodical, requiring rare materials and days—if not weeks—of careful rituals. The rewards, however, are extraordinary. Alchemists can create weapons that strike with cosmic energy, armor that turns aside bullets, or rings that allow teleportation across vast distances. These artifacts are powerful and enduring, their magic as permanent as the objects themselves.
-
-It is time to step into the mind of an Arcanist and talk about how Magic really works in Shadows.
-
-#### Powers
+#### Powers & Vulnerabilities
 
 #### Growth & Milestones
 
