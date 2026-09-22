@@ -498,3 +498,66 @@ test("the print sheet carries a Conditions box, blank and filled", () => {
   assert.equal((filled.match(/p-box on/g) || []).length, 1 + 1 + 2, "Injured + Dying ticks + two Death Marks");
   assert.match(filled, /Left Arm/);
 });
+
+// ── Take a hit (Decision 99) ──────────────────────────────────────────
+function setHit(app, key, value) {
+  const el = app.$(`[data-hit="${key}"]`);
+  assert.ok(el, `the hit form has no ${key} control`);
+  if (el.type === "checkbox") el.checked = value; else el.value = value;
+  el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+}
+const activeChar = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch;
+
+test("Take a hit: a worn vest answers, the hit lands as one undoable action", () => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const app = openSheet(ch, "trackers");
+  app.click("[data-hitopen]");
+  assert.ok(app.$("[data-hitpanel]"), "the panel didn't open");
+  assert.match(app.$("[data-hitpanel]").textContent, /Kevlar Vest · PROT 1d6 · RES \+2/);
+  assert.ok(app.$("[data-hitapply]").disabled, "Apply is live before there's a hit to apply");
+  setHit(app, "damage", "9");
+  setHit(app, "protRoll", "3");
+  assert.match(app.$(".hitresult").textContent, /PROT 3 \+ RES 2 stops 5\. *4 gets through/);
+  app.click("[data-hitapply]");
+  assert.equal(app.$("[data-hitpanel]"), null, "the panel stayed open after Apply");
+  assert.equal(activeChar(app).trackers.damage, 4);
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Hit: 9 Ballistic → 4 through/);
+  app.click("button[data-undolast]");
+  assert.equal(activeChar(app).trackers.damage, 0, "undo didn't take the hit back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Take a hit: Massive with no armor removes levels, asks at zero, and adds Dying on a fail", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  const alerts = [];
+  app.window.alert = m => alerts.push(m);
+  app.click("[data-hitopen]");
+  setHit(app, "category", "massive");
+  setHit(app, "damage", "60");
+  assert.ok(app.$("[data-hit=atZero]"), "no check at zero was asked for");
+  assert.equal(app.$("[data-hit=shock]"), null, "a hit to zero skips the Shock Check");
+  app.click("[data-hitapply]");
+  assert.equal(alerts.length, 1, "Apply went through without the check being answered");
+  setHit(app, "atZero", "fail");
+  app.click("[data-hitapply]");
+  const got = activeChar(app);
+  assert.ok(got.trackers.massiveLevels > 0);
+  assert.equal(got.trackers.damage, 0);
+  assert.ok(got.trackers.conditions.some(c => c.id === "dying"));
+  assert.ok(app.$(".hl.massive"), "Massive levels aren't drawn on the track");
+  assert.ok(app.$("[data-massiverestore]"), "no way to restore a Massive level");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Take a hit: an Electric hit says its RES rule is unsettled; a Blade hit doesn't", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  app.click("[data-hitopen]");
+  setHit(app, "damage", "4");
+  setHit(app, "damageType", "electric");
+  assert.match(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
+  setHit(app, "damageType", "blade");
+  assert.doesNotMatch(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
+  assert.deepEqual(app.errors, []);
+});

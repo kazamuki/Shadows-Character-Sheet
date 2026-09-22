@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.12.0";
+const APP_VERSION = "0.13.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -241,14 +241,44 @@ function bindSheet(){
   main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; window.scrollTo(0,0); update(); });
   main.querySelectorAll("[data-admin-exit]").forEach(b=>b.onclick=()=>{ S.admin=false; if(S.section==="admin") S.section="main"; window.scrollTo(0,0); update(); });
 
-  // Damage
+  // Damage. Withering is the part of `damage` that can't regenerate, so it
+  // can never be more than the damage itself — a hand edit down trims it.
+  const setDamage = v => { ch.trackers.damage=v;
+    ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
   main.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.dmg);
-    commit("damage", `Damage ${d>0?"+":""}${d}`, ()=>{ ch.trackers.damage=Math.max(0,(ch.trackers.damage||0)+d); });
+    commit("damage", `Damage ${d>0?"+":""}${d}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
   });
   const ds=main.querySelector("[data-dmgset]");
-  if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ ch.trackers.damage=v; }); };
-  main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ ch.trackers.damage=0; }));
+  if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
+  main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
+  // Massive levels only come back by an explicit action (Decision 98, CQ6).
+  main.querySelectorAll("[data-massiverestore]").forEach(b=>b.onclick=()=>commit("damage","Restored a Massive Health Level",()=>{
+    ch.trackers.massiveLevels=Math.max(0, Engine.hlState(ch).massive-1);
+  }));
+
+  // Take a hit (Decision 99). The form lives in S.hit until Apply, which is
+  // one commit() — so the hit, its armor wear and its Conditions undo together.
+  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=()=>{ S.hit=Object.assign(newHitForm(), { owner: ch }); renderMain(); });
+  main.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=()=>{ S.hit=null; renderMain(); });
+  main.querySelectorAll("[data-hit]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return;
+    S.hit[el.dataset.hit] = el.type==="checkbox" ? el.checked : el.value;
+    renderMain();
+  });
+  main.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.conds[el.dataset.hitcond]=el.checked; renderMain();
+  });
+  main.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
+    const st=S.hit; if (!st) return;
+    const input=hitInput(st), r=Engine.resolveHit(ch, input);
+    if (!r.ok){ alert(r.why); return; }
+    if (r.prompts.shock && !st.shock){ alert("Mark the Shock Check as passed or failed first."); return; }
+    if (r.prompts.atZero && !st.atZero){ alert("Mark the check at zero as passed or failed first."); return; }
+    const choices=hitChoices(st, r);
+    S.hit=null;
+    commit("damage", hitLabel(r), ()=>{ Engine.applyHit(ch, input, choices); });
+  });
 
   // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
   // body-part picker only shows for a Condition that needs one.
