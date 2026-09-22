@@ -74,8 +74,8 @@ which read oddly once other work queued ahead of it. Ken flagged this
 | — | Printable sheet + demo hosting | #17 | `renderPrintView` (filled/blank) + standalone build artifact + GH Pages deploy · Decision 89, F18 |
 | — | Light theme toggle | #18 | `data-theme` attribute + blocking init script + header toggle · Decision 90 |
 | — | PR #7 adversarial review | #19 | Decision 91 — machinery gaps closed, not player-visible (§4) |
-| — | Weapons, Ammo & Armor (data) | this branch | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
-| — | Magic — archetype-independent half (data) | this branch | 96 spells across 5 domains/4 tiers, Spellcraft rules as reference text, Enchantment/Alchemy materials · Decision 93 |
+| — | Weapons, Ammo & Armor (data) | #22 | 54 weapons/9 ammo/11 arrowheads/37 armor + five glossaries · Decision 92 |
+| — | Magic — archetype-independent half (data) | #22 | 96 spells across 5 domains/4 tiers, Spellcraft rules as reference text, Enchantment/Alchemy materials · Decision 93 |
 | — | Print sheet — visual redesign | this branch | Blank-print + Notes-clipping bug fixes; case-file front page, Pain Level bands, two-panel Skills, Scott's real frame/texture assets · Decision 94 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
@@ -148,12 +148,15 @@ test fixtures (Decision 57).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #19** — `grants` (3b), the printable sheet +
-demo-hosting work, the light theme toggle, and the PR #7 machinery-gap fixes
-(Decision 91) have all landed. The Weapons/Ammo/Armor data batch (Decision
-92, §2), the Magic archetype-independent-half data batch (Decision 93, §2),
-and the print sheet visual redesign (Decision 94, §2) are all done on this
-branch, not yet a PR. `npm run verify` is green (103 passing, 0 todo).
+**`main` is caught up through PR #22** — `grants` (3b), the printable sheet +
+demo-hosting work, the light theme toggle, the PR #7 machinery-gap fixes
+(Decision 91), the Weapons/Ammo/Armor data batch (Decision 92), and the
+Magic archetype-independent-half data batch (Decision 93) have all landed.
+(This line itself was stale before this session started — §2's board had
+both marked "this branch" when they were already on `main`; worth a glance
+here before trusting "this branch" elsewhere.) The print sheet visual
+redesign (Decision 94, §2) is done on this branch, not yet a PR. `npm run
+verify` is green (103 passing, 0 todo).
 
 **Two areas in §3 have no external block right now:** Gear & Combat (the
 engine + Loadout UI half — the natural continuation of what just merged) and
