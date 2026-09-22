@@ -80,8 +80,9 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F11` | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the cat… | Ken |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F13` | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline… | Ken |
-| `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96); PROT/RES/Integrity math, Massive damage application and Loadout pickers are plan Sessions 3–4 | Design (small gap) + engine sessions |
+| `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99); Loadout pickers, weapon lines and recovery actions are plan Session 4 | Design (small gap) + Session 4 |
 | `F19` | Cyborg install cost mechanism — Sanity erosion vs. temporary Health Level cost, still undecided (Scott unsure which) | Design |
+| `F23` | RES against Electric and Burning (stubbed as Energy), and where the Resistance upgrade's 50% sits (not applied) | Deighton |
 
 The one **unnumbered** flag (the stat curve past 10) closed with Decision 98.
 
@@ -119,6 +120,7 @@ What a number *is*. Change one of these and characters change.
 - **67** *(B9)* — The milestone cadence comes from the data, once.
 - **98** *(Design-team rulings, part 2)* — Stats past 10: +5 at 11–15, +1 per 5 after. F20–F22 closed: Skill Checks only, a −8 cap on one roll, only Injured/Maimed take a body part. Plan CQ4–CQ7/CQ10 answered for Session 3.
 - **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open.
+- **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened.
 - **96** *(Conditions — the numbers)* — Pain = HL band + Condition Pain, clamped 0–3; a flat Condition penalty lands on every Skill Check; attack/defense and conditional penalties are shown, never summed.
 
 ### Content & the CRB

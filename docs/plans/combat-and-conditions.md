@@ -1,6 +1,6 @@
 # Plan — Conditions, damage & armor
 
-**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 next
+**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 next
 **Covers:** F18's engine half (Decision 92 deferred it), plus the Conditions system
 that chapter 054 now fully specifies.
 **Sources:** `reference/crb/053_Combat_Encounters.md` (Damage and Armor),
@@ -180,7 +180,7 @@ its decisions numbered.
   054's "BOD-heavy character at PL 3: −3 / −3 dice / −15%"; Agonized at PL 3
   stays 3; Agonized at PL 0 gives 1; no duplicate ids; migrate round-trip.
   **Unblocked now** — CQ1/CQ2 only change one number each, stub and flag.
-- [ ] **Session 3 — Taking a hit.** `Engine.resolveHit()` (P6) and
+- [x] **Session 3 — Taking a hit** (2026-09-22, Decision 99; F23 opened for RES vs Electric/Burning and the Resistance upgrade). `Engine.resolveHit()` (P6) and
   `Engine.armorState()` (worn piece, Compromised, RES-applies-to) · the "Take a
   hit" dialog on Trackers · Shock and At-Zero prompts that add Unconscious/Prone
   or Dying through Session 2's Conditions · Massive and Withering recorded.

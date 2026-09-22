@@ -275,6 +275,31 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hl-mini .seg i{position:absolute; inset:0; transform-origin:left; background:rgba(188,72,154,.55); transition:transform .3s}
 .hl-mini .seg.gone{border-color:var(--magenta)}
 .hl-mini .seg.gone i{background:var(--magenta)}
+/* Decision 99 — Health Levels removed by Massive damage: gone, not emptied.
+   Hatched and dashed so they never read as ordinary damage. */
+.hl.massive{border-style:dashed; border-color:var(--magenta); color:var(--magenta)}
+.hl.massive .fill{background:repeating-linear-gradient(135deg, rgba(188,72,154,.55) 0 4px, transparent 4px 8px)}
+.hl-mini .seg.massive{border-style:dashed}
+.hl-mini .seg.massive i{background:repeating-linear-gradient(135deg, var(--magenta) 0 3px, transparent 3px 6px)}
+/* Decision 99 — the Take a hit panel on Trackers */
+.hitpanel{background:var(--panel); border:1px solid var(--violet); border-radius:8px; padding:14px 16px; margin:4px 0 16px}
+.hitpanel h4{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; margin-bottom:8px}
+.hitrow{display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin:8px 0}
+.hitrow label.field{margin:0; min-width:110px}
+.hitrow input[type=number]{width:84px; text-align:center}
+.hitrow label.check{display:flex; align-items:center; gap:6px; font-size:.82rem; padding-bottom:8px}
+.hitarmor{font-family:var(--mono); font-size:.76rem; color:var(--cyan); padding-bottom:8px}
+.hitnote{font-size:.76rem; color:var(--dim); margin:4px 0}
+.hitwhy{font-size:.82rem; color:var(--gold); margin:10px 0}
+.hitresult{border-left:2px solid var(--violet); padding:4px 0 4px 12px; margin:10px 0; font-size:.86rem}
+.hitresult p{margin:3px 0}
+.hitcheck{border:1px solid var(--frame); border-radius:6px; padding:9px 12px; margin:8px 0; font-size:.84rem}
+.hitcheck.bad{border-color:var(--magenta)}
+.hitcheck b{font-family:var(--display); letter-spacing:.04em}
+.hitcheck p{color:var(--dim); margin:4px 0 8px}
+.hitconds{display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; margin:8px 0; font-size:.84rem}
+.hitconds > span{flex-basis:100%; color:var(--dim); font-size:.76rem}
+.hitconds label.check{display:flex; align-items:center; gap:6px}
 /* Phase 3.3 — derived (TOL/WILL) "how it's derived" affordance */
 .deriv-q{margin:5px auto 0; display:block; width:18px; height:18px; border-radius:50%; border:1px solid var(--frame);
   background:var(--panel-2); color:var(--dim); font-family:var(--mono); font-size:.7rem; line-height:1; cursor:pointer}
