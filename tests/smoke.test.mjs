@@ -289,7 +289,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.7");
+  assert.equal(resumed.meta.schemaVersion, "0.8");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -397,4 +397,104 @@ test("raising a free advantage's rank does not wipe the picks already made", () 
   assert.equal(row.rank, 2, "the rank did not go up");
   assert.equal((row.selections || {}).skill && row.selections.skill[0], "handguns",
     "raising the rank wiped the skill already chosen");
+});
+
+// ── Conditions (Decision 95) ──────────────────────────────────────────
+
+function openSheet(ch, section) {
+  const app = boot({ storage: { "shadows.active.v1": { ch, section } } });
+  const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
+  open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click(`[data-sec="${section}"]`);
+  return app;
+}
+function addCondition(app, id, location) {
+  const sel = app.$("[data-condadd-id]");
+  sel.value = id;
+  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  if (location) app.$("[data-condadd-loc]").value = location;
+  app.click("[data-condadd]");
+}
+const activeConditions = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.trackers.conditions;
+
+test("a Condition added on Trackers raises Pain, shows on Main, and undoes", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  addCondition(app, "agonized");
+  assert.deepEqual(app.errors, []);
+  assert.equal(activeConditions(app).length, 1);
+  assert.match(app.$("#main").textContent, /Pain Level 1/, "Agonized did not raise the Pain Level");
+  assert.match(app.$("#main").textContent, /Medical \(Difficulty 15\)/, "recovery text is missing on Trackers");
+
+  app.click('[data-sec="main"]');
+  assert.ok(app.$(".cond-chip"), "no Condition chip on Main");
+  assert.match(app.$(".cond-chip").textContent, /Agonized/);
+
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Condition: Agonized/, "the add is missing from the Activity Log");
+  app.click("button[data-undolast]");
+  assert.equal(activeConditions(app).length, 0, "undo did not clear the Condition");
+  assert.deepEqual(app.errors, []);
+});
+
+test("a body-part Condition shows the picker, and the same part twice is refused", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  const loc = app.$("[data-condadd-loc]");
+  assert.equal(loc.hidden, true, "the body-part picker shows before it's needed");
+  const sel = app.$("[data-condadd-id]");
+  sel.value = "injured";
+  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(app.$("[data-condadd-loc]").hidden, false, "Injured did not ask for a body part");
+
+  const alerts = [];
+  app.window.alert = m => alerts.push(m);
+  addCondition(app, "injured", "left-arm");
+  addCondition(app, "injured", "left-arm");
+  assert.equal(activeConditions(app).length, 1);
+  assert.equal(alerts.length, 1, "the duplicate was not refused out loud");
+  addCondition(app, "injured", "right-leg");
+  assert.equal(activeConditions(app).length, 2);
+  assert.match(app.$("#main").textContent, /Injured \(Right Leg\)/);
+  // Two Injured on different parts is allowed (Decision 98), and nothing
+  // calls it unsettled any more.
+  assert.doesNotMatch(app.$("#main").textContent, new RegExp(D.appCopy.unsettledLabel));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Helpless shows a banner, and Death Marks count up to the CRB's three", () => {
+  const ch = lockedCharacter();
+  ch.trackers.conditions = [{ id: "dying", marks: 0 }];
+  const app = openSheet(ch, "main");
+  assert.match(app.$(".cond-alert").textContent, /2 or better/);
+  app.click('[data-condmarks="0|3"]');
+  assert.equal(activeConditions(app)[0].marks, 3);
+  assert.match(app.$("#main").textContent, /Three Death Marks/);
+  app.click('[data-condrm="0"]');
+  assert.equal(activeConditions(app).length, 0);
+  assert.equal(app.$(".cond-alert"), null, "the banner outlived the Condition");
+  assert.deepEqual(app.errors, []);
+});
+
+test("a flat Condition penalty reaches the skill totals the sheet shows", () => {
+  const ch = lockedCharacter();
+  const before = Engine.skillLine(ch, "handguns").checkBonus;
+  ch.trackers.conditions = [{ id: "disoriented" }];
+  const app = openSheet(ch, "main");
+  assert.match(app.$("#main").textContent, new RegExp(`1d10 \\+ ${before - 1}`));
+  assert.match(app.$("#main").textContent, /-1 conditions/);
+  assert.match(app.$("#main").textContent, /Conditions take −1; totals include it/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("the print sheet carries a Conditions box, blank and filled", () => {
+  const ch = lockedCharacter();
+  ch.trackers.conditions = [{ id: "injured", location: "left-arm" }, { id: "dying", marks: 2 }];
+  const app = openSheet(ch, "main");
+  const html = app.window.renderPrintView(null);
+  assert.match(html, /Conditions/);
+  assert.match(html, /Death Marks/);
+  for (const c of D.conditions) assert.ok(html.includes(c.name), `blank print is missing ${c.name}`);
+  assert.doesNotMatch(html, /p-box on/, "a blank sheet ticked something");
+  const filled = app.window.renderPrintView(ch);
+  assert.equal((filled.match(/p-box on/g) || []).length, 1 + 1 + 2, "Injured + Dying ticks + two Death Marks");
+  assert.match(filled, /Left Arm/);
 });

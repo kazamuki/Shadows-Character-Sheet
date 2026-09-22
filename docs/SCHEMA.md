@@ -343,6 +343,30 @@ window.SHADOWS_DATA = {
     // slot:"body" always carries prot/res/integrity; slot:"head"/"hand" never do.
   ],
 
+  // ── Conditions (0.8, Decision 95) ───────────────────────────────────
+  // One entry per row of 054's Conditions table, plus Dying (no table row —
+  // plan CQ9). effect/recovery/short are display text; the engine reads only
+  // the structured hooks, and a Condition with none is text on a chip.
+  conditionRules: {
+    noStacking: "...", helpless: "...", painClamp: "...",
+    rollPenalty:      { appliesTo: "skillChecks", text: "..." },      // Decision 98
+    penaltyStacking:  { stacks: true, cap: -8, text: "..." },          // every penalty on one roll
+    locationStacking: { perLocation: true }
+  },
+  bodyLocations: [ { id: "left-arm", name: "Left Arm" } ],   // 6: head, torso, arms, legs
+  conditions: [
+    { id: "agonized", name: "Agonized", short: "+1 Pain Level", effect: "...", recovery: "...",
+      painLevels: 1 },                      // adds to Pain Level before the 0–3 clamp
+    { id: "burning", ..., rollPenalty: -1,  // summed onto every Skill Check total
+      ongoing: { source: true, per: "round" } },   // or { hp: 1, per: "round" } (Bleeding)
+    { id: "frightened", ..., rollPenaltyWhen: { amount: -1, when: "while the source is present" } },
+    { id: "prone", ..., attackDefense: -3 },       // shown on Combat lines, never summed
+    { id: "stunned", ..., helpless: true },        // the "2 or better hits" banner
+    { id: "injured", ..., location: true },        // needs a bodyLocations id — Injured, Maimed only
+    { id: "dying", ..., helpless: true, counter: { max: 3, label: "Death Marks", atMax: "..." } }
+    // 20 entries.
+  ],
+
   // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
   // Merged from docs/reference/crb/Magic.md. Origins (Book/Blood/Bound) are
   // deliberately NOT here — that's the Arcanist subtype question, still
@@ -409,8 +433,8 @@ on un-modeled rules.
 ```js
 {
   meta: {
-    schemaVersion: "0.7",
-    gamedataVersion: "0.7",          // version of shadows-data.js at save time
+    schemaVersion: "0.8",
+    gamedataVersion: "0.8",          // version of shadows-data.js at save time
     created: "...", updated: "..."
   },
 
@@ -479,6 +503,17 @@ on un-modeled rules.
     // spends TOL directly; Exhausted is what 0 TOL is called, not a second
     // tracked value (Decision 93).
     credits: { current: 800, ledger: [ { date, amount, note } ] },
+    // (0.8) Active Conditions (Decision 95). One entry per id ("you have it or
+    // you don't"), except a location-bearing Condition, which is one per body
+    // part (Decision 98). Pain, penalties and Helpless are derived, never stored.
+    // migrate() drops junk entries and keeps the first of any duplicate.
+    conditions: [ { id: "injured", location: "left-arm", note: "" },
+                  { id: "dying", marks: 1 } ],
+    // (0.8) Plan P4. Health Levels removed by Massive damage, and the part of
+    // `damage` that can't regenerate. Carried now so there's one migration;
+    // nothing reads them until the hit resolver (plan Session 3).
+    massiveLevels: 0,
+    witheringDamage: 0,
     // (0.3) Manual adjustments — milestone benefits & un-modeled effects.
     // Stat-id targets cascade like any input; TOL/WILL/SAN/LUCK/HP apply flat.
     adjustments: [ { target: "BOD", amount: 1, note: "Honed", date } ],
@@ -504,8 +539,11 @@ on un-modeled rules.
              { custom: true, name, type, damage, rof, capacity, ammo, features, notes } ],
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
-  armor:   [ { id: "kevlar-vest", integrityLoss: 0, notes: "" },
-             { custom: true, name, prot, res, integrity, integrityLoss, notes } ],
+  // (0.8, plan P5) worn: the one body piece that rolls PROT (CQ7) · scrapped:
+  // driven to 0 by Massive, which integrityLoss alone can't say · upgrades:
+  // armorUpgradeGlossary ids. Compromised is derived. Unread until Session 3.
+  armor:   [ { id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] },
+             { custom: true, name, prot, res, integrity, integrityLoss, notes, worn, scrapped, upgrades } ],
 
   progression: {
     ip: {
@@ -589,7 +627,8 @@ No cascade logic to maintain — it falls out of the architecture.
     `advantages` entries with `notes: "natural"` and cost 0 CP — they render
     on the sheet like any advantage but never hit the CP ledger.
 18. **(Phase 2)** Arcanist focus-stat bonus may push a stat past 10; the
-    modifier curve extrapolates +1 per point above 10. Werewolf stat bonus
+    modifier curve extrapolates +1 per point above 10 (superseded past 10 by
+    Decision 98: +1 per 5 points). Werewolf stat bonus
     allocates to any stat but respects the cap of 10.
 19. **(Phase 2)** Arcanist Disciplines are purchasable in the CP step at
     6 CP/rank, capped at the power level's Max Power Rank. Evocation's
@@ -1589,6 +1628,151 @@ No cascade logic to maintain — it falls out of the architecture.
     existing capability, not a bug fix and not new data. No game-data or
     character-schema change. (Ken + Scott + Claude, 2026-09-21)
 
+95. **(Conditions — catalog and schema 0.8, data + engine)** **Conditions
+    are a data catalog with structured effects, and the active ones are
+    inputs on the character.** Ken signed off the combat plan's §3
+    (`plans/combat-and-conditions.md`) on 2026-09-22: P1–P7 and P9 as
+    written, P8 renamed from "Reset" to **"Turn Reset"** so the button reads
+    as an encounter helper. This decision locks only what Session 2 built;
+    the rest of §3 locks when the session that builds it numbers it.
+    **Data (game data 0.7 → 0.8):** a top-level `conditions` array — the 19
+    rows of `054_Conditions_and_Recovery.md`'s table plus **Dying**, which
+    054 treats as a Condition in prose and recovery but gives no row (plan
+    CQ9, a CRB doc fix for Ken). Where Gear's older Conditions table
+    disagrees with 054 (plan CQ8 — five rows), the app follows 054. Each
+    entry carries display text (`short`, `effect`, `recovery`) and only the
+    hooks the engine can compute: `painLevels`, `rollPenalty`,
+    `rollPenaltyWhen`, `attackDefense`, `helpless`, `ongoing`, `location`,
+    `counter`. Everything else (Blinded's autofail, Grappled's −5 to
+    sophisticated movement, Poisoned's secondary Condition) is text on the
+    chip. `bodyLocations` (six ids) and `conditionRules` (the three stubbed
+    rules below, each `flagged` with a `playerNote`) sit beside it. Adding a
+    Condition is a data edit with zero app changes. Dying's Death Marks are a
+    generic `counter` (`max`, `label`, `atMax`), not an id special case.
+    **Character (schema 0.7 → 0.8):** `trackers.conditions: [{ id,
+    location?, marks?, note? }]`, plus plan P4's `trackers.massiveLevels` and
+    `trackers.witheringDamage` and P5's `armor[i].worn`/`scrapped`/`upgrades`
+    — landed together so there is one migration, though nothing reads the
+    damage or armor fields until Session 3. "You have it or you don't":
+    `Engine.addCondition()` refuses a second entry with the same id, except a
+    location-bearing Condition, which keys by id + body part (**F22** stub:
+    an Injured arm and an Injured leg are two entries) and demands a body
+    part. `migrate()` drops junk entries and keeps the first of any
+    duplicate, so a hand-edited file can't smuggle one past the rule.
+    `versionCheck()` reports a Condition id the data no longer defines;
+    `conditionState()` still renders it by name with no effects. Every add,
+    clear, Death Mark and note goes through `commit()`, so it is undoable
+    with no new undo code. (Ken + Claude, 2026-09-22)
+
+96. **(Conditions — what they do to the numbers, engine + app)** **Pain
+    Level is the Health-Levels band plus Condition Pain, clamped 0–3; a
+    Condition's flat penalty lands on every Skill Check total; attack/defense
+    and conditional penalties are shown, never summed.** `painState()` adds
+    `conditionState().painLevels` to the band for HL lost and clamps to the
+    table ("never falls below 0 or climbs above 3", 054) — Agonized at Pain 0
+    reads 1, at Pain 3 stays 3 — and returns `fromHealth`/`fromConditions` so
+    the sheet can say where the number came from. Condition Pain carries the
+    full per-level penalty (Skill, Essence die, Breaker %), because it *is*
+    a Pain Level. A flat `rollPenalty` (Disoriented, Burning, Shocked) is
+    summed into `skillLine().checkBonus` and reported separately as
+    `breakdown.conditions`. Stubbed pending Deighton: **F20** — it reaches
+    Skill Checks only, not Essence dice or Breaker % (plan CQ1); **F21** —
+    different Conditions' penalties stack with no cap (plan CQ2). Each stub
+    renders its `playerNote` on Trackers only when a Condition it governs is
+    active, so the uncertainty surfaces where it bites instead of on every
+    sheet. `attackDefense` (Blinded −5, Prone −3, Restrained −5) is listed on
+    Main's Combat section and `rollPenaltyWhen` (Frightened) beside the
+    totals, both marked "not in the totals" — the CRB states them for
+    attack/defense and for "while the source is present", neither of which
+    the sheet can know. **UI:** Conditions chips on Main (under the vitals
+    strip), full cards with effect, recovery text and a note field on
+    Trackers, one add row with a body-part picker that appears only for a
+    Condition that needs one, a Helpless banner, Death Mark pips, and a
+    "Cond" pill in the vitals bar. **Print:** a Conditions tick list under
+    Stats on the front page, with body-part Conditions and Dying's Death
+    Marks on full-width rows. That column had about 100px spare below Stats.
+    A first two-column list cost 203px and pushed the front page past one
+    sheet, just as the stacked health ladder did in Decision 94. The shipped
+    version is 150px and holds the page at its 720px minimum both blank and
+    filled, with about 2px spare on a filled sheet. That was measured by
+    force-enabling `print.css` in the browser, not asserted by a test, since
+    jsdom has no layout. Treat any further addition to that column as a page
+    break. App **0.11.0 → 0.12.0** (minor, new capability). (Ken + Claude,
+    2026-09-22)
+
+97. **(Design-team rulings, 2026-09-22 — rules + data + engine)** **Four
+    flags close on a ruling from the design team (Scott + Deighton), and a
+    new skill after creation costs a flat 25 IP.** F1: a LUCK point costs
+    1 CP at creation. F2: boosting a skill, stat or power costs 1 CP per
+    point at creation, across all three. Both were already the stubbed
+    values, so only the flags go — no computed value moves. F17: Long-Lived's
+    ranks stack (rank 3 = 2 Minor + 1 Major Milestone slots), and it is
+    creation-only, so a character starts with them — as Decision 88 already
+    built it. **F14 changes a price:** at creation, rank 0 → 1 costs 1 Skill
+    Point (the pool already charged that); after creation, learning a new
+    skill costs **25 IP**, not the rank-1 price of 5 (3 Focused) the app
+    stubbed. The designers' reason: it makes a point in any skill you expect
+    to want worth buying at creation, and a rank switches on Synergy. The
+    price is data (`ip.skillIncreaseCost.newSkill`); `ipCost()` reads it
+    whenever the current rank is 0. Past rank 0 the formula is unchanged
+    (5 × current rank, Focused 3 ×). **Flat for Focused skills too:** a
+    Professional's Focused skill at rank 0 also costs 25 — confirmed by the
+    designers "for now". The CRB's
+    Advancement text should state the 25 (a doc fix for Ken). Folded into
+    game data 0.8, which has not shipped; no separate bump. Also answered the
+    same day: plan CQ8 — the Conditions and Recovery chapter is the master
+    document for Conditions, and Gear's table becomes a pointer to it (a CRB
+    edit for Ken; the app already follows 054, Decision 95). **F8 stays
+    open**: the designers want to playtest how many Stat Points people
+    realistically end up with before choosing between the flat and scaled
+    rolls. (Ken + Scott + Deighton + Claude, 2026-09-22)
+
+98. **(Design-team rulings, part 2, 2026-09-22 — rules + data + engine)**
+    **The stat curve past 10 is settled, the three Conditions stubs close,
+    and the combat plan's Session 3 questions are answered.** From Scott +
+    Deighton, the same day as Decision 97:
+    - **Stats past 10** (the old unnumbered `statMod` flag): 11–15 = +5,
+      16–20 = +6, 21–25 = +7, another +1 for every 5 points after that.
+      `statMod()` read the top of the curve as +1 per point, so an 11 was
+      already right but a 12 read +6 instead of +5. The step is data
+      (`statRules.beyondTen.stepEvery`). This replaces Decision 18's
+      extrapolation. BOD past 10 adding 1 HP per Health Level was confirmed
+      as already built (Decision 64 and the rules tests).
+    - **F20 closed:** a Condition's "−1 to all rolls" hits Skill Checks
+      only, not Essence dice or Breaker % — the stub, now the rule.
+    - **F21 closed:** different Conditions stack, and the same one doesn't.
+      **Every penalty on one roll caps at −8**, whatever it comes from
+      (Conditions, range, cover, visibility). `conditionState()` caps the
+      Condition sum at `penaltyStacking.cap`. Conditions alone can't reach
+      −8 with the current catalog; range and cover, which push a roll there
+      at the table, are outside the sheet, so the cap is also stated on
+      Trackers as a "How this works" note.
+    - **F22 closed:** one body-part Condition can sit on two parts — and
+      **only Injured and Maimed are body-part Conditions.** DeSynced loses
+      its body-part picker; its text still names limbs/head/torso and asks
+      the player to note which.
+    - **Plan CQ4:** Siege causes Massive damage, to people too. Gear's
+      Siege tag ("double damage to soft targets") is out of date; the
+      glossary text is updated here and the CRB needs the same fix (Ken).
+    - **Plan CQ5:** only Massive damage causes Injured or Maimed. A Called
+      Shot is the exception only when the weapon or the way it's used deals
+      Massive damage (a sniper rifle, say). 053's Called Shot text needs to
+      say so (Ken).
+    - **Plan CQ6:** Health Levels removed by Massive damage count toward
+      Pain. Getting them back takes Focused Healing (a Nanomed Kit,
+      hospitalization) **and** a replacement: a prosthetic or other limb
+      replacement, possibly magical.
+    - **Plan CQ7:** no layering. Two pieces of armor can't cover the same
+      body part, and all body armor covers at least the torso (a vest is
+      torso, a duster is torso/arms/legs), so one worn body piece is the
+      rule. Plan P5's single `worn` flag holds.
+    - **Plan CQ10:** the Shock threshold is half of max Health Levels,
+      rounded up (2 → 1, 3 → 2, 5 → 3).
+    CQ4–CQ7 and CQ10 are recorded here and in the plan but not yet built:
+    Session 3 builds them and cites this decision. Game data 0.8 (unshipped)
+    absorbs the stat curve, the DeSynced change and the Siege text; no
+    separate bump. (Ken + Scott + Deighton + Claude, 2026-09-22)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -1628,26 +1812,27 @@ INT/EMP all along, so nothing changed but the flag.
 match and its flag dropped. Text-only — no computed value or available choice
 moved, so no `gamedataVersion` bump (Decision 68).
 
-Sixteen objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
-(a recursive count, not twelve as this line used to say — it had drifted before
-F16 closed). `tests/docs.test.mjs` is what keeps the table below honest, not this
+Twelve objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
+(a recursive count: sixteen, plus F20–F22 opened by the Conditions session,
+minus F1, F2, F14, F17 and F20–F22, closed by Decisions 97–98).
+
+~~F1~~, ~~F2~~, ~~F14~~ and ~~F17~~ closed 2026-09-22 on a design-team ruling
+(Decision 97). F1/F2/F17 confirmed what the app already did; F14 moved a price.
+~~F20~~, ~~F21~~ and ~~F22~~ closed the same day (Decision 98), hours after the
+Conditions session opened them; so did the unnumbered stat-curve flag. `tests/docs.test.mjs` is what keeps the table below honest, not this
 sentence.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
-| F1 | LUCK buy-up cost in CP per point (stubbed 1:1, flagged in data) | Deighton | No |
-| F2 | CP boost exchange rate across skills/stats/powers (stubbed 1:1, flagged) | Deighton | No |
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked | Ken → docs | No |
-| F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling | Ken/D | **Wizard** |
+| F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling. **Design team, 2026-09-22: still open** — they want to playtest how many Stat Points people realistically get before choosing | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
 | F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
-| F14 | **Skill IP cost at rank 0**: "5 × current rank" prices learning a new skill (0→1) at zero. App costs it as rank 1 (5 IP; Focused 3) pending ruling — flagged in the Progression UI | Deighton | No |
-| F17 | **Long-Lived's rank table reads as "Effect" per row, not "gain another"** — ambiguous whether ranks stack. Implemented as stacking (rank 3 = 2 Minor + 1 Major Milestone slots total), confirmed with Ken; needs Deighton's sign-off as the rules-authority call | Deighton | No |
-| F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). What's left: assigning MD ratings across the gear list (Design, small), and the engine/UI half — PROT/RES/Integrity math, a Conditions system (Injured/Maimed live there, per `054_Conditions_and_Recovery.md`), Massive damage application, and Loadout pickers — deliberately deferred to a second batch (Decision 92) | Ken/D/Scott | No |
+| F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small), and the rest of the engine/UI half — PROT/RES/Integrity math, Massive damage application, and Loadout pickers — planned as Sessions 3–4 of `plans/combat-and-conditions.md` | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 
 ## 6. Roadmap
@@ -1850,9 +2035,9 @@ sentence.
   only wizard-blocking flag.
 
 - **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in
-  `docs/plans/combat-and-conditions.md`: Conditions first (Session 2), then hit
-  resolution through armor (Session 3), then Loadout pickers and recovery actions
-  (Session 4). The plan holds the sequencing rationale and the open questions
+  `docs/plans/combat-and-conditions.md`: Conditions first (Session 2 — **done**,
+  Decisions 95–96), then hit resolution through armor (Session 3), then Loadout
+  pickers and recovery actions, including the Turn Reset helper (Session 4). The plan holds the sequencing rationale and the open questions
   (`CQ`n); decisions get numbered here as each session lands.
 
 **Session handoff protocol:** every phase ends with current files +

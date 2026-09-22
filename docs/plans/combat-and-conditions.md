@@ -1,6 +1,6 @@
 # Plan — Conditions, damage & armor
 
-**Status:** proposed 2026-09-22 · awaiting Ken's sign-off on §3 before Session 2 starts
+**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 next
 **Covers:** F18's engine half (Decision 92 deferred it), plus the Conditions system
 that chapter 054 now fully specifies.
 **Sources:** `reference/crb/053_Combat_Encounters.md` (Damage and Armor),
@@ -65,7 +65,7 @@ put its consequences instead of printing "you are now Bleeding" as text.
 
 ---
 
-## 3. The proposal — for sign-off before Session 2
+## 3. The proposal — signed off 2026-09-22
 
 Each item is a design choice Ken should approve or redirect. Numbered P-items so
 review comments can point at them.
@@ -137,7 +137,7 @@ is undoable with no new undo code. That's the payoff of constraint 7.
 guided path; typing a damage total is still how a GM ruling or a
 missed-it-earlier correction gets in. Same for adding a Condition by hand.
 
-**P8 — Reset is a helper, not an automation.** One "Reset" button: ticks Bleeding
+**P8 — Turn Reset is a helper, not an automation.** *(Renamed from "Reset" at sign-off, so the button reads as an encounter helper.)* One "Turn Reset" button: ticks Bleeding
 (−1 HP), asks for Burning/Shocked source damage, and lists the recovery check each
 active Condition gets, as text. It does not run the checks. **Frank view:** full
 round-by-round automation is a GM-toolkit feature (Scott's area), not a player
@@ -172,7 +172,7 @@ its decisions numbered.
 - [x] **Session 1 — Level set + plan** (2026-09-22). CRB mirror re-pulled and
   extended (053, 055, Magic, spells, Aberrations); F16 closed; this plan; the
   Deighton question list.
-- [ ] **Session 2 — Conditions.** `conditions` catalog (P2) · schema 0.8 (P3, P4,
+- [x] **Session 2 — Conditions** (2026-09-22, Decisions 95–96; CQ1/CQ2/CQ3 stubbed as F20/F21/F22). `conditions` catalog (P2) · schema 0.8 (P3, P4,
   and P5's fields) with `migrate()` · `Engine.conditionState()` · `painState()`
   folds condition Pain (clamped 3) · condition `rollPenalty` on skill lines ·
   Conditions card on Main + Trackers (toggle, location, Death Marks, recovery text,
@@ -186,11 +186,11 @@ its decisions numbered.
   or Dying through Session 2's Conditions · Massive and Withering recorded.
   **Tests to pin:** 053's Massive formula at 9/10/25 damage, with and without
   armor; AP skipping RES; Compromised skipping RES; fully soaked hit costing 1 INT;
-  Shock at exactly half HL. Needs CQ4 and CQ6 answered or stubbed.
+  Shock at exactly half HL. CQ4/CQ5/CQ6/CQ7/CQ10 are answered (Decision 98) — no stubs needed.
 - [ ] **Session 4 — Loadout & recovery.** Catalog pickers for weapons and
   armor (schema 0.6 already supports them) · weapon lines computed (skill total,
   `BOD+X` resolved to a number) · worn toggle and Integrity bar · wear roll,
-  repair kit, rest/natural healing, Focused Healing, Reset helper (P8, P9) ·
+  repair kit, rest/natural healing, Focused Healing, Turn Reset helper (P8, P9) ·
   print sheet shows armor and Integrity.
 - [ ] **Side session — Magic tables** (independent of all of the above). Encode
   the Cascade Table and the Aberration Table from `Magic.md`, and the
@@ -205,34 +205,45 @@ Two kinds, kept apart because they go to different people.
 
 ### Rules questions — Deighton (CQ1–CQ7, CQ10)
 
+**All answered by the design team 2026-09-22 (Decisions 97–98).** The
+original questions stay below as history; each answer is in bold at its end.
+
 Each becomes an F-number the day a session stubs behavior on it.
 
-- **CQ1 — What does "−1 to all rolls" hit?** (Disoriented, Burning, Shocked,
+- **CQ1 → F20 — What does "−1 to all rolls" hit?** (Disoriented, Burning, Shocked,
   Frightened.) Skill Checks, obviously. Does it also cost a die on Essence Checks
   and 5% on Breaker Checks the way a Pain Level does — or is it Skill Checks and
   attack/defense only? *Stub: Skill Checks only.*
-- **CQ2 — Do different conditions' penalties stack?** Burning + Disoriented =
+  **Answer: Skill Checks only.**
+- **CQ2 → F21 — Do different conditions' penalties stack?** Burning + Disoriented =
   −2? "Doesn't stack with itself" implies different ones do. Is there a cap (the
   attack modifiers stop at −8)? *Stub: they stack, no cap.*
-- **CQ3 — Can the same location-bearing Condition exist on two body parts?** An
+  **Answer: yes, different ones stack; every penalty on one roll caps at −8 (Conditions, range, cover, visibility).**
+- **CQ3 → F22 — Can the same location-bearing Condition exist on two body parts?** An
   Injured arm and an Injured leg — two Injured, or one? *Stub: two.*
+  **Answer: yes — and only Injured and Maimed are body-part Conditions (DeSynced isn't).**
 - **CQ4 — Siege vs Massive.** Gear's Siege tag says soft targets take **double
   damage**; 053 says Massive against a person strips Integrity and takes 1 HL per
   10. Which is the rule for a Siege weapon hitting a person? *Blocks Session 3's
   Massive path.*
+  **Answer: Siege causes Massive damage, to people too. Gear's Siege tag needs updating (Ken).**
 - **CQ5 — Ballistic and Injured/Maimed.** Gear: "standard ballistic fire does not
   risk Maimed or Injured — that threshold belongs to Massive." 053: a Called Shot
   (Single fire) can apply Injured or Maimed. Is Called Shot the exception, or is
   one of these wrong?
+  **Answer: only Massive damage causes Injured/Maimed. A Called Shot counts only when the weapon or use deals Massive (e.g. a sniper rifle). 053 needs to say so (Ken).**
 - **CQ6 — Do Massive-removed Health Levels count toward Pain?** Natural reading
   is yes (they're HL lost). And how does "somebody has to put you back together
   properly" restore them — Focused Healing, how many per what? *Stub: count toward
   Pain; restored only by an explicit manual action.*
+  **Answer: yes. Restoring them takes Focused Healing (Nanomed Kit, hospital) and a prosthetic or other limb replacement (possibly magical).**
 - **CQ7 — One body armor at a time?** Can a vest go under a duster, and if so which
   PROT rolls and whose INT pays? *Stub: one worn body piece.*
+  **Answer: no layering — two pieces can't cover the same body part, and all body armor covers at least the torso. One worn body piece.**
 - **CQ10 — Shock Check threshold.** "A single hit that takes half your Health
   Levels or more" — half of **max** HL, rounded up? (BOD 5 → 3 HL?) *Stub: half of
   max, rounded up.*
+  **Answer: half of max HL, rounded up (2 → 1, 3 → 2, 5 → 3).**
 
 ### Doc fixes — Ken, in the CRB (CQ8, CQ9, CQ11)
 
@@ -242,7 +253,8 @@ Each becomes an F-number the day a session stubs behavior on it.
   (054 says Medical, Difficulty 15); Agonized's recovery differs. Gear also says
   the full rules are "in the Combat chapter" — they're in Conditions and
   Recovery. Suggest: cut Gear's table to a pointer at 054 so there's one table.
-  **The app will follow 054.**
+  **The app will follow 054.** **Agreed by the design team 2026-09-22:**
+  Conditions and Recovery is the master document; Gear points to it (Decision 97).
 - **CQ9 — Dying has no row in 054's Conditions table**, though Medical and
   Nanomed both "end the Dying condition". Unconscious's recovery says "see Going
   Down". Add a Dying row (effect: Helpless, Death Marks; recovery: Medical 20,
