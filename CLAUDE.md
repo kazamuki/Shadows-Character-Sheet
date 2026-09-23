@@ -25,6 +25,8 @@ and a cold session read them as current. Live numbers are in `docs/STATE.md`.
 Also here when relevant: `docs/VOICE-APP.md` (player-facing copy),
 `docs/log/2026.md` (session history — why something was done),
 `docs/plans/` (multi-session plans in flight — sessions, open questions),
+`docs/WISHLIST.md` (unscheduled ideas as `W` ids — add to it when you notice
+something worth doing later rather than doing it unasked),
 `docs/reference/` (mirrors of CRB-project documents; never edited here).
 
 Do not start editing before reading 1 and 2. Most mistakes on this project are
@@ -181,6 +183,23 @@ once, so group related flags rather than pressing them one at a time.
 **A decision isn't made until it's numbered.** `SCHEMA.md` §4 is the ledger. Add
 the decision in the same change as the code it describes.
 
+**Before you number one, check what it replaces.** Search the ledger for what
+the new decision touches: the stat, field, formula, rule, or UI element by
+name, not just its topic heading in `INDEX.md`. A note buried in an unrelated
+entry counts. Deighton's TOL ruling reversed a formula confirmed inside
+Decision 93, a data-merge decision nobody would have filed under "stats". For
+every earlier decision it overrides:
+
+- mark the old entry `→ **Superseded by Decision N**` (or `in part`) with a
+  clause saying what changed;
+- mark its `INDEX.md` line `→ **superseded [in part] by N**`, struck through
+  when wholly replaced;
+- say in the new decision which ones it replaces.
+
+Never delete or renumber an entry; numbers are cited from code and tests.
+`tests/docs.test.mjs` fails if the ledger and the index disagree, but only you
+can find a replacement nobody marked (Decision 102).
+
 **Player-facing copy follows `docs/VOICE-APP.md`.** The app speaks as NYTE City —
 except where the player is stuck, which is tool voice: clear, short, out of the
 way. Three files generate player copy and one of them surprises people:
@@ -198,7 +217,7 @@ in `tests/rules.test.mjs`.
 ## Working rhythm
 
 - Branch per unit of work: `feat/picks-system`, `fix/a1-double-aberration`,
-  `data/biomech-rewrite`. Batches from the board in `STATE.md` get one branch each.
+  `data/biomech-rewrite`. Each batch gets one branch, and a row in `docs/log/shipped.md` when it merges.
 - Commit subjects in the imperative, naming the finding or decision:
   `fix(ui): render aberrations once (A1)`.
 - `main` is always openable and always passes `npm run verify`.

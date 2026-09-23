@@ -14,13 +14,15 @@ Generated summaries are one line each and deliberately lossy — they are for
 
 | I want to know | Go to |
 |---|---|
-| What's next, what's blocked, who can clear it | **`STATE.md`** §3 (§2 is shipped history only) |
+| What's next, what's blocked, who can clear it | **`STATE.md`** §3 (§2 is what shipped work left behind; the board itself is `log/shipped.md`) |
 | Why a past decision was made | `SCHEMA.md` §4 — find the number in §3 below |
 | What an id like `A1` / `B7` / `C2` means | §2 below |
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The shape of the game data or a character file | `SCHEMA.md` §2 and §3 |
 | What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
 | A multi-session plan still in flight — its sessions, open questions (`CQ`_n_) | `plans/` — currently `plans/combat-and-conditions.md` |
+| An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` |
+| What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `docs/log/2026.md` |
 | Whether a string is allowed to say that | `VOICE-APP.md` |
 | Whether the current WIP text already answers an open flag | `docs/reference/crb/README.md` |
@@ -28,14 +30,14 @@ Generated summaries are one line each and deliberately lossy — they are for
 | How to work on this repo at all | `../CLAUDE.md` |
 
 **The trap worth naming:** `CHANGELOG.md` never describes upcoming work, and
-`STATE.md`'s board is one line per batch. The *reasoning* for a batch — what it
+`log/shipped.md` is one line per batch. The *reasoning* for a batch — what it
 contains and why it is split that way — lives in **`SCHEMA.md` §6**.
 
 ---
 
 ## 2. Id registry
 
-Four namespaces. Each id is defined in exactly one place and referenced everywhere.
+Five namespaces. Each id is defined in exactly one place and referenced everywhere.
 
 | Prefix | Means | Defined in |
 |---|---|---|
@@ -44,6 +46,7 @@ Four namespaces. Each id is defined in exactly one place and referenced everywhe
 | `C`_n_ | Carried note — real but not yet actionable | same audit, §3 |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
 | `D`_n_ | Shorthand used here for decision _n_ | `SCHEMA.md` §4 |
+| `W`_n_ | Wishlist item — an idea, not a commitment; statuses live with the item | `WISHLIST.md` §1 |
 
 ### Audit findings
 
@@ -94,6 +97,32 @@ The one **unnumbered** flag (the stat curve past 10) closed with Decision 98.
 Every entry in `SCHEMA.md` §4, grouped by subject. The number is the thing to
 look up — these lines are signposts, not the decision.
 
+**Load-bearing.** Most of the ledger is choices made on the way to building
+something. These few shape *what* gets built — break one and the project changes
+character. Read these before a structural change; the rest when a topic sends
+you there.
+
+| # | Why it shapes everything |
+|---|---|
+| 11 | Every roll is physical — the app never rolls a player's dice |
+| 15 | Archetypes share one generic structure; a new one is data, not code |
+| 26 | What the engine doesn't model goes through a manual adjustments ledger, not a special case |
+| 48 | Audit trail and admin are one subsystem: one ordered, reversible record |
+| 62 | The engine is total — it reports a problem, it never throws |
+| 63 | `migrate()`'s completeness is the migration guarantee |
+| 68 | When game data bumps, and when it must not |
+| 70 | Two audiences, two fields — maintainer text can't render |
+| 74 | Volatile facts live in exactly one place |
+| 75 | Four versions, four triggers |
+| 77 | One selection system, three hosts |
+| 78 | The mechanical picks are the app's business; the fiction is the table's |
+| 89 | Print is a second rendering path, not a second data model |
+| 102 | A decision that replaces another marks it, in the same change |
+
+A line ending **→ superseded in part by N** still stands except where N says
+otherwise; a ~~struck~~ line is wholly replaced. `tests/docs.test.mjs` checks
+that the ledger and this index agree on both.
+
 ### Rules the app enforces
 
 What a number *is*. Change one of these and characters change.
@@ -111,17 +140,16 @@ What a number *is*. Change one of these and characters change.
 - **11** — All rolls are physical: the app never rolls dice for creation pools.
 - **12** — Supernatural restriction: archetypes with canPurchaseAdvantages: false (Werewolf; Vampire assumed) cannot buy Advan...
 - **13** — Milestone cadence: 1 Milestone Point per session; Minor at 5/15/25…, Major at 10/20/30…; 10 IP per session (WIP Pro...
-- **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via...
+- **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via... → **superseded in part by 97**
 - **16** *(Phase 2)* — Ranked Advantages cost cost per rank (Archery Master rank 2 = 12 CP).
-- **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10.
+- **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10. → **superseded in part by 98**
 - **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank.
-- **42** *(Phase 3.2)* — LUCK refresh confirmed — no change.
 - **64** *(B3)* — 1 Health Level per BOD is an invariant, not a tunable.
 - **66** *(B8)* — The two Pain Level floors are numbers the engine carries and the sheet states.
 - **67** *(B9)* — The milestone cadence comes from the data, once.
 - **98** *(Design-team rulings, part 2)* — Stats past 10: +5 at 11–15, +1 per 5 after. F20–F22 closed: Skill Checks only, a −8 cap on one roll, only Injured/Maimed take a body part. Plan CQ4–CQ7/CQ10 answered for Session 3.
 - **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open.
-- **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened.
+- **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened. → **superseded in part by 100**
 - **100** *(Loadout & recovery — combat plan Session 4)* — Catalog pickers with Add/Buy, one worn piece per slot, upgrades by slot and quality; weapon lines (attack = skill check, ACC apart, `BOD+X` resolved). Wear, repair, Rest, Focused Healing (the only way back for Massive levels and Injured), Turn Reset (ticks aren't hits: no armor, no Shock). Stand-in armor gone. F24 opened.
 - **96** *(Conditions — the numbers)* — Pain = HL band + Condition Pain, clamped 0–3; a flat Condition penalty lands on every Skill Check; attack/defense and conditional penalties are shown, never summed.
 
@@ -142,8 +170,8 @@ The generic archetype structure, and the pick that defines one.
 - **15** — Archetypes: generic six-block structure (Power Scaling, Baseline Traits, Specialization, Core Mechanic, Powers & Vu...
 - **17** *(Phase 2)* — Professional natural advantages are stored as normal advantages entries with notes: "natural" and cost 0 CP — they...
 - **20** *(Phase 2)* — Aberration prose benefits display as reference text only; only structured fields (e.g.
-- **21** *(Phase 2)* — Common-spell selection is deferred to Phase 3; the wizard shows the computed count (TOL + 2d4) only.
-- **58** *(CRB v4 content pass)* — The Phase 4 selection system is now specified by the rulebook rather than proposed — and none of it is encoded yet.
+- **21** ~~*(Phase 2)* — Common-spell selection is deferred to Phase 3; the wizard shows the computed count (TOL + 2d4) only.~~ → **superseded by 25**
+- **58** *(CRB v4 content pass)* — The Phase 4 selection system is now specified by the rulebook rather than proposed — and none of it is encoded yet. → **superseded in part by 77 and 87**
 - **77** *(Batch 3)* — One selection system, three hosts.
 - **78** *(Batch 3)* — The mechanical picks are the app's business; the fiction is the table's.
 - **79** *(A3 — closes A1 and A2)* — One specialization model, and the count comes from the data.
@@ -153,8 +181,6 @@ The generic archetype structure, and the pick that defines one.
 The saved `.shadows.json`: shape, versions, upgrades.
 
 - **28** *(Phase 3)* — Character schema bumped to 0.3.
-- **34** *(Phase 3.1)* — No schema bump.
-- **47** *(Phase 3.2)* — No schema bump.
 - **53** *(Phase 3.3)* — Character schema → 0.4.
 - **63** *(B6)* — migrate()'s completeness is the migration guarantee.
 - **68** — When gamedataVersion bumps — and when it must not.
@@ -186,12 +212,11 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **24** *(Phase 3)* — Pain Level penalties are applied to every displayed skill-check total, with the reason shown inline (breakdown colu...
 - **25** *(Phase 3)* — The Grimoire is a free-entry table.
 - **26** *(Phase 3)* — Un-modeled effects (milestone benefits, aberration prose, items) are applied through a manual adjustments ledger: s...
-- **27** *(Phase 3)* — The IP journal is the audit trail: entries are spend or grant; spends update the target's IPE atomically; the last...
+- **27** *(Phase 3)* — The IP journal is the audit trail: entries are spend or grant; spends update the target's IPE atomically; the last... → **superseded in part by 49**
 - **29** *(Phase 3)* — Milestone enforcement: Minor duplicates blocked until all five have been selected once; Major prerequisites are mac...
 - **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll.
 - **31** *(Phase 3.1)* — Iconography lives in shadows-icons.js (see §1).
-- **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta...
-- **33** *(Phase 3.1)* — Fixed: the REF/Hand brand icon rendered as a solid blob.
+- **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35**
 - **35** *(Phase 3.2)* — Full-width sheet on every tab.
 - **36** *(Phase 3.2)* — Four-sphere stat layout on Main.
 - **37** *(Phase 3.2)* — Vitals flyout drawer.
@@ -230,6 +255,16 @@ Every string a player reads, and what enforces it.
 - **76** *(Voice)* — docs/VOICE-APP.md is adopted, not draft.
 - **85** *(Docs)* — GUIDE_Shadows_Voice.md is re-pulled with pandoc.
 
+### Housekeeping — records, not choices
+
+Numbered because they were written down in the ledger at the time, not because
+they choose anything: a no-op version check, a fix, a confirmation.
+
+- **33** *(Phase 3.1)* — Fixed: the REF/Hand brand icon rendered as a solid blob.
+- **34** *(Phase 3.1)* — No schema bump.
+- **42** *(Phase 3.2)* — LUCK refresh confirmed — no change.
+- **47** *(Phase 3.2)* — No schema bump.
+
 ### Repository & docs
 
 How the project itself is organised.
@@ -238,6 +273,8 @@ How the project itself is organised.
 - **61** *(B5)* — The review step's number derives from creationFlow.steps.
 - **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place.
 - **86** *(Repository)* — Decision 54's deferred refactor lands: `src/ui/app.js` splits into four classic scripts.
+- **101** *(Docs)* — The batch board leaves `STATE.md` for `docs/log/shipped.md`, and unscheduled ideas get `docs/WISHLIST.md`.
+- **102** *(Docs)* — A decision that replaces another marks it in the same change — in SCHEMA §4 and here — and a test holds the two together.
 
 ---
 
