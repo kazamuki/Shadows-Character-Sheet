@@ -240,7 +240,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **106** *(Cascade and Aberrations — Magic-tables side session)* — Magic.md's two tables and the Appendix's 39 Aberrations are data; `Engine.cascade()` reads the player's dice. The Arcanist gets a TOL Spent tracker (it had none after 93), whose Cascade panel writes the result into Notes. Schema unchanged.
 - **107** *(Sheet feel — wishlist pass)* — W7 `--on-accent` text on filled controls with a both-themes contrast guard; W11 Heal/Hurt stepper; W12 an undo toast on every `commit()`, matched to its audit entry by identity; W14 a Condition chip palette, and Main's chips open their details.
 - **108** *(The Grimoire reads the book — magic plan Session 1)* — Book rows store `{ spellId, stage, notes }`, your own rows are typed columns (`custom`); schema 0.9, migrate never links. `Engine.grimoire()`, Spell Power, Mastery = 30 IP × TH through the IP journal (TH − 1), a picker that shows the numbers first, Link to the book. Spell Attack left for a ruling.
-- **109** *(Deighton's magic rulings)* — Starting spells gated by TH ≤ Evocation rank (MQ1); Drained −2 max TOL, can go to 0, current unchanged, so TOL Spent −2 (MQ2); Phantom Pain PL 1 at full health (MQ3); Spell Attack = Evocation + raw REF + raw WILL. Docs only; built by the plan's sessions.
+- **109** *(Deighton's magic rulings)* — Starting spells gated by TH ≤ Evocation rank (MQ1); Drained −2 max TOL (never below 0), current unchanged either way, so TOL Spent −2 on / +2 off (MQ2); Phantom Pain PL 1 at full health (MQ3); Spell Attack = Evocation + raw REF + raw WILL. Docs only; built by the plan's sessions.
 
 ### Audit trail, undo & admin
 

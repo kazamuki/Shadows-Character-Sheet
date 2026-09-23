@@ -114,9 +114,11 @@ chips with Clear ("Lasts 8 hours" is the table's call, not a timer).
 hooks the engine already reads, not special cases:
 - **Drained:** −2 on **maximum** TOL, and **current TOL doesn't move** (MQ2,
   Decision 109). The sheet stores TOL *Spent* (current = max − spent), so
-  recording Drained also takes 2 off TOL Spent, floored at 0. It's one
-  writer, one commit, and one undo. Max TOL can go below the formula's floor of 1,
-  down to 0.
+  recording Drained also takes 2 off TOL Spent, floored at 0. **Removing it
+  gives no TOL back**: max rises by 2, current stays, so TOL Spent goes up by
+  2 and the character rests the rest back. Recording and removing are one
+  writer each, one commit each, one undo each. Max TOL can go below the
+  formula's floor of 1, and **never below 0**.
 - **Phantom Pain:** "one Pain Level higher", so `painLevels: 1`, the same hook
   as Agonized (Decision 96), clamped at 3.
 Every other Aberration is text on its chip, like most Conditions (P2 in the
@@ -169,7 +171,8 @@ and its decisions numbered.
 - [ ] **Session 2 — Aberrations on the character, and the reference.** M7's
   reader and UI, M8, M9, M11, and the Cascade panel's Record it. **Replaces
   Decision 106 in part** (Notes stops being the only record). **Tests:** Ken's
-  worked Drained examples (max 8 / current 3 → max 6 / current 3; max 2 → 0);
+  worked Drained examples (max 8 / current 3 → max 6 / current 3; max 2 → 0;
+  max 0 stays 0; removing Drained at 6 / 6 → max 8 / current 6);
   Phantom Pain PL 1 at full health; clamps at 3 with Agonized; Spell Attack
   from raw REF and WILL; permanent vs temporary display; Record it undoes in
   one step.
@@ -201,9 +204,10 @@ REF, raised by Decision 108, was answered at the same time.
   **Answer: yes. "Since it is assigned by the GM based on the roll, they can
   choose to be very mean."** Ken on how it works: Drained lowers **maximum**
   TOL and leaves **current** alone. Max 8 / current 3 becomes max 6 / current
-  3, and a max of 2 becomes 0. *Not covered:* a maximum below 0, and what
-  removing Drained does to current. The app floors max at 0, and Session 2
-  asks about removal before building it.
+  3, and a max of 2 becomes 0. **Ken, the same day: max TOL is never below 0,
+  and removing Drained grants no TOL.** At max 8, Drained makes it 6. After
+  resting to 6 and then removing Drained, TOL stays 6, and the character
+  recovers naturally back to 8.
 - **MQ3 — Does Phantom Pain count at full health?** "Permanently operate at one
   Pain Level higher" reads as Pain Level 1 with no damage at all. *Stub: yes,
   like Agonized at PL 0.*
