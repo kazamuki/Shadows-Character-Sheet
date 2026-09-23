@@ -741,3 +741,74 @@ test('Magic.md: Mastered "Costs 30 IP x TH ... TH is reduced by 1"; "A Mastered 
   assert.equal(bolt.th, bolt.printedTH, "a Known spell lost TH");
   assert.equal(bolt.masteryCost, 30 * bolt.printedTH);
 });
+
+// ── Aberrations on the character (Decisions 109–110) ─────────────────
+
+/** An Arcanist whose maximum TOL is exactly `max`, with `current` left. */
+function arcanistAt(max, current) {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  const base = Engine.derived(ch).TOL;
+  ch.trackers.adjustments = [{ target: "TOL", amount: max - base, note: "fixture" }];
+  ch.trackers.panel["tol-spent"] = { value: max - current };
+  return ch;
+}
+const tolOf = ch => {
+  const max = Engine.derived(ch).TOL;
+  return { max, current: max - ch.trackers.panel["tol-spent"].value };
+};
+
+test('Decision 109 (Deighton, MQ2): Drained lowers maximum TOL by 2 and leaves current alone — "max 8 / current 3 becomes max 6 / current 3"', () => {
+  const ch = arcanistAt(8, 3);
+  assert.deepEqual(tolOf(ch), { max: 8, current: 3 });
+  assert.equal(Engine.recordAberration(ch, { id: "drained", permanence: "permanent" }).ok, true);
+  assert.deepEqual(tolOf(ch), { max: 6, current: 3 });
+});
+
+test('Decision 109: Drained "can go below 1" — "a max of 2 becomes 0", and max TOL is never below 0', () => {
+  const two = arcanistAt(2, 2);
+  Engine.recordAberration(two, { id: "drained", permanence: "temporary" });
+  assert.deepEqual(tolOf(two), { max: 0, current: 0 });
+  const zero = arcanistAt(0, 0);
+  Engine.recordAberration(zero, { id: "drained", permanence: "temporary" });
+  assert.deepEqual(tolOf(zero), { max: 0, current: 0 }, "max 0 didn't stay 0");
+  const one = arcanistAt(1, 1);
+  Engine.recordAberration(one, { id: "drained", permanence: "temporary" });
+  assert.equal(Engine.derived(one).TOL, 0, "max 1 went below 0");
+});
+
+test('Decision 109 (Ken): removing Drained grants no TOL — "after resting to 6 and then removing Drained, TOL stays 6"', () => {
+  const ch = arcanistAt(8, 8);
+  Engine.recordAberration(ch, { id: "drained", permanence: "permanent" });
+  assert.deepEqual(tolOf(ch), { max: 6, current: 6 });
+  const i = ch.trackers.aberrations.findIndex(e => e.id === "drained");
+  assert.equal(Engine.removeAberration(ch, i).ok, true);
+  assert.deepEqual(tolOf(ch), { max: 8, current: 6 });
+});
+
+test('Decision 109 (Deighton, MQ3): Phantom Pain — "Your PL1 happens even if you are full health"', () => {
+  const ch = subject({ bod: 10 });
+  ch.identity.archetype = "arcanist";
+  Engine.recordAberration(ch, { id: "phantom-pain", permanence: "permanent" });
+  const at = dmg => { ch.trackers.damage = dmg; return Engine.painState(ch); };
+  assert.equal(at(0).level, 1, "Phantom Pain at full health isn't Pain Level 1");
+  assert.equal(at(0).fromAberrations, 1);
+  assert.equal(at(10).level, 2);
+  assert.equal(Engine.addCondition(ch, { id: "agonized" }).ok, true);
+  assert.equal(at(0).level, 2, "Phantom Pain and Agonized don't add");
+  assert.equal(at(40).level, 3, "Phantom Pain with Agonized passed the clamp at 3");
+  assert.deepEqual([...at(0).painSources], ["Agonized", "Phantom Pain"]);
+});
+
+test('Decision 109: "Spell Attack = Evocation Rank + REF + WILL", the scores and not their bonuses', () => {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  ch.stats.REF.base = 7;
+  const sa = Engine.spellAttack(ch);
+  const evo = Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank;
+  assert.equal(sa.value, evo + 7 + Engine.derived(ch).WILL);
+  assert.notEqual(sa.value, evo + Engine.statTable(ch).REF.mod + Engine.derived(ch).WILL, "read REF's bonus, not the score");
+  ch.stats.REF.base = 8;
+  assert.equal(Engine.spellAttack(ch).value, sa.value + 1, "REF didn't count point for point");
+  assert.equal(Engine.grimoire(ch).spellAttack.value, sa.value + 1, "the Grimoire doesn't carry Spell Attack");
+});
