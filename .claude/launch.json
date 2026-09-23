@@ -5,7 +5,8 @@
       "name": "shadows-dev-preview",
       "runtimeExecutable": "node",
       "runtimeArgs": ["tools/devserver.mjs"],
-      "port": 8420
+      "port": 8420,
+      "autoPort": true
     }
   ]
 }

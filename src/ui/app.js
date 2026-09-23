@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.13.0";
+const APP_VERSION = "0.14.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -252,14 +252,9 @@ function bindSheet(){
   const ds=main.querySelector("[data-dmgset]");
   if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
   main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
-  // Massive levels only come back by an explicit action (Decision 98, CQ6).
-  main.querySelectorAll("[data-massiverestore]").forEach(b=>b.onclick=()=>commit("damage","Restored a Massive Health Level",()=>{
-    ch.trackers.massiveLevels=Math.max(0, Engine.hlState(ch).massive-1);
-  }));
-
   // Take a hit (Decision 99). The form lives in S.hit until Apply, which is
   // one commit() — so the hit, its armor wear and its Conditions undo together.
-  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=()=>{ S.hit=Object.assign(newHitForm(), { owner: ch }); renderMain(); });
+  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=()=>{ S.act=null; S.hit=Object.assign(newHitForm(), { owner: ch }); renderMain(); });
   main.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=()=>{ S.hit=null; renderMain(); });
   main.querySelectorAll("[data-hit]").forEach(el=>el.onchange=()=>{
     if (!S.hit) return;
@@ -278,6 +273,52 @@ function bindSheet(){
     const choices=hitChoices(st, r);
     S.hit=null;
     commit("damage", hitLabel(r), ()=>{ Engine.applyHit(ch, input, choices); });
+  });
+
+  // Turn Reset, Rest, Focused Healing, After the fight (Decision 100): one
+  // form in S.act, one commit() on Apply, the same as a hit.
+  main.querySelectorAll("[data-actopen]").forEach(b=>b.onclick=()=>{ S.hit=null; S.act=Object.assign(newActForm(b.dataset.actopen), { owner: ch }); renderMain(); });
+  main.querySelectorAll("[data-actcancel]").forEach(b=>b.onclick=()=>{ S.act=null; renderMain(); });
+  main.querySelectorAll("[data-act]").forEach(el=>el.onchange=()=>{
+    const st=S.act; if (!st) return;
+    const k=el.dataset.act, v=el.type==="checkbox" ? el.checked : el.value;
+    if (k.startsWith("src:")) st.sources[k.slice(4)]=v;
+    else if (k.startsWith("clear:")) st.clear[k.slice(6)]=v;
+    else {
+      st[k]=v;
+      if (st.kind==="rest" && (k==="days" || k==="speed")) st.hp="";     // re-propose BOD × days
+      if (k==="shCheck") st.shRoll="";
+    }
+    renderMain();
+  });
+  main.querySelectorAll("[data-actapply]").forEach(b=>b.onclick=()=>{
+    const st=S.act; if (!st) return;
+    const input=actInput(ch, st), plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
+    if (st.kind==="reset"){
+      const r=Engine.resolveReset(ch, input);
+      if (!r.ok){ alert(r.why); return; }
+      if (r.prompts.atZero && !st.atZero){ alert("Mark the check at zero as passed or failed first."); return; }
+      if (r.prompts.dyingCheck && !st.dyingCheck){ alert("Mark the Dying check as passed or failed first."); return; }
+      const marks = r.marks + (r.prompts.dyingCheck && st.dyingCheck==="fail" ? 1 : 0);
+      const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":""].filter(Boolean);
+      S.act=null;
+      commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck }); });
+    } else if (st.kind==="rest" || st.kind==="focused"){
+      const r=Engine.heal(clone(ch), input);
+      if (!r.ok){ alert(r.why); return; }
+      const bits=[r.healed?`+${r.healed} HP`:"", r.restored?`${plural(r.restored,"Massive level")} restored`:"",
+        ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
+      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}` : "Focused Healing";
+      S.act=null;
+      commit("damage", `${label}: ${bits.join(", ")}`, ()=>{ Engine.heal(ch, input); });
+    } else if (st.kind==="wear"){
+      const w=Engine.armorState(ch).worn; if (!w) return;
+      const r=Engine.armorWear(clone(ch), w.index, input);
+      if (!r.ok){ alert(r.why); return; }
+      S.act=null;
+      commit("loadout", `Armor wear (${r.die}): ${r.name} −${r.lost} Integrity${r.selfHeal&&r.selfHeal.healed?`, +${r.selfHeal.healed} ${r.selfHeal.feature}`:""}`,
+        ()=>{ Engine.armorWear(ch, w.index, input); });
+    }
   });
 
   // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
@@ -459,6 +500,69 @@ function bindSheet(){
     if (rows[Number(i)]) rows[Number(i)][col]=inp.value;
     lite();
   });
+
+  // Loadout: weapons and armor (Decision 100). Notes are keystrokes like the
+  // table cells; everything that changes a number is one commit().
+  const loName = (kind, i) => kind==="weapons" ? ((Engine.weaponLine(ch,i)||{}).name||"weapon")
+                                               : ((Engine.armorState(ch).pieces.find(p=>p.index===i)||{}).name||"armor");
+  main.querySelectorAll("[data-lopick]").forEach(sel=>sel.onchange=()=>{
+    const kind=sel.dataset.lopick, list=kind==="armor"?D.armor:D.weapons;
+    const d=list.find(x=>x.id===sel.value), buy=main.querySelector(`[data-lobuy="${kind}"]`);
+    if (!buy) return;
+    const price = d && typeof d.cost==="number" && d.cost>0 ? d.cost : null;
+    buy.disabled = price==null;
+    buy.textContent = price==null ? "Buy" : `Buy · ${priceText(d)}`;
+  });
+  const loAdd = buy => b => b.onclick=()=>{
+    const kind=buy?b.dataset.lobuy:b.dataset.loadd, id=(main.querySelector(`[data-lopick="${kind}"]`)||{}).value;
+    const pre=Engine.addLoadout(clone(ch), kind, id, { buy });
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", buy ? `Bought ${pre.name} (−${pre.paid}Ç)` : `Added ${pre.name}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
+  };
+  main.querySelectorAll("[data-loadd]").forEach(loAdd(false));
+  main.querySelectorAll("[data-lobuy]").forEach(loAdd(true));
+  main.querySelectorAll("[data-locustom]").forEach(b=>b.onclick=()=>{
+    const kind=b.dataset.locustom;
+    commit("loadout", `Added custom ${kind==="armor"?"armor":"weapon"}`, ()=>{ Engine.addCustomLoadout(ch, kind); });
+  });
+  main.querySelectorAll("[data-lorm]").forEach(b=>b.onclick=()=>{
+    const [kind,i]=b.dataset.lorm.split("|"), n=loName(kind, Number(i));
+    commit("loadout", `Removed ${n}`, ()=>{ Engine.removeLoadout(ch, kind, Number(i)); });
+  });
+  main.querySelectorAll("[data-lonote]").forEach(inp=>inp.oninput=()=>{
+    const [kind,i]=inp.dataset.lonote.split("|"), e=(ch[kind]||[])[Number(i)];
+    if (e) e.notes=inp.value;
+    lite();
+  });
+  main.querySelectorAll("[data-worn]").forEach(cb=>cb.onchange=()=>{
+    const i=Number(cb.dataset.worn), n=loName("armor", i);
+    commit("loadout", `${cb.checked?"Put on":"Took off"} ${n}`, ()=>{ Engine.setWorn(ch, i, cb.checked); });
+  });
+  main.querySelectorAll("[data-armorfield]").forEach(el=>el.onchange=()=>{
+    const [i,k]=el.dataset.armorfield.split("|"), e=ch.armor[Number(i)];
+    if (!e) return;
+    const v = el.type==="number" ? Math.max(0, Math.floor(Number(el.value)||0)) : el.value;
+    commit("loadout", `${e.name||"Custom armor"}: ${k} → ${v===""?"—":v}`, ()=>{ e[k]=v; });
+  });
+  main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;
+    const pre=Engine.addUpgrade(clone(ch), i, id);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `Installed ${id} in ${loName("armor", i)}`, ()=>{ Engine.addUpgrade(ch, i, id); });
+  });
+  main.querySelectorAll("[data-upgrm]").forEach(b=>b.onclick=()=>{
+    const [i,at]=b.dataset.upgrm.split("|").map(Number), id=((ch.armor[i]||{}).upgrades||[])[at];
+    commit("loadout", `Removed ${id} from ${loName("armor", i)}`, ()=>{ Engine.removeUpgrade(ch, i, at); });
+  });
+  const repair = full => b => b.onclick=()=>{
+    const i=Number(full?b.dataset.repairfull:b.dataset.repairkit);
+    const input = full ? { full:true } : { roll:(main.querySelector(`[data-repairroll="${i}"]`)||{}).value };
+    const pre=Engine.repairArmor(clone(ch), i, input);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${full?"Armorer":"Field Repair Kit"}: ${pre.name} +${pre.restored} Integrity`, ()=>{ Engine.repairArmor(ch, i, input); });
+  };
+  main.querySelectorAll("[data-repairkit]").forEach(repair(false));
+  main.querySelectorAll("[data-repairfull]").forEach(repair(true));
 
   // Form toggle (e.g. Werewolf Human/Werewolf)
   main.querySelectorAll("[data-ptoggle]").forEach(b=>b.onclick=()=>{
