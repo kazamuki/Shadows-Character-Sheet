@@ -1670,7 +1670,7 @@ No cascade logic to maintain — it falls out of the architecture.
     Deliberately **not** built this batch: Origins/subtypes (blocked, see
     above), wiring the Grimoire table to reference `spells` by id (still
     free-entry — an engine+UI batch, same split Decision 92 drew for the
-    Loadout picker), and the Tools of the Trade pricing tables (every row is
+    Loadout picker; → **built by Decision 108**), and the Tools of the Trade pricing tables (every row is
     still `[X] Ç` in the WIP, not ready to merge as a finished catalog the
     way the equipment chapter's pricing was). (Ken + Claude, 2026-09-20)
     → **Superseded in part by Decision 103** — its note that INT/BOD/COOL was a misreading: Deighton ruled TOL is INT/BOD/COOL.
