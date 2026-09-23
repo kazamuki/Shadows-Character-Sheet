@@ -462,6 +462,44 @@ function renderShArchetype(){
 }
 
 // ── Sheet: trackers ──────────────────────────────────────────────────
+// ── Cascade (Decision 106) ───────────────────────────────────────────
+// The player enters their own dice; the engine reads the two tables and the
+// GM's pick from the rolled category. Nothing is stored until "Add to notes",
+// which writes one line into Notes as one undoable action. S.cascade holds
+// the dice meanwhile, the way S.hit holds a hit.
+function newCascadeForm(){ return { roll:"", degree:"", aberrationRoll:"", pick:"" }; }
+function cascadeInput(st){ return { roll:st.roll, degree:st.degree, aberrationRoll:st.aberrationRoll, pick:st.pick }; }
+function cascadePanelHtml(ch){
+  if (!S.cascade || S.cascade.owner!==ch) S.cascade = Object.assign(newCascadeForm(), { owner: ch });
+  const st=S.cascade, T=D.cascadeTable||{}, A=D.aberrationTable||{}, R=D.aberrationRules||{};
+  const c=Engine.cascade(ch, cascadeInput(st)), ab=c.aberration;
+  const num=(k, label, max)=>`<label class="field"><span>${label}</span><input type="number" min="1" ${max?`max="${max}"`:""} data-cas="${k}" value="${esc(st[k])}"></label>`;
+  const range=r=>r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
+  let h=`<div class="hitpanel" data-cascadepanel><h4>Cascade</h4>
+    <p class="hitnote">The Aether broke through. ${esc(T.rollNote||"")}</p>
+    <div class="hitrow">${num("roll","d10",10)}${num("degree","Rupture degree")}</div>`;
+  if (c.result){
+    h+=`<div class="hitresult"><p><b>${c.roll} + ${c.degree} = ${c.total}: ${esc(c.result.name)}.</b> ${esc(c.result.effect)}</p></div>`;
+    if (ab){
+      h+=`<div class="hitrow">${num("aberrationRoll","Aberration d10",10)}</div>`;
+      if (!ab.pending && ab.category){
+        h+=`<div class="hitcheck"><b>${esc(ab.category.name)}</b> · ${ab.permanence==="permanent"?"permanent":"temporary"}. ${esc(A.note||"")}
+          <p><select data-cas="pick" aria-label="Aberration"><option value="">Which one?</option>${ab.options.map(o=>
+            `<option value="${esc(o.id)}" ${ab.pick&&ab.pick.id===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select></p>
+          ${ab.pick?`<p>${ab.pick.as?`<i>As ${esc(ab.pick.as)}.</i> `:""}${esc(ab.pick.description)}</p>`:""}
+          ${ab.permanence==="permanent"&&R.permanent?`<p>${esc(R.permanent)}</p>`:""}</div>`;
+      }
+    }
+  }
+  if (!c.ok && st.roll!=="" && st.degree!=="") h+=`<p class="hitwhy">${esc(c.why)}</p>`;
+  const ready = c.ok && (!ab || (!ab.pending && ab.pick));
+  h+=`<details class="group"><summary>The Cascade Table</summary><table class="ref"><tbody>${(T.rows||[]).map(r=>
+      `<tr><td class="num">${range(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table></details>
+    <div class="hitrow"><button class="btn primary sm" data-caslog ${ready?"":"disabled"}>Add to notes</button>
+      <button class="btn sm" data-casclear>Clear</button></div></div>`;
+  return h;
+}
+
 // ── Take a hit (combat plan Session 3, Decision 99) ──────────────────
 // The panel is a guided path onto the same inputs the damage buttons edit
 // (plan P7): the engine resolves the hit, the player answers the checks it
@@ -777,7 +815,10 @@ function renderShTrackers(){
       <button class="btn sm" data-trk="${p.id}|-1">−1</button>
       <button class="btn sm" data-trk="${p.id}|1">+1</button>
       ${max==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
-      <span class="sub">${p.id==="sfr"?"Counts spend against a computed pool — RoU caps a single turn.":p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span></div>`;
+      <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.id==="sfr"?"Counts spend against a computed pool — RoU caps a single turn.":p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span></div>`;
+    // A tracker that declares `overMax: "cascade"` (the Arcanist's TOL Spent) opens the
+    // Cascade panel once it's past its max: TOL below zero (Decision 106).
+    if (p.overMax==="cascade" && effMax!=null && cur>effMax) h += cascadePanelHtml(ch);
   }
 
   // Çredits

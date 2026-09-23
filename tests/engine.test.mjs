@@ -1199,3 +1199,75 @@ test("a Nanomed Kit clears 054's four, stabilizes the Dying, and proposes BOD / 
   assert.equal(ch.trackers.damage, 13);
   assert.ok(Engine.heal(subject(), { kind: "nanomed", hp: 0 }).ok === false, "a kit on nobody hurt did something");
 });
+
+// ── Cascade and Aberrations (Decision 106) ────────────────────────────
+
+test("the Cascade and Aberration tables have no gaps or overlaps, and every category has entries", () => {
+  // Contiguous from the first row to an open-ended last one, so every total
+  // a Cascade can produce lands on exactly one row.
+  const rows = D.cascadeTable.rows;
+  rows.forEach((r, i) => {
+    if (i) assert.equal(r.min, rows[i - 1].max + 1, `cascade row ${r.id} doesn't follow ${rows[i - 1].id}`);
+    if (i < rows.length - 1) assert.ok(r.max >= r.min, `cascade row ${r.id} has no range`);
+  });
+  assert.equal(rows[rows.length - 1].max, null, "the last Cascade row should be open-ended (12+)");
+  const ab = D.aberrationTable.rows;
+  assert.equal(ab[0].min, 1); assert.equal(ab[ab.length - 1].max, 10);
+  ab.forEach((r, i) => { if (i) assert.equal(r.min, ab[i - 1].max + 1, "the Aberration table has a gap"); });
+  const cats = new Set(D.aberrationCategories.map(c => c.id));
+  for (const r of ab) for (const k of ["temporary", "permanent"]) {
+    assert.ok(cats.has(r[k]), `${k} ${r.min}-${r.max} → "${r[k]}" isn't a category`);
+    assert.ok(D.aberrations.some(a => a.category === r[k]), `nothing to pick in "${r[k]}"`);
+  }
+  // "treat a Good result as Neutral" (Magic.md) — the permanent column never says good.
+  assert.ok(!ab.some(r => r.permanent === "good"), "a permanent Aberration can come out Good");
+  const perm = rows.filter(r => r.aberration).map(r => r.aberration).sort();
+  same(perm, ["permanent", "temporary"]);
+  const seen = new Set();
+  for (const a of D.aberrations) {
+    assert.ok(!seen.has(a.id), `duplicate aberration id ${a.id}`); seen.add(a.id);
+    assert.ok(cats.has(a.category), `${a.id}: category ${a.category}`);
+    assert.ok(a.name && a.description, `${a.id} has no text`);
+  }
+});
+
+test("cascade and logCascade are total on every degenerate character and every bad input", () => {
+  const failures = [];
+  const inputs = [undefined, null, {}, { roll: "x" }, { roll: 0, degree: 3 }, { roll: 11, degree: 3 }, { roll: 5 },
+    { roll: 1, degree: 1 }, { roll: 3, degree: -2 }, { roll: 6, degree: 3, aberrationRoll: "x" },
+    { roll: 6, degree: 3, aberrationRoll: 99 }, { roll: 6, degree: 3, aberrationRoll: 2, pick: "no-such" },
+    { roll: 10, degree: 40 }, { roll: 6, degree: 3, aberrationRoll: 2, pick: "heterochromia" }];
+  for (const [label, ch] of Object.entries(degenerates())){
+    for (const input of inputs){
+      try { Engine.cascade(ch, input); Engine.logCascade(ch, input); }
+      catch (e) { failures.push(`${label} ${JSON.stringify(input)} -> ${e.message}`); }
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test("logCascade writes one line into Notes, keeps what was there, and refuses without the GM's pick", () => {
+  const ch = subject();
+  ch.notes = "Owes Mara a favor.\n";
+  const perm = { roll: 6, degree: 3, aberrationRoll: 2 };
+  assert.equal(Engine.logCascade(ch, perm).ok, false, "logged an Aberration before one was picked");
+  assert.equal(ch.notes, "Owes Mara a favor.\n", "a refused log still wrote");
+  const r = Engine.logCascade(ch, Object.assign({ pick: "dense-frame" }, perm), "2026-09-23T10:00:00Z");
+  assert.ok(r.ok, r.why);
+  assert.equal(ch.notes.split("\n")[0], "Owes Mara a favor.");
+  assert.match(ch.notes.split("\n")[1], /^Cascade, 2026-09-23: 6 \+ Rupture 3 = 9, Permanent Aberration\. Dense Frame \(permanent, Neutral\)/);
+  // A pick from outside the rolled category is ignored, not trusted.
+  const wrong = Engine.cascade(ch, Object.assign({}, perm, { pick: "aether-reservoir" }));
+  assert.equal(wrong.aberration.pick, null);
+  // No Aberration row: the effect goes in the note instead.
+  const plain = subject();
+  assert.ok(Engine.logCascade(plain, { roll: 2, degree: 3 }).ok);
+  assert.match(plain.notes, /Backlash\. Spirit damage equal to your Spell Power\.$/);
+});
+
+test("the Arcanist's TOL Spent tracker declares the Cascade panel and the Exhausted note in data", () => {
+  const panel = D.archetypes.find(a => a.id === "arcanist").coreMechanic.panels.find(p => p.id === "tol-spent");
+  assert.equal(panel.max, "TOL");
+  assert.equal(panel.overMax, "cascade");
+  assert.ok(panel.atMax, "no Exhausted note at max");
+});

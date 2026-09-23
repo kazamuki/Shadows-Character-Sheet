@@ -382,6 +382,23 @@ function bindSheet(){
       else { const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.value=Math.max(0,(e.value||0)+delta); }
     });
   });
+  // Cascade (Decision 106): the dice live in S.cascade; "Add to notes" is
+  // the one commit(), so the note undoes like any other action.
+  main.querySelectorAll("[data-cas]").forEach(el=>el.onchange=()=>{
+    const st=S.cascade; if (!st) return;
+    st[el.dataset.cas]=el.value;
+    if (el.dataset.cas==="roll" || el.dataset.cas==="degree"){ st.aberrationRoll=""; st.pick=""; }
+    if (el.dataset.cas==="aberrationRoll") st.pick="";
+    renderMain();
+  });
+  main.querySelectorAll("[data-casclear]").forEach(b=>b.onclick=()=>{ S.cascade=null; renderMain(); });
+  main.querySelectorAll("[data-caslog]").forEach(b=>b.onclick=()=>{
+    const st=S.cascade; if (!st) return;
+    const input=cascadeInput(st), c=Engine.cascade(ch, input), ab=c.aberration;
+    if (!c.ok || (ab && !ab.pick)){ alert(c.ok ? "Pick the Aberration the GM chose." : c.why); return; }
+    S.cascade=null;
+    commit("notes", `Cascade: ${c.result.name}${ab?` (${ab.pick.name})`:""}`, ()=>{ Engine.logCascade(ch, input); });
+  });
   main.querySelectorAll("[data-trkmax]").forEach(inp=>inp.onchange=()=>{
     const pid=inp.dataset.trkmax, mx=inp.value===""?null:Math.max(0,Number(inp.value));
     commit("tracker", `${pid.toUpperCase()} max → ${mx==null?"—":mx}`, ()=>{
