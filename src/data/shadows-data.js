@@ -1801,8 +1801,10 @@ window.SHADOWS_DATA = {
 
      PANELS are how archetypes stay generic: `coreMechanic.panels` DECLARES the
      extra sheet UI an archetype needs from a small vocabulary -- "rankedList"
-     (e.g. Disciplines, cappedBy a power-rank field), "table" (e.g. Grimoire,
-     free-entry columns), "tracker" (e.g. Tolerance Load, max = a derived id), "text".
+     (e.g. Disciplines, cappedBy a power-rank field), "table" (free-entry
+     columns, e.g. Augments), "grimoire" (book spells from its `catalog` plus
+     your own in its columns, Decision 108), "tracker" (e.g. Tolerance Load,
+     max = a derived id), "text".
      The app renders whatever is declared. To give a new archetype custom sheet
      panels you describe them here as data; no app change (this is how the Biomech
      rewrite will add NCI tiers / augment slots). Effects that can't be modeled
