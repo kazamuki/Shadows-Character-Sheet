@@ -247,7 +247,7 @@ function bindSheet(){
     ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
   main.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.dmg);
-    commit("damage", `Damage ${d>0?"+":""}${d}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
+    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
   });
   const ds=main.querySelector("[data-dmgset]");
   if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };

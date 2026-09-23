@@ -744,15 +744,16 @@ function renderShTrackers(){
   const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
-  // Damage
+  // Damage. The headline is HP left, so the stepper says Heal and Hurt
+  // rather than signs on the damage total it edits (W11).
   h += `<div class="trk"><h4>Damage</h4>
     <span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
-    <button class="btn sm" data-dmg="-5">−5</button>
-    <button class="btn sm" data-dmg="-1">−1</button>
-    <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken">
-    <button class="btn sm" data-dmg="1">+1</button>
-    <button class="btn sm" data-dmg="5">+5</button>
+    <button class="btn sm" data-dmg="-5" ${ch.trackers.damage?"":"disabled"}>Heal 5</button>
+    <button class="btn sm" data-dmg="-1" ${ch.trackers.damage?"":"disabled"}>Heal 1</button>
+    <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken" title="Total damage taken">
+    <button class="btn sm" data-dmg="1">Hurt 1</button>
+    <button class="btn sm" data-dmg="5">Hurt 5</button>
     <button class="btn sm danger" data-dmgheal="1">Heal all</button>
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
       hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
