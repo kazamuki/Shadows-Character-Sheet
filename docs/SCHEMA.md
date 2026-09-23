@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.7 (game data 0.7) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-20 (Magic — archetype-independent half, data batch)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.8 (game data 0.11) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-23 (Cascade tables and the wishlist pass, Decisions 106–107)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -1762,7 +1762,8 @@ No cascade logic to maintain — it falls out of the architecture.
     the sheet can know. **UI:** Conditions chips on Main (under the vitals
     strip), full cards with effect, recovery text and a note field on
     Trackers, one add row with a body-part picker that appears only for a
-    Condition that needs one, a Helpless banner, Death Mark pips, and a
+    Condition that needs one → **Superseded in part by Decision 107** (the
+    add row became a chip palette; Main's chips open their details), a Helpless banner, Death Mark pips, and a
     "Cond" pill in the vitals bar. **Print:** a Conditions tick list under
     Stats on the front page, with body-part Conditions and Dying's Death
     Marks on full-width rows. That column had about 100px spare below Stats.
@@ -2229,6 +2230,42 @@ No cascade logic to maintain — it falls out of the architecture.
     Arcanist's sheet (Decision 68). Ships in app **0.16.0**. (Ken + Claude,
     2026-09-23)
 
+107. **(Sheet feel — wishlist pass, app)** **Four wishlist items ship as one
+    UI decision: W7, W11, W12 and W14.** Ken picked them on 2026-09-23. None
+    touches rules, data or the character file.
+    - **W7: text on a filled control is `--on-accent`.** `.btn.primary` set
+      a violet fill and no color, so the light theme's near-black `--text`
+      landed on violet at 2.2:1. `--on-accent` (#FFFFFF, the same in both
+      themes) is the text on every violet or frame fill: primary buttons and
+      their hover, the active form toggle, stepper hover, and `::selection`.
+      `build.test.mjs` resolves both themes' tokens and checks every rule
+      that paints `background: var(--token)` against its own color, its
+      un-hovered rule's, or the `--text` it inherits, at WCAG AA (4.5:1).
+      Shapes that never hold text are exempt by name. It fails the pre-fix
+      CSS on all six defects.
+    - **W11: the damage stepper says Heal and Hurt.** The headline is HP
+      left, and the stepper edits damage taken (constraint 7). So `+5` made
+      the big number go down. The buttons are Heal 5 / Heal 1 / Hurt 1 /
+      Hurt 5, Heal is disabled at no damage, and the audit labels match.
+    - **W12: every `commit()` offers its own undo.** A toast names the
+      action with an Undo button for six seconds, through the one LIFO undo
+      (Decision 49; the Activity Log stays under Session Log, Decision 50).
+      It undoes only while that action's audit entry is still the newest
+      one, **by identity**, since `recordAction` reuses a seq once an undo
+      pops it. A seq check let a leftover toast take back a later action. The
+      smoke test caught that before merge, and it's mutation-tested. The
+      toast lives outside `#main`, never takes focus, is hidden in print, and
+      drops its animation under `prefers-reduced-motion`.
+    - **W14: adding a Condition is a chip palette.** **Replaces Decision 96
+      in part** (its "one add row with a body-part picker"). Both tabs show a
+      collapsible palette of every catalog Condition with its `short` text.
+      One click adds, and W12's toast is what makes one click safe. A
+      Condition already held is greyed out. A body-part one opens a "where?"
+      row instead, and the engine still refuses a duplicate part out loud.
+      Main's active chips open their effect and recovery in place, where
+      before they only had a hover tooltip.
+    App **0.16.0**, shared with Decision 106. (Ken + Claude, 2026-09-23)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2502,9 +2539,11 @@ sentence.
   Decision 99), then Loadout pickers and recovery actions, including the Turn
   Reset helper (Session 4 — **done**, Decision 100), then the cleanup session
   (**done**, Decisions 103–105: Deighton's TOL ruling, Natural Armor as one
-  derived value with F25, the Nanomed Kit). Weapon mods and ammo went to
-  `WISHLIST.md`. The plan holds the sequencing rationale and the open
-  questions (`CQ`n).
+  derived value with F25, the Nanomed Kit), and the Magic-tables side
+  session (**done**, Decision 106: the Cascade and Aberration tables, and a
+  TOL Spent tracker for the Arcanist). **The plan is closed.** Weapon mods and
+  ammo went to `WISHLIST.md`. The plan holds the sequencing rationale and the
+  open questions (`CQ`n).
 
 **Session handoff protocol:** every phase ends with current files +
 this document updated. Ken adds the latest versions to project knowledge.

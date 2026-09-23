@@ -1,13 +1,107 @@
 # Changelog
 
-Phase-level history lives in `docs/SCHEMA.md` §6 (roadmap) and §4 (numbered decisions).
-This file maps phases to release tags so a download can be traced back to a state of the design.
+What a player would notice, one section per release tag, newest first. CI attaches the
+single-file build to each `v*` release, so a download traces back to its section here.
+The *why* behind each change is in `docs/SCHEMA.md` §4 (numbered decisions), and the
+batch-by-batch board is `docs/log/shipped.md`.
+
+**Keeping it current:** a change that bumps `APP_VERSION` adds its lines under
+`[Unreleased] — app X.Y.Z` in the same commit, and tagging renames that heading to the
+tag. `tests/docs.test.mjs` fails if no heading here names the current `APP_VERSION`.
+That's what stopped this file at 0.7.0 for eight releases (W18).
 
 Four versions move independently — app, game data, character schema, ruleset. The rules
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.7.0
+## [Unreleased] — app 0.16.0
+
+Character schema **0.8** · game data **0.11** · ruleset CRB v4 (in progress).
+
+- **Cascades.** An Arcanist now tracks TOL spent. At TOL it says you're Exhausted. Past
+  TOL, a Cascade panel takes your d10 and the Rupture's degree and reads the Cascade
+  Table. If you land on an Aberration, it takes the second die too and lists that
+  category's Aberrations for your GM to pick from. **Add to notes** writes the result
+  into Notes.
+- **Undo right where you clicked.** Every change on the sheet shows a short toast
+  naming what happened, with an Undo that takes back that action and nothing newer.
+- **Conditions are one click.** Adding a Condition is a palette of chips. A Condition
+  you already have is greyed out, and a body-part one asks where. On Main, clicking an
+  active Condition's chip shows its effect and recovery.
+- The damage stepper says **Heal 5 / Heal 1 / Hurt 1 / Hurt 5**. It used to show `+5`,
+  which made the HP headline go *down*.
+- Light mode: the violet buttons (Take a hit, Continue, Open sheet, Buy…) had
+  near-black text on violet, which was hard to read. It's white now, and a build check
+  covers every filled control in both themes.
+
+## v0.15.0 — 2026-09-23
+
+Character schema **0.8** · game data **0.10**.
+
+- **TOL is 1 + INT + BOD + COOL** (Deighton's ruling, was INT/COOL/EMP). Every
+  character's TOL can move, and the Arcanist's most of all.
+- **Natural Armor** (Thick Skin, Shake it Off, Iron Shirt, a Trueborn's waning moon) is
+  one number. Take a hit applies it, and the print sheet's Nat column fills.
+  Conditional sources ask whether they're on.
+- **Nanomed Kit** on Trackers: clears Agonized, Bleeding, Paralyzed and Poisoned,
+  stabilizes the Dying, and proposes the HP it regenerates by dose.
+
+## v0.14.1 — 2026-09-22
+
+- The built file (the demo site, and the file players get) rendered blank on screen from
+  v0.13.0. It works again. Opening `index.html` from the folder was never affected.
+
+## v0.14.0 — 2026-09-22
+
+Game data **0.9**.
+
+- **Loadout picks from the catalog.** Add or Buy (paid from Çredits) any weapon or armor
+  piece. Weapon lines show the attack total and resolve `BOD+X` to a number. Wear one
+  body piece, and add upgrades by slot and quality.
+- **Recovery on Trackers:** Rest (BOD per day), Focused Healing (the only way back for
+  Massive-lost Health Levels and Injured), Field Repair, the after-fight wear roll, and
+  **Turn Reset**, which ticks Bleeding and lists each Condition's recovery check.
+- The print sheet shows your armor and its Integrity.
+
+## v0.13.0 — 2026-09-22
+
+Character schema **0.8** · game data **0.8**. Also carries 0.11.0 and 0.12.0, which were
+never tagged.
+
+- **Take a hit.** Enter the damage, type and your PROT roll. The worn armor answers
+  (PROT, RES, AP, Compromised), and the sheet asks for the Shock Check or the check at
+  zero when one is due. It adds what follows (Unconscious, Prone, Dying) and undoes as
+  one action. Massive damage strips Integrity and removes Health Levels outright.
+- **Conditions** (054's table plus Dying): add them on Main or Trackers. Agonized raises
+  Pain, the flat penalties reach every Skill Check total, the helpless ones show a
+  banner, and Dying counts Death Marks.
+- Design-team rulings: a new skill after creation costs 25 IP, stats past 10 follow the
+  designers' curve, and Condition penalties stack to −8.
+- **The print sheet is redesigned** (0.11.0): a case-file front page, Health Levels in
+  Pain Level bands, and Skills in two panels. Printing a blank sheet no longer comes out
+  empty, and Notes no longer clip.
+
+## v0.10.1 — 2026-09-21
+
+Character schema **0.7** · game data **0.7**. Also carries 0.10.0.
+
+- **Light theme** (0.10.0): a toggle in the header, remembered per browser.
+- **The catalog arrives in the data**: 54 weapons, 9 ammo types, 11 arrowheads, 37 armor
+  pieces. **Magic's shared half** arrives too: 96 Known spells across five Domains, and
+  the Spellcraft rules.
+- The Arcanist's Rupture works as the CRB says: it spends TOL by its degree. Exhausted
+  is what you are at 0 TOL, not a second pool. The old Exhaustion tracker is gone.
+
+## v0.9.0 — 2026-09-07
+
+Character schema **0.5** · game data **0.5**. Carries 0.7.0 (below) and 0.8.0.
+
+- **Print your sheet**, filled or blank, from the header menu. A standalone blank sheet
+  ships next to the app, and the demo site went live.
+- **`grants`** (0.8.0): Educated, Hard to Kill, Lucky/Unlucky and Long-Lived now change
+  the numbers they name instead of sitting as text.
+
+### app 0.7.0
 
 Character schema **0.5** · game data **0.4** · ruleset CRB v4 (in progress).
 

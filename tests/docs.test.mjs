@@ -156,6 +156,14 @@ test("the game-data and character-schema versions agree with the docs", () => {
   assert.equal(r[1], app, "README.md's app version is stale");
   assert.equal(r[2], m[2], "README.md's character schema version is stale");
   assert.equal(r[3], m[1], "README.md's game data version is stale");
+
+  // CHANGELOG.md sat at "[Unreleased] — app 0.7.0" through eight releases
+  // because nothing read it (W18). The current version needs a heading: the
+  // unreleased one while it's in flight, the tag's once it ships.
+  const log = read("CHANGELOG.md");
+  const esc = app.replace(/\./g, "\\.");
+  assert.match(log, new RegExp(`^## (\\[Unreleased\\] — app ${esc}|v${esc})\\b`, "m"),
+    `CHANGELOG.md has no section for app ${app} — add its lines under "## [Unreleased] — app ${app}"`);
 });
 
 test("every document CLAUDE.md points at exists", () => {

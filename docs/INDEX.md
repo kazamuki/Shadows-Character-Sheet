@@ -155,7 +155,7 @@ What a number *is*. Change one of these and characters change.
 - **104** *(Natural Armor — combat plan cleanup)* — One derived value from `grants` on advantages, Major Milestones and specializations; conditional sources (Iron Shirt, a waning moon) shown, never summed, asked for on a hit. How it answers a hit is the F25 stub. Print's Nat column fills. `migrate()` drops junk held entries.
 - **105** *(Nanomed Kit — CQ12)* — 054's list is the master: clears Agonized, Bleeding, Paralyzed, Poisoned and stabilizes the Dying; proposes floor(BOD / dose) HP; a third kind in `heal()`.
 - **103** *(Deighton's TOL ruling)* — TOL = 1 + INT/BOD/COOL mods (floor 1), was INT/COOL/EMP; WILL and SAN unchanged. Data only; the CRB's rewritten example is pinned in `rules.test.mjs`.
-- **96** *(Conditions — the numbers)* — Pain = HL band + Condition Pain, clamped 0–3; a flat Condition penalty lands on every Skill Check; attack/defense and conditional penalties are shown, never summed.
+- **96** *(Conditions — the numbers)* — Pain = HL band + Condition Pain, clamped 0–3; a flat Condition penalty lands on every Skill Check; attack/defense and conditional penalties are shown, never summed. → **superseded in part by 107**
 
 ### Content & the CRB
 
@@ -238,6 +238,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **90** *(Light theme)* — A light theme toggle, ported as a mechanism rather than a token set.
 - **94** *(Print sheet — visual redesign)* — The front page moves to a case-file layout and starts drawing from Scott's real Affinity artwork; Health Levels groups into Pain Level bands; Skills becomes two panels with Primary/Synergy icon badges.
 - **106** *(Cascade and Aberrations — Magic-tables side session)* — Magic.md's two tables and the Appendix's 39 Aberrations are data; `Engine.cascade()` reads the player's dice. The Arcanist gets a TOL Spent tracker (it had none after 93), whose Cascade panel writes the result into Notes. Schema unchanged.
+- **107** *(Sheet feel — wishlist pass)* — W7 `--on-accent` text on filled controls with a both-themes contrast guard; W11 Heal/Hurt stepper; W12 an undo toast on every `commit()`, matched to its audit entry by identity; W14 a Condition chip palette, and Main's chips open their details.
 
 ### Audit trail, undo & admin
 
