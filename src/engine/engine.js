@@ -11,7 +11,7 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.8", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.9", gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -34,6 +34,8 @@ const Engine = (() => {
                  conditions:[],                // { id, location?, marks?, note? }
                  massiveLevels:0,              // HL removed by Massive damage (read from Session 3)
                  witheringDamage:0,            // the part of `damage` that can't regenerate
+                 // Schema 0.9 (magic plan M7): Aberrations a Cascade left.
+                 aberrations:[],               // { id, permanence: "temporary"|"permanent", note? }
                  credits:{current:0, ledger:[]},
                  adjustments:[],               // Phase 3: manual adjustments ledger
                  panel:{} },                   // Phase 3: generic archetype tracker panels
@@ -1075,6 +1077,14 @@ const Engine = (() => {
       if (cur >= D().statRules.max) return {ok:false, why:`Stat cap ${D().statRules.max}.`};
       return {ok:true, cost: cur*10, from:cur, to:cur+1};
     }
+    // Decision 108: Mastering a Known book spell, 30 IP × its printed TH.
+    if (targetType==="spell"){
+      const line = grimoire(ch).lines.find(l=>l.id===targetId);
+      if (!line) return {ok:false, why:"That spell isn't in the Grimoire."};
+      if (line.mastered) return {ok:false, why:`${line.name} is already Mastered.`};
+      if (line.masteryCost==null) return {ok:false, why:`${line.name} has no Threshold to master.`};
+      return {ok:true, cost: line.masteryCost, from:"known", to:"mastered", index: line.index};
+    }
     const line = skillLine(ch, targetId);
     const cur = line.rank;
     if (cur >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
@@ -1089,6 +1099,7 @@ const Engine = (() => {
     if (!c.ok) return c;
     if (ipState(ch).available < c.cost) return {ok:false, why:`Not enough IP (need ${c.cost}).`};
     if (targetType==="stat") ch.stats[targetId].ipe += 1;
+    else if (targetType==="spell") grimoireRows(ch)[c.index].stage = "mastered";
     else { if (!ch.skills[targetId]) ch.skills[targetId]={rank:0, ipe:0}; ch.skills[targetId].ipe += 1; }
     ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:c.cost,
       targetType, targetId, from:c.from, to:c.to, note:note||"" });
@@ -1288,6 +1299,93 @@ const Engine = (() => {
     return { ok:true, line };
   }
 
+  // ── Grimoire (Decision 108) ──
+  // A row is a book spell ({ spellId, stage, notes }, everything else read
+  // from `spells` every time, constraint 7) or the player's own (the panel's
+  // typed columns, custom:true). The panel names its catalog in the data.
+  const spellById = id => (D().spells||[]).find(s=>s && s.id===id) || null;
+  const spellKey = s => String(s==null ? "" : s).toLowerCase().replace(/[^a-z0-9]/g, "");
+  function grimoirePanelIds(){
+    const ids = new Set();
+    for (const a of D().archetypes||[])
+      for (const p of ((a && a.coreMechanic && a.coreMechanic.panels) || [])) if (p && p.type==="grimoire") ids.add(p.id);
+    return [...ids];
+  }
+  const grimoirePanel = ch => archPanels(ch).find(p=>p && p.type==="grimoire") || null;
+  // Writers only: it creates the row list if it's missing. grimoire() reads without it.
+  function grimoireRows(ch){
+    const p = grimoirePanel(ch);
+    if (!p) return null;
+    const pd = ch.panelData && typeof ch.panelData==="object" ? ch.panelData : (ch.panelData = {});
+    if (!Array.isArray(pd[p.id])) pd[p.id] = [];
+    return pd[p.id];
+  }
+  function spellPower(ch){
+    const R = (D().spellcraftRules||{}).spellPower;
+    if (!R) return null;
+    const d = disciplineRanks(ch).find(x=>x.id===R.discipline);
+    const stat = derived(ch)[R.stat];
+    if (!d || typeof stat!=="number") return null;
+    return { value: d.rank + stat, rank: d.rank, discipline: d.name, stat: R.stat, statValue: stat, text: R.text||"" };
+  }
+  function spellMasteryCost(s){
+    const M = (D().spellcraftRules||{}).mastery || {};
+    return s && typeof s.th==="number" && s.th>=1 && M.ipPerTH ? M.ipPerTH * s.th : null;
+  }
+  function grimoire(ch){
+    const p = grimoirePanel(ch);
+    if (!p) return { panel:null, lines:[], spellPower:null };
+    const pd = ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
+    const rows = Array.isArray(pd[p.id]) ? pd[p.id] : [], M = (D().spellcraftRules||{}).mastery || {};
+    const held = new Set(rows.filter(r=>r && typeof r.spellId==="string").map(r=>r.spellId));
+    const nameCol = (p.columns||[])[0];
+    const tiers = D().spellTiers||[], domains = D().domains||[];
+    const lines = rows.map((r, index)=>{
+      if (!r || typeof r!=="object") return { index, custom:true, row:{} };
+      if (typeof r.spellId!=="string"){
+        // "Link to the book": a typed name that is a book spell not already held.
+        const k = spellKey(nameCol ? r[nameCol] : "");
+        const m = k ? (D().spells||[]).find(s=>s && spellKey(s.name)===k && !held.has(s.id)) : null;
+        return { index, custom:true, row:r, match: m ? { id:m.id, name:m.name } : null };
+      }
+      const s = spellById(r.spellId), notes = typeof r.notes==="string" ? r.notes : "";
+      if (!s) return { index, missing:true, spellId:r.spellId, notes };
+      const mastered = r.stage==="mastered";
+      const th = typeof s.th!=="number" ? null : mastered ? Math.max(0, s.th - (M.thReduction||0)) : s.th;
+      return { index, id:s.id, name:s.name, notes, mastered, th, printedTH:s.th, noRoll: th===0,
+               tier: (tiers.find(t=>t.id===s.tier)||{name:s.tier}).name, tierId:s.tier,
+               domain: (domains.find(d=>d.id===s.domain)||{name:s.domain}).name, domainId:s.domain,
+               glyph:s.glyph, tn:s.tn, range:s.range, spellType:s.spellType, damageType:s.damageType,
+               target:s.target, effect:s.effect, defending:s.defending, overflow:s.overflow||null,
+               tags:s.tags||[], flavorLine:s.flavorLine||"", spellNotes:s.notes||"",
+               masteryCost: mastered ? null : spellMasteryCost(s) };
+    });
+    return { panel:p, lines, held:[...held], spellPower: spellPower(ch), masteryText: M.text||"" };
+  }
+  function addSpell(ch, spellId){
+    const rows = grimoireRows(ch), s = spellById(spellId);
+    if (!rows) return { ok:false, why:"This archetype keeps no Grimoire." };
+    if (!s) return { ok:false, why:"That spell isn't in the book." };
+    if (rows.some(r=>r && r.spellId===s.id)) return { ok:false, why:`${s.name} is already in the Grimoire.` };
+    rows.push({ spellId:s.id, stage:"known", notes:"" });
+    return { ok:true, name:s.name };
+  }
+  // Swap a typed row for the book spell its name matches, keeping its notes.
+  function linkSpell(ch, index){
+    const g = grimoire(ch), line = g.lines[index];
+    if (!line || !line.custom || !line.match) return { ok:false, why:"That row doesn't match a book spell." };
+    const notesCol = (g.panel.columns||[]).find(c=>/^notes$/i.test(c));
+    const rows = grimoireRows(ch);
+    rows[index] = { spellId: line.match.id, stage:"known", notes: notesCol ? String(line.row[notesCol]||"") : "" };
+    return { ok:true, name: line.match.name };
+  }
+  function removeGrimoireRow(ch, index){
+    const rows = grimoireRows(ch);
+    if (!rows || !(index>=0 && index<rows.length)) return { ok:false, why:"No such row." };
+    rows.splice(index, 1);
+    return { ok:true };
+  }
+
   // ── Archetype sheet panels (declared in data; rendered generically) ──
   const archPanels = ch => {
     const a = archetype(ch);
@@ -1481,6 +1579,24 @@ const Engine = (() => {
     });
     if (typeof c.notes!=="string") c.notes="";
     if (!Array.isArray(c.audit)) c.audit=[];      // Phase 3.3
+    // Schema 0.9 (Decision 108): a Grimoire row is a book spell ({ spellId,
+    // stage, notes }) or the player's own (the typed columns, custom:true).
+    // A pre-0.9 row is typed text. Tag it custom and never guess which book
+    // spell a typed name meant; "Link to the book" is the player's call, the
+    // same rule the 0.6 step uses for weapons. Junk rows are dropped.
+    for (const id of grimoirePanelIds()){
+      const rows = c.panelData[id];
+      if (rows===undefined) continue;
+      c.panelData[id] = (Array.isArray(rows) ? rows : []).filter(r=>r && typeof r==="object").map(r=>{
+        if (typeof r.spellId!=="string"){ r.custom = true; return r; }
+        const b = Object.assign({ notes:"" }, r, { stage: r.stage==="mastered" ? "mastered" : "known" });
+        delete b.custom;
+        return b;
+      });
+    }
+    t.aberrations = (Array.isArray(t.aberrations) ? t.aberrations : [])
+      .filter(e=>e && typeof e==="object" && typeof e.id==="string")
+      .map(e=>Object.assign({}, e, { permanence: e.permanence==="permanent" ? "permanent" : "temporary" }));
     // Schema 0.5 (A3): ONE specialization array replaces the three fields that
     // used to hold the same idea — identity.specialization (single-select),
     // archetypeChoices.subtype (its duplicate) and archetypeChoices.aberrations
@@ -1500,7 +1616,7 @@ const Engine = (() => {
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.8";
+    c.meta.schemaVersion = "0.9";
     return c;
   }
 
@@ -1910,6 +2026,8 @@ const Engine = (() => {
            naturalArmor, nanomedKit,
            // Cascade (Decision 106)
            cascade, logCascade, aberrationById,
+           // Grimoire (Decision 108)
+           spellById, grimoire, spellPower, addSpell, linkSpell, removeGrimoireRow,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,

@@ -14,6 +14,22 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.17.0
+
+Character schema **0.9** · game data **0.12** · ruleset CRB v4 (in progress).
+
+- **The Grimoire reads the book.** Add spells from the Book of Known Spells with a picker
+  that shows each spell's TN, TH, range and effect before you add it. Search by name,
+  Glyph or effect, and filter by tier or Domain. A book spell shows its full entry:
+  flavor, target, defending, Overflow and tags.
+- **Spell Power** (Evocation + WILL) sits at the top of the Grimoire.
+- **Master a spell** for 30 IP × its TH. It goes in the IP journal, and the spell's TH
+  drops by 1. A Mastered TH 1 spell needs no roll.
+- **Spells you typed in yourself** are kept exactly as you wrote them. If one's name
+  matches a book spell, **Link to the book** swaps in the book's numbers and keeps your
+  notes. Improvised and house spells stay free-typed.
+- The Arcanist's text no longer points you at a "Magic section" that isn't there.
+
 ## v0.16.0 — 2026-09-23
 
 Character schema **0.8** · game data **0.11** · ruleset CRB v4 (in progress).

@@ -135,7 +135,7 @@ button.card:hover{border-color:var(--violet-hi)}
 label.field{display:block; margin-bottom:14px}
 label.field span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
   text-transform:uppercase; color:var(--dim); margin-bottom:5px}
-input[type=text],input[type=number],input[type=date],textarea,select{
+input[type=text],input[type=search],input[type=number],input[type=date],textarea,select{
   width:100%; background:var(--ground); border:1px solid var(--frame); border-radius:4px;
   padding:9px 11px; font-size:.92rem}
 input[type=number]{font-family:var(--mono)}
@@ -453,6 +453,26 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .cond-card{border-color:var(--magenta)}
 .cond-card .desc b{color:var(--text); font-weight:600}
 .cond-card .cond-note{width:100%; margin-top:8px}
+/* Grimoire (Decision 108): book spells as expandable lines, the picker's
+   results as a reference table, your own spells as the edit table. */
+.grim-sp{margin:4px 0 12px; font-size:.9rem}
+.grim-sp b{font-family:var(--mono); color:var(--violet-hi); font-size:1.05rem}
+.grim-sp .sub{color:var(--dim); font-size:.78rem; margin-left:6px}
+.spell{border:1px solid var(--frame); border-radius:4px; margin-bottom:6px; background:var(--panel)}
+.spell.mastered{border-color:var(--violet-hi)}
+.spell.missing{padding:8px 12px; color:var(--dim)}
+.spell > summary{cursor:pointer; list-style:none; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:8px 12px}
+.spell > summary .sub{color:var(--dim); font-size:.76rem}
+.spell > summary .num{font-family:var(--mono); font-size:.76rem; color:var(--cyan)}
+.spell > summary .eff{flex-basis:100%; font-size:.84rem}
+.spell-body{padding:0 12px 10px; font-size:.84rem}
+.spell-body p{margin:4px 0}
+.spell-body .flavor{font-style:italic; color:var(--dim)}
+.spell-body .overflow{margin:4px 0 6px 18px}
+.spell-results td .sub{color:var(--dim); font-size:.72rem}
+.spell-pick .hitrow input[type=search]{flex:1; min-width:180px; width:auto}
+.spell-pick .hitrow select{width:auto; min-width:150px}
+.subsect{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px}
 /* W14: the add palette. Catalog chips are outlined until picked; one you
    already have is greyed out. Active chips on Main open their details. */
 .cond-add{margin-bottom:14px}
