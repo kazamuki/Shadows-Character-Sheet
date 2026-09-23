@@ -1238,6 +1238,56 @@ const Engine = (() => {
     return {ok:true};
   }
 
+  // ── Cascade (Decision 106) ──
+  // Lookups on the player's own dice (Decision 11): `cascadeTable` for 1d10 +
+  // the Rupture's degree, then `aberrationTable` if that row calls for one.
+  // `pick` is the Aberration the GM chose from the rolled category. Every
+  // step it can't take yet comes back as `pending`, never a throw.
+  const rangeRow = (rows, n) => (rows||[]).find(r => r && n>=r.min && (r.max==null || n<=r.max)) || null;
+  const aberrationById = id => (D().aberrations||[]).find(a=>a.id===id) || null;
+  function cascade(ch, input){
+    input = input || {};
+    const T = D().cascadeTable || {}, rows = T.rows || [];
+    const r = checkRoll(T.die || "1d10", input.roll, "Cascade die");
+    if (!r.ok) return r;
+    const degree = Math.floor(Number(input.degree));
+    if (input.degree==null || input.degree==="" || !(degree>=1))
+      return { ok:false, why:"Enter the Rupture's degree: its Duds minus its Hits." };
+    const total = r.value + degree, row = rangeRow(rows, total);
+    if (!row) return { ok:false, total, why: rows.length
+      ? `The Cascade Table starts at ${rows[0].min}. Casting needs TOL above zero, so the Rupture that broke through was at least ${Math.max(1, rows[0].min-1)}.`
+      : "There's no Cascade Table to read." };
+    const out = { ok:true, roll:r.value, degree, total, result:{ id:row.id, name:row.name, effect:row.effect||"" }, aberration:null };
+    if (!row.aberration) return out;
+    const A = D().aberrationTable || {};
+    const ab = out.aberration = { permanence: row.aberration, pending: true, category: null, options: [], pick: null };
+    if (input.aberrationRoll==null || input.aberrationRoll==="") return out;
+    const ar = checkRoll(A.die || "1d10", input.aberrationRoll, "Aberration die");
+    if (!ar.ok) return Object.assign(out, { ok:false, why: ar.why });
+    const catId = (rangeRow(A.rows, ar.value)||{})[row.aberration];
+    const cat = (D().aberrationCategories||[]).find(c=>c.id===catId) || (catId ? { id:catId, name:catId } : null);
+    ab.roll = ar.value; ab.pending = false; ab.category = cat;
+    ab.options = (D().aberrations||[]).filter(a=>cat && a.category===cat.id);
+    const pick = input.pick ? aberrationById(input.pick) : null;
+    if (pick && ab.options.includes(pick)) ab.pick = pick;
+    return out;
+  }
+  // The sheet stores no Cascade (no schema field, Decision 106): the result
+  // goes into the player's own notes as one line, one undoable action.
+  function logCascade(ch, input, when){
+    const c = cascade(ch, input);
+    if (!c.ok) return c;
+    const ab = c.aberration;
+    if (ab && (ab.pending || !ab.pick)) return { ok:false, why: ab.pending ? "Roll on the Aberration table first." : "Pick the Aberration the GM chose." };
+    const date = String(when || new Date().toISOString()).slice(0,10);
+    let line = `Cascade, ${date}: ${c.roll} + Rupture ${c.degree} = ${c.total}, ${c.result.name}.`;
+    if (ab) line += ` ${ab.pick.name} (${ab.permanence === "permanent" ? "permanent" : "temporary"}, ${ab.category.name}): ${ab.pick.description}`;
+    else if (c.result.effect) line += ` ${c.result.effect}`;
+    const prior = typeof ch.notes === "string" ? ch.notes : "";
+    ch.notes = prior ? prior.replace(/\s*$/, "") + "\n" + line : line;
+    return { ok:true, line };
+  }
+
   // ── Archetype sheet panels (declared in data; rendered generically) ──
   const archPanels = ch => {
     const a = archetype(ch);
@@ -1858,6 +1908,8 @@ const Engine = (() => {
            naturalHealing, heal, resolveReset, applyReset,
            // Combat cleanup (Decisions 104–105)
            naturalArmor, nanomedKit,
+           // Cascade (Decision 106)
+           cascade, logCascade, aberrationById,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,

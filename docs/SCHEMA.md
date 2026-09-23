@@ -441,6 +441,27 @@ window.SHADOWS_DATA = {
     // 96 entries: 18 Cantrip + 47 Standard + 17 Advanced + 14 Superior, across
     // the 5 domains. A handful (e.g. Counterspell) have th:null/overflow:null
     // and a `notes` field instead — no Threshold, no Overflow, by design.
+  ],
+
+  // ── Cascade and Aberrations (0.11, Decision 106) ─────────────────────
+  // Magic.md's two tables and Appendix_Aberrations.md's lists. Rows are
+  // ranges on a die the player rolls and enters; `Engine.cascade()` looks
+  // them up. `max: null` is open-ended. The Cascade Table starts at 3: a
+  // Cascade's Rupture is degree 2 or more, since casting needs TOL above 0.
+  cascadeTable: { die: "1d10", rollNote: "...",
+    rows: [ { min: 7, max: 8, id: "temporary-aberration", name: "Temporary Aberration",
+              aberration: "temporary", effect: "..." } ] },  // 5 rows, 3–4 … 12+
+  aberrationTable: { die: "1d10", note: "...",
+    rows: [ { min: 1, max: 3, temporary: "good", permanent: "neutral" } ] }, // 3 rows, 1–10
+  aberrationCategories: [ { id: "good", name: "Good" } ],   // good / neutral / bad
+  aberrationRules: { intro: "...", permanent: "..." },
+  // The Cascade's list, NOT the Arcanist's creation-time Unique Aberrations
+  // (those are `specialization.options`). `as` is display text naming the
+  // Advantage or Disadvantage an entry works like; it grants nothing.
+  aberrations: [
+    { id: "danger-sense", name: "Danger Sense", category: "good",
+      as: "Danger Sense Advantage, Rank 3", description: "..." }
+    // 39 entries: 15 Good, 15 Neutral, 9 Bad.
   ]
 };
 ```
@@ -459,6 +480,13 @@ Panel types will be finalized in Phase 2 when we know what the five archetypes
 actually demand. Where an effect can't be made machine-readable yet, it stays
 prose and the sheet displays it as reference text — the app should never block
 on un-modeled rules.
+
+A `tracker` counts up from 0 against its `max` (a number, `"TOL"`, or
+`"startingSFR"`; none means the player sets it). Three optional fields shape
+what it says (Decision 106): `note` is the line under it, `atMax` replaces
+that line once the count reaches the max, and `overMax: "cascade"` opens the
+Cascade panel once the count passes it. The Arcanist's `tol-spent` uses all
+three. The value lives in `trackers.panel[id]` like any other tracker.
 
 ---
 
@@ -2151,6 +2179,55 @@ No cascade logic to maintain — it falls out of the architecture.
     Rest and Focused Healing on Trackers, and is one undoable action.
     Pinned: the four clear, Injured stays, 7 / 3 / 2 HP at doses 1–3 for
     BOD 7. (Ken + Claude, 2026-09-23)
+
+106. **(Cascade and Aberrations — combat plan's Magic-tables side session,
+    data + engine + app)** **The Cascade Table, the Aberration Table and the
+    Appendix's Good/Neutral/Bad lists are game data, and the sheet looks
+    them up from the player's own dice.** `cascadeTable`, `aberrationTable`,
+    `aberrationCategories`, `aberrationRules` and `aberrations` (39: 15/15/9)
+    merge from `Magic.md` and `Appendix_Aberrations.md` as they stood
+    2026-09-22. `spellcraftRules.outcomes.cascade` no longer says "not yet
+    encoded". The Cascade's Aberrations are a different list from the
+    Arcanist's creation-time Unique Aberrations (`specialization.options`),
+    and the two stay apart.
+    - **The engine reads, never rolls** (Decision 11, combat plan P1).
+      `Engine.cascade(ch, { roll, degree, aberrationRoll, pick })` returns
+      the row for 1d10 + the Rupture's degree, then the category for the
+      Aberration die, the options in it, and the GM's pick if it's one of
+      them. Each step it can't take yet comes back `pending` or as a `why`,
+      never a throw (constraint 8). A pick from outside the rolled category
+      is ignored.
+    - **The table starts at 3 on purpose, and that isn't a gap.** You can't
+      cast at 0 TOL, so the Rupture that drives TOL below zero is at least
+      degree 2, and 1d10 + 2 can't come in under 3. A degree-1 entry gets a
+      `why` that says so. Nothing is flagged, since the CRB's own rules close
+      it.
+    - **The Arcanist gets a TOL Spent tracker.** This session found the
+      Arcanist had no way to track TOL at all. Decision 93 removed the old
+      `exhaustion` panel, which modeled the wrong rule, and nothing replaced
+      it. (The `tolerance-load` tracker is the Cyborg's.) `tol-spent` is a
+      generic tracker against `max: "TOL"`, stored in `trackers.panel` like
+      every other, so **character schema is unchanged (0.8)**. This fills the
+      gap 93 left rather than reversing it: 93 ruled out a second resource
+      beside TOL, and this counts TOL itself. Trackers gain three optional
+      data fields: `note`, `atMax` (shown at the max, "Exhausted") and
+      `overMax: "cascade"`. None of them is special-cased on an id.
+    - **Nothing about a Cascade is stored.** Once TOL Spent passes TOL, the
+      Cascade panel asks for the dice and shows the result, the Aberration
+      category and the list to pick from. **Add to notes** writes one line
+      into `notes` (`Engine.logCascade`) as one undoable action. Tracking
+      acquired Aberrations as structured data is a schema bump, and Ken
+      chose not to take it this session.
+    - **Pinned:** every band of the Cascade Table, the degree-1 `why`, both
+      columns of the Aberration Table, the 15/15/9 count and the seven `as`
+      references (`rules.test.mjs`). Also the tables' contiguity, totality on
+      degenerate characters and bad input, and `logCascade` keeping existing
+      notes and refusing without a pick (`engine.test.mjs`). Mutation-tested:
+      an off-by-one range, a Good permanent row, a gap in the table, an
+      unchecked pick and a notes overwrite each fail a test.
+    Game data **0.10 → 0.11**: a new tracker and new choices on the
+    Arcanist's sheet (Decision 68). Ships in app **0.16.0**. (Ken + Claude,
+    2026-09-23)
 
 ## 5. Open Flags
 

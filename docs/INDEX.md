@@ -237,6 +237,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **89** *(Print view)* — A printable sheet is a second rendering path, not a second data model.
 - **90** *(Light theme)* — A light theme toggle, ported as a mechanism rather than a token set.
 - **94** *(Print sheet — visual redesign)* — The front page moves to a case-file layout and starts drawing from Scott's real Affinity artwork; Health Levels groups into Pain Level bands; Skills becomes two panels with Primary/Synergy icon badges.
+- **106** *(Cascade and Aberrations — Magic-tables side session)* — Magic.md's two tables and the Appendix's 39 Aberrations are data; `Engine.cascade()` reads the player's dice. The Arcanist gets a TOL Spent tracker (it had none after 93), whose Cascade panel writes the result into Notes. Schema unchanged.
 
 ### Audit trail, undo & admin
 
