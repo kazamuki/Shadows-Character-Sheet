@@ -208,3 +208,48 @@ test("INDEX.md lists every decision and every open flag, exactly once", () => {
     "INDEX.md lists a flag that SCHEMA §5 no longer carries — closing a flag is now three edits");
 });
 
+
+test("a superseded decision says so in SCHEMA and in INDEX, the same way", () => {
+  // Decision 18's INDEX line said "+1 per point above 10" for weeks after
+  // Decision 98 replaced it: the ledger noted it inline, the index line looked
+  // current. A decision that a later one replaces carries a marker in the
+  // ledger -- `→ **Superseded [in part] by Decision N**` -- and the same claim
+  // in INDEX -- `→ **superseded [in part] by N**` -- struck through when whole.
+  // Decision 102.
+  const nums = t => (t.match(/\d+/g) || []).map(Number).sort((a, b) => a - b);
+  const sec = SCHEMA.slice(SCHEMA.indexOf("## 4. Locked Decisions"), SCHEMA.indexOf("## 5. Open Flags"));
+  const ledger = new Map();
+  for (const part of sec.split(/\n(?=\d{1,3}\. )/)) {
+    const n = part.match(/^(\d{1,3})\. /);
+    const m = n && part.match(/→ \*\*Superseded (in part )?by Decisions? ([\d, and]+?)\*\*/);
+    if (m) ledger.set(Number(n[1]), { part: !!m[1], by: nums(m[2]) });
+  }
+  assert.ok(ledger.size >= 7, `found only ${ledger.size} superseded decisions — did the marker's format change?`);
+
+  const topics = INDEX.slice(INDEX.indexOf("## 3. Decisions by topic"));
+  const index = new Map(), lines = new Map();
+  for (const line of topics.split("\n")) {
+    const n = line.match(/^- \*\*(\d{1,3})\*\*/);
+    const m = n && line.match(/→ \*\*superseded (in part )?by ([\d, and]+?)\*\*/);
+    if (m) { index.set(Number(n[1]), { part: !!m[1], by: nums(m[2]) }); lines.set(Number(n[1]), line); }
+  }
+
+  const all = new Set([...sec.matchAll(/^(\d{1,3})\. /gm)].map(m => Number(m[1])));
+  for (const [n, s] of ledger) {
+    for (const b of s.by) assert.ok(all.has(b) && b > n, `Decision ${n} is superseded by ${b}, which is not a later decision`);
+    assert.deepEqual(index.get(n), s, `Decision ${n}'s supersession in SCHEMA §4 and its INDEX line disagree`);
+    if (!s.part) assert.match(lines.get(n), /~~.+~~/, `Decision ${n} is wholly superseded — strike its INDEX line through`);
+  }
+  assert.deepEqual([...index.keys()].filter(n => !ledger.has(n)), [],
+    "INDEX marks a decision superseded that SCHEMA §4 does not");
+
+  // The load-bearing table points at decisions by number; a wholly superseded
+  // one does not belong there.
+  const load = INDEX.slice(INDEX.indexOf("**Load-bearing.**"), INDEX.indexOf("### Rules the app enforces"));
+  const cited = [...load.matchAll(/^\| (\d{1,3}) \|/gm)].map(m => Number(m[1]));
+  assert.ok(cited.length > 5, "the load-bearing table is missing or changed shape");
+  for (const n of cited) {
+    assert.ok(all.has(n), `the load-bearing table cites Decision ${n}, which SCHEMA §4 does not have`);
+    assert.ok(!(ledger.has(n) && !ledger.get(n).part), `the load-bearing table cites Decision ${n}, which is wholly superseded`);
+  }
+});

@@ -200,7 +200,21 @@ its decisions numbered.
   Shirt / the archetype grants of Natural Armor as one derived value on top of
   `armorState()` (it fills the print Defense card's Nat column) · revisit a
   Nanomed Kit button (after CQ12) · weapon mods and rounds-in-magazine, if
-  wanted, as one schema 0.9 bump.
+  wanted, as one schema 0.9 bump. **Also: Deighton's TOL ruling
+  (2026-09-22)** — TOL = 1 + INT + BOD + COOL bonuses (was INT/COOL/EMP);
+  WILL confirmed unchanged at 1 + INT + BOD + EMP. Data-only: swap EMP → BOD
+  in `derived.TOL.inputs`, no engine change, no schema change (TOL is never
+  stored). Game data bump (every character's TOL can move) and an app patch
+  bump. New decision, and per Decision 102 mark what it replaces in SCHEMA
+  and INDEX: **Decision 9 in part** (the TOL formula; WILL and SAN stand) and
+  **Decision 93 in part** (its note that INT/BOD/COOL was a misreading and
+  Scott had confirmed the old formula). Scott is looped in and updating the CRB.
+  **Pin a worked example** in `tests/rules.test.mjs` (nothing tests the
+  formula today). The Arcanist feels it most: EMP no longer feeds TOL, and
+  BOD — which Arcanist bonus points can't reach — now does. That's the
+  ruling working as given, and Scott has it; don't "fix" it in code. CRB lines to re-pull once Scott's edits land: `020` l.101, `040`
+  l.90–91 (the worked example), `041` l.90 ("all three feed TOL"), `Magic.md`
+  l.109.
 - [ ] **Side session — Magic tables** (independent of all of the above). Encode
   the Cascade Table and the Aberration Table from `Magic.md`, and the
   Good/Neutral/Bad lists from `Appendix_Aberrations.md`. `spellcraftRules.cascade`
