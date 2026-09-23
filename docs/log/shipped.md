@@ -35,4 +35,4 @@ by batch number (Ken, 2026-09-12).
 | — | 0.14.1 build fix | #30 | Print-media build fix; v0.13.0/v0.14.0 had rendered blank on the demo site |
 | — | CI onto Node 24 | #32 | Every action bumped; `deploy-demo` gains a manual trigger (dry run on a branch, re-publish on a tag) |
 | — | Wishlist + board archive (docs) | — | `WISHLIST.md` (`W` ids) · this file · Deighton's TOL ruling queued · superseded decisions marked, load-bearing table, the house rule · Decisions 101–102 |
-| — | Combat cleanup (TOL, Natural Armor, Nanomed) | — | TOL = INT/BOD/COOL; `naturalArmor()` in the hit resolver and print Nat; Nanomed Kit per 054; `migrate()` drops junk held entries · Decisions 103–105, F25 |
+| — | Combat cleanup (TOL, Natural Armor, Nanomed) | #34 | TOL = INT/BOD/COOL; `naturalArmor()` in the hit resolver and print Nat; Nanomed Kit per 054; `migrate()` drops junk held entries · Decisions 103–105, F25 |

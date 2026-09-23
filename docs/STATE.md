@@ -64,9 +64,10 @@ left that is still true now.
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
-dry run on a branch, a re-publish on a tag. **Live: app `0.14.1`,
-game data `0.9`** (tag `v0.14.1`, deployed 2026-09-22 and checked by loading
-the page: Home renders, the wizard opens). `0.15.0` isn't tagged yet. `v0.13.0` and `v0.14.0` rendered
+dry run on a branch, a re-publish on a tag. **Live: app `0.15.0`,
+game data `0.10`** (tag `v0.15.0`, deployed 2026-09-23 and checked by loading
+the page: the page reports both versions, TOL reads INT/BOD/COOL, Home
+renders, the wizard opens). `v0.13.0` and `v0.14.0` rendered
 blank (#30). **Check a deploy by loading the page**, not by curling it.
 
 **Two things a next session should know.**
@@ -126,10 +127,10 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**The combat plan's cleanup session is done** on
-`claude/session-4-cleanup-7d811a` (Decisions 103–105): app 0.15.0, game data
-0.10, both unshipped until it merges and a `v0.15.0` tag deploys. The next
-change a character can observe after that needs game data 0.11 (Decision 68).
+**`main` is caught up through PR #34** (the combat plan's cleanup session,
+Decisions 103–105), tagged `v0.15.0` and live on the demo site. Game data
+0.10 has shipped, so the next change a character can observe needs game data
+0.11 (Decision 68).
 `npm run verify` is green (190 passing, 0 todo).
 
 **Next, all unblocked:** the plan's Magic-tables side session (Cascade +
