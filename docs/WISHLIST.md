@@ -67,7 +67,7 @@ inside the Damage card, each box banded by the Pain Level it drives, so a
 player sees *why* they're at Pain 2 instead of reading it in a separate card.
 Folds into W1's layout.
 
-**W11 — The damage stepper runs backwards from what it displays.** *Claude · 🔎*
+~~**W11 — The damage stepper runs backwards from what it displays.**~~ *Claude · → Decision 107, app 0.16.0: Heal 5 / Heal 1 / Hurt 1 / Hurt 5*
 The card shows `25 / 25 HP` in big green, and `+5` turns it into `20 / 25`.
 The stepper edits *damage taken* (store inputs — Constraint 7, correct), but
 the number on screen is HP remaining, so "+" makes the number go down. Checked
@@ -75,7 +75,7 @@ in the running app, 2026-09-22. Either relabel the stepper (`Hurt 5` / `Heal 5`,
 or `−5 HP` / `+5 HP` with the sign matching the display) or show the damage
 number as the headline. Relabelling is the smaller change and keeps the model.
 
-**W12 — Undo where the action happened.** *Claude · 💡*
+~~**W12 — Undo where the action happened.**~~ *Claude · → Decision 107, app 0.16.0: `showUndoToast` in `shared.js`, which undoes only its own audit entry*
 Undo lives under Session Log (Decision 50). Mid-fight, a mis-click on `+5` or a
 wrong Apply means leaving the tab to fix it. A short toast after any tracker
 action — "Took 12 damage · Undo" — calling the same LIFO undo (Decision 49)
@@ -135,7 +135,7 @@ before code.
 
 ### Theme & polish
 
-**W7 — Primary buttons are unreadable in light mode.** *Ken · ⏭*
+~~**W7 — Primary buttons are unreadable in light mode.**~~ *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
 `Take a hit`, `Apply hit`, `Buy`, the recovery actions' apply button — and
 off the sheet, the wizard's `Continue` and Home's `Open sheet`/`Resume draft`.
 Every `.btn.primary`: dark text on violet. Cause, found 2026-09-22: `.btn.primary` in `shadows.css` sets only the
@@ -146,7 +146,7 @@ accent-background buttons (Heal all, Add, Custom weapon) in the same pass, and
 worth a small contrast guard in the smoke test so the next token change can't
 reintroduce it — mutation-test it against the current CSS.
 
-**W14 — Conditions as chips, not a dropdown.** *Claude · 💡*
+~~**W14 — Conditions as chips, not a dropdown.**~~ *Claude · → Decision 107, app 0.16.0: a chip palette on both tabs, and Main's chips open their details*
 Main and Trackers both add Conditions via `select` + `Add`. Active Conditions
 could render as chips with the penalty inline
 (`Stunned · −2`), click to open details or remove. Makes "what's wrong with me
@@ -162,7 +162,7 @@ not a system.
 
 ### Docs
 
-**W18 — `CHANGELOG.md` stopped at 0.7.0.** *Claude · ⏭*
+~~**W18 — `CHANGELOG.md` stopped at 0.7.0.**~~ *Claude · → caught up through v0.15.0 in `CHANGELOG.md`; `docs.test.mjs` now fails without a section for the current version*
 Found 2026-09-22 and noted only in that day's log entry, so it had nowhere to
 be picked up from until now. The file is still headed "[Unreleased] — app
 0.7.0", and its last tag section is `v0.4.0-phase-3.3`. Everything from 0.8.0
@@ -182,8 +182,9 @@ the same way again.
   focus-and-dismiss handling. Build the primitive once.
 - **W1 and W10 are one layout pass.** Doing W1 without W10 lays out a card
   that W10 rearranges again.
-- **W7 is the only one that's a plain defect.** It can go out as a patch on
-  its own without waiting for the rest.
+- **W12's toast is built** (app 0.16.0). W2/W3/W6's popovers and modal
+  still want one shared primitive for focus and dismissal. The toast isn't
+  that primitive, since it never takes focus.
 - None of these touch rules. If one starts to — e.g. W13 wants to show a
   computed number the engine doesn't have yet — that part stops and goes to
   Deighton.
