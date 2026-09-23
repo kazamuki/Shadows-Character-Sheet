@@ -31,10 +31,16 @@ function assertInlineSafe(path, text, tag) {
 export function buildHtml(root = ROOT) {
   const shell = readFileSync(join(root, "index.html"), "utf8");
 
-  const css = (_m, href) => {
+  // A <link>'s media gate has to survive inlining. print.css hides the whole
+  // app (#app{display:none}) for printing; without media="print" on its
+  // <style>, the built page hid itself on screen. That shipped in v0.13.0 and
+  // v0.14.0 as a blank demo site, and nothing caught it because jsdom has no
+  // layout.
+  const css = (tag, href) => {
     const text = readFileSync(join(root, href), "utf8");
     assertInlineSafe(href, text, "style");
-    return `<style>\n/* ${href} */\n${text.trimEnd()}\n</style>\n`;
+    const media = /\bmedia=["']([^"']+)["']/i.exec(tag);
+    return `<style${media ? ` media="${media[1]}"` : ""}>\n/* ${href} */\n${text.trimEnd()}\n</style>\n`;
   };
   const js = (_m, src) => {
     const text = readFileSync(join(root, src), "utf8");
