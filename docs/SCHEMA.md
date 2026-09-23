@@ -94,7 +94,7 @@ window.SHADOWS_DATA = {
   // formula type "sumOfModifiers": base + Σ modifier(stat) for listed stats
   derived: [
     { id: "TOL",  name: "Tolerance", type: "sumOfModifiers",
-      base: 1, floor: 1, inputs: ["INT", "COOL", "EMP"] },
+      base: 1, floor: 1, inputs: ["INT", "BOD", "COOL"] },   // Decision 103
     { id: "WILL", name: "Will", type: "sumOfModifiers",
       base: 1, floor: 1, inputs: ["BOD", "INT", "EMP"] },
     { id: "SAN",  name: "Sanity", type: "percent",
@@ -345,6 +345,14 @@ window.SHADOWS_DATA = {
     repeatable: true, description: "..." } ], // 6 entries; also resAgainst (Ablative, Warding).
   // An upgrade id in an armor's preInstalledFeatures takes no slot and is read
   // as already in the printed stats (Plasteel's Tri-Weave; Decision 100).
+  // (0.10, Decision 104) Natural Armor: how it answers a hit is the F25 stub.
+  // Its sources are `grants` of type "naturalArmor" -- on an advantage
+  // ({ perRank }), a Major Milestone ({ amount }, per time taken) or a
+  // specialization option ({ stat, plus } read as the stat's modifier + plus).
+  // A grant with `while` is conditional: shown, never summed; the hit panel
+  // asks. `resAgainst` on a grant adds classes it answers (Resilient Spirit).
+  naturalArmorRules: { flagged: true, flagNote: "F25 ...", playerNote: "...",
+    resAgainst: ["kinetic"], ignoresAp: true, text: "..." },
   armor: [
     { id: "kevlar-vest", name: "Kevlar Vest", slot: "body", coverage: "light",
       prot: "1d6", res: 2, integrity: 20, quality: "Mid", material: "Light",
@@ -386,7 +394,11 @@ window.SHADOWS_DATA = {
   // resetText (and carries F24).
   recoveryRules: {
     naturalHealing: { stat: "BOD", speedHealMultiplier: 2, text: "...", speedHealText: "..." },
-    focusedHealing: { clears: ["injured"], text: "...", massiveText: "..." }
+    focusedHealing: { clears: ["injured"], text: "...", massiveText: "..." },
+    // (0.10, Decision 105) 054's list is the master (CQ12). Dose n inside a
+    // day regenerates 1 HP every n rounds for `roundsStat` rounds.
+    nanomed: { clears: ["agonized", "bleeding", "paralyzed", "poisoned"], endsDying: true,
+               roundsStat: "BOD", text: "...", doseText: "..." }
   },
 
   // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
@@ -634,6 +646,7 @@ No cascade logic to maintain — it falls out of the architecture.
    (modifier). Untrained: 1d10 + Primary Stat only.
 9. **Derived attributes:** TOL = 1 + INT/COOL/EMP mods (floor 1); WILL = 1 +
    BOD/INT/EMP mods (floor 1); SAN = EMP×10 (floor 10%, cap 95%).
+    → **Superseded in part by Decision 103** — TOL's inputs are INT/BOD/COOL; WILL and SAN stand.
 10. **Hard caps:** the wizard enforces all table limits strictly. No
     warn-but-allow in v1.
 11. **All rolls are physical:** the app never rolls dice for creation pools.
@@ -1612,6 +1625,7 @@ No cascade logic to maintain — it falls out of the architecture.
     Loadout picker), and the Tools of the Trade pricing tables (every row is
     still `[X] Ç` in the WIP, not ready to merge as a finished catalog the
     way the equipment chapter's pricing was). (Ken + Claude, 2026-09-20)
+    → **Superseded in part by Decision 103** — its note that INT/BOD/COOL was a misreading: Deighton ruled TOL is INT/BOD/COOL.
 
 94. **(Print sheet — visual redesign, app)** **The printable sheet's front
     page moves from a linear stack of full-width sections to a case-file
@@ -2009,6 +2023,7 @@ No cascade logic to maintain — it falls out of the architecture.
       while 055 says Focused Healing is required (plan CQ13). The app's
       Focused Healing clears it either way.
     (Ken + Claude, 2026-09-22)
+    → **Superseded in part by Decisions 104 and 105** — the deferred Natural Armor and Nanomed Kit are built.
 101. **(Docs)** **The batch board leaves `STATE.md` for `docs/log/shipped.md`,
     and unscheduled ideas get `docs/WISHLIST.md`.** Decision 74 put the board
     in STATE. By 2026-09-22 it was twenty-odd rows of merged history, and STATE
@@ -2045,6 +2060,97 @@ No cascade logic to maintain — it falls out of the architecture.
     record rather than choose (33, 34, 42, 47). `CLAUDE.md` carries the
     working rule: before numbering a decision, search the ledger for what it
     touches. (Ken + Claude, 2026-09-22)
+
+103. **(Deighton's TOL ruling — combat plan cleanup, data)** **TOL = 1 +
+    INT + BOD + COOL bonuses, floor 1. It was INT/COOL/EMP.** Deighton
+    ruled on 2026-09-22; WILL is confirmed unchanged at 1 + BOD + INT + EMP,
+    and SAN is untouched. **Replaces Decision 9 in part** (the TOL formula)
+    **and Decision 93 in part**: 93 recorded INT/BOD/COOL as a misreading
+    that Scott had confirmed against, and the ruling makes that "misreading"
+    the rule. Data only: `derived.TOL.inputs` swaps EMP for BOD. No engine
+    change, since `derived()` sums whatever `inputs` names, and no schema
+    change, since TOL is never stored (constraint 7). Every character's TOL
+    can move, so game data **0.9 → 0.10** (Decision 68), shared with
+    Decisions 104–105; app **0.14.1 → 0.15.0** with them (minor, for their
+    new capabilities; on its own this would have been a patch). The Arcanist feels it most:
+    its focus-stat bonus lands on INT/COOL/EMP, so EMP points stop feeding
+    TOL and BOD, which that bonus can't reach, starts to. That is the ruling
+    working as given, and Scott has it; it is not a defect to fix in code.
+    **Pinned** in `tests/rules.test.mjs` from the CRB's rewritten worked
+    example (`040` l.88–89: INT 4, BOD 3, COOL 9 → TOL 3). Nothing tested the
+    formula before, and both tests fail against the old inputs. The CRB edit landed the same day in `020`, `040`, `041` and `Magic.md`,
+    and all four were re-pulled. (Ken + Claude, 2026-09-23)
+
+104. **(Natural Armor — combat plan cleanup, data + engine + app)**
+    **Natural Armor is one derived value, `Engine.naturalArmor(ch)`, read by
+    the hit resolver, and how it answers a hit is stubbed as F25.** The CRB
+    grants it in four places and never says what it does. Thick Skin gives
+    +1 per rank and says only "unaffected by Armor Piercing". Shake it Off
+    (a Major Milestone, twice) gives 5. Iron Shirt (True Warrior's Power
+    Style, a Chi ability that has to be active) gives BOD bonus + 1. The
+    Trueborn's Waning Moon boon has it "treated as Warding". This is the
+    Decision 66 shape the 3b note named: promote it to a number, read it,
+    display it. It is not a Thick Skin special case. Ken chose the stub over
+    display-only on 2026-09-23, because a display-only value would leave the
+    hit panel under-protecting a Thick Skin character.
+    - **Sources are data.** A `grants` entry of type `naturalArmor` works on
+      an advantage (`perRank`), a Major Milestone (`amount`, per time
+      taken) or a specialization option (`stat` + `plus`). **This extends
+      Decision 87's `grants` to Milestones and specializations**, but only
+      for this reader: `grants()` itself still scans advantages and
+      disadvantages. A grant with `while` is conditional (Iron Shirt, the
+      waning moon). It is listed with its amount and never summed, the
+      same rule as `rollPenaltyWhen` (Decision 96), and the hit panel asks
+      whether it's on. Stored nowhere (constraint 7); a hit takes the ids of
+      the ones that are on (`hit.natural`), like the PROT roll.
+    - **The F25 stub, in `naturalArmorRules`:** a flat reduction after PROT
+      and RES, on every body part (it's the body, so coverage doesn't
+      apply). It answers Kinetic, like base RES, and a `resAgainst` grant
+      extends that (Resilient Spirit adds Magical). AP doesn't get past it,
+      per Thick Skin's own text. Massive skips it, as it skips PROT and RES.
+      Sources stack. The hit panel shows the stub's `playerNote` whenever
+      the character has any. Natural Armor finishing off what armor let
+      through doesn't count as the armor soaking the hit (no 1 INT).
+    - **Display.** Main's combat column, the Trackers Armor card and
+      Loadout carry one line: "Natural Armor 7 · Iron Shirt +3 while
+      active". Print's Defense card fills its Nat column from the always-on
+      amount on every location. Conditional sources aren't printed as a
+      number. The "nothing answers the hit" lines say so only when nothing
+      does.
+    - **A totality gap, found by the new guard.** A degenerate character
+      with a `null` in `advantages[]` crashed `grants()`, `advSpent()` and
+      everything downstream of them. That was a pre-existing gap: `migrate()`
+      passed the list through. `migrate()` now drops non-entries from
+      advantages, disadvantages and both Milestone lists, as it already did
+      for Conditions (Decision 95). No schema bump, since the shape doesn't
+      change.
+    - **Tests.** Sums and conditionality, a hit with and without worn
+      armor, AP, a Kinetic-only miss, Massive, Resilient Spirit on Magical,
+      `applyHit` writing post-skin damage, and totality on a "junk grant
+      sources" character. Each was mutation-tested (no absorption, AP
+      skipping it, `through` ignoring it, rank ignored, `migrate` keeping
+      junk), and each mutation failed a test.
+    Game data **0.9 → 0.10** and app **0.15.0**, shared with 103 and 105.
+    Character schema unchanged (0.8). (Ken + Claude, 2026-09-23)
+105. **(Nanomed Kit — combat plan cleanup, CQ12, data + engine + app)**
+    **054's "With Çredits" list is the master: a Nanomed Kit clears
+    Agonized, Bleeding, Paralyzed and Poisoned and stabilizes the Dying.**
+    Ken ruled on 2026-09-23. Gear's entry leaves out Paralyzed, so it is
+    the one that changes (a CRB fix for Ken), following Decision 97's
+    precedent that Conditions and Recovery is the master document.
+    `heal(ch, {kind: "nanomed", dose, hp})` is a third kind in the one
+    healing writer. It clears everything on `recoveryRules.nanomed.clears`
+    that's active, plus Dying and its Death Marks. The player doesn't
+    tick them, because the kit does it all. `nanomedKit(ch, dose)` proposes
+    the regeneration: dose n inside a day is 1 HP every n rounds for BOD
+    rounds, so floor(BOD / n). The player can lower it, because a fight
+    that ends early or a crash cuts it short, and that's a table call.
+    Injured still takes Focused Healing. The kit isn't taken out of
+    inventory or paid for, since Loadout's gear is free text; the Çredits
+    tracker is where a purchase goes. A "Nanomed Kit" panel sits next to
+    Rest and Focused Healing on Trackers, and is one undoable action.
+    Pinned: the four clear, Injured stays, 7 / 3 / 2 HP at doses 1–3 for
+    BOD 7. (Ken + Claude, 2026-09-23)
 
 ## 5. Open Flags
 
@@ -2089,7 +2195,8 @@ Sixteen objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
 (a recursive count: sixteen, plus F20–F22 opened by the Conditions session,
 minus F1, F2, F14, F17 and F20–F22, closed by Decisions 97–98, plus the
 three F23 entries opened by the hit resolver, Decision 99, plus F24 on
-`damageRules.whileDying`, Decision 100).
+`damageRules.whileDying`, Decision 100, plus F25 on `naturalArmorRules`,
+Decision 104).
 
 ~~F1~~, ~~F2~~, ~~F14~~ and ~~F17~~ closed 2026-09-22 on a design-team ruling
 (Decision 97). F1/F2/F17 confirmed what the app already did; F14 moved a price.
@@ -2111,6 +2218,7 @@ sentence.
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 | F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and Magical (Warding), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
 | F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
+| F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
 
 ## 6. Roadmap
 
@@ -2315,9 +2423,11 @@ sentence.
   `docs/plans/combat-and-conditions.md`: Conditions first (Session 2 — **done**,
   Decisions 95–96), then hit resolution through armor (Session 3 — **done**,
   Decision 99), then Loadout pickers and recovery actions, including the Turn
-  Reset helper (Session 4 — **done**, Decision 100). A cleanup session follows
-  (Thick Skin/natural armor, then Nanomed once it has been revisited). The plan
-  holds the sequencing rationale and the open questions (`CQ`n).
+  Reset helper (Session 4 — **done**, Decision 100), then the cleanup session
+  (**done**, Decisions 103–105: Deighton's TOL ruling, Natural Armor as one
+  derived value with F25, the Nanomed Kit). Weapon mods and ammo went to
+  `WISHLIST.md`. The plan holds the sequencing rationale and the open
+  questions (`CQ`n).
 
 **Session handoff protocol:** every phase ends with current files +
 this document updated. Ken adds the latest versions to project knowledge.

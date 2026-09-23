@@ -479,6 +479,48 @@ const Engine = (() => {
     return { worn: wornBody[0] || null, pieces, redirects, problems };
   }
 
+  // Natural Armor (Decision 104): the armor a body has without wearing any.
+  // Every source is a `grants` entry of type "naturalArmor" on a held
+  // advantage/disadvantage (`perRank`), a Major Milestone (`amount` per time
+  // taken) or a chosen specialization option. `stat` + `plus` reads that
+  // stat's modifier (Iron Shirt: BOD bonus + 1). A grant with `while` is
+  // conditional: listed, never summed, unless its id is in `activeIds` (the
+  // hit panel asks). How it answers a hit is the F25 stub in
+  // `naturalArmorRules` -- which classes, whether AP gets past it.
+  function naturalArmor(ch, activeIds){
+    const R = D().naturalArmorRules || {};
+    const t = statTable(ch), on = new Set(activeIds || []);
+    const always = [], conditional = [];
+    const add = (g, from, times) => {
+      if (!g || g.type!=="naturalArmor") return;
+      const sid = g.stat ? normStat(g.stat) : null;
+      const amount = Math.max(0, (Number(g.amount)||0) * times + (Number(g.perRank)||0) * times
+                                 + (sid ? t[sid].mod : 0) + (Number(g.plus)||0));
+      const e = { id: g.id || from.id, name: g.name || from.name, amount,
+                  resAgainst: Array.isArray(g.resAgainst) ? g.resAgainst : [], while: g.while || null };
+      if (!e.while) always.push(e);
+      else conditional.push(Object.assign(e, { active: on.has(e.id) }));
+    };
+    const held = (list, lookup) => (list||[]).forEach(entry=>{
+      const def = entry && lookup(entry.id);
+      ((def && def.grants) || []).forEach(g=>add(g, def, Number(entry.rank)||1));
+    });
+    held(ch && ch.advantages, advById);
+    held(ch && ch.disadvantages, disById);
+    const taken = {};
+    ((((ch||{}).progression||{}).milestones||{}).major || []).forEach(m=>{ if (m && m.id) taken[m.id] = (taken[m.id]||0) + 1; });
+    Object.keys(taken).forEach(id=>{
+      const def = (D().milestones.majorGeneral||[]).find(x=>x.id===id);
+      ((def && def.grants) || []).forEach(g=>add(g, def, taken[id]));
+    });
+    specializationChosen(ch).forEach(o=>(o.grants||[]).forEach(g=>add(g, o, 1)));
+    const counted = [...always, ...conditional.filter(c=>c.active)];
+    const resAgainst = [...new Set([...(R.resAgainst||[]), ...counted.flatMap(c=>c.resAgainst)])];
+    return { total: counted.reduce((n,c)=>n + c.amount, 0), base: always.reduce((n,c)=>n + c.amount, 0),
+             always, conditional, resAgainst, ignoresAp: R.ignoresAp===true,
+             text: R.text || "", playerNote: R.flagged && R.playerNote ? R.playerNote : null };
+  }
+
   // resolveHit's stages, in the order a hit happens. Each takes what it needs
   // and returns plain values, so Session 4 can change one without the rest.
 
@@ -531,6 +573,22 @@ const Engine = (() => {
     const integrityLost = soaked && intBefore!=null
       ? Math.min(Number((D().armorRules||{}).soakedIntegrityLoss)||0, intBefore) : 0;
     return { ok:true, prot, res, resSkipped, absorbed, through, soaked, integrityLost, levelsLost:0, scrap:false };
+  }
+
+  // Natural Armor (Decision 104, stubbed as F25): after worn armor, on any
+  // body part, when the damage's class is one it answers. AP doesn't get past
+  // it (Thick Skin). Massive skips it, as it skips PROT and RES. `hit.natural`
+  // is the ids of the conditional sources that are on (Iron Shirt).
+  function mitigateNatural(ch, left, type, hit, cat){
+    const n = naturalArmor(ch, hit.natural);
+    const out = { total: n.total, absorbed: 0, skipped: null, playerNote: n.playerNote,
+                  sources: [...n.always, ...n.conditional.filter(c=>c.active)] };
+    if (!(n.total>0)) return out;
+    if (cat.bypassesArmor) out.skipped = "massive";
+    else if (hit.ap && !n.ignoresAp) out.skipped = "ap";
+    else if (!n.resAgainst.includes(type.resClass)) out.skipped = "type";
+    else out.absorbed = Math.min(left, n.total);
+    return out;
   }
 
   // 054's consequences of taking damage, hit or not: At Zero, and the Death
@@ -589,9 +647,11 @@ const Engine = (() => {
     const m = cat.bypassesArmor ? mitigateBypass(damage, armor, covered)
                                 : mitigateArmor(damage, type, hit, armor, covered);
     if (!m.ok) return m;
+    const nat = mitigateNatural(ch, m.through, type, hit, cat);
+    const through = m.through - nat.absorbed;
 
     const before = hlState(ch);
-    const after = hlState(ch, { damage: before.damage + m.through,
+    const after = hlState(ch, { damage: before.damage + through,
                                 massiveLevels: Math.min(before.levels, before.massive + m.levelsLost) });
     const c = hitPrompts(ch, type, cat, before, after);
     const notes = [];
@@ -599,6 +659,7 @@ const Engine = (() => {
     if (covered) armor.upgrades.forEach(u=>{
       const g = upgradeById(u); if (g && g.flagged && g.playerNote && !notes.includes(g.playerNote)) notes.push(g.playerNote);
     });
+    if (nat.total>0 && nat.playerNote) notes.push(nat.playerNote);
 
     const intBefore = covered ? armor.integrity : null;
     const t = ((ch||{}).trackers) || {};
@@ -608,12 +669,13 @@ const Engine = (() => {
       armor: armor ? { source: armor.source, name: armor.name, prot: armor.prot, res: armor.res,
                        integrityBefore: intBefore, integrityAfter: intBefore==null ? null : intBefore - m.integrityLost,
                        integrityMax: armor.integrityMax ?? null, compromised: !!armor.compromised } : null,
-      prot: m.prot, res: m.res, resSkipped: m.resSkipped, absorbed: m.absorbed, through: m.through,
+      prot: m.prot, res: m.res, resSkipped: m.resSkipped, absorbed: m.absorbed, through,
+      natural: { total: nat.total, absorbed: nat.absorbed, skipped: nat.skipped, sources: nat.sources },
       soaked: m.soaked, integrityLost: m.integrityLost, levelsLost: m.levelsLost, scrap: m.scrap,
       before, after, lostThisHit: c.lostThisHit, tookDamage: c.tookDamage,
       patch: {
         damage: after.damage, massiveLevels: after.massive,
-        witheringDamage: nonNegInt(t.witheringDamage) + (cat.recordsWithering ? m.through : 0),
+        witheringDamage: nonNegInt(t.witheringDamage) + (cat.recordsWithering ? through : 0),
         armor: covered && (m.integrityLost>0 || m.scrap)
           ? { index: armor.index, integrityLoss: armor.integrityLoss + m.integrityLost, scrapped: armor.scrapped || m.scrap }
           : null,
@@ -865,15 +927,32 @@ const Engine = (() => {
   // also clear the Conditions `recoveryRules.focusedHealing.clears` names
   // (Injured), by index, and restore Massive levels (CQ6: with a replacement).
   // Withering is trimmed to the damage left, as every lowering of it is.
+  // A Nanomed Kit (Decision 105, 054's list): dose n inside a day regenerates
+  // 1 HP every n rounds for BOD rounds, so it proposes floor(BOD / n). The
+  // player can change the number: a fight that ends early stops it.
+  function nanomedKit(ch, dose){
+    const N = ((D().recoveryRules||{}).nanomed) || {};
+    const n = Math.max(1, Math.floor(Number(dose)||1));
+    const stat = normStat(N.roundsStat || "BOD");
+    const rounds = stat ? Math.max(0, statTable(ch)[stat].value) : 0;
+    const dying = ((D().damageRules||{}).whileDying||{}).condition;
+    const clears = [...(N.clears||[]), ...(N.endsDying && dying ? [dying] : [])];
+    return { dose: n, rounds, everyRounds: n, proposed: Math.floor(rounds / n), clears,
+             text: N.text || "", doseText: N.doseText || "" };
+  }
+  // Focused Healing clears only what the player ticks; a Nanomed Kit clears
+  // everything on its list that's active, Dying and its Death Marks included.
   function heal(ch, input){
     input = input || {};
     const F = ((D().recoveryRules||{}).focusedHealing) || {};
-    const focused = input.kind==="focused";
-    if (!focused && input.kind!=="natural") return { ok:false, why:"Natural or Focused Healing?" };
+    const focused = input.kind==="focused", nanomed = input.kind==="nanomed";
+    if (!focused && !nanomed && input.kind!=="natural") return { ok:false, why:"Natural or Focused Healing?" };
     const hp = (input.hp==null || input.hp==="") ? 0 : Math.floor(Number(input.hp));
     if (!(hp>=0)) return { ok:false, why:"Enter the HP restored." };
     const t = ch.trackers, conds = t.conditions, hs = hlState(ch);
-    const clear = focused ? [...new Set((input.clear||[]).map(Number))]
+    const kit = nanomed ? nanomedKit(ch, input.dose) : null;
+    const clear = nanomed ? conds.map((e,i)=>i).filter(i=>conds[i] && kit.clears.includes(conds[i].id))
+      : focused ? [...new Set((input.clear||[]).map(Number))]
       .filter(i=>conds[i] && (F.clears||[]).includes(conds[i].id)) : [];
     const massive = focused ? Math.min(nonNegInt(input.massive), hs.massive) : 0;
     const healed = Math.min(hp, hs.damage);
@@ -1327,6 +1406,11 @@ const Engine = (() => {
     pr.ip = Object.assign({earned:0, log:[]}, pr.ip);
     if (!Array.isArray(pr.ip.log)) pr.ip.log=[];
     pr.milestones = Object.assign({minor:[], major:[]}, pr.milestones);
+    // Decision 104: a held entry that isn't an object with an id was reaching
+    // grants()/advSpent() and throwing. Drop it, as conditions already do.
+    const isEntry = e => !!e && typeof e==="object" && typeof e.id==="string";
+    for (const k of ["advantages","disadvantages"]) c[k] = Array.isArray(c[k]) ? c[k].filter(isEntry) : [];
+    for (const k of ["minor","major"]) pr.milestones[k] = Array.isArray(pr.milestones[k]) ? pr.milestones[k].filter(isEntry) : [];
     if (!Array.isArray(c.sessions)) c.sessions=[];
     c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.powers=c.powers||[]; c.armor=c.armor||[];
     // Schema 0.6 (Weapons/Ammo/Armor data batch): a weapons entry may now
@@ -1772,6 +1856,8 @@ const Engine = (() => {
            weaponLine, addLoadout, addCustomLoadout, removeLoadout, setWorn,
            upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
            naturalHealing, heal, resolveReset, applyReset,
+           // Combat cleanup (Decisions 104–105)
+           naturalArmor, nanomedKit,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,
