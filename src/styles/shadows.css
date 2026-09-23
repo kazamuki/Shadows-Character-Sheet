@@ -578,4 +578,15 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   main{padding:20px 16px 70px}
   .grid-2,.grid-3{grid-template-columns:1fr}
 }
-@media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} }
+/* Undo toast (W12): bottom-centre, above the footer, below the drawer. */
+.toast{position:fixed; left:50%; bottom:44px; transform:translateX(-50%); z-index:75;
+  display:flex; align-items:center; gap:12px; max-width:min(560px, calc(100vw - 32px));
+  padding:8px 10px 8px 16px; background:var(--panel-2); color:var(--text);
+  border:1px solid var(--frame); border-left:3px solid var(--violet-hi); border-radius:4px;
+  box-shadow:0 6px 24px rgba(5,10,22,.45); font-size:.86rem; animation:toastIn .18s ease-out}
+.toast[hidden]{display:none}
+.toast .toast-msg{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.toast .toast-x{background:none; border:0; color:var(--dim); font-size:1.1rem; line-height:1; padding:2px 4px}
+.toast .toast-x:hover{color:var(--text)}
+@keyframes toastIn{from{opacity:0; transform:translate(-50%, 8px)} to{opacity:1; transform:translate(-50%, 0)}}
+@media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} .toast{animation:none} }
