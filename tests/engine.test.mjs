@@ -273,6 +273,9 @@ function degenerates(){
     "junk armor":          Engine.migrate({ armor:[null, 7, {id:"no-such-armor", worn:true, integrityLoss:"x"},
                                             {custom:true, worn:true, prot:"junk", integrity:"lots", upgrades:["no-such-upgrade"]}],
                                             trackers:{ massiveLevels: 999, witheringDamage: -4 } }),
+    "junk grant sources":  Engine.migrate({ identity:{archetype:"professional"}, archetypeChoices:{specialization:["true-warrior","no-such-spec"]},
+                                            advantages:[{id:"thick-skin", rank:"x"}, null],
+                                            progression:{ milestones:{ major:[null, {id:"shake-it-off"}, {id:"no-such-milestone"}] } } }),
   };
 }
 
@@ -315,7 +318,7 @@ test("no exported reader throws on any character migrate() can return", () => {
   // its own test. Named here so adding an export is a deliberate choice.
   const readers = ["powerLevel","archetype","statTable","scalingRow","derived","health","sfr",
                    "statPool","statSpent","skillPool","skillSpent","advSpent","disGranted",
-                   "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalHealing","resolveReset","luckState",
+                   "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalArmor","naturalHealing","resolveReset","luckState",
                    "sanState","focusedSkillIds","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
                    "disciplineRanks","buildExport","versionCheck"];
@@ -1025,6 +1028,9 @@ test("the Loadout and recovery functions are total on every degenerate character
       armorWear: () => [0, 2, 3, 99].forEach(i => Engine.armorWear(ch, i, { difficulty: "hard", roll: 3, selfHealCheck: 4, selfHealRoll: 2 })),
       repairArmor: () => [0, 2, 3, 99].forEach(i => { Engine.repairArmor(ch, i, { roll: 2 }); Engine.repairArmor(ch, i, { full: true }); }),
       naturalHealing: () => Engine.naturalHealing(ch),
+      naturalArmor: () => { Engine.naturalArmor(ch, ["iron-shirt", "x"]); Engine.naturalArmor(ch, "junk"); },
+      nanomedKit: () => [undefined, 0, -3, "x", 2, 99].forEach(d => Engine.nanomedKit(ch, d)),
+      nanomed: () => { Engine.heal(ch, { kind: "nanomed", dose: "x", hp: 2 }); Engine.heal(ch, { kind: "nanomed" }); },
       heal: () => { Engine.heal(ch, { kind: "natural", hp: 3 }); Engine.heal(ch, { kind: "focused", hp: "x", clear: [0, 9], massive: 99 }); Engine.heal(ch, {}); },
       resolveReset: () => { Engine.resolveReset(ch); Engine.resolveReset(ch, { sources: { 0: "x" } }); },
       applyReset: () => Engine.applyReset(ch, { sources: { 0: 2, 1: 2, 2: 2, 3: 2 } }, { atZero: "fail", dyingCheck: "fail" }),
@@ -1114,4 +1120,82 @@ test("applyReset re-resolves from its inputs, like applyHit", () => {
   Engine.applyReset(ch);
   assert.equal(ch.trackers.damage, 6);
   assert.equal(Engine.resolveReset(subject()).hasEffect, false, "nothing ticking, not Dying: nothing to record");
+});
+
+// ── Natural Armor (Decision 104, F25 stub) ────────────────────────────
+// The engine's arrays come from the VM realm (Decision 80), so compare them
+// as JSON rather than with deepEqual.
+const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
+
+test("Natural Armor sums Thick Skin per rank and Shake it Off per time taken; nothing is stored", () => {
+  const ch = subject();
+  ch.advantages.push({ id: "thick-skin", rank: 2 });
+  ch.progression.milestones.major.push({ id: "shake-it-off" }, { id: "shake-it-off" });
+  const before = JSON.stringify(ch);
+  const n = Engine.naturalArmor(ch);
+  assert.equal(n.total, 12);
+  same(n.always.map(s => [s.id, s.amount]), [["thick-skin", 2], ["shake-it-off", 10]]);
+  assert.equal(JSON.stringify(ch), before, "naturalArmor wrote to the character");
+  assert.equal(Engine.naturalArmor(subject()).total, 0);
+});
+
+test("Iron Shirt is conditional: BOD bonus + 1, listed but not counted until it's on", () => {
+  const ch = subject({ bod: 8 });                       // BOD 8 → +2
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["true-warrior"];
+  const off = Engine.naturalArmor(ch);
+  assert.equal(off.total, 0);
+  same(off.conditional.map(c => [c.id, c.amount, c.active]), [["iron-shirt", 3, false]]);
+  assert.equal(Engine.naturalArmor(ch, ["iron-shirt"]).total, 3);
+  ch.stats.BOD.base = 1;                                // −3 + 1 never goes negative
+  assert.equal(Engine.naturalArmor(ch, ["iron-shirt"]).total, 0);
+});
+
+test("a hit: Natural Armor comes off after worn armor, anywhere, and AP doesn't get past it", () => {
+  const ch = subject({ bod: 10 });
+  ch.advantages.push({ id: "thick-skin", rank: 3 });
+  const hit = o => Engine.resolveHit(ch, { damage: 10, damageType: "ballistic", ...o });
+  let r = hit({});
+  assert.deepEqual([r.natural.absorbed, r.through], [3, 7], "no armor worn: skin still answers");
+  r = hit({ ap: true });
+  assert.equal(r.through, 7, "AP skipped Natural Armor");
+  r = hit({ damageType: "energy" });
+  assert.deepEqual([r.natural.skipped, r.through], ["type", 10], "stub: Kinetic only");
+  r = hit({ category: "massive" });
+  assert.equal(r.natural.skipped, "massive");
+  assert.ok(r.notes.some(n => /natural armor/i.test(n)), "the stub's playerNote isn't shown");
+
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  r = hit({ protRoll: 4 });                             // PROT 4 + RES 2, then skin 3
+  assert.deepEqual([r.absorbed, r.natural.absorbed, r.through], [6, 3, 1]);
+  assert.equal(r.soaked, false, "skin finishing the job isn't the armor soaking it");
+  r = hit({ protRoll: 1, location: "right-leg" });      // the vest doesn't cover a leg
+  assert.deepEqual([r.covered, r.through], [false, 7]);
+  Engine.applyHit(ch, { damage: 10, damageType: "ballistic", protRoll: 4 });
+  assert.equal(ch.trackers.damage, 1, "applyHit didn't write the post-skin damage");
+});
+
+test("Resilient Spirit (Waning Moon) lets Natural Armor answer Magical damage while it's on", () => {
+  const ch = subject();
+  ch.identity.archetype = "werewolf";
+  ch.archetypeChoices.specialization = ["trueborn"];
+  ch.progression.milestones.major.push({ id: "shake-it-off" });
+  const hit = natural => Engine.resolveHit(ch, { damage: 8, damageType: "magical", natural });
+  assert.equal(hit([]).through, 8);
+  assert.equal(hit(["resilient-spirit"]).through, 3);
+});
+
+// ── Nanomed Kit (Decision 105, CQ12: 054's list) ──────────────────────
+
+test("a Nanomed Kit clears 054's four, stabilizes the Dying, and proposes BOD / dose", () => {
+  const ch = subject({ bod: 7 });
+  ch.trackers.damage = 20;
+  ch.trackers.conditions = [{ id: "bleeding" }, { id: "injured", location: "left-arm" },
+                            { id: "paralyzed" }, { id: "dying", marks: 2 }, { id: "agonized" }];
+  assert.deepEqual([1, 2, 3].map(d => Engine.nanomedKit(ch, d).proposed), [7, 3, 2]);
+  const r = Engine.heal(ch, { kind: "nanomed", dose: 1, hp: 7 });
+  assert.ok(r.ok);
+  same(ch.trackers.conditions.map(e => e.id), ["injured"], "Injured takes Focused Healing");
+  assert.equal(ch.trackers.damage, 13);
+  assert.ok(Engine.heal(subject(), { kind: "nanomed", hp: 0 }).ok === false, "a kit on nobody hurt did something");
 });

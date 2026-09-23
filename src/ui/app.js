@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.14.1";
+const APP_VERSION = "0.15.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -264,6 +264,9 @@ function bindSheet(){
   main.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{
     if (!S.hit) return; S.hit.conds[el.dataset.hitcond]=el.checked; renderMain();
   });
+  main.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; renderMain();
+  });
   main.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
     const st=S.hit; if (!st) return;
     const input=hitInput(st), r=Engine.resolveHit(ch, input);
@@ -287,6 +290,7 @@ function bindSheet(){
     else {
       st[k]=v;
       if (st.kind==="rest" && (k==="days" || k==="speed")) st.hp="";     // re-propose BOD × days
+      if (st.kind==="nanomed" && k==="dose") st.hp="";                   // re-propose BOD / dose
       if (k==="shCheck") st.shRoll="";
     }
     renderMain();
@@ -303,12 +307,13 @@ function bindSheet(){
       const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":""].filter(Boolean);
       S.act=null;
       commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck }); });
-    } else if (st.kind==="rest" || st.kind==="focused"){
+    } else if (st.kind==="rest" || st.kind==="focused" || st.kind==="nanomed"){
       const r=Engine.heal(clone(ch), input);
       if (!r.ok){ alert(r.why); return; }
       const bits=[r.healed?`+${r.healed} HP`:"", r.restored?`${plural(r.restored,"Massive level")} restored`:"",
         ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
-      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}` : "Focused Healing";
+      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}`
+                  : st.kind==="nanomed" ? "Nanomed Kit" : "Focused Healing";
       S.act=null;
       commit("damage", `${label}: ${bits.join(", ")}`, ()=>{ Engine.heal(ch, input); });
     } else if (st.kind==="wear"){

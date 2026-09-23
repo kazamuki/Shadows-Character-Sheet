@@ -641,3 +641,33 @@ test('CRB 054 At Zero: the check comes "again every time you take damage" — a 
   Engine.applyReset(ch, { sources: { 1: 6 } }, { atZero: "fail" });
   assert.ok(ch.trackers.conditions.some(c => c.id === "dying"));
 });
+
+// ── Tolerance (Decision 103) ──────────────────────────────────────────
+// Deighton's ruling, 2026-09-22: TOL = 1 + INT + BOD + COOL bonuses (it was
+// INT/COOL/EMP). WILL stands at 1 + BOD + INT + EMP. Source: `040` l.88–89,
+// as Scott rewrote it on 2026-09-23.
+
+function withStats(stats) {
+  const ch = subject();
+  for (const [id, v] of Object.entries(stats)) ch.stats[id].base = v;
+  return ch;
+}
+
+test('CRB: "INT 4 (0), BOD 3 (-1), and COOL 9 (+3). Your TOL is 3"', () => {
+  // EMP 9 isn't in the book's example. It's here so the old INT/COOL/EMP
+  // formula (which would give 7) can't pass this test.
+  const ch = withStats({ INT: 4, BOD: 3, COOL: 9, EMP: 9 });
+  assert.equal(Engine.derived(ch).TOL, 3);
+});
+
+test('Decision 103: BOD feeds TOL and EMP no longer does; WILL keeps BOD/INT/EMP', () => {
+  const base = { INT: 4, COOL: 4, BOD: 4, EMP: 4 };
+  const at = (over) => Engine.derived(withStats({ ...base, ...over }));
+  assert.equal(at({}).TOL, 1);
+  assert.equal(at({ BOD: 9 }).TOL, 4, "BOD +3 must raise TOL by 3");
+  assert.equal(at({ EMP: 9 }).TOL, 1, "EMP must not move TOL");
+  assert.equal(at({ EMP: 9 }).WILL, 4, "EMP still feeds WILL");
+  assert.equal(at({ BOD: 9 }).WILL, 4, "BOD still feeds WILL");
+  assert.equal(at({ COOL: 9 }).WILL, 1, "COOL does not feed WILL");
+  assert.equal(at({ INT: 1, BOD: 1, COOL: 1 }).TOL, 1, "floor 1");
+});

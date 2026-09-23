@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-23. -->
 
 # Section IV – Making a Character
 
@@ -87,8 +87,8 @@ Once your Base Stats are set, calculate your derived Attributes: TOL, WILL, and 
 
 <u>Tolerance (TOL)</u>
 
-Base 1 + INT Modifier + COOL Modifier + EMP Modifier\
-**Example**: If your stat distribution was: INT 4 (0), COOL 3 (-1), and EMP 9 (+3). Your TOL is 3: 1 (Base) + 0 (INT) -1 (COOL) +3 (EMP)
+Base 1 + INT Modifier + BOD Modifier + COOL Modifier\
+**Example**: If your stat distribution was: INT 4 (0), BOD 3 (-1), and COOL 9 (+3). Your TOL is 3: 1 (Base) + 0 (INT) -1 (BOD) +3 (COOL)
 
 <u>Will (WILL)</u>
 

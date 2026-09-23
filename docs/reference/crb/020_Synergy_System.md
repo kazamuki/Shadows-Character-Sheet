@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-23. -->
 
 # Section II - What makes Synergy Different
 
@@ -98,7 +98,7 @@ These attributes are the more ethereal side of your character and are derived fr
 
 As you cast spells or activate cybernetics, **Exhaustion** builds. Push too far, and your body refuses to cooperate: spells fizzle, systems fail, and the moment slips through your fingers.
 
-**TOL** is based on your **INT**, **COOL**, and **EMP** bonuses.
+**TOL** is based on your **INT**, **BOD**, and **COOL** bonuses.
 
 **Will** **(WILL)**
 

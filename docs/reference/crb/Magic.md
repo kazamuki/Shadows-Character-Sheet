@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-23. -->
 
 # Introduction
 
@@ -106,9 +106,9 @@ Your rank in any Discipline cannot exceed your WILL score. The Aether doesn't re
 
 TOL measures how much Aetheric backlash an Arcanist can absorb before the body gives out. Every Rupture costs TOL equal to the degree of the Rupture. When TOL reaches zero, the Arcanist is Exhausted and cannot cast until they recover. If a Rupture pushes TOL below zero, a Cascade follows immediately.
 
-**TOL** = 1 + **INT** bonus + **COOL** bonus + **EMP** bonus
+**TOL** = 1 + **INT** bonus + **BOD** bonus + **COOL** bonus
 
-Like WILL, 1 is the minimum — and like WILL, it can be raised. Recovery is straightforward: one hour of rest restores 1 TOL. An Arcanist can resume casting as soon as TOL is above zero. Full restoration takes as many hours as the Arcanist's maximum TOL.
+Like WILL, 1 is the minimum — and like WILL, it can be raised.
 
 ### Discipline
 
@@ -124,8 +124,6 @@ Everything in this section covers live spellcasting — Evocation, the Spellcraf
 
 Every spell is an act of Spellcraft — the art of drawing Aether into expression and shaping it toward a specific intent. Spellcraft is the core of every discipline. Evocation does it in the moment. Enchantment and Alchemy do it during preparation. The mechanics are the same regardless of when it happens.
 
-A spell is made of **Glyphs** — shaped expressions of Aether representing specific concepts. A simple spell draws on one Glyph. A more complex spell chains multiple Glyphs together, each adding to the effect and difficulty of casting. The Domains section covers commonly used Glyphs found in each Domain.
-
 Every spell, however simple or complex, is defined by two numbers: the **Target Number** and the **Threshold**.
 
 - The **Target Number (TN)** is the floor. When making a Spellcraft roll, any die that meets or exceeds the TN is a Hit. Any die that rolls a 1 is a Dud. Duds cancel Hits. What remains is the net Hit count.
@@ -138,7 +136,7 @@ Known spells have a fixed TN and TH documented in the Arcanist's grimoire. Impro
 
 ## Domains and Glyphs
 
-Glyphs are the fundamental unit of a spell — shaped expressions of Aether that represent specific concepts. Every spell is built from one or more Glyphs. The more Glyphs a spell requires, the more complex the expression, and generally the higher the TH.
+Glyphs are the fundamental unit of a spell — shaped expressions of Aether that represent specific concepts. Every spell is built from one or more Glyphs.
 
 Glyphs are organized into five domains. A Domain is a grouping of related concepts — the categories that the Aether, for whatever reason, responds to most readily. Magical communities have debated the boundaries between Domains for as long as anyone has been writing them down. The five here represent the consensus that has survived the longest.
 
@@ -225,7 +223,7 @@ The Arcanist states what they want to achieve and what Glyphs they are drawing o
 
 For a Known spell, this is a reference — the formula exists and the parameters are fixed.
 
-For an Improvised spell, the Arcanist describes the intended effect in terms of available Glyphs, and the GM sets the TN and TH based on complexity. More Glyphs add approximately +1 TH each. Unusual targets, extended range, or environmental difficulty may raise the TN.
+For an Improvised spell, the Arcanist describes the intended effect in terms of available Glyphs, and the GM sets the TN and TH based on complexity.
 
 There are limits to improvisation. An Arcanist cannot improvise effects that have no basis in their available Glyphs, and cannot exceed the ceiling set by their WILL score. The Aether responds to what the caster can genuinely direct.
 
@@ -255,7 +253,7 @@ If the Arcanist is holding a previous spell through Concentration, those dice ar
 
 Every Spellcraft roll produces exactly one of five results:
 
-- **Overflow** — net Hits exceed TH. The spell works and produces an additional effect. Each net Hit above TH generates +1x, and each explosion generates a further +1x. Known spells define what each x-tier produces; Improvised Overflow is GM-determined.
+- **Overflow** — net Hits exceed TH. The spell works and produces an additional effect — see Overflow.
 
 - **Manifest** — net Hits equal TH. The spell works as intended. No bonus, no shortfall.
 
@@ -353,13 +351,15 @@ A Professional walking into an alley after a firefight reads the scene the way t
 
 People carry it too. Someone who has been working the Aether wears it for a while afterward, and an Arcanist who knows how to look can tell.
 
-Reading Resonance
+### Reading Resonance 
 
 Resonance is perceived with an Awareness check, and Arcanists add their Aetheric Attunement bonus. A success reveals that magic was worked here, roughly how much, and how recently.
 
 Resonance also carries style. Every caster shapes the Aether the way their grimoire records it — the same private habits that make one Arcanist's notation unreadable to another — and a teacher's style often surfaces in their students. None of this puts a name to a trace. But the same style at five scenes, and someone known to have been at three of them, is a thread worth pulling.
 
-How long it lingers
+A strong enough reading goes further than knowing what happened. An Arcanist who reads a trace clearly enough can sometimes work backward from it — reconstructing the shape of the spell that left it, and occasionally reproducing it. A recently closed portal still carries the pattern that opened it. The GM sets the difficulty, and it should be high.
+
+### How long it lingers 
 
 Resonance fades, and how fast depends on how much Aether was spent. A Cantrip's trace is faint and brief. A Superior working lingers long enough that someone arriving well after the fact can still read it — and a spell that Overflowed leaves more behind than one that didn't. The GM decides what remains.
 
@@ -431,7 +431,7 @@ The GM chooses the specific Aberration from the rolled category — see **Append
 
 ### Recovery
 
-It takes 1 hour of rest — sleep, meditation, light activity — restores 1 TOL. An Arcanist can resume casting as soon as TOL is above zero. Full restoration takes as many hours as the Arcanist's maximum TOL score. More information is in the Downtime chapter.
+It takes 1 hour of rest — sleep, meditation, light activity — to restore 1 TOL. An Arcanist can resume casting as soon as TOL is above zero. Full restoration takes as many hours as the Arcanist's maximum TOL score. More information is in the Downtime chapter.
 
 ## Spell Progression
 
@@ -441,7 +441,7 @@ Every spell cast exists somewhere on a progression from raw improvisation to dee
 
 An Improvised spell has no fixed formula. The spellcaster shapes the Aether by intent, describing what they want to achieve and creating a spell chain on the fly using their knowledge of Domains and their respective Glyphs. Improvised magic is often what an inexperienced caster reaches for in a moment of panic, but can also be what an expert spellcaster uses to perfectly address the needs of the situation.
 
-The GM then sets the TN and TH based on the complexity of the spell being attempted. The potency of the spell — range, damage, duration, number of targets — increases the TN. The level of complexity of the spell, including the number of Glyphs involved, increases the TH. The GM can set any TH from 0 upward, but the TN will never exceed 10.
+The GM then sets the TN and TH. The potency of the spell — range, damage, duration, number of targets — increases the TN. The level of complexity, including the number of Glyphs involved, increases the TH. The GM can set any TH from 0 upward, but the TN will never exceed 10.
 
 The GM also determines any Overflow results — the result of an extremely successful Spellcraft roll.
 
@@ -455,7 +455,7 @@ The process of formalization requires **10 x TH** successful casts of the same I
 
 The term “successful” is the key here. A Rupture — an extremely poor Spellcraft attempt — during casting sets the progress back by 1 attempt.
 
-Additionally, any spells that have been acquired through formal training — from a teacher or copied from another grimoire — starts as Known.
+Additionally, spells acquired from a teacher start as Known. Spells copied from a grimoire without the original Arcanist's help are less certain — see *Copying from a Grimoire*.
 
 ### Stage 3 — Mastered
 
@@ -473,7 +473,7 @@ Once a spell is Mastered, the TH is reduced by 1.
 
 A grimoire is a personal record of an Arcanist's Known spells. It is not a spellbook in the classical sense — it is closer to a working journal, accumulated over time as Improvised spells crystallize into fixed formulas. The notes, diagrams, and corrections that pile up during formalization are the grimoire. A cook developing a recipe writes down what worked. An Arcanist does the same.
 
-It has to be written by hand. Glyphs do not survive reproduction — a photograph of a glyph is a photograph, a scan is a scan, and neither one holds anything. More to the point, the writing is part of the formalization. The hand learns the shape while the Arcanist learns the spell, in ways that a typed or digitally reproduction could never imitate. In a city that keeps everything and forgets nothing, Arcanists carry paper.
+It has to be written by hand. Glyphs do not survive reproduction — a photograph of a glyph is a photograph, a scan is a scan, and neither one holds anything. More to the point, the writing is part of the formalization. The hand learns the shape while the Arcanist learns the spell, in ways that a typed or digital reproduction could never imitate. In a city that keeps everything and forgets nothing, Arcanists carry paper.
 
 The form varies. A battered notebook, a bound ledger, vellum scrolls, diagrams inked into skin or glyphs etched onto metal. What matters is that it holds the fixed TN, TH, and Overflow results for each Known spell somewhere the Arcanist can reach.
 
