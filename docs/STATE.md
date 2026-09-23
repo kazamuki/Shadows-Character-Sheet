@@ -75,9 +75,9 @@ left that is still true now.
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
-dry run on a branch, a re-publish on a tag. **Live: app `0.17.0`,
-game data `0.12`** (tag `v0.17.0`, deployed 2026-09-23; loaded: all three versions,
-the `grimoire` panel and a Link offer, Home and wizard render). `v0.13.0` and `v0.14.0`
+dry run on a branch, a re-publish on a tag. **Live: app `0.18.0`,
+game data `0.13`** (tag `v0.18.0`, deployed 2026-09-23; loaded: all three versions,
+the `reference` panel, Drained taking TOL 2 → 0, and Home renders). `v0.13.0` and `v0.14.0`
 rendered blank (#30). **Check a deploy by loading the page**, not by curling it.
 **`CHANGELOG.md` is current again** (W18); `docs.test.mjs` checks each bump has a section.
 
@@ -138,9 +138,9 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #40**; live is `v0.17.0`. The magic plan's
-Session 2 (Decision 110, app 0.18.0, game data 0.13) is on its branch, not yet
-merged or tagged. After 0.13 ships, the next observable change is 0.14.
+**`main` is caught up through PR #41** (the magic plan's Session 2, Decision
+110), tagged `v0.18.0` and live. Game data 0.13 has shipped, so the next change
+a character can observe needs 0.14 (Decision 68).
 
 **Next, all unblocked:** the magic plan's Session 3 (starting spells in the wizard, M6), the plan's last. Deighton answered MQ1 (Decision 109), so a spell's TH can't exceed Evocation rank. Also Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
