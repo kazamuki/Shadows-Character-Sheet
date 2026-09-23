@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-23
-**Versions:** app `0.16.0` · game data `0.11` · character schema `0.8` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.17.0` · game data `0.12` · character schema `0.9` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **202 passing, 0 todo, 0 failing** (202 tests, six files)
+**Suite:** `npm run verify` → **212 passing, 0 todo, 0 failing** (212 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -34,8 +34,9 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 half of Magic (Decision 93) and the Cascade and Aberration tables (Decision
 106). The Arcanist's sheet has a **TOL Spent** tracker. It says Exhausted at
 TOL, and past TOL it opens a Cascade panel that reads the player's dice and
-writes the result into Notes. The spell catalog isn't wired to the Grimoire
-yet.
+writes the result into Notes. **The Grimoire reads the book** (Decision 108): a
+picker over the 96 spells, Mastery for 30 IP × TH, Spell Power shown, and typed
+spells kept as written, with **Link to the book** when a name matches.
 
 **Combat is built end to end, and the combat plan is closed (Decisions
 95–96, 99–100, 103–106).** Loadout picks weapons and armor from the catalog
@@ -110,7 +111,7 @@ full text.
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ✅ Cascade + Aberration tables, TOL Spent tracker and the Cascade panel (Decision 106) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
+| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ✅ Cascade + Aberration tables, TOL Spent tracker and the Cascade panel (Decision 106) · 📋 **magic on the sheet** (`plans/magic-on-the-sheet.md`): ✅ Grimoire from the book (Decision 108) · ⏭ acquired Aberrations + Magic reference · ⏸ starting spells (MQ1) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a complete, finished export — his current file is a two-page **portrait** WIP with only Stats built, in two competing styles (hex-dial sidebar vs. plain table). Portrait-vs-landscape is a real decision once that lands, not yet made. Separately: the frame/texture layer doesn't print in Chrome's actual output yet (screen-only) — not blocked on anyone, just not chased down |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
@@ -135,13 +136,11 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #36** (the combat plan closed, Decision
-106, and a wishlist pass, Decision 107), tagged `v0.16.0` and live on the
-demo site. Game data 0.11 has shipped, so the next change a character can
-observe needs game data 0.12 (Decision 68). `npm run verify` is green (202
-passing, 0 todo).
+**This session started the magic plan** (`plans/magic-on-the-sheet.md`) with its
+Session 1 on `feat/magic-on-the-sheet` (Decision 108). App 0.17.0, schema 0.9
+and game data 0.12 ship when it merges and `v0.17.0` deploys; `v0.16.0` is live.
 
-**Next, all unblocked:** Milestones & doc reconciliation (Ken alone;
+**Next, all unblocked:** the magic plan's Session 2 (acquired Aberrations, Drained and Phantom Pain, the Magic reference). Its Session 3 (starting spells) waits on **MQ1**, which is on the Deighton list below with MQ2–MQ3. Also Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
 under General Milestones in `041_Archetypes` — not in the Advantages chapter).
 The wishlist's layout pair **W1 + W10** is one pass. So is the popover/modal
@@ -155,7 +154,9 @@ from `041` (Aethereal Link now says *animals*; Thaumaturgical Sight adds *when
 analyzing magic*). A display-text sync, but cross-check it against the CRB.
 
 **Waiting on the design team:** F8 (the wizard-blocker, being playtested),
-and one grouped question for Deighton. **F23:** which RES class do Electric
+the magic plan's MQ1–MQ3 (§6 of the plan: starting-spell tiers, Drained's
+floor, Phantom Pain at full health), plus whether Spell Attack's REF is the
+score or its modifier, and one grouped question for Deighton. **F23:** which RES class do Electric
 and Burning fall under (stubbed as Energy), and where does Resistance's 50%
 sit (not applied)? **F24:** when Bleeding ticks at a Reset while Dying, is it
 one Death Mark standing in for the WILL check (the stub), or the check plus a

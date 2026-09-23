@@ -921,6 +921,7 @@ function renderShProgression(){
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
   h += ip.log.length ? `<div class="journal">` + ip.log.slice().reverse().map(e=>{
     const what = e.kind==="grant" ? `Grant` :
+      e.targetType==="spell" ? `Mastered ${(Engine.spellById(e.targetId)||{name:e.targetId}).name}` :
       `${e.targetType==="stat"?e.targetId:(Engine.skillById(e.targetId)||{name:e.targetId}).name} ${e.from} → ${e.to}`;
     return `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
       <span class="amt ${e.kind==="grant"?"grant":"spend"}">${e.kind==="grant"?"+":"−"}${e.amount}</span>
@@ -1162,6 +1163,81 @@ function armorRowsHtml(ch){
   return h + loadoutPickerHtml("armor");
 }
 
+// ── Grimoire (Decision 108) ──────────────────────────────────────────
+// Book spells read everything from `spells`; your own spells are the typed
+// columns. The picker shows a spell's numbers before you add it (W4's lesson),
+// and S.spellPick keeps its search across re-renders.
+const tnth = l => `TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}`;
+function spellMatches(g){
+  const q = (S.spellPick||{}).q || "", tier = (S.spellPick||{}).tier || "", dom = (S.spellPick||{}).domain || "";
+  const k = q.toLowerCase().trim();
+  return (D.spells||[]).filter(s=>(!tier || s.tier===tier) && (!dom || s.domain===dom) &&
+    (!k || [s.name, s.glyph, s.effect, (s.tags||[]).join(" ")].join(" ").toLowerCase().includes(k)));
+}
+function spellResultsHtml(g){
+  // A book spell you've already typed as your own links that row, not a copy.
+  const held = new Set(g.held||[]), list = spellMatches(g);
+  const yours = new Map(g.lines.filter(l=>l.custom && l.match).map(l=>[l.match.id, l.index]));
+  const tierName = id => ((D.spellTiers||[]).find(t=>t.id===id)||{name:id}).name;
+  const domName = id => ((D.domains||[]).find(d=>d.id===id)||{name:id}).name;
+  if (!list.length) return `<p class="step-note">No spell in the book matches that.</p>`;
+  return `<table class="ref spell-results"><tbody>` + list.map(s=>`<tr>
+      <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(s.glyph||"")}</div></td>
+      <td class="num">${esc(tnth(s))}</td><td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
+      <td>${yours.has(s.id) ? `<button class="btn sm" data-spelllink="${yours.get(s.id)}" title="You typed this one in yourself. Link that row to the book, keeping your notes">Link yours</button>`
+        : `<button class="btn sm" data-spelladd="${esc(s.id)}" ${held.has(s.id)?"disabled":""}>${held.has(s.id)?"Known":"Add"}</button>`}</td></tr>`).join("") + `</tbody></table>`;
+}
+function grimoireHtml(ch, p){
+  const g = Engine.grimoire(ch), sp = g.spellPower, ip = Engine.ipState(ch).available;
+  const book = g.lines.filter(l=>!l.custom), own = g.lines.filter(l=>l.custom);
+  let h = sp ? `<p class="grim-sp" title="${esc(sp.text)}">Spell Power <b>${sp.value}</b> <span class="sub">${esc(sp.discipline)} ${sp.rank} + ${esc(sp.stat)} ${sp.statValue}</span></p>` : "";
+
+  // From the book
+  h += book.length ? book.map(l=>{
+    if (l.missing) return `<div class="spell missing"><b>${esc(l.spellId)}</b> isn't in the book any more.
+      <button class="x" data-spellrm="${l.index}" aria-label="Remove">✕</button></div>`;
+    const ov = l.overflow ? Object.entries(l.overflow).map(([k,v])=>`<li><b>${esc(k)}</b> ${esc(v)}</li>`).join("") : "";
+    return `<details class="spell${l.mastered?" mastered":""}"><summary>
+        <b>${esc(l.name)}</b>${l.mastered?` <span class="chip">Mastered</span>`:""}
+        <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(l.glyph||"")}</span>
+        <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>
+        <span class="eff">${esc(l.effect||"")}</span></summary>
+      <div class="spell-body">
+        ${l.flavorLine?`<p class="flavor">${esc(l.flavorLine)}</p>`:""}
+        <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.defending&&`Defending: ${l.defending}`].filter(Boolean).map(esc).join(" · ")}</p>
+        ${l.spellNotes?`<p>${esc(l.spellNotes)}</p>`:""}
+        ${ov?`<ul class="overflow">${ov}</ul>`:""}
+        ${l.tags.length?`<p class="sub">Tags: ${l.tags.map(esc).join(", ")}</p>`:""}
+        <input type="text" class="cond-note" data-spellnote="${l.index}" value="${esc(l.notes)}" placeholder="notes: who taught it, how it behaves for you" aria-label="${esc(l.name)} notes">
+        <div class="trk-actions">
+          ${l.masteryCost!=null?`<button class="btn sm" data-spellmaster="${esc(l.id)}" ${ip<l.masteryCost?"disabled":""} title="${esc(g.masteryText)}">Master (${l.masteryCost} IP)</button>`:""}
+          <button class="btn sm danger" data-spellrm="${l.index}">Remove</button></div></div></details>`;
+  }).join("") : `<p class="step-note">No spells from the book yet.</p>`;
+
+  // Add from the book
+  const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"", open:false });
+  const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
+  h += `<details class="cond-add spell-pick" data-spellpick ${st.open?"open":""}><summary>Add from the book</summary>
+    <div class="hitrow">
+      <input type="search" data-spellq value="${esc(st.q)}" placeholder="Search name, Glyph, effect" aria-label="Search the book">
+      <select data-spellf="tier" aria-label="Tier">${opt("","Every tier",!st.tier)}${(D.spellTiers||[]).map(t=>opt(t.id,t.name,st.tier===t.id)).join("")}</select>
+      <select data-spellf="domain" aria-label="Domain">${opt("","Every Domain",!st.domain)}${(D.domains||[]).map(d=>opt(d.id,d.name,st.domain===d.id)).join("")}</select>
+    </div><div data-spellresults>${st.open?spellResultsHtml(g):""}</div></details>`;
+
+  // Your own
+  h += `<div class="subsect">Your own spells</div>`;
+  if (own.length){
+    const cols = p.columns||[];
+    h += `<table class="edit"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>` +
+      own.map(l=>`<tr>${cols.map(c=>`<td><input type="text" data-cell="${esc(p.id)}|${l.index}|${esc(c)}" value="${esc(l.row[c]||"")}" aria-label="${esc(c)}"></td>`).join("")}
+        <td class="rm">${l.match?`<button class="btn sm" data-spelllink="${l.index}" title="Swap this row for the book's ${esc(l.match.name)}, keeping your notes">Link to the book</button>`:""}
+          <button class="x" data-spellrm="${l.index}" title="remove row">✕</button></td></tr>`).join("") + `</tbody></table>`;
+  }
+  h += `<button class="btn sm" data-spellown="1">+ Add your own</button>
+    <p class="step-note">Improvised spells and ones your GM agreed to. The book's numbers don't apply to these.</p>`;
+  return h;
+}
+
 // ── Sheet: loadout & powers ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch, a=Engine.archetype(ch);
@@ -1183,10 +1259,8 @@ function renderShLoadout(){
           <p class="step-note">${esc(copy("ranksAdvanceInPlay"))}</p>`;
       } else h += `<p class="step-note">Nothing here yet.</p>`;
     }
-    if (p.type==="table"){
-      h += editTable(panelRows(ch, p.id), p.columns, p.id, "Add row");
-      if (p.id==="grimoire") h += `<p class="step-note">Free entry by design — Arcanists improvise. A common-spell catalog can slot in here later without touching the sheet.</p>`;
-    }
+    if (p.type==="table") h += editTable(panelRows(ch, p.id), p.columns, p.id, "Add row");
+    if (p.type==="grimoire") h += grimoireHtml(ch, p);
     if (p.type==="list" && p.id==="focused-skills"){
       const f = Engine.focusedSkillIds(ch).map(id=>(Engine.skillById(id)||{name:id}).name);
       h += f.length ? `<p class="step-note">${f.map(esc).join(" · ")} — advance at 3× current rank.</p>` : `<p class="step-note">None.</p>`;

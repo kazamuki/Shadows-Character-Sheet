@@ -717,3 +717,27 @@ test("Appendix Aberrations: fifteen Good, fifteen Neutral, nine Bad, and the one
   assert.equal(as["hemophiliac"], "Hemophiliac Disadvantage");
   assert.equal(Object.keys(as).length, 7);
 });
+
+// ── Grimoire (Magic.md, Decision 108) ─────────────────────────────────
+
+test('Magic.md: "Spell Power = Evocation Rank + WILL"', () => {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  const sp = Engine.spellPower(ch);
+  const evo = Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank;
+  assert.equal(sp.value, evo + Engine.derived(ch).WILL);
+  ch.archetypeChoices.disciplines = { evocation: 2 };
+  assert.equal(Engine.spellPower(ch).value, sp.value + 2, "buying Evocation didn't raise Spell Power");
+});
+
+test('Magic.md: Mastered "Costs 30 IP x TH ... TH is reduced by 1"; "A Mastered TH 1 spell requires no roll at all"', () => {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  ch.panelData.grimoire = [{ spellId: "zap", stage: "mastered", notes: "" }, { spellId: "firebolt", stage: "known", notes: "" }];
+  const [zap, bolt] = Engine.grimoire(ch).lines;
+  assert.equal(zap.printedTH, 1);
+  assert.equal(zap.th, 0);
+  assert.equal(zap.noRoll, true);
+  assert.equal(bolt.th, bolt.printedTH, "a Known spell lost TH");
+  assert.equal(bolt.masteryCost, 30 * bolt.printedTH);
+});

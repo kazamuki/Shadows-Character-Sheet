@@ -267,7 +267,7 @@ function renderArchetype(){
     // A1 closed here: the aberration list used to render a SECOND time in
     // this block, with its own [data-aber] buttons and its own validate rule.
     // It is the specialization block above, and always was.
-    h += `<p class="step-note">${esc(copy("applyFromText"))} Evocation starts at rank ${row.evocationStartingRank}; Common Spells (${esc(row.commonSpells)}) are chosen from the Magic section in play.</p>`;
+    h += `<p class="step-note">${esc(copy("applyFromText"))} Evocation starts at rank ${row.evocationStartingRank}; Your starting Known spells (${esc(row.commonSpells)}) go in your Grimoire, under Loadout & Powers once you lock.</p>`;
   }
 
   // Werewolf creation inputs
