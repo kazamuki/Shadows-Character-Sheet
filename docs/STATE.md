@@ -72,9 +72,9 @@ left that is still true now.
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
-dry run on a branch, a re-publish on a tag. **Live: app `0.15.0`,
-game data `0.10`** (tag `v0.15.0`, deployed 2026-09-23; loaded: both versions, TOL
-INT/BOD/COOL, Home and wizard render). `0.16.0` isn't tagged yet. `v0.13.0` and `v0.14.0`
+dry run on a branch, a re-publish on a tag. **Live: app `0.16.0`,
+game data `0.11`** (tag `v0.16.0`, deployed 2026-09-23; loaded: both versions, the
+Cascade data and TOL Spent, Home and wizard render). `v0.13.0` and `v0.14.0`
 rendered blank (#30). **Check a deploy by loading the page**, not by curling it.
 **`CHANGELOG.md` is current again** (W18); `docs.test.mjs` checks each bump has a section.
 
@@ -135,12 +135,10 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**This session closed the combat plan and made a wishlist pass** on
-`claude/combat-conditions-magic-tables-882feb`: the Magic-tables side session
-(Decision 106) and W7, W11, W12, W14 (Decision 107), plus W18's CHANGELOG
-catch-up. App 0.16.0 and game data 0.11 are both unshipped until it merges
-and a `v0.16.0` tag deploys. The next change a character can observe after
-that needs game data 0.12 (Decision 68). `npm run verify` is green (202
+**`main` is caught up through PR #36** (the combat plan closed, Decision
+106, and a wishlist pass, Decision 107), tagged `v0.16.0` and live on the
+demo site. Game data 0.11 has shipped, so the next change a character can
+observe needs game data 0.12 (Decision 68). `npm run verify` is green (202
 passing, 0 todo).
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone;
