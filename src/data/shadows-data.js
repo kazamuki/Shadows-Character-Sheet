@@ -50,10 +50,10 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.12",
+    "gamedataVersion": "0.13",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-23",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight). 0.10 (Decisions 103-105): TOL reads INT/BOD/COOL (Deighton, was INT/COOL/EMP), so every character's TOL can move; `naturalArmorRules` and `grants` of type naturalArmor on Thick Skin, Shake it Off, True Warrior (Iron Shirt) and Trueborn (Resilient Spirit), which a hit now reads (F25 stub); `recoveryRules.nanomed` (054's list, CQ12). 0.11 (Decision 106): the Cascade Table, the Aberration Table and the Appendix's Aberrations (`cascadeTable`, `aberrationTable`, `aberrationCategories`, `aberrationRules`, `aberrations`), and a TOL Spent tracker on the Arcanist that opens the Cascade panel -- a new tracker and new choices on the sheet. 0.12 (Decision 108): the Grimoire becomes a `grimoire` panel over the `spells` catalog, and `spellcraftRules` gains `spellPower` and `mastery` -- what an Arcanist's sheet offers changes."
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight). 0.10 (Decisions 103-105): TOL reads INT/BOD/COOL (Deighton, was INT/COOL/EMP), so every character's TOL can move; `naturalArmorRules` and `grants` of type naturalArmor on Thick Skin, Shake it Off, True Warrior (Iron Shirt) and Trueborn (Resilient Spirit), which a hit now reads (F25 stub); `recoveryRules.nanomed` (054's list, CQ12). 0.11 (Decision 106): the Cascade Table, the Aberration Table and the Appendix's Aberrations (`cascadeTable`, `aberrationTable`, `aberrationCategories`, `aberrationRules`, `aberrations`), and a TOL Spent tracker on the Arcanist that opens the Cascade panel -- a new tracker and new choices on the sheet. 0.12 (Decision 108): the Grimoire becomes a `grimoire` panel over the `spells` catalog, and `spellcraftRules` gains `spellPower` and `mastery` -- what an Arcanist's sheet offers changes. 0.13 (Decision 110): Aberrations carry the hooks the engine reads once one is recorded on the character (Drained `adjust` TOL -2, Phantom Pain `painLevels` 1, `aberrationRules.adjustFloor`), `spellcraftRules.spellAttack`, a `reference` panel on the Arcanist, and three Unique Aberrations synced to 041 (Aethereal Link reaches animals, Thaumaturgical Sight's +2 is for analyzing magic, Resonant Whispers drops charms) -- computed TOL and Pain can change."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -1803,7 +1803,8 @@ window.SHADOWS_DATA = {
      extra sheet UI an archetype needs from a small vocabulary -- "rankedList"
      (e.g. Disciplines, cappedBy a power-rank field), "table" (free-entry
      columns, e.g. Augments), "grimoire" (book spells from its `catalog` plus
-     your own in its columns, Decision 108), "tracker" (e.g. Tolerance Load,
+     your own in its columns, Decision 108), "reference" (read-only rules drawn
+     from the data sections its `shows` names, Decision 110), "tracker" (e.g. Tolerance Load,
      max = a derived id), "text".
      The app renders whatever is declared. To give a new archetype custom sheet
      panels you describe them here as data; no app change (this is how the Biomech
@@ -1905,20 +1906,20 @@ window.SHADOWS_DATA = {
           {
             "id": "thaumaturgical-sight",
             "name": "Thaumaturgical Sight",
-            "description": "With this Aberration you can see the threading and weave a spell creates, even if you have no other sight.",
-            "benefit": "Gain +2 for any Occult Check; what you see is only visible to you."
+            "description": "With this Aberration you can see the resonance a spell leaves, even if you have no other sight.",
+            "benefit": "Gain +2 for any Occult Check when analyzing magic; what you see is only visible to you."
           },
           {
             "id": "aethereal-link",
             "name": "Aethereal Link",
             "description": "You're linked to the cosmos in a way that is utterly different from most. When animals are close you are able to understand them at a telepathic level.",
-            "benefit": "Hear the thoughts of creatures around you within meters equal to your WILL. With a successful WILL Essence Check (TN 9 TH 1), communicate telepathically with a single creature in range while you maintain concentration."
+            "benefit": "Hear the thoughts of animals around you within meters equal to your WILL. With a successful WILL Essence Check (TN 9 TH 1), communicate telepathically with a single animal in range while you maintain concentration."
           },
           {
             "id": "resonant-whispers",
             "name": "Resonant Whispers",
             "description": "Magic is reactive to some people. When they touch things, it allows them to hear the whispers of magic within.",
-            "benefit": "Gain +3 to any Occult check to discern the properties of any charm, talisman, or artifact. Requires physical contact for at least one minute; the effect has audible and visual side effects everyone can see/hear."
+            "benefit": "Gain +3 to any Occult check to discern the properties of any talisman or artifact. Requires physical contact for at least one minute; the effect has audible and visual side effects everyone can see/hear."
           },
           {
             "id": "aetheric-magnetism",
@@ -1930,7 +1931,7 @@ window.SHADOWS_DATA = {
       },
       "coreMechanic": {
         "name": "Magic",
-        "description": "Channeling the flow of Aether through your body. Every spell is a Spellcraft roll: Discipline rank sets the d10 pool, dice meeting the Target Number (TN) are Hits, and any 1 is a Dud. Net Hits measured against the spell's Threshold (TH) decide the outcome. If Duds exceed Hits, the Aether ruptures back on the caster and Tolerance (TOL) drops by the difference. At 0 TOL the Arcanist is Exhausted and cannot cast until TOL recovers above zero (one hour of rest restores 1 point); a Rupture that would push TOL below zero is a Cascade. Your Grimoire, under Loadout & Powers, holds the Known spells you take from the book. The full Spellcraft rules and Enchantment/Alchemy are in the Magic chapter.",
+        "description": "Channeling the flow of Aether through your body. Every spell is a Spellcraft roll: Discipline rank sets the d10 pool, dice meeting the Target Number (TN) are Hits, and any 1 is a Dud. Net Hits measured against the spell's Threshold (TH) decide the outcome. If Duds exceed Hits, the Aether ruptures back on the caster and Tolerance (TOL) drops by the difference. At 0 TOL the Arcanist is Exhausted and cannot cast until TOL recovers above zero (one hour of rest restores 1 point); a Rupture that would push TOL below zero is a Cascade. Your Grimoire, under Loadout & Powers, holds the Known spells you take from the book. The Magic reference on the Archetype tab holds the Spellcraft roll, the spell tiers, the Cascade and the Aberrations.",
         "disciplines": {
           "maxRankBy": "powerLevel.maxPowerRank",
           "creationCostNote": "At character creation, raising a Discipline by 1 point costs 6 Character Points (REF source; pre-rename 'Freebie points').",
@@ -1987,6 +1988,18 @@ window.SHADOWS_DATA = {
             "note": "Every Rupture spends TOL equal to its degree: Duds minus Hits.",
             "atMax": "Exhausted. No Spellcraft until TOL is back above zero. An hour's rest restores 1.",
             "overMax": "cascade"
+          },
+          {
+            "id": "magic-reference",
+            "type": "reference",
+            "title": "Magic reference",
+            "shows": [
+              "spellcraftRules",
+              "spellTiers",
+              "cascadeTable",
+              "aberrationTable",
+              "aberrations"
+            ]
           }
         ]
       },
@@ -3651,6 +3664,8 @@ window.SHADOWS_DATA = {
       "willingConscious": "No modifier", "unconsciousAlly": "+1 TH", "unwilling": "+3 TH" },
     "spellPower": { "discipline": "evocation", "stat": "WILL",
       "text": "Spell Power is Evocation rank + WILL. Effects that say \"SP\" or \"½ SP\" read it." },
+    "spellAttack": { "discipline": "evocation", "stats": ["REF", "WILL"],
+      "text": "Spell Attack is Evocation rank + REF + WILL, the scores themselves and not their bonuses. Offensive spells aimed at a target roll it against the target's defenses." },
     "mastery": { "ipPerTH": 30, "thReduction": 1,
       "text": "Mastering a Known spell costs 30 IP × its TH, and takes 1 off its TH for good. A Mastered TH 1 spell needs no roll at all." },
     "castingRequiresVoice": "Shaping Aether requires the caster's voice, not necessarily volume. Gagged, silenced, underwater, or in a vacuum, the Aether does not answer.",
@@ -3674,7 +3689,10 @@ window.SHADOWS_DATA = {
      `aberrations` are the Cascade's list, NOT the Arcanist's creation-time
      Unique Aberrations -- those are the archetype's `specialization.options`
      and a different list. `as` names the Advantage or Disadvantage an entry
-     works like, as the CRB prints it; it's display text, not a grant. */
+     works like, as the CRB prints it; it's display text, not a grant. Once the character has an
+     Aberration (`trackers.aberrations`, Decision 110), `painLevels` adds to
+     Pain like a Condition and `adjust` moves a derived stat after its own
+     floor, down to `aberrationRules.adjustFloor`. */
   "cascadeTable": {
     "die": "1d10",
     "rollNote": "Roll 1d10 and add the degree of the Rupture that caused it. The worse the failure, the worse the result.",
@@ -3702,7 +3720,10 @@ window.SHADOWS_DATA = {
   ],
   "aberrationRules": {
     "intro": "The Aether leaves marks. Good, Neutral, and Bad describe mechanical tendency rather than moral weight. An Aberration is simply the shape the Aether decided to leave behind.",
-    "permanent": "Permanent Aberrations cannot be removed with IP. Only a quest, ritual, or other significant event will undo one."
+    "permanent": "Permanent Aberrations cannot be removed with IP. Only a quest, ritual, or other significant event will undo one.",
+    "noStacking": "An Aberration doesn't stack with itself. You have it or you don't.",
+    "adjustFloor": 0,
+    "adjustNote": "Drained can take maximum TOL below 1, never below 0. Current TOL doesn't move when it comes or goes: you rest the rest back."
   },
   "aberrations": [
     {"id": "aether-reservoir", "name": "Aether Reservoir", "category": "good", "description": "Once per day, recover 2 TOL at any time."},
@@ -3736,12 +3757,12 @@ window.SHADOWS_DATA = {
     {"id": "unreflected", "name": "Unreflected", "category": "neutral", "description": "Cameras, mirrors, and recordings capture you badly — blurred, delayed, or absent. You are nearly impossible to identify from footage. People who watch you in a mirror find it deeply unsettling."},
     {"id": "voltivorous", "name": "Voltivorous", "category": "neutral", "description": "Your body now draws on electrical current. Electrical damage heals you for half its amount instead of harming you. Go a day without absorbing at least 5 points of it, and you recover no TOL until you have."},
     {"id": "beacon", "name": "Beacon", "category": "bad", "description": "You radiate Aether like a lit window. Spirits, supernatural creatures, and other practitioners can sense you at a distance and find you without trying."},
-    {"id": "drained", "name": "Drained", "category": "bad", "description": "Your maximum TOL is reduced by 2."},
+    {"id": "drained", "name": "Drained", "category": "bad", "adjust": {"TOL": -2}, "description": "Your maximum TOL is reduced by 2."},
     {"id": "glossolalia", "name": "Glossolalia", "category": "bad", "description": "Your speech has fractured. Sound still comes out — words, sentences — but none of it is comprehensible, even to you. Written communication still works. So does Evocation, but whenever Duds appear in an Evocation roll, even on a successful cast, the GM decides how the Aether misread your intent. The effect is adjacent to what you attempted, but not quite it."},
     {"id": "hemophiliac", "name": "Hemophiliac", "category": "bad", "as": "Hemophiliac Disadvantage", "description": "Your blood no longer clots properly. Every wound keeps bleeding until treated."},
     {"id": "marked", "name": "Marked", "category": "bad", "description": "A visible sign of Aetheric exposure — scarring, discoloration, a pattern beneath the skin — that no makeup, clothing, or disguise fully hides. Anyone familiar with the signs knows what you are. −2 to Deception and Disguise to pass as ordinary. In a city where nobody practices openly, this is a problem."},
     {"id": "paranoia", "name": "Paranoia", "category": "bad", "as": "Minor Insanity Disadvantage — Paranoia", "description": "Your sensitivity to the Aether has become indistinguishable from threat perception. You are always on edge, and trust comes hard. Something is always watching — and eventually, that may be correct."},
-    {"id": "phantom-pain", "name": "Phantom Pain", "category": "bad", "description": "You permanently operate at one Pain Level higher than your Health Levels indicate."},
+    {"id": "phantom-pain", "name": "Phantom Pain", "category": "bad", "painLevels": 1, "description": "You permanently operate at one Pain Level higher than your Health Levels indicate."},
     {"id": "slow-tide", "name": "Slow Tide", "category": "bad", "description": "TOL recovers at 1 point per 2 hours of rest rather than per hour."},
     {"id": "tremor", "name": "Tremor", "category": "bad", "description": "A fine, constant shake has settled into your hands. −1 die on Enchantment and Alchemy rolls."}
   ],

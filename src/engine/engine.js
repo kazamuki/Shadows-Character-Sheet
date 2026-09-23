@@ -147,6 +147,14 @@ const Engine = (() => {
     if (row && typeof row.tolBonus === "number") out.TOL += row.tolBonus;
     // Manual adjustments (flat, post-compute)
     out.TOL += adjFor(ch,"TOL"); out.WILL += adjFor(ch,"WILL"); out.SAN += adjFor(ch,"SAN");
+    // Aberrations the character has (Decision 110) move a derived stat after
+    // its own floor: Drained takes max TOL below 1, never below adjustFloor.
+    // Never lifts a value already under that floor from something else.
+    const ab = aberrationState(ch).adjust, abFloor = (D().aberrationRules||{}).adjustFloor;
+    for (const k of Object.keys(ab)) if (typeof out[k]==="number" && ab[k]){
+      const v = out[k] + ab[k];
+      out[k] = typeof abFloor==="number" ? Math.max(Math.min(out[k], abFloor), v) : v;
+    }
     return out;
   }
 
@@ -400,13 +408,17 @@ const Engine = (() => {
     const hlLost = hs.lost;
     let band = hl.painLevels[0];
     for (const p of hl.painLevels) if (hlLost >= p.hlLostThreshold) band = p;
-    const fromConditions = conditionState(ch).painLevels;
+    const cs = conditionState(ch), as = aberrationState(ch);
+    const fromConditions = cs.painLevels, fromAberrations = as.painLevels;
+    // Who's adding Pain, by name, so the sheet can say "Agonized, Phantom Pain".
+    const painSources = cs.active.filter(a=>a.def && typeof a.def.painLevels==="number").map(a=>a.name)
+      .concat(as.active.filter(a=>a.def && typeof a.def.painLevels==="number").map(a=>a.name));
     const top = hl.painLevels.reduce((m,p)=>Math.max(m,p.level), 0);
-    const target = Math.max(0, Math.min(top, band.level + fromConditions));
+    const target = Math.max(0, Math.min(top, band.level + fromConditions + fromAberrations));
     const lvl = hl.painLevels.find(p=>p.level===target) || band;
     const pen = hl.painPenaltiesPerLevel;
     return { hlLost, level: lvl.level, label: lvl.label, description: lvl.description,
-             fromHealth: band.level, fromConditions,
+             fromHealth: band.level, fromConditions, fromAberrations, painSources,
              // `|| 0` normalises the -0 that `0 * -1` produces at Pain Level 0.
              skillPenalty:   lvl.level * pen.skillChecks || 0,
              essencePenalty: lvl.level * pen.essenceCheckDice || 0,
@@ -1299,6 +1311,79 @@ const Engine = (() => {
     return { ok:true, line };
   }
 
+  // ── Aberrations the character has (magic plan M7/M8, Decision 110) ──
+  // `trackers.aberrations` stores { id, permanence, note? } and nothing else
+  // (constraint 7). What an entry does is read from the catalog every time:
+  // `painLevels` adds to Pain like Agonized, `adjust` moves a derived stat
+  // (Drained, max TOL -2). One per id, like a Condition (Ken, 2026-09-23).
+  function aberrationState(ch){
+    const raw = (((ch||{}).trackers||{}).aberrations), list = Array.isArray(raw) ? raw : [];
+    const active = [], adjust = {};
+    let painLevels = 0;
+    list.forEach((e, index)=>{
+      if (!e || typeof e!=="object") return;
+      const def = aberrationById(e.id);
+      const cat = def && (D().aberrationCategories||[]).find(c=>c.id===def.category);
+      active.push({ index, id:e.id, def, name: def ? def.name : String(e.id),
+                    permanence: e.permanence==="permanent" ? "permanent" : "temporary",
+                    category: cat ? cat.name : (def ? def.category : null),
+                    note: typeof e.note==="string" ? e.note : "", missing: !def });
+      if (!def) return;                 // versionCheck reports the orphan
+      if (typeof def.painLevels==="number") painLevels += def.painLevels;
+      for (const [k, v] of Object.entries(def.adjust||{})) if (typeof v==="number") adjust[k] = (adjust[k]||0) + v;
+    });
+    return { active, permanent: active.filter(a=>a.permanence==="permanent"),
+             temporary: active.filter(a=>a.permanence==="temporary"), painLevels, adjust };
+  }
+  // Current TOL doesn't move when an Aberration changes max TOL (MQ2,
+  // Decision 109). The sheet stores TOL *Spent* (current = max - spent), so
+  // every tracker counting against TOL shifts by the change in max, floored
+  // at 0: current never rises above the new max, and a rise is rested back.
+  function keepCurrentTOL(ch, before){
+    const delta = derived(ch).TOL - before;
+    if (!delta) return;
+    const t = ch.trackers, panel = t.panel && typeof t.panel==="object" ? t.panel : (t.panel = {});
+    for (const p of archPanels(ch)) if (p && p.type==="tracker" && p.max==="TOL"){
+      const e = panel[p.id] && typeof panel[p.id]==="object" ? panel[p.id] : (panel[p.id] = { value:0 });
+      e.value = Math.max(0, nonNegInt(e.value) + delta);
+    }
+  }
+  const aberrationList = ch => Array.isArray(ch.trackers.aberrations) ? ch.trackers.aberrations : (ch.trackers.aberrations = []);
+  function recordAberration(ch, entry){
+    const def = aberrationById(entry && entry.id);
+    if (!def) return { ok:false, why:"Choose an Aberration." };
+    const list = aberrationList(ch);
+    if (list.some(x=>x && x.id===def.id)) return { ok:false, why:`Already ${def.name}. An Aberration doesn't stack with itself.` };
+    const before = derived(ch).TOL;
+    const e = { id:def.id, permanence: entry.permanence==="permanent" ? "permanent" : "temporary" };
+    if (entry.note) e.note = String(entry.note);
+    list.push(e);
+    keepCurrentTOL(ch, before);
+    return { ok:true, name:def.name };
+  }
+  function removeAberration(ch, index){
+    const list = aberrationList(ch);
+    if (!(index>=0 && index<list.length)) return { ok:false, why:"No such Aberration." };
+    const before = derived(ch).TOL;
+    list.splice(index, 1);
+    keepCurrentTOL(ch, before);
+    return { ok:true };
+  }
+  // "Record it": the Cascade's line in Notes and, if it left one, the
+  // Aberration on the character. The UI wraps this in one commit(), so one
+  // undo takes back both. Refuses before writing anything.
+  function recordCascade(ch, input, when){
+    const c = cascade(ch, input);
+    if (!c.ok) return c;
+    const ab = c.aberration;
+    if (ab && ab.pick && aberrationList(ch).some(x=>x && x.id===ab.pick.id))
+      return { ok:false, why:`Already ${ab.pick.name}. An Aberration doesn't stack with itself, so the GM picks another.` };
+    const r = logCascade(ch, input, when);
+    if (!r.ok) return r;
+    if (ab) recordAberration(ch, { id: ab.pick.id, permanence: ab.permanence });
+    return { ok:true, line:r.line, aberration: ab ? ab.pick.name : null };
+  }
+
   // ── Grimoire (Decision 108) ──
   // A row is a book spell ({ spellId, stage, notes }, everything else read
   // from `spells` every time, constraint 7) or the player's own (the panel's
@@ -1328,13 +1413,26 @@ const Engine = (() => {
     if (!d || typeof stat!=="number") return null;
     return { value: d.rank + stat, rank: d.rank, discipline: d.name, stat: R.stat, statValue: stat, text: R.text||"" };
   }
+  // Spell Attack = Evocation rank + the REF and WILL scores themselves, not
+  // their bonuses (Deighton, Decision 109). A Basic Stat reads its score, a
+  // derived one (WILL) its value.
+  function spellAttack(ch){
+    const R = (D().spellcraftRules||{}).spellAttack;
+    if (!R || !Array.isArray(R.stats)) return null;
+    const d = disciplineRanks(ch).find(x=>x.id===R.discipline);
+    if (!d) return null;
+    const dv = derived(ch), basic = new Set(D().stats.map(s=>s.id));
+    const parts = R.stats.map(id=>({ stat:id, value: basic.has(id) ? statValue(ch, id) : dv[id] }));
+    if (parts.some(p=>typeof p.value!=="number" || !isFinite(p.value))) return null;
+    return { value: d.rank + parts.reduce((s,p)=>s+p.value, 0), rank: d.rank, discipline: d.name, parts, text: R.text||"" };
+  }
   function spellMasteryCost(s){
     const M = (D().spellcraftRules||{}).mastery || {};
     return s && typeof s.th==="number" && s.th>=1 && M.ipPerTH ? M.ipPerTH * s.th : null;
   }
   function grimoire(ch){
     const p = grimoirePanel(ch);
-    if (!p) return { panel:null, lines:[], spellPower:null };
+    if (!p) return { panel:null, lines:[], spellPower:null, spellAttack:null };
     const pd = ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
     const rows = Array.isArray(pd[p.id]) ? pd[p.id] : [], M = (D().spellcraftRules||{}).mastery || {};
     const held = new Set(rows.filter(r=>r && typeof r.spellId==="string").map(r=>r.spellId));
@@ -1360,7 +1458,7 @@ const Engine = (() => {
                tags:s.tags||[], flavorLine:s.flavorLine||"", spellNotes:s.notes||"",
                masteryCost: mastered ? null : spellMasteryCost(s) };
     });
-    return { panel:p, lines, held:[...held], spellPower: spellPower(ch), masteryText: M.text||"" };
+    return { panel:p, lines, held:[...held], spellPower: spellPower(ch), spellAttack: spellAttack(ch), masteryText: M.text||"" };
   }
   function addSpell(ch, spellId){
     const rows = grimoireRows(ch), s = spellById(spellId);
@@ -1987,6 +2085,9 @@ const Engine = (() => {
       if (!disById(d.id)) issues.push(`Disadvantage "${d.id}" no longer exists in game data.`);
     for (const e of ((c.trackers||{}).conditions)||[])
       if (e && !conditionById(e.id)) issues.push(`Condition "${e.id}" no longer exists in game data.`);
+    const abs = (c.trackers||{}).aberrations;
+    for (const e of Array.isArray(abs) ? abs : [])
+      if (e && !aberrationById(e.id)) issues.push(`Aberration "${e.id}" no longer exists in game data.`);
     // Phase 3: milestone ids + IP journal vs. IPE consistency
     for (const t of ((c.progression||{}).milestones||{}).minor||[])
       if (!(D().milestones.minorShared||[]).some(m=>m.id===t.id))
@@ -2026,8 +2127,10 @@ const Engine = (() => {
            naturalArmor, nanomedKit,
            // Cascade (Decision 106)
            cascade, logCascade, aberrationById,
-           // Grimoire (Decision 108)
-           spellById, grimoire, spellPower, addSpell, linkSpell, removeGrimoireRow,
+           // Aberrations on the character (Decision 110)
+           aberrationState, recordAberration, removeAberration, recordCascade,
+           // Grimoire (Decisions 108, 110)
+           spellById, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,

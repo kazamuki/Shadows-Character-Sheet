@@ -276,6 +276,8 @@ function degenerates(){
     "junk grant sources":  Engine.migrate({ identity:{archetype:"professional"}, archetypeChoices:{specialization:["true-warrior","no-such-spec"]},
                                             advantages:[{id:"thick-skin", rank:"x"}, null],
                                             progression:{ milestones:{ major:[null, {id:"shake-it-off"}, {id:"no-such-milestone"}] } } }),
+    "junk aberrations":    Engine.migrate({ identity:{archetype:"arcanist"}, trackers:{ aberrations:[null, 7, {id:"no-such-aberration"},
+                                            {id:"drained", permanence:"forever"}, {id:"phantom-pain"}], panel:{ "tol-spent":{ value:"lots" } } } }),
   };
 }
 
@@ -321,7 +323,7 @@ test("no exported reader throws on any character migrate() can return", () => {
                    "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalArmor","naturalHealing","resolveReset","luckState",
                    "sanState","focusedSkillIds","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
-                   "disciplineRanks","buildExport","versionCheck"];
+                   "disciplineRanks","buildExport","versionCheck","aberrationState","spellAttack","spellPower","grimoire"];
   const failures = [];
   for (const [label, ch] of Object.entries(degenerates())){
     for (const fn of readers){
@@ -1365,4 +1367,94 @@ test("the Grimoire functions are total on every degenerate character", () => {
     }
   }
   assert.deepEqual(failures, []);
+});
+
+// ── Aberrations on the character (Decision 110) ──────────────────────
+
+test("an Aberration is held once, recorded and cleared by index, and an unknown id is refused", () => {
+  const ch = subject();
+  assert.equal(Engine.recordAberration(ch, { id: "no-such" }).ok, false);
+  assert.equal(Engine.recordAberration(ch, { id: "night-eyes", permanence: "temporary" }).ok, true);
+  const again = Engine.recordAberration(ch, { id: "night-eyes", permanence: "permanent" });
+  assert.equal(again.ok, false, "the same Aberration was held twice");
+  assert.match(again.why, /doesn't stack/);
+  assert.equal(ch.trackers.aberrations.length, 1);
+  assert.equal(ch.trackers.aberrations[0].permanence, "temporary", "a refused duplicate changed the one held");
+  Engine.recordAberration(ch, { id: "heterochromia", permanence: "permanent", note: "left eye" });
+  const st = Engine.aberrationState(ch);
+  assert.deepEqual([...st.permanent.map(a => a.name)], ["Heterochromia"]);
+  assert.deepEqual([...st.temporary.map(a => a.name)], ["Night Eyes"]);
+  assert.equal(st.permanent[0].note, "left eye");
+  assert.equal(st.permanent[0].category, "Neutral");
+  assert.equal(Engine.removeAberration(ch, 5).ok, false);
+  assert.equal(Engine.removeAberration(ch, 0).ok, true);
+  assert.deepEqual([...ch.trackers.aberrations.map(e => e.id)], ["heterochromia"]);
+});
+
+test("the character stores only { id, permanence, note } — what an Aberration does is read from the catalog", () => {
+  const ch = subject();
+  Engine.recordAberration(ch, { id: "drained", permanence: "permanent" });
+  assert.deepEqual(Object.keys(ch.trackers.aberrations[0]).sort(), ["id", "permanence"]);
+  assert.equal(ch.trackers.adjustments.length, 0, "Drained was written as an adjustment instead of read from the catalog");
+});
+
+test("a missing Aberration id renders and is reported, and adds nothing", () => {
+  const ch = subject();
+  ch.trackers.aberrations = [{ id: "retired-aberration", permanence: "permanent" }];
+  const st = Engine.aberrationState(ch);
+  assert.equal(st.active[0].missing, true);
+  assert.equal(st.active[0].name, "retired-aberration");
+  assert.equal(st.painLevels, 0);
+  assert.ok(Engine.versionCheck(ch).some(i => /Aberration "retired-aberration"/.test(i)));
+});
+
+test("Drained never lifts a TOL something else already took below 0", () => {
+  const ch = subject();
+  ch.trackers.adjustments = [{ target: "TOL", amount: -50, note: "fixture" }];
+  const low = Engine.derived(ch).TOL;
+  assert.ok(low < 0);
+  Engine.recordAberration(ch, { id: "drained", permanence: "temporary" });
+  assert.equal(Engine.derived(ch).TOL, low);
+});
+
+test("Record it writes the note and the Aberration as one undoable action", () => {
+  const ch = subject();
+  ch.notes = "Owes Mara a favor.";
+  const input = { roll: 6, degree: 4, aberrationRoll: 9, pick: "drained" };       // 10: Permanent; 9: Bad
+  const tolBefore = Engine.derived(ch).TOL;
+  const before = JSON.parse(JSON.stringify(ch));
+  const r = Engine.recordCascade(ch, input, "2026-09-23");
+  assert.equal(r.ok, true, r.why);
+  assert.equal(r.aberration, "Drained");
+  assert.match(ch.notes, /^Owes Mara a favor\.\nCascade, 2026-09-23: .*Drained \(permanent, Bad\)/);
+  assert.deepEqual(ch.trackers.aberrations.map(e => e.id + "/" + e.permanence).join(), "drained/permanent");
+  assert.equal(Engine.derived(ch).TOL, Math.max(0, tolBefore - 2));
+  Engine.recordAction(ch, "notes", "Cascade: Permanent Aberration (Drained)", before);
+  assert.ok(Engine.undoLastAction(ch).ok);
+  assert.equal(ch.notes, "Owes Mara a favor.");
+  assert.equal(ch.trackers.aberrations.length, 0, "undo left the Aberration behind");
+  assert.equal(Engine.derived(ch).TOL, tolBefore);
+});
+
+test("Record it refuses an Aberration already held, before writing anything", () => {
+  const ch = subject();
+  Engine.recordAberration(ch, { id: "drained", permanence: "temporary" });
+  const notes = ch.notes;
+  const r = Engine.recordCascade(ch, { roll: 6, degree: 4, aberrationRoll: 9, pick: "drained" });
+  assert.equal(r.ok, false);
+  assert.equal(ch.notes, notes, "a refused Record it wrote into Notes");
+  assert.equal(ch.trackers.aberrations.length, 1);
+  // A result with no Aberration only writes the note, as Add to notes did.
+  assert.equal(Engine.recordCascade(ch, { roll: 2, degree: 3 }).ok, true);
+  assert.match(ch.notes, /Backlash/);
+  assert.equal(ch.trackers.aberrations.length, 1);
+  // And the pick is still required.
+  assert.equal(Engine.recordCascade(ch, { roll: 6, degree: 4, aberrationRoll: 9 }).ok, false);
+});
+
+test("the Arcanist declares a reference panel naming data sections that exist", () => {
+  const panel = D.archetypes.find(a => a.id === "arcanist").coreMechanic.panels.find(p => p.type === "reference");
+  assert.ok(panel, "no reference panel");
+  assert.ok(panel.shows.length > 0);
+  for (const k of panel.shows) assert.ok(D[k], `${k} isn't in the game data`);
 });

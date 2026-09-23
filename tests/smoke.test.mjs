@@ -691,7 +691,7 @@ test("a tracker action offers its own Undo, and that Undo takes back only that a
 
 // ── Cascade (Decision 106) ────────────────────────────────────────────
 
-test("TOL Spent past TOL opens the Cascade panel; Add to notes writes one line and undoes", () => {
+test("TOL Spent past TOL opens the Cascade panel; Record it writes the note and the Aberration, and one undo takes back both", () => {
   const ch = lockedCharacter();
   const tol = Engine.derived(ch).TOL;
   ch.trackers.panel["tol-spent"] = { value: tol };
@@ -703,14 +703,17 @@ test("TOL Spent past TOL opens the Cascade panel; Add to notes writes one line a
   const set = (k, v) => { const el = app.$(`[data-cas="${k}"]`); el.value = v; el.dispatchEvent(new app.window.Event("change")); };
   set("roll", "5"); set("degree", "2");
   assert.match(app.$("[data-cascadepanel]").textContent, /Temporary Aberration/);
-  assert.ok(app.$("[data-caslog]").disabled, "Add to notes before the Aberration roll");
+  assert.ok(app.$("[data-caslog]").disabled, "Record it before the Aberration roll");
   set("aberrationRoll", "1");
   assert.match(app.$("[data-cascadepanel]").textContent, /Good/);
   set("pick", "night-eyes");
   app.click("[data-caslog]");
   assert.match(activeChar(app).notes, /Night Eyes \(temporary, Good\)/);
+  assert.deepEqual(activeChar(app).trackers.aberrations.map(e => e.id + "/" + e.permanence), ["night-eyes/temporary"]);
+  assert.match(app.$("#main").textContent, /Aberrations[\s\S]*Night Eyes/, "the recorded Aberration isn't on the sheet");
   app.click("[data-toastundo]");
   assert.equal(activeChar(app).notes, "", "undo left the Cascade in Notes");
+  assert.equal(activeChar(app).trackers.aberrations.length, 0, "undo left the Aberration behind");
   assert.deepEqual(app.errors, []);
 });
 
@@ -772,5 +775,49 @@ test("Grimoire: the picker offers to link a spell you typed yourself instead of 
   assert.equal(rows.length, 1, "linking added a row");
   assert.equal(rows[0].spellId, "kindle");
   assert.equal(rows[0].notes, "lights the stove");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Aberrations on the character (Decision 110) ──────────────────────
+
+test("Aberrations: the palette adds one by hand, Drained moves max TOL but not current, and Clear gives no TOL back", () => {
+  const ch = lockedCharacter();
+  const max = Engine.derived(ch).TOL;
+  ch.trackers.panel["tol-spent"] = { value: 1 };                   // current = max - 1
+  const app = openSheet(ch, "trackers");
+  assert.match(app.$("#main").textContent, /No Aberrations/);
+  const pal = app.$("[data-abpalette]");
+  pal.open = true; pal.dispatchEvent(new app.window.Event("toggle"));
+  app.click('[data-abquick="drained"]');
+  const got = activeChar(app);
+  assert.deepEqual(got.trackers.aberrations.map(e => e.id + "/" + e.permanence), ["drained/temporary"]);
+  assert.equal(Engine.derived(got).TOL, Math.max(0, max - 2));
+  assert.equal(Engine.derived(got).TOL - got.trackers.panel["tol-spent"].value, Math.min(max - 1, Math.max(0, max - 2)), "current TOL moved");
+  assert.equal(app.$('[data-abquick="drained"]').disabled, true, "a held Aberration is still offered");
+  assert.match(app.$("#undotoast").textContent, /Aberration: Drained \(temporary\)/);
+  app.click('[data-abrm="0"]');
+  const after = activeChar(app);
+  assert.equal(after.trackers.aberrations.length, 0);
+  assert.equal(Engine.derived(after).TOL, max);
+  assert.equal(Engine.derived(after).TOL - after.trackers.panel["tol-spent"].value, Math.min(max - 1, Math.max(0, max - 2)), "clearing Drained gave TOL back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Aberrations: a permanent one shows on the Archetype tab, Phantom Pain names itself on Main, and the Magic reference and Spell Attack render", () => {
+  const ch = lockedCharacter();
+  ch.trackers.aberrations = [{ id: "phantom-pain", permanence: "permanent", note: "since the warehouse" }];
+  const app = openSheet(ch, "archetype");
+  const text = app.$("#main").textContent;
+  assert.match(text, /Permanent Aberrations[\s\S]*Phantom Pain[\s\S]*since the warehouse/);
+  const ref = app.$('[data-reference="magic-reference"]');
+  assert.ok(ref, "no Magic reference");
+  for (const t of ["The Spellcraft roll", "Spell tiers", "The Cascade Table", "The Aberration Table", "Aberrations"])
+    assert.match(ref.textContent, new RegExp(t), `the reference has no ${t}`);
+  assert.match(ref.textContent, /Spell Attack is Evocation rank \+ REF \+ WILL/);
+  app.click('[data-sec="main"]');
+  assert.match(app.$("#main").textContent, /from Phantom Pain/, "Main doesn't say where the Pain comes from");
+  app.click('[data-sec="loadout"]');
+  assert.match(app.$("#main").textContent, /Spell Attack \d+/);
+  assert.equal(app.$('#main [data-reference]'), null, "the reference panel leaked into Loadout");
   assert.deepEqual(app.errors, []);
 });

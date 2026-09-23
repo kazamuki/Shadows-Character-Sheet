@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.17.0";
+const APP_VERSION = "0.18.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -394,8 +394,8 @@ function bindSheet(){
       else { const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.value=Math.max(0,(e.value||0)+delta); }
     });
   });
-  // Cascade (Decision 106): the dice live in S.cascade; "Add to notes" is
-  // the one commit(), so the note undoes like any other action.
+  // Cascade (Decisions 106, 110): the dice live in S.cascade; "Record it" is
+  // the one commit(), so the note and the Aberration undo together.
   main.querySelectorAll("[data-cas]").forEach(el=>el.onchange=()=>{
     const st=S.cascade; if (!st) return;
     st[el.dataset.cas]=el.value;
@@ -407,9 +407,29 @@ function bindSheet(){
   main.querySelectorAll("[data-caslog]").forEach(b=>b.onclick=()=>{
     const st=S.cascade; if (!st) return;
     const input=cascadeInput(st), c=Engine.cascade(ch, input), ab=c.aberration;
-    if (!c.ok || (ab && !ab.pick)){ alert(c.ok ? "Pick the Aberration the GM chose." : c.why); return; }
+    const r=Engine.recordCascade(clone(ch), input);               // validate without mutating
+    if (!r.ok){ alert(r.why); return; }
     S.cascade=null;
-    commit("notes", `Cascade: ${c.result.name}${ab?` (${ab.pick.name})`:""}`, ()=>{ Engine.logCascade(ch, input); });
+    commit(ab?"aberration":"notes", `Cascade: ${c.result.name}${ab?` (${ab.pick.name})`:""}`, ()=>{ Engine.recordCascade(ch, input); });
+  });
+  // Aberrations on the character (Decision 110)
+  const abName = i => { const a=Engine.aberrationState(ch).active.find(x=>x.index===i); return a ? a.name : "Aberration"; };
+  main.querySelectorAll("[data-abpalette]").forEach(d=>d.ontoggle=()=>{ S.abPalette=d.open; });
+  main.querySelectorAll("[data-abperm]").forEach(b=>b.onclick=()=>{ S.abPerm=b.dataset.abperm; S.abPalette=true; renderMain(); });
+  main.querySelectorAll("[data-abquick]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.abquick, permanence=S.abPerm==="permanent"?"permanent":"temporary";
+    const r=Engine.recordAberration(clone(ch), {id, permanence});
+    if (!r.ok){ alert(r.why); return; }
+    commit("aberration", `Aberration: ${r.name} (${permanence})`, ()=>{ Engine.recordAberration(ch, {id, permanence}); });
+  });
+  main.querySelectorAll("[data-abrm]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.abrm), e=ch.trackers.aberrations[i], nm=abName(i);
+    commit("aberration", `${e&&e.permanence==="permanent"?"Removed":"Cleared"}: ${nm}`, ()=>{ Engine.removeAberration(ch, i); });
+  });
+  main.querySelectorAll("[data-abnote]").forEach(inp=>inp.onchange=()=>{
+    const i=Number(inp.dataset.abnote), e=ch.trackers.aberrations[i];
+    if (!e) return;
+    commit("aberration", `Note on ${abName(i)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
   });
   main.querySelectorAll("[data-trkmax]").forEach(inp=>inp.onchange=()=>{
     const pid=inp.dataset.trkmax, mx=inp.value===""?null:Math.max(0,Number(inp.value));
