@@ -408,12 +408,10 @@ function openSheet(ch, section) {
   app.click(`[data-sec="${section}"]`);
   return app;
 }
+// W14: one click on a palette chip; a body-part Condition then asks where.
 function addCondition(app, id, location) {
-  const sel = app.$("[data-condadd-id]");
-  sel.value = id;
-  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
-  if (location) app.$("[data-condadd-loc]").value = location;
-  app.click("[data-condadd]");
+  app.click(`[data-condquick="${id}"]`);
+  if (location) { app.$("[data-condadd-loc]").value = location; app.click("[data-condadd]"); }
 }
 const activeConditions = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.trackers.conditions;
 
@@ -438,12 +436,11 @@ test("a Condition added on Trackers raises Pain, shows on Main, and undoes", () 
 
 test("a body-part Condition shows the picker, and the same part twice is refused", () => {
   const app = openSheet(lockedCharacter(), "trackers");
-  const loc = app.$("[data-condadd-loc]");
-  assert.equal(loc.hidden, true, "the body-part picker shows before it's needed");
-  const sel = app.$("[data-condadd-id]");
-  sel.value = "injured";
-  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
-  assert.equal(app.$("[data-condadd-loc]").hidden, false, "Injured did not ask for a body part");
+  assert.equal(app.$("[data-condadd-loc]"), null, "the body-part picker shows before it's needed");
+  app.click('[data-condquick="injured"]');
+  assert.ok(app.$("[data-condadd-loc]"), "Injured did not ask for a body part");
+  assert.equal(activeConditions(app).length, 0, "a body-part Condition went on before saying where");
+  app.click("[data-condpickcancel]");
 
   const alerts = [];
   app.window.alert = m => alerts.push(m);
@@ -714,5 +711,22 @@ test("TOL Spent past TOL opens the Cascade panel; Add to notes writes one line a
   assert.match(activeChar(app).notes, /Night Eyes \(temporary, Good\)/);
   app.click("[data-toastundo]");
   assert.equal(activeChar(app).notes, "", "undo left the Cascade in Notes");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Conditions as chips (W14) ─────────────────────────────────────────
+
+test("a palette chip adds its Condition in one click, greys out once held, and Main's chip opens its details", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  app.click('[data-condquick="prone"]');
+  assert.deepEqual(activeConditions(app).map(c => c.id), ["prone"]);
+  assert.equal(app.$('[data-condquick="prone"]').disabled, true, "a held Condition is still offered");
+  assert.equal(app.$('[data-condquick="injured"]').disabled, false, "a body-part Condition should stay open for another part");
+  assert.equal(app.$(".cond-info"), null, "details showed before the chip was clicked");
+  app.click('[data-condinfo="0"]');
+  assert.match(app.$(".cond-info").textContent, /Recovery:/);
+  app.click('[data-condinfo="0"]');
+  assert.equal(app.$(".cond-info"), null, "a second click didn't close the details");
+  assert.match(app.$("#undotoast").textContent, /Condition: Prone/, "the add didn't offer its undo");
   assert.deepEqual(app.errors, []);
 });

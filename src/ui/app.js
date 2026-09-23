@@ -330,20 +330,32 @@ function bindSheet(){
   // body-part picker only shows for a Condition that needs one.
   const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
     return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
-  main.querySelectorAll("[data-condadd-id]").forEach(sel=>sel.onchange=()=>{
-    const def=Engine.conditionById(sel.value), loc=sel.parentNode.querySelector("[data-condadd-loc]");
-    if (loc) loc.hidden = !(def && def.location);
-  });
-  main.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
-    const box=b.parentNode, id=(box.querySelector("[data-condadd-id]")||{}).value;
-    const location=(box.querySelector("[data-condadd-loc]")||{}).value;
-    if (!id) return;
+  // W14: a palette chip adds in one click (the undo toast makes that safe);
+  // a body-part Condition asks where first, through the same Add.
+  const addCond = (id, location) => {
     const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
     if (!r.ok){ alert(r.why); return; }
+    S.condPick=null;
     commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
+  };
+  main.querySelectorAll("[data-condpalette]").forEach(d=>d.ontoggle=()=>{ S.condPalette=d.open; });
+  main.querySelectorAll("[data-condquick]").forEach(b=>b.onclick=()=>{
+    const def=Engine.conditionById(b.dataset.condquick); if (!def) return;
+    if (def.location){ S.condPick=def.id; renderMain(); return; }
+    addCond(def.id);
+  });
+  main.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
+  main.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
+    const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
+    if (!location){ alert("Pick the body part."); return; }
+    addCond(b.dataset.condadd, location);
+  });
+  main.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condinfo); S.condInfo = S.condInfo===i ? null : i; renderMain();
   });
   main.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
+    S.condInfo=null;                                   // indexes shift once one goes
     commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
   });
   main.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
