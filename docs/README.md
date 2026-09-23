@@ -5,11 +5,12 @@ Read in this order. The first two are enough to start work.
 | File | What it is | When to read it |
 |---|---|---|
 | `../CLAUDE.md` | Standing instructions: hard constraints, conventions, how we work. No live numbers — those drift. | First, every session. |
-| `STATE.md` | Where the build stands, the batch board, who can clear what, branches in flight. **Rewritten, never appended.** | Second, every session. Read it whole. |
+| `STATE.md` | Where the build stands, who can clear what, where to start. **Rewritten, never appended.** | Second, every session. Read it whole. |
 | `INDEX.md` | **The map.** Where every kind of thing is written down, what every `A`/`B`/`C`/`F` id means, and all decisions grouped by topic. | When you know *what* you want and not *where* it is. |
 | `SCHEMA.md` | The authority: architecture, both schemas, the numbered decision ledger, the flag table, the roadmap. | **Not front to back.** Open the section you need — `INDEX.md` tells you which. |
 | `VOICE-APP.md` | City voice vs tool voice, for player-facing strings. | Before writing any string a player reads. |
-| `log/` | Session history, append-only. Why something was done, what it cost, what to watch for. | When you need the reasoning behind a past change. |
+| `WISHLIST.md` | Unscheduled ideas, mostly UX and table feel, as `W` ids. Not decisions, not a queue. Ken's and Claude's both. | When a session has room, or you notice something worth fixing later. |
+| `log/` | History, append-only. `2026.md`: why something was done, what it cost, what to watch for. `shipped.md`: the batch board, one row per merge. | When you need the reasoning behind a past change. |
 | `audits/` | Dated whole-app audits. Findings referenced by id (A1, B2, C3) everywhere else. | Look up the id before working on it. |
 | `reference/` | Mirrors of documents mastered in the CRB project. **Never edited here** — re-pull instead. | When you need the source standard. |
 

@@ -646,6 +646,7 @@ No cascade logic to maintain — it falls out of the architecture.
 14. **IP costs:** stat increase = current value ×10; skill rank = 5× current
     (Focused 3×); skills/powers cap at rank 10 via IPE; WILL and TOL cannot
     be raised directly.
+    → **Superseded in part by Decision 97** — a new skill after creation costs a flat 25 IP, not the rank-1 price.
 15. **Archetypes:** generic six-block structure (Power Scaling, Baseline
     Traits, Specialization, Core Mechanic, Powers & Vulnerabilities, Growth &
     Milestones), designer-fillable, with `status` badges for tbd/draft content.
@@ -658,6 +659,7 @@ No cascade logic to maintain — it falls out of the architecture.
     modifier curve extrapolates +1 per point above 10 (superseded past 10 by
     Decision 98: +1 per 5 points). Werewolf stat bonus
     allocates to any stat but respects the cap of 10.
+    → **Superseded in part by Decision 98** — the curve past 10.
 19. **(Phase 2)** Arcanist Disciplines are purchasable in the CP step at
     6 CP/rank, capped at the power level's Max Power Rank. Evocation's
     starting rank comes from the scaling table and is computed, not stored.
@@ -665,7 +667,7 @@ No cascade logic to maintain — it falls out of the architecture.
     only structured fields (e.g. `tolBonus`) auto-apply to computed values.
     → Resolved in Phase 3 by Decision 26 (manual adjustments ledger).
 21. **(Phase 2)** Common-spell *selection* is deferred to Phase 3; the wizard
-    shows the computed count (TOL + 2d4) only. → Resolved by Decision 25.
+    shows the computed count (TOL + 2d4) only. → **Superseded by Decision 25** — the Grimoire decided it: free entry.
 22. **(Phase 2)** Engine normalizes legacy stat-id aliases in skill data
     (e.g. `BODY` → `BOD`) and degrades gracefully on unknown ids, surfacing
     a gold data-issue flag instead of crashing.
@@ -692,6 +694,7 @@ No cascade logic to maintain — it falls out of the architecture.
     entry is undoable; `versionCheck` flags IPE/journal divergence on
     import. Stat raises cost current value ×10 against the **computed**
     current value; WILL/TOL are blocked from direct raise.
+    → **Superseded in part by Decision 49** — "the last entry is undoable": the one global undo replaced the IP-only one.
 28. **(Phase 3)** Character schema bumped to **0.3**. `migrate()` upgrades
     0.2 files on import/resume. `buildExport` seeds starting Çredits from
     the creation roll **only while the credits ledger is empty** — tracked
@@ -726,6 +729,7 @@ No cascade logic to maintain — it falls out of the architecture.
     hand) + a read-only Weapons quick-reference on the right. Identity drops to a
     collapsible at the bottom. The rail still shows on every other tab. Stacks to
     one column under 900px. (Ken, 2026-06-15)
+    → **Superseded in part by Decision 35** — the rail is hidden on every locked tab, not Main only.
 33. **(Phase 3.1)** Fixed: the REF/Hand brand icon rendered as a solid blob.
     `hand.svg` used a full-canvas background **circle** (r≈256, opacity 1) rather
     than the transparent rect the other ten use; the normalizer now strips any
@@ -951,6 +955,7 @@ No cascade logic to maintain — it falls out of the architecture.
     make one commit both a content update *and* a new subsystem, which is the
     one thing this project has consistently refused to do. These ~15 entries
     become the **test corpus** when the machinery lands. (Ken, 2026-08-29)
+    → **Superseded in part by Decisions 77 and 87** — "none of it is encoded yet" stopped being true: 77 encoded the selection system, 87 `grants`.
 
 59. **(B2)** **Legacy stat aliases point at live stat ids, and `normStat`
     verifies its own target.** The alias map is the pre-Shadows stat vocabulary
@@ -1900,6 +1905,7 @@ No cascade logic to maintain — it falls out of the architecture.
       directly (P7). App **0.12.0 → 0.13.0** (minor, new capability).
       Character schema unchanged (0.8 already carried every field).
       (Ken + Claude, 2026-09-22)
+    → **Superseded in part by Decision 100** — the bare "Restore a Massive level" button folded into Focused Healing.
 
 100. **(Loadout & recovery — combat plan Session 4, data + engine + app)**
     **Loadout writes weapons and armor from the catalog, a weapon line is
@@ -2003,6 +2009,42 @@ No cascade logic to maintain — it falls out of the architecture.
       while 055 says Focused Healing is required (plan CQ13). The app's
       Focused Healing clears it either way.
     (Ken + Claude, 2026-09-22)
+101. **(Docs)** **The batch board leaves `STATE.md` for `docs/log/shipped.md`,
+    and unscheduled ideas get `docs/WISHLIST.md`.** Decision 74 put the board
+    in STATE. By 2026-09-22 it was twenty-odd rows of merged history, and STATE
+    had reached its 200-line guard (`tests/docs.test.mjs`) with the board as the
+    biggest block in it. That was the guard working: the history belongs with
+    the other history. `log/shipped.md` is append-only like `log/2026.md`, with
+    one row per merged batch. STATE §2 keeps only what shipped work left behind
+    that is still true now (the live deploy, the two traps). Separately,
+    `WISHLIST.md` holds ideas nobody has committed to yet, as `W` ids that are
+    never reused, raised by Ken or by Claude. It is not a queue and not STATE
+    §3: STATE lists what is in flight or waiting on someone, and a wishlist item
+    waits only on a free session and Ken's yes. An item leaves the wishlist
+    when it is picked up and is struck through, not deleted. Neither change is
+    player-visible, so no version moves. (Ken + Claude, 2026-09-22)
+102. **(Docs)** **A decision that replaces another marks it in the same
+    change, in the ledger and in the index, and a test holds the two
+    together.** The ledger reached 101 entries, and Ken asked whether the
+    code-level ones should move to an archive. They stay. Numbers are cited
+    141 times in `src/` and `tests/` alone, so an archive could only move text
+    and add a place to look. And a split by importance would have archived
+    Decision 93 as a routine data merge, when a note inside it was what caught
+    Deighton's TOL ruling reversing a formula Scott had confirmed. Length was
+    never the cost. The cost was entries that read as current after a later
+    decision replaced them: Decision 18's INDEX line still said "+1 per point
+    above 10" after Decision 98, and six more were in the same state (14, 21,
+    27, 32, 58, 99), only two of them noted anywhere. So the ledger entry gets
+    `→ **Superseded [in part] by Decision N**` with a clause saying what, the
+    INDEX line gets `→ **superseded [in part] by N**`, and a wholly replaced
+    line is struck through. Entries are never deleted and never renumbered.
+    `tests/docs.test.mjs` fails if the two disagree. The old marker "→
+    Resolved by Decision 25" on 21 became the first case. INDEX also gains a
+    short **load-bearing** table (the decisions that shape what gets built,
+    as opposed to how) and a **Housekeeping** group for the four entries that
+    record rather than choose (33, 34, 42, 47). `CLAUDE.md` carries the
+    working rule: before numbering a decision, search the ledger for what it
+    touches. (Ken + Claude, 2026-09-22)
 
 ## 5. Open Flags
 
