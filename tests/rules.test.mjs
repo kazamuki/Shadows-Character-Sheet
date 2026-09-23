@@ -424,8 +424,9 @@ test("Gear: RES answers only the damage it matches. Kinetic by default, Energy w
 });
 
 test('CRB 053 Playing it Out: "PROT: 2, plus RES 3. That\'s 5 defended of 15 ... 10 gets through. That\'s two Health Levels ... Pain Level 1"', () => {
-  const ch = subject({ bod: 5 });
-  const hit = { damage: 15, damageType: "ballistic", protRoll: 2, manual: { res: 3 } };
+  // His vest isn't in the catalog, so it goes on the sheet as a custom piece.
+  const ch = wearing(subject({ bod: 5 }), undefined, { id: undefined, custom: true, name: "Vest", prot: "1d6", res: 3, integrity: 20 });
+  const hit = { damage: 15, damageType: "ballistic", protRoll: 2 };
   const r = Engine.resolveHit(ch, hit);
   assert.deepEqual([r.absorbed, r.through, r.lostThisHit], [5, 10, 2]);
   Engine.applyHit(ch, hit);
@@ -498,4 +499,145 @@ test("Design ruling (CQ5): only Massive damage offers Injured and Maimed", () =>
   assert.ok(!reg.prompts.conditions.includes("injured"));
   const mas = Engine.resolveHit(subject({ bod: 10 }), { damage: 10, damageType: "ballistic", category: "massive" });
   assert.ok(mas.prompts.conditions.includes("injured") && mas.prompts.conditions.includes("maimed"));
+});
+
+// ── Loadout & recovery (053 Weapons/Wear, 055 Downtime, Gear — Decision 100) ──
+
+test('CRB 053: "A character with BOD 5 using a BOD+3 weapon does 8 damage per strike"', () => {
+  const ch = subject({ bod: 5 });
+  ch.weapons.push({ id: "combat-knife", notes: "" });          // BOD+3
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.damage, 8);
+  assert.equal(l.damageFormula, "BOD+3");
+  // A ranged weapon's damage is fixed: BOD doesn't touch it.
+  ch.weapons.push({ id: "vs4-ironside", notes: "" });
+  assert.equal(Engine.weaponLine(ch, 1).damage, 7);
+  assert.equal(Engine.weaponLine(subject({ bod: 9 }), 0), null, "no weapon, no line");
+});
+
+test('CRB 053: "Roll the attack. 1d10 + your Skill + modifiers" — Single fire adds the weapon\'s ACC', () => {
+  const ch = subject();
+  ch.skills.handguns = { rank: 4, ipe: 0 };
+  ch.weapons.push({ id: "vs4-ironside", notes: "" });          // ACC +1
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.attack, Engine.skillLine(ch, "handguns").checkBonus, "the attack IS the skill check");
+  assert.equal(l.acc, 1, "ACC is carried apart, because only Single fire adds it");
+  ch.trackers.damage = 10;                                      // BOD 5: 2 HL lost, Pain Level 1
+  assert.equal(Engine.weaponLine(ch, 0).attack, l.attack - 1, "Pain comes off the attack like any check");
+});
+
+test('CRB 055: "A BOD 5 character rebuilds a Health Level a day; five hard days puts the whole ladder back"', () => {
+  const ch = subject({ bod: 5 });
+  assert.equal(Engine.naturalHealing(ch).perDay, 5);
+  ch.trackers.damage = 25;
+  assert.equal(Engine.hlState(ch).emptied, 5);
+  Engine.heal(ch, { kind: "natural", hp: 5 });
+  assert.equal(Engine.hlState(ch).emptied, 4, "one Health Level back per day");
+  Engine.heal(ch, { kind: "natural", hp: 5 * 4 });
+  assert.equal(ch.trackers.damage, 0);
+});
+
+test("Design ruling (CQ6): rest never brings back a Massive level; Focused Healing with a replacement does", () => {
+  const ch = subject({ bod: 5 });
+  ch.trackers.damage = 5; ch.trackers.massiveLevels = 2;
+  Engine.heal(ch, { kind: "natural", hp: 5, massive: 2 });
+  assert.equal(ch.trackers.massiveLevels, 2, "rest touched Massive levels");
+  const r = Engine.heal(ch, { kind: "focused", massive: 1 });
+  assert.equal(r.restored, 1);
+  assert.equal(ch.trackers.massiveLevels, 1);
+});
+
+test('CRB 055: "The Injured Condition must be resolved through Focused Healing"', () => {
+  const ch = subject();
+  ch.trackers.damage = 6;
+  ch.trackers.conditions = [{ id: "bleeding" }, { id: "injured", location: "left-arm" }];
+  Engine.heal(ch, { kind: "natural", hp: 5, clear: [1] });
+  assert.equal(ch.trackers.conditions.length, 2, "rest cleared a Condition");
+  const r = Engine.heal(ch, { kind: "focused", hp: 0, clear: [0, 1] });
+  assert.equal(r.cleared.map(c => c.id).join(","), "injured", "Focused Healing only clears what it clears");
+  assert.deepEqual(ch.trackers.conditions.map(c => c.id), ["bleeding"]);
+});
+
+test('Gear: after the fight, "roll a die determined by encounter difficulty" — Hard is 1d8', () => {
+  const ch = wearing(subject());                                 // Kevlar Vest, INT 20
+  assert.equal(Engine.armorWear(ch, 0, { difficulty: "hard", roll: 9 }).ok, false, "a d8 can't roll 9");
+  const r = Engine.armorWear(ch, 0, { difficulty: "hard", roll: 6 });
+  assert.deepEqual([r.lost, r.after], [6, 14]);
+  // It can leave the armor Compromised, never scrap: only Massive scraps.
+  Engine.armorWear(ch, 0, { difficulty: "legendary", roll: 10 });
+  Engine.armorWear(ch, 0, { difficulty: "legendary", roll: 10 });
+  const w = Engine.armorState(ch).worn;
+  assert.deepEqual([w.integrity, w.compromised, w.scrapped], [0, true, false]);
+});
+
+test('Gear: "A Field Repair Kit restores 1d6 INT"; 053: armor driven to 0 by Massive "isn\'t repairable"', () => {
+  const ch = wearing(subject(), "kevlar-vest", { integrityLoss: 10 });
+  assert.equal(Engine.repairArmor(ch, 0, { roll: 7 }).ok, false, "a d6 can't roll 7");
+  assert.equal(Engine.repairArmor(ch, 0, { roll: 4 }).restored, 4);
+  assert.equal(Engine.repairArmor(ch, 0, { full: true }).after, 20, "an armorer restores it completely");
+  const scrap = wearing(subject(), "kevlar-vest", { integrityLoss: 20, scrapped: true });
+  assert.equal(Engine.repairArmor(scrap, 0, { full: true }).ok, false);
+});
+
+test('Gear: Self-Healing — "roll 1d4 — on a 3 or higher, the armor regains 1d4 INT ... Cannot restore INT beyond the armor\'s maximum"', () => {
+  const coat = () => wearing(subject(), "hammerlock-reaper-overcoat");   // INT 30
+  assert.equal(Engine.armorWear(coat(), 0, { difficulty: "medium", roll: 5 }).ok, false, "the Self-Healing roll wasn't asked for");
+  const miss = Engine.armorWear(coat(), 0, { difficulty: "medium", roll: 5, selfHealCheck: 2 });
+  assert.deepEqual([miss.after, miss.selfHeal.healed], [25, 0], "a 2 regains nothing");
+  const hit = Engine.armorWear(coat(), 0, { difficulty: "medium", roll: 5, selfHealCheck: 3, selfHealRoll: 4 });
+  assert.deepEqual([hit.after, hit.selfHeal.healed], [29, 4]);
+  const cap = Engine.armorWear(coat(), 0, { difficulty: "easy", roll: 1, selfHealCheck: 4, selfHealRoll: 4 });
+  assert.deepEqual([cap.after, cap.selfHeal.healed], [30, 1], "healed past the maximum");
+});
+
+test('Gear: upgrades take a mod slot each, need their minimum quality, and Tri-Weave "can be installed multiple times"', () => {
+  // Ken's ruling (Decision 100): the Plasteel Weave Jacket's built-in
+  // Tri-Weave is already in its printed INT 30. It doesn't add +10 again.
+  assert.equal(Engine.armorState(wearing(subject(), "plasteel-weave-jacket")).worn.integrityMax, 30);
+  const leather = wearing(subject(), "leather-jacket");         // Low quality, 1 slot
+  assert.match(Engine.addUpgrade(leather, 0, "Ablative Plating").why, /Mid quality/);
+  assert.equal(Engine.addUpgrade(leather, 0, "EMP Shielding").ok, true);
+  assert.equal(Engine.addUpgrade(leather, 0, "HUDsync").ok, false, "a second upgrade in a one-slot jacket");
+  const specops = wearing(subject(), "specops-vest");           // High, 3 slots
+  Engine.addUpgrade(specops, 0, "Tri-Weave"); Engine.addUpgrade(specops, 0, "Tri-Weave");
+  assert.equal(Engine.armorState(specops).worn.integrityMax, 50);
+  assert.equal(Engine.addUpgrade(specops, 0, "Warding").ok, true);
+  assert.equal(Engine.addUpgrade(specops, 0, "EMP Shielding").ok, false, "a fourth upgrade in three slots");
+  const two = wearing(subject(), "urban-tactics-vest");          // Mid, 2 slots
+  Engine.addUpgrade(two, 0, "Warding");
+  assert.match(Engine.addUpgrade(two, 0, "Warding").why, /Already installed/, "Warding isn't repeatable");
+  assert.equal(Engine.addUpgrade(wearing(subject(), "reinforced-denim-vest"), 0, "EMP Shielding").ok, false, "Low quality has no mod slots");
+});
+
+test('CRB 054 Dying: ongoing damage "will continue to tick while you\'re dying. Each time you take damage, that\'s another mark" (F24 stub)', () => {
+  const ch = subject({ bod: 5 });
+  ch.trackers.damage = 25;
+  ch.trackers.conditions = [{ id: "dying", marks: 0 }, { id: "bleeding" }];
+  const r = Engine.resolveReset(ch);
+  assert.equal(r.marks, 1);
+  assert.equal(r.prompts.dyingCheck, null, "the tick stands in for the check (F24 stub)");
+  assert.equal(r.notes.length, 1, "the stub doesn't say so");
+  Engine.applyReset(ch);
+  assert.equal(ch.trackers.conditions[0].marks, 1);
+  assert.equal(ch.trackers.damage, 26);
+  // Nothing ticking: "make a WILL Essence Check TN 8 TH 2 at every Reset phase".
+  ch.trackers.conditions = [{ id: "dying", marks: 1 }];
+  assert.ok(Engine.resolveReset(ch).prompts.dyingCheck);
+  Engine.applyReset(ch, {}, { dyingCheck: "pass" });
+  assert.equal(ch.trackers.conditions[0].marks, 1, "a pass buys the round");
+  Engine.applyReset(ch, {}, { dyingCheck: "fail" });
+  assert.equal(ch.trackers.conditions[0].marks, 2);
+});
+
+test('CRB 054 At Zero: the check comes "again every time you take damage" — a Bleeding tick included, and no Shock for it', () => {
+  const ch = subject({ bod: 5 });
+  ch.trackers.damage = 24;
+  ch.trackers.conditions = [{ id: "bleeding" }, { id: "burning" }];
+  assert.equal(Engine.resolveReset(ch).ok, false, "Burning's damage has to be entered");
+  const r = Engine.resolveReset(ch, { sources: { 1: 6 } });
+  assert.equal(r.total, 7);
+  assert.ok(r.prompts.atZero, "the drop to zero didn't ask At Zero");
+  assert.equal(r.prompts.shock, undefined, "Shock is for a single hit, not a tick");
+  Engine.applyReset(ch, { sources: { 1: 6 } }, { atZero: "fail" });
+  assert.ok(ch.trackers.conditions.some(c => c.id === "dying"));
 });

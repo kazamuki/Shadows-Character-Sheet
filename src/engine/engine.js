@@ -435,24 +435,30 @@ const Engine = (() => {
     const def = entry.custom ? null : armorDefById(entry.id);
     const src = def || entry;
     const slot = src.slot || "body";                 // a custom piece is body armor
-    const upgrades = Array.isArray(entry.upgrades) ? entry.upgrades : [];
-    const bonus = upgrades.reduce((n,u)=>n + (Number((upgradeById(u)||{}).integrityBonus)||0), 0);
+    const upgrades = Array.isArray(entry.upgrades) ? entry.upgrades.filter(u=>typeof u==="string") : [];
+    const features = [...(src.preInstalledFeatures||[]), ...(src.feature ? [src.feature] : [])];
+    // Only upgrades the player installs add their effect. A manufacturer's
+    // built-in upgrade (the Plasteel Weave Jacket's Tri-Weave) is read as
+    // already in the printed stats. Ken's ruling, Decision 100.
+    const effects = upgrades;
+    const bonus = effects.reduce((n,u)=>n + (Number((upgradeById(u)||{}).integrityBonus)||0), 0);
     // Head and hand pieces don't roll PROT or track INT — features only (Gear).
     const tracks = slot==="body";
     const integrityMax = tracks ? (Number(src.integrity)||0) + bonus : 0;
-    const integrityLoss = nonNegInt(entry.integrityLoss);
+    const integrityLoss = Math.min(nonNegInt(entry.integrityLoss), integrityMax);
     const integrity = Math.max(0, integrityMax - integrityLoss);
     const resAgainst = [...(R.baseResAgainst||[]),
-                        ...upgrades.map(u=>(upgradeById(u)||{}).resAgainst).filter(Boolean)];
+                        ...effects.map(u=>(upgradeById(u)||{}).resAgainst).filter(Boolean)];
     const coverage = tracks ? ((R.coverageLocations||{})[src.coverage || R.defaultCoverage] || []) : [];
-    const features = [...(src.preInstalledFeatures||[]), ...(src.feature ? [src.feature] : [])];
     return { index, id: entry.id || null, custom: !!entry.custom, missing: !entry.custom && !def,
-             name: src.name || String(entry.id || "Armor"), slot, worn: entry.worn===true,
+             name: src.name || (entry.custom ? "Custom armor" : String(entry.id || "Armor")), slot, worn: entry.worn===true,
              prot: tracks ? (src.prot || null) : null, protMax: tracks ? dieMax(src.prot) : null,
              res: tracks ? (Number(src.res)||0) : 0,
              integrityMax, integrityLoss, integrity,
              compromised: tracks && integrity<=0, scrapped: entry.scrapped===true,
-             resAgainst, coverage, features, upgrades };
+             resAgainst, coverage, features, upgrades,
+             quality: src.quality || null, mods: def ? (Number(def.mods)||0) : null,
+             coverageName: tracks ? (src.coverage || R.defaultCoverage) : null };
   }
 
   // One worn body piece rolls PROT (no layering, Decision 98 CQ7). Compromised
@@ -476,16 +482,11 @@ const Engine = (() => {
   // resolveHit's stages, in the order a hit happens. Each takes what it needs
   // and returns plain values, so Session 4 can change one without the rest.
 
-  // Which armor answers: the worn piece, or the stand-in typed into the panel
-  // when the sheet holds none (base Kinetic, covers the hit, no wear tracked).
-  function hitArmor(as, hit){
-    if (as.worn) return Object.assign({ source:"worn" }, as.worn);
-    if (!hit.manual || typeof hit.manual!=="object") return null;
-    const mi = hit.manual.integrity;
-    const integrity = (mi==null || mi==="") ? null : nonNegInt(mi);
-    return { source:"manual", name:"Your armor", prot:null, protMax:null,
-             res: nonNegInt(hit.manual.res), resAgainst: (D().armorRules||{}).baseResAgainst || [],
-             coverage:null, integrity, compromised: integrity===0, scrapped:false };
+  // Which armor answers: the worn body piece, or none. Armor that isn't in
+  // the catalog goes on Loadout as a custom piece -- Decision 100 retired the
+  // stand-in this panel used to take, which tracked no wear.
+  function hitArmor(as){
+    return as.worn ? Object.assign({ source:"worn" }, as.worn) : null;
   }
 
   // Where it lands: the part aimed at, moved by a worn redirect (Headshot
@@ -502,8 +503,6 @@ const Engine = (() => {
   function mitigateBypass(damage, armor, covered){
     const M = (D().damageRules||{}).massive || {};
     const intBefore = covered ? armor.integrity : null;
-    if (covered && armor.source==="manual" && intBefore==null)
-      return { ok:false, why:"Enter your armor's Integrity before the hit. Massive damage strips it." };
     const integrityLost = covered ? Math.min(damage, intBefore) : 0;
     const gone = !covered || intBefore - integrityLost <= 0;
     return { ok:true, prot:0, res:0, resSkipped:null, absorbed:0, through:0, soaked:false, integrityLost,
@@ -534,31 +533,43 @@ const Engine = (() => {
     return { ok:true, prot, res, resSkipped, absorbed, through, soaked, integrityLost, levelsLost:0, scrap:false };
   }
 
-  // 054's consequences: Shock, At Zero, the Death Mark while Dying, and the
-  // Conditions this hit can cause (its type's `inflicts` + its category's).
-  function hitPrompts(ch, type, cat, before, after){
+  // 054's consequences of taking damage, hit or not: At Zero, and the Death
+  // Mark while Dying. Turn Reset's ongoing damage shares this. Shock doesn't:
+  // 054 asks it of "a single hit", and a Bleeding tick isn't one.
+  function isDying(ch){
+    const dyingId = ((D().damageRules||{}).whileDying||{}).condition;
+    return !!dyingId && (((ch||{}).trackers||{}).conditions||[]).some(e=>e && e.id===dyingId);
+  }
+  function damagePrompts(ch, before, after){
     const DR = D().damageRules || {};
-    const lostThisHit = after.lost - before.lost;
     const tookDamage = after.damage>before.damage || after.massive>before.massive;
-    const shockAt = Math.ceil(before.levels * ((DR.shock||{}).fractionOfMaxLevels ?? 0.5));
-    const dyingId = (DR.whileDying||{}).condition;
-    const dying = !!dyingId && (((ch||{}).trackers||{}).conditions||[]).some(e=>e && e.id===dyingId);
+    const dying = isDying(ch);
     const freePass = (DR.atZero||{}).freePass;
-    const offered = tookDamage ? [...new Set([...(type.inflicts||[]), ...(cat.inflicts||[])])].filter(id=>conditionById(id)) : [];
-    return { lostThisHit, tookDamage, dying, prompts: {
-      shock: tookDamage && !after.down && shockAt>0 && lostThisHit >= shockAt
-        ? Object.assign({ threshold: shockAt }, DR.shock) : null,
+    return { tookDamage, dying,
       atZero: tookDamage && after.down && !dying
         ? Object.assign({}, DR.atZero, { freePassHeld: !!(freePass && ((ch||{}).advantages||[]).some(a=>a && a.id===freePass.advantage)) })
         : null,
-      deathMark: tookDamage && dying ? DR.whileDying : null,
+      deathMark: tookDamage && dying ? DR.whileDying : null };
+  }
+  // A hit adds Shock, and the Conditions it can cause (its type's `inflicts`
+  // plus its category's), to those.
+  function hitPrompts(ch, type, cat, before, after){
+    const DR = D().damageRules || {};
+    const lostThisHit = after.lost - before.lost;
+    const d = damagePrompts(ch, before, after);
+    const shockAt = Math.ceil(before.levels * ((DR.shock||{}).fractionOfMaxLevels ?? 0.5));
+    const offered = d.tookDamage ? [...new Set([...(type.inflicts||[]), ...(cat.inflicts||[])])].filter(id=>conditionById(id)) : [];
+    return { lostThisHit, tookDamage: d.tookDamage, dying: d.dying, prompts: {
+      shock: d.tookDamage && !after.down && shockAt>0 && lostThisHit >= shockAt
+        ? Object.assign({ threshold: shockAt }, DR.shock) : null,
+      atZero: d.atZero, deathMark: d.deathMark,
       conditions: offered, always: (type.always||[]).filter(id=>offered.includes(id))
     } };
   }
 
   // Pure: what a hit WOULD do (plan P6). Returns the breakdown, the patch and
   // the prompts; applyHit() is the only thing that writes. `hit`:
-  //   { damage, damageType, category, ap, location, protRoll, manual: { res, integrity } }
+  //   { damage, damageType, category, ap, location, protRoll }
   // How a category resolves is data: `bypassesArmor` takes the Massive path,
   // `recordsWithering` marks what got through, `inflicts` adds Conditions.
   function resolveHit(ch, hit){
@@ -572,9 +583,9 @@ const Engine = (() => {
     if (!cat) return { ok:false, why:"Choose Regular, Withering or Massive." };
 
     const as = armorState(ch);
-    const armor = hitArmor(as, hit);
+    const armor = hitArmor(as);
     const where = hitLocation(as, hit);
-    const covered = !!armor && (armor.coverage==null || armor.coverage.includes(where.location));
+    const covered = !!armor && armor.coverage.includes(where.location);
     const m = cat.bypassesArmor ? mitigateBypass(damage, armor, covered)
                                 : mitigateArmor(damage, type, hit, armor, covered);
     if (!m.ok) return m;
@@ -585,7 +596,7 @@ const Engine = (() => {
     const c = hitPrompts(ch, type, cat, before, after);
     const notes = [];
     if (type.flagged && type.playerNote) notes.push(type.playerNote);
-    if (covered && armor.source==="worn") armor.upgrades.forEach(u=>{
+    if (covered) armor.upgrades.forEach(u=>{
       const g = upgradeById(u); if (g && g.flagged && g.playerNote && !notes.includes(g.playerNote)) notes.push(g.playerNote);
     });
 
@@ -603,7 +614,7 @@ const Engine = (() => {
       patch: {
         damage: after.damage, massiveLevels: after.massive,
         witheringDamage: nonNegInt(t.witheringDamage) + (cat.recordsWithering ? m.through : 0),
-        armor: covered && armor.source==="worn" && (m.integrityLost>0 || m.scrap)
+        armor: covered && (m.integrityLost>0 || m.scrap)
           ? { index: armor.index, integrityLoss: armor.integrityLoss + m.integrityLost, scrapped: armor.scrapped || m.scrap }
           : null,
         deathMark: c.tookDamage && c.dying
@@ -648,6 +659,289 @@ const Engine = (() => {
       if (i>=0) setConditionMarks(ch, i, (Number(t.conditions[i].marks)||0) + 1);
     }
     return { ok:true, result:r, added, skipped };
+  }
+
+  // ── Loadout & recovery (combat plan Session 4, Decision 100) ─────────
+  // Writers change stored inputs only, and the UI wraps each in commit(), so
+  // every one is a single undoable action. The player rolls every die (plan
+  // P1): a function that takes a roll checks the number fits the die.
+  const weaponDefById = byId("weapons");
+  const listOf = (ch, kind) => Array.isArray(ch && ch[kind]) ? ch[kind] : [];
+  const priceOf = def => (typeof def.cost==="number" && def.cost>0) ? def.cost : null;
+  const loadoutDef = (kind, id) => kind==="armor" ? armorDefById(id) : kind==="weapons" ? weaponDefById(id) : null;
+  function checkRoll(die, roll, what){
+    const max = dieMax(die), n = Math.floor(Number(roll));
+    if (roll==null || roll==="" || !(n>=1)) return { ok:false, why:`Enter the ${what} you rolled.` };
+    if (max && n>max) return { ok:false, why:`That's a ${die}, so the roll can't be more than ${max}.` };
+    return { ok:true, value:n };
+  }
+
+  // "BOD+3" is "calculated by adding the BOD score to the bonus" (053): BOD 5
+  // does 8. A number is fixed damage; anything else ("6/round") stays text.
+  function weaponDamage(ch, d){
+    if (typeof d==="number") return { value:d, formula:null };
+    const m = /^\s*([A-Za-z]+)\s*\+\s*(\d+)\s*$/.exec(String(d==null ? "" : d));
+    const stat = m && normStat(m[1]);
+    if (stat) return { value: statTable(ch)[stat].value + Number(m[2]), formula: `${stat}+${m[2]}` };
+    return { value:null, formula: d==null || d==="" ? null : String(d) };
+  }
+
+  // Everything a player reads off the sheet to make an attack with a catalog
+  // weapon. The attack total is the skill's, so Pain and Conditions are in it;
+  // ACC is apart because only Single fire adds it (053). A custom weapon is
+  // whatever was typed, so there's nothing to compute.
+  function weaponLine(ch, index){
+    const e = listOf(ch, "weapons")[index];
+    if (!e || typeof e!=="object") return null;
+    const notes = typeof e.notes==="string" ? e.notes : "";
+    if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), notes };
+    const def = weaponDefById(e.id);
+    if (!def) return { index, missing:true, name:String(e.id), notes };
+    const sk = def.skill && skillById(def.skill) ? skillLine(ch, def.skill) : null;
+    const dmg = weaponDamage(ch, def.damage);
+    return { index, id:def.id, name:def.name, category:def.category||null, notes,
+             skill: sk ? { id:sk.def.id, name:sk.def.name, trained:sk.trained } : null,
+             attack: sk ? sk.checkBonus : null, acc: typeof def.acc==="number" ? def.acc : null,
+             damage: dmg.value, damageFormula: dmg.formula,
+             style: def.style||null, damageType: def.damageType||null,
+             reach: def.reach||null, parry: def.parry||null, range: def.range||null,
+             rof: def.rof||null, capacity: def.capacity||null,
+             tags: def.tags||[], features: def.features||[], weaponNotes: def.notes||null };
+  }
+
+  // Add a catalog piece. `buy` also pays its price out of Çredits, in the
+  // same action, so one undo takes back both. A price the catalog doesn't
+  // state ("By Contract") can be added but not bought.
+  function addLoadout(ch, kind, id, opts){
+    const def = loadoutDef(kind, id);
+    if (!def) return { ok:false, why:"Choose something from the list first." };
+    const buy = !!(opts && opts.buy), price = priceOf(def);
+    if (buy){
+      if (price==null) return { ok:false, why:`${def.name} has no street price. Add it instead, and record what it cost under Çredits.` };
+      const have = Number(ch.trackers.credits.current)||0;
+      if (price>have) return { ok:false, why:`${def.name} costs ${price}Ç. You have ${have}Ç.` };
+    }
+    const list = ch[kind];
+    if (kind==="armor"){
+      const e = { id, integrityLoss:0, notes:"", worn:false, scrapped:false, upgrades:[] };
+      // The first piece in a slot goes on. Nobody buys a vest to leave it home.
+      const slot = def.slot || "body";
+      if (!list.some((o,i)=>o && typeof o==="object" && o.worn===true && armorPiece(o,i).slot===slot)) e.worn = true;
+      list.push(e);
+    } else list.push({ id, notes:"" });
+    if (buy) addCredits(ch, -price, `Bought ${def.name}`);
+    return { ok:true, index:list.length-1, name:def.name, paid: buy ? price : 0 };
+  }
+  // A custom piece is typed by the player. Armor's `coverage` is optional and
+  // reads as light (torso) when absent, so a file without it is still valid.
+  function addCustomLoadout(ch, kind){
+    if (kind==="armor") ch.armor.push({ custom:true, name:"", prot:"", res:0, integrity:0, coverage:"light",
+                                        integrityLoss:0, notes:"", worn:false, scrapped:false, upgrades:[] });
+    else if (kind==="weapons") ch.weapons.push({ custom:true, name:"", type:"", damage:"", rof:"", capacity:"", ammo:"", features:"", notes:"" });
+    else return { ok:false, why:"Weapons or armor only." };
+    return { ok:true, index:ch[kind].length-1 };
+  }
+  function removeLoadout(ch, kind, index){
+    const list = listOf(ch, kind);
+    if (!(index>=0 && index<list.length)) return { ok:false, why:"That isn't on the sheet." };
+    list.splice(index, 1);
+    return { ok:true };
+  }
+
+  // Wearing is per slot: one body piece (no layering, CQ7), one helmet, one
+  // pair of gloves. Putting one on takes off whatever held that slot.
+  function setWorn(ch, index, on){
+    const list = listOf(ch, "armor"), e = list[index];
+    if (!e || typeof e!=="object") return { ok:false, why:"That armor isn't on the sheet." };
+    const slot = armorPiece(e, index).slot;
+    if (on) list.forEach((o,i)=>{ if (i!==index && o && typeof o==="object" && armorPiece(o,i).slot===slot) o.worn = false; });
+    e.worn = !!on;
+    return { ok:true };
+  }
+
+  // Which upgrades a piece can take, and why not when it can't (Gear: one mod
+  // slot each, a quality floor, and only the `repeatable` ones twice). A
+  // custom piece states no slots or quality, so neither limit applies to it.
+  function upgradeOptions(ch, index){
+    const e = listOf(ch, "armor")[index];
+    if (!e || typeof e!=="object") return null;
+    const p = armorPiece(e, index), order = (D().armorRules||{}).qualityOrder || [];
+    const body = p.slot==="body";
+    const slots = !body ? 0 : p.custom ? null : p.mods;
+    const used = p.upgrades.length;
+    const rank = q => order.indexOf(q);
+    const options = (D().armorUpgradeGlossary||[]).map(g=>{
+      let why = null;
+      if (!body) why = "Only body armor takes upgrades.";
+      else if (slots!=null && used>=slots) why = slots===1 ? "Its one mod slot is taken." : slots ? `All ${slots} mod slots are taken.` : `${p.name} has no mod slots.`;
+      else if (!g.repeatable && (p.upgrades.includes(g.id) || p.features.includes(g.id))) why = "Already installed.";
+      else if (g.minQuality && rank(p.quality)>=0 && rank(p.quality)<rank(g.minQuality)) why = `Needs ${g.minQuality} quality or better.`;
+      return { id:g.id, ok:!why, why, description:g.description||"" };
+    });
+    return { name:p.name, slots, used, free: slots==null ? null : Math.max(0, slots-used), options };
+  }
+  function addUpgrade(ch, index, id){
+    const u = upgradeOptions(ch, index);
+    const o = u && u.options.find(x=>x.id===id);
+    if (!o) return { ok:false, why:"Choose an upgrade." };
+    if (!o.ok) return { ok:false, why:o.why };
+    const e = ch.armor[index];
+    if (!Array.isArray(e.upgrades)) e.upgrades = [];
+    e.upgrades.push(id);
+    return { ok:true };
+  }
+  function removeUpgrade(ch, index, at){
+    const e = listOf(ch, "armor")[index];
+    if (!e || !Array.isArray(e.upgrades) || !(at>=0 && at<e.upgrades.length)) return { ok:false, why:"No such upgrade." };
+    e.upgrades.splice(at, 1);
+    return { ok:true };
+  }
+
+  // The after-fight wear roll (053): the die is the GM's call by difficulty,
+  // and the roll comes off the top of Integrity. It can leave armor
+  // Compromised, never scrap -- only Massive does that. A feature with an
+  // `afterEncounter` roll (Self-Healing) is asked for in the same action.
+  function armorWear(ch, index, input){
+    input = input || {};
+    const e = listOf(ch, "armor")[index];
+    if (!e || typeof e!=="object") return { ok:false, why:"That armor isn't on the sheet." };
+    const p = armorPiece(e, index);
+    if (p.slot!=="body") return { ok:false, why:`${p.name} doesn't track Integrity.` };
+    const die = ((D().armorRules||{}).integrityLossByDifficulty||{})[input.difficulty];
+    if (!die) return { ok:false, why:"Choose how hard the fight was." };
+    const r = checkRoll(die, input.roll, "wear die");
+    if (!r.ok) return r;
+    const lost = Math.min(r.value, p.integrity);
+    let loss = p.integrityLoss + lost, selfHeal = null;
+    const sh = p.scrapped ? null : p.features.map(f=>featureById(f)).find(f=>f && f.afterEncounter);
+    if (sh){
+      const A = sh.afterEncounter;
+      const c = checkRoll(A.checkDie, input.selfHealCheck, `${sh.id} roll`);
+      if (!c.ok) return c;
+      let healed = 0;
+      if (c.value >= A.succeedsOn){
+        const h = checkRoll(A.restoresDie, input.selfHealRoll, "Integrity it regains");
+        if (!h.ok) return h;
+        healed = Math.min(h.value, loss);       // "Cannot restore INT beyond the armor's maximum"
+        loss -= healed;
+      }
+      selfHeal = { feature:sh.id, check:c.value, healed };
+    }
+    e.integrityLoss = loss;
+    return { ok:true, name:p.name, die, rolled:r.value, lost, selfHeal,
+             before:p.integrity, after:p.integrityMax - loss };
+  }
+  // Repair: a Field Repair Kit (the player's roll on `repairKitDie`) or an
+  // armorer (all of it). Scrap can't be repaired (053).
+  function repairArmor(ch, index, input){
+    input = input || {};
+    const e = listOf(ch, "armor")[index];
+    if (!e || typeof e!=="object") return { ok:false, why:"That armor isn't on the sheet." };
+    const p = armorPiece(e, index);
+    if (p.slot!=="body") return { ok:false, why:`${p.name} doesn't track Integrity.` };
+    if (p.scrapped) return { ok:false, why:`${p.name} is scrap. It can't be repaired.` };
+    if (p.integrityLoss<=0) return { ok:false, why:`${p.name} is already at full Integrity.` };
+    let restored = p.integrityLoss;
+    if (!input.full){
+      const r = checkRoll((D().armorRules||{}).repairKitDie, input.roll, "repair die");
+      if (!r.ok) return r;
+      restored = Math.min(r.value, p.integrityLoss);
+    }
+    e.integrityLoss = p.integrityLoss - restored;
+    return { ok:true, name:p.name, restored, after:p.integrityMax - e.integrityLoss };
+  }
+
+  // Natural Healing (055): BOD per day of real rest. The engine proposes the
+  // number; the GM may halve it for pushing on, so the player can change it.
+  function naturalHealing(ch){
+    const N = ((D().recoveryRules||{}).naturalHealing) || {};
+    const stat = normStat(N.stat || "BOD");
+    return { stat, perDay: stat ? Math.max(0, statTable(ch)[stat].value) : 0,
+             speedHealMultiplier: Number(N.speedHealMultiplier)||1,
+             text: N.text||"", speedHealText: N.speedHealText||"" };
+  }
+  // One writer for both kinds of healing. Natural takes HP and nothing else:
+  // it never touches Massive levels or clears a Condition. Focused Healing can
+  // also clear the Conditions `recoveryRules.focusedHealing.clears` names
+  // (Injured), by index, and restore Massive levels (CQ6: with a replacement).
+  // Withering is trimmed to the damage left, as every lowering of it is.
+  function heal(ch, input){
+    input = input || {};
+    const F = ((D().recoveryRules||{}).focusedHealing) || {};
+    const focused = input.kind==="focused";
+    if (!focused && input.kind!=="natural") return { ok:false, why:"Natural or Focused Healing?" };
+    const hp = (input.hp==null || input.hp==="") ? 0 : Math.floor(Number(input.hp));
+    if (!(hp>=0)) return { ok:false, why:"Enter the HP restored." };
+    const t = ch.trackers, conds = t.conditions, hs = hlState(ch);
+    const clear = focused ? [...new Set((input.clear||[]).map(Number))]
+      .filter(i=>conds[i] && (F.clears||[]).includes(conds[i].id)) : [];
+    const massive = focused ? Math.min(nonNegInt(input.massive), hs.massive) : 0;
+    const healed = Math.min(hp, hs.damage);
+    if (!healed && !clear.length && !massive)
+      return { ok:false, why: hs.damage ? "Enter the HP restored." : "There's no damage to heal." };
+    t.damage = hs.damage - healed;
+    t.witheringDamage = Math.min(nonNegInt(t.witheringDamage), t.damage);
+    t.massiveLevels = hs.massive - massive;
+    const cleared = clear.sort((a,b)=>b-a).map(i=>{ const e = conds[i]; removeCondition(ch, i); return e; }).reverse();
+    return { ok:true, healed, restored:massive, cleared };
+  }
+
+  // Turn Reset (plan P8): a bookkeeping helper, not an automation. Each active
+  // Condition with `ongoing` damage ticks -- a fixed amount (Bleeding) or the
+  // number entered for its source (Burning, Shocked). The damage goes straight
+  // onto the total: it isn't a hit, so armor and Shock don't come into it
+  // (054 asks Shock of "a single hit"), but At Zero and Dying do. `input`:
+  //   { sources: { [condition index]: hp } }
+  // Every Condition's recovery is listed as text; no check is run.
+  function resolveReset(ch, input){
+    input = input || {};
+    const W = (D().damageRules||{}).whileDying || {};
+    const conds = (((ch||{}).trackers||{}).conditions) || [];
+    const ticks = [], recovery = [];
+    conds.forEach((e,i)=>{
+      const def = e && conditionById(e.id);
+      if (!def) return;
+      const loc = locationById(e.location);
+      recovery.push({ index:i, name: def.name + (loc ? ` (${loc.name})` : ""), recovery: def.recovery||"" });
+      const o = def.ongoing;
+      if (!o) return;
+      const v = o.source ? (input.sources||{})[i] : o.hp;
+      ticks.push({ index:i, id:def.id, name:def.name, source:!!o.source,
+                   hp: v==null || v==="" ? null : nonNegInt(v) });
+    });
+    const missing = ticks.find(t=>t.hp==null);
+    if (missing) return { ok:false, why:`Enter this round's ${missing.name} damage. Put 0 if it's out.`, ticks, recovery };
+    const total = ticks.reduce((n,t)=>n+t.hp, 0);
+    const before = hlState(ch), after = hlState(ch, { damage: before.damage + total });
+    const d = damagePrompts(ch, before, after);
+    // F24 stub: while Dying, each source that ticks is a Death Mark and takes
+    // the place of the check. With nothing ticking, the check is asked.
+    const ticking = ticks.filter(t=>t.hp>0).length;
+    const marks = d.dying ? ticking : 0;
+    const dyingCheck = d.dying && !ticking ? { check:W.resetCheck, text:W.resetText } : null;
+    const notes = d.dying && ticking && W.flagged && W.playerNote ? [W.playerNote] : [];
+    return { ok:true, ticks, total, before, after, dying:d.dying, marks,
+             prompts: { atZero:d.atZero, dyingCheck }, recovery, notes,
+             hasEffect: total>0 || !!dyingCheck };
+  }
+  // The one writer, re-resolving from its inputs like applyHit. `choices`:
+  //   { atZero: "pass"|"fail", dyingCheck: "pass"|"fail" }
+  function applyReset(ch, input, choices){
+    const r = resolveReset(ch, input);
+    if (!r.ok) return r;
+    choices = choices || {};
+    const t = ch.trackers;
+    t.damage = r.after.damage;
+    const marks = r.marks + (r.prompts.dyingCheck && choices.dyingCheck==="fail" ? 1 : 0);
+    const added = [];
+    const A = r.prompts.atZero;
+    if (A) ((choices.atZero==="pass" ? A.onPass : choices.atZero==="fail" ? A.onFail : null) || [])
+      .forEach(id=>{ if (addCondition(ch, { id }).ok) added.push(id); });
+    if (marks){
+      const i = t.conditions.findIndex(e=>e && e.id===((D().damageRules||{}).whileDying||{}).condition);
+      if (i>=0) setConditionMarks(ch, i, (Number(t.conditions[i].marks)||0) + marks);
+    }
+    return { ok:true, result:r, marks, added };
   }
 
   function luckState(ch){
@@ -1474,6 +1768,10 @@ const Engine = (() => {
            conditionById, locationById, conditionState, addCondition, removeCondition, setConditionMarks,
            // Taking a hit (Decision 99)
            hlState, armorState, resolveHit, applyHit, damageTypeById, damageCategoryById,
+           // Loadout & recovery (Decision 100)
+           weaponLine, addLoadout, addCustomLoadout, removeLoadout, setWorn,
+           upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
+           naturalHealing, heal, resolveReset, applyReset,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,

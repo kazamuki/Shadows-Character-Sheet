@@ -1,6 +1,6 @@
 # Plan — Conditions, damage & armor
 
-**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 next
+**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 done (Decision 100, F24) · cleanup session next
 **Covers:** F18's engine half (Decision 92 deferred it), plus the Conditions system
 that chapter 054 now fully specifies.
 **Sources:** `reference/crb/053_Combat_Encounters.md` (Damage and Armor),
@@ -187,11 +187,20 @@ its decisions numbered.
   **Tests to pin:** 053's Massive formula at 9/10/25 damage, with and without
   armor; AP skipping RES; Compromised skipping RES; fully soaked hit costing 1 INT;
   Shock at exactly half HL. CQ4/CQ5/CQ6/CQ7/CQ10 are answered (Decision 98) — no stubs needed.
-- [ ] **Session 4 — Loadout & recovery.** Catalog pickers for weapons and
+- [x] **Session 4 — Loadout & recovery** (2026-09-22, Decision 100; F24 opened for ongoing damage while Dying at a Reset). Catalog pickers for weapons and
   armor (schema 0.6 already supports them) · weapon lines computed (skill total,
   `BOD+X` resolved to a number) · worn toggle and Integrity bar · wear roll,
   repair kit, rest/natural healing, Focused Healing, Turn Reset helper (P8, P9) ·
-  print sheet shows armor and Integrity.
+  print sheet shows armor and Integrity. **Ken's calls at sign-off:** the hit
+  panel's stand-in armor goes; **Buy** (pays from Çredits) sits next to Add;
+  weapon mods and ammo tracking wait (they need schema 0.9); a Nanomed Kit
+  button waits until this lands (CQ12). The bare "Restore a Massive level"
+  button folded into Focused Healing.
+- [ ] **Cleanup session — see where Session 4 landed.** Thick Skin / Iron
+  Shirt / the archetype grants of Natural Armor as one derived value on top of
+  `armorState()` (it fills the print Defense card's Nat column) · revisit a
+  Nanomed Kit button (after CQ12) · weapon mods and rounds-in-magazine, if
+  wanted, as one schema 0.9 bump.
 - [ ] **Side session — Magic tables** (independent of all of the above). Encode
   the Cascade Table and the Aberration Table from `Magic.md`, and the
   Good/Neutral/Bad lists from `Appendix_Aberrations.md`. `spellcraftRules.cascade`
@@ -245,7 +254,7 @@ Each becomes an F-number the day a session stubs behavior on it.
   max, rounded up.*
   **Answer: half of max HL, rounded up (2 → 1, 3 → 2, 5 → 3).**
 
-### Doc fixes — Ken, in the CRB (CQ8, CQ9, CQ11)
+### Doc fixes — Ken, in the CRB (CQ8, CQ9, CQ11, CQ12, CQ13)
 
 - **CQ8 — Gear's Conditions table disagrees with 054's.** Disoriented −2 vs −1;
   Agonized "all current penalties doubled" vs "+1 Pain Level"; Stunned "can't act,
@@ -263,3 +272,11 @@ Each becomes an F-number the day a session stubs behavior on it.
   vest rolls PROT and turns 3 of it" — but the same section says *enemy* armor is
   static and doesn't roll, and a Ballistic hit on a Kinetic vest should also take
   RES off. Either the example or the rule needs to move.
+- **CQ12 — What does a Nanomed Kit clear?** 054's "With Çredits" lists
+  Agonized, Bleeding, **Paralyzed** and Poisoned. Gear's entry lists Bleeding,
+  Poisoned and Agonized, with no Paralyzed. One list needs to move before the
+  app gets a Nanomed button (deferred by Ken, Session 4).
+- **CQ13 — How does Injured end?** 054's table says "Focused Healing or 1 week
+  downtime". 055 says Injured "must be resolved through Focused Healing". The
+  app's Focused Healing clears it, and a player can still clear the chip by
+  hand after a week, so nothing's blocked. The two chapters should agree.

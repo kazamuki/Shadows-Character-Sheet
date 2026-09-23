@@ -311,6 +311,9 @@ window.SHADOWS_DATA = {
     // capacity/mods instead of style/reach/parry/damageType; grenades use
     // radius instead of acc/range/rof/capacity.
   ],
+  // (0.9, Decision 100) The catalog's own section headings, in the book's
+  // order: what the Loadout picker groups by. Every weapon's `category` is one.
+  weaponCategories: [ { id: "smgs", name: "Submachine Guns" } ],  // 14 entries
   weaponTagGlossary: [ { id: "AP", description: "..." } ],       // 29 entries
   weaponFeatureGlossary: [ { id: "Scope", description: "..." } ], // 6 entries
   weaponModGlossary: [ { id: "Silencer", slots: 1, description: "..." } ], // 7 entries
@@ -321,17 +324,27 @@ window.SHADOWS_DATA = {
 
   // PROT is a die the player rolls physically (Decision 11 — the app never
   // rolls dice); RES is a flat reduction; INT is a depleting resource.
-  // `armorRules` documents the mechanic as reference text/formulas the way
-  // ip.statCost documents IP math — no engine code executes any of it yet
-  // (that lands with the engine batch). Head/Hand armor doesn't roll PROT or
-  // track INT at all; it grants a named `feature` instead.
+  // `armorRules` began as reference text (Decision 92). The hit resolver
+  // (Decision 99) and Loadout & recovery (Decision 100) now read its numbers.
+  // Head/Hand armor doesn't roll PROT or track INT at all; it grants a named
+  // `feature` instead.
   armorRules: {
     protNote: "...", resNote: "...", integrityNote: "...",
-    integrityLossByDifficulty: { easy: "1d4", medium: "1d6", hard: "1d8", legendary: "1d10" },
-    compromisedNote: "...", repairNote: "..."
+    integrityLossByDifficulty: { easy: "1d4", medium: "1d6", hard: "1d8", legendary: "1d10" }, // the wear die
+    compromisedNote: "...", repairNote: "...",
+    baseResAgainst: ["kinetic"], coverageLocations: { light: ["torso"], /* medium, full */ },
+    defaultCoverage: "light", defaultHitLocation: "torso", soakedIntegrityLoss: 1,   // Decision 99
+    qualityOrder: ["Low", "Mid", "High"],       // an upgrade's minQuality is ranked here
+    slotNames: { body: "Body armor", head: "Head", hand: "Hands" }, coverageNames: { light: "..." },
+    repairKitDie: "1d6", repairKitNote: "...", armorerNote: "...", wearNote: "..."   // Decision 100
   },
-  armorFeatureGlossary: [ { id: "Concealable", description: "..." } ],  // 10 entries
-  armorUpgradeGlossary: [ { id: "Tri-Weave", minQuality: "Mid", description: "..." } ], // 6 entries
+  armorFeatureGlossary: [ { id: "Concealable", description: "..." },  // 10 entries
+    { id: "Headshot Defense", redirect: { from: "head", to: "torso" } },             // Decision 99
+    { id: "Self-Healing", afterEncounter: { checkDie: "1d4", succeedsOn: 3, restoresDie: "1d4" } } ], // Decision 100
+  armorUpgradeGlossary: [ { id: "Tri-Weave", minQuality: "Mid", integrityBonus: 10,
+    repeatable: true, description: "..." } ], // 6 entries; also resAgainst (Ablative, Warding).
+  // An upgrade id in an armor's preInstalledFeatures takes no slot and is read
+  // as already in the printed stats (Plasteel's Tri-Weave; Decision 100).
   armor: [
     { id: "kevlar-vest", name: "Kevlar Vest", slot: "body", coverage: "light",
       prot: "1d6", res: 2, integrity: 20, quality: "Mid", material: "Light",
@@ -366,6 +379,15 @@ window.SHADOWS_DATA = {
     { id: "dying", ..., helpless: true, counter: { max: 3, label: "Death Marks", atMax: "..." } }
     // 20 entries.
   ],
+  // (0.9, Decision 100) Natural and Focused Healing. The engine proposes BOD
+  // per day of rest and never decides the GM's halving; Focused Healing takes
+  // the HP the care restored and is the only path that clears `clears` or
+  // restores a Massive level. damageRules.whileDying also gains resetCheck/
+  // resetText (and carries F24).
+  recoveryRules: {
+    naturalHealing: { stat: "BOD", speedHealMultiplier: 2, text: "...", speedHealText: "..." },
+    focusedHealing: { clears: ["injured"], text: "...", massiveText: "..." }
+  },
 
   // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
   // Merged from docs/reference/crb/Magic.md. Origins (Book/Blood/Bound) are
@@ -534,9 +556,9 @@ on un-modeled rules.
   // `weapons` game-data array, `notes` only — stats read from the catalog)
   // OR freeform (`custom: true`, every field preserved as typed, same shape
   // as before 0.6). migrate() tags every pre-0.6 entry `custom: true` rather
-  // than guessing which catalog weapon a free-typed name meant. No UI writes
-  // a catalog reference yet (Loadout still edits the old free-text columns) —
-  // this batch is the data and the schema, not the picker (see log/2026.md).
+  // than guessing which catalog weapon a free-typed name meant. Loadout's
+  // catalog picker writes the reference, and Engine.weaponLine() computes the
+  // rest (Decision 100).
   weapons: [ { id: "combat-knife", notes: "" },
              { custom: true, name, type, damage, rof, capacity, ammo, features, notes } ],
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
@@ -544,9 +566,12 @@ on un-modeled rules.
   // (0.8, plan P5) worn: the one body piece that rolls PROT (CQ7) · scrapped:
   // driven to 0 by Massive, which integrityLoss alone can't say · upgrades:
   // armorUpgradeGlossary ids. Compromised is derived. Read by armorState()
-  // and resolveHit() (Decision 99); nothing writes `worn` until Session 4.
+  // and resolveHit() (Decision 99); written by Loadout (Decision 100).
+  // A custom piece may carry `coverage` (light/medium/full); absent reads as
+  // light, which is what every reader did before, so a file without it is
+  // valid both ways and there is no migrate() step or schema bump.
   armor:   [ { id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] },
-             { custom: true, name, prot, res, integrity, integrityLoss, notes, worn, scrapped, upgrades } ],
+             { custom: true, name, prot, res, integrity, coverage, integrityLoss, notes, worn, scrapped, upgrades } ],
 
   progression: {
     ip: {
@@ -1876,6 +1901,109 @@ No cascade logic to maintain — it falls out of the architecture.
       Character schema unchanged (0.8 already carried every field).
       (Ken + Claude, 2026-09-22)
 
+100. **(Loadout & recovery — combat plan Session 4, data + engine + app)**
+    **Loadout writes weapons and armor from the catalog, a weapon line is
+    computed, and every recovery step is one audited action.** Ken approved
+    the Session 4 proposal on 2026-09-22 and settled four questions. The hit
+    panel's stand-in armor is removed. **Buy** sits next to Add. Weapon mods
+    and rounds-in-magazine tracking are deferred, so there's no schema bump.
+    A Nanomed Kit button is deferred until this lands. Thick Skin and natural
+    armor move to a post-Session-4 cleanup session. This locks plan P8 and P9.
+    - **Weapons.** `weaponLine(ch, i)` reads a catalog weapon. Attack is
+      that weapon's skill's `checkBonus`, so Pain and Conditions are already
+      in it (053: "1d10 + your Skill + modifiers"). ACC is carried apart,
+      because only Single fire adds it. `BOD+3` resolves to BOD's value + 3
+      (053's own example: BOD 5 does 8). A number is fixed damage. Anything
+      else ("6/round") stays text. A custom weapon reads back what was typed.
+      The weapon's damage type isn't mapped onto `damageTypes`: nothing
+      consumes it, since the hit panel is for incoming damage.
+    - **Armor.** `addLoadout(ch, kind, id, {buy})` adds a catalog piece. The
+      first piece in a slot goes on. **Buy** also pays the catalog price
+      through `addCredits` in the same action, so one undo takes back both.
+      It refuses a price the player can't cover or one the catalog doesn't
+      state ("By Contract"); Add still works then. `setWorn` is one piece per
+      **slot**: body (CQ7), head, hands. `upgradeOptions`/`addUpgrade` apply
+      Gear's rules: one mod slot each, `minQuality` ranked by
+      `armorRules.qualityOrder`, only `repeatable` upgrades twice (Tri-Weave,
+      Resistance). A custom piece states no slots or quality, so neither
+      limit binds it. **A built-in upgrade is already in the printed
+      stats (Ken, 2026-09-22).** The Plasteel Weave Jacket's Tri-Weave is
+      part of its INT 30, so only upgrades the player installs add their
+      effect. Session 3 read it that way on purpose (log), but the reading
+      never reached Decision 99's text. This session briefly changed it to
+      40 before finding the log entry and asking. Ken ruled 30: start from
+      the catalog as printed, and tune numbers later if play says so.
+      `integrityLoss` also reads clamped to the maximum, so removing an
+      upgrade can't show negative Integrity.
+    - **Wear and repair (053, Gear).** `armorWear` takes the difficulty's
+      die (`integrityLossByDifficulty`) and the player's roll, checked
+      against the die. It can leave armor Compromised, never scrap; only
+      Massive scraps. A feature with `afterEncounter` (Self-Healing: 1d4, 3+
+      regains 1d4, never past max) is asked for in the same action.
+      `repairArmor` takes the Field Repair Kit's die (`repairKitDie`) or an
+      armorer's full restore, and refuses scrap.
+    - **Healing (055).** `naturalHealing` proposes BOD per day. The panel
+      multiplies by days and by Speed Heal's ×2, and the player can change
+      the number, because "the GM may halve that" is a GM's call, not a
+      formula. `heal(ch, {kind})` is one writer. Natural Healing takes HP
+      only and never touches Massive levels or a Condition. Focused Healing
+      takes the HP the care restored, clears what
+      `recoveryRules.focusedHealing.clears` names (Injured), and restores
+      Massive levels (CQ6: with a replacement). **The bare "Restore a
+      Massive level" button (Decision 99) is gone, folded into Focused
+      Healing**, so the ruling's "and a replacement" is stated where the
+      level comes back. Withering is trimmed to the damage left.
+    - **Turn Reset (P8).** `resolveReset`/`applyReset` work like
+      `resolveHit`/`applyHit`: pure preview, a writer that re-resolves.
+      Each Condition with `ongoing` ticks: Bleeding's fixed 1, and the
+      entered source damage for Burning/Shocked. The damage goes straight
+      onto the total. **It isn't a hit**, so there's no armor and no Shock
+      (054 asks Shock of "a single hit"). At Zero is asked again (054: "every
+      time you take damage"). Every active Condition's recovery is listed as
+      text, and no check is run. `hitPrompts` was split so both paths share
+      `damagePrompts` (At Zero, Death Mark).
+    - **New stub, F24.** 054 says damage while Dying is "an automatic failure
+      and a mark" and that ongoing damage ticking is "another mark". At a
+      Reset where Bleeding ticks, is that one mark or the check plus one
+      per source? **Stub:** each source that ticks is one Death Mark and
+      takes the place of the check. With nothing ticking, the WILL check is
+      asked, and a fail is a mark. The panel shows the stub's `playerNote`
+      only when it applies.
+    - **Data (game data 0.9 — Decision 68: new choices a character can
+      observe, such as a rest proposing BOD per day and Self-Healing asked
+      after a fight).** `weaponCategories` (the picker's groups),
+      `recoveryRules`, `damageRules.whileDying.resetCheck/resetText` (F24).
+      On `armorRules`: `qualityOrder`, `slotNames`, `coverageNames`,
+      `repairKitDie`, notes. Self-Healing's `afterEncounter`. `repeatable` on
+      Tri-Weave and Resistance.
+    - **Character schema unchanged (0.8).** A custom armor piece may now
+      carry `coverage`. Absent reads as light, which every reader already
+      assumed, so older and newer files read each other and there's no
+      `migrate()` step.
+    - **App.** Loadout has a catalog picker for each of weapons and armor
+      (Add / Buy with its price / + Custom), weapon lines, and armor rows
+      (worn, Integrity bar, built-in features, upgrades, repair, notes).
+      Main's combat column shows weapon lines and the worn armor. Trackers
+      adds Turn Reset, Rest and Focused Healing to the damage card, plus an
+      Armor card with After the fight. The hit panel says "no body armor
+      worn" instead of offering a stand-in. **Print:** the front page's
+      Defense card fills from the worn piece (RES, Integrity, PROT on the
+      locations it covers; name, features, Warding) and no longer carries
+      the "not tracked digitally" note. The Loadout page gets computed
+      weapon columns and an Armor table **beside** Gear. Full width, it
+      measured 104px against about 68px spare and spilled a blank sheet onto
+      a fourth page. Side by side, all three pages hold at 720px, blank and
+      filled (measured with print.css force-enabled). App **0.13.0 →
+      0.14.0** (minor).
+    - **Deferred, by Ken's call:** weapon mods and ammo tracking (both need
+      schema 0.9), a Nanomed Kit button (054 and Gear disagree on whether it
+      clears Paralyzed, plan CQ12), and Thick Skin/natural armor (cleanup
+      session; the print Defense card's Nat column stays blank until then).
+      Also a CRB doc fix: 054's table lets a week of downtime clear Injured,
+      while 055 says Focused Healing is required (plan CQ13). The app's
+      Focused Healing clears it either way.
+    (Ken + Claude, 2026-09-22)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -1915,10 +2043,11 @@ INT/EMP all along, so nothing changed but the flag.
 match and its flag dropped. Text-only — no computed value or available choice
 moved, so no `gamedataVersion` bump (Decision 68).
 
-Fifteen objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
+Sixteen objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
 (a recursive count: sixteen, plus F20–F22 opened by the Conditions session,
 minus F1, F2, F14, F17 and F20–F22, closed by Decisions 97–98, plus the
-three F23 entries opened by the hit resolver, Decision 99).
+three F23 entries opened by the hit resolver, Decision 99, plus F24 on
+`damageRules.whileDying`, Decision 100).
 
 ~~F1~~, ~~F2~~, ~~F14~~ and ~~F17~~ closed 2026-09-22 on a design-team ruling
 (Decision 97). F1/F2/F17 confirmed what the app already did; F14 moved a price.
@@ -1936,9 +2065,10 @@ sentence.
 | F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
-| F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small), and Loadout pickers, weapon lines, the worn toggle and the recovery actions — plan Session 4 of `plans/combat-and-conditions.md` | Ken/D/Scott | No |
+| F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 | F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and Magical (Warding), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
+| F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 
 ## 6. Roadmap
 
@@ -2141,9 +2271,11 @@ sentence.
 
 - **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in
   `docs/plans/combat-and-conditions.md`: Conditions first (Session 2 — **done**,
-  Decisions 95–96), then hit resolution through armor (Session 3), then Loadout
-  pickers and recovery actions, including the Turn Reset helper (Session 4). The plan holds the sequencing rationale and the open questions
-  (`CQ`n); decisions get numbered here as each session lands.
+  Decisions 95–96), then hit resolution through armor (Session 3 — **done**,
+  Decision 99), then Loadout pickers and recovery actions, including the Turn
+  Reset helper (Session 4 — **done**, Decision 100). A cleanup session follows
+  (Thick Skin/natural armor, then Nanomed once it has been revisited). The plan
+  holds the sequencing rationale and the open questions (`CQ`n).
 
 **Session handoff protocol:** every phase ends with current files +
 this document updated. Ken adds the latest versions to project knowledge.

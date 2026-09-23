@@ -306,14 +306,25 @@ function renderShMain(){
   if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
   h += conditionTotalsNote(ch, true);
   h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
-  if (ch.weapons && ch.weapons.length){
+  // Weapons: a catalog piece is computed (Decision 100); a custom one reads
+  // back what was typed.
+  const lines = (ch.weapons||[]).map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
+  if (lines.length){
     h += `<div class="sect">Weapons</div>
-      <table class="ref"><thead><tr><th>Weapon</th><th>Dmg</th><th>RoF</th><th>Cap.</th><th>Features</th></tr></thead><tbody>` +
-      ch.weapons.map(w=>`<tr><td>${esc(w.name)||"—"}</td><td class="num">${esc(w.damage)||"—"}</td>
-        <td class="num">${esc(w.rof)||"—"}</td><td class="num">${esc(w.capacity)||"—"}${w.ammo?` (${esc(w.ammo)})`:""}</td>
-        <td style="font-size:.76rem;color:var(--dim)">${esc(w.features)||"—"}</td></tr>`).join("") +
-      `</tbody></table>`;
+      <table class="ref"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` +
+      lines.map(l=>{
+        if (l.custom){ const w=ch.weapons[l.index];
+          return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td><td class="num">—</td><td class="num">${esc(w.damage)||"—"}</td>
+            <td class="num">${esc(w.rof)||"—"}</td><td class="num">${esc(w.capacity)||"—"}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
+        return `<tr><td>${esc(l.name)}${l.tags&&l.tags.length?`<div class="lo-sub">${esc(l.tags.join(" · "))}</div>`:""}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}</td>
+          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
+          <td class="num">${esc(l.rof||"—")}</td><td class="num">${esc(l.capacity||"—")}</td></tr>`;
+      }).join("") + `</tbody></table>`;
   }
+  const worn = Engine.armorState(ch).worn;
+  if (worn) h += `<div class="sect">Armor</div><div class="lo-armor worn"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
+    <div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(worn)}</span></div><div class="lo-armor-int">${intBar(worn)}</div></div>`;
   h += `</section></div>`;   // /main-grid
 
   // Identity — reference, kept at the bottom and collapsible
@@ -456,12 +467,11 @@ function renderShArchetype(){
 // S.hit holds the form while it's open; nothing is saved until Apply.
 function newHitForm(){
   return { damage:"", damageType:"ballistic", category:"regular", ap:false, location:"",
-           protRoll:"", manual:false, manualRes:"", manualInt:"", shock:"", atZero:"", conds:{} };
+           protRoll:"", shock:"", atZero:"", conds:{} };
 }
 function hitInput(st){
   return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap,
-           location: st.location || undefined, protRoll: st.protRoll,
-           manual: st.manual ? { res: st.manualRes, integrity: st.manualInt } : undefined };
+           location: st.location || undefined, protRoll: st.protRoll };
 }
 // Condition ids only: the engine puts a body-part Condition where the hit
 // landed (after any Headshot Defense redirect), not where it was aimed.
@@ -495,15 +505,13 @@ function hitPanelHtml(ch){
     </div>
     <p class="hitnote">${esc(cat.text||"")}</p>`;
 
-  // Armor: the worn piece when the sheet has one; otherwise a stand-in the
-  // player types (Loadout's pickers are Session 4).
+  // Armor: the worn body piece, from Loadout (Decision 100).
   if (as.worn){
     const w=as.worn;
     h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
       ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll",`max="${w.protMax||""}"`) : ""}</div>`;
   } else {
-    h+=`<div class="hitrow"><label class="check"><input type="checkbox" data-hit="manual" ${st.manual?"checked":""}> I'm wearing armor that isn't on the sheet yet</label>
-      ${st.manual ? (bypass ? num("manualInt","Its Integrity now") : num("protRoll","PROT roll")+num("manualRes","RES")) : ""}</div>`;
+    h+=`<div class="hitrow"><span class="hitnote">No body armor worn, so nothing answers the hit. Armor goes on under Loadout.</span></div>`;
   }
   as.problems.forEach(p=>{ h+=`<p class="hitnote">${esc(p)}</p>`; });
 
@@ -544,10 +552,117 @@ function hitPanelHtml(ch){
   return h;
 }
 
+// ── Recovery and the Turn Reset (combat plan Session 4, Decision 100) ──
+// Same shape as Take a hit: S.act holds one open panel's form, the engine
+// says what it would do, and Apply is one commit(). Only one panel is open at
+// a time, the hit panel included.
+function newActForm(kind){
+  return { kind, sources:{}, atZero:"", dyingCheck:"", days:"1", speed:false, hp:"",
+           clear:{}, massive:"", difficulty:"medium", roll:"", shCheck:"", shRoll:"" };
+}
+const actOpt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
+const actNum=(st,k,label,extra="")=>`<label class="field"><span>${label}</span><input type="number" min="0" data-act="${k}" value="${esc(st[k])}" ${extra}></label>`;
+const actPassFail=(st,k)=>`<select data-act="${k}" aria-label="result">${actOpt("","Did you pass?",!st[k])}${actOpt("pass","Passed",st[k]==="pass")}${actOpt("fail","Failed",st[k]==="fail")}</select>`;
+const actButtons=(ok, label)=>`<div class="hitrow"><button class="btn primary" data-actapply="1" ${ok?"":"disabled"}>${esc(label)}</button>
+  <button class="btn" data-actcancel="1">Cancel</button></div>`;
+function actInput(ch, st){
+  if (st.kind==="reset") return { sources: st.sources };
+  if (st.kind==="rest"){
+    const nh=Engine.naturalHealing(ch), days=Math.max(0, Math.floor(Number(st.days)||0));
+    const proposed = nh.perDay * days * (st.speed ? nh.speedHealMultiplier : 1);
+    return { kind:"natural", hp: st.hp==="" ? proposed : st.hp, days, proposed };
+  }
+  if (st.kind==="focused") return { kind:"focused", hp: st.hp,
+    clear: Object.keys(st.clear).filter(i=>st.clear[i]).map(Number), massive: st.massive };
+  if (st.kind==="wear") return { difficulty: st.difficulty, roll: st.roll, selfHealCheck: st.shCheck, selfHealRoll: st.shRoll };
+  return {};
+}
+function resetPanelHtml(ch, st){
+  const r=Engine.resolveReset(ch, actInput(ch, st));
+  let h=`<div class="hitpanel" data-actpanel="reset"><h4>Turn Reset</h4>`;
+  if (r.ticks.length) h+=`<div class="hitrow">` + r.ticks.map(t=> t.source
+    ? actNum({ [`src:${t.index}`]: st.sources[t.index]==null?"":st.sources[t.index] }, `src:${t.index}`, `${esc(t.name)} damage this round`)
+    : `<span class="hitarmor">${esc(t.name)}: ${t.hp} HP</span>`).join("") + `</div>`;
+  else h+=`<p class="hitnote">Nothing is ticking this round.</p>`;
+  if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
+  else {
+    const lines=[];
+    if (r.total) lines.push(`${r.total} damage goes on. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
+    if (r.marks) lines.push(`You're Dying, so that's ${r.marks} Death Mark${r.marks===1?"":"s"}.`);
+    if (lines.length) h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
+    r.notes.forEach(n=>{ h+=noticeHtml(copy("unsettledLabel"), n); });
+    const P=r.prompts;
+    if (P.atZero) h+=`<div class="hitcheck bad"><b>At zero</b> · ${esc(P.atZero.check)}<p>${esc(P.atZero.text)}${
+      P.atZero.freePassHeld?" "+esc(P.atZero.freePass.text):""}</p>${actPassFail(st,"atZero")}</div>`;
+    if (P.dyingCheck) h+=`<div class="hitcheck bad"><b>Dying</b> · ${esc(P.dyingCheck.check)}<p>${esc(P.dyingCheck.text)}</p>${actPassFail(st,"dyingCheck")}</div>`;
+  }
+  if (r.recovery.length) h+=`<div class="hitconds"><span>What each Condition needs to end. Your GM calls the checks:</span></div>
+    <div class="hitresult">${r.recovery.map(c=>`<p><b>${esc(c.name)}</b> · ${esc(c.recovery)}</p>`).join("")}</div>`;
+  return h + actButtons(r.ok && r.hasEffect, "Apply Reset") + `</div>`;
+}
+function restPanelHtml(ch, st){
+  const nh=Engine.naturalHealing(ch), inp=actInput(ch, st), hs=Engine.hlState(ch);
+  const r=Engine.heal(clone(ch), inp);
+  let h=`<div class="hitpanel" data-actpanel="rest"><h4>Rest</h4><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>
+    <div class="hitrow">${actNum(st,"days","Days of rest")}
+      <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
+      ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP recovered")}</div>`;
+  if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
+  else h+=`<div class="hitresult"><p>${esc(`Damage ${hs.damage} → ${hs.damage - r.healed}.`)}</p>${
+    hs.massive?`<p>${esc("Rest doesn't bring back Health Levels lost to Massive damage. That takes Focused Healing.")}</p>`:""}</div>`;
+  return h + actButtons(r.ok, "Rest") + `</div>`;
+}
+function focusedPanelHtml(ch, st){
+  const F=(D.recoveryRules||{}).focusedHealing||{}, hs=Engine.hlState(ch);
+  const r=Engine.heal(clone(ch), actInput(ch, st));
+  let h=`<div class="hitpanel" data-actpanel="focused"><h4>Focused Healing</h4><p class="hitnote">${esc(F.text||"")}</p>
+    <div class="hitrow">${actNum(st,"hp","HP restored")}${hs.massive?actNum(st,"massive","Massive levels restored",`max="${hs.massive}"`):""}</div>`;
+  if (hs.massive) h+=`<p class="hitnote">${esc(F.massiveText||"")}</p>`;
+  const clearable = (ch.trackers.conditions||[]).map((e,i)=>({e,i})).filter(x=>(F.clears||[]).includes(x.e.id));
+  if (clearable.length) h+=`<div class="hitconds"><span>Conditions this care clears:</span>` + clearable.map(({e,i})=>{
+    const d=Engine.conditionById(e.id), l=Engine.locationById(e.location);
+    return `<label class="check"><input type="checkbox" data-act="clear:${i}" ${st.clear[i]?"checked":""}> ${esc(d.name)}${l?` (${esc(l.name)})`:""}</label>`; }).join("") + `</div>`;
+  if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
+  else {
+    const lines=[r.healed?`Damage ${hs.damage} → ${hs.damage - r.healed}.`:"",
+      r.restored?`Massive levels ${hs.massive} → ${hs.massive - r.restored}.`:"",
+      ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `Clears ${d?d.name:e.id}${l?` (${l.name})`:""}.`; })].filter(Boolean);
+    h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
+  }
+  return h + actButtons(r.ok, "Apply healing") + `</div>`;
+}
+function wearPanelHtml(ch, st){
+  const R=D.armorRules||{}, w=Engine.armorState(ch).worn;
+  let h=`<div class="hitpanel" data-actpanel="wear"><h4>After the fight</h4><p class="hitnote">${esc(R.wearNote||"")}</p>`;
+  if (!w) return h + `<p class="hitwhy">No body armor worn.</p>` + actButtons(false, "Apply wear") + `</div>`;
+  const dice=R.integrityLossByDifficulty||{};
+  h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · Integrity ${w.integrity}/${w.integrityMax}</span>
+    <label class="field"><span>How hard was it</span><select data-act="difficulty">${Object.keys(dice).map(k=>actOpt(k, `${titleCase(k)} (${dice[k]})`, st.difficulty===k)).join("")}</select></label>
+    ${actNum(st,"roll","Wear die",`max="${esc(String(dice[st.difficulty]||"").replace(/^1?d/,""))}"`)}</div>`;
+  const sh = w.scrapped ? null : w.features.map(f=>(D.armorFeatureGlossary||[]).find(g=>g.id===f)).find(g=>g && g.afterEncounter);
+  if (sh){
+    const A=sh.afterEncounter;
+    h+=`<div class="hitrow"><span class="hitnote">${esc(sh.id)}: roll ${esc(A.checkDie)}. On ${A.succeedsOn} or better it regains ${esc(A.restoresDie)} Integrity.</span>
+      ${actNum(st,"shCheck",`${esc(sh.id)} roll`)}${Number(st.shCheck)>=A.succeedsOn?actNum(st,"shRoll","Integrity regained"):""}</div>`;
+  }
+  const c=clone(ch), r=Engine.armorWear(c, w.index, actInput(ch, st));
+  if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
+  else h+=`<div class="hitresult"><p>${esc(`${r.name} loses ${r.lost} Integrity${r.selfHeal&&r.selfHeal.healed?` and ${r.selfHeal.feature} gives back ${r.selfHeal.healed}`:""}: ${r.before} → ${r.after}.`)}${
+    r.after<=0?` ${esc(R.compromisedNote||"")}`:""}</p></div>`;
+  return h + actButtons(r.ok, "Apply wear") + `</div>`;
+}
+function actPanelHtml(ch){
+  const st=S.act;
+  return st.kind==="reset" ? resetPanelHtml(ch, st) : st.kind==="rest" ? restPanelHtml(ch, st)
+       : st.kind==="focused" ? focusedPanelHtml(ch, st) : st.kind==="wear" ? wearPanelHtml(ch, st) : "";
+}
+
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
   if (S.hit && S.hit.owner!==ch) S.hit=null;     // a different character was loaded
+  if (S.act && S.act.owner!==ch) S.act=null;
+  const open = !!(S.hit || S.act);
   const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
@@ -561,15 +676,29 @@ function renderShTrackers(){
     <button class="btn sm" data-dmg="1">+1</button>
     <button class="btn sm" data-dmg="5">+5</button>
     <button class="btn sm danger" data-dmgheal="1">Heal all</button>
-    <button class="btn sm primary" data-hitopen="1" ${S.hit?"disabled":""}>Take a hit</button>
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
-      hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied, so resting and Heal all don't bring them back.`:""}${
+      hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
       withering?` ${withering} of the damage is Withering and won't regenerate.`:""}</span>
-    ${hs.massive?`<button class="btn sm" data-massiverestore="1" title="${esc(D.damageRules.massive.text)}">Restore a Massive level</button>`:""}</div>`;
+    <div class="trk-actions">
+      <button class="btn sm primary" data-hitopen="1" ${open?"disabled":""}>Take a hit</button>
+      <button class="btn sm" data-actopen="reset" ${open?"disabled":""}>Turn Reset</button>
+      <button class="btn sm" data-actopen="rest" ${open?"disabled":""}>Rest</button>
+      <button class="btn sm" data-actopen="focused" ${open?"disabled":""}>Focused Healing</button></div></div>`;
   h += `<div class="hl-track">` + hlCells(ch).map(c=>
     `<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hp.hpPer}</span></div>`
   ).join("") + `</div>`;
   if (S.hit) h += hitPanelHtml(ch);
+  if (S.act && S.act.kind!=="wear") h += actPanelHtml(ch);
+
+  // Armor: the worn body piece's Integrity, and the after-fight wear roll.
+  const worn = Engine.armorState(ch).worn;
+  h += `<div class="trk"><h4>Armor</h4>` + (worn
+    ? `<span class="hitarmor">${esc(worn.name)} · ${armorStatLine(worn)}</span>
+       <div class="lo-armor-int" style="flex-basis:100%">${intBar(worn)}</div>
+       <button class="btn sm" data-actopen="wear" ${open?"disabled":""}>After the fight</button>
+       <span class="sub">${esc((D.armorRules||{}).wearNote||"")} Repairs are on Loadout.</span>`
+    : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`) + `</div>`;
+  if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
     <div class="desc">${esc(pain.description)}${pain.fromConditions?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; Conditions add ${signed(pain.fromConditions)}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
@@ -807,11 +936,131 @@ function auditChip(kind){
   return "";
 }
 
+// ── Loadout: weapons and armor (combat plan Session 4, Decision 100) ──
+// A catalog piece shows what the catalog and the engine say, and only its
+// notes are editable. A custom piece is typed. Every number on a weapon line
+// comes from Engine.weaponLine(); every armor number from armorState().
+const attackText = n => n==null ? "—" : `1d10 ${n<0?"−":"+"} ${Math.abs(n)}`;
+const priceText = d => typeof d.cost==="number" && d.cost>0 ? `${d.cost.toLocaleString("en-US")}Ç` : "";
+const titleCase = s => String(s||"").replace(/^./, c=>c.toUpperCase());
+function loadoutPickerHtml(kind){
+  const R = D.armorRules||{};
+  let groups;
+  if (kind==="weapons"){
+    const known = new Set((D.weaponCategories||[]).map(c=>c.id));
+    groups = (D.weaponCategories||[]).map(c=>({ label:c.name, items:D.weapons.filter(w=>w.category===c.id) }))
+      .concat([{ label:"Other", items:D.weapons.filter(w=>!known.has(w.category)) }]);
+  } else {
+    const slots = [...new Set(D.armor.map(a=>a.slot||"body"))];
+    groups = slots.flatMap(slot => slot==="body"
+      ? Object.keys(R.coverageLocations||{}).map(cov=>({ label:(R.coverageNames||{})[cov]||titleCase(cov),
+          items:D.armor.filter(a=>(a.slot||"body")==="body" && (a.coverage||R.defaultCoverage)===cov) }))
+      : [{ label:(R.slotNames||{})[slot]||titleCase(slot), items:D.armor.filter(a=>a.slot===slot) }]);
+  }
+  const opts = groups.filter(g=>g.items.length).map(g=>`<optgroup label="${esc(g.label)}">` +
+    g.items.map(d=>`<option value="${esc(d.id)}">${esc(d.name)}${priceText(d)?" — "+priceText(d):""}</option>`).join("") + `</optgroup>`).join("");
+  return `<div class="lo-add">
+    <select data-lopick="${kind}" aria-label="${kind==="armor"?"Armor":"Weapon"} from the catalog"><option value="">Choose from the catalog…</option>${opts}</select>
+    <button class="btn sm" data-loadd="${kind}">Add</button>
+    <button class="btn sm primary" data-lobuy="${kind}" disabled>Buy</button>
+    <button class="btn sm" data-locustom="${kind}">+ Custom ${kind==="armor"?"armor":"weapon"}</button></div>`;
+}
+function weaponRowsHtml(ch){
+  const lines = ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
+  const cat = lines.filter(l=>!l.custom), custom = lines.filter(l=>l.custom);
+  let h = "";
+  if (cat.length){
+    h += `<div class="lo-scroll"><table class="ref lo-weapons"><thead><tr><th>Weapon</th><th>Attack</th><th>Damage</th><th>Range</th><th>RoF</th><th>Cap.</th><th>Notes</th><th></th></tr></thead><tbody>` +
+      cat.map(l=>{
+        if (l.missing) return `<tr><td><b>${esc(l.name)}</b> <span class="chip pain">no longer in the game data</span></td><td colspan="5"></td>
+          <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
+          <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
+        const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null, ...l.tags].filter(Boolean);
+        const range = [l.reach ? `Reach ${l.reach}` : l.range, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
+        return `<tr><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div></td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}</td>
+          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}</td>
+          <td>${esc(range||"—")}</td><td class="num">${esc(l.rof||"—")}</td><td class="num">${esc(l.capacity||"—")}</td>
+          <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
+          <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
+      }).join("") + `</tbody></table></div>`;
+    const pain = Engine.painState(ch);
+    h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
+  }
+  if (custom.length){
+    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>` +
+      custom.map(l=>{ const r=ch.weapons[l.index];
+        return `<tr>` + WEAPON_COLS.map(c=>`<td><input type="text" data-cell="weapons|${l.index}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
+          `<td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+  }
+  if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
+  return h + loadoutPickerHtml("weapons");
+}
+const intBar = p => {
+  const pct = p.integrityMax>0 ? Math.round(100*p.integrity/p.integrityMax) : 0;
+  return `<div class="bar ${p.integrity<=0?"bad":pct<=50?"warn":""}"><i style="width:${pct}%"></i></div>
+    <span class="lo-int">${p.integrity} / ${p.integrityMax} Integrity</span>${
+    p.scrapped?' <span class="chip pain">scrap</span>':p.compromised?' <span class="chip pain">Compromised</span>':""}`;
+};
+function armorStatLine(p){
+  const R = D.armorRules||{};
+  const res = p.resAgainst.map(titleCase).join(", ");
+  return `PROT ${esc(p.prot||"—")} · RES +${p.res}${res?` (${esc(res)})`:""} · ${esc((R.coverageNames||{})[p.coverageName]||titleCase(p.coverageName))}`;
+}
+function armorRowHtml(ch, p){
+  const R = D.armorRules||{}, e = ch.armor[p.index], body = p.slot==="body";
+  const slotName = (R.slotNames||{})[p.slot]||titleCase(p.slot);
+  let h = `<div class="lo-armor${p.worn?" worn":""}"><div class="lo-armor-head">
+    <label class="check"><input type="checkbox" data-worn="${p.index}" ${p.worn?"checked":""}> Worn</label>
+    <b>${esc(p.name)}</b> <span class="chip">${esc(slotName)}</span>
+    ${p.missing?'<span class="chip pain">no longer in the game data</span>':""}
+    <button class="x" data-lorm="armor|${p.index}" title="Remove" aria-label="Remove ${esc(p.name)}">✕</button></div>`;
+  if (p.custom){
+    const f=(k,label,type)=>`<label class="field"><span>${label}</span><input type="${type}" ${type==="number"?'min="0"':""} data-armorfield="${p.index}|${k}" value="${esc(e[k]==null?"":e[k])}"></label>`;
+    h += `<div class="hitrow">${f("name","Name","text")}${f("prot","PROT die","text")}${f("res","RES","number")}${f("integrity","Integrity","number")}
+      <label class="field"><span>Coverage</span><select data-armorfield="${p.index}|coverage">${Object.keys(R.coverageLocations||{}).map(c=>
+        `<option value="${esc(c)}" ${(e.coverage||R.defaultCoverage)===c?"selected":""}>${esc((R.coverageNames||{})[c]||c)}</option>`).join("")}</select></label></div>`;
+  }
+  if (body){
+    h += `<div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(p)}</span></div>
+      <div class="lo-armor-int">${intBar(p)}</div>`;
+  }
+  if (p.features.length) h += `<p class="lo-sub">Built in: ${p.features.map(f=>{
+    const g=(D.armorFeatureGlossary||[]).find(x=>x.id===f)||(D.armorUpgradeGlossary||[]).find(x=>x.id===f);
+    return `<span title="${esc(g?g.description:"")}">${esc(f)}</span>`; }).join(" · ")}</p>`;
+  if (body){
+    const u = Engine.upgradeOptions(ch, p.index);
+    const chips = p.upgrades.map((id,at)=>{ const g=(D.armorUpgradeGlossary||[]).find(x=>x.id===id);
+      return `<span class="cond-chip" title="${esc(g?g.description:"")}"><b>${esc(id)}</b>
+        <button class="x" data-upgrm="${p.index}|${at}" aria-label="Remove ${esc(id)}" title="Remove">✕</button></span>`; }).join("");
+    const slotsTxt = u.slots==null ? "" : u.slots ? ` · ${u.free} of ${u.slots} mod slot${u.slots===1?"":"s"} free` : " · no mod slots";
+    h += `<div class="lo-upgrades"><span class="lo-sub">Upgrades${slotsTxt}</span>${chips}
+      ${u.slots!==0?`<select data-upgpick="${p.index}" aria-label="Upgrade"><option value="">Install an upgrade…</option>${
+        u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)}${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
+      <button class="btn sm" data-upgadd="${p.index}">Install</button>`:""}</div>`;
+    const canRepair = !p.scrapped && p.integrityLoss>0;
+    h += `<div class="hitrow lo-repair">
+      <label class="field"><span>Repair kit (${esc(R.repairKitDie||"1d6")})</span><input type="number" min="1" data-repairroll="${p.index}" ${canRepair?"":"disabled"}></label>
+      <button class="btn sm" data-repairkit="${p.index}" ${canRepair?"":"disabled"}>Field Repair Kit</button>
+      <button class="btn sm" data-repairfull="${p.index}" ${canRepair?"":"disabled"}>Armorer: full repair</button>
+      <span class="hitnote">${esc(p.scrapped ? R.scrapNote : p.features.includes("Rapid Repair") ? "Rapid Repair: the kit is an Action here, not an hour." : R.repairKitNote)}</span></div>`;
+  }
+  h += `<label class="field lo-notes"><span>Notes</span><input type="text" data-lonote="armor|${p.index}" value="${esc(e.notes||"")}"></label></div>`;
+  return h;
+}
+function armorRowsHtml(ch){
+  const as = Engine.armorState(ch);
+  let h = as.problems.map(p=>`<p class="hitnote">${esc(p)}</p>`).join("");
+  h += as.pieces.map(p=>armorRowHtml(ch, p)).join("") || `<p class="step-note">No armor yet.</p>`;
+  return h + loadoutPickerHtml("armor");
+}
+
 // ── Sheet: loadout & powers ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch, a=Engine.archetype(ch);
-  let h = sheetHeader("Loadout & Powers", "Weapons, gear, and whatever your archetype carries that the rest of the city can't.");
-  h += `<div class="sect">Weapons</div>` + editTable(ch.weapons, WEAPON_COLS, "weapons", "Add weapon");
+  let h = sheetHeader("Loadout & Powers", "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't.");
+  h += `<div class="sect">Weapons</div>` + weaponRowsHtml(ch);
+  h += `<div class="sect">Armor</div>` + armorRowsHtml(ch);
   h += `<div class="sect">Gear</div>` + editTable(ch.gear, GEAR_COLS, "gear", "Add gear");
 
   // Archetype panels: rankedList / table / list / text / toggle
@@ -971,12 +1220,12 @@ function renderShAdmin(){
 }
 
 // ── Print view — a universal three-page sheet (Character Info/Stats/Combat/
-// Health, full Skills, Weapons/Gear/Advantages/Disadvantages/Notes), styled
-// entirely by print.css. `ch` is optional: present renders live values via
-// the engine; absent renders a blank fillable template built from game data
-// alone — no character needed, since every label on a blank sheet comes from
-// SHADOWS_DATA, not a character. Defense ships blank either way: the app
-// doesn't model armor/defense yet (open design flag, see SCHEMA.md §5).
+// Health, full Skills, Weapons/Armor/Gear/Advantages/Disadvantages/Notes),
+// styled entirely by print.css. `ch` is optional: present renders live values
+// via the engine; absent renders a blank fillable template built from game
+// data alone — no character needed, since every label on a blank sheet comes
+// from SHADOWS_DATA, not a character. Defense fills from the worn armor
+// (Decision 100); its Nat column stays blank until natural armor is derived.
 function pLine(v){ return `<span class="p-line">${v==null||v===""?"":esc(v)}</span>`; }
 function pField(label, v){ return `<div class="p-field"><span class="p-label">${esc(label)}</span>${pLine(v)}</div>`; }
 function pBuildTag(){
@@ -1092,14 +1341,44 @@ function pConditionsHtml(ch){
   return `<ul class="p-condlist">${D.conditions.filter(c=>!wide(c)).map(row).join("")}</ul>`
        + `<ul class="p-condlist p-condloc">${D.conditions.filter(wide).map(row).join("")}</ul>`;
 }
-function pDefenseHtml(){
+// Filled from the worn body piece (Decision 100): each location it covers
+// gets its RES, current Integrity and PROT die. Natural armor stays blank
+// until Thick Skin and the rest become a derived value. The front page is
+// full (Decision 96), so this fills the card's blanks and adds no rows.
+function pDefenseHtml(ch){
+  const as = ch ? Engine.armorState(ch) : null, w = as && as.worn;
+  const locs = [["head","Head"],["torso","Torso"],["right-arm","R Arm"],["left-arm","L Arm"],["right-leg","R Leg"],["left-leg","L Leg"]];
   let h = `<table class="p-table"><thead><tr><th>Location</th><th>Res</th><th>Int</th><th>Nat</th><th>Prot</th></tr></thead><tbody>` +
-    ["Head","Torso","R Arm","L Arm","R Leg","L Leg"].map(l=>
-      `<tr><td>${esc(l)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(null)}</td></tr>`
-    ).join("") + `</tbody></table>`;
-  h += `<div class="p-fieldrow">${pField("Components",null)}${pField("Features",null)}${pField("Warding",null)}</div>`;
-  h += `<p class="p-note">Armor and defense aren't tracked digitally yet — use this section to keep score by hand.</p>`;
+    locs.map(([id,l])=>{ const on = w && w.coverage.includes(id);
+      return `<tr><td>${esc(l)}</td><td class="num">${pLine(on?"+"+w.res:null)}</td><td class="num">${pLine(on?w.integrity:null)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(on?w.prot:null)}</td></tr>`;
+    }).join("") + `</tbody></table>`;
+  const others = as ? as.pieces.filter(p=>p.worn && p.slot!=="body") : [];
+  const feats = w ? [...w.features, ...w.upgrades, ...others.flatMap(p=>p.features)] : [];
+  h += `<div class="p-fieldrow">${pField("Components", w ? [w.name, ...others.map(p=>p.name)].join(", ") : null)}${
+    pField("Features", feats.length ? [...new Set(feats)].join(", ") : null)}${pField("Warding", w && w.resAgainst.includes("magical") ? "Yes" : null)}</div>`;
   return h;
+}
+// The Loadout page's weapons: a catalog piece prints its computed line, a
+// custom one what was typed.
+function pWeaponRows(ch){
+  if (!ch) return [];
+  return ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean).map(l=>{
+    if (l.custom){ const w=ch.weapons[l.index];
+      return { name:[w.name,w.type].filter(Boolean).join(" · "), attack:"", damage:w.damage, range:"", rof:w.rof,
+               capacity:[w.capacity, w.ammo?`(${w.ammo})`:""].filter(Boolean).join(" "), features:w.features, notes:w.notes }; }
+    return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
+             damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""),
+             range: l.reach ? `Reach ${l.reach}` : (l.range||""), rof:l.rof||"", capacity:l.capacity||"",
+             features:[...(l.tags||[]), ...(l.features||[])].join(", "), notes:l.notes };
+  });
+}
+function pArmorRows(ch){
+  if (!ch) return [];
+  const R = D.armorRules||{};
+  return Engine.armorState(ch).pieces.map(p=>({ name: p.slot==="body" ? p.name : `${p.name} (${(R.slotNames||{})[p.slot]||p.slot})`,
+    prot:p.prot||"", res:p.slot==="body"?"+"+p.res:"",
+    integrity:p.slot==="body"?`${p.integrity} / ${p.integrityMax}${p.scrapped?" scrap":p.compromised?" Compromised":""}`:"",
+    worn:p.worn?"✓":"" }));
 }
 function pSkillIcons(s){
   const pri = iconSvg(s.primaryStat), syn = iconSvg(s.synergyStat);
@@ -1166,7 +1445,7 @@ function renderPrintView(ch){
   p1main += `<div class="p-frontright">` +
     pCard("Combat Quick-Ref", pSkillCellsHtml(ch,"combat"), "magenta") +
     pCard("Health Levels", pHealthHtml(ch)) +
-    pCard("Defense", pDefenseHtml(), "magenta") +
+    pCard("Defense", pDefenseHtml(ch), "magenta") +
     `</div>`;
   p1main += `</div>`;
   let p1 = `<div class="p-frontpage"><div class="p-tabstrip"><span>Character Sheet — Front</span></div>` +
@@ -1176,8 +1455,13 @@ function renderPrintView(ch){
   p2 += `<div class="p-section">Skills</div>${pSkillsTableHtml(ch)}`;
 
   let p3 = pHead(ch, "Loadout");
-  p3 += `<div class="p-section">Weapons</div>${pRowsTableHtml(ch&&ch.weapons, WEAPON_COLS, ["Weapon","Type","Damage","RoF","Capacity","Ammo","Features","Notes"], 5)}`;
-  p3 += `<div class="p-section">Gear</div>${pRowsTableHtml(ch&&ch.gear, GEAR_COLS, ["Item","Type","Notes"], 5)}`;
+  p3 += `<div class="p-section">Weapons</div>${pRowsTableHtml(pWeaponRows(ch), ["name","attack","damage","range","rof","capacity","features","notes"],
+    ["Weapon","Attack","Damage","Range","RoF","Capacity","Features","Notes"], 5)}`;
+  // Armor sits beside Gear rather than below it: the blank Loadout page had
+  // about 68px spare, and a full-width armor table would spill to a 4th sheet.
+  p3 += `<div class="p-cols2"><div><div class="p-section">Gear</div>${pRowsTableHtml(ch&&ch.gear, GEAR_COLS, ["Item","Type","Notes"], 5)}</div>` +
+        `<div><div class="p-section">Armor</div>${pRowsTableHtml(pArmorRows(ch), ["name","prot","res","integrity","worn"],
+          ["Armor","PROT","RES","Integrity","Worn"], 5)}</div></div>`;
   p3 += `<div class="p-cols2"><div><div class="p-section">Advantages</div>${pTraitsTableHtml(ch&&ch.advantages, Engine.advById, "Advantage", 5)}</div>` +
         `<div><div class="p-section">Disadvantages</div>${pTraitsTableHtml(ch&&ch.disadvantages, Engine.disById, "Disadvantage", 5)}</div></div>`;
   p3 += `<div class="p-section">Notes</div><div class="p-notes small">${ch&&ch.notes?esc(ch.notes):""}</div>`;

@@ -315,7 +315,7 @@ test("no exported reader throws on any character migrate() can return", () => {
   // its own test. Named here so adding an export is a deliberate choice.
   const readers = ["powerLevel","archetype","statTable","scalingRow","derived","health","sfr",
                    "statPool","statSpent","skillPool","skillSpent","advSpent","disGranted",
-                   "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","luckState",
+                   "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalHealing","resolveReset","luckState",
                    "sanState","focusedSkillIds","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
                    "disciplineRanks","buildExport","versionCheck"];
@@ -917,9 +917,9 @@ test("resolveHit and applyHit are total: every degenerate character, every kind 
   const hits = [
     {}, { damage: "x" }, { damage: 5 }, { damage: 5, damageType: "nope" },
     { damage: 12, damageType: "ballistic", protRoll: 3 },
-    { damage: 12, damageType: "ballistic", protRoll: 3, manual: { res: "x", integrity: "y" } },
+    { damage: 12, damageType: "ballistic", protRoll: "x" },
     { damage: 30, damageType: "blunt", category: "massive", location: "nowhere" },
-    { damage: 30, damageType: "energy", category: "withering", ap: true, manual: {} },
+    { damage: 30, damageType: "energy", category: "withering", ap: true },
   ];
   const failures = [];
   for (const [label, ch] of Object.entries(degenerates())){
@@ -973,7 +973,8 @@ test("applyHit only adds Conditions the hit offered (no Injured from a regular h
 
 test("Withering is recorded as the part of the damage that got through", () => {
   const ch = subject({ bod: 10 });
-  Engine.applyHit(ch, { damage: 9, damageType: "ballistic", category: "withering", protRoll: 2, manual: { res: 3 } });
+  ch.armor.push({ custom: true, name: "Vest", prot: "1d6", res: 3, integrity: 20, integrityLoss: 0, worn: true, scrapped: false, upgrades: [] });
+  Engine.applyHit(ch, { damage: 9, damageType: "ballistic", category: "withering", protRoll: 2 });
   assert.equal(ch.trackers.damage, 4);
   assert.equal(ch.trackers.witheringDamage, 4);
   Engine.applyHit(ch, { damage: 3, damageType: "blade" });
@@ -1006,4 +1007,111 @@ test("F23 surfaces where it bites: an Electric hit carries the stub's player not
   const r = Engine.resolveHit(subject(), { damage: 5, damageType: "electric" });
   assert.equal(r.notes.length, 1);
   assert.equal(Engine.resolveHit(subject(), { damage: 5, damageType: "blade" }).notes.length, 0);
+});
+
+// ── Loadout & recovery (Decision 100) ─────────────────────────────────
+// The CRB's numbers are pinned in rules.test.mjs; these guard the machinery.
+
+test("the Loadout and recovery functions are total on every degenerate character", () => {
+  const failures = [];
+  for (const [label, ch] of Object.entries(degenerates())){
+    ch.weapons.push(null, 4, { id: "no-such-weapon" }, { custom: true }, { id: "combat-knife" });
+    const calls = {
+      weaponLine: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => Engine.weaponLine(ch, i)),
+      upgradeOptions: () => [-1, 0, 1, 2, 3, 99].forEach(i => Engine.upgradeOptions(ch, i)),
+      setWorn: () => [0, 1, 2, 3, 99].forEach(i => Engine.setWorn(ch, i, true)),
+      addUpgrade: () => [0, 2, 3, 99].forEach(i => Engine.addUpgrade(ch, i, "Tri-Weave")),
+      removeUpgrade: () => [0, 2, 3, 99].forEach(i => Engine.removeUpgrade(ch, i, 0)),
+      armorWear: () => [0, 2, 3, 99].forEach(i => Engine.armorWear(ch, i, { difficulty: "hard", roll: 3, selfHealCheck: 4, selfHealRoll: 2 })),
+      repairArmor: () => [0, 2, 3, 99].forEach(i => { Engine.repairArmor(ch, i, { roll: 2 }); Engine.repairArmor(ch, i, { full: true }); }),
+      naturalHealing: () => Engine.naturalHealing(ch),
+      heal: () => { Engine.heal(ch, { kind: "natural", hp: 3 }); Engine.heal(ch, { kind: "focused", hp: "x", clear: [0, 9], massive: 99 }); Engine.heal(ch, {}); },
+      resolveReset: () => { Engine.resolveReset(ch); Engine.resolveReset(ch, { sources: { 0: "x" } }); },
+      applyReset: () => Engine.applyReset(ch, { sources: { 0: 2, 1: 2, 2: 2, 3: 2 } }, { atZero: "fail", dyingCheck: "fail" }),
+      addLoadout: () => { Engine.addLoadout(ch, "armor", "kevlar-vest", { buy: true }); Engine.addLoadout(ch, "weapons", "nope"); Engine.addLoadout(ch, "gear", "x"); },
+      addCustomLoadout: () => { Engine.addCustomLoadout(ch, "armor"); Engine.addCustomLoadout(ch, "weapons"); Engine.addCustomLoadout(ch, "x"); },
+      removeLoadout: () => { Engine.removeLoadout(ch, "armor", 99); Engine.removeLoadout(ch, "weapons", 0); },
+    };
+    for (const [fn, call] of Object.entries(calls)){
+      try { call(); } catch (e) { failures.push(`${fn}(${label}) -> ${e.message}`); }
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
+test("every catalog weapon resolves: its category is listed, its skill exists, its damage reads", () => {
+  const cats = new Set(D.weaponCategories.map(c => c.id));
+  const ch = subject();
+  D.weapons.forEach((w, i) => {
+    assert.ok(cats.has(w.category), `${w.id}: category "${w.category}" isn't in weaponCategories`);
+    assert.ok(Engine.skillById(w.skill), `${w.id}: skill "${w.skill}" doesn't exist`);
+    ch.weapons.push({ id: w.id, notes: "" });
+    const l = Engine.weaponLine(ch, i);
+    assert.equal(typeof l.attack, "number", `${w.id}: no attack total`);
+    if (typeof w.damage === "number" || /^BOD\+\d+$/.test(String(w.damage)))
+      assert.equal(typeof l.damage, "number", `${w.id}: damage "${w.damage}" didn't resolve`);
+  });
+});
+
+test("Buy pays the catalog price out of Çredits in the same action, and one undo takes back both", () => {
+  const ch = subject();
+  ch.trackers.credits.current = 600;
+  assert.match(Engine.addLoadout(ch, "armor", "specops-vest", { buy: true }).why, /costs 1800Ç\. You have 600Ç/);
+  assert.equal(Engine.addLoadout(ch, "weapons", "hxc1-absolute", { buy: true }).ok, false, "a By Contract price was bought");
+  assert.equal(Engine.addLoadout(ch, "weapons", "hxc1-absolute").ok, true, "…but it can still be added");
+  const snap = JSON.parse(JSON.stringify(ch));
+  const r = Engine.addLoadout(ch, "armor", "kevlar-vest", { buy: true });
+  Engine.recordAction(ch, "loadout", "Bought", snap);
+  assert.equal(r.paid, 500);
+  assert.equal(ch.trackers.credits.current, 100);
+  assert.equal(ch.trackers.credits.ledger.at(-1).note, "Bought Kevlar Vest");
+  assert.ok(Engine.undoLastAction(ch).ok);
+  const strip = c => JSON.stringify({ ...c, audit: [] });
+  assert.equal(strip(ch), strip(snap));
+});
+
+test("wearing is one piece per slot: the first goes on, putting one on takes the other off", () => {
+  const ch = subject();
+  Engine.addLoadout(ch, "armor", "kevlar-vest");
+  Engine.addLoadout(ch, "armor", "leather-jacket");
+  Engine.addLoadout(ch, "armor", "motorcycle-helmet");
+  assert.equal(ch.armor.map(a => a.worn).join(","), "true,false,true", "the first piece in each slot goes on");
+  Engine.setWorn(ch, 1, true);
+  assert.equal(ch.armor.map(a => a.worn).join(","), "false,true,true", "a helmet came off with the vest");
+  assert.equal(Engine.armorState(ch).worn.name, "Leather Jacket");
+  Engine.addCustomLoadout(ch, "armor");
+  assert.equal(ch.armor[3].worn, false, "a blank custom piece went on");
+});
+
+test("the hit panel's stand-in armor is gone: armor that isn't worn doesn't answer (Decision 100)", () => {
+  const ch = subject();
+  const r = Engine.resolveHit(ch, { damage: 8, damageType: "ballistic", protRoll: 3, manual: { res: 5 } });
+  assert.equal(r.armor, null);
+  assert.equal(r.through, 8);
+});
+
+test("Integrity lost can't read past the maximum when an upgrade comes out", () => {
+  const ch = subject();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 25, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const w = Engine.armorState(ch).worn;
+  assert.deepEqual([w.integrity, w.integrityLoss], [0, 20]);
+});
+
+test("healing trims Withering to the damage left, and refuses when there's nothing to do", () => {
+  const ch = subject({ bod: 10 });
+  ch.trackers.damage = 10; ch.trackers.witheringDamage = 8;
+  Engine.heal(ch, { kind: "natural", hp: 6 });
+  assert.deepEqual([ch.trackers.damage, ch.trackers.witheringDamage], [4, 4]);
+  assert.equal(Engine.heal(subject(), { kind: "natural", hp: 5 }).ok, false, "healed an unhurt character");
+  assert.equal(Engine.heal(subject(), { kind: "rest", hp: 5 }).ok, false, "an unknown kind of healing");
+});
+
+test("applyReset re-resolves from its inputs, like applyHit", () => {
+  const ch = subject({ bod: 10 });
+  ch.trackers.conditions = [{ id: "bleeding" }];
+  Engine.resolveReset(ch);                      // the panel's preview
+  ch.trackers.damage = 5;                       // something else changed meanwhile
+  Engine.applyReset(ch);
+  assert.equal(ch.trackers.damage, 6);
+  assert.equal(Engine.resolveReset(subject()).hasEffect, false, "nothing ticking, not Dying: nothing to record");
 });

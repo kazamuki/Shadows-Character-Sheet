@@ -7,7 +7,9 @@ import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css" };
+// PORT lets two worktrees preview side by side; 8420 when nothing assigns one.
+const PORT = Number(process.env.PORT) || 8420;
+const TYPES ={ ".html": "text/html", ".js": "text/javascript", ".css": "text/css" };
 
 createServer(async (req, res) => {
   const path = req.url === "/" ? "/index.html" : req.url.split("?")[0];
@@ -18,4 +20,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404); res.end("not found");
   }
-}).listen(8420, () => console.log("dev preview on http://localhost:8420"));
+}).listen(PORT, () => console.log(`dev preview on http://localhost:${PORT}`));
