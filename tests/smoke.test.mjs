@@ -547,7 +547,15 @@ test("Take a hit: Massive with no armor removes levels, asks at zero, and adds D
   assert.equal(got.trackers.damage, 0);
   assert.ok(got.trackers.conditions.some(c => c.id === "dying"));
   assert.ok(app.$(".hl.massive"), "Massive levels aren't drawn on the track");
-  assert.ok(app.$("[data-massiverestore]"), "no way to restore a Massive level");
+  // Decision 100: a Massive level comes back through Focused Healing, which
+  // replaced the bare restore button.
+  app.click('[data-actopen="focused"]');
+  const field = app.$('[data-act="massive"]');
+  assert.ok(field, "Focused Healing doesn't offer to restore a Massive level");
+  field.value = "1"; field.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  const before = activeChar(app).trackers.massiveLevels;
+  app.click("[data-actapply]");
+  assert.equal(activeChar(app).trackers.massiveLevels, before - 1);
   assert.deepEqual(app.errors, []);
 });
 
@@ -560,4 +568,99 @@ test("Take a hit: an Electric hit says its RES rule is unsettled; a Blade hit do
   setHit(app, "damageType", "blade");
   assert.doesNotMatch(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
   assert.deepEqual(app.errors, []);
+});
+
+// ── Loadout & recovery (Decision 100) ─────────────────────────────────
+function pickFromCatalog(app, kind, id) {
+  const sel = app.$(`[data-lopick="${kind}"]`);
+  assert.ok(sel, `no ${kind} picker`);
+  sel.value = id;
+  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+}
+
+test("Loadout: Buy a vest from the catalog — it's paid for, worn, answers a hit, and one undo takes it all back", () => {
+  const ch = lockedCharacter();
+  ch.trackers.credits.current = 1000;
+  const app = openSheet(ch, "loadout");
+  pickFromCatalog(app, "armor", "kevlar-vest");
+  assert.match(app.$('[data-lobuy="armor"]').textContent, /500Ç/, "Buy doesn't show the price");
+  app.click('[data-lobuy="armor"]');
+  const got = activeChar(app);
+  assert.equal(got.trackers.credits.current, 500);
+  assert.equal(got.armor.length, 1);
+  assert.equal(got.armor[0].worn, true, "the first vest didn't go on");
+  assert.match(app.$(".lo-armor").textContent, /20 \/ 20 Integrity/);
+
+  app.click('[data-sec="trackers"]');
+  app.click("[data-hitopen]");
+  assert.match(app.$("[data-hitpanel]").textContent, /Kevlar Vest · PROT 1d6/, "the hit panel didn't pick up the worn vest");
+  app.click("[data-hitcancel]");
+
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Bought Kevlar Vest \(−500Ç\)/);
+  app.click("button[data-undolast]");
+  const undone = activeChar(app);
+  assert.deepEqual([undone.trackers.credits.current, undone.armor.length], [1000, 0]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Loadout: a catalog weapon shows its computed attack and damage on Loadout and Main", () => {
+  const ch = lockedCharacter();                                  // BOD 5
+  const app = openSheet(ch, "loadout");
+  pickFromCatalog(app, "weapons", "combat-knife");               // BOD+3
+  app.click('[data-loadd="weapons"]');
+  const attack = Engine.skillLine(activeChar(app), "melee").checkBonus;
+  const row = app.$(".lo-weapons tbody tr").textContent;
+  assert.match(row, /Combat Knife/);
+  assert.match(row, new RegExp(`1d10 \\+ ${attack}`));
+  assert.match(row, /8\s*BOD\+3/, "BOD+3 didn't resolve to 8");
+  assert.equal(activeChar(app).trackers.credits.current, ch.trackers.credits.current, "Add charged Çredits");
+  app.click('[data-sec="main"]');
+  assert.match(app.$(".main-combat").textContent, /Combat Knife/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Turn Reset: Bleeding ticks one HP and lists what each Condition needs, as one undoable action", () => {
+  const ch = lockedCharacter();
+  ch.trackers.conditions = [{ id: "bleeding" }];
+  const app = openSheet(ch, "trackers");
+  app.click('[data-actopen="reset"]');
+  const panel = app.$('[data-actpanel="reset"]').textContent;
+  assert.match(panel, /Bleeding: 1 HP/);
+  assert.match(panel, /Medical \(Difficulty 15\)/, "the recovery text isn't listed");
+  app.click("[data-actapply]");
+  assert.equal(activeChar(app).trackers.damage, 1);
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Turn Reset: 1 damage/);
+  app.click("button[data-undolast]");
+  assert.equal(activeChar(app).trackers.damage, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("After the fight: the wear die comes off the worn piece's Integrity", () => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const app = openSheet(ch, "trackers");
+  app.click('[data-actopen="wear"]');
+  const roll = app.$('[data-act="roll"]');
+  roll.value = "4"; roll.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.match(app.$('[data-actpanel="wear"]').textContent, /loses 4 Integrity: 20 → 16/);
+  app.click("[data-actapply]");
+  assert.equal(activeChar(app).armor[0].integrityLoss, 4);
+  assert.deepEqual(app.errors, []);
+});
+
+test("the print sheet fills Defense and an Armor table from the worn piece; blank stays blank", () => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 2, notes: "", worn: true, scrapped: false, upgrades: [] });
+  ch.weapons.push({ id: "combat-knife", notes: "" });
+  const app = openSheet(ch, "main");
+  const filled = app.window.renderPrintView(ch);
+  assert.match(filled, /Kevlar Vest/);
+  assert.match(filled, /18 \/ 20/, "the armor table has no Integrity");
+  assert.match(filled, /8 \(BOD\+3\)/, "the weapon's damage isn't computed");
+  assert.doesNotMatch(filled, /aren't tracked digitally/, "the old hand-tracking note survived");
+  const blank = app.window.renderPrintView(null);
+  assert.match(blank, /<th>Armor<\/th>/);
+  assert.doesNotMatch(blank, /Kevlar/);
 });
