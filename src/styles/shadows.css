@@ -300,6 +300,31 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hitconds{display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; margin:8px 0; font-size:.84rem}
 .hitconds > span{flex-basis:100%; color:var(--dim); font-size:.76rem}
 .hitconds label.check{display:flex; align-items:center; gap:6px}
+/* Decision 100 — Loadout pickers, armor rows, recovery buttons */
+.trk-actions{display:flex; flex-wrap:wrap; gap:8px; flex-basis:100%}
+.lo-add{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0 14px}
+.lo-add select{flex:1; min-width:0; max-width:420px}
+.lo-sub{font-size:.72rem; color:var(--dim); margin:2px 0}
+.lo-scroll{overflow-x:auto; max-width:100%}
+table.lo-weapons td{vertical-align:top}
+table.lo-weapons input[type=text]{padding:4px 6px; font-size:.78rem; min-width:90px}
+table.lo-weapons td.rm{width:34px; text-align:center}
+table.lo-weapons .x,.lo-armor .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
+table.lo-weapons .x:hover,.lo-armor .x:hover{color:var(--magenta)}
+.lo-armor{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:10px 14px; margin-bottom:10px}
+.lo-armor.worn{border-color:var(--cyan)}
+.lo-armor-head{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
+.lo-armor-head label.check{display:flex; align-items:center; gap:6px; font-size:.8rem}
+.lo-armor-head .x{margin-left:auto}
+.lo-armor-stats{margin-top:6px}
+.lo-armor-int{display:flex; align-items:center; gap:10px; margin:4px 0}
+.lo-int{font-family:var(--mono); font-size:.74rem; color:var(--dim); white-space:nowrap}
+.lo-upgrades{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin:8px 0}
+.lo-upgrades > .lo-sub{flex-basis:100%}
+.lo-upgrades select{width:auto; flex:0 1 340px; min-width:200px}
+.lo-repair input[type=number]{width:84px}
+.lo-repair{margin:6px 0 2px}
+.lo-notes{margin:6px 0 0}
 /* Phase 3.3 — derived (TOL/WILL) "how it's derived" affordance */
 .deriv-q{margin:5px auto 0; display:block; width:18px; height:18px; border-radius:50%; border:1px solid var(--frame);
   background:var(--panel-2); color:var(--dim); font-family:var(--mono); font-size:.7rem; line-height:1; cursor:pointer}

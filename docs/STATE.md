@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-22
-**Versions:** app `0.13.0` · game data `0.8` · character schema `0.8` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.14.0` · game data `0.9` · character schema `0.8` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **157 passing, 0 todo, 0 failing** (157 tests, six files)
+**Suite:** `npm run verify` → **181 passing, 0 todo, 0 failing** (181 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -25,23 +25,22 @@ The app is a browser character creator and live play sheet for **Shadows**
 architecture and is enforced by tests.
 
 **Working and covered by tests:** the whole wizard, all nine sheet tabs,
-damage and Pain Levels, taking a hit through armor, Conditions, Sanity, Luck,
-Çredits, IP and Milestones, the session log, loadout, `grants`, an undoable
-audit trail, and a printable sheet, filled or blank. The engine reproduces
-the CRB's own worked examples (`tests/rules.test.mjs`). Game data also
-carries the weapons/armor catalog (Decision 92) and the archetype-independent
-half of Magic (Decision 93). Neither is wired to UI beyond the Arcanist's
+damage and Pain Levels, taking a hit through armor, Conditions, recovery,
+Sanity, Luck, Çredits, IP and Milestones, the session log, loadout with the
+weapons/armor catalog, `grants`, an undoable audit trail, and a printable
+sheet, filled or blank. The engine reproduces the CRB's own worked examples
+(`tests/rules.test.mjs`). Game data also carries the archetype-independent
+half of Magic (Decision 93). It isn't wired to UI beyond the Arcanist's
 Grimoire/Disciplines panels.
 
-**Combat so far (plan Sessions 2–3, Decisions 95–96, 99).** Conditions are
-a data catalog and inputs on the character. Trackers has a **Take a hit**
-panel: PROT (the die the player rolled) + RES when the type matches, and AP
-or Compromised armor skips RES. Massive strips Integrity and removes Health
-Levels, drawn hatched on every HL track and counted toward Pain. The panel
-asks for Shock/At Zero and adds the resulting Conditions, and the whole hit
-is one undoable action. **Nothing writes `ch.armor[]` yet** (Session 4), so
-with no worn piece the panel takes a typed PROT roll and RES. One stub,
-**F23** (RES vs Electric/Burning; the Resistance upgrade).
+**Combat is built end to end (plan Sessions 2–4, Decisions 95–96, 99–100).**
+Loadout picks weapons and armor from the catalog (**Add**, or **Buy** from
+Çredits in one undoable action), one worn piece per slot, and upgrades by
+slot and quality. Weapon lines compute the attack (the skill check, ACC
+apart) and `BOD+X`. Take a hit reads the worn piece; the stand-in is gone.
+Trackers adds Turn Reset, Rest, Focused Healing (the only way back for
+Massive levels and Injured) and After the fight; Loadout repairs. Print
+fills Defense and an Armor table. Stubs: **F23** and **F24**.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -76,6 +75,7 @@ yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 | — | Conditions (combat plan Session 2) | #25 | Catalog, schema 0.8, Pain folding, Skill Check penalties, sheet + print · Decisions 95–96, F20–F22 |
 | — | Design-team rulings | #25 | F1, F2, F14, F17, F20–F22 and the stat-curve flag closed; new skill = 25 IP; stats past 10 +1 per 5 · Decisions 97–98 |
 | — | Taking a hit (combat plan Session 3) | #26 | `hlState`/`armorState`/`resolveHit`/`applyHit`, the Take a hit panel, Massive levels on every HL track · Decision 99, F23 |
+| — | Loadout & recovery (combat plan Session 4) | this branch | Catalog pickers + Buy, weapon lines, worn/upgrades/wear/repair, Rest, Focused Healing, Turn Reset, print armor · Decision 100, F24 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
@@ -88,9 +88,11 @@ game data `0.8`** (tag `v0.13.0`, deployed and checked 2026-09-22).
 - **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
   Both are tested against a synthetic fixture. Adding a real one is a rules
   question for Deighton, not a data edit (Decision 77).
-- **Thick Skin is held out.** Natural Armor is granted in prose in four places
-  (Thick Skin, Iron Shirt, an archetype effect and benefit). It should become
-  one derived value on top of `armorState()` (Decision 99), not a special case.
+- **Thick Skin is held out, on purpose, for the cleanup session.** Natural
+  Armor is granted in prose in four places (Thick Skin, Iron Shirt, an
+  archetype effect and benefit). It should become one derived value on top of
+  `armorState()`, not a special case. Ken moved it out of Session 4
+  (2026-09-22). The print Defense card's Nat column waits on it.
 
 ---
 
@@ -106,7 +108,7 @@ full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Gear & Combat** — Conditions, damage, armor | ✅ catalog (Decision 92) · ✅ **Conditions** (Session 2, Decisions 95–96) · ✅ **taking a hit** (Session 3, Decision 99) · 📋 Session 4 in `plans/combat-and-conditions.md` | ⏭ Session 4 (Loadout & recovery) is unblocked. **F23** (Deighton, one grouped question: RES vs Electric/Burning, and where Resistance's 50% applies) is stubbed and blocks nothing. MD1/2/3 ratings (Design, small) block nothing |
+| **Gear & Combat** — Conditions, damage, armor | ✅ catalog (Decision 92) · ✅ Conditions (Decisions 95–96) · ✅ taking a hit (Decision 99) · ✅ **Loadout & recovery** (Session 4, Decision 100) · 📋 cleanup session in `plans/combat-and-conditions.md` | ⏭ Cleanup (Thick Skin/natural armor; revisit Nanomed; weapon mods/ammo if wanted) is unblocked. **F23 + F24** (Deighton, ask together) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
 | **Milestones & doc reconciliation** — F9, F11, F12, F13 · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -131,30 +133,26 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 forward notes — one line each in `INDEX.md` §2, which is where you look up what
 any id means and whether it is still live.
 
-### PR #7 adversarial review — closed (Decision 91)
-
-All three machinery gaps (`requirementState`/`majorPrereqs` duplication, the
-Professional stat gate's own stat loop, `heldIds` missing skills) are fixed
-and mutation-tested. Full account in `log/2026.md` and `SCHEMA.md` Decision
-91. Not player-visible today — no entry uses `excludes`/`requires` beyond the
-test fixtures (Decision 57).
+The PR #7 adversarial review's three machinery gaps are closed and
+mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ---
 
 ## 5. Where to start
 
-**`main` is caught up through PR #26** (combat plan Session 3, Taking a hit,
-Decision 99, with the PR's adversarial review folded in). It's tagged
-`v0.13.0` and live on the demo site. Game data 0.8 has shipped, so the next
-change a character can observe needs a `gamedataVersion` bump (Decision 68).
-`npm run verify` is green (157 passing, 0 todo).
+**`main` is caught up through PR #26** (Session 3), tagged `v0.13.0` and
+live on the demo site. **Session 4 (Loadout & recovery, Decision 100) is on
+`claude/combat-conditions-session-4-48a91e`**, not yet merged. App 0.14.0,
+game data 0.9 (new recovery choices), schema unchanged. `npm run verify`
+is green (181 passing, 0 todo). After it merges, the demo moves only on a
+`v0.14.0` tag.
 
-**Next up is Session 4 of `plans/combat-and-conditions.md` (Loadout &
-recovery):** armor/weapon pickers and the worn toggle (which make the hit
-panel use the real worn piece: `armorState()` already reads `worn`,
-`integrityLoss`, `scrapped`, `upgrades`), weapon lines, wear roll, repair,
-healing and Turn Reset. It should decide whether the bare "Restore a Massive
-level" button (Decision 99) stays or folds into Focused Healing.
+**Next up is the combat plan's cleanup session**, Ken's call on 2026-09-22:
+see where Session 4 landed, then fold Thick Skin, Iron Shirt and the
+archetype Natural Armor grants into one value derived on top of
+`armorState()`. That also fills the print Defense card's Nat column. Then
+revisit a Nanomed Kit button (after CQ12). Weapon mods and ammo tracking,
+deferred at sign-off, would be one schema 0.9 bump with a `migrate()` step.
 
 **Also unblocked:** the plan's Magic-tables side session (Cascade + Aberration
 tables, independent of combat) and Milestones & doc reconciliation (Ken alone;
@@ -164,15 +162,16 @@ Cyborg, Vampire, and the print sheet's remaining visual work wait on people
 outside a session.
 
 **Waiting on the design team:** F8 (the wizard-blocker, being playtested),
-and **F23**, new this session, one grouped question for Deighton. Which RES
-class do Electric and Burning damage fall under (stubbed as Energy, so no RES
-without Ablative Plating)? And where does the Resistance upgrade's 50% sit
-against PROT and RES (not applied yet)? **Ken's CRB fixes:** Gear's
-Conditions table → a pointer at 054 (CQ8, agreed); Gear's Siege tag →
-Massive damage (CQ4); 053's Called Shot → only Massive causes Injured/Maimed
-(CQ5); the 25 IP new-skill price and the stat curve past 10 into the CRB; a
-Dying row in 054 (CQ9); CQ11. F23 may also want a line in Gear's RES text
-once ruled.
+and one grouped question for Deighton. **F23:** which RES class do Electric
+and Burning fall under (stubbed as Energy), and where does Resistance's 50%
+sit (not applied)? **F24:** when Bleeding ticks at a Reset while Dying, is it
+one Death Mark standing in for the WILL check (the stub), or the check plus a
+mark per source? **Ken's CRB fixes:** Gear's Conditions table → a pointer at
+054 (CQ8, agreed); Siege → Massive (CQ4); Called Shot → only Massive causes
+Injured/Maimed (CQ5); the 25 IP new-skill price and the stat curve past 10; a
+Dying row in 054 (CQ9); CQ11; and new this session, **CQ12** (054 and Gear
+disagree on whether a Nanomed Kit clears Paralyzed) and **CQ13** (054 lets a
+week of downtime clear Injured; 055 says it takes Focused Healing). F23 may also want a line in Gear's RES text once ruled.
 
 ---
 
