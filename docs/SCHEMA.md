@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.12) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-23 (the Grimoire reads the book, Decision 108)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.13) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-23 (Aberrations on the character and the Magic reference, Decision 110)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -257,7 +257,11 @@ window.SHADOWS_DATA = {
           // (0.12, Decision 108) `grimoire` is its own panel type: book spells
           // from the named catalog, plus your own spells in these columns.
           { id: "grimoire", type: "grimoire", catalog: "spells",
-            columns: ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"] }
+            columns: ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"] },
+          // (0.13, Decision 110) read-only rules from the named data sections,
+          // on the Archetype tab.
+          { id: "magic-reference", type: "reference", title: "Magic reference",
+            shows: ["spellcraftRules", "spellTiers", "cascadeTable", "aberrationTable", "aberrations"] }
         ]
       },
 
@@ -456,13 +460,20 @@ window.SHADOWS_DATA = {
   aberrationTable: { die: "1d10", note: "...",
     rows: [ { min: 1, max: 3, temporary: "good", permanent: "neutral" } ] }, // 3 rows, 1–10
   aberrationCategories: [ { id: "good", name: "Good" } ],   // good / neutral / bad
-  aberrationRules: { intro: "...", permanent: "..." },
+  // (0.13, Decision 110) the rules for an Aberration the character has: one
+  // per id, and the floor an `adjust` stops at.
+  aberrationRules: { intro: "...", permanent: "...", noStacking: "...",
+                     adjustFloor: 0, adjustNote: "..." },
   // The Cascade's list, NOT the Arcanist's creation-time Unique Aberrations
   // (those are `specialization.options`). `as` is display text naming the
   // Advantage or Disadvantage an entry works like; it grants nothing.
+  // (0.13, Decision 110) two optional hooks the engine reads once one is on
+  // the character: `painLevels` (Phantom Pain, 1) adds to Pain like Agonized,
+  // `adjust` (Drained, { TOL: -2 }) moves a derived stat after its own floor.
   aberrations: [
     { id: "danger-sense", name: "Danger Sense", category: "good",
-      as: "Danger Sense Advantage, Rank 3", description: "..." }
+      as: "Danger Sense Advantage, Rank 3", description: "..." },
+    { id: "drained", name: "Drained", category: "bad", adjust: { TOL: -2 }, description: "..." }
     // 39 entries: 15 Good, 15 Neutral, 9 Bad.
   ]
 };
@@ -494,7 +505,13 @@ A `grimoire` panel (Decision 108) names its `catalog` (`spells`) and keeps
 `columns` for the player's own spells. Its rows live in `panelData[id]`. The
 numbers it shows come from two `spellcraftRules` entries: `spellPower`
 (`{ discipline: "evocation", stat: "WILL" }`, Evocation rank + WILL) and
-`mastery` (`{ ipPerTH: 30, thReduction: 1 }`).
+`mastery` (`{ ipPerTH: 30, thReduction: 1 }`). A third, `spellAttack`
+(`{ discipline: "evocation", stats: ["REF", "WILL"] }`, Decision 110), adds
+the stats' scores, not their bonuses.
+
+A `reference` panel (Decision 110) names the data sections it `shows`. The
+sheet has one renderer per section name and skips a name it has none for.
+It renders on the Archetype tab.
 
 ---
 
@@ -586,8 +603,9 @@ numbers it shows come from two `spellcraftRules` entries: `spellPower`
     // an archetype regenerates.
     massiveLevels: 0,
     witheringDamage: 0,
-    // (0.9, magic plan M7) Aberrations a Cascade left. Seeded now so magic
-    // takes one migration; the reader and UI land in the plan's Session 2.
+    // (0.9, magic plan M7) Aberrations a Cascade left, or a GM ruled. One per
+    // id. Read by aberrationState(); the catalog says what each does
+    // (Decision 110), so nothing derived is stored here.
     aberrations: [ { id: "dense-frame", permanence: "permanent", note: "" } ],
     // (0.3) Manual adjustments — milestone benefits & un-modeled effects.
     // Stat-id targets cascade like any input; TOL/WILL/SAN/LUCK/HP apply flat.
@@ -1782,8 +1800,9 @@ No cascade logic to maintain — it falls out of the architecture.
     the sheet can know. **UI:** Conditions chips on Main (under the vitals
     strip), full cards with effect, recovery text and a note field on
     Trackers, one add row with a body-part picker that appears only for a
-    Condition that needs one → **Superseded in part by Decision 107** (the
-    add row became a chip palette; Main's chips open their details), a Helpless banner, Death Mark pips, and a
+    Condition that needs one → **Superseded in part by Decisions 107 and 110** (107:
+    the add row became a chip palette, and Main's chips open their details; 110:
+    Pain also counts an Aberration's `painLevels`, Phantom Pain), a Helpless banner, Death Mark pips, and a
     "Cond" pill in the vitals bar. **Print:** a Conditions tick list under
     Stats on the front page, with body-part Conditions and Dying's Death
     Marks on full-width rows. That column had about 100px spare below Stats.
@@ -2241,6 +2260,8 @@ No cascade logic to maintain — it falls out of the architecture.
       into `notes` (`Engine.logCascade`) as one undoable action. Tracking
       acquired Aberrations as structured data is a schema bump, and Ken
       chose not to take it this session.
+      → **Superseded in part by Decision 110**: **Record it** also stores the Aberration on the character
+      (`trackers.aberrations`, seeded by 108's 0.9), in the same undo.
     - **Pinned:** every band of the Cascade Table, the degree-1 `why`, both
       columns of the Aberration Table, the 15/15/9 count and the seven `as`
       references (`rules.test.mjs`). Also the tables' contiguity, totality on
@@ -2373,6 +2394,81 @@ No cascade logic to maintain — it falls out of the architecture.
       bonuses. It answers what Decision 108 left out, and the plan adds it as
       M11 in Session 2.
     (Deighton via Ken, 2026-09-23)
+
+110. **(Aberrations on the character, and the Magic reference — magic plan
+    Session 2, data + engine + app)** **An Aberration the character picks up
+    is stored as `{ id, permanence, note? }`, and what it does is read from
+    the catalog every time.** Ken agreed the shape on 2026-09-23 (the plan's
+    M7, M8, M9 and M11). **Replaces Decision 106 in part**: Notes stops being
+    the only record of a Cascade. **Replaces Decision 96 in part**: Pain
+    counts Aberration Pain as well as Condition Pain. Builds Decision 109's
+    MQ2, MQ3 and Spell Attack answers.
+    - **One per id** (Ken: "like conditions, there can be only one instance
+      at a time"). Recording one you hold is refused out loud, and so is a
+      Cascade pick of one you hold, before anything is written. The GM picks
+      another. `aberrationRules.noStacking` says it.
+    - **Hooks in the data, not special cases.** An `aberrations` entry can
+      carry `painLevels` (added to Pain like Agonized, then the 0–3 clamp) and
+      `adjust` (a derived stat, moved after its own floor, down to
+      `aberrationRules.adjustFloor`: 0). Phantom Pain has `painLevels: 1` and
+      Drained has `adjust: { TOL: -2 }`. The floor never lifts a value
+      something else (a manual adjustment) already took under it. Every
+      other Aberration is text on its card.
+    - **Current TOL doesn't move** when an Aberration changes max TOL. The
+      sheet stores TOL *Spent*, so `recordAberration` and `removeAberration`
+      shift every tracker counting against `max: "TOL"` by the change in max,
+      floored at 0. That gives Ken's examples: 8/3 → 6/3, 2 → 0, 0 stays
+      0, and removing Drained at 6/6 → 8/6. It keys on `max: "TOL"`, not on
+      `tol-spent`, and it keeps a character already past zero past zero.
+    - **Record it** (was Add to notes): `Engine.recordCascade` writes the
+      Notes line and records the Aberration, and the sheet wraps both in one
+      `commit()`, so one undo takes back both. A result with no Aberration
+      only writes the note. `logCascade` stays as the note half.
+    - **UI.** Trackers shows an Aberrations section under TOL Spent wherever
+      a tracker declares `overMax: "cascade"`, or on any sheet already
+      holding one. Permanent ones are cards with Remove (a quest or ritual is
+      the GM's call) and a note. Temporary ones are chips with Clear. A
+      palette, the same shape as W14's, adds one by hand with a
+      Temporary/Permanent toggle, and a held one is greyed out there and in
+      the Cascade's pick list. Permanent ones also show read-only on the
+      Archetype tab as **Permanent Aberrations**. Nothing on Main except
+      the Pain line, which now names what adds to it ("from Agonized,
+      Phantom Pain"). Ken agreed Main stays clear until playtesting says
+      otherwise.
+    - **Spell Attack = Evocation rank + REF score + WILL** (`spellcraftRules.
+      spellAttack`, `Engine.spellAttack`). A Basic Stat reads its score,
+      not its bonus; WILL is derived and reads its value. It's shown beside
+      Spell Power in the Grimoire with its breakdown.
+    - **A `reference` panel type.** It names the data sections it shows
+      (`shows`), and the sheet has one renderer per section name
+      (`spellcraftRules`, `spellTiers`, `cascadeTable`, `aberrationTable`,
+      `aberrations`). A name with no renderer is skipped. The Arcanist
+      declares **Magic reference** and it renders on the Archetype tab, not
+      Loadout. The Arcanist description now points there (M10's pointer).
+    - **The Unique Aberrations follow `041`** (Ken: Scott has been making the
+      edits). Aethereal Link reaches animals, not creatures. Thaumaturgical
+      Sight's +2 is for Occult checks when analyzing magic, and it sees "the
+      resonance a spell leaves". Resonant Whispers drops charms, since
+      Talismans and Artifacts are the Magic chapter's two categories. Display
+      text only, and no id changes. Ken expects the Origins subtypes to
+      replace this list.
+    - **Pinned:** the four Drained examples, Phantom Pain at full health and
+      its clamp with Agonized, and Spell Attack from the scores
+      (`rules.test.mjs`). Also one per id, the stored shape, a missing id
+      rendered and reported by `versionCheck`, the floor not lifting, Record
+      it undoing in one step and refusing before it writes, the reference
+      panel's sections existing, and totality with junk Aberrations
+      (`engine.test.mjs`), plus two smoke tests and the Cascade one updated.
+      Mutation-tested: no Spent shift, no floor, a floor that lifts, Pain
+      ignoring Aberrations, Spell Attack reading REF's bonus, Record it
+      skipping the Aberration or writing before it refuses, duplicates
+      allowed, removal giving TOL back, either hook dropped from the data,
+      the Pain line losing its source and the reference panel not rendering.
+      Each fails a test.
+    Game data **0.12 → 0.13** (Drained and Phantom Pain change computed TOL
+    and Pain, Decision 68). Character schema unchanged at **0.9**: Decision
+    108 seeded `trackers.aberrations`. App **0.17.0 → 0.18.0**. (Ken +
+    Claude, 2026-09-23)
 
 ## 5. Open Flags
 
@@ -2644,7 +2740,7 @@ sentence.
 - **Magic on the sheet** — planned 2026-09-23 in
   `docs/plans/magic-on-the-sheet.md`: the Grimoire reads the book (Session 1 —
   **done**, Decision 108), then acquired Aberrations and a Magic reference
-  (Session 2), then starting spells in the wizard (Session 3). Its rules
+  (Session 2 — **done**, Decision 110), then starting spells in the wizard (Session 3). Its rules
   questions (`MQ`n) go to Deighton.
 
 - **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in

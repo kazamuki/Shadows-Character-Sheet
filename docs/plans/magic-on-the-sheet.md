@@ -147,9 +147,9 @@ build. The Arcanist description's pointer names the section M9 adds.
   `trackers.aberrations`, one migration with the round-trip test. M7's reader
   comes in Session 2. The combat plan's Session 2 did the same with
   `witheringDamage`. W16 and W17 take their own bump later (Ken, 2026-09-23).
-- **Game data → 0.12** in Session 2 (M8's hooks change computed TOL and Pain).
-  Session 1's panel change (`grimoire` stops being a plain `table`) is also
-  observable, so Session 1 bumps it.
+- **Game data → 0.12** in Session 1 (`grimoire` stops being a plain `table`),
+  then **→ 0.13** in Session 2 (M8's hooks change computed TOL and Pain).
+  This line first said Session 2 took 0.12. Session 1 needed it first.
 - **App:** a minor bump each session that ships UI.
 
 ---
@@ -168,7 +168,8 @@ and its decisions numbered.
   = Evocation + WILL; migrate tags legacy rows custom and never links them;
   Link keeps notes; a missing `spellId` renders; the catalog picker greys held
   spells; totality on degenerate characters.
-- [ ] **Session 2 — Aberrations on the character, and the reference.** M7's
+- [x] **Session 2 — Aberrations on the character, and the reference** (2026-09-23, Decision 110). Built as proposed. Ken ruled one Aberration per id, like a Condition, and nothing on Main for now. The three Unique Aberrations were synced to `041`. The original box follows.
+  M7's
   reader and UI, M8, M9, M11, and the Cascade panel's Record it. **Replaces
   Decision 106 in part** (Notes stops being the only record). **Tests:** Ken's
   worked Drained examples (max 8 / current 3 → max 6 / current 3; max 2 → 0;
@@ -220,7 +221,8 @@ Origins question (STATE §3), not on these.
 
 ### Doc fixes — Ken, in the CRB or the data
 
-- **The Unique Aberrations drift** (#36's checklist, STATE §5): Aethereal Link
+- ~~**The Unique Aberrations drift**~~ **Done in Session 2** (Decision 110): Ken said to use `041`, since Scott has been making the edits. Ken expects the Origins subtypes to replace this list.
+  The original note: (#36's checklist, STATE §5): Aethereal Link
   (animals), Thaumaturgical Sight (when analyzing magic), Resonant Whispers (no
   charms). The data catches up to `041`. Session 2 touches the Archetype tab,
   so it can take the sync if Ken has checked it by then.

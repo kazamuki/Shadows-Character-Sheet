@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-23
-**Versions:** app `0.17.0` · game data `0.12` · character schema `0.9` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.18.0` · game data `0.13` · character schema `0.9` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **212 passing, 0 todo, 0 failing** (212 tests, six files)
+**Suite:** `npm run verify` → **226 passing, 0 todo, 0 failing** (226 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -32,11 +32,13 @@ weapons/armor catalog, `grants`, an undoable audit trail, and a printable
 sheet, filled or blank. The engine reproduces the CRB's own worked examples
 (`tests/rules.test.mjs`). Game data also carries the archetype-independent
 half of Magic (Decision 93) and the Cascade and Aberration tables (Decision
-106). The Arcanist's sheet has a **TOL Spent** tracker. It says Exhausted at
-TOL, and past TOL it opens a Cascade panel that reads the player's dice and
-writes the result into Notes. **The Grimoire reads the book** (Decision 108): a
-picker over the 96 spells, Mastery for 30 IP × TH, Spell Power shown, and typed
-spells kept as written, with **Link to the book** when a name matches.
+106). The Arcanist's **TOL Spent** tracker says Exhausted at TOL and, past
+it, opens a Cascade panel whose **Record it** writes Notes and records the
+Aberration (Decision 110). **The Grimoire reads the book** (Decision 108):
+picker, Mastery at 30 IP × TH, Spell Power and Spell Attack, **Link to the
+book**. **Aberrations live on the sheet** (Decision 110), one of each: cards
+and chips on Trackers, Drained −2 max TOL (floor 0, current unmoved), Phantom
+Pain PL 1 at full health, and a data-built **Magic reference** on Archetype.
 
 **Combat is built end to end, and the combat plan is closed (Decisions
 95–96, 99–100, 103–106).** Loadout picks weapons and armor from the catalog
@@ -111,7 +113,7 @@ full text.
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ✅ Cascade + Aberration tables, TOL Spent tracker and the Cascade panel (Decision 106) · 📋 **magic on the sheet** (`plans/magic-on-the-sheet.md`): ✅ Grimoire from the book (Decision 108) · ⏭ acquired Aberrations + Magic reference · ⏭ starting spells (MQ1 answered, Decision 109) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
+| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ✅ Cascade + Aberration tables, TOL Spent tracker and the Cascade panel (Decision 106) · 📋 **magic on the sheet** (`plans/magic-on-the-sheet.md`): ✅ Grimoire from the book (Decision 108) · ✅ acquired Aberrations, Spell Attack + Magic reference (Decision 110) · ⏭ starting spells (Session 3; MQ1 answered, Decision 109) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a complete, finished export — his current file is a two-page **portrait** WIP with only Stats built, in two competing styles (hex-dial sidebar vs. plain table). Portrait-vs-landscape is a real decision once that lands, not yet made. Separately: the frame/texture layer doesn't print in Chrome's actual output yet (screen-only) — not blocked on anyone, just not chased down |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
@@ -136,11 +138,11 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #38** (the magic plan's Session 1, Decision
-108), tagged `v0.17.0` and live. Game data 0.12 has shipped, so the next change
-a character can observe needs game data 0.13 (Decision 68).
+**`main` is caught up through PR #40**; live is `v0.17.0`. The magic plan's
+Session 2 (Decision 110, app 0.18.0, game data 0.13) is on its branch, not yet
+merged or tagged. After 0.13 ships, the next observable change is 0.14.
 
-**Next, all unblocked:** the magic plan's Session 2 (acquired Aberrations, Drained and Phantom Pain, the Magic reference). Session 3 (starting spells) is unblocked too. Deighton answered MQ1–MQ3 and Spell Attack (Decision 109). Also Milestones & doc reconciliation (Ken alone;
+**Next, all unblocked:** the magic plan's Session 3 (starting spells in the wizard, M6), the plan's last. Deighton answered MQ1 (Decision 109), so a spell's TH can't exceed Evocation rank. Also Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
 under General Milestones in `041_Archetypes` — not in the Advantages chapter).
 The wishlist's layout pair **W1 + W10** is one pass. So is the popover/modal
@@ -149,9 +151,9 @@ isn't it, since it never takes focus). **W16** (weapon mods and rounds) is the
 next schema bump, and **W17** could share it. Cyborg, Vampire, and the print
 sheet's remaining visual work wait on people outside a session.
 
-**Worth a look:** the Arcanist's creation-time Unique Aberrations have drifted
-from `041` (Aethereal Link now says *animals*; Thaumaturgical Sight adds *when
-analyzing magic*). A display-text sync, but cross-check it against the CRB.
+**Worth knowing:** the Arcanist's creation-time Unique Aberrations now follow
+`041` (Decision 110). Ken expects the Origins subtypes to replace that list,
+so don't invest in it.
 
 **Waiting on the design team:** F8 (the wizard-blocker, being playtested),
 and one grouped question for Deighton. **F23:** which RES class do Electric

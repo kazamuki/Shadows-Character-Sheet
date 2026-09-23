@@ -24,6 +24,8 @@ function sheetHeader(title, note){
   if (note) h += `<p class="step-note">${note}</p>`;
   return h;
 }
+// Pain on top of Health Levels, from Conditions (Agonized) and Aberrations (Phantom Pain).
+const painExtra = pain => (pain.fromConditions||0) + (pain.fromAberrations||0);
 const painChip = pain => pain.level
   ? ` <span class="chip pain">Pain Lv ${pain.level} · ${pain.skillPenalty} skill</span>` : "";
 
@@ -296,7 +298,7 @@ function renderShMain(){
   h += cond(`hp ${pain.down?"danger":""}`,"Health","health",
     `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch));
   h += cond(`${pain.level?"danger":""}`,"Pain","pain",
-    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(pain.fromConditions?` · ${signed(pain.fromConditions)} Lv from Conditions`:""):"no penalties", null);
+    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null);
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
     `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max));
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
@@ -448,6 +450,15 @@ function renderShArchetype(){
       <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div></div>`).join("");
   }
 
+  // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
+  // Trackers tab records and removes them.
+  const abPerm = Engine.aberrationState(ch).permanent;
+  if (abPerm.length){
+    h += `<div class="sect">Permanent Aberrations</div>` + abPerm.map(x=>`<div class="pick selected"><div class="head"><h4>${esc(x.name)}</h4>
+      ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
+      <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
+  }
+
   // Disciplines (computed ranks: scaling base + CP-bought), read-only
   const dr = (Engine.disciplineRanks && Engine.disciplineRanks(ch)) || [];
   if (dr.length){
@@ -471,15 +482,60 @@ function renderShArchetype(){
         <div class="desc">${esc(v.description||"")}</div></div>`).join("");
   }
 
+  // Reference panels (Decision 110): rules text straight from the data.
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(p);
+
   h += `<p class="step-note" style="margin-top:18px">Tracker pools and editable manifests (grimoire, augments, forms) live on the <b>Loadout &amp; Powers</b> and <b>Trackers</b> tabs.</p>`;
   return h;
+}
+
+// ── Reference panels (magic plan M9, Decision 110) ───────────────────
+// A `reference` panel names the data sections it shows (`shows`); each
+// section has one renderer here, keyed by the data's own name, so an
+// archetype picks its reference in data and nothing is special-cased on it.
+// A name with no renderer is skipped rather than guessed at.
+const rangeLabel = r => r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
+const REFERENCE_SECTIONS = {
+  spellcraftRules: R => {
+    const o = R.outcomes||{}, names = { overflow:"Overflow", manifest:"Manifest", fizzle:"Fizzle", rupture:"Rupture", cascade:"Cascade" };
+    return { title:"The Spellcraft roll", html:
+      `<p>${esc(R.rollNote||"")}</p>
+      <table class="ref"><tbody>${Object.keys(names).filter(k=>o[k]).map(k=>`<tr><td><b>${names[k]}</b></td><td>${esc(o[k])}</td></tr>`).join("")}</tbody></table>
+      ${[R.exhaustion, (R.spellPower||{}).text, (R.spellAttack||{}).text, (R.mastery||{}).text, R.castingRequiresVoice].filter(Boolean).map(t=>`<p>${esc(t)}</p>`).join("")}` };
+  },
+  spellTiers: T => ({ title:"Spell tiers", html:
+    `<table class="ref"><thead><tr><th>Tier</th><th>TN</th><th>TH</th><th></th></tr></thead><tbody>${T.map(t=>
+      `<tr><td><b>${esc(t.name)}</b></td><td class="num">${t.tn}</td><td class="num">${t.th}</td><td>${esc(t.description||"")}</td></tr>`).join("")}</tbody></table>` }),
+  cascadeTable: T => ({ title:"The Cascade Table", html:
+    `<p>${esc(T.rollNote||"")}</p><table class="ref"><tbody>${(T.rows||[]).map(r=>
+      `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table>` }),
+  aberrationTable: A => {
+    const cat = id => ((D.aberrationCategories||[]).find(c=>c.id===id)||{name:id}).name;
+    return { title:"The Aberration Table", html:
+      `<p>${esc(A.die||"")}. ${esc(A.note||"")}</p><table class="ref"><thead><tr><th>Roll</th><th>Temporary</th><th>Permanent</th></tr></thead><tbody>${(A.rows||[]).map(r=>
+        `<tr><td class="num">${rangeLabel(r)}</td><td>${esc(cat(r.temporary))}</td><td>${esc(cat(r.permanent))}</td></tr>`).join("")}</tbody></table>` };
+  },
+  aberrations: list => {
+    const R = D.aberrationRules||{};
+    return { title:"Aberrations", html:
+      `${R.intro?`<p>${esc(R.intro)}</p>`:""}${(D.aberrationCategories||[]).map(c=>`<div class="subsect">${esc(c.name)}</div><table class="ref"><tbody>${
+        list.filter(a=>a.category===c.id).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}</td></tr>`).join("")}</tbody></table>`).join("")}
+      ${R.permanent?`<p>${esc(R.permanent)}</p>`:""}` };
+  },
+};
+function referencePanelHtml(p){
+  const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).map(k=>REFERENCE_SECTIONS[k](D[k]));
+  if (!parts.length) return "";
+  return `<div class="sect">${esc(p.title||"Reference")}</div><div class="reference" data-reference="${esc(p.id)}">` +
+    parts.map(x=>`<details class="group"><summary>${esc(x.title)}</summary><div class="ref-body">${x.html}</div></details>`).join("") + `</div>`;
 }
 
 // ── Sheet: trackers ──────────────────────────────────────────────────
 // ── Cascade (Decision 106) ───────────────────────────────────────────
 // The player enters their own dice; the engine reads the two tables and the
-// GM's pick from the rolled category. Nothing is stored until "Add to notes",
-// which writes one line into Notes as one undoable action. S.cascade holds
+// GM's pick from the rolled category. Nothing is stored until "Record it",
+// which writes one line into Notes and, if the Cascade left an Aberration,
+// records it on the character, as one undoable action (Decision 110). S.cascade holds
 // the dice meanwhile, the way S.hit holds a hit.
 function newCascadeForm(){ return { roll:"", degree:"", aberrationRoll:"", pick:"" }; }
 function cascadeInput(st){ return { roll:st.roll, degree:st.degree, aberrationRoll:st.aberrationRoll, pick:st.pick }; }
@@ -487,8 +543,8 @@ function cascadePanelHtml(ch){
   if (!S.cascade || S.cascade.owner!==ch) S.cascade = Object.assign(newCascadeForm(), { owner: ch });
   const st=S.cascade, T=D.cascadeTable||{}, A=D.aberrationTable||{}, R=D.aberrationRules||{};
   const c=Engine.cascade(ch, cascadeInput(st)), ab=c.aberration;
+  const held=new Set(Engine.aberrationState(ch).active.map(a=>a.id));
   const num=(k, label, max)=>`<label class="field"><span>${label}</span><input type="number" min="1" ${max?`max="${max}"`:""} data-cas="${k}" value="${esc(st[k])}"></label>`;
-  const range=r=>r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
   let h=`<div class="hitpanel" data-cascadepanel><h4>Cascade</h4>
     <p class="hitnote">The Aether broke through. ${esc(T.rollNote||"")}</p>
     <div class="hitrow">${num("roll","d10",10)}${num("degree","Rupture degree")}</div>`;
@@ -499,7 +555,7 @@ function cascadePanelHtml(ch){
       if (!ab.pending && ab.category){
         h+=`<div class="hitcheck"><b>${esc(ab.category.name)}</b> · ${ab.permanence==="permanent"?"permanent":"temporary"}. ${esc(A.note||"")}
           <p><select data-cas="pick" aria-label="Aberration"><option value="">Which one?</option>${ab.options.map(o=>
-            `<option value="${esc(o.id)}" ${ab.pick&&ab.pick.id===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select></p>
+            `<option value="${esc(o.id)}" ${ab.pick&&ab.pick.id===o.id?"selected":""} ${held.has(o.id)?"disabled":""}>${esc(o.name)}${held.has(o.id)?" (you have it)":""}</option>`).join("")}</select></p>
           ${ab.pick?`<p>${ab.pick.as?`<i>As ${esc(ab.pick.as)}.</i> `:""}${esc(ab.pick.description)}</p>`:""}
           ${ab.permanence==="permanent"&&R.permanent?`<p>${esc(R.permanent)}</p>`:""}</div>`;
       }
@@ -508,9 +564,41 @@ function cascadePanelHtml(ch){
   if (!c.ok && st.roll!=="" && st.degree!=="") h+=`<p class="hitwhy">${esc(c.why)}</p>`;
   const ready = c.ok && (!ab || (!ab.pending && ab.pick));
   h+=`<details class="group"><summary>The Cascade Table</summary><table class="ref"><tbody>${(T.rows||[]).map(r=>
-      `<tr><td class="num">${range(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table></details>
-    <div class="hitrow"><button class="btn primary sm" data-caslog ${ready?"":"disabled"}>Add to notes</button>
+      `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table></details>
+    <div class="hitrow"><button class="btn primary sm" data-caslog ${ready?"":"disabled"} title="${ab?"Adds the Aberration to your sheet and the Cascade to your notes":"Writes the Cascade into your notes"}">Record it</button>
       <button class="btn sm" data-casclear>Clear</button></div></div>`;
+  return h;
+}
+
+// ── Aberrations the character has (Decision 110) ─────────────────────
+// Chips from Engine.aberrationState(): permanent ones get Remove (a quest or
+// ritual is the GM's call), temporary ones Clear ("8 hours" is the table's
+// clock, not ours). The palette adds one by hand on a GM ruling, the same
+// shape as the Conditions palette (W14). S.abPalette / S.abPerm keep its
+// state across the re-render a click causes.
+function aberrationsHtml(ch){
+  const st = Engine.aberrationState(ch), R = D.aberrationRules||{};
+  const chip = a => `<span class="cond-chip${a.def&&a.def.category==="bad"?" bad":""}" title="${esc(a.def?a.def.description:"")}">
+      <span class="cond-chip-body"><b>${esc(a.name)}</b>${a.category?` <small>${esc(a.category)}</small>`:""}${a.missing?` <small>no longer in the game data</small>`:""}</span>
+      <button class="x" data-abrm="${a.index}" aria-label="${a.permanence==="permanent"?"Remove":"Clear"} ${esc(a.name)}" title="${a.permanence==="permanent"?"Remove (a quest or ritual undid it)":"Clear (it wore off)"}">✕</button></span>`;
+  const card = a => `<div class="pick cond-card"><div class="head"><h4>${esc(a.name)}</h4>
+      ${a.category?`<span class="cost">${esc(a.category)}</span>`:""}
+      <div class="controls"><button class="btn sm" data-abrm="${a.index}">${a.permanence==="permanent"?"Remove":"Clear"}</button></div></div>
+      <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description):"This Aberration isn't in the game data any more."}</div>
+      <input type="text" class="cond-note" data-abnote="${a.index}" value="${esc(a.note)}" placeholder="note: which Cascade, what it looks like on you" aria-label="${esc(a.name)} note"></div>`;
+  let h = `<div class="sect">Aberrations</div>`;
+  if (!st.active.length) h += `<p class="step-note cond-none">No Aberrations. ${esc(R.noStacking||"")}</p>`;
+  if (st.permanent.length) h += `<div class="subsect">Permanent</div>${st.permanent.map(card).join("")}<p class="step-note">${esc(R.permanent||"")}</p>`;
+  if (st.temporary.length) h += `<div class="subsect">Temporary</div><div class="cond-chips">${st.temporary.map(chip).join("")}</div>`;
+  if (st.adjust.TOL) h += `<p class="step-note">${esc(R.adjustNote||"")}</p>`;
+  // Add by hand
+  const held = new Set(st.active.map(a=>a.id)), perm = S.abPerm==="permanent" ? "permanent" : "temporary";
+  const cats = D.aberrationCategories||[];
+  h += `<details class="cond-add" data-abpalette ${S.abPalette?"open":""}><summary>Add an Aberration</summary>
+    <div class="form-toggle">${["temporary","permanent"].map(p=>`<button class="${perm===p?"on":""}" data-abperm="${p}">${p==="permanent"?"Permanent":"Temporary"}</button>`).join("")}</div>
+    ${cats.map(c=>`<div class="subsect">${esc(c.name)}</div><div class="cond-chips palette">${(D.aberrations||[]).filter(a=>a.category===c.id).map(a=>
+      `<button class="cond-chip add${c.id==="bad"?" bad":""}" data-abquick="${esc(a.id)}" ${held.has(a.id)?"disabled":""} title="${esc(a.description)}"><b>${esc(a.name)}</b></button>`).join("")}</div>`).join("")}
+  </details>`;
   return h;
 }
 
@@ -796,7 +884,7 @@ function renderShTrackers(){
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
-    <div class="desc">${esc(pain.description)}${pain.fromConditions?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; Conditions add ${signed(pain.fromConditions)}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
+    <div class="desc">${esc(pain.description)}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
   // Conditions (Decision 95)
   h += `<div class="sect">Conditions</div>${conditionsHtml(ch, true)}`;
@@ -835,6 +923,9 @@ function renderShTrackers(){
     // Cascade panel once it's past its max: TOL below zero (Decision 106).
     if (p.overMax==="cascade" && effMax!=null && cur>effMax) h += cascadePanelHtml(ch);
   }
+  // What a Cascade leaves behind (Decision 110): shown wherever a Cascade can
+  // happen, and on any sheet that already carries an Aberration.
+  if (Engine.archPanels(ch).some(x=>x.overMax==="cascade") || Engine.aberrationState(ch).active.length) h += aberrationsHtml(ch);
 
   // Çredits
   h += `<div class="sect">Çredits</div>
@@ -1028,7 +1119,7 @@ function renderShSessions(){
 }
 // Maps an audit entry's kind to a chip colour.
 function auditChip(kind){
-  if (kind==="damage"||kind==="pain"||kind==="san"||kind==="condition") return "pain";
+  if (kind==="damage"||kind==="pain"||kind==="san"||kind==="condition"||kind==="aberration") return "pain";
   if (kind==="ip"||kind==="skill"||kind==="stat") return "cyan";
   if (kind==="admin") return "gold";
   if (kind==="milestone") return "ok";
@@ -1188,9 +1279,10 @@ function spellResultsHtml(g){
         : `<button class="btn sm" data-spelladd="${esc(s.id)}" ${held.has(s.id)?"disabled":""}>${held.has(s.id)?"Known":"Add"}</button>`}</td></tr>`).join("") + `</tbody></table>`;
 }
 function grimoireHtml(ch, p){
-  const g = Engine.grimoire(ch), sp = g.spellPower, ip = Engine.ipState(ch).available;
+  const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
   const book = g.lines.filter(l=>!l.custom), own = g.lines.filter(l=>l.custom);
   let h = sp ? `<p class="grim-sp" title="${esc(sp.text)}">Spell Power <b>${sp.value}</b> <span class="sub">${esc(sp.discipline)} ${sp.rank} + ${esc(sp.stat)} ${sp.statValue}</span></p>` : "";
+  if (sa) h += `<p class="grim-sp" title="${esc(sa.text)}">Spell Attack <b>${sa.value}</b> <span class="sub">${esc(sa.discipline)} ${sa.rank}${sa.parts.map(x=>` + ${esc(x.stat)} ${x.value}`).join("")}</span></p>`;
 
   // From the book
   h += book.length ? book.map(l=>{
@@ -1249,6 +1341,7 @@ function renderShLoadout(){
   // Archetype panels: rankedList / table / list / text / toggle
   for (const p of Engine.archPanels(ch)){
     if (p.type==="tracker") continue; // lives in Trackers
+    if (p.type==="reference") continue; // lives on the Archetype tab
     h += `<div class="sect">${esc(p.title)}</div>`;
     if (p.type==="rankedList"){
       const ranks = Engine.disciplineRanks(ch);
