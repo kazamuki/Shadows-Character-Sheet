@@ -289,7 +289,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.8");
+  assert.equal(resumed.meta.schemaVersion, "0.9");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -728,5 +728,49 @@ test("a palette chip adds its Condition in one click, greys out once held, and M
   app.click('[data-condinfo="0"]');
   assert.equal(app.$(".cond-info"), null, "a second click didn't close the details");
   assert.match(app.$("#undotoast").textContent, /Condition: Prone/, "the add didn't offer its undo");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Grimoire from the book (Decision 108) ─────────────────────────────
+
+test("Grimoire: a typed spell links to the book, the picker adds one, Mastering spends IP, and each undoes", () => {
+  const ch = lockedCharacter();
+  ch.panelData.grimoire = [{ custom: true, "Spell Name": "Zap", "Effect": "a snap of current", "Notes": "go-to" }];
+  ch.progression.ip.log.push({ date: "2026-09-23", kind: "grant", amount: 100, note: "test" });
+  const app = openSheet(ch, "loadout");
+  assert.match(app.$("#main").textContent, /Spell Power \d+/);
+  app.click('[data-spelllink="0"]');
+  assert.equal(activeChar(app).panelData.grimoire[0].spellId, "zap");
+  assert.equal(activeChar(app).panelData.grimoire[0].notes, "go-to", "linking lost the notes");
+  assert.match(app.$(".spell").textContent, /shorts simple electronics/, "the book's effect isn't shown");
+
+  const pick = app.$("[data-spellpick]");
+  pick.open = true; pick.dispatchEvent(new app.window.Event("toggle"));
+  const q = app.$("[data-spellq]"); q.value = "firebolt"; q.dispatchEvent(new app.window.Event("input"));
+  assert.equal(app.$('[data-spelladd="zap"]'), null, "the search didn't filter");
+  app.click('[data-spelladd="firebolt"]');
+  assert.deepEqual(activeChar(app).panelData.grimoire.map(r => r.spellId), ["zap", "firebolt"]);
+
+  app.click('[data-spellmaster="firebolt"]');
+  assert.equal(activeChar(app).panelData.grimoire[1].stage, "mastered");
+  assert.match(app.$("#undotoast").textContent, /Mastered Firebolt/);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).panelData.grimoire[1].stage, "known", "undo didn't un-master");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Grimoire: the picker offers to link a spell you typed yourself instead of adding a second copy", () => {
+  const ch = lockedCharacter();
+  ch.panelData.grimoire = [{ custom: true, "Spell Name": "Kindle", "Notes": "lights the stove" }];
+  const app = openSheet(ch, "loadout");
+  const pick = app.$("[data-spellpick]");
+  pick.open = true; pick.dispatchEvent(new app.window.Event("toggle"));
+  const q = app.$("[data-spellq]"); q.value = "kindle"; q.dispatchEvent(new app.window.Event("input"));
+  assert.equal(app.$('[data-spellresults] [data-spelladd="kindle"]'), null, "offered a second Kindle");
+  app.click("[data-spellresults] [data-spelllink]");
+  const rows = activeChar(app).panelData.grimoire;
+  assert.equal(rows.length, 1, "linking added a row");
+  assert.equal(rows[0].spellId, "kindle");
+  assert.equal(rows[0].notes, "lights the stove");
   assert.deepEqual(app.errors, []);
 });

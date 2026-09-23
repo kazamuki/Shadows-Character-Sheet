@@ -214,7 +214,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 
 - **23** *(Phase 3)* — Logging a session auto-grants the per-session IP (10 per WIP Professional cadence, overridable per session), 1 Mile...
 - **24** *(Phase 3)* — Pain Level penalties are applied to every displayed skill-check total, with the reason shown inline (breakdown colu...
-- **25** *(Phase 3)* — The Grimoire is a free-entry table.
+- **25** *(Phase 3)* — The Grimoire is a free-entry table. → **superseded in part by 108**
 - **26** *(Phase 3)* — Un-modeled effects (milestone benefits, aberration prose, items) are applied through a manual adjustments ledger: s...
 - **27** *(Phase 3)* — The IP journal is the audit trail: entries are spend or grant; spends update the target's IPE atomically; the last... → **superseded in part by 49**
 - **29** *(Phase 3)* — Milestone enforcement: Minor duplicates blocked until all five have been selected once; Major prerequisites are mac...
@@ -239,6 +239,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **94** *(Print sheet — visual redesign)* — The front page moves to a case-file layout and starts drawing from Scott's real Affinity artwork; Health Levels groups into Pain Level bands; Skills becomes two panels with Primary/Synergy icon badges.
 - **106** *(Cascade and Aberrations — Magic-tables side session)* — Magic.md's two tables and the Appendix's 39 Aberrations are data; `Engine.cascade()` reads the player's dice. The Arcanist gets a TOL Spent tracker (it had none after 93), whose Cascade panel writes the result into Notes. Schema unchanged.
 - **107** *(Sheet feel — wishlist pass)* — W7 `--on-accent` text on filled controls with a both-themes contrast guard; W11 Heal/Hurt stepper; W12 an undo toast on every `commit()`, matched to its audit entry by identity; W14 a Condition chip palette, and Main's chips open their details.
+- **108** *(The Grimoire reads the book — magic plan Session 1)* — Book rows store `{ spellId, stage, notes }`, your own rows are typed columns (`custom`); schema 0.9, migrate never links. `Engine.grimoire()`, Spell Power, Mastery = 30 IP × TH through the IP journal (TH − 1), a picker that shows the numbers first, Link to the book. Spell Attack left for a ruling.
 
 ### Audit trail, undo & admin
 
