@@ -322,9 +322,11 @@ function renderShMain(){
           <td class="num">${esc(l.rof||"—")}</td><td class="num">${esc(l.capacity||"—")}</td></tr>`;
       }).join("") + `</tbody></table>`;
   }
-  const worn = Engine.armorState(ch).worn;
-  if (worn) h += `<div class="sect">Armor</div><div class="lo-armor worn"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
+  const worn = Engine.armorState(ch).worn, natMain = naturalArmorText(ch);
+  if (worn || natMain) h += `<div class="sect">Armor</div>`;
+  if (worn) h += `<div class="lo-armor worn"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
     <div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(worn)}</span></div><div class="lo-armor-int">${intBar(worn)}</div></div>`;
+  if (natMain) h += `<p class="hitarmor">${esc(natMain)}</p>`;
   h += `</section></div>`;   // /main-grid
 
   // Identity — reference, kept at the bottom and collapsible
@@ -467,11 +469,12 @@ function renderShArchetype(){
 // S.hit holds the form while it's open; nothing is saved until Apply.
 function newHitForm(){
   return { damage:"", damageType:"ballistic", category:"regular", ap:false, location:"",
-           protRoll:"", shock:"", atZero:"", conds:{} };
+           protRoll:"", shock:"", atZero:"", conds:{}, nat:{} };
 }
 function hitInput(st){
   return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap,
-           location: st.location || undefined, protRoll: st.protRoll };
+           location: st.location || undefined, protRoll: st.protRoll,
+           natural: Object.keys(st.nat||{}).filter(k=>st.nat[k]) };
 }
 // Condition ids only: the engine puts a body-part Condition where the hit
 // landed (after any Headshot Defense redirect), not where it was aimed.
@@ -506,21 +509,29 @@ function hitPanelHtml(ch){
     <p class="hitnote">${esc(cat.text||"")}</p>`;
 
   // Armor: the worn body piece, from Loadout (Decision 100).
+  const skin=Engine.naturalArmor(ch, hitInput(st).natural).total>0;
   if (as.worn){
     const w=as.worn;
     h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
       ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll",`max="${w.protMax||""}"`) : ""}</div>`;
   } else {
-    h+=`<div class="hitrow"><span class="hitnote">No body armor worn, so nothing answers the hit. Armor goes on under Loadout.</span></div>`;
+    h+=`<div class="hitrow"><span class="hitnote">No body armor worn${skin?"":", so nothing answers the hit"}. Armor goes on under Loadout.</span></div>`;
   }
   as.problems.forEach(p=>{ h+=`<p class="hitnote">${esc(p)}</p>`; });
+  // Natural Armor (Decision 104): what's always on, and a tick for each
+  // source that's only on some of the time (Iron Shirt, a waning moon).
+  const nat=Engine.naturalArmor(ch, hitInput(st).natural);
+  if (nat.base>0 || nat.conditional.length)
+    h+=`<div class="hitrow"><span class="hitarmor">Natural Armor ${nat.total}</span>${nat.conditional.map(c=>
+      `<label class="check"><input type="checkbox" data-hitnat="${esc(c.id)}" ${c.active?"checked":""}> ${esc(c.name)} (${
+        c.amount?`+${c.amount}`:`answers ${esc(c.resAgainst.map(titleCase).join(", "))}`}, ${esc(c.while)})</label>`).join("")}</div>`;
 
   if (!r.ok){
     h+=`<p class="hitwhy">${esc(r.why)}</p>`;
   } else {
     const lines=[];
     if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
-    if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}. Nothing answers the hit.`);
+    if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}.${skin?"":" Nothing answers the hit."}`);
     if (r.bypassesArmor){
       if (r.covered) lines.push(`Strips ${r.integrityLost} Integrity from ${r.armor.name}${r.scrap?". It's scrap now, and can't be repaired":""}.`);
       lines.push(`Removes ${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} outright.`);
@@ -528,8 +539,14 @@ function hitPanelHtml(ch){
       const why={ ap:"Armor-piercing skips RES.", compromised:"The armor is Compromised, so no RES.",
                   type:`RES doesn't answer ${r.type.name} damage.` }[r.resSkipped]||"";
       lines.push(`PROT ${r.prot}${r.res?` + RES ${r.res}`:""} stops ${r.absorbed}. ${why}`.trim());
-      lines.push(r.soaked ? `Nothing gets through${r.integrityLost?`, but the armor loses ${r.integrityLost} Integrity`:""}.` : `${r.through} gets through.`);
-    } else lines.push(`${r.through} gets through.`);
+      if (r.soaked) lines.push(`Nothing gets through${r.integrityLost?`, but the armor loses ${r.integrityLost} Integrity`:""}.`);
+    }
+    const N=r.natural;
+    const natLine = !(N.total>0) ? "" : N.absorbed ? `Natural Armor stops ${N.absorbed}.`
+      : N.skipped==="massive" ? "Massive damage goes straight past Natural Armor."
+      : N.skipped==="type" ? `Natural Armor doesn't answer ${r.type.name} damage.` : "";
+    if (natLine) lines.push(natLine);
+    if (!r.bypassesArmor && !r.soaked) lines.push(r.through ? `${r.through} gets through.` : "Nothing gets through.");
     if (r.tookDamage) lines.push(`Health Levels lost: ${r.before.lost} → ${r.after.lost}. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
     h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
     r.notes.forEach(n=>{ h+=noticeHtml(copy("unsettledLabel"), n); });
@@ -558,7 +575,7 @@ function hitPanelHtml(ch){
 // a time, the hit panel included.
 function newActForm(kind){
   return { kind, sources:{}, atZero:"", dyingCheck:"", days:"1", speed:false, hp:"",
-           clear:{}, massive:"", difficulty:"medium", roll:"", shCheck:"", shRoll:"" };
+           clear:{}, massive:"", difficulty:"medium", roll:"", shCheck:"", shRoll:"", dose:"1" };
 }
 const actOpt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
 const actNum=(st,k,label,extra="")=>`<label class="field"><span>${label}</span><input type="number" min="0" data-act="${k}" value="${esc(st[k])}" ${extra}></label>`;
@@ -574,6 +591,10 @@ function actInput(ch, st){
   }
   if (st.kind==="focused") return { kind:"focused", hp: st.hp,
     clear: Object.keys(st.clear).filter(i=>st.clear[i]).map(Number), massive: st.massive };
+  if (st.kind==="nanomed"){
+    const proposed=Engine.nanomedKit(ch, st.dose).proposed;
+    return { kind:"nanomed", dose: st.dose, hp: st.hp==="" ? proposed : st.hp, proposed };
+  }
   if (st.kind==="wear") return { difficulty: st.difficulty, roll: st.roll, selfHealCheck: st.shCheck, selfHealRoll: st.shRoll };
   return {};
 }
@@ -631,6 +652,24 @@ function focusedPanelHtml(ch, st){
   }
   return h + actButtons(r.ok, "Apply healing") + `</div>`;
 }
+// A Nanomed Kit (Decision 105): clears 054's list and Dying on its own, and
+// proposes the regeneration for the dose. The player can lower the number.
+function nanomedPanelHtml(ch, st){
+  const inp=actInput(ch, st), kit=Engine.nanomedKit(ch, st.dose), hs=Engine.hlState(ch);
+  const r=Engine.heal(clone(ch), inp);
+  const doses=["First","Second","Third","Fourth","Fifth"];
+  let h=`<div class="hitpanel" data-actpanel="nanomed"><h4>Nanomed Kit</h4><p class="hitnote">${esc(kit.text)} ${esc(kit.doseText)}</p>
+    <div class="hitrow"><label class="field"><span>Kit today</span><select data-act="dose">${doses.map((l,i)=>actOpt(String(i+1), l, String(st.dose)===String(i+1))).join("")}</select></label>
+      ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP regenerated")}</div>
+    <p class="hitnote">${esc(`1 HP every ${kit.everyRounds===1?"round":kit.everyRounds+" rounds"} for ${kit.rounds} rounds. If it's cut short, lower the number.`)}</p>`;
+  if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
+  else {
+    const lines=[r.healed?`Damage ${hs.damage} → ${hs.damage - r.healed}.`:"",
+      ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id); return `Clears ${d?d.name:e.id}${e.marks?` and its ${e.marks} Death Mark${e.marks===1?"":"s"}`:""}.`; })].filter(Boolean);
+    h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
+  }
+  return h + actButtons(r.ok, "Use the kit") + `</div>`;
+}
 function wearPanelHtml(ch, st){
   const R=D.armorRules||{}, w=Engine.armorState(ch).worn;
   let h=`<div class="hitpanel" data-actpanel="wear"><h4>After the fight</h4><p class="hitnote">${esc(R.wearNote||"")}</p>`;
@@ -654,7 +693,8 @@ function wearPanelHtml(ch, st){
 function actPanelHtml(ch){
   const st=S.act;
   return st.kind==="reset" ? resetPanelHtml(ch, st) : st.kind==="rest" ? restPanelHtml(ch, st)
-       : st.kind==="focused" ? focusedPanelHtml(ch, st) : st.kind==="wear" ? wearPanelHtml(ch, st) : "";
+       : st.kind==="focused" ? focusedPanelHtml(ch, st) : st.kind==="nanomed" ? nanomedPanelHtml(ch, st)
+       : st.kind==="wear" ? wearPanelHtml(ch, st) : "";
 }
 
 function renderShTrackers(){
@@ -683,7 +723,8 @@ function renderShTrackers(){
       <button class="btn sm primary" data-hitopen="1" ${open?"disabled":""}>Take a hit</button>
       <button class="btn sm" data-actopen="reset" ${open?"disabled":""}>Turn Reset</button>
       <button class="btn sm" data-actopen="rest" ${open?"disabled":""}>Rest</button>
-      <button class="btn sm" data-actopen="focused" ${open?"disabled":""}>Focused Healing</button></div></div>`;
+      <button class="btn sm" data-actopen="focused" ${open?"disabled":""}>Focused Healing</button>
+      <button class="btn sm" data-actopen="nanomed" ${open?"disabled":""}>Nanomed Kit</button></div></div>`;
   h += `<div class="hl-track">` + hlCells(ch).map(c=>
     `<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hp.hpPer}</span></div>`
   ).join("") + `</div>`;
@@ -697,7 +738,8 @@ function renderShTrackers(){
        <div class="lo-armor-int" style="flex-basis:100%">${intBar(worn)}</div>
        <button class="btn sm" data-actopen="wear" ${open?"disabled":""}>After the fight</button>
        <span class="sub">${esc((D.armorRules||{}).wearNote||"")} Repairs are on Loadout.</span>`
-    : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`) + `</div>`;
+    : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
+    + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
@@ -1048,9 +1090,18 @@ function armorRowHtml(ch, p){
   h += `<label class="field lo-notes"><span>Notes</span><input type="text" data-lonote="armor|${p.index}" value="${esc(e.notes||"")}"></label></div>`;
   return h;
 }
+// Natural Armor (Decision 104) as one line: what's always on, and each
+// conditional source stated, never summed. Empty when a character has none.
+function naturalArmorText(ch){
+  const n=Engine.naturalArmor(ch);
+  if (!(n.base>0) && !n.conditional.length) return "";
+  const when=n.conditional.map(c=>`${c.name} ${c.amount?`+${c.amount}`:`answers ${c.resAgainst.map(titleCase).join(", ")}`} ${c.while}`);
+  return [`Natural Armor ${n.base}`, ...when].join(" · ");
+}
 function armorRowsHtml(ch){
-  const as = Engine.armorState(ch);
+  const as = Engine.armorState(ch), nat = naturalArmorText(ch);
   let h = as.problems.map(p=>`<p class="hitnote">${esc(p)}</p>`).join("");
+  if (nat) h += `<p class="hitarmor">${esc(nat)}</p>`;
   h += as.pieces.map(p=>armorRowHtml(ch, p)).join("") || `<p class="step-note">No armor yet.</p>`;
   return h + loadoutPickerHtml("armor");
 }
@@ -1225,7 +1276,7 @@ function renderShAdmin(){
 // via the engine; absent renders a blank fillable template built from game
 // data alone — no character needed, since every label on a blank sheet comes
 // from SHADOWS_DATA, not a character. Defense fills from the worn armor
-// (Decision 100); its Nat column stays blank until natural armor is derived.
+// (Decision 100); its Nat column from Engine.naturalArmor() (Decision 104).
 function pLine(v){ return `<span class="p-line">${v==null||v===""?"":esc(v)}</span>`; }
 function pField(label, v){ return `<div class="p-field"><span class="p-label">${esc(label)}</span>${pLine(v)}</div>`; }
 function pBuildTag(){
@@ -1342,15 +1393,17 @@ function pConditionsHtml(ch){
        + `<ul class="p-condlist p-condloc">${D.conditions.filter(wide).map(row).join("")}</ul>`;
 }
 // Filled from the worn body piece (Decision 100): each location it covers
-// gets its RES, current Integrity and PROT die. Natural armor stays blank
-// until Thick Skin and the rest become a derived value. The front page is
+// gets its RES, current Integrity and PROT die. Nat is the always-on
+// Natural Armor on every location (Decision 104; Iron Shirt and the like are
+// conditional, so they aren't printed as a number). The front page is
 // full (Decision 96), so this fills the card's blanks and adds no rows.
 function pDefenseHtml(ch){
   const as = ch ? Engine.armorState(ch) : null, w = as && as.worn;
+  const nat = ch ? Engine.naturalArmor(ch).base : 0;
   const locs = [["head","Head"],["torso","Torso"],["right-arm","R Arm"],["left-arm","L Arm"],["right-leg","R Leg"],["left-leg","L Leg"]];
   let h = `<table class="p-table"><thead><tr><th>Location</th><th>Res</th><th>Int</th><th>Nat</th><th>Prot</th></tr></thead><tbody>` +
     locs.map(([id,l])=>{ const on = w && w.coverage.includes(id);
-      return `<tr><td>${esc(l)}</td><td class="num">${pLine(on?"+"+w.res:null)}</td><td class="num">${pLine(on?w.integrity:null)}</td><td class="num">${pLine(null)}</td><td class="num">${pLine(on?w.prot:null)}</td></tr>`;
+      return `<tr><td>${esc(l)}</td><td class="num">${pLine(on?"+"+w.res:null)}</td><td class="num">${pLine(on?w.integrity:null)}</td><td class="num">${pLine(nat>0?nat:null)}</td><td class="num">${pLine(on?w.prot:null)}</td></tr>`;
     }).join("") + `</tbody></table>`;
   const others = as ? as.pieces.filter(p=>p.worn && p.slot!=="body") : [];
   const feats = w ? [...w.features, ...w.upgrades, ...others.flatMap(p=>p.features)] : [];

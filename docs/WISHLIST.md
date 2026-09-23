@@ -112,6 +112,27 @@ of the skills table) or whether that's a separate mode. Bigger than the rest of
 this list; wants its own proposal before any code. W2/W3/W6 are steps toward it
 either way.
 
+**W16 — Weapon mods and rounds in the magazine.** *Ken · ⏭*
+Deferred twice from the combat plan (Session 4, then the cleanup session,
+2026-09-23) as "if wanted". Today a weapon line shows capacity as text, and the
+mods glossary is reference only: a player can't mark a scope on a rifle or
+count down a magazine. Shape: `weapons[i].mods: [ids]` from
+`weaponModGlossary` and `weapons[i].rounds`, as **one** character schema 0.9
+bump with its `migrate()` step and the round-trip test (constraint 8). Mods
+that change a number (ACC, damage) are read by `weaponLine()`, the way armor
+upgrades are by `armorPiece()`. Anything the Gear chapter leaves vague is a
+Deighton question, not a guess.
+
+**W17 — Consumables you carry: a Nanomed Kit comes out of stock.** *Claude · 💡*
+Raised 2026-09-23, from Decision 105. The Nanomed Kit panel heals and clears,
+but using one doesn't take a kit from Loadout or cost the 4,500Ç. The player
+has to remember to cross it off gear and to log the purchase. Speed Heal, the
+battle chems and Field Repair Kits have the same gap, because Loadout's gear
+is free text. Shape to decide first: consumables as catalog entries with a
+count (a schema bump, so it could share W16's 0.9 migration), and the panel
+offering "use one you carry" next to "bought on the spot". Wants a proposal
+before code.
+
 ### Theme & polish
 
 **W7 — Primary buttons are unreadable in light mode.** *Ken · ⏭*
@@ -138,6 +159,19 @@ pill and the HL boxes that were lost, and a distinct beat when Pain Level
 changes, would make damage feel like damage. Respect
 `prefers-reduced-motion`. Cosmetic, cheap, and easy to overdo — one effect,
 not a system.
+
+### Docs
+
+**W18 — `CHANGELOG.md` stopped at 0.7.0.** *Claude · ⏭*
+Found 2026-09-22 and noted only in that day's log entry, so it had nowhere to
+be picked up from until now. The file is still headed "[Unreleased] — app
+0.7.0", and its last tag section is `v0.4.0-phase-3.3`. Everything from 0.8.0
+to 0.15.0 is missing, and CI attaches the build to each `v*` release, so a
+download can't be traced back through it. The history already exists in
+`log/shipped.md` and the ledger. The fix is one catch-up pass, one section per
+tag, written for what a player would notice. It should also decide whether the
+file keeps up per release or points at `log/shipped.md`, so it can't go stale
+the same way again.
 
 ---
 
