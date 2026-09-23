@@ -453,8 +453,24 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .cond-card{border-color:var(--magenta)}
 .cond-card .desc b{color:var(--text); font-weight:600}
 .cond-card .cond-note{width:100%; margin-top:8px}
-.cond-add{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px}
-.cond-add select{max-width:220px}
+/* W14: the add palette. Catalog chips are outlined until picked; one you
+   already have is greyed out. Active chips on Main open their details. */
+.cond-add{margin-bottom:14px}
+.cond-add > summary{cursor:pointer; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--violet-hi); padding:4px 0; list-style:none}
+.cond-add > summary::before{content:"+ "}
+.cond-add[open] > summary::before{content:"− "}
+.cond-chips.palette{margin:8px 0 6px}
+.cond-chip.add{cursor:pointer; border-color:var(--frame); color:var(--text); font:inherit; font-size:.8rem; padding:4px 9px}
+.cond-chip.add b{color:var(--text)}
+.cond-chip.add:hover:not(:disabled), .cond-chip.add.on{border-color:var(--magenta)}
+.cond-chip.add.on b{color:var(--magenta)}
+.cond-chip.add:disabled{opacity:.4; cursor:default}
+.cond-chip-body{background:none; border:0; padding:0; color:inherit; font:inherit; cursor:pointer; display:inline-flex; align-items:center; gap:6px}
+.cond-chip.on{box-shadow:0 0 0 1px var(--magenta)}
+.cond-info{border-left:2px solid var(--magenta); padding:6px 12px; margin:-2px 0 12px; font-size:.84rem}
+.cond-where{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:6px}
+.cond-where select{max-width:220px}
 .cond-note-line{margin-bottom:10px}
 
 /* horizontal vitals bar — replaces the right rail on every tab except Main

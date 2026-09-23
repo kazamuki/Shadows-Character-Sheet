@@ -31,13 +31,27 @@ const painChip = pain => pain.level
 // Trackers shows each Condition's effect and recovery text. Everything shown
 // comes from Engine.conditionState() and the catalog; nothing is decided here.
 const signed = n => (n>0?"+":n<0?"−":"")+Math.abs(n);
-function conditionAddHtml(){
-  const opts = D.conditions.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
-  const locs = D.bodyLocations.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("");
-  return `<div class="cond-add">
-    <select data-condadd-id aria-label="Condition"><option value="">Add a Condition…</option>${opts}</select>
-    <select data-condadd-loc aria-label="Body part" hidden><option value="">Body part…</option>${locs}</select>
-    <button class="btn sm" data-condadd="1">Add</button></div>`;
+// W14: adding is one click on a chip from the catalog. A body-part Condition
+// asks where first (S.condPick), and one you already have is greyed out.
+// S.condPalette keeps the palette open across the re-render a click causes.
+function conditionAddHtml(st){
+  const has = new Set(st.active.filter(a=>a.def && !a.def.location).map(a=>a.id));
+  const pick = S.condPick && Engine.conditionById(S.condPick);
+  const chips = D.conditions.map(c=>`<button class="cond-chip add${c.helpless?" bad":""}${pick&&pick.id===c.id?" on":""}" data-condquick="${esc(c.id)}"
+      ${has.has(c.id)?"disabled":""} title="${esc(c.effect||"")}"><b>${esc(c.name)}</b>${c.short?` <small>${esc(c.short)}</small>`:""}</button>`).join("");
+  const where = pick && pick.location ? `<div class="cond-where"><span>${esc(pick.name)}: where?</span>
+      <select data-condadd-loc aria-label="Body part"><option value="">Body part…</option>${
+        D.bodyLocations.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")}</select>
+      <button class="btn sm primary" data-condadd="${esc(pick.id)}">Add</button>
+      <button class="btn sm" data-condpickcancel>Cancel</button></div>` : "";
+  return `<details class="cond-add" data-condpalette ${S.condPalette||pick?"open":""}><summary>Add a Condition</summary>
+    <div class="cond-chips palette">${chips}</div>${where}</details>`;
+}
+// Main's chips open their effect and recovery in place (S.condInfo = index).
+function conditionInfoHtml(st){
+  const a = st.active.find(x=>x.index===S.condInfo);
+  if (!a || !a.def) return "";
+  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}</div>`;
 }
 function conditionCounterHtml(c){
   let pips = "";
@@ -54,9 +68,9 @@ function conditionsHtml(ch, full){
   for (const c of st.counters) h += conditionCounterHtml(c);
   if (!st.active.length) h += `<p class="step-note cond-none">No Conditions. ${full?esc(R.noStacking||""):""}</p>`;
   else if (!full){
-    h += `<div class="cond-chips">` + st.active.map(a=>`<span class="cond-chip${a.def&&a.def.helpless?" bad":""}" title="${esc(a.def?a.def.effect:"")}">
-      <b>${esc(a.label)}</b>${a.def?` <small>${esc(a.def.short)}</small>`:""}
-      <button class="x" data-condrm="${a.index}" aria-label="Clear ${esc(a.label)}" title="Clear">✕</button></span>`).join("") + `</div>`;
+    h += `<div class="cond-chips">` + st.active.map(a=>`<span class="cond-chip${a.def&&a.def.helpless?" bad":""}${S.condInfo===a.index?" on":""}">
+      <button class="cond-chip-body" data-condinfo="${a.index}" aria-expanded="${S.condInfo===a.index}" title="${esc(a.def?a.def.effect:"")}"><b>${esc(a.label)}</b>${a.def?` <small>${esc(a.def.short)}</small>`:""}</button>
+      <button class="x" data-condrm="${a.index}" aria-label="Clear ${esc(a.label)}" title="Clear">✕</button></span>`).join("") + `</div>` + conditionInfoHtml(st);
   } else {
     h += st.active.map(a=>`<div class="pick cond-card"><div class="head"><h4>${esc(a.label)}</h4>
       ${a.def?`<span class="cost">${esc(a.def.short)}</span>`:""}
@@ -67,7 +81,7 @@ function conditionsHtml(ch, full){
     const penalised = st.active.filter(a=>a.def && typeof a.def.rollPenalty==="number");
     if (penalised.length) h += ruleHtml([(R.rollPenalty||{}).text, (R.penaltyStacking||{}).text].filter(Boolean).join(" "));
   }
-  return h + conditionAddHtml();
+  return h + conditionAddHtml(st);
 }
 // What a Condition does to the numbers on this tab, in one line. Flat penalties
 // are already in the totals; attack/defense and conditional ones are not.
