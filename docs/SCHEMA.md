@@ -691,7 +691,7 @@ No cascade logic to maintain — it falls out of the architecture.
    (modifier). Untrained: 1d10 + Primary Stat only.
 9. **Derived attributes:** TOL = 1 + INT/COOL/EMP mods (floor 1); WILL = 1 +
    BOD/INT/EMP mods (floor 1); SAN = EMP×10 (floor 10%, cap 95%).
-    → **Superseded in part by Decision 103** — TOL's inputs are INT/BOD/COOL; WILL and SAN stand.
+    → **Superseded in part by Decisions 103 and 109** — TOL's inputs are INT/BOD/COOL (103), and Drained can take maximum TOL below the floor of 1, to 0 (109); WILL and SAN stand.
 10. **Hard caps:** the wizard enforces all table limits strictly. No
     warn-but-allow in v1.
 11. **All rolls are physical:** the app never rolls dice for creation pools.
@@ -2129,6 +2129,8 @@ No cascade logic to maintain — it falls out of the architecture.
     example (`040` l.88–89: INT 4, BOD 3, COOL 9 → TOL 3). Nothing tested the
     formula before, and both tests fail against the old inputs. The CRB edit landed the same day in `020`, `040`, `041` and `Magic.md`,
     and all four were re-pulled. (Ken + Claude, 2026-09-23)
+    → **Superseded in part by Decision 109**: its floor of 1 holds for the
+    formula, but the Drained Aberration can take maximum TOL below it, to 0.
 
 104. **(Natural Armor — combat plan cleanup, data + engine + app)**
     **Natural Armor is one derived value, `Engine.naturalArmor(ch)`, read by
@@ -2313,7 +2315,8 @@ No cascade logic to maintain — it falls out of the architecture.
       the top of the Grimoire, read from `spellcraftRules.spellPower`.
       **Spell Attack** (Evocation + REF + WILL) is deliberately **not**
       computed. The book doesn't say whether REF is the score or its
-      modifier, so that one waits for a ruling.
+      modifier, so that one waits for a ruling. (→ **Answered by Decision
+      109**: the raw scores. Built in the plan's Session 2 as M11.)
     - **Mastering spends IP through the journal.** `ipCost`/`spendIP` take a
       `spell` target at `mastery.ipPerTH` × the printed TH, so undo reverses
       it like any spend (Decision 49). Only a Known book spell with a TH can
@@ -2338,6 +2341,38 @@ No cascade logic to maintain — it falls out of the architecture.
     Game data **0.11 → 0.12** (the panel type and the two rules entries
     change what an Arcanist's sheet offers). Character schema **0.8 → 0.9**.
     App **0.16.0 → 0.17.0**. (Ken + Claude, 2026-09-23)
+
+109. **(Deighton's magic rulings — the magic plan's MQ1–MQ3 and Spell Attack,
+    docs)** Deighton answered all four on 2026-09-23, relayed by Ken. **No
+    code changes in this entry.** Each answer is built by the plan session
+    that needs it (`plans/magic-on-the-sheet.md` §6 has the questions).
+    - **MQ1 — Starting spells can be any tier, gated by Evocation rank.** "A
+      new arcanist can start with advanced or superior spells, but they
+      would need the ranks in Evocation." The threshold, confirmed by Ken:
+      **a spell's TH can't exceed the character's Evocation rank**, counting
+      ranks bought at creation. The power level's rank cap (Street 2, Heroic
+      3, Shadows 4, World Coming Down 5) then does the gating. The
+      appendix's "works from the Cantrip and Standard lists" is the usual
+      case, not a rule. For the plan's Session 3 (M6), which is now
+      unblocked.
+    - **MQ2 — Drained lowers maximum TOL by 2, can go below 1, and leaves
+      current TOL alone.** "They can choose to be very mean." Ken's worked
+      example: max 8 / current 3 becomes max 6 / current 3, and a max of 2
+      becomes 0. The sheet stores TOL *Spent*, so recording Drained also takes
+      2 off TOL Spent, floored at 0. That keeps current at the lower of what it
+      was and the new max. **Replaces Decisions 9 and 103 in part**: their
+      floor of 1 still holds for the formula, but Drained applies after it,
+      down to 0. **Max TOL is never below 0.** **Removing Drained grants no
+      TOL** (Ken): max rises by 2 and current stays, so TOL Spent goes up by
+      2. At max 8, Drained makes it 6. After resting to 6 and then removing
+      Drained, TOL is still 6, and the character recovers back to 8 naturally.
+      Current never moves when Drained comes or goes.
+    - **MQ3 — Phantom Pain applies at full health.** "Your PL1 happens even
+      if you are full health." It's `painLevels: 1` like Agonized, clamped at 3.
+    - **Spell Attack = Evocation rank + raw REF + raw WILL**, not the
+      bonuses. It answers what Decision 108 left out, and the plan adds it as
+      M11 in Session 2.
+    (Deighton via Ken, 2026-09-23)
 
 ## 5. Open Flags
 
