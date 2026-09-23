@@ -75,13 +75,13 @@ yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 | — | Conditions (combat plan Session 2) | #25 | Catalog, schema 0.8, Pain folding, Skill Check penalties, sheet + print · Decisions 95–96, F20–F22 |
 | — | Design-team rulings | #25 | F1, F2, F14, F17, F20–F22 and the stat-curve flag closed; new skill = 25 IP; stats past 10 +1 per 5 · Decisions 97–98 |
 | — | Taking a hit (combat plan Session 3) | #26 | `hlState`/`armorState`/`resolveHit`/`applyHit`, the Take a hit panel, Massive levels on every HL track · Decision 99, F23 |
-| — | Loadout & recovery (combat plan Session 4) | this branch | Catalog pickers + Buy, weapon lines, worn/upgrades/wear/repair, Rest, Focused Healing, Turn Reset, print armor · Decision 100, F24 |
+| — | Loadout & recovery (combat plan Session 4) | #28 | Catalog pickers + Buy, weapon lines, worn/upgrades/wear/repair, Rest, Focused Healing, Turn Reset, print armor · Decision 100, F24 |
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com` (2026-09-12). It only redeploys on a `v*` tag
-push (`deploy-demo.yml`), not on every merge to `main`. **Live: app `0.13.0`,
-game data `0.8`** (tag `v0.13.0`, deployed and checked 2026-09-22).
+push (`deploy-demo.yml`), not on every merge to `main`. **Live: app `0.14.0`,
+game data `0.9`** (tag `v0.14.0`, deployed and checked 2026-09-22).
 
 **Two things a next session should know.**
 
@@ -140,12 +140,11 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #26** (Session 3), tagged `v0.13.0` and
-live on the demo site. **Session 4 (Loadout & recovery, Decision 100) is on
-`claude/combat-conditions-session-4-48a91e`**, not yet merged. App 0.14.0,
-game data 0.9 (new recovery choices), schema unchanged. `npm run verify`
-is green (181 passing, 0 todo). After it merges, the demo moves only on a
-`v0.14.0` tag.
+**`main` is caught up through PR #28** (combat plan Session 4, Loadout &
+recovery, Decision 100). It's tagged `v0.14.0` and live on the demo site:
+app 0.14.0, game data 0.9, schema 0.8. Game data 0.9 has shipped, so the
+next change a character can observe needs a `gamedataVersion` bump
+(Decision 68). `npm run verify` is green (181 passing, 0 todo).
 
 **Next up is the combat plan's cleanup session**, Ken's call on 2026-09-22:
 see where Session 4 landed, then fold Thick Skin, Iron Shirt and the
