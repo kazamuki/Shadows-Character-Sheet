@@ -2362,9 +2362,11 @@ No cascade logic to maintain — it falls out of the architecture.
       2 off TOL Spent, floored at 0. That keeps current at the lower of what it
       was and the new max. **Replaces Decisions 9 and 103 in part**: their
       floor of 1 still holds for the formula, but Drained applies after it,
-      down to 0. A maximum below 0 and what *removing* Drained does to current
-      aren't covered. The app floors at 0, and the removal question goes to
-      Ken before Session 2 builds it.
+      down to 0. **Max TOL is never below 0.** **Removing Drained grants no
+      TOL** (Ken): max rises by 2 and current stays, so TOL Spent goes up by
+      2. At max 8, Drained makes it 6. After resting to 6 and then removing
+      Drained, TOL is still 6, and the character recovers back to 8 naturally.
+      Current never moves when Drained comes or goes.
     - **MQ3 — Phantom Pain applies at full health.** "Your PL1 happens even
       if you are full health." It's `painLevels: 1` like Agonized, clamped at 3.
     - **Spell Attack = Evocation rank + raw REF + raw WILL**, not the
