@@ -79,8 +79,8 @@ yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
-`charactersheet.shadowsrpg.com` (2026-09-12). It only redeploys on a `v*` tag
-push (`deploy-demo.yml`), not on every merge to `main`. **Live: app `0.14.1`,
+`charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
+dry run on a branch, a re-publish on a tag. **Live: app `0.14.1`,
 game data `0.9`** (tag `v0.14.1`, deployed 2026-09-22 and checked by loading
 the page: Home renders, the wizard opens). `v0.13.0` and `v0.14.0` rendered
 blank (#30). **Check a deploy by loading the page**, not by curling it.
