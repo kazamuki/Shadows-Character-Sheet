@@ -14,6 +14,28 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.18.0
+
+Character schema **0.9** · game data **0.13** · ruleset CRB v4 (in progress).
+
+- **Record it.** After a Cascade, one button writes it into Notes and puts the Aberration
+  on your sheet. One Undo takes back both.
+- **Aberrations on the Trackers tab.** Permanent ones are cards with a note and Remove;
+  temporary ones are chips you Clear when they wear off. Add one by hand from the
+  catalog when the GM rules it. You can't hold the same Aberration twice.
+- **Drained** takes 2 off your maximum TOL, down to 0, and leaves your current TOL where
+  it was. Clearing it gives the 2 back to the maximum, and you rest the rest back.
+- **Phantom Pain** puts you at Pain Level 1 even at full health. The Pain line says what's
+  adding to it.
+- **Spell Attack** (Evocation + REF + WILL, the scores themselves) sits beside Spell Power
+  in the Grimoire.
+- **A Magic reference** on the Archetype tab: the Spellcraft roll and its five outcomes,
+  spell tiers, the Cascade Table, the Aberration Table and every Aberration. Permanent
+  Aberrations also show there.
+- **Three Unique Aberrations follow the current rulebook:** Aethereal Link hears animals,
+  Thaumaturgical Sight's +2 is for analyzing magic, and Resonant Whispers reads
+  talismans and artifacts.
+
 ## v0.17.0 — 2026-09-23
 
 Character schema **0.9** · game data **0.12** · ruleset CRB v4 (in progress).
