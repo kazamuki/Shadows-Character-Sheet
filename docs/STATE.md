@@ -80,10 +80,10 @@ yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com` (2026-09-12). It only redeploys on a `v*` tag
-push (`deploy-demo.yml`), not on every merge to `main`. **Live: app `0.14.0`,
-game data `0.9`** (tag `v0.14.0`), **which renders blank**, as did `v0.13.0`:
-the build dropped `print.css`'s `media="print"` (fixed in 0.14.1, not yet
-tagged). **Check a deploy by loading the page**, not by curling `APP_VERSION`.
+push (`deploy-demo.yml`), not on every merge to `main`. **Live: app `0.14.1`,
+game data `0.9`** (tag `v0.14.1`, deployed 2026-09-22 and checked by loading
+the page: Home renders, the wizard opens). `v0.13.0` and `v0.14.0` rendered
+blank (#30). **Check a deploy by loading the page**, not by curling it.
 
 **Two things a next session should know.**
 
@@ -143,8 +143,8 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 ## 5. Where to start
 
 **`main` is caught up through PR #28** (combat plan Session 4, Loadout &
-recovery, Decision 100) and the 0.14.1 build fix. `v0.14.0` is on the demo
-site but blank (see §2); tag 0.14.1 to fix it. Game data 0.9 has shipped, so the
+recovery, Decision 100) and the 0.14.1 build fix (#30), tagged `v0.14.1`
+and live on the demo site. Game data 0.9 has shipped, so the
 next change a character can observe needs a `gamedataVersion` bump
 (Decision 68). `npm run verify` is green (182 passing, 0 todo).
 
