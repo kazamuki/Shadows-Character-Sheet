@@ -73,9 +73,9 @@ left that is still true now.
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
-dry run on a branch, a re-publish on a tag. **Live: app `0.16.0`,
-game data `0.11`** (tag `v0.16.0`, deployed 2026-09-23; loaded: both versions, the
-Cascade data and TOL Spent, Home and wizard render). `v0.13.0` and `v0.14.0`
+dry run on a branch, a re-publish on a tag. **Live: app `0.17.0`,
+game data `0.12`** (tag `v0.17.0`, deployed 2026-09-23; loaded: all three versions,
+the `grimoire` panel and a Link offer, Home and wizard render). `v0.13.0` and `v0.14.0`
 rendered blank (#30). **Check a deploy by loading the page**, not by curling it.
 **`CHANGELOG.md` is current again** (W18); `docs.test.mjs` checks each bump has a section.
 
@@ -136,9 +136,9 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**This session started the magic plan** (`plans/magic-on-the-sheet.md`) with its
-Session 1 on `feat/magic-on-the-sheet` (Decision 108). App 0.17.0, schema 0.9
-and game data 0.12 ship when it merges and `v0.17.0` deploys; `v0.16.0` is live.
+**`main` is caught up through PR #38** (the magic plan's Session 1, Decision
+108), tagged `v0.17.0` and live. Game data 0.12 has shipped, so the next change
+a character can observe needs game data 0.13 (Decision 68).
 
 **Next, all unblocked:** the magic plan's Session 2 (acquired Aberrations, Drained and Phantom Pain, the Magic reference). Its Session 3 (starting spells) waits on **MQ1**, which is on the Deighton list below with MQ2–MQ3. Also Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,

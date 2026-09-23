@@ -37,4 +37,4 @@ by batch number (Ken, 2026-09-12).
 | — | Wishlist + board archive (docs) | — | `WISHLIST.md` (`W` ids) · this file · Deighton's TOL ruling queued · superseded decisions marked, load-bearing table, the house rule · Decisions 101–102 |
 | — | Combat cleanup (TOL, Natural Armor, Nanomed) | #34 | TOL = INT/BOD/COOL; `naturalArmor()` in the hit resolver and print Nat; Nanomed Kit per 054; `migrate()` drops junk held entries · Decisions 103–105, F25 |
 | — | Magic tables + wishlist pass | #36 | Cascade and Aberration tables, the Arcanist's TOL Spent tracker, the combat plan closed · W7, W11, W12, W14, W18 · Decision 106 |
-| — | Magic on the sheet, Session 1 | — | Plan doc (M1–M10, MQ1–MQ3); the Grimoire reads the 96-spell book, Mastery by IP, Spell Power, Link to the book; schema 0.9 · Decision 108 |
+| — | Magic on the sheet, Session 1 | #38 | Plan doc (M1–M10, MQ1–MQ3); the Grimoire reads the 96-spell book, Mastery by IP, Spell Power, Link to the book; schema 0.9 · Decision 108 |
