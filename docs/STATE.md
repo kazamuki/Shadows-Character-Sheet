@@ -111,7 +111,7 @@ full text.
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ✅ Cascade + Aberration tables, TOL Spent tracker and the Cascade panel (Decision 106) · 📋 **magic on the sheet** (`plans/magic-on-the-sheet.md`): ✅ Grimoire from the book (Decision 108) · ⏭ acquired Aberrations + Magic reference · ⏸ starting spells (MQ1) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
+| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ✅ Cascade + Aberration tables, TOL Spent tracker and the Cascade panel (Decision 106) · 📋 **magic on the sheet** (`plans/magic-on-the-sheet.md`): ✅ Grimoire from the book (Decision 108) · ⏭ acquired Aberrations + Magic reference · ⏭ starting spells (MQ1 answered, Decision 109) · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a complete, finished export — his current file is a two-page **portrait** WIP with only Stats built, in two competing styles (hex-dial sidebar vs. plain table). Portrait-vs-landscape is a real decision once that lands, not yet made. Separately: the frame/texture layer doesn't print in Chrome's actual output yet (screen-only) — not blocked on anyone, just not chased down |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
@@ -140,7 +140,7 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 108), tagged `v0.17.0` and live. Game data 0.12 has shipped, so the next change
 a character can observe needs game data 0.13 (Decision 68).
 
-**Next, all unblocked:** the magic plan's Session 2 (acquired Aberrations, Drained and Phantom Pain, the Magic reference). Its Session 3 (starting spells) waits on **MQ1**, which is on the Deighton list below with MQ2–MQ3. Also Milestones & doc reconciliation (Ken alone;
+**Next, all unblocked:** the magic plan's Session 2 (acquired Aberrations, Drained and Phantom Pain, the Magic reference). Session 3 (starting spells) is unblocked too. Deighton answered MQ1–MQ3 and Spell Attack (Decision 109). Also Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
 under General Milestones in `041_Archetypes` — not in the Advantages chapter).
 The wishlist's layout pair **W1 + W10** is one pass. So is the popover/modal
@@ -154,9 +154,7 @@ from `041` (Aethereal Link now says *animals*; Thaumaturgical Sight adds *when
 analyzing magic*). A display-text sync, but cross-check it against the CRB.
 
 **Waiting on the design team:** F8 (the wizard-blocker, being playtested),
-the magic plan's MQ1–MQ3 (§6 of the plan: starting-spell tiers, Drained's
-floor, Phantom Pain at full health), plus whether Spell Attack's REF is the
-score or its modifier, and one grouped question for Deighton. **F23:** which RES class do Electric
+and one grouped question for Deighton. **F23:** which RES class do Electric
 and Burning fall under (stubbed as Energy), and where does Resistance's 50%
 sit (not applied)? **F24:** when Bleeding ticks at a Reset while Dying, is it
 one Death Mark standing in for the WILL check (the stub), or the check plus a

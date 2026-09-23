@@ -136,7 +136,7 @@ What a number *is*. Change one of these and characters change.
 - **6** — Health Levels: 1 HL per point of BOD, 5 HP per HL.
 - **7** — Çredits: player rolls physically, enters result; pool = table formula.
 - **8** — Skill checks: 1d10 + Rank + Primary Stat (full score) + Synergy Bonus (modifier).
-- **9** — Derived attributes: TOL = 1 + INT/COOL/EMP mods (floor 1); WILL = 1 + BOD/INT/EMP mods (floor 1); SAN = EMP×10 (flo... → **superseded in part by 103**
+- **9** — Derived attributes: TOL = 1 + INT/COOL/EMP mods (floor 1); WILL = 1 + BOD/INT/EMP mods (floor 1); SAN = EMP×10 (flo... → **superseded in part by 103 and 109**
 - **10** — Hard caps: the wizard enforces all table limits strictly.
 - **11** — All rolls are physical: the app never rolls dice for creation pools.
 - **12** — Supernatural restriction: archetypes with canPurchaseAdvantages: false (Werewolf; Vampire assumed) cannot buy Advan...
@@ -154,7 +154,7 @@ What a number *is*. Change one of these and characters change.
 - **100** *(Loadout & recovery — combat plan Session 4)* — Catalog pickers with Add/Buy, one worn piece per slot, upgrades by slot and quality; weapon lines (attack = skill check, ACC apart, `BOD+X` resolved). Wear, repair, Rest, Focused Healing (the only way back for Massive levels and Injured), Turn Reset (ticks aren't hits: no armor, no Shock). Stand-in armor gone. F24 opened. → **superseded in part by 104 and 105**
 - **104** *(Natural Armor — combat plan cleanup)* — One derived value from `grants` on advantages, Major Milestones and specializations; conditional sources (Iron Shirt, a waning moon) shown, never summed, asked for on a hit. How it answers a hit is the F25 stub. Print's Nat column fills. `migrate()` drops junk held entries.
 - **105** *(Nanomed Kit — CQ12)* — 054's list is the master: clears Agonized, Bleeding, Paralyzed, Poisoned and stabilizes the Dying; proposes floor(BOD / dose) HP; a third kind in `heal()`.
-- **103** *(Deighton's TOL ruling)* — TOL = 1 + INT/BOD/COOL mods (floor 1), was INT/COOL/EMP; WILL and SAN unchanged. Data only; the CRB's rewritten example is pinned in `rules.test.mjs`.
+- **103** *(Deighton's TOL ruling)* — TOL = 1 + INT/BOD/COOL mods (floor 1), was INT/COOL/EMP; WILL and SAN unchanged. Data only; the CRB's rewritten example is pinned in `rules.test.mjs`. → **superseded in part by 109**
 - **96** *(Conditions — the numbers)* — Pain = HL band + Condition Pain, clamped 0–3; a flat Condition penalty lands on every Skill Check; attack/defense and conditional penalties are shown, never summed. → **superseded in part by 107**
 
 ### Content & the CRB
@@ -240,6 +240,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **106** *(Cascade and Aberrations — Magic-tables side session)* — Magic.md's two tables and the Appendix's 39 Aberrations are data; `Engine.cascade()` reads the player's dice. The Arcanist gets a TOL Spent tracker (it had none after 93), whose Cascade panel writes the result into Notes. Schema unchanged.
 - **107** *(Sheet feel — wishlist pass)* — W7 `--on-accent` text on filled controls with a both-themes contrast guard; W11 Heal/Hurt stepper; W12 an undo toast on every `commit()`, matched to its audit entry by identity; W14 a Condition chip palette, and Main's chips open their details.
 - **108** *(The Grimoire reads the book — magic plan Session 1)* — Book rows store `{ spellId, stage, notes }`, your own rows are typed columns (`custom`); schema 0.9, migrate never links. `Engine.grimoire()`, Spell Power, Mastery = 30 IP × TH through the IP journal (TH − 1), a picker that shows the numbers first, Link to the book. Spell Attack left for a ruling.
+- **109** *(Deighton's magic rulings)* — Starting spells gated by TH ≤ Evocation rank (MQ1); Drained −2 max TOL (never below 0), current unchanged either way, so TOL Spent −2 on / +2 off (MQ2); Phantom Pain PL 1 at full health (MQ3); Spell Attack = Evocation + raw REF + raw WILL. Docs only; built by the plan's sessions.
 
 ### Audit trail, undo & admin
 
