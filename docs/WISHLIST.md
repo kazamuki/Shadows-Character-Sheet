@@ -93,6 +93,10 @@ already known); a filter by skill/group; and a browse view — a table or card
 grid with the stats that matter, sortable, with Add/Buy on each row. The browse
 view can be a modal (same pattern as W6) so Loadout stays a list of what you
 own. Data already has everything this needs (Decision 92) — zero data changes.
+*Claude, 2026-09-23:* the Grimoire's picker (Decision 108) is a working version
+of this: search, filters, the numbers shown before Add, and held entries greyed
+out. `spellResultsHtml` in `sheet.js` and its handler in `app.js` are the
+pattern to reuse for weapons and armor.
 
 **W5 — Section shortcuts inside Loadout.** *Ken · 💡*
 Loadout & Powers is one long scroll: Weapons, Armor, Gear, Focused Skills,

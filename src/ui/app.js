@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.16.0";
+const APP_VERSION = "0.17.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -520,6 +520,49 @@ function bindSheet(){
   });
 
   // Editable tables (weapons / gear / panel tables)
+  // Grimoire (Decision 108). Adding, linking, removing and Mastering are each
+  // one commit(); notes are keystrokes, like the table cells.
+  const spellName = id => (Engine.spellById(id)||{name:id}).name;
+  const pick = main.querySelector("[data-spellpick]");
+  if (pick){
+    const results = pick.querySelector("[data-spellresults]");
+    const refresh = () => { results.innerHTML = spellResultsHtml(Engine.grimoire(ch)); };
+    pick.ontoggle = () => { S.spellPick.open = pick.open; if (pick.open) refresh(); };
+    const q = pick.querySelector("[data-spellq]");
+    if (q) q.oninput = () => { S.spellPick.q = q.value; refresh(); };
+    pick.querySelectorAll("[data-spellf]").forEach(sel=>sel.onchange=()=>{ S.spellPick[sel.dataset.spellf] = sel.value; refresh(); });
+    results.onclick = e => {
+      const l = e.target.closest("[data-spelllink]"); if (l) return linkRow(Number(l.dataset.spelllink));
+      const b = e.target.closest("[data-spelladd]"); if (!b || b.disabled) return;
+      const id = b.dataset.spelladd;
+      commit("grimoire", `Grimoire: ${spellName(id)}`, ()=>{ Engine.addSpell(ch, id); });
+    };
+  }
+  function linkRow(i){
+    const line = Engine.grimoire(ch).lines[i];
+    if (!line || !line.match) return;
+    commit("grimoire", `Linked to the book: ${line.match.name}`, ()=>{ Engine.linkSpell(ch, i); });
+  }
+  main.querySelectorAll("[data-spelllink]").forEach(b=>b.onclick=()=>linkRow(Number(b.dataset.spelllink)));
+  main.querySelectorAll("[data-spellrm]").forEach(b=>b.onclick=()=>{
+    const i = Number(b.dataset.spellrm), line = Engine.grimoire(ch).lines[i];
+    const label = line && (line.name || line.spellId || (line.row && Object.values(line.row).find(v=>typeof v==="string" && v))) || "a row";
+    commit("grimoire", `Grimoire: removed ${label}`, ()=>{ Engine.removeGrimoireRow(ch, i); });
+  });
+  main.querySelectorAll("[data-spellown]").forEach(b=>b.onclick=()=>{
+    const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"); if (!p) return;
+    commit("grimoire", "Grimoire: your own spell", ()=>{ panelRows(ch, p.id).push({ custom:true }); });
+  });
+  main.querySelectorAll("[data-spellnote]").forEach(inp=>inp.oninput=()=>{
+    const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"), r = p && panelRows(ch, p.id)[Number(inp.dataset.spellnote)];
+    if (r) { r.notes = inp.value; lite(); }
+  });
+  main.querySelectorAll("[data-spellmaster]").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.spellmaster, c = Engine.ipCost(ch, "spell", id);
+    if (!c.ok){ alert(c.why); return; }
+    if (Engine.ipState(ch).available < c.cost){ alert(`Not enough IP (need ${c.cost}).`); return; }
+    commit("ip", `Mastered ${spellName(id)} (−${c.cost} IP)`, ()=>{ Engine.spendIP(ch, "spell", id); });
+  });
   main.querySelectorAll("[data-rowadd]").forEach(b=>b.onclick=()=>{
     const key=b.dataset.rowadd;
     commit("loadout", `Add ${key} row`, ()=>{ panelRows(ch, key).push({}); });

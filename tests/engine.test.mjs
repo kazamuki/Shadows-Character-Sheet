@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.8");
+  assert.equal(ch.meta.schemaVersion, "0.9");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.8");
+  assert.equal(old.meta.schemaVersion, "0.9");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.8");
+  assert.equal(old.meta.schemaVersion, "0.9");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -203,7 +203,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.8");
+  assert.equal(old.meta.schemaVersion, "0.9");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -309,7 +309,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.8");
+  assert.equal(bare.meta.schemaVersion, "0.9");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -531,7 +531,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.8");
+    assert.equal(c.meta.schemaVersion, "0.9");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -806,7 +806,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.8");
+  assert.equal(old.meta.schemaVersion, "0.9");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1270,4 +1270,99 @@ test("the Arcanist's TOL Spent tracker declares the Cascade panel and the Exhaus
   assert.equal(panel.max, "TOL");
   assert.equal(panel.overMax, "cascade");
   assert.ok(panel.atMax, "no Exhausted note at max");
+});
+
+// ── Grimoire from the book (Decision 108) ─────────────────────────────
+
+test("migrate to 0.9 tags typed Grimoire rows as your own, never links them, and seeds acquired Aberrations", () => {
+  const old = subject();
+  old.meta.schemaVersion = "0.8";
+  old.panelData.grimoire = [
+    { "Spell Name": "Zap", "TN": "7", "TH": "1", "Notes": "go-to" },      // a book name, typed
+    null, "junk",
+    { spellId: "kindle" },                                               // a hand-edited book row
+    { spellId: "dart", stage: "weird", custom: true },
+  ];
+  delete old.trackers.aberrations;
+  Engine.migrate(old);
+  const rows = old.panelData.grimoire;
+  assert.equal(rows.length, 3, "junk rows weren't dropped");
+  assert.equal(rows[0].custom, true);
+  assert.equal(rows[0].spellId, undefined, "migrate linked a typed name to the book on its own");
+  assert.equal(rows[0]["Spell Name"], "Zap", "migrate lost what the player typed");
+  same([rows[1].spellId, rows[1].stage, rows[1].notes], ["kindle", "known", ""]);
+  same([rows[2].stage, rows[2].custom], ["known", undefined]);
+  assert.ok(Array.isArray(old.trackers.aberrations));
+  const again = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  same(again.panelData.grimoire, rows, "a second migrate changed the rows");
+});
+
+test("grimoire() reads the book: numbers, a missing spell, and a typed name that could link", () => {
+  const ch = subject();
+  ch.panelData.grimoire = [
+    { spellId: "firebolt", stage: "known", notes: "" },
+    { spellId: "no-such-spell", stage: "known", notes: "old" },
+    { custom: true, "Spell Name": "  ZAP! ", "Notes": "mine" },
+    { custom: true, "Spell Name": "Firebolt" },                          // already held: no link
+  ];
+  const g = Engine.grimoire(ch), book = D.spells.find(s => s.id === "firebolt");
+  same([g.lines[0].tn, g.lines[0].th, g.lines[0].effect], [book.tn, book.th, book.effect]);
+  assert.equal(g.lines[1].missing, true);
+  same(g.lines[2].match, { id: "zap", name: "Zap" });
+  assert.equal(g.lines[3].match, null, "offered to link a spell that's already in the Grimoire");
+});
+
+test("grimoire() is a reader: it doesn't create the row list", () => {
+  const ch = subject();
+  delete ch.panelData.grimoire;
+  Engine.grimoire(ch);
+  assert.equal(ch.panelData.grimoire, undefined);
+});
+
+test("addSpell refuses a duplicate, an unknown id, and an archetype with no Grimoire; linkSpell keeps the notes", () => {
+  const ch = subject();
+  assert.ok(Engine.addSpell(ch, "zap").ok);
+  assert.equal(Engine.addSpell(ch, "zap").ok, false);
+  assert.equal(Engine.addSpell(ch, "no-such-spell").ok, false);
+  const pro = subject(); pro.identity.archetype = "professional";
+  assert.equal(Engine.addSpell(pro, "zap").ok, false);
+  ch.panelData.grimoire.push({ custom: true, "Spell Name": "kindle", "Notes": "lights the stove" });
+  assert.ok(Engine.linkSpell(ch, 1).ok);
+  same(ch.panelData.grimoire[1], { spellId: "kindle", stage: "known", notes: "lights the stove" });
+  assert.equal(Engine.linkSpell(ch, 0).ok, false, "linked a row that's already a book spell");
+});
+
+test("Mastering a book spell spends 30 IP × its TH through the IP journal, and only once", () => {
+  const ch = subject();
+  Engine.addSpell(ch, "firebolt");                                     // Standard, TH 2
+  const th = D.spells.find(s => s.id === "firebolt").th;
+  const c = Engine.ipCost(ch, "spell", "firebolt");
+  same([c.ok, c.cost], [true, 30 * th]);
+  assert.equal(Engine.spendIP(ch, "spell", "firebolt").ok, false, "Mastered with no IP");
+  Engine.grantIP(ch, 100, "test");
+  assert.ok(Engine.spendIP(ch, "spell", "firebolt").ok);
+  assert.equal(ch.panelData.grimoire[0].stage, "mastered");
+  const e = ch.progression.ip.log[ch.progression.ip.log.length - 1];
+  same([e.targetType, e.targetId, e.amount], ["spell", "firebolt", 30 * th]);
+  assert.equal(Engine.ipCost(ch, "spell", "firebolt").ok, false, "a Mastered spell offered Mastery again");
+  assert.equal(Engine.ipCost(ch, "spell", "zap").ok, false, "a spell not in the Grimoire had a price");
+});
+
+test("the Grimoire functions are total on every degenerate character", () => {
+  const failures = [];
+  for (const [label, ch] of Object.entries(degenerates())){
+    const calls = {
+      grimoire: () => Engine.grimoire(ch),
+      spellPower: () => Engine.spellPower(ch),
+      addSpell: () => { Engine.addSpell(ch, "zap"); Engine.addSpell(ch, null); },
+      linkSpell: () => [-1, 0, 1, 99, "x"].forEach(i => Engine.linkSpell(ch, i)),
+      removeGrimoireRow: () => [-1, 99, "x"].forEach(i => Engine.removeGrimoireRow(ch, i)),
+      ipCost: () => { Engine.ipCost(ch, "spell", "zap"); Engine.ipCost(ch, "spell", undefined); },
+    };
+    if (ch.panelData && typeof ch.panelData === "object") ch.panelData.grimoire = [null, 4, { spellId: 7 }, { custom: true }];
+    for (const [fn, call] of Object.entries(calls)){
+      try { call(); } catch (e) { failures.push(`${fn}(${label}) -> ${e.message}`); }
+    }
+  }
+  assert.deepEqual(failures, []);
 });

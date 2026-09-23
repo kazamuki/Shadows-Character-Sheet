@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.8 (game data 0.11) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-23 (Cascade tables and the wishlist pass, Decisions 106–107)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.12) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-23 (the Grimoire reads the book, Decision 108)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -254,8 +254,10 @@ window.SHADOWS_DATA = {
           { id: "disciplines", type: "rankedList",
             items: ["Evocation", "Enchantment", "Alchemy"],
             cappedBy: "maxPowerRank" },
-          { id: "grimoire", type: "table",
-            columns: ["Spell Name", "Discipline", "Target", "Threshold", "Materials"] }
+          // (0.12, Decision 108) `grimoire` is its own panel type: book spells
+          // from the named catalog, plus your own spells in these columns.
+          { id: "grimoire", type: "grimoire", catalog: "spells",
+            columns: ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"] }
         ]
       },
 
@@ -488,6 +490,12 @@ that line once the count reaches the max, and `overMax: "cascade"` opens the
 Cascade panel once the count passes it. The Arcanist's `tol-spent` uses all
 three. The value lives in `trackers.panel[id]` like any other tracker.
 
+A `grimoire` panel (Decision 108) names its `catalog` (`spells`) and keeps
+`columns` for the player's own spells. Its rows live in `panelData[id]`. The
+numbers it shows come from two `spellcraftRules` entries: `spellPower`
+(`{ discipline: "evocation", stat: "WILL" }`, Evocation rank + WILL) and
+`mastery` (`{ ipPerTH: 30, thReduction: 1 }`).
+
 ---
 
 ## 3. Character File Schema (`*.shadows.json`)
@@ -495,8 +503,8 @@ three. The value lives in `trackers.panel[id]` like any other tracker.
 ```js
 {
   meta: {
-    schemaVersion: "0.8",
-    gamedataVersion: "0.8",          // version of shadows-data.js at save time
+    schemaVersion: "0.9",
+    gamedataVersion: "0.12",          // version of shadows-data.js at save time
     created: "...", updated: "..."
   },
 
@@ -578,6 +586,9 @@ three. The value lives in `trackers.panel[id]` like any other tracker.
     // an archetype regenerates.
     massiveLevels: 0,
     witheringDamage: 0,
+    // (0.9, magic plan M7) Aberrations a Cascade left. Seeded now so magic
+    // takes one migration; the reader and UI land in the plan's Session 2.
+    aberrations: [ { id: "dense-frame", permanence: "permanent", note: "" } ],
     // (0.3) Manual adjustments — milestone benefits & un-modeled effects.
     // Stat-id targets cascade like any input; TOL/WILL/SAN/LUCK/HP apply flat.
     adjustments: [ { target: "BOD", amount: 1, note: "Honed", date } ],
@@ -586,8 +597,14 @@ three. The value lives in `trackers.panel[id]` like any other tracker.
   },
 
   // (0.3) Archetype table/toggle panel content — grimoire rows, augment
-  // manifests, Werewolf form. Keyed by panel id, free entry by design.
-  panelData: { grimoire: [ { "Spell Name": "...", "Discipline": "..." } ], form: "Human" },
+  // manifests, Werewolf form. Keyed by panel id.
+  // (0.9, Decision 108) A grimoire row is EITHER a book spell, where only the
+  // id, stage and notes are stored and every number is read from `spells`,
+  // OR the player's own, the typed columns plus custom:true. migrate() tags a
+  // pre-0.9 row custom and never links a typed name to the book by itself.
+  panelData: { grimoire: [ { spellId: "zap", stage: "known", notes: "" },          // "known" | "mastered"
+                           { custom: true, "Spell Name": "...", "TN": "...", "Notes": "..." } ],
+               form: "Human" },
 
   powers:  [ /* instances with per-character notes */ ],
   gear:    [ { name, type, notes } ],          // still free-entry; the general
@@ -724,6 +741,9 @@ No cascade logic to maintain — it falls out of the architecture.
 25. **(Phase 3)** The Grimoire is a free-entry table. Free-form stays even
     after a spell catalog exists — players can improvise magic. A catalog
     slots in later as data without touching the sheet. (Ken, 2026-06-12)
+    → **Superseded in part by Decision 108**: book spells come from the
+    catalog, and free entry stays for your own. The "without touching the
+    sheet" half was wrong, since a catalog needed a reader and a picker.
 26. **(Phase 3)** Un-modeled effects (milestone benefits, aberration prose,
     items) are applied through a **manual adjustments ledger**: stat-id
     targets cascade through everything downstream; TOL/WILL/SAN max/LUCK
@@ -1650,7 +1670,7 @@ No cascade logic to maintain — it falls out of the architecture.
     Deliberately **not** built this batch: Origins/subtypes (blocked, see
     above), wiring the Grimoire table to reference `spells` by id (still
     free-entry — an engine+UI batch, same split Decision 92 drew for the
-    Loadout picker), and the Tools of the Trade pricing tables (every row is
+    Loadout picker; → **built by Decision 108**), and the Tools of the Trade pricing tables (every row is
     still `[X] Ç` in the WIP, not ready to merge as a finished catalog the
     way the equipment chapter's pricing was). (Ken + Claude, 2026-09-20)
     → **Superseded in part by Decision 103** — its note that INT/BOD/COOL was a misreading: Deighton ruled TOL is INT/BOD/COOL.
@@ -2266,6 +2286,59 @@ No cascade logic to maintain — it falls out of the architecture.
       before they only had a hover tooltip.
     App **0.16.0**, shared with Decision 106. (Ken + Claude, 2026-09-23)
 
+108. **(The Grimoire reads the book — magic plan Session 1, schema 0.9,
+    data + engine + app)** **A Grimoire row is a book spell or your own, and
+    a book spell stores only which spell it is.** Ken agreed the plan
+    (`plans/magic-on-the-sheet.md`, M1–M5 and M10) on 2026-09-23, after
+    loading Wren Calloway and finding nothing new for magic. **Replaces
+    Decision 25 in part.** Free entry stays for your own spells, and its
+    "a catalog slots in without touching the sheet" was wrong. It also does
+    what Decision 93 left for "an engine+UI batch".
+    - **Schema 0.8 → 0.9.** Book rows are `{ spellId, stage: "known" |
+      "mastered", notes }`. Your own rows are the typed columns plus
+      `custom: true`. `migrate()` tags every pre-0.9 row custom and **never**
+      links a typed name to the book, the same rule as 0.6's weapons. It
+      drops junk rows and normalises `stage`. The same bump seeds the plan's
+      M7 field, `trackers.aberrations`, so magic takes one migration. Its
+      reader comes in Session 2.
+    - **`grimoire` is a panel type** naming its `catalog`. `Engine.grimoire(ch)`
+      is the one reader, and it doesn't create the row list (only writers
+      do). Each book line carries the spell's numbers and text, with **TH − 1
+      when Mastered**, `noRoll` at TH 0 (`Magic.md`: "a Mastered TH 1 spell
+      requires no roll"), and the Mastery price. A `spellId` the data lost
+      renders as missing. A typed row whose name matches a book spell you
+      don't hold (case and punctuation ignored) offers **Link to the book**,
+      which keeps its Notes column. `addSpell` refuses a duplicate.
+    - **Spell Power = Evocation rank + WILL** (`Magic.md` l.284) is shown at
+      the top of the Grimoire, read from `spellcraftRules.spellPower`.
+      **Spell Attack** (Evocation + REF + WILL) is deliberately **not**
+      computed. The book doesn't say whether REF is the score or its
+      modifier, so that one waits for a ruling.
+    - **Mastering spends IP through the journal.** `ipCost`/`spendIP` take a
+      `spell` target at `mastery.ipPerTH` × the printed TH, so undo reverses
+      it like any spend (Decision 49). Only a Known book spell with a TH can
+      be Mastered.
+    - **The picker shows a spell before you add it** (W4's lesson): search
+      over name, Glyph, effect and tags, plus filters for tier and Domain. A
+      spell you hold reads Known. One you typed as your own reads **Link
+      yours** and links that row instead of adding a copy. That one was
+      found by loading Wren, whose typed Kindle the first version offered to
+      duplicate.
+    - **Copy (M10).** The Grimoire note that narrated the build (constraint
+      9) is gone. The Arcanist description and the wizard no longer point at
+      a "Magic section" the app doesn't have.
+    - **Pinned:** Spell Power and Mastery's TH − 1, no roll and 30 × TH
+      (`rules.test.mjs`). Also migrate tagging without linking and
+      idempotence, the reader not writing, Link keeping notes, duplicates
+      refused, IP spend and refusal, and totality (`engine.test.mjs`), plus
+      two smoke tests. Mutation-tested: TH not lowered, rows not tagged,
+      the reader creating rows, Link dropping notes, a held spell offered
+      for linking, Mastery not setting the stage, and Spell Power ignoring
+      the rank. Each fails a test.
+    Game data **0.11 → 0.12** (the panel type and the two rules entries
+    change what an Arcanist's sheet offers). Character schema **0.8 → 0.9**.
+    App **0.16.0 → 0.17.0**. (Ken + Claude, 2026-09-23)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2532,6 +2605,12 @@ sentence.
   Then Cyborg (F6) as data rather than a fourth special
   case. Clear **F8** on its own track — it is a four-number data edit and the
   only wizard-blocking flag.
+
+- **Magic on the sheet** — planned 2026-09-23 in
+  `docs/plans/magic-on-the-sheet.md`: the Grimoire reads the book (Session 1 —
+  **done**, Decision 108), then acquired Aberrations and a Magic reference
+  (Session 2), then starting spells in the wizard (Session 3). Its rules
+  questions (`MQ`n) go to Deighton.
 
 - **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in
   `docs/plans/combat-and-conditions.md`: Conditions first (Session 2 — **done**,
