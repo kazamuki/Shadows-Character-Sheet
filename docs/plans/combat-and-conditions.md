@@ -1,6 +1,11 @@
 # Plan — Conditions, damage & armor
 
-**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 done (Decision 100, F24) · cleanup done (Decisions 103–105, F25) · the Magic-tables side session is the only box left
+> **Done, see Decisions 95–106.** Every box in §5 is ticked (the last, the
+> Magic-tables side session, 2026-09-23). This file stays as history. What's
+> still open from it lives elsewhere: F23/F24/F25 in `SCHEMA.md` §5, and Ken's
+> CRB fixes (CQ8, CQ9, CQ11–CQ13) in `STATE.md` §5.
+
+**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 done (Decision 100, F24) · cleanup done (Decisions 103–105, F25) · Magic-tables side session done (Decision 106)
 **Covers:** F18's engine half (Decision 92 deferred it), plus the Conditions system
 that chapter 054 now fully specifies.
 **Sources:** `reference/crb/053_Combat_Encounters.md` (Damage and Armor),
@@ -216,7 +221,8 @@ its decisions numbered.
   ruling working as given, and Scott has it; don't "fix" it in code. CRB lines to re-pull once Scott's edits land: `020` l.101, `040`
   l.90–91 (the worked example), `041` l.90 ("all three feed TOL"), `Magic.md`
   l.109. *(2026-09-23: all four updated in the CRB and re-pulled.)*
-- [ ] **Side session — Magic tables** (independent of all of the above). Encode
+- [x] **Side session — Magic tables** (2026-09-23, Decision 106). The three tables are data and `Engine.cascade()` reads them. The Arcanist gained a TOL Spent tracker, since it had none after Decision 93. Its Cascade panel writes the result into Notes (no schema change, Ken's call). The original box follows.
+  (independent of all of the above). Encode
   the Cascade Table and the Aberration Table from `Magic.md`, and the
   Good/Neutral/Bad lists from `Appendix_Aberrations.md`. `spellcraftRules.cascade`
   still says "Design, not yet encoded" — it now is designed.

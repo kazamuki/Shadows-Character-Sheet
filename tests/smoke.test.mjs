@@ -408,12 +408,10 @@ function openSheet(ch, section) {
   app.click(`[data-sec="${section}"]`);
   return app;
 }
+// W14: one click on a palette chip; a body-part Condition then asks where.
 function addCondition(app, id, location) {
-  const sel = app.$("[data-condadd-id]");
-  sel.value = id;
-  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
-  if (location) app.$("[data-condadd-loc]").value = location;
-  app.click("[data-condadd]");
+  app.click(`[data-condquick="${id}"]`);
+  if (location) { app.$("[data-condadd-loc]").value = location; app.click("[data-condadd]"); }
 }
 const activeConditions = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.trackers.conditions;
 
@@ -438,12 +436,11 @@ test("a Condition added on Trackers raises Pain, shows on Main, and undoes", () 
 
 test("a body-part Condition shows the picker, and the same part twice is refused", () => {
   const app = openSheet(lockedCharacter(), "trackers");
-  const loc = app.$("[data-condadd-loc]");
-  assert.equal(loc.hidden, true, "the body-part picker shows before it's needed");
-  const sel = app.$("[data-condadd-id]");
-  sel.value = "injured";
-  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
-  assert.equal(app.$("[data-condadd-loc]").hidden, false, "Injured did not ask for a body part");
+  assert.equal(app.$("[data-condadd-loc]"), null, "the body-part picker shows before it's needed");
+  app.click('[data-condquick="injured"]');
+  assert.ok(app.$("[data-condadd-loc]"), "Injured did not ask for a body part");
+  assert.equal(activeConditions(app).length, 0, "a body-part Condition went on before saying where");
+  app.click("[data-condpickcancel]");
 
   const alerts = [];
   app.window.alert = m => alerts.push(m);
@@ -663,4 +660,73 @@ test("the print sheet fills Defense and an Armor table from the worn piece; blan
   const blank = app.window.renderPrintView(null);
   assert.match(blank, /<th>Armor<\/th>/);
   assert.doesNotMatch(blank, /Kevlar/);
+});
+
+// ── Undo toast (W12) ──────────────────────────────────────────────────
+
+test("a tracker action offers its own Undo, and that Undo takes back only that action", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  app.click('[data-dmg="5"]');
+  assert.equal(activeChar(app).trackers.damage, 5);
+  const toast = app.$("#undotoast");
+  assert.ok(toast && !toast.hidden, "no toast after the action");
+  assert.match(toast.textContent, /Hurt 5/);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.damage, 0, "the toast's Undo didn't undo");
+  assert.match(app.$("#undotoast").textContent, /Undone: Hurt 5/);
+
+  // A toast that outlived its action can't take back a later one, even when
+  // the later action reuses its seq (an undo pops the entry, the next action
+  // takes the same number).
+  app.click('[data-dmg="1"]');
+  const stale = app.$("[data-toastundo]");
+  app.click('[data-sec="sessions"]');
+  app.click("button[data-undolast]");        // the Hurt 1, undone from the log instead
+  app.click('[data-sec="trackers"]');
+  app.click('[data-dmg="5"]');
+  stale.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(activeChar(app).trackers.damage, 5, "a stale toast undid a later action");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Cascade (Decision 106) ────────────────────────────────────────────
+
+test("TOL Spent past TOL opens the Cascade panel; Add to notes writes one line and undoes", () => {
+  const ch = lockedCharacter();
+  const tol = Engine.derived(ch).TOL;
+  ch.trackers.panel["tol-spent"] = { value: tol };
+  const app = openSheet(ch, "trackers");
+  assert.match(app.$("#main").textContent, /Exhausted/, "no Exhausted note at the max");
+  assert.equal(app.$("[data-cascadepanel]"), null, "the Cascade panel opened at the max, not past it");
+  app.click('[data-trk="tol-spent|1"]');
+  assert.ok(app.$("[data-cascadepanel]"), "no Cascade panel past TOL");
+  const set = (k, v) => { const el = app.$(`[data-cas="${k}"]`); el.value = v; el.dispatchEvent(new app.window.Event("change")); };
+  set("roll", "5"); set("degree", "2");
+  assert.match(app.$("[data-cascadepanel]").textContent, /Temporary Aberration/);
+  assert.ok(app.$("[data-caslog]").disabled, "Add to notes before the Aberration roll");
+  set("aberrationRoll", "1");
+  assert.match(app.$("[data-cascadepanel]").textContent, /Good/);
+  set("pick", "night-eyes");
+  app.click("[data-caslog]");
+  assert.match(activeChar(app).notes, /Night Eyes \(temporary, Good\)/);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).notes, "", "undo left the Cascade in Notes");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Conditions as chips (W14) ─────────────────────────────────────────
+
+test("a palette chip adds its Condition in one click, greys out once held, and Main's chip opens its details", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  app.click('[data-condquick="prone"]');
+  assert.deepEqual(activeConditions(app).map(c => c.id), ["prone"]);
+  assert.equal(app.$('[data-condquick="prone"]').disabled, true, "a held Condition is still offered");
+  assert.equal(app.$('[data-condquick="injured"]').disabled, false, "a body-part Condition should stay open for another part");
+  assert.equal(app.$(".cond-info"), null, "details showed before the chip was clicked");
+  app.click('[data-condinfo="0"]');
+  assert.match(app.$(".cond-info").textContent, /Recovery:/);
+  app.click('[data-condinfo="0"]');
+  assert.equal(app.$(".cond-info"), null, "a second click didn't close the details");
+  assert.match(app.$("#undotoast").textContent, /Condition: Prone/, "the add didn't offer its undo");
+  assert.deepEqual(app.errors, []);
 });

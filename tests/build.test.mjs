@@ -162,3 +162,46 @@ test("`node tools/build.mjs` also writes the standalone blank sheet", () => {
   const html = readFileSync(out, "utf8");
   assert.ok(html.includes('id="printSheet"'), "print container missing from the written file");
 });
+
+test("every rule that paints a token background leaves readable text on it, in both themes (W7)", () => {
+  // W7: `.btn.primary` set a violet background and no color, so its text
+  // inherited --text, which the light theme turns near-black (2.2:1). A token
+  // change can do that again to any filled control, so check them all: each
+  // rule with `background: var(--token)` against the color it declares, or
+  // its un-hovered base rule's, or --text it inherits. WCAG AA, 4.5:1.
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim().replace(/\s+/g, " "), body: m[2] }));
+  const decl = (body, prop) => {
+    const m = [...body.matchAll(/(?:^|;)\s*([\w-]+)\s*:\s*([^;]+)/g)].find(d => d[1] === prop);
+    return m && m[2].trim();
+  };
+  const tokens = sel => Object.fromEntries(rules.filter(r => r.sel === sel)
+    .flatMap(r => [...r.body.matchAll(/--([\w-]+)\s*:\s*([^;]+)/g)].map(m => [m[1], m[2].trim()])));
+  const dark = tokens(":root"), light = Object.assign({}, dark, tokens(':root[data-theme="light"]'));
+  assert.ok(dark.text && light.text && dark.text !== light.text, "couldn't read both themes' tokens — did the :root blocks move?");
+  const resolve = (v, t, d = 0) => { const m = /^var\(--([\w-]+)\)$/.exec(v || ""); return m && d < 5 ? resolve(t[m[1]], t, d + 1) : v; };
+  const lum = hex => [0, 2, 4].map(i => parseInt(hex.slice(1 + i, 3 + i), 16) / 255)
+    .map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)
+    .reduce((s, x, i) => s + x * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const base = s => s.replace(/:(hover|focus|active|focus-visible)\b/g, "").replace(/:not\([^)]*\)/g, "");
+  // Filled shapes that never hold text (checked in the renderers, 2026-09-23).
+  const textless = new Set([".admin-banner .dot", ".cond-counter .pip.on"]);
+  const hex = /^#[0-9a-f]{6}$/i, bad = [];
+  let checked = 0;
+  for (const r of rules) {
+    const bg = decl(r.body, "background") || decl(r.body, "background-color");
+    if (!/^var\(--[\w-]+\)$/.test(bg || "") || textless.has(r.sel) || /::(after|before)| i$/.test(r.sel)) continue;
+    let fg = decl(r.body, "color");
+    if (!fg) { const b = rules.find(x => x.sel === base(r.sel) && decl(x.body, "color")); fg = b ? decl(b.body, "color") : "var(--text)"; }
+    for (const [name, t] of [["dark", dark], ["light", light]]) {
+      const B = resolve(bg, t), F = resolve(fg, t);
+      if (!hex.test(B || "") || !hex.test(F || "")) continue;
+      checked++;
+      const c = ratio(B, F);
+      if (c < 4.5) bad.push(`${name}: ${r.sel} — ${F} on ${B} is ${c.toFixed(2)}:1`);
+    }
+  }
+  assert.ok(checked > 20, `only ${checked} rule/theme pairs checked — did the parser break?`);
+  assert.deepEqual(bad, []);
+});

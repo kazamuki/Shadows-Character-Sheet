@@ -31,13 +31,27 @@ const painChip = pain => pain.level
 // Trackers shows each Condition's effect and recovery text. Everything shown
 // comes from Engine.conditionState() and the catalog; nothing is decided here.
 const signed = n => (n>0?"+":n<0?"−":"")+Math.abs(n);
-function conditionAddHtml(){
-  const opts = D.conditions.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
-  const locs = D.bodyLocations.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("");
-  return `<div class="cond-add">
-    <select data-condadd-id aria-label="Condition"><option value="">Add a Condition…</option>${opts}</select>
-    <select data-condadd-loc aria-label="Body part" hidden><option value="">Body part…</option>${locs}</select>
-    <button class="btn sm" data-condadd="1">Add</button></div>`;
+// W14: adding is one click on a chip from the catalog. A body-part Condition
+// asks where first (S.condPick), and one you already have is greyed out.
+// S.condPalette keeps the palette open across the re-render a click causes.
+function conditionAddHtml(st){
+  const has = new Set(st.active.filter(a=>a.def && !a.def.location).map(a=>a.id));
+  const pick = S.condPick && Engine.conditionById(S.condPick);
+  const chips = D.conditions.map(c=>`<button class="cond-chip add${c.helpless?" bad":""}${pick&&pick.id===c.id?" on":""}" data-condquick="${esc(c.id)}"
+      ${has.has(c.id)?"disabled":""} title="${esc(c.effect||"")}"><b>${esc(c.name)}</b>${c.short?` <small>${esc(c.short)}</small>`:""}</button>`).join("");
+  const where = pick && pick.location ? `<div class="cond-where"><span>${esc(pick.name)}: where?</span>
+      <select data-condadd-loc aria-label="Body part"><option value="">Body part…</option>${
+        D.bodyLocations.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")}</select>
+      <button class="btn sm primary" data-condadd="${esc(pick.id)}">Add</button>
+      <button class="btn sm" data-condpickcancel>Cancel</button></div>` : "";
+  return `<details class="cond-add" data-condpalette ${S.condPalette||pick?"open":""}><summary>Add a Condition</summary>
+    <div class="cond-chips palette">${chips}</div>${where}</details>`;
+}
+// Main's chips open their effect and recovery in place (S.condInfo = index).
+function conditionInfoHtml(st){
+  const a = st.active.find(x=>x.index===S.condInfo);
+  if (!a || !a.def) return "";
+  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}</div>`;
 }
 function conditionCounterHtml(c){
   let pips = "";
@@ -54,9 +68,9 @@ function conditionsHtml(ch, full){
   for (const c of st.counters) h += conditionCounterHtml(c);
   if (!st.active.length) h += `<p class="step-note cond-none">No Conditions. ${full?esc(R.noStacking||""):""}</p>`;
   else if (!full){
-    h += `<div class="cond-chips">` + st.active.map(a=>`<span class="cond-chip${a.def&&a.def.helpless?" bad":""}" title="${esc(a.def?a.def.effect:"")}">
-      <b>${esc(a.label)}</b>${a.def?` <small>${esc(a.def.short)}</small>`:""}
-      <button class="x" data-condrm="${a.index}" aria-label="Clear ${esc(a.label)}" title="Clear">✕</button></span>`).join("") + `</div>`;
+    h += `<div class="cond-chips">` + st.active.map(a=>`<span class="cond-chip${a.def&&a.def.helpless?" bad":""}${S.condInfo===a.index?" on":""}">
+      <button class="cond-chip-body" data-condinfo="${a.index}" aria-expanded="${S.condInfo===a.index}" title="${esc(a.def?a.def.effect:"")}"><b>${esc(a.label)}</b>${a.def?` <small>${esc(a.def.short)}</small>`:""}</button>
+      <button class="x" data-condrm="${a.index}" aria-label="Clear ${esc(a.label)}" title="Clear">✕</button></span>`).join("") + `</div>` + conditionInfoHtml(st);
   } else {
     h += st.active.map(a=>`<div class="pick cond-card"><div class="head"><h4>${esc(a.label)}</h4>
       ${a.def?`<span class="cost">${esc(a.def.short)}</span>`:""}
@@ -67,7 +81,7 @@ function conditionsHtml(ch, full){
     const penalised = st.active.filter(a=>a.def && typeof a.def.rollPenalty==="number");
     if (penalised.length) h += ruleHtml([(R.rollPenalty||{}).text, (R.penaltyStacking||{}).text].filter(Boolean).join(" "));
   }
-  return h + conditionAddHtml();
+  return h + conditionAddHtml(st);
 }
 // What a Condition does to the numbers on this tab, in one line. Flat penalties
 // are already in the totals; attack/defense and conditional ones are not.
@@ -462,6 +476,44 @@ function renderShArchetype(){
 }
 
 // ── Sheet: trackers ──────────────────────────────────────────────────
+// ── Cascade (Decision 106) ───────────────────────────────────────────
+// The player enters their own dice; the engine reads the two tables and the
+// GM's pick from the rolled category. Nothing is stored until "Add to notes",
+// which writes one line into Notes as one undoable action. S.cascade holds
+// the dice meanwhile, the way S.hit holds a hit.
+function newCascadeForm(){ return { roll:"", degree:"", aberrationRoll:"", pick:"" }; }
+function cascadeInput(st){ return { roll:st.roll, degree:st.degree, aberrationRoll:st.aberrationRoll, pick:st.pick }; }
+function cascadePanelHtml(ch){
+  if (!S.cascade || S.cascade.owner!==ch) S.cascade = Object.assign(newCascadeForm(), { owner: ch });
+  const st=S.cascade, T=D.cascadeTable||{}, A=D.aberrationTable||{}, R=D.aberrationRules||{};
+  const c=Engine.cascade(ch, cascadeInput(st)), ab=c.aberration;
+  const num=(k, label, max)=>`<label class="field"><span>${label}</span><input type="number" min="1" ${max?`max="${max}"`:""} data-cas="${k}" value="${esc(st[k])}"></label>`;
+  const range=r=>r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
+  let h=`<div class="hitpanel" data-cascadepanel><h4>Cascade</h4>
+    <p class="hitnote">The Aether broke through. ${esc(T.rollNote||"")}</p>
+    <div class="hitrow">${num("roll","d10",10)}${num("degree","Rupture degree")}</div>`;
+  if (c.result){
+    h+=`<div class="hitresult"><p><b>${c.roll} + ${c.degree} = ${c.total}: ${esc(c.result.name)}.</b> ${esc(c.result.effect)}</p></div>`;
+    if (ab){
+      h+=`<div class="hitrow">${num("aberrationRoll","Aberration d10",10)}</div>`;
+      if (!ab.pending && ab.category){
+        h+=`<div class="hitcheck"><b>${esc(ab.category.name)}</b> · ${ab.permanence==="permanent"?"permanent":"temporary"}. ${esc(A.note||"")}
+          <p><select data-cas="pick" aria-label="Aberration"><option value="">Which one?</option>${ab.options.map(o=>
+            `<option value="${esc(o.id)}" ${ab.pick&&ab.pick.id===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select></p>
+          ${ab.pick?`<p>${ab.pick.as?`<i>As ${esc(ab.pick.as)}.</i> `:""}${esc(ab.pick.description)}</p>`:""}
+          ${ab.permanence==="permanent"&&R.permanent?`<p>${esc(R.permanent)}</p>`:""}</div>`;
+      }
+    }
+  }
+  if (!c.ok && st.roll!=="" && st.degree!=="") h+=`<p class="hitwhy">${esc(c.why)}</p>`;
+  const ready = c.ok && (!ab || (!ab.pending && ab.pick));
+  h+=`<details class="group"><summary>The Cascade Table</summary><table class="ref"><tbody>${(T.rows||[]).map(r=>
+      `<tr><td class="num">${range(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table></details>
+    <div class="hitrow"><button class="btn primary sm" data-caslog ${ready?"":"disabled"}>Add to notes</button>
+      <button class="btn sm" data-casclear>Clear</button></div></div>`;
+  return h;
+}
+
 // ── Take a hit (combat plan Session 3, Decision 99) ──────────────────
 // The panel is a guided path onto the same inputs the damage buttons edit
 // (plan P7): the engine resolves the hit, the player answers the checks it
@@ -706,15 +758,16 @@ function renderShTrackers(){
   const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
-  // Damage
+  // Damage. The headline is HP left, so the stepper says Heal and Hurt
+  // rather than signs on the damage total it edits (W11).
   h += `<div class="trk"><h4>Damage</h4>
     <span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
-    <button class="btn sm" data-dmg="-5">−5</button>
-    <button class="btn sm" data-dmg="-1">−1</button>
-    <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken">
-    <button class="btn sm" data-dmg="1">+1</button>
-    <button class="btn sm" data-dmg="5">+5</button>
+    <button class="btn sm" data-dmg="-5" ${ch.trackers.damage?"":"disabled"}>Heal 5</button>
+    <button class="btn sm" data-dmg="-1" ${ch.trackers.damage?"":"disabled"}>Heal 1</button>
+    <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken" title="Total damage taken">
+    <button class="btn sm" data-dmg="1">Hurt 1</button>
+    <button class="btn sm" data-dmg="5">Hurt 5</button>
     <button class="btn sm danger" data-dmgheal="1">Heal all</button>
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
       hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
@@ -777,7 +830,10 @@ function renderShTrackers(){
       <button class="btn sm" data-trk="${p.id}|-1">−1</button>
       <button class="btn sm" data-trk="${p.id}|1">+1</button>
       ${max==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
-      <span class="sub">${p.id==="sfr"?"Counts spend against a computed pool — RoU caps a single turn.":p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span></div>`;
+      <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.id==="sfr"?"Counts spend against a computed pool — RoU caps a single turn.":p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span></div>`;
+    // A tracker that declares `overMax: "cascade"` (the Arcanist's TOL Spent) opens the
+    // Cascade panel once it's past its max: TOL below zero (Decision 106).
+    if (p.overMax==="cascade" && effMax!=null && cur>effMax) h += cascadePanelHtml(ch);
   }
 
   // Çredits

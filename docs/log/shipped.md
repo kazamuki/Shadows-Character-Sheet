@@ -36,3 +36,4 @@ by batch number (Ken, 2026-09-12).
 | — | CI onto Node 24 | #32 | Every action bumped; `deploy-demo` gains a manual trigger (dry run on a branch, re-publish on a tag) |
 | — | Wishlist + board archive (docs) | — | `WISHLIST.md` (`W` ids) · this file · Deighton's TOL ruling queued · superseded decisions marked, load-bearing table, the house rule · Decisions 101–102 |
 | — | Combat cleanup (TOL, Natural Armor, Nanomed) | #34 | TOL = INT/BOD/COOL; `naturalArmor()` in the hit resolver and print Nat; Nanomed Kit per 054; `migrate()` drops junk held entries · Decisions 103–105, F25 |
+| — | Magic tables + wishlist pass | — | Cascade and Aberration tables, the Arcanist's TOL Spent tracker, the combat plan closed · W7, W11, W12, W14, W18 · Decision 106 |

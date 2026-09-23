@@ -67,8 +67,48 @@ function commit(kind, label, fn){
   const ch=S.ch; if(!ch) return;
   const before=clone(ch);
   fn();
-  Engine.recordAction(ch, kind, label, before);
+  const r=Engine.recordAction(ch, kind, label, before);
   update();
+  if (r && r.ok) showUndoToast(ch, ch.audit[ch.audit.length-1], label);
+}
+
+// W12 — undo where the action happened. Every commit() that changed something
+// offers its own undo for a few seconds, through the same LIFO undo the
+// Session Log uses (Decision 49). It undoes only if that action's own audit
+// entry is still the newest one (by identity: a seq is reused once an undo
+// pops it), so a leftover toast can't take back a later action. Lives outside
+// #main so a re-render doesn't wipe it.
+const TOAST_MS = 6000;
+let toastTimer = null;
+function undoToastEl(){
+  let el=document.getElementById("undotoast");
+  if (!el){
+    el=document.createElement("div");
+    el.id="undotoast"; el.className="toast"; el.setAttribute("role","status"); el.setAttribute("aria-live","polite");
+    el.hidden=true; document.body.appendChild(el);
+  }
+  return el;
+}
+function hideUndoToast(){
+  clearTimeout(toastTimer); toastTimer=null;
+  const el=document.getElementById("undotoast"); if (el){ el.hidden=true; el.innerHTML=""; }
+}
+function showUndoToast(ch, entry, label, done){
+  const el=undoToastEl();
+  el.innerHTML = done
+    ? `<span class="toast-msg">Undone: ${esc(label)}</span>`
+    : `<span class="toast-msg">${esc(label)}</span><button class="btn sm" data-toastundo>Undo</button>
+       <button class="toast-x" data-toastclose aria-label="Dismiss">×</button>`;
+  el.hidden=false;
+  clearTimeout(toastTimer); toastTimer=setTimeout(hideUndoToast, done ? 2500 : TOAST_MS);
+  const u=el.querySelector("[data-toastundo]");
+  if (u) u.onclick=()=>{
+    const log=ch.audit||[];
+    if (S.ch!==ch || !entry || log[log.length-1]!==entry){ hideUndoToast(); return; }
+    const r=Engine.undoLastAction(ch); if (!r.ok){ hideUndoToast(); return; }
+    update(); showUndoToast(ch, entry, label, true);
+  };
+  const x=el.querySelector("[data-toastclose]"); if (x) x.onclick=hideUndoToast;
 }
 
 // ── Vitals row — the one visual atom the creation rail and the sheet's

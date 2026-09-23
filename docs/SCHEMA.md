@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.7 (game data 0.7) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-20 (Magic — archetype-independent half, data batch)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.8 (game data 0.11) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-23 (Cascade tables and the wishlist pass, Decisions 106–107)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -441,6 +441,27 @@ window.SHADOWS_DATA = {
     // 96 entries: 18 Cantrip + 47 Standard + 17 Advanced + 14 Superior, across
     // the 5 domains. A handful (e.g. Counterspell) have th:null/overflow:null
     // and a `notes` field instead — no Threshold, no Overflow, by design.
+  ],
+
+  // ── Cascade and Aberrations (0.11, Decision 106) ─────────────────────
+  // Magic.md's two tables and Appendix_Aberrations.md's lists. Rows are
+  // ranges on a die the player rolls and enters; `Engine.cascade()` looks
+  // them up. `max: null` is open-ended. The Cascade Table starts at 3: a
+  // Cascade's Rupture is degree 2 or more, since casting needs TOL above 0.
+  cascadeTable: { die: "1d10", rollNote: "...",
+    rows: [ { min: 7, max: 8, id: "temporary-aberration", name: "Temporary Aberration",
+              aberration: "temporary", effect: "..." } ] },  // 5 rows, 3–4 … 12+
+  aberrationTable: { die: "1d10", note: "...",
+    rows: [ { min: 1, max: 3, temporary: "good", permanent: "neutral" } ] }, // 3 rows, 1–10
+  aberrationCategories: [ { id: "good", name: "Good" } ],   // good / neutral / bad
+  aberrationRules: { intro: "...", permanent: "..." },
+  // The Cascade's list, NOT the Arcanist's creation-time Unique Aberrations
+  // (those are `specialization.options`). `as` is display text naming the
+  // Advantage or Disadvantage an entry works like; it grants nothing.
+  aberrations: [
+    { id: "danger-sense", name: "Danger Sense", category: "good",
+      as: "Danger Sense Advantage, Rank 3", description: "..." }
+    // 39 entries: 15 Good, 15 Neutral, 9 Bad.
   ]
 };
 ```
@@ -459,6 +480,13 @@ Panel types will be finalized in Phase 2 when we know what the five archetypes
 actually demand. Where an effect can't be made machine-readable yet, it stays
 prose and the sheet displays it as reference text — the app should never block
 on un-modeled rules.
+
+A `tracker` counts up from 0 against its `max` (a number, `"TOL"`, or
+`"startingSFR"`; none means the player sets it). Three optional fields shape
+what it says (Decision 106): `note` is the line under it, `atMax` replaces
+that line once the count reaches the max, and `overMax: "cascade"` opens the
+Cascade panel once the count passes it. The Arcanist's `tol-spent` uses all
+three. The value lives in `trackers.panel[id]` like any other tracker.
 
 ---
 
@@ -1734,7 +1762,8 @@ No cascade logic to maintain — it falls out of the architecture.
     the sheet can know. **UI:** Conditions chips on Main (under the vitals
     strip), full cards with effect, recovery text and a note field on
     Trackers, one add row with a body-part picker that appears only for a
-    Condition that needs one, a Helpless banner, Death Mark pips, and a
+    Condition that needs one → **Superseded in part by Decision 107** (the
+    add row became a chip palette; Main's chips open their details), a Helpless banner, Death Mark pips, and a
     "Cond" pill in the vitals bar. **Print:** a Conditions tick list under
     Stats on the front page, with body-part Conditions and Dying's Death
     Marks on full-width rows. That column had about 100px spare below Stats.
@@ -2152,6 +2181,91 @@ No cascade logic to maintain — it falls out of the architecture.
     Pinned: the four clear, Injured stays, 7 / 3 / 2 HP at doses 1–3 for
     BOD 7. (Ken + Claude, 2026-09-23)
 
+106. **(Cascade and Aberrations — combat plan's Magic-tables side session,
+    data + engine + app)** **The Cascade Table, the Aberration Table and the
+    Appendix's Good/Neutral/Bad lists are game data, and the sheet looks
+    them up from the player's own dice.** `cascadeTable`, `aberrationTable`,
+    `aberrationCategories`, `aberrationRules` and `aberrations` (39: 15/15/9)
+    merge from `Magic.md` and `Appendix_Aberrations.md` as they stood
+    2026-09-22. `spellcraftRules.outcomes.cascade` no longer says "not yet
+    encoded". The Cascade's Aberrations are a different list from the
+    Arcanist's creation-time Unique Aberrations (`specialization.options`),
+    and the two stay apart.
+    - **The engine reads, never rolls** (Decision 11, combat plan P1).
+      `Engine.cascade(ch, { roll, degree, aberrationRoll, pick })` returns
+      the row for 1d10 + the Rupture's degree, then the category for the
+      Aberration die, the options in it, and the GM's pick if it's one of
+      them. Each step it can't take yet comes back `pending` or as a `why`,
+      never a throw (constraint 8). A pick from outside the rolled category
+      is ignored.
+    - **The table starts at 3 on purpose, and that isn't a gap.** You can't
+      cast at 0 TOL, so the Rupture that drives TOL below zero is at least
+      degree 2, and 1d10 + 2 can't come in under 3. A degree-1 entry gets a
+      `why` that says so. Nothing is flagged, since the CRB's own rules close
+      it.
+    - **The Arcanist gets a TOL Spent tracker.** This session found the
+      Arcanist had no way to track TOL at all. Decision 93 removed the old
+      `exhaustion` panel, which modeled the wrong rule, and nothing replaced
+      it. (The `tolerance-load` tracker is the Cyborg's.) `tol-spent` is a
+      generic tracker against `max: "TOL"`, stored in `trackers.panel` like
+      every other, so **character schema is unchanged (0.8)**. This fills the
+      gap 93 left rather than reversing it: 93 ruled out a second resource
+      beside TOL, and this counts TOL itself. Trackers gain three optional
+      data fields: `note`, `atMax` (shown at the max, "Exhausted") and
+      `overMax: "cascade"`. None of them is special-cased on an id.
+    - **Nothing about a Cascade is stored.** Once TOL Spent passes TOL, the
+      Cascade panel asks for the dice and shows the result, the Aberration
+      category and the list to pick from. **Add to notes** writes one line
+      into `notes` (`Engine.logCascade`) as one undoable action. Tracking
+      acquired Aberrations as structured data is a schema bump, and Ken
+      chose not to take it this session.
+    - **Pinned:** every band of the Cascade Table, the degree-1 `why`, both
+      columns of the Aberration Table, the 15/15/9 count and the seven `as`
+      references (`rules.test.mjs`). Also the tables' contiguity, totality on
+      degenerate characters and bad input, and `logCascade` keeping existing
+      notes and refusing without a pick (`engine.test.mjs`). Mutation-tested:
+      an off-by-one range, a Good permanent row, a gap in the table, an
+      unchecked pick and a notes overwrite each fail a test.
+    Game data **0.10 → 0.11**: a new tracker and new choices on the
+    Arcanist's sheet (Decision 68). Ships in app **0.16.0**. (Ken + Claude,
+    2026-09-23)
+
+107. **(Sheet feel — wishlist pass, app)** **Four wishlist items ship as one
+    UI decision: W7, W11, W12 and W14.** Ken picked them on 2026-09-23. None
+    touches rules, data or the character file.
+    - **W7: text on a filled control is `--on-accent`.** `.btn.primary` set
+      a violet fill and no color, so the light theme's near-black `--text`
+      landed on violet at 2.2:1. `--on-accent` (#FFFFFF, the same in both
+      themes) is the text on every violet or frame fill: primary buttons and
+      their hover, the active form toggle, stepper hover, and `::selection`.
+      `build.test.mjs` resolves both themes' tokens and checks every rule
+      that paints `background: var(--token)` against its own color, its
+      un-hovered rule's, or the `--text` it inherits, at WCAG AA (4.5:1).
+      Shapes that never hold text are exempt by name. It fails the pre-fix
+      CSS on all six defects.
+    - **W11: the damage stepper says Heal and Hurt.** The headline is HP
+      left, and the stepper edits damage taken (constraint 7). So `+5` made
+      the big number go down. The buttons are Heal 5 / Heal 1 / Hurt 1 /
+      Hurt 5, Heal is disabled at no damage, and the audit labels match.
+    - **W12: every `commit()` offers its own undo.** A toast names the
+      action with an Undo button for six seconds, through the one LIFO undo
+      (Decision 49; the Activity Log stays under Session Log, Decision 50).
+      It undoes only while that action's audit entry is still the newest
+      one, **by identity**, since `recordAction` reuses a seq once an undo
+      pops it. A seq check let a leftover toast take back a later action. The
+      smoke test caught that before merge, and it's mutation-tested. The
+      toast lives outside `#main`, never takes focus, is hidden in print, and
+      drops its animation under `prefers-reduced-motion`.
+    - **W14: adding a Condition is a chip palette.** **Replaces Decision 96
+      in part** (its "one add row with a body-part picker"). Both tabs show a
+      collapsible palette of every catalog Condition with its `short` text.
+      One click adds, and W12's toast is what makes one click safe. A
+      Condition already held is greyed out. A body-part one opens a "where?"
+      row instead, and the engine still refuses a duplicate part out loud.
+      Main's active chips open their effect and recovery in place, where
+      before they only had a hover tooltip.
+    App **0.16.0**, shared with Decision 106. (Ken + Claude, 2026-09-23)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2425,9 +2539,11 @@ sentence.
   Decision 99), then Loadout pickers and recovery actions, including the Turn
   Reset helper (Session 4 — **done**, Decision 100), then the cleanup session
   (**done**, Decisions 103–105: Deighton's TOL ruling, Natural Armor as one
-  derived value with F25, the Nanomed Kit). Weapon mods and ammo went to
-  `WISHLIST.md`. The plan holds the sequencing rationale and the open
-  questions (`CQ`n).
+  derived value with F25, the Nanomed Kit), and the Magic-tables side
+  session (**done**, Decision 106: the Cascade and Aberration tables, and a
+  TOL Spent tracker for the Arcanist). **The plan is closed.** Weapon mods and
+  ammo went to `WISHLIST.md`. The plan holds the sequencing rationale and the
+  open questions (`CQ`n).
 
 **Session handoff protocol:** every phase ends with current files +
 this document updated. Ken adds the latest versions to project knowledge.

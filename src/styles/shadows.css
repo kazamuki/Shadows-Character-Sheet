@@ -13,6 +13,7 @@
   --text:#E7E7E7;          /* Neutral Zone */
   --dim:#8C97B5;
   --ink:#111111;           /* Gutter Black */
+  --on-accent:#FFFFFF;     /* text on a violet/frame fill -- both themes (W7) */
   --display:'Cerulean Nights','Chakra Petch',sans-serif;
   --body:'Inter',system-ui,sans-serif;
   --mono:'Roboto Mono',ui-monospace,monospace;
@@ -53,7 +54,7 @@ body{
 }
 button{font-family:inherit; cursor:pointer}
 input,textarea,select{font-family:inherit; color:var(--text)}
-::selection{background:var(--violet); color:var(--text)}
+::selection{background:var(--violet); color:var(--on-accent)}
 
 /* ── App frame ──────────────────────────────────────────────────────── */
 .app{display:grid; grid-template-columns:var(--rail-w) 1fr var(--vitals-w);
@@ -163,7 +164,7 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .alloc-row .name small{display:block; color:var(--dim); font-size:.74rem}
 .stepper{display:flex; align-items:center; gap:0; border:1px solid var(--frame); border-radius:4px; overflow:hidden}
 .stepper button{background:var(--panel-2); border:0; color:var(--text); width:30px; height:30px; font-size:1rem; line-height:1}
-.stepper button:hover:not(:disabled){background:var(--frame)}
+.stepper button:hover:not(:disabled){background:var(--frame); color:var(--on-accent)}
 .stepper button:disabled{opacity:.3; cursor:default}
 .stepper .val{font-family:var(--mono); width:42px; text-align:center; font-size:.95rem}
 .mod{font-family:var(--mono); font-size:.78rem; width:3.2em; text-align:right; color:var(--dim)}
@@ -212,7 +213,7 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .btn{border-radius:4px; padding:10px 22px; font-size:.9rem; font-weight:600; border:1px solid var(--frame);
   background:var(--panel-2); color:var(--text)}
 .btn:hover{border-color:var(--violet-hi)}
-.btn.primary{background:var(--violet); border-color:var(--violet)}
+.btn.primary{background:var(--violet); border-color:var(--violet); color:var(--on-accent)}
 .btn.primary:hover{background:var(--violet-hi); border-color:var(--violet-hi)}
 .btn.go{background:var(--cyan); border-color:var(--cyan); color:var(--ink)}
 .btn:disabled{opacity:.45; cursor:default}
@@ -387,7 +388,7 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .statcell .sm2.pos{color:var(--green)} .statcell .sm2.neg{color:var(--magenta)}
 .form-toggle{display:flex; gap:0; border:1px solid var(--frame); border-radius:4px; overflow:hidden}
 .form-toggle button{background:var(--panel-2); border:0; color:var(--dim); padding:6px 16px; font-size:.8rem}
-.form-toggle button.on{background:var(--violet); color:var(--text)}
+.form-toggle button.on{background:var(--violet); color:var(--on-accent)}
 
 /* ── Phase 3.1: tabbed sheet ─────────────────────────────────────────── */
 /* Once a character is locked the creation ledger is dead weight — collapse it
@@ -452,8 +453,24 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .cond-card{border-color:var(--magenta)}
 .cond-card .desc b{color:var(--text); font-weight:600}
 .cond-card .cond-note{width:100%; margin-top:8px}
-.cond-add{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px}
-.cond-add select{max-width:220px}
+/* W14: the add palette. Catalog chips are outlined until picked; one you
+   already have is greyed out. Active chips on Main open their details. */
+.cond-add{margin-bottom:14px}
+.cond-add > summary{cursor:pointer; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--violet-hi); padding:4px 0; list-style:none}
+.cond-add > summary::before{content:"+ "}
+.cond-add[open] > summary::before{content:"− "}
+.cond-chips.palette{margin:8px 0 6px}
+.cond-chip.add{cursor:pointer; border-color:var(--frame); color:var(--text); font:inherit; font-size:.8rem; padding:4px 9px}
+.cond-chip.add b{color:var(--text)}
+.cond-chip.add:hover:not(:disabled), .cond-chip.add.on{border-color:var(--magenta)}
+.cond-chip.add.on b{color:var(--magenta)}
+.cond-chip.add:disabled{opacity:.4; cursor:default}
+.cond-chip-body{background:none; border:0; padding:0; color:inherit; font:inherit; cursor:pointer; display:inline-flex; align-items:center; gap:6px}
+.cond-chip.on{box-shadow:0 0 0 1px var(--magenta)}
+.cond-info{border-left:2px solid var(--magenta); padding:6px 12px; margin:-2px 0 12px; font-size:.84rem}
+.cond-where{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:6px}
+.cond-where select{max-width:220px}
 .cond-note-line{margin-bottom:10px}
 
 /* horizontal vitals bar — replaces the right rail on every tab except Main
@@ -577,4 +594,15 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   main{padding:20px 16px 70px}
   .grid-2,.grid-3{grid-template-columns:1fr}
 }
-@media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} }
+/* Undo toast (W12): bottom-centre, above the footer, below the drawer. */
+.toast{position:fixed; left:50%; bottom:44px; transform:translateX(-50%); z-index:75;
+  display:flex; align-items:center; gap:12px; max-width:min(560px, calc(100vw - 32px));
+  padding:8px 10px 8px 16px; background:var(--panel-2); color:var(--text);
+  border:1px solid var(--frame); border-left:3px solid var(--violet-hi); border-radius:4px;
+  box-shadow:0 6px 24px rgba(5,10,22,.45); font-size:.86rem; animation:toastIn .18s ease-out}
+.toast[hidden]{display:none}
+.toast .toast-msg{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.toast .toast-x{background:none; border:0; color:var(--dim); font-size:1.1rem; line-height:1; padding:2px 4px}
+.toast .toast-x:hover{color:var(--text)}
+@keyframes toastIn{from{opacity:0; transform:translate(-50%, 8px)} to{opacity:1; transform:translate(-50%, 0)}}
+@media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} .toast{animation:none} }
