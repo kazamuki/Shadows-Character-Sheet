@@ -74,7 +74,8 @@ GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
 dry run on a branch, a re-publish on a tag. **Live: app `0.15.0`,
 game data `0.10`** (tag `v0.15.0`, deployed 2026-09-23 and checked by loading
-the page: Home renders on game data 0.10). `0.16.0` isn't tagged yet. `v0.13.0` and `v0.14.0` rendered
+the page: the page reports both versions, TOL reads INT/BOD/COOL, Home
+renders, the wizard opens). `0.16.0` isn't tagged yet. `v0.13.0` and `v0.14.0` rendered
 blank (#30). **Check a deploy by loading the page**, not by curling it.
 **`CHANGELOG.md` is current again** (W18); `docs.test.mjs` checks each bump has a section.
 
