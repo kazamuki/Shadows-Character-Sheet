@@ -38,3 +38,4 @@ by batch number (Ken, 2026-09-12).
 | — | Combat cleanup (TOL, Natural Armor, Nanomed) | #34 | TOL = INT/BOD/COOL; `naturalArmor()` in the hit resolver and print Nat; Nanomed Kit per 054; `migrate()` drops junk held entries · Decisions 103–105, F25 |
 | — | Magic tables + wishlist pass | #36 | Cascade and Aberration tables, the Arcanist's TOL Spent tracker, the combat plan closed · W7, W11, W12, W14, W18 · Decision 106 |
 | — | Magic on the sheet, Session 1 | #38 | Plan doc (M1–M10, MQ1–MQ3); the Grimoire reads the 96-spell book, Mastery by IP, Spell Power, Link to the book; schema 0.9 · Decision 108 |
+| — | Magic on the sheet, Session 2 | #41 | Aberrations on the character (Record it, one per id, Drained −2 max TOL with current kept, Phantom Pain PL 1), Spell Attack, the `reference` panel and the Magic reference, Unique Aberrations synced to 041; game data 0.13 · Decision 110 |
