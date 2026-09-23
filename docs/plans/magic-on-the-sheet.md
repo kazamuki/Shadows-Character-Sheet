@@ -96,7 +96,8 @@ because its TH is whatever was typed.
 **M6 — Starting spells in the wizard.** On the Arcanist's step: the count is
 TOL + the power level's roll (`campaignPowerScaling.commonSpells`), and the
 player enters the roll (Decision 11). They pick from the book with M3's picker,
-**Cantrip and Standard only** (MQ1, stubbed and flagged). Short of the count
+**a spell's TH can't exceed the character's Evocation rank**, counting ranks
+bought at creation (MQ1, answered: Decision 109). Short of the count
 **warns**, it doesn't block, the same as an open GM detail (Decision 82).
 Picks land in `panelData.grimoire` as Known book spells, so there's no
 second store.
@@ -111,12 +112,20 @@ chips with Clear ("Lasts 8 hours" is the table's call, not a timer).
 
 **M8 — Two Aberrations change numbers the sheet already has.** In the data, as
 hooks the engine already reads, not special cases:
-- **Drained:** "maximum TOL is reduced by 2", so −2 on derived TOL, through the
-  same path as the Arcanist's `tolBonus` (floor per MQ2).
+- **Drained:** −2 on **maximum** TOL, and **current TOL doesn't move** (MQ2,
+  Decision 109). The sheet stores TOL *Spent* (current = max − spent), so
+  recording Drained also takes 2 off TOL Spent, floored at 0. It's one
+  writer, one commit, and one undo. Max TOL can go below the formula's floor of 1,
+  down to 0.
 - **Phantom Pain:** "one Pain Level higher", so `painLevels: 1`, the same hook
   as Agonized (Decision 96), clamped at 3.
 Every other Aberration is text on its chip, like most Conditions (P2 in the
 combat plan).
+
+**M11 — Spell Attack** (added 2026-09-23, Decision 109): Evocation rank + the
+**raw** REF score + the **raw** WILL score, not their modifiers. It's shown
+beside Spell Power in the Grimoire, read from `spellcraftRules` like
+`spellPower`.
 
 **M9 — A Magic reference on the Archetype tab.** A collapsible section built
 from the data: the Spellcraft roll and its five outcomes (`spellcraftRules`),
@@ -158,15 +167,17 @@ and its decisions numbered.
   Link keeps notes; a missing `spellId` renders; the catalog picker greys held
   spells; totality on degenerate characters.
 - [ ] **Session 2 — Aberrations on the character, and the reference.** M7's
-  reader and UI, M8, M9, and the Cascade panel's Record it. **Replaces
-  Decision 106 in part** (Notes stops being the only record). **Tests:**
-  Drained −2 TOL (and MQ2's floor); Phantom Pain PL 1 at full health; clamps
-  at 3 with Agonized; permanent vs temporary display; Record it undoes in one
-  step.
-- [ ] **Session 3 — Starting spells in the wizard.** M6, after MQ1 is answered
-  or stubbed. **Replaces Decision 21's deferral** (already superseded by 25).
+  reader and UI, M8, M9, M11, and the Cascade panel's Record it. **Replaces
+  Decision 106 in part** (Notes stops being the only record). **Tests:** Ken's
+  worked Drained examples (max 8 / current 3 → max 6 / current 3; max 2 → 0);
+  Phantom Pain PL 1 at full health; clamps at 3 with Agonized; Spell Attack
+  from raw REF and WILL; permanent vs temporary display; Record it undoes in
+  one step.
+- [ ] **Session 3 — Starting spells in the wizard.** M6. MQ1 is answered
+  (Decision 109), so nothing blocks it. **Replaces Decision 21's deferral** (already superseded by 25).
   **Tests:** count = TOL + entered roll; short warns, doesn't block; picks
-  are Known book rows after lock.
+  are Known book rows after lock; a TH above Evocation rank is refused, and
+  buying Evocation at creation opens the next tier.
 
 ---
 
@@ -174,16 +185,31 @@ and its decisions numbered.
 
 ### Rules questions — Deighton (MQ1–MQ3)
 
-Each becomes an F-number the day a session stubs behavior on it.
+**All answered by Deighton on 2026-09-23 (Decision 109)**, relayed by Ken. The
+questions stay below as history, each with its answer in bold. Spell Attack's
+REF, raised by Decision 108, was answered at the same time.
 
 - **MQ1 — Can a new Arcanist start with Advanced or Superior spells?** The
   appendix says "A new Arcanist works from the Cantrip and Standard lists."
   Is that a rule or advice? *Stub: Cantrip and Standard only, at creation.*
+  **Answer: a new Arcanist can start with Advanced or Superior spells, but
+  needs the ranks in Evocation.** Ken's reading, which he confirmed: a spell's
+  TH can't exceed Evocation rank, so the power level's rank cap does the
+  gating.
 - **MQ2 — Can Drained take TOL below 1?** Derived stats floor at 1 today.
   *Stub: the floor holds.*
+  **Answer: yes. "Since it is assigned by the GM based on the roll, they can
+  choose to be very mean."** Ken on how it works: Drained lowers **maximum**
+  TOL and leaves **current** alone. Max 8 / current 3 becomes max 6 / current
+  3, and a max of 2 becomes 0. *Not covered:* a maximum below 0, and what
+  removing Drained does to current. The app floors max at 0, and Session 2
+  asks about removal before building it.
 - **MQ3 — Does Phantom Pain count at full health?** "Permanently operate at one
   Pain Level higher" reads as Pain Level 1 with no damage at all. *Stub: yes,
   like Agonized at PL 0.*
+  **Answer: yes. "Your PL1 happens even if you are full health."**
+- **Spell Attack's REF** (Decision 108). **Answer: Evocation rank + raw REF +
+  raw WILL, not the bonuses.** This became M11.
 
 Origin starting-spell modifiers (Book +3, Blood −2, Bound base) wait on the
 Origins question (STATE §3), not on these.
