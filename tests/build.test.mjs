@@ -54,6 +54,29 @@ test("every local asset is inlined by the build", () => {
   assert.match(html, /\/\*UI-START\*\//);
 });
 
+test("inlining keeps a stylesheet's media gate (the blank demo site, v0.13.0–v0.14.0)", () => {
+  // print.css hides #app for printing and relies on media="print" to keep
+  // that off the screen. The build used to inline every stylesheet as a bare
+  // <style>, so the built page hid itself: a blank blue page on the demo site
+  // and in the dist/ file players get. jsdom ignores `media` and has no
+  // layout, so no smoke test could see it. This checks the markup instead.
+  const shell = readFileSync(join(ROOT, "index.html"), "utf8");
+  const html = buildHtml();
+  const gated = [...shell.matchAll(/<link[^>]*rel=["']stylesheet["'][^>]*>/gi)]
+    .map(m => ({ href: (/href=["']([^"']+)["']/.exec(m[0]) || [])[1], media: (/media=["']([^"']+)["']/.exec(m[0]) || [])[1] }))
+    .filter(l => l.media && !/^https?:/.test(l.href));
+  assert.ok(gated.some(l => l.href === "src/styles/print.css"), "index.html no longer gates print.css — did the shell change?");
+  for (const l of gated) {
+    const esc = l.href.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
+    assert.match(html, new RegExp(`<style media="${l.media}">\\s*/\\* ${esc} \\*/`),
+      `${l.href} was inlined without media="${l.media}"`);
+  }
+  // And the rule that blanked the page must never reach the screen ungated.
+  for (const [, attrs, body] of html.matchAll(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi))
+    if (/#app\b[^{]*\{[^}]*display\s*:\s*none/.test(body))
+      assert.match(attrs, /media=["']print["']/, "a stylesheet hiding #app is not gated to print");
+});
+
 test("script order in the shell is theme-init → data → icons → engine → ui", () => {
   // theme-init.js runs first and alone, in <head> before the shadows.css
   // <link> — it has to beat first paint (Decision 90), which is a different
