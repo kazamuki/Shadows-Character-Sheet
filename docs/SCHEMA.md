@@ -344,7 +344,7 @@ window.SHADOWS_DATA = {
   armorUpgradeGlossary: [ { id: "Tri-Weave", minQuality: "Mid", integrityBonus: 10,
     repeatable: true, description: "..." } ], // 6 entries; also resAgainst (Ablative, Warding).
   // An upgrade id in an armor's preInstalledFeatures takes no slot and is read
-  // as already in the printed stats (Plasteel's Tri-Weave; open, Decision 100).
+  // as already in the printed stats (Plasteel's Tri-Weave; Decision 100).
   armor: [
     { id: "kevlar-vest", name: "Kevlar Vest", slot: "body", coverage: "light",
       prot: "1d6", res: 2, integrity: 20, quality: "Mid", material: "Light",
@@ -1926,16 +1926,15 @@ No cascade logic to maintain — it falls out of the architecture.
       Gear's rules: one mod slot each, `minQuality` ranked by
       `armorRules.qualityOrder`, only `repeatable` upgrades twice (Tri-Weave,
       Resistance). A custom piece states no slots or quality, so neither
-      limit binds it. **An open reading, carried from Session 3:** a
-      built-in upgrade (the Plasteel Weave Jacket's Tri-Weave) is taken as
-      already in the printed INT 30, so only upgrades the player installs add
-      their effect. Session 3 chose that on purpose (log, 2026-09-22) but it
-      never reached Decision 99's text. This session briefly overturned it
-      to 40 before finding the log entry, then put it back. The catalog
-      doesn't settle it: the Nightshade, also High quality with medium
-      coverage, is 30 without Tri-Weave. It's Ken's call, and a one-line
-      change either way. `integrityLoss` also reads clamped to the maximum,
-      so removing an upgrade can't show negative Integrity.
+      limit binds it. **A built-in upgrade is already in the printed
+      stats (Ken, 2026-09-22).** The Plasteel Weave Jacket's Tri-Weave is
+      part of its INT 30, so only upgrades the player installs add their
+      effect. Session 3 read it that way on purpose (log), but the reading
+      never reached Decision 99's text. This session briefly changed it to
+      40 before finding the log entry and asking. Ken ruled 30: start from
+      the catalog as printed, and tune numbers later if play says so.
+      `integrityLoss` also reads clamped to the maximum, so removing an
+      upgrade can't show negative Integrity.
     - **Wear and repair (053, Gear).** `armorWear` takes the difficulty's
       die (`integrityLossByDifficulty`) and the player's roll, checked
       against the die. It can leave armor Compromised, never scrap; only

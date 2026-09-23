@@ -591,9 +591,8 @@ test('Gear: Self-Healing — "roll 1d4 — on a 3 or higher, the armor regains 1
 });
 
 test('Gear: upgrades take a mod slot each, need their minimum quality, and Tri-Weave "can be installed multiple times"', () => {
-  // Session 3's reading (Decision 99, log): the Plasteel Weave Jacket's
-  // built-in Tri-Weave is already in its printed INT 30. Unconfirmed -- if the
-  // ruling goes the other way this becomes 40.
+  // Ken's ruling (Decision 100): the Plasteel Weave Jacket's built-in
+  // Tri-Weave is already in its printed INT 30. It doesn't add +10 again.
   assert.equal(Engine.armorState(wearing(subject(), "plasteel-weave-jacket")).worn.integrityMax, 30);
   const leather = wearing(subject(), "leather-jacket");         // Low quality, 1 slot
   assert.match(Engine.addUpgrade(leather, 0, "Ablative Plating").why, /Mid quality/);

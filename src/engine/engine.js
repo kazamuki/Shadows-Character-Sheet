@@ -439,8 +439,7 @@ const Engine = (() => {
     const features = [...(src.preInstalledFeatures||[]), ...(src.feature ? [src.feature] : [])];
     // Only upgrades the player installs add their effect. A manufacturer's
     // built-in upgrade (the Plasteel Weave Jacket's Tri-Weave) is read as
-    // already in the printed stats -- Session 3's reading (log, Decision 99),
-    // not yet confirmed; see Decision 100.
+    // already in the printed stats. Ken's ruling, Decision 100.
     const effects = upgrades;
     const bonus = effects.reduce((n,u)=>n + (Number((upgradeById(u)||{}).integrityBonus)||0), 0);
     // Head and hand pieces don't roll PROT or track INT — features only (Gear).

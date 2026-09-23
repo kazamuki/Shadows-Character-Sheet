@@ -143,9 +143,9 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 **`main` is caught up through PR #26** (Session 3), tagged `v0.13.0` and
 live on the demo site. **Session 4 (Loadout & recovery, Decision 100) is on
 `claude/combat-conditions-session-4-48a91e`**, not yet merged. App 0.14.0,
-game data 0.9 (new recovery choices), schema unchanged. Open for Ken: is
-Plasteel's built-in Tri-Weave in its printed INT 30 (as built) or +10? `npm run verify` is green (181 passing, 0 todo). After it
-merges, the demo moves only on a `v0.14.0` tag.
+game data 0.9 (new recovery choices), schema unchanged. `npm run verify`
+is green (181 passing, 0 todo). After it merges, the demo moves only on a
+`v0.14.0` tag.
 
 **Next up is the combat plan's cleanup session**, Ken's call on 2026-09-22:
 see where Session 4 landed, then fold Thick Skin, Iron Shirt and the
