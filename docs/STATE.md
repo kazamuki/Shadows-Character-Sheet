@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-22
-**Versions:** app `0.14.0` · game data `0.9` · character schema `0.8` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.14.1` · game data `0.9` · character schema `0.8` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **181 passing, 0 todo, 0 failing** (181 tests, six files)
+**Suite:** `npm run verify` → **182 passing, 0 todo, 0 failing** (182 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -81,7 +81,9 @@ yet done is organized by topic in §3, not by batch number** (Ken, 2026-09-12).
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com` (2026-09-12). It only redeploys on a `v*` tag
 push (`deploy-demo.yml`), not on every merge to `main`. **Live: app `0.14.0`,
-game data `0.9`** (tag `v0.14.0`, deployed and checked 2026-09-22).
+game data `0.9`** (tag `v0.14.0`), **which renders blank**, as did `v0.13.0`:
+the build dropped `print.css`'s `media="print"` (fixed in 0.14.1, not yet
+tagged). **Check a deploy by loading the page**, not by curling `APP_VERSION`.
 
 **Two things a next session should know.**
 
@@ -141,10 +143,10 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 ## 5. Where to start
 
 **`main` is caught up through PR #28** (combat plan Session 4, Loadout &
-recovery, Decision 100). It's tagged `v0.14.0` and live on the demo site:
-app 0.14.0, game data 0.9, schema 0.8. Game data 0.9 has shipped, so the
+recovery, Decision 100) and the 0.14.1 build fix. `v0.14.0` is on the demo
+site but blank (see §2); tag 0.14.1 to fix it. Game data 0.9 has shipped, so the
 next change a character can observe needs a `gamedataVersion` bump
-(Decision 68). `npm run verify` is green (181 passing, 0 todo).
+(Decision 68). `npm run verify` is green (182 passing, 0 todo).
 
 **Next up is the combat plan's cleanup session**, Ken's call on 2026-09-22:
 see where Session 4 landed, then fold Thick Skin, Iron Shirt and the
