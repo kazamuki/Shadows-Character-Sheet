@@ -1,6 +1,6 @@
 # Plan — Conditions, damage & armor
 
-**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 done (Decision 100, F24) · cleanup session next
+**Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 done (Decision 100, F24) · cleanup done (Decisions 103–105, F25) · the Magic-tables side session is the only box left
 **Covers:** F18's engine half (Decision 92 deferred it), plus the Conditions system
 that chapter 054 now fully specifies.
 **Sources:** `reference/crb/053_Combat_Encounters.md` (Damage and Armor),
@@ -196,7 +196,8 @@ its decisions numbered.
   weapon mods and ammo tracking wait (they need schema 0.9); a Nanomed Kit
   button waits until this lands (CQ12). The bare "Restore a Massive level"
   button folded into Focused Healing.
-- [ ] **Cleanup session — see where Session 4 landed.** Thick Skin / Iron
+- [x] **Cleanup session** (2026-09-23, Decisions 103–105; F25 opened for how Natural Armor answers a hit). TOL is INT/BOD/COOL, pinned in `rules.test.mjs`. Natural Armor is `Engine.naturalArmor()`, stubbed in the hit resolver and filling print's Nat column. The Nanomed Kit follows 054 (CQ12, Ken). Weapon mods and ammo went to `WISHLIST.md` as W16. The original box follows.
+  **See where Session 4 landed.** Thick Skin / Iron
   Shirt / the archetype grants of Natural Armor as one derived value on top of
   `armorState()` (it fills the print Defense card's Nat column) · revisit a
   Nanomed Kit button (after CQ12) · weapon mods and rounds-in-magazine, if
@@ -214,7 +215,7 @@ its decisions numbered.
   BOD — which Arcanist bonus points can't reach — now does. That's the
   ruling working as given, and Scott has it; don't "fix" it in code. CRB lines to re-pull once Scott's edits land: `020` l.101, `040`
   l.90–91 (the worked example), `041` l.90 ("all three feed TOL"), `Magic.md`
-  l.109.
+  l.109. *(2026-09-23: all four updated in the CRB and re-pulled.)*
 - [ ] **Side session — Magic tables** (independent of all of the above). Encode
   the Cascade Table and the Aberration Table from `Magic.md`, and the
   Good/Neutral/Bad lists from `Appendix_Aberrations.md`. `spellcraftRules.cascade`
@@ -290,6 +291,8 @@ Each becomes an F-number the day a session stubs behavior on it.
   Agonized, Bleeding, **Paralyzed** and Poisoned. Gear's entry lists Bleeding,
   Poisoned and Agonized, with no Paralyzed. One list needs to move before the
   app gets a Nanomed button (deferred by Ken, Session 4).
+  **Answered by Ken 2026-09-23: 054 wins** (Paralyzed is cleared). Gear's
+  entry gets the fix; the app follows 054 (Decision 105).
 - **CQ13 — How does Injured end?** 054's table says "Focused Healing or 1 week
   downtime". 055 says Injured "must be resolved through Focused Healing". The
   app's Focused Healing clears it, and a player can still clear the chip by

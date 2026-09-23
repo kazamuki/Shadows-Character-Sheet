@@ -50,10 +50,10 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.9",
+    "gamedataVersion": "0.10",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-22",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight)."
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight). 0.10 (Decisions 103-105): TOL reads INT/BOD/COOL (Deighton, was INT/COOL/EMP), so every character's TOL can move; `naturalArmorRules` and `grants` of type naturalArmor on Thick Skin, Shake it Off, True Warrior (Iron Shirt) and Trueborn (Resilient Spirit), which a hit now reads (F25 stub); `recoveryRules.nanomed` (054's list, CQ12)."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -163,8 +163,8 @@ window.SHADOWS_DATA = {
       "floor": 1,
       "inputs": [
         "INT",
-        "COOL",
-        "EMP"
+        "BOD",
+        "COOL"
       ],
       "description": "How much Aetheric backlash your body can absorb before it stops cooperating. A Rupture spends TOL directly, equal to its degree; at zero you're Exhausted and can't cast until you recover. One hour of rest restores 1 point."
     },
@@ -1441,7 +1441,8 @@ window.SHADOWS_DATA = {
       "name": "Thick Skin",
       "cost": 3,
       "maxRank": 3,
-      "description": "Gain +1 Natural Armor per rank.\n\nNatural Armor is unaffected by Armor Piercing effects."
+      "description": "Gain +1 Natural Armor per rank.\n\nNatural Armor is unaffected by Armor Piercing effects.",
+      "grants": [{ "type": "naturalArmor", "perRank": 1 }]
     },
     {
       "id": "thick-skull",
@@ -2290,7 +2291,9 @@ window.SHADOWS_DATA = {
                 "Death Touch [Chi 4]: Martial Arts attacks are Armor Piercing when not using melee weapons.",
                 "Flying Talons [Chi 5]: Make 3 throwing attacks using thrown weapons matching your Martial Art style, once per turn, following the same rules as a firearm burst."
               ]
-            }
+            },
+            "grants": [{ "type": "naturalArmor", "id": "iron-shirt", "name": "Iron Shirt",
+                         "stat": "BOD", "plus": 1, "while": "while active" }]
           },
           {
             "id": "wheelman",
@@ -2514,6 +2517,8 @@ window.SHADOWS_DATA = {
                 }
               ]
             },
+            "grants": [{ "type": "naturalArmor", "id": "resilient-spirit", "name": "Resilient Spirit",
+                         "resAgainst": ["magical"], "while": "under a waning moon" }],
             "additionalPowers": [
               "Moonlit Vitality (TBD)",
               "Ancestral Wisdom (TBD)",
@@ -2872,7 +2877,8 @@ window.SHADOWS_DATA = {
           }
         },
         "benefit": "Gain 5 Natural Armor.",
-        "repeatable": "Can be selected up to two times."
+        "repeatable": "Can be selected up to two times.",
+        "grants": [{ "type": "naturalArmor", "amount": 5 }]
       },
       {
         "id": "make-my-own-luck",
@@ -3275,6 +3281,21 @@ window.SHADOWS_DATA = {
     "armorerNote": "An armorer or a base restores it completely. Time varies by quality.",
     "wearNote": "Anyone who took a hit rolls once for wear after the fight, whether the armor or your body took it. Your GM names the die."
   },
+  /* NATURAL ARMOR (Decision 104) -- the armor a body has without wearing any.
+     Sources are `grants` of type "naturalArmor" on an advantage (`perRank`),
+     a Major Milestone (`amount`, once per time taken) or a specialization
+     option. A grant with `while` is conditional: shown, never summed, and the
+     hit panel asks whether it's on. `stat` + `plus` reads a stat's modifier
+     (Iron Shirt: BOD bonus + 1); `resAgainst` extends the classes it answers
+     (Resilient Spirit: Warding). Read by Engine.naturalArmor()/resolveHit(). */
+  "naturalArmorRules": {
+    "flagged": true,
+    "flagNote": "F25 -- the CRB grants Natural Armor in four places but never says how it applies to a hit. Only 'unaffected by Armor Piercing' (Thick Skin) and 'treated as Warding' (Waning Moon) are stated. Stubbed: a flat reduction after PROT and RES, on every body part, Kinetic only (like base RES) unless Warding extends it, ignores AP, skipped by Massive; sources stack.",
+    "playerNote": "How natural armor stops a hit is still being settled. For now it takes a flat amount off Blade, Blunt and Ballistic damage anywhere on the body, after your armor, and armor-piercing doesn't get past it. Massive damage ignores it.",
+    "resAgainst": ["kinetic"],
+    "ignoresAp": true,
+    "text": "Toughness you don't take off at night. It stops damage after your worn armor does, wherever the hit lands."
+  },
   "armorFeatureGlossary": [
     { "id": "Concealable", "description": "Thin and lightweight enough to wear discreetly beneath a hoodie or blazer without printing. Standard visual security checks don't detect it; specialized scanning or a Perception check against a threshold may." },
     { "id": "Dampening", "description": "Engineered to reduce sensor detection -- disperses heat signature, reduces optical reflection, dampens sound. +1 to Stealth against sensor-based detection. One Dampening feature covers one detection type (Thermal/Optical/Sound), specified at manufacture." },
@@ -3470,6 +3491,16 @@ window.SHADOWS_DATA = {
       "clears": ["injured"],
       "text": "Med kits, chems, nanites, or real care in a clinic. How much comes back depends on the care. It also clears Injured.",
       "massiveText": "A Health Level lost to Massive damage comes back with Focused Healing and a replacement: a prosthetic, or something stranger."
+    },
+    /* 054 "With Çredits" is the master list (Decision 105, CQ12): Gear's
+       entry leaves out Paralyzed. Regeneration is 1 HP every `dose` rounds
+       for `roundsStat` rounds, so dose n proposes floor(BOD / n) HP. */
+    "nanomed": {
+      "clears": ["agonized", "bleeding", "paralyzed", "poisoned"],
+      "endsDying": true,
+      "roundsStat": "BOD",
+      "text": "Nanites in the bloodstream. It clears Agonized, Bleeding, Paralyzed and Poisoned, stabilizes the Dying, and regenerates 1 HP a round for BOD rounds.",
+      "doseText": "Another kit inside a day still clears and stabilizes, but regenerates slower: 1 HP every two rounds for the second, every three for the third."
     }
   },
   "conditions": [

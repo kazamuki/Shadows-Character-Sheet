@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-23. -->
 
 ## Archetypes
 
@@ -76,7 +76,7 @@ Control is not a suggestion. In NYTE City, an Arcanist without control is just t
 
 The following table represents the Arcanist Campaign Power Scaling:
 
-| **Power Level** | **Focus Stat Bonus Points** | **TOL Bonus** | **Aberration** | **Evocation Starting Rank** | **Known** **Spells** |
+| **Power Level** | **Focus Stat Bonus Points** | **TOL Bonus** | **Aberration** | **Evocation Starting Rank** | **Known Spells** |
 |----|----|----|----|----|----|
 | Street Level | 1d4 | 0 | 1 | 1 | TOL + 1d4 |
 | Heroic | 2d4 | +1 | 2 | 2 | TOL + 2d4 |
@@ -87,9 +87,9 @@ Your Base Known spells are shown above; choose them from **Appendix X: Book of K
 
 The Focus Stats for the Arcanist are **INT**, **COOL**, and **EMP. Bonus stats can push a base stat beyond 10.**
 
-All three feed **TOL,** and **INT** and **EMP** also feed **WILL**, which caps your Discipline ranks. **BOD** contributes to **WILL** as well, but bonus points can’t reach it.
+**INT** and **COOL** feed TOL, and **INT** and **EMP** feed WILL, which caps your Discipline ranks. **BOD** feeds both — and bonus points can't reach it.
 
-**Example**: A Street Level Arcanist rolls 1d4 and gets a result of 2. This means you have two points to spend increasing either the **INT**, **COOL**, or **EMP** stats.
+**Example**: As a Street Level Arcanist you roll 1d4 and get a result of 2. This means you have two points to spend increasing either the **INT**, **COOL**, or **EMP** stats.
 
 #### Baseline Traits
 
@@ -160,7 +160,7 @@ Your grimoire is lighter than your colleagues’, but no matter — your instinc
 
 “Magic is Debt”
 
-Your powe came from a bargain. You made it, someone made it for you, or some cosmic entity decided you were worthy of their attention. The details are up to you, but the arrangement is non-negotiable.
+Your power came from a bargain. You made it, someone made it for you, or some cosmic entity decided you were worthy of their attention. The details are up to you, but the arrangement is non-negotiable.
 
 You have a patron who grants you access to the Aether, and more. Establish with the GM who or what this entity is. They are not a spell and not a resource, they are a relationship. Like any relationship, they have opinions about how they are treated.
 
@@ -206,29 +206,15 @@ Through extended exposure to the Aether, cosmic energies have subtly altered you
 - **Unshakable Mind:** The Arcanist can peer into the depths of alternate realms, see through the veil, or encounter the terrifying realities of the world itself.\
   *Benefit:* Gain +10% bonus to any Sanity Breaker Check
 
-- 
-
-- 
-
-- 
-
-- 
-
-- 
-
-- 
-
 #### Core Mechanic (Magic)
 
-The Core Mechanic of the Arcanist is channeling the flow of Aether through your body through the Disciplines of **Evocation**, **Enchantment**, and **Alchemy**. **Evocation** is where every Arcanist begins, and the only one available at character creation.
+The Core Mechanic of the Arcanist is channeling the flow of Aether through your body by way of the Disciplines of **Evocation**, **Enchantment**, and **Alchemy**. **Evocation** is where every Arcanist begins, and the only one available at character creation.
 
 All magic is cast with a Spellcraft roll. You roll dice equal to your **Evocation** rank, aiming to Hit the Target Number (TN) enough times to meet or beat the Threshold (TH). Every Dud cancels a Hit.
 
 If your Duds outnumber your Hits, the spell Ruptures and you lose TOL equal to the difference. At 0 TOL you are Exhausted and cannot cast until you recover. If a Rupture drives your TOL below 0, it becomes a Cascade.
 
 Full rules for Spellcraft, Tolerance, Rupture, and Cascades are in the Magic chapter.
-
-#### 
 
 #### Powers & Vulnerabilities
 
@@ -723,7 +709,7 @@ Horrors of the supernatural don't hit like they used to. When facing the darknes
 
 You're fast at gauging a situation and knowing what's needed to move forward.
 
-- **Prerequisites:** 1 Major Milestone already selected, Danger Sense Advantage at least Rank 1, Intuition Advantage at least Rank 1
+- **Prerequisites:** 1 Major Milestone already selected, Danger Sense Advantage at least Rank 1, Intuition skill at least Rank 1
 
 - **Benefit:** When needing make a Combat Sense Skill Check, you may Take 6 (Treat the d10 as X instead of rolling. No roll = no explosion or botch).
 
