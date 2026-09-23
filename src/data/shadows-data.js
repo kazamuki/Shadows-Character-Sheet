@@ -50,10 +50,10 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.10",
+    "gamedataVersion": "0.11",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-09-22",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight). 0.10 (Decisions 103-105): TOL reads INT/BOD/COOL (Deighton, was INT/COOL/EMP), so every character's TOL can move; `naturalArmorRules` and `grants` of type naturalArmor on Thick Skin, Shake it Off, True Warrior (Iron Shirt) and Trueborn (Resilient Spirit), which a hit now reads (F25 stub); `recoveryRules.nanomed` (054's list, CQ12)."
+    "updated": "2026-09-23",
+    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight). 0.10 (Decisions 103-105): TOL reads INT/BOD/COOL (Deighton, was INT/COOL/EMP), so every character's TOL can move; `naturalArmorRules` and `grants` of type naturalArmor on Thick Skin, Shake it Off, True Warrior (Iron Shirt) and Trueborn (Resilient Spirit), which a hit now reads (F25 stub); `recoveryRules.nanomed` (054's list, CQ12). 0.11 (Decision 106): the Cascade Table, the Aberration Table and the Appendix's Aberrations (`cascadeTable`, `aberrationTable`, `aberrationCategories`, `aberrationRules`, `aberrations`), and a TOL Spent tracker on the Arcanist that opens the Cascade panel -- a new tracker and new choices on the sheet."
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -1975,6 +1975,15 @@ window.SHADOWS_DATA = {
               "Overflow",
               "Notes"
             ]
+          },
+          {
+            "id": "tol-spent",
+            "type": "tracker",
+            "title": "TOL Spent",
+            "max": "TOL",
+            "note": "Every Rupture spends TOL equal to its degree: Duds minus Hits.",
+            "atMax": "Exhausted. No Spellcraft until TOL is back above zero. An hour's rest restores 1.",
+            "overMax": "cascade"
           }
         ]
       },
@@ -3629,7 +3638,7 @@ window.SHADOWS_DATA = {
       "manifest": "Net Hits equal TH exactly. The spell works as intended -- no bonus, no shortfall.",
       "fizzle": "Net Hits fall short of TH and Duds don't exceed Hits. The Aether disperses. Nothing happens and nothing is owed.",
       "rupture": "Duds exceed Hits. TOL decreases by the degree of the Rupture (Duds minus Hits). A Rupture while formalizing a spell also sets its progress back by 1 successful cast.",
-      "cascade": "A Rupture pushes TOL below zero. The Aether doesn't just fail, it breaks -- see the Cascade Table (Design, not yet encoded)."
+      "cascade": "A Rupture pushes TOL below zero. The Aether doesn't just fail, it breaks. Roll on the Cascade Table: 1d10 plus the Rupture's degree."
     },
     "exhaustion": "TOL reaching zero is the Exhausted condition, not a separate tracked resource. An Exhausted Arcanist cannot make Spellcraft rolls until TOL is above zero again. One hour of rest restores 1 TOL; full restoration takes as many hours as maximum TOL.",
     "charging": { "standardAction": true, "tnReductionPerTurn": 1, "maxTurns": 3, "floorTN": 5,
@@ -3648,6 +3657,87 @@ window.SHADOWS_DATA = {
       "copiedCold": "From a library find or someone else's grimoire: 1 hour per Threshold working through the notation, then a Spellcraft roll (Evocation rank only) against the spell's own TN/TH. Manifest: the spell is Known. Fizzle: the hours are gone, try again. Rupture: the entry looks correct and isn't -- found out on the next cast. (Book Arcanists get a free second attempt on a Fizzle via Between the Lines -- archetype content, not encoded here.)"
     }
   },
+  /* Cascade and Aberrations (Decision 106) -- merged from Magic.md's Cascade
+     Table and Aberration Table and Appendix_Aberrations.md's three lists,
+     2026-09-23. Rows are ranges on a physical roll the player enters; the
+     engine looks them up (`Engine.cascade`) and never rolls (Decision 11).
+     `cascadeTable` starts at 3 on purpose: casting needs TOL above zero, so a
+     Rupture that drives it below zero is degree 2 or more, and 1d10 + 2 can't
+     come in under 3. `max: null` is open-ended (12+).
+     `aberrations` are the Cascade's list, NOT the Arcanist's creation-time
+     Unique Aberrations -- those are the archetype's `specialization.options`
+     and a different list. `as` names the Advantage or Disadvantage an entry
+     works like, as the CRB prints it; it's display text, not a grant. */
+  "cascadeTable": {
+    "die": "1d10",
+    "rollNote": "Roll 1d10 and add the degree of the Rupture that caused it. The worse the failure, the worse the result.",
+    "rows": [
+      { "min": 3, "max": 4, "id": "cosmetic-mutation", "name": "Cosmetic Mutation", "effect": "A visible change — markings, glowing eyes, an altered voice. Lasts until TOL is fully restored." },
+      { "min": 5, "max": 6, "id": "backlash", "name": "Backlash", "effect": "Spirit damage equal to your Spell Power." },
+      { "min": 7, "max": 8, "id": "temporary-aberration", "name": "Temporary Aberration", "aberration": "temporary", "effect": "Roll on the Aberration table. Lasts 8 hours." },
+      { "min": 9, "max": 11, "id": "permanent-aberration", "name": "Permanent Aberration", "aberration": "permanent", "effect": "Roll on the Aberration table; treat a Good result as Neutral. Removed only by quest or ritual." },
+      { "min": 12, "max": null, "id": "burned-out", "name": "Burned Out", "effect": "You cannot cast until a significant quest or ritual restores your connection to the Aether." }
+    ]
+  },
+  "aberrationTable": {
+    "die": "1d10",
+    "note": "The GM chooses the specific Aberration from the rolled category.",
+    "rows": [
+      { "min": 1, "max": 3, "temporary": "good", "permanent": "neutral" },
+      { "min": 4, "max": 7, "temporary": "neutral", "permanent": "neutral" },
+      { "min": 8, "max": 10, "temporary": "bad", "permanent": "bad" }
+    ]
+  },
+  "aberrationCategories": [
+    { "id": "good", "name": "Good" },
+    { "id": "neutral", "name": "Neutral" },
+    { "id": "bad", "name": "Bad" }
+  ],
+  "aberrationRules": {
+    "intro": "The Aether leaves marks. Good, Neutral, and Bad describe mechanical tendency rather than moral weight. An Aberration is simply the shape the Aether decided to leave behind.",
+    "permanent": "Permanent Aberrations cannot be removed with IP. Only a quest, ritual, or other significant event will undo one."
+  },
+  "aberrations": [
+    {"id": "aether-reservoir", "name": "Aether Reservoir", "category": "good", "description": "Once per day, recover 2 TOL at any time."},
+    {"id": "animal-ken", "name": "Animal Ken", "category": "good", "as": "Animal Ken Advantage", "description": "Your attunement extends to all living creatures. Animals sense no threat from you and are instinctively non-hostile. EMP Essence checks to calm, befriend, or interact with animals use TN 6."},
+    {"id": "aura-sight", "name": "Aura Sight", "category": "good", "as": "Aura Sight Advantage", "description": "The Aether flowing through living beings has become visible to you. You perceive the energy fields of living beings within WILL meters, through solid objects and walls. An aura shows power level, mood, and overall health."},
+    {"id": "clean-blood", "name": "Clean Blood", "category": "good", "description": "+1 die to resist Poisoned. Ordinary toxins and intoxicants have no effect on you."},
+    {"id": "danger-sense", "name": "Danger Sense", "category": "good", "as": "Danger Sense Advantage, Rank 3", "description": "The Aether whispers before danger arrives. You sense threat at distances up to 500 meters — direction without detail, presence without identity."},
+    {"id": "echolocation", "name": "Echolocation", "category": "good", "description": "Your body emits involuntary Aetheric pulses during moments of focus, returning as awareness of the space around you. Within 9 meters, you detect the presence, size, and shape of objects and creatures regardless of visibility. Suppressed when you cannot make sound."},
+    {"id": "eidetic-memory", "name": "Eidetic Memory", "category": "good", "as": "Eidetic Memory Advantage", "description": "Your recall has permanently sharpened. INT Essence checks for memory recall succeed automatically. Suppressed while incapacitated, suffering a head injury, or under the influence of drugs or toxins."},
+    {"id": "electrocytes", "name": "Electrocytes", "category": "good", "description": "Charged nerve cells line your spine, generating a low electrical field. You passively sense electrically active objects and creatures within 3 meters. As a Standard Action, you can discharge it: ½ Spell Power Elemental damage to everything within 2 meters, and augmented targets must make a TECH Essence check or be DeSynced."},
+    {"id": "inactive-camouflage", "name": "Inactive Camouflage", "category": "good", "description": "Photoreceptors have developed across your skin. While completely still, a REF Essence check, TN 8 TH 2, renders you visually transparent. Clothing and equipment are unaffected. Any movement ends the effect."},
+    {"id": "magnetic-grip", "name": "Magnetic Grip", "category": "good", "description": "Your hands and feet cling to metal. You climb metal surfaces at full movement, and metal objects in your grip cannot be Disarmed."},
+    {"id": "night-eyes", "name": "Night Eyes", "category": "good", "description": "Treat Dark visibility as Dim, and Blind as Dark."},
+    {"id": "quick-clot", "name": "Quick Clot", "category": "good", "description": "Your blood closes wounds almost as fast as they open. Bleeding ends on its own at the next Reset."},
+    {"id": "steady-heart", "name": "Steady Heart", "category": "good", "description": "Mundane sources cannot make you Frightened."},
+    {"id": "sure-step", "name": "Sure Step", "category": "good", "description": "Difficult Terrain costs you no extra movement, and does not hinder your Scramble."},
+    {"id": "warded-flesh", "name": "Warded Flesh", "category": "good", "description": "+1 die on any defender check against a spell."},
+    {"id": "bioluminescence", "name": "Bioluminescence", "category": "neutral", "description": "A soft glow emanates from part of your body. Roll 1d4 for its trigger: 1 — during or after spellcasting; 2 — at will; 3 — in darkness only; 4 — under emotional or physical stress. The color reflects your bond with the Aether, agreed with the GM. It cannot be suppressed once triggered."},
+    {"id": "dense-frame", "name": "Dense Frame", "category": "neutral", "description": "Your body has grown impossibly heavy. +2 dice to resist being pushed, shoved, or knocked Prone. You sink in water and cannot swim."},
+    {"id": "elemental-blood", "name": "Elemental Blood", "category": "neutral", "description": "Your blood has taken on an elemental quality. Roll 1d3: 1 — Fire, 2 — Cold, 3 — Lightning. Halve damage you take from that element. Anyone who strikes you unarmed or in melee takes ½ Spell Power Elemental damage."},
+    {"id": "fast-metabolism", "name": "Fast Metabolism", "category": "neutral", "description": "Your cellular processes have accelerated. You heal twice as fast from rest and recover from conditions more quickly. Toxins and drugs — helpful ones included — run their course in half the time."},
+    {"id": "fine-bristles", "name": "Fine Bristles", "category": "neutral", "description": "Thousands of near-invisible hairs register changes in airflow, pressure, and vibration. Within 3 meters, you detect movement and presence regardless of visibility."},
+    {"id": "heterochromia", "name": "Heterochromia", "category": "neutral", "description": "Your eyes have become mismatched in color. Entirely cosmetic, but immediately recognizable to anyone who knows the signs."},
+    {"id": "light-frame", "name": "Light Frame", "category": "neutral", "description": "Your body has grown impossibly light. Falls deal half damage. Pushes, shoves, and concussive force move you twice as far."},
+    {"id": "medium", "name": "Medium", "category": "neutral", "as": "Medium Advantage", "description": "Your sensitivity has extended beyond the physical. You can perceive and, with effort, communicate with spirits and entities behind the veil. This draws the attention of things that notice such openness."},
+    {"id": "mimetic-skin", "name": "Mimetic Skin", "category": "neutral", "description": "Chromatophores across your skin continuously shift to match nearby surfaces. Always active and cannot be suppressed. +3 to Stealth when not wearing heavy armor. This is ambient blending, not the active transparency of Inactive Camouflage."},
+    {"id": "nocturnal", "name": "Nocturnal", "category": "neutral", "description": "Your rhythms have permanently shifted toward the dark. +1 to all checks in Dim or Dark visibility, −1 to all checks in Bright."},
+    {"id": "ozone-trail", "name": "Ozone Trail", "category": "neutral", "description": "You carry a scent — ozone, incense, turned earth, something unplaceable. Anyone who has met you recognizes it, and anything that tracks by scent follows you easily."},
+    {"id": "static-charge", "name": "Static Charge", "category": "neutral", "description": "Your touch shorts simple, non-hardened electronics, deliberately or not. Handling your own unshielded gear risks it."},
+    {"id": "thought-projection", "name": "Thought Projection", "category": "neutral", "description": "Your surface thoughts broadcast involuntarily to Aetherically sensitive beings nearby. You cannot control what leaks, and you don't know what has."},
+    {"id": "unreflected", "name": "Unreflected", "category": "neutral", "description": "Cameras, mirrors, and recordings capture you badly — blurred, delayed, or absent. You are nearly impossible to identify from footage. People who watch you in a mirror find it deeply unsettling."},
+    {"id": "voltivorous", "name": "Voltivorous", "category": "neutral", "description": "Your body now draws on electrical current. Electrical damage heals you for half its amount instead of harming you. Go a day without absorbing at least 5 points of it, and you recover no TOL until you have."},
+    {"id": "beacon", "name": "Beacon", "category": "bad", "description": "You radiate Aether like a lit window. Spirits, supernatural creatures, and other practitioners can sense you at a distance and find you without trying."},
+    {"id": "drained", "name": "Drained", "category": "bad", "description": "Your maximum TOL is reduced by 2."},
+    {"id": "glossolalia", "name": "Glossolalia", "category": "bad", "description": "Your speech has fractured. Sound still comes out — words, sentences — but none of it is comprehensible, even to you. Written communication still works. So does Evocation, but whenever Duds appear in an Evocation roll, even on a successful cast, the GM decides how the Aether misread your intent. The effect is adjacent to what you attempted, but not quite it."},
+    {"id": "hemophiliac", "name": "Hemophiliac", "category": "bad", "as": "Hemophiliac Disadvantage", "description": "Your blood no longer clots properly. Every wound keeps bleeding until treated."},
+    {"id": "marked", "name": "Marked", "category": "bad", "description": "A visible sign of Aetheric exposure — scarring, discoloration, a pattern beneath the skin — that no makeup, clothing, or disguise fully hides. Anyone familiar with the signs knows what you are. −2 to Deception and Disguise to pass as ordinary. In a city where nobody practices openly, this is a problem."},
+    {"id": "paranoia", "name": "Paranoia", "category": "bad", "as": "Minor Insanity Disadvantage — Paranoia", "description": "Your sensitivity to the Aether has become indistinguishable from threat perception. You are always on edge, and trust comes hard. Something is always watching — and eventually, that may be correct."},
+    {"id": "phantom-pain", "name": "Phantom Pain", "category": "bad", "description": "You permanently operate at one Pain Level higher than your Health Levels indicate."},
+    {"id": "slow-tide", "name": "Slow Tide", "category": "bad", "description": "TOL recovers at 1 point per 2 hours of rest rather than per hour."},
+    {"id": "tremor", "name": "Tremor", "category": "bad", "description": "A fine, constant shake has settled into your hands. −1 die on Enchantment and Alchemy rolls."}
+  ],
   "enchantmentMaterialCategories": [
     { "id": "degradable", "name": "Degradable", "examples": ["Paper", "Cloth"], "charges": 1,
       "onUse": "Destroyed. Nothing remains.", "onRupture": "Destroyed.", "recharging": "Not applicable -- fast to produce and cheap to replace." },

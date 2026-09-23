@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.15.0";
+const APP_VERSION = "0.16.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -247,7 +247,7 @@ function bindSheet(){
     ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
   main.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.dmg);
-    commit("damage", `Damage ${d>0?"+":""}${d}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
+    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
   });
   const ds=main.querySelector("[data-dmgset]");
   if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
@@ -330,20 +330,32 @@ function bindSheet(){
   // body-part picker only shows for a Condition that needs one.
   const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
     return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
-  main.querySelectorAll("[data-condadd-id]").forEach(sel=>sel.onchange=()=>{
-    const def=Engine.conditionById(sel.value), loc=sel.parentNode.querySelector("[data-condadd-loc]");
-    if (loc) loc.hidden = !(def && def.location);
-  });
-  main.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
-    const box=b.parentNode, id=(box.querySelector("[data-condadd-id]")||{}).value;
-    const location=(box.querySelector("[data-condadd-loc]")||{}).value;
-    if (!id) return;
+  // W14: a palette chip adds in one click (the undo toast makes that safe);
+  // a body-part Condition asks where first, through the same Add.
+  const addCond = (id, location) => {
     const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
     if (!r.ok){ alert(r.why); return; }
+    S.condPick=null;
     commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
+  };
+  main.querySelectorAll("[data-condpalette]").forEach(d=>d.ontoggle=()=>{ S.condPalette=d.open; });
+  main.querySelectorAll("[data-condquick]").forEach(b=>b.onclick=()=>{
+    const def=Engine.conditionById(b.dataset.condquick); if (!def) return;
+    if (def.location){ S.condPick=def.id; renderMain(); return; }
+    addCond(def.id);
+  });
+  main.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
+  main.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
+    const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
+    if (!location){ alert("Pick the body part."); return; }
+    addCond(b.dataset.condadd, location);
+  });
+  main.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condinfo); S.condInfo = S.condInfo===i ? null : i; renderMain();
   });
   main.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
+    S.condInfo=null;                                   // indexes shift once one goes
     commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
   });
   main.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
@@ -381,6 +393,23 @@ function bindSheet(){
       if (pid==="sfr") ch.trackers.sfr.spent=Math.max(0,(ch.trackers.sfr.spent||0)+delta);
       else { const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.value=Math.max(0,(e.value||0)+delta); }
     });
+  });
+  // Cascade (Decision 106): the dice live in S.cascade; "Add to notes" is
+  // the one commit(), so the note undoes like any other action.
+  main.querySelectorAll("[data-cas]").forEach(el=>el.onchange=()=>{
+    const st=S.cascade; if (!st) return;
+    st[el.dataset.cas]=el.value;
+    if (el.dataset.cas==="roll" || el.dataset.cas==="degree"){ st.aberrationRoll=""; st.pick=""; }
+    if (el.dataset.cas==="aberrationRoll") st.pick="";
+    renderMain();
+  });
+  main.querySelectorAll("[data-casclear]").forEach(b=>b.onclick=()=>{ S.cascade=null; renderMain(); });
+  main.querySelectorAll("[data-caslog]").forEach(b=>b.onclick=()=>{
+    const st=S.cascade; if (!st) return;
+    const input=cascadeInput(st), c=Engine.cascade(ch, input), ab=c.aberration;
+    if (!c.ok || (ab && !ab.pick)){ alert(c.ok ? "Pick the Aberration the GM chose." : c.why); return; }
+    S.cascade=null;
+    commit("notes", `Cascade: ${c.result.name}${ab?` (${ab.pick.name})`:""}`, ()=>{ Engine.logCascade(ch, input); });
   });
   main.querySelectorAll("[data-trkmax]").forEach(inp=>inp.onchange=()=>{
     const pid=inp.dataset.trkmax, mx=inp.value===""?null:Math.max(0,Number(inp.value));

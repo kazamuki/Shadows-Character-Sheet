@@ -671,3 +671,49 @@ test('Decision 103: BOD feeds TOL and EMP no longer does; WILL keeps BOD/INT/EMP
   assert.equal(at({ COOL: 9 }).WILL, 1, "COOL does not feed WILL");
   assert.equal(at({ INT: 1, BOD: 1, COOL: 1 }).TOL, 1, "floor 1");
 });
+
+// ── Cascade (Magic.md, Decision 106) ──────────────────────────────────
+
+test('Magic.md: "roll 1d10 and add the degree of the Rupture that caused it" — each band of the Cascade Table', () => {
+  const ch = subject();
+  const at = (roll, degree) => Engine.cascade(ch, { roll, degree }).result.id;
+  assert.equal(at(1, 2), "cosmetic-mutation");      // 3
+  assert.equal(at(2, 2), "cosmetic-mutation");      // 4
+  assert.equal(at(3, 2), "backlash");               // 5
+  assert.equal(at(4, 2), "backlash");               // 6
+  assert.equal(at(5, 2), "temporary-aberration");   // 7
+  assert.equal(at(6, 2), "temporary-aberration");   // 8
+  assert.equal(at(7, 2), "permanent-aberration");   // 9
+  assert.equal(at(6, 5), "permanent-aberration");   // 11
+  assert.equal(at(8, 4), "burned-out");             // "12+"
+  assert.equal(at(10, 9), "burned-out");
+});
+
+test("Magic.md: casting needs TOL above zero, so a Cascade's Rupture is at least 2 and the table starts at 3", () => {
+  // Not a gap in the table: 1d10 + 1 can't happen, since a Rupture of 1 can
+  // only take TOL from 1 to 0 (Exhausted), never below it.
+  const r = Engine.cascade(subject(), { roll: 1, degree: 1 });
+  assert.equal(r.ok, false);
+  assert.match(r.why, /at least 2/);
+  assert.equal(D.cascadeTable.rows[0].min, 3);
+});
+
+test('Magic.md Aberration Table: 1–3 is Good temporary but Neutral permanent; 8–10 is Bad either way', () => {
+  const ch = subject();
+  const cat = (roll, degree, aberrationRoll) => Engine.cascade(ch, { roll, degree, aberrationRoll }).aberration.category.id;
+  // 5 + 2 = 7, Temporary; 7 + 2 = 9, Permanent.
+  assert.deepEqual([1, 3, 4, 7, 8, 10].map(a => cat(5, 2, a)), ["good", "good", "neutral", "neutral", "bad", "bad"]);
+  assert.deepEqual([1, 3, 4, 7, 8, 10].map(a => cat(7, 2, a)), ["neutral", "neutral", "neutral", "neutral", "bad", "bad"]);
+  const pending = Engine.cascade(ch, { roll: 5, degree: 2 }).aberration;
+  assert.equal(pending.pending, true, "an Aberration row should wait for the second die");
+  assert.equal(Engine.cascade(ch, { roll: 3, degree: 2 }).aberration, null, "Backlash has no Aberration roll");
+});
+
+test("Appendix Aberrations: fifteen Good, fifteen Neutral, nine Bad, and the ones the CRB ties to an Advantage say so", () => {
+  const n = c => D.aberrations.filter(a => a.category === c).length;
+  assert.deepEqual([n("good"), n("neutral"), n("bad")], [15, 15, 9]);
+  const as = Object.fromEntries(D.aberrations.filter(a => a.as).map(a => [a.id, a.as]));
+  assert.equal(as["danger-sense"], "Danger Sense Advantage, Rank 3");
+  assert.equal(as["hemophiliac"], "Hemophiliac Disadvantage");
+  assert.equal(Object.keys(as).length, 7);
+});
