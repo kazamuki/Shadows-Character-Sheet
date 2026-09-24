@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.11");
+  assert.equal(ch.meta.schemaVersion, "0.12");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.11");
+  assert.equal(old.meta.schemaVersion, "0.12");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.11");
+  assert.equal(old.meta.schemaVersion, "0.12");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -274,7 +274,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.11");
+  assert.equal(old.meta.schemaVersion, "0.12");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -382,7 +382,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.11");
+  assert.equal(bare.meta.schemaVersion, "0.12");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -604,7 +604,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.11");
+    assert.equal(c.meta.schemaVersion, "0.12");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -879,7 +879,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.11");
+  assert.equal(old.meta.schemaVersion, "0.12");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1722,7 +1722,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.11");
+  assert.equal(m.meta.schemaVersion, "0.12");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -1795,24 +1795,36 @@ test("W17: migrate to 0.10 tags every typed gear row custom and never guesses a 
   assert.deepEqual([junk.gear.length, junk.weapons.length], [0, 0]);
 });
 
-test("B18: every character has a NYTE City intake number that reads aloud cleanly, and no two match", () => {
+test("B18: every character has a TAG that reads aloud cleanly, and no two match (Decision 133)", () => {
   const ids = Array.from({ length: 2000 }, () => Engine.newCharacter().meta.id);
-  const bad = ids.filter(id => !/^NCR-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/.test(id));
-  assert.deepEqual(bad, [], "an intake number is malformed, or uses I, L, O or U");
-  assert.equal(new Set(ids).size, ids.length, "two new characters got the same intake number");
+  const bad = ids.filter(id => !/^TAG-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/.test(id));
+  assert.deepEqual(bad, [], "a TAG is malformed, or uses I, L, O or U");
+  assert.equal(new Set(ids).size, ids.length, "two new characters got the same TAG");
   assert.ok(ids.every(id => Engine.isIntakeId(id)));
 });
 
-test("B18: migrate() gives an older file an intake number, keeps a real one, and replaces anything else (schema 0.11)", () => {
+test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces anything else (schema 0.12)", () => {
   const old = subject();
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
-  assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no intake number");
-  assert.equal(m.meta.schemaVersion, "0.11");
+  assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
+  assert.equal(m.meta.schemaVersion, "0.12");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
-  assert.equal(kept.meta.id, m.meta.id, "migrate() reissued an intake number a file already had");
-  for (const junk of ["", "NCR-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn"]) {
+  assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
+  for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
     const c = subject(); c.meta.id = junk;
-    assert.ok(Engine.isIntakeId(Engine.migrate(c).meta.id), `migrate() trusted ${JSON.stringify(junk)} as an intake number`);
+    assert.ok(Engine.isIntakeId(Engine.migrate(c).meta.id), `migrate() trusted ${JSON.stringify(junk)} as a TAG`);
   }
+});
+
+test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve characters, so it is still the same character", () => {
+  // Players have 0.24.0 files carrying NCR- numbers. Reissuing them would make
+  // a player's own older export look like a different character to the
+  // replace guard, and a different one again on every import.
+  const c = subject();
+  c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
+  const m = Engine.migrate(c);
+  assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
+  assert.equal(m.meta.schemaVersion, "0.12");
+  assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
