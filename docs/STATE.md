@@ -116,8 +116,14 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-None open. Every `A` and `B` audit finding is closed. `C1`–`C3` are forward
-notes, one line each in `INDEX.md` §2.
+**The 2026-09-24 whole-app audit opened A4–A12, B11–B19 and C4–C15**
+(`audits/2026-09-24_whole-app-audit.md`, one line each in `INDEX.md` §2).
+What to do about them is `plans/audit-2026-09-remediation.md`, **proposed and
+waiting on Ken's answers (AQ1–AQ10)**. Nothing is fixed yet. Three are worth
+doing first whatever else is decided, and need no ruling: B16 (Admin renders
+file ids unescaped), B18 (Import replaces the saved sheet silently) and B11
+(Mastery trips the hand-edit warning), all plan session S1. rev 9's `A` and
+`B` findings are all closed; `C1`–`C3` are still forward notes.
 
 ---
 
@@ -126,7 +132,9 @@ notes, one line each in `INDEX.md` §2.
 **`main` is caught up through PR #53, tagged `v0.23.0` (app 0.23.0, schema
 0.10, game data 0.16).** Check the live footer reads 0.23.0.
 
-**Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
+**Next, all unblocked:** Ken reads the audit and answers the plan's AQ
+questions; its session S1 needs no answers and can start any time.
+Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
 Professional) and F13 need Ken or Deighton. F12 waits on 041's unwritten
 Advancement Section. The wishlist is empty but for W28; new ideas start at
@@ -149,7 +157,8 @@ W29.
 - **Ken:** add `AP` (Armor Piercing) to the spell appendix's tag list, to
   match Decision 116.
 - **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
-  25 IP new-skill price and the stat curve past 10. Each is written up in
+  25 IP new-skill price and the stat curve past 10. **New (AQ8):** Hardcore
+  Parkour requires a "Cat Like Balance" Advantage that 043 doesn't have (B15). Each is written up in
   `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
   once ruled.
 

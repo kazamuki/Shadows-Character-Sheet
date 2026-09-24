@@ -20,7 +20,7 @@ Generated summaries are one line each and deliberately lossy — they are for
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The shape of the game data or a character file | `SCHEMA.md` §2 and §3 |
 | What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
-| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_) | `plans/` — none in flight. Both there are closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_) | `plans/` — **one proposed, waiting on Ken:** `audit-2026-09-remediation.md` (acting on the 2026-09-24 audit, `AQ`_n_). Two closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `docs/log/2026.md` |
@@ -37,13 +37,15 @@ contains and why it is split that way — lives in **`SCHEMA.md` §6**.
 
 ## 2. Id registry
 
-Five namespaces. Each id is defined in exactly one place and referenced everywhere.
+Each id is defined in exactly one place and referenced everywhere.
 
 | Prefix | Means | Defined in |
 |---|---|---|
-| `A`_n_ | Architectural finding — a design that has drifted | `audits/2026-06-16_rev9-whole-app-audit.md` §1 |
-| `B`_n_ | Bug / correctness finding | same audit, §2 |
-| `C`_n_ | Carried note — real but not yet actionable | same audit, §3 |
+| `A`_n_ | Architectural finding — a design that has drifted | A1–A3: `audits/2026-06-16_rev9-whole-app-audit.md` §1 · A4–A12: `audits/2026-09-24_whole-app-audit.md` §4 |
+| `B`_n_ | Bug / correctness finding | B1–B10: rev 9 audit §2 · B11–B19: 2026-09-24 audit §5 |
+| `C`_n_ | Carried note — real but not yet actionable | C1–C3: rev 9 audit §3 · C4–C15: 2026-09-24 audit §6 |
+| `R`_n_ | Recommended practice — a proposal until Ken adopts it and it is numbered | 2026-09-24 audit §8 |
+| `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/audit-2026-09-remediation.md` §5 |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
 | `D`_n_ | Shorthand used here for decision _n_ | `SCHEMA.md` §4 |
 | `W`_n_ | Wishlist item — an idea, not a commitment; statuses live with the item | `WISHLIST.md` §1 |
@@ -68,6 +70,30 @@ Five namespaces. Each id is defined in exactly one place and referenced everywhe
 | `C1` | Sheet number inputs vs. the caret fix — forward note | **open** | if a field moves to live `oninput` |
 | `C2` | Admin can't reach archetype-specific choices | **open** | easier now: one array |
 | `C3` | `panelMax` / SFR display copy | **open** | re-read after F6 and F7 |
+
+**From the 2026-09-24 audit.** All open; the plan session that would take each is in the last column. Full text in the audit.
+
+| Id | What | Status | Where |
+|---|---|---|---|
+| `A4` | Orientation spread across eight docs; the untested ones drifted | **open** | plan S2 |
+| `A5` | The decision ledger is doing three jobs | **open** | plan S2 |
+| `A6` | Per-change documentation tax out of proportion to the change | **open** | plan S2, S5 |
+| `A7` | Seven flags have no F-number; four are unasked Deighton questions | **open** | plan S2 |
+| `A8` | Archetypes special-cased by id; Professional rules parsed from prose | **open** | plan S3, S4 |
+| `A9` | Data fields that look like settings but aren't read (B3's class) | **open** | plan S4 |
+| `A10` | Merged content no player can see | **open** | plan S6 · AQ4 |
+| `A11` | `notes: "natural"` doubles as a type marker | **open** | plan S7 |
+| `A12` | UI split by render/bind, not by screen | **open** | plan S7 |
+| `B11` | Mastering a spell trips `versionCheck`'s hand-edit warning | **open** | plan S1 |
+| `B12` | The Mercenary never picks its fifth Focused Skill | **open** | plan S3 |
+| `B13` | Focused Skill Max Bonus never applied | **open** | plan S3 |
+| `B14` | Jack-of-all-Trades pays full price for every skill | **open** | plan S3 |
+| `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | **open** | plan S1 · AQ8 |
+| `B16` | Admin mode renders two character-file ids unescaped | **open** | plan S1 |
+| `B17` | The Trueborn's Lunar Phase Blessing never renders | **open** | plan S1 |
+| `B18` | Import and New replace the saved sheet without asking | **open** | plan S1 |
+| `B19` | Phone: the sticky header covers 30% of the screen | **open** | plan S6 |
+| `C4`–`C15` | Carried notes: import warnings, `alert()`s, dead code, fonts offline, audit growth, orphans, `meta.notes`, closed plans with open work, dev server, voice corpus, releases, suite time | **open** | plan S1–S7 |
 
 ### Open flags
 
