@@ -74,9 +74,9 @@ left that is still true now.
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
-dry run on a branch, a re-publish on a tag. **Live: app `0.17.0`,
-game data `0.12`** (tag `v0.17.0`, deployed 2026-09-23; loaded: all three versions,
-the `grimoire` panel and a Link offer, Home and wizard render). `v0.13.0` and `v0.14.0`
+dry run on a branch, a re-publish on a tag. **Live: app `0.19.0`,
+game data `0.14`** (tag `v0.19.0`, deployed 2026-09-23; loaded: the footer's versions,
+Home, and a Heroic Arcanist's step 7 with Starting spells — TOL + 2d4 and the picker). `v0.13.0` and `v0.14.0`
 rendered blank (#30). **Check a deploy by loading the page**, not by curling it.
 **`CHANGELOG.md` is current again** (W18); `docs.test.mjs` checks each bump has a section.
 
@@ -137,10 +137,9 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #41** (Session 2, app 0.18.0, game data
-0.13); live is still `v0.17.0`. The magic plan's Session 3 (Decision 111, app
-0.19.0, game data 0.14) is on its branch, not yet merged. **Nothing since
-0.17.0 is tagged**, so the next tag ships both. **The magic plan is closed.**
+**`main` is caught up through PR #43, and live is `v0.19.0`** (Decision 111,
+game data 0.14). **The magic plan is closed** (Decisions 108–111). The next
+observable change is 0.20.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
