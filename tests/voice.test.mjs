@@ -47,13 +47,30 @@ function visibleText(app) {
 function renderedCorpus() {
   const parts = [];
 
-  const sheet = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
-  const open = sheet.$$("#main button").find(b => /Open sheet/.test(b.textContent));
-  open.dispatchEvent(new sheet.window.MouseEvent("click", { bubbles: true }));
-  for (const id of sheet.$$("[data-sec]").map(t => t.dataset.sec)) {
-    sheet.click(`[data-sec="${id}"]`);
-    parts.push(visibleText(sheet));
+  // Every archetype's sheet, with its first specialization chosen, and Admin
+  // mode once (C13): copy on the sheet only renders for the archetype that
+  // owns it, so one Arcanist never read a Werewolf's or a Professional's.
+  for (const arch of D.archetypes) {
+    const ch = lockedCharacter();
+    ch.identity.archetype = arch.id;
+    const first = ((arch.specialization || {}).options || [])[0];
+    ch.archetypeChoices.specialization = first ? [first.id] : [];
+    const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
+    app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+      .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+    for (const id of app.$$("[data-sec]").map(t => t.dataset.sec)) {
+      app.click(`[data-sec="${id}"]`);
+      parts.push(visibleText(app));
+    }
+    if (arch === D.archetypes[0]) {
+      app.click("[data-menu-toggle]"); app.click("[data-admin]");
+      parts.push(visibleText(app));
+    }
   }
+
+  const sheet = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
+  sheet.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+    .dispatchEvent(new sheet.window.MouseEvent("click", { bubbles: true }));
   // What's new is every release note a player can open (Decision 123). It's
   // written in CHANGELOG.md, next to maintainer prose, so it's read here too.
   sheet.click("[data-whatsnew]");

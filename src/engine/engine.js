@@ -9,9 +9,26 @@ const Engine = (() => {
   // number ≥ 0. Anything unreadable is 0: the engine is total (constraint 8).
   const nonNegInt = v => Math.max(0, Math.floor(Number(v)||0));
 
+  // A character's NYTE City intake number: its permanent identity (B18,
+  // Decision 128). Twelve characters from Crockford's base-32 alphabet (no I,
+  // L, O or U, so it reads aloud cleanly), about 60 random bits, grouped
+  // NCR-XXXX-XXXX-XXXX. It tells two characters apart when a file would
+  // replace a saved one, and it's what a roster will key on. Never reissued:
+  // a copy of the file is the same character.
+  const INTAKE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const INTAKE_RE = /^NCR-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
+  const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
+  function newIntakeId(){
+    const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
+    const bytes = new Uint8Array(12);
+    if (c) c.getRandomValues(bytes); else for (let i=0;i<12;i++) bytes[i] = Math.floor(Math.random()*256);
+    const s = [...bytes].map(b=>INTAKE_ALPHABET[b & 31]).join("");
+    return `NCR-${s.slice(0,4)}-${s.slice(4,8)}-${s.slice(8,12)}`;
+  }
+
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.10", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.11", id:newIntakeId(), gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -1775,8 +1792,20 @@ const Engine = (() => {
     for (const k of keys){ if (k==="audit"||k==="meta") continue; _walk((before||{})[k], (after||{})[k], [k], ops); }
     return ops;
   }
-  function _container(ch, path){ let o=ch; for (let i=0;i<path.length-1;i++) o=o[path[i]]; return o; }
+  // A patch path is only ever the character's own keys. The audit rides in a
+  // player-supplied file, so a crafted entry must not walk into a prototype
+  // (["__proto__", …] would write onto every object in the page) or through
+  // a missing link (B16, the 2026-09-24 audit).
+  const UNSAFE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+  const safePath = p => Array.isArray(p) && p.length>0
+    && p.every(k=>(typeof k==="string" || typeof k==="number") && !UNSAFE_KEYS.has(String(k)));
+  function _container(ch, path){
+    let o=ch;
+    for (let i=0;i<path.length-1;i++){ if (!o || typeof o!=="object") return null; o=o[path[i]]; }
+    return o;
+  }
   function _applyOp(ch, op){
+    if (!op || !safePath(op.path)) return;
     const cont=_container(ch, op.path), key=op.path[op.path.length-1];
     if (!cont || typeof cont!=="object") return;
     if (op.type==="scalar"){
@@ -1801,8 +1830,12 @@ const Engine = (() => {
     const log=ch.audit||[];
     if (!log.length) return { ok:false, why:"Nothing to undo." };
     const entry=log[log.length-1];
-    for (let i=entry.patch.length-1;i>=0;i--) _applyOp(ch, entry.patch[i]);
+    const patch=Array.isArray(entry && entry.patch) ? entry.patch : [];
+    for (let i=patch.length-1;i>=0;i--) _applyOp(ch, patch[i]);
     log.pop();
+    // What an entry restores came from the file too: hold the numbers to
+    // the same guarantee a load gives them.
+    _coerceNumbers(ch);
     return { ok:true, undone:entry };
   }
 
@@ -1830,6 +1863,81 @@ const Engine = (() => {
       }
     }
     return target;
+  }
+
+  // Every number a character file stores is read back as a number (B16, the
+  // 2026-09-24 audit). A file is player-supplied: a string where a count
+  // belongs rode `+` as text ("5" + 1 is "51") and reached the page as
+  // markup, on every tab, without a single throw. Everything that loads a
+  // character runs migrate(), and undo runs this too, so no reader or
+  // renderer has to distrust a stored number. A plain numeric string is
+  // read as its number; anything else falls back to the field's default.
+  // `null` stays where a field allows it (a roll not entered, an age blank).
+  const _num = (v, d) => {
+    const n = typeof v==="number" ? v : (typeof v==="string" && /^\s*-?\d+(\.\d+)?\s*$/.test(v)) ? Number(v) : NaN;
+    return Number.isFinite(n) ? n : d;
+  };
+  const _numOrNull = v => v==null || v==="" ? null : _num(v, null);
+  function _coerceNumbers(c){
+    const isObj = o => !!o && typeof o==="object" && !Array.isArray(o);
+    const fix = (o, k, d) => { if (isObj(o) && k in o) o[k] = _num(o[k], d); };
+    const fixAll = (o, d) => { if (isObj(o)) for (const k of Object.keys(o)) o[k] = _num(o[k], d); };
+    const fixNull = o => { if (isObj(o)) for (const k of Object.keys(o)) o[k] = _numOrNull(o[k]); };
+    const rows = a => Array.isArray(a) ? a.filter(isObj) : [];
+    if (!isObj(c)) return c;
+    if (isObj(c.identity) && "age" in c.identity) c.identity.age = _numOrNull(c.identity.age);
+    if (isObj(c.creation)){
+      fixNull(c.creation.rolls);
+      c.creation.boosts = rows(c.creation.boosts);
+      c.creation.boosts.forEach(b=>fix(b, "times", 0));
+    }
+    const ac = c.archetypeChoices;
+    if (isObj(ac)){
+      fixNull(ac.rolls);
+      fixAll(ac.focusAllocation, 0); fixAll(ac.statBonusAllocation, 0); fixAll(ac.disciplines, 0);
+      ac.naturalAdvantages = rows(ac.naturalAdvantages);
+      ac.naturalAdvantages.forEach(n=>fix(n, "rank", 0));
+    }
+    if (isObj(c.stats)) for (const s of Object.values(c.stats)) { fix(s, "base", 1); fix(s, "ipe", 0); }
+    if (isObj(c.skills)) for (const id of Object.keys(c.skills)){
+      const s = c.skills[id];
+      if (!isObj(s)) { delete c.skills[id]; continue; }
+      s.rank = _num(s.rank, 0); s.ipe = _num(s.ipe, 0);
+    }
+    for (const k of ["advantages","disadvantages"]) if (Array.isArray(c[k])) c[k].forEach(e=>{ if (isObj(e)) e.rank = _num(e.rank, 1); });
+    const t = c.trackers;
+    if (isObj(t)){
+      for (const k of ["damage","massiveLevels","witheringDamage"]) fix(t, k, 0);
+      fix(t.luck, "bonus", 0); fix(t.luck, "spent", 0); fix(t.san, "loss", 0); fix(t.sfr, "spent", 0);
+      if (isObj(t.credits)){
+        fix(t.credits, "current", 0);
+        t.credits.ledger = rows(t.credits.ledger);
+        t.credits.ledger.forEach(e=>{ e.amount = _num(e.amount, 0); });
+      }
+      if (Array.isArray(t.adjustments)){ t.adjustments = rows(t.adjustments); t.adjustments.forEach(e=>{ e.amount = _num(e.amount, 0); }); }
+      if (Array.isArray(t.conditions)) t.conditions.forEach(e=>fix(e, "marks", 0));
+      if (isObj(t.panel)) for (const id of Object.keys(t.panel)){
+        const p = t.panel[id];
+        if (!isObj(p)) { delete t.panel[id]; continue; }
+        p.value = _num(p.value, 0);
+        if ("max" in p) p.max = _numOrNull(p.max);
+      }
+    }
+    const pr = c.progression;
+    if (isObj(pr)){
+      fix(pr, "milestonePoints", 0);
+      if (isObj(pr.ip)){
+        fix(pr.ip, "earned", 0);
+        if (Array.isArray(pr.ip.log)){ pr.ip.log = rows(pr.ip.log); pr.ip.log.forEach(e=>{ e.amount = _num(e.amount, 0); }); }
+      }
+    }
+    if (Array.isArray(c.sessions)){ c.sessions = rows(c.sessions); c.sessions.forEach(s=>{ s.ipEarned = _num(s.ipEarned, 0); }); }
+    if (Array.isArray(c.weapons)) c.weapons.forEach(w=>{ if (isObj(w)) w.roundsSpent = nonNegInt(w.roundsSpent); });
+    if (Array.isArray(c.armor)) c.armor.forEach(a=>{ if (isObj(a)) a.integrityLoss = nonNegInt(a.integrityLoss); });
+    if (Array.isArray(c.gear)) c.gear.forEach(g=>{ if (isObj(g) && !g.custom){ g.qty = nonNegInt(g.qty);
+      if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed); } });
+    if (Array.isArray(c.audit)) c.audit.forEach(e=>{ if (isObj(e)) e.seq = _num(e.seq, 0); });
+    return c;
   }
 
   function migrate(c){
@@ -1914,6 +2022,11 @@ const Engine = (() => {
     });
     if (typeof c.notes!=="string") c.notes="";
     if (!Array.isArray(c.audit)) c.audit=[];      // Phase 3.3
+    // An audit entry is only what recordAction writes: a patch of ops on the
+    // character's own keys. Anything else in a file is dropped, never undone
+    // (B16): undo would otherwise write wherever a crafted path pointed.
+    c.audit = c.audit.filter(e=>e && typeof e==="object" && Array.isArray(e.patch)
+      && e.patch.every(op=>op && typeof op==="object" && safePath(op.path)));
     // Schema 0.9 (Decision 108): a Grimoire row is a book spell ({ spellId,
     // stage, notes }) or the player's own (the typed columns, custom:true).
     // A pre-0.9 row is typed text. Tag it custom and never guess which book
@@ -1948,10 +2061,15 @@ const Engine = (() => {
     }
     delete ac.aberrations; delete ac.subtype;
     if (c.identity && typeof c.identity==="object") delete c.identity.specialization;
+    _coerceNumbers(c);
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.10";
+    // Schema 0.11 (B18, Decision 128): a file from before gets its intake
+    // number here, and keeps it from its next save on. Anything else in the
+    // field (a hand edit, a payload) is replaced, not trusted.
+    if (!isIntakeId(c.meta.id)) c.meta.id = newIntakeId();
+    c.meta.schemaVersion = "0.11";
     return c;
   }
 
@@ -2349,6 +2467,16 @@ const Engine = (() => {
       perTarget[e.targetType+"|"+e.targetId] = (perTarget[e.targetType+"|"+e.targetId]||0)+1;
     for (const [k,n] of Object.entries(perTarget)){
       const [type,id] = k.split("|");
+      // Mastery isn't IPE (Decision 108): a spell's spend is matched by its
+      // Grimoire row saying Mastered. Read as a skill it looked like a hand
+      // edit on every Arcanist who had mastered anything (B11).
+      if (type==="spell"){
+        const p = grimoirePanel(c), rows = p && c.panelData && Array.isArray(c.panelData[p.id]) ? c.panelData[p.id] : [];
+        const row = rows.find(r=>r && r.spellId===id), name = (spellById(id)||{name:id}).name;
+        if (!row || row.stage!=="mastered")
+          issues.push(`IP journal shows ${name} Mastered, but the Grimoire doesn't — it may have been edited by hand.`);
+        continue;
+      }
       const ipe = type==="stat" ? ((c.stats||{})[id]||{}).ipe||0
                                 : ((c.skills||{})[id]||{}).ipe||0;
       if (ipe !== n) issues.push(`IP journal shows ${n} increase${n>1?"s":""} on ${id} but IPE is ${ipe} — totals may have been edited by hand.`);
@@ -2356,7 +2484,7 @@ const Engine = (() => {
     return issues;
   }
 
-  return { D, newCharacter, powerLevel, archetype, skillById, advById, disById,
+  return { D, newCharacter, isIntakeId, powerLevel, archetype, skillById, advById, disById,
            statMod, statValue, statTable, archStatBonus, boostsFor, addBoost, canBoost,
            scalingRow, derived, health, sfr, statPool, statSpent, skillPool, skillSpent,
            advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, cp,

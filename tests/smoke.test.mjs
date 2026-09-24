@@ -290,7 +290,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.10");
+  assert.equal(resumed.meta.schemaVersion, "0.11");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1380,5 +1380,164 @@ test("What's new opens from the sheet's menu and from the footer", () => {
   app.click("#modal [data-modalclose]");
   app.click("#footer [data-whatsnew]");
   assert.ok(app.$("#modal[open] .whatsnew"), "the footer's What's new didn't open the notes");
+  assert.deepEqual(app.errors, []);
+});
+
+test("C4: what the load check found stays on every page until it's dismissed; a bare version difference shows once", () => {
+  // It used to render once and vanish on the next click, and a draft's
+  // never showed at all. A version difference alone is news, not a problem,
+  // and every returning player has one after a data release, so it keeps
+  // showing just once.
+  const orphan = lockedCharacter();
+  orphan.skills["long-gone-skill"] = { rank: 2, ipe: 0 };
+  const app = boot({ storage: { "shadows.active.v1": { ch: orphan, section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  const shown = () => /long-gone-skill/.test(app.$("#main .import-issues")?.textContent || "");
+  assert.ok(shown(), "the load check's finding never showed");
+  app.click('[data-sec="skills"]');
+  assert.ok(shown(), "the finding vanished on the next click");
+  app.click("[data-importdismiss]");
+  assert.ok(!shown(), "Dismiss didn't clear it");
+  app.click('[data-sec="main"]');
+  assert.ok(!shown(), "a dismissed finding came back");
+
+  const stale = lockedCharacter();
+  stale.meta.gamedataVersion = "0.0-ancient";
+  const v = boot({ storage: { "shadows.active.v1": { ch: stale, section: "main" } } });
+  v.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  const said = () => /saved against game data 0\.0-ancient/.test(v.$("#main").textContent);
+  assert.ok(said(), "a version difference wasn't mentioned at all");
+  assert.equal(v.$("[data-importdismiss]"), null, "a bare version difference asks to be dismissed");
+  v.click('[data-sec="skills"]');
+  assert.ok(!said(), "a bare version difference stuck to every page");
+
+  const draft = lockedCharacter();
+  draft.creation.locked = false;
+  draft.skills["long-gone-skill"] = { rank: 1, ipe: 0 };
+  const w = boot();
+  w.window.eval(`S=Object.assign({screen:"wizard", ch:Engine.migrate(${JSON.stringify(draft)}), step:0, maxReached:0, section:"main"}); Object.assign(S, loadFindings(S.ch)); update();`);
+  assert.match(w.$("#main").textContent, /long-gone-skill/, "an imported draft's finding never showed in the wizard");
+  assert.deepEqual([...app.errors, ...v.errors, ...w.errors], []);
+});
+
+test("B17: a Trueborn sees the Lunar Phase Blessing, its four phases, and which powers aren't written yet — on the sheet and in the wizard", () => {
+  // The option's starterPower and additionalPowers were in the data and
+  // nowhere on screen: a Werewolf's sheet never mentioned its starting power.
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf";
+  ch.archetypeChoices.specialization = ["trueborn"];
+  const tb = D.archetypes.find(a => a.id === "werewolf").specialization.options.find(o => o.id === "trueborn");
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "archetype" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  app.click('[data-sec="archetype"]');
+  const text = app.$("#main").textContent;
+  assert.match(text, new RegExp(tb.starterPower.name), "the starting power isn't on the sheet");
+  for (const p of tb.starterPower.phases) assert.ok(text.includes(p.boon) && text.includes(p.effect), `${p.phase}'s boon isn't on the sheet`);
+  const unwritten = app.$$("#main .power").filter(el => /not written yet/.test(el.textContent)).map(el => el.querySelector("h5").textContent);
+  assert.equal(unwritten.length, tb.additionalPowers.length, "the powers still to come don't say they aren't written yet");
+
+  const draft = lockedCharacter();
+  draft.creation.locked = false;
+  draft.identity.archetype = "werewolf";
+  const w = boot({ storage: { "shadows.draft.v1": { ch: draft, step: 3, maxReached: 3 } } });
+  w.click("#btn-resume");
+  assert.match(w.$("#main").textContent, new RegExp(tb.starterPower.name), "the wizard's Trueborn card doesn't show its starting power");
+  assert.deepEqual([...app.errors, ...w.errors], []);
+});
+
+// ── B18: nothing replaces a saved character without asking ──────────────
+// Import goes through the real file input and FileReader; downloads are
+// caught at URL.createObjectURL, which jsdom doesn't implement.
+function withDownloads(app) {
+  const got = [];
+  app.window.URL.createObjectURL = blob => { got.push(blob); return "blob:shadows-test"; };
+  app.window.URL.revokeObjectURL = () => {};
+  return got;
+}
+async function importFile(app, ch) {
+  const input = app.$("#file-import");
+  const file = new app.window.File([JSON.stringify(ch)], "x.shadows.json", { type: "application/json" });
+  Object.defineProperty(input, "files", { value: [file], configurable: true });
+  input.dispatchEvent(new app.window.Event("change"));
+  for (let i = 0; i < 50 && !app.$("#modal[open]") && app.window.eval("S.screen") === "home"; i++) await new Promise(r => setTimeout(r, 10));
+}
+const savedName = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.identity.name;
+const named = (name, extra = {}) => Object.assign(lockedCharacter(), { identity: Object.assign(lockedCharacter().identity, { name }) }, extra);
+
+test("B18: importing a different character asks first — Cancel keeps the saved one, Export first downloads it, then replaces", async () => {
+  const vex = Engine.migrate(named("Vex Morrow"));
+  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
+  const downloads = withDownloads(app);
+  await importFile(app, Engine.migrate(named("Other Player")));
+  const modal = app.$("#modal[open]");
+  assert.ok(modal, "importing another character replaced the saved sheet without asking");
+  assert.match(modal.textContent, /Vex Morrow/);
+  assert.match(modal.textContent, new RegExp(vex.meta.id), "the prompt doesn't show which character it means");
+  app.click("#modal [data-modalclose]");
+  assert.equal(savedName(app), "Vex Morrow", "Cancel still replaced the saved sheet");
+
+  await importFile(app, Engine.migrate(named("Other Player")));
+  app.click("#modal [data-replaceexport]");
+  assert.equal(downloads.length, 1, "Export first didn't download the saved character");
+  assert.match(await downloads[0].text(), /Vex Morrow/, "Export first downloaded the wrong character");
+  assert.equal(savedName(app), "Other Player", "after exporting, the import didn't go ahead");
+  assert.deepEqual(app.errors, []);
+});
+
+test("B18: a newer copy of the same character replaces without asking; an older one asks", async () => {
+  const vex = Engine.migrate(named("Vex Morrow"));
+  vex.meta.updated = "2026-09-24T10:00:00.000Z";
+  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
+  const newer = JSON.parse(JSON.stringify(vex));
+  newer.meta.updated = "2026-09-24T12:00:00.000Z"; newer.notes = "after the heist";
+  await importFile(app, newer);
+  assert.equal(app.$("#modal[open]"), null, "a newer copy of the same character asked to replace itself");
+  assert.equal(JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.notes, "after the heist");
+
+  app.click("[data-menu-toggle]"); app.click("[data-home]");
+  const older = JSON.parse(JSON.stringify(vex));
+  older.meta.updated = "2026-09-23T09:00:00.000Z"; older.notes = "before the heist";
+  await importFile(app, older);
+  assert.ok(app.$("#modal[open]"), "an older copy replaced the newer saved one without asking");
+  assert.deepEqual(app.errors, []);
+});
+
+test("B18: New asks before replacing a draft, and Lock asks before replacing another saved sheet", () => {
+  const vex = Engine.migrate(named("Vex Morrow"));
+  const draft = named("Half-Built"); draft.creation.locked = false;
+  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" }, "shadows.draft.v1": { ch: draft, step: 7, maxReached: 7 } } });
+  withDownloads(app);
+  app.click("#btn-new");
+  assert.ok(app.$("#modal[open]"), "New replaced the saved draft without asking");
+  assert.match(app.$("#modal").textContent, /Half-Built/);
+  app.click("#modal [data-modalclose]");
+  assert.equal(app.window.eval("S.screen"), "home", "Cancel started a new character anyway");
+
+  // Resume the draft, parked on Review, and lock it over Vex.
+  app.click("#btn-resume");
+  app.window.eval("S.ch.creation.rolls.credits = 5; update();");
+  app.click("[data-lock]");
+  assert.ok(app.$("#modal[open]"), "Lock replaced another saved character without asking");
+  assert.match(app.$("#modal").textContent, /Vex Morrow/);
+  app.click("#modal [data-modalclose]");
+  assert.equal(savedName(app), "Vex Morrow", "Cancel on Lock still replaced the saved sheet");
+  assert.equal(app.window.eval("S.ch.creation.locked"), false, "Cancel on Lock still locked the draft");
+  app.click("[data-lock]"); app.click("#modal [data-replacego]");
+  assert.equal(savedName(app), "Half-Built", "Lock and replace didn't lock");
+  assert.deepEqual(app.errors, []);
+});
+
+test("B18: the intake number sits under the name on Main and in the printed header; Main's subtitle names the specialization", () => {
+  const ch = Engine.migrate(named("Vex Morrow"));
+  ch.identity.archetype = "werewolf"; ch.archetypeChoices.specialization = ["trueborn"];
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  const intake = app.$("#main .intake");
+  assert.ok(intake && intake.textContent.includes(ch.meta.id), "Main doesn't show the intake number");
+  assert.ok(intake.querySelector("svg rect"), "the intake number has no bars");
+  assert.match(app.$("#main").textContent, /Werewolf · Trueborn · /, "Main's subtitle still leaves out the specialization");
+  app.window.print = () => {};
+  app.click("[data-menu-toggle]"); app.click("[data-print]");
+  assert.ok(app.$("#printSheet .p-intake") && app.$("#printSheet .p-intake").textContent.includes(ch.meta.id), "the print header doesn't carry the intake number");
   assert.deepEqual(app.errors, []);
 });

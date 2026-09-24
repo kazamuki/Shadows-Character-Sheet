@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.23.0` · game data `0.16` · character schema `0.10` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.24.0` · game data `0.17` · character schema `0.11` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **266 passing, 0 todo, 0 failing** (266 tests, six files)
+**Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -36,11 +36,11 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
 
-**The wishlist session (Decisions 117–122, app 0.22.0, PR #51)** cleared
-every wishlist item but W28, took the character schema to 0.10 and game data
-to 0.16, and opened F26. **App 0.23.0 adds What's new** (Decision 123): the
-release notes, in the app, from the home screen, the sheet's menu and the
-footer.
+**App 0.24.0 (unreleased, on `claude/vibrant-gates-66y9l0`)** is the
+audit's first session: character files are untrusted input (Decision 124),
+load findings stay until dismissed (125), the Trueborn's powers render (126),
+Hardcore Parkour's prerequisites are ruled (129), and every character has a NYTE City
+intake number, with nothing replaced without asking (128, schema 0.11).
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -56,8 +56,9 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.23.0`, game data `0.16`** (tag `v0.23.0`). A cloud session
-can merge but usually can't push a tag, so tag locally after it. **Check a
+tag. The live version is the latest `v*` tag, and the page's footer says
+which. A cloud session can merge but usually can't push a tag, so tag locally
+after it (plan S5 moves releasing into a workflow, AQ9). **Check a
 deploy by loading the page** and reading the footer, not by curling it.
 `CHANGELOG.md` needs a section for every app bump, and **players read it**:
 after editing it, run `npm run changelog` and commit the generated
@@ -97,7 +98,7 @@ full text.
 |---|---|---|
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **F23 + F24 + F25 + F26** (Deighton, ask together; F23 and F25 are the same RES-class question, F26 is whether a shotgun is a rifle for mods) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Magic's Warding services: W28 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
-| **Milestones & doc reconciliation** — F9, F12, F13 (F11 closed, Decision 113) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
+| **Milestones & doc reconciliation** — F9, F12, F13 (F11 closed, Decision 113; F27 closed, Decision 129) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
@@ -116,21 +117,34 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-None open. Every `A` and `B` audit finding is closed. `C1`–`C3` are forward
-notes, one line each in `INDEX.md` §2.
+**The 2026-09-24 whole-app audit** (`audits/2026-09-24_whole-app-audit.md`,
+one line per id in `INDEX.md` §2) drives it, through
+`plans/audit-2026-09-remediation.md`. **Ken has answered every question**
+(the plan's §5), and **S1 is done**: B11, B15 (F27, ruled), B16, B17, B18, C4, C13,
+C16, R9, the first half of R6, and AQ2 and AQ7, all mutation-tested.
+
+- **Next, no answers needed, any order:** S3 (the Professional as data:
+  B12–B14; propose its data shape first), S5 (tooling: embed the fonts per
+  AQ6, a release workflow a cloud session can run per AQ9), S2 (the docs
+  diet, and the §6 decision format made standard).
+- **Then S6 (table feel),** now specified by AQ4: rules text a hover or tap
+  away, lore on the Archetype tab, Ammo in the shop, and the phone header.
+
+rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
 
 ---
 
 ## 5. Where to start
 
-**`main` is caught up through PR #53, tagged `v0.23.0` (app 0.23.0, schema
-0.10, game data 0.16).** Check the live footer reads 0.23.0.
+**`main` is caught up through PR #55, tagged `v0.23.0` (app 0.23.0, schema
+0.10, game data 0.16).** This branch carries the audit and S1 as app 0.24.0,
+schema 0.11 and game data 0.17, not yet merged or tagged.
 
-**Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
-(are General Milestones Professional-only? 041 files them under
-Professional) and F13 need Ken or Deighton. F12 waits on 041's unwritten
-Advancement Section. The wishlist is empty but for W28; new ideas start at
-W29.
+**Next, all unblocked:** merge this branch, then S3, S5 or S2. Milestones &
+doc reconciliation (Ken alone): F9 (are General Milestones Professional-only?)
+and F13 need Ken or Deighton; F12 waits on 041's unwritten Advancement
+Section. The wishlist holds W28 (blocked), W29 (a GM mode, needs a server)
+and W30 (Reload from carried ammo).
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.
@@ -151,7 +165,9 @@ W29.
 - **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
   25 IP new-skill price and the stat curve past 10. Each is written up in
   `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
-  once ruled.
+  once ruled. **New (Decision 129):** 041's Hardcore Parkour prerequisites
+  become 1 Major Milestone, Acrobatics 4 and Danger Sense 1 (Deighton; Cat
+  Like Balance and Time Sense go). The data already follows it.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `041` (Decision 110), and Ken expects the Origins subtypes to replace
@@ -164,7 +180,7 @@ them.
 - **Every volatile fact lives here and nowhere else.** `CLAUDE.md` carries no
   counts. Session-log entries state figures *as of that session* and are never
   updated — they are history, and history does not drift.
-- **`tests/docs.test.mjs` enforces it.** The suite result, versions and length
+- **`tests/docs.test.mjs` enforces it.** The todo count, versions and length
   of this file are checked, the flag table is checked against `flagged: true`
   in the data, and every file `CLAUDE.md` points at must exist.
 - **§3 is organized by topic, not by sequence, on purpose (2026-09-12).** A

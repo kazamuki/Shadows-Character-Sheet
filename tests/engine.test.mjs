@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.10");
+  assert.equal(ch.meta.schemaVersion, "0.11");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.10");
+  assert.equal(old.meta.schemaVersion, "0.11");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.10");
+  assert.equal(old.meta.schemaVersion, "0.11");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -149,6 +149,77 @@ test("every skill references a stat that exists (guards the BODY/BOD class of bu
     }
   }
   assert.deepEqual(bad, []);
+});
+
+test("every id the game data points at exists (R6, the 2026-09-24 audit)", () => {
+  // One sweep over every field that names another entry, rather than one test
+  // per catalog added batch by batch. Its first run found Hardcore Parkour
+  // asking for an Advantage no catalog had (B15, now F27).
+  const set = k => new Set((D[k] || []).map(x => x && x.id));
+  const S = {
+    skill: set("skills"), advantage: set("advantages"), disadvantage: set("disadvantages"), stat: set("stats"),
+    condition: set("conditions"), weapon: set("weapons"), weaponCategory: set("weaponCategories"),
+    armorFeature: new Set([...set("armorFeatureGlossary"), ...set("armorUpgradeGlossary")]),
+    equipmentCategory: set("equipmentCategories"), spell: set("spells"), domain: set("domains"), tier: set("spellTiers"),
+    aberrationCategory: set("aberrationCategories"), major: new Set((D.milestones.majorGeneral || []).map(m => m.id)),
+    luckSpend: new Set((D.resources.luck.spend || []).map(s => s.id)),
+  };
+  const refs = [];
+  const ref = (kind, id, where) => { if (id != null) refs.push([kind, id, where]); };
+  const prereqs = (p, where) => {
+    if (!p) return;
+    for (const sid of Object.keys(p.stats || {})) ref("stat", sid, where);
+    for (const [id] of [...((p.skills || {}).any || []), ...((p.skills || {}).all || [])]) ref("skill", id, where);
+    for (const [id] of ((p.advantages || {}).all || [])) ref("advantage", id, where);
+    for (const id of p.milestones || []) ref("major", id, where);
+  };
+  for (const [kind, list] of [["advantage", D.advantages], ["disadvantage", D.disadvantages], ["skill", D.skills]]) {
+    for (const e of list) {
+      for (const p of e.picks || []) for (const id of ((p.from || {}).ids || [])) ref("skill", id, `${e.id}.picks`);
+      prereqs(e.requires, `${e.id}.requires`);
+      for (const x of e.excludes || []) refs.push([S.advantage.has(x) || S.disadvantage.has(x) ? "advantage" : "skill", x, `${e.id}.excludes`]);
+      for (const g of e.grants || []) if (g.type === "luckCost") ref("luckSpend", g.spendId, `${e.id}.grants`);
+    }
+  }
+  for (const m of D.milestones.majorGeneral || []) prereqs(m.prerequisites, `milestone ${m.id}`);
+  for (const d of D.derived) for (const s of d.inputs || []) ref("stat", s, `derived ${d.id}`);
+  // The Professional's focused skills are English names, two of them with
+  // instructions mixed in (A8, B12). Matched by name until S3 makes them ids;
+  // this list must shrink to nothing then, and fails if an entry goes stale.
+  const PROSE = ["2 Combat Skills (chosen at creation)", "1 Additional Combat Skill"];
+  const norm = s => String(s).toLowerCase().replace(/[^a-z]/g, "").replace(/s$/, "");
+  const prose = [];
+  for (const a of D.archetypes) {
+    for (const t of a.baselineTraits || []) for (const p of t.pool || []) ref("advantage", p.advantageId, `${a.id} natural pool`);
+    for (const o of (a.specialization || {}).options || []) {
+      prereqs(o.requires, `${a.id}.${o.id}.requires`);
+      for (const f of o.focusedSkills || []) {
+        if (PROSE.includes(f)) { prose.push(f); continue; }
+        if (!D.skills.some(s => norm(s.name) === norm(f))) refs.push(["skill", f, `${a.id}.${o.id}.focusedSkills (by name)`]);
+      }
+    }
+  }
+  for (const w of D.weapons) { ref("skill", w.skill, `weapon ${w.id}`); ref("weaponCategory", w.category, `weapon ${w.id}`); }
+  for (const g of D.weaponModGlossary || []) {
+    for (const id of ((g.onlyFor || {}).weapons || [])) ref("weapon", id, `mod ${g.id}.onlyFor`);
+    for (const c of [...((g.onlyFor || {}).categories || []), ...((g.notFor || {}).categories || [])]) ref("weaponCategory", c, `mod ${g.id}`);
+  }
+  for (const x of D.armor) { for (const f of x.preInstalledFeatures || []) ref("armorFeature", f, `armor ${x.id}`); ref("armorFeature", x.feature, `armor ${x.id}`); }
+  for (const e of D.equipment || []) { ref("equipmentCategory", e.category, `equipment ${e.id}`); ref("spell", e.spell, `equipment ${e.id}`); }
+  for (const s of D.spells || []) { ref("domain", s.domain, `spell ${s.id}`); ref("tier", s.tier, `spell ${s.id}`); }
+  for (const a of D.aberrations || []) ref("aberrationCategory", a.category, `aberration ${a.id}`);
+  for (const t of D.damageTypes || []) for (const c of [...(t.inflicts || []), ...(t.always || [])]) ref("condition", c, `damage type ${t.id}`);
+  for (const t of D.damageCategories || []) for (const c of t.inflicts || []) ref("condition", c, `damage category ${t.id}`);
+  const R = D.recoveryRules || {}, DR = D.damageRules || {};
+  for (const c of [...((R.focusedHealing || {}).clears || []), ...((R.nanomed || {}).clears || [])]) ref("condition", c, "recoveryRules");
+  ref("condition", (DR.whileDying || {}).condition, "damageRules.whileDying");
+  for (const c of [...((DR.atZero || {}).onPass || []), ...((DR.atZero || {}).onFail || []), ...((DR.shock || {}).onFail || [])]) ref("condition", c, "damageRules");
+  ref("advantage", ((DR.atZero || {}).freePass || {}).advantage, "damageRules.atZero.freePass");
+
+  assert.ok(refs.length > 300, `swept only ${refs.length} references — did a field get renamed?`);
+  const dangling = refs.filter(([kind, id]) => !S[kind].has(id)).map(([kind, id, where]) => `${where}: "${id}" is no ${kind}`);
+  assert.deepEqual(dangling, []);
+  assert.deepEqual([...new Set(prose)].sort(), [...PROSE].sort(), "a prose focused skill is gone — take it off the exception list");
 });
 
 test("every weapon references a skill that exists (Weapons/Ammo/Armor batch)", () => {
@@ -203,7 +274,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.10");
+  assert.equal(old.meta.schemaVersion, "0.11");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -311,7 +382,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.10");
+  assert.equal(bare.meta.schemaVersion, "0.11");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -533,7 +604,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.10");
+    assert.equal(c.meta.schemaVersion, "0.11");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -808,7 +879,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.10");
+  assert.equal(old.meta.schemaVersion, "0.11");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1327,6 +1398,20 @@ test("grimoire() reads the book: numbers, a missing spell, and a typed name that
   assert.equal(g.lines[3].match, null, "offered to link a spell that's already in the Grimoire");
 });
 
+test("versionCheck matches a Mastery spend to its Grimoire row, not to skill IPE (B11)", () => {
+  // Mastering a spell is an IP spend with targetType "spell" (Decision 108).
+  // versionCheck read every non-stat spend as a skill, found IPE 0, and told
+  // every Arcanist who had mastered anything that their file was hand-edited.
+  const ch = subject();
+  Engine.grantIP(ch, 200, "test");
+  assert.ok(Engine.addSpell(ch, "firebolt").ok);
+  assert.ok(Engine.spendIP(ch, "spell", "firebolt").ok);
+  same(Engine.versionCheck(ch), [], "mastering a spell reads as a hand edit");
+  ch.panelData.grimoire[0].stage = "known";
+  assert.ok(Engine.versionCheck(ch).some(m => /Firebolt Mastered/.test(m)),
+    "a Mastery spend the Grimoire doesn't show went unreported");
+});
+
 test("grimoire() is a reader: it doesn't create the row list", () => {
   const ch = subject();
   delete ch.panelData.grimoire;
@@ -1637,7 +1722,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.10");
+  assert.equal(m.meta.schemaVersion, "0.11");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -1708,4 +1793,26 @@ test("W17: migrate to 0.10 tags every typed gear row custom and never guesses a 
   assert.equal(Engine.gearLine(m, 0).custom, true);
   const junk = Engine.migrate({ gear: {}, weapons: "x" });                  // a hand-edited file
   assert.deepEqual([junk.gear.length, junk.weapons.length], [0, 0]);
+});
+
+test("B18: every character has a NYTE City intake number that reads aloud cleanly, and no two match", () => {
+  const ids = Array.from({ length: 2000 }, () => Engine.newCharacter().meta.id);
+  const bad = ids.filter(id => !/^NCR-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/.test(id));
+  assert.deepEqual(bad, [], "an intake number is malformed, or uses I, L, O or U");
+  assert.equal(new Set(ids).size, ids.length, "two new characters got the same intake number");
+  assert.ok(ids.every(id => Engine.isIntakeId(id)));
+});
+
+test("B18: migrate() gives an older file an intake number, keeps a real one, and replaces anything else (schema 0.11)", () => {
+  const old = subject();
+  delete old.meta.id; old.meta.schemaVersion = "0.10";
+  const m = Engine.migrate(old);
+  assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no intake number");
+  assert.equal(m.meta.schemaVersion, "0.11");
+  const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
+  assert.equal(kept.meta.id, m.meta.id, "migrate() reissued an intake number a file already had");
+  for (const junk of ["", "NCR-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn"]) {
+    const c = subject(); c.meta.id = junk;
+    assert.ok(Engine.isIntakeId(Engine.migrate(c).meta.id), `migrate() trusted ${JSON.stringify(junk)} as an intake number`);
+  }
 });
