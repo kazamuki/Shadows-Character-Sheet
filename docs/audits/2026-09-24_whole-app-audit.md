@@ -127,7 +127,7 @@ That is a lot of mechanical steps, and most can be generated or dropped (A6, R2,
 | **B12** | The Mercenary never picks its fifth Focused Skill | Med | [run] | S3 |
 | **B13** | Focused Skill Max Bonus is never applied | Med | [run] | S3 |
 | **B14** | Jack-of-all-Trades pays full price for every skill | Med | [run] | S3 |
-| **B15** | Hardcore Parkour can never be taken: its prerequisite names an Advantage that doesn't exist | Med | [run] | **closed → F27** |
+| **B15** | Hardcore Parkour can never be taken: its prerequisite names an Advantage that doesn't exist | Med | [run] | **closed → F27 → D129** |
 | **B16** | Admin mode renders two ids from the character file unescaped | High | [run] Chromium | S1 |
 | **B17** | The Trueborn's Lunar Phase Blessing never appears anywhere | Med | [run] Chromium | S1 |
 | **B18** | Import and New Character replace the browser's saved sheet without asking | High | [run] Chromium | S1 |
@@ -324,6 +324,8 @@ Its prerequisites include `["cat-like-balance", 1]`. No advantage has that id, a
 **Direction.** A CRB question for Ken, like the CQ doc fixes: what is Cat Like Balance? Until it's answered, flag the milestone with a `playerNote` so the table knows why it's locked, rather than having the app look broken. A generic referential-integrity test would have caught it on merge (R6).
 
 **Closed 2026-09-24 → F27** (app 0.23.1, game data 0.17). Ken: Cat Like Balance was an Advantage from an earlier version ("+3 to Athletics or Acrobatics checks for balance"), since culled, so 041's prerequisite needs removing or replacing. Flagged as F27. Rather than stay locked, the stub makes the missing Advantage the GM's call, the way every prose prerequisite already is (Decision 91). Time Sense and Danger Sense are still checked. `rules.test.mjs` pins it, and the test was mutation-tested: it fails against the old data.
+
+**Ruled 2026-09-24** (Decision 129, F27 closed). Deighton: Cat Like Balance becomes Acrobatics at rank 4 or better, and Time Sense is removed. Hardcore Parkour now needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1. The stub above never shipped.
 
 ### B16: Admin mode renders two ids from the character file unescaped
 **High · [run] (headless Chromium)**

@@ -37,9 +37,8 @@ was, and gets its intake number the first time it's opened.
   *Werewolf · Trueborn · Heroic*.
 
 - **Hardcore Parkour can be taken.** One of its prerequisites named an Advantage that's
-  no longer in the game, so the Milestone stayed locked for everyone. Time Sense and
-  Danger Sense are still checked; the missing Advantage is now your GM's call, and the
-  Milestone says so until it's settled.
+  no longer in the game, so the Milestone stayed locked for everyone. It now asks for one
+  Major Milestone, Acrobatics at rank 4 or better, and Danger Sense.
 - **A Trueborn sees their Lunar Phase Blessing.** The Werewolf's starting power, and what
   each phase of the moon grants, is on the Archetype tab and on the Trueborn's card when
   you make one. The powers that come later are listed too, marked as not written yet.
