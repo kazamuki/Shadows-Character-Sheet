@@ -14,6 +14,32 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.22.0
+
+Character schema **0.10** · game data **0.16** · ruleset CRB v4 (in progress).
+A character file from 0.21 opens as it was: its weapons start with no mods and a full
+magazine, and its typed gear rows stay typed.
+
+- **Change your vitals where you see them.** Tap HP, Pain, SAN, LUCK or Çredits, on the
+  bar above any tab or on Main's cards, and a small panel opens with the same buttons
+  Trackers has. Hurt, Heal, Take a hit, add a Condition, spend LUCK, earn or spend
+  Çredits, all without leaving the tab, and all undoable.
+- **A hit lands.** When you take damage, your HP and the Health Level boxes that took it
+  flash, and Pain pulses twice if its level went up. Nothing flashes with reduced motion
+  on.
+- **Shop with the numbers in front of you.** Weapons, armor and gear each have a catalog
+  to browse: search, filter by section, show only what you can afford, sort by price, and
+  see a weapon's attack and damage for *your* character before you add or buy it.
+- **Mods and magazines.** Install mods into a weapon's slots (a Scope on a rifle, a
+  Silencer, an Angel Mod), and see what they add. Count your rounds down with Single,
+  Burst and Full Auto buttons, and Reload, on Loadout and on Main.
+- **Gear you carry is counted.** Gear's Equipment chapter and the Magic chapter's shop are
+  in the catalog: chems and kits stack with a count and **Use one**, Talismans keep their
+  charges and show the spell they hold. A Nanomed Kit, a dose of Speed Heal or a Field
+  Repair Kit you carry comes off your gear when you use it.
+- **Main is ready for a fight.** Its Combat column starts with the weapons you carry and
+  the armor you're wearing, then the combat skills.
+
 ## v0.21.0 — 2026-09-24
 
 Character schema **0.9** · game data **0.15** · ruleset CRB v4 (in progress).

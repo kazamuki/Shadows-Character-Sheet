@@ -1706,4 +1706,6 @@ test("W17: migrate to 0.10 tags every typed gear row custom and never guesses a 
   assert.deepEqual([m.gear[0].custom, m.gear[0].id], [true, undefined], "a typed row was matched to the catalog");
   assert.deepEqual([m.gear[1].qty, m.gear[2].qty, m.gear[2].chargesUsed], [3, 1, 0]);
   assert.equal(Engine.gearLine(m, 0).custom, true);
+  const junk = Engine.migrate({ gear: {}, weapons: "x" });                  // a hand-edited file
+  assert.deepEqual([junk.gear.length, junk.weapons.length], [0, 0]);
 });

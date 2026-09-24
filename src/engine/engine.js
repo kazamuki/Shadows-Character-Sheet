@@ -1884,7 +1884,7 @@ const Engine = (() => {
     // reference ({ id, qty }, `chargesUsed` on a charged Talisman) or typed
     // (custom:true). Every row from before is typed text, so it's tagged
     // custom, never matched to a catalog name, as the 0.6 step did weapons.
-    c.gear = c.gear.filter(g=>g && typeof g==="object").map(g=>{
+    c.gear = (Array.isArray(c.gear) ? c.gear : []).filter(g=>g && typeof g==="object").map(g=>{
       if (g.custom || typeof g.id!=="string"){ g.custom = true; return g; }
       g.qty = g.qty==null ? 1 : nonNegInt(g.qty);
       if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed);
@@ -1895,6 +1895,7 @@ const Engine = (() => {
     // catalog weapon's `mods`, weaponModGlossary ids) and the rounds spent
     // since its last reload. Nothing is guessed: a file from before starts
     // with no mods and a full magazine.
+    if (!Array.isArray(c.weapons)) c.weapons = [];
     c.weapons.forEach(w => {
       if (!w || typeof w!=="object") return;
       w.roundsSpent = nonNegInt(w.roundsSpent);

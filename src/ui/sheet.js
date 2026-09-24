@@ -322,11 +322,13 @@ function renderShMain(){
   // ── left: stats, clustered into the four spheres ──
   h += `<section class="main-stats"><div class="sect">Stats</div>${groupedStatBlockHtml(ch)}</section>`;
 
-  // ── right: combat skills + weapons ──
+  // ── right: what gets rolled in a fight (W13) ──
+  // The weapons you carry come first, with their magazines (W16), then the
+  // armor that answers, then every combat skill. The skill table is long, and
+  // it was pushing the lines a player actually rolls below the fold.
   h += `<section class="main-combat"><div class="sect">Combat${painChip(pain)}</div>`;
   if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
   h += conditionTotalsNote(ch, true);
-  h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
   // Weapons: a catalog piece is computed (Decision 100); a custom one reads
   // back what was typed.
   const lines = (ch.weapons||[]).map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
@@ -348,6 +350,8 @@ function renderShMain(){
   if (worn) h += `<div class="lo-armor worn"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
     <div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(worn)}</span></div><div class="lo-armor-int">${intBar(worn)}</div></div>`;
   if (natMain) h += `<p class="hitarmor">${esc(natMain)}</p>`;
+  if (lines.length || worn || natMain) h += `<div class="sect">Combat skills</div>`;
+  h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
   h += `</section></div>`;   // /main-grid
 
   // Identity — reference, kept at the bottom and collapsible

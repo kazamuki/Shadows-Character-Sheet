@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
 **Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.14) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-23 (Starting spells in the wizard and the spell picker modal, Decision 111)
+Last updated: 2026-09-24 (the wishlist session: Decisions 117–122, schema 0.10, game data 0.16)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -2951,6 +2951,23 @@ No cascade logic to maintain — it falls out of the architecture.
       Each fails a test.
     Game data **0.16**, character schema **0.10**, both shared with Decision
     120. Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
+122. **(Main is the fight view — W13, app)** **W13 asked whether Main
+    becomes the fight dashboard or a separate mode gets built. This session
+    made Main the fight view, and a separate mode stays unbuilt until play
+    shows Main isn't enough.** 2026-09-24, under Ken's "everything, no
+    pauses". What W13 listed, and where it now is on Main: weapon lines with
+    their attack and damage, which already existed, now with Fire and Reload
+    (Decision 120); HP, Take a hit, Pain and Conditions, Luck and SAN, each
+    one click from its card (Decision 119); armor and its Integrity, already
+    there. The one change here is the order of Main's Combat column: **the
+    weapons you carry, then the armor that answers, then the combat skills**.
+    The skills table lists every combat skill, trained or not, and it was
+    pushing the lines a player rolls below the fold. A defense readout isn't
+    added: 053 has the defender roll a skill (Dodge, a Parry), which the
+    skills table already shows, and a single "Defense" number would be
+    invented. One smoke test pins the order (mutation-tested: skills first
+    fails it). Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
 
 ## 5. Open Flags
 
