@@ -170,9 +170,9 @@ function groupedStatBlockHtml(ch){
 function hlMiniHtml(ch){
   const hp=Engine.health(ch);
   if (hp.levels<=0 || hp.hpPer<=0) return "";
-  return `<div class="hl-mini" aria-hidden="true">` + hlCells(ch).map(c=>
-    `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
-  ).join("") + `</div>`;
+  return `<span class="hl-mini" aria-hidden="true">` + hlCells(ch).map((c,i)=>
+    `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
+  ).join("") + `</span>`;
 }
 
 // One entry per Health Level, the way every track draws it (Decision 99):
@@ -191,17 +191,19 @@ function hlCells(ch){
 function sheetVitalsBar(ch){
   const hp=Engine.health(ch), pain=Engine.painState(ch), luck=Engine.luckState(ch),
         san=Engine.sanState(ch), sf=Engine.sfr(ch), ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
-  const pill=(cls,ui,k,v)=>`<div class="vpill ${cls}">${ui?`<span class="vico">${uiIcon(ui)}</span>`:""}<span class="vtext"><span class="vk">${k}</span><span class="vv">${v}</span></span></div>`;
+  // W2: a pill with a `pop` key is a button that opens that vital's popover.
+  const pill=(cls,ui,k,v,pop)=>{ const inner=`${ui?`<span class="vico">${uiIcon(ui)}</span>`:""}<span class="vtext"><span class="vk">${k}</span><span class="vv">${v}</span></span>`;
+    return pop ? `<button class="vpill act ${cls}" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>` : `<div class="vpill ${cls}">${inner}</div>`; };
   let h=`<div class="vbar" aria-label="Vitals">`;
-  h+=pill(pain.down?"hp danger":"hp","health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`);
-  h+=pill(pain.level?"danger":"","pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"));
+  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`,"hp");
+  h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"),"pain");
   const cs=Engine.conditionState(ch);
-  if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`);
-  h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`);
-  h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`);
+  if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`,"cond");
+  h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`,"san");
+  h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`,"luck");
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h+=pill("sfr","sfr","SFR",`${left}<small>/${sf.value}</small>`); }
-  h+=pill("cred","credits","Ç",`${ch.trackers.credits.current}`);
+  h+=pill("cred","credits","Ç",`${ch.trackers.credits.current}`,"cred");
   h+=pill(ip.available<0?"danger":"","","IP",`${ip.available}`);
   h+=pill("","","MP",`${ms.mp}`);
   h+=`<button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv" style="font-size:.82rem">View ▸</span></span></button>`;
@@ -291,22 +293,26 @@ function renderShMain(){
 
   // Condition strip — replaces the Vitals rail on this tab (full width)
   const pct = (n,d)=> d>0 ? Math.max(0,Math.min(100,Math.round(n/d*100))) : 0;
-  const cond = (cls,name,uiName,big,meta,meter,seg)=>`<div class="cond ${cls}"><div class="corner">${uiIcon(uiName)}</div>
-    <div class="lab">${name}</div><div class="big">${big}</div>${meta?`<div class="meta">${meta}</div>`:""}${seg?seg:(meter!=null?`<div class="meter"><i style="width:${meter}%"></i></div>`:"")}</div>`;
+  // W3: a card with a `pop` key is a button that opens the same popover as
+  // its pill on the other tabs (spans inside, since a button holds no divs).
+  const cond = (cls,name,uiName,big,meta,meter,seg,pop)=>{
+    const inner=`<span class="corner">${uiIcon(uiName)}</span>
+    <span class="lab">${name}</span><span class="big">${big}</span>${meta?`<span class="meta">${meta}</span>`:""}${seg?seg:(meter!=null?`<span class="meter"><i style="width:${meter}%"></i></span>`:"")}`;
+    return pop ? `<button class="cond act ${cls}" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>` : `<div class="cond ${cls}">${inner}</div>`; };
   h += `<div class="cond-grid">`;
-  h += cond(`hp ${pain.down?"danger":""}`,"Health","health",
-    `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch));
-  h += cond(`${pain.level?"danger":""}`,"Pain","pain",
-    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null);
+  h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
+    `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
+  h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
+    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null, "", "pain");
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
-    `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max));
+    `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
-    `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max));
+    `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max), "", "luck");
   if (sf && sf.value!=null){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
   }
-  h += cond("cred","Çredits","credits", `Ç${ch.trackers.credits.current}`, "", null);
+  h += cond("cred","Çredits","credits", `Ç${ch.trackers.credits.current}`, "", null, "", "cred");
   h += `</div>`;
   h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
@@ -316,11 +322,13 @@ function renderShMain(){
   // ── left: stats, clustered into the four spheres ──
   h += `<section class="main-stats"><div class="sect">Stats</div>${groupedStatBlockHtml(ch)}</section>`;
 
-  // ── right: combat skills + weapons ──
+  // ── right: what gets rolled in a fight (W13) ──
+  // The weapons you carry come first, with their magazines (W16), then the
+  // armor that answers, then every combat skill. The skill table is long, and
+  // it was pushing the lines a player actually rolls below the fold.
   h += `<section class="main-combat"><div class="sect">Combat${painChip(pain)}</div>`;
   if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
   h += conditionTotalsNote(ch, true);
-  h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
   // Weapons: a catalog piece is computed (Decision 100); a custom one reads
   // back what was typed.
   const lines = (ch.weapons||[]).map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
@@ -330,11 +338,11 @@ function renderShMain(){
       lines.map(l=>{
         if (l.custom){ const w=ch.weapons[l.index];
           return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td><td class="num">—</td><td class="num">${esc(w.damage)||"—"}</td>
-            <td class="num">${esc(w.rof)||"—"}</td><td class="num">${esc(w.capacity)||"—"}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
+            <td class="num">${esc(w.rof)||"—"}</td><td class="num lo-rounds">${roundsHtml(l, w.capacity)}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
         return `<tr><td>${esc(l.name)}${l.tags&&l.tags.length?`<div class="lo-sub">${esc(l.tags.join(" · "))}</div>`:""}</td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
-          <td class="num">${esc(l.rof||"—")}</td><td class="num">${esc(l.capacity||"—")}</td></tr>`;
+          <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td></tr>`;
       }).join("") + `</tbody></table>`;
   }
   const worn = Engine.armorState(ch).worn, natMain = naturalArmorText(ch);
@@ -342,6 +350,8 @@ function renderShMain(){
   if (worn) h += `<div class="lo-armor worn"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
     <div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(worn)}</span></div><div class="lo-armor-int">${intBar(worn)}</div></div>`;
   if (natMain) h += `<p class="hitarmor">${esc(natMain)}</p>`;
+  if (lines.length || worn || natMain) h += `<div class="sect">Combat skills</div>`;
+  h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
   h += `</section></div>`;   // /main-grid
 
   // Identity — reference, kept at the bottom and collapsible
@@ -727,7 +737,7 @@ function hitPanelHtml(ch, r){
 // a time, the hit panel included.
 function newActForm(kind){
   return { kind, sources:{}, atZero:"", dyingCheck:"", days:"1", speed:false, hp:"",
-           clear:{}, massive:"", difficulty:"medium", roll:"", shCheck:"", shRoll:"", dose:"1" };
+           clear:{}, massive:"", difficulty:"medium", roll:"", shCheck:"", shRoll:"", dose:"1", fromGear:null };
 }
 const actOpt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
 const actNum=(st,k,label,extra="")=>`<label class="field"><span>${label}</span><input type="number" min="0" data-act="${k}" value="${esc(st[k])}" ${extra}></label>`;
@@ -779,7 +789,7 @@ function restPanelHtml(ch, st){
   let h=`<div class="hitpanel" data-actpanel="rest"><h4>Rest</h4><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>
     <div class="hitrow">${actNum(st,"days","Days of rest")}
       <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
-      ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP recovered")}</div>`;
+      ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP recovered")}</div>${st.speed?gearUseHtml(ch, st, "speed-heal", "fromGear"):""}`;
   if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
   else h+=`<div class="hitresult"><p>${esc(`Damage ${hs.damage} → ${hs.damage - r.healed}.`)}</p>${
     hs.massive?`<p>${esc("Rest doesn't bring back Health Levels lost to Massive damage. That takes Focused Healing.")}</p>`:""}</div>`;
@@ -804,6 +814,16 @@ function focusedPanelHtml(ch, st){
   }
   return h + actButtons(r.ok, "Apply healing") + `</div>`;
 }
+// W17: a panel that spends something you might carry offers to take it
+// from your gear. On by default when you carry one, so the kit comes off the
+// count in the same action as the healing, and one undo puts both back.
+// `st[key]` is null until the player says otherwise.
+function gearUseHtml(ch, st, id, key){
+  const c=Engine.carriedGear(ch, id), def=(D.equipment||[]).find(e=>e.id===id);
+  if (!c || !def) return "";
+  const on = st[key]==null ? true : !!st[key];
+  return `<div class="hitrow"><label class="check"><input type="checkbox" data-act="${key}" ${on?"checked":""}> Use one you carry: ${esc(def.name)} (${c.qty} left)</label></div>`;
+}
 // A Nanomed Kit (Decision 105): clears 054's list and Dying on its own, and
 // proposes the regeneration for the dose. The player can lower the number.
 function nanomedPanelHtml(ch, st){
@@ -813,7 +833,7 @@ function nanomedPanelHtml(ch, st){
   let h=`<div class="hitpanel" data-actpanel="nanomed"><h4>Nanomed Kit</h4><p class="hitnote">${esc(kit.text)} ${esc(kit.doseText)}</p>
     <div class="hitrow"><label class="field"><span>Kit today</span><select data-act="dose">${doses.map((l,i)=>actOpt(String(i+1), l, String(st.dose)===String(i+1))).join("")}</select></label>
       ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP regenerated")}</div>
-    <p class="hitnote">${esc(`1 HP every ${kit.everyRounds===1?"round":kit.everyRounds+" rounds"} for ${kit.rounds} rounds. If it's cut short, lower the number.`)}</p>`;
+    <p class="hitnote">${esc(`1 HP every ${kit.everyRounds===1?"round":kit.everyRounds+" rounds"} for ${kit.rounds} rounds. If it's cut short, lower the number.`)}</p>${gearUseHtml(ch, st, "nanomed-kit", "fromGear")}`;
   if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
   else {
     const lines=[r.healed?`Damage ${hs.damage} → ${hs.damage - r.healed}.`:"",
@@ -861,9 +881,55 @@ function hlTrackHtml(ch){
   return `<div class="hl-track">` + bands.map(b=>{
     const at = b.level===pPainBandFor(here).level;
     return `<div class="hl-band pl-${b.level}${at?" here":""}"><span class="hl-band-k">Pain ${b.level}</span><div class="hl-band-cells">` +
-      b.cells.map(([c])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
+      b.cells.map(([c,i])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
       `</div></div>`; }).join("") + `</div>`;
 }
+// The vitals' controls, drawn by Trackers and by the vitals popovers (W2/W3)
+// alike and bound by one binder (bindVitalControls), so they can't drift.
+function damageStepperHtml(ch){
+  const d=ch.trackers.damage;
+  return `<div class="trk-row">
+    <button class="btn sm" data-dmg="-5" ${d?"":"disabled"}>Heal 5</button>
+    <button class="btn sm" data-dmg="-1" ${d?"":"disabled"}>Heal 1</button>
+    <input type="number" min="0" data-dmgset value="${d}" aria-label="total damage taken" title="Total damage taken">
+    <button class="btn sm" data-dmg="1">Hurt 1</button>
+    <button class="btn sm" data-dmg="5">Hurt 5</button>
+    <button class="btn sm danger" data-dmgheal="1">Heal all</button></div>`;
+}
+const sanControlsHtml = ch => `<button class="btn sm" data-san="-1">−1 loss</button>
+    <input type="number" min="0" data-sanset value="${ch.trackers.san.loss}" aria-label="SAN lost">
+    <button class="btn sm" data-san="1">+1 loss</button>`;
+const luckControlsHtml = luck => luck.spendActions.map(sa=>`<button class="btn sm" data-luckspend="${sa.cost}" ${luck.current<sa.cost?"disabled":""} title="${esc(sa.effect)}">${esc(sa.action)} (−${sa.cost})</button>`).join("") +
+    `<button class="btn sm" data-luckregain="1" ${luck.spent<=0?"disabled":""}>Regain (+1)</button>`;
+const creditControlsHtml = () => `<input type="number" data-cramt placeholder="amount" aria-label="credit amount">
+    <input type="text" data-crnote placeholder="note (what for)" aria-label="credit note">
+    <button class="btn sm" data-cr="1">+ Earn</button>
+    <button class="btn sm" data-cr="-1">− Spend</button>`;
+
+// W2/W3: what each vital's popover holds. The same five on the vitals bar
+// and on Main's cards; `null` when the key isn't one (the popover closes).
+function vitalPopover(ch, key){
+  const pain=Engine.painState(ch), hp=Engine.health(ch);
+  const now = (big, cls, sub) => `<div class="pop-now"><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
+  if (key==="hp") return { title:"Health",
+    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)) + damageStepperHtml(ch) +
+      `<div class="trk-actions"><button class="btn sm primary" data-pophit>Take a hit</button>
+       <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
+  if (key==="pain" || key==="cond") return { title:"Pain & Conditions",
+    html: now(pain.down?"DOWN":pain.level?`Pain Lv ${pain.level}`:"No Pain", pain.level||pain.down?"bad":"",
+      pain.level?esc(painPenaltyLine(pain,false)):"no penalties") + conditionsHtml(ch, false) };
+  if (key==="san"){ const san=Engine.sanState(ch);
+    return { title:"Sanity", html: now(`${san.current} / ${san.max}%`, san.current<=san.max/2?"bad":"san", "") +
+      `<div class="trk-row">${sanControlsHtml(ch)}</div>` }; }
+  if (key==="luck"){ const luck=Engine.luckState(ch);
+    return { title:"LUCK", html: now(`${luck.current} / ${luck.max}`, luck.current===0?"bad":"gold", "") +
+      `<div class="trk-row">${luckControlsHtml(luck)}</div>` }; }
+  if (key==="cred") return { title:"Çredits",
+    html: now(`Ç ${ch.trackers.credits.current}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
+      <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
+  return null;
+}
+
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
@@ -882,15 +948,9 @@ function renderShTrackers(){
   // Damage. The headline is HP left, so the stepper says Heal and Hurt
   // rather than signs on the damage total it edits (W11).
   h += `<div class="trk"><h4>Damage</h4>
-    <span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
+    <span class="big ${pain.down?"bad":"hp"}${landedCls("hp")}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
-    <div class="trk-row">
-    <button class="btn sm" data-dmg="-5" ${ch.trackers.damage?"":"disabled"}>Heal 5</button>
-    <button class="btn sm" data-dmg="-1" ${ch.trackers.damage?"":"disabled"}>Heal 1</button>
-    <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken" title="Total damage taken">
-    <button class="btn sm" data-dmg="1">Hurt 1</button>
-    <button class="btn sm" data-dmg="5">Hurt 5</button>
-    <button class="btn sm danger" data-dmgheal="1">Heal all</button></div>
+    ${damageStepperHtml(ch)}
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
       hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
       withering?` ${withering} of the damage is Withering and won't regenerate.`:""}</span>
@@ -913,7 +973,7 @@ function renderShTrackers(){
     : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
     + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
-  h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
+  h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h4>${esc(pain.label)}</h4>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
     <div class="desc">${esc(pain.description)}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
@@ -924,16 +984,12 @@ function renderShTrackers(){
   // SAN
   h += `<div class="trk"><h4>Sanity</h4>
     <span class="big ${san.current<=san.max/2?"bad":""}">${san.current} / ${san.max}%</span>
-    <button class="btn sm" data-san="-1">−1 loss</button>
-    <input type="number" min="0" data-sanset value="${ch.trackers.san.loss}" aria-label="SAN lost">
-    <button class="btn sm" data-san="1">+1 loss</button>
+    ${sanControlsHtml(ch)}
     <span class="sub">Max is EMP × 10, computed. Track loss here; recovery is a story, not a button.</span></div>`;
 
   // LUCK
   h += `<div class="trk"><h4>LUCK</h4>
-    <span class="big ${luck.current===0?"bad":"gold"}">${luck.current} / ${luck.max}</span>` +
-    luck.spendActions.map(sa=>`<button class="btn sm" data-luckspend="${sa.cost}" ${luck.current<sa.cost?"disabled":""} title="${esc(sa.effect)}">${esc(sa.action)} (−${sa.cost})</button>`).join("") +
-    `<button class="btn sm" data-luckregain="1" ${luck.spent<=0?"disabled":""}>Regain (+1)</button>
+    <span class="big ${luck.current===0?"bad":"gold"}">${luck.current} / ${luck.max}</span>${luckControlsHtml(luck)}
     <span class="sub">${esc(luck.refresh)} Logging a session refreshes it automatically.</span></div>`;
 
   // Archetype tracker panels (declared in data, rendered generically)
@@ -962,10 +1018,7 @@ function renderShTrackers(){
   // Çredits
   h += `<div class="sect">Çredits</div>
     <div class="trk"><h4>Balance</h4><span class="big gold">Ç ${ch.trackers.credits.current}</span>
-    <input type="number" data-cramt placeholder="amount" aria-label="credit amount">
-    <input type="text" data-crnote placeholder="note (what for)" aria-label="credit note">
-    <button class="btn sm" data-cr="1">+ Earn</button>
-    <button class="btn sm" data-cr="-1">− Spend</button></div>`;
+    ${creditControlsHtml()}</div>`;
   const ledger = ch.trackers.credits.ledger||[];
   if (ledger.length){
     h += `<details class="group" open><summary>Ledger (${ledger.length})</summary><div class="journal">` +
@@ -1167,27 +1220,169 @@ function auditChip(kind){
 const attackText = n => n==null ? "—" : `1d10 ${n<0?"−":"+"} ${Math.abs(n)}`;
 const priceText = d => typeof d.cost==="number" && d.cost>0 ? `${d.cost.toLocaleString("en-US")}Ç` : "";
 const titleCase = s => String(s||"").replace(/^./, c=>c.toUpperCase());
-function loadoutPickerHtml(kind){
+// ── The catalog browser (W4) ─────────────────────────────────────────
+// A modal like the spell picker (Decisions 111–112): search, a group filter,
+// "what I can afford", a sort, and every number Loadout would show, before
+// Add or Buy. The numbers are Engine.catalogLine(), the same reader Loadout's
+// rows use, so the two can't disagree. S.loPick keeps the filters while the
+// modal is open; a click on a row (not its buttons) opens its details.
+function catalogGroups(kind){
   const R = D.armorRules||{};
-  let groups;
+  if (kind==="gear") return (D.equipmentCategories||[]).map(c=>({ id:c.id, label:c.name, note:c.note||"", items:(D.equipment||[]).filter(e=>e.category===c.id) }))
+    .filter(g=>g.items.length);
   if (kind==="weapons"){
     const known = new Set((D.weaponCategories||[]).map(c=>c.id));
-    groups = (D.weaponCategories||[]).map(c=>({ label:c.name, items:D.weapons.filter(w=>w.category===c.id) }))
-      .concat([{ label:"Other", items:D.weapons.filter(w=>!known.has(w.category)) }]);
-  } else {
-    const slots = [...new Set(D.armor.map(a=>a.slot||"body"))];
-    groups = slots.flatMap(slot => slot==="body"
-      ? Object.keys(R.coverageLocations||{}).map(cov=>({ label:(R.coverageNames||{})[cov]||titleCase(cov),
-          items:D.armor.filter(a=>(a.slot||"body")==="body" && (a.coverage||R.defaultCoverage)===cov) }))
-      : [{ label:(R.slotNames||{})[slot]||titleCase(slot), items:D.armor.filter(a=>a.slot===slot) }]);
+    return (D.weaponCategories||[]).map(c=>({ id:c.id, label:c.name, items:D.weapons.filter(w=>w.category===c.id) }))
+      .concat([{ id:"other", label:"Other", items:D.weapons.filter(w=>!known.has(w.category)) }]).filter(g=>g.items.length);
   }
-  const opts = groups.filter(g=>g.items.length).map(g=>`<optgroup label="${esc(g.label)}">` +
-    g.items.map(d=>`<option value="${esc(d.id)}">${esc(d.name)}${priceText(d)?" — "+priceText(d):""}</option>`).join("") + `</optgroup>`).join("");
+  const slots = [...new Set(D.armor.map(a=>a.slot||"body"))];
+  return slots.flatMap(slot => slot==="body"
+    ? Object.keys(R.coverageLocations||{}).map(cov=>({ id:`cov:${cov}`, label:(R.coverageNames||{})[cov]||titleCase(cov),
+        items:D.armor.filter(a=>(a.slot||"body")==="body" && (a.coverage||R.defaultCoverage)===cov) }))
+    : [{ id:`slot:${slot}`, label:(R.slotNames||{})[slot]||titleCase(slot), items:D.armor.filter(a=>a.slot===slot) }]).filter(g=>g.items.length);
+}
+const CATALOG_SORTS = {
+  weapons: [["book","Book order"],["price","Price, low to high"],["-price","Price, high to low"],["-damage","Damage, high to low"],["name","Name"]],
+  armor:   [["book","Book order"],["price","Price, low to high"],["-price","Price, high to low"],["-integrity","Integrity, high to low"],["name","Name"]],
+  gear:    [["book","Book order"],["price","Price, low to high"],["-price","Price, high to low"],["name","Name"]]
+};
+function catalogMatches(ch, kind){
+  const st = S.loPick || {}, k = String(st.q||"").toLowerCase().trim();
+  const rows = catalogGroups(kind).filter(g=>!st.group || g.id===st.group)
+    .flatMap(g=>g.items.map(d=>({ g, l: Engine.catalogLine(ch, kind, d.id) }))).filter(x=>x.l);
+  const hit = x => !k || [x.l.name, x.g.label, x.l.skill&&x.l.skill.name, x.l.style, x.l.damageType, x.l.quality,
+    ...(x.l.tags||[]), ...(x.l.features||[]), x.l.flavorLine, x.l.itemNotes, x.l.spellName, x.l.material].filter(Boolean).join(" ").toLowerCase().includes(k);
+  const list = rows.filter(x=>hit(x) && (!st.afford || x.l.buy.ok));
+  const key = { price: x=>x.l.price==null?Infinity:x.l.price, damage: x=>x.l.damage==null?-Infinity:x.l.damage,
+                integrity: x=>x.l.integrityMax||0, name: x=>x.l.name.toLowerCase() };
+  const sort = st.sort||"book", desc = sort[0]==="-", f = key[sort.replace(/^-/,"")];
+  if (f) list.sort((a,b)=>{ const x=f(a), y=f(b); return (x<y?-1:x>y?1:0)*(desc?-1:1); });
+  return { list, total: rows.length };
+}
+const perPurchase = l => l.chargesMax ? `${l.chargesMax} charges${l.startsEmpty?" (sold empty)":""}` : l.pack>1 ? `${l.pack} ${esc(l.unit||"")}s` : l.unit ? `1 ${esc(l.unit)}` : "1";
+function catalogCellsHtml(kind, l){
+  if (kind==="gear")
+    return `<td data-k="Notes">${esc(l.itemNotes||"—")}${l.spell?`<div class="sub">${esc(l.spell.name)}: ${esc(tnth(l.spell))}, ${esc(l.spell.effect)}</div>`:""}</td>
+      <td class="num" data-k="Comes as">${perPurchase(l)}</td>`;
+  if (kind==="weapons"){
+    const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
+    return `<td class="num" data-k="Attack">${attackText(l.attack)}${l.acc?`<div class="sub">+${l.acc} ACC Single</div>`:""}${l.skill&&!l.skill.trained?`<div class="sub">untrained</div>`:""}</td>
+      <td class="num" data-k="Damage">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="sub">${esc(l.damageFormula)}</div>`:""}</td>
+      <td data-k="Range">${esc(range||"—")}</td><td class="num" data-k="RoF">${esc(l.rof||"—")}</td><td class="num" data-k="Cap.">${esc(l.capacity||"—")}</td>`;
+  }
+  const res = l.resAgainst.map(titleCase).join(", ");
+  return l.slot==="body"
+    ? `<td class="num" data-k="PROT">${esc(l.prot||"—")}</td><td class="num" data-k="RES">+${l.res}${res?`<div class="sub">${esc(res)}</div>`:""}</td>
+       <td class="num" data-k="Integrity">${l.integrityMax}</td><td class="num" data-k="Mods">${l.mods==null?"—":l.mods}</td>`
+    : `<td colspan="4" class="sub">${esc(l.features.join(" · ")||"—")}</td>`;
+}
+function catalogResultsHtml(ch, kind){
+  const { list } = catalogMatches(ch, kind), open = (S.loPick||{}).open;
+  if (!list.length) return `<p class="step-note">Nothing in the catalog matches that.</p>`;
+  const head = kind==="weapons" ? ["Weapon","Attack","Damage","Range","RoF","Cap."] : kind==="gear" ? ["Item","Notes","Comes as"] : ["Armor","PROT","RES","Integrity","Mods"];
+  const cols = head.length + 2;
+  return `<table class="ref cat-results"><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}<th>Price</th><th></th></tr></thead><tbody>` +
+    list.map(({ g, l })=>{
+      const sub = kind==="weapons"
+        ? [g.label, l.skill&&l.skill.name, l.style, l.damageType&&l.damageType!=="Normal"?l.damageType:null, ...l.tags, ...l.features]
+        : kind==="gear" ? [g.label, l.material, l.spellName?`Holds ${l.spellName}`:null, l.action?`${l.action} Action`:null]
+        : [g.label, l.quality, ...(l.slot==="body"?l.features:[])];
+      const det = [l.flavorLine, l.weaponNotes, kind==="gear"?g.note:null].filter(Boolean);
+      return `<tr class="catrow${open===l.id?" open":""}" data-catrow="${esc(l.id)}" aria-expanded="${open===l.id}">
+        <td><b>${esc(l.name)}</b><div class="sub">${esc([...new Set(sub.filter(Boolean))].join(" · "))}</div>${l.buy.ok||l.price==null?"":`<div class="why">${esc(l.buy.why)}</div>`}</td>
+        ${catalogCellsHtml(kind, l)}
+        <td class="num" data-k="Price">${priceText({cost:l.price})||esc(l.costText||"—")}${l.availability?`<div class="sub">${esc(l.availability)}</div>`:""}</td>
+        <td class="cat-act"><button class="btn sm" data-catadd="${esc(l.id)}" title="Add it without paying: found, issued, or already bought">Add</button>
+          <button class="btn sm primary" data-catbuy="${esc(l.id)}" ${l.buy.ok?"":"disabled"} title="${esc(l.buy.ok?`Pay ${priceText({cost:l.price})} from your Çredits`:l.buy.why)}">Buy</button></td></tr>
+      <tr class="cat-detail" ${open===l.id?"":"hidden"}><td colspan="${cols}">${det.length?det.map(t=>`<p>${esc(t)}</p>`).join(""):"<p>No notes in the catalog.</p>"}</td></tr>`;
+    }).join("") + `</tbody></table>`;
+}
+function catalogStatusHtml(ch, kind){
+  const { list, total } = catalogMatches(ch, kind);
+  return `Showing <b>${list.length}</b> of ${total} · You have <b>${(Number(ch.trackers.credits.current)||0).toLocaleString("en-US")}Ç</b>`;
+}
+function catalogPickerHtml(ch, kind){
+  const st = S.loPick;
+  const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
+  return `<div class="spell-pick cat-pick"><div class="pick-head"><div class="hitrow">
+      <input type="search" data-catq value="${esc(st.q)}" placeholder="${kind==="gear"?"Search name, notes, spell":"Search name, tags, skill"}" aria-label="Search the catalog">
+      <select data-catf="group" aria-label="Section">${opt("",kind==="armor"?"Every kind":"Every section",!st.group)}${catalogGroups(kind).map(g=>opt(g.id,g.label,st.group===g.id)).join("")}</select>
+      <select data-catf="sort" aria-label="Sort">${CATALOG_SORTS[kind].map(([v,l])=>opt(v,l,(st.sort||"book")===v)).join("")}</select>
+      <label class="check"><input type="checkbox" data-catafford ${st.afford?"checked":""}> What I can afford</label>
+    </div><p class="pick-status" data-catstatus aria-live="polite">${catalogStatusHtml(ch, kind)}</p></div>
+    <div data-catresults>${catalogResultsHtml(ch, kind)}</div></div>`;
+}
+function loadoutAddHtml(kind){
+  const what = { armor:"armor", weapons:"weapons", gear:"equipment" }[kind];
   return `<div class="lo-add">
-    <select data-lopick="${kind}" aria-label="${kind==="armor"?"Armor":"Weapon"} from the catalog"><option value="">Choose from the catalog…</option>${opts}</select>
-    <button class="btn sm" data-loadd="${kind}">Add</button>
-    <button class="btn sm primary" data-lobuy="${kind}" disabled>Buy</button>
-    <button class="btn sm" data-locustom="${kind}">+ Custom ${kind==="armor"?"armor":"weapon"}</button></div>`;
+    <button class="btn sm primary" data-lobrowse="${kind}">Browse the ${what} catalog</button>
+    ${kind==="gear" ? `<button class="btn sm" data-rowadd="gear">+ Your own</button>`
+      : `<button class="btn sm" data-locustom="${kind}">+ Custom ${kind==="armor"?"armor":"weapon"}</button>`}</div>`;
+}
+// ── Gear (W17 + W27, Decision 121) ───────────────────────────────────
+// Catalog rows count what you carry: a consumable says how many and takes
+// one off with Use one; a charged Talisman shows its charges; an inscribed
+// object names the spell it holds, from the book when the book has it. Your
+// own rows are the typed table they always were.
+function gearRowsHtml(ch){
+  const lines = (ch.gear||[]).map((e,i)=>Engine.gearLine(ch,i)).filter(Boolean);
+  const cat = lines.filter(l=>!l.custom), own = lines.filter(l=>l.custom);
+  let h = "";
+  if (cat.length) h += `<div class="lo-gear">` + cat.map(l=>{
+    if (l.missing) return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b> <span class="chip pain">no longer in the game data</span></div>
+      <div class="lo-gear-ctl"></div><input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" aria-label="notes">
+      <button class="x" data-lorm="gear|${l.index}" title="Remove">✕</button></div>`;
+    const sub = [l.categoryName, l.material, l.action?`${l.action} Action`:null, l.itemNotes].filter(Boolean);
+    const count = l.charges
+      ? `<span class="gear-count${l.charges.left?"":" empty"}">${l.charges.left}<small>/${l.charges.max} charges</small></span>
+         <button class="btn sm" data-gearcharge="${l.index}" ${l.charges.left?"":"disabled"}>Use a charge</button>
+         <button class="btn sm" data-gearrecharge="${l.index}" ${l.charges.used?"":"disabled"}>Recharged</button>`
+      : l.consumable
+      ? `<span class="gear-count">×${l.qty}${l.unit?` <small>${esc(l.unit)}${l.qty===1?"":"s"}</small>`:""}</span>
+         <button class="btn sm" data-gearuse="${l.index}">Use one</button><button class="btn sm" data-gearplus="${l.index}" aria-label="One more ${esc(l.name)}">+1</button>`
+      : l.qty>1 ? `<span class="gear-count">×${l.qty}</span>` : "";
+    const spell = l.spell ? `<div class="lo-sub">Holds <b>${esc(l.spell.name)}</b> (${esc(tnth(l.spell))}): ${esc(l.spell.effect)}</div>`
+                : l.spellName ? `<div class="lo-sub">Holds ${esc(l.spellName)}</div>` : "";
+    return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${spell}</div>
+      <div class="lo-gear-ctl">${count}</div>
+      <input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" placeholder="notes" aria-label="${esc(l.name)} notes">
+      <button class="x" data-lorm="gear|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></div>`;
+  }).join("") + `</div>`;
+  if (own.length){
+    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${GEAR_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>` +
+      own.map(l=>{ const r=ch.gear[l.index];
+        return `<tr>` + GEAR_COLS.map(c=>`<td><input type="text" data-cell="gear|${l.index}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
+          `<td class="rm"><button class="x" data-rowdel="gear|${l.index}" title="remove row">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+  }
+  if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
+  return h + loadoutAddHtml("gear");
+}
+// W16: the magazine, where a weapon line is drawn (Loadout and Main). One
+// button per rate of fire the weapon has, each spending that mode's rounds
+// (053), and Reload. A weapon whose capacity doesn't read shows it as text.
+function roundsHtml(l, capacityText){
+  const r=l.rounds;
+  if (!r) return esc(capacityText||"—");
+  const modes = l.fireModes && l.fireModes.length ? l.fireModes : [{ id:"", name:"Fire", rounds:1 }];
+  return `<span class="rounds${r.left===0?" empty":""}" title="Rounds left of ${r.max}">${r.left}<small>/${r.max}</small></span>
+    <span class="fire">${modes.map(f=>`<button class="btn sm" data-fire="${l.index}|${esc(f.id)}" ${r.left<f.rounds?"disabled":""}
+      aria-label="Fire ${esc(f.name)}, ${f.rounds} round${f.rounds===1?"":"s"}" title="${esc(f.name)}: ${f.rounds} round${f.rounds===1?"":"s"}">${esc(f.id||"−1")}</button>`).join("")}
+    <button class="btn sm" data-reload="${l.index}" ${r.spent?"":"disabled"}>Reload</button></span>`;
+}
+// A sight's ACC is for aimed shots, and a Scope's only at range (Gear), so
+// they're listed apart from Single's ACC rather than summed into it.
+const aimedHtml = l => (l.aimed||[]).map(a=>`<div class="lo-sub">Aimed${a.when?` ${esc(a.when)}`:""}: +${a.acc} ACC (${esc(a.by.join(", "))}${
+  a.instead&&a.instead.length?`, instead of ${esc(a.instead.join(", "))}`:""})</div>`).join("");
+function weaponModsHtml(ch, l){
+  const u = Engine.weaponModOptions(ch, l.index);
+  if (!u || (!u.slots && !l.mods.length)) return "";
+  const chips = l.mods.map((m,at)=>`<span class="cond-chip" title="${esc(m.description)}"><b>${esc(m.id)}</b>
+    <button class="x" data-wmodrm="${l.index}|${at}" aria-label="Remove ${esc(m.id)}" title="Remove">✕</button></span>`).join("");
+  const flagged = (D.weaponModGlossary||[]).filter(g=>g.flagged && l.mods.some(m=>m.id===g.id));
+  return `<div class="lo-upgrades"><span class="lo-sub">Mods · ${u.free} of ${u.slots} slot${u.slots===1?"":"s"} free</span>${chips}
+    ${u.free?`<select data-wmodpick="${l.index}" aria-label="Mod for ${esc(l.name)}"><option value="">Install a mod…</option>${
+      u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)} (${o.slots} slot${o.slots===1?"":"s"})${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
+    <button class="btn sm" data-wmodadd="${l.index}">Install</button>`:""}</div>${flagged.map(flagHtml).join("")}`;
 }
 function weaponRowsHtml(ch){
   const lines = ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
@@ -1201,24 +1396,27 @@ function weaponRowsHtml(ch){
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
         const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null, ...l.tags].filter(Boolean);
         const range = [l.reach ? `Reach ${l.reach}` : l.range, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
+        const mods = weaponModsHtml(ch, l);
         return `<tr><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div></td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}</td>
-          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}</td>
-          <td>${esc(range||"—")}</td><td class="num">${esc(l.rof||"—")}</td><td class="num">${esc(l.capacity||"—")}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${aimedHtml(l)}</td>
+          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
+            l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}</td>
+          <td>${esc(range||"—")}</td><td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
-          <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
+          <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>${
+          mods?`<tr class="lo-modrow"><td colspan="8">${mods}</td></tr>`:""}`;
       }).join("") + `</tbody></table></div>`;
     const pain = Engine.painState(ch);
     h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
   }
   if (custom.length){
-    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>` +
+    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th>rounds</th><th></th></tr></thead><tbody>` +
       custom.map(l=>{ const r=ch.weapons[l.index];
         return `<tr>` + WEAPON_COLS.map(c=>`<td><input type="text" data-cell="weapons|${l.index}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
-          `<td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+          `<td class="num lo-rounds">${roundsHtml(l, "")}</td><td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
   }
   if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
-  return h + loadoutPickerHtml("weapons");
+  return h + loadoutAddHtml("weapons");
 }
 const intBar = p => {
   const pct = p.integrityMax>0 ? Math.round(100*p.integrity/p.integrityMax) : 0;
@@ -1262,10 +1460,10 @@ function armorRowHtml(ch, p){
       ${u.slots!==0?`<select data-upgpick="${p.index}" aria-label="Upgrade"><option value="">Install an upgrade…</option>${
         u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)}${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
       <button class="btn sm" data-upgadd="${p.index}">Install</button>`:""}</div>`;
-    const canRepair = !p.scrapped && p.integrityLoss>0;
+    const canRepair = !p.scrapped && p.integrityLoss>0, frk = Engine.carriedGear(ch, "field-repair-kit");
     h += `<div class="hitrow lo-repair">
       <label class="field"><span>Repair kit (${esc(R.repairKitDie||"1d6")})</span><input type="number" min="1" data-repairroll="${p.index}" ${canRepair?"":"disabled"}></label>
-      <button class="btn sm" data-repairkit="${p.index}" ${canRepair?"":"disabled"}>Field Repair Kit</button>
+      <button class="btn sm" data-repairkit="${p.index}" ${canRepair?"":"disabled"}>Field Repair Kit${frk?` (1 of your ${frk.qty})`:""}</button>
       <button class="btn sm" data-repairfull="${p.index}" ${canRepair?"":"disabled"}>Armorer: full repair</button>
       <span class="hitnote">${esc(p.scrapped ? R.scrapNote : p.features.includes("Rapid Repair") ? "Rapid Repair: the kit is an Action here, not an hour." : R.repairKitNote)}</span></div>`;
   }
@@ -1285,7 +1483,7 @@ function armorRowsHtml(ch){
   let h = as.problems.map(p=>`<p class="hitnote">${esc(p)}</p>`).join("");
   if (nat) h += `<p class="hitarmor">${esc(nat)}</p>`;
   h += as.pieces.map(p=>armorRowHtml(ch, p)).join("") || `<p class="step-note">No armor yet.</p>`;
-  return h + loadoutPickerHtml("armor");
+  return h + loadoutAddHtml("armor");
 }
 
 // ── Grimoire (Decision 108) ──────────────────────────────────────────
@@ -1415,7 +1613,7 @@ function renderShLoadout(){
   const secs = sectionList("lo");
   let h = secs.sect("Weapons") + weaponRowsHtml(ch);
   h += secs.sect("Armor") + armorRowsHtml(ch);
-  h += secs.sect("Gear") + editTable(ch.gear, GEAR_COLS, "gear", "Add gear");
+  h += secs.sect("Gear") + gearRowsHtml(ch);
 
   // Archetype panels: rankedList / table / list / text / toggle
   for (const p of Engine.archPanels(ch)){
@@ -1724,8 +1922,14 @@ function pWeaponRows(ch){
     return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
              damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""),
              range: l.reach ? `Reach ${l.reach}` : (l.range||""), rof:l.rof||"", capacity:l.capacity||"",
-             features:[...(l.tags||[]), ...(l.features||[])].join(", "), notes:l.notes };
+             features:[...(l.tags||[]), ...(l.features||[]), ...(l.mods||[]).map(m=>m.id)].join(", "), notes:l.notes };
   });
+}
+// Gear on paper: a catalog row prints its count or charges as its type.
+function pGearRows(ch){
+  return (ch.gear||[]).map((e,i)=>Engine.gearLine(ch,i)).filter(Boolean).map(l=>l.custom ? ch.gear[l.index]
+    : { name:l.name, type:[l.categoryName, l.charges?`${l.charges.left}/${l.charges.max} charges`:l.qty>1||l.consumable?`×${l.qty}`:""].filter(Boolean).join(" · "),
+        notes:[l.spellName?`Holds ${l.spellName}`:"", l.notes].filter(Boolean).join(" · ") });
 }
 function pArmorRows(ch){
   if (!ch) return [];
@@ -1814,7 +2018,7 @@ function renderPrintView(ch){
     ["Weapon","Attack","Damage","Range","RoF","Capacity","Features","Notes"], 5)}`;
   // Armor sits beside Gear rather than below it: the blank Loadout page had
   // about 68px spare, and a full-width armor table would spill to a 4th sheet.
-  p3 += `<div class="p-cols2"><div><div class="p-section">Gear</div>${pRowsTableHtml(ch&&ch.gear, GEAR_COLS, ["Item","Type","Notes"], 5)}</div>` +
+  p3 += `<div class="p-cols2"><div><div class="p-section">Gear</div>${pRowsTableHtml(ch&&pGearRows(ch), GEAR_COLS, ["Item","Type","Notes"], 5)}</div>` +
         `<div><div class="p-section">Armor</div>${pRowsTableHtml(pArmorRows(ch), ["name","prot","res","integrity","worn"],
           ["Armor","PROT","RES","Integrity","Worn"], 5)}</div></div>`;
   p3 += `<div class="p-cols2"><div><div class="p-section">Advantages</div>${pTraitsTableHtml(ch&&ch.advantages, Engine.advById, "Advantage", 5)}</div>` +

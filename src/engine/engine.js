@@ -11,7 +11,7 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.9", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.10", gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -744,7 +744,9 @@ const Engine = (() => {
   const weaponDefById = byId("weapons");
   const listOf = (ch, kind) => Array.isArray(ch && ch[kind]) ? ch[kind] : [];
   const priceOf = def => (typeof def.cost==="number" && def.cost>0) ? def.cost : null;
-  const loadoutDef = (kind, id) => kind==="armor" ? armorDefById(id) : kind==="weapons" ? weaponDefById(id) : null;
+  const equipmentById = byId("equipment");
+  const loadoutDef = (kind, id) => kind==="armor" ? armorDefById(id) : kind==="weapons" ? weaponDefById(id)
+                                 : kind==="gear" ? equipmentById(id) : null;
   function checkRoll(die, roll, what){
     const max = dieMax(die), n = Math.floor(Number(roll));
     if (roll==null || roll==="" || !(n>=1)) return { ok:false, why:`Enter the ${what} you rolled.` };
@@ -770,19 +772,135 @@ const Engine = (() => {
     const e = listOf(ch, "weapons")[index];
     if (!e || typeof e!=="object") return null;
     const notes = typeof e.notes==="string" ? e.notes : "";
-    if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), notes };
+    if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), notes,
+      rounds: roundsOf(e.capacity, e), fireModes: fireModesOf(e.rof) };
     const def = weaponDefById(e.id);
     if (!def) return { index, missing:true, name:String(e.id), notes };
+    const line = Object.assign({ index, notes }, weaponDefLine(ch, def));
+    // W16: what's installed changes the line. A mod's tags join the
+    // weapon's, its damage bonus adds to every hit, and a sight's ACC is
+    // carried apart as `aimed`, since it's for aimed shots, not Single fire.
+    const mods = modsOf(e).map(id=>weaponModById(id)).filter(Boolean);
+    line.mods = mods.map(m=>({ id:m.id, slots:Number(m.slots)||0, description:m.description||"" }));
+    line.modSlots = { slots: Number(def.mods)||0, used: mods.reduce((n,m)=>n+(Number(m.slots)||0),0) };
+    line.modSlots.free = Math.max(0, line.modSlots.slots - line.modSlots.used);
+    const bonus = mods.reduce((n,m)=>n+(Number(m.damageBonus)||0),0);
+    if (bonus){ line.damageBonus = bonus; if (line.damage!=null) line.damage += bonus; }
+    line.tags = [...new Set([...line.tags, ...mods.flatMap(m=>m.grantsTags||[])])];
+    const sights = mods.filter(m=>m.aimedAcc && !m.aimedAt), far = mods.filter(m=>m.aimedAcc && m.aimedAt);
+    line.aimed = [];
+    if (sights.length) line.aimed.push({ acc: sights.reduce((n,m)=>n+m.aimedAcc,0), by: sights.map(m=>m.id), when:null });
+    far.forEach(m=>line.aimed.push({ acc:m.aimedAcc, by:[m.id], when:m.aimedAt,
+      instead: (m.notWith||[]).filter(x=>sights.some(g=>g.id===x)) }));
+    line.rounds = roundsOf(def.capacity, e);
+    line.fireModes = fireModesOf(def.rof);
+    return line;
+  }
+  // ── Rounds and mods (W16, Decision 120) ──
+  // A capacity reads as its leading number plus any chambered "+N": "15+1"
+  // holds 16, "100 (belt)" 100, "10 bursts" 10. Anything else isn't tracked
+  // (null). `roundsSpent` is the stored input, so a full magazine is 0 and a
+  // catalog capacity that changes can't strand a stale count.
+  const weaponModById = byId("weaponModGlossary");
+  const modsOf = e => Array.isArray(e && e.mods) ? e.mods.filter(x=>typeof x==="string") : [];
+  function roundsOf(capacity, e){
+    const m = /^\s*(\d+)\s*(?:\+\s*(\d+))?/.exec(String(capacity==null ? "" : capacity));
+    const max = m ? Number(m[1]) + Number(m[2]||0) : 0;
+    if (!(max>0)) return null;
+    const spent = Math.min(max, nonNegInt(e && e.roundsSpent));
+    return { max, spent, left: max - spent };
+  }
+  function fireModesOf(rof){
+    const ids = String(rof==null ? "" : rof).toUpperCase().split(/[^A-Z]+/).filter(Boolean);
+    return ((D().weaponRules||{}).rofModes||[]).filter(r=>ids.includes(r.id)).map(r=>({ id:r.id, name:r.name, rounds:Number(r.rounds)||1 }));
+  }
+  function weaponEntry(ch, index){
+    const e = listOf(ch, "weapons")[index];
+    return e && typeof e==="object" ? e : null;
+  }
+  // Fire a mode (or a bare count, for a weapon with no RoF: a bow, the
+  // Hellmouth's bursts). Refused, with the reason, if the magazine can't pay.
+  function fireWeapon(ch, index, mode){
+    const e = weaponEntry(ch, index), l = e && weaponLine(ch, index);
+    if (!l || l.missing) return { ok:false, why:"That weapon isn't on the sheet." };
+    if (!l.rounds) return { ok:false, why:`${l.name||"This weapon"} doesn't track rounds.` };
+    const fm = (l.fireModes||[]).find(f=>f.id===mode);
+    const n = fm ? fm.rounds : mode==null || mode==="" ? 1 : Math.floor(Number(mode));
+    if (!(n>=1)) return { ok:false, why:"Choose how it's fired." };
+    if (n>l.rounds.left) return { ok:false, why:`${fm?fm.name:"That"} spends ${n} round${n===1?"":"s"}, and ${l.rounds.left} ${l.rounds.left===1?"is":"are"} left. Reload.` };
+    e.roundsSpent = l.rounds.spent + n;
+    return { ok:true, name:l.name, spent:n, mode: fm ? fm.name : null, left: l.rounds.left - n, max: l.rounds.max };
+  }
+  function reloadWeapon(ch, index){
+    const e = weaponEntry(ch, index), l = e && weaponLine(ch, index);
+    if (!l || l.missing) return { ok:false, why:"That weapon isn't on the sheet." };
+    if (!l.rounds) return { ok:false, why:`${l.name||"This weapon"} doesn't track rounds.` };
+    if (!l.rounds.spent) return { ok:false, why:"It's already full." };
+    e.roundsSpent = 0;
+    return { ok:true, name:l.name, max:l.rounds.max };
+  }
+  // What can go on a catalog weapon: every mod, with the reason one can't.
+  function weaponModOptions(ch, index){
+    const e = weaponEntry(ch, index);
+    if (!e || e.custom || !e.id) return null;
+    const def = weaponDefById(e.id); if (!def) return null;
+    const l = weaponLine(ch, index), have = modsOf(e);
+    const options = (D().weaponModGlossary||[]).map(g=>{
+      const need = Number(g.slots)||0, only = g.onlyFor, not = g.notFor;
+      let why = null;
+      if (!l.modSlots.slots) why = `${def.name} has no mod slots.`;
+      else if (have.includes(g.id)) why = "Already installed.";
+      else if (not && (not.categories||[]).includes(def.category)) why = `Doesn't go on ${categoryName(def.category)}.`;
+      else if (only && !(only.categories||[]).includes(def.category) && !(only.weapons||[]).includes(def.id)) why = `Doesn't fit ${def.name}.`;
+      else if (need>l.modSlots.free) why = need===1 ? "No slot free." : `Needs ${need} slots; ${l.modSlots.free} free.`;
+      return { id:g.id, slots:need, ok:!why, why, description:g.description||"" };
+    });
+    return { name:def.name, slots:l.modSlots.slots, used:l.modSlots.used, free:l.modSlots.free, options };
+  }
+  const categoryName = id => ((D().weaponCategories||[]).find(c=>c.id===id)||{ name:String(id||"this weapon") }).name;
+  function addWeaponMod(ch, index, id){
+    const u = weaponModOptions(ch, index);
+    const o = u && u.options.find(x=>x.id===id);
+    if (!o) return { ok:false, why: u ? "Choose a mod." : "Only a catalog weapon takes mods." };
+    if (!o.ok) return { ok:false, why:o.why };
+    const e = ch.weapons[index];
+    e.mods = modsOf(e).concat(id);
+    return { ok:true, name:u.name };
+  }
+  function removeWeaponMod(ch, index, at){
+    const e = weaponEntry(ch, index);
+    if (!e || !Array.isArray(e.mods) || !(at>=0 && at<e.mods.length)) return { ok:false, why:"No such mod." };
+    const id = e.mods.splice(at, 1)[0];
+    return { ok:true, id };
+  }
+  // A catalog weapon's numbers for this character, before anyone carries it.
+  function weaponDefLine(ch, def){
     const sk = def.skill && skillById(def.skill) ? skillLine(ch, def.skill) : null;
     const dmg = weaponDamage(ch, def.damage);
-    return { index, id:def.id, name:def.name, category:def.category||null, notes,
+    return { id:def.id, name:def.name, category:def.category||null,
              skill: sk ? { id:sk.def.id, name:sk.def.name, trained:sk.trained } : null,
              attack: sk ? sk.checkBonus : null, acc: typeof def.acc==="number" ? def.acc : null,
              damage: dmg.value, damageFormula: dmg.formula,
              style: def.style||null, damageType: def.damageType||null,
-             reach: def.reach||null, parry: def.parry||null, range: def.range||null,
+             reach: def.reach||null, parry: def.parry||null, range: def.range||null, radius: def.radius||null,
              rof: def.rof||null, capacity: def.capacity||null,
              tags: def.tags||[], features: def.features||[], weaponNotes: def.notes||null };
+  }
+
+  // W4 — one catalog entry as the browser shows it, before it's added: the
+  // same line Loadout would draw (a weapon's attack and damage for this
+  // character, an armor piece's PROT, RES and Integrity), its price, and
+  // whether Buy can go ahead and, if not, why. Null for an unknown id.
+  function catalogLine(ch, kind, id){
+    const def = loadoutDef(kind, id);
+    if (!def || !ch || typeof ch!=="object") return null;
+    const line = kind==="armor" ? armorPiece({ id }, null) : kind==="gear" ? gearDefLine(def) : weaponDefLine(ch, def);
+    const price = priceOf(def), have = Number(ch && ch.trackers && ch.trackers.credits && ch.trackers.credits.current)||0;
+    const buy = price==null ? { ok:false, why:"No street price. Add it, then log what it cost under Çredits." }
+              : price>have ? { ok:false, why:`Costs ${price.toLocaleString("en-US")}Ç. You have ${have.toLocaleString("en-US")}Ç.` }
+              : { ok:true };
+    return Object.assign(line, { kind, price, availability: def.availability||null,
+      flavorLine: def.flavorLine||null, buy });
   }
 
   // Add a catalog piece. `buy` also pays its price out of Çredits, in the
@@ -797,6 +915,11 @@ const Engine = (() => {
       const have = Number(ch.trackers.credits.current)||0;
       if (price>have) return { ok:false, why:`${def.name} costs ${price}Ç. You have ${have}Ç.` };
     }
+    if (kind==="gear"){
+      const r = addGearEntry(ch, def);
+      if (buy) addCredits(ch, -price, `Bought ${def.name}`);
+      return Object.assign(r, { name:def.name, paid: buy ? price : 0 });
+    }
     const list = ch[kind];
     if (kind==="armor"){
       const e = { id, integrityLoss:0, notes:"", worn:false, scrapped:false, upgrades:[] };
@@ -804,16 +927,90 @@ const Engine = (() => {
       const slot = def.slot || "body";
       if (!list.some((o,i)=>o && typeof o==="object" && o.worn===true && armorPiece(o,i).slot===slot)) e.worn = true;
       list.push(e);
-    } else list.push({ id, notes:"" });
+    } else list.push({ id, notes:"", mods:[], roundsSpent:0 });
     if (buy) addCredits(ch, -price, `Bought ${def.name}`);
     return { ok:true, index:list.length-1, name:def.name, paid: buy ? price : 0 };
   }
+  // ── Equipment (W17 + W27, Decision 121) ──
+  // A gear row is a catalog reference ({ id, qty, notes }, plus chargesUsed
+  // for a charged Talisman) or the player's own typed row (custom:true), the
+  // same split weapons have. A stackable entry (anything without charges)
+  // adds to the row you already have; a charged Talisman is its own row,
+  // since each one keeps its own charges.
+  const gearCategoryName = id => ((D().equipmentCategories||[]).find(c=>c.id===id)||{ name:String(id||"") }).name;
+  function gearDefLine(def){
+    const sp = def.spell ? spellById(def.spell) : null;
+    return { id:def.id, name:def.name, category:def.category||null, categoryName:gearCategoryName(def.category),
+             consumable:!!def.consumable, pack: Math.max(1, nonNegInt(def.pack)||1), unit:def.unit||null,
+             chargesMax: nonNegInt(def.charges)||null, material:def.material||null,
+             spell: sp ? { id:sp.id, name:sp.name, tn:sp.tn, th:sp.th, effect:sp.effect||"" } : null,
+             spellName: def.spellName||null, action:def.action||null, itemNotes:def.notes||null, costText:def.costText||null,
+             startsEmpty: !!def.startsEmpty };
+  }
+  function gearLine(ch, index){
+    const e = listOf(ch, "gear")[index];
+    if (!e || typeof e!=="object") return null;
+    const notes = typeof e.notes==="string" ? e.notes : "";
+    if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), type:String(e.type||""), notes };
+    const def = equipmentById(e.id);
+    if (!def) return { index, missing:true, name:String(e.id), notes, qty: nonNegInt(e.qty) };
+    const l = Object.assign({ index, notes, qty: nonNegInt(e.qty) }, gearDefLine(def), { flavorLine: def.flavorLine||null });
+    if (l.chargesMax){ const used = Math.min(l.chargesMax, nonNegInt(e.chargesUsed));
+      l.charges = { max:l.chargesMax, used, left:l.chargesMax-used }; }
+    return l;
+  }
+  function addGearEntry(ch, def){
+    const list = ch.gear, pack = Math.max(1, nonNegInt(def.pack)||1), charges = nonNegInt(def.charges);
+    if (!charges){
+      const at = list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===def.id);
+      if (at>=0){ list[at].qty = nonNegInt(list[at].qty) + pack; return { ok:true, index:at, stacked:true, added:pack }; }
+      list.push({ id:def.id, qty:pack, notes:"" });
+    } else list.push({ id:def.id, qty:1, notes:"", chargesUsed: def.startsEmpty ? charges : 0 });
+    return { ok:true, index:list.length-1, added:pack };
+  }
+  // The first row of an id you still have some of, for a panel that can use
+  // one you carry (a Nanomed Kit, a dose of Speed Heal, a Field Repair Kit).
+  function carriedGear(ch, id){
+    const list = listOf(ch, "gear");
+    const index = list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===id && nonNegInt(o.qty)>0);
+    return index<0 ? null : { index, qty: nonNegInt(list[index].qty) };
+  }
+  // Use one (n) of a consumable, or put some back (negative n). A count that
+  // reaches zero takes the row off, as crossing it off the sheet would.
+  function useGear(ch, index, n){
+    const l = gearLine(ch, index);
+    if (!l || l.custom || l.missing) return { ok:false, why:"That isn't a catalog item on the sheet." };
+    const k = n==null ? 1 : Math.trunc(Number(n));
+    if (!k) return { ok:false, why:"Say how many." };
+    if (k>0 && !l.consumable) return { ok:false, why:`${l.name} isn't used up.` };
+    if (k>l.qty) return { ok:false, why:`You have ${l.qty}.` };
+    const left = l.qty - k;
+    if (left<=0) ch.gear.splice(index, 1); else ch.gear[index].qty = left;
+    return { ok:true, name:l.name, used:k, left: Math.max(0, left), removed: left<=0 };
+  }
+  // A charged Talisman: spend a charge, or recharge it full (by TOL or a
+  // paid service; the sheet records that it's full, the player the price).
+  function useCharge(ch, index){
+    const l = gearLine(ch, index);
+    if (!l || !l.charges) return { ok:false, why:"That doesn't hold charges." };
+    if (!l.charges.left) return { ok:false, why:`${l.name} is spent. Recharge it first.` };
+    ch.gear[index].chargesUsed = l.charges.used + 1;
+    return { ok:true, name:l.name, left: l.charges.left - 1, max:l.charges.max };
+  }
+  function rechargeGear(ch, index){
+    const l = gearLine(ch, index);
+    if (!l || !l.charges) return { ok:false, why:"That doesn't hold charges." };
+    if (!l.charges.used) return { ok:false, why:"It's already full." };
+    ch.gear[index].chargesUsed = 0;
+    return { ok:true, name:l.name, restored:l.charges.used, max:l.charges.max };
+  }
+
   // A custom piece is typed by the player. Armor's `coverage` is optional and
   // reads as light (torso) when absent, so a file without it is still valid.
   function addCustomLoadout(ch, kind){
     if (kind==="armor") ch.armor.push({ custom:true, name:"", prot:"", res:0, integrity:0, coverage:"light",
                                         integrityLoss:0, notes:"", worn:false, scrapped:false, upgrades:[] });
-    else if (kind==="weapons") ch.weapons.push({ custom:true, name:"", type:"", damage:"", rof:"", capacity:"", ammo:"", features:"", notes:"" });
+    else if (kind==="weapons") ch.weapons.push({ custom:true, name:"", type:"", damage:"", rof:"", capacity:"", ammo:"", features:"", notes:"", roundsSpent:0 });
     else return { ok:false, why:"Weapons or armor only." };
     return { ok:true, index:ch[kind].length-1 };
   }
@@ -1683,6 +1880,28 @@ const Engine = (() => {
     // A pre-0.6 entry has neither marker -- tag it custom rather than guess
     // which catalog weapon a free-typed name was supposed to mean.
     c.weapons.forEach(w => { if (w && !w.id && !w.custom) w.custom = true; });
+    // Schema 0.10 (W17 + W27, Decision 121): a gear row is a catalog
+    // reference ({ id, qty }, `chargesUsed` on a charged Talisman) or typed
+    // (custom:true). Every row from before is typed text, so it's tagged
+    // custom, never matched to a catalog name, as the 0.6 step did weapons.
+    c.gear = (Array.isArray(c.gear) ? c.gear : []).filter(g=>g && typeof g==="object").map(g=>{
+      if (g.custom || typeof g.id!=="string"){ g.custom = true; return g; }
+      g.qty = g.qty==null ? 1 : nonNegInt(g.qty);
+      if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed);
+      if (typeof g.notes!=="string") g.notes = "";
+      return g;
+    });
+    // Schema 0.10 (W16, Decision 120): a weapon keeps its installed mods (a
+    // catalog weapon's `mods`, weaponModGlossary ids) and the rounds spent
+    // since its last reload. Nothing is guessed: a file from before starts
+    // with no mods and a full magazine.
+    if (!Array.isArray(c.weapons)) c.weapons = [];
+    c.weapons.forEach(w => {
+      if (!w || typeof w!=="object") return;
+      w.roundsSpent = nonNegInt(w.roundsSpent);
+      if (w.custom) delete w.mods;
+      else w.mods = Array.isArray(w.mods) ? w.mods.filter(x=>typeof x==="string") : [];
+    });
     // Schema 0.8 (plan P5, landed now so there's one migration): `worn` marks
     // the body piece that rolls PROT, `scrapped` is the one state
     // integrityLoss can't express (driven to 0 by Massive), `upgrades` holds
@@ -1732,7 +1951,7 @@ const Engine = (() => {
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.9";
+    c.meta.schemaVersion = "0.10";
     return c;
   }
 
@@ -2149,7 +2368,8 @@ const Engine = (() => {
            // Taking a hit (Decision 99)
            hlState, armorState, resolveHit, applyHit, damageTypeById, damageCategoryById,
            // Loadout & recovery (Decision 100)
-           weaponLine, addLoadout, addCustomLoadout, removeLoadout, setWorn,
+           weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
+           gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
            upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
            naturalHealing, heal, resolveReset, applyReset,
            // Combat cleanup (Decisions 104–105)

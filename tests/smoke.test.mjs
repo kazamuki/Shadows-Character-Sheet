@@ -289,7 +289,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.9");
+  assert.equal(resumed.meta.schemaVersion, "0.10");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -595,20 +595,22 @@ test("Take a hit opens as a modal: HP and the track up top, Apply says what it w
 });
 
 // ── Loadout & recovery (Decision 100) ─────────────────────────────────
-function pickFromCatalog(app, kind, id) {
-  const sel = app.$(`[data-lopick="${kind}"]`);
-  assert.ok(sel, `no ${kind} picker`);
-  sel.value = id;
-  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+// W4: the catalog is a modal. Open it and press a row's Add or Buy.
+function pickFromCatalog(app, kind, id, how = "add") {
+  app.click(`[data-lobrowse="${kind}"]`);
+  const b = app.$(`#modal [data-cat${how}="${id}"]`);
+  assert.ok(b, `${id} isn't in the ${kind} catalog`);
+  return b;
 }
 
 test("Loadout: Buy a vest from the catalog — it's paid for, worn, answers a hit, and one undo takes it all back", () => {
   const ch = lockedCharacter();
   ch.trackers.credits.current = 1000;
   const app = openSheet(ch, "loadout");
-  pickFromCatalog(app, "armor", "kevlar-vest");
-  assert.match(app.$('[data-lobuy="armor"]').textContent, /500Ç/, "Buy doesn't show the price");
-  app.click('[data-lobuy="armor"]');
+  const buy = pickFromCatalog(app, "armor", "kevlar-vest", "buy");
+  assert.match(buy.closest("tr").textContent, /500Ç/, "the row doesn't show the price");
+  buy.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click("#modal [data-modalclose]");
   const got = activeChar(app);
   assert.equal(got.trackers.credits.current, 500);
   assert.equal(got.armor.length, 1);
@@ -631,8 +633,9 @@ test("Loadout: Buy a vest from the catalog — it's paid for, worn, answers a hi
 test("Loadout: a catalog weapon shows its computed attack and damage on Loadout and Main", () => {
   const ch = lockedCharacter();                                  // BOD 5
   const app = openSheet(ch, "loadout");
-  pickFromCatalog(app, "weapons", "combat-knife");               // BOD+3
-  app.click('[data-loadd="weapons"]');
+  pickFromCatalog(app, "weapons", "combat-knife")               // BOD+3
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click("#modal [data-modalclose]");
   const attack = Engine.skillLine(activeChar(app), "melee").checkBonus;
   const row = app.$(".lo-weapons tbody tr").textContent;
   assert.match(row, /Combat Knife/);
@@ -1082,5 +1085,239 @@ test("W22: step 7's sticky bar filters the picks, keeps what you hold, and survi
   app.click('[data-step="luck|x|1"]');                                 // a stepper re-renders the step
   assert.equal(filter().value, "berserk", "a re-render dropped the filter");
   assert.deepEqual(shown(), ["Berserker", "Danger Sense"], "a re-render dropped the filtering");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W15: a hit lands once — the HP readouts and the boxes that took it flash, Pain beats when it rises, and healing never flashes", () => {
+  const ch = lockedCharacter();
+  const hp = Engine.health(ch);
+  const app = openSheet(ch, "trackers");
+  const landed = () => app.$$("#main .hl.landed").length;
+  assert.equal(landed(), 0, "a box flashed before anything happened");
+  app.click('[data-dmg="1"]');                                            // 1 HP into the first box
+  assert.equal(landed(), 1, "the box that took the damage didn't flash");
+  assert.ok(app.$("#main .hl.landed") === app.$("#main .hl"), "the wrong box flashed");
+  assert.ok(app.$("#main .trk .big.struck") && app.$("#main .vpill.hp.struck"), "the HP readouts didn't flash");
+  assert.equal(app.$$("#main .painup").length, 0, "Pain beat though its level didn't move");
+  app.click('[data-sec="trackers"]');                                     // a plain re-render
+  assert.equal(landed() + app.$$("#main .struck").length, 0, "the flash replayed on a later render");
+  app.click('[data-dmg="-1"]');                                           // Heal 1
+  assert.equal(landed() + app.$$("#main .struck").length, 0, "healing flashed");
+
+  // Enough to cross into Pain 1: the Pain readouts get their own beat.
+  const cross = D.resources.healthLevels.painLevels.find(p => p.level === 1).hlLostThreshold * hp.hpPer;
+  const set = app.$("[data-dmgset]"); set.value = String(cross);
+  set.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(landed(), D.resources.healthLevels.painLevels.find(p => p.level === 1).hlLostThreshold, "not every box the damage filled flashed");
+  assert.ok(app.$("#main .pick.painup") && app.$("#main .vpill.painup"), "Pain didn't beat when it rose");
+  app.click('[data-sec="main"]');
+  assert.equal(app.$$("#main .landed, #main .struck, #main .painup").length, 0, "switching tabs replayed the flash");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W4: the catalog browser shows the numbers before you buy, searches, filters to what you can afford, sorts, and stays open", () => {
+  const ch = lockedCharacter();                                  // BOD 5
+  ch.trackers.credits.current = 1500;
+  const app = openSheet(ch, "loadout");
+  app.click('[data-lobrowse="weapons"]');
+  const rows = () => app.$$("#modal [data-catrow]");
+  assert.equal(rows().length, D.weapons.length, "not every weapon is listed");
+  const row = id => app.$(`#modal [data-catrow="${id}"]`);
+  const attack = Engine.skillLine(ch, "melee").checkBonus;
+  assert.match(row("combat-knife").textContent, new RegExp(`1d10 \\+ ${attack}`), "the attack isn't shown before adding");
+  assert.match(row("combat-knife").textContent, /8\s*BOD\+3/, "the damage isn't resolved for this character");
+  assert.ok(app.$('#modal [data-catbuy="bdf-oni"]').disabled, "Buy is on for a weapon you can't afford");
+  assert.match(row("bdf-oni").textContent, /Costs 7,500Ç\. You have 1,500Ç\./, "the row doesn't say why Buy is off");
+
+  const q = app.$("#modal [data-catq]");
+  q.value = "viper"; q.dispatchEvent(new app.window.Event("input"));
+  assert.deepEqual(rows().map(r => r.dataset.catrow), ["ads-lp9-viper"], "search didn't narrow the list");
+  q.value = ""; q.dispatchEvent(new app.window.Event("input"));
+  const afford = app.$("#modal [data-catafford]");
+  afford.checked = true; afford.dispatchEvent(new app.window.Event("change"));
+  const cheap = D.weapons.filter(w => typeof w.cost === "number" && w.cost > 0 && w.cost <= 1500).map(w => w.id);
+  assert.deepEqual(rows().map(r => r.dataset.catrow).sort(), [...cheap].sort(), "'What I can afford' is wrong");
+  assert.match(app.$("#modal [data-catstatus]").textContent, new RegExp(`Showing ${cheap.length} of ${D.weapons.length}`));
+  const sort = app.$('#modal [data-catf="sort"]');
+  sort.value = "-price"; sort.dispatchEvent(new app.window.Event("change"));
+  const prices = rows().map(r => D.weapons.find(w => w.id === r.dataset.catrow).cost);
+  assert.deepEqual(prices, [...prices].sort((a, b) => b - a), "sorting by price didn't");
+
+  // A click on the row opens its details; Buy pays, and the modal stays open with the new balance.
+  const detail = () => app.$('#modal [data-catrow="combat-knife"] + tr');
+  assert.ok(detail().hidden, "a row's details show before it's opened");
+  app.click('#modal [data-catrow="combat-knife"] td');
+  assert.ok(!detail().hidden && /sharp edge/.test(detail().textContent), "the row's details didn't open");
+  app.click('#modal [data-catbuy="combat-knife"]');
+  assert.ok(app.$("#modal").open, "the modal closed after a pick");
+  assert.equal(activeChar(app).trackers.credits.current, 1400);
+  assert.match(app.$("#modal [data-catstatus]").textContent, /1,400Ç/, "the balance didn't refresh");
+  assert.equal(activeChar(app).weapons[0].id, "combat-knife");
+  app.click("#modal [data-toastundo]");
+  assert.deepEqual([activeChar(app).weapons.length, activeChar(app).trackers.credits.current], [0, 1500], "one undo didn't take the purchase back");
+
+  // Armor shows its numbers too.
+  app.click("#modal [data-modalclose]");
+  app.click('[data-lobrowse="armor"]');
+  assert.match(app.$('#modal [data-catrow="kevlar-vest"]').textContent, /1d6/, "the vest's PROT isn't shown");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W2: a vitals pill opens its popover, whose buttons are Trackers' own — same audit label, same undo — and it follows the render", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const hp = Engine.health(activeChar(app)).total;
+  app.click('[data-vpop="hp"]');
+  const pop = () => app.$("#vpop");
+  assert.ok(!pop().hidden, "the HP pill didn't open a popover");
+  assert.equal(app.$('[data-vpop="hp"]').getAttribute("aria-expanded"), "true");
+  assert.match(pop().textContent, new RegExp(`${hp} / ${hp} HP`));
+  app.$('#vpop [data-dmg="5"]').focus();                                  // a browser focuses what's clicked
+  app.click('#vpop [data-dmg="5"]');
+  assert.equal(activeChar(app).trackers.damage, 5);
+  assert.ok(!pop().hidden, "the popover closed after an action");
+  assert.match(pop().textContent, new RegExp(`${hp - 5} / ${hp} HP`), "the popover didn't redraw with the new HP");
+  assert.equal(app.window.document.activeElement, app.$('#vpop [data-dmg="5"]'), "focus didn't stay on the button pressed");
+  assert.match(app.$("#undotoast").textContent, /Hurt 5/, "not Trackers' own label");
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.damage, 0, "the popover's action didn't undo");
+
+  // Esc closes and hands focus back to the pill.
+  app.window.document.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.ok(pop().hidden, "Esc didn't close the popover");
+  assert.equal(app.window.document.activeElement, app.$('[data-vpop="hp"]'), "focus didn't go back to the pill");
+
+  // Çredits: Earn with a note, from the popover's own fields.
+  app.click('[data-vpop="cred"]');
+  app.$("#vpop [data-cramt]").value = "250"; app.$("#vpop [data-crnote]").value = "fixer's cut";
+  app.click('#vpop [data-cr="1"]');
+  const c = activeChar(app).trackers.credits;
+  assert.equal(c.current, lockedCharacter().trackers.credits.current + 250);
+  assert.equal(c.ledger[c.ledger.length - 1].note, "fixer's cut");
+
+  // A click elsewhere closes it; a second popover replaces the first.
+  app.click('[data-vpop="san"]');
+  assert.match(pop().textContent, /Sanity/);
+  app.click('#vpop [data-san="1"]');
+  assert.equal(activeChar(app).trackers.san.loss, 1);
+  app.$("#main h1").dispatchEvent(new app.window.MouseEvent("mousedown", { bubbles: true }));
+  assert.ok(pop().hidden, "a click elsewhere didn't close the popover");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W3: Main's cards open the same popovers — LUCK spends, Pain adds a Condition, and Take a hit hands over to the hit modal", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  assert.ok(app.$("#main .cond-grid button.cond[data-vpop='hp']"), "Main's Health card isn't a button");
+  app.click('#main .cond[data-vpop="luck"]');
+  const spend = app.$("#vpop [data-luckspend]:not([disabled])");
+  assert.ok(spend, "the LUCK popover has no spend action");
+  spend.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(activeChar(app).trackers.luck.spent, Number(spend.dataset.luckspend));
+
+  app.click('#main .cond[data-vpop="pain"]');
+  app.click('#vpop [data-condquick="stunned"]');
+  assert.deepEqual(activeChar(app).trackers.conditions.map(c => c.id), ["stunned"], "the Pain popover didn't add the Condition");
+  assert.match(app.$("#vpop").textContent, /Stunned/, "the popover didn't show the Condition it added");
+  app.click('#vpop [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 0, "the popover couldn't clear it");
+
+  app.click('#main .cond[data-vpop="hp"]');
+  app.click("#vpop [data-pophit]");
+  assert.ok(app.$("#vpop").hidden, "the popover stayed open under the hit modal");
+  assert.ok(app.$("#modal").open && /Take a hit/.test(app.$("#modal").textContent), "Take a hit didn't open the hit modal");
+  app.click("[data-hitcancel]");
+  assert.equal(app.window.document.activeElement, app.$('#main [data-vpop="hp"]'), "focus didn't come back to the Health card");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W16: install a mod on Loadout, fire a Burst from Main, Reload, and each is one undo", () => {
+  const ch = lockedCharacter();
+  ch.weapons.push({ id: "ar9x-guardian", notes: "", mods: [], roundsSpent: 0 });   // 30+1, S/B/F, 1 slot
+  const app = openSheet(ch, "loadout");
+  const pick = app.$('[data-wmodpick="0"]');
+  assert.ok(pick, "no mod picker on a weapon with a slot");
+  assert.ok(pick.querySelector('option[value="Silencer"]') && !pick.querySelector('option[value="Scope"]').disabled, "a rifle can't take a Scope");
+  pick.value = "Scope";
+  app.click('[data-wmodadd="0"]');
+  assert.deepEqual([...activeChar(app).weapons[0].mods], ["Scope"]);
+  assert.match(app.$(".lo-weapons").textContent, /Aimed at Long or Extreme range: \+2 ACC \(Scope\)/, "the Scope's ACC isn't shown");
+  assert.match(app.$(".lo-weapons").textContent, /0 of 1 slot free/);
+  assert.ok(app.$(".lo-modrow .flag"), "the Scope's unsettled fit isn't said");
+
+  app.click('[data-sec="main"]');
+  assert.match(app.$(".main-combat .lo-rounds").textContent, /31\s*\/31/, "Main doesn't show the magazine");
+  app.click('.main-combat [data-fire="0|B"]');
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 3);
+  assert.match(app.$("#undotoast").textContent, /Burst −3 \(28\/31 left\)/);
+  app.click('.main-combat [data-fire="0|F"]');
+  assert.match(app.$(".main-combat .lo-rounds").textContent, /18\s*\/31/);
+  app.click('.main-combat [data-reload="0"]');
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 0);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 13, "Reload didn't undo on its own");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W17/W27: buy from the equipment catalog, use one and a charge on Loadout, and a Nanomed Kit you carry comes off with the healing", () => {
+  const ch = lockedCharacter();
+  ch.trackers.credits.current = 10000;
+  ch.trackers.damage = 6;
+  const app = openSheet(ch, "loadout");
+  app.click('[data-lobrowse="gear"]');
+  const group = app.$('#modal [data-catf="group"]');
+  group.value = "charged"; group.dispatchEvent(new app.window.Event("change"));
+  assert.match(app.$('#modal [data-catrow="shield-charm"]').textContent, /Shield: TN .* TH/, "the charm doesn't show the spell it holds");
+  app.click('#modal [data-catbuy="shield-charm"]');
+  group.value = ""; group.dispatchEvent(new app.window.Event("change"));
+  app.click('#modal [data-catbuy="nanomed-kit"]');
+  app.click('#modal [data-catbuy="quickstitch"]');
+  app.click("#modal [data-modalclose]");
+  let got = activeChar(app);
+  assert.equal(got.trackers.credits.current, 10000 - 450 - 4500 - 1500);
+  assert.match(app.$(".lo-gear").textContent, /Quickstitch[\s\S]*×5 doses/);
+  const row = id => app.$$(".lo-gear-row").find(r => r.textContent.includes(id));
+  row("Quickstitch").querySelector("[data-gearuse]").dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.match(row("Quickstitch").textContent, /×4/);
+  row("Shield charm").querySelector("[data-gearcharge]").dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.match(row("Shield charm").textContent, /2\s*\/3 charges/);
+  assert.match(row("Shield charm").textContent, /Holds Shield/);
+
+  // The Nanomed panel offers the kit you carry, on by default; Apply takes it off.
+  app.click('[data-sec="trackers"]');
+  app.click('[data-actopen="nanomed"]');
+  const use = app.$('[data-actpanel="nanomed"] [data-act="fromGear"]');
+  assert.ok(use && use.checked, "the panel didn't offer the kit you carry");
+  app.click("[data-actapply]");
+  got = activeChar(app);
+  assert.ok(!got.gear.some(g => g.id === "nanomed-kit"), "the kit didn't come out of your gear");
+  assert.ok(got.trackers.damage < 6, "the kit didn't heal");
+  app.click("[data-toastundo]");
+  got = activeChar(app);
+  assert.deepEqual([got.gear.some(g => g.id === "nanomed-kit"), got.trackers.damage], [true, 6], "one undo didn't put back both");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W17: the Field Repair Kit button takes a use off the kit you carry", () => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 6, notes: "", worn: true, scrapped: false, upgrades: [] });
+  ch.gear.push({ id: "field-repair-kit", qty: 5, notes: "" });
+  const app = openSheet(ch, "loadout");
+  assert.match(app.$('[data-repairkit="0"]').textContent, /1 of your 5/);
+  app.$('[data-repairroll="0"]').value = "4";
+  app.click('[data-repairkit="0"]');
+  const got = activeChar(app);
+  assert.deepEqual([got.armor[0].integrityLoss, got.gear[0].qty], [2, 4]);
+  assert.match(app.$("#undotoast").textContent, /4 kit uses left/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("W13: Main's Combat column leads with the weapons you carry and the armor that answers, then the skills", () => {
+  const ch = lockedCharacter();
+  ch.weapons.push({ id: "ads-lp9-viper", notes: "", mods: [], roundsSpent: 0 });
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const app = openSheet(ch, "main");
+  const heads = app.$$(".main-combat .sect").map(s => s.textContent.replace(/Pain.*/, "").trim());
+  assert.deepEqual(heads, ["Combat", "Weapons", "Armor", "Combat skills"], "the fight's lines aren't first");
+  const weapons = app.$(".main-combat table.ref:not(.skill-table)"), skills = app.$(".main-combat .skill-table");
+  assert.ok(weapons.compareDocumentPosition(skills) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, "the skills table comes before the weapons");
   assert.deepEqual(app.errors, []);
 });
