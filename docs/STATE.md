@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-23
-**Versions:** app `0.19.0` · game data `0.14` · character schema `0.9` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.19.1` · game data `0.14` · character schema `0.9` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **237 passing, 0 todo, 0 failing** (237 tests, six files)
+**Suite:** `npm run verify` → **238 passing, 0 todo, 0 failing** (238 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -137,16 +137,18 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #43, and live is `v0.19.0`** (Decision 111,
-game data 0.14). **The magic plan is closed** (Decisions 108–111). The next
-observable change is 0.20.
+**`main` is caught up through PR #44, and live is `v0.19.0`** (Decision 111,
+game data 0.14). App **0.19.1** (W19, the Martial Arts grid fix) is on its
+branch with Ken's W19–W26, not yet merged or tagged. **The magic plan is closed.**
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
 under General Milestones in `041_Archetypes` — not in the Advantages chapter).
 The wishlist's layout pair **W1 + W10** is one pass. The popover/modal set
 **W2/W3/W6** now has its primitive (`openModal`, Decision 111), so **W6** (Take
-a hit in the modal) is a UI move. **W16** (weapon mods and rounds) is the
+a hit in the modal) is a UI move, and **W23–W26** (row click, disabled rows,
+sticky search, a Done button, Ken's pick for W26) are one pass on the same
+primitive. **W20 + W21** (the skill line) is another. **W16** (weapon mods and rounds) is the
 next schema bump, and **W17** could share it. Cyborg, Vampire, and the print
 sheet's remaining visual work wait on people outside a session.
 
