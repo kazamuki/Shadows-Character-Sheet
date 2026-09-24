@@ -179,6 +179,8 @@ Where to start and what the project is gets told in `CLAUDE.md`, `docs/README.md
 
 **Partly closed 2026-09-24:** every stale fact in the table above is corrected, except the §5 preamble, the §6 roadmap, CONTRIBUTING's six constraints, and INDEX's "five namespaces" and "generated" claims. Those, and the structural half (one orientation path, and retiring or merging files), are S2.
 
+**Closed 2026-09-24** (Decision 132, plan S2): `CLAUDE.md` → `STATE.md` → `INDEX.md` is the path; `docs/README.md` and the `HANDOFF.md` stub are gone; SCHEMA is §1–§5, with its roadmap and §5's history verbatim in `log/archive.md`; CONTRIBUTING points at CLAUDE.md instead of restating it.
+
 ### A5: The decision ledger is doing three jobs
 **Med · [read]**
 
@@ -187,6 +189,8 @@ Where to start and what the project is gets told in `CLAUDE.md`, `docs/README.md
 **Why it matters.** The ledger is the one document everyone is told to trust ("the text that counts"). When one entry is a hundred lines, the decision inside it is hard to find, and supersession gets harder to see. Decision 102 exists because Decision 93 buried a formula that Deighton's TOL ruling later reversed.
 
 **Direction.** Keep every existing entry and number: they're cited from code and tests. **From now on,** a decision is a short record: the choice, why, what it replaces, and consequences, capped at around 20 lines, with a link to the log entry or PR for the build detail (R1). Only choices get numbered: a rule, a data shape, an architectural rule, or a player-facing behavior someone could reasonably have chosen otherwise. A no-op version check is a log line, not a decision (R2).
+
+**Closed 2026-09-24** (Decision 130, plan S2): the format is standard from 124 on and tested, and the fourteen load-bearing entries are backfilled with what they rejected and when to revisit.
 
 ### A6: The per-change documentation tax is out of proportion to the change
 **Med · [run] (git history)**
@@ -210,6 +214,8 @@ Where to start and what the project is gets told in `CLAUDE.md`, `docs/README.md
 - `archetypes[vampire]`, `archetypes[werewolf]`, `archetypes[arcanist].growth`: content-gap notes. Vampire and Werewolf partly overlap F7/F13, but nothing links them.
 
 **Direction.** Every `flagged: true` gets an F-number or loses the flag. A test fails on a flag without one (R6). F27–F30 for the four tags go into the next grouped question to Deighton, alongside F23–F26.
+
+**Closed 2026-09-24** (plan S2): F27 had gone to Hardcore Parkour, so the tags are **F28–F31**. The Arcanist's `growth` is **F32**; the Vampire and Werewolf notes name F7 (and F13). `docs.test.mjs` now fails on a flag with no open F-number.
 
 ### A8: "A new archetype is data, not code" doesn't hold for two of the three built ones
 **High · [read] + [run]**
@@ -383,7 +389,7 @@ At phone width the nine tabs, the ⋮ menu and the theme toggle wrap to four row
 - **C8: Audit log growth, and undo across a migration.** A simulated 100-session campaign (2,200 actions) produced a 219 KB file, 92% of it audit. That's about 94 bytes per action, far under `localStorage`'s ~5 MB, **so this is not a problem at any realistic scale**. Two facts to keep: an edit inside an array (firing one weapon, using one gear item) stores a copy of the whole array (`_arrayDiff`'s `set` fallback), and stored undo patches are never migrated, so undoing an action recorded before a `migrate()` step can restore the older shape. Readers tolerate it today. Revisit if a file passes about 1 MB, or before a migration that reshapes an array.
 - **C9: `versionCheck()` doesn't report every orphan.** It checks skills, advantages, disadvantages, Conditions, Aberrations and Milestones, but not weapon, armor, gear, spell or specialization ids. Every reader survives those (they show "no longer in the game data"), so it's a reporting gap only.
 - **C10: `meta.notes` in the game data is a changelog.** It's a single string, now about 4 KB, narrating every data version from 0.3 to 0.16. It skips 0.15, and it ships to players inside the data. That history belongs in `log/` or `CHANGELOG.md`, and `meta` should hold only what the app reads.
-- **C11: Closed plans still host open work.** Both plans in `docs/plans/` are closed, but STATE §5 sends Ken to `plans/combat-and-conditions.md` §6 for CQ8, CQ9 and CQ11–CQ13, his CRB fixes. Open items should live somewhere open: STATE §5 itself, or a short "CRB fixes" list.
+- **C11: Closed plans still host open work.** Both plans in `docs/plans/` are closed, but STATE §5 sends Ken to `plans/combat-and-conditions.md` §6 for CQ8, CQ9 and CQ11–CQ13, his CRB fixes. Open items should live somewhere open: STATE §5 itself, or a short "CRB fixes" list. *Closed 2026-09-24 (plan S2), along with C10: each fix is one line in STATE §5, and `meta.notes` is in `log/archive.md`.*
 - **C12: The dev server listens on every interface and doesn't confine paths.** `tools/devserver.mjs` calls `listen(PORT)`, which binds all interfaces, and joins `req.url` onto the repo root without checking the result stays inside. It isn't shipped and is only run by hand, but on shared Wi-Fi it serves any file the user can read. Fix: bind `127.0.0.1` and reject paths outside `ROOT`.
 - **C13: The voice corpus renders the sheet for one archetype.** `voice.test.mjs` walks every wizard step for every archetype, but the nine sheet tabs only for an Arcanist with no specialization. Werewolf, Professional and Admin copy on the sheet is never read by the voice guard.
 - **C14: Releases.** `release.yml` attaches only the character sheet, not the blank sheet, and uses GitHub's auto-generated notes (a list of PR titles) rather than the CHANGELOG section written for players. `release.yml` and `deploy-demo.yml` each build the same tag separately. And the tag has to be pushed from Ken's machine.

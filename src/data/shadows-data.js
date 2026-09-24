@@ -48,12 +48,14 @@ window.SHADOWS_DATA = {
      `gamedataVersion` against this on load and surfaces mismatches (e.g. a skill
      the character has that no longer exists) instead of failing silently.
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
-     and `updated` whenever content changes. */
+     and `updated` whenever content changes.
+     What each version changed is in the session log and, up to 0.17, in
+     docs/log/archive.md (it was a `notes` string here that shipped to every
+     player; audit C10). `meta` holds only what the app reads. */
   "meta": {
     "gamedataVersion": "0.17",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-09-24",
-    "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight). 0.10 (Decisions 103-105): TOL reads INT/BOD/COOL (Deighton, was INT/COOL/EMP), so every character's TOL can move; `naturalArmorRules` and `grants` of type naturalArmor on Thick Skin, Shake it Off, True Warrior (Iron Shirt) and Trueborn (Resilient Spirit), which a hit now reads (F25 stub); `recoveryRules.nanomed` (054's list, CQ12). 0.11 (Decision 106): the Cascade Table, the Aberration Table and the Appendix's Aberrations (`cascadeTable`, `aberrationTable`, `aberrationCategories`, `aberrationRules`, `aberrations`), and a TOL Spent tracker on the Arcanist that opens the Cascade panel -- a new tracker and new choices on the sheet. 0.12 (Decision 108): the Grimoire becomes a `grimoire` panel over the `spells` catalog, and `spellcraftRules` gains `spellPower` and `mastery` -- what an Arcanist's sheet offers changes. 0.13 (Decision 110): Aberrations carry the hooks the engine reads once one is recorded on the character (Drained `adjust` TOL -2, Phantom Pain `painLevels` 1, `aberrationRules.adjustFloor`), `spellcraftRules.spellAttack`, a `reference` panel on the Arcanist, and three Unique Aberrations synced to 041 (Aethereal Link reaches animals, Thaumaturgical Sight's +2 is for analyzing magic, Resonant Whispers drops charms) -- computed TOL and Pain can change. 0.14 (Decision 111): starting spells are chosen in the wizard. The Arcanist's scaling rows carry `startingSpellsRoll` (was the string `commonSpells`), and `spellcraftRules` gains `startingSpells` (TOL + that roll, TH capped at Evocation rank at creation only) and `castingPool` (the Grimoire marks a spell whose TH is beyond the Evocation pool) -- new choices at creation. 0.16 (Decision 120): weapon mods carry what the engine reads (`grantsTags`, `aimedAcc`, `damageBonus`, `onlyFor`/`notFor`), and `weaponRules` gives each rate of fire its rounds -- a weapon line's damage, tags and rounds can now change. 0.17 (F27, Decision 129): Hardcore Parkour's Cat Like Balance prerequisite named an Advantage culled from an earlier version, so the Milestone could never be taken. Deighton ruled its prerequisites are now 1 Major Milestone, Acrobatics 4 and Danger Sense 1 (Time Sense dropped) -- an available choice changes."
+    "updated": "2026-09-24"
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -2009,7 +2011,7 @@ window.SHADOWS_DATA = {
         "minorMilestones": "shared",
         "majorMilestones": [],
         "flagged": true,
-        "flagNote": "Arcanist Powers and Growth & Milestones sections are empty in the WIP. Arcanist Major Milestones exist in REF_CRB (e.g., Aetheric Potency) - extract on request."
+        "flagNote": "F32: Arcanist Powers and Growth & Milestones sections are empty in the WIP. Arcanist Major Milestones exist in REF_CRB (e.g., Aetheric Potency) - extract on request."
       }
     },
     {
@@ -2384,7 +2386,7 @@ window.SHADOWS_DATA = {
       "name": "Vampire",
       "status": "tbd",
       "flagged": true,
-      "flagNote": "WIP contains narrative only - no Campaign Power Scaling, Baseline Traits, Specialization (Bloodline), Core Mechanic, or Powers yet.",
+      "flagNote": "F7, F13: WIP contains narrative only - no Campaign Power Scaling, Baseline Traits, Specialization (Bloodline), Core Mechanic, or Powers yet.",
       "primaryStats": [
         "BOD",
         "REF",
@@ -2429,7 +2431,7 @@ window.SHADOWS_DATA = {
       "name": "Werewolf",
       "status": "draft",
       "flagged": true,
-      "flagNote": "Trueborn origin is partially complete (powers list trails off: Moonlit Vitality, Ancestral Wisdom, Spirit Pack, Ancestral Dominance are name-only). Other Origins (Unblooded, Forge Fang) referenced in lore but not defined.",
+      "flagNote": "F7: Trueborn origin is partially complete (powers list trails off: Moonlit Vitality, Ancestral Wisdom, Spirit Pack, Ancestral Dominance are name-only). Other Origins (Unblooded, Forge Fang) referenced in lore but not defined.",
       "primaryStats": [
         "BOD",
         "REF",
@@ -3125,10 +3127,10 @@ window.SHADOWS_DATA = {
     { "id": "Volatile", "description": "Experimental or hybrid systems carry a risk of malfunction. On a botched attack roll, roll on the Volatile Misfire table (1: no effect; 2-3: jam, one Action to clear; 4: misfire, 5 damage ignoring armor, then jams)." },
     { "id": "Wither Cloud (Lycanthropes)", "description": "Creates a zone of particulate matter converting all damage dealt to lycanthropes and their kindred within the area into Withering damage for the duration. Non-supernatural targets are unaffected by the cloud itself." },
     { "id": "Withering", "description": "Damage of this type cannot be regenerated supernaturally -- it must heal at the natural rate regardless of the target's normal recovery. The damage amount is not necessarily greater; the permanence is." },
-    { "id": "Suppression", "flagged": true, "flagNote": "Appears on the Titan and Ironwall heavy weapons. No formal rule is given anywhere in the CRB v4 equipment chapter -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "(Undefined in the CRB source -- see flagNote.)" },
-    { "id": "Blast", "flagged": true, "flagNote": "Appears (with a radius parameter) on several heavy/beam weapons alongside or instead of Area/Siege. The equipment chapter never states how Blast differs mechanically from Area or Siege -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "(Undefined in the CRB source -- see flagNote.)" },
-    { "id": "Anti-Materiel", "flagged": true, "flagNote": "Appears on the VR-50 'Verdict'. The vehicle-combat rules (same chapter) say weapons with the Anti-Materiel, Siege, or Blast tags deal full damage to vehicles, but no rule defines an Anti-Materiel effect against personal targets -- confirm with Deighton.", "description": "Deals full damage to vehicles (per the vehicle-combat rules); no separate personal-combat effect is defined yet." },
-    { "id": "Reach", "flagged": true, "flagNote": "Appears as a weapon Tag on the Razorwhip and Orion MW-1 'Filament', distinct from the Reach column both weapons already carry. The equipment chapter never explains what the tag adds beyond the column value -- confirm with Deighton.", "description": "(Undefined beyond the weapon's own Reach column value -- see flagNote.)" }
+    { "id": "Suppression", "flagged": true, "flagNote": "F28: Appears on the Titan and Ironwall heavy weapons. No formal rule is given anywhere in the CRB v4 equipment chapter -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "(Undefined in the CRB source -- see flagNote.)" },
+    { "id": "Blast", "flagged": true, "flagNote": "F29: Appears (with a radius parameter) on several heavy/beam weapons alongside or instead of Area/Siege. The equipment chapter never states how Blast differs mechanically from Area or Siege -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "(Undefined in the CRB source -- see flagNote.)" },
+    { "id": "Anti-Materiel", "flagged": true, "flagNote": "F30: Appears on the VR-50 'Verdict'. The vehicle-combat rules (same chapter) say weapons with the Anti-Materiel, Siege, or Blast tags deal full damage to vehicles, but no rule defines an Anti-Materiel effect against personal targets -- confirm with Deighton.", "description": "Deals full damage to vehicles (per the vehicle-combat rules); no separate personal-combat effect is defined yet." },
+    { "id": "Reach", "flagged": true, "flagNote": "F31: Appears as a weapon Tag on the Razorwhip and Orion MW-1 'Filament', distinct from the Reach column both weapons already carry. The equipment chapter never explains what the tag adds beyond the column value -- confirm with Deighton.", "description": "(Undefined beyond the weapon's own Reach column value -- see flagNote.)" }
   ],
   "weaponFeatureGlossary": [
     { "id": "Bipod Mount", "description": "Integrated bipod for stable firing from prone or braced. Satisfies the Mounted tag's requirement without a separate mount." },
