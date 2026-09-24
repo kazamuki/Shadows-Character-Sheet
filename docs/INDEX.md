@@ -71,7 +71,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `C2` | Admin can't reach archetype-specific choices | **open** | easier now: one array |
 | `C3` | `panelMax` / SFR display copy | **open** | re-read after F6 and F7 |
 
-**From the 2026-09-24 audit.** All open; the plan session that would take each is in the last column. Full text in the audit.
+**From the 2026-09-24 audit.** Open unless marked; the plan session that would take each is in the last column. Full text in the audit.
 
 | Id | What | Status | Where |
 |---|---|---|---|
@@ -88,7 +88,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `B12` | The Mercenary never picks its fifth Focused Skill | **open** | plan S3 |
 | `B13` | Focused Skill Max Bonus never applied | **open** | plan S3 |
 | `B14` | Jack-of-all-Trades pays full price for every skill | **open** | plan S3 |
-| `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | **open** | plan S1 · AQ8 |
+| `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | closed | → flag F27 (app 0.23.1, game data 0.17) |
 | `B16` | Admin mode renders two character-file ids unescaped | **open** | plan S1 |
 | `B17` | The Trueborn's Lunar Phase Blessing never renders | **open** | plan S1 |
 | `B18` | Import and New replace the saved sheet without asking | **open** | plan S1 |
@@ -114,6 +114,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F24` | Ongoing damage while Dying at a Reset: one Death Mark per ticking source standing in for the check (stub), or the check plus a mark per source | Deighton |
 | `F25` | How Natural Armor answers a hit: stubbed as flat, after PROT and RES, anywhere, Kinetic unless Warded, ignores AP, skipped by Massive | Deighton |
 | `F26` | Does a shotgun count as a rifle for the Scope and the Angel Mod? Stubbed: no | Deighton |
+| `F27` | Hardcore Parkour asks for Cat Like Balance, an Advantage culled from an earlier version: remove or replace it. Stubbed as the GM's call | Ken (CRB) |
 
 The one **unnumbered** flag (the stat curve past 10) closed with Decision 98.
 

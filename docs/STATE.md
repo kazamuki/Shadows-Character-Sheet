@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.23.0` · game data `0.16` · character schema `0.10` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.23.1` · game data `0.17` · character schema `0.10` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **266 passing, 0 todo, 0 failing** (266 tests, six files)
+**Suite:** `npm run verify` → **267 passing, 0 todo, 0 failing** (267 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -97,7 +97,7 @@ full text.
 |---|---|---|
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **F23 + F24 + F25 + F26** (Deighton, ask together; F23 and F25 are the same RES-class question, F26 is whether a shotgun is a rifle for mods) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Magic's Warding services: W28 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
-| **Milestones & doc reconciliation** — F9, F12, F13 (F11 closed, Decision 113) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
+| **Milestones & doc reconciliation** — F9, F12, F13, **F27** (F11 closed, Decision 113) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
@@ -118,8 +118,9 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 **The 2026-09-24 whole-app audit opened A4–A12, B11–B19 and C4–C15**
 (`audits/2026-09-24_whole-app-audit.md`, one line each in `INDEX.md` §2).
-What to do about them is `plans/audit-2026-09-remediation.md`, **proposed and
-waiting on Ken's answers (AQ1–AQ10)**. Nothing is fixed yet. Three are worth
+What to do about them is `plans/audit-2026-09-remediation.md`, **proposed;
+Ken answered AQ1, AQ3, AQ5, AQ8 and AQ10** (AQ2, AQ4, AQ6, AQ7, AQ9 open).
+B15 is closed as flag F27 (app 0.23.1); nothing else is fixed yet. Three are worth
 doing first whatever else is decided, and need no ruling: B16 (Admin renders
 file ids unescaped), B18 (Import replaces the saved sheet silently) and B11
 (Mastery trips the hand-edit warning), all plan session S1. rev 9's `A` and
@@ -157,10 +158,11 @@ W29.
 - **Ken:** add `AP` (Armor Piercing) to the spell appendix's tag list, to
   match Decision 116.
 - **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
-  25 IP new-skill price and the stat curve past 10. **New (AQ8):** Hardcore
-  Parkour requires a "Cat Like Balance" Advantage that 043 doesn't have (B15). Each is written up in
+  25 IP new-skill price and the stat curve past 10. Each is written up in
   `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
-  once ruled.
+  once ruled. **New, F27:** Hardcore Parkour's Cat Like Balance prerequisite
+  was culled; remove or replace it in 041. Until then the app makes it the
+  GM's call (app 0.23.1).
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `041` (Decision 110), and Ken expects the Origins subtypes to replace

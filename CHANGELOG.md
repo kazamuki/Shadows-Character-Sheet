@@ -21,6 +21,15 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.23.1
+
+Game data **0.17**.
+
+- **Hardcore Parkour can be taken.** One of its prerequisites named an Advantage that's
+  no longer in the game, so the Milestone stayed locked for everyone. Time Sense and
+  Danger Sense are still checked; the missing Advantage is now your GM's call, and the
+  Milestone says so until it's settled.
+
 ## v0.23.0 — 2026-09-24
 
 - **See what's new.** Every update's notes are in the app. Open **What's new** from the
