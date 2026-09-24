@@ -56,7 +56,7 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.22.0`, game data `0.16`** (tag `v0.22.0`). A cloud session
+tag. **Live: app `0.23.0`, game data `0.16`** (tag `v0.23.0`). A cloud session
 can merge but usually can't push a tag, so tag locally after it. **Check a
 deploy by loading the page** and reading the footer, not by curling it.
 `CHANGELOG.md` needs a section for every app bump, and **players read it**:
@@ -123,10 +123,8 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**`v0.22.0` is live. What's new (app 0.23.0) is on
-`claude/in-app-changelog`.** Once it merges: rename CHANGELOG's
-`[Unreleased] — app 0.23.0` heading to `v0.23.0 — <date>`, run
-`npm run changelog`, commit, tag `v0.23.0`, and check the live footer.
+**`main` is caught up through PR #53, tagged `v0.23.0` (app 0.23.0, schema
+0.10, game data 0.16).** Check the live footer reads 0.23.0.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
