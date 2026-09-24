@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-23
-**Versions:** app `0.19.1` · game data `0.14` · character schema `0.9` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.20.0` · game data `0.14` · character schema `0.9` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **241 passing, 0 todo, 0 failing** (241 tests, six files)
+**Suite:** `npm run verify` → **242 passing, 0 todo, 0 failing** (242 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -36,8 +36,6 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 closed).** Starting spells in the wizard (TOL + roll, TH ≤ Evocation until
 lock), a Grimoire that reads the book, Mastery, Spell Power/Attack, TOL
 Spent → Cascade → **Record it**, Aberrations on Trackers, a Magic reference.
-The spell picker is a **modal**, the first focus-and-dismiss primitive
-(`openModal` in `shared.js`) that W2/W3/W6 want.
 
 **Combat is built end to end, and the combat plan is closed (Decisions
 95–96, 99–100, 103–106).** Loadout picks weapons and armor from the catalog
@@ -54,10 +52,11 @@ Every character's TOL can move, and the Arcanist feels it most: its bonus
 points reach EMP, which no longer counts, and not BOD, which now does. That's
 the ruling as given. Scott has it and is updating the CRB.
 
-**The sheet got a feel pass (Decision 107).** Every action shows an undo
-toast. Conditions are added from a chip palette. The damage stepper says Heal
-and Hurt. Violet buttons are readable in light mode, and a build check now
-covers every filled control's contrast in both themes.
+**Two feel passes (Decisions 107, 112).** Undo toasts, a Condition chip
+palette, a Heal/Hurt stepper, and contrast checked in both themes. **0.20.0**
+(not yet tagged): Take a hit in a modal (`openModal`) with Apply waiting on
+its reason, Trackers in two columns with the HL track banded by Pain Level,
+stat icons with the character's numbers on every skill, and a centred modal.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -137,20 +136,20 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #45, and live is `v0.19.1`** (W19's
-Martial Arts grid fix; game data 0.14). **The magic plan is closed.** The next
-observable change is 0.19.2 for a fix, 0.20 for a feature.
+**Live is `v0.19.1`.** This branch carries **app 0.20.0** (Decision 112: W1,
+W6, W10, W20, W21, W23–W26), not yet merged or tagged. Game data stays 0.14
+and the schema 0.9. Once it merges, append its row to `log/shipped.md`. Then
+tag `v0.20.0` and check the footer on the demo site.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
 under General Milestones in `041_Archetypes` — not in the Advantages chapter).
-The wishlist's layout pair **W1 + W10** is one pass. The popover/modal set
-**W2/W3/W6** now has its primitive (`openModal`, Decision 111), so **W6** (Take
-a hit in the modal) is a UI move, and **W23–W26** (row click, disabled rows,
-sticky search, a Done button, Ken's pick for W26) are one pass on the same
-primitive. **W20 + W21** (the skill line) is another. **W16** (weapon mods and rounds) is the
-next schema bump, and **W17** could share it. Cyborg, Vampire, and the print
-sheet's remaining visual work wait on people outside a session.
+From the wishlist: **W2 + W3** (the vitals popovers; HP's can call
+`openHitModal()`), **W4** (the weapon/armor catalog, which can reuse the
+spell picker whole), **W22** (step 7's jump bar), and **W5** (Loadout's
+section shortcuts). **W16** (weapon mods and rounds) is the next schema bump,
+and **W17** could share it. Cyborg, Vampire, and the print sheet's remaining
+visual work wait on people outside a session.
 
 **Worth knowing:** the Arcanist's creation-time Unique Aberrations now follow
 `041` (Decision 110). Ken expects the Origins subtypes to replace that list,

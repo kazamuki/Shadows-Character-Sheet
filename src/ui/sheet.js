@@ -855,12 +855,20 @@ function actPanelHtml(ch){
        : st.kind==="wear" ? wearPanelHtml(ch, st) : "";
 }
 
-// The Health Level track: on Trackers, and atop the Take a hit modal.
+// The Health Level track: in Trackers' Damage card, and atop the Take a hit
+// modal. W10: the boxes are grouped by the Pain Level each one puts you at,
+// the print sheet's bands (pPainBandFor), and the band you're standing in is
+// marked, so the track shows why you're at Pain 2 rather than a card saying so.
 function hlTrackHtml(ch){
-  const hpPer=Engine.health(ch).hpPer;
-  return `<div class="hl-track">` + hlCells(ch).map(c=>
-    `<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`
-  ).join("") + `</div>`;
+  const hpPer=Engine.health(ch).hpPer, cells=hlCells(ch), here=Engine.hlState(ch).lost;   // HL lost, Massive included
+  const bands=[];
+  cells.forEach((c,i)=>{ const lvl=pPainBandFor(i).level, last=bands[bands.length-1];
+    if (last && last.level===lvl) last.cells.push([c,i]); else bands.push({ level:lvl, cells:[[c,i]] }); });
+  return `<div class="hl-track">` + bands.map(b=>{
+    const at = b.level===pPainBandFor(here).level;
+    return `<div class="hl-band pl-${b.level}${at?" here":""}"><span class="hl-band-k">Pain ${b.level}</span><div class="hl-band-cells">` +
+      b.cells.map(([c])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
+      `</div></div>`; }).join("") + `</div>`;
 }
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
@@ -871,27 +879,34 @@ function renderShTrackers(){
   const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
+  // W1: two columns on a wide screen. The body (Damage with its Health
+  // Levels, recovery, Armor, Pain, Conditions) reads down the left; the rest
+  // (Sanity, LUCK, archetype trackers, Çredits) down the right. One column on
+  // a phone, in the same order.
+  h += `<div class="trk-grid"><div class="trk-col">`;
+
   // Damage. The headline is HP left, so the stepper says Heal and Hurt
   // rather than signs on the damage total it edits (W11).
   h += `<div class="trk"><h4>Damage</h4>
     <span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
+    <div class="trk-row">
     <button class="btn sm" data-dmg="-5" ${ch.trackers.damage?"":"disabled"}>Heal 5</button>
     <button class="btn sm" data-dmg="-1" ${ch.trackers.damage?"":"disabled"}>Heal 1</button>
     <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken" title="Total damage taken">
     <button class="btn sm" data-dmg="1">Hurt 1</button>
     <button class="btn sm" data-dmg="5">Hurt 5</button>
-    <button class="btn sm danger" data-dmgheal="1">Heal all</button>
+    <button class="btn sm danger" data-dmgheal="1">Heal all</button></div>
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
       hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
       withering?` ${withering} of the damage is Withering and won't regenerate.`:""}</span>
+    ${hlTrackHtml(ch)}
     <div class="trk-actions">
       <button class="btn sm primary" data-hitopen="1" ${open?"disabled":""}>Take a hit</button>
       <button class="btn sm" data-actopen="reset" ${open?"disabled":""}>Turn Reset</button>
       <button class="btn sm" data-actopen="rest" ${open?"disabled":""}>Rest</button>
       <button class="btn sm" data-actopen="focused" ${open?"disabled":""}>Focused Healing</button>
       <button class="btn sm" data-actopen="nanomed" ${open?"disabled":""}>Nanomed Kit</button></div></div>`;
-  h += hlTrackHtml(ch);
   if (S.act && S.act.kind!=="wear") h += actPanelHtml(ch);
 
   // Armor: the worn body piece's Integrity, and the after-fight wear roll.
@@ -910,6 +925,7 @@ function renderShTrackers(){
 
   // Conditions (Decision 95)
   h += `<div class="sect">Conditions</div>${conditionsHtml(ch, true)}`;
+  h += `</div><div class="trk-col">`;
 
   // SAN
   h += `<div class="trk"><h4>Sanity</h4>
@@ -963,6 +979,8 @@ function renderShTrackers(){
         <span class="amt ${e.amount<0?"spend":"grant"}">${e.amount>0?"+":""}${e.amount}</span>
         <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
   }
+
+  h += `</div></div>`;
 
   // Manual adjustments
   h += `<div class="sect">Manual Adjustments</div>

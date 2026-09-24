@@ -278,6 +278,22 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
   font-family:var(--mono); font-size:.68rem; display:flex; align-items:center; justify-content:center;
   color:var(--dim); background:var(--panel); overflow:hidden}
 .hl .fill{position:absolute; inset:0; background:rgba(188,72,154,.32); transform-origin:left; z-index:0}
+/* W1: Trackers in two columns on a wide screen, one on a phone. */
+.trk-col{min-width:0}
+@media (min-width:1000px){ .trk-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0 18px; align-items:start} }
+/* W10: the Health Level track sits in the Damage card, grouped into the
+   Pain Level bands the print sheet draws; the band you're in is lit. */
+.trk .hl-track{flex-basis:100%; margin:2px 0}
+.hl-track{gap:12px}
+.hl-band{display:flex; flex-direction:column; gap:3px}
+.hl-band-cells{display:flex; gap:5px; flex-wrap:wrap}
+.hl-band-k{font-family:var(--mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+.hl-band.here .hl-band-k{color:var(--text)}
+.hl-band.here .hl-band-k::before{content:"▸ "}
+.hl-band.pl-1 .hl{border-color:var(--violet-hi)}
+.hl-band.pl-2 .hl{border-color:var(--magenta); border-width:1.5px}
+.hl-band.pl-3 .hl{border-color:var(--magenta); border-width:2px}
+.hl-band .hl.massive{border-color:var(--magenta)}   /* Massive stays Massive in any band */
 .hl span{position:relative; z-index:1}
 .hl.gone{border-color:var(--magenta); color:var(--magenta)}
 .hl.gone .fill{background:rgba(188,72,154,.5)}
@@ -320,6 +336,7 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hitconds label.check{display:flex; align-items:center; gap:6px}
 /* Decision 100 — Loadout pickers, armor rows, recovery buttons */
 .trk-actions{display:flex; flex-wrap:wrap; gap:8px; flex-basis:100%}
+.trk-row{display:flex; flex-wrap:wrap; align-items:center; gap:8px; flex-basis:100%}   /* W1: a stepper wraps as one group */
 .lo-add{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0 14px}
 .lo-add select{flex:1; min-width:0; max-width:420px}
 .lo-sub{font-size:.72rem; color:var(--dim); margin:2px 0}
