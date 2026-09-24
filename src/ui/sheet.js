@@ -14,9 +14,10 @@ function painPenaltyLine(pain, long){
 }
 
 // ════ PHASE 3 — LIVE SHEET ════════════════════════════════════════════
-function sheetHeader(title, note){
+// `under` is HTML that sits beneath the title: Main puts the intake number there.
+function sheetHeader(title, note, under){
   let h = importIssuesHtml();
-  h += `<div class="eyebrow">Live Sheet</div><h1 class="step-title">${esc(title)}</h1>`;
+  h += `<div class="eyebrow">Live Sheet</div><h1 class="step-title">${esc(title)}</h1>${under||""}`;
   if (note) h += `<p class="step-note">${note}</p>`;
   return h;
 }
@@ -285,7 +286,10 @@ function renderShMain(){
   const hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch), sf=Engine.sfr(ch);
   const id=ch.identity;
-  let h = sheetHeader(id.name||"Unnamed", `${a?esc(a.name):"—"}${id.specialization?" · "+esc(id.specialization):""} · ${pl?esc(pl.name):"—"}`);
+  // The specialization is derived (schema 0.5, Decision 79). This line read
+  // the removed identity.specialization and never showed it.
+  const spec=Engine.specializationLabel(ch);
+  let h = sheetHeader(id.name||"Unnamed", `${a?esc(a.name):"—"}${spec?" · "+esc(spec):""} · ${pl?esc(pl.name):"—"}`, intakeHtml(ch));
 
   // Condition strip — replaces the Vitals rail on this tab (full width)
   const pct = (n,d)=> d>0 ? Math.max(0,Math.min(100,Math.round(n/d*100))) : 0;
@@ -1786,7 +1790,7 @@ function pBuildTag(){
 function pHead(ch, title){
   return `<div class="p-head">
     <div><div class="p-wordmark">Shadows<small>Adventures in NYTE City</small></div>${pBuildTag()}</div>
-    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}</div>
+    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}${ch && intakeOf(ch)?`<div class="p-intake">${intakeBarsSvg(intakeOf(ch))}<span>Intake No. ${esc(intakeOf(ch))}</span></div>`:""}</div>
   </div>`;
 }
 function pStatIcon(id){

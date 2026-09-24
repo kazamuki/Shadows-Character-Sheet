@@ -2,12 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.23.1",
+    "version": "0.24.0",
     "date": null,
     "intro": [
-      "Game data **0.17**."
+      "Character schema **0.11** · game data **0.17**. A character file from 0.23 opens as it was, and gets its intake number the first time it's opened."
     ],
     "items": [
+      "**Every character has a NYTE City intake number.** It sits under your name on the sheet and on the printed sheet, with its barcode, so two characters called Vex are never mixed up. A character keeps its number for good, in every file you export.",
+      "**Nothing replaces your saved character without asking.** This browser keeps one sheet and one draft. Importing a file, starting a new character, or locking one now asks first if that would replace a different character, or a newer copy of the same one, and offers to export the saved one before it goes.",
+      "**Main names your specialization.** The line under your name reads, for example, *Werewolf · Trueborn · Heroic*.",
       "**Hardcore Parkour can be taken.** One of its prerequisites named an Advantage that's no longer in the game, so the Milestone stayed locked for everyone. Time Sense and Danger Sense are still checked; the missing Advantage is now your GM's call, and the Milestone says so until it's settled.",
       "**A Trueborn sees their Lunar Phase Blessing.** The Werewolf's starting power, and what each phase of the moon grants, is on the Archetype tab and on the Trueborn's card when you make one. The powers that come later are listed too, marked as not written yet.",
       "**Mastering a spell no longer looks like tampering.** An Arcanist who had mastered a spell was told their file might have been edited by hand. It wasn't, and the app no longer says so.",

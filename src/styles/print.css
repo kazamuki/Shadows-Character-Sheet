@@ -74,6 +74,9 @@
   border-bottom:1.5pt solid var(--p-violet); padding-bottom:5px; margin-bottom:10px }
 #printSheet .p-head .p-name{ text-align:right }
 #printSheet .p-head .p-name .p-line{ min-width:220px; font-size:12pt; font-weight:600 }
+#printSheet .p-head .p-intake{ display:flex; justify-content:flex-end; align-items:center; gap:6px; margin-top:2px;
+  font:600 6.5pt/1 'Roboto Mono',monospace; letter-spacing:.1em; text-transform:uppercase; color:#555 }
+#printSheet .p-head .p-intake svg{ height:10pt; width:auto; color:#222 }
 
 #printSheet .p-section{ font-family:'Chakra Petch',sans-serif; font-weight:600; font-size:9pt;
   text-transform:uppercase; letter-spacing:.06em; color:#fff; background:var(--p-violet);

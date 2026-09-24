@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.23.1` · game data `0.17` · character schema `0.10` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.24.0` · game data `0.17` · character schema `0.11` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -36,10 +36,11 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
 
-**App 0.23.1 (unreleased, on `claude/vibrant-gates-66y9l0`)** is the
+**App 0.24.0 (unreleased, on `claude/vibrant-gates-66y9l0`)** is the
 audit's first session: character files are untrusted input (Decision 124),
 load findings stay until dismissed (125), the Trueborn's powers render (126),
-and Hardcore Parkour can be taken (F27). What shipped before it is in `log/`.
+Hardcore Parkour can be taken (F27), and every character has a NYTE City
+intake number, with nothing replaced without asking (128, schema 0.11).
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -118,19 +119,16 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 **The 2026-09-24 whole-app audit** (`audits/2026-09-24_whole-app-audit.md`,
 one line per id in `INDEX.md` §2) drives it, through
-`plans/audit-2026-09-remediation.md`. Ken has answered every question but
-AQ4 (rephrased; show or delete the text players can't see) and AQ7 (a
-recommendation is waiting on his yes).
+`plans/audit-2026-09-remediation.md`. **Ken has answered every question**
+(the plan's §5), and **S1 is done**: B11, B15 (F27), B16, B17, B18, C4, C13,
+C16, R9, the first half of R6, and AQ2 and AQ7, all mutation-tested.
 
-- **S1 is done but for B18:** B11, B15 (F27), B16, B17, C4, C13, R9 and the
-  first half of R6, all mutation-tested; AQ2 was pulled forward too.
-- **B18 waits on Ken's yes to one proposal:** a permanent `meta.id`
-  (character schema 0.11), `meta.updated` stamped on every change, and a
-  confirm with **Export first** at all three doors that replace a saved
-  character: Import, New and Lock. It's in the plan's S1.
-- **Next, no answers needed:** S3 (the Professional as data: B12–B14) once
-  its data shape is proposed, S5 (tooling: fonts embedded per AQ6, and the
-  release workflow per AQ9), and S2 (the docs diet; AQ1 answered).
+- **Next, no answers needed, any order:** S3 (the Professional as data:
+  B12–B14; propose its data shape first), S5 (tooling: embed the fonts per
+  AQ6, a release workflow a cloud session can run per AQ9), S2 (the docs
+  diet, and the §6 decision format made standard).
+- **Then S6 (table feel),** now specified by AQ4: rules text a hover or tap
+  away, lore on the Archetype tab, Ammo in the shop, and the phone header.
 
 rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
 
@@ -139,13 +137,13 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 ## 5. Where to start
 
 **`main` is caught up through PR #55, tagged `v0.23.0` (app 0.23.0, schema
-0.10, game data 0.16).** This branch carries the audit and S1 as app 0.23.1
-and game data 0.17, not yet merged or tagged.
+0.10, game data 0.16).** This branch carries the audit and S1 as app 0.24.0,
+schema 0.11 and game data 0.17, not yet merged or tagged.
 
-**Next, all unblocked:** Ken's yes on B18 and AQ4's list, then S3, S5 or
-S2 in any order. Milestones & doc reconciliation (Ken alone): F9 (are General
-Milestones Professional-only?) and F13 need Ken or Deighton; F12 waits on
-041's unwritten Advancement Section. The wishlist is empty but for W28.
+**Next, all unblocked:** merge this branch, then S3, S5 or S2. Milestones &
+doc reconciliation (Ken alone): F9 (are General Milestones Professional-only?)
+and F13 need Ken or Deighton; F12 waits on 041's unwritten Advancement
+Section. The wishlist is empty but for W28.
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.

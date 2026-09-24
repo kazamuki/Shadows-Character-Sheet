@@ -4,7 +4,7 @@ Character creation and live play sheet for **Shadows**, the cyberpunk-noir urban
 
 Build a character through an eight-step intake, lock it, and the app becomes a running sheet: damage and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, session log, loadout, and a full undo-able audit trail of everything that happens at the table.
 
-**Status:** app `0.23.1` · character schema `0.10` · game data `0.17` · ruleset target **CRB v4 (in progress)**
+**Status:** app `0.24.0` · character schema `0.11` · game data `0.17` · ruleset target **CRB v4 (in progress)**
 Read [`docs/SCHEMA.md`](docs/SCHEMA.md) before changing anything. It is the project's memory.
 
 ---
@@ -58,7 +58,7 @@ tools/build.mjs         Inlines everything into dist/.
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: run `npm run verify`, log design questions as issues rather than deciding them in code, and update `docs/SCHEMA.md` in the same commit as any decision.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: run `npm run verify`, flag design questions in `docs/SCHEMA.md` §5 rather than deciding them in code, report bugs as GitHub issues, and update `docs/SCHEMA.md` in the same commit as any decision.
 
 ---
 

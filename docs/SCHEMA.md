@@ -548,9 +548,14 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.10",
-    gamedataVersion: "0.16",          // version of shadows-data.js at save time
-    created: "...", updated: "..."
+    schemaVersion: "0.11",
+    // (0.11, Decision 128) The NYTE City intake number: the character's
+    // permanent identity, NCR- + 12 Crockford base-32 characters. Issued by
+    // newCharacter(), backfilled by migrate(), never reissued.
+    id: "NCR-7F3K-2QXM-9D4R",
+    gamedataVersion: "0.17",          // version of shadows-data.js at save time
+    created: "...",
+    updated: "..."                    // last changed: commit() stamps it, and so does an export
   },
 
   identity: {
@@ -3039,6 +3044,15 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 74 in part, its check of STATE's suite line against the real total.
      - **Revisit if:** a pass count ever needs to be quoted outside CI.
      - **Built:** docs only; this session's commit.
+
+128. **A character has a permanent intake number, and nothing replaces a saved character without asking.**
+     *2026-09-24 · Ken + Claude · Touches: meta.id, intake number, meta.updated, import, New character, Lock, localStorage slots, export, roster, B18*
+     - **Decided:** every character carries `meta.id`, a NYTE City intake number (`NCR-XXXX-XXXX-XXXX`, Crockford base-32, ~60 random bits). `newCharacter()` issues it, `migrate()` backfills it and replaces anything that isn't one, and it's never reissued. It shows under the name on Main, on the Review step and in the printed header, with decorative bars drawn from it. `meta.updated` now means last changed: `commit()` stamps it. Import, New and Lock ask before a character takes a slot holding a different character, or a newer copy of the same one, and offer to export the saved one first. Character schema 0.10 → 0.11.
+     - **Why:** the browser keeps one sheet and one draft, and all three doors replaced them silently. Locking a second character discarded the first one's play since its last export (B18). Ken asked for the id to be an in-universe intake number, a form number with a barcode.
+     - **Rejected:** matching by name, because two players can share one and a rename would lose the match. Comparing whole files, because any play makes them differ. A scannable Code 39 barcode, until a decoder can verify it; the bars are decoration. Asking at every import, because a newer copy of your own character is an update, not a loss.
+     - **Replaces:** nothing. Decision 63 holds: `migrate()` still invents no timestamps; `commit()` records one when something changes.
+     - **Revisit if:** the roster (plan S6) gives each character its own slot, which turns "replace?" into "add".
+     - **Built:** app 0.24.0; the audit plan's S1; `smoke.test.mjs` B18 ×4, `engine.test.mjs` B18 ×2.
 
 ## 5. Open Flags
 
