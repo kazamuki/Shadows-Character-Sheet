@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.21.0` · game data `0.16` · character schema `0.10` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.22.0` · game data `0.16` · character schema `0.10` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **260 passing, 0 todo, 0 failing** (260 tests, six files)
+**Suite:** `npm run verify` → **261 passing, 0 todo, 0 failing** (261 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -35,8 +35,16 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 **Combat and magic are both built end to end, and both plans are closed**
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
-The newest is Decision 115 (app 0.21.0): the GM runs a Cascade, and one
-Aberration picker shows every Aberration's text.
+
+**The wishlist session (2026-09-24, Decisions 117–122, app 0.22.0)** cleared
+every open wishlist item but W28: vitals popovers (W2/W3), the catalog
+browser (W4), a hit that lands (W15), weapon mods and rounds (W16), counted
+gear from Gear's and Magic's shops (W17/W27), and Main as the fight view
+(W13). **It bumped the character schema to 0.10 and game data to 0.16**,
+and opened F26. It's on branch `claude/affectionate-hawking-7zblnw`, not
+yet on `main`: **GitHub refused the push (403, the Claude GitHub App's
+access)**, so the commits exist only in that session until access is fixed
+and they're pushed.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -52,11 +60,11 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.21.0`, game data `0.15`** (tag `v0.21.0`). **Check a
+tag. **Live: app `0.21.0`, game data `0.15`** (tag `v0.21.0`); 0.22.0 is unmerged. **Check a
 deploy by loading the page** and reading the footer, not by curling it.
 `CHANGELOG.md` needs a section for every app bump (`docs.test.mjs` checks).
 
-**Two things a next session should know.**
+**Things a next session should know.**
 
 - **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
   Both are tested against a synthetic fixture. Adding a real one is a rules
@@ -66,6 +74,13 @@ deploy by loading the page** and reading the footer, not by curling it.
   and `naturalArmor()` scans all three. `grants()` itself still scans
   advantages and disadvantages. The next grant type on a Milestone should
   widen `grants()` rather than copy the scan (Decision 104).
+- **Three reusable pieces landed in 0.22.** `openPopover` (a non-modal panel
+  that follows the render), `openCatalog(kind)` over `Engine.catalogLine`
+  (weapons, armor, gear), and `bindVitalControls(root)` (Trackers' vitals
+  controls, bound anywhere they're drawn). Reuse them; don't copy them.
+- **Gear rows and weapon rows now share a shape**: a catalog reference or
+  `custom: true`, and `migrate()` never guesses between them (Decisions
+  120–121).
 
 ---
 
@@ -81,7 +96,7 @@ full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Gear & Combat** — Conditions, damage, armor | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105) | **F23 + F24 + F25** (Deighton, ask together; F23 and F25 are the same RES-class question) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Weapon mods/ammo: `WISHLIST.md` W16 |
+| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **F23 + F24 + F25 + F26** (Deighton, ask together; F23 and F25 are the same RES-class question, F26 is whether a shotgun is a rifle for mods) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Magic's Warding services: W28 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
 | **Milestones & doc reconciliation** — F9, F12, F13 (F11 closed, Decision 113) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -109,28 +124,32 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**`main` is caught up through PR #49, and live is `v0.21.0`** (app 0.21.0,
-game data 0.15, schema 0.9). The next observable change is 0.21.1 for a
-fix, 0.22 for a feature.
+**`main` is caught up through PR #49, and live is `v0.21.0`.** The wishlist
+session's 0.22.0 (schema 0.10, game data 0.16) sits on
+`claude/affectionate-hawking-7zblnw`. **First: push it and open its PR**
+once the Claude GitHub App can reach the repo, then tag `v0.22.0` on merge
+and add its `log/shipped.md` row.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
 Professional) and F13 need Ken or Deighton. F12 waits on 041's unwritten
-Advancement Section.
-From the wishlist: **W2 + W3** (the vitals popovers; HP's can call
-`openHitModal()`), **W4** (the weapon/armor catalog, which can reuse the
-spell picker whole), and **W15** (a hit that lands with a flash). **W16** (weapon mods and rounds) is the next schema bump,
-and **W17** could share it.
+Advancement Section. The wishlist is empty but for W28; new ideas start at
+W29.
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.
-- **Deighton:** F23, F24 and F25 as one question. Each flag's stub and the
-  question itself are in `SCHEMA.md` §5.
+- **Deighton:** F23, F24, F25 and **F26** as one question, plus W28
+  (Warding by Elemental/Spirit/Aether against the one Warding upgrade).
+  Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), and
-  the print export. **New, from his finished Magic chapter:** Concentration
-  says a Talisman holds a spell for 1 die fewer and an Artifact for 2. The
-  Enchantment section now says an inscribed spell isn't held at all and runs
-  on a duration. The data still carries the first rule.
+  the print export. From his finished Magic chapter: Concentration says a
+  Talisman holds a spell for 1 die fewer and an Artifact for 2, but the
+  Enchantment section says an inscribed spell isn't held at all. The data
+  still carries the first rule. **New:** the shop's inscribed objects name
+  13 spells the Book of Known Spells doesn't have (Blink, Everlight, Tracer,
+  Sure Grip, Sure Hand, Second Wind, Turning Rune, Watchward, Frost Trap,
+  Threshold Ward, Stasis Trap, Hearthstone, Consecrate). The catalog keeps
+  their names and links the other 14 to the book.
 - **Ken:** add `AP` (Armor Piercing) to the spell appendix's tag list, to
   match Decision 116.
 - **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
@@ -141,10 +160,6 @@ and **W17** could share it.
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `041` (Decision 110), and Ken expects the Origins subtypes to replace
 them.
-
-**Unscheduled ideas** — UX and table feel, Ken's and Claude's — are in
-`WISHLIST.md` as `W` ids. **W27** is new: the Magic chapter now prices
-its blanks, supplies and inscribed objects.
 
 ---
 

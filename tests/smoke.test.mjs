@@ -1309,3 +1309,15 @@ test("W17: the Field Repair Kit button takes a use off the kit you carry", () =>
   assert.match(app.$("#undotoast").textContent, /4 kit uses left/);
   assert.deepEqual(app.errors, []);
 });
+
+test("W13: Main's Combat column leads with the weapons you carry and the armor that answers, then the skills", () => {
+  const ch = lockedCharacter();
+  ch.weapons.push({ id: "ads-lp9-viper", notes: "", mods: [], roundsSpent: 0 });
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const app = openSheet(ch, "main");
+  const heads = app.$$(".main-combat .sect").map(s => s.textContent.replace(/Pain.*/, "").trim());
+  assert.deepEqual(heads, ["Combat", "Weapons", "Armor", "Combat skills"], "the fight's lines aren't first");
+  const weapons = app.$(".main-combat table.ref:not(.skill-table)"), skills = app.$(".main-combat .skill-table");
+  assert.ok(weapons.compareDocumentPosition(skills) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, "the skills table comes before the weapons");
+  assert.deepEqual(app.errors, []);
+});

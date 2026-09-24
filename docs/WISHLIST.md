@@ -111,7 +111,7 @@ anchors-and-scroll rather than sub-tabs, so print and Ctrl-F still see the
 whole page. Section names should come from what's rendered, not a hardcoded
 list, so an archetype panel shows up on its own ("zero app changes" rule).
 
-**W13 — A fight view.** *Claude · 🔎*
+~~**W13 — A fight view.**~~ *Claude · → Decision 122, app 0.22.0: Main is the fight view, weapons first; a separate mode waits on play showing it's needed*
 During combat a player needs: their weapon lines (attack check, damage),
 Defense/armor INT, HP/Pain, Conditions, Luck, and Take a hit. Those live on
 three tabs — Main, Loadout, Trackers. Main's Combat table lists combat *skills*,
@@ -283,15 +283,17 @@ the same way again.
 
 ## 2. Notes for whoever picks these up
 
-- **W2 and W3 are what's left of the popover work, and they're one
-  component at two sizes.** The toast (W12), the modal primitive
-  (`openModal`, Decision 111) and the hit modal (W6) are built. HP's popover
-  can call `openHitModal()`. A popover is smaller than a modal and doesn't
-  make the page inert, so it may want its own light primitive, with
-  `openModal`'s focus-return handling copied, not a second modal.
-- **W4 can reuse the picker whole.** Search, filters, rows that act on a
-  click, dimmed rows that say why, a sticky head and a Done footer are all in
-  `spellResultsHtml`/`spellPickerHtml` and `openModal` since Decision 112.
+- **What's open:** W28 (Magic's Services, blocked on Deighton). Everything
+  else on this list has moved out. New ideas get the next free number, W29.
+- **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
+  anything that takes the screen; a popover (`openPopover`, Decision 119)
+  for a small panel beside what opened it, which follows the render; the
+  catalog browser (`openCatalog`, Decision 118), which takes a new catalog
+  as a `kind` with `Engine.catalogLine` reading it; the undo toast, which
+  every `commit()` gets for free.
+- **One binder per set of controls.** Trackers' vitals controls are bound by
+  `bindVitalControls(root)`, so a popover and the page can't drift apart.
+  A new place that shows the same controls should call it, not copy it.
 - None of these touch rules. If one starts to — e.g. W13 wants to show a
   computed number the engine doesn't have yet — that part stops and goes to
   Deighton.
