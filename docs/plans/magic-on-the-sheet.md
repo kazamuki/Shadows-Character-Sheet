@@ -1,5 +1,8 @@
 # Plan — Magic on the sheet
 
+> **Done, see Decisions 108–111.** All three sessions shipped on 2026-09-23.
+> This file stays as history.
+
 **Status:** scope agreed by Ken 2026-09-23 (all four pieces, character schema
 0.9 for magic only, plan first, then Session 1). Nothing here is a locked
 decision until the session that builds it numbers it in `SCHEMA.md` §4.
@@ -177,7 +180,8 @@ and its decisions numbered.
   Phantom Pain PL 1 at full health; clamps at 3 with Agonized; Spell Attack
   from raw REF and WILL; permanent vs temporary display; Record it undoes in
   one step.
-- [ ] **Session 3 — Starting spells in the wizard.** M6. MQ1 is answered
+- [x] **Session 3 — Starting spells in the wizard** (2026-09-23, Decision 111). Built on the **Character Points step**, not the Arcanist's step, because Evocation ranks and the boosts that move TOL are spent there. Ken added two things: the picker became a **modal** shared with the sheet (the first focus-and-dismiss primitive), and after lock nothing gates TH, since the creation limit is for a balanced start. A spell past the Evocation pool is marked instead (only an exploding 10 reaches it). The original box follows.
+  **Starting spells in the wizard.** M6. MQ1 is answered
   (Decision 109), so nothing blocks it. **Replaces Decision 21's deferral** (already superseded by 25).
   **Tests:** count = TOL + entered roll; short warns, doesn't block; picks
   are Known book rows after lock; a TH above Evocation rank is refused, and

@@ -58,6 +58,11 @@ damage; the modal makes the reason unmissable). Needs: focus trap, Esc to
 cancel, return focus to the button that opened it. Decision 99's resolver is
 already pure (`resolveHit` previews, `applyHit` commits), so this is a UI move,
 not an engine change. Also the natural target for W2/W3's HP popover.
+*Update (Decision 111):* the primitive exists. `openModal`/`closeModal` in
+`shared.js` is a native `<dialog>` with Esc, backdrop close, the page made
+inert, focus returned to the opener, and the undo toast carried inside. The
+spell picker is its first user, so W6 is now a matter of moving the Take a hit
+panel into it.
 
 **W10 — Health Levels sit outside the Damage card.** *Claude · 💡*
 The five `5/5` boxes float in their own row between Damage and Armor, grey

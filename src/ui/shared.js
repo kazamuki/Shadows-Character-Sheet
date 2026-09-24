@@ -85,8 +85,12 @@ function undoToastEl(){
   if (!el){
     el=document.createElement("div");
     el.id="undotoast"; el.className="toast"; el.setAttribute("role","status"); el.setAttribute("aria-live","polite");
-    el.hidden=true; document.body.appendChild(el);
+    el.hidden=true;
   }
+  // A modal makes the page behind it inert, so the toast rides inside an open
+  // one and comes back out when it closes (closeModal).
+  const host=document.querySelector("dialog.modal[open]") || document.body;
+  if (el.parentNode!==host) host.appendChild(el);
   return el;
 }
 function hideUndoToast(){
@@ -109,6 +113,55 @@ function showUndoToast(ch, entry, label, done){
     update(); showUndoToast(ch, entry, label, true);
   };
   const x=el.querySelector("[data-toastclose]"); if (x) x.onclick=hideUndoToast;
+}
+
+// ── Modal (Decision 111) ──────────────────────────────────────────────
+// The one focus-and-dismiss primitive (W2/W3/W6 want the same one). A native
+// <dialog> opened with showModal(): the browser makes the page behind it
+// inert, traps Tab, and Esc closes it. Where showModal() is missing (jsdom,
+// an old browser) it opens as a plain dialog and Esc is handled here. It
+// lives outside #main, so a commit() re-rendering the page behind it leaves
+// it alone. Focus goes back to what opened it, or to `returnTo` if a
+// re-render replaced that element.
+let modalState=null;
+function modalEl(){
+  let el=document.getElementById("modal");
+  if (!el){
+    el=document.createElement("dialog");
+    el.id="modal"; el.className="modal"; el.setAttribute("aria-labelledby","modal-title");
+    el.addEventListener("cancel", e=>{ e.preventDefault(); closeModal(); });
+    el.addEventListener("keydown", e=>{ if (e.key==="Escape"){ e.preventDefault(); closeModal(); } });
+    el.addEventListener("click", e=>{ if (e.target===el) closeModal(); });   // the backdrop
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function openModal({ title, html, bind, returnTo, onClose }){
+  const el=modalEl();
+  modalState={ opener: document.activeElement, returnTo, onClose };
+  el.innerHTML=`<div class="modal-inner"><div class="modal-head"><h2 id="modal-title">${esc(title)}</h2>
+    <button class="modal-x" data-modalclose aria-label="Close">×</button></div>
+    <div class="modal-body">${html}</div></div>`;
+  el.querySelector("[data-modalclose]").onclick=closeModal;
+  if (!el.open){ if (typeof el.showModal==="function") el.showModal(); else el.setAttribute("open",""); }
+  if (bind) bind(el.querySelector(".modal-body"));
+  const first=el.querySelector(".modal-body [autofocus], .modal-body input, .modal-body select");
+  if (first) first.focus();
+}
+function closeModal(){
+  const el=document.getElementById("modal"), st=modalState;
+  if (!el || !el.open) return;
+  modalState=null;
+  const toast=document.getElementById("undotoast");
+  if (toast && el.contains(toast)) document.body.appendChild(toast);
+  if (typeof el.close==="function") el.close(); else el.removeAttribute("open");
+  el.innerHTML="";
+  if (st && st.onClose) st.onClose();
+  // Not every browser focuses a clicked button (Safari doesn't), so <body>
+  // doesn't count as an opener.
+  const back = st && st.opener && st.opener!==document.body && st.opener.isConnected ? st.opener
+             : st && st.returnTo ? document.querySelector(st.returnTo) : null;
+  if (back && back.focus) back.focus();
 }
 
 // ── Vitals row — the one visual atom the creation rail and the sheet's
@@ -136,6 +189,10 @@ function resetArchetypeChoices(ch){
   // way. A supernatural archetype cannot purchase at all, so it keeps none.
   ch.advantages = (a && a.canPurchaseAdvantages===false)
     ? [] : ch.advantages.filter(x=>x.notes!=="natural");
+  // Starting spells are the Grimoire's own rows (Decision 111), so in the
+  // wizard they go with the archetype that chose them. A locked sheet's panels
+  // are play history, and the admin change leaves them to its single undo.
+  if (!ch.creation.locked) ch.panelData = {};
 }
 
 function issuesHtml(list){
