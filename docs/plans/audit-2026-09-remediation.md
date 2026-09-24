@@ -52,7 +52,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 ### S2: The docs diet and change tiers (docs only; AQ1 answered yes, still needs AQ2, AQ7)
 - [ ] **R2**: write the change tiers into `CLAUDE.md`, then number them. Tie "close the session" (rewrite STATE, append the log) to the tiers.
 - [ ] **R1, decisions that stop relitigation.** Ken asked for a way to anchor the reasoning so settled questions stay settled (AQ1). The design is in §6. In short: every new decision states what it **rejected** and **when to revisit**, plus a **Touches** line so a search for the subject finds it. A `CLAUDE.md` rule says to search before proposing. A test checks the format from Decision 124 on. The ~14 load-bearing decisions get their rejected alternatives backfilled; existing entries are otherwise untouched.
-- [ ] **A4 / R3**:
+- [ ] **A4 / R3** *(the stale facts were fixed 2026-09-24: SCHEMA's header now points at STATE for versions, §1's file table lists the four UI scripts, print.css and the changelog, and §2's example lost `schemaVersion "0.3"`, `levelsPerBOD` and the old flag. CLAUDE.md's script order and line count and README's layout were fixed too. What's left is structural)*:
   - `SCHEMA.md` header and §1 rewritten, and §2's stale example lines fixed;
   - §6 moves to `log/`;
   - §5's preamble cut to the table plus one line on closed flags;

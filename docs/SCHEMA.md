@@ -1,7 +1,6 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.14) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-24 (the wishlist session: Decisions 117–122, schema 0.10, game data 0.16)
+**Current versions are in `STATE.md`, and only there** (this line stated them once and went stale; audit A4). Ruleset target: CRB v4 (in progress).
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -14,16 +13,19 @@ should start by reading this file.
 
 Content, rules, and presentation are separated so game data can change without
 touching the app. Since Phase 3.4 (Decision 54) these live as separate files
-under `src/`, loaded by a shell in fixed order: data → icons → engine → ui.
+under `src/`, loaded by a shell in fixed order: theme-init → data (game data,
+then the generated release notes) → icons → engine → ui. `tests/build.test.mjs`
+enforces the order.
 
 | File | Role | Who edits it |
 |---|---|---|
 | `src/data/shadows-data.js` | All game content: stats, skills, adv/disadv, power levels, archetypes. JSON wrapped in `window.SHADOWS_DATA = { ... }` (the wrapper exists because browsers block `fetch()` of local `.json` files when an HTML file is opened from disk) | Designers, in any text editor |
 | `src/data/shadows-icons.js` | All iconography as inline-SVG strings on `window.SHADOWS_ICONS` (`stats` = brand set keyed by stat/derived id; `ui` = free-to-use chrome icons keyed by name). Same `<script>`-wrapper reason as the data file (see below) | Asset pipeline / designers |
 | `src/engine/engine.js` | The pure rules engine. Reads `SHADOWS_DATA`, returns values, **never touches the DOM** — it is loaded in a bare VM by the test suite | App maintainers |
-| `src/ui/app.js` | The app: creation wizard, sheet view, session tracking. Renders off the engine, never hardcodes content | App maintainers |
-| `src/styles/shadows.css` | Brand tokens and all styling | App maintainers |
-| `index.html` | A 31-line shell — markup and `<script src>` tags only. No inline logic, no inline styles | Structural changes only |
+| `src/data/shadows-changelog.js` | The release notes behind **What's new**, generated from `CHANGELOG.md` by `npm run changelog`. Never edited by hand (Decision 123) | Generated |
+| `src/ui/` | The app as four classic scripts sharing one global scope, loaded in order (Decision 86): `shared.js` (state, `commit()`, modal/popover primitives, helpers), `wizard.js` (the eight creation steps and Home), `sheet.js` (the nine sheet tabs, Admin, the print view), `app.js` (chrome, event wiring, boot). `theme-init.js` runs first, in `<head>`, so the theme applies before paint. Renders off the engine, never hardcodes content | App maintainers |
+| `src/styles/shadows.css`, `print.css` | Brand tokens and all screen styling; the printed sheet's layout (`media="print"`, kept on inlining) | App maintainers |
+| `index.html` | A shell: markup and `<script src>`/`<link>` tags only. No inline logic, no inline styles | Structural changes only |
 | `*.shadows.json` | One character per file. Exported/imported through the app. Portable, player-owned | The app (players via UI) |
 
 **Why icons are a `.js` file, not loose `.svg` files (Phase 3.1 decision).** Three
@@ -66,9 +68,9 @@ Top-level shape. Every content entry supports an optional `"flagged": true` +
 ```js
 window.SHADOWS_DATA = {
   meta: {
-    schemaVersion: "0.3",
-    rulesetVersion: "CRB v4 WIP",
-    updated: "2026-06-11"
+    gamedataVersion: "0.17",          // Decision 75: the data's own version (a character's is schemaVersion)
+    rulesetVersion: "CRB v4 (in progress)",
+    updated: "2026-09-24"
   },
 
   // ── Stats ────────────────────────────────────────────────
@@ -106,11 +108,11 @@ window.SHADOWS_DATA = {
     luck: {
       startingValue: 2,
       buyUpWith: "characterPoints",
-      cpCostPerPoint: null,          // FLAGGED — see §5
+      cpCostPerPoint: 1,             // F1/F2 confirmed 1:1 (Decision 97)
       exemptFromBoostCap: true       // confirmed by Ken 2026-06-11
     },
     healthLevels: {
-      levelsPerBOD: 1,               // 1 Health Level per point of BOD
+      maxLevels: 10,                 // 1 Health Level per point of BOD, an invariant (Decision 64)
       hpPerLevel: 5
       // wound penalties per level: extract from WIP in Phase 1
     },

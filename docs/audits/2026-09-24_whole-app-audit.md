@@ -177,6 +177,8 @@ Where to start and what the project is gets told in `CLAUDE.md`, `docs/README.md
 
 **Direction.** One orientation path: `CLAUDE.md` → `STATE.md` → `INDEX.md`. `README.md` becomes the outside-world page and points in. `CONTRIBUTING.md` either shrinks to a pointer or becomes the human-contributor version of CLAUDE's rules, stating none of the volatile facts. `docs/README.md` merges into `INDEX.md` §1. The `HANDOFF.md` stub retires. `SCHEMA.md` keeps §2–§5 as the authority. Its header drops versions and phases, §1 is rewritten to the four-script reality, and §6 moves to `log/`.
 
+**Partly closed 2026-09-24:** every stale fact in the table above is corrected, except the §5 preamble, the §6 roadmap, CONTRIBUTING's six constraints, and INDEX's "five namespaces" and "generated" claims. Those, and the structural half (one orientation path, and retiring or merging files), are S2.
+
 ### A5: The decision ledger is doing three jobs
 **Med · [read]**
 

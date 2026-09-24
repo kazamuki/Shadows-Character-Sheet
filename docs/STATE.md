@@ -143,7 +143,8 @@ schema 0.11 and game data 0.17, not yet merged or tagged.
 **Next, all unblocked:** merge this branch, then S3, S5 or S2. Milestones &
 doc reconciliation (Ken alone): F9 (are General Milestones Professional-only?)
 and F13 need Ken or Deighton; F12 waits on 041's unwritten Advancement
-Section. The wishlist is empty but for W28.
+Section. The wishlist holds W28 (blocked), W29 (a GM mode, needs a server)
+and W30 (Reload from carried ammo).
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.

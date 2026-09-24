@@ -75,7 +75,7 @@ Each id is defined in exactly one place and referenced everywhere.
 
 | Id | What | Status | Where |
 |---|---|---|---|
-| `A4` | Orientation spread across eight docs; the untested ones drifted | **open** | plan S2 |
+| `A4` | Orientation spread across eight docs; the untested ones drifted | **open**: the stale facts fixed, the structure left | plan S2 |
 | `A5` | The decision ledger is doing three jobs | **open** | plan S2 |
 | `A6` | Per-change documentation tax out of proportion to the change | **open** | plan S2, S5 |
 | `A7` | Seven flags have no F-number; four are unasked Deighton questions | **open** | plan S2 |
