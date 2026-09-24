@@ -237,6 +237,9 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .issues{margin-top:14px; font-size:.82rem}
 .issues li{color:var(--magenta); margin-left:18px; margin-bottom:3px}
 .issues li.warn{color:var(--gold)}
+.intake{display:flex; align-items:center; gap:10px; margin:2px 0 8px; color:var(--dim)}
+.intake-bars{flex:none; opacity:.85}
+.intake-no{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase}
 .import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
 .import-issues .issues{margin-top:0}
 

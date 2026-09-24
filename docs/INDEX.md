@@ -43,7 +43,7 @@ Each id is defined in exactly one place and referenced everywhere.
 |---|---|---|
 | `A`_n_ | Architectural finding — a design that has drifted | A1–A3: `audits/2026-06-16_rev9-whole-app-audit.md` §1 · A4–A12: `audits/2026-09-24_whole-app-audit.md` §4 |
 | `B`_n_ | Bug / correctness finding | B1–B10: rev 9 audit §2 · B11–B19: 2026-09-24 audit §5 |
-| `C`_n_ | Carried note — real but not yet actionable | C1–C3: rev 9 audit §3 · C4–C15: 2026-09-24 audit §6 |
+| `C`_n_ | Carried note — real but not yet actionable | C1–C3: rev 9 audit §3 · C4–C16: 2026-09-24 audit §6 |
 | `R`_n_ | Recommended practice — a proposal until Ken adopts it and it is numbered | 2026-09-24 audit §8 |
 | `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/audit-2026-09-remediation.md` §5 |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
@@ -91,9 +91,10 @@ Each id is defined in exactly one place and referenced everywhere.
 | `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | closed | → flag F27 (app 0.23.1, game data 0.17) |
 | `B16` | A character file could put markup on the page (Admin ids; numbers stored as text; crafted undo) | closed | plan S1 · D124 |
 | `B17` | The Trueborn's Lunar Phase Blessing never renders | closed | plan S1 · D126 |
-| `B18` | Import, New and Lock replace the saved sheet without asking | **open** — proposed, waiting on Ken | plan S1 |
+| `B18` | Import, New and Lock replace the saved sheet without asking | closed | plan S1 · D128 |
 | `B19` | Phone: the sticky header covers 30% of the screen | **open** | plan S6 |
 | `C4`, `C13` | Import warnings vanished; the voice corpus read one archetype's sheet | closed | plan S1 · D125 |
+| `C16` | Main's subtitle read a field removed in schema 0.5, so it never named the specialization | closed | with B18 · app 0.24.0 |
 | `C5`–`C12`, `C14`, `C15` | Carried notes: `alert()`s, dead code, fonts offline, audit growth, orphans, `meta.notes`, closed plans with open work, dev server, releases, suite time | **open** | plan S2–S7 |
 
 ### Open flags
@@ -223,6 +224,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **93** *(Magic — archetype-independent half, data)* — The Magic chapter splits into a universal Spellcraft system and an archetype question (Origins); only the first merges, and it corrects a live mechanical error along the way. Character schema 0.6 → 0.7. → **superseded in part by 103 and 116**
 - **95** *(Conditions — catalog and schema 0.8)* — Conditions are a data catalog with structured hooks; active ones are inputs, one per id (per body part for location-bearing ones); game data 0.7 → 0.8, character schema 0.7 → 0.8, with the plan's damage and armor fields landed in the same migration.
 - **125** *(Load findings — C4)* — what `versionCheck` finds stays until dismissed; a bare game-data version difference shows once.
+- **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first.
 
 ### Engine contracts
 

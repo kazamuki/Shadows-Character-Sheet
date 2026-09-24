@@ -50,7 +50,9 @@ Step notes, flavor lines, and empty-state text are **in-world writing**, not UI 
 
 ## Design questions
 
-Do not resolve rules questions in code. Open an issue using the **Design flag** template, label it `deighton-ruling` or `docs-question`, and stub the behavior with a `flagged: true` entry so the app surfaces the uncertainty at the table. Flags are tracked in `docs/SCHEMA.md` §5.
+Do not resolve rules questions in code. Stub the behavior with a `flagged: true` entry and a `flagNote`, add the flag to `docs/SCHEMA.md` §5, and let the app surface the uncertainty at the table. Flags are tracked there and in `docs/STATE.md` §3, not as GitHub issues (Ken, 2026-09-24).
+
+GitHub issues are for bugs and playtest reports: use the **Bug or playtest report** template.
 
 ## Commits and branches
 

@@ -9,9 +9,26 @@ const Engine = (() => {
   // number ≥ 0. Anything unreadable is 0: the engine is total (constraint 8).
   const nonNegInt = v => Math.max(0, Math.floor(Number(v)||0));
 
+  // A character's NYTE City intake number: its permanent identity (B18,
+  // Decision 128). Twelve characters from Crockford's base-32 alphabet (no I,
+  // L, O or U, so it reads aloud cleanly), about 60 random bits, grouped
+  // NCR-XXXX-XXXX-XXXX. It tells two characters apart when a file would
+  // replace a saved one, and it's what a roster will key on. Never reissued:
+  // a copy of the file is the same character.
+  const INTAKE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  const INTAKE_RE = /^NCR-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
+  const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
+  function newIntakeId(){
+    const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
+    const bytes = new Uint8Array(12);
+    if (c) c.getRandomValues(bytes); else for (let i=0;i<12;i++) bytes[i] = Math.floor(Math.random()*256);
+    const s = [...bytes].map(b=>INTAKE_ALPHABET[b & 31]).join("");
+    return `NCR-${s.slice(0,4)}-${s.slice(4,8)}-${s.slice(8,12)}`;
+  }
+
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.10", gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:"0.11", id:newIntakeId(), gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -2048,7 +2065,11 @@ const Engine = (() => {
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
-    c.meta.schemaVersion = "0.10";
+    // Schema 0.11 (B18, Decision 128): a file from before gets its intake
+    // number here, and keeps it from its next save on. Anything else in the
+    // field (a hand edit, a payload) is replaced, not trusted.
+    if (!isIntakeId(c.meta.id)) c.meta.id = newIntakeId();
+    c.meta.schemaVersion = "0.11";
     return c;
   }
 
@@ -2463,7 +2484,7 @@ const Engine = (() => {
     return issues;
   }
 
-  return { D, newCharacter, powerLevel, archetype, skillById, advById, disById,
+  return { D, newCharacter, isIntakeId, powerLevel, archetype, skillById, advById, disById,
            statMod, statValue, statTable, archStatBonus, boostsFor, addBoost, canBoost,
            scalingRow, derived, health, sfr, statPool, statSpent, skillPool, skillSpent,
            advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, cp,

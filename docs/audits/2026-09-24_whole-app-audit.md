@@ -357,6 +357,8 @@ The browser holds one live sheet and one draft (§2.1). Importing a file puts it
 
 **Update 2026-09-24:** there's a third door. **Lock** also replaces the live sheet, so making a second character discards the first one's play since its last export. The fix, a permanent `meta.id` plus a confirm with *Export first*, changes the save file, so it's proposed in the plan's S1 and waits on Ken.
 
+**Closed 2026-09-24** (Decision 128, app 0.24.0, character schema 0.11). Ken approved and made the id an in-universe **NYTE City intake number** with a barcode under the name. Import, New and Lock now ask before replacing a different character or a newer copy, with *Export first*.
+
 ### B19: On a phone the sticky header covers 30% of the screen
 **Med · [run] (headless Chromium, 390 × 844)**
 
@@ -382,6 +384,7 @@ At phone width the nine tabs, the ⋮ menu and the theme toggle wrap to four row
 - **C13: The voice corpus renders the sheet for one archetype.** `voice.test.mjs` walks every wizard step for every archetype, but the nine sheet tabs only for an Arcanist with no specialization. Werewolf, Professional and Admin copy on the sheet is never read by the voice guard.
 - **C14: Releases.** `release.yml` attaches only the character sheet, not the blank sheet, and uses GitHub's auto-generated notes (a list of PR titles) rather than the CHANGELOG section written for players. `release.yml` and `deploy-demo.yml` each build the same tag separately. And the tag has to be pushed from Ken's machine.
 - **C15: The smoke suite is 95% of `verify`'s wall time.** Of about 74 s, `smoke.test.mjs` takes 70 s (59 tests, each booting the 0.9 MB build in jsdom) and `voice.test.mjs` takes 24 s in parallel. Engine, rules, docs and build tests together take under 10 s. There's no quick loop for engine work (R8).
+- **C16: Main's subtitle never named the specialization.** *(Found while building B18, closed the same day.)* `renderShMain` read `identity.specialization`, which schema 0.5 removed (Decision 79). Main said *Werewolf · Heroic* where the Archetype tab said *Trueborn*. It now reads `Engine.specializationLabel()`, and a smoke test pins it.
 
 ---
 
