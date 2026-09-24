@@ -735,6 +735,11 @@ test("a palette chip adds its Condition in one click, greys out once held, and M
 });
 
 // ── Grimoire from the book (Decision 108) ─────────────────────────────
+// The picker is a modal since Decision 111.
+function search(app, q) {
+  const box = app.$("#modal [data-spellq]");
+  box.value = q; box.dispatchEvent(new app.window.Event("input"));
+}
 
 test("Grimoire: a typed spell links to the book, the picker adds one, Mastering spends IP, and each undoes", () => {
   const ch = lockedCharacter();
@@ -747,12 +752,18 @@ test("Grimoire: a typed spell links to the book, the picker adds one, Mastering 
   assert.equal(activeChar(app).panelData.grimoire[0].notes, "go-to", "linking lost the notes");
   assert.match(app.$(".spell").textContent, /shorts simple electronics/, "the book's effect isn't shown");
 
-  const pick = app.$("[data-spellpick]");
-  pick.open = true; pick.dispatchEvent(new app.window.Event("toggle"));
-  const q = app.$("[data-spellq]"); q.value = "firebolt"; q.dispatchEvent(new app.window.Event("input"));
-  assert.equal(app.$('[data-spelladd="zap"]'), null, "the search didn't filter");
-  app.click('[data-spelladd="firebolt"]');
+  app.click('[data-spellpickopen="sheet"]');
+  assert.ok(app.$("#modal").open, "the picker didn't open as a modal");
+  search(app, "firebolt");
+  assert.equal(app.$('#modal [data-spelladd="zap"]'), null, "the search didn't filter");
+  app.click('#modal [data-spelladd="firebolt"]');
   assert.deepEqual(activeChar(app).panelData.grimoire.map(r => r.spellId), ["zap", "firebolt"]);
+  assert.equal(app.$('#modal [data-spelladd="firebolt"]').disabled, true, "the modal didn't refresh after the add");
+  assert.ok(app.$("#modal #undotoast"), "the undo toast is outside the modal, where the page is inert");
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.equal(app.$("#modal").open, false, "Esc didn't close the modal");
+  assert.equal(app.window.document.activeElement, app.$('[data-spellpickopen="sheet"]'), "focus didn't go back to the opener");
+  assert.ok(!app.$("#modal #undotoast"), "the toast stayed inside the closed modal");
 
   app.click('[data-spellmaster="firebolt"]');
   assert.equal(activeChar(app).panelData.grimoire[1].stage, "mastered");
@@ -766,9 +777,8 @@ test("Grimoire: the picker offers to link a spell you typed yourself instead of 
   const ch = lockedCharacter();
   ch.panelData.grimoire = [{ custom: true, "Spell Name": "Kindle", "Notes": "lights the stove" }];
   const app = openSheet(ch, "loadout");
-  const pick = app.$("[data-spellpick]");
-  pick.open = true; pick.dispatchEvent(new app.window.Event("toggle"));
-  const q = app.$("[data-spellq]"); q.value = "kindle"; q.dispatchEvent(new app.window.Event("input"));
+  app.click('[data-spellpickopen="sheet"]');
+  search(app, "kindle");
   assert.equal(app.$('[data-spellresults] [data-spelladd="kindle"]'), null, "offered a second Kindle");
   app.click("[data-spellresults] [data-spelllink]");
   const rows = activeChar(app).panelData.grimoire;
@@ -819,5 +829,75 @@ test("Aberrations: a permanent one shows on the Archetype tab, Phantom Pain name
   app.click('[data-sec="loadout"]');
   assert.match(app.$("#main").textContent, /Spell Attack \d+/);
   assert.equal(app.$('#main [data-reference]'), null, "the reference panel leaked into Loadout");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Starting spells in the wizard (Decision 111) ──────────────────────
+
+function arcanistOnCP(setup) {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "arcanist";
+  ch.creation.powerLevel = "street";                                   // Evocation starts at 1
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;
+  if (setup) setup(ch);
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("character-points"), maxReached: steps.length } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  return app;
+}
+const draft = app => JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+
+test("starting spells: the count is TOL + the roll, the picker refuses a TH above Evocation, and buying a rank opens it", () => {
+  const app = arcanistOnCP();
+  const tol = Engine.derived(draft(app)).TOL;
+  const roll = app.$('[data-archroll="startingSpells"]');
+  roll.value = "2"; roll.dispatchEvent(new app.window.Event("input"));
+  assert.ok(app.$("#main").textContent.includes(`TOL ${tol} + roll = ${tol + 2} spells`), "the count isn't TOL + the roll");
+
+  app.click('[data-spellpickopen="wizard"]');
+  search(app, "firebolt");                                             // Standard, TH 2
+  const fb = app.$('#modal [data-startadd="firebolt"]');
+  assert.equal(fb.disabled, true, "a TH 2 spell was open at Evocation 1");
+  assert.match(fb.textContent, /Needs Evocation 2/);
+  search(app, "zap");
+  app.click('#modal [data-startadd="zap"]');
+  assert.deepEqual(draft(app).panelData.grimoire, [{ spellId: "zap", stage: "known", notes: "" }]);
+  assert.match(app.$("#modal [data-spellstatus]").textContent, new RegExp(`Chosen 1 of ${tol + 2}`));
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+  app.click('[data-step="disc|evocation|1"]');                         // buy Evocation 2
+  app.click('[data-spellpickopen="wizard"]');
+  search(app, "firebolt");
+  assert.equal(app.$('#modal [data-startadd="firebolt"]').disabled, false, "buying Evocation didn't open the next tier");
+  app.click('#modal [data-startadd="firebolt"]');
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+  // Un-buying the rank keeps the pick and says what's wrong, out loud, on the step.
+  app.click('[data-step="disc|evocation|-1"]');
+  assert.deepEqual(draft(app).panelData.grimoire.map(r => r.spellId), ["zap", "firebolt"], "a pick was dropped silently");
+  assert.match(app.$(".issues").textContent, /Firebolt needs Evocation 2/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("starting spells: short of the count warns without blocking, and the picks lock in as Known book spells", () => {
+  const app = arcanistOnCP(ch => { ch.archetypeChoices.rolls.startingSpells = 3; ch.panelData.grimoire = [{ spellId: "zap", stage: "known", notes: "" }]; });
+  const issues = Engine.validate("character-points", draft(app)).filter(i => /starting spell/.test(i.msg));
+  assert.deepEqual(Array.from(issues, i => i.level), ["warn"]);
+  const ch = draft(app);
+  ch.creation.locked = true;
+  const locked = Engine.migrate(Engine.buildExport(ch));
+  assert.deepEqual(JSON.parse(JSON.stringify(locked.panelData.grimoire)), [{ spellId: "zap", stage: "known", notes: "" }]);
+  assert.equal(Engine.grimoire(locked).lines[0].name, "Zap");
+});
+
+test("starting spells: switching archetype takes the picks with it", () => {
+  const app = arcanistOnCP(ch => { ch.panelData.grimoire = [{ spellId: "zap", stage: "known", notes: "" }]; });
+  app.click('[data-goto="3"]');                                        // the Archetype step
+  app.click('[data-arch="professional"]');
+  app.click('[data-arch="arcanist"]');
+  assert.deepEqual(draft(app).panelData, {}, "an old Arcanist's picks came back");
   assert.deepEqual(app.errors, []);
 });

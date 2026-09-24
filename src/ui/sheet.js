@@ -1257,7 +1257,9 @@ function armorRowsHtml(ch){
 // ── Grimoire (Decision 108) ──────────────────────────────────────────
 // Book spells read everything from `spells`; your own spells are the typed
 // columns. The picker shows a spell's numbers before you add it (W4's lesson),
-// and S.spellPick keeps its search across re-renders.
+// and S.spellPick keeps its search across re-renders. Since Decision 111 the
+// picker is a modal the sheet and the wizard share; only the button on each
+// result and the status line differ (spellPickMode).
 const tnth = l => `TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}`;
 function spellMatches(g){
   const q = (S.spellPick||{}).q || "", tier = (S.spellPick||{}).tier || "", dom = (S.spellPick||{}).domain || "";
@@ -1265,18 +1267,55 @@ function spellMatches(g){
   return (D.spells||[]).filter(s=>(!tier || s.tier===tier) && (!dom || s.domain===dom) &&
     (!k || [s.name, s.glyph, s.effect, (s.tags||[]).join(" ")].join(" ").toLowerCase().includes(k)));
 }
-function spellResultsHtml(g){
-  // A book spell you've already typed as your own links that row, not a copy.
-  const held = new Set(g.held||[]), list = spellMatches(g);
-  const yours = new Map(g.lines.filter(l=>l.custom && l.match).map(l=>[l.match.id, l.index]));
+// The two places the picker opens. `button` is each result's action; `status`
+// is the line under the title that keeps the count and the cap in view.
+const spellPickMode = {
+  sheet: {
+    title: "Add from the book",
+    status: ch => { const p = Engine.grimoire(ch).pool;
+      return p ? `Your pool is ${p.rank}d10 (${esc(p.discipline)} ${p.rank}). You can learn any spell; one marked Beyond your pool needs an exploding 10.` : ""; },
+    button: (ch, s, g) => {
+      // A book spell you've already typed as your own links that row, not a copy.
+      const yours = g.lines.find(l=>l.custom && l.match && l.match.id===s.id);
+      if (yours) return `<button class="btn sm" data-spelllink="${yours.index}" title="You typed this one in yourself. Link that row to the book, keeping your notes">Link yours</button>`;
+      const held = (g.held||[]).includes(s.id);
+      return `<button class="btn sm" data-spelladd="${esc(s.id)}" ${held?"disabled":""}>${held?"Known":"Add"}</button>`;
+    }
+  },
+  wizard: {
+    title: "Choose starting spells",
+    status: ch => { const st = Engine.startingSpells(ch); if (!st) return "";
+      return `Chosen <b>${st.have}</b>${st.count==null?"":` of <b>${st.count}</b>`} · TH up to ${st.cap} (${esc(st.discipline)} ${st.cap})`; },
+    button: (ch, s, g) => {
+      const mine = g.lines.find(l=>!l.custom && l.id===s.id);
+      if (mine) return `<button class="btn sm" data-startrm="${mine.index}" title="Take it back off your list">Remove</button>`;
+      const c = Engine.canAddStartingSpell(ch, s.id);
+      const label = c.ok ? "Choose" : c.needs ? `Needs ${esc(Engine.startingSpells(ch).discipline)} ${c.needs}` : "Choose";
+      return `<button class="btn sm" data-startadd="${esc(s.id)}" ${c.ok?"":"disabled"} title="${esc(c.ok?"":c.why)}">${label}</button>`;
+    }
+  }
+};
+function spellResultsHtml(ch, mode){
+  const g = Engine.grimoire(ch), M = spellPickMode[mode], list = spellMatches(g), pool = g.pool;
   const tierName = id => ((D.spellTiers||[]).find(t=>t.id===id)||{name:id}).name;
   const domName = id => ((D.domains||[]).find(d=>d.id===id)||{name:id}).name;
   if (!list.length) return `<p class="step-note">No spell in the book matches that.</p>`;
   return `<table class="ref spell-results"><tbody>` + list.map(s=>`<tr>
       <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(s.glyph||"")}</div></td>
-      <td class="num">${esc(tnth(s))}</td><td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
-      <td>${yours.has(s.id) ? `<button class="btn sm" data-spelllink="${yours.get(s.id)}" title="You typed this one in yourself. Link that row to the book, keeping your notes">Link yours</button>`
-        : `<button class="btn sm" data-spelladd="${esc(s.id)}" ${held.has(s.id)?"disabled":""}>${held.has(s.id)?"Known":"Add"}</button>`}</td></tr>`).join("") + `</tbody></table>`;
+      <td class="num">${esc(tnth(s))}${mode==="sheet" && pool && typeof s.th==="number" && s.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
+      <td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
+      <td>${M.button(ch, s, g)}</td></tr>`).join("") + `</tbody></table>`;
+}
+// The modal's body: filters, the status line, and the results.
+function spellPickerHtml(ch, mode){
+  const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"" });
+  const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
+  return `<div class="spell-pick"><div class="hitrow">
+      <input type="search" data-spellq value="${esc(st.q)}" placeholder="Search name, Glyph, effect" aria-label="Search the book">
+      <select data-spellf="tier" aria-label="Tier">${opt("","Every tier",!st.tier)}${(D.spellTiers||[]).map(t=>opt(t.id,t.name,st.tier===t.id)).join("")}</select>
+      <select data-spellf="domain" aria-label="Domain">${opt("","Every Domain",!st.domain)}${(D.domains||[]).map(d=>opt(d.id,d.name,st.domain===d.id)).join("")}</select>
+    </div><p class="pick-status" data-spellstatus aria-live="polite">${spellPickMode[mode].status(ch)}</p>
+    <div data-spellresults>${spellResultsHtml(ch, mode)}</div></div>`;
 }
 function grimoireHtml(ch, p){
   const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
@@ -1292,7 +1331,7 @@ function grimoireHtml(ch, p){
     return `<details class="spell${l.mastered?" mastered":""}"><summary>
         <b>${esc(l.name)}</b>${l.mastered?` <span class="chip">Mastered</span>`:""}
         <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(l.glyph||"")}</span>
-        <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>
+        <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>${l.beyondPool?`<span class="beyond" title="${esc(g.pool.text)}">Beyond your pool</span>`:""}
         <span class="eff">${esc(l.effect||"")}</span></summary>
       <div class="spell-body">
         ${l.flavorLine?`<p class="flavor">${esc(l.flavorLine)}</p>`:""}
@@ -1306,15 +1345,8 @@ function grimoireHtml(ch, p){
           <button class="btn sm danger" data-spellrm="${l.index}">Remove</button></div></div></details>`;
   }).join("") : `<p class="step-note">No spells from the book yet.</p>`;
 
-  // Add from the book
-  const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"", open:false });
-  const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
-  h += `<details class="cond-add spell-pick" data-spellpick ${st.open?"open":""}><summary>Add from the book</summary>
-    <div class="hitrow">
-      <input type="search" data-spellq value="${esc(st.q)}" placeholder="Search name, Glyph, effect" aria-label="Search the book">
-      <select data-spellf="tier" aria-label="Tier">${opt("","Every tier",!st.tier)}${(D.spellTiers||[]).map(t=>opt(t.id,t.name,st.tier===t.id)).join("")}</select>
-      <select data-spellf="domain" aria-label="Domain">${opt("","Every Domain",!st.domain)}${(D.domains||[]).map(d=>opt(d.id,d.name,st.domain===d.id)).join("")}</select>
-    </div><div data-spellresults>${st.open?spellResultsHtml(g):""}</div></details>`;
+  // Add from the book (a modal since Decision 111)
+  h += `<button class="btn sm" data-spellpickopen="sheet">+ Add from the book</button>`;
 
   // Your own
   h += `<div class="subsect">Your own spells</div>`;

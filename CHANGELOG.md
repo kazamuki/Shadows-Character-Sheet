@@ -14,6 +14,23 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.19.0
+
+Character schema **0.9** · game data **0.14** · ruleset CRB v4 (in progress).
+
+- **Choose your starting spells in the wizard.** An Arcanist enters the TOL + 1d4 (up to
+  4d4) roll on the Character Points step and picks that many spells from the book. They
+  land in the Grimoire, Known, when you lock.
+- **Evocation sets how far you can reach at creation.** A spell's TH can't be higher than
+  your Evocation rank. Buy a rank on the same step and the next tier opens right there.
+  Un-buy it and the step tells you which spell needs it; nothing is dropped behind your back.
+- **After creation, learn anything.** A spell whose TH is past your Evocation dice is marked
+  **Beyond your pool**: it can still be cast, but only an exploding 10 gets there. Mastery
+  counts.
+- **The spell picker opens as its own window**, on the sheet and in the wizard. Search and
+  filter, see each spell's numbers before you take it, and keep picking without it closing.
+  Esc or a click outside closes it. Undo still works while it's open.
+
 ## [Unreleased] — app 0.18.0
 
 Character schema **0.9** · game data **0.13** · ruleset CRB v4 (in progress).
