@@ -181,6 +181,16 @@ function bindMain(){
     ch.archetypeChoices.rolls[inp.dataset.archroll] = clean===""?null:Math.max(0,Number(clean));
     rerenderKeepFocus(`data-archroll="${inp.dataset.archroll}"`, clean);
   });
+  // Jump bars (W5, W22). The filter works on the rendered page, so typing
+  // keeps focus; S.cpFilter carries it across the re-render a stepper causes.
+  main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
+  const jf=main.querySelector("[data-jumpfilter]");
+  if (jf){
+    const run=()=>{ const r=applyPickFilter(main, jf.value), c=main.querySelector("[data-jumpcount]");
+      if (c) c.textContent = r.active ? `${r.shown} of ${r.total}` : ""; };
+    jf.oninput=()=>{ S.cpFilter=jf.value; run(); };
+    run();
+  }
   // The book's spell picker, a modal on the sheet and in the wizard (Decision 111)
   main.querySelectorAll("[data-spellpickopen]").forEach(b=>b.onclick=()=>openSpellPicker(b.dataset.spellpickopen));
   main.querySelectorAll("[data-startrm]").forEach(b=>b.onclick=()=>{ Engine.removeGrimoireRow(ch, Number(b.dataset.startrm)); update(); });
@@ -948,6 +958,14 @@ function boot(){
   }
   renderFooter();
   wireThemeToggle();
+  // The sticky header wraps on a narrow screen, so a sticky jump bar (W22)
+  // reads its real height rather than --header-h.
+  const hdr=document.querySelector("header.top");
+  if (hdr){
+    const setH=()=>document.documentElement.style.setProperty("--hdr-live", hdr.offsetHeight+"px");
+    setH();
+    if (window.ResizeObserver) new ResizeObserver(setH).observe(hdr);
+  }
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{
     if (e.key==="Escape"){ const dr=$("vdrawer"); if (dr && dr.classList.contains("open")) closeVitals(); closeMenu(); }

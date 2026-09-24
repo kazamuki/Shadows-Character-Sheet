@@ -3,7 +3,7 @@
 **Updated:** 2026-09-23
 **Versions:** app `0.20.0` · game data `0.15` · character schema `0.9` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **243 passing, 0 todo, 0 failing** (243 tests, six files)
+**Suite:** `npm run verify` → **245 passing, 0 todo, 0 failing** (245 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -35,7 +35,7 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 **Combat and magic are both built end to end, and both plans are closed**
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106 and 108–111.
-The newest UI work is Decision 112 (app 0.20.0, not yet tagged).
+The newest UI work is Decisions 112 and 114 (app 0.20.0, not yet tagged).
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -108,8 +108,8 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**Live is `v0.19.1`.** This branch carries **app 0.20.0** (Decision 112: W1,
-W6, W10, W20, W21, W23–W26) and **game data 0.15** (Decision 113, F11), not
+**Live is `v0.19.1`.** This branch carries **app 0.20.0** (Decisions 112 and 114:
+W1, W5, W6, W10, W20–W26) and **game data 0.15** (Decision 113, F11), not
 yet merged or tagged. The schema stays 0.9. Once it merges, append its row to `log/shipped.md`. Then
 tag `v0.20.0` and check the footer on the demo site.
 
@@ -119,8 +119,7 @@ Professional) and F13 need Ken or Deighton. F12 waits on 041's unwritten
 Advancement Section.
 From the wishlist: **W2 + W3** (the vitals popovers; HP's can call
 `openHitModal()`), **W4** (the weapon/armor catalog, which can reuse the
-spell picker whole), **W22** (step 7's jump bar), and **W5** (Loadout's
-section shortcuts). **W16** (weapon mods and rounds) is the next schema bump,
+spell picker whole), and **W15** (a hit that lands with a flash). **W16** (weapon mods and rounds) is the next schema bump,
 and **W17** could share it.
 
 **Waiting on others:**

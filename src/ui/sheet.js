@@ -1415,16 +1415,19 @@ function grimoireHtml(ch, p){
 // ── Sheet: loadout & powers ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch, a=Engine.archetype(ch);
-  let h = sheetHeader("Loadout & Powers", "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't.");
-  h += `<div class="sect">Weapons</div>` + weaponRowsHtml(ch);
-  h += `<div class="sect">Armor</div>` + armorRowsHtml(ch);
-  h += `<div class="sect">Gear</div>` + editTable(ch.gear, GEAR_COLS, "gear", "Add gear");
+  const head = sheetHeader("Loadout & Powers", "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't.");
+  // W5: a jump to each section, from the sections this page drew. Anchors
+  // and scroll rather than sub-tabs, so print and Ctrl-F see the whole page.
+  const secs = sectionList("lo");
+  let h = secs.sect("Weapons") + weaponRowsHtml(ch);
+  h += secs.sect("Armor") + armorRowsHtml(ch);
+  h += secs.sect("Gear") + editTable(ch.gear, GEAR_COLS, "gear", "Add gear");
 
   // Archetype panels: rankedList / table / list / text / toggle
   for (const p of Engine.archPanels(ch)){
     if (p.type==="tracker") continue; // lives in Trackers
     if (p.type==="reference") continue; // lives on the Archetype tab
-    h += `<div class="sect">${esc(p.title)}</div>`;
+    h += secs.sect(p.title);
     if (p.type==="rankedList"){
       const ranks = Engine.disciplineRanks(ch);
       if (ranks.length){
@@ -1453,7 +1456,7 @@ function renderShLoadout(){
         <p class="step-note">${esc(copy("applyFromText"))}</p>`;
     }
   }
-  return h;
+  return head + jumpBarHtml(secs.list) + h;
 }
 
 // ── Sheet: notes ─────────────────────────────────────────────────────

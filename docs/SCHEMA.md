@@ -2619,6 +2619,35 @@ No cascade logic to maintain — it falls out of the architecture.
     0.15**: a choice that was closed is now open (Decision 68). App and
     schema unchanged. (Ken + Claude, 2026-09-23)
 
+114. **(Jump bars — W5 and W22, app)** **Loadout and the Character Points
+    step get a bar that jumps to each section the page drew, and step 7's
+    bar also filters and sticks.** Ken picked both on 2026-09-23. No rules,
+    data or schema change.
+    - **One helper, the page's own sections.** `sectionList(prefix)` in
+      `shared.js` hands out `sect(label, html)`: the heading gets an id and
+      `tabindex="-1"`, and the short label goes on the bar. So an
+      archetype's panels (the Arcanist's Disciplines and Grimoire) show up
+      with no app change, as W5 asked. `jumpTo` scrolls the heading to just
+      under the sticky header, and under a sticky bar if there is one. It
+      then focuses the heading, so the keyboard carries on from there.
+      Smooth unless reduced motion. Anchors and scroll, not sub-tabs, so
+      print and Ctrl-F still see the whole page.
+    - **Loadout (W5):** a plain bar under the title, not sticky, since the
+      sheet's header already takes the top of the screen.
+    - **Step 7 (W22)** sticks under the header. The header wraps on a
+      phone, so boot measures it into `--hdr-live` (a ResizeObserver
+      where there is one). The bar has a filter over Advantages and
+      Disadvantages, matching name and description. A pick you hold always
+      stays visible (`.pick.selected`), as W22 asked. It shows "N of M" and
+      the **CP still to spend**, the one number you need while scrolling
+      that page. Filtering works on the rendered page, so typing keeps focus,
+      and `S.cpFilter` carries it through the re-render a stepper causes.
+    - **Pinned:** two smoke tests. Mutation-tested (5 mutants): an archetype
+      panel left off the bar, a held pick filtered out, the filter lost on a
+      re-render, focus not moved, the bar not sticky. Each fails a test.
+    Ships in app **0.20.0**, with Decisions 112 and 113. (Ken + Claude,
+    2026-09-23)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),

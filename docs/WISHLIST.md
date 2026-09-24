@@ -103,7 +103,7 @@ of this: search, filters, the numbers shown before Add, and held entries greyed
 out. `spellResultsHtml` in `sheet.js` and its handler in `app.js` are the
 pattern to reuse for weapons and armor.
 
-**W5 — Section shortcuts inside Loadout.** *Ken · 💡*
+~~**W5 — Section shortcuts inside Loadout.**~~ *Ken · → Decision 114, app 0.20.0: from the sections the page drew*
 Loadout & Powers is one long scroll: Weapons, Armor, Gear, Focused Skills,
 Tweak, and archetype powers. A small in-page nav (chips or a sub-tab row) at the
 top — Weapons · Armor · Gear · Powers — that jumps to each section. Keep it
@@ -202,7 +202,7 @@ Wizard and sheet.
 
 ### Wizard
 
-**W22 — A sticky filter and jump bar on the Character Points step.** *Ken · 💡*
+~~**W22 — A sticky filter and jump bar on the Character Points step.**~~ *Ken · → Decision 114, app 0.20.0: filter, jumps and the CP left, sticky*
 Step 7 is the longest page in the app: 30 Disadvantages, then every
 Advantage, then LUCK, Disciplines, Starting spells (Decision 111) and
 Boosts. A bar that sticks under the header, with a text filter over names
