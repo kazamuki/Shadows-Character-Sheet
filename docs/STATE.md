@@ -1,9 +1,9 @@
 # State of the build
 
-**Updated:** 2026-09-23
-**Versions:** app `0.20.0` · game data `0.15` · character schema `0.9` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-24
+**Versions:** app `0.21.0` · game data `0.15` · character schema `0.9` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **245 passing, 0 todo, 0 failing** (245 tests, six files)
+**Suite:** `npm run verify` → **244 passing, 0 todo, 0 failing** (244 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -34,8 +34,9 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 
 **Combat and magic are both built end to end, and both plans are closed**
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
-waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106 and 108–111.
-The newest UI work is Decisions 112 and 114 (app 0.20.0).
+waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
+The newest is Decision 115 (app 0.21.0): the GM runs a Cascade, and one
+Aberration picker shows every Aberration's text.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -87,7 +88,7 @@ full text.
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed (Decisions 93, 106, 108–111) · Origins still `status: "draft"`, though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way question comparison from the 2026-09-10 meeting; not blocking |
+| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed (Decisions 93, 106, 108–111, 115) · data matches Scott's finished Magic chapter and appendices (2026-09-24) · Origins still `status: "draft"`, though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way question comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a finished export. His current file is a two-page **portrait** WIP with only Stats built, in two competing styles; portrait vs. landscape is decided once it lands. The frame/texture print defect blocks on no one |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
@@ -108,9 +109,9 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**`main` is caught up through PR #47, and live is `v0.20.0`** (app 0.20.0,
-game data 0.15, schema 0.9). The next observable change is 0.20.1 for a
-fix, 0.21 for a feature.
+**Live is `v0.20.0`.** Branch `claude/crb-spell-sync-cascade-fb4a18`
+carries app 0.21.0 (game data 0.15, schema 0.9): the magic data synced to
+Scott's finished chapter, and Decision 115. Merge it and tag `v0.21.0`.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
@@ -126,7 +127,11 @@ and **W17** could share it.
 - **Deighton:** F23, F24 and F25 as one question. Each flag's stub and the
   question itself are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), and
-  the print export.
+  the print export. **New, from his finished Magic chapter:** Concentration
+  says a Talisman holds a spell for 1 die fewer and an Artifact for 2. The
+  Enchantment section now says an inscribed spell isn't held at all and runs
+  on a duration. The data still carries the first rule. Also, `AP` is still
+  on Iron Lance but not in the tag list.
 - **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
   25 IP new-skill price and the stat curve past 10. Each is written up in
   `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
@@ -137,7 +142,8 @@ follow `041` (Decision 110), and Ken expects the Origins subtypes to replace
 them.
 
 **Unscheduled ideas** — UX and table feel, Ken's and Claude's — are in
-`WISHLIST.md` as `W` ids.
+`WISHLIST.md` as `W` ids. **W27** is new: the Magic chapter now prices
+its blanks, supplies and inscribed objects.
 
 ---
 

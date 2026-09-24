@@ -14,6 +14,20 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.21.0
+
+Character schema **0.9** · game data **0.15** · ruleset CRB v4 (in progress).
+
+- **A Cascade is your GM's to call.** When TOL goes below zero, the sheet tells you to
+  roll a d10, add your Rupture's degree and tell your GM the total. Then it opens a list
+  of every Aberration for you to record the one they name. You no longer enter the dice.
+- **Read what you might have caught.** Every Aberration in the picker shows its full
+  text, in Good, Neutral and Bad, with a search. One you already have is dimmed. **+ Add
+  an Aberration** on Trackers uses the same picker.
+- **The magic text matches Scott's finished chapter.** Force's Domain description, how
+  Overflow reads past 2x, Dominate Mind's text, and two Aberrations (Animal Ken reads
+  MAG, and Beacon works like Monster Magnet).
+
 ## v0.20.0 — 2026-09-23
 
 Character schema **0.9** · game data **0.15** · ruleset CRB v4 (in progress).

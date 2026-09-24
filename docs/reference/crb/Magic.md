@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-23. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-24. -->
 
 # Introduction
 
@@ -50,7 +50,7 @@ A wide range of terms are used when discussing the Aether and all that surrounds
 
 - **Evocation:** The fast discipline. Aether shaped directly and in the moment. Powerful, immediate, and the most likely to go wrong.
 
-- **Exhaustion:** The state reached when TOL hits zero. An Exhausted Arcanist cannot cast until they recover at least 1 TOL. One hour of rest restores 1 TOL.
+- **Exhaustion:** The state reached when TOL hits zero. An Exhausted Arcanist cannot make Spellcraft rolls until they recover at least 1 TOL.
 
 - **Fizzle:** A Spellcraft outcome. Net Hits fall short of TH — the Aether disperses without effect. No consequence beyond the failed cast.
 
@@ -64,7 +64,7 @@ A wide range of terms are used when discussing the Aether and all that surrounds
 
 - **Manifest:** A Spellcraft outcome. Net Hits equal TH exactly — the spell works as intended. No bonus, no shortfall.
 
-- **Mastered Spell:** A Known spell refined through deliberate practice until it becomes second nature. Costs IP upfront. Reduces the spell's TH by 1 — a Mastered TH 1 spell requires no roll at all.
+- **Mastered Spell:** A Known spell refined through deliberate practice until it becomes second nature. Costs IP upfront. Reduces the spell's TH by 1. A Mastered spell that drops to TH 0 can be cast even while Exhausted.
 
 - **Origin:** How an Arcanist came to magic. Three Origins exist — Book, Blood, and Bound — each shaping how efficiently and naturally an Arcanist moves through the spell progression. Origins are covered in full in the Arcanist chapter.
 
@@ -152,7 +152,7 @@ Raw natural force. The Elements Domain covers energy in its most immediate forms
 
 Shockwave · Gravity · Barrier · Telekinesis · Distortion
 
-Kinetic and spatial manipulation. Force spells move things — toward, away, together, apart, or not at all. A Barrier spell holds a doorway. Gravity Crush holds a person. Telekinesis holds a conversation hostage. Force is the Domain of leverage, and leverage in NYTE City is worth more than firepower most nights.
+The manipulation of objects through time and space. Force spells move things — toward, away, together, apart, or not at all, or not yet. A Barrier spell holds a doorway. Gravity Crush holds a person. Telekinesis holds a conversation hostage. Distortion holds the frame everything else is happening in, and bends it. Force is the Domain of leverage, and leverage in NYTE City is worth more than firepower most nights.
 
 ### Matter
 
@@ -501,21 +501,39 @@ A Book Arcanist has the feature **Between the Lines** and gets one free second a
 
 # Advanced Practice — Enchantment & Alchemy
 
+## What Prepared Magic Is For
+
+An Evoker answers the question in front of them. That is the whole of their craft, and it is not a small thing — Evocation is the discipline that works when nothing went to plan.
+
+Enchantment and Alchemy are for everything else.
+
+**You equip yourself.** The Arcanist who spends their evenings inscribing is the one who arrives at the job with a pocket of paper cards, a charm on a cord, and the specific answer to the specific problem they expect. They are not more powerful than the Evoker. They are more prepared, and prepared is often the same thing.
+
+**You equip the crew.** A Talisman does not care who holds it. The spell was cast at the workbench, so the person who releases it needs no Evocation rank, no grimoire, and no idea how any of it works. Hand a runner a Blink charm and they cross a gap nobody expected them to cross. Hand a heavy a warded vest and the fire that was going to end them doesn't. This is the thing an Arcanist can do for their crew that nobody else can: make them all slightly harder to kill, in ways that don't require anyone to become a caster.
+
+**You make things people want.** Magic is unknown to most of NYTE City, but the people who know about it need the same things everyone else needs, and a Talisman is a product like any other. Somewhere behind a crystal shop that sells tourists nothing at all, someone is turning out six pairs of Blink boots a week. Everlight pendants trade in quantity. A well-made ward has a price, and a badly-made one has a lower one. An Enchanter with a workspace and time has a living, and every practitioner they sell to becomes a contact, a debt, or a problem.
+
+**And Alchemy makes things that stay made.** An Enchanter's Everlight is a good lamp for as long as its charges hold, and then someone has to spend TOL on it. An Alchemist's Everlight is ready every night, because the light is not stored in the pendant — it is a property of the pendant now. The same is true of everything Alchemy touches. A vest that closes its own holes after a fight. A blade that was always going to cut the way it cuts. A sidearm that has never jammed and never will, because jamming stopped being something it does.
+
+Alchemy also works on what the crew already carries. The rifle somebody has had since before you met them, the jacket that has been shot twice — those are better candidates than raw material, because the object already means something and knows what it’s supposed to do. An Alchemist who asks what the crew is carrying is asking a better question than an Alchemist who asks what they want made.
+
+**Prepared magic is generally better than the same spell cast live.** That’s the point. You spent the hours, you bought the certainty, and the object holds the Aether so you don't have to. You traded the flexibility of Evocation for the certainty of inscription.
+
 ## The Work of Prepared Magic
 
-Enchantment and Alchemy are not cast, they are made.
+Enchantment and Alchemy are not cast. They are made.
 
-The distinction matters. Evocation is a moment of will under pressure — the spellcaster reaches for the Aether and either holds it or doesn’t. Prepared magic is something else entirely: a sustained conversation between the practitioner, the material, and the Aether, conducted over time, in a space built to support it. The outcome is determined by a single roll at the end, but everything leading up to that roll is craft, ritual, and patience.
+Where a spell cast live is a moment of will under pressure, prepared magic is a sustained conversation between the practitioner, the material, and the Aether — conducted over time, in a space built to support it. The outcome comes down to a single roll at the end, but everything leading to that roll is craft, ritual, and patience.
 
-Every ritual requires three things to be successful:
+Every ritual requires three things:
 
 - Workspace – the physical location where the ritual will be performed
 
-- Materials – the tools both for inscribing as well as the materials upon which the spell chains will be inscribed
+- Materials – the tools for inscribing, and the object the spell chain is inscribed onto
 
 - Time – uninterrupted hours set aside, whether across an evening or across days.
 
-With these three things at your disposal, and at least a single rank in Enchantment or Alchemy, you can begin the work of creating Talismans or Artifacts.
+With these three things at your disposal, and at least a single rank in Enchantment or Alchemy, you can begin the work of inscribing Talismans or Artifacts.
 
 ### The Workspace
 
@@ -720,7 +738,7 @@ Cap</strong></th>
 
 ### Putting it All Together
 
-Once the Arcanist has prepared their environment and gathered their materials, all that is left is to begin the actual work of laying out spell chains on to the object that will eventually become the Talisman or Artifact of their choice.
+Once the Arcanist has prepared their environment and gathered their materials, all that is left is to begin the actual work of laying out spell chains onto the object that will eventually become the Talisman or Artifact of their choice.
 
 The details for Enchantment and Alchemy are covered below. There is much overlap, but they are not the same.
 
@@ -750,7 +768,7 @@ Enchanting an object — that is to say, creating a Talisman — takes several h
 
 The object must be kept undisturbed between sessions. It doesn’t need to be locked away or protected by any particular ritual — it just needs to not be moved, jostled, or handled by anyone else while the work is ongoing. The Aether is settling. Disturbance disrupts the settling.
 
-If a session is interrupted before the day’s inscription work is complete, that session may need to be redone. The formula doesn’t hold if it’s broken mid-way. If the Arcanist finishes the day’s work and then gets pulled away for a week, the object waits exactly where they left it. The Aether is patient when the work is sound
+If a session is interrupted before the day’s inscription work is complete, that session may need to be redone. The formula doesn’t hold if it’s broken mid-way. If the Arcanist finishes the day’s work and then gets pulled away for a week, the object waits exactly where they left it. The Aether is patient when the work is sound.
 
 ### Making a Talisman
 
@@ -778,7 +796,7 @@ Every Talisman has one trigger, set at inscription. Changing it means re-inscrib
 
 - **Proximity Talismans** release on their own, with no action from anyone.
 
-Holding a Concentration spell through a Talisman costs 1 die fewer than holding it live.
+**Concentration in an inscribed spell.** A Concentration spell inscribed into a Talisman or Artifact is no longer held by the Arcanist — the object holds it. Once triggered, the spell runs on a duration: rounds for effects built for combat, minutes or hours for effects built for everything else.
 
 #### Degradable Talismans
 
@@ -844,7 +862,11 @@ Artifacts are rare. Making one takes days, materials, a workspace, a design conv
 
 The same spell can exist as an Evocation, a Talisman, or an Artifact. The effect is recognizable across all three. What changes is when the casting happens, how long the result lasts, and what the Arcanist has to do in the moment to access it.
 
-Evocation is cast under pressure, in the instant, with the outcome determined by the dice right now. A Talisman was cast during preparation — the Arcanist spent the hours, made the roll, and the spell is waiting. An Artifact is permanent and deeply embedded in the object — its magic doesn't expire, it just needs to be recharged.
+- An Evocation is cast under pressure, with the outcome determined by the dice in the moment.
+
+- A Talisman was cast during preparation — the Arcanist spent the hours, made the roll, and the spell is waiting.
+
+- An Artifact is an investment — a permanent change that is deeply embedded in the object.
 
 ### **Example: Shield**
 
@@ -880,7 +902,7 @@ Elements / Fire · Offensive · Short · Spell Power damage
 
 **As a Talisman**
 
-> A playing card. Degradable material, one charge, Contact trigger, inscribed in about three hours.
+> A stack of five playing cards. Degradable material, one charge each, Contact trigger, inscribed in about three hours.
 >
 > Throwing it is a Standard Action using the Melee Skill — the same roll as a throwing knife or a grenade, at whatever range your BOD allows. No Spellcraft roll; that happened during inscription. If the card hits, the Dart releases at the point of impact. The card is gone either way.
 >
@@ -908,248 +930,155 @@ For those with the right connections, the sourcing itself becomes part of the pr
 
 High-grade Inorganic Durable materials — properly sourced, correctly cut — come from specialist suppliers who operate through referrals and long-standing relationships with practitioners. They don’t advertise. For the very best materials, reliably and honestly represented, an Arcanist eventually finds their way to the Goblin Market, the one place in NYTE City where the serious work happens openly.
 
-#### Raw Materials
+### Raw Materials
+
+Materials are cheap. A wood blank costs fifteen Çredits and the Shield charm it becomes sells for four hundred and fifty. What the buyer is paying for is the four hours, the workspace, and the fact that almost nobody can do this. An Enchanter who keeps a supply of blanks and a free evening is running a business whether they think of it that way or not.
 
 | **Item** | **Availability** | **Cost** | **Notes** |
 |----|----|----|----|
-| Paper (sheet, standard) | Common | \[X\] Ç / 10 | Degradable. Works for any single-charge inscription. |
-| Cloth (square, standard) | Common | \[X\] Ç / 10 | Degradable. Flexible — can be worn or wrapped. |
-| Wood blank (small) | Common | \[X\] Ç | Once-Living. 3 charges. Coins, discs, small carvings. |
-| Bone blank (small) | Uncommon | \[X\] Ç | Once-Living. 3 charges. Carved and smoothed for inscription. |
-| Stone blank (small) | Uncommon | \[X\] Ç | Inorganic Durable. 5 charges. Uncut or rough-finished. |
-| Metal blank (small) | Uncommon | \[X\] Ç | Inorganic Durable. 5 charges. Coin-sized, smooth face. |
-| Glass blank (small) | Uncommon | \[X\] Ç | Inorganic Durable. 5 charges. Requires care in handling. |
-| Crystal blank (standard) | Rare | \[X\] Ç | Inorganic Durable. 5 charges. Basic cut, adequate retention. |
-| Crystal blank (precision cut) | Rare | \[X\] Ç | Inorganic Durable. 5 charges. Required for Superior-tier Alchemy. |
-| Specialist or rare material | Goblin Market / Referral | \[X\] Ç | Some commissions require sourcing as part of the job. |
+| Paper (sheet, standard) | Common | 5Ç / 10 | Degradable. Works for any single-charge inscription. |
+| Cloth (square, standard) | Common | 10Ç / 10 | Degradable. Flexible — can be worn or wrapped. |
+| Wood blank (small) | Common | 15Ç | Once-Living. 3 charges. Coins, discs, small carvings. |
+| Bone blank (small) | Uncommon | 30Ç | Once-Living. 3 charges. Carved and smoothed for inscription. |
+| Stone blank (small) | Uncommon | 40Ç | Inorganic Durable. 5 charges. Uncut or rough-finished. |
+| Metal blank (small) | Uncommon | 60Ç | Inorganic Durable. 5 charges. Coin-sized, smooth face. |
+| Glass blank (small) | Uncommon | 75Ç | Inorganic Durable. 5 charges. Requires care in handling. |
+| Crystal blank (standard) | Rare | 250Ç | Inorganic Durable. 5 charges. Basic cut, adequate retention. |
+| Crystal blank (precision cut) | Rare | 900Ç | Inorganic Durable. 5 charges. Required for Superior-tier Alchemy. |
+| Specialist or rare material | Goblin Market / Referral | 1,500Ç+ | Some commissions require sourcing as part of the job. |
 
-#### Ritual Supplies
+### Ritual Supplies
 
 These items are not mechanically required for Enchantment or Alchemy. They support the workspace — the frame of mind, the conditions of concentration — that serious practitioners have learned to build around themselves.
 
 | **Item** | **Availability** | **Cost** | **Notes** |
 |----|----|----|----|
-| Candles (pack of 12) | Common | \[X\] Ç | Standard. Color matters to some practitioners, not to the Aether. |
-| Ritual candles (specialty) | Uncommon | \[X\] Ç | Beeswax, hand-poured, longer burn. Preferred for extended rituals. |
-| Incense (standard) | Common | \[X\] Ç | Assorted. Common in occult retail. |
-| Incense (specialist blend) | Uncommon | \[X\] Ç | Specific scent profiles associated with specific Domains. |
-| Salt (ritual grade, 1kg) | Common | \[X\] Ç | Used for geometric patterns, workspace boundaries. |
-| Chalk (colored set) | Common | \[X\] Ç | Floor and surface patterns. Washes clean. |
-| Inscription ink (standard) | Common | \[X\] Ç | Works on paper and cloth. |
-| Inscription ink (etching grade) | Uncommon | \[X\] Ç | For metal and stone. Requires etching tool. |
-| Etching tool set | Uncommon | \[X\] Ç | For inscribing metal, stone, glass, crystal. |
-| Ritual basin | Uncommon | \[X\] Ç | Ceramic or metal. Used for water, oil, or symbolic materials. |
-| Portable ritual mat | Uncommon | \[X\] Ç | Fabric with pre-printed geometric patterns. Rolls up for transport. |
-| Geometric inlay kit | Rare | \[X\] Ç | Copper wire and setting tools. For permanent workspace installation. |
-| Workbench lamp (magnifying) | Common | \[X\] Ç | For fine inscription work. |
+| Salt (ritual grade, 1kg) | Common | 8Ç | Used for geometric patterns, workspace boundaries. |
+| Incense (standard) | Common | 10Ç | Assorted. Common in occult retail. |
+| Chalk (colored set) | Common | 12Ç | Floor and surface patterns. Washes clean. |
+| Candles (pack of 12) | Common | 15Ç | Standard. Color matters to some practitioners, not to the Aether. |
+| Inscription ink (standard) | Common | 25Ç | Works on paper and cloth. |
+| Incense (specialist blend) | Uncommon | 45Ç | Specific scent profiles associated with specific Domains. |
+| Ritual candles (specialty) | Uncommon | 60Ç | Beeswax, hand-poured, longer burn. Preferred for extended rituals. |
+| Workbench lamp (magnifying) | Common | 85Ç | For fine inscription work. |
+| Inscription ink (etching grade) | Uncommon | 90Ç | For metal and stone. Requires etching tool. |
+| Ritual basin | Uncommon | 120Ç | Ceramic or metal. Used for water, oil, or symbolic materials. |
+| Portable ritual mat | Uncommon | 200Ç | Fabric with pre-printed geometric patterns. Rolls up for transport. |
+| Etching tool set | Uncommon | 350Ç | For inscribing metal, stone, glass, crystal. |
+| Geometric inlay kit | Rare | 800Ç | Copper wire and setting tools. For permanent workspace installation. |
 
-#### Inscription Blanks
+### Inscription Blanks
 
 Inscription blanks are objects purpose-built for Enchantment — shaped, finished, and ready to receive a spell chain. Any of these can be used as a Talisman base. Material category determines charges and recharging rules as normal.
 
-<table>
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 17%" />
-<col style="width: 13%" />
-<col style="width: 6%" />
-<col style="width: 46%" />
-</colgroup>
-<thead>
-<tr>
-<th><strong>Item</strong></th>
-<th><strong>Material</strong></th>
-<th><strong>Availability</strong></th>
-<th><strong>Cost</strong></th>
-<th><strong>Notes</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Athame</td>
-<td>Inorganic Durable</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>Ritual knife. Double-edged, inscription-ready blade.</td>
-</tr>
-<tr>
-<td>Wand<br />
-(wood)</td>
-<td>Once-Living</td>
-<td>Common</td>
-<td>[X] Ç</td>
-<td>Standard length. Smooth finish, inscription-ready surface.</td>
-</tr>
-<tr>
-<td>Wand<br />
-(bone)</td>
-<td>Once-Living</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>As wand (wood). Unsettling to some. Effective to all.</td>
-</tr>
-<tr>
-<td>Wand<br />
-(metal)</td>
-<td>Inorganic Durable</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>Cast or machined. High-end finish.</td>
-</tr>
-<tr>
-<td>Wand<br />
-(crystal-tipped)</td>
-<td>Inorganic Durable</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>Metal shaft, crystal focus point. Superior-tier capable.</td>
-</tr>
-<tr>
-<td>Staff<br />
-(wood)</td>
-<td>Once-Living</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>Full length. Higher surface area allows complex inscription.</td>
-</tr>
-<tr>
-<td>Staff<br />
-(metal-shod)</td>
-<td>Inorganic Durable</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>Wood shaft with inscribable metal fittings at head and base.</td>
-</tr>
-<tr>
-<td>Ring blank<br />
-(metal)</td>
-<td>Inorganic Durable</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>Smooth inner band for inscription.</td>
-</tr>
-<tr>
-<td>Ring blank<br />
-(crystal-set)</td>
-<td>Inorganic Durable</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>Metal band with mounted stone.</td>
-</tr>
-<tr>
-<td>Charm<br />
-(wood, set of 3)</td>
-<td>Once-Living</td>
-<td>Common</td>
-<td>[X] Ç</td>
-<td>Small carved blanks. Necklace, bracelet, or loose carry.</td>
-</tr>
-<tr>
-<td>Charm<br />
-(bone, set of 3)</td>
-<td>Once-Living</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>As wood charm.</td>
-</tr>
-<tr>
-<td>Charm<br />
-(crystal, single)</td>
-<td>Inorganic Durable</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>Single precision stone on a mount.</td>
-</tr>
-<tr>
-<td>Coin blank<br />
-(metal)</td>
-<td>Inorganic Durable</td>
-<td>Common</td>
-<td>[X] Ç</td>
-<td>Smooth-faced coin. Easily carried, easily palmed.</td>
-</tr>
-<tr>
-<td>Medallion<br />
-(metal, large)</td>
-<td>Inorganic Durable</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>Larger inscription surface. Worn or carried.</td>
-</tr>
-<tr>
-<td>Paper talisman<br />
-(folded, set of 10)</td>
-<td>Degradable</td>
-<td>Common</td>
-<td>[X] Ç</td>
-<td>Pre-folded for throwing or contact trigger. Single charge each.</td>
-</tr>
-</tbody>
-</table>
+| **Item** | **Material** | **Availability** | **Cost** | **Notes** |
+|----|----|----|----|----|
+| **Paper talisman** (folded, set of 10) | Degradable | Common | 20Ç | Pre-folded for throwing or contact trigger. Single charge each. |
+| **Charm** (wood, set of 3) | Once-Living | Common | 45Ç | Small carved blanks. Necklace, bracelet, or loose carry. |
+| **Charm** (bone, set of 3) | Once-Living | Uncommon | 100Ç | As wood charm. |
+| **Charm** (crystal, single) | Inorganic Durable | Rare | 400Ç | Single precision stone on a mount. |
+| **Coin blank** (metal) | Inorganic Durable | Common | 25Ç | Smooth-faced coin. Easily carried, easily palmed. |
+| **Medallion** (metal, large) | Inorganic Durable | Uncommon | 150Ç | Larger inscription surface. Worn or carried. |
+| **Ring blank** (metal) | Inorganic Durable | Uncommon | 120Ç | Smooth inner band for inscription. |
+| **Ring blank** (crystal-set) | Inorganic Durable | Rare | 550Ç | Metal band with mounted stone. |
+| **Wand** (wood) | Once-Living | Common | 80Ç | Standard length. Smooth finish, inscription-ready surface. |
+| **Wand** (bone) | Once-Living | Uncommon | 180Ç | As wand (wood). Unsettling to some. Effective to all. |
+| **Wand** (metal) | Inorganic Durable | Rare | 450Ç | Cast or machined. High-end finish. |
+| **Wand** (crystal-tipped) | Inorganic Durable | Rare | 1,200Ç | Metal shaft, crystal focus point. Superior-tier capable. |
+| **Staff** (wood) | Once-Living | Uncommon | 250Ç | Full length. Higher surface area allows complex inscription. |
+| **Staff** (metal-shod) | Inorganic Durable | Rare | 700Ç | Wood shaft with inscribable metal fittings at head and base. |
+| **Athame** | Inorganic Durable | Uncommon | 300Ç | Ritual knife. Double-edged, inscription-ready blade. |
 
-#### Pre-Made Talismans
+### Inscribed Objects
 
-Pre-made Talismans are available through specialist suppliers and the Goblin Market. They are produced by practicing Arcanists and sold charged, with a trigger already set. The buyer cannot change the trigger or the spell without re-inscribing the object.
+Most Talismans in NYTE City were made by someone who needed the Çredits. An Enchanter with a workspace and a free evening can turn out a batch of Cantrip cards before bed, and there is always somebody buying. The trade runs through occult retailers who keep the real stock behind the counter, through fixers who know which of their contacts practices, and openly through the Goblin Market.
 
-Quality varies. A talisman sourced from the Goblin Market was made by someone who knows what they’re doing. One sourced from an occult retail shop may or may not work as described — caveat emptor.
+What follows is what you can expect to find. Anything not on this list is a commission, and a commission is a conversation.
 
-<table style="width:92%;">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 15%" />
-<col style="width: 10%" />
-<col style="width: 36%" />
-</colgroup>
-<thead>
-<tr>
-<th><strong>Item</strong></th>
-<th><strong>Availability</strong></th>
-<th><strong>Cost</strong></th>
-<th><strong>Notes</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Ward<br />
-(paper, Cantrip)</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>Single use. Proximity/Contact trigger. Common supply.</td>
-</tr>
-<tr>
-<td>Offensive talisman<br />
-(paper, Cantrip)</td>
-<td>Uncommon</td>
-<td>[X] Ç</td>
-<td>Contact trigger. Standard damage.</td>
-</tr>
-<tr>
-<td>Ward<br />
-(wood, Standard)</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>3 charges. Trigger varies by seller.</td>
-</tr>
-<tr>
-<td>Utility talisman<br />
-(wood, Standard)</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>3 charges. Effect varies by seller. Verify before purchase.</td>
-</tr>
-<tr>
-<td>Offensive talisman<br />
-(metal, Standard)</td>
-<td>Rare</td>
-<td>[X] Ç</td>
-<td>5 charges. Durable. Contact trigger standard.</td>
-</tr>
-<tr>
-<td>Specialist talisman<br />
-(crystal, Advanced+)</td>
-<td>Goblin Market only</td>
-<td>[X] Ç</td>
-<td>Effect, charges, and trigger negotiated at purchase.</td>
-</tr>
-</tbody>
-</table>
+*Forms listed are typical. Any object of the right material will hold the same working, and vendors who know their trade will say so.*
+
+#### Single-Use
+
+*Degradable material. One charge, destroyed on use.*
+
+| **Item** | **Spell** | **Availability** | **Cost** | **Notes** |
+|----|----|----|----|----|
+| Blink card | Blink | Rare | 150Ç | One crossing. |
+| Dart cards (deck of 5) | Dart | Uncommon | 200Ç | Thrown — Melee attack, releases on impact. |
+| Field Suture patch | Mend Flesh | Uncommon | 250Ç | Press to the wound. |
+| Everlight slip | Everlight | Common | 40Ç | Sold in strips of ten. |
+| Ward card | Shield | Uncommon | 75Ç | Tap to activate. |
+
+#### Charged Talismans
+
+*Once-Living material. Three charges, recharged by an Arcanist at 1 TOL each after re-inscription.*
+
+| **Item** | **Spell** | **Availability** | **Cost** | **Notes** |
+|----|----|----|----|----|
+| Everlight pendant | Everlight | Common | 300Ç | The most common inscription in the city. |
+| Steadying cord | Soothe | Common | 350Ç | Knotted leather at the wrist. For whoever needs it most. |
+| Lucky dice | Luck of the Bold | Uncommon | 400Ç | A pair of knucklebones. Roll them, then roll yours. |
+| Shield charm | Shield | Uncommon | 450Ç | Carved wood on a cord. Fast Action to tap. |
+| Featherfall charm | Feather Fall | Uncommon | 550Ç | A single feather, sealed. Three descents. |
+| Tracer cord | Tracer | Uncommon | 700Ç | Braided leather. Slip it onto something and follow. |
+| Facemask visor | Facemask | Rare | 900Ç | Tap and wear another face. |
+
+#### Durable Talismans
+
+*Inorganic material. Five charges, recharged with TOL alone.*
+
+| **Item** | **Spell** | **Availability** | **Cost** | **Notes** |
+|----|----|----|----|----|
+| Sure Grip wrap | Sure Grip | Uncommon | 800Ç | Fits any weapon grip. |
+| Bulwark rune | Shield | Rare | 1,200Ç | Stone inlay for armor. Triggers on a hit. |
+| Blink boots | Blink | Rare | 1,400Ç | Click your heels. |
+| Truestrike sight | Sure Hand | Rare | 1,600Ç | Fixed to a weapon. |
+| Embersight visor | Ember Sight | Rare | 1,800Ç | Nothing a scanner finds. |
+| Second Wind charm | Second Wind | By Practice | 2,200Ç | Sold empty. |
+| Turning rune | Turning Rune | By Practice | 3,000Ç | Armor inlay. Triggers on a hit. |
+
+#### Wards and Traps
+
+*Placed rather than carried. Proximity triggers, set at inscription.*
+
+| **Item** | **Spell** | **Availability** | **Cost** | **Notes** |
+|----|----|----|----|----|
+| Watchward | Watchward | Uncommon | 600Ç | Silent alert, any distance. |
+| Frost Trap | Frost Trap | Rare | 800Ç | — |
+| Lightning Trap | Lightning Trap | Rare | 800Ç | — |
+| Quiet Ward | Hush | Uncommon | 900Ç | Inscribed for a room rather than a moment. |
+| Spike Trap | Spike Trap | Rare | 1,500Ç | — |
+| Threshold Ward | Threshold Ward | By Practice | 2,400Ç | Target type named at inscription. |
+| Stasis Trap | Stasis Trap | By Practice | 3,000Ç | — |
+| Spikefield | Spikefield | By Practice | 4,500Ç | — |
+
+#### Artifacts
+
+*Artifacts cannot be jammed, shorted, or traced, and an EMP that takes down a crew's tech leaves them working. For some buyers that is the whole reason to own one.*
+
+| **Item** | **Spell** | **Availability** | **Cost** | **Notes** |
+|----|----|----|----|----|
+| Everlight lamp | Everlight | Rare | 3,500Ç | Ready every night, forever. |
+| Hearthstone (Artifact) | Hearthstone | Rare | 4,000Ç | A room that is never cold again. |
+| Watchward stone | Watchward | Rare | 5,500Ç | Set in a doorframe. Never needs resetting. |
+| Quietwalk soles | Hush | By Practice | 6,000Ç | Your footsteps stop arriving. Always on. |
+| Stillglass lenses | Ember Sight | By Practice | 6,000Ç | Thermal sight, all day. Reads as sunglasses. |
+| Tracer ring | Tracer | By Practice | 6,000Ç | Marks one target a day, holds until dawn. |
+| Wardbreaker rod | Counterspell | By Practice | 9,000Ç | One counter per day. Works for anyone. |
+| Grave-iron blade | Consecrate | By Contract | Varies | Deals Spirit damage to things that shrug off steel. |
+| Blink boots | Blink | By Practice | 12,000Ç | Five crossings, recovered by morning. |
+| Ferryman's coin | Tether | By Contract | 30,000Ç | One automatic Death check. Recovers after a month. |
+
+#### \
+Services
+
+*Work done to something you already own. You bring the object; the practitioner brings the expertise. Armor must be Mid quality or better.*
+
+| **Service** | **Spell** | **Availability** | **Cost** | **Notes** |
+|----|----|----|----|----|
+| Recharging | — | Uncommon | 200Ç per charge | Any Arcanist with Enchantment rank. Once-Living materials need re-inscribing first. |
+| Warding — Elemental | Warding — Elemental | Rare | 2,500Ç | Armor RES applies to Elemental damage. One mod slot. |
+| Warding — Spirit | Warding — Spirit | By Practice | 5,000Ç | Armor RES applies to Spirit damage. One mod slot. |
+| Warding — Aether | Warding — Aether | By Practice | 12,000Ç | Armor RES applies to Aether damage. Nothing else stops Aether. |
+| Weapon inscription | Varies | By Contract | Varies | A property, not a spell. Negotiated, not purchased. |
+| Self-mending | Ironhide | By Practice | 15,000Ç | Armor closes its own holes after a fight. One mod slot. |

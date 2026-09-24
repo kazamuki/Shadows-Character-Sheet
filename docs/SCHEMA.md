@@ -2264,8 +2264,10 @@ No cascade logic to maintain — it falls out of the architecture.
       into `notes` (`Engine.logCascade`) as one undoable action. Tracking
       acquired Aberrations as structured data is a schema bump, and Ken
       chose not to take it this session.
-      → **Superseded in part by Decision 110**: **Record it** also stores the Aberration on the character
-      (`trackers.aberrations`, seeded by 108's 0.9), in the same undo.
+      → **Superseded in part by Decisions 110 and 115**: 110's **Record it**
+      also stores the Aberration on the character (`trackers.aberrations`,
+      seeded by 108's 0.9), in the same undo. Since 115 the panel no longer
+      asks for the dice or shows the result, because the GM reads the tables.
     - **Pinned:** every band of the Cascade Table, the degree-1 `why`, both
       columns of the Aberration Table, the 15/15/9 count and the seven `as`
       references (`rules.test.mjs`). Also the tables' contiguity, totality on
@@ -2430,13 +2432,18 @@ No cascade logic to maintain — it falls out of the architecture.
       Notes line and records the Aberration, and the sheet wraps both in one
       `commit()`, so one undo takes back both. A result with no Aberration
       only writes the note. `logCascade` stays as the note half.
+      → **Superseded in part by Decision 115**, this bullet whole:
+      `recordCascade` and `logCascade` are gone. A Cascade records through the picker, with the date in the
+      Aberration's own note, and nothing goes into Notes.
     - **UI.** Trackers shows an Aberrations section under TOL Spent wherever
       a tracker declares `overMax: "cascade"`, or on any sheet already
       holding one. Permanent ones are cards with Remove (a quest or ritual is
       the GM's call) and a note. Temporary ones are chips with Clear. A
       palette, the same shape as W14's, adds one by hand with a
       Temporary/Permanent toggle, and a held one is greyed out there and in
-      the Cascade's pick list. Permanent ones also show read-only on the
+      the Cascade's pick list. Since Decision 115 the palette and the pick
+      list are one picker modal, with each Aberration's
+      text on its card. Permanent ones also show read-only on the
       Archetype tab as **Permanent Aberrations**. Nothing on Main except
       the Pain line, which now names what adds to it ("from Agonized,
       Phantom Pain"). Ken agreed Main stays clear until playtesting says
@@ -2647,6 +2654,46 @@ No cascade logic to maintain — it falls out of the architecture.
       re-render, focus not moved, the bar not sticky. Each fails a test.
     Ships in app **0.20.0**, with Decisions 112 and 113. (Ken + Claude,
     2026-09-23)
+
+115. **(The GM runs the Cascade, and one Aberration picker — app + data)**
+    **The Cascade panel stops reading the player's dice. It gives the
+    instruction, roll a d10, add the Rupture's degree and tell your GM, and
+    opens an Aberration picker for whatever the GM names.** Scott told Ken on
+    2026-09-24 that the GM resolves a Cascade and says which Aberration it
+    left. Ken picked both shapes the same day. **Replaces Decision 106 in
+    part** (the panel asking for the dice and showing the result) and
+    **Decision 110 in part** (Record it as a Notes line plus the Aberration,
+    `recordCascade`, and the W14-shaped palette).
+    - **The tables stay data.** `cascadeTable` and `aberrationTable` are
+      unchanged and still render in the Arcanist's Magic reference.
+      `Engine.cascade()` stays as their reader, and the CRB conformance tests
+      pin the tables through it. The sheet no longer calls it. `logCascade`
+      and `recordCascade` are removed, since nothing calls them.
+    - **Nothing goes into Notes.** A Cascade's Aberration is recorded with
+      `note: "Cascade, YYYY-MM-DD"`, which the player can rewrite on its
+      card. The audit entry reads "Cascade: Name (permanence)". Backlash, a
+      Cosmetic Mutation and Burned Out aren't recorded. The panel says the GM
+      runs them and anything that lasts goes in Notes.
+    - **One picker, in Decision 111's modal.** It opens from the Cascade
+      panel and from **+ Add an Aberration** on Trackers. It has a
+      Temporary/Permanent toggle, whose status line reads
+      `aberrationRules.temporary` or `.permanent`, and a search over name,
+      `as` and description. Below that are Good, Neutral and Bad as cards,
+      each with its whole text, because Ken asked to read them before the
+      pick. One you hold is disabled and says "You have it". A pick is one
+      `commit()`, then the modal closes and focus goes back to its button.
+    - `aberrationRules.temporary` is new: "A Temporary Aberration lasts 8
+      hours", which is the Cascade Table's own clock. It's display text only.
+    - **Pinned:** the Cascade smoke test is rewritten. It checks there are no
+      dice inputs, every Aberration is on a card with its text, and search
+      and the toggle work. It checks a pick records with the dated note and
+      no Notes line, focus returns, a held one is disabled, and undo works.
+      The palette test moved to the picker. An engine test covers the note
+      and the one undo. Mutation-tested: cards without their text fail the
+      smoke test.
+    No game data or schema bump, since nothing a character computes changes
+    (Decision 68). App **0.20.0 → 0.21.0**. (Ken + Scott + Claude,
+    2026-09-24)
 
 ## 5. Open Flags
 
