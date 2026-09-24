@@ -227,8 +227,20 @@ in `tests/rules.test.mjs`.
 - **Close every session by rewriting `docs/STATE.md` and appending to
   `docs/log/2026.md`**, in the same commit as the code. STATE is rewritten; the
   log is append-only and never revised — its figures are true as of that entry.
-- Tag when a phase closes: `v0.4.0-phase-3.3`. CI attaches the single-file build
-  to the release.
+- **Every change a player can see updates both changelogs, in the same
+  commit.** Write it in `CHANGELOG.md` under `[Unreleased] — app X.Y.Z`, in
+  player voice (no decision numbers, audit ids, document numbers, or who
+  ruled what). Then run `npm run changelog` and commit the regenerated
+  `src/data/shadows-changelog.js`: that is the app's **What's new** window,
+  and players read it (Decision 123). The generated file is never edited by
+  hand. `tests/docs.test.mjs` fails if it lags the markdown, but the test
+  can't tell when a visible change never got a line at all. That part is on
+  you.
+- **Releasing is a rename, a regenerate, then a tag.** Rename the
+  `[Unreleased]` heading to `vX.Y.Z — <date>`, run `npm run changelog`, commit
+  and merge, then push the `vX.Y.Z` tag. The tag is what deploys the live site.
+  A cloud session can merge but usually can't push a tag, so tag locally after
+  it. CI attaches the single-file build to the release.
 
 ## What's next
 
