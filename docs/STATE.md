@@ -52,7 +52,7 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.20.0`, game data `0.15`** (tag `v0.20.0`). **Check a
+tag. **Live: app `0.21.0`, game data `0.15`** (tag `v0.21.0`). **Check a
 deploy by loading the page** and reading the footer, not by curling it.
 `CHANGELOG.md` needs a section for every app bump (`docs.test.mjs` checks).
 
@@ -109,9 +109,9 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**Live is `v0.20.0`.** Branch `claude/crb-spell-sync-cascade-fb4a18`
-carries app 0.21.0 (game data 0.15, schema 0.9): the magic data synced to
-Scott's finished chapter, and Decision 115. Merge it and tag `v0.21.0`.
+**`main` is caught up through PR #49, and live is `v0.21.0`** (app 0.21.0,
+game data 0.15, schema 0.9). The next observable change is 0.21.1 for a
+fix, 0.22 for a feature.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
