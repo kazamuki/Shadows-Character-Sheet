@@ -74,9 +74,9 @@ left that is still true now.
 **Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
 GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
 `charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
-dry run on a branch, a re-publish on a tag. **Live: app `0.19.0`,
-game data `0.14`** (tag `v0.19.0`, deployed 2026-09-23; loaded: the footer's versions,
-Home, and a Heroic Arcanist's step 7 with Starting spells — TOL + 2d4 and the picker). `v0.13.0` and `v0.14.0`
+dry run on a branch, a re-publish on a tag. **Live: app `0.19.1`,
+game data `0.14`** (tag `v0.19.1`, deployed 2026-09-23; loaded: the footer's versions,
+and Martial Arts' style picker spanning the Skills grid with Melee aligned below it). `v0.13.0` and `v0.14.0`
 rendered blank (#30). **Check a deploy by loading the page**, not by curling it.
 **`CHANGELOG.md` is current again** (W18); `docs.test.mjs` checks each bump has a section.
 
@@ -137,9 +137,9 @@ mutation-tested (Decision 91; the account is in `log/2026.md`).
 
 ## 5. Where to start
 
-**`main` is caught up through PR #44, and live is `v0.19.0`** (Decision 111,
-game data 0.14). App **0.19.1** (W19, the Martial Arts grid fix) is on its
-branch with Ken's W19–W26, not yet merged or tagged. **The magic plan is closed.**
+**`main` is caught up through PR #45, and live is `v0.19.1`** (W19's
+Martial Arts grid fix; game data 0.14). **The magic plan is closed.** The next
+observable change is 0.19.2 for a fix, 0.20 for a feature.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone;
 note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
