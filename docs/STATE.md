@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.24.0` · game data `0.17` · character schema `0.11` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.24.1` · game data `0.17` · character schema `0.12` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -32,10 +32,12 @@ everywhere (`tests/hostile.test.mjs`).
 waiting on Deighton. Magic: Decisions 93, 106, 108–111 and 115.
 
 **The 2026-09-24 audit's first two sessions are done.** S1 (app 0.24.0) made
-character files untrusted input and gave every character a NYTE City intake
-number. S2, this session, was docs only: decisions are short records that say
-what they rejected (Decision 130), every change has a tier that says what it
-must touch (131), and there's one orientation path (132).
+character files untrusted input and gave every character a permanent number.
+S2 was docs only: decisions are short records that say what they rejected
+(Decision 130), every change has a tier that says what it must touch (131),
+and there's one orientation path (132). Then, in app 0.24.1, that number
+became the character's **TAG** (Decision 133, schema 0.12). A 0.24.0 `NCR-`
+number keeps its twelve characters, so old exports are still the same character.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -126,12 +128,13 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**`main` is at `v0.24.0` (app 0.24.0, schema 0.11, game data 0.17).** S2
-changes no version: nothing in it reaches a player.
+**The live site is `v0.24.0`.** S2 (#58) is merged and moved no version.
+The TAG change (app 0.24.1, schema 0.12) is in review; once it merges, release
+`v0.24.1` per `CLAUDE.md`.
 
 **Next, all unblocked:** S3 (propose first), S5 or S6. Ken alone: F9, F12,
-F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode) and W30
-(Reload from carried ammo).
+F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode), W30 (Reload
+from carried ammo) and W31 (how a TAGless or Ghost TAG character's TAG reads).
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.
