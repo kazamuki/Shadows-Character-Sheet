@@ -41,8 +41,7 @@ every open wishlist item but W28: vitals popovers (W2/W3), the catalog
 browser (W4), a hit that lands (W15), weapon mods and rounds (W16), counted
 gear from Gear's and Magic's shops (W17/W27), and Main as the fight view
 (W13). **It bumped the character schema to 0.10 and game data to 0.16**,
-and opened F26. It's on branch `claude/affectionate-hawking-7zblnw`, in
-review as a PR, not yet on `main`.
+and opened F26. It merged as PR #51.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -58,7 +57,7 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.21.0`, game data `0.15`** (tag `v0.21.0`); 0.22.0 is unmerged. **Check a
+tag. **Live: app `0.21.0`, game data `0.15`** (tag `v0.21.0`); 0.22.0 is merged, not yet tagged. **Check a
 deploy by loading the page** and reading the footer, not by curling it.
 `CHANGELOG.md` needs a section for every app bump (`docs.test.mjs` checks).
 
@@ -122,10 +121,9 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**`main` is caught up through PR #49, and live is `v0.21.0`.** The wishlist
-session's 0.22.0 (schema 0.10, game data 0.16) sits on
-`claude/affectionate-hawking-7zblnw`, in review as a PR. **First: merge
-it**, then tag `v0.22.0` and add its `log/shipped.md` row.
+**`main` is caught up through PR #51 (app 0.22.0, schema 0.10, game data
+0.16); live is still `v0.21.0`.** **First: tag `v0.22.0`** on #51's merge
+commit, which deploys it, then check the footer on the live page.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
