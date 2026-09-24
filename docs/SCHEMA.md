@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.13) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-23 (Aberrations on the character and the Magic reference, Decision 110)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.14) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-23 (Starting spells in the wizard and the spell picker modal, Decision 111)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -507,7 +507,11 @@ numbers it shows come from two `spellcraftRules` entries: `spellPower`
 (`{ discipline: "evocation", stat: "WILL" }`, Evocation rank + WILL) and
 `mastery` (`{ ipPerTH: 30, thReduction: 1 }`). A third, `spellAttack`
 (`{ discipline: "evocation", stats: ["REF", "WILL"] }`, Decision 110), adds
-the stats' scores, not their bonuses.
+the stats' scores, not their bonuses. Decision 111 adds `startingSpells`
+(`{ countFrom: "TOL", discipline: "evocation" }`: TOL + the scaling row's
+`startingSpellsRoll`, TH capped at the rank at creation only) and
+`castingPool` (`{ discipline: "evocation" }`: a TH above that rank is
+marked as reachable only by an exploding 10).
 
 A `reference` panel (Decision 110) names the data sections it `shows`. The
 sheet has one renderer per section name and skips a name it has none for.
@@ -1987,7 +1991,7 @@ No cascade logic to maintain — it falls out of the architecture.
       directly (P7). App **0.12.0 → 0.13.0** (minor, new capability).
       Character schema unchanged (0.8 already carried every field).
       (Ken + Claude, 2026-09-22)
-    → **Superseded in part by Decision 100** — the bare "Restore a Massive level" button folded into Focused Healing.
+    → **Superseded in part by Decisions 100 and 112** — the bare "Restore a Massive level" button folded into Focused Healing (100); Take a hit opens as a modal, not a panel on Trackers, and Apply waits with its reason instead of alerting (112).
 
 100. **(Loadout & recovery — combat plan Session 4, data + engine + app)**
     **Loadout writes weapons and armor from the catalog, a weapon line is
@@ -2343,6 +2347,8 @@ No cascade logic to maintain — it falls out of the architecture.
       it like any spend (Decision 49). Only a Known book spell with a TH can
       be Mastered.
     - **The picker shows a spell before you add it** (W4's lesson): search
+      (→ **Superseded in part by Decision 111**: the picker is a modal the
+      sheet and the wizard share, not an inline section of the Grimoire)
       over name, Glyph, effect and tags, plus filters for tier and Domain. A
       spell you hold reads Known. One you typed as your own reads **Link
       yours** and links that row instead of adding a copy. That one was
@@ -2470,6 +2476,178 @@ No cascade logic to maintain — it falls out of the architecture.
     108 seeded `trackers.aberrations`. App **0.17.0 → 0.18.0**. (Ken +
     Claude, 2026-09-23)
 
+111. **(Starting spells in the wizard, and the spell picker as a modal —
+    magic plan Session 3, data + engine + app)** **A new Arcanist chooses
+    TOL + the power level's roll of Known spells from the book, and at
+    creation a spell's TH can't pass their Evocation rank.** Ken agreed the
+    shape on 2026-09-23 (the plan's M6). Builds Decision 109's MQ1. Does what
+    Decision 21 deferred and Decision 25 left to free entry. **Replaces
+    Decision 108 in part**: its inline picker becomes a modal.
+    - **On the Character Points step, not the Archetype step.** The plan said
+      the Arcanist's step, but Evocation ranks are bought on step 7 (Decision
+      19) and step 7's boosts move INT, BOD and COOL, so both the count and
+      the cap are only final there. The block sits under Disciplines, and
+      buying a rank opens the next tier while the player watches. The
+      Archetype step's note points there.
+    - **No second store, no schema bump.** The roll is
+      `archetypeChoices.rolls.startingSpells` (Decision 11: the player
+      rolls). Picks are the Grimoire's own book rows, `{ spellId, stage:
+      "known", notes }`, so lock changes nothing. Changing archetype in the
+      wizard clears `panelData`, so an old Arcanist's picks don't come back.
+      A locked sheet's admin change leaves panels to its single undo.
+    - **The data.** The Arcanist's scaling rows carry `startingSpellsRoll`
+      (`"1d4"`…`"4d4"`), which replaces the string `commonSpells` (`"TOL +
+      1d4"`) that nothing could compute from. `spellcraftRules.startingSpells`
+      names what the count adds to (`countFrom: "TOL"`) and the Discipline
+      that caps TH (`evocation`).
+    - **`Engine.startingSpells(ch)`** is the one reader: the die, the roll,
+      the count (null until the roll is entered), the picks, the cap, and any
+      pick over it. `canAddStartingSpell` refuses an unknown spell, a
+      duplicate, a TH over the cap (with `needs`) and a pick past the count.
+      `addStartingSpell` goes through it into `addSpell`.
+    - **What blocks and what warns** (`validate("character-points")`). No
+      roll entered and short of the count **warn**, like an unspent pool. A
+      held spell over the rank and more picks than the count are
+      **errors**. Un-buying a rank never drops a pick on its own: the step
+      says which spell needs which rank, and the player decides.
+    - **After lock nothing gates a spell's TH** (Ken: like a skill past its
+      creation cap, the limit is for a balanced start). Instead
+      `spellcraftRules.castingPool` marks a Grimoire spell whose TH, after
+      Mastery, is above the Evocation pool: it can be cast, but only an
+      exploding 10 reaches it (Magic.md, Step 2: the pool is Evocation rank
+      d10s). The sheet's picker shows the same marker.
+    - **The modal** is the first focus-and-dismiss primitive (`openModal`
+      / `closeModal` in `shared.js`), the one W2/W3/W6 want. It's a native
+      `<dialog>` opened with `showModal()`, so the browser makes the page
+      inert, traps Tab and closes on Esc. The backdrop closes it too. Where
+      `showModal()` is missing (jsdom) it opens as a plain dialog and Esc is
+      handled by hand. Focus goes back to the opener, or to `returnTo` when
+      a re-render replaced it. The undo toast moves inside an open modal,
+      because the page behind is inert, and back out on close. It's hidden
+      in print and drops its animation under reduced motion.
+    - **One picker, two modes** (`spellPickMode`). On the sheet a result
+      reads Add, Known or Link yours, and each is one `commit()` with its
+      toast. In the wizard it reads Choose, Remove, or **Needs Evocation N**
+      (disabled), and a status line keeps "Chosen 2 of 5 · TH up to 1" in
+      view. The modal stays open across picks and refreshes itself.
+    - **Pinned:** 041's rolls by power level and the count as TOL + the roll,
+      and MQ1's gate counting ranks bought at creation (`rules.test.mjs`).
+      Also the count following TOL, the gate and the count cap, warn vs.
+      error, no gate after lock, the pool marker with Mastery, and totality
+      (`engine.test.mjs`), plus three wizard smoke tests and the two sheet
+      picker tests moved to the modal. Mutation-tested (16 mutants): no TH gate,
+      the count ignoring TOL, the cap ignoring bought ranks, no count cap,
+      short of the count blocking, an over-rank pick or too many going
+      unreported, no roll unwarned, the pool marker ignoring Mastery, the
+      gate leaking onto the sheet, an archetype switch keeping picks, the
+      toast left outside the modal, focus not returned, Esc not closing, the
+      wizard's button ignoring the gate, and the modal not refreshing after a
+      pick. Each fails a test.
+    Game data **0.13 → 0.14** (new choices at creation, Decision 68).
+    Character schema unchanged at **0.9**. App **0.18.0 → 0.19.0**. (Ken +
+    Claude, 2026-09-23)
+
+112. **(Modals, the skill line and Trackers' layout — wishlist pass, app)**
+    **Three wishlist passes ship as one UI decision: the modal pass (W6,
+    W23–W26), the skill line (W20, W21) and Trackers' layout (W1, W10).**
+    Ken picked them on 2026-09-23. None touches rules, data or the character
+    file. **Replaces Decision 99 in part** (its "Take a hit panel on
+    Trackers"), and extends Decision 111's modal.
+    - **The modal gets a footer** (`openModal({ foot })`) that stays put
+      while the body scrolls; the head does too. Any `[data-modalclose]` in
+      it closes, and `bind` gets the body and the footer. The dialog is
+      centred again: the stylesheet's `*` reset zeroed the margins a native
+      `<dialog>` centres with, so the 0.19 picker opened pinned top-left.
+    - **W6: Take a hit is a modal.** Its body leads with HP and the Health
+      Level track, then the form and what the hit would do. Apply is in the
+      footer and stays disabled while anything is pending, with the reason
+      next to it (`hitPending`: no damage yet, a PROT die not entered, a
+      Shock Check or a check at zero not marked). Those were alerts on
+      Apply. Cancel, ×, Esc and the backdrop drop the form. Each change
+      redraws the modal and puts focus back where it was. The two number
+      fields redraw as they're typed, not on `change`, which fires on blur:
+      a redraw then would replace Apply between the press and the click.
+      They're `inputmode="numeric"` text, like the wizard's roll fields, so
+      the caret goes back to the end. `openHitModal()` is callable from
+      anywhere, which is what W2/W3's HP popover wants.
+    - **W23–W26: the spell picker.** A click anywhere on a row is its
+      button's click; the button stays for the keyboard and screen readers,
+      and a field or link keeps its own click. A row whose button can't act
+      is dimmed and says why in the row ("Already in your Grimoire.", the
+      engine's reason in the wizard), since a tooltip never reaches a touch
+      screen. The search, filters and status line are sticky over the
+      results. The footer has **Done** (Ken's pick, (a) not staged picks)
+      and says each pick is kept as it's made.
+    - **W20/W21: a skill's stats are icons with the character's numbers.**
+      `skillStatsHtml` draws "REF 5 · COOL +1 syn": the primary adds its
+      score, the synergy its modifier (030). The wizard puts it on the
+      skill's name line, above the description. The sheet's breakdown uses
+      it in place of the bare text, which was the same line. Violet and
+      magenta match the print badges (Decision 94). The synergy is dimmed on
+      an untrained skill, whose check leaves it out.
+    - **W1/W10: Trackers reads in two columns from 1000px.** The body
+      (Damage, recovery, Armor, Pain, Conditions) down the left; Sanity,
+      LUCK, the archetype's trackers and Çredits down the right; Manual
+      Adjustments full width below. One column on a phone, in the same order.
+      The Health Level track moved into the Damage card, grouped into the
+      Pain Level bands the print sheet draws (`pPainBandFor`, from data), and
+      the band you're in is lit. The same track tops the hit modal. The
+      damage stepper has its own row, so it wraps as one group.
+    - **Pinned:** five smoke tests (the hit modal, the at-zero check
+      pending in the footer, the picker's row click, disabled row, sticky
+      head and Done, the skill line in the wizard, and the Trackers columns
+      and bands). Mutation-tested (13 mutants): no row click, no dimmed row,
+      no Done, no sticky head, the at-zero check not pending, numbers
+      redrawing on `change`, the field losing focus, the old skill line,
+      the synergy never dimmed, bands off by one, the wrong band lit, no
+      grid, and the track outside the card. Each fails a test.
+    App **0.19.1 → 0.20.0**. Game data and character schema unchanged.
+    (Ken + Claude, 2026-09-23)
+
+113. **(Quick Study's Intuition — F11, data)** **Quick Study's prerequisite
+    is the Intuition skill at Rank 1, not an advantage.** 041 (mirror of
+    2026-09-22) reads "1 Major Milestone already selected, Danger Sense
+    Advantage at least Rank 1, Intuition skill at least Rank 1". The data
+    had carried the WIP's "Intuition Advantage" as an advantage prerequisite
+    since Phase 1. No advantage has that id, so the prerequisite could never
+    be met, and **no character could take Quick Study**. That's a defect,
+    not a stub. The engine already reads `skills` prerequisites, so the fix
+    is data only: Danger Sense stays under `advantages`, and Intuition moves
+    to `skills.all`. The benefit text is left as it was: 041's new
+    parenthetical says "Treat the d10 as X", which isn't ready to copy.
+    Pinned in `rules.test.mjs` (fails on the old data). Game data **0.14 →
+    0.15**: a choice that was closed is now open (Decision 68). App and
+    schema unchanged. (Ken + Claude, 2026-09-23)
+
+114. **(Jump bars — W5 and W22, app)** **Loadout and the Character Points
+    step get a bar that jumps to each section the page drew, and step 7's
+    bar also filters and sticks.** Ken picked both on 2026-09-23. No rules,
+    data or schema change.
+    - **One helper, the page's own sections.** `sectionList(prefix)` in
+      `shared.js` hands out `sect(label, html)`: the heading gets an id and
+      `tabindex="-1"`, and the short label goes on the bar. So an
+      archetype's panels (the Arcanist's Disciplines and Grimoire) show up
+      with no app change, as W5 asked. `jumpTo` scrolls the heading to just
+      under the sticky header, and under a sticky bar if there is one. It
+      then focuses the heading, so the keyboard carries on from there.
+      Smooth unless reduced motion. Anchors and scroll, not sub-tabs, so
+      print and Ctrl-F still see the whole page.
+    - **Loadout (W5):** a plain bar under the title, not sticky, since the
+      sheet's header already takes the top of the screen.
+    - **Step 7 (W22)** sticks under the header. The header wraps on a
+      phone, so boot measures it into `--hdr-live` (a ResizeObserver
+      where there is one). The bar has a filter over Advantages and
+      Disadvantages, matching name and description. A pick you hold always
+      stays visible (`.pick.selected`), as W22 asked. It shows "N of M" and
+      the **CP still to spend**, the one number you need while scrolling
+      that page. Filtering works on the rendered page, so typing keeps focus,
+      and `S.cpFilter` carries it through the re-render a stepper causes.
+    - **Pinned:** two smoke tests. Mutation-tested (5 mutants): an archetype
+      panel left off the bar, a held pick filtered out, the filter lost on a
+      re-render, focus not moved, the bar not sticky. Each fails a test.
+    Ships in app **0.20.0**, with Decisions 112 and 113. (Ken + Claude,
+    2026-09-23)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2522,6 +2700,9 @@ Decision 104).
 Conditions session opened them; so did the unnumbered stat-curve flag. `tests/docs.test.mjs` is what keeps the table below honest, not this
 sentence.
 
+~~F11~~ closed 2026-09-23 (Decision 113): 041 now asks for the Intuition
+**skill** at Rank 1, and Quick Study's data follows it.
+
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
@@ -2529,7 +2710,6 @@ sentence.
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked | Ken → docs | No |
 | F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling. **Design team, 2026-09-22: still open** — they want to playtest how many Stat Points people realistically get before choosing | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
-| F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
@@ -2740,8 +2920,9 @@ sentence.
 - **Magic on the sheet** — planned 2026-09-23 in
   `docs/plans/magic-on-the-sheet.md`: the Grimoire reads the book (Session 1 —
   **done**, Decision 108), then acquired Aberrations and a Magic reference
-  (Session 2 — **done**, Decision 110), then starting spells in the wizard (Session 3). Its rules
-  questions (`MQ`n) go to Deighton.
+  (Session 2 — **done**, Decision 110), then starting spells in the wizard
+  (Session 3 — **done**, Decision 111). **The plan is closed.** Its rules
+  questions (`MQ`n) all went to Deighton and were answered (Decision 109).
 
 - **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in
   `docs/plans/combat-and-conditions.md`: Conditions first (Session 2 — **done**,

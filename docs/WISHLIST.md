@@ -25,7 +25,7 @@ items here too, marked as such; Ken triages them.
 
 ### Trackers & vitals
 
-**W1 — Trackers wastes the right half of the screen.** *Ken · 💡*
+~~**W1 — Trackers wastes the right half of the screen.**~~ *Ken · → Decision 112, app 0.20.0: two columns from 1000px, the body on the left*
 Every tracker card is full-width with its controls packed left: Damage's
 stepper and action row, Sanity, Luck, Çredits. At a desktop width most of each
 card is empty. Options: a two-column grid of tracker cards on wide screens
@@ -48,7 +48,7 @@ Main's Health/Pain/Sanity/Luck/Çredits cards are the big version of W2's pills
 (Decision 32's command console). Same popovers, same actions. Build W2 and W3
 as one component rendered at two sizes, not twice.
 
-**W6 — Take a hit becomes a modal.** *Ken · 💡*
+~~**W6 — Take a hit becomes a modal.**~~ *Ken · → Decision 112, app 0.20.0: HP and the track up top, Apply waits with its reason; `openHitModal()` for W2/W3*
 Today it opens as an inline panel under Damage, below the HL boxes, and the page
 around it stays live. Taking a hit is the one moment that deserves the whole
 screen: a modal that shows current HP and the Health Level track up top, the
@@ -58,8 +58,13 @@ damage; the modal makes the reason unmissable). Needs: focus trap, Esc to
 cancel, return focus to the button that opened it. Decision 99's resolver is
 already pure (`resolveHit` previews, `applyHit` commits), so this is a UI move,
 not an engine change. Also the natural target for W2/W3's HP popover.
+*Update (Decision 111):* the primitive exists. `openModal`/`closeModal` in
+`shared.js` is a native `<dialog>` with Esc, backdrop close, the page made
+inert, focus returned to the opener, and the undo toast carried inside. The
+spell picker is its first user, so W6 is now a matter of moving the Take a hit
+panel into it.
 
-**W10 — Health Levels sit outside the Damage card.** *Claude · 💡*
+~~**W10 — Health Levels sit outside the Damage card.**~~ *Claude · → Decision 112, app 0.20.0: the track in the Damage card, in the print sheet's Pain Level bands, yours lit*
 The five `5/5` boxes float in their own row between Damage and Armor, grey
 until something is lost, and nothing ties them to Pain. The print sheet already
 groups HL into Pain Level bands (Decision 94). Bring that on-screen: HL track
@@ -98,7 +103,7 @@ of this: search, filters, the numbers shown before Add, and held entries greyed
 out. `spellResultsHtml` in `sheet.js` and its handler in `app.js` are the
 pattern to reuse for weapons and armor.
 
-**W5 — Section shortcuts inside Loadout.** *Ken · 💡*
+~~**W5 — Section shortcuts inside Loadout.**~~ *Ken · → Decision 114, app 0.20.0: from the sections the page drew*
 Loadout & Powers is one long scroll: Weapons, Armor, Gear, Focused Skills,
 Tweak, and archetype powers. A small in-page nav (chips or a sub-tab row) at the
 top — Weapons · Armor · Gear · Powers — that jumps to each section. Keep it
@@ -164,6 +169,84 @@ changes, would make damage feel like damage. Respect
 `prefers-reduced-motion`. Cosmetic, cheap, and easy to overdo — one effect,
 not a system.
 
+### Skills
+
+~~**W19 — Choosing a Martial Arts style breaks the Skills grid.**~~ *Ken · → fixed in app 0.19.1: `.alloc > .picks` spans the grid, with a smoke guard (mutation-tested)*
+Train Martial Arts in the wizard's Skills step and its style picker appears
+squeezed into a narrow column, and every skill below it shifts one column
+over: Melee's name sits under the steppers and its bonus wraps to the left
+edge. Cause, found 2026-09-23 in the preview: `.alloc` is a three-column grid
+(name · stepper · bonus) whose rows are `display: contents`, and the picks
+block (`picksHtml`, Batch 3) is inserted as a plain grid child, so it takes
+one 194px cell and pushes every later cell along. The likely fix is one rule,
+`.alloc > .picks { grid-column: 1 / -1 }`. Check any other `.alloc` that
+can hold picks, and add a smoke assertion that the row after a picks block
+still starts in column 1. Mutation-test it.
+
+~~**W20 — Stat icons beside the skill name.**~~ *Ken · → Decision 112, app 0.20.0: `skillStatsHtml` on the wizard's name line and in the sheet's breakdown*
+In the wizard's Skills step and the sheet's Skills tab, a skill reads as its
+name, then a new line with "REF + COOL syn". Put the stats on the name's line
+as the brand stat icons (`statIco`, `shadows-icons.js`), primary and synergy
+told apart. The print sheet already does this with its Primary/Synergy
+badges (Decision 94), so the two should match. One pass with W21, since
+it's the same line.
+
+~~**W21 — Show the character's own numbers on a skill's stats.**~~ *Ken · → Decision 112, app 0.20.0: "REF 5 · COOL +1 syn", the synergy dimmed until trained*
+Archery is REF + COOL synergy. With REF 5 and COOL 7, show "REF 5 · COOL +1
+syn", so a player sees where the check bonus comes from without doing the
+sum. Shape to respect: the primary stat adds its **score** and the synergy
+stat adds its **modifier** (030: "Skill rank + Primary Stat + Synergy Bonus"),
+so the synergy number should read as a bonus, not a score. The engine
+already returns both (`skillLine().breakdown`), so this is display only.
+Wizard and sheet.
+
+### Wizard
+
+~~**W22 — A sticky filter and jump bar on the Character Points step.**~~ *Ken · → Decision 114, app 0.20.0: filter, jumps and the CP left, sticky*
+Step 7 is the longest page in the app: 30 Disadvantages, then every
+Advantage, then LUCK, Disciplines, Starting spells (Decision 111) and
+Boosts. A bar that sticks under the header, with a text filter over names
+and descriptions and jump links to each section. The filter should leave a
+taken entry visible even when it doesn't match, so nothing you hold
+disappears. It must still work at phone width.
+
+### Modals & pickers
+
+These build on the modal primitive (`openModal`, Decision 111), whose first
+user is the spell picker. They belong in that primitive or the picker's
+shared renderer, so the sheet and the wizard both get them.
+
+~~**W23 — Clicking anywhere on a row picks it.**~~ *Ken · → Decision 112, app 0.20.0*
+In the spell picker, only the small button at the end of a row acts. The
+whole row should: Add, Choose, Remove or Link yours, whichever the row's
+button says. Keep the button, since it's what the keyboard and a screen
+reader use, and don't let a click inside a text field or a link trigger it.
+On the sheet each add is a `commit()` with its undo toast, so a stray click
+is one Undo away.
+
+~~**W24 — A disabled row should look disabled.**~~ *Ken · → Decision 112, app 0.20.0: dimmed, with the reason in the row*
+Today only the button greys out ("Needs Evocation 3", "Known"), and the
+reason is in a `title` tooltip that touch screens never show. Dim the whole
+row, drop the pointer cursor, and put the reason in the row as text.
+Contrast still has to pass in both themes (W7's guard).
+
+~~**W25 — The picker's search stays in view.**~~ *Ken · → Decision 112, app 0.20.0*
+Scrolling the spell list scrolls the search box, filters and the "Chosen 2
+of 7" status line out of sight. Make that block sticky at the top of the
+modal body. It's the picker's shared renderer, so this is for the sheet as
+well as for starting spells.
+
+~~**W26 — A way to finish, not just close.**~~ *Ken · → Decision 112, app 0.20.0: Done in a footer that says picks are kept*
+The modal only has × and Esc, which read as "cancel", yet every pick has
+already been saved. Two shapes, and they differ:
+(a) a **Done** button in the modal's footer that just closes, making it
+clear the picks are already kept (small, matches how it works now); or
+(b) staged picks with **Accept** and **Cancel**, where Cancel throws the
+session's picks away. (b) changes how the picker commits and how undo
+groups (one audit entry per session instead of one per spell). Claude's
+take: (a), unless there's a case for backing out of a whole picking session
+that per-pick Undo doesn't already cover. **Ken chose (a), a Done button,** on 2026-09-23.
+
 ### Docs
 
 ~~**W18 — `CHANGELOG.md` stopped at 0.7.0.**~~ *Claude · → caught up through v0.15.0 in `CHANGELOG.md`; `docs.test.mjs` now fails without a section for the current version*
@@ -181,14 +264,15 @@ the same way again.
 
 ## 2. Notes for whoever picks these up
 
-- **W2, W3, W6 and W12 are one piece of work in practice.** A shared
-  popover/modal primitive, the undo toast, and the hit modal all want the same
-  focus-and-dismiss handling. Build the primitive once.
-- **W1 and W10 are one layout pass.** Doing W1 without W10 lays out a card
-  that W10 rearranges again.
-- **W12's toast is built** (app 0.16.0). W2/W3/W6's popovers and modal
-  still want one shared primitive for focus and dismissal. The toast isn't
-  that primitive, since it never takes focus.
+- **W2 and W3 are what's left of the popover work, and they're one
+  component at two sizes.** The toast (W12), the modal primitive
+  (`openModal`, Decision 111) and the hit modal (W6) are built. HP's popover
+  can call `openHitModal()`. A popover is smaller than a modal and doesn't
+  make the page inert, so it may want its own light primitive, with
+  `openModal`'s focus-return handling copied, not a second modal.
+- **W4 can reuse the picker whole.** Search, filters, rows that act on a
+  click, dimmed rows that say why, a sticky head and a Done footer are all in
+  `spellResultsHtml`/`spellPickerHtml` and `openModal` since Decision 112.
 - None of these touch rules. If one starts to — e.g. W13 wants to show a
   computed number the engine doesn't have yet — that part stops and goes to
   Deighton.

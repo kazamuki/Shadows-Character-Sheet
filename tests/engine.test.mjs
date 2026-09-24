@@ -1369,6 +1369,113 @@ test("the Grimoire functions are total on every degenerate character", () => {
   assert.deepEqual(failures, []);
 });
 
+// ── Starting spells (Decision 111) ────────────────────────────────────
+
+/** An Arcanist in the wizard at Street, where Evocation starts at 1. */
+function creating(setup) {
+  const ch = subject();
+  ch.creation.locked = false;
+  ch.creation.powerLevel = "street";
+  if (setup) setup(ch);
+  return ch;
+}
+const byTH = th => D.spells.find(s => s.th === th).id;
+const spellIssues = ch => Engine.validate("character-points", ch).filter(i => /starting spell|needs Evocation/.test(i.msg))
+  .map(i => [i.level, i.msg]);
+
+test("the starting count is TOL + the entered roll, and unknown until it's entered", () => {
+  const ch = creating();
+  assert.equal(Engine.startingSpells(ch).count, null);
+  ch.archetypeChoices.rolls.startingSpells = 3;
+  const st = Engine.startingSpells(ch);
+  same([st.rollDie, st.base, st.count], ["1d4", Engine.derived(ch).TOL, Engine.derived(ch).TOL + 3]);
+  ch.stats.BOD.base = 10;                                             // a boost on this step moves TOL, so the count
+  assert.equal(Engine.startingSpells(ch).count, Engine.derived(ch).TOL + 3);
+  const pro = creating(c => { c.identity.archetype = "professional"; });
+  assert.equal(Engine.startingSpells(pro), null, "an archetype with no Grimoire was asked for spells");
+});
+
+test("at creation a spell's TH can't pass Evocation rank, and a rank bought at creation opens the next tier", () => {
+  const ch = creating(c => { c.archetypeChoices.rolls.startingSpells = 4; });
+  const refused = Engine.addStartingSpell(ch, byTH(2));
+  same([refused.ok, refused.needs], [false, 2]);
+  assert.match(refused.why, /needs Evocation 2/);
+  assert.equal((ch.panelData.grimoire || []).length, 0, "a refused pick was written");
+  assert.ok(Engine.addStartingSpell(ch, byTH(1)).ok);
+  assert.equal(Engine.addStartingSpell(ch, byTH(1)).ok, false, "the same spell was chosen twice");
+  ch.archetypeChoices.disciplines.evocation = 1;                      // Evocation 2
+  assert.ok(Engine.addStartingSpell(ch, byTH(2)).ok, "buying Evocation didn't open TH 2");
+  assert.equal(Engine.canAddStartingSpell(ch, byTH(3)).ok, false);
+  same(ch.panelData.grimoire.map(r => r.stage), ["known", "known"]);
+});
+
+test("the picks stop at the count", () => {
+  const ch = creating(c => { c.archetypeChoices.rolls.startingSpells = 0; c.stats.BOD.base = 1; c.stats.INT.base = 1; c.stats.COOL.base = 1; });
+  const count = Engine.startingSpells(ch).count;
+  const cantrips = D.spells.filter(s => s.th === 1).map(s => s.id);
+  for (let i = 0; i < count; i++) assert.ok(Engine.addStartingSpell(ch, cantrips[i]).ok);
+  const full = Engine.canAddStartingSpell(ch, cantrips[count]);
+  same([full.ok, full.full], [false, true]);
+});
+
+test("validate: short of the count and no roll warn; a spell over the rank and too many picks block", () => {
+  const ch = creating();
+  same(spellIssues(ch), [["warn", "Enter your 1d4 starting spells roll."]]);
+  ch.archetypeChoices.rolls.startingSpells = 2;
+  const count = Engine.startingSpells(ch).count;
+  Engine.addStartingSpell(ch, "zap");
+  same(spellIssues(ch), [["warn", `${count - 1} starting spell${count - 1 > 1 ? "s" : ""} left to choose (1/${count}).`]]);
+
+  ch.archetypeChoices.disciplines.evocation = 1;
+  Engine.addStartingSpell(ch, byTH(2));
+  delete ch.archetypeChoices.disciplines.evocation;                   // un-bought: the pick stays, and says so
+  const name = D.spells.find(s => s.id === byTH(2)).name;
+  assert.ok(spellIssues(ch).some(([l, m]) => l === "error" && m === `${name} needs Evocation 2. Buy the rank or choose another spell.`));
+  assert.equal(ch.panelData.grimoire.length, 2, "validate dropped a pick");
+
+  ch.archetypeChoices.rolls.startingSpells = 0;
+  ch.panelData.grimoire = D.spells.filter(s => s.th === 1).slice(0, Engine.startingSpells(ch).count + 1)
+    .map(s => ({ spellId: s.id, stage: "known", notes: "" }));
+  assert.ok(spellIssues(ch).some(([l, m]) => l === "error" && /^Too many starting spells/.test(m)));
+});
+
+test("after lock nothing gates a spell's TH, and one beyond the Evocation pool is marked, Mastery included", () => {
+  const ch = subject();                                               // locked, Evocation 1
+  assert.ok(Engine.addSpell(ch, byTH(3)).ok, "the creation gate reached the sheet");
+  Engine.addSpell(ch, byTH(1));
+  const g = Engine.grimoire(ch);
+  same([g.pool.rank, g.lines[0].beyondPool, g.lines[1].beyondPool], [1, true, false]);
+  ch.panelData.grimoire[0] = { spellId: byTH(2), stage: "mastered", notes: "" };   // TH 2 - 1 = 1, inside Evocation 1
+  assert.equal(Engine.grimoire(ch).lines[0].beyondPool, false, "Mastery's TH - 1 wasn't counted");
+});
+
+test("the starting-spell functions are total on every degenerate character", () => {
+  const failures = [];
+  // The shared set has no Arcanist with a power level, which is the only one
+  // that gets past startingSpells' first line, so two are added here.
+  const cases = Object.assign(degenerates(), {
+    "arcanist, junk choices": Engine.migrate({ identity:{archetype:"arcanist"}, creation:{powerLevel:"street"},
+                                 archetypeChoices:{ rolls:null, disciplines:"x" }, panelData:{ grimoire:"x" } }),
+    "arcanist, junk stats":   Engine.migrate({ identity:{archetype:"arcanist"}, creation:{powerLevel:"wcd"},
+                                 stats:{ INT:"x", BOD:null }, archetypeChoices:{ rolls:{ startingSpells:-3 } } }),
+  });
+  for (const [label, ch] of Object.entries(cases)){
+    if (ch.panelData && typeof ch.panelData === "object") ch.panelData.grimoire = [null, 4, { spellId: 7 }, { spellId: "no-such-spell" }];
+    if (ch.archetypeChoices && ch.archetypeChoices.rolls) ch.archetypeChoices.rolls.startingSpells = "lots";
+    const calls = {
+      startingSpells: () => Engine.startingSpells(ch),
+      castingPool: () => Engine.castingPool(ch),
+      canAddStartingSpell: () => [null, "zap", "no-such-spell", 7].forEach(id => Engine.canAddStartingSpell(ch, id)),
+      addStartingSpell: () => Engine.addStartingSpell(ch, "zap"),
+      validate: () => Engine.validate("character-points", ch),
+    };
+    for (const [fn, call] of Object.entries(calls)){
+      try { call(); } catch (e) { failures.push(`${fn}(${label}) -> ${e.message}`); }
+    }
+  }
+  assert.deepEqual(failures, []);
+});
+
 // ── Aberrations on the character (Decision 110) ──────────────────────
 
 test("an Aberration is held once, recorded and cleared by index, and an unknown id is refused", () => {

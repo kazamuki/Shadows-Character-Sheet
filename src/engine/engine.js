@@ -1430,9 +1430,19 @@ const Engine = (() => {
     const M = (D().spellcraftRules||{}).mastery || {};
     return s && typeof s.th==="number" && s.th>=1 && M.ipPerTH ? M.ipPerTH * s.th : null;
   }
+  // The dice a live cast rolls: the named Discipline's rank (Magic.md, Step 2).
+  // A TH above it can still be cast, but only an exploding 10 reaches it
+  // (Ken, Decision 111). Concentration's held dice are the table's to count.
+  function castingPool(ch){
+    const R = (D().spellcraftRules||{}).castingPool;
+    if (!R) return null;
+    const d = disciplineRanks(ch).find(x=>x.id===R.discipline);
+    return d ? { rank: d.rank, discipline: d.name, text: R.beyond||"" } : null;
+  }
   function grimoire(ch){
     const p = grimoirePanel(ch);
-    if (!p) return { panel:null, lines:[], spellPower:null, spellAttack:null };
+    if (!p) return { panel:null, lines:[], spellPower:null, spellAttack:null, pool:null };
+    const pool = castingPool(ch);
     const pd = ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
     const rows = Array.isArray(pd[p.id]) ? pd[p.id] : [], M = (D().spellcraftRules||{}).mastery || {};
     const held = new Set(rows.filter(r=>r && typeof r.spellId==="string").map(r=>r.spellId));
@@ -1451,6 +1461,7 @@ const Engine = (() => {
       const mastered = r.stage==="mastered";
       const th = typeof s.th!=="number" ? null : mastered ? Math.max(0, s.th - (M.thReduction||0)) : s.th;
       return { index, id:s.id, name:s.name, notes, mastered, th, printedTH:s.th, noRoll: th===0,
+               beyondPool: !!pool && th!=null && th > pool.rank,
                tier: (tiers.find(t=>t.id===s.tier)||{name:s.tier}).name, tierId:s.tier,
                domain: (domains.find(d=>d.id===s.domain)||{name:s.domain}).name, domainId:s.domain,
                glyph:s.glyph, tn:s.tn, range:s.range, spellType:s.spellType, damageType:s.damageType,
@@ -1458,7 +1469,7 @@ const Engine = (() => {
                tags:s.tags||[], flavorLine:s.flavorLine||"", spellNotes:s.notes||"",
                masteryCost: mastered ? null : spellMasteryCost(s) };
     });
-    return { panel:p, lines, held:[...held], spellPower: spellPower(ch), spellAttack: spellAttack(ch), masteryText: M.text||"" };
+    return { panel:p, lines, held:[...held], spellPower: spellPower(ch), spellAttack: spellAttack(ch), pool, masteryText: M.text||"" };
   }
   function addSpell(ch, spellId){
     const rows = grimoireRows(ch), s = spellById(spellId);
@@ -1482,6 +1493,42 @@ const Engine = (() => {
     if (!rows || !(index>=0 && index<rows.length)) return { ok:false, why:"No such row." };
     rows.splice(index, 1);
     return { ok:true };
+  }
+
+  // ── Starting spells (Decision 111) ──
+  // How many: TOL + the power level's roll, which the player enters (Decision
+  // 11). Which: at creation a spell's TH can't pass the named Discipline's
+  // rank, counting ranks bought at creation (Deighton, Decision 109). After
+  // lock nothing gates it, like a skill past the creation cap. The picks are
+  // the Grimoire's own book rows, so there's no second store.
+  function startingSpells(ch){
+    const R = (D().spellcraftRules||{}).startingSpells, row = scalingRow(ch);
+    if (!R || !grimoirePanel(ch) || !row || !row.startingSpellsRoll) return null;
+    const raw = (((ch||{}).archetypeChoices||{}).rolls||{}).startingSpells;
+    const roll = typeof raw==="number" && isFinite(raw) && raw>=0 ? raw : null;
+    const base = derived(ch)[R.countFrom || "TOL"];
+    const d = disciplineRanks(ch).find(x=>x.id===R.discipline);
+    const cap = d ? d.rank : 0;
+    const book = grimoire(ch).lines.filter(l=>!l.custom && !l.missing);
+    return { rollDie: row.startingSpellsRoll, roll, base, countFrom: R.countFrom || "TOL",
+             count: roll==null || typeof base!=="number" ? null : base + roll,
+             have: book.length, picked: book.map(l=>l.id), cap, discipline: d ? d.name : R.discipline,
+             over: book.filter(l=>typeof l.printedTH==="number" && l.printedTH > cap).map(l=>({ id:l.id, name:l.name, th:l.printedTH })),
+             text: R.text||"" };
+  }
+  function canAddStartingSpell(ch, spellId){
+    const st = startingSpells(ch), s = spellById(spellId);
+    if (!st) return { ok:false, why:"This archetype keeps no Grimoire." };
+    if (!s) return { ok:false, why:"That spell isn't in the book." };
+    if (st.picked.includes(s.id)) return { ok:false, why:`${s.name} is already chosen.` };
+    if (typeof s.th==="number" && s.th > st.cap)
+      return { ok:false, needs:s.th, why:`${s.name} needs ${st.discipline} ${s.th}.` };
+    if (st.count!=null && st.have >= st.count) return { ok:false, full:true, why:`That's all ${st.count} starting spells.` };
+    return { ok:true };
+  }
+  function addStartingSpell(ch, spellId){
+    const c = canAddStartingSpell(ch, spellId);
+    return c.ok ? addSpell(ch, spellId) : c;
   }
 
   // ── Archetype sheet panels (declared in data; rendered generically) ──
@@ -2021,6 +2068,17 @@ const Engine = (() => {
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
       if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.notes!=="natural"))
         E(`${a.name}s cannot purchase Advantages.`);
+      // Starting spells (Decision 111). Evocation and TOL are only final on
+      // this step, so the picks are checked here. Short of the count warns,
+      // like an unspent pool; a spell above the rank or one too many blocks.
+      const ss = startingSpells(ch);
+      if (ss){
+        if (ss.roll==null) W(`Enter your ${ss.rollDie} starting spells roll.`);
+        for (const o of ss.over) E(`${o.name} needs ${ss.discipline} ${o.th}. Buy the rank or choose another spell.`);
+        if (ss.count!=null && ss.have > ss.count) E(`Too many starting spells (${ss.have}/${ss.count}).`);
+        else if (ss.count!=null && ss.have < ss.count)
+          W(`${ss.count-ss.have} starting spell${ss.count-ss.have>1?"s":""} left to choose (${ss.have}/${ss.count}).`);
+      }
       // Batch 3 — locks, gates, and the inputs a trait demands. Reported once
       // per taken entry, in the order the player sees them.
       for (const [kind, list] of [["advantage", ch.advantages||[]], ["disadvantage", ch.disadvantages||[]]]){
@@ -2131,6 +2189,8 @@ const Engine = (() => {
            aberrationState, recordAberration, removeAberration, recordCascade,
            // Grimoire (Decisions 108, 110)
            spellById, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
+           // Starting spells (Decision 111)
+           castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
            // Batch 3b — grants
            grants,
            ipState, ipCost, spendIP, grantIP,
