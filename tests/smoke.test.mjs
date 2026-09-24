@@ -1162,3 +1162,69 @@ test("W4: the catalog browser shows the numbers before you buy, searches, filter
   assert.match(app.$('#modal [data-catrow="kevlar-vest"]').textContent, /1d6/, "the vest's PROT isn't shown");
   assert.deepEqual(app.errors, []);
 });
+
+test("W2: a vitals pill opens its popover, whose buttons are Trackers' own — same audit label, same undo — and it follows the render", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const hp = Engine.health(activeChar(app)).total;
+  app.click('[data-vpop="hp"]');
+  const pop = () => app.$("#vpop");
+  assert.ok(!pop().hidden, "the HP pill didn't open a popover");
+  assert.equal(app.$('[data-vpop="hp"]').getAttribute("aria-expanded"), "true");
+  assert.match(pop().textContent, new RegExp(`${hp} / ${hp} HP`));
+  app.$('#vpop [data-dmg="5"]').focus();                                  // a browser focuses what's clicked
+  app.click('#vpop [data-dmg="5"]');
+  assert.equal(activeChar(app).trackers.damage, 5);
+  assert.ok(!pop().hidden, "the popover closed after an action");
+  assert.match(pop().textContent, new RegExp(`${hp - 5} / ${hp} HP`), "the popover didn't redraw with the new HP");
+  assert.equal(app.window.document.activeElement, app.$('#vpop [data-dmg="5"]'), "focus didn't stay on the button pressed");
+  assert.match(app.$("#undotoast").textContent, /Hurt 5/, "not Trackers' own label");
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.damage, 0, "the popover's action didn't undo");
+
+  // Esc closes and hands focus back to the pill.
+  app.window.document.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.ok(pop().hidden, "Esc didn't close the popover");
+  assert.equal(app.window.document.activeElement, app.$('[data-vpop="hp"]'), "focus didn't go back to the pill");
+
+  // Çredits: Earn with a note, from the popover's own fields.
+  app.click('[data-vpop="cred"]');
+  app.$("#vpop [data-cramt]").value = "250"; app.$("#vpop [data-crnote]").value = "fixer's cut";
+  app.click('#vpop [data-cr="1"]');
+  const c = activeChar(app).trackers.credits;
+  assert.equal(c.current, lockedCharacter().trackers.credits.current + 250);
+  assert.equal(c.ledger[c.ledger.length - 1].note, "fixer's cut");
+
+  // A click elsewhere closes it; a second popover replaces the first.
+  app.click('[data-vpop="san"]');
+  assert.match(pop().textContent, /Sanity/);
+  app.click('#vpop [data-san="1"]');
+  assert.equal(activeChar(app).trackers.san.loss, 1);
+  app.$("#main h1").dispatchEvent(new app.window.MouseEvent("mousedown", { bubbles: true }));
+  assert.ok(pop().hidden, "a click elsewhere didn't close the popover");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W3: Main's cards open the same popovers — LUCK spends, Pain adds a Condition, and Take a hit hands over to the hit modal", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  assert.ok(app.$("#main .cond-grid button.cond[data-vpop='hp']"), "Main's Health card isn't a button");
+  app.click('#main .cond[data-vpop="luck"]');
+  const spend = app.$("#vpop [data-luckspend]:not([disabled])");
+  assert.ok(spend, "the LUCK popover has no spend action");
+  spend.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(activeChar(app).trackers.luck.spent, Number(spend.dataset.luckspend));
+
+  app.click('#main .cond[data-vpop="pain"]');
+  app.click('#vpop [data-condquick="stunned"]');
+  assert.deepEqual(activeChar(app).trackers.conditions.map(c => c.id), ["stunned"], "the Pain popover didn't add the Condition");
+  assert.match(app.$("#vpop").textContent, /Stunned/, "the popover didn't show the Condition it added");
+  app.click('#vpop [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 0, "the popover couldn't clear it");
+
+  app.click('#main .cond[data-vpop="hp"]');
+  app.click("#vpop [data-pophit]");
+  assert.ok(app.$("#vpop").hidden, "the popover stayed open under the hit modal");
+  assert.ok(app.$("#modal").open && /Take a hit/.test(app.$("#modal").textContent), "Take a hit didn't open the hit modal");
+  app.click("[data-hitcancel]");
+  assert.equal(app.window.document.activeElement, app.$('#main [data-vpop="hp"]'), "focus didn't come back to the Health card");
+  assert.deepEqual(app.errors, []);
+});

@@ -170,9 +170,9 @@ function groupedStatBlockHtml(ch){
 function hlMiniHtml(ch){
   const hp=Engine.health(ch);
   if (hp.levels<=0 || hp.hpPer<=0) return "";
-  return `<div class="hl-mini" aria-hidden="true">` + hlCells(ch).map((c,i)=>
+  return `<span class="hl-mini" aria-hidden="true">` + hlCells(ch).map((c,i)=>
     `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
-  ).join("") + `</div>`;
+  ).join("") + `</span>`;
 }
 
 // One entry per Health Level, the way every track draws it (Decision 99):
@@ -191,17 +191,19 @@ function hlCells(ch){
 function sheetVitalsBar(ch){
   const hp=Engine.health(ch), pain=Engine.painState(ch), luck=Engine.luckState(ch),
         san=Engine.sanState(ch), sf=Engine.sfr(ch), ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
-  const pill=(cls,ui,k,v)=>`<div class="vpill ${cls}">${ui?`<span class="vico">${uiIcon(ui)}</span>`:""}<span class="vtext"><span class="vk">${k}</span><span class="vv">${v}</span></span></div>`;
+  // W2: a pill with a `pop` key is a button that opens that vital's popover.
+  const pill=(cls,ui,k,v,pop)=>{ const inner=`${ui?`<span class="vico">${uiIcon(ui)}</span>`:""}<span class="vtext"><span class="vk">${k}</span><span class="vv">${v}</span></span>`;
+    return pop ? `<button class="vpill act ${cls}" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>` : `<div class="vpill ${cls}">${inner}</div>`; };
   let h=`<div class="vbar" aria-label="Vitals">`;
-  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`);
-  h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"));
+  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`,"hp");
+  h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"),"pain");
   const cs=Engine.conditionState(ch);
-  if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`);
-  h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`);
-  h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`);
+  if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`,"cond");
+  h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`,"san");
+  h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`,"luck");
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h+=pill("sfr","sfr","SFR",`${left}<small>/${sf.value}</small>`); }
-  h+=pill("cred","credits","Ç",`${ch.trackers.credits.current}`);
+  h+=pill("cred","credits","Ç",`${ch.trackers.credits.current}`,"cred");
   h+=pill(ip.available<0?"danger":"","","IP",`${ip.available}`);
   h+=pill("","","MP",`${ms.mp}`);
   h+=`<button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv" style="font-size:.82rem">View ▸</span></span></button>`;
@@ -291,22 +293,26 @@ function renderShMain(){
 
   // Condition strip — replaces the Vitals rail on this tab (full width)
   const pct = (n,d)=> d>0 ? Math.max(0,Math.min(100,Math.round(n/d*100))) : 0;
-  const cond = (cls,name,uiName,big,meta,meter,seg)=>`<div class="cond ${cls}"><div class="corner">${uiIcon(uiName)}</div>
-    <div class="lab">${name}</div><div class="big">${big}</div>${meta?`<div class="meta">${meta}</div>`:""}${seg?seg:(meter!=null?`<div class="meter"><i style="width:${meter}%"></i></div>`:"")}</div>`;
+  // W3: a card with a `pop` key is a button that opens the same popover as
+  // its pill on the other tabs (spans inside, since a button holds no divs).
+  const cond = (cls,name,uiName,big,meta,meter,seg,pop)=>{
+    const inner=`<span class="corner">${uiIcon(uiName)}</span>
+    <span class="lab">${name}</span><span class="big">${big}</span>${meta?`<span class="meta">${meta}</span>`:""}${seg?seg:(meter!=null?`<span class="meter"><i style="width:${meter}%"></i></span>`:"")}`;
+    return pop ? `<button class="cond act ${cls}" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>` : `<div class="cond ${cls}">${inner}</div>`; };
   h += `<div class="cond-grid">`;
   h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
-    `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch));
+    `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
   h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
-    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null);
+    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null, "", "pain");
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
-    `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max));
+    `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
-    `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max));
+    `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max), "", "luck");
   if (sf && sf.value!=null){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
   }
-  h += cond("cred","Çredits","credits", `Ç${ch.trackers.credits.current}`, "", null);
+  h += cond("cred","Çredits","credits", `Ç${ch.trackers.credits.current}`, "", null, "", "cred");
   h += `</div>`;
   h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
@@ -864,6 +870,52 @@ function hlTrackHtml(ch){
       b.cells.map(([c,i])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
       `</div></div>`; }).join("") + `</div>`;
 }
+// The vitals' controls, drawn by Trackers and by the vitals popovers (W2/W3)
+// alike and bound by one binder (bindVitalControls), so they can't drift.
+function damageStepperHtml(ch){
+  const d=ch.trackers.damage;
+  return `<div class="trk-row">
+    <button class="btn sm" data-dmg="-5" ${d?"":"disabled"}>Heal 5</button>
+    <button class="btn sm" data-dmg="-1" ${d?"":"disabled"}>Heal 1</button>
+    <input type="number" min="0" data-dmgset value="${d}" aria-label="total damage taken" title="Total damage taken">
+    <button class="btn sm" data-dmg="1">Hurt 1</button>
+    <button class="btn sm" data-dmg="5">Hurt 5</button>
+    <button class="btn sm danger" data-dmgheal="1">Heal all</button></div>`;
+}
+const sanControlsHtml = ch => `<button class="btn sm" data-san="-1">−1 loss</button>
+    <input type="number" min="0" data-sanset value="${ch.trackers.san.loss}" aria-label="SAN lost">
+    <button class="btn sm" data-san="1">+1 loss</button>`;
+const luckControlsHtml = luck => luck.spendActions.map(sa=>`<button class="btn sm" data-luckspend="${sa.cost}" ${luck.current<sa.cost?"disabled":""} title="${esc(sa.effect)}">${esc(sa.action)} (−${sa.cost})</button>`).join("") +
+    `<button class="btn sm" data-luckregain="1" ${luck.spent<=0?"disabled":""}>Regain (+1)</button>`;
+const creditControlsHtml = () => `<input type="number" data-cramt placeholder="amount" aria-label="credit amount">
+    <input type="text" data-crnote placeholder="note (what for)" aria-label="credit note">
+    <button class="btn sm" data-cr="1">+ Earn</button>
+    <button class="btn sm" data-cr="-1">− Spend</button>`;
+
+// W2/W3: what each vital's popover holds. The same five on the vitals bar
+// and on Main's cards; `null` when the key isn't one (the popover closes).
+function vitalPopover(ch, key){
+  const pain=Engine.painState(ch), hp=Engine.health(ch);
+  const now = (big, cls, sub) => `<div class="pop-now"><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
+  if (key==="hp") return { title:"Health",
+    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)) + damageStepperHtml(ch) +
+      `<div class="trk-actions"><button class="btn sm primary" data-pophit>Take a hit</button>
+       <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
+  if (key==="pain" || key==="cond") return { title:"Pain & Conditions",
+    html: now(pain.down?"DOWN":pain.level?`Pain Lv ${pain.level}`:"No Pain", pain.level||pain.down?"bad":"",
+      pain.level?esc(painPenaltyLine(pain,false)):"no penalties") + conditionsHtml(ch, false) };
+  if (key==="san"){ const san=Engine.sanState(ch);
+    return { title:"Sanity", html: now(`${san.current} / ${san.max}%`, san.current<=san.max/2?"bad":"san", "") +
+      `<div class="trk-row">${sanControlsHtml(ch)}</div>` }; }
+  if (key==="luck"){ const luck=Engine.luckState(ch);
+    return { title:"LUCK", html: now(`${luck.current} / ${luck.max}`, luck.current===0?"bad":"gold", "") +
+      `<div class="trk-row">${luckControlsHtml(luck)}</div>` }; }
+  if (key==="cred") return { title:"Çredits",
+    html: now(`Ç ${ch.trackers.credits.current}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
+      <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
+  return null;
+}
+
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
@@ -884,13 +936,7 @@ function renderShTrackers(){
   h += `<div class="trk"><h4>Damage</h4>
     <span class="big ${pain.down?"bad":"hp"}${landedCls("hp")}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
-    <div class="trk-row">
-    <button class="btn sm" data-dmg="-5" ${ch.trackers.damage?"":"disabled"}>Heal 5</button>
-    <button class="btn sm" data-dmg="-1" ${ch.trackers.damage?"":"disabled"}>Heal 1</button>
-    <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken" title="Total damage taken">
-    <button class="btn sm" data-dmg="1">Hurt 1</button>
-    <button class="btn sm" data-dmg="5">Hurt 5</button>
-    <button class="btn sm danger" data-dmgheal="1">Heal all</button></div>
+    ${damageStepperHtml(ch)}
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
       hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
       withering?` ${withering} of the damage is Withering and won't regenerate.`:""}</span>
@@ -924,16 +970,12 @@ function renderShTrackers(){
   // SAN
   h += `<div class="trk"><h4>Sanity</h4>
     <span class="big ${san.current<=san.max/2?"bad":""}">${san.current} / ${san.max}%</span>
-    <button class="btn sm" data-san="-1">−1 loss</button>
-    <input type="number" min="0" data-sanset value="${ch.trackers.san.loss}" aria-label="SAN lost">
-    <button class="btn sm" data-san="1">+1 loss</button>
+    ${sanControlsHtml(ch)}
     <span class="sub">Max is EMP × 10, computed. Track loss here; recovery is a story, not a button.</span></div>`;
 
   // LUCK
   h += `<div class="trk"><h4>LUCK</h4>
-    <span class="big ${luck.current===0?"bad":"gold"}">${luck.current} / ${luck.max}</span>` +
-    luck.spendActions.map(sa=>`<button class="btn sm" data-luckspend="${sa.cost}" ${luck.current<sa.cost?"disabled":""} title="${esc(sa.effect)}">${esc(sa.action)} (−${sa.cost})</button>`).join("") +
-    `<button class="btn sm" data-luckregain="1" ${luck.spent<=0?"disabled":""}>Regain (+1)</button>
+    <span class="big ${luck.current===0?"bad":"gold"}">${luck.current} / ${luck.max}</span>${luckControlsHtml(luck)}
     <span class="sub">${esc(luck.refresh)} Logging a session refreshes it automatically.</span></div>`;
 
   // Archetype tracker panels (declared in data, rendered generically)
@@ -962,10 +1004,7 @@ function renderShTrackers(){
   // Çredits
   h += `<div class="sect">Çredits</div>
     <div class="trk"><h4>Balance</h4><span class="big gold">Ç ${ch.trackers.credits.current}</span>
-    <input type="number" data-cramt placeholder="amount" aria-label="credit amount">
-    <input type="text" data-crnote placeholder="note (what for)" aria-label="credit note">
-    <button class="btn sm" data-cr="1">+ Earn</button>
-    <button class="btn sm" data-cr="-1">− Spend</button></div>`;
+    ${creditControlsHtml()}</div>`;
   const ledger = ch.trackers.credits.ledger||[];
   if (ledger.length){
     h += `<details class="group" open><summary>Ledger (${ledger.length})</summary><div class="journal">` +

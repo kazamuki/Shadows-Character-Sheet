@@ -34,7 +34,7 @@ putting each card's action buttons on the right of its own row. The grid is the
 bigger win — it also puts Damage, Armor and Pain side by side, which is how
 they're read (see W10). Must still collapse to one column on a phone.
 
-**W2 — Make the quick-info pills interactive.** *Ken · 💡*
+~~**W2 — Make the quick-info pills interactive.**~~ *Ken · → Decision 119, app 0.22.0: HP, Pain, SAN, LUCK and Ç open a popover of Trackers' own controls*
 The vitals bar (HP, Pain, SAN, Luck, Ç, IP, MP) on every non-Main tab is
 read-only; changing any of them means going to Trackers. Clicking a pill
 should open a small popover for *that* value: HP → Take a hit / ±damage; Pain →
@@ -43,7 +43,7 @@ Popovers call the same actions Trackers does — no second code path, every
 change still lands in the audit trail as one undoable action (Decisions 48–49).
 Pairs with W6: HP's popover can just open the hit modal.
 
-**W3 — Same interactivity on Main's vitals cards.** *Ken · 💡*
+~~**W3 — Same interactivity on Main's vitals cards.**~~ *Ken · → Decision 119, app 0.22.0: the same popover, anchored to the card*
 Main's Health/Pain/Sanity/Luck/Çredits cards are the big version of W2's pills
 (Decision 32's command console). Same popovers, same actions. Build W2 and W3
 as one component rendered at two sizes, not twice.
