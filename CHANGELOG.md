@@ -16,7 +16,7 @@ own in the footer.
 
 ## [Unreleased] — app 0.20.0
 
-Character schema **0.9** · game data **0.14** · ruleset CRB v4 (in progress).
+Character schema **0.9** · game data **0.15** · ruleset CRB v4 (in progress).
 
 - **Take a hit opens in its own window.** Your HP and Health Levels sit at the top, the
   page behind waits, and Apply stays greyed out with the reason beside it until the hit
@@ -32,6 +32,9 @@ Character schema **0.9** · game data **0.14** · ruleset CRB v4 (in progress).
   right. Health Levels sit in the Damage card, grouped by the Pain Level each one puts
   you at, with yours lit.
 - **The spell book opens in the middle of the screen**, not pinned to the top-left.
+- **Quick Study can be taken.** Its prerequisite now asks for the Intuition skill at
+  Rank 1, as the rulebook does. It asked for an Intuition advantage, which doesn't exist,
+  so no one could take it.
 
 ## v0.19.1 — 2026-09-23
 
