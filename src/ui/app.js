@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.18.0";
+const APP_VERSION = "0.19.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -181,6 +181,9 @@ function bindMain(){
     ch.archetypeChoices.rolls[inp.dataset.archroll] = clean===""?null:Math.max(0,Number(clean));
     rerenderKeepFocus(`data-archroll="${inp.dataset.archroll}"`, clean);
   });
+  // The book's spell picker, a modal on the sheet and in the wizard (Decision 111)
+  main.querySelectorAll("[data-spellpickopen]").forEach(b=>b.onclick=()=>openSpellPicker(b.dataset.spellpickopen));
+  main.querySelectorAll("[data-startrm]").forEach(b=>b.onclick=()=>{ Engine.removeGrimoireRow(ch, Number(b.dataset.startrm)); update(); });
   // identity / history text
   main.querySelectorAll("[data-id]").forEach(inp=>inp.oninput=()=>{
     const k=inp.dataset.id;
@@ -196,6 +199,39 @@ function bindMain(){
     S.screen="sheet"; S.section="main";
     window.scrollTo(0,0); update();
   });
+}
+
+// ── The spell picker (Decisions 108, 111) ────────────────────────────
+// One modal for the sheet and the wizard. On the sheet each add or link is
+// one commit() with its undo toast; in the wizard a pick is a creation input,
+// like a stepper, and goes through Engine.addStartingSpell's gate. The page
+// behind re-renders on every change, and the modal refreshes its own results.
+const spellName = id => (Engine.spellById(id)||{name:id}).name;
+function linkSpellRow(ch, i){
+  const line = Engine.grimoire(ch).lines[i];
+  if (!line || !line.match) return;
+  commit("grimoire", `Linked to the book: ${line.match.name}`, ()=>{ Engine.linkSpell(ch, i); });
+}
+function openSpellPicker(mode){
+  const ch = S.ch, M = spellPickMode[mode];
+  if (!ch || !M) return;
+  openModal({ title: M.title, html: spellPickerHtml(ch, mode), returnTo: `[data-spellpickopen="${mode}"]`,
+    bind: body => {
+      const results = body.querySelector("[data-spellresults]"), status = body.querySelector("[data-spellstatus]");
+      const refresh = () => { results.innerHTML = spellResultsHtml(S.ch, mode); status.innerHTML = M.status(S.ch); };
+      body.querySelector("[data-spellq]").oninput = e => { S.spellPick.q = e.target.value; refresh(); };
+      body.querySelectorAll("[data-spellf]").forEach(sel=>sel.onchange=()=>{ S.spellPick[sel.dataset.spellf] = sel.value; refresh(); });
+      results.onclick = e => {
+        const b = e.target.closest("button"); if (!b || b.disabled) return;
+        const d = b.dataset;
+        if (d.spelllink!=null) linkSpellRow(ch, Number(d.spelllink));
+        else if (d.spelladd) commit("grimoire", `Grimoire: ${spellName(d.spelladd)}`, ()=>{ Engine.addSpell(ch, d.spelladd); });
+        else if (d.startadd){ Engine.addStartingSpell(ch, d.startadd); update(); }
+        else if (d.startrm!=null){ Engine.removeGrimoireRow(ch, Number(d.startrm)); update(); }
+        else return;
+        refresh();
+      };
+    } });
 }
 
 // ── Phase 3: sheet event wiring ─────────────────────────────────────
@@ -542,28 +578,7 @@ function bindSheet(){
   // Editable tables (weapons / gear / panel tables)
   // Grimoire (Decision 108). Adding, linking, removing and Mastering are each
   // one commit(); notes are keystrokes, like the table cells.
-  const spellName = id => (Engine.spellById(id)||{name:id}).name;
-  const pick = main.querySelector("[data-spellpick]");
-  if (pick){
-    const results = pick.querySelector("[data-spellresults]");
-    const refresh = () => { results.innerHTML = spellResultsHtml(Engine.grimoire(ch)); };
-    pick.ontoggle = () => { S.spellPick.open = pick.open; if (pick.open) refresh(); };
-    const q = pick.querySelector("[data-spellq]");
-    if (q) q.oninput = () => { S.spellPick.q = q.value; refresh(); };
-    pick.querySelectorAll("[data-spellf]").forEach(sel=>sel.onchange=()=>{ S.spellPick[sel.dataset.spellf] = sel.value; refresh(); });
-    results.onclick = e => {
-      const l = e.target.closest("[data-spelllink]"); if (l) return linkRow(Number(l.dataset.spelllink));
-      const b = e.target.closest("[data-spelladd]"); if (!b || b.disabled) return;
-      const id = b.dataset.spelladd;
-      commit("grimoire", `Grimoire: ${spellName(id)}`, ()=>{ Engine.addSpell(ch, id); });
-    };
-  }
-  function linkRow(i){
-    const line = Engine.grimoire(ch).lines[i];
-    if (!line || !line.match) return;
-    commit("grimoire", `Linked to the book: ${line.match.name}`, ()=>{ Engine.linkSpell(ch, i); });
-  }
-  main.querySelectorAll("[data-spelllink]").forEach(b=>b.onclick=()=>linkRow(Number(b.dataset.spelllink)));
+  main.querySelectorAll("[data-spelllink]").forEach(b=>b.onclick=()=>linkSpellRow(ch, Number(b.dataset.spelllink)));
   main.querySelectorAll("[data-spellrm]").forEach(b=>b.onclick=()=>{
     const i = Number(b.dataset.spellrm), line = Engine.grimoire(ch).lines[i];
     const label = line && (line.name || line.spellId || (line.row && Object.values(line.row).find(v=>typeof v==="string" && v))) || "a row";

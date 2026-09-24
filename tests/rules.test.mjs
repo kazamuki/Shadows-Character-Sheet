@@ -812,3 +812,28 @@ test('Decision 109: "Spell Attack = Evocation Rank + REF + WILL", the scores and
   assert.equal(Engine.spellAttack(ch).value, sa.value + 1, "REF didn't count point for point");
   assert.equal(Engine.grimoire(ch).spellAttack.value, sa.value + 1, "the Grimoire doesn't carry Spell Attack");
 });
+
+// ── Starting spells (041_Archetypes, the Arcanist; Decisions 109 and 111) ──
+
+test('041: "Known Spells" is TOL + 1d4 / 2d4 / 3d4 / 4d4 by power level, and the count is TOL + the roll', () => {
+  const want = { street: "1d4", heroic: "2d4", shadows: "3d4", wcd: "4d4" };
+  for (const [pl, die] of Object.entries(want)){
+    const ch = subject();
+    ch.identity.archetype = "arcanist";
+    ch.creation.powerLevel = pl;
+    ch.archetypeChoices.rolls.startingSpells = 3;
+    const st = Engine.startingSpells(ch);
+    assert.equal(st.rollDie, die, `${pl}: wrong starting-spell roll`);
+    assert.equal(st.count, Engine.derived(ch).TOL + 3, `${pl}: the count isn't TOL + the roll`);
+  }
+});
+
+test('Decision 109 (Deighton, MQ1): a new Arcanist "would need the ranks in Evocation" — at creation a spell\'s TH can\'t exceed Evocation rank', () => {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  ch.creation.powerLevel = "street";                                  // Evocation starts at 1
+  const superior = D.spells.find(s => s.th === 4).id;
+  assert.equal(Engine.canAddStartingSpell(ch, superior).ok, false);
+  ch.archetypeChoices.disciplines.evocation = 3;                      // bought at creation: Evocation 4
+  assert.equal(Engine.canAddStartingSpell(ch, superior).ok, true, "ranks bought at creation didn't count");
+});

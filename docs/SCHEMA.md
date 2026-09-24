@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.13) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-23 (Aberrations on the character and the Magic reference, Decision 110)
+**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.14) · Ruleset target: CRB v4 (WIP)
+Last updated: 2026-09-23 (Starting spells in the wizard and the spell picker modal, Decision 111)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -507,7 +507,11 @@ numbers it shows come from two `spellcraftRules` entries: `spellPower`
 (`{ discipline: "evocation", stat: "WILL" }`, Evocation rank + WILL) and
 `mastery` (`{ ipPerTH: 30, thReduction: 1 }`). A third, `spellAttack`
 (`{ discipline: "evocation", stats: ["REF", "WILL"] }`, Decision 110), adds
-the stats' scores, not their bonuses.
+the stats' scores, not their bonuses. Decision 111 adds `startingSpells`
+(`{ countFrom: "TOL", discipline: "evocation" }`: TOL + the scaling row's
+`startingSpellsRoll`, TH capped at the rank at creation only) and
+`castingPool` (`{ discipline: "evocation" }`: a TH above that rank is
+marked as reachable only by an exploding 10).
 
 A `reference` panel (Decision 110) names the data sections it `shows`. The
 sheet has one renderer per section name and skips a name it has none for.
@@ -2343,6 +2347,8 @@ No cascade logic to maintain — it falls out of the architecture.
       it like any spend (Decision 49). Only a Known book spell with a TH can
       be Mastered.
     - **The picker shows a spell before you add it** (W4's lesson): search
+      (→ **Superseded in part by Decision 111**: the picker is a modal the
+      sheet and the wizard share, not an inline section of the Grimoire)
       over name, Glyph, effect and tags, plus filters for tier and Domain. A
       spell you hold reads Known. One you typed as your own reads **Link
       yours** and links that row instead of adding a copy. That one was
@@ -2468,6 +2474,77 @@ No cascade logic to maintain — it falls out of the architecture.
     Game data **0.12 → 0.13** (Drained and Phantom Pain change computed TOL
     and Pain, Decision 68). Character schema unchanged at **0.9**: Decision
     108 seeded `trackers.aberrations`. App **0.17.0 → 0.18.0**. (Ken +
+    Claude, 2026-09-23)
+
+111. **(Starting spells in the wizard, and the spell picker as a modal —
+    magic plan Session 3, data + engine + app)** **A new Arcanist chooses
+    TOL + the power level's roll of Known spells from the book, and at
+    creation a spell's TH can't pass their Evocation rank.** Ken agreed the
+    shape on 2026-09-23 (the plan's M6). Builds Decision 109's MQ1. Does what
+    Decision 21 deferred and Decision 25 left to free entry. **Replaces
+    Decision 108 in part**: its inline picker becomes a modal.
+    - **On the Character Points step, not the Archetype step.** The plan said
+      the Arcanist's step, but Evocation ranks are bought on step 7 (Decision
+      19) and step 7's boosts move INT, BOD and COOL, so both the count and
+      the cap are only final there. The block sits under Disciplines, and
+      buying a rank opens the next tier while the player watches. The
+      Archetype step's note points there.
+    - **No second store, no schema bump.** The roll is
+      `archetypeChoices.rolls.startingSpells` (Decision 11: the player
+      rolls). Picks are the Grimoire's own book rows, `{ spellId, stage:
+      "known", notes }`, so lock changes nothing. Changing archetype in the
+      wizard clears `panelData`, so an old Arcanist's picks don't come back.
+      A locked sheet's admin change leaves panels to its single undo.
+    - **The data.** The Arcanist's scaling rows carry `startingSpellsRoll`
+      (`"1d4"`…`"4d4"`), which replaces the string `commonSpells` (`"TOL +
+      1d4"`) that nothing could compute from. `spellcraftRules.startingSpells`
+      names what the count adds to (`countFrom: "TOL"`) and the Discipline
+      that caps TH (`evocation`).
+    - **`Engine.startingSpells(ch)`** is the one reader: the die, the roll,
+      the count (null until the roll is entered), the picks, the cap, and any
+      pick over it. `canAddStartingSpell` refuses an unknown spell, a
+      duplicate, a TH over the cap (with `needs`) and a pick past the count.
+      `addStartingSpell` goes through it into `addSpell`.
+    - **What blocks and what warns** (`validate("character-points")`). No
+      roll entered and short of the count **warn**, like an unspent pool. A
+      held spell over the rank and more picks than the count are
+      **errors**. Un-buying a rank never drops a pick on its own: the step
+      says which spell needs which rank, and the player decides.
+    - **After lock nothing gates a spell's TH** (Ken: like a skill past its
+      creation cap, the limit is for a balanced start). Instead
+      `spellcraftRules.castingPool` marks a Grimoire spell whose TH, after
+      Mastery, is above the Evocation pool: it can be cast, but only an
+      exploding 10 reaches it (Magic.md, Step 2: the pool is Evocation rank
+      d10s). The sheet's picker shows the same marker.
+    - **The modal** is the first focus-and-dismiss primitive (`openModal`
+      / `closeModal` in `shared.js`), the one W2/W3/W6 want. It's a native
+      `<dialog>` opened with `showModal()`, so the browser makes the page
+      inert, traps Tab and closes on Esc. The backdrop closes it too. Where
+      `showModal()` is missing (jsdom) it opens as a plain dialog and Esc is
+      handled by hand. Focus goes back to the opener, or to `returnTo` when
+      a re-render replaced it. The undo toast moves inside an open modal,
+      because the page behind is inert, and back out on close. It's hidden
+      in print and drops its animation under reduced motion.
+    - **One picker, two modes** (`spellPickMode`). On the sheet a result
+      reads Add, Known or Link yours, and each is one `commit()` with its
+      toast. In the wizard it reads Choose, Remove, or **Needs Evocation N**
+      (disabled), and a status line keeps "Chosen 2 of 5 · TH up to 1" in
+      view. The modal stays open across picks and refreshes itself.
+    - **Pinned:** 041's rolls by power level and the count as TOL + the roll,
+      and MQ1's gate counting ranks bought at creation (`rules.test.mjs`).
+      Also the count following TOL, the gate and the count cap, warn vs.
+      error, no gate after lock, the pool marker with Mastery, and totality
+      (`engine.test.mjs`), plus three wizard smoke tests and the two sheet
+      picker tests moved to the modal. Mutation-tested (16 mutants): no TH gate,
+      the count ignoring TOL, the cap ignoring bought ranks, no count cap,
+      short of the count blocking, an over-rank pick or too many going
+      unreported, no roll unwarned, the pool marker ignoring Mastery, the
+      gate leaking onto the sheet, an archetype switch keeping picks, the
+      toast left outside the modal, focus not returned, Esc not closing, the
+      wizard's button ignoring the gate, and the modal not refreshing after a
+      pick. Each fails a test.
+    Game data **0.13 → 0.14** (new choices at creation, Decision 68).
+    Character schema unchanged at **0.9**. App **0.18.0 → 0.19.0**. (Ken +
     Claude, 2026-09-23)
 
 ## 5. Open Flags
@@ -2740,8 +2817,9 @@ sentence.
 - **Magic on the sheet** — planned 2026-09-23 in
   `docs/plans/magic-on-the-sheet.md`: the Grimoire reads the book (Session 1 —
   **done**, Decision 108), then acquired Aberrations and a Magic reference
-  (Session 2 — **done**, Decision 110), then starting spells in the wizard (Session 3). Its rules
-  questions (`MQ`n) go to Deighton.
+  (Session 2 — **done**, Decision 110), then starting spells in the wizard
+  (Session 3 — **done**, Decision 111). **The plan is closed.** Its rules
+  questions (`MQ`n) all went to Deighton and were answered (Decision 109).
 
 - **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in
   `docs/plans/combat-and-conditions.md`: Conditions first (Session 2 — **done**,

@@ -267,7 +267,7 @@ function renderArchetype(){
     // A1 closed here: the aberration list used to render a SECOND time in
     // this block, with its own [data-aber] buttons and its own validate rule.
     // It is the specialization block above, and always was.
-    h += `<p class="step-note">${esc(copy("applyFromText"))} Evocation starts at rank ${row.evocationStartingRank}; Your starting Known spells (${esc(row.commonSpells)}) go in your Grimoire, under Loadout & Powers once you lock.</p>`;
+    h += `<p class="step-note">${esc(copy("applyFromText"))} Evocation starts at rank ${row.evocationStartingRank}. You choose your starting spells (TOL + ${esc(row.startingSpellsRoll)}) in Step 7, once your Evocation rank is set.</p>`;
   }
 
   // Werewolf creation inputs
@@ -430,6 +430,28 @@ function renderCP(){
         <div class="controls">${stepper(rank,"disc|"+disc.id, bought>0, rank<pl.maxPowerRank && bal.left>=6)}</div></div>
         <div class="desc">${esc(disc.description)}</div></div>`;
     }).join("");
+  }
+
+  // Starting spells (Decision 111). Here, not on the Archetype step, because
+  // Evocation rank and TOL are only final once this step's ranks and boosts
+  // are spent. Buying a rank above opens the next tier in the picker.
+  const ss = Engine.startingSpells(ch);
+  if (ss){
+    const book = Engine.grimoire(ch).lines.filter(l=>!l.custom && !l.missing);
+    h += `<div class="sect">Starting spells — ${esc(ss.countFrom)} + ${esc(ss.rollDie)}</div>
+      <div class="roll-entry"><span class="die">${esc(ss.rollDie)}</span>
+      <input type="text" inputmode="numeric" pattern="[0-9]*" data-archroll="startingSpells" value="${ss.roll==null?"":ss.roll}" aria-label="starting spells roll">
+      <span class="pool">${esc(ss.countFrom)} ${ss.base} + roll = <b>${ss.count==null?"—":ss.count}</b> spells · chosen <b>${ss.have}</b> · TH up to ${ss.cap} (${esc(ss.discipline)} ${ss.cap})</span></div>
+      <p class="step-note">${esc(ss.text)}</p>`;
+    h += book.map(l=>{
+      const over = ss.over.some(o=>o.id===l.id);
+      return `<div class="pick selected"><div class="head"><h4>${esc(l.name)}</h4>
+        <span class="cost">${esc(l.tier)} · TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}</span>
+        ${over?`<span class="cost over">needs ${esc(ss.discipline)} ${l.printedTH}</span>`:""}
+        <div class="controls"><button class="toggle" data-startrm="${l.index}">Remove</button></div></div>
+        <div class="desc">${esc(l.effect||"")}</div></div>`;
+    }).join("");
+    h += `<button class="btn" data-spellpickopen="wizard">Choose from the book</button>`;
   }
 
   // Boosts
