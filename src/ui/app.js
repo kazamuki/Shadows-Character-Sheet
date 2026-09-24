@@ -253,6 +253,38 @@ function openSpellPicker(mode){
     } });
 }
 
+// ── The catalog browser (W4) ─────────────────────────────────────────
+// Add and Buy are each one commit() with its undo toast, and the modal stays
+// open for the next pick, as the spell picker does. Buy is refused with the
+// engine's reason (catalogLine's `buy`), which the row already shows.
+function openCatalog(kind){
+  const ch = S.ch; if (!ch || (kind!=="weapons" && kind!=="armor")) return;
+  S.loPick = { kind, q:"", group:"", sort:"book", afford:false, open:null };
+  openModal({ title: kind==="armor" ? "The armor catalog" : "The weapons catalog", html: catalogPickerHtml(ch, kind),
+    foot: pickerFootHtml(), returnTo: `[data-lobrowse="${kind}"]`, onClose: ()=>{ S.loPick=null; },
+    bind: body => {
+      const results = body.querySelector("[data-catresults]"), status = body.querySelector("[data-catstatus]");
+      const refresh = () => { if (!S.loPick) return; results.innerHTML = catalogResultsHtml(S.ch, kind); status.innerHTML = catalogStatusHtml(S.ch, kind); };
+      body.querySelector("[data-catq]").oninput = e => { S.loPick.q = e.target.value; refresh(); };
+      body.querySelectorAll("[data-catf]").forEach(sel=>sel.onchange=()=>{ S.loPick[sel.dataset.catf] = sel.value; refresh(); });
+      body.querySelector("[data-catafford]").onchange = e => { S.loPick.afford = e.target.checked; refresh(); };
+      results.onclick = e => {
+        const b = e.target.closest("button");
+        if (!b){                                          // the row itself: its details
+          const tr = e.target.closest("[data-catrow]"); if (!tr) return;
+          S.loPick.open = S.loPick.open===tr.dataset.catrow ? null : tr.dataset.catrow; refresh(); return;
+        }
+        if (b.disabled) return;
+        const buy = b.dataset.catbuy!=null, id = buy ? b.dataset.catbuy : b.dataset.catadd;
+        if (!id) return;
+        const pre = Engine.addLoadout(clone(ch), kind, id, { buy });
+        if (!pre.ok){ alert(pre.why); return; }
+        commit("loadout", buy ? `Bought ${pre.name} (−${pre.paid}Ç)` : `Added ${pre.name}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
+        refresh();
+      };
+    } });
+}
+
 // ── The Aberration picker (Decision 115) ─────────────────────────────
 // One pick, then it closes: the pick is one commit() with its undo toast. From
 // a Cascade the entry's note says so, which the player can rewrite.
@@ -670,22 +702,7 @@ function bindSheet(){
   // table cells; everything that changes a number is one commit().
   const loName = (kind, i) => kind==="weapons" ? ((Engine.weaponLine(ch,i)||{}).name||"weapon")
                                                : ((Engine.armorState(ch).pieces.find(p=>p.index===i)||{}).name||"armor");
-  main.querySelectorAll("[data-lopick]").forEach(sel=>sel.onchange=()=>{
-    const kind=sel.dataset.lopick, list=kind==="armor"?D.armor:D.weapons;
-    const d=list.find(x=>x.id===sel.value), buy=main.querySelector(`[data-lobuy="${kind}"]`);
-    if (!buy) return;
-    const price = d && typeof d.cost==="number" && d.cost>0 ? d.cost : null;
-    buy.disabled = price==null;
-    buy.textContent = price==null ? "Buy" : `Buy · ${priceText(d)}`;
-  });
-  const loAdd = buy => b => b.onclick=()=>{
-    const kind=buy?b.dataset.lobuy:b.dataset.loadd, id=(main.querySelector(`[data-lopick="${kind}"]`)||{}).value;
-    const pre=Engine.addLoadout(clone(ch), kind, id, { buy });
-    if (!pre.ok){ alert(pre.why); return; }
-    commit("loadout", buy ? `Bought ${pre.name} (−${pre.paid}Ç)` : `Added ${pre.name}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
-  };
-  main.querySelectorAll("[data-loadd]").forEach(loAdd(false));
-  main.querySelectorAll("[data-lobuy]").forEach(loAdd(true));
+  main.querySelectorAll("[data-lobrowse]").forEach(b=>b.onclick=()=>openCatalog(b.dataset.lobrowse));
   main.querySelectorAll("[data-locustom]").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.locustom;
     commit("loadout", `Added custom ${kind==="armor"?"armor":"weapon"}`, ()=>{ Engine.addCustomLoadout(ch, kind); });

@@ -595,20 +595,22 @@ test("Take a hit opens as a modal: HP and the track up top, Apply says what it w
 });
 
 // ── Loadout & recovery (Decision 100) ─────────────────────────────────
-function pickFromCatalog(app, kind, id) {
-  const sel = app.$(`[data-lopick="${kind}"]`);
-  assert.ok(sel, `no ${kind} picker`);
-  sel.value = id;
-  sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+// W4: the catalog is a modal. Open it and press a row's Add or Buy.
+function pickFromCatalog(app, kind, id, how = "add") {
+  app.click(`[data-lobrowse="${kind}"]`);
+  const b = app.$(`#modal [data-cat${how}="${id}"]`);
+  assert.ok(b, `${id} isn't in the ${kind} catalog`);
+  return b;
 }
 
 test("Loadout: Buy a vest from the catalog — it's paid for, worn, answers a hit, and one undo takes it all back", () => {
   const ch = lockedCharacter();
   ch.trackers.credits.current = 1000;
   const app = openSheet(ch, "loadout");
-  pickFromCatalog(app, "armor", "kevlar-vest");
-  assert.match(app.$('[data-lobuy="armor"]').textContent, /500Ç/, "Buy doesn't show the price");
-  app.click('[data-lobuy="armor"]');
+  const buy = pickFromCatalog(app, "armor", "kevlar-vest", "buy");
+  assert.match(buy.closest("tr").textContent, /500Ç/, "the row doesn't show the price");
+  buy.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click("#modal [data-modalclose]");
   const got = activeChar(app);
   assert.equal(got.trackers.credits.current, 500);
   assert.equal(got.armor.length, 1);
@@ -631,8 +633,9 @@ test("Loadout: Buy a vest from the catalog — it's paid for, worn, answers a hi
 test("Loadout: a catalog weapon shows its computed attack and damage on Loadout and Main", () => {
   const ch = lockedCharacter();                                  // BOD 5
   const app = openSheet(ch, "loadout");
-  pickFromCatalog(app, "weapons", "combat-knife");               // BOD+3
-  app.click('[data-loadd="weapons"]');
+  pickFromCatalog(app, "weapons", "combat-knife")               // BOD+3
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click("#modal [data-modalclose]");
   const attack = Engine.skillLine(activeChar(app), "melee").checkBonus;
   const row = app.$(".lo-weapons tbody tr").textContent;
   assert.match(row, /Combat Knife/);
@@ -1109,5 +1112,53 @@ test("W15: a hit lands once — the HP readouts and the boxes that took it flash
   assert.ok(app.$("#main .pick.painup") && app.$("#main .vpill.painup"), "Pain didn't beat when it rose");
   app.click('[data-sec="main"]');
   assert.equal(app.$$("#main .landed, #main .struck, #main .painup").length, 0, "switching tabs replayed the flash");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W4: the catalog browser shows the numbers before you buy, searches, filters to what you can afford, sorts, and stays open", () => {
+  const ch = lockedCharacter();                                  // BOD 5
+  ch.trackers.credits.current = 1500;
+  const app = openSheet(ch, "loadout");
+  app.click('[data-lobrowse="weapons"]');
+  const rows = () => app.$$("#modal [data-catrow]");
+  assert.equal(rows().length, D.weapons.length, "not every weapon is listed");
+  const row = id => app.$(`#modal [data-catrow="${id}"]`);
+  const attack = Engine.skillLine(ch, "melee").checkBonus;
+  assert.match(row("combat-knife").textContent, new RegExp(`1d10 \\+ ${attack}`), "the attack isn't shown before adding");
+  assert.match(row("combat-knife").textContent, /8\s*BOD\+3/, "the damage isn't resolved for this character");
+  assert.ok(app.$('#modal [data-catbuy="bdf-oni"]').disabled, "Buy is on for a weapon you can't afford");
+  assert.match(row("bdf-oni").textContent, /Costs 7,500Ç\. You have 1,500Ç\./, "the row doesn't say why Buy is off");
+
+  const q = app.$("#modal [data-catq]");
+  q.value = "viper"; q.dispatchEvent(new app.window.Event("input"));
+  assert.deepEqual(rows().map(r => r.dataset.catrow), ["ads-lp9-viper"], "search didn't narrow the list");
+  q.value = ""; q.dispatchEvent(new app.window.Event("input"));
+  const afford = app.$("#modal [data-catafford]");
+  afford.checked = true; afford.dispatchEvent(new app.window.Event("change"));
+  const cheap = D.weapons.filter(w => typeof w.cost === "number" && w.cost > 0 && w.cost <= 1500).map(w => w.id);
+  assert.deepEqual(rows().map(r => r.dataset.catrow).sort(), [...cheap].sort(), "'What I can afford' is wrong");
+  assert.match(app.$("#modal [data-catstatus]").textContent, new RegExp(`Showing ${cheap.length} of ${D.weapons.length}`));
+  const sort = app.$('#modal [data-catf="sort"]');
+  sort.value = "-price"; sort.dispatchEvent(new app.window.Event("change"));
+  const prices = rows().map(r => D.weapons.find(w => w.id === r.dataset.catrow).cost);
+  assert.deepEqual(prices, [...prices].sort((a, b) => b - a), "sorting by price didn't");
+
+  // A click on the row opens its details; Buy pays, and the modal stays open with the new balance.
+  const detail = () => app.$('#modal [data-catrow="combat-knife"] + tr');
+  assert.ok(detail().hidden, "a row's details show before it's opened");
+  app.click('#modal [data-catrow="combat-knife"] td');
+  assert.ok(!detail().hidden && /sharp edge/.test(detail().textContent), "the row's details didn't open");
+  app.click('#modal [data-catbuy="combat-knife"]');
+  assert.ok(app.$("#modal").open, "the modal closed after a pick");
+  assert.equal(activeChar(app).trackers.credits.current, 1400);
+  assert.match(app.$("#modal [data-catstatus]").textContent, /1,400Ç/, "the balance didn't refresh");
+  assert.equal(activeChar(app).weapons[0].id, "combat-knife");
+  app.click("#modal [data-toastundo]");
+  assert.deepEqual([activeChar(app).weapons.length, activeChar(app).trackers.credits.current], [0, 1500], "one undo didn't take the purchase back");
+
+  // Armor shows its numbers too.
+  app.click("#modal [data-modalclose]");
+  app.click('[data-lobrowse="armor"]');
+  assert.match(app.$('#modal [data-catrow="kevlar-vest"]').textContent, /1d6/, "the vest's PROT isn't shown");
   assert.deepEqual(app.errors, []);
 });

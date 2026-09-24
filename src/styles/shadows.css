@@ -535,6 +535,27 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .spell-results tr.off td:first-child{opacity:1}
 .spell-results tr.off td:first-child > b, .spell-results tr.off td:first-child > .sub{opacity:.55}
 .spell-results .why{font-size:.74rem; color:var(--gold); margin-top:2px}
+/* W4: the catalog browser. A row opens its details; its two buttons act. */
+.cat-results td .sub{color:var(--dim); font-size:.72rem}
+.cat-results .why{font-size:.74rem; color:var(--gold); margin-top:2px}
+.cat-results tr.catrow{cursor:pointer}
+.cat-results tr.catrow:hover td, .cat-results tr.catrow.open td{background:rgba(113,43,140,.12)}
+.cat-results tr.cat-detail td{font-size:.82rem; font-style:italic; color:var(--dim); border-top:0}
+.cat-results tr.cat-detail p{margin:2px 0}
+.cat-results .cat-act{white-space:nowrap}
+.cat-pick .hitrow .check{white-space:nowrap}
+/* On a phone each entry is a card: the name across the top, its numbers
+   labelled in a wrapping row, Add and Buy last. */
+@media (max-width:640px){
+  .cat-results thead{display:none}
+  .cat-results tr.catrow{display:flex; flex-wrap:wrap; gap:4px 14px; padding:8px 0; border-top:1px solid var(--frame)}
+  .cat-results tr.catrow td{border:0; padding:0}
+  .cat-results tr.catrow td:first-child{flex-basis:100%}
+  .cat-results tr.catrow td[data-k]::before{content:attr(data-k); display:block; font-family:var(--mono); font-size:.58rem;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+  .cat-results tr.catrow td.cat-act{flex-basis:100%; display:flex; gap:8px; justify-content:flex-end}
+  .cat-results tr.cat-detail{display:block} .cat-results tr.cat-detail[hidden]{display:none}
+}
 .subsect{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px}
 /* W14: the add palette. Catalog chips are outlined until picked; one you
    already have is greyed out. Active chips on Main open their details. */

@@ -89,7 +89,7 @@ value-per-line item on this list.
 
 ### Loadout & catalog
 
-**W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · 💡*
+~~**W4 — Search, filter, and a full view for the weapon/armor catalog.**~~ *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*
 The pickers are native `<select>`s: 55 weapons in 14 groups, 37 armor pieces,
 type-a-letter to jump, no search. And each option shows only name and price —
 **no damage, ACC, range, PROT or RES until after it's added**, so a player

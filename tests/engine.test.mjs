@@ -1039,12 +1039,32 @@ test("the Loadout and recovery functions are total on every degenerate character
       addLoadout: () => { Engine.addLoadout(ch, "armor", "kevlar-vest", { buy: true }); Engine.addLoadout(ch, "weapons", "nope"); Engine.addLoadout(ch, "gear", "x"); },
       addCustomLoadout: () => { Engine.addCustomLoadout(ch, "armor"); Engine.addCustomLoadout(ch, "weapons"); Engine.addCustomLoadout(ch, "x"); },
       removeLoadout: () => { Engine.removeLoadout(ch, "armor", 99); Engine.removeLoadout(ch, "weapons", 0); },
+      catalogLine: () => { Engine.catalogLine(ch, "weapons", "combat-knife"); Engine.catalogLine(ch, "armor", "kevlar-vest");
+        Engine.catalogLine(ch, "weapons", "nope"); Engine.catalogLine(ch, "gear", "x"); Engine.catalogLine(null, "weapons", "combat-knife"); },
     };
     for (const [fn, call] of Object.entries(calls)){
       try { call(); } catch (e) { failures.push(`${fn}(${label}) -> ${e.message}`); }
     }
   }
   assert.deepEqual(failures, []);
+});
+
+test("W4: a catalog entry's line before it's carried matches the line once it is, and Buy says why not", () => {
+  const ch = subject();
+  ch.trackers.credits.current = 1000;
+  D.weapons.forEach((w, i) => {
+    ch.weapons.push({ id: w.id, notes: "" });
+    const carried = { ...Engine.weaponLine(ch, i) }, pre = { ...Engine.catalogLine(ch, "weapons", w.id) };
+    delete carried.index; delete carried.notes;
+    for (const k of Object.keys(carried)) assert.deepEqual(pre[k], carried[k], `${w.id}: ${k} differs before and after carrying it`);
+  });
+  const vest = Engine.catalogLine(ch, "armor", "kevlar-vest");
+  assert.deepEqual([vest.prot, vest.res, vest.integrityMax, vest.price, vest.buy.ok], ["1d6", 2, 20, 500, true]);
+  const pricey = D.weapons.find(w => w.cost > 1000);
+  assert.match(Engine.catalogLine(ch, "weapons", pricey.id).buy.why, /You have 1,000Ç/);
+  const noPrice = [...D.weapons, ...D.armor].find(d => !(typeof d.cost === "number" && d.cost > 0));
+  if (noPrice) assert.equal(Engine.catalogLine(ch, D.weapons.includes(noPrice) ? "weapons" : "armor", noPrice.id).buy.ok, false);
+  assert.equal(Engine.catalogLine(ch, "weapons", "nope"), null);
 });
 
 test("every catalog weapon resolves: its category is listed, its skill exists, its damage reads", () => {

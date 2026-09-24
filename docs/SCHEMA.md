@@ -2730,6 +2730,46 @@ No cascade logic to maintain — it falls out of the architecture.
       always beating, Pain never beating. Each fails the test.
     Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
 
+118. **(The catalog browser — W4, engine + app)** **Loadout's weapon and
+    armor pickers are a modal that shows every number before Add or Buy, with
+    search, a section filter, "What I can afford", and a sort.** Ken's
+    wishlist item, 2026-09-24 session. No data or schema change. It extends
+    Decision 100 (Add and Buy side by side, Buy paying in the same action)
+    and reuses the spell picker's shape (Decisions 111–112): a sticky head,
+    a status line, a **Done** footer, and a modal that stays open for the
+    next pick, each pick one `commit()` with its undo toast.
+    - **One reader, two places.** `Engine.catalogLine(ch, kind, id)` returns
+      what Loadout would draw for that entry once carried: a weapon's attack
+      (its skill's check, Pain and Conditions in it), damage resolved for
+      this character (BOD+3 reads 8 at BOD 5), range, RoF and capacity; an
+      armor piece's PROT, RES, Integrity and mod slots. It adds `price`,
+      `availability`, `flavorLine`, and `buy: { ok, why }`: "Costs 7,500Ç.
+      You have 1,500Ç." or "No street price". `weaponLine` now builds on the
+      same `weaponDefLine`, and an engine test pins that every catalog
+      weapon's line is the same before and after it's carried. It's total,
+      and null for an unknown id. The line also carries a grenade's
+      `radius`.
+    - **The modal.** Rows list name, section, skill, style and tags, then
+      the numbers, the price and availability, and Add and Buy. Buy is off
+      when you can't pay, and the row says why in text (W24's lesson: a
+      tooltip never reaches a touch screen). Add stays on, for gear that's
+      found or issued. A click on the row, not its buttons, opens the
+      catalog's flavour line, so a row has two actions and neither is
+      a guess. Sorts: book order, price either way, damage (weapons),
+      Integrity (armor), name. On a phone each row is a card with its
+      numbers labelled.
+    - **Loadout** keeps only what you own, plus **Browse the catalog** and
+      **+ Custom** under each section. The native `<select>`, its Add and its
+      Buy are gone.
+    - **Pinned:** a smoke test (numbers before adding, search, afford, sort,
+      details, Buy keeps the modal open and refreshes the balance, undo) and
+      two engine tests (parity with `weaponLine`, totality). The two older
+      Loadout smoke tests now go through the modal. Mutation-tested (6
+      mutants): the afford filter ignored, no refresh after a pick, Buy never
+      disabled, the engine never refusing on price, no sort, details that
+      never open. Each fails a test.
+    Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
