@@ -121,7 +121,7 @@ of the skills table) or whether that's a separate mode. Bigger than the rest of
 this list; wants its own proposal before any code. W2/W3/W6 are steps toward it
 either way.
 
-**W16 — Weapon mods and rounds in the magazine.** *Ken · ⏭*
+~~**W16 — Weapon mods and rounds in the magazine.**~~ *Ken · → Decision 120, app 0.22.0, schema 0.10: mods in fixed slots, Fire and Reload on Loadout and Main*
 Deferred twice from the combat plan (Session 4, then the cleanup session,
 2026-09-23) as "if wanted". Today a weapon line shows capacity as text, and the
 mods glossary is reference only: a player can't mark a scope on a rifle or

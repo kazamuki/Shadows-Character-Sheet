@@ -289,7 +289,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.9");
+  assert.equal(resumed.meta.schemaVersion, "0.10");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1226,5 +1226,33 @@ test("W3: Main's cards open the same popovers — LUCK spends, Pain adds a Condi
   assert.ok(app.$("#modal").open && /Take a hit/.test(app.$("#modal").textContent), "Take a hit didn't open the hit modal");
   app.click("[data-hitcancel]");
   assert.equal(app.window.document.activeElement, app.$('#main [data-vpop="hp"]'), "focus didn't come back to the Health card");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W16: install a mod on Loadout, fire a Burst from Main, Reload, and each is one undo", () => {
+  const ch = lockedCharacter();
+  ch.weapons.push({ id: "ar9x-guardian", notes: "", mods: [], roundsSpent: 0 });   // 30+1, S/B/F, 1 slot
+  const app = openSheet(ch, "loadout");
+  const pick = app.$('[data-wmodpick="0"]');
+  assert.ok(pick, "no mod picker on a weapon with a slot");
+  assert.ok(pick.querySelector('option[value="Silencer"]') && !pick.querySelector('option[value="Scope"]').disabled, "a rifle can't take a Scope");
+  pick.value = "Scope";
+  app.click('[data-wmodadd="0"]');
+  assert.deepEqual([...activeChar(app).weapons[0].mods], ["Scope"]);
+  assert.match(app.$(".lo-weapons").textContent, /Aimed at Long or Extreme range: \+2 ACC \(Scope\)/, "the Scope's ACC isn't shown");
+  assert.match(app.$(".lo-weapons").textContent, /0 of 1 slot free/);
+  assert.ok(app.$(".lo-modrow .flag"), "the Scope's unsettled fit isn't said");
+
+  app.click('[data-sec="main"]');
+  assert.match(app.$(".main-combat .lo-rounds").textContent, /31\s*\/31/, "Main doesn't show the magazine");
+  app.click('.main-combat [data-fire="0|B"]');
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 3);
+  assert.match(app.$("#undotoast").textContent, /Burst −3 \(28\/31 left\)/);
+  app.click('.main-combat [data-fire="0|F"]');
+  assert.match(app.$(".main-combat .lo-rounds").textContent, /18\s*\/31/);
+  app.click('.main-combat [data-reload="0"]');
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 0);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 13, "Reload didn't undo on its own");
   assert.deepEqual(app.errors, []);
 });

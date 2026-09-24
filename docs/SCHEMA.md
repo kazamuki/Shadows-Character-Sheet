@@ -323,6 +323,10 @@ window.SHADOWS_DATA = {
   weaponTagGlossary: [ { id: "AP", description: "..." } ],       // 29 entries
   weaponFeatureGlossary: [ { id: "Scope", description: "..." } ], // 6 entries
   weaponModGlossary: [ { id: "Silencer", slots: 1, description: "..." } ], // 7 entries
+  // (0.16, Decision 120) what the engine reads off a mod: grantsTags, aimedAcc
+  // (+ aimedAt, notWith), damageBonus, onlyFor/notFor { categories, weapons }
+  weaponRules: { rofModes: [ { id: "S", name: "Single", rounds: 1 } ],  // S 1 · B 3 · F 10 (053)
+                 reloadNote: "...", modNote: "..." },
   ammunition: [ { id: "handgun-rounds", name: "Handgun Rounds", weaponType: "Handgun",
     availability: "Common", cost: "15Ç/mag", flavorLine: "..." } ],       // 9 entries
   arrowheads: [ { id: "barbed-tip", name: "Barbed Tip", effect: "Base weapon DMG",
@@ -524,8 +528,8 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.9",
-    gamedataVersion: "0.12",          // version of shadows-data.js at save time
+    schemaVersion: "0.10",
+    gamedataVersion: "0.16",          // version of shadows-data.js at save time
     created: "...", updated: "..."
   },
 
@@ -638,8 +642,12 @@ It renders on the Archetype tab.
   // than guessing which catalog weapon a free-typed name meant. Loadout's
   // catalog picker writes the reference, and Engine.weaponLine() computes the
   // rest (Decision 100).
-  weapons: [ { id: "combat-knife", notes: "" },
-             { custom: true, name, type, damage, rof, capacity, ammo, features, notes } ],
+  // (0.10, Decision 120) `mods`: weaponModGlossary ids installed on a catalog
+  // weapon (a custom one types its own features). `roundsSpent`: rounds fired
+  // since the last reload, so 0 is a full magazine; the rounds left are
+  // computed from the capacity, never stored.
+  weapons: [ { id: "combat-knife", notes: "", mods: [], roundsSpent: 0 },
+             { custom: true, name, type, damage, rof, capacity, ammo, features, notes, roundsSpent: 0 } ],
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
   // (0.8, plan P5) worn: the one body piece that rolls PROT (CQ7) · scrapped:
@@ -2807,6 +2815,68 @@ No cascade logic to maintain — it falls out of the architecture.
       and Take a hit leaving the popover open. Each fails a test.
     Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
 
+120. **(Weapon mods and rounds in the magazine — W16, data + engine + app,
+    character schema 0.10)** **A catalog weapon takes mods into its fixed
+    slots, and every weapon whose capacity reads counts its rounds down by
+    rate of fire.** Deferred twice from the combat plan as "if wanted";
+    picked up in the 2026-09-24 wishlist session under Ken's "everything, no
+    pauses", as the one schema bump W16 asked for. W17 doesn't share it (see
+    below).
+    - **Stored:** `weapons[i].mods` (glossary ids, catalog weapons only) and
+      `weapons[i].roundsSpent` (all weapons). Rounds spent, not rounds left,
+      is the input (Constraint 7), the way `luck.spent` and `sfr.spent` are:
+      0 is a full magazine, and a capacity the catalog changes can't strand
+      a stale count. `migrate()` gives an older file no mods and a full
+      magazine, drops a non-string mod id, and takes `mods` off a custom
+      weapon. Schema **0.9 → 0.10**, with the round-trip test.
+    - **Rounds (053).** "Ammunition is spent by mode": Single 1, Burst 3,
+      Full Auto 10, as `weaponRules.rofModes` in data. A capacity reads as its
+      leading number plus a chambered "+N": 15+1 holds 16, "100 (belt)" 100,
+      "10 bursts" 10. One that doesn't read (a knife, a grenade) isn't
+      tracked. `fireWeapon(ch, i, mode)` refuses a mode the weapon doesn't
+      have and a spend the magazine can't pay ("Burst spends 3 rounds, and 2
+      are left. Reload."). `reloadWeapon` empties `roundsSpent`. A custom
+      weapon's typed capacity and RoF count the same way. The buttons (one
+      per RoF, then Reload) are on Loadout **and on Main's weapon table**,
+      where a fight is run, a step toward W13. Each is one `commit()`: "AR-9X
+      "Guardian": Burst −3 (28/31 left)".
+    - **Mods (Gear).** `weaponModOptions(ch, i)` lists every mod with why one
+      can't go on: no slots, already installed, not enough slots free, or
+      doesn't fit. Fit is data: `notFor` (a Silencer isn't for shotguns or
+      heavy weapons, as Gear says) and `onlyFor` (a Scope: rifles and the
+      Strix by id; an Angel Mod: what fires Angel Rounds, which the ammo table
+      lists for handguns, SMGs and rifles). What a mod changes is read by
+      `weaponLine()`, the way armor upgrades are by `armorPiece()`: its
+      `grantsTags` join the weapon's tags (Silent; AP, Burning, Agonized), its
+      `damageBonus` adds to the damage (Angel +4). A sight's ACC is **not**
+      folded into ACC: Gear gives it to "aimed shots", and ACC is Single
+      fire's. So the line carries `aimed`: Laser and Holo stack (+2), and a
+      Scope is its own "at Long or Extreme range" entry, listed "instead of"
+      the sights it doesn't stack with. The Holo Sight's "does not stack with
+      SMART Targeting" stays in its text, since the CRB doesn't say SMART
+      Targeting is the SMART Link feature. Mods cost nothing here: the CRB
+      prices none, so the player logs the gunsmith's bill under Çredits.
+    - **F26 (new, Deighton): does a shotgun count as a rifle?** The Scope is
+      "compatible with rifles and the Strix only", and Angel Rounds fit
+      "Handgun, Rifle, SMG". The ammo table files shotgun shells under
+      "Rifle (shotgun)". Stub: shotguns take neither. Both entries are
+      `flagged` with a `playerNote`, which shows under a weapon holding one.
+    - **Not W17.** Consumables (a Nanomed Kit coming out of stock) want
+      gear with a count, which is its own shape and its own proposal (W17's
+      row says so). They don't need to share this bump.
+    - **Pinned:** four engine tests (capacity parsing and the RoF rounds;
+      firing, refusing, reloading, a custom weapon; mod fit, slots, Laser +
+      Holo, Angel's damage and tags, Scope's range, the Strix by id; the
+      0.10 migration and a second migrate changing nothing), totality over
+      every degenerate character, and a smoke test (install a Scope on
+      Loadout, fire from Main, Reload, undo). Mutation-tested (8 mutants):
+      the chambered round dropped, an overspend allowed, a duplicate mod, the
+      Strix not fitting, no Angel damage, slots not counted, a custom weapon
+      keeping mods, Main without the magazine. Each fails a test.
+    Game data **0.15 → 0.16** (a weapon line's damage, tags and rounds can
+    change, and mods are new choices; Decision 68). Character schema **0.9 →
+    0.10**. Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2876,6 +2946,7 @@ sentence.
 | F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and Magical (Warding), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
 | F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 | F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
+| F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both | Deighton | No |
 
 ## 6. Roadmap
 
