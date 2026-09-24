@@ -170,6 +170,17 @@ you carry. The data has a hook, `weaponType` on each ammunition entry
 maps to a weapon's capacity, and whether one "mag" of Handgun Rounds fits every
 handgun. If the CRB is silent, that's a question for Deighton, not a guess.
 
+**W31 — TAGless and Ghost TAG characters.** *Ken · 💡 · follows Decision 133*
+Raised 2026-09-24 with the TAG. Every character shows a TAG under its name,
+because every file needs the number to tell characters apart. But the CRB lets
+a character go TAGless (living in the skrip economy, no UBI) or carry a Ghost
+TAG (the Advantage) or a Black TAG, and the sheet says nothing about either.
+The idea: the label reads differently for them, e.g. "TAG on file" for a
+TAGless character or "Ghost TAG" when the Advantage is held. The stored number
+never changes. What it needs first: a way to mark a character TAGless, which
+the data doesn't have, and whether that's a player choice or a GM one. Holding
+Ghost TAG is already on the character, so that half could come first.
+
 ### Theme & polish
 
 ~~**W7 — Primary buttons are unreadable in light mode.**~~ *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
@@ -356,9 +367,9 @@ the same way again.
 ## 2. Notes for whoever picks these up
 
 - **What's open:** W28 (Magic's Services, blocked on Deighton), W29 (a GM
-  mode, a server-tier idea) and W30 (Reload from carried ammo, after S6).
-  Everything else on this list has moved out. New ideas get the next free
-  number, W31.
+  mode, a server-tier idea), W30 (Reload from carried ammo, after S6) and
+  W31 (how a TAGless or Ghost TAG character's TAG reads). Everything else on
+  this list has moved out. New ideas get the next free number, W32.
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
   for a small panel beside what opened it, which follows the render; the

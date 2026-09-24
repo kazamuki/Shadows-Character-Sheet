@@ -21,6 +21,16 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.24.1
+
+Character schema **0.12**. A character file from 0.24.0 opens as it was, and its
+number carries over.
+
+- **Your character's number is now their TAG**, the Trusted Authentication Gateway
+  NYTE City issues every resident. It sits under your name as `TAG-` and the same
+  twelve characters it had before, with the same barcode, so every file you've
+  already exported is still the same character.
+
 ## v0.24.0 — 2026-09-24
 
 Character schema **0.11** · game data **0.17**. A character file from 0.23 opens as it

@@ -290,7 +290,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.11");
+  assert.equal(resumed.meta.schemaVersion, "0.12");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1502,6 +1502,25 @@ test("B18: a newer copy of the same character replaces without asking; an older 
   assert.deepEqual(app.errors, []);
 });
 
+test("Decision 133: a sheet saved by 0.24.0 (NCR-) and a newer export of it are still the same character", async () => {
+  // The browser slot isn't migrated until the sheet is opened, so it can
+  // still say NCR- when the player imports their own newer file.
+  const vex = Engine.migrate(named("Vex Morrow"));
+  const digits = vex.meta.id.slice(4);
+  const saved = JSON.parse(JSON.stringify(vex));
+  saved.meta.id = "NCR-" + digits; saved.meta.schemaVersion = "0.11";
+  saved.meta.updated = "2026-09-24T10:00:00.000Z";
+  const app = boot({ storage: { "shadows.active.v1": { ch: saved, section: "main" } } });
+  const newer = JSON.parse(JSON.stringify(saved));
+  newer.meta.updated = "2026-09-24T12:00:00.000Z"; newer.notes = "after the heist";
+  await importFile(app, newer);
+  assert.equal(app.$("#modal[open]"), null, "an NCR- save and its own newer export were taken for two characters");
+  const now = JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch;
+  assert.equal(now.notes, "after the heist");
+  assert.equal(now.meta.id, "TAG-" + digits, "the imported file didn't carry its number over as a TAG");
+  assert.deepEqual(app.errors, []);
+});
+
 test("B18: New asks before replacing a draft, and Lock asks before replacing another saved sheet", () => {
   const vex = Engine.migrate(named("Vex Morrow"));
   const draft = named("Half-Built"); draft.creation.locked = false;
@@ -1534,6 +1553,7 @@ test("B18: the intake number sits under the name on Main and in the printed head
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
   const intake = app.$("#main .intake");
   assert.ok(intake && intake.textContent.includes(ch.meta.id), "Main doesn't show the intake number");
+  assert.match(intake.textContent.trim(), /^TAG-/, "Main labels the number instead of showing the TAG itself (Decision 133)");
   assert.ok(intake.querySelector("svg rect"), "the intake number has no bars");
   assert.match(app.$("#main").textContent, /Werewolf · Trueborn · /, "Main's subtitle still leaves out the specialization");
   app.window.print = () => {};

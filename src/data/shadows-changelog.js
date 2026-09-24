@@ -2,6 +2,16 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.24.1",
+    "date": null,
+    "intro": [
+      "Character schema **0.12**. A character file from 0.24.0 opens as it was, and its number carries over."
+    ],
+    "items": [
+      "**Your character's number is now their TAG**, the Trusted Authentication Gateway NYTE City issues every resident. It sits under your name as `TAG-` and the same twelve characters it had before, with the same barcode, so every file you've already exported is still the same character."
+    ]
+  },
+  {
     "version": "0.24.0",
     "date": "2026-09-24",
     "intro": [
