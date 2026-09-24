@@ -169,6 +169,84 @@ changes, would make damage feel like damage. Respect
 `prefers-reduced-motion`. Cosmetic, cheap, and easy to overdo — one effect,
 not a system.
 
+### Skills
+
+**W19 — Choosing a Martial Arts style breaks the Skills grid.** *Ken · ⏭ (a bug)*
+Train Martial Arts in the wizard's Skills step and its style picker appears
+squeezed into a narrow column, and every skill below it shifts one column
+over: Melee's name sits under the steppers and its bonus wraps to the left
+edge. Cause, found 2026-09-23 in the preview: `.alloc` is a three-column grid
+(name · stepper · bonus) whose rows are `display: contents`, and the picks
+block (`picksHtml`, Batch 3) is inserted as a plain grid child, so it takes
+one 194px cell and pushes every later cell along. The likely fix is one rule,
+`.alloc > .picks { grid-column: 1 / -1 }`. Check any other `.alloc` that
+can hold picks, and add a smoke assertion that the row after a picks block
+still starts in column 1. Mutation-test it.
+
+**W20 — Stat icons beside the skill name.** *Ken · 💡*
+In the wizard's Skills step and the sheet's Skills tab, a skill reads as its
+name, then a new line with "REF + COOL syn". Put the stats on the name's line
+as the brand stat icons (`statIco`, `shadows-icons.js`), primary and synergy
+told apart. The print sheet already does this with its Primary/Synergy
+badges (Decision 94), so the two should match. One pass with W21, since
+it's the same line.
+
+**W21 — Show the character's own numbers on a skill's stats.** *Ken · 💡*
+Archery is REF + COOL synergy. With REF 5 and COOL 7, show "REF 5 · COOL +1
+syn", so a player sees where the check bonus comes from without doing the
+sum. Shape to respect: the primary stat adds its **score** and the synergy
+stat adds its **modifier** (030: "Skill rank + Primary Stat + Synergy Bonus"),
+so the synergy number should read as a bonus, not a score. The engine
+already returns both (`skillLine().breakdown`), so this is display only.
+Wizard and sheet.
+
+### Wizard
+
+**W22 — A sticky filter and jump bar on the Character Points step.** *Ken · 💡*
+Step 7 is the longest page in the app: 30 Disadvantages, then every
+Advantage, then LUCK, Disciplines, Starting spells (Decision 111) and
+Boosts. A bar that sticks under the header, with a text filter over names
+and descriptions and jump links to each section. The filter should leave a
+taken entry visible even when it doesn't match, so nothing you hold
+disappears. It must still work at phone width.
+
+### Modals & pickers
+
+These build on the modal primitive (`openModal`, Decision 111), whose first
+user is the spell picker. They belong in that primitive or the picker's
+shared renderer, so the sheet and the wizard both get them.
+
+**W23 — Clicking anywhere on a row picks it.** *Ken · 💡*
+In the spell picker, only the small button at the end of a row acts. The
+whole row should: Add, Choose, Remove or Link yours, whichever the row's
+button says. Keep the button, since it's what the keyboard and a screen
+reader use, and don't let a click inside a text field or a link trigger it.
+On the sheet each add is a `commit()` with its undo toast, so a stray click
+is one Undo away.
+
+**W24 — A disabled row should look disabled.** *Ken · 💡*
+Today only the button greys out ("Needs Evocation 3", "Known"), and the
+reason is in a `title` tooltip that touch screens never show. Dim the whole
+row, drop the pointer cursor, and put the reason in the row as text.
+Contrast still has to pass in both themes (W7's guard).
+
+**W25 — The picker's search stays in view.** *Ken · 💡*
+Scrolling the spell list scrolls the search box, filters and the "Chosen 2
+of 7" status line out of sight. Make that block sticky at the top of the
+modal body. It's the picker's shared renderer, so this is for the sheet as
+well as for starting spells.
+
+**W26 — A way to finish, not just close.** *Ken · 🔎*
+The modal only has × and Esc, which read as "cancel", yet every pick has
+already been saved. Two shapes, and they differ:
+(a) a **Done** button in the modal's footer that just closes, making it
+clear the picks are already kept (small, matches how it works now); or
+(b) staged picks with **Accept** and **Cancel**, where Cancel throws the
+session's picks away. (b) changes how the picker commits and how undo
+groups (one audit entry per session instead of one per spell). Claude's
+take: (a), unless there's a case for backing out of a whole picking session
+that per-pick Undo doesn't already cover. Needs Ken's call on the shape.
+
 ### Docs
 
 ~~**W18 — `CHANGELOG.md` stopped at 0.7.0.**~~ *Claude · → caught up through v0.15.0 in `CHANGELOG.md`; `docs.test.mjs` now fails without a section for the current version*
@@ -194,6 +272,9 @@ the same way again.
 - **W12's toast is built** (app 0.16.0). W2/W3/W6's popovers and modal
   still want one shared primitive for focus and dismissal. The toast isn't
   that primitive, since it never takes focus.
+- **W23–W26 are one modal pass, and W6 can share it.** Row click, disabled
+  rows, a sticky header and a footer are all changes to the primitive or the
+  picker's renderer. W20 and W21 are one pass on the skill line.
 - None of these touch rules. If one starts to — e.g. W13 wants to show a
   computed number the engine doesn't have yet — that part stops and goes to
   Deighton.
