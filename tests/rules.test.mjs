@@ -856,3 +856,23 @@ test("041: Quick Study needs a Major, Danger Sense 1 and the Intuition skill at 
   assert.equal(r.ok, true, `Quick Study stays shut with every CRB prerequisite met: ${r.unmet.join("; ")}`);
   assert.ok(!JSON.stringify(qs).includes("\"flagged\""), "Quick Study is still flagged");
 });
+
+test("041: Hardcore Parkour's culled Cat Like Balance prerequisite is the GM's call, not a lock (F27)", () => {
+  // 041: "1 Major Milestone already selected, Cat Like Balance Advantage at
+  // least Rank 1, Time Sense Advantage at least Rank 1, Danger Sense Advantage
+  // at least Rank 1". Cat Like Balance was culled from an earlier version and
+  // 043 has no such Advantage, so its id matched nothing and the Milestone
+  // could never be taken. Until F27 is ruled, the two real Advantages are
+  // checked and the missing one goes to the table, like any prose prerequisite.
+  const hp = D.milestones.majorGeneral.find(m => m.id === "hardcore-parkour");
+  const ch = subject();
+  ch.progression.milestones.major.push({ id: "specialist", date: "2026-09-24" });
+  ch.advantages.push({ id: "time-sense", rank: 1, notes: "" });
+  const missing = Engine.majorPrereqs(ch, hp);
+  assert.equal(missing.ok, false, "Hardcore Parkour opened without Danger Sense");
+  ch.advantages.push({ id: "danger-sense", rank: 1, notes: "" });
+  const r = Engine.majorPrereqs(ch, hp);
+  assert.equal(r.ok, true, `Hardcore Parkour stays shut with every prerequisite that exists met: ${r.unmet.join("; ")}`);
+  assert.ok(r.manual.some(m => /Cat Like Balance/.test(m)), "the table isn't told about Cat Like Balance");
+  assert.equal(hp.flagged, true, "Hardcore Parkour's prerequisite is unsettled but not flagged");
+});

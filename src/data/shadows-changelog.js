@@ -2,6 +2,16 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.23.1",
+    "date": null,
+    "intro": [
+      "Game data **0.17**."
+    ],
+    "items": [
+      "**Hardcore Parkour can be taken.** One of its prerequisites named an Advantage that's no longer in the game, so the Milestone stayed locked for everyone. Time Sense and Danger Sense are still checked; the missing Advantage is now your GM's call, and the Milestone says so until it's settled."
+    ]
+  },
+  {
     "version": "0.23.0",
     "date": "2026-09-24",
     "intro": [],
