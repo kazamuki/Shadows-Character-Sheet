@@ -755,6 +755,29 @@ function bindSheet(){
     const v = el.type==="number" ? Math.max(0, Math.floor(Number(el.value)||0)) : el.value;
     commit("loadout", `${e.name||"Custom armor"}: ${k} → ${v===""?"—":v}`, ()=>{ e[k]=v; });
   });
+  // W16: mods and the magazine (Decision 120), each one commit(). Firing and
+  // Reload are bound on Main as well as Loadout, where a weapon line is drawn.
+  main.querySelectorAll("[data-wmodadd]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.wmodadd), id=(main.querySelector(`[data-wmodpick="${i}"]`)||{}).value;
+    const pre=Engine.addWeaponMod(clone(ch), i, id);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `Installed ${id} on ${loName("weapons", i)}`, ()=>{ Engine.addWeaponMod(ch, i, id); });
+  });
+  main.querySelectorAll("[data-wmodrm]").forEach(b=>b.onclick=()=>{
+    const [i,at]=b.dataset.wmodrm.split("|").map(Number), id=((ch.weapons[i]||{}).mods||[])[at];
+    commit("loadout", `Removed ${id} from ${loName("weapons", i)}`, ()=>{ Engine.removeWeaponMod(ch, i, at); });
+  });
+  main.querySelectorAll("[data-fire]").forEach(b=>b.onclick=()=>{
+    const [i,mode]=b.dataset.fire.split("|"), idx=Number(i);
+    const pre=Engine.fireWeapon(clone(ch), idx, mode);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name||"Weapon"}: ${pre.mode||"fired"} −${pre.spent} (${pre.left}/${pre.max} left)`, ()=>{ Engine.fireWeapon(ch, idx, mode); });
+  });
+  main.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.reload), pre=Engine.reloadWeapon(clone(ch), i);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `Reloaded ${pre.name||"weapon"} (${pre.max})`, ()=>{ Engine.reloadWeapon(ch, i); });
+  });
   main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;
     const pre=Engine.addUpgrade(clone(ch), i, id);

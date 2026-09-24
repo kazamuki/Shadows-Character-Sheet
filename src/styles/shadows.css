@@ -556,6 +556,15 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
   .cat-results tr.catrow td.cat-act{flex-basis:100%; display:flex; gap:8px; justify-content:flex-end}
   .cat-results tr.cat-detail{display:block} .cat-results tr.cat-detail[hidden]{display:none}
 }
+/* W16: the magazine and a weapon's mods. */
+.lo-rounds{white-space:nowrap}
+.lo-rounds .rounds{font-family:var(--mono); color:var(--cyan); margin-right:6px}
+.lo-rounds .rounds.empty{color:var(--magenta)}
+.lo-rounds .rounds small{color:var(--dim)}
+.lo-rounds .fire{display:inline-flex; gap:3px; flex-wrap:wrap; vertical-align:middle}
+.lo-rounds .fire .btn.sm{padding:3px 8px}
+tr.lo-modrow td{border-top:0; padding-top:0}
+.main-combat .lo-rounds{white-space:normal} .main-combat .lo-rounds .fire{margin-top:3px}
 .subsect{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px}
 /* W14: the add palette. Catalog chips are outlined until picked; one you
    already have is greyed out. Active chips on Main open their details. */

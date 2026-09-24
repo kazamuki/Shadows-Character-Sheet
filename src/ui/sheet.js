@@ -336,11 +336,11 @@ function renderShMain(){
       lines.map(l=>{
         if (l.custom){ const w=ch.weapons[l.index];
           return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td><td class="num">—</td><td class="num">${esc(w.damage)||"—"}</td>
-            <td class="num">${esc(w.rof)||"—"}</td><td class="num">${esc(w.capacity)||"—"}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
+            <td class="num">${esc(w.rof)||"—"}</td><td class="num lo-rounds">${roundsHtml(l, w.capacity)}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
         return `<tr><td>${esc(l.name)}${l.tags&&l.tags.length?`<div class="lo-sub">${esc(l.tags.join(" · "))}</div>`:""}</td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
-          <td class="num">${esc(l.rof||"—")}</td><td class="num">${esc(l.capacity||"—")}</td></tr>`;
+          <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td></tr>`;
       }).join("") + `</tbody></table>`;
   }
   const worn = Engine.armorState(ch).worn, natMain = naturalArmorText(ch);
@@ -1295,6 +1295,33 @@ function loadoutAddHtml(kind){
     <button class="btn sm primary" data-lobrowse="${kind}">Browse the ${kind==="armor"?"armor":"weapons"} catalog</button>
     <button class="btn sm" data-locustom="${kind}">+ Custom ${kind==="armor"?"armor":"weapon"}</button></div>`;
 }
+// W16: the magazine, where a weapon line is drawn (Loadout and Main). One
+// button per rate of fire the weapon has, each spending that mode's rounds
+// (053), and Reload. A weapon whose capacity doesn't read shows it as text.
+function roundsHtml(l, capacityText){
+  const r=l.rounds;
+  if (!r) return esc(capacityText||"—");
+  const modes = l.fireModes && l.fireModes.length ? l.fireModes : [{ id:"", name:"Fire", rounds:1 }];
+  return `<span class="rounds${r.left===0?" empty":""}" title="Rounds left of ${r.max}">${r.left}<small>/${r.max}</small></span>
+    <span class="fire">${modes.map(f=>`<button class="btn sm" data-fire="${l.index}|${esc(f.id)}" ${r.left<f.rounds?"disabled":""}
+      aria-label="Fire ${esc(f.name)}, ${f.rounds} round${f.rounds===1?"":"s"}" title="${esc(f.name)}: ${f.rounds} round${f.rounds===1?"":"s"}">${esc(f.id||"−1")}</button>`).join("")}
+    <button class="btn sm" data-reload="${l.index}" ${r.spent?"":"disabled"}>Reload</button></span>`;
+}
+// A sight's ACC is for aimed shots, and a Scope's only at range (Gear), so
+// they're listed apart from Single's ACC rather than summed into it.
+const aimedHtml = l => (l.aimed||[]).map(a=>`<div class="lo-sub">Aimed${a.when?` ${esc(a.when)}`:""}: +${a.acc} ACC (${esc(a.by.join(", "))}${
+  a.instead&&a.instead.length?`, instead of ${esc(a.instead.join(", "))}`:""})</div>`).join("");
+function weaponModsHtml(ch, l){
+  const u = Engine.weaponModOptions(ch, l.index);
+  if (!u || (!u.slots && !l.mods.length)) return "";
+  const chips = l.mods.map((m,at)=>`<span class="cond-chip" title="${esc(m.description)}"><b>${esc(m.id)}</b>
+    <button class="x" data-wmodrm="${l.index}|${at}" aria-label="Remove ${esc(m.id)}" title="Remove">✕</button></span>`).join("");
+  const flagged = (D.weaponModGlossary||[]).filter(g=>g.flagged && l.mods.some(m=>m.id===g.id));
+  return `<div class="lo-upgrades"><span class="lo-sub">Mods · ${u.free} of ${u.slots} slot${u.slots===1?"":"s"} free</span>${chips}
+    ${u.free?`<select data-wmodpick="${l.index}" aria-label="Mod for ${esc(l.name)}"><option value="">Install a mod…</option>${
+      u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)} (${o.slots} slot${o.slots===1?"":"s"})${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
+    <button class="btn sm" data-wmodadd="${l.index}">Install</button>`:""}</div>${flagged.map(flagHtml).join("")}`;
+}
 function weaponRowsHtml(ch){
   const lines = ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
   const cat = lines.filter(l=>!l.custom), custom = lines.filter(l=>l.custom);
@@ -1307,21 +1334,24 @@ function weaponRowsHtml(ch){
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
         const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null, ...l.tags].filter(Boolean);
         const range = [l.reach ? `Reach ${l.reach}` : l.range, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
+        const mods = weaponModsHtml(ch, l);
         return `<tr><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div></td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}</td>
-          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}</td>
-          <td>${esc(range||"—")}</td><td class="num">${esc(l.rof||"—")}</td><td class="num">${esc(l.capacity||"—")}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${aimedHtml(l)}</td>
+          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
+            l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}</td>
+          <td>${esc(range||"—")}</td><td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
-          <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
+          <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>${
+          mods?`<tr class="lo-modrow"><td colspan="8">${mods}</td></tr>`:""}`;
       }).join("") + `</tbody></table></div>`;
     const pain = Engine.painState(ch);
     h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
   }
   if (custom.length){
-    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>` +
+    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th>rounds</th><th></th></tr></thead><tbody>` +
       custom.map(l=>{ const r=ch.weapons[l.index];
         return `<tr>` + WEAPON_COLS.map(c=>`<td><input type="text" data-cell="weapons|${l.index}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
-          `<td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+          `<td class="num lo-rounds">${roundsHtml(l, "")}</td><td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
   }
   if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
   return h + loadoutAddHtml("weapons");
@@ -1830,7 +1860,7 @@ function pWeaponRows(ch){
     return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
              damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""),
              range: l.reach ? `Reach ${l.reach}` : (l.range||""), rof:l.rof||"", capacity:l.capacity||"",
-             features:[...(l.tags||[]), ...(l.features||[])].join(", "), notes:l.notes };
+             features:[...(l.tags||[]), ...(l.features||[]), ...(l.mods||[]).map(m=>m.id)].join(", "), notes:l.notes };
   });
 }
 function pArmorRows(ch){

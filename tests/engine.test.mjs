@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.9");
+  assert.equal(ch.meta.schemaVersion, "0.10");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.9");
+  assert.equal(old.meta.schemaVersion, "0.10");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.9");
+  assert.equal(old.meta.schemaVersion, "0.10");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -203,7 +203,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.9");
+  assert.equal(old.meta.schemaVersion, "0.10");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -311,7 +311,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.9");
+  assert.equal(bare.meta.schemaVersion, "0.10");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -533,7 +533,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.9");
+    assert.equal(c.meta.schemaVersion, "0.10");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -808,7 +808,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.9");
+  assert.equal(old.meta.schemaVersion, "0.10");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1039,6 +1039,8 @@ test("the Loadout and recovery functions are total on every degenerate character
       addLoadout: () => { Engine.addLoadout(ch, "armor", "kevlar-vest", { buy: true }); Engine.addLoadout(ch, "weapons", "nope"); Engine.addLoadout(ch, "gear", "x"); },
       addCustomLoadout: () => { Engine.addCustomLoadout(ch, "armor"); Engine.addCustomLoadout(ch, "weapons"); Engine.addCustomLoadout(ch, "x"); },
       removeLoadout: () => { Engine.removeLoadout(ch, "armor", 99); Engine.removeLoadout(ch, "weapons", 0); },
+      weaponMods: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.weaponModOptions(ch, i); Engine.addWeaponMod(ch, i, "Scope"); Engine.addWeaponMod(ch, i, "nope"); Engine.removeWeaponMod(ch, i, 0); }),
+      rounds: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.fireWeapon(ch, i, "S"); Engine.fireWeapon(ch, i, "x"); Engine.fireWeapon(ch, i); Engine.reloadWeapon(ch, i); }),
       catalogLine: () => { Engine.catalogLine(ch, "weapons", "combat-knife"); Engine.catalogLine(ch, "armor", "kevlar-vest");
         Engine.catalogLine(ch, "weapons", "nope"); Engine.catalogLine(ch, "gear", "x"); Engine.catalogLine(null, "weapons", "combat-knife"); },
     };
@@ -1055,8 +1057,8 @@ test("W4: a catalog entry's line before it's carried matches the line once it is
   D.weapons.forEach((w, i) => {
     ch.weapons.push({ id: w.id, notes: "" });
     const carried = { ...Engine.weaponLine(ch, i) }, pre = { ...Engine.catalogLine(ch, "weapons", w.id) };
-    delete carried.index; delete carried.notes;
-    for (const k of Object.keys(carried)) assert.deepEqual(pre[k], carried[k], `${w.id}: ${k} differs before and after carrying it`);
+    for (const k of ["kind", "price", "availability", "flavorLine", "buy"]) delete pre[k];   // the catalog's own
+    for (const k of Object.keys(pre)) assert.deepEqual(pre[k], carried[k], `${w.id}: ${k} differs before and after carrying it`);
   });
   const vest = Engine.catalogLine(ch, "armor", "kevlar-vest");
   assert.deepEqual([vest.prot, vest.res, vest.integrityMax, vest.price, vest.buy.ok], ["1d6", 2, 20, 500, true]);
@@ -1552,4 +1554,90 @@ test("the Arcanist declares a reference panel naming data sections that exist", 
   assert.ok(panel, "no reference panel");
   assert.ok(panel.shows.length > 0);
   for (const k of panel.shows) assert.ok(D[k], `${k} isn't in the game data`);
+});
+
+
+// ── Weapon mods and rounds (W16, Decision 120) ────────────────────────
+
+function armed(id, extra = {}) {
+  const ch = subject();
+  Engine.addLoadout(ch, "weapons", id);
+  Object.assign(ch.weapons[0], extra);
+  return ch;
+}
+
+test("W16: a capacity reads as its rounds, chambered one included; one that doesn't read isn't tracked", () => {
+  const rounds = id => { const l = Engine.weaponLine(armed(id), 0); return l.rounds && l.rounds.max; };
+  assert.equal(rounds("ads-lp9-viper"), 16);          // "15+1"
+  assert.equal(rounds("vlw6-titan"), 100);            // "100 (belt)"
+  assert.equal(rounds("hft3-hellmouth"), 10);         // "10 bursts"
+  assert.equal(rounds("the-preacher"), 2);            // "2"
+  assert.equal(rounds("combat-knife"), null);         // no capacity
+  const modes = Engine.weaponLine(armed("ts7-bulldog"), 0).fireModes.map(f => `${f.id}${f.rounds}`);
+  assert.deepEqual([...modes], ["S1", "B3", "F10"], "053: Single 1, Burst 3, Full Auto 10");
+});
+
+test("W16: firing spends the mode's rounds, refuses what the magazine can't pay or the weapon can't do, and Reload fills it", () => {
+  const ch = armed("ads-lp9-viper");                   // 15+1, S/B
+  assert.equal(Engine.fireWeapon(ch, 0, "B").left, 13);
+  assert.equal(Engine.fireWeapon(ch, 0, "S").left, 12);
+  assert.equal(ch.weapons[0].roundsSpent, 4, "the stored input is rounds spent");
+  assert.equal(Engine.fireWeapon(ch, 0, "F").ok, false, "fired Full Auto from a weapon without it");
+  ch.weapons[0].roundsSpent = 14;
+  const r = Engine.fireWeapon(ch, 0, "B");
+  assert.equal(r.ok, false);
+  assert.match(r.why, /Burst spends 3 rounds, and 2 are left\. Reload\./);
+  assert.equal(Engine.reloadWeapon(ch, 0).ok, true);
+  assert.equal(ch.weapons[0].roundsSpent, 0);
+  assert.equal(Engine.reloadWeapon(ch, 0).ok, false, "reloaded a full magazine");
+  assert.equal(Engine.fireWeapon(armed("combat-knife"), 0, "S").ok, false, "a knife fired a round");
+  // A custom weapon's typed capacity is tracked the same way.
+  const c = subject(); Engine.addCustomLoadout(c, "weapons"); Object.assign(c.weapons[0], { name: "Zip gun", capacity: "4", rof: "S" });
+  assert.equal(Engine.fireWeapon(c, 0, "S").left, 3);
+});
+
+test("W16: mods fill the weapon's fixed slots, fit only what Gear says they fit, and change the line", () => {
+  const ch = armed("ads-lp9-viper");                   // 2 slots, handgun
+  const opt = id => Engine.weaponModOptions(ch, 0).options.find(o => o.id === id);
+  assert.match(opt("Scope").why, /Doesn't fit/, "a Scope went on a handgun");
+  assert.equal(Engine.addWeaponMod(ch, 0, "Laser Sight").ok, true);
+  assert.equal(Engine.addWeaponMod(ch, 0, "Laser Sight").ok, false, "the same mod twice");
+  assert.equal(Engine.addWeaponMod(ch, 0, "Holo Sight").ok, true);
+  let l = Engine.weaponLine(ch, 0);
+  assert.deepEqual([l.modSlots.used, l.modSlots.free], [2, 0]);
+  assert.equal(l.acc, 2, "a sight changed Single's ACC");
+  assert.deepEqual([l.aimed[0].acc, [...l.aimed[0].by]], [2, ["Laser Sight", "Holo Sight"]], "Laser and Holo stack on aimed shots");
+  assert.match(opt("Flashlight").why, /No slot free/);
+
+  const angel = armed("ads-lp9-viper");
+  assert.equal(Engine.addWeaponMod(angel, 0, "Angel Mod").ok, true);
+  l = Engine.weaponLine(angel, 0);
+  assert.equal(l.damage, 6 + 4, "the Angel Mod's +4 DMG");
+  for (const t of ["AP", "Burning", "Agonized"]) assert.ok(l.tags.includes(t), `no ${t} from the Angel Mod`);
+
+  const shotgun = armed("sg88-siege-breaker");
+  assert.match(Engine.weaponModOptions(shotgun, 0).options.find(o => o.id === "Silencer").why, /Doesn't go on Shotguns/);
+  const rifle = armed("ar9x-guardian");                // 1 slot
+  assert.equal(Engine.addWeaponMod(rifle, 0, "Scope").ok, true);
+  const far = Engine.weaponLine(rifle, 0).aimed[0];
+  assert.deepEqual([far.acc, far.when], [2, "at Long or Extreme range"]);
+  const strix = armed("ads-tc1-strix");
+  assert.equal(Engine.weaponModOptions(strix, 0).options.find(o => o.id === "Scope").ok, true, "the Strix takes a Scope by name");
+  assert.equal(Engine.weaponModOptions(armed("cheapshot"), 0).options.every(o => !o.ok), true, "a no-slot weapon took a mod");
+  assert.equal(Engine.removeWeaponMod(rifle, 0, 0).id, "Scope");
+  assert.equal(Engine.weaponModOptions(subject(), 0), null);
+});
+
+test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, keeps what's there, and drops junk", () => {
+  const old = subject();
+  old.meta.schemaVersion = "0.9";
+  old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
+                 { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
+  const m = Engine.migrate(old);
+  assert.equal(m.meta.schemaVersion, "0.10");
+  assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
+  assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
+  assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
+  const again = Engine.migrate(JSON.parse(JSON.stringify(m)));
+  assert.deepEqual(JSON.parse(JSON.stringify(again.weapons)), JSON.parse(JSON.stringify(m.weapons)), "a second migrate changed the weapons");
 });
