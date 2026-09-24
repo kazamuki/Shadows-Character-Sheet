@@ -1256,3 +1256,56 @@ test("W16: install a mod on Loadout, fire a Burst from Main, Reload, and each is
   assert.equal(activeChar(app).weapons[0].roundsSpent, 13, "Reload didn't undo on its own");
   assert.deepEqual(app.errors, []);
 });
+
+test("W17/W27: buy from the equipment catalog, use one and a charge on Loadout, and a Nanomed Kit you carry comes off with the healing", () => {
+  const ch = lockedCharacter();
+  ch.trackers.credits.current = 10000;
+  ch.trackers.damage = 6;
+  const app = openSheet(ch, "loadout");
+  app.click('[data-lobrowse="gear"]');
+  const group = app.$('#modal [data-catf="group"]');
+  group.value = "charged"; group.dispatchEvent(new app.window.Event("change"));
+  assert.match(app.$('#modal [data-catrow="shield-charm"]').textContent, /Shield: TN .* TH/, "the charm doesn't show the spell it holds");
+  app.click('#modal [data-catbuy="shield-charm"]');
+  group.value = ""; group.dispatchEvent(new app.window.Event("change"));
+  app.click('#modal [data-catbuy="nanomed-kit"]');
+  app.click('#modal [data-catbuy="quickstitch"]');
+  app.click("#modal [data-modalclose]");
+  let got = activeChar(app);
+  assert.equal(got.trackers.credits.current, 10000 - 450 - 4500 - 1500);
+  assert.match(app.$(".lo-gear").textContent, /Quickstitch[\s\S]*×5 doses/);
+  const row = id => app.$$(".lo-gear-row").find(r => r.textContent.includes(id));
+  row("Quickstitch").querySelector("[data-gearuse]").dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.match(row("Quickstitch").textContent, /×4/);
+  row("Shield charm").querySelector("[data-gearcharge]").dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.match(row("Shield charm").textContent, /2\s*\/3 charges/);
+  assert.match(row("Shield charm").textContent, /Holds Shield/);
+
+  // The Nanomed panel offers the kit you carry, on by default; Apply takes it off.
+  app.click('[data-sec="trackers"]');
+  app.click('[data-actopen="nanomed"]');
+  const use = app.$('[data-actpanel="nanomed"] [data-act="fromGear"]');
+  assert.ok(use && use.checked, "the panel didn't offer the kit you carry");
+  app.click("[data-actapply]");
+  got = activeChar(app);
+  assert.ok(!got.gear.some(g => g.id === "nanomed-kit"), "the kit didn't come out of your gear");
+  assert.ok(got.trackers.damage < 6, "the kit didn't heal");
+  app.click("[data-toastundo]");
+  got = activeChar(app);
+  assert.deepEqual([got.gear.some(g => g.id === "nanomed-kit"), got.trackers.damage], [true, 6], "one undo didn't put back both");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W17: the Field Repair Kit button takes a use off the kit you carry", () => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 6, notes: "", worn: true, scrapped: false, upgrades: [] });
+  ch.gear.push({ id: "field-repair-kit", qty: 5, notes: "" });
+  const app = openSheet(ch, "loadout");
+  assert.match(app.$('[data-repairkit="0"]').textContent, /1 of your 5/);
+  app.$('[data-repairroll="0"]').value = "4";
+  app.click('[data-repairkit="0"]');
+  const got = activeChar(app);
+  assert.deepEqual([got.armor[0].integrityLoss, got.gear[0].qty], [2, 4]);
+  assert.match(app.$("#undotoast").textContent, /4 kit uses left/);
+  assert.deepEqual(app.errors, []);
+});

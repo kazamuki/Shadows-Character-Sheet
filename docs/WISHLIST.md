@@ -132,7 +132,7 @@ that change a number (ACC, damage) are read by `weaponLine()`, the way armor
 upgrades are by `armorPiece()`. Anything the Gear chapter leaves vague is a
 Deighton question, not a guess.
 
-**W17 — Consumables you carry: a Nanomed Kit comes out of stock.** *Claude · 💡*
+~~**W17 — Consumables you carry: a Nanomed Kit comes out of stock.**~~ *Claude · → Decision 121, app 0.22.0: gear from a catalog, counted; the Nanomed, Speed Heal and repair-kit actions take from it*
 Raised 2026-09-23, from Decision 105. The Nanomed Kit panel heals and clears,
 but using one doesn't take a kit from Loadout or cost the 4,500Ç. The player
 has to remember to cross it off gear and to log the purchase. Speed Heal, the
@@ -142,7 +142,7 @@ count (a schema bump, so it could share W16's 0.9 migration), and the panel
 offering "use one you carry" next to "bought on the spot". Wants a proposal
 before code.
 
-**W27 — The Magic chapter's shop: blanks, supplies and inscribed objects.** *Claude · 💡*
+~~**W27 — The Magic chapter's shop: blanks, supplies and inscribed objects.**~~ *Claude · → Decision 121, app 0.22.0: in the equipment catalog, Talismans with charges and their spell; Services are W28*
 Scott's finished Magic chapter (2026-09-24) prices its Tools of the Trade:
 raw materials, ritual supplies, inscription blanks, and a catalog of
 Talismans, Wards, Artifacts and services with the spell each holds. Today an
@@ -150,6 +150,16 @@ Arcanist writes them into Gear by hand. Once it's in the data, it could be a
 tab in W4's catalog browser, and an item could link to its spell in the book.
 It's new content only, with no rules question, though "Warding" services
 change what armor's RES stops, which the hit resolver would need to read.
+
+**W28 — Magic's Services: Warding by damage type, and Self-mending.** *Claude · 🔎 · blocked on Deighton*
+Raised 2026-09-24 while merging W27. The Magic chapter sells Warding as
+three services, Elemental (2,500Ç), Spirit (5,000Ç) and Aether (12,000Ç),
+each "Armor RES applies to [that] damage", plus Self-mending (Ironhide, "One
+mod slot"). The data has one `Warding` armor upgrade that extends RES to
+"magical" damage, and `damageTypes` has no Elemental, Spirit or Aether.
+Which damage types those are, and whether the three replace the one upgrade,
+is a rules question (it's F23's neighbour), so these stayed out of the
+catalog. Once ruled they're armor upgrades, not gear.
 
 ### Theme & polish
 

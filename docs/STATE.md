@@ -3,7 +3,7 @@
 **Updated:** 2026-09-24
 **Versions:** app `0.21.0` · game data `0.16` · character schema `0.10` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **254 passing, 0 todo, 0 failing** (254 tests, six files)
+**Suite:** `npm run verify` → **260 passing, 0 todo, 0 failing** (260 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
