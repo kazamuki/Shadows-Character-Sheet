@@ -1167,26 +1167,93 @@ function auditChip(kind){
 const attackText = n => n==null ? "—" : `1d10 ${n<0?"−":"+"} ${Math.abs(n)}`;
 const priceText = d => typeof d.cost==="number" && d.cost>0 ? `${d.cost.toLocaleString("en-US")}Ç` : "";
 const titleCase = s => String(s||"").replace(/^./, c=>c.toUpperCase());
-function loadoutPickerHtml(kind){
+// ── The catalog browser (W4) ─────────────────────────────────────────
+// A modal like the spell picker (Decisions 111–112): search, a group filter,
+// "what I can afford", a sort, and every number Loadout would show, before
+// Add or Buy. The numbers are Engine.catalogLine(), the same reader Loadout's
+// rows use, so the two can't disagree. S.loPick keeps the filters while the
+// modal is open; a click on a row (not its buttons) opens its details.
+function catalogGroups(kind){
   const R = D.armorRules||{};
-  let groups;
   if (kind==="weapons"){
     const known = new Set((D.weaponCategories||[]).map(c=>c.id));
-    groups = (D.weaponCategories||[]).map(c=>({ label:c.name, items:D.weapons.filter(w=>w.category===c.id) }))
-      .concat([{ label:"Other", items:D.weapons.filter(w=>!known.has(w.category)) }]);
-  } else {
-    const slots = [...new Set(D.armor.map(a=>a.slot||"body"))];
-    groups = slots.flatMap(slot => slot==="body"
-      ? Object.keys(R.coverageLocations||{}).map(cov=>({ label:(R.coverageNames||{})[cov]||titleCase(cov),
-          items:D.armor.filter(a=>(a.slot||"body")==="body" && (a.coverage||R.defaultCoverage)===cov) }))
-      : [{ label:(R.slotNames||{})[slot]||titleCase(slot), items:D.armor.filter(a=>a.slot===slot) }]);
+    return (D.weaponCategories||[]).map(c=>({ id:c.id, label:c.name, items:D.weapons.filter(w=>w.category===c.id) }))
+      .concat([{ id:"other", label:"Other", items:D.weapons.filter(w=>!known.has(w.category)) }]).filter(g=>g.items.length);
   }
-  const opts = groups.filter(g=>g.items.length).map(g=>`<optgroup label="${esc(g.label)}">` +
-    g.items.map(d=>`<option value="${esc(d.id)}">${esc(d.name)}${priceText(d)?" — "+priceText(d):""}</option>`).join("") + `</optgroup>`).join("");
+  const slots = [...new Set(D.armor.map(a=>a.slot||"body"))];
+  return slots.flatMap(slot => slot==="body"
+    ? Object.keys(R.coverageLocations||{}).map(cov=>({ id:`cov:${cov}`, label:(R.coverageNames||{})[cov]||titleCase(cov),
+        items:D.armor.filter(a=>(a.slot||"body")==="body" && (a.coverage||R.defaultCoverage)===cov) }))
+    : [{ id:`slot:${slot}`, label:(R.slotNames||{})[slot]||titleCase(slot), items:D.armor.filter(a=>a.slot===slot) }]).filter(g=>g.items.length);
+}
+const CATALOG_SORTS = {
+  weapons: [["book","Book order"],["price","Price, low to high"],["-price","Price, high to low"],["-damage","Damage, high to low"],["name","Name"]],
+  armor:   [["book","Book order"],["price","Price, low to high"],["-price","Price, high to low"],["-integrity","Integrity, high to low"],["name","Name"]]
+};
+function catalogMatches(ch, kind){
+  const st = S.loPick || {}, k = String(st.q||"").toLowerCase().trim();
+  const rows = catalogGroups(kind).filter(g=>!st.group || g.id===st.group)
+    .flatMap(g=>g.items.map(d=>({ g, l: Engine.catalogLine(ch, kind, d.id) }))).filter(x=>x.l);
+  const hit = x => !k || [x.l.name, x.g.label, x.l.skill&&x.l.skill.name, x.l.style, x.l.damageType, x.l.quality,
+    ...(x.l.tags||[]), ...(x.l.features||[]), x.l.flavorLine].filter(Boolean).join(" ").toLowerCase().includes(k);
+  const list = rows.filter(x=>hit(x) && (!st.afford || x.l.buy.ok));
+  const key = { price: x=>x.l.price==null?Infinity:x.l.price, damage: x=>x.l.damage==null?-Infinity:x.l.damage,
+                integrity: x=>x.l.integrityMax||0, name: x=>x.l.name.toLowerCase() };
+  const sort = st.sort||"book", desc = sort[0]==="-", f = key[sort.replace(/^-/,"")];
+  if (f) list.sort((a,b)=>{ const x=f(a), y=f(b); return (x<y?-1:x>y?1:0)*(desc?-1:1); });
+  return { list, total: rows.length };
+}
+function catalogCellsHtml(kind, l){
+  if (kind==="weapons"){
+    const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
+    return `<td class="num" data-k="Attack">${attackText(l.attack)}${l.acc?`<div class="sub">+${l.acc} ACC Single</div>`:""}${l.skill&&!l.skill.trained?`<div class="sub">untrained</div>`:""}</td>
+      <td class="num" data-k="Damage">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="sub">${esc(l.damageFormula)}</div>`:""}</td>
+      <td data-k="Range">${esc(range||"—")}</td><td class="num" data-k="RoF">${esc(l.rof||"—")}</td><td class="num" data-k="Cap.">${esc(l.capacity||"—")}</td>`;
+  }
+  const res = l.resAgainst.map(titleCase).join(", ");
+  return l.slot==="body"
+    ? `<td class="num" data-k="PROT">${esc(l.prot||"—")}</td><td class="num" data-k="RES">+${l.res}${res?`<div class="sub">${esc(res)}</div>`:""}</td>
+       <td class="num" data-k="Integrity">${l.integrityMax}</td><td class="num" data-k="Mods">${l.mods==null?"—":l.mods}</td>`
+    : `<td colspan="4" class="sub">${esc(l.features.join(" · ")||"—")}</td>`;
+}
+function catalogResultsHtml(ch, kind){
+  const { list } = catalogMatches(ch, kind), open = (S.loPick||{}).open;
+  if (!list.length) return `<p class="step-note">Nothing in the catalog matches that.</p>`;
+  const head = kind==="weapons" ? ["Weapon","Attack","Damage","Range","RoF","Cap."] : ["Armor","PROT","RES","Integrity","Mods"];
+  const cols = head.length + 2;
+  return `<table class="ref cat-results"><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}<th>Price</th><th></th></tr></thead><tbody>` +
+    list.map(({ g, l })=>{
+      const sub = kind==="weapons"
+        ? [g.label, l.skill&&l.skill.name, l.style, l.damageType&&l.damageType!=="Normal"?l.damageType:null, ...l.tags, ...l.features]
+        : [g.label, l.quality, ...(l.slot==="body"?l.features:[])];
+      const det = [l.flavorLine, l.weaponNotes].filter(Boolean);
+      return `<tr class="catrow${open===l.id?" open":""}" data-catrow="${esc(l.id)}" aria-expanded="${open===l.id}">
+        <td><b>${esc(l.name)}</b><div class="sub">${esc([...new Set(sub.filter(Boolean))].join(" · "))}</div>${l.buy.ok||l.price==null?"":`<div class="why">${esc(l.buy.why)}</div>`}</td>
+        ${catalogCellsHtml(kind, l)}
+        <td class="num" data-k="Price">${priceText({cost:l.price})||"—"}${l.availability?`<div class="sub">${esc(l.availability)}</div>`:""}</td>
+        <td class="cat-act"><button class="btn sm" data-catadd="${esc(l.id)}" title="Add it without paying: found, issued, or already bought">Add</button>
+          <button class="btn sm primary" data-catbuy="${esc(l.id)}" ${l.buy.ok?"":"disabled"} title="${esc(l.buy.ok?`Pay ${priceText({cost:l.price})} from your Çredits`:l.buy.why)}">Buy</button></td></tr>
+      <tr class="cat-detail" ${open===l.id?"":"hidden"}><td colspan="${cols}">${det.length?det.map(t=>`<p>${esc(t)}</p>`).join(""):"<p>No notes in the catalog.</p>"}</td></tr>`;
+    }).join("") + `</tbody></table>`;
+}
+function catalogStatusHtml(ch, kind){
+  const { list, total } = catalogMatches(ch, kind);
+  return `Showing <b>${list.length}</b> of ${total} · You have <b>${(Number(ch.trackers.credits.current)||0).toLocaleString("en-US")}Ç</b>`;
+}
+function catalogPickerHtml(ch, kind){
+  const st = S.loPick;
+  const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
+  return `<div class="spell-pick cat-pick"><div class="pick-head"><div class="hitrow">
+      <input type="search" data-catq value="${esc(st.q)}" placeholder="Search name, tags, skill" aria-label="Search the catalog">
+      <select data-catf="group" aria-label="Section">${opt("",kind==="weapons"?"Every section":"Every kind",!st.group)}${catalogGroups(kind).map(g=>opt(g.id,g.label,st.group===g.id)).join("")}</select>
+      <select data-catf="sort" aria-label="Sort">${CATALOG_SORTS[kind].map(([v,l])=>opt(v,l,(st.sort||"book")===v)).join("")}</select>
+      <label class="check"><input type="checkbox" data-catafford ${st.afford?"checked":""}> What I can afford</label>
+    </div><p class="pick-status" data-catstatus aria-live="polite">${catalogStatusHtml(ch, kind)}</p></div>
+    <div data-catresults>${catalogResultsHtml(ch, kind)}</div></div>`;
+}
+function loadoutAddHtml(kind){
   return `<div class="lo-add">
-    <select data-lopick="${kind}" aria-label="${kind==="armor"?"Armor":"Weapon"} from the catalog"><option value="">Choose from the catalog…</option>${opts}</select>
-    <button class="btn sm" data-loadd="${kind}">Add</button>
-    <button class="btn sm primary" data-lobuy="${kind}" disabled>Buy</button>
+    <button class="btn sm primary" data-lobrowse="${kind}">Browse the ${kind==="armor"?"armor":"weapons"} catalog</button>
     <button class="btn sm" data-locustom="${kind}">+ Custom ${kind==="armor"?"armor":"weapon"}</button></div>`;
 }
 function weaponRowsHtml(ch){
@@ -1218,7 +1285,7 @@ function weaponRowsHtml(ch){
           `<td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
   }
   if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
-  return h + loadoutPickerHtml("weapons");
+  return h + loadoutAddHtml("weapons");
 }
 const intBar = p => {
   const pct = p.integrityMax>0 ? Math.round(100*p.integrity/p.integrityMax) : 0;
@@ -1285,7 +1352,7 @@ function armorRowsHtml(ch){
   let h = as.problems.map(p=>`<p class="hitnote">${esc(p)}</p>`).join("");
   if (nat) h += `<p class="hitarmor">${esc(nat)}</p>`;
   h += as.pieces.map(p=>armorRowHtml(ch, p)).join("") || `<p class="step-note">No armor yet.</p>`;
-  return h + loadoutPickerHtml("armor");
+  return h + loadoutAddHtml("armor");
 }
 
 // ── Grimoire (Decision 108) ──────────────────────────────────────────

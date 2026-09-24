@@ -773,16 +773,36 @@ const Engine = (() => {
     if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), notes };
     const def = weaponDefById(e.id);
     if (!def) return { index, missing:true, name:String(e.id), notes };
+    return Object.assign({ index, notes }, weaponDefLine(ch, def));
+  }
+  // A catalog weapon's numbers for this character, before anyone carries it.
+  function weaponDefLine(ch, def){
     const sk = def.skill && skillById(def.skill) ? skillLine(ch, def.skill) : null;
     const dmg = weaponDamage(ch, def.damage);
-    return { index, id:def.id, name:def.name, category:def.category||null, notes,
+    return { id:def.id, name:def.name, category:def.category||null,
              skill: sk ? { id:sk.def.id, name:sk.def.name, trained:sk.trained } : null,
              attack: sk ? sk.checkBonus : null, acc: typeof def.acc==="number" ? def.acc : null,
              damage: dmg.value, damageFormula: dmg.formula,
              style: def.style||null, damageType: def.damageType||null,
-             reach: def.reach||null, parry: def.parry||null, range: def.range||null,
+             reach: def.reach||null, parry: def.parry||null, range: def.range||null, radius: def.radius||null,
              rof: def.rof||null, capacity: def.capacity||null,
              tags: def.tags||[], features: def.features||[], weaponNotes: def.notes||null };
+  }
+
+  // W4 — one catalog entry as the browser shows it, before it's added: the
+  // same line Loadout would draw (a weapon's attack and damage for this
+  // character, an armor piece's PROT, RES and Integrity), its price, and
+  // whether Buy can go ahead and, if not, why. Null for an unknown id.
+  function catalogLine(ch, kind, id){
+    const def = loadoutDef(kind, id);
+    if (!def || !ch || typeof ch!=="object") return null;
+    const line = kind==="armor" ? armorPiece({ id }, null) : weaponDefLine(ch, def);
+    const price = priceOf(def), have = Number(ch && ch.trackers && ch.trackers.credits && ch.trackers.credits.current)||0;
+    const buy = price==null ? { ok:false, why:"No street price. Add it, then log what it cost under Çredits." }
+              : price>have ? { ok:false, why:`Costs ${price.toLocaleString("en-US")}Ç. You have ${have.toLocaleString("en-US")}Ç.` }
+              : { ok:true };
+    return Object.assign(line, { kind, price, availability: def.availability||null,
+      flavorLine: def.flavorLine||null, buy });
   }
 
   // Add a catalog piece. `buy` also pays its price out of Çredits, in the
@@ -2149,7 +2169,7 @@ const Engine = (() => {
            // Taking a hit (Decision 99)
            hlState, armorState, resolveHit, applyHit, damageTypeById, damageCategoryById,
            // Loadout & recovery (Decision 100)
-           weaponLine, addLoadout, addCustomLoadout, removeLoadout, setWorn,
+           weaponLine, catalogLine, addLoadout, addCustomLoadout, removeLoadout, setWorn,
            upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
            naturalHealing, heal, resolveReset, applyReset,
            // Combat cleanup (Decisions 104–105)
