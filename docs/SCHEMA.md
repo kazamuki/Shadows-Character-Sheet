@@ -2707,6 +2707,29 @@ No cascade logic to maintain — it falls out of the architecture.
     tags, so there's no game data bump (Decision 68). Ships in app
     **0.21.0** with Decision 115. (Ken + Claude, 2026-09-24)
 
+117. **(Let a hit land — W15, app)** **An action that leaves more damage
+    than before flashes what it changed, once.** Ken's wishlist item, picked
+    up in the 2026-09-24 wishlist session under his "everything, no pauses".
+    No rules, data or schema change.
+    - **One hook, in `commit()`.** `landedFrom(before, ch)` compares the
+      Health Level cells before and after (`hlCells`). If damage or Massive
+      went up, `S.landed` names the cells whose fill grew and whether the
+      Pain Level rose (or the character went Down). `renderMain` takes it
+      into `landedNow` for that one render and clears it, so a tab switch
+      or any later render doesn't replay it. So a hit from the modal, Hurt,
+      a typed damage total and a Turn Reset tick all land the same way.
+      Healing and undo never flash, since undo doesn't go through `commit()`.
+    - **One effect.** A magenta flash on the HP readouts (the vitals pill,
+      Main's Health card, Trackers' HP) and on each Health Level box that
+      took damage, on the track and Main's mini track. The Pain readouts (the
+      pill, Main's Pain card, Trackers' Pain card) play it twice when the
+      level rose: the distinct beat W15 asked for. None of it plays under
+      `prefers-reduced-motion`.
+    - **Pinned:** one smoke test. Mutation-tested (5 mutants): the flash
+      replaying on a later render, healing flashing, the wrong boxes, Pain
+      always beating, Pain never beating. Each fails the test.
+    Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),

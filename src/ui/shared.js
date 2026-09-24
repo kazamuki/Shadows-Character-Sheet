@@ -83,9 +83,29 @@ function commit(kind, label, fn){
   const before=clone(ch);
   fn();
   const r=Engine.recordAction(ch, kind, label, before);
+  S.landed=landedFrom(before, ch);
   update();
   if (r && r.ok) showUndoToast(ch, ch.audit[ch.audit.length-1], label);
 }
+
+// W15 — let a hit land. When an action leaves more damage than before (a
+// hit, Hurt, a Turn Reset tick), the next render marks the HP readouts, the
+// Health Level boxes that took it, and the Pain readouts if the Pain Level
+// went up. The render takes it once (landedNow), so the flash plays once and
+// a later re-render doesn't replay it. Healing and undo never flash. The CSS
+// drops the animation under prefers-reduced-motion.
+let landedNow=null;
+function landedFrom(before, ch){
+  if (!ch.creation || !ch.creation.locked) return null;
+  const b=Engine.hlState(before), a=Engine.hlState(ch);
+  if (a.damage<=b.damage && a.massive<=b.massive) return null;
+  const was=hlCells(before), cells=new Set();
+  hlCells(ch).forEach((c,i)=>{ const o=was[i]; if (!o || c.frac>o.frac || (c.massive && !o.massive)) cells.add(i); });
+  const pb=Engine.painState(before), pa=Engine.painState(ch);
+  return { cells, pain: pa.level>pb.level || (pa.down && !pb.down) };
+}
+const landedCls = (what, i) => !landedNow ? "" : what==="hp" ? " struck"
+  : what==="pain" ? (landedNow.pain ? " painup" : "") : landedNow.cells.has(i) ? " landed" : "";
 
 // W12 — undo where the action happened. Every commit() that changed something
 // offers its own undo for a few seconds, through the same LIFO undo the

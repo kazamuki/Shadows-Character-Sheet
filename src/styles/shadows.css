@@ -310,6 +310,19 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hl.massive .fill{background:repeating-linear-gradient(135deg, rgba(188,72,154,.55) 0 4px, transparent 4px 8px)}
 .hl-mini .seg.massive{border-style:dashed}
 .hl-mini .seg.massive i{background:repeating-linear-gradient(135deg, var(--magenta) 0 3px, transparent 3px 6px)}
+/* W15 — a hit lands: one magenta flash on what it changed (HP readouts and the
+   Health Levels that took it), played twice on the Pain readouts when the Pain
+   Level went up. Only once per action; none under reduced motion. */
+@keyframes landed{0%{box-shadow:0 0 0 2px var(--magenta), 0 0 18px var(--magenta); background-color:rgba(188,72,154,.35)}
+  100%{box-shadow:0 0 0 0 transparent; background-color:transparent}}
+@keyframes struck{0%{text-shadow:0 0 14px var(--magenta); color:var(--magenta)} 100%{}}
+.hl.landed, .hl-mini .seg.landed, .cond.painup, .vpill.painup, .pick.painup{animation:landed .7s ease-out}
+.cond.painup, .vpill.painup, .pick.painup{animation-iteration-count:2}
+.cond.struck .big, .vpill.struck .vv, .big.struck{animation:struck .7s ease-out}
+@media (prefers-reduced-motion: reduce){
+  .hl.landed, .hl-mini .seg.landed, .cond.painup, .vpill.painup, .pick.painup,
+  .cond.struck .big, .vpill.struck .vv, .big.struck{animation:none}
+}
 /* Decision 99 — the Take a hit panel on Trackers */
 .hitpanel{background:var(--panel); border:1px solid var(--violet); border-radius:8px; padding:14px 16px; margin:4px 0 16px}
 .hitpanel h4{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; margin-bottom:8px}

@@ -247,6 +247,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **115** *(The GM runs the Cascade)* — The Cascade panel gives the instruction (d10 + Rupture degree, tell your GM) and opens one Aberration picker, a modal of cards with each one's text, also used by Trackers' Add. The pick's note is dated; nothing goes into Notes. `recordCascade`/`logCascade` removed; the tables stay in the reference.
 - **116** *(Spell tag AP)* — `AP` on a spell means Armor Piercing, as the weapon tag does (skips RES, PROT still rolls). Unflagged; Iron Lance's own effect already said so.
 - **112** *(Modals, the skill line and Trackers' layout — wishlist pass)* — The modal gains a sticky footer and is centred; W6 Take a hit in the modal, Apply disabled with its reason; W23–W26 row click, dimmed rows that say why, sticky search, Done; W20/W21 a skill's stats as icons with the character's numbers; W1/W10 Trackers in two columns, the HL track in Damage banded by Pain Level.
+- **117** *(Let a hit land — W15)* — `commit()` notes when damage went up; the next render flashes the HP readouts and the Health Level boxes that took it, twice on Pain if its level rose, once only, never on heal or undo, none under reduced motion.
 
 ### Audit trail, undo & admin
 

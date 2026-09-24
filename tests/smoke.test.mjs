@@ -1084,3 +1084,30 @@ test("W22: step 7's sticky bar filters the picks, keeps what you hold, and survi
   assert.deepEqual(shown(), ["Berserker", "Danger Sense"], "a re-render dropped the filtering");
   assert.deepEqual(app.errors, []);
 });
+
+test("W15: a hit lands once — the HP readouts and the boxes that took it flash, Pain beats when it rises, and healing never flashes", () => {
+  const ch = lockedCharacter();
+  const hp = Engine.health(ch);
+  const app = openSheet(ch, "trackers");
+  const landed = () => app.$$("#main .hl.landed").length;
+  assert.equal(landed(), 0, "a box flashed before anything happened");
+  app.click('[data-dmg="1"]');                                            // 1 HP into the first box
+  assert.equal(landed(), 1, "the box that took the damage didn't flash");
+  assert.ok(app.$("#main .hl.landed") === app.$("#main .hl"), "the wrong box flashed");
+  assert.ok(app.$("#main .trk .big.struck") && app.$("#main .vpill.hp.struck"), "the HP readouts didn't flash");
+  assert.equal(app.$$("#main .painup").length, 0, "Pain beat though its level didn't move");
+  app.click('[data-sec="trackers"]');                                     // a plain re-render
+  assert.equal(landed() + app.$$("#main .struck").length, 0, "the flash replayed on a later render");
+  app.click('[data-dmg="-1"]');                                           // Heal 1
+  assert.equal(landed() + app.$$("#main .struck").length, 0, "healing flashed");
+
+  // Enough to cross into Pain 1: the Pain readouts get their own beat.
+  const cross = D.resources.healthLevels.painLevels.find(p => p.level === 1).hlLostThreshold * hp.hpPer;
+  const set = app.$("[data-dmgset]"); set.value = String(cross);
+  set.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(landed(), D.resources.healthLevels.painLevels.find(p => p.level === 1).hlLostThreshold, "not every box the damage filled flashed");
+  assert.ok(app.$("#main .pick.painup") && app.$("#main .vpill.painup"), "Pain didn't beat when it rose");
+  app.click('[data-sec="main"]');
+  assert.equal(app.$$("#main .landed, #main .struck, #main .painup").length, 0, "switching tabs replayed the flash");
+  assert.deepEqual(app.errors, []);
+});
