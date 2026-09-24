@@ -35,7 +35,7 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 **Combat and magic are both built end to end, and both plans are closed**
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106 and 108–111.
-The newest UI work is Decisions 112 and 114 (app 0.20.0, not yet tagged).
+The newest UI work is Decisions 112 and 114 (app 0.20.0).
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -51,7 +51,7 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.19.1`, game data `0.14`** (tag `v0.19.1`). **Check a
+tag. **Live: app `0.20.0`, game data `0.15`** (tag `v0.20.0`). **Check a
 deploy by loading the page** and reading the footer, not by curling it.
 `CHANGELOG.md` needs a section for every app bump (`docs.test.mjs` checks).
 
@@ -108,10 +108,9 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**Live is `v0.19.1`.** This branch carries **app 0.20.0** (Decisions 112 and 114:
-W1, W5, W6, W10, W20–W26) and **game data 0.15** (Decision 113, F11), not
-yet merged or tagged. The schema stays 0.9. Once it merges, append its row to `log/shipped.md`. Then
-tag `v0.20.0` and check the footer on the demo site.
+**`main` is caught up through PR #47, and live is `v0.20.0`** (app 0.20.0,
+game data 0.15, schema 0.9). The next observable change is 0.20.1 for a
+fix, 0.21 for a feature.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
