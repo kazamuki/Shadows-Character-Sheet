@@ -36,7 +36,7 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
 
-**App 0.24.0 (unreleased, on `claude/vibrant-gates-66y9l0`)** is the
+**App 0.24.0 (PR #56, tagged `v0.24.0`)** is the
 audit's first session: character files are untrusted input (Decision 124),
 load findings stay until dismissed (125), the Trueborn's powers render (126),
 Hardcore Parkour's prerequisites are ruled (129), and every character has a NYTE City
@@ -136,11 +136,11 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**`main` is caught up through PR #55, tagged `v0.23.0` (app 0.23.0, schema
-0.10, game data 0.16).** This branch carries the audit and S1 as app 0.24.0,
-schema 0.11 and game data 0.17, not yet merged or tagged.
+**`main` is caught up through PR #56 and its release rename, tagged
+`v0.24.0` (app 0.24.0, schema 0.11, game data 0.17).** Check the live footer
+reads 0.24.0.
 
-**Next, all unblocked:** merge this branch, then S3, S5 or S2. Milestones &
+**Next, all unblocked:** S3, S5 or S2 of the audit plan. Milestones &
 doc reconciliation (Ken alone): F9 (are General Milestones Professional-only?)
 and F13 need Ken or Deighton; F12 waits on 041's unwritten Advancement
 Section. The wishlist holds W28 (blocked), W29 (a GM mode, needs a server)
