@@ -627,18 +627,41 @@ function hitLabel(r){
   return `Hit: ${r.damage} ${r.type.name}${kind} → ` +
     (r.bypassesArmor ? `${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} removed` : `${r.through} through`);
 }
-function hitPanelHtml(ch){
-  const st=S.hit, as=Engine.armorState(ch), r=Engine.resolveHit(ch, hitInput(st));
+// What still stands between the form and Apply, in words. The footer shows
+// it next to the disabled button (W6), so the reason is never a guess.
+function hitPending(st, r){
+  if (!r.ok) return r.why;
+  if (r.prompts.shock && !st.shock) return "Mark the Shock Check as passed or failed first.";
+  if (r.prompts.atZero && !st.atZero) return "Mark the check at zero as passed or failed first.";
+  return "";
+}
+// W6: Take a hit is a modal (openModal). The body leads with where the
+// character stands, HP and the Health Level track, then the form and what the
+// hit would do; the footer holds Apply, which stays off until nothing's pending.
+function hitModalParts(ch){
+  const st=S.hit, r=Engine.resolveHit(ch, hitInput(st)), pain=Engine.painState(ch), hp=Engine.health(ch);
+  const pending=hitPending(st, r);
+  const body=`<div class="hit-now"><span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
+      <span class="sub">${esc(pain.label)}</span></div>${hlTrackHtml(ch)}` + hitPanelHtml(ch, r);
+  const foot=`${pending?`<span class="modal-note hitwhy">${esc(pending)}</span>`:""}
+    <button class="btn" data-hitcancel="1">Cancel</button>
+    <button class="btn primary" data-hitapply="1" ${pending?"disabled":""}>Apply hit</button>`;
+  return { body, foot };
+}
+function hitPanelHtml(ch, r){
+  const st=S.hit, as=Engine.armorState(ch);
   const opt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
   // How the chosen category resolves is data (Decision 99): one that
   // bypasses armor asks for Integrity instead of a PROT roll, and has no AP.
   const cat=Engine.damageCategoryById(st.category)||{}, bypass=!!cat.bypassesArmor;
   const locName=id=>((Engine.locationById(id)||{}).name||"").toLowerCase();
   const field=(label, inner)=>`<label class="field"><span>${label}</span>${inner}</label>`;
-  const num=(k, label, extra="")=>field(label, `<input type="number" min="0" data-hit="${k}" value="${esc(st[k])}" ${extra}>`);
+  // Text with a numeric keypad, not type=number: the modal redraws as you
+  // type, and only a text field can have its caret put back at the end.
+  const num=(k, label)=>field(label, `<input type="text" inputmode="numeric" pattern="[0-9]*" data-hit="${k}" value="${esc(st[k])}">`);
   const passFail=k=>`<select data-hit="${k}" aria-label="result">${opt("","Did you pass?",!st[k])}${opt("pass","Passed",st[k]==="pass")}${opt("fail","Failed",st[k]==="fail")}</select>`;
 
-  let h=`<div class="hitpanel" data-hitpanel><h4>Take a hit</h4>
+  let h=`<div data-hitpanel>
     <div class="hitrow">
       ${num("damage","Damage")}
       ${field("Type",`<select data-hit="damageType">${D.damageTypes.map(t=>opt(t.id,t.name,t.id===st.damageType)).join("")}</select>`)}
@@ -653,7 +676,7 @@ function hitPanelHtml(ch){
   if (as.worn){
     const w=as.worn;
     h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
-      ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll",`max="${w.protMax||""}"`) : ""}</div>`;
+      ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll") : ""}</div>`;
   } else {
     h+=`<div class="hitrow"><span class="hitnote">No body armor worn${skin?"":", so nothing answers the hit"}. Armor goes on under Loadout.</span></div>`;
   }
@@ -666,9 +689,7 @@ function hitPanelHtml(ch){
       `<label class="check"><input type="checkbox" data-hitnat="${esc(c.id)}" ${c.active?"checked":""}> ${esc(c.name)} (${
         c.amount?`+${c.amount}`:`answers ${esc(c.resAgainst.map(titleCase).join(", "))}`}, ${esc(c.while)})</label>`).join("")}</div>`;
 
-  if (!r.ok){
-    h+=`<p class="hitwhy">${esc(r.why)}</p>`;
-  } else {
+  if (r.ok){
     const lines=[];
     if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
     if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}.${skin?"":" Nothing answers the hit."}`);
@@ -704,9 +725,7 @@ function hitPanelHtml(ch){
             d.location?` (${esc(locName(r.location))})`:""}</label>`; }).join("") + `</div>`;
     }
   }
-  h+=`<div class="hitrow"><button class="btn primary" data-hitapply="1" ${r.ok?"":"disabled"}>Apply hit</button>
-    <button class="btn" data-hitcancel="1">Cancel</button></div></div>`;
-  return h;
+  return h + `</div>`;
 }
 
 // ── Recovery and the Turn Reset (combat plan Session 4, Decision 100) ──
@@ -837,12 +856,19 @@ function actPanelHtml(ch){
        : st.kind==="wear" ? wearPanelHtml(ch, st) : "";
 }
 
+// The Health Level track: on Trackers, and atop the Take a hit modal.
+function hlTrackHtml(ch){
+  const hpPer=Engine.health(ch).hpPer;
+  return `<div class="hl-track">` + hlCells(ch).map(c=>
+    `<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`
+  ).join("") + `</div>`;
+}
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
-  if (S.hit && S.hit.owner!==ch) S.hit=null;     // a different character was loaded
-  if (S.act && S.act.owner!==ch) S.act=null;
-  const open = !!(S.hit || S.act);
+  if (S.act && S.act.owner!==ch) S.act=null;     // a different character was loaded
+  // Take a hit is a modal (W6), so only a recovery panel holds the page.
+  const open = !!S.act;
   const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
@@ -866,10 +892,7 @@ function renderShTrackers(){
       <button class="btn sm" data-actopen="rest" ${open?"disabled":""}>Rest</button>
       <button class="btn sm" data-actopen="focused" ${open?"disabled":""}>Focused Healing</button>
       <button class="btn sm" data-actopen="nanomed" ${open?"disabled":""}>Nanomed Kit</button></div></div>`;
-  h += `<div class="hl-track">` + hlCells(ch).map(c=>
-    `<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hp.hpPer}</span></div>`
-  ).join("") + `</div>`;
-  if (S.hit) h += hitPanelHtml(ch);
+  h += hlTrackHtml(ch);
   if (S.act && S.act.kind!=="wear") h += actPanelHtml(ch);
 
   // Armor: the worn body piece's Integrity, and the after-fight wear roll.
@@ -1267,56 +1290,66 @@ function spellMatches(g){
   return (D.spells||[]).filter(s=>(!tier || s.tier===tier) && (!dom || s.domain===dom) &&
     (!k || [s.name, s.glyph, s.effect, (s.tags||[]).join(" ")].join(" ").toLowerCase().includes(k)));
 }
-// The two places the picker opens. `button` is each result's action; `status`
-// is the line under the title that keeps the count and the cap in view.
+// The two places the picker opens. `action` is each result's button, and,
+// when that button can't act, the reason, which the row shows as text (W24:
+// a tooltip never reaches a touch screen). `status` is the line under the
+// title that keeps the count and the cap in view.
 const spellPickMode = {
   sheet: {
     title: "Add from the book",
     status: ch => { const p = Engine.grimoire(ch).pool;
       return p ? `Your pool is ${p.rank}d10 (${esc(p.discipline)} ${p.rank}). You can learn any spell; one marked Beyond your pool needs an exploding 10.` : ""; },
-    button: (ch, s, g) => {
+    action: (ch, s, g) => {
       // A book spell you've already typed as your own links that row, not a copy.
       const yours = g.lines.find(l=>l.custom && l.match && l.match.id===s.id);
-      if (yours) return `<button class="btn sm" data-spelllink="${yours.index}" title="You typed this one in yourself. Link that row to the book, keeping your notes">Link yours</button>`;
-      const held = (g.held||[]).includes(s.id);
-      return `<button class="btn sm" data-spelladd="${esc(s.id)}" ${held?"disabled":""}>${held?"Known":"Add"}</button>`;
+      if (yours) return { btn: `<button class="btn sm" data-spelllink="${yours.index}" title="You typed this one in yourself. Link that row to the book, keeping your notes">Link yours</button>` };
+      if ((g.held||[]).includes(s.id)) return { btn: `<button class="btn sm" data-spelladd="${esc(s.id)}" disabled>Known</button>`, why: "Already in your Grimoire." };
+      return { btn: `<button class="btn sm" data-spelladd="${esc(s.id)}">Add</button>` };
     }
   },
   wizard: {
     title: "Choose starting spells",
     status: ch => { const st = Engine.startingSpells(ch); if (!st) return "";
       return `Chosen <b>${st.have}</b>${st.count==null?"":` of <b>${st.count}</b>`} · TH up to ${st.cap} (${esc(st.discipline)} ${st.cap})`; },
-    button: (ch, s, g) => {
+    action: (ch, s, g) => {
       const mine = g.lines.find(l=>!l.custom && l.id===s.id);
-      if (mine) return `<button class="btn sm" data-startrm="${mine.index}" title="Take it back off your list">Remove</button>`;
+      if (mine) return { btn: `<button class="btn sm" data-startrm="${mine.index}" title="Take it back off your list">Remove</button>` };
       const c = Engine.canAddStartingSpell(ch, s.id);
       const label = c.ok ? "Choose" : c.needs ? `Needs ${esc(Engine.startingSpells(ch).discipline)} ${c.needs}` : "Choose";
-      return `<button class="btn sm" data-startadd="${esc(s.id)}" ${c.ok?"":"disabled"} title="${esc(c.ok?"":c.why)}">${label}</button>`;
+      return { btn: `<button class="btn sm" data-startadd="${esc(s.id)}" ${c.ok?"":"disabled"}>${label}</button>`, why: c.ok ? "" : c.why };
     }
   }
 };
+// W23: the whole row acts, so a row whose button can't is dimmed (`off`)
+// rather than just its button.
 function spellResultsHtml(ch, mode){
   const g = Engine.grimoire(ch), M = spellPickMode[mode], list = spellMatches(g), pool = g.pool;
   const tierName = id => ((D.spellTiers||[]).find(t=>t.id===id)||{name:id}).name;
   const domName = id => ((D.domains||[]).find(d=>d.id===id)||{name:id}).name;
   if (!list.length) return `<p class="step-note">No spell in the book matches that.</p>`;
-  return `<table class="ref spell-results"><tbody>` + list.map(s=>`<tr>
-      <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(s.glyph||"")}</div></td>
+  return `<table class="ref spell-results"><tbody>` + list.map(s=>{ const a = M.action(ch, s, g);
+    return `<tr class="${a.why?"off":"pickrow"}">
+      <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(s.glyph||"")}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
       <td class="num">${esc(tnth(s))}${mode==="sheet" && pool && typeof s.th==="number" && s.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
       <td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
-      <td>${M.button(ch, s, g)}</td></tr>`).join("") + `</tbody></table>`;
+      <td>${a.btn}</td></tr>`; }).join("") + `</tbody></table>`;
 }
-// The modal's body: filters, the status line, and the results.
+// The modal's body: filters and the status line, which stay in view while the
+// results scroll (W25), then the results.
 function spellPickerHtml(ch, mode){
   const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"" });
   const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
-  return `<div class="spell-pick"><div class="hitrow">
+  return `<div class="spell-pick"><div class="pick-head"><div class="hitrow">
       <input type="search" data-spellq value="${esc(st.q)}" placeholder="Search name, Glyph, effect" aria-label="Search the book">
       <select data-spellf="tier" aria-label="Tier">${opt("","Every tier",!st.tier)}${(D.spellTiers||[]).map(t=>opt(t.id,t.name,st.tier===t.id)).join("")}</select>
       <select data-spellf="domain" aria-label="Domain">${opt("","Every Domain",!st.domain)}${(D.domains||[]).map(d=>opt(d.id,d.name,st.domain===d.id)).join("")}</select>
-    </div><p class="pick-status" data-spellstatus aria-live="polite">${spellPickMode[mode].status(ch)}</p>
+    </div><p class="pick-status" data-spellstatus aria-live="polite">${spellPickMode[mode].status(ch)}</p></div>
     <div data-spellresults>${spellResultsHtml(ch, mode)}</div></div>`;
 }
+// W26 (Ken's pick: a Done button, not staged picks). Every pick is saved as
+// it's made, so the footer says so and closes.
+const pickerFootHtml = () =>
+  `<span class="modal-note">Each pick is kept as you make it.</span><button class="btn primary" data-modalclose>Done</button>`;
 function grimoireHtml(ch, p){
   const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
   const book = g.lines.filter(l=>!l.custom), own = g.lines.filter(l=>l.custom);
