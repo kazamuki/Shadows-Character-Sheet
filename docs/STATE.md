@@ -128,9 +128,9 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**The live site is `v0.24.0`.** S2 (#58) moves no version. The TAG branch
-(app 0.24.1, schema 0.12) stacks on it: merge #58 first, then tag `v0.24.1`
-after the TAG PR merges, per `CLAUDE.md`.
+**The live site is `v0.24.0`.** S2 (#58) is merged and moved no version.
+The TAG change (app 0.24.1, schema 0.12) is in review; once it merges, release
+`v0.24.1` per `CLAUDE.md`.
 
 **Next, all unblocked:** S3 (propose first), S5 or S6. Ken alone: F9, F12,
 F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode), W30 (Reload
