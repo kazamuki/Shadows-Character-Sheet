@@ -1991,7 +1991,7 @@ No cascade logic to maintain — it falls out of the architecture.
       directly (P7). App **0.12.0 → 0.13.0** (minor, new capability).
       Character schema unchanged (0.8 already carried every field).
       (Ken + Claude, 2026-09-22)
-    → **Superseded in part by Decision 100** — the bare "Restore a Massive level" button folded into Focused Healing.
+    → **Superseded in part by Decisions 100 and 112** — the bare "Restore a Massive level" button folded into Focused Healing (100); Take a hit opens as a modal, not a panel on Trackers, and Apply waits with its reason instead of alerting (112).
 
 100. **(Loadout & recovery — combat plan Session 4, data + engine + app)**
     **Loadout writes weapons and armor from the catalog, a weapon line is
@@ -2546,6 +2546,63 @@ No cascade logic to maintain — it falls out of the architecture.
     Game data **0.13 → 0.14** (new choices at creation, Decision 68).
     Character schema unchanged at **0.9**. App **0.18.0 → 0.19.0**. (Ken +
     Claude, 2026-09-23)
+
+112. **(Modals, the skill line and Trackers' layout — wishlist pass, app)**
+    **Three wishlist passes ship as one UI decision: the modal pass (W6,
+    W23–W26), the skill line (W20, W21) and Trackers' layout (W1, W10).**
+    Ken picked them on 2026-09-23. None touches rules, data or the character
+    file. **Replaces Decision 99 in part** (its "Take a hit panel on
+    Trackers"), and extends Decision 111's modal.
+    - **The modal gets a footer** (`openModal({ foot })`) that stays put
+      while the body scrolls; the head does too. Any `[data-modalclose]` in
+      it closes, and `bind` gets the body and the footer. The dialog is
+      centred again: the stylesheet's `*` reset zeroed the margins a native
+      `<dialog>` centres with, so the 0.19 picker opened pinned top-left.
+    - **W6: Take a hit is a modal.** Its body leads with HP and the Health
+      Level track, then the form and what the hit would do. Apply is in the
+      footer and stays disabled while anything is pending, with the reason
+      next to it (`hitPending`: no damage yet, a PROT die not entered, a
+      Shock Check or a check at zero not marked). Those were alerts on
+      Apply. Cancel, ×, Esc and the backdrop drop the form. Each change
+      redraws the modal and puts focus back where it was. The two number
+      fields redraw as they're typed, not on `change`, which fires on blur:
+      a redraw then would replace Apply between the press and the click.
+      They're `inputmode="numeric"` text, like the wizard's roll fields, so
+      the caret goes back to the end. `openHitModal()` is callable from
+      anywhere, which is what W2/W3's HP popover wants.
+    - **W23–W26: the spell picker.** A click anywhere on a row is its
+      button's click; the button stays for the keyboard and screen readers,
+      and a field or link keeps its own click. A row whose button can't act
+      is dimmed and says why in the row ("Already in your Grimoire.", the
+      engine's reason in the wizard), since a tooltip never reaches a touch
+      screen. The search, filters and status line are sticky over the
+      results. The footer has **Done** (Ken's pick, (a) not staged picks)
+      and says each pick is kept as it's made.
+    - **W20/W21: a skill's stats are icons with the character's numbers.**
+      `skillStatsHtml` draws "REF 5 · COOL +1 syn": the primary adds its
+      score, the synergy its modifier (030). The wizard puts it on the
+      skill's name line, above the description. The sheet's breakdown uses
+      it in place of the bare text, which was the same line. Violet and
+      magenta match the print badges (Decision 94). The synergy is dimmed on
+      an untrained skill, whose check leaves it out.
+    - **W1/W10: Trackers reads in two columns from 1000px.** The body
+      (Damage, recovery, Armor, Pain, Conditions) down the left; Sanity,
+      LUCK, the archetype's trackers and Çredits down the right; Manual
+      Adjustments full width below. One column on a phone, in the same order.
+      The Health Level track moved into the Damage card, grouped into the
+      Pain Level bands the print sheet draws (`pPainBandFor`, from data), and
+      the band you're in is lit. The same track tops the hit modal. The
+      damage stepper has its own row, so it wraps as one group.
+    - **Pinned:** five smoke tests (the hit modal, the at-zero check
+      pending in the footer, the picker's row click, disabled row, sticky
+      head and Done, the skill line in the wizard, and the Trackers columns
+      and bands). Mutation-tested (13 mutants): no row click, no dimmed row,
+      no Done, no sticky head, the at-zero check not pending, numbers
+      redrawing on `change`, the field losing focus, the old skill line,
+      the synergy never dimmed, bands off by one, the wrong band lit, no
+      grid, and the track outside the card. Each fails a test.
+    App **0.19.1 → 0.20.0**. Game data and character schema unchanged.
+    (Ken + Claude, 2026-09-23)
 
 ## 5. Open Flags
 

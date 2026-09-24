@@ -1011,3 +1011,24 @@ test("W20/W21: a skill's line shows its stats as icons with the character's own 
   assert.equal(stats().querySelector(".skstat.syn.off"), null, "training the skill left its synergy dimmed");
   assert.deepEqual(app.errors, []);
 });
+
+test("W1/W10: Trackers reads in two columns, and the Health Levels sit in Damage, banded by the Pain Level they put you at", () => {
+  const ch = lockedCharacter();
+  const hp = Engine.health(ch);
+  ch.trackers.damage = hp.hpPer * 2;                                  // two HL lost: Pain 1
+  const app = openSheet(ch, "trackers");
+  const cols = app.$$("#main .trk-grid > .trk-col");
+  assert.equal(cols.length, 2, "Trackers isn't split into two columns");
+  const card = h => app.$$("#main .trk").find(t => (t.querySelector("h4") || {}).textContent === h);
+  assert.ok(cols[0].contains(card("Damage")) && cols[1].contains(card("Sanity")), "Damage and Sanity aren't in their own columns");
+  const track = card("Damage").querySelector(".hl-track");
+  assert.ok(track, "the Health Levels aren't inside the Damage card");
+  const levels = D.resources.healthLevels.painLevels;
+  const want = i => levels.reduce((l, p) => i >= p.hlLostThreshold ? p.level : l, 0);
+  const got = [...track.querySelectorAll(".hl-band")].flatMap(b =>
+    [...b.querySelectorAll(".hl")].map(() => Number(b.className.match(/pl-(\d)/)[1])));
+  assert.deepEqual(got, Array.from({ length: hp.levels }, (_, i) => want(i)), "a box is in the wrong Pain Level band");
+  const here = track.querySelector(".hl-band.here");
+  assert.ok(here && here.classList.contains(`pl-${Engine.painState(activeChar(app)).fromHealth}`), "the band you're in isn't the lit one");
+  assert.deepEqual(app.errors, []);
+});
