@@ -136,15 +136,18 @@ function modalEl(){
   }
   return el;
 }
-function openModal({ title, html, bind, returnTo, onClose }){
+// The head and the footer stay put while the body scrolls. `foot` is the
+// footer's HTML; any [data-modalclose] in it closes, and `bind` gets both
+// halves, since a footer's buttons can depend on the body's inputs.
+function openModal({ title, html, foot, bind, returnTo, onClose }){
   const el=modalEl();
   modalState={ opener: document.activeElement, returnTo, onClose };
   el.innerHTML=`<div class="modal-inner"><div class="modal-head"><h2 id="modal-title">${esc(title)}</h2>
     <button class="modal-x" data-modalclose aria-label="Close">×</button></div>
-    <div class="modal-body">${html}</div></div>`;
-  el.querySelector("[data-modalclose]").onclick=closeModal;
+    <div class="modal-body">${html}</div>${foot!=null?`<div class="modal-foot">${foot}</div>`:""}</div>`;
+  el.querySelectorAll("[data-modalclose]").forEach(b=>b.onclick=closeModal);
   if (!el.open){ if (typeof el.showModal==="function") el.showModal(); else el.setAttribute("open",""); }
-  if (bind) bind(el.querySelector(".modal-body"));
+  if (bind) bind(el.querySelector(".modal-body"), el.querySelector(".modal-foot"));
   const first=el.querySelector(".modal-body [autofocus], .modal-body input, .modal-body select");
   if (first) first.focus();
 }

@@ -501,7 +501,8 @@ function setHit(app, key, value) {
   const el = app.$(`[data-hit="${key}"]`);
   assert.ok(el, `the hit form has no ${key} control`);
   if (el.type === "checkbox") el.checked = value; else el.value = value;
-  el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  // A number redraws the modal as it is typed (W6); the rest on change.
+  el.dispatchEvent(new app.window.Event(el.getAttribute("inputmode") === "numeric" ? "input" : "change", { bubbles: true }));
 }
 const activeChar = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch;
 
@@ -535,8 +536,10 @@ test("Take a hit: Massive with no armor removes levels, asks at zero, and adds D
   setHit(app, "damage", "60");
   assert.ok(app.$("[data-hit=atZero]"), "no check at zero was asked for");
   assert.equal(app.$("[data-hit=shock]"), null, "a hit to zero skips the Shock Check");
+  assert.ok(app.$("[data-hitapply]").disabled, "Apply is live before the check is answered");
+  assert.match(app.$("#modal .modal-foot").textContent, /Mark the check at zero/, "the footer doesn't say what's missing");
   app.click("[data-hitapply]");
-  assert.equal(alerts.length, 1, "Apply went through without the check being answered");
+  assert.equal(activeChar(app).trackers.massiveLevels || 0, 0, "Apply went through without the check being answered");
   setHit(app, "atZero", "fail");
   app.click("[data-hitapply]");
   const got = activeChar(app);
@@ -564,6 +567,30 @@ test("Take a hit: an Electric hit says its RES rule is unsettled; a Blade hit do
   assert.match(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
   setHit(app, "damageType", "blade");
   assert.doesNotMatch(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Take a hit opens as a modal: HP and the track up top, Apply says what it waits for, Esc drops the form", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  app.click("[data-hitopen]");
+  assert.ok(app.$("#modal").open, "Take a hit didn't open as a modal");
+  assert.ok(app.$("#modal [data-hitpanel]"), "the hit form isn't in the modal");
+  assert.equal(app.$("#main [data-hitpanel]"), null, "the hit form also opened on the page");
+  assert.match(app.$("#modal .hit-now").textContent, /\d+ \/ \d+ HP/, "the modal doesn't show HP");
+  assert.ok(app.$("#modal .hl-track .hl"), "the modal doesn't show the Health Level track");
+  assert.ok(app.$("#modal .modal-foot [data-hitapply]").disabled, "Apply is live with no damage entered");
+  assert.ok(app.$("#modal .modal-foot .hitwhy"), "the footer doesn't say why Apply is off");
+  setHit(app, "damage", "12");
+  const dmg = app.$('#modal [data-hit="damage"]');
+  assert.equal(app.window.document.activeElement, dmg, "typing damage lost the field's focus");
+  assert.equal(dmg.selectionStart, 2, "the caret didn't go back to the end of what was typed");
+  assert.equal(app.$("#modal .modal-foot [data-hitapply]").disabled, false, "Apply stayed off with a valid hit");
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.equal(app.$("#modal").open, false, "Esc didn't close the hit modal");
+  assert.equal(activeChar(app).trackers.damage, 0, "closing the modal applied the hit");
+  assert.equal(app.window.document.activeElement, app.$("[data-hitopen]"), "focus didn't go back to Take a hit");
+  app.click("[data-hitopen]");
+  assert.equal(app.$('#modal [data-hit="damage"]').value, "", "a cancelled hit's form came back");
   assert.deepEqual(app.errors, []);
 });
 
@@ -785,6 +812,41 @@ test("Grimoire: the picker offers to link a spell you typed yourself instead of 
   assert.equal(rows.length, 1, "linking added a row");
   assert.equal(rows[0].spellId, "kindle");
   assert.equal(rows[0].notes, "lights the stove");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── The picker's modal pass (W23–W26) ────────────────────────────────
+const clickIn = (app, el) => el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+
+test("picker: a click anywhere on a row picks it, a held row is dimmed and says why, and Done closes", () => {
+  const ch = lockedCharacter();
+  ch.panelData.grimoire = [{ spellId: "zap", stage: "known", notes: "" }];
+  const app = openSheet(ch, "loadout");
+  app.click('[data-spellpickopen="sheet"]');
+  // W25: the search and the status line sit in the sticky head, above the results.
+  assert.ok(app.$("#modal .pick-head [data-spellq]"), "the search isn't in the picker's sticky head");
+  assert.ok(app.$("#modal .pick-head [data-spellstatus]"), "the status line isn't in the picker's sticky head");
+  search(app, "firebolt");
+  const row = app.$('#modal [data-spelladd="firebolt"]').closest("tr");
+  assert.ok(row.classList.contains("pickrow"), "an open row isn't marked as clickable");
+  clickIn(app, row.querySelector("td"));                                // the name cell, not the button
+  assert.deepEqual(activeChar(app).panelData.grimoire.map(r => r.spellId), ["zap", "firebolt"], "a row click didn't add");
+  // W24: a row that can't act looks it, and says why in the row, not a tooltip.
+  search(app, "zap");
+  const held = app.$('#modal [data-spelladd="zap"]').closest("tr");
+  assert.ok(held.classList.contains("off"), "a Known row isn't dimmed");
+  assert.match(held.querySelector(".why").textContent, /Already in your Grimoire/);
+  clickIn(app, held.querySelector("td"));
+  assert.equal(activeChar(app).panelData.grimoire.length, 2, "a click on a Known row did something");
+  // A click in the search box is the search box's, never a row's.
+  clickIn(app, app.$("#modal [data-spellq]"));
+  assert.equal(activeChar(app).panelData.grimoire.length, 2);
+  // W26: Done closes and hands focus back to the button that opened it.
+  const done = app.$$("#modal .modal-foot button").find(b => /Done/.test(b.textContent));
+  assert.ok(done, "no Done button in the footer");
+  clickIn(app, done);
+  assert.equal(app.$("#modal").open, false, "Done didn't close the picker");
+  assert.equal(app.window.document.activeElement, app.$('[data-spellpickopen="sheet"]'), "focus didn't go back to the opener");
   assert.deepEqual(app.errors, []);
 });
 

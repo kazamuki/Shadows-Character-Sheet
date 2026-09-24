@@ -215,14 +215,21 @@ function linkSpellRow(ch, i){
 function openSpellPicker(mode){
   const ch = S.ch, M = spellPickMode[mode];
   if (!ch || !M) return;
-  openModal({ title: M.title, html: spellPickerHtml(ch, mode), returnTo: `[data-spellpickopen="${mode}"]`,
+  openModal({ title: M.title, html: spellPickerHtml(ch, mode), foot: pickerFootHtml(), returnTo: `[data-spellpickopen="${mode}"]`,
     bind: body => {
       const results = body.querySelector("[data-spellresults]"), status = body.querySelector("[data-spellstatus]");
       const refresh = () => { results.innerHTML = spellResultsHtml(S.ch, mode); status.innerHTML = M.status(S.ch); };
       body.querySelector("[data-spellq]").oninput = e => { S.spellPick.q = e.target.value; refresh(); };
       body.querySelectorAll("[data-spellf]").forEach(sel=>sel.onchange=()=>{ S.spellPick[sel.dataset.spellf] = sel.value; refresh(); });
+      // W23: a click anywhere on a row is its button's click. The button stays
+      // for the keyboard and a screen reader; a field or a link keeps its own.
       results.onclick = e => {
-        const b = e.target.closest("button"); if (!b || b.disabled) return;
+        let b = e.target.closest("button");
+        if (!b){
+          if (e.target.closest("input, select, textarea, a, label")) return;
+          const tr = e.target.closest("tr"); b = tr && tr.querySelector("button");
+        }
+        if (!b || b.disabled) return;
         const d = b.dataset;
         if (d.spelllink!=null) linkSpellRow(ch, Number(d.spelllink));
         else if (d.spelladd) commit("grimoire", `Grimoire: ${spellName(d.spelladd)}`, ()=>{ Engine.addSpell(ch, d.spelladd); });
@@ -232,6 +239,56 @@ function openSpellPicker(mode){
         refresh();
       };
     } });
+}
+
+// ── Take a hit (Decision 99; a modal since W6) ───────────────────────
+// The form lives in S.hit until Apply, which is one commit(), so the hit, its
+// armor wear and its Conditions undo together. Each change redraws the modal
+// and puts focus back on the control that changed; Cancel, ×, Esc and the
+// backdrop all drop the form. A number redraws as it's typed, not on
+// `change`, which fires on blur: a redraw then would replace Apply between
+// the press and the click that was meant for it.
+function openHitModal(){
+  const ch=S.ch; if (!ch) return;
+  if (S.act){ S.act=null; renderMain(); }
+  S.hit=Object.assign(newHitForm(), { owner: ch });
+  const p=hitModalParts(ch);
+  openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: "[data-hitopen]",
+    onClose: ()=>{ S.hit=null; }, bind: bindHitModal });
+}
+function bindHitModal(body, foot){
+  const ch=S.ch;
+  const redraw = key => {
+    if (!S.hit) return;
+    const p=hitModalParts(ch);
+    body.innerHTML=p.body; foot.innerHTML=p.foot;
+    bindHitModal(body, foot);
+    const again = key && body.querySelector(`[${key}]`);
+    if (again){ again.focus(); try{ again.setSelectionRange(again.value.length, again.value.length); }catch(e){} }
+  };
+  const sel = (el, attr) => `${attr}="${el.getAttribute(attr)}"`;
+  body.querySelectorAll("[data-hit]").forEach(el=>el[el.getAttribute("inputmode")==="numeric"?"oninput":"onchange"]=()=>{
+    if (!S.hit) return;
+    if (el.getAttribute("inputmode")==="numeric") el.value=el.value.replace(/[^0-9]/g,"");
+    S.hit[el.dataset.hit] = el.type==="checkbox" ? el.checked : el.value;
+    redraw(sel(el, "data-hit"));
+  });
+  body.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.conds[el.dataset.hitcond]=el.checked; redraw(sel(el, "data-hitcond"));
+  });
+  body.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; redraw(sel(el, "data-hitnat"));
+  });
+  foot.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=closeModal);
+  foot.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
+    const st=S.hit; if (!st) return;
+    const input=hitInput(st), r=Engine.resolveHit(ch, input);
+    if (hitPending(st, r)) return;          // the footer already says why
+    const choices=hitChoices(st, r);
+    S.hit=null;
+    commit("damage", hitLabel(r), ()=>{ Engine.applyHit(ch, input, choices); });
+    closeModal();
+  });
 }
 
 // ── Phase 3: sheet event wiring ─────────────────────────────────────
@@ -288,31 +345,7 @@ function bindSheet(){
   const ds=main.querySelector("[data-dmgset]");
   if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
   main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
-  // Take a hit (Decision 99). The form lives in S.hit until Apply, which is
-  // one commit() — so the hit, its armor wear and its Conditions undo together.
-  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=()=>{ S.act=null; S.hit=Object.assign(newHitForm(), { owner: ch }); renderMain(); });
-  main.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=()=>{ S.hit=null; renderMain(); });
-  main.querySelectorAll("[data-hit]").forEach(el=>el.onchange=()=>{
-    if (!S.hit) return;
-    S.hit[el.dataset.hit] = el.type==="checkbox" ? el.checked : el.value;
-    renderMain();
-  });
-  main.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{
-    if (!S.hit) return; S.hit.conds[el.dataset.hitcond]=el.checked; renderMain();
-  });
-  main.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
-    if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; renderMain();
-  });
-  main.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
-    const st=S.hit; if (!st) return;
-    const input=hitInput(st), r=Engine.resolveHit(ch, input);
-    if (!r.ok){ alert(r.why); return; }
-    if (r.prompts.shock && !st.shock){ alert("Mark the Shock Check as passed or failed first."); return; }
-    if (r.prompts.atZero && !st.atZero){ alert("Mark the check at zero as passed or failed first."); return; }
-    const choices=hitChoices(st, r);
-    S.hit=null;
-    commit("damage", hitLabel(r), ()=>{ Engine.applyHit(ch, input, choices); });
-  });
+  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=openHitModal);
 
   // Turn Reset, Rest, Focused Healing, After the fight (Decision 100): one
   // form in S.act, one commit() on Apply, the same as a hit.

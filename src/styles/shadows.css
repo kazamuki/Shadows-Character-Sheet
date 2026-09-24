@@ -290,13 +290,18 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hitpanel h4{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; margin-bottom:8px}
 .hitrow{display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin:8px 0}
 .hitrow label.field{margin:0; min-width:110px}
-.hitrow input[type=number]{width:84px; text-align:center}
+.hitrow input[type=number], .hitrow input[inputmode=numeric]{width:84px; text-align:center}
 .hitrow label.check{display:flex; align-items:center; gap:6px; font-size:.82rem; padding-bottom:8px}
 .hitarmor{font-family:var(--mono); font-size:.76rem; color:var(--cyan); padding-bottom:8px}
 .hitnote{font-size:.76rem; color:var(--dim); margin:4px 0}
 .hitwhy{font-size:.82rem; color:var(--gold); margin:10px 0}
 .hitresult{border-left:2px solid var(--violet); padding:4px 0 4px 12px; margin:10px 0; font-size:.86rem}
 .hitresult p{margin:3px 0}
+/* W6: where the character stands, atop the Take a hit modal */
+.hit-now{display:flex; align-items:baseline; gap:12px; margin:6px 0 0}
+.hit-now .big{font-family:var(--mono); font-size:1.25rem; color:var(--cyan)}
+.hit-now .big.hp{color:var(--green)} .hit-now .big.bad{color:var(--magenta)}
+.hit-now .sub{font-size:.8rem; color:var(--dim)}
 .hitcheck{border:1px solid var(--frame); border-radius:6px; padding:9px 12px; margin:8px 0; font-size:.84rem}
 .hitcheck.bad{border-color:var(--magenta)}
 .hitcheck b{font-family:var(--display); letter-spacing:.04em}
@@ -481,6 +486,16 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .pick .cost.over{color:var(--magenta); border-color:var(--magenta)}
 .pick-status{margin:8px 0 10px; font-size:.84rem; color:var(--dim)}
 .pick-status b{color:var(--text)}
+/* W25: the search, filters and status line stay in view over the results. */
+.pick-head{position:sticky; top:0; z-index:1; background:var(--panel); padding-top:4px; border-bottom:1px solid var(--frame); margin-bottom:6px}
+.pick-head .pick-status{margin-bottom:8px}
+/* W23/W24: a row is its button. One that can't act is dimmed and says why. */
+.spell-results tr.pickrow{cursor:pointer}
+.spell-results tr.pickrow:hover td{background:rgba(113,43,140,.12)}
+.spell-results tr.off td{opacity:.55}
+.spell-results tr.off td:first-child{opacity:1}
+.spell-results tr.off td:first-child > b, .spell-results tr.off td:first-child > .sub{opacity:.55}
+.spell-results .why{font-size:.74rem; color:var(--gold); margin-top:2px}
 .subsect{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px}
 /* W14: the add palette. Catalog chips are outlined until picked; one you
    already have is greyed out. Active chips on Main open their details. */
@@ -639,16 +654,24 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
    the dialog element itself is a click on the backdrop. */
 .modal{padding:0; border:1px solid var(--frame); border-top:3px solid var(--violet-hi); border-radius:6px;
   background:var(--panel); color:var(--text); width:min(920px, calc(100vw - 32px)); max-height:calc(100vh - 48px);
-  box-shadow:0 12px 48px rgba(5,10,22,.6); animation:modalIn .16s ease-out}
+  box-shadow:0 12px 48px rgba(5,10,22,.6); animation:modalIn .16s ease-out;
+  margin:auto}   /* the * reset zeroes margins, which pinned the dialog top-left */
 .modal:not([open]){display:none}
 .modal::backdrop{background:rgba(5,10,22,.62)}
-.modal-inner{padding:16px 20px 20px; max-height:calc(100vh - 52px); overflow:auto; box-sizing:border-box}
-.modal-head{display:flex; align-items:center; gap:12px; margin-bottom:4px}
+/* The head and the footer stay put; only the body scrolls. */
+.modal-inner{display:flex; flex-direction:column; max-height:calc(100vh - 52px); box-sizing:border-box}
+.modal-head{display:flex; align-items:center; gap:12px; padding:16px 20px 4px}
 .modal-head h2{flex:1; margin:0; font-family:var(--display); font-size:1.2rem; letter-spacing:.04em}
+.modal-body{flex:1; min-height:0; overflow:auto; padding:0 20px 20px}
+.modal-foot{display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:10px;
+  padding:12px 20px; border-top:1px solid var(--frame)}
+.modal-note{flex:1; min-width:180px; font-size:.8rem; color:var(--dim)}
+.modal-note.hitwhy{margin:0; color:var(--gold)}
 .modal-x{background:none; border:0; color:var(--dim); font-size:1.5rem; line-height:1; padding:2px 6px; cursor:pointer}
 .modal-x:hover{color:var(--text)}
 .modal .toast{z-index:1}
 @keyframes modalIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
 @media (max-width:640px){ .modal{width:100vw; max-width:100vw; max-height:100vh; height:100vh; border-radius:0; margin:0}
-  .modal-inner{max-height:100vh; padding:14px 16px 20px} }
+  .modal-inner{max-height:100vh; height:100%}
+  .modal-head{padding:14px 16px 4px} .modal-body{padding:0 16px 16px} .modal-foot{padding:10px 16px} }
 @media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} .toast{animation:none} .modal{animation:none} }

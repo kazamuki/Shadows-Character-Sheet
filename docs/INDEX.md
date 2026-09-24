@@ -20,7 +20,7 @@ Generated summaries are one line each and deliberately lossy — they are for
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The shape of the game data or a character file | `SCHEMA.md` §2 and §3 |
 | What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
-| A multi-session plan still in flight — its sessions, open questions (`CQ`_n_) | `plans/` — currently `plans/combat-and-conditions.md` |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_) | `plans/` — none in flight. Both there are closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `docs/log/2026.md` |
