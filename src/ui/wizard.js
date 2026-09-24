@@ -527,6 +527,7 @@ function renderHome(){
       <button class="btn" id="btn-import">Import .shadows.json</button>
       <input type="file" id="file-import" accept=".json,.shadows.json" style="display:none">
     </div>
+    <div class="home-news" id="homenews">${whatsNewHomeHtml()}</div>
     <p class="step-note" style="margin-top:14px">Playing at the table instead? <button class="btn sm" id="btn-print-blank">Print a blank character sheet</button></p>
     </div>`;
   $("btn-new").onclick=()=>{ S={screen:"wizard", ch:Engine.newCharacter(), step:0, maxReached:0, section:"main"}; update(); };

@@ -10,9 +10,23 @@ batch-by-batch board is `docs/log/shipped.md`.
 tag. `tests/docs.test.mjs` fails if no heading here names the current `APP_VERSION`.
 That's what stopped this file at 0.7.0 for eight releases (W18).
 
+**Players read this file.** The app's **What's new** window is generated from every
+section above the `in-app changelog ends here` comment (Decision 123). After editing,
+run `npm run changelog` and commit `src/data/shadows-changelog.js` with it;
+`tests/docs.test.mjs` fails if you forget. Write for someone at the table: no decision
+numbers, audit or wishlist ids, document numbers, or who ruled what. `**bold**`,
+`*emphasis*` and `` `code` `` render; nothing else does.
+
 Four versions move independently — app, game data, character schema, ruleset. The rules
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
+
+## [Unreleased] — app 0.23.0
+
+- **See what's new.** Every update's notes are in the app. Open **What's new** from the
+  home screen, the ⋮ menu on your sheet, or the version in the footer. When the app has
+  updated since your last visit, the home screen tells you, and the new releases open
+  first.
 
 ## v0.22.0 — 2026-09-24
 
@@ -50,7 +64,7 @@ Character schema **0.9** · game data **0.15** · ruleset CRB v4 (in progress).
 - **Read what you might have caught.** Every Aberration in the picker shows its full
   text, in Good, Neutral and Bad, with a search. One you already have is dimmed. **+ Add
   an Aberration** on Trackers uses the same picker.
-- **The magic text matches Scott's finished chapter.** Force's Domain description, how
+- **The magic text matches the finished Magic chapter.** Force's Domain description, how
   Overflow reads past 2x, Dominate Mind's text, and two Aberrations (Animal Ken reads
   MAG, and Beacon works like Monster Magnet).
 - **The AP tag on a spell is explained.** Iron Lance's AP now reads Armor Piercing: it
@@ -169,7 +183,7 @@ Character schema **0.8** · game data **0.11** · ruleset CRB v4 (in progress).
 
 Character schema **0.8** · game data **0.10**.
 
-- **TOL is 1 + INT + BOD + COOL** (Deighton's ruling, was INT/COOL/EMP). Every
+- **TOL is 1 + INT + BOD + COOL** (as the rulebook now has it; it was INT/COOL/EMP). Every
   character's TOL can move, and the Arcanist's most of all.
 - **Natural Armor** (Thick Skin, Shake it Off, Iron Shirt, a Trueborn's waning moon) is
   one number. Take a hit applies it, and the print sheet's Nat column fills.
@@ -196,14 +210,13 @@ Game data **0.9**.
 
 ## v0.13.0 — 2026-09-22
 
-Character schema **0.8** · game data **0.8**. Also carries 0.11.0 and 0.12.0, which were
-never tagged.
+Character schema **0.8** · game data **0.8**. Also carries 0.11.0 and 0.12.0.
 
 - **Take a hit.** Enter the damage, type and your PROT roll. The worn armor answers
   (PROT, RES, AP, Compromised), and the sheet asks for the Shock Check or the check at
   zero when one is due. It adds what follows (Unconscious, Prone, Dying) and undoes as
   one action. Massive damage strips Integrity and removes Health Levels outright.
-- **Conditions** (054's table plus Dying): add them on Main or Trackers. Agonized raises
+- **Conditions** (the rulebook's table, plus Dying): add them on Main or Trackers. Agonized raises
   Pain, the flat penalties reach every Skill Check total, the helpless ones show a
   banner, and Dying counts Death Marks.
 - Design-team rulings: a new skill after creation costs 25 IP, stats past 10 follow the
@@ -217,11 +230,13 @@ never tagged.
 Character schema **0.7** · game data **0.7**. Also carries 0.10.0.
 
 - **Light theme** (0.10.0): a toggle in the header, remembered per browser.
-- **The catalog arrives in the data**: 54 weapons, 9 ammo types, 11 arrowheads, 37 armor
+- **The catalog arrives**: 54 weapons, 9 ammo types, 11 arrowheads, 37 armor
   pieces. **Magic's shared half** arrives too: 96 Known spells across five Domains, and
   the Spellcraft rules.
 - The Arcanist's Rupture works as the CRB says: it spends TOL by its degree. Exhausted
   is what you are at 0 TOL, not a second pool. The old Exhaustion tracker is gone.
+
+<!-- in-app changelog ends here -->
 
 ## v0.9.0 — 2026-09-07
 

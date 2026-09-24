@@ -261,3 +261,18 @@ test("a superseded decision says so in SCHEMA and in INDEX, the same way", () =>
     assert.ok(!(ledger.has(n) && !ledger.get(n).part), `the load-bearing table cites Decision ${n}, which is wholly superseded`);
   }
 });
+
+test("the in-app release notes are generated from the current CHANGELOG.md (Decision 123)", async () => {
+  // The app can't read CHANGELOG.md from file://, so What's new reads a
+  // generated copy. An edit to the markdown without `npm run changelog`
+  // would leave players reading last release's notes.
+  const { changelogScript } = await import("../tools/changelog.mjs");
+  const want = changelogScript(read("CHANGELOG.md"));
+  const have = read("src/data/shadows-changelog.js").replace(/\r\n?/g, "\n");
+  assert.equal(have, want, "src/data/shadows-changelog.js is stale — run `npm run changelog` and commit it");
+
+  // And the current version is in them, released or not.
+  const app = /const APP_VERSION = "([\d.]+)"/.exec(read("src/ui/app.js"))[1];
+  assert.match(want, new RegExp(`"version": "${app.replace(/\./g, "\.")}"`),
+    `What's new has no section for app ${app}`);
+});
