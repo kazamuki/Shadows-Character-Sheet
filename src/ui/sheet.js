@@ -170,8 +170,8 @@ function groupedStatBlockHtml(ch){
 function hlMiniHtml(ch){
   const hp=Engine.health(ch);
   if (hp.levels<=0 || hp.hpPer<=0) return "";
-  return `<div class="hl-mini" aria-hidden="true">` + hlCells(ch).map(c=>
-    `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
+  return `<div class="hl-mini" aria-hidden="true">` + hlCells(ch).map((c,i)=>
+    `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
   ).join("") + `</div>`;
 }
 
@@ -193,8 +193,8 @@ function sheetVitalsBar(ch){
         san=Engine.sanState(ch), sf=Engine.sfr(ch), ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
   const pill=(cls,ui,k,v)=>`<div class="vpill ${cls}">${ui?`<span class="vico">${uiIcon(ui)}</span>`:""}<span class="vtext"><span class="vk">${k}</span><span class="vv">${v}</span></span></div>`;
   let h=`<div class="vbar" aria-label="Vitals">`;
-  h+=pill(pain.down?"hp danger":"hp","health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`);
-  h+=pill(pain.level?"danger":"","pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"));
+  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`);
+  h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"));
   const cs=Engine.conditionState(ch);
   if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`);
   h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`);
@@ -294,9 +294,9 @@ function renderShMain(){
   const cond = (cls,name,uiName,big,meta,meter,seg)=>`<div class="cond ${cls}"><div class="corner">${uiIcon(uiName)}</div>
     <div class="lab">${name}</div><div class="big">${big}</div>${meta?`<div class="meta">${meta}</div>`:""}${seg?seg:(meter!=null?`<div class="meter"><i style="width:${meter}%"></i></div>`:"")}</div>`;
   h += `<div class="cond-grid">`;
-  h += cond(`hp ${pain.down?"danger":""}`,"Health","health",
+  h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
     `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch));
-  h += cond(`${pain.level?"danger":""}`,"Pain","pain",
+  h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
     pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null);
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
     `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max));
@@ -861,7 +861,7 @@ function hlTrackHtml(ch){
   return `<div class="hl-track">` + bands.map(b=>{
     const at = b.level===pPainBandFor(here).level;
     return `<div class="hl-band pl-${b.level}${at?" here":""}"><span class="hl-band-k">Pain ${b.level}</span><div class="hl-band-cells">` +
-      b.cells.map(([c])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
+      b.cells.map(([c,i])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
       `</div></div>`; }).join("") + `</div>`;
 }
 function renderShTrackers(){
@@ -882,7 +882,7 @@ function renderShTrackers(){
   // Damage. The headline is HP left, so the stepper says Heal and Hurt
   // rather than signs on the damage total it edits (W11).
   h += `<div class="trk"><h4>Damage</h4>
-    <span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
+    <span class="big ${pain.down?"bad":"hp"}${landedCls("hp")}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
     <div class="trk-row">
     <button class="btn sm" data-dmg="-5" ${ch.trackers.damage?"":"disabled"}>Heal 5</button>
@@ -913,7 +913,7 @@ function renderShTrackers(){
     : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
     + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
-  h += `<div class="pick ${pain.level?"":"selected"}"><div class="head"><h4>${esc(pain.label)}</h4>
+  h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h4>${esc(pain.label)}</h4>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
     <div class="desc">${esc(pain.description)}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 

@@ -80,11 +80,13 @@ function renderMain(){
   if (S.screen==="home") return renderHome();
   if (S.screen==="sheet"){
     S.section = normSection(S.section);
+    landedNow = S.landed || null; S.landed = null;     // W15: flash once
     const body = SHEET_RENDER[S.section] ? SHEET_RENDER[S.section]() : SHEET_RENDER.main();
     // Main carries its own condition strip; every other tab gets the vitals bar.
     const bar = S.section==="main" ? "" : sheetVitalsBar(S.ch);
     const banner = S.admin ? adminBannerHtml() : "";
     $("main").innerHTML = bar + banner + body;
+    landedNow = null;
     renderDrawer();
     bindMain(); bindSheet();
     return;

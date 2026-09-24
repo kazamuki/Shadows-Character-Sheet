@@ -171,7 +171,7 @@ could render as chips with the penalty inline
 right now" a glance instead of a read, and it's the same component W2's Pain
 popover wants.
 
-**W15 — Let a hit land.** *Claude · 💡*
+~~**W15 — Let a hit land.**~~ *Claude · → Decision 117, app 0.22.0: one flash on what the hit changed, a second beat on Pain*
 Game feel. Applying a hit changes numbers silently. A brief flash on the HP
 pill and the HL boxes that were lost, and a distinct beat when Pain Level
 changes, would make damage feel like damage. Respect
