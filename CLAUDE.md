@@ -48,6 +48,7 @@ maintains the CRB and builds this app.
 npm run verify   # build check + full test suite — run BEFORE and AFTER every change
 npm test         # engine units, CRB conformance, voice enforcement, jsdom smoke, architecture guards
 npm run build    # → dist/shadows-character-sheet.html (the file players get)
+npm run changelog  # CHANGELOG.md → src/data/shadows-changelog.js (the app's What's new)
 ```
 
 `npm install` first — `node_modules` is not committed.
@@ -133,7 +134,9 @@ three went stale. `docs/STATE.md` is the only place they live.
 
 ```
 index.html              Shell. 34 lines.
-src/data/               Game content + icons. Designers edit these.
+src/data/               Game content + icons. Designers edit these. Also the
+                        release notes, generated from CHANGELOG.md — never
+                        edited by hand (Decision 123).
 src/engine/engine.js    Pure rules engine. No DOM.
 src/ui/                 Wizard + sheet, as four classic scripts sharing one
                         global scope (shared, wizard, sheet, then app for

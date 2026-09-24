@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.22.0` · game data `0.16` · character schema `0.10` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.23.0` · game data `0.16` · character schema `0.10` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **261 passing, 0 todo, 0 failing** (261 tests, six files)
+**Suite:** `npm run verify` → **266 passing, 0 todo, 0 failing** (266 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -36,12 +36,11 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
 
-**The wishlist session (2026-09-24, Decisions 117–122, app 0.22.0)** cleared
-every open wishlist item but W28: vitals popovers (W2/W3), the catalog
-browser (W4), a hit that lands (W15), weapon mods and rounds (W16), counted
-gear from Gear's and Magic's shops (W17/W27), and Main as the fight view
-(W13). **It bumped the character schema to 0.10 and game data to 0.16**,
-and opened F26. It merged as PR #51.
+**The wishlist session (Decisions 117–122, app 0.22.0, PR #51)** cleared
+every wishlist item but W28, took the character schema to 0.10 and game data
+to 0.16, and opened F26. **App 0.23.0 adds What's new** (Decision 123): the
+release notes, in the app, from the home screen, the sheet's menu and the
+footer.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -57,9 +56,12 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.21.0`, game data `0.15`** (tag `v0.21.0`); 0.22.0 is merged, not yet tagged. **Check a
+tag. **Live: app `0.22.0`, game data `0.16`** (tag `v0.22.0`). A cloud session
+can merge but usually can't push a tag, so tag locally after it. **Check a
 deploy by loading the page** and reading the footer, not by curling it.
-`CHANGELOG.md` needs a section for every app bump (`docs.test.mjs` checks).
+`CHANGELOG.md` needs a section for every app bump, and **players read it**:
+after editing it, run `npm run changelog` and commit the generated
+`src/data/shadows-changelog.js` (`docs.test.mjs` checks both).
 
 **Things a next session should know.**
 
@@ -121,9 +123,10 @@ notes, one line each in `INDEX.md` §2.
 
 ## 5. Where to start
 
-**`main` is caught up through PR #51 (app 0.22.0, schema 0.10, game data
-0.16); live is still `v0.21.0`.** **First: tag `v0.22.0`** on #51's merge
-commit, which deploys it, then check the footer on the live page.
+**`v0.22.0` is live. What's new (app 0.23.0) is on
+`claude/in-app-changelog`.** Once it merges: rename CHANGELOG's
+`[Unreleased] — app 0.23.0` heading to `v0.23.0 — <date>`, run
+`npm run changelog`, commit, tag `v0.23.0`, and check the live footer.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under

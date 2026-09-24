@@ -2969,6 +2969,35 @@ No cascade logic to maintain — it falls out of the architecture.
     invented. One smoke test pins the order (mutation-tested: skills first
     fails it). Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
 
+123. **(What's new — release notes in the app)** **A player can read every
+    update's notes in the app. `CHANGELOG.md` stays the one place they're
+    written; `tools/changelog.mjs` (`npm run changelog`) turns every section
+    above its `in-app changelog ends here` comment into
+    `src/data/shadows-changelog.js`, a committed classic data script that
+    sets `window.SHADOWS_CHANGELOG`.** The app runs from `file://`, where it
+    can't fetch a sibling markdown file, so the notes arrive the way the game
+    data does. It loads straight after `shadows-data.js`; the data → icons →
+    engine → ui order is unchanged. `docs.test.mjs` fails if the generated
+    file is older than the markdown, and the parser throws on a heading or
+    sub-heading it doesn't know rather than dropping it. **Only v0.10.1 and
+    later reach players** (Ken's pick): older sections are developer notes,
+    and the cutoff comment keeps them in the repo. Five lines above the
+    cutoff named people or document numbers and were reworded; the voice
+    test now reads the open window too. **Three ways in**: a line on the
+    home screen, **What's new** in the sheet's ⋮ menu, and a link beside the
+    version in the footer. `shadows.seenVersion` in `localStorage` holds the
+    last version this browser was shown. A returning player on a newer build
+    gets one quiet "Updated to x.y.z · See what changed ×" line on the home
+    screen, and the releases past their mark open first, badged New. A
+    browser with no mark but other `shadows.*` keys used the app before the
+    mark existed and gets the line once, with the latest release open; a
+    browser with no keys at all is a first visit, marked and told nothing.
+    **The window never opens by itself**, because the sheet gets opened
+    mid-session at the table (Ken agreed). It supersedes nothing: Decision
+    40's footer gains a link, and the script-order decision holds. Four
+    smoke tests and the docs guard, each mutation-tested. Ships in app
+    **0.23.0**. (Ken + Claude, 2026-09-24)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
