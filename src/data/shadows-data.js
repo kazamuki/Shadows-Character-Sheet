@@ -3648,7 +3648,7 @@ window.SHADOWS_DATA = {
     { "id": "Cold", "description": "Can freeze liquids and make surfaces treacherous." },
     { "id": "Concentration", "description": "Held rather than released; dice equal to the spell's Threshold are set aside for as long as it's held." },
     { "id": "Ench.", "description": "No Evocation form -- exists only as a Talisman or Artifact." },
-    { "id": "AP", "flagged": true, "flagNote": "Used on Iron Lance's tag line but not defined in the Magic WIP's own tag list (which names only AOE/DoT/EMP/Fire/Cold/Concentration/Ench.) -- presumably Armor Piercing, matching the weapon tag of the same name, but not Scott's to assume silently. Confirm with Design.", "description": "(Undefined in the Magic WIP source -- see flagNote.)" }
+    { "id": "AP", "description": "Armor Piercing, as the weapon tag: the spell bypasses the target's RES entirely. PROT still rolls." }
   ],
   "spellcraftRules": {
     "rollNote": "Assemble a d10 pool: Evocation rank for a live cast, Evocation + Enchantment rank when inscribing a Talisman, Evocation + Alchemy rank when inscribing an Artifact. Dice meeting or exceeding the spell's TN are Hits; a 1 is a Dud. A 10 is always a Hit and explodes -- roll and add another d10, which can explode again. Duds cancel Hits; what remains is net Hits, measured against the spell's TH.",
