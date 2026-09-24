@@ -43,7 +43,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 - [x] **B11**: `versionCheck()` matches a Mastery spend to its Grimoire row. **C4**: findings stay above every page until dismissed, in the wizard too; a bare version difference still shows once (Decision 125). Both mutation-tested.
 - [x] **B17**: the Trueborn's Lunar Phase Blessing, its phases as a table, and the four powers still to come, marked not written yet, on the Archetype tab and the wizard card (Decision 126). Mutation-tested.
 - [x] **R6, first part**: one sweep over every id the data points at (over 300 references), with the Professional's two prose entries as named exceptions that S3 must remove. Mutation-tested: it catches B15 if the old prerequisite comes back.
-- [x] **B15**: flagged as **F27** on 2026-09-24 (app 0.23.1, game data 0.17). The culled Cat Like Balance prerequisite is the GM's call until 041 removes or replaces it.
+- [x] **B15**: flagged as **F27**, then **ruled by Deighton the same day** (Decision 129): Hardcore Parkour needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1, and Cat Like Balance and Time Sense go. The interim GM's-call stub never shipped.
 - [x] **C13**: the voice corpus renders every archetype's sheet, with its first specialization chosen, plus Admin. Mutation-tested with "(TBD)" put back on a Trueborn power.
 - [x] **AQ2**, pulled forward from S2 because this session changed the test count: STATE states the todo count only (Decision 127).
 
@@ -173,7 +173,7 @@ For Ken unless marked. Answered ones keep the question, with the answer and date
     - **One caveat:** a playtester needs a GitHub account to file an issue. If most won't have one, a form link in the app's footer is the better door, and it can feed issues later. That's a question for when playtesting starts, not now.
   - **Answered 2026-09-24, Ken:** agreed. Done in S1's second pass: the Design flag template is deleted, the Bug template is rewritten as *Bug or playtest report*, and CONTRIBUTING and README point rules questions at SCHEMA §5.
 - **AQ8 (CRB fix, Ken): What is "Cat Like Balance"?**
-  - **Answered 2026-09-24, Ken:** an Advantage from an earlier version ("+3 bonus to Athletics or Acrobatics checks for balance"), since culled. The prerequisite needs removing or changing. Flagged as **F27**, with the GM's-call stub (S1).
+  - **Answered 2026-09-24, Ken:** an Advantage from an earlier version ("+3 bonus to Athletics or Acrobatics checks for balance"), since culled. The prerequisite needs removing or changing. Flagged as **F27**, with the GM's-call stub (S1). **Deighton ruled it later the same day** (Decision 129): Acrobatics 4 replaces it, and Time Sense goes.
 - **AQ9: Releasing from a cloud session.** OK with one dispatchable workflow that creates the tag itself? The alternative is a token Ken provides so a tag push triggers the existing workflows.
   - **Answered 2026-09-24, Ken:** yes, releasing from the cloud is fine, since the PR process holds. S5 builds the dispatchable workflow. A cloud session's git proxy usually refuses a tag push, so the workflow creating the tag is the dependable route.
 - **AQ10: How do players reach the app at the table?**

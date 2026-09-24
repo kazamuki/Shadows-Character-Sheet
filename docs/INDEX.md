@@ -88,7 +88,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `B12` | The Mercenary never picks its fifth Focused Skill | **open** | plan S3 |
 | `B13` | Focused Skill Max Bonus never applied | **open** | plan S3 |
 | `B14` | Jack-of-all-Trades pays full price for every skill | **open** | plan S3 |
-| `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | closed | → flag F27 (app 0.23.1, game data 0.17) |
+| `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | closed | → F27 → Deighton's ruling, D129 |
 | `B16` | A character file could put markup on the page (Admin ids; numbers stored as text; crafted undo) | closed | plan S1 · D124 |
 | `B17` | The Trueborn's Lunar Phase Blessing never renders | closed | plan S1 · D126 |
 | `B18` | Import, New and Lock replace the saved sheet without asking | closed | plan S1 · D128 |
@@ -116,7 +116,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F24` | Ongoing damage while Dying at a Reset: one Death Mark per ticking source standing in for the check (stub), or the check plus a mark per source | Deighton |
 | `F25` | How Natural Armor answers a hit: stubbed as flat, after PROT and RES, anywhere, Kinetic unless Warded, ignores AP, skipped by Massive | Deighton |
 | `F26` | Does a shotgun count as a rifle for the Scope and the Angel Mod? Stubbed: no | Deighton |
-| `F27` | Hardcore Parkour asks for Cat Like Balance, an Advantage culled from an earlier version: remove or replace it. Stubbed as the GM's call | Ken (CRB) |
 
 The one **unnumbered** flag (the stat curve past 10) closed with Decision 98.
 
@@ -196,6 +195,7 @@ Where game text comes from and how it is merged.
 - **65** *(Mechanism 3)* — The rulebook's worked examples run as tests.
 - **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`.
 - **113** *(Quick Study's Intuition — F11)* — Quick Study's prerequisite is the Intuition skill at Rank 1, per 041; the old "Intuition Advantage" matched no entry, so no one could take it.
+- **129** *(Hardcore Parkour's prerequisites — F27)* — 1 Major Milestone, Acrobatics 4 and Danger Sense 1; Cat Like Balance becomes Acrobatics 4, Time Sense is dropped (Deighton).
 
 ### Archetypes & specialization
 

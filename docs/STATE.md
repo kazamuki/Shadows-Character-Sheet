@@ -39,7 +39,7 @@ waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115
 **App 0.24.0 (unreleased, on `claude/vibrant-gates-66y9l0`)** is the
 audit's first session: character files are untrusted input (Decision 124),
 load findings stay until dismissed (125), the Trueborn's powers render (126),
-Hardcore Parkour can be taken (F27), and every character has a NYTE City
+Hardcore Parkour's prerequisites are ruled (129), and every character has a NYTE City
 intake number, with nothing replaced without asking (128, schema 0.11).
 
 **The print front page is full.** Anything more there breaks to a second
@@ -98,7 +98,7 @@ full text.
 |---|---|---|
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **F23 + F24 + F25 + F26** (Deighton, ask together; F23 and F25 are the same RES-class question, F26 is whether a shotgun is a rifle for mods) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Magic's Warding services: W28 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
-| **Milestones & doc reconciliation** — F9, F12, F13, **F27** (F11 closed, Decision 113) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
+| **Milestones & doc reconciliation** — F9, F12, F13 (F11 closed, Decision 113; F27 closed, Decision 129) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
@@ -120,7 +120,7 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 **The 2026-09-24 whole-app audit** (`audits/2026-09-24_whole-app-audit.md`,
 one line per id in `INDEX.md` §2) drives it, through
 `plans/audit-2026-09-remediation.md`. **Ken has answered every question**
-(the plan's §5), and **S1 is done**: B11, B15 (F27), B16, B17, B18, C4, C13,
+(the plan's §5), and **S1 is done**: B11, B15 (F27, ruled), B16, B17, B18, C4, C13,
 C16, R9, the first half of R6, and AQ2 and AQ7, all mutation-tested.
 
 - **Next, no answers needed, any order:** S3 (the Professional as data:
@@ -165,9 +165,9 @@ and W30 (Reload from carried ammo).
 - **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
   25 IP new-skill price and the stat curve past 10. Each is written up in
   `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
-  once ruled. **New, F27:** Hardcore Parkour's Cat Like Balance prerequisite
-  was culled; remove or replace it in 041. Until then the app makes it the
-  GM's call (app 0.23.1).
+  once ruled. **New (Decision 129):** 041's Hardcore Parkour prerequisites
+  become 1 Major Milestone, Acrobatics 4 and Danger Sense 1 (Deighton; Cat
+  Like Balance and Time Sense go). The data already follows it.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `041` (Decision 110), and Ken expects the Origins subtypes to replace

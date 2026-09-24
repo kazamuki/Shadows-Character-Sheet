@@ -3056,6 +3056,15 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** the roster (plan S6) gives each character its own slot, which turns "replace?" into "add".
      - **Built:** app 0.24.0; the audit plan's S1; `smoke.test.mjs` B18 ×4, `engine.test.mjs` B18 ×2.
 
+129. **Hardcore Parkour needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1.**
+     *2026-09-24 · Deighton (ruling), via Ken · Touches: Hardcore Parkour, Cat Like Balance, Time Sense, Danger Sense, Acrobatics, Major Milestone prerequisites, F27, B15*
+     - **Decided:** Cat Like Balance at Rank 1 (an Advantage culled from an earlier version, "+3 to Athletics or Acrobatics checks for balance") becomes the **Acrobatics skill at rank 4 or better**, and the **Time Sense** requirement is removed. Danger Sense 1 and one Major Milestone already taken stay. F27 closes.
+     - **Why:** the old prerequisite named nothing in the game, so the Milestone could never be taken (B15). Deighton wanted a fix that doesn't need revisiting and still asks enough.
+     - **Rejected:** the interim stub (Time Sense and Danger Sense checked, Cat Like Balance left to the GM, app 0.23.1), which left a rules question open. Reviving Cat Like Balance as an Advantage.
+     - **Replaces:** nothing numbered; it ends F27's stub, which never shipped. Ken's CRB fix: 041's prerequisite line for Hardcore Parkour.
+     - **Revisit if:** the Advantages chapter gains a balance Advantage worth asking for.
+     - **Built:** game data 0.17 (unreleased); `rules.test.mjs` pins it, and fails against the stub.
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -3111,6 +3120,9 @@ sentence.
 ~~F11~~ closed 2026-09-23 (Decision 113): 041 now asks for the Intuition
 **skill** at Rank 1, and Quick Study's data follows it.
 
+~~F27~~ opened and closed 2026-09-24 (Decision 129). Hardcore Parkour asked for Cat Like Balance, an
+Advantage culled from an earlier version. Deighton ruled that it becomes Acrobatics 4, and that Time Sense goes.
+
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
@@ -3126,7 +3138,6 @@ sentence.
 | F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 | F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
 | F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both | Deighton | No |
-| F27 | **Hardcore Parkour's culled prerequisite** — 041 asks for the Cat Like Balance Advantage at Rank 1, but it was culled from an earlier version (+3 to Athletics or Acrobatics checks for balance) and 043 has no such entry, so the Milestone could never be taken (audit B15). Ken, 2026-09-24: remove the prerequisite or replace it. Stubbed: Time Sense and Danger Sense are still checked; Cat Like Balance is the GM's call, as prose prerequisites are (Decision 91) | Ken → CRB | No |
 
 ## 6. Roadmap
 
