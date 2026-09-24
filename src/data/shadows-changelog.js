@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.24.0",
-    "date": null,
+    "date": "2026-09-24",
     "intro": [
       "Character schema **0.11** · game data **0.17**. A character file from 0.23 opens as it was, and gets its intake number the first time it's opened."
     ],
