@@ -21,6 +21,7 @@ const BROWSER_JS = [
   "src/ui/sheet.js",
   "src/ui/app.js",
   "src/data/shadows-data.js",
+  "src/data/shadows-changelog.js",
   "src/data/shadows-icons.js",
 ];
 
@@ -87,6 +88,7 @@ test("script order in the shell is theme-init → data → icons → engine → 
   assert.deepEqual(order, [
     "src/ui/theme-init.js",
     "src/data/shadows-data.js",
+    "src/data/shadows-changelog.js",   // generated from CHANGELOG.md (Decision 123)
     "src/data/shadows-icons.js",
     "src/engine/engine.js",
     "src/ui/shared.js",
