@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** proposed 2026-09-24. **Ken answered AQ1, AQ3, AQ5, AQ8 and AQ10 the same day** (§5), and B15 is done (flagged as F27, app 0.23.1). Still waiting on AQ2, AQ4, AQ6, AQ7 and AQ9. Nothing here is a decision until the session that builds it numbers it in `SCHEMA.md` §4.
+**Status:** under way. Ken answered every question but AQ4 and AQ7 on 2026-09-24 (§5). **S1 is done except B18**, whose save-file change is proposed and waiting on Ken's yes. Nothing here is a decision until the session that builds it numbers it in `SCHEMA.md` §4.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -31,17 +31,25 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 ## 3. Sessions
 
 ### S1: Safety and correctness (no rulings needed)
-- [ ] **B16**: escape the two Admin ids; while there, stop using `notes` inside Admin's button addresses.
-- [ ] **R9**: a permanent hostile-file render test covering every tab, Admin, print and each modal. Mutation-test it against the pre-fix `sheet.js` so it's shown to catch B16.
-- [ ] **B18**, built for the multi-character world Ken wants (AQ5):
-  - **A stable character id.** `meta.id`, assigned when a character is created and backfilled by `migrate()` for older files. Without it the app can't tell "a newer copy of this character" from "a different character", so neither a replace warning nor a roster can be right. It's a character-schema bump (0.10 → 0.11) with a `migrate()` step, so propose the shape first.
-  - **Confirm before replace.** When Import or New would overwrite a slot holding a *different* id, a modal offers **Export this one first**, **Replace** or **Cancel** (Ken: "if it allowed you to download the current state before replace, even better"). The same id arriving from a newer file replaces without asking.
-  - Storage keys stay as they are for now. S6's roster builds on the id.
-- [ ] **B11**: `versionCheck()` checks spell targets against the Grimoire row's stage. Also **C4**: import warnings stay until dismissed.
-- [ ] **B17**: render an option's `starterPower`/`additionalPowers` generically on the Archetype tab and in the wizard card. Display only.
-- [ ] **R6, first part**: one generic referential-integrity test over every id-bearing field. It would have failed on B15 (now fixed) and fails on the Professional's prose, so let it except that prose until S3.
+- [x] **B16**: done 2026-09-24 (Decision 124), and **wider than the audit found**. The first probe only put payloads in text fields. With payloads in numeric fields too, a string stored where a count lives (a stat, the LUCK bonus, Çredits, a ledger amount) rode the engine's `+` as text onto every tab. A crafted undo entry could also write onto `Object.prototype`. Fixed at the one gate: `migrate()` makes every stored number a number and drops audit entries whose path leaves the character, and undo skips such paths and re-coerces. Admin addresses rows by position. The Review step's raw boost target, found by the new test, is escaped.
+- [x] **R9**: `tests/hostile.test.mjs`. Payloads in every string, id and number, rendered across nine tabs, Admin, print, 60 modals and popovers, and every wizard step, plus the undo, migrate and Admin-addressing checks. Mutation-tested: each of the six fixes, reverted, fails it.
+- [ ] **B18**, built for the multi-character world Ken wants (AQ5). **Proposed 2026-09-24, waiting on Ken's yes** (it changes the save file):
+  - **Three doors replace a saved character today, not two.** Import replaces the live sheet. New replaces the draft. **Lock** replaces the live sheet too: making a second character silently discards the first one's play since its last export.
+  - **A permanent id: `meta.id`.** `newCharacter()` assigns one: `"ch-"` plus 16 random hex digits, from `crypto.getRandomValues` where the browser has it, `Math.random` where it doesn't (the engine's test VM). `migrate()` gives a file without one a new id; it's saved from then on, and written into the next export. Character schema 0.10 → 0.11, with a `migrate()` assertion in `engine.test.mjs`. The id is never shown to the player.
+  - **`meta.updated` means "last changed".** `commit()` stamps it on every action; today only Export does. `diffChar` already skips `meta`, so this puts nothing in the audit trail and nothing to undo. It's what lets the app tell an older copy from a newer one.
+  - **The rule, at all three doors.** Replace without asking only when the incoming character has the same id **and** is at least as recent as the saved one. Otherwise a modal (the existing `openModal`) asks:
+    > **Replace Vex Morrow?** This browser keeps one sheet at a time. Anything not exported is lost.
+    > **Export Vex Morrow first** · **Replace** · **Cancel**
+
+    *Export first* downloads the saved character, then replaces it. A file with no id, from before 0.11, always asks.
+  - **What doesn't change yet:** the two storage keys. S6's roster keys each saved character by `meta.id`, so this is its foundation.
+  - **The decision it would number,** in the §6 format: *"A character has a permanent id, and a saved character is never replaced without asking." Rejected: comparing names (two players can share one, and a rename would lose the match); comparing whole files (any play makes them differ). Revisit if: the roster lands and one slot per character makes the replace question moot.*
+- [x] **B11**: `versionCheck()` matches a Mastery spend to its Grimoire row. **C4**: findings stay above every page until dismissed, in the wizard too; a bare version difference still shows once (Decision 125). Both mutation-tested.
+- [x] **B17**: the Trueborn's Lunar Phase Blessing, its phases as a table, and the four powers still to come, marked not written yet, on the Archetype tab and the wizard card (Decision 126). Mutation-tested.
+- [x] **R6, first part**: one sweep over every id the data points at (over 300 references), with the Professional's two prose entries as named exceptions that S3 must remove. Mutation-tested: it catches B15 if the old prerequisite comes back.
 - [x] **B15**: flagged as **F27** on 2026-09-24 (app 0.23.1, game data 0.17). The culled Cat Like Balance prerequisite is the GM's call until 041 removes or replaces it.
-- [ ] **C13**: add a Werewolf and a Professional sheet, and Admin, to the voice corpus.
+- [x] **C13**: the voice corpus renders every archetype's sheet, with its first specialization chosen, plus Admin. Mutation-tested with "(TBD)" put back on a Trueborn power.
+- [x] **AQ2**, pulled forward from S2 because this session changed the test count: STATE states the todo count only (Decision 127).
 
 *Versions:* app minor (0.24.0), since B17 and B18 are visible. Character schema 0.11 for `meta.id`. Game data: per Decision 68, likely none. *Size:* one session, or two if the id and the confirm flow go in separately.
 
@@ -131,17 +139,31 @@ For Ken unless marked. Answered ones keep the question, with the answer and date
 - **AQ1: How much docs weight to shed?** Short decision records (R1), change tiers (R2), retiring `docs/README.md`, the `HANDOFF.md` stub and SCHEMA §6, and shrinking `CONTRIBUTING.md`.
   - **Answered 2026-09-24, Ken:** "as long as we can always find what we did, and know why, I can trim a lot." He also asked for a better way to anchor decisions so they aren't relitigated. That's §6.
 - **AQ2: STATE's exact test count and "Live:" line.** Drop both? The CI result and the footer already carry them. The `todo` count stays.
+  - **Answered 2026-09-24, Ken:** drop both. Done in S1 (Decision 127).
 - **AQ3: B12–B14 now, or with the Professional's final pass?**
   - **Answered 2026-09-24, Ken:** now. Some tweaking will follow, and the data schema was designed to take tweaks without breaking. S3 goes ahead, with each rule as one editable field.
-- **AQ4: Unshown content (A10), render or drop, item by item.** The weapon and spell tag glossaries (the audit's pick for tooltips), archetype `lore`, ammunition and arrowheads, the Enchantment tables, archetype `growth`.
+- **AQ4: The data holds text no player ever sees. For each item: show it, or delete it?** Ken asked for this one plainly. My recommendation is first:
+  1. **What a tag means.** Weapons and spells list tags like *AP*, *Conceal* or *Burning*, and the data has a sentence for each, but a player can't read it anywhere. **Show:** tap or hover a tag to read it, in the catalog, on Loadout, on Main and in the Grimoire.
+  2. **Each archetype's `lore` paragraph** (the "An Arcanist is what happens when someone looks at the fabric of reality…" writing). **Show:** on the wizard's archetype card and the Archetype tab.
+  3. **Ammunition and arrowheads.** Two price lists (9 and 11 items) that nothing can buy, although weapons now spend rounds and reload. **Show:** add them to the equipment shop as things you carry.
+  4. **Enchantment and Alchemy tables** (which materials hold how many charges, how long crafting takes). **Show:** in the Arcanist's Magic reference panel, next to the Spellcraft rules already there.
+  5. **Archetype-specific Major Milestones (`growth`).** Empty everywhere so far; the Arcanist's carries a flag saying they're unwritten. **Keep, hidden:** it's where they'll go. S2 gives the flag a number.
+  6. **Small rules text:** botch, explosion and difficulty numbers, what stat ranges mean, and the Spellcraft sub-rules (charging, concentration, Sovereign Soul, teaching). **Show** in the reference panels where they belong, or **delete** if the CRB chapters players read already cover them. Ken's call on which.
 - **AQ5: The browser's saved sheet.** Confirm-before-replace, or a roster of several characters?
   - **Answered 2026-09-24, Ken:** design for a multi-character future. For now confirm-before-replace, better still with a way to download the current sheet first. S1 does both, on a stable character id; S6 builds the roster.
   - **No pushback on the direction.** One caution, written into S6: a roster makes it tempting never to export, and browser storage isn't a backup.
 - **AQ6: Fonts offline.** Embed them (about +100–200 KB in the single file) or accept the system-font fallback?
+  - **Answered 2026-09-24, Ken:** embed. All three (Inter, Roboto Mono, Chakra Petch) are open-source. S5 checks each one's licence (SIL OFL or Apache 2.0), embeds subsetted WOFF2 in the single-file build, and keeps each licence file in the repo.
 - **AQ7: GitHub issues.** No issue has ever been filed, and flags live in SCHEMA §5. Delete the issue templates and CONTRIBUTING's issue flow, or start using issues (for playtest bug reports, say)?
+  - **Ken, 2026-09-24:** unsure, since the app hasn't been playtested.
+  - **Recommendation: split the two templates.**
+    - **Delete the Design flag template.** Rules questions live in SCHEMA §5 and STATE §3. A second tracker for the same questions drifts, which is audit A4's lesson. It has also never been used.
+    - **Keep the Bug template, rewritten for playtesters.** What happened, what you expected, the version from the footer, device and browser, and the exported `.shadows.json` attached. Playtests are about to start, and issues give reports a place to land that isn't a chat thread. Triage sends each one to a fix, the wishlist, or a flag.
+    - **One caveat:** a playtester needs a GitHub account to file an issue. If most won't have one, a form link in the app's footer is the better door, and it can feed issues later. That's a question for when playtesting starts, not now.
 - **AQ8 (CRB fix, Ken): What is "Cat Like Balance"?**
   - **Answered 2026-09-24, Ken:** an Advantage from an earlier version ("+3 bonus to Athletics or Acrobatics checks for balance"), since culled. The prerequisite needs removing or changing. Flagged as **F27**, with the GM's-call stub (S1).
 - **AQ9: Releasing from a cloud session.** OK with one dispatchable workflow that creates the tag itself? The alternative is a token Ken provides so a tag push triggers the existing workflows.
+  - **Answered 2026-09-24, Ken:** yes, releasing from the cloud is fine, since the PR process holds. S5 builds the dispatchable workflow. A cloud session's git proxy usually refuses a tag push, so the workflow creating the tag is the dependable route.
 - **AQ10: How do players reach the app at the table?**
   - **Answered 2026-09-24, Ken:** no full playtests yet, but tablet or laptop is expected to be ideal, given how much the app does. A phone is the "in an emergency" fallback. B19 drops to "usable in an emergency", and tablet widths join that check (S6).
 - **Deighton (via S2):** F28–F31, the Suppression, Blast, Anti-Materiel and Reach weapon tags. Ask with F23–F26 as one grouped question.

@@ -3,7 +3,7 @@
 **Updated:** 2026-09-24
 **Versions:** app `0.23.1` · game data `0.17` · character schema `0.10` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **267 passing, 0 todo, 0 failing** (267 tests, six files)
+**Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -36,11 +36,10 @@ sheet, filled or blank. The engine reproduces the CRB's own worked examples
 (`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
 waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
 
-**The wishlist session (Decisions 117–122, app 0.22.0, PR #51)** cleared
-every wishlist item but W28, took the character schema to 0.10 and game data
-to 0.16, and opened F26. **App 0.23.0 adds What's new** (Decision 123): the
-release notes, in the app, from the home screen, the sheet's menu and the
-footer.
+**App 0.23.1 (unreleased, on `claude/vibrant-gates-66y9l0`)** is the
+audit's first session: character files are untrusted input (Decision 124),
+load findings stay until dismissed (125), the Trueborn's powers render (126),
+and Hardcore Parkour can be taken (F27). What shipped before it is in `log/`.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -56,8 +55,9 @@ left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. **Live: app `0.23.0`, game data `0.16`** (tag `v0.23.0`). A cloud session
-can merge but usually can't push a tag, so tag locally after it. **Check a
+tag. The live version is the latest `v*` tag, and the page's footer says
+which. A cloud session can merge but usually can't push a tag, so tag locally
+after it (plan S5 moves releasing into a workflow, AQ9). **Check a
 deploy by loading the page** and reading the footer, not by curling it.
 `CHANGELOG.md` needs a section for every app bump, and **players read it**:
 after editing it, run `npm run changelog` and commit the generated
@@ -116,30 +116,36 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-**The 2026-09-24 whole-app audit opened A4–A12, B11–B19 and C4–C15**
-(`audits/2026-09-24_whole-app-audit.md`, one line each in `INDEX.md` §2).
-What to do about them is `plans/audit-2026-09-remediation.md`, **proposed;
-Ken answered AQ1, AQ3, AQ5, AQ8 and AQ10** (AQ2, AQ4, AQ6, AQ7, AQ9 open).
-B15 is closed as flag F27 (app 0.23.1); nothing else is fixed yet. Three are worth
-doing first whatever else is decided, and need no ruling: B16 (Admin renders
-file ids unescaped), B18 (Import replaces the saved sheet silently) and B11
-(Mastery trips the hand-edit warning), all plan session S1. rev 9's `A` and
-`B` findings are all closed; `C1`–`C3` are still forward notes.
+**The 2026-09-24 whole-app audit** (`audits/2026-09-24_whole-app-audit.md`,
+one line per id in `INDEX.md` §2) drives it, through
+`plans/audit-2026-09-remediation.md`. Ken has answered every question but
+AQ4 (rephrased; show or delete the text players can't see) and AQ7 (a
+recommendation is waiting on his yes).
+
+- **S1 is done but for B18:** B11, B15 (F27), B16, B17, C4, C13, R9 and the
+  first half of R6, all mutation-tested; AQ2 was pulled forward too.
+- **B18 waits on Ken's yes to one proposal:** a permanent `meta.id`
+  (character schema 0.11), `meta.updated` stamped on every change, and a
+  confirm with **Export first** at all three doors that replace a saved
+  character: Import, New and Lock. It's in the plan's S1.
+- **Next, no answers needed:** S3 (the Professional as data: B12–B14) once
+  its data shape is proposed, S5 (tooling: fonts embedded per AQ6, and the
+  release workflow per AQ9), and S2 (the docs diet; AQ1 answered).
+
+rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
 
 ---
 
 ## 5. Where to start
 
-**`main` is caught up through PR #53, tagged `v0.23.0` (app 0.23.0, schema
-0.10, game data 0.16).** Check the live footer reads 0.23.0.
+**`main` is caught up through PR #55, tagged `v0.23.0` (app 0.23.0, schema
+0.10, game data 0.16).** This branch carries the audit and S1 as app 0.23.1
+and game data 0.17, not yet merged or tagged.
 
-**Next, all unblocked:** Ken reads the audit and answers the plan's AQ
-questions; its session S1 needs no answers and can start any time.
-Milestones & doc reconciliation (Ken alone). F9
-(are General Milestones Professional-only? 041 files them under
-Professional) and F13 need Ken or Deighton. F12 waits on 041's unwritten
-Advancement Section. The wishlist is empty but for W28; new ideas start at
-W29.
+**Next, all unblocked:** Ken's yes on B18 and AQ4's list, then S3, S5 or
+S2 in any order. Milestones & doc reconciliation (Ken alone): F9 (are General
+Milestones Professional-only?) and F13 need Ken or Deighton; F12 waits on
+041's unwritten Advancement Section. The wishlist is empty but for W28.
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.
@@ -175,7 +181,7 @@ them.
 - **Every volatile fact lives here and nowhere else.** `CLAUDE.md` carries no
   counts. Session-log entries state figures *as of that session* and are never
   updated — they are history, and history does not drift.
-- **`tests/docs.test.mjs` enforces it.** The suite result, versions and length
+- **`tests/docs.test.mjs` enforces it.** The todo count, versions and length
   of this file are checked, the flag table is checked against `flagged: true`
   in the data, and every file `CLAUDE.md` points at must exist.
 - **§3 is organized by topic, not by sequence, on purpose (2026-09-12).** A

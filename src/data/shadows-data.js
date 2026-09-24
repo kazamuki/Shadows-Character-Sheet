@@ -2545,10 +2545,10 @@ window.SHADOWS_DATA = {
             "grants": [{ "type": "naturalArmor", "id": "resilient-spirit", "name": "Resilient Spirit",
                          "resAgainst": ["magical"], "while": "under a waning moon" }],
             "additionalPowers": [
-              "Moonlit Vitality (TBD)",
-              "Ancestral Wisdom (TBD)",
-              "Spirit Pack (TBD)",
-              "Ancestral Dominance (TBD)"
+              { "name": "Moonlit Vitality" },
+              { "name": "Ancestral Wisdom" },
+              { "name": "Spirit Pack" },
+              { "name": "Ancestral Dominance" }
             ]
           }
         ]

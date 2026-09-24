@@ -139,7 +139,7 @@ function wizNav(stepId){
 
 // ── Step renderers ───────────────────────────────────────────────────
 function stepHeader(st){
-  return `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
+  return importIssuesHtml() + `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
     <h1 class="step-title">${esc(st.label.split(" - ")[0].split(":")[0])}</h1>
     <p class="step-note">${esc(st.label)}${st.note?` <em>${esc(st.note)}</em>`:""}</p>`;
 }
@@ -243,6 +243,7 @@ function renderArchetype(){
         ${o.tweak?`<div class="desc"><b>Tweak — ${esc(o.tweak.name)}:</b> ${esc(o.tweak.description)} ${(o.tweak.benefits||[]).map(esc).join(" ")}</div>`:""}
         ${o.benefit?`<div class="desc"><b>Benefit:</b> ${esc(o.benefit)}</div>`:""}
         ${o.transformation?`<div class="desc"><b>Transformation:</b> ${esc(o.transformation)}</div>`:""}
+        ${optionPowersHtml(o)}
       </div>`;
     }).join("");
   } else if (sel.specialization && sel.specialization.required){
@@ -498,7 +499,7 @@ function renderReview(){
     <span class="k">Skills</span><span class="v">${Object.keys(ch.skills).map(id=>{const l=Engine.skillLine(ch,id);return esc(l.def.name)+" "+l.rank;}).join(" · ")||"—"}</span>
     <span class="k">Advantages</span><span class="v">${ch.advantages.map(x=>{const d2=Engine.advById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"")+(x.notes==="natural"?" (natural)":"");}).join(" · ")||"—"}</span>
     <span class="k">Disadvantages</span><span class="v">${ch.disadvantages.map(x=>{const d2=Engine.disById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");}).join(" · ")||"—"}</span>
-    <span class="k">Boost ledger</span><span class="v">${ch.creation.boosts.map(b=>b.targetId+" ×"+b.times).join(" · ")||"—"}</span>
+    <span class="k">Boost ledger</span><span class="v">${ch.creation.boosts.map(b=>esc(b.targetId)+" ×"+b.times).join(" · ")||"—"}</span>
   </div></div>`;
   h += issuesHtml(issues);
   h += `<div class="wiznav">
@@ -538,7 +539,7 @@ function renderHome(){
   const r=$("btn-resume"); if(r) r.onclick=()=>{ S={screen:"wizard", ch:Engine.migrate(draft.ch), step:draft.step, maxReached:draft.maxReached, section:"main"}; update(); };
   const ac=$("btn-active"); if(ac) ac.onclick=()=>{
     const c=Engine.migrate(active.ch);
-    S={screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:normSection(active.section), importIssues:Engine.versionCheck(c)};
+    S=Object.assign({screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:normSection(active.section)}, loadFindings(c));
     update();
   };
   $("btn-import").onclick=()=>$("file-import").click();
@@ -547,9 +548,9 @@ function renderHome(){
     const rd=new FileReader();
     rd.onload=()=>{ try{
         const c=Engine.migrate(JSON.parse(rd.result));
-        const issues=Engine.versionCheck(c);
-        if (c.creation && c.creation.locked) S={screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:"main", importIssues:issues};
-        else S={screen:"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main", importIssues:issues};
+        const found=loadFindings(c);
+        if (c.creation && c.creation.locked) S=Object.assign({screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, found);
+        else S=Object.assign({screen:"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, found);
         update();
       }catch(err){ alert("That file didn't parse as a character: "+err.message); } };
     rd.readAsText(f);

@@ -25,9 +25,12 @@ const SCHEMA = read("docs/SCHEMA.md");
 const CLAUDE = read("CLAUDE.md");
 const INDEX  = read("docs/INDEX.md");
 
-test("STATE.md reports the real suite result", () => {
+test("STATE.md reports the real number of todo tests", () => {
   // Counted from source rather than by running the suite — this test IS the
-  // suite, so it cannot run itself.
+  // suite, so it cannot run itself. Only the todo count is stated: a todo is
+  // a confirmed defect written as a failing test, which a cold session must
+  // know about. The pass total was dropped on Ken's call (AQ2, 2026-09-24):
+  // CI reports it, and restating it cost every change a STATE edit.
   //
   // Match from `test(` to the callback's arrow, because a { todo: } option
   // object is the SECOND argument and is routinely written on its own line.
@@ -42,6 +45,7 @@ test("STATE.md reports the real suite result", () => {
       if (/\{\s*todo:/.test(head)) todo++;
     }
   }
+  assert.ok(total > 100, `found only ${total} tests — did the test() format change?`);
   // The parser's own sanity check: if the sentinel appears anywhere in the test
   // sources but the counter found none, the counter is broken rather than the
   // suite being clean. THIS file is excluded from that scan, because the
@@ -51,17 +55,11 @@ test("STATE.md reports the real suite result", () => {
   const others = files.filter(f => f !== "docs.test.mjs").map(f => read(join("tests", f))).join("");
   assert.ok(todo > 0 || !/\{\s*todo:/.test(others),
     "a todo option exists in the tests but the counter found none — the parser is broken");
-  const passing = total - todo;
 
-  const m = /\*\*(\d+) passing, (\d+) todo, (\d+) failing\*\* \((\d+) tests, (\w+) files\)/.exec(STATE);
+  const m = /\*\*Suite:\*\* `npm run verify` passes · \*\*(\d+) todo\*\*/.exec(STATE);
   assert.ok(m, "STATE.md's suite line is missing or reworded — keep the format so this can check it");
-  assert.equal(Number(m[1]), passing, "STATE.md's passing count is stale");
-  assert.equal(Number(m[2]), todo,    "STATE.md's todo count is stale");
-  assert.equal(Number(m[3]), 0,       "STATE.md claims failing tests");
-  assert.equal(Number(m[4]), total,   "STATE.md's total test count is stale");
-
-  const words = { one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8 };
-  assert.equal(words[m[5]], files.length, "STATE.md's test-file count is stale");
+  assert.equal(Number(m[1]), todo, "STATE.md's todo count is stale");
+  assert.doesNotMatch(STATE, /\d+ passing/, "STATE.md is restating the pass count again — CI reports it (AQ2)");
 });
 
 test("the decision ledger's numbering is unbroken and nothing restates its count", () => {

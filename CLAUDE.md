@@ -53,7 +53,7 @@ npm run changelog  # CHANGELOG.md → src/data/shadows-changelog.js (the app's W
 
 `npm install` first — `node_modules` is not committed.
 
-The expected result is in `docs/STATE.md`. Any `todo` tests are **confirmed
+`docs/STATE.md` says how many `todo` tests to expect. Any `todo` tests are **confirmed
 defects written as failing assertions on purpose** — they flip green when fixed.
 Do not delete one to make the output cleaner.
 

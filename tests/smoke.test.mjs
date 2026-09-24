@@ -1382,3 +1382,65 @@ test("What's new opens from the sheet's menu and from the footer", () => {
   assert.ok(app.$("#modal[open] .whatsnew"), "the footer's What's new didn't open the notes");
   assert.deepEqual(app.errors, []);
 });
+
+test("C4: what the load check found stays on every page until it's dismissed; a bare version difference shows once", () => {
+  // It used to render once and vanish on the next click, and a draft's
+  // never showed at all. A version difference alone is news, not a problem,
+  // and every returning player has one after a data release, so it keeps
+  // showing just once.
+  const orphan = lockedCharacter();
+  orphan.skills["long-gone-skill"] = { rank: 2, ipe: 0 };
+  const app = boot({ storage: { "shadows.active.v1": { ch: orphan, section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  const shown = () => /long-gone-skill/.test(app.$("#main .import-issues")?.textContent || "");
+  assert.ok(shown(), "the load check's finding never showed");
+  app.click('[data-sec="skills"]');
+  assert.ok(shown(), "the finding vanished on the next click");
+  app.click("[data-importdismiss]");
+  assert.ok(!shown(), "Dismiss didn't clear it");
+  app.click('[data-sec="main"]');
+  assert.ok(!shown(), "a dismissed finding came back");
+
+  const stale = lockedCharacter();
+  stale.meta.gamedataVersion = "0.0-ancient";
+  const v = boot({ storage: { "shadows.active.v1": { ch: stale, section: "main" } } });
+  v.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  const said = () => /saved against game data 0\.0-ancient/.test(v.$("#main").textContent);
+  assert.ok(said(), "a version difference wasn't mentioned at all");
+  assert.equal(v.$("[data-importdismiss]"), null, "a bare version difference asks to be dismissed");
+  v.click('[data-sec="skills"]');
+  assert.ok(!said(), "a bare version difference stuck to every page");
+
+  const draft = lockedCharacter();
+  draft.creation.locked = false;
+  draft.skills["long-gone-skill"] = { rank: 1, ipe: 0 };
+  const w = boot();
+  w.window.eval(`S=Object.assign({screen:"wizard", ch:Engine.migrate(${JSON.stringify(draft)}), step:0, maxReached:0, section:"main"}); Object.assign(S, loadFindings(S.ch)); update();`);
+  assert.match(w.$("#main").textContent, /long-gone-skill/, "an imported draft's finding never showed in the wizard");
+  assert.deepEqual([...app.errors, ...v.errors, ...w.errors], []);
+});
+
+test("B17: a Trueborn sees the Lunar Phase Blessing, its four phases, and which powers aren't written yet — on the sheet and in the wizard", () => {
+  // The option's starterPower and additionalPowers were in the data and
+  // nowhere on screen: a Werewolf's sheet never mentioned its starting power.
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf";
+  ch.archetypeChoices.specialization = ["trueborn"];
+  const tb = D.archetypes.find(a => a.id === "werewolf").specialization.options.find(o => o.id === "trueborn");
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "archetype" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  app.click('[data-sec="archetype"]');
+  const text = app.$("#main").textContent;
+  assert.match(text, new RegExp(tb.starterPower.name), "the starting power isn't on the sheet");
+  for (const p of tb.starterPower.phases) assert.ok(text.includes(p.boon) && text.includes(p.effect), `${p.phase}'s boon isn't on the sheet`);
+  const unwritten = app.$$("#main .power").filter(el => /not written yet/.test(el.textContent)).map(el => el.querySelector("h5").textContent);
+  assert.equal(unwritten.length, tb.additionalPowers.length, "the powers still to come don't say they aren't written yet");
+
+  const draft = lockedCharacter();
+  draft.creation.locked = false;
+  draft.identity.archetype = "werewolf";
+  const w = boot({ storage: { "shadows.draft.v1": { ch: draft, step: 3, maxReached: 3 } } });
+  w.click("#btn-resume");
+  assert.match(w.$("#main").textContent, new RegExp(tb.starterPower.name), "the wizard's Trueborn card doesn't show its starting power");
+  assert.deepEqual([...app.errors, ...w.errors], []);
+});

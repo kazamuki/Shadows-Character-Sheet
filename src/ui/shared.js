@@ -346,6 +346,48 @@ function resetArchetypeChoices(ch){
   if (!ch.creation.locked) ch.panelData = {};
 }
 
+// C4: what versionCheck found when this character was loaded. Content the
+// game data no longer has, or a journal that disagrees with the totals,
+// stays at the top of every page until the player dismisses it; it used to
+// vanish on the next click, and a draft's never showed at all. A bare "saved
+// against an older game data" is news, not a problem, and a file keeps its
+// old stamp until it's next exported, so that alone still shows just once.
+function loadFindings(c){
+  const issues = Engine.versionCheck(c);
+  const versionOnly = issues.length===1 && ((c && c.meta) || {}).gamedataVersion !== D.meta.gamedataVersion;
+  return { importIssues: issues, importSticky: !versionOnly };
+}
+function importIssuesHtml(){
+  const list = S.importIssues || [];
+  if (!list.length) return "";
+  const body = issuesHtml(list.map(m=>({level:"warn",msg:m})));
+  if (!S.importSticky){ S.importIssues = []; return `<div class="import-issues" role="status">${body}</div>`; }
+  return `<div class="import-issues" role="status">${body}
+    <button class="btn sm" data-importdismiss>Dismiss</button></div>`;
+}
+
+// B17: a specialization option's powers — the one it starts with and the
+// ones that follow. A power is a name, its text, and optionally a table of
+// rows (the Trueborn's four moon phases); any array of plain objects on it
+// renders as one, so a new power needs no app change. A power with a name
+// and no text isn't written yet, and says so in the app's own status words.
+function powerHtml(p){
+  if (!p) return "";
+  if (typeof p==="string") p = { name: p };
+  const rows = Object.values(p).find(v=>Array.isArray(v) && v.length && v.every(r=>r && typeof r==="object" && !Array.isArray(r)));
+  const cols = rows ? Object.keys(rows[0]) : [];
+  const head = c => esc(String(c).replace(/^./, x=>x.toUpperCase()));
+  return `<div class="power"><h5>${esc(p.name||"")}${p.description?"":` <span class="chip">${esc(statusLabel("tbd"))}</span>`}</h5>`
+    + (p.description?`<p>${esc(p.description)}</p>`:"")
+    + (rows?`<table class="ref"><thead><tr>${cols.map(c=>`<th>${head(c)}</th>`).join("")}</tr></thead><tbody>${
+        rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c]==null?"":r[c])}</td>`).join("")}</tr>`).join("")}</tbody></table>`:"")
+    + `</div>`;
+}
+function optionPowersHtml(o){
+  const list = [o && o.starterPower, ...((o && o.additionalPowers) || [])].filter(Boolean);
+  return list.length ? `<div class="powers">${list.map(powerHtml).join("")}</div>` : "";
+}
+
 function issuesHtml(list){
   if (!list.length) return "";
   return `<ul class="issues">`+list.map(i=>`<li class="${i.level}">${esc(i.msg)}</li>`).join("")+`</ul>`;
