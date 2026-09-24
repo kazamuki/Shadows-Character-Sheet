@@ -985,3 +985,29 @@ test("W19: training Martial Arts puts its style picker across the whole Skills g
   assert.equal(app.window.getComputedStyle(picks).gridColumn, "1 / -1", "the style picker sits in one grid cell");
   assert.deepEqual(app.errors, []);
 });
+
+test("W20/W21: a skill's line shows its stats as icons with the character's own numbers, synergy as a bonus", () => {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "professional";
+  ch.creation.powerLevel = "heroic";
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  ch.stats.REF.base = 5; ch.stats.COOL.base = 7;
+  const syn = Engine.skillLine(ch, "archery").breakdown.synergy.mod;
+  const synText = `COOL ${syn < 0 ? "−" : "+"}${Math.abs(syn)} syn`;
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("skills"), maxReached: steps.length } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const nameOf = () => app.$('[data-step="skill|archery|1"]').closest(".alloc-row").querySelector(".name");
+  const stats = () => nameOf().querySelector(".skstats");
+  assert.ok(stats(), "the stats aren't on the skill's name line");
+  assert.equal(stats().querySelectorAll("svg").length, 2, "the stats aren't shown as their icons");
+  assert.match(stats().textContent, /REF 5/, "the primary doesn't show its score");
+  assert.ok(stats().textContent.includes(synText), "the synergy doesn't read as a bonus");
+  assert.doesNotMatch(nameOf().querySelector("small").textContent, /syn/, "the old stats line is still there");
+  assert.ok(stats().querySelector(".skstat.syn.off"), "an untrained skill's synergy isn't dimmed");
+  app.click('[data-step="skill|archery|1"]');
+  assert.equal(stats().querySelector(".skstat.syn.off"), null, "training the skill left its synergy dimmed");
+  assert.deepEqual(app.errors, []);
+});
