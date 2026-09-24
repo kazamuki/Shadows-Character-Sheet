@@ -2,10 +2,12 @@
 
 **Current versions are in `STATE.md`, and only there** (this line stated them once and went stale; audit A4). Ruleset target: CRB v4 (in progress).
 
-This document is the project's memory. It defines the file architecture, the two
-data schemas (game data and character), the locked design decisions, the open
-flags for Deighton, and the build roadmap. Any session of work on this project
-should start by reading this file.
+The authority on the file architecture (§1), the two data schemas (§2 game
+data, §3 character), the decision ledger (§4) and the open flags (§5). **Don't
+read it front to back.** A session starts at `CLAUDE.md` and `STATE.md`, and
+`INDEX.md` says which section here holds what it needs. What shipped is in
+`log/shipped.md`; the roadmap that used to close this file is in
+`log/archive.md`.
 
 ---
 
@@ -510,15 +512,17 @@ window.SHADOWS_DATA = {
 Archetypes differ wildly in what their sheet needs — a grimoire, an augment
 manifest, forms, a blood pool. Rather than hardcoding a Cyborg page and an
 Arcanist page, each archetype's `coreMechanic.panels` *declares* what UI it
-needs from a small set of panel types (`rankedList`, `table`, `tracker`,
-`text`). The app renders whatever is declared. When the Cyborg rewrite lands,
-you describe its NCI tiers and augment slots as panel declarations in the data
-file — no app changes.
+needs from a small set of panel types: `rankedList`, `table`, `tracker`,
+`text`, `list`, `toggle`, `grimoire` and `reference`, each described below or
+in the decision that added it. The app renders whatever is declared. When the
+Cyborg rewrite lands, you describe its NCI tiers and augment slots as panel
+declarations in the data file — no app changes. (Two of today's panels, the
+Professional's `focused-skills` list and `tweak` text, are still matched by
+id in `sheet.js`; audit A8 and plan S3 take that out.)
 
-Panel types will be finalized in Phase 2 when we know what the five archetypes
-actually demand. Where an effect can't be made machine-readable yet, it stays
-prose and the sheet displays it as reference text — the app should never block
-on un-modeled rules.
+Where an effect can't be made machine-readable yet, it stays prose and the
+sheet displays it as reference text — the app should never block on
+un-modeled rules.
 
 A `tracker` counts up from 0 against its `max` (a number, `"TOL"`, or
 `"startingSFR"`; none means the player sets it). Three optional fields shape
@@ -758,6 +762,9 @@ No cascade logic to maintain — it falls out of the architecture.
     warn-but-allow in v1.
 11. **All rolls are physical:** the app never rolls dice for creation pools.
     Players enter what they rolled. (The Shadows experience includes the dice.)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: dice, creation rolls (Stat Points, Çredits, starting spells), the Improved roll, dice rollers*
+    - **Rejected:** an in-app roller for creation pools. The Shadows experience includes the dice: the player rolls, and the app records what they rolled.
+    - **Revisit if:** a table plays where the dice can't be seen, remotely or through a GM mode (W29), and wants rolls both sides trust.
 12. **Supernatural restriction:** archetypes with `canPurchaseAdvantages:
     false` (Werewolf; Vampire assumed) cannot buy Advantages — the wizard
     must enforce this.
@@ -770,6 +777,9 @@ No cascade logic to maintain — it falls out of the architecture.
 15. **Archetypes:** generic six-block structure (Power Scaling, Baseline
     Traits, Specialization, Core Mechanic, Powers & Vulnerabilities, Growth &
     Milestones), designer-fillable, with `status` badges for tbd/draft content.
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: archetypes, panels, specialization, status badges, archetype special cases, A8*
+    - **Rejected:** an app page per archetype (a Cyborg page, an Arcanist page), and branches in the renderers on an archetype's id. Batch 3's A3 removed the last renderer branches (Decision 79).
+    - **Revisit if:** an archetype's rule can't be written as data an existing reader understands. Then it gets a generic reader or panel type, not a branch on its id (audit A8).
 16. **(Phase 2)** Ranked Advantages cost `cost` **per rank** (Archery Master
     rank 2 = 12 CP). Disadvantages grant `pointsGranted` per rank.
 17. **(Phase 2)** Professional natural advantages are stored as normal
@@ -812,6 +822,9 @@ No cascade logic to maintain — it falls out of the architecture.
     max/HP max apply flat. Milestone benefits stay prose + manual — except
     *Improved*, which prompts for the physical 2d10+15 roll and books it as
     an IP grant.
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: manual adjustments, milestone benefits, aberration prose, item effects, un-modeled rules*
+    - **Rejected:** a special case in the engine for each prose effect. Reference text alone (Decision 20's interim), which left a prose effect no way to reach the numbers.
+    - **Revisit if:** one kind of effect recurs across many entries. Then it earns a structured field the engine reads, as `grants` did for Educated and Hard to Kill (Decision 87).
 27. **(Phase 3)** The IP journal is the audit trail: entries are
     `spend` or `grant`; spends update the target's IPE atomically; the last
     entry is undoable; `versionCheck` flags IPE/journal divergence on
@@ -951,6 +964,9 @@ No cascade logic to maintain — it falls out of the architecture.
     fn)` → snapshot, mutate, `Engine.recordAction`, save+render. Creation/wizard
     actions are **not** audited (pre-lock; the draft autosave covers them). (Ken,
     2026-06-16)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: audit trail, undo, Admin mode, `commit()`, Activity Log*
+    - **Rejected:** an Admin free-edit with its own history beside a separate log. An inverse handler per action, when storing inputs lets one structural diff serve every action. Auditing the wizard, which the draft autosave already covers.
+    - **Revisit if:** undo has to cross a `migrate()` step that reshapes an array, or the patches become something synced between devices (audit C8, W29).
 49. **(Phase 3.3)** **Undo is last-in-first-out.** The Activity Log shows every
     action; "Undo last action" peels the most recent and is itself **not** logged
     (it pops, like the old `undoIP`). Arbitrary out-of-order undo is rejected — it
@@ -1127,6 +1143,9 @@ No cascade logic to maintain — it falls out of the architecture.
     enforced by a guard that runs six degenerate characters through
     twenty-seven readers, every `validate` step, and `skillLine`. It found a
     fourth violation (**B10**) on its first run. (Ken, 2026-09-02)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: engine readers, totality, `validate`, what `migrate()` returns, degenerate characters*
+    - **Rejected:** fixing B2, B6 and B7 one at a time as unrelated findings. They were one unenforced promise, so the fix was a stated contract with a guard behind it.
+    - **Revisit if:** nothing foreseen. A reader that seems to need an exception gets the missing field from `migrate()` instead, and joins the guard's list.
 
 63. **(B6)** **`migrate()`'s completeness *is* the migration guarantee.**
     `migrate` is version-agnostic — it backfills unconditionally rather than
@@ -1146,6 +1165,9 @@ No cascade logic to maintain — it falls out of the architecture.
     handler is deleted — two backfill mechanisms disagreeing about who owns
     defaults was the same *two parallel models* disease as A1/A2, in miniature.
     (Ken, 2026-09-02)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `migrate()`, character schema versions, `newCharacter()`, import, backfill, defaults*
+    - **Rejected:** a chain of versioned steps (0.1 → 0.2 → 0.3) as the only guarantee, which missed a field for two versions. The import handler's own `Object.assign(newCharacter(), c)`: two backfill mechanisms that disagreed about who owns defaults.
+    - **Revisit if:** a schema change reshapes a field rather than adding one. That needs an explicit step inside `migrate()`, as schema 0.5's specialization array did (Decision 79), and it still runs on every load.
 
 64. **(B3)** **1 Health Level per BOD is an invariant, not a tunable.**
     `resources.healthLevels.levelsPerBOD: 1` sat in the data for four schema
@@ -1203,6 +1225,9 @@ No cascade logic to maintain — it falls out of the architecture.
     existing data, a corrected comment, a closed flag. Bumping on a no-op makes
     every saved character report a mismatch for nothing, and a warning that
     cries wolf stops being read. (Ken, 2026-09-02)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `gamedataVersion`, version bumps, the load check, `versionCheck`*
+    - **Rejected:** bumping on every data edit, because every saved character then reports a mismatch for nothing and the warning stops being read. Bumping on shape changes only, which the data file's comment once said and nobody practised (Decision 75).
+    - **Revisit if:** the load check stops comparing versions, for instance if a file's stamp is refreshed on load (Decision 125's own Revisit if).
 
 69. **(Batch 2)** **The Voice & Style Guide is mirrored into this repo, and the
     CRB copy stays the master.** `docs/reference/GUIDE_Shadows_Voice.md` carries
@@ -1229,6 +1254,9 @@ No cascade logic to maintain — it falls out of the architecture.
     only for the four a player meets during creation (F1, F2, F8, F14). The
     precedent generalises — **maintainer content and player content are
     different fields, everywhere, from here on.** (Ken, 2026-09-02)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `flagNote`, `playerNote`, `appCopy`, `flagHtml`, maintainer text, player-facing copy*
+    - **Rejected:** rewriting flag notes to read well to players, because the id and the precision are what make the flag table useful. Requiring a `playerNote` on every flag, when the `appCopy` fallback covers the flags no player meets.
+    - **Revisit if:** a third audience appears, such as a GM view (W29), that should see more than a player and less than a maintainer.
 
 71. **(Batch 2)** **"Not finished" is a state the app renders, not a sentence
     someone remembers to delete.** The app was built to be demonstrated, so it
@@ -1300,7 +1328,10 @@ No cascade logic to maintain — it falls out of the architecture.
     updater script carrying the identical bug* — a guard validating its own
     blind spot. All five checks were mutation-tested afterwards.
     (Ken, 2026-09-02)
-    → **Superseded in part by Decision 127** — STATE states only the todo count; the pass total and its check are gone.
+    → **Superseded in part by Decisions 101, 127 and 132** — the batch board left STATE for `log/shipped.md` (101); STATE states only the todo count, and the pass total and its check are gone (127); the `HANDOFF.md` stub and `docs/README.md` are gone, and the orientation path is `CLAUDE.md` → `STATE.md` → `INDEX.md` (132).
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `STATE.md`, `HANDOFF.md`, `CLAUDE.md`, volatile facts, counts, `docs.test.mjs`, `log/`*
+    - **Rejected:** one handoff document holding both the current position and the history. Restating counts in several files with a reminder to keep them equal, which had just misled three sessions.
+    - **Revisit if:** a fact seems to need a second home. Point to the first instead, or generate or test the copy (audit R3).
 
 75. **(Versioning)** **Four versions, four triggers — and `schemaVersion` stopped
     meaning two things.** The project had three version numbers and no way for
@@ -1328,6 +1359,9 @@ No cascade logic to maintain — it falls out of the architecture.
     build if `APP_VERSION`, `package.json` and `STATE.md` disagree, if the footer
     stops rendering the constant, or if the data file reverts to calling its
     version `schemaVersion`. (Ken, 2026-09-02)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `APP_VERSION`, `gamedataVersion`, `schemaVersion`, `rulesetVersion`, the footer, version bumps*
+    - **Rejected:** one number for everything, which can't say whether a save file is affected. A phase label as the visible version ("app phase 3.3"), which was roadmap vocabulary aimed at players. Keeping `schemaVersion` as the data's key: one name for two things.
+    - **Revisit if:** two of the four move together for several releases running, which would say one of them isn't earning its place.
 
 76. **(Voice)** **`docs/VOICE-APP.md` is adopted, not draft.** Ken reviewed and
     accepted it. It is the standard for every string a player reads in the app,
@@ -1364,6 +1398,9 @@ No cascade logic to maintain — it falls out of the architecture.
     something to chew on would be resolving a rules question in code, and one
     invented mutual exclusion is exactly the kind of thing that reads as
     authoritative six months later. (Ken, 2026-09-03)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `picks`, `excludes`, `requires`, `selections`, `optionLock`, Martial Arts styles*
+    - **Rejected:** a special case per entry that asks for a choice. Writing an invented `excludes` pair into the data to exercise the machinery, which would resolve a rules question in code; a synthetic test fixture does it instead.
+    - **Revisit if:** the CRB asks for a choice none of the three shapes (a fixed list, a category, free text) can say.
 
 78. **(Batch 3)** **The mechanical picks are the app's business; the fiction is
     the table's.** Ten entries — Immunity, Followers/Minion, Cursed, Fanatic,
@@ -1377,6 +1414,9 @@ No cascade logic to maintain — it falls out of the architecture.
     app tell whether this is right?* Where it cannot, it says so and gets out of
     the way — the same principle as Decision 66's floors, which the engine
     carries and displays but never applies. (Ken, 2026-09-03)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `gmApproval`, picks, `validate` errors and warnings, locking, session zero*
+    - **Rejected:** an empty text pick as an error like any other, which would stop a player locking at session zero, before the GM conversation has happened.
+    - **Revisit if:** a `gmApproval` pick turns out to carry something the engine should check. Then it becomes a list or category pick, and an error again.
 
 79. **(A3 — closes A1 and A2)** **One specialization model, and the count comes
     from the data.** There were three fields for one idea:
@@ -1581,6 +1621,9 @@ No cascade logic to maintain — it falls out of the architecture.
     hand-maintained second template. No schema bump, no `gamedataVersion`
     bump (no computed value changed); `APP_VERSION` **0.8.0 → 0.9.0** minor
     (a player can now do something new). (Ken + Claude, 2026-09-07)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: the print view, `print.css`, the blank sheet, `dist/shadows-blank-sheet.html`, `renderPrintView`*
+    - **Rejected:** a hand-maintained blank-sheet template, which would drift from what the app renders; the blank build runs the real renderer instead. Inventing a Defense model to fill the printed layout, which printed blank until the armor model landed (Decision 100).
+    - **Revisit if:** the print design (Scott's export) needs a value the engine doesn't compute. Then it's a new engine reader, never arithmetic in the print path.
 
 90. **A light theme toggle, ported as a mechanism rather than a token set.**
     `getdangerousgames.com` and `shadowsrpg.com` share a `theme.css` /
@@ -2173,6 +2216,9 @@ No cascade logic to maintain — it falls out of the architecture.
     record rather than choose (33, 34, 42, 47). `CLAUDE.md` carries the
     working rule: before numbering a decision, search the ledger for what it
     touches. (Ken + Claude, 2026-09-22)
+    *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: supersession markers, `INDEX.md`, a ledger archive, the load-bearing table*
+    - **Rejected:** moving the code-level decisions to an archive, because numbers are cited from code and tests and an archive only adds a place to look. Splitting the ledger by importance, which would have archived Decision 93 with the note that caught Deighton's TOL ruling.
+    - **Revisit if:** supersession gets hard to see again. Decision 130's **Replaces** field is the next step.
 
 103. **(Deighton's TOL ruling — combat plan cleanup, data)** **TOL = 1 +
     INT + BOD + COOL bonuses, floor 1. It was INT/COOL/EMP.** Deighton
@@ -3065,70 +3111,53 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** the Advantages chapter gains a balance Advantage worth asking for.
      - **Built:** game data 0.17 (unreleased); `rules.test.mjs` pins it, and fails against the stub.
 
+130. **A decision is a short record that says what it rejected and when to reopen it, and a proposal searches the ledger first.**
+     *2026-09-24 · Ken + Claude · Touches: decision format, ledger, Touches lines, relitigation, load-bearing decisions, CLAUDE.md, docs.test.mjs, R1, A5, AQ1*
+     - **Decided:** from Decision 124 on, an entry is the decision in one bold line, an italic *date · who · Touches* line, and Decided · Why · Rejected · Replaces · Revisit if · Built, in about 25 lines. Build detail goes to the log or the PR. Before proposing a change, a session searches the Touches lines and the ledger for what it touches, and reopens a decision only when its Revisit if has happened or something new has come up that its Rejected list didn't weigh. The fourteen load-bearing decisions (INDEX §3) are backfilled with Touches, Rejected and Revisit if. `docs.test.mjs` checks the shape from 124 on and the backfill on every load-bearing entry.
+     - **Why:** Ken asked for a way to keep settled questions settled (AQ1). They get reopened when the next session can't see what was already turned down, and entries of 50–100 lines buried the choice itself (audit A5).
+     - **Rejected:** one file per decision (ADRs), because numbers are cited from code and tests and splitting the file doesn't record rejections. Rewriting the old entries to the new format, because their text is history; only the fourteen worth reopening by mistake get the backfill.
+     - **Replaces:** nothing. It extends Decision 102's rule (search before numbering) to searching before proposing.
+     - **Revisit if:** the 350-word cap forces real reasoning out of entries, or the Touches lines stop being what sessions search.
+     - **Built:** docs and `docs.test.mjs`; the audit plan's S2; `log/2026.md` 2026-09-24. 124–129 were written this way as a trial first.
+
+131. **Every change has a tier, and the tier says what it must touch.**
+     *2026-09-24 · Ken + Claude · Touches: change tiers, STATE rewrite, session log, CHANGELOG, version bumps, closing a session, shipped.md, CLAUDE.md, R2, A6*
+     - **Decided:** four tiers, each including the one before: **Docs** (the doc; a log line only if it changes how we work), **Fix** (tests, plus a CHANGELOG line, `npm run changelog` and an app patch if a player can see it, plus the finding's INDEX status), **Content** (plus `gamedataVersion` per Decision 68, a log entry, a closed flag's three edits) and **Rule or shape** (plus propose first, a numbered decision, a schema bump and `migrate()` step if the save file moves, STATE rewritten). A merged batch gets its `log/shipped.md` row in the PR itself. `CLAUDE.md` holds the table.
+     - **Why:** "rewrite STATE and append the log" applied to every change, however small, so a one-line data fix carried about 30 lines of docs across five files, and the eleventh place to update was the one that drifted (audit A6).
+     - **Rejected:** three tiers with Fix and Content folded together, since a content change a character can observe earns a log entry and a typo doesn't. Keeping the rule for every change and scripting the edits, because a generated STATE line is still a fact nobody reads.
+     - **Replaces:** nothing numbered. It replaces `CLAUDE.md`'s "close every session by rewriting STATE and appending to the log".
+     - **Revisit if:** a session's work is lost because a Fix-tier change skipped the log, or STATE falls out of date between Rule-or-shape changes.
+     - **Built:** docs only; the audit plan's S2. The scripts that write the mechanical parts (R4) are S5.
+
+132. **One orientation path, one home for each fact, and retired text kept verbatim in one archive.**
+     *2026-09-24 · Ken + Claude · Touches: CLAUDE.md, STATE.md, INDEX.md, SCHEMA header and §6, docs/README.md, HANDOFF.md, CONTRIBUTING.md, README.md, meta.notes, log/archive.md, A4, C10, C11*
+     - **Decided:** a session reads `CLAUDE.md`, then `STATE.md`, then `INDEX.md`, and opens SCHEMA only by section. `docs/README.md` folds into INDEX §1 and the `HANDOFF.md` stub is removed. SCHEMA is §1–§5: its roadmap (§6), §5's notes on closed flags and the data's `meta.notes` move verbatim to `log/archive.md`, which is never edited. `CONTRIBUTING.md` is a short human version that points at `CLAUDE.md` rather than restating it. Releasing and the changelog rule are stated in `CLAUDE.md` only. Ken's open CRB fixes leave the closed combat plan for STATE §5.
+     - **Why:** the story of where to start was told in eight places, and every one no test reads had drifted (audit A4). History inside live documents read as current, and `meta.notes` shipped 5 KB of changelog to every player (C10).
+     - **Rejected:** more tests over the copies, because deleting a copy is cheaper than guarding it (R3). Deleting the retired text outright, because Ken's condition for trimming was that what was done and why stays findable (AQ1).
+     - **Replaces:** Decision 74 in part: its HANDOFF stub, which "remains so saved prompts still land", is gone.
+     - **Revisit if:** a saved prompt or outside link still points at `docs/README.md` or `HANDOFF.md` and lands nowhere.
+     - **Built:** docs and data (no version moves: nothing a character can observe, Decision 68); the audit plan's S2.
+
 ## 5. Open Flags
 
-Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
-~~F4~~ (v4 uses Pain Levels at 2+/5+/8+ HL lost; −1 Skill / −1 Essence die / −5%
-Breaker per level).
+A rules question the app must not answer. Each row is stubbed in the data
+with `flagged: true` and a `flagNote` that names its F-number, and
+`tests/docs.test.mjs` fails on a flag that names no number or a closed one.
+Closing a flag is three edits: its row here, `flagged` in the data, and its
+line in `INDEX.md` §2.
 
-Fixed in Phase 2 (data): five skills referenced stat id `BODY`, which doesn't
-exist in the catalog (`BOD`) — Heavy Weapons, Martial Arts, Melee, Acrobatics
-(synergy) and Athletics (primary). Corrected in `shadows-data.js`; the engine
-now also tolerates legacy aliases (Decision 22). F8 needs no code change when
-ruled: the wizard reads `statPoints` off the power-level entry, so the ruling
-is a four-number data edit.
-
-Resolved in the CRB v4 content pass (2026-08-29): ~~F10~~ — both halves closed.
-**The flag itself outlived the work by four days.** The renames landed on
-2026-08-29 and the docs recorded F10 as closed, but `skillsFlags.flagged` stayed
-`true` in the data and kept rendering a Design flag to players for finished
-work. Cleared 2026-09-02 (Batch 1) — the block was removed rather than set to
-`false`, because dead data that looks live is the defect class Batch 1 exists to
-close. Closing a flag is now two edits, not one: the docs *and* the `flagged`
-field.
-`occult-lore` and `survival` now exist in the catalog, and the Professional
-subtype references were renamed to match ("Occult" → "Occult Lore", "Handgun" →
-"Handguns"). Focused-skill matching is by **name**, so those two had to move
-together. **F5 is three-quarters closed**: Field Medic now names the catalog's
-"Medical", Combat Paralysis' text is no longer ambiguous, and Poverty's Max Rank
-is ruled at 3; only Cyber-Prophetical still carries `flagged: true`, and it
-waits on the Cyborg rewrite (F6).
-
-~~F15~~ closed the same day it opened: Ken confirmed Tracking is **INT/EMP** — the
-CRB's "(INT / INT)" was a slip made while correcting Occult Lore and Survival off
-their derived-attribute synergies — and corrected the CRB. The data had carried
-INT/EMP all along, so nothing changed but the flag.
-
-~~F16~~ closed 2026-09-22: Ken corrected Hemophiliac in the CRB to call for a
-**Medical** Skill Check (both mentions), and the data entry was re-synced to
-match and its flag dropped. Text-only — no computed value or available choice
-moved, so no `gamedataVersion` bump (Decision 68).
-
-Sixteen objects in `shadows-data.js` carry `flagged: true` as of 2026-09-22
-(a recursive count: sixteen, plus F20–F22 opened by the Conditions session,
-minus F1, F2, F14, F17 and F20–F22, closed by Decisions 97–98, plus the
-three F23 entries opened by the hit resolver, Decision 99, plus F24 on
-`damageRules.whileDying`, Decision 100, plus F25 on `naturalArmorRules`,
-Decision 104).
-
-~~F1~~, ~~F2~~, ~~F14~~ and ~~F17~~ closed 2026-09-22 on a design-team ruling
-(Decision 97). F1/F2/F17 confirmed what the app already did; F14 moved a price.
-~~F20~~, ~~F21~~ and ~~F22~~ closed the same day (Decision 98), hours after the
-Conditions session opened them; so did the unnumbered stat-curve flag. `tests/docs.test.mjs` is what keeps the table below honest, not this
-sentence.
-
-~~F11~~ closed 2026-09-23 (Decision 113): 041 now asks for the Intuition
-**skill** at Rank 1, and Quick Study's data follows it.
-
-~~F27~~ opened and closed 2026-09-24 (Decision 129). Hardcore Parkour asked for Cat Like Balance, an
-Advantage culled from an earlier version. Deighton ruled that it becomes Acrobatics 4, and that Time Sense goes.
+**Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
+CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
+F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
+129). How each one closed is in the session log, and the notes that used to sit
+here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
-| F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked | Ken → docs | No |
-| F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling. **Design team, 2026-09-22: still open** — they want to playtest how many Stat Points people realistically get before choosing | Ken/D | **Wizard** |
+| F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked. The Vampire and Werewolf entries' notes on unwritten content (Vampire's missing blocks, the Werewolf's name-only powers and undefined Origins) are filed here too | Ken → docs | No |
+| F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling. **Design team, 2026-09-22: still open** — they want to playtest how many Stat Points people realistically get before choosing. Ruling it needs no code: the wizard reads `statPoints` off each power level, so it's a four-number data edit | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
@@ -3138,226 +3167,11 @@ Advantage culled from an earlier version. Deighton ruled that it becomes Acrobat
 | F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 | F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
 | F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both | Deighton | No |
+| F28 | **Suppression (weapon tag).** On the Titan and the Ironwall. The CRB v4 equipment chapter gives it no rule. Carried as a tag with no effect | Deighton | No |
+| F29 | **Blast (weapon tag).** On several heavy and beam weapons, with a radius, beside or instead of Area and Siege. How it differs from them is never stated. Carried as a tag with no effect | Deighton | No |
+| F30 | **Anti-Materiel (weapon tag).** On the VR-50 'Verdict'. The vehicle rules give it full damage against vehicles; nothing says what it does to a person | Deighton | No |
+| F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated | Deighton | No |
+| F32 | **Arcanist Major Milestones.** 041's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 041? `growth` stays hidden until then (AQ4) | Ken | No |
 
-## 6. Roadmap
+F23–F26 and F28–F31 go to Deighton as one grouped question.
 
-- **Phase 0 — Schema** ✅
-- **Phase 1 — `shadows-data.js`** ✅ — contains: 8 stats + modifier curve,
-  3 derived attributes, resources (Health/Pain Levels, Luck w/ spend costs,
-  Çredits, SFR, Exhaustion), 4 power levels, 34 skills (10 combat / 10
-  utility / 14 general — **36 as of Decision 55**), 57 advantages, 30
-  disadvantages, 5 archetypes
-  (Arcanist draft, Professional draft w/ 7 subtypes, Werewolf draft w/
-  Trueborn origin, Cyborg tbd, Vampire tbd), 5 minor + 25 major milestones,
-  IP rules, creation flow. 13 flagged items carried `flagged: true` inline
-  (11 as of Decision 55).
-- **Phase 2 — App shell + Creation Wizard** ✅ — `index.html`, single file,
-  no build step. Three-pane layout: Intake Ledger step rail · step panel ·
-  live Vitals rail (TOL/WILL/SAN/HP/pools recompute on every input). Full
-  8-step flow: power level (F8 flag surfaced) → identity → stat roll +
-  allocation → archetype (Arcanist focus roll/allocation + aberrations;
-  Professional subtype/required-stat checks/focused-skill picks/natural
-  advantages; Werewolf stat bonus + advantage-purchase block) → history →
-  skills (check preview per row) → CP (disadv/adv, LUCK, Arcanist
-  disciplines, boosts with per-target Max Boost ledger) → review & lock →
-  `<name>.shadows.json` export. Draft autosave to localStorage with resume;
-  import with gamedataVersion + missing-id checks. Engine is pure and
-  isolated between `/*ENGINE-START*/` / `/*ENGINE-END*/` markers — 43 unit
-  tests + 29-assertion jsdom E2E pass.
-- **Phase 3 — Sheet & Session Tracking** ✅ — locked characters land on a
-  live sheet (left rail becomes section nav: Sheet · Trackers · Progression ·
-  Session Log · Loadout & Powers · Notes; Vitals rail switches to a condition
-  readout: HP/Pain/SAN/LUCK/SFR/Ç/IP/MP). **Sheet:** identity, stat + derived
-  grids, trained-skill tables with full check breakdowns (rank + primary +
-  synergy − pain, reason shown inline), untrained reference, adv/disadv,
-  archetype reference. **Trackers:** damage with per-HL boxes and Pain Level
-  card (skill/Essence/Breaker penalties), SAN loss, LUCK with data-driven
-  spend actions (Boost −2 / Explode −3) and undo, generic archetype tracker
-  panels (SFR, Exhaustion, Tolerance Load, Blood Pool w/ manual max),
-  Çredits with transaction ledger, manual adjustments ledger. **Progression:**
-  IP grant/spend/undo with journal, per-target costs computed live, focused-
-  skill 3× detection (plural-tolerant name matching vs F10), learn-new-skill
-  flow (F14 flagged), Milestone Points (session-derived + manual), Minor/Major
-  pick lists with prerequisite chips and the Improved roll prompt.
-  **Sessions:** log form (auto 10 IP overridable, MP toggle, LUCK refresh),
-  history with delete. **Loadout:** editable weapons/gear tables + generic
-  archetype panels (rankedList disciplines, free-entry Grimoire/augments,
-  focused-skills list, Tweak text, Werewolf form toggle). Active sheet
-  autosaves to localStorage and resumes from Home; imports migrate 0.2 → 0.3
-  with versionCheck (now also milestone-id + IPE/journal consistency).
-  Engine still pure between markers — 58 engine unit tests, 46-assertion
-  sheet E2E, 12-assertion wizard→lock regression smoke, all passing (jsdom).
-- **Phase 3.1 — Sheet UX + Iconography** ✅ — locked sheet converted from a
-  single scroll to a nine-tab interface (Decision 30); the creation ledger
-  collapses on lock and a horizontal tab bar takes over. New `shadows-icons.js`
-  module (Decision 31): brand stat set (11 icons, `currentColor`, REF/Hand
-  background bug fixed — Decision 33) + free-to-use Lucide UI set (ISC) for
-  condition cards and tab glyphs. **Main** rebuilt as a full-width command
-  console (Decision 32): condition strip + Stats/Derived beside Combat
-  (trained + untrained) + Weapons quick-ref, Vitals rail hidden on Main only.
-  Stat/derived grids and the Vitals rail are now icon-forward. No schema bump;
-  engine untouched (Decision 34). Verified via headless render across all tabs,
-  desktop + mobile + the <900px stacking breakpoint.
-
-- **Phase 3.2 — Sheet fit & finish** ✅ — full-width sheet on every tab with a
-  slim horizontal vitals bar and an on-demand Vitals flyout drawer (Decisions
-  35-37); four-sphere stat columns on Main with derived/SAN de-duplicated (36);
-  sticky in-header nav reading "Shadows // <name>", the registry banner removed,
-  Home/Export folded into a header overflow (kebab) menu, registry/version moved
-  to a collapsible footer (38-40); number-entry caret fix (41); LUCK refresh
-  confirmed (42); date-input theming (43); Skills unified into one aligned table
-  with per-skill "?" descriptions (44); Traits and Progression made collapsible
-  (45-46). No schema bump; engine untouched (47). Headless jsdom harness at 61
-  assertions; ready to present to Deighton.
-
-- **Phase 3.3 — Audit trail, undo & admin mode** ✅ — character schema → **0.4**
-  (Decision 53). New unified **audit trail**: every play/admin action routes
-  through one `commit()` wrapper into `ch.audit`, with last-in-first-out **Undo**
-  (Decisions 48-49); pure-engine `diffChar`/`recordAction`/`undoLastAction`
-  (arrays diffed as append/removeAt/set). Surfaced as an **Activity Log** section
-  under Session Log with inline + header undo and an admin-only clear (50). New
-  **Admin mode** (kebab toggle + sticky ADMIN banner) free-edits identity, power
-  level, archetype, stats (base+IPE), skills (rank+IPE/add/remove), adv/disadv,
-  and LUCK bonus — bypassing caps/pools, every edit logged and undoable; archetype
-  change is guarded and wipes `archetypeChoices` as one step (51). Main **Health**
-  card becomes a numberless **HL segment strip**; **TOL/WILL/SAN derivations**
-  shown in the Vitals drawer and behind a "?" on the Main Soul cells (52). The two
-  ad-hoc undo buttons retire in favour of the global undo; LUCK's becomes a
-  forward "Regain (+1)". App label → "phase 3.3". Engine no longer byte-identical
-  — harness needs the new assertions + a rerun (53). Validated here by 37 engine
-  diff/undo unit assertions, 8 migrate/record/undo assertions on the real engine,
-  and a 32-assertion jsdom render+interaction smoke across all tabs, admin mode,
-  the activity log, and undo — all passing, zero runtime errors.
-
-- **Phase 3.4 — Repository restructure** ✅ — the app becomes a maintainable
-  git repository (Decision 54). Sources split under `src/`; `index.html` is a
-  shell; `tools/build.mjs` produces the single-file release; CI runs the suite
-  on every push and attaches the built file to tagged releases. Test suite
-  formalized at **20 passing assertions + 2 tracked `todo`s** across three
-  suites: engine units (no DOM), jsdom boot/wizard/all-tabs smoke, and
-  architecture guards. The two `todo`s are confirmed defects written as failing
-  tests so they flip green when fixed — **A1** (Arcanist aberrations render
-  twice; re-verified 2026-08-02 as 6 `[data-spec]` + 6 `[data-aber]` buttons)
-  and **B7** (new: `validate("stats", ch)` throws instead of reporting when the
-  character has no power level, `engine.js:574` as of Decision 60). Also re-confirmed: **B2** is
-  worse than recorded — `MOVEMENT→"MA"` and `ATTRACTIVENESS→"ATTR"` both resolve
-  to ids that do not exist (real ids are `MOB` / `MAG`). No schema bump; engine
-  untouched. *(B2 closed 2026-09-02 by Decision 59 — and it was worse again
-  than this line records: the bad alias did not merely fail to resolve, it
-  threw.)*
-
-- **CRB v4 content pass** ✅ *(2026-08-29 — a data merge, not a phase)* —
-  Skills, Advantages and Disadvantages re-merged from CRB sections 042/043/044
-  (Decisions 55-58). Skills 34 → 36 with flavor lines throughout; every
-  adv/disadv id preserved; three disadvantage point values changed; game data
-  → **0.3**. Closed **F10** outright and three quarters of **F5**; surfaced
-  **F15** (Tracking INT/INT, confirmed a CRB slip and closed the same day) and
-  opened **F16** (Hemophiliac's First Aid reference).
-  Also closed a real gap in the test suite: the stat-id guard looped over a
-  `synergy` array the data does not have, so it had never checked
-  `synergyStat` — the field the engine actually reads, and the one carrying
-  both invalid stats this pass turned up. No app code changed; the suite held
-  at 20 passing / 2 todo / 0 failing throughout.
-
-- **Quick-win pass** ✅ *(2026-09-02 — three audit findings, not a phase)* —
-  **B2**, **B4** and **B5** closed as Decisions 59-61: the two dead stat
-  aliases now resolve (and `normStat` verifies its target, so the class of bug
-  cannot return silently), the superseded `Engine.undoIP` is deleted, and the
-  review step numbers itself off the data. Engine and UI both touched; no
-  schema bump, no data change, no id moved. Suite **28 passing assertions + 2
-  tracked `todo`s** — four new guards, each mutation-tested against the
-  pre-fix code to confirm it actually fails there. **A1** and **B7** remain the
-  two `todo`s.
-
-- **Batch 1 — Engine totality & CRB conformance** ✅ *(2026-09-02)* — the first
-  batch of the debt-ledger plan. Decisions 62-68. **B6, B7, B8, B9, B10** and
-  **B3** closed; the stale **F10** flag cleared. The engine's promise from
-  Decision 22 is now a written contract with a guard behind it, `migrate()`
-  guarantees its own completeness, and `tests/rules.test.mjs` turns the CRB's
-  worked examples into build-breaking assertions. Suite **45 passing + 1 tracked
-  `todo`** across four files — up from 26 + 2. No schema bump and no
-  gamedataVersion bump (Decision 68): sixty computed outputs were diffed before
-  and after and every one was identical. **A1** is now the only `todo`, and it
-  closes with A3 in Batch 3.
-
-- **Batch 2 — App voice & status copy** ✅ *(2026-09-02)* — Decisions 69-73.
-  The app stopped narrating its own build state. Ten leak sites closed across
-  `app.js`, `engine.js` and the data; `flagNote` can no longer render;
-  player-facing state copy consolidated into one `appCopy` block, so the voice
-  is a data edit. `docs/VOICE-APP.md` records the city-voice / tool-voice split
-  and the test for which you are in — *is the player stuck right now?* Suite
-  **51 passing + 1 `todo`**, with `tests/voice.test.mjs` rendering the whole
-  app and reading every string a player can see. No schema or gamedataVersion
-  bump (Decision 68): no computed value moved.
-
-- **Batch 3 — Selection & constraint system** ✅ *(2026-09-03)* — Decisions
-  77-81. `picks` / `excludes` / `requires` built once and hosted by three
-  things: advantages, disadvantages and skills. All ~15 entries Decision 58
-  named are encoded, plus Martial Arts styles. **A3** retrofitted archetype
-  specialization onto one model, which retired the Arcanist / Professional /
-  Werewolf branches in `renderArchetype` and the aberration-only branch in
-  `renderShArchetype` — **A1 and A2 closed as a side effect and the suite's
-  last `todo` flipped green.** Character schema **0.4 → 0.5** (one
-  specialization array replaces three fields, with a `migrate()` step);
-  game data **0.3 → 0.4** (fifteen entries now demand an input they did not
-  before); app **0.5.0 → 0.6.0**. A stale-mirror defect in the Professional
-  natural-advantage pool was found and fixed in passing (Decision 81).
-
-- **Batch 3a — the ledger attention state** ✅ — `renderLedger` marks a passed
-  step done when it has no *errors*, ignoring warnings entirely, so a player who
-  walks past Skills with ten unspent points gets a green tick. That is shipped
-  behaviour for every step and every player, not an Educated problem. A third row
-  state — done / active / needs attention — driven by warnings on a step already
-  passed, plus a callout linking back. The rows are already clickable and
-  `validate()` already emits the warnings. **It goes first because it is the
-  thing that makes `grants` safe to land.**
-
-- **Batch 3b — `grants`** ✅ *(2026-09-05)* — the other half of Decision 58:
-  Educated (+10 Skill Points/rank), Hard to Kill (+1 max HP per Health Level),
-  Lucky / Unlucky (LUCK spend costs) and Long-Lived (Milestones), via a new
-  `grants` array consumed by `skillPool`/`health`/`luckState`/`milestoneState`
-  (Decision 87). **Educated needed a wizard-flow ruling** — bought at step 7,
-  it grows the step-6 pool retroactively — and 3a settled it by construction:
-  surfacing the unspent points and letting the player go back means the points
-  are usable at creation, and the app says so rather than reopening a step in
-  silence. Long-Lived's rank-stacking ambiguity flagged rather than guessed
-  (F17, Decision 88). Game data **0.4 → 0.5**; app **0.7.0 → 0.8.0**.
-
-  **Thick Skin is deliberately not in 3b.** It grants Natural Armor, the armor
-  design is still in flux, and **four separate places in the data already grant
-  Natural Armor in prose** — Thick Skin, the Iron Shirt Martial Arts style, an
-  archetype effect, and an archetype benefit. Four sources for one quantity is
-  the Decision 66 shape (*promote it to a number, read it, display it*), so
-  Natural Armor becomes a real derived value with its own reader when the design
-  lands — not a Thick Skin special case bolted on early. Until then it ships as
-  reference text, like every other un-modeled rule.
-
-- **Decompose `src/ui/app.js`** (Decision 54's deferred refactor) ✅ — done on
-  `refactor/decompose-app-js`, ahead of 3b rather than after it (Decision 86).
-  Then Cyborg (F6) as data rather than a fourth special
-  case. Clear **F8** on its own track — it is a four-number data edit and the
-  only wizard-blocking flag.
-
-- **Magic on the sheet** — planned 2026-09-23 in
-  `docs/plans/magic-on-the-sheet.md`: the Grimoire reads the book (Session 1 —
-  **done**, Decision 108), then acquired Aberrations and a Magic reference
-  (Session 2 — **done**, Decision 110), then starting spells in the wizard
-  (Session 3 — **done**, Decision 111). **The plan is closed.** Its rules
-  questions (`MQ`n) all went to Deighton and were answered (Decision 109).
-
-- **Conditions, damage & armor** (F18's engine half) — planned 2026-09-22 in
-  `docs/plans/combat-and-conditions.md`: Conditions first (Session 2 — **done**,
-  Decisions 95–96), then hit resolution through armor (Session 3 — **done**,
-  Decision 99), then Loadout pickers and recovery actions, including the Turn
-  Reset helper (Session 4 — **done**, Decision 100), then the cleanup session
-  (**done**, Decisions 103–105: Deighton's TOL ruling, Natural Armor as one
-  derived value with F25, the Nanomed Kit), and the Magic-tables side
-  session (**done**, Decision 106: the Cascade and Aberration tables, and a
-  TOL Spent tracker for the Arcanist). **The plan is closed.** Weapon mods and
-  ammo went to `WISHLIST.md`. The plan holds the sequencing rationale and the
-  open questions (`CQ`n).
-
-**Session handoff protocol:** every phase ends with current files +
-this document updated. Ken adds the latest versions to project knowledge.
-A new session resumes with: *"Continue the character sheet build — Phase N.
-Files are in project knowledge; read SCHEMA.md first."*

@@ -25,6 +25,19 @@ const SCHEMA = read("docs/SCHEMA.md");
 const CLAUDE = read("CLAUDE.md");
 const INDEX  = read("docs/INDEX.md");
 
+// One `## ` section of a document, from its heading to the next `## ` or the
+// end. The slices used to end at "## 6.", which went when SCHEMA's roadmap
+// moved to docs/log/archive.md: a missing end marker made indexOf return -1,
+// and slice(a, -1) quietly kept going to the end of the file.
+function section(doc, heading) {
+  const start = doc.indexOf(heading);
+  assert.ok(start >= 0, `no "${heading}" heading — did the document change shape?`);
+  const next = doc.indexOf("\n## ", start + heading.length);
+  return doc.slice(start, next < 0 ? undefined : next);
+}
+const LEDGER = section(SCHEMA, "## 4. Locked Decisions");
+const FLAGS  = section(SCHEMA, "## 5. Open Flags");
+
 test("STATE.md reports the real number of todo tests", () => {
   // Counted from source rather than by running the suite — this test IS the
   // suite, so it cannot run itself. Only the todo count is stated: a todo is
@@ -77,29 +90,32 @@ test("the decision ledger's numbering is unbroken and nothing restates its count
     "CLAUDE.md is restating the suite result — that number drifts, leave it in STATE.md");
 });
 
-test("closing a flag is two edits: the SCHEMA table AND the data", () => {
-  // F10's table row was struck through while `skillsFlags.flagged` stayed true,
-  // so the app kept rendering it. Whichever half you did, this catches the other.
-  const section = SCHEMA.slice(SCHEMA.indexOf("## 5. Open Flags"), SCHEMA.indexOf("## 6."));
-  const openRows = [...section.matchAll(/^\| (F\d+) \|/gm)].map(m => m[1]);
+test("every flag in the data names an F-number that is open in SCHEMA §5", () => {
+  // Two ways a flag goes untracked. F10's table row was struck through while
+  // `skillsFlags.flagged` stayed true, so the app kept rendering it. And seven
+  // flags never had a number at all, so nothing asked their questions: four
+  // weapon tags said "confirm with Deighton" in no list Deighton sees (audit
+  // A7). A flag is `flagged: true` plus a flagNote that names every F it waits
+  // on, and each of those must be open. Closing a flag is its three edits.
+  const openRows = [...FLAGS.matchAll(/^\| (F\d+) \|/gm)].map(m => m[1]);
   assert.ok(openRows.length > 5, `parsed only ${openRows.length} open-flag rows — did §5's table change?`);
   const open = new Set(openRows);
 
-  // F-numbers the data still carries a live `flagged: true` for.
-  const live = new Map();
+  const problems = [];
   (function walk(o, path) {
     if (!o || typeof o !== "object") return;
     if (Array.isArray(o)) return o.forEach((v, i) => walk(v, `${path}[${i}]`));
-    if (o.flagged === true && typeof o.flagNote === "string") {
-      const m = /\b(F\d+)\b/.exec(o.flagNote);
-      if (m) live.set(m[1], o.id || path);
+    if (o.flagged === true) {
+      const where = o.id ? `${path} (${o.id})` : path;
+      const named = [...String(o.flagNote || "").matchAll(/\bF(\d+)\b/g)].map(m => `F${m[1]}`);
+      if (!named.length) problems.push(`${where} is flagged but its flagNote names no F-number`);
+      for (const f of named) {
+        if (!open.has(f)) problems.push(`${where} names ${f}, which is not open in SCHEMA §5`);
+      }
     }
     for (const k of Object.keys(o)) walk(o[k], path ? `${path}.${k}` : k);
   })(D, "");
-
-  const stale = [...live].filter(([f]) => !open.has(f))
-    .map(([f, where]) => `${f} is closed in SCHEMA §5 but "${where}" still has flagged:true`);
-  assert.deepEqual(stale, []);
+  assert.deepEqual(problems, []);
 });
 
 test("the app version agrees across app.js, package.json and STATE.md", () => {
@@ -185,8 +201,7 @@ test("INDEX.md lists every decision and every open flag, exactly once", () => {
   // session to the wrong place with confidence. So it is generated from the
   // ledger and checked against it: add a decision without indexing it, or close
   // a flag without removing its row, and the build fails.
-  const sec  = SCHEMA.slice(SCHEMA.indexOf("## 4. Locked Decisions"), SCHEMA.indexOf("## 5. Open Flags"));
-  const ledger = [...sec.matchAll(/^(\d{1,3})\. /gm)].map(m => Number(m[1]));
+  const ledger = [...LEDGER.matchAll(/^(\d{1,3})\. /gm)].map(m => Number(m[1]));
   assert.ok(ledger.length > 50, `parsed only ${ledger.length} decisions — did §4's format change?`);
 
   const topics = INDEX.slice(INDEX.indexOf("## 3. Decisions by topic"));
@@ -204,8 +219,7 @@ test("INDEX.md lists every decision and every open flag, exactly once", () => {
   assert.deepEqual(phantom, [], "INDEX.md lists a decision number that SCHEMA §4 does not have");
 
   // Every flag still open in §5 needs a row in the id registry, and nothing else.
-  const fsec = SCHEMA.slice(SCHEMA.indexOf("## 5. Open Flags"), SCHEMA.indexOf("## 6."));
-  const open = [...new Set([...fsec.matchAll(/^\| (F\d+) \|/gm)].map(m => m[1]))];
+  const open = [...new Set([...FLAGS.matchAll(/^\| (F\d+) \|/gm)].map(m => m[1]))];
   const registry = INDEX.slice(INDEX.indexOf("### Open flags"), INDEX.indexOf("## 3."));
   const indexed = [...new Set([...registry.matchAll(/^\| `(F\d+)` \|/gm)].map(m => m[1]))];
   assert.deepEqual(open.filter(f => !indexed.includes(f)), [],
@@ -223,7 +237,7 @@ test("a superseded decision says so in SCHEMA and in INDEX, the same way", () =>
   // in INDEX -- `→ **superseded [in part] by N**` -- struck through when whole.
   // Decision 102.
   const nums = t => (t.match(/\d+/g) || []).map(Number).sort((a, b) => a - b);
-  const sec = SCHEMA.slice(SCHEMA.indexOf("## 4. Locked Decisions"), SCHEMA.indexOf("## 5. Open Flags"));
+  const sec = LEDGER;
   const ledger = new Map();
   for (const part of sec.split(/\n(?=\d{1,3}\. )/)) {
     const n = part.match(/^(\d{1,3})\. /);
@@ -258,6 +272,47 @@ test("a superseded decision says so in SCHEMA and in INDEX, the same way", () =>
     assert.ok(all.has(n), `the load-bearing table cites Decision ${n}, which SCHEMA §4 does not have`);
     assert.ok(!(ledger.has(n) && !ledger.get(n).part), `the load-bearing table cites Decision ${n}, which is wholly superseded`);
   }
+});
+
+test("a decision from 124 on is a short record, and a load-bearing one says what it rejected", () => {
+  // Decisions 99 and 100 ran past a hundred lines each: build detail, test
+  // names and review notes buried the choice, and a settled question got
+  // reopened because nobody could see what had already been turned down (audit
+  // A5; plan §6; Decision 130). From 124 on an entry is the decision in bold,
+  // an italic *date · who · Touches: …* line, and six fields in order, about
+  // 25 wrapped lines at most. Older entries are history and exempt, except the
+  // load-bearing ones INDEX §3 names, which were backfilled with what they
+  // rejected and when to reopen them, because those are the ones worth
+  // reopening by mistake.
+  const FIELDS = ["Decided", "Why", "Rejected", "Replaces", "Revisit if", "Built"];
+  const entries = new Map();
+  for (const part of LEDGER.split(/\n(?=\d{1,3}\. )/)) {
+    const n = /^(\d{1,3})\. /.exec(part);
+    if (n) entries.set(Number(n[1]), part.trimEnd());
+  }
+  const bad = [];
+  let checked = 0;
+  for (const [n, text] of entries) {
+    if (n < 124) continue;
+    checked++;
+    const [first, second = ""] = text.split("\n");
+    if (!/^\d{1,3}\. \*\*[^*].*\*\*$/.test(first)) bad.push(`${n}: line 1 should be the decision alone, in bold`);
+    if (!/^\s+\*\d{4}-\d{2}-\d{2} · .+ · Touches: .+\*$/.test(second)) bad.push(`${n}: line 2 should be *YYYY-MM-DD · who · Touches: …*`);
+    const got = [...text.matchAll(/^\s+- \*\*([A-Za-z ]+):\*\*/gm)].map(m => m[1]);
+    if (got.join("|") !== FIELDS.join("|")) bad.push(`${n}: has ${got.join(", ") || "no fields"}; needs ${FIELDS.join(", ")}, in that order`);
+    const words = text.split(/\s+/).length;
+    if (words > 350) bad.push(`${n}: ${words} words; a decision is a short record, and build detail goes to log/ or the PR`);
+  }
+  assert.ok(checked >= 6, `checked only ${checked} decisions from 124 on — did §4's format change?`);
+
+  const load = INDEX.slice(INDEX.indexOf("**Load-bearing.**"), INDEX.indexOf("### Rules the app enforces"));
+  for (const [, num] of load.matchAll(/^\| (\d{1,3}) \|/gm)) {
+    const text = entries.get(Number(num)) || "";
+    for (const f of ["Rejected", "Revisit if"]) {
+      if (!new RegExp(`^\\s+- \\*\\*${f}:\\*\\* \\S`, "m").test(text)) bad.push(`${num} is load-bearing but has no ${f} line`);
+    }
+  }
+  assert.deepEqual(bad, []);
 });
 
 test("the in-app release notes are generated from the current CHANGELOG.md (Decision 123)", async () => {
