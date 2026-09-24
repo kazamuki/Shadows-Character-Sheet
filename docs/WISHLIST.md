@@ -171,7 +171,7 @@ not a system.
 
 ### Skills
 
-**W19 — Choosing a Martial Arts style breaks the Skills grid.** *Ken · ⏭ (a bug)*
+~~**W19 — Choosing a Martial Arts style breaks the Skills grid.**~~ *Ken · → fixed in app 0.19.1: `.alloc > .picks` spans the grid, with a smoke guard (mutation-tested)*
 Train Martial Arts in the wizard's Skills step and its style picker appears
 squeezed into a narrow column, and every skill below it shifts one column
 over: Melee's name sits under the steppers and its bonus wraps to the left
@@ -236,7 +236,7 @@ of 7" status line out of sight. Make that block sticky at the top of the
 modal body. It's the picker's shared renderer, so this is for the sheet as
 well as for starting spells.
 
-**W26 — A way to finish, not just close.** *Ken · 🔎*
+**W26 — A way to finish, not just close.** *Ken · ⏭ (a), Ken 2026-09-23*
 The modal only has × and Esc, which read as "cancel", yet every pick has
 already been saved. Two shapes, and they differ:
 (a) a **Done** button in the modal's footer that just closes, making it
@@ -245,7 +245,7 @@ clear the picks are already kept (small, matches how it works now); or
 session's picks away. (b) changes how the picker commits and how undo
 groups (one audit entry per session instead of one per spell). Claude's
 take: (a), unless there's a case for backing out of a whole picking session
-that per-pick Undo doesn't already cover. Needs Ken's call on the shape.
+that per-pick Undo doesn't already cover. **Ken chose (a), a Done button,** on 2026-09-23.
 
 ### Docs
 

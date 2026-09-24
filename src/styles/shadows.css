@@ -160,6 +160,9 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 /* allocator rows */
 .alloc{display:grid; grid-template-columns:1fr auto auto; gap:8px 14px; align-items:center}
 .alloc-row{display:contents}
+/* W19: a picks block (Martial Arts styles) inside the grid spans every column.
+   As one plain grid child it took one cell and shifted every later row over. */
+.alloc > .picks{grid-column:1 / -1}
 .alloc-row .name{font-size:.9rem}
 .alloc-row .name small{display:block; color:var(--dim); font-size:.74rem}
 .stepper{display:flex; align-items:center; gap:0; border:1px solid var(--frame); border-radius:4px; overflow:hidden}
