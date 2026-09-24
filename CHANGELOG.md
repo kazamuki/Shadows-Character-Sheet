@@ -27,6 +27,8 @@ Character schema **0.9** · game data **0.15** · ruleset CRB v4 (in progress).
 - **The magic text matches Scott's finished chapter.** Force's Domain description, how
   Overflow reads past 2x, Dominate Mind's text, and two Aberrations (Animal Ken reads
   MAG, and Beacon works like Monster Magnet).
+- **The AP tag on a spell is explained.** Iron Lance's AP now reads Armor Piercing: it
+  skips RES, and PROT still rolls.
 
 ## v0.20.0 — 2026-09-23
 

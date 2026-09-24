@@ -418,7 +418,7 @@ window.SHADOWS_DATA = {
     // force, matter, mind, soul — 5 total.
   ],
   spellTiers: [ { id: "cantrip", name: "Cantrip", tn: 7, th: 1, description: "..." } ], // 4: cantrip/standard/advanced/superior
-  spellTagGlossary: [ { id: "AOE", description: "..." } ], // 8 entries, incl. one flagged (AP — not in the WIP's own tag list)
+  spellTagGlossary: [ { id: "AOE", description: "..." } ], // 8 entries; AP is the weapon tag's meaning (Decision 116)
   // `spellcraftRules` documents the roll, the five outcomes (Overflow/
   // Manifest/Fizzle/Rupture/Cascade), Concentration, Sovereign Soul,
   // Charging, and the Improvised → Known → Mastered progression as
@@ -1695,7 +1695,7 @@ No cascade logic to maintain — it falls out of the architecture.
     Loadout picker; → **built by Decision 108**), and the Tools of the Trade pricing tables (every row is
     still `[X] Ç` in the WIP, not ready to merge as a finished catalog the
     way the equipment chapter's pricing was). (Ken + Claude, 2026-09-20)
-    → **Superseded in part by Decision 103** — its note that INT/BOD/COOL was a misreading: Deighton ruled TOL is INT/BOD/COOL.
+    → **Superseded in part by Decisions 103 and 116** — 103: its note that INT/BOD/COOL was a misreading: Deighton ruled TOL is INT/BOD/COOL. 116: `AP` is no longer flagged; it means Armor Piercing, as the weapon tag does.
 
 94. **(Print sheet — visual redesign, app)** **The printable sheet's front
     page moves from a linear stack of full-width sections to a case-file
@@ -2694,6 +2694,18 @@ No cascade logic to maintain — it falls out of the architecture.
     No game data or schema bump, since nothing a character computes changes
     (Decision 68). App **0.20.0 → 0.21.0**. (Ken + Scott + Claude,
     2026-09-24)
+
+116. **(The spell tag AP is Armor Piercing — data)** **`spellTagGlossary`'s
+    `AP` means what the weapon tag means: it bypasses the target's RES, and
+    PROT still rolls.** Ken's ruling, 2026-09-24. **Replaces Decision 93 in
+    part**, which flagged AP rather than assume it, because only Iron Lance
+    uses it and the Magic chapter's own tag list doesn't name it. Iron
+    Lance's effect line already reads "SP Damage, armor piercing", so the
+    CRB said it all along. The flag and its note are gone, and the player
+    now sees a definition instead of "(Undefined…)". Ken adds AP to the
+    appendix's tag list. It's display text, since no engine code reads spell
+    tags, so there's no game data bump (Decision 68). Ships in app
+    **0.21.0** with Decision 115. (Ken + Claude, 2026-09-24)
 
 ## 5. Open Flags
 

@@ -130,8 +130,9 @@ and **W17** could share it.
   the print export. **New, from his finished Magic chapter:** Concentration
   says a Talisman holds a spell for 1 die fewer and an Artifact for 2. The
   Enchantment section now says an inscribed spell isn't held at all and runs
-  on a duration. The data still carries the first rule. Also, `AP` is still
-  on Iron Lance but not in the tag list.
+  on a duration. The data still carries the first rule.
+- **Ken:** add `AP` (Armor Piercing) to the spell appendix's tag list, to
+  match Decision 116.
 - **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
   25 IP new-skill price and the stat curve past 10. Each is written up in
   `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
