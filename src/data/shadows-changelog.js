@@ -2,6 +2,23 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.24.0",
+    "date": null,
+    "intro": [
+      "Character schema **0.11** · game data **0.17**. A character file from 0.23 opens as it was, and gets its intake number the first time it's opened."
+    ],
+    "items": [
+      "**Every character has a NYTE City intake number.** It sits under your name on the sheet, on the printed sheet and on the last step before you lock, with its barcode, so two characters called Vex are never mixed up. A character keeps its number for good, in every file you export.",
+      "**Nothing replaces your saved character without asking.** This browser keeps one sheet and one draft. Importing a file, starting a new character, or locking one now asks first if that would replace a different character, or a newer copy of the same one, and offers to export the saved one before it goes.",
+      "**Main names your specialization.** The line under your name reads, for example, *Werewolf · Trueborn · Heroic*.",
+      "**Hardcore Parkour can be taken.** One of its prerequisites named an Advantage that's no longer in the game, so the Milestone stayed locked for everyone. It now asks for one Major Milestone, Acrobatics at rank 4 or better, and Danger Sense.",
+      "**A Trueborn sees their Lunar Phase Blessing.** The Werewolf's starting power, and what each phase of the moon grants, is on the Archetype tab and on the Trueborn's card when you make one. The powers that come later are listed too, marked as not written yet.",
+      "**Mastering a spell no longer looks like tampering.** An Arcanist who had mastered a spell was told their file might have been edited by hand. It wasn't, and the app no longer says so.",
+      "**What the app finds when it opens a file stays until you dismiss it.** If a character holds something the game no longer has, the note sits at the top of every page, in the wizard too, instead of vanishing on your next click.",
+      "**Character files are safer to share.** A file made to cause trouble can no longer put anything on your screen but text, whether you open it, edit it in Admin mode, or undo."
+    ]
+  },
+  {
     "version": "0.23.0",
     "date": "2026-09-24",
     "intro": [],

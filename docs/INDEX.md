@@ -20,7 +20,7 @@ Generated summaries are one line each and deliberately lossy — they are for
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The shape of the game data or a character file | `SCHEMA.md` §2 and §3 |
 | What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
-| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_) | `plans/` — none in flight. Both there are closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_) | `plans/` — **one proposed, waiting on Ken:** `audit-2026-09-remediation.md` (acting on the 2026-09-24 audit, `AQ`_n_). Two closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `docs/log/2026.md` |
@@ -37,13 +37,15 @@ contains and why it is split that way — lives in **`SCHEMA.md` §6**.
 
 ## 2. Id registry
 
-Five namespaces. Each id is defined in exactly one place and referenced everywhere.
+Each id is defined in exactly one place and referenced everywhere.
 
 | Prefix | Means | Defined in |
 |---|---|---|
-| `A`_n_ | Architectural finding — a design that has drifted | `audits/2026-06-16_rev9-whole-app-audit.md` §1 |
-| `B`_n_ | Bug / correctness finding | same audit, §2 |
-| `C`_n_ | Carried note — real but not yet actionable | same audit, §3 |
+| `A`_n_ | Architectural finding — a design that has drifted | A1–A3: `audits/2026-06-16_rev9-whole-app-audit.md` §1 · A4–A12: `audits/2026-09-24_whole-app-audit.md` §4 |
+| `B`_n_ | Bug / correctness finding | B1–B10: rev 9 audit §2 · B11–B19: 2026-09-24 audit §5 |
+| `C`_n_ | Carried note — real but not yet actionable | C1–C3: rev 9 audit §3 · C4–C16: 2026-09-24 audit §6 |
+| `R`_n_ | Recommended practice — a proposal until Ken adopts it and it is numbered | 2026-09-24 audit §8 |
+| `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/audit-2026-09-remediation.md` §5 |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
 | `D`_n_ | Shorthand used here for decision _n_ | `SCHEMA.md` §4 |
 | `W`_n_ | Wishlist item — an idea, not a commitment; statuses live with the item | `WISHLIST.md` §1 |
@@ -68,6 +70,32 @@ Five namespaces. Each id is defined in exactly one place and referenced everywhe
 | `C1` | Sheet number inputs vs. the caret fix — forward note | **open** | if a field moves to live `oninput` |
 | `C2` | Admin can't reach archetype-specific choices | **open** | easier now: one array |
 | `C3` | `panelMax` / SFR display copy | **open** | re-read after F6 and F7 |
+
+**From the 2026-09-24 audit.** Open unless marked; the plan session that would take each is in the last column. Full text in the audit.
+
+| Id | What | Status | Where |
+|---|---|---|---|
+| `A4` | Orientation spread across eight docs; the untested ones drifted | **open**: the stale facts fixed, the structure left | plan S2 |
+| `A5` | The decision ledger is doing three jobs | **open** | plan S2 |
+| `A6` | Per-change documentation tax out of proportion to the change | **open** | plan S2, S5 |
+| `A7` | Seven flags have no F-number; four are unasked Deighton questions | **open** | plan S2 |
+| `A8` | Archetypes special-cased by id; Professional rules parsed from prose | **open** | plan S3, S4 |
+| `A9` | Data fields that look like settings but aren't read (B3's class) | **open** | plan S4 |
+| `A10` | Merged content no player can see | **open** | plan S6 · AQ4 |
+| `A11` | `notes: "natural"` doubles as a type marker | **open** | plan S7 |
+| `A12` | UI split by render/bind, not by screen | **open** | plan S7 |
+| `B11` | Mastering a spell trips `versionCheck`'s hand-edit warning | closed | plan S1 · app 0.23.1 |
+| `B12` | The Mercenary never picks its fifth Focused Skill | **open** | plan S3 |
+| `B13` | Focused Skill Max Bonus never applied | **open** | plan S3 |
+| `B14` | Jack-of-all-Trades pays full price for every skill | **open** | plan S3 |
+| `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | closed | → F27 → Deighton's ruling, D129 |
+| `B16` | A character file could put markup on the page (Admin ids; numbers stored as text; crafted undo) | closed | plan S1 · D124 |
+| `B17` | The Trueborn's Lunar Phase Blessing never renders | closed | plan S1 · D126 |
+| `B18` | Import, New and Lock replace the saved sheet without asking | closed | plan S1 · D128 |
+| `B19` | Phone: the sticky header covers 30% of the screen | **open** | plan S6 |
+| `C4`, `C13` | Import warnings vanished; the voice corpus read one archetype's sheet | closed | plan S1 · D125 |
+| `C16` | Main's subtitle read a field removed in schema 0.5, so it never named the specialization | closed | with B18 · app 0.24.0 |
+| `C5`–`C12`, `C14`, `C15` | Carried notes: `alert()`s, dead code, fonts offline, audit growth, orphans, `meta.notes`, closed plans with open work, dev server, releases, suite time | **open** | plan S2–S7 |
 
 ### Open flags
 
@@ -167,6 +195,7 @@ Where game text comes from and how it is merged.
 - **65** *(Mechanism 3)* — The rulebook's worked examples run as tests.
 - **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`.
 - **113** *(Quick Study's Intuition — F11)* — Quick Study's prerequisite is the Intuition skill at Rank 1, per 041; the old "Intuition Advantage" matched no entry, so no one could take it.
+- **129** *(Hardcore Parkour's prerequisites — F27)* — 1 Major Milestone, Acrobatics 4 and Danger Sense 1; Cat Like Balance becomes Acrobatics 4, Time Sense is dropped (Deighton).
 
 ### Archetypes & specialization
 
@@ -180,6 +209,7 @@ The generic archetype structure, and the pick that defines one.
 - **77** *(Batch 3)* — One selection system, three hosts.
 - **78** *(Batch 3)* — The mechanical picks are the app's business; the fiction is the table's.
 - **79** *(A3 — closes A1 and A2)* — One specialization model, and the count comes from the data.
+- **126** *(Option powers — B17)* — `starterPower`/`additionalPowers` render from the data; an array of plain objects on a power is a table; no text means "not written yet".
 
 ### Character file & migration
 
@@ -193,6 +223,8 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **92** *(Weapons, Ammo & Armor — data)* — The equipment chapter merges as catalogs, not as engine logic; character schema 0.5 → 0.6.
 - **93** *(Magic — archetype-independent half, data)* — The Magic chapter splits into a universal Spellcraft system and an archetype question (Origins); only the first merges, and it corrects a live mechanical error along the way. Character schema 0.6 → 0.7. → **superseded in part by 103 and 116**
 - **95** *(Conditions — catalog and schema 0.8)* — Conditions are a data catalog with structured hooks; active ones are inputs, one per id (per body part for location-bearing ones); game data 0.7 → 0.8, character schema 0.7 → 0.8, with the plan's damage and armor fields landed in the same migration.
+- **125** *(Load findings — C4)* — what `versionCheck` finds stays until dismissed; a bare game-data version difference shows once.
+- **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first.
 
 ### Engine contracts
 
@@ -208,6 +240,7 @@ Promises the engine makes and the guards behind them.
 - **87** *(Batch 3b)* — The other half of Decision 58 lands: a `grants` array gives an advantage/disadvantage a static mechanical effect.
 - **88** *(Batch 3b, F17)* — Long-Lived's ranks stack.
 - **91** *(PR #7 review, closed)* — One prerequisite vocabulary, checked in one place: `requirementState`/`majorPrereqs` share `checkPrereqs`, the Professional stat gate reads `requires` data, `heldIds` reaches skills.
+- **124** *(A character file is untrusted input — B16)* — every stored number is a number after `migrate()`; undo writes only to the character; Admin addresses rows by position; `hostile.test.mjs` is the guard.
 
 ### Sheet & play tracking
 
@@ -293,10 +326,11 @@ How the project itself is organised.
 
 - **54** *(Phase 3.4)* — The app becomes a repository.
 - **61** *(B5)* — The review step's number derives from creationFlow.steps.
-- **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place.
+- **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place. → **superseded in part by 127**
 - **86** *(Repository)* — Decision 54's deferred refactor lands: `src/ui/app.js` splits into four classic scripts.
 - **101** *(Docs)* — The batch board leaves `STATE.md` for `docs/log/shipped.md`, and unscheduled ideas get `docs/WISHLIST.md`.
 - **102** *(Docs)* — A decision that replaces another marks it in the same change — in SCHEMA §4 and here — and a test holds the two together.
+- **127** *(STATE's suite line — AQ2)* — STATE states the todo count only; no pass total, no live version.
 
 ---
 

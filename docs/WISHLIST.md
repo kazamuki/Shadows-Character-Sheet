@@ -161,6 +161,15 @@ Which damage types those are, and whether the three replace the one upgrade,
 is a rules question (it's F23's neighbour), so these stayed out of the
 catalog. Once ruled they're armor upgrades, not gear.
 
+**W30 — Reload from what you carry.** *Claude · 💡 · follows S6's Ammo category*
+Raised 2026-09-24, with AQ4. Once ammunition is in the shop as its own category
+(the audit plan's S6), Reload could take a magazine from the matching rounds you
+carry and say when you're out, the way the Nanomed Kit already comes off what
+you carry. The data has a hook, `weaponType` on each ammunition entry
+("Handgun", "Rifle (shotgun)"). What it lacks: how a bought unit ("15Ç/mag")
+maps to a weapon's capacity, and whether one "mag" of Handgun Rounds fits every
+handgun. If the CRB is silent, that's a question for Deighton, not a guess.
+
 ### Theme & polish
 
 ~~**W7 — Primary buttons are unreadable in light mode.**~~ *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
@@ -266,6 +275,69 @@ groups (one audit entry per session instead of one per spell). Claude's
 take: (a), unless there's a case for backing out of a whole picking session
 that per-pick Undo doesn't already cover. **Ken chose (a), a Done button,** on 2026-09-23.
 
+### Beyond one sheet
+
+**W29 — A GM mode: link to the table's characters, read them, leave notes.** *Ken · 💡 · a different tier of product: needs a server*
+Raised 2026-09-24, at the end of the whole-app audit. Today a GM who wants a
+player's HP, Conditions or loadout asks for it, or collects exported files by
+hand. The wish: the GM links up with the characters at the table, sees their
+data without asking, and can put notes onto a character's sheet.
+
+*What already points this way.*
+- **Identity.** Every character has a permanent NYTE City intake number (Decision 128).
+- **What gets synced.** A character stores only inputs (constraint 7), and every change
+  is already a small structural patch in the audit trail (Decisions 48–49). Those
+  patches are exactly what a sync layer sends.
+- **One engine on both ends.** The engine is pure and never touches the DOM
+  (constraint 5), so a server could run the same code to check and compute.
+- **The gate.** `migrate()` already treats every file as untrusted (Decision 124). A
+  server would run the same gate on everything it accepts.
+
+*What it must respect.*
+- **Constraint 1.** The sheet keeps working from `file://` with no server. Linking is
+  an extra that needs a network, never a requirement.
+- **The player owns the character.** The GM doesn't edit it. GM writes are *notes*
+  and *suggestions* ("take 12 Ballistic to the torso") that the player accepts, and an
+  accepted one becomes an ordinary undoable action on the player's own sheet. That
+  also avoids the hard problem of two people editing one sheet.
+- **The intake number is a name, not a key.** It's printed on paper. Access comes from
+  joining a table, never from knowing a number.
+- **Consent and privacy.** Joining a table is what lets the GM see a sheet, and
+  leaving stops it. Player data on a server means someone owns the hosting, the
+  cost and how long it's kept.
+
+*A skeleton, cheapest first.*
+1. **No server.** After S6's roster, a GM's browser holds several characters
+   read-only, imported from the players' exports and refreshed by re-importing (a
+   newer copy of the same intake number just updates; Decision 128's rule). GM
+   notes go back as a small "dispatch" file a player imports into a *From your GM*
+   inbox. Most of the value, with no infrastructure.
+2. **Live, read-only.** A table service. A player's sheet pushes its latest snapshot,
+   and the GM's view subscribes.
+3. **Two-way, player-approved.** GM notes and suggested changes are pushed to the
+   player's sheet and accepted or declined there.
+4. **The GM toolkit on top:** initiative, one hit applied to several characters,
+   encounter state. That's Scott's area, so his design as much as the app's.
+
+For stages 2–3, the API is roughly:
+```
+POST   /tables                           GM creates a table        → { tableId, joinCode }
+POST   /tables/:t/seats                  player joins: code + a character snapshot → { seatToken }
+GET    /tables/:t/characters             GM: every seated character, latest snapshot + revision
+PUT    /characters/:intake               player: new snapshot { rev, character }, or the patches since rev
+GET    /tables/:t/events                 live stream (SSE or WebSocket): { intake, rev } changed
+POST   /characters/:intake/notes         GM: { text, visibility: "player" | "gm-only" }
+POST   /characters/:intake/suggestions   GM: { label, patch } → the player accepts or declines
+DELETE /tables/:t/seats/:intake          player leaves; the GM's copy goes with them
+```
+It can stay small: one serverless function and one store per table (Cloudflare
+Workers with Durable Objects, or a hosted realtime database). Players join with
+a code or a QR at the table; accounts can wait.
+
+*Before anything is built:* who hosts and pays; whether stage 1 is enough on its
+own; how long player data is kept; and whether this is the character sheet's
+job or the GM toolkit's.
+
 ### Docs
 
 ~~**W18 — `CHANGELOG.md` stopped at 0.7.0.**~~ *Claude · → caught up through v0.15.0 in `CHANGELOG.md`; `docs.test.mjs` now fails without a section for the current version*
@@ -283,8 +355,10 @@ the same way again.
 
 ## 2. Notes for whoever picks these up
 
-- **What's open:** W28 (Magic's Services, blocked on Deighton). Everything
-  else on this list has moved out. New ideas get the next free number, W29.
+- **What's open:** W28 (Magic's Services, blocked on Deighton), W29 (a GM
+  mode, a server-tier idea) and W30 (Reload from carried ammo, after S6).
+  Everything else on this list has moved out. New ideas get the next free
+  number, W31.
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
   for a small panel beside what opened it, which follows the render; the

@@ -1,7 +1,6 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
-**Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.14) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-24 (the wishlist session: Decisions 117–122, schema 0.10, game data 0.16)
+**Current versions are in `STATE.md`, and only there** (this line stated them once and went stale; audit A4). Ruleset target: CRB v4 (in progress).
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -14,16 +13,19 @@ should start by reading this file.
 
 Content, rules, and presentation are separated so game data can change without
 touching the app. Since Phase 3.4 (Decision 54) these live as separate files
-under `src/`, loaded by a shell in fixed order: data → icons → engine → ui.
+under `src/`, loaded by a shell in fixed order: theme-init → data (game data,
+then the generated release notes) → icons → engine → ui. `tests/build.test.mjs`
+enforces the order.
 
 | File | Role | Who edits it |
 |---|---|---|
 | `src/data/shadows-data.js` | All game content: stats, skills, adv/disadv, power levels, archetypes. JSON wrapped in `window.SHADOWS_DATA = { ... }` (the wrapper exists because browsers block `fetch()` of local `.json` files when an HTML file is opened from disk) | Designers, in any text editor |
 | `src/data/shadows-icons.js` | All iconography as inline-SVG strings on `window.SHADOWS_ICONS` (`stats` = brand set keyed by stat/derived id; `ui` = free-to-use chrome icons keyed by name). Same `<script>`-wrapper reason as the data file (see below) | Asset pipeline / designers |
 | `src/engine/engine.js` | The pure rules engine. Reads `SHADOWS_DATA`, returns values, **never touches the DOM** — it is loaded in a bare VM by the test suite | App maintainers |
-| `src/ui/app.js` | The app: creation wizard, sheet view, session tracking. Renders off the engine, never hardcodes content | App maintainers |
-| `src/styles/shadows.css` | Brand tokens and all styling | App maintainers |
-| `index.html` | A 31-line shell — markup and `<script src>` tags only. No inline logic, no inline styles | Structural changes only |
+| `src/data/shadows-changelog.js` | The release notes behind **What's new**, generated from `CHANGELOG.md` by `npm run changelog`. Never edited by hand (Decision 123) | Generated |
+| `src/ui/` | The app as four classic scripts sharing one global scope, loaded in order (Decision 86): `shared.js` (state, `commit()`, modal/popover primitives, helpers), `wizard.js` (the eight creation steps and Home), `sheet.js` (the nine sheet tabs, Admin, the print view), `app.js` (chrome, event wiring, boot). `theme-init.js` runs first, in `<head>`, so the theme applies before paint. Renders off the engine, never hardcodes content | App maintainers |
+| `src/styles/shadows.css`, `print.css` | Brand tokens and all screen styling; the printed sheet's layout (`media="print"`, kept on inlining) | App maintainers |
+| `index.html` | A shell: markup and `<script src>`/`<link>` tags only. No inline logic, no inline styles | Structural changes only |
 | `*.shadows.json` | One character per file. Exported/imported through the app. Portable, player-owned | The app (players via UI) |
 
 **Why icons are a `.js` file, not loose `.svg` files (Phase 3.1 decision).** Three
@@ -66,9 +68,9 @@ Top-level shape. Every content entry supports an optional `"flagged": true` +
 ```js
 window.SHADOWS_DATA = {
   meta: {
-    schemaVersion: "0.3",
-    rulesetVersion: "CRB v4 WIP",
-    updated: "2026-06-11"
+    gamedataVersion: "0.17",          // Decision 75: the data's own version (a character's is schemaVersion)
+    rulesetVersion: "CRB v4 (in progress)",
+    updated: "2026-09-24"
   },
 
   // ── Stats ────────────────────────────────────────────────
@@ -106,11 +108,11 @@ window.SHADOWS_DATA = {
     luck: {
       startingValue: 2,
       buyUpWith: "characterPoints",
-      cpCostPerPoint: null,          // FLAGGED — see §5
+      cpCostPerPoint: 1,             // F1/F2 confirmed 1:1 (Decision 97)
       exemptFromBoostCap: true       // confirmed by Ken 2026-06-11
     },
     healthLevels: {
-      levelsPerBOD: 1,               // 1 Health Level per point of BOD
+      maxLevels: 10,                 // 1 Health Level per point of BOD, an invariant (Decision 64)
       hpPerLevel: 5
       // wound penalties per level: extract from WIP in Phase 1
     },
@@ -241,7 +243,12 @@ window.SHADOWS_DATA = {
         // that silence IS the declaration (Decision 79).
         countBy: "campaignPowerScaling.aberrations",
         options: [
-          { id: "...", name: "...", description: "...", grants: [] }
+          { id: "...", name: "...", description: "...", grants: [],
+            // (Decision 126) rendered on the Archetype tab and the wizard card.
+            // A power's array of plain objects (e.g. `phases`) shows as a
+            // table; a power with no description reads "not written yet".
+            starterPower: { name: "...", description: "...", phases: [ { phase, boon, effect } ] },
+            additionalPowers: [ { name: "...", description: "..." } ] }
         ]
       },
 
@@ -543,9 +550,14 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.10",
-    gamedataVersion: "0.16",          // version of shadows-data.js at save time
-    created: "...", updated: "..."
+    schemaVersion: "0.11",
+    // (0.11, Decision 128) The NYTE City intake number: the character's
+    // permanent identity, NCR- + 12 Crockford base-32 characters. Issued by
+    // newCharacter(), backfilled by migrate(), never reissued.
+    id: "NCR-7F3K-2QXM-9D4R",
+    gamedataVersion: "0.17",          // version of shadows-data.js at save time
+    created: "...",
+    updated: "..."                    // last changed: commit() stamps it, and so does an export
   },
 
   identity: {
@@ -1288,6 +1300,7 @@ No cascade logic to maintain — it falls out of the architecture.
     updater script carrying the identical bug* — a guard validating its own
     blind spot. All five checks were mutation-tested afterwards.
     (Ken, 2026-09-02)
+    → **Superseded in part by Decision 127** — STATE states only the todo count; the pass total and its check are gone.
 
 75. **(Versioning)** **Four versions, four triggers — and `schemaVersion` stopped
     meaning two things.** The project had three version numbers and no way for
@@ -2998,6 +3011,60 @@ No cascade logic to maintain — it falls out of the architecture.
     smoke tests and the docs guard, each mutation-tested. Ships in app
     **0.23.0**. (Ken + Claude, 2026-09-24)
 
+124. **A character file is untrusted input: every stored number is a number, and undo only writes to the character.**
+     *2026-09-24 · Ken + Claude · Touches: migrate, undo, audit trail, Admin mode, import, escaping, hostile file*
+     - **Decided:** `migrate()` reads every numeric input as a finite number (a plain numeric string as its number, anything else as the field's default; `null` kept where a field allows it) and drops any audit entry whose patch path leaves the character. `undoLastAction` skips such a path and re-applies the same number rule to what it restores. Admin mode addresses a row by its position, not by its id or notes. `tests/hostile.test.mjs` renders a character with a payload in every string, id and number across every tab, Admin, print, the wizard and 60 pickers.
+     - **Why:** files are made to be shared. A string stored where a count lives rode the engine's `+` as text and reached every tab as markup without a throw. A crafted undo entry could write onto `Object.prototype`. Admin put two raw ids into attributes (B16, the 2026-09-24 audit).
+     - **Rejected:** escaping every number in every template, because hundreds of sites would each need remembering, while one gate at `migrate()` covers them by construction. Refusing a file with a bad field, because a player's own damaged file should still open.
+     - **Replaces:** nothing. It extends Decisions 62 and 63: `migrate()`'s output is now typed, not only complete.
+     - **Revisit if:** a stored field legitimately holds a number or text (add it to the rule by name, don't loosen the rule).
+     - **Built:** app 0.23.1; the audit plan's S1; `log/2026.md` 2026-09-24.
+
+125. **What the load check finds stays on the page until dismissed; a bare game-data difference shows once.**
+     *2026-09-24 · Ken + Claude · Touches: versionCheck, import, resume, load warnings, C4*
+     - **Decided:** content the game data no longer has, or a journal that disagrees with the totals, shows above every sheet page and wizard step until the player clicks Dismiss. A difference in game-data version alone shows once, as before.
+     - **Why:** the one notice that a file references missing content vanished on the next click, and an imported draft's never showed (C4).
+     - **Rejected:** keeping the version line too, because a file keeps its old stamp until it's next exported, so every returning player would carry it on every page after each data release.
+     - **Replaces:** nothing.
+     - **Revisit if:** the version stamp is refreshed on load, making the version line rare.
+     - **Built:** app 0.23.1; `smoke.test.mjs` C4.
+
+126. **An option's powers render from the data, and a power with no text says it isn't written yet.**
+     *2026-09-24 · Ken + Claude · Touches: specialization options, starterPower, additionalPowers, Trueborn, Werewolf, B17*
+     - **Decided:** a specialization option's `starterPower` and `additionalPowers` show on the Archetype tab and in the wizard's option card. A power is `{ name, description?, … }`; any array of plain objects on it (the Lunar Phase Blessing's `phases`) renders as a table; a power with no `description` carries `appCopy.statusLabel.tbd`. `additionalPowers` became objects (it held strings ending "(TBD)").
+     - **Why:** the Trueborn's starting power was in the data and nowhere on screen (B17).
+     - **Rejected:** a Trueborn-shaped renderer (phase, boon, effect), because the next archetype's power would need an app change.
+     - **Replaces:** nothing. Game data stays 0.17: display only, no computed value (Decision 68).
+     - **Revisit if:** powers gain mechanical fields the engine should read.
+     - **Built:** app 0.23.1; `smoke.test.mjs` B17.
+
+127. **STATE states the todo count, not the pass count or the live version.**
+     *2026-09-24 · Ken · Touches: STATE suite line, Live line, docs.test.mjs, volatile facts, AQ2*
+     - **Decided:** STATE's suite line says `npm run verify` passes and how many `todo` tests exist, and `docs.test.mjs` checks only that count. A pass count is refused. The "Live:" version is gone: the latest `v*` tag and the page footer say it.
+     - **Why:** CI reports the total, and restating it cost every change a STATE edit (audit A6). A `todo` is a known defect, which a cold session must see.
+     - **Rejected:** keeping the total with a script that rewrites it, because it's still a fact nobody reads.
+     - **Replaces:** Decision 74 in part, its check of STATE's suite line against the real total.
+     - **Revisit if:** a pass count ever needs to be quoted outside CI.
+     - **Built:** docs only; this session's commit.
+
+128. **A character has a permanent intake number, and nothing replaces a saved character without asking.**
+     *2026-09-24 · Ken + Claude · Touches: meta.id, intake number, meta.updated, import, New character, Lock, localStorage slots, export, roster, B18*
+     - **Decided:** every character carries `meta.id`, a NYTE City intake number (`NCR-XXXX-XXXX-XXXX`, Crockford base-32, ~60 random bits). `newCharacter()` issues it, `migrate()` backfills it and replaces anything that isn't one, and it's never reissued. It shows under the name on Main, on the Review step and in the printed header, with decorative bars drawn from it. `meta.updated` now means last changed: `commit()` stamps it. Import, New and Lock ask before a character takes a slot holding a different character, or a newer copy of the same one, and offer to export the saved one first. Character schema 0.10 → 0.11.
+     - **Why:** the browser keeps one sheet and one draft, and all three doors replaced them silently. Locking a second character discarded the first one's play since its last export (B18). Ken asked for the id to be an in-universe intake number, a form number with a barcode.
+     - **Rejected:** matching by name, because two players can share one and a rename would lose the match. Comparing whole files, because any play makes them differ. A scannable Code 39 barcode, until a decoder can verify it; the bars are decoration. Asking at every import, because a newer copy of your own character is an update, not a loss.
+     - **Replaces:** nothing. Decision 63 holds: `migrate()` still invents no timestamps; `commit()` records one when something changes.
+     - **Revisit if:** the roster (plan S6) gives each character its own slot, which turns "replace?" into "add".
+     - **Built:** app 0.24.0; the audit plan's S1; `smoke.test.mjs` B18 ×4, `engine.test.mjs` B18 ×2.
+
+129. **Hardcore Parkour needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1.**
+     *2026-09-24 · Deighton (ruling), via Ken · Touches: Hardcore Parkour, Cat Like Balance, Time Sense, Danger Sense, Acrobatics, Major Milestone prerequisites, F27, B15*
+     - **Decided:** Cat Like Balance at Rank 1 (an Advantage culled from an earlier version, "+3 to Athletics or Acrobatics checks for balance") becomes the **Acrobatics skill at rank 4 or better**, and the **Time Sense** requirement is removed. Danger Sense 1 and one Major Milestone already taken stay. F27 closes.
+     - **Why:** the old prerequisite named nothing in the game, so the Milestone could never be taken (B15). Deighton wanted a fix that doesn't need revisiting and still asks enough.
+     - **Rejected:** the interim stub (Time Sense and Danger Sense checked, Cat Like Balance left to the GM, app 0.23.1), which left a rules question open. Reviving Cat Like Balance as an Advantage.
+     - **Replaces:** nothing numbered; it ends F27's stub, which never shipped. Ken's CRB fix: 041's prerequisite line for Hardcore Parkour.
+     - **Revisit if:** the Advantages chapter gains a balance Advantage worth asking for.
+     - **Built:** game data 0.17 (unreleased); `rules.test.mjs` pins it, and fails against the stub.
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -3052,6 +3119,9 @@ sentence.
 
 ~~F11~~ closed 2026-09-23 (Decision 113): 041 now asks for the Intuition
 **skill** at Rank 1, and Quick Study's data follows it.
+
+~~F27~~ opened and closed 2026-09-24 (Decision 129). Hardcore Parkour asked for Cat Like Balance, an
+Advantage culled from an earlier version. Deighton ruled that it becomes Acrobatics 4, and that Time Sense goes.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|

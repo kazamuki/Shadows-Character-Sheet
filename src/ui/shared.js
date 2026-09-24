@@ -83,6 +83,9 @@ function commit(kind, label, fn){
   const before=clone(ch);
   fn();
   const r=Engine.recordAction(ch, kind, label, before);
+  // meta.updated is "last changed" (Decision 128), so a file can be told from
+  // an older copy of itself. diffChar skips meta: nothing here is undoable.
+  if (r && r.ok){ if (!ch.meta || typeof ch.meta!=="object") ch.meta={}; ch.meta.updated=new Date().toISOString(); }
   S.landed=landedFrom(before, ch);
   update();
   if (r && r.ok) showUndoToast(ch, ch.audit[ch.audit.length-1], label);
@@ -344,6 +347,96 @@ function resetArchetypeChoices(ch){
   // wizard they go with the archetype that chose them. A locked sheet's panels
   // are play history, and the admin change leaves them to its single undo.
   if (!ch.creation.locked) ch.panelData = {};
+}
+
+// ── The saved character, and what may replace it (B18, Decision 128) ──
+// This browser keeps one live sheet and one draft. Import, New and Lock each
+// put a character in a slot; before one takes the place of a *different*
+// character, or of a newer copy of the same one, the player is asked, with a
+// way to export what's there first. The intake number tells them apart.
+const charName = c => String(((c && c.identity) || {}).name || "").trim() || "your unnamed character";
+const intakeOf = c => (c && c.meta && Engine.isIntakeId(c.meta.id)) ? c.meta.id : "";
+function supersedes(incoming, saved){
+  if (!saved) return true;
+  const id = intakeOf(saved);
+  if (!id || intakeOf(incoming)!==id) return false;
+  const a = Date.parse(((incoming && incoming.meta) || {}).updated), b = Date.parse(((saved && saved.meta) || {}).updated);
+  return Number.isFinite(a) && Number.isFinite(b) && a >= b;
+}
+// `words`: { title, lead, go }. `lead` is HTML the caller has already escaped.
+function guardReplace(saved, incoming, words, proceed){
+  if (supersedes(incoming, saved)) { proceed(); return; }
+  const who = esc(charName(saved)), id = intakeOf(saved);
+  openModal({ title: words.title,
+    html: `<p>${words.lead}</p>
+      <p class="step-note">This browser keeps one sheet and one draft at a time. Anything about <b>${who}</b>${id?` (${esc(id)})`:""} that you haven't exported is lost.</p>`,
+    foot: `<button class="btn" data-replaceexport>Export ${who} first</button>
+      <button class="btn primary" data-replacego>${esc(words.go)}</button>
+      <button class="btn" data-modalclose>Cancel</button>`,
+    bind(body, foot){
+      foot.querySelector("[data-replaceexport]").onclick=()=>{ exportCharacter(Engine.migrate(clone(saved))); closeModal(); proceed(); };
+      foot.querySelector("[data-replacego]").onclick=()=>{ closeModal(); proceed(); };
+    } });
+}
+
+// The intake number as the form prints it, under the character's name. The
+// bars are drawn from the number itself, five per character: decoration
+// that reads as a barcode, not one a scanner would read.
+function intakeBarsSvg(id){
+  const A = "0123456789ABCDEFGHJKMNPQRSTVWXYZ", s = String(id||"").replace(/^NCR-/, "").replace(/-/g, "");
+  if (!s) return "";
+  let x = 0, bars = "";
+  const bar = w => { bars += `<rect x="${x}" y="0" width="${w}" height="20"/>`; x += w + 1; };
+  bar(1); bar(1); x += 1;
+  for (const ch of s){ const v = Math.max(0, A.indexOf(ch)); for (let b=4;b>=0;b--) bar((v>>b)&1 ? 2 : 1); x += 1; }
+  bar(1); bar(1);
+  return `<svg class="intake-bars" viewBox="0 0 ${x} 20" width="${Math.round(x*1.4)}" height="20" preserveAspectRatio="none" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true">${bars}</svg>`;
+}
+function intakeHtml(ch){
+  const id = intakeOf(ch);
+  return id ? `<div class="intake" title="NYTE City intake number">${intakeBarsSvg(id)}<span class="intake-no">Intake No. ${esc(id)}</span></div>` : "";
+}
+
+// C4: what versionCheck found when this character was loaded. Content the
+// game data no longer has, or a journal that disagrees with the totals,
+// stays at the top of every page until the player dismisses it; it used to
+// vanish on the next click, and a draft's never showed at all. A bare "saved
+// against an older game data" is news, not a problem, and a file keeps its
+// old stamp until it's next exported, so that alone still shows just once.
+function loadFindings(c){
+  const issues = Engine.versionCheck(c);
+  const versionOnly = issues.length===1 && ((c && c.meta) || {}).gamedataVersion !== D.meta.gamedataVersion;
+  return { importIssues: issues, importSticky: !versionOnly };
+}
+function importIssuesHtml(){
+  const list = S.importIssues || [];
+  if (!list.length) return "";
+  const body = issuesHtml(list.map(m=>({level:"warn",msg:m})));
+  if (!S.importSticky){ S.importIssues = []; return `<div class="import-issues" role="status">${body}</div>`; }
+  return `<div class="import-issues" role="status">${body}
+    <button class="btn sm" data-importdismiss>Dismiss</button></div>`;
+}
+
+// B17: a specialization option's powers — the one it starts with and the
+// ones that follow. A power is a name, its text, and optionally a table of
+// rows (the Trueborn's four moon phases); any array of plain objects on it
+// renders as one, so a new power needs no app change. A power with a name
+// and no text isn't written yet, and says so in the app's own status words.
+function powerHtml(p){
+  if (!p) return "";
+  if (typeof p==="string") p = { name: p };
+  const rows = Object.values(p).find(v=>Array.isArray(v) && v.length && v.every(r=>r && typeof r==="object" && !Array.isArray(r)));
+  const cols = rows ? Object.keys(rows[0]) : [];
+  const head = c => esc(String(c).replace(/^./, x=>x.toUpperCase()));
+  return `<div class="power"><h5>${esc(p.name||"")}${p.description?"":` <span class="chip">${esc(statusLabel("tbd"))}</span>`}</h5>`
+    + (p.description?`<p>${esc(p.description)}</p>`:"")
+    + (rows?`<table class="ref"><thead><tr>${cols.map(c=>`<th>${head(c)}</th>`).join("")}</tr></thead><tbody>${
+        rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c]==null?"":r[c])}</td>`).join("")}</tr>`).join("")}</tbody></table>`:"")
+    + `</div>`;
+}
+function optionPowersHtml(o){
+  const list = [o && o.starterPower, ...((o && o.additionalPowers) || [])].filter(Boolean);
+  return list.length ? `<div class="powers">${list.map(powerHtml).join("")}</div>` : "";
 }
 
 function issuesHtml(list){

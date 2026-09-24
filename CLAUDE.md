@@ -53,7 +53,7 @@ npm run changelog  # CHANGELOG.md → src/data/shadows-changelog.js (the app's W
 
 `npm install` first — `node_modules` is not committed.
 
-The expected result is in `docs/STATE.md`. Any `todo` tests are **confirmed
+`docs/STATE.md` says how many `todo` tests to expect. Any `todo` tests are **confirmed
 defects written as failing assertions on purpose** — they flip green when fixed.
 Do not delete one to make the output cleaner.
 
@@ -78,7 +78,8 @@ its own. Check before reaching for a different one or building it again.
    Everything is a classic script sharing script scope.
 3. **`index.html` stays a shell** — markup and `<script src>` tags only. No inline
    styles, no inline logic.
-4. **Script order is fixed:** data → icons → engine → ui.
+4. **Script order is fixed:** theme-init → data (then the generated release notes)
+   → icons → engine → ui.
 5. **The engine never touches the DOM.** `src/engine/engine.js` reads
    `window.SHADOWS_DATA` and returns values. Tests load it with no DOM present.
 6. **IDs are immutable.** Every id in `shadows-data.js` may be referenced by a
@@ -133,7 +134,7 @@ three went stale. `docs/STATE.md` is the only place they live.
 ## Layout
 
 ```
-index.html              Shell. 34 lines.
+index.html              Shell: markup and script/link tags, nothing else.
 src/data/               Game content + icons. Designers edit these. Also the
                         release notes, generated from CHANGELOG.md — never
                         edited by hand (Decision 123).

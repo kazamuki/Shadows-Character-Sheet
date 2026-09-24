@@ -4,7 +4,7 @@ Character creation and live play sheet for **Shadows**, the cyberpunk-noir urban
 
 Build a character through an eight-step intake, lock it, and the app becomes a running sheet: damage and Pain Levels, Sanity, Luck, Çredits, IP and Milestones, session log, loadout, and a full undo-able audit trail of everything that happens at the table.
 
-**Status:** app `0.23.0` · character schema `0.10` · game data `0.16` · ruleset target **CRB v4 (in progress)**
+**Status:** app `0.24.0` · character schema `0.11` · game data `0.17` · ruleset target **CRB v4 (in progress)**
 Read [`docs/SCHEMA.md`](docs/SCHEMA.md) before changing anything. It is the project's memory.
 
 ---
@@ -38,16 +38,19 @@ index.html              Shell only: markup + script tags. No logic, no styles.
 src/
   data/
     shadows-data.js     All game content. Designers edit this, in any text editor.
+    shadows-changelog.js  What's new in the app, generated from CHANGELOG.md.
     shadows-icons.js    Brand stat icons + Lucide UI icons, as inline SVG strings.
   engine/engine.js      Pure rules engine. No DOM. Every computed value lives here.
-  ui/app.js             Wizard, sheet, session tracking. Renders off the engine.
-  styles/shadows.css    Brand tokens and all styling.
+  ui/                   shared.js, wizard.js, sheet.js, app.js (+ theme-init.js):
+                        classic scripts, one global scope. Render off the engine.
+  styles/               shadows.css (screen) and print.css (the printed sheet).
 docs/
-  SCHEMA.md             Architecture, both schemas, locked decisions, open flags, roadmap.
-  STATE.md              Current status, the batch board, what happens next. Start here.
-  audits/               Whole-app audits, dated.
-tests/                  Engine units, jsdom smoke, build/architecture guards.
-tools/build.mjs         Inlines everything into dist/.
+  STATE.md              Where things stand and what's next. Start here, after CLAUDE.md.
+  INDEX.md              The map: where every decision, flag and finding lives.
+  SCHEMA.md             Architecture, both schemas, the decision ledger, open flags.
+  audits/  plans/  log/ Whole-app audits · multi-session plans · session history.
+tests/                  Engine units, CRB conformance, hostile files, voice, jsdom smoke, guards.
+tools/                  build.mjs (the single file), changelog.mjs, devserver.mjs.
 ```
 
 ## The two rules that keep this working
@@ -58,7 +61,7 @@ tools/build.mjs         Inlines everything into dist/.
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: run `npm run verify`, log design questions as issues rather than deciding them in code, and update `docs/SCHEMA.md` in the same commit as any decision.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: run `npm run verify`, flag design questions in `docs/SCHEMA.md` §5 rather than deciding them in code, report bugs as GitHub issues, and update `docs/SCHEMA.md` in the same commit as any decision.
 
 ---
 

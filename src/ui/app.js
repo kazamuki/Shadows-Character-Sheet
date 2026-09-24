@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.23.0";
+const APP_VERSION = "0.24.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -110,6 +110,7 @@ function bindMain(){
     window.scrollTo(0,0); update();
   });
   main.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{ S={screen:"home",ch:null,step:0,maxReached:0}; renderHome(); });
+  main.querySelectorAll("[data-importdismiss]").forEach(b=>b.onclick=()=>{ S.importIssues=[]; update(); });
   // selections
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ ch.creation.powerLevel=b.dataset.pl; update(); });
   main.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
@@ -207,11 +208,19 @@ function bindMain(){
   // export / lock
   main.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>exportChar());
   main.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{
-    ch.creation.locked=true;
-    S.ch=Engine.migrate(Engine.buildExport(ch));
-    exportChar(); clearDraft();
-    S.screen="sheet"; S.section="main";
-    window.scrollTo(0,0); update();
+    // Locking puts this character in the live-sheet slot. If a different
+    // character is saved there, ask first (B18).
+    const saved=(loadActive()||{}).ch;
+    const locking=()=>{
+      ch.creation.locked=true;
+      S.ch=Engine.migrate(Engine.buildExport(ch));
+      exportChar(); clearDraft();
+      S.screen="sheet"; S.section="main";
+      window.scrollTo(0,0); update();
+    };
+    guardReplace(saved, ch, { title:`Replace ${charName(saved)}'s sheet?`,
+      lead:`Locking <b>${esc(charName(ch))}</b> makes it the sheet this browser keeps, in place of <b>${esc(charName(saved))}</b>.`,
+      go:"Lock and replace" }, locking);
   });
 }
 
@@ -878,8 +887,12 @@ function bindSheet(){
     commit("admin", `Admin: add skill ${nm} @1`, ()=>{ if(!ch.skills[id]) ch.skills[id]={rank:1,ipe:0}; });
   });
   main.querySelectorAll("[data-admin-adv]").forEach(b=>b.onclick=()=>{
-    const [id,notes,op]=b.dataset.adminAdv.split("|"), nm=(Engine.advById(id)||{name:id}).name;
-    const find=()=>ch.advantages.find(a=>a.id===id && (a.notes||"")===(notes||""));
+    // The row's position when the page drew it; commit() re-renders after
+    // every change, so it can't go stale under the click (B16).
+    const [at,op]=b.dataset.adminAdv.split("|"), row=ch.advantages[Number(at)];
+    if (!row) return;
+    const nm=(Engine.advById(row.id)||{name:row.id}).name;
+    const find=()=>ch.advantages.includes(row) ? row : null;
     if (op==="x"){ commit("admin", `Admin: remove advantage ${nm}`, ()=>{ ch.advantages=ch.advantages.filter(a=>a!==find()); }); return; }
     const delta=Number(op);
     commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{
@@ -893,8 +906,10 @@ function bindSheet(){
     commit("admin", `Admin: add advantage ${nm}`, ()=>{ if(!ch.advantages.some(a=>a.id===id&&a.notes!=="natural")) ch.advantages.push({id, rank:1, notes:""}); });
   });
   main.querySelectorAll("[data-admin-dis]").forEach(b=>b.onclick=()=>{
-    const [id,op]=b.dataset.adminDis.split("|"), nm=(Engine.disById(id)||{name:id}).name;
-    const find=()=>ch.disadvantages.find(d=>d.id===id);
+    const [at,op]=b.dataset.adminDis.split("|"), row=ch.disadvantages[Number(at)];
+    if (!row) return;
+    const nm=(Engine.disById(row.id)||{name:row.id}).name;
+    const find=()=>ch.disadvantages.includes(row) ? row : null;
     if (op==="x"){ commit("admin", `Admin: remove disadvantage ${nm}`, ()=>{ ch.disadvantages=ch.disadvantages.filter(d=>d!==find()); }); return; }
     const delta=Number(op);
     commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{
@@ -1016,8 +1031,11 @@ function printSheet(ch){
   window.print();
 }
 
-function exportChar(){
-  const c=Engine.buildExport(S.ch);
+function exportChar(){ exportCharacter(S.ch); }
+// Any character, not only the open one: the replace guard exports the saved
+// character it's about to overwrite (B18).
+function exportCharacter(ch){
+  const c=Engine.buildExport(ch);
   const name=(c.identity.name||"character").trim().replace(/[^\w\- ]+/g,"").replace(/\s+/g,"_")||"character";
   const blob=new Blob([JSON.stringify(c,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);

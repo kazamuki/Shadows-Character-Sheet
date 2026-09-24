@@ -139,7 +139,7 @@ function wizNav(stepId){
 
 // ── Step renderers ───────────────────────────────────────────────────
 function stepHeader(st){
-  return `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
+  return importIssuesHtml() + `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
     <h1 class="step-title">${esc(st.label.split(" - ")[0].split(":")[0])}</h1>
     <p class="step-note">${esc(st.label)}${st.note?` <em>${esc(st.note)}</em>`:""}</p>`;
 }
@@ -243,6 +243,7 @@ function renderArchetype(){
         ${o.tweak?`<div class="desc"><b>Tweak — ${esc(o.tweak.name)}:</b> ${esc(o.tweak.description)} ${(o.tweak.benefits||[]).map(esc).join(" ")}</div>`:""}
         ${o.benefit?`<div class="desc"><b>Benefit:</b> ${esc(o.benefit)}</div>`:""}
         ${o.transformation?`<div class="desc"><b>Transformation:</b> ${esc(o.transformation)}</div>`:""}
+        ${optionPowersHtml(o)}
       </div>`;
     }).join("");
   } else if (sel.specialization && sel.specialization.required){
@@ -490,7 +491,7 @@ function renderReview(){
   let h = `<div class="roll-entry"><span class="die">Çredits: ${esc(pl.startingCredits.roll)} × ${pl.startingCredits.multiplier}</span>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
     <span class="pool">Starting Ç <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
-  h += `<div class="review-block"><h3>${esc(ch.identity.name)||"Unnamed"}</h3><div class="kv">
+  h += `<div class="review-block"><h3>${esc(ch.identity.name)||"Unnamed"}</h3>${intakeHtml(ch)}<div class="kv">
     <span class="k">Archetype</span><span class="v">${a?esc(a.name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
     <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
     <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
@@ -498,7 +499,7 @@ function renderReview(){
     <span class="k">Skills</span><span class="v">${Object.keys(ch.skills).map(id=>{const l=Engine.skillLine(ch,id);return esc(l.def.name)+" "+l.rank;}).join(" · ")||"—"}</span>
     <span class="k">Advantages</span><span class="v">${ch.advantages.map(x=>{const d2=Engine.advById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"")+(x.notes==="natural"?" (natural)":"");}).join(" · ")||"—"}</span>
     <span class="k">Disadvantages</span><span class="v">${ch.disadvantages.map(x=>{const d2=Engine.disById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");}).join(" · ")||"—"}</span>
-    <span class="k">Boost ledger</span><span class="v">${ch.creation.boosts.map(b=>b.targetId+" ×"+b.times).join(" · ")||"—"}</span>
+    <span class="k">Boost ledger</span><span class="v">${ch.creation.boosts.map(b=>esc(b.targetId)+" ×"+b.times).join(" · ")||"—"}</span>
   </div></div>`;
   h += issuesHtml(issues);
   h += `<div class="wiznav">
@@ -530,7 +531,13 @@ function renderHome(){
     <div class="home-news" id="homenews">${whatsNewHomeHtml()}</div>
     <p class="step-note" style="margin-top:14px">Playing at the table instead? <button class="btn sm" id="btn-print-blank">Print a blank character sheet</button></p>
     </div>`;
-  $("btn-new").onclick=()=>{ S={screen:"wizard", ch:Engine.newCharacter(), step:0, maxReached:0, section:"main"}; update(); };
+  $("btn-new").onclick=()=>{
+    const fresh=Engine.newCharacter();
+    // A new character takes the draft slot; a draft already there is asked about first (B18).
+    guardReplace(draft && draft.ch, fresh, { title:"Start a new character?",
+      lead:`Your unfinished draft of <b>${esc(charName(draft && draft.ch))}</b> is saved in this browser. Starting over replaces it.`,
+      go:"Start new" }, ()=>{ S={screen:"wizard", ch:fresh, step:0, maxReached:0, section:"main"}; update(); });
+  };
   $("btn-print-blank").onclick=()=>printSheet(null);
   // Resume must migrate like the other two load paths. It did not, so a draft
   // saved under an older schema came back with its data in fields no current
@@ -538,21 +545,30 @@ function renderHome(){
   const r=$("btn-resume"); if(r) r.onclick=()=>{ S={screen:"wizard", ch:Engine.migrate(draft.ch), step:draft.step, maxReached:draft.maxReached, section:"main"}; update(); };
   const ac=$("btn-active"); if(ac) ac.onclick=()=>{
     const c=Engine.migrate(active.ch);
-    S={screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:normSection(active.section), importIssues:Engine.versionCheck(c)};
+    S=Object.assign({screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:normSection(active.section)}, loadFindings(c));
     update();
   };
   $("btn-import").onclick=()=>$("file-import").click();
   $("file-import").onchange=e=>{
     const f=e.target.files[0]; if(!f) return;
     const rd=new FileReader();
-    rd.onload=()=>{ try{
-        const c=Engine.migrate(JSON.parse(rd.result));
-        const issues=Engine.versionCheck(c);
-        if (c.creation && c.creation.locked) S={screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:"main", importIssues:issues};
-        else S={screen:"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main", importIssues:issues};
-        update();
-      }catch(err){ alert("That file didn't parse as a character: "+err.message); } };
+    rd.onload=()=>{
+      let c;
+      try{ c=Engine.migrate(JSON.parse(rd.result)); }
+      catch(err){ alert("That file didn't parse as a character: "+err.message); return; }
+      const locked=!!(c.creation && c.creation.locked);
+      // A locked file takes the live-sheet slot, a draft the draft slot. Ask
+      // before it replaces a different character, or a newer copy (B18).
+      const saved=((locked ? loadActive() : loadDraft())||{}).ch;
+      guardReplace(saved, c, { title:`Replace ${charName(saved)}?`,
+        lead:`Opening <b>${esc(charName(c))}</b>${intakeOf(c)?` (${esc(intakeOf(c))})`:""} puts it in place of <b>${esc(charName(saved))}</b>.`,
+        go:"Replace" }, ()=>{
+          S=Object.assign({screen: locked?"sheet":"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, loadFindings(c));
+          update();
+        });
+    };
     rd.readAsText(f);
+    e.target.value="";      // the same file can be chosen again after a Cancel
   };
   renderLedger(); renderVitals();
 }
