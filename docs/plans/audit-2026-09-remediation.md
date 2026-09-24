@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** under way. **Every question is answered** (§5). **S1 is done** (app 0.24.0, character schema 0.11, game data 0.17), not yet merged. Next: S3, S5 or S2, in any order; S6 follows AQ4's answers.
+**Status:** under way. **Every question is answered** (§5). **S1 and S2 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only). Next: S3, S5 or S6, in any order; S4 after S3.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -49,26 +49,18 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 
 *Versions:* app minor (0.24.0), since B17 and B18 are visible. Character schema 0.11 for `meta.id`. Game data: per Decision 68, likely none. *Size:* one session, or two if the id and the confirm flow go in separately.
 
-### S2: The docs diet and change tiers (docs only; AQ1 answered yes, still needs AQ2, AQ7)
-- [ ] **R2**: write the change tiers into `CLAUDE.md`, then number them. Tie "close the session" (rewrite STATE, append the log) to the tiers.
-- [ ] **R1, decisions that stop relitigation.** Ken asked for a way to anchor the reasoning so settled questions stay settled (AQ1). The design is in §6. In short: every new decision states what it **rejected** and **when to revisit**, plus a **Touches** line so a search for the subject finds it. A `CLAUDE.md` rule says to search before proposing. A test checks the format from Decision 124 on. The ~14 load-bearing decisions get their rejected alternatives backfilled; existing entries are otherwise untouched.
-- [ ] **A4 / R3** *(the stale facts were fixed 2026-09-24: SCHEMA's header now points at STATE for versions, §1's file table lists the four UI scripts, print.css and the changelog, and §2's example lost `schemaVersion "0.3"`, `levelsPerBOD` and the old flag. CLAUDE.md's script order and line count and README's layout were fixed too. What's left is structural)*:
-  - `SCHEMA.md` header and §1 rewritten, and §2's stale example lines fixed;
-  - §6 moves to `log/`;
-  - §5's preamble cut to the table plus one line on closed flags;
-  - `README.md` Layout corrected, and it points in;
-  - `CONTRIBUTING.md` shrinks to a pointer, or to the human-contributor rules with no volatile facts (AQ7 decides the issue-template half);
-  - `docs/README.md` folds into `INDEX.md` §1;
-  - the `HANDOFF.md` stub retires;
-  - `INDEX.md` §2's namespace count and §4's "generated" claim are fixed.
-- [ ] **`CLAUDE.md`** per audit §7: drop the line count; correct the script order; describe the branch names actually used; state each procedure once; three orientation docs, not four plus seven.
-- [ ] **A7**: an F-number for every flag. The four weapon tags become F28–F31 (F27 went to Hardcore Parkour), added to the grouped Deighton question with F23–F26. The archetype content notes link to F6/F7/F13 or drop their flag.
-- [ ] **R6, flag guard**: a test that every `flagged: true` has an F-number open in §5.
-- [ ] **C10**: move `meta.notes` history into `log/`, leaving `meta` what the app reads.
-- [ ] **C11**: Ken's open CRB fixes (CQ8, CQ9, CQ11–CQ13, plus B15's) move out of the closed combat plan into STATE §5.
-- [ ] **A6**: drop STATE's exact test count and the "Live:" line if AQ2 says so, and loosen `docs.test.mjs` to match. It keeps checking the `todo` count, which means something.
+### S2: The docs diet and change tiers (done 2026-09-24, Decisions 130–132)
+- [x] **R2**: four change tiers in `CLAUDE.md` (Docs, Fix, Content, Rule or shape), Ken's pick of the drafts (Decision 131). STATE and the log move when the tier says so.
+- [x] **R1**: the §6 format is standard (Decision 130). `CLAUDE.md` says to search the Touches lines before proposing; `docs.test.mjs` checks the shape from 124 on, and that every load-bearing decision has Rejected and Revisit if. The fourteen load-bearing entries are backfilled from their own text and the log, marked as backfilled. Their **Revisit if** lines are Claude's reading and are Ken's to correct.
+- [x] **A4 / R3** (Decision 132): SCHEMA's header says what it's for and that nobody reads it front to back; §2's panel types are current; §5's preamble is one line on closed flags; §6 and the old preamble moved verbatim to `log/archive.md`. `docs/README.md` folded into INDEX §1, and it and the `HANDOFF.md` stub are gone. README points in; CONTRIBUTING is a short human version that points at `CLAUDE.md`. INDEX's "generated" claim is gone, and CQ/MQ are in its registry.
+- [x] **`CLAUDE.md`** per audit §7: three orientation docs; the branch names actually used (Ken's pick); releasing and the changelog rule stated once (STATE §2 now points at them); a *Where things live* block for Layout; decisions and flags as their own short sections. Decision 124's rule became hard constraint 10, since `hostile.test.mjs` enforces it.
+- [x] **A7**: F28–F31 are the four weapon tags, for Deighton with F23–F26. F32 is the Arcanist's Majors (Ken). The Vampire and Werewolf content notes name F7 (and F13), and F7's row says so.
+- [x] **R6, flag guard**: every `flagged: true` names at least one F-number, and every one it names is open. Mutation-tested: the pre-S2 data, a note losing its number, and a note naming a closed flag each fail.
+- [x] **C10**: `meta.notes` is out of the data and in `log/archive.md`. No game-data bump: nothing read it (Decision 68).
+- [x] **C11**: Ken's CRB fixes are one line each in STATE §5.
+- [x] **A6**'s STATE half was AQ2 (Decision 127). The scripts are S5's R4, so A6 stays open until then.
 
-*Versions:* none. *Size:* one session, mostly Ken's reading time.
+*Versions:* none moved. *Found on the way:* Decision 101 had replaced part of 74 (the batch board) without marking it; 74 now says so.
 
 ### S3: The Professional as data (AQ3 answered: go now; propose the data shape first)
 - [ ] **A8, Professional half / R7**:
@@ -107,6 +99,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 - [ ] **C5**: refusals go to the toast or inline, confirmations to `openModal`. The 33 `alert()`/`confirm()` calls go.
 - [ ] **A10**, as Ken answered AQ4. One principle: any rule the sheet names, a player can read without leaving it.
   - **Tags** (weapon, feature, spell): the glossary sentence on hover or tap, wherever a tag shows (the catalog browser, Loadout, Main, the Grimoire). Build one tooltip-or-popover primitive and reuse it for everything below, not a copy per place.
+    **Before they render:** three flagged tags (Suppression, Blast, Reach) have a `description` that says "(Undefined … see flagNote.)", which is maintainer text. Each needs a player-facing `description` or `playerNote` first (F28–F31, Decision 70).
   - **Lore:** on the wizard's archetype card, and as a collapsed *Lineage* section on the Archetype tab.
   - **Ammunition and arrowheads:** an *Ammo* category in the equipment catalog, carried and counted like other gear. A later step could let Reload take a magazine from what you carry; that's a wishlist item, not this one.
   - **Enchantment and Alchemy tables:** in the Arcanist's Magic reference, collapsed until opened.
