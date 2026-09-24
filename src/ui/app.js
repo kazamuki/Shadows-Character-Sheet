@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.21.0";
+const APP_VERSION = "0.22.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -80,16 +80,19 @@ function renderMain(){
   if (S.screen==="home") return renderHome();
   if (S.screen==="sheet"){
     S.section = normSection(S.section);
+    landedNow = S.landed || null; S.landed = null;     // W15: flash once
     const body = SHEET_RENDER[S.section] ? SHEET_RENDER[S.section]() : SHEET_RENDER.main();
     // Main carries its own condition strip; every other tab gets the vitals bar.
     const bar = S.section==="main" ? "" : sheetVitalsBar(S.ch);
     const banner = S.admin ? adminBannerHtml() : "";
     $("main").innerHTML = bar + banner + body;
+    landedNow = null;
     renderDrawer();
     bindMain(); bindSheet();
+    refreshPopover();
     return;
   }
-  closeVitals();
+  closeVitals(); closePopover(false);
   const st = STEPS[S.step];
   let h = stepHeader(st) + RENDER[st.id]();
   if (st.id!=="review") h += wizNav(st.id);
@@ -251,6 +254,39 @@ function openSpellPicker(mode){
     } });
 }
 
+// ── The catalog browser (W4) ─────────────────────────────────────────
+// Add and Buy are each one commit() with its undo toast, and the modal stays
+// open for the next pick, as the spell picker does. Buy is refused with the
+// engine's reason (catalogLine's `buy`), which the row already shows.
+function openCatalog(kind){
+  const ch = S.ch; if (!ch || !["weapons","armor","gear"].includes(kind)) return;
+  S.loPick = { kind, q:"", group:"", sort:"book", afford:false, open:null };
+  openModal({ title: { armor:"The armor catalog", weapons:"The weapons catalog", gear:"The equipment catalog" }[kind], html: catalogPickerHtml(ch, kind),
+    foot: pickerFootHtml(), returnTo: `[data-lobrowse="${kind}"]`, onClose: ()=>{ S.loPick=null; },
+    bind: body => {
+      const results = body.querySelector("[data-catresults]"), status = body.querySelector("[data-catstatus]");
+      const refresh = () => { if (!S.loPick) return; results.innerHTML = catalogResultsHtml(S.ch, kind); status.innerHTML = catalogStatusHtml(S.ch, kind); };
+      body.querySelector("[data-catq]").oninput = e => { S.loPick.q = e.target.value; refresh(); };
+      body.querySelectorAll("[data-catf]").forEach(sel=>sel.onchange=()=>{ S.loPick[sel.dataset.catf] = sel.value; refresh(); });
+      body.querySelector("[data-catafford]").onchange = e => { S.loPick.afford = e.target.checked; refresh(); };
+      results.onclick = e => {
+        const b = e.target.closest("button");
+        if (!b){                                          // the row itself: its details
+          const tr = e.target.closest("[data-catrow]"); if (!tr) return;
+          S.loPick.open = S.loPick.open===tr.dataset.catrow ? null : tr.dataset.catrow; refresh(); return;
+        }
+        if (b.disabled) return;
+        const buy = b.dataset.catbuy!=null, id = buy ? b.dataset.catbuy : b.dataset.catadd;
+        if (!id) return;
+        const pre = Engine.addLoadout(clone(ch), kind, id, { buy });
+        if (!pre.ok){ alert(pre.why); return; }
+        const n = pre.added>1 ? ` ×${pre.added}` : "";
+        commit("loadout", buy ? `Bought ${pre.name}${n} (−${pre.paid}Ç)` : `Added ${pre.name}${n}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
+        refresh();
+      };
+    } });
+}
+
 // ── The Aberration picker (Decision 115) ─────────────────────────────
 // One pick, then it closes: the pick is one commit() with its undo toast. From
 // a Cascade the entry's note says so, which the player can rewrite.
@@ -290,12 +326,12 @@ function openAberrationPicker(mode){
 // backdrop all drop the form. A number redraws as it's typed, not on
 // `change`, which fires on blur: a redraw then would replace Apply between
 // the press and the click that was meant for it.
-function openHitModal(){
+function openHitModal(returnTo){
   const ch=S.ch; if (!ch) return;
   if (S.act){ S.act=null; renderMain(); }
   S.hit=Object.assign(newHitForm(), { owner: ch });
   const p=hitModalParts(ch);
-  openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: "[data-hitopen]",
+  openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: typeof returnTo==="string" ? returnTo : "[data-hitopen]",
     onClose: ()=>{ S.hit=null; }, bind: bindHitModal });
 }
 function bindHitModal(body, foot){
@@ -333,6 +369,113 @@ function bindHitModal(body, foot){
   });
 }
 
+// ── The vitals' own controls (W2/W3) ─────────────────────────────────
+// Damage's stepper, Take a hit, Conditions, SAN, LUCK and Çredits, bound to
+// whatever root draws them: Trackers, or a vitals popover. One binder, so a
+// popover's Hurt 5 is Trackers' Hurt 5 — the same commit(), the same audit
+// label, the same undo — never a second code path.
+function bindVitalControls(root){
+  const ch=S.ch; if (!ch) return;
+  const num = el => el && el.value!=="" ? Number(el.value) : null;
+  // Damage. Withering is the part of `damage` that can't regenerate, so it
+  // can never be more than the damage itself — a hand edit down trims it.
+  const setDamage = v => { ch.trackers.damage=v;
+    ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
+  root.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.dmg);
+    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
+  });
+  const ds=root.querySelector("[data-dmgset]");
+  if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
+  root.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
+  root.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=openHitModal);
+
+  // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
+  // body-part picker only shows for a Condition that needs one.
+  const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
+    return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
+  // W14: a palette chip adds in one click (the undo toast makes that safe);
+  // a body-part Condition asks where first, through the same Add.
+  const addCond = (id, location) => {
+    const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
+    if (!r.ok){ alert(r.why); return; }
+    S.condPick=null;
+    commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
+  };
+  root.querySelectorAll("[data-condpalette]").forEach(d=>d.ontoggle=()=>{ S.condPalette=d.open; });
+  root.querySelectorAll("[data-condquick]").forEach(b=>b.onclick=()=>{
+    const def=Engine.conditionById(b.dataset.condquick); if (!def) return;
+    if (def.location){ S.condPick=def.id; renderMain(); return; }
+    addCond(def.id);
+  });
+  root.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
+  root.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
+    const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
+    if (!location){ alert("Pick the body part."); return; }
+    addCond(b.dataset.condadd, location);
+  });
+  root.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condinfo); S.condInfo = S.condInfo===i ? null : i; renderMain();
+  });
+  root.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
+    S.condInfo=null;                                   // indexes shift once one goes
+    commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
+  });
+  root.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
+    const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];
+    const d=Engine.conditionById(e&&e.id);
+    commit("condition", `${d&&d.counter?d.counter.label:"Marks"} → ${n}`, ()=>{ Engine.setConditionMarks(ch, i, n); });
+  });
+  root.querySelectorAll("[data-condnote]").forEach(inp=>inp.onchange=()=>{
+    const i=Number(inp.dataset.condnote), e=ch.trackers.conditions[i];
+    if (!e) return;
+    commit("condition", `Note on ${condLabel(e)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
+  });
+
+  // SAN
+  root.querySelectorAll("[data-san]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.san);
+    commit("san", `SAN loss ${d>0?"+":""}${d}`, ()=>{ ch.trackers.san.loss=Math.max(0,(ch.trackers.san.loss||0)+d); });
+  });
+  const ss=root.querySelector("[data-sanset]");
+  if (ss) ss.onchange=()=>{ const v=Math.max(0,Number(ss.value)||0); commit("san", `Set SAN loss → ${v}`, ()=>{ ch.trackers.san.loss=v; }); };
+
+  // LUCK
+  root.querySelectorAll("[data-luckspend]").forEach(b=>b.onclick=()=>{
+    const cost=Number(b.dataset.luckspend);
+    if (Engine.luckState(ch).current>=cost) commit("luck", `LUCK spent −${cost}`, ()=>{ ch.trackers.luck.spent+=cost; });
+  });
+  root.querySelectorAll("[data-luckregain]").forEach(b=>b.onclick=()=>{
+    if ((ch.trackers.luck.spent||0)>0) commit("luck","LUCK regained +1",()=>{ ch.trackers.luck.spent=Math.max(0,ch.trackers.luck.spent-1); });
+  });
+
+  // Çredits
+  root.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{
+    const amt=num(root.querySelector("[data-cramt]"));
+    const note=(root.querySelector("[data-crnote]")||{}).value||"";
+    if (amt==null || !amt) return;
+    const signed=Math.abs(amt)*Number(b.dataset.cr);
+    commit("credits", `Çredits ${signed>0?"+":""}${signed}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, signed, note); });
+  });
+
+}
+
+// W2/W3: a vital's popover, from its pill or its card on Main. The body is
+// Trackers' own controls, bound by the same binder; Take a hit closes the
+// popover and opens the hit modal, whose focus comes back to the vital.
+function openVitalPopover(key){
+  openPopover({ key, render: ()=>S.ch ? vitalPopover(S.ch, key) : null, bind: body=>{
+    bindVitalControls(body);
+    body.querySelectorAll("[data-pophit]").forEach(b=>b.onclick=()=>{
+      closePopover(true); openHitModal(`[data-vpop="${key}"]`);
+    });
+    body.querySelectorAll("[data-popgo]").forEach(b=>b.onclick=()=>{
+      closePopover(false); S.section=normSection(b.dataset.popgo); window.scrollTo(0,0); update();
+    });
+  } });
+}
+
 // ── Phase 3: sheet event wiring ─────────────────────────────────────
 function bindSheet(){
   const main=$("main"), ch=S.ch;
@@ -343,6 +486,7 @@ function bindSheet(){
     if (dr){ dr.classList.toggle("open", S.vitalsOpen); dr.setAttribute("aria-hidden", S.vitalsOpen?"false":"true"); }
     if (sc) sc.classList.toggle("open", S.vitalsOpen);
   });
+  main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
   // Skill description toggles (no full re-render — flip the hidden detail row)
   main.querySelectorAll("[data-skilldesc]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.skilldesc; S.openSkills=S.openSkills||new Set();
@@ -376,18 +520,7 @@ function bindSheet(){
   main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; window.scrollTo(0,0); update(); });
   main.querySelectorAll("[data-admin-exit]").forEach(b=>b.onclick=()=>{ S.admin=false; if(S.section==="admin") S.section="main"; window.scrollTo(0,0); update(); });
 
-  // Damage. Withering is the part of `damage` that can't regenerate, so it
-  // can never be more than the damage itself — a hand edit down trims it.
-  const setDamage = v => { ch.trackers.damage=v;
-    ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
-  main.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
-    const d=Number(b.dataset.dmg);
-    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
-  });
-  const ds=main.querySelector("[data-dmgset]");
-  if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
-  main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
-  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=openHitModal);
+  bindVitalControls(main);
 
   // Turn Reset, Rest, Focused Healing, After the fight (Decision 100): one
   // form in S.act, one commit() on Apply, the same as a hit.
@@ -425,8 +558,14 @@ function bindSheet(){
         ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
       const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}`
                   : st.kind==="nanomed" ? "Nanomed Kit" : "Focused Healing";
+      // W17: the kit or the dose comes out of your gear in the same action.
+      const gearId = st.kind==="nanomed" ? "nanomed-kit" : st.kind==="rest" && st.speed ? "speed-heal" : null;
+      const carried = gearId && st.fromGear!==false && Engine.carriedGear(ch, gearId);
       S.act=null;
-      commit("damage", `${label}: ${bits.join(", ")}`, ()=>{ Engine.heal(ch, input); });
+      commit("damage", `${label}: ${bits.join(", ")}${carried?", one from your gear":""}`, ()=>{
+        Engine.heal(ch, input);
+        if (carried) Engine.useGear(ch, carried.index, 1);
+      });
     } else if (st.kind==="wear"){
       const w=Engine.armorState(ch).worn; if (!w) return;
       const r=Engine.armorWear(clone(ch), w.index, input);
@@ -435,66 +574,6 @@ function bindSheet(){
       commit("loadout", `Armor wear (${r.die}): ${r.name} −${r.lost} Integrity${r.selfHeal&&r.selfHeal.healed?`, +${r.selfHeal.healed} ${r.selfHeal.feature}`:""}`,
         ()=>{ Engine.armorWear(ch, w.index, input); });
     }
-  });
-
-  // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
-  // body-part picker only shows for a Condition that needs one.
-  const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
-    return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
-  // W14: a palette chip adds in one click (the undo toast makes that safe);
-  // a body-part Condition asks where first, through the same Add.
-  const addCond = (id, location) => {
-    const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
-    if (!r.ok){ alert(r.why); return; }
-    S.condPick=null;
-    commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
-  };
-  main.querySelectorAll("[data-condpalette]").forEach(d=>d.ontoggle=()=>{ S.condPalette=d.open; });
-  main.querySelectorAll("[data-condquick]").forEach(b=>b.onclick=()=>{
-    const def=Engine.conditionById(b.dataset.condquick); if (!def) return;
-    if (def.location){ S.condPick=def.id; renderMain(); return; }
-    addCond(def.id);
-  });
-  main.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
-  main.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
-    const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
-    if (!location){ alert("Pick the body part."); return; }
-    addCond(b.dataset.condadd, location);
-  });
-  main.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
-    const i=Number(b.dataset.condinfo); S.condInfo = S.condInfo===i ? null : i; renderMain();
-  });
-  main.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
-    const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
-    S.condInfo=null;                                   // indexes shift once one goes
-    commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
-  });
-  main.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
-    const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];
-    const d=Engine.conditionById(e&&e.id);
-    commit("condition", `${d&&d.counter?d.counter.label:"Marks"} → ${n}`, ()=>{ Engine.setConditionMarks(ch, i, n); });
-  });
-  main.querySelectorAll("[data-condnote]").forEach(inp=>inp.onchange=()=>{
-    const i=Number(inp.dataset.condnote), e=ch.trackers.conditions[i];
-    if (!e) return;
-    commit("condition", `Note on ${condLabel(e)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
-  });
-
-  // SAN
-  main.querySelectorAll("[data-san]").forEach(b=>b.onclick=()=>{
-    const d=Number(b.dataset.san);
-    commit("san", `SAN loss ${d>0?"+":""}${d}`, ()=>{ ch.trackers.san.loss=Math.max(0,(ch.trackers.san.loss||0)+d); });
-  });
-  const ss=main.querySelector("[data-sanset]");
-  if (ss) ss.onchange=()=>{ const v=Math.max(0,Number(ss.value)||0); commit("san", `Set SAN loss → ${v}`, ()=>{ ch.trackers.san.loss=v; }); };
-
-  // LUCK
-  main.querySelectorAll("[data-luckspend]").forEach(b=>b.onclick=()=>{
-    const cost=Number(b.dataset.luckspend);
-    if (Engine.luckState(ch).current>=cost) commit("luck", `LUCK spent −${cost}`, ()=>{ ch.trackers.luck.spent+=cost; });
-  });
-  main.querySelectorAll("[data-luckregain]").forEach(b=>b.onclick=()=>{
-    if ((ch.trackers.luck.spent||0)>0) commit("luck","LUCK regained +1",()=>{ ch.trackers.luck.spent=Math.max(0,ch.trackers.luck.spent-1); });
   });
 
   // Generic archetype trackers (SFR / panel trackers)
@@ -523,15 +602,6 @@ function bindSheet(){
     commit("tracker", `${pid.toUpperCase()} max → ${mx==null?"—":mx}`, ()=>{
       const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.max=mx;
     });
-  });
-
-  // Çredits
-  main.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{
-    const amt=num(main.querySelector("[data-cramt]"));
-    const note=(main.querySelector("[data-crnote]")||{}).value||"";
-    if (amt==null || !amt) return;
-    const signed=Math.abs(amt)*Number(b.dataset.cr);
-    commit("credits", `Çredits ${signed>0?"+":""}${signed}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, signed, note); });
   });
 
   // Manual adjustments
@@ -651,7 +721,7 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-rowadd]").forEach(b=>b.onclick=()=>{
     const key=b.dataset.rowadd;
-    commit("loadout", `Add ${key} row`, ()=>{ panelRows(ch, key).push({}); });
+    commit("loadout", `Add ${key} row`, ()=>{ panelRows(ch, key).push(key==="gear" ? { custom:true } : {}); });
   });
   main.querySelectorAll("[data-rowdel]").forEach(b=>b.onclick=()=>{
     const [key,i]=b.dataset.rowdel.split("|");
@@ -667,23 +737,30 @@ function bindSheet(){
   // Loadout: weapons and armor (Decision 100). Notes are keystrokes like the
   // table cells; everything that changes a number is one commit().
   const loName = (kind, i) => kind==="weapons" ? ((Engine.weaponLine(ch,i)||{}).name||"weapon")
+                            : kind==="gear" ? ((Engine.gearLine(ch,i)||{}).name||"gear")
                                                : ((Engine.armorState(ch).pieces.find(p=>p.index===i)||{}).name||"armor");
-  main.querySelectorAll("[data-lopick]").forEach(sel=>sel.onchange=()=>{
-    const kind=sel.dataset.lopick, list=kind==="armor"?D.armor:D.weapons;
-    const d=list.find(x=>x.id===sel.value), buy=main.querySelector(`[data-lobuy="${kind}"]`);
-    if (!buy) return;
-    const price = d && typeof d.cost==="number" && d.cost>0 ? d.cost : null;
-    buy.disabled = price==null;
-    buy.textContent = price==null ? "Buy" : `Buy · ${priceText(d)}`;
-  });
-  const loAdd = buy => b => b.onclick=()=>{
-    const kind=buy?b.dataset.lobuy:b.dataset.loadd, id=(main.querySelector(`[data-lopick="${kind}"]`)||{}).value;
-    const pre=Engine.addLoadout(clone(ch), kind, id, { buy });
+  // Gear (Decision 121): Use one, +1, a charge, Recharged — each one commit().
+  main.querySelectorAll("[data-gearuse]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearuse), pre=Engine.useGear(clone(ch), i, 1);
     if (!pre.ok){ alert(pre.why); return; }
-    commit("loadout", buy ? `Bought ${pre.name} (−${pre.paid}Ç)` : `Added ${pre.name}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
-  };
-  main.querySelectorAll("[data-loadd]").forEach(loAdd(false));
-  main.querySelectorAll("[data-lobuy]").forEach(loAdd(true));
+    commit("loadout", `Used ${pre.name} (${pre.left} left)`, ()=>{ Engine.useGear(ch, i, 1); });
+  });
+  main.querySelectorAll("[data-gearplus]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearplus), pre=Engine.useGear(clone(ch), i, -1);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name} +1 (${pre.left})`, ()=>{ Engine.useGear(ch, i, -1); });
+  });
+  main.querySelectorAll("[data-gearcharge]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearcharge), pre=Engine.useCharge(clone(ch), i);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name}: a charge used (${pre.left}/${pre.max})`, ()=>{ Engine.useCharge(ch, i); });
+  });
+  main.querySelectorAll("[data-gearrecharge]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearrecharge), pre=Engine.rechargeGear(clone(ch), i);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name}: recharged (${pre.max}/${pre.max})`, ()=>{ Engine.rechargeGear(ch, i); });
+  });
+  main.querySelectorAll("[data-lobrowse]").forEach(b=>b.onclick=()=>openCatalog(b.dataset.lobrowse));
   main.querySelectorAll("[data-locustom]").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.locustom;
     commit("loadout", `Added custom ${kind==="armor"?"armor":"weapon"}`, ()=>{ Engine.addCustomLoadout(ch, kind); });
@@ -707,6 +784,29 @@ function bindSheet(){
     const v = el.type==="number" ? Math.max(0, Math.floor(Number(el.value)||0)) : el.value;
     commit("loadout", `${e.name||"Custom armor"}: ${k} → ${v===""?"—":v}`, ()=>{ e[k]=v; });
   });
+  // W16: mods and the magazine (Decision 120), each one commit(). Firing and
+  // Reload are bound on Main as well as Loadout, where a weapon line is drawn.
+  main.querySelectorAll("[data-wmodadd]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.wmodadd), id=(main.querySelector(`[data-wmodpick="${i}"]`)||{}).value;
+    const pre=Engine.addWeaponMod(clone(ch), i, id);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `Installed ${id} on ${loName("weapons", i)}`, ()=>{ Engine.addWeaponMod(ch, i, id); });
+  });
+  main.querySelectorAll("[data-wmodrm]").forEach(b=>b.onclick=()=>{
+    const [i,at]=b.dataset.wmodrm.split("|").map(Number), id=((ch.weapons[i]||{}).mods||[])[at];
+    commit("loadout", `Removed ${id} from ${loName("weapons", i)}`, ()=>{ Engine.removeWeaponMod(ch, i, at); });
+  });
+  main.querySelectorAll("[data-fire]").forEach(b=>b.onclick=()=>{
+    const [i,mode]=b.dataset.fire.split("|"), idx=Number(i);
+    const pre=Engine.fireWeapon(clone(ch), idx, mode);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name||"Weapon"}: ${pre.mode||"fired"} −${pre.spent} (${pre.left}/${pre.max} left)`, ()=>{ Engine.fireWeapon(ch, idx, mode); });
+  });
+  main.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.reload), pre=Engine.reloadWeapon(clone(ch), i);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `Reloaded ${pre.name||"weapon"} (${pre.max})`, ()=>{ Engine.reloadWeapon(ch, i); });
+  });
   main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;
     const pre=Engine.addUpgrade(clone(ch), i, id);
@@ -722,7 +822,11 @@ function bindSheet(){
     const input = full ? { full:true } : { roll:(main.querySelector(`[data-repairroll="${i}"]`)||{}).value };
     const pre=Engine.repairArmor(clone(ch), i, input);
     if (!pre.ok){ alert(pre.why); return; }
-    commit("loadout", `${full?"Armorer":"Field Repair Kit"}: ${pre.name} +${pre.restored} Integrity`, ()=>{ Engine.repairArmor(ch, i, input); });
+    const kit = !full && Engine.carriedGear(ch, "field-repair-kit");   // W17: a use off the kit you carry
+    commit("loadout", `${full?"Armorer":"Field Repair Kit"}: ${pre.name} +${pre.restored} Integrity${kit?`, ${kit.qty-1} kit use${kit.qty===2?"":"s"} left`:""}`, ()=>{
+      Engine.repairArmor(ch, i, input);
+      if (kit) Engine.useGear(ch, kit.index, 1);
+    });
   };
   main.querySelectorAll("[data-repairkit]").forEach(repair(false));
   main.querySelectorAll("[data-repairfull]").forEach(repair(true));

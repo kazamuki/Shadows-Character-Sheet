@@ -87,6 +87,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F23` | RES against Electric and Burning (stubbed as Energy), and where the Resistance upgrade's 50% sits (not applied) | Deighton |
 | `F24` | Ongoing damage while Dying at a Reset: one Death Mark per ticking source standing in for the check (stub), or the check plus a mark per source | Deighton |
 | `F25` | How Natural Armor answers a hit: stubbed as flat, after PROT and RES, anywhere, Kinetic unless Warded, ignores AP, skipped by Massive | Deighton |
+| `F26` | Does a shotgun count as a rifle for the Scope and the Angel Mod? Stubbed: no | Deighton |
 
 The one **unnumbered** flag (the stat curve past 10) closed with Decision 98.
 
@@ -247,6 +248,12 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **115** *(The GM runs the Cascade)* — The Cascade panel gives the instruction (d10 + Rupture degree, tell your GM) and opens one Aberration picker, a modal of cards with each one's text, also used by Trackers' Add. The pick's note is dated; nothing goes into Notes. `recordCascade`/`logCascade` removed; the tables stay in the reference.
 - **116** *(Spell tag AP)* — `AP` on a spell means Armor Piercing, as the weapon tag does (skips RES, PROT still rolls). Unflagged; Iron Lance's own effect already said so.
 - **112** *(Modals, the skill line and Trackers' layout — wishlist pass)* — The modal gains a sticky footer and is centred; W6 Take a hit in the modal, Apply disabled with its reason; W23–W26 row click, dimmed rows that say why, sticky search, Done; W20/W21 a skill's stats as icons with the character's numbers; W1/W10 Trackers in two columns, the HL track in Damage banded by Pain Level.
+- **117** *(Let a hit land — W15)* — `commit()` notes when damage went up; the next render flashes the HP readouts and the Health Level boxes that took it, twice on Pain if its level rose, once only, never on heal or undo, none under reduced motion.
+- **118** *(The catalog browser — W4)* — Loadout's pickers are a modal: search, section, What I can afford, sort, and every number before Add/Buy from `Engine.catalogLine()`, the reader Loadout's own rows share. Buy says why it's off; a row click opens its details.
+- **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal.
+- **120** *(Weapon mods and rounds — W16)* — Schema 0.10: `weapons[i].mods` and `roundsSpent`. Single/Burst/Full Auto spend 1/3/10 (053) from a capacity read as its number + chambered round; Fire and Reload on Loadout and Main. Mods fill fixed slots, fit per data (`onlyFor`/`notFor`), add tags and damage; a sight's ACC is aimed, apart from Single's. F26 opened.
+- **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog.
+- **122** *(Main is the fight view — W13)* — Main's Combat column leads with the weapons you carry (Fire/Reload), then the armor, then the combat skills; no separate fight mode, and no invented Defense number.
 
 ### Audit trail, undo & admin
 

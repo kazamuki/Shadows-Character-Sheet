@@ -83,9 +83,29 @@ function commit(kind, label, fn){
   const before=clone(ch);
   fn();
   const r=Engine.recordAction(ch, kind, label, before);
+  S.landed=landedFrom(before, ch);
   update();
   if (r && r.ok) showUndoToast(ch, ch.audit[ch.audit.length-1], label);
 }
+
+// W15 — let a hit land. When an action leaves more damage than before (a
+// hit, Hurt, a Turn Reset tick), the next render marks the HP readouts, the
+// Health Level boxes that took it, and the Pain readouts if the Pain Level
+// went up. The render takes it once (landedNow), so the flash plays once and
+// a later re-render doesn't replay it. Healing and undo never flash. The CSS
+// drops the animation under prefers-reduced-motion.
+let landedNow=null;
+function landedFrom(before, ch){
+  if (!ch.creation || !ch.creation.locked) return null;
+  const b=Engine.hlState(before), a=Engine.hlState(ch);
+  if (a.damage<=b.damage && a.massive<=b.massive) return null;
+  const was=hlCells(before), cells=new Set();
+  hlCells(ch).forEach((c,i)=>{ const o=was[i]; if (!o || c.frac>o.frac || (c.massive && !o.massive)) cells.add(i); });
+  const pb=Engine.painState(before), pa=Engine.painState(ch);
+  return { cells, pain: pa.level>pb.level || (pa.down && !pb.down) };
+}
+const landedCls = (what, i) => !landedNow ? "" : what==="hp" ? " struck"
+  : what==="pain" ? (landedNow.pain ? " painup" : "") : landedNow.cells.has(i) ? " landed" : "";
 
 // W12 — undo where the action happened. Every commit() that changed something
 // offers its own undo for a few seconds, through the same LIFO undo the
@@ -180,6 +200,78 @@ function closeModal(){
   const back = st && st.opener && st.opener!==document.body && st.opener.isConnected ? st.opener
              : st && st.returnTo ? document.querySelector(st.returnTo) : null;
   if (back && back.focus) back.focus();
+}
+
+// ── Popover (W2/W3) ───────────────────────────────────────────────────
+// A small panel under the vital that opened it: lighter than openModal, so
+// the page stays live behind it and nothing is made inert. One at a time.
+// It lives outside #main, so a commit() re-rendering the page leaves it; the
+// render then calls refreshPopover(), which finds the new trigger by its
+// `data-vpop` key, redraws the content from `render()` and puts focus back
+// on the control that had it. Esc and a click elsewhere close it; Esc hands
+// focus back to the trigger (openModal's rule, copied rather than shared,
+// since a popover isn't a dialog the page waits on).
+let popState=null;
+function popEl(){
+  let el=document.getElementById("vpop");
+  if (!el){
+    el=document.createElement("div");
+    el.id="vpop"; el.className="popover"; el.hidden=true;
+    el.setAttribute("role","dialog"); el.setAttribute("aria-labelledby","vpop-title");
+    document.body.appendChild(el);
+    document.addEventListener("keydown", e=>{ if (e.key==="Escape" && popState && !document.querySelector("dialog.modal[open]")){ e.preventDefault(); closePopover(true); } });
+    document.addEventListener("mousedown", e=>{
+      if (!popState) return;
+      const t=e.target;
+      if (el.contains(t) || (t.closest && t.closest("[data-vpop], #undotoast, dialog.modal"))) return;
+      closePopover(false);
+    });
+    window.addEventListener("resize", ()=>{ if (popState) placePopover(); });
+  }
+  return el;
+}
+const popTrigger = key => document.querySelector(`#main [data-vpop="${key}"]`);
+function placePopover(){
+  const el=popEl(), a=popState && popTrigger(popState.key); if (!a) return;
+  const r=a.getBoundingClientRect(), vw=document.documentElement.clientWidth||window.innerWidth||0;
+  const w=el.offsetWidth||320;
+  el.style.top=`${Math.round(r.bottom + (window.scrollY||0) + 6)}px`;
+  el.style.left=`${Math.round(Math.max(8, Math.min(r.left + (window.scrollX||0), (window.scrollX||0) + vw - w - 8)))}px`;
+}
+function drawPopover(){
+  const el=popEl(), st=popState, p=st.render();
+  if (!p){ closePopover(false); return; }
+  el.innerHTML=`<div class="pop-head"><h3 id="vpop-title">${esc(p.title)}</h3>
+    <button class="modal-x" data-popclose aria-label="Close">×</button></div><div class="pop-body">${p.html}</div>`;
+  el.querySelectorAll("[data-popclose]").forEach(b=>b.onclick=()=>closePopover(true));
+  if (st.bind) st.bind(el.querySelector(".pop-body"));
+  const t=popTrigger(st.key); if (t) t.setAttribute("aria-expanded","true");
+}
+function openPopover({ key, render, bind }){
+  if (popState && popState.key===key){ closePopover(true); return; }   // the trigger toggles
+  if (popState) closePopover(false);
+  popState={ key, render, bind };
+  const el=popEl(); el.hidden=false;
+  drawPopover(); placePopover();
+  const first=el.querySelector(".pop-body button:not([disabled]), .pop-body input");
+  if (first) first.focus();
+}
+// After a render: same trigger, fresh numbers, focus where it was.
+function refreshPopover(){
+  if (!popState) return;
+  if (!popTrigger(popState.key)){ closePopover(false); return; }
+  const el=popEl(), f=document.activeElement;
+  const attr=f && el.contains(f) ? [...f.attributes].find(a=>a.name.startsWith("data-")) : null;
+  drawPopover(); placePopover();
+  const again=attr && el.querySelector(`[${attr.name}="${attr.value.replace(/"/g,'\\"')}"]`);
+  if (again) again.focus();
+}
+function closePopover(returnFocus){
+  const st=popState; if (!st) return;
+  popState=null;
+  const el=popEl(); el.hidden=true; el.innerHTML="";
+  const t=popTrigger(st.key);
+  if (t){ t.setAttribute("aria-expanded","false"); if (returnFocus) t.focus(); }
 }
 
 // ── Jump bar (W5, W22) ────────────────────────────────────────────────

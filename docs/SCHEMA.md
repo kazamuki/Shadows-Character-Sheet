@@ -1,7 +1,7 @@
 # Shadows Digital Character Sheet — Schema & Decision Log
 
 **Phases 0-3 complete · 3.1 (sheet UX + iconography) · 3.2 (sheet fit & finish) · 3.3 (audit trail, undo & admin mode) · 3.4 (repository restructure) complete** · Character schema 0.9 (game data 0.14) · Ruleset target: CRB v4 (WIP)
-Last updated: 2026-09-23 (Starting spells in the wizard and the spell picker modal, Decision 111)
+Last updated: 2026-09-24 (the wishlist session: Decisions 117–122, schema 0.10, game data 0.16)
 
 This document is the project's memory. It defines the file architecture, the two
 data schemas (game data and character), the locked design decisions, the open
@@ -323,6 +323,10 @@ window.SHADOWS_DATA = {
   weaponTagGlossary: [ { id: "AP", description: "..." } ],       // 29 entries
   weaponFeatureGlossary: [ { id: "Scope", description: "..." } ], // 6 entries
   weaponModGlossary: [ { id: "Silencer", slots: 1, description: "..." } ], // 7 entries
+  // (0.16, Decision 120) what the engine reads off a mod: grantsTags, aimedAcc
+  // (+ aimedAt, notWith), damageBonus, onlyFor/notFor { categories, weapons }
+  weaponRules: { rofModes: [ { id: "S", name: "Single", rounds: 1 } ],  // S 1 · B 3 · F 10 (053)
+                 reloadNote: "...", modNote: "..." },
   ammunition: [ { id: "handgun-rounds", name: "Handgun Rounds", weaponType: "Handgun",
     availability: "Common", cost: "15Ç/mag", flavorLine: "..." } ],       // 9 entries
   arrowheads: [ { id: "barbed-tip", name: "Barbed Tip", effect: "Base weapon DMG",
@@ -368,6 +372,21 @@ window.SHADOWS_DATA = {
       feature: "Headshot Defense", flavorLine: "..." }
     // 37 entries: 8 light + 8 medium + 9 full body coverage, 6 head, 6 hand.
     // slot:"body" always carries prot/res/integrity; slot:"head"/"hand" never do.
+  ],
+
+  // ── Equipment (0.16, Decision 121) ──────────────────────────────────
+  // Gear's Equipment chapter (tech, field & recovery, tools, clothing) and
+  // Magic's Tools of the Trade (materials, ritual supplies, blanks, inscribed
+  // objects), from the two chapters' own tables. 116 entries, 12 categories.
+  equipmentCategories: [ { id: "charged", name: "Charged Talismans", book: "Magic", note: "..." } ],
+  equipment: [
+    { id: "quickstitch", name: "Quickstitch", category: "medical", availability: "Common",
+      cost: 1500, costText: "1,500Ç / strip of 5", pack: 5, unit: "dose", consumable: true,
+      action: "Fast", notes: "...", flavorLine: "..." },
+    { id: "shield-charm", name: "Shield charm", category: "charged", spell: "shield",
+      spellName: "Shield", availability: "Uncommon", cost: 450, charges: 3, notes: "..." }
+    // cost null ("Varies", "1,500Ç+") can be added, not bought. `spell` only
+    // when the Book of Known Spells has it; `spellName` always.
   ],
 
   // ── Conditions (0.8, Decision 95) ───────────────────────────────────
@@ -524,8 +543,8 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.9",
-    gamedataVersion: "0.12",          // version of shadows-data.js at save time
+    schemaVersion: "0.10",
+    gamedataVersion: "0.16",          // version of shadows-data.js at save time
     created: "...", updated: "..."
   },
 
@@ -629,8 +648,13 @@ It renders on the Archetype tab.
                form: "Human" },
 
   powers:  [ /* instances with per-character notes */ ],
-  gear:    [ { name, type, notes } ],          // still free-entry; the general
-                                                // Equipment chapter is not yet merged
+  // (0.10, Decision 121) A gear row is a catalog reference (`id` into
+  // `equipment`, `qty` carried, `chargesUsed` on a charged Talisman) or typed
+  // (`custom: true`, name/type/notes as before). migrate() tags every older
+  // row custom and never matches a typed name to the catalog.
+  gear:    [ { id: "quickstitch", qty: 4, notes: "" },
+             { id: "shield-charm", qty: 1, chargesUsed: 1, notes: "" },
+             { custom: true, name, type, notes } ],
   // (0.6) A weapon entry is EITHER a catalog reference (`id` into the new
   // `weapons` game-data array, `notes` only — stats read from the catalog)
   // OR freeform (`custom: true`, every field preserved as typed, same shape
@@ -638,8 +662,12 @@ It renders on the Archetype tab.
   // than guessing which catalog weapon a free-typed name meant. Loadout's
   // catalog picker writes the reference, and Engine.weaponLine() computes the
   // rest (Decision 100).
-  weapons: [ { id: "combat-knife", notes: "" },
-             { custom: true, name, type, damage, rof, capacity, ammo, features, notes } ],
+  // (0.10, Decision 120) `mods`: weaponModGlossary ids installed on a catalog
+  // weapon (a custom one types its own features). `roundsSpent`: rounds fired
+  // since the last reload, so 0 is a full magazine; the rounds left are
+  // computed from the capacity, never stored.
+  weapons: [ { id: "combat-knife", notes: "", mods: [], roundsSpent: 0 },
+             { custom: true, name, type, damage, rof, capacity, ammo, features, notes, roundsSpent: 0 } ],
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
   // (0.8, plan P5) worn: the one body piece that rolls PROT (CQ7) · scrapped:
@@ -2707,6 +2735,240 @@ No cascade logic to maintain — it falls out of the architecture.
     tags, so there's no game data bump (Decision 68). Ships in app
     **0.21.0** with Decision 115. (Ken + Claude, 2026-09-24)
 
+117. **(Let a hit land — W15, app)** **An action that leaves more damage
+    than before flashes what it changed, once.** Ken's wishlist item, picked
+    up in the 2026-09-24 wishlist session under his "everything, no pauses".
+    No rules, data or schema change.
+    - **One hook, in `commit()`.** `landedFrom(before, ch)` compares the
+      Health Level cells before and after (`hlCells`). If damage or Massive
+      went up, `S.landed` names the cells whose fill grew and whether the
+      Pain Level rose (or the character went Down). `renderMain` takes it
+      into `landedNow` for that one render and clears it, so a tab switch
+      or any later render doesn't replay it. So a hit from the modal, Hurt,
+      a typed damage total and a Turn Reset tick all land the same way.
+      Healing and undo never flash, since undo doesn't go through `commit()`.
+    - **One effect.** A magenta flash on the HP readouts (the vitals pill,
+      Main's Health card, Trackers' HP) and on each Health Level box that
+      took damage, on the track and Main's mini track. The Pain readouts (the
+      pill, Main's Pain card, Trackers' Pain card) play it twice when the
+      level rose: the distinct beat W15 asked for. None of it plays under
+      `prefers-reduced-motion`.
+    - **Pinned:** one smoke test. Mutation-tested (5 mutants): the flash
+      replaying on a later render, healing flashing, the wrong boxes, Pain
+      always beating, Pain never beating. Each fails the test.
+    Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
+118. **(The catalog browser — W4, engine + app)** **Loadout's weapon and
+    armor pickers are a modal that shows every number before Add or Buy, with
+    search, a section filter, "What I can afford", and a sort.** Ken's
+    wishlist item, 2026-09-24 session. No data or schema change. It extends
+    Decision 100 (Add and Buy side by side, Buy paying in the same action)
+    and reuses the spell picker's shape (Decisions 111–112): a sticky head,
+    a status line, a **Done** footer, and a modal that stays open for the
+    next pick, each pick one `commit()` with its undo toast.
+    - **One reader, two places.** `Engine.catalogLine(ch, kind, id)` returns
+      what Loadout would draw for that entry once carried: a weapon's attack
+      (its skill's check, Pain and Conditions in it), damage resolved for
+      this character (BOD+3 reads 8 at BOD 5), range, RoF and capacity; an
+      armor piece's PROT, RES, Integrity and mod slots. It adds `price`,
+      `availability`, `flavorLine`, and `buy: { ok, why }`: "Costs 7,500Ç.
+      You have 1,500Ç." or "No street price". `weaponLine` now builds on the
+      same `weaponDefLine`, and an engine test pins that every catalog
+      weapon's line is the same before and after it's carried. It's total,
+      and null for an unknown id. The line also carries a grenade's
+      `radius`.
+    - **The modal.** Rows list name, section, skill, style and tags, then
+      the numbers, the price and availability, and Add and Buy. Buy is off
+      when you can't pay, and the row says why in text (W24's lesson: a
+      tooltip never reaches a touch screen). Add stays on, for gear that's
+      found or issued. A click on the row, not its buttons, opens the
+      catalog's flavour line, so a row has two actions and neither is
+      a guess. Sorts: book order, price either way, damage (weapons),
+      Integrity (armor), name. On a phone each row is a card with its
+      numbers labelled.
+    - **Loadout** keeps only what you own, plus **Browse the catalog** and
+      **+ Custom** under each section. The native `<select>`, its Add and its
+      Buy are gone.
+    - **Pinned:** a smoke test (numbers before adding, search, afford, sort,
+      details, Buy keeps the modal open and refreshes the balance, undo) and
+      two engine tests (parity with `weaponLine`, totality). The two older
+      Loadout smoke tests now go through the modal. Mutation-tested (6
+      mutants): the afford filter ignored, no refresh after a pick, Buy never
+      disabled, the engine never refusing on price, no sort, details that
+      never open. Each fails a test.
+    Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
+119. **(Vitals popovers — W2 and W3, app)** **Every vital you'd change
+    mid-scene opens a small popover where it's shown: HP, Pain (and the
+    Cond pill), SAN, LUCK and Çredits, on the vitals bar of every tab but
+    Main and on Main's cards.** Ken's wishlist items, one component at two
+    sizes as W3 asked. 2026-09-24 session. No rules, data or schema change.
+    - **No second code path.** Trackers' damage stepper, SAN, LUCK and
+      Çredits controls are now small renderers (`damageStepperHtml`,
+      `sanControlsHtml`, `luckControlsHtml`, `creditControlsHtml`), and
+      their handlers, with Take a hit and every Condition control, moved
+      from `bindSheet` into `bindVitalControls(root)`. Trackers binds it on
+      `#main`, a popover on its own body. So a popover's Hurt 5 is the same
+      `commit()` with the same audit label and undo toast as Trackers'.
+      The Pain popover is `conditionsHtml(ch, false)`, the palette included.
+    - **A popover primitive, not a second modal** (`openPopover` in
+      `shared.js`, as the wishlist's notes suggested). It sits under its
+      trigger, doesn't make the page inert, and is one at a time; the trigger
+      toggles it. It lives outside `#main`, and `renderMain` calls
+      `refreshPopover()`: it finds the new trigger by its `data-vpop` key,
+      redraws from `vitalPopover(ch, key)` and puts focus back on the
+      control that had it, so an action leaves you where you were with the
+      new numbers. Esc closes and returns focus to the trigger (openModal's
+      rule, copied). A click elsewhere closes it; the toast and a modal
+      don't count as elsewhere. Leaving the sheet closes it.
+    - **Take a hit** from the HP popover closes it and opens the hit modal
+      (`openHitModal(returnTo)`), whose focus comes back to the pill or card.
+      **Recovery on Trackers** and **Ledger on Trackers** go there.
+    - **The pills and cards are buttons** (`aria-haspopup`,
+      `aria-expanded`). Main's cards hold spans rather than divs, since a
+      button holds no divs. IP, MP and SFR stay read-only: they're spent on
+      Progression and the Arcanist's panels, which have more to them than a
+      stepper.
+    - **Pinned:** two smoke tests. Mutation-tested (6 mutants): no refresh
+      after a render, the popover's controls unbound, focus lost on the
+      redraw, focus not returned on Esc, a click elsewhere not closing it,
+      and Take a hit leaving the popover open. Each fails a test.
+    Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
+120. **(Weapon mods and rounds in the magazine — W16, data + engine + app,
+    character schema 0.10)** **A catalog weapon takes mods into its fixed
+    slots, and every weapon whose capacity reads counts its rounds down by
+    rate of fire.** Deferred twice from the combat plan as "if wanted";
+    picked up in the 2026-09-24 wishlist session under Ken's "everything, no
+    pauses", as the one schema bump W16 asked for. W17 doesn't share it (see
+    below).
+    - **Stored:** `weapons[i].mods` (glossary ids, catalog weapons only) and
+      `weapons[i].roundsSpent` (all weapons). Rounds spent, not rounds left,
+      is the input (Constraint 7), the way `luck.spent` and `sfr.spent` are:
+      0 is a full magazine, and a capacity the catalog changes can't strand
+      a stale count. `migrate()` gives an older file no mods and a full
+      magazine, drops a non-string mod id, and takes `mods` off a custom
+      weapon. Schema **0.9 → 0.10**, with the round-trip test.
+    - **Rounds (053).** "Ammunition is spent by mode": Single 1, Burst 3,
+      Full Auto 10, as `weaponRules.rofModes` in data. A capacity reads as its
+      leading number plus a chambered "+N": 15+1 holds 16, "100 (belt)" 100,
+      "10 bursts" 10. One that doesn't read (a knife, a grenade) isn't
+      tracked. `fireWeapon(ch, i, mode)` refuses a mode the weapon doesn't
+      have and a spend the magazine can't pay ("Burst spends 3 rounds, and 2
+      are left. Reload."). `reloadWeapon` empties `roundsSpent`. A custom
+      weapon's typed capacity and RoF count the same way. The buttons (one
+      per RoF, then Reload) are on Loadout **and on Main's weapon table**,
+      where a fight is run, a step toward W13. Each is one `commit()`: "AR-9X
+      "Guardian": Burst −3 (28/31 left)".
+    - **Mods (Gear).** `weaponModOptions(ch, i)` lists every mod with why one
+      can't go on: no slots, already installed, not enough slots free, or
+      doesn't fit. Fit is data: `notFor` (a Silencer isn't for shotguns or
+      heavy weapons, as Gear says) and `onlyFor` (a Scope: rifles and the
+      Strix by id; an Angel Mod: what fires Angel Rounds, which the ammo table
+      lists for handguns, SMGs and rifles). What a mod changes is read by
+      `weaponLine()`, the way armor upgrades are by `armorPiece()`: its
+      `grantsTags` join the weapon's tags (Silent; AP, Burning, Agonized), its
+      `damageBonus` adds to the damage (Angel +4). A sight's ACC is **not**
+      folded into ACC: Gear gives it to "aimed shots", and ACC is Single
+      fire's. So the line carries `aimed`: Laser and Holo stack (+2), and a
+      Scope is its own "at Long or Extreme range" entry, listed "instead of"
+      the sights it doesn't stack with. The Holo Sight's "does not stack with
+      SMART Targeting" stays in its text, since the CRB doesn't say SMART
+      Targeting is the SMART Link feature. Mods cost nothing here: the CRB
+      prices none, so the player logs the gunsmith's bill under Çredits.
+    - **F26 (new, Deighton): does a shotgun count as a rifle?** The Scope is
+      "compatible with rifles and the Strix only", and Angel Rounds fit
+      "Handgun, Rifle, SMG". The ammo table files shotgun shells under
+      "Rifle (shotgun)". Stub: shotguns take neither. Both entries are
+      `flagged` with a `playerNote`, which shows under a weapon holding one.
+    - **Not W17.** Consumables (a Nanomed Kit coming out of stock) want
+      gear with a count, which is its own shape and its own proposal (W17's
+      row says so). They don't need to share this bump.
+    - **Pinned:** four engine tests (capacity parsing and the RoF rounds;
+      firing, refusing, reloading, a custom weapon; mod fit, slots, Laser +
+      Holo, Angel's damage and tags, Scope's range, the Strix by id; the
+      0.10 migration and a second migrate changing nothing), totality over
+      every degenerate character, and a smoke test (install a Scope on
+      Loadout, fire from Main, Reload, undo). Mutation-tested (8 mutants):
+      the chambered round dropped, an overspend allowed, a duplicate mod, the
+      Strix not fitting, no Angel damage, slots not counted, a custom weapon
+      keeping mods, Main without the magazine. Each fails a test.
+    Game data **0.15 → 0.16** (a weapon line's damage, tags and rounds can
+    change, and mods are new choices; Decision 68). Character schema **0.9 →
+    0.10**. Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
+121. **(Equipment you carry — W17 and W27, data + engine + app, character
+    schema 0.10)** **Gear gets a catalog: Gear's Equipment chapter and the
+    Magic chapter's Tools of the Trade. A consumable is a count that Use one
+    takes down, a Talisman keeps its charges, and a panel that spends a kit
+    takes it from your gear in the same action.** W17 wanted a proposal;
+    under Ken's "everything, no pauses" (2026-09-24) the shape below was
+    chosen, and it shares Decision 120's 0.10 bump, which hadn't shipped.
+    W27 is the Magic chapter's half of the same catalog.
+    - **Data (game data 0.16).** `equipmentCategories` (12) and `equipment`
+      (116), transcribed from the two chapters' tables by a script rather
+      than by hand: Tech & Communications, Field & Recovery, Tools & Field
+      Gear, Clothing; Raw Materials, Ritual Supplies, Inscription Blanks,
+      Single-Use, Charged and Durable Talismans, Wards and Traps, Artifacts.
+      `pack`/`unit` is what one purchase adds (a strip of 5 Quickstitch, a
+      Field Repair Kit's 5 uses, a deck of 5 Dart cards). `consumable` marks
+      what's used up. `charges` is 3 for Once-Living and 5 for Durable, as
+      the chapter's headers say; the Second Wind charm is `startsEmpty`
+      ("Sold empty"). `spell` links the Book of Known Spells where it has the
+      spell (14 of the 27 the shop names). `spellName` is always what the
+      shop printed. **Left out:** Transportation, Food & Drink, Lodging (paid
+      for, not carried; log them under Çredits) and Magic's Services, whose
+      Warding comes in Elemental, Spirit and Aether where the data's one
+      Warding upgrade answers "magical" (W28).
+    - **Character (schema 0.10).** A gear row is `{ id, qty, notes }`, plus
+      `chargesUsed` on a charged Talisman, or the typed `{ custom: true,
+      name, type, notes }` it always was. `migrate()` tags every older row
+      custom, never guessing a catalog match (the 0.6 weapons rule).
+    - **Engine.** `gearLine(ch, i)`, `addLoadout(ch, "gear", id, {buy})`
+      (anything without charges stacks onto the row you have; a charged
+      Talisman is its own row, since each keeps its own charges), `useGear`
+      (take one off, or put one back; the last one takes the row off, as
+      crossing it out would), `useCharge`, `rechargeGear` (full; the TOL or
+      the 200Ç service is the player's to record), and `carriedGear(ch, id)`.
+      `catalogLine` reads gear too, so the W4 browser has a third catalog.
+    - **W17's panels.** The Nanomed Kit panel and Rest on Speed Heal offer
+      "Use one you carry (N left)", on by default when you carry one; Apply
+      heals and takes it off in one `commit()`, so one undo puts back both.
+      The Field Repair Kit button says "1 of your 5" and takes a use. Chems
+      and everything else consumable have Use one on their row.
+    - **Loadout's Gear** shows catalog rows (count or charges, the spell an
+      object holds with its TN, TH and effect, notes), then your own typed
+      rows, then **Browse the equipment catalog** and **+ Your own**. The
+      print sheet writes a catalog row's count or charges as its type.
+    - **Pinned:** four engine tests (the catalog's integrity and spell links;
+      stacking by pack, Use one to zero, Buy, a "Varies" price; charges,
+      recharge, sold empty; the 0.10 gear migration), totality, and two smoke
+      tests (buy three kinds, use one, use a charge, the Nanomed panel taking
+      the kit with one undo; the Field Repair Kit). Mutation-tested (8
+      mutants): no stacking, an emptied row left behind, a tool used up,
+      Second Wind sold full, the kit not taken, the panel's offer off by
+      default, a typed row matched to the catalog, the repair kit not taken.
+      Each fails a test.
+    Game data **0.16**, character schema **0.10**, both shared with Decision
+    120. Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
+122. **(Main is the fight view — W13, app)** **W13 asked whether Main
+    becomes the fight dashboard or a separate mode gets built. This session
+    made Main the fight view, and a separate mode stays unbuilt until play
+    shows Main isn't enough.** 2026-09-24, under Ken's "everything, no
+    pauses". What W13 listed, and where it now is on Main: weapon lines with
+    their attack and damage, which already existed, now with Fire and Reload
+    (Decision 120); HP, Take a hit, Pain and Conditions, Luck and SAN, each
+    one click from its card (Decision 119); armor and its Integrity, already
+    there. The one change here is the order of Main's Combat column: **the
+    weapons you carry, then the armor that answers, then the combat skills**.
+    The skills table lists every combat skill, trained or not, and it was
+    pushing the lines a player rolls below the fold. A defense readout isn't
+    added: 053 has the defender roll a skill (Dodge, a Parry), which the
+    skills table already shows, and a single "Defense" number would be
+    invented. One smoke test pins the order (mutation-tested: skills first
+    fails it). Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2776,6 +3038,7 @@ sentence.
 | F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and Magical (Warding), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
 | F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 | F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
+| F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both | Deighton | No |
 
 ## 6. Roadmap
 

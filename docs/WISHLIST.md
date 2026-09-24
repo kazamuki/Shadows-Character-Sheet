@@ -34,7 +34,7 @@ putting each card's action buttons on the right of its own row. The grid is the
 bigger win — it also puts Damage, Armor and Pain side by side, which is how
 they're read (see W10). Must still collapse to one column on a phone.
 
-**W2 — Make the quick-info pills interactive.** *Ken · 💡*
+~~**W2 — Make the quick-info pills interactive.**~~ *Ken · → Decision 119, app 0.22.0: HP, Pain, SAN, LUCK and Ç open a popover of Trackers' own controls*
 The vitals bar (HP, Pain, SAN, Luck, Ç, IP, MP) on every non-Main tab is
 read-only; changing any of them means going to Trackers. Clicking a pill
 should open a small popover for *that* value: HP → Take a hit / ±damage; Pain →
@@ -43,7 +43,7 @@ Popovers call the same actions Trackers does — no second code path, every
 change still lands in the audit trail as one undoable action (Decisions 48–49).
 Pairs with W6: HP's popover can just open the hit modal.
 
-**W3 — Same interactivity on Main's vitals cards.** *Ken · 💡*
+~~**W3 — Same interactivity on Main's vitals cards.**~~ *Ken · → Decision 119, app 0.22.0: the same popover, anchored to the card*
 Main's Health/Pain/Sanity/Luck/Çredits cards are the big version of W2's pills
 (Decision 32's command console). Same popovers, same actions. Build W2 and W3
 as one component rendered at two sizes, not twice.
@@ -89,7 +89,7 @@ value-per-line item on this list.
 
 ### Loadout & catalog
 
-**W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · 💡*
+~~**W4 — Search, filter, and a full view for the weapon/armor catalog.**~~ *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*
 The pickers are native `<select>`s: 55 weapons in 14 groups, 37 armor pieces,
 type-a-letter to jump, no search. And each option shows only name and price —
 **no damage, ACC, range, PROT or RES until after it's added**, so a player
@@ -111,7 +111,7 @@ anchors-and-scroll rather than sub-tabs, so print and Ctrl-F still see the
 whole page. Section names should come from what's rendered, not a hardcoded
 list, so an archetype panel shows up on its own ("zero app changes" rule).
 
-**W13 — A fight view.** *Claude · 🔎*
+~~**W13 — A fight view.**~~ *Claude · → Decision 122, app 0.22.0: Main is the fight view, weapons first; a separate mode waits on play showing it's needed*
 During combat a player needs: their weapon lines (attack check, damage),
 Defense/armor INT, HP/Pain, Conditions, Luck, and Take a hit. Those live on
 three tabs — Main, Loadout, Trackers. Main's Combat table lists combat *skills*,
@@ -121,7 +121,7 @@ of the skills table) or whether that's a separate mode. Bigger than the rest of
 this list; wants its own proposal before any code. W2/W3/W6 are steps toward it
 either way.
 
-**W16 — Weapon mods and rounds in the magazine.** *Ken · ⏭*
+~~**W16 — Weapon mods and rounds in the magazine.**~~ *Ken · → Decision 120, app 0.22.0, schema 0.10: mods in fixed slots, Fire and Reload on Loadout and Main*
 Deferred twice from the combat plan (Session 4, then the cleanup session,
 2026-09-23) as "if wanted". Today a weapon line shows capacity as text, and the
 mods glossary is reference only: a player can't mark a scope on a rifle or
@@ -132,7 +132,7 @@ that change a number (ACC, damage) are read by `weaponLine()`, the way armor
 upgrades are by `armorPiece()`. Anything the Gear chapter leaves vague is a
 Deighton question, not a guess.
 
-**W17 — Consumables you carry: a Nanomed Kit comes out of stock.** *Claude · 💡*
+~~**W17 — Consumables you carry: a Nanomed Kit comes out of stock.**~~ *Claude · → Decision 121, app 0.22.0: gear from a catalog, counted; the Nanomed, Speed Heal and repair-kit actions take from it*
 Raised 2026-09-23, from Decision 105. The Nanomed Kit panel heals and clears,
 but using one doesn't take a kit from Loadout or cost the 4,500Ç. The player
 has to remember to cross it off gear and to log the purchase. Speed Heal, the
@@ -142,7 +142,7 @@ count (a schema bump, so it could share W16's 0.9 migration), and the panel
 offering "use one you carry" next to "bought on the spot". Wants a proposal
 before code.
 
-**W27 — The Magic chapter's shop: blanks, supplies and inscribed objects.** *Claude · 💡*
+~~**W27 — The Magic chapter's shop: blanks, supplies and inscribed objects.**~~ *Claude · → Decision 121, app 0.22.0: in the equipment catalog, Talismans with charges and their spell; Services are W28*
 Scott's finished Magic chapter (2026-09-24) prices its Tools of the Trade:
 raw materials, ritual supplies, inscription blanks, and a catalog of
 Talismans, Wards, Artifacts and services with the spell each holds. Today an
@@ -150,6 +150,16 @@ Arcanist writes them into Gear by hand. Once it's in the data, it could be a
 tab in W4's catalog browser, and an item could link to its spell in the book.
 It's new content only, with no rules question, though "Warding" services
 change what armor's RES stops, which the hit resolver would need to read.
+
+**W28 — Magic's Services: Warding by damage type, and Self-mending.** *Claude · 🔎 · blocked on Deighton*
+Raised 2026-09-24 while merging W27. The Magic chapter sells Warding as
+three services, Elemental (2,500Ç), Spirit (5,000Ç) and Aether (12,000Ç),
+each "Armor RES applies to [that] damage", plus Self-mending (Ironhide, "One
+mod slot"). The data has one `Warding` armor upgrade that extends RES to
+"magical" damage, and `damageTypes` has no Elemental, Spirit or Aether.
+Which damage types those are, and whether the three replace the one upgrade,
+is a rules question (it's F23's neighbour), so these stayed out of the
+catalog. Once ruled they're armor upgrades, not gear.
 
 ### Theme & polish
 
@@ -171,7 +181,7 @@ could render as chips with the penalty inline
 right now" a glance instead of a read, and it's the same component W2's Pain
 popover wants.
 
-**W15 — Let a hit land.** *Claude · 💡*
+~~**W15 — Let a hit land.**~~ *Claude · → Decision 117, app 0.22.0: one flash on what the hit changed, a second beat on Pain*
 Game feel. Applying a hit changes numbers silently. A brief flash on the HP
 pill and the HL boxes that were lost, and a distinct beat when Pain Level
 changes, would make damage feel like damage. Respect
@@ -273,15 +283,17 @@ the same way again.
 
 ## 2. Notes for whoever picks these up
 
-- **W2 and W3 are what's left of the popover work, and they're one
-  component at two sizes.** The toast (W12), the modal primitive
-  (`openModal`, Decision 111) and the hit modal (W6) are built. HP's popover
-  can call `openHitModal()`. A popover is smaller than a modal and doesn't
-  make the page inert, so it may want its own light primitive, with
-  `openModal`'s focus-return handling copied, not a second modal.
-- **W4 can reuse the picker whole.** Search, filters, rows that act on a
-  click, dimmed rows that say why, a sticky head and a Done footer are all in
-  `spellResultsHtml`/`spellPickerHtml` and `openModal` since Decision 112.
+- **What's open:** W28 (Magic's Services, blocked on Deighton). Everything
+  else on this list has moved out. New ideas get the next free number, W29.
+- **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
+  anything that takes the screen; a popover (`openPopover`, Decision 119)
+  for a small panel beside what opened it, which follows the render; the
+  catalog browser (`openCatalog`, Decision 118), which takes a new catalog
+  as a `kind` with `Engine.catalogLine` reading it; the undo toast, which
+  every `commit()` gets for free.
+- **One binder per set of controls.** Trackers' vitals controls are bound by
+  `bindVitalControls(root)`, so a popover and the page can't drift apart.
+  A new place that shows the same controls should call it, not copy it.
 - None of these touch rules. If one starts to — e.g. W13 wants to show a
   computed number the engine doesn't have yet — that part stops and goes to
   Deighton.
