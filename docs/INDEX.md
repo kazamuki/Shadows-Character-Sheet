@@ -80,7 +80,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD — 2026-09-10 meeting added unlocked direction | Design |
 | `F8` | Stat Point roll conflict: WIP says flat "3d10+30" for all levels; REF table scales by pow… | Deighton — **wizard-blocking** |
 | `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
-| `F11` | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the cat… | Ken |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F13` | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline… | Ken |
 | `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99), Loadout and recovery done (Decision 100); only the MD1/2/3 ratings are left | Design (small gap) |
@@ -166,6 +165,7 @@ Where game text comes from and how it is merged.
 - **57** *(CRB v4 content pass)* — Rank tables stay prose; rankTable waits for the renderer.
 - **65** *(Mechanism 3)* — The rulebook's worked examples run as tests.
 - **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`.
+- **113** *(Quick Study's Intuition — F11)* — Quick Study's prerequisite is the Intuition skill at Rank 1, per 041; the old "Intuition Advantage" matched no entry, so no one could take it.
 
 ### Archetypes & specialization
 

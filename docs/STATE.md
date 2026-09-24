@@ -1,9 +1,9 @@
 # State of the build
 
 **Updated:** 2026-09-23
-**Versions:** app `0.20.0` · game data `0.14` · character schema `0.9` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.20.0` · game data `0.15` · character schema `0.9` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
-**Suite:** `npm run verify` → **242 passing, 0 todo, 0 failing** (242 tests, six files)
+**Suite:** `npm run verify` → **243 passing, 0 todo, 0 failing** (243 tests, six files)
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
@@ -82,7 +82,7 @@ full text.
 |---|---|---|
 | **Gear & Combat** — Conditions, damage, armor | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105) | **F23 + F24 + F25** (Deighton, ask together; F23 and F25 are the same RES-class question) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Weapon mods/ammo: `WISHLIST.md` W16 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
-| **Milestones & doc reconciliation** — F9, F11, F12, F13 · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
+| **Milestones & doc reconciliation** — F9, F12, F13 (F11 closed, Decision 113) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
@@ -109,13 +109,14 @@ notes, one line each in `INDEX.md` §2.
 ## 5. Where to start
 
 **Live is `v0.19.1`.** This branch carries **app 0.20.0** (Decision 112: W1,
-W6, W10, W20, W21, W23–W26), not yet merged or tagged. Game data stays 0.14
-and the schema 0.9. Once it merges, append its row to `log/shipped.md`. Then
+W6, W10, W20, W21, W23–W26) and **game data 0.15** (Decision 113, F11), not
+yet merged or tagged. The schema stays 0.9. Once it merges, append its row to `log/shipped.md`. Then
 tag `v0.20.0` and check the footer on the demo site.
 
-**Next, all unblocked:** Milestones & doc reconciliation (Ken alone;
-note F11's "Intuition Advantage" lives in a **Major Milestone** — Quick Study,
-under General Milestones in `041_Archetypes` — not in the Advantages chapter).
+**Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
+(are General Milestones Professional-only? 041 files them under
+Professional) and F13 need Ken or Deighton. F12 waits on 041's unwritten
+Advancement Section.
 From the wishlist: **W2 + W3** (the vitals popovers; HP's can call
 `openHitModal()`), **W4** (the weapon/armor catalog, which can reuse the
 spell picker whole), **W22** (step 7's jump bar), and **W5** (Loadout's

@@ -2604,6 +2604,21 @@ No cascade logic to maintain — it falls out of the architecture.
     App **0.19.1 → 0.20.0**. Game data and character schema unchanged.
     (Ken + Claude, 2026-09-23)
 
+113. **(Quick Study's Intuition — F11, data)** **Quick Study's prerequisite
+    is the Intuition skill at Rank 1, not an advantage.** 041 (mirror of
+    2026-09-22) reads "1 Major Milestone already selected, Danger Sense
+    Advantage at least Rank 1, Intuition skill at least Rank 1". The data
+    had carried the WIP's "Intuition Advantage" as an advantage prerequisite
+    since Phase 1. No advantage has that id, so the prerequisite could never
+    be met, and **no character could take Quick Study**. That's a defect,
+    not a stub. The engine already reads `skills` prerequisites, so the fix
+    is data only: Danger Sense stays under `advantages`, and Intuition moves
+    to `skills.all`. The benefit text is left as it was: 041's new
+    parenthetical says "Treat the d10 as X", which isn't ready to copy.
+    Pinned in `rules.test.mjs` (fails on the old data). Game data **0.14 →
+    0.15**: a choice that was closed is now open (Decision 68). App and
+    schema unchanged. (Ken + Claude, 2026-09-23)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2656,6 +2671,9 @@ Decision 104).
 Conditions session opened them; so did the unnumbered stat-curve flag. `tests/docs.test.mjs` is what keeps the table below honest, not this
 sentence.
 
+~~F11~~ closed 2026-09-23 (Decision 113): 041 now asks for the Intuition
+**skill** at Rank 1, and Quick Study's data follows it.
+
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
@@ -2663,7 +2681,6 @@ sentence.
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked | Ken → docs | No |
 | F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling. **Design team, 2026-09-22: still open** — they want to playtest how many Stat Points people realistically get before choosing | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
-| F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |

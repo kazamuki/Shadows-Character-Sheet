@@ -50,7 +50,7 @@ window.SHADOWS_DATA = {
      UPDATE: bump `gamedataVersion` per the rule above; set `rulesetVersion`
      and `updated` whenever content changes. */
   "meta": {
-    "gamedataVersion": "0.14",
+    "gamedataVersion": "0.15",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-23",
     "notes": "Generated from WIP_NewIntroduction.md (authoritative) and REF files (fallback). WIP beats REF on conflicts. Skills, Advantages and Disadvantages re-merged 2026-08-29 from CRB v4 sections 042/043/044. 0.3 adds flavorLine/notes/styles to skills, adds two skills (occult-lore, survival), recategorises two (tactics -> combat, streetwise -> general), and changes three disadvantage point values -- so a character saved against 0.2 has a different CP grant under 0.3. 0.4 encodes the selection system Decision 58 specified: `picks` on fifteen adv/disadv entries and on Martial Arts, `creationOnly` on Long-Lived, and ids on the Martial Arts styles so a choice can be stored. Those entries now DEMAND an input they did not before, which is a change to a character's available choices -- the Decision 68 test for a bump. 0.6 merges the equipment chapter (`Gear.md`): weapons, ammunition, arrowheads and armor as new catalogs (54/9/11/37 entries), plus glossaries for weapon tags/features/mods and armor features/upgrades. New content a character's Loadout can now reference -- the Decision 68 test for a bump. 0.7 merges the archetype-independent half of `Magic.md` (Decision 93): `domains`, `spells` (the full Known-spell catalog), `spellTiers`, `spellcraftRules`, `enchantmentMaterialCategories`/`enchantmentTimeTable`, and `spellTagGlossary`, plus a rewrite of the Arcanist's `coreMechanic` description and Discipline text to match the corrected Spellcraft resolution (Rupture is per-roll and spends TOL directly; Exhaustion is the name for TOL at zero, not a separate accruing resource -- confirmed with Scott, 2026-09-20). The Origins subtype system stays out (still blocked on the archetype four-way comparison, STATE.md §3). 0.8 adds the Conditions catalog from `054_Conditions_and_Recovery.md` (Decision 95): `conditions`, `conditionRules`, `bodyLocations`. Agonized now raises Pain Level and Disoriented/Burning/Shocked take 1 off every Skill Check -- a computed value a character can observe, the Decision 68 test for a bump. Also in 0.8: learning a new skill after creation costs a flat 25 IP (`ip.skillIncreaseCost.newSkill`, Decision 97), up from the rank-1 price. And: stats past 10 follow the designers' curve (+5 at 11-15, +1 per 5 after, `statRules.beyondTen`) instead of +1 per point, only DeSynced's body-part picker is gone (Injured and Maimed only), and different Conditions' penalties cap at -8 (Decision 98). And: `damageTypes`, `damageCategories`, `damageRules` and the armor fields the hit resolver reads (coverage, RES classes, Tri-Weave's +10 INT, Headshot Defense's redirect) -- a hit now computes values a character can observe (Decision 99). 0.9 (Decision 100): `recoveryRules` (Natural and Focused Healing), the Field Repair die and upgrade rules on `armorRules` (quality order, `repeatable`), Self-Healing's after-encounter roll and the Dying check at Turn Reset -- new choices a character can observe (a rest proposes BOD per day, Self-Healing is asked after a fight). 0.10 (Decisions 103-105): TOL reads INT/BOD/COOL (Deighton, was INT/COOL/EMP), so every character's TOL can move; `naturalArmorRules` and `grants` of type naturalArmor on Thick Skin, Shake it Off, True Warrior (Iron Shirt) and Trueborn (Resilient Spirit), which a hit now reads (F25 stub); `recoveryRules.nanomed` (054's list, CQ12). 0.11 (Decision 106): the Cascade Table, the Aberration Table and the Appendix's Aberrations (`cascadeTable`, `aberrationTable`, `aberrationCategories`, `aberrationRules`, `aberrations`), and a TOL Spent tracker on the Arcanist that opens the Cascade panel -- a new tracker and new choices on the sheet. 0.12 (Decision 108): the Grimoire becomes a `grimoire` panel over the `spells` catalog, and `spellcraftRules` gains `spellPower` and `mastery` -- what an Arcanist's sheet offers changes. 0.13 (Decision 110): Aberrations carry the hooks the engine reads once one is recorded on the character (Drained `adjust` TOL -2, Phantom Pain `painLevels` 1, `aberrationRules.adjustFloor`), `spellcraftRules.spellAttack`, a `reference` panel on the Arcanist, and three Unique Aberrations synced to 041 (Aethereal Link reaches animals, Thaumaturgical Sight's +2 is for analyzing magic, Resonant Whispers drops charms) -- computed TOL and Pain can change. 0.14 (Decision 111): starting spells are chosen in the wizard. The Arcanist's scaling rows carry `startingSpellsRoll` (was the string `commonSpells`), and `spellcraftRules` gains `startingSpells` (TOL + that roll, TH capped at Evocation rank at creation only) and `castingPool` (the Grimoire marks a spell whose TH is beyond the Evocation pool) -- new choices at creation."
@@ -2836,16 +2836,19 @@ window.SHADOWS_DATA = {
               [
                 "danger-sense",
                 1
-              ],
+              ]
+            ]
+          },
+          // F11, closed by Decision 113: 041 now reads "Intuition skill at
+          // least Rank 1". It had said "Intuition Advantage", which no entry is.
+          "skills": {
+            "all": [
               [
                 "intuition",
                 1
               ]
             ]
-          },
-          "flagged": true,
-          // REVIEW (F11): see SCHEMA.md section 5.
-          "flagNote": "Prerequisite lists an 'Intuition Advantage' - Intuition is a Skill in the catalog, not an Advantage. Confirm."
+          }
         },
         "benefit": "When making a Combat Sense Skill Check, you may Take 6."
       },
