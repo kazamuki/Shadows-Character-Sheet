@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.23.0",
-    "date": null,
+    "date": "2026-09-24",
     "intro": [],
     "items": [
       "**See what's new.** Every update's notes are in the app. Open **What's new** from the home screen, the ⋮ menu on your sheet, or the version in the footer. When the app has updated since your last visit, the home screen tells you, and the new releases open first."
