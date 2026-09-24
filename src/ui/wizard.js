@@ -351,7 +351,7 @@ function renderSkills(){
       const rank = ch.skills[s.id]?ch.skills[s.id].rank:0;
       const line = Engine.skillLine(ch, s.id);
       h += `<div class="alloc-row">
-        <div class="name">${esc(s.name)} <small>${s.primaryStat} + ${s.synergyStat} syn — ${esc(s.description)}</small></div>
+        <div class="name">${esc(s.name)} ${skillStatsHtml(line)}<small>${esc(s.description)}</small></div>
         ${stepper(rank, "skill|"+s.id, rank>0, rank<pl.maxSkillRank && left>0 && pool.total!=null)}
         <span class="mod ${line.trained?"pos":""}" title="check bonus">+${line.checkBonus}</span>
       </div>`;

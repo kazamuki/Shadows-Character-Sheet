@@ -258,9 +258,8 @@ function skillRowPair(ch, l, {withRank=true}={}){
   const focused = Engine.focusedSkillIds(ch);
   const b=l.breakdown;
   const parts = l.trained
-    ? [`rank ${b.rank}`, `${b.primary.id||"?"} ${b.primary.value}`,
-       `${b.synergy.mod>=0?"+":"−"}${Math.abs(b.synergy.mod)} ${b.synergy.id||"?"} syn`]
-    : [`${b.primary.id} ${b.primary.value}`, `<span style="color:var(--dim)">untrained</span>`];
+    ? [`rank ${b.rank}`, skillStatsHtml(l)]
+    : [skillStatsHtml(l), `<span style="color:var(--dim)">untrained</span>`];
   if (b.pain) parts.push(`<span style="color:var(--magenta)">${b.pain} pain</span>`);
   if (b.conditions) parts.push(`<span style="color:var(--magenta)">${b.conditions} conditions</span>`);
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;

@@ -22,6 +22,21 @@ const iconSvg = id => ICONS[id] || "";
 const uiIcon  = name => UI_ICONS[name] || "";
 const statIco = (id, cls="ico") => { const s=iconSvg(id); return s?`<div class="${cls}">${s}</div>`:""; };
 
+// W20/W21: a skill's two stats as the brand icons with this character's own
+// numbers, on the wizard's skill line and in the sheet's breakdown. The
+// primary adds its score and the synergy its modifier (030), so the synergy
+// reads as a bonus. Violet and magenta match the print sheet's badges. The
+// synergy is dimmed on an untrained skill, whose check leaves it out.
+function skillStatsHtml(line){
+  const b=line.breakdown, trained=line.trained;
+  const chip=(id, text, syn)=>{ const svg=id&&iconSvg(id);
+    return `<span class="skstat${syn?" syn":""}${syn&&!trained?" off":""}" title="${syn?(trained?"Synergy: adds its modifier":"Synergy: counts once trained"):"Primary: adds its score"}">${
+      svg?`<span class="ico">${svg}</span>`:""}${text}</span>`; };
+  const m=b.synergy.mod;
+  return `<span class="skstats">${chip(b.primary.id, `${esc(b.primary.id||"?")} ${b.primary.value}`)}${
+    chip(b.synergy.id, `${esc(b.synergy.id||"?")} ${m<0?"−":"+"}${Math.abs(m)} syn`, true)}</span>`;
+}
+
 
 // ── State ─────────────────────────────────────────────────────────────
 const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, label:s.label, note:s.note}))
