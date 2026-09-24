@@ -1265,7 +1265,9 @@ const Engine = (() => {
   // Lookups on the player's own dice (Decision 11): `cascadeTable` for 1d10 +
   // the Rupture's degree, then `aberrationTable` if that row calls for one.
   // `pick` is the Aberration the GM chose from the rolled category. Every
-  // step it can't take yet comes back as `pending`, never a throw.
+  // step it can't take yet comes back as `pending`, never a throw. The sheet
+  // no longer calls it: the GM reads the tables (Decision 115). It stays as
+  // the reader the CRB conformance tests pin the tables through.
   const rangeRow = (rows, n) => (rows||[]).find(r => r && n>=r.min && (r.max==null || n<=r.max)) || null;
   const aberrationById = id => (D().aberrations||[]).find(a=>a.id===id) || null;
   function cascade(ch, input){
@@ -1295,22 +1297,6 @@ const Engine = (() => {
     if (pick && ab.options.includes(pick)) ab.pick = pick;
     return out;
   }
-  // The sheet stores no Cascade (no schema field, Decision 106): the result
-  // goes into the player's own notes as one line, one undoable action.
-  function logCascade(ch, input, when){
-    const c = cascade(ch, input);
-    if (!c.ok) return c;
-    const ab = c.aberration;
-    if (ab && (ab.pending || !ab.pick)) return { ok:false, why: ab.pending ? "Roll on the Aberration table first." : "Pick the Aberration the GM chose." };
-    const date = String(when || new Date().toISOString()).slice(0,10);
-    let line = `Cascade, ${date}: ${c.roll} + Rupture ${c.degree} = ${c.total}, ${c.result.name}.`;
-    if (ab) line += ` ${ab.pick.name} (${ab.permanence === "permanent" ? "permanent" : "temporary"}, ${ab.category.name}): ${ab.pick.description}`;
-    else if (c.result.effect) line += ` ${c.result.effect}`;
-    const prior = typeof ch.notes === "string" ? ch.notes : "";
-    ch.notes = prior ? prior.replace(/\s*$/, "") + "\n" + line : line;
-    return { ok:true, line };
-  }
-
   // ── Aberrations the character has (magic plan M7/M8, Decision 110) ──
   // `trackers.aberrations` stores { id, permanence, note? } and nothing else
   // (constraint 7). What an entry does is read from the catalog every time:
@@ -1369,21 +1355,6 @@ const Engine = (() => {
     keepCurrentTOL(ch, before);
     return { ok:true };
   }
-  // "Record it": the Cascade's line in Notes and, if it left one, the
-  // Aberration on the character. The UI wraps this in one commit(), so one
-  // undo takes back both. Refuses before writing anything.
-  function recordCascade(ch, input, when){
-    const c = cascade(ch, input);
-    if (!c.ok) return c;
-    const ab = c.aberration;
-    if (ab && ab.pick && aberrationList(ch).some(x=>x && x.id===ab.pick.id))
-      return { ok:false, why:`Already ${ab.pick.name}. An Aberration doesn't stack with itself, so the GM picks another.` };
-    const r = logCascade(ch, input, when);
-    if (!r.ok) return r;
-    if (ab) recordAberration(ch, { id: ab.pick.id, permanence: ab.permanence });
-    return { ok:true, line:r.line, aberration: ab ? ab.pick.name : null };
-  }
-
   // ── Grimoire (Decision 108) ──
   // A row is a book spell ({ spellId, stage, notes }, everything else read
   // from `spells` every time, constraint 7) or the player's own (the panel's
@@ -2184,9 +2155,9 @@ const Engine = (() => {
            // Combat cleanup (Decisions 104–105)
            naturalArmor, nanomedKit,
            // Cascade (Decision 106)
-           cascade, logCascade, aberrationById,
+           cascade, aberrationById,
            // Aberrations on the character (Decision 110)
-           aberrationState, recordAberration, removeAberration, recordCascade,
+           aberrationState, recordAberration, removeAberration,
            // Grimoire (Decisions 108, 110)
            spellById, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
            // Starting spells (Decision 111)
