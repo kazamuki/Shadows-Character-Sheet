@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.19.1";
+const APP_VERSION = "0.20.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -181,6 +181,16 @@ function bindMain(){
     ch.archetypeChoices.rolls[inp.dataset.archroll] = clean===""?null:Math.max(0,Number(clean));
     rerenderKeepFocus(`data-archroll="${inp.dataset.archroll}"`, clean);
   });
+  // Jump bars (W5, W22). The filter works on the rendered page, so typing
+  // keeps focus; S.cpFilter carries it across the re-render a stepper causes.
+  main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
+  const jf=main.querySelector("[data-jumpfilter]");
+  if (jf){
+    const run=()=>{ const r=applyPickFilter(main, jf.value), c=main.querySelector("[data-jumpcount]");
+      if (c) c.textContent = r.active ? `${r.shown} of ${r.total}` : ""; };
+    jf.oninput=()=>{ S.cpFilter=jf.value; run(); };
+    run();
+  }
   // The book's spell picker, a modal on the sheet and in the wizard (Decision 111)
   main.querySelectorAll("[data-spellpickopen]").forEach(b=>b.onclick=()=>openSpellPicker(b.dataset.spellpickopen));
   main.querySelectorAll("[data-startrm]").forEach(b=>b.onclick=()=>{ Engine.removeGrimoireRow(ch, Number(b.dataset.startrm)); update(); });
@@ -215,14 +225,21 @@ function linkSpellRow(ch, i){
 function openSpellPicker(mode){
   const ch = S.ch, M = spellPickMode[mode];
   if (!ch || !M) return;
-  openModal({ title: M.title, html: spellPickerHtml(ch, mode), returnTo: `[data-spellpickopen="${mode}"]`,
+  openModal({ title: M.title, html: spellPickerHtml(ch, mode), foot: pickerFootHtml(), returnTo: `[data-spellpickopen="${mode}"]`,
     bind: body => {
       const results = body.querySelector("[data-spellresults]"), status = body.querySelector("[data-spellstatus]");
       const refresh = () => { results.innerHTML = spellResultsHtml(S.ch, mode); status.innerHTML = M.status(S.ch); };
       body.querySelector("[data-spellq]").oninput = e => { S.spellPick.q = e.target.value; refresh(); };
       body.querySelectorAll("[data-spellf]").forEach(sel=>sel.onchange=()=>{ S.spellPick[sel.dataset.spellf] = sel.value; refresh(); });
+      // W23: a click anywhere on a row is its button's click. The button stays
+      // for the keyboard and a screen reader; a field or a link keeps its own.
       results.onclick = e => {
-        const b = e.target.closest("button"); if (!b || b.disabled) return;
+        let b = e.target.closest("button");
+        if (!b){
+          if (e.target.closest("input, select, textarea, a, label")) return;
+          const tr = e.target.closest("tr"); b = tr && tr.querySelector("button");
+        }
+        if (!b || b.disabled) return;
         const d = b.dataset;
         if (d.spelllink!=null) linkSpellRow(ch, Number(d.spelllink));
         else if (d.spelladd) commit("grimoire", `Grimoire: ${spellName(d.spelladd)}`, ()=>{ Engine.addSpell(ch, d.spelladd); });
@@ -232,6 +249,56 @@ function openSpellPicker(mode){
         refresh();
       };
     } });
+}
+
+// ── Take a hit (Decision 99; a modal since W6) ───────────────────────
+// The form lives in S.hit until Apply, which is one commit(), so the hit, its
+// armor wear and its Conditions undo together. Each change redraws the modal
+// and puts focus back on the control that changed; Cancel, ×, Esc and the
+// backdrop all drop the form. A number redraws as it's typed, not on
+// `change`, which fires on blur: a redraw then would replace Apply between
+// the press and the click that was meant for it.
+function openHitModal(){
+  const ch=S.ch; if (!ch) return;
+  if (S.act){ S.act=null; renderMain(); }
+  S.hit=Object.assign(newHitForm(), { owner: ch });
+  const p=hitModalParts(ch);
+  openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: "[data-hitopen]",
+    onClose: ()=>{ S.hit=null; }, bind: bindHitModal });
+}
+function bindHitModal(body, foot){
+  const ch=S.ch;
+  const redraw = key => {
+    if (!S.hit) return;
+    const p=hitModalParts(ch);
+    body.innerHTML=p.body; foot.innerHTML=p.foot;
+    bindHitModal(body, foot);
+    const again = key && body.querySelector(`[${key}]`);
+    if (again){ again.focus(); try{ again.setSelectionRange(again.value.length, again.value.length); }catch(e){} }
+  };
+  const sel = (el, attr) => `${attr}="${el.getAttribute(attr)}"`;
+  body.querySelectorAll("[data-hit]").forEach(el=>el[el.getAttribute("inputmode")==="numeric"?"oninput":"onchange"]=()=>{
+    if (!S.hit) return;
+    if (el.getAttribute("inputmode")==="numeric") el.value=el.value.replace(/[^0-9]/g,"");
+    S.hit[el.dataset.hit] = el.type==="checkbox" ? el.checked : el.value;
+    redraw(sel(el, "data-hit"));
+  });
+  body.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.conds[el.dataset.hitcond]=el.checked; redraw(sel(el, "data-hitcond"));
+  });
+  body.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; redraw(sel(el, "data-hitnat"));
+  });
+  foot.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=closeModal);
+  foot.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
+    const st=S.hit; if (!st) return;
+    const input=hitInput(st), r=Engine.resolveHit(ch, input);
+    if (hitPending(st, r)) return;          // the footer already says why
+    const choices=hitChoices(st, r);
+    S.hit=null;
+    commit("damage", hitLabel(r), ()=>{ Engine.applyHit(ch, input, choices); });
+    closeModal();
+  });
 }
 
 // ── Phase 3: sheet event wiring ─────────────────────────────────────
@@ -288,31 +355,7 @@ function bindSheet(){
   const ds=main.querySelector("[data-dmgset]");
   if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
   main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
-  // Take a hit (Decision 99). The form lives in S.hit until Apply, which is
-  // one commit() — so the hit, its armor wear and its Conditions undo together.
-  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=()=>{ S.act=null; S.hit=Object.assign(newHitForm(), { owner: ch }); renderMain(); });
-  main.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=()=>{ S.hit=null; renderMain(); });
-  main.querySelectorAll("[data-hit]").forEach(el=>el.onchange=()=>{
-    if (!S.hit) return;
-    S.hit[el.dataset.hit] = el.type==="checkbox" ? el.checked : el.value;
-    renderMain();
-  });
-  main.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{
-    if (!S.hit) return; S.hit.conds[el.dataset.hitcond]=el.checked; renderMain();
-  });
-  main.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
-    if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; renderMain();
-  });
-  main.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
-    const st=S.hit; if (!st) return;
-    const input=hitInput(st), r=Engine.resolveHit(ch, input);
-    if (!r.ok){ alert(r.why); return; }
-    if (r.prompts.shock && !st.shock){ alert("Mark the Shock Check as passed or failed first."); return; }
-    if (r.prompts.atZero && !st.atZero){ alert("Mark the check at zero as passed or failed first."); return; }
-    const choices=hitChoices(st, r);
-    S.hit=null;
-    commit("damage", hitLabel(r), ()=>{ Engine.applyHit(ch, input, choices); });
-  });
+  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=openHitModal);
 
   // Turn Reset, Rest, Focused Healing, After the fight (Decision 100): one
   // form in S.act, one commit() on Apply, the same as a hit.
@@ -915,6 +958,14 @@ function boot(){
   }
   renderFooter();
   wireThemeToggle();
+  // The sticky header wraps on a narrow screen, so a sticky jump bar (W22)
+  // reads its real height rather than --header-h.
+  const hdr=document.querySelector("header.top");
+  if (hdr){
+    const setH=()=>document.documentElement.style.setProperty("--hdr-live", hdr.offsetHeight+"px");
+    setH();
+    if (window.ResizeObserver) new ResizeObserver(setH).observe(hdr);
+  }
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{
     if (e.key==="Escape"){ const dr=$("vdrawer"); if (dr && dr.classList.contains("open")) closeVitals(); closeMenu(); }

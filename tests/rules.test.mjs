@@ -837,3 +837,21 @@ test('Decision 109 (Deighton, MQ1): a new Arcanist "would need the ranks in Evoc
   ch.archetypeChoices.disciplines.evocation = 3;                      // bought at creation: Evocation 4
   assert.equal(Engine.canAddStartingSpell(ch, superior).ok, true, "ranks bought at creation didn't count");
 });
+
+test("041: Quick Study needs a Major, Danger Sense 1 and the Intuition skill at 1 (F11)", () => {
+  // 041: "Prerequisites: 1 Major Milestone already selected, Danger Sense
+  // Advantage at least Rank 1, Intuition skill at least Rank 1". The data
+  // asked for an Intuition *advantage*, which doesn't exist, so no one could
+  // ever take it.
+  const qs = D.milestones.majorGeneral.find(m => m.id === "quick-study");
+  const ch = subject();
+  ch.progression.milestones.major.push({ id: "specialist", date: "2026-09-23" });
+  ch.advantages.push({ id: "danger-sense", rank: 1, notes: "" });
+  const missing = Engine.majorPrereqs(ch, qs);
+  assert.equal(missing.ok, false, "Quick Study opened without the Intuition skill");
+  assert.ok(missing.unmet.some(u => /Intuition/.test(u)), "the unmet line doesn't name Intuition");
+  ch.skills.intuition = { rank: 1, ipe: 0 };
+  const r = Engine.majorPrereqs(ch, qs);
+  assert.equal(r.ok, true, `Quick Study stays shut with every CRB prerequisite met: ${r.unmet.join("; ")}`);
+  assert.ok(!JSON.stringify(qs).includes("\"flagged\""), "Quick Study is still flagged");
+});

@@ -40,3 +40,5 @@ by batch number (Ken, 2026-09-12).
 | — | Magic on the sheet, Session 1 | #38 | Plan doc (M1–M10, MQ1–MQ3); the Grimoire reads the 96-spell book, Mastery by IP, Spell Power, Link to the book; schema 0.9 · Decision 108 |
 | — | Deighton's magic rulings (docs) | #40 | MQ1–MQ3 and Spell Attack answered; Drained's last two answers · Decision 109 |
 | — | Magic on the sheet, Session 2 | #41 | Aberrations on the character (Record it, Drained, Phantom Pain), Spell Attack, the Magic reference panel; Unique Aberrations synced to 041 · Decision 110 |
+| — | Magic on the sheet, Session 3 | #43 | Starting spells on the Character Points step; the spell picker becomes a modal (`openModal`), shared with the sheet; the magic plan closed · Decision 111 |
+| — | Martial Arts grid fix + wishlist pass | #45 | The style picker spans the Skills grid, with a mutation-tested guard (W19); W19–W26 added, W26 decided as a Done button |

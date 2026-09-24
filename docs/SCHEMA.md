@@ -1991,7 +1991,7 @@ No cascade logic to maintain — it falls out of the architecture.
       directly (P7). App **0.12.0 → 0.13.0** (minor, new capability).
       Character schema unchanged (0.8 already carried every field).
       (Ken + Claude, 2026-09-22)
-    → **Superseded in part by Decision 100** — the bare "Restore a Massive level" button folded into Focused Healing.
+    → **Superseded in part by Decisions 100 and 112** — the bare "Restore a Massive level" button folded into Focused Healing (100); Take a hit opens as a modal, not a panel on Trackers, and Apply waits with its reason instead of alerting (112).
 
 100. **(Loadout & recovery — combat plan Session 4, data + engine + app)**
     **Loadout writes weapons and armor from the catalog, a weapon line is
@@ -2547,6 +2547,107 @@ No cascade logic to maintain — it falls out of the architecture.
     Character schema unchanged at **0.9**. App **0.18.0 → 0.19.0**. (Ken +
     Claude, 2026-09-23)
 
+112. **(Modals, the skill line and Trackers' layout — wishlist pass, app)**
+    **Three wishlist passes ship as one UI decision: the modal pass (W6,
+    W23–W26), the skill line (W20, W21) and Trackers' layout (W1, W10).**
+    Ken picked them on 2026-09-23. None touches rules, data or the character
+    file. **Replaces Decision 99 in part** (its "Take a hit panel on
+    Trackers"), and extends Decision 111's modal.
+    - **The modal gets a footer** (`openModal({ foot })`) that stays put
+      while the body scrolls; the head does too. Any `[data-modalclose]` in
+      it closes, and `bind` gets the body and the footer. The dialog is
+      centred again: the stylesheet's `*` reset zeroed the margins a native
+      `<dialog>` centres with, so the 0.19 picker opened pinned top-left.
+    - **W6: Take a hit is a modal.** Its body leads with HP and the Health
+      Level track, then the form and what the hit would do. Apply is in the
+      footer and stays disabled while anything is pending, with the reason
+      next to it (`hitPending`: no damage yet, a PROT die not entered, a
+      Shock Check or a check at zero not marked). Those were alerts on
+      Apply. Cancel, ×, Esc and the backdrop drop the form. Each change
+      redraws the modal and puts focus back where it was. The two number
+      fields redraw as they're typed, not on `change`, which fires on blur:
+      a redraw then would replace Apply between the press and the click.
+      They're `inputmode="numeric"` text, like the wizard's roll fields, so
+      the caret goes back to the end. `openHitModal()` is callable from
+      anywhere, which is what W2/W3's HP popover wants.
+    - **W23–W26: the spell picker.** A click anywhere on a row is its
+      button's click; the button stays for the keyboard and screen readers,
+      and a field or link keeps its own click. A row whose button can't act
+      is dimmed and says why in the row ("Already in your Grimoire.", the
+      engine's reason in the wizard), since a tooltip never reaches a touch
+      screen. The search, filters and status line are sticky over the
+      results. The footer has **Done** (Ken's pick, (a) not staged picks)
+      and says each pick is kept as it's made.
+    - **W20/W21: a skill's stats are icons with the character's numbers.**
+      `skillStatsHtml` draws "REF 5 · COOL +1 syn": the primary adds its
+      score, the synergy its modifier (030). The wizard puts it on the
+      skill's name line, above the description. The sheet's breakdown uses
+      it in place of the bare text, which was the same line. Violet and
+      magenta match the print badges (Decision 94). The synergy is dimmed on
+      an untrained skill, whose check leaves it out.
+    - **W1/W10: Trackers reads in two columns from 1000px.** The body
+      (Damage, recovery, Armor, Pain, Conditions) down the left; Sanity,
+      LUCK, the archetype's trackers and Çredits down the right; Manual
+      Adjustments full width below. One column on a phone, in the same order.
+      The Health Level track moved into the Damage card, grouped into the
+      Pain Level bands the print sheet draws (`pPainBandFor`, from data), and
+      the band you're in is lit. The same track tops the hit modal. The
+      damage stepper has its own row, so it wraps as one group.
+    - **Pinned:** five smoke tests (the hit modal, the at-zero check
+      pending in the footer, the picker's row click, disabled row, sticky
+      head and Done, the skill line in the wizard, and the Trackers columns
+      and bands). Mutation-tested (13 mutants): no row click, no dimmed row,
+      no Done, no sticky head, the at-zero check not pending, numbers
+      redrawing on `change`, the field losing focus, the old skill line,
+      the synergy never dimmed, bands off by one, the wrong band lit, no
+      grid, and the track outside the card. Each fails a test.
+    App **0.19.1 → 0.20.0**. Game data and character schema unchanged.
+    (Ken + Claude, 2026-09-23)
+
+113. **(Quick Study's Intuition — F11, data)** **Quick Study's prerequisite
+    is the Intuition skill at Rank 1, not an advantage.** 041 (mirror of
+    2026-09-22) reads "1 Major Milestone already selected, Danger Sense
+    Advantage at least Rank 1, Intuition skill at least Rank 1". The data
+    had carried the WIP's "Intuition Advantage" as an advantage prerequisite
+    since Phase 1. No advantage has that id, so the prerequisite could never
+    be met, and **no character could take Quick Study**. That's a defect,
+    not a stub. The engine already reads `skills` prerequisites, so the fix
+    is data only: Danger Sense stays under `advantages`, and Intuition moves
+    to `skills.all`. The benefit text is left as it was: 041's new
+    parenthetical says "Treat the d10 as X", which isn't ready to copy.
+    Pinned in `rules.test.mjs` (fails on the old data). Game data **0.14 →
+    0.15**: a choice that was closed is now open (Decision 68). App and
+    schema unchanged. (Ken + Claude, 2026-09-23)
+
+114. **(Jump bars — W5 and W22, app)** **Loadout and the Character Points
+    step get a bar that jumps to each section the page drew, and step 7's
+    bar also filters and sticks.** Ken picked both on 2026-09-23. No rules,
+    data or schema change.
+    - **One helper, the page's own sections.** `sectionList(prefix)` in
+      `shared.js` hands out `sect(label, html)`: the heading gets an id and
+      `tabindex="-1"`, and the short label goes on the bar. So an
+      archetype's panels (the Arcanist's Disciplines and Grimoire) show up
+      with no app change, as W5 asked. `jumpTo` scrolls the heading to just
+      under the sticky header, and under a sticky bar if there is one. It
+      then focuses the heading, so the keyboard carries on from there.
+      Smooth unless reduced motion. Anchors and scroll, not sub-tabs, so
+      print and Ctrl-F still see the whole page.
+    - **Loadout (W5):** a plain bar under the title, not sticky, since the
+      sheet's header already takes the top of the screen.
+    - **Step 7 (W22)** sticks under the header. The header wraps on a
+      phone, so boot measures it into `--hdr-live` (a ResizeObserver
+      where there is one). The bar has a filter over Advantages and
+      Disadvantages, matching name and description. A pick you hold always
+      stays visible (`.pick.selected`), as W22 asked. It shows "N of M" and
+      the **CP still to spend**, the one number you need while scrolling
+      that page. Filtering works on the rendered page, so typing keeps focus,
+      and `S.cpFilter` carries it through the re-render a stepper causes.
+    - **Pinned:** two smoke tests. Mutation-tested (5 mutants): an archetype
+      panel left off the bar, a held pick filtered out, the filter lost on a
+      re-render, focus not moved, the bar not sticky. Each fails a test.
+    Ships in app **0.20.0**, with Decisions 112 and 113. (Ken + Claude,
+    2026-09-23)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
@@ -2599,6 +2700,9 @@ Decision 104).
 Conditions session opened them; so did the unnumbered stat-curve flag. `tests/docs.test.mjs` is what keeps the table below honest, not this
 sentence.
 
+~~F11~~ closed 2026-09-23 (Decision 113): 041 now asks for the Intuition
+**skill** at Rank 1, and Quick Study's data follows it.
+
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
@@ -2606,7 +2710,6 @@ sentence.
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked | Ken → docs | No |
 | F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling. **Design team, 2026-09-22: still open** — they want to playtest how many Stat Points people realistically get before choosing | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
-| F11 | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the catalog | Ken → docs | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
