@@ -501,7 +501,8 @@ function setHit(app, key, value) {
   const el = app.$(`[data-hit="${key}"]`);
   assert.ok(el, `the hit form has no ${key} control`);
   if (el.type === "checkbox") el.checked = value; else el.value = value;
-  el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  // A number redraws the modal as it is typed (W6); the rest on change.
+  el.dispatchEvent(new app.window.Event(el.getAttribute("inputmode") === "numeric" ? "input" : "change", { bubbles: true }));
 }
 const activeChar = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch;
 
@@ -535,8 +536,10 @@ test("Take a hit: Massive with no armor removes levels, asks at zero, and adds D
   setHit(app, "damage", "60");
   assert.ok(app.$("[data-hit=atZero]"), "no check at zero was asked for");
   assert.equal(app.$("[data-hit=shock]"), null, "a hit to zero skips the Shock Check");
+  assert.ok(app.$("[data-hitapply]").disabled, "Apply is live before the check is answered");
+  assert.match(app.$("#modal .modal-foot").textContent, /Mark the check at zero/, "the footer doesn't say what's missing");
   app.click("[data-hitapply]");
-  assert.equal(alerts.length, 1, "Apply went through without the check being answered");
+  assert.equal(activeChar(app).trackers.massiveLevels || 0, 0, "Apply went through without the check being answered");
   setHit(app, "atZero", "fail");
   app.click("[data-hitapply]");
   const got = activeChar(app);
@@ -564,6 +567,30 @@ test("Take a hit: an Electric hit says its RES rule is unsettled; a Blade hit do
   assert.match(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
   setHit(app, "damageType", "blade");
   assert.doesNotMatch(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Take a hit opens as a modal: HP and the track up top, Apply says what it waits for, Esc drops the form", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  app.click("[data-hitopen]");
+  assert.ok(app.$("#modal").open, "Take a hit didn't open as a modal");
+  assert.ok(app.$("#modal [data-hitpanel]"), "the hit form isn't in the modal");
+  assert.equal(app.$("#main [data-hitpanel]"), null, "the hit form also opened on the page");
+  assert.match(app.$("#modal .hit-now").textContent, /\d+ \/ \d+ HP/, "the modal doesn't show HP");
+  assert.ok(app.$("#modal .hl-track .hl"), "the modal doesn't show the Health Level track");
+  assert.ok(app.$("#modal .modal-foot [data-hitapply]").disabled, "Apply is live with no damage entered");
+  assert.ok(app.$("#modal .modal-foot .hitwhy"), "the footer doesn't say why Apply is off");
+  setHit(app, "damage", "12");
+  const dmg = app.$('#modal [data-hit="damage"]');
+  assert.equal(app.window.document.activeElement, dmg, "typing damage lost the field's focus");
+  assert.equal(dmg.selectionStart, 2, "the caret didn't go back to the end of what was typed");
+  assert.equal(app.$("#modal .modal-foot [data-hitapply]").disabled, false, "Apply stayed off with a valid hit");
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.equal(app.$("#modal").open, false, "Esc didn't close the hit modal");
+  assert.equal(activeChar(app).trackers.damage, 0, "closing the modal applied the hit");
+  assert.equal(app.window.document.activeElement, app.$("[data-hitopen]"), "focus didn't go back to Take a hit");
+  app.click("[data-hitopen]");
+  assert.equal(app.$('#modal [data-hit="damage"]').value, "", "a cancelled hit's form came back");
   assert.deepEqual(app.errors, []);
 });
 
@@ -788,6 +815,41 @@ test("Grimoire: the picker offers to link a spell you typed yourself instead of 
   assert.deepEqual(app.errors, []);
 });
 
+// ── The picker's modal pass (W23–W26) ────────────────────────────────
+const clickIn = (app, el) => el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+
+test("picker: a click anywhere on a row picks it, a held row is dimmed and says why, and Done closes", () => {
+  const ch = lockedCharacter();
+  ch.panelData.grimoire = [{ spellId: "zap", stage: "known", notes: "" }];
+  const app = openSheet(ch, "loadout");
+  app.click('[data-spellpickopen="sheet"]');
+  // W25: the search and the status line sit in the sticky head, above the results.
+  assert.ok(app.$("#modal .pick-head [data-spellq]"), "the search isn't in the picker's sticky head");
+  assert.ok(app.$("#modal .pick-head [data-spellstatus]"), "the status line isn't in the picker's sticky head");
+  search(app, "firebolt");
+  const row = app.$('#modal [data-spelladd="firebolt"]').closest("tr");
+  assert.ok(row.classList.contains("pickrow"), "an open row isn't marked as clickable");
+  clickIn(app, row.querySelector("td"));                                // the name cell, not the button
+  assert.deepEqual(activeChar(app).panelData.grimoire.map(r => r.spellId), ["zap", "firebolt"], "a row click didn't add");
+  // W24: a row that can't act looks it, and says why in the row, not a tooltip.
+  search(app, "zap");
+  const held = app.$('#modal [data-spelladd="zap"]').closest("tr");
+  assert.ok(held.classList.contains("off"), "a Known row isn't dimmed");
+  assert.match(held.querySelector(".why").textContent, /Already in your Grimoire/);
+  clickIn(app, held.querySelector("td"));
+  assert.equal(activeChar(app).panelData.grimoire.length, 2, "a click on a Known row did something");
+  // A click in the search box is the search box's, never a row's.
+  clickIn(app, app.$("#modal [data-spellq]"));
+  assert.equal(activeChar(app).panelData.grimoire.length, 2);
+  // W26: Done closes and hands focus back to the button that opened it.
+  const done = app.$$("#modal .modal-foot button").find(b => /Done/.test(b.textContent));
+  assert.ok(done, "no Done button in the footer");
+  clickIn(app, done);
+  assert.equal(app.$("#modal").open, false, "Done didn't close the picker");
+  assert.equal(app.window.document.activeElement, app.$('[data-spellpickopen="sheet"]'), "focus didn't go back to the opener");
+  assert.deepEqual(app.errors, []);
+});
+
 // ── Aberrations on the character (Decision 110) ──────────────────────
 
 test("Aberrations: the palette adds one by hand, Drained moves max TOL but not current, and Clear gives no TOL back", () => {
@@ -921,5 +983,85 @@ test("W19: training Martial Arts puts its style picker across the whole Skills g
   app.click('[data-step="skill|martial-arts|1"]');
   const picks = app.$('.alloc > .picks select[data-sel]').closest(".picks");
   assert.equal(app.window.getComputedStyle(picks).gridColumn, "1 / -1", "the style picker sits in one grid cell");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W20/W21: a skill's line shows its stats as icons with the character's own numbers, synergy as a bonus", () => {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "professional";
+  ch.creation.powerLevel = "heroic";
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  ch.stats.REF.base = 5; ch.stats.COOL.base = 7;
+  const syn = Engine.skillLine(ch, "archery").breakdown.synergy.mod;
+  const synText = `COOL ${syn < 0 ? "−" : "+"}${Math.abs(syn)} syn`;
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("skills"), maxReached: steps.length } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const nameOf = () => app.$('[data-step="skill|archery|1"]').closest(".alloc-row").querySelector(".name");
+  const stats = () => nameOf().querySelector(".skstats");
+  assert.ok(stats(), "the stats aren't on the skill's name line");
+  assert.equal(stats().querySelectorAll("svg").length, 2, "the stats aren't shown as their icons");
+  assert.match(stats().textContent, /REF 5/, "the primary doesn't show its score");
+  assert.ok(stats().textContent.includes(synText), "the synergy doesn't read as a bonus");
+  assert.doesNotMatch(nameOf().querySelector("small").textContent, /syn/, "the old stats line is still there");
+  assert.ok(stats().querySelector(".skstat.syn.off"), "an untrained skill's synergy isn't dimmed");
+  app.click('[data-step="skill|archery|1"]');
+  assert.equal(stats().querySelector(".skstat.syn.off"), null, "training the skill left its synergy dimmed");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W1/W10: Trackers reads in two columns, and the Health Levels sit in Damage, banded by the Pain Level they put you at", () => {
+  const ch = lockedCharacter();
+  const hp = Engine.health(ch);
+  ch.trackers.damage = hp.hpPer * 2;                                  // two HL lost: Pain 1
+  const app = openSheet(ch, "trackers");
+  const cols = app.$$("#main .trk-grid > .trk-col");
+  assert.equal(cols.length, 2, "Trackers isn't split into two columns");
+  const card = h => app.$$("#main .trk").find(t => (t.querySelector("h4") || {}).textContent === h);
+  assert.ok(cols[0].contains(card("Damage")) && cols[1].contains(card("Sanity")), "Damage and Sanity aren't in their own columns");
+  const track = card("Damage").querySelector(".hl-track");
+  assert.ok(track, "the Health Levels aren't inside the Damage card");
+  const levels = D.resources.healthLevels.painLevels;
+  const want = i => levels.reduce((l, p) => i >= p.hlLostThreshold ? p.level : l, 0);
+  const got = [...track.querySelectorAll(".hl-band")].flatMap(b =>
+    [...b.querySelectorAll(".hl")].map(() => Number(b.className.match(/pl-(\d)/)[1])));
+  assert.deepEqual(got, Array.from({ length: hp.levels }, (_, i) => want(i)), "a box is in the wrong Pain Level band");
+  const here = track.querySelector(".hl-band.here");
+  assert.ok(here && here.classList.contains(`pl-${Engine.painState(activeChar(app)).fromHealth}`), "the band you're in isn't the lit one");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W5: Loadout jumps to each section it drew, archetype panels included, and focus lands on the heading", () => {
+  const app = openSheet(lockedCharacter(), "loadout");
+  const jumps = app.$$("#main .jumpbar [data-jump]");
+  const heads = app.$$("#main .sect[id]");
+  assert.deepEqual(jumps.map(b => b.textContent), heads.map(h => h.textContent), "the bar and the page's sections disagree");
+  const want = D.archetypes.find(a => a.id === "arcanist").coreMechanic.panels
+    .filter(p => p.type !== "tracker" && p.type !== "reference").map(p => p.title);
+  for (const t of want) assert.ok(jumps.some(b => b.textContent === t), `the archetype's ${t} panel has no jump`);
+  const last = jumps[jumps.length - 1];
+  app.click(`[data-jump="${last.dataset.jump}"]`);
+  assert.equal(app.window.document.activeElement, app.$(`#${last.dataset.jump}`), "focus didn't land on the section");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W22: step 7's sticky bar filters the picks, keeps what you hold, and survives a re-render", () => {
+  const app = arcanistOnCP(ch => { ch.advantages.push({ id: "danger-sense", rank: 1, notes: "" }); });
+  const bar = app.$("#main .jumpbar.sticky");
+  assert.ok(bar, "step 7 has no sticky jump bar");
+  const labels = app.$$("#main .jumpbar [data-jump]").map(b => b.textContent);
+  for (const l of ["Disadvantages", "Advantages", "Starting spells", "Boosts"]) assert.ok(labels.includes(l), `no jump to ${l}`);
+  assert.match(bar.textContent, /Remaining \d+ CP/, "the bar doesn't keep the CP left in view");
+  const filter = () => app.$("#main [data-jumpfilter]");
+  const shown = () => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h4").textContent);
+  const all = app.$$("#main [data-filterable] .pick").length;
+  filter().value = "berserk"; filter().dispatchEvent(new app.window.Event("input"));
+  assert.deepEqual(shown(), ["Berserker", "Danger Sense"], "the filter didn't narrow to the match plus what's held");
+  assert.equal(app.$("#main [data-jumpcount]").textContent, `2 of ${all}`);
+  app.click('[data-step="luck|x|1"]');                                 // a stepper re-renders the step
+  assert.equal(filter().value, "berserk", "a re-render dropped the filter");
+  assert.deepEqual(shown(), ["Berserker", "Danger Sense"], "a re-render dropped the filtering");
   assert.deepEqual(app.errors, []);
 });

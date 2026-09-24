@@ -22,6 +22,21 @@ const iconSvg = id => ICONS[id] || "";
 const uiIcon  = name => UI_ICONS[name] || "";
 const statIco = (id, cls="ico") => { const s=iconSvg(id); return s?`<div class="${cls}">${s}</div>`:""; };
 
+// W20/W21: a skill's two stats as the brand icons with this character's own
+// numbers, on the wizard's skill line and in the sheet's breakdown. The
+// primary adds its score and the synergy its modifier (030), so the synergy
+// reads as a bonus. Violet and magenta match the print sheet's badges. The
+// synergy is dimmed on an untrained skill, whose check leaves it out.
+function skillStatsHtml(line){
+  const b=line.breakdown, trained=line.trained;
+  const chip=(id, text, syn)=>{ const svg=id&&iconSvg(id);
+    return `<span class="skstat${syn?" syn":""}${syn&&!trained?" off":""}" title="${syn?(trained?"Synergy: adds its modifier":"Synergy: counts once trained"):"Primary: adds its score"}">${
+      svg?`<span class="ico">${svg}</span>`:""}${text}</span>`; };
+  const m=b.synergy.mod;
+  return `<span class="skstats">${chip(b.primary.id, `${esc(b.primary.id||"?")} ${b.primary.value}`)}${
+    chip(b.synergy.id, `${esc(b.synergy.id||"?")} ${m<0?"−":"+"}${Math.abs(m)} syn`, true)}</span>`;
+}
+
 
 // ── State ─────────────────────────────────────────────────────────────
 const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, label:s.label, note:s.note}))
@@ -136,15 +151,18 @@ function modalEl(){
   }
   return el;
 }
-function openModal({ title, html, bind, returnTo, onClose }){
+// The head and the footer stay put while the body scrolls. `foot` is the
+// footer's HTML; any [data-modalclose] in it closes, and `bind` gets both
+// halves, since a footer's buttons can depend on the body's inputs.
+function openModal({ title, html, foot, bind, returnTo, onClose }){
   const el=modalEl();
   modalState={ opener: document.activeElement, returnTo, onClose };
   el.innerHTML=`<div class="modal-inner"><div class="modal-head"><h2 id="modal-title">${esc(title)}</h2>
     <button class="modal-x" data-modalclose aria-label="Close">×</button></div>
-    <div class="modal-body">${html}</div></div>`;
-  el.querySelector("[data-modalclose]").onclick=closeModal;
+    <div class="modal-body">${html}</div>${foot!=null?`<div class="modal-foot">${foot}</div>`:""}</div>`;
+  el.querySelectorAll("[data-modalclose]").forEach(b=>b.onclick=closeModal);
   if (!el.open){ if (typeof el.showModal==="function") el.showModal(); else el.setAttribute("open",""); }
-  if (bind) bind(el.querySelector(".modal-body"));
+  if (bind) bind(el.querySelector(".modal-body"), el.querySelector(".modal-foot"));
   const first=el.querySelector(".modal-body [autofocus], .modal-body input, .modal-body select");
   if (first) first.focus();
 }
@@ -162,6 +180,47 @@ function closeModal(){
   const back = st && st.opener && st.opener!==document.body && st.opener.isConnected ? st.opener
              : st && st.returnTo ? document.querySelector(st.returnTo) : null;
   if (back && back.focus) back.focus();
+}
+
+// ── Jump bar (W5, W22) ────────────────────────────────────────────────
+// Section headings register themselves as a page renders, so a bar jumps to
+// whatever the page actually drew: an archetype's panel shows up on its own
+// (the "zero app changes" rule). `sect(label, html)`: the short label goes
+// on the bar, the html (plain label when omitted) on the heading.
+function sectionList(prefix){
+  const list=[];
+  return { list, sect(label, html){
+    const id=`${prefix}-${list.length}`; list.push({ id, label });
+    return `<div class="sect" id="${id}" tabindex="-1">${html==null?esc(label):html}</div>`; } };
+}
+// `filter` adds a search box over the page's [data-filterable] picks (W22);
+// `extra` is anything else the bar should keep in view.
+function jumpBarHtml(list, { sticky=false, filter=null, extra="" }={}){
+  return `<nav class="jumpbar${sticky?" sticky":""}" aria-label="Jump to a section">${
+    filter?`<input type="search" data-jumpfilter value="${esc(filter.value||"")}" placeholder="${esc(filter.placeholder)}" aria-label="${esc(filter.placeholder)}"><span class="jump-count" data-jumpcount aria-live="polite"></span>`:""}${
+    list.map(s=>`<button class="jump" data-jump="${esc(s.id)}">${esc(s.label)}</button>`).join("")}${extra}</nav>`;
+}
+// Scroll a heading to just under the sticky header (and a sticky bar), then
+// give it focus, so the keyboard carries on from there.
+function jumpTo(id){
+  const el=document.getElementById(id); if (!el) return;
+  const hdr=document.querySelector("header.top"), bar=document.querySelector(".jumpbar.sticky");
+  const off=(hdr?hdr.offsetHeight:0)+(bar?bar.offsetHeight:0)+8;
+  const calm=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  try{ window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: calm?"auto":"smooth" }); }catch(e){}
+  el.focus({ preventScroll:true });
+}
+// W22: hide the picks whose name and description don't match. One you hold
+// (.selected) stays, so nothing you've taken disappears.
+function applyPickFilter(root, q){
+  const k=String(q||"").trim().toLowerCase(); let shown=0, total=0;
+  root.querySelectorAll("[data-filterable] .pick").forEach(p=>{
+    total++;
+    const text=`${(p.querySelector("h4")||{}).textContent||""} ${(p.querySelector(".desc")||{}).textContent||""}`.toLowerCase();
+    const hit=!k || p.classList.contains("selected") || text.includes(k);
+    p.hidden=!hit; if (hit) shown++;
+  });
+  return { shown, total, active: !!k };
 }
 
 // ── Vitals row — the one visual atom the creation rail and the sheet's

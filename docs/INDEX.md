@@ -20,7 +20,7 @@ Generated summaries are one line each and deliberately lossy — they are for
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The shape of the game data or a character file | `SCHEMA.md` §2 and §3 |
 | What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
-| A multi-session plan still in flight — its sessions, open questions (`CQ`_n_) | `plans/` — currently `plans/combat-and-conditions.md` |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_) | `plans/` — none in flight. Both there are closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `docs/log/2026.md` |
@@ -80,7 +80,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD — 2026-09-10 meeting added unlocked direction | Design |
 | `F8` | Stat Point roll conflict: WIP says flat "3d10+30" for all levels; REF table scales by pow… | Deighton — **wizard-blocking** |
 | `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
-| `F11` | Quick Study milestone requires an "Intuition Advantage" — Intuition is a Skill in the cat… | Ken |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F13` | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline… | Ken |
 | `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99), Loadout and recovery done (Decision 100); only the MD1/2/3 ratings are left | Design (small gap) |
@@ -150,7 +149,7 @@ What a number *is*. Change one of these and characters change.
 - **67** *(B9)* — The milestone cadence comes from the data, once.
 - **98** *(Design-team rulings, part 2)* — Stats past 10: +5 at 11–15, +1 per 5 after. F20–F22 closed: Skill Checks only, a −8 cap on one roll, only Injured/Maimed take a body part. Plan CQ4–CQ7/CQ10 answered for Session 3.
 - **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open.
-- **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened. → **superseded in part by 100**
+- **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened. → **superseded in part by 100 and 112**
 - **100** *(Loadout & recovery — combat plan Session 4)* — Catalog pickers with Add/Buy, one worn piece per slot, upgrades by slot and quality; weapon lines (attack = skill check, ACC apart, `BOD+X` resolved). Wear, repair, Rest, Focused Healing (the only way back for Massive levels and Injured), Turn Reset (ticks aren't hits: no armor, no Shock). Stand-in armor gone. F24 opened. → **superseded in part by 104 and 105**
 - **104** *(Natural Armor — combat plan cleanup)* — One derived value from `grants` on advantages, Major Milestones and specializations; conditional sources (Iron Shirt, a waning moon) shown, never summed, asked for on a hit. How it answers a hit is the F25 stub. Print's Nat column fills. `migrate()` drops junk held entries.
 - **105** *(Nanomed Kit — CQ12)* — 054's list is the master: clears Agonized, Bleeding, Paralyzed, Poisoned and stabilizes the Dying; proposes floor(BOD / dose) HP; a third kind in `heal()`.
@@ -166,6 +165,7 @@ Where game text comes from and how it is merged.
 - **57** *(CRB v4 content pass)* — Rank tables stay prose; rankTable waits for the renderer.
 - **65** *(Mechanism 3)* — The rulebook's worked examples run as tests.
 - **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`.
+- **113** *(Quick Study's Intuition — F11)* — Quick Study's prerequisite is the Intuition skill at Rank 1, per 041; the old "Intuition Advantage" matched no entry, so no one could take it.
 
 ### Archetypes & specialization
 
@@ -243,6 +243,8 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **109** *(Deighton's magic rulings)* — Starting spells gated by TH ≤ Evocation rank (MQ1); Drained −2 max TOL (never below 0), current unchanged either way, so TOL Spent −2 on / +2 off (MQ2); Phantom Pain PL 1 at full health (MQ3); Spell Attack = Evocation + raw REF + raw WILL. Docs only; built by the plan's sessions.
 - **110** *(Aberrations on the character, and the Magic reference — magic plan Session 2)* — `trackers.aberrations` holds `{ id, permanence, note? }`, one per id; the catalog's `painLevels` (Phantom Pain) and `adjust` (Drained, max TOL −2, floor 0) are read every time, and every tracker on `max: "TOL"` shifts so current TOL never moves. Record it = note + Aberration in one undo. Spell Attack from the scores. A `reference` panel type (the Arcanist's Magic reference). Unique Aberrations synced to 041.
 - **111** *(Starting spells in the wizard, and the spell picker modal — magic plan Session 3)* — TOL + the power level's roll of book spells, chosen on the Character Points step where Evocation and TOL are final; at creation TH ≤ Evocation rank, after lock nothing gates it and a TH beyond the pool is marked (exploding 10s only). Picks are Grimoire rows; no schema bump. The picker is a native `<dialog>` modal shared by sheet and wizard — the first focus-and-dismiss primitive.
+- **114** *(Jump bars — W5, W22)* — `sectionList` headings feed a bar that jumps to each section a page drew (archetype panels included) and focuses it; step 7's bar sticks, filters Advantages/Disadvantages keeping what you hold, and shows the CP left.
+- **112** *(Modals, the skill line and Trackers' layout — wishlist pass)* — The modal gains a sticky footer and is centred; W6 Take a hit in the modal, Apply disabled with its reason; W23–W26 row click, dimmed rows that say why, sticky search, Done; W20/W21 a skill's stats as icons with the character's numbers; W1/W10 Trackers in two columns, the HL track in Damage banded by Pain Level.
 
 ### Audit trail, undo & admin
 

@@ -14,6 +14,32 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.20.0
+
+Character schema **0.9** · game data **0.15** · ruleset CRB v4 (in progress).
+
+- **Take a hit opens in its own window.** Your HP and Health Levels sit at the top, the
+  page behind waits, and Apply stays greyed out with the reason beside it until the hit
+  is ready: the PROT die, the Shock Check, the check at zero. Esc or Cancel drops it.
+- **The spell book picks on a click anywhere in the row.** A spell you can't take is
+  dimmed and says why, the search stays at the top while you scroll, and **Done** closes
+  the book. Every pick is still saved as you make it.
+- **Skills show where the bonus comes from.** Each skill shows its two stats as icons
+  with your numbers, like "REF 5 · COOL +1 syn", in the wizard and on the sheet. The
+  synergy is dimmed until the skill is trained.
+- **Trackers uses the whole screen.** On a wide screen it's two columns: Damage, Armor,
+  Pain and Conditions on the left, Sanity, LUCK, archetype trackers and Çredits on the
+  right. Health Levels sit in the Damage card, grouped by the Pain Level each one puts
+  you at, with yours lit.
+- **The spell book opens in the middle of the screen**, not pinned to the top-left.
+- **Jump around the long pages.** Loadout has a row of buttons that jump to each section,
+  your archetype's included. The Character Points step has one that stays at the top as
+  you scroll, with a filter over Advantages and Disadvantages (anything you've taken stays
+  in view) and the CP you have left.
+- **Quick Study can be taken.** Its prerequisite now asks for the Intuition skill at
+  Rank 1, as the rulebook does. It asked for an Intuition advantage, which doesn't exist,
+  so no one could take it.
+
 ## v0.19.1 — 2026-09-23
 
 Character schema **0.9** · game data **0.14** · ruleset CRB v4 (in progress).

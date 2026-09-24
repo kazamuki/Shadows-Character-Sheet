@@ -351,7 +351,7 @@ function renderSkills(){
       const rank = ch.skills[s.id]?ch.skills[s.id].rank:0;
       const line = Engine.skillLine(ch, s.id);
       h += `<div class="alloc-row">
-        <div class="name">${esc(s.name)} <small>${s.primaryStat} + ${s.synergyStat} syn — ${esc(s.description)}</small></div>
+        <div class="name">${esc(s.name)} ${skillStatsHtml(line)}<small>${esc(s.description)}</small></div>
         ${stepper(rank, "skill|"+s.id, rank>0, rank<pl.maxSkillRank && left>0 && pool.total!=null)}
         <span class="mod ${line.trained?"pos":""}" title="check bonus">+${line.checkBonus}</span>
       </div>`;
@@ -368,14 +368,15 @@ function renderCP(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const bal = Engine.cp(ch);
   const canBuyAdv = !a || a.canPurchaseAdvantages!==false;
-  let h = `<div class="roll-entry">
+  const secs = sectionList("cp");
+  let top = `<div class="roll-entry">
     <span class="pool" style="margin-left:0">Base <b>${bal.base}</b> + Disadvantages <b>${bal.granted}</b> = Budget <b>${bal.budget}</b> · Spent <b>${bal.spent}</b> · <span style="color:${bal.left<0?"var(--magenta)":"var(--gold)"}">Remaining <b>${bal.left}</b></span></span>
     <span class="dice-note">${esc(D.creationFlow.steps.find(s=>s.id==="character-points").note||"")}</span></div>`;
-  if (!canBuyAdv) h += ruleHtml(`${a.name}s are Supernatural — unable to purchase Advantages. Disadvantages, LUCK, and boosts remain open.`);
+  if (!canBuyAdv) top += ruleHtml(`${a.name}s are Supernatural — unable to purchase Advantages. Disadvantages, LUCK, and boosts remain open.`);
 
   // Disadvantages
-  h += `<div class="sect">Disadvantages — grant Character Points (no cap)</div>`;
-  h += `<details class="group" open><summary>${D.disadvantages.length} available</summary>` +
+  let h = secs.sect("Disadvantages", "Disadvantages — grant Character Points (no cap)");
+  h += `<details class="group" open data-filterable><summary>${D.disadvantages.length} available</summary>` +
     D.disadvantages.map(dd=>{
       const cur = (ch.disadvantages.find(x=>x.id===dd.id)||{rank:0}).rank;
       const lock = Engine.optionLock(ch,"disadvantage",dd.id);
@@ -389,8 +390,8 @@ function renderCP(){
     }).join("") + `</details>`;
 
   // Advantages
-  h += `<div class="sect">Advantages — cost Character Points</div>`;
-  h += `<details class="group" open><summary>${D.advantages.length} available</summary>` +
+  h += secs.sect("Advantages", "Advantages — cost Character Points");
+  h += `<details class="group" open data-filterable><summary>${D.advantages.length} available</summary>` +
     D.advantages.map(ad=>{
       const cur = (ch.advantages.find(x=>x.id===ad.id && x.notes!=="natural")||{rank:0}).rank;
       const natural = ch.advantages.find(x=>x.id===ad.id && x.notes==="natural");
@@ -409,7 +410,7 @@ function renderCP(){
 
   // LUCK
   const luck = D.resources.luck;
-  h += `<div class="sect">LUCK</div>`;
+  h += secs.sect("LUCK");
   if (luck.flagged) h += flagHtml(luck);
   h += `<div class="pick"><div class="head"><h4>Buy up LUCK</h4>
     <span class="cost">${luck.cpCostPerPoint} CP/point · exempt from Max Boost</span>
@@ -419,7 +420,7 @@ function renderCP(){
   // Arcanist disciplines
   if (a && a.id==="arcanist"){
     const startEvoc = Engine.scalingRow(ch).evocationStartingRank;
-    h += `<div class="sect">Disciplines — 6 CP per rank · cap ${pl.maxPowerRank}</div>`;
+    h += secs.sect("Disciplines", `Disciplines — 6 CP per rank · cap ${pl.maxPowerRank}`);
     if (D.creationFlow.boostRules.flagged) {} // exchange-rate flag shown under boosts
     h += a.coreMechanic.disciplines.list.map(disc=>{
       const base = disc.id==="evocation"?startEvoc:0;
@@ -438,7 +439,7 @@ function renderCP(){
   const ss = Engine.startingSpells(ch);
   if (ss){
     const book = Engine.grimoire(ch).lines.filter(l=>!l.custom && !l.missing);
-    h += `<div class="sect">Starting spells — ${esc(ss.countFrom)} + ${esc(ss.rollDie)}</div>
+    h += secs.sect("Starting spells", `Starting spells — ${esc(ss.countFrom)} + ${esc(ss.rollDie)}`) + `
       <div class="roll-entry"><span class="die">${esc(ss.rollDie)}</span>
       <input type="text" inputmode="numeric" pattern="[0-9]*" data-archroll="startingSpells" value="${ss.roll==null?"":ss.roll}" aria-label="starting spells roll">
       <span class="pool">${esc(ss.countFrom)} ${ss.base} + roll = <b>${ss.count==null?"—":ss.count}</b> spells · chosen <b>${ss.have}</b> · TH up to ${ss.cap} (${esc(ss.discipline)} ${ss.cap})</span></div>
@@ -455,7 +456,7 @@ function renderCP(){
   }
 
   // Boosts
-  h += `<div class="sect">Boosts — leftover CP on Stats &amp; Skills · max ${pl.maxBoost}× per target</div>`;
+  h += secs.sect("Boosts", `Boosts — leftover CP on Stats &amp; Skills · max ${pl.maxBoost}× per target`);
   if (D.creationFlow.boostRules.flagged) h += flagHtml(D.creationFlow.boostRules);
   h += `<div class="alloc">`;
   for (const s of D.stats){
@@ -474,7 +475,11 @@ function renderCP(){
   }
   if (!Object.keys(ch.skills).length) h += `<p class="step-note">Train skills in Step 6 to boost them here.</p>`;
   h += `</div>`;
-  return h;
+  // W22: step 7 is the longest page in the app, so a bar sticks under the
+  // header with a filter over the picks, a jump to each section, and the CP
+  // still to spend.
+  const left = `<span class="jump-cp ${bal.left<0?"over":""}">Remaining <b>${bal.left}</b> CP</span>`;
+  return top + jumpBarHtml(secs.list, { sticky:true, filter:{ value:S.cpFilter, placeholder:"Filter Advantages and Disadvantages" }, extra:left }) + h;
 }
 
 function renderReview(){
