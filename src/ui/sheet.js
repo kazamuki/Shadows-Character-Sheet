@@ -1790,7 +1790,7 @@ function pBuildTag(){
 function pHead(ch, title){
   return `<div class="p-head">
     <div><div class="p-wordmark">Shadows<small>Adventures in NYTE City</small></div>${pBuildTag()}</div>
-    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}${ch && intakeOf(ch)?`<div class="p-intake">${intakeBarsSvg(intakeOf(ch))}<span>Intake No. ${esc(intakeOf(ch))}</span></div>`:""}</div>
+    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}${ch && intakeOf(ch)?`<div class="p-intake">${intakeBarsSvg(intakeOf(ch))}<span>${esc(intakeOf(ch))}</span></div>`:""}</div>
   </div>`;
 }
 function pStatIcon(id){

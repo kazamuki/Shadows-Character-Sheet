@@ -242,7 +242,8 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **93** *(Magic — archetype-independent half, data)* — The Magic chapter splits into a universal Spellcraft system and an archetype question (Origins); only the first merges, and it corrects a live mechanical error along the way. Character schema 0.6 → 0.7. → **superseded in part by 103 and 116**
 - **95** *(Conditions — catalog and schema 0.8)* — Conditions are a data catalog with structured hooks; active ones are inputs, one per id (per body part for location-bearing ones); game data 0.7 → 0.8, character schema 0.7 → 0.8, with the plan's damage and armor fields landed in the same migration.
 - **125** *(Load findings — C4)* — what `versionCheck` finds stays until dismissed; a bare game-data version difference shows once.
-- **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first.
+- **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first. → **superseded in part by 133**
+- **133** *(The TAG)* — `meta.id` is `TAG-XXXX-XXXX-XXXX`, shown as itself; a 0.11 `NCR-` number keeps its twelve characters under the new prefix; schema 0.12.
 
 ### Engine contracts
 

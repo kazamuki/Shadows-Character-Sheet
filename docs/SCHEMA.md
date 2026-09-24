@@ -554,11 +554,13 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.11",
-    // (0.11, Decision 128) The NYTE City intake number: the character's
-    // permanent identity, NCR- + 12 Crockford base-32 characters. Issued by
-    // newCharacter(), backfilled by migrate(), never reissued.
-    id: "NCR-7F3K-2QXM-9D4R",
+    schemaVersion: "0.12",
+    // (0.11, Decisions 128 and 133) The character's TAG, its permanent
+    // identity: TAG- + 12 Crockford base-32 characters. Issued by
+    // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
+    // the prefix; migrate() turns a 0.11 NCR- number into the TAG with the
+    // same twelve characters.
+    id: "TAG-7F3K-2QXM-9D4R",
     gamedataVersion: "0.17",          // version of shadows-data.js at save time
     created: "...",
     updated: "..."                    // last changed: commit() stamps it, and so does an export
@@ -3101,6 +3103,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing. Decision 63 holds: `migrate()` still invents no timestamps; `commit()` records one when something changes.
      - **Revisit if:** the roster (plan S6) gives each character its own slot, which turns "replace?" into "add".
      - **Built:** app 0.24.0; the audit plan's S1; `smoke.test.mjs` B18 ×4, `engine.test.mjs` B18 ×2.
+     → **Superseded in part by Decision 133** — the number is a TAG (`TAG-XXXX-XXXX-XXXX`), shown without an "Intake No." label.
 
 129. **Hardcore Parkour needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1.**
      *2026-09-24 · Deighton (ruling), via Ken · Touches: Hardcore Parkour, Cat Like Balance, Time Sense, Danger Sense, Acrobatics, Major Milestone prerequisites, F27, B15*
@@ -3137,6 +3140,15 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 74 in part: its HANDOFF stub, which "remains so saved prompts still land", is gone.
      - **Revisit if:** a saved prompt or outside link still points at `docs/README.md` or `HANDOFF.md` and lands nowhere.
      - **Built:** docs and data (no version moves: nothing a character can observe, Decision 68); the audit plan's S2.
+
+133. **A character's permanent number is its TAG, and a number already issued keeps its twelve characters.**
+     *2026-09-24 · Ken + Claude · Touches: meta.id, TAG, Trusted Authentication Gateway, intake number, NCR, migrate, replace guard, character schema 0.12, barcode, TAGless, Ghost TAG*
+     - **Decided:** `meta.id` is `TAG-XXXX-XXXX-XXXX`, the Trusted Authentication Gateway NYTE City issues every resident (Gear). The sheet, the Review step and the print header show the TAG itself with its bars, with no "Intake No." label; hovering says what a TAG is. `migrate()` rewrites a 0.11 `NCR-` number as `TAG-` with the same twelve characters, so the same character keeps the same identity and the same bars; anything else invalid still gets a fresh TAG. The replace guard compares the saved slot as `migrate()` makes it. Character schema 0.11 → 0.12. The footer's "NYTE City Registry" and the wizard's "Character Intake" stay.
+     - **Why:** Ken: the CRB already has the in-world identity, the TAG, so a separate registry number was a second name for the same thing.
+     - **Rejected:** changing the prefix check alone, because `migrate()` would then reissue every 0.24.0 character's number, and a player's own older export would look like a different character on every import. "Intake No." or "TAG No." in front of the number, since the prefix already says what it is. Keeping a neutral registry number because TAGless characters exist: every file needs the number, so how a TAGless or Ghost TAG character's label reads is W31.
+     - **Replaces:** Decision 128 in part: the `NCR-` format and the "Intake No." label.
+     - **Revisit if:** W31 gives the character a way to be TAGless or carry a Ghost TAG, which changes the label, never the stored number.
+     - **Built:** app 0.24.1, character schema 0.12; `engine.test.mjs` and `smoke.test.mjs` (Decision 133), mutation-tested.
 
 ## 5. Open Flags
 

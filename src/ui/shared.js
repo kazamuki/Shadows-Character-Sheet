@@ -365,6 +365,10 @@ function supersedes(incoming, saved){
 }
 // `words`: { title, lead, go }. `lead` is HTML the caller has already escaped.
 function guardReplace(saved, incoming, words, proceed){
+  // The slots hold whatever was saved, possibly by an older app: a 0.11 sheet
+  // still says NCR-, and only migrate() turns that into its TAG (Decision 133).
+  // Compare what migrate() makes of it, or a player's own file looks foreign.
+  saved = saved && Engine.migrate(clone(saved));
   if (supersedes(incoming, saved)) { proceed(); return; }
   const who = esc(charName(saved)), id = intakeOf(saved);
   openModal({ title: words.title,
@@ -379,11 +383,11 @@ function guardReplace(saved, incoming, words, proceed){
     } });
 }
 
-// The intake number as the form prints it, under the character's name. The
+// The TAG as the form prints it, under the character's name. The
 // bars are drawn from the number itself, five per character: decoration
 // that reads as a barcode, not one a scanner would read.
 function intakeBarsSvg(id){
-  const A = "0123456789ABCDEFGHJKMNPQRSTVWXYZ", s = String(id||"").replace(/^NCR-/, "").replace(/-/g, "");
+  const A = "0123456789ABCDEFGHJKMNPQRSTVWXYZ", s = String(id||"").replace(/^[A-Z]{3}-/, "").replace(/-/g, "");
   if (!s) return "";
   let x = 0, bars = "";
   const bar = w => { bars += `<rect x="${x}" y="0" width="${w}" height="20"/>`; x += w + 1; };
@@ -394,7 +398,7 @@ function intakeBarsSvg(id){
 }
 function intakeHtml(ch){
   const id = intakeOf(ch);
-  return id ? `<div class="intake" title="NYTE City intake number">${intakeBarsSvg(id)}<span class="intake-no">Intake No. ${esc(id)}</span></div>` : "";
+  return id ? `<div class="intake" title="Trusted Authentication Gateway">${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
 }
 
 // C4: what versionCheck found when this character was loaded. Content the
