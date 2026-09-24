@@ -14,6 +14,14 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.19.1
+
+Character schema **0.9** · game data **0.14** · ruleset CRB v4 (in progress).
+
+- **Martial Arts no longer scrambles the Skills step.** Training it used to squeeze the
+  style picker into a narrow column and push every skill below it out of line. The
+  picker now spans the row, and the skills after it stay in place.
+
 ## v0.19.0 — 2026-09-23
 
 Character schema **0.9** · game data **0.14** · ruleset CRB v4 (in progress).
