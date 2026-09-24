@@ -715,7 +715,8 @@ test("Appendix Aberrations: fifteen Good, fifteen Neutral, nine Bad, and the one
   const as = Object.fromEntries(D.aberrations.filter(a => a.as).map(a => [a.id, a.as]));
   assert.equal(as["danger-sense"], "Danger Sense Advantage, Rank 3");
   assert.equal(as["hemophiliac"], "Hemophiliac Disadvantage");
-  assert.equal(Object.keys(as).length, 7);
+  assert.equal(as["beacon"], "Monster Magnet Disadvantage", "the 2026-09-24 appendix ties Beacon to Monster Magnet");
+  assert.equal(Object.keys(as).length, 8);
 });
 
 // ── Grimoire (Magic.md, Decision 108) ─────────────────────────────────

@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-24. -->
 
 # Aberrations
 
@@ -10,7 +10,7 @@ Permanent Aberrations cannot be removed with IP. Only a quest, ritual, or other 
 
 **Aether Reservoir** — Once per day, recover 2 TOL at any time.
 
-**Animal Ken** *\[As the Animal Ken Advantage\]* — Your attunement extends to all living creatures. Animals sense no threat from you and are instinctively non-hostile. EMP Essence checks to calm, befriend, or interact with animals use TN 6.
+**Animal Ken** *\[As the Animal Ken Advantage\]* — Your attunement extends to all living creatures. Animals sense no threat from you and are instinctively non-hostile. MAG Essence checks to calm, befriend, or interact with animals use TN 6.
 
 **Aura Sight** *\[As the Aura Sight Advantage\]* — The Aether flowing through living beings has become visible to you. You perceive the energy fields of living beings within WILL meters, through solid objects and walls. An aura shows power level, mood, and overall health.
 
@@ -72,7 +72,7 @@ Permanent Aberrations cannot be removed with IP. Only a quest, ritual, or other 
 
 ## Bad
 
-**Beacon** — You radiate Aether like a lit window. Spirits, supernatural creatures, and other practitioners can sense you at a distance and find you without trying.
+**Beacon** *\[As the Monster Magnet Disadvantage\]* — You radiate Aether like a lit window. Spirits, supernatural creatures, and other practitioners can sense you at a distance and find you without trying.
 
 **Drained** — Your maximum TOL is reduced by 2.
 

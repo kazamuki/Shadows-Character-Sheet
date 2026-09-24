@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-24. -->
 
 # Book of Known Spells
 
@@ -54,13 +54,13 @@ Every spell in this book follows the same format.
 
 **Defending.** How the spell is resisted.
 
-- **Dodge** against spells aimed at specific targets
+- **Dodge** against spells aimed at specific targets.
 
-- **Scramble** against area effects, for ½ damage or avoid a Condition
+- **Scramble** against area effects.
 
-- **Essence** check against anything reaching into a mind or body
+- **Essence check** against anything reaching into a mind or body.
 
-**Overflow.** Each net Hit above TH generates 1x, and each explosion generates another. Add them and read the matching line. Most spells cap at **2x+**; entries that scale further say so.
+**Overflow.** Each net Hit above TH generates 1x, and each explosion generates another. Add them and read the matching line. Most spells list 1x and 2x+. The 2x+ line applies at every tier above — at 4x, a spell that increases damage by \[X\] has increased it four times.
 
 **Tags.** Properties that matter outside the spell's own text.
 
@@ -1117,7 +1117,7 @@ An affliction drawn out and dispersed. Does not reach what the body has already 
 > **2x+ —** A second condition is removed, and the target resists reacquiring it this scene.
 
 **Counterspell**\
-Decay · TN 8 · Short · Utility
+*Decay · TN 8 · Short · Utility*
 
 You attempt to unravel the Aether another caster is still gathering. Nothing about a charged spell wants to hold together, and you’re helping to rip it apart.
 
@@ -1488,7 +1488,7 @@ A harder working than Cleanse, reaching what has set deeper. The Aether does not
 > **2x+ —** All conditions from the Cleanse list are removed as well.
 
 **Silence**\
-Binding · TN 8 · TH 3 · Short · Offensive
+*Binding · TN 8 · TH 3 · Short · Offensive*
 
 The vocal cords stop answering. Breath still moves, the jaw still works, and nothing at all comes out. It stops them from speaking. It does not stop them from shooting you.
 

@@ -530,51 +530,23 @@ function referencePanelHtml(p){
 }
 
 // ── Sheet: trackers ──────────────────────────────────────────────────
-// ── Cascade (Decision 106) ───────────────────────────────────────────
-// The player enters their own dice; the engine reads the two tables and the
-// GM's pick from the rolled category. Nothing is stored until "Record it",
-// which writes one line into Notes and, if the Cascade left an Aberration,
-// records it on the character, as one undoable action (Decision 110). S.cascade holds
-// the dice meanwhile, the way S.hit holds a hit.
-function newCascadeForm(){ return { roll:"", degree:"", aberrationRoll:"", pick:"" }; }
-function cascadeInput(st){ return { roll:st.roll, degree:st.degree, aberrationRoll:st.aberrationRoll, pick:st.pick }; }
+// ── Cascade (Decisions 106, 115) ─────────────────────────────────────
+// The GM runs the Cascade (Scott, 2026-09-24): the player rolls 1d10 + the
+// Rupture's degree and says the total, and the GM says what it left. So the
+// panel gives the instruction and opens the Aberration picker for whatever
+// the GM names. The tables stay in the Magic reference for anyone to read.
 function cascadePanelHtml(ch){
-  if (!S.cascade || S.cascade.owner!==ch) S.cascade = Object.assign(newCascadeForm(), { owner: ch });
-  const st=S.cascade, T=D.cascadeTable||{}, A=D.aberrationTable||{}, R=D.aberrationRules||{};
-  const c=Engine.cascade(ch, cascadeInput(st)), ab=c.aberration;
-  const held=new Set(Engine.aberrationState(ch).active.map(a=>a.id));
-  const num=(k, label, max)=>`<label class="field"><span>${label}</span><input type="number" min="1" ${max?`max="${max}"`:""} data-cas="${k}" value="${esc(st[k])}"></label>`;
-  let h=`<div class="hitpanel" data-cascadepanel><h4>Cascade</h4>
-    <p class="hitnote">The Aether broke through. ${esc(T.rollNote||"")}</p>
-    <div class="hitrow">${num("roll","d10",10)}${num("degree","Rupture degree")}</div>`;
-  if (c.result){
-    h+=`<div class="hitresult"><p><b>${c.roll} + ${c.degree} = ${c.total}: ${esc(c.result.name)}.</b> ${esc(c.result.effect)}</p></div>`;
-    if (ab){
-      h+=`<div class="hitrow">${num("aberrationRoll","Aberration d10",10)}</div>`;
-      if (!ab.pending && ab.category){
-        h+=`<div class="hitcheck"><b>${esc(ab.category.name)}</b> · ${ab.permanence==="permanent"?"permanent":"temporary"}. ${esc(A.note||"")}
-          <p><select data-cas="pick" aria-label="Aberration"><option value="">Which one?</option>${ab.options.map(o=>
-            `<option value="${esc(o.id)}" ${ab.pick&&ab.pick.id===o.id?"selected":""} ${held.has(o.id)?"disabled":""}>${esc(o.name)}${held.has(o.id)?" (you have it)":""}</option>`).join("")}</select></p>
-          ${ab.pick?`<p>${ab.pick.as?`<i>As ${esc(ab.pick.as)}.</i> `:""}${esc(ab.pick.description)}</p>`:""}
-          ${ab.permanence==="permanent"&&R.permanent?`<p>${esc(R.permanent)}</p>`:""}</div>`;
-      }
-    }
-  }
-  if (!c.ok && st.roll!=="" && st.degree!=="") h+=`<p class="hitwhy">${esc(c.why)}</p>`;
-  const ready = c.ok && (!ab || (!ab.pending && ab.pick));
-  h+=`<details class="group"><summary>The Cascade Table</summary><table class="ref"><tbody>${(T.rows||[]).map(r=>
-      `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table></details>
-    <div class="hitrow"><button class="btn primary sm" data-caslog ${ready?"":"disabled"} title="${ab?"Adds the Aberration to your sheet and the Cascade to your notes":"Writes the Cascade into your notes"}">Record it</button>
-      <button class="btn sm" data-casclear>Clear</button></div></div>`;
-  return h;
+  return `<div class="hitpanel" data-cascadepanel><h4>Cascade</h4>
+    <p>The Aether broke through. Roll a d10, add your Rupture's degree, and tell your GM the total. What it left behind is their call.</p>
+    <div class="hitrow"><button class="btn primary sm" data-abpickopen="cascade">Record what your GM tells you</button></div>
+    <p class="hitnote">Backlash, a Cosmetic Mutation and Burned Out aren't Aberrations. Your GM runs those, and anything that lasts goes in your Notes.</p></div>`;
 }
 
 // ── Aberrations the character has (Decision 110) ─────────────────────
 // Chips from Engine.aberrationState(): permanent ones get Remove (a quest or
 // ritual is the GM's call), temporary ones Clear ("8 hours" is the table's
-// clock, not ours). The palette adds one by hand on a GM ruling, the same
-// shape as the Conditions palette (W14). S.abPalette / S.abPerm keep its
-// state across the re-render a click causes.
+// clock, not ours). Adding one, by hand or from a Cascade, is the picker
+// modal below (Decision 115).
 function aberrationsHtml(ch){
   const st = Engine.aberrationState(ch), R = D.aberrationRules||{};
   const chip = a => `<span class="cond-chip${a.def&&a.def.category==="bad"?" bad":""}" title="${esc(a.def?a.def.description:"")}">
@@ -590,15 +562,37 @@ function aberrationsHtml(ch){
   if (st.permanent.length) h += `<div class="subsect">Permanent</div>${st.permanent.map(card).join("")}<p class="step-note">${esc(R.permanent||"")}</p>`;
   if (st.temporary.length) h += `<div class="subsect">Temporary</div><div class="cond-chips">${st.temporary.map(chip).join("")}</div>`;
   if (st.adjust.TOL) h += `<p class="step-note">${esc(R.adjustNote||"")}</p>`;
-  // Add by hand
-  const held = new Set(st.active.map(a=>a.id)), perm = S.abPerm==="permanent" ? "permanent" : "temporary";
-  const cats = D.aberrationCategories||[];
-  h += `<details class="cond-add" data-abpalette ${S.abPalette?"open":""}><summary>Add an Aberration</summary>
-    <div class="form-toggle">${["temporary","permanent"].map(p=>`<button class="${perm===p?"on":""}" data-abperm="${p}">${p==="permanent"?"Permanent":"Temporary"}</button>`).join("")}</div>
-    ${cats.map(c=>`<div class="subsect">${esc(c.name)}</div><div class="cond-chips palette">${(D.aberrations||[]).filter(a=>a.category===c.id).map(a=>
-      `<button class="cond-chip add${c.id==="bad"?" bad":""}" data-abquick="${esc(a.id)}" ${held.has(a.id)?"disabled":""} title="${esc(a.description)}"><b>${esc(a.name)}</b></button>`).join("")}</div>`).join("")}
-  </details>`;
+  h += `<button class="btn sm" data-abpickopen="add">+ Add an Aberration</button>`;
   return h;
+}
+
+// ── The Aberration picker (Decision 115) ─────────────────────────────
+// Every Aberration as a card with its whole text, so a player can read what
+// they might have caught before the GM says which. The same modal for a
+// Cascade and for adding one by hand; one you have is dimmed and says so.
+// S.abPick keeps the toggle and the search across the redraws.
+const abPermNote = p => (D.aberrationRules||{})[p==="permanent" ? "permanent" : "temporary"] || "";
+function aberrationPickerHtml(ch){
+  const st = S.abPick;
+  return `<div class="ab-pick"><div class="pick-head">
+      <div class="hitrow"><div class="form-toggle">${["temporary","permanent"].map(p=>
+        `<button class="${st.permanence===p?"on":""}" data-abperm="${p}" aria-pressed="${st.permanence===p}">${p==="permanent"?"Permanent":"Temporary"}</button>`).join("")}</div>
+      <input type="search" data-abq value="${esc(st.q)}" placeholder="Search name or text" aria-label="Search Aberrations"></div>
+      <p class="pick-status" data-abstatus>${esc(abPermNote(st.permanence))}</p></div>
+    <div data-abresults>${aberrationResultsHtml(ch)}</div></div>`;
+}
+function aberrationResultsHtml(ch){
+  const st = S.abPick, q = st.q.trim().toLowerCase();
+  const held = new Set(Engine.aberrationState(ch).active.map(a=>a.id));
+  const hit = a => !q || [a.name, a.as, a.description].some(s=>s && s.toLowerCase().includes(q));
+  const html = (D.aberrationCategories||[]).map(c=>{
+    const list = (D.aberrations||[]).filter(a=>a.category===c.id && hit(a));
+    return list.length ? `<div class="subsect">${esc(c.name)}</div><div class="ab-cards">${list.map(a=>
+      `<button class="ab-card${c.id==="bad"?" bad":""}" data-abpick="${esc(a.id)}" ${held.has(a.id)?"disabled":""}>
+        <b>${esc(a.name)}</b>${held.has(a.id)?`<span class="why">You have it</span>`:""}
+        <span class="desc">${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}</span></button>`).join("")}</div>` : "";
+  }).join("");
+  return html || `<p class="step-note">Nothing matches.</p>`;
 }
 
 // ── Take a hit (combat plan Session 3, Decision 99) ──────────────────

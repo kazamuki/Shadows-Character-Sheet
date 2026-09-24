@@ -62,4 +62,4 @@ Not mirrored (lower value for data/engine work as of this pull): `000_Index`,
 `051_Social_Encounters`, `052_Environmental_Encounters`, and the GM chapters
 (`200`–`213`). Pull one of these the same way, the day it actually gates work.
 
-**Pulled 2026-09-22** (all files; the first nine were first pulled 2026-09-04). `020_Synergy_System`, `040_Character_Creation`, `041_Archetypes` and `Magic` re-pulled 2026-09-23 for the TOL edit (Decision 103). Converted with `pandoc -f docx -t gfm --wrap=preserve`. File names swap the source's spaces and ` - ` for underscores.
+**Pulled 2026-09-22** (all files; the first nine were first pulled 2026-09-04). `020_Synergy_System`, `040_Character_Creation`, `041_Archetypes` and `Magic` re-pulled 2026-09-23 for the TOL edit (Decision 103). `Magic`, `Appendix_Book_of_Known_Spells` and `Appendix_Aberrations` re-pulled 2026-09-24, Scott's finished magic pass. Converted with `pandoc -f docx -t gfm --wrap=preserve`. File names swap the source's spaces and ` - ` for underscores.

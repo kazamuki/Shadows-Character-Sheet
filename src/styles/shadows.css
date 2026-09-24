@@ -538,6 +538,20 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .cond-chip.add:disabled{opacity:.4; cursor:default}
 .cond-chip-body{background:none; border:0; padding:0; color:inherit; font:inherit; cursor:pointer; display:inline-flex; align-items:center; gap:6px}
 .cond-chip.on{box-shadow:0 0 0 1px var(--magenta)}
+/* Decision 115: the Aberration picker. Each card carries its whole text so a
+   player can read what they might have before the GM names it. */
+.ab-pick .hitrow{align-items:center}
+.ab-pick .hitrow input[type=search]{flex:1; min-width:160px; width:auto}
+.ab-cards{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:8px; margin-bottom:6px}
+.ab-card{display:flex; flex-direction:column; gap:4px; text-align:left; background:var(--panel); color:var(--text);
+  border:1px solid var(--frame); border-radius:4px; padding:8px 11px; font:inherit; font-size:.8rem; cursor:pointer}
+.ab-card b{font-weight:600; font-size:.86rem}
+.ab-card .desc{color:var(--dim); line-height:1.4}
+.ab-card.bad{background:rgba(188,72,154,.14)}
+.ab-card.bad b{color:var(--magenta)}
+.ab-card:hover:not(:disabled), .ab-card:focus-visible{border-color:var(--magenta)}
+.ab-card:disabled{opacity:.55; cursor:default}
+.ab-card .why{font-size:.72rem; color:var(--gold)}
 .cond-info{border-left:2px solid var(--magenta); padding:6px 12px; margin:-2px 0 12px; font-size:.84rem}
 .cond-where{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:6px}
 .cond-where select{max-width:220px}
