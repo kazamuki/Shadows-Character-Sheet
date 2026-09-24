@@ -606,6 +606,29 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .vpill.cred .vv{color:var(--gold)} .vpill.sfr .vv{color:var(--violet-hi)}
 .vpill.danger{border-color:var(--magenta)}
 .vpill.danger .vv{color:var(--magenta)} .vpill.danger .vico{color:var(--magenta)}
+/* W2/W3: a vital that opens its popover. The pill and Main's card are
+   buttons, so they reset a button's own look and show they can be pressed. */
+.vpill.act, .cond.act{font:inherit; color:inherit; text-align:left; cursor:pointer}
+.cond.act{display:block; width:100%}
+.cond .lab, .cond .big, .cond .meta, .cond .meter{display:block}
+.vpill.act:hover, .cond.act:hover, .vpill.act[aria-expanded="true"], .cond.act[aria-expanded="true"]{border-color:var(--cyan)}
+.vpill.act:focus-visible, .cond.act:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+.popover{position:absolute; z-index:40; width:min(380px, calc(100vw - 16px)); box-sizing:border-box;
+  background:var(--panel); color:var(--text); border:1px solid var(--frame); border-top:3px solid var(--cyan);
+  border-radius:6px; box-shadow:0 10px 36px rgba(5,10,22,.55); padding:10px 14px 14px; animation:modalIn .12s ease-out}
+.popover[hidden]{display:none}
+.pop-head{display:flex; align-items:center; gap:10px}
+.pop-head h3{flex:1; margin:0; font-family:var(--mono); font-size:.68rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
+.pop-now{display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; margin:2px 0 10px}
+.pop-now .big{font-family:var(--mono); font-size:1.35rem}
+.pop-now .big.hp{color:var(--green)} .pop-now .big.san{color:var(--cyan)} .pop-now .big.gold{color:var(--gold)} .pop-now .big.bad{color:var(--magenta)}
+.pop-now .sub{font-size:.78rem; color:var(--dim)}
+.pop-body .trk-row{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px}
+.pop-body .trk-row input[type=number]{width:74px}
+.pop-body .pop-cred input[type=number]{width:110px}
+.pop-body .pop-cred input[type=text]{flex-basis:100%; order:5}
+.pop-body .trk-actions{display:flex; flex-wrap:wrap; gap:6px; margin-top:4px}
+@media (prefers-reduced-motion:reduce){ .popover{animation:none} }
 .vpill.toggle{cursor:pointer; background:var(--panel-2)}
 .vpill.toggle:hover{border-color:var(--cyan)}
 .vpill.toggle .vk{color:var(--cyan)}

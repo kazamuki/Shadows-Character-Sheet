@@ -89,9 +89,10 @@ function renderMain(){
     landedNow = null;
     renderDrawer();
     bindMain(); bindSheet();
+    refreshPopover();
     return;
   }
-  closeVitals();
+  closeVitals(); closePopover(false);
   const st = STEPS[S.step];
   let h = stepHeader(st) + RENDER[st.id]();
   if (st.id!=="review") h += wizNav(st.id);
@@ -324,12 +325,12 @@ function openAberrationPicker(mode){
 // backdrop all drop the form. A number redraws as it's typed, not on
 // `change`, which fires on blur: a redraw then would replace Apply between
 // the press and the click that was meant for it.
-function openHitModal(){
+function openHitModal(returnTo){
   const ch=S.ch; if (!ch) return;
   if (S.act){ S.act=null; renderMain(); }
   S.hit=Object.assign(newHitForm(), { owner: ch });
   const p=hitModalParts(ch);
-  openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: "[data-hitopen]",
+  openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: typeof returnTo==="string" ? returnTo : "[data-hitopen]",
     onClose: ()=>{ S.hit=null; }, bind: bindHitModal });
 }
 function bindHitModal(body, foot){
@@ -367,6 +368,113 @@ function bindHitModal(body, foot){
   });
 }
 
+// ── The vitals' own controls (W2/W3) ─────────────────────────────────
+// Damage's stepper, Take a hit, Conditions, SAN, LUCK and Çredits, bound to
+// whatever root draws them: Trackers, or a vitals popover. One binder, so a
+// popover's Hurt 5 is Trackers' Hurt 5 — the same commit(), the same audit
+// label, the same undo — never a second code path.
+function bindVitalControls(root){
+  const ch=S.ch; if (!ch) return;
+  const num = el => el && el.value!=="" ? Number(el.value) : null;
+  // Damage. Withering is the part of `damage` that can't regenerate, so it
+  // can never be more than the damage itself — a hand edit down trims it.
+  const setDamage = v => { ch.trackers.damage=v;
+    ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
+  root.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.dmg);
+    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
+  });
+  const ds=root.querySelector("[data-dmgset]");
+  if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
+  root.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
+  root.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=openHitModal);
+
+  // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
+  // body-part picker only shows for a Condition that needs one.
+  const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
+    return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
+  // W14: a palette chip adds in one click (the undo toast makes that safe);
+  // a body-part Condition asks where first, through the same Add.
+  const addCond = (id, location) => {
+    const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
+    if (!r.ok){ alert(r.why); return; }
+    S.condPick=null;
+    commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
+  };
+  root.querySelectorAll("[data-condpalette]").forEach(d=>d.ontoggle=()=>{ S.condPalette=d.open; });
+  root.querySelectorAll("[data-condquick]").forEach(b=>b.onclick=()=>{
+    const def=Engine.conditionById(b.dataset.condquick); if (!def) return;
+    if (def.location){ S.condPick=def.id; renderMain(); return; }
+    addCond(def.id);
+  });
+  root.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
+  root.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
+    const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
+    if (!location){ alert("Pick the body part."); return; }
+    addCond(b.dataset.condadd, location);
+  });
+  root.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condinfo); S.condInfo = S.condInfo===i ? null : i; renderMain();
+  });
+  root.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
+    S.condInfo=null;                                   // indexes shift once one goes
+    commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
+  });
+  root.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
+    const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];
+    const d=Engine.conditionById(e&&e.id);
+    commit("condition", `${d&&d.counter?d.counter.label:"Marks"} → ${n}`, ()=>{ Engine.setConditionMarks(ch, i, n); });
+  });
+  root.querySelectorAll("[data-condnote]").forEach(inp=>inp.onchange=()=>{
+    const i=Number(inp.dataset.condnote), e=ch.trackers.conditions[i];
+    if (!e) return;
+    commit("condition", `Note on ${condLabel(e)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
+  });
+
+  // SAN
+  root.querySelectorAll("[data-san]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.san);
+    commit("san", `SAN loss ${d>0?"+":""}${d}`, ()=>{ ch.trackers.san.loss=Math.max(0,(ch.trackers.san.loss||0)+d); });
+  });
+  const ss=root.querySelector("[data-sanset]");
+  if (ss) ss.onchange=()=>{ const v=Math.max(0,Number(ss.value)||0); commit("san", `Set SAN loss → ${v}`, ()=>{ ch.trackers.san.loss=v; }); };
+
+  // LUCK
+  root.querySelectorAll("[data-luckspend]").forEach(b=>b.onclick=()=>{
+    const cost=Number(b.dataset.luckspend);
+    if (Engine.luckState(ch).current>=cost) commit("luck", `LUCK spent −${cost}`, ()=>{ ch.trackers.luck.spent+=cost; });
+  });
+  root.querySelectorAll("[data-luckregain]").forEach(b=>b.onclick=()=>{
+    if ((ch.trackers.luck.spent||0)>0) commit("luck","LUCK regained +1",()=>{ ch.trackers.luck.spent=Math.max(0,ch.trackers.luck.spent-1); });
+  });
+
+  // Çredits
+  root.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{
+    const amt=num(root.querySelector("[data-cramt]"));
+    const note=(root.querySelector("[data-crnote]")||{}).value||"";
+    if (amt==null || !amt) return;
+    const signed=Math.abs(amt)*Number(b.dataset.cr);
+    commit("credits", `Çredits ${signed>0?"+":""}${signed}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, signed, note); });
+  });
+
+}
+
+// W2/W3: a vital's popover, from its pill or its card on Main. The body is
+// Trackers' own controls, bound by the same binder; Take a hit closes the
+// popover and opens the hit modal, whose focus comes back to the vital.
+function openVitalPopover(key){
+  openPopover({ key, render: ()=>S.ch ? vitalPopover(S.ch, key) : null, bind: body=>{
+    bindVitalControls(body);
+    body.querySelectorAll("[data-pophit]").forEach(b=>b.onclick=()=>{
+      closePopover(true); openHitModal(`[data-vpop="${key}"]`);
+    });
+    body.querySelectorAll("[data-popgo]").forEach(b=>b.onclick=()=>{
+      closePopover(false); S.section=normSection(b.dataset.popgo); window.scrollTo(0,0); update();
+    });
+  } });
+}
+
 // ── Phase 3: sheet event wiring ─────────────────────────────────────
 function bindSheet(){
   const main=$("main"), ch=S.ch;
@@ -377,6 +485,7 @@ function bindSheet(){
     if (dr){ dr.classList.toggle("open", S.vitalsOpen); dr.setAttribute("aria-hidden", S.vitalsOpen?"false":"true"); }
     if (sc) sc.classList.toggle("open", S.vitalsOpen);
   });
+  main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
   // Skill description toggles (no full re-render — flip the hidden detail row)
   main.querySelectorAll("[data-skilldesc]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.skilldesc; S.openSkills=S.openSkills||new Set();
@@ -410,18 +519,7 @@ function bindSheet(){
   main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; window.scrollTo(0,0); update(); });
   main.querySelectorAll("[data-admin-exit]").forEach(b=>b.onclick=()=>{ S.admin=false; if(S.section==="admin") S.section="main"; window.scrollTo(0,0); update(); });
 
-  // Damage. Withering is the part of `damage` that can't regenerate, so it
-  // can never be more than the damage itself — a hand edit down trims it.
-  const setDamage = v => { ch.trackers.damage=v;
-    ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
-  main.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
-    const d=Number(b.dataset.dmg);
-    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
-  });
-  const ds=main.querySelector("[data-dmgset]");
-  if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
-  main.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
-  main.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=openHitModal);
+  bindVitalControls(main);
 
   // Turn Reset, Rest, Focused Healing, After the fight (Decision 100): one
   // form in S.act, one commit() on Apply, the same as a hit.
@@ -471,66 +569,6 @@ function bindSheet(){
     }
   });
 
-  // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
-  // body-part picker only shows for a Condition that needs one.
-  const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
-    return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
-  // W14: a palette chip adds in one click (the undo toast makes that safe);
-  // a body-part Condition asks where first, through the same Add.
-  const addCond = (id, location) => {
-    const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
-    if (!r.ok){ alert(r.why); return; }
-    S.condPick=null;
-    commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
-  };
-  main.querySelectorAll("[data-condpalette]").forEach(d=>d.ontoggle=()=>{ S.condPalette=d.open; });
-  main.querySelectorAll("[data-condquick]").forEach(b=>b.onclick=()=>{
-    const def=Engine.conditionById(b.dataset.condquick); if (!def) return;
-    if (def.location){ S.condPick=def.id; renderMain(); return; }
-    addCond(def.id);
-  });
-  main.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
-  main.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
-    const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
-    if (!location){ alert("Pick the body part."); return; }
-    addCond(b.dataset.condadd, location);
-  });
-  main.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
-    const i=Number(b.dataset.condinfo); S.condInfo = S.condInfo===i ? null : i; renderMain();
-  });
-  main.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
-    const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
-    S.condInfo=null;                                   // indexes shift once one goes
-    commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
-  });
-  main.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
-    const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];
-    const d=Engine.conditionById(e&&e.id);
-    commit("condition", `${d&&d.counter?d.counter.label:"Marks"} → ${n}`, ()=>{ Engine.setConditionMarks(ch, i, n); });
-  });
-  main.querySelectorAll("[data-condnote]").forEach(inp=>inp.onchange=()=>{
-    const i=Number(inp.dataset.condnote), e=ch.trackers.conditions[i];
-    if (!e) return;
-    commit("condition", `Note on ${condLabel(e)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
-  });
-
-  // SAN
-  main.querySelectorAll("[data-san]").forEach(b=>b.onclick=()=>{
-    const d=Number(b.dataset.san);
-    commit("san", `SAN loss ${d>0?"+":""}${d}`, ()=>{ ch.trackers.san.loss=Math.max(0,(ch.trackers.san.loss||0)+d); });
-  });
-  const ss=main.querySelector("[data-sanset]");
-  if (ss) ss.onchange=()=>{ const v=Math.max(0,Number(ss.value)||0); commit("san", `Set SAN loss → ${v}`, ()=>{ ch.trackers.san.loss=v; }); };
-
-  // LUCK
-  main.querySelectorAll("[data-luckspend]").forEach(b=>b.onclick=()=>{
-    const cost=Number(b.dataset.luckspend);
-    if (Engine.luckState(ch).current>=cost) commit("luck", `LUCK spent −${cost}`, ()=>{ ch.trackers.luck.spent+=cost; });
-  });
-  main.querySelectorAll("[data-luckregain]").forEach(b=>b.onclick=()=>{
-    if ((ch.trackers.luck.spent||0)>0) commit("luck","LUCK regained +1",()=>{ ch.trackers.luck.spent=Math.max(0,ch.trackers.luck.spent-1); });
-  });
-
   // Generic archetype trackers (SFR / panel trackers)
   main.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
     const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
@@ -557,15 +595,6 @@ function bindSheet(){
     commit("tracker", `${pid.toUpperCase()} max → ${mx==null?"—":mx}`, ()=>{
       const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.max=mx;
     });
-  });
-
-  // Çredits
-  main.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{
-    const amt=num(main.querySelector("[data-cramt]"));
-    const note=(main.querySelector("[data-crnote]")||{}).value||"";
-    if (amt==null || !amt) return;
-    const signed=Math.abs(amt)*Number(b.dataset.cr);
-    commit("credits", `Çredits ${signed>0?"+":""}${signed}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, signed, note); });
   });
 
   // Manual adjustments

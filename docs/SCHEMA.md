@@ -2770,6 +2770,43 @@ No cascade logic to maintain — it falls out of the architecture.
       never open. Each fails a test.
     Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
 
+119. **(Vitals popovers — W2 and W3, app)** **Every vital you'd change
+    mid-scene opens a small popover where it's shown: HP, Pain (and the
+    Cond pill), SAN, LUCK and Çredits, on the vitals bar of every tab but
+    Main and on Main's cards.** Ken's wishlist items, one component at two
+    sizes as W3 asked. 2026-09-24 session. No rules, data or schema change.
+    - **No second code path.** Trackers' damage stepper, SAN, LUCK and
+      Çredits controls are now small renderers (`damageStepperHtml`,
+      `sanControlsHtml`, `luckControlsHtml`, `creditControlsHtml`), and
+      their handlers, with Take a hit and every Condition control, moved
+      from `bindSheet` into `bindVitalControls(root)`. Trackers binds it on
+      `#main`, a popover on its own body. So a popover's Hurt 5 is the same
+      `commit()` with the same audit label and undo toast as Trackers'.
+      The Pain popover is `conditionsHtml(ch, false)`, the palette included.
+    - **A popover primitive, not a second modal** (`openPopover` in
+      `shared.js`, as the wishlist's notes suggested). It sits under its
+      trigger, doesn't make the page inert, and is one at a time; the trigger
+      toggles it. It lives outside `#main`, and `renderMain` calls
+      `refreshPopover()`: it finds the new trigger by its `data-vpop` key,
+      redraws from `vitalPopover(ch, key)` and puts focus back on the
+      control that had it, so an action leaves you where you were with the
+      new numbers. Esc closes and returns focus to the trigger (openModal's
+      rule, copied). A click elsewhere closes it; the toast and a modal
+      don't count as elsewhere. Leaving the sheet closes it.
+    - **Take a hit** from the HP popover closes it and opens the hit modal
+      (`openHitModal(returnTo)`), whose focus comes back to the pill or card.
+      **Recovery on Trackers** and **Ledger on Trackers** go there.
+    - **The pills and cards are buttons** (`aria-haspopup`,
+      `aria-expanded`). Main's cards hold spans rather than divs, since a
+      button holds no divs. IP, MP and SFR stay read-only: they're spent on
+      Progression and the Arcanist's panels, which have more to them than a
+      stepper.
+    - **Pinned:** two smoke tests. Mutation-tested (6 mutants): no refresh
+      after a render, the popover's controls unbound, focus lost on the
+      redraw, focus not returned on Esc, a click elsewhere not closing it,
+      and Take a hit leaving the popover open. Each fails a test.
+    Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
 ## 5. Open Flags
 
 Resolved in Phase 1: ~~F3~~ (skill IP cost = 5× current rank; Focused Skills 3×),
