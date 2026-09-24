@@ -32,31 +32,10 @@ weapons/armor catalog, `grants`, an undoable audit trail, and a printable
 sheet, filled or blank. The engine reproduces the CRB's own worked examples
 (`tests/rules.test.mjs`).
 
-**Magic is on the sheet end to end (Decisions 93, 106, 108–111; plan
-closed).** Starting spells in the wizard (TOL + roll, TH ≤ Evocation until
-lock), a Grimoire that reads the book, Mastery, Spell Power/Attack, TOL
-Spent → Cascade → **Record it**, Aberrations on Trackers, a Magic reference.
-
-**Combat is built end to end, and the combat plan is closed (Decisions
-95–96, 99–100, 103–106).** Loadout picks weapons and armor from the catalog
-(**Add**, or **Buy** from Çredits), one worn piece per slot, upgrades by slot
-and quality. Weapon lines compute the attack and `BOD+X`. Take a hit reads
-the worn piece, then **Natural Armor** (Thick Skin, Shake it Off, and Iron
-Shirt/Waning Moon when ticked on), one derived value (Decision 104).
-Trackers has Turn Reset, Rest, Focused Healing, a **Nanomed Kit** (054's
-list, Decision 105) and After the fight. Print fills Defense, Nat column
-included. Stubs: **F23**, **F24**, **F25**.
-
-**TOL is 1 + INT + BOD + COOL** (Deighton, Decision 103; was INT/COOL/EMP).
-Every character's TOL can move, and the Arcanist feels it most: its bonus
-points reach EMP, which no longer counts, and not BOD, which now does. That's
-the ruling as given. Scott has it and is updating the CRB.
-
-**Two feel passes (Decisions 107, 112).** Undo toasts, a Condition chip
-palette, a Heal/Hurt stepper, and contrast checked in both themes. **0.20.0**
-(not yet tagged): Take a hit in a modal (`openModal`) with Apply waiting on
-its reason, Trackers in two columns with the HL track banded by Pain Level,
-stat icons with the character's numbers on every skill, and a centred modal.
+**Combat and magic are both built end to end, and both plans are closed**
+(`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
+waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106 and 108–111.
+The newest UI work is Decision 112 (app 0.20.0, not yet tagged).
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -70,14 +49,11 @@ The batch board — one row per merged batch — is history, so it lives in
 **`log/shipped.md`** (Decision 101). This section keeps only what shipped work
 left that is still true now.
 
-**Demo hosting is live** (Printable sheet + demo hosting, #17) — Ken set the
-GitHub Pages source and the Squarespace DNS CNAME; confirmed serving at
-`charactersheet.shadowsrpg.com`. Only a `v*` tag deploys; **Run workflow** is a
-dry run on a branch, a re-publish on a tag. **Live: app `0.19.1`,
-game data `0.14`** (tag `v0.19.1`, deployed 2026-09-23; loaded: the footer's versions,
-and Martial Arts' style picker spanning the Skills grid with Melee aligned below it). `v0.13.0` and `v0.14.0`
-rendered blank (#30). **Check a deploy by loading the page**, not by curling it.
-**`CHANGELOG.md` is current again** (W18); `docs.test.mjs` checks each bump has a section.
+**Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
+`v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
+tag. **Live: app `0.19.1`, game data `0.14`** (tag `v0.19.1`). **Check a
+deploy by loading the page** and reading the footer, not by curling it.
+`CHANGELOG.md` needs a section for every app bump (`docs.test.mjs` checks).
 
 **Two things a next session should know.**
 
@@ -104,15 +80,15 @@ full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Gear & Combat** — Conditions, damage, armor | ✅ catalog (Decision 92) · ✅ Conditions (Decisions 95–96) · ✅ taking a hit (Decision 99) · ✅ Loadout & recovery (Decision 100) · ✅ cleanup (TOL, Natural Armor, Nanomed; Decisions 103–105) · **plan closed** | **F23 + F24 + F25** (Deighton, ask together; F23 and F25 are the same RES-class question) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Weapon mods/ammo: `WISHLIST.md` W16 |
+| **Gear & Combat** — Conditions, damage, armor | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105) | **F23 + F24 + F25** (Deighton, ask together; F23 and F25 are the same RES-class question) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Weapon mods/ammo: `WISHLIST.md` W16 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
 | **Milestones & doc reconciliation** — F9, F11, F12, F13 · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | 🔶 Spellcraft + spell catalog merged (Decision 93) · ✅ Cascade + Aberration tables, TOL Spent tracker and the Cascade panel (Decision 106) · ✅ **magic on the sheet, plan closed** (Decisions 108–111): Grimoire from the book, acquired Aberrations, Spell Attack, Magic reference, starting spells · Origins still `status: "draft"` — though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements still wait on the four-way question comparison from the 2026-09-10 meeting; not blocking now that the archetype-independent half is in |
-| **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a complete, finished export — his current file is a two-page **portrait** WIP with only Stats built, in two competing styles (hex-dial sidebar vs. plain table). Portrait-vs-landscape is a real decision once that lands, not yet made. Separately: the frame/texture layer doesn't print in Chrome's actual output yet (screen-only) — not blocked on anyone, just not chased down |
+| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed (Decisions 93, 106, 108–111) · Origins still `status: "draft"`, though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way question comparison from the 2026-09-10 meeting; not blocking |
+| **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a finished export. His current file is a two-page **portrait** WIP with only Stats built, in two competing styles; portrait vs. landscape is decided once it lands. The frame/texture print defect blocks on no one |
 
 F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
 Advantages/Disadvantages item and wholly waits on Cyborg's ruling; don't ask
@@ -125,12 +101,8 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-**Every `A` and `B` finding from the rev 9 audit is closed.** `C1`–`C3` remain as
-forward notes — one line each in `INDEX.md` §2, which is where you look up what
-any id means and whether it is still live.
-
-The PR #7 adversarial review's three machinery gaps are closed and
-mutation-tested (Decision 91; the account is in `log/2026.md`).
+None open. Every `A` and `B` audit finding is closed. `C1`–`C3` are forward
+notes, one line each in `INDEX.md` §2.
 
 ---
 
@@ -148,27 +120,22 @@ From the wishlist: **W2 + W3** (the vitals popovers; HP's can call
 `openHitModal()`), **W4** (the weapon/armor catalog, which can reuse the
 spell picker whole), **W22** (step 7's jump bar), and **W5** (Loadout's
 section shortcuts). **W16** (weapon mods and rounds) is the next schema bump,
-and **W17** could share it. Cyborg, Vampire, and the print sheet's remaining
-visual work wait on people outside a session.
+and **W17** could share it.
 
-**Worth knowing:** the Arcanist's creation-time Unique Aberrations now follow
-`041` (Decision 110). Ken expects the Origins subtypes to replace that list,
-so don't invest in it.
+**Waiting on others:**
+- **Design team:** F8, being playtested.
+- **Deighton:** F23, F24 and F25 as one question. Each flag's stub and the
+  question itself are in `SCHEMA.md` §5.
+- **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), and
+  the print export.
+- **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
+  25 IP new-skill price and the stat curve past 10. Each is written up in
+  `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
+  once ruled.
 
-**Waiting on the design team:** F8 (the wizard-blocker, being playtested),
-and one grouped question for Deighton. **F23:** which RES class do Electric
-and Burning fall under (stubbed as Energy), and where does Resistance's 50%
-sit (not applied)? **F24:** when Bleeding ticks at a Reset while Dying, is it
-one Death Mark standing in for the WILL check (the stub), or the check plus a
-mark per source? **F25:** how does Natural Armor answer a hit? Stubbed as flat
-after PROT and RES, anywhere on the body, Kinetic unless Warded, past AP, not
-Massive, and every source stacks. **Ken's CRB fixes:** Gear's Conditions table → a pointer at
-054 (CQ8, agreed); Siege → Massive (CQ4); Called Shot → only Massive causes
-Injured/Maimed (CQ5); the 25 IP new-skill price and the stat curve past 10; a
-Dying row in 054 (CQ9); CQ11; **CQ12** (answered: 054 wins, so Gear's Nanomed entry
-needs Paralyzed added) and **CQ13** (054 lets a week of downtime clear
-Injured; 055 says it takes Focused Healing). F23 may also want a line in
-Gear's RES text once ruled.
+**Don't invest in** the Arcanist's creation-time Unique Aberrations: they
+follow `041` (Decision 110), and Ken expects the Origins subtypes to replace
+them.
 
 **Unscheduled ideas** — UX and table feel, Ken's and Claude's — are in
 `WISHLIST.md` as `W` ids.
@@ -177,21 +144,19 @@ Gear's RES text once ruled.
 
 ## 6. Keeping this file honest
 
-The numbers in this file drifted twice before it existed — `CLAUDE.md` was
-telling cold sessions "20 passing, 2 todo" when the real figure was 51/1, and
-"Decisions… at 54" when the ledger was at 73. So:
-
 - **Every volatile fact lives here and nowhere else.** `CLAUDE.md` carries no
   counts. Session-log entries state figures *as of that session* and are never
   updated — they are history, and history does not drift.
-- **`tests/docs.test.mjs` enforces it.** The suite result and decision count in
-  this file are checked against reality, the flag table is checked against
-  `flagged: true` in the data (which is how F10 stayed live for four days after
-  the docs closed it), and every file `CLAUDE.md` points at must exist.
+- **`tests/docs.test.mjs` enforces it.** The suite result, versions and length
+  of this file are checked, the flag table is checked against `flagged: true`
+  in the data, and every file `CLAUDE.md` points at must exist.
 - **§3 is organized by topic, not by sequence, on purpose (2026-09-12).** A
   batch number implies "next in line"; several areas here are blocked on
   different people and resolve in whatever order those people answer. Don't
   reintroduce a `#` column to §3 — if a strict next-up order is ever needed
   again, say so in prose rather than implying it with numbering.
+- **Describe what shipped in `log/`, not here.** A paragraph in §1 about a
+  finished batch is history; this file keeps only what's still true and what
+  to do next. That's what pushed it to the length cap on 2026-09-23.
 - **Close a session by rewriting §1–§5 here** and appending to `log/2026.md`, in
   the same commit as the code.
