@@ -7,6 +7,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { boot, loadEngine } from "./harness.mjs";
 
 const { Engine, D } = loadEngine();
@@ -1319,5 +1320,65 @@ test("W13: Main's Combat column leads with the weapons you carry and the armor t
   assert.deepEqual(heads, ["Combat", "Weapons", "Armor", "Combat skills"], "the fight's lines aren't first");
   const weapons = app.$(".main-combat table.ref:not(.skill-table)"), skills = app.$(".main-combat .skill-table");
   assert.ok(weapons.compareDocumentPosition(skills) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, "the skills table comes before the weapons");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── What's new (Decision 123) ─────────────────────────────────────────
+// Read from source so the tests never hard-code a version.
+const APP_VERSION_NOW = /const APP_VERSION = "([\d.]+)"/.exec(
+  readFileSync(new URL("../src/ui/app.js", import.meta.url), "utf8"))[1];
+const APP_V = () => APP_VERSION_NOW;
+
+test("What's new: a first visit is marked seen and told nothing", () => {
+  const app = boot();
+  assert.deepEqual(app.errors, []);
+  assert.ok(!app.$(".wn-note"), "a first visit shouldn't get the Updated notice");
+  assert.ok(app.$("#homenews .wn-link"), "the home screen has no What's new link");
+  assert.equal(app.window.localStorage.getItem("shadows.seenVersion"), APP_V());
+});
+
+test("What's new: a returning player sees one quiet line, and opening the notes clears it", () => {
+  const app = boot({ storage: { "shadows.seenVersion": "0.19.0" } });
+  assert.deepEqual(app.errors, []);
+  const note = app.$("#homenews .wn-note");
+  assert.ok(note, "no Updated notice for a player last here on 0.19.0");
+  assert.match(note.textContent, new RegExp(`Updated to ${APP_V().replace(/\./g, "\.")}`));
+  assert.ok(!app.$("#modal[open]"), "the notes must not open by themselves");
+
+  app.click("#homenews [data-whatsnew]");
+  const rels = app.$$("#modal .wn-rel");
+  assert.ok(rels.length > 10, `only ${rels.length} releases in What's new`);
+  // Everything after 0.19.0 is New and open; 0.19.0 itself and older are neither.
+  const fresh = rels.filter(r => r.querySelector(".wn-new")).map(r => r.querySelector(".wn-ver").textContent);
+  const newer = v => { const [a,b,c] = v.split(".").map(Number); return a > 0 || b > 19 || (b === 19 && c > 0); };
+  const want = [...app.window.SHADOWS_CHANGELOG].map(r => r.version).filter(newer);   // out of the page's realm
+  assert.deepEqual([...fresh], [...want], "New should mark exactly the releases after 0.19.0");
+  assert.ok(fresh.includes("0.19.1") && !fresh.includes("0.19.0"), "the version they'd already seen is marked New");
+  for (const r of rels) assert.equal(r.open, !!r.querySelector(".wn-new"), "a New release is closed, or an old one open");
+  assert.equal(app.window.localStorage.getItem("shadows.seenVersion"), APP_V(), "opening the notes didn't mark them seen");
+  assert.ok(!app.$("#homenews .wn-note"), "the notice outlived opening the notes");
+  assert.match(app.$("#modal .whatsnew").innerHTML, /<strong>/, "the notes' **bold** didn't render");
+});
+
+test("What's new: someone who used the app before the mark existed gets the notice once", () => {
+  const app = boot({ storage: { "shadows.theme": "dark" } });
+  assert.ok(app.$("#homenews .wn-note"), "a returning player with no mark got no notice");
+  app.click("#homenews [data-whatsnew-dismiss]");
+  assert.ok(!app.$("#homenews .wn-note"), "dismiss didn't clear the notice");
+  assert.equal(app.window.localStorage.getItem("shadows.seenVersion"), APP_V());
+  const again = boot({ storage: { "shadows.theme": "dark", "shadows.seenVersion": APP_V() } });
+  assert.ok(!again.$("#homenews .wn-note"), "the notice came back after it was seen");
+});
+
+test("What's new opens from the sheet's menu and from the footer", () => {
+  const app = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
+  const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
+  open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click("#hdrmenu [data-whatsnew]");
+  assert.ok(app.$("#modal[open] .whatsnew"), "the menu's What's new didn't open the notes");
+  assert.ok(app.$("#hdrmenu").hidden, "the menu stayed open behind the notes");
+  app.click("#modal [data-modalclose]");
+  app.click("#footer [data-whatsnew]");
+  assert.ok(app.$("#modal[open] .whatsnew"), "the footer's What's new didn't open the notes");
   assert.deepEqual(app.errors, []);
 });

@@ -275,6 +275,7 @@ Every string a player reads, and what enforces it.
 - **73** *(Batch 2)* — The voice standard is enforced by rendering the app, not by reading the source.
 - **76** *(Voice)* — docs/VOICE-APP.md is adopted, not draft.
 - **85** *(Docs)* — GUIDE_Shadows_Voice.md is re-pulled with pandoc.
+- **123** *(What's new)* — CHANGELOG.md generates `src/data/shadows-changelog.js` (v0.10.1 on, above a cutoff comment; a test fails if it's stale); the app shows it from the home screen, the sheet's menu and the footer, with a one-time Updated line for a returning player and never an auto-opening window.
 
 ### Housekeeping — records, not choices
 

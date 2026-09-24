@@ -54,6 +54,13 @@ function renderedCorpus() {
     sheet.click(`[data-sec="${id}"]`);
     parts.push(visibleText(sheet));
   }
+  // What's new is every release note a player can open (Decision 123). It's
+  // written in CHANGELOG.md, next to maintainer prose, so it's read here too.
+  sheet.click("[data-whatsnew]");
+  const notes = sheet.$("#modal .whatsnew");
+  if (!notes || notes.textContent.length < 2000) throw new Error("What's new didn't render its notes");
+  parts.push(visibleText(sheet));
+  sheet.click("#modal [data-modalclose]");
 
   // Wizard: resume a draft parked on each step in turn. Every archetype gets a
   // pass, because the draft/tbd copy only renders for the unfinished ones.
