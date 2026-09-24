@@ -182,6 +182,47 @@ function closeModal(){
   if (back && back.focus) back.focus();
 }
 
+// ── Jump bar (W5, W22) ────────────────────────────────────────────────
+// Section headings register themselves as a page renders, so a bar jumps to
+// whatever the page actually drew: an archetype's panel shows up on its own
+// (the "zero app changes" rule). `sect(label, html)`: the short label goes
+// on the bar, the html (plain label when omitted) on the heading.
+function sectionList(prefix){
+  const list=[];
+  return { list, sect(label, html){
+    const id=`${prefix}-${list.length}`; list.push({ id, label });
+    return `<div class="sect" id="${id}" tabindex="-1">${html==null?esc(label):html}</div>`; } };
+}
+// `filter` adds a search box over the page's [data-filterable] picks (W22);
+// `extra` is anything else the bar should keep in view.
+function jumpBarHtml(list, { sticky=false, filter=null, extra="" }={}){
+  return `<nav class="jumpbar${sticky?" sticky":""}" aria-label="Jump to a section">${
+    filter?`<input type="search" data-jumpfilter value="${esc(filter.value||"")}" placeholder="${esc(filter.placeholder)}" aria-label="${esc(filter.placeholder)}"><span class="jump-count" data-jumpcount aria-live="polite"></span>`:""}${
+    list.map(s=>`<button class="jump" data-jump="${esc(s.id)}">${esc(s.label)}</button>`).join("")}${extra}</nav>`;
+}
+// Scroll a heading to just under the sticky header (and a sticky bar), then
+// give it focus, so the keyboard carries on from there.
+function jumpTo(id){
+  const el=document.getElementById(id); if (!el) return;
+  const hdr=document.querySelector("header.top"), bar=document.querySelector(".jumpbar.sticky");
+  const off=(hdr?hdr.offsetHeight:0)+(bar?bar.offsetHeight:0)+8;
+  const calm=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  try{ window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: calm?"auto":"smooth" }); }catch(e){}
+  el.focus({ preventScroll:true });
+}
+// W22: hide the picks whose name and description don't match. One you hold
+// (.selected) stays, so nothing you've taken disappears.
+function applyPickFilter(root, q){
+  const k=String(q||"").trim().toLowerCase(); let shown=0, total=0;
+  root.querySelectorAll("[data-filterable] .pick").forEach(p=>{
+    total++;
+    const text=`${(p.querySelector("h4")||{}).textContent||""} ${(p.querySelector(".desc")||{}).textContent||""}`.toLowerCase();
+    const hit=!k || p.classList.contains("selected") || text.includes(k);
+    p.hidden=!hit; if (hit) shown++;
+  });
+  return { shown, total, active: !!k };
+}
+
 // ── Vitals row — the one visual atom the creation rail and the sheet's
 // flyout drawer both render (vrow lives here so both can call it). ────────
 let lastVitals = {};

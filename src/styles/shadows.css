@@ -701,3 +701,17 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   .modal-inner{max-height:100vh; height:100%}
   .modal-head{padding:14px 16px 4px} .modal-body{padding:0 16px 16px} .modal-foot{padding:10px 16px} }
 @media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} .toast{animation:none} .modal{animation:none} }
+/* W5/W22: the jump bar. On step 7 it sticks under the header, which can wrap
+   to more than one line, so its height is measured (--hdr-live, set in boot). */
+.jumpbar{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px}
+.jumpbar.sticky{position:sticky; top:var(--hdr-live, var(--header-h)); z-index:20; background:var(--ground);
+  padding:8px 0; border-bottom:1px solid var(--frame)}
+.jumpbar input[type=search]{flex:1 1 220px; min-width:0; width:auto}
+.jump{background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit;
+  font-size:.74rem; padding:4px 11px; cursor:pointer}
+.jump:hover, .jump:focus-visible{border-color:var(--violet-hi)}
+.jump-count{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
+.jump-cp{margin-left:auto; font-family:var(--mono); font-size:.76rem; color:var(--gold); white-space:nowrap}
+.jump-cp.over{color:var(--magenta)}
+.sect[tabindex]:focus{outline:none}
+.pick[hidden]{display:none}

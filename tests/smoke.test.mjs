@@ -1032,3 +1032,36 @@ test("W1/W10: Trackers reads in two columns, and the Health Levels sit in Damage
   assert.ok(here && here.classList.contains(`pl-${Engine.painState(activeChar(app)).fromHealth}`), "the band you're in isn't the lit one");
   assert.deepEqual(app.errors, []);
 });
+
+test("W5: Loadout jumps to each section it drew, archetype panels included, and focus lands on the heading", () => {
+  const app = openSheet(lockedCharacter(), "loadout");
+  const jumps = app.$$("#main .jumpbar [data-jump]");
+  const heads = app.$$("#main .sect[id]");
+  assert.deepEqual(jumps.map(b => b.textContent), heads.map(h => h.textContent), "the bar and the page's sections disagree");
+  const want = D.archetypes.find(a => a.id === "arcanist").coreMechanic.panels
+    .filter(p => p.type !== "tracker" && p.type !== "reference").map(p => p.title);
+  for (const t of want) assert.ok(jumps.some(b => b.textContent === t), `the archetype's ${t} panel has no jump`);
+  const last = jumps[jumps.length - 1];
+  app.click(`[data-jump="${last.dataset.jump}"]`);
+  assert.equal(app.window.document.activeElement, app.$(`#${last.dataset.jump}`), "focus didn't land on the section");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W22: step 7's sticky bar filters the picks, keeps what you hold, and survives a re-render", () => {
+  const app = arcanistOnCP(ch => { ch.advantages.push({ id: "danger-sense", rank: 1, notes: "" }); });
+  const bar = app.$("#main .jumpbar.sticky");
+  assert.ok(bar, "step 7 has no sticky jump bar");
+  const labels = app.$$("#main .jumpbar [data-jump]").map(b => b.textContent);
+  for (const l of ["Disadvantages", "Advantages", "Starting spells", "Boosts"]) assert.ok(labels.includes(l), `no jump to ${l}`);
+  assert.match(bar.textContent, /Remaining \d+ CP/, "the bar doesn't keep the CP left in view");
+  const filter = () => app.$("#main [data-jumpfilter]");
+  const shown = () => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h4").textContent);
+  const all = app.$$("#main [data-filterable] .pick").length;
+  filter().value = "berserk"; filter().dispatchEvent(new app.window.Event("input"));
+  assert.deepEqual(shown(), ["Berserker", "Danger Sense"], "the filter didn't narrow to the match plus what's held");
+  assert.equal(app.$("#main [data-jumpcount]").textContent, `2 of ${all}`);
+  app.click('[data-step="luck|x|1"]');                                 // a stepper re-renders the step
+  assert.equal(filter().value, "berserk", "a re-render dropped the filter");
+  assert.deepEqual(shown(), ["Berserker", "Danger Sense"], "a re-render dropped the filtering");
+  assert.deepEqual(app.errors, []);
+});
