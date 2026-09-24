@@ -27,15 +27,15 @@ Character schema **0.11** · game data **0.17**. A character file from 0.23 open
 was, and gets its intake number the first time it's opened.
 
 - **Every character has a NYTE City intake number.** It sits under your name on the
-  sheet and on the printed sheet, with its barcode, so two characters called Vex are
-  never mixed up. A character keeps its number for good, in every file you export.
+  sheet, on the printed sheet and on the last step before you lock, with its barcode,
+  so two characters called Vex are never mixed up. A character keeps its number for
+  good, in every file you export.
 - **Nothing replaces your saved character without asking.** This browser keeps one sheet
   and one draft. Importing a file, starting a new character, or locking one now asks
   first if that would replace a different character, or a newer copy of the same one,
   and offers to export the saved one before it goes.
 - **Main names your specialization.** The line under your name reads, for example,
   *Werewolf · Trueborn · Heroic*.
-
 - **Hardcore Parkour can be taken.** One of its prerequisites named an Advantage that's
   no longer in the game, so the Milestone stayed locked for everyone. It now asks for one
   Major Milestone, Acrobatics at rank 4 or better, and Danger Sense.
