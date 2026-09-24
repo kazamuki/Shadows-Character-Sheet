@@ -110,6 +110,7 @@ function bindMain(){
     window.scrollTo(0,0); update();
   });
   main.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{ S={screen:"home",ch:null,step:0,maxReached:0}; renderHome(); });
+  main.querySelectorAll("[data-importdismiss]").forEach(b=>b.onclick=()=>{ S.importIssues=[]; update(); });
   // selections
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ ch.creation.powerLevel=b.dataset.pl; update(); });
   main.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
@@ -878,8 +879,12 @@ function bindSheet(){
     commit("admin", `Admin: add skill ${nm} @1`, ()=>{ if(!ch.skills[id]) ch.skills[id]={rank:1,ipe:0}; });
   });
   main.querySelectorAll("[data-admin-adv]").forEach(b=>b.onclick=()=>{
-    const [id,notes,op]=b.dataset.adminAdv.split("|"), nm=(Engine.advById(id)||{name:id}).name;
-    const find=()=>ch.advantages.find(a=>a.id===id && (a.notes||"")===(notes||""));
+    // The row's position when the page drew it; commit() re-renders after
+    // every change, so it can't go stale under the click (B16).
+    const [at,op]=b.dataset.adminAdv.split("|"), row=ch.advantages[Number(at)];
+    if (!row) return;
+    const nm=(Engine.advById(row.id)||{name:row.id}).name;
+    const find=()=>ch.advantages.includes(row) ? row : null;
     if (op==="x"){ commit("admin", `Admin: remove advantage ${nm}`, ()=>{ ch.advantages=ch.advantages.filter(a=>a!==find()); }); return; }
     const delta=Number(op);
     commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{
@@ -893,8 +898,10 @@ function bindSheet(){
     commit("admin", `Admin: add advantage ${nm}`, ()=>{ if(!ch.advantages.some(a=>a.id===id&&a.notes!=="natural")) ch.advantages.push({id, rank:1, notes:""}); });
   });
   main.querySelectorAll("[data-admin-dis]").forEach(b=>b.onclick=()=>{
-    const [id,op]=b.dataset.adminDis.split("|"), nm=(Engine.disById(id)||{name:id}).name;
-    const find=()=>ch.disadvantages.find(d=>d.id===id);
+    const [at,op]=b.dataset.adminDis.split("|"), row=ch.disadvantages[Number(at)];
+    if (!row) return;
+    const nm=(Engine.disById(row.id)||{name:row.id}).name;
+    const find=()=>ch.disadvantages.includes(row) ? row : null;
     if (op==="x"){ commit("admin", `Admin: remove disadvantage ${nm}`, ()=>{ ch.disadvantages=ch.disadvantages.filter(d=>d!==find()); }); return; }
     const delta=Number(op);
     commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{

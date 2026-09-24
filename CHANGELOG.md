@@ -29,6 +29,17 @@ Game data **0.17**.
   no longer in the game, so the Milestone stayed locked for everyone. Time Sense and
   Danger Sense are still checked; the missing Advantage is now your GM's call, and the
   Milestone says so until it's settled.
+- **A Trueborn sees their Lunar Phase Blessing.** The Werewolf's starting power, and what
+  each phase of the moon grants, is on the Archetype tab and on the Trueborn's card when
+  you make one. The powers that come later are listed too, marked as not written yet.
+- **Mastering a spell no longer looks like tampering.** An Arcanist who had mastered a
+  spell was told their file might have been edited by hand. It wasn't, and the app no
+  longer says so.
+- **What the app finds when it opens a file stays until you dismiss it.** If a character
+  holds something the game no longer has, the note sits at the top of every page, in the
+  wizard too, instead of vanishing on your next click.
+- **Character files are safer to share.** A file made to cause trouble can no longer put
+  anything on your screen but text, whether you open it, edit it in Admin mode, or undo.
 
 ## v0.23.0 — 2026-09-24
 

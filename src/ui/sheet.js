@@ -15,11 +15,7 @@ function painPenaltyLine(pain, long){
 
 // ════ PHASE 3 — LIVE SHEET ════════════════════════════════════════════
 function sheetHeader(title, note){
-  let h = "";
-  if (S.importIssues && S.importIssues.length){
-    h += issuesHtml(S.importIssues.map(m=>({level:"warn",msg:m})));
-    S.importIssues = []; // surface once; versionCheck reruns on next import
-  }
+  let h = importIssuesHtml();
   h += `<div class="eyebrow">Live Sheet</div><h1 class="step-title">${esc(title)}</h1>`;
   if (note) h += `<p class="step-note">${note}</p>`;
   return h;
@@ -456,7 +452,7 @@ function renderShArchetype(){
     h += `<div class="sect">${esc(a.specialization.label||"Specialization")}${chosen.length?"":" <span class='chip'>none chosen</span>"}</div>`;
     h += chosen.map(o=>`<div class="pick selected"><div class="head"><h4>${esc(o.name)}</h4>
       ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-      <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div></div>`).join("");
+      <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div>${optionPowersHtml(o)}</div>`).join("");
   }
 
   // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
@@ -1730,15 +1726,17 @@ function renderShAdmin(){
   // Advantages
   h += `<div class="sect">Advantages</div><div class="alloc">`;
   if (!ch.advantages.length) h += `<p class="step-note">None.</p>`;
-  for (const a of ch.advantages){
+  // Rows are addressed by position, never by id or notes: both come from the
+  // character file, and notes is free text (B16, A11).
+  ch.advantages.forEach((a, i)=>{
     const def=Engine.advById(a.id)||{name:a.id};
     h += `<div class="alloc-row"><div class="name">${esc(def.name)}${a.notes==="natural"?' <span class="chip">natural</span>':""} <small>rank ${a.rank}</small></div>
       <div class="admin-steppers">
-        <button class="btn sm" data-admin-adv="${a.id}|${esc(a.notes||"")}|-1">−</button>
-        <button class="btn sm" data-admin-adv="${a.id}|${esc(a.notes||"")}|1">+</button>
-        <button class="btn sm danger" data-admin-adv="${a.id}|${esc(a.notes||"")}|x">remove</button>
+        <button class="btn sm" data-admin-adv="${i}|-1">−</button>
+        <button class="btn sm" data-admin-adv="${i}|1">+</button>
+        <button class="btn sm danger" data-admin-adv="${i}|x">remove</button>
       </div><span class="mod"></span></div>`;
-  }
+  });
   h += `</div>`;
   const addAdv=D.advantages.filter(d=>!ch.advantages.some(a=>a.id===d.id && a.notes!=="natural"));
   if (addAdv.length) h += `<div class="trk"><h4>Add advantage</h4>
@@ -1748,14 +1746,14 @@ function renderShAdmin(){
   // Disadvantages
   h += `<div class="sect">Disadvantages</div><div class="alloc">`;
   if (!ch.disadvantages.length) h += `<p class="step-note">None.</p>`;
-  for (const d of ch.disadvantages){
+  ch.disadvantages.forEach((d, i)=>{
     const def=Engine.disById(d.id)||{name:d.id};
     h += `<div class="alloc-row"><div class="name">${esc(def.name)} <small>rank ${d.rank}</small></div>
       <div class="admin-steppers">
-        <button class="btn sm" data-admin-dis="${d.id}|-1">−</button><button class="btn sm" data-admin-dis="${d.id}|1">+</button>
-        <button class="btn sm danger" data-admin-dis="${d.id}|x">remove</button>
+        <button class="btn sm" data-admin-dis="${i}|-1">−</button><button class="btn sm" data-admin-dis="${i}|1">+</button>
+        <button class="btn sm danger" data-admin-dis="${i}|x">remove</button>
       </div><span class="mod"></span></div>`;
-  }
+  });
   h += `</div>`;
   const addDis=D.disadvantages.filter(x=>!ch.disadvantages.some(d=>d.id===x.id));
   if (addDis.length) h += `<div class="trk"><h4>Add disadvantage</h4>

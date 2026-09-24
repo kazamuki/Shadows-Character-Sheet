@@ -241,7 +241,12 @@ window.SHADOWS_DATA = {
         // that silence IS the declaration (Decision 79).
         countBy: "campaignPowerScaling.aberrations",
         options: [
-          { id: "...", name: "...", description: "...", grants: [] }
+          { id: "...", name: "...", description: "...", grants: [],
+            // (Decision 126) rendered on the Archetype tab and the wizard card.
+            // A power's array of plain objects (e.g. `phases`) shows as a
+            // table; a power with no description reads "not written yet".
+            starterPower: { name: "...", description: "...", phases: [ { phase, boon, effect } ] },
+            additionalPowers: [ { name: "...", description: "..." } ] }
         ]
       },
 
@@ -1288,6 +1293,7 @@ No cascade logic to maintain — it falls out of the architecture.
     updater script carrying the identical bug* — a guard validating its own
     blind spot. All five checks were mutation-tested afterwards.
     (Ken, 2026-09-02)
+    → **Superseded in part by Decision 127** — STATE states only the todo count; the pass total and its check are gone.
 
 75. **(Versioning)** **Four versions, four triggers — and `schemaVersion` stopped
     meaning two things.** The project had three version numbers and no way for
@@ -2997,6 +3003,42 @@ No cascade logic to maintain — it falls out of the architecture.
     40's footer gains a link, and the script-order decision holds. Four
     smoke tests and the docs guard, each mutation-tested. Ships in app
     **0.23.0**. (Ken + Claude, 2026-09-24)
+
+124. **A character file is untrusted input: every stored number is a number, and undo only writes to the character.**
+     *2026-09-24 · Ken + Claude · Touches: migrate, undo, audit trail, Admin mode, import, escaping, hostile file*
+     - **Decided:** `migrate()` reads every numeric input as a finite number (a plain numeric string as its number, anything else as the field's default; `null` kept where a field allows it) and drops any audit entry whose patch path leaves the character. `undoLastAction` skips such a path and re-applies the same number rule to what it restores. Admin mode addresses a row by its position, not by its id or notes. `tests/hostile.test.mjs` renders a character with a payload in every string, id and number across every tab, Admin, print, the wizard and 60 pickers.
+     - **Why:** files are made to be shared. A string stored where a count lives rode the engine's `+` as text and reached every tab as markup without a throw. A crafted undo entry could write onto `Object.prototype`. Admin put two raw ids into attributes (B16, the 2026-09-24 audit).
+     - **Rejected:** escaping every number in every template, because hundreds of sites would each need remembering, while one gate at `migrate()` covers them by construction. Refusing a file with a bad field, because a player's own damaged file should still open.
+     - **Replaces:** nothing. It extends Decisions 62 and 63: `migrate()`'s output is now typed, not only complete.
+     - **Revisit if:** a stored field legitimately holds a number or text (add it to the rule by name, don't loosen the rule).
+     - **Built:** app 0.23.1; the audit plan's S1; `log/2026.md` 2026-09-24.
+
+125. **What the load check finds stays on the page until dismissed; a bare game-data difference shows once.**
+     *2026-09-24 · Ken + Claude · Touches: versionCheck, import, resume, load warnings, C4*
+     - **Decided:** content the game data no longer has, or a journal that disagrees with the totals, shows above every sheet page and wizard step until the player clicks Dismiss. A difference in game-data version alone shows once, as before.
+     - **Why:** the one notice that a file references missing content vanished on the next click, and an imported draft's never showed (C4).
+     - **Rejected:** keeping the version line too, because a file keeps its old stamp until it's next exported, so every returning player would carry it on every page after each data release.
+     - **Replaces:** nothing.
+     - **Revisit if:** the version stamp is refreshed on load, making the version line rare.
+     - **Built:** app 0.23.1; `smoke.test.mjs` C4.
+
+126. **An option's powers render from the data, and a power with no text says it isn't written yet.**
+     *2026-09-24 · Ken + Claude · Touches: specialization options, starterPower, additionalPowers, Trueborn, Werewolf, B17*
+     - **Decided:** a specialization option's `starterPower` and `additionalPowers` show on the Archetype tab and in the wizard's option card. A power is `{ name, description?, … }`; any array of plain objects on it (the Lunar Phase Blessing's `phases`) renders as a table; a power with no `description` carries `appCopy.statusLabel.tbd`. `additionalPowers` became objects (it held strings ending "(TBD)").
+     - **Why:** the Trueborn's starting power was in the data and nowhere on screen (B17).
+     - **Rejected:** a Trueborn-shaped renderer (phase, boon, effect), because the next archetype's power would need an app change.
+     - **Replaces:** nothing. Game data stays 0.17: display only, no computed value (Decision 68).
+     - **Revisit if:** powers gain mechanical fields the engine should read.
+     - **Built:** app 0.23.1; `smoke.test.mjs` B17.
+
+127. **STATE states the todo count, not the pass count or the live version.**
+     *2026-09-24 · Ken · Touches: STATE suite line, Live line, docs.test.mjs, volatile facts, AQ2*
+     - **Decided:** STATE's suite line says `npm run verify` passes and how many `todo` tests exist, and `docs.test.mjs` checks only that count. A pass count is refused. The "Live:" version is gone: the latest `v*` tag and the page footer say it.
+     - **Why:** CI reports the total, and restating it cost every change a STATE edit (audit A6). A `todo` is a known defect, which a cold session must see.
+     - **Rejected:** keeping the total with a script that rewrites it, because it's still a fact nobody reads.
+     - **Replaces:** Decision 74 in part, its check of STATE's suite line against the real total.
+     - **Revisit if:** a pass count ever needs to be quoted outside CI.
+     - **Built:** docs only; this session's commit.
 
 ## 5. Open Flags
 

@@ -192,6 +192,11 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .pick .cost{font-family:var(--mono); font-size:.72rem; color:var(--gold)}
 .pick .cost.grant{color:var(--green)}
 .pick .desc{font-size:.8rem; color:var(--dim); margin-top:5px; white-space:pre-line}
+.pick .powers{margin-top:8px; font-size:.8rem}
+.pick .power{margin-top:8px}
+.pick .power h5{margin:0 0 3px; font-size:.82rem; color:var(--text)}
+.pick .power p{margin:0 0 5px; color:var(--dim)}
+.pick .power table.ref{margin-top:4px}
 .pick .controls{margin-left:auto; display:flex; align-items:center; gap:8px}
 .pick .toggle{background:var(--panel-2); border:1px solid var(--frame); border-radius:4px;
   color:var(--text); padding:4px 12px; font-size:.76rem}
@@ -232,6 +237,8 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .issues{margin-top:14px; font-size:.82rem}
 .issues li{color:var(--magenta); margin-left:18px; margin-bottom:3px}
 .issues li.warn{color:var(--gold)}
+.import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
+.import-issues .issues{margin-top:0}
 
 /* ── Vitals rail (signature) ────────────────────────────────────────── */
 aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:rgba(17,30,61,.45);

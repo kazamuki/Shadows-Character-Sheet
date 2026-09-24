@@ -295,6 +295,8 @@ Any Arcanist who masters a spell sees this warning each time they resume or impo
 
 **Direction.** Check spell targets against the Grimoire row's `stage`, or skip non-stat, non-skill targets. Pin it with a test.
 
+**Closed 2026-09-24** (app 0.23.1, plan S1): a spell spend is matched to its Grimoire row being Mastered. Pinned in `engine.test.mjs` and mutation-tested.
+
 ### B12: The Mercenary never picks its fifth Focused Skill
 **Med · [run]**
 
@@ -335,6 +337,8 @@ An advantage id like `"><img src=x onerror=…>` breaks out of the attribute and
 
 **Direction.** Escape both ids. Then add the hostile-file render to the suite (R9). A test that renders every tab, Admin, print and each modal with payloads everywhere would have caught this, and it catches the next one.
 
+**Closed 2026-09-24, and it was wider than this entry says** (Decision 124, app 0.23.1, plan S1). The probe above only put payloads in text fields. With payloads in numeric fields too, a string stored where a count lives (a stat's base, the LUCK bonus, Çredits, a ledger amount, a boost's times) was joined as text by the engine's `+` and reached **every tab** as markup, with no error. A crafted undo entry could write onto `Object.prototype` and put a string back into a number. Fixed at the one gate every load passes: `migrate()` makes every stored number a number and drops audit entries whose path leaves the character, and undo skips such paths and re-coerces what it restores. Admin addresses rows by position, not by id and notes (which also retires A11's worst symptom). The new `tests/hostile.test.mjs` found one more, the Review step's raw boost target, now escaped. Each fix was reverted in turn, and each reversion failed the test.
+
 ### B17: The Trueborn's Lunar Phase Blessing never appears anywhere
 **Med · [run] (headless Chromium)**
 
@@ -342,12 +346,16 @@ The Werewolf's only built Origin, Trueborn, carries a `starterPower`, the **Luna
 
 **Direction.** Render `starterPower` (and `powers`) generically on the Archetype tab and in the wizard's option card. That's display only: no rules decision and no schema change.
 
+**Closed 2026-09-24** (Decision 126, app 0.23.1): on the Archetype tab and the wizard card, the phases as a table, and the four powers still to come marked *not written yet*. `additionalPowers` became objects; it held strings ending "(TBD)".
+
 ### B18: Import and New Character replace the browser's saved sheet without asking
 **High · [run] (headless Chromium)**
 
 The browser holds one live sheet and one draft (§2.1). Importing a file puts it straight into the active slot. **New character** puts a blank into the draft slot. Neither asks. Verified: with Vex Morrow as the saved sheet, importing another player's file then reloading offers only "Open sheet — Other Player". Vex's play since the last export is gone, and no dialog appeared. Lock auto-exports, but play afterwards never does. A GM who opens a player's file on their own device, or a player who imports a friend's, loses their own session's changes.
 
 **Direction.** Now: if the slot holds a different character, confirm first and offer to export it. Later, a small roster keyed by character, so the browser can hold several (**AQ5**, R10).
+
+**Update 2026-09-24:** there's a third door. **Lock** also replaces the live sheet, so making a second character discards the first one's play since its last export. The fix, a permanent `meta.id` plus a confirm with *Export first*, changes the save file, so it's proposed in the plan's S1 and waits on Ken.
 
 ### B19: On a phone the sticky header covers 30% of the screen
 **Med · [run] (headless Chromium, 390 × 844)**
