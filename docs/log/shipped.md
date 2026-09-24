@@ -42,3 +42,4 @@ by batch number (Ken, 2026-09-12).
 | — | Magic on the sheet, Session 2 | #41 | Aberrations on the character (Record it, Drained, Phantom Pain), Spell Attack, the Magic reference panel; Unique Aberrations synced to 041 · Decision 110 |
 | — | Magic on the sheet, Session 3 | #43 | Starting spells on the Character Points step; the spell picker becomes a modal (`openModal`), shared with the sheet; the magic plan closed · Decision 111 |
 | — | Martial Arts grid fix + wishlist pass | #45 | The style picker spans the Skills grid, with a mutation-tested guard (W19); W19–W26 added, W26 decided as a Done button |
+| — | Wishlist pass + F11 (app 0.20.0, data 0.15) | #47 | Take a hit in a modal, the picker's row click/dimmed rows/sticky search/Done, skill stat icons, Trackers in two columns with Pain-banded HL, jump bars on Loadout and step 7; Quick Study's Intuition skill prerequisite; STATE trimmed · W1, W5, W6, W10, W20–W26 · Decisions 112–114, F11 |
