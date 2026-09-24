@@ -16,7 +16,7 @@
  * That rule still matches during print — only this stylesheet's own rules
  * are print-only — so it must be un-hidden here, and the rest of the app
  * chrome hidden, or window.print() just prints whatever screen was up. */
-#app, #vscrim, #vdrawer, #footer, #undotoast{ display:none }
+#app, #vscrim, #vdrawer, #footer, #undotoast, #modal{ display:none }
 
 #printSheet{
   display:block;

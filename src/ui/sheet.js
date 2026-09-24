@@ -258,9 +258,8 @@ function skillRowPair(ch, l, {withRank=true}={}){
   const focused = Engine.focusedSkillIds(ch);
   const b=l.breakdown;
   const parts = l.trained
-    ? [`rank ${b.rank}`, `${b.primary.id||"?"} ${b.primary.value}`,
-       `${b.synergy.mod>=0?"+":"−"}${Math.abs(b.synergy.mod)} ${b.synergy.id||"?"} syn`]
-    : [`${b.primary.id} ${b.primary.value}`, `<span style="color:var(--dim)">untrained</span>`];
+    ? [`rank ${b.rank}`, skillStatsHtml(l)]
+    : [skillStatsHtml(l), `<span style="color:var(--dim)">untrained</span>`];
   if (b.pain) parts.push(`<span style="color:var(--magenta)">${b.pain} pain</span>`);
   if (b.conditions) parts.push(`<span style="color:var(--magenta)">${b.conditions} conditions</span>`);
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
@@ -627,18 +626,41 @@ function hitLabel(r){
   return `Hit: ${r.damage} ${r.type.name}${kind} → ` +
     (r.bypassesArmor ? `${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} removed` : `${r.through} through`);
 }
-function hitPanelHtml(ch){
-  const st=S.hit, as=Engine.armorState(ch), r=Engine.resolveHit(ch, hitInput(st));
+// What still stands between the form and Apply, in words. The footer shows
+// it next to the disabled button (W6), so the reason is never a guess.
+function hitPending(st, r){
+  if (!r.ok) return r.why;
+  if (r.prompts.shock && !st.shock) return "Mark the Shock Check as passed or failed first.";
+  if (r.prompts.atZero && !st.atZero) return "Mark the check at zero as passed or failed first.";
+  return "";
+}
+// W6: Take a hit is a modal (openModal). The body leads with where the
+// character stands, HP and the Health Level track, then the form and what the
+// hit would do; the footer holds Apply, which stays off until nothing's pending.
+function hitModalParts(ch){
+  const st=S.hit, r=Engine.resolveHit(ch, hitInput(st)), pain=Engine.painState(ch), hp=Engine.health(ch);
+  const pending=hitPending(st, r);
+  const body=`<div class="hit-now"><span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
+      <span class="sub">${esc(pain.label)}</span></div>${hlTrackHtml(ch)}` + hitPanelHtml(ch, r);
+  const foot=`${pending?`<span class="modal-note hitwhy">${esc(pending)}</span>`:""}
+    <button class="btn" data-hitcancel="1">Cancel</button>
+    <button class="btn primary" data-hitapply="1" ${pending?"disabled":""}>Apply hit</button>`;
+  return { body, foot };
+}
+function hitPanelHtml(ch, r){
+  const st=S.hit, as=Engine.armorState(ch);
   const opt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
   // How the chosen category resolves is data (Decision 99): one that
   // bypasses armor asks for Integrity instead of a PROT roll, and has no AP.
   const cat=Engine.damageCategoryById(st.category)||{}, bypass=!!cat.bypassesArmor;
   const locName=id=>((Engine.locationById(id)||{}).name||"").toLowerCase();
   const field=(label, inner)=>`<label class="field"><span>${label}</span>${inner}</label>`;
-  const num=(k, label, extra="")=>field(label, `<input type="number" min="0" data-hit="${k}" value="${esc(st[k])}" ${extra}>`);
+  // Text with a numeric keypad, not type=number: the modal redraws as you
+  // type, and only a text field can have its caret put back at the end.
+  const num=(k, label)=>field(label, `<input type="text" inputmode="numeric" pattern="[0-9]*" data-hit="${k}" value="${esc(st[k])}">`);
   const passFail=k=>`<select data-hit="${k}" aria-label="result">${opt("","Did you pass?",!st[k])}${opt("pass","Passed",st[k]==="pass")}${opt("fail","Failed",st[k]==="fail")}</select>`;
 
-  let h=`<div class="hitpanel" data-hitpanel><h4>Take a hit</h4>
+  let h=`<div data-hitpanel>
     <div class="hitrow">
       ${num("damage","Damage")}
       ${field("Type",`<select data-hit="damageType">${D.damageTypes.map(t=>opt(t.id,t.name,t.id===st.damageType)).join("")}</select>`)}
@@ -653,7 +675,7 @@ function hitPanelHtml(ch){
   if (as.worn){
     const w=as.worn;
     h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
-      ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll",`max="${w.protMax||""}"`) : ""}</div>`;
+      ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll") : ""}</div>`;
   } else {
     h+=`<div class="hitrow"><span class="hitnote">No body armor worn${skin?"":", so nothing answers the hit"}. Armor goes on under Loadout.</span></div>`;
   }
@@ -666,9 +688,7 @@ function hitPanelHtml(ch){
       `<label class="check"><input type="checkbox" data-hitnat="${esc(c.id)}" ${c.active?"checked":""}> ${esc(c.name)} (${
         c.amount?`+${c.amount}`:`answers ${esc(c.resAgainst.map(titleCase).join(", "))}`}, ${esc(c.while)})</label>`).join("")}</div>`;
 
-  if (!r.ok){
-    h+=`<p class="hitwhy">${esc(r.why)}</p>`;
-  } else {
+  if (r.ok){
     const lines=[];
     if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
     if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}.${skin?"":" Nothing answers the hit."}`);
@@ -704,9 +724,7 @@ function hitPanelHtml(ch){
             d.location?` (${esc(locName(r.location))})`:""}</label>`; }).join("") + `</div>`;
     }
   }
-  h+=`<div class="hitrow"><button class="btn primary" data-hitapply="1" ${r.ok?"":"disabled"}>Apply hit</button>
-    <button class="btn" data-hitcancel="1">Cancel</button></div></div>`;
-  return h;
+  return h + `</div>`;
 }
 
 // ── Recovery and the Turn Reset (combat plan Session 4, Decision 100) ──
@@ -837,39 +855,58 @@ function actPanelHtml(ch){
        : st.kind==="wear" ? wearPanelHtml(ch, st) : "";
 }
 
+// The Health Level track: in Trackers' Damage card, and atop the Take a hit
+// modal. W10: the boxes are grouped by the Pain Level each one puts you at,
+// the print sheet's bands (pPainBandFor), and the band you're standing in is
+// marked, so the track shows why you're at Pain 2 rather than a card saying so.
+function hlTrackHtml(ch){
+  const hpPer=Engine.health(ch).hpPer, cells=hlCells(ch), here=Engine.hlState(ch).lost;   // HL lost, Massive included
+  const bands=[];
+  cells.forEach((c,i)=>{ const lvl=pPainBandFor(i).level, last=bands[bands.length-1];
+    if (last && last.level===lvl) last.cells.push([c,i]); else bands.push({ level:lvl, cells:[[c,i]] }); });
+  return `<div class="hl-track">` + bands.map(b=>{
+    const at = b.level===pPainBandFor(here).level;
+    return `<div class="hl-band pl-${b.level}${at?" here":""}"><span class="hl-band-k">Pain ${b.level}</span><div class="hl-band-cells">` +
+      b.cells.map(([c])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
+      `</div></div>`; }).join("") + `</div>`;
+}
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
-  if (S.hit && S.hit.owner!==ch) S.hit=null;     // a different character was loaded
-  if (S.act && S.act.owner!==ch) S.act=null;
-  const open = !!(S.hit || S.act);
+  if (S.act && S.act.owner!==ch) S.act=null;     // a different character was loaded
+  // Take a hit is a modal (W6), so only a recovery panel holds the page.
+  const open = !!S.act;
   const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
+
+  // W1: two columns on a wide screen. The body (Damage with its Health
+  // Levels, recovery, Armor, Pain, Conditions) reads down the left; the rest
+  // (Sanity, LUCK, archetype trackers, Çredits) down the right. One column on
+  // a phone, in the same order.
+  h += `<div class="trk-grid"><div class="trk-col">`;
 
   // Damage. The headline is HP left, so the stepper says Heal and Hurt
   // rather than signs on the damage total it edits (W11).
   h += `<div class="trk"><h4>Damage</h4>
     <span class="big ${pain.down?"bad":"hp"}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
+    <div class="trk-row">
     <button class="btn sm" data-dmg="-5" ${ch.trackers.damage?"":"disabled"}>Heal 5</button>
     <button class="btn sm" data-dmg="-1" ${ch.trackers.damage?"":"disabled"}>Heal 1</button>
     <input type="number" min="0" data-dmgset value="${ch.trackers.damage}" aria-label="total damage taken" title="Total damage taken">
     <button class="btn sm" data-dmg="1">Hurt 1</button>
     <button class="btn sm" data-dmg="5">Hurt 5</button>
-    <button class="btn sm danger" data-dmgheal="1">Heal all</button>
+    <button class="btn sm danger" data-dmgheal="1">Heal all</button></div>
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
       hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
       withering?` ${withering} of the damage is Withering and won't regenerate.`:""}</span>
+    ${hlTrackHtml(ch)}
     <div class="trk-actions">
       <button class="btn sm primary" data-hitopen="1" ${open?"disabled":""}>Take a hit</button>
       <button class="btn sm" data-actopen="reset" ${open?"disabled":""}>Turn Reset</button>
       <button class="btn sm" data-actopen="rest" ${open?"disabled":""}>Rest</button>
       <button class="btn sm" data-actopen="focused" ${open?"disabled":""}>Focused Healing</button>
       <button class="btn sm" data-actopen="nanomed" ${open?"disabled":""}>Nanomed Kit</button></div></div>`;
-  h += `<div class="hl-track">` + hlCells(ch).map(c=>
-    `<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hp.hpPer}</span></div>`
-  ).join("") + `</div>`;
-  if (S.hit) h += hitPanelHtml(ch);
   if (S.act && S.act.kind!=="wear") h += actPanelHtml(ch);
 
   // Armor: the worn body piece's Integrity, and the after-fight wear roll.
@@ -888,6 +925,7 @@ function renderShTrackers(){
 
   // Conditions (Decision 95)
   h += `<div class="sect">Conditions</div>${conditionsHtml(ch, true)}`;
+  h += `</div><div class="trk-col">`;
 
   // SAN
   h += `<div class="trk"><h4>Sanity</h4>
@@ -941,6 +979,8 @@ function renderShTrackers(){
         <span class="amt ${e.amount<0?"spend":"grant"}">${e.amount>0?"+":""}${e.amount}</span>
         <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
   }
+
+  h += `</div></div>`;
 
   // Manual adjustments
   h += `<div class="sect">Manual Adjustments</div>
@@ -1257,7 +1297,9 @@ function armorRowsHtml(ch){
 // ── Grimoire (Decision 108) ──────────────────────────────────────────
 // Book spells read everything from `spells`; your own spells are the typed
 // columns. The picker shows a spell's numbers before you add it (W4's lesson),
-// and S.spellPick keeps its search across re-renders.
+// and S.spellPick keeps its search across re-renders. Since Decision 111 the
+// picker is a modal the sheet and the wizard share; only the button on each
+// result and the status line differ (spellPickMode).
 const tnth = l => `TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}`;
 function spellMatches(g){
   const q = (S.spellPick||{}).q || "", tier = (S.spellPick||{}).tier || "", dom = (S.spellPick||{}).domain || "";
@@ -1265,19 +1307,66 @@ function spellMatches(g){
   return (D.spells||[]).filter(s=>(!tier || s.tier===tier) && (!dom || s.domain===dom) &&
     (!k || [s.name, s.glyph, s.effect, (s.tags||[]).join(" ")].join(" ").toLowerCase().includes(k)));
 }
-function spellResultsHtml(g){
-  // A book spell you've already typed as your own links that row, not a copy.
-  const held = new Set(g.held||[]), list = spellMatches(g);
-  const yours = new Map(g.lines.filter(l=>l.custom && l.match).map(l=>[l.match.id, l.index]));
+// The two places the picker opens. `action` is each result's button, and,
+// when that button can't act, the reason, which the row shows as text (W24:
+// a tooltip never reaches a touch screen). `status` is the line under the
+// title that keeps the count and the cap in view.
+const spellPickMode = {
+  sheet: {
+    title: "Add from the book",
+    status: ch => { const p = Engine.grimoire(ch).pool;
+      return p ? `Your pool is ${p.rank}d10 (${esc(p.discipline)} ${p.rank}). You can learn any spell; one marked Beyond your pool needs an exploding 10.` : ""; },
+    action: (ch, s, g) => {
+      // A book spell you've already typed as your own links that row, not a copy.
+      const yours = g.lines.find(l=>l.custom && l.match && l.match.id===s.id);
+      if (yours) return { btn: `<button class="btn sm" data-spelllink="${yours.index}" title="You typed this one in yourself. Link that row to the book, keeping your notes">Link yours</button>` };
+      if ((g.held||[]).includes(s.id)) return { btn: `<button class="btn sm" data-spelladd="${esc(s.id)}" disabled>Known</button>`, why: "Already in your Grimoire." };
+      return { btn: `<button class="btn sm" data-spelladd="${esc(s.id)}">Add</button>` };
+    }
+  },
+  wizard: {
+    title: "Choose starting spells",
+    status: ch => { const st = Engine.startingSpells(ch); if (!st) return "";
+      return `Chosen <b>${st.have}</b>${st.count==null?"":` of <b>${st.count}</b>`} · TH up to ${st.cap} (${esc(st.discipline)} ${st.cap})`; },
+    action: (ch, s, g) => {
+      const mine = g.lines.find(l=>!l.custom && l.id===s.id);
+      if (mine) return { btn: `<button class="btn sm" data-startrm="${mine.index}" title="Take it back off your list">Remove</button>` };
+      const c = Engine.canAddStartingSpell(ch, s.id);
+      const label = c.ok ? "Choose" : c.needs ? `Needs ${esc(Engine.startingSpells(ch).discipline)} ${c.needs}` : "Choose";
+      return { btn: `<button class="btn sm" data-startadd="${esc(s.id)}" ${c.ok?"":"disabled"}>${label}</button>`, why: c.ok ? "" : c.why };
+    }
+  }
+};
+// W23: the whole row acts, so a row whose button can't is dimmed (`off`)
+// rather than just its button.
+function spellResultsHtml(ch, mode){
+  const g = Engine.grimoire(ch), M = spellPickMode[mode], list = spellMatches(g), pool = g.pool;
   const tierName = id => ((D.spellTiers||[]).find(t=>t.id===id)||{name:id}).name;
   const domName = id => ((D.domains||[]).find(d=>d.id===id)||{name:id}).name;
   if (!list.length) return `<p class="step-note">No spell in the book matches that.</p>`;
-  return `<table class="ref spell-results"><tbody>` + list.map(s=>`<tr>
-      <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(s.glyph||"")}</div></td>
-      <td class="num">${esc(tnth(s))}</td><td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
-      <td>${yours.has(s.id) ? `<button class="btn sm" data-spelllink="${yours.get(s.id)}" title="You typed this one in yourself. Link that row to the book, keeping your notes">Link yours</button>`
-        : `<button class="btn sm" data-spelladd="${esc(s.id)}" ${held.has(s.id)?"disabled":""}>${held.has(s.id)?"Known":"Add"}</button>`}</td></tr>`).join("") + `</tbody></table>`;
+  return `<table class="ref spell-results"><tbody>` + list.map(s=>{ const a = M.action(ch, s, g);
+    return `<tr class="${a.why?"off":"pickrow"}">
+      <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(s.glyph||"")}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
+      <td class="num">${esc(tnth(s))}${mode==="sheet" && pool && typeof s.th==="number" && s.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
+      <td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
+      <td>${a.btn}</td></tr>`; }).join("") + `</tbody></table>`;
 }
+// The modal's body: filters and the status line, which stay in view while the
+// results scroll (W25), then the results.
+function spellPickerHtml(ch, mode){
+  const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"" });
+  const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
+  return `<div class="spell-pick"><div class="pick-head"><div class="hitrow">
+      <input type="search" data-spellq value="${esc(st.q)}" placeholder="Search name, Glyph, effect" aria-label="Search the book">
+      <select data-spellf="tier" aria-label="Tier">${opt("","Every tier",!st.tier)}${(D.spellTiers||[]).map(t=>opt(t.id,t.name,st.tier===t.id)).join("")}</select>
+      <select data-spellf="domain" aria-label="Domain">${opt("","Every Domain",!st.domain)}${(D.domains||[]).map(d=>opt(d.id,d.name,st.domain===d.id)).join("")}</select>
+    </div><p class="pick-status" data-spellstatus aria-live="polite">${spellPickMode[mode].status(ch)}</p></div>
+    <div data-spellresults>${spellResultsHtml(ch, mode)}</div></div>`;
+}
+// W26 (Ken's pick: a Done button, not staged picks). Every pick is saved as
+// it's made, so the footer says so and closes.
+const pickerFootHtml = () =>
+  `<span class="modal-note">Each pick is kept as you make it.</span><button class="btn primary" data-modalclose>Done</button>`;
 function grimoireHtml(ch, p){
   const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
   const book = g.lines.filter(l=>!l.custom), own = g.lines.filter(l=>l.custom);
@@ -1292,7 +1381,7 @@ function grimoireHtml(ch, p){
     return `<details class="spell${l.mastered?" mastered":""}"><summary>
         <b>${esc(l.name)}</b>${l.mastered?` <span class="chip">Mastered</span>`:""}
         <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(l.glyph||"")}</span>
-        <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>
+        <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>${l.beyondPool?`<span class="beyond" title="${esc(g.pool.text)}">Beyond your pool</span>`:""}
         <span class="eff">${esc(l.effect||"")}</span></summary>
       <div class="spell-body">
         ${l.flavorLine?`<p class="flavor">${esc(l.flavorLine)}</p>`:""}
@@ -1306,15 +1395,8 @@ function grimoireHtml(ch, p){
           <button class="btn sm danger" data-spellrm="${l.index}">Remove</button></div></div></details>`;
   }).join("") : `<p class="step-note">No spells from the book yet.</p>`;
 
-  // Add from the book
-  const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"", open:false });
-  const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
-  h += `<details class="cond-add spell-pick" data-spellpick ${st.open?"open":""}><summary>Add from the book</summary>
-    <div class="hitrow">
-      <input type="search" data-spellq value="${esc(st.q)}" placeholder="Search name, Glyph, effect" aria-label="Search the book">
-      <select data-spellf="tier" aria-label="Tier">${opt("","Every tier",!st.tier)}${(D.spellTiers||[]).map(t=>opt(t.id,t.name,st.tier===t.id)).join("")}</select>
-      <select data-spellf="domain" aria-label="Domain">${opt("","Every Domain",!st.domain)}${(D.domains||[]).map(d=>opt(d.id,d.name,st.domain===d.id)).join("")}</select>
-    </div><div data-spellresults>${st.open?spellResultsHtml(g):""}</div></details>`;
+  // Add from the book (a modal since Decision 111)
+  h += `<button class="btn sm" data-spellpickopen="sheet">+ Add from the book</button>`;
 
   // Your own
   h += `<div class="subsect">Your own spells</div>`;
@@ -1333,16 +1415,19 @@ function grimoireHtml(ch, p){
 // ── Sheet: loadout & powers ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch, a=Engine.archetype(ch);
-  let h = sheetHeader("Loadout & Powers", "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't.");
-  h += `<div class="sect">Weapons</div>` + weaponRowsHtml(ch);
-  h += `<div class="sect">Armor</div>` + armorRowsHtml(ch);
-  h += `<div class="sect">Gear</div>` + editTable(ch.gear, GEAR_COLS, "gear", "Add gear");
+  const head = sheetHeader("Loadout & Powers", "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't.");
+  // W5: a jump to each section, from the sections this page drew. Anchors
+  // and scroll rather than sub-tabs, so print and Ctrl-F see the whole page.
+  const secs = sectionList("lo");
+  let h = secs.sect("Weapons") + weaponRowsHtml(ch);
+  h += secs.sect("Armor") + armorRowsHtml(ch);
+  h += secs.sect("Gear") + editTable(ch.gear, GEAR_COLS, "gear", "Add gear");
 
   // Archetype panels: rankedList / table / list / text / toggle
   for (const p of Engine.archPanels(ch)){
     if (p.type==="tracker") continue; // lives in Trackers
     if (p.type==="reference") continue; // lives on the Archetype tab
-    h += `<div class="sect">${esc(p.title)}</div>`;
+    h += secs.sect(p.title);
     if (p.type==="rankedList"){
       const ranks = Engine.disciplineRanks(ch);
       if (ranks.length){
@@ -1371,7 +1456,7 @@ function renderShLoadout(){
         <p class="step-note">${esc(copy("applyFromText"))}</p>`;
     }
   }
-  return h;
+  return head + jumpBarHtml(secs.list) + h;
 }
 
 // ── Sheet: notes ─────────────────────────────────────────────────────

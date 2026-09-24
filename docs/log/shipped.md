@@ -38,4 +38,8 @@ by batch number (Ken, 2026-09-12).
 | — | Combat cleanup (TOL, Natural Armor, Nanomed) | #34 | TOL = INT/BOD/COOL; `naturalArmor()` in the hit resolver and print Nat; Nanomed Kit per 054; `migrate()` drops junk held entries · Decisions 103–105, F25 |
 | — | Magic tables + wishlist pass | #36 | Cascade and Aberration tables, the Arcanist's TOL Spent tracker, the combat plan closed · W7, W11, W12, W14, W18 · Decision 106 |
 | — | Magic on the sheet, Session 1 | #38 | Plan doc (M1–M10, MQ1–MQ3); the Grimoire reads the 96-spell book, Mastery by IP, Spell Power, Link to the book; schema 0.9 · Decision 108 |
-| — | Magic on the sheet, Session 2 | #41 | Aberrations on the character (Record it, one per id, Drained −2 max TOL with current kept, Phantom Pain PL 1), Spell Attack, the `reference` panel and the Magic reference, Unique Aberrations synced to 041; game data 0.13 · Decision 110 |
+| — | Deighton's magic rulings (docs) | #40 | MQ1–MQ3 and Spell Attack answered; Drained's last two answers · Decision 109 |
+| — | Magic on the sheet, Session 2 | #41 | Aberrations on the character (Record it, Drained, Phantom Pain), Spell Attack, the Magic reference panel; Unique Aberrations synced to 041 · Decision 110 |
+| — | Magic on the sheet, Session 3 | #43 | Starting spells on the Character Points step; the spell picker becomes a modal (`openModal`), shared with the sheet; the magic plan closed · Decision 111 |
+| — | Martial Arts grid fix + wishlist pass | #45 | The style picker spans the Skills grid, with a mutation-tested guard (W19); W19–W26 added, W26 decided as a Done button |
+| — | Wishlist pass + F11 (app 0.20.0, data 0.15) | #47 | Take a hit in a modal, the picker's row click/dimmed rows/sticky search/Done, skill stat icons, Trackers in two columns with Pain-banded HL, jump bars on Loadout and step 7; Quick Study's Intuition skill prerequisite; STATE trimmed · W1, W5, W6, W10, W20–W26 · Decisions 112–114, F11 |
