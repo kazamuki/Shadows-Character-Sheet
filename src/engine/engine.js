@@ -744,7 +744,9 @@ const Engine = (() => {
   const weaponDefById = byId("weapons");
   const listOf = (ch, kind) => Array.isArray(ch && ch[kind]) ? ch[kind] : [];
   const priceOf = def => (typeof def.cost==="number" && def.cost>0) ? def.cost : null;
-  const loadoutDef = (kind, id) => kind==="armor" ? armorDefById(id) : kind==="weapons" ? weaponDefById(id) : null;
+  const equipmentById = byId("equipment");
+  const loadoutDef = (kind, id) => kind==="armor" ? armorDefById(id) : kind==="weapons" ? weaponDefById(id)
+                                 : kind==="gear" ? equipmentById(id) : null;
   function checkRoll(die, roll, what){
     const max = dieMax(die), n = Math.floor(Number(roll));
     if (roll==null || roll==="" || !(n>=1)) return { ok:false, why:`Enter the ${what} you rolled.` };
@@ -892,7 +894,7 @@ const Engine = (() => {
   function catalogLine(ch, kind, id){
     const def = loadoutDef(kind, id);
     if (!def || !ch || typeof ch!=="object") return null;
-    const line = kind==="armor" ? armorPiece({ id }, null) : weaponDefLine(ch, def);
+    const line = kind==="armor" ? armorPiece({ id }, null) : kind==="gear" ? gearDefLine(def) : weaponDefLine(ch, def);
     const price = priceOf(def), have = Number(ch && ch.trackers && ch.trackers.credits && ch.trackers.credits.current)||0;
     const buy = price==null ? { ok:false, why:"No street price. Add it, then log what it cost under Çredits." }
               : price>have ? { ok:false, why:`Costs ${price.toLocaleString("en-US")}Ç. You have ${have.toLocaleString("en-US")}Ç.` }
@@ -913,6 +915,11 @@ const Engine = (() => {
       const have = Number(ch.trackers.credits.current)||0;
       if (price>have) return { ok:false, why:`${def.name} costs ${price}Ç. You have ${have}Ç.` };
     }
+    if (kind==="gear"){
+      const r = addGearEntry(ch, def);
+      if (buy) addCredits(ch, -price, `Bought ${def.name}`);
+      return Object.assign(r, { name:def.name, paid: buy ? price : 0 });
+    }
     const list = ch[kind];
     if (kind==="armor"){
       const e = { id, integrityLoss:0, notes:"", worn:false, scrapped:false, upgrades:[] };
@@ -924,6 +931,80 @@ const Engine = (() => {
     if (buy) addCredits(ch, -price, `Bought ${def.name}`);
     return { ok:true, index:list.length-1, name:def.name, paid: buy ? price : 0 };
   }
+  // ── Equipment (W17 + W27, Decision 121) ──
+  // A gear row is a catalog reference ({ id, qty, notes }, plus chargesUsed
+  // for a charged Talisman) or the player's own typed row (custom:true), the
+  // same split weapons have. A stackable entry (anything without charges)
+  // adds to the row you already have; a charged Talisman is its own row,
+  // since each one keeps its own charges.
+  const gearCategoryName = id => ((D().equipmentCategories||[]).find(c=>c.id===id)||{ name:String(id||"") }).name;
+  function gearDefLine(def){
+    const sp = def.spell ? spellById(def.spell) : null;
+    return { id:def.id, name:def.name, category:def.category||null, categoryName:gearCategoryName(def.category),
+             consumable:!!def.consumable, pack: Math.max(1, nonNegInt(def.pack)||1), unit:def.unit||null,
+             chargesMax: nonNegInt(def.charges)||null, material:def.material||null,
+             spell: sp ? { id:sp.id, name:sp.name, tn:sp.tn, th:sp.th, effect:sp.effect||"" } : null,
+             spellName: def.spellName||null, action:def.action||null, itemNotes:def.notes||null, costText:def.costText||null,
+             startsEmpty: !!def.startsEmpty };
+  }
+  function gearLine(ch, index){
+    const e = listOf(ch, "gear")[index];
+    if (!e || typeof e!=="object") return null;
+    const notes = typeof e.notes==="string" ? e.notes : "";
+    if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), type:String(e.type||""), notes };
+    const def = equipmentById(e.id);
+    if (!def) return { index, missing:true, name:String(e.id), notes, qty: nonNegInt(e.qty) };
+    const l = Object.assign({ index, notes, qty: nonNegInt(e.qty) }, gearDefLine(def), { flavorLine: def.flavorLine||null });
+    if (l.chargesMax){ const used = Math.min(l.chargesMax, nonNegInt(e.chargesUsed));
+      l.charges = { max:l.chargesMax, used, left:l.chargesMax-used }; }
+    return l;
+  }
+  function addGearEntry(ch, def){
+    const list = ch.gear, pack = Math.max(1, nonNegInt(def.pack)||1), charges = nonNegInt(def.charges);
+    if (!charges){
+      const at = list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===def.id);
+      if (at>=0){ list[at].qty = nonNegInt(list[at].qty) + pack; return { ok:true, index:at, stacked:true, added:pack }; }
+      list.push({ id:def.id, qty:pack, notes:"" });
+    } else list.push({ id:def.id, qty:1, notes:"", chargesUsed: def.startsEmpty ? charges : 0 });
+    return { ok:true, index:list.length-1, added:pack };
+  }
+  // The first row of an id you still have some of, for a panel that can use
+  // one you carry (a Nanomed Kit, a dose of Speed Heal, a Field Repair Kit).
+  function carriedGear(ch, id){
+    const list = listOf(ch, "gear");
+    const index = list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===id && nonNegInt(o.qty)>0);
+    return index<0 ? null : { index, qty: nonNegInt(list[index].qty) };
+  }
+  // Use one (n) of a consumable, or put some back (negative n). A count that
+  // reaches zero takes the row off, as crossing it off the sheet would.
+  function useGear(ch, index, n){
+    const l = gearLine(ch, index);
+    if (!l || l.custom || l.missing) return { ok:false, why:"That isn't a catalog item on the sheet." };
+    const k = n==null ? 1 : Math.trunc(Number(n));
+    if (!k) return { ok:false, why:"Say how many." };
+    if (k>0 && !l.consumable) return { ok:false, why:`${l.name} isn't used up.` };
+    if (k>l.qty) return { ok:false, why:`You have ${l.qty}.` };
+    const left = l.qty - k;
+    if (left<=0) ch.gear.splice(index, 1); else ch.gear[index].qty = left;
+    return { ok:true, name:l.name, used:k, left: Math.max(0, left), removed: left<=0 };
+  }
+  // A charged Talisman: spend a charge, or recharge it full (by TOL or a
+  // paid service; the sheet records that it's full, the player the price).
+  function useCharge(ch, index){
+    const l = gearLine(ch, index);
+    if (!l || !l.charges) return { ok:false, why:"That doesn't hold charges." };
+    if (!l.charges.left) return { ok:false, why:`${l.name} is spent. Recharge it first.` };
+    ch.gear[index].chargesUsed = l.charges.used + 1;
+    return { ok:true, name:l.name, left: l.charges.left - 1, max:l.charges.max };
+  }
+  function rechargeGear(ch, index){
+    const l = gearLine(ch, index);
+    if (!l || !l.charges) return { ok:false, why:"That doesn't hold charges." };
+    if (!l.charges.used) return { ok:false, why:"It's already full." };
+    ch.gear[index].chargesUsed = 0;
+    return { ok:true, name:l.name, restored:l.charges.used, max:l.charges.max };
+  }
+
   // A custom piece is typed by the player. Armor's `coverage` is optional and
   // reads as light (torso) when absent, so a file without it is still valid.
   function addCustomLoadout(ch, kind){
@@ -1799,6 +1880,17 @@ const Engine = (() => {
     // A pre-0.6 entry has neither marker -- tag it custom rather than guess
     // which catalog weapon a free-typed name was supposed to mean.
     c.weapons.forEach(w => { if (w && !w.id && !w.custom) w.custom = true; });
+    // Schema 0.10 (W17 + W27, Decision 121): a gear row is a catalog
+    // reference ({ id, qty }, `chargesUsed` on a charged Talisman) or typed
+    // (custom:true). Every row from before is typed text, so it's tagged
+    // custom, never matched to a catalog name, as the 0.6 step did weapons.
+    c.gear = c.gear.filter(g=>g && typeof g==="object").map(g=>{
+      if (g.custom || typeof g.id!=="string"){ g.custom = true; return g; }
+      g.qty = g.qty==null ? 1 : nonNegInt(g.qty);
+      if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed);
+      if (typeof g.notes!=="string") g.notes = "";
+      return g;
+    });
     // Schema 0.10 (W16, Decision 120): a weapon keeps its installed mods (a
     // catalog weapon's `mods`, weaponModGlossary ids) and the rounds spent
     // since its last reload. Nothing is guessed: a file from before starts
@@ -2275,7 +2367,8 @@ const Engine = (() => {
            // Taking a hit (Decision 99)
            hlState, armorState, resolveHit, applyHit, damageTypeById, damageCategoryById,
            // Loadout & recovery (Decision 100)
-           weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon, addCustomLoadout, removeLoadout, setWorn,
+           weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
+           gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
            upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
            naturalHealing, heal, resolveReset, applyReset,
            // Combat cleanup (Decisions 104–105)

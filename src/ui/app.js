@@ -259,9 +259,9 @@ function openSpellPicker(mode){
 // open for the next pick, as the spell picker does. Buy is refused with the
 // engine's reason (catalogLine's `buy`), which the row already shows.
 function openCatalog(kind){
-  const ch = S.ch; if (!ch || (kind!=="weapons" && kind!=="armor")) return;
+  const ch = S.ch; if (!ch || !["weapons","armor","gear"].includes(kind)) return;
   S.loPick = { kind, q:"", group:"", sort:"book", afford:false, open:null };
-  openModal({ title: kind==="armor" ? "The armor catalog" : "The weapons catalog", html: catalogPickerHtml(ch, kind),
+  openModal({ title: { armor:"The armor catalog", weapons:"The weapons catalog", gear:"The equipment catalog" }[kind], html: catalogPickerHtml(ch, kind),
     foot: pickerFootHtml(), returnTo: `[data-lobrowse="${kind}"]`, onClose: ()=>{ S.loPick=null; },
     bind: body => {
       const results = body.querySelector("[data-catresults]"), status = body.querySelector("[data-catstatus]");
@@ -280,7 +280,8 @@ function openCatalog(kind){
         if (!id) return;
         const pre = Engine.addLoadout(clone(ch), kind, id, { buy });
         if (!pre.ok){ alert(pre.why); return; }
-        commit("loadout", buy ? `Bought ${pre.name} (−${pre.paid}Ç)` : `Added ${pre.name}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
+        const n = pre.added>1 ? ` ×${pre.added}` : "";
+        commit("loadout", buy ? `Bought ${pre.name}${n} (−${pre.paid}Ç)` : `Added ${pre.name}${n}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
         refresh();
       };
     } });
@@ -557,8 +558,14 @@ function bindSheet(){
         ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
       const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}`
                   : st.kind==="nanomed" ? "Nanomed Kit" : "Focused Healing";
+      // W17: the kit or the dose comes out of your gear in the same action.
+      const gearId = st.kind==="nanomed" ? "nanomed-kit" : st.kind==="rest" && st.speed ? "speed-heal" : null;
+      const carried = gearId && st.fromGear!==false && Engine.carriedGear(ch, gearId);
       S.act=null;
-      commit("damage", `${label}: ${bits.join(", ")}`, ()=>{ Engine.heal(ch, input); });
+      commit("damage", `${label}: ${bits.join(", ")}${carried?", one from your gear":""}`, ()=>{
+        Engine.heal(ch, input);
+        if (carried) Engine.useGear(ch, carried.index, 1);
+      });
     } else if (st.kind==="wear"){
       const w=Engine.armorState(ch).worn; if (!w) return;
       const r=Engine.armorWear(clone(ch), w.index, input);
@@ -714,7 +721,7 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-rowadd]").forEach(b=>b.onclick=()=>{
     const key=b.dataset.rowadd;
-    commit("loadout", `Add ${key} row`, ()=>{ panelRows(ch, key).push({}); });
+    commit("loadout", `Add ${key} row`, ()=>{ panelRows(ch, key).push(key==="gear" ? { custom:true } : {}); });
   });
   main.querySelectorAll("[data-rowdel]").forEach(b=>b.onclick=()=>{
     const [key,i]=b.dataset.rowdel.split("|");
@@ -730,7 +737,29 @@ function bindSheet(){
   // Loadout: weapons and armor (Decision 100). Notes are keystrokes like the
   // table cells; everything that changes a number is one commit().
   const loName = (kind, i) => kind==="weapons" ? ((Engine.weaponLine(ch,i)||{}).name||"weapon")
+                            : kind==="gear" ? ((Engine.gearLine(ch,i)||{}).name||"gear")
                                                : ((Engine.armorState(ch).pieces.find(p=>p.index===i)||{}).name||"armor");
+  // Gear (Decision 121): Use one, +1, a charge, Recharged — each one commit().
+  main.querySelectorAll("[data-gearuse]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearuse), pre=Engine.useGear(clone(ch), i, 1);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `Used ${pre.name} (${pre.left} left)`, ()=>{ Engine.useGear(ch, i, 1); });
+  });
+  main.querySelectorAll("[data-gearplus]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearplus), pre=Engine.useGear(clone(ch), i, -1);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name} +1 (${pre.left})`, ()=>{ Engine.useGear(ch, i, -1); });
+  });
+  main.querySelectorAll("[data-gearcharge]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearcharge), pre=Engine.useCharge(clone(ch), i);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name}: a charge used (${pre.left}/${pre.max})`, ()=>{ Engine.useCharge(ch, i); });
+  });
+  main.querySelectorAll("[data-gearrecharge]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearrecharge), pre=Engine.rechargeGear(clone(ch), i);
+    if (!pre.ok){ alert(pre.why); return; }
+    commit("loadout", `${pre.name}: recharged (${pre.max}/${pre.max})`, ()=>{ Engine.rechargeGear(ch, i); });
+  });
   main.querySelectorAll("[data-lobrowse]").forEach(b=>b.onclick=()=>openCatalog(b.dataset.lobrowse));
   main.querySelectorAll("[data-locustom]").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.locustom;
@@ -793,7 +822,11 @@ function bindSheet(){
     const input = full ? { full:true } : { roll:(main.querySelector(`[data-repairroll="${i}"]`)||{}).value };
     const pre=Engine.repairArmor(clone(ch), i, input);
     if (!pre.ok){ alert(pre.why); return; }
-    commit("loadout", `${full?"Armorer":"Field Repair Kit"}: ${pre.name} +${pre.restored} Integrity`, ()=>{ Engine.repairArmor(ch, i, input); });
+    const kit = !full && Engine.carriedGear(ch, "field-repair-kit");   // W17: a use off the kit you carry
+    commit("loadout", `${full?"Armorer":"Field Repair Kit"}: ${pre.name} +${pre.restored} Integrity${kit?`, ${kit.qty-1} kit use${kit.qty===2?"":"s"} left`:""}`, ()=>{
+      Engine.repairArmor(ch, i, input);
+      if (kit) Engine.useGear(ch, kit.index, 1);
+    });
   };
   main.querySelectorAll("[data-repairkit]").forEach(repair(false));
   main.querySelectorAll("[data-repairfull]").forEach(repair(true));

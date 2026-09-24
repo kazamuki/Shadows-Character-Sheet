@@ -357,8 +357,8 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 table.lo-weapons td{vertical-align:top}
 table.lo-weapons input[type=text]{padding:4px 6px; font-size:.78rem; min-width:90px}
 table.lo-weapons td.rm{width:34px; text-align:center}
-table.lo-weapons .x,.lo-armor .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
-table.lo-weapons .x:hover,.lo-armor .x:hover{color:var(--magenta)}
+table.lo-weapons .x,.lo-armor .x,.lo-gear-row .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
+table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--magenta)}
 .lo-armor{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:10px 14px; margin-bottom:10px}
 .lo-armor.worn{border-color:var(--cyan)}
 .lo-armor-head{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
@@ -565,6 +565,15 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .lo-rounds .fire .btn.sm{padding:3px 8px}
 tr.lo-modrow td{border-top:0; padding-top:0}
 .main-combat .lo-rounds{white-space:normal} .main-combat .lo-rounds .fire{margin-top:3px}
+/* Gear (Decision 121): catalog rows count what's carried. */
+.lo-gear{display:flex; flex-direction:column; gap:0; margin-bottom:8px}
+.lo-gear-row{display:grid; grid-template-columns:minmax(180px,1.4fr) auto minmax(120px,1fr) auto; gap:6px 12px; align-items:center;
+  padding:8px 0; border-bottom:1px solid var(--frame)}
+.lo-gear-ctl{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
+.gear-count{font-family:var(--mono); color:var(--cyan); margin-right:4px}
+.gear-count small{color:var(--dim)}
+.gear-count.empty{color:var(--magenta)}
+@media (max-width:640px){ .lo-gear-row{grid-template-columns:1fr auto} .lo-gear-name, .lo-gear-ctl{grid-column:1 / -1} }
 .subsect{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px}
 /* W14: the add palette. Catalog chips are outlined until picked; one you
    already have is greyed out. Active chips on Main open their details. */

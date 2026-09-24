@@ -1041,6 +1041,9 @@ test("the Loadout and recovery functions are total on every degenerate character
       removeLoadout: () => { Engine.removeLoadout(ch, "armor", 99); Engine.removeLoadout(ch, "weapons", 0); },
       weaponMods: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.weaponModOptions(ch, i); Engine.addWeaponMod(ch, i, "Scope"); Engine.addWeaponMod(ch, i, "nope"); Engine.removeWeaponMod(ch, i, 0); }),
       rounds: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.fireWeapon(ch, i, "S"); Engine.fireWeapon(ch, i, "x"); Engine.fireWeapon(ch, i); Engine.reloadWeapon(ch, i); }),
+      gear: () => { ch.gear.push(null, 3, { id: "nope" }, { custom: true }, { id: "shield-charm", chargesUsed: "x" }, { id: "quickstitch", qty: -4 });
+        [-1, 0, 1, 2, 3, 4, 5, 99].forEach(i => { Engine.gearLine(ch, i); Engine.useGear(ch, i, 1); Engine.useGear(ch, i, "x"); Engine.useCharge(ch, i); Engine.rechargeGear(ch, i); });
+        Engine.carriedGear(ch, "quickstitch"); Engine.carriedGear(null, "x"); Engine.addLoadout(ch, "gear", "quickstitch", { buy: true }); Engine.catalogLine(ch, "gear", "shield-charm"); },
       catalogLine: () => { Engine.catalogLine(ch, "weapons", "combat-knife"); Engine.catalogLine(ch, "armor", "kevlar-vest");
         Engine.catalogLine(ch, "weapons", "nope"); Engine.catalogLine(ch, "gear", "x"); Engine.catalogLine(null, "weapons", "combat-knife"); },
     };
@@ -1640,4 +1643,67 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
   const again = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.deepEqual(JSON.parse(JSON.stringify(again.weapons)), JSON.parse(JSON.stringify(m.weapons)), "a second migrate changed the weapons");
+});
+
+// ── Equipment (W17 + W27, Decision 121) ───────────────────────────────
+
+test("W17/W27: the equipment catalog is the two chapters' tables, every id unique, every category listed, every spell link real", () => {
+  const cats = new Set(D.equipmentCategories.map(c => c.id));
+  assert.equal(new Set(D.equipment.map(e => e.id)).size, D.equipment.length, "a duplicate equipment id");
+  for (const e of D.equipment) {
+    assert.ok(cats.has(e.category), `${e.id}: category "${e.category}" isn't listed`);
+    assert.ok(e.cost === null || (typeof e.cost === "number" && e.cost > 0), `${e.id}: cost is neither a price nor null`);
+    if (e.cost === null) assert.ok(e.costText, `${e.id}: no price and no costText saying why`);
+    if (e.spell) assert.ok(Engine.spellById(e.spell), `${e.id}: spell "${e.spell}" isn't in the book`);
+  }
+  const at = id => D.equipment.find(e => e.id === id);
+  assert.deepEqual([at("nanomed-kit").cost, at("quickstitch").pack, at("field-repair-kit").pack], [4500, 5, 5]);
+  assert.deepEqual([at("shield-charm").charges, at("bulwark-rune").charges, at("second-wind-charm").startsEmpty], [3, 5, true]);
+  assert.equal(at("shield-charm").spell, "shield");
+});
+
+test("W17: a consumable stacks by its pack, Use one takes one off and the last one takes the row, and Buy pays", () => {
+  const ch = subject();
+  ch.trackers.credits.current = 5000;
+  const r = Engine.addLoadout(ch, "gear", "quickstitch", { buy: true });
+  assert.deepEqual([r.ok, r.added, ch.gear[0].qty, ch.trackers.credits.current], [true, 5, 5, 3500], "a strip of 5 for 1,500Ç");
+  Engine.addLoadout(ch, "gear", "quickstitch");
+  assert.deepEqual([ch.gear.length, ch.gear[0].qty], [1, 10], "a second strip didn't stack");
+  assert.equal(Engine.useGear(ch, 0, 1).left, 9);
+  assert.equal(Engine.useGear(ch, 0, 20).ok, false);
+  Engine.useGear(ch, 0, 9);
+  assert.equal(ch.gear.length, 0, "the empty row stayed");
+  Engine.addLoadout(ch, "gear", "multitool");
+  assert.equal(Engine.useGear(ch, 0, 1).ok, false, "used up a Multitool");
+  assert.equal(Engine.useGear(ch, 0, -1).left, 2, "+1 on a tool");
+  assert.equal(Engine.addLoadout(ch, "gear", "smart-brace", { buy: true }).ok, false, "bought something priced 'Varies'");
+  assert.equal(Engine.carriedGear(ch, "nanomed-kit"), null);
+  Engine.addLoadout(ch, "gear", "nanomed-kit");
+  assert.deepEqual({ ...Engine.carriedGear(ch, "nanomed-kit") }, { index: 1, qty: 1 });
+});
+
+test("W27: a charged Talisman is its own row, spends and recharges its charges, and names the spell it holds", () => {
+  const ch = subject();
+  Engine.addLoadout(ch, "gear", "shield-charm");
+  Engine.addLoadout(ch, "gear", "shield-charm");
+  assert.equal(ch.gear.length, 2, "two charms stacked into one row");
+  const l = Engine.gearLine(ch, 0);
+  assert.deepEqual([l.charges.left, l.charges.max, l.spell.name], [3, 3, "Shield"]);
+  Engine.useCharge(ch, 0); Engine.useCharge(ch, 0); Engine.useCharge(ch, 0);
+  assert.match(Engine.useCharge(ch, 0).why, /spent\. Recharge/);
+  assert.equal(Engine.rechargeGear(ch, 0).restored, 3);
+  Engine.addLoadout(ch, "gear", "second-wind-charm");
+  assert.equal(Engine.gearLine(ch, 2).charges.left, 0, "Second Wind is sold empty");
+  assert.equal(Engine.gearLine(ch, 2).spellName, "Second Wind", "a spell the book lacks keeps its name");
+});
+
+test("W17: migrate to 0.10 tags every typed gear row custom and never guesses a catalog match", () => {
+  const old = subject();
+  old.meta.schemaVersion = "0.9";
+  old.gear = [{ name: "Nanomed Kit", type: "med", notes: "x2" }, null, { id: "quickstitch", qty: "3" }, { id: "shield-charm", chargesUsed: -2 }];
+  const m = Engine.migrate(old);
+  assert.equal(m.gear.length, 3, "junk wasn't dropped");
+  assert.deepEqual([m.gear[0].custom, m.gear[0].id], [true, undefined], "a typed row was matched to the catalog");
+  assert.deepEqual([m.gear[1].qty, m.gear[2].qty, m.gear[2].chargesUsed], [3, 1, 0]);
+  assert.equal(Engine.gearLine(m, 0).custom, true);
 });

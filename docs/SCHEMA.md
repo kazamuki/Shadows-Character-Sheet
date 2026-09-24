@@ -374,6 +374,21 @@ window.SHADOWS_DATA = {
     // slot:"body" always carries prot/res/integrity; slot:"head"/"hand" never do.
   ],
 
+  // ── Equipment (0.16, Decision 121) ──────────────────────────────────
+  // Gear's Equipment chapter (tech, field & recovery, tools, clothing) and
+  // Magic's Tools of the Trade (materials, ritual supplies, blanks, inscribed
+  // objects), from the two chapters' own tables. 116 entries, 12 categories.
+  equipmentCategories: [ { id: "charged", name: "Charged Talismans", book: "Magic", note: "..." } ],
+  equipment: [
+    { id: "quickstitch", name: "Quickstitch", category: "medical", availability: "Common",
+      cost: 1500, costText: "1,500Ç / strip of 5", pack: 5, unit: "dose", consumable: true,
+      action: "Fast", notes: "...", flavorLine: "..." },
+    { id: "shield-charm", name: "Shield charm", category: "charged", spell: "shield",
+      spellName: "Shield", availability: "Uncommon", cost: 450, charges: 3, notes: "..." }
+    // cost null ("Varies", "1,500Ç+") can be added, not bought. `spell` only
+    // when the Book of Known Spells has it; `spellName` always.
+  ],
+
   // ── Conditions (0.8, Decision 95) ───────────────────────────────────
   // One entry per row of 054's Conditions table, plus Dying (no table row —
   // plan CQ9). effect/recovery/short are display text; the engine reads only
@@ -633,8 +648,13 @@ It renders on the Archetype tab.
                form: "Human" },
 
   powers:  [ /* instances with per-character notes */ ],
-  gear:    [ { name, type, notes } ],          // still free-entry; the general
-                                                // Equipment chapter is not yet merged
+  // (0.10, Decision 121) A gear row is a catalog reference (`id` into
+  // `equipment`, `qty` carried, `chargesUsed` on a charged Talisman) or typed
+  // (`custom: true`, name/type/notes as before). migrate() tags every older
+  // row custom and never matches a typed name to the catalog.
+  gear:    [ { id: "quickstitch", qty: 4, notes: "" },
+             { id: "shield-charm", qty: 1, chargesUsed: 1, notes: "" },
+             { custom: true, name, type, notes } ],
   // (0.6) A weapon entry is EITHER a catalog reference (`id` into the new
   // `weapons` game-data array, `notes` only — stats read from the catalog)
   // OR freeform (`custom: true`, every field preserved as typed, same shape
@@ -2876,6 +2896,61 @@ No cascade logic to maintain — it falls out of the architecture.
     Game data **0.15 → 0.16** (a weapon line's damage, tags and rounds can
     change, and mods are new choices; Decision 68). Character schema **0.9 →
     0.10**. Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+
+121. **(Equipment you carry — W17 and W27, data + engine + app, character
+    schema 0.10)** **Gear gets a catalog: Gear's Equipment chapter and the
+    Magic chapter's Tools of the Trade. A consumable is a count that Use one
+    takes down, a Talisman keeps its charges, and a panel that spends a kit
+    takes it from your gear in the same action.** W17 wanted a proposal;
+    under Ken's "everything, no pauses" (2026-09-24) the shape below was
+    chosen, and it shares Decision 120's 0.10 bump, which hadn't shipped.
+    W27 is the Magic chapter's half of the same catalog.
+    - **Data (game data 0.16).** `equipmentCategories` (12) and `equipment`
+      (116), transcribed from the two chapters' tables by a script rather
+      than by hand: Tech & Communications, Field & Recovery, Tools & Field
+      Gear, Clothing; Raw Materials, Ritual Supplies, Inscription Blanks,
+      Single-Use, Charged and Durable Talismans, Wards and Traps, Artifacts.
+      `pack`/`unit` is what one purchase adds (a strip of 5 Quickstitch, a
+      Field Repair Kit's 5 uses, a deck of 5 Dart cards). `consumable` marks
+      what's used up. `charges` is 3 for Once-Living and 5 for Durable, as
+      the chapter's headers say; the Second Wind charm is `startsEmpty`
+      ("Sold empty"). `spell` links the Book of Known Spells where it has the
+      spell (14 of the 27 the shop names). `spellName` is always what the
+      shop printed. **Left out:** Transportation, Food & Drink, Lodging (paid
+      for, not carried; log them under Çredits) and Magic's Services, whose
+      Warding comes in Elemental, Spirit and Aether where the data's one
+      Warding upgrade answers "magical" (W28).
+    - **Character (schema 0.10).** A gear row is `{ id, qty, notes }`, plus
+      `chargesUsed` on a charged Talisman, or the typed `{ custom: true,
+      name, type, notes }` it always was. `migrate()` tags every older row
+      custom, never guessing a catalog match (the 0.6 weapons rule).
+    - **Engine.** `gearLine(ch, i)`, `addLoadout(ch, "gear", id, {buy})`
+      (anything without charges stacks onto the row you have; a charged
+      Talisman is its own row, since each keeps its own charges), `useGear`
+      (take one off, or put one back; the last one takes the row off, as
+      crossing it out would), `useCharge`, `rechargeGear` (full; the TOL or
+      the 200Ç service is the player's to record), and `carriedGear(ch, id)`.
+      `catalogLine` reads gear too, so the W4 browser has a third catalog.
+    - **W17's panels.** The Nanomed Kit panel and Rest on Speed Heal offer
+      "Use one you carry (N left)", on by default when you carry one; Apply
+      heals and takes it off in one `commit()`, so one undo puts back both.
+      The Field Repair Kit button says "1 of your 5" and takes a use. Chems
+      and everything else consumable have Use one on their row.
+    - **Loadout's Gear** shows catalog rows (count or charges, the spell an
+      object holds with its TN, TH and effect, notes), then your own typed
+      rows, then **Browse the equipment catalog** and **+ Your own**. The
+      print sheet writes a catalog row's count or charges as its type.
+    - **Pinned:** four engine tests (the catalog's integrity and spell links;
+      stacking by pack, Use one to zero, Buy, a "Varies" price; charges,
+      recharge, sold empty; the 0.10 gear migration), totality, and two smoke
+      tests (buy three kinds, use one, use a charge, the Nanomed panel taking
+      the kit with one undo; the Field Repair Kit). Mutation-tested (8
+      mutants): no stacking, an emptied row left behind, a tool used up,
+      Second Wind sold full, the kit not taken, the panel's offer off by
+      default, a typed row matched to the catalog, the repair kit not taken.
+      Each fails a test.
+    Game data **0.16**, character schema **0.10**, both shared with Decision
+    120. Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
 
 ## 5. Open Flags
 
