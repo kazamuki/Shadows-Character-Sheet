@@ -41,10 +41,8 @@ every open wishlist item but W28: vitals popovers (W2/W3), the catalog
 browser (W4), a hit that lands (W15), weapon mods and rounds (W16), counted
 gear from Gear's and Magic's shops (W17/W27), and Main as the fight view
 (W13). **It bumped the character schema to 0.10 and game data to 0.16**,
-and opened F26. It's on branch `claude/affectionate-hawking-7zblnw`, not
-yet on `main`: **GitHub refused the push (403, the Claude GitHub App's
-access)**, so the commits exist only in that session until access is fixed
-and they're pushed.
+and opened F26. It's on branch `claude/affectionate-hawking-7zblnw`, in
+review as a PR, not yet on `main`.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -126,9 +124,8 @@ notes, one line each in `INDEX.md` §2.
 
 **`main` is caught up through PR #49, and live is `v0.21.0`.** The wishlist
 session's 0.22.0 (schema 0.10, game data 0.16) sits on
-`claude/affectionate-hawking-7zblnw`. **First: push it and open its PR**
-once the Claude GitHub App can reach the repo, then tag `v0.22.0` on merge
-and add its `log/shipped.md` row.
+`claude/affectionate-hawking-7zblnw`, in review as a PR. **First: merge
+it**, then tag `v0.22.0` and add its `log/shipped.md` row.
 
 **Next, all unblocked:** Milestones & doc reconciliation (Ken alone). F9
 (are General Milestones Professional-only? 041 files them under
