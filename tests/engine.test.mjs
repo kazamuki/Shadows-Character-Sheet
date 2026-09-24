@@ -1233,7 +1233,7 @@ test("the Cascade and Aberration tables have no gaps or overlaps, and every cate
   }
 });
 
-test("cascade and logCascade are total on every degenerate character and every bad input", () => {
+test("cascade is total on every degenerate character and every bad input", () => {
   const failures = [];
   const inputs = [undefined, null, {}, { roll: "x" }, { roll: 0, degree: 3 }, { roll: 11, degree: 3 }, { roll: 5 },
     { roll: 1, degree: 1 }, { roll: 3, degree: -2 }, { roll: 6, degree: 3, aberrationRoll: "x" },
@@ -1241,30 +1241,18 @@ test("cascade and logCascade are total on every degenerate character and every b
     { roll: 10, degree: 40 }, { roll: 6, degree: 3, aberrationRoll: 2, pick: "heterochromia" }];
   for (const [label, ch] of Object.entries(degenerates())){
     for (const input of inputs){
-      try { Engine.cascade(ch, input); Engine.logCascade(ch, input); }
+      try { Engine.cascade(ch, input); }
       catch (e) { failures.push(`${label} ${JSON.stringify(input)} -> ${e.message}`); }
     }
   }
   assert.deepEqual(failures, []);
 });
 
-test("logCascade writes one line into Notes, keeps what was there, and refuses without the GM's pick", () => {
+test("cascade ignores a pick from outside the rolled category rather than trusting it", () => {
   const ch = subject();
-  ch.notes = "Owes Mara a favor.\n";
-  const perm = { roll: 6, degree: 3, aberrationRoll: 2 };
-  assert.equal(Engine.logCascade(ch, perm).ok, false, "logged an Aberration before one was picked");
-  assert.equal(ch.notes, "Owes Mara a favor.\n", "a refused log still wrote");
-  const r = Engine.logCascade(ch, Object.assign({ pick: "dense-frame" }, perm), "2026-09-23T10:00:00Z");
-  assert.ok(r.ok, r.why);
-  assert.equal(ch.notes.split("\n")[0], "Owes Mara a favor.");
-  assert.match(ch.notes.split("\n")[1], /^Cascade, 2026-09-23: 6 \+ Rupture 3 = 9, Permanent Aberration\. Dense Frame \(permanent, Neutral\)/);
-  // A pick from outside the rolled category is ignored, not trusted.
-  const wrong = Engine.cascade(ch, Object.assign({}, perm, { pick: "aether-reservoir" }));
-  assert.equal(wrong.aberration.pick, null);
-  // No Aberration row: the effect goes in the note instead.
-  const plain = subject();
-  assert.ok(Engine.logCascade(plain, { roll: 2, degree: 3 }).ok);
-  assert.match(plain.notes, /Backlash\. Spirit damage equal to your Spell Power\.$/);
+  const perm = { roll: 6, degree: 3, aberrationRoll: 2 };                     // 9: Permanent; 2: Neutral
+  assert.equal(Engine.cascade(ch, Object.assign({ pick: "dense-frame" }, perm)).aberration.pick.id, "dense-frame");
+  assert.equal(Engine.cascade(ch, Object.assign({ pick: "aether-reservoir" }, perm)).aberration.pick, null);
 });
 
 test("the Arcanist's TOL Spent tracker declares the Cascade panel and the Exhausted note in data", () => {
@@ -1524,39 +1512,19 @@ test("Drained never lifts a TOL something else already took below 0", () => {
   assert.equal(Engine.derived(ch).TOL, low);
 });
 
-test("Record it writes the note and the Aberration as one undoable action", () => {
+test("an Aberration from a Cascade keeps its note, and one undo takes it back with its TOL change", () => {
   const ch = subject();
-  ch.notes = "Owes Mara a favor.";
-  const input = { roll: 6, degree: 4, aberrationRoll: 9, pick: "drained" };       // 10: Permanent; 9: Bad
   const tolBefore = Engine.derived(ch).TOL;
   const before = JSON.parse(JSON.stringify(ch));
-  const r = Engine.recordCascade(ch, input, "2026-09-23");
+  const r = Engine.recordAberration(ch, { id: "drained", permanence: "permanent", note: "Cascade, 2026-09-24" });
   assert.equal(r.ok, true, r.why);
-  assert.equal(r.aberration, "Drained");
-  assert.match(ch.notes, /^Owes Mara a favor\.\nCascade, 2026-09-23: .*Drained \(permanent, Bad\)/);
-  assert.deepEqual(ch.trackers.aberrations.map(e => e.id + "/" + e.permanence).join(), "drained/permanent");
+  assert.equal(JSON.stringify(ch.trackers.aberrations), JSON.stringify([{ id: "drained", permanence: "permanent", note: "Cascade, 2026-09-24" }]));
   assert.equal(Engine.derived(ch).TOL, Math.max(0, tolBefore - 2));
-  Engine.recordAction(ch, "notes", "Cascade: Permanent Aberration (Drained)", before);
+  assert.equal(Engine.recordAberration(ch, { id: "drained", permanence: "temporary" }).ok, false, "an Aberration stacked with itself");
+  Engine.recordAction(ch, "aberration", "Cascade: Drained (permanent)", before);
   assert.ok(Engine.undoLastAction(ch).ok);
-  assert.equal(ch.notes, "Owes Mara a favor.");
   assert.equal(ch.trackers.aberrations.length, 0, "undo left the Aberration behind");
   assert.equal(Engine.derived(ch).TOL, tolBefore);
-});
-
-test("Record it refuses an Aberration already held, before writing anything", () => {
-  const ch = subject();
-  Engine.recordAberration(ch, { id: "drained", permanence: "temporary" });
-  const notes = ch.notes;
-  const r = Engine.recordCascade(ch, { roll: 6, degree: 4, aberrationRoll: 9, pick: "drained" });
-  assert.equal(r.ok, false);
-  assert.equal(ch.notes, notes, "a refused Record it wrote into Notes");
-  assert.equal(ch.trackers.aberrations.length, 1);
-  // A result with no Aberration only writes the note, as Add to notes did.
-  assert.equal(Engine.recordCascade(ch, { roll: 2, degree: 3 }).ok, true);
-  assert.match(ch.notes, /Backlash/);
-  assert.equal(ch.trackers.aberrations.length, 1);
-  // And the pick is still required.
-  assert.equal(Engine.recordCascade(ch, { roll: 6, degree: 4, aberrationRoll: 9 }).ok, false);
 });
 
 test("the Arcanist declares a reference panel naming data sections that exist", () => {

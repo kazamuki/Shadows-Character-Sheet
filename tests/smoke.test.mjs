@@ -716,9 +716,9 @@ test("a tracker action offers its own Undo, and that Undo takes back only that a
   assert.deepEqual(app.errors, []);
 });
 
-// ── Cascade (Decision 106) ────────────────────────────────────────────
+// ── Cascade (Decisions 106, 115) ──────────────────────────────────────
 
-test("TOL Spent past TOL opens the Cascade panel; Record it writes the note and the Aberration, and one undo takes back both", () => {
+test("TOL Spent past TOL opens the Cascade panel: the GM's instruction, then the picker records what they name, and one undo takes it back", () => {
   const ch = lockedCharacter();
   const tol = Engine.derived(ch).TOL;
   ch.trackers.panel["tol-spent"] = { value: tol };
@@ -726,20 +726,37 @@ test("TOL Spent past TOL opens the Cascade panel; Record it writes the note and 
   assert.match(app.$("#main").textContent, /Exhausted/, "no Exhausted note at the max");
   assert.equal(app.$("[data-cascadepanel]"), null, "the Cascade panel opened at the max, not past it");
   app.click('[data-trk="tol-spent|1"]');
-  assert.ok(app.$("[data-cascadepanel]"), "no Cascade panel past TOL");
-  const set = (k, v) => { const el = app.$(`[data-cas="${k}"]`); el.value = v; el.dispatchEvent(new app.window.Event("change")); };
-  set("roll", "5"); set("degree", "2");
-  assert.match(app.$("[data-cascadepanel]").textContent, /Temporary Aberration/);
-  assert.ok(app.$("[data-caslog]").disabled, "Record it before the Aberration roll");
-  set("aberrationRoll", "1");
-  assert.match(app.$("[data-cascadepanel]").textContent, /Good/);
-  set("pick", "night-eyes");
-  app.click("[data-caslog]");
-  assert.match(activeChar(app).notes, /Night Eyes \(temporary, Good\)/);
-  assert.deepEqual(activeChar(app).trackers.aberrations.map(e => e.id + "/" + e.permanence), ["night-eyes/temporary"]);
+  const panel = app.$("[data-cascadepanel]");
+  assert.ok(panel, "no Cascade panel past TOL");
+  assert.match(panel.textContent, /Roll a d10, add your Rupture's degree, and tell your GM/);
+  assert.equal(panel.querySelector("input"), null, "the panel still asks for dice the GM reads");
+  app.click('[data-abpickopen="cascade"]');
+  assert.equal(app.$("#modal").open, true, "the picker didn't open");
+  assert.match(app.$("#modal-title").textContent, /Cascade/);
+  // Every Aberration shows its text before it's picked (Ken, 2026-09-24).
+  assert.equal(app.$$("#modal [data-abpick]").length, D.aberrations.length);
+  assert.match(app.$('#modal [data-abpick="night-eyes"]').textContent, /Treat Dark visibility as Dim/);
+  assert.match(app.$('#modal [data-abpick="beacon"]').textContent, /As Monster Magnet Disadvantage/);
+  const q = app.$("#modal [data-abq]");
+  q.value = "glow"; q.dispatchEvent(new app.window.Event("input"));
+  assert.deepEqual(app.$$("#modal [data-abpick]").map(b => b.dataset.abpick), ["bioluminescence"]);
+  q.value = ""; q.dispatchEvent(new app.window.Event("input"));
+  app.click('#modal [data-abperm="permanent"]');
+  assert.match(app.$("#modal [data-abstatus]").textContent, /quest, ritual/);
+  app.click('#modal [data-abpick="night-eyes"]');
+  assert.equal(app.$("#modal").open, false, "a pick didn't close the picker");
+  const got = activeChar(app);
+  assert.deepEqual(got.trackers.aberrations.map(e => e.id + "/" + e.permanence), ["night-eyes/permanent"]);
+  assert.match(got.trackers.aberrations[0].note, /^Cascade, \d{4}-\d{2}-\d{2}$/);
+  assert.equal(got.notes, "", "a Cascade still writes into Notes");
+  assert.match(app.$("#undotoast").textContent, /Cascade: Night Eyes \(permanent\)/);
+  assert.equal(app.window.document.activeElement, app.$('[data-abpickopen="cascade"]'), "focus didn't go back to the panel");
   assert.match(app.$("#main").textContent, /Aberrations[\s\S]*Night Eyes/, "the recorded Aberration isn't on the sheet");
+  app.click('[data-abpickopen="cascade"]');
+  assert.equal(app.$('#modal [data-abpick="night-eyes"]').disabled, true, "a held Aberration can be picked again");
+  assert.match(app.$('#modal [data-abpick="night-eyes"]').textContent, /You have it/);
+  app.click("#modal [data-modalclose]");
   app.click("[data-toastundo]");
-  assert.equal(activeChar(app).notes, "", "undo left the Cascade in Notes");
   assert.equal(activeChar(app).trackers.aberrations.length, 0, "undo left the Aberration behind");
   assert.deepEqual(app.errors, []);
 });
@@ -852,21 +869,23 @@ test("picker: a click anywhere on a row picks it, a held row is dimmed and says 
 
 // ── Aberrations on the character (Decision 110) ──────────────────────
 
-test("Aberrations: the palette adds one by hand, Drained moves max TOL but not current, and Clear gives no TOL back", () => {
+test("Aberrations: the picker adds one by hand, Drained moves max TOL but not current, and Clear gives no TOL back", () => {
   const ch = lockedCharacter();
   const max = Engine.derived(ch).TOL;
   ch.trackers.panel["tol-spent"] = { value: 1 };                   // current = max - 1
   const app = openSheet(ch, "trackers");
   assert.match(app.$("#main").textContent, /No Aberrations/);
-  const pal = app.$("[data-abpalette]");
-  pal.open = true; pal.dispatchEvent(new app.window.Event("toggle"));
-  app.click('[data-abquick="drained"]');
+  app.click('[data-abpickopen="add"]');
+  assert.match(app.$("#modal-title").textContent, /Add an Aberration/);
+  app.click('#modal [data-abpick="drained"]');
   const got = activeChar(app);
   assert.deepEqual(got.trackers.aberrations.map(e => e.id + "/" + e.permanence), ["drained/temporary"]);
   assert.equal(Engine.derived(got).TOL, Math.max(0, max - 2));
   assert.equal(Engine.derived(got).TOL - got.trackers.panel["tol-spent"].value, Math.min(max - 1, Math.max(0, max - 2)), "current TOL moved");
-  assert.equal(app.$('[data-abquick="drained"]').disabled, true, "a held Aberration is still offered");
   assert.match(app.$("#undotoast").textContent, /Aberration: Drained \(temporary\)/);
+  app.click('[data-abpickopen="add"]');
+  assert.equal(app.$('#modal [data-abpick="drained"]').disabled, true, "a held Aberration is still offered");
+  app.click("#modal [data-modalclose]");
   app.click('[data-abrm="0"]');
   const after = activeChar(app);
   assert.equal(after.trackers.aberrations.length, 0);

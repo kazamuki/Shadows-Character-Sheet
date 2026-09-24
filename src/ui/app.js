@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.20.0";
+const APP_VERSION = "0.21.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -251,6 +251,38 @@ function openSpellPicker(mode){
     } });
 }
 
+// ── The Aberration picker (Decision 115) ─────────────────────────────
+// One pick, then it closes: the pick is one commit() with its undo toast. From
+// a Cascade the entry's note says so, which the player can rewrite.
+function openAberrationPicker(mode){
+  const ch = S.ch; if (!ch) return;
+  const fromCascade = mode==="cascade";
+  S.abPick = { q:"", permanence:"temporary" };
+  openModal({ title: fromCascade ? "What the Cascade left" : "Add an Aberration", html: aberrationPickerHtml(ch),
+    foot: `<span class="modal-note">${fromCascade?"Pick the one your GM names.":"Pick one your GM ruled you have."}</span><button class="btn" data-modalclose>Cancel</button>`,
+    returnTo: `[data-abpickopen="${mode}"]`, onClose: ()=>{ S.abPick=null; },
+    bind: body => {
+      const results = body.querySelector("[data-abresults]");
+      const refresh = () => { results.innerHTML = aberrationResultsHtml(S.ch); };
+      body.querySelector("[data-abq]").oninput = e => { S.abPick.q = e.target.value; refresh(); };
+      body.querySelectorAll("[data-abperm]").forEach(b=>b.onclick=()=>{
+        S.abPick.permanence = b.dataset.abperm;
+        body.querySelectorAll("[data-abperm]").forEach(x=>{ const on = x===b; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });
+        body.querySelector("[data-abstatus]").textContent = abPermNote(b.dataset.abperm);
+      });
+      results.onclick = e => {
+        const b = e.target.closest("[data-abpick]");
+        if (!b || b.disabled || !S.abPick) return;
+        const entry = { id: b.dataset.abpick, permanence: S.abPick.permanence };
+        if (fromCascade) entry.note = `Cascade, ${new Date().toISOString().slice(0,10)}`;
+        const r = Engine.recordAberration(clone(ch), entry);      // validate without mutating
+        if (!r.ok){ alert(r.why); return; }
+        commit("aberration", `${fromCascade?"Cascade":"Aberration"}: ${r.name} (${entry.permanence})`, ()=>{ Engine.recordAberration(ch, entry); });
+        closeModal();
+      };
+    } });
+}
+
 // ── Take a hit (Decision 99; a modal since W6) ───────────────────────
 // The form lives in S.hit until Apply, which is one commit(), so the hit, its
 // armor wear and its Conditions undo together. Each change redraws the modal
@@ -473,34 +505,10 @@ function bindSheet(){
       else { const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.value=Math.max(0,(e.value||0)+delta); }
     });
   });
-  // Cascade (Decisions 106, 110): the dice live in S.cascade; "Record it" is
-  // the one commit(), so the note and the Aberration undo together.
-  main.querySelectorAll("[data-cas]").forEach(el=>el.onchange=()=>{
-    const st=S.cascade; if (!st) return;
-    st[el.dataset.cas]=el.value;
-    if (el.dataset.cas==="roll" || el.dataset.cas==="degree"){ st.aberrationRoll=""; st.pick=""; }
-    if (el.dataset.cas==="aberrationRoll") st.pick="";
-    renderMain();
-  });
-  main.querySelectorAll("[data-casclear]").forEach(b=>b.onclick=()=>{ S.cascade=null; renderMain(); });
-  main.querySelectorAll("[data-caslog]").forEach(b=>b.onclick=()=>{
-    const st=S.cascade; if (!st) return;
-    const input=cascadeInput(st), c=Engine.cascade(ch, input), ab=c.aberration;
-    const r=Engine.recordCascade(clone(ch), input);               // validate without mutating
-    if (!r.ok){ alert(r.why); return; }
-    S.cascade=null;
-    commit(ab?"aberration":"notes", `Cascade: ${c.result.name}${ab?` (${ab.pick.name})`:""}`, ()=>{ Engine.recordCascade(ch, input); });
-  });
-  // Aberrations on the character (Decision 110)
+  // Aberrations on the character (Decision 110); adding one, from a Cascade
+  // or by hand, is the picker modal (Decision 115).
   const abName = i => { const a=Engine.aberrationState(ch).active.find(x=>x.index===i); return a ? a.name : "Aberration"; };
-  main.querySelectorAll("[data-abpalette]").forEach(d=>d.ontoggle=()=>{ S.abPalette=d.open; });
-  main.querySelectorAll("[data-abperm]").forEach(b=>b.onclick=()=>{ S.abPerm=b.dataset.abperm; S.abPalette=true; renderMain(); });
-  main.querySelectorAll("[data-abquick]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.abquick, permanence=S.abPerm==="permanent"?"permanent":"temporary";
-    const r=Engine.recordAberration(clone(ch), {id, permanence});
-    if (!r.ok){ alert(r.why); return; }
-    commit("aberration", `Aberration: ${r.name} (${permanence})`, ()=>{ Engine.recordAberration(ch, {id, permanence}); });
-  });
+  main.querySelectorAll("[data-abpickopen]").forEach(b=>b.onclick=()=>openAberrationPicker(b.dataset.abpickopen));
   main.querySelectorAll("[data-abrm]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.abrm), e=ch.trackers.aberrations[i], nm=abName(i);
     commit("aberration", `${e&&e.permanence==="permanent"?"Removed":"Cleared"}: ${nm}`, ()=>{ Engine.removeAberration(ch, i); });

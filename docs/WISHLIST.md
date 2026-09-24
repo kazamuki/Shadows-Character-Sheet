@@ -142,6 +142,15 @@ count (a schema bump, so it could share W16's 0.9 migration), and the panel
 offering "use one you carry" next to "bought on the spot". Wants a proposal
 before code.
 
+**W27 — The Magic chapter's shop: blanks, supplies and inscribed objects.** *Claude · 💡*
+Scott's finished Magic chapter (2026-09-24) prices its Tools of the Trade:
+raw materials, ritual supplies, inscription blanks, and a catalog of
+Talismans, Wards, Artifacts and services with the spell each holds. Today an
+Arcanist writes them into Gear by hand. Once it's in the data, it could be a
+tab in W4's catalog browser, and an item could link to its spell in the book.
+It's new content only, with no rules question, though "Warding" services
+change what armor's RES stops, which the hit resolver would need to read.
+
 ### Theme & polish
 
 ~~**W7 — Primary buttons are unreadable in light mode.**~~ *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
