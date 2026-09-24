@@ -7,14 +7,8 @@ The app prints its own version in the footer — compare it against this line be
 
 This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
-of date it is a bug. History lives in `log/` — `2026.md` for sessions,
-`shipped.md` for the batch board; the authority on
-architecture, schemas, decisions and flags is `SCHEMA.md`.
-
-> **Starting a session?** Read `CLAUDE.md`, then this file. That is enough to
-> begin. When you need a decision, an `A`/`B`/`C`/`F` id, or the reasoning behind
-> a batch, go through **`INDEX.md`** — it maps each to the section that holds it.
-> Never read `SCHEMA.md` front to back.
+of date it is a bug. History lives in `log/`; the authority on architecture,
+schemas, decisions and flags is `SCHEMA.md`; `INDEX.md` finds anything else.
 
 ---
 
@@ -30,17 +24,18 @@ damage and Pain Levels, taking a hit through armor, Conditions, recovery,
 Sanity, Luck, Çredits, IP and Milestones, the session log, loadout with the
 weapons/armor catalog, `grants`, an undoable audit trail, and a printable
 sheet, filled or blank. The engine reproduces the CRB's own worked examples
-(`tests/rules.test.mjs`).
+(`tests/rules.test.mjs`), and a hostile character file renders safely
+everywhere (`tests/hostile.test.mjs`).
 
 **Combat and magic are both built end to end, and both plans are closed**
-(`plans/` keeps them as history). Combat: Decisions 95–106, with three stubs
-waiting on Deighton (F23, F24, F25). Magic: Decisions 93, 106, 108–111 and 115.
+(`plans/` keeps them as history). Combat: Decisions 95–106, with stubs
+waiting on Deighton. Magic: Decisions 93, 106, 108–111 and 115.
 
-**App 0.24.0 (PR #56, tagged `v0.24.0`)** is the
-audit's first session: character files are untrusted input (Decision 124),
-load findings stay until dismissed (125), the Trueborn's powers render (126),
-Hardcore Parkour's prerequisites are ruled (129), and every character has a NYTE City
-intake number, with nothing replaced without asking (128, schema 0.11).
+**The 2026-09-24 audit's first two sessions are done.** S1 (app 0.24.0) made
+character files untrusted input and gave every character a NYTE City intake
+number. S2, this session, was docs only: decisions are short records that say
+what they rejected (Decision 130), every change has a tier that says what it
+must touch (131), and there's one orientation path (132).
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -50,65 +45,60 @@ on screen but not in Chrome's print/PDF output (Decision 94). Cosmetic only.
 
 ## 2. Shipped, and what it left behind
 
-The batch board — one row per merged batch — is history, so it lives in
-**`log/shipped.md`** (Decision 101). This section keeps only what shipped work
+The batch board is `log/shipped.md`. This section keeps only what shipped work
 left that is still true now.
 
 **Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
 `v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. The live version is the latest `v*` tag, and the page's footer says
-which. A cloud session can merge but usually can't push a tag, so tag locally
-after it (plan S5 moves releasing into a workflow, AQ9). **Check a
-deploy by loading the page** and reading the footer, not by curling it.
-`CHANGELOG.md` needs a section for every app bump, and **players read it**:
-after editing it, run `npm run changelog` and commit the generated
-`src/data/shadows-changelog.js` (`docs.test.mjs` checks both).
+tag. The live version is the latest `v*` tag. How to release is in
+`CLAUDE.md`, and only there (plan S5 moves it into one workflow, AQ9).
 
 **Things a next session should know.**
 
+- **Name the change tier first** (`CLAUDE.md`). A Docs or Fix change doesn't
+  rewrite this file unless what's next changed.
+- **Before proposing anything, search SCHEMA §4's Touches lines** for what it
+  touches, and read the Rejected and Revisit if of what you find (Decision 130).
 - **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
   Both are tested against a synthetic fixture. Adding a real one is a rules
   question for Deighton, not a data edit (Decision 77).
-- **`grants` now reaches past advantages, for one reader only.** Natural
-  Armor's `grants` sit on a Major Milestone and on specialization options,
-  and `naturalArmor()` scans all three. `grants()` itself still scans
-  advantages and disadvantages. The next grant type on a Milestone should
+- **`grants` reaches past advantages for one reader only.** Natural Armor's
+  `grants` sit on a Major Milestone and on specialization options, and
+  `naturalArmor()` scans all three. The next grant type on a Milestone should
   widen `grants()` rather than copy the scan (Decision 104).
-- **Three reusable pieces landed in 0.22.** `openPopover` (a non-modal panel
-  that follows the render), `openCatalog(kind)` over `Engine.catalogLine`
-  (weapons, armor, gear), and `bindVitalControls(root)` (Trackers' vitals
-  controls, bound anywhere they're drawn). Reuse them; don't copy them.
-- **Gear rows and weapon rows now share a shape**: a catalog reference or
+- **Reuse, don't copy:** `openPopover`, `openCatalog(kind)` over
+  `Engine.catalogLine`, `bindVitalControls(root)` (0.22), and `openModal`.
+- **Gear rows and weapon rows share a shape**: a catalog reference or
   `custom: true`, and `migrate()` never guesses between them (Decisions
   120–121).
+- **Retired text lives in `log/archive.md`**, verbatim: SCHEMA's old roadmap,
+  the closed-flag notes, and the data's old `meta.notes`.
 
 ---
 
 ## 3. Areas of work
 
 Grouped by what part of the app or ruleset they touch, not by who owns
-them — a status and what's blocking it travel with the topic, so picking up
-work as a flag resolves doesn't mean re-deriving which batch it belonged to.
-This is the pick-up-work view; `SCHEMA.md` §5 is the authority on a flag's
-full text.
+them — a status and what's blocking it travel with the topic. `SCHEMA.md` §5
+is the authority on a flag's full text.
 
 **Legend:** ✅ done · ⏭ ready (nothing external blocks starting) · 📋 planned (a plan doc exists) · 🔶 partial/stable · ⏸ blocked
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **F23 + F24 + F25 + F26** (Deighton, ask together; F23 and F25 are the same RES-class question, F26 is whether a shotgun is a rifle for mods) are stubbed and block nothing. MD1/2/3 ratings (Design, small) block nothing. Magic's Warding services: W28 |
+| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1 ✅ · S2 ✅ · S3, S4, S5 ⏭ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
+| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), and **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags. All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
-| **Milestones & doc reconciliation** — F9, F12, F13 (F11 closed, Decision 113; F27 closed, Decision 129) · plan CQ8, CQ9, CQ11 | ⏭ ready | Ken alone — zero-dependency, the standing low-friction session |
+| **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
-| **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked |
-| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed (Decisions 93, 106, 108–111, 115) · data matches Scott's finished Magic chapter and appendices (2026-09-24) · Origins still `status: "draft"`, though the CRB now drafts Book/Blood/Bound (2026-09-22) | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way question comparison from the 2026-09-10 meeting; not blocking |
-| **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a finished export. His current file is a two-page **portrait** WIP with only Stats built, in two competing styles; portrait vs. landscape is decided once it lands. The frame/texture print defect blocks on no one |
+| **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked; three Origins and four Trueborn powers unwritten |
+| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · data matches Scott's finished Magic chapter (2026-09-24) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
+| **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a finished export (portrait vs. landscape is decided once it lands). The frame/texture print defect blocks on no one |
 
-F5 (Cyber-Prophetical) isn't its own row — it's the last quarter of the
-Advantages/Disadvantages item and wholly waits on Cyborg's ruling; don't ask
-it separately.
+F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling;
+don't ask it separately.
 
 Archetype status in the data: `arcanist: draft · professional: draft ·
 werewolf: draft · cyborg: tbd · vampire: tbd`.
@@ -117,18 +107,18 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-**The 2026-09-24 whole-app audit** (`audits/2026-09-24_whole-app-audit.md`,
-one line per id in `INDEX.md` §2) drives it, through
-`plans/audit-2026-09-remediation.md`. **Ken has answered every question**
-(the plan's §5), and **S1 is done**: B11, B15 (F27, ruled), B16, B17, B18, C4, C13,
-C16, R9, the first half of R6, and AQ2 and AQ7, all mutation-tested.
-
-- **Next, no answers needed, any order:** S3 (the Professional as data:
-  B12–B14; propose its data shape first), S5 (tooling: embed the fonts per
-  AQ6, a release workflow a cloud session can run per AQ9), S2 (the docs
-  diet, and the §6 decision format made standard).
-- **Then S6 (table feel),** now specified by AQ4: rules text a hover or tap
-  away, lore on the Archetype tab, Ammo in the shop, and the phone header.
+**The audit plan's next sessions, any order, no answers needed:**
+- **S3, the Professional as data** (B12–B14, the Professional half of A8).
+  It's *Rule or shape*: propose the data shape first.
+- **S5, tooling:** the `SessionStart` hook and project skills (R5), `npm run
+  bump` and `release:check` (R4, the rest of A6), `test:fast`, one release
+  workflow a cloud session can run (AQ9), embedded fonts (AQ6), the dev
+  server on `127.0.0.1`.
+- **S4, read it or label it** (A9, the Arcanist half of A8), after S3, since
+  they touch the same engine functions.
+- **S6, table feel,** specified by AQ4: rules text a hover or tap away, lore
+  on the Archetype tab, Ammo in the shop, the phone and tablet header, the
+  roster.
 
 rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
 
@@ -136,38 +126,45 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**`main` is caught up through PR #56 and its release rename, tagged
-`v0.24.0` (app 0.24.0, schema 0.11, game data 0.17).** Check the live footer
-reads 0.24.0.
+**`main` is at `v0.24.0` (app 0.24.0, schema 0.11, game data 0.17).** S2
+changes no version: nothing in it reaches a player.
 
-**Next, all unblocked:** S3, S5 or S2 of the audit plan. Milestones &
-doc reconciliation (Ken alone): F9 (are General Milestones Professional-only?)
-and F13 need Ken or Deighton; F12 waits on 041's unwritten Advancement
-Section. The wishlist holds W28 (blocked), W29 (a GM mode, needs a server)
-and W30 (Reload from carried ammo).
+**Next, all unblocked:** S3 (propose first), S5 or S6. Ken alone: F9, F12,
+F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode) and W30
+(Reload from carried ammo).
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.
-- **Deighton:** F23, F24, F25 and **F26** as one question, plus W28
-  (Warding by Elemental/Spirit/Aether against the one Warding upgrade).
+- **Deighton:** one grouped question — F23, F24, F25, F26 and F28–F31 — plus
+  W28 (Warding by Elemental/Spirit/Aether against the one Warding upgrade).
   Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), and
-  the print export. From his finished Magic chapter: Concentration says a
-  Talisman holds a spell for 1 die fewer and an Artifact for 2, but the
-  Enchantment section says an inscribed spell isn't held at all. The data
-  still carries the first rule. **New:** the shop's inscribed objects name
-  13 spells the Book of Known Spells doesn't have (Blink, Everlight, Tracer,
-  Sure Grip, Sure Hand, Second Wind, Turning Rune, Watchward, Frost Trap,
-  Threshold Ward, Stasis Trap, Hearthstone, Consecrate). The catalog keeps
-  their names and links the other 14 to the book.
-- **Ken:** add `AP` (Armor Piercing) to the spell appendix's tag list, to
-  match Decision 116.
-- **Ken's CRB fixes:** CQ4, CQ5, CQ8, CQ9, CQ11, CQ12 and CQ13, plus the
-  25 IP new-skill price and the stat curve past 10. Each is written up in
-  `plans/combat-and-conditions.md` §6. F23 may want a line in Gear's RES text
-  once ruled. **New (Decision 129):** 041's Hardcore Parkour prerequisites
-  become 1 Major Milestone, Acrobatics 4 and Danger Sense 1 (Deighton; Cat
-  Like Balance and Time Sense go). The data already follows it.
+  the print export. From his Magic chapter: Concentration says a Talisman
+  holds a spell for 1 die fewer and an Artifact for 2, but the Enchantment
+  section says an inscribed spell isn't held at all; the data carries the
+  first. The shop's inscribed objects name 13 spells the Book of Known Spells
+  doesn't have (Blink, Everlight, Tracer, Sure Grip, Sure Hand, Second Wind,
+  Turning Rune, Watchward, Frost Trap, Threshold Ward, Stasis Trap,
+  Hearthstone, Consecrate); the catalog keeps their names.
+
+**Ken's CRB fixes** (the app already follows the answer in each; the
+questions' history is in `plans/combat-and-conditions.md` §6):
+- **CQ4:** Gear's Siege tag should say Siege causes Massive damage, to people too.
+- **CQ5:** 053 should say only Massive damage causes Injured/Maimed; a Called
+  Shot counts only when the weapon deals Massive.
+- **CQ8:** Gear's Conditions table becomes a pointer to 054's, the master.
+- **CQ9:** 054's Conditions table needs a Dying row (Helpless, Death Marks;
+  recovery Medical 20 or a Nanomed Kit).
+- **CQ11:** 053's worked attack example has enemy armor rolling PROT and skips
+  RES, against its own rules. One of them moves.
+- **CQ12:** Gear's Nanomed Kit entry adds Paralyzed, matching 054.
+- **CQ13:** 054 and 055 should agree on how Injured ends.
+- **041:** Hardcore Parkour's prerequisites become 1 Major Milestone,
+  Acrobatics 4 and Danger Sense 1 (Decision 129).
+- **The spell appendix:** add `AP` (Armor Piercing) to its tag list (Decision 116).
+- **The new-skill price** (a flat 25 IP, Decision 97) and **the stat curve
+  past 10** (Decision 98) need writing into the CRB. F23 may want a line in
+  Gear's RES text once ruled.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `041` (Decision 110), and Ken expects the Origins subtypes to replace
@@ -178,18 +175,15 @@ them.
 ## 6. Keeping this file honest
 
 - **Every volatile fact lives here and nowhere else.** `CLAUDE.md` carries no
-  counts. Session-log entries state figures *as of that session* and are never
+  counts. Log entries state figures *as of that session* and are never
   updated — they are history, and history does not drift.
-- **`tests/docs.test.mjs` enforces it.** The todo count, versions and length
-  of this file are checked, the flag table is checked against `flagged: true`
-  in the data, and every file `CLAUDE.md` points at must exist.
-- **§3 is organized by topic, not by sequence, on purpose (2026-09-12).** A
-  batch number implies "next in line"; several areas here are blocked on
-  different people and resolve in whatever order those people answer. Don't
-  reintroduce a `#` column to §3 — if a strict next-up order is ever needed
-  again, say so in prose rather than implying it with numbering.
-- **Describe what shipped in `log/`, not here.** A paragraph in §1 about a
-  finished batch is history; this file keeps only what's still true and what
-  to do next. That's what pushed it to the length cap on 2026-09-23.
-- **Close a session by rewriting §1–§5 here** and appending to `log/2026.md`, in
-  the same commit as the code.
+- **`tests/docs.test.mjs` enforces it:** the todo count, the versions and this
+  file's length are checked, the flag table is checked against the data, and
+  every file `CLAUDE.md` points at must exist.
+- **§3 is organized by topic, not by sequence, on purpose (2026-09-12).**
+  Several areas are blocked on different people and resolve in whatever
+  order those people answer. Don't reintroduce a `#` column to §3.
+- **Describe what shipped in `log/`, not here.** A paragraph about a finished
+  batch is history; this file keeps only what's still true and what's next.
+- **Rewrite §1–§5 when the change tier says so** (`CLAUDE.md`), in the same
+  commit as the work.

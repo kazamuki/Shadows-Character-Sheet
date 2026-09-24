@@ -5,8 +5,14 @@ this tells you **where a thing is written down**. It exists because the decision
 ledger passed eighty entries, and because the ids referenced everywhere — `A1`,
 `B7`, `C2`, `F8` — are each defined in exactly one place that is not obvious.
 
-Generated summaries are one line each and deliberately lossy — they are for
-*finding* a decision, never for citing one. `SCHEMA.md` §4 is the text that counts.
+The decision summaries in §3 are hand-written, one line each, and deliberately
+lossy — they are for *finding* a decision, never for citing one. `SCHEMA.md` §4
+is the text that counts.
+
+**Starting a session:** `../CLAUDE.md` (how we work, and the hard constraints),
+then `STATE.md` whole (where things stand), then here when you need to find
+something. That is the whole orientation path (Decision 132). `SCHEMA.md` is the
+authority and is never read front to back; §1 below says which section to open.
 
 ---
 
@@ -16,22 +22,26 @@ Generated summaries are one line each and deliberately lossy — they are for
 |---|---|
 | What's next, what's blocked, who can clear it | **`STATE.md`** §3 (§2 is what shipped work left behind; the board itself is `log/shipped.md`) |
 | Why a past decision was made | `SCHEMA.md` §4 — find the number in §3 below |
+| Whether a question is already settled | search `SCHEMA.md` §4's **Touches** lines for the thing it touches, then read that entry's **Rejected** and **Revisit if** (Decision 130) |
 | What an id like `A1` / `B7` / `C2` means | §2 below |
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
-| The shape of the game data or a character file | `SCHEMA.md` §2 and §3 |
-| What a batch will contain and why it is ordered that way | `SCHEMA.md` §6 (roadmap) |
-| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_) | `plans/` — **one proposed, waiting on Ken:** `audit-2026-09-remediation.md` (acting on the 2026-09-24 audit, `AQ`_n_). Two closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
+| The architecture, the shape of the game data or a character file | `SCHEMA.md` §1, §2 and §3 |
+| What a change must touch (docs, versions, decision, changelog) | `../CLAUDE.md`, *Change tiers* (Decision 131) |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **under way:** `audit-2026-09-remediation.md` (acting on the 2026-09-24 audit, `AQ`_n_). Two closed and kept as history: `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
-| What a past session cost, and what to watch for | `docs/log/2026.md` |
+| What a past session cost, and what to watch for | `log/2026.md` |
+| Text retired from a live document: the old phase roadmap, `meta.notes`, the closed-flag notes | `log/archive.md` — verbatim, never edited |
 | Whether a string is allowed to say that | `VOICE-APP.md` |
-| Whether the current WIP text already answers an open flag | `docs/reference/crb/README.md` |
-| What shipped in a release | `../CHANGELOG.md` — backward-looking only |
+| Whether the current WIP text already answers an open flag | `reference/crb/README.md` — mirrors of CRB documents, **never edited here**; re-pull instead |
+| What shipped in a release | `../CHANGELOG.md` — backward-looking only, in player voice |
 | How to work on this repo at all | `../CLAUDE.md` |
+| A finding by id (A1, B2, C3) | `audits/` — the dated audits; look the id up before working on it |
 
 **The trap worth naming:** `CHANGELOG.md` never describes upcoming work, and
 `log/shipped.md` is one line per batch. The *reasoning* for a batch — what it
-contains and why it is split that way — lives in **`SCHEMA.md` §6**.
+contains and why it is split that way — lives in its plan in `plans/`, and in
+its entry in `log/2026.md`.
 
 ---
 
@@ -46,6 +56,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `C`_n_ | Carried note — real but not yet actionable | C1–C3: rev 9 audit §3 · C4–C16: 2026-09-24 audit §6 |
 | `R`_n_ | Recommended practice — a proposal until Ken adopts it and it is numbered | 2026-09-24 audit §8 |
 | `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/audit-2026-09-remediation.md` §5 |
+| `CQ`_n_, `MQ`_n_ | Questions the combat and magic plans raised; all answered except Ken's open CRB fixes, now listed in `STATE.md` §5 | `plans/combat-and-conditions.md` §6 · `plans/magic-on-the-sheet.md` |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
 | `D`_n_ | Shorthand used here for decision _n_ | `SCHEMA.md` §4 |
 | `W`_n_ | Wishlist item — an idea, not a commitment; statuses live with the item | `WISHLIST.md` §1 |
@@ -75,10 +86,10 @@ Each id is defined in exactly one place and referenced everywhere.
 
 | Id | What | Status | Where |
 |---|---|---|---|
-| `A4` | Orientation spread across eight docs; the untested ones drifted | **open**: the stale facts fixed, the structure left | plan S2 |
-| `A5` | The decision ledger is doing three jobs | **open** | plan S2 |
-| `A6` | Per-change documentation tax out of proportion to the change | **open** | plan S2, S5 |
-| `A7` | Seven flags have no F-number; four are unasked Deighton questions | **open** | plan S2 |
+| `A4` | Orientation spread across eight docs; the untested ones drifted | closed | plan S2 · D132 |
+| `A5` | The decision ledger is doing three jobs | closed | plan S2 · D130 |
+| `A6` | Per-change documentation tax out of proportion to the change | **open**: tiers in place (D131); the scripts left | plan S5 (R4) |
+| `A7` | Seven flags had no F-number; four were unasked Deighton questions | closed | plan S2 · F28–F32 |
 | `A8` | Archetypes special-cased by id; Professional rules parsed from prose | **open** | plan S3, S4 |
 | `A9` | Data fields that look like settings but aren't read (B3's class) | **open** | plan S4 |
 | `A10` | Merged content no player can see | **open** | plan S6 · AQ4 |
@@ -95,7 +106,8 @@ Each id is defined in exactly one place and referenced everywhere.
 | `B19` | Phone: the sticky header covers 30% of the screen | **open** | plan S6 |
 | `C4`, `C13` | Import warnings vanished; the voice corpus read one archetype's sheet | closed | plan S1 · D125 |
 | `C16` | Main's subtitle read a field removed in schema 0.5, so it never named the specialization | closed | with B18 · app 0.24.0 |
-| `C5`–`C12`, `C14`, `C15` | Carried notes: `alert()`s, dead code, fonts offline, audit growth, orphans, `meta.notes`, closed plans with open work, dev server, releases, suite time | **open** | plan S2–S7 |
+| `C10`, `C11` | `meta.notes` was a changelog shipped in the data; closed plans hosted Ken's open CRB fixes | closed | plan S2 · D132 |
+| `C5`–`C9`, `C12`, `C14`, `C15` | Carried notes: `alert()`s, dead code, fonts offline, audit growth, orphans, dev server, releases, suite time | **open** | plan S5–S7 |
 
 ### Open flags
 
@@ -116,8 +128,14 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F24` | Ongoing damage while Dying at a Reset: one Death Mark per ticking source standing in for the check (stub), or the check plus a mark per source | Deighton |
 | `F25` | How Natural Armor answers a hit: stubbed as flat, after PROT and RES, anywhere, Kinetic unless Warded, ignores AP, skipped by Massive | Deighton |
 | `F26` | Does a shotgun count as a rifle for the Scope and the Angel Mod? Stubbed: no | Deighton |
+| `F28` | Suppression (weapon tag): no rule anywhere in the CRB | Deighton |
+| `F29` | Blast (weapon tag): how it differs from Area and Siege | Deighton |
+| `F30` | Anti-Materiel (weapon tag): what it does to a person | Deighton |
+| `F31` | Reach (weapon tag): what it adds to the Reach column | Deighton |
+| `F32` | Arcanist Major Milestones: bring in REF_CRB's, or wait for 041? | Ken |
 
-The one **unnumbered** flag (the stat curve past 10) closed with Decision 98.
+Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
+fails on one that doesn't (audit A7).
 
 ---
 
@@ -326,21 +344,25 @@ How the project itself is organised.
 
 - **54** *(Phase 3.4)* — The app becomes a repository.
 - **61** *(B5)* — The review step's number derives from creationFlow.steps.
-- **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place. → **superseded in part by 127**
+- **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place. → **superseded in part by 101, 127 and 132**
 - **86** *(Repository)* — Decision 54's deferred refactor lands: `src/ui/app.js` splits into four classic scripts.
 - **101** *(Docs)* — The batch board leaves `STATE.md` for `docs/log/shipped.md`, and unscheduled ideas get `docs/WISHLIST.md`.
 - **102** *(Docs)* — A decision that replaces another marks it in the same change — in SCHEMA §4 and here — and a test holds the two together.
 - **127** *(STATE's suite line — AQ2)* — STATE states the todo count only; no pass total, no live version.
+- **130** *(Decisions that stay decided — R1, AQ1)* — an entry is the decision, a *Touches* line, and Decided · Why · Rejected · Replaces · Revisit if · Built, in about 25 lines; search the Touches lines before proposing; the load-bearing fourteen are backfilled.
+- **131** *(Change tiers — R2)* — what each kind of change must touch; STATE and the log move when the tier says so, not on every change.
+- **132** *(One orientation path — A4, C10, C11)* — `CLAUDE.md` → `STATE.md` → `INDEX.md`; `docs/README.md` and the HANDOFF stub go; retired text goes verbatim to `log/archive.md`; SCHEMA is §1–§5.
 
 ---
 
 ## 4. Keeping this file honest
 
 `tests/docs.test.mjs` checks that **every decision number in `SCHEMA.md` §4 appears
-here exactly once**, and that every `F`-number open in §5 has a row in §2. Add a
-decision without indexing it and the build fails — which is the only reason to
-trust an index at all.
+here exactly once**, that every `F`-number open in §5 has a row in §2 and nothing
+closed does, that a supersession reads the same here as in the ledger, and that
+every flag in the data names an open F-number. Add a decision without indexing it
+and the build fails — which is the only reason to trust an index at all.
 
-The one-line summaries are generated from the first sentence of each decision.
-If one reads badly, fix the decision's opening sentence in `SCHEMA.md` rather than
-the line here — the ledger is the master.
+The one-line summaries are written by hand when a decision is numbered. Nothing
+checks their wording, so if one reads badly or no longer matches, fix the line
+here; the ledger is the master.
