@@ -128,8 +128,8 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**The live site is v0.25.1.** The spell catalog is app 0.26.0 (game data 0.20,
-schema 0.12), under `[Unreleased]` until released. Next, all unblocked: S5
+**The live site is v0.26.0** (game data 0.20, schema 0.12): the spell catalog and
+a spell's forms. Next, all unblocked: S5
 or S6. Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
 W30 (Reload from carried ammo), W31 (a TAGless character's TAG), W32 (spell
 damage from Spell Power, which wants a CRB line on rounding), W33 (Martial Arts
