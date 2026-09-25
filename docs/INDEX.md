@@ -96,8 +96,8 @@ Each id is defined in exactly one place and referenced everywhere.
 | `A8` | Archetypes special-cased by id; Professional rules parsed from prose | closed | plan S3 · D134 (Professional) · plan S4 · D135 (Arcanist, Werewolf) |
 | `A9` | Data fields that look like settings but aren't read (B3's class) | closed | plan S4 · D135 |
 | `A10` | Merged content no player can see | **closed** 2026-09-25 (Decision 139) | plan S6a · AQ4 |
-| `A11` | `notes: "natural"` doubles as a type marker | **open** | plan S7 |
-| `A12` | UI split by render/bind, not by screen | **open** | plan S7 |
+| `A11` | `notes: "natural"` doubles as a type marker | **closed** 2026-09-25 (Decision 142) | plan S7 · schema 0.13 |
+| `A12` | UI split by render/bind, not by screen | **closed** 2026-09-25 | plan S7 · binders beside their renderers |
 | `B11` | Mastering a spell trips `versionCheck`'s hand-edit warning | closed | plan S1 · app 0.23.1 |
 | `B12` | The Mercenary never picks its fifth Focused Skill | closed | plan S3 · D134 |
 | `B13` | Focused Skill Max Bonus never applied | closed | plan S3 · D134 |
@@ -112,7 +112,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `C10`, `C11` | `meta.notes` was a changelog shipped in the data; closed plans hosted Ken's open CRB fixes | closed | plan S2 · D132 |
 | `C7`, `C12`, `C14`, `C15` | Fonts fell back offline; the dev server listened on every interface; releases built twice with generated notes; no fast test loop | closed | plan S5 · D137 (C7) · D138 (C14) |
 | `C5` | Carried note: `alert()`s | **closed** 2026-09-25 (Decision 139) | plan S6a |
-| `C6`, `C8`, `C9` | Carried notes: dead code, audit growth, orphans | **open** | plan S7 |
+| `C6`, `C8`, `C9` | Carried notes: dead code, audit growth, orphans | **closed** 2026-09-25 (C8's undo half by Decision 142; its size half stays a watch: revisit past ~1 MB) | plan S7 · app 0.28.2 |
 
 ### Open flags
 
@@ -228,7 +228,7 @@ Where game text comes from and how it is merged.
 The generic archetype structure, and the pick that defines one.
 
 - **15** — Archetypes: generic six-block structure (Power Scaling, Baseline Traits, Specialization, Core Mechanic, Powers & Vu...
-- **17** *(Phase 2)* — Professional natural advantages are stored as normal advantages entries with notes: "natural" and cost 0 CP — they...
+- **17** *(Phase 2)* — Professional natural advantages are stored as normal advantages entries with notes: "natural" and cost 0 CP — they... → **superseded in part by 142**
 - **20** *(Phase 2)* — Aberration prose benefits display as reference text only; only structured fields (e.g.
 - **21** ~~*(Phase 2)* — Common-spell selection is deferred to Phase 3; the wizard shows the computed count (TOL + 2d4) only.~~ → **superseded by 25**
 - **58** *(CRB v4 content pass)* — The Phase 4 selection system is now specified by the rulebook rather than proposed — and none of it is encoded yet. → **superseded in part by 77 and 87**
@@ -254,6 +254,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first. → **superseded in part by 133 and 141**
 - **133** *(The TAG)* — `meta.id` is `TAG-XXXX-XXXX-XXXX`, shown as itself; a 0.11 `NCR-` number keeps its twelve characters under the new prefix; schema 0.12.
 - **141** *(The roster — R10, AQ5)* — one `localStorage` entry per TAG, draft through locked; Home lists them with Open, Export and Remove and marks play no file holds; only an older copy of the same character asks before it replaces.
+- **142** *(The natural-advantage marker — A11)* — a Professional's free advantage is `source: "natural"`, not a note; schema 0.13 moves the old marker, in the undo history too.
 
 ### Engine contracts
 

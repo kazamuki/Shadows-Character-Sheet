@@ -1004,8 +1004,8 @@ window.SHADOWS_DATA = {
      marks traits any archetype may take. Multi-rank scaling lives in the prose
      `description`. Supernatural archetypes with `canPurchaseAdvantages:false`
      cannot buy any of these (Decision 12). Professional "natural" advantages are
-     stored on the character as normal entries with notes:"natural" at 0 CP
-     (Decision 17) -- they are NOT a separate list here. `id` is referenced by
+     stored on the character as normal entries with source:"natural" at 0 CP
+     (Decisions 17, 142) -- they are NOT a separate list here. `id` is referenced by
      milestone/advantage prerequisites, so do not rename existing ids.
      REVIEW (F5 - adv/disadv audit): the CRB v4 pass closed three of the four.
      Field Medic now names the catalog's "Medical"; Combat Paralysis' text is no

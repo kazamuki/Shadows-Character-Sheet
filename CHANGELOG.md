@@ -23,6 +23,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.28.2
+
+- **The load check names everything that's gone.** When a file holds a weapon, armor,
+  gear, spell or specialization this version of the game no longer has, the notice at the
+  top of the page now says which, as it already did for skills, advantages and Conditions.
+
 ## v0.28.1 — 2026-09-25
 
 - **Version numbers you can read.** Each release in **What's new** shows its version in

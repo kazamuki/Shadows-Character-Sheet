@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.28.2",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**The load check names everything that's gone.** When a file holds a weapon, armor, gear, spell or specialization this version of the game no longer has, the notice at the top of the page now says which, as it already did for skills, advantages and Conditions."
+    ]
+  },
+  {
     "version": "0.28.1",
     "date": "2026-09-25",
     "intro": [],
