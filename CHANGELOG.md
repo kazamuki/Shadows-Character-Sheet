@@ -23,6 +23,28 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.27.0
+
+- **Tap a tag to read it.** AP, Conceal, Burning, Blast (10m) and every other tag on a
+  weapon, an arrowhead or a spell now tells you what it does. Hover or tap it on Main, on
+  Loadout, in the catalog and in your Grimoire. A few the book hasn't pinned down yet say
+  so, and leave it to your GM.
+- **Your stats say what they mean.** Hover or tap a score on Main to read what a 3, a 6
+  or an 8 says about you, and what changes past 10.
+- **Ammo is in the shop.** Rounds, shells, power cells and arrowheads have their own
+  section in the equipment catalog. Buy a pack of broadheads and a dozen go in your bag,
+  counted down with Use one.
+- **The rules are on the sheet.** Skills has *How a check works*: the roll, the target
+  numbers, the 10 that explodes and the 1 that botches. The Archetype tab has your
+  *Lineage*, and an Arcanist's Magic reference adds charging, holding a spell, the
+  Sovereign Soul, learning and teaching, the Glyphs of each Domain, and the Enchantment
+  and Alchemy tables.
+- **Each archetype's story, up front.** Choosing an archetype in character creation shows
+  its lore.
+- **No more pop-up boxes.** When the sheet can't do something, it says why at the bottom
+  of the screen without stopping you. Deleting a session or removing a Milestone asks in
+  the sheet's own window, with Cancel ready.
+
 ## v0.26.1 — 2026-09-25
 
 - **The sheet looks the same offline.** Its typefaces travel inside the file now, so a

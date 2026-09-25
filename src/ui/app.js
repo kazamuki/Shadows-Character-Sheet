@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.26.1";
+const APP_VERSION = "0.27.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -289,7 +289,7 @@ function openCatalog(kind){
         const buy = b.dataset.catbuy!=null, id = buy ? b.dataset.catbuy : b.dataset.catadd;
         if (!id) return;
         const pre = Engine.addLoadout(clone(ch), kind, id, { buy });
-        if (!pre.ok){ alert(pre.why); return; }
+        if (!pre.ok){ notice(pre.why); return; }
         const n = pre.added>1 ? ` ×${pre.added}` : "";
         commit("loadout", buy ? `Bought ${pre.name}${n} (−${pre.paid}${Engine.creditSymbol()})` : `Added ${pre.name}${n}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
         refresh();
@@ -322,7 +322,7 @@ function openAberrationPicker(mode){
         const entry = { id: b.dataset.abpick, permanence: S.abPick.permanence };
         if (fromCascade) entry.note = `Cascade, ${new Date().toISOString().slice(0,10)}`;
         const r = Engine.recordAberration(clone(ch), entry);      // validate without mutating
-        if (!r.ok){ alert(r.why); return; }
+        if (!r.ok){ notice(r.why); return; }
         commit("aberration", `${fromCascade?"Cascade":"Aberration"}: ${r.name} (${entry.permanence})`, ()=>{ Engine.recordAberration(ch, entry); });
         closeModal();
       };
@@ -408,7 +408,7 @@ function bindVitalControls(root){
   // a body-part Condition asks where first, through the same Add.
   const addCond = (id, location) => {
     const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
-    if (!r.ok){ alert(r.why); return; }
+    if (!r.ok){ notice(r.why); return; }
     S.condPick=null;
     commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
   };
@@ -421,7 +421,7 @@ function bindVitalControls(root){
   root.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
   root.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
     const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
-    if (!location){ alert("Pick the body part."); return; }
+    if (!location){ notice("Pick the body part."); return; }
     addCond(b.dataset.condadd, location);
   });
   root.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
@@ -521,10 +521,11 @@ function bindSheet(){
 
   // ── Activity Log: last-in-first-out undo (NOT itself logged) ──────────
   main.querySelectorAll("[data-undolast]").forEach(b=>b.onclick=()=>{
-    const r=Engine.undoLastAction(ch); if(!r.ok){ alert(r.why); return; } update();
+    const r=Engine.undoLastAction(ch); if(!r.ok){ notice(r.why); return; } update();
   });
   main.querySelectorAll("[data-admin-clearlog]").forEach(b=>b.onclick=()=>{
-    if (confirm("Clear the activity log? This removes history only (no character values change) and cannot be undone.")){ ch.audit=[]; update(); }
+    askFirst({ title:"Clear the activity log?", text:"This removes history only. No character values change, and it can't be undone.",
+      yes:"Clear the log", then:()=>{ ch.audit=[]; update(); } });
   });
   // Admin banner controls
   main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; window.scrollTo(0,0); update(); });
@@ -554,16 +555,16 @@ function bindSheet(){
     const input=actInput(ch, st), plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
     if (st.kind==="reset"){
       const r=Engine.resolveReset(ch, input);
-      if (!r.ok){ alert(r.why); return; }
-      if (r.prompts.atZero && !st.atZero){ alert("Mark the check at zero as passed or failed first."); return; }
-      if (r.prompts.dyingCheck && !st.dyingCheck){ alert("Mark the Dying check as passed or failed first."); return; }
+      if (!r.ok){ notice(r.why); return; }
+      if (r.prompts.atZero && !st.atZero){ notice("Mark the check at zero as passed or failed first."); return; }
+      if (r.prompts.dyingCheck && !st.dyingCheck){ notice("Mark the Dying check as passed or failed first."); return; }
       const marks = r.marks + (r.prompts.dyingCheck && st.dyingCheck==="fail" ? 1 : 0);
       const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":""].filter(Boolean);
       S.act=null;
       commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck }); });
     } else if (st.kind==="rest" || st.kind==="focused" || st.kind==="nanomed"){
       const r=Engine.heal(clone(ch), input);
-      if (!r.ok){ alert(r.why); return; }
+      if (!r.ok){ notice(r.why); return; }
       const bits=[r.healed?`+${r.healed} HP`:"", r.restored?`${plural(r.restored,"Massive level")} restored`:"",
         ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
       const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}`
@@ -579,7 +580,7 @@ function bindSheet(){
     } else if (st.kind==="wear"){
       const w=Engine.armorState(ch).worn; if (!w) return;
       const r=Engine.armorWear(clone(ch), w.index, input);
-      if (!r.ok){ alert(r.why); return; }
+      if (!r.ok){ notice(r.why); return; }
       S.act=null;
       commit("loadout", `Armor wear (${r.die}): ${r.name} −${r.lost} Integrity${r.selfHeal&&r.selfHeal.healed?`, +${r.selfHeal.healed} ${r.selfHeal.feature}`:""}`,
         ()=>{ Engine.armorWear(ch, w.index, input); });
@@ -632,13 +633,13 @@ function bindSheet(){
     const c=Engine.ipCost(ch,type,id);
     const nm = type==="stat" ? id : (Engine.skillById(id)||{name:id}).name;
     const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
-    commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) alert(r.why); });
+    commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
   });
   main.querySelectorAll("[data-ipgrant]").forEach(b=>b.onclick=()=>{
     const amt=num(main.querySelector("[data-ipamt]"));
     const note=(main.querySelector("[data-ipnote]")||{}).value||"";
     const pre=Engine.grantIP(clone(ch), amt, note);   // validate without mutating
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("ip", `IP grant +${Math.floor(amt)}${note?` (${note})`:""}`, ()=>{ Engine.grantIP(ch, amt, note); });
   });
 
@@ -651,12 +652,12 @@ function bindSheet(){
     const id=b.dataset.takeminor;
     if (id==="improved"){ S.askImproved=true; update(); return; }
     const nm=(D.milestones.minorShared.find(m=>m.id===id)||{name:id}).name;
-    commit("milestone", `Take Minor: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"minor",id); if(!r.ok) alert(r.why); });
+    commit("milestone", `Take Minor: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"minor",id); if(!r.ok) notice(r.why); });
   });
   main.querySelectorAll("[data-improvok]").forEach(b=>b.onclick=()=>{
     const roll=num(main.querySelector("[data-improvroll]"));
     const pre=Engine.takeMilestone(clone(ch),"minor","improved");
-    if (!pre.ok){ alert(pre.why); S.askImproved=false; update(); return; }
+    if (!pre.ok){ notice(pre.why); S.askImproved=false; update(); return; }
     commit("milestone", `Take Minor: Improved${roll?` (+${roll} IP)`:""}`, ()=>{
       Engine.takeMilestone(ch,"minor","improved");
       if (roll) Engine.grantIP(ch, roll, "Improved milestone (2d10+15)");
@@ -666,21 +667,23 @@ function bindSheet(){
   main.querySelectorAll("[data-improvcancel]").forEach(b=>b.onclick=()=>{ S.askImproved=false; update(); });
   main.querySelectorAll("[data-takemajor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takemajor;
-    if (b.dataset.gm==="1" && !confirm("This Milestone has prerequisites the table adjudicates (see gold chips). Has your GM signed off?")) return;
     const nm=((D.milestones.majorGeneral||[]).find(m=>m.id===id)||{name:id}).name;
-    commit("milestone", `Take Major: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"major",id); if(!r.ok) alert(r.why); });
+    const take=()=>commit("milestone", `Take Major: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"major",id); if(!r.ok) notice(r.why); });
+    if (b.dataset.gm!=="1") return take();
+    askFirst({ title:`Take ${nm}?`, text:"This Milestone has prerequisites your table decides (the gold chips). Take it once your GM has signed off.",
+      yes:"My GM signed off", danger:false, then:take });
   });
   main.querySelectorAll("[data-delminor]").forEach(b=>b.onclick=()=>{
-    if (!confirm("Remove this Minor Milestone from the record?")) return;
     const i=Number(b.dataset.delminor), t=(ch.progression.milestones.minor[i]||{});
     const nm=(D.milestones.minorShared.find(m=>m.id===t.id)||{name:t.id||""}).name;
-    commit("milestone", `Remove Minor: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"minor",i); });
+    askFirst({ title:"Remove this Minor Milestone?", text:`${nm} comes off the record.`, yes:"Remove it",
+      then:()=>commit("milestone", `Remove Minor: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"minor",i); }) });
   });
   main.querySelectorAll("[data-delmajor]").forEach(b=>b.onclick=()=>{
-    if (!confirm("Remove this Major Milestone from the record?")) return;
     const i=Number(b.dataset.delmajor), t=(ch.progression.milestones.major[i]||{});
     const nm=((D.milestones.majorGeneral||[]).find(m=>m.id===t.id)||{name:t.id||""}).name;
-    commit("milestone", `Remove Major: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"major",i); });
+    askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record.`, yes:"Remove it",
+      then:()=>commit("milestone", `Remove Major: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"major",i); }) });
   });
 
   // Sessions
@@ -698,9 +701,9 @@ function bindSheet(){
     window.scrollTo(0,0);
   });
   main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
-    if (!confirm("Delete this session? Its IP and Milestone Point come off the totals — spent IP may go negative.")) return;
     const i=Number(b.dataset.sesdel), s=ch.sessions[i]||{};
-    commit("session", `Delete session${s.title?`: ${s.title}`:""}`, ()=>{ ch.sessions.splice(i,1); });
+    askFirst({ title:"Delete this session?", text:"Its IP and Milestone Point come off the totals. If you've spent that IP, what you have left can go negative.",
+      yes:"Delete the session", then:()=>commit("session", `Delete session${s.title?`: ${s.title}`:""}`, ()=>{ ch.sessions.splice(i,1); }) });
   });
 
   // Editable tables (weapons / gear / panel tables)
@@ -722,8 +725,8 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-spellmaster]").forEach(b=>b.onclick=()=>{
     const id = b.dataset.spellmaster, c = Engine.ipCost(ch, "spell", id);
-    if (!c.ok){ alert(c.why); return; }
-    if (Engine.ipState(ch).available < c.cost){ alert(`Not enough IP (need ${c.cost}).`); return; }
+    if (!c.ok){ notice(c.why); return; }
+    if (Engine.ipState(ch).available < c.cost){ notice(`Not enough IP (need ${c.cost}).`); return; }
     commit("ip", `Mastered ${spellName(id)} (−${c.cost} IP)`, ()=>{ Engine.spendIP(ch, "spell", id); });
   });
   main.querySelectorAll("[data-rowadd]").forEach(b=>b.onclick=()=>{
@@ -749,22 +752,22 @@ function bindSheet(){
   // Gear (Decision 121): Use one, +1, a charge, Recharged — each one commit().
   main.querySelectorAll("[data-gearuse]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.gearuse), pre=Engine.useGear(clone(ch), i, 1);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `Used ${pre.name} (${pre.left} left)`, ()=>{ Engine.useGear(ch, i, 1); });
   });
   main.querySelectorAll("[data-gearplus]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.gearplus), pre=Engine.useGear(clone(ch), i, -1);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `${pre.name} +1 (${pre.left})`, ()=>{ Engine.useGear(ch, i, -1); });
   });
   main.querySelectorAll("[data-gearcharge]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.gearcharge), pre=Engine.useCharge(clone(ch), i);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `${pre.name}: a charge used (${pre.left}/${pre.max})`, ()=>{ Engine.useCharge(ch, i); });
   });
   main.querySelectorAll("[data-gearrecharge]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.gearrecharge), pre=Engine.rechargeGear(clone(ch), i);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `${pre.name}: recharged (${pre.max}/${pre.max})`, ()=>{ Engine.rechargeGear(ch, i); });
   });
   main.querySelectorAll("[data-lobrowse]").forEach(b=>b.onclick=()=>openCatalog(b.dataset.lobrowse));
@@ -796,7 +799,7 @@ function bindSheet(){
   main.querySelectorAll("[data-wmodadd]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.wmodadd), id=(main.querySelector(`[data-wmodpick="${i}"]`)||{}).value;
     const pre=Engine.addWeaponMod(clone(ch), i, id);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `Installed ${id} on ${loName("weapons", i)}`, ()=>{ Engine.addWeaponMod(ch, i, id); });
   });
   main.querySelectorAll("[data-wmodrm]").forEach(b=>b.onclick=()=>{
@@ -806,18 +809,18 @@ function bindSheet(){
   main.querySelectorAll("[data-fire]").forEach(b=>b.onclick=()=>{
     const [i,mode]=b.dataset.fire.split("|"), idx=Number(i);
     const pre=Engine.fireWeapon(clone(ch), idx, mode);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `${pre.name||"Weapon"}: ${pre.mode||"fired"} −${pre.spent} (${pre.left}/${pre.max} left)`, ()=>{ Engine.fireWeapon(ch, idx, mode); });
   });
   main.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.reload), pre=Engine.reloadWeapon(clone(ch), i);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `Reloaded ${pre.name||"weapon"} (${pre.max})`, ()=>{ Engine.reloadWeapon(ch, i); });
   });
   main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;
     const pre=Engine.addUpgrade(clone(ch), i, id);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", `Installed ${id} in ${loName("armor", i)}`, ()=>{ Engine.addUpgrade(ch, i, id); });
   });
   main.querySelectorAll("[data-upgrm]").forEach(b=>b.onclick=()=>{
@@ -828,7 +831,7 @@ function bindSheet(){
     const i=Number(full?b.dataset.repairfull:b.dataset.repairkit);
     const input = full ? { full:true } : { roll:(main.querySelector(`[data-repairroll="${i}"]`)||{}).value };
     const pre=Engine.repairArmor(clone(ch), i, input);
-    if (!pre.ok){ alert(pre.why); return; }
+    if (!pre.ok){ notice(pre.why); return; }
     const kit = !full && Engine.carriedGear(ch, "field-repair-kit");   // W17: a use off the kit you carry
     commit("loadout", `${full?"Armorer":"Field Repair Kit"}: ${pre.name} +${pre.restored} Integrity${kit?`, ${kit.qty-1} kit use${kit.qty===2?"":"s"} left`:""}`, ()=>{
       Engine.repairArmor(ch, i, input);
@@ -867,12 +870,14 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-admin-arch]").forEach(sel=>sel.onchange=()=>{
     const v=sel.value||null; if (ch.identity.archetype===v) return;
-    if (!confirm("Change archetype? This clears all archetype-specific choices (focus/stat-bonus allocations, specialization, disciplines, natural advantages). It's logged, so a single undo restores everything.")){ sel.value=ch.identity.archetype||""; return; }
+    sel.value=ch.identity.archetype||"";   // until the answer is yes
     const nm = v ? (D.archetypes.find(a=>a.id===v)||{name:v}).name : "none";
-    commit("admin", `Admin: archetype → ${nm}`, ()=>{
-      ch.identity.archetype=v;
-      resetArchetypeChoices(ch);
-    });
+    askFirst({ title:`Change archetype to ${nm}?`,
+      text:"This clears every archetype-specific choice: focus and stat-bonus allocations, specialization, disciplines and natural advantages. It's logged, so one undo restores everything.",
+      yes:"Change archetype", then:()=>commit("admin", `Admin: archetype → ${nm}`, ()=>{
+        ch.identity.archetype=v;
+        resetArchetypeChoices(ch);
+      }) });
   });
   main.querySelectorAll("[data-admin-stat]").forEach(b=>b.onclick=()=>{
     const [id,field,d]=b.dataset.adminStat.split("|"), delta=Number(d);
