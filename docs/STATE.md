@@ -130,8 +130,8 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**The live site is v0.26.1** (game data 0.20, schema 0.12): embedded fonts and
-Oxanium numbers, the first release from the release workflow. 0.28.0 (S6a, rules a tap away; S6b, the header; S6c, the roster) is built, not yet released. Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
+**The live site is v0.28.0** (game data 0.21, schema 0.12): the audit's table feel,
+rules a tap away (S6a), the header (S6b) and the roster (S6c). Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
 W30 (Reload from carried ammo), W31 (a TAGless character's TAG), W32 (spell
 damage from Spell Power, which wants a CRB line on rounding), W33 (Martial Arts
 styles), W34–W37 (character creation) and W38 (two tabs on one character).
