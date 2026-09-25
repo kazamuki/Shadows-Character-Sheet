@@ -3247,7 +3247,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Rejected:**
        - Reusing `openPopover`: it only finds triggers in `#main`, takes focus, and would open under the catalog modal.
        - The native `title=` tooltip: no touch, no keyboard, slow.
-       - A fourth catalog beside Weapons (AQ4's words): ammo is carried and counted like gear (packs, Use one), and the section filter puts it one click away.
+       - A fourth catalog beside Weapons: ammo is carried and counted like gear (packs, Use one). Ken meant a section of its own in the equipment catalog all along (2026-09-25).
        - Lore inside every archetype card: five long paragraphs swamp the grid.
        - Keeping ammo's `weaponType`: nothing read it (Decision 135); it's in the notes until W30 needs it.
      - **Replaces:** Decision 92 in part: ammunition and arrowheads aren't their own arrays any more.
