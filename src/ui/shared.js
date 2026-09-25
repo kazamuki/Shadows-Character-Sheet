@@ -61,17 +61,99 @@ const normSection = s => s==="admin" ? (S.admin?"admin":"main")
                         : (SHEET_IDS.includes(s) ? s : (LEGACY_SECTION[s] || "main"));
 let S = { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false };
 
-// Autosave (guarded — the app works fine without storage)
-const DRAFT_KEY = "shadows.draft.v1";
-const ACTIVE_KEY = "shadows.active.v1";   // Phase 3: live sheet survives refresh
-function saveDraft(){ try{ if(S.ch && !S.ch.creation.locked) localStorage.setItem(DRAFT_KEY, JSON.stringify({ch:S.ch, step:S.step, maxReached:S.maxReached})); }catch(e){} }
-function loadDraft(){ try{ const r=localStorage.getItem(DRAFT_KEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
-function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }
-function saveActive(){ try{ if(S.ch && S.ch.creation.locked) localStorage.setItem(ACTIVE_KEY, JSON.stringify({ch:S.ch, section:S.section})); }catch(e){} }
-function loadActive(){ try{ const r=localStorage.getItem(ACTIVE_KEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
+// ── The roster (R10, Decision 141) ────────────────────────────────────
+// Every character this browser keeps is one localStorage key named by its
+// TAG, draft and sheet alike: locking updates the same entry, and a second
+// character is added, never swapped in. An entry is
+// { ch, step, maxReached, section, changed, exported }. `changed` moves only
+// when the stored character actually differs (a re-render isn't a change),
+// and always forward; `exported` is the `changed` it had when it last went to
+// a file. Home says a character has play its file doesn't whenever the two
+// differ, with no clock comparison to get wrong. Neither is ever written
+// into the character. Guarded throughout: the app works without storage.
+const CHAR_PREFIX = "shadows.char.v1.";
+const LEGACY_KEYS = ["shadows.active.v1", "shadows.draft.v1"];   // before 0.28: one sheet, one draft
+const charKey = id => CHAR_PREFIX + id;
+let lastSaved = null;   // { id, json, changed, exported }: the open character as last written
+let untouched = null;   // a New character's JSON until the player changes something
+let saveFailed = false;
+function readEntry(key){
+  try{
+    const r=localStorage.getItem(key), v=r && JSON.parse(r);
+    return v && typeof v==="object" && v.ch && typeof v.ch==="object" ? v : null;
+  }catch(e){ return null; }
+}
+function savedChar(id){ return Engine.isIntakeId(id) ? readEntry(charKey(id)) : null; }
+function writeEntry(id, ch, view, changed, exported){
+  const json=typeof ch==="string" ? ch : JSON.stringify(ch);
+  const rest=JSON.stringify({ step:view.step||0, maxReached:view.maxReached||0, section:view.section||"main", changed, exported:exported||null });
+  localStorage.setItem(charKey(id), `{"ch":${json},${rest.slice(1)}`);
+}
+function saveChar(){
+  const ch=S.ch, id=intakeOf(ch); if (!id) return;
+  const json=JSON.stringify(ch);
+  if (json===untouched) return;
+  untouched=null;
+  if (!lastSaved || lastSaved.id!==id){ const e=savedChar(id); lastSaved={ id, json:e?JSON.stringify(e.ch):null, changed:e&&e.changed, exported:e&&e.exported }; }
+  let changed=lastSaved.changed;
+  if (json!==lastSaved.json || !changed){
+    const was=Date.parse(changed); let t=Date.now();
+    if (Number.isFinite(was) && t<=was) t=was+1;
+    changed=new Date(t).toISOString();
+  }
+  try{
+    writeEntry(id, json, S, changed, lastSaved.exported);
+    lastSaved.json=json; lastSaved.changed=changed; saveFailed=false;
+  }catch(e){
+    // A full or blocked storage used to fail without a word. The page says so
+    // until a save goes through (importIssuesHtml): a toast would be gone
+    // under the next action's undo.
+    saveFailed=true;
+  }
+}
+// Called on every export: the file now holds what's stored.
+function markExported(id){
+  const e=savedChar(id); if (!e) return;
+  e.exported=e.changed;
+  try{ localStorage.setItem(charKey(id), JSON.stringify(e)); }catch(err){}
+  if (lastSaved && lastSaved.id===id) lastSaved.exported=e.exported;
+}
+function removeChar(id){
+  try{ localStorage.removeItem(charKey(id)); }catch(e){}
+  if (lastSaved && lastSaved.id===id) lastSaved=null;
+}
+// Every saved character, the most recently changed first.
+function rosterEntries(){
+  const out=[];
+  try{
+    for (let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if (!k || k.indexOf(CHAR_PREFIX)!==0 || !Engine.isIntakeId(k.slice(CHAR_PREFIX.length))) continue;
+      const e=readEntry(k); if (e) out.push(Object.assign(e, { id:k.slice(CHAR_PREFIX.length) }));
+    }
+  }catch(e){}
+  const t = e => { const n=Date.parse(e.changed); return Number.isFinite(n) ? n : 0; };
+  return out.sort((a,b)=>t(b)-t(a));
+}
+const unexported = e => !e.exported || e.exported!==e.changed;
+// The two slots a 0.27 browser kept become roster entries on first load. An
+// old key goes only once its entry is written; one that doesn't parse stays.
+// If both hold the same character, the newer copy wins, as on import.
+function migrateLegacySlots(){
+  for (const key of LEGACY_KEYS){
+    const r=readEntry(key); if (!r) continue;
+    try{
+      const c=Engine.migrate(clone(r.ch)), id=intakeOf(c);
+      const have=savedChar(id);
+      if (!have || supersedes(c, Engine.migrate(clone(have.ch))))
+        writeEntry(id, c, r, (c.meta && c.meta.updated) || new Date().toISOString(), null);
+      localStorage.removeItem(key);
+    }catch(e){}
+  }
+}
 
 function update(rerenderMain=true){
-  saveDraft(); saveActive();
+  saveChar();
   if (rerenderMain){ renderMain(); sweepTip(); }
   renderLedger(); renderVitals();
 }
@@ -475,11 +557,11 @@ function resetArchetypeChoices(ch){
   if (!ch.creation.locked) ch.panelData = {};
 }
 
-// ── The saved character, and what may replace it (B18, Decision 128) ──
-// This browser keeps one live sheet and one draft. Import, New and Lock each
-// put a character in a slot; before one takes the place of a *different*
-// character, or of a newer copy of the same one, the player is asked, with a
-// way to export what's there first. The intake number tells them apart.
+// ── What may replace a saved character (B18, Decisions 128, 141) ──────
+// Each character has its own entry, keyed by its TAG, so a different
+// character is simply added. The one thing still asked about is a file that
+// would put an older copy of a character in place of a newer saved one, with
+// a way to export what's there first.
 const charName = c => String(((c && c.identity) || {}).name || "").trim() || "your unnamed character";
 const intakeOf = c => (c && c.meta && Engine.isIntakeId(c.meta.id)) ? c.meta.id : "";
 function supersedes(incoming, saved){
@@ -499,7 +581,7 @@ function guardReplace(saved, incoming, words, proceed){
   const who = esc(charName(saved)), id = intakeOf(saved);
   openModal({ title: words.title,
     html: `<p>${words.lead}</p>
-      <p class="step-note">This browser keeps one sheet and one draft at a time. Anything about <b>${who}</b>${id?` (${esc(id)})`:""} that you haven't exported is lost.</p>`,
+      <p class="step-note">Anything about <b>${who}</b>${id?` (${esc(id)})`:""} that you haven't exported is lost.</p>`,
     foot: `<button class="btn" data-replaceexport>Export ${who} first</button>
       <button class="btn primary" data-replacego>${esc(words.go)}</button>
       <button class="btn" data-modalclose>Cancel</button>`,
@@ -539,6 +621,10 @@ function loadFindings(c){
   return { importIssues: issues, importSticky: !versionOnly };
 }
 function importIssuesHtml(){
+  const failed = saveFailed ? `<div class="import-issues" role="alert">${issuesHtml([{level:"error", msg:"This browser couldn't save your last change. Export the character now so nothing is lost."}])}</div>` : "";
+  return failed + loadIssuesHtml();
+}
+function loadIssuesHtml(){
   const list = S.importIssues || [];
   if (!list.length) return "";
   const body = issuesHtml(list.map(m=>({level:"warn",msg:m})));

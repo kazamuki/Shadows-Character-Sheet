@@ -89,7 +89,7 @@ function renderedCorpus() {
       ch.creation.powerLevel = D.powerLevels[0].id;
       ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
       const app = boot({ storage: { "shadows.draft.v1": { ch, step, maxReached: step } } });
-      const resume = app.$("#btn-resume");
+      const resume = app.$("[data-open]");
       if (!resume) continue;
       resume.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
       parts.push(visibleText(app));
@@ -193,7 +193,7 @@ test("no element renders a raw status as its own text", () => {
     ch.creation.powerLevel = D.powerLevels[0].id;
     ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
     const w = boot({ storage: { "shadows.draft.v1": { ch, step: 3, maxReached: 7 } } });
-    w.$("#btn-resume").dispatchEvent(new w.window.MouseEvent("click", { bubbles: true }));
+    w.$("[data-open]").dispatchEvent(new w.window.MouseEvent("click", { bubbles: true }));
     scan(w);
 
     const locked = { ...JSON.parse(JSON.stringify(ch)) };

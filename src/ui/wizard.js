@@ -515,42 +515,100 @@ function renderReview(){
 }
 
 // ── Home ─────────────────────────────────────────────────────────────
+// The roster (R10, Decision 141): every character this browser keeps, the
+// most recently changed first, each with open, export and remove. A card
+// says when its changes haven't reached a file, because browser storage is
+// a convenience and the exported file is the copy that lasts.
+function whenText(iso){
+  const t=Date.parse(iso); if (!Number.isFinite(t)) return "";
+  const m=Math.round((Date.now()-t)/60000);
+  if (m<1) return "just now";
+  if (m<60) return m+" min ago";
+  const h=Math.round(m/60); if (h<24) return h+" h ago";
+  const d=Math.round(h/24); if (d===1) return "yesterday";
+  return d<7 ? d+" days ago" : new Date(t).toLocaleDateString();
+}
+const stepOf = (n, max=STEPS.length-1) => { n=Number(n); return Number.isInteger(n) && n>=0 && n<=max ? n : 0; };
+function rosterCardHtml(e){
+  const c=Engine.migrate(clone(e.ch)), locked=!!c.creation.locked, id=esc(e.id);
+  const arch=D.archetypes.find(a=>a.id===c.identity.archetype);
+  const where = locked ? "Sheet · "+((SHEET_SECTIONS.find(s=>s.id===normSection(e.section))||SHEET_SECTIONS[0]).label)
+                       : `Draft · step ${stepOf(e.step)+1} of ${STEPS.length}`;
+  const bits=[arch?arch.name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
+  return `<li class="roster-card" data-card="${id}">
+    <div class="roster-top"><b class="roster-name">${esc(String(c.identity.name||"").trim() || "Unnamed")}</b><span class="roster-where">${esc(where)}</span></div>
+    <div class="roster-meta"><span class="roster-tag">${id}</span>${bits?" · "+bits:""}</div>
+    ${unexported(e)?`<div class="roster-unexported">Changes not exported yet</div>`:""}
+    <div class="roster-actions">
+      <button class="btn primary sm" data-open="${id}">${locked?"Open sheet":"Resume draft"}</button>
+      <button class="btn sm" data-exportchar="${id}">Export</button>
+      <button class="btn sm" data-remove="${id}">Remove</button>
+    </div></li>`;
+}
+function openEntry(e){
+  const c=Engine.migrate(clone(e.ch));
+  lastSaved=null; untouched=null;
+  // Resume must migrate like every other load path: a draft saved under an
+  // older schema otherwise comes back with its data where no reader looks.
+  S = c.creation.locked
+    ? Object.assign({screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:normSection(e.section)}, loadFindings(c))
+    : {screen:"wizard", ch:c, step:stepOf(e.step), maxReached:Math.max(stepOf(e.step), stepOf(e.maxReached)), section:"main"};
+  update();
+}
+function exportEntry(e){ exportCharacter(Engine.migrate(clone(e.ch))); }
+function askRemove(e){
+  const c=Engine.migrate(clone(e.ch)), who=esc(charName(c));
+  const risk = !e.exported ? `This browser holds the only copy of <b>${who}</b>. Once it's removed, it's gone.`
+    : unexported(e) ? `<b>${who}</b> has changes you haven't exported. Once it's removed, they're gone.`
+    : `Your exported file of <b>${who}</b> isn't touched. Import it to bring the character back.`;
+  openModal({ title:`Remove ${charName(c)}?`,
+    html:`<p>This removes <b>${who}</b> (${esc(e.id)}) from this browser.</p><p class="step-note">${risk}</p>`,
+    foot:`<button class="btn" data-modalclose>Cancel</button>
+      <button class="btn" data-removeexport>Export, then remove</button>
+      <button class="btn danger" data-removego>Remove</button>`,
+    bind(body, foot){
+      const go=()=>{ closeModal(); removeChar(e.id); renderHome(); };
+      foot.querySelector("[data-removeexport]").onclick=()=>{ exportEntry(e); go(); };
+      foot.querySelector("[data-removego]").onclick=go;
+      foot.querySelector("[data-modalclose]").focus();
+    } });
+}
 function renderHome(){
   const app=$("app"); if (app) app.classList.remove("sheet-mode");
   renderTopChrome(); closeVitals();
-  const draft = loadDraft();
-  const active = loadActive();
+  const roster = rosterEntries();
   $("main").innerHTML = `<div class="home-hero">
     <div class="glyph">[ 1 0 ]</div>
     <h1>Character Intake</h1>
     <p>NYTE City doesn't care who you were. Build who you're going to be.</p>
     <div class="home-actions">
       <button class="btn go" id="btn-new">New character</button>
-      ${active&&active.ch?`<button class="btn primary" id="btn-active">Open sheet${active.ch.identity.name?" — "+esc(active.ch.identity.name):""}</button>`:""}
-      ${draft?`<button class="btn primary" id="btn-resume">Resume draft${draft.ch.identity.name?" — "+esc(draft.ch.identity.name):""}</button>`:""}
       <button class="btn" id="btn-import">Import .shadows.json</button>
       <input type="file" id="file-import" accept=".json,.shadows.json" style="display:none">
     </div>
+    ${roster.length?`<section class="roster" aria-labelledby="roster-h">
+      <h2 id="roster-h" class="roster-h">Your characters</h2>
+      <ul class="roster-list">${roster.map(rosterCardHtml).join("")}</ul>
+      <p class="step-note">Characters stay in this browser until you remove them, but it isn't a backup: clearing site data erases every one. The exported <span style="font-family:var(--mono)">.shadows.json</span> is the copy that lasts.</p>
+    </section>`:""}
     <div class="home-news" id="homenews">${whatsNewHomeHtml()}</div>
     <p class="step-note" style="margin-top:14px">Playing at the table instead? <button class="btn sm" id="btn-print-blank">Print a blank character sheet</button></p>
     </div>`;
   $("btn-new").onclick=()=>{
+    // A new character is saved once the player changes something, so a
+    // stray click leaves no empty entry behind.
     const fresh=Engine.newCharacter();
-    // A new character takes the draft slot; a draft already there is asked about first (B18).
-    guardReplace(draft && draft.ch, fresh, { title:"Start a new character?",
-      lead:`Your unfinished draft of <b>${esc(charName(draft && draft.ch))}</b> is saved in this browser. Starting over replaces it.`,
-      go:"Start new" }, ()=>{ S={screen:"wizard", ch:fresh, step:0, maxReached:0, section:"main"}; update(); });
+    lastSaved=null; untouched=JSON.stringify(fresh);
+    S={screen:"wizard", ch:fresh, step:0, maxReached:0, section:"main"}; update();
   };
   $("btn-print-blank").onclick=()=>printSheet(null);
-  // Resume must migrate like the other two load paths. It did not, so a draft
-  // saved under an older schema came back with its data in fields no current
-  // reader looks at — the choice vanished with no warning.
-  const r=$("btn-resume"); if(r) r.onclick=()=>{ S={screen:"wizard", ch:Engine.migrate(draft.ch), step:draft.step, maxReached:draft.maxReached, section:"main"}; update(); };
-  const ac=$("btn-active"); if(ac) ac.onclick=()=>{
-    const c=Engine.migrate(active.ch);
-    S=Object.assign({screen:"sheet", ch:c, step:0, maxReached:STEPS.length-1, section:normSection(active.section)}, loadFindings(c));
-    update();
-  };
+  const byId = id => roster.find(e=>e.id===id);
+  const main=$("main");
+  main.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openEntry(byId(b.dataset.open)));
+  main.querySelectorAll("[data-exportchar]").forEach(b=>b.onclick=()=>{ exportEntry(byId(b.dataset.exportchar)); renderHome(); });
+  main.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>askRemove(byId(b.dataset.remove)));
+  // A tap anywhere on a card opens it; its buttons keep their own.
+  main.querySelectorAll("[data-card]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) openEntry(byId(li.dataset.card)); });
   $("btn-import").onclick=()=>$("file-import").click();
   $("file-import").onchange=e=>{
     const f=e.target.files[0]; if(!f) return;
@@ -559,15 +617,17 @@ function renderHome(){
       let c;
       try{ c=Engine.migrate(JSON.parse(rd.result)); }
       catch(err){ notice("That file didn't parse as a character: "+err.message); return; }
-      const locked=!!(c.creation && c.creation.locked);
-      // A locked file takes the live-sheet slot, a draft the draft slot. Ask
-      // before it replaces a different character, or a newer copy (B18).
-      const saved=((locked ? loadActive() : loadDraft())||{}).ch;
-      guardReplace(saved, c, { title:`Replace ${charName(saved)}?`,
-        lead:`Opening <b>${esc(charName(c))}</b>${intakeOf(c)?` (${esc(intakeOf(c))})`:""} puts it in place of <b>${esc(charName(saved))}</b>.`,
-        go:"Replace" }, ()=>{
+      const locked=!!(c.creation && c.creation.locked), id=intakeOf(c);
+      // A different character is added. The only question left is a file
+      // older than the copy this browser keeps of the same character (B18).
+      const have=(savedChar(id)||{}).ch;
+      guardReplace(have, c, { title:`Open an older copy of ${charName(have)}?`,
+        lead:`This file is an older copy of <b>${esc(charName(c))}</b> (${esc(id)}) than the one saved in this browser. Opening it puts it in place of the newer one.`,
+        go:"Open the older copy" }, ()=>{
+          lastSaved=null; untouched=null;
           S=Object.assign({screen: locked?"sheet":"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, loadFindings(c));
           update();
+          markExported(id);   // the file just opened holds what's now saved
         });
     };
     rd.readAsText(f);

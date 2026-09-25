@@ -112,6 +112,9 @@ test("a hostile character file renders as text on every tab, in Admin, in print 
     closeOverlays(app);
   };
 
+  // Home's roster card shows the saved file before anything opens it (Decision 141).
+  found.push(...injected(app, "home"));
+  assert.ok(app.$("#main .roster-card"), "the hostile character isn't on Home's roster");
   // Open sheet is the resume door; it runs migrate() like Import does.
   const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
   assert.ok(open, "the hostile character didn't reach the Home screen's Open sheet button");
@@ -137,7 +140,7 @@ test("a hostile character file renders as text on every tab, in Admin, in print 
 test("a hostile draft renders as text on every wizard step (R9)", () => {
   const ch = hostileCharacter({ locked: false });
   const app = boot({ storage: { "shadows.draft.v1": { ch, step: 0, maxReached: D.creationFlow.steps.length } } });
-  app.click("#btn-resume");
+  app.click("[data-open]");
   const found = [];
   for (let i = 0; i <= D.creationFlow.steps.length; i++) {
     app.click(`[data-goto="${i}"]`);

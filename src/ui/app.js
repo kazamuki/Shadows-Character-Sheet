@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.27.1";
+const APP_VERSION = "0.28.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -226,19 +226,14 @@ function bindMain(){
   // export / lock
   main.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>exportChar());
   main.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{
-    // Locking puts this character in the live-sheet slot. If a different
-    // character is saved there, ask first (B18).
-    const saved=(loadActive()||{}).ch;
-    const locking=()=>{
-      ch.creation.locked=true;
-      S.ch=Engine.migrate(Engine.buildExport(ch));
-      exportChar(); clearDraft();
-      S.screen="sheet"; S.section="main";
-      window.scrollTo(0,0); update();
-    };
-    guardReplace(saved, ch, { title:`Replace ${charName(saved)}'s sheet?`,
-      lead:`Locking <b>${esc(charName(ch))}</b> makes it the sheet this browser keeps, in place of <b>${esc(charName(saved))}</b>.`,
-      go:"Lock and replace" }, locking);
+    // Locking turns this character's own entry into a sheet (Decision 141):
+    // nothing else is replaced, so nothing is asked. It saves before it
+    // exports, so the file holds what's stored and Home shows no marker.
+    ch.creation.locked=true;
+    S.ch=Engine.migrate(Engine.buildExport(ch));
+    S.screen="sheet"; S.section="main";
+    window.scrollTo(0,0); update();
+    exportChar();
   });
 }
 
@@ -1065,6 +1060,7 @@ function exportChar(){ exportCharacter(S.ch); }
 // character it's about to overwrite (B18).
 function exportCharacter(ch){
   const c=Engine.buildExport(ch);
+  markExported(intakeOf(c));
   const name=(c.identity.name||"character").trim().replace(/[^\w\- ]+/g,"").replace(/\s+/g,"_")||"character";
   const blob=new Blob([JSON.stringify(c,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob);
@@ -1187,6 +1183,7 @@ function boot(){
     return;
   }
   initWhatsNew();
+  migrateLegacySlots();
   renderFooter();
   wireThemeToggle();
   // The sticky header is two rows on the sheet and one elsewhere, so a

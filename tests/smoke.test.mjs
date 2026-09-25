@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { boot, loadEngine } from "./harness.mjs";
+import { boot, loadEngine, stored } from "./harness.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -276,7 +276,7 @@ test("a pick chosen in the wizard survives export and reaches the sheet", () => 
 
   // Read it back out of the saved draft rather than reaching into the app's
   // closure — that also proves the choice survives a reload.
-  const live = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  const live = stored(app, { locked: false });
   assert.equal(live.advantages.find(a => a.id === "favored-skill").selections.skill[0], "handguns");
 
   // And the sheet states it by name rather than leaving the player guessing.
@@ -328,7 +328,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
      .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   assert.deepEqual(app.errors, []);
 
-  const resumed = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
   assert.equal(resumed.meta.schemaVersion, "0.12");
@@ -360,7 +360,7 @@ test("changing archetype clears the natural-advantage mirror (review #4)", () =>
   // Arcanist can purchase advantages, so the bought one survives...
   app.click('[data-arch="arcanist"]');
   assert.deepEqual(app.errors, []);
-  let now = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  let now = stored(app, { locked: false });
   assert.equal(now.advantages.some(a => a.notes === "natural"), false,
     "the Professional's free advantages survived the archetype change");
   assert.equal(now.advantages.some(a => a.id === "ambidextrous"), true,
@@ -369,7 +369,7 @@ test("changing archetype clears the natural-advantage mirror (review #4)", () =>
 
   // ...and a supernatural archetype, which cannot purchase at all, keeps none.
   app.click('[data-arch="werewolf"]');
-  now = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  now = stored(app, { locked: false });
   assert.deepEqual([...now.advantages], [],
     "a Werewolf kept advantages it cannot hold");
 });
@@ -434,7 +434,7 @@ test("raising a free advantage's rank does not wipe the picks already made", () 
   // Now bump the free rank — the choice above must survive.
   app.click('[data-step="natadv|favored-skill|1"]');
   assert.deepEqual(app.errors, []);
-  const after = JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+  const after = stored(app, { locked: false });
   const row = after.advantages.find(a => a.id === "favored-skill");
   assert.equal(row.rank, 2, "the rank did not go up");
   assert.equal((row.selections || {}).skill && row.selections.skill[0], "handguns",
@@ -455,7 +455,7 @@ function addCondition(app, id, location) {
   app.click(`[data-condquick="${id}"]`);
   if (location) { app.$("[data-condadd-loc]").value = location; app.click("[data-condadd]"); }
 }
-const activeConditions = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.trackers.conditions;
+const activeConditions = app => stored(app, { locked: true }).trackers.conditions;
 
 test("a Condition added on Trackers raises Pain, shows on Main, and undoes", () => {
   const app = openSheet(lockedCharacter(), "trackers");
@@ -548,7 +548,7 @@ function setHit(app, key, value) {
   // A number redraws the modal as it is typed (W6); the rest on change.
   el.dispatchEvent(new app.window.Event(el.getAttribute("inputmode") === "numeric" ? "input" : "change", { bubbles: true }));
 }
-const activeChar = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch;
+const activeChar = app => stored(app, { locked: true });
 
 test("Take a hit: a worn vest answers, the hit lands as one undoable action", () => {
   const ch = lockedCharacter();
@@ -991,7 +991,7 @@ function arcanistOnCP(setup) {
      .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   return app;
 }
-const draft = app => JSON.parse(app.window.localStorage.getItem("shadows.draft.v1")).ch;
+const draft = app => stored(app, { locked: false });
 
 test("starting spells: the count is TOL + the roll, the picker refuses a TH above Evocation, and buying a rank opens it", () => {
   const app = arcanistOnCP();
@@ -1498,7 +1498,7 @@ test("B17: a Trueborn sees the Lunar Phase Blessing, its four phases, and which 
   draft.creation.locked = false;
   draft.identity.archetype = "werewolf";
   const w = boot({ storage: { "shadows.draft.v1": { ch: draft, step: 3, maxReached: 3 } } });
-  w.click("#btn-resume");
+  w.click("[data-open]");
   assert.match(w.$("#main").textContent, new RegExp(tb.starterPower.name), "the wizard's Trueborn card doesn't show its starting power");
   assert.deepEqual([...app.errors, ...w.errors], []);
 });
@@ -1519,26 +1519,31 @@ async function importFile(app, ch) {
   input.dispatchEvent(new app.window.Event("change"));
   for (let i = 0; i < 50 && !app.$("#modal[open]") && app.window.eval("S.screen") === "home"; i++) await new Promise(r => setTimeout(r, 10));
 }
-const savedName = app => JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.identity.name;
 const named = (name, extra = {}) => Object.assign(lockedCharacter(), { identity: Object.assign(lockedCharacter().identity, { name }) }, extra);
 
-test("B18: importing a different character asks first — Cancel keeps the saved one, Export first downloads it, then replaces", async () => {
+// ── The roster (R10, Decision 141): one entry per TAG ────────────────────
+const charKeys = app => {
+  const ls = app.window.localStorage, out = [];
+  for (let i = 0; i < ls.length; i++) if (ls.key(i).startsWith("shadows.char.v1.")) out.push(ls.key(i));
+  return out;
+};
+const entryOf = (app, id) => JSON.parse(app.window.localStorage.getItem("shadows.char.v1." + id));
+const card = (app, name) => app.$$("#main .roster-card").find(c => c.querySelector(".roster-name").textContent === name);
+const sheetHome = app => { app.click("[data-menu-toggle]"); app.click("[data-home]"); };
+
+test("Decision 141: importing a different character adds it beside the saved one, with nothing asked", async () => {
   const vex = Engine.migrate(named("Vex Morrow"));
   const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
-  const downloads = withDownloads(app);
-  await importFile(app, Engine.migrate(named("Other Player")));
-  const modal = app.$("#modal[open]");
-  assert.ok(modal, "importing another character replaced the saved sheet without asking");
-  assert.match(modal.textContent, /Vex Morrow/);
-  assert.match(modal.textContent, new RegExp(vex.meta.id), "the prompt doesn't show which character it means");
-  app.click("#modal [data-modalclose]");
-  assert.equal(savedName(app), "Vex Morrow", "Cancel still replaced the saved sheet");
-
-  await importFile(app, Engine.migrate(named("Other Player")));
-  app.click("#modal [data-replaceexport]");
-  assert.equal(downloads.length, 1, "Export first didn't download the saved character");
-  assert.match(await downloads[0].text(), /Vex Morrow/, "Export first downloaded the wrong character");
-  assert.equal(savedName(app), "Other Player", "after exporting, the import didn't go ahead");
+  withDownloads(app);
+  const other = Engine.migrate(named("Other Player"));
+  await importFile(app, other);
+  assert.equal(app.$("#modal[open]"), null, "importing a different character still asks to replace one");
+  assert.equal(app.window.eval("S.ch.identity.name"), "Other Player", "the imported character didn't open");
+  sheetHome(app);
+  const names = app.$$("#main .roster-card .roster-name").map(n => n.textContent);
+  assert.deepEqual(names, ["Other Player", "Vex Morrow"], "Home doesn't list both, the most recently changed first");
+  assert.doesNotMatch(card(app, "Other Player").textContent, /not exported/, "a character just opened from its own file says it isn't exported");
+  assert.match(card(app, "Other Player").textContent, new RegExp(other.meta.id), "the card doesn't show the TAG");
   assert.deepEqual(app.errors, []);
 });
 
@@ -1550,13 +1555,23 @@ test("B18: a newer copy of the same character replaces without asking; an older 
   newer.meta.updated = "2026-09-24T12:00:00.000Z"; newer.notes = "after the heist";
   await importFile(app, newer);
   assert.equal(app.$("#modal[open]"), null, "a newer copy of the same character asked to replace itself");
-  assert.equal(JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch.notes, "after the heist");
+  assert.equal(stored(app, { locked: true }).notes, "after the heist");
 
   app.click("[data-menu-toggle]"); app.click("[data-home]");
   const older = JSON.parse(JSON.stringify(vex));
   older.meta.updated = "2026-09-23T09:00:00.000Z"; older.notes = "before the heist";
   await importFile(app, older);
   assert.ok(app.$("#modal[open]"), "an older copy replaced the newer saved one without asking");
+  assert.match(app.$("#modal").textContent, /older copy/);
+  app.click("#modal [data-modalclose]");
+  assert.equal(stored(app, { locked: true }).notes, "after the heist", "Cancel still opened the older copy");
+
+  await importFile(app, older);
+  const downloads = withDownloads(app);
+  app.click("#modal [data-replaceexport]");
+  assert.equal(downloads.length, 1, "Export first didn't download the saved copy");
+  assert.match(await downloads[0].text(), /after the heist/, "Export first downloaded the wrong copy");
+  assert.equal(stored(app, { locked: true }).notes, "before the heist", "after exporting, the older copy didn't open");
   assert.deepEqual(app.errors, []);
 });
 
@@ -1573,34 +1588,142 @@ test("Decision 133: a sheet saved by 0.24.0 (NCR-) and a newer export of it are 
   newer.meta.updated = "2026-09-24T12:00:00.000Z"; newer.notes = "after the heist";
   await importFile(app, newer);
   assert.equal(app.$("#modal[open]"), null, "an NCR- save and its own newer export were taken for two characters");
-  const now = JSON.parse(app.window.localStorage.getItem("shadows.active.v1")).ch;
+  const now = stored(app, { locked: true });
   assert.equal(now.notes, "after the heist");
   assert.equal(now.meta.id, "TAG-" + digits, "the imported file didn't carry its number over as a TAG");
   assert.deepEqual(app.errors, []);
 });
 
-test("B18: New asks before replacing a draft, and Lock asks before replacing another saved sheet", () => {
+test("Decision 141: New saves nothing until something changes, and Lock turns the same entry into a sheet beside the other one", () => {
   const vex = Engine.migrate(named("Vex Morrow"));
-  const draft = named("Half-Built"); draft.creation.locked = false;
-  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" }, "shadows.draft.v1": { ch: draft, step: 7, maxReached: 7 } } });
-  withDownloads(app);
+  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
   app.click("#btn-new");
-  assert.ok(app.$("#modal[open]"), "New replaced the saved draft without asking");
-  assert.match(app.$("#modal").textContent, /Half-Built/);
-  app.click("#modal [data-modalclose]");
-  assert.equal(app.window.eval("S.screen"), "home", "Cancel started a new character anyway");
+  assert.equal(app.$("#modal[open]"), null, "New asked about something");
+  app.click('[data-nav="1"]');
+  assert.equal(charKeys(app).length, 1, "an untouched new character was saved");
+  app.window.eval("S.ch.identity.name = 'Fresh'; update();");
+  assert.equal(charKeys(app).length, 2, "a new character wasn't saved once it changed");
 
-  // Resume the draft, parked on Review, and lock it over Vex.
-  app.click("#btn-resume");
-  app.window.eval("S.ch.creation.rolls.credits = 5; update();");
-  app.click("[data-lock]");
-  assert.ok(app.$("#modal[open]"), "Lock replaced another saved character without asking");
-  assert.match(app.$("#modal").textContent, /Vex Morrow/);
+  const half = named("Half-Built"); half.creation.locked = false;
+  const w = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" }, "shadows.draft.v1": { ch: half, step: 7, maxReached: 7 } } });
+  const got = withDownloads(w);
+  card(w, "Half-Built").querySelector("[data-open]").click();
+  w.window.eval("S.ch.creation.rolls.credits = 5; update();");
+  w.click("[data-lock]");
+  assert.equal(w.$("#modal[open]"), null, "Lock asked to replace another character");
+  assert.equal(charKeys(w).length, 2, "Lock made a second entry instead of turning the draft into a sheet");
+  assert.equal(entryOf(w, half.meta.id).ch.creation.locked, true, "the draft's own entry isn't locked");
+  assert.equal(entryOf(w, vex.meta.id).ch.identity.name, "Vex Morrow", "locking touched the other character");
+  assert.equal(got.length, 1, "Lock didn't export");
+  sheetHome(w);
+  assert.match(card(w, "Half-Built").textContent, /Open sheet/);
+  assert.doesNotMatch(card(w, "Half-Built").textContent, /not exported/, "a character locked and exported a moment ago says it isn't exported");
+  assert.deepEqual([...app.errors, ...w.errors], []);
+});
+
+test("Decision 141: Home marks a character with changes no file has; opening it doesn't, and exporting clears it", () => {
+  const vex = Engine.migrate(named("Vex Morrow"));
+  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
+  const downloads = withDownloads(app);
+  const marked = () => /Changes not exported yet/.test(card(app, "Vex Morrow").textContent);
+  assert.ok(marked(), "a character carried over from an older browser isn't marked, though no export of it is known");
+  card(app, "Vex Morrow").querySelector("[data-exportchar]").click();
+  assert.equal(downloads.length, 1, "Export on the card didn't download");
+  assert.ok(!marked(), "exporting from Home didn't clear the mark");
+
+  card(app, "Vex Morrow").click();   // the card itself, not a button
+  assert.equal(app.window.eval("S.screen"), "sheet", "tapping the card didn't open it");
+  app.click('[data-sec="skills"]'); app.click('[data-sec="trackers"]');
+  sheetHome(app);
+  assert.ok(!marked(), "opening a character and changing tabs marked it as changed");
+  assert.match(card(app, "Vex Morrow").textContent, /Sheet · Trackers/, "the card doesn't say where the sheet was left");
+
+  card(app, "Vex Morrow").querySelector("[data-open]").click();
+  assert.equal(app.window.eval("S.section"), "trackers", "the sheet didn't reopen where it was left");
+  app.window.eval("commit('notes', 'Notes', () => { S.ch.notes = 'after the heist'; });");
+  sheetHome(app);
+  assert.ok(marked(), "a change on the sheet didn't mark the character");
+  card(app, "Vex Morrow").querySelector("[data-open]").click();
+  app.click("[data-menu-toggle]"); app.click("#hdrmenu [data-export]");
+  sheetHome(app);
+  assert.ok(!marked(), "exporting from the sheet didn't clear the mark");
+  assert.equal(downloads.length, 2);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 141: Remove asks first, says what's at stake, and Export, then remove downloads the character before it goes", async () => {
+  const vex = Engine.migrate(named("Vex Morrow")), other = Engine.migrate(named("Other Player"));
+  const at = "2026-09-24T10:00:00.000Z";
+  const app = boot({ storage: {
+    ["shadows.char.v1." + vex.meta.id]: { ch: vex, section: "main", changed: at, exported: null },
+    ["shadows.char.v1." + other.meta.id]: { ch: other, section: "main", changed: at, exported: at },
+  } });
+  const downloads = withDownloads(app);
+  card(app, "Vex Morrow").querySelector("[data-remove]").click();
+  assert.ok(app.$("#modal[open]"), "Remove didn't ask");
+  assert.match(app.$("#modal").textContent, /only copy/, "removing a never-exported character doesn't say it's the only copy");
   app.click("#modal [data-modalclose]");
-  assert.equal(savedName(app), "Vex Morrow", "Cancel on Lock still replaced the saved sheet");
-  assert.equal(app.window.eval("S.ch.creation.locked"), false, "Cancel on Lock still locked the draft");
-  app.click("[data-lock]"); app.click("#modal [data-replacego]");
-  assert.equal(savedName(app), "Half-Built", "Lock and replace didn't lock");
+  assert.ok(card(app, "Vex Morrow"), "Cancel removed the character anyway");
+
+  card(app, "Vex Morrow").querySelector("[data-remove]").click();
+  app.click("#modal [data-removeexport]");
+  assert.equal(downloads.length, 1, "Export, then remove didn't download");
+  assert.match(await downloads[0].text(), /Vex Morrow/, "Export, then remove downloaded the wrong character");
+  assert.equal(card(app, "Vex Morrow"), undefined, "the removed character is still listed");
+  assert.equal(app.window.localStorage.getItem("shadows.char.v1." + vex.meta.id), null, "the removed character is still stored");
+  assert.ok(card(app, "Other Player"), "removing one character removed another");
+
+  card(app, "Other Player").querySelector("[data-remove]").click();
+  assert.match(app.$("#modal").textContent, /isn't touched/, "removing an exported character doesn't say the file is safe");
+  app.click("#modal [data-removego]");
+  assert.equal(app.$("#main .roster"), null, "an empty roster still shows its heading");
+  assert.deepEqual(app.errors, []);
+});
+
+test("R10: a 0.27 browser's saved sheet and draft both survive into the roster; an unreadable slot is left alone", () => {
+  const vex = Engine.migrate(named("Vex Morrow"));
+  const half = named("Half-Built"); half.creation.locked = false; delete half.meta.id;   // a draft from before TAGs
+  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "skills" }, "shadows.draft.v1": { ch: half, step: 3, maxReached: 5 } } });
+  const ls = app.window.localStorage;
+  assert.equal(ls.getItem("shadows.active.v1"), null, "the old sheet slot is still there");
+  assert.equal(ls.getItem("shadows.draft.v1"), null, "the old draft slot is still there");
+  assert.equal(charKeys(app).length, 2, "the sheet and the draft didn't both become entries");
+  assert.match(card(app, "Vex Morrow").textContent, /Sheet · Skills/);
+  assert.match(card(app, "Half-Built").textContent, new RegExp(`Draft · step 4 of ${D.creationFlow.steps.length + 1}`));
+  card(app, "Half-Built").querySelector("[data-open]").click();
+  assert.equal(app.window.eval("S.step"), 3, "the draft didn't reopen on its step");
+  assert.equal(app.window.eval("S.maxReached"), 5);
+
+  const bad = boot({ storage: { "shadows.active.v1": "{not json" } });
+  assert.equal(bad.window.localStorage.getItem("shadows.active.v1"), "{not json", "an unreadable old slot was deleted");
+  assert.equal(charKeys(bad).length, 0);
+
+  // Both slots holding one character: the newer copy wins, whichever slot it was in.
+  const copy = (updated, notes, locked) => Object.assign(JSON.parse(JSON.stringify(vex)), { notes, meta: Object.assign({}, vex.meta, { updated }), creation: Object.assign({}, vex.creation, { locked }) });
+  for (const [active, draft] of [[copy("2026-09-20T00:00:00.000Z", "new", true), copy("2026-09-01T00:00:00.000Z", "old", false)],
+                                 [copy("2026-09-01T00:00:00.000Z", "old", true), copy("2026-09-20T00:00:00.000Z", "new", false)]]) {
+    const both = boot({ storage: { "shadows.active.v1": { ch: active, section: "main" }, "shadows.draft.v1": { ch: draft, step: 0, maxReached: 0 } } });
+    assert.equal(charKeys(both).length, 1);
+    assert.equal(entryOf(both, vex.meta.id).ch.notes, "new", "an older copy won over the newer one");
+    assert.deepEqual(both.errors, []);
+  }
+  assert.deepEqual([...app.errors, ...bad.errors], []);
+});
+
+test("Decision 141: a save the browser refuses stays on the page until one goes through", () => {
+  const vex = Engine.migrate(named("Vex Morrow"));
+  const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
+  card(app, "Vex Morrow").querySelector("[data-open]").click();
+  const proto = app.window.Storage.prototype, real = proto.setItem;
+  proto.setItem = function () { throw new app.window.DOMException("full", "QuotaExceededError"); };
+  app.window.eval("commit('notes', 'Notes', () => { S.ch.notes = 'one'; });");
+  assert.match(app.$("#main").textContent, /couldn't save your last change/, "a failed save said nothing");
+  app.click('[data-sec="skills"]');
+  assert.match(app.$("#main").textContent, /couldn't save/, "the warning went away before a save went through");
+  proto.setItem = real;
+  app.click('[data-sec="main"]');
+  assert.doesNotMatch(app.$("#main").textContent, /couldn't save/, "the warning stayed after a save went through");
+  assert.equal(entryOf(app, vex.meta.id).ch.notes, "one");
   assert.deepEqual(app.errors, []);
 });
 
