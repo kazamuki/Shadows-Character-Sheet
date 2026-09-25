@@ -60,7 +60,7 @@ function renderVitals(){
     h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold");
     const sfr = Engine.sfr(ch);
     if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
-    h += vrow("Ç", ch.trackers.credits.current, "gold");
+    h += vrow(CR, ch.trackers.credits.current, "gold");
     h += `</div><div class="vgroup">`;
     h += vrow("IP", ip.available, ip.available<0?"over":"");
     h += vrow("Milestone Pts", ms.mp);
@@ -158,7 +158,7 @@ function renderPowerLevel(){
         <span>Skill cap <b>${p.maxSkillRank}</b></span>
         <span>Power cap <b>${p.maxPowerRank}</b></span>
         <span>Max Boost <b>${p.maxBoost}</b></span>
-        <span>Ç <b>${p.startingCredits.roll}×${p.startingCredits.multiplier}</b></span>
+        <span>${CR} <b>${p.startingCredits.roll}×${p.startingCredits.multiplier}</b></span>
       </div>
     </button>`).join("") + `</div>`;
   return h;
@@ -213,8 +213,10 @@ function renderArchetype(){
   const pl = Engine.powerLevel(ch);
   if (row && Object.keys(row).length){
     h += `<div class="sect">Campaign Power Scaling — ${esc(pl.name)}</div>`;
+    // A formula cell (a Werewolf's starting SFR) is numbers in the data and
+    // reads as "WILL × 3 + 5" here (Decision 135).
     h += `<table class="ref"><tbody>` + Object.entries(row).map(([k,v])=>
-      `<tr><td>${esc(k.replace(/([A-Z])/g," $1").replace(/^./,c=>c.toUpperCase()))}</td><td class="num">${esc(v)}</td></tr>`).join("") + `</tbody></table>`;
+      `<tr><td>${esc(k.replace(/([A-Z])/g," $1").replace(/^./,c=>c.toUpperCase()))}</td><td class="num">${esc(v && typeof v==="object" ? Engine.formulaText(v) : v)}</td></tr>`).join("") + `</tbody></table>`;
     if (sel.campaignPowerScaling.notes) h += `<p class="step-note">${esc(sel.campaignPowerScaling.notes)}</p>`;
   }
 
@@ -251,32 +253,42 @@ function renderArchetype(){
       <p class="step-note">${esc(copy("specializationUnwritten").replace("{label}", sel.specialization.label))}</p>`;
   }
 
-  // Arcanist creation inputs
-  if (sel.id==="arcanist" && row){
+  // Creation rolls the scaling row asks for (Decision 135): a Focus Stat
+  // bonus on the stats `focusStats` names, or a Stat Bonus on any stat. The
+  // row's own keys say which, so no archetype is named here.
+  if (row && row.focusStatBonusRoll){
+    const focus = sel.campaignPowerScaling.focusStats||[];
     h += `<div class="sect">Focus Stat Bonus</div>
       <div class="roll-entry"><span class="die">${esc(row.focusStatBonusRoll)}</span>
       <input type="text" inputmode="numeric" pattern="[0-9]*" data-archroll="focusStatBonus" value="${ac.rolls.focusStatBonus==null?"":ac.rolls.focusStatBonus}" aria-label="focus stat bonus roll">
-      <span class="pool">Allocate among INT · COOL · EMP — these points can push a stat past 10.</span></div>`;
+      <span class="pool">Allocate among ${esc(focus.join(" · "))} — these points can push a stat past ${D.statRules.max}.</span></div>`;
     const total = ac.rolls.focusStatBonus||0;
     const used = Object.values(ac.focusAllocation).reduce((s,v)=>s+v,0);
-    h += `<div class="alloc">` + ["INT","COOL","EMP"].map(sid=>{
+    h += `<div class="alloc">` + focus.map(sid=>{
       const v = ac.focusAllocation[sid]||0;
-      return `<div class="alloc-row"><div class="name">${sid} <small>current ${Engine.statValue(ch,sid)}</small></div>
+      return `<div class="alloc-row"><div class="name">${esc(sid)} <small>current ${Engine.statValue(ch,sid)}</small></div>
         ${stepper(v,"focus|"+sid, v>0, used<total)}<span class="mod"></span></div>`;
     }).join("") + `</div>`;
-
-    // A1 closed here: the aberration list used to render a SECOND time in
-    // this block, with its own [data-aber] buttons and its own validate rule.
-    // It is the specialization block above, and always was.
-    h += `<p class="step-note">${esc(copy("applyFromText"))} Evocation starts at rank ${row.evocationStartingRank}. You choose your starting spells (TOL + ${esc(row.startingSpellsRoll)}) in Step 7, once your Evocation rank is set.</p>`;
   }
 
-  // Werewolf creation inputs
-  if (sel.id==="werewolf" && row && row.statBonusRoll){
+  // A1 closed here: the aberration list used to render a SECOND time in
+  // this block, with its own [data-aber] buttons and its own validate rule.
+  // It is the specialization block above, and always was. What follows is
+  // written from the disciplines' starting ranks and the starting-spells rule.
+  const starts = Engine.disciplineRanks(ch).filter(d=>d.base>0).map(d=>`${d.name} starts at rank ${d.base}.`);
+  const ssRule = (D.spellcraftRules||{}).startingSpells;
+  if (row && ssRule && row.startingSpellsRoll){
+    const disc = Engine.disciplineRanks(ch).find(d=>d.id===ssRule.discipline);
+    const step = D.creationFlow.steps.find(s=>s.id==="character-points");
+    starts.push(`You choose your starting spells (${ssRule.countFrom||"TOL"} + ${row.startingSpellsRoll}) in Step ${step?step.n:""}, once your ${disc?disc.name:""} rank is set.`);
+  }
+  if (starts.length) h += `<p class="step-note">${esc(copy("applyFromText"))} ${esc(starts.join(" "))}</p>`;
+
+  if (row && row.statBonusRoll){
     h += `<div class="sect">Stat Bonus</div>
       <div class="roll-entry"><span class="die">${esc(row.statBonusRoll)}</span>
       <input type="text" inputmode="numeric" pattern="[0-9]*" data-archroll="statBonus" value="${ac.rolls.statBonus==null?"":ac.rolls.statBonus}" aria-label="stat bonus roll">
-      <span class="pool">Allocate to any Stats (cap 10).</span></div>`;
+      <span class="pool">Allocate to any Stats (cap ${D.statRules.max}).</span></div>`;
     const total = ac.rolls.statBonus||0;
     const used = Object.values(ac.statBonusAllocation).reduce((s,v)=>s+v,0);
     h += `<div class="alloc">` + D.stats.map(s=>{
@@ -413,20 +425,15 @@ function renderCP(){
     <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, bal.left>=luck.cpCostPerPoint)}</div></div>
     <div class="desc">Everyone starts at ${luck.startingValue}. ${esc(luck.refresh)}</div></div>`;
 
-  // Arcanist disciplines
-  if (a && a.id==="arcanist"){
-    const startEvoc = Engine.scalingRow(ch).evocationStartingRank;
-    h += secs.sect("Disciplines", `Disciplines — 6 CP per rank · cap ${pl.maxPowerRank}`);
-    if (D.creationFlow.boostRules.flagged) {} // exchange-rate flag shown under boosts
-    h += a.coreMechanic.disciplines.list.map(disc=>{
-      const base = disc.id==="evocation"?startEvoc:0;
-      const bought = ch.archetypeChoices.disciplines[disc.id]||0;
-      const rank = base+bought;
-      return `<div class="pick ${rank>0?"selected":""}"><div class="head"><h4>${esc(disc.name)}</h4>
-        <span class="cost">${base?`starts at ${base} · `:""}rank ${rank}</span>
-        <div class="controls">${stepper(rank,"disc|"+disc.id, bought>0, rank<pl.maxPowerRank && bal.left>=6)}</div></div>
-        <div class="desc">${esc(disc.description)}</div></div>`;
-    }).join("");
+  // Disciplines: price, cap and starting ranks are the data's (Decision 135).
+  const discs = Engine.disciplineRanks(ch);
+  if (discs.length){
+    const per = Number(a.coreMechanic.disciplines.cpPerRank)||0, cap = Engine.disciplineCap(ch);
+    h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank${cap==null?"":` · cap ${cap}`}`);
+    h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h4>${esc(d.name)}</h4>
+        <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}</span>
+        <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, (cap==null || d.rank<cap) && bal.left>=per)}</div></div>
+        <div class="desc">${esc(d.description)}</div></div>`).join("");
   }
 
   // Starting spells (Decision 111). Here, not on the Archetype step, because
@@ -485,7 +492,7 @@ function renderReview(){
   const blocked = issues.some(i=>i.level==="error");
   let h = `<div class="roll-entry"><span class="die">Çredits: ${esc(pl.startingCredits.roll)} × ${pl.startingCredits.multiplier}</span>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
-    <span class="pool">Starting Ç <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
+    <span class="pool">Starting ${CR} <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
   h += `<div class="review-block"><h3>${esc(ch.identity.name)||"Unnamed"}</h3>${intakeHtml(ch)}<div class="kv">
     <span class="k">Archetype</span><span class="v">${a?esc(a.name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
     <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>

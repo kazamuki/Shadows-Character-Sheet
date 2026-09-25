@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** under way. **Every question is answered** (§5). **S1, S2 and S3 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18). Next: S4, S5 or S6, in any order.
+**Status:** under way. **Every question is answered** (§5). **S1–S4 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1). Next: S5 or S6, in either order.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -72,13 +72,14 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 
 *Versions:* app 0.25.0, game data 0.18. Character schema: none, as expected: `focusedSkillPicks` already stored ids, and `migrate()` now keeps it a list of strings.
 
-### S4: Read it or label it (engine change, propose first)
-- [ ] **A8, Arcanist half**: `disciplines.cpPerRank` read by `disciplineSpent` and the wizard (the two hardcoded 6s go); `maxRankBy` read; the Evocation starting rank declared on the discipline, not matched by id.
-- [ ] **A9**, for each "setting the engine ignores": read it, or rename it as display text. The stat IP formula and SAN formula become numbers the engine reads (the skill prices went in S3). `boostRules` is read or trimmed. `startingSFR` becomes `{ stat, times, plus }`. The credit symbol comes from data. The milestone cadence prose (two data fields, two engine strings) is generated from the numbers.
-- [ ] **R6, key guard**: a test that every data key is read by code or named as display text (`*Text`, `*Note`, `description`, `flavorLine`, …).
-- [ ] Before and after, diff every computed output across a set of characters, as Batch 1 did. If nothing moves, there's no game-data bump (Decision 68).
+### S4: Read it or label it (done 2026-09-24, Decision 135)
+- [x] **A8, Arcanist half**: `disciplines.cpPerRank` read by `disciplineSpent` and the wizard (both 6s gone); `maxRankBy` read, and `validate` now checks it; Evocation's `startingRankBy` on its own entry. One `dataPath` reads it, `maxRankBy` and `countBy`. **Wider than listed:** the wizard's Focus Stat block (`sel.id==="arcanist"`, INT/COOL/EMP typed in) and Stat Bonus block (`sel.id==="werewolf"`) read the scaling row's keys and `focusStats` now. A test fails on any archetype or discipline id in engine or UI code.
+- [x] **A9**: SAN and starting SFR are `{ stat, times, plus }`; the stat IP price is `perPoint`. `boostRules` is **trimmed** to `cpCostPerPoint`, and so are `luck.exemptFromBoostCap`/`buyUpWith`, `penaltyStacking.stacks`, `locationStacking`, `rollPenalty.appliesTo`, `supernatural`, `supernaturalRestriction`, the Disciplines panel's `items`/`cappedBy` and the Grimoire's `catalog` (Decision 64's precedent: they restated what the code does by structure). The credit symbol comes from data. The cadence is written from the numbers, and a refusal names the next unlock (Ken's pick).
+- [x] **R6, key guard** (`engine.test.mjs`): every key is named in code, text by name (and holds text), reached by a data path, or on `NOT_YET_SHOWN`, the S6 list, which fails when an entry becomes read. It found five fields the audit hadn't: Major Milestone `details` (shown now), Martial Arts `styles` (W33), 043's `universal` tag (a CRB question), and `supernatural` and `catalog` (trimmed).
+- [x] **The SFR panel** (Ken added it): `counts: "down"` and `resource: "sfr"` replace `p.id==="sfr"` in `sheet.js` and `app.js`.
+- [x] Before and after, `tools/outputs.mjs` diffed 1,468 outputs (every archetype × power level: engine readers, every tab, picker, Admin, print, wizard step). Only the intended copy moved, so no game-data bump (Decision 68). The tool is committed (Ken's pick).
 
-*Versions:* none if the diff is clean. *Size:* one session.
+*Versions:* app 0.25.1 (the refusal copy, the SFR formula's text and the Milestone details are visible). Game data and schema: none.
 
 ### S5: Tooling (independent; a cloud session can do most of it)
 - [ ] **R5**: `.claude/settings.json` with a `SessionStart` hook running `npm ci`. Project skills for *close the session*, *number a decision*, *close a flag*, *cut a release*.
@@ -119,7 +120,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 | S1 | minor | none expected | 0.11 (`meta.id`) |
 | S2 | none | none | none |
 | S3 | minor (0.25.0) | minor (0.18) | none |
-| S4 | none if outputs are identical | none if outputs are identical | none |
+| S4 | patch (0.25.1): three copy changes a player sees | none: outputs diffed identical | none |
 | S5 | patch only if fonts are embedded | none | none |
 | S6 | minor | none | none (a roster lives in `localStorage` keys, not the file) |
 | S7 | with whatever carries it | none | A11 needs a bump and a `migrate()` step |

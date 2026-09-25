@@ -90,8 +90,8 @@ Each id is defined in exactly one place and referenced everywhere.
 | `A5` | The decision ledger is doing three jobs | closed | plan S2 · D130 |
 | `A6` | Per-change documentation tax out of proportion to the change | **open**: tiers in place (D131); the scripts left | plan S5 (R4) |
 | `A7` | Seven flags had no F-number; four were unasked Deighton questions | closed | plan S2 · F28–F32 |
-| `A8` | Archetypes special-cased by id; Professional rules parsed from prose | **open**: the Professional half closed (D134); the Arcanist half left | plan S4 |
-| `A9` | Data fields that look like settings but aren't read (B3's class) | **open** | plan S4 |
+| `A8` | Archetypes special-cased by id; Professional rules parsed from prose | closed | plan S3 · D134 (Professional) · plan S4 · D135 (Arcanist, Werewolf) |
+| `A9` | Data fields that look like settings but aren't read (B3's class) | closed | plan S4 · D135 |
 | `A10` | Merged content no player can see | **open** | plan S6 · AQ4 |
 | `A11` | `notes: "natural"` doubles as a type marker | **open** | plan S7 |
 | `A12` | UI split by render/bind, not by screen | **open** | plan S7 |
@@ -195,6 +195,7 @@ What a number *is*. Change one of these and characters change.
 - **64** *(B3)* — 1 Health Level per BOD is an invariant, not a tunable.
 - **66** *(B8)* — The two Pain Level floors are numbers the engine carries and the sheet states.
 - **67** *(B9)* — The milestone cadence comes from the data, once.
+- **135** *(Audit S4 — A8, A9)* — A data field is read by code or named as text; formulas and paths are numbers the engine reads (`{ stat, times, plus }`, `dataPath`); fields restating the code are deleted; no archetype id in code. The R6 key guard enforces it.
 - **98** *(Design-team rulings, part 2)* — Stats past 10: +5 at 11–15, +1 per 5 after. F20–F22 closed: Skill Checks only, a −8 cap on one roll, only Injured/Maimed take a body part. Plan CQ4–CQ7/CQ10 answered for Session 3.
 - **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open.
 - **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened. → **superseded in part by 100 and 112**
