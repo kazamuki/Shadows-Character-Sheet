@@ -147,7 +147,7 @@ function statCellHtml(ch, id){
   const t=Engine.statTable(ch);
   if (t[id]){
     const m=t[id].mod;
-    return `<div class="statcell">${statIco(id)}<div class="sid">${id}</div><div class="sv">${t[id].value}</div>
+    return `<div class="statcell" data-tip="stat" data-term="${esc(id)}" tabindex="0">${statIco(id)}<div class="sid">${id}</div><div class="sv">${t[id].value}</div>
       <div class="sm2 ${m>0?"pos":m<0?"neg":""}">${m>=0?"+":""}${m}</div></div>`;
   }
   // derived (TOL/WILL): value only, with a "?" that reveals how it's derived
@@ -340,7 +340,7 @@ function renderShMain(){
         if (l.custom){ const w=ch.weapons[l.index];
           return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td><td class="num">—</td><td class="num">${esc(w.damage)||"—"}</td>
             <td class="num">${esc(w.rof)||"—"}</td><td class="num lo-rounds">${roundsHtml(l, w.capacity)}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
-        return `<tr><td>${esc(l.name)}${l.tags&&l.tags.length?`<div class="lo-sub">${esc(l.tags.join(" · "))}</div>`:""}</td>
+        return `<tr><td>${esc(l.name)}${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
           <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
           <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td></tr>`;
@@ -388,6 +388,7 @@ function renderShSkills(){
       <thead><tr><th>Skill</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead>
       <tbody>${body}</tbody></table>`;
   } else h += `<p class="step-note">No trained skills.</p>`;
+  h += checkRulesHtml();
   const untrained = D.skills.map(s=>Engine.skillLine(ch,s.id)).filter(l=>!l.trained);
   if (untrained.length){
     h += `<details class="group"><summary>Untrained — 1d10 + Primary Stat only (${untrained.length})</summary>
@@ -428,6 +429,18 @@ function renderShTraits(){
   return h;
 }
 
+// How a check works (Decision 139): the roll, the target numbers, the 10
+// that explodes and the 1 that botches, from skillCheckRules, collapsed.
+function checkRulesHtml(){
+  const R = D.skillCheckRules||{}, df = R.difficulties||{};
+  const rows = [["Trained", R.trained], ["Untrained", R.untrained], ["A 10", R.explosion], ["A 1", R.botch]].filter(r=>r[1]);
+  const tns = Object.entries(df).map(([k,v])=>`<span class="chip">${esc(k)} ${esc(v)}</span>`).join(" ");
+  if (!rows.length && !tns) return "";
+  return `<details class="group"><summary>How a check works</summary><div class="ref-body">
+    <table class="ref"><tbody>${rows.map(([k,v])=>`<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>`).join("")}</tbody></table>
+    ${tns?`<p>Target numbers: ${tns}</p>`:""}</div></details>`;
+}
+
 // ── Sheet: ARCHETYPE (everything about the chosen archetype) ──────────
 function renderShArchetype(){
   const ch=S.ch, a=Engine.archetype(ch);
@@ -436,6 +449,9 @@ function renderShArchetype(){
   const specLabel = Engine.specializationLabel(ch);
   let h = sheetHeader(a.name+(specLabel?" · "+specLabel:""),
     a.summary||a.gameplayStyle||"");
+
+  // Lineage (AQ4 2): the archetype's lore, collapsed.
+  if (a.lore) h += `<details class="group lineage"><summary>Lineage</summary><div class="ref-body"><p class="flavor">${esc(a.lore)}</p></div></details>`;
 
   if (a.coreMechanic){
     h += `<div class="sect">${esc(a.coreMechanic.name||"Core Mechanic")}${badge}</div>`;
@@ -508,10 +524,31 @@ const rangeLabel = r => r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` :
 const REFERENCE_SECTIONS = {
   spellcraftRules: R => {
     const o = R.outcomes||{}, names = { overflow:"Overflow", manifest:"Manifest", fizzle:"Fizzle", rupture:"Rupture", cascade:"Cascade" };
-    return { title:"The Spellcraft roll", html:
+    return [{ title:"The Spellcraft roll", html:
       `<p>${esc(R.rollNote||"")}</p>
       <table class="ref"><tbody>${Object.keys(names).filter(k=>o[k]).map(k=>`<tr><td><b>${names[k]}</b></td><td>${esc(o[k])}</td></tr>`).join("")}</tbody></table>
-      ${[R.exhaustion, (R.spellPower||{}).text, (R.spellAttack||{}).text, (R.mastery||{}).text, R.castingRequiresVoice].filter(Boolean).map(t=>`<p>${esc(t)}</p>`).join("")}` };
+      ${[R.exhaustion, (R.spellPower||{}).text, (R.spellAttack||{}).text, (R.mastery||{}).text, R.castingRequiresVoice].filter(Boolean).map(t=>`<p>${esc(t)}</p>`).join("")}` }, spellcraftWorkings(R)];
+  },
+  domains: list => ({ title:"Domains and Glyphs", html:
+    `<table class="ref"><thead><tr><th>Domain</th><th>Glyphs</th><th></th></tr></thead><tbody>${list.map(d=>
+      `<tr><td><b>${esc(d.name)}</b></td><td>${esc((d.glyphs||[]).join(", "))}</td><td>${esc(d.description||"")}</td></tr>`).join("")}</tbody></table>` }),
+  // Enchantment and Alchemy (AQ4 4): the Threshold and time for each tier,
+  // what extra time buys, and what each material holds.
+  enchantmentMaterialCategories: mats => {
+    const T = D.enchantmentTimeTable||[], X = D.enchantmentExtendedTime||{};
+    const discs = [...new Set(T.flatMap(r=>Object.keys(r.th||{})))];
+    const discName = id => { for (const a of D.archetypes){ const d=(((a.coreMechanic||{}).disciplines||{}).list||[]).find(x=>x.id===id); if (d) return d.name; } return id; };
+    const timed = discs.filter(k=>T.some(r=>(r.minTime||{})[k]));
+    const tier = id => ((D.spellTiers||[]).find(t=>t.id===id)||{ name:id }).name;
+    const cap = Object.entries(X.reductionCapByRank||{}).map(([r,n])=>`rank ${r}: ${n}`).join(" · ");
+    return { title:"Enchantment and Alchemy", html:
+      `<table class="ref"><thead><tr><th>Tier</th>${discs.map(k=>`<th>${esc(discName(k))} TH</th>`).join("")}${timed.map(k=>`<th>${esc(discName(k))} time</th>`).join("")}</tr></thead><tbody>${
+        T.map(r=>`<tr><td><b>${esc(tier(r.tier))}</b></td>${discs.map(k=>`<td class="num">${esc((r.th||{})[k]??"—")}</td>`).join("")}${
+          timed.map(k=>`<td>${esc((r.minTime||{})[k]||"—")}</td>`).join("")}</tr>`).join("")}</tbody></table>
+      ${X.note?`<p>${esc(X.note)}${cap?` Most TH off, by rank: ${esc(cap)}.`:""}</p>`:""}
+      <div class="subsect">Materials</div><table class="ref"><thead><tr><th>Material</th><th>Charges</th><th>Used up</th><th>On a Rupture</th><th>Recharging</th></tr></thead><tbody>${
+        mats.map(m=>`<tr><td><b>${esc(m.name)}</b><div class="sub">${esc((m.examples||[]).join(", "))}</div></td><td class="num">${esc(m.charges)}</td>
+          <td>${esc(m.onUse||m.onDepletion||"")}</td><td>${esc(m.onRupture||"")}</td><td>${esc(m.recharging||"")}</td></tr>`).join("")}</tbody></table>` };
   },
   spellTiers: T => ({ title:"Spell tiers", html:
     `<table class="ref"><thead><tr><th>Tier</th><th>TN</th><th>TH</th><th></th></tr></thead><tbody>${T.map(t=>
@@ -533,8 +570,23 @@ const REFERENCE_SECTIONS = {
       ${R.permanent?`<p>${esc(R.permanent)}</p>`:""}` };
   },
 };
+// The Spellcraft sub-rules (AQ4 6): charging, holding a spell, the Sovereign
+// Soul, how a spell is learned, and teaching one.
+function spellcraftWorkings(R){
+  const c = R.charging||{}, ss = R.sovereignSoul||{}, pr = R.progression||{}, te = R.teaching||{};
+  const row = (k, v) => v ? `<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>` : "";
+  const charge = c.maxTurns ? `${c.standardAction?"A Standard Action each turn":"Each turn"} takes ${c.tnReductionPerTurn} off the spell's TN, for up to ${c.maxTurns} turns, never below TN ${c.floorTN}.` : "";
+  return { title:"Charging, holding and learning", html:
+    `<table class="ref"><tbody>${row("Charging", [charge, c.breakCheck].filter(Boolean).join(" "))}${row("Concentration", R.concentration)}</tbody></table>
+    ${ss.note?`<div class="subsect">The Sovereign Soul</div><p>${esc(ss.note)}</p><table class="ref"><tbody>${
+      row("Willing and conscious", ss.willingConscious)}${row("Unconscious ally", ss.unconsciousAlly)}${row("Unwilling", ss.unwilling)}</tbody></table>`:""}
+    <div class="subsect">Improvised, Known, Mastered</div><table class="ref"><tbody>${row("Improvised", pr.improvised)}${row("Known", pr.known)}${row("Mastered", pr.mastered)}</tbody></table>
+    <div class="subsect">Teaching</div><table class="ref"><tbody>${row("Taught", te.taught)}${row("Copied cold", te.copiedCold)}</tbody></table>` };
+}
+
 function referencePanelHtml(p){
-  const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).map(k=>REFERENCE_SECTIONS[k](D[k]));
+  // A section may draw more than one heading from its block (the Spellcraft rules do).
+  const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).flatMap(k=>REFERENCE_SECTIONS[k](D[k]));
   if (!parts.length) return "";
   return `<div class="sect">${esc(p.title||"Reference")}</div><div class="reference" data-reference="${esc(p.id)}">` +
     parts.map(x=>`<details class="group"><summary>${esc(x.title)}</summary><div class="ref-body">${x.html}</div></details>`).join("") + `</div>`;
@@ -1284,12 +1336,13 @@ function catalogResultsHtml(ch, kind){
   return `<table class="ref cat-results"><thead><tr>${head.map(h=>`<th>${h}</th>`).join("")}<th>Price</th><th></th></tr></thead><tbody>` +
     list.map(({ g, l })=>{
       const sub = kind==="weapons"
-        ? [g.label, l.skill&&l.skill.name, l.style, l.damageType&&l.damageType!=="Normal"?l.damageType:null, ...l.tags, ...l.features]
+        ? [g.label, l.skill&&l.skill.name, l.style, l.damageType&&l.damageType!=="Normal"?l.damageType:null]
         : kind==="gear" ? [g.label, l.material, l.spellName?`Holds ${l.spellName}`:null, l.action?`${l.action} Action`:null]
         : [g.label, l.quality, ...(l.slot==="body"?l.features:[])];
       const det = [l.flavorLine, l.weaponNotes, kind==="gear"?g.note:null].filter(Boolean);
       return `<tr class="catrow${open===l.id?" open":""}" data-catrow="${esc(l.id)}" aria-expanded="${open===l.id}">
-        <td><b>${esc(l.name)}</b><div class="sub">${esc([...new Set(sub.filter(Boolean))].join(" · "))}</div>${l.buy.ok||l.price==null?"":`<div class="why">${esc(l.buy.why)}</div>`}</td>
+        <td><b>${esc(l.name)}</b><div class="sub">${esc([...new Set(sub.filter(Boolean))].join(" · "))}</div>${
+          kind!=="armor" && (l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...new Set([...(l.tags||[]), ...(l.features||[])])])}</div>`:""}${l.buy.ok||l.price==null?"":`<div class="why">${esc(l.buy.why)}</div>`}</td>
         ${catalogCellsHtml(kind, l)}
         <td class="num" data-k="Price">${priceText({cost:l.price})||esc(l.costText||"—")}${l.availability?`<div class="sub">${esc(l.availability)}</div>`:""}</td>
         <td class="cat-act"><button class="btn sm" data-catadd="${esc(l.id)}" title="Add it without paying: found, issued, or already bought">Add</button>
@@ -1343,7 +1396,7 @@ function gearRowsHtml(ch){
       : l.qty>1 ? `<span class="gear-count">×${l.qty}</span>` : "";
     const spell = l.spell ? `<div class="lo-sub">Holds <b>${esc(l.spell.name)}</b> (${esc(tnth(l.spell))}): ${esc(l.spell.effect)}</div>`
                 : l.spellName ? `<div class="lo-sub">Holds ${esc(l.spellName)}</div>` : "";
-    return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${spell}</div>
+    return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length?`<div class="tags">${tagChipsHtml(l.tags)}</div>`:""}${spell}</div>
       <div class="lo-gear-ctl">${count}</div>
       <input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" placeholder="notes" aria-label="${esc(l.name)} notes">
       <button class="x" data-lorm="gear|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></div>`;
@@ -1394,10 +1447,10 @@ function weaponRowsHtml(ch){
         if (l.missing) return `<tr><td><b>${esc(l.name)}</b> <span class="chip pain">no longer in the game data</span></td><td colspan="5"></td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
-        const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null, ...l.tags].filter(Boolean);
+        const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null].filter(Boolean);
         const range = [l.reach ? `Reach ${l.reach}` : l.range, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
         const mods = weaponModsHtml(ch, l);
-        return `<tr><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div></td>
+        return `<tr><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
           <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
             l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}</td>
@@ -1589,7 +1642,7 @@ function grimoireHtml(ch, p){
         <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.duration&&`Duration: ${l.duration}`, l.defending&&`Defending: ${l.defending}`].filter(Boolean).map(esc).join(" · ")}</p>
         ${l.spellNotes?`<p>${esc(l.spellNotes)}</p>`:""}
         ${ov?`<ul class="overflow">${ov}</ul>`:""}
-        ${l.tags.length?`<p class="sub">Tags: ${l.tags.map(esc).join(", ")}</p>`:""}
+        ${l.tags.length?`<div class="tags">${tagChipsHtml(l.tags, "spelltag")}</div>`:""}
         <input type="text" class="cond-note" data-spellnote="${l.index}" value="${esc(l.notes)}" placeholder="notes: who taught it, how it behaves for you" aria-label="${esc(l.name)} notes">
         <div class="trk-actions">
           ${l.masteryCost!=null?`<button class="btn sm" data-spellmaster="${esc(l.id)}" ${ip<l.masteryCost?"disabled":""} title="${esc(g.masteryText)}">Master (${l.masteryCost} IP)</button>`:""}

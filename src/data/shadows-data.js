@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.20",
+    "gamedataVersion": "0.21",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-24"
   },
@@ -133,19 +133,19 @@ window.SHADOWS_DATA = {
     "beyondHumanLimits": "Some Archetypes (Vampires, Werewolves) are not bound by normal human ceilings; their Basic Stats can exceed 10. Once a stat passes 10, gains slow down: 11-15 is +5, 16-20 is +6, 21-25 is +7, and another +1 for every 5 points after that.",
     "ranges": [
       {
-        "range": "3 or lower",
+        "max": 3,
         "meaning": "Very young or old, an old injury or trauma, poor genetics, or hard living has left a mark. This will matter in play."
       },
       {
-        "range": "4-6",
+        "min": 4, "max": 6,
         "meaning": "Human average. You get by. You don't stand out."
       },
       {
-        "range": "7-9",
+        "min": 7, "max": 9,
         "meaning": "Exceptional. The city notices."
       },
       {
-        "range": "10",
+        "min": 10, "max": 10,
         "meaning": "The edge of human potential. Pushing past this comes at a cost."
       }
     ]
@@ -2005,7 +2005,9 @@ window.SHADOWS_DATA = {
             "title": "Magic reference",
             "shows": [
               "spellcraftRules",
+              "domains",
               "spellTiers",
+              "enchantmentMaterialCategories",
               "cascadeTable",
               "aberrationTable",
               "aberrations"
@@ -3090,10 +3092,10 @@ window.SHADOWS_DATA = {
     { "id": "Volatile", "description": "Experimental or hybrid systems carry a risk of malfunction. On a botched attack roll, roll on the Volatile Misfire table (1: no effect; 2-3: jam, one Action to clear; 4: misfire, 5 damage ignoring armor, then jams)." },
     { "id": "Wither Cloud (Lycanthropes)", "description": "Creates a zone of particulate matter converting all damage dealt to lycanthropes and their kindred within the area into Withering damage for the duration. Non-supernatural targets are unaffected by the cloud itself." },
     { "id": "Withering", "description": "Damage of this type cannot be regenerated supernaturally -- it must heal at the natural rate regardless of the target's normal recovery. The damage amount is not necessarily greater; the permanence is." },
-    { "id": "Suppression", "flagged": true, "flagNote": "F28: Appears on the Titan and Ironwall heavy weapons. No formal rule is given anywhere in the CRB v4 equipment chapter -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "(Undefined in the CRB source -- see flagNote.)" },
-    { "id": "Blast", "flagged": true, "flagNote": "F29: Appears (with a radius parameter) on several heavy/beam weapons alongside or instead of Area/Siege. The equipment chapter never states how Blast differs mechanically from Area or Siege -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "(Undefined in the CRB source -- see flagNote.)" },
-    { "id": "Anti-Materiel", "flagged": true, "flagNote": "F30: Appears on the VR-50 'Verdict'. The vehicle-combat rules (same chapter) say weapons with the Anti-Materiel, Siege, or Blast tags deal full damage to vehicles, but no rule defines an Anti-Materiel effect against personal targets -- confirm with Deighton.", "description": "Deals full damage to vehicles (per the vehicle-combat rules); no separate personal-combat effect is defined yet." },
-    { "id": "Reach", "flagged": true, "flagNote": "F31: Appears as a weapon Tag on the Razorwhip and Orion MW-1 'Filament', distinct from the Reach column both weapons already carry. The equipment chapter never explains what the tag adds beyond the column value -- confirm with Deighton.", "description": "(Undefined beyond the weapon's own Reach column value -- see flagNote.)" }
+    { "id": "Suppression", "flagged": true, "flagNote": "F28: Appears on the Titan and Ironwall heavy weapons. No formal rule is given anywhere in the CRB v4 equipment chapter -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "Found on heavy weapons built for sustained fire.", "playerNote": "The book doesn't say what Suppression does in a fight yet. Until it does, your GM rules on it." },
+    { "id": "Blast", "flagged": true, "flagNote": "F29: Appears (with a radius parameter) on several heavy/beam weapons alongside or instead of Area/Siege. The equipment chapter never states how Blast differs mechanically from Area or Siege -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "An explosive burst with a radius, printed beside or instead of Area and Siege.", "playerNote": "The book doesn't say yet how Blast differs from Area or Siege. Until it does, your GM rules on it." },
+    { "id": "Anti-Materiel", "flagged": true, "flagNote": "F30: Appears on the VR-50 'Verdict'. The vehicle-combat rules (same chapter) say weapons with the Anti-Materiel, Siege, or Blast tags deal full damage to vehicles, but no rule defines an Anti-Materiel effect against personal targets -- confirm with Deighton.", "description": "Deals full damage to vehicles (per the vehicle-combat rules); no separate personal-combat effect is defined yet.", "playerNote": "What it does to a person isn't written yet. Your GM rules on it." },
+    { "id": "Reach", "flagged": true, "flagNote": "F31: Appears as a weapon Tag on the Razorwhip and Orion MW-1 'Filament', distinct from the Reach column both weapons already carry. The equipment chapter never explains what the tag adds beyond the column value -- confirm with Deighton.", "description": "The weapon reaches as far as its Reach column says.", "playerNote": "What the tag adds beyond that number isn't written yet. Your GM rules on it." }
   ],
   "weaponFeatureGlossary": [
     { "id": "Bipod Mount", "description": "Integrated bipod for stable firing from prone or braced. Satisfies the Mounted tag's requirement without a separate mount." },
@@ -3228,31 +3230,6 @@ window.SHADOWS_DATA = {
     { "id": "urban-recurve-bow", "name": "Urban Recurve Bow", "category": "archery", "skill": "archery", "damage": 6, "acc": 1, "range": "Medium", "rof": "S", "mods": 2, "availability": "Common", "cost": 400, "tags": ["Silent", "Payload"], "flavorLine": "A takedown recurve bow collapsible into a configuration that fits a gear bag." },
     { "id": "bdf-yumi", "name": "BDF Yumi", "category": "archery", "skill": "archery", "damage": 8, "acc": 2, "range": "Long", "rof": "S", "mods": 1, "availability": "Rare", "cost": 6000, "tags": ["Silent", "Payload"], "flavorLine": "A traditional longbow reinterpreted in carbon fiber, hand-fitted to its owner's draw length." },
     { "id": "ads-tc1-strix", "name": "ADS TC-1 \"Strix\"", "category": "archery", "skill": "archery", "damage": 7, "acc": 2, "range": "Medium", "rof": "S/B", "capacity": "6", "mods": 2, "availability": "Uncommon", "cost": 2800, "tags": ["Silent", "Payload"], "features": ["Conceal"], "flavorLine": "A magazine-fed tactical crossbow with a folding stock and repeating bolt mechanism." }
-  ],
-
-  "ammunition": [
-    { "id": "handgun-rounds", "name": "Handgun Rounds", "weaponType": "Handgun", "availability": "Common", "cost": "15Ç/mag", "flavorLine": "If you carry a handgun, you carry these." },
-    { "id": "smg-rounds", "name": "SMG Rounds", "weaponType": "SMG", "availability": "Common", "cost": "20Ç/mag", "flavorLine": "Higher-velocity pistol-caliber rounds for the shorter barrels of submachine guns." },
-    { "id": "rifle-rounds", "name": "Rifle Rounds", "weaponType": "Rifle", "availability": "Common", "cost": "20Ç/mag", "flavorLine": "The round that most of NYTE City's serious work gets done with." },
-    { "id": "shotgun-shells", "name": "Shotgun Shells", "weaponType": "Rifle (shotgun)", "tags": ["Spread"], "availability": "Common", "cost": "15Ç/box (10 shells)", "flavorLine": "Shot or slug -- your call. It hurts either way." },
-    { "id": "heavy-rounds", "name": "Heavy Rounds", "weaponType": "Heavy", "availability": "Common", "cost": "50Ç/mag", "notes": "Belt-fed weapons carry substantial loads -- treat as unlimited for standard encounters, resupply between operations.", "flavorLine": "Belt-fed and bulk-purchased for sustained operations, not individual engagements." },
-    { "id": "power-cell", "name": "Power Cell", "weaponType": "Beam, Archery (Strix)", "availability": "Uncommon", "cost": "50Ç/cell", "notes": "Not interchangeable with ballistic ammunition.", "flavorLine": "Rechargeable energy cells powering beam weapons and the Strix's firing mechanism." },
-    { "id": "silver-rounds", "name": "Silver Rounds", "weaponType": "Handgun, Rifle, Heavy", "tags": ["Withering (Lycanthropes)"], "availability": "By Practice", "cost": "3x standard", "notes": "Standard ballistic damage against unaugmented targets; Withering against lycanthropes and kindred.", "flavorLine": "The silver content doesn't make them hit harder -- it makes the wounds stop healing." },
-    { "id": "holy-points", "name": "Holy Points", "weaponType": "Handgun", "tags": ["Withering (Unholy)"], "availability": "By Practice", "cost": "4x standard", "notes": "Hollow point notched with an isometric cross, blessed by clergy. Withering against supernaturals aligned against the faith.", "flavorLine": "Against the right target, the blessing stays in the wound." },
-    { "id": "angel-rounds", "name": "Angel Rounds", "weaponType": "Handgun, Rifle, SMG", "tags": ["+4 DMG", "AP", "Burning", "Agonized"], "availability": "Rare", "cost": "5x standard", "notes": "Required for the Angel Mod. Cannot be used without it installed.", "flavorLine": "Plasma-coated high-grade alloy projectile." }
-  ],
-  "arrowheads": [
-    { "id": "standard-broadhead", "name": "Standard Broadhead", "effect": "Base weapon DMG", "availability": "Common", "cost": "50Ç/12" },
-    { "id": "armor-piercing-arrowhead", "name": "Armor Piercing", "effect": "Base weapon DMG", "tags": ["AP"], "availability": "Uncommon", "cost": "150Ç/6" },
-    { "id": "barbed-tip", "name": "Barbed Tip", "effect": "Base weapon DMG", "tags": ["Bleeding"], "availability": "Uncommon", "cost": "100Ç/6", "flavorLine": "A hooked arrowhead that catches and tears on impact. The wound doesn't close cleanly." },
-    { "id": "explosive-tip", "name": "Explosive Tip", "effect": "Base DMG +2, 1m blast", "tags": ["Blast"], "availability": "Rare", "cost": "200Ç/3" },
-    { "id": "emp-tip", "name": "EMP Tip", "effect": "DMG 2, electronics disruption", "tags": ["EMP"], "availability": "Uncommon", "cost": "180Ç/3" },
-    { "id": "incendiary-arrowhead", "name": "Incendiary", "effect": "Base weapon DMG", "tags": ["Burning"], "availability": "Uncommon", "cost": "120Ç/6" },
-    { "id": "poison-tip", "name": "Poison Tip", "effect": "Base weapon DMG", "tags": ["Condition (specify: Poison / Sedative / Paralytic)"], "availability": "Rare", "cost": "400Ç/3", "flavorLine": "A hollow-tipped arrowhead with a sealed payload chamber; specify the payload at purchase." },
-    { "id": "silver-tipped-arrowhead", "name": "Silver-Tipped", "effect": "Base weapon DMG", "tags": ["Withering (Lycanthropes)"], "availability": "By Practice", "cost": "300Ç/6" },
-    { "id": "iron-cored-arrowhead", "name": "Iron-Cored", "effect": "Base weapon DMG", "tags": ["Withering (Fae / Spirits)"], "availability": "By Practice", "cost": "300Ç/6" },
-    { "id": "consecrated-arrowhead", "name": "Consecrated", "effect": "Base weapon DMG", "tags": ["Withering (Undead / Demonic)"], "availability": "By Practice", "cost": "250Ç/6" },
-    { "id": "void-touched-arrowhead", "name": "Void-Touched", "effect": "Base DMG -2", "tags": ["Withering (All Supernaturals)"], "availability": "By Practice", "cost": null, "flavorLine": "The only arrowhead effective against the full range of supernatural targets, at the cost of reduced physical impact." }
   ],
 
   /* ARMOR -- PROT is a die the player rolls physically (per Decision 11, the
@@ -3403,6 +3380,7 @@ window.SHADOWS_DATA = {
     { "id": "medical", "name": "Field & Recovery", "book": "Gear" },
     { "id": "tools", "name": "Tools & Field Gear", "book": "Gear" },
     { "id": "clothing", "name": "Clothing", "book": "Gear" },
+    { "id": "ammo", "name": "Ammo", "book": "Gear", "note": "Rounds, cells and arrowheads. Each fits the weapons its notes name." },
     { "id": "materials", "name": "Raw Materials", "book": "Magic" },
     { "id": "ritual", "name": "Ritual Supplies", "book": "Magic", "note": "Not mechanically required for Enchantment or Alchemy. They support the workspace." },
     { "id": "blanks", "name": "Inscription Blanks", "book": "Magic", "note": "Any of these can be a Talisman base. Material decides charges and recharging." },
@@ -3454,6 +3432,26 @@ window.SHADOWS_DATA = {
     { "id": "accessories-base", "name": "Accessories (Base)", "category": "clothing", "availability": "Common", "cost": 225, "notes": "Standard jewelry and eyewear", "flavorLine": "Baseline quality accessories — jewelry, sunglasses, and other finishing pieces that complete an outfit without calling attention to themselves." },
     { "id": "accessories-good", "name": "Accessories (Good)", "category": "clothing", "availability": "Common", "cost": 600, "notes": "Flashy statement pieces", "flavorLine": "Flashy jewelry and fashionwear that make a statement." },
     { "id": "accessories-lavish", "name": "Accessories (Lavish)", "category": "clothing", "availability": "Uncommon", "cost": 1200, "notes": "Luxury status accessories", "flavorLine": "Luxurious jewelry and accessories used by the wealthy." },
+    { "id": "handgun-rounds", "name": "Handgun Rounds", "category": "ammo", "availability": "Common", "cost": 15, "costText": "15Ç / mag", "pack": 1, "unit": "mag", "consumable": true, "notes": "Fits Handgun.", "flavorLine": "If you carry a handgun, you carry these." },
+    { "id": "smg-rounds", "name": "SMG Rounds", "category": "ammo", "availability": "Common", "cost": 20, "costText": "20Ç / mag", "pack": 1, "unit": "mag", "consumable": true, "notes": "Fits SMG.", "flavorLine": "Higher-velocity pistol-caliber rounds for the shorter barrels of submachine guns." },
+    { "id": "rifle-rounds", "name": "Rifle Rounds", "category": "ammo", "availability": "Common", "cost": 20, "costText": "20Ç / mag", "pack": 1, "unit": "mag", "consumable": true, "notes": "Fits Rifle.", "flavorLine": "The round that most of NYTE City's serious work gets done with." },
+    { "id": "shotgun-shells", "name": "Shotgun Shells", "category": "ammo", "availability": "Common", "cost": 15, "costText": "15Ç / box of 10", "pack": 10, "unit": "shell", "consumable": true, "tags": ["Spread"], "notes": "Fits Rifle (shotgun).", "flavorLine": "Shot or slug -- your call. It hurts either way." },
+    { "id": "heavy-rounds", "name": "Heavy Rounds", "category": "ammo", "availability": "Common", "cost": 50, "costText": "50Ç / mag", "pack": 1, "unit": "mag", "consumable": true, "notes": "Fits Heavy. Belt-fed weapons carry substantial loads -- treat as unlimited for standard encounters, resupply between operations.", "flavorLine": "Belt-fed and bulk-purchased for sustained operations, not individual engagements." },
+    { "id": "power-cell", "name": "Power Cell", "category": "ammo", "availability": "Uncommon", "cost": 50, "costText": "50Ç / cell", "pack": 1, "unit": "cell", "consumable": true, "notes": "Fits Beam, Archery (Strix). Not interchangeable with ballistic ammunition.", "flavorLine": "Rechargeable energy cells powering beam weapons and the Strix's firing mechanism." },
+    { "id": "silver-rounds", "name": "Silver Rounds", "category": "ammo", "availability": "By Practice", "cost": null, "costText": "3× standard", "pack": 1, "unit": "mag", "consumable": true, "tags": ["Withering (Lycanthropes)"], "notes": "Fits Handgun, Rifle, Heavy. Standard ballistic damage against unaugmented targets; Withering against lycanthropes and kindred.", "flavorLine": "The silver content doesn't make them hit harder -- it makes the wounds stop healing." },
+    { "id": "holy-points", "name": "Holy Points", "category": "ammo", "availability": "By Practice", "cost": null, "costText": "4× standard", "pack": 1, "unit": "mag", "consumable": true, "tags": ["Withering (Unholy)"], "notes": "Fits Handgun. Hollow point notched with an isometric cross, blessed by clergy. Withering against supernaturals aligned against the faith.", "flavorLine": "Against the right target, the blessing stays in the wound." },
+    { "id": "angel-rounds", "name": "Angel Rounds", "category": "ammo", "availability": "Rare", "cost": null, "costText": "5× standard", "pack": 1, "unit": "mag", "consumable": true, "tags": ["+4 DMG", "AP", "Burning", "Agonized"], "notes": "Fits Handgun, Rifle, SMG. Required for the Angel Mod. Cannot be used without it installed.", "flavorLine": "Plasma-coated high-grade alloy projectile." },
+    { "id": "standard-broadhead", "name": "Standard Broadhead", "category": "ammo", "availability": "Common", "cost": 50, "costText": "50Ç / 12", "pack": 12, "unit": "arrow", "consumable": true, "notes": "Arrowhead. Base weapon DMG." },
+    { "id": "armor-piercing-arrowhead", "name": "Armor Piercing", "category": "ammo", "availability": "Uncommon", "cost": 150, "costText": "150Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["AP"], "notes": "Arrowhead. Base weapon DMG." },
+    { "id": "barbed-tip", "name": "Barbed Tip", "category": "ammo", "availability": "Uncommon", "cost": 100, "costText": "100Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Bleeding"], "notes": "Arrowhead. Base weapon DMG.", "flavorLine": "A hooked arrowhead that catches and tears on impact. The wound doesn't close cleanly." },
+    { "id": "explosive-tip", "name": "Explosive Tip", "category": "ammo", "availability": "Rare", "cost": 200, "costText": "200Ç / 3", "pack": 3, "unit": "arrow", "consumable": true, "tags": ["Blast"], "notes": "Arrowhead. Base DMG +2, 1m blast." },
+    { "id": "emp-tip", "name": "EMP Tip", "category": "ammo", "availability": "Uncommon", "cost": 180, "costText": "180Ç / 3", "pack": 3, "unit": "arrow", "consumable": true, "tags": ["EMP"], "notes": "Arrowhead. DMG 2, electronics disruption." },
+    { "id": "incendiary-arrowhead", "name": "Incendiary", "category": "ammo", "availability": "Uncommon", "cost": 120, "costText": "120Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Burning"], "notes": "Arrowhead. Base weapon DMG." },
+    { "id": "poison-tip", "name": "Poison Tip", "category": "ammo", "availability": "Rare", "cost": 400, "costText": "400Ç / 3", "pack": 3, "unit": "arrow", "consumable": true, "tags": ["Condition (specify: Poison / Sedative / Paralytic)"], "notes": "Arrowhead. Base weapon DMG.", "flavorLine": "A hollow-tipped arrowhead with a sealed payload chamber; specify the payload at purchase." },
+    { "id": "silver-tipped-arrowhead", "name": "Silver-Tipped", "category": "ammo", "availability": "By Practice", "cost": 300, "costText": "300Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Withering (Lycanthropes)"], "notes": "Arrowhead. Base weapon DMG." },
+    { "id": "iron-cored-arrowhead", "name": "Iron-Cored", "category": "ammo", "availability": "By Practice", "cost": 300, "costText": "300Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Withering (Fae / Spirits)"], "notes": "Arrowhead. Base weapon DMG." },
+    { "id": "consecrated-arrowhead", "name": "Consecrated", "category": "ammo", "availability": "By Practice", "cost": 250, "costText": "250Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Withering (Undead / Demonic)"], "notes": "Arrowhead. Base weapon DMG." },
+    { "id": "void-touched-arrowhead", "name": "Void-Touched", "category": "ammo", "availability": "By Practice", "cost": null, "costText": "No listed price", "pack": 1, "unit": "arrow", "consumable": true, "tags": ["Withering (All Supernaturals)"], "notes": "Arrowhead. Base DMG -2.", "flavorLine": "The only arrowhead effective against the full range of supernatural targets, at the cost of reduced physical impact." },
     { "id": "paper-sheet-standard", "name": "Paper (sheet, standard)", "category": "materials", "availability": "Common", "cost": 5, "costText": "5Ç / 10", "pack": 10, "unit": "sheet", "consumable": true, "notes": "Degradable. Works for any single-charge inscription." },
     { "id": "cloth-square-standard", "name": "Cloth (square, standard)", "category": "materials", "availability": "Common", "cost": 10, "costText": "10Ç / 10", "pack": 10, "unit": "square", "consumable": true, "notes": "Degradable. Flexible — can be worn or wrapped." },
     { "id": "wood-blank-small", "name": "Wood blank (small)", "category": "materials", "availability": "Common", "cost": 15, "consumable": true, "notes": "Once-Living. 3 charges. Coins, discs, small carvings." },

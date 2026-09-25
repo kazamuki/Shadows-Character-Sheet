@@ -941,6 +941,39 @@ const Engine = (() => {
              tags: def.tags||[], features: def.features||[], weaponNotes: def.notes||null };
   }
 
+  // A tag read out (Decision 139): what a weapon's, an arrowhead's or a
+  // spell's tag means, from its glossary. A tag with a parameter ("Blast
+  // (10m)", "Withering (Undead / Demonic)") is found by the words before the
+  // bracket. A spell's tag reads the spell glossary first, since the two
+  // share a few words (AP, Decision 116). Null for a tag no glossary has.
+  function glossary(term, kind){
+    const t = String(term==null ? "" : term).trim();
+    if (!t) return null;
+    const base = t.replace(/\s*\(.*\)\s*$/, "");
+    const lists = kind==="spell" ? ["spellTagGlossary", "weaponTagGlossary", "weaponFeatureGlossary"]
+                                 : ["weaponTagGlossary", "weaponFeatureGlossary", "spellTagGlossary"];
+    for (const key of base===t ? [t] : [t, base])
+      for (const list of lists){
+        const g = (D()[list]||[]).find(x=>x && x.id===key);
+        if (g) return { id:g.id, term:t, text:g.description||"", note:g.playerNote||null };
+      }
+    return null;
+  }
+
+  // What a stat's score means (Decision 139): the book's range the score
+  // sits in, how the modifier works, and past 10, what changes. `ranges`
+  // run up the scale; the first one the score fits is its reading.
+  function statReading(ch, id){
+    const R = D().statRules||{}, def = (D().stats||[]).find(s=>s.id===id);
+    if (!def) return null;
+    const v = statValue(ch, id);
+    const range = (R.ranges||[]).find(r=>(r.min==null || v>=r.min) && (r.max==null || v<=r.max)) || null;
+    const hlRule = (((D().resources||{}).healthLevels)||{}).bodAbove10Rule;
+    return { id, name:def.name||id, description:def.description||"", value:v, mod:statMod(v), range,
+             rule: R.modifierRuleText||"", beyond: v>10 ? (R.beyondHumanLimits||null) : null,
+             health: v>10 && id==="BOD" && hlRule ? hlRule : null };
+  }
+
   // W4 — one catalog entry as the browser shows it, before it's added: the
   // same line Loadout would draw (a weapon's attack and damage for this
   // character, an armor piece's PROT, RES and Integrity), its price, and
@@ -1002,7 +1035,7 @@ const Engine = (() => {
              chargesMax: nonNegInt(def.charges)||null, material:def.material||null,
              spell: sp ? { id:sp.id, name:sp.name, tn:sp.tn, th:sp.th, effect:sp.effect||"" } : null,
              spellName: def.spellName||null, action:def.action||null, itemNotes:def.notes||null, costText:def.costText||null,
-             startsEmpty: !!def.startsEmpty };
+             startsEmpty: !!def.startsEmpty, tags: def.tags||[] };
   }
   function gearLine(ch, index){
     const e = listOf(ch, "gear")[index];
@@ -2678,7 +2711,7 @@ const Engine = (() => {
            // Taking a hit (Decision 99)
            hlState, armorState, resolveHit, applyHit, damageTypeById, damageCategoryById,
            // Loadout & recovery (Decision 100)
-           weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
+           weaponLine, catalogLine, glossary, statReading, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
            gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
            upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
            naturalHealing, heal, resolveReset, applyReset,
