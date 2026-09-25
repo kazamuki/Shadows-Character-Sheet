@@ -2,6 +2,16 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.25.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Every Major Milestone shows all it does.** Hardcore Parkour, Cyber Psion and Can't See Me each have rules past their first line (Hardcore Parkour's fall damage and Dodge bonus, for one) that the Progression tab never showed. They're under the benefit now.",
+      "**\"No Milestone unlocked\" says when the next one is**: \"next at 15 MP\", counted from where you are, not the whole list of thresholds.",
+      "A Werewolf's starting SFR reads **WILL × 3 + 5** on the Archetype step, not `WILL*3 + 5`."
+    ]
+  },
+  {
     "version": "0.25.0",
     "date": "2026-09-24",
     "intro": [

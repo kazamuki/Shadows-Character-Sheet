@@ -149,6 +149,28 @@ const Engine = (() => {
     return a.campaignPowerScaling.byPowerLevel[pl.id] || null;
   }
 
+  // A data path names a number another table holds (Decisions 79, 135):
+  // "campaignPowerScaling.<key>" reads the current power level's scaling row,
+  // "powerLevel.<key>" the power level, anything else the archetype itself.
+  // Null when it can't resolve to a number: the caller decides what that means.
+  function dataPath(ch, path){
+    const keys = String(path).split(".");
+    let node;
+    if (keys[0]==="campaignPowerScaling"){ node = scalingRow(ch); keys.shift(); }
+    else if (keys[0]==="powerLevel"){ node = powerLevel(ch); keys.shift(); }
+    else node = archetype(ch);
+    for (const k of keys){ if (node==null) break; node = node[k]; }
+    return typeof node==="number" && isFinite(node) ? node : null;
+  }
+
+  // A formula the data states as numbers, never as text (Decision 135):
+  // { stat, times, plus } is stat × times + plus. SAN is EMP × 10 and a
+  // Werewolf's starting SFR is WILL × 3 + 5; the text is written from the same
+  // numbers, so it can't say something the engine doesn't do.
+  const isFormula = f => !!f && typeof f==="object" && typeof f.stat==="string" && typeof f.times==="number";
+  const formulaValue = (f, input) => typeof input==="number" ? input * f.times + (Number(f.plus)||0) : null;
+  const formulaText = f => isFormula(f) ? `${f.stat} × ${f.times}${f.plus ? ` + ${f.plus}` : ""}` : "";
+
   function derived(ch){
     const t = statTable(ch), out = {};
     for (const d of D().derived){
@@ -157,7 +179,8 @@ const Engine = (() => {
         if (d.floor != null) v = Math.max(d.floor, v);
         out[d.id] = v;
       } else if (d.type === "percent"){
-        let v = t.EMP.value * 10;                      // SAN = EMP×10
+        if (!isFormula(d.formula) || !t[d.formula.stat]) continue;
+        let v = formulaValue(d.formula, t[d.formula.stat].value);
         if (d.floor != null) v = Math.max(d.floor, v);
         if (d.cap   != null) v = Math.min(d.cap, v);
         out[d.id] = v;
@@ -188,12 +211,17 @@ const Engine = (() => {
     return { levels, hpPer, total: levels*hpPer + adjFor(ch,"HP") };
   }
 
+  // Starting SFR is a formula on the scaling row. Its stat can be a derived
+  // one (WILL) or a Basic Stat; one the engine can't find gives no value,
+  // and the tracker then asks for its max instead of inventing one.
   function sfr(ch){
     const row = scalingRow(ch);
     if (!row || !row.startingSFR) return null;
-    const will = derived(ch).WILL;
-    const m = /WILL\*3 \+ (\d+)/.exec(row.startingSFR);
-    return m ? { value: will*3 + Number(m[1]), rou: row.rou, formula: row.startingSFR } : { value:null, rou:row.rou, formula:row.startingSFR };
+    const f = row.startingSFR;
+    if (!isFormula(f)) return { value:null, rou:row.rou, formula:"" };
+    const d = derived(ch);
+    const input = typeof d[f.stat]==="number" ? d[f.stat] : D().stats.some(s=>s.id===f.stat) ? statValue(ch, f.stat) : null;
+    return { value: formulaValue(f, input), rou: row.rou, formula: formulaText(f) };
   }
 
   // ── Pools ────────────────────────────────────────────────────────────
@@ -228,13 +256,17 @@ const Engine = (() => {
   const boostSpent = ch => ch.creation.boosts
     .filter(b=>b.targetType!=="power")
     .reduce((s,b)=>s + b.times * D().creationFlow.boostRules.cpCostPerPoint, 0);
-  // Arcanist Disciplines at creation: 6 CP per rank above starting (REF note)
+  // Disciplines (Decision 135): what a rank costs at creation, the cap and
+  // each one's starting rank all come from the archetype's data, so any
+  // archetype that declares `coreMechanic.disciplines` gets them.
+  const disciplineSpec = ch => { const a = archetype(ch); return (a && a.coreMechanic && a.coreMechanic.disciplines) || null; };
   function disciplineSpent(ch){
-    const a = archetype(ch);
-    if (!a || a.id!=="arcanist") return 0;
-    const cost = 6;
+    const spec = disciplineSpec(ch);
+    if (!spec) return 0;
+    const cost = Number(spec.cpPerRank)||0;
     return Object.values(ch.archetypeChoices.disciplines||{}).reduce((s,r)=>s + r*cost, 0);
   }
+  const disciplineCap = ch => { const spec = disciplineSpec(ch); return spec && spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null; };
   function cp(ch){
     const pl = powerLevel(ch);
     if (!pl) return null;
@@ -248,10 +280,10 @@ const Engine = (() => {
     const pl = powerLevel(ch);
     if (!pl) return {ok:false, why:"No power level."};
     const times = boostsFor(ch, type, id);
-    if (type!=="luck" && times >= pl.maxBoost)
+    if (times >= pl.maxBoost)
       return {ok:false, why:`Max Boost reached (${pl.maxBoost}× per target).`};
     if (type==="stat" && statValue(ch,id) >= D().statRules.max)
-      return {ok:false, why:"Stat cap 10."};
+      return {ok:false, why:`Stat cap ${D().statRules.max}.`};
     if (type==="skill"){
       const rank = (ch.skills[id] ? ch.skills[id].rank : 0) + times;
       const cap = skillRankCap(ch, id);
@@ -913,13 +945,16 @@ const Engine = (() => {
   // same line Loadout would draw (a weapon's attack and damage for this
   // character, an armor piece's PROT, RES and Integrity), its price, and
   // whether Buy can go ahead and, if not, why. Null for an unknown id.
+  // The currency sign is the data's (Decision 135), like every other number here.
+  const creditSymbol = () => (((D().resources||{}).credits||{}).symbol) || "";
   function catalogLine(ch, kind, id){
     const def = loadoutDef(kind, id);
     if (!def || !ch || typeof ch!=="object") return null;
     const line = kind==="armor" ? armorPiece({ id }, null) : kind==="gear" ? gearDefLine(def) : weaponDefLine(ch, def);
     const price = priceOf(def), have = Number(ch && ch.trackers && ch.trackers.credits && ch.trackers.credits.current)||0;
+    const cr = creditSymbol();
     const buy = price==null ? { ok:false, why:"No street price. Add it, then log what it cost under Çredits." }
-              : price>have ? { ok:false, why:`Costs ${price.toLocaleString("en-US")}Ç. You have ${have.toLocaleString("en-US")}Ç.` }
+              : price>have ? { ok:false, why:`Costs ${price.toLocaleString("en-US")}${cr}. You have ${have.toLocaleString("en-US")}${cr}.` }
               : { ok:true };
     return Object.assign(line, { kind, price, availability: def.availability||null,
       flavorLine: def.flavorLine||null, buy });
@@ -935,7 +970,7 @@ const Engine = (() => {
     if (buy){
       if (price==null) return { ok:false, why:`${def.name} has no street price. Add it instead, and record what it cost under Çredits.` };
       const have = Number(ch.trackers.credits.current)||0;
-      if (price>have) return { ok:false, why:`${def.name} costs ${price}Ç. You have ${have}Ç.` };
+      if (price>have) return { ok:false, why:`${def.name} costs ${price}${creditSymbol()}. You have ${have}${creditSymbol()}.` };
     }
     if (kind==="gear"){
       const r = addGearEntry(ch, def);
@@ -1359,7 +1394,7 @@ const Engine = (() => {
         return {ok:false, why:`${targetId} cannot be raised directly with IP.`};
       const cur = statValue(ch, targetId);
       if (cur >= D().statRules.max) return {ok:false, why:`Stat cap ${D().statRules.max}.`};
-      return {ok:true, cost: cur*10, from:cur, to:cur+1};
+      return {ok:true, cost: cur * D().ip.statIncreaseCost.perPoint, from:cur, to:cur+1};
     }
     // Decision 108: Mastering a Known book spell, 30 IP × its printed TH.
     if (targetType==="spell"){
@@ -1400,16 +1435,19 @@ const Engine = (() => {
   // through commit() -> recordAction(), so undoLastAction reverses it structurally.
 
   // ── Milestones ────────────────────────────────────────────────────────
-  // Minor unlock at 5, 15, 25… MP; Major at 10, 20, 30… MP.
   function milestoneState(ch){
     // B9: the cadence used to be stated twice -- as prose in the data ("5, 15,
     // 25...") and as arithmetic here -- with nothing connecting them, and
-    // milestonePointsPerSession was inert. Both now come from the data.
+    // milestonePointsPerSession was inert. Both now come from the data, and
+    // so does every "5, 15, 25…" a player reads (Decision 135).
     const r = D().milestones.rules;
     const per = r.milestonePointsPerSession==null ? 1 : r.milestonePointsPerSession;
     const sessionMP = (ch.sessions||[]).filter(s=>s.milestonePoint!==false).length * per;
     const mp = sessionMP + ((ch.progression||{}).milestonePoints||0);
     const avail = (first, every) => (every>0 && mp>=first) ? Math.floor((mp-first)/every)+1 : 0;
+    // The next Milestone Point total that unlocks one more, or null if none will.
+    const next = (first, every) => mp<first ? first : every>0 ? first + avail(first, every)*every : null;
+    const cadence = (first, every) => every>0 ? `${first}, ${first+every}, ${first+2*every}…` : `${first}`;
     const g = grants(ch);
     // Long-Lived's Milestone grants land as extra unlocked slots, not an
     // auto-picked Milestone — the existing pick lists handle the rest.
@@ -1420,11 +1458,14 @@ const Engine = (() => {
     return { mp, sessionMP, manualMP: ch.progression.milestonePoints||0,
              minorAvail, majorAvail, minorTaken, majorTaken,
              minorLeft: minorAvail - minorTaken.length,
-             majorLeft: majorAvail - majorTaken.length };
+             majorLeft: majorAvail - majorTaken.length,
+             nextMinorAt: next(r.minorFirstAt, r.minorEvery), nextMajorAt: next(r.majorFirstAt, r.majorEvery),
+             minorCadence: cadence(r.minorFirstAt, r.minorEvery), majorCadence: cadence(r.majorFirstAt, r.majorEvery) };
   }
+  const noneUnlocked = (tier, at) => `No ${tier} Milestone unlocked${at==null ? "" : ` (next at ${at} MP)`}.`;
   function canTakeMinor(ch, id){
     const st = milestoneState(ch);
-    if (st.minorLeft<=0) return {ok:false, why:"No Minor Milestone unlocked (next at 5, 15, 25… MP)."};
+    if (st.minorLeft<=0) return {ok:false, why:noneUnlocked("Minor", st.nextMinorAt)};
     // "May not duplicate until each Minor Milestone has been selected."
     const counts = {};
     for (const m of D().milestones.minorShared) counts[m.id]=0;
@@ -1501,7 +1542,7 @@ const Engine = (() => {
       const m = (D().milestones.majorGeneral||[]).find(x=>x.id===id);
       if (!m) return {ok:false, why:"Unknown milestone."};
       const st = milestoneState(ch);
-      if (st.majorLeft<=0) return {ok:false, why:"No Major Milestone unlocked (next at 10, 20, 30… MP)."};
+      if (st.majorLeft<=0) return {ok:false, why:noneUnlocked("Major", st.nextMajorAt)};
       const pre = majorPrereqs(ch, m); if (!pre.ok) return {ok:false, why:pre.unmet.join(" ")};
       ch.progression.milestones.major.push({id, date:new Date().toISOString()});
     }
@@ -1785,14 +1826,40 @@ const Engine = (() => {
     if (p.max==="startingSFR"){ const s=sfr(ch); return s && s.value!=null ? s.value : null; }
     return typeof p.max==="number" ? p.max : null;
   }
+  // A tracker panel's count. It lives on the panel's own entry, or with
+  // `resource` on that resource's tracker (SFR's spend is `trackers.sfr`, which
+  // Main reads too). `counts: "down"` shows what's left of the max instead of
+  // what's been counted (Decision 135): no panel id is special.
+  // `create` is for the writer only: reading a count never adds to the file.
+  const panelStore = (ch, p, create) => {
+    const t = (ch && ch.trackers) || {};
+    if (p.resource && t[p.resource] && typeof t[p.resource]==="object") return { obj:t[p.resource], key:"spent" };
+    const panel = t.panel && typeof t.panel==="object" ? t.panel : null;
+    if (panel && panel[p.id] && typeof panel[p.id]==="object") return { obj:panel[p.id], key:"value" };
+    if (!create) return { obj:{}, key:"value" };
+    if (!panel) t.panel = {};
+    return { obj: (t.panel[p.id] = { value:0 }), key:"value" };
+  };
+  function panelTracker(ch, p){
+    const max = panelMax(ch, p), s = panelStore(ch, p, false), count = Number(s.obj[s.key])||0;
+    const down = p.counts==="down";
+    return { count, max, down, shown: down ? (max!=null ? Math.max(0, max-count) : null) : count };
+  }
+  function adjustPanelTracker(ch, panelId, delta){
+    const p = archPanels(ch).find(x=>x.id===panelId && x.type==="tracker");
+    if (!p) return { ok:false, why:"That tracker isn't on this sheet." };
+    const s = panelStore(ch, p, true);
+    s.obj[s.key] = Math.max(0, (Number(s.obj[s.key])||0) + (Number(delta)||0));
+    return { ok:true };
+  }
   function disciplineRanks(ch){
-    const a = archetype(ch);
-    if (!a || !a.coreMechanic || !a.coreMechanic.disciplines) return [];
-    const row = scalingRow(ch);
-    return a.coreMechanic.disciplines.list.map(d=>{
-      const base = (d.id==="evocation" && row) ? (row.evocationStartingRank||0) : 0;
+    const spec = disciplineSpec(ch);
+    if (!spec) return [];
+    const cap = disciplineCap(ch);
+    return (spec.list||[]).map(d=>{
+      const base = d.startingRankBy ? (dataPath(ch, d.startingRankBy)||0) : 0;
       const bought = (ch.archetypeChoices.disciplines||{})[d.id]||0;
-      return { id:d.id, name:d.name, rank: base+bought, description:d.description };
+      return { id:d.id, name:d.name, base, bought, rank: base+bought, cap, description:d.description };
     });
   }
 
@@ -2318,14 +2385,11 @@ const Engine = (() => {
     const spec = a && a.specialization;
     if (!spec || !(spec.options||[]).length) return 0;
     if (!spec.countBy) return 1;
-    const path = String(spec.countBy).split(".");
-    let node = path[0]==="campaignPowerScaling" ? scalingRow(ch) : a;
-    const from = path[0]==="campaignPowerScaling" ? 1 : 0;
-    for (let i=from; i<path.length && node!=null; i++) node = node[path[i]];
     // An entry that DECLARES a count and cannot resolve one asks for nothing.
     // Falling back to 1 invented a requirement the data never stated — on a
     // corrupt import with no power level, main raised nothing here.
-    return typeof node==="number" ? node : 0;
+    const n = dataPath(ch, spec.countBy);
+    return n==null ? 0 : n;
   }
   const specializationIds = ch => (((ch||{}).archetypeChoices||{}).specialization) || [];
   // Resolved option objects, in the order chosen. Orphans (an id the data no
@@ -2458,6 +2522,11 @@ const Engine = (() => {
       overCap(true);
       if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.notes!=="natural"))
         E(`${a.name}s cannot purchase Advantages.`);
+      // The discipline cap (Decision 135) is the data's `maxRankBy`. The
+      // stepper stops at it, so only an edited file or a lower power level
+      // chosen afterwards can pass it.
+      for (const d of disciplineRanks(ch))
+        if (d.cap!=null && d.rank > d.cap) E(`${d.name} is rank ${d.rank}. It can start at ${d.cap} at most.`);
       // Starting spells (Decision 111). Evocation and TOL are only final on
       // this step, so the picks are checked here. Short of the count warns,
       // like an unspent pool; a spell above the rank or one too many blocks.
@@ -2599,7 +2668,9 @@ const Engine = (() => {
            grants,
            ipState, ipCost, spendIP, grantIP,
            milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
-           logSession, addCredits, archPanels, panelMax, disciplineRanks, migrate,
+           logSession, addCredits, archPanels, panelMax, panelTracker, adjustPanelTracker,
+           // Read it or label it (Decision 135)
+           dataPath, formulaText, disciplineCap, creditSymbol, disciplineRanks, migrate,
            // Phase 3.3 — audit trail & undo
            diffChar, recordAction, undoLastAction,
            // Batch 3 — selection & constraint system

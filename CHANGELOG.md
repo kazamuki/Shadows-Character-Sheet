@@ -21,6 +21,15 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.25.1
+
+- **Every Major Milestone shows all it does.** Hardcore Parkour, Cyber Psion and Can't See
+  Me each have rules past their first line (Hardcore Parkour's fall damage and Dodge
+  bonus, for one) that the Progression tab never showed. They're under the benefit now.
+- **"No Milestone unlocked" says when the next one is**: "next at 15 MP", counted from
+  where you are, not the whole list of thresholds.
+- A Werewolf's starting SFR reads **WILL × 3 + 5** on the Archetype step, not `WILL*3 + 5`.
+
 ## v0.25.0 — 2026-09-24
 
 Game data **0.18**. A character file from 0.24 opens as it was.

@@ -102,23 +102,21 @@ window.SHADOWS_DATA = {
     { id: "WILL", name: "Will", type: "sumOfModifiers",
       base: 1, floor: 1, inputs: ["BOD", "INT", "EMP"] },
     { id: "SAN",  name: "Sanity", type: "percent",
-      formula: "EMP * 10", floor: 10, cap: 95 }
+      formula: { stat: "EMP", times: 10 }, floor: 10, cap: 95 }   // stat × times + plus (Decision 135)
   ],
 
   // ── Resources ────────────────────────────────────────────
   resources: {
     luck: {
       startingValue: 2,
-      buyUpWith: "characterPoints",
-      cpCostPerPoint: 1,             // F1/F2 confirmed 1:1 (Decision 97)
-      exemptFromBoostCap: true       // confirmed by Ken 2026-06-11
+      cpCostPerPoint: 1              // F1/F2 confirmed 1:1 (Decision 97); bought on its own line, so Max Boost never applies
     },
     healthLevels: {
       maxLevels: 10,                 // 1 Health Level per point of BOD, an invariant (Decision 64)
       hpPerLevel: 5
       // wound penalties per level: extract from WIP in Phase 1
     },
-    credits: { /* starting roll lives on the power level entry */ },
+    credits: { symbol: "Ç", description: "..." },   // the sign every price shows (Decision 135); the starting roll is on the power level
     sfr: { /* SFR / Blood Pool — archetype-dependent, Phase 1 */ }
   },
 
@@ -225,11 +223,17 @@ window.SHADOWS_DATA = {
       primaryStats: ["INT", "COOL", "EMP"],
 
       campaignPowerScaling: {
-        // keyed by powerLevel id; free-form trait grants the wizard applies
-        street:  { grants: [ /* {type, target, value, label} */ ] },
-        heroic:  { grants: [] },
-        shadows: { grants: [] },
-        wcd:     { grants: [] }
+        notes: "...",
+        focusStats: ["INT", "COOL", "EMP"],   // what a `focusStatBonusRoll` may raise (Decision 135)
+        // One row per powerLevel id. A `*Roll` is a die the player rolls and
+        // enters; a key the wizard sees (`focusStatBonusRoll`, `statBonusRoll`)
+        // draws its input, so no archetype is named in code (Decision 135).
+        byPowerLevel: {
+          street: { focusStatBonusRoll: "1d4", tolBonus: 0, aberrations: 1,
+                    evocationStartingRank: 1, startingSpellsRoll: "1d4" }
+          // A Werewolf row: { statBonusRoll: "1d4",
+          //   startingSFR: { stat: "WILL", times: 3, plus: 5 }, rou: 3 }
+        }
       },
 
       baselineTraits: [
@@ -257,15 +261,21 @@ window.SHADOWS_DATA = {
       coreMechanic: {
         name: "Magic",
         description: "...",
+        // (Decision 135) Bought in the Character Points step. A path reads a
+        // number from the scaling row or the power level, like `countBy`.
+        disciplines: {
+          cpPerRank: 6,
+          maxRankBy: "powerLevel.maxPowerRank",
+          list: [ { id: "evocation", name: "Evocation", description: "...",
+                    startingRankBy: "campaignPowerScaling.evocationStartingRank" } ]
+        },
         // Declares extra character-sheet panels this archetype needs.
         // The app renders panels generically from these declarations.
         panels: [
-          { id: "disciplines", type: "rankedList",
-            items: ["Evocation", "Enchantment", "Alchemy"],
-            cappedBy: "maxPowerRank" },
+          { id: "disciplines", type: "rankedList", title: "Disciplines" },   // draws `disciplines`
           // (0.12, Decision 108) `grimoire` is its own panel type: book spells
-          // from the named catalog, plus your own spells in these columns.
-          { id: "grimoire", type: "grimoire", catalog: "spells",
+          // from `spells`, plus your own spells in these columns.
+          { id: "grimoire", type: "grimoire",
             columns: ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"] },
           // (0.13, Decision 110) read-only rules from the named data sections,
           // on the Archetype tab.
@@ -300,7 +310,7 @@ window.SHADOWS_DATA = {
 
   // ── Improvement Points ───────────────────────────────────
   ip: {
-    statCost: "currentValue * 10",    // REF 6→7 = 60 IP (per REF_CRB)
+    statIncreaseCost: { perPoint: 10, example: "..." },   // × current value: REF 6→7 = 60 IP (Decision 135)
     skillIncreaseCost: { perRank: 5, focusedPerRank: 3, newSkill: 25 },  // Decisions 97, 134
     rankCap: 10,                      // skills & powers cap at 10 via IP
     cannotRaiseDirectly: ["WILL", "TOL"]
@@ -404,9 +414,8 @@ window.SHADOWS_DATA = {
   // the structured hooks, and a Condition with none is text on a chip.
   conditionRules: {
     noStacking: "...", helpless: "...", painClamp: "...",
-    rollPenalty:      { appliesTo: "skillChecks", text: "..." },      // Decision 98
-    penaltyStacking:  { stacks: true, cap: -8, text: "..." },          // every penalty on one roll
-    locationStacking: { perLocation: true }
+    rollPenalty:      { text: "..." },            // Skill Checks only (Decision 98)
+    penaltyStacking:  { cap: -8, text: "..." }    // every penalty on one roll
   },
   bodyLocations: [ { id: "left-arm", name: "Left Arm" } ],   // 6: head, torso, arms, legs
   conditions: [
@@ -530,9 +539,12 @@ A `tracker` counts up from 0 against its `max` (a number, `"TOL"`, or
 what it says (Decision 106): `note` is the line under it, `atMax` replaces
 that line once the count reaches the max, and `overMax: "cascade"` opens the
 Cascade panel once the count passes it. The Arcanist's `tol-spent` uses all
-three. The value lives in `trackers.panel[id]` like any other tracker.
+three. The value lives in `trackers.panel[id]` like any other tracker. Two
+more (Decision 135): `counts: "down"` shows what's left of the max, and
+`resource` keeps the count on that resource's own tracker. The Werewolf's
+`sfr` panel has both, so its spend is `trackers.sfr.spent`, which Main reads.
 
-A `grimoire` panel (Decision 108) names its `catalog` (`spells`) and keeps
+A `grimoire` panel (Decision 108) draws the book from `spells` and keeps
 `columns` for the player's own spells. Its rows live in `panelData[id]`. The
 numbers it shows come from two `spellcraftRules` entries: `spellPower`
 (`{ discipline: "evocation", stat: "WILL" }`, Evocation rank + WILL) and
@@ -3165,6 +3177,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 91 in part: its `if (a.id==="professional")` branch in `validate` is gone.
      - **Revisit if:** Deighton rules F33, or a specialization needs picks from two categories (`choose` becomes a list).
      - **Built:** app 0.25.0, game data 0.18, no schema change. Log 2026-09-24 (S3).
+
+135. **A data field is read by code or named as text, never a setting the code ignores, and no archetype is named in code.**
+     *2026-09-24 · Ken + Claude · Touches: data keys, R6 key guard, NOT_YET_SHOWN, dataPath, countBy, maxRankBy, startingRankBy, cpPerRank, focusStats, formula, SAN, startingSFR, statIncreaseCost, boostRules, exemptFromBoostCap, credits.symbol, milestone cadence, Milestone refusal, tracker counts/resource, SFR panel, A8, A9*
+     - **Decided:** Every key in `shadows-data.js` is named in engine or UI code, is text by its name (`…Text`, `…Note`, `description`, …, and holds text), or sits on the key guard's list of content S6 will show. A number is a number: a formula is `{ stat, times, plus }`, and a number held elsewhere is a data path (`countBy`, `maxRankBy`, `startingRankBy`) read by one `dataPath`. A field restating what the code does by structure is deleted. No archetype, discipline or panel id appears in code. A Milestone refusal names the next unlock.
+     - **Why:** B3 closed this class once and it came back (A9): a live-looking knob beside a hardcoded number. A test now fails on the next one, and Cyborg and Vampire get fields, not branches.
+     - **Rejected:**
+       - Making the engine read the boost lists (`spendOn`, `exemptions`, `hardCapsStillApply`): path strings into rules that can't vary. Deleted, as Decision 64 deleted `levelsPerBOD`.
+       - A formula language or `eval`: one linear shape covers every formula the data has.
+       - Tracing reads at run time (a Proxy over the data): it passes or fails on which branches the tests happen to run. The name check's known gap is a key that shares its name with one that's read.
+       - Renaming every rules paragraph to `…Text`: S6 shows them, so they wait on a list that can only shrink.
+     - **Replaces:** nothing. It finishes Decision 67, whose cadence prose outlived it in the data and two engine strings.
+     - **Revisit if:** a formula needs more than stat × times + plus, or a field passes the name check while nothing reads it.
+     - **Built:** app 0.25.1, no game-data or schema bump (1,468 outputs diffed before and after). Log 2026-09-24 (S4).
 
 ## 5. Open Flags
 

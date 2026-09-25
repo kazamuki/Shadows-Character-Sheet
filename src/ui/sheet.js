@@ -136,9 +136,10 @@ function derivedBreakdownStr(ch, id){
     if (bonus)     s += ` ${bonus>0?"+":"−"} ${Math.abs(bonus)} bonus → ${total}`;
     return s;
   }
-  if (id==="SAN"){
-    const emp=t.EMP.value, raw=emp*10, total=Engine.derived(ch).SAN;
-    return `EMP ${emp} × 10 = ${raw}%` + (total!==raw?` → ${total}% (floor 10 / cap 95)`:"");
+  // A percent is its formula, from the data like everything above (Decision 135).
+  if (def && def.type==="percent" && def.formula && t[def.formula.stat]){
+    const f=def.formula, v=t[f.stat].value, raw=v*f.times+(Number(f.plus)||0), total=Engine.derived(ch)[id];
+    return `${f.stat} ${v} × ${f.times}${f.plus?` + ${f.plus}`:""} = ${raw}%` + (total!==raw?` → ${total}% (floor ${def.floor} / cap ${def.cap})`:"");
   }
   return "";
 }
@@ -200,7 +201,7 @@ function sheetVitalsBar(ch){
   h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`,"luck");
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h+=pill("sfr","sfr","SFR",`${left}<small>/${sf.value}</small>`); }
-  h+=pill("cred","credits","Ç",`${ch.trackers.credits.current}`,"cred");
+  h+=pill("cred","credits",CR,`${ch.trackers.credits.current}`,"cred");
   h+=pill(ip.available<0?"danger":"","","IP",`${ip.available}`);
   h+=pill("","","MP",`${ms.mp}`);
   h+=`<button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv" style="font-size:.82rem">View ▸</span></span></button>`;
@@ -223,7 +224,7 @@ function vitalsPanelHtml(ch){
   h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"");
   h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold");
   if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
-  h += vrow("Ç", ch.trackers.credits.current, "gold");
+  h += vrow(CR, ch.trackers.credits.current, "gold");
   h += `</div><div class="vgroup">`;
   h += vrow("IP", ip.available, ip.available<0?"over":"");
   h += vrow("Milestone Pts", ms.mp);
@@ -312,7 +313,7 @@ function renderShMain(){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
   }
-  h += cond("cred","Çredits","credits", `Ç${ch.trackers.credits.current}`, "", null, "", "cred");
+  h += cond("cred","Çredits","credits", `${CR}${ch.trackers.credits.current}`, "", null, "", "cred");
   h += `</div>`;
   h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
@@ -925,7 +926,7 @@ function vitalPopover(ch, key){
     return { title:"LUCK", html: now(`${luck.current} / ${luck.max}`, luck.current===0?"bad":"gold", "") +
       `<div class="trk-row">${luckControlsHtml(luck)}</div>` }; }
   if (key==="cred") return { title:"Çredits",
-    html: now(`Ç ${ch.trackers.credits.current}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
+    html: now(`${CR} ${ch.trackers.credits.current}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
   return null;
 }
@@ -985,7 +986,7 @@ function renderShTrackers(){
   h += `<div class="trk"><h4>Sanity</h4>
     <span class="big ${san.current<=san.max/2?"bad":""}">${san.current} / ${san.max}%</span>
     ${sanControlsHtml(ch)}
-    <span class="sub">Max is EMP × 10, computed. Track loss here; recovery is a story, not a button.</span></div>`;
+    <span class="sub">Max is ${esc(Engine.formulaText((D.derived.find(d=>d.id==="SAN")||{}).formula))}, computed. Track loss here; recovery is a story, not a button.</span></div>`;
 
   // LUCK
   h += `<div class="trk"><h4>LUCK</h4>
@@ -994,19 +995,18 @@ function renderShTrackers(){
 
   // Archetype tracker panels (declared in data, rendered generically)
   for (const p of Engine.archPanels(ch).filter(x=>x.type==="tracker")){
-    const max = Engine.panelMax(ch, p);
-    let val;
-    if (p.id==="sfr") val = ch.trackers.sfr.spent||0;
-    else val = (ch.trackers.panel[p.id]||{}).value||0;
+    // Where the count lives and which way it reads are the panel's data
+    // (`resource`, `counts`, Decision 135), not its id.
+    const t = Engine.panelTracker(ch, p), max = t.max, val = t.count, down = t.down;
     const manualMax = max==null ? ((ch.trackers.panel[p.id]||{}).max??"") : null;
     const effMax = max!=null ? max : (manualMax===""?null:Number(manualMax));
-    const cur = p.id==="sfr" ? (effMax!=null?Math.max(0,effMax-val):null) : val;
+    const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
     h += `<div class="trk"><h4>${esc(p.title)}</h4>
-      <span class="big ${effMax!=null&&p.id!=="sfr"&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
+      <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
       <button class="btn sm" data-trk="${p.id}|-1">−1</button>
       <button class="btn sm" data-trk="${p.id}|1">+1</button>
       ${max==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
-      <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.id==="sfr"?"Counts spend against a computed pool — RoU caps a single turn.":p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span></div>`;
+      <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span></div>`;
     // A tracker that declares `overMax: "cascade"` (the Arcanist's TOL Spent) opens the
     // Cascade panel once it's past its max: TOL below zero (Decision 106).
     if (p.overMax==="cascade" && effMax!=null && cur>effMax) h += cascadePanelHtml(ch);
@@ -1017,7 +1017,7 @@ function renderShTrackers(){
 
   // Çredits
   h += `<div class="sect">Çredits</div>
-    <div class="trk"><h4>Balance</h4><span class="big gold">Ç ${ch.trackers.credits.current}</span>
+    <div class="trk"><h4>Balance</h4><span class="big gold">${CR} ${ch.trackers.credits.current}</span>
     ${creditControlsHtml()}</div>`;
   const ledger = ch.trackers.credits.ledger||[];
   if (ledger.length){
@@ -1064,7 +1064,7 @@ function renderShProgression(){
     <button class="btn sm" data-ipgrant="1">Grant IP</button></div>`;
 
   // Spend: stats
-  h += `<details class="group" open><summary>Raise a Stat — current value × 10 IP</summary><div class="alloc">`;
+  h += `<details class="group" open><summary>Raise a Stat — current value × ${D.ip.statIncreaseCost.perPoint} IP</summary><div class="alloc">`;
   for (const s of D.stats){
     const c = Engine.ipCost(ch,"stat",s.id);
     const v = Engine.statValue(ch,s.id), ipe = ch.stats[s.id].ipe;
@@ -1113,7 +1113,7 @@ function renderShProgression(){
     <span class="sub" style="flex-basis:auto">${ms.sessionMP} from sessions · ${ms.manualMP} manual</span>
     <button class="btn sm" data-mp="-1" ${ms.manualMP<=0?"disabled":""}>−1 manual</button>
     <button class="btn sm" data-mp="1">+1 manual</button>
-    <span class="sub">Minor unlock at 5, 15, 25… · Major at 10, 20, 30…  Unlocked: ${ms.minorAvail} Minor (${ms.minorTaken.length} taken) · ${ms.majorAvail} Major (${ms.majorTaken.length} taken).</span></div>`;
+    <span class="sub">Minor unlock at ${ms.minorCadence} · Major at ${ms.majorCadence}  Unlocked: ${ms.minorAvail} Minor (${ms.minorTaken.length} taken) · ${ms.majorAvail} Major (${ms.majorTaken.length} taken).</span></div>`;
 
   // Minor
   h += `<details class="group" ${ms.minorLeft>0?"open":""}><summary>Minor Milestones ${ms.minorLeft>0?`— <b style="color:var(--green)">${ms.minorLeft} to pick</b>`:""}</summary>`;
@@ -1151,7 +1151,7 @@ function renderShProgression(){
       <div class="controls"><button class="toggle" data-takemajor="${m.id}" data-gm="${pre.manual.length?1:0}" ${canTake?"":"disabled"}
         title="${esc(canTake?"":(taken?"Once each.":pre.unmet.concat(ms.majorLeft<=0?["No Major unlocked."]:[]).join(" ")))}">Take</button></div></div>
       ${m.flavor?`<div class="desc" style="font-style:italic">${esc(m.flavor)}</div>`:""}
-      <div class="desc">${esc(m.benefit)}</div>
+      <div class="desc">${esc(m.benefit)}${(Array.isArray(m.details)?m.details:[]).map(d=>"\n"+esc(d)).join("")}</div>
       ${reqs?`<div class="req">${reqs}</div>`:""}</div>`;
   }).join("");
   if (ms.majorTaken.length) h += `<div class="journal">` + ms.majorTaken.map((t,i)=>{
@@ -1218,7 +1218,7 @@ function auditChip(kind){
 // notes are editable. A custom piece is typed. Every number on a weapon line
 // comes from Engine.weaponLine(); every armor number from armorState().
 const attackText = n => n==null ? "—" : `1d10 ${n<0?"−":"+"} ${Math.abs(n)}`;
-const priceText = d => typeof d.cost==="number" && d.cost>0 ? `${d.cost.toLocaleString("en-US")}Ç` : "";
+const priceText = d => typeof d.cost==="number" && d.cost>0 ? `${d.cost.toLocaleString("en-US")}${CR}` : "";
 const titleCase = s => String(s||"").replace(/^./, c=>c.toUpperCase());
 // ── The catalog browser (W4) ─────────────────────────────────────────
 // A modal like the spell picker (Decisions 111–112): search, a group filter,
@@ -1299,7 +1299,7 @@ function catalogResultsHtml(ch, kind){
 }
 function catalogStatusHtml(ch, kind){
   const { list, total } = catalogMatches(ch, kind);
-  return `Showing <b>${list.length}</b> of ${total} · You have <b>${(Number(ch.trackers.credits.current)||0).toLocaleString("en-US")}Ç</b>`;
+  return `Showing <b>${list.length}</b> of ${total} · You have <b>${(Number(ch.trackers.credits.current)||0).toLocaleString("en-US")}${CR}</b>`;
 }
 function catalogPickerHtml(ch, kind){
   const st = S.loPick;

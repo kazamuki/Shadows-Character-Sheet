@@ -184,6 +184,17 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
   }
   for (const m of D.milestones.majorGeneral || []) prereqs(m.prerequisites, `milestone ${m.id}`);
   for (const d of D.derived) for (const s of d.inputs || []) ref("stat", s, `derived ${d.id}`);
+  // Formulas are { stat, times, plus } (Decision 135). SAN's stat is a Basic
+  // Stat; a starting SFR's may be a derived one (WILL).
+  for (const d of D.derived) if (d.formula) ref("stat", d.formula.stat, `derived ${d.id}.formula`);
+  const derivedIds = new Set(D.derived.map(d => d.id));
+  for (const a of D.archetypes) {
+    const cps = a.campaignPowerScaling || {};
+    for (const s of cps.focusStats || []) ref("stat", s, `${a.id}.focusStats`);
+    for (const [pl, row] of Object.entries(cps.byPowerLevel || {}))
+      if (row.startingSFR) refs.push([derivedIds.has(row.startingSFR.stat) ? "derived" : "stat", row.startingSFR.stat, `${a.id}.${pl}.startingSFR`]);
+  }
+  S.derived = derivedIds;
   // Focused Skills are ids plus a category pick (Decision 134). A list here
   // is the old prose shape coming back, which is what hid B12.
   const shapes = [];
@@ -219,6 +230,232 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
   const dangling = refs.filter(([kind, id]) => !S[kind].has(id)).map(([kind, id, where]) => `${where}: "${id}" is no ${kind}`);
   assert.deepEqual(dangling, []);
   assert.deepEqual(shapes, [], "focusedSkills must be { ids, choose?, all? }, not a list of names");
+});
+
+test("every data path and formula resolves to a number at every power level (Decision 135)", () => {
+  // `countBy`, `maxRankBy` and `startingRankBy` name a number by path, and a
+  // formula names a stat. A typo in either used to fall back quietly to 0 or
+  // null, which reads as "no requirement". Each one resolves, for real.
+  const bad = [];
+  let checked = 0;
+  for (const a of D.archetypes) {
+    const disc = (a.coreMechanic || {}).disciplines;
+    const paths = [["specialization.countBy", (a.specialization || {}).countBy],
+      ["disciplines.maxRankBy", disc && disc.maxRankBy],
+      ...((disc && disc.list) || []).map(d => [`${d.id}.startingRankBy`, d.startingRankBy])].filter(([, p]) => p);
+    for (const pl of D.powerLevels) {
+      const ch = Engine.newCharacter();
+      ch.identity.archetype = a.id; ch.creation.powerLevel = pl.id;
+      for (const [where, p] of paths) { checked++; if (Engine.dataPath(ch, p) == null) bad.push(`${a.id} ${pl.id} ${where}: "${p}"`); }
+      const s = Engine.sfr(ch);
+      if (s) { checked++; if (typeof s.value !== "number") bad.push(`${a.id} ${pl.id} startingSFR`); }
+    }
+  }
+  assert.ok(checked >= 16, `checked only ${checked} paths — did a field get renamed?`);
+  assert.deepEqual(bad, []);
+  assert.equal(typeof Engine.derived(subject()).SAN, "number");
+});
+
+// ── The data contract (R6's key guard, Decision 135) ──────────────────
+// Engine and UI source with comments stripped, so a key named only in a
+// comment doesn't count as read. A `//` after a colon is a URL, not a comment.
+const CODE_FILES = ["src/engine/engine.js", "src/ui/shared.js", "src/ui/wizard.js", "src/ui/sheet.js", "src/ui/app.js"];
+const code = file => readFileSync(join(ROOT, file), "utf8")
+  .replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`\\])\/\/.*$/gm, "$1");
+const CODE = CODE_FILES.map(code).join("\n");
+
+// Where a key is content, not a field: a power level's row, a stat value's
+// modifier, a spell's overflow degrees, an integrity die or a TN per
+// difficulty, an armor slot's name, and a specialization's powers (shared.js
+// draws any array of plain objects on a power as a table, columns from keys).
+const MAPS = [/\.byPowerLevel$/, /^statRules\.modifiers$/, /^spells\[\]\.overflow$/,
+  /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
+  /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/];
+// Display and maintainer text by name. A key named like this has to hold text,
+// so a number can't hide behind a *Note name.
+const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$/;
+// Merged content no screen shows yet. AQ4 answered each one: S6 shows them,
+// except `growth`, which stays hidden until the Majors are written. An entry
+// leaves this list the day code reads it; the test says when.
+const NOT_YET_SHOWN = {
+  weaponTagGlossary: "S6: tag sentences on hover or tap (AQ4 1)",
+  weaponFeatureGlossary: "S6: tag sentences on hover or tap (AQ4 1)",
+  spellTagGlossary: "S6: tag sentences on hover or tap (AQ4 1)",
+  ammunition: "S6: the Ammo category (AQ4 3)", arrowheads: "S6: the Ammo category (AQ4 3)",
+  weaponType: "S6: the Ammo category (AQ4 3)",
+  enchantmentTimeTable: "S6: the Magic reference (AQ4 4)", enchantmentMaterialCategories: "S6: the Magic reference (AQ4 4)",
+  enchantmentExtendedTime: "S6: the Magic reference (AQ4 4)",
+  evocationTH: "S6 (AQ4 4)", enchantmentTH: "S6 (AQ4 4)", alchemyTH: "S6 (AQ4 4)",
+  enchantmentMinTime: "S6 (AQ4 4)", alchemyMinTime: "S6 (AQ4 4)", reductionCapByRank: "S6 (AQ4 4)",
+  examples: "S6 (AQ4 4)", onUse: "S6 (AQ4 4)", onRupture: "S6 (AQ4 4)", onDepletion: "S6 (AQ4 4)", recharging: "S6 (AQ4 4)",
+  growth: "hidden until the archetype Majors are written (AQ4 5, F32)",
+  difficulties: "S6: rules text (AQ4 6)", explosion: "S6: rules text (AQ4 6)", botch: "S6: rules text (AQ4 6)",
+  ranges: "S6: rules text (AQ4 6)", beyondHumanLimits: "S6: rules text (AQ4 6)", bodAbove10Rule: "S6: rules text (AQ4 6)",
+  charging: "S6: Spellcraft sub-rules (AQ4 6)", concentration: "S6: Spellcraft sub-rules (AQ4 6)",
+  sovereignSoul: "S6: Spellcraft sub-rules (AQ4 6)", teaching: "S6: Spellcraft sub-rules (AQ4 6)",
+  floorTN: "S6 (AQ4 6)", maxTurns: "S6 (AQ4 6)", tnReductionPerTurn: "S6 (AQ4 6)", standardAction: "S6 (AQ4 6)",
+  breakCheck: "S6 (AQ4 6)", willingConscious: "S6 (AQ4 6)", unconsciousAlly: "S6 (AQ4 6)", unwilling: "S6 (AQ4 6)",
+  copiedCold: "S6 (AQ4 6)", taught: "S6 (AQ4 6)", improvised: "S6: Spellcraft sub-rules (AQ4 6)", glyphs: "S6: rules text (AQ4 6)",
+  styles: "W33: Martial Arts styles, found by this test",
+  universal: "043's 'Universal' tag on an Advantage; what it means is a CRB question for Ken",
+};
+
+function dataKeys() {
+  const keys = new Map();   // key -> { paths, values }
+  const viaPath = new Set(); // keys the engine reaches through a `…By` data path
+  (function walk(v, path) {
+    if (Array.isArray(v)) return v.forEach(x => walk(x, `${path}[]`));
+    if (!v || typeof v !== "object") return;
+    const isMap = MAPS.some(re => re.test(path));
+    for (const [k, x] of Object.entries(v)) {
+      if (!isMap) {
+        const e = keys.get(k) || { paths: new Set(), values: [] };
+        e.paths.add(path || "(top)"); e.values.push(x); keys.set(k, e);
+        // `countBy`, `maxRankBy`, `startingRankBy`: Engine.dataPath reads the key it ends in.
+        if (/By$/.test(k) && typeof x === "string") for (const seg of x.split(".")) viaPath.add(seg);
+      }
+      walk(x, path ? `${path}.${isMap ? "*" : k}` : k);
+    }
+  })(D, "");
+  return { keys, viaPath };
+}
+const namedInCode = k => new RegExp(`(\\?\\.|\\.)${k}\\b|["'\`]${k}["'\`]|[{,]\\s*${k}\\s*[,}:=]`).test(CODE);
+
+test("every data key is read by code, or named as text (R6 key guard, Decision 135)", () => {
+  // rev 9's B3 and this audit's A9: a field that looks like a live setting,
+  // beside a number the engine hardcodes. Each key is named in code, named
+  // as text, or waiting on a screen that will show it.
+  const { keys, viaPath } = dataKeys();
+  const isRead = k => viaPath.has(k) || namedInCode(k);
+  assert.ok(keys.size > 300, `found only ${keys.size} keys — did the walk break?`);
+  const where = k => [...keys.get(k).paths].slice(0, 2).join(", ");
+  const unread = [...keys.keys()].filter(k => !isRead(k) && !TEXT_KEY.test(k) && !(k in NOT_YET_SHOWN))
+    .map(k => `${where(k)}.${k}`);
+  assert.deepEqual(unread, [], "a data key nothing reads: read it, name it as text (…Text, …Note), or delete it");
+  const isText = v => v == null || typeof v === "string" || (Array.isArray(v) && v.every(x => typeof x === "string"));
+  const textButNot = [...keys].filter(([k, e]) => TEXT_KEY.test(k) && !e.values.every(isText)).map(([k]) => `${where(k)}.${k}`);
+  assert.deepEqual(textButNot, [], "a key named as text holds something else");
+  const stale = Object.keys(NOT_YET_SHOWN).filter(k => !keys.has(k) || isRead(k));
+  assert.deepEqual(stale, [], "shown now, or gone from the data: take it off NOT_YET_SHOWN");
+});
+
+// The key guard proves a field is named in code; these prove it's read. Each
+// changes one number in the data and checks the output follows it. Before
+// Decision 135 every one of these values was typed into the engine beside it.
+const withData = (obj, key, value, fn) => {
+  const had = Object.prototype.hasOwnProperty.call(obj, key), old = obj[key];
+  obj[key] = value;
+  try { fn(); } finally { if (had) obj[key] = old; else delete obj[key]; }
+};
+
+test("the Arcanist's Discipline price, cap and Evocation start are read from the data (A8, Decision 135)", () => {
+  const disc = D.archetypes.find(a => a.coreMechanic && a.coreMechanic.disciplines).coreMechanic.disciplines;
+  const ch = subject();
+  ch.archetypeChoices.disciplines = { enchantment: 2 };
+  assert.equal(Engine.disciplineSpent(ch), 2 * disc.cpPerRank);
+  withData(disc, "cpPerRank", 9, () => assert.equal(Engine.disciplineSpent(ch), 18));
+
+  const pl = Engine.powerLevel(ch);
+  assert.equal(Engine.disciplineCap(ch), pl.maxPowerRank);
+  withData(disc, "maxRankBy", "powerLevel.characterPoints", () => assert.equal(Engine.disciplineCap(ch), pl.characterPoints));
+
+  const evo = disc.list.find(d => d.startingRankBy);
+  const rank = () => Engine.disciplineRanks(ch).find(d => d.id === evo.id).rank;
+  assert.equal(rank(), Engine.scalingRow(ch).evocationStartingRank);
+  // A different number, not a different key: aberrations equals the Evocation start at every level.
+  withData(evo, "startingRankBy", "powerLevel.characterPoints", () => assert.equal(rank(), pl.characterPoints));
+
+  // Over the cap is an error on the Character Points step, from the same number.
+  ch.archetypeChoices.disciplines = { enchantment: pl.maxPowerRank + 1 };
+  const msgs = Engine.validate("character-points", ch).filter(i => i.level === "error").map(i => i.msg).join(" ");
+  assert.match(msgs, new RegExp(`Enchantment is rank ${pl.maxPowerRank + 1}\\. It can start at ${pl.maxPowerRank} at most\\.`));
+});
+
+test("SAN, starting SFR and the stat IP price are numbers the engine reads (A9, Decision 135)", () => {
+  const ch = subject();
+  const san = D.derived.find(d => d.id === "SAN");
+  const emp = Engine.statValue(ch, "EMP");
+  assert.equal(Engine.derived(ch).SAN, Math.min(san.cap, Math.max(san.floor, emp * 10)));
+  withData(san.formula, "times", 5, () => assert.equal(Engine.derived(ch).SAN, Math.max(san.floor, emp * 5)));
+
+  const ww = D.archetypes.find(a => Object.values((a.campaignPowerScaling || {}).byPowerLevel || {}).some(r => r.startingSFR));
+  ch.identity.archetype = ww.id;
+  const row = Engine.scalingRow(ch), will = Engine.derived(ch).WILL;
+  assert.equal(Engine.sfr(ch).value, will * 3 + row.startingSFR.plus);
+  assert.equal(Engine.sfr(ch).formula, `WILL × 3 + ${row.startingSFR.plus}`);
+  withData(row.startingSFR, "plus", 100, () => assert.equal(Engine.sfr(ch).value, will * 3 + 100));
+
+  ch.identity.archetype = "";
+  const cur = Engine.statValue(ch, "REF");
+  assert.equal(Engine.ipCost(ch, "stat", "REF").cost, cur * 10);
+  withData(D.ip.statIncreaseCost, "perPoint", 12, () => assert.equal(Engine.ipCost(ch, "stat", "REF").cost, cur * 12));
+});
+
+test("a Milestone refusal says when the next one unlocks, from the cadence numbers (A9, Decision 135)", () => {
+  const ch = subject();
+  const minor = D.milestones.minorShared[0].id, major = D.milestones.majorGeneral[0].id;
+  ch.progression.milestonePoints = 0;
+  assert.equal(Engine.canTakeMinor(ch, minor).why, "No Minor Milestone unlocked (next at 5 MP).");
+  assert.equal(Engine.takeMilestone(ch, "major", major).why, "No Major Milestone unlocked (next at 10 MP).");
+  ch.progression.milestonePoints = 7;
+  ch.progression.milestones.minor = [{ id: minor }];
+  assert.equal(Engine.canTakeMinor(ch, D.milestones.minorShared[1].id).why, "No Minor Milestone unlocked (next at 15 MP).");
+  const st = Engine.milestoneState(ch);
+  assert.equal(st.minorCadence, "5, 15, 25…");
+  assert.equal(st.majorCadence, "10, 20, 30…");
+  withData(D.milestones.rules, "minorEvery", 4, () => {
+    assert.equal(Engine.milestoneState(ch).minorCadence, "5, 9, 13…");
+    assert.equal(Engine.milestoneState(ch).nextMinorAt, 9);
+  });
+});
+
+test("the currency sign on a refusal is the data's (A9, Decision 135)", () => {
+  const ch = subject();
+  ch.trackers.credits.current = 0;
+  const w = D.weapons.find(x => typeof x.cost === "number" && x.cost > 0);
+  assert.match(Engine.catalogLine(ch, "weapons", w.id).buy.why, /Ç\. You have 0Ç\./);
+  withData(D.resources.credits, "symbol", "¤", () => {
+    assert.match(Engine.catalogLine(ch, "weapons", w.id).buy.why, /¤\. You have 0¤\./);
+    assert.match(Engine.addLoadout(ch, "weapons", w.id, { buy: true }).why, /¤\. You have 0¤\./);
+  });
+});
+
+test("a tracker panel's direction and storage are its data, not its id (Decision 135)", () => {
+  const ch = subject();
+  const p = { id: "__fixture", type: "tracker", max: 6 };
+  const panels = D.archetypes.find(a => a.id === ch.identity.archetype).coreMechanic.panels;
+  panels.push(p);
+  try {
+    assert.equal(Engine.panelTracker(ch, p).shown, 0);
+    assert.equal(ch.trackers.panel.__fixture, undefined, "reading a tracker wrote to the character");
+    Engine.adjustPanelTracker(ch, "__fixture", 2);
+    assert.deepEqual([Engine.panelTracker(ch, p).shown, ch.trackers.panel.__fixture.value], [2, 2]);
+    p.counts = "down"; p.resource = "sfr";
+    ch.trackers.sfr.spent = 1;
+    assert.equal(Engine.panelTracker(ch, p).shown, 5, "counts down from the max, from the resource's own spend");
+    Engine.adjustPanelTracker(ch, "__fixture", 2);
+    assert.equal(ch.trackers.sfr.spent, 3);
+    assert.equal(Engine.adjustPanelTracker(ch, "nope", 1).ok, false);
+  } finally { panels.pop(); }
+});
+
+test("no archetype or discipline is named in engine or UI code (A8, Decision 135)", () => {
+  // "Adding an archetype is data" (CLAUDE.md). An id in code is the special
+  // case that makes the next archetype an app change: the Arcanist's 6 CP,
+  // the Evocation starting rank and the Professional's parsed prose all were.
+  const ids = [...D.archetypes.map(a => a.id),
+    ...D.archetypes.flatMap(a => (((a.coreMechanic || {}).disciplines || {}).list || []).map(d => d.id))];
+  assert.ok(ids.length >= 8, `expected five archetypes and three disciplines, got ${ids.length}`);
+  // A panel is matched by its `type`, never its `id`: the SFR tracker's
+  // `p.id==="sfr"` in two files is what `counts` and `resource` replaced.
+  const panelIds = D.archetypes.flatMap(a => ((a.coreMechanic || {}).panels || []).map(p => p.id));
+  const found = [];
+  for (const file of CODE_FILES) {
+    const src = code(file);
+    for (const id of ids) if (new RegExp(`["'\`]${id}["'\`]`).test(src)) found.push(`${file}: "${id}"`);
+    for (const id of panelIds) if (new RegExp(`(\\.id|\\bpid)\\s*[!=]==?\\s*["'\`]${id}["'\`]`).test(src)) found.push(`${file}: panel "${id}"`);
+  }
+  assert.deepEqual(found, []);
 });
 
 test("every weapon references a skill that exists (Weapons/Ammo/Armor batch)", () => {
@@ -838,7 +1075,6 @@ test("a Condition's flat penalty lands on every Skill Check, and only there (F20
   const p = Engine.painState(ch);
   assert.equal(p.level, 0);
   assert.equal(p.essencePenalty, 0, "just Skill Checks — Essence is untouched");
-  assert.equal(D.conditionRules.rollPenalty.appliesTo, "skillChecks");
 });
 
 test("different Conditions' penalties stack; conditional and attack/defense ones are not summed (F21, Decision 98)", () => {
@@ -998,7 +1234,7 @@ test("only Injured and Maimed are body-part Conditions (F22, Decision 98)", () =
 });
 
 test("the Conditions rules carry no open flag any more (F20–F22 closed)", () => {
-  for (const k of ["rollPenalty", "penaltyStacking", "locationStacking"])
+  for (const k of ["rollPenalty", "penaltyStacking"])
     assert.equal(D.conditionRules[k].flagged, undefined, k);
 });
 
