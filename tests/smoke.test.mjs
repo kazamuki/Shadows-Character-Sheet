@@ -1622,3 +1622,80 @@ test("a locked Mercenary short its pick chooses it on Loadout, as one undoable a
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0, "undo didn't take the pick back");
   assert.deepEqual(app.errors, []);
 });
+
+// ── Read it or label it (Decision 135) ────────────────────────────────
+// The engine tests prove the engine reads each number. These prove the
+// screens do too: change the number in the booted app's own data, and what
+// the wizard and sheet draw follows it. A value typed into the UI beside the
+// data (the 6 CP, INT · COOL · EMP) passes every other test while the data
+// happens to agree with it.
+function draftOn(archetype, stepId, tweak) {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = archetype;
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf(stepId), maxReached: steps.length - 1 } } });
+  if (tweak) tweak(app.D);
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  return app;
+}
+const withDisciplines = d => d.archetypes.find(a => a.coreMechanic && a.coreMechanic.disciplines);
+
+test("the wizard draws Disciplines, Focus Stats and the Stat Bonus from the data (Decision 135)", () => {
+  const arc = withDisciplines(D).id;
+  const cp = draftOn(arc, "character-points", d => { withDisciplines(d).coreMechanic.disciplines.cpPerRank = 7; });
+  assert.match(cp.$("#main").textContent, /Disciplines — 7 CP per rank · cap \d/);
+  assert.deepEqual(cp.errors, []);
+
+  const focus = draftOn(arc, "archetype", d => { withDisciplines(d).campaignPowerScaling.focusStats = ["INT", "EMP"]; });
+  assert.match(focus.$("#main").textContent, /Allocate among INT · EMP — /);
+  const focusStats = [...new Set(focus.$$('[data-step^="focus|"]').map(b => b.dataset.step.split("|")[1]))].sort().join(" ");
+  assert.equal(focusStats, "EMP INT", "the Focus Stat steppers aren't the data's focusStats");
+  assert.match(focus.$("#main").textContent, /Evocation starts at rank \d+\. You choose your starting spells \(TOL \+ \dd4\) in Step 7/);
+
+  // The Stat Bonus block is keyed by the scaling row, not the archetype.
+  const ww = D.archetypes.find(a => Object.values((a.campaignPowerScaling || {}).byPowerLevel || {}).some(r => r.statBonusRoll)).id;
+  const sb = draftOn(ww, "archetype");
+  assert.match(sb.$("#main").textContent, /Stat Bonus.*Allocate to any Stats \(cap 10\)/s);
+  assert.match(sb.$("#main").textContent, /WILL × 3 \+ 5/, "the starting SFR formula didn't read as text");
+  assert.deepEqual([...focus.errors, ...sb.errors], []);
+});
+
+test("the SFR tracker counts down by its data, and a Major Milestone shows its details (Decision 135)", () => {
+  const ww = D.archetypes.find(a => ((a.coreMechanic || {}).panels || []).some(p => p.counts === "down"));
+  const ch = lockedCharacter();
+  ch.identity.archetype = ww.id;
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "trackers" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="trackers"]');
+  const max = app.Engine.sfr(activeChar(app)).value;
+  const trk = () => app.$$("#main .trk").find(t => t.querySelector('[data-trk="sfr|1"]'));
+  assert.match(trk().textContent, new RegExp(`${max} / ${max}.*Counts spend against a computed pool`, "s"));
+  app.click('#main [data-trk="sfr|1"]');
+  assert.equal(activeChar(app).trackers.sfr.spent, 1, "spending SFR didn't land on trackers.sfr");
+  assert.match(trk().textContent, new RegExp(`${max - 1} / ${max}`));
+
+  app.click('[data-sec="progression"]');
+  const hp = D.milestones.majorGeneral.find(m => (m.details || []).length);
+  assert.ok(app.$("#main").textContent.includes(hp.details[0]), `${hp.name}'s details don't show`);
+  assert.deepEqual(app.errors, []);
+});
+
+test("the sheet's price and SAN lines are written from the data (Decision 135)", () => {
+  const app = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
+  app.D.ip.statIncreaseCost.perPoint = 12;
+  app.D.derived.find(d => d.id === "SAN").formula.times = 7;
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="progression"]');
+  assert.match(app.$("#main").textContent, /Raise a Stat — current value × 12 IP/);
+  app.click('[data-sec="trackers"]');
+  assert.match(app.$("#main").textContent, /Max is EMP × 7, computed\./);
+  assert.match(app.window.eval("derivedBreakdownStr(S.ch, 'SAN')"), /^EMP 5 × 7 = 35%/);
+  assert.deepEqual(app.errors, []);
+});

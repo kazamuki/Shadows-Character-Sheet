@@ -152,8 +152,10 @@ window.SHADOWS_DATA = {
   },
   /* DERIVED -- attributes the app COMPUTES from stats; never stored on a
      character. Two `type`s in use: "sumOfModifiers" (base + sum of the modifier
-     of each stat in `inputs`, clamped to `floor`) and "percent" (evaluate
-     `formula`, clamp to `floor`/`cap`). `inputs` and `formula` must reference
+     of each stat in `inputs`, clamped to `floor`) and "percent" (`formula`,
+     then clamped to `floor`/`cap`). A `formula` is numbers, never text:
+     `{ stat, times, plus }` is stat × times + plus (Decision 135), the same
+     shape as a Werewolf's `startingSFR`. `inputs` and `formula.stat` must be
      valid stat ids. TOL and WILL cannot be raised directly by IP (see `ip`).
      To add a derived attribute, copy a block and pick the matching `type`. */
   "derived": [
@@ -187,7 +189,10 @@ window.SHADOWS_DATA = {
       "id": "SAN",
       "name": "Sanity",
       "type": "percent",
-      "formula": "EMP * 10",
+      "formula": {
+        "stat": "EMP",
+        "times": 10
+      },
       "floor": 10,
       "cap": 95,
       "description": "Your connection to reality and its people, based on EMP alone. No one is perfectly sane: maximum SAN is 95%."
@@ -245,9 +250,7 @@ window.SHADOWS_DATA = {
     },
     "luck": {
       "startingValue": 2,
-      "buyUpWith": "characterPoints",
       "cpCostPerPoint": 1,
-      "exemptFromBoostCap": true,
       "spend": [
         {
           "id": "boost",
@@ -270,8 +273,7 @@ window.SHADOWS_DATA = {
     },
     "sfr": {
       "name": "Spiritual Force Rating",
-      "description": "The pressure behind a supernatural nature - the energy channeled to activate Powers. No spellcraft check to activate: spend the required SFR and the effect triggers. Rate of Use (RoU) limits the maximum SFR channeled in a single turn. Some Powers drain SFR over time, counting against RoU each turn.",
-      "appliesTo": "supernatural archetypes (per archetype scaling tables)"
+      "description": "The pressure behind a supernatural nature - the energy channeled to activate Powers. No spellcraft check to activate: spend the required SFR and the effect triggers. Rate of Use (RoU) limits the maximum SFR channeled in a single turn. Some Powers drain SFR over time, counting against RoU each turn."
     }
   },
   /* SKILL CHECK RULES -- the dice math the app displays in skill breakdowns and
@@ -1803,18 +1805,26 @@ window.SHADOWS_DATA = {
 
      PANELS are how archetypes stay generic: `coreMechanic.panels` DECLARES the
      extra sheet UI an archetype needs from a small vocabulary -- "rankedList"
-     (e.g. Disciplines, cappedBy a power-rank field), "table" (free-entry
-     columns, e.g. Augments), "grimoire" (book spells from its `catalog` plus
+     (the archetype's `coreMechanic.disciplines`), "table" (free-entry
+     columns, e.g. Augments), "grimoire" (book spells from `spells` plus
      your own in its columns, Decision 108), "reference" (read-only rules drawn
      from the data sections its `shows` names, Decision 110), "tracker" (e.g. Tolerance Load,
-     max = a derived id), "text".
+     max = a derived id; `counts: "down"` shows what's left of the max, and
+     `resource` keeps the count on that resource's own tracker, like SFR), "text".
+
+     DISCIPLINES (Decision 135): `cpPerRank` is what a rank costs at creation,
+     `maxRankBy` a path to the cap and a discipline's `startingRankBy` a path to
+     its starting rank. A path reads "campaignPowerScaling.<key>" from the
+     current power level's row, or "powerLevel.<key>" from the power level,
+     the same way `specialization.countBy` does. `campaignPowerScaling.focusStats`
+     names the stats a `focusStatBonusRoll` may raise.
      The app renders whatever is declared. To give a new archetype custom sheet
      panels you describe them here as data; no app change (this is how the Biomech
      rewrite will add NCI tiers / augment slots). Effects that can't be modeled
      yet stay prose and display as reference.
 
-     REVIEW (F7 - SFR per archetype): Werewolf SFR is defined (WILL*3+N w/ RoU,
-       in its scaling table); Vampire Blood Pool is still TBD.
+     REVIEW (F7 - SFR per archetype): Werewolf SFR is defined (WILL x 3 + N
+       w/ RoU, as `startingSFR` in its scaling table); Vampire Blood Pool is still TBD.
      REVIEW (F13 - Vampire): vampire `canPurchaseAdvantages` is ASSUMED from the
        Werewolf supernatural baseline -- confirm with D. (see vampire entry).
      See SCHEMA.md section 5 for both. */
@@ -1831,7 +1841,6 @@ window.SHADOWS_DATA = {
       "summary": "Wizards, sorcerers, mages - many names exist for those who unlocked the ability to manipulate Aether and wield its power like a weapon. What they gain in power, they trade for risk of ripping themselves, or the world, apart. The Aether doesn't care how curious you are. It only cares whether you can hold on.",
       "gameplayStyle": "Arcanists reshape reality through study and will. You solve problems by bending the rules of the world - rewriting physics, enchanting tools, or unraveling what others do not understand. Your power is immense, but every spell carries risk. Control is everything.",
       "lore": "An Arcanist is what happens when someone looks at the fabric of reality, understands that it can be pulled apart and rewoven, and decides that knowing how is worth whatever it costs them. They have traded normalcy for comprehension. Their spells are not tricks. They are statements made directly to the universe, and the universe listens. The Aether leaves marks. Arcanists wear them.",
-      "supernatural": false,
       "canPurchaseAdvantages": true,
       "campaignPowerScaling": {
         "columns": [
@@ -1842,6 +1851,11 @@ window.SHADOWS_DATA = {
           "Common Spells"
         ],
         "notes": "Focus Stats are INT, COOL, and EMP. Bonus stat points can push a base stat beyond 10.",
+        "focusStats": [
+          "INT",
+          "COOL",
+          "EMP"
+        ],
         "byPowerLevel": {
           "street": {
             "focusStatBonusRoll": "1d4",
@@ -1935,12 +1949,13 @@ window.SHADOWS_DATA = {
         "name": "Magic",
         "description": "Channeling the flow of Aether through your body. Every spell is a Spellcraft roll: Discipline rank sets the d10 pool, dice meeting the Target Number (TN) are Hits, and any 1 is a Dud. Net Hits measured against the spell's Threshold (TH) decide the outcome. If Duds exceed Hits, the Aether ruptures back on the caster and Tolerance (TOL) drops by the difference. At 0 TOL the Arcanist is Exhausted and cannot cast until TOL recovers above zero (one hour of rest restores 1 point); a Rupture that would push TOL below zero is a Cascade. Your Grimoire, under Loadout & Powers, holds the Known spells you take from the book. The Magic reference on the Archetype tab holds the Spellcraft roll, the spell tiers, the Cascade and the Aberrations.",
         "disciplines": {
+          "cpPerRank": 6,
           "maxRankBy": "powerLevel.maxPowerRank",
-          "creationCostNote": "At character creation, raising a Discipline by 1 point costs 6 Character Points (REF source; pre-rename 'Freebie points').",
           "list": [
             {
               "id": "evocation",
               "name": "Evocation",
+              "startingRankBy": "campaignPowerScaling.evocationStartingRank",
               "description": "The fastest, most dangerous form of spellcraft. Draws Aether directly into expression, shaping Glyphs in the moment, under pressure. Immediate, volatile, and the most likely to turn on the caster."
             },
             {
@@ -1959,18 +1974,11 @@ window.SHADOWS_DATA = {
           {
             "id": "disciplines",
             "type": "rankedList",
-            "title": "Disciplines",
-            "items": [
-              "Evocation",
-              "Enchantment",
-              "Alchemy"
-            ],
-            "cappedBy": "maxPowerRank"
+            "title": "Disciplines"
           },
           {
             "id": "grimoire",
             "type": "grimoire",
-            "catalog": "spells",
             "title": "Grimoire",
             "columns": [
               "Spell Name",
@@ -2028,7 +2036,6 @@ window.SHADOWS_DATA = {
       "summary": "Some people love technology, others become it. Cyborgs are humans who have gone all in, complete with a Neurocybernetic Interpreter, cyber-limbs, nanobots, and more. Cyborgs pay for their cybernetics with a combination of Credits and humanity.",
       "gameplayStyle": "You redefine yourself piece by piece. Cyborgs adapt by installing the tools they need - social infiltrator, heavy hitter, data ghost, or battlefield support. Your limits are defined by tolerance and humanity, not imagination.",
       "lore": "A Cyborg has looked at the flesh and decided it was a rough draft. What comes next is intentional. This is not modification. This is authorship. Eventually, a normal person becomes a cyborg when upgrading their Neurocybernetic Interpreter (NCI) to beta or higher - the link between flesh and machine with pseudo-AI managing the systems and user intent. Every enhancement is a decision you don't get to walk back.",
-      "supernatural": false,
       "canPurchaseAdvantages": true,
       "campaignPowerScaling": {
         "byPowerLevel": {}
@@ -2079,7 +2086,6 @@ window.SHADOWS_DATA = {
       "summary": "The quintessential human. Focusing on adaptability, Professionals make a living working in NYTE City and have become experts at surviving. They bring skills, techniques and Tweaks to situations that expect a mundane human; Professionals teach them otherwise.",
       "gameplayStyle": "Professionals thrive on preparation and precision. Where others rely on supernatural gifts or tech, you rely on training, foresight, and execution. You excel in skill-driven play, turning planning, equipment, and expertise into decisive advantages.",
       "lore": "No bloodline. No implants rewriting their nervous system. No covenant with forces older than language. Just a person who decided that wasn't going to be enough of a reason to lose. They are not the most powerful thing in any room. They are frequently the most dangerous.",
-      "supernatural": false,
       "canPurchaseAdvantages": true,
       "campaignPowerScaling": {
         "columns": [
@@ -2330,12 +2336,7 @@ window.SHADOWS_DATA = {
       "vulnerabilities": [],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": "general",
-        "cadence": [
-          "Every session completed grants 10 Improvement Points (IP).",
-          "Every 5 sessions: pick a Minor Milestone.",
-          "Every 10 sessions: earn a Major Milestone."
-        ]
+        "majorMilestones": "general"
       }
     },
     // REVIEW (F13): `canPurchaseAdvantages:false` below is ASSUMED from the
@@ -2354,7 +2355,6 @@ window.SHADOWS_DATA = {
       "summary": "As old as civilization itself. Vampires have had centuries to accumulate power, influence, and everything that comes with both. Vampires can be part of many different houses, each with their own strengths, resources, allies, and enemies.",
       "gameplayStyle": "Vampires navigate hunger, power, and eternity in equal measure. You walk a different version of NYTE City - one shaped by blood, secrecy, and influence. Your abilities are potent and intoxicating, but indulgence always carries consequences.",
       "lore": "In NYTE City, Vampires thrive in the shadows, concealed by the chaos of urban decay. While they remain hidden from public knowledge, Vampires are not hiding. They are waiting. The Unseen Court, a secretive governing body, ensures their kind stays in the shadows while exerting influence over corporations, criminal syndicates, and political figures. You are undead. You consume blood to survive. Sunlight kills you - and NYTE City, to its credit, never fully sees the sun. Whatever path you choose, feeding is not optional.",
-      "supernatural": true,
       "canPurchaseAdvantages": false,
       "canPurchaseAdvantagesNote": "Assumed per the supernatural baseline established in the Werewolf section - confirm.",
       "campaignPowerScaling": {
@@ -2399,7 +2399,6 @@ window.SHADOWS_DATA = {
       "summary": "Lycanthropy is both a curse and a gift: immense strength, savage instinct, and the weight of a tribe and lineage older than the city. Werewolves can shift into their beast form when words stop working and something more permanent is required.",
       "gameplayStyle": "Werewolves live between restraint and release. Bound to a tribe and driven by instinct, you navigate loyalty, territory, and transformation. When the beast emerges, subtlety fades and raw power takes over - but that power always demands something in return.",
       "lore": "For as long as there have been people, there have been wolves in the shadows - protectors not from mankind, but for mankind, against the things that lurk beyond the Veil. They are the knife in the dark, the last line of defense against things that humanity cannot, or should not, know about. The beast is not a separate creature. It is the same person, with different priorities.",
-      "supernatural": true,
       "canPurchaseAdvantages": false,
       "campaignPowerScaling": {
         "columns": [
@@ -2410,22 +2409,22 @@ window.SHADOWS_DATA = {
         "byPowerLevel": {
           "street": {
             "statBonusRoll": "1d4",
-            "startingSFR": "WILL*3 + 5",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 5 },
             "rou": 3
           },
           "heroic": {
             "statBonusRoll": "1d4+1",
-            "startingSFR": "WILL*3 + 10",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 10 },
             "rou": 5
           },
           "shadows": {
             "statBonusRoll": "1d4+2",
-            "startingSFR": "WILL*3 + 15",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 15 },
             "rou": 7
           },
           "wcd": {
             "statBonusRoll": "1d4+3",
-            "startingSFR": "WILL*3 + 20",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 20 },
             "rou": 9
           }
         }
@@ -2522,7 +2521,10 @@ window.SHADOWS_DATA = {
             "id": "sfr",
             "type": "tracker",
             "title": "SFR",
-            "max": "startingSFR"
+            "max": "startingSFR",
+            "counts": "down",
+            "resource": "sfr",
+            "note": "Counts spend against a computed pool — RoU caps a single turn."
           },
           {
             "id": "form",
@@ -2544,8 +2546,9 @@ window.SHADOWS_DATA = {
     }
   ],
   /* MILESTONES -- advancement unlocks driven by Milestone Points (1/session,
-     Decision 13). `rules` documents cadence (Minor at 5/15/25..., Major at
-     10/20/30...). `minorShared` is the pool everyone draws from (no duplicates
+     Decision 13). `rules` holds the cadence as numbers (Minor at 5/15/25...,
+     Major at 10/20/30...); every "5, 15, 25..." a player reads is written
+     from them (Decisions 67, 135), so the notes don't repeat them. `minorShared` is the pool everyone draws from (no duplicates
      until all five are taken once, Decision 29). `majorGeneral` is open to all
      archetypes; archetype-specific majors live on each archetype's `growth`.
      `prerequisites` is the machine-enforced gate the app reads:
@@ -2569,8 +2572,8 @@ window.SHADOWS_DATA = {
       "minorEvery": 10,
       "majorFirstAt": 10,
       "majorEvery": 10,
-      "minor": "Unlocked at 5, 15, 25... Milestone Points. All characters share the same pool; may not duplicate until each Minor Milestone has been selected.",
-      "major": "Unlocked at 10, 20, 30... Milestone Points. Taken only once each, in any order, subject to prerequisites. Divided into General (open to all) and Archetype (limited to that Archetype).",
+      "minorNote": "All characters share the same pool; may not duplicate until each Minor Milestone has been selected.",
+      "majorNote": "Taken only once each, in any order, subject to prerequisites. Divided into General (open to all) and Archetype (limited to that Archetype).",
       "source": "Cadence from REF_CRB Advancement + WIP Professional Growth section."
     },
     "minorShared": [
@@ -2989,8 +2992,8 @@ window.SHADOWS_DATA = {
   },
   /* IMPROVEMENT POINTS (IP) -- post-creation advancement costs (Decision 14).
      `perSession` is the default grant (overridable per session, Decision 23).
-     Stat raise = currentValue * 10 (computed against the CURRENT value, so it
-     scales as the stat grows). Skill raise = `perRank` x current rank, Focused
+     Stat raise = `statIncreaseCost.perPoint` x the CURRENT value, so it
+     scales as the stat grows (Decision 135). Skill raise = `perRank` x current rank, Focused
      skills `focusedPerRank` x current rank (Decision 134: numbers the engine
      reads, not formula text). `rankCap` caps skills/powers at 10 via IP. WILL and TOL are
      in `cannotRaiseDirectly` -- they only move via their input stats or manual
@@ -3029,7 +3032,7 @@ window.SHADOWS_DATA = {
   "ip": {
     "perSession": 10,
     "statIncreaseCost": {
-      "formula": "currentValue * 10",
+      "perPoint": 10,
       "example": "REF 6 to 7 costs 60 IP; 9 to 10 costs 90 IP."
     },
     "skillIncreaseCost": {
@@ -3553,16 +3556,11 @@ window.SHADOWS_DATA = {
     "helpless": "Helpless — you can't move or react. Any attack roll of 2 or better hits you.",
     "painClamp": "Pain Level never goes below 0 or above 3.",
     "rollPenalty": {
-      "appliesTo": "skillChecks",
       "text": "A Condition's penalty comes off Skill Checks only. It doesn't cost Essence dice or Breaker percentage."
     },
     "penaltyStacking": {
-      "stacks": true,
       "cap": -8,
       "text": "Different Conditions stack. All the penalties on one roll together (Conditions, range, cover, visibility) never go past -8."
-    },
-    "locationStacking": {
-      "perLocation": true
     }
   },
   "bodyLocations": [
@@ -4038,13 +4036,13 @@ window.SHADOWS_DATA = {
 
   /* CREATION FLOW -- the ordered wizard steps and the rules for leftover CP.
      `steps` is the 8-step sequence the wizard renders (label + optional note).
-     `boostRules` governs spending leftover Character Points after advantages:
-     `spendOn` lists valid targets, `cpCostPerPoint` the rate (stubbed, see F2),
-     `maxBoostPerTarget` points at the power level's `maxBoost` (any single target
-     boosted at most that many times -- the anti-min-max throttle, Decision 3),
-     `exemptions` lists targets the cap ignores (LUCK), and `hardCapsStillApply`
-     names the table maxima that bound boosts regardless. `supernaturalRestriction`
-     restates the canPurchaseAdvantages rule. Reorder/relabel steps freely; keep
+     `boostRules.cpCostPerPoint` is what one Boost of a stat or skill costs from
+     leftover Character Points (F2, closed by Decision 97). The rest of the
+     boost rules are the engine's, not settings: any one target is boosted at
+     most the power level's `maxBoost` times (Decision 3), the stat cap and
+     Max Skill Rank still bound it, and LUCK is bought on its own line, so the
+     cap never touches it. Fields that restated those were deleted (Decision 135;
+     Decision 64 is the precedent). Reorder/relabel steps freely; keep
      step `id`s stable if the wizard branches on them. */
   "creationFlow": {
     "steps": [
@@ -4087,23 +4085,7 @@ window.SHADOWS_DATA = {
       }
     ],
     "boostRules": {
-      "spendOn": [
-        "power",
-        "skill",
-        "stat",
-        "luck"
-      ],
-      "cpCostPerPoint": 1,
-      "maxBoostPerTarget": "powerLevel.maxBoost",
-      "exemptions": [
-        "luck"
-      ],
-      "hardCapsStillApply": [
-        "maxSkillRank",
-        "maxPowerRank",
-        "statRules.max"
-      ],
-      "supernaturalRestriction": "Archetypes with canPurchaseAdvantages=false cannot buy Advantages (Werewolf confirmed; Vampire assumed)."
+      "cpCostPerPoint": 1
     }
   }
 };

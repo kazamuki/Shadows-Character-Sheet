@@ -120,7 +120,10 @@ docs/                   STATE, INDEX, SCHEMA, VOICE-APP, WISHLIST, and audits/,
 
 Adding a stat, skill, advantage, archetype, or panel should require **zero** app
 changes. If it doesn't, that's a bug in the app — not a reason to special-case
-the data.
+the data. The other direction holds too: a data field is read by code or named
+as text (`…Text`, `…Note`, `description`), never a setting the code ignores.
+`tests/engine.test.mjs` fails on an archetype id in code and on a data key
+nothing reads (Decision 135).
 
 ## Versions — four of them, four different triggers
 

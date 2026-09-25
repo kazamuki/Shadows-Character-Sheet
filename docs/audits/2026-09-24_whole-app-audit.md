@@ -237,6 +237,8 @@ The data has the numbers it needs, but in prose. `coreMechanic.disciplines.creat
 
 **Direction.** Structured data for anything the engine reads (R7). For example, `focusedSkills: { ids: [...], choose: { count: 2, category: "combat" } }` and `disciplines.cpPerRank: 6`. Then one generic reader, and the id checks go. **This is an engine and data-shape change, so it's proposed in the plan (S3/S4), not decided here.**
 
+**Closed 2026-09-24**, the Professional half in S3 (Decision 134) and the rest in S4 (Decision 135, app 0.25.1). It was wider than this table: the wizard's Focus Stat and Stat Bonus blocks were matched by `"arcanist"` and `"werewolf"` too, and the SFR tracker by its panel id in two files. The Disciplines are `cpPerRank`, `maxRankBy` and a per-discipline `startingRankBy`, read through one `dataPath`. A test now fails on any archetype, discipline or panel id in engine or UI code, and each id check put back was caught.
+
 ### A9: Data fields that look like settings but aren't read (B3's class, again)
 **Med · [run] (key scan)**
 
@@ -256,6 +258,8 @@ rev 9's B3 was `levelsPerBOD`, "an authoritative-looking knob the engine ignored
 **The milestone cadence is stated four times:** as numbers in `milestones.rules` (read, per Decision 67), as prose in `milestones.rules.minor`/`.major`, as prose in the Professional's `growth.cadence`, and inside two engine error strings, "next at 5, 15, 25… MP" (`engine.js:1351, 1428`). Change the numbers and three of the four stay wrong. B9 was meant to close this.
 
 **Direction.** Each such field is either read or renamed as display text: `…Text`/`…Note`, or `formulaText` next to a number the engine reads. A test fails on a data key that is neither read nor named as text (R6). The cadence prose comes from the numbers.
+
+**Closed 2026-09-24** (Decision 135, plan S4, app 0.25.1). The formulas are `{ stat, times, plus }` and the stat price is `perPoint`. The boost lists and `exemptFromBoostCap` described what the code does by structure, so they were deleted rather than read, as `levelsPerBOD` was. The credit sign and the cadence come from the data. The key guard R6 asked for is in `engine.test.mjs`. On its first run it found five more fields this scan hadn't: Major Milestone `details` (never shown; they are now), Martial Arts `styles` (W33), 043's `universal` tag, and `supernatural` and the Grimoire's `catalog` (deleted). 1,468 outputs were diffed before and after with `tools/outputs.mjs`, and only the intended copy moved.
 
 ### A10: Merged content no player can see
 **Med · [run] (key scan)**
