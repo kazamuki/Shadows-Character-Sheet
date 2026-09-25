@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.28.1",
-    "date": null,
+    "date": "2026-09-25",
     "intro": [],
     "items": [
       "**Version numbers you can read.** Each release in **What's new** shows its version in the same clean digital face as your stats, so 0.28.0 no longer reads like 0.20.0."
