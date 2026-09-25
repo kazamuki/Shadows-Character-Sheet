@@ -2,6 +2,16 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.29.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Warding for each kind of magic.** Armor can now take Warding against Elemental, Spirit or Aether damage, each its own upgrade in its own mod slot, and **Take a hit** asks which of the three a spell dealt. Self-mending is an upgrade too. Armor that already had Warding keeps answering all three.",
+      "**Your Martial Arts styles, on the sheet.** The Skills tab shows the styles you chose, each with its bonus, and a skill's description lists every style on offer.",
+      "**The load check names everything that's gone.** When a file holds a weapon, armor, gear, spell or specialization this version of the game no longer has, the notice at the top of the page now says which, as it already did for skills, advantages and Conditions."
+    ]
+  },
+  {
     "version": "0.28.1",
     "date": "2026-09-25",
     "intro": [],

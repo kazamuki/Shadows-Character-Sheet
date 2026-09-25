@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.21",
+    "gamedataVersion": "0.22",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-24"
   },
@@ -1004,8 +1004,8 @@ window.SHADOWS_DATA = {
      marks traits any archetype may take. Multi-rank scaling lives in the prose
      `description`. Supernatural archetypes with `canPurchaseAdvantages:false`
      cannot buy any of these (Decision 12). Professional "natural" advantages are
-     stored on the character as normal entries with notes:"natural" at 0 CP
-     (Decision 17) -- they are NOT a separate list here. `id` is referenced by
+     stored on the character as normal entries with source:"natural" at 0 CP
+     (Decisions 17, 142) -- they are NOT a separate list here. `id` is referenced by
      milestone/advantage prerequisites, so do not rename existing ids.
      REVIEW (F5 - adv/disadv audit): the CRB v4 pass closed three of the four.
      Field Medic now names the catalog's "Medical"; Combat Paralysis' text is no
@@ -2505,7 +2505,7 @@ window.SHADOWS_DATA = {
               ]
             },
             "grants": [{ "type": "naturalArmor", "id": "resilient-spirit", "name": "Resilient Spirit",
-                         "resAgainst": ["magical"], "while": "under a waning moon" }],
+                         "resAgainst": ["elemental", "spirit", "aether"], "while": "under a waning moon" }],
             "additionalPowers": [
               { "name": "Moonlit Vitality" },
               { "name": "Ancestral Wisdom" },
@@ -3241,14 +3241,16 @@ window.SHADOWS_DATA = {
      named `feature` instead (see `armorFeatureGlossary`). */
   "armorRules": {
     "protNote": "Roll the armor's PROT die and subtract the result from incoming damage before it reaches you. PROT applies to all damage types.",
-    "resNote": "A flat reduction applied when the armor's type matches the incoming attack. Base armor is Kinetic -- RES applies to Blade, Blunt and Ballistic damage, not Energy or Magical, unless upgraded with Ablative Plating or Warding.",
+    "resNote": "A flat reduction applied when the armor's type matches the incoming attack. Base armor is Kinetic -- RES applies to Blade, Blunt and Ballistic damage, not Energy, Elemental, Spirit or Aether, unless upgraded with Ablative Plating or a Warding.",
     "integrityNote": "A resource, not a fixed stat. After any encounter where hits were taken, roll a die by encounter difficulty and subtract from the armor's INT pool.",
     "integrityLossByDifficulty": { "easy": "1d4", "medium": "1d6", "hard": "1d8", "legendary": "1d10" },
     "compromisedNote": "At 0 INT the armor is Compromised: PROT still rolls, but RES no longer applies until repaired.",
     "repairNote": "A Field Repair Kit restores 1d6 INT with roughly an hour of work. Armor with the Rapid Repair feature restores INT as an Action instead.",
     /* Read by Engine.armorState()/resolveHit() (combat plan Session 3,
        Decision 99). Base armor is Kinetic; an upgrade's `resAgainst` extends
-       RES to another class, `integrityBonus` raises max INT per install.
+       RES to another class (or a list of them), `integrityBonus` raises max
+       INT per install. A `retired` upgrade still works where it's installed
+       and is no longer offered (the one Warding, Decision 143).
        Coverage says which body parts a piece protects -- a hit anywhere else
        bypasses it entirely (Gear, Armor Properties). A custom piece with no
        `coverage` is treated as "light": all body armor covers the torso
@@ -3313,7 +3315,11 @@ window.SHADOWS_DATA = {
       "flagged": true, "flagNote": "F23 -- where the 50% reduction sits against PROT and RES is unstated. The hit resolver does not apply it; it reminds the player instead.",
       "playerNote": "The hit calculator doesn't take this lining's 50% off for you yet. Work it out with your GM and adjust the damage by hand." },
     { "id": "Tri-Weave", "minQuality": "Mid", "integrityBonus": 10, "repeatable": true, "description": "Grants +10 INT to the armor's integrity pool. Can be installed multiple times in separate slots for cumulative effect." },
-    { "id": "Warding", "minQuality": "Mid", "resAgainst": "magical", "availability": "By Practice", "description": "Extends the armor's RES bonus to magical damage. Requires finding a practitioner willing to perform the work; cannot be bought with Çredits alone." }
+    { "id": "Warding", "minQuality": "Mid", "resAgainst": ["elemental", "spirit", "aether"], "retired": true, "availability": "By Practice", "description": "Warding against every kind of magic at once: the armor's RES applies to Elemental, Spirit and Aether damage. No longer offered; three separate Wardings replace it." },
+    { "id": "Warding — Elemental", "minQuality": "Mid", "resAgainst": "elemental", "availability": "Rare", "description": "The armor's RES applies to Elemental damage. A practitioner's work: 2,500Ç." },
+    { "id": "Warding — Spirit", "minQuality": "Mid", "resAgainst": "spirit", "availability": "By Practice", "description": "The armor's RES applies to Spirit damage. A practitioner's work: 5,000Ç." },
+    { "id": "Warding — Aether", "minQuality": "Mid", "resAgainst": "aether", "availability": "By Practice", "description": "The armor's RES applies to Aether damage. Nothing else stops Aether. A practitioner's work: 12,000Ç." },
+    { "id": "Self-mending", "minQuality": "Mid", "availability": "By Practice", "description": "Ironhide, worked in for good: the armor closes its own holes after a fight. Mark the Integrity it gets back with Repair. A practitioner's work: 15,000Ç." }
   ],
 
   "armor": [
@@ -3571,9 +3577,11 @@ window.SHADOWS_DATA = {
   ],
 
   /* DAMAGE -- what a hit is made of, read by Engine.resolveHit() (combat plan
-     Session 3, Decision 99). `damageTypes` are Gear's six types plus Magical
-     (the one the RES rules name); `resClass` decides whether RES answers --
-     base armor is Kinetic, Ablative Plating adds Energy, Warding adds Magical.
+     Session 3, Decision 99). `damageTypes` are Gear's six types plus the
+     three the Book of Known Spells names (Decision 143): Elemental, Spirit and
+     Aether, each `magical`, which spells' `damageType` ids match. `resClass`
+     decides whether RES answers -- base armor is Kinetic, Ablative Plating
+     adds Energy, and each Warding adds its own kind.
      `inflicts` are the Conditions a type CAN cause (offered in the hit
      dialog, never forced); `always` are the ones Gear says it always causes
      (pre-ticked, still the player's call). Electric and Burning have no stated
@@ -3595,7 +3603,9 @@ window.SHADOWS_DATA = {
     { "id": "burning",   "name": "Burning",   "resClass": "energy",  "inflicts": ["agonized", "burning"], "always": ["agonized", "burning"],
       "flagged": true, "flagNote": "F23 -- as Electric: no stated RES class for Burning. Stubbed as Energy (no RES without Ablative Plating).",
       "playerNote": "Whether armor's RES stops fire is still being settled. For now it counts as Energy, so only Ablative Plating lets RES answer it." },
-    { "id": "magical",   "name": "Magical",   "resClass": "magical", "inflicts": [] }
+    { "id": "elemental", "name": "Elemental", "resClass": "elemental", "magical": true, "inflicts": [] },
+    { "id": "spirit",    "name": "Spirit",    "resClass": "spirit",    "magical": true, "inflicts": [] },
+    { "id": "aether",    "name": "Aether",    "resClass": "aether",    "magical": true, "inflicts": [] }
   ],
   "damageCategories": [
     { "id": "regular",   "name": "Regular",   "text": "The everyday kind. Armor answers, and what gets through heals the usual ways." },

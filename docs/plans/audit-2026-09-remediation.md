@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** done 2026-09-25. **Every question is answered** (§5), and **S1–S6 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21; S6b: app 0.27.1; S6c: app 0.28.0). S7 stays opportunistic: it rides with other work, never a session of its own.
+**Status:** done 2026-09-25. **Every question is answered** (§5), and **S1–S6 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21; S6b: app 0.27.1; S6c: app 0.28.0), and **S7 is done** (app 0.28.2, character schema 0.13, Ken asked for it as a session of its own). Every finding is closed.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -130,11 +130,13 @@ AQ4 answered what to show and AQ10 who plays where. Ken split the session into t
 
 *Versions:* app 0.28.0. Game data and schema: none.
 
-### S7: Structure (opportunistic, never a session of its own)
+### S7: Structure (done 2026-09-25, Decision 142)
 - **A11**: `source: "natural"` replaces `notes: "natural"`, with the next character-schema bump that has another reason to happen.
 - **A12**: move each screen's binders beside its renderers when a session is already editing them.
 - **C6**: delete the no-op, the `skillsFlags` read and stale comments on sight. Regroup the engine's export object by domain the next time it's touched.
 - **C8, C9**: revisit if a save file passes about 1 MB, or before a migration that reshapes an array.
+
+**Done.** A11: `source: "natural"`, schema 0.13, and the step rewrites the audit's stored undo patches too, since A11 is the migration C8 warned about (Decision 142). A12: `bindMain`/`applyStep`/`refreshNav` moved to `wizard.js`, `bindSheet` and the pickers and modals to `sheet.js`, bodies verbatim; `app.js` is chrome, the router, export and boot. One script per tab was not done: `bindSheet` is still one function. C6: the no-op and its unused `pool`, the history banners ("PHASE 3", "BATCH 3"), the "flag for D" comment, and the export object regrouped by domain (`skillsFlags` was already gone). C9: weapons, armor, gear, spells and specializations reported. Mutations: the C9 guard fails on the old engine; the A11 test fails with the patch step removed and with the version gate removed.
 
 ## 4. Versions this will move
 
@@ -148,7 +150,7 @@ AQ4 answered what to show and AQ10 who plays where. Ken split the session into t
 | S6a | minor (0.27.0) | 0.21: Ammo is a new choice | none |
 | S6b | patch (0.27.1): the header | none | none |
 | S6c | minor (0.28.0) | none | none (a roster lives in `localStorage` keys, not the file) |
-| S7 | with whatever carries it | none | A11 needs a bump and a `migrate()` step |
+| S7 | patch (0.28.2): the load check names more orphans (C9) | none | 0.13 (A11's `source`) |
 
 ## 5. Open questions
 

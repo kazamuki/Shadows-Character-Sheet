@@ -151,7 +151,7 @@ tab in W4's catalog browser, and an item could link to its spell in the book.
 It's new content only, with no rules question, though "Warding" services
 change what armor's RES stops, which the hit resolver would need to read.
 
-**W28 — Magic's Services: Warding by damage type, and Self-mending.** *Claude · 🔎 · blocked on Deighton*
+~~**W28 — Magic's Services: Warding by damage type, and Self-mending.**~~ *Claude · → Decision 143, app 0.29.0: Ken ruled Magic's three Wardings replace Gear's one; Elemental, Spirit and Aether are damage types; the old Warding answers all three; Self-mending is text*
 Raised 2026-09-24 while merging W27. The Magic chapter sells Warding as
 three services, Elemental (2,500Ç), Spirit (5,000Ç) and Aether (12,000Ç),
 each "Armor RES applies to [that] damage", plus Self-mending (Ironhide, "One
@@ -201,13 +201,23 @@ What it has to respect:
 - **Spell Power can be null** (no Evocation rank), and the engine is total:
   the book text alone shows then.
 
-**W33 — Martial Arts styles.** *Claude · 💡 · found by the S4 key guard (Decision 135)*
+~~**W33 — Martial Arts styles.**~~ *Claude · → app 0.29.0: the Skills tab shows the chosen styles with their bonuses and lists every style. Choosing them already existed in the wizard (the `style` pick); the rest is W39*
 Raised 2026-09-24. Martial Arts carries a list of styles in the data (Commando,
 Escrima, Jujitsu, Karate, Krav Maga and more), each with a bonus ("+1 Stun",
 "+1 Disarm"), and no screen shows them. The smallest step is showing the list
 where Martial Arts is described, under S6's "a rule the sheet names is a tap
 away". Choosing a style is bigger: it's a stored input (a character-schema
 change), and whether its bonus is something the sheet applies is Deighton's.
+
+**W39 — Train a Martial Arts style in play, and apply its bonus.** *Claude · 🔎 · the bonus half is Deighton's*
+Raised 2026-09-25, finishing W33. The wizard lets a player choose up to two
+styles, and Martial Arts says "you may train additional styles later in
+play", but a locked sheet has no way to add one: `setSelection` is only
+reached from the wizard, and the pick's two-slot cap is a creation rule. The
+bonuses ("+1 Stun", "+1 Grapple") are shown, never applied, and nothing says
+what +1 Stun adds to. *Needs:* how a style is trained after creation (IP?
+GM's word?) and what each bonus modifies, both Deighton's, before the sheet
+does more than show them.
 
 ### Theme & polish
 
@@ -433,7 +443,7 @@ a code or a QR at the table; accounts can wait.
 own; how long player data is kept; and whether this is the character sheet's
 job or the GM toolkit's.
 
-**W38 — Two tabs open on one character overwrite each other.** *Claude, raised in S6c · ⏭ · follows Decision 141*
+**W38 — Two tabs open on one character overwrite each other.** *Claude, raised in S6c · ⏭ · planned: `plans/two-tabs-one-character.md`*
 Open the same character in two browser tabs, play in one, then touch anything
 in the other: the second tab saves its older copy over the first's, and the
 play is gone with no warning. The roster (Decision 141) doesn't cause this, and
@@ -460,14 +470,14 @@ the same way again.
 
 ## 2. Notes for whoever picks these up
 
-- **What's open:** W28 (Magic's Services, blocked on Deighton), W29 (a GM
-  mode, a server-tier idea), W30 (Reload from carried ammo, after S6) and
-  W31 (how a TAGless or Ghost TAG character's TAG reads), W32 (spell damage
-  worked out from Spell Power), W33 (Martial Arts styles), and W34–W37
-  (the character-creation economy: a stat buy that costs more as a stat climbs,
-  a flat Stat Point pool, the F8 roll, and starting LUCK, all waiting on
-  Deighton). W38 (two tabs on one character) is ready. Everything else on this
-  list has moved out. New ideas get the next free number, W39.
+- **What's open:** W29 (a GM mode, a server-tier idea), W30 (Reload from
+  carried ammo), W31 (how a TAGless or Ghost TAG character's TAG reads), W32
+  (spell damage worked out from Spell Power), W34–W37 (the character-creation
+  economy: a stat buy that costs more as a stat climbs, a flat Stat Point pool,
+  the F8 roll, and starting LUCK, all waiting on Deighton) and W39 (training a
+  Martial Arts style in play). W38 (two tabs on one character) has a plan,
+  `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. Everything else on this
+  list has moved out. New ideas get the next free number, W40.
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
   for a small panel beside what opened it, which follows the render; the

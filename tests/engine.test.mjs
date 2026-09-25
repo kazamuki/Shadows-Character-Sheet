@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.12");
+  assert.equal(ch.meta.schemaVersion, "0.13");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.12");
+  assert.equal(old.meta.schemaVersion, "0.13");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.12");
+  assert.equal(old.meta.schemaVersion, "0.13");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -280,7 +280,6 @@ const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$
 // leaves this list the day code reads it; the test says when.
 const NOT_YET_SHOWN = {
   growth: "hidden until the archetype Majors are written (AQ4 5, F32)",
-  styles: "W33: Martial Arts styles, found by this test",
   universal: "043's 'Universal' tag on an Advantage; what it means is a CRB question for Ken",
 };
 
@@ -297,6 +296,8 @@ function dataKeys() {
         e.paths.add(path || "(top)"); e.values.push(x); keys.set(k, e);
         // `countBy`, `maxRankBy`, `startingRankBy`: Engine.dataPath reads the key it ends in.
         if (/By$/.test(k) && typeof x === "string") for (const seg of x.split(".")) viaPath.add(seg);
+        // A pick's `from.optionsFrom` names the list pickOptions reads off its entry (Martial Arts' `styles`).
+        if (k === "optionsFrom" && typeof x === "string") viaPath.add(x);
       }
       walk(x, path ? `${path}.${isMap ? "*" : k}` : k);
     }
@@ -492,7 +493,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.12");
+  assert.equal(old.meta.schemaVersion, "0.13");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -603,7 +604,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.12");
+  assert.equal(bare.meta.schemaVersion, "0.13");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -839,7 +840,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.12");
+    assert.equal(c.meta.schemaVersion, "0.13");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -865,7 +866,7 @@ test("specializationNeed comes from the data, not from the archetype's name", ()
 
 // ── Adversarial review of PR #7 — the findings, as guards ─────────────
 // A Professional can hold the SAME advantage twice: once free through the
-// Natural Advantages pool (notes:"natural") and once bought with CP
+// Natural Advantages pool (source:"natural") and once bought with CP
 // (notes:""). `favored-skill` is in that pool AND carries picks, so this is
 // reachable with shipped data, not a hypothetical.
 
@@ -876,7 +877,7 @@ function doubleHeld({ natural = 2, purchased = 1 } = {}){
   ch.archetypeChoices.specialization = ["cleaner"];
   ch.archetypeChoices.naturalAdvantages = [{ id: "favored-skill", rank: natural }];
   ch.advantages = [];
-  if (natural)   ch.advantages.push({ id: "favored-skill", rank: natural, notes: "natural" });
+  if (natural)   ch.advantages.push({ id: "favored-skill", rank: natural, notes: "", source: "natural" });
   if (purchased) ch.advantages.push({ id: "favored-skill", rank: purchased, notes: "" });
   return ch;
 }
@@ -1113,7 +1114,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.12");
+  assert.equal(old.meta.schemaVersion, "0.13");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1156,6 +1157,59 @@ test("conditionState and versionCheck survive a Condition the data no longer def
   assert.equal(st.active[1].marks, 0, "a non-numeric mark count became something other than 0");
   assert.equal(st.painLevels, 0);
   assert.ok(Engine.versionCheck(ch).some(i => /Condition "no-such-condition"/.test(i)));
+});
+
+test("versionCheck reports an orphaned weapon, armor, gear, spell or specialization id (C9)", () => {
+  const ch = subject();
+  ch.weapons = [{ id: "no-such-gun" }, { id: D.weapons[0].id }];
+  ch.armor = [{ id: "no-such-vest" }, { id: D.armor[0].id }];
+  ch.gear = [{ id: "no-such-kit", qty: 1 }, { id: D.equipment[0].id, qty: 1 }];
+  ch.panelData = { grimoire: [{ spellId: "no-such-spell", stage: "known" }, { spellId: D.spells[0].id, stage: "known" }] };
+  ch.archetypeChoices.specialization = ["no-such-origin"];
+  const issues = Engine.versionCheck(Engine.migrate(ch));
+  for (const [kind, id] of [["Weapon", "no-such-gun"], ["Armor", "no-such-vest"], ["Gear", "no-such-kit"],
+                            ["Spell", "no-such-spell"], ["Specialization", "no-such-origin"]])
+    assert.ok(issues.some(i => i.startsWith(`${kind} "${id}"`)), `${kind} "${id}" went unreported`);
+  // What the data still defines, and a typed row, report nothing.
+  ch.weapons = [{ id: D.weapons[0].id }, { custom: true, name: "Grandpa's revolver" }];
+  ch.armor = [{ id: D.armor[0].id }]; ch.gear = [{ id: D.equipment[0].id, qty: 1 }];
+  ch.panelData = { grimoire: [{ spellId: D.spells[0].id, stage: "known" }] };
+  ch.archetypeChoices.specialization = [];
+  const left = Engine.versionCheck(Engine.migrate(ch)).filter(i => / no longer exists /.test(i));
+  assert.equal(left.length, 0, left.join(" · "));
+});
+
+test("schema 0.13 moves the natural-advantage marker out of notes, undo history included (A11, Decision 142)", () => {
+  // A 0.12 Professional: one free row, one bought, and an undo entry recorded
+  // before the migration that restores the whole list in the old shape.
+  const old = doubleHeld();
+  old.meta.schemaVersion = "0.12";
+  old.advantages = [{ id: "favored-skill", rank: 2, notes: "natural" }, { id: "favored-skill", rank: 1, notes: "" }];
+  old.audit = [{ seq: 1, date: "2026-09-01", kind: "admin", label: "Admin", patch: [
+    { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
+    { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
+  const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.advantages[0].source, "natural");
+  assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
+  assert.equal(m.advantages[1].source, undefined);
+  assert.equal(Engine.advSpent(m), Engine.advSpent(doubleHeld({ natural: 0 })), "the free row started costing CP");
+  const [set, remove] = m.audit[0].patch;
+  assert.equal(set.before[0].source, "natural", "a stored undo patch kept the old shape");
+  assert.equal(remove.item.source, "natural", "a stored undo row kept the old shape");
+  Engine.undoLastAction(m);
+  assert.equal(m.advantages.length, 1);   // ops replay last-first, so the list `set` wins
+  assert.equal(m.advantages[0].source, "natural", "undo past the migration restored the old shape");
+  assert.equal(m.advantages[0].notes, "");
+  // From 0.13 on, a note is only a note: "natural" typed as text buys nothing free.
+  const now = doubleHeld({ natural: 0 });
+  now.advantages[0].notes = "natural";
+  const n = Engine.migrate(JSON.parse(JSON.stringify(now)));
+  assert.equal(n.advantages[0].source, undefined);
+  assert.ok(Engine.advSpent(n) > 0, "a 0.13 note reading \"natural\" made a bought advantage free");
+  // Anything but "natural" in source is dropped, never kept as a third kind.
+  now.advantages[0].source = "gift";
+  assert.equal(Engine.migrate(JSON.parse(JSON.stringify(now))).advantages[0].source, undefined);
 });
 
 // ── Design-team rulings, 2026-09-22 (Decision 97) ─────────────────────
@@ -1507,12 +1561,12 @@ test("a hit: Natural Armor comes off after worn armor, anywhere, and AP doesn't 
   assert.equal(ch.trackers.damage, 1, "applyHit didn't write the post-skin damage");
 });
 
-test("Resilient Spirit (Waning Moon) lets Natural Armor answer Magical damage while it's on", () => {
+test("Resilient Spirit (Waning Moon) lets Natural Armor answer magical damage while it's on", () => {
   const ch = subject();
   ch.identity.archetype = "werewolf";
   ch.archetypeChoices.specialization = ["trueborn"];
   ch.progression.milestones.major.push({ id: "shake-it-off" });
-  const hit = natural => Engine.resolveHit(ch, { damage: 8, damageType: "magical", natural });
+  const hit = natural => Engine.resolveHit(ch, { damage: 8, damageType: "spirit", natural });
   assert.equal(hit([]).through, 8);
   assert.equal(hit(["resilient-spirit"]).through, 3);
 });
@@ -2009,7 +2063,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.12");
+  assert.equal(m.meta.schemaVersion, "0.13");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2095,7 +2149,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.12");
+  assert.equal(m.meta.schemaVersion, "0.13");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2112,7 +2166,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.12");
+  assert.equal(m.meta.schemaVersion, "0.13");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
