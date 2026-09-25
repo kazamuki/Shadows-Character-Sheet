@@ -235,11 +235,11 @@ function renderArchetype(){
         const unmet = Object.entries(o.requires.stats).filter(([sid,r])=>Engine.statValue(ch,sid)<r);
         req = `<span class="cost ${unmet.length?"":"grant"}">requires ${Object.entries(o.requires.stats).map(([s,r])=>s+" "+r).join(", ")}</span>`;
       }
-      return `<div class="pick ${seld?"selected":""}">
+      return `<div class="pick ${seld?"selected":""}">${o.flagged?flagHtml(o):""}
         <div class="head"><h4>${esc(o.name)}</h4>${req}
           <div class="controls"><button class="toggle" data-spec="${o.id}">${need>1?(seld?"Chosen":"Choose"):(seld?"Selected":"Select")}</button></div></div>
         <div class="desc">${esc(o.description||"")}</div>
-        ${o.focusedSkills?`<div class="desc"><b>Focused Skills:</b> ${o.focusedSkills.map(esc).join(", ")}</div>`:""}
+        ${o.focusedSkills?`<div class="desc"><b>Focused Skills:</b> ${esc(focusedSkillsText(o.focusedSkills))}</div>`:""}
         ${o.tweak?`<div class="desc"><b>Tweak — ${esc(o.tweak.name)}:</b> ${esc(o.tweak.description)} ${(o.tweak.benefits||[]).map(esc).join(" ")}</div>`:""}
         ${o.benefit?`<div class="desc"><b>Benefit:</b> ${esc(o.benefit)}</div>`:""}
         ${o.transformation?`<div class="desc"><b>Transformation:</b> ${esc(o.transformation)}</div>`:""}
@@ -286,37 +286,29 @@ function renderArchetype(){
     }).join("") + `</div>`;
   }
 
-  // Professional creation inputs
-  if (sel.id==="professional"){
-    const sub = (sel.specialization.options||[]).find(o=>o.id===Engine.specializationIds(ch)[0]);
-    if (sub){
-      const chooseN = (sub.focusedSkills||[]).filter(f=>/chosen at creation/i.test(f));
-      if (chooseN.length){
-        const m=/^(\d+)/.exec(chooseN[0]); const need=m?Number(m[1]):2;
-        h += `<div class="sect">Focused Skills — pick ${need} Combat Skills</div>`;
-        if (D.skillsFlags && D.skillsFlags.flagged) h += flagHtml(D.skillsFlags);
-        h += D.skills.filter(s=>s.category==="combat").map(s=>{
-          const on = ac.focusedSkillPicks.includes(s.id);
-          return `<div class="pick ${on?"selected":""}"><div class="head"><h4>${esc(s.name)}</h4>
-            <div class="controls"><button class="toggle" data-fskill="${s.id}">${on?"Chosen":"Choose"}</button></div></div></div>`;
-        }).join("");
-      }
-      const nat = (sel.baselineTraits||[]).find(t=>t.id==="natural-advantages");
-      const rowP = Engine.scalingRow(ch);
-      if (nat && rowP){
-        const have = ac.naturalAdvantages.reduce((s,n)=>s+n.rank,0);
-        h += `<div class="sect">Natural Advantages — allocate ${rowP.naturalAdvantageRanks} ranks (free)</div>
-          <p class="step-note">${esc(nat.description)} <em>${have}/${rowP.naturalAdvantageRanks} allocated.</em></p>`;
-        h += nat.pool.map(p=>{
-          const def = Engine.advById(p.advantageId);
-          const cur = (ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank;
-          return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h4>${esc(def?def.name:p.advantageId)}</h4>
-            <span class="cost grant">max rank ${p.maxRank}</span>
-            <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks)}</div></div>
-            <div class="desc">${esc(def?def.description:"")}</div>
-            ${cur>0?picksHtml("advantage",p.advantageId):""}</div>`;
-        }).join("");
-      }
+  // Focused Skill picks and the free Natural Advantage pool (Decision 134):
+  // drawn for any archetype whose chosen specialization and data carry them.
+  if (Engine.specializationIds(ch).length){
+    const fp = Engine.focusedPicks(ch);
+    if (fp && fp.need){
+      h += `<div class="sect">Focused Skills — choose ${fp.need} ${esc(Engine.focusedCategoryName(fp.category))} Skill${fp.need>1?"s":""}</div>`;
+      h += focusedPickHtml(ch, "data-fskill");
+    }
+    const nat = Engine.naturalAdvantagePool(sel);
+    const rowP = Engine.scalingRow(ch);
+    if (nat && rowP && rowP.naturalAdvantageRanks!=null){
+      const have = ac.naturalAdvantages.reduce((s,n)=>s+n.rank,0);
+      h += `<div class="sect">Natural Advantages — allocate ${rowP.naturalAdvantageRanks} ranks (free)</div>
+        <p class="step-note">${esc(nat.description)} <em>${have}/${rowP.naturalAdvantageRanks} allocated.</em></p>`;
+      h += nat.pool.map(p=>{
+        const def = Engine.advById(p.advantageId);
+        const cur = (ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank;
+        return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h4>${esc(def?def.name:p.advantageId)}</h4>
+          <span class="cost grant">max rank ${p.maxRank}</span>
+          <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks)}</div></div>
+          <div class="desc">${esc(def?def.description:"")}</div>
+          ${cur>0?picksHtml("advantage",p.advantageId):""}</div>`;
+      }).join("");
     }
   }
 
@@ -337,10 +329,13 @@ function renderHistory(){
 function renderSkills(){
   const ch=S.ch, pool=Engine.skillPool(ch), pl=Engine.powerLevel(ch);
   const left = pool.total==null?0:pool.total-Engine.skillSpent(ch);
+  // Focused Skills start higher (Decision 134); the header says by how much.
+  const focused = Engine.focusedSkillIds(ch);
+  const fCap = focused.length ? Engine.skillRankCap(ch, focused[0]) : null;
   let h = `<div class="roll-entry">
     <span class="die">${pool.rollDie}</span>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="skillPoints" value="${pool.roll==null?"":pool.roll}" aria-label="skill point roll">
-    <span class="pool">Pool <b>${pool.total==null?"—":pool.total}</b> · Remaining <b>${pool.total==null?"—":left}</b> · Max Rank <b>${pl.maxSkillRank}</b></span>
+    <span class="pool">Pool <b>${pool.total==null?"—":pool.total}</b> · Remaining <b>${pool.total==null?"—":left}</b> · Max Rank <b>${pl.maxSkillRank}</b>${fCap!=null&&fCap>pl.maxSkillRank?` · Focused <b>${fCap}</b>`:""}</span>
     <span class="dice-note">Trained checks: ${esc(D.skillCheckRules.trained)}. Untrained: ${esc(D.skillCheckRules.untrained)}.</span>
   </div>`;
   const dataWarns = D.skills.map(s=>Engine.skillLine(ch,s.id).dataWarning).filter(Boolean);
@@ -350,10 +345,10 @@ function renderSkills(){
     h += `<div class="sect">${cname}</div><div class="alloc">`;
     for (const s of D.skills.filter(x=>x.category===cid)){
       const rank = ch.skills[s.id]?ch.skills[s.id].rank:0;
-      const line = Engine.skillLine(ch, s.id);
+      const line = Engine.skillLine(ch, s.id), cap = Engine.skillRankCap(ch, s.id);
       h += `<div class="alloc-row">
-        <div class="name">${esc(s.name)} ${skillStatsHtml(line)}<small>${esc(s.description)}</small></div>
-        ${stepper(rank, "skill|"+s.id, rank>0, rank<pl.maxSkillRank && left>0 && pool.total!=null)}
+        <div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} ${skillStatsHtml(line)}<small>${esc(s.description)}</small></div>
+        ${stepper(rank, "skill|"+s.id, rank>0, rank<cap && left>0 && pool.total!=null)}
         <span class="mod ${line.trained?"pos":""}" title="check bonus">+${line.checkBonus}</span>
       </div>`;
       // A trained skill may demand choices of its own — Martial Arts styles

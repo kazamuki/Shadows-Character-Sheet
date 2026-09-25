@@ -163,6 +163,7 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
     equipmentCategory: set("equipmentCategories"), spell: set("spells"), domain: set("domains"), tier: set("spellTiers"),
     aberrationCategory: set("aberrationCategories"), major: new Set((D.milestones.majorGeneral || []).map(m => m.id)),
     luckSpend: new Set((D.resources.luck.spend || []).map(s => s.id)),
+    skillCategory: new Set(D.skills.map(s => s.category)),
   };
   const refs = [];
   const ref = (kind, id, where) => { if (id != null) refs.push([kind, id, where]); };
@@ -183,20 +184,18 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
   }
   for (const m of D.milestones.majorGeneral || []) prereqs(m.prerequisites, `milestone ${m.id}`);
   for (const d of D.derived) for (const s of d.inputs || []) ref("stat", s, `derived ${d.id}`);
-  // The Professional's focused skills are English names, two of them with
-  // instructions mixed in (A8, B12). Matched by name until S3 makes them ids;
-  // this list must shrink to nothing then, and fails if an entry goes stale.
-  const PROSE = ["2 Combat Skills (chosen at creation)", "1 Additional Combat Skill"];
-  const norm = s => String(s).toLowerCase().replace(/[^a-z]/g, "").replace(/s$/, "");
-  const prose = [];
+  // Focused Skills are ids plus a category pick (Decision 134). A list here
+  // is the old prose shape coming back, which is what hid B12.
+  const shapes = [];
   for (const a of D.archetypes) {
     for (const t of a.baselineTraits || []) for (const p of t.pool || []) ref("advantage", p.advantageId, `${a.id} natural pool`);
     for (const o of (a.specialization || {}).options || []) {
       prereqs(o.requires, `${a.id}.${o.id}.requires`);
-      for (const f of o.focusedSkills || []) {
-        if (PROSE.includes(f)) { prose.push(f); continue; }
-        if (!D.skills.some(s => norm(s.name) === norm(f))) refs.push(["skill", f, `${a.id}.${o.id}.focusedSkills (by name)`]);
-      }
+      const f = o.focusedSkills;
+      if (f === undefined) continue;
+      if (!f || typeof f !== "object" || Array.isArray(f)) { shapes.push(`${a.id}.${o.id}.focusedSkills`); continue; }
+      for (const id of f.ids || []) ref("skill", id, `${a.id}.${o.id}.focusedSkills.ids`);
+      if (f.choose) ref("skillCategory", f.choose.category, `${a.id}.${o.id}.focusedSkills.choose`);
     }
   }
   for (const w of D.weapons) { ref("skill", w.skill, `weapon ${w.id}`); ref("weaponCategory", w.category, `weapon ${w.id}`); }
@@ -219,7 +218,7 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
   assert.ok(refs.length > 300, `swept only ${refs.length} references — did a field get renamed?`);
   const dangling = refs.filter(([kind, id]) => !S[kind].has(id)).map(([kind, id, where]) => `${where}: "${id}" is no ${kind}`);
   assert.deepEqual(dangling, []);
-  assert.deepEqual([...new Set(prose)].sort(), [...PROSE].sort(), "a prose focused skill is gone — take it off the exception list");
+  assert.deepEqual(shapes, [], "focusedSkills must be { ids, choose?, all? }, not a list of names");
 });
 
 test("every weapon references a skill that exists (Weapons/Ammo/Armor batch)", () => {
@@ -347,6 +346,9 @@ function degenerates(){
     "junk grant sources":  Engine.migrate({ identity:{archetype:"professional"}, archetypeChoices:{specialization:["true-warrior","no-such-spec"]},
                                             advantages:[{id:"thick-skin", rank:"x"}, null],
                                             progression:{ milestones:{ major:[null, {id:"shake-it-off"}, {id:"no-such-milestone"}] } } }),
+    "junk focused picks":  Engine.migrate({ identity:{archetype:"professional"}, creation:{powerLevel:"heroic"},
+                                            archetypeChoices:{specialization:["mercenary"], focusedSkillPicks:[7, null, {}, "no-such-skill", "rifles", "rifles"]} }),
+    "focused picks text":  Engine.migrate({ identity:{archetype:"professional"}, archetypeChoices:{specialization:["cleaner"], focusedSkillPicks:"rifles"} }),
     "junk aberrations":    Engine.migrate({ identity:{archetype:"arcanist"}, trackers:{ aberrations:[null, 7, {id:"no-such-aberration"},
                                             {id:"drained", permanence:"forever"}, {id:"phantom-pain"}], panel:{ "tol-spent":{ value:"lots" } } } }),
   };
@@ -392,7 +394,7 @@ test("no exported reader throws on any character migrate() can return", () => {
   const readers = ["powerLevel","archetype","statTable","scalingRow","derived","health","sfr",
                    "statPool","statSpent","skillPool","skillSpent","advSpent","disGranted",
                    "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalArmor","naturalHealing","resolveReset","luckState",
-                   "sanState","focusedSkillIds","ipState","milestoneState","archPanels",
+                   "sanState","focusedSkillIds","focusedSkillSpec","focusedPicks","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
                    "disciplineRanks","buildExport","versionCheck","aberrationState","spellAttack","spellPower","grimoire"];
   const failures = [];
@@ -406,6 +408,10 @@ test("no exported reader throws on any character migrate() can return", () => {
     }
     for (const id of Object.keys(ch.skills||{})){
       try { Engine.skillLine(ch, id); } catch (e) { failures.push(`skillLine(${label}, ${id}) -> ${e.message}`); }
+    }
+    for (const id of [...Object.keys(ch.skills||{}), "rifles", "no-such-skill"]){
+      try { Engine.skillRankCap(ch, id); Engine.focusedPrice(ch, id, 3); Engine.ipCost(ch, "skill", id); Engine.canBoost(ch, "skill", id); }
+      catch (e) { failures.push(`Focused Skill readers(${label}, ${id}) -> ${e.message}`); }
     }
   }
   assert.deepEqual(failures, []);
@@ -582,6 +588,16 @@ test("the new readers are total on every character migrate() can return", () => 
     }
   }
   assert.deepEqual(failures, []);
+});
+
+test("migrate keeps Focused Skill picks a list of ids, and validate names the ones that don't count (Decision 134)", () => {
+  const junk = Engine.migrate({ identity:{ archetype:"professional" }, creation:{ powerLevel:"heroic" },
+                                archetypeChoices:{ specialization:["mercenary"], focusedSkillPicks:[7, null, {}, "no-such-skill", "rifles"] } });
+  assert.equal(junk.archetypeChoices.focusedSkillPicks.join(), "no-such-skill,rifles");
+  assert.equal(Engine.focusedSkillIds(junk).includes("no-such-skill"), false, "a pick outside the options became Focused");
+  assert.ok(Engine.validate("archetype", junk).some(i => /no-such-skill can't be one/.test(i.msg)));
+  const text = Engine.migrate({ archetypeChoices:{ focusedSkillPicks:"rifles" } });
+  assert.equal(Array.isArray(text.archetypeChoices.focusedSkillPicks) && text.archetypeChoices.focusedSkillPicks.length, 0);
 });
 
 test("migrate folds the three old specialization fields into one array (A3)", () => {
@@ -943,7 +959,7 @@ test("learning a new skill after creation costs a flat 25 IP, not the rank-1 pri
 test("a Focused skill keeps its 3× rate past rank 0, and a new one is 25 IP too (F14, literal reading)", () => {
   const ch = subject();
   ch.identity.archetype = "professional";
-  const sub = Engine.archetype(ch).specialization.options.find(o => (o.focusedSkills || []).length);
+  const sub = Engine.archetype(ch).specialization.options.find(o => ((o.focusedSkills || {}).ids || []).length);
   ch.archetypeChoices.specialization = [sub.id];
   const id = Engine.focusedSkillIds(ch)[0];
   assert.ok(id, "no Focused skill resolved for the fixture");

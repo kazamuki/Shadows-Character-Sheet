@@ -1561,3 +1561,64 @@ test("B18: the intake number sits under the name on Main and in the printed head
   assert.ok(app.$("#printSheet .p-intake") && app.$("#printSheet .p-intake").textContent.includes(ch.meta.id), "the print header doesn't carry the intake number");
   assert.deepEqual(app.errors, []);
 });
+
+// ── The Professional as data (Decision 134) ──────────────────────────
+
+test("B12: the wizard asks a Mercenary for its fifth Focused Skill, and Jack's card says what isn't settled", () => {
+  const app = onArchetypeStep("professional", "heroic");
+  app.click('[data-spec="mercenary"]');
+  const card = app.$('[data-spec="mercenary"]').closest(".pick");
+  assert.match(card.textContent, /Athletics, Awareness, Combat Sense, Handguns, and 1 Combat Skill of your choice/,
+    "the card's Focused Skills line isn't built from the data");
+  const picks = app.$$("[data-fskill]");
+  assert.ok(picks.length > 0, "no Focused Skill picker for the Mercenary");
+  assert.ok(!picks.some(b => b.dataset.fskill === "handguns"), "the picker offers Handguns, which the Mercenary already has");
+  app.click('[data-fskill="rifles"]');
+  assert.equal(draft(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
+  assert.ok(app.$('[data-fskill="melee"]').disabled, "a second pick is offered when one is the count");
+  const jack = app.$('[data-spec="jack-of-all-trades"]').closest(".pick");
+  const note = D.archetypes.find(a => a.id === "professional").specialization.options.find(o => o.id === "jack-of-all-trades").playerNote;
+  assert.ok(jack.textContent.includes(note), "Jack of All Trades doesn't say its cap question is unsettled");
+  assert.doesNotMatch(jack.textContent, /F33/, "maintainer text reached the card");
+  assert.deepEqual(app.errors, []);
+});
+
+test("B13: the wizard's skill stepper lets a Focused Skill past the power level's Max Rank", () => {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["mercenary"];
+  ch.creation.powerLevel = "heroic";                  // Max Skill Rank 5, Focused +2
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  ch.skills.athletics = { rank: 5, ipe: 0 };
+  ch.skills.stealth = { rank: 5, ipe: 0 };
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("skills"), maxReached: steps.length } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.match(app.$(".roll-entry .pool").textContent, /Max Rank 5 · Focused 7/);
+  assert.ok(!app.$('[data-step="skill|athletics|1"]').disabled, "Focused Athletics stops at 5");
+  assert.ok(app.$('[data-step="skill|stealth|1"]').disabled, "unfocused Stealth goes past 5");
+  app.click('[data-step="skill|athletics|1"]');
+  assert.equal(draft(app).skills.athletics.rank, 6);
+  assert.deepEqual(app.errors, []);
+});
+
+test("a locked Mercenary short its pick chooses it on Loadout, as one undoable action", () => {
+  // A Mercenary locked before its pick existed, or after a designer raises a
+  // count, would otherwise have no way to take it.
+  const ch = lockedCharacter();
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["mercenary"];
+  const app = openSheet(ch, "loadout");
+  assert.match(app.$("#main").textContent, /Choose 1 more Combat Skill to Focus/);
+  app.click('[data-fpick="rifles"]');
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
+  assert.doesNotMatch(app.$("#main").textContent, /Choose 1 more/, "the picker stays after the count is met");
+  assert.match(app.$("#main").textContent, /Rifles/);
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Focused Skill: Rifles/, "the pick is missing from the Activity Log");
+  app.click("button[data-undolast]");
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0, "undo didn't take the pick back");
+  assert.deepEqual(app.errors, []);
+});

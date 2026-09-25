@@ -15,7 +15,10 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
+import { ROOT } from "../tools/build.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -876,4 +879,107 @@ test("Hardcore Parkour needs a Major, Acrobatics 4 and Danger Sense 1, and nothi
   assert.deepEqual([...r.manual], [], "a prerequisite is still left to the GM");
   assert.ok(!JSON.stringify(hp.prerequisites).includes("time-sense"), "Time Sense is still required");
   assert.notEqual(hp.flagged, true, "Hardcore Parkour is still flagged after the ruling");
+});
+
+// ── The Professional (041), as data (Decision 134) ───────────────────
+
+/** A Professional of one Subtype at one Campaign Power Level. */
+function professional(subtype, pl = "heroic") {
+  const ch = Engine.newCharacter();
+  ch.identity.archetype = "professional";
+  ch.creation.powerLevel = pl;
+  ch.archetypeChoices.specialization = [subtype];
+  return ch;
+}
+// A plain array: deepEqual treats the engine's VM-realm arrays as unequal to
+// a local [] even when both are empty (see engine.test.mjs).
+const focusedErrors = ch => [...Engine.validate("archetype", ch)].filter(i => /Focused Skill/.test(i.msg)).map(i => String(i.msg));
+
+test('CRB 041, Mercenary: "Athletics, Awareness, Combat Sense, Handgun, and 1 Additional Combat Skill" (B12)', () => {
+  const ch = professional("mercenary");
+  assert.equal([...Engine.focusedSkillIds(ch)].sort().join(), "athletics,awareness,combat-sense,handguns");
+  const p = Engine.focusedPicks(ch);
+  assert.equal(p.need, 1, "the Mercenary's fifth Focused Skill isn't asked for");
+  assert.ok(focusedErrors(ch).some(m => /Choose 1 Combat Skill /.test(m)), "validate doesn't ask for the pick");
+  assert.ok(!p.options.includes("handguns") && !p.options.includes("combat-sense"), "the pick offers a skill the Mercenary already has");
+  assert.ok(p.options.every(id => Engine.skillById(id).category === "combat"), "the pick offers a skill that isn't Combat");
+  assert.equal(Engine.toggleFocusedPick(ch, "rifles").ok, true);
+  assert.equal(Engine.focusedSkillIds(ch).length, 5);
+  assert.deepEqual(focusedErrors(ch), []);
+  assert.equal(Engine.toggleFocusedPick(ch, "melee").ok, false, "a second pick went through");
+});
+
+test('CRB 041, Cleaner: "Acrobatics, Combat Sense, Security, Stealth, and 2 Combat Skills" is six, never five', () => {
+  const ch = professional("cleaner");
+  assert.equal(Engine.toggleFocusedPick(ch, "combat-sense").ok, false, "a pick went on Combat Sense, which the Cleaner already has");
+  assert.equal(Engine.toggleFocusedPick(ch, "stealth").ok, false, "a General skill passed as a Combat pick");
+  // A file can carry what the picker refuses; validate says so.
+  ch.archetypeChoices.focusedSkillPicks = ["combat-sense", "handguns"];
+  assert.ok(focusedErrors(ch).some(m => /Combat Sense can't be one/.test(m)), "a doubled pick passes validate");
+  ch.archetypeChoices.focusedSkillPicks = ["handguns", "rifles"];
+  assert.deepEqual(focusedErrors(ch), []);
+  assert.equal(Engine.focusedSkillIds(ch).length, 6);
+});
+
+test('CRB 041: the Focused Skill Max Bonus (+1/+2/+3/+4) raises the starting cap of Focused Skills only (B13)', () => {
+  // 042: "The cap on starting rank is a function of Campaign Power Level.
+  // Once the campaign begins, it doesn't apply."
+  for (const [pl, bonus] of [["street", 1], ["heroic", 2], ["shadows", 3], ["wcd", 4]]) {
+    const ch = professional("mercenary", pl);
+    const max = D.powerLevels.find(p => p.id === pl).maxSkillRank;
+    assert.equal(Engine.skillRankCap(ch, "athletics"), max + bonus, `${pl}: Focused Athletics`);
+    assert.equal(Engine.skillRankCap(ch, "stealth"), max, `${pl}: unfocused Stealth`);
+  }
+  const ch = professional("mercenary");   // Heroic: 5, Focused 7
+  ch.skills.athletics = { rank: 5, ipe: 0 };
+  assert.equal(Engine.canBoost(ch, "skill", "athletics").ok, true, "a Focused skill at 5 can't be boosted at Heroic");
+  ch.skills.stealth = { rank: 5, ipe: 0 };
+  assert.equal(Engine.canBoost(ch, "skill", "stealth").ok, false, "an unfocused skill was boosted past the cap");
+});
+
+test("the starting cap is checked, not only held by the stepper: changing Subtype can't strand a rank over it", () => {
+  const ch = professional("mercenary");
+  ch.skills.athletics = { rank: 7, ipe: 0 };
+  assert.ok(!Engine.validate("skills", ch).some(i => /Athletics/.test(i.msg)), "Focused Athletics 7 refused at Heroic");
+  ch.archetypeChoices.specialization = ["fence"];   // Athletics isn't a Fence's
+  assert.ok(Engine.validate("skills", ch).some(i => i.level === "error" && /Athletics is rank 7/.test(i.msg)),
+    "an unfocused rank 7 passes at Heroic");
+  ch.skills.athletics.rank = 5;
+  ch.creation.boosts.push({ targetType: "skill", targetId: "athletics", times: 1 });
+  assert.ok(Engine.validate("character-points", ch).some(i => i.level === "error" && /Athletics is rank 6 with Boosts/.test(i.msg)),
+    "a Boost past the cap passes");
+});
+
+test('CRB 041, Master of None: "3 x current skill rank up to rank 4. At Rank 5 and above, the standard cost ... returns" (B14)', () => {
+  // Ken, 2026-09-24: "up to rank 4" is the rank being bought, so 4 → 5 is
+  // the standard price.
+  const ch = professional("jack-of-all-trades");
+  const cost = from => { ch.skills.stealth = { rank: from, ipe: 0 }; return Engine.ipCost(ch, "skill", "stealth").cost; };
+  assert.equal(cost(1), 3);
+  assert.equal(cost(2), 6, "the audit's case: Stealth 2 → 3");
+  assert.equal(cost(3), 9);
+  assert.equal(cost(4), 20, "4 → 5 is the standard price");
+  assert.equal(cost(5), 25);
+  delete ch.skills.stealth;
+  assert.equal(Engine.ipCost(ch, "skill", "stealth").cost, D.ip.skillIncreaseCost.newSkill, "Decision 97's flat price for a new skill");
+  // F33: the price only. No starting-cap bonus until Deighton rules.
+  assert.equal(Engine.skillRankCap(ch, "stealth"), D.powerLevels.find(p => p.id === "heroic").maxSkillRank);
+});
+
+test("R13: the Professional's Campaign Power Scaling table matches 041, row for row", () => {
+  const md = readFileSync(join(ROOT, "docs/reference/crb/041_Archetypes.md"), "utf8");
+  const head = md.search(/\|\s*\*\*Power Level\*\*\s*\|\s*\*\*Focused Skill Max Bonus\*\*\s*\|\s*\*\*Natural Advantages\*\*\s*\|/);
+  assert.ok(head >= 0, "041's Professional scaling table moved or was renamed");
+  const lines = md.slice(head).split("\n").slice(2);
+  const rows = lines.slice(0, lines.findIndex(l => !l.startsWith("|"))).map(l => l.split("|").slice(1, -1).map(c => c.trim()));
+  const byPl = D.archetypes.find(a => a.id === "professional").campaignPowerScaling.byPowerLevel;
+  const seen = [];
+  for (const [name, bonus, ranks] of rows) {
+    const pl = D.powerLevels.find(p => p.name === name);
+    assert.ok(pl, `041 names a power level the data doesn't: ${name}`);
+    assert.equal(byPl[pl.id].focusedSkillMaxBonus, Number(bonus.replace("+", "")), `${name}: Focused Skill Max Bonus`);
+    assert.equal(byPl[pl.id].naturalAdvantageRanks, parseInt(ranks, 10), `${name}: Natural Advantages`);
+    seen.push(pl.id);
+  }
+  assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join(), "041's table and the data cover different power levels");
 });

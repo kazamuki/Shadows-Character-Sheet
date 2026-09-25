@@ -181,6 +181,26 @@ never changes. What it needs first: a way to mark a character TAGless, which
 the data doesn't have, and whether that's a player choice or a GM one. Holding
 Ghost TAG is already on the character, so that half could come first.
 
+**W32 — Spell damage in numbers.** *Ken · 💡 · reads Spell Power (Decision 108)*
+Raised 2026-09-24. A spell's effect reads "½ SP Damage", and the player works
+out their own Spell Power and halves it at the table, every cast. The idea:
+the sheet does the arithmetic and keeps the book's words beside it, so with
+Spell Power 13, Dart reads **7 (½ SP Damage)**. Halves round up for damage
+(Ken). Wherever a spell's effect or overflow shows: the Grimoire, the spell
+picker, Main. The Aberrations and the Cascade table name Spell Power damage
+too (Backlash, Electrocytes, Elemental Blood).
+What it has to respect:
+- **Don't parse the prose.** The data writes it five ways ("½ SP", "½ Spell
+  Power", "Full Spell Power", bare "SP", "Spell Power"). That's the Focused
+  Skills lesson (B12–B14, Decision 134). A structured field, e.g. `damage: {
+  sp: 0.5 }` on the effect and each overflow row, is what the engine should
+  read. The text stays as the book's words.
+- **Rounding isn't in the CRB.** Magic and the spell appendix never say how
+  to round ½ SP. "Round up" wants a line in the CRB (Ken's), so the sheet
+  isn't the only place it's written.
+- **Spell Power can be null** (no Evocation rank), and the engine is total:
+  the book text alone shows then.
+
 ### Theme & polish
 
 ~~**W7 — Primary buttons are unreadable in light mode.**~~ *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
@@ -368,8 +388,9 @@ the same way again.
 
 - **What's open:** W28 (Magic's Services, blocked on Deighton), W29 (a GM
   mode, a server-tier idea), W30 (Reload from carried ammo, after S6) and
-  W31 (how a TAGless or Ghost TAG character's TAG reads). Everything else on
-  this list has moved out. New ideas get the next free number, W32.
+  W31 (how a TAGless or Ghost TAG character's TAG reads) and W32 (spell damage
+  worked out from Spell Power). Everything else on this list has moved out.
+  New ideas get the next free number, W33.
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
   for a small panel beside what opened it, which follows the render; the

@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.24.1` · game data `0.17` · character schema `0.12` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.25.0` · game data `0.18` · character schema `0.12` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -31,13 +31,16 @@ everywhere (`tests/hostile.test.mjs`).
 (`plans/` keeps them as history). Combat: Decisions 95–106, with stubs
 waiting on Deighton. Magic: Decisions 93, 106, 108–111 and 115.
 
-**The 2026-09-24 audit's first two sessions are done.** S1 (app 0.24.0) made
+**The 2026-09-24 audit's first three sessions are done.** S1 (app 0.24.0) made
 character files untrusted input and gave every character a permanent number.
 S2 was docs only: decisions are short records that say what they rejected
 (Decision 130), every change has a tier that says what it must touch (131),
 and there's one orientation path (132). Then, in app 0.24.1, that number
 became the character's **TAG** (Decision 133, schema 0.12). A 0.24.0 `NCR-`
 number keeps its twelve characters, so old exports are still the same character.
+S3 (app 0.25.0, game data 0.18) made the Professional data: Focused Skills are
+ids, a category pick and an all-skills price, read by one generic reader
+(Decision 134), which fixed B12–B14.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -88,8 +91,8 @@ is the authority on a flag's full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1 ✅ · S2 ✅ · S3, S4, S5 ⏭ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
-| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), and **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags. All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
+| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1 ✅ · S2 ✅ · S3 ✅ · S4, S5 ⏭ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
+| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -110,14 +113,12 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 ## 4. Open engineering work
 
 **The audit plan's next sessions, any order, no answers needed:**
-- **S3, the Professional as data** (B12–B14, the Professional half of A8).
-  It's *Rule or shape*: propose the data shape first.
 - **S5, tooling:** the `SessionStart` hook and project skills (R5), `npm run
   bump` and `release:check` (R4, the rest of A6), `test:fast`, one release
   workflow a cloud session can run (AQ9), embedded fonts (AQ6), the dev
   server on `127.0.0.1`.
-- **S4, read it or label it** (A9, the Arcanist half of A8), after S3, since
-  they touch the same engine functions.
+- **S4, read it or label it** (A9, the Arcanist half of A8). *Rule or shape*
+  if any output moves, so diff first. S3 took the skill IP prices already.
 - **S6, table feel,** specified by AQ4: rules text a hover or tap away, lore
   on the Archetype tab, Ammo in the shop, the phone and tablet header, the
   roster.
@@ -128,17 +129,17 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**`main` is app 0.24.1 (schema 0.12, game data 0.17)**: S2 (#58) and the TAG
-(#59) are merged, and the changelog section is named `v0.24.1`. The tag goes
-on the merge of that rename; until then the live site says 0.24.0.
+**The live site is v0.24.1.** S3 is app 0.25.0 (game data 0.18, schema 0.12),
+under `[Unreleased]` in the changelog until it's released.
 
-**Next, all unblocked:** S3 (propose first), S5 or S6. Ken alone: F9, F12,
-F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode), W30 (Reload
-from carried ammo) and W31 (how a TAGless or Ghost TAG character's TAG reads).
+**Next, all unblocked:** S4, S5 or S6. Ken alone: F9, F12, F13 and F32. The
+wishlist holds W28 (blocked), W29 (a GM mode), W30 (Reload from carried
+ammo), W31 (how a TAGless or Ghost TAG character's TAG reads) and W32 (spell
+damage worked out from Spell Power, which wants a CRB line on rounding).
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.
-- **Deighton:** one grouped question — F23, F24, F25, F26 and F28–F31 — plus
+- **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31 and F33 — plus
   W28 (Warding by Elemental/Spirit/Aether against the one Warding upgrade).
   Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), and
@@ -165,6 +166,10 @@ questions' history is in `plans/combat-and-conditions.md` §6):
 - **041:** Hardcore Parkour's prerequisites become 1 Major Milestone,
   Acrobatics 4 and Danger Sense 1 (Decision 129).
 - **The spell appendix:** add `AP` (Armor Piercing) to its tag list (Decision 116).
+- **041, Master of None:** say whether "up to rank 4" is the rank bought (the
+  app's reading, Ken's answer: 4 → 5 is standard). The Mercenary's "Handgun"
+  and the Slayer's and True Warrior's "Occult" are Handguns and Occult Lore.
+- **Magic:** say how ½ Spell Power rounds (up, per Ken; W32).
 - **The new-skill price** (a flat 25 IP, Decision 97) and **the stat curve
   past 10** (Decision 98) need writing into the CRB. F23 may want a line in
   Gear's RES text once ruled.
