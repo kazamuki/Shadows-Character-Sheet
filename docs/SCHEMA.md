@@ -301,7 +301,7 @@ window.SHADOWS_DATA = {
   // ── Improvement Points ───────────────────────────────────
   ip: {
     statCost: "currentValue * 10",    // REF 6→7 = 60 IP (per REF_CRB)
-    skillCost: "5 * currentRank",     // focused skills: 3 * currentRank (WIP Professional)
+    skillIncreaseCost: { perRank: 5, focusedPerRank: 3, newSkill: 25 },  // Decisions 97, 134
     rankCap: 10,                      // skills & powers cap at 10 via IP
     cannotRaiseDirectly: ["WILL", "TOL"]
   },
@@ -513,12 +513,13 @@ Archetypes differ wildly in what their sheet needs — a grimoire, an augment
 manifest, forms, a blood pool. Rather than hardcoding a Cyborg page and an
 Arcanist page, each archetype's `coreMechanic.panels` *declares* what UI it
 needs from a small set of panel types: `rankedList`, `table`, `tracker`,
-`text`, `list`, `toggle`, `grimoire` and `reference`, each described below or
+`toggle`, `grimoire`, `reference`, `focusedSkills` and `specializationText`, each described below or
 in the decision that added it. The app renders whatever is declared. When the
 Cyborg rewrite lands, you describe its NCI tiers and augment slots as panel
-declarations in the data file — no app changes. (Two of today's panels, the
-Professional's `focused-skills` list and `tweak` text, are still matched by
-id in `sheet.js`; audit A8 and plan S3 take that out.)
+declarations in the data file — no app changes. `focusedSkills` draws the
+chosen specialization's Focused Skills and, when one is short, its pick;
+`specializationText` draws the chosen option's `field` (the Professional's
+`tweak`) as a name, a description and benefits (Decision 134).
 
 Where an effect can't be made machine-readable yet, it stays prose and the
 sheet displays it as reference text — the app should never block on
@@ -600,7 +601,8 @@ It renders on the Archetype tab.
     // otherwise). Replaces identity.specialization + subtype + aberrations,
     // which were three fields for one idea and the root of A1/A2.
     specialization: [],
-    focusedSkillPicks: [],           // Professional: "chosen at creation" focused skill ids
+    focusedSkillPicks: [],           // skill ids for the specialization's focusedSkills.choose
+                                     // (Decision 134); migrate() keeps only strings
     naturalAdvantages: [],           // Professional: [{ id, rank }] — also mirrored into
                                      // `advantages` with notes:"natural", cost 0 CP
     disciplines: {}                  // Arcanist: CP-bought ranks { enchantment: 1 } (6 CP each;
@@ -1690,6 +1692,7 @@ No cascade logic to maintain — it falls out of the architecture.
     skill-exclusion directions, mutation-tested against the pre-fix code
     (both failed there, both pass now) rather than only against post-fix
     behavior. (Ken + Claude, 2026-09-07)
+    → **Superseded in part by Decision 134** — the `if (a.id==="professional")` branch went too: the specialization gate runs for any archetype whose options carry `requires`.
 
 92. **(Weapons, Ammo & Armor — data)** **The equipment chapter merges as
     catalogs, not as engine logic.** `docs/reference/crb/Gear.md` (mirrored
@@ -3150,6 +3153,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** W31 gives the character a way to be TAGless or carry a Ghost TAG, which changes the label, never the stored number.
      - **Built:** app 0.24.1, character schema 0.12; `engine.test.mjs` and `smoke.test.mjs` (Decision 133), mutation-tested.
 
+134. **Focused Skills are data: ids, a category pick and an all-skills price, read by one generic reader.**
+     *2026-09-24 · Ken + Claude · Touches: focusedSkills, focusedSkillPicks, Focused Skill Max Bonus, maxSkillRank, skillRankCap, canBoost, ipCost, ip.skillIncreaseCost, Jack of All Trades, Mercenary, Cleaner, Natural Advantages, focusedSkills panel, specializationText panel, A8, B12–B14, F33*
+     - **Decided:** A specialization's `focusedSkills` is `{ ids, choose: { count, category }, all: { throughRank } }`, read for whatever archetype carries it. A pick is a skill of that category the option doesn't already name. `skillRankCap` adds the scaling row's `focusedSkillMaxBonus` to Max Skill Rank for a Focused Skill; it caps starting rank only (042), and `canBoost`, the stepper and `validate` read it. `ipCost` reads `ip.skillIncreaseCost.{perRank, focusedPerRank, newSkill}`. Jack's `throughRank: 4` means ranks bought up to 4, so 4 → 5 is standard (Ken). The sheet's two Professional panels are generic types, and a locked character short of a pick chooses it there.
+     - **Why:** Three readers parsed English three ways, and B12–B14 were the result. Each rule is now one field a designer changes (AQ3), and Cyborg and Vampire get a reader, not a branch (Decision 15's Revisit if).
+     - **Rejected:**
+       - Keeping the strings and fixing the regexes: the parsing was the defect, and a tweak would still be code.
+       - Jack's cap bonus on every skill: a rules reading (a Heroic Jack could start all 36 skills at 7), so it's F33.
+       - The picker only in the wizard: a locked character would be stranded when a designer raises `choose.count`.
+       - Leaving the 3×/5× prices to S4: `ipCost` was being rewritten here anyway.
+     - **Replaces:** Decision 91 in part: its `if (a.id==="professional")` branch in `validate` is gone.
+     - **Revisit if:** Deighton rules F33, or a specialization needs picks from two categories (`choose` becomes a list).
+     - **Built:** app 0.25.0, game data 0.18, no schema change. Log 2026-09-24 (S3).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -3184,6 +3200,7 @@ here are in `log/archive.md`.
 | F30 | **Anti-Materiel (weapon tag).** On the VR-50 'Verdict'. The vehicle rules give it full damage against vehicles; nothing says what it does to a person | Deighton | No |
 | F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated | Deighton | No |
 | F32 | **Arcanist Major Milestones.** 041's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 041? `growth` stays hidden until then (AQ4) | Ken | No |
+| F33 | **Jack of All Trades: how far does "treated as Focused" go?** Master of None says all skills are "treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4". Does that also give every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7)? And can Skill Paragon's "a focused skill from your chosen Profession" be any skill for a Jack? Stubbed (Decision 134): the price only, for ranks bought up to 4 (4 → 5 is standard, Ken); no cap bonus | Deighton | No |
 
-F23–F26 and F28–F31 go to Deighton as one grouped question.
+F23–F26, F28–F31 and F33 go to Deighton as one grouped question.
 

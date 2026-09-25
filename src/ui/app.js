@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.24.1";
+const APP_VERSION = "0.25.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -158,8 +158,8 @@ function bindMain(){
     update(false); refreshNav();
   });
   main.querySelectorAll("[data-fskill]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.fskill, list=ch.archetypeChoices.focusedSkillPicks;
-    const i=list.indexOf(id); if(i>=0) list.splice(i,1); else list.push(id);
+    const r = Engine.toggleFocusedPick(ch, b.dataset.fskill);
+    if (!r.ok && r.why) b.title = r.why;
     update();
   });
   // steppers
@@ -841,6 +841,15 @@ function bindSheet(){
   main.querySelectorAll("[data-repairkit]").forEach(repair(false));
   main.querySelectorAll("[data-repairfull]").forEach(repair(true));
 
+  // A Focused Skill pick taken on the sheet (Decision 134): a locked
+  // character short of its picks (or holding one the data no longer allows)
+  // settles it here, as one undoable action.
+  main.querySelectorAll("[data-fpick]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.fpick, name=(Engine.skillById(id)||{name:id}).name;
+    const had=(ch.archetypeChoices.focusedSkillPicks||[]).includes(id);
+    commit("loadout", had?`Focused Skill removed: ${name}`:`Focused Skill: ${name}`, ()=>{ Engine.toggleFocusedPick(ch, id); });
+  });
+
   // Form toggle (e.g. Werewolf Human/Werewolf)
   main.querySelectorAll("[data-ptoggle]").forEach(b=>b.onclick=()=>{
     const [pid,opt]=b.dataset.ptoggle.split("|");
@@ -957,7 +966,7 @@ function applyStep(key, delta){
   if (kind==="skill"){
     const cur=ch.skills[id]?ch.skills[id].rank:0, v=cur+delta;
     const pl=Engine.powerLevel(ch);
-    if (v<0||v>pl.maxSkillRank) return;
+    if (v<0||v>Engine.skillRankCap(ch,id)) return;
     if (v===0) delete ch.skills[id];
     else {
       const prev = ch.skills[id] || {};
