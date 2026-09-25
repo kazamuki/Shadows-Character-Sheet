@@ -280,7 +280,6 @@ const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$
 // leaves this list the day code reads it; the test says when.
 const NOT_YET_SHOWN = {
   growth: "hidden until the archetype Majors are written (AQ4 5, F32)",
-  styles: "W33: Martial Arts styles, found by this test",
   universal: "043's 'Universal' tag on an Advantage; what it means is a CRB question for Ken",
 };
 
@@ -297,6 +296,8 @@ function dataKeys() {
         e.paths.add(path || "(top)"); e.values.push(x); keys.set(k, e);
         // `countBy`, `maxRankBy`, `startingRankBy`: Engine.dataPath reads the key it ends in.
         if (/By$/.test(k) && typeof x === "string") for (const seg of x.split(".")) viaPath.add(seg);
+        // A pick's `from.optionsFrom` names the list pickOptions reads off its entry (Martial Arts' `styles`).
+        if (k === "optionsFrom" && typeof x === "string") viaPath.add(x);
       }
       walk(x, path ? `${path}.${isMap ? "*" : k}` : k);
     }
@@ -1560,12 +1561,12 @@ test("a hit: Natural Armor comes off after worn armor, anywhere, and AP doesn't 
   assert.equal(ch.trackers.damage, 1, "applyHit didn't write the post-skin damage");
 });
 
-test("Resilient Spirit (Waning Moon) lets Natural Armor answer Magical damage while it's on", () => {
+test("Resilient Spirit (Waning Moon) lets Natural Armor answer magical damage while it's on", () => {
   const ch = subject();
   ch.identity.archetype = "werewolf";
   ch.archetypeChoices.specialization = ["trueborn"];
   ch.progression.milestones.major.push({ id: "shake-it-off" });
-  const hit = natural => Engine.resolveHit(ch, { damage: 8, damageType: "magical", natural });
+  const hit = natural => Engine.resolveHit(ch, { damage: 8, damageType: "spirit", natural });
   assert.equal(hit([]).through, 8);
   assert.equal(hit(["resilient-spirit"]).through, 3);
 });

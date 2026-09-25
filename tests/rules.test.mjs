@@ -412,15 +412,18 @@ test('CRB 053: "A hit that armor soaks entirely still costs the armor 1 integrit
   assert.equal(through.integrityLost, 0);
 });
 
-test("Gear: RES answers only the damage it matches. Kinetic by default, Energy with Ablative Plating, Magical with Warding", () => {
+test("Gear: RES answers only the damage it matches. Kinetic by default, Energy with Ablative Plating, each kind of magic with its Warding", () => {
   const hit = { damage: 10, damageType: "energy", protRoll: 2 };
   const bare = Engine.resolveHit(wearing(subject()), hit);
   assert.deepEqual([bare.res, bare.through, bare.resSkipped], [0, 8, "type"]);
   const ablative = Engine.resolveHit(wearing(subject(), "kevlar-vest", { upgrades: ["Ablative Plating"] }), hit);
   assert.deepEqual([ablative.res, ablative.through], [2, 6]);
-  const warded = Engine.resolveHit(wearing(subject(), "kevlar-vest", { upgrades: ["Warding"] }),
-                                   { ...hit, damageType: "magical" });
-  assert.equal(warded.res, 2);
+  // Magic: "Armor RES applies to Spirit damage" (Warding — Spirit), and to
+  // nothing else. The retired all-kinds Warding still answers all three.
+  const res = (upgrades, damageType) => Engine.resolveHit(wearing(subject(), "kevlar-vest", { upgrades }), { ...hit, damageType }).res;
+  assert.deepEqual(["elemental", "spirit", "aether"].map(t => res([], t)), [0, 0, 0], "bare armor answered magic");
+  assert.deepEqual(["elemental", "spirit", "aether"].map(t => res(["Warding — Spirit"], t)), [0, 2, 0]);
+  assert.deepEqual(["elemental", "spirit", "aether"].map(t => res(["Warding"], t)), [2, 2, 2], "an installed old Warding lost cover");
   // Tri-Weave: "+10 INT to the armor's integrity pool", per install.
   const tw = Engine.armorState(wearing(subject(), "kevlar-vest", { upgrades: ["Tri-Weave", "Tri-Weave"] }));
   assert.equal(tw.worn.integrityMax, 40);
@@ -604,11 +607,15 @@ test('Gear: upgrades take a mod slot each, need their minimum quality, and Tri-W
   const specops = wearing(subject(), "specops-vest");           // High, 3 slots
   Engine.addUpgrade(specops, 0, "Tri-Weave"); Engine.addUpgrade(specops, 0, "Tri-Weave");
   assert.equal(Engine.armorState(specops).worn.integrityMax, 50);
-  assert.equal(Engine.addUpgrade(specops, 0, "Warding").ok, true);
+  assert.equal(Engine.addUpgrade(specops, 0, "Warding — Aether").ok, true);
   assert.equal(Engine.addUpgrade(specops, 0, "EMP Shielding").ok, false, "a fourth upgrade in three slots");
   const two = wearing(subject(), "urban-tactics-vest");          // Mid, 2 slots
-  Engine.addUpgrade(two, 0, "Warding");
-  assert.match(Engine.addUpgrade(two, 0, "Warding").why, /Already installed/, "Warding isn't repeatable");
+  Engine.addUpgrade(two, 0, "Warding — Elemental");
+  assert.match(Engine.addUpgrade(two, 0, "Warding — Elemental").why, /Already installed/, "Warding isn't repeatable");
+  assert.equal(Engine.addUpgrade(two, 0, "Warding — Spirit").ok, true, "two kinds of Warding take two slots");
+  // The one Warding from before is retired: installed, it works; it isn't offered.
+  assert.ok(!Engine.upgradeOptions(wearing(subject(), "specops-vest"), 0).options.some(o => o.id === "Warding"));
+  assert.equal(Engine.addUpgrade(wearing(subject(), "specops-vest"), 0, "Warding").ok, false);
   assert.equal(Engine.addUpgrade(wearing(subject(), "reinforced-denim-vest"), 0, "EMP Shielding").ok, false, "Low quality has no mod slots");
 });
 

@@ -248,10 +248,22 @@ function skillColgroup(withRank=true){
     ? `<colgroup><col class="c-name"><col class="c-rank"><col class="c-check"><col class="c-break"></colgroup>`
     : `<colgroup><col class="c-name"><col class="c-check"><col class="c-break"></colgroup>`;
 }
-function skillDescRow(def, cols, open){
+// A skill's option picks (Martial Arts styles), read from the data through
+// Engine.picksFor, so no skill is named here (W33). What was chosen shows on
+// the skill's row, each with what it gives; its description lists them all.
+const skillOptionPicks = (ch, id) => Engine.picksFor(ch, "skill", id).filter(st=>st.pick.type==="option");
+function skillChosenHtml(ch, id){
+  const picked = skillOptionPicks(ch, id).flatMap(st=>st.chosen.filter(Boolean)
+    .map(v=>st.options.find(o=>o.id===v) || { name:v, description:"" }));
+  return picked.length ? `<div class="skill-picked">${picked.map(o=>
+    `<span class="chip">${esc(o.name)}${o.description?` <small>${esc(o.description)}</small>`:""}</span>`).join(" ")}</div>` : "";
+}
+function skillDescRow(ch, def, cols, open){
   const covers = Array.isArray(def.covers) ? def.covers.join(", ") : (def.covers||"");
+  const offered = skillOptionPicks(ch, def.id).filter(st=>st.options.length).map(st=>
+    `<div class="covers">${esc(st.pick.label||"Options")}: ${esc(st.options.map(o=>o.description ? `${o.name} (${o.description})` : o.name).join(" · "))}</div>`).join("");
   return `<tr class="skill-desc" data-descrow="${def.id}"${open?"":" hidden"}><td colspan="${cols}">
-    <div class="skill-desc-body">${esc(def.description||"No description on file.")}${covers?`<div class="covers">Covers: ${esc(covers)}</div>`:""}</div></td></tr>`;
+    <div class="skill-desc-body">${esc(def.description||"No description on file.")}${covers?`<div class="covers">Covers: ${esc(covers)}</div>`:""}${offered}</div></td></tr>`;
 }
 // Returns the skill's main row plus its (hidden) description row.
 function skillRowPair(ch, l, {withRank=true}={}){
@@ -266,11 +278,11 @@ function skillRowPair(ch, l, {withRank=true}={}){
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   let tr = `<tr class="skill-line"${l.trained?"":' style="opacity:.72"'}>`;
-  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${q}</td>`;
+  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
   if (withRank) tr += `<td class="num">${l.trained?l.rank:"—"}</td>`;
   tr += `<td class="num">1d10 + ${l.checkBonus}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
-  return tr + skillDescRow(l.def, withRank?4:3, open);
+  return tr + skillDescRow(ch, l.def, withRank?4:3, open);
 }
 // One category as a standalone aligned table (used on Main for Combat).
 function skillTableHtml(ch, cid, cname, {includeUntrained=false}={}){
@@ -1987,7 +1999,7 @@ function pDefenseHtml(ch){
   const others = as ? as.pieces.filter(p=>p.worn && p.slot!=="body") : [];
   const feats = w ? [...w.features, ...w.upgrades, ...others.flatMap(p=>p.features)] : [];
   h += `<div class="p-fieldrow">${pField("Components", w ? [w.name, ...others.map(p=>p.name)].join(", ") : null)}${
-    pField("Features", feats.length ? [...new Set(feats)].join(", ") : null)}${pField("Warding", w && w.resAgainst.includes("magical") ? "Yes" : null)}</div>`;
+    pField("Features", feats.length ? [...new Set(feats)].join(", ") : null)}${pField("Warding", w ? D.damageTypes.filter(t=>t.magical && w.resAgainst.includes(t.resClass)).map(t=>t.name).join(", ") || null : null)}</div>`;
   return h;
 }
 // The Loadout page's weapons: a catalog piece prints its computed line, a
