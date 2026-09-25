@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.28.1
+## v0.28.1 — 2026-09-25
 
 - **Version numbers you can read.** Each release in **What's new** shows its version in
   the same clean digital face as your stats, so 0.28.0 no longer reads like 0.20.0.
