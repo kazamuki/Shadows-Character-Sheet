@@ -21,7 +21,20 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.25.1
+## [Unreleased] — app 0.25.2
+
+- **Sixteen new spells in the Book of Known Spells**, from Glasswalk, Borrowed Tongue
+  and Mend among the Cantrips up to Borrowed Time. Blink, Tracer, Sure Hand, Doorway,
+  Invisicloak and Consecrate are among them.
+- **Every spell says how long it lasts.** Duration sits beside Range and Target when
+  you open a spell in your Grimoire.
+- **Overflow says how much.** Lines that read "increases by [X]" now give the number:
+  +½ SP damage, +2m, +1 round.
+- **Some spells work differently now**, as the book prints them. Mind Nudge pushes a
+  target along a course they're already on, or holds them back. Tremor, Frostbite,
+  Glimmer and Facemask changed too. A spell you already know updates by itself.
+- **The shop's Blink, Tracer, Sure Hand and Consecrate items show their spell.** The
+  Grave-iron blade and Ferryman's coin read as the book now has them.
 
 - **Every Major Milestone shows all it does.** Hardcore Parkour, Cyber Psion and Can't See
   Me each have rules past their first line (Hardcore Parkour's fall damage and Dodge

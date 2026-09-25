@@ -1577,7 +1577,7 @@ function grimoireHtml(ch, p){
         <span class="eff">${esc(l.effect||"")}</span></summary>
       <div class="spell-body">
         ${l.flavorLine?`<p class="flavor">${esc(l.flavorLine)}</p>`:""}
-        <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.defending&&`Defending: ${l.defending}`].filter(Boolean).map(esc).join(" · ")}</p>
+        <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.duration&&`Duration: ${l.duration}`, l.defending&&`Defending: ${l.defending}`].filter(Boolean).map(esc).join(" · ")}</p>
         ${l.spellNotes?`<p>${esc(l.spellNotes)}</p>`:""}
         ${ov?`<ul class="overflow">${ov}</ul>`:""}
         ${l.tags.length?`<p class="sub">Tags: ${l.tags.map(esc).join(", ")}</p>`:""}

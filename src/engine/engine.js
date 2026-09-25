@@ -1750,7 +1750,7 @@ const Engine = (() => {
                tier: (tiers.find(t=>t.id===s.tier)||{name:s.tier}).name, tierId:s.tier,
                domain: (domains.find(d=>d.id===s.domain)||{name:s.domain}).name, domainId:s.domain,
                glyph:s.glyph, tn:s.tn, range:s.range, spellType:s.spellType, damageType:s.damageType,
-               target:s.target, effect:s.effect, defending:s.defending, overflow:s.overflow||null,
+               target:s.target, effect:s.effect, duration:s.duration||null, defending:s.defending, overflow:s.overflow||null,
                tags:s.tags||[], flavorLine:s.flavorLine||"", spellNotes:s.notes||"",
                masteryCost: mastered ? null : spellMasteryCost(s) };
     });
