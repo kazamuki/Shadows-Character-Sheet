@@ -1,12 +1,14 @@
 <!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-24. -->
 
-# Book of Known Spells
+**SHADOWS TTRPG · MAGIC**
+
+# **Book of Known Spells**
 
 Every spell here is a Known spell — a fixed formula with documented parameters and Overflow effects. Improvised spells follow identical mechanics with their parameters set by the GM at the time of casting.
 
 Spells are organized by Tier, then by Domain. A new Arcanist works from the Cantrip and Standard lists. Advanced and Superior spells are what the practice opens up over time.
 
-## How to Read a Spell Entry
+# **How to Read a Spell Entry**
 
 Every spell in this book follows the same format.
 
@@ -14,69 +16,45 @@ Every spell in this book follows the same format.
 >
 > *Lightning · TN 8 · TH 2 · Short · Offensive · Elemental*
 >
-> A direct bolt of electrical energy at a single target. In a city wired end to end, this spell has a way of finding more than it was aimed at.
+> A direct bolt of electrical energy. In a city wired end to end, this spell has a way of finding more than it was aimed at.
 >
 > **Target:** 1 person or object
 >
 > **Effect:** SP Damage
 >
+> **Duration:** Instant
+>
 > **Defending:** Dodge
 >
-> **1x —** Damage increases by \[X\], and the target is Shocked.
+> **1x —** Damage increases by ½ SP, and the target is Shocked.
 >
 > **2x+ —** Damage increases, the target is Shocked, and cybernetic targets may be DeSynced.
 >
 > *Tags: EMP*
 
-**Name and Glyphs.** What Arcanists call it, and what it is built from. Most spells draw on one Glyph; more complex spells chain several, sometimes across Domains.
+- **Name and Glyphs.** What Arcanists call it, and what it is built from. Most spells draw on one Glyph; more complex spells chain several, sometimes across Domains.
 
-**Tier.** Cantrip, Standard, Advanced, or Superior. Shorthand for the TN and TH that follow.
+- **Tier.** Cantrip, Standard, Advanced, or Superior. Shorthand for the TN and TH that follow.
 
-**TN and TH.** The Target Number (TN) and Threshold (TH) required for a spell to Manifest.
+- **TN and TH.** The Target Number and Threshold required for the spell to Manifest.
 
-**Range.** Close, Short, Medium, Long, or Extreme, as used everywhere else in the game. Some entries list **Self**, **Touch**, or an area shape instead.
+- **Range.** Close, Short, Medium, Long, or Extreme, as used everywhere else in the game. Some entries list Self, Touch, Proximity, or an area shape instead.
 
-**Spell Type.** Offensive, Defensive, or Utility. It tells you what the spell is for.
+- **Spell Type.** Offensive, Defensive, or Utility. It tells you what the spell is for.
 
-**Damage Type.** Different spells apply damage in different ways, and armor may reduce it.
+- **Damage Type.** Only damaging spells list one, and it decides whether armor applies. Physical — armor applies. Elemental, Spirit, and Aether — armor does not. Barriers absorb damage regardless of type.
 
-- **Physical** — armor applies. Something real was thrown at someone.
+- **Target.** Who or what the spell is impacting.
 
-- **Elemental** — armor does not apply. Fire, cold, current.
+- **Effect.** What the spell does when it Manifests.
 
-- **Spirit** — armor does not apply. Decay, wrath, and spells that work on minds.
+- **Duration.** How long the effect lasts. Instant resolves and is done. Concentration lasts as long as you hold it. Durations measured in minutes or hours scale with your WILL — a caster with more of it holds a shape in reality longer. Debuffs that last until shaken off allow the target a check at each Reset.
 
-- **Aether** — armor does not apply. Raw unshaped force.
+- **Defending.** How the spell is resisted, using the spell's own TN and TH.
 
-**Target.** Who or what the spell is impacting.
+- **Overflow.** Each net Hit above TH generates 1x, and each explosion generates another. Add them and read the matching line. Most spells list 1x and 2x+. The 2x+ line applies at every tier above — at 4x, a spell that increases damage by ½ SP has increased it four times.
 
-**Effect.** What the spell does when it Manifests.
-
-**Defending.** How the spell is resisted.
-
-- **Dodge** against spells aimed at specific targets.
-
-- **Scramble** against area effects.
-
-- **Essence check** against anything reaching into a mind or body.
-
-**Overflow.** Each net Hit above TH generates 1x, and each explosion generates another. Add them and read the matching line. Most spells list 1x and 2x+. The 2x+ line applies at every tier above — at 4x, a spell that increases damage by \[X\] has increased it four times.
-
-**Tags.** Properties that matter outside the spell's own text.
-
-- **AOE** — affects an area rather than specific targets
-
-- **DoT** — damage over multiple rounds
-
-- **EMP** — interacts with electronics and cyberware
-
-- **Fire** — can ignite flammable material
-
-- **Cold** — can freeze liquids and make surfaces treacherous
-
-- **Concentration** — held rather than released; dice equal to its TH are set aside until you let go
-
-- **Alch./Ench.** — no Evocation form; exists only as a Talisman or Artifact
+- **Tags.** AOE affects an area. DoT deals damage over rounds. EMP interacts with electronics and cyberware. Fire can ignite the environment. Cold can freeze liquids and make surfaces treacherous. AP pierces armor. Concentration means the spell is held rather than released. Alch./Ench. means the spell has no Evocation form and exists only as a Talisman or Artifact.
 
 # **Cantrips**
 
@@ -96,6 +74,8 @@ A focused mote of incendiary energy hurled at a single target. The first spell m
 
 **Effect:** ½ SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
 > **1x —** Full Spell Power damage.
@@ -114,11 +94,13 @@ A short burst of wind directed at a target or object. No damage unless the envir
 
 **Effect:** Push 1–2m
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Push distance increases by \[X\]m.
+> **1x —** Push distance increases by 2m.
 >
-> **2x+ —** Push distance increases by \[X\]m, and the target is Prone.
+> **2x+ —** Push distance increases by 2m, and the target is Prone.
 
 **Kindle**
 
@@ -129,6 +111,8 @@ A focused burst of heat, enough to catch paper, dry cloth, or spilled fuel. What
 **Target:** 1 small combustible object
 
 **Effect:** Ignites the target
+
+**Duration:** Instant
 
 **Defending:** None
 
@@ -148,6 +132,8 @@ A shower of sparks radiating outward. Enough to startle, not enough to matter un
 
 **Effect:** 1 Damage, and flammables ignite
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
 > **1x —** ½ Spell Power damage, or a significantly wider area ignited.
@@ -164,11 +150,13 @@ A focused vibration driven into a surface. Enough to startle, unbalance, or disl
 
 **Target:** An area of ground or a single surface
 
-**Effect:** Difficult terrain in the affected area for 1 round
+**Effect:** Destabilizes footing and loose objects
+
+**Duration:** 1 round
 
 **Defending:** Scramble
 
-> **1x —** Affected area increases by \[X\]m.
+> **1x —** Affected area increases by 2m.
 >
 > **2x+ —** Affected area increases, and targets are Prone.
 
@@ -183,6 +171,8 @@ A focused arc of electrical energy. The caster chooses at time of casting whethe
 **Target:** 1 person or electronic device
 
 **Effect:** ½ SP Damage, or shorts simple electronics
+
+**Duration:** Instant
 
 **Defending:** Dodge
 
@@ -204,11 +194,13 @@ Raw kinetic force exerted against a person, object, or door. No damage unless th
 
 **Effect:** Shove 2m
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Distance increases by \[X\]m.
+> **1x —** Distance increases by 2m.
 >
-> **2x+ —** Distance increases by \[X\]m, and the target is Prone.
+> **2x+ —** Distance increases by 2m, and the target is Prone.
 
 **Shield**
 
@@ -220,11 +212,13 @@ A barrier of shaped Aether. The most reliable defensive spell in the Force Domai
 
 **Effect:** Absorbs SP damage of any type for 1 round
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Absorbed damage increases by \[X\].
+> **1x —** Absorbed damage increases by ½ SP.
 >
-> **2x+ —** Absorbed damage increases by \[X\], and the barrier holds an additional round.
+> **2x+ —** Absorbed damage increases by ½ SP, and the barrier holds an additional round.
 
 **Snatch**
 
@@ -232,13 +226,15 @@ A barrier of shaped Aether. The most reliable defensive spell in the Force Domai
 
 Pulls a small object through the air and into the caster's hand. Useful for weapons, keys, and anything that has ended up somewhere inconvenient.
 
-**Target:** 1 object of 5 lbs or less
+**Target:** 1 object of 5 lbs. or less
 
 **Effect:** Object is pulled to the caster
 
+**Duration:** Instant
+
 **Defending:** BOD Essence, if held
 
-> **1x —** Weight limit increases by \[X\] lbs.
+> **1x —** Weight limit increases by 5 lbs.
 >
 > **2x+ —** Weight limit increases, or two objects are pulled at once.
 
@@ -254,11 +250,33 @@ A crystalline barrier, visible and physical, that shatters loudly when it fails.
 
 **Effect:** Absorbs SP damage of any type for 1 round
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Absorbed damage increases by \[X\].
+> **1x —** Absorbed damage increases by ½ SP.
 >
-> **2x+ —** Absorbed damage increases, and shards deal \[X\] damage to adjacent attackers when the barrier breaks.
+> **2x+ —** Absorbed damage increases, and shards deal ½ SP damage to adjacent attackers when the barrier breaks.
+
+**Glasswalk**
+
+*Glass · Insight · TN 7 · TH 1 · Touch · Utility*
+
+Put your hand on a wall and it stops being opaque. Only for you, and only while you are touching it.
+
+**Target:** One surface you are touching
+
+**Effect:** You see through it as though it were glass
+
+**Duration:** Concentration
+
+**Defending:** None
+
+> **1x —** Thickness you can see through increases by 1m.
+>
+> **2x+ —** Thickness increases, and you hear through it as well.
+
+*Tags: Concentration*
 
 **Thorn Snare**
 
@@ -270,15 +288,35 @@ Forces growth from whatever organic material is present — roots through concre
 
 **Effect:** Area becomes Difficult Terrain
 
+**Duration:** Until cleared
+
 **Defending:** Scramble
 
-> **1x —** Radius increases by \[X\]m, or duration extends by \[X\] rounds.
+> **1x —** Radius increases by 2m, or duration extends by 1 round.
 >
 > **2x+ —** Radius increases, and targets who fail are Restrained.
 
 *Tags: AOE*
 
 ## **Mind**
+
+**Borrowed Tongue**
+
+*Memory · Air · TN 7 · TH 1 · Short · Utility*
+
+You do not learn the language. You borrow the shape of it from whoever is speaking and give it back when they stop.
+
+**Target:** Self
+
+**Effect:** Understand and speak one language being spoken within range
+
+**Duration:** WILL minutes
+
+**Defending:** None
+
+> **1x —** Duration doubles.
+>
+> **2x+ —** Duration doubles, and written forms of the language are legible too.
 
 **Glimmer**
 
@@ -288,13 +326,15 @@ A flash of light at the edge of a target's vision — bright enough to pull focu
 
 **Target:** 1 person
 
-**Effect:** Target's next action takes \[X\] penalty
+**Effect:** −1 to the target's next action
+
+**Duration:** 1 round
 
 **Defending:** INT Essence
 
-> **1x —** Duration extends by \[X\] round.
+> **1x —** A second target is affected.
 >
-> **2x+ —** Duration extends, and the target is Disoriented.
+> **2x+ —** A second target, and the penalty increases by 1.
 
 **Hush**
 
@@ -304,11 +344,13 @@ Sound dampened to almost nothing. Does not create silence. Creates deniability.
 
 **Target:** An area
 
-**Effect:** \[X\] bonus to Stealth within the area for 1 round
+**Effect:** +1 to Stealth within the area for 1 round
+
+**Duration:** 1 round
 
 **Defending:** None
 
-> **1x —** Radius increases by \[X\]m, or duration by \[X\] round.
+> **1x —** Radius increases by 2m, or duration by 1 round.
 >
 > **2x+ —** Both, or silence rather than dampening.
 
@@ -324,9 +366,11 @@ Heightened awareness for the space of a breath.
 
 **Effect:** Detect one of: active magic, movement, or hostile intent
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Duration or range increases by \[X\].
+> **1x —** Duration increases by 1 round, or range by one band.
 >
 > **2x+ —** Two categories detected at once.
 
@@ -340,9 +384,11 @@ Perception sharpened past whatever is being used to obscure it.
 
 **Effect:** Reveals hidden creatures, disguises, and invisibility
 
+**Duration:** WILL minutes
+
 **Defending:** Contested against the concealing effect
 
-> **1x —** Range or duration increases by \[X\].
+> **1x —** Range increases by one band, or duration by 1 round.
 >
 > **2x+ —** Both, or extends to an additional sense.
 
@@ -354,11 +400,13 @@ Ambient shadow drawn close. Not invisibility — something better suited to a ci
 
 **Target:** Self or 1 ally within reach
 
-**Effect:** Target counts as Dark to observers, and gains \[X\] to Stealth
+**Effect:** Target counts as Dark to observers, and gains +1 to Stealth
+
+**Duration:** Concentration
 
 **Defending:** INT Essence to notice
 
-> **1x —** Duration extends by \[X\] round.
+> **1x —** Duration extends by 1 round.
 >
 > **2x+ —** Duration extends, or a second target is covered.
 
@@ -374,11 +422,31 @@ A surge of certainty ahead of a moment that needs it.
 
 **Effect:** Bonus to next action equal to net Hits, used within 1 round
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Bonus increases by \[X\].
+> **1x —** Bonus increases by 1.
 >
 > **2x+ —** Bonus increases, and the window extends by one action.
+
+**Mend**
+
+*Decay · TN 7 · TH 1 · Touch · Utility*
+
+Decay run backwards. The object was whole once and the Aether remembers it, which is most of the work.
+
+**Target:** 1 broken non-magical object
+
+**Effect:** The object is whole again
+
+**Duration:** Permanent
+
+**Defending:** None
+
+> **1x —** Repairs something substantially larger or more complex.
+>
+> **2x+ —** Repairs something that was in several pieces, or restores ½ SP Integrity to a damaged item.
 
 **Soothe**
 
@@ -390,9 +458,11 @@ Slows the heart rate, clears the adrenaline fog, takes the edge off whatever the
 
 **Effect:** Negates fear-based penalties
 
+**Duration:** WILL minutes
+
 **Defending:** WILL Essence, if unwilling
 
-> **1x —** Duration extends by \[X\] round.
+> **1x —** Duration extends by 1 round.
 >
 > **2x+ —** Duration extends, and a second target is affected.
 
@@ -414,9 +484,11 @@ A blade of compressed air. The trajectory is flat and fast — nothing visible u
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, and the target is Bleeding.
 
@@ -430,9 +502,11 @@ The air around a point ignites, engulfing everything in it while the Arcanist ho
 
 **Effect:** ½ SP Damage each round the spell is held
 
+**Duration:** Concentration
+
 **Defending:** Scramble, each round
 
-> **1x —** Radius increases by \[X\]m.
+> **1x —** Radius increases by 2m.
 >
 > **2x+ —** Radius increases, and targets who fail are Burning.
 
@@ -448,9 +522,11 @@ Elemental force caught and held rather than dispersed. Fire taken is fire return
 
 **Effect:** Absorbs up to SP Elemental damage; discharges on the caster's next attack
 
+**Duration:** Concentration
+
 **Defending:** None
 
-> **1x —** Capacity increases by \[X\].
+> **1x —** Capacity increases by 1.
 >
 > **2x+ —** Capacity increases, and the charge can be released as its own attack rather than riding an existing one.
 
@@ -466,9 +542,11 @@ The workhorse of the Fire Glyph — straightforward, reliable, and exactly as da
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, and the target is Burning.
 
@@ -484,9 +562,11 @@ Ambient moisture condensed into a bank of fog thick enough to lose a firefight i
 
 **Effect:** Area counts as Dark; line of sight across it is broken
 
+**Duration:** Concentration
+
 **Defending:** None
 
-> **1x —** Radius increases by \[X\]m.
+> **1x —** Radius increases by 2m.
 >
 > **2x+ —** Radius increases, and the area counts as Blind rather than Dark.
 
@@ -500,7 +580,9 @@ A sharp chill across exposed skin, joints, extremities.
 
 **Target:** 1 person
 
-**Effect:** ½ SP Damage, and the ground beneath them becomes Difficult Terrain
+**Effect:** ½ SP Damage, and the target's Movement is halved
+
+**Duration:** Until shaken off — BOD Essence at Reset
 
 **Defending:** Dodge
 
@@ -520,9 +602,11 @@ A directed wave. Good for crowd control, better for making a mess of a room that
 
 **Effect:** Push 1–2m; extinguishes small fires
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Push distance increases by \[X\]m.
+> **1x —** Push distance increases by 2m.
 >
 > **2x+ —** Push distance increases, and targets are Prone.
 
@@ -538,9 +622,11 @@ A lance of solid ice formed and hurled in one motion. It shatters on impact, whi
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, and the target is Restrained.
 
@@ -555,6 +641,8 @@ Sets a target alight and leaves them to deal with it.
 **Target:** 1 person or object
 
 **Effect:** Target is Burning until extinguished
+
+**Duration:** Until extinguished
 
 **Defending:** Dodge
 
@@ -574,9 +662,11 @@ A sudden detonation of heat radiating outward. Fire does not distinguish allies.
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Radius increases by \[X\]m.
+> **1x —** Radius increases by 2m.
 >
 > **2x+ —** Radius increases, and targets who fail are Burning.
 
@@ -592,9 +682,11 @@ A direct bolt of electrical energy. In a city wired end to end, this spell has a
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\], and the target is Shocked.
+> **1x —** Damage increases by ½ SP, and the target is Shocked.
 >
 > **2x+ —** Damage increases, the target is Shocked, and cybernetic targets may be DeSynced.
 
@@ -609,6 +701,8 @@ A discharge waiting in an object for someone to come too close. Has no Evocation
 **Target:** Designated target type entering range
 
 **Effect:** SP Damage on trigger
+
+**Duration:** Until triggered
 
 **Defending:** Scramble
 
@@ -628,9 +722,11 @@ A localized tremor, enough to destabilize structures and put people on the floor
 
 **Effect:** Targets are Prone; loose structures may collapse
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Radius increases by \[X\]m.
+> **1x —** Radius increases by 2m.
 >
 > **2x+ —** Radius increases, and the broken ground becomes Difficult Terrain.
 
@@ -646,9 +742,11 @@ A sharper, more focused jolt than Zap.
 
 **Effect:** SP Damage, or disrupts hardened electronics
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\], and the target is Shocked.
+> **1x —** Damage increases by ½ SP, and the target is Shocked.
 >
 > **2x+ —** Damage increases, and cybernetic targets may be DeSynced.
 
@@ -663,6 +761,8 @@ A disorienting discharge set into an object. Has no Evocation form.
 **Target:** Designated target type entering range
 
 **Effect:** ½ SP Damage on trigger
+
+**Duration:** Until triggered
 
 **Defending:** Scramble
 
@@ -682,9 +782,11 @@ An electromagnetic pulse radiating outward. Unaugmented targets feel nothing. Sh
 
 **Effect:** ½ SP Damage to electronics and cyberware
 
+**Duration:** Instant
+
 **Defending:** TECH Essence
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, and cybernetic targets are Shocked.
 
@@ -700,9 +802,11 @@ A wave surging outward. No direct damage — the utility is the point.
 
 **Effect:** Push 1–2m; extinguishes fires and moves loose objects
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Push distance or area increases by \[X\]m.
+> **1x —** Push distance or area increases by 2m.
 >
 > **2x+ —** Both, and targets are Prone.
 
@@ -716,11 +820,13 @@ No combat application whatsoever, and occasionally the only thing that matters.
 
 **Target:** 1 willing person within reach
 
-**Effect:** Target breathes underwater for \[X\] minutes
+**Effect:** Target breathes underwater
+
+**Duration:** WILL hours
 
 **Defending:** None
 
-> **1x —** Duration extends by \[X\] minutes.
+> **1x —** Duration doubles.
 >
 > **2x+ —** Duration extends, and a second target is affected.
 
@@ -732,13 +838,15 @@ Moving air wrapped close, lightening the step and sharpening the reaction.
 
 **Target:** Self
 
-**Effect:** MOB increases by \[X\]; \[X\] bonus to Dodge
+**Effect:** MOB increases by 1, and +1 to Dodge
+
+**Duration:** Concentration
 
 **Defending:** None
 
-> **1x —** Duration extends by \[X\] round.
+> **1x —** Duration extends by 1 round.
 >
-> **2x+ —** MOB and Dodge bonuses each increase by \[X\].
+> **2x+ —** MOB and Dodge bonuses each increase by 1.
 
 *Tags: Concentration*
 
@@ -754,11 +862,31 @@ A whip of raw Aether. Leaves a mark that does not look like anything conventiona
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage or range increases by \[X\].
+> **1x —** Damage or range increases by 1.
 >
 > **2x+ —** Damage increases, and the target is Disarmed.
+
+**Blink**
+
+*Distortion · TN 8 · TH 2 · Short · Utility*
+
+Space folds briefly and you are standing somewhere else. The gap between is not a place, and nobody who has been through it can describe it.
+
+**Target:** Self
+
+**Effect:** Teleport to any point within Short range that you can see
+
+**Duration:** Instant
+
+**Defending:** None
+
+> **1x —** Range extends by one band.
+>
+> **2x+ —** Range extends, and you may bring one willing person you are touching.
 
 **Crush**
 
@@ -770,9 +898,11 @@ A nearby object seized and slammed home at speed. What is available shapes what 
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage or knockback increases by \[X\].
+> **1x —** Damage or knockback increases by 1.
 >
 > **2x+ —** Damage increases, and the target is Prone.
 
@@ -785,6 +915,8 @@ A descent slowed to survivable speed. Can be cast on someone else mid-fall, whic
 **Target:** 1 falling person or object
 
 **Effect:** Negates falling damage and the Prone that follows
+
+**Duration:** Instant
 
 **Defending:** None
 
@@ -802,9 +934,11 @@ A layered barrier that scales with the quality of the cast rather than a flat va
 
 **Effect:** Absorbs SP + net Hits damage of any type for 1 round
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Absorbed damage increases by \[X\].
+> **1x —** Absorbed damage increases by ½ SP.
 >
 > **2x+ —** Absorbed damage increases, and the barrier holds an additional round.
 
@@ -818,9 +952,11 @@ Concussive energy radiating outward from the caster.
 
 **Effect:** SP Damage, or push all targets outward
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Radius increases by \[X\]m.
+> **1x —** Radius increases by 2m.
 >
 > **2x+ —** Radius increases, and targets are Prone.
 
@@ -836,11 +972,49 @@ A barrier tuned against impact and nothing else. The Arcanist who knows a firefi
 
 **Effect:** Absorbs SP × 2 Physical damage for 1 round
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Absorbed damage increases by \[X\].
+> **1x —** Absorbed damage increases by ½ SP.
 >
 > **2x+ —** Absorbed damage increases, and the ward holds an additional round.
+
+**Leaden**
+
+*Gravity · Decay · TN 8 · TH 2 · Short · Offensive*
+
+Everything they do costs more than it should. Their arms are heavier. So is the air.
+
+**Target:** 1 person
+
+**Effect:** Target loses their Fast Action each turn
+
+**Duration:** Until shaken off — BOD Essence at Reset
+
+**Defending:** BOD Essence
+
+> **1x —** A second target is affected.
+>
+> **2x+ —** A second target, and the ground beneath them is Difficult Terrain.
+
+**Modify Weight**
+
+*Gravity · TN 8 · TH 2 · Touch · Utility*
+
+Weight is a negotiation. Most objects have never been asked. Held is not worn — a rifle in someone's hands is a valid target, and the first thing most Arcanists do with this spell is make one too heavy to aim.
+
+**Target:** 1 unworn object you can touch
+
+**Effect:** Object's weight increases or decreases by 50%
+
+**Duration:** WILL hours
+
+**Defending:** None
+
+> **1x —** A further 50% in the same direction.
+>
+> **2x+ —** A further 50% per tier.
 
 **Repel**
 
@@ -852,9 +1026,11 @@ A concussive blast that shoves targets back and rattles them badly.
 
 **Effect:** Push 1–2m
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Push distance increases by \[X\]m.
+> **1x —** Push distance increases by 2m.
 >
 > **2x+ —** Push distance increases, and targets are Disoriented.
 
@@ -870,11 +1046,13 @@ Local space bent to alter how things move through it. A corridor made longer, a 
 
 **Effect:** Alters movement or trajectory; effects negotiated with the GM
 
+**Duration:** Concentration
+
 **Defending:** Dodge, where applicable
 
 > **1x —** Affected area or complexity increases.
 >
-> **2x+ —** Both, or duration extends by \[X\] round.
+> **2x+ —** Both, or duration extends by 1 round.
 
 *Tags: Concentration*
 
@@ -888,11 +1066,13 @@ Hardened earth or concrete pulled up into a wall. Leaves debris behind when it d
 
 **Target:** Self or 1 ally within reach
 
-**Effect:** Grants Heavy Cover; Integrity \[X\]
+**Effect:** Grants Heavy Cover; Integrity SP × 2
+
+**Duration:** Until destroyed
 
 **Defending:** None
 
-> **1x —** Integrity increases by \[X\].
+> **1x —** Integrity increases by ½ SP.
 >
 > **2x+ —** Integrity increases, and the barrier covers an additional target.
 
@@ -900,17 +1080,19 @@ Hardened earth or concrete pulled up into a wall. Leaves debris behind when it d
 
 *Flesh · TN 8 · TH 2 · Touch · Utility*
 
-Not a disguise in the conventional sense — the face is genuinely different. Fools cameras, fools people, does not fool gait analysis or a TAG scan.
+The face is genuinely different, not disguised. Fools cameras, fools people, does not fool gait analysis or a TAG scan.
 
 **Target:** 1 person within reach
 
-**Effect:** Target's facial features are reshaped
+**Effect:** Alter facial features — human, or a supernatural type you have seen firsthand. +1 TH to appear as a specific person.
+
+**Duration:** Concentration
 
 **Defending:** WILL Essence, if unwilling
 
-> **1x —** Realism improves, or the change holds without active concentration.
+> **1x —** Realism improves, or the change holds without Concentration.
 >
-> **2x+ —** Both, or gestures and vocal patterns are mimicked as well.
+> **2x+ —** Both, and gestures and vocal patterns are mimicked as well.
 
 *Tags: Concentration*
 
@@ -924,9 +1106,11 @@ A lance of solid metal formed and driven home.
 
 **Effect:** SP Damage, armor piercing
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Range or armor penetration increases by \[X\].
+> **1x —** Range or armor penetration increases by 1.
 >
 > **2x+ —** Both, and the target is Bleeding.
 
@@ -942,11 +1126,13 @@ Tissue knitted back together. Sovereign Soul applies.
 
 **Effect:** Restores 1d SP Health Levels
 
+**Duration:** Instant
+
 **Defending:** WILL Essence, if unwilling
 
-> **1x —** Healing increases by \[X\].
+> **1x —** Healing increases by ½ SP.
 >
-> **2x+ —** Healing increases, and the target resists damage for \[X\] rounds.
+> **2x+ —** Healing increases, and the target resists damage for 1 round.
 
 **Staunch**
 
@@ -958,11 +1144,13 @@ Seals what is open and smothers what is burning. Handles what the source left be
 
 **Effect:** Ends Bleeding, Burning, or Shocked
 
+**Duration:** Instant
+
 **Defending:** WILL Essence, if unwilling
 
 > **1x —** A second ongoing condition ends.
 >
-> **2x+ —** All ongoing damage conditions end, and \[X\] Health Levels are restored.
+> **2x+ —** All ongoing damage conditions end, and ½ SP Health Levels are restored.
 
 **Stone Lash**
 
@@ -973,6 +1161,8 @@ Loose debris animated and whipped outward. Requires debris to be present, which 
 **Target:** 1 person or object
 
 **Effect:** SP Damage
+
+**Duration:** Instant
 
 **Defending:** Dodge
 
@@ -990,9 +1180,11 @@ Skin hardened to the density of stone. Movement is unaffected, which is the part
 
 **Effect:** Absorbs SP damage of any type for 1 round
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Absorbed damage increases by \[X\].
+> **1x —** Absorbed damage increases by ½ SP.
 >
 > **2x+ —** Absorbed damage increases, and the effect holds an additional round.
 
@@ -1006,11 +1198,31 @@ A jagged spike driven up through the ground. Requires the target to be standing 
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\], or knockback added.
+> **1x —** Damage increases by ½ SP, or knockback added.
 >
 > **2x+ —** Damage increases, and the target is Restrained — the spike pins rather than pierces clean.
+
+**Sure Hand**
+
+*Flesh · Insight · TN 8 · TH 2 · Touch · Utility*
+
+The hesitation goes out of them. Whatever they were about to do, they do it like they have done it a thousand times.
+
+**Target:** 1 willing person within reach
+
+**Effect:** +1 die on their next Skill Check or attack
+
+**Duration:** 1 round
+
+**Defending:** None
+
+> **1x —** The bonus increases by 1.
+>
+> **2x+ —** The bonus increases by 1, and applies to their next two actions.
 
 ## **Mind**
 
@@ -1023,6 +1235,8 @@ Single word, single action, no complexity. The target knows it happened.
 **Target:** 1 person
 
 **Effect:** Target performs one simple action on their next turn
+
+**Duration:** 1 round
 
 **Defending:** WILL Essence
 
@@ -1038,11 +1252,13 @@ Psychic terror radiating outward. A wrongness nobody can source and a strong urg
 
 **Target:** All targets in the area
 
-**Effect:** Targets take \[X\] penalty while in the area
+**Effect:** Targets take a −1 penalty while in the area
+
+**Duration:** Concentration
 
 **Defending:** WILL Essence
 
-> **1x —** Radius or duration increases by \[X\].
+> **1x —** Radius increases by 2m, or duration by 1 round.
 >
 > **2x+ —** Radius increases, and targets are Frightened.
 
@@ -1058,29 +1274,51 @@ Functionally identical to the ordnance it is named after, minus the ordnance.
 
 **Effect:** Area counts as Blind for 1 round
 
+**Duration:** 1 round
+
 **Defending:** Scramble
 
-> **1x —** Duration or radius increases by \[X\].
+> **1x —** Duration increases by 1 round, or radius by 2m.
 >
 > **2x+ —** Duration increases, and targets who fail are Blinded.
 
 *Tags: AOE*
 
+**Fumble**
+
+*Compulsion · Telekinesis · TN 8 · TH 2 · Short · Offensive*
+
+Their grip decides, briefly, that it belongs to someone else.
+
+**Target:** 1 person
+
+**Effect:** Target is Disarmed
+
+**Duration:** Instant
+
+**Defending:** REF Essence
+
+> **1x —** The dropped item lands 2m away.
+>
+> **2x+ —** The item lands away from them, and the target is Prone reaching for it.
+
 **Mind Nudge**
 
 *Compulsion · TN 8 · TH 2 · Short · Offensive · Spirit*
 
-A light push against a target's attention. Not control — just interference.
+They were already going somewhere. A nudge with it means they arrive sooner and commit harder than they meant to. A nudge against it means they hesitate at exactly the wrong moment. Either way, the path was theirs. You only leaned on it.
 
 **Target:** 1 person
 
-**Effect:** Target's next action takes \[X\] penalty
+**Effect:** Name a course the target is already on. Push, and they commit — +2 to Social checks that move them further along it. Hold, and they falter — −2 to any action that continues it.
+
+**Duration:** Until shaken off — WILL Essence at Reset
 
 **Defending:** WILL Essence
 
-> **1x —** The target's next two actions are affected.
+> **1x —** A second target is affected.
 >
-> **2x+ —** Duration extends, and the target is Disoriented.
+> **2x+ —** A second target, and the target acts on the nudge rather than merely leaning toward it.
 
 **Rewrite Memory**
 
@@ -1091,6 +1329,8 @@ A few minutes rewritten, a face swapped out. It holds under casual recall and fr
 **Target:** 1 person within reach
 
 **Effect:** Alters a brief, recent memory
+
+**Duration:** Permanent
 
 **Defending:** WILL Essence
 
@@ -1110,22 +1350,13 @@ An affliction drawn out and dispersed. Does not reach what the body has already 
 
 **Effect:** Removes Bleeding, Blinded, Deafened, Disoriented, Frightened, or Poisoned
 
+**Duration:** Instant
+
 **Defending:** WILL Essence, if unwilling
 
 > **1x —** A second condition is removed.
 >
 > **2x+ —** A second condition is removed, and the target resists reacquiring it this scene.
-
-**Counterspell**\
-*Decay · TN 8 · Short · Utility*
-
-You attempt to unravel the Aether another caster is still gathering. Nothing about a charged spell wants to hold together, and you’re helping to rip it apart.
-
-**Target:** 1 creature charging a spell, within line of sight\
-**Effect:** If successful, the spell is dispersed and the caster loses their progress.\
-**Defending:** Opposed Spellcraft (Evocation) check
-
-Counterspell has no Threshold and no Overflow.
 
 **Decay Burst**
 
@@ -1135,11 +1366,13 @@ Decay accelerated through cloth, plate, and casing alike. The Aether does not re
 
 **Target:** 1 person's worn or carried gear
 
-**Effect:** Strips \[X\] Integrity from armor or equipment
+**Effect:** Strips SP Integrity from armor or equipment
+
+**Duration:** Until repaired
 
 **Defending:** BOD Essence
 
-> **1x —** Integrity stripped increases by \[X\], or a second item is affected.
+> **1x —** Integrity stripped increases by ½ SP, or a second item is affected.
 >
 > **2x+ —** Both, or the affected item is destroyed outright.
 
@@ -1152,6 +1385,8 @@ A significant working with significant implications, and one that should be ente
 **Target:** 1 person within reach
 
 **Effect:** Prevents astral travel, possession, or departure at death
+
+**Duration:** WILL hours
 
 **Defending:** WILL Essence, if unwilling
 
@@ -1169,11 +1404,31 @@ A spirit anchored against intrusion. Does not stop physical harm. Stops the othe
 
 **Effect:** Absorbs SP × 2 Spirit damage; resists possession and compulsion
 
+**Duration:** 1 round
+
 **Defending:** None
 
-> **1x —** Absorbed damage increases by \[X\].
+> **1x —** Absorbed damage increases by ½ SP.
 >
 > **2x+ —** Absorbed damage increases, and the ward holds an additional round.
+
+**Tracer**
+
+*Spirit · Insight · TN 8 · TH 2 · Short · Utility*
+
+A thread tied to something that doesn't know it's carrying it.
+
+**Target:** 1 person or object
+
+**Effect:** You sense the target's direction and rough distance
+
+**Duration:** WILL hours
+
+**Defending:** WILL Essence
+
+> **1x —** Duration doubles.
+>
+> **2x+ —** Duration doubles, and you sense whether the target is moving, still, or in distress.
 
 **Wither**
 
@@ -1185,9 +1440,11 @@ Vitality drawn straight out. The damage does not look like an injury. It looks l
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** BOD Essence
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, and the target is Agonized.
 
@@ -1201,9 +1458,11 @@ Spiritual fury poured into a weapon. The energy discharges on contact whether th
 
 **Effect:** Adds SP Damage to the next successful attack
 
+**Duration:** Until your next attack
+
 **Defending:** None to imbue; the attack resolves normally
 
-> **1x —** Bonus damage increases by \[X\].
+> **1x —** Bonus damage increases by ½ SP.
 >
 > **2x+ —** Bonus damage increases, and the target is Agonized.
 
@@ -1211,7 +1470,7 @@ Spiritual fury poured into a weapon. The energy discharges on contact whether th
 
 *TN 8 · TH 3*
 
-Three net Hits requires either enough dice to absorb some Duds or enough control to avoid them. Advanced spells reward the Arcanist who has invested in rank.
+Three net Hits requires either enough dice to absorb some Duds or enough control to avoid them. Advanced spells reward the caster who has invested in rank.
 
 ## **Elements**
 
@@ -1224,6 +1483,8 @@ A bolt that strikes and then keeps going. Bringing more dice to this roll is not
 **Target:** 1 person, then additional targets within 2m of the last
 
 **Effect:** SP Damage to each target struck
+
+**Duration:** Instant
 
 **Defending:** Dodge on the initial target; Scramble for each arc
 
@@ -1245,9 +1506,11 @@ A ball of flame thrown to a point and detonating on arrival. The radius is unfor
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Radius increases by \[X\]m.
+> **1x —** Radius increases by 2m.
 >
 > **2x+ —** Radius increases, and targets who fail are Burning.
 
@@ -1261,13 +1524,15 @@ A wall of ice raised along a line. Blocks line of sight and movement until destr
 
 **Target:** A line up to 5m long
 
-**Effect:** Grants Full Cover; Integrity \[X\]
+**Effect:** Grants Full Cover; Integrity SP × 2
+
+**Duration:** Until destroyed
 
 **Defending:** None
 
-> **1x —** Length or Integrity increases by \[X\].
+> **1x —** Length or Integrity increases by ½ SP.
 >
-> **2x+ —** Both, and the wall shatters outward when destroyed, dealing ½ SP Damage within \[X\]m.
+> **2x+ —** Both, and the wall shatters outward when destroyed, dealing ½ SP Damage within 2m.
 
 *Tags: Cold*
 
@@ -1281,9 +1546,11 @@ The same damage as Ice Spear in a narrower, faster delivery, and it holds the ta
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, and the target is Restrained and Agonized.
 
@@ -1301,9 +1568,11 @@ The expensive answer to not knowing what is coming.
 
 **Effect:** Absorbs SP × 2 damage of any type
 
+**Duration:** Concentration
+
 **Defending:** None
 
-> **1x —** Absorbed damage increases by \[X\].
+> **1x —** Absorbed damage increases by ½ SP.
 >
 > **2x+ —** Absorbed damage increases, and the barrier holds an additional round.
 
@@ -1319,11 +1588,33 @@ A beam of Aether sustained across rounds for as long as the Arcanist can hold it
 
 **Effect:** SP Damage per round held
 
+**Duration:** Concentration
+
 **Defending:** Dodge, each round
 
-> **1x —** Beam length or damage per round increases by \[X\].
+> **1x —** Beam length or damage per round increases by 1.
 >
 > **2x+ —** Both, and targets are Agonized.
+
+*Tags: Concentration*
+
+**Doorway**
+
+*Distortion · Glass · TN 8 · TH 3 · Close · Utility*
+
+A passage opened through a wall, a floor, a locked shutter. It is not a hole. The material is still there, and closes behind you as though nothing happened.
+
+**Target:** One surface up to 1m thick
+
+**Effect:** A passage opens; anyone may use it
+
+**Duration:** Concentration
+
+**Defending:** None
+
+> **1x —** Thickness increases by 1m.
+>
+> **2x+ —** Thickness increases, and the passage can be closed early at will.
 
 *Tags: Concentration*
 
@@ -1337,9 +1628,11 @@ A wall of kinetic force driven down a line. Anything that hits something solid o
 
 **Effect:** Shove 1–3m; SP Damage on collision
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Shove distance increases by \[X\]m, or additional targets are caught.
+> **1x —** Shove distance increases by 2m, or additional targets are caught.
 >
 > **2x+ —** Distance increases, and targets are Prone.
 
@@ -1357,11 +1650,31 @@ A chunk of masonry, a vehicle panel, a section of wall. Requires something suita
 
 **Effect:** SP Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage or knockback increases by \[X\].
+> **1x —** Damage or knockback increases by 1.
 >
 > **2x+ —** Damage increases, and the target is Prone and Injured.
+
+**Ironhide**
+
+*Stone · Vitality · TN 8 · TH 3 · Touch · Defensive*
+
+Their armor remembers being stone. It holds together longer than it has any right to.
+
+**Target:** 1 person's worn armor
+
+**Effect:** Armor gains SP Integrity
+
+**Duration:** Scene
+
+**Defending:** None
+
+> **1x —** Integrity bonus increases by ½ SP.
+>
+> **2x+ —** Integrity increases, and armor lost to damage is restored at the end of the scene.
 
 **Knit Bone**
 
@@ -1373,11 +1686,31 @@ The fracture, the torn nerve, the joint that stopped answering. Takes the place 
 
 **Effect:** Removes the Injured condition
 
+**Duration:** Instant
+
 **Defending:** WILL Essence, if unwilling
 
-> **1x —** \[X\] Health Levels are restored alongside the repair.
+> **1x —** ½ SP Health Levels are restored alongside the repair.
 >
-> **2x+ —** All Injured conditions are repaired, and \[X\] Health Levels are restored.
+> **2x+ —** All Injured conditions are repaired, and ½ SP Health Levels are restored.
+
+**Quicken**
+
+*Flesh · Telekinesis · TN 8 · TH 3 · Touch · Utility*
+
+The body moves the way it does in the half-second before you decide to move it. Most people find it unpleasant. Nobody turns it down twice.
+
+**Target:** 1 willing person within reach
+
+**Effect:** Target gains one additional Fast Action on their next turn
+
+**Duration:** 1 round
+
+**Defending:** Sovereign Soul applies if unwilling
+
+> **1x —** A second target is affected.
+>
+> **2x+ —** A second target, and each gains +1 MOB on that turn.
 
 **Spike Trap**
 
@@ -1389,6 +1722,8 @@ A field of spikes waiting under the floor. Has no Evocation form — the shaping
 
 **Effect:** SP Damage on trigger
 
+**Duration:** Until triggered
+
 **Defending:** Scramble
 
 > **1x —** Duration or area increases at inscription.
@@ -1396,6 +1731,24 @@ A field of spikes waiting under the floor. Has no Evocation form — the shaping
 > **2x+ —** Targets who fail are Restrained.
 
 *Tags: AOE, Ench.*
+
+**Unmake**
+
+*Metal · Decay · TN 8 · TH 3 · Short · Offensive*
+
+Metal remembers being ore. It takes very little to remind it.
+
+**Target:** 1 weapon, tool, or piece of equipment
+
+**Effect:** Target item's Integrity is reduced to 0 and it stops functioning
+
+**Duration:** Until repaired
+
+**Defending:** REF Essence to keep it clear
+
+> **1x —** A second item is affected.
+>
+> **2x+ —** A second item, and the first is destroyed outright.
 
 ## **Mind**
 
@@ -1409,9 +1762,11 @@ Brighter, broader, and harder to look away from than Flashbang.
 
 **Effect:** Area counts as Blind for 1 round
 
+**Duration:** 1 round
+
 **Defending:** Scramble
 
-> **1x —** Duration or radius increases by \[X\].
+> **1x —** Duration increases by 1 round, or radius by 2m.
 >
 > **2x+ —** Duration increases, and targets who fail are Blinded and Disoriented.
 
@@ -1427,9 +1782,11 @@ Directions invert, faces shift, the floor stops being reliable. The target acts 
 
 **Effect:** Target's perception of their surroundings is distorted for 1–2 rounds
 
+**Duration:** Until shaken off — WILL Essence at Reset
+
 **Defending:** WILL Essence
 
-> **1x —** Duration extends by \[X\] round.
+> **1x —** Duration extends by 1 round.
 >
 > **2x+ —** Duration extends, the target is Disoriented, and may act against their own interests.
 
@@ -1443,13 +1800,35 @@ Vision pushed into the infrared. Does not see through walls — sees through the
 
 **Effect:** Heat sources resolve through darkness, smoke, and thin barriers
 
+**Duration:** Concentration
+
 **Defending:** None
 
-> **1x —** Duration or range increases by \[X\].
+> **1x —** Duration increases by 1 round, or range by one band.
 >
-> **2x+ —** Both, and residual heat can be tracked for \[X\] minutes after a target has left.
+> **2x+ —** Both, and residual heat can be tracked for WILL minutes after a target has left.
 
 *Tags: Concentration*
+
+**Invisicloak**
+
+*Illusion · Barrier · TN 8 · TH 3 · Close · Utility*
+
+A dome of shaped air that does not carry light out of itself. From outside there is nothing. From inside, everything is exactly where you left it.
+
+**Target:** An area, centered on a point within reach
+
+**Effect:** A dome of up to 3m radius, placed where it is cast. Anything inside is invisible from outside; vision from inside is unaffected
+
+**Duration:** Concentration
+
+**Defending:** INT Essence to notice the seam
+
+> **1x —** Extend the dome by up to 2m.
+>
+> **2x+ —** Extend the dome, and it moves with the caster rather than staying where it was placed.
+
+*Tags: AOE, Concentration*
 
 **Mirror Image**
 
@@ -1461,15 +1840,35 @@ Duplicates moving in imperfect synchrony with the original. Each one dissipates 
 
 **Effect:** 1–3 illusory duplicates; attacks may strike a duplicate instead
 
+**Duration:** Concentration
+
 **Defending:** INT Essence to identify the original
 
 > **1x —** One additional duplicate.
 >
-> **2x+ —** Additional duplicates, and they act independently for \[X\] rounds.
+> **2x+ —** Additional duplicates, and they act independently for 1 round.
 
 *Tags: Concentration*
 
 ## **Soul**
+
+**Consecrate**
+
+*Spirit · Wrath · TN 8 · TH 3 · Touch · Utility*
+
+Some things do not care about steel. They care about this.
+
+**Target:** 1 weapon, or the caster's own hands
+
+**Effect:** The weapon gains the Withering (Holy) tag on the next successful attack. Holy affects vampires and things like them; werewolves, Arcanists, cyborgs and ordinary people feel nothing.
+
+**Duration:** Until your next attack
+
+**Defending:** None
+
+> **1x —** The tag applies to attacks for 1 round.
+>
+> **2x+ —** The tag applies for 2 rounds.
 
 **Purge**
 
@@ -1481,25 +1880,13 @@ A harder working than Cleanse, reaching what has set deeper. The Aether does not
 
 **Effect:** Removes Agonized, Paralyzed, Restrained, Stunned, or DeSync
 
+**Duration:** Instant
+
 **Defending:** WILL Essence, if unwilling
 
 > **1x —** A second condition is removed.
 >
 > **2x+ —** All conditions from the Cleanse list are removed as well.
-
-**Silence**\
-*Binding · TN 8 · TH 3 · Short · Offensive*
-
-The vocal cords stop answering. Breath still moves, the jaw still works, and nothing at all comes out. It stops them from speaking. It does not stop them from shooting you.
-
-**Target:** 1 person\
-**Effect:** Target cannot speak or make vocal sound. They cannot cast.\
-**Defending:** BOD Essence
-
-> **1x —** Duration extends by \[X\] rounds.\
-> **2x+ —** Duration extends, and the target is Disoriented.
-
-*Tags: Concentration*
 
 **Tether**
 
@@ -1510,6 +1897,8 @@ It does not stabilize them and does not wake them. It buys one round. Cannot be 
 **Target:** 1 Dying person within reach
 
 **Effect:** Next Death check is an automatic success
+
+**Duration:** Until the next Reset
 
 **Defending:** None
 
@@ -1535,9 +1924,11 @@ At this scale the spell is pure force rather than arc discharge, and the EMP tag
 
 **Effect:** SP × 2 Damage
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Line length extends by \[X\]m.
+> **1x —** Line length extends by 2m.
 >
 > **2x+ —** Line extends, and all targets hit are Shocked and Stunned.
 
@@ -1553,11 +1944,13 @@ A pillar of ice erupting from the ground. It remains afterward as a physical obs
 
 **Effect:** SP × 2 Damage
 
+**Duration:** Instant — the spire remains until destroyed
+
 **Defending:** Scramble to move clear before emergence
 
-> **1x —** Damage or spire size increases by \[X\].
+> **1x —** Damage or spire size increases by 1.
 >
-> **2x+ —** Damage increases, the target is Restrained, and the spire shatters when destroyed for ½ SP within \[X\]m.
+> **2x+ —** Damage increases, the target is Restrained, and the spire shatters when destroyed for ½ SP within 2m.
 
 *Tags: Cold*
 
@@ -1571,9 +1964,11 @@ Shards driven simultaneously at everyone the caster has decided is a problem.
 
 **Effect:** SP Damage distributed as the caster chooses
 
+**Duration:** Instant
+
 **Defending:** Dodge, per target
 
-> **1x —** \[X\] additional projectiles, or damage per projectile increases.
+> **1x —** 2 additional projectiles, or damage per projectile increases.
 >
 > **2x —** Additional projectiles, and targets are Restrained.
 >
@@ -1591,9 +1986,11 @@ A roaring column of flame. Structures burn. Cover burns. The caster should have 
 
 **Effect:** SP × 2 Damage
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Radius increases by \[X\]m.
+> **1x —** Radius increases by 2m.
 >
 > **2x+ —** Radius increases, and targets who fail are Burning and Agonized.
 
@@ -1611,11 +2008,31 @@ A spear of pure Aether that passes through barriers as though they were not ther
 
 **Effect:** SP × 2 Damage; ignores armor and barriers
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, a second target in line is struck, and both are Agonized.
+
+**Borrowed Time**
+
+*Distortion · TN 8 · TH 4 · Touch · Utility*
+
+A moment set aside and handed back when it is needed. The Aether does not care that it has already happened.
+
+**Target:** 1 willing person within reach
+
+**Effect:** Once before the Duration ends, the target may reroll any one check
+
+**Duration:** Scene
+
+**Defending:** None
+
+> **1x —** The reroll may be used twice.
+>
+> **2x+ —** Twice, and the target chooses which result stands on each.
 
 **Gravity Crush**
 
@@ -1627,9 +2044,11 @@ Local gravity multiplied. Loose objects become part of the problem.
 
 **Effect:** SP Damage, and targets are driven Prone
 
+**Duration:** Instant
+
 **Defending:** Scramble
 
-> **1x —** Radius or damage increases by \[X\].
+> **1x —** Radius or damage increases by ½ SP.
 >
 > **2x+ —** Both, and targets are Restrained and Agonized.
 
@@ -1645,9 +2064,11 @@ Briefly outside physical reality. The re-entry is not always clean.
 
 **Effect:** Intangible — passes through solids, immune to physical harm, cannot affect anything material
 
+**Duration:** Concentration
+
 **Defending:** None
 
-> **1x —** Duration extends by \[X\] round.
+> **1x —** Duration extends by 1 round.
 >
 > **2x+ —** Duration extends, and one additional person can be carried through.
 
@@ -1663,9 +2084,11 @@ Debris, furniture, loose fittings — whatever the room is willing to give up, d
 
 **Effect:** SP Damage across multiple impacts
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** \[X\] additional strikes, or damage per strike increases.
+> **1x —** 2 additional strikes, or damage per strike increases.
 >
 > **2x+ —** Additional strikes, and the target is Prone and Bleeding.
 
@@ -1681,9 +2104,11 @@ Something genuinely large, lifted and brought down. Leaves the room substantiall
 
 **Effect:** SP × 2 Damage
 
+**Duration:** Instant
+
 **Defending:** Dodge
 
-> **1x —** Damage increases by \[X\].
+> **1x —** Damage increases by ½ SP.
 >
 > **2x+ —** Damage increases, the target is Prone and Injured, and nearby structure may collapse.
 
@@ -1696,6 +2121,8 @@ A wide array of spikes set into the ground and left to wait. Has no Evocation fo
 **Target:** Designated target type entering the area
 
 **Effect:** SP Damage on trigger
+
+**Duration:** Until triggered
 
 **Defending:** Scramble
 
@@ -1717,9 +2144,11 @@ Light intense enough to overwhelm across a wide radius. Anyone with optical augm
 
 **Effect:** Area counts as Blind for 1 round
 
+**Duration:** 1 round
+
 **Defending:** Scramble
 
-> **1x —** Radius or duration increases by \[X\].
+> **1x —** Radius increases by 2m, or duration by 1 round.
 >
 > **2x+ —** Both, targets who fail are Blinded, and optical cyberware may be DeSynced.
 
@@ -1735,9 +2164,11 @@ They know it happened, they remember it happening, and they were present for all
 
 **Effect:** Caster controls the target's action for 1 round
 
+**Duration:** 1 round
+
 **Defending:** WILL Essence
 
-> **1x —** Duration extends by \[X\] round.
+> **1x —** Duration extends by 1 round.
 >
 > **2x+ —** Duration extends, a complex or multi-part action can be forced, and the target is Stunned on release.
 
@@ -1753,9 +2184,11 @@ The most powerful healing available through Evocation, and still not a resurrect
 
 **Effect:** Restores SP × 2 Health Levels and ends Dying
 
+**Duration:** Instant
+
 **Defending:** WILL Essence, if unwilling
 
-> **1x —** \[X\] additional Health Levels, and one condition is removed.
+> **1x —** ½ SP additional Health Levels, and one condition is removed.
 >
 > **2x+ —** Full Health Level restoration, and all conditions from the Cleanse list are removed.
 
@@ -1765,14 +2198,380 @@ The most powerful healing available through Evocation, and still not a resurrect
 
 Held, not cast and forgotten. The Arcanist is carrying something, and everything else they do is harder for it. Letting go is always available, and always a decision someone has to say out loud.
 
-**Target:** 1 body dead within \[X\] minutes
+**Target:** 1 body dead within WILL minutes
 
 **Effect:** Holds the soul in place and arrests decay
 
+**Duration:** Concentration
+
 **Defending:** None
 
-> **1x —** The ward persists \[X\] minutes after concentration ends.
+> **1x —** The ward persists WILL minutes after concentration ends.
 >
-> **2x+ —** The ward persists \[X\] hours after concentration ends, and the body is protected from further harm.
+> **2x+ —** The ward persists WILL hours after concentration ends, and the body is protected from further harm.
 
 *Tags: Concentration*
+
+# **Inscribed Spells**
+
+These spells have no Evocation form. The Aether will not hold these shapes in open air — they exist only inscribed into an object and released when something meets their trigger.
+
+Traps and wards use a Proximity trigger. Target type and range are set at inscription. Contact is not an option: a trap that goes off when touched is a trap that goes off in your hand.
+
+Gear inscriptions use a Contact trigger, and they are reactive rather than always-on. The inscription spends a charge when the moment it was made for arrives — a round strikes the plate, someone grabs for the weapon.
+
+Permanent workings are Alchemy only. They are not stored spells released by a trigger — they are changes to what the object is, and they do not spend charges.
+
+Each entry lists its Threshold and the time that Threshold requires. Area and effect are defined at inscription rather than by the spell.
+
+## **Traps**
+
+**Lightning Trap**
+
+*Lightning · TN 8 · TH 4 · 4 hours · Offensive · Elemental*
+
+A discharge waiting in an object for someone to come too close.
+
+**Target:** Designated target type entering range
+
+**Effect:** SP Damage on trigger
+
+**Duration:** Until triggered
+
+**Defending:** Scramble
+
+> **1x —** Damage increases by ½ SP, or area increases by 2m.
+>
+> **2x+ —** Both, and targets who fail are Shocked.
+
+*Tags: EMP, Ench.*
+
+**Spark Trap**
+
+*Lightning · TN 8 · TH 4 · 4 hours · Offensive · Elemental*
+
+A disorienting discharge set into an object. Less damage than its sibling, more confusion.
+
+**Target:** Designated target type entering range
+
+**Effect:** ½ SP Damage on trigger
+
+**Duration:** Until triggered
+
+**Defending:** Scramble
+
+> **1x —** Additional triggers, or area increases by 2m.
+>
+> **2x+ —** Targets who fail are Shocked or DeSynced.
+
+*Tags: EMP, Ench.*
+
+**Frost Trap**
+
+*Water · TN 8 · TH 4 · 4 hours · Offensive · Elemental*
+
+Cold laid into the floor, waiting. It does not hurt much. It does not need to.
+
+**Target:** Designated target type entering the area
+
+**Effect:** ½ SP Damage, and targets are Restrained
+
+**Duration:** Until triggered
+
+**Defending:** Scramble
+
+> **1x —** Area increases by 2m.
+>
+> **2x+ —** Area increases, and the ground remains Difficult Terrain for 1 round after.
+
+*Tags: AOE, Cold, Ench.*
+
+**Spike Trap**
+
+*Stone · TN 8 · TH 5 · 5 hours · Offensive · Physical*
+
+Stone spikes waiting under the floor. The shaping takes longer than a live cast allows, which is why nobody has ever thrown one.
+
+**Target:** Designated target type entering the area
+
+**Effect:** SP Damage on trigger
+
+**Duration:** Until triggered
+
+**Defending:** Scramble
+
+> **1x —** Area increases by 2m.
+>
+> **2x+ —** Area increases, and targets who fail are Restrained.
+
+*Tags: AOE, Ench.*
+
+**Stasis Trap**
+
+*Distortion · Barrier · TN 8 · TH 5 · 5 hours · Offensive*
+
+Space closes around them. Nothing touches them, nothing hurts them, and they are not going anywhere.
+
+**Target:** Designated target type entering the area
+
+**Effect:** Target is held immobile and cannot act. They take no damage and deal none.
+
+**Duration:** Until shaken off — BOD Essence at Reset
+
+**Defending:** REF Essence
+
+> **1x —** A second target can be held.
+>
+> **2x+ —** A second target, and the field muffles sound — nobody inside can call for help.
+
+*Tags: Ench.*
+
+**Spikefield**
+
+*Stone · TN 8 · TH 6 · 6 hours · Offensive · Physical*
+
+A wide array of spikes set into the ground and left to wait. The most expensive thing an Enchanter can leave in a hallway.
+
+**Target:** Designated target type entering the area
+
+**Effect:** SP Damage on trigger
+
+**Duration:** Until triggered
+
+**Defending:** Scramble
+
+> **1x —** Area or spike count increases.
+>
+> **2x+ —** Targets who fail are Restrained and Bleeding.
+
+*Tags: AOE, Ench.*
+
+## **Wards**
+
+**Watchward**
+
+*Insight · TN 8 · TH 3 · 3 hours · Utility*
+
+You will know. Not where you are, not what you are doing — you will simply know, the way you know someone is standing behind you.
+
+**Target:** Designated target type crossing the warded line
+
+**Effect:** The inscriber is alerted silently, at any distance on the same plane
+
+**Duration:** Until triggered
+
+**Defending:** None
+
+> **1x —** The alert carries direction and rough distance.
+>
+> **2x+ —** Direction and distance, and a sense of how many crossed.
+
+*Tags: Ench.*
+
+**Threshold Ward**
+
+*Barrier · Binding · TN 8 · TH 5 · 5 hours · Defensive*
+
+A door that is still a door, unless you are the thing it was made to keep out.
+
+**Target:** A doorway, window, or opening up to 3m wide
+
+**Effect:** The designated target type cannot pass. Everyone else walks through unaware.
+
+**Duration:** Until triggered
+
+**Defending:** BOD Essence to force through, taking ½ SP Damage on success
+
+> **1x —** The opening warded may be larger, or a second target type named.
+>
+> **2x+ —** Both, and forcing through alerts the inscriber.
+
+*Tags: Ench.*
+
+## **Gear Inscriptions**
+
+**Sure Grip**
+
+*Telekinesis · TN 8 · TH 3 · 3 hours · Utility*
+
+The weapon decides it is staying.
+
+**Target:** The bearer, when the object would leave their hand
+
+**Effect:** The Disarmed condition is negated
+
+**Duration:** Until triggered
+
+**Defending:** None
+
+> **1x —** The object also returns to hand if already dropped, within 2m.
+>
+> **2x+ —** Returns from any distance within Short range.
+
+*Tags: Ench.*
+
+**Turning Rune**
+
+*Metal · Distortion · TN 8 · TH 5 · 5 hours · Defensive*
+
+The round does not stop. It arrives somewhere else.
+
+**Target:** The wearer, when struck
+
+**Effect:** The attack is redirected and misses entirely
+
+**Duration:** Until triggered
+
+**Defending:** None
+
+> **1x —** The redirected attack strikes a target within 2m of the wearer.
+>
+> **2x+ —** It strikes the attacker.
+
+*Tags: Ench.*
+
+## **Recovery**
+
+**Second Wind**
+
+*Vitality · Binding · TN 8 · TH 5 · 5 hours · Utility*
+
+Tolerance does not travel well, but it can be set down somewhere and picked up later. This is storage, not generation — charging costs the usual 1 TOL per charge, so nobody profits by filling and emptying one. What it buys is timing, and generosity: the Arcanist who fills it need not be the one who uses it.
+
+**Target:** The bearer
+
+**Effect:** Washes away 1 point of accumulated strain, restoring 1 TOL
+
+**Duration:** Until triggered
+
+**Defending:** None
+
+> **1x —** Restores 2 TOL.
+>
+> **2x+ —** Restores 3 TOL.
+
+*Tags: Ench.*
+
+## **Lifestyle**
+
+**Everlight**
+
+*Fire · TN 8 · TH 3 · 3 hours · Utility*
+
+The most common inscription in NYTE City, and the one nobody looks at twice.
+
+**Target:** The Talisman
+
+**Effect:** Sheds light as a lamp out to 10m, raising Dark to Dim and Dim to Bright
+
+**Duration:** WILL hours
+
+**Defending:** None
+
+> **1x —** Brighter, or the color is the bearer's to choose.
+>
+> **2x+ —** Both, and the light can be dimmed to nothing and back without spending another charge.
+
+*Tags: Ench.*
+
+**Hearthstone**
+
+*Fire · Air · TN 8 · TH 3 · 3 hours · Utility*
+
+A stone in the corner and the room stops being a problem. Squats and safehouses across the Zones run on these.
+
+**Target:** An enclosed space up to 10m across
+
+**Effect:** The space holds a comfortable temperature and stays dry, regardless of what it is doing outside
+
+**Duration:** WILL hours
+
+**Defending:** None
+
+> **1x —** The space may be larger, or the air is filtered clean as well.
+>
+> **2x+ —** Both.
+
+*Tags: AOE, Ench.*
+
+## **Permanent Workings**
+
+**Consecration**
+
+*Spirit · Wrath · TN 8 · TH 8 · 8 days · Utility*
+
+The weapon was always going to cut this way. Consecration does not add anything; it settles an argument the blade was already having.
+
+**Target:** One weapon
+
+**Effect:** The weapon permanently gains the Withering (Holy) tag. Holy affects vampires and things like them; werewolves, Arcanists, cyborgs and ordinary people feel nothing.
+
+**Duration:** Permanent
+
+**Defending:** None
+
+> **1x —** Also functions against things that would normally ignore the tag.
+>
+> **2x+ —** The weapon is visibly marked, and things that should fear it do.
+
+*Tags: Alch.*
+
+**Warding — Elemental**
+
+*Binding · Barrier · TN 8 · TH 7 · 7 days · Defensive*
+
+Armor stops what it was made to stop. The Aether was never on that list. Warding does not add protection so much as widen the definition of what the armor considers its business.
+
+**Target:** One suit of armor, Mid quality or better
+
+**Effect:** The armor’s RES applies to Elemental damage. Occupies one mod slot.
+
+**Duration:** Permanent
+
+**Defending:** None
+
+> **1x —** RES against Elemental damage increases by 1.
+>
+> **2x+ —** RES against Elemental damage increases by 2.
+
+*Tags: Alch.*
+
+**Warding — Spirit**
+
+*Binding · Barrier · TN 8 · TH 8 · 8 days · Defensive*
+
+The same working, pitched at something harder to argue with.
+
+**Target:** One suit of armor, Mid quality or better
+
+**Effect:** The armor’s RES applies to Spirit damage. Occupies one mod slot.
+
+**Duration:** Permanent
+
+**Defending:** None
+
+> **1x —** RES against Spirit damage increases by 1.
+>
+> **2x+ —** RES against Spirit damage increases by 2.
+
+*Tags: Alch.*
+
+**Warding — Aether**
+
+*Binding · Barrier · TN 8 · TH 9 · 9 days · Defensive*
+
+Raw Aether goes through armor, barriers, and most of what anyone puts between themselves and it. This is the exception, and there is no other.
+
+**Target:** One suit of armor, Mid quality or better
+
+**Effect:** The armor’s RES applies to Aether damage. Occupies one mod slot.
+
+**Duration:** Permanent
+
+**Defending:** None
+
+> **1x —** RES against Aether damage increases by 1.
+>
+> **2x+ —** RES against Aether damage increases by 2.
+
+*Tags: Alch.*

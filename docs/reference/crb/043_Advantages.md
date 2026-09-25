@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-24. -->
 
 ## Advantages & Disadvantages
 
@@ -21,7 +21,7 @@ You gain a set amount of Character Points based on the campaign power level.
 
 ### Advantages
 
-**Ambidextrous**
+**Ambidextrousa**
 
 **1 Point \| Max Rank 1**\
 Retain accuracy bonuses when making aimed shots using your off hand.
