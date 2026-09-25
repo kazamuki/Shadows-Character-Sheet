@@ -92,7 +92,10 @@ window.SHADOWS_DATA = {
     max: 10,
     // v4 modifier curve: 1→-3, 2→-2, 3→-1, 4–6→0, 7→+1, 8→+2, 9→+3, 10→+4
     modifiers: { "1": -3, "2": -2, "3": -1, "4": 0, "5": 0,
-                 "6": 0, "7": 1, "8": 2, "9": 3, "10": 4 }
+                 "6": 0, "7": 1, "8": 2, "9": 3, "10": 4 },
+    // (Decision 139) what a score means, read out on its tip: the first
+    // range the score fits. Past 10, `beyondHumanLimits` shows instead.
+    ranges: [ { max: 3, meaning: "..." }, { min: 4, max: 6, meaning: "..." } ]
   },
 
   // ── Derived attributes ──────────────────────────────────
@@ -347,10 +350,10 @@ window.SHADOWS_DATA = {
   // (+ aimedAt, notWith), damageBonus, onlyFor/notFor { categories, weapons }
   weaponRules: { rofModes: [ { id: "S", name: "Single", rounds: 1 } ],  // S 1 · B 3 · F 10 (053)
                  reloadNote: "...", modNote: "..." },
-  ammunition: [ { id: "handgun-rounds", name: "Handgun Rounds", weaponType: "Handgun",
-    availability: "Common", cost: "15Ç/mag", flavorLine: "..." } ],       // 9 entries
-  arrowheads: [ { id: "barbed-tip", name: "Barbed Tip", effect: "Base weapon DMG",
-    tags: ["Bleeding"], availability: "Uncommon", cost: "100Ç/6" } ],     // 11 entries
+  // (game data 0.21, Decision 139) Ammunition and arrowheads are `equipment`
+  // entries in the `ammo` category below, not arrays of their own. A tag reads
+  // out through Engine.glossary(), which looks a bracketed tag ("Blast (10m)")
+  // up by the words before the bracket. A flagged tag has a `playerNote`.
 
   // PROT is a die the player rolls physically (Decision 11 — the app never
   // rolls dice); RES is a flat reduction; INT is a depleting resource.
@@ -397,7 +400,8 @@ window.SHADOWS_DATA = {
   // ── Equipment (0.16, Decision 121) ──────────────────────────────────
   // Gear's Equipment chapter (tech, field & recovery, tools, clothing) and
   // Magic's Tools of the Trade (materials, ritual supplies, blanks, inscribed
-  // objects), from the two chapters' own tables. 116 entries, 12 categories.
+  // objects), from the two chapters' own tables, and Gear's ammunition and
+  // arrowheads as the Ammo category (Decision 139). 136 entries, 13 categories.
   equipmentCategories: [ { id: "charged", name: "Charged Talismans", book: "Magic", note: "..." } ],
   equipment: [
     { id: "quickstitch", name: "Quickstitch", category: "medical", availability: "Common",
@@ -1744,6 +1748,7 @@ No cascade logic to maintain — it falls out of the architecture.
     session's own correction of an F20 flag opened in error two entries
     earlier. (Ken + Claude, 2026-09-12)
 
+    → **Superseded in part by Decision 139**: `ammunition` and `arrowheads` are `equipment` entries in an Ammo category now.
 93. **(Magic — archetype-independent half, data)** **The Magic chapter splits
     cleanly into a universal Spellcraft system and an archetype question
     (Origins), and only the first merges here.** `Magic.md` (Ken's WIP,
@@ -3234,6 +3239,20 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing numbered. CLAUDE.md's release steps, and the tag-only deploy rule from the demo host's setup.
      - **Revisit if:** releases need a reviewer's approval step, or the Pages environment stops accepting main.
      - **Built:** app 0.26.1 (the tooling moves no version). Log 2026-09-24 (S5).
+
+139. **Any rule the sheet names is a hover or tap away; Ammo is gear; a refusal is a toast, and a confirmation is the modal.**
+     *2026-09-25 · Ken + Claude · Touches: tags, glossaries, Engine.glossary, tip, statRules.ranges, statReading, skillCheckRules, lore, Lineage, Magic reference, spellcraftRules, glyphs, enchantment tables, ammunition, arrowheads, Ammo, equipment, alert, confirm, notice, askFirst, NOT_YET_SHOWN, A10, C5, AQ4, F28–F31*
+     - **Decided:** one tip primitive (`data-tip`, `TIPS` in `shared.js`): hover or focus shows it, a tap pins it, inside an open modal if there is one. Tags read out through `Engine.glossary()` on Main, Loadout, the catalog and the Grimoire; a stat score reads its book range (`statRules.ranges` is `{ min?, max?, meaning }`). Skills gets *How a check works*, Archetype a collapsed *Lineage*, the wizard the chosen archetype's lore, and the Magic reference the Spellcraft sub-rules, Glyphs and the Enchantment tables. Ammunition and arrowheads are 20 `equipment` entries (category `ammo`, same ids). `notice()` (a toast) and `askFirst()` (a modal) replace `alert()` and `confirm()`.
+     - **Why:** AQ4: "so you don't have to hunt for information." `NOT_YET_SHOWN` falls from 40 keys to 3.
+     - **Rejected:**
+       - Reusing `openPopover`: it only finds triggers in `#main`, takes focus, and would open under the catalog modal.
+       - The native `title=` tooltip: no touch, no keyboard, slow.
+       - A fourth catalog beside Weapons: ammo is carried and counted like gear (packs, Use one). Ken meant a section of its own in the equipment catalog all along (2026-09-25).
+       - Lore inside every archetype card: five long paragraphs swamp the grid.
+       - Keeping ammo's `weaponType`: nothing read it (Decision 135); it's in the notes until W30 needs it.
+     - **Replaces:** Decision 92 in part: ammunition and arrowheads aren't their own arrays any more.
+     - **Revisit if:** playtesters miss tips on a touch screen, or W30 needs ammo matched to weapons by field.
+     - **Built:** app 0.27.0, game data 0.21. Log 2026-09-25 (S6a).
 
 ## 5. Open Flags
 

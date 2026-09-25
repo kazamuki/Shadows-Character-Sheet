@@ -243,3 +243,11 @@ test("every rule that paints a token background leaves readable text on it, in b
   assert.ok(checked > 20, `only ${checked} rule/theme pairs checked — did the parser break?`);
   assert.deepEqual(bad, []);
 });
+
+test("no screen blocks the page with alert() or confirm() (C5)", () => {
+  // Refusals go to notice(), confirmations to askFirst() (shared.js).
+  for (const f of BROWSER_JS.filter(f => f.startsWith("src/ui/"))) {
+    const src = readFileSync(join(ROOT, f), "utf8").replace(/\/\/.*$/gm, "");
+    assert.doesNotMatch(src, /\b(alert|confirm|prompt)\s*\(/, `${f} calls a blocking dialog`);
+  }
+});

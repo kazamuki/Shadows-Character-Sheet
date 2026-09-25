@@ -2,6 +2,19 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.27.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Tap a tag to read it.** AP, Conceal, Burning, Blast (10m) and every other tag on a weapon, an arrowhead or a spell now tells you what it does. Hover or tap it on Main, on Loadout, in the catalog and in your Grimoire. A few the book hasn't pinned down yet say so, and leave it to your GM.",
+      "**Your stats say what they mean.** Hover or tap a score on Main to read what a 3, a 6 or an 8 says about you, and what changes past 10.",
+      "**Ammo is in the shop.** Rounds, shells, power cells and arrowheads have their own section in the equipment catalog. Buy a pack of broadheads and a dozen go in your bag, counted down with Use one.",
+      "**The rules are on the sheet.** Skills has *How a check works*: the roll, the target numbers, the 10 that explodes and the 1 that botches. The Archetype tab has your *Lineage*, and an Arcanist's Magic reference adds charging, holding a spell, the Sovereign Soul, learning and teaching, the Glyphs of each Domain, and the Enchantment and Alchemy tables.",
+      "**Each archetype's story, up front.** Choosing an archetype in character creation shows its lore.",
+      "**No more pop-up boxes.** When the sheet can't do something, it says why at the bottom of the screen without stopping you. Deleting a session or removing a Milestone asks in the sheet's own window, with Cancel ready."
+    ]
+  },
+  {
     "version": "0.26.1",
     "date": "2026-09-25",
     "intro": [],

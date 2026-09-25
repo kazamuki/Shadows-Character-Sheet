@@ -207,6 +207,7 @@ function renderArchetype(){
     </button>`).join("") + `</div>`;
   if (!sel) return h;
   if (sel.flagged) h += flagHtml(sel);
+  if (sel.lore) h += `<p class="flavor arch-lore">${esc(sel.lore)}</p>`;
   if (sel.gameplayStyle) h += `<p class="step-note" style="margin-top:16px">${esc(sel.gameplayStyle)}</p>`;
 
   const row = Engine.scalingRow(ch);
@@ -557,7 +558,7 @@ function renderHome(){
     rd.onload=()=>{
       let c;
       try{ c=Engine.migrate(JSON.parse(rd.result)); }
-      catch(err){ alert("That file didn't parse as a character: "+err.message); return; }
+      catch(err){ notice("That file didn't parse as a character: "+err.message); return; }
       const locked=!!(c.creation && c.creation.locked);
       // A locked file takes the live-sheet slot, a draft the draft slot. Ask
       // before it replaces a different character, or a newer copy (B18).

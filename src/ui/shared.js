@@ -72,7 +72,7 @@ function loadActive(){ try{ const r=localStorage.getItem(ACTIVE_KEY); return r?J
 
 function update(rerenderMain=true){
   saveDraft(); saveActive();
-  if (rerenderMain) renderMain();
+  if (rerenderMain){ renderMain(); sweepTip(); }
   renderLedger(); renderVitals();
 }
 
@@ -197,6 +197,7 @@ function closeModal(){
   modalState=null;
   const toast=document.getElementById("undotoast");
   if (toast && el.contains(toast)) document.body.appendChild(toast);
+  if (tipNode && el.contains(tipNode)){ hideTip(); document.body.appendChild(tipNode); }
   if (typeof el.close==="function") el.close(); else el.removeAttribute("open");
   el.innerHTML="";
   if (st && st.onClose) st.onClose();
@@ -277,6 +278,129 @@ function closePopover(returnFocus){
   const el=popEl(); el.hidden=true; el.innerHTML="";
   const t=popTrigger(st.key);
   if (t){ t.setAttribute("aria-expanded","false"); if (returnFocus) t.focus(); }
+}
+
+// ── Tips (Decision 139) ───────────────────────────────────────────────
+// Any rule the sheet names, a player can read without leaving it (AQ4). A
+// trigger carries data-tip="<kind>" and data-term; TIPS[kind](term) says
+// what goes in it, or null for nothing. One floating note for the page:
+// hover or focus shows it, a click or tap pins it, and Esc, a click
+// elsewhere or the trigger leaving the page puts it away. It rides inside an
+// open modal, as the undo toast does, since the modal's top layer would
+// cover it otherwise. Lighter than openPopover: it holds text, never
+// controls, and it never takes focus.
+const statRangeText = r => r.min==null ? `${r.max} or lower` : r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
+const TIPS = {
+  tag: term => { const g=Engine.glossary(term); return g && { title:g.term, text:g.text, note:g.note }; },
+  spelltag: term => { const g=Engine.glossary(term, "spell"); return g && { title:g.term, text:g.text, note:g.note }; },
+  stat: id => {
+    const r = S.ch && Engine.statReading(S.ch, id); if (!r) return null;
+    return { title:`${r.name} ${r.value}`, text:r.description,
+      more:[r.range && `${statRangeText(r.range)}: ${r.range.meaning}`, r.rule, r.beyond, r.health].filter(Boolean) };
+  },
+};
+// Tags as chips: one the glossary knows opens its sentence; one it doesn't
+// stays a plain word.
+function tagChipsHtml(tags, kind="tag"){
+  return (tags||[]).filter(t=>typeof t==="string" && t).map(t=> TIPS[kind](t)
+    ? `<button type="button" class="tag" data-tip="${kind}" data-term="${esc(t)}">${esc(t)}</button>`
+    : `<span class="tag plain">${esc(t)}</span>`).join("");
+}
+let tipState=null, tipTimer=null, tipNode=null;
+function tipEl(){
+  if (!tipNode){
+    tipNode=document.createElement("div");
+    tipNode.id="tip"; tipNode.className="tip"; tipNode.setAttribute("role","tooltip"); tipNode.hidden=true;
+  }
+  const host=document.querySelector("dialog.modal[open]") || document.body;
+  if (tipNode.parentNode!==host) host.appendChild(tipNode);
+  return tipNode;
+}
+const tipTrigger = e => e.target && e.target.closest ? e.target.closest("[data-tip]") : null;
+document.addEventListener("mouseover", e=>{
+  const t=tipTrigger(e);
+  if (!t || (tipState && (tipState.pinned || tipState.el===t))) return;
+  clearTimeout(tipTimer); tipTimer=setTimeout(()=>showTip(t, false), 250);
+});
+document.addEventListener("mouseout", e=>{
+  const t=tipTrigger(e);
+  if (!t || (e.relatedTarget && t.contains(e.relatedTarget))) return;
+  clearTimeout(tipTimer);
+  if (tipState && tipState.el===t && !tipState.pinned) hideTip();
+});
+document.addEventListener("focusin", e=>{
+  const t=tipTrigger(e);
+  if (t && !(tipState && tipState.el===t)) showTip(t, false);
+});
+document.addEventListener("focusout", e=>{
+  if (tipState && tipState.el===e.target && !tipState.pinned) hideTip();
+});
+// Capture, so a tag inside a clickable row or a <summary> reads out
+// instead of opening the row.
+document.addEventListener("click", e=>{
+  const t=tipTrigger(e);
+  if (t){
+    e.preventDefault(); e.stopPropagation();
+    if (tipState && tipState.el===t && tipState.pinned) hideTip(); else showTip(t, true);
+    return;
+  }
+  if (tipState && !(tipNode && tipNode.contains(e.target))) hideTip();
+}, true);
+document.addEventListener("keydown", e=>{
+  if (e.key==="Escape" && tipState){ e.preventDefault(); e.stopPropagation(); hideTip(); }
+}, true);
+document.addEventListener("scroll", ()=>{ if (tipState) placeTip(); }, true);
+function showTip(t, pinned){
+  clearTimeout(tipTimer);
+  const f=TIPS[t.dataset.tip], p=f && f(t.dataset.term||"");
+  if (!p){ hideTip(); return; }
+  if (tipState && tipState.el!==t) tipState.el.removeAttribute("aria-describedby");
+  const el=tipEl();
+  el.innerHTML=`<b class="tip-title">${esc(p.title)}</b>${p.text?`<p>${esc(p.text)}</p>`:""}${
+    (p.more||[]).map(x=>`<p>${esc(x)}</p>`).join("")}${p.note?`<p class="tip-note">${esc(p.note)}</p>`:""}`;
+  el.hidden=false; el.classList.toggle("pinned", !!pinned);
+  tipState={ el:t, pinned:!!pinned };
+  t.setAttribute("aria-describedby","tip");
+  placeTip();
+}
+function placeTip(){
+  const el=tipNode, st=tipState;
+  if (!el || !st) return;
+  if (!st.el.isConnected){ hideTip(); return; }
+  const host=el.parentNode, inModal=host!==document.body;
+  const r=st.el.getBoundingClientRect(), h=inModal ? host.getBoundingClientRect() : { left:-(window.scrollX||0), top:-(window.scrollY||0) };
+  const vw=document.documentElement.clientWidth||window.innerWidth||0, w=el.offsetWidth||300;
+  const left=Math.max(8, Math.min(r.left, vw - w - 8));
+  el.style.left=`${Math.round(left - h.left)}px`;
+  el.style.top=`${Math.round(r.bottom + 6 - h.top)}px`;
+}
+function hideTip(){
+  clearTimeout(tipTimer);
+  const st=tipState; tipState=null;
+  if (st) st.el.removeAttribute("aria-describedby");
+  if (tipNode){ tipNode.hidden=true; tipNode.innerHTML=""; }
+}
+// After a redraw: a tip whose trigger went with it goes too.
+function sweepTip(){ if (tipState && !tipState.el.isConnected) hideTip(); }
+
+// ── Refusals and confirmations (C5) ───────────────────────────────────
+// A refused action says why in the toast's place, and doesn't block the
+// page the way alert() did. A step that can't be taken back asks in the
+// modal, with Cancel focused.
+function notice(msg){
+  const el=undoToastEl();
+  el.innerHTML=`<span class="toast-msg wrap">${esc(msg)}</span><button class="toast-x" data-toastclose aria-label="Dismiss">×</button>`;
+  el.hidden=false;
+  clearTimeout(toastTimer); toastTimer=setTimeout(hideUndoToast, TOAST_MS);
+  el.querySelector("[data-toastclose]").onclick=hideUndoToast;
+}
+function askFirst({ title, text, yes, then, danger=true }){
+  openModal({ title, html:`<p>${esc(text)}</p>`,
+    foot:`<button class="btn" data-modalclose>Cancel</button><button class="btn ${danger?"danger":"primary"}" data-askyes>${esc(yes)}</button>`,
+    bind:(body, foot)=>{
+      foot.querySelector("[data-askyes]").onclick=()=>{ closeModal(); then(); };
+      foot.querySelector("[data-modalclose]").focus();
+    } });
 }
 
 // ── Jump bar (W5, W22) ────────────────────────────────────────────────
