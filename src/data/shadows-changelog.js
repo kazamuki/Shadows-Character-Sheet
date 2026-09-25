@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.28.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Version numbers you can read.** Each release in **What's new** shows its version in the same clean digital face as your stats, so 0.28.0 no longer reads like 0.20.0."
+    ]
+  },
+  {
     "version": "0.28.0",
     "date": "2026-09-25",
     "intro": [],
