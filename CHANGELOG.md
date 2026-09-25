@@ -21,7 +21,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.25.1
+## v0.25.1 — 2026-09-24
 
 - **Every Major Milestone shows all it does.** Hardcore Parkour, Cyber Psion and Can't See
   Me each have rules past their first line (Hardcore Parkour's fall damage and Dodge
