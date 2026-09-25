@@ -28,7 +28,8 @@ authority and is never read front to back; §1 below says which section to open.
 | The architecture, the shape of the game data or a character file | `SCHEMA.md` §1, §2 and §3 |
 | What a change must touch (docs, versions, decision, changelog) | `../CLAUDE.md`, *Change tiers* (Decision 131) |
 | A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **proposed:** `two-tabs-one-character.md` (W38, `TQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
-| An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` |
+| An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` — open items only |
+| A wishlist item that was built, and what it was before | `log/wishes-granted.md` — moved whole from `WISHLIST.md`, never edited |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `log/2026.md` |
 | Text retired from a live document: the old phase roadmap, `meta.notes`, the closed-flag notes | `log/archive.md` — verbatim, never edited |
@@ -63,7 +64,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `CQ`_n_, `MQ`_n_ | Questions the combat and magic plans raised; all answered except Ken's open CRB fixes, now listed in `STATE.md` §5 | `plans/combat-and-conditions.md` §6 · `plans/magic-on-the-sheet.md` |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
 | `D`_n_ | Shorthand used here for decision _n_ | `SCHEMA.md` §4 |
-| `W`_n_ | Wishlist item — an idea, not a commitment; statuses live with the item | `WISHLIST.md` §1 |
+| `W`_n_ | Wishlist item — an idea, not a commitment; statuses live with the item | open: `WISHLIST.md` §1 · built: `log/wishes-granted.md` |
 
 ### Audit findings
 
@@ -362,13 +363,14 @@ How the project itself is organised.
 - **61** *(B5)* — The review step's number derives from creationFlow.steps.
 - **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place. → **superseded in part by 101, 127 and 132**
 - **86** *(Repository)* — Decision 54's deferred refactor lands: `src/ui/app.js` splits into four classic scripts.
-- **101** *(Docs)* — The batch board leaves `STATE.md` for `docs/log/shipped.md`, and unscheduled ideas get `docs/WISHLIST.md`.
+- **101** *(Docs)* — The batch board leaves `STATE.md` for `docs/log/shipped.md`, and unscheduled ideas get `docs/WISHLIST.md`. → **superseded in part by 144**
 - **102** *(Docs)* — A decision that replaces another marks it in the same change — in SCHEMA §4 and here — and a test holds the two together.
 - **127** *(STATE's suite line — AQ2)* — STATE states the todo count only; no pass total, no live version.
 - **130** *(Decisions that stay decided — R1, AQ1)* — an entry is the decision, a *Touches* line, and Decided · Why · Rejected · Replaces · Revisit if · Built, in about 25 lines; search the Touches lines before proposing; the load-bearing fourteen are backfilled.
 - **131** *(Change tiers — R2)* — what each kind of change must touch; STATE and the log move when the tier says so, not on every change.
 - **132** *(One orientation path — A4, C10, C11)* — `CLAUDE.md` → `STATE.md` → `INDEX.md`; `docs/README.md` and the HANDOFF stub go; retired text goes verbatim to `log/archive.md`; SCHEMA is §1–§5.
 - **137** *(Fonts embedded — C7, AQ6)* — the brand fonts are WOFF2 data URIs in a generated `fonts.css`, so the app makes no network request; big numbers are Oxanium (`--numeric`), headers keep the display face; build tests hold both.
+- **144** *(Wishes granted)* — a built `W` item moves, whole, to `log/wishes-granted.md`; `WISHLIST.md` shows only what's open.
 - **138** *(One release workflow — R4, R11, C14, AQ9)* — `release.yml`, dispatched from main with a version, checks, builds once, creates the tag and the Release (CHANGELOG notes, both files) and deploys; `npm run bump` and `release:prep` do the typing.
 
 ---
