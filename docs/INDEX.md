@@ -95,7 +95,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `A7` | Seven flags had no F-number; four were unasked Deighton questions | closed | plan S2 · F28–F32 |
 | `A8` | Archetypes special-cased by id; Professional rules parsed from prose | closed | plan S3 · D134 (Professional) · plan S4 · D135 (Arcanist, Werewolf) |
 | `A9` | Data fields that look like settings but aren't read (B3's class) | closed | plan S4 · D135 |
-| `A10` | Merged content no player can see | **open** | plan S6 · AQ4 |
+| `A10` | Merged content no player can see | **closed** 2026-09-25 (Decision 139) | plan S6a · AQ4 |
 | `A11` | `notes: "natural"` doubles as a type marker | **open** | plan S7 |
 | `A12` | UI split by render/bind, not by screen | **open** | plan S7 |
 | `B11` | Mastering a spell trips `versionCheck`'s hand-edit warning | closed | plan S1 · app 0.23.1 |
@@ -106,12 +106,13 @@ Each id is defined in exactly one place and referenced everywhere.
 | `B16` | A character file could put markup on the page (Admin ids; numbers stored as text; crafted undo) | closed | plan S1 · D124 |
 | `B17` | The Trueborn's Lunar Phase Blessing never renders | closed | plan S1 · D126 |
 | `B18` | Import, New and Lock replace the saved sheet without asking | closed | plan S1 · D128 |
-| `B19` | Phone: the sticky header covers 30% of the screen | **open** | plan S6 |
+| `B19` | Phone: the sticky header covers 30% of the screen | **open** | plan S6b |
 | `C4`, `C13` | Import warnings vanished; the voice corpus read one archetype's sheet | closed | plan S1 · D125 |
 | `C16` | Main's subtitle read a field removed in schema 0.5, so it never named the specialization | closed | with B18 · app 0.24.0 |
 | `C10`, `C11` | `meta.notes` was a changelog shipped in the data; closed plans hosted Ken's open CRB fixes | closed | plan S2 · D132 |
 | `C7`, `C12`, `C14`, `C15` | Fonts fell back offline; the dev server listened on every interface; releases built twice with generated notes; no fast test loop | closed | plan S5 · D137 (C7) · D138 (C14) |
-| `C5`, `C6`, `C8`, `C9` | Carried notes: `alert()`s, dead code, audit growth, orphans | **open** | plan S6–S7 |
+| `C5` | Carried note: `alert()`s | **closed** 2026-09-25 (Decision 139) | plan S6a |
+| `C6`, `C8`, `C9` | Carried notes: dead code, audit growth, orphans | **open** | plan S7 |
 
 ### Open flags
 
@@ -246,7 +247,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **63** *(B6)* — migrate()'s completeness is the migration guarantee.
 - **68** — When gamedataVersion bumps — and when it must not.
 - **75** *(Versioning)* — Four versions, four triggers — and schemaVersion stopped meaning two things.
-- **92** *(Weapons, Ammo & Armor — data)* — The equipment chapter merges as catalogs, not as engine logic; character schema 0.5 → 0.6.
+- **92** *(Weapons, Ammo & Armor — data)* — The equipment chapter merges as catalogs, not as engine logic; character schema 0.5 → 0.6. → **superseded in part by 139**
 - **93** *(Magic — archetype-independent half, data)* — The Magic chapter splits into a universal Spellcraft system and an archetype question (Origins); only the first merges, and it corrects a live mechanical error along the way. Character schema 0.6 → 0.7. → **superseded in part by 103, 116 and 136**
 - **95** *(Conditions — catalog and schema 0.8)* — Conditions are a data catalog with structured hooks; active ones are inputs, one per id (per body part for location-bearing ones); game data 0.7 → 0.8, character schema 0.7 → 0.8, with the plan's damage and armor fields landed in the same migration.
 - **125** *(Load findings — C4)* — what `versionCheck` finds stays until dismissed; a bare game-data version difference shows once.
@@ -314,6 +315,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **120** *(Weapon mods and rounds — W16)* — Schema 0.10: `weapons[i].mods` and `roundsSpent`. Single/Burst/Full Auto spend 1/3/10 (053) from a capacity read as its number + chambered round; Fire and Reload on Loadout and Main. Mods fill fixed slots, fit per data (`onlyFor`/`notFor`), add tags and damage; a sight's ACC is aimed, apart from Single's. F26 opened.
 - **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog.
 - **122** *(Main is the fight view — W13)* — Main's Combat column leads with the weapons you carry (Fire/Reload), then the armor, then the combat skills; no separate fight mode, and no invented Defense number.
+- **139** *(Rules a tap away — A10, C5, AQ4)* — one tip primitive reads tags (`Engine.glossary`), stat ranges and rules text on hover or tap; Lineage, How a check works and the whole Magic reference render; Ammo is an equipment category; `notice()` and `askFirst()` replace `alert()` and `confirm()`.
 
 ### Audit trail, undo & admin
 

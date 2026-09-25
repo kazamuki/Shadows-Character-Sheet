@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-09-24
-**Versions:** app `0.26.1` · game data `0.20` · character schema `0.12` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-25
+**Versions:** app `0.27.0` · game data `0.21` · character schema `0.12` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -31,13 +31,16 @@ everywhere (`tests/hostile.test.mjs`).
 (`plans/` keeps them as history). Combat: Decisions 95–106, with stubs
 waiting on Deighton. Magic: Decisions 93, 106, 108–111 and 115.
 
-**The 2026-09-24 audit's first five sessions are done** (`log/2026.md` has
-each). Character files are untrusted input (Decision 124), every character has
-a permanent **TAG** (133), decisions say what they rejected (130), and changes
-have tiers (131). The data now drives the archetypes: every key is read by
-code or named as text, and **no archetype is named in engine or UI code**
-(134, 135). The app makes no network request, fonts included (137), and a
-release is one workflow a cloud session can run (138). Tests enforce all of it.
+**The 2026-09-24 audit is down to its last two sessions** (`log/2026.md` has
+each one done). Character files are untrusted input (Decision 124), every
+character has a permanent **TAG** (133), decisions say what they rejected
+(130), and changes have tiers (131). The data drives the archetypes: every key
+is read by code or named as text, and **no archetype is named in engine or UI
+code** (134, 135). The app makes no network request, fonts included (137), and
+a release is one workflow a cloud session can run (138). **Any rule the sheet
+names is a hover or tap away** (139): tags, stat scores, the check rules, lore
+and the whole Magic reference, through one tip primitive, and Ammo is in the
+shop. Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -93,7 +96,7 @@ is the authority on a flag's full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1–S5 ✅ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
+| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1–S5, S6a ✅ · S6b (the header) ⏭ · S6c (the roster) ⏭ · S7 opportunistic | Nobody. S6b and S6c each start with a proposal to Ken |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
 | **Creation-pool economics** — F8, W34–W37 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker. The 2026-09-24 meeting added a climbing-cost stat buy (W34), a flat pool per Campaign level (W35) and starting LUCK 6, maybe by level (W37). Settle them with F8 (W36) as one ruling |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
@@ -114,13 +117,12 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-**The audit plan's last session, no answers needed:**
-- **S6, table feel,** specified by AQ4: rules text a hover or tap away, lore
-  on the Archetype tab, Ammo in the shop, the phone and tablet header, the
-  roster. The key guard's `NOT_YET_SHOWN` list is S6's content checklist:
-  each entry comes off it as a screen shows it. `npm run phone-check` is the
-  header's: today the phone fails (header 30%, Home 74 px too wide) and so does
-  1024×768 (header 23% against a 20% budget); 768 px passes.
+**The audit plan's last two sessions, either order; the plan specifies each:**
+- **S6b, the header (B19).** `npm run phone-check` is its test: 390 px and
+  1024×768 fail today, 768 px passes. Supersedes Decision 38 in part.
+- **S6c, the roster (R10).** Saved slots keyed by the TAG; Home lists them.
+- **Reuse the tip** (139): a new "what does this mean" is a `TIPS` kind in
+  `shared.js`. Refusals are `notice()`, confirmations `askFirst()`.
 
 rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
 
@@ -129,7 +131,7 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 ## 5. Where to start
 
 **The live site is v0.26.1** (game data 0.20, schema 0.12): embedded fonts and
-Oxanium numbers, the first release from the release workflow. Next, unblocked: S6. Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
+Oxanium numbers, the first release from the release workflow. 0.27.0 (S6a, rules a tap away) is built, not yet released. Next, unblocked: S6b and S6c. Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
 W30 (Reload from carried ammo), W31 (a TAGless character's TAG), W32 (spell
 damage from Spell Power, which wants a CRB line on rounding), W33 (Martial Arts
 styles) and W34–W37 (character creation).
