@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.27.0";
+const APP_VERSION = "0.27.1";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -25,6 +25,7 @@ function renderTopChrome(){
     nav.querySelectorAll("[data-sec]").forEach(b=>b.onclick=()=>{
       S.section=normSection(b.dataset.sec); window.scrollTo(0,0); update();
     });
+    showActiveTab(nav);
     if (act){
       act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Sheet actions">⋮</button>
         <div class="hdr-menu" id="hdrmenu" hidden>
@@ -51,6 +52,23 @@ function renderTopChrome(){
   } else {
     ctx.textContent = "Character Intake"; nav.innerHTML = ""; if (act) act.innerHTML = "";
   }
+}
+
+// The tab row scrolls sideways where it doesn't fit (Decision 140): keep the
+// active tab in view, and fade whichever edge has more tabs past it.
+function tabRowFades(nav){
+  const max=nav.scrollWidth-nav.clientWidth;
+  nav.classList.toggle("more-l", max>1 && nav.scrollLeft>1);
+  nav.classList.toggle("more-r", max>1 && nav.scrollLeft<max-1);
+}
+function showActiveTab(nav){
+  const a=nav.querySelector(".tab.active");
+  if (a){
+    const n=nav.getBoundingClientRect(), r=a.getBoundingClientRect(), room=48;
+    if (r.left<n.left+room) nav.scrollLeft-=n.left+room-r.left;
+    else if (r.right>n.right-room) nav.scrollLeft+=r.right-(n.right-room);
+  }
+  tabRowFades(nav);
 }
 
 function closeVitals(){
@@ -1171,13 +1189,22 @@ function boot(){
   initWhatsNew();
   renderFooter();
   wireThemeToggle();
-  // The sticky header wraps on a narrow screen, so a sticky jump bar (W22)
-  // reads its real height rather than --header-h.
-  const hdr=document.querySelector("header.top");
+  // The sticky header is two rows on the sheet and one elsewhere, so a
+  // sticky jump bar (W22) reads its real height rather than --header-h.
+  const hdr=document.querySelector("header.top"), nav=$("topnav");
   if (hdr){
-    const setH=()=>document.documentElement.style.setProperty("--hdr-live", hdr.offsetHeight+"px");
+    const setH=()=>{ document.documentElement.style.setProperty("--hdr-live", hdr.offsetHeight+"px"); if (nav) tabRowFades(nav); };
     setH();
     if (window.ResizeObserver) new ResizeObserver(setH).observe(hdr);
+  }
+  // A plain mouse wheel scrolls the tab row sideways, until it can't.
+  if (nav){
+    nav.addEventListener("scroll", ()=>tabRowFades(nav), { passive:true });
+    nav.addEventListener("wheel", e=>{
+      if (Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;
+      const was=nav.scrollLeft; nav.scrollLeft+=e.deltaY;
+      if (nav.scrollLeft!==was) e.preventDefault();
+    }, { passive:false });
   }
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{

@@ -7,7 +7,9 @@
  * would, with a locked character, and on Home and every sheet tab at each
  * width measures:
  *   - the sticky header's height once scrolled, against a share of the screen;
- *   - horizontal overflow, which should be none.
+ *   - horizontal overflow, which should be none;
+ *   - on the sheet, whether the character's name fits in the header. The
+ *     test name is short, so an ellipsis means the header gave it no room.
  *
  * Outside `npm test` on purpose: it needs a browser, and CI doesn't install
  * one. playwright-core (a devDependency) drives whichever Chromium is here:
@@ -30,6 +32,7 @@ import { loadEngine } from "../tests/harness.mjs";
 
 // The share of the screen's height the pinned header may take, once scrolled.
 const HEADER_MAX_SHARE = 0.2;
+const LONG = "a long name";
 const WIDTHS = [
   { name: "phone", width: 390, height: 844 },
   { name: "tablet, portrait", width: 768, height: 1024 },
@@ -79,13 +82,17 @@ try {
         window.scrollTo(0, document.documentElement.scrollHeight);
         const h = document.querySelector("header.top").getBoundingClientRect();
         const de = document.documentElement;
-        return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth };
+        const brand = document.querySelector("header.top .brand");
+        return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth,
+          nameCut: brand.scrollWidth > brand.clientWidth };
       });
       const share = m.header / w.height;
       rows.push({ width: w.name, screen, header: `${m.header}px (${Math.round(share * 100)}%)`,
         overflow: m.overflow ? `${m.overflow}px` : "none",
-        ok: share <= HEADER_MAX_SHARE && m.overflow <= 0 });
+        name: screen === "home" ? "" : m.nameCut ? "cut" : "fits",
+        ok: share <= HEADER_MAX_SHARE && m.overflow <= 0 && (!mustFit(screen) || !m.nameCut) });
     };
+    const mustFit = screen => screen !== "home" && screen !== LONG;
     await page.goto(pathToFileURL(file).href);
     await measure("home");
     await page.click("#btn-active");
@@ -95,6 +102,9 @@ try {
       await page.click(`#topnav [data-sec="${sec}"]`);
       await measure(sec);
     }
+    // A long name is cut short, never allowed to push the page wider.
+    await page.evaluate(n => { document.getElementById("brandctx").textContent = n; }, "Maximilian Aurelius Blackwood-Ravenscroft III");
+    await measure(LONG);
     if (errors.length) rows.push({ width: w.name, screen: "(page errors)", header: errors.join("; "), overflow: "", ok: false });
     await ctx.close();
   }
@@ -103,7 +113,7 @@ try {
   rmSync(dir, { recursive: true, force: true });
 }
 
-console.log(`Header budget: ${HEADER_MAX_SHARE * 100}% of the screen's height, pinned after scrolling. Overflow budget: none.\n`);
+console.log(`Header budget: ${HEADER_MAX_SHARE * 100}% of the screen's height, pinned after scrolling. Overflow budget: none. On the sheet, the name should fit.\n`);
 console.table(rows.map(r => ({ ...r, ok: r.ok ? "ok" : "OVER" })));
 const bad = rows.filter(r => !r.ok);
 const byWidth = [...new Set(bad.map(r => r.width))];
