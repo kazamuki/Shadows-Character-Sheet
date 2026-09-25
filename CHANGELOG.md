@@ -21,7 +21,19 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.25.2
+## [Unreleased] — app 0.26.0
+
+- **Inscribed spells are in the book.** Traps, wards, gear inscriptions, Everlight,
+  Hearthstone, Second Wind, Consecration and the three Wardings join the Book of Known
+  Spells. You can know one and keep it in your Grimoire like any other spell.
+- **A spell says what it's made with.** One that can only be inscribed reads
+  "Enchantment only · 4 hours" (or Alchemy, in days), and its TH is that Discipline's.
+  Mastering it is priced from that TH too.
+- **Filter the book by Discipline.** Evocation, Enchantment or Alchemy, next to tier and
+  Domain in the spell picker.
+- **Starting spells are ones you can cast.** A spell that can only be inscribed says so
+  and waits until after creation.
+- **Every inscribed object in the shop shows its spell.**
 
 - **Sixteen new spells in the Book of Known Spells**, from Glasswalk, Borrowed Tongue
   and Mend among the Cantrips up to Borrowed Time. Blink, Tracer, Sure Hand, Doorway,

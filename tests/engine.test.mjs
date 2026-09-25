@@ -265,10 +265,11 @@ const code = file => readFileSync(join(ROOT, file), "utf8")
 const CODE = CODE_FILES.map(code).join("\n");
 
 // Where a key is content, not a field: a power level's row, a stat value's
-// modifier, a spell's overflow degrees, an integrity die or a TN per
+// modifier, a spell's overflow degrees, a tier's TH and time per Discipline
+// (Decision 136), an integrity die or a TN per
 // difficulty, an armor slot's name, and a specialization's powers (shared.js
 // draws any array of plain objects on a power as a table, columns from keys).
-const MAPS = [/\.byPowerLevel$/, /^statRules\.modifiers$/, /^spells\[\]\.overflow$/,
+const MAPS = [/\.byPowerLevel$/, /^statRules\.modifiers$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
   /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/];
 // Display and maintainer text by name. A key named like this has to hold text,
@@ -283,10 +284,9 @@ const NOT_YET_SHOWN = {
   spellTagGlossary: "S6: tag sentences on hover or tap (AQ4 1)",
   ammunition: "S6: the Ammo category (AQ4 3)", arrowheads: "S6: the Ammo category (AQ4 3)",
   weaponType: "S6: the Ammo category (AQ4 3)",
-  enchantmentTimeTable: "S6: the Magic reference (AQ4 4)", enchantmentMaterialCategories: "S6: the Magic reference (AQ4 4)",
+  enchantmentMaterialCategories: "S6: the Magic reference (AQ4 4)",
   enchantmentExtendedTime: "S6: the Magic reference (AQ4 4)",
-  evocationTH: "S6 (AQ4 4)", enchantmentTH: "S6 (AQ4 4)", alchemyTH: "S6 (AQ4 4)",
-  enchantmentMinTime: "S6 (AQ4 4)", alchemyMinTime: "S6 (AQ4 4)", reductionCapByRank: "S6 (AQ4 4)",
+  reductionCapByRank: "S6 (AQ4 4)",
   examples: "S6 (AQ4 4)", onUse: "S6 (AQ4 4)", onRupture: "S6 (AQ4 4)", onDepletion: "S6 (AQ4 4)", recharging: "S6 (AQ4 4)",
   growth: "hidden until the archetype Majors are written (AQ4 5, F32)",
   difficulties: "S6: rules text (AQ4 6)", explosion: "S6: rules text (AQ4 6)", botch: "S6: rules text (AQ4 6)",
@@ -1729,7 +1729,9 @@ function creating(setup) {
   if (setup) setup(ch);
   return ch;
 }
-const byTH = th => D.spells.find(s => s.th === th).id;
+// A starting spell is one Evocation casts (Decision 136), so these pick from those.
+const castable = s => Engine.spellForms(s).includes(D.spellcraftRules.startingSpells.discipline);
+const byTH = th => D.spells.find(s => s.th === th && castable(s)).id;
 const spellIssues = ch => Engine.validate("character-points", ch).filter(i => /starting spell|needs Evocation/.test(i.msg))
   .map(i => [i.level, i.msg]);
 
@@ -1762,7 +1764,7 @@ test("at creation a spell's TH can't pass Evocation rank, and a rank bought at c
 test("the picks stop at the count", () => {
   const ch = creating(c => { c.archetypeChoices.rolls.startingSpells = 0; c.stats.BOD.base = 1; c.stats.INT.base = 1; c.stats.COOL.base = 1; });
   const count = Engine.startingSpells(ch).count;
-  const cantrips = D.spells.filter(s => s.th === 1).map(s => s.id);
+  const cantrips = D.spells.filter(s => s.th === 1 && castable(s)).map(s => s.id);
   for (let i = 0; i < count; i++) assert.ok(Engine.addStartingSpell(ch, cantrips[i]).ok);
   const full = Engine.canAddStartingSpell(ch, cantrips[count]);
   same([full.ok, full.full], [false, true]);
@@ -1784,7 +1786,7 @@ test("validate: short of the count and no roll warn; a spell over the rank and t
   assert.equal(ch.panelData.grimoire.length, 2, "validate dropped a pick");
 
   ch.archetypeChoices.rolls.startingSpells = 0;
-  ch.panelData.grimoire = D.spells.filter(s => s.th === 1).slice(0, Engine.startingSpells(ch).count + 1)
+  ch.panelData.grimoire = D.spells.filter(s => s.th === 1 && castable(s)).slice(0, Engine.startingSpells(ch).count + 1)
     .map(s => ({ spellId: s.id, stage: "known", notes: "" }));
   assert.ok(spellIssues(ch).some(([l, m]) => l === "error" && /^Too many starting spells/.test(m)));
 });
@@ -1797,6 +1799,57 @@ test("after lock nothing gates a spell's TH, and one beyond the Evocation pool i
   same([g.pool.rank, g.lines[0].beyondPool, g.lines[1].beyondPool], [1, true, false]);
   ch.panelData.grimoire[0] = { spellId: byTH(2), stage: "mastered", notes: "" };   // TH 2 - 1 = 1, inside Evocation 1
   assert.equal(Engine.grimoire(ch).lines[0].beyondPool, false, "Mastery's TH - 1 wasn't counted");
+});
+
+// ── A spell's forms (Decision 136) ────────────────────────────────────
+
+const onlyIn = d => D.spells.find(s => Engine.spellForms(s).length === 1 && Engine.spellForms(s)[0] === d);
+
+test("a spell takes every form unless it names its own, and a bad list falls back to the default", () => {
+  const all = D.spellcraftRules.forms.disciplines;
+  same(Engine.spellForms(D.spells.find(s => s.id === "firebolt")), all);
+  same(Engine.spellForms({ disciplines: ["enchantment"] }), ["enchantment"]);
+  same(Engine.spellForms({ disciplines: ["nonsense"] }), all, "an unknown discipline narrowed the spell to nothing");
+  same(Engine.spellForms({ disciplines: "enchantment" }), all);
+  same(Engine.spellForms(null), all);
+});
+
+test("a spell's TH in another form is the Enchantment table's row for its tier", () => {
+  const ch = subject();
+  for (const s of D.spells.filter(x => typeof x.th === "number")) {
+    const row = D.enchantmentTimeTable.find(r => r.tier === s.tier);
+    for (const d of Engine.spellForms(s)) {
+      const f = Engine.spellForm(ch, s, d);
+      if (f.live) same([f.th, f.time], [s.th, null], `${s.id} cast live`);
+      else same([f.th, f.time], [row.th[d], row.minTime[d]], `${s.id} as ${d}`);
+    }
+  }
+  const ward = onlyIn("alchemy"), f = Engine.spellForm(ch, ward);
+  same([f.discipline, f.only, f.live], ["alchemy", true, false]);
+  assert.equal(f.name, "Alchemy", "the form's name isn't the Discipline's");
+});
+
+test("an inscribed-only spell isn't a starting spell, and says why", () => {
+  const ch = creating(c => { c.archetypeChoices.rolls.startingSpells = 4; });
+  const trap = onlyIn("enchantment");
+  const c = Engine.canAddStartingSpell(ch, trap.id);
+  assert.equal(c.ok, false);
+  assert.match(c.why, new RegExp(`^${trap.name} is made with Enchantment, never cast`));
+  ch.panelData.grimoire = [{ spellId: trap.id, stage: "known", notes: "" }];   // a file that has one anyway
+  assert.ok(spellIssues(ch).some(([l, m]) => l === "error" && m.startsWith(`${trap.name} is made with Enchantment`)),
+    "validate let an inscribed-only spell through as a starting spell");
+  same(Engine.startingSpells(ch).over, [], "an uncastable spell was also reported as over the Evocation rank");
+});
+
+test("in the Grimoire an inscribed-only spell reads its own TH, prices Mastery from it, and is never beyond the pool", () => {
+  const ch = subject();                                               // locked, Evocation 1
+  const trap = D.spells.find(s => Engine.spellForms(s).length === 1 && s.th >= 2);
+  assert.ok(Engine.addSpell(ch, trap.id).ok);
+  const l = Engine.grimoire(ch).lines[0], th = Engine.spellForm(ch, trap).th;
+  same([l.th, l.printedTH, l.beyondPool, l.masteryCost], [th, th, false, D.spellcraftRules.mastery.ipPerTH * th]);
+  assert.ok(th > trap.th, "the test spell's form TH should differ from its tier TH");
+  ch.panelData.grimoire[0].stage = "mastered";
+  assert.equal(Engine.grimoire(ch).lines[0].th, th - D.spellcraftRules.mastery.thReduction);
 });
 
 test("the starting-spell functions are total on every degenerate character", () => {

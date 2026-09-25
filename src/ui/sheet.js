@@ -1495,8 +1495,10 @@ function armorRowsHtml(ch){
 const tnth = l => `TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}`;
 function spellMatches(g){
   const q = (S.spellPick||{}).q || "", tier = (S.spellPick||{}).tier || "", dom = (S.spellPick||{}).domain || "";
+  const disc = (S.spellPick||{}).discipline || "";
   const k = q.toLowerCase().trim();
   return (D.spells||[]).filter(s=>(!tier || s.tier===tier) && (!dom || s.domain===dom) &&
+    (!disc || Engine.spellForms(s).includes(disc)) &&
     (!k || [s.name, s.glyph, s.effect, (s.tags||[]).join(" ")].join(" ").toLowerCase().includes(k)));
 }
 // The two places the picker opens. `action` is each result's button, and,
@@ -1529,6 +1531,11 @@ const spellPickMode = {
     }
   }
 };
+// A spell that exists in fewer than every form says which, and how long it
+// takes to make (Decision 136). Its TH is that form's.
+// A spell of two Glyphs reads "Binding · Barrier", not the array's comma.
+const glyphText = g => [].concat(g||[]).join(" · ");
+const formNote = f => f && !f.live ? ` · ${esc(f.name)}${f.only?" only":""}${f.time?` · ${esc(f.time)}`:""}` : "";
 // W23: the whole row acts, so a row whose button can't is dimmed (`off`)
 // rather than just its button.
 function spellResultsHtml(ch, mode){
@@ -1536,22 +1543,24 @@ function spellResultsHtml(ch, mode){
   const tierName = id => ((D.spellTiers||[]).find(t=>t.id===id)||{name:id}).name;
   const domName = id => ((D.domains||[]).find(d=>d.id===id)||{name:id}).name;
   if (!list.length) return `<p class="step-note">No spell in the book matches that.</p>`;
-  return `<table class="ref spell-results"><tbody>` + list.map(s=>{ const a = M.action(ch, s, g);
+  return `<table class="ref spell-results"><tbody>` + list.map(s=>{ const a = M.action(ch, s, g), f = Engine.spellForm(ch, s);
     return `<tr class="${a.why?"off":"pickrow"}">
-      <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(s.glyph||"")}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
-      <td class="num">${esc(tnth(s))}${mode==="sheet" && pool && typeof s.th==="number" && s.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
+      <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(glyphText(s.glyph))}${formNote(f)}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
+      <td class="num">${esc(tnth({ tn:s.tn, th:f.th }))}${mode==="sheet" && pool && f.live && typeof f.th==="number" && f.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
       <td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
       <td>${a.btn}</td></tr>`; }).join("") + `</tbody></table>`;
 }
 // The modal's body: filters and the status line, which stay in view while the
 // results scroll (W25), then the results.
 function spellPickerHtml(ch, mode){
-  const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"" });
+  const st = S.spellPick || (S.spellPick = { q:"", tier:"", domain:"", discipline:"" });
+  const forms = (((D.spellcraftRules||{}).forms||{}).disciplines||[]).map(id=>({ id, name: Engine.spellForm(ch, {}, id).name }));
   const opt = (v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
   return `<div class="spell-pick"><div class="pick-head"><div class="hitrow">
       <input type="search" data-spellq value="${esc(st.q)}" placeholder="Search name, Glyph, effect" aria-label="Search the book">
       <select data-spellf="tier" aria-label="Tier">${opt("","Every tier",!st.tier)}${(D.spellTiers||[]).map(t=>opt(t.id,t.name,st.tier===t.id)).join("")}</select>
       <select data-spellf="domain" aria-label="Domain">${opt("","Every Domain",!st.domain)}${(D.domains||[]).map(d=>opt(d.id,d.name,st.domain===d.id)).join("")}</select>
+      <select data-spellf="discipline" aria-label="Discipline">${opt("","Every Discipline",!st.discipline)}${forms.map(d=>opt(d.id,d.name,st.discipline===d.id)).join("")}</select>
     </div><p class="pick-status" data-spellstatus aria-live="polite">${spellPickMode[mode].status(ch)}</p></div>
     <div data-spellresults>${spellResultsHtml(ch, mode)}</div></div>`;
 }
@@ -1572,7 +1581,7 @@ function grimoireHtml(ch, p){
     const ov = l.overflow ? Object.entries(l.overflow).map(([k,v])=>`<li><b>${esc(k)}</b> ${esc(v)}</li>`).join("") : "";
     return `<details class="spell${l.mastered?" mastered":""}"><summary>
         <b>${esc(l.name)}</b>${l.mastered?` <span class="chip">Mastered</span>`:""}
-        <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(l.glyph||"")}</span>
+        <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(glyphText(l.glyph))}${formNote(l.form)}</span>
         <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>${l.beyondPool?`<span class="beyond" title="${esc(g.pool.text)}">Beyond your pool</span>`:""}
         <span class="eff">${esc(l.effect||"")}</span></summary>
       <div class="spell-body">

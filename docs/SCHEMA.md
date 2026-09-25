@@ -468,22 +468,25 @@ window.SHADOWS_DATA = {
     teaching: { taught: "...", copiedCold: "..." } },
   enchantmentMaterialCategories: [ { id: "once-living", examples: ["Wood", "Bone", "Leather"], charges: 3,
     onDepletion: "...", onRupture: "...", recharging: "..." } ], // 3: degradable/once-living/inorganic-durable
-  enchantmentTimeTable: [ { tier: "cantrip", evocationTH: 1, enchantmentTH: 3, enchantmentMinTime: "3 hours",
-    alchemyTH: 6, alchemyMinTime: "6 days" } ], // one row per spell tier
+  enchantmentTimeTable: [ { tier: "cantrip", th: { evocation: 1, enchantment: 3, alchemy: 6 },
+    minTime: { enchantment: "3 hours", alchemy: "6 days" } } ], // one row per spell tier, keyed by discipline (Decision 136)
   enchantmentExtendedTime: { note: "...", reductionCapByRank: { "1": 1, "2": 2, "3": 3, "4": 4, "5": 5 } },
   // `spells` is the full Known-spell catalog: id + tier + domain + glyph +
-  // tn/th/range/spellType/damageType/target/effect/defending/overflow/tags.
-  // Overflow keeps the WIP's own `[X]` placeholders verbatim — unresolved
-  // balance magnitudes, not a transcription gap.
+  // tn/th/range/spellType/damageType/disciplines?/target/effect/duration/
+  // defending/overflow/tags. `th` is the tier's; `disciplines` is present only
+  // on a spell that can't take every form in `spellcraftRules.forms`, and
+  // another form's TH and time are the table's row (Decision 136).
   spells: [
     { id: "firebolt", name: "Firebolt", tier: "standard", domain: "elements", glyph: "Fire",
       tn: 8, th: 2, range: "Short", spellType: "offensive", damageType: "elemental",
       target: "1 person or object", effect: "SP Damage", defending: "Dodge",
-      overflow: { "1x": "Damage increases by [X].", "2x+": "Damage increases, and the target is Burning." },
-      tags: ["Fire"], flavorLine: "..." }
-    // 96 entries: 18 Cantrip + 47 Standard + 17 Advanced + 14 Superior, across
-    // the 5 domains. A handful (e.g. Counterspell) have th:null/overflow:null
-    // and a `notes` field instead — no Threshold, no Overflow, by design.
+      duration: "Instant",
+      overflow: { "1x": "Damage increases by ½ SP.", "2x+": "Damage increases, and the target is Burning." },
+      tags: ["Fire"], flavorLine: "..." },
+    { id: "watchward", tier: "cantrip", tn: 8, th: 1, disciplines: ["enchantment"], /* … */ }
+    // Every tier and Domain of the Book of Known Spells, its Inscribed Spells
+    // included. Counterspell has th:null/overflow:null and a `notes` field
+    // instead — no Threshold, no Overflow, by design.
   ],
 
   // ── Cascade and Aberrations (0.11, Decision 106) ─────────────────────
@@ -1796,7 +1799,7 @@ No cascade logic to maintain — it falls out of the architecture.
     Loadout picker; → **built by Decision 108**), and the Tools of the Trade pricing tables (every row is
     still `[X] Ç` in the WIP, not ready to merge as a finished catalog the
     way the equipment chapter's pricing was). (Ken + Claude, 2026-09-20)
-    → **Superseded in part by Decisions 103 and 116** — 103: its note that INT/BOD/COOL was a misreading: Deighton ruled TOL is INT/BOD/COOL. 116: `AP` is no longer flagged; it means Armor Piercing, as the weapon tag does.
+    → **Superseded in part by Decisions 103, 116 and 136** — 103: its note that INT/BOD/COOL was a misreading: Deighton ruled TOL is INT/BOD/COOL. 116: `AP` is no longer flagged; it means Armor Piercing, as the weapon tag does. 136: the book now gives every `[X]` a number and the catalog carries them, and `enchantmentTimeTable` is read, keyed by discipline.
 
 94. **(Print sheet — visual redesign, app)** **The printable sheet's front
     page moves from a linear stack of full-width sections to a case-file
@@ -2453,8 +2456,9 @@ No cascade logic to maintain — it falls out of the architecture.
       it like any spend (Decision 49). Only a Known book spell with a TH can
       be Mastered.
     - **The picker shows a spell before you add it** (W4's lesson): search
-      (→ **Superseded in part by Decision 111**: the picker is a modal the
-      sheet and the wizard share, not an inline section of the Grimoire)
+      (→ **Superseded in part by Decisions 111 and 136**: the picker is a modal the
+      sheet and the wizard share, not an inline section of the Grimoire (111);
+      Mastery of a spell not cast live prices its own form's TH (136))
       over name, Glyph, effect and tags, plus filters for tier and Domain. A
       spell you hold reads Known. One you typed as your own reads **Link
       yours** and links that row instead of adding a copy. That one was
@@ -3190,6 +3194,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing. It finishes Decision 67, whose cadence prose outlived it in the data and two engine strings.
      - **Revisit if:** a formula needs more than stat × times + plus, or a field passes the name check while nothing reads it.
      - **Built:** app 0.25.1, no game-data or schema bump (1,468 outputs diffed before and after). Log 2026-09-24 (S4).
+
+136. **A spell names the Disciplines it can be made with; its tier stays, and any other form's TH and time come from the Enchantment table.**
+     *2026-09-24 · Ken + Claude · Touches: spells, disciplines, forms, Evocation, Enchantment, Alchemy, Inscribed Spells, traps, wards, enchantmentTimeTable, starting spells, Mastery, Beyond your pool, spell picker, Grimoire, Ench./Alch. tags*
+     - **Decided:** By Magic's Three Forms any spell is an Evocation, a Talisman or an Artifact (`spellcraftRules.forms`). A spell in fewer forms lists its `disciplines`: traps, wards and gear inscriptions `["enchantment"]` (Ken), permanent workings `["alchemy"]`. Inscribed Spells go into their real tier and Domain; `th` stays the tier's, and another form's TH and time come from `enchantmentTimeTable`, keyed by discipline. A starting spell must be castable with `startingSpells.discipline`; Mastery prices the form's TH; only a live cast is Beyond your pool.
+     - **Why:** every Inscribed entry lands exactly on the table (Lightning Trap at Enchantment TH 4 is Standard), so the traps printed twice are one spell at two Disciplines. One field and a table the book already has say it all.
+     - **Rejected:**
+       - A fifth "Inscribed" tier (Claude's first proposal): stores TH 3–9 as if Evocation's, duplicating the table.
+       - A separate inscriptions catalog: a player couldn't hold one as Known, which Ken ruled they are.
+       - Each form's TH on the spell: copies of a table row, free to drift.
+       - Ench./Alch. tags as the setting: a tag is display text (Decision 135). R14 checks they agree.
+     - **Replaces:** Decision 93 (in part: its catalog is no longer placeholders, and the time table is read). Decision 108 (in part: Mastery prices the form's TH).
+     - **Revisit if:** a form's TN differs from the spell's (the book prints TN 8 on four inscribed Cantrips; Magic says an Artifact keeps its spell's TN).
+     - **Built:** app 0.26.0, game data 0.20, no schema change. Log 2026-09-24 (last, part two).
 
 ## 5. Open Flags
 
