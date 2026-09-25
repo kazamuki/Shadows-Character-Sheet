@@ -106,7 +106,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `B16` | A character file could put markup on the page (Admin ids; numbers stored as text; crafted undo) | closed | plan S1 · D124 |
 | `B17` | The Trueborn's Lunar Phase Blessing never renders | closed | plan S1 · D126 |
 | `B18` | Import, New and Lock replace the saved sheet without asking | closed | plan S1 · D128 |
-| `B19` | Phone: the sticky header covers 30% of the screen | **open** | plan S6b |
+| `B19` | Phone: the sticky header covers 30% of the screen | closed | plan S6b · D140 |
 | `C4`, `C13` | Import warnings vanished; the voice corpus read one archetype's sheet | closed | plan S1 · D125 |
 | `C16` | Main's subtitle read a field removed in schema 0.5, so it never named the specialization | closed | with B18 · app 0.24.0 |
 | `C10`, `C11` | `meta.notes` was a changelog shipped in the data; closed plans hosted Ken's open CRB fixes | closed | plan S2 · D132 |
@@ -251,9 +251,9 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **93** *(Magic — archetype-independent half, data)* — The Magic chapter splits into a universal Spellcraft system and an archetype question (Origins); only the first merges, and it corrects a live mechanical error along the way. Character schema 0.6 → 0.7. → **superseded in part by 103, 116 and 136**
 - **95** *(Conditions — catalog and schema 0.8)* — Conditions are a data catalog with structured hooks; active ones are inputs, one per id (per body part for location-bearing ones); game data 0.7 → 0.8, character schema 0.7 → 0.8, with the plan's damage and armor fields landed in the same migration.
 - **125** *(Load findings — C4)* — what `versionCheck` finds stays until dismissed; a bare game-data version difference shows once.
-- **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first. → **superseded in part by 133 and 140**
+- **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first. → **superseded in part by 133 and 141**
 - **133** *(The TAG)* — `meta.id` is `TAG-XXXX-XXXX-XXXX`, shown as itself; a 0.11 `NCR-` number keeps its twelve characters under the new prefix; schema 0.12.
-- **140** *(The roster — R10, AQ5)* — one `localStorage` entry per TAG, draft through locked; Home lists them with Open, Export and Remove and marks play no file holds; only an older copy of the same character asks before it replaces.
+- **141** *(The roster — R10, AQ5)* — one `localStorage` entry per TAG, draft through locked; Home lists them with Open, Export and Remove and marks play no file holds; only an older copy of the same character asks before it replaces.
 
 ### Engine contracts
 
@@ -287,7 +287,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **35** *(Phase 3.2)* — Full-width sheet on every tab.
 - **36** *(Phase 3.2)* — Four-sphere stat layout on Main.
 - **37** *(Phase 3.2)* — Vitals flyout drawer.
-- **38** *(Phase 3.2)* — Sticky in-header navigation.
+- **38** *(Phase 3.2)* — Sticky in-header navigation. → **superseded in part by 140**
 - **39** *(Phase 3.2)* — Header overflow menu.
 - **40** *(Phase 3.2)* — Collapsible page footer.
 - **41** *(Phase 3.2)* — Number-entry caret fix.
@@ -317,6 +317,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog.
 - **122** *(Main is the fight view — W13)* — Main's Combat column leads with the weapons you carry (Fire/Reload), then the armor, then the combat skills; no separate fight mode, and no invented Defense number.
 - **139** *(Rules a tap away — A10, C5, AQ4)* — one tip primitive reads tags (`Engine.glossary`), stat ranges and rules text on hover or tap; Lineage, How a check works and the whole Magic reference render; Ammo is an equipment category; `notice()` and `askFirst()` replace `alert()` and `confirm()`.
+- **140** *(The header — B19, AQ10)* — two thin rows: the name with ⋮ and theme, then the tabs in one line that scrolls sideways (active tab kept in view, fades, mouse wheel); a long name ends in "…", the `Shadows //` prefix goes below 480 px, and the header un-sticks below 540 px tall.
 
 ### Audit trail, undo & admin
 

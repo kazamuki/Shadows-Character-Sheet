@@ -59,7 +59,7 @@ export function boot({ storage = null } = {}) {
 }
 
 /**
- * The character a test saved, read back from the roster (Decision 140): one
+ * The character a test saved, read back from the roster (Decision 141): one
  * localStorage key per TAG, draft or sheet alike. `locked` picks a sheet or a
  * draft; it throws unless exactly one matches, so a test can't read the wrong
  * character.

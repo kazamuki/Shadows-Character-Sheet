@@ -60,21 +60,40 @@ input,textarea,select{font-family:inherit; color:var(--text)}
 /* ── App frame ──────────────────────────────────────────────────────── */
 .app{display:grid; grid-template-columns:var(--rail-w) 1fr var(--vitals-w);
   grid-template-rows:auto 1fr; min-height:100vh}
+/* Two thin rows at every width (Decision 140): the name with the menu and
+   theme button, then the tabs in one line that scrolls sideways. Nothing in
+   it may widen the page: the name ends in "…" instead. */
 header.top{
-  grid-column:1/-1; display:flex; align-items:center; gap:14px 18px; flex-wrap:wrap;
+  grid-column:1/-1; display:grid; align-items:center; gap:0 10px;
+  grid-template-columns:1fr auto auto;
+  grid-template-areas:"brand act theme" "nav nav nav";
   padding:12px 22px; border-bottom:1px solid var(--frame);
   position:sticky; top:0; z-index:60;
   background-color:var(--ground);
   background-image:linear-gradient(180deg, rgba(113,43,140,.16), rgba(13,23,49,0) 90%);
 }
-.brand{font-family:var(--display); font-weight:700; font-size:1.3rem;
+.brand{grid-area:brand; overflow:hidden; text-overflow:ellipsis;
+  font-family:var(--display); font-weight:700; font-size:1.3rem;
   letter-spacing:.12em; text-transform:uppercase; color:var(--text); white-space:nowrap}
 .brand .x{color:var(--violet-hi)}
 .brand .ctx{letter-spacing:.06em}
-/* Tabs, hosted in the header on the live sheet. */
-nav.topnav{display:flex; gap:2px; flex-wrap:wrap; margin-left:auto; margin-bottom:-12px}
+/* On a narrow screen the character's name gets the room. */
+@media (max-width:480px){ .brand .pre{display:none} }
+/* A short screen (a phone on its side) can't spare two pinned rows. */
+@media (max-height:540px){ header.top{position:static} .jumpbar.sticky{top:0} }
+/* Tabs, hosted in the header on the live sheet: one row, scrolled sideways
+   where it doesn't fit, with a fade on the side that has more (set in app.js). */
+nav.topnav{grid-area:nav; min-width:0; display:flex; gap:2px; flex-wrap:nowrap;
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:none; overscroll-behavior-x:contain;
+  margin:6px -22px -13px; padding:0 22px 1px}
+nav.topnav::-webkit-scrollbar{display:none}
 nav.topnav:empty{display:none}
-nav.topnav .tab{padding:7px 12px 12px}
+nav.topnav.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent)}
+nav.topnav.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px); mask-image:linear-gradient(90deg,transparent,#000 48px)}
+nav.topnav.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent); mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent)}
+nav.topnav .tab{padding:7px 12px 12px; flex:none}
+.hdr-actions{grid-area:act}
+.theme-toggle{grid-area:theme}
 .tagline{font-family:var(--mono); font-size:.72rem; color:var(--dim); letter-spacing:.06em}
 .ver{margin-left:auto; font-family:var(--mono); font-size:.7rem; color:var(--dim)}
 .ver b{color:var(--cyan); font-weight:500}
@@ -168,7 +187,7 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .alloc-row .name small{display:block; color:var(--dim); font-size:.74rem}
 /* W20/W21: a skill's stats with this character's numbers. Primary violet,
    synergy magenta, as on the print sheet's badges. */
-.skstats{display:inline-flex; gap:6px; vertical-align:middle; margin-left:6px}
+.skstats{display:inline-flex; flex-wrap:wrap; gap:2px 6px; vertical-align:middle; margin-left:6px}
 .skstat{display:inline-flex; align-items:center; gap:3px; font-family:var(--mono); font-size:.7rem; color:var(--text); white-space:nowrap}
 .skstat .ico{display:inline-flex; width:13px; height:13px; color:var(--violet-hi)}
 .skstat .ico svg{width:100%; height:100%}
@@ -867,7 +886,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .sect[tabindex]:focus{outline:none}
 .pick[hidden]{display:none}
 
-/* ── The roster on Home (R10, Decision 140) ── */
+/* ── The roster on Home (R10, Decision 141) ── */
 .roster{margin-top:28px; text-align:left}
 .roster-h{font-family:var(--display); font-size:.95rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin-bottom:10px}
 .roster-list{list-style:none; margin:0; padding:0; display:grid; gap:10px}

@@ -14,7 +14,8 @@ window.SHADOWS_CHANGELOG = [
       "**Ammo is in the shop.** Rounds, shells, power cells and arrowheads have their own section in the equipment catalog. Buy a pack of broadheads and a dozen go in your bag, counted down with Use one.",
       "**The rules are on the sheet.** Skills has *How a check works*: the roll, the target numbers, the 10 that explodes and the 1 that botches. The Archetype tab has your *Lineage*, and an Arcanist's Magic reference adds charging, holding a spell, the Sovereign Soul, learning and teaching, the Glyphs of each Domain, and the Enchantment and Alchemy tables.",
       "**Each archetype's story, up front.** Choosing an archetype in character creation shows its lore.",
-      "**No more pop-up boxes.** When the sheet can't do something, it says why at the bottom of the screen without stopping you. Deleting a session or removing a Milestone asks in the sheet's own window, with Cancel ready."
+      "**No more pop-up boxes.** When the sheet can't do something, it says why at the bottom of the screen without stopping you. Deleting a session or removing a Milestone asks in the sheet's own window, with Cancel ready.",
+      "**More sheet, less header.** The top bar is two slim rows on every screen: your name, then the tabs in one line. Where they don't all fit, swipe or scroll them sideways; the tab you're on stays in view. On a tablet the header takes about half the room it did, and the sheet fits a phone without sliding sideways. On a phone turned on its side, the header scrolls away with the page."
     ]
   },
   {
