@@ -575,7 +575,7 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.12",
+    schemaVersion: "0.13",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -624,7 +624,7 @@ It renders on the Archetype tab.
     focusedSkillPicks: [],           // skill ids for the specialization's focusedSkills.choose
                                      // (Decision 134); migrate() keeps only strings
     naturalAdvantages: [],           // Professional: [{ id, rank }] — also mirrored into
-                                     // `advantages` with notes:"natural", cost 0 CP
+                                     // `advantages` with source:"natural", cost 0 CP (0.13)
     disciplines: {}                  // Arcanist: CP-bought ranks { enchantment: 1 } (6 CP each;
                                      // Evocation starting rank from scaling table is NOT stored)
   },
@@ -636,6 +636,9 @@ It renders on the Archetype tab.
   // `selections` (0.5) answers the entry's `picks`, keyed by pick id. Skill and
   // option picks store an ARRAY of ids, one per slot; text picks store a string.
   // Absent means nothing chosen yet, which every reader tolerates.
+  // `source: "natural"` (0.13, Decision 142) marks a Professional's free row,
+  // the mirror of archetypeChoices.naturalAdvantages. Absent means bought.
+  // `notes` is only ever text.
   advantages:    [ { id: "favored-skill", rank: 2, notes: "",
                      selections: { skill: ["handguns", "melee"] } } ],
   disadvantages: [ { id: "cursed", rank: 1, notes: "",
@@ -809,6 +812,7 @@ No cascade logic to maintain — it falls out of the architecture.
 17. **(Phase 2)** Professional natural advantages are stored as normal
     `advantages` entries with `notes: "natural"` and cost 0 CP — they render
     on the sheet like any advantage but never hit the CP ledger.
+    → **Superseded in part by Decision 142** — the marker is `source: "natural"`, not the notes.
 18. **(Phase 2)** Arcanist focus-stat bonus may push a stat past 10; the
     modifier curve extrapolates +1 per point above 10 (superseded past 10 by
     Decision 98: +1 per 5 points). Werewolf stat bonus
@@ -3280,6 +3284,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 128 in part: Import, New and Lock no longer ask about a different character, and the browser no longer keeps one sheet and one draft.
      - **Revisit if:** a player loses play to two tabs on one character (W38), or storage fills in play.
      - **Built:** app 0.28.0; the audit plan's S6c. Log 2026-09-25 (S6c).
+
+142. **A Professional's free advantage is marked by `source: "natural"`, and `notes` is only text.**
+     *2026-09-25 · Ken + Claude · Touches: advantages, notes, source, naturalAdvantages, Professional, advSpent, canonicalEntry, Admin mode, migrate, undo, audit trail, character schema 0.13, A11, C8*
+     - **Decided:** a row in `advantages` mirrored from `archetypeChoices.naturalAdvantages` carries `source: "natural"`; a bought row has no `source`, and `migrate()` drops any other value. Schema 0.13's step moves a pre-0.13 file's `notes: "natural"` into `source` and empties the notes, in the advantages list and in the audit's stored undo patches. A 0.13 file's notes are never read as a marker.
+     - **Why:** a free-text field doubled as a type marker, branched on at a dozen sites (A11). The patches are migrated because Decision 48's Revisit if came true: an undo recorded before the step would have restored a free row as a bought one.
+     - **Rejected:**
+       - Waiting for another schema bump to ride with, as the audit plan first said: Ken asked for S7 finished, and the step is small.
+       - Re-running `migrate()` after every undo: a loaded character is already 0.13, so the gated step wouldn't fire, and ungated it would read any note as a marker.
+       - Converting any `notes: "natural"` whatever the file's version: a player's note would make a bought advantage free.
+     - **Replaces:** Decision 17 in part (the marker). Extends Decision 48: a migration that reshapes a row also migrates the audit's patches of it.
+     - **Revisit if:** advantages gain a second source (a Milestone's grant, say), which would be a new `source` value named here.
+     - **Built:** app 0.28.2, character schema 0.13; the audit plan's S7. Log 2026-09-25 (S7).
 
 ## 5. Open Flags
 

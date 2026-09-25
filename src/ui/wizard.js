@@ -1,8 +1,9 @@
-// Creation wizard: the eight-step intake ledger + rail, and every step's
-// renderer. Reads/writes the shared state and helpers declared in shared.js.
+// Creation wizard: the eight-step intake ledger + rail, every step's
+// renderer, then its binders (bindMain, applyStep). Reads/writes the shared
+// state and helpers declared in shared.js.
 
 // ── Ledger ───────────────────────────────────────────────────────────
-// Batch 3a — a passed step with open warnings (e.g. unspent Skill Points) used
+// A passed step with open warnings (e.g. unspent Skill Points) used
 // to render the same ✓ as one with nothing left to fix. "done" now means no
 // errors AND no warnings; a passed step that still has warnings is its own
 // "attn" state, and the callout jumps back to the first one.
@@ -50,7 +51,7 @@ function renderVitals(){
     h += `</div>`;
   }
   if (locked){
-    // Phase 3 condition readout — current values, computed maxima
+    // Condition readout — current values, computed maxima
     const pain=Engine.painState(ch), luck=Engine.luckState(ch), san=Engine.sanState(ch);
     const ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
     h += `<div class="vgroup">`;
@@ -90,7 +91,7 @@ function stepper(val, dataAttr, downOk, upOk){
     <span class="val">${val}</span>
     <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="increase">+</button></div>`;
 }
-// Batch 3 — the controls for one entry's picks. Rendered off Engine.picksFor,
+// The controls for one entry's picks. Rendered off Engine.picksFor,
 // which has already resolved how many slots exist and what may go in them, so
 // this function knows nothing about ranks, categories or archetypes. Used by
 // the Character Points step and the Skills step alike.
@@ -402,8 +403,8 @@ function renderCP(){
   h += secs.sect("Advantages", "Advantages — cost Character Points");
   h += `<details class="group" open data-filterable><summary>${D.advantages.length} available</summary>` +
     D.advantages.map(ad=>{
-      const cur = (ch.advantages.find(x=>x.id===ad.id && x.notes!=="natural")||{rank:0}).rank;
-      const natural = ch.advantages.find(x=>x.id===ad.id && x.notes==="natural");
+      const cur = (ch.advantages.find(x=>x.id===ad.id && x.source!=="natural")||{rank:0}).rank;
+      const natural = ch.advantages.find(x=>x.id===ad.id && x.source==="natural");
       const affordable = bal.left>=ad.cost;
       const lock = Engine.optionLock(ch,"advantage",ad.id);
       const req  = Engine.requirementState(ch,"advantage",ad.id);
@@ -500,7 +501,7 @@ function renderReview(){
     <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
     <span class="k">Derived</span><span class="v">TOL ${der.TOL} · WILL ${der.WILL} · SAN ${der.SAN}% · ${hp.levels} HL / ${hp.total} HP · LUCK ${D.resources.luck.startingValue+ch.trackers.luck.bonus}</span>
     <span class="k">Skills</span><span class="v">${Object.keys(ch.skills).map(id=>{const l=Engine.skillLine(ch,id);return esc(l.def.name)+" "+l.rank;}).join(" · ")||"—"}</span>
-    <span class="k">Advantages</span><span class="v">${ch.advantages.map(x=>{const d2=Engine.advById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"")+(x.notes==="natural"?" (natural)":"");}).join(" · ")||"—"}</span>
+    <span class="k">Advantages</span><span class="v">${ch.advantages.map(x=>{const d2=Engine.advById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"")+(x.source==="natural"?" (natural)":"");}).join(" · ")||"—"}</span>
     <span class="k">Disadvantages</span><span class="v">${ch.disadvantages.map(x=>{const d2=Engine.disById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");}).join(" · ")||"—"}</span>
     <span class="k">Boost ledger</span><span class="v">${ch.creation.boosts.map(b=>esc(b.targetId)+" ×"+b.times).join(" · ")||"—"}</span>
   </div></div>`;
@@ -639,3 +640,210 @@ function renderHome(){
 const RENDER = { "power-level":renderPowerLevel, "concept":renderConcept, "stats":renderStats,
   "archetype":renderArchetype, "history":renderHistory, "skills":renderSkills,
   "character-points":renderCP, "review":renderReview };
+
+// ── Wizard event wiring ──────────────────────────────────────────────
+// Runs on the sheet too, for what both screens share: Home, the load notice.
+function bindMain(){
+  const main=$("main"), ch=S.ch;
+  // navigation
+  main.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>{
+    S.step = Math.max(0, Math.min(STEPS.length-1, S.step+Number(b.dataset.nav)));
+    S.maxReached = Math.max(S.maxReached, S.step);
+    window.scrollTo(0,0); update();
+  });
+  main.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{ S={screen:"home",ch:null,step:0,maxReached:0}; renderHome(); });
+  main.querySelectorAll("[data-importdismiss]").forEach(b=>b.onclick=()=>{ S.importIssues=[]; update(); });
+  // selections
+  main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ ch.creation.powerLevel=b.dataset.pl; update(); });
+  main.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
+    if (ch.identity.archetype!==b.dataset.arch){
+      ch.identity.archetype=b.dataset.arch;
+      resetArchetypeChoices(ch);
+    }
+    update();
+  });
+  // One handler for every archetype's specialization (A3). Single-select
+  // replaces; multi-select toggles. Over-picking is deliberately allowed —
+  // validate() says "Too many", and an error you can read beats a click that
+  // silently does nothing.
+  main.querySelectorAll("[data-spec]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.spec, ac=ch.archetypeChoices;
+    if (!Array.isArray(ac.specialization)) ac.specialization=[];
+    const before = ac.specialization[0];
+    if (Engine.specializationNeed(ch) <= 1) ac.specialization=[id];
+    else {
+      const i=ac.specialization.indexOf(id);
+      if (i>=0) ac.specialization.splice(i,1); else ac.specialization.push(id);
+    }
+    // The Professional's focused-skill and natural-advantage pools hang off
+    // the subtype, so changing it invalidates both — including the entries
+    // natural advantages mirror into ch.advantages, which the old
+    // single-select handler cleared on one side only.
+    if (ac.specialization[0]!==before){
+      ac.focusedSkillPicks=[]; ac.naturalAdvantages=[];
+      ch.advantages=ch.advantages.filter(x=>x.source!=="natural");
+    }
+    update();
+  });
+  // Pick controls. `data-sel` is "<kind>|<entryId>|<pickId>|<slot>"; the
+  // engine owns distinctness and the slot cap, so a refusal comes back with a
+  // reason and the control simply re-renders to what is actually stored.
+  const applySel = (el, val) => {
+    const [kind, entryId, pickId, slot] = el.dataset.sel.split("|");
+    const r = Engine.setSelection(ch, kind, entryId, pickId, Number(slot), val);
+    if (!r.ok && r.why) el.title = r.why;
+    return r;
+  };
+  main.querySelectorAll("select[data-sel]").forEach(el=>el.onchange=()=>{ applySel(el, el.value); update(); });
+  main.querySelectorAll("input[data-sel]").forEach(el=>el.oninput=()=>{
+    applySel(el, el.value);
+    update(false); refreshNav();
+  });
+  main.querySelectorAll("[data-fskill]").forEach(b=>b.onclick=()=>{
+    const r = Engine.toggleFocusedPick(ch, b.dataset.fskill);
+    if (!r.ok && r.why) b.title = r.why;
+    update();
+  });
+  // steppers
+  main.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>{
+    const [key,delta]=b.dataset.step.split("|").reduce((acc,part,i,arr)=>{
+      if(i===arr.length-1) acc[1]=Number(part); else acc[0]=(acc[0]?acc[0]+"|":"")+part; return acc; },[null,0]);
+    applyStep(key, delta); update();
+  });
+  // dice rolls — re-render main so pool-gated steppers enable, but keep focus on the input
+  const rerenderKeepFocus = (selAttr, val) => {
+    update(); // full re-render: steppers re-evaluate against the new pool
+    const again = main.querySelector(`[${selAttr}]`);
+    if (again){ again.focus(); try{ again.setSelectionRange(String(val).length, String(val).length); }catch(e){} }
+  };
+  main.querySelectorAll("[data-roll]").forEach(inp=>inp.oninput=()=>{
+    const clean = inp.value.replace(/[^0-9]/g,"");
+    if (clean !== inp.value) inp.value = clean;
+    ch.creation.rolls[inp.dataset.roll] = clean===""?null:Math.max(0,Number(clean));
+    rerenderKeepFocus(`data-roll="${inp.dataset.roll}"`, clean);
+  });
+  main.querySelectorAll("[data-archroll]").forEach(inp=>inp.oninput=()=>{
+    const clean = inp.value.replace(/[^0-9]/g,"");
+    if (clean !== inp.value) inp.value = clean;
+    ch.archetypeChoices.rolls[inp.dataset.archroll] = clean===""?null:Math.max(0,Number(clean));
+    rerenderKeepFocus(`data-archroll="${inp.dataset.archroll}"`, clean);
+  });
+  // Jump bars (W5, W22). The filter works on the rendered page, so typing
+  // keeps focus; S.cpFilter carries it across the re-render a stepper causes.
+  main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
+  const jf=main.querySelector("[data-jumpfilter]");
+  if (jf){
+    const run=()=>{ const r=applyPickFilter(main, jf.value), c=main.querySelector("[data-jumpcount]");
+      if (c) c.textContent = r.active ? `${r.shown} of ${r.total}` : ""; };
+    jf.oninput=()=>{ S.cpFilter=jf.value; run(); };
+    run();
+  }
+  // The book's spell picker, a modal on the sheet and in the wizard (Decision 111)
+  main.querySelectorAll("[data-spellpickopen]").forEach(b=>b.onclick=()=>openSpellPicker(b.dataset.spellpickopen));
+  main.querySelectorAll("[data-startrm]").forEach(b=>b.onclick=()=>{ Engine.removeGrimoireRow(ch, Number(b.dataset.startrm)); update(); });
+  // identity / history text
+  main.querySelectorAll("[data-id]").forEach(inp=>inp.oninput=()=>{
+    const k=inp.dataset.id;
+    ch.identity[k] = inp.type==="number" ? (inp.value===""?null:Number(inp.value)) : inp.value;
+    update(false); refreshNav();
+  });
+  // export / lock
+  main.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>exportChar());
+  main.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{
+    // Locking turns this character's own entry into a sheet (Decision 141):
+    // nothing else is replaced, so nothing is asked. It saves before it
+    // exports, so the file holds what's stored and Home shows no marker.
+    ch.creation.locked=true;
+    S.ch=Engine.migrate(Engine.buildExport(ch));
+    S.screen="sheet"; S.section="main";
+    window.scrollTo(0,0); update();
+    exportChar();
+  });
+}
+
+function refreshNav(){
+  // re-evaluate Continue button + issue list without nuking input focus
+  const st=STEPS[S.step]; if(!st) return;
+  const nav=document.querySelector(".wiznav"); if(!nav) return;
+  const issues=Engine.validate(st.id,S.ch);
+  const btn=nav.querySelector('[data-nav="1"]');
+  if(btn) btn.disabled=issues.some(i=>i.level==="error");
+  const ul=document.querySelector(".issues"); if(ul) ul.remove();
+  nav.insertAdjacentHTML("afterend", issuesHtml(issues));
+  const lock=nav.querySelector("[data-lock]");
+  if(lock) lock.disabled=issues.some(i=>i.level==="error");
+}
+
+function applyStep(key, delta){
+  const ch=S.ch, [kind,...rest]=key.split("|"), id=rest.join("|");
+  if (kind==="stat"){
+    const v=ch.stats[id].base+delta;
+    if (v<D.statRules.base || v>D.statRules.max) return;
+    ch.stats[id].base=v;
+  }
+  if (kind==="skill"){
+    const cur=ch.skills[id]?ch.skills[id].rank:0, v=cur+delta;
+    const pl=Engine.powerLevel(ch);
+    if (v<0||v>Engine.skillRankCap(ch,id)) return;
+    if (v===0) delete ch.skills[id];
+    else {
+      const prev = ch.skills[id] || {};
+      ch.skills[id] = Object.assign({}, prev, {rank:v, ipe:prev.ipe||0});
+      Engine.trimSelections(ch,"skill",id);
+    }
+  }
+  if (kind==="focus"){
+    const cur=ch.archetypeChoices.focusAllocation[id]||0, v=cur+delta;
+    if (v<0) return; ch.archetypeChoices.focusAllocation[id]=v;
+    if (v===0) delete ch.archetypeChoices.focusAllocation[id];
+  }
+  if (kind==="wwbonus"){
+    const cur=ch.archetypeChoices.statBonusAllocation[id]||0, v=cur+delta;
+    if (v<0) return; ch.archetypeChoices.statBonusAllocation[id]=v;
+    if (v===0) delete ch.archetypeChoices.statBonusAllocation[id];
+  }
+  if (kind==="natadv"){
+    const list=ch.archetypeChoices.naturalAdvantages;
+    let e=list.find(n=>n.id===id);
+    if (!e && delta>0){ e={id, rank:0}; list.push(e); }
+    if (!e) return;
+    e.rank=Math.max(0,e.rank+delta);
+    if (e.rank===0) ch.archetypeChoices.naturalAdvantages=list.filter(n=>n!==e);
+    // Mirror into advantages with source:"natural". The mirror is rebuilt from
+    // the ledger each time, so any `selections` the row was carrying have to
+    // be carried across — dropping them would silently wipe a player's picks
+    // on every rank change.
+    const keep = new Map(ch.advantages.filter(x=>x.source==="natural" && x.selections)
+                                      .map(x=>[x.id, x.selections]));
+    ch.advantages=ch.advantages.filter(x=>x.source!=="natural")
+      .concat(ch.archetypeChoices.naturalAdvantages.map(n=>{
+        const row={id:n.id, rank:n.rank, notes:"", source:"natural"};
+        if (keep.has(n.id)) row.selections=keep.get(n.id);
+        return row;
+      }));
+    Engine.trimSelections(ch,"advantage",id);
+  }
+  if (kind==="adv"){
+    let e=ch.advantages.find(x=>x.id===id && x.source!=="natural");
+    if (!e && delta>0){ e={id, rank:0, notes:""}; ch.advantages.push(e); }
+    if (!e) return;
+    e.rank=Math.max(0,e.rank+delta);
+    if (e.rank===0) ch.advantages=ch.advantages.filter(x=>x!==e);
+    else Engine.trimSelections(ch,"advantage",id);
+  }
+  if (kind==="disadv"){
+    let e=ch.disadvantages.find(x=>x.id===id);
+    if (!e && delta>0){ e={id, rank:0, notes:""}; ch.disadvantages.push(e); }
+    if (!e) return;
+    e.rank=Math.max(0,e.rank+delta);
+    if (e.rank===0) ch.disadvantages=ch.disadvantages.filter(x=>x!==e);
+    else Engine.trimSelections(ch,"disadvantage",id);
+  }
+  if (kind==="luck"){ ch.trackers.luck.bonus=Math.max(0, ch.trackers.luck.bonus+delta); }
+  if (kind==="disc"){
+    const cur=ch.archetypeChoices.disciplines[id]||0, v=cur+delta;
+    if (v<0) return; ch.archetypeChoices.disciplines[id]=v;
+    if (v===0) delete ch.archetypeChoices.disciplines[id];
+  }
+  if (kind==="boost"){ const [type,tid]=[rest[0],rest.slice(1).join("|")]; Engine.addBoost(ch,type,tid,delta); }
+}

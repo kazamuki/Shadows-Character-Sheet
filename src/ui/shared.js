@@ -158,7 +158,7 @@ function update(rerenderMain=true){
   renderLedger(); renderVitals();
 }
 
-// Phase 3.3 — every state-changing sheet action runs through commit(): snapshot
+// Every state-changing sheet action runs through commit(): snapshot
 // the character, run the mutation, record a reversible audit entry, then save +
 // re-render. Admin edits use the same path, so the activity log is complete.
 const clone = x => (x==null ? x : JSON.parse(JSON.stringify(x)));
@@ -540,7 +540,7 @@ function vrow(k,v,cls="",ico=""){
 // Changing archetype invalidates every archetype-specific choice. Both change
 // handlers say so in their warning text; only this function makes it true.
 // The natural-advantage MIRROR is the easy half to forget: free advantages
-// live in archetypeChoices.naturalAdvantages AND as notes:"natural" rows in
+// live in archetypeChoices.naturalAdvantages AND as source:"natural" rows in
 // ch.advantages, so clearing one side strands the other. A mirror needs one
 // writer (Decision 81).
 function resetArchetypeChoices(ch){
@@ -550,7 +550,7 @@ function resetArchetypeChoices(ch){
   // Free advantages belonged to the archetype being left, so they go either
   // way. A supernatural archetype cannot purchase at all, so it keeps none.
   ch.advantages = (a && a.canPurchaseAdvantages===false)
-    ? [] : ch.advantages.filter(x=>x.notes!=="natural");
+    ? [] : ch.advantages.filter(x=>x.source!=="natural");
   // Starting spells are the Grimoire's own rows (Decision 111), so in the
   // wizard they go with the archetype that chose them. A locked sheet's panels
   // are play history, and the admin change leaves them to its single undo.
@@ -660,7 +660,7 @@ function issuesHtml(list){
   return `<ul class="issues">`+list.map(i=>`<li class="${i.level}">${esc(i.msg)}</li>`).join("")+`</ul>`;
 }
 
-// Batch 2 / Decision 70 — two audiences, two fields. `flagNote` is written for
+// Decision 70 — two audiences, two fields. `flagNote` is written for
 // Ken and Deighton: flag ids, field paths, "confirm with D". It must never
 // reach a player, so flagHtml takes the ENTRY and reads only `playerNote`,
 // falling back to one line in D.appCopy. Passing a raw string is not possible

@@ -198,13 +198,13 @@ test("Admin edits the row it drew: a purchased copy beside a free one, and a row
   ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 10 };
   for (const s of D.stats) ch.stats[s.id].base = 6;
   ch.creation.locked = true;
-  ch.advantages = [{ id: "favored-skill", rank: 1, notes: "natural" }, { id: "favored-skill", rank: 1, notes: "" },
+  ch.advantages = [{ id: "favored-skill", rank: 1, notes: "", source: "natural" }, { id: "favored-skill", rank: 1, notes: "" },
     { id: P("adv.id"), rank: 1, notes: "a|b" }];
   const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
   app.click("[data-menu-toggle]"); app.click("[data-admin]");
   // Spread into this realm: an array made in jsdom never deepEquals a local one.
-  const live = () => [...app.window.eval("S.ch").advantages].map(a => `${a.notes || "-"}:${a.rank}`);
+  const live = () => [...app.window.eval("S.ch").advantages].map(a => `${a.source || a.notes || "-"}:${a.rank}`);
 
   app.click('[data-admin-adv="1|1"]');
   assert.deepEqual(live().slice(0, 2), ["natural:1", "-:2"], "+ on the purchased row changed the wrong copy");
