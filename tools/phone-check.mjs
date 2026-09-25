@@ -88,7 +88,7 @@ try {
     };
     await page.goto(pathToFileURL(file).href);
     await measure("home");
-    await page.click("#btn-active");
+    await page.click("[data-open]");
     await page.waitForSelector("#topnav [data-sec]");
     const tabs = await page.$$eval("#topnav [data-sec]", bs => bs.map(b => b.dataset.sec));
     for (const sec of tabs) {
