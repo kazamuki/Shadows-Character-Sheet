@@ -987,37 +987,57 @@ test("R13: the Professional's Campaign Power Scaling table matches 041, row for 
 test("R14: every spell in the Book of Known Spells is in the catalog, as the book prints it", () => {
   // Read the mirror the way the book lays a spell out: a bold name, then an
   // italic header "Glyph · TN n · TH n · Range · Type · Damage", then the
-  // Target/Effect/Duration/Defending lines and the Overflow lines. The book's
-  // Inscribed Spells part is not merged yet, so the walk stops there. The
-  // data writes the book's dashes as -- and -.
+  // Target/Effect/Duration/Defending lines and the Overflow lines. The data
+  // writes the book's dashes as -- and -.
+  //
+  // The Inscribed Spells part prints a spell at its Enchantment or Alchemy TH,
+  // with that TH's time where the range would be (Decision 136). The catalog
+  // keeps the tier's own TH, so those are checked through Engine.spellForm,
+  // and the Ench./Alch. tag has to agree with `disciplines`. Four traps are
+  // printed in both parts; the Inscribed copy is the newer text and wins.
   const md = readFileSync(join(ROOT, "docs/reference/crb/Appendix_Book_of_Known_Spells.md"), "utf8").replace(/\r/g, "");
-  const tiered = md.slice(0, md.search(/^# \*\*Inscribed Spells\*\*/m));
-  assert.ok(tiered.length < md.length, "the book's Inscribed Spells heading moved; this walk needs to know where to stop");
-  const from = tiered.search(/^# \*\*Cantrips\*\*/m); // after "How to Read a Spell Entry" and its example
+  const from = md.search(/^# \*\*Cantrips\*\*/m); // after "How to Read a Spell Entry" and its example
+  const inscribedAt = md.search(/^# \*\*Inscribed Spells\*\*/m);
+  assert.ok(from > 0 && inscribedAt > from, "the book's Cantrips or Inscribed Spells heading moved; this walk needs both");
   const dash = s => s.replace(/—/g, "--").replace(/–/g, "-").replace(/[‘’]/g, "'");
-  const lines = tiered.slice(from).split("\n").map(l => l.replace(/^>\s?/, "").trim());
-  const book = [];
-  for (let i = 0; i < lines.length; i++) {
-    const name = lines[i].match(/^\*\*([^*]+)\*\*$/);
-    const head = name && lines.slice(i + 1).find(l => l);
-    if (!head || !/^\*[^*].*TN \d/.test(head)) continue;
-    const sp = { name: name[1], head: head.replace(/^\*|\*$/g, "").split("·").map(s => s.trim()), overflow: {} };
-    for (let j = i + 2; j < lines.length && !/^\*Tags:|^\*\*[^*:]+\*\*$/.test(lines[j]); j++) {
-      const f = lines[j].match(/^\*\*(Target|Effect|Duration|Defending):\*\*\s*(.*)$/);
-      if (f) sp[f[1].toLowerCase()] = dash(f[2]);
-      const o = lines[j].match(/^\*\*(\dx\+?)\s*—\s*\*\*\s*(.*)$/);
-      if (o) sp.overflow[o[1]] = dash(o[2]);
+  const read = text => {
+    const lines = text.split("\n").map(l => l.replace(/^>\s?/, "").trim()), out = [];
+    for (let i = 0; i < lines.length; i++) {
+      const name = lines[i].match(/^\*\*([^*]+)\*\*$/);
+      const head = name && lines.slice(i + 1).find(l => l);
+      if (!head || !/^\*[^*].*TN \d/.test(head)) continue;
+      const sp = { name: name[1], head: head.replace(/^\*|\*$/g, "").split("·").map(s => s.trim()), overflow: {}, tags: [] };
+      for (let j = i + 2; j < lines.length && !/^\*\*[^*:]+\*\*$/.test(lines[j]); j++) {
+        const f = lines[j].match(/^\*\*(Target|Effect|Duration|Defending):\*\*\s*(.*)$/);
+        if (f) sp[f[1].toLowerCase()] = dash(f[2]);
+        const o = lines[j].match(/^\*\*(\dx\+?)\s*—\s*\*\*\s*(.*)$/);
+        if (o) sp.overflow[o[1]] = dash(o[2]);
+        const t = lines[j].match(/^\*Tags:\s*(.*)\*$/);
+        if (t) { sp.tags = t[1].split(",").map(x => x.trim()); break; }
+      }
+      out.push(sp);
     }
-    book.push(sp);
-  }
-  assert.ok(book.length > 100, `read only ${book.length} spells from the book; the layout changed`);
+    return out;
+  };
+  const inscribed = read(md.slice(inscribedAt));
+  const names = new Set(inscribed.map(b => b.name));
+  const book = [...read(md.slice(from, inscribedAt)).filter(b => !names.has(b.name)).map(b => ({ ...b, form: null })),
+                ...inscribed.map(b => ({ ...b, form: true }))];
+  assert.ok(inscribed.length >= 17 && book.length > 120, `read only ${book.length} spells (${inscribed.length} inscribed); the layout changed`);
+  const ch = Engine.newCharacter();
   for (const b of book) {
     const s = D.spells.find(x => x.name === b.name);
     assert.ok(s, `the book has ${b.name}; the catalog doesn't`);
     const tn = b.head.findIndex(p => /^TN \d+$/.test(p));
     assert.equal([].concat(s.glyph).join(" · "), b.head.slice(0, tn).join(" · "), `${b.name}: Glyph`);
     assert.equal(s.tn, Number(b.head[tn].slice(3)), `${b.name}: TN`);
-    assert.equal(s.th, Number(b.head[tn + 1].slice(3)), `${b.name}: TH`);
+    const only = b.tags.includes("Alch.") ? "alchemy" : b.tags.includes("Ench.") ? "enchantment" : null;
+    assert.equal(JSON.stringify(Engine.spellForms(s)), JSON.stringify(only ? [only] : D.spellcraftRules.forms.disciplines), `${b.name}: its tags and its disciplines disagree`);
+    const f = Engine.spellForm(ch, s);
+    if (b.form) {
+      assert.equal(f.th, Number(b.head[tn + 1].slice(3)), `${b.name}: its ${only} TH isn't the Enchantment table's for ${s.tier}`);
+      assert.equal(f.time, b.head[tn + 2], `${b.name}: its ${only} time`);
+    } else assert.equal(s.th, Number(b.head[tn + 1].slice(3)), `${b.name}: TH`);
     for (const k of ["target", "effect", "duration", "defending"]) assert.equal(s[k], b[k], `${b.name}: ${k}`);
     assert.equal(JSON.stringify(s.overflow), JSON.stringify(b.overflow), `${b.name}: Overflow`); // D lives in another realm
   }
