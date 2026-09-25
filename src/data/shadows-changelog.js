@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.28.0",
-    "date": null,
+    "date": "2026-09-25",
     "intro": [],
     "items": [
       "**Keep every character you play.** This browser used to hold one sheet and one draft, and opening another character meant replacing one. Now Home lists every character you've made or imported, newest first, each with Open, Export and Remove. Tap a card to pick up where you left off. Your old sheet and draft are already on the list.",
