@@ -1,6 +1,6 @@
 {
   "name": "shadows-character-sheet",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "private": true,
   "description": "Digital character sheet for Shadows (Synergy system) — Get Dangerous Games.",
   "type": "module",
@@ -9,9 +9,20 @@
     "check": "node tools/build.mjs --check",
     "changelog": "node tools/changelog.mjs",
     "test": "node --test \"tests/*.test.mjs\"",
-    "verify": "npm run check && npm test"
+    "test:fast": "node --test tests/engine.test.mjs tests/rules.test.mjs tests/docs.test.mjs tests/build.test.mjs",
+    "verify": "npm run check && npm test",
+    "fonts": "node tools/fonts.mjs",
+    "bump": "node tools/release.mjs bump",
+    "release:prep": "node tools/release.mjs prep",
+    "release:check": "node tools/release.mjs check",
+    "phone-check": "node tools/phone-check.mjs"
   },
   "devDependencies": {
-    "jsdom": "^30.0.1"
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/oxanium": "^5.3.0",
+    "@fontsource-variable/roboto-mono": "^5.3.0",
+    "@fontsource/chakra-petch": "^5.3.0",
+    "jsdom": "^30.0.1",
+    "playwright-core": "^1.63.0"
   }
 }
