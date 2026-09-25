@@ -48,8 +48,9 @@ export function buildHtml(root = ROOT) {
     return `<script>\n/* ${src} */\n${text.trimEnd()}\n</script>\n`;
   };
 
-  // Every local asset the shell references must be consumed. Remote <link>s
-  // (web fonts) are expected and left alone.
+  // Every local asset the shell references must be consumed. There are no
+  // remote ones: the fonts are embedded (tools/fonts.mjs), and
+  // tests/build.test.mjs fails if a network request comes back.
   const expected = (shell.match(/<(script|link)[^>]*(src|href)=["'](?!https?:)[^"']+["']/gi) || []).length;
   const out = shell.replace(LINK_RE, css).replace(SCRIPT_RE, js);
   const consumed = expected - (shell.replace(LINK_RE, "").replace(SCRIPT_RE, "")
@@ -80,6 +81,8 @@ export function buildBlankSheetHtml(root = ROOT) {
   }
   const printCss = readFileSync(join(root, "src/styles/print.css"), "utf8");
   assertInlineSafe("src/styles/print.css", printCss, "style");
+  const fontsCss = readFileSync(join(root, "src/styles/fonts.css"), "utf8");
+  assertInlineSafe("src/styles/fonts.css", fontsCss, "style");
 
   return `<!doctype html>
 <html lang="en">
@@ -87,10 +90,8 @@ export function buildBlankSheetHtml(root = ROOT) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shadows — Blank Character Sheet</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+${fontsCss.trimEnd()}
 body{background:#fff;margin:0}
 .p-print-btn{position:fixed;top:10px;right:10px;z-index:10;font:600 13px 'Inter',system-ui,sans-serif;
   background:#712B8C;color:#fff;border:0;border-radius:4px;padding:8px 14px;cursor:pointer}

@@ -36,6 +36,9 @@ authority and is never read front to back; §1 below says which section to open.
 | Whether the current WIP text already answers an open flag | `reference/crb/README.md` — mirrors of CRB documents, **never edited here**; re-pull instead |
 | What shipped in a release | `../CHANGELOG.md` — backward-looking only, in player voice |
 | How to work on this repo at all | `../CLAUDE.md` |
+| The commands and scripts (bump, release, test:fast, phone-check, dev server) | `../CLAUDE.md`, *Commands* |
+| A procedure step by step: close a session, number a decision, open or close a flag, cut a release | `../.claude/skills/` (the rules they follow stay in `CLAUDE.md`) |
+| How a release reaches players and the live site | `../CLAUDE.md`, *Working rhythm*, and `../.github/workflows/release.yml` (Decision 138) |
 | A finding by id (A1, B2, C3) | `audits/` — the dated audits; look the id up before working on it |
 
 **The trap worth naming:** `CHANGELOG.md` never describes upcoming work, and
@@ -88,7 +91,7 @@ Each id is defined in exactly one place and referenced everywhere.
 |---|---|---|---|
 | `A4` | Orientation spread across eight docs; the untested ones drifted | closed | plan S2 · D132 |
 | `A5` | The decision ledger is doing three jobs | closed | plan S2 · D130 |
-| `A6` | Per-change documentation tax out of proportion to the change | **open**: tiers in place (D131); the scripts left | plan S5 (R4) |
+| `A6` | Per-change documentation tax out of proportion to the change | closed | plan S2 · D131 (tiers) · plan S5 · D138 (scripts) |
 | `A7` | Seven flags had no F-number; four were unasked Deighton questions | closed | plan S2 · F28–F32 |
 | `A8` | Archetypes special-cased by id; Professional rules parsed from prose | closed | plan S3 · D134 (Professional) · plan S4 · D135 (Arcanist, Werewolf) |
 | `A9` | Data fields that look like settings but aren't read (B3's class) | closed | plan S4 · D135 |
@@ -107,7 +110,8 @@ Each id is defined in exactly one place and referenced everywhere.
 | `C4`, `C13` | Import warnings vanished; the voice corpus read one archetype's sheet | closed | plan S1 · D125 |
 | `C16` | Main's subtitle read a field removed in schema 0.5, so it never named the specialization | closed | with B18 · app 0.24.0 |
 | `C10`, `C11` | `meta.notes` was a changelog shipped in the data; closed plans hosted Ken's open CRB fixes | closed | plan S2 · D132 |
-| `C5`–`C9`, `C12`, `C14`, `C15` | Carried notes: `alert()`s, dead code, fonts offline, audit growth, orphans, dev server, releases, suite time | **open** | plan S5–S7 |
+| `C7`, `C12`, `C14`, `C15` | Fonts fell back offline; the dev server listened on every interface; releases built twice with generated notes; no fast test loop | closed | plan S5 · D137 (C7) · D138 (C14) |
+| `C5`, `C6`, `C8`, `C9` | Carried notes: `alert()`s, dead code, audit growth, orphans | **open** | plan S6–S7 |
 
 ### Open flags
 
@@ -357,6 +361,8 @@ How the project itself is organised.
 - **130** *(Decisions that stay decided — R1, AQ1)* — an entry is the decision, a *Touches* line, and Decided · Why · Rejected · Replaces · Revisit if · Built, in about 25 lines; search the Touches lines before proposing; the load-bearing fourteen are backfilled.
 - **131** *(Change tiers — R2)* — what each kind of change must touch; STATE and the log move when the tier says so, not on every change.
 - **132** *(One orientation path — A4, C10, C11)* — `CLAUDE.md` → `STATE.md` → `INDEX.md`; `docs/README.md` and the HANDOFF stub go; retired text goes verbatim to `log/archive.md`; SCHEMA is §1–§5.
+- **137** *(Fonts embedded — C7, AQ6)* — the brand fonts are WOFF2 data URIs in a generated `fonts.css`, so the app makes no network request; big numbers are Oxanium (`--numeric`), headers keep the display face; build tests hold both.
+- **138** *(One release workflow — R4, R11, C14, AQ9)* — `release.yml`, dispatched from main with a version, checks, builds once, creates the tag and the Release (CHANGELOG notes, both files) and deploys; `npm run bump` and `release:prep` do the typing.
 
 ---
 

@@ -18,7 +18,7 @@ Then read [`docs/STATE.md`](docs/STATE.md) for where things stand.
 | A **developer** changing behaviour | `src/engine/`, `src/ui/`, `src/styles/` | game content, unless a decision says so |
 | **Anyone** recording a decision | `docs/SCHEMA.md` §4, and its line in `docs/INDEX.md` | — |
 
-## Four things that aren't obvious
+## Five things that aren't obvious
 
 - **Run `npm install` once, then `npm run verify` before every commit.** If a
   test fails, fix the code, not the test.
@@ -28,3 +28,7 @@ Then read [`docs/STATE.md`](docs/STATE.md) for where things stand.
   with a `flagNote` that names its F-number, and add the flag to
   `docs/SCHEMA.md` §5. Rules questions live there, not in GitHub issues.
 - **Anything a player reads** follows `docs/VOICE-APP.md`.
+- **Versions and releases are scripted.** `npm run bump -- X.Y.Z` moves the app
+  version everywhere it's written; a release is the **release** workflow, run
+  from `main`. Never edit a version number by hand, or push a tag by hand
+  unless the workflow can't run.
