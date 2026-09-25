@@ -1,17 +1,50 @@
 name: release
 
-# Tag a phase (e.g. v0.4.0-phase-3.3) and the single-file build is attached
-# to the GitHub Release. That file is what players download.
+# One workflow releases a version end to end: checks it's ready, tests and
+# builds once, creates the tag and the GitHub Release (its notes are the
+# version's CHANGELOG section, both files attached), then deploys the demo at
+# charactersheet.shadowsrpg.com. CLAUDE.md has the steps before it; the
+# .claude/skills/cut-a-release skill walks them.
+#
+# Three ways in:
+#   - Actions -> release -> Run workflow, on main, with the version: the normal
+#     path. The workflow creates the tag itself, which a cloud session can't
+#     push. A tag made with the workflow's own token starts no other workflow,
+#     which is why releasing and deploying live in this one file (AQ9).
+#   - "dry run" ticked, on any branch: check, test and build, then stop. The
+#     readiness check reports without failing, since a branch mid-batch still
+#     has an [Unreleased] heading.
+#   - Pushing a v* tag from a machine, or running this on a tag: releases that
+#     tag. A second run on the same tag re-publishes it.
+#
+# One-time setup this depends on (not done here): Settings -> Pages -> Source
+# "GitHub Actions", the custom domain, and the DNS CNAME. The github-pages
+# environment must accept both main and v* tags.
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 0.26.1. It must match APP_VERSION. Ignored when run on a tag."
+        required: true
+      dry_run:
+        description: "Dry run: check, test and build only. No tag, no release, no deploy."
+        type: boolean
+        default: false
   push:
     tags: ['v*']
 
-permissions:
-  contents: write
+# One release at a time; let an in-flight one finish rather than race it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.v.outputs.version }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -19,9 +52,64 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+
+      - name: Which version
+        id: v
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then v="${GITHUB_REF_NAME#v}"; else v="$INPUT_VERSION"; fi
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "::error::\"$v\" isn't a version like 0.26.1"; exit 1; fi
+          if [ "$GITHUB_REF_TYPE" != tag ] && [ "$GITHUB_REF_NAME" != main ] && [ "$DRY_RUN" != true ]; then
+            echo "::error::A release is cut from main, and this is $GITHUB_REF_NAME. Tick dry run to try a branch."; exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Ready to release?
+        continue-on-error: ${{ inputs.dry_run == true }}
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+          TAGGED: ${{ github.ref_type == 'tag' && '--tagged' || '' }}
+        run: node tools/release.mjs check "$VERSION" $TAGGED
+
       - run: npm test
       - run: npm run build
-      - uses: softprops/action-gh-release@v3
+
+      - name: Release notes and the Pages site
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          node tools/release.mjs notes "$VERSION" > dist/release-notes.md || echo "(no CHANGELOG section for $VERSION yet)" > dist/release-notes.md
+          mkdir -p site
+          cp dist/shadows-character-sheet.html site/index.html
+          cp dist/shadows-blank-sheet.html site/blank-sheet.html
+          echo "charactersheet.shadowsrpg.com" > site/CNAME
+      - uses: actions/upload-pages-artifact@v5
         with:
-          files: dist/shadows-character-sheet.html
-          generate_release_notes: true
+          path: site
+
+      - name: Tag and publish the release
+        if: ${{ !inputs.dry_run }}
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ steps.v.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          body_path: dist/release-notes.md
+          files: |
+            dist/shadows-character-sheet.html
+            dist/shadows-blank-sheet.html
+
+  deploy:
+    needs: release
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v5
+        id: deployment
