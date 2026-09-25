@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.25.1",
-    "date": null,
+    "date": "2026-09-24",
     "intro": [],
     "items": [
       "**Every Major Milestone shows all it does.** Hardcore Parkour, Cyber Psion and Can't See Me each have rules past their first line (Hardcore Parkour's fall damage and Dodge bonus, for one) that the Progression tab never showed. They're under the benefit now.",
