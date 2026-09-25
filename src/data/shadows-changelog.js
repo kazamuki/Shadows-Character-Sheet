@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.24.1",
-    "date": null,
+    "date": "2026-09-24",
     "intro": [
       "Character schema **0.12**. A character file from 0.24.0 opens as it was, and its number carries over."
     ],
