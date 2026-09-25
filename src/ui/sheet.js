@@ -1075,13 +1075,13 @@ function renderShProgression(){
   h += `</div><p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p></details>`;
 
   // Spend: skills
-  const focused = Engine.focusedSkillIds(ch);
+  const price = D.ip.skillIncreaseCost, focused = Engine.focusedSkillIds(ch);
   const trained = D.skills.filter(s=>Engine.skillLine(ch,s.id).trained);
   const untrained = D.skills.filter(s=>!Engine.skillLine(ch,s.id).trained);
-  h += `<details class="group" open><summary>Raise a Skill — 5 × current rank · Focused 3 × · new skill ${D.ip.skillIncreaseCost.newSkill} · cap ${D.ip.rankCap}</summary><div class="alloc">`;
+  h += `<details class="group" open><summary>Raise a Skill — ${price.perRank} × current rank · Focused ${price.focusedPerRank} × · new skill ${price.newSkill} · cap ${D.ip.rankCap}</summary><div class="alloc">`;
   for (const s of trained){
     const line=Engine.skillLine(ch,s.id), c=Engine.ipCost(ch,"skill",s.id);
-    h += `<div class="alloc-row"><div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} <small>rank ${line.rank}</small></div>
+    h += `<div class="alloc-row"><div class="name">${esc(s.name)}${c.ok&&c.focused?' <span class="chip gold">focused</span>':""} <small>rank ${line.rank}</small></div>
       <div>${c.ok?`<button class="btn sm ${ip.available>=c.cost?"primary":""}" data-ipbuy="skill|${s.id}" ${ip.available>=c.cost?"":"disabled"}>${c.from} → ${c.to} · ${c.cost} IP</button>`:`<span class="chip">${esc(c.why)}</span>`}</div>
       <span class="mod pos">+${line.checkBonus}</span></div>`;
   }
@@ -1606,7 +1606,7 @@ function grimoireHtml(ch, p){
 
 // ── Sheet: loadout & powers ──────────────────────────────────────────
 function renderShLoadout(){
-  const ch=S.ch, a=Engine.archetype(ch);
+  const ch=S.ch;
   const head = sheetHeader("Loadout & Powers", "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't.");
   // W5: a jump to each section, from the sections this page drew. Anchors
   // and scroll rather than sub-tabs, so print and Ctrl-F see the whole page.
@@ -1615,7 +1615,8 @@ function renderShLoadout(){
   h += secs.sect("Armor") + armorRowsHtml(ch);
   h += secs.sect("Gear") + gearRowsHtml(ch);
 
-  // Archetype panels: rankedList / table / list / text / toggle
+  // Archetype panels: rankedList / table / grimoire / focusedSkills /
+  // specializationText / toggle
   for (const p of Engine.archPanels(ch)){
     if (p.type==="tracker") continue; // lives in Trackers
     if (p.type==="reference") continue; // lives on the Archetype tab
@@ -1631,15 +1632,28 @@ function renderShLoadout(){
     }
     if (p.type==="table") h += editTable(panelRows(ch, p.id), p.columns, p.id, "Add row");
     if (p.type==="grimoire") h += grimoireHtml(ch, p);
-    if (p.type==="list" && p.id==="focused-skills"){
-      const f = Engine.focusedSkillIds(ch).map(id=>(Engine.skillById(id)||{name:id}).name);
-      h += f.length ? `<p class="step-note">${f.map(esc).join(" · ")} — advance at 3× current rank.</p>` : `<p class="step-note">None.</p>`;
+    // Decision 134: both read the chosen specialization's data. Nothing here
+    // knows which archetype declared them.
+    if (p.type==="focusedSkills"){
+      const f = Engine.focusedSkillSpec(ch), fp = Engine.focusedPicks(ch);
+      const names = Engine.focusedSkillIds(ch).map(id=>(Engine.skillById(id)||{name:id}).name);
+      const per = D.ip.skillIncreaseCost.focusedPerRank;
+      if (f && f.source.flagged) h += flagHtml(f.source);
+      if (names.length) h += `<p class="step-note">${names.map(esc).join(" · ")} — advance at ${per}× current rank.</p>`;
+      if (f && f.all) h += `<p class="step-note">Every skill advances at ${per}× current rank up to rank ${esc(f.all.throughRank)}.</p>`;
+      if (!names.length && !(f && f.all)) h += `<p class="step-note">None.</p>`;
+      if (fp && !fp.complete){
+        const more = fp.need - fp.have, cat = esc(Engine.focusedCategoryName(fp.category));
+        if (more>0) h += `<p class="step-note">Choose ${more} more ${cat} Skill${more===1?"":"s"} to Focus.</p>`;
+        if (fp.invalid.length) h += `<p class="step-note">A pick below can't be a Focused Skill any more. Remove it.</p>`;
+        h += focusedPickHtml(ch, "data-fpick");
+      }
     }
-    if (p.type==="text" && p.id==="tweak" && a){
-      const sub = ((a.specialization||{}).options||[]).find(o=>o.id===Engine.specializationIds(ch)[0]);
-      h += sub && sub.tweak ? `<div class="pick"><div class="head"><h4>${esc(sub.tweak.name)}</h4></div>
-        <div class="desc">${esc(sub.tweak.description||"")}${(sub.tweak.benefits||[]).length?"\n• "+sub.tweak.benefits.map(esc).join("\n• "):""}</div></div>`
-        : `<p class="step-note">No Tweak on record.</p>`;
+    if (p.type==="specializationText"){
+      const entries = Engine.specializationChosen(ch).map(o=>o[p.field]).filter(x=>x && typeof x==="object");
+      h += entries.length ? entries.map(t=>`<div class="pick"><div class="head"><h4>${esc(t.name||"")}</h4></div>
+        <div class="desc">${esc(t.description||"")}${(t.benefits||[]).length?"\n• "+t.benefits.map(esc).join("\n• "):""}</div></div>`).join("")
+        : `<p class="step-note">No ${esc(p.title||"entry")} on record.</p>`;
     }
     if (p.type==="toggle"){
       const cur = ch.panelData[p.id] || p.options[0];

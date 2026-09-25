@@ -21,6 +21,24 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.25.0
+
+Game data **0.18**. A character file from 0.24 opens as it was.
+
+- **A Mercenary chooses a fifth Focused Skill**, one Combat Skill of your choice, on the
+  Archetype step. A Mercenary you've already locked gets the choice on Loadout & Powers,
+  beside their Focused Skills, and it undoes like anything else.
+- **Focused Skills can start higher.** At creation, a Professional's Focused Skills go past
+  the Campaign Power Level's Max Skill Rank by the Focused Skill Max Bonus: +1 at Street
+  Level, up to +4 at World Coming Down. The Skills step shows both caps.
+- **Jack of All Trades raises every skill at the Focused price**, 3 × its current rank, for
+  every rank up to 4. From rank 5 on it's the standard price. Whether Master of None also
+  lifts every skill's starting cap isn't settled yet. For now it doesn't, and the Subtype
+  card says so.
+- **A Cleaner's two Combat Skill picks can't land on a skill the Cleaner already has**, like
+  Combat Sense, so every Cleaner ends up with six Focused Skills.
+- Each Subtype card lists its Focused Skills by name, and says what it asks you to choose.
+
 ## v0.24.1 — 2026-09-24
 
 Character schema **0.12**. A character file from 0.24.0 opens as it was, and its

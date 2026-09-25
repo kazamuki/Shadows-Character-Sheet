@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** under way. **Every question is answered** (§5). **S1 and S2 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only). Next: S3, S5 or S6, in any order; S4 after S3.
+**Status:** under way. **Every question is answered** (§5). **S1, S2 and S3 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18). Next: S4, S5 or S6, in any order.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -62,22 +62,19 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 
 *Versions:* none moved. *Found on the way:* Decision 101 had replaced part of 74 (the batch board) without marking it; 74 now says so.
 
-### S3: The Professional as data (AQ3 answered: go now; propose the data shape first)
-- [ ] **A8, Professional half / R7**:
-  - `focusedSkills` becomes ids plus a structured pick (e.g. `{ ids: [...], choose: { count: 1, category: "combat" } }`);
-  - the Jack-of-all-Trades rule becomes data (e.g. `allSkillsFocused: { upToRank: 4 }`);
-  - one generic reader;
-  - the three regex/name-matching sites and both `a.id==="professional"` checks go.
-- [ ] **B12**: the Mercenary's pick appears. **B13**: `focusedSkillMaxBonus` raises the cap in `canBoost`, the wizard stepper and `validate`. **B14**: Jack-of-all-Trades costs 3× up to rank 4.
-- [ ] Pin each with a `rules.test.mjs` case quoting 041.
-- [ ] Ken expects the Professional to be tweaked later (AQ3). So each rule should be one field a designer changes, like the bonus number, the pick count and category, or the rank ceiling, and never a rule in code. That makes a later tweak a data edit.
-- [ ] **R13, first table**: test the Professional scaling table against the mirrored 041.
+### S3: The Professional as data (done 2026-09-24, Decision 134)
+- [x] **A8, Professional half / R7**: `focusedSkills` is `{ ids, choose: { count, category }, all: { throughRank } }`, read by one generic reader. The name matching, both regexes and all three `professional` checks (engine `focusedSkillIds` and `validate`, `wizard.js`) are gone. So are the two panels matched by id on the sheet: they're the `focusedSkills` and `specializationText` panel types now.
+- [x] **B12**: the Mercenary's pick appears, and a pick can't repeat a skill the Subtype already names (the Cleaner could end with five; the probe found it). **B13**: `skillRankCap` adds `focusedSkillMaxBonus`, read by `canBoost`, the wizard stepper and label, and a new `validate` check. **B14**: Jack pays 3× for ranks bought up to 4, and 4 → 5 is standard (Ken's answer).
+- [x] Pinned in `rules.test.mjs`, one case per 041 line; 18 mutations, each caught.
+- [x] Each rule is one field: `choose.count`, `choose.category`, `all.throughRank`, `focusedSkillMaxBonus`, and the IP prices (`ip.skillIncreaseCost.perRank`/`focusedPerRank`, pulled forward from S4 since `ipCost` was being rewritten).
+- [x] **R13, first table**: the scaling table is tested against 041's markdown.
+- **Also, from Ken's answers:** Jack's cap question is **F33**, for Deighton's grouped question. A locked character short of a pick chooses it on Loadout & Powers, as one undoable action.
 
-*Versions:* game data minor (available choices change, Decision 68). Character schema: probably none, since `focusedSkillPicks` already stores ids. The proposal must confirm that. App minor. *Size:* one session.
+*Versions:* app 0.25.0, game data 0.18. Character schema: none, as expected: `focusedSkillPicks` already stored ids, and `migrate()` now keeps it a list of strings.
 
 ### S4: Read it or label it (engine change, propose first)
 - [ ] **A8, Arcanist half**: `disciplines.cpPerRank` read by `disciplineSpent` and the wizard (the two hardcoded 6s go); `maxRankBy` read; the Evocation starting rank declared on the discipline, not matched by id.
-- [ ] **A9**, for each "setting the engine ignores": read it, or rename it as display text. The IP formulas and SAN formula become numbers the engine reads. `boostRules` is read or trimmed. `startingSFR` becomes `{ stat, times, plus }`. The credit symbol comes from data. The milestone cadence prose (two data fields, two engine strings) is generated from the numbers.
+- [ ] **A9**, for each "setting the engine ignores": read it, or rename it as display text. The stat IP formula and SAN formula become numbers the engine reads (the skill prices went in S3). `boostRules` is read or trimmed. `startingSFR` becomes `{ stat, times, plus }`. The credit symbol comes from data. The milestone cadence prose (two data fields, two engine strings) is generated from the numbers.
 - [ ] **R6, key guard**: a test that every data key is read by code or named as display text (`*Text`, `*Note`, `description`, `flavorLine`, …).
 - [ ] Before and after, diff every computed output across a set of characters, as Batch 1 did. If nothing moves, there's no game-data bump (Decision 68).
 
@@ -121,7 +118,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 |---|---|---|---|
 | S1 | minor | none expected | 0.11 (`meta.id`) |
 | S2 | none | none | none |
-| S3 | minor | minor | probably none; the proposal confirms |
+| S3 | minor (0.25.0) | minor (0.18) | none |
 | S4 | none if outputs are identical | none if outputs are identical | none |
 | S5 | patch only if fonts are embedded | none | none |
 | S6 | minor | none | none (a roster lives in `localStorage` keys, not the file) |

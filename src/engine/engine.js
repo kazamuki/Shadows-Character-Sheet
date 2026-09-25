@@ -254,7 +254,8 @@ const Engine = (() => {
       return {ok:false, why:"Stat cap 10."};
     if (type==="skill"){
       const rank = (ch.skills[id] ? ch.skills[id].rank : 0) + times;
-      if (rank >= pl.maxSkillRank) return {ok:false, why:`Max Skill Rank ${pl.maxSkillRank}.`};
+      const cap = skillRankCap(ch, id);
+      if (rank >= cap) return {ok:false, why:`Max Skill Rank ${cap}.`};
     }
     const bal = cp(ch);
     if (bal && bal.left < D().creationFlow.boostRules.cpCostPerPoint)
@@ -1273,21 +1274,74 @@ const Engine = (() => {
     return { max, loss, current: Math.max(0, max - loss) };
   }
 
-  // Professional Focused Skills: subtype list (matched by name, plural-tolerant
-  // — F10 names like "Handgun" vs "Handguns") + creation picks. Focused skills
-  // advance at 3× current rank instead of 5×.
-  function focusedSkillIds(ch){
-    const a = archetype(ch);
-    if (!a || a.id!=="professional") return [];
-    const sub = ((a.specialization||{}).options||[]).find(o=>o.id===((ch.archetypeChoices||{}).specialization||[])[0]);
-    const ids = new Set(ch.archetypeChoices.focusedSkillPicks||[]);
-    const norm = s => String(s).toLowerCase().replace(/[^a-z]/g,"").replace(/s$/,"");
-    if (sub) for (const fname of (sub.focusedSkills||[])){
-      if (/chosen at creation/i.test(fname)) continue;
-      const hit = D().skills.find(sk => norm(sk.name)===norm(fname));
-      if (hit) ids.add(hit.id);
+  // Focused Skills (Decision 134). Whatever specialization the character chose
+  // may carry `focusedSkills: { ids, choose: { count, category }, all: {
+  // throughRank } }`; nothing here asks which archetype that is. The first
+  // chosen option that carries one is the one read.
+  function focusedSkillSpec(ch){
+    for (const o of specializationChosen(ch)){
+      const f = o.focusedSkills;
+      if (f && typeof f==="object" && !Array.isArray(f))
+        return { ids: Array.isArray(f.ids) ? f.ids : [], choose: f.choose || null, all: f.all || null, source: o };
     }
-    return [...ids];
+    return null;
+  }
+  // The creation pick: which skills may be chosen (the category, less the ones
+  // the specialization already names), how many, and which stored picks count.
+  function focusedPicks(ch){
+    const f = focusedSkillSpec(ch);
+    if (!f || !f.choose) return null;
+    const need = Math.max(0, Number(f.choose.count)||0);
+    const options = D().skills.filter(s=>s.category===f.choose.category && !f.ids.includes(s.id)).map(s=>s.id);
+    const stored = Array.isArray((ch.archetypeChoices||{}).focusedSkillPicks) ? ch.archetypeChoices.focusedSkillPicks : [];
+    const picks = stored.filter((id,i)=>options.includes(id) && stored.indexOf(id)===i);
+    const invalid = stored.filter(id=>!options.includes(id));
+    return { need, have: picks.length, picks, invalid, options, category: f.choose.category,
+             complete: picks.length===need && !invalid.length };
+  }
+  // Choose or unchoose one pick. The engine owns eligibility and the count, so
+  // the wizard and the sheet refuse the same things for the same reason.
+  function toggleFocusedPick(ch, skillId){
+    const p = focusedPicks(ch);
+    if (!p) return { ok:false, why:"Nothing to choose here." };
+    const list = ch.archetypeChoices.focusedSkillPicks;
+    const i = list.indexOf(skillId);
+    if (i>=0){ list.splice(i,1); return { ok:true }; }
+    if (!p.options.includes(skillId)) return { ok:false, why:"That skill can't be one of these picks." };
+    if (p.have >= p.need) return { ok:false, why:`You've chosen ${p.need}. Unchoose one first.` };
+    list.push(skillId);
+    return { ok:true };
+  }
+  // The skills that are Focused by name: the specialization's own plus valid
+  // picks. An `all` rule (Jack of All Trades) is a price, not a list, and is
+  // read by focusedPrice() alone (F33).
+  function focusedSkillIds(ch){
+    const f = focusedSkillSpec(ch);
+    if (!f) return [];
+    const p = focusedPicks(ch);
+    return [...new Set([...f.ids, ...(p ? p.picks : [])])];
+  }
+  // "combat" → "Combat", for the copy that names a pick's category.
+  const focusedCategoryName = c => c ? String(c).charAt(0).toUpperCase() + String(c).slice(1) : "";
+  // The archetype's free-ranks pool (the Professional's Natural Advantages):
+  // the baseline trait that carries a `pool`, sized by the scaling row's
+  // naturalAdvantageRanks.
+  const naturalAdvantagePool = a => ((a||{}).baselineTraits||[]).find(t=>Array.isArray(t.pool)) || null;
+  // Does raising this skill to `toRank` pay the Focused price?
+  function focusedPrice(ch, skillId, toRank){
+    if (focusedSkillIds(ch).includes(skillId)) return true;
+    const f = focusedSkillSpec(ch);
+    return !!(f && f.all && toRank <= (Number(f.all.throughRank)||0));
+  }
+  // The most a skill can start at. 042: the Power Level's Max Skill Rank caps
+  // starting rank only, so this is a creation rule; play is capped by
+  // ip.rankCap. A Focused Skill adds the scaling row's focusedSkillMaxBonus.
+  function skillRankCap(ch, skillId){
+    const pl = powerLevel(ch);
+    if (!pl) return null;
+    const row = scalingRow(ch);
+    const bonus = row && focusedSkillIds(ch).includes(skillId) ? (Number(row.focusedSkillMaxBonus)||0) : 0;
+    return pl.maxSkillRank + bonus;
   }
 
   // ── Improvement Points: the journal is the audit trail ────────────────
@@ -1318,10 +1372,11 @@ const Engine = (() => {
     const line = skillLine(ch, targetId);
     const cur = line.rank;
     if (cur >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
-    const focused = focusedSkillIds(ch).includes(targetId);
+    const price = D().ip.skillIncreaseCost;
+    const focused = focusedPrice(ch, targetId, cur+1);
     // Decision 97: "5 × current rank" would price rank 0→1 at zero; a new skill
     // after creation is a flat price from the data instead.
-    const cost = cur===0 ? D().ip.skillIncreaseCost.newSkill : (focused?3:5) * cur;
+    const cost = cur===0 ? price.newSkill : (focused ? price.focusedPerRank : price.perRank) * cur;
     return {ok:true, cost, from:cur, to:cur+1, focused};
   }
   function spendIP(ch, targetType, targetId, note){
@@ -2064,6 +2119,8 @@ const Engine = (() => {
       ac.specialization = legacy.filter(Boolean);
     }
     delete ac.aberrations; delete ac.subtype;
+    // Focused Skill picks are skill ids (Decision 134): anything else is junk.
+    ac.focusedSkillPicks = (Array.isArray(ac.focusedSkillPicks) ? ac.focusedSkillPicks : []).filter(x=>typeof x==="string");
     if (c.identity && typeof c.identity==="object") delete c.identity.specialization;
     _coerceNumbers(c);
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
@@ -2284,6 +2341,20 @@ const Engine = (() => {
   function validate(stepId, ch){
     const out = [], pl = powerLevel(ch), a = archetype(ch);
     const E=(m)=>out.push({level:"error",msg:m}), W=(m)=>out.push({level:"warn",msg:m});
+    // The starting cap (Decision 134): the stepper and canBoost refuse to pass
+    // it, but changing Subtype after assigning ranks can leave a skill over.
+    // The skills step reports a rank over the cap; Character Points reports
+    // one that only Boosts carried over.
+    const overCap = withBoosts => {
+      if (!pl) return;
+      for (const [id, s] of Object.entries(ch.skills||{})){
+        const def = skillById(id), cap = skillRankCap(ch, id);
+        if (!def || cap==null) continue;
+        const base = Number(s.rank)||0, boosted = base + boostsFor(ch, "skill", id);
+        if (!withBoosts && base > cap) E(`${def.name} is rank ${base}. It can start at ${cap} at most.`);
+        if (withBoosts && base <= cap && boosted > cap) E(`${def.name} is rank ${boosted} with Boosts. It can start at ${cap} at most.`);
+      }
+    };
     if (stepId==="power-level"){ if (!pl) E("Choose a Campaign Power Level."); }
     if (stepId==="concept"){ if (!String((ch.identity||{}).name||"").trim()) E("Your character needs a name."); }
     if (stepId==="stats"){
@@ -2337,26 +2408,26 @@ const Engine = (() => {
           else if (used < r) W(`${r-used} Stat Bonus points unallocated.`);
         }
       }
-      if (a.id==="professional"){
-        const sub = (a.specialization.options||[]).find(o=>o.id===specializationIds(ch)[0]);
-        // Decision 91: the subtype's stat gate is requires data, not its own
-        // special-cased check — same vocabulary checkPrereqs already speaks.
-        if (sub && sub.requires){
-          const r = checkPrereqs(ch, sub.requires);
-          for (const u of r.unmet) E(`${sub.name} requires ${u}.`);
-        }
-        if (sub){
-          const chooseN = (sub.focusedSkills||[]).filter(f=>/chosen at creation/i.test(f));
-          if (chooseN.length){
-            const m = /^(\d+)/.exec(chooseN[0]); const need = m?Number(m[1]):2;
-            if (ch.archetypeChoices.focusedSkillPicks.length !== need)
-              E(`Pick ${need} Combat Skills for your Focused Skills (${ch.archetypeChoices.focusedSkillPicks.length}/${need}).`);
-          }
-          const row2 = scalingRow(ch);
-          const have = ch.archetypeChoices.naturalAdvantages.reduce((s,n)=>s+n.rank,0);
-          if (row2 && have !== row2.naturalAdvantageRanks)
-            E(`Allocate ${row2.naturalAdvantageRanks} Natural Advantage ranks (${have}/${row2.naturalAdvantageRanks}).`);
-        }
+      // Decision 91: a specialization's gate is `requires` data, read by
+      // checkPrereqs. Decision 134: it and the two pools below run for any
+      // archetype whose data carries them, not for one named archetype.
+      for (const o of specializationChosen(ch)){
+        if (!o.requires) continue;
+        const r = checkPrereqs(ch, o.requires);
+        for (const u of r.unmet) E(`${o.name} requires ${u}.`);
+      }
+      const fp = focusedPicks(ch);
+      if (fp){
+        const cat = focusedCategoryName(fp.category);
+        for (const id of fp.invalid) E(`${(skillById(id)||{name:id}).name} can't be one of your Focused Skill picks. Unchoose it.`);
+        if (fp.have !== fp.need)
+          E(`Choose ${fp.need} ${cat} Skill${fp.need>1?"s":""} for your Focused Skills (${fp.have}/${fp.need}).`);
+      }
+      const row2 = scalingRow(ch);
+      if (specializationIds(ch).length && naturalAdvantagePool(a) && row2 && row2.naturalAdvantageRanks!=null){
+        const have = ch.archetypeChoices.naturalAdvantages.reduce((s,n)=>s+n.rank,0);
+        if (have !== row2.naturalAdvantageRanks)
+          E(`Allocate ${row2.naturalAdvantageRanks} Natural Advantage ranks (${have}/${row2.naturalAdvantageRanks}).`);
       }
     }
     if (stepId==="skills"){
@@ -2368,6 +2439,7 @@ const Engine = (() => {
         if (left < 0) E(`Skill Points overspent by ${-left}.`);
         else if (left > 0) W(`${left} Skill Points unspent.`);
       }
+      overCap(false);
       // Skills host picks too (Martial Arts styles). Same rule, same voice.
       for (const id of Object.keys(ch.skills||{})){
         const def = skillById(id);
@@ -2383,6 +2455,7 @@ const Engine = (() => {
       if (!bal) E("Choose a Campaign Power Level before spending Character Points.");
       else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
+      overCap(true);
       if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.notes!=="natural"))
         E(`${a.name}s cannot purchase Advantages.`);
       // Starting spells (Decision 111). Evocation and TOL are only final on
@@ -2500,6 +2573,9 @@ const Engine = (() => {
            skillLine, validate, buildExport, versionCheck,
            // Phase 3
            adjFor, painState, luckState, sanState, focusedSkillIds,
+           // Focused Skills as data (Decision 134)
+           focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice, skillRankCap,
+           focusedCategoryName, naturalAdvantagePool,
            // Conditions (Decision 95)
            conditionById, locationById, conditionState, addCondition, removeCondition, setConditionMarks,
            // Taking a hit (Decision 99)

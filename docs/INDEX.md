@@ -90,15 +90,15 @@ Each id is defined in exactly one place and referenced everywhere.
 | `A5` | The decision ledger is doing three jobs | closed | plan S2 · D130 |
 | `A6` | Per-change documentation tax out of proportion to the change | **open**: tiers in place (D131); the scripts left | plan S5 (R4) |
 | `A7` | Seven flags had no F-number; four were unasked Deighton questions | closed | plan S2 · F28–F32 |
-| `A8` | Archetypes special-cased by id; Professional rules parsed from prose | **open** | plan S3, S4 |
+| `A8` | Archetypes special-cased by id; Professional rules parsed from prose | **open**: the Professional half closed (D134); the Arcanist half left | plan S4 |
 | `A9` | Data fields that look like settings but aren't read (B3's class) | **open** | plan S4 |
 | `A10` | Merged content no player can see | **open** | plan S6 · AQ4 |
 | `A11` | `notes: "natural"` doubles as a type marker | **open** | plan S7 |
 | `A12` | UI split by render/bind, not by screen | **open** | plan S7 |
 | `B11` | Mastering a spell trips `versionCheck`'s hand-edit warning | closed | plan S1 · app 0.23.1 |
-| `B12` | The Mercenary never picks its fifth Focused Skill | **open** | plan S3 |
-| `B13` | Focused Skill Max Bonus never applied | **open** | plan S3 |
-| `B14` | Jack-of-all-Trades pays full price for every skill | **open** | plan S3 |
+| `B12` | The Mercenary never picks its fifth Focused Skill | closed | plan S3 · D134 |
+| `B13` | Focused Skill Max Bonus never applied | closed | plan S3 · D134 |
+| `B14` | Jack-of-all-Trades pays full price for every skill | closed | plan S3 · D134 |
 | `B15` | Hardcore Parkour's prerequisite names a nonexistent Advantage | closed | → F27 → Deighton's ruling, D129 |
 | `B16` | A character file could put markup on the page (Admin ids; numbers stored as text; crafted undo) | closed | plan S1 · D124 |
 | `B17` | The Trueborn's Lunar Phase Blessing never renders | closed | plan S1 · D126 |
@@ -133,6 +133,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F30` | Anti-Materiel (weapon tag): what it does to a person | Deighton |
 | `F31` | Reach (weapon tag): what it adds to the Reach column | Deighton |
 | `F32` | Arcanist Major Milestones: bring in REF_CRB's, or wait for 041? | Ken |
+| `F33` | Jack of All Trades: does "treated as Focused" raise every skill's starting cap, and open Skill Paragon to any skill? Stubbed: the price only | Deighton |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
@@ -228,6 +229,7 @@ The generic archetype structure, and the pick that defines one.
 - **78** *(Batch 3)* — The mechanical picks are the app's business; the fiction is the table's.
 - **79** *(A3 — closes A1 and A2)* — One specialization model, and the count comes from the data.
 - **126** *(Option powers — B17)* — `starterPower`/`additionalPowers` render from the data; an array of plain objects on a power is a table; no text means "not written yet".
+- **134** *(Audit S3 — B12–B14)* — Focused Skills are data (`ids`, a category `choose`, an `all` price), read by one generic reader; the Focused cap and the IP prices are numbers the engine reads.
 
 ### Character file & migration
 
@@ -258,7 +260,7 @@ Promises the engine makes and the guards behind them.
 - **82** *(Batch 3, post-review)* — A trait held twice is still one trait — and an adversarial review found it.
 - **87** *(Batch 3b)* — The other half of Decision 58 lands: a `grants` array gives an advantage/disadvantage a static mechanical effect.
 - **88** *(Batch 3b, F17)* — Long-Lived's ranks stack.
-- **91** *(PR #7 review, closed)* — One prerequisite vocabulary, checked in one place: `requirementState`/`majorPrereqs` share `checkPrereqs`, the Professional stat gate reads `requires` data, `heldIds` reaches skills.
+- **91** *(PR #7 review, closed)* — One prerequisite vocabulary, checked in one place: `requirementState`/`majorPrereqs` share `checkPrereqs`, the Professional stat gate reads `requires` data, `heldIds` reaches skills. → **superseded in part by 134**
 - **124** *(A character file is untrusted input — B16)* — every stored number is a number after `migrate()`; undo writes only to the character; Admin addresses rows by position; `hostile.test.mjs` is the guard.
 
 ### Sheet & play tracking

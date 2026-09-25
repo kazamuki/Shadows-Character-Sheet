@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.17",
+    "gamedataVersion": "0.18",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-24"
   },
@@ -400,8 +400,8 @@ window.SHADOWS_DATA = {
      crashed; Decision 22). `category` drives table grouping on the sheet.
      `covers` is the bullet list shown under the skill's "?" expander. Character
      files reference skills by `id`, so adding is safe but renaming an id is not.
-     NOTE: any skill named in a Professional subtype's `focusedSkills` must exist
-     here by name -- see the F10 review note below. */
+     A Professional subtype's `focusedSkills.ids` name skills here by id, and
+     `focusedSkills.choose.category` names a `category` (Decision 134). */
   "skills": [
     {
       "id": "archery",
@@ -993,8 +993,8 @@ window.SHADOWS_DATA = {
   ],
   // F10 closed 2026-09-02. Both halves are done: the catalog gained Occult Lore
   // and Survival in the CRB v4 pass, and archetypes.professional was renamed to
-  // match in the same pass -- which mattered, because focused-skill matching is
-  // by NAME, not id. The flag outlived the work it described and was still
+  // match in the same pass -- which mattered then, because focused-skill
+  // matching was by NAME, not id (it's by id since Decision 134). The flag outlived the work it described and was still
   // rendering to players; the whole block is removed rather than set to false,
   // because dead data that looks live is the defect class this batch closes.
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
@@ -2156,13 +2156,7 @@ window.SHADOWS_DATA = {
               "BOD": 6,
               "REF": 8
             } },
-            "focusedSkills": [
-              "Acrobatics",
-              "Combat Sense",
-              "Security",
-              "Stealth",
-              "2 Combat Skills (chosen at creation)"
-            ],
+            "focusedSkills": { "ids": ["acrobatics", "combat-sense", "security", "stealth"], "choose": { "count": 2, "category": "combat" } },
             "tweak": {
               "name": "Vanish",
               "description": "A mastery over bodily movements combined with patience to effectively disappear altogether. You become a ghost in the flesh.",
@@ -2181,13 +2175,7 @@ window.SHADOWS_DATA = {
               "MOB": 7,
               "BOD": 8
             } },
-            "focusedSkills": [
-              "Athletics",
-              "Combat Sense",
-              "Intimidation",
-              "Investigation",
-              "Survival"
-            ],
+            "focusedSkills": { "ids": ["athletics", "combat-sense", "intimidation", "investigation", "survival"] },
             "tweak": {
               "name": "Hard Knock Life",
               "description": "You've been through the worst that life has to offer, developing incredible fortitude in both mind and body.",
@@ -2205,12 +2193,7 @@ window.SHADOWS_DATA = {
               "INT": 7,
               "MAG": 7
             } },
-            "focusedSkills": [
-              "Awareness",
-              "Combat Sense",
-              "Streetwise",
-              "Basic Tech"
-            ],
+            "focusedSkills": { "ids": ["awareness", "combat-sense", "streetwise", "basic-tech"] },
             "tweak": {
               "name": "Concierge",
               "description": "A foundation that lets you survive on wits and cunning, plus an underground knowledge of the black market.",
@@ -2229,7 +2212,7 @@ window.SHADOWS_DATA = {
               "INT": 9,
               "COOL": 7
             } },
-            "focusedSkills": [],
+            "focusedSkills": { "ids": [], "all": { "throughRank": 4 } },
             "tweak": {
               "name": "Master of None",
               "description": "Real mastery comes from understanding all your options and using what you have available to the best of your ability.",
@@ -2238,7 +2221,9 @@ window.SHADOWS_DATA = {
                 "All skills are treated as Focused Skills and may be improved at 3 x current rank up to rank 4. At Rank 5 and above, the standard cost of 5 x current rank returns."
               ]
             },
-            "note": "Focused Skills: none (all skills are treated as Focused per the Tweak)."
+            "flagged": true,
+            "flagNote": "F33. Master of None: 'All skills are treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4.' Unclear whether 'treated as Focused' also gives every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7), and whether Skill Paragon's 'a focused skill from your chosen Profession' can be any skill for a Jack. Stub: the price only, through rank 4 (Ken, 2026-09-24: 4 to 5 is normal cost); no cap bonus. Confirm with Deighton.",
+            "playerNote": "Every skill advances at the Focused price up to rank 4. Whether it also raises every skill's starting cap is still being settled. For now it doesn't."
           },
           {
             "id": "mercenary",
@@ -2248,13 +2233,7 @@ window.SHADOWS_DATA = {
               "BOD": 6,
               "REF": 7
             } },
-            "focusedSkills": [
-              "Athletics",
-              "Awareness",
-              "Combat Sense",
-              "Handguns",
-              "1 Additional Combat Skill"
-            ],
+            "focusedSkills": { "ids": ["athletics", "awareness", "combat-sense", "handguns"], "choose": { "count": 1, "category": "combat" } },
             "tweak": {
               "name": "Battle Hardened",
               "description": "Combat has been part of your life so long it's nearly your best friend. Pain, disorientation, and serious injury have made you far tougher than the average person.",
@@ -2274,15 +2253,7 @@ window.SHADOWS_DATA = {
               "BOD": 5,
               "EMP": 7
             } },
-            "focusedSkills": [
-              "Athletics",
-              "Combat Sense",
-              "Intuition",
-              "Occult Lore",
-              "Stealth",
-              "Survival",
-              "Tracking"
-            ],
+            "focusedSkills": { "ids": ["athletics", "combat-sense", "intuition", "occult-lore", "stealth", "survival", "tracking"] },
             "tweak": {
               "name": "Hunter's Calling",
               "description": "Knowledge and instinct honed against the things that hunt in the dark.",
@@ -2300,13 +2271,7 @@ window.SHADOWS_DATA = {
               "BOD": 8,
               "REF": 7
             } },
-            "focusedSkills": [
-              "Acrobatics",
-              "Combat Sense",
-              "Intuition",
-              "Martial Arts",
-              "Occult Lore"
-            ],
+            "focusedSkills": { "ids": ["acrobatics", "combat-sense", "intuition", "martial-arts", "occult-lore"] },
             "tweak": {
               "name": "Power Style",
               "description": "Pseudo-supernatural abilities using the body's energy (Chi). Usable Chi equals your TOL score; each ability has a Chi cost. Activate individually or simultaneously via a WILL Essence Check (TN 8, TH 1 per ability being activated). Cumulative cost of active abilities cannot exceed TOL. Activating or switching abilities requires the check again; on failure, no abilities can be activated until a successful check (once per turn in combat). All abilities are sustained through concentration.",
@@ -2330,14 +2295,7 @@ window.SHADOWS_DATA = {
               "BOD": 6,
               "REF": 9
             } },
-            "focusedSkills": [
-              "Athletics",
-              "Awareness",
-              "Basic Tech",
-              "Combat Sense",
-              "Pilot",
-              "Deception"
-            ],
+            "focusedSkills": { "ids": ["athletics", "awareness", "basic-tech", "combat-sense", "pilot", "deception"] },
             "tweak": {
               "name": "Stunt Driver",
               "description": "How far can the boundaries of physics be pushed? You don't hesitate to find out. (Piloting a mech is considered a vehicle.)",
@@ -2356,12 +2314,13 @@ window.SHADOWS_DATA = {
         "panels": [
           {
             "id": "focused-skills",
-            "type": "list",
+            "type": "focusedSkills",
             "title": "Focused Skills"
           },
           {
             "id": "tweak",
-            "type": "text",
+            "type": "specializationText",
+            "field": "tweak",
             "title": "Tweak"
           }
         ]
@@ -3031,8 +2990,9 @@ window.SHADOWS_DATA = {
   /* IMPROVEMENT POINTS (IP) -- post-creation advancement costs (Decision 14).
      `perSession` is the default grant (overridable per session, Decision 23).
      Stat raise = currentValue * 10 (computed against the CURRENT value, so it
-     scales as the stat grows). Skill raise = 5 * currentRank, Focused skills
-     3 * currentRank. `rankCap` caps skills/powers at 10 via IP. WILL and TOL are
+     scales as the stat grows). Skill raise = `perRank` x current rank, Focused
+     skills `focusedPerRank` x current rank (Decision 134: numbers the engine
+     reads, not formula text). `rankCap` caps skills/powers at 10 via IP. WILL and TOL are
      in `cannotRaiseDirectly` -- they only move via their input stats or manual
      adjustments. IPE = IP-purchased enhancement, tracked per target on the sheet.
      Learning a NEW skill after creation (rank 0 -> 1) is a flat
@@ -3073,8 +3033,8 @@ window.SHADOWS_DATA = {
       "example": "REF 6 to 7 costs 60 IP; 9 to 10 costs 90 IP."
     },
     "skillIncreaseCost": {
-      "formula": "5 * currentRank",
-      "focusedFormula": "3 * currentRank",
+      "perRank": 5,
+      "focusedPerRank": 3,
       "newSkill": 25
     },
     "rankCap": 10,

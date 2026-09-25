@@ -458,6 +458,33 @@ const copy = k => (D.appCopy||{})[k] || "";
 function noticeHtml(label, text){
   return `<div class="flag"><div><b>${esc(label)}</b> — ${esc(text)}</div></div>`;
 }
+// A specialization's Focused Skills as one line, built from its data
+// (Decision 134): "Athletics, Awareness, and 1 Combat Skill of your choice".
+function focusedSkillsText(f){
+  if (!f || typeof f!=="object" || Array.isArray(f)) return "";
+  const parts = (f.ids||[]).map(id=>(Engine.skillById(id)||{name:id}).name);
+  if (f.choose){
+    const n = Number(f.choose.count)||0;
+    parts.push(`${n} ${Engine.focusedCategoryName(f.choose.category)} Skill${n===1?"":"s"} of your choice`);
+  }
+  if (f.all) return `Every skill, at the Focused price up to rank ${f.all.throughRank}`;
+  if (!parts.length) return "None";
+  return parts.length>1 ? parts.slice(0,-1).join(", ")+", and "+parts[parts.length-1] : parts[0];
+}
+// The Focused Skill pick: one toggle per skill the engine allows, plus any
+// stored pick it doesn't, so the player can clear it. `attr` names the
+// binder: the wizard's (data-fskill) or the sheet's (data-fpick).
+function focusedPickHtml(ch, attr){
+  const fp = Engine.focusedPicks(ch);
+  if (!fp) return "";
+  const full = fp.have >= fp.need;
+  return `<p class="step-note"><em>${fp.have}/${fp.need} chosen.</em></p>` + [...fp.options, ...fp.invalid].map(id=>{
+    const s = Engine.skillById(id) || { name:id };
+    const on = fp.picks.includes(id), bad = fp.invalid.includes(id);
+    return `<div class="pick ${on?"selected":""}"><div class="head"><h4>${esc(s.name)}</h4>
+      <div class="controls"><button class="toggle" ${attr}="${esc(id)}" ${!on && !bad && full?"disabled":""}>${bad?"Remove":on?"Chosen":"Choose"}</button></div></div></div>`;
+  }).join("");
+}
 function flagHtml(entry){
   return noticeHtml(copy("unsettledLabel"), (entry && entry.playerNote) || copy("unsettledRule"));
 }
