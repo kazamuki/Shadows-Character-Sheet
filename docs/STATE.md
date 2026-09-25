@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.26.0` · game data `0.20` · character schema `0.12` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.26.1` · game data `0.20` · character schema `0.12` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -31,12 +31,13 @@ everywhere (`tests/hostile.test.mjs`).
 (`plans/` keeps them as history). Combat: Decisions 95–106, with stubs
 waiting on Deighton. Magic: Decisions 93, 106, 108–111 and 115.
 
-**The 2026-09-24 audit's first four sessions are done** (`log/2026.md` has
+**The 2026-09-24 audit's first five sessions are done** (`log/2026.md` has
 each). Character files are untrusted input (Decision 124), every character has
 a permanent **TAG** (133), decisions say what they rejected (130), and changes
 have tiers (131). The data now drives the archetypes: every key is read by
 code or named as text, and **no archetype is named in engine or UI code**
-(134, 135). Tests enforce all of it.
+(134, 135). The app makes no network request, fonts included (137), and a
+release is one workflow a cloud session can run (138). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -49,15 +50,16 @@ on screen but not in Chrome's print/PDF output (Decision 94). Cosmetic only.
 The batch board is `log/shipped.md`. This section keeps only what shipped work
 left that is still true now.
 
-**Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages. Only a
-`v*` tag deploys; **Run workflow** is a dry run on a branch, a re-publish on a
-tag. The live version is the latest `v*` tag. How to release is in
-`CLAUDE.md`, and only there (plan S5 moves it into one workflow, AQ9).
+**Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages, deployed
+only by the **release** workflow (Decision 138): from main with a version, a
+pushed `v*` tag, or a dry run on a branch. The live version is the latest
+`v*` tag. How to release is in `CLAUDE.md`, and only there.
 
 **Things a next session should know.**
 
 - **Name the change tier first** (`CLAUDE.md`). A Docs or Fix change doesn't
-  rewrite this file unless what's next changed.
+  rewrite this file unless what's next changed. `.claude/skills/` walks the
+  procedures; `npm run bump` moves the app version; `test:fast` is the quick loop.
 - **Before proposing anything, search SCHEMA §4's Touches lines** for what it
   touches, and read the Rejected and Revisit if of what you find (Decision 130).
 - **No entry declares `excludes` or `requires` yet** — the CRB names no pair.
@@ -91,7 +93,7 @@ is the authority on a flag's full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1–S4 ✅ · S5 ⏭ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
+| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1–S5 ✅ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
 | **Creation-pool economics** — F8, W34–W37 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker. The 2026-09-24 meeting added a climbing-cost stat buy (W34), a flat pool per Campaign level (W35) and starting LUCK 6, maybe by level (W37). Settle them with F8 (W36) as one ruling |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
@@ -112,15 +114,13 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-**The audit plan's next sessions, any order, no answers needed:**
-- **S5, tooling:** the `SessionStart` hook and project skills (R5), `npm run
-  bump` and `release:check` (R4, the rest of A6), `test:fast`, one release
-  workflow a cloud session can run (AQ9), embedded fonts (AQ6), the dev
-  server on `127.0.0.1`.
+**The audit plan's last session, no answers needed:**
 - **S6, table feel,** specified by AQ4: rules text a hover or tap away, lore
   on the Archetype tab, Ammo in the shop, the phone and tablet header, the
   roster. The key guard's `NOT_YET_SHOWN` list is S6's content checklist:
-  each entry comes off it as a screen shows it.
+  each entry comes off it as a screen shows it. `npm run phone-check` is the
+  header's: today the phone fails (header 30%, Home 74 px too wide) and so does
+  1024×768 (header 23% against a 20% budget); 768 px passes.
 
 rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
 
@@ -129,8 +129,8 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 ## 5. Where to start
 
 **The live site is v0.26.0** (game data 0.20, schema 0.12): the spell catalog and
-a spell's forms. Next, all unblocked: S5
-or S6. Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
+a spell's forms. App 0.26.1 (embedded fonts) is under `[Unreleased]`; releasing
+it is the new workflow's first run. Next, unblocked: S6. Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
 W30 (Reload from carried ammo), W31 (a TAGless character's TAG), W32 (spell
 damage from Spell Power, which wants a CRB line on rounding), W33 (Martial Arts
 styles) and W34–W37 (character creation).
