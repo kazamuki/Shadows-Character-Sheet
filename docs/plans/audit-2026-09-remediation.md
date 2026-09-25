@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** under way. **Every question is answered** (§5). **S1–S5 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1). Next: S6.
+**Status:** under way. **Every question is answered** (§5). **S1–S5 and S6a are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21). Next: S6b (the header) and S6c (the roster), in either order.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -23,7 +23,7 @@ There are also three player-facing problems worth fixing regardless:
 2. **The docs diet next (S2).** It's pure docs, it needs Ken's answers more than code, and **it makes every later session cheaper**. Every session after it pays the smaller per-change cost.
 3. **Then the data contract (S3, S4).** It's the structural fix behind A8/A9 and B12–B14, and it wants the lighter process from S2 in place first.
 4. **Tooling (S5) can go any time.** It's independent, and a cloud session can do most of it alone.
-5. **Table feel (S6) waits on design answers** (AQ4, AQ5, AQ10). Its items then go through the wishlist like any other UX work.
+5. **Table feel (S6) waited on design answers** (AQ4, AQ5, AQ10), all answered. It split into S6a (rules a tap away), S6b (the header) and S6c (the roster).
 6. **Structure (S7) is opportunistic.** Do each item when a session is already in that code, never as a session of its own.
 
 S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine functions, so run them one after the other.
@@ -92,20 +92,42 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 
 *Versions:* app 0.26.1 (the fonts). Game data and schema: none.
 
-### S6: Table feel (after AQ4; runs through the wishlist)
-- [ ] **B19**: the phone header. **Lower priority after AQ10:** tablets and laptops are the expected devices, and a phone is the emergency fallback. The aim is "usable in an emergency", not phone-first: probably just a header that scrolls away below a width. New wishlist item. Check tablet widths (768–1024 px) in the same pass, since that's where most play will happen.
-- [ ] **C5**: refusals go to the toast or inline, confirmations to `openModal`. The 33 `alert()`/`confirm()` calls go.
-- [ ] **A10**, as Ken answered AQ4. One principle: any rule the sheet names, a player can read without leaving it.
-  - **Tags** (weapon, feature, spell): the glossary sentence on hover or tap, wherever a tag shows (the catalog browser, Loadout, Main, the Grimoire). Build one tooltip-or-popover primitive and reuse it for everything below, not a copy per place.
-    **Before they render:** three flagged tags (Suppression, Blast, Reach) have a `description` that says "(Undefined … see flagNote.)", which is maintainer text. Each needs a player-facing `description` or `playerNote` first (F28–F31, Decision 70).
-  - **Lore:** on the wizard's archetype card, and as a collapsed *Lineage* section on the Archetype tab.
-  - **Ammunition and arrowheads:** an *Ammo* category in the equipment catalog, carried and counted like other gear. A later step could let Reload take a magazine from what you carry; that's a wishlist item, not this one.
-  - **Enchantment and Alchemy tables:** in the Arcanist's Magic reference, collapsed until opened.
-  - **Rules text** (botch, explosion, difficulty numbers, stat ranges, the Spellcraft sub-rules): in the reference panels, or on hover where the number they explain is shown.
-  - **Archetype Majors (`growth`):** stay hidden.
-- [ ] **R10, the roster** (AQ5: yes, design for several characters): the saved slots become keyed by S1's `meta.id`, and Home lists them with open, export and remove. Keep the "unsaved since last export" marker: browser storage is a convenience, and clearing site data erases every character in it. The exported file is the copy that lasts. Size isn't a worry: a long campaign is about 220 KB (C8), so a dozen characters fit in `localStorage` easily. Likely a session of its own.
+### S6: Table feel, split three ways (2026-09-25)
+AQ4 answered what to show and AQ10 who plays where. Ken split the session into three that don't depend on each other: **S6a** rules a tap away (done), **S6b** the header, **S6c** the roster. Take S6b and S6c in either order, one per session.
 
-*Versions:* app minor. *Size:* one or two sessions.
+### S6a: Rules a tap away (done 2026-09-25, Decision 139)
+- [x] **A10**, as Ken answered AQ4. One principle: any rule the sheet names, a player can read without leaving it.
+  - **The tip primitive** (`shared.js`): `data-tip` + `data-term`, and a `TIPS` table says what each kind shows. Hover or focus shows it, a tap pins it, and Esc, a click elsewhere or a redraw puts it away. It rides inside an open modal, as the undo toast does. Reuse it for any new "what does this mean": add a `TIPS` kind, never a second primitive.
+  - **Tags:** `Engine.glossary(term, kind)` reads a tag, a bracketed parameter and all (`Blast (10m)`), as chips (`tagChipsHtml`) on Main, Loadout's weapons and gear, the catalog and the Grimoire. Six tags have no glossary line and stay plain words, listed in `engine.test.mjs`. F28–F31's tags carry a player-facing `description` and `playerNote`.
+  - **Stats:** each score's tip reads its book range (`statRules.ranges` is `{ min?, max?, meaning }` now, via `Engine.statReading`), the modifier rule, and past 10 the beyond-human text (BOD's Health Level line too).
+  - **Rules text:** *How a check works* on Skills (trained, untrained, the target numbers, explosion, botch).
+  - **Lore:** the chosen archetype's lore under the wizard's cards (not inside each card: five long paragraphs swamp the grid), and a collapsed *Lineage* on the Archetype tab.
+  - **Magic reference:** *Charging, holding and learning* (charging, concentration, the Sovereign Soul, Improvised/Known/Mastered, teaching), *Domains and Glyphs*, *Enchantment and Alchemy* (the tier table, extra time, materials), each collapsed.
+  - **Ammo:** the 9 rounds and 11 arrowheads are `equipment` entries in an **Ammo** category, same ids, numeric prices with `pack` and `unit` (a box of 10 shells, 12 broadheads). A price the book gives relative to the round ("3× standard") can be added, not bought. **Placed inside the equipment catalog, not a fourth catalog beside Weapons** (Claude's recommendation over AQ4's wording, in Decision 139's Rejected list; Ken can overturn it).
+  - **Archetype Majors (`growth`):** still hidden. `NOT_YET_SHOWN` is down to `growth`, `styles` (W33) and `universal` (a CRB question).
+- [x] **C5**: `notice(msg)` is the toast without an Undo; `askFirst({ title, text, yes, then })` is the modal with Cancel focused. All 33 `alert()`/`confirm()` calls are gone, and `build.test.mjs` fails if one comes back.
+- **Mutation-tested:** no bracket lookup, the tip on `<body>` instead of in the modal, the session delete without asking, an `alert()` put back, the BOD line on any stat, and a flagged tag's old maintainer description. Each fails. The capture-phase `stopPropagation` doesn't catch a mutation: tags are buttons, which the catalog row already ignores, so it's defensive.
+
+*Versions:* app 0.27.0, game data 0.21 (Ammo is a new choice). Schema: none.
+
+### S6b: The header (B19), next
+- [ ] **B19**, "usable in an emergency" on a phone (AQ10), and right at tablet widths, where most play will happen.
+- **Measure first:** `npm run phone-check` (Home and every tab at 390, 768 and 1024 px, real Chromium). As of S5: 390 px fails (header 30%, Home 74 px too wide); 1024×768 fails (header 23% against a 20% budget); 768 px passes. It has to pass all three before this is done.
+- **The proposal Ken saw (2026-09-25), not yet approved in detail:**
+  - The nine tabs become one row that scrolls sideways, at every width, with the active tab kept in view. The header stays two thin rows at most. That should fix 1024×768.
+  - Below about 600 px the header stops being sticky and scrolls away with the page.
+  - Find why Home is 74 px too wide at 390 px and fix that on its own.
+- **It supersedes Decision 38 in part** (tabs wrapping to a second row was accepted then; four rows at 390 px and 23% at 1024×768 are the new information). That needs a numbered decision with the mark on 38.
+- *Versions:* app patch or minor. Nothing else.
+
+### S6c: The roster (R10), next
+- [ ] **R10** (AQ5: design for several characters). The saved slots (`shadows.active.v1`, `shadows.draft.v1` in `shared.js`) become keyed by the TAG (`meta.id`, Decision 133), and Home lists every character with open, export and remove.
+  - Keep the "unsaved since last export" marker: browser storage is a convenience, and clearing site data erases every character in it. The exported file is the copy that lasts.
+  - Decision 128's replace guard turns from "replace?" into "add" (its **Revisit if**). Mark 128 superseded in part.
+  - Existing single slots migrate into the roster on first load; test that a 0.26 browser's saved sheet and draft both survive.
+  - Size isn't a worry: a long campaign is about 220 KB (C8), so a dozen characters fit in `localStorage` easily.
+- **Rule or shape tier:** propose the slot-key shape and Home's layout to Ken before building. No character schema bump (the roster lives in `localStorage` keys, not the file).
+- *Versions:* app minor.
 
 ### S7: Structure (opportunistic, never a session of its own)
 - **A11**: `source: "natural"` replaces `notes: "natural"`, with the next character-schema bump that has another reason to happen.
@@ -122,7 +144,9 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 | S3 | minor (0.25.0) | minor (0.18) | none |
 | S4 | patch (0.25.1): three copy changes a player sees | none: outputs diffed identical | none |
 | S5 | patch (0.26.1): the fonts are embedded | none | none |
-| S6 | minor | none | none (a roster lives in `localStorage` keys, not the file) |
+| S6a | minor (0.27.0) | 0.21: Ammo is a new choice | none |
+| S6b | patch or minor | none | none |
+| S6c | minor | none | none (a roster lives in `localStorage` keys, not the file) |
 | S7 | with whatever carries it | none | A11 needs a bump and a `migrate()` step |
 
 ## 5. Open questions
