@@ -93,13 +93,13 @@ is the authority on a flag's full text.
 |---|---|---|
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1–S4 ✅ · S5 ⏭ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
-| **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
+| **Creation-pool economics** — F8, W34–W37 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker. The 2026-09-24 meeting added a climbing-cost stat buy (W34), a flat pool per Campaign level (W35) and starting LUCK 6, maybe by level (W37). Settle them with F8 (W36) as one ruling |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked; three Origins and four Trueborn powers unwritten |
-| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · data matches Scott's finished Magic chapter (2026-09-24) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
+| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · the data is **behind Scott's later 2026-09-24 edits** (§5) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a finished export (portrait vs. landscape is decided once it lands). The frame/texture print defect blocks on no one |
 
 F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling;
@@ -131,24 +131,24 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 **The live site is v0.25.0.** S4 is app 0.25.1 (game data 0.18, schema 0.12),
 under `[Unreleased]` in the changelog until it's released.
 
-**Next, all unblocked:** S5 or S6. Ken alone: F9, F12, F13 and F32. The
-wishlist holds W28 (blocked), W29 (a GM mode), W30 (Reload from carried
-ammo), W31 (a TAGless character's TAG), W32 (spell damage from Spell Power,
-which wants a CRB line on rounding) and W33 (Martial Arts styles).
+**Next, all unblocked:** S5, S6, or the spell catalog (below). Ken alone:
+F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
+W30 (Reload from carried ammo), W31 (a TAGless character's TAG), W32 (spell
+damage from Spell Power, which wants a CRB line on rounding), W33 (Martial Arts
+styles) and W34–W37 (character creation).
 
 **Waiting on others:**
-- **Design team:** F8, being playtested.
+- **Design team:** F8, being playtested, and W34–W37 with it.
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31 and F33 — plus
   W28 (Warding by Elemental/Spirit/Aether against the one Warding upgrade).
   Each flag's stub and question are in `SCHEMA.md` §5.
-- **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), and
-  the print export. From his Magic chapter: Concentration says a Talisman
-  holds a spell for 1 die fewer and an Artifact for 2, but the Enchantment
-  section says an inscribed spell isn't held at all; the data carries the
-  first. The shop's inscribed objects name 13 spells the Book of Known Spells
-  doesn't have (Blink, Everlight, Tracer, Sure Grip, Sure Hand, Second Wind,
-  Turning Rune, Watchward, Frost Trap, Threshold Ward, Stasis Trap,
-  Hearthstone, Consecrate); the catalog keeps their names.
+- **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), the print export.
+
+**The data is behind the CRB's magic chapters** (re-pulled 2026-09-24
+evening). Book of Known Spells: +33 spells, a new Inscribed Spells part, a
+Duration line on every spell, and some Overflow lines changed. Magic dropped the
+Talisman Concentration discount that `spellcraftRules.concentration` still
+carries. `040` and `046_Gear` were locked in Word; re-pull them.
 
 **Ken's CRB fixes** (the app already follows the answer in each; the
 questions' history is in `plans/combat-and-conditions.md` §6):
@@ -164,7 +164,7 @@ questions' history is in `plans/combat-and-conditions.md` §6):
 - **CQ13:** 054 and 055 should agree on how Injured ends.
 - **041:** Hardcore Parkour's prerequisites become 1 Major Milestone,
   Acrobatics 4 and Danger Sense 1 (Decision 129).
-- **The spell appendix:** add `AP` (Armor Piercing) to its tag list (Decision 116).
+- **043:** "Ambidextrousa" is a typo for Ambidextrous (Scott's pass).
 - **041, Master of None:** say whether "up to rank 4" is the rank bought (the
   app's reading, Ken's answer: 4 → 5 is standard). The Mercenary's "Handgun"
   and the Slayer's and True Warrior's "Occult" are Handguns and Occult Lore.
