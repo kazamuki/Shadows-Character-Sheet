@@ -2,6 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.26.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**The sheet looks the same offline.** Its typefaces travel inside the file now, so a copy opened with no connection keeps its look instead of falling back to your system's fonts, and opening it never reaches out to a font server.",
+      "**Numbers you can read at a glance.** Your stats and the Health, Sanity, Luck and Çredits readouts use a clean digital face now. An 8 no longer passes for a 0."
+    ]
+  },
+  {
     "version": "0.26.0",
     "date": "2026-09-24",
     "intro": [],

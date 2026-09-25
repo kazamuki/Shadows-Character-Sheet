@@ -1,13 +1,15 @@
 # Changelog
 
-What a player would notice, one section per release tag, newest first. CI attaches the
-single-file build to each `v*` release, so a download traces back to its section here.
+What a player would notice, one section per release, newest first. Each section becomes
+its GitHub Release's notes, word for word, and both HTML files are attached there, so a
+download traces back to its section here.
 The *why* behind each change is in `docs/SCHEMA.md` §4 (numbered decisions), and the
 batch-by-batch board is `docs/log/shipped.md`.
 
-**Keeping it current:** a change that bumps `APP_VERSION` adds its lines under
-`[Unreleased] — app X.Y.Z` in the same commit, and tagging renames that heading to the
-tag. `tests/docs.test.mjs` fails if no heading here names the current `APP_VERSION`.
+**Keeping it current:** `npm run bump -- X.Y.Z` adds (or renames) the
+`[Unreleased] — app X.Y.Z` heading; the change's lines go under it in the same commit.
+`npm run release:prep` renames it to `vX.Y.Z — <date>` when it ships.
+`tests/docs.test.mjs` fails if no heading here names the current `APP_VERSION`.
 That's what stopped this file at 0.7.0 for eight releases (W18).
 
 **Players read this file.** The app's **What's new** window is generated from every
@@ -20,6 +22,14 @@ numbers, audit or wishlist ids, document numbers, or who ruled what. `**bold**`,
 Four versions move independently — app, game data, character schema, ruleset. The rules
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
+
+## [Unreleased] — app 0.26.1
+
+- **The sheet looks the same offline.** Its typefaces travel inside the file now, so a
+  copy opened with no connection keeps its look instead of falling back to your system's
+  fonts, and opening it never reaches out to a font server.
+- **Numbers you can read at a glance.** Your stats and the Health, Sanity, Luck and
+  Çredits readouts use a clean digital face now. An 8 no longer passes for a 0.
 
 ## v0.26.0 — 2026-09-24
 
