@@ -59,6 +59,23 @@ export function boot({ storage = null } = {}) {
 }
 
 /**
+ * The character a test saved, read back from the roster (Decision 140): one
+ * localStorage key per TAG, draft or sheet alike. `locked` picks a sheet or a
+ * draft; it throws unless exactly one matches, so a test can't read the wrong
+ * character.
+ */
+export function stored(app, { locked } = {}) {
+  const ls = app.window.localStorage, all = [];
+  for (let i = 0; i < ls.length; i++) {
+    const k = ls.key(i);
+    if (k.startsWith("shadows.char.v1.")) all.push(JSON.parse(ls.getItem(k)).ch);
+  }
+  const hit = all.filter(c => locked === undefined || !!c.creation.locked === locked);
+  if (hit.length !== 1) throw new Error(`stored: expected one ${locked === undefined ? "" : locked ? "sheet" : "draft"} character, found ${hit.length}`);
+  return hit[0];
+}
+
+/**
  * Load ONLY the engine — no DOM, no UI. Proves the engine stayed pure:
  * if engine.js ever touches `document`, this throws.
  *

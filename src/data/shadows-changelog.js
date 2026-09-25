@@ -2,10 +2,13 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.27.0",
+    "version": "0.28.0",
     "date": null,
     "intro": [],
     "items": [
+      "**Keep every character you play.** This browser used to hold one sheet and one draft, and opening another character meant replacing one. Now Home lists every character you've made or imported, newest first, each with Open, Export and Remove. Tap a card to pick up where you left off. Your old sheet and draft are already on the list.",
+      "**Home says what isn't in a file yet.** A character with changes you haven't exported says *Changes not exported yet*. The browser is a convenience, not a backup: clearing site data erases everything in it, and the exported `.shadows.json` is the copy that lasts.",
+      "**Nothing is replaced behind your back.** Importing or locking a character adds it to the list. The one question left is a file older than the copy you already have. If the browser can't save a change, the page says so until it can.",
       "**Tap a tag to read it.** AP, Conceal, Burning, Blast (10m) and every other tag on a weapon, an arrowhead or a spell now tells you what it does. Hover or tap it on Main, on Loadout, in the catalog and in your Grimoire. A few the book hasn't pinned down yet say so, and leave it to your GM.",
       "**Your stats say what they mean.** Hover or tap a score on Main to read what a 3, a 6 or an 8 says about you, and what changes past 10.",
       "**Ammo is in the shop.** Rounds, shells, power cells and arrowheads have their own section in the equipment catalog. Buy a pack of broadheads and a dozen go in your bag, counted down with Use one.",
