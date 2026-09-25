@@ -146,15 +146,15 @@ styles) and W34–W37 (character creation).
 **For Scott, from the Book of Known Spells** (R14 checks the catalog against
 it): it dropped Counterspell and Silence (kept: Magic still uses Counterspell);
 four inscribed Cantrip-level spells print TN 8 where Magic keeps the spell's TN
-(7); Mastery of an inscribed spell costs up to 270 IP. `040` and `046_Gear` were
-locked in Word; re-pull them.
+(7); Mastery of an inscribed spell costs up to 270 IP.
 
 **Ken's CRB fixes** (the app already follows the answer in each; the
 questions' history is in `plans/combat-and-conditions.md` §6):
 - **CQ4:** Gear's Siege tag should say Siege causes Massive damage, to people too.
 - **CQ5:** 053 should say only Massive damage causes Injured/Maimed; a Called
   Shot counts only when the weapon deals Massive.
-- **CQ8:** Gear's Conditions table becomes a pointer to 054's, the master.
+- **CQ8:** Gear's Conditions table becomes a pointer to 054's, the master. Half
+  done: its sentence now points at Conditions & Recovery, but the table is still there.
 - **CQ9:** 054's Conditions table needs a Dying row (Helpless, Death Marks;
   recovery Medical 20 or a Nanomed Kit).
 - **CQ11:** 053's worked attack example has enemy armor rolling PROT and skips
