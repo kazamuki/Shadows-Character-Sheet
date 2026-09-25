@@ -55,6 +55,42 @@ test("every local asset is inlined by the build", () => {
   assert.match(html, /\/\*UI-START\*\//);
 });
 
+test("neither built file loads anything over the network (C7)", () => {
+  // The brand fonts came from Google Fonts until 0.26.1, so a folder opened
+  // offline fell back to system fonts, and every open told Google about it.
+  // They're embedded now (tools/fonts.mjs). This scans the whole output,
+  // script bodies too, since the renderers build markup in template strings.
+  const loads = [
+    [/<link\b[^>]*href=["']?(https?:)?\/\//i, "a <link> to a URL (a stylesheet, or even a preconnect)"],
+    [/\bsrc=["']?(https?:)?\/\//i, "a src= pointing at a URL"],
+    [/url\(\s*["']?(https?:)?\/\//i, "a CSS url() pointing at a URL"],
+    [/@import\b/i, "a CSS @import"],
+  ];
+  for (const [name, html] of [["the app", buildHtml()], ["the blank sheet", buildBlankSheetHtml()]]) {
+    for (const [re, what] of loads) {
+      const m = re.exec(html);
+      assert.ok(!m, m && `${name} has ${what}: …${html.slice(m.index, m.index + 100)}…`);
+    }
+    assert.ok(html.includes('@font-face{font-family:"Chakra Petch"'), `${name} lost its embedded fonts`);
+  }
+});
+
+test("big numbers are set in the numeric face, never the display face (Decision 137)", () => {
+  // Cerulean Nights, first in --display, is a header face: its 8 reads as a
+  // 0, so a stat of 8 looked empty and SAN 68 read as 60. The stat values and
+  // the vitals' readouts use --numeric (Oxanium) with fixed-width digits.
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.match(css, /--numeric\s*:\s*'Oxanium'/, "the --numeric token is gone or no longer leads with Oxanium");
+  for (const sel of [".statcell .sv", ".cond .big"]) {
+    const rule = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(m => m[1].trim() === sel);
+    assert.ok(rule, `no ${sel} rule — did the markup's class change?`);
+    assert.match(rule[2], /font-family\s*:\s*var\(--numeric\)/, `${sel} isn't set in --numeric`);
+  }
+  const onDisplay = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(m => /\.(sv|big|vv|num)\b/.test(m[1]) && /var\(--display\)/.test(m[2])).map(m => m[1].trim());
+  assert.deepEqual(onDisplay, [], "a number is set in the header face");
+});
+
 test("inlining keeps a stylesheet's media gate (the blank demo site, v0.13.0–v0.14.0)", () => {
   // print.css hides #app for printing and relies on media="print" to keep
   // that off the screen. The build used to inline every stylesheet as a bare
