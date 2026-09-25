@@ -56,6 +56,47 @@ test("a locked character resumes from storage and every sheet tab renders", () =
   }
 });
 
+test("the tab row keeps the active tab in view and fades the side with more (B19)", () => {
+  // jsdom has no layout, so give the row one: nine 100 px tabs in 390 px.
+  const app = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const nav = app.$("#topnav");
+  let left = 0;
+  const max = 900 - 390;
+  Object.defineProperty(nav, "scrollLeft", { get: () => left, set: v => { left = Math.max(0, Math.min(max, v)); } });
+  Object.defineProperty(nav, "scrollWidth", { get: () => 900 });
+  Object.defineProperty(nav, "clientWidth", { get: () => 390 });
+  const rect = (l, w) => ({ left: l, right: l + w, top: 0, bottom: 40, width: w, height: 40 });
+  const proto = app.window.HTMLElement.prototype, real = proto.getBoundingClientRect;
+  proto.getBoundingClientRect = function () {
+    if (this === nav) return rect(0, 390);
+    const i = [...nav.children].indexOf(this);
+    return i >= 0 ? rect(i * 100 - left, 100) : real.call(this);
+  };
+  try {
+    app.click('[data-sec="notes"]');
+    assert.equal(left, max, "the last tab was not scrolled into view");
+    assert.ok(nav.classList.contains("more-l") && !nav.classList.contains("more-r"), `fades: ${nav.className}`);
+    app.click('[data-sec="trackers"]');
+    const t = nav.querySelector(".tab.active").getBoundingClientRect();
+    assert.ok(t.left >= 0 && t.right <= 390, `Trackers out of view at ${t.left}–${t.right}`);
+    app.click('[data-sec="main"]');
+    assert.equal(left, 0);
+    assert.ok(nav.classList.contains("more-r") && !nav.classList.contains("more-l"), `fades: ${nav.className}`);
+
+    // A mouse wheel scrolls the row sideways, and lets the page have it at the end.
+    const wheel = dy => { const e = new app.window.WheelEvent("wheel", { deltaY: dy, bubbles: true, cancelable: true }); nav.dispatchEvent(e); return e.defaultPrevented; };
+    assert.equal(wheel(120), true);
+    assert.equal(left, 120);
+    left = max;
+    assert.equal(wheel(120), false, "the wheel was swallowed with nowhere to scroll");
+  } finally {
+    proto.getBoundingClientRect = real;
+  }
+  assert.deepEqual(app.errors, []);
+});
+
 test("the sheet survives a game-data change without code changes", () => {
   // Proves the data-driven contract: rename a skill's display name in the data
   // and the app still renders — no hardcoded content in the UI layer.

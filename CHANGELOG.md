@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.27.0
+## [Unreleased] — app 0.27.1
 
 - **Tap a tag to read it.** AP, Conceal, Burning, Blast (10m) and every other tag on a
   weapon, an arrowhead or a spell now tells you what it does. Hover or tap it on Main, on
@@ -44,6 +44,11 @@ own in the footer.
 - **No more pop-up boxes.** When the sheet can't do something, it says why at the bottom
   of the screen without stopping you. Deleting a session or removing a Milestone asks in
   the sheet's own window, with Cancel ready.
+- **More sheet, less header.** The top bar is two slim rows on every screen: your name,
+  then the tabs in one line. Where they don't all fit, swipe or scroll them sideways; the
+  tab you're on stays in view. On a tablet the header takes about half the room it did,
+  and the sheet fits a phone without sliding sideways. On a phone turned on its side,
+  the header scrolls away with the page.
 
 ## v0.26.1 — 2026-09-25
 
