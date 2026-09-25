@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.25.0",
-    "date": null,
+    "date": "2026-09-24",
     "intro": [
       "Game data **0.18**. A character file from 0.24 opens as it was."
     ],
