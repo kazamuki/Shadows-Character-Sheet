@@ -21,7 +21,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.24.1
+## v0.24.1 — 2026-09-24
 
 Character schema **0.12**. A character file from 0.24.0 opens as it was, and its
 number carries over.
