@@ -15,6 +15,8 @@ applies, and nothing above it does.
       suite line; a new `todo` is a confirmed defect, so say so.
 - [ ] A new guard was mutation-tested: put the old code back and watch it fail.
 - [ ] Ideas that came up and weren't done went to `docs/WISHLIST.md` as `W` ids.
+- [ ] A `W` item this batch built moved, whole, to `docs/log/wishes-granted.md`
+      with its pointer (Decision 144); a leftover half stays as a new `W` id.
 
 ## Fix: a player can see it
 
