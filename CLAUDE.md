@@ -40,13 +40,25 @@ maintains the CRB and builds this app.
 ## Commands
 
 ```bash
-npm run verify   # build check + full test suite — run BEFORE and AFTER every change
-npm test         # engine units, CRB conformance, hostile files, voice, jsdom smoke, architecture guards
-npm run build    # → dist/shadows-character-sheet.html (the file players get)
+npm run verify     # build check + full test suite — run BEFORE and AFTER every change
+npm test           # engine units, CRB conformance, hostile files, voice, jsdom smoke, architecture guards
+npm run test:fast  # engine, rules, docs and build only: the inner loop while working. verify still gates
+npm run build      # → dist/shadows-character-sheet.html (the file players get) and the blank sheet
 npm run changelog  # CHANGELOG.md → src/data/shadows-changelog.js (the app's What's new)
+npm run bump -- X.Y.Z  # the app version, everywhere it's written, plus CHANGELOG's [Unreleased] heading
+npm run release:check  # is this commit ready to tag? (release:prep dates the heading first)
+npm run phone-check    # header height and sideways overflow at phone and tablet widths, in real Chromium
+npm run fonts          # regenerate src/styles/fonts.css from the font packages (rarely)
 ```
 
-`npm install` first — `node_modules` is not committed.
+`npm install` first — `node_modules` is not committed. Claude Code's
+`SessionStart` hook (`.claude/settings.json`) runs `npm ci` when it's missing
+or stale.
+
+**Procedures as skills.** `.claude/skills/` holds the runbooks for closing a
+session, numbering a decision, opening or closing a flag, and cutting a
+release. They carry the steps and commands; the rules they follow are stated
+here, and only here.
 
 `docs/STATE.md` says how many `todo` tests to expect. Any `todo` tests are **confirmed
 defects written as failing assertions on purpose** — they flip green when fixed.
@@ -61,14 +73,16 @@ from `file://` renders inert in some embedded/automated browsers — the markup
 shows but no script executes, so nothing is clickable. `tools/devserver.mjs` is
 a zero-dependency static file server (not shipped, not part of the app or its
 build) that serves the repo over plain HTTP so a browser tool can actually run
-it: `node tools/devserver.mjs` → `http://localhost:8420`. `.claude/launch.json`
+it: `node tools/devserver.mjs` → `http://localhost:8420`, loopback only, and
+nothing outside the repo. `.claude/launch.json`
 wires it up as `shadows-dev-preview` for Claude Code's browser tool to start on
 its own. Check before reaching for a different one or building it again.
 
 ## Hard constraints — breaking any of these breaks the app for players
 
 1. **The app runs from `file://` with no server and no build step.** A GM hands a
-   player a folder and it works. This is load-bearing, not a preference.
+   player a folder and it works. This is load-bearing, not a preference. It
+   makes no network request either: even the fonts are embedded (Decision 137).
 2. **No ES `import`/`export` anywhere in `src/`.** CORS blocks modules from disk.
    Everything is a classic script sharing script scope.
 3. **`index.html` stays a shell** — markup and `<script src>` tags only. No inline
@@ -96,7 +110,7 @@ its own. Check before reaching for a different one or building it again.
     `migrate()` is the gate: every stored number comes out a number, and undo
     only writes inside the character (Decision 124).
 
-Constraints 2–5 are enforced by `tests/build.test.mjs` and `tests/engine.test.mjs`;
+Constraint 1's no-network half and 2–5 are enforced by `tests/build.test.mjs` and `tests/engine.test.mjs`;
 8 by `tests/engine.test.mjs`; 9 by `tests/voice.test.mjs`; 10 by
 `tests/hostile.test.mjs`. If a test fails on one of them, the test is right.
 
@@ -111,9 +125,14 @@ src/engine/engine.js    Pure rules engine. No DOM.
 src/ui/                 Wizard + sheet, as four classic scripts sharing one
                         global scope (shared, wizard, sheet, then app for
                         chrome/boot) — no namespace object, see Decision 86.
-src/styles/             shadows.css (brand tokens + screen), print.css.
+src/styles/             shadows.css (brand tokens + screen), print.css, and
+                        fonts.css, generated, with its licences in fonts/.
 tests/                  Engine units, CRB conformance, hostile files, voice, smoke, guards.
-tools/                  build.mjs (inlines everything into dist/), changelog.mjs, devserver.mjs.
+tools/                  build.mjs (inlines everything into dist/), changelog.mjs,
+                        release.mjs (bump, prep, check), fonts.mjs, outputs.mjs,
+                        phone-check.mjs, devserver.mjs, session-start.mjs.
+.claude/                settings.json (the SessionStart hook), launch.json (the
+                        dev server), skills/ (the procedures as runbooks).
 docs/                   STATE, INDEX, SCHEMA, VOICE-APP, WISHLIST, and audits/,
                         plans/, log/, reference/ — INDEX §1 says what's in each.
 ```
@@ -288,12 +307,14 @@ unasked.
 - **Commit subjects in the imperative, naming the finding or decision:**
   `fix(ui): render aberrations once (A1)`.
 - **`main` is always openable and always passes `npm run verify`.**
-- **Releasing is a rename, a regenerate, then a tag.** Rename the
-  `[Unreleased]` heading to `vX.Y.Z — <date>`, run `npm run changelog`, commit
-  and merge, then push the `vX.Y.Z` tag. The tag is what deploys the live site
-  (`charactersheet.shadowsrpg.com`); check a deploy by loading the page and
-  reading its footer. A cloud session can merge but usually can't push a tag,
-  so tag locally after it. CI attaches the single-file build to the release.
+- **Releasing is a rename, a regenerate, then the release workflow**
+  (Decision 138). `npm run release:prep` renames the `[Unreleased]` heading to
+  `vX.Y.Z — <date>` and regenerates What's new; commit and merge. Then run the
+  **release** workflow from `main` with the version. It checks, builds once,
+  creates the tag and the Release (its notes are that CHANGELOG section, both
+  files attached) and deploys the live site (`charactersheet.shadowsrpg.com`).
+  A cloud session can do all of it. Check a deploy by loading the page and
+  reading its footer. The `cut-a-release` skill walks it.
 
 ## What's next
 
