@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** under way. **Every question is answered** (§5). **S1–S5 and S6a are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21). Next: S6b (the header) and S6c (the roster), in either order.
+**Status:** under way. **Every question is answered** (§5). **S1–S5, S6a and S6c are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21; S6c: app 0.28.0). Next: S6b (the header), the last session.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -93,7 +93,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 *Versions:* app 0.26.1 (the fonts). Game data and schema: none.
 
 ### S6: Table feel, split three ways (2026-09-25)
-AQ4 answered what to show and AQ10 who plays where. Ken split the session into three that don't depend on each other: **S6a** rules a tap away (done), **S6b** the header, **S6c** the roster. Take S6b and S6c in either order, one per session.
+AQ4 answered what to show and AQ10 who plays where. Ken split the session into three that don't depend on each other: **S6a** rules a tap away (done), **S6b** the header, **S6c** the roster (done). Take S6b and S6c in either order, one per session.
 
 ### S6a: Rules a tap away (done 2026-09-25, Decision 139)
 - [x] **A10**, as Ken answered AQ4. One principle: any rule the sheet names, a player can read without leaving it.
@@ -120,14 +120,17 @@ AQ4 answered what to show and AQ10 who plays where. Ken split the session into t
 - **It supersedes Decision 38 in part** (tabs wrapping to a second row was accepted then; four rows at 390 px and 23% at 1024×768 are the new information). That needs a numbered decision with the mark on 38.
 - *Versions:* app patch or minor. Nothing else.
 
-### S6c: The roster (R10), next
-- [ ] **R10** (AQ5: design for several characters). The saved slots (`shadows.active.v1`, `shadows.draft.v1` in `shared.js`) become keyed by the TAG (`meta.id`, Decision 133), and Home lists every character with open, export and remove.
-  - Keep the "unsaved since last export" marker: browser storage is a convenience, and clearing site data erases every character in it. The exported file is the copy that lasts.
-  - Decision 128's replace guard turns from "replace?" into "add" (its **Revisit if**). Mark 128 superseded in part.
-  - Existing single slots migrate into the roster on first load; test that a 0.26 browser's saved sheet and draft both survive.
-  - Size isn't a worry: a long campaign is about 220 KB (C8), so a dozen characters fit in `localStorage` easily.
-- **Rule or shape tier:** propose the slot-key shape and Home's layout to Ken before building. No character schema bump (the roster lives in `localStorage` keys, not the file).
-- *Versions:* app minor.
+### S6c: The roster (R10) (done 2026-09-25, Decision 140)
+- [x] **R10** (AQ5: design for several characters). Each character is one `localStorage` key, `shadows.char.v1.<TAG>`, holding `{ ch, step, maxReached, section, changed, exported }`, draft through locked, with no index key. Home lists them, most recently changed first, with Open, Export and Remove, and a tap on the card opens it.
+  - **The marker is new, not kept:** the plan said to keep an "unsaved since last export" marker, but none existed. Home now says *Changes not exported yet* whenever an entry's `changed` isn't the `changed` it was last exported at. `changed` moves only when the stored character differs, and always forward, so no clock comparison can hide it.
+  - Decision 128's guard turned into "add". The one question left is a file older than the saved copy of the same character. 128 is marked superseded in part.
+  - The two 0.27 slots move into the roster on first load. An old key goes only after its entry is written, one that doesn't parse stays, and if both hold one character the newer copy wins. Tested, and seen working in Chromium.
+  - New saves nothing until the player changes something. Lock saves before it exports, so a freshly locked character isn't marked. A save the browser refuses stays on the page until one goes through: a toast would be replaced by the next action's undo.
+  - **Mutation-tested:** thirteen mutations (an untouched New saved, every save bumping `changed`, export not marking, Lock exporting before saving, an older legacy copy winning, an unreadable slot deleted, a draft's step lost, no save-failure banner, Import asking about any character, Remove without asking, no only-copy warning, the section not kept, the card's name unescaped). Each fails.
+  - `phone-check` at 390 px measures the same as main (Home 74 px, the sheet 16 px). The roster adds no overflow; the rest is S6b.
+  - Two tabs on one character overwrite each other, as they always did; that's W38.
+
+*Versions:* app 0.28.0. Game data and schema: none.
 
 ### S7: Structure (opportunistic, never a session of its own)
 - **A11**: `source: "natural"` replaces `notes: "natural"`, with the next character-schema bump that has another reason to happen.
@@ -146,7 +149,7 @@ AQ4 answered what to show and AQ10 who plays where. Ken split the session into t
 | S5 | patch (0.26.1): the fonts are embedded | none | none |
 | S6a | minor (0.27.0) | 0.21: Ammo is a new choice | none |
 | S6b | patch or minor | none | none |
-| S6c | minor | none | none (a roster lives in `localStorage` keys, not the file) |
+| S6c | minor (0.28.0) | none | none (a roster lives in `localStorage` keys, not the file) |
 | S7 | with whatever carries it | none | A11 needs a bump and a `migrate()` step |
 
 ## 5. Open questions

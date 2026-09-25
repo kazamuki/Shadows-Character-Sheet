@@ -3128,7 +3128,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing. Decision 63 holds: `migrate()` still invents no timestamps; `commit()` records one when something changes.
      - **Revisit if:** the roster (plan S6) gives each character its own slot, which turns "replace?" into "add".
      - **Built:** app 0.24.0; the audit plan's S1; `smoke.test.mjs` B18 ×4, `engine.test.mjs` B18 ×2.
-     → **Superseded in part by Decision 133** — the number is a TAG (`TAG-XXXX-XXXX-XXXX`), shown without an "Intake No." label.
+     → **Superseded in part by Decisions 133 and 140** — the number is a TAG (`TAG-XXXX-XXXX-XXXX`), shown without an "Intake No." label (133); each character has its own entry, so only an older copy of the same character asks (140).
 
 129. **Hardcore Parkour needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1.**
      *2026-09-24 · Deighton (ruling), via Ken · Touches: Hardcore Parkour, Cat Like Balance, Time Sense, Danger Sense, Acrobatics, Major Milestone prerequisites, F27, B15*
@@ -3253,6 +3253,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 92 in part: ammunition and arrowheads aren't their own arrays any more.
      - **Revisit if:** playtesters miss tips on a touch screen, or W30 needs ammo matched to weapons by field.
      - **Built:** app 0.27.0, game data 0.21. Log 2026-09-25 (S6a).
+
+140. **The browser keeps a roster: one entry per character, keyed by its TAG, and Home says which ones have play no file holds.**
+     *2026-09-25 · Ken + Claude · Touches: roster, localStorage, shadows.char.v1, shadows.active.v1, shadows.draft.v1, Home, New character, Import, Lock, Remove, export, unexported marker, replace guard, save failure, R10, AQ5, B18*
+     - **Decided:** each character is one `localStorage` key, `shadows.char.v1.<TAG>`, holding `{ ch, step, maxReached, section, changed, exported }`, draft through locked; there's no index key. Home lists every entry, most recently changed first, with Open, Export and Remove, and marks one whose `changed` isn't the `changed` it was last exported at. New saves nothing until something changes; Import of a different character and Lock add or update an entry without asking; Remove asks, offering *Export, then remove*. The one question left is a file older than the saved copy of the same character. The 0.27 slots move in on first load.
+     - **Why:** AQ5: design for several characters. One sheet and one draft made every door a replacement. The marker keeps AQ5's caution: browser storage isn't a backup.
+     - **Rejected:**
+       - One roster key holding every character: autosave would rewrite all of them on every keystroke, and one quota failure loses them all.
+       - An index key beside the entries: a second copy of the same facts, which drifts.
+       - Comparing export and change by clock: a change in the export's millisecond, or a clock that moves back, would hide the mark. `changed` only moves forward and `exported` copies it.
+       - Reopening the last character on reload: Home is one tap away.
+     - **Replaces:** Decision 128 in part: Import, New and Lock no longer ask about a different character, and the browser no longer keeps one sheet and one draft.
+     - **Revisit if:** a player loses play to two tabs on one character (W38), or storage fills in play.
+     - **Built:** app 0.28.0; the audit plan's S6c. Log 2026-09-25 (S6c).
 
 ## 5. Open Flags
 
