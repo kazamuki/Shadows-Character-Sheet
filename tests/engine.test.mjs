@@ -279,23 +279,7 @@ const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$
 // except `growth`, which stays hidden until the Majors are written. An entry
 // leaves this list the day code reads it; the test says when.
 const NOT_YET_SHOWN = {
-  weaponTagGlossary: "S6: tag sentences on hover or tap (AQ4 1)",
-  weaponFeatureGlossary: "S6: tag sentences on hover or tap (AQ4 1)",
-  spellTagGlossary: "S6: tag sentences on hover or tap (AQ4 1)",
-  ammunition: "S6: the Ammo category (AQ4 3)", arrowheads: "S6: the Ammo category (AQ4 3)",
-  weaponType: "S6: the Ammo category (AQ4 3)",
-  enchantmentMaterialCategories: "S6: the Magic reference (AQ4 4)",
-  enchantmentExtendedTime: "S6: the Magic reference (AQ4 4)",
-  reductionCapByRank: "S6 (AQ4 4)",
-  examples: "S6 (AQ4 4)", onUse: "S6 (AQ4 4)", onRupture: "S6 (AQ4 4)", onDepletion: "S6 (AQ4 4)", recharging: "S6 (AQ4 4)",
   growth: "hidden until the archetype Majors are written (AQ4 5, F32)",
-  difficulties: "S6: rules text (AQ4 6)", explosion: "S6: rules text (AQ4 6)", botch: "S6: rules text (AQ4 6)",
-  ranges: "S6: rules text (AQ4 6)", beyondHumanLimits: "S6: rules text (AQ4 6)", bodAbove10Rule: "S6: rules text (AQ4 6)",
-  charging: "S6: Spellcraft sub-rules (AQ4 6)", concentration: "S6: Spellcraft sub-rules (AQ4 6)",
-  sovereignSoul: "S6: Spellcraft sub-rules (AQ4 6)", teaching: "S6: Spellcraft sub-rules (AQ4 6)",
-  floorTN: "S6 (AQ4 6)", maxTurns: "S6 (AQ4 6)", tnReductionPerTurn: "S6 (AQ4 6)", standardAction: "S6 (AQ4 6)",
-  breakCheck: "S6 (AQ4 6)", willingConscious: "S6 (AQ4 6)", unconsciousAlly: "S6 (AQ4 6)", unwilling: "S6 (AQ4 6)",
-  copiedCold: "S6 (AQ4 6)", taught: "S6 (AQ4 6)", improvised: "S6: Spellcraft sub-rules (AQ4 6)", glyphs: "S6: rules text (AQ4 6)",
   styles: "W33: Martial Arts styles, found by this test",
   universal: "043's 'Universal' tag on an Advantage; what it means is a CRB question for Ken",
 };
@@ -474,8 +458,6 @@ test("every weapon and armor id is unique, and armor slots are valid", () => {
   const dupes = list => { const seen = new Set(), out = []; for (const x of list) { if (seen.has(x.id)) out.push(x.id); seen.add(x.id); } return out; };
   assert.deepEqual(dupes(D.weapons || []), []);
   assert.deepEqual(dupes(D.armor || []), []);
-  assert.deepEqual(dupes(D.ammunition || []), []);
-  assert.deepEqual(dupes(D.arrowheads || []), []);
   const slots = new Set(["body", "head", "hand"]);
   const badSlots = [], badBody = [];
   for (const a of D.armor || []) {
@@ -2132,4 +2114,77 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
   assert.equal(m.meta.schemaVersion, "0.12");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
+});
+
+// ── Rules a tap away (Decision 139) ───────────────────────────────────
+
+test("a tag reads out its glossary sentence, a bracketed parameter and all (Decision 139)", () => {
+  assert.equal(Engine.glossary("AP").id, "AP");
+  const blast = Engine.glossary("Blast (10m)");
+  assert.deepEqual([blast.id, blast.term], ["Blast", "Blast (10m)"], "a tag with a parameter found nothing");
+  assert.equal(Engine.glossary("Withering (Undead / Demonic)").id, "Withering");
+  assert.equal(Engine.glossary("Conceal").id, "Conceal", "a weapon feature isn't read");
+  for (const nothing of ["Nonsense", "", null, undefined, 7]) assert.equal(Engine.glossary(nothing), null);
+  // A spell's tag reads the spell glossary first, a weapon's the weapon one.
+  const both = D.spellTagGlossary.find(s => D.weaponTagGlossary.some(w => w.id === s.id && w.description !== s.description));
+  if (both) {
+    assert.equal(Engine.glossary(both.id, "spell").text, both.description);
+    assert.notEqual(Engine.glossary(both.id).text, both.description);
+  }
+});
+
+test("every tag in the data reads out, bar the few no glossary defines (Decision 139)", () => {
+  // The CRB names these without a glossary line; they show as plain words.
+  // A new tag with no sentence fails here, so it gets one or joins the list.
+  const BARE = ["2H", "Paired", "Agonized", "Vehicle Mount Required", "+4 DMG", "Condition (specify: Poison / Sedative / Paralytic)"];
+  const tags = new Set();
+  (function walk(v) {
+    if (Array.isArray(v)) return v.forEach(walk);
+    if (!v || typeof v !== "object") return;
+    for (const [k, x] of Object.entries(v)) {
+      if (["tags", "features", "grantsTags"].includes(k) && Array.isArray(x)) x.forEach(t => typeof t === "string" && tags.add(t));
+      walk(x);
+    }
+  })({ weapons: D.weapons, equipment: D.equipment, mods: D.weaponModGlossary, spells: D.spells });
+  const bare = [...tags].filter(t => !Engine.glossary(t)).sort();
+  assert.deepEqual(bare, [...BARE].sort());
+});
+
+test("a flagged tag reads as something a player can use, not a note to us (F28–F31)", () => {
+  for (const g of [...D.weaponTagGlossary, ...D.weaponFeatureGlossary, ...D.spellTagGlossary].filter(g => g.flagged)) {
+    assert.ok(g.playerNote, `${g.id}: flagged with no playerNote`);
+    assert.doesNotMatch(g.description, /flagNote|Undefined|CRB|Deighton|\bF\d+\b/, `${g.id}: the description is maintainer text`);
+    assert.equal(Engine.glossary(g.id).note, g.playerNote);
+  }
+});
+
+test("a stat's score reads as its range in the book, and past 10 says what changes (Decision 139)", () => {
+  const ch = subject();
+  const at = (id, v) => { ch.stats[id].base = v; return Engine.statReading(ch, id); };
+  assert.equal(at("BOD", 2).range.max, 3);
+  assert.deepEqual([at("BOD", 5).range.min, at("BOD", 5).range.max], [4, 6]);
+  assert.deepEqual([at("BOD", 10).range.min, at("BOD", 10).beyond], [10, null]);
+  const past = at("BOD", 12);
+  assert.equal(past.range, null);
+  assert.ok(past.beyond && past.health, "past 10, BOD says nothing about Health Levels");
+  ch.stats.REF.base = 12;
+  assert.equal(Engine.statReading(ch, "REF").health, null, "the Health Level line isn't BOD's alone");
+  assert.equal(Engine.statReading(ch, "NOPE"), null);
+});
+
+test("Ammo is equipment: rounds by the mag, shells and arrowheads by the pack (AQ4 3)", () => {
+  const ammo = D.equipment.filter(e => e.category === "ammo");
+  assert.equal(ammo.length, 20, "the nine rounds and eleven arrowheads");
+  assert.equal(D.ammunition, undefined);
+  assert.equal(D.arrowheads, undefined);
+  const ch = subject();
+  ch.trackers.credits.current = 1000;
+  const r = Engine.addLoadout(ch, "gear", "standard-broadhead", { buy: true });
+  assert.deepEqual([r.ok, r.added, ch.gear[0].qty, ch.trackers.credits.current], [true, 12, 12, 950], "a dozen broadheads for 50Ç");
+  Engine.addLoadout(ch, "gear", "shotgun-shells", { buy: true });
+  assert.equal(ch.gear[1].qty, 10, "a box of ten shells");
+  assert.equal(Engine.addLoadout(ch, "gear", "silver-rounds", { buy: true }).ok, false, "a price relative to the round has no street price");
+  assert.deepEqual([...Engine.gearLine(ch, 0).tags], [], "a plain broadhead grew tags");
+  Engine.addLoadout(ch, "gear", "barbed-tip");
+  assert.deepEqual([...Engine.gearLine(ch, 2).tags], ["Bleeding"]);
 });

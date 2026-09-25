@@ -443,12 +443,14 @@ test("a body-part Condition shows the picker, and the same part twice is refused
   assert.equal(activeConditions(app).length, 0, "a body-part Condition went on before saying where");
   app.click("[data-condpickcancel]");
 
-  const alerts = [];
-  app.window.alert = m => alerts.push(m);
   addCondition(app, "injured", "left-arm");
   addCondition(app, "injured", "left-arm");
   assert.equal(activeConditions(app).length, 1);
-  assert.equal(alerts.length, 1, "the duplicate was not refused out loud");
+  // C5: the refusal says why in the toast, not in a blocking alert().
+  const toast = app.$("#undotoast");
+  assert.ok(toast && !toast.hidden, "the duplicate was not refused out loud");
+  assert.match(toast.textContent, /already/i, "the toast doesn't say why");
+  assert.equal(toast.querySelector("[data-toastundo]"), null, "a refusal offered an Undo");
   addCondition(app, "injured", "right-leg");
   assert.equal(activeConditions(app).length, 2);
   assert.match(app.$("#main").textContent, /Injured \(Right Leg\)/);
@@ -530,8 +532,6 @@ test("Take a hit: a worn vest answers, the hit lands as one undoable action", ()
 
 test("Take a hit: Massive with no armor removes levels, asks at zero, and adds Dying on a fail", () => {
   const app = openSheet(lockedCharacter(), "trackers");
-  const alerts = [];
-  app.window.alert = m => alerts.push(m);
   app.click("[data-hitopen]");
   setHit(app, "category", "massive");
   setHit(app, "damage", "60");
@@ -1714,5 +1714,107 @@ test("the sheet's price and SAN lines are written from the data (Decision 135)",
   app.click('[data-sec="trackers"]');
   assert.match(app.$("#main").textContent, /Max is EMP × 7, computed\./);
   assert.match(app.window.eval("derivedBreakdownStr(S.ch, 'SAN')"), /^EMP 5 × 7 = 35%/);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Rules a tap away (Decision 139) ───────────────────────────────────
+const tip = app => app.$("#tip");
+const tipShown = app => tip(app) && !tip(app).hidden ? tip(app).textContent : "";
+const withWhip = () => { const ch = lockedCharacter(); ch.weapons = [{ id: "razorwhip", notes: "", mods: [], roundsSpent: 0 }]; return ch; };
+
+test("a tag on Main reads out on a tap, with a flagged tag's player note, and a second tap or Esc puts it away", () => {
+  const app = openSheet(withWhip(), "main");
+  const ap = app.$('#main .tag[data-term="AP"]');
+  assert.ok(ap, "Main's weapon shows no AP chip");
+  clickIn(app, ap);
+  assert.match(tipShown(app), /Armor Piercing/, "the tap didn't read the tag out");
+  assert.equal(ap.getAttribute("aria-describedby"), "tip");
+  clickIn(app, ap);
+  assert.equal(tipShown(app), "", "a second tap left it open");
+  clickIn(app, app.$('#main .tag[data-term="Reach"]'));
+  assert.match(tipShown(app), /GM rules on it/, "a flagged tag hid its player note");
+  app.doc.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.equal(tipShown(app), "", "Esc didn't put it away");
+  assert.deepEqual(app.errors, []);
+});
+
+test("in the catalog a tag reads out inside the modal, and doesn't open the row (Decision 139)", () => {
+  const app = openSheet(lockedCharacter(), "loadout");
+  app.click('[data-lobrowse="weapons"]');
+  const row = app.$('#modal [data-catrow="razorwhip"]');
+  clickIn(app, row.querySelector('.tag[data-term="AP"]'));
+  assert.match(tipShown(app), /Armor Piercing/);
+  assert.ok(app.$("#modal").contains(tip(app)), "the tip sits under the modal's top layer");
+  assert.equal(app.$('#modal [data-catrow="razorwhip"]').getAttribute("aria-expanded"), "false", "the tap opened the row too");
+  app.click("#modal [data-modalclose]");
+  assert.equal(tipShown(app), "", "the tip outlived the modal");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Loadout's weapons and the Grimoire's spells read their tags out (Decision 139)", () => {
+  const ch = withWhip();
+  ch.panelData.grimoire = [{ spellId: "kindle", stage: "known", notes: "" }];
+  const app = openSheet(ch, "loadout");
+  clickIn(app, app.$('#main .lo-weapons .tag[data-term="AP"]'));
+  assert.match(tipShown(app), /Armor Piercing/);
+  clickIn(app, app.$('#main .spell .tag[data-term="Fire"]'));
+  assert.match(tipShown(app), new RegExp(D.spellTagGlossary.find(t => t.id === "Fire").description.slice(0, 20)));
+  assert.deepEqual(app.errors, []);
+});
+
+test("a stat's score says what it means (Decision 139)", () => {
+  const ch = lockedCharacter();
+  ch.stats.BOD.base = 8;
+  const app = openSheet(ch, "main");
+  clickIn(app, app.$('#main [data-tip="stat"][data-term="BOD"]'));
+  assert.match(tipShown(app), /Body 8/);
+  assert.match(tipShown(app), new RegExp(D.statRules.ranges.find(r => r.min === 7).meaning.slice(0, 20)));
+  assert.deepEqual(app.errors, []);
+});
+
+test("rules text: Lineage and the whole Magic reference on Archetype, How a check works on Skills (AQ4)", () => {
+  const app = openSheet(lockedCharacter(), "archetype");
+  const arc = D.archetypes.find(a => a.id === "arcanist");
+  const main = () => app.$("#main").textContent;
+  assert.match(app.$("#main details.lineage").textContent, new RegExp(arc.lore.slice(0, 30)));
+  for (const t of ["Charging, holding and learning", "Domains and Glyphs", "Enchantment and Alchemy", "The Sovereign Soul", "Copied cold"])
+    assert.ok(main().includes(t), `the Magic reference has no ${t}`);
+  assert.match(main(), /Once-Living/, "no materials table");
+  app.click('[data-sec="skills"]');
+  assert.match(main(), /How a check works/);
+  assert.ok(main().includes(D.skillCheckRules.botch), "the botch rule is missing");
+  assert.deepEqual(app.errors, []);
+});
+
+test("the wizard shows the chosen archetype's lore (AQ4 2)", () => {
+  const app = onArchetypeStep("werewolf");
+  const lore = D.archetypes.find(a => a.id === "werewolf").lore;
+  assert.ok(app.$("#main .arch-lore").textContent.includes(lore.slice(0, 40)));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Ammo is a category in the equipment catalog, and Buy puts a dozen broadheads in the bag (AQ4 3)", () => {
+  const ch = lockedCharacter();
+  ch.trackers.credits.current = 1000;
+  const app = openSheet(ch, "loadout");
+  const buy = pickFromCatalog(app, "gear", "standard-broadhead", "buy");
+  assert.match(app.$("#modal").textContent, /Ammo/);
+  clickIn(app, buy);
+  app.click("#modal [data-modalclose]");
+  assert.deepEqual([activeChar(app).gear[0].qty, activeChar(app).trackers.credits.current], [12, 950]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("deleting a session asks in the modal: Cancel keeps it, the button deletes it (C5)", () => {
+  const ch = lockedCharacter();
+  Engine.logSession(ch, { title: "The docks", ipEarned: 3, milestonePoint: true });
+  const app = openSheet(ch, "sessions");
+  app.click("[data-sesdel]");
+  assert.match(app.$("#modal").textContent, /Delete this session\?/);
+  app.click("#modal [data-modalclose]");
+  assert.equal(activeChar(app).sessions.length, 1, "Cancel deleted it");
+  app.click("[data-sesdel]");
+  app.click("#modal [data-askyes]");
+  assert.equal(activeChar(app).sessions.length, 0, "the button didn't delete it");
   assert.deepEqual(app.errors, []);
 });
