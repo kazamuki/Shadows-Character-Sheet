@@ -21,6 +21,8 @@ const Engine = (() => {
   const INTAKE_BODY = "[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}";
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
+  // The character file's shape. A bump needs a migrate() step in the same change.
+  const SCHEMA_VERSION = "0.13";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function newIntakeId(){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -32,7 +34,7 @@ const Engine = (() => {
 
   function newCharacter(){
     return {
-      meta:{ schemaVersion:"0.12", id:newIntakeId(), gamedataVersion:D().meta.gamedataVersion,
+      meta:{ schemaVersion:SCHEMA_VERSION, id:newIntakeId(), gamedataVersion:D().meta.gamedataVersion,
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
@@ -58,14 +60,14 @@ const Engine = (() => {
                  // Schema 0.9 (magic plan M7): Aberrations a Cascade left.
                  aberrations:[],               // { id, permanence: "temporary"|"permanent", note? }
                  credits:{current:0, ledger:[]},
-                 adjustments:[],               // Phase 3: manual adjustments ledger
-                 panel:{} },                   // Phase 3: generic archetype tracker panels
-      panelData:{},                            // Phase 3: archetype table/toggle panel content
+                 adjustments:[],               // manual adjustments ledger
+                 panel:{} },                   // generic archetype tracker panels
+      panelData:{},                            // archetype table/toggle panel content
       powers:[], gear:[], weapons:[], armor:[],
       progression:{ ip:{earned:0, log:[]}, milestonePoints:0,
                     milestones:{minor:[], major:[]} },
       sessions:[], notes:"",
-      audit:[]                                 // Phase 3.3: reversible action log
+      audit:[]                                 // reversible action log
     };
   }
 
@@ -97,12 +99,12 @@ const Engine = (() => {
     return (ac.focusAllocation[statId]||0) + (ac.statBonusAllocation[statId]||0);
   }
 
-  // Phase 3: manual adjustments ledger — for milestone benefits (e.g. Honed)
+  // The manual adjustments ledger — for milestone benefits (e.g. Honed)
   // and other un-modeled effects. Stat adjustments cascade like any input.
   const adjFor = (ch, target) => (ch.trackers.adjustments||[])
     .reduce((s,a)=>s + (a.target===target ? a.amount : 0), 0);
 
-  // Batch 3b — an advantage/disadvantage's `grants` array is a static
+  // An advantage/disadvantage's `grants` array is a static
   // mechanical effect, not a player choice (unlike `picks`): Educated's +10
   // Skill Points/rank, Hard to Kill's +1 HP/Health Level/rank, Lucky/Unlucky's
   // LUCK spend-cost deltas, Long-Lived's Milestone slots. Computed fresh from
@@ -244,9 +246,9 @@ const Engine = (() => {
   const skillSpent = ch => Object.values(ch.skills).reduce((s,k)=>s + k.rank, 0);
 
   // ── Character Points ─────────────────────────────────────────────────
-  // Assumption (flag for D): ranked Advantages cost `cost` PER RANK.
+  // Ranked Advantages cost `cost` per rank (Decision 16).
   const advSpent  = ch => ch.advantages.reduce((s,a)=>{
-    if (a.notes === "natural") return s;                    // Professional pool: free
+    if (a.source === "natural") return s;                   // Professional pool: free
     const def = advById(a.id); return s + (def ? def.cost * a.rank : 0);
   }, 0);
   const disGranted = ch => ch.disadvantages.reduce((s,d)=>{
@@ -319,7 +321,7 @@ const Engine = (() => {
   }
 
   // Effective skill data for display: rank incl. boosts + IPE; check preview.
-  // Phase 3: the current Pain Level penalty applies to all skill checks and is
+  // The current Pain Level penalty applies to all skill checks and is
   // carried in the breakdown so the sheet can show *why* a total is modified.
   function skillLine(ch, id){
     const def = skillById(id);
@@ -347,7 +349,7 @@ const Engine = (() => {
              dataWarning: (pri && syn) ? null : `Skill "${def.name}" references an unknown stat (${!pri?def.primaryStat:def.synergyStat}).` };
   }
 
-  // ════ PHASE 3 — CONDITION, PROGRESSION, SESSIONS ══════════════════════
+  // ════ CONDITION, PROGRESSION, SESSIONS ═══════════════════════════════
 
   // ── Conditions (Decision 95) ─────────────────────────────────────────
   // The character stores which Conditions are active; everything they DO is
@@ -515,8 +517,9 @@ const Engine = (() => {
     const integrityMax = tracks ? (Number(src.integrity)||0) + bonus : 0;
     const integrityLoss = Math.min(nonNegInt(entry.integrityLoss), integrityMax);
     const integrity = Math.max(0, integrityMax - integrityLoss);
-    const resAgainst = [...(R.baseResAgainst||[]),
-                        ...effects.map(u=>(upgradeById(u)||{}).resAgainst).filter(Boolean)];
+    // An upgrade answers one class or a list (the retired Warding, all three kinds).
+    const resAgainst = [...new Set([...(R.baseResAgainst||[]),
+                        ...effects.flatMap(u=>[].concat((upgradeById(u)||{}).resAgainst || []))])];
     const coverage = tracks ? ((R.coverageLocations||{})[src.coverage || R.defaultCoverage] || []) : [];
     return { index, id: entry.id || null, custom: !!entry.custom, missing: !entry.custom && !def,
              name: src.name || (entry.custom ? "Custom armor" : String(entry.id || "Armor")), slot, worn: entry.worn===true,
@@ -1133,7 +1136,8 @@ const Engine = (() => {
     const slots = !body ? 0 : p.custom ? null : p.mods;
     const used = p.upgrades.length;
     const rank = q => order.indexOf(q);
-    const options = (D().armorUpgradeGlossary||[]).map(g=>{
+    // A `retired` upgrade still works where it's installed; it just isn't offered (Decision 143).
+    const options = (D().armorUpgradeGlossary||[]).filter(g=>!g.retired).map(g=>{
       let why = null;
       if (!body) why = "Only body armor takes upgrades.";
       else if (slots!=null && used>=slots) why = slots===1 ? "Its one mod slot is taken." : slots ? `All ${slots} mod slots are taken.` : `${p.name} has no mod slots.`;
@@ -1923,7 +1927,7 @@ const Engine = (() => {
     });
   }
 
-  // ════ PHASE 3.3 — AUDIT TRAIL & UNDO ═════════════════════════════════
+  // ════ AUDIT TRAIL & UNDO ═════════════════════════════════════════════
   // A reversible record of every play/admin action, stored on ch.audit. Each
   // entry is { seq, date, kind, label, patch }, where patch is a compact diff
   // (scalars by path; arrays as append / removeAt / set) sufficient to restore
@@ -2064,6 +2068,18 @@ const Engine = (() => {
     return Number.isFinite(n) ? n : d;
   };
   const _numOrNull = v => v==null || v==="" ? null : _num(v, null);
+  // Is this file's schema older than `v`? A file with no readable version is.
+  function _schemaBefore(meta, v){
+    const parse = x => String(x).split(".").map(Number);
+    const have = meta && typeof meta==="object" && typeof meta.schemaVersion==="string" ? parse(meta.schemaVersion) : null;
+    if (!have || have.some(n=>!Number.isFinite(n))) return true;
+    const want = parse(v);
+    for (let i=0;i<Math.max(have.length, want.length);i++){
+      const d = (have[i]||0) - (want[i]||0);
+      if (d) return d < 0;
+    }
+    return false;
+  }
   function _coerceNumbers(c){
     const isObj = o => !!o && typeof o==="object" && !Array.isArray(o);
     const fix = (o, k, d) => { if (isObj(o) && k in o) o[k] = _num(o[k], d); };
@@ -2207,7 +2223,7 @@ const Engine = (() => {
       if (!Array.isArray(a.upgrades)) a.upgrades = [];
     });
     if (typeof c.notes!=="string") c.notes="";
-    if (!Array.isArray(c.audit)) c.audit=[];      // Phase 3.3
+    if (!Array.isArray(c.audit)) c.audit=[];
     // An audit entry is only what recordAction writes: a patch of ops on the
     // character's own keys. Anything else in a file is dropped, never undone
     // (B16): undo would otherwise write wherever a crafted path pointed.
@@ -2249,6 +2265,23 @@ const Engine = (() => {
     // Focused Skill picks are skill ids (Decision 134): anything else is junk.
     ac.focusedSkillPicks = (Array.isArray(ac.focusedSkillPicks) ? ac.focusedSkillPicks : []).filter(x=>typeof x==="string");
     if (c.identity && typeof c.identity==="object") delete c.identity.specialization;
+    // Schema 0.13 (A11, Decision 142): a Professional's free advantage is
+    // marked `source: "natural"`, and `notes` is only ever text. Before, the
+    // marker WAS the notes. Only a file from before 0.13 is read that way,
+    // so a note that happens to say "natural" can't make a bought advantage
+    // free. The audit's stored undo patches get the same step (C8): a patch
+    // of `advantages` is the whole list or one row, never a field inside a
+    // row (_arrayDiff), so an undo past this migration restores the new shape.
+    if (_schemaBefore(c.meta, "0.13")){
+      const mark = e => { if (e && typeof e==="object" && e.notes==="natural" && e.source===undefined){ e.source = "natural"; e.notes = ""; } };
+      c.advantages.forEach(mark);
+      for (const e of c.audit) for (const op of e.patch){
+        if (op.path.length!==1 || op.path[0]!=="advantages") continue;
+        if (Array.isArray(op.before)) op.before.forEach(mark);
+        mark(op.item);
+      }
+    }
+    for (const e of c.advantages) if (e.source!=="natural") delete e.source;
     _coerceNumbers(c);
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
@@ -2262,12 +2295,12 @@ const Engine = (() => {
     const old = typeof c.meta.id==="string" && OLD_INTAKE_RE.exec(c.meta.id);
     if (old) c.meta.id = `TAG-${old[1]}`;
     if (!isIntakeId(c.meta.id)) c.meta.id = newIntakeId();
-    c.meta.schemaVersion = "0.12";
+    c.meta.schemaVersion = SCHEMA_VERSION;
     return c;
   }
 
 
-  // ════ BATCH 3 — SELECTION & CONSTRAINT SYSTEM ═════════════════════════
+  // ════ SELECTION & CONSTRAINT SYSTEM ═══════════════════════════════════
   // One system, three jobs: mutual locks and gating on advantages and
   // disadvantages, the inputs an entry demands when it is taken (a skill, an
   // option, a line of text), and the archetype specialization pick. The rev 9
@@ -2287,7 +2320,7 @@ const Engine = (() => {
     : (listFor(ch, kind).find(x=>x && x.id===id) || null);
 
   // A character can hold the SAME advantage on two ledger rows — once free
-  // through the Professional Natural Advantages pool (notes:"natural") and once
+  // through the Professional Natural Advantages pool (source:"natural") and once
   // bought with CP. They are two rows for ONE trait: the ranks add up, and the
   // choices the trait demands belong to the trait rather than to a row.
   // `favored-skill` sits in that pool AND carries picks, so this is reachable
@@ -2300,7 +2333,7 @@ const Engine = (() => {
   // stable however the rows happen to be ordered.
   function canonicalEntry(ch, kind, id){
     const copies = entryCopies(ch, kind, id);
-    return copies.find(x=>x.notes!=="natural") || copies[0] || null;
+    return copies.find(x=>x.source!=="natural") || copies[0] || null;
   }
   const heldRank = (ch, kind, id) =>
     entryCopies(ch, kind, id).reduce((s,x)=>s + Math.max(0, x.rank||0), 0);
@@ -2580,7 +2613,7 @@ const Engine = (() => {
       else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
       overCap(true);
-      if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.notes!=="natural"))
+      if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.source!=="natural"))
         E(`${a.name}s cannot purchase Advantages.`);
       // The discipline cap (Decision 135) is the data's `maxRankBy`. The
       // stepper stops at it, so only an edited file or a lower power level
@@ -2599,7 +2632,7 @@ const Engine = (() => {
         else if (ss.count!=null && ss.have < ss.count)
           W(`${ss.count-ss.have} starting spell${ss.count-ss.have>1?"s":""} left to choose (${ss.have}/${ss.count}).`);
       }
-      // Batch 3 — locks, gates, and the inputs a trait demands. Reported once
+      // Locks, gates, and the inputs a trait demands. Reported once
       // per taken entry, in the order the player sees them.
       for (const [kind, list] of [["advantage", ch.advantages||[]], ["disadvantage", ch.disadvantages||[]]]){
         for (const entry of list){
@@ -2644,7 +2677,7 @@ const Engine = (() => {
     c.meta.gamedataVersion = D().meta.gamedataVersion;
     const pl = powerLevel(ch);
     // Seed starting Çredits from the creation roll — but never overwrite a
-    // tracked total once play transactions exist (Phase 3).
+    // tracked total once play transactions exist.
     if (pl && c.creation.rolls.credits!=null && (c.trackers.credits.ledger||[]).length===0)
       c.trackers.credits.current = c.creation.rolls.credits * pl.startingCredits.multiplier;
     return c;
@@ -2666,7 +2699,19 @@ const Engine = (() => {
     const abs = (c.trackers||{}).aberrations;
     for (const e of Array.isArray(abs) ? abs : [])
       if (e && !aberrationById(e.id)) issues.push(`Aberration "${e.id}" no longer exists in game data.`);
-    // Phase 3: milestone ids + IP journal vs. IPE consistency
+    // Loadout, Grimoire and specialization ids (C9). Each reader already shows
+    // an orphan as a name with nothing behind it; this says so on load, too.
+    listOf(c, "weapons").forEach((e, i)=>{ const l = weaponLine(c, i);
+      if (l && l.missing) issues.push(`Weapon "${l.name}" no longer exists in game data.`); });
+    listOf(c, "armor").forEach(e=>{ if (e && typeof e==="object" && !e.custom && !armorDefById(e.id))
+      issues.push(`Armor "${String(e.id)}" no longer exists in game data.`); });
+    listOf(c, "gear").forEach((e, i)=>{ const l = gearLine(c, i);
+      if (l && l.missing) issues.push(`Gear "${l.name}" no longer exists in game data.`); });
+    for (const l of grimoire(c).lines)
+      if (l.missing) issues.push(`Spell "${l.spellId}" no longer exists in game data.`);
+    for (const o of specializationChosen(c))
+      if (o.missing) issues.push(`Specialization "${o.id}" no longer exists in game data.`);
+    // Milestone ids, then the IP journal against IPE
     for (const t of ((c.progression||{}).milestones||{}).minor||[])
       if (!(D().milestones.minorShared||[]).some(m=>m.id===t.id))
         issues.push(`Minor Milestone "${t.id}" no longer exists in game data.`);
@@ -2696,46 +2741,42 @@ const Engine = (() => {
     return issues;
   }
 
-  return { D, newCharacter, isIntakeId, powerLevel, archetype, skillById, advById, disById,
-           statMod, statValue, statTable, archStatBonus, boostsFor, addBoost, canBoost,
-           scalingRow, derived, health, sfr, statPool, statSpent, skillPool, skillSpent,
-           advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, cp,
-           skillLine, validate, buildExport, versionCheck,
-           // Phase 3
-           adjFor, painState, luckState, sanState, focusedSkillIds,
-           // Focused Skills as data (Decision 134)
-           focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice, skillRankCap,
-           focusedCategoryName, naturalAdvantagePool,
-           // Conditions (Decision 95)
-           conditionById, locationById, conditionState, addCondition, removeCondition, setConditionMarks,
-           // Taking a hit (Decision 99)
-           hlState, armorState, resolveHit, applyHit, damageTypeById, damageCategoryById,
-           // Loadout & recovery (Decision 100)
-           weaponLine, catalogLine, glossary, statReading, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
-           gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
-           upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
-           naturalHealing, heal, resolveReset, applyReset,
-           // Combat cleanup (Decisions 104–105)
-           naturalArmor, nanomedKit,
-           // Cascade (Decision 106)
-           cascade, aberrationById,
-           // Aberrations on the character (Decision 110)
-           aberrationState, recordAberration, removeAberration,
-           // Grimoire (Decisions 108, 110)
-           spellById, spellForms, spellForm, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
-           // Starting spells (Decision 111)
-           castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
-           // Batch 3b — grants
-           grants,
-           ipState, ipCost, spendIP, grantIP,
-           milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
-           logSession, addCredits, archPanels, panelMax, panelTracker, adjustPanelTracker,
-           // Read it or label it (Decision 135)
-           dataPath, formulaText, disciplineCap, creditSymbol, disciplineRanks, migrate,
-           // Phase 3.3 — audit trail & undo
-           diffChar, recordAction, undoLastAction,
-           // Batch 3 — selection & constraint system
-           optionLock, requirementState, picksFor, setSelection, trimSelections,
-           specializationNeed, specializationIds, specializationChosen, specializationLabel };
+  // The engine's surface, grouped by domain.
+  return {
+    // Data: lookups by id, paths and formulas the data holds
+    D, dataPath, formulaText, creditSymbol, glossary, skillById, advById, disById,
+    conditionById, locationById, damageTypeById, damageCategoryById, aberrationById, spellById,
+    // The character file: create, load, check, export
+    newCharacter, isIntakeId, migrate, versionCheck, buildExport,
+    // Stats, skills and derived values
+    powerLevel, archetype, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
+    derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
+    // Creation: pools, costs, grants and the wizard's checks
+    boostsFor, addBoost, canBoost, statPool, statSpent, skillPool, skillSpent,
+    advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, cp, grants, validate,
+    // Focused Skills and natural advantages (Decision 134)
+    focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,
+    focusedCategoryName, naturalAdvantagePool,
+    // Selections and constraints
+    optionLock, requirementState, picksFor, setSelection, trimSelections,
+    specializationNeed, specializationIds, specializationChosen, specializationLabel,
+    // Vitals: Pain, LUCK, Sanity, Conditions, taking a hit, recovery
+    painState, luckState, sanState, conditionState, addCondition, removeCondition, setConditionMarks,
+    hlState, armorState, resolveHit, applyHit, naturalArmor, nanomedKit,
+    naturalHealing, heal, resolveReset, applyReset,
+    // Loadout: weapons, gear, armor
+    weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
+    gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
+    upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
+    // Magic: the Cascade, Aberrations, the Grimoire, starting spells
+    cascade, aberrationState, recordAberration, removeAberration,
+    spellForms, spellForm, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
+    castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
+    // Progression and play: IP, Milestones, sessions, Çredits, panels
+    ipState, ipCost, spendIP, grantIP,
+    milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
+    logSession, addCredits, archPanels, panelMax, panelTracker, adjustPanelTracker,
+    // Audit trail and undo
+    diffChar, recordAction, undoLastAction };
 })();
 /*ENGINE-END*/

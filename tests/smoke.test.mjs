@@ -108,6 +108,23 @@ test("the sheet survives a game-data change without code changes", () => {
   assert.ok(app.$("#main").textContent.length > 200);
 });
 
+test("the Skills tab shows the Martial Arts styles chosen, with their bonuses, and lists every style (W33)", () => {
+  const ma = D.skills.find(s => s.id === "martial-arts"), [a, b] = ma.styles;
+  const ch = lockedCharacter();
+  ch.skills["martial-arts"] = { rank: 2, ipe: 0, selections: { style: [a.id, b.id] } };
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "skills" } } });
+  app.$$("#main button").find(x => /Open sheet/.test(x.textContent)).click();
+  app.click('[data-sec="skills"]');
+  assert.deepEqual(app.errors, []);
+  const row = app.$$(".skill-line").find(r => r.textContent.includes(ma.name));
+  const chips = [...row.querySelectorAll(".skill-picked .chip")].map(c => c.textContent.replace(/\s+/g, " ").trim());
+  assert.deepEqual(chips, [`${a.name} ${a.bonus}`, `${b.name} ${b.bonus}`], "the chosen styles and their bonuses aren't on the row");
+  const desc = app.$('[data-descrow="martial-arts"]').textContent;
+  for (const st of ma.styles) assert.ok(desc.includes(`${st.name} (${st.bonus})`), `${st.name} missing from the description`);
+  // A skill with no option pick grows nothing.
+  assert.equal(app.$$(".skill-picked").length, 1);
+});
+
 /** Drop a draft character on the Archetype step and open the wizard there. */
 function onArchetypeStep(archetype, powerLevel = D.powerLevels[0].id) {
   const steps = D.creationFlow.steps.map(s => s.id);
@@ -331,7 +348,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.12");
+  assert.equal(resumed.meta.schemaVersion, "0.13");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -350,7 +367,7 @@ test("changing archetype clears the natural-advantage mirror (review #4)", () =>
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
   ch.archetypeChoices.specialization = ["cleaner"];
   ch.archetypeChoices.naturalAdvantages = [{ id: "iron-will", rank: 1 }];
-  ch.advantages = [{ id: "iron-will", rank: 1, notes: "natural" },
+  ch.advantages = [{ id: "iron-will", rank: 1, notes: "", source: "natural" },
                    { id: "ambidextrous", rank: 1, notes: "" }];
 
   const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("archetype"), maxReached: steps.length - 1 } } });
@@ -386,7 +403,7 @@ test("a free-only pick-bearing advantage is fillable on the step that demands it
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
   ch.archetypeChoices.specialization = ["cleaner"];
   ch.archetypeChoices.naturalAdvantages = [{ id: "favored-skill", rank: 2 }];
-  ch.advantages = [{ id: "favored-skill", rank: 2, notes: "natural" }];
+  ch.advantages = [{ id: "favored-skill", rank: 2, notes: "", source: "natural" }];
 
   const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("character-points"), maxReached: steps.length - 1 } } });
   app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
@@ -420,7 +437,7 @@ test("raising a free advantage's rank does not wipe the picks already made", () 
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
   ch.archetypeChoices.specialization = ["cleaner"];
   ch.archetypeChoices.naturalAdvantages = [{ id: "favored-skill", rank: 1 }];
-  ch.advantages = [{ id: "favored-skill", rank: 1, notes: "natural" }];
+  ch.advantages = [{ id: "favored-skill", rank: 1, notes: "", source: "natural" }];
 
   const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("archetype"), maxReached: steps.length - 1 } } });
   app.$$("#main button").find(b => /Resume draft/.test(b.textContent))

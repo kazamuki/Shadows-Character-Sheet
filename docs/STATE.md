@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-25
-**Versions:** app `0.28.1` · game data `0.21` · character schema `0.12` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.29.0` · game data `0.22` · character schema `0.13` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,7 +41,7 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -97,8 +97,8 @@ is the authority on a flag's full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S6 done, plan closed · S7 opportunistic | Nobody |
-| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
+| **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
+| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
 | **Creation-pool economics** — F8, W34–W37 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker. The 2026-09-24 meeting added a climbing-cost stat buy (W34), a flat pool per Campaign level (W35) and starting LUCK 6, maybe by level (W37). Settle them with F8 (W36) as one ruling |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -118,30 +118,29 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
 
 ## 4. Open engineering work
 
-**The audit plan is done.** `npm run phone-check` passes (140): run it after touching the header.
+**The audit plan is done, S7 included.** `npm run phone-check` passes (140) after header work.
+- **Binders sit beside their renderers** (`wizard.js`, `sheet.js`); a migration that reshapes a row migrates the audit's patches too (142).
 - **The roster** (141): a character is `shadows.char.v1.<TAG>`; a test reads one
   back with `stored()`. Seeding the old slot keys still works, through the migration.
 - **Reuse the tip** (139): a new "what does this mean" is a `TIPS` kind in
   `shared.js`. Refusals are `notice()`, confirmations `askFirst()`.
 
-rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
+rev 9's `C1`–`C3` are still forward notes.
 
 ---
 
 ## 5. Where to start
 
-**The live site is v0.28.1** (game data 0.21, schema 0.12): the audit's table feel,
-rules a tap away (S6a), the header (S6b) and the roster (S6c), and readable version numbers in What's new. Ken alone: F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
-W30 (Reload from carried ammo), W31 (a TAGless character's TAG), W32 (spell
-damage from Spell Power, which wants a CRB line on rounding), W33 (Martial Arts
-styles), W34–W37 (character creation) and W38 (two tabs on one character).
+**The live site is v0.28.1.** Unreleased: 0.29.0, the audit's S7 (schema 0.13), Warding by
+kind (143, data 0.22) and Martial Arts styles on the sheet. Ken alone: F9, F12, F13, F32,
+and **W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3), then one session builds it.
+The wishlist holds W29 (a GM mode), W30 (Reload from ammo), W31 (a TAGless TAG), W32
+(spell damage from Spell Power), W34–W37 (character creation) and W39 (training a style).
 
 **Waiting on others:**
 - **Design team:** F8, being playtested, and W34–W37 with it.
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31 and F33 — plus
-  W28 (Warding by Elemental/Spirit/Aether against the one Warding upgrade; the
-  book now prints three Warding workings, which may answer it).
-  Each flag's stub and question are in `SCHEMA.md` §5.
+  W39's two halves. Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), the print export.
 
 **For Scott, from the Book of Known Spells** (R14 checks the catalog against
@@ -161,6 +160,7 @@ questions' history is in `plans/combat-and-conditions.md` §6):
 - **CQ11:** 053's worked attack example has enemy armor rolling PROT and skips
   RES, against its own rules. One of them moves.
 - **CQ12:** Gear's Nanomed Kit entry adds Paralyzed, matching 054.
+- **Gear's Warding** becomes Magic's three and Self-mending, a mod slot each (143).
 - **CQ13:** 054 and 055 should agree on how Injured ends.
 - **041:** Hardcore Parkour's prerequisites become 1 Major Milestone,
   Acrobatics 4 and Danger Sense 1 (Decision 129).

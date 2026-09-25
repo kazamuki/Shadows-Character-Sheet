@@ -1,4 +1,5 @@
-// The locked character's live sheet: nine tabs plus the hidden Admin section.
+// The locked character's live sheet: nine tabs plus the hidden Admin section,
+// their renderers, then their binders (bindSheet and the pickers and modals).
 // Reads/writes the shared state and helpers declared in shared.js.
 
 // B8: the CRB floors Essence dice at 1 and Breaker at 10% "to prevent
@@ -13,7 +14,7 @@ function painPenaltyLine(pain, long){
        + ` · ${pain.breakerPenalty}% Breaker${b}`;
 }
 
-// ════ PHASE 3 — LIVE SHEET ════════════════════════════════════════════
+// ════ LIVE SHEET ══════════════════════════════════════════════════════
 // `under` is HTML that sits beneath the title: Main puts the intake number there.
 function sheetHeader(title, note, under){
   let h = importIssuesHtml();
@@ -93,7 +94,7 @@ function conditionTotalsNote(ch, combat){
   return bits.length ? `<p class="step-note cond-note-line">${esc(bits.join(" "))}</p>` : "";
 }
 
-// Phase 3.3 — persistent reminder + jump-to-editor while admin mode is on.
+// A persistent reminder + jump-to-editor while admin mode is on.
 function adminBannerHtml(){
   return `<div class="admin-banner"><span class="dot"></span><b>ADMIN MODE</b>
     <span class="note">Free editing — caps and pools are off. Every change is logged to the Activity Log and can be undone.</span>
@@ -123,7 +124,7 @@ const STAT_GROUPS = [
   ["MAG","EMP"],           // Social
   ["TOL","WILL"]           // Soul
 ];
-// Phase 3.3 — human-readable derivation of a computed attribute, generated
+// A human-readable derivation of a computed attribute, generated
 // from shadows-data.js (base + inputs) so it stays correct if a formula changes.
 function derivedBreakdownStr(ch, id){
   const def=(D.derived||[]).find(d=>d.id===id), t=Engine.statTable(ch);
@@ -162,7 +163,7 @@ function groupedStatBlockHtml(ch){
   ).join("") + `</div>`;
 }
 
-// Phase 3.3 — Main health as Health-Level segments (no numbers): one segment
+// Main health as Health-Level segments (no numbers): one segment
 // per HL, filling magenta with damage just like the Trackers HL track, so the
 // depletion / "pain journey" reads at a glance. Partial fill on the current HL.
 function hlMiniHtml(ch){
@@ -247,10 +248,22 @@ function skillColgroup(withRank=true){
     ? `<colgroup><col class="c-name"><col class="c-rank"><col class="c-check"><col class="c-break"></colgroup>`
     : `<colgroup><col class="c-name"><col class="c-check"><col class="c-break"></colgroup>`;
 }
-function skillDescRow(def, cols, open){
+// A skill's option picks (Martial Arts styles), read from the data through
+// Engine.picksFor, so no skill is named here (W33). What was chosen shows on
+// the skill's row, each with what it gives; its description lists them all.
+const skillOptionPicks = (ch, id) => Engine.picksFor(ch, "skill", id).filter(st=>st.pick.type==="option");
+function skillChosenHtml(ch, id){
+  const picked = skillOptionPicks(ch, id).flatMap(st=>st.chosen.filter(Boolean)
+    .map(v=>st.options.find(o=>o.id===v) || { name:v, description:"" }));
+  return picked.length ? `<div class="skill-picked">${picked.map(o=>
+    `<span class="chip">${esc(o.name)}${o.description?` <small>${esc(o.description)}</small>`:""}</span>`).join(" ")}</div>` : "";
+}
+function skillDescRow(ch, def, cols, open){
   const covers = Array.isArray(def.covers) ? def.covers.join(", ") : (def.covers||"");
+  const offered = skillOptionPicks(ch, def.id).filter(st=>st.options.length).map(st=>
+    `<div class="covers">${esc(st.pick.label||"Options")}: ${esc(st.options.map(o=>o.description ? `${o.name} (${o.description})` : o.name).join(" · "))}</div>`).join("");
   return `<tr class="skill-desc" data-descrow="${def.id}"${open?"":" hidden"}><td colspan="${cols}">
-    <div class="skill-desc-body">${esc(def.description||"No description on file.")}${covers?`<div class="covers">Covers: ${esc(covers)}</div>`:""}</div></td></tr>`;
+    <div class="skill-desc-body">${esc(def.description||"No description on file.")}${covers?`<div class="covers">Covers: ${esc(covers)}</div>`:""}${offered}</div></td></tr>`;
 }
 // Returns the skill's main row plus its (hidden) description row.
 function skillRowPair(ch, l, {withRank=true}={}){
@@ -265,11 +278,11 @@ function skillRowPair(ch, l, {withRank=true}={}){
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   let tr = `<tr class="skill-line"${l.trained?"":' style="opacity:.72"'}>`;
-  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${q}</td>`;
+  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
   if (withRank) tr += `<td class="num">${l.trained?l.rank:"—"}</td>`;
   tr += `<td class="num">1d10 + ${l.checkBonus}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
-  return tr + skillDescRow(l.def, withRank?4:3, open);
+  return tr + skillDescRow(ch, l.def, withRank?4:3, open);
 }
 // One category as a standalone aligned table (used on Main for Combat).
 function skillTableHtml(ch, cid, cname, {includeUntrained=false}={}){
@@ -416,7 +429,7 @@ function renderShTraits(){
   h += `<div class="sect">Advantages</div>`;
   const advs = ch.advantages.map(x=>{ const d2=Engine.advById(x.id);
     const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
-    const cost=x.notes==="natural" ? '<span class="cost grant">natural</span>'
+    const cost=x.source==="natural" ? '<span class="cost grant">natural</span>'
       : (d2?`<span class="cost">${d2.cost*(x.rank||1)} CP</span>`:"");
     return traitCard(name, cost, d2?d2.description:"", selHtml("advantage",x.id)); }).join("");
   h += advs || `<p class="step-note">No advantages.</p>`;
@@ -1237,7 +1250,7 @@ function renderShSessions(){
       ${s.notes?`<div class="desc">${esc(s.notes)}</div>`:""}</div>`).reverse().join("")
     : `<p class="step-note">No sessions yet. NYTE City is patient.</p>`;
 
-  // Activity Log — the full audit trail (Phase 3.3). Undo is last-in-first-out.
+  // Activity Log — the full audit trail. Undo is last-in-first-out.
   const log=ch.audit||[];
   h += `<div class="sect">Activity Log — ${log.length} action${log.length===1?"":"s"}</div>`;
   h += `<div class="trk"><h4>Undo</h4>
@@ -1735,7 +1748,7 @@ function renderShNotes(){
   return h;
 }
 
-// ── Sheet: ADMIN (free edit) — Phase 3.3 ─────────────────────────────
+// ── Sheet: ADMIN (free edit) ───────────────────────────────────────────
 // Direct edits to stored inputs, bypassing creation caps/pools. Every change
 // here routes through commit(), so it lands in the Activity Log and is undoable.
 function renderShAdmin(){
@@ -1810,7 +1823,7 @@ function renderShAdmin(){
   // character file, and notes is free text (B16, A11).
   ch.advantages.forEach((a, i)=>{
     const def=Engine.advById(a.id)||{name:a.id};
-    h += `<div class="alloc-row"><div class="name">${esc(def.name)}${a.notes==="natural"?' <span class="chip">natural</span>':""} <small>rank ${a.rank}</small></div>
+    h += `<div class="alloc-row"><div class="name">${esc(def.name)}${a.source==="natural"?' <span class="chip">natural</span>':""} <small>rank ${a.rank}</small></div>
       <div class="admin-steppers">
         <button class="btn sm" data-admin-adv="${i}|-1">−</button>
         <button class="btn sm" data-admin-adv="${i}|1">+</button>
@@ -1818,7 +1831,7 @@ function renderShAdmin(){
       </div><span class="mod"></span></div>`;
   });
   h += `</div>`;
-  const addAdv=D.advantages.filter(d=>!ch.advantages.some(a=>a.id===d.id && a.notes!=="natural"));
+  const addAdv=D.advantages.filter(d=>!ch.advantages.some(a=>a.id===d.id && a.source!=="natural"));
   if (addAdv.length) h += `<div class="trk"><h4>Add advantage</h4>
     <select data-admin-addadv><option value="">— pick —</option>${addAdv.map(d=>`<option value="${d.id}">${esc(d.name)} (${d.cost} CP)</option>`).join("")}</select>
     <button class="btn sm" data-admin-addadv-go="1">Add</button></div>`;
@@ -1986,7 +1999,7 @@ function pDefenseHtml(ch){
   const others = as ? as.pieces.filter(p=>p.worn && p.slot!=="body") : [];
   const feats = w ? [...w.features, ...w.upgrades, ...others.flatMap(p=>p.features)] : [];
   h += `<div class="p-fieldrow">${pField("Components", w ? [w.name, ...others.map(p=>p.name)].join(", ") : null)}${
-    pField("Features", feats.length ? [...new Set(feats)].join(", ") : null)}${pField("Warding", w && w.resAgainst.includes("magical") ? "Yes" : null)}</div>`;
+    pField("Features", feats.length ? [...new Set(feats)].join(", ") : null)}${pField("Warding", w ? D.damageTypes.filter(t=>t.magical && w.resAgainst.includes(t.resClass)).map(t=>t.name).join(", ") || null : null)}</div>`;
   return h;
 }
 // The Loadout page's weapons: a catalog piece prints its computed line, a
@@ -2110,3 +2123,722 @@ const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, traits:renderSh
   archetype:renderShArchetype, trackers:renderShTrackers,
   progression:renderShProgression, sessions:renderShSessions,
   loadout:renderShLoadout, notes:renderShNotes, admin:renderShAdmin };
+
+// ── The spell picker (Decisions 108, 111) ────────────────────────────
+// One modal for the sheet and the wizard. On the sheet each add or link is
+// one commit() with its undo toast; in the wizard a pick is a creation input,
+// like a stepper, and goes through Engine.addStartingSpell's gate. The page
+// behind re-renders on every change, and the modal refreshes its own results.
+const spellName = id => (Engine.spellById(id)||{name:id}).name;
+function linkSpellRow(ch, i){
+  const line = Engine.grimoire(ch).lines[i];
+  if (!line || !line.match) return;
+  commit("grimoire", `Linked to the book: ${line.match.name}`, ()=>{ Engine.linkSpell(ch, i); });
+}
+function openSpellPicker(mode){
+  const ch = S.ch, M = spellPickMode[mode];
+  if (!ch || !M) return;
+  openModal({ title: M.title, html: spellPickerHtml(ch, mode), foot: pickerFootHtml(), returnTo: `[data-spellpickopen="${mode}"]`,
+    bind: body => {
+      const results = body.querySelector("[data-spellresults]"), status = body.querySelector("[data-spellstatus]");
+      const refresh = () => { results.innerHTML = spellResultsHtml(S.ch, mode); status.innerHTML = M.status(S.ch); };
+      body.querySelector("[data-spellq]").oninput = e => { S.spellPick.q = e.target.value; refresh(); };
+      body.querySelectorAll("[data-spellf]").forEach(sel=>sel.onchange=()=>{ S.spellPick[sel.dataset.spellf] = sel.value; refresh(); });
+      // W23: a click anywhere on a row is its button's click. The button stays
+      // for the keyboard and a screen reader; a field or a link keeps its own.
+      results.onclick = e => {
+        let b = e.target.closest("button");
+        if (!b){
+          if (e.target.closest("input, select, textarea, a, label")) return;
+          const tr = e.target.closest("tr"); b = tr && tr.querySelector("button");
+        }
+        if (!b || b.disabled) return;
+        const d = b.dataset;
+        if (d.spelllink!=null) linkSpellRow(ch, Number(d.spelllink));
+        else if (d.spelladd) commit("grimoire", `Grimoire: ${spellName(d.spelladd)}`, ()=>{ Engine.addSpell(ch, d.spelladd); });
+        else if (d.startadd){ Engine.addStartingSpell(ch, d.startadd); update(); }
+        else if (d.startrm!=null){ Engine.removeGrimoireRow(ch, Number(d.startrm)); update(); }
+        else return;
+        refresh();
+      };
+    } });
+}
+
+// ── The catalog browser (W4) ─────────────────────────────────────────
+// Add and Buy are each one commit() with its undo toast, and the modal stays
+// open for the next pick, as the spell picker does. Buy is refused with the
+// engine's reason (catalogLine's `buy`), which the row already shows.
+function openCatalog(kind){
+  const ch = S.ch; if (!ch || !["weapons","armor","gear"].includes(kind)) return;
+  S.loPick = { kind, q:"", group:"", sort:"book", afford:false, open:null };
+  openModal({ title: { armor:"The armor catalog", weapons:"The weapons catalog", gear:"The equipment catalog" }[kind], html: catalogPickerHtml(ch, kind),
+    foot: pickerFootHtml(), returnTo: `[data-lobrowse="${kind}"]`, onClose: ()=>{ S.loPick=null; },
+    bind: body => {
+      const results = body.querySelector("[data-catresults]"), status = body.querySelector("[data-catstatus]");
+      const refresh = () => { if (!S.loPick) return; results.innerHTML = catalogResultsHtml(S.ch, kind); status.innerHTML = catalogStatusHtml(S.ch, kind); };
+      body.querySelector("[data-catq]").oninput = e => { S.loPick.q = e.target.value; refresh(); };
+      body.querySelectorAll("[data-catf]").forEach(sel=>sel.onchange=()=>{ S.loPick[sel.dataset.catf] = sel.value; refresh(); });
+      body.querySelector("[data-catafford]").onchange = e => { S.loPick.afford = e.target.checked; refresh(); };
+      results.onclick = e => {
+        const b = e.target.closest("button");
+        if (!b){                                          // the row itself: its details
+          const tr = e.target.closest("[data-catrow]"); if (!tr) return;
+          S.loPick.open = S.loPick.open===tr.dataset.catrow ? null : tr.dataset.catrow; refresh(); return;
+        }
+        if (b.disabled) return;
+        const buy = b.dataset.catbuy!=null, id = buy ? b.dataset.catbuy : b.dataset.catadd;
+        if (!id) return;
+        const pre = Engine.addLoadout(clone(ch), kind, id, { buy });
+        if (!pre.ok){ notice(pre.why); return; }
+        const n = pre.added>1 ? ` ×${pre.added}` : "";
+        commit("loadout", buy ? `Bought ${pre.name}${n} (−${pre.paid}${Engine.creditSymbol()})` : `Added ${pre.name}${n}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
+        refresh();
+      };
+    } });
+}
+
+// ── The Aberration picker (Decision 115) ─────────────────────────────
+// One pick, then it closes: the pick is one commit() with its undo toast. From
+// a Cascade the entry's note says so, which the player can rewrite.
+function openAberrationPicker(mode){
+  const ch = S.ch; if (!ch) return;
+  const fromCascade = mode==="cascade";
+  S.abPick = { q:"", permanence:"temporary" };
+  openModal({ title: fromCascade ? "What the Cascade left" : "Add an Aberration", html: aberrationPickerHtml(ch),
+    foot: `<span class="modal-note">${fromCascade?"Pick the one your GM names.":"Pick one your GM ruled you have."}</span><button class="btn" data-modalclose>Cancel</button>`,
+    returnTo: `[data-abpickopen="${mode}"]`, onClose: ()=>{ S.abPick=null; },
+    bind: body => {
+      const results = body.querySelector("[data-abresults]");
+      const refresh = () => { results.innerHTML = aberrationResultsHtml(S.ch); };
+      body.querySelector("[data-abq]").oninput = e => { S.abPick.q = e.target.value; refresh(); };
+      body.querySelectorAll("[data-abperm]").forEach(b=>b.onclick=()=>{
+        S.abPick.permanence = b.dataset.abperm;
+        body.querySelectorAll("[data-abperm]").forEach(x=>{ const on = x===b; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });
+        body.querySelector("[data-abstatus]").textContent = abPermNote(b.dataset.abperm);
+      });
+      results.onclick = e => {
+        const b = e.target.closest("[data-abpick]");
+        if (!b || b.disabled || !S.abPick) return;
+        const entry = { id: b.dataset.abpick, permanence: S.abPick.permanence };
+        if (fromCascade) entry.note = `Cascade, ${new Date().toISOString().slice(0,10)}`;
+        const r = Engine.recordAberration(clone(ch), entry);      // validate without mutating
+        if (!r.ok){ notice(r.why); return; }
+        commit("aberration", `${fromCascade?"Cascade":"Aberration"}: ${r.name} (${entry.permanence})`, ()=>{ Engine.recordAberration(ch, entry); });
+        closeModal();
+      };
+    } });
+}
+
+// ── Take a hit (Decision 99; a modal since W6) ───────────────────────
+// The form lives in S.hit until Apply, which is one commit(), so the hit, its
+// armor wear and its Conditions undo together. Each change redraws the modal
+// and puts focus back on the control that changed; Cancel, ×, Esc and the
+// backdrop all drop the form. A number redraws as it's typed, not on
+// `change`, which fires on blur: a redraw then would replace Apply between
+// the press and the click that was meant for it.
+function openHitModal(returnTo){
+  const ch=S.ch; if (!ch) return;
+  if (S.act){ S.act=null; renderMain(); }
+  S.hit=Object.assign(newHitForm(), { owner: ch });
+  const p=hitModalParts(ch);
+  openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: typeof returnTo==="string" ? returnTo : "[data-hitopen]",
+    onClose: ()=>{ S.hit=null; }, bind: bindHitModal });
+}
+function bindHitModal(body, foot){
+  const ch=S.ch;
+  const redraw = key => {
+    if (!S.hit) return;
+    const p=hitModalParts(ch);
+    body.innerHTML=p.body; foot.innerHTML=p.foot;
+    bindHitModal(body, foot);
+    const again = key && body.querySelector(`[${key}]`);
+    if (again){ again.focus(); try{ again.setSelectionRange(again.value.length, again.value.length); }catch(e){} }
+  };
+  const sel = (el, attr) => `${attr}="${el.getAttribute(attr)}"`;
+  body.querySelectorAll("[data-hit]").forEach(el=>el[el.getAttribute("inputmode")==="numeric"?"oninput":"onchange"]=()=>{
+    if (!S.hit) return;
+    if (el.getAttribute("inputmode")==="numeric") el.value=el.value.replace(/[^0-9]/g,"");
+    S.hit[el.dataset.hit] = el.type==="checkbox" ? el.checked : el.value;
+    redraw(sel(el, "data-hit"));
+  });
+  body.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.conds[el.dataset.hitcond]=el.checked; redraw(sel(el, "data-hitcond"));
+  });
+  body.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; redraw(sel(el, "data-hitnat"));
+  });
+  foot.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=closeModal);
+  foot.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
+    const st=S.hit; if (!st) return;
+    const input=hitInput(st), r=Engine.resolveHit(ch, input);
+    if (hitPending(st, r)) return;          // the footer already says why
+    const choices=hitChoices(st, r);
+    S.hit=null;
+    commit("damage", hitLabel(r), ()=>{ Engine.applyHit(ch, input, choices); });
+    closeModal();
+  });
+}
+
+// ── The vitals' own controls (W2/W3) ─────────────────────────────────
+// Damage's stepper, Take a hit, Conditions, SAN, LUCK and Çredits, bound to
+// whatever root draws them: Trackers, or a vitals popover. One binder, so a
+// popover's Hurt 5 is Trackers' Hurt 5 — the same commit(), the same audit
+// label, the same undo — never a second code path.
+function bindVitalControls(root){
+  const ch=S.ch; if (!ch) return;
+  const num = el => el && el.value!=="" ? Number(el.value) : null;
+  // Damage. Withering is the part of `damage` that can't regenerate, so it
+  // can never be more than the damage itself — a hand edit down trims it.
+  const setDamage = v => { ch.trackers.damage=v;
+    ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
+  root.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.dmg);
+    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
+  });
+  const ds=root.querySelector("[data-dmgset]");
+  if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
+  root.querySelectorAll("[data-dmgheal]").forEach(b=>b.onclick=()=>commit("damage","Heal all",()=>{ setDamage(0); }));
+  root.querySelectorAll("[data-hitopen]").forEach(b=>b.onclick=openHitModal);
+
+  // Conditions (Decision 95) — the engine owns the no-duplicates rule; the
+  // body-part picker only shows for a Condition that needs one.
+  const condLabel = e => { const d=Engine.conditionById(e&&e.id), l=Engine.locationById(e&&e.location);
+    return (d?d.name:String(e&&e.id))+(l?` (${l.name})`:""); };
+  // W14: a palette chip adds in one click (the undo toast makes that safe);
+  // a body-part Condition asks where first, through the same Add.
+  const addCond = (id, location) => {
+    const r=Engine.addCondition(clone(ch), {id, location});     // validate without mutating
+    if (!r.ok){ notice(r.why); return; }
+    S.condPick=null;
+    commit("condition", `Condition: ${condLabel({id, location})}`, ()=>{ Engine.addCondition(ch, {id, location}); });
+  };
+  root.querySelectorAll("[data-condpalette]").forEach(d=>d.ontoggle=()=>{ S.condPalette=d.open; });
+  root.querySelectorAll("[data-condquick]").forEach(b=>b.onclick=()=>{
+    const def=Engine.conditionById(b.dataset.condquick); if (!def) return;
+    if (def.location){ S.condPick=def.id; renderMain(); return; }
+    addCond(def.id);
+  });
+  root.querySelectorAll("[data-condpickcancel]").forEach(b=>b.onclick=()=>{ S.condPick=null; renderMain(); });
+  root.querySelectorAll("[data-condadd]").forEach(b=>b.onclick=()=>{
+    const location=(b.parentNode.querySelector("[data-condadd-loc]")||{}).value;
+    if (!location){ notice("Pick the body part."); return; }
+    addCond(b.dataset.condadd, location);
+  });
+  root.querySelectorAll("[data-condinfo]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condinfo); S.condInfo = S.condInfo===i ? null : i; renderMain();
+  });
+  root.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
+    S.condInfo=null;                                   // indexes shift once one goes
+    commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
+  });
+  root.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
+    const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];
+    const d=Engine.conditionById(e&&e.id);
+    commit("condition", `${d&&d.counter?d.counter.label:"Marks"} → ${n}`, ()=>{ Engine.setConditionMarks(ch, i, n); });
+  });
+  root.querySelectorAll("[data-condnote]").forEach(inp=>inp.onchange=()=>{
+    const i=Number(inp.dataset.condnote), e=ch.trackers.conditions[i];
+    if (!e) return;
+    commit("condition", `Note on ${condLabel(e)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
+  });
+
+  // SAN
+  root.querySelectorAll("[data-san]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.san);
+    commit("san", `SAN loss ${d>0?"+":""}${d}`, ()=>{ ch.trackers.san.loss=Math.max(0,(ch.trackers.san.loss||0)+d); });
+  });
+  const ss=root.querySelector("[data-sanset]");
+  if (ss) ss.onchange=()=>{ const v=Math.max(0,Number(ss.value)||0); commit("san", `Set SAN loss → ${v}`, ()=>{ ch.trackers.san.loss=v; }); };
+
+  // LUCK
+  root.querySelectorAll("[data-luckspend]").forEach(b=>b.onclick=()=>{
+    const cost=Number(b.dataset.luckspend);
+    if (Engine.luckState(ch).current>=cost) commit("luck", `LUCK spent −${cost}`, ()=>{ ch.trackers.luck.spent+=cost; });
+  });
+  root.querySelectorAll("[data-luckregain]").forEach(b=>b.onclick=()=>{
+    if ((ch.trackers.luck.spent||0)>0) commit("luck","LUCK regained +1",()=>{ ch.trackers.luck.spent=Math.max(0,ch.trackers.luck.spent-1); });
+  });
+
+  // Çredits
+  root.querySelectorAll("[data-cr]").forEach(b=>b.onclick=()=>{
+    const amt=num(root.querySelector("[data-cramt]"));
+    const note=(root.querySelector("[data-crnote]")||{}).value||"";
+    if (amt==null || !amt) return;
+    const signed=Math.abs(amt)*Number(b.dataset.cr);
+    commit("credits", `Çredits ${signed>0?"+":""}${signed}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, signed, note); });
+  });
+
+}
+
+// W2/W3: a vital's popover, from its pill or its card on Main. The body is
+// Trackers' own controls, bound by the same binder; Take a hit closes the
+// popover and opens the hit modal, whose focus comes back to the vital.
+function openVitalPopover(key){
+  openPopover({ key, render: ()=>S.ch ? vitalPopover(S.ch, key) : null, bind: body=>{
+    bindVitalControls(body);
+    body.querySelectorAll("[data-pophit]").forEach(b=>b.onclick=()=>{
+      closePopover(true); openHitModal(`[data-vpop="${key}"]`);
+    });
+    body.querySelectorAll("[data-popgo]").forEach(b=>b.onclick=()=>{
+      closePopover(false); S.section=normSection(b.dataset.popgo); window.scrollTo(0,0); update();
+    });
+  } });
+}
+
+// ── Sheet event wiring ─────────────────────────────────────────────
+function bindSheet(){
+  const main=$("main"), ch=S.ch;
+  // Vitals flyout (the bar's "Vitals" toggle on non-Main tabs)
+  main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{
+    S.vitalsOpen=!S.vitalsOpen;
+    const dr=$("vdrawer"), sc=$("vscrim");
+    if (dr){ dr.classList.toggle("open", S.vitalsOpen); dr.setAttribute("aria-hidden", S.vitalsOpen?"false":"true"); }
+    if (sc) sc.classList.toggle("open", S.vitalsOpen);
+  });
+  main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
+  // Skill description toggles (no full re-render — flip the hidden detail row)
+  main.querySelectorAll("[data-skilldesc]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.skilldesc; S.openSkills=S.openSkills||new Set();
+    const open=!S.openSkills.has(id);
+    if (open) S.openSkills.add(id); else S.openSkills.delete(id);
+    const row=main.querySelector('[data-descrow="'+id+'"]');
+    if (row) row.hidden=!open;
+    b.setAttribute("aria-expanded", open?"true":"false");
+  });
+  const num = el => el && el.value!=="" ? Number(el.value) : null;
+  const lite = () => { update(false); };   // save + rails, keep focus in inputs
+
+  // Derived (TOL/WILL) derivation toggles — flip the hidden line, no re-render
+  main.querySelectorAll("[data-derivdesc]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.derivdesc; S.openDerived=S.openDerived||new Set();
+    const open=!S.openDerived.has(id);
+    if (open) S.openDerived.add(id); else S.openDerived.delete(id);
+    const row=main.querySelector('[data-derivrow="'+id+'"]');
+    if (row) row.hidden=!open;
+    b.setAttribute("aria-expanded", open?"true":"false");
+  });
+
+  // ── Activity Log: last-in-first-out undo (NOT itself logged) ──────────
+  main.querySelectorAll("[data-undolast]").forEach(b=>b.onclick=()=>{
+    const r=Engine.undoLastAction(ch); if(!r.ok){ notice(r.why); return; } update();
+  });
+  main.querySelectorAll("[data-admin-clearlog]").forEach(b=>b.onclick=()=>{
+    askFirst({ title:"Clear the activity log?", text:"This removes history only. No character values change, and it can't be undone.",
+      yes:"Clear the log", then:()=>{ ch.audit=[]; update(); } });
+  });
+  // Admin banner controls
+  main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; window.scrollTo(0,0); update(); });
+  main.querySelectorAll("[data-admin-exit]").forEach(b=>b.onclick=()=>{ S.admin=false; if(S.section==="admin") S.section="main"; window.scrollTo(0,0); update(); });
+
+  bindVitalControls(main);
+
+  // Turn Reset, Rest, Focused Healing, After the fight (Decision 100): one
+  // form in S.act, one commit() on Apply, the same as a hit.
+  main.querySelectorAll("[data-actopen]").forEach(b=>b.onclick=()=>{ S.hit=null; S.act=Object.assign(newActForm(b.dataset.actopen), { owner: ch }); renderMain(); });
+  main.querySelectorAll("[data-actcancel]").forEach(b=>b.onclick=()=>{ S.act=null; renderMain(); });
+  main.querySelectorAll("[data-act]").forEach(el=>el.onchange=()=>{
+    const st=S.act; if (!st) return;
+    const k=el.dataset.act, v=el.type==="checkbox" ? el.checked : el.value;
+    if (k.startsWith("src:")) st.sources[k.slice(4)]=v;
+    else if (k.startsWith("clear:")) st.clear[k.slice(6)]=v;
+    else {
+      st[k]=v;
+      if (st.kind==="rest" && (k==="days" || k==="speed")) st.hp="";     // re-propose BOD × days
+      if (st.kind==="nanomed" && k==="dose") st.hp="";                   // re-propose BOD / dose
+      if (k==="shCheck") st.shRoll="";
+    }
+    renderMain();
+  });
+  main.querySelectorAll("[data-actapply]").forEach(b=>b.onclick=()=>{
+    const st=S.act; if (!st) return;
+    const input=actInput(ch, st), plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
+    if (st.kind==="reset"){
+      const r=Engine.resolveReset(ch, input);
+      if (!r.ok){ notice(r.why); return; }
+      if (r.prompts.atZero && !st.atZero){ notice("Mark the check at zero as passed or failed first."); return; }
+      if (r.prompts.dyingCheck && !st.dyingCheck){ notice("Mark the Dying check as passed or failed first."); return; }
+      const marks = r.marks + (r.prompts.dyingCheck && st.dyingCheck==="fail" ? 1 : 0);
+      const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":""].filter(Boolean);
+      S.act=null;
+      commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck }); });
+    } else if (st.kind==="rest" || st.kind==="focused" || st.kind==="nanomed"){
+      const r=Engine.heal(clone(ch), input);
+      if (!r.ok){ notice(r.why); return; }
+      const bits=[r.healed?`+${r.healed} HP`:"", r.restored?`${plural(r.restored,"Massive level")} restored`:"",
+        ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
+      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}`
+                  : st.kind==="nanomed" ? "Nanomed Kit" : "Focused Healing";
+      // W17: the kit or the dose comes out of your gear in the same action.
+      const gearId = st.kind==="nanomed" ? "nanomed-kit" : st.kind==="rest" && st.speed ? "speed-heal" : null;
+      const carried = gearId && st.fromGear!==false && Engine.carriedGear(ch, gearId);
+      S.act=null;
+      commit("damage", `${label}: ${bits.join(", ")}${carried?", one from your gear":""}`, ()=>{
+        Engine.heal(ch, input);
+        if (carried) Engine.useGear(ch, carried.index, 1);
+      });
+    } else if (st.kind==="wear"){
+      const w=Engine.armorState(ch).worn; if (!w) return;
+      const r=Engine.armorWear(clone(ch), w.index, input);
+      if (!r.ok){ notice(r.why); return; }
+      S.act=null;
+      commit("loadout", `Armor wear (${r.die}): ${r.name} −${r.lost} Integrity${r.selfHeal&&r.selfHeal.healed?`, +${r.selfHeal.healed} ${r.selfHeal.feature}`:""}`,
+        ()=>{ Engine.armorWear(ch, w.index, input); });
+    }
+  });
+
+  // Generic archetype trackers (SFR / panel trackers)
+  main.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
+    const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
+    commit("tracker", `${pid.toUpperCase()} ${delta>0?"+":""}${delta}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
+  });
+  // Aberrations on the character (Decision 110); adding one, from a Cascade
+  // or by hand, is the picker modal (Decision 115).
+  const abName = i => { const a=Engine.aberrationState(ch).active.find(x=>x.index===i); return a ? a.name : "Aberration"; };
+  main.querySelectorAll("[data-abpickopen]").forEach(b=>b.onclick=()=>openAberrationPicker(b.dataset.abpickopen));
+  main.querySelectorAll("[data-abrm]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.abrm), e=ch.trackers.aberrations[i], nm=abName(i);
+    commit("aberration", `${e&&e.permanence==="permanent"?"Removed":"Cleared"}: ${nm}`, ()=>{ Engine.removeAberration(ch, i); });
+  });
+  main.querySelectorAll("[data-abnote]").forEach(inp=>inp.onchange=()=>{
+    const i=Number(inp.dataset.abnote), e=ch.trackers.aberrations[i];
+    if (!e) return;
+    commit("aberration", `Note on ${abName(i)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
+  });
+  main.querySelectorAll("[data-trkmax]").forEach(inp=>inp.onchange=()=>{
+    const pid=inp.dataset.trkmax, mx=inp.value===""?null:Math.max(0,Number(inp.value));
+    commit("tracker", `${pid.toUpperCase()} max → ${mx==null?"—":mx}`, ()=>{
+      const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.max=mx;
+    });
+  });
+
+  // Manual adjustments
+  main.querySelectorAll("[data-adjadd]").forEach(b=>b.onclick=()=>{
+    const target=(main.querySelector("[data-adjtarget]")||{}).value;
+    const amt=num(main.querySelector("[data-adjamt]"));
+    const note=(main.querySelector("[data-adjnote]")||{}).value||"";
+    if (!target || amt==null || !amt) return;
+    commit("adjustment", `Adjust ${target} ${amt>0?"+":""}${Math.trunc(amt)}${note?` (${note})`:""}`, ()=>{
+      ch.trackers.adjustments.push({target, amount:Math.trunc(amt), note, date:new Date().toISOString()});
+    });
+  });
+  main.querySelectorAll("[data-adjdel]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.adjdel), a2=ch.trackers.adjustments[i]||{};
+    commit("adjustment", `Remove adjustment ${esc(a2.target||"")}`, ()=>{ ch.trackers.adjustments.splice(i,1); });
+  });
+
+  // IP
+  main.querySelectorAll("[data-ipbuy]").forEach(b=>b.onclick=()=>{
+    const [type,id]=b.dataset.ipbuy.split("|");
+    const c=Engine.ipCost(ch,type,id);
+    const nm = type==="stat" ? id : (Engine.skillById(id)||{name:id}).name;
+    const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
+    commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
+  });
+  main.querySelectorAll("[data-ipgrant]").forEach(b=>b.onclick=()=>{
+    const amt=num(main.querySelector("[data-ipamt]"));
+    const note=(main.querySelector("[data-ipnote]")||{}).value||"";
+    const pre=Engine.grantIP(clone(ch), amt, note);   // validate without mutating
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("ip", `IP grant +${Math.floor(amt)}${note?` (${note})`:""}`, ()=>{ Engine.grantIP(ch, amt, note); });
+  });
+
+  // Milestones
+  main.querySelectorAll("[data-mp]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.mp);
+    commit("milestone", `Manual MP ${d>0?"+":""}${d}`, ()=>{ ch.progression.milestonePoints=Math.max(0,(ch.progression.milestonePoints||0)+d); });
+  });
+  main.querySelectorAll("[data-takeminor]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.takeminor;
+    if (id==="improved"){ S.askImproved=true; update(); return; }
+    const nm=(D.milestones.minorShared.find(m=>m.id===id)||{name:id}).name;
+    commit("milestone", `Take Minor: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"minor",id); if(!r.ok) notice(r.why); });
+  });
+  main.querySelectorAll("[data-improvok]").forEach(b=>b.onclick=()=>{
+    const roll=num(main.querySelector("[data-improvroll]"));
+    const pre=Engine.takeMilestone(clone(ch),"minor","improved");
+    if (!pre.ok){ notice(pre.why); S.askImproved=false; update(); return; }
+    commit("milestone", `Take Minor: Improved${roll?` (+${roll} IP)`:""}`, ()=>{
+      Engine.takeMilestone(ch,"minor","improved");
+      if (roll) Engine.grantIP(ch, roll, "Improved milestone (2d10+15)");
+    });
+    S.askImproved=false; update();
+  });
+  main.querySelectorAll("[data-improvcancel]").forEach(b=>b.onclick=()=>{ S.askImproved=false; update(); });
+  main.querySelectorAll("[data-takemajor]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.takemajor;
+    const nm=((D.milestones.majorGeneral||[]).find(m=>m.id===id)||{name:id}).name;
+    const take=()=>commit("milestone", `Take Major: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"major",id); if(!r.ok) notice(r.why); });
+    if (b.dataset.gm!=="1") return take();
+    askFirst({ title:`Take ${nm}?`, text:"This Milestone has prerequisites your table decides (the gold chips). Take it once your GM has signed off.",
+      yes:"My GM signed off", danger:false, then:take });
+  });
+  main.querySelectorAll("[data-delminor]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.delminor), t=(ch.progression.milestones.minor[i]||{});
+    const nm=(D.milestones.minorShared.find(m=>m.id===t.id)||{name:t.id||""}).name;
+    askFirst({ title:"Remove this Minor Milestone?", text:`${nm} comes off the record.`, yes:"Remove it",
+      then:()=>commit("milestone", `Remove Minor: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"minor",i); }) });
+  });
+  main.querySelectorAll("[data-delmajor]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.delmajor), t=(ch.progression.milestones.major[i]||{});
+    const nm=((D.milestones.majorGeneral||[]).find(m=>m.id===t.id)||{name:t.id||""}).name;
+    askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record.`, yes:"Remove it",
+      then:()=>commit("milestone", `Remove Major: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"major",i); }) });
+  });
+
+  // Sessions
+  main.querySelectorAll("[data-seslog]").forEach(b=>b.onclick=()=>{
+    const title=(main.querySelector("[data-sestitle]")||{}).value||"";
+    commit("session", `Log session${title?`: ${title}`:""}`, ()=>{
+      Engine.logSession(ch, {
+        date:(main.querySelector("[data-sesdate]")||{}).value,
+        title,
+        ipEarned:num(main.querySelector("[data-sesip]")) ?? D.ip.perSession,
+        milestonePoint:(main.querySelector("[data-sesmp]")||{checked:true}).checked,
+        notes:(main.querySelector("[data-sesnotes]")||{}).value
+      });
+    });
+    window.scrollTo(0,0);
+  });
+  main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.sesdel), s=ch.sessions[i]||{};
+    askFirst({ title:"Delete this session?", text:"Its IP and Milestone Point come off the totals. If you've spent that IP, what you have left can go negative.",
+      yes:"Delete the session", then:()=>commit("session", `Delete session${s.title?`: ${s.title}`:""}`, ()=>{ ch.sessions.splice(i,1); }) });
+  });
+
+  // Editable tables (weapons / gear / panel tables)
+  // Grimoire (Decision 108). Adding, linking, removing and Mastering are each
+  // one commit(); notes are keystrokes, like the table cells.
+  main.querySelectorAll("[data-spelllink]").forEach(b=>b.onclick=()=>linkSpellRow(ch, Number(b.dataset.spelllink)));
+  main.querySelectorAll("[data-spellrm]").forEach(b=>b.onclick=()=>{
+    const i = Number(b.dataset.spellrm), line = Engine.grimoire(ch).lines[i];
+    const label = line && (line.name || line.spellId || (line.row && Object.values(line.row).find(v=>typeof v==="string" && v))) || "a row";
+    commit("grimoire", `Grimoire: removed ${label}`, ()=>{ Engine.removeGrimoireRow(ch, i); });
+  });
+  main.querySelectorAll("[data-spellown]").forEach(b=>b.onclick=()=>{
+    const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"); if (!p) return;
+    commit("grimoire", "Grimoire: your own spell", ()=>{ panelRows(ch, p.id).push({ custom:true }); });
+  });
+  main.querySelectorAll("[data-spellnote]").forEach(inp=>inp.oninput=()=>{
+    const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"), r = p && panelRows(ch, p.id)[Number(inp.dataset.spellnote)];
+    if (r) { r.notes = inp.value; lite(); }
+  });
+  main.querySelectorAll("[data-spellmaster]").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.spellmaster, c = Engine.ipCost(ch, "spell", id);
+    if (!c.ok){ notice(c.why); return; }
+    if (Engine.ipState(ch).available < c.cost){ notice(`Not enough IP (need ${c.cost}).`); return; }
+    commit("ip", `Mastered ${spellName(id)} (−${c.cost} IP)`, ()=>{ Engine.spendIP(ch, "spell", id); });
+  });
+  main.querySelectorAll("[data-rowadd]").forEach(b=>b.onclick=()=>{
+    const key=b.dataset.rowadd;
+    commit("loadout", `Add ${key} row`, ()=>{ panelRows(ch, key).push(key==="gear" ? { custom:true } : {}); });
+  });
+  main.querySelectorAll("[data-rowdel]").forEach(b=>b.onclick=()=>{
+    const [key,i]=b.dataset.rowdel.split("|");
+    commit("loadout", `Remove ${key} row`, ()=>{ panelRows(ch, key).splice(Number(i),1); });
+  });
+  main.querySelectorAll("[data-cell]").forEach(inp=>inp.oninput=()=>{   // text: not audited (keystrokes)
+    const [key,i,col]=inp.dataset.cell.split("|");
+    const rows=panelRows(ch, key);
+    if (rows[Number(i)]) rows[Number(i)][col]=inp.value;
+    lite();
+  });
+
+  // Loadout: weapons and armor (Decision 100). Notes are keystrokes like the
+  // table cells; everything that changes a number is one commit().
+  const loName = (kind, i) => kind==="weapons" ? ((Engine.weaponLine(ch,i)||{}).name||"weapon")
+                            : kind==="gear" ? ((Engine.gearLine(ch,i)||{}).name||"gear")
+                                               : ((Engine.armorState(ch).pieces.find(p=>p.index===i)||{}).name||"armor");
+  // Gear (Decision 121): Use one, +1, a charge, Recharged — each one commit().
+  main.querySelectorAll("[data-gearuse]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearuse), pre=Engine.useGear(clone(ch), i, 1);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `Used ${pre.name} (${pre.left} left)`, ()=>{ Engine.useGear(ch, i, 1); });
+  });
+  main.querySelectorAll("[data-gearplus]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearplus), pre=Engine.useGear(clone(ch), i, -1);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `${pre.name} +1 (${pre.left})`, ()=>{ Engine.useGear(ch, i, -1); });
+  });
+  main.querySelectorAll("[data-gearcharge]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearcharge), pre=Engine.useCharge(clone(ch), i);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `${pre.name}: a charge used (${pre.left}/${pre.max})`, ()=>{ Engine.useCharge(ch, i); });
+  });
+  main.querySelectorAll("[data-gearrecharge]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.gearrecharge), pre=Engine.rechargeGear(clone(ch), i);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `${pre.name}: recharged (${pre.max}/${pre.max})`, ()=>{ Engine.rechargeGear(ch, i); });
+  });
+  main.querySelectorAll("[data-lobrowse]").forEach(b=>b.onclick=()=>openCatalog(b.dataset.lobrowse));
+  main.querySelectorAll("[data-locustom]").forEach(b=>b.onclick=()=>{
+    const kind=b.dataset.locustom;
+    commit("loadout", `Added custom ${kind==="armor"?"armor":"weapon"}`, ()=>{ Engine.addCustomLoadout(ch, kind); });
+  });
+  main.querySelectorAll("[data-lorm]").forEach(b=>b.onclick=()=>{
+    const [kind,i]=b.dataset.lorm.split("|"), n=loName(kind, Number(i));
+    commit("loadout", `Removed ${n}`, ()=>{ Engine.removeLoadout(ch, kind, Number(i)); });
+  });
+  main.querySelectorAll("[data-lonote]").forEach(inp=>inp.oninput=()=>{
+    const [kind,i]=inp.dataset.lonote.split("|"), e=(ch[kind]||[])[Number(i)];
+    if (e) e.notes=inp.value;
+    lite();
+  });
+  main.querySelectorAll("[data-worn]").forEach(cb=>cb.onchange=()=>{
+    const i=Number(cb.dataset.worn), n=loName("armor", i);
+    commit("loadout", `${cb.checked?"Put on":"Took off"} ${n}`, ()=>{ Engine.setWorn(ch, i, cb.checked); });
+  });
+  main.querySelectorAll("[data-armorfield]").forEach(el=>el.onchange=()=>{
+    const [i,k]=el.dataset.armorfield.split("|"), e=ch.armor[Number(i)];
+    if (!e) return;
+    const v = el.type==="number" ? Math.max(0, Math.floor(Number(el.value)||0)) : el.value;
+    commit("loadout", `${e.name||"Custom armor"}: ${k} → ${v===""?"—":v}`, ()=>{ e[k]=v; });
+  });
+  // W16: mods and the magazine (Decision 120), each one commit(). Firing and
+  // Reload are bound on Main as well as Loadout, where a weapon line is drawn.
+  main.querySelectorAll("[data-wmodadd]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.wmodadd), id=(main.querySelector(`[data-wmodpick="${i}"]`)||{}).value;
+    const pre=Engine.addWeaponMod(clone(ch), i, id);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `Installed ${id} on ${loName("weapons", i)}`, ()=>{ Engine.addWeaponMod(ch, i, id); });
+  });
+  main.querySelectorAll("[data-wmodrm]").forEach(b=>b.onclick=()=>{
+    const [i,at]=b.dataset.wmodrm.split("|").map(Number), id=((ch.weapons[i]||{}).mods||[])[at];
+    commit("loadout", `Removed ${id} from ${loName("weapons", i)}`, ()=>{ Engine.removeWeaponMod(ch, i, at); });
+  });
+  main.querySelectorAll("[data-fire]").forEach(b=>b.onclick=()=>{
+    const [i,mode]=b.dataset.fire.split("|"), idx=Number(i);
+    const pre=Engine.fireWeapon(clone(ch), idx, mode);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `${pre.name||"Weapon"}: ${pre.mode||"fired"} −${pre.spent} (${pre.left}/${pre.max} left)`, ()=>{ Engine.fireWeapon(ch, idx, mode); });
+  });
+  main.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.reload), pre=Engine.reloadWeapon(clone(ch), i);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `Reloaded ${pre.name||"weapon"} (${pre.max})`, ()=>{ Engine.reloadWeapon(ch, i); });
+  });
+  main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;
+    const pre=Engine.addUpgrade(clone(ch), i, id);
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("loadout", `Installed ${id} in ${loName("armor", i)}`, ()=>{ Engine.addUpgrade(ch, i, id); });
+  });
+  main.querySelectorAll("[data-upgrm]").forEach(b=>b.onclick=()=>{
+    const [i,at]=b.dataset.upgrm.split("|").map(Number), id=((ch.armor[i]||{}).upgrades||[])[at];
+    commit("loadout", `Removed ${id} from ${loName("armor", i)}`, ()=>{ Engine.removeUpgrade(ch, i, at); });
+  });
+  const repair = full => b => b.onclick=()=>{
+    const i=Number(full?b.dataset.repairfull:b.dataset.repairkit);
+    const input = full ? { full:true } : { roll:(main.querySelector(`[data-repairroll="${i}"]`)||{}).value };
+    const pre=Engine.repairArmor(clone(ch), i, input);
+    if (!pre.ok){ notice(pre.why); return; }
+    const kit = !full && Engine.carriedGear(ch, "field-repair-kit");   // W17: a use off the kit you carry
+    commit("loadout", `${full?"Armorer":"Field Repair Kit"}: ${pre.name} +${pre.restored} Integrity${kit?`, ${kit.qty-1} kit use${kit.qty===2?"":"s"} left`:""}`, ()=>{
+      Engine.repairArmor(ch, i, input);
+      if (kit) Engine.useGear(ch, kit.index, 1);
+    });
+  };
+  main.querySelectorAll("[data-repairkit]").forEach(repair(false));
+  main.querySelectorAll("[data-repairfull]").forEach(repair(true));
+
+  // A Focused Skill pick taken on the sheet (Decision 134): a locked
+  // character short of its picks (or holding one the data no longer allows)
+  // settles it here, as one undoable action.
+  main.querySelectorAll("[data-fpick]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.fpick, name=(Engine.skillById(id)||{name:id}).name;
+    const had=(ch.archetypeChoices.focusedSkillPicks||[]).includes(id);
+    commit("loadout", had?`Focused Skill removed: ${name}`:`Focused Skill: ${name}`, ()=>{ Engine.toggleFocusedPick(ch, id); });
+  });
+
+  // Form toggle (e.g. Werewolf Human/Werewolf)
+  main.querySelectorAll("[data-ptoggle]").forEach(b=>b.onclick=()=>{
+    const [pid,opt]=b.dataset.ptoggle.split("|");
+    commit("loadout", `${pid}: ${opt}`, ()=>{ ch.panelData[pid]=opt; });
+  });
+
+  // ── Admin: free edits (each logged via commit) ───────────────────────
+  main.querySelectorAll("[data-admin-id]").forEach(inp=>inp.onchange=()=>{   // change, not input → one entry
+    const k=inp.dataset.adminId;
+    const v = inp.type==="number" ? (inp.value===""?null:Number(inp.value)) : inp.value;
+    if (ch.identity[k]===v) return;
+    commit("admin", `Admin: ${k} → ${v===null||v===""?"—":String(v).slice(0,40)}`, ()=>{ ch.identity[k]=v; });
+  });
+  main.querySelectorAll("[data-admin-pl]").forEach(sel=>sel.onchange=()=>{
+    const v=sel.value; if (ch.creation.powerLevel===v) return;
+    const nm=(D.powerLevels.find(p=>p.id===v)||{name:v}).name;
+    commit("admin", `Admin: power level → ${nm}`, ()=>{ ch.creation.powerLevel=v; });
+  });
+  main.querySelectorAll("[data-admin-arch]").forEach(sel=>sel.onchange=()=>{
+    const v=sel.value||null; if (ch.identity.archetype===v) return;
+    sel.value=ch.identity.archetype||"";   // until the answer is yes
+    const nm = v ? (D.archetypes.find(a=>a.id===v)||{name:v}).name : "none";
+    askFirst({ title:`Change archetype to ${nm}?`,
+      text:"This clears every archetype-specific choice: focus and stat-bonus allocations, specialization, disciplines and natural advantages. It's logged, so one undo restores everything.",
+      yes:"Change archetype", then:()=>commit("admin", `Admin: archetype → ${nm}`, ()=>{
+        ch.identity.archetype=v;
+        resetArchetypeChoices(ch);
+      }) });
+  });
+  main.querySelectorAll("[data-admin-stat]").forEach(b=>b.onclick=()=>{
+    const [id,field,d]=b.dataset.adminStat.split("|"), delta=Number(d);
+    commit("admin", `Admin: ${id} ${field} ${delta>0?"+":""}${delta}`, ()=>{ ch.stats[id][field]=Math.max(0,(ch.stats[id][field]||0)+delta); });
+  });
+  main.querySelectorAll("[data-admin-skill]").forEach(b=>b.onclick=()=>{
+    const [id,field,d]=b.dataset.adminSkill.split("|"), nm=(Engine.skillById(id)||{name:id}).name;
+    if (field==="remove"){ commit("admin", `Admin: remove skill ${nm}`, ()=>{ delete ch.skills[id]; }); return; }
+    const delta=Number(d);
+    commit("admin", `Admin: ${nm} ${field} ${delta>0?"+":""}${delta}`, ()=>{
+      if (!ch.skills[id]) ch.skills[id]={rank:0,ipe:0};
+      ch.skills[id][field]=Math.max(0,(ch.skills[id][field]||0)+delta);
+    });
+  });
+  main.querySelectorAll("[data-admin-addskill-go]").forEach(b=>b.onclick=()=>{
+    const id=(main.querySelector("[data-admin-addskill]")||{}).value; if(!id) return;
+    const nm=(Engine.skillById(id)||{name:id}).name;
+    commit("admin", `Admin: add skill ${nm} @1`, ()=>{ if(!ch.skills[id]) ch.skills[id]={rank:1,ipe:0}; });
+  });
+  main.querySelectorAll("[data-admin-adv]").forEach(b=>b.onclick=()=>{
+    // The row's position when the page drew it; commit() re-renders after
+    // every change, so it can't go stale under the click (B16).
+    const [at,op]=b.dataset.adminAdv.split("|"), row=ch.advantages[Number(at)];
+    if (!row) return;
+    const nm=(Engine.advById(row.id)||{name:row.id}).name;
+    const find=()=>ch.advantages.includes(row) ? row : null;
+    if (op==="x"){ commit("admin", `Admin: remove advantage ${nm}`, ()=>{ ch.advantages=ch.advantages.filter(a=>a!==find()); }); return; }
+    const delta=Number(op);
+    commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{
+      const e=find(); if(!e) return; e.rank=Math.max(0,e.rank+delta);
+      if (e.rank===0) ch.advantages=ch.advantages.filter(a=>a!==e);
+    });
+  });
+  main.querySelectorAll("[data-admin-addadv-go]").forEach(b=>b.onclick=()=>{
+    const id=(main.querySelector("[data-admin-addadv]")||{}).value; if(!id) return;
+    const nm=(Engine.advById(id)||{name:id}).name;
+    commit("admin", `Admin: add advantage ${nm}`, ()=>{ if(!ch.advantages.some(a=>a.id===id&&a.source!=="natural")) ch.advantages.push({id, rank:1, notes:""}); });
+  });
+  main.querySelectorAll("[data-admin-dis]").forEach(b=>b.onclick=()=>{
+    const [at,op]=b.dataset.adminDis.split("|"), row=ch.disadvantages[Number(at)];
+    if (!row) return;
+    const nm=(Engine.disById(row.id)||{name:row.id}).name;
+    const find=()=>ch.disadvantages.includes(row) ? row : null;
+    if (op==="x"){ commit("admin", `Admin: remove disadvantage ${nm}`, ()=>{ ch.disadvantages=ch.disadvantages.filter(d=>d!==find()); }); return; }
+    const delta=Number(op);
+    commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{
+      const e=find(); if(!e) return; e.rank=Math.max(0,e.rank+delta);
+      if (e.rank===0) ch.disadvantages=ch.disadvantages.filter(d=>d!==e);
+    });
+  });
+  main.querySelectorAll("[data-admin-adddis-go]").forEach(b=>b.onclick=()=>{
+    const id=(main.querySelector("[data-admin-adddis]")||{}).value; if(!id) return;
+    const nm=(Engine.disById(id)||{name:id}).name;
+    commit("admin", `Admin: add disadvantage ${nm}`, ()=>{ if(!ch.disadvantages.some(d=>d.id===id)) ch.disadvantages.push({id, rank:1, notes:""}); });
+  });
+  main.querySelectorAll("[data-admin-luck]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.adminLuck);
+    commit("admin", `Admin: LUCK bonus ${d>0?"+":""}${d}`, ()=>{ ch.trackers.luck.bonus=Math.max(0,(ch.trackers.luck.bonus||0)+d); });
+  });
+
+  // Notes
+  const nt=main.querySelector("[data-notes]");
+  if (nt) nt.oninput=()=>{ ch.notes=nt.value; lite(); };
+}

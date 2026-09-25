@@ -375,7 +375,7 @@ window.SHADOWS_DATA = {
     { id: "Headshot Defense", redirect: { from: "head", to: "torso" } },             // Decision 99
     { id: "Self-Healing", afterEncounter: { checkDie: "1d4", succeedsOn: 3, restoresDie: "1d4" } } ], // Decision 100
   armorUpgradeGlossary: [ { id: "Tri-Weave", minQuality: "Mid", integrityBonus: 10,
-    repeatable: true, description: "..." } ], // 6 entries; also resAgainst (Ablative, Warding).
+    repeatable: true, description: "..." } ], // 10 entries; also resAgainst (Ablative, the Wardings), retired (Decision 143).
   // An upgrade id in an armor's preInstalledFeatures takes no slot and is read
   // as already in the printed stats (Plasteel's Tri-Weave; Decision 100).
   // (0.10, Decision 104) Natural Armor: how it answers a hit is the F25 stub.
@@ -575,7 +575,7 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.12",
+    schemaVersion: "0.13",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -624,7 +624,7 @@ It renders on the Archetype tab.
     focusedSkillPicks: [],           // skill ids for the specialization's focusedSkills.choose
                                      // (Decision 134); migrate() keeps only strings
     naturalAdvantages: [],           // Professional: [{ id, rank }] — also mirrored into
-                                     // `advantages` with notes:"natural", cost 0 CP
+                                     // `advantages` with source:"natural", cost 0 CP (0.13)
     disciplines: {}                  // Arcanist: CP-bought ranks { enchantment: 1 } (6 CP each;
                                      // Evocation starting rank from scaling table is NOT stored)
   },
@@ -636,6 +636,9 @@ It renders on the Archetype tab.
   // `selections` (0.5) answers the entry's `picks`, keyed by pick id. Skill and
   // option picks store an ARRAY of ids, one per slot; text picks store a string.
   // Absent means nothing chosen yet, which every reader tolerates.
+  // `source: "natural"` (0.13, Decision 142) marks a Professional's free row,
+  // the mirror of archetypeChoices.naturalAdvantages. Absent means bought.
+  // `notes` is only ever text.
   advantages:    [ { id: "favored-skill", rank: 2, notes: "",
                      selections: { skill: ["handguns", "melee"] } } ],
   disadvantages: [ { id: "cursed", rank: 1, notes: "",
@@ -809,6 +812,7 @@ No cascade logic to maintain — it falls out of the architecture.
 17. **(Phase 2)** Professional natural advantages are stored as normal
     `advantages` entries with `notes: "natural"` and cost 0 CP — they render
     on the sheet like any advantage but never hit the CP ledger.
+    → **Superseded in part by Decision 142** — the marker is `source: "natural"`, not the notes.
 18. **(Phase 2)** Arcanist focus-stat bonus may push a stat past 10; the
     modifier curve extrapolates +1 per point above 10 (superseded past 10 by
     Decision 98: +1 per 5 points). Werewolf stat bonus
@@ -2102,7 +2106,7 @@ No cascade logic to maintain — it falls out of the architecture.
       directly (P7). App **0.12.0 → 0.13.0** (minor, new capability).
       Character schema unchanged (0.8 already carried every field).
       (Ken + Claude, 2026-09-22)
-    → **Superseded in part by Decisions 100 and 112** — the bare "Restore a Massive level" button folded into Focused Healing (100); Take a hit opens as a modal, not a panel on Trackers, and Apply waits with its reason instead of alerting (112).
+    → **Superseded in part by Decisions 100, 112 and 143** — the bare "Restore a Massive level" button folded into Focused Healing (100); Take a hit opens as a modal, not a panel on Trackers, and Apply waits with its reason instead of alerting (112); the Magical damage type became Elemental, Spirit and Aether, each with its own Warding (143).
 
 100. **(Loadout & recovery — combat plan Session 4, data + engine + app)**
     **Loadout writes weapons and armor from the catalog, a weapon line is
@@ -2320,6 +2324,7 @@ No cascade logic to maintain — it falls out of the architecture.
       junk), and each mutation failed a test.
     Game data **0.9 → 0.10** and app **0.15.0**, shared with 103 and 105.
     Character schema unchanged (0.8). (Ken + Claude, 2026-09-23)
+    → **Superseded in part by Decision 143** — Resilient Spirit answers Elemental, Spirit and Aether, not "Magical"; the F25 stub stands.
 105. **(Nanomed Kit — combat plan cleanup, CQ12, data + engine + app)**
     **054's "With Çredits" list is the master: a Nanomed Kit clears
     Agonized, Bleeding, Paralyzed and Poisoned and stabilizes the Dying.**
@@ -3038,6 +3043,7 @@ No cascade logic to maintain — it falls out of the architecture.
       Each fails a test.
     Game data **0.16**, character schema **0.10**, both shared with Decision
     120. Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+    → **Superseded in part by Decision 143** — Magic's Warding and Self-mending services are armor upgrades now; Recharging and Weapon inscription stay out.
 
 122. **(Main is the fight view — W13, app)** **W13 asked whether Main
     becomes the fight dashboard or a separate mode gets built. This session
@@ -3281,6 +3287,31 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** a player loses play to two tabs on one character (W38), or storage fills in play.
      - **Built:** app 0.28.0; the audit plan's S6c. Log 2026-09-25 (S6c).
 
+142. **A Professional's free advantage is marked by `source: "natural"`, and `notes` is only text.**
+     *2026-09-25 · Ken + Claude · Touches: advantages, notes, source, naturalAdvantages, Professional, advSpent, canonicalEntry, Admin mode, migrate, undo, audit trail, character schema 0.13, A11, C8*
+     - **Decided:** a row in `advantages` mirrored from `archetypeChoices.naturalAdvantages` carries `source: "natural"`; a bought row has no `source`, and `migrate()` drops any other value. Schema 0.13's step moves a pre-0.13 file's `notes: "natural"` into `source` and empties the notes, in the advantages list and in the audit's stored undo patches. A 0.13 file's notes are never read as a marker.
+     - **Why:** a free-text field doubled as a type marker, branched on at a dozen sites (A11). The patches are migrated because Decision 48's Revisit if came true: an undo recorded before the step would have restored a free row as a bought one.
+     - **Rejected:**
+       - Waiting for another schema bump to ride with, as the audit plan first said: Ken asked for S7 finished, and the step is small.
+       - Re-running `migrate()` after every undo: a loaded character is already 0.13, so the gated step wouldn't fire, and ungated it would read any note as a marker.
+       - Converting any `notes: "natural"` whatever the file's version: a player's note would make a bought advantage free.
+     - **Replaces:** Decision 17 in part (the marker). Extends Decision 48: a migration that reshapes a row also migrates the audit's patches of it.
+     - **Revisit if:** advantages gain a second source (a Milestone's grant, say), which would be a new `source` value named here.
+     - **Built:** app 0.28.2, character schema 0.13; the audit plan's S7. Log 2026-09-25 (S7).
+
+143. **Warding comes in three kinds, one per kind of magic damage, and the one Warding from before answers all three.**
+     *2026-09-25 · Ken + Claude · Touches: Warding, Warding — Elemental, Warding — Spirit, Warding — Aether, Self-mending, Ironhide, armor upgrades, retired, damageTypes, Magical, Elemental, Spirit, Aether, resAgainst, Resilient Spirit, print sheet Warding field, Magic's Services, Gear, W28*
+     - **Decided:** `damageTypes` drops Magical for the three the Book of Known Spells names (Elemental, Spirit, Aether, each `magical: true`; spells' `damageType` ids match). Magic's Services become armor upgrades: three Wardings, each extending RES to its own kind, and Self-mending, which is text (the player marks the Integrity it restores). Gear's one `Warding` is `retired`: where it's installed it answers all three kinds, and it's no longer offered. Resilient Spirit's "treated as Warding" reads as all three.
+     - **Why:** Magic prices three Wardings and the spell appendix says which magic damage armor stops; Gear's single Warding for "magical damage" is the older text. Ken ruled the conflict as the CRB's maintainer (W28). Nobody loses cover they already had.
+     - **Rejected:**
+       - One Warding for all three, per Gear: Magic's three prices would mean nothing.
+       - The old Warding counting as Elemental only: a saved character would lose Spirit and Aether cover it has now.
+       - Asking each player which Warding theirs was: friction for a guess the player can't make better than the app.
+       - Self-mending restoring full Integrity after a fight: the CRB never says how much.
+     - **Replaces:** Decisions 99, 104 and 121 in part (the Magical type; Resilient Spirit's class; the Services left out). F23 and F25 stand.
+     - **Revisit if:** Deighton rules how much Self-mending restores, or a source deals magic damage that isn't one of the three.
+     - **Built:** app 0.29.0, game data 0.22. Log 2026-09-25 (W28, W33). CRB fix for Ken: Gear's Warding entry.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -3306,7 +3337,7 @@ here are in `log/archive.md`.
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
-| F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and Magical (Warding), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
+| F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and to Elemental, Spirit and Aether (a Warding each, Decision 143), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
 | F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 | F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
 | F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both | Deighton | No |
