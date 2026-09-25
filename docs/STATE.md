@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.25.1` · game data `0.18` · character schema `0.12` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.25.2` · game data `0.19` · character schema `0.12` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -99,7 +99,7 @@ is the authority on a flag's full text.
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked; three Origins and four Trueborn powers unwritten |
-| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · the data is **behind Scott's later 2026-09-24 edits** (§5) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
+| **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · catalog matches the 2026-09-24 book except its Inscribed Spells (§5) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a finished export (portrait vs. landscape is decided once it lands). The frame/texture print defect blocks on no one |
 
 F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling;
@@ -128,10 +128,9 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**The live site is v0.25.0.** S4 is app 0.25.1 (game data 0.18, schema 0.12),
-under `[Unreleased]` in the changelog until it's released.
-
-**Next, all unblocked:** S5, S6, or the spell catalog (below). Ken alone:
+**The live site is v0.25.0.** S4 and the spell catalog are app 0.25.2 (game data
+0.19, schema 0.12), under `[Unreleased]` until released. Next, all unblocked: S5
+or S6. Ken alone: the Inscribed Spells shape (below),
 F9, F12, F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode),
 W30 (Reload from carried ammo), W31 (a TAGless character's TAG), W32 (spell
 damage from Spell Power, which wants a CRB line on rounding), W33 (Martial Arts
@@ -144,11 +143,12 @@ styles) and W34–W37 (character creation).
   Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), the print export.
 
-**The data is behind the CRB's magic chapters** (re-pulled 2026-09-24
-evening). Book of Known Spells: +33 spells, a new Inscribed Spells part, a
-Duration line on every spell, and some Overflow lines changed. Magic dropped the
-Talisman Concentration discount that `spellcraftRules.concentration` still
-carries. `040` and `046_Gear` were locked in Word; re-pull them.
+**The spell catalog matches the book's tiers** (app 0.25.2, R14 guards it).
+Not merged: its new **Inscribed Spells** part (17 entries: traps, wards, gear,
+Everlight, Hearthstone, Consecration, the three Wardings, touching W28), which
+wants Ken's call on shape. **For Scott:** the book dropped Counterspell and
+Silence (kept: Magic still uses Counterspell) and prints four traps twice at
+different THs. `040` and `046_Gear` were locked in Word; re-pull them.
 
 **Ken's CRB fixes** (the app already follows the answer in each; the
 questions' history is in `plans/combat-and-conditions.md` §6):
