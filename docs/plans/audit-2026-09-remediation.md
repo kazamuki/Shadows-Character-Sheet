@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** under way. **Every question is answered** (§5). **S1–S4 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1). Next: S5 or S6, in either order.
+**Status:** under way. **Every question is answered** (§5). **S1–S5 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1). Next: S6.
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -81,16 +81,16 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 
 *Versions:* app 0.25.1 (the refusal copy, the SFR formula's text and the Milestone details are visible). Game data and schema: none.
 
-### S5: Tooling (independent; a cloud session can do most of it)
-- [ ] **R5**: `.claude/settings.json` with a `SessionStart` hook running `npm ci`. Project skills for *close the session*, *number a decision*, *close a flag*, *cut a release*.
-- [ ] **R4**: `npm run bump <x.y.z>` writes all five version sites. `npm run release:check` runs before tagging.
-- [ ] **R8 / C15**: `npm run test:fast` for engine, rules, docs and build (about 10 s).
-- [ ] **R11 / C14**: one dispatchable release workflow (checks, builds once, tags, releases with the CHANGELOG section and both artifacts, deploys Pages). AQ9 decides tag creation.
-- [ ] **R12**: a phone-width Playwright check script (header height budget, no horizontal overflow). Outside `npm test` unless CI should install a browser.
-- [ ] **C12**: the dev server binds `127.0.0.1` and confines paths to the repo.
-- [ ] **C7**: fonts per AQ6.
+### S5: Tooling (done 2026-09-24, Decisions 137–138)
+- [x] **R5**: `.claude/settings.json`'s `SessionStart` hook runs `tools/session-start.mjs`, which runs `npm ci` only when `node_modules` is missing or older than the lockfile, and is silent otherwise. Four skills in `.claude/skills/`: `close-the-session`, `number-a-decision`, `close-a-flag`, `cut-a-release`. They're runbooks (steps, commands, files) and cite `CLAUDE.md` for the rules rather than restating them, so there's still one place a rule lives.
+- [x] **R4**: `npm run bump -- X.Y.Z` writes the six sites (the lockfile twice) and renames or adds the `[Unreleased]` heading, then regenerates What's new. `release:check` (one version everywhere, a dated section with lines, What's new current, the tag free on origin and locally; `--tagged` for a tag run) and `release:prep` (dates the heading), both in `tools/release.mjs`. Game data and schema are left out on purpose: each needs a judgement.
+- [x] **R8 / C15**: `npm run test:fast`, engine, rules, docs and build, about 13 s against verify's two minutes and more.
+- [x] **R11 / C14**: one `release.yml`, dispatched from main with a version (or a pushed tag): check, test, build once, tag, Release with the CHANGELOG section and both files, deploy Pages. A dry run stops after the build. `deploy-demo.yml` is gone (Decision 138).
+- [x] **R12**: `npm run phone-check` drives Chromium through `playwright-core` (Edge locally, Playwright's own in the cloud) over Home and every tab at 390, 768 and 1024 px. It reproduced B19's 257 px exactly, and found two things the audit hadn't: Home is 74 px too wide at 390, and at 1024×768 the header is 23% of the screen. The pre-S5 build measures the same, so both are S6's. Outside `npm test`.
+- [x] **C12**: the dev server binds `127.0.0.1` and answers 403 to a path outside the repo (`%2f` and `%5c` traversal tried).
+- [x] **C7**: fonts per AQ6: `src/styles/fonts.css`, generated from Fontsource's packages, 170 KB, with the OFL in its header and the licence files in `src/styles/fonts/`. A build test fails if either built file loads anything from a URL; putting either Google link back fails it (Decision 137). Ken then moved the big numbers off the header face to Oxanium (`--numeric`), with a test that no number uses `--display`.
 
-*Versions:* none, unless fonts are embedded (app patch). *Size:* one session.
+*Versions:* app 0.26.1 (the fonts). Game data and schema: none.
 
 ### S6: Table feel (after AQ4; runs through the wishlist)
 - [ ] **B19**: the phone header. **Lower priority after AQ10:** tablets and laptops are the expected devices, and a phone is the emergency fallback. The aim is "usable in an emergency", not phone-first: probably just a header that scrolls away below a width. New wishlist item. Check tablet widths (768–1024 px) in the same pass, since that's where most play will happen.
@@ -121,7 +121,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 | S2 | none | none | none |
 | S3 | minor (0.25.0) | minor (0.18) | none |
 | S4 | patch (0.25.1): three copy changes a player sees | none: outputs diffed identical | none |
-| S5 | patch only if fonts are embedded | none | none |
+| S5 | patch (0.26.1): the fonts are embedded | none | none |
 | S6 | minor | none | none (a roster lives in `localStorage` keys, not the file) |
 | S7 | with whatever carries it | none | A11 needs a bump and a `migrate()` step |
 
