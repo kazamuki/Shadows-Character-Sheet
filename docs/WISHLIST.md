@@ -277,6 +277,62 @@ and descriptions and jump links to each section. The filter should leave a
 taken entry visible even when it doesn't match, so nothing you hold
 disappears. It must still work at phone width.
 
+W34–W37 came out of the weekly meeting's walk through character creation on
+2026-09-24. All four are **rules questions for the design team**, so all four
+are blocked on Deighton. They touch the same few numbers (the Stat Point pool,
+how points turn into stats, and starting LUCK), so they should be settled
+together rather than one at a time. F8 is part of the same conversation.
+
+**W34 — A stat buy where each point costs more than the last.** *Ken · 🔎 · rules: Deighton*
+Today a Stat Point buys one point of any stat, 1:1, from a base of 1 up to 10.
+A stat at 9 costs the same to raise as one at 2, so the cheapest build is
+always to pile everything into a few stats. The idea is an optional buy where
+the price climbs with the stat's current value. There's already a precedent
+after creation: raising a stat with IP costs its current value ×10
+(Decision 14). *To respect:* it's an **option**, so a character has to record
+which method it was built with. That's a stored input, which means a
+character-schema change and a `migrate()` step. The cost table belongs in the
+data (per Campaign level if it differs), and the wizard shows a running cost
+per stat. Decision 10's hard caps stay: a table enforces its limits strictly.
+Search Decisions 10, 14 and 98 (the curve past 10) before proposing.
+
+**W35 — A flat Stat Point pool per Campaign level, with no roll.** *Ken · 🔎 · rules: Deighton*
+Instead of rolling for Stat Points, every character at a Campaign level gets
+the same fixed pool: no dice, no lucky or unlucky rolls, and a table where
+nobody's out-built on the first night. It works with either buy, 1:1 or W34's
+climbing cost. *To respect:* it's an option next to rolling, not a
+replacement. Decision 11 (every creation roll is physical, and the app never
+rolls) isn't affected, because a flat pool has no roll. It does need a number
+per Campaign level in `powerLevels[*].statPoints`, and a GM-facing choice of
+method, which is the same stored-input question as W34. F8's playtest (what
+Stat Point totals people really end up with) is the natural source for the
+flat numbers.
+
+**W36 — The Stat Point roll gives 10 more than the CRB says.** *Ken · ⏸ · this is F8*
+Rolling at Heroic, the wizard's total is 40 + 3d10. The CRB (040, "Rolling
+Stat Points") says 3d10 + 30. This isn't a bug in the count. It's open flag
+**F8**: the data follows the older reference table, which scales by Campaign
+level (30 + 2d10 / 40 + 3d10 / 50 + 4d10 / 60 + 5d10), and the CRB's flat line
+disagrees. The player sees `playerNote` saying the number isn't settled. Ruling
+it is four numbers in `powerLevels[*].statPoints`, with no app change, and it
+closes F8 (three edits: SCHEMA §5, `flagged` in the data, INDEX §2). The
+meeting leaned toward revisiting it together with W34 and W35 rather than
+fixing it alone, and that's why it's here rather than a quick data edit.
+
+**W37 — Starting LUCK of 6, maybe by Campaign level.** *Ken · 🔎 · rules: Deighton*
+Everyone starts with 2 LUCK today (Decision 5, `resources.luck.startingValue`).
+The meeting wants 6. The other idea discussed was to vary it by Campaign
+level, and the direction is undecided: more LUCK at Street level (to help a
+fragile character survive) or more at World Coming Down (to fit the scale).
+*To respect:* **maximum LUCK is computed, not stored** (constraint 7). It's
+`startingValue` plus bought LUCK, so changing the base raises every existing
+character's maximum too, locked ones included. That's probably right, but it
+should be a choice, and it's a `gamedataVersion` bump. A per-level value means
+moving the number onto `powerLevels[*]`, and the four places in `wizard.js`
+and `sheet.js` that read `luck.startingValue` directly should go through one
+engine reader first. Decision 5 needs superseding, and the CRB's Luck section
+(030) needs the new number.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first
@@ -397,8 +453,11 @@ the same way again.
 - **What's open:** W28 (Magic's Services, blocked on Deighton), W29 (a GM
   mode, a server-tier idea), W30 (Reload from carried ammo, after S6) and
   W31 (how a TAGless or Ghost TAG character's TAG reads), W32 (spell damage
-  worked out from Spell Power) and W33 (Martial Arts styles). Everything else
-  on this list has moved out. New ideas get the next free number, W34.
+  worked out from Spell Power), W33 (Martial Arts styles), and W34–W37
+  (the character-creation economy: a stat buy that costs more as a stat climbs,
+  a flat Stat Point pool, the F8 roll, and starting LUCK, all waiting on
+  Deighton). Everything else on this list has moved out. New ideas get the
+  next free number, W38.
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
   for a small panel beside what opened it, which follows the render; the

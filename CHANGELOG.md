@@ -21,6 +21,31 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.26.0
+
+- **Inscribed spells are in the book.** Traps, wards, gear inscriptions, Everlight,
+  Hearthstone, Second Wind, Consecration and the three Wardings join the Book of Known
+  Spells. You can know one and keep it in your Grimoire like any other spell.
+- **A spell says what it's made with.** One that can only be inscribed reads
+  "Enchantment only · 4 hours" (or Alchemy, in days), and its TH is that Discipline's.
+  Mastering it is priced from that TH too.
+- **Filter the book by Discipline.** Evocation, Enchantment or Alchemy, next to tier and
+  Domain in the spell picker.
+- **Starting spells are ones you can cast.** A spell that can only be inscribed says so
+  and waits until after creation.
+- **Every inscribed object in the shop shows its spell.** The Grave-iron blade and
+  Ferryman's coin read as the book now has them.
+- **Sixteen new spells in the Book of Known Spells**, from Glasswalk, Borrowed Tongue
+  and Mend among the Cantrips up to Borrowed Time. Blink, Tracer, Sure Hand, Doorway,
+  Invisicloak and Consecrate are among them.
+- **Every spell says how long it lasts.** Duration sits beside Range and Target when
+  you open a spell in your Grimoire.
+- **Overflow says how much.** Lines that read "increases by [X]" now give the number:
+  +½ SP damage, +2m, +1 round.
+- **Some spells work differently now**, as the book prints them. Mind Nudge pushes a
+  target along a course they're already on, or holds them back. Tremor, Frostbite,
+  Glimmer and Facemask changed too. A spell you already know updates by itself.
+
 ## v0.25.1 — 2026-09-24
 
 - **Every Major Milestone shows all it does.** Hardcore Parkour, Cyber Psion and Can't See
