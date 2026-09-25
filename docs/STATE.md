@@ -131,8 +131,8 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.28.1.** Unreleased: 0.29.0, the audit's S7 (schema 0.13), Warding by
-kind (143, data 0.22) and Martial Arts styles on the sheet. Ken alone: F9, F12, F13, F32,
+**The live site is v0.29.0** (data 0.22, schema 0.13): the audit's S7, Warding by kind
+(143) and Martial Arts styles on the sheet. Ken alone: F9, F12, F13, F32,
 and **W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3), then one session builds it.
 The wishlist holds W29 (a GM mode), W30 (Reload from ammo), W31 (a TAGless TAG), W32
 (spell damage from Spell Power), W34–W37 (character creation) and W39 (training a style).
