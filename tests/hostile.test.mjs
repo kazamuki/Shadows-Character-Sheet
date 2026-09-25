@@ -112,7 +112,7 @@ test("a hostile character file renders as text on every tab, in Admin, in print 
     closeOverlays(app);
   };
 
-  // Home's roster card shows the saved file before anything opens it (Decision 140).
+  // Home's roster card shows the saved file before anything opens it (Decision 141).
   found.push(...injected(app, "home"));
   assert.ok(app.$("#main .roster-card"), "the hostile character isn't on Home's roster");
   // Open sheet is the resume door; it runs migrate() like Import does.

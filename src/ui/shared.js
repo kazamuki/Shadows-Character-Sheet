@@ -61,7 +61,7 @@ const normSection = s => s==="admin" ? (S.admin?"admin":"main")
                         : (SHEET_IDS.includes(s) ? s : (LEGACY_SECTION[s] || "main"));
 let S = { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false };
 
-// ── The roster (R10, Decision 140) ────────────────────────────────────
+// ── The roster (R10, Decision 141) ────────────────────────────────────
 // Every character this browser keeps is one localStorage key named by its
 // TAG, draft and sheet alike: locking updates the same entry, and a second
 // character is added, never swapped in. An entry is
@@ -557,7 +557,7 @@ function resetArchetypeChoices(ch){
   if (!ch.creation.locked) ch.panelData = {};
 }
 
-// ── What may replace a saved character (B18, Decisions 128, 140) ──────
+// ── What may replace a saved character (B18, Decisions 128, 141) ──────
 // Each character has its own entry, keyed by its TAG, so a different
 // character is simply added. The one thing still asked about is a file that
 // would put an older copy of a character in place of a newer saved one, with

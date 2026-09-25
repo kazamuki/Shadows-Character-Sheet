@@ -932,6 +932,7 @@ No cascade logic to maintain — it falls out of the architecture.
     redundant with the header name. On narrow widths the nine tabs wrap to a
     second header row — accepted; shortening labels is the lever if a single row
     is ever required. (Ken, 2026-06-16)
+    → **Superseded in part by Decision 140** — the tabs are one row that scrolls sideways, under the name, at every width.
 39. **(Phase 3.2)** **Header overflow menu.** Home and Export move off the
     content into a kebab (⋮) menu pinned to the far right of the header, after the
     last tab. Opens on click; closes on outside-click, Esc, or item-select. Sheet
@@ -3128,7 +3129,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing. Decision 63 holds: `migrate()` still invents no timestamps; `commit()` records one when something changes.
      - **Revisit if:** the roster (plan S6) gives each character its own slot, which turns "replace?" into "add".
      - **Built:** app 0.24.0; the audit plan's S1; `smoke.test.mjs` B18 ×4, `engine.test.mjs` B18 ×2.
-     → **Superseded in part by Decisions 133 and 140** — the number is a TAG (`TAG-XXXX-XXXX-XXXX`), shown without an "Intake No." label (133); each character has its own entry, so only an older copy of the same character asks (140).
+     → **Superseded in part by Decisions 133 and 141** — the number is a TAG (`TAG-XXXX-XXXX-XXXX`), shown without an "Intake No." label (133); each character has its own entry, so only an older copy of the same character asks (141).
 
 129. **Hardcore Parkour needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1.**
      *2026-09-24 · Deighton (ruling), via Ken · Touches: Hardcore Parkour, Cat Like Balance, Time Sense, Danger Sense, Acrobatics, Major Milestone prerequisites, F27, B15*
@@ -3254,7 +3255,20 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** playtesters miss tips on a touch screen, or W30 needs ammo matched to weapons by field.
      - **Built:** app 0.27.0, game data 0.21. Log 2026-09-25 (S6a).
 
-140. **The browser keeps a roster: one entry per character, keyed by its TAG, and Home says which ones have play no file holds.**
+140. **The header is two thin rows at every width, and the tabs are one line that scrolls sideways.**
+     *2026-09-25 · Ken + Claude · Touches: header.top, brand, Shadows //, topnav, tabs, tab row, sticky header, kebab, theme toggle, --hdr-live, jump bar, phone, tablet, 1024×768, phone-check, B19, AQ10*
+     - **Decided:** row one is the name, ⋮ and the theme button; row two is the nine tabs, never wrapping, scrolled so the active tab is in view, faded on the side that has more, and moved by a plain mouse wheel. A long name ends in "…", and below 480 px wide the `Shadows //` prefix goes. Below 540 px tall the header scrolls away with the page. The sheet's header is 88 px at every width checked (9–11%).
+     - **Why:** at 1024×768 nine tabs (990 px) and the name (362 px) wrapped to three rows, 23% of the screen; on a phone, 30%. The name never wrapped, so it pushed Home 74 px wider than a phone. Tablets are where play happens (AQ10).
+     - **Rejected:**
+       - Shorter tab labels (38's own lever): about 150 px back, and still no fit at 1024.
+       - Icon-only tabs on narrow screens: nine unfamiliar icons for a new player.
+       - A "More ▾" menu for the tabs that don't fit: it hides tabs and needs measuring code. The wizard's step ledger already scrolls sideways below 1060 px.
+       - Unsticking below 600 px wide: at 11% the sticky header fits a phone, and changing tabs mid-fight would mean scrolling to the top. What a phone can't spare is height, on its side.
+     - **Replaces:** Decision 38 in part: the tabs no longer wrap to a second row.
+     - **Revisit if:** the sheet gains a tenth tab, or playtesters on tablets don't find the tabs past the fade.
+     - **Built:** app 0.27.1. Log 2026-09-25 (S6b); `npm run phone-check` passes all three widths.
+
+141. **The browser keeps a roster: one entry per character, keyed by its TAG, and Home says which ones have play no file holds.**
      *2026-09-25 · Ken + Claude · Touches: roster, localStorage, shadows.char.v1, shadows.active.v1, shadows.draft.v1, Home, New character, Import, Lock, Remove, export, unexported marker, replace guard, save failure, R10, AQ5, B18*
      - **Decided:** each character is one `localStorage` key, `shadows.char.v1.<TAG>`, holding `{ ch, step, maxReached, section, changed, exported }`, draft through locked; there's no index key. Home lists every entry, most recently changed first, with Open, Export and Remove, and marks one whose `changed` isn't the `changed` it was last exported at. New saves nothing until something changes; Import of a different character and Lock add or update an entry without asking; Remove asks, offering *Export, then remove*. The one question left is a file older than the saved copy of the same character. The 0.27 slots move in on first load.
      - **Why:** AQ5: design for several characters. One sheet and one draft made every door a replacement. The marker keeps AQ5's caution: browser storage isn't a backup.

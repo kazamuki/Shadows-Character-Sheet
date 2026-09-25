@@ -402,7 +402,7 @@ data without asking, and can put notes onto a character's sheet.
   cost and how long it's kept.
 
 *A skeleton, cheapest first.*
-1. **No server.** With the roster (Decision 140), a GM's browser holds several characters
+1. **No server.** With the roster (Decision 141), a GM's browser holds several characters
    read-only, imported from the players' exports and refreshed by re-importing (a
    newer copy of the same intake number just updates; Decision 128's rule). GM
    notes go back as a small "dispatch" file a player imports into a *From your GM*
@@ -433,10 +433,10 @@ a code or a QR at the table; accounts can wait.
 own; how long player data is kept; and whether this is the character sheet's
 job or the GM toolkit's.
 
-**W38 — Two tabs open on one character overwrite each other.** *Claude, raised in S6c · ⏭ · follows Decision 140*
+**W38 — Two tabs open on one character overwrite each other.** *Claude, raised in S6c · ⏭ · follows Decision 141*
 Open the same character in two browser tabs, play in one, then touch anything
 in the other: the second tab saves its older copy over the first's, and the
-play is gone with no warning. The roster (Decision 140) doesn't cause this, and
+play is gone with no warning. The roster (Decision 141) doesn't cause this, and
 the single-slot app had it too, but a list of characters makes several open
 tabs more likely. *The fix:* listen for the `storage` event. When another tab
 writes the entry for the open character, stop saving from this tab and say so,

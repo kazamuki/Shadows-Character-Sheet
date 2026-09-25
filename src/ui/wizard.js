@@ -515,7 +515,7 @@ function renderReview(){
 }
 
 // ── Home ─────────────────────────────────────────────────────────────
-// The roster (R10, Decision 140): every character this browser keeps, the
+// The roster (R10, Decision 141): every character this browser keeps, the
 // most recently changed first, each with open, export and remove. A card
 // says when its changes haven't reached a file, because browser storage is
 // a convenience and the exported file is the copy that lasts.

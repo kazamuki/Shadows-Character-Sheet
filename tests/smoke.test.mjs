@@ -56,6 +56,47 @@ test("a locked character resumes from storage and every sheet tab renders", () =
   }
 });
 
+test("the tab row keeps the active tab in view and fades the side with more (B19)", () => {
+  // jsdom has no layout, so give the row one: nine 100 px tabs in 390 px.
+  const app = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const nav = app.$("#topnav");
+  let left = 0;
+  const max = 900 - 390;
+  Object.defineProperty(nav, "scrollLeft", { get: () => left, set: v => { left = Math.max(0, Math.min(max, v)); } });
+  Object.defineProperty(nav, "scrollWidth", { get: () => 900 });
+  Object.defineProperty(nav, "clientWidth", { get: () => 390 });
+  const rect = (l, w) => ({ left: l, right: l + w, top: 0, bottom: 40, width: w, height: 40 });
+  const proto = app.window.HTMLElement.prototype, real = proto.getBoundingClientRect;
+  proto.getBoundingClientRect = function () {
+    if (this === nav) return rect(0, 390);
+    const i = [...nav.children].indexOf(this);
+    return i >= 0 ? rect(i * 100 - left, 100) : real.call(this);
+  };
+  try {
+    app.click('[data-sec="notes"]');
+    assert.equal(left, max, "the last tab was not scrolled into view");
+    assert.ok(nav.classList.contains("more-l") && !nav.classList.contains("more-r"), `fades: ${nav.className}`);
+    app.click('[data-sec="trackers"]');
+    const t = nav.querySelector(".tab.active").getBoundingClientRect();
+    assert.ok(t.left >= 0 && t.right <= 390, `Trackers out of view at ${t.left}–${t.right}`);
+    app.click('[data-sec="main"]');
+    assert.equal(left, 0);
+    assert.ok(nav.classList.contains("more-r") && !nav.classList.contains("more-l"), `fades: ${nav.className}`);
+
+    // A mouse wheel scrolls the row sideways, and lets the page have it at the end.
+    const wheel = dy => { const e = new app.window.WheelEvent("wheel", { deltaY: dy, bubbles: true, cancelable: true }); nav.dispatchEvent(e); return e.defaultPrevented; };
+    assert.equal(wheel(120), true);
+    assert.equal(left, 120);
+    left = max;
+    assert.equal(wheel(120), false, "the wheel was swallowed with nowhere to scroll");
+  } finally {
+    proto.getBoundingClientRect = real;
+  }
+  assert.deepEqual(app.errors, []);
+});
+
 test("the sheet survives a game-data change without code changes", () => {
   // Proves the data-driven contract: rename a skill's display name in the data
   // and the app still renders — no hardcoded content in the UI layer.
@@ -1480,7 +1521,7 @@ async function importFile(app, ch) {
 }
 const named = (name, extra = {}) => Object.assign(lockedCharacter(), { identity: Object.assign(lockedCharacter().identity, { name }) }, extra);
 
-// ── The roster (R10, Decision 140): one entry per TAG ────────────────────
+// ── The roster (R10, Decision 141): one entry per TAG ────────────────────
 const charKeys = app => {
   const ls = app.window.localStorage, out = [];
   for (let i = 0; i < ls.length; i++) if (ls.key(i).startsWith("shadows.char.v1.")) out.push(ls.key(i));
@@ -1490,7 +1531,7 @@ const entryOf = (app, id) => JSON.parse(app.window.localStorage.getItem("shadows
 const card = (app, name) => app.$$("#main .roster-card").find(c => c.querySelector(".roster-name").textContent === name);
 const sheetHome = app => { app.click("[data-menu-toggle]"); app.click("[data-home]"); };
 
-test("Decision 140: importing a different character adds it beside the saved one, with nothing asked", async () => {
+test("Decision 141: importing a different character adds it beside the saved one, with nothing asked", async () => {
   const vex = Engine.migrate(named("Vex Morrow"));
   const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
   withDownloads(app);
@@ -1553,7 +1594,7 @@ test("Decision 133: a sheet saved by 0.24.0 (NCR-) and a newer export of it are 
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 140: New saves nothing until something changes, and Lock turns the same entry into a sheet beside the other one", () => {
+test("Decision 141: New saves nothing until something changes, and Lock turns the same entry into a sheet beside the other one", () => {
   const vex = Engine.migrate(named("Vex Morrow"));
   const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
   app.click("#btn-new");
@@ -1580,7 +1621,7 @@ test("Decision 140: New saves nothing until something changes, and Lock turns th
   assert.deepEqual([...app.errors, ...w.errors], []);
 });
 
-test("Decision 140: Home marks a character with changes no file has; opening it doesn't, and exporting clears it", () => {
+test("Decision 141: Home marks a character with changes no file has; opening it doesn't, and exporting clears it", () => {
   const vex = Engine.migrate(named("Vex Morrow"));
   const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
   const downloads = withDownloads(app);
@@ -1610,7 +1651,7 @@ test("Decision 140: Home marks a character with changes no file has; opening it 
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 140: Remove asks first, says what's at stake, and Export, then remove downloads the character before it goes", async () => {
+test("Decision 141: Remove asks first, says what's at stake, and Export, then remove downloads the character before it goes", async () => {
   const vex = Engine.migrate(named("Vex Morrow")), other = Engine.migrate(named("Other Player"));
   const at = "2026-09-24T10:00:00.000Z";
   const app = boot({ storage: {
@@ -1669,7 +1710,7 @@ test("R10: a 0.27 browser's saved sheet and draft both survive into the roster; 
   assert.deepEqual([...app.errors, ...bad.errors], []);
 });
 
-test("Decision 140: a save the browser refuses stays on the page until one goes through", () => {
+test("Decision 141: a save the browser refuses stays on the page until one goes through", () => {
   const vex = Engine.migrate(named("Vex Morrow"));
   const app = boot({ storage: { "shadows.active.v1": { ch: vex, section: "main" } } });
   card(app, "Vex Morrow").querySelector("[data-open]").click();
