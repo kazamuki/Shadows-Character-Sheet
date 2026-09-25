@@ -10,6 +10,8 @@
 const D = window.SHADOWS_DATA;
 const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// The currency sign, from the data (Decision 135), escaped once for markup.
+const CR = esc(Engine.creditSymbol());
 
 // ── Iconography (loaded from shadows-icons.js) ──────────────────────
 // Brand stat icons keyed by stat/derived id; free-to-use UI icons keyed by

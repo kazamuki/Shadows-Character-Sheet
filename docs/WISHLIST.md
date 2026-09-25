@@ -201,6 +201,14 @@ What it has to respect:
 - **Spell Power can be null** (no Evocation rank), and the engine is total:
   the book text alone shows then.
 
+**W33 — Martial Arts styles.** *Claude · 💡 · found by the S4 key guard (Decision 135)*
+Raised 2026-09-24. Martial Arts carries a list of styles in the data (Commando,
+Escrima, Jujitsu, Karate, Krav Maga and more), each with a bonus ("+1 Stun",
+"+1 Disarm"), and no screen shows them. The smallest step is showing the list
+where Martial Arts is described, under S6's "a rule the sheet names is a tap
+away". Choosing a style is bigger: it's a stored input (a character-schema
+change), and whether its bonus is something the sheet applies is Deighton's.
+
 ### Theme & polish
 
 ~~**W7 — Primary buttons are unreadable in light mode.**~~ *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
@@ -388,9 +396,9 @@ the same way again.
 
 - **What's open:** W28 (Magic's Services, blocked on Deighton), W29 (a GM
   mode, a server-tier idea), W30 (Reload from carried ammo, after S6) and
-  W31 (how a TAGless or Ghost TAG character's TAG reads) and W32 (spell damage
-  worked out from Spell Power). Everything else on this list has moved out.
-  New ideas get the next free number, W33.
+  W31 (how a TAGless or Ghost TAG character's TAG reads), W32 (spell damage
+  worked out from Spell Power) and W33 (Martial Arts styles). Everything else
+  on this list has moved out. New ideas get the next free number, W34.
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
   for a small panel beside what opened it, which follows the render; the

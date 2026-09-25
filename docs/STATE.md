@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-24
-**Versions:** app `0.25.0` · game data `0.18` · character schema `0.12` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.25.1` · game data `0.18` · character schema `0.12` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -31,16 +31,12 @@ everywhere (`tests/hostile.test.mjs`).
 (`plans/` keeps them as history). Combat: Decisions 95–106, with stubs
 waiting on Deighton. Magic: Decisions 93, 106, 108–111 and 115.
 
-**The 2026-09-24 audit's first three sessions are done.** S1 (app 0.24.0) made
-character files untrusted input and gave every character a permanent number.
-S2 was docs only: decisions are short records that say what they rejected
-(Decision 130), every change has a tier that says what it must touch (131),
-and there's one orientation path (132). Then, in app 0.24.1, that number
-became the character's **TAG** (Decision 133, schema 0.12). A 0.24.0 `NCR-`
-number keeps its twelve characters, so old exports are still the same character.
-S3 (app 0.25.0, game data 0.18) made the Professional data: Focused Skills are
-ids, a category pick and an all-skills price, read by one generic reader
-(Decision 134), which fixed B12–B14.
+**The 2026-09-24 audit's first four sessions are done** (`log/2026.md` has
+each). Character files are untrusted input (Decision 124), every character has
+a permanent **TAG** (133), decisions say what they rejected (130), and changes
+have tiers (131). The data now drives the archetypes: every key is read by
+code or named as text, and **no archetype is named in engine or UI code**
+(134, 135). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -71,6 +67,10 @@ tag. The live version is the latest `v*` tag. How to release is in
   `grants` sit on a Major Milestone and on specialization options, and
   `naturalArmor()` scans all three. The next grant type on a Milestone should
   widen `grants()` rather than copy the scan (Decision 104).
+- **A number another table holds is a path** (`"powerLevel.x"`, read by
+  `Engine.dataPath`); a formula is `{ stat, times, plus }` (Decision 135).
+- **Proving a change invisible** (Decision 68): `node tools/outputs.mjs a.json`,
+  change it, then `--against a.json`. About four minutes each way.
 - **Reuse, don't copy:** `openPopover`, `openCatalog(kind)` over
   `Engine.catalogLine`, `bindVitalControls(root)` (0.22), and `openModal`.
 - **Gear rows and weapon rows share a shape**: a catalog reference or
@@ -91,7 +91,7 @@ is the authority on a flag's full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1 ✅ · S2 ✅ · S3 ✅ · S4, S5 ⏭ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
+| **Audit remediation** — `plans/audit-2026-09-remediation.md` | 📋 S1–S4 ✅ · S5 ⏭ · S6 ⏭ (specified by AQ4) · S7 opportunistic | Nobody. Every question is answered |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small). Warding services: W28 |
 | **Creation-pool economics** — F8 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
@@ -117,11 +117,10 @@ werewolf: draft · cyborg: tbd · vampire: tbd`.
   bump` and `release:check` (R4, the rest of A6), `test:fast`, one release
   workflow a cloud session can run (AQ9), embedded fonts (AQ6), the dev
   server on `127.0.0.1`.
-- **S4, read it or label it** (A9, the Arcanist half of A8). *Rule or shape*
-  if any output moves, so diff first. S3 took the skill IP prices already.
 - **S6, table feel,** specified by AQ4: rules text a hover or tap away, lore
   on the Archetype tab, Ammo in the shop, the phone and tablet header, the
-  roster.
+  roster. The key guard's `NOT_YET_SHOWN` list is S6's content checklist:
+  each entry comes off it as a screen shows it.
 
 rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes.
 
@@ -129,13 +128,13 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**The live site is v0.24.1.** S3 is app 0.25.0 (game data 0.18, schema 0.12),
+**The live site is v0.25.0.** S4 is app 0.25.1 (game data 0.18, schema 0.12),
 under `[Unreleased]` in the changelog until it's released.
 
-**Next, all unblocked:** S4, S5 or S6. Ken alone: F9, F12, F13 and F32. The
+**Next, all unblocked:** S5 or S6. Ken alone: F9, F12, F13 and F32. The
 wishlist holds W28 (blocked), W29 (a GM mode), W30 (Reload from carried
-ammo), W31 (how a TAGless or Ghost TAG character's TAG reads) and W32 (spell
-damage worked out from Spell Power, which wants a CRB line on rounding).
+ammo), W31 (a TAGless character's TAG), W32 (spell damage from Spell Power,
+which wants a CRB line on rounding) and W33 (Martial Arts styles).
 
 **Waiting on others:**
 - **Design team:** F8, being playtested.
@@ -170,6 +169,8 @@ questions' history is in `plans/combat-and-conditions.md` §6):
   app's reading, Ken's answer: 4 → 5 is standard). The Mercenary's "Handgun"
   and the Slayer's and True Warrior's "Occult" are Handguns and Occult Lore.
 - **Magic:** say how ½ Spell Power rounds (up, per Ken; W32).
+- **043:** 15 Advantages are tagged "Universal" (Common Sense, Lucky…) and the
+  chapter never says what that means. The data keeps the tag, unread.
 - **The new-skill price** (a flat 25 IP, Decision 97) and **the stat curve
   past 10** (Decision 98) need writing into the CRB. F23 may want a line in
   Gear's RES text once ruled.

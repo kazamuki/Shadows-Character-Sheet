@@ -11,7 +11,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.25.0";
+const APP_VERSION = "0.25.1";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -291,7 +291,7 @@ function openCatalog(kind){
         const pre = Engine.addLoadout(clone(ch), kind, id, { buy });
         if (!pre.ok){ alert(pre.why); return; }
         const n = pre.added>1 ? ` ×${pre.added}` : "";
-        commit("loadout", buy ? `Bought ${pre.name}${n} (−${pre.paid}Ç)` : `Added ${pre.name}${n}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
+        commit("loadout", buy ? `Bought ${pre.name}${n} (−${pre.paid}${Engine.creditSymbol()})` : `Added ${pre.name}${n}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
         refresh();
       };
     } });
@@ -589,10 +589,7 @@ function bindSheet(){
   // Generic archetype trackers (SFR / panel trackers)
   main.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
     const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
-    commit("tracker", `${pid.toUpperCase()} ${delta>0?"+":""}${delta}`, ()=>{
-      if (pid==="sfr") ch.trackers.sfr.spent=Math.max(0,(ch.trackers.sfr.spent||0)+delta);
-      else { const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.value=Math.max(0,(e.value||0)+delta); }
-    });
+    commit("tracker", `${pid.toUpperCase()} ${delta>0?"+":""}${delta}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
   });
   // Aberrations on the character (Decision 110); adding one, from a Cascade
   // or by hand, is the picker modal (Decision 115).
