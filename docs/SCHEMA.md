@@ -2225,6 +2225,7 @@ No cascade logic to maintain — it falls out of the architecture.
     waits only on a free session and Ken's yes. An item leaves the wishlist
     when it is picked up and is struck through, not deleted. Neither change is
     player-visible, so no version moves. (Ken + Claude, 2026-09-22)
+    → **Superseded in part by Decision 144** — a built item moves, whole, to `log/wishes-granted.md` instead of being struck through in place.
 102. **(Docs)** **A decision that replaces another marks it in the same
     change, in the ledger and in the index, and a test holds the two
     together.** The ledger reached 101 entries, and Ken asked whether the
@@ -3311,6 +3312,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decisions 99, 104 and 121 in part (the Magical type; Resilient Spirit's class; the Services left out). F23 and F25 stand.
      - **Revisit if:** Deighton rules how much Self-mending restores, or a source deals magic damage that isn't one of the three.
      - **Built:** app 0.29.0, game data 0.22. Log 2026-09-25 (W28, W33). CRB fix for Ken: Gear's Warding entry.
+
+144. **A wishlist item that is built moves, whole, to `log/wishes-granted.md`; `WISHLIST.md` shows only what's open.**
+     *2026-09-25 · Ken + Claude · Touches: WISHLIST.md, log/wishes-granted.md, W ids, struck-through wishlist entries, INDEX §1 and §2, close-the-session*
+     - **Decided:** when a `W` item lands, its entry (heading, pointer to where it went, and its text) moves to `docs/log/wishes-granted.md` under the same topic heading, and leaves `WISHLIST.md`. The granted file is history: never edited after an entry arrives. `W` ids are still never reused; an id is open in the wishlist or built in the granted file, and INDEX §2 names both.
+     - **Why:** by 0.29.0, 27 of 37 items were struck through with their full text kept, and Ken found his eyes hunting for the unstruck headings instead of reading the list. The history is worth keeping (the text records what the player felt before the fix, which the decision doesn't), but not in the view a session reads to pick up work.
+     - **Rejected:**
+       - Keep striking in place (Decision 101): the list gets harder to read with every item that ships.
+       - Append to `log/archive.md`: that holds one-off moves out of live documents (Decision 132); this one grows every batch.
+       - Leave a one-line stub in the wishlist per granted item: still noise, and INDEX §2 already resolves the id.
+       - Delete granted entries: loses the before-picture, and ids cited in the ledger would point nowhere.
+     - **Replaces:** Decision 101 in part (a picked-up item is struck through, not deleted).
+     - **Revisit if:** the granted file itself grows too long to find an entry in, or items start landing half-built often enough that splitting them gets awkward.
+     - **Built:** no version moves. Log 2026-09-25 (wishes granted).
 
 ## 5. Open Flags
 
