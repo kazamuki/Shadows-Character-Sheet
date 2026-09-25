@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.29.0
+## v0.29.0 — 2026-09-25
 
 - **Warding for each kind of magic.** Armor can now take Warding against Elemental, Spirit
   or Aether damage, each its own upgrade in its own mod slot, and **Take a hit** asks which of
