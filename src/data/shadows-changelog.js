@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.26.1",
-    "date": null,
+    "date": "2026-09-25",
     "intro": [],
     "items": [
       "**The sheet looks the same offline.** Its typefaces travel inside the file now, so a copy opened with no connection keeps its look instead of falling back to your system's fonts, and opening it never reaches out to a font server.",
