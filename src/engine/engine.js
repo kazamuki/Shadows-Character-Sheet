@@ -1711,9 +1711,31 @@ const Engine = (() => {
     if (parts.some(p=>typeof p.value!=="number" || !isFinite(p.value))) return null;
     return { value: d.rank + parts.reduce((s,p)=>s+p.value, 0), rank: d.rank, discipline: d.name, parts, text: R.text||"" };
   }
-  function spellMasteryCost(s){
+  // The forms a spell takes (Decision 136). Magic's Three Forms: any spell can
+  // be an Evocation, a Talisman or an Artifact, so the default list is the
+  // data's `forms.disciplines`; a spell naming its own `disciplines` exists
+  // only in those. `th` stays the tier's own, what a live cast rolls against;
+  // any other form's TH and time are the Enchantment table's row for the tier.
+  function spellForms(s){
+    const all = ((D().spellcraftRules||{}).forms||{}).disciplines || [];
+    const own = s && Array.isArray(s.disciplines) ? s.disciplines.filter(d=>all.includes(d)) : [];
+    return own.length ? own : all.slice();
+  }
+  const liveDiscipline = () => ((D().spellcraftRules||{}).castingPool||{}).discipline || null;
+  function spellForm(ch, s, discipline){
+    const id = discipline || spellForms(s)[0] || null;
+    const named = disciplineRanks(ch).find(d=>d.id===id)
+      || (((D().archetypes||[]).map(a=>a && a.coreMechanic && a.coreMechanic.disciplines).find(x=>x && Array.isArray(x.list))||{}).list||[]).find(d=>d && d.id===id);
+    const row = (D().enchantmentTimeTable||[]).find(r=>r && r.tier===(s||{}).tier) || {};
+    const live = id===liveDiscipline();
+    const th = live ? (s||{}).th : ((row.th||{})[id]);
+    return { discipline:id, name: named ? named.name : String(id||""), live, only: spellForms(s).length===1,
+             th: typeof th==="number" ? th : null, time: live ? null : ((row.minTime||{})[id] || null) };
+  }
+  function spellMasteryCost(s, th){
     const M = (D().spellcraftRules||{}).mastery || {};
-    return s && typeof s.th==="number" && s.th>=1 && M.ipPerTH ? M.ipPerTH * s.th : null;
+    const t = th===undefined ? s && s.th : th;
+    return typeof t==="number" && t>=1 && M.ipPerTH ? M.ipPerTH * t : null;
   }
   // The dice a live cast rolls: the named Discipline's rank (Magic.md, Step 2).
   // A TH above it can still be cast, but only an exploding 10 reaches it
@@ -1743,16 +1765,16 @@ const Engine = (() => {
       }
       const s = spellById(r.spellId), notes = typeof r.notes==="string" ? r.notes : "";
       if (!s) return { index, missing:true, spellId:r.spellId, notes };
-      const mastered = r.stage==="mastered";
-      const th = typeof s.th!=="number" ? null : mastered ? Math.max(0, s.th - (M.thReduction||0)) : s.th;
-      return { index, id:s.id, name:s.name, notes, mastered, th, printedTH:s.th, noRoll: th===0,
-               beyondPool: !!pool && th!=null && th > pool.rank,
+      const mastered = r.stage==="mastered", form = spellForm(ch, s);
+      const th = typeof form.th!=="number" ? null : mastered ? Math.max(0, form.th - (M.thReduction||0)) : form.th;
+      return { index, id:s.id, name:s.name, notes, mastered, th, printedTH:form.th, noRoll: th===0, form,
+               beyondPool: form.live && !!pool && th!=null && th > pool.rank,
                tier: (tiers.find(t=>t.id===s.tier)||{name:s.tier}).name, tierId:s.tier,
                domain: (domains.find(d=>d.id===s.domain)||{name:s.domain}).name, domainId:s.domain,
                glyph:s.glyph, tn:s.tn, range:s.range, spellType:s.spellType, damageType:s.damageType,
-               target:s.target, effect:s.effect, defending:s.defending, overflow:s.overflow||null,
+               target:s.target, effect:s.effect, duration:s.duration||null, defending:s.defending, overflow:s.overflow||null,
                tags:s.tags||[], flavorLine:s.flavorLine||"", spellNotes:s.notes||"",
-               masteryCost: mastered ? null : spellMasteryCost(s) };
+               masteryCost: mastered ? null : spellMasteryCost(s, form.th) };
     });
     return { panel:p, lines, held:[...held], spellPower: spellPower(ch), spellAttack: spellAttack(ch), pool, masteryText: M.text||"" };
   }
@@ -1795,17 +1817,22 @@ const Engine = (() => {
     const d = disciplineRanks(ch).find(x=>x.id===R.discipline);
     const cap = d ? d.rank : 0;
     const book = grimoire(ch).lines.filter(l=>!l.custom && !l.missing);
+    // A starting spell is one you cast with the named Discipline (Decision 136).
+    const castable = l => spellForms(spellById(l.id)).includes(R.discipline);
     return { rollDie: row.startingSpellsRoll, roll, base, countFrom: R.countFrom || "TOL",
              count: roll==null || typeof base!=="number" ? null : base + roll,
              have: book.length, picked: book.map(l=>l.id), cap, discipline: d ? d.name : R.discipline,
-             over: book.filter(l=>typeof l.printedTH==="number" && l.printedTH > cap).map(l=>({ id:l.id, name:l.name, th:l.printedTH })),
-             text: R.text||"" };
+             over: book.filter(l=>castable(l) && typeof l.printedTH==="number" && l.printedTH > cap).map(l=>({ id:l.id, name:l.name, th:l.printedTH })),
+             notCast: book.filter(l=>!castable(l)).map(l=>({ id:l.id, name:l.name, form:l.form.name })),
+             disciplineId: R.discipline, text: R.text||"" };
   }
   function canAddStartingSpell(ch, spellId){
     const st = startingSpells(ch), s = spellById(spellId);
     if (!st) return { ok:false, why:"This archetype keeps no Grimoire." };
     if (!s) return { ok:false, why:"That spell isn't in the book." };
     if (st.picked.includes(s.id)) return { ok:false, why:`${s.name} is already chosen.` };
+    if (!spellForms(s).includes(st.disciplineId))
+      return { ok:false, why:`${s.name} is made with ${spellForm(ch, s).name}, never cast. Learn it after creation.` };
     if (typeof s.th==="number" && s.th > st.cap)
       return { ok:false, needs:s.th, why:`${s.name} needs ${st.discipline} ${s.th}.` };
     if (st.count!=null && st.have >= st.count) return { ok:false, full:true, why:`That's all ${st.count} starting spells.` };
@@ -2534,6 +2561,7 @@ const Engine = (() => {
       if (ss){
         if (ss.roll==null) W(`Enter your ${ss.rollDie} starting spells roll.`);
         for (const o of ss.over) E(`${o.name} needs ${ss.discipline} ${o.th}. Buy the rank or choose another spell.`);
+        for (const o of ss.notCast) E(`${o.name} is made with ${o.form}, never cast, so it can't be a starting spell. Choose another.`);
         if (ss.count!=null && ss.have > ss.count) E(`Too many starting spells (${ss.have}/${ss.count}).`);
         else if (ss.count!=null && ss.have < ss.count)
           W(`${ss.count-ss.have} starting spell${ss.count-ss.have>1?"s":""} left to choose (${ss.have}/${ss.count}).`);
@@ -2661,7 +2689,7 @@ const Engine = (() => {
            // Aberrations on the character (Decision 110)
            aberrationState, recordAberration, removeAberration,
            // Grimoire (Decisions 108, 110)
-           spellById, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
+           spellById, spellForms, spellForm, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
            // Starting spells (Decision 111)
            castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
            // Batch 3b — grants

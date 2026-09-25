@@ -1,4 +1,4 @@
-<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-22. -->
+<!-- MIRROR — do not edit here. See docs/reference/crb/README.md for source, refresh instructions, and why this file is kept. Pulled 2026-09-24. -->
 
 # Introduction
 
@@ -132,7 +132,7 @@ Damage type describes what the harm actually is — the physics and chemistry of
 
 Conditions are temporary game states imposed by weapons, substances, and environment. A condition doesn't stack with itself — you either have it or you don't.
 
-Full condition rules, recovery mechanics, and interactions are covered in the **Combat** chapter.
+Full condition rules, recovery mechanics, and interactions are covered in the **Conditions & Recovery** chapter.
 
 |  |  |  |
 |:--:|:--:|:--:|

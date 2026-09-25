@@ -369,10 +369,6 @@ Some spells are held rather than cast and released. A held spell sets aside dice
 
 The Arcanist can still act. They are simply carrying something, and everything else they do is harder for it. Concentration can be released voluntarily at any time, and ends automatically if the Arcanist falls unconscious.
 
-Talismans and Artifacts carry part of the load. A concentration spell held through a Talisman costs 1 die fewer. Through an Artifact, 2 dice fewer. The inscription holds part of the pattern so the Arcanist doesn’t have to — which is much of the reason Enchanters and Alchemists put up with the hours.
-
-The cost never drops below 1 die. Something always has to be given.
-
 ## Sovereign Soul
 
 Any spell that reaches into another person’s body has to contend with the person inside it. Healing, transmutation, alteration, binding — the category is defined by the target being a living person, not by what the spell is trying to do to them. Good intentions do not matter to the Sovereign Soul.
@@ -1065,9 +1061,9 @@ What follows is what you can expect to find. Anything not on this list is a comm
 | Stillglass lenses | Ember Sight | By Practice | 6,000Ç | Thermal sight, all day. Reads as sunglasses. |
 | Tracer ring | Tracer | By Practice | 6,000Ç | Marks one target a day, holds until dawn. |
 | Wardbreaker rod | Counterspell | By Practice | 9,000Ç | One counter per day. Works for anyone. |
-| Grave-iron blade | Consecrate | By Contract | Varies | Deals Spirit damage to things that shrug off steel. |
+| Grave-iron blade | Consecrate | By Contract | Varies | Deals Withering (Holy) damage to things that shrug off ordinary steel. |
 | Blink boots | Blink | By Practice | 12,000Ç | Five crossings, recovered by morning. |
-| Ferryman's coin | Tether | By Contract | 30,000Ç | One automatic Death check. Recovers after a month. |
+| Ferryman's coin | Tether | By Contract | 30,000Ç | Stabilizes one Dying person outright. Recovers after a month. |
 
 #### \
 Services

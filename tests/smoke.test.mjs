@@ -836,6 +836,23 @@ test("Grimoire: the picker offers to link a spell you typed yourself instead of 
   assert.deepEqual(app.errors, []);
 });
 
+test("Grimoire: an inscribed-only spell says its form and time, and the picker filters by Discipline (Decision 136)", () => {
+  const ch = lockedCharacter();
+  ch.panelData.grimoire = [{ spellId: "lightning-trap", stage: "known", notes: "" }];
+  const app = openSheet(ch, "loadout");
+  const line = app.$("details.spell summary");
+  assert.match(line.querySelector(".sub").textContent, /· Enchantment only · 4 hours$/);
+  assert.match(line.querySelector(".num").textContent, /TH 4/, "the Grimoire showed the tier's TH, not Enchantment's");
+  app.click('[data-spellpickopen="sheet"]');
+  const pick = app.$('#modal [data-spellf="discipline"]');
+  pick.value = "alchemy";
+  pick.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  const names = app.$$("#modal .spell-results tr b").map(b => b.textContent);
+  assert.ok(names.includes("Warding — Aether") && names.includes("Firebolt"), "Alchemy should list its own spells and every spell of all forms");
+  assert.ok(!names.includes("Lightning Trap"), "an Enchantment-only spell was listed under Alchemy");
+  assert.deepEqual(app.errors, []);
+});
+
 // ── The picker's modal pass (W23–W26) ────────────────────────────────
 const clickIn = (app, el) => el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
 
