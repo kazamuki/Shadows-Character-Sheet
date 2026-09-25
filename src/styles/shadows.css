@@ -746,6 +746,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .skill-desc td{background:rgba(32,63,123,.12); border-bottom:1px solid rgba(32,63,123,.35)}
 .skill-desc-body{padding:5px 4px 7px; font-size:.82rem; color:var(--text); line-height:1.5; white-space:normal}
 .skill-desc-body .covers{margin-top:5px; font-family:var(--mono); font-size:.72rem; color:var(--dim)}
+.skill-picked{margin-top:3px; display:flex; flex-wrap:wrap; gap:4px}
+.skill-picked small{color:var(--dim)}
 
 /* Light/dark toggle — always present in the header, unlike .hdr-actions which
    the sheet/wizard/home renders clear on every screen change (Decision 90). */

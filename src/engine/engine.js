@@ -517,8 +517,9 @@ const Engine = (() => {
     const integrityMax = tracks ? (Number(src.integrity)||0) + bonus : 0;
     const integrityLoss = Math.min(nonNegInt(entry.integrityLoss), integrityMax);
     const integrity = Math.max(0, integrityMax - integrityLoss);
-    const resAgainst = [...(R.baseResAgainst||[]),
-                        ...effects.map(u=>(upgradeById(u)||{}).resAgainst).filter(Boolean)];
+    // An upgrade answers one class or a list (the retired Warding, all three kinds).
+    const resAgainst = [...new Set([...(R.baseResAgainst||[]),
+                        ...effects.flatMap(u=>[].concat((upgradeById(u)||{}).resAgainst || []))])];
     const coverage = tracks ? ((R.coverageLocations||{})[src.coverage || R.defaultCoverage] || []) : [];
     return { index, id: entry.id || null, custom: !!entry.custom, missing: !entry.custom && !def,
              name: src.name || (entry.custom ? "Custom armor" : String(entry.id || "Armor")), slot, worn: entry.worn===true,
@@ -1135,7 +1136,8 @@ const Engine = (() => {
     const slots = !body ? 0 : p.custom ? null : p.mods;
     const used = p.upgrades.length;
     const rank = q => order.indexOf(q);
-    const options = (D().armorUpgradeGlossary||[]).map(g=>{
+    // A `retired` upgrade still works where it's installed; it just isn't offered (Decision 143).
+    const options = (D().armorUpgradeGlossary||[]).filter(g=>!g.retired).map(g=>{
       let why = null;
       if (!body) why = "Only body armor takes upgrades.";
       else if (slots!=null && used>=slots) why = slots===1 ? "Its one mod slot is taken." : slots ? `All ${slots} mod slots are taken.` : `${p.name} has no mod slots.`;

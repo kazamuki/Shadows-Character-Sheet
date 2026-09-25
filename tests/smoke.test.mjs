@@ -108,6 +108,23 @@ test("the sheet survives a game-data change without code changes", () => {
   assert.ok(app.$("#main").textContent.length > 200);
 });
 
+test("the Skills tab shows the Martial Arts styles chosen, with their bonuses, and lists every style (W33)", () => {
+  const ma = D.skills.find(s => s.id === "martial-arts"), [a, b] = ma.styles;
+  const ch = lockedCharacter();
+  ch.skills["martial-arts"] = { rank: 2, ipe: 0, selections: { style: [a.id, b.id] } };
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "skills" } } });
+  app.$$("#main button").find(x => /Open sheet/.test(x.textContent)).click();
+  app.click('[data-sec="skills"]');
+  assert.deepEqual(app.errors, []);
+  const row = app.$$(".skill-line").find(r => r.textContent.includes(ma.name));
+  const chips = [...row.querySelectorAll(".skill-picked .chip")].map(c => c.textContent.replace(/\s+/g, " ").trim());
+  assert.deepEqual(chips, [`${a.name} ${a.bonus}`, `${b.name} ${b.bonus}`], "the chosen styles and their bonuses aren't on the row");
+  const desc = app.$('[data-descrow="martial-arts"]').textContent;
+  for (const st of ma.styles) assert.ok(desc.includes(`${st.name} (${st.bonus})`), `${st.name} missing from the description`);
+  // A skill with no option pick grows nothing.
+  assert.equal(app.$$(".skill-picked").length, 1);
+});
+
 /** Drop a draft character on the Archetype step and open the wizard there. */
 function onArchetypeStep(archetype, powerLevel = D.powerLevels[0].id) {
   const steps = D.creationFlow.steps.map(s => s.id);
