@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.26.0",
-    "date": null,
+    "date": "2026-09-24",
     "intro": [],
     "items": [
       "**Inscribed spells are in the book.** Traps, wards, gear inscriptions, Everlight, Hearthstone, Second Wind, Consecration and the three Wardings join the Book of Known Spells. You can know one and keep it in your Grimoire like any other spell.",
