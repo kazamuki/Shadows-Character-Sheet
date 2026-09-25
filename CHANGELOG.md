@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.26.1
+## v0.26.1 — 2026-09-25
 
 - **The sheet looks the same offline.** Its typefaces travel inside the file now, so a
   copy opened with no connection keeps its look instead of falling back to your system's
