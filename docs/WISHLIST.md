@@ -402,7 +402,7 @@ data without asking, and can put notes onto a character's sheet.
   cost and how long it's kept.
 
 *A skeleton, cheapest first.*
-1. **No server.** After S6's roster, a GM's browser holds several characters
+1. **No server.** With the roster (Decision 141), a GM's browser holds several characters
    read-only, imported from the players' exports and refreshed by re-importing (a
    newer copy of the same intake number just updates; Decision 128's rule). GM
    notes go back as a small "dispatch" file a player imports into a *From your GM*
@@ -433,6 +433,16 @@ a code or a QR at the table; accounts can wait.
 own; how long player data is kept; and whether this is the character sheet's
 job or the GM toolkit's.
 
+**W38 — Two tabs open on one character overwrite each other.** *Claude, raised in S6c · ⏭ · follows Decision 141*
+Open the same character in two browser tabs, play in one, then touch anything
+in the other: the second tab saves its older copy over the first's, and the
+play is gone with no warning. The roster (Decision 141) doesn't cause this, and
+the single-slot app had it too, but a list of characters makes several open
+tabs more likely. *The fix:* listen for the `storage` event. When another tab
+writes the entry for the open character, stop saving from this tab and say so,
+with a button to reload from the newer copy. *To respect:* the app works
+without storage, so the listener is guarded like every other read.
+
 ### Docs
 
 ~~**W18 — `CHANGELOG.md` stopped at 0.7.0.**~~ *Claude · → caught up through v0.15.0 in `CHANGELOG.md`; `docs.test.mjs` now fails without a section for the current version*
@@ -456,8 +466,8 @@ the same way again.
   worked out from Spell Power), W33 (Martial Arts styles), and W34–W37
   (the character-creation economy: a stat buy that costs more as a stat climbs,
   a flat Stat Point pool, the F8 roll, and starting LUCK, all waiting on
-  Deighton). Everything else on this list has moved out. New ideas get the
-  next free number, W38.
+  Deighton). W38 (two tabs on one character) is ready. Everything else on this
+  list has moved out. New ideas get the next free number, W39.
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
   for a small panel beside what opened it, which follows the render; the

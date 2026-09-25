@@ -130,7 +130,7 @@ function wizardTexts(archId, plId, key, out) {
   for (let step = 0; step <= D.creationFlow.steps.length; step++) {
     const ch = worked(archId, plId, { locked: false });
     const app = boot({ storage: { "shadows.draft.v1": { ch, step, maxReached: step } } });
-    const resume = app.$("#btn-resume");
+    const resume = app.$("[data-open]");
     if (!resume) continue;
     clickEl(app, resume);
     out[`${key}/wizard:${step}`] = visible(app);

@@ -23,8 +23,19 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.27.1
+## [Unreleased] — app 0.28.0
 
+- **Keep every character you play.** This browser used to hold one sheet and one draft,
+  and opening another character meant replacing one. Now Home lists every character
+  you've made or imported, newest first, each with Open, Export and Remove. Tap a card
+  to pick up where you left off. Your old sheet and draft are already on the list.
+- **Home says what isn't in a file yet.** A character with changes you haven't exported
+  says *Changes not exported yet*. The browser is a convenience, not a backup: clearing
+  site data erases everything in it, and the exported `.shadows.json` is the copy that
+  lasts.
+- **Nothing is replaced behind your back.** Importing or locking a character adds it to
+  the list. The one question left is a file older than the copy you already have. If the
+  browser can't save a change, the page says so until it can.
 - **Tap a tag to read it.** AP, Conceal, Burning, Blast (10m) and every other tag on a
   weapon, an arrowhead or a spell now tells you what it does. Hover or tap it on Main, on
   Loadout, in the catalog and in your Grimoire. A few the book hasn't pinned down yet say
