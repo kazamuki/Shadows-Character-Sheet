@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.29.0",
-    "date": null,
+    "date": "2026-09-25",
     "intro": [],
     "items": [
       "**Warding for each kind of magic.** Armor can now take Warding against Elemental, Spirit or Aether damage, each its own upgrade in its own mod slot, and **Take a hit** asks which of the three a spell dealt. Self-mending is an upgrade too. Armor that already had Warding keeps answering all three.",
