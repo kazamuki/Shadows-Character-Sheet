@@ -932,6 +932,7 @@ No cascade logic to maintain — it falls out of the architecture.
     redundant with the header name. On narrow widths the nine tabs wrap to a
     second header row — accepted; shortening labels is the lever if a single row
     is ever required. (Ken, 2026-06-16)
+    → **Superseded in part by Decision 140** — the tabs are one row that scrolls sideways, under the name, at every width.
 39. **(Phase 3.2)** **Header overflow menu.** Home and Export move off the
     content into a kebab (⋮) menu pinned to the far right of the header, after the
     last tab. Opens on click; closes on outside-click, Esc, or item-select. Sheet
@@ -3253,6 +3254,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 92 in part: ammunition and arrowheads aren't their own arrays any more.
      - **Revisit if:** playtesters miss tips on a touch screen, or W30 needs ammo matched to weapons by field.
      - **Built:** app 0.27.0, game data 0.21. Log 2026-09-25 (S6a).
+
+140. **The header is two thin rows at every width, and the tabs are one line that scrolls sideways.**
+     *2026-09-25 · Ken + Claude · Touches: header.top, brand, Shadows //, topnav, tabs, tab row, sticky header, kebab, theme toggle, --hdr-live, jump bar, phone, tablet, 1024×768, phone-check, B19, AQ10*
+     - **Decided:** row one is the name, ⋮ and the theme button; row two is the nine tabs, never wrapping, scrolled so the active tab is in view, faded on the side that has more, and moved by a plain mouse wheel. A long name ends in "…", and below 480 px wide the `Shadows //` prefix goes. Below 540 px tall the header scrolls away with the page. The sheet's header is 88 px at every width checked (9–11%).
+     - **Why:** at 1024×768 nine tabs (990 px) and the name (362 px) wrapped to three rows, 23% of the screen; on a phone, 30%. The name never wrapped, so it pushed Home 74 px wider than a phone. Tablets are where play happens (AQ10).
+     - **Rejected:**
+       - Shorter tab labels (38's own lever): about 150 px back, and still no fit at 1024.
+       - Icon-only tabs on narrow screens: nine unfamiliar icons for a new player.
+       - A "More ▾" menu for the tabs that don't fit: it hides tabs and needs measuring code. The wizard's step ledger already scrolls sideways below 1060 px.
+       - Unsticking below 600 px wide: at 11% the sticky header fits a phone, and changing tabs mid-fight would mean scrolling to the top. What a phone can't spare is height, on its side.
+     - **Replaces:** Decision 38 in part: the tabs no longer wrap to a second row.
+     - **Revisit if:** the sheet gains a tenth tab, or playtesters on tablets don't find the tabs past the fade.
+     - **Built:** app 0.27.1. Log 2026-09-25 (S6b); `npm run phone-check` passes all three widths.
 
 ## 5. Open Flags
 

@@ -1,6 +1,6 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
-**Status:** under way. **Every question is answered** (§5). **S1–S5 and S6a are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21). Next: S6b (the header) and S6c (the roster), in either order.
+**Status:** under way. **Every question is answered** (§5). **S1–S5, S6a and S6b are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21; S6b: app 0.27.1). Next: S6c (the roster).
 **Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
@@ -93,7 +93,7 @@ S1 and S5 can run in parallel with anything. S3 and S4 touch the same engine fun
 *Versions:* app 0.26.1 (the fonts). Game data and schema: none.
 
 ### S6: Table feel, split three ways (2026-09-25)
-AQ4 answered what to show and AQ10 who plays where. Ken split the session into three that don't depend on each other: **S6a** rules a tap away (done), **S6b** the header, **S6c** the roster. Take S6b and S6c in either order, one per session.
+AQ4 answered what to show and AQ10 who plays where. Ken split the session into three that don't depend on each other: **S6a** rules a tap away (done), **S6b** the header (done), **S6c** the roster. Take S6b and S6c in either order, one per session.
 
 ### S6a: Rules a tap away (done 2026-09-25, Decision 139)
 - [x] **A10**, as Ken answered AQ4. One principle: any rule the sheet names, a player can read without leaving it.
@@ -110,15 +110,13 @@ AQ4 answered what to show and AQ10 who plays where. Ken split the session into t
 
 *Versions:* app 0.27.0, game data 0.21 (Ammo is a new choice). Schema: none.
 
-### S6b: The header (B19), next
-- [ ] **B19**, "usable in an emergency" on a phone (AQ10), and right at tablet widths, where most play will happen.
-- **Measure first:** `npm run phone-check` (Home and every tab at 390, 768 and 1024 px, real Chromium). As of S5: 390 px fails (header 30%, Home 74 px too wide); 1024×768 fails (header 23% against a 20% budget); 768 px passes. It has to pass all three before this is done.
-- **The proposal Ken saw (2026-09-25), not yet approved in detail:**
-  - The nine tabs become one row that scrolls sideways, at every width, with the active tab kept in view. The header stays two thin rows at most. That should fix 1024×768.
-  - Below about 600 px the header stops being sticky and scrolls away with the page.
-  - Find why Home is 74 px too wide at 390 px and fix that on its own.
-- **It supersedes Decision 38 in part** (tabs wrapping to a second row was accepted then; four rows at 390 px and 23% at 1024×768 are the new information). That needs a numbered decision with the mark on 38.
-- *Versions:* app patch or minor. Nothing else.
+### S6b: The header (done 2026-09-25, Decision 140)
+- [x] **B19**: the header is two thin rows at every width: the name with ⋮ and the theme button, then the nine tabs in one line that scrolls sideways. The active tab is kept in view, the side with more tabs fades, and a plain mouse wheel scrolls the row (then hands the page back at the end). Below 480 px wide the `Shadows //` prefix goes; a long name ends in "…". Below 540 px tall (a phone on its side) the header scrolls away. `phone-check` passes all three widths: the sheet's header is 88 px (9–11%), with no sideways overflow anywhere.
+- **Measured first:** at 1024 the tabs (990 px) and the name (362 px) wrapped to three rows, with Notes alone on the second. Home's 74 px and the sheet's 16 px of overflow were one cause: the name never wrapped, and set the page's width. The last 4 px was Main's Combat stat chips, which now wrap in their cell.
+- **Ken's picks against the first sketch:** un-stick on a *short* screen, not below 600 px wide (at 11% the sticky header fits a phone, and tabs stay reachable mid-fight); drop the prefix on narrow screens.
+- **Mutation-tested:** no scroll-into-view, the wheel swallowed at the row's end, no wheel handler, the left fade always on (the smoke test, with a faked layout); the tabs wrapping, the chips not wrapping, the prefix kept, and the brand's `overflow:hidden` removed (`phone-check`). The last two only fail because `phone-check` now checks that the test name fits and probes a long name; two redundant `min-width:0`s the mutations exposed are gone.
+
+*Versions:* app 0.27.1. Nothing else.
 
 ### S6c: The roster (R10), next
 - [ ] **R10** (AQ5: design for several characters). The saved slots (`shadows.active.v1`, `shadows.draft.v1` in `shared.js`) become keyed by the TAG (`meta.id`, Decision 133), and Home lists every character with open, export and remove.
@@ -145,7 +143,7 @@ AQ4 answered what to show and AQ10 who plays where. Ken split the session into t
 | S4 | patch (0.25.1): three copy changes a player sees | none: outputs diffed identical | none |
 | S5 | patch (0.26.1): the fonts are embedded | none | none |
 | S6a | minor (0.27.0) | 0.21: Ammo is a new choice | none |
-| S6b | patch or minor | none | none |
+| S6b | patch (0.27.1): the header | none | none |
 | S6c | minor | none | none (a roster lives in `localStorage` keys, not the file) |
 | S7 | with whatever carries it | none | A11 needs a bump and a `migrate()` step |
 
