@@ -78,10 +78,11 @@ test("neither built file loads anything over the network (C7)", () => {
 test("big numbers are set in the numeric face, never the display face (Decision 137)", () => {
   // Cerulean Nights, first in --display, is a header face: its 8 reads as a
   // 0, so a stat of 8 looked empty and SAN 68 read as 60. The stat values and
-  // the vitals' readouts use --numeric (Oxanium) with fixed-width digits.
+  // the vitals' readouts use --numeric (Oxanium) with fixed-width digits, and
+  // so does each release's version in What's new.
   const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
   assert.match(css, /--numeric\s*:\s*'Oxanium'/, "the --numeric token is gone or no longer leads with Oxanium");
-  for (const sel of [".statcell .sv", ".cond .big"]) {
+  for (const sel of [".statcell .sv", ".cond .big", ".wn-ver"]) {
     const rule = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].find(m => m[1].trim() === sel);
     assert.ok(rule, `no ${sel} rule — did the markup's class change?`);
     assert.match(rule[2], /font-family\s*:\s*var\(--numeric\)/, `${sel} isn't set in --numeric`);
