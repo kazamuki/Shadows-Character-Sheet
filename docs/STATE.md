@@ -128,9 +128,9 @@ rev 9's `A` and `B` findings are all closed; `C1`–`C3` are still forward notes
 
 ## 5. Where to start
 
-**The live site is `v0.24.0`.** S2 (#58) is merged and moved no version.
-The TAG change (app 0.24.1, schema 0.12) is in review; once it merges, release
-`v0.24.1` per `CLAUDE.md`.
+**`main` is app 0.24.1 (schema 0.12, game data 0.17)**: S2 (#58) and the TAG
+(#59) are merged, and the changelog section is named `v0.24.1`. The tag goes
+on the merge of that rename; until then the live site says 0.24.0.
 
 **Next, all unblocked:** S3 (propose first), S5 or S6. Ken alone: F9, F12,
 F13 and F32. The wishlist holds W28 (blocked), W29 (a GM mode), W30 (Reload
