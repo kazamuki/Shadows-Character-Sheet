@@ -23,6 +23,16 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.30.0
+
+- **Reload uses the rounds you carry.** Reloading a gun takes a mag of the rounds that fit
+  it from your gear, and a shotgun loads shells one at a time, as many as you have. Hover
+  **Reload** to see what it will use and how much you have left. Carry none and the sheet
+  asks before reloading anyway, and the activity log notes that the rounds came from nowhere.
+  Belt-fed guns and launchers reload as before.
+- **A Ghost TAG says so.** With the Ghost TAG advantage, the sheet, the review page and the
+  printed sheet all label your TAG as a Ghost TAG, and hovering it explains the counterfeit.
+
 ## v0.29.0 — 2026-09-25
 
 - **Warding for each kind of magic.** Armor can now take Warding against Elemental, Spirit

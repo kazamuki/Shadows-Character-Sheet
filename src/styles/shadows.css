@@ -260,6 +260,7 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .intake{display:flex; align-items:center; gap:10px; margin:2px 0 8px; color:var(--dim)}
 .intake-bars{flex:none; opacity:.85}
 .intake-no{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase}
+.intake-label{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--magenta)}
 .import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
 .import-issues .issues{margin-top:0}
 
@@ -613,6 +614,7 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .lo-rounds{white-space:nowrap}
 .lo-rounds .rounds{font-family:var(--mono); color:var(--cyan); margin-right:6px}
 .lo-rounds .rounds.empty{color:var(--magenta)}
+.btn.sm.dry{border-style:dashed}
 .lo-rounds .rounds small{color:var(--dim)}
 .lo-rounds .fire{display:inline-flex; gap:3px; flex-wrap:wrap; vertical-align:middle}
 .lo-rounds .fire .btn.sm{padding:3px 8px}
