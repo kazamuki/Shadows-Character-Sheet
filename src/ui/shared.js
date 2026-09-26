@@ -604,9 +604,10 @@ function intakeBarsSvg(id){
   bar(1); bar(1);
   return `<svg class="intake-bars" viewBox="0 0 ${x} 20" width="${Math.round(x*1.4)}" height="20" preserveAspectRatio="none" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true">${bars}</svg>`;
 }
+// W31: a Ghost TAG says so over the number, and hovering says what it is.
 function intakeHtml(ch){
-  const id = intakeOf(ch);
-  return id ? `<div class="intake" title="Trusted Authentication Gateway">${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
+  const id = intakeOf(ch), r = Engine.tagReading(ch);
+  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : "Trusted Authentication Gateway")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
 }
 
 // C4: what versionCheck found when this character was loaded. Content the

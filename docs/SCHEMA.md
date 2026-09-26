@@ -181,6 +181,9 @@ window.SHADOWS_DATA = {
     { id: "rapid-healing", name: "Rapid Healing",
       cost: 5, maxRank: 3, universal: false,
       description: "...", rankNotes: ["x2", "x3", "x4"] },
+    // tagReads (Decision 146): held, it names what the TAG is and what
+    // hovering it says. Ghost TAG(s) carries one; the number never changes.
+    { id: "ghost-tag-s", ..., tagReads: { label: "Ghost TAG", text: "..." } },
 
     // (0.4) Selection & constraint fields — ALL optional. An entry without
     // them behaves exactly as it always did. See Decisions 77-78.
@@ -407,6 +410,11 @@ window.SHADOWS_DATA = {
     { id: "quickstitch", name: "Quickstitch", category: "medical", availability: "Common",
       cost: 1500, costText: "1,500Ç / strip of 5", pack: 5, unit: "dose", consumable: true,
       action: "Fast", notes: "...", flavorLine: "..." },
+    { id: "shotgun-shells", category: "ammo", pack: 10, unit: "shell", consumable: true,
+      reload: { categories: ["shotguns"], fills: "round" } },   // Decision 145
+    // reload: what the ammo loads ({ categories, weapons }) and what one unit
+    // fills, "magazine" (a mag, a cell) or "round" (a shell). Read by
+    // reloadWeapon; ammo without it (specialty rounds, arrows) isn't loaded.
     { id: "shield-charm", name: "Shield charm", category: "charged", spell: "shield",
       spellName: "Shield", availability: "Uncommon", cost: 450, charges: 3, notes: "..." }
     // cost null ("Varies", "1,500Ç+") can be added, not bought. `spell` only
@@ -2948,7 +2956,7 @@ No cascade logic to maintain — it falls out of the architecture.
       "10 bursts" 10. One that doesn't read (a knife, a grenade) isn't
       tracked. `fireWeapon(ch, i, mode)` refuses a mode the weapon doesn't
       have and a spend the magazine can't pay ("Burst spends 3 rounds, and 2
-      are left. Reload."). `reloadWeapon` empties `roundsSpent`. A custom
+      are left. Reload."). `reloadWeapon` empties `roundsSpent`. → **Superseded in part by Decision 145**: Reload takes a unit of fitting ammo from what's carried, and asks before reloading from none. A custom
       weapon's typed capacity and RoF count the same way. The buttons (one
       per RoF, then Reload) are on Loadout **and on Main's weapon table**,
       where a fight is run, a step toward W13. Each is one `commit()`: "AR-9X
@@ -3182,6 +3190,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 128 in part: the `NCR-` format and the "Intake No." label.
      - **Revisit if:** W31 gives the character a way to be TAGless or carry a Ghost TAG, which changes the label, never the stored number.
      - **Built:** app 0.24.1, character schema 0.12; `engine.test.mjs` and `smoke.test.mjs` (Decision 133), mutation-tested.
+     → **Superseded in part by Decision 146**: a held Ghost TAG labels the TAG.
 
 134. **Focused Skills are data: ids, a category pick and an all-skills price, read by one generic reader.**
      *2026-09-24 · Ken + Claude · Touches: focusedSkills, focusedSkillPicks, Focused Skill Max Bonus, maxSkillRank, skillRankCap, canBoost, ipCost, ip.skillIncreaseCost, Jack of All Trades, Mercenary, Cleaner, Natural Advantages, focusedSkills panel, specializationText panel, A8, B12–B14, F33*
@@ -3325,6 +3334,30 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 101 in part (a picked-up item is struck through, not deleted).
      - **Revisit if:** the granted file itself grows too long to find an entry in, or items start landing half-built often enough that splitting them gets awkward.
      - **Built:** no version moves. Log 2026-09-25 (wishes granted).
+
+145. **Reload takes what fits from the ammunition you carry, and asks before reloading from nothing.**
+     *2026-09-26 · Ken + Claude · Touches: reloadWeapon, reload, ammo, Ammo, equipment, handgun-rounds, smg-rounds, rifle-rounds, shotgun-shells, power-cell, heavy-rounds, weaponLine.reloadFrom, roundsSpent, useGear, carriedGear, Reload anyway, audit trail, W30, F26*
+     - **Decided:** an ammo entry's `reload: { categories, weapons, fills }` names what it loads (Gear's Weapon Type column) and what one unit fills: the whole `"magazine"` (a mag, a cell) or one `"round"` (a shell). Reload on a catalog weapon takes one mag, or as many shells as it has spent rounds and you have shells, off the carried row. With none carried the sheet asks "Reload anyway?", and the audit line says the reload came from nothing on the sheet. A weapon nothing fits reloads as before: launchers, the belt-fed guns (Gear treats Heavy Rounds as unlimited) and custom weapons. No save-file shape moves.
+     - **Why:** Gear defines Capacity as the magazine and sells rounds per mag by Weapon Type, so one mag fills any weapon of that type, and the question W30 held for Deighton is answered in the book. Ken wanted the fallback kept "just in case", but auditable.
+     - **Rejected:**
+       - Refusing outright with no ammo: every character made before ammo was in the shop carries none, so Reload would break mid-session.
+       - Reading "Fits Handgun." out of `notes`: prose, the Decision 134 lesson.
+       - Loading specialty rounds (Silver, Holy, Angel) now: they change the weapon's tags, so the weapon has to remember what's loaded, which is a schema bump. Left to W30's follow-up, W40.
+       - Heavy Rounds and the Strix: Gear says to treat the belt as unlimited, and the Power Cell runs the Strix's mechanism, not its bolts.
+     - **Replaces:** Decision 120 in part: `reloadWeapon` no longer always fills from nowhere.
+     - **Revisit if:** the CRB prices ammo per round, or a weapon takes a magazine another of its type can't.
+     - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W30), mutation-tested. Log 2026-09-26.
+
+146. **A held Ghost TAG labels the TAG and says what it is; Black TAG is the same thing.**
+     *2026-09-26 · Ken + Claude · Touches: tagReads, tagReading, Ghost TAG, ghost-tag-s, Black TAG, TAG, meta.id, intake, print header, Review, W31, TAGless*
+     - **Decided:** an Advantage or Disadvantage with `tagReads: { label, text }` changes how a TAG reads while it's held. Ghost TAG(s) carries one: "Ghost TAG" over the number on Main, Review and the print header, and hovering explains the counterfeit and names the street's Black TAG. The stored number never changes. TAGless, which needs a new field on the character, is the rest of W31.
+     - **Why:** Ken: Gear's Black TAG and 043's Ghost TAG are one thing. Holding the Advantage is already on the character, so this half needs no schema change, and the data names the label so no Advantage id appears in code (Decision 135's rule).
+     - **Rejected:**
+       - Checking for `ghost-tag-s` in the UI: an id in code, and a second counterfeit would need a code change.
+       - Black TAG as a third identity choice or its own Advantage: it's the same counterfeit (Ken).
+     - **Replaces:** Decision 133 in part: a TAG can carry a label, when an Advantage held says so.
+     - **Revisit if:** the CRB separates Black TAG from Ghost TAG, or TAGless lands and wants the same reader.
+     - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W31), mutation-tested. Log 2026-09-26.
 
 ## 5. Open Flags
 
