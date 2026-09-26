@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.30.0
+## v0.30.0 — 2026-09-26
 
 - **Reload uses the rounds you carry.** Reloading a gun takes a mag of the rounds that fit
   it from your gear, and a shotgun loads shells one at a time, as many as you have. Hover

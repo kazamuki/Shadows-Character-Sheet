@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.30.0",
-    "date": null,
+    "date": "2026-09-26",
     "intro": [],
     "items": [
       "**Reload uses the rounds you carry.** Reloading a gun takes a mag of the rounds that fit it from your gear, and a shotgun loads shells one at a time, as many as you have. Hover **Reload** to see what it will use and how much you have left. Carry none and the sheet asks before reloading anyway, and the activity log notes that the rounds came from nowhere. Belt-fed guns and launchers reload as before.",
