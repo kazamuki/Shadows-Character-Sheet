@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-09-25
-**Versions:** app `0.29.0` · game data `0.22` · character schema `0.13` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-26
+**Versions:** app `0.30.0` · game data `0.23` · character schema `0.13` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,7 +41,7 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -131,11 +131,10 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.29.0** (data 0.22, schema 0.13): the audit's S7, Warding by kind
-(143) and Martial Arts styles on the sheet. Ken alone: F9, F12, F13, F32,
-and **W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3), then one session builds it.
-The wishlist holds W29 (a GM mode), W30 (Reload from ammo), W31 (a TAGless TAG), W32
-(spell damage from Spell Power), W34–W37 (character creation) and W39 (training a style).
+**The live site is v0.29.0** (data 0.22). **0.30.0 is on main, unreleased:** Reload
+from what you carry (145) and the Ghost TAG label (146). Ken alone: F9, F12, F13, F32 and
+**W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3). The wishlist: W29, W32,
+W34–W37, W39, and W40 (specialty rounds) and W41 (TAGless), both schema bumps.
 
 **Waiting on others:**
 - **Design team:** F8, being playtested, and W34–W37 with it.
@@ -164,6 +163,7 @@ questions' history is in `plans/combat-and-conditions.md` §6):
 - **CQ13:** 054 and 055 should agree on how Injured ends.
 - **041:** Hardcore Parkour's prerequisites become 1 Major Milestone,
   Acrobatics 4 and Danger Sense 1 (Decision 129).
+- **Gear, The TAG:** Black TAG is the Ghost TAG Advantage (Ken, 146); a line saying so.
 - **043:** "Ambidextrousa" is a typo for Ambidextrous (Scott's pass).
 - **041, Master of None:** say whether "up to rank 4" is the rank bought (the
   app's reading, Ken's answer: 4 → 5 is standard). The Mercenary's "Handgun"

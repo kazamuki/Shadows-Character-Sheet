@@ -1389,6 +1389,7 @@ test("the Loadout and recovery functions are total on every degenerate character
       armorWear: () => [0, 2, 3, 99].forEach(i => Engine.armorWear(ch, i, { difficulty: "hard", roll: 3, selfHealCheck: 4, selfHealRoll: 2 })),
       repairArmor: () => [0, 2, 3, 99].forEach(i => { Engine.repairArmor(ch, i, { roll: 2 }); Engine.repairArmor(ch, i, { full: true }); }),
       naturalHealing: () => Engine.naturalHealing(ch),
+      tagReading: () => Engine.tagReading(ch),
       naturalArmor: () => { Engine.naturalArmor(ch, ["iron-shirt", "x"]); Engine.naturalArmor(ch, "junk"); },
       nanomedKit: () => [undefined, 0, -3, "x", 2, 99].forEach(d => Engine.nanomedKit(ch, d)),
       nanomed: () => { Engine.heal(ch, { kind: "nanomed", dose: "x", hp: 2 }); Engine.heal(ch, { kind: "nanomed" }); },
@@ -1399,7 +1400,7 @@ test("the Loadout and recovery functions are total on every degenerate character
       addCustomLoadout: () => { Engine.addCustomLoadout(ch, "armor"); Engine.addCustomLoadout(ch, "weapons"); Engine.addCustomLoadout(ch, "x"); },
       removeLoadout: () => { Engine.removeLoadout(ch, "armor", 99); Engine.removeLoadout(ch, "weapons", 0); },
       weaponMods: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.weaponModOptions(ch, i); Engine.addWeaponMod(ch, i, "Scope"); Engine.addWeaponMod(ch, i, "nope"); Engine.removeWeaponMod(ch, i, 0); }),
-      rounds: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.fireWeapon(ch, i, "S"); Engine.fireWeapon(ch, i, "x"); Engine.fireWeapon(ch, i); Engine.reloadWeapon(ch, i); }),
+      rounds: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.fireWeapon(ch, i, "S"); Engine.fireWeapon(ch, i, "x"); Engine.fireWeapon(ch, i); Engine.reloadWeapon(ch, i); Engine.reloadWeapon(ch, i, { anyway: true }); }),
       gear: () => { ch.gear.push(null, 3, { id: "nope" }, { custom: true }, { id: "shield-charm", chargesUsed: "x" }, { id: "quickstitch", qty: -4 });
         [-1, 0, 1, 2, 3, 4, 5, 99].forEach(i => { Engine.gearLine(ch, i); Engine.useGear(ch, i, 1); Engine.useGear(ch, i, "x"); Engine.useCharge(ch, i); Engine.rechargeGear(ch, i); });
         Engine.carriedGear(ch, "quickstitch"); Engine.carriedGear(null, "x"); Engine.addLoadout(ch, "gear", "quickstitch", { buy: true }); Engine.catalogLine(ch, "gear", "shield-charm"); },
@@ -2016,6 +2017,7 @@ test("W16: firing spends the mode's rounds, refuses what the magazine can't pay 
   const r = Engine.fireWeapon(ch, 0, "B");
   assert.equal(r.ok, false);
   assert.match(r.why, /Burst spends 3 rounds, and 2 are left\. Reload\./);
+  Engine.addLoadout(ch, "gear", "handgun-rounds");
   assert.equal(Engine.reloadWeapon(ch, 0).ok, true);
   assert.equal(ch.weapons[0].roundsSpent, 0);
   assert.equal(Engine.reloadWeapon(ch, 0).ok, false, "reloaded a full magazine");
@@ -2023,6 +2025,49 @@ test("W16: firing spends the mode's rounds, refuses what the magazine can't pay 
   // A custom weapon's typed capacity is tracked the same way.
   const c = subject(); Engine.addCustomLoadout(c, "weapons"); Object.assign(c.weapons[0], { name: "Zip gun", capacity: "4", rof: "S" });
   assert.equal(Engine.fireWeapon(c, 0, "S").left, 3);
+});
+
+test("W30: Reload takes a mag (or a shell a round) of what fits from what you carry, and asks before reloading from nothing", () => {
+  const ch = armed("ads-lp9-viper");                   // handgun, 15+1
+  ch.weapons[0].roundsSpent = 10;
+  assert.equal(Engine.weaponLine(ch, 0).reloadFrom.carried, 0);
+  const dry = Engine.reloadWeapon(ch, 0);
+  assert.equal(dry.ok, false, "reloaded from rounds nobody carries");
+  assert.equal(dry.noAmmo, true);
+  assert.match(dry.why, /You carry no Handgun Rounds\./);
+  assert.equal(ch.weapons[0].roundsSpent, 10, "a refused reload changed the magazine");
+  const anyway = Engine.reloadWeapon(ch, 0, { anyway: true });
+  assert.equal(anyway.ok, true); assert.equal(anyway.anyway, true, "the result doesn't say it came from nowhere");
+  assert.equal(ch.weapons[0].roundsSpent, 0);
+  // Gear sells rounds by the mag, and Capacity is the magazine: one mag fills it.
+  Engine.addLoadout(ch, "gear", "handgun-rounds"); Engine.addLoadout(ch, "gear", "handgun-rounds");
+  Engine.addLoadout(ch, "gear", "smg-rounds");         // doesn't fit a handgun
+  const mags = () => Engine.carriedGear(ch, "handgun-rounds");
+  assert.equal(mags().qty, 2);
+  assert.equal(Engine.weaponLine(ch, 0).reloadFrom.carried, 2);
+  ch.weapons[0].roundsSpent = 3;
+  const r = Engine.reloadWeapon(ch, 0);
+  assert.equal(r.ok, true); assert.equal(r.used, 1); assert.equal(r.left, 16); assert.equal(r.ammoLeft, 1);
+  assert.equal(mags().qty, 1, "the mag didn't come off what's carried");
+  assert.equal(Engine.carriedGear(ch, "smg-rounds").qty, 1, "an SMG mag went into a handgun");
+  ch.weapons[0].roundsSpent = 1; Engine.reloadWeapon(ch, 0);
+  assert.equal(mags(), null, "the last mag used stays on the sheet");
+  // Shells load one at a time, as many as you have.
+  const sg = armed("sg88-siege-breaker");              // shotgun, 8+1
+  sg.weapons[0].roundsSpent = 5;
+  sg.gear.push({ id: "shotgun-shells", qty: 3, notes: "" });
+  const s = Engine.reloadWeapon(sg, 0);
+  assert.equal(s.used, 3); assert.equal(s.left, 7); assert.equal(sg.weapons[0].roundsSpent, 2);
+  assert.equal(Engine.carriedGear(sg, "shotgun-shells"), null);
+  // Rifle Rounds don't load a shotgun (F26's stub), and a beam weapon takes a cell.
+  sg.gear.push({ id: "rifle-rounds", qty: 1, notes: "" });
+  assert.equal(Engine.reloadWeapon(sg, 0).noAmmo, true);
+  const beam = armed("ads-le4-falcon"); beam.weapons[0].roundsSpent = 20;
+  assert.match(Engine.reloadWeapon(beam, 0).why, /Power Cell/);
+  // Nothing in the ammo table fits a launcher or a custom weapon: those reload as before.
+  const gl = armed("hgl4-anvil"); gl.weapons[0].roundsSpent = 2;
+  assert.equal(Engine.reloadWeapon(gl, 0).ok, true);
+  assert.equal(Engine.weaponLine(gl, 0).reloadFrom, undefined);
 });
 
 test("W16: mods fill the weapon's fixed slots, fit only what Gear says they fit, and change the line", () => {
@@ -2168,6 +2213,21 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
   assert.equal(m.meta.schemaVersion, "0.13");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
+});
+
+test("W31: a held Ghost TAG names the TAG and says what it is; the number never moves", () => {
+  const c = subject();
+  const id = c.meta.id;
+  assert.equal(Engine.tagReading(c), null, "a plain TAG reads as something else");
+  c.advantages.push({ id: "ghost-tag-s", rank: 1 });
+  const r = Engine.tagReading(c);
+  assert.equal(r.label, "Ghost TAG");
+  assert.match(r.text, /Black TAG/, "the street name isn't given (Ken: Black TAG is the Ghost TAG)");
+  assert.equal(c.meta.id, id, "reading the TAG changed the stored number");
+  c.advantages[0].rank = 0;
+  assert.equal(Engine.tagReading(c), null, "a rank-0 entry still counts as held");
+  for (const junk of [null, {}, { advantages: "x" }, { advantages: [null, 4, { id: "ghost-tag-s", rank: "x" }] }])
+    assert.equal(Engine.tagReading(junk), null);
 });
 
 // ── Rules a tap away (Decision 139) ───────────────────────────────────

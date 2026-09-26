@@ -1433,8 +1433,11 @@ function roundsHtml(l, capacityText){
   return `<span class="rounds${r.left===0?" empty":""}" title="Rounds left of ${r.max}">${r.left}<small>/${r.max}</small></span>
     <span class="fire">${modes.map(f=>`<button class="btn sm" data-fire="${l.index}|${esc(f.id)}" ${r.left<f.rounds?"disabled":""}
       aria-label="Fire ${esc(f.name)}, ${f.rounds} round${f.rounds===1?"":"s"}" title="${esc(f.name)}: ${f.rounds} round${f.rounds===1?"":"s"}">${esc(f.id||"−1")}</button>`).join("")}
-    <button class="btn sm" data-reload="${l.index}" ${r.spent?"":"disabled"}>Reload</button></span>`;
+    <button class="btn sm${l.reloadFrom && !l.reloadFrom.carried?" dry":""}" data-reload="${l.index}" ${r.spent?"":"disabled"} title="${esc(reloadTitle(l.reloadFrom))}">Reload</button></span>`;
 }
+// W30: what Reload takes from, and how much of it is on the sheet.
+const plural = (n, unit) => `${n} ${unit||"unit"}${n===1?"":"s"}`;
+const reloadTitle = f => !f ? "Fill the magazine" : f.carried ? `${f.ammo[0]}: ${plural(f.carried, f.unit)} carried` : `You carry no ${f.ammo.join(" or ")}`;
 // A sight's ACC is for aimed shots, and a Scope's only at range (Gear), so
 // they're listed apart from Single's ACC rather than summed into it.
 const aimedHtml = l => (l.aimed||[]).map(a=>`<div class="lo-sub">Aimed${a.when?` ${esc(a.when)}`:""}: +${a.acc} ACC (${esc(a.by.join(", "))}${
@@ -1879,7 +1882,7 @@ function pBuildTag(){
 function pHead(ch, title){
   return `<div class="p-head">
     <div><div class="p-wordmark">Shadows<small>Adventures in NYTE City</small></div>${pBuildTag()}</div>
-    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}${ch && intakeOf(ch)?`<div class="p-intake">${intakeBarsSvg(intakeOf(ch))}<span>${esc(intakeOf(ch))}</span></div>`:""}</div>
+    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}${ch && intakeOf(ch)?`<div class="p-intake">${Engine.tagReading(ch)?`<b>${esc(Engine.tagReading(ch).label)}</b>`:""}${intakeBarsSvg(intakeOf(ch))}<span>${esc(intakeOf(ch))}</span></div>`:""}</div>
   </div>`;
 }
 function pStatIcon(id){
@@ -2714,8 +2717,13 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-reload]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.reload), pre=Engine.reloadWeapon(clone(ch), i);
+    const name=pre.name||loName("weapons", i)||"weapon";
+    // With nothing on the sheet that fits, the player can still reload, and
+    // the audit says it came from nowhere (W30).
+    if (pre.noAmmo){ askFirst({ title:"Nothing to reload from", text:`${pre.why} Reload anyway?`, yes:"Reload anyway", danger:false,
+      then:()=>commit("loadout", `Reloaded ${name} anyway, no ${pre.ammo.join(" or ")} on the sheet`, ()=>{ Engine.reloadWeapon(ch, i, { anyway:true }); }) }); return; }
     if (!pre.ok){ notice(pre.why); return; }
-    commit("loadout", `Reloaded ${pre.name||"weapon"} (${pre.max})`, ()=>{ Engine.reloadWeapon(ch, i); });
+    commit("loadout", `Reloaded ${name} (${pre.left}/${pre.max})${pre.used ? `, −${plural(pre.used, pre.unit)} of ${pre.ammo[0]}` : ""}`, ()=>{ Engine.reloadWeapon(ch, i); });
   });
   main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;

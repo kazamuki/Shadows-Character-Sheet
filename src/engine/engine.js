@@ -130,6 +130,18 @@ const Engine = (() => {
     return out;
   }
 
+  // W31: how a character's TAG reads. The number itself never changes
+  // (Decision 133); an Advantage or Disadvantage held with `tagReads` (Ghost
+  // TAG) names what the TAG is and what hovering it says. Null when nothing does.
+  function tagReading(ch){
+    for (const [list, lookup] of [[ch && ch.advantages, advById], [ch && ch.disadvantages, disById]])
+      for (const e of Array.isArray(list) ? list : []){
+        const def = e && Number(e.rank)>0 && lookup(e.id), r = def && def.tagReads;
+        if (r && typeof r==="object" && typeof r.label==="string") return { label:r.label, text: typeof r.text==="string" ? r.text : "" };
+      }
+    return null;
+  }
+
   // Final stat value = creation base + archetype bonus + CP boosts + IPE + adjustments
   function statValue(ch, id){
     return ch.stats[id].base + archStatBonus(ch,id)
@@ -851,6 +863,10 @@ const Engine = (() => {
       instead: (m.notWith||[]).filter(x=>sights.some(g=>g.id===x)) }));
     line.rounds = roundsOf(def.capacity, e);
     line.fireModes = fireModesOf(def.rof);
+    // W30: what Reload would take, and how much of it you carry.
+    const src = line.rounds && reloadSource(ch, e);
+    if (src) line.reloadFrom = { ammo: src.have ? [src.have.def.name] : src.ammo, carried: src.have ? src.have.qty : 0,
+                                 unit: src.have ? src.have.def.unit||null : null };
     return line;
   }
   // ── Rounds and mods (W16, Decision 120) ──
@@ -888,13 +904,42 @@ const Engine = (() => {
     e.roundsSpent = l.rounds.spent + n;
     return { ok:true, name:l.name, spent:n, mode: fm ? fm.name : null, left: l.rounds.left - n, max: l.rounds.max };
   }
-  function reloadWeapon(ch, index){
+  // W30: what reloads a catalog weapon. An ammo entry's `reload` names what it
+  // fits (Gear's Weapon Type column, as weapon categories or ids) and what one
+  // unit fills: the whole "magazine" (a mag, a cell) or one "round" (a shell).
+  // A weapon nothing fits (a launcher, the belt-fed guns Gear treats as
+  // unlimited, a custom weapon) reloads as it always did.
+  function ammoFor(def){
+    if (!def) return [];
+    return (D().equipment||[]).filter(g=>{ const r = g && g.reload;
+      return !!r && typeof r==="object" && ((r.categories||[]).includes(def.category) || (r.weapons||[]).includes(def.id)); });
+  }
+  function reloadSource(ch, e){
+    const kinds = ammoFor(e && !e.custom && e.id ? weaponDefById(e.id) : null);
+    if (!kinds.length) return null;
+    const have = kinds.map(k=>{ const c = carriedGear(ch, k.id); return c && Object.assign({ def:k }, c); }).find(Boolean);
+    return { ammo: kinds.map(k=>k.name), have: have || null };
+  }
+  // Reload takes one unit of what fits from what you carry. With none on the
+  // sheet it's refused, saying so, unless the player reloads anyway (`anyway`),
+  // which the result marks so the audit can say it was.
+  function reloadWeapon(ch, index, opts){
     const e = weaponEntry(ch, index), l = e && weaponLine(ch, index);
     if (!l || l.missing) return { ok:false, why:"That weapon isn't on the sheet." };
     if (!l.rounds) return { ok:false, why:`${l.name||"This weapon"} doesn't track rounds.` };
     if (!l.rounds.spent) return { ok:false, why:"It's already full." };
-    e.roundsSpent = 0;
-    return { ok:true, name:l.name, max:l.rounds.max };
+    const src = reloadSource(ch, e), done = { ok:true, name:l.name, max:l.rounds.max, left:l.rounds.max };
+    if (!src){ e.roundsSpent = 0; return done; }
+    if (!src.have){
+      if (!(opts && opts.anyway)) return { ok:false, noAmmo:true, ammo:src.ammo, why:`You carry no ${src.ammo.join(" or ")}.` };
+      e.roundsSpent = 0;
+      return Object.assign(done, { anyway:true, ammo:src.ammo });
+    }
+    const k = src.have, perRound = k.def.reload.fills==="round";
+    const n = perRound ? Math.min(l.rounds.spent, k.qty) : 1;
+    useGear(ch, k.index, n);
+    e.roundsSpent = perRound ? l.rounds.spent - n : 0;
+    return Object.assign(done, { left: l.rounds.max - e.roundsSpent, used:n, ammo:[k.def.name], ammoLeft: k.qty - n, unit: k.def.unit||null });
   }
   // What can go on a catalog weapon: every mod, with the reason one can't.
   function weaponModOptions(ch, index){
@@ -2747,7 +2792,7 @@ const Engine = (() => {
     D, dataPath, formulaText, creditSymbol, glossary, skillById, advById, disById,
     conditionById, locationById, damageTypeById, damageCategoryById, aberrationById, spellById,
     // The character file: create, load, check, export
-    newCharacter, isIntakeId, migrate, versionCheck, buildExport,
+    newCharacter, isIntakeId, tagReading, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
     powerLevel, archetype, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,

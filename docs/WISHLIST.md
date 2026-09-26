@@ -24,25 +24,28 @@ items here too, marked as such; Ken triages them.
 
 ### Loadout & catalog
 
-**W30 — Reload from what you carry.** *Claude · 💡 · follows S6's Ammo category*
-Raised 2026-09-24, with AQ4. Once ammunition is in the shop as its own category
-(the audit plan's S6), Reload could take a magazine from the matching rounds you
-carry and say when you're out, the way the Nanomed Kit already comes off what
-you carry. The data has a hook, `weaponType` on each ammunition entry
-("Handgun", "Rifle (shotgun)"). What it lacks: how a bought unit ("15Ç/mag")
-maps to a weapon's capacity, and whether one "mag" of Handgun Rounds fits every
-handgun. If the CRB is silent, that's a question for Deighton, not a guess.
+**W40 — Load the round you mean.** *Claude · 💡 · follows Decision 145*
+Raised 2026-09-26, the half of W30 left over. Reload takes standard rounds from
+what you carry, but Silver Rounds, Holy Points and Angel Rounds never leave the
+gear list: they change the weapon's tags (Withering, +4 DMG, AP…), so the sheet
+has to know which kind is in the magazine. 053 lets a Reload swap types once a
+turn. The idea: a weapon row remembers what's loaded (`loaded: "silver-rounds"`),
+its line shows that ammo's tags, and Reload asks which when more than one kind
+fits. What it has to respect: that's a character-schema bump with a
+`migrate()` step; specialty rounds are priced "3× standard", so their `reload`
+names the same weapons as the standard kind; Angel Rounds only fire from a
+weapon with the Angel Mod (F26's stub decides which weapons can take it).
 
-**W31 — TAGless and Ghost TAG characters.** *Ken · 💡 · follows Decision 133*
-Raised 2026-09-24 with the TAG. Every character shows a TAG under its name,
-because every file needs the number to tell characters apart. But the CRB lets
-a character go TAGless (living in the skrip economy, no UBI) or carry a Ghost
-TAG (the Advantage) or a Black TAG, and the sheet says nothing about either.
-The idea: the label reads differently for them, e.g. "TAG on file" for a
-TAGless character or "Ghost TAG" when the Advantage is held. The stored number
-never changes. What it needs first: a way to mark a character TAGless, which
-the data doesn't have, and whether that's a player choice or a GM one. Holding
-Ghost TAG is already on the character, so that half could come first.
+**W41 — A TAGless character.** *Ken · 💡 · follows Decision 146*
+Raised 2026-09-24 as W31's other half. Gear calls going TAGless "a legitimate
+choice": no government identity, the skrip economy, no 625Ç UBI. A Ghost TAG
+already labels the TAG (Decision 146); a TAGless character still shows a plain
+one. The idea: a TAGless/TAG'd choice on the Identity step, the player's like
+their name, and the label reads differently (e.g. "TAG on file" or "Off grid",
+a voice pass). The stored number never changes; every file needs it. What it
+has to respect: a new field on the character is a schema bump and a
+`migrate()` step defaulting to TAG'd, and `tagReading` should answer for it
+rather than a second reader. The app doesn't compute UBI, so nothing else moves.
 
 **W32 — Spell damage in numbers.** *Ken · 💡 · reads Spell Power (Decision 108)*
 Raised 2026-09-24. A spell's effect reads "½ SP Damage", and the player works
@@ -209,7 +212,7 @@ without storage, so the listener is guarded like every other read.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W40.** Everything above is open; W38 has a plan,
+- **Next free number: W42.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
