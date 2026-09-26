@@ -1326,11 +1326,30 @@ test("W16: install a mod on Loadout, fire a Burst from Main, Reload, and each is
   assert.match(app.$("#undotoast").textContent, /Burst −3 \(28\/31 left\)/);
   app.click('.main-combat [data-fire="0|F"]');
   assert.match(app.$(".main-combat .lo-rounds").textContent, /18\s*\/31/);
+  // W30: nothing on the sheet fits, so Reload asks, and the audit says so.
   app.click('.main-combat [data-reload="0"]');
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 13, "reloaded from nothing without asking");
+  assert.match(app.$("#modal").textContent, /You carry no Rifle Rounds\. Reload anyway\?/);
+  app.click("#modal [data-askyes]");
   assert.equal(activeChar(app).weapons[0].roundsSpent, 0);
+  assert.match(app.$("#undotoast").textContent, /Reloaded .* anyway, no Rifle Rounds on the sheet/);
+  assert.match(activeChar(app).audit.at(-1).label, /anyway, no Rifle Rounds on the sheet/, "the audit doesn't say it came from nowhere");
   app.click("[data-toastundo]");
   assert.equal(activeChar(app).weapons[0].roundsSpent, 13, "Reload didn't undo on its own");
   assert.deepEqual(app.errors, []);
+  // With a mag carried, Reload takes it, in the same one undo.
+  const c2 = lockedCharacter();
+  c2.weapons.push({ id: "ar9x-guardian", notes: "", mods: [], roundsSpent: 13 });
+  c2.gear.push({ id: "rifle-rounds", qty: 2, notes: "" });
+  const app2 = openSheet(c2, "main");
+  assert.match(app2.$('.main-combat [data-reload="0"]').title, /Rifle Rounds: 2 mags carried/);
+  app2.click('.main-combat [data-reload="0"]');
+  assert.equal(activeChar(app2).weapons[0].roundsSpent, 0);
+  assert.equal(activeChar(app2).gear[0].qty, 1, "the mag didn't come off what's carried");
+  assert.match(app2.$("#undotoast").textContent, /Reloaded .*\(31\/31\), −1 mag of Rifle Rounds/);
+  app2.click("[data-toastundo]");
+  assert.equal(activeChar(app2).gear[0].qty, 2, "undo didn't put the mag back");
+  assert.deepEqual(app2.errors, []);
 });
 
 test("W17/W27: buy from the equipment catalog, use one and a charge on Loadout, and a Nanomed Kit you carry comes off with the healing", () => {
@@ -1757,6 +1776,21 @@ test("B18: the intake number sits under the name on Main and in the printed head
   app.window.print = () => {};
   app.click("[data-menu-toggle]"); app.click("[data-print]");
   assert.ok(app.$("#printSheet .p-intake") && app.$("#printSheet .p-intake").textContent.includes(ch.meta.id), "the print header doesn't carry the intake number");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W31: a Ghost TAG says so over the number on Main and in the printed header", () => {
+  const ch = Engine.migrate(named("Vex Morrow"));
+  ch.advantages.push({ id: "ghost-tag-s", rank: 1 });
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  const intake = app.$("#main .intake");
+  assert.equal(intake.querySelector(".intake-label") && intake.querySelector(".intake-label").textContent, "Ghost TAG");
+  assert.ok(intake.textContent.includes(ch.meta.id), "the number went away");
+  assert.match(intake.title, /^Ghost TAG\. A counterfeit/, "hovering doesn't say what a Ghost TAG is");
+  app.window.print = () => {};
+  app.click("[data-menu-toggle]"); app.click("[data-print]");
+  assert.match(app.$("#printSheet .p-intake").textContent, /Ghost TAG/, "the print header doesn't say Ghost TAG");
   assert.deepEqual(app.errors, []);
 });
 

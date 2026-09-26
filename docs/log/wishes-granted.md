@@ -159,6 +159,26 @@ where Martial Arts is described, under S6's "a rule the sheet names is a tap
 away". Choosing a style is bigger: it's a stored input (a character-schema
 change), and whether its bonus is something the sheet applies is Deighton's.
 
+**W30 — Reload from what you carry.** *Claude · → Decision 145, app 0.30.0: standard rounds by the mag, shells by the round, "Reload anyway" in the audit; loading specialty rounds is W40*
+Raised 2026-09-24, with AQ4. Once ammunition is in the shop as its own category
+(the audit plan's S6), Reload could take a magazine from the matching rounds you
+carry and say when you're out, the way the Nanomed Kit already comes off what
+you carry. The data has a hook, `weaponType` on each ammunition entry
+("Handgun", "Rifle (shotgun)"). What it lacks: how a bought unit ("15Ç/mag")
+maps to a weapon's capacity, and whether one "mag" of Handgun Rounds fits every
+handgun. If the CRB is silent, that's a question for Deighton, not a guess.
+
+**W31 — TAGless and Ghost TAG characters.** *Ken · → Decision 146, app 0.30.0: the Ghost TAG half (Black TAG is the same thing); TAGless is W41*
+Raised 2026-09-24 with the TAG. Every character shows a TAG under its name,
+because every file needs the number to tell characters apart. But the CRB lets
+a character go TAGless (living in the skrip economy, no UBI) or carry a Ghost
+TAG (the Advantage) or a Black TAG, and the sheet says nothing about either.
+The idea: the label reads differently for them, e.g. "TAG on file" for a
+TAGless character or "Ghost TAG" when the Advantage is held. The stored number
+never changes. What it needs first: a way to mark a character TAGless, which
+the data doesn't have, and whether that's a player choice or a GM one. Holding
+Ghost TAG is already on the character, so that half could come first.
+
 ### Theme & polish
 
 **W7 — Primary buttons are unreadable in light mode.** *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
