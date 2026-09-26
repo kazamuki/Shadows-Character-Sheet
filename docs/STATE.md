@@ -131,8 +131,8 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.29.0** (data 0.22). **0.30.0 is on main, unreleased:** Reload
-from what you carry (145) and the Ghost TAG label (146). Ken alone: F9, F12, F13, F32 and
+**The live site is v0.30.0** (data 0.23, schema 0.13): Reload from what you carry
+(145) and the Ghost TAG label (146). Ken alone: F9, F12, F13, F32 and
 **W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3). The wishlist: W29, W32,
 W34–W37, W39, and W40 (specialty rounds) and W41 (TAGless), both schema bumps.
 
