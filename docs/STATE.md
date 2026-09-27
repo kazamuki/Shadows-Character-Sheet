@@ -131,7 +131,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.30.0.** 0.31.0 (data 0.24, schema 0.14) waits to be released:
+**The live site is v0.31.0** (data 0.24, schema 0.14):
 Spell Power in numbers (147), TAGless (148) and specialty rounds (149). Ken alone: F9, F12, F13, F32 and
 **W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3). The wishlist: W29, W34–W37
 and W39.
