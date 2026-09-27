@@ -583,7 +583,7 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.13",
+    schemaVersion: "0.14",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -600,7 +600,11 @@ It renders on the Archetype tab.
     archetype: "arcanist",
     // NO `specialization` since 0.5 — it lives once, in archetypeChoices, and
     // is derived for display via Engine.specializationLabel() (Decision 79).
-    history: ""                      // creation step 5: what shaped them
+    history: "",                     // creation step 5: what shaped them
+    // (0.14, Decision 148) TAGless, the player's pick on the Identity step.
+    // false is TAG'd; migrate() makes anything but `true` false. It changes
+    // how the TAG reads (Engine.tagReading), never meta.id.
+    tagless: false
   },
 
   creation: {
@@ -3358,6 +3362,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 133 in part: a TAG can carry a label, when an Advantage held says so.
      - **Revisit if:** the CRB separates Black TAG from Ghost TAG, or TAGless lands and wants the same reader.
      - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W31), mutation-tested. Log 2026-09-26.
+     → **Superseded in part by Decision 148**: `tagReading` reads TAGless too.
 
 147. **A Spell Power amount is a number on the sheet, worked out from a structured field beside the book's words, and halves round up.**
      *2026-09-26 · Ken + Claude · Touches: sp, spAmounts, Spell Power, ½ SP, SP × 2, effect, overflow, defending, spells, cascadeTable, Backlash, aberrations, Electrocytes, Elemental Blood, Grimoire, spell picker, starting spells, Magic reference, W32*
@@ -3371,6 +3376,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing.
      - **Revisit if:** the CRB says how ½ SP rounds and it isn't up, or says whose Spell Power a Talisman carries.
      - **Built:** app 0.31.0, game data 0.24; `engine.test.mjs` and `smoke.test.mjs` (W32), mutation-tested. Log 2026-09-26.
+
+148. **A character is TAG'd or TAGless, the player's pick like their name, and a TAGless character's TAG reads "Off grid".**
+     *2026-09-26 · Ken + Claude · Touches: identity.tagless, TAGless, TAG'd, tag, tag.choice, tag.tagless, tagReading, Ghost TAG, meta.id, Identity step, Admin mode, print header, Review, UBI, skrip, character schema 0.14, W41*
+     - **Decided:** `identity.tagless` (schema 0.14, `false` is TAG'd) is chosen on the Identity step and changed later in Admin, logged and undoable. `tagReading` answers for it with the data's `tag.tagless` label, "Off grid", over the number wherever a TAG shows. A held Ghost TAG's label wins, since a counterfeit is what a scanner reads, and its tip says both. `migrate()` makes anything but `true` TAG'd. The number never changes, and the app computes no UBI, so nothing else moves.
+     - **Why:** Gear calls going TAGless "a legitimate choice", and a TAGless character still showed a plain TAG. The copy is data (`tag`), so its voice is a data edit, and one reader keeps the label in one place.
+     - **Rejected:**
+       - TAGless as an Advantage or Disadvantage: the book prices it at nothing; it's who the character is.
+       - Hiding the number for a TAGless character: every file needs it (Decision 133).
+       - "No TAG" as the label: it reads as a missing field; "Off grid" is Gear's own phrase (voice pass pending).
+     - **Replaces:** Decision 146 in part: `tagReading` reads TAGless too, and a Ghost TAG's text says so when both hold.
+     - **Revisit if:** the CRB gives going TAGless a mechanical cost, or the app starts computing the UBI.
+     - **Built:** app 0.31.0, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W41), mutation-tested. Log 2026-09-26.
 
 ## 5. Open Flags
 

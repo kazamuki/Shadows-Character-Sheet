@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.23",
+    "gamedataVersion": "0.24",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-24"
   },
@@ -3019,6 +3019,18 @@ window.SHADOWS_DATA = {
      Say what isn't settled and hand the table its authority. Never name a
      phase, a flag id, a field path, or a person. The app makes no promises
      about its own future. */
+  /* The TAG (Gear, Decision 133) and going without one (W41). `text` is what
+     hovering a TAG says; `choice` is the Identity step's TAG'd/TAGless pick;
+     `tagless` is how a TAGless character's TAG reads. The number itself never
+     changes: every character file needs it. */
+  "tag": {
+    "text": "Trusted Authentication Gateway",
+    "choice": {
+      "tagged": { "name": "TAG'd", "text": "The city issued you a TAG. It knows where you are, what you buy and who you talk to, and it pays you 625Ç a month for the privilege." },
+      "tagless": { "name": "TAGless", "text": "No government identity. You deal in skrip, the UBI goes unclaimed, and the city's systems don't know your name." }
+    },
+    "tagless": { "label": "Off grid", "text": "TAGless: no government identity, no 625Ç UBI, business done in skrip." }
+  },
   "appCopy": {
     "unsettledLabel": "Not settled yet",
     "unsettledRule": "This rule is still being written. Until it is, it's your GM's call.",

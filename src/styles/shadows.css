@@ -155,6 +155,11 @@ button.card:hover{border-color:var(--violet-hi)}
 label.field{display:block; margin-bottom:14px}
 label.field span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
   text-transform:uppercase; color:var(--dim); margin-bottom:5px}
+/* W41: TAG'd or TAGless, a field that's a toggle rather than a box */
+.tag-choice{margin-bottom:14px}
+.tag-choice > span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin-bottom:5px}
+.tag-choice .form-toggle{width:max-content}
+.tag-choice .step-note{margin:6px 0 0}
 input[type=text],input[type=search],input[type=number],input[type=date],textarea,select{
   width:100%; background:var(--ground); border:1px solid var(--frame); border-radius:4px;
   padding:9px 11px; font-size:.92rem}

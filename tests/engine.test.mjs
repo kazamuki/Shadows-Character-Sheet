@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.13");
+  assert.equal(ch.meta.schemaVersion, "0.14");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -494,7 +494,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -605,7 +605,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.13");
+  assert.equal(bare.meta.schemaVersion, "0.14");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -841,7 +841,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.13");
+    assert.equal(c.meta.schemaVersion, "0.14");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1115,7 +1115,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1190,7 +1190,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2159,7 +2159,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2245,7 +2245,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2262,7 +2262,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2279,6 +2279,33 @@ test("W31: a held Ghost TAG names the TAG and says what it is; the number never 
   assert.equal(Engine.tagReading(c), null, "a rank-0 entry still counts as held");
   for (const junk of [null, {}, { advantages: "x" }, { advantages: [null, 4, { id: "ghost-tag-s", rank: "x" }] }])
     assert.equal(Engine.tagReading(junk), null);
+});
+
+test("W41: a TAGless character's TAG reads Off grid, a Ghost TAG over it still wins, and the number never moves", () => {
+  const c = subject(), id = c.meta.id;
+  assert.equal(c.identity.tagless, false, "a new character isn't TAG'd");
+  c.identity.tagless = true;
+  const r = Engine.tagReading(c);
+  same([r.label, r.tagless], [D.tag.tagless.label, true]);
+  assert.match(r.text, /skrip/);
+  c.advantages.push({ id: "ghost-tag-s", rank: 1 });
+  const g = Engine.tagReading(c);
+  assert.equal(g.label, "Ghost TAG", "a counterfeit is what a scanner reads");
+  assert.ok(g.text.includes(D.tag.tagless.text) && /Black TAG/.test(g.text), "the tip doesn't say both");
+  c.identity.tagless = false;
+  assert.equal(Engine.tagReading(c).tagless, false);
+  assert.equal(c.meta.id, id, "reading the TAG changed the stored number");
+});
+
+test("W41: migrate() makes every older file TAG'd, and only a real true makes one TAGless (schema 0.14)", () => {
+  const old = subject();
+  delete old.identity.tagless; old.meta.schemaVersion = "0.13";
+  const m = Engine.migrate(old);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.14"]);
+  for (const junk of ["true", 1, "yes", {}, null])
+    assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
+  const t = subject(); t.identity.tagless = true;
+  assert.equal(Engine.migrate(JSON.parse(JSON.stringify(t))).identity.tagless, true, "TAGless didn't survive a round trip");
 });
 
 // ── Rules a tap away (Decision 139) ───────────────────────────────────

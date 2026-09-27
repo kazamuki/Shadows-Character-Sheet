@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.13";
+  const SCHEMA_VERSION = "0.14";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function newIntakeId(){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -38,8 +38,9 @@ const Engine = (() => {
              created:new Date().toISOString(), updated:new Date().toISOString() },
       // No `specialization` here: schema 0.5 stores it once, in
       // archetypeChoices.specialization, and derives the display string (A3).
+      // Schema 0.14 (W41): `tagless` is the player's, like the name; false is TAG'd.
       identity:{ name:"", age:null, build:"", hair:"", eyes:"", skin:"",
-                 archetype:null, history:"" },
+                 archetype:null, history:"", tagless:false },
       creation:{ powerLevel:null,
                  rolls:{ statPoints:null, skillPoints:null, credits:null },
                  boosts:[], locked:false },
@@ -132,14 +133,23 @@ const Engine = (() => {
 
   // W31: how a character's TAG reads. The number itself never changes
   // (Decision 133); an Advantage or Disadvantage held with `tagReads` (Ghost
-  // TAG) names what the TAG is and what hovering it says. Null when nothing does.
+  // TAG) names what the TAG is and what hovering it says. W41: a TAGless
+  // character's reads as the data's `tag.tagless`. A counterfeit is what a
+  // scanner sees, so a Ghost TAG's label wins, and its text says both.
+  // Null when nothing changes how it reads.
   function tagReading(ch){
+    const T = (D().tag||{}).tagless;
+    const off = !!(ch && ch.identity && ch.identity.tagless===true) && !!T && typeof T.label==="string"
+      ? { label:T.label, text: typeof T.text==="string" ? T.text : "", tagless:true } : null;
     for (const [list, lookup] of [[ch && ch.advantages, advById], [ch && ch.disadvantages, disById]])
       for (const e of Array.isArray(list) ? list : []){
         const def = e && Number(e.rank)>0 && lookup(e.id), r = def && def.tagReads;
-        if (r && typeof r==="object" && typeof r.label==="string") return { label:r.label, text: typeof r.text==="string" ? r.text : "" };
+        if (r && typeof r==="object" && typeof r.label==="string"){
+          const text = typeof r.text==="string" ? r.text : "";
+          return { label:r.label, text: off ? `${text} ${off.text}`.trim() : text, tagless: !!off };
+        }
       }
-    return null;
+    return off;
   }
 
   // Final stat value = creation base + archetype bonus + CP boosts + IPE + adjustments
@@ -2330,6 +2340,9 @@ const Engine = (() => {
     // Focused Skill picks are skill ids (Decision 134): anything else is junk.
     ac.focusedSkillPicks = (Array.isArray(ac.focusedSkillPicks) ? ac.focusedSkillPicks : []).filter(x=>typeof x==="string");
     if (c.identity && typeof c.identity==="object") delete c.identity.specialization;
+    // Schema 0.14 (W41): TAGless only when a file says so, as `true`. Every
+    // character from before is TAG'd, which _fillDefaults already seeded.
+    c.identity.tagless = c.identity.tagless===true;
     // Schema 0.13 (A11, Decision 142): a Professional's free advantage is
     // marked `source: "natural"`, and `notes` is only ever text. Before, the
     // marker WAS the notes. Only a file from before 0.13 is read that way,
