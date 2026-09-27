@@ -1375,6 +1375,34 @@ test("W16: install a mod on Loadout, fire a Burst from Main, Reload, and each is
   assert.deepEqual(app2.errors, []);
 });
 
+test("W40: Reload asks which rounds, Silver Rounds stay loaded with their tag, and a full weapon swaps back", () => {
+  const ch = lockedCharacter();
+  ch.weapons.push({ id: "ar9x-guardian", notes: "", mods: [], roundsSpent: 13 });
+  ch.gear.push({ id: "rifle-rounds", qty: 2, notes: "" }, { id: "silver-rounds", qty: 1, notes: "" });
+  const app = openSheet(ch, "main");
+  app.click('.main-combat [data-reload="0"]');
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 13, "reloaded without asking which");
+  const modal = app.$("#modal");
+  assert.ok(modal.open, "no choice of rounds");
+  assert.match(modal.textContent, /Rifle Rounds[\s\S]*Silver Rounds[\s\S]*Withering \(Lycanthropes\)/);
+  assert.match(modal.textContent, /still being settled/, "the unsettled swap rule isn't said");
+  app.click('#modal [data-loadammo="silver-rounds"]');
+  const w = activeChar(app).weapons[0];
+  assert.deepEqual([w.roundsSpent, w.loaded], [0, "silver-rounds"]);
+  assert.match(app.$("#undotoast").textContent, /Loaded .* with Silver Rounds \(31\/31\), −1 mag of Silver Rounds/);
+  const row = app.$('.main-combat [data-reload="0"]').closest("tr");
+  assert.match(row.textContent, /Silver Rounds/, "the line doesn't say what's loaded");
+  assert.match(row.textContent, /Withering \(Lycanthropes\)/, "the rounds' tag isn't on the line");
+  // Full, Reload is there to swap back, and asks.
+  assert.equal(app.$('.main-combat [data-reload="0"]').disabled, false, "a full weapon can't swap");
+  app.click('.main-combat [data-reload="0"]');
+  app.click('#modal [data-loadammo="rifle-rounds"]');
+  assert.equal(activeChar(app).weapons[0].loaded, undefined);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).weapons[0].loaded, "silver-rounds", "undo didn't put the silver back");
+  assert.deepEqual(app.errors, []);
+});
+
 test("W17/W27: buy from the equipment catalog, use one and a charge on Loadout, and a Nanomed Kit you carry comes off with the healing", () => {
   const ch = lockedCharacter();
   ch.trackers.credits.current = 10000;

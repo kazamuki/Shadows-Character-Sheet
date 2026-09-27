@@ -873,10 +873,21 @@ const Engine = (() => {
       instead: (m.notWith||[]).filter(x=>sights.some(g=>g.id===x)) }));
     line.rounds = roundsOf(def.capacity, e);
     line.fireModes = fireModesOf(def.rof);
-    // W30: what Reload would take, and how much of it you carry.
+    // W40: specialty rounds in the magazine name themselves, and their tags
+    // join the weapon's.
+    const loadedDef = line.rounds && loadedOf(e) ? equipmentById(loadedOf(e)) : null;
+    if (loadedDef && loadsAs(loadedDef)){
+      line.loaded = { id:loadedDef.id, name:loadedDef.name, tags:ammoTags(loadedDef) };
+      line.tags = [...new Set([...line.tags, ...line.loaded.tags])];
+    }
+    // W30: what Reload would take, and how much of it you carry. W40: every
+    // kind carried, and whether one would swap what's loaded.
     const src = line.rounds && reloadSource(ch, e);
-    if (src) line.reloadFrom = { ammo: src.have ? [src.have.def.name] : src.ammo, carried: src.have ? src.have.qty : 0,
-                                 unit: src.have ? src.have.def.unit||null : null };
+    if (src){ const have = src.have;
+      line.reloadFrom = { ammo: have.length ? have.map(h=>h.def.name) : src.ammo, carried: have.reduce((n,h)=>n+h.qty, 0),
+                          unit: have.length===1 ? have[0].def.unit||null : null, kinds: have.length,
+                          swap: have.some(h=>loadsAs(h.def)!==loadedOf(e)) };
+    }
     return line;
   }
   // ── Rounds and mods (W16, Decision 120) ──
@@ -918,38 +929,69 @@ const Engine = (() => {
   // fits (Gear's Weapon Type column, as weapon categories or ids) and what one
   // unit fills: the whole "magazine" (a mag, a cell) or one "round" (a shell).
   // A weapon nothing fits (a launcher, the belt-fed guns Gear treats as
-  // unlimited, a custom weapon) reloads as it always did.
-  function ammoFor(def){
+  // unlimited, a custom weapon) reloads as it always did. W40: rounds that
+  // `needsMod` fit only a weapon with that mod, and a mod that `firesOnly`
+  // certain rounds (the Angel Mod) takes nothing else.
+  function ammoFor(def, mods){
     if (!def) return [];
+    const only = mods.map(id=>weaponModById(id)).filter(m=>m && Array.isArray(m.firesOnly)).flatMap(m=>m.firesOnly);
     return (D().equipment||[]).filter(g=>{ const r = g && g.reload;
-      return !!r && typeof r==="object" && ((r.categories||[]).includes(def.category) || (r.weapons||[]).includes(def.id)); });
+      if (!r || typeof r!=="object") return false;
+      if (!((r.categories||[]).includes(def.category) || (r.weapons||[]).includes(def.id))) return false;
+      if (r.needsMod && !mods.includes(r.needsMod)) return false;
+      return !only.length || only.includes(g.id); });
   }
   function reloadSource(ch, e){
-    const kinds = ammoFor(e && !e.custom && e.id ? weaponDefById(e.id) : null);
+    const kinds = ammoFor(e && !e.custom && e.id ? weaponDefById(e.id) : null, modsOf(e));
     if (!kinds.length) return null;
-    const have = kinds.map(k=>{ const c = carriedGear(ch, k.id); return c && Object.assign({ def:k }, c); }).find(Boolean);
-    return { ammo: kinds.map(k=>k.name), have: have || null };
+    const have = kinds.map(k=>{ const c = carriedGear(ch, k.id); return c && Object.assign({ def:k }, c); }).filter(Boolean);
+    // What to say it takes: the standard rounds, or what's left when a mod
+    // allows only specialty ones.
+    const standard = kinds.filter(k=>!loadsAs(k));
+    return { ammo: (standard.length ? standard : kinds).map(k=>k.name), have };
   }
+  // W40: what a weapon remembers is in its magazine: a specialty round's id,
+  // or nothing for standard rounds. Specialty rounds change the weapon (their
+  // tags join its line), unless they need a mod, whose own tags already say it.
+  const loadsAs = def => def && def.reload && def.reload.specialty ? def.id : null;
+  const loadedOf = e => e && typeof e.loaded==="string" ? e.loaded : null;
+  const ammoTags = def => def && def.reload && !def.reload.needsMod && Array.isArray(def.tags) ? def.tags : [];
+  const ammoOption = (h, loaded) => ({ id:h.def.id, name:h.def.name, qty:h.qty, unit:h.def.unit||null, tags:ammoTags(h.def),
+                                       loaded: loadsAs(h.def)===loaded });
   // Reload takes one unit of what fits from what you carry. With none on the
   // sheet it's refused, saying so, unless the player reloads anyway (`anyway`),
-  // which the result marks so the audit can say it was.
+  // which the result marks so the audit can say it was. W40: with more than
+  // one kind carried it asks which (`choose`, answered with `opts.ammo`), and
+  // a full weapon reloads only to swap kinds (053). What was left in the
+  // magazine isn't kept (F34's stub).
   function reloadWeapon(ch, index, opts){
     const e = weaponEntry(ch, index), l = e && weaponLine(ch, index);
     if (!l || l.missing) return { ok:false, why:"That weapon isn't on the sheet." };
     if (!l.rounds) return { ok:false, why:`${l.name||"This weapon"} doesn't track rounds.` };
-    if (!l.rounds.spent) return { ok:false, why:"It's already full." };
-    const src = reloadSource(ch, e), done = { ok:true, name:l.name, max:l.rounds.max, left:l.rounds.max };
+    const src = reloadSource(ch, e), loaded = loadedOf(e), full = !l.rounds.spent;
+    const done = { ok:true, name:l.name, max:l.rounds.max, left:l.rounds.max };
+    const options = !src ? [] : full ? src.have.filter(h=>loadsAs(h.def)!==loaded) : src.have;
+    if (full && !options.length) return { ok:false, why:"It's already full." };
     if (!src){ e.roundsSpent = 0; return done; }
-    if (!src.have){
+    if (!src.have.length){
       if (!(opts && opts.anyway)) return { ok:false, noAmmo:true, ammo:src.ammo, why:`You carry no ${src.ammo.join(" or ")}.` };
-      e.roundsSpent = 0;
+      e.roundsSpent = 0; delete e.loaded;
       return Object.assign(done, { anyway:true, ammo:src.ammo });
     }
-    const k = src.have, perRound = k.def.reload.fills==="round";
-    const n = perRound ? Math.min(l.rounds.spent, k.qty) : 1;
+    const want = opts && typeof opts.ammo==="string" ? opts.ammo : null;
+    // Swapping a full magazine is always a choice the player names.
+    const k = want ? options.find(h=>h.def.id===want) : options.length===1 && !full ? options[0] : null;
+    if (want && !k) return { ok:false, why: full ? "It's already loaded with those." : "That doesn't load this weapon." };
+    if (!k) return { ok:false, choose:true, options: options.map(h=>ammoOption(h, loaded)), full, left:l.rounds.left, why:"Choose which rounds to load." };
+    const kind = loadsAs(k.def), swap = kind!==loaded, perRound = k.def.reload.fills==="round";
+    // A swap on a weapon loaded a round at a time empties it first.
+    const empty = perRound && swap ? l.rounds.max : l.rounds.spent;
+    const n = perRound ? Math.min(empty, k.qty) : 1;
     useGear(ch, k.index, n);
-    e.roundsSpent = perRound ? l.rounds.spent - n : 0;
-    return Object.assign(done, { left: l.rounds.max - e.roundsSpent, used:n, ammo:[k.def.name], ammoLeft: k.qty - n, unit: k.def.unit||null });
+    e.roundsSpent = perRound ? empty - n : 0;
+    if (kind) e.loaded = kind; else delete e.loaded;
+    return Object.assign(done, { left: l.rounds.max - e.roundsSpent, used:n, ammo:[k.def.name], ammoLeft: k.qty - n, unit: k.def.unit||null,
+                                 loaded: kind, swapped: swap });
   }
   // What can go on a catalog weapon: every mod, with the reason one can't.
   function weaponModOptions(ch, index){
@@ -2286,6 +2328,9 @@ const Engine = (() => {
       w.roundsSpent = nonNegInt(w.roundsSpent);
       if (w.custom) delete w.mods;
       else w.mods = Array.isArray(w.mods) ? w.mods.filter(x=>typeof x==="string") : [];
+      // Schema 0.14 (W40): `loaded` is a specialty round's id; standard
+      // rounds, and every weapon from before, have none.
+      if (w.custom || typeof w.loaded!=="string") delete w.loaded;
     });
     // Schema 0.8 (plan P5, landed now so there's one migration): `worn` marks
     // the body piece that rolls PROT, `scrapped` is the one state

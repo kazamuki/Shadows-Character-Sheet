@@ -1433,11 +1433,30 @@ function roundsHtml(l, capacityText){
   return `<span class="rounds${r.left===0?" empty":""}" title="Rounds left of ${r.max}">${r.left}<small>/${r.max}</small></span>
     <span class="fire">${modes.map(f=>`<button class="btn sm" data-fire="${l.index}|${esc(f.id)}" ${r.left<f.rounds?"disabled":""}
       aria-label="Fire ${esc(f.name)}, ${f.rounds} round${f.rounds===1?"":"s"}" title="${esc(f.name)}: ${f.rounds} round${f.rounds===1?"":"s"}">${esc(f.id||"−1")}</button>`).join("")}
-    <button class="btn sm${l.reloadFrom && !l.reloadFrom.carried?" dry":""}" data-reload="${l.index}" ${r.spent?"":"disabled"} title="${esc(reloadTitle(l.reloadFrom))}">Reload</button></span>`;
+    <button class="btn sm${l.reloadFrom && !l.reloadFrom.carried?" dry":""}" data-reload="${l.index}" ${r.spent || (l.reloadFrom && l.reloadFrom.swap)?"":"disabled"} title="${esc(reloadTitle(l.reloadFrom))}">Reload</button></span>${
+    l.loaded?`<span class="loaded" title="Loaded">${esc(l.loaded.name)}</span>`:""}`;
 }
 // W30: what Reload takes from, and how much of it is on the sheet.
 const plural = (n, unit) => `${n} ${unit||"unit"}${n===1?"":"s"}`;
-const reloadTitle = f => !f ? "Fill the magazine" : f.carried ? `${f.ammo[0]}: ${plural(f.carried, f.unit)} carried` : `You carry no ${f.ammo.join(" or ")}`;
+const reloadTitle = f => !f ? "Fill the magazine" : f.kinds>1 ? `Carried: ${f.ammo.join(", ")}` : f.carried ? `${f.ammo[0]}: ${plural(f.carried, f.unit)} carried` : `You carry no ${f.ammo.join(" or ")}`;
+// W40: the audit line for a reload, naming the rounds when a swap loaded them.
+const reloadAudit = (name, p) => `${p.swapped ? `Loaded ${name} with ${p.ammo[0]}` : `Reloaded ${name}`} (${p.left}/${p.max})${p.used ? `, −${plural(p.used, p.unit)} of ${p.ammo[0]}` : ""}`;
+// W40: more than one kind of rounds fits, so Reload asks which. A swap says
+// what happens to the rounds left, which is still being settled (F34).
+function reloadChooser(ch, i, name, pre){
+  const sw = (D.weaponRules||{}).swap||{};
+  const left = pre.left ? `<p class="step-note">${esc(sw.text||"")} ${plural(pre.left, "round")} left in it now.</p>${sw.flagged ? flagHtml(sw) : ""}` : "";
+  openModal({ title:`Load ${name}`, html: `<div class="ammo-pick">${pre.options.map(o=>`<div class="ammo-opt">
+      <div><b>${esc(o.name)}</b> <span class="sub">${plural(o.qty, o.unit)} carried${o.loaded?" · in it now":""}</span>${o.tags.length?`<div class="tags">${tagChipsHtml(o.tags)}</div>`:""}</div>
+      <button class="btn sm" data-loadammo="${esc(o.id)}">Load</button></div>`).join("")}</div>${left}`,
+    foot:`<button class="btn" data-modalclose>Cancel</button>`,
+    bind: body=>body.querySelectorAll("[data-loadammo]").forEach(b=>b.onclick=()=>{
+      const id=b.dataset.loadammo, p=Engine.reloadWeapon(clone(ch), i, { ammo:id });
+      closeModal();
+      if (!p.ok){ notice(p.why); return; }
+      commit("loadout", reloadAudit(name, p), ()=>{ Engine.reloadWeapon(ch, i, { ammo:id }); });
+    }) });
+}
 // A sight's ACC is for aimed shots, and a Scope's only at range (Gear), so
 // they're listed apart from Single's ACC rather than summed into it.
 const aimedHtml = l => (l.aimed||[]).map(a=>`<div class="lo-sub">Aimed${a.when?` ${esc(a.when)}`:""}: +${a.acc} ACC (${esc(a.by.join(", "))}${
@@ -2723,8 +2742,9 @@ function bindSheet(){
     // the audit says it came from nowhere (W30).
     if (pre.noAmmo){ askFirst({ title:"Nothing to reload from", text:`${pre.why} Reload anyway?`, yes:"Reload anyway", danger:false,
       then:()=>commit("loadout", `Reloaded ${name} anyway, no ${pre.ammo.join(" or ")} on the sheet`, ()=>{ Engine.reloadWeapon(ch, i, { anyway:true }); }) }); return; }
+    if (pre.choose){ reloadChooser(ch, i, name, pre); return; }
     if (!pre.ok){ notice(pre.why); return; }
-    commit("loadout", `Reloaded ${name} (${pre.left}/${pre.max})${pre.used ? `, −${plural(pre.used, pre.unit)} of ${pre.ammo[0]}` : ""}`, ()=>{ Engine.reloadWeapon(ch, i); });
+    commit("loadout", reloadAudit(name, pre), ()=>{ Engine.reloadWeapon(ch, i); });
   });
   main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;

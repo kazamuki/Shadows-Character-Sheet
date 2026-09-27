@@ -721,7 +721,11 @@ It renders on the Archetype tab.
   // weapon (a custom one types its own features). `roundsSpent`: rounds fired
   // since the last reload, so 0 is a full magazine; the rounds left are
   // computed from the capacity, never stored.
+  // (0.14, Decision 149) `loaded`: the specialty round in the magazine (an
+  // equipment id whose `reload.specialty` is true); absent for standard
+  // rounds. migrate() drops anything but a string, and any on a custom weapon.
   weapons: [ { id: "combat-knife", notes: "", mods: [], roundsSpent: 0 },
+             { id: "ads-lp9-viper", notes: "", mods: [], roundsSpent: 3, loaded: "silver-rounds" },
              { custom: true, name, type, damage, rof, capacity, ammo, features, notes, roundsSpent: 0 } ],
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
@@ -3351,6 +3355,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 120 in part: `reloadWeapon` no longer always fills from nowhere.
      - **Revisit if:** the CRB prices ammo per round, or a weapon takes a magazine another of its type can't.
      - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W30), mutation-tested. Log 2026-09-26.
+     → **Superseded in part by Decision 149**: Reload asks which kind.
 
 146. **A held Ghost TAG labels the TAG and says what it is; Black TAG is the same thing.**
      *2026-09-26 · Ken + Claude · Touches: tagReads, tagReading, Ghost TAG, ghost-tag-s, Black TAG, TAG, meta.id, intake, print header, Review, W31, TAGless*
@@ -3389,6 +3394,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** the CRB gives going TAGless a mechanical cost, or the app starts computing the UBI.
      - **Built:** app 0.31.0, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W41), mutation-tested. Log 2026-09-26.
 
+149. **A weapon remembers the specialty rounds it's loaded with, their tags join its line, and Reload asks which rounds when more than one kind fits.**
+     *2026-09-26 · Ken + Claude · Touches: weapons[i].loaded, reloadWeapon, reload.specialty, reload.needsMod, firesOnly, Angel Mod, silver-rounds, holy-points, angel-rounds, weaponLine.loaded, reloadFrom.swap, weaponRules.swap, character schema 0.14, W40, F26, F34*
+     - **Decided:** Silver Rounds, Holy Points and Angel Rounds carry `reload` blocks marked `specialty`, fitting the weapons their standard kind does. `weapons[i].loaded` (schema 0.14) holds the specialty round in the magazine, absent for standard rounds. Its tags join the weapon's line, and the magazine shows its name. With two kinds carried, Reload asks which; a full weapon reloads only to swap, and always asks. Angel Rounds `needsMod` the Angel Mod, which `firesOnly` them, and add no tags of their own, since the mod's say it. What a swapped magazine keeps is F34, stubbed as nothing.
+     - **Why:** specialty rounds change what a shot does (Withering), so the sheet has to know what's in the gun; 053 lets a Reload swap kinds. Ken opened F34 rather than decide it: Deighton may want mags kept with their count.
+     - **Rejected:**
+       - Storing standard rounds' ids too: one standard kind fits a weapon, so the field would say nothing, and every weapon from before would need a guess.
+       - Telling a specialty round by its tags: Shotgun Shells carry Spread.
+       - Keeping a partly spent magazine with its count: Deighton's call (F34).
+       - Silver Rounds in Heavy weapons: Gear treats the belt as unlimited, so they don't reload (Decision 145).
+     - **Replaces:** Decision 145 in part: Reload asks which kind, and a full weapon reloads to swap.
+     - **Revisit if:** F34 or F26 is ruled, or the CRB adds a specialty round that fits a weapon its standard kind doesn't.
+     - **Built:** app 0.31.0, game data 0.24, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W40), mutation-tested. Log 2026-09-26.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -3424,6 +3442,7 @@ here are in `log/archive.md`.
 | F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated | Deighton | No |
 | F32 | **Arcanist Major Milestones.** 041's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 041? `growth` stays hidden until then (AQ4) | Ken | No |
 | F33 | **Jack of All Trades: how far does "treated as Focused" go?** Master of None says all skills are "treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4". Does that also give every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7)? And can Skill Paragon's "a focused skill from your chosen Profession" be any skill for a Jack? Stubbed (Decision 134): the price only, for ranks bought up to 4 (4 → 5 is standard, Ken); no cap bonus | Deighton | No |
+| F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 053 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
 
-F23–F26, F28–F31 and F33 go to Deighton as one grouped question.
+F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question.
 
