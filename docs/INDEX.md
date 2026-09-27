@@ -27,7 +27,7 @@ authority and is never read front to back; §1 below says which section to open.
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The architecture, the shape of the game data or a character file | `SCHEMA.md` §1, §2 and §3 |
 | What a change must touch (docs, versions, decision, changelog) | `../CLAUDE.md`, *Change tiers* (Decision 131) |
-| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **proposed:** `two-tabs-one-character.md` (W38, `TQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **proposed:** `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` — open items only |
 | A wishlist item that was built, and what it was before | `log/wishes-granted.md` — moved whole from `WISHLIST.md`, never edited |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
@@ -61,6 +61,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `R`_n_ | Recommended practice — a proposal until Ken adopts it and it is numbered | 2026-09-24 audit §8 |
 | `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/audit-2026-09-remediation.md` §5 |
 | `TQ`_n_ | A question the two-tabs plan (W38) raises for Ken | `plans/two-tabs-one-character.md` §5 |
+| `PQ`_n_ | A question the print-sheet plan raises for Scott, Deighton or Ken | `plans/print-sheet-scotts-look.md` §6 |
 | `CQ`_n_, `MQ`_n_ | Questions the combat and magic plans raised; all answered except Ken's open CRB fixes, now listed in `STATE.md` §5 | `plans/combat-and-conditions.md` §6 · `plans/magic-on-the-sheet.md` |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
 | `D`_n_ | Shorthand used here for decision _n_ | `SCHEMA.md` §4 |
