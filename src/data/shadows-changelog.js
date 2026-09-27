@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.31.0",
-    "date": null,
+    "date": "2026-09-27",
     "intro": [],
     "items": [
       "**Spell Power, worked out.** Wherever a spell says \"½ SP Damage\" or \"Spell Power × 2\", the sheet shows the number beside it: with Spell Power 13, Dart reads **7** (½ SP Damage). Halves round up. Increases read as **+7**, and absorption, Integrity and healing get the same treatment. It shows in your Grimoire, the spell picker, the Cascade table and the Aberrations that deal Spell Power damage.",
