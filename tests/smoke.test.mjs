@@ -992,6 +992,29 @@ test("Aberrations: a permanent one shows on the Archetype tab, Phantom Pain name
   assert.deepEqual(app.errors, []);
 });
 
+test("W32: a spell's Spell Power reads as a number beside the book's words, wherever it shows", () => {
+  const ch = lockedCharacter();
+  ch.panelData.grimoire = [{ spellId: "dart", stage: "known", notes: "" }, { spellId: "firebolt", stage: "known", notes: "" }];
+  ch.trackers.aberrations = [{ id: "electrocytes", permanence: "permanent", note: "" }];
+  ch.archetypeChoices.disciplines = { evocation: 3 };           // Spell Power 5: its half rounds up to 3
+  const sp = Engine.spellPower(ch).value, half = Math.ceil(sp / 2);
+  assert.deepEqual([sp, half], [5, 3]);
+  const app = openSheet(ch, "loadout");
+  const [dart, bolt] = app.$$(".spell");
+  assert.equal(dart.querySelector("summary .eff").textContent.trim(), `${half} (½ SP Damage)`);
+  assert.match(dart.querySelector(".overflow").textContent, new RegExp(`1x ${sp} \\(Full Spell Power damage\\.\\)`));
+  assert.match(bolt.querySelector(".overflow").textContent, new RegExp(`1x \\+${half} \\(Damage increases by ½ SP\\.\\)`), "an increase doesn't read as one");
+  app.click('[data-spellpickopen="sheet"]');
+  search(app, "zap");
+  assert.match(app.$("#modal [data-spellresults]").textContent, new RegExp(`${half} \\(½ SP Damage, or shorts simple electronics\\)`), "the picker shows the words alone");
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  app.click('[data-sec="archetype"]');
+  const ref = app.$('[data-reference="magic-reference"]');
+  assert.match(ref.textContent, new RegExp(`${sp} \\(Spirit damage equal to your Spell Power\\.\\)`), "Backlash in the Cascade table");
+  assert.match(app.$("#main").textContent, new RegExp(`½ Spell Power: ${half}`), "Electrocytes on the Archetype tab");
+  assert.deepEqual(app.errors, []);
+});
+
 // ── Starting spells in the wizard (Decision 111) ──────────────────────
 
 function arcanistOnCP(setup) {

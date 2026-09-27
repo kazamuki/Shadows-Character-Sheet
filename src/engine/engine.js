@@ -1780,6 +1780,26 @@ const Engine = (() => {
     if (!d || typeof stat!=="number") return null;
     return { value: d.rank + stat, rank: d.rank, discipline: d.name, stat: R.stat, statValue: stat, text: R.text||"" };
   }
+  // W32: what an entry's Spell Power amounts come to for this character. The
+  // entry's `sp` names the text it sits beside (`effect`, `defending`,
+  // `description`, or an `overflow` tier) and how much Spell Power it is:
+  // `times` an amount, `adds` an increase. Halves round up (Ken). Null with no
+  // Spell Power, and the book's words show alone. `power` saves a caller that
+  // reads many entries from working Spell Power out again for each.
+  function spAmounts(ch, entry, power){
+    const sp = power===undefined ? spellPower(ch) : power, f = entry && entry.sp;
+    if (!sp || typeof sp.value!=="number" || !f || typeof f!=="object") return null;
+    const one = x => {
+      if (!x || typeof x!=="object") return null;
+      const adds = typeof x.adds==="number", n = adds ? x.adds : x.times;
+      return typeof n==="number" && n>0 && isFinite(n) ? { value: Math.ceil(sp.value*n), times:n, adds, spellPower: sp.value } : null;
+    };
+    const out = { overflow:{} };
+    for (const k of Object.keys(f)) if (k!=="overflow"){ const a = one(f[k]); if (a) out[k] = a; }
+    if (f.overflow && typeof f.overflow==="object")
+      for (const k of Object.keys(f.overflow)){ const a = one(f.overflow[k]); if (a) out.overflow[k] = a; }
+    return out;
+  }
   // Spell Attack = Evocation rank + the REF and WILL scores themselves, not
   // their bonuses (Deighton, Decision 109). A Basic Stat reads its score, a
   // derived one (WILL) its value.
@@ -1831,7 +1851,7 @@ const Engine = (() => {
   function grimoire(ch){
     const p = grimoirePanel(ch);
     if (!p) return { panel:null, lines:[], spellPower:null, spellAttack:null, pool:null };
-    const pool = castingPool(ch);
+    const pool = castingPool(ch), power = spellPower(ch);
     const pd = ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
     const rows = Array.isArray(pd[p.id]) ? pd[p.id] : [], M = (D().spellcraftRules||{}).mastery || {};
     const held = new Set(rows.filter(r=>r && typeof r.spellId==="string").map(r=>r.spellId));
@@ -1855,10 +1875,10 @@ const Engine = (() => {
                domain: (domains.find(d=>d.id===s.domain)||{name:s.domain}).name, domainId:s.domain,
                glyph:s.glyph, tn:s.tn, range:s.range, spellType:s.spellType, damageType:s.damageType,
                target:s.target, effect:s.effect, duration:s.duration||null, defending:s.defending, overflow:s.overflow||null,
-               tags:s.tags||[], flavorLine:s.flavorLine||"", spellNotes:s.notes||"",
+               tags:s.tags||[], flavorLine:s.flavorLine||"", spellNotes:s.notes||"", sp: spAmounts(ch, s, power),
                masteryCost: mastered ? null : spellMasteryCost(s, form.th) };
     });
-    return { panel:p, lines, held:[...held], spellPower: spellPower(ch), spellAttack: spellAttack(ch), pool, masteryText: M.text||"" };
+    return { panel:p, lines, held:[...held], spellPower: power, spellAttack: spellAttack(ch), pool, masteryText: M.text||"" };
   }
   function addSpell(ch, spellId){
     const rows = grimoireRows(ch), s = spellById(spellId);
@@ -2815,7 +2835,7 @@ const Engine = (() => {
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,
-    spellForms, spellForm, grimoire, spellPower, spellAttack, addSpell, linkSpell, removeGrimoireRow,
+    spellForms, spellForm, grimoire, spellPower, spAmounts, spellAttack, addSpell, linkSpell, removeGrimoireRow,
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP,

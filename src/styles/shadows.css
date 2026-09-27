@@ -556,6 +556,10 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .grim-sp{margin:4px 0 12px; font-size:.9rem}
 .grim-sp b{font-family:var(--mono); color:var(--violet-hi); font-size:1.05rem}
 .grim-sp .sub{color:var(--dim); font-size:.78rem; margin-left:6px}
+/* W32: a Spell Power amount worked out, the book's words beside it */
+.sp-num{font-family:var(--mono); color:var(--violet-hi)}
+.sp-book{color:var(--dim)}
+.sp-tail{display:block; margin-top:4px; font-size:.84rem; color:var(--dim)}
 .spell{border:1px solid var(--frame); border-radius:4px; margin-bottom:6px; background:var(--panel)}
 .spell.mastered{border-color:var(--violet-hi)}
 .spell.missing{padding:8px 12px; color:var(--dim)}

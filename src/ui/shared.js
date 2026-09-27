@@ -12,6 +12,14 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // The currency sign, from the data (Decision 135), escaped once for markup.
 const CR = esc(Engine.creditSymbol());
+// W32: a Spell Power amount worked out (Engine.spAmounts), beside the book's
+// words that name it: "7 (½ SP Damage)", "+7" for an increase. `spTail` is
+// for prose too long to put in brackets, an Aberration's text. With no
+// amount, the book's words alone.
+const spTitle = a => `Your Spell Power is ${a.spellPower}${a.times%1?"; halves round up":""}.`;
+const spText = (a, text) => a ? `<b class="sp-num" title="${esc(spTitle(a))}">${a.adds?"+":""}${a.value}</b> <span class="sp-book">(${esc(text)})</span>` : esc(text);
+const spPart = n => n===1 ? "Spell Power" : n===0.5 ? "½ Spell Power" : `Spell Power × ${n}`;
+const spTail = a => a ? ` <span class="sp-tail" title="${esc(spTitle(a))}">${spPart(a.times)}: <b class="sp-num">${a.value}</b></span>` : "";
 
 // ── Iconography (loaded from shadows-icons.js) ──────────────────────
 // Brand stat icons keyed by stat/derived id; free-to-use UI icons keyed by
