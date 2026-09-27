@@ -3359,6 +3359,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** the CRB separates Black TAG from Ghost TAG, or TAGless lands and wants the same reader.
      - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W31), mutation-tested. Log 2026-09-26.
 
+147. **A Spell Power amount is a number on the sheet, worked out from a structured field beside the book's words, and halves round up.**
+     *2026-09-26 · Ken + Claude · Touches: sp, spAmounts, Spell Power, ½ SP, SP × 2, effect, overflow, defending, spells, cascadeTable, Backlash, aberrations, Electrocytes, Elemental Blood, Grimoire, spell picker, starting spells, Magic reference, W32*
+     - **Decided:** a spell, Cascade row or Aberration whose text names Spell Power carries `sp`, keyed by that text (`effect`, `defending`, `description`, or an `overflow` tier): `{ times }` for an amount, `{ adds }` for an increase. `Engine.spAmounts` works it out, rounding up, and the sheet shows **7** (½ SP Damage), or +7 for an increase, wherever the text shows; an Aberration's prose gets "½ Spell Power: 7" after it. Damage, absorption, Integrity and healing alike (Ken). No Spell Power, no number.
+     - **Why:** the player halved their own Spell Power at the table on every cast. The data writes it five ways, so the engine reads a field, never the prose (Decision 134's lesson), and a test keeps field and words together.
+     - **Rejected:**
+       - Parsing "½ SP" out of the text: the Focused Skills defect again (B12–B14).
+       - Damage only, as W32 was first written: absorption, Integrity and healing are the same arithmetic (Ken).
+       - A number for "1d SP" (Mend Flesh) and "SP + net Hits" (Force Armor): each hangs on a roll, so the book's words stand alone.
+       - A number on a Talisman's spell in Loadout: whose Spell Power it carries (the maker's or the bearer's) isn't written.
+     - **Replaces:** nothing.
+     - **Revisit if:** the CRB says how ½ SP rounds and it isn't up, or says whose Spell Power a Talisman carries.
+     - **Built:** app 0.31.0, game data 0.24; `engine.test.mjs` and `smoke.test.mjs` (W32), mutation-tested. Log 2026-09-26.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

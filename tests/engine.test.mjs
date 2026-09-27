@@ -271,7 +271,8 @@ const CODE = CODE_FILES.map(code).join("\n");
 // draws any array of plain objects on a power as a table, columns from keys).
 const MAPS = [/\.byPowerLevel$/, /^statRules\.modifiers$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
-  /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/];
+  /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/,
+  /\.sp(\.\*)?$/]; // W32: keyed by the text an amount sits beside, read by spAmounts
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
 const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$/;
@@ -1685,6 +1686,56 @@ test("grimoire() reads the book: numbers, a missing spell, and a typed name that
   assert.equal(g.lines[1].missing, true);
   same(g.lines[2].match, { id: "zap", name: "Zap" });
   assert.equal(g.lines[3].match, null, "offered to link a spell that's already in the Grimoire");
+});
+
+// ── W32: Spell Power in numbers ───────────────────────────────────────
+const spell = id => D.spells.find(s => s.id === id);
+
+test("spAmounts works out Spell Power: Dart at Spell Power 13 is 7, halves round up (W32)", () => {
+  const ch = subject(), at13 = { value: 13 };
+  const dart = Engine.spAmounts(ch, spell("dart"), at13);
+  same([dart.effect.value, dart.effect.adds, dart.overflow["1x"].value], [7, false, 13]);
+  const bolt = Engine.spAmounts(ch, spell("firebolt"), at13);
+  same([bolt.effect.value, bolt.overflow["1x"].value, bolt.overflow["1x"].adds], [13, 7, true], "an increase reads as one");
+  assert.equal(Engine.spAmounts(ch, spell("kinetic-ward"), at13).effect.value, 26, "SP × 2");
+  assert.equal(Engine.spAmounts(ch, spell("threshold-ward"), at13).defending.value, 7);
+  // Without the precomputed power it reads the character's own.
+  const own = Engine.spellPower(ch).value;
+  assert.equal(Engine.spAmounts(ch, spell("dart")).effect.value, Math.ceil(own / 2));
+  // The Grimoire carries it on the line.
+  ch.panelData.grimoire = [{ spellId: "dart", stage: "known", notes: "" }];
+  assert.equal(Engine.grimoire(ch).lines[0].sp.effect.value, Math.ceil(own / 2));
+});
+
+test("spAmounts is null without Spell Power, and ignores an amount that isn't one (W32)", () => {
+  const ch = subject();
+  ch.identity.archetype = null;
+  assert.equal(Engine.spellPower(ch), null);
+  assert.equal(Engine.spAmounts(ch, spell("dart")), null, "a number with no Spell Power to read");
+  const at = { value: 10 };
+  for (const bad of [null, 7, "x", { effect: null }, { effect: { times: -1 } }, { effect: { times: "½" } }, { effect: { adds: Infinity } }, { overflow: 3 }]){
+    const r = Engine.spAmounts(subject(), { sp: bad }, at);
+    assert.ok(r === null || (!r.effect && !Object.keys(r.overflow).length), `made a number of ${JSON.stringify(bad)}`);
+  }
+  assert.equal(Engine.spAmounts(ch, null, at), null);
+});
+
+test("every text that names Spell Power carries its amount, and every amount names a text (W32)", () => {
+  // The engine never reads the prose (the Focused Skills lesson, Decision
+  // 134); this is what keeps the structured field and the book's words
+  // together. "1d SP" and "SP + net Hits" hang on a roll, so the words stand alone.
+  const names = t => typeof t === "string" && /(\bSP\b|Spell Power)/.test(t) && !/1d SP|SP \+ net Hits/.test(t);
+  const gaps = [];
+  const check = (where, entry, fields) => {
+    const sp = entry.sp || {};
+    for (const k of fields) if (names(entry[k]) !== !!sp[k]) gaps.push(`${where}.${k}`);
+    for (const k of Object.keys(entry.overflow || {})) if (names(entry.overflow[k]) !== !!(sp.overflow || {})[k]) gaps.push(`${where}.overflow.${k}`);
+    for (const k of Object.keys(sp)) if (k !== "overflow" && !fields.includes(k)) gaps.push(`${where}.sp.${k} names no text`);
+  };
+  D.spells.forEach(s => check(s.id, s, ["effect", "defending"]));
+  D.cascadeTable.rows.forEach(r => check(r.id, r, ["effect"]));
+  D.aberrations.forEach(a => check(a.id, a, ["description"]));
+  same(gaps, []);
 });
 
 test("versionCheck matches a Mastery spend to its Grimoire row, not to skill IPE (B11)", () => {

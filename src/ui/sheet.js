@@ -495,7 +495,7 @@ function renderShArchetype(){
   if (abPerm.length){
     h += `<div class="sect">Permanent Aberrations</div>` + abPerm.map(x=>`<div class="pick selected"><div class="head"><h4>${esc(x.name)}</h4>
       ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
-      <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
+      <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
   }
 
   // Disciplines (computed ranks: scaling base + CP-bought), read-only
@@ -522,7 +522,7 @@ function renderShArchetype(){
   }
 
   // Reference panels (Decision 110): rules text straight from the data.
-  for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(p);
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p);
 
   h += `<p class="step-note" style="margin-top:18px">Tracker pools and editable manifests (grimoire, augments, forms) live on the <b>Loadout &amp; Powers</b> and <b>Trackers</b> tabs.</p>`;
   return h;
@@ -566,20 +566,20 @@ const REFERENCE_SECTIONS = {
   spellTiers: T => ({ title:"Spell tiers", html:
     `<table class="ref"><thead><tr><th>Tier</th><th>TN</th><th>TH</th><th></th></tr></thead><tbody>${T.map(t=>
       `<tr><td><b>${esc(t.name)}</b></td><td class="num">${t.tn}</td><td class="num">${t.th}</td><td>${esc(t.description||"")}</td></tr>`).join("")}</tbody></table>` }),
-  cascadeTable: T => ({ title:"The Cascade Table", html:
+  cascadeTable: (T, ch) => ({ title:"The Cascade Table", html:
     `<p>${esc(T.rollNote||"")}</p><table class="ref"><tbody>${(T.rows||[]).map(r=>
-      `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table>` }),
+      `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${spText((Engine.spAmounts(ch, r)||{}).effect, r.effect||"")}</td></tr>`).join("")}</tbody></table>` }),
   aberrationTable: A => {
     const cat = id => ((D.aberrationCategories||[]).find(c=>c.id===id)||{name:id}).name;
     return { title:"The Aberration Table", html:
       `<p>${esc(A.die||"")}. ${esc(A.note||"")}</p><table class="ref"><thead><tr><th>Roll</th><th>Temporary</th><th>Permanent</th></tr></thead><tbody>${(A.rows||[]).map(r=>
         `<tr><td class="num">${rangeLabel(r)}</td><td>${esc(cat(r.temporary))}</td><td>${esc(cat(r.permanent))}</td></tr>`).join("")}</tbody></table>` };
   },
-  aberrations: list => {
-    const R = D.aberrationRules||{};
+  aberrations: (list, ch) => {
+    const R = D.aberrationRules||{}, power = Engine.spellPower(ch);
     return { title:"Aberrations", html:
       `${R.intro?`<p>${esc(R.intro)}</p>`:""}${(D.aberrationCategories||[]).map(c=>`<div class="subsect">${esc(c.name)}</div><table class="ref"><tbody>${
-        list.filter(a=>a.category===c.id).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}</td></tr>`).join("")}</tbody></table>`).join("")}
+        list.filter(a=>a.category===c.id).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}${spTail((Engine.spAmounts(ch, a, power)||{}).description)}</td></tr>`).join("")}</tbody></table>`).join("")}
       ${R.permanent?`<p>${esc(R.permanent)}</p>`:""}` };
   },
 };
@@ -597,9 +597,9 @@ function spellcraftWorkings(R){
     <div class="subsect">Teaching</div><table class="ref"><tbody>${row("Taught", te.taught)}${row("Copied cold", te.copiedCold)}</tbody></table>` };
 }
 
-function referencePanelHtml(p){
+function referencePanelHtml(ch, p){
   // A section may draw more than one heading from its block (the Spellcraft rules do).
-  const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).flatMap(k=>REFERENCE_SECTIONS[k](D[k]));
+  const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).flatMap(k=>REFERENCE_SECTIONS[k](D[k], ch));
   if (!parts.length) return "";
   return `<div class="sect">${esc(p.title||"Reference")}</div><div class="reference" data-reference="${esc(p.id)}">` +
     parts.map(x=>`<details class="group"><summary>${esc(x.title)}</summary><div class="ref-body">${x.html}</div></details>`).join("") + `</div>`;
@@ -631,7 +631,7 @@ function aberrationsHtml(ch){
   const card = a => `<div class="pick cond-card"><div class="head"><h4>${esc(a.name)}</h4>
       ${a.category?`<span class="cost">${esc(a.category)}</span>`:""}
       <div class="controls"><button class="btn sm" data-abrm="${a.index}">${a.permanence==="permanent"?"Remove":"Clear"}</button></div></div>
-      <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description):"This Aberration isn't in the game data any more."}</div>
+      <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description)+spTail((Engine.spAmounts(ch, a.def)||{}).description):"This Aberration isn't in the game data any more."}</div>
       <input type="text" class="cond-note" data-abnote="${a.index}" value="${esc(a.note)}" placeholder="note: which Cascade, what it looks like on you" aria-label="${esc(a.name)} note"></div>`;
   let h = `<div class="sect">Aberrations</div>`;
   if (!st.active.length) h += `<p class="step-note cond-none">No Aberrations. ${esc(R.noStacking||"")}</p>`;
@@ -659,14 +659,14 @@ function aberrationPickerHtml(ch){
 }
 function aberrationResultsHtml(ch){
   const st = S.abPick, q = st.q.trim().toLowerCase();
-  const held = new Set(Engine.aberrationState(ch).active.map(a=>a.id));
+  const held = new Set(Engine.aberrationState(ch).active.map(a=>a.id)), power = Engine.spellPower(ch);
   const hit = a => !q || [a.name, a.as, a.description].some(s=>s && s.toLowerCase().includes(q));
   const html = (D.aberrationCategories||[]).map(c=>{
     const list = (D.aberrations||[]).filter(a=>a.category===c.id && hit(a));
     return list.length ? `<div class="subsect">${esc(c.name)}</div><div class="ab-cards">${list.map(a=>
       `<button class="ab-card${c.id==="bad"?" bad":""}" data-abpick="${esc(a.id)}" ${held.has(a.id)?"disabled":""}>
         <b>${esc(a.name)}</b>${held.has(a.id)?`<span class="why">You have it</span>`:""}
-        <span class="desc">${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}</span></button>`).join("")}</div>` : "";
+        <span class="desc">${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}${spTail((Engine.spAmounts(ch, a, power)||{}).description)}</span></button>`).join("")}</div>` : "";
   }).join("");
   return html || `<p class="step-note">Nothing matches.</p>`;
 }
@@ -1616,7 +1616,7 @@ function spellResultsHtml(ch, mode){
     return `<tr class="${a.why?"off":"pickrow"}">
       <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(glyphText(s.glyph))}${formNote(f)}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
       <td class="num">${esc(tnth({ tn:s.tn, th:f.th }))}${mode==="sheet" && pool && f.live && typeof f.th==="number" && f.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
-      <td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
+      <td>${esc(s.range||"")}</td><td>${spText((Engine.spAmounts(ch, s, g.spellPower)||{}).effect, s.effect||"")}</td>
       <td>${a.btn}</td></tr>`; }).join("") + `</tbody></table>`;
 }
 // The modal's body: filters and the status line, which stay in view while the
@@ -1647,15 +1647,15 @@ function grimoireHtml(ch, p){
   h += book.length ? book.map(l=>{
     if (l.missing) return `<div class="spell missing"><b>${esc(l.spellId)}</b> isn't in the book any more.
       <button class="x" data-spellrm="${l.index}" aria-label="Remove">✕</button></div>`;
-    const ov = l.overflow ? Object.entries(l.overflow).map(([k,v])=>`<li><b>${esc(k)}</b> ${esc(v)}</li>`).join("") : "";
+    const ov = l.overflow ? Object.entries(l.overflow).map(([k,v])=>`<li><b>${esc(k)}</b> ${spText(l.sp&&l.sp.overflow[k], v)}</li>`).join("") : "";
     return `<details class="spell${l.mastered?" mastered":""}"><summary>
         <b>${esc(l.name)}</b>${l.mastered?` <span class="chip">Mastered</span>`:""}
         <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(glyphText(l.glyph))}${formNote(l.form)}</span>
         <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>${l.beyondPool?`<span class="beyond" title="${esc(g.pool.text)}">Beyond your pool</span>`:""}
-        <span class="eff">${esc(l.effect||"")}</span></summary>
+        <span class="eff">${spText(l.sp&&l.sp.effect, l.effect||"")}</span></summary>
       <div class="spell-body">
         ${l.flavorLine?`<p class="flavor">${esc(l.flavorLine)}</p>`:""}
-        <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.duration&&`Duration: ${l.duration}`, l.defending&&`Defending: ${l.defending}`].filter(Boolean).map(esc).join(" · ")}</p>
+        <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.duration&&`Duration: ${l.duration}`].filter(Boolean).map(esc).concat(l.defending?[`Defending: ${spText(l.sp&&l.sp.defending, l.defending)}`]:[]).join(" · ")}</p>
         ${l.spellNotes?`<p>${esc(l.spellNotes)}</p>`:""}
         ${ov?`<ul class="overflow">${ov}</ul>`:""}
         ${l.tags.length?`<div class="tags">${tagChipsHtml(l.tags, "spelltag")}</div>`:""}

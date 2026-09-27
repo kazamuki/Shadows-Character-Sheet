@@ -455,7 +455,7 @@ function renderCP(){
         <span class="cost">${esc(l.tier)} · TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}</span>
         ${over?`<span class="cost over">needs ${esc(ss.discipline)} ${l.printedTH}</span>`:""}
         <div class="controls"><button class="toggle" data-startrm="${l.index}">Remove</button></div></div>
-        <div class="desc">${esc(l.effect||"")}</div></div>`;
+        <div class="desc">${spText(l.sp&&l.sp.effect, l.effect||"")}</div></div>`;
     }).join("");
     h += `<button class="btn" data-spellpickopen="wizard">Choose from the book</button>`;
   }
