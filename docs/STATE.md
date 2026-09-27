@@ -106,7 +106,7 @@ is the authority on a flag's full text.
 | **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked; three Origins and four Trueborn powers unwritten |
 | **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · catalog matches the whole 2026-09-24 book, Inscribed Spells included (Decision 136) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
-| **Print sheet — visual system** | 🔶 redesigned (Decision 94) · one known cosmetic defect | Scott: a finished export (portrait vs. landscape is decided once it lands). The frame/texture print defect blocks on no one |
+| **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
 F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling;
 don't ask it separately.
@@ -140,7 +140,7 @@ and W39.
 - **Design team:** F8, being playtested, and W34–W37 with it.
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31, F33 and F34 — plus
   W39's two halves. Each flag's stub and question are in `SCHEMA.md` §5.
-- **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), the print export.
+- **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103); the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab).
 
 **For Scott, from the Book of Known Spells** (R14 checks the catalog against
 it): it dropped Counterspell and Silence (kept: Magic still uses Counterspell);
