@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-26
-**Versions:** app `0.30.0` · game data `0.24` · character schema `0.14` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.31.0` · game data `0.24` · character schema `0.14` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,7 +41,7 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -98,7 +98,7 @@ is the authority on a flag's full text.
 | Area | Status | Waiting on |
 |---|---|---|
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
-| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
+| **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
 | **Creation-pool economics** — F8, W34–W37 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker. The 2026-09-24 meeting added a climbing-cost stat buy (W34), a flat pool per Campaign level (W35) and starting LUCK 6, maybe by level (W37). Settle them with F8 (W36) as one ruling |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -131,14 +131,14 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.30.0** (data 0.23, schema 0.13): Reload from what you carry
-(145) and the Ghost TAG label (146). Ken alone: F9, F12, F13, F32 and
-**W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3). The wishlist: W29, W32,
-W34–W37, W39, and W40 (specialty rounds) and W41 (TAGless), both schema bumps.
+**The live site is v0.30.0.** 0.31.0 (data 0.24, schema 0.14) waits to be released:
+Spell Power in numbers (147), TAGless (148) and specialty rounds (149). Ken alone: F9, F12, F13, F32 and
+**W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3). The wishlist: W29, W34–W37
+and W39.
 
 **Waiting on others:**
 - **Design team:** F8, being playtested, and W34–W37 with it.
-- **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31 and F33 — plus
+- **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31, F33 and F34 — plus
   W39's two halves. Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103), the print export.
 
@@ -168,7 +168,7 @@ questions' history is in `plans/combat-and-conditions.md` §6):
 - **041, Master of None:** say whether "up to rank 4" is the rank bought (the
   app's reading, Ken's answer: 4 → 5 is standard). The Mercenary's "Handgun"
   and the Slayer's and True Warrior's "Occult" are Handguns and Occult Lore.
-- **Magic:** say how ½ Spell Power rounds (up, per Ken; W32).
+- **Magic:** say how ½ Spell Power rounds (up, per Ken; the sheet does, Decision 147).
 - **043:** 15 Advantages are tagged "Universal" (Common Sense, Lucky…) and the
   chapter never says what that means. The data keeps the tag, unread.
 - **The new-skill price** (a flat 25 IP, Decision 97) and **the stat curve

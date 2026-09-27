@@ -179,6 +179,49 @@ never changes. What it needs first: a way to mark a character TAGless, which
 the data doesn't have, and whether that's a player choice or a GM one. Holding
 Ghost TAG is already on the character, so that half could come first.
 
+**W40 — Load the round you mean.** *Claude · → Decision 149, app 0.31.0: specialty rounds stay loaded with their tags; Reload asks which; F34 open*
+Raised 2026-09-26, the half of W30 left over. Reload takes standard rounds from
+what you carry, but Silver Rounds, Holy Points and Angel Rounds never leave the
+gear list: they change the weapon's tags (Withering, +4 DMG, AP…), so the sheet
+has to know which kind is in the magazine. 053 lets a Reload swap types once a
+turn. The idea: a weapon row remembers what's loaded (`loaded: "silver-rounds"`),
+its line shows that ammo's tags, and Reload asks which when more than one kind
+fits. What it has to respect: that's a character-schema bump with a
+`migrate()` step; specialty rounds are priced "3× standard", so their `reload`
+names the same weapons as the standard kind; Angel Rounds only fire from a
+weapon with the Angel Mod (F26's stub decides which weapons can take it).
+
+**W41 — A TAGless character.** *Ken · → Decision 148, app 0.31.0: TAG'd or TAGless on the Identity step and in Admin; the TAG reads Off grid*
+Raised 2026-09-24 as W31's other half. Gear calls going TAGless "a legitimate
+choice": no government identity, the skrip economy, no 625Ç UBI. A Ghost TAG
+already labels the TAG (Decision 146); a TAGless character still shows a plain
+one. The idea: a TAGless/TAG'd choice on the Identity step, the player's like
+their name, and the label reads differently (e.g. "TAG on file" or "Off grid",
+a voice pass). The stored number never changes; every file needs it. What it
+has to respect: a new field on the character is a schema bump and a
+`migrate()` step defaulting to TAG'd, and `tagReading` should answer for it
+rather than a second reader. The app doesn't compute UBI, so nothing else moves.
+
+**W32 — Spell damage in numbers.** *Ken · → Decision 147, app 0.31.0: every plain Spell Power amount, damage or not, rounded up*
+Raised 2026-09-24. A spell's effect reads "½ SP Damage", and the player works
+out their own Spell Power and halves it at the table, every cast. The idea:
+the sheet does the arithmetic and keeps the book's words beside it, so with
+Spell Power 13, Dart reads **7 (½ SP Damage)**. Halves round up for damage
+(Ken). Wherever a spell's effect or overflow shows: the Grimoire, the spell
+picker, Main. The Aberrations and the Cascade table name Spell Power damage
+too (Backlash, Electrocytes, Elemental Blood).
+What it has to respect:
+- **Don't parse the prose.** The data writes it five ways ("½ SP", "½ Spell
+  Power", "Full Spell Power", bare "SP", "Spell Power"). That's the Focused
+  Skills lesson (B12–B14, Decision 134). A structured field, e.g. `damage: {
+  sp: 0.5 }` on the effect and each overflow row, is what the engine should
+  read. The text stays as the book's words.
+- **Rounding isn't in the CRB.** Magic and the spell appendix never say how
+  to round ½ SP. "Round up" wants a line in the CRB (Ken's), so the sheet
+  isn't the only place it's written.
+- **Spell Power can be null** (no Evocation rank), and the engine is total:
+  the book text alone shows then.
+
 ### Theme & polish
 
 **W7 — Primary buttons are unreadable in light mode.** *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
