@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.31.0
+## v0.31.0 — 2026-09-27
 
 - **Spell Power, worked out.** Wherever a spell says "½ SP Damage" or "Spell Power × 2", the
   sheet shows the number beside it: with Spell Power 13, Dart reads **7** (½ SP Damage).
