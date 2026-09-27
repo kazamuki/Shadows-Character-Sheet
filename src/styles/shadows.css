@@ -627,6 +627,12 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .lo-rounds .rounds small{color:var(--dim)}
 .lo-rounds .fire{display:inline-flex; gap:3px; flex-wrap:wrap; vertical-align:middle}
 .lo-rounds .fire .btn.sm{padding:3px 8px}
+/* W40: the specialty rounds in the magazine, and Reload's "which rounds?" */
+.lo-rounds .loaded{display:block; margin-top:3px; font-family:var(--mono); font-size:.7rem; letter-spacing:.06em; color:var(--magenta)}
+.ammo-pick{display:flex; flex-direction:column; gap:8px}
+.ammo-opt{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 10px; border:1px solid var(--frame); border-radius:4px; background:var(--panel)}
+.ammo-opt .sub{color:var(--dim); font-size:.8rem}
+.ammo-opt .tags{margin-top:4px}
 tr.lo-modrow td{border-top:0; padding-top:0}
 .main-combat .lo-rounds{white-space:normal} .main-combat .lo-rounds .fire{margin-top:3px}
 /* Gear (Decision 121): catalog rows count what's carried. */

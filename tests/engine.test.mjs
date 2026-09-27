@@ -2121,6 +2121,60 @@ test("W30: Reload takes a mag (or a shell a round) of what fits from what you ca
   assert.equal(Engine.weaponLine(gl, 0).reloadFrom, undefined);
 });
 
+test("W40: with two kinds carried Reload asks which, and specialty rounds stay loaded, their tags on the line", () => {
+  const ch = armed("ads-lp9-viper", { roundsSpent: 5 });
+  ch.gear.push({ id: "handgun-rounds", qty: 2, notes: "" }, { id: "silver-rounds", qty: 1, notes: "" });
+  const ask = Engine.reloadWeapon(ch, 0);
+  same([ask.ok, ask.choose, ask.options.map(o => o.id)], [false, true, ["handgun-rounds", "silver-rounds"]]);
+  assert.equal(ask.options[0].loaded, true, "standard rounds aren't what a weapon with nothing named holds");
+  assert.equal(ch.weapons[0].roundsSpent, 5, "asking changed the magazine");
+  const r = Engine.reloadWeapon(ch, 0, { ammo: "silver-rounds" });
+  same([r.ok, r.loaded, r.swapped, r.left], [true, "silver-rounds", true, 16]);
+  assert.equal(Engine.carriedGear(ch, "silver-rounds"), null, "the silver mag didn't come off what's carried");
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.loaded.name, "Silver Rounds");
+  assert.ok(l.tags.includes("Withering (Lycanthropes)"), "the loaded rounds' tag isn't on the line");
+  // Full, it reloads only to swap, and always asks.
+  const full = Engine.reloadWeapon(ch, 0);
+  same([full.choose, full.options.map(o => o.id)], [true, ["handgun-rounds"]], "a full weapon offered what's already in it");
+  assert.equal(Engine.reloadWeapon(ch, 0, { ammo: "handgun-rounds" }).loaded, null);
+  assert.equal(ch.weapons[0].loaded, undefined, "standard rounds are remembered as something");
+  assert.ok(!Engine.weaponLine(ch, 0).tags.includes("Withering (Lycanthropes)"), "the tag outlived its rounds");
+  assert.match(Engine.reloadWeapon(ch, 0).why, /already full/, "full of standard rounds with no specialty carried, and it reloaded");
+  // Reloading from nothing forgets what was loaded.
+  ch.weapons[0].loaded = "silver-rounds"; ch.weapons[0].roundsSpent = 3; ch.gear = [];
+  Engine.reloadWeapon(ch, 0, { anyway: true });
+  assert.equal(ch.weapons[0].loaded, undefined);
+});
+
+test("W40: specialty rounds fit what Gear says, and the Angel Mod fires Angel Rounds only (F26's stub)", () => {
+  const fits = (id, mods = []) => { const ch = armed(id, { mods, roundsSpent: 1 });
+    for (const a of ["silver-rounds", "holy-points", "angel-rounds", "handgun-rounds", "rifle-rounds"]) ch.gear.push({ id: a, qty: 1, notes: "" });
+    const r = Engine.reloadWeapon(ch, 0);
+    return r.choose ? r.options.map(o => o.id) : r.ammo; };
+  same(fits("ads-lp9-viper"), ["handgun-rounds", "silver-rounds", "holy-points"]);
+  same(fits("vr8-sentinel"), ["rifle-rounds", "silver-rounds"], "Holy Points are handgun only");
+  same(fits("sg88-siege-breaker"), ["Shotgun Shells"], "a shotgun takes no specialty round while F26 stands");
+  same(fits("ads-lp9-viper", ["Angel Mod"]), ["Angel Rounds"], "an Angel Mod loaded something besides Angel Rounds");
+  const ch = armed("ads-lp9-viper", { mods: ["Angel Mod"], roundsSpent: 1 });
+  ch.gear.push({ id: "handgun-rounds", qty: 1, notes: "" });
+  assert.match(Engine.reloadWeapon(ch, 0).why, /You carry no Angel Rounds\./);
+  ch.gear.push({ id: "angel-rounds", qty: 1, notes: "" });
+  assert.equal(Engine.reloadWeapon(ch, 0).loaded, "angel-rounds");
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.loaded.name, "Angel Rounds");
+  assert.ok(!l.tags.includes("+4 DMG"), "the mod's own damage came back as a tag");
+});
+
+test("W40: migrate() keeps a loaded round's id and drops anything else (schema 0.14)", () => {
+  const ch = armed("ads-lp9-viper", { loaded: "silver-rounds" });
+  Engine.addLoadout(ch, "weapons", "ads-lp9-viper"); ch.weapons[1].loaded = 7;
+  ch.weapons.push({ custom: true, name: "Zip gun", loaded: "silver-rounds" });
+  const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  same(m.weapons.map(w => w.loaded), ["silver-rounds", undefined, undefined]);
+  same(Engine.migrate(JSON.parse(JSON.stringify(m))).weapons[0].loaded, "silver-rounds", "a round trip lost it");
+});
+
 test("W16: mods fill the weapon's fixed slots, fit only what Gear says they fit, and change the line", () => {
   const ch = armed("ads-lp9-viper");                   // 2 slots, handgun
   const opt = id => Engine.weaponModOptions(ch, 0).options.find(o => o.id === id);
