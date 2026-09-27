@@ -12,6 +12,14 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // The currency sign, from the data (Decision 135), escaped once for markup.
 const CR = esc(Engine.creditSymbol());
+// W32: a Spell Power amount worked out (Engine.spAmounts), beside the book's
+// words that name it: "7 (½ SP Damage)", "+7" for an increase. `spTail` is
+// for prose too long to put in brackets, an Aberration's text. With no
+// amount, the book's words alone.
+const spTitle = a => `Your Spell Power is ${a.spellPower}${a.times%1?"; halves round up":""}.`;
+const spText = (a, text) => a ? `<b class="sp-num" title="${esc(spTitle(a))}">${a.adds?"+":""}${a.value}</b> <span class="sp-book">(${esc(text)})</span>` : esc(text);
+const spPart = n => n===1 ? "Spell Power" : n===0.5 ? "½ Spell Power" : `Spell Power × ${n}`;
+const spTail = a => a ? ` <span class="sp-tail" title="${esc(spTitle(a))}">${spPart(a.times)}: <b class="sp-num">${a.value}</b></span>` : "";
 
 // ── Iconography (loaded from shadows-icons.js) ──────────────────────
 // Brand stat icons keyed by stat/derived id; free-to-use UI icons keyed by
@@ -604,10 +612,18 @@ function intakeBarsSvg(id){
   bar(1); bar(1);
   return `<svg class="intake-bars" viewBox="0 0 ${x} 20" width="${Math.round(x*1.4)}" height="20" preserveAspectRatio="none" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true">${bars}</svg>`;
 }
+// W41: TAG'd or TAGless, the player's pick like their name: the Identity
+// step and Admin draw the same toggle, each binding its own `attr`.
+function taglessToggleHtml(ch, attr){
+  const C = (D.tag||{}).choice||{}, off = !!ch.identity.tagless;
+  return `<div class="field tag-choice"><span>TAG</span><div class="form-toggle" role="group" aria-label="TAG">${[["tagged",false],["tagless",true]].map(([k,v])=>
+      `<button type="button" data-${attr}="${v?1:0}" class="${off===v?"on":""}" aria-pressed="${off===v}">${esc((C[k]||{}).name||k)}</button>`).join("")}</div>
+    <p class="step-note">${esc((C[off?"tagless":"tagged"]||{}).text||"")}</p></div>`;
+}
 // W31: a Ghost TAG says so over the number, and hovering says what it is.
 function intakeHtml(ch){
   const id = intakeOf(ch), r = Engine.tagReading(ch);
-  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : "Trusted Authentication Gateway")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
+  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
 }
 
 // C4: what versionCheck found when this character was loaded. Content the

@@ -155,6 +155,11 @@ button.card:hover{border-color:var(--violet-hi)}
 label.field{display:block; margin-bottom:14px}
 label.field span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
   text-transform:uppercase; color:var(--dim); margin-bottom:5px}
+/* W41: TAG'd or TAGless, a field that's a toggle rather than a box */
+.tag-choice{margin-bottom:14px}
+.tag-choice > span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin-bottom:5px}
+.tag-choice .form-toggle{width:max-content}
+.tag-choice .step-note{margin:6px 0 0}
 input[type=text],input[type=search],input[type=number],input[type=date],textarea,select{
   width:100%; background:var(--ground); border:1px solid var(--frame); border-radius:4px;
   padding:9px 11px; font-size:.92rem}
@@ -556,6 +561,10 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .grim-sp{margin:4px 0 12px; font-size:.9rem}
 .grim-sp b{font-family:var(--mono); color:var(--violet-hi); font-size:1.05rem}
 .grim-sp .sub{color:var(--dim); font-size:.78rem; margin-left:6px}
+/* W32: a Spell Power amount worked out, the book's words beside it */
+.sp-num{font-family:var(--mono); color:var(--violet-hi)}
+.sp-book{color:var(--dim)}
+.sp-tail{display:block; margin-top:4px; font-size:.84rem; color:var(--dim)}
 .spell{border:1px solid var(--frame); border-radius:4px; margin-bottom:6px; background:var(--panel)}
 .spell.mastered{border-color:var(--violet-hi)}
 .spell.missing{padding:8px 12px; color:var(--dim)}
@@ -618,6 +627,12 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .lo-rounds .rounds small{color:var(--dim)}
 .lo-rounds .fire{display:inline-flex; gap:3px; flex-wrap:wrap; vertical-align:middle}
 .lo-rounds .fire .btn.sm{padding:3px 8px}
+/* W40: the specialty rounds in the magazine, and Reload's "which rounds?" */
+.lo-rounds .loaded{display:block; margin-top:3px; font-family:var(--mono); font-size:.7rem; letter-spacing:.06em; color:var(--magenta)}
+.ammo-pick{display:flex; flex-direction:column; gap:8px}
+.ammo-opt{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 10px; border:1px solid var(--frame); border-radius:4px; background:var(--panel)}
+.ammo-opt .sub{color:var(--dim); font-size:.8rem}
+.ammo-opt .tags{margin-top:4px}
 tr.lo-modrow td{border-top:0; padding-top:0}
 .main-combat .lo-rounds{white-space:normal} .main-combat .lo-rounds .fire{margin-top:3px}
 /* Gear (Decision 121): catalog rows count what's carried. */

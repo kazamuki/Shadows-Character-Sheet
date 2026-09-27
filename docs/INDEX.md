@@ -141,6 +141,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F31` | Reach (weapon tag): what it adds to the Reach column | Deighton |
 | `F32` | Arcanist Major Milestones: bring in REF_CRB's, or wait for 041? | Ken |
 | `F33` | Jack of All Trades: does "treated as Focused" raise every skill's starting cap, and open Skill Paragon to any skill? Stubbed: the price only | Deighton |
+| `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
@@ -257,7 +258,8 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **133** *(The TAG)* — `meta.id` is `TAG-XXXX-XXXX-XXXX`, shown as itself; a 0.11 `NCR-` number keeps its twelve characters under the new prefix; schema 0.12. → **superseded in part by 146**
 - **141** *(The roster — R10, AQ5)* — one `localStorage` entry per TAG, draft through locked; Home lists them with Open, Export and Remove and marks play no file holds; only an older copy of the same character asks before it replaces.
 - **142** *(The natural-advantage marker — A11)* — a Professional's free advantage is `source: "natural"`, not a note; schema 0.13 moves the old marker, in the undo history too.
-- **146** *(Ghost TAG reads — W31)* — an Advantage held with `tagReads` labels the TAG and says what it is; Ghost TAG does, and Black TAG is the same counterfeit. The number never moves.
+- **146** *(Ghost TAG reads — W31)* — an Advantage held with `tagReads` labels the TAG and says what it is; Ghost TAG does, and Black TAG is the same counterfeit. The number never moves. → **superseded in part by 148**
+- **148** *(TAGless — W41)* — `identity.tagless` (schema 0.14) is picked on the Identity step and in Admin; `tagReading` labels the TAG "Off grid" from the data's `tag`, a Ghost TAG's label wins and its tip says both.
 - **143** *(Warding by kind — W28)* — Elemental, Spirit and Aether replace the Magical damage type, each with its own Warding upgrade; Gear's one Warding is retired and still answers all three where installed; Self-mending is text.
 
 ### Engine contracts
@@ -314,13 +316,15 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **114** *(Jump bars — W5, W22)* — `sectionList` headings feed a bar that jumps to each section a page drew (archetype panels included) and focuses it; step 7's bar sticks, filters Advantages/Disadvantages keeping what you hold, and shows the CP left.
 - **115** *(The GM runs the Cascade)* — The Cascade panel gives the instruction (d10 + Rupture degree, tell your GM) and opens one Aberration picker, a modal of cards with each one's text, also used by Trackers' Add. The pick's note is dated; nothing goes into Notes. `recordCascade`/`logCascade` removed; the tables stay in the reference.
 - **116** *(Spell tag AP)* — `AP` on a spell means Armor Piercing, as the weapon tag does (skips RES, PROT still rolls). Unflagged; Iron Lance's own effect already said so.
+- **147** *(Spell Power in numbers — W32)* — a spell, Cascade row or Aberration naming Spell Power carries `sp` ({ times } or { adds }) keyed by its text; `Engine.spAmounts` rounds up, and the sheet shows the number beside the book's words.
 - **112** *(Modals, the skill line and Trackers' layout — wishlist pass)* — The modal gains a sticky footer and is centred; W6 Take a hit in the modal, Apply disabled with its reason; W23–W26 row click, dimmed rows that say why, sticky search, Done; W20/W21 a skill's stats as icons with the character's numbers; W1/W10 Trackers in two columns, the HL track in Damage banded by Pain Level.
 - **117** *(Let a hit land — W15)* — `commit()` notes when damage went up; the next render flashes the HP readouts and the Health Level boxes that took it, twice on Pain if its level rose, once only, never on heal or undo, none under reduced motion.
 - **118** *(The catalog browser — W4)* — Loadout's pickers are a modal: search, section, What I can afford, sort, and every number before Add/Buy from `Engine.catalogLine()`, the reader Loadout's own rows share. Buy says why it's off; a row click opens its details.
 - **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal.
 - **120** *(Weapon mods and rounds — W16)* — Schema 0.10: `weapons[i].mods` and `roundsSpent`. Single/Burst/Full Auto spend 1/3/10 (053) from a capacity read as its number + chambered round; Fire and Reload on Loadout and Main. Mods fill fixed slots, fit per data (`onlyFor`/`notFor`), add tags and damage; a sight's ACC is aimed, apart from Single's. F26 opened. → **superseded in part by 145**
 - **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog. → **superseded in part by 143**
-- **145** *(Reload from what you carry — W30)* — ammo's `reload` names what it fits and whether a unit fills the magazine or one round; Reload takes it from the gear you carry, and with none asks "Reload anyway?" and says so in the audit.
+- **145** *(Reload from what you carry — W30)* — ammo's `reload` names what it fits and whether a unit fills the magazine or one round; Reload takes it from the gear you carry, and with none asks "Reload anyway?" and says so in the audit. → **superseded in part by 149**
+- **149** *(Load the round you mean — W40)* — `weapons[i].loaded` (schema 0.14) holds a specialty round; its tags join the line; Reload asks which kind, a full weapon reloads to swap; Angel Rounds need the Angel Mod, which fires only them. F34 opened.
 - **122** *(Main is the fight view — W13)* — Main's Combat column leads with the weapons you carry (Fire/Reload), then the armor, then the combat skills; no separate fight mode, and no invented Defense number.
 - **139** *(Rules a tap away — A10, C5, AQ4)* — one tip primitive reads tags (`Engine.glossary`), stat ranges and rules text on hover or tap; Lineage, How a check works and the whole Magic reference render; Ammo is an equipment category; `notice()` and `askFirst()` replace `alert()` and `confirm()`.
 - **140** *(The header — B19, AQ10)* — two thin rows: the name with ⋮ and theme, then the tabs in one line that scrolls sideways (active tab kept in view, fades, mouse wheel); a long name ends in "…", the `Shadows //` prefix goes below 480 px, and the header un-sticks below 540 px tall.
