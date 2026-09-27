@@ -2,6 +2,16 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.31.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Spell Power, worked out.** Wherever a spell says \"½ SP Damage\" or \"Spell Power × 2\", the sheet shows the number beside it: with Spell Power 13, Dart reads **7** (½ SP Damage). Halves round up. Increases read as **+7**, and absorption, Integrity and healing get the same treatment. It shows in your Grimoire, the spell picker, the Cascade table and the Aberrations that deal Spell Power damage.",
+      "**Load the round you mean.** Silver Rounds, Holy Points and Angel Rounds now load. When you carry more than one kind that fits, **Reload** asks which. The weapon remembers specialty rounds and adds their tags to its line, and you can swap back even with a full magazine. Angel Rounds need the Angel Mod, and a gun with one fires nothing else.",
+      "**Go TAGless.** The Identity step asks whether your character is TAG'd or TAGless. A TAGless character's TAG reads **Off grid** wherever it shows. Change it later in Admin mode. Characters from before are TAG'd."
+    ]
+  },
+  {
     "version": "0.30.0",
     "date": "2026-09-26",
     "intro": [],
