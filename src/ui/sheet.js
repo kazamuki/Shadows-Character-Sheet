@@ -495,7 +495,7 @@ function renderShArchetype(){
   if (abPerm.length){
     h += `<div class="sect">Permanent Aberrations</div>` + abPerm.map(x=>`<div class="pick selected"><div class="head"><h4>${esc(x.name)}</h4>
       ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
-      <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
+      <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
   }
 
   // Disciplines (computed ranks: scaling base + CP-bought), read-only
@@ -522,7 +522,7 @@ function renderShArchetype(){
   }
 
   // Reference panels (Decision 110): rules text straight from the data.
-  for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(p);
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p);
 
   h += `<p class="step-note" style="margin-top:18px">Tracker pools and editable manifests (grimoire, augments, forms) live on the <b>Loadout &amp; Powers</b> and <b>Trackers</b> tabs.</p>`;
   return h;
@@ -566,20 +566,20 @@ const REFERENCE_SECTIONS = {
   spellTiers: T => ({ title:"Spell tiers", html:
     `<table class="ref"><thead><tr><th>Tier</th><th>TN</th><th>TH</th><th></th></tr></thead><tbody>${T.map(t=>
       `<tr><td><b>${esc(t.name)}</b></td><td class="num">${t.tn}</td><td class="num">${t.th}</td><td>${esc(t.description||"")}</td></tr>`).join("")}</tbody></table>` }),
-  cascadeTable: T => ({ title:"The Cascade Table", html:
+  cascadeTable: (T, ch) => ({ title:"The Cascade Table", html:
     `<p>${esc(T.rollNote||"")}</p><table class="ref"><tbody>${(T.rows||[]).map(r=>
-      `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${esc(r.effect||"")}</td></tr>`).join("")}</tbody></table>` }),
+      `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${spText((Engine.spAmounts(ch, r)||{}).effect, r.effect||"")}</td></tr>`).join("")}</tbody></table>` }),
   aberrationTable: A => {
     const cat = id => ((D.aberrationCategories||[]).find(c=>c.id===id)||{name:id}).name;
     return { title:"The Aberration Table", html:
       `<p>${esc(A.die||"")}. ${esc(A.note||"")}</p><table class="ref"><thead><tr><th>Roll</th><th>Temporary</th><th>Permanent</th></tr></thead><tbody>${(A.rows||[]).map(r=>
         `<tr><td class="num">${rangeLabel(r)}</td><td>${esc(cat(r.temporary))}</td><td>${esc(cat(r.permanent))}</td></tr>`).join("")}</tbody></table>` };
   },
-  aberrations: list => {
-    const R = D.aberrationRules||{};
+  aberrations: (list, ch) => {
+    const R = D.aberrationRules||{}, power = Engine.spellPower(ch);
     return { title:"Aberrations", html:
       `${R.intro?`<p>${esc(R.intro)}</p>`:""}${(D.aberrationCategories||[]).map(c=>`<div class="subsect">${esc(c.name)}</div><table class="ref"><tbody>${
-        list.filter(a=>a.category===c.id).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}</td></tr>`).join("")}</tbody></table>`).join("")}
+        list.filter(a=>a.category===c.id).map(a=>`<tr><td><b>${esc(a.name)}</b></td><td>${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}${spTail((Engine.spAmounts(ch, a, power)||{}).description)}</td></tr>`).join("")}</tbody></table>`).join("")}
       ${R.permanent?`<p>${esc(R.permanent)}</p>`:""}` };
   },
 };
@@ -597,9 +597,9 @@ function spellcraftWorkings(R){
     <div class="subsect">Teaching</div><table class="ref"><tbody>${row("Taught", te.taught)}${row("Copied cold", te.copiedCold)}</tbody></table>` };
 }
 
-function referencePanelHtml(p){
+function referencePanelHtml(ch, p){
   // A section may draw more than one heading from its block (the Spellcraft rules do).
-  const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).flatMap(k=>REFERENCE_SECTIONS[k](D[k]));
+  const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).flatMap(k=>REFERENCE_SECTIONS[k](D[k], ch));
   if (!parts.length) return "";
   return `<div class="sect">${esc(p.title||"Reference")}</div><div class="reference" data-reference="${esc(p.id)}">` +
     parts.map(x=>`<details class="group"><summary>${esc(x.title)}</summary><div class="ref-body">${x.html}</div></details>`).join("") + `</div>`;
@@ -631,7 +631,7 @@ function aberrationsHtml(ch){
   const card = a => `<div class="pick cond-card"><div class="head"><h4>${esc(a.name)}</h4>
       ${a.category?`<span class="cost">${esc(a.category)}</span>`:""}
       <div class="controls"><button class="btn sm" data-abrm="${a.index}">${a.permanence==="permanent"?"Remove":"Clear"}</button></div></div>
-      <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description):"This Aberration isn't in the game data any more."}</div>
+      <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description)+spTail((Engine.spAmounts(ch, a.def)||{}).description):"This Aberration isn't in the game data any more."}</div>
       <input type="text" class="cond-note" data-abnote="${a.index}" value="${esc(a.note)}" placeholder="note: which Cascade, what it looks like on you" aria-label="${esc(a.name)} note"></div>`;
   let h = `<div class="sect">Aberrations</div>`;
   if (!st.active.length) h += `<p class="step-note cond-none">No Aberrations. ${esc(R.noStacking||"")}</p>`;
@@ -659,14 +659,14 @@ function aberrationPickerHtml(ch){
 }
 function aberrationResultsHtml(ch){
   const st = S.abPick, q = st.q.trim().toLowerCase();
-  const held = new Set(Engine.aberrationState(ch).active.map(a=>a.id));
+  const held = new Set(Engine.aberrationState(ch).active.map(a=>a.id)), power = Engine.spellPower(ch);
   const hit = a => !q || [a.name, a.as, a.description].some(s=>s && s.toLowerCase().includes(q));
   const html = (D.aberrationCategories||[]).map(c=>{
     const list = (D.aberrations||[]).filter(a=>a.category===c.id && hit(a));
     return list.length ? `<div class="subsect">${esc(c.name)}</div><div class="ab-cards">${list.map(a=>
       `<button class="ab-card${c.id==="bad"?" bad":""}" data-abpick="${esc(a.id)}" ${held.has(a.id)?"disabled":""}>
         <b>${esc(a.name)}</b>${held.has(a.id)?`<span class="why">You have it</span>`:""}
-        <span class="desc">${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}</span></button>`).join("")}</div>` : "";
+        <span class="desc">${a.as?`<i>As ${esc(a.as)}.</i> `:""}${esc(a.description)}${spTail((Engine.spAmounts(ch, a, power)||{}).description)}</span></button>`).join("")}</div>` : "";
   }).join("");
   return html || `<p class="step-note">Nothing matches.</p>`;
 }
@@ -1433,11 +1433,30 @@ function roundsHtml(l, capacityText){
   return `<span class="rounds${r.left===0?" empty":""}" title="Rounds left of ${r.max}">${r.left}<small>/${r.max}</small></span>
     <span class="fire">${modes.map(f=>`<button class="btn sm" data-fire="${l.index}|${esc(f.id)}" ${r.left<f.rounds?"disabled":""}
       aria-label="Fire ${esc(f.name)}, ${f.rounds} round${f.rounds===1?"":"s"}" title="${esc(f.name)}: ${f.rounds} round${f.rounds===1?"":"s"}">${esc(f.id||"−1")}</button>`).join("")}
-    <button class="btn sm${l.reloadFrom && !l.reloadFrom.carried?" dry":""}" data-reload="${l.index}" ${r.spent?"":"disabled"} title="${esc(reloadTitle(l.reloadFrom))}">Reload</button></span>`;
+    <button class="btn sm${l.reloadFrom && !l.reloadFrom.carried?" dry":""}" data-reload="${l.index}" ${r.spent || (l.reloadFrom && l.reloadFrom.swap)?"":"disabled"} title="${esc(reloadTitle(l.reloadFrom))}">Reload</button></span>${
+    l.loaded?`<span class="loaded" title="Loaded">${esc(l.loaded.name)}</span>`:""}`;
 }
 // W30: what Reload takes from, and how much of it is on the sheet.
 const plural = (n, unit) => `${n} ${unit||"unit"}${n===1?"":"s"}`;
-const reloadTitle = f => !f ? "Fill the magazine" : f.carried ? `${f.ammo[0]}: ${plural(f.carried, f.unit)} carried` : `You carry no ${f.ammo.join(" or ")}`;
+const reloadTitle = f => !f ? "Fill the magazine" : f.kinds>1 ? `Carried: ${f.ammo.join(", ")}` : f.carried ? `${f.ammo[0]}: ${plural(f.carried, f.unit)} carried` : `You carry no ${f.ammo.join(" or ")}`;
+// W40: the audit line for a reload, naming the rounds when a swap loaded them.
+const reloadAudit = (name, p) => `${p.swapped ? `Loaded ${name} with ${p.ammo[0]}` : `Reloaded ${name}`} (${p.left}/${p.max})${p.used ? `, −${plural(p.used, p.unit)} of ${p.ammo[0]}` : ""}`;
+// W40: more than one kind of rounds fits, so Reload asks which. A swap says
+// what happens to the rounds left, which is still being settled (F34).
+function reloadChooser(ch, i, name, pre){
+  const sw = (D.weaponRules||{}).swap||{};
+  const left = pre.left ? `<p class="step-note">${esc(sw.text||"")} ${plural(pre.left, "round")} left in it now.</p>${sw.flagged ? flagHtml(sw) : ""}` : "";
+  openModal({ title:`Load ${name}`, html: `<div class="ammo-pick">${pre.options.map(o=>`<div class="ammo-opt">
+      <div><b>${esc(o.name)}</b> <span class="sub">${plural(o.qty, o.unit)} carried${o.loaded?" · in it now":""}</span>${o.tags.length?`<div class="tags">${tagChipsHtml(o.tags)}</div>`:""}</div>
+      <button class="btn sm" data-loadammo="${esc(o.id)}">Load</button></div>`).join("")}</div>${left}`,
+    foot:`<button class="btn" data-modalclose>Cancel</button>`,
+    bind: body=>body.querySelectorAll("[data-loadammo]").forEach(b=>b.onclick=()=>{
+      const id=b.dataset.loadammo, p=Engine.reloadWeapon(clone(ch), i, { ammo:id });
+      closeModal();
+      if (!p.ok){ notice(p.why); return; }
+      commit("loadout", reloadAudit(name, p), ()=>{ Engine.reloadWeapon(ch, i, { ammo:id }); });
+    }) });
+}
 // A sight's ACC is for aimed shots, and a Scope's only at range (Gear), so
 // they're listed apart from Single's ACC rather than summed into it.
 const aimedHtml = l => (l.aimed||[]).map(a=>`<div class="lo-sub">Aimed${a.when?` ${esc(a.when)}`:""}: +${a.acc} ACC (${esc(a.by.join(", "))}${
@@ -1616,7 +1635,7 @@ function spellResultsHtml(ch, mode){
     return `<tr class="${a.why?"off":"pickrow"}">
       <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(glyphText(s.glyph))}${formNote(f)}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
       <td class="num">${esc(tnth({ tn:s.tn, th:f.th }))}${mode==="sheet" && pool && f.live && typeof f.th==="number" && f.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
-      <td>${esc(s.range||"")}</td><td>${esc(s.effect||"")}</td>
+      <td>${esc(s.range||"")}</td><td>${spText((Engine.spAmounts(ch, s, g.spellPower)||{}).effect, s.effect||"")}</td>
       <td>${a.btn}</td></tr>`; }).join("") + `</tbody></table>`;
 }
 // The modal's body: filters and the status line, which stay in view while the
@@ -1647,15 +1666,15 @@ function grimoireHtml(ch, p){
   h += book.length ? book.map(l=>{
     if (l.missing) return `<div class="spell missing"><b>${esc(l.spellId)}</b> isn't in the book any more.
       <button class="x" data-spellrm="${l.index}" aria-label="Remove">✕</button></div>`;
-    const ov = l.overflow ? Object.entries(l.overflow).map(([k,v])=>`<li><b>${esc(k)}</b> ${esc(v)}</li>`).join("") : "";
+    const ov = l.overflow ? Object.entries(l.overflow).map(([k,v])=>`<li><b>${esc(k)}</b> ${spText(l.sp&&l.sp.overflow[k], v)}</li>`).join("") : "";
     return `<details class="spell${l.mastered?" mastered":""}"><summary>
         <b>${esc(l.name)}</b>${l.mastered?` <span class="chip">Mastered</span>`:""}
         <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(glyphText(l.glyph))}${formNote(l.form)}</span>
         <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>${l.beyondPool?`<span class="beyond" title="${esc(g.pool.text)}">Beyond your pool</span>`:""}
-        <span class="eff">${esc(l.effect||"")}</span></summary>
+        <span class="eff">${spText(l.sp&&l.sp.effect, l.effect||"")}</span></summary>
       <div class="spell-body">
         ${l.flavorLine?`<p class="flavor">${esc(l.flavorLine)}</p>`:""}
-        <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.duration&&`Duration: ${l.duration}`, l.defending&&`Defending: ${l.defending}`].filter(Boolean).map(esc).join(" · ")}</p>
+        <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.duration&&`Duration: ${l.duration}`].filter(Boolean).map(esc).concat(l.defending?[`Defending: ${spText(l.sp&&l.sp.defending, l.defending)}`]:[]).join(" · ")}</p>
         ${l.spellNotes?`<p>${esc(l.spellNotes)}</p>`:""}
         ${ov?`<ul class="overflow">${ov}</ul>`:""}
         ${l.tags.length?`<div class="tags">${tagChipsHtml(l.tags, "spelltag")}</div>`:""}
@@ -1773,6 +1792,7 @@ function renderShAdmin(){
   h += `<div class="sect">Identity</div><div class="grid-3">`
      + idf("name","Name")+idf("age","Age","number")+idf("build","Build")
      + idf("hair","Hair")+idf("eyes","Eyes")+idf("skin","Skin") + `</div>
+    ${taglessToggleHtml(ch, "admin-tagless")}
     <label class="field"><span>History</span><textarea data-admin-id="history" style="min-height:64px">${esc(ch.identity.history||"")}</textarea></label>`;
 
   // Campaign & archetype (destructive)
@@ -2722,8 +2742,9 @@ function bindSheet(){
     // the audit says it came from nowhere (W30).
     if (pre.noAmmo){ askFirst({ title:"Nothing to reload from", text:`${pre.why} Reload anyway?`, yes:"Reload anyway", danger:false,
       then:()=>commit("loadout", `Reloaded ${name} anyway, no ${pre.ammo.join(" or ")} on the sheet`, ()=>{ Engine.reloadWeapon(ch, i, { anyway:true }); }) }); return; }
+    if (pre.choose){ reloadChooser(ch, i, name, pre); return; }
     if (!pre.ok){ notice(pre.why); return; }
-    commit("loadout", `Reloaded ${name} (${pre.left}/${pre.max})${pre.used ? `, −${plural(pre.used, pre.unit)} of ${pre.ammo[0]}` : ""}`, ()=>{ Engine.reloadWeapon(ch, i); });
+    commit("loadout", reloadAudit(name, pre), ()=>{ Engine.reloadWeapon(ch, i); });
   });
   main.querySelectorAll("[data-upgadd]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.upgadd), id=(main.querySelector(`[data-upgpick="${i}"]`)||{}).value;
@@ -2770,6 +2791,12 @@ function bindSheet(){
     const v = inp.type==="number" ? (inp.value===""?null:Number(inp.value)) : inp.value;
     if (ch.identity[k]===v) return;
     commit("admin", `Admin: ${k} → ${v===null||v===""?"—":String(v).slice(0,40)}`, ()=>{ ch.identity[k]=v; });
+  });
+  main.querySelectorAll("[data-admin-tagless]").forEach(b=>b.onclick=()=>{
+    const v = b.dataset.adminTagless==="1";
+    if (!!ch.identity.tagless===v) return;
+    const C = (D.tag||{}).choice||{};
+    commit("admin", `Admin: ${(C[v?"tagless":"tagged"]||{}).name||(v?"TAGless":"TAG'd")}`, ()=>{ ch.identity.tagless = v; });
   });
   main.querySelectorAll("[data-admin-pl]").forEach(sel=>sel.onchange=()=>{
     const v=sel.value; if (ch.creation.powerLevel===v) return;

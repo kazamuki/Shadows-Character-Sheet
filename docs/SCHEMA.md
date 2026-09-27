@@ -583,7 +583,7 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.13",
+    schemaVersion: "0.14",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -600,7 +600,11 @@ It renders on the Archetype tab.
     archetype: "arcanist",
     // NO `specialization` since 0.5 — it lives once, in archetypeChoices, and
     // is derived for display via Engine.specializationLabel() (Decision 79).
-    history: ""                      // creation step 5: what shaped them
+    history: "",                     // creation step 5: what shaped them
+    // (0.14, Decision 148) TAGless, the player's pick on the Identity step.
+    // false is TAG'd; migrate() makes anything but `true` false. It changes
+    // how the TAG reads (Engine.tagReading), never meta.id.
+    tagless: false
   },
 
   creation: {
@@ -717,7 +721,11 @@ It renders on the Archetype tab.
   // weapon (a custom one types its own features). `roundsSpent`: rounds fired
   // since the last reload, so 0 is a full magazine; the rounds left are
   // computed from the capacity, never stored.
+  // (0.14, Decision 149) `loaded`: the specialty round in the magazine (an
+  // equipment id whose `reload.specialty` is true); absent for standard
+  // rounds. migrate() drops anything but a string, and any on a custom weapon.
   weapons: [ { id: "combat-knife", notes: "", mods: [], roundsSpent: 0 },
+             { id: "ads-lp9-viper", notes: "", mods: [], roundsSpent: 3, loaded: "silver-rounds" },
              { custom: true, name, type, damage, rof, capacity, ammo, features, notes, roundsSpent: 0 } ],
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
@@ -3347,6 +3355,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 120 in part: `reloadWeapon` no longer always fills from nowhere.
      - **Revisit if:** the CRB prices ammo per round, or a weapon takes a magazine another of its type can't.
      - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W30), mutation-tested. Log 2026-09-26.
+     → **Superseded in part by Decision 149**: Reload asks which kind.
 
 146. **A held Ghost TAG labels the TAG and says what it is; Black TAG is the same thing.**
      *2026-09-26 · Ken + Claude · Touches: tagReads, tagReading, Ghost TAG, ghost-tag-s, Black TAG, TAG, meta.id, intake, print header, Review, W31, TAGless*
@@ -3358,6 +3367,45 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 133 in part: a TAG can carry a label, when an Advantage held says so.
      - **Revisit if:** the CRB separates Black TAG from Ghost TAG, or TAGless lands and wants the same reader.
      - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W31), mutation-tested. Log 2026-09-26.
+     → **Superseded in part by Decision 148**: `tagReading` reads TAGless too.
+
+147. **A Spell Power amount is a number on the sheet, worked out from a structured field beside the book's words, and halves round up.**
+     *2026-09-26 · Ken + Claude · Touches: sp, spAmounts, Spell Power, ½ SP, SP × 2, effect, overflow, defending, spells, cascadeTable, Backlash, aberrations, Electrocytes, Elemental Blood, Grimoire, spell picker, starting spells, Magic reference, W32*
+     - **Decided:** a spell, Cascade row or Aberration whose text names Spell Power carries `sp`, keyed by that text (`effect`, `defending`, `description`, or an `overflow` tier): `{ times }` for an amount, `{ adds }` for an increase. `Engine.spAmounts` works it out, rounding up, and the sheet shows **7** (½ SP Damage), or +7 for an increase, wherever the text shows; an Aberration's prose gets "½ Spell Power: 7" after it. Damage, absorption, Integrity and healing alike (Ken). No Spell Power, no number.
+     - **Why:** the player halved their own Spell Power at the table on every cast. The data writes it five ways, so the engine reads a field, never the prose (Decision 134's lesson), and a test keeps field and words together.
+     - **Rejected:**
+       - Parsing "½ SP" out of the text: the Focused Skills defect again (B12–B14).
+       - Damage only, as W32 was first written: absorption, Integrity and healing are the same arithmetic (Ken).
+       - A number for "1d SP" (Mend Flesh) and "SP + net Hits" (Force Armor): each hangs on a roll, so the book's words stand alone.
+       - A number on a Talisman's spell in Loadout: whose Spell Power it carries (the maker's or the bearer's) isn't written.
+     - **Replaces:** nothing.
+     - **Revisit if:** the CRB says how ½ SP rounds and it isn't up, or says whose Spell Power a Talisman carries.
+     - **Built:** app 0.31.0, game data 0.24; `engine.test.mjs` and `smoke.test.mjs` (W32), mutation-tested. Log 2026-09-26.
+
+148. **A character is TAG'd or TAGless, the player's pick like their name, and a TAGless character's TAG reads "Off grid".**
+     *2026-09-26 · Ken + Claude · Touches: identity.tagless, TAGless, TAG'd, tag, tag.choice, tag.tagless, tagReading, Ghost TAG, meta.id, Identity step, Admin mode, print header, Review, UBI, skrip, character schema 0.14, W41*
+     - **Decided:** `identity.tagless` (schema 0.14, `false` is TAG'd) is chosen on the Identity step and changed later in Admin, logged and undoable. `tagReading` answers for it with the data's `tag.tagless` label, "Off grid", over the number wherever a TAG shows. A held Ghost TAG's label wins, since a counterfeit is what a scanner reads, and its tip says both. `migrate()` makes anything but `true` TAG'd. The number never changes, and the app computes no UBI, so nothing else moves.
+     - **Why:** Gear calls going TAGless "a legitimate choice", and a TAGless character still showed a plain TAG. The copy is data (`tag`), so its voice is a data edit, and one reader keeps the label in one place.
+     - **Rejected:**
+       - TAGless as an Advantage or Disadvantage: the book prices it at nothing; it's who the character is.
+       - Hiding the number for a TAGless character: every file needs it (Decision 133).
+       - "No TAG" as the label: it reads as a missing field; "Off grid" is Gear's own phrase (voice pass pending).
+     - **Replaces:** Decision 146 in part: `tagReading` reads TAGless too, and a Ghost TAG's text says so when both hold.
+     - **Revisit if:** the CRB gives going TAGless a mechanical cost, or the app starts computing the UBI.
+     - **Built:** app 0.31.0, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W41), mutation-tested. Log 2026-09-26.
+
+149. **A weapon remembers the specialty rounds it's loaded with, their tags join its line, and Reload asks which rounds when more than one kind fits.**
+     *2026-09-26 · Ken + Claude · Touches: weapons[i].loaded, reloadWeapon, reload.specialty, reload.needsMod, firesOnly, Angel Mod, silver-rounds, holy-points, angel-rounds, weaponLine.loaded, reloadFrom.swap, weaponRules.swap, character schema 0.14, W40, F26, F34*
+     - **Decided:** Silver Rounds, Holy Points and Angel Rounds carry `reload` blocks marked `specialty`, fitting the weapons their standard kind does. `weapons[i].loaded` (schema 0.14) holds the specialty round in the magazine, absent for standard rounds. Its tags join the weapon's line, and the magazine shows its name. With two kinds carried, Reload asks which; a full weapon reloads only to swap, and always asks. Angel Rounds `needsMod` the Angel Mod, which `firesOnly` them, and add no tags of their own, since the mod's say it. What a swapped magazine keeps is F34, stubbed as nothing.
+     - **Why:** specialty rounds change what a shot does (Withering), so the sheet has to know what's in the gun; 053 lets a Reload swap kinds. Ken opened F34 rather than decide it: Deighton may want mags kept with their count.
+     - **Rejected:**
+       - Storing standard rounds' ids too: one standard kind fits a weapon, so the field would say nothing, and every weapon from before would need a guess.
+       - Telling a specialty round by its tags: Shotgun Shells carry Spread.
+       - Keeping a partly spent magazine with its count: Deighton's call (F34).
+       - Silver Rounds in Heavy weapons: Gear treats the belt as unlimited, so they don't reload (Decision 145).
+     - **Replaces:** Decision 145 in part: Reload asks which kind, and a full weapon reloads to swap.
+     - **Revisit if:** F34 or F26 is ruled, or the CRB adds a specialty round that fits a weapon its standard kind doesn't.
+     - **Built:** app 0.31.0, game data 0.24, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W40), mutation-tested. Log 2026-09-26.
 
 ## 5. Open Flags
 
@@ -3394,6 +3442,7 @@ here are in `log/archive.md`.
 | F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated | Deighton | No |
 | F32 | **Arcanist Major Milestones.** 041's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 041? `growth` stays hidden until then (AQ4) | Ken | No |
 | F33 | **Jack of All Trades: how far does "treated as Focused" go?** Master of None says all skills are "treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4". Does that also give every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7)? And can Skill Paragon's "a focused skill from your chosen Profession" be any skill for a Jack? Stubbed (Decision 134): the price only, for ranks bought up to 4 (4 → 5 is standard, Ken); no cap bonus | Deighton | No |
+| F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 053 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
 
-F23–F26, F28–F31 and F33 go to Deighton as one grouped question.
+F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question.
 

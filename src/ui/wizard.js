@@ -174,7 +174,7 @@ function renderConcept(){
     <label class="field"><span>Hair</span><input type="text" data-id="hair" value="${esc(id.hair)}"></label>
     <label class="field"><span>Eyes</span><input type="text" data-id="eyes" value="${esc(id.eyes)}"></label>
     <label class="field"><span>Skin</span><input type="text" data-id="skin" value="${esc(id.skin)}"></label>
-  </div>`;
+  </div>${taglessToggleHtml(S.ch, "tagless")}`;
 }
 
 function renderStats(){
@@ -455,7 +455,7 @@ function renderCP(){
         <span class="cost">${esc(l.tier)} · TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}</span>
         ${over?`<span class="cost over">needs ${esc(ss.discipline)} ${l.printedTH}</span>`:""}
         <div class="controls"><button class="toggle" data-startrm="${l.index}">Remove</button></div></div>
-        <div class="desc">${esc(l.effect||"")}</div></div>`;
+        <div class="desc">${spText(l.sp&&l.sp.effect, l.effect||"")}</div></div>`;
     }).join("");
     h += `<button class="btn" data-spellpickopen="wizard">Choose from the book</button>`;
   }
@@ -747,6 +747,7 @@ function bindMain(){
     ch.identity[k] = inp.type==="number" ? (inp.value===""?null:Number(inp.value)) : inp.value;
     update(false); refreshNav();
   });
+  main.querySelectorAll("[data-tagless]").forEach(b=>b.onclick=()=>{ ch.identity.tagless = b.dataset.tagless==="1"; update(); });
   // export / lock
   main.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>exportChar());
   main.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{

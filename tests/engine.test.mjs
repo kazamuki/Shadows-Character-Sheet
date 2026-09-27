@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.13");
+  assert.equal(ch.meta.schemaVersion, "0.14");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -271,7 +271,8 @@ const CODE = CODE_FILES.map(code).join("\n");
 // draws any array of plain objects on a power as a table, columns from keys).
 const MAPS = [/\.byPowerLevel$/, /^statRules\.modifiers$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
-  /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/];
+  /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/,
+  /\.sp(\.\*)?$/]; // W32: keyed by the text an amount sits beside, read by spAmounts
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
 const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$/;
@@ -493,7 +494,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -604,7 +605,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.13");
+  assert.equal(bare.meta.schemaVersion, "0.14");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -840,7 +841,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.13");
+    assert.equal(c.meta.schemaVersion, "0.14");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1114,7 +1115,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.13");
+  assert.equal(old.meta.schemaVersion, "0.14");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1189,7 +1190,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -1687,6 +1688,56 @@ test("grimoire() reads the book: numbers, a missing spell, and a typed name that
   assert.equal(g.lines[3].match, null, "offered to link a spell that's already in the Grimoire");
 });
 
+// ── W32: Spell Power in numbers ───────────────────────────────────────
+const spell = id => D.spells.find(s => s.id === id);
+
+test("spAmounts works out Spell Power: Dart at Spell Power 13 is 7, halves round up (W32)", () => {
+  const ch = subject(), at13 = { value: 13 };
+  const dart = Engine.spAmounts(ch, spell("dart"), at13);
+  same([dart.effect.value, dart.effect.adds, dart.overflow["1x"].value], [7, false, 13]);
+  const bolt = Engine.spAmounts(ch, spell("firebolt"), at13);
+  same([bolt.effect.value, bolt.overflow["1x"].value, bolt.overflow["1x"].adds], [13, 7, true], "an increase reads as one");
+  assert.equal(Engine.spAmounts(ch, spell("kinetic-ward"), at13).effect.value, 26, "SP × 2");
+  assert.equal(Engine.spAmounts(ch, spell("threshold-ward"), at13).defending.value, 7);
+  // Without the precomputed power it reads the character's own.
+  const own = Engine.spellPower(ch).value;
+  assert.equal(Engine.spAmounts(ch, spell("dart")).effect.value, Math.ceil(own / 2));
+  // The Grimoire carries it on the line.
+  ch.panelData.grimoire = [{ spellId: "dart", stage: "known", notes: "" }];
+  assert.equal(Engine.grimoire(ch).lines[0].sp.effect.value, Math.ceil(own / 2));
+});
+
+test("spAmounts is null without Spell Power, and ignores an amount that isn't one (W32)", () => {
+  const ch = subject();
+  ch.identity.archetype = null;
+  assert.equal(Engine.spellPower(ch), null);
+  assert.equal(Engine.spAmounts(ch, spell("dart")), null, "a number with no Spell Power to read");
+  const at = { value: 10 };
+  for (const bad of [null, 7, "x", { effect: null }, { effect: { times: -1 } }, { effect: { times: "½" } }, { effect: { adds: Infinity } }, { overflow: 3 }]){
+    const r = Engine.spAmounts(subject(), { sp: bad }, at);
+    assert.ok(r === null || (!r.effect && !Object.keys(r.overflow).length), `made a number of ${JSON.stringify(bad)}`);
+  }
+  assert.equal(Engine.spAmounts(ch, null, at), null);
+});
+
+test("every text that names Spell Power carries its amount, and every amount names a text (W32)", () => {
+  // The engine never reads the prose (the Focused Skills lesson, Decision
+  // 134); this is what keeps the structured field and the book's words
+  // together. "1d SP" and "SP + net Hits" hang on a roll, so the words stand alone.
+  const names = t => typeof t === "string" && /(\bSP\b|Spell Power)/.test(t) && !/1d SP|SP \+ net Hits/.test(t);
+  const gaps = [];
+  const check = (where, entry, fields) => {
+    const sp = entry.sp || {};
+    for (const k of fields) if (names(entry[k]) !== !!sp[k]) gaps.push(`${where}.${k}`);
+    for (const k of Object.keys(entry.overflow || {})) if (names(entry.overflow[k]) !== !!(sp.overflow || {})[k]) gaps.push(`${where}.overflow.${k}`);
+    for (const k of Object.keys(sp)) if (k !== "overflow" && !fields.includes(k)) gaps.push(`${where}.sp.${k} names no text`);
+  };
+  D.spells.forEach(s => check(s.id, s, ["effect", "defending"]));
+  D.cascadeTable.rows.forEach(r => check(r.id, r, ["effect"]));
+  D.aberrations.forEach(a => check(a.id, a, ["description"]));
+  same(gaps, []);
+});
+
 test("versionCheck matches a Mastery spend to its Grimoire row, not to skill IPE (B11)", () => {
   // Mastering a spell is an IP spend with targetType "spell" (Decision 108).
   // versionCheck read every non-stat spend as a skill, found IPE 0, and told
@@ -2070,6 +2121,60 @@ test("W30: Reload takes a mag (or a shell a round) of what fits from what you ca
   assert.equal(Engine.weaponLine(gl, 0).reloadFrom, undefined);
 });
 
+test("W40: with two kinds carried Reload asks which, and specialty rounds stay loaded, their tags on the line", () => {
+  const ch = armed("ads-lp9-viper", { roundsSpent: 5 });
+  ch.gear.push({ id: "handgun-rounds", qty: 2, notes: "" }, { id: "silver-rounds", qty: 1, notes: "" });
+  const ask = Engine.reloadWeapon(ch, 0);
+  same([ask.ok, ask.choose, ask.options.map(o => o.id)], [false, true, ["handgun-rounds", "silver-rounds"]]);
+  assert.equal(ask.options[0].loaded, true, "standard rounds aren't what a weapon with nothing named holds");
+  assert.equal(ch.weapons[0].roundsSpent, 5, "asking changed the magazine");
+  const r = Engine.reloadWeapon(ch, 0, { ammo: "silver-rounds" });
+  same([r.ok, r.loaded, r.swapped, r.left], [true, "silver-rounds", true, 16]);
+  assert.equal(Engine.carriedGear(ch, "silver-rounds"), null, "the silver mag didn't come off what's carried");
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.loaded.name, "Silver Rounds");
+  assert.ok(l.tags.includes("Withering (Lycanthropes)"), "the loaded rounds' tag isn't on the line");
+  // Full, it reloads only to swap, and always asks.
+  const full = Engine.reloadWeapon(ch, 0);
+  same([full.choose, full.options.map(o => o.id)], [true, ["handgun-rounds"]], "a full weapon offered what's already in it");
+  assert.equal(Engine.reloadWeapon(ch, 0, { ammo: "handgun-rounds" }).loaded, null);
+  assert.equal(ch.weapons[0].loaded, undefined, "standard rounds are remembered as something");
+  assert.ok(!Engine.weaponLine(ch, 0).tags.includes("Withering (Lycanthropes)"), "the tag outlived its rounds");
+  assert.match(Engine.reloadWeapon(ch, 0).why, /already full/, "full of standard rounds with no specialty carried, and it reloaded");
+  // Reloading from nothing forgets what was loaded.
+  ch.weapons[0].loaded = "silver-rounds"; ch.weapons[0].roundsSpent = 3; ch.gear = [];
+  Engine.reloadWeapon(ch, 0, { anyway: true });
+  assert.equal(ch.weapons[0].loaded, undefined);
+});
+
+test("W40: specialty rounds fit what Gear says, and the Angel Mod fires Angel Rounds only (F26's stub)", () => {
+  const fits = (id, mods = []) => { const ch = armed(id, { mods, roundsSpent: 1 });
+    for (const a of ["silver-rounds", "holy-points", "angel-rounds", "handgun-rounds", "rifle-rounds"]) ch.gear.push({ id: a, qty: 1, notes: "" });
+    const r = Engine.reloadWeapon(ch, 0);
+    return r.choose ? r.options.map(o => o.id) : r.ammo; };
+  same(fits("ads-lp9-viper"), ["handgun-rounds", "silver-rounds", "holy-points"]);
+  same(fits("vr8-sentinel"), ["rifle-rounds", "silver-rounds"], "Holy Points are handgun only");
+  same(fits("sg88-siege-breaker"), ["Shotgun Shells"], "a shotgun takes no specialty round while F26 stands");
+  same(fits("ads-lp9-viper", ["Angel Mod"]), ["Angel Rounds"], "an Angel Mod loaded something besides Angel Rounds");
+  const ch = armed("ads-lp9-viper", { mods: ["Angel Mod"], roundsSpent: 1 });
+  ch.gear.push({ id: "handgun-rounds", qty: 1, notes: "" });
+  assert.match(Engine.reloadWeapon(ch, 0).why, /You carry no Angel Rounds\./);
+  ch.gear.push({ id: "angel-rounds", qty: 1, notes: "" });
+  assert.equal(Engine.reloadWeapon(ch, 0).loaded, "angel-rounds");
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.loaded.name, "Angel Rounds");
+  assert.ok(!l.tags.includes("+4 DMG"), "the mod's own damage came back as a tag");
+});
+
+test("W40: migrate() keeps a loaded round's id and drops anything else (schema 0.14)", () => {
+  const ch = armed("ads-lp9-viper", { loaded: "silver-rounds" });
+  Engine.addLoadout(ch, "weapons", "ads-lp9-viper"); ch.weapons[1].loaded = 7;
+  ch.weapons.push({ custom: true, name: "Zip gun", loaded: "silver-rounds" });
+  const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  same(m.weapons.map(w => w.loaded), ["silver-rounds", undefined, undefined]);
+  same(Engine.migrate(JSON.parse(JSON.stringify(m))).weapons[0].loaded, "silver-rounds", "a round trip lost it");
+});
+
 test("W16: mods fill the weapon's fixed slots, fit only what Gear says they fit, and change the line", () => {
   const ch = armed("ads-lp9-viper");                   // 2 slots, handgun
   const opt = id => Engine.weaponModOptions(ch, 0).options.find(o => o.id === id);
@@ -2108,7 +2213,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2194,7 +2299,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2211,7 +2316,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.13");
+  assert.equal(m.meta.schemaVersion, "0.14");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2228,6 +2333,33 @@ test("W31: a held Ghost TAG names the TAG and says what it is; the number never 
   assert.equal(Engine.tagReading(c), null, "a rank-0 entry still counts as held");
   for (const junk of [null, {}, { advantages: "x" }, { advantages: [null, 4, { id: "ghost-tag-s", rank: "x" }] }])
     assert.equal(Engine.tagReading(junk), null);
+});
+
+test("W41: a TAGless character's TAG reads Off grid, a Ghost TAG over it still wins, and the number never moves", () => {
+  const c = subject(), id = c.meta.id;
+  assert.equal(c.identity.tagless, false, "a new character isn't TAG'd");
+  c.identity.tagless = true;
+  const r = Engine.tagReading(c);
+  same([r.label, r.tagless], [D.tag.tagless.label, true]);
+  assert.match(r.text, /skrip/);
+  c.advantages.push({ id: "ghost-tag-s", rank: 1 });
+  const g = Engine.tagReading(c);
+  assert.equal(g.label, "Ghost TAG", "a counterfeit is what a scanner reads");
+  assert.ok(g.text.includes(D.tag.tagless.text) && /Black TAG/.test(g.text), "the tip doesn't say both");
+  c.identity.tagless = false;
+  assert.equal(Engine.tagReading(c).tagless, false);
+  assert.equal(c.meta.id, id, "reading the TAG changed the stored number");
+});
+
+test("W41: migrate() makes every older file TAG'd, and only a real true makes one TAGless (schema 0.14)", () => {
+  const old = subject();
+  delete old.identity.tagless; old.meta.schemaVersion = "0.13";
+  const m = Engine.migrate(old);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.14"]);
+  for (const junk of ["true", 1, "yes", {}, null])
+    assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
+  const t = subject(); t.identity.tagless = true;
+  assert.equal(Engine.migrate(JSON.parse(JSON.stringify(t))).identity.tagless, true, "TAGless didn't survive a round trip");
 });
 
 // ── Rules a tap away (Decision 139) ───────────────────────────────────
