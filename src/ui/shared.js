@@ -612,10 +612,18 @@ function intakeBarsSvg(id){
   bar(1); bar(1);
   return `<svg class="intake-bars" viewBox="0 0 ${x} 20" width="${Math.round(x*1.4)}" height="20" preserveAspectRatio="none" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true">${bars}</svg>`;
 }
+// W41: TAG'd or TAGless, the player's pick like their name: the Identity
+// step and Admin draw the same toggle, each binding its own `attr`.
+function taglessToggleHtml(ch, attr){
+  const C = (D.tag||{}).choice||{}, off = !!ch.identity.tagless;
+  return `<div class="field tag-choice"><span>TAG</span><div class="form-toggle" role="group" aria-label="TAG">${[["tagged",false],["tagless",true]].map(([k,v])=>
+      `<button type="button" data-${attr}="${v?1:0}" class="${off===v?"on":""}" aria-pressed="${off===v}">${esc((C[k]||{}).name||k)}</button>`).join("")}</div>
+    <p class="step-note">${esc((C[off?"tagless":"tagged"]||{}).text||"")}</p></div>`;
+}
 // W31: a Ghost TAG says so over the number, and hovering says what it is.
 function intakeHtml(ch){
   const id = intakeOf(ch), r = Engine.tagReading(ch);
-  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : "Trusted Authentication Gateway")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
+  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
 }
 
 // C4: what versionCheck found when this character was loaded. Content the

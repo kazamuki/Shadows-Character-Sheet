@@ -1773,6 +1773,7 @@ function renderShAdmin(){
   h += `<div class="sect">Identity</div><div class="grid-3">`
      + idf("name","Name")+idf("age","Age","number")+idf("build","Build")
      + idf("hair","Hair")+idf("eyes","Eyes")+idf("skin","Skin") + `</div>
+    ${taglessToggleHtml(ch, "admin-tagless")}
     <label class="field"><span>History</span><textarea data-admin-id="history" style="min-height:64px">${esc(ch.identity.history||"")}</textarea></label>`;
 
   // Campaign & archetype (destructive)
@@ -2770,6 +2771,12 @@ function bindSheet(){
     const v = inp.type==="number" ? (inp.value===""?null:Number(inp.value)) : inp.value;
     if (ch.identity[k]===v) return;
     commit("admin", `Admin: ${k} → ${v===null||v===""?"—":String(v).slice(0,40)}`, ()=>{ ch.identity[k]=v; });
+  });
+  main.querySelectorAll("[data-admin-tagless]").forEach(b=>b.onclick=()=>{
+    const v = b.dataset.adminTagless==="1";
+    if (!!ch.identity.tagless===v) return;
+    const C = (D.tag||{}).choice||{};
+    commit("admin", `Admin: ${(C[v?"tagless":"tagged"]||{}).name||(v?"TAGless":"TAG'd")}`, ()=>{ ch.identity.tagless = v; });
   });
   main.querySelectorAll("[data-admin-pl]").forEach(sel=>sel.onchange=()=>{
     const v=sel.value; if (ch.creation.powerLevel===v) return;

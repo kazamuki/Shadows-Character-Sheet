@@ -348,7 +348,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.13");
+  assert.equal(resumed.meta.schemaVersion, "0.14");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1815,6 +1815,31 @@ test("W31: a Ghost TAG says so over the number on Main and in the printed header
   app.click("[data-menu-toggle]"); app.click("[data-print]");
   assert.match(app.$("#printSheet .p-intake").textContent, /Ghost TAG/, "the print header doesn't say Ghost TAG");
   assert.deepEqual(app.errors, []);
+});
+
+test("W41: the Identity step asks TAG'd or TAGless, and Admin changes it later, logged and undoable", () => {
+  const app = draftOn("arcanist", "concept");
+  const pick = v => app.$(`[data-tagless="${v}"]`);
+  assert.ok(pick(0) && pick(1), "no TAG'd/TAGless choice on the Identity step");
+  assert.equal(pick(0).getAttribute("aria-pressed"), "true", "a new character isn't TAG'd");
+  pick(1).click();
+  assert.equal(draft(app).identity.tagless, true);
+  assert.equal(app.$(`[data-tagless="1"]`).getAttribute("aria-pressed"), "true");
+  assert.match(app.$(".tag-choice").textContent, /skrip/, "the pick doesn't say what it means");
+  assert.deepEqual(app.errors, []);
+
+  const ch = Engine.migrate(named("Vex Morrow"));
+  const sheet = openSheet(ch, "main");
+  assert.equal(sheet.$("#main .intake .intake-label"), null, "a TAG'd character's TAG is labelled");
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-admin]");        // admin mode opens its editor
+  sheet.click('[data-admin-tagless="1"]');
+  assert.equal(activeChar(sheet).identity.tagless, true);
+  sheet.click('[data-sec="main"]');
+  assert.equal(sheet.$("#main .intake .intake-label").textContent, D.tag.tagless.label);
+  assert.ok(sheet.$("#main .intake").textContent.includes(ch.meta.id), "the number went away");
+  sheet.click("[data-toastundo]");
+  assert.equal(activeChar(sheet).identity.tagless, false, "undo didn't put the TAG back");
+  assert.deepEqual(sheet.errors, []);
 });
 
 // ── The Professional as data (Decision 134) ──────────────────────────
