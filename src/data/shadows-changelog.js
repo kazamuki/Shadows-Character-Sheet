@@ -2,6 +2,18 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.32.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**New starting numbers at every Campaign Power Level.** Stat Points are now the same for everyone at the table (45 at Street, 50 Heroic, 55 Shadows, 60 World Coming Down), unless your GM has you roll for them instead. Pick which on the Power Level step.",
+      "**High stats cost more.** Every stat starts at 1 for free. Each point up to 6 costs 1 Stat Point, and each point from 7 to 10 costs 2, so a 10 costs 13. The Stats step shows when the next point costs 2.",
+      "**No more Skill Point roll.** Your Skill Points are the level's base plus your INT and REF. Boosting either with Character Points adds Skill Points too, and the Skills step shows them as unspent.",
+      "**Character Points and skill caps moved.** Starting CP is 5, 10, 15 or 20 by level, and the highest a skill can start at is 4, 5, 6 or 7.",
+      "Characters you've already locked keep what they were built with. Admin mode says they came from the earlier table instead of measuring them against the new one."
+    ]
+  },
+  {
     "version": "0.31.0",
     "date": "2026-09-27",
     "intro": [],

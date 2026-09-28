@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.14");
+  assert.equal(ch.meta.schemaVersion, "0.15");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -112,7 +112,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.14");
+  assert.equal(old.meta.schemaVersion, "0.15");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -124,7 +124,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.14");
+  assert.equal(old.meta.schemaVersion, "0.15");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -269,7 +269,7 @@ const CODE = CODE_FILES.map(code).join("\n");
 // (Decision 136), an integrity die or a TN per
 // difficulty, an armor slot's name, and a specialization's powers (shared.js
 // draws any array of plain objects on a power as a table, columns from keys).
-const MAPS = [/\.byPowerLevel$/, /^statRules\.modifiers$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
+const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
   /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/,
   /\.sp(\.\*)?$/]; // W32: keyed by the text an amount sits beside, read by spAmounts
@@ -494,7 +494,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.14");
+  assert.equal(old.meta.schemaVersion, "0.15");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -605,7 +605,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.14");
+  assert.equal(bare.meta.schemaVersion, "0.15");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -841,7 +841,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.14");
+    assert.equal(c.meta.schemaVersion, "0.15");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1115,7 +1115,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.14");
+  assert.equal(old.meta.schemaVersion, "0.15");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1190,7 +1190,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.14");
+  assert.equal(m.meta.schemaVersion, "0.15");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2213,7 +2213,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.14");
+  assert.equal(m.meta.schemaVersion, "0.15");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2299,7 +2299,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.14");
+  assert.equal(m.meta.schemaVersion, "0.15");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2316,7 +2316,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.14");
+  assert.equal(m.meta.schemaVersion, "0.15");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2355,7 +2355,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.14"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.15"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2433,4 +2433,87 @@ test("Ammo is equipment: rounds by the mag, shells and arrowheads by the pack (A
   assert.deepEqual([...Engine.gearLine(ch, 0).tags], [], "a plain broadhead grew tags");
   Engine.addLoadout(ch, "gear", "barbed-tip");
   assert.deepEqual([...Engine.gearLine(ch, 2).tags], ["Bleeding"]);
+});
+
+// ── The stat buy (Decision 150) ───────────────────────────────────────
+
+test("Decision 150: the Stat Point pool is flat unless the GM has players roll, and a roll must fit its die", () => {
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = "heroic";
+  assert.equal(ch.creation.statMethod, "flat", "a new character isn't on the flat pool");
+  assert.equal(Engine.statPool(ch).total, 50);
+  ch.creation.rolls.statPoints = 9;
+  assert.equal(Engine.statPool(ch).total, 50, "a flat pool read the roll");
+
+  ch.creation.statMethod = "rolled";
+  assert.equal(Engine.statPool(ch).total, 45 + 9);
+  ch.creation.rolls.statPoints = null;
+  assert.ok(Engine.validate("stats", ch).some(i => i.level === "error" && /1d10 Stat Point roll/.test(i.msg)), "no roll asked for");
+  for (const bad of [0, 11]) {
+    ch.creation.rolls.statPoints = bad;
+    assert.ok(Engine.validate("stats", ch).some(i => i.level === "error" && /1 to 10/.test(i.msg)), `a ${bad} on 1d10 passed`);
+  }
+});
+
+test("Decision 150: the climbing cost is what overspends, and the + stops where the next point costs more than is left", () => {
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = "street";                                  // 45
+  const set = o => { for (const [k, v] of Object.entries(o)) ch.stats[k].base = v; };
+  set({ BOD: 6, REF: 10, MOB: 10, INT: 8, TECH: 2, COOL: 2, MAG: 2, EMP: 2 });  // 5+13+13+9+4 = 44
+  assert.equal(Engine.statSpent(ch), 44);
+  assert.equal(Engine.nextStatCost(ch, "BOD"), 2);
+  assert.equal(Engine.nextStatCost(ch, "TECH"), 1);
+  assert.ok(Engine.validate("stats", ch).some(i => i.level === "warn" && /1 Stat Points unspent/.test(i.msg)));
+  ch.stats.BOD.base = 7;                                               // 1:1 would read 45 of 45
+  assert.ok(Engine.validate("stats", ch).some(i => i.level === "error" && /overspent by 1/.test(i.msg)), "a 7 cost 1");
+});
+
+test("Decision 150: Skill Points count INT and REF with the archetype's bonus and a CP Boost, and a later Boost leaves points to spend", () => {
+  const ch = subject();
+  ch.stats.INT.base = 5; ch.stats.REF.base = 5;
+  const base = Engine.skillPool(ch).total;
+  ch.archetypeChoices.statBonusAllocation.INT = 1;
+  assert.equal(Engine.skillPool(ch).total, base + 1, "the archetype's bonus didn't count");
+  ch.skills.stealth = { rank: Engine.skillPool(ch).total, ipe: 0 };   // every point spent
+  assert.equal(Engine.validate("skills", ch).some(i => /unspent/.test(i.msg)), false);
+  ch.creation.boosts.push({ targetType: "stat", targetId: "REF", times: 1 });
+  assert.equal(Engine.skillPool(ch).total, base + 2, "a Boost to REF didn't raise Skill Points");
+  assert.ok(Engine.validate("skills", ch).some(i => i.level === "warn" && /1 Skill Points unspent/.test(i.msg)),
+    "the Skills step doesn't say the Boost left a point to spend");
+});
+
+test("Decision 150: an absurd stat score can't make the cost loop, and costs a number", () => {
+  for (const v of [1e12, -5, NaN, "x"]) assert.equal(typeof Engine.statCost(v), "number");
+  assert.equal(Engine.statCost(12), 13 + 2 * 2, "past 10 each point costs the table's last price");
+});
+
+test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is marked built under the earlier table", () => {
+  const old = (locked, roll) => {
+    const c = Engine.newCharacter();
+    c.meta.schemaVersion = "0.14";
+    delete c.creation.statMethod;
+    c.creation.rolls = { statPoints: roll, skillPoints: 20, credits: 5 };
+    c.creation.locked = locked;
+    return c;
+  };
+  const a = Engine.migrate(old(true, 15));
+  assert.equal(a.creation.statMethod, "rolled");
+  assert.equal(a.creation.earlierTable, true);
+  assert.equal(a.meta.schemaVersion, "0.15");
+  const b = Engine.migrate(old(false, null));
+  assert.equal(b.creation.statMethod, "flat");
+  assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
+  const c = Engine.migrate(old(false, 15));
+  assert.equal(c.creation.statMethod, "rolled");
+  assert.equal("earlierTable" in c.creation, false);
+
+  // A current file is left as it is, and only real values survive.
+  const d = Engine.newCharacter();
+  d.creation.statMethod = "rolled"; d.creation.locked = true;
+  assert.equal("earlierTable" in Engine.migrate(d).creation, false, "a 0.15 lock was marked earlier");
+  const e = Engine.newCharacter();
+  e.creation.statMethod = "<img>"; e.creation.earlierTable = "yes";
+  const m = Engine.migrate(e);
+  assert.equal(m.creation.statMethod, "flat");
+  assert.equal("earlierTable" in m.creation, false);
 });

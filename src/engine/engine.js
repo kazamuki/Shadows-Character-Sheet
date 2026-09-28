@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.14";
+  const SCHEMA_VERSION = "0.15";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function newIntakeId(){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -41,8 +41,10 @@ const Engine = (() => {
       // Schema 0.14 (W41): `tagless` is the player's, like the name; false is TAG'd.
       identity:{ name:"", age:null, build:"", hair:"", eyes:"", skin:"",
                  archetype:null, history:"", tagless:false },
-      creation:{ powerLevel:null,
-                 rolls:{ statPoints:null, skillPoints:null, credits:null },
+      // Schema 0.15 (Decision 150): `statMethod` is the GM's pick, a flat
+      // Stat Point pool or a rolled one. Skill Points have no roll any more.
+      creation:{ powerLevel:null, statMethod:"flat",
+                 rolls:{ statPoints:null, credits:null },
                  boosts:[], locked:false },
       // Archetype-specific creation inputs (schema 0.2 addition; see SCHEMA.md §3)
       archetypeChoices:{ rolls:{}, focusAllocation:{}, statBonusAllocation:{},
@@ -249,21 +251,57 @@ const Engine = (() => {
   }
 
   // ── Pools ────────────────────────────────────────────────────────────
+  // "3d10" -> [3, 30]; anything else has no range to check against.
+  function diceRange(die){
+    const m = /^(\d+)d(\d+)$/.exec(String(die||""));
+    return m ? [Number(m[1]), Number(m[1])*Number(m[2])] : null;
+  }
+  // Decision 150: the Stat Point pool is flat or rolled, the GM's pick.
+  const statMethod = ch => ch.creation.statMethod==="rolled" ? "rolled" : "flat";
   function statPool(ch){
     const pl = powerLevel(ch);
     if (!pl) return null;
-    const r = ch.creation.rolls.statPoints;
-    return { base:pl.statPoints.base, roll:r, rollDie:pl.statPoints.roll,
-             total: r==null ? null : pl.statPoints.base + r };
+    const sp = pl.statPoints || {};
+    if (statMethod(ch)==="rolled"){
+      const r = sp.rolled || {}, roll = ch.creation.rolls.statPoints;
+      return { method:"rolled", base:r.base, roll, rollDie:r.roll, range:diceRange(r.roll),
+               total: roll==null ? null : r.base + roll };
+    }
+    return { method:"flat", base:sp.flat, roll:null, rollDie:null, range:null, total:sp.flat };
   }
-  const statSpent = ch => D().stats.reduce((s,st)=>s + (ch.stats[st.id].base - D().statRules.base), 0);
+  // What a stat at `score` cost to buy from the free base: `raiseCost` is
+  // the price of raising TO each score. Past the table (an admin edit), each
+  // point costs what the table's last one does. Closed form past the table,
+  // so a hostile score can't make this loop.
+  function statCost(score){
+    const R = D().statRules, rc = R.raiseCost || {};
+    const keys = Object.keys(rc).map(Number).filter(Number.isFinite);
+    const top = keys.length ? Math.max(...keys) : R.base;
+    const topCost = keys.length ? Number(rc[top])||0 : 1;
+    const n = Number(score);
+    if (!Number.isFinite(n)) return 0;
+    let c = 0;
+    for (let v = R.base+1; v <= Math.min(n, top); v++) c += Number(rc[v]) || 0;
+    if (n > top) c += (Math.floor(n) - top) * topCost;
+    return c;
+  }
+  const statSpent = ch => D().stats.reduce((s,st)=>s + statCost(ch.stats[st.id].base), 0);
+  // What raising this stat's base by one more point costs.
+  const nextStatCost = (ch, id) => statCost(ch.stats[id].base + 1) - statCost(ch.stats[id].base);
 
+  // Decision 150: Skill Points are the level's base plus the scores of its
+  // `plusStats` (INT and REF), with no roll. The score counts the archetype's
+  // bonus and CP Boosts too (Ken, 2026-09-27): a Boost bought on a later step
+  // raises the pool, and the Skills step then warns of points unspent.
   function skillPool(ch){
     const pl = powerLevel(ch);
     if (!pl) return null;
-    const r = ch.creation.rolls.skillPoints;
-    return { base:pl.skillPoints.base, roll:r, rollDie:pl.skillPoints.roll,
-             total: r==null ? null : pl.skillPoints.base + r + grants(ch).skillPoints };
+    const k = pl.skillPoints || {};
+    const stats = (k.plusStats||[]).filter(id=>ch.stats[id])
+      .map(id=>({ id, value: ch.stats[id].base + archStatBonus(ch, id) + boostsFor(ch, "stat", id) }));
+    const granted = grants(ch).skillPoints;
+    return { base:k.base, stats, granted,
+             total: (Number(k.base)||0) + stats.reduce((s,x)=>s + x.value, 0) + granted };
   }
   const skillSpent = ch => Object.values(ch.skills).reduce((s,k)=>s + k.rank, 0);
 
@@ -2405,6 +2443,17 @@ const Engine = (() => {
       }
     }
     for (const e of c.advantages) if (e.source!=="natural") delete e.source;
+    // Schema 0.15 (Decision 150): a file from before rolled its Stat Points,
+    // or hadn't yet. A locked one was built under the earlier table, whose
+    // pools no longer exist in the data, so `earlierTable` says its creation
+    // budgets can't be recomputed. A draft carries on under the new rules.
+    const cr = c.creation;
+    if (_schemaBefore(c.meta, "0.15")){
+      cr.statMethod = cr.rolls.statPoints!=null && cr.rolls.statPoints!=="" ? "rolled" : "flat";
+      if (cr.locked===true) cr.earlierTable = true;
+    }
+    if (cr.statMethod!=="rolled") cr.statMethod = "flat";
+    if (cr.earlierTable!==true) delete cr.earlierTable;
     _coerceNumbers(c);
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
@@ -2643,7 +2692,9 @@ const Engine = (() => {
       // even though the wizard gates it.
       const p = statPool(ch);
       if (!p) E("Choose a Campaign Power Level before assigning Stat Points.");
-      else if (p.roll==null) E(`Enter your ${p.rollDie} Stat Point roll.`);
+      else if (p.total==null) E(`Enter your ${p.rollDie} Stat Point roll.`);
+      else if (p.range && (p.roll < p.range[0] || p.roll > p.range[1]))
+        E(`A ${p.rollDie} roll is ${p.range[0]} to ${p.range[1]}. Enter what you rolled.`);
       else {
         const left = p.total - statSpent(ch);
         if (left < 0) E(`Stat Points overspent by ${-left}.`);
@@ -2713,7 +2764,6 @@ const Engine = (() => {
     if (stepId==="skills"){
       const p = skillPool(ch);
       if (!p) E("Choose a Campaign Power Level before assigning Skill Points.");
-      else if (p.roll==null) E(`Enter your ${p.rollDie} Skill Point roll.`);
       else {
         const left = p.total - skillSpent(ch);
         if (left < 0) E(`Skill Points overspent by ${-left}.`);
@@ -2875,7 +2925,7 @@ const Engine = (() => {
     powerLevel, archetype, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
     // Creation: pools, costs, grants and the wizard's checks
-    boostsFor, addBoost, canBoost, statPool, statSpent, skillPool, skillSpent,
+    boostsFor, addBoost, canBoost, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
     advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, cp, grants, validate,
     // Focused Skills and natural advantages (Decision 134)
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,
