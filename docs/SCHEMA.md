@@ -583,7 +583,7 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.14",
+    schemaVersion: "0.15",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -609,11 +609,16 @@ It renders on the Archetype tab.
 
   creation: {
     powerLevel: "heroic",
+    // (0.15, Decision 150) The GM's pick: "flat" (the level's statPoints.flat)
+    // or "rolled" (statPoints.rolled.base + the roll below). migrate() makes
+    // an older file "rolled" if it holds a roll, else "flat".
+    statMethod: "flat",
     rolls: {                         // the physical dice, entered by player
-      statPoints: null,              // e.g. rolled 14 on 3d10 → pool = 40+14
-      skillPoints: null,
-      credits: null
+      statPoints: null,              // read only when rolled: 7 on 1d10 → pool = 45+7
+      credits: null                  // (Skill Points have no roll since 0.15)
     },
+    // (0.15) earlierTable: true, only on a file locked before 0.15. Its pools
+    // came from a table the data no longer holds, so Admin doesn't measure it.
     // CP boost ledger — enforces Max Boost per *target*, not per pool
     boosts: [
       // { targetType: "skill"|"stat"|"power", targetId: "handgun", times: 2 }
@@ -792,6 +797,7 @@ No cascade logic to maintain — it falls out of the architecture.
 4. **Costs at creation:** Stat Points 1:1 (stats start at base 1, max 10).
    Skill Points 1:1 up to Max Skill Rank. Advantages cost CP; disadvantages
    grant CP, **no cap** — design philosophy: do whatever you want, at a cost.
+    → **Superseded in part by Decision 150** — a stat point costs 1 up to 6 and 2 from 7 to 10; Skill Points and CP stand.
 5. **LUCK:** everyone starts at 2. Buy-ups use CP, treated like an advantage
    purchase, **exempt from Max Boost**.
 6. **Health Levels:** 1 HL per point of BOD, 5 HP per HL.
@@ -3407,6 +3413,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** F34 or F26 is ruled, or the CRB adds a specialty round that fits a weapon its standard kind doesn't.
      - **Built:** app 0.31.0, game data 0.24, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W40), mutation-tested. Log 2026-09-26.
 
+150. **Stat Points are a flat pool or a rolled one, the GM's pick, and buy stats on a climbing cost; the whole Campaign Power Level table moves to Deighton's playtested numbers.**
+     *2026-09-27 · Ken + Deighton + Claude · Touches: creation.statMethod, creation.earlierTable, statPoints.flat, statPoints.rolled, skillPoints.plusStats, statRules.raiseCost, statPool, statCost, skillPool, characterPoints, maxSkillRank, Stats step, Skills step, Admin budgets, character schema 0.15, F8, F35, W34, W35, W36*
+     - **Decided:** Each Campaign Power Level has a flat Stat Point pool (45/50/55/60) and a rolled one, 5 below it + 1d10. The GM picks between them on the Power Level step, and the pick is stored as `creation.statMethod`. Stats start at 1 for free; a point costs 1 up to 6 and 2 from 7 to 10 (`statRules.raiseCost`), so a 10 costs 13. Skill Points are the level's base (40/45/50/55) + INT + REF, Boosts included, with no roll. CP is 5/10/15/20, and Max Skill Rank is 4/5/6/7.
+     - **Why:** Deighton playtested the flat pools with the climbing buy. The old 1:1 buy and big rolls let a lucky Street player near-max everything. Ken wanted rolling kept as the GM's option, with smaller numbers; Ken ruled the stub (F35, closed).
+     - **Rejected:**
+       - A GM pick of the buy too: Deighton gave the climbing buy as the rule.
+       - Counting the base 1 as a paid point (the printed table's "2 costs 2"): Deighton confirmed the base is free.
+       - Leaving CP Boosts out of Skill Points' INT + REF: Ken ruled a Boost raises them, and the Skills step warns of what it adds.
+       - Measuring a character locked before against the new table: its old pools are gone, so Admin says so.
+     - **Replaces:** Decision 4 in part: Stat Points no longer buy 1:1.
+     - **Revisit if:** Deighton wants the rolled pools to differ, or playtesting moves the flat pools or the cost past 6.
+     - **Built:** app 0.32.0, game data 0.25, character schema 0.15; tests mutation-tested. Closes F8, W34–W36. Log 2026-09-27.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -3418,7 +3437,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -3426,7 +3445,6 @@ here are in `log/archive.md`.
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked. The Vampire and Werewolf entries' notes on unwritten content (Vampire's missing blocks, the Werewolf's name-only powers and undefined Origins) are filed here too | Ken → docs | No |
-| F8 | **Stat Point roll conflict**: WIP says flat "3d10+30" for all levels; REF table scales by power level (30+2d10 … 60+5d10). Data file uses the scaled table pending ruling. **Design team, 2026-09-22: still open** — they want to playtest how many Stat Points people realistically get before choosing. Ruling it needs no code: the wizard reads `statPoints` off each power level, so it's a four-number data edit | Ken/D | **Wizard** |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |

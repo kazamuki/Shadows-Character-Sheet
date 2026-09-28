@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-09-26
-**Versions:** app `0.31.0` · game data `0.24` · character schema `0.14` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-09-27
+**Versions:** app `0.32.0` · game data `0.25` · character schema `0.15` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,7 +41,7 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -99,7 +99,7 @@ is the authority on a flag's full text.
 |---|---|---|
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
-| **Creation-pool economics** — F8, W34–W37 | 🔶 scaled table, working · F1/F2/F14 closed (Decision 97) | Design team, **playtesting** realistic Stat Point totals. F8 is the only wizard-blocker. The 2026-09-24 meeting added a climbing-cost stat buy (W34), a flat pool per Campaign level (W35) and starting LUCK 6, maybe by level (W37). Settle them with F8 (W36) as one ruling |
+| **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed | Deighton: **W37**, starting LUCK 6, maybe by level. It doesn't block the wizard |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
@@ -131,13 +131,12 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.31.0** (data 0.24, schema 0.14):
-Spell Power in numbers (147), TAGless (148) and specialty rounds (149). Ken alone: F9, F12, F13, F32 and
-**W38's plan** (`plans/two-tabs-one-character.md`, TQ1–TQ3). The wishlist: W29, W34–W37
-and W39.
+**The live site is v0.32.0** (data 0.25, schema 0.15): the stat buy and Deighton's Power Level table (150).
+Ken alone: F9, F12, F13, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
+TQ1–TQ3). The wishlist: W29, W37 and W39.
 
 **Waiting on others:**
-- **Design team:** F8, being playtested, and W34–W37 with it.
+- **Deighton, on creation:** W37 (starting LUCK).
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31, F33 and F34 — plus
   W39's two halves. Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103); the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab).
@@ -149,6 +148,7 @@ four inscribed Cantrip-level spells print TN 8 where Magic keeps the spell's TN
 
 **Ken's CRB fixes** (the app already follows the answer in each; the
 questions' history is in `plans/combat-and-conditions.md` §6):
+- **040, Rolling Stat Points:** Deighton's table, the stat buy and Skill Points as base + INT + REF (150).
 - **CQ4:** Gear's Siege tag should say Siege causes Massive damage, to people too.
 - **CQ5:** 053 should say only Massive damage causes Injured/Maimed; a Called
   Shot counts only when the weapon deals Massive.
