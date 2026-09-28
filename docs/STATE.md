@@ -131,7 +131,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**Live: v0.31.0.** **Unreleased, 0.32.0:** the stat buy and Deighton's Power Level table (150).
+**The live site is v0.32.0** (data 0.25, schema 0.15): the stat buy and Deighton's Power Level table (150).
 Ken alone: F9, F12, F13, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3). The wishlist: W29, W37 and W39.
 
