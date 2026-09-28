@@ -1783,7 +1783,11 @@ function renderShAdmin(){
   const sLeft=sp&&sp.total!=null ? sp.total-Engine.statSpent(ch) : null;
   const kLeft=kp&&kp.total!=null ? kp.total-Engine.skillSpent(ch) : null;
   const fmt=(n)=> n==null?"—":(n>=0?n+" left":(-n)+" over");
-  h += `<div class="trk"><h4>Budgets</h4>
+  // Decision 150: a character locked under the earlier creation table can't
+  // be measured against today's pools, so it isn't.
+  h += ch.creation.earlierTable ? `<div class="trk"><h4>Budgets</h4>
+    <span class="sub" style="flex-basis:auto">Built under the earlier creation table, so there's nothing to measure these edits against.</span></div>`
+    : `<div class="trk"><h4>Budgets</h4>
     <span class="sub" style="flex-basis:auto">Stat Points ${fmt(sLeft)} · Skill Points ${fmt(kLeft)} · CP ${bal?fmt(bal.left):"—"}</span>
     <span class="sub">Reference only — admin edits never block on these.</span></div>`;
 

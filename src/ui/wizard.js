@@ -46,7 +46,7 @@ function renderVitals(){
     const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), cp=Engine.cp(ch);
     h += `<div class="vgroup">`;
     h += vrow("Stat Points", sp.total==null?"roll "+sp.rollDie:(sp.total-Engine.statSpent(ch))+" / "+sp.total, sp.total!=null&&sp.total-Engine.statSpent(ch)<0?"over":"");
-    h += vrow("Skill Points", kp.total==null?"roll "+kp.rollDie:(kp.total-Engine.skillSpent(ch))+" / "+kp.total, kp.total!=null&&kp.total-Engine.skillSpent(ch)<0?"over":"");
+    h += vrow("Skill Points", (kp.total-Engine.skillSpent(ch))+" / "+kp.total, kp.total-Engine.skillSpent(ch)<0?"over":"");
     h += vrow("Character Pts", cp.left+" / "+cp.budget, cp.left<0?"over":"gold");
     h += `</div>`;
   }
@@ -147,14 +147,14 @@ function stepHeader(st){
 
 function renderPowerLevel(){
   const ch=S.ch;
-  let h = D.powerLevelFlags && D.powerLevelFlags.flagged ? flagHtml(D.powerLevelFlags) : "";
+  let h = "";
   h += `<div class="cards two">` + D.powerLevels.map(p=>`
     <button class="card ${ch.creation.powerLevel===p.id?"selected":""}" data-pl="${p.id}">
       <h3>${esc(p.name)}</h3>
       <p>${esc(p.description||"")}</p>
       <div class="stat-line">
-        <span>Stats <b>${p.statPoints.base}+${p.statPoints.roll}</b></span>
-        <span>Skills <b>${p.skillPoints.base}+${p.skillPoints.roll}</b></span>
+        <span>Stats <b>${p.statPoints.flat}</b> or <b>${p.statPoints.rolled.base}+${p.statPoints.rolled.roll}</b></span>
+        <span>Skills <b>${p.skillPoints.base}+${(p.skillPoints.plusStats||[]).join("+")}</b></span>
         <span>CP <b>${p.characterPoints}</b></span>
         <span>Skill cap <b>${p.maxSkillRank}</b></span>
         <span>Power cap <b>${p.maxPowerRank}</b></span>
@@ -162,7 +162,18 @@ function renderPowerLevel(){
         <span>${CR} <b>${p.startingCredits.roll}×${p.startingCredits.multiplier}</b></span>
       </div>
     </button>`).join("") + `</div>`;
-  return h;
+  return h + statMethodHtml(ch);
+}
+
+// Decision 150: the GM picks how Stat Points are set, for the whole table.
+const STAT_METHODS = [
+  ["flat", "Same for everyone", "Everyone at the table starts with the same Stat Points. Nobody's out-built on the first night."],
+  ["rolled", "Roll for them", "Each player rolls, and the dice decide who starts ahead."]];
+function statMethodHtml(ch){
+  const m = ch.creation.statMethod==="rolled" ? "rolled" : "flat";
+  return `<div class="field stat-method"><span>Stat Points — your GM's call</span><div class="form-toggle" role="group" aria-label="Stat Points">${STAT_METHODS.map(([k,name])=>
+      `<button type="button" data-stat-method="${k}" class="${m===k?"on":""}" aria-pressed="${m===k}">${esc(name)}</button>`).join("")}</div>
+    <p class="step-note">${esc(STAT_METHODS.find(x=>x[0]===m)[2])}</p></div>`;
 }
 
 function renderConcept(){
@@ -180,17 +191,19 @@ function renderConcept(){
 function renderStats(){
   const ch=S.ch, pool=Engine.statPool(ch);
   const left = pool.total==null?0:pool.total-Engine.statSpent(ch);
-  let h = `<div class="roll-entry">
-    <span class="die">${pool.rollDie}</span>
-    <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="statPoints" value="${pool.roll==null?"":pool.roll}" aria-label="stat point roll">
+  const rolled = pool.method==="rolled";
+  let h = `<div class="roll-entry">${rolled ? `
+    <span class="die">${pool.base}+${pool.rollDie}</span>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="statPoints" value="${pool.roll==null?"":pool.roll}" aria-label="stat point roll">` : ""}
     <span class="pool">Pool <b>${pool.total==null?"—":pool.total}</b> · Remaining <b>${pool.total==null?"—":left}</b></span>
-    <span class="dice-note">Roll your dice at the table and enter the result — the app never rolls for you. Explosions do not happen on creation rolls.</span>
+    <span class="dice-note">${esc(D.statRules.buyText)}${rolled?" Roll your dice at the table and enter the result — the app never rolls for you. Explosions do not happen on creation rolls.":""}</span>
   </div><div class="alloc">`;
   for (const s of D.stats){
     const v = ch.stats[s.id].base, m = Engine.statMod(Engine.statValue(ch,s.id));
+    const next = v<D.statRules.max ? Engine.nextStatCost(ch, s.id) : null;
     h += `<div class="alloc-row">
-      <div class="name">${esc(s.name)} <small>${esc(s.description)}</small></div>
-      ${stepper(v, "stat|"+s.id, v>D.statRules.base, v<D.statRules.max && left>0 && pool.total!=null)}
+      <div class="name">${esc(s.name)} <small>${esc(s.description)}</small>${next>1?`<small class="next-cost">The next point costs ${next}.</small>`:""}</div>
+      ${stepper(v, "stat|"+s.id, v>D.statRules.base, next!=null && next<=left && pool.total!=null)}
       <span class="mod ${m>0?"pos":m<0?"neg":""}">${m>=0?"+":""}${m}</span>
     </div>`;
   }
@@ -342,14 +355,13 @@ function renderHistory(){
 
 function renderSkills(){
   const ch=S.ch, pool=Engine.skillPool(ch), pl=Engine.powerLevel(ch);
-  const left = pool.total==null?0:pool.total-Engine.skillSpent(ch);
+  const left = pool.total-Engine.skillSpent(ch);
   // Focused Skills start higher (Decision 134); the header says by how much.
   const focused = Engine.focusedSkillIds(ch);
   const fCap = focused.length ? Engine.skillRankCap(ch, focused[0]) : null;
+  const sum = [pool.base, ...pool.stats.map(x=>`${x.id} ${x.value}`), ...(pool.granted?[`${pool.granted} from Advantages`]:[])].join(" + ");
   let h = `<div class="roll-entry">
-    <span class="die">${pool.rollDie}</span>
-    <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="skillPoints" value="${pool.roll==null?"":pool.roll}" aria-label="skill point roll">
-    <span class="pool">Pool <b>${pool.total==null?"—":pool.total}</b> · Remaining <b>${pool.total==null?"—":left}</b> · Max Rank <b>${pl.maxSkillRank}</b>${fCap!=null&&fCap>pl.maxSkillRank?` · Focused <b>${fCap}</b>`:""}</span>
+    <span class="pool">Pool <b>${pool.total}</b> <small>(${esc(sum)})</small> · Remaining <b>${left}</b> · Max Rank <b>${pl.maxSkillRank}</b>${fCap!=null&&fCap>pl.maxSkillRank?` · Focused <b>${fCap}</b>`:""}</span>
     <span class="dice-note">Trained checks: ${esc(D.skillCheckRules.trained)}. Untrained: ${esc(D.skillCheckRules.untrained)}.</span>
   </div>`;
   const dataWarns = D.skills.map(s=>Engine.skillLine(ch,s.id).dataWarning).filter(Boolean);
@@ -655,6 +667,7 @@ function bindMain(){
   main.querySelectorAll("[data-importdismiss]").forEach(b=>b.onclick=()=>{ S.importIssues=[]; update(); });
   // selections
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ ch.creation.powerLevel=b.dataset.pl; update(); });
+  main.querySelectorAll("[data-stat-method]").forEach(b=>b.onclick=()=>{ ch.creation.statMethod=b.dataset.statMethod; update(); });
   main.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
     if (ch.identity.archetype!==b.dataset.arch){
       ch.identity.archetype=b.dataset.arch;
