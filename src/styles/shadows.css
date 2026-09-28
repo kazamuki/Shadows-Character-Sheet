@@ -156,10 +156,10 @@ label.field{display:block; margin-bottom:14px}
 label.field span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
   text-transform:uppercase; color:var(--dim); margin-bottom:5px}
 /* W41: TAG'd or TAGless, a field that's a toggle rather than a box */
-.tag-choice{margin-bottom:14px}
-.tag-choice > span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin-bottom:5px}
-.tag-choice .form-toggle{width:max-content}
-.tag-choice .step-note{margin:6px 0 0}
+.tag-choice, .stat-method{margin-bottom:14px}
+.tag-choice > span, .stat-method > span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin-bottom:5px}
+.tag-choice .form-toggle, .stat-method .form-toggle{width:max-content}
+.tag-choice .step-note, .stat-method .step-note{margin:6px 0 0}
 input[type=text],input[type=search],input[type=number],input[type=date],textarea,select{
   width:100%; background:var(--ground); border:1px solid var(--frame); border-radius:4px;
   padding:9px 11px; font-size:.92rem}
@@ -190,6 +190,7 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .alloc > .picks{grid-column:1 / -1}
 .alloc-row .name{font-size:.9rem}
 .alloc-row .name small{display:block; color:var(--dim); font-size:.74rem}
+.alloc-row .name small.next-cost{color:var(--gold); font-family:var(--mono)}
 /* W20/W21: a skill's stats with this character's numbers. Primary violet,
    synergy magenta, as on the print sheet's badges. */
 .skstats{display:inline-flex; flex-wrap:wrap; gap:2px 6px; vertical-align:middle; margin-left:6px}

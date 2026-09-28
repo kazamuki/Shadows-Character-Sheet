@@ -53,9 +53,9 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.24",
+    "gamedataVersion": "0.25",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-09-24"
+    "updated": "2026-09-27"
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -129,6 +129,12 @@ window.SHADOWS_DATA = {
       "10": 4
     },
     "beyondTen": { "stepEvery": 5 },
+    /* What raising a stat TO each score costs in Stat Points at creation
+       (Decision 150). Every stat starts at `base` for free; a point costs 1
+       up to 6 and 2 from 7 to 10, so a 10 costs 13 in all. `buyText` is the
+       rule as a player reads it. */
+    "raiseCost": { "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 2, "8": 2, "9": 2, "10": 2 },
+    "buyText": "Every stat starts at 1 for free. Each point up to 6 costs 1 Stat Point, and each point from 7 to 10 costs 2, so a 10 costs 13 in all.",
     "modifierRuleText": "For each point below 4, a -1 penalty for skills or synergies. For each point above 6, a +1 bonus for skills or synergies.",
     "beyondHumanLimits": "Some Archetypes (Vampires, Werewolves) are not bound by normal human ceilings; their Basic Stats can exceed 10. Once a stat passes 10, gains slow down: 11-15 is +5, 16-20 is +6, 21-25 is +7, and another +1 for every 5 points after that.",
     "ranges": [
@@ -293,8 +299,11 @@ window.SHADOWS_DATA = {
     "botch": "Rolling a 1: the action fails and the situation gets worse."
   },
   /* POWER LEVELS -- the 4 campaign tiers. The creation wizard reads the chosen
-     tier's `statPoints`/`skillPoints` pools, the `max*` caps (enforced strictly,
-     Decision 10), `characterPoints`, and `startingCredits` roll. `maxBoost` caps
+     tier's pools, the `max*` caps (enforced strictly, Decision 10),
+     `characterPoints`, and `startingCredits` roll. `statPoints` is a
+     `flat` pool or a `rolled` one (base + dice), the GM's pick, stored as
+     the character's `creation.statMethod` (Decision 150). `skillPoints` is
+     `base` plus the scores of `plusStats`, with no roll. `maxBoost` caps
      how many times any single target may be CP-boosted (Decision 3). Archetype
      scaling tables (below) key off these `id`s, so keep the four ids stable.
      `roll` strings are physical dice the player enters -- the app never rolls. */
@@ -304,17 +313,17 @@ window.SHADOWS_DATA = {
       "name": "Street Level",
       "order": 1,
       "statPoints": {
-        "base": 30,
-        "roll": "2d10"
+        "flat": 45,
+        "rolled": { "base": 40, "roll": "1d10" }
       },
       "skillPoints": {
         "base": 40,
-        "roll": "3d10"
+        "plusStats": ["INT", "REF"]
       },
       "maxSkillRank": 4,
       "maxPowerRank": 2,
       "maxBoost": 2,
-      "characterPoints": 10,
+      "characterPoints": 5,
       "startingCredits": {
         "roll": "3d4",
         "multiplier": 100
@@ -326,17 +335,17 @@ window.SHADOWS_DATA = {
       "name": "Heroic",
       "order": 2,
       "statPoints": {
-        "base": 40,
-        "roll": "3d10"
+        "flat": 50,
+        "rolled": { "base": 45, "roll": "1d10" }
       },
       "skillPoints": {
         "base": 45,
-        "roll": "3d10"
+        "plusStats": ["INT", "REF"]
       },
       "maxSkillRank": 5,
       "maxPowerRank": 3,
       "maxBoost": 3,
-      "characterPoints": 15,
+      "characterPoints": 10,
       "startingCredits": {
         "roll": "4d4",
         "multiplier": 100
@@ -348,17 +357,17 @@ window.SHADOWS_DATA = {
       "name": "Shadows",
       "order": 3,
       "statPoints": {
-        "base": 50,
-        "roll": "4d10"
+        "flat": 55,
+        "rolled": { "base": 50, "roll": "1d10" }
       },
       "skillPoints": {
         "base": 50,
-        "roll": "3d10"
+        "plusStats": ["INT", "REF"]
       },
-      "maxSkillRank": 5,
+      "maxSkillRank": 6,
       "maxPowerRank": 4,
       "maxBoost": 4,
-      "characterPoints": 20,
+      "characterPoints": 15,
       "startingCredits": {
         "roll": "5d4",
         "multiplier": 100
@@ -370,17 +379,17 @@ window.SHADOWS_DATA = {
       "name": "World Coming Down",
       "order": 4,
       "statPoints": {
-        "base": 60,
-        "roll": "5d10"
+        "flat": 60,
+        "rolled": { "base": 55, "roll": "1d10" }
       },
       "skillPoints": {
         "base": 55,
-        "roll": "3d10"
+        "plusStats": ["INT", "REF"]
       },
-      "maxSkillRank": 6,
+      "maxSkillRank": 7,
       "maxPowerRank": 5,
       "maxBoost": 5,
-      "characterPoints": 25,
+      "characterPoints": 20,
       "startingCredits": {
         "roll": "5d10",
         "multiplier": 100
@@ -388,14 +397,6 @@ window.SHADOWS_DATA = {
       "description": "The highest starting scale of play. Threats include the full weight of corporations, criminal empires, and supernatural entities capable of destabilizing entire regions - or the world itself. Survival may not be the only question; what survives with you becomes just as important."
     }
   ],
-  // REVIEW (F8 - BLOCKS WIZARD): WIP vs REF disagree on the stat-point roll. The
-  // data below uses the scaled REF table; once D. rules, this is a four-number
-  // edit to `powerLevels[*].statPoints` -- no app change. See SCHEMA.md section 5.
-  "powerLevelFlags": {
-    "flagged": true,
-    "playerNote": "How many Stat Points you roll isn't settled. The sheet uses the table that scales with your Campaign Power Level.",
-    "flagNote": "F8: WIP 'Rolling Stat Points' says a flat 'Roll 3d10 + 30' for all levels; the REF table scales stat point rolls by power level (30+2d10 / 40+3d10 / 50+4d10 / 60+5d10). Data file uses the scaled REF table pending confirmation. Note: explosions do NOT happen on creation rolls."
-  },
   /* SKILLS -- the 36-skill catalog (11 combat / 9 utility / 16 general). Each entry's
      `primaryStat` and `synergyStat` MUST be valid stat ids (a wrong id -- e.g.
      legacy "BODY" -- is auto-normalized where known and otherwise flagged, not

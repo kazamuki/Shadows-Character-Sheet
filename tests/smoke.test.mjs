@@ -348,7 +348,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.14");
+  assert.equal(resumed.meta.schemaVersion, "0.15");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -2108,4 +2108,58 @@ test("deleting a session asks in the modal: Cancel keeps it, the button deletes 
   app.click("#modal [data-askyes]");
   assert.equal(activeChar(app).sessions.length, 0, "the button didn't delete it");
   assert.deepEqual(app.errors, []);
+});
+
+// ── The stat buy (Decision 150) ───────────────────────────────────────
+
+test("Decision 150: the GM picks flat or rolled on the Power Level step, and Stats asks for dice only when rolling", () => {
+  const pl = draftOn("arcanist", "power-level");
+  const pick = k => pl.$(`[data-stat-method="${k}"]`);
+  assert.ok(pick("flat") && pick("rolled"), "no flat/rolled choice on the Power Level step");
+  assert.equal(pick("flat").getAttribute("aria-pressed"), "true", "a new character isn't on the flat pool");
+  assert.match(pl.$("#main").textContent, /Stats 45 or 40\+1d10/, "the Street card doesn't show both pools");
+  pick("rolled").click();
+  assert.equal(draft(pl).creation.statMethod, "rolled");
+  assert.deepEqual(pl.errors, []);
+
+  const flat = draftOn("arcanist", "stats");                         // all 5s: 32 of 45
+  assert.equal(flat.$('[data-roll="statPoints"]'), null, "a flat pool asks for a roll");
+  assert.match(flat.$("#main .pool").textContent, /Pool 45 · Remaining 13/);
+  flat.click('[data-step="stat|BOD|1"]');                             // 6: +1
+  flat.click('[data-step="stat|BOD|1"]');                             // 7: +2
+  assert.match(flat.$("#main .pool").textContent, /Remaining 10/, "a 7 didn't cost 2");
+  assert.match(flat.$("#main").textContent, /The next point costs 2\./);
+  assert.deepEqual(flat.errors, []);
+
+  pl.$$("#ledger [data-goto]")[D.creationFlow.steps.findIndex(s => s.id === "stats")].click();
+  assert.ok(pl.$('[data-roll="statPoints"]'), "a rolled pool doesn't ask for the roll");
+  assert.equal(pl.$("#main .die").textContent, "40+1d10");
+  assert.deepEqual(pl.errors, []);
+});
+
+test("Decision 150: the + stops where the next point costs more than is left", () => {
+  const app = draftOn("arcanist", "stats");
+  const ch = draft(app);
+  Object.assign(ch.stats, { BOD: { base: 6, ipe: 0 }, REF: { base: 10, ipe: 0 }, MOB: { base: 10, ipe: 0 }, INT: { base: 8, ipe: 0 },
+    TECH: { base: 2, ipe: 0 }, COOL: { base: 2, ipe: 0 }, MAG: { base: 2, ipe: 0 }, EMP: { base: 2, ipe: 0 } });
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const again = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("stats"), maxReached: steps.length - 1 } } });
+  again.$$("#main button").find(b => /Resume draft/.test(b.textContent)).click();
+  assert.match(again.$("#main .pool").textContent, /Remaining 1\b/);
+  assert.ok(again.$('[data-step="stat|BOD|1"]').disabled, "a 7 is buyable with 1 point left");
+  assert.ok(!again.$('[data-step="stat|TECH|1"]').disabled, "a 3 isn't buyable with 1 point left");
+  assert.deepEqual(again.errors, []);
+});
+
+test("Decision 150: Admin doesn't measure a character locked under the earlier table", () => {
+  const old = lockedCharacter();
+  old.meta.schemaVersion = "0.14";
+  const sheet = openSheet(Engine.migrate(old), "main");
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-admin]");
+  assert.match(sheet.$("#main").textContent, /earlier creation table/);
+  assert.doesNotMatch(sheet.$("#main").textContent, /Stat Points \d+ (left|over)/);
+  const now = openSheet(lockedCharacter(), "main");
+  now.click("[data-menu-toggle]"); now.click("[data-admin]");
+  assert.match(now.$("#main").textContent, /Stat Points \d+ (left|over)/, "a current character lost its budgets");
+  assert.deepEqual([sheet.errors, now.errors], [[], []]);
 });

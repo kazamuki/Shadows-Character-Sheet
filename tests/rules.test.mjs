@@ -1049,3 +1049,49 @@ test("R14: every spell in the Book of Known Spells is in the catalog, as the boo
     assert.equal(JSON.stringify(s.overflow), JSON.stringify(b.overflow), `${b.name}: Overflow`); // D lives in another realm
   }
 });
+
+// ── Character Points and Power Level (Decision 150) ───────────────────
+// Source: Deighton's playtested Campaign Power Level table and STAT Point
+// Costs, relayed by Ken on 2026-09-27 (the CRB's 040 text still says 3d10+30
+// until it's rewritten). The base of 1 is free: "going to 7 costs 2".
+
+test("Deighton's table: flat Stat Points, Skill Points, CP and Max Skill Rank by Campaign level", () => {
+  const want = {
+    street:  { flat: 45, skills: 40, cp: 5,  skillCap: 4, powerCap: 2, boost: 2 },
+    heroic:  { flat: 50, skills: 45, cp: 10, skillCap: 5, powerCap: 3, boost: 3 },
+    shadows: { flat: 55, skills: 50, cp: 15, skillCap: 6, powerCap: 4, boost: 4 },
+    wcd:     { flat: 60, skills: 55, cp: 20, skillCap: 7, powerCap: 5, boost: 5 },
+  };
+  for (const [id, w] of Object.entries(want)) {
+    const p = D.powerLevels.find(x => x.id === id);
+    assert.equal(p.statPoints.flat, w.flat, `${id}: flat Stat Points`);
+    assert.equal(p.skillPoints.base, w.skills, `${id}: Skill Points base`);
+    assert.equal(p.skillPoints.plusStats.join("+"), "INT+REF", `${id}: Skill Points add INT + REF`);
+    assert.equal(p.characterPoints, w.cp, `${id}: CP`);
+    assert.equal(p.maxSkillRank, w.skillCap, `${id}: Max Skill Rank`);
+    assert.equal(p.maxPowerRank, w.powerCap, `${id}: Max Power Rank`);
+    assert.equal(p.maxBoost, w.boost, `${id}: Max Boost`);
+  }
+});
+
+test("a stat point costs 1 up to 6 and 2 from 7 to 10, from a free 1, so a 10 costs 13", () => {
+  const total = [0, 0, 1, 2, 3, 4, 5, 7, 9, 11, 13];            // score -> Stat Points
+  for (let s = 1; s <= 10; s++) assert.equal(Engine.statCost(s), total[s], `a ${s} costs ${total[s]}`);
+  const ch = subject();
+  ch.stats.REF.base = 6;
+  assert.equal(Engine.nextStatCost(ch, "REF"), 2, "6 -> 7 costs 2");
+  ch.stats.REF.base = 4;
+  assert.equal(Engine.nextStatCost(ch, "REF"), 1, "4 -> 5 costs 1");
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 1;
+  ch.stats.BOD.base = 10; ch.stats.REF.base = 10;                 // two 10s at Street
+  assert.equal(Engine.statSpent(ch), 26);
+  assert.equal(Engine.statPool(ch).total - Engine.statSpent(ch), 19, "Street leaves 19 after two 10s");
+});
+
+test("Skill Points are the level's base + INT + REF, with no roll", () => {
+  const ch = subject();
+  ch.stats.INT.base = 6; ch.stats.REF.base = 7;
+  const p = Engine.skillPool(ch);
+  assert.equal(p.total, 40 + 6 + 7);
+  assert.equal(Engine.validate("skills", ch).some(i => /roll/i.test(i.msg)), false, "the Skills step still asks for a roll");
+});
