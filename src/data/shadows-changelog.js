@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.32.0",
-    "date": null,
+    "date": "2026-09-28",
     "intro": [],
     "items": [
       "**New starting numbers at every Campaign Power Level.** Stat Points are now the same for everyone at the table (45 at Street, 50 Heroic, 55 Shadows, 60 World Coming Down), unless your GM has you roll for them instead. Pick which on the Power Level step.",
