@@ -1,0 +1,578 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-29T02:44:50.223Z",
+  "title": "Design System: Shadows Character Sheet",
+  "extensions": {
+    "colorMeta": {
+      "midnight-underpass": {
+        "role": "neutral",
+        "displayName": "Midnight Underpass",
+        "canonical": "#0D1731",
+        "oklch": "oklch(21.2% 0.053 266.1)",
+        "tonalRamp": [
+          "#030921",
+          "#16203B",
+          "#2D3A57",
+          "#4F5D7C",
+          "#7180A1",
+          "#95A4C7",
+          "#BACAEE",
+          "#E7EFFF"
+        ]
+      },
+      "underpass-panel": {
+        "role": "neutral",
+        "displayName": "Underpass Panel",
+        "canonical": "#111E3D",
+        "oklch": "oklch(24.2% 0.062 265.0)",
+        "tonalRamp": [
+          "#020825",
+          "#13203F",
+          "#2B395B",
+          "#4C5D81",
+          "#6E80A6",
+          "#92A5CC",
+          "#B7CBF4",
+          "#E7EFFE"
+        ]
+      },
+      "raised-panel": {
+        "role": "neutral",
+        "displayName": "Raised Panel",
+        "canonical": "#16264C",
+        "oklch": "oklch(27.8% 0.073 264.9)",
+        "tonalRamp": [
+          "#010629",
+          "#101F44",
+          "#273961",
+          "#495D87",
+          "#6B80AD",
+          "#8EA4D3",
+          "#B3CBFB",
+          "#E7EFFF"
+        ]
+      },
+      "deep-circuit": {
+        "role": "neutral",
+        "displayName": "Deep Circuit",
+        "canonical": "#203F7B",
+        "oklch": "oklch(37.9% 0.109 262.0)",
+        "tonalRamp": [
+          "#000729",
+          "#021B54",
+          "#193772",
+          "#3B5C9A",
+          "#5C7FC1",
+          "#7FA4E9",
+          "#AFCBFF",
+          "#E6EFFE"
+        ]
+      },
+      "aether-pulse": {
+        "role": "primary",
+        "displayName": "Aether Pulse",
+        "canonical": "#712B8C",
+        "oklch": "oklch(43.5% 0.161 315.1)",
+        "tonalRamp": [
+          "#160020",
+          "#360048",
+          "#580C72",
+          "#7F399A",
+          "#A45EC1",
+          "#CA83E9",
+          "#E7B3FF",
+          "#F7E8FE"
+        ]
+      },
+      "aether-pulse-lit": {
+        "role": "primary",
+        "displayName": "Aether Pulse, lit",
+        "canonical": "#9B4DBA",
+        "oklch": "oklch(56.2% 0.176 315.3)",
+        "tonalRamp": [
+          "#160020",
+          "#360148",
+          "#5A0075",
+          "#82339F",
+          "#A759C6",
+          "#CE7EEF",
+          "#E7B3FE",
+          "#F7E8FF"
+        ]
+      },
+      "neon-veil": {
+        "role": "tertiary",
+        "displayName": "Neon Veil",
+        "canonical": "#BC489A",
+        "oklch": "oklch(58.4% 0.175 340.9)",
+        "tonalRamp": [
+          "#1B0013",
+          "#400130",
+          "#690051",
+          "#99257A",
+          "#C14D9F",
+          "#EB73C5",
+          "#FFACE1",
+          "#FFE6F5"
+        ]
+      },
+      "static-cyan": {
+        "role": "secondary",
+        "displayName": "Static Cyan",
+        "canonical": "#1BBBC4",
+        "oklch": "oklch(72.2% 0.119 201.2)",
+        "tonalRamp": [
+          "#000E0F",
+          "#02272A",
+          "#014347",
+          "#036B70",
+          "#079299",
+          "#19BAC3",
+          "#56E2EA",
+          "#C1FBFF"
+        ]
+      },
+      "ghostly-green": {
+        "role": "semantic",
+        "displayName": "Ghostly Green",
+        "canonical": "#71C388",
+        "oklch": "oklch(74.9% 0.118 151.7)",
+        "tonalRamp": [
+          "#001004",
+          "#002A10",
+          "#024721",
+          "#16703A",
+          "#42945C",
+          "#68BA7F",
+          "#8EE1A4",
+          "#C7FFD4"
+        ]
+      },
+      "signal-gold": {
+        "role": "semantic",
+        "displayName": "Signal Gold",
+        "canonical": "#F2C94C",
+        "oklch": "oklch(85.0% 0.146 90.5)",
+        "tonalRamp": [
+          "#100A00",
+          "#2B2001",
+          "#483802",
+          "#725B05",
+          "#9C7C01",
+          "#C79F05",
+          "#EFC648",
+          "#FFEEBE"
+        ]
+      },
+      "neutral-zone": {
+        "role": "neutral",
+        "displayName": "Neutral Zone",
+        "canonical": "#E7E7E7",
+        "oklch": "oklch(92.8% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#222222",
+          "#3A3A3A",
+          "#5D5D5D",
+          "#808080",
+          "#A4A4A4",
+          "#CACACA",
+          "#EEEEEE"
+        ]
+      },
+      "overcast-steel": {
+        "role": "neutral",
+        "displayName": "Overcast Steel",
+        "canonical": "#8C97B5",
+        "oklch": "oklch(67.8% 0.046 269.3)",
+        "tonalRamp": [
+          "#05091E",
+          "#192038",
+          "#313953",
+          "#535D78",
+          "#757F9D",
+          "#99A4C2",
+          "#BECAEA",
+          "#E8EEFE"
+        ]
+      },
+      "gutter-black": {
+        "role": "neutral",
+        "displayName": "Gutter Black",
+        "canonical": "#111111",
+        "oklch": "oklch(17.8% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#222222",
+          "#3A3A3A",
+          "#5D5D5D",
+          "#808080",
+          "#A4A4A4",
+          "#CACACA",
+          "#EEEEEE"
+        ]
+      },
+      "on-accent": {
+        "role": "neutral",
+        "displayName": "On-accent",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#222222",
+          "#3A3A3A",
+          "#5D5D5D",
+          "#808080",
+          "#A4A4A4",
+          "#CACACA",
+          "#EEEEEE"
+        ]
+      },
+      "light-ground": {
+        "role": "neutral",
+        "displayName": "Pale Concrete (light ground)",
+        "canonical": "#F5F4F2",
+        "oklch": "oklch(96.7% 0.003 84.6)",
+        "tonalRamp": [
+          "#0C0B0A",
+          "#222120",
+          "#3B3A39",
+          "#5E5D5C",
+          "#81807E",
+          "#A5A4A2",
+          "#CBCAC8",
+          "#EFEEEC"
+        ]
+      },
+      "light-panel": {
+        "role": "neutral",
+        "displayName": "Light Panel",
+        "canonical": "#FFFFFF",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#222222",
+          "#3A3A3A",
+          "#5D5D5D",
+          "#808080",
+          "#A4A4A4",
+          "#CACACA",
+          "#EEEEEE"
+        ]
+      },
+      "light-raised-panel": {
+        "role": "neutral",
+        "displayName": "Light Raised Panel",
+        "canonical": "#EDEBE7",
+        "oklch": "oklch(94.1% 0.006 84.6)",
+        "tonalRamp": [
+          "#0C0B08",
+          "#23211F",
+          "#3C3A37",
+          "#5F5D5A",
+          "#82807C",
+          "#A6A4A1",
+          "#CCCAC6",
+          "#F0EEEA"
+        ]
+      },
+      "light-text": {
+        "role": "neutral",
+        "displayName": "Light-theme text",
+        "canonical": "#111111",
+        "oklch": "oklch(17.8% 0.000 89.9)",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#222222",
+          "#3A3A3A",
+          "#5D5D5D",
+          "#808080",
+          "#A4A4A4",
+          "#CACACA",
+          "#EEEEEE"
+        ]
+      },
+      "light-dim": {
+        "role": "neutral",
+        "displayName": "Light-theme dim",
+        "canonical": "#5B6472",
+        "oklch": "oklch(50.1% 0.025 259.2)",
+        "tonalRamp": [
+          "#050B16",
+          "#1A222E",
+          "#333B48",
+          "#555E6C",
+          "#778190",
+          "#9BA5B5",
+          "#C1CBDB",
+          "#E5EFFE"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The home hero and the header brand only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "A wizard step's title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, review-block, hit-panel and modal headings; the character's name."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, descriptions and notes, at 62–80ch."
+      },
+      "label": {
+        "displayName": "Mono Caps label",
+        "purpose": "Field labels, section rules, table heads, chips, badges, vitals keys. Uppercase."
+      },
+      "readout": {
+        "displayName": "Readout",
+        "purpose": "Stat scores and Condition-card numbers, in tabular figures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "floating-note",
+        "value": "0 6px 24px rgba(5,10,22,.45)",
+        "purpose": "Tips and the undo toast."
+      },
+      {
+        "name": "dialog",
+        "value": "0 12px 48px rgba(5,10,22,.6)",
+        "purpose": "The modal, over a rgba(5,10,22,.62) backdrop."
+      },
+      {
+        "name": "drawer",
+        "value": "-18px 0 44px rgba(0,0,0,.45)",
+        "purpose": "The side drawer."
+      },
+      {
+        "name": "selected-ring",
+        "value": "0 0 0 1px var(--cyan), 0 0 18px rgba(27,187,196,.12)",
+        "purpose": "A chosen card."
+      },
+      {
+        "name": "landed",
+        "value": "0 0 0 2px var(--magenta), 0 0 18px var(--magenta)",
+        "purpose": "A hit landing; fades over .7s."
+      }
+    ],
+    "motion": [
+      {
+        "name": "hover",
+        "value": "color .15s, border-color .15s",
+        "purpose": "Tag and control hover."
+      },
+      {
+        "name": "modal-in",
+        "value": "opacity and translateY(8px), .16s ease-out",
+        "purpose": "The modal opening."
+      },
+      {
+        "name": "toast-in",
+        "value": "opacity and translateY(8px), .18s ease-out",
+        "purpose": "The undo toast arriving."
+      },
+      {
+        "name": "meter",
+        "value": "width .35s",
+        "purpose": "Condition meters changing."
+      },
+      {
+        "name": "landed",
+        "value": ".7s ease-out, twice on a Pain rise",
+        "purpose": "A hit landing; never on heal or undo."
+      },
+      {
+        "name": "reduced",
+        "value": "prefers-reduced-motion: reduce → none",
+        "purpose": "Every animation off."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "header-unsticks",
+        "value": "max-height: 540px"
+      },
+      {
+        "name": "brand-drops-prefix",
+        "value": "max-width: 480px"
+      },
+      {
+        "name": "statgroups-two-up",
+        "value": "max-width: 540px"
+      },
+      {
+        "name": "phone",
+        "value": "max-width: 640px"
+      },
+      {
+        "name": "console-stacks",
+        "value": "max-width: 900px"
+      },
+      {
+        "name": "trackers-two-columns",
+        "value": "min-width: 1000px"
+      },
+      {
+        "name": "one-column",
+        "value": "max-width: 1060px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Default action: raised panel, one frame line, lights violet on hover.",
+      "html": "<button class=\"ds-btn\">Import file</button>",
+      "css": ".ds-btn{font-family:var(--body,Inter,system-ui,sans-serif);border-radius:4px;padding:10px 22px;font-size:.9rem;font-weight:600;border:1px solid var(--frame,#203F7B);background:var(--panel-2,#16264C);color:var(--text,#E7E7E7);cursor:pointer}.ds-btn:hover{border-color:var(--violet-hi,#9B4DBA)}.ds-btn:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The brand's hand: the main action of a step.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Next</button>",
+      "css": ".ds-btn{font-family:var(--body,Inter,system-ui,sans-serif);border-radius:4px;padding:10px 22px;font-size:.9rem;font-weight:600;border:1px solid var(--frame,#203F7B);background:var(--panel-2,#16264C);color:var(--text,#E7E7E7);cursor:pointer}.ds-btn:hover{border-color:var(--violet-hi,#9B4DBA)}.ds-btn:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}.ds-btn-primary{background:var(--violet,#712B8C);border-color:var(--violet,#712B8C);color:var(--on-accent,#fff)}.ds-btn-primary:hover{background:var(--violet-hi,#9B4DBA);border-color:var(--violet-hi,#9B4DBA)}"
+    },
+    {
+      "name": "Go Button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The moment of commitment: Lock & Export, Log session, New character.",
+      "html": "<button class=\"ds-btn ds-btn-go\">Lock &amp; Export</button>",
+      "css": ".ds-btn{font-family:var(--body,Inter,system-ui,sans-serif);border-radius:4px;padding:10px 22px;font-size:.9rem;font-weight:600;border:1px solid var(--frame,#203F7B);background:var(--panel-2,#16264C);color:var(--text,#E7E7E7);cursor:pointer}.ds-btn:hover{border-color:var(--violet-hi,#9B4DBA)}.ds-btn:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}.ds-btn-go{background:var(--cyan,#1BBBC4);border-color:var(--cyan,#1BBBC4);color:var(--ink,#111)}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A Mono Caps label over a field sunk into the ground.",
+      "html": "<label class=\"ds-field\"><span>Name</span><input type=\"text\" placeholder=\"What the street calls you\"></label>",
+      "css": ".ds-field{display:block;font-family:var(--body,Inter,system-ui,sans-serif)}.ds-field span{display:block;font-family:var(--mono,'Roboto Mono',monospace);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim,#8C97B5);margin-bottom:5px}.ds-field input{width:100%;box-sizing:border-box;background:var(--ground,#0D1731);border:1px solid var(--frame,#203F7B);border-radius:4px;padding:9px 11px;font-size:.92rem;color:var(--text,#E7E7E7);font-family:inherit}.ds-field input:focus{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}"
+    },
+    {
+      "name": "Stepper",
+      "kind": "custom",
+      "refersTo": "stepper",
+      "description": "Two raised keys around a mono value.",
+      "html": "<div class=\"ds-stepper\"><button aria-label=\"Lower\">−</button><span>7</span><button aria-label=\"Raise\">+</button></div>",
+      "css": ".ds-stepper{display:inline-flex;align-items:center;border:1px solid var(--frame,#203F7B);border-radius:4px;overflow:hidden}.ds-stepper button{background:var(--panel-2,#16264C);border:0;color:var(--text,#E7E7E7);width:30px;height:30px;font-size:1rem;cursor:pointer}.ds-stepper button:hover{background:var(--frame,#203F7B);color:var(--on-accent,#fff)}.ds-stepper button:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}.ds-stepper span{font-family:var(--mono,'Roboto Mono',monospace);width:42px;text-align:center;color:var(--text,#E7E7E7)}"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Mono caps, the line and text in one colour; the colour is the meaning.",
+      "html": "<span class=\"ds-chip\">Draft</span> <span class=\"ds-chip ds-gold\">3 CP</span> <span class=\"ds-chip ds-pain\">Pain 2</span> <span class=\"ds-chip ds-ok\">Locked</span>",
+      "css": ".ds-chip{font-family:var(--mono,'Roboto Mono',monospace);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid var(--frame,#203F7B);color:var(--dim,#8C97B5)}.ds-gold{color:var(--gold,#F2C94C);border-color:var(--gold,#F2C94C)}.ds-pain{color:var(--magenta,#BC489A);border-color:var(--magenta,#BC489A)}.ds-ok{color:var(--green,#71C388);border-color:var(--green,#71C388)}"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab-active",
+      "description": "One scrolling row; the active tab is bright with a cyan underline.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-on\">Main</button><button class=\"ds-tab\">Trackers</button><button class=\"ds-tab\">Loadout</button><button class=\"ds-tab\">Magic</button></nav>",
+      "css": ".ds-tabs{display:flex;gap:2px;border-bottom:1px solid var(--frame,#203F7B)}.ds-tab{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--dim,#8C97B5);padding:9px 14px 10px;font-size:.85rem;font-weight:500;font-family:var(--body,Inter,system-ui,sans-serif);cursor:pointer}.ds-tab:hover{color:var(--text,#E7E7E7)}.ds-tab:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}.ds-on{color:var(--text,#E7E7E7);border-bottom-color:var(--cyan,#1BBBC4)}"
+    },
+    {
+      "name": "Selected Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A panel with one frame line; chosen, it takes a cyan ring.",
+      "html": "<button class=\"ds-card ds-sel\"><h3>Professional</h3><p>Trained, paid, and good at it.</p></button>",
+      "css": ".ds-card{display:block;text-align:left;background:var(--panel,#111E3D);border:1px solid var(--frame,#203F7B);border-radius:6px;padding:16px 18px;color:var(--text,#E7E7E7);cursor:pointer;font-family:var(--body,Inter,system-ui,sans-serif)}.ds-card:hover{border-color:var(--violet-hi,#9B4DBA)}.ds-card:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}.ds-card h3{font-family:var(--display,'Chakra Petch',sans-serif);font-weight:600;font-size:1.05rem;letter-spacing:.05em;margin:0 0 2px}.ds-card p{font-size:.85rem;color:var(--dim,#8C97B5);margin:0}.ds-sel{border-color:var(--cyan,#1BBBC4);box-shadow:0 0 0 1px var(--cyan,#1BBBC4),0 0 18px rgba(27,187,196,.12)}"
+    },
+    {
+      "name": "Condition Readout",
+      "kind": "custom",
+      "refersTo": "readout-card",
+      "description": "Signature: a mono label, a big Oxanium number in the colour of what it is, a meter; magenta in danger.",
+      "html": "<div class=\"ds-cond\"><div class=\"ds-lab\">HP</div><div class=\"ds-big\">28<small> / 35</small></div><div class=\"ds-meter\"><i style=\"width:80%\"></i></div></div><div class=\"ds-cond ds-danger\"><div class=\"ds-lab\">Sanity</div><div class=\"ds-big\">3<small> / 12</small></div><div class=\"ds-meter\"><i style=\"width:25%\"></i></div></div>",
+      "css": ".ds-cond{display:inline-block;width:150px;vertical-align:top;margin-right:10px;background:var(--panel,#111E3D);border:1px solid var(--frame,#203F7B);border-radius:8px;padding:13px 15px}.ds-lab{font-family:var(--mono,'Roboto Mono',monospace);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim,#8C97B5)}.ds-big{font-family:var(--numeric,Oxanium,monospace);font-weight:600;font-variant-numeric:tabular-nums;font-size:1.9rem;line-height:1.1;color:var(--green,#71C388);margin-top:3px}.ds-big small{font-family:var(--mono,'Roboto Mono',monospace);font-size:.8rem;color:var(--dim,#8C97B5)}.ds-meter{height:5px;border-radius:3px;background:var(--panel-2,#16264C);overflow:hidden;margin-top:9px}.ds-meter i{display:block;height:100%;background:var(--green,#71C388)}.ds-danger{border-color:var(--magenta,#BC489A)}.ds-danger .ds-big{color:var(--magenta,#BC489A)}.ds-danger .ds-meter i{background:var(--magenta,#BC489A)}"
+    },
+    {
+      "name": "Tip",
+      "kind": "custom",
+      "refersTo": "tip",
+      "description": "A rule a hover or tap away: raised panel, cyan left edge, floating shadow.",
+      "html": "<div class=\"ds-tip\"><span class=\"ds-tip-t\">Pain Level</span>Each level past the first costs you on every check until you heal.</div>",
+      "css": ".ds-tip{max-width:340px;background:var(--panel-2,#16264C);color:var(--text,#E7E7E7);border:1px solid var(--frame,#203F7B);border-left:3px solid var(--cyan,#1BBBC4);border-radius:4px;box-shadow:0 6px 24px rgba(5,10,22,.45);padding:8px 12px;font-size:.82rem;line-height:1.45;font-family:var(--body,Inter,system-ui,sans-serif)}.ds-tip-t{display:block;font-family:var(--mono,'Roboto Mono',monospace);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan,#1BBBC4);margin-bottom:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Night-Shift Readout",
+    "overview": "A monitor glowing at three in the morning. The ground is Midnight Underpass;\npanels sit on it one shade lighter, framed by a single Deep Circuit line. The\nnumbers are what you came for, and they read cold and exact — Static Cyan for a\nvalue, Ghostly Green for health, Signal Gold for what you can spend. When\nsomething goes wrong, Neon Veil magenta says so, and when a hit lands it flashes\nonce. The rest of the time the screen is quiet.\n\nIt is an instrument, not a poster. Density and legibility win over atmosphere,\nbecause the sheet is read mid-scene on a phone between turns. Atmosphere lives in\nprecise details: letter-spaced mono labels, a violet haze behind the header, the\ndisplay face on a character's name, the magenta hatching on a Health Level that\nMassive damage took away. Neon is signal — state, damage, focus, selection —\nnever decoration.\n\nIt is **not** generic cyberpunk (no glitch, scanlines, chromatic aberration or\nterminal green), **not** a fantasy parchment sheet (no scrolls, textures or\nornament, magic or not), and **not** a SaaS dashboard (no big soft cards,\npastel gradients or friendly illustration). Shadows is noir and urban fantasy.",
+    "keyCharacteristics": [
+      "Dark midnight-navy ground; depth by tone, one 1px frame line per surface.",
+      "Engineered at rest, colour only in response: hover, selection, state, damage.",
+      "Four type voices, each with one job: display for names, Inter for prose, mono for labels and ids, Oxanium for big numbers.",
+      "Small, consistent radii (3–8px); nothing pill-soft except the jump chips.",
+      "Colour carries fixed meaning: cyan value/focus, green health/done, gold spend/caution, magenta harm/error, violet the brand's hand.",
+      "A light theme exists and folds the neons onto the two brand constants rather than inventing new colours."
+    ],
+    "rules": [
+      {
+        "name": "The Signal-Not-Decor Rule",
+        "body": "A neon appears only when it means something: a value, a state, a warning, harm, focus. If you can't name what the colour is telling the player, it's Overcast Steel.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Meaning Rule",
+        "body": "Each neon has one job and keeps it on every screen. Magenta never marks something good; green never marks something spent. A new readout takes the colour of what it *is* (a pool of Luck is gold wherever it appears).",
+        "section": "colors"
+      },
+      {
+        "name": "The Fold Rule",
+        "body": "In the light theme, cyan and green fold onto Deep Circuit and gold and magenta fold onto Aether Pulse, because the neons fail contrast on a pale ground. Never hard-code a neon hex; use the token so the fold happens.",
+        "section": "colors"
+      },
+      {
+        "name": "The Four Voices Rule",
+        "body": "Display names things, Inter explains them, mono labels and counts them, Oxanium shows the number you came for. Don't cross them: no Inter labels in capitals, no display face in a paragraph, no big numbers in Inter.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono Caps Rule",
+        "body": "Every label that names a field or a section is Roboto Mono, uppercase, letter-spaced at least .12em, in Overcast Steel (Aether Pulse, lit for section rules). It's the system's handwriting.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Floor Rule",
+        "body": "Surfaces at rest are flat. A shadow means the thing floats (tip, toast, modal, drawer); a glow means the thing just changed state (selected, hit, pulse). Nothing gets a shadow for looking important.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-Line Frame Rule",
+        "body": "A surface is a tonal step plus one 1px Deep Circuit line. State recolours the line (cyan selected or worn, green picked, magenta danger, violet on hover); it doesn't thicken it, except on the Pain bands, where weight *is* the meaning.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "**Do** use the tokens (`--cyan`, `--magenta`, …), never the hex, so the light theme's fold happens.",
+      "**Do** give every new number the colour of what it is — gold for anything spent, green for health, cyan for a plain value, magenta only for harm.",
+      "**Do** label fields and sections in Mono Caps: Roboto Mono, uppercase, .12em or more, Overcast Steel.",
+      "**Do** frame every surface with one 1px Deep Circuit line and change the line's colour for state.",
+      "**Do** keep motion short (.15–.35s, ease-out) and state-driven, and turn every animation off under `prefers-reduced-motion`.",
+      "**Do** focus every control with the 2px Static Cyan outline.",
+      "**Do** keep text on a violet or Deep Circuit fill `--on-accent` (white) in both themes."
+    ],
+    "donts": [
+      "**Don't** use neon as decoration: no glowing headers, gradient text, neon borders on resting surfaces, or colour that means nothing.",
+      "**Don't** reach for generic cyberpunk: glitch, scanlines, chromatic aberration, terminal green, Matrix rain.",
+      "**Don't** reach for fantasy parchment: scrolls, paper texture, ornament, blackletter — not even on the Magic tab.",
+      "**Don't** drift toward a SaaS dashboard: big rounded cards, soft pastel gradients, friendly illustration, radii past 8px.",
+      "**Don't** put a shadow on a surface at rest; shadows are for things that float.",
+      "**Don't** use Neon Veil for anything good, or Ghostly Green for anything spent.",
+      "**Don't** set big numbers in Inter or prose in the display face.",
+      "**Don't** use a raw neon as text in the light theme; it fails contrast. The fold exists for this."
+    ]
+  }
+}
