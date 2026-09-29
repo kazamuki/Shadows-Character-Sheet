@@ -34,6 +34,8 @@ authority and is never read front to back; §1 below says which section to open.
 | What a past session cost, and what to watch for | `log/2026.md` |
 | Text retired from a live document: the old phase roadmap, `meta.notes`, the closed-flag notes | `log/archive.md` — verbatim, never edited |
 | Whether a string is allowed to say that | `VOICE-APP.md` |
+| Who the app is for, what sets it apart, the accessibility floor: product truth for design work | `../PRODUCT.md` — points back here and at `SCHEMA.md` rather than restating them |
+| The screen's visual system: colour roles, type, layout, components, what to avoid | `../DESIGN.md` (screen only; the print sheet is `print.css` and its plan). `../.impeccable/design.json` is the same system in machine-readable form, for design tools |
 | Whether the current WIP text already answers an open flag | `reference/crb/README.md` — mirrors of CRB documents, **never edited here**; re-pull instead |
 | What shipped in a release | `../CHANGELOG.md` — backward-looking only, in player voice |
 | How to work on this repo at all | `../CLAUDE.md` |
