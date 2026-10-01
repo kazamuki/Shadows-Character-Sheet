@@ -3425,6 +3425,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 4 in part: Stat Points no longer buy 1:1.
      - **Revisit if:** Deighton wants the rolled pools to differ, or playtesting moves the flat pools or the cost past 6.
      - **Built:** app 0.32.0, game data 0.25, character schema 0.15; tests mutation-tested. Closes F8, W34–W36. Log 2026-09-27.
+151. **Main carries Heal 1 · Hurt 1 · Take a hit under its Health and Pain cards, and at zero Health Levels its Hurt 1 greys out so a hit goes through Take a hit.**
+     *2026-09-30 · Ken + Claude · Touches: Main tab, vital-verbs, vitalVerbsHtml, bindVitalControls, data-dmg, data-hitopen, Hurt 1, Heal 1, Take a hit, At Zero, Dying, Death Marks, cond-grid, undo toast, focus, W42, F36*
+     - **Decided:** A full-width row in Main's card grid, straight after Pain (on a phone, under Health), holds Heal 1, Hurt 1 and Take a hit with the popover's own `data-dmg` / `data-hitopen`, so `bindVitalControls` wires them. The ×5 steps, a typed total and Heal all stay in the Health popover. At zero, Main's Hurt 1 is disabled with a line saying why; Trackers' and the popover's steppers stay raw corrections with no ceiling.
+     - **Why:** the critique's P1: the most common change mid-fight had no visible verb on Main. 054 asks a WILL check for every hit at zero and a Death Mark while Dying; Take a hit asks them, a raw Hurt skips them, and Main is where a player at zero would reach for it.
+     - **Rejected:**
+       - W42 as written, verbs split under both the Health and Pain cards: two places for one action, and three 132px cards can't hold 44px buttons side by side.
+       - All five stepper buttons on Main: the popover already holds them; Main gets the three a fight uses.
+       - Hurt 1 at zero opening Take a hit with 1 filled in: more behaviour to explain for a case the hit modal already covers.
+       - Clamping Hurt at zero everywhere: a correction tool must reach any value, and what damage past zero means is F36.
+     - **Replaces:** nothing. It extends Decision 119 (the vitals popovers).
+     - **Revisit if:** Deighton rules on F36, or the vitals popovers change shape.
+     - **Built:** app 0.33.0, PR (this batch), log 2026-09-30 (W42). One smoke test, mutation-tested.
 
 ## 5. Open Flags
 
@@ -3461,6 +3473,7 @@ here are in `log/archive.md`.
 | F32 | **Arcanist Major Milestones.** 041's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 041? `growth` stays hidden until then (AQ4) | Ken | No |
 | F33 | **Jack of All Trades: how far does "treated as Focused" go?** Master of None says all skills are "treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4". Does that also give every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7)? And can Skill Paragon's "a focused skill from your chosen Profession" be any skill for a Jack? Stubbed (Decision 134): the price only, for ranks bought up to 4 (4 → 5 is standard, Ken); no cap bonus | Deighton | No |
 | F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 053 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
+| F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 054 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
 
 F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question.
 
