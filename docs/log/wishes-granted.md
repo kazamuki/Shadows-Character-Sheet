@@ -249,6 +249,15 @@ changes, would make damage feel like damage. Respect
 `prefers-reduced-motion`. Cosmetic, cheap, and easy to overdo — one effect,
 not a system.
 
+**W43 — Small tap targets and sub-floor text.** *Claude · → app 0.32.1: 24px everywhere and 44px on a touchscreen, nothing under 11px, violet and magenta words on their own read tokens, a test for each*
+Measured: the `?` tip is 18px (`.skill-q`, `shadows.css`), "+ Add a condition"
+26px, steppers and action rows 30px. "What's new" is 10.56px and "GDG ▴" 9.6px,
+under the 11px floor, and `#9b4dba` on `#0d1731` is 3.5:1 against the 4.5:1
+needed. The `?` tips also lean on hover. *The fix:* 44px hit areas (padding or a
+pseudo-element, so the look stays), 40px+ on steppers, the two labels to 11px or
+more, the violet text lifted by a token change so the light-theme fold still
+holds. Check that every tip opens from keyboard and touch.
+
 ### Skills
 
 **W19 — Choosing a Martial Arts style breaks the Skills grid.** *Ken · → fixed in app 0.19.1: `.alloc > .picks` spans the grid, with a smoke guard (mutation-tested)*
