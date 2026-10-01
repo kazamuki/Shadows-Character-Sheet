@@ -99,6 +99,7 @@ is the authority on a flag's full text.
 |---|---|---|
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
+| **Custom archetype & classification** — `plans/custom-archetype.md` | 📋 shape approved 2026-09-30, wanted for Saturday 2026-10-03 · S1 closes F13 | Nobody: XQ1–XQ6 each carry a default |
 | **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed | Deighton: **W37**, starting LUCK 6, maybe by level. It doesn't block the wizard |
 | **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -108,8 +109,7 @@ is the authority on a flag's full text.
 | **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · catalog matches the whole 2026-09-24 book, Inscribed Spells included (Decision 136) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
-F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling;
-don't ask it separately.
+F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling; don't ask it separately.
 
 Archetype status in the data: `arcanist: draft · professional: draft ·
 werewolf: draft · cyborg: tbd · vampire: tbd`.
