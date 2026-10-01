@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.34.0",
-    "date": null,
+    "date": "2026-10-01",
     "intro": [],
     "items": [
       "**Continue stays on screen.** While you make a character, Back and Continue sit at the bottom of the screen however far down a step you are, so fixing something halfway up the Character Points list no longer means scrolling back to the end. While Continue is greyed out, the bar says how many things need fixing; tap that to jump to them.",
