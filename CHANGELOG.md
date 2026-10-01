@@ -39,6 +39,11 @@ own in the footer.
   listing every stat, or every skill with a search, with what a raise costs and why one
   is out of reach. Raise as many as you like before closing it, and the Milestones are
   no longer below two long lists.
+- **Pin your vitals beside the sheet.** On a wide screen, open Vitals and press **Pin**: the
+  panel stays on the right of every tab, the sheet makes room for it, and the row of vitals
+  above each page goes, since the panel has them. Tap HP, Pain, SAN, LUCK or Çredits in the
+  panel to change them, the same as from the row. **Unpin** puts it back. On a narrower
+  screen the row returns on its own.
 
 ## v0.34.0 — 2026-10-01
 

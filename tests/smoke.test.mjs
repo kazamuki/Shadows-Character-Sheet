@@ -2449,6 +2449,36 @@ test("Progression: Raise a Stat and Raise a Skill open modals, and a raise keeps
   assert.deepEqual(app.errors, []);
 });
 
+// Decision 160: the vitals panel pins beside the sheet. The pin is the
+// browser's (CSS honours it from 1280px, which jsdom can't lay out), the
+// panel's vitals open the same popovers as the bar, from the panel, and
+// Unpin puts it back.
+test("Pinned vitals: Pin keeps the panel, its vitals open their popovers, Unpin returns the bar (Decision 160)", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const body = app.window.document.body, drawer = () => app.$("#vdrawer");
+  assert.ok(!body.classList.contains("vitals-pinned"), "pinned before anyone asked");
+  app.click("#vdrawer [data-vitals-pin]");
+  assert.ok(body.classList.contains("vitals-pinned"), "Pin didn't pin");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.vitalsPinned"), "pinned", "the pin isn't remembered");
+  assert.equal(drawer().querySelector("[data-vitals-pin]").textContent, "Unpin");
+  for (const k of ["hp", "pain", "san", "luck", "cred"]) assert.ok(drawer().querySelector(`[data-vpop="${k}"]`), `the panel's ${k} doesn't open anything`);
+
+  app.click('#vdrawer [data-vpop="luck"]');
+  const pop = app.$("#vpop");
+  assert.ok(!pop.hidden && pop.classList.contains("from-rail"), "the panel's LUCK didn't open its popover from the panel");
+  assert.match(pop.textContent, /Boost the roll/);
+  assert.equal(drawer().querySelector('[data-vpop="luck"]').getAttribute("aria-expanded"), "true");
+  app.click('#main [data-vpop="luck"]');                  // the bar's own LUCK is a different trigger
+  assert.ok(!pop.hidden && !pop.classList.contains("from-rail"), "the bar's LUCK didn't take the popover over");
+
+  app.click('[data-sec="main"]');
+  assert.ok(body.classList.contains("vitals-pinned") && drawer().querySelector('[data-vpop="hp"]'), "the panel left Main");
+  app.click("#vdrawer [data-vitals-pin]");
+  assert.ok(!body.classList.contains("vitals-pinned"), "Unpin didn't unpin");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.vitalsPinned"), "unpinned");
+  assert.deepEqual(app.errors, []);
+});
+
 const loadoutSec = app => app.$$("[data-sec]").map(b => b.dataset.sec).find(s => /loadout/.test(s));
 
 test("the sheet draws a written-in archetype: its name everywhere, its classification, traits, powers and vulnerabilities", () => {
