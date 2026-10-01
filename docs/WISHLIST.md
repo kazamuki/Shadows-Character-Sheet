@@ -231,9 +231,84 @@ The plan's **Other** classification, with its own text, covers it until then.
 
 ---
 
+### For the designers
+
+**W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*
+Raised 2026-10-01. Today a numeric ruling (LUCK starting at 4, not 2) reaches
+the app by Ken relaying it to Claude in a session. `shadows-data.js` is
+meant for designers in a text editor (SCHEMA §1), but it's thousands of
+lines of JSON, and finding the number is the easy half. The hard half is
+what the number touches. The wish is a page Ken, Scott or Deighton opens,
+changes numbers on, and exports as something a session then lands.
+
+*The shape.*
+- **A bench, not an editor.** It never writes `shadows-data.js`. It exports
+  a *change request*: a small file listing each change as
+  `{ path, from, to }`, with who proposed it, why, and the `gamedataVersion` it
+  was made against. A session lands it as *Content* tier work, with the
+  version bump, the changelog line, the CRB cross-check and any flag it closes.
+  The tool takes the typing out of the change. Review still happens.
+- **Show what moves.** A number on its own is hard to judge, so the bench shows
+  what it does to characters. It loads the real engine with no DOM (constraint 5),
+  so it can run sample characters (one per archetype at each power level)
+  before and after the change, side by side: HP, SAN, LUCK, CP left, whatever
+  differs. Deighton then sees "every Street-level character starts with 2 more
+  LUCK" and not only `resources.luck.startingValue: 2 → 4`. Without this
+  part it's a form over a JSON file. This part is why it's worth building.
+- **Only real knobs.** It offers only numbers the engine actually reads. The
+  Decision 135 key guard already knows which those are, and the bench should
+  use that list and not keep its own. Invariants that look like settings
+  (1 Health Level per BOD, Decision 64) aren't offered.
+- **Catch prose that goes stale.** Text often repeats a number. A vehicle
+  perk spells out "Boosting costs 1 LUCK, Exploding costs 2 LUCK", and SAN's
+  description says the cap is 95%. The bench lists every text field that
+  quotes a changed number, so the request flags the copy for a voice pass and
+  the copy doesn't drift.
+- **Lives in `tools/`, never shipped.** It isn't part of the player build or
+  `src/`. Like the app it runs from `file://` (classic scripts, export through
+  a Blob download), so it can go to Deighton as a folder.
+
+*Settled with Ken, 2026-10-01.*
+1. **Numbers only, to start.** Adding or editing advantages, archetypes or
+   powers would be a content editor, which is a much bigger tool and a
+   separate wish if it's ever wanted.
+2. **Not hosted, to start.** It goes out as a folder. A page on the live site
+   would always match `main`, so it's worth revisiting, but it would be a
+   public page offering to change the rules.
+3. **Sign-off stays a conversation.** Ken, Scott and Claude can raise anything
+   with Deighton as needed. The request records who proposed each change, and
+   the bench doesn't add an approval step.
+4. **Ken hands the request to Claude, and a skill lands it.** A new
+   `.claude/skills/` runbook (working name `land-a-tuning`), alongside
+   `close-a-flag`. It checks the request was made against the current
+   `gamedataVersion`, applies each path, and runs the before/after diff to
+   decide whether Decision 68 calls for a bump. It goes through the CRB
+   cross-check and pins any worked example in `tests/rules.test.mjs`. It
+   rewrites or flags the stale prose, closes any flag the change answers,
+   writes the changelog line, and runs `verify`. The rules stay in
+   `CLAUDE.md`, and the skill only carries the steps. If applying the paths
+   turns out to be fiddly, a small script can do that one step.
+
+*Also a review sheet.* The idea came from wanting to hand Deighton the raw
+numbers to check. So the bench should be readable as an audit as much as a
+place to edit. Each number shows its label, its section and the text that
+explains it. A **Confirmed** tick sits beside each one, and it goes out in the
+same request file. A request made up only of ticks is a useful result in its
+own right: a record of which numbers Deighton has checked, and against which
+`gamedataVersion`.
+
+*To respect:* constraints 1, 5 and 6 (an id is never offered for editing).
+Decision 68 (a change no character can observe bumps nothing, and the
+before/after diff is how you tell). Decision 135. *Change tiers* in
+`CLAUDE.md`: a request is input to a Content change and doesn't replace one.
+Building the bench itself is tooling no player sees, so it's not *Rule or
+shape* work. Choosing how designer changes reach the data is a workflow choice
+someone could have made differently, so it probably earns a decision when it
+lands.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W56.** Everything above is open; W38 has a plan,
+- **Next free number: W57.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
