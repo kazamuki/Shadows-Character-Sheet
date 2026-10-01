@@ -2236,6 +2236,35 @@ test("Decision 150: Admin doesn't measure a character locked under the earlier t
   assert.deepEqual([sheet.errors, now.errors], [[], []]);
 });
 
+// ── The wizard's nav sticks to the bottom of a long step ────────────────
+// Continue is in reach from anywhere; the issues sit above it, and while one
+// blocks, the bar counts them and links there. Typing redraws all of it in
+// place, and the issues stay above the bar.
+test("the wizard's nav sticks to the screen's bottom, counts what blocks Continue, and keeps the issues above it", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const rule = (css.match(/\.wiznav\{([^}]*)\}/) || [])[1] || "";
+  assert.match(rule, /position:sticky/, "the nav doesn't stick");
+  assert.match(rule, /bottom:0/, "the nav doesn't stick to the bottom");
+
+  const app = onArchetypeStep(D.archetypes.find(a => a.writeIn).id);
+  const nav = () => app.$(".wiznav"), why = () => app.$(".wiznav-why");
+  const count = () => app.$$("#wiz-issues .issues li.error").length;
+  const above = () => app.$$("#wiz-issues").length === 1 && app.$("#wiz-issues").nextElementSibling === nav();
+  assert.ok(count() > 0, "a nameless Custom archetype has nothing to fix");
+  assert.equal(app.$('[data-nav="1"]').disabled, true);
+  assert.ok(why(), "Continue is disabled and the bar doesn't say why");
+  assert.match(why().textContent, new RegExp(`^${count()} things? to fix first$`));
+  assert.equal(why().getAttribute("href"), "#wiz-issues");
+  assert.ok(above(), "the issues aren't just above the nav");
+
+  const before = count(), el = app.$('[data-wi="name"]');
+  el.value = "Changeling"; el.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(count(), before - 1, "naming the archetype didn't clear its error");
+  assert.ok(above(), "a redraw in place put the issues below the nav, or twice");
+  assert.equal(app.$$(".wiznav-why").length, 1, "a redraw in place doubled the count");
+  assert.match(why().textContent, new RegExp(`^${count()} things? to fix first$`), "the count didn't follow the redraw");
+});
+
 // ── The wizard's write-in block (Decision 153, custom archetype S3) ─────
 test("a Custom archetype is written on the Archetype step: what it is, its classification, mechanics and three lists", () => {
   const custom = D.archetypes.find(a => a.writeIn);

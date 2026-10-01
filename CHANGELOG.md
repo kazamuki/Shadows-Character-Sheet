@@ -23,6 +23,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.33.1
+
+- **Continue stays on screen.** While you make a character, Back and Continue sit at the
+  bottom of the screen however far down a step you are, so fixing something halfway up the
+  Character Points list no longer means scrolling back to the end. While Continue is greyed
+  out, the bar says how many things need fixing; tap that to jump to them.
+
 ## v0.33.0 — 2026-10-01
 
 - **Heal, Hurt and Take a hit, right on Main.** Under the Health and Pain cards there's

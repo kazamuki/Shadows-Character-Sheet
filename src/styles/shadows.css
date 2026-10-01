@@ -266,7 +266,10 @@ table.ref td{padding:6px 10px; border-bottom:1px solid rgba(32,63,123,.35)}
 table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 
 /* footer nav */
-.wiznav{display:flex; gap:12px; margin-top:30px; align-items:center}
+.wiznav{display:flex; gap:12px; margin-top:30px; align-items:center; flex-wrap:wrap;
+  position:sticky; bottom:0; z-index:30; padding:12px 0; background:var(--ground); border-top:1px solid var(--frame)}
+.wiznav-why{font-size:.82rem; color:var(--magenta-text)}
+#wiz-issues{scroll-margin-top:calc(var(--hdr-live, var(--header-h)) + 12px)}
 .btn{border-radius:4px; padding:10px 22px; font-size:.9rem; font-weight:600; border:1px solid var(--frame);
   background:var(--panel-2); color:var(--text)}
 .btn:hover{border-color:var(--violet-hi)}
