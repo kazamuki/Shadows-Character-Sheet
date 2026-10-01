@@ -1,7 +1,8 @@
 # Plan — A custom archetype, and classification for every archetype
 
-**Status:** proposed 2026-09-30, approved in shape by Ken the same day; not
-started. Nothing here is a decision until the session that builds it numbers
+**Status:** proposed 2026-09-30, approved in shape by Ken the same day. S1
+built (Decision 152), S2 built (Decision 153, schema 0.16); S3–S6 next. XQ2,
+XQ3, XQ5 and XQ6 took their defaults in S2. Nothing here is a decision until the session that builds it numbers
 it in `SCHEMA.md` §4. Its open questions are `XQ`_n_ (§6), each with the
 default the build takes if nobody answers first.
 **Wanted by:** Saturday 2026-10-03. Deighton is running Shadows for his son's

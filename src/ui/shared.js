@@ -552,8 +552,11 @@ function vrow(k,v,cls="",ico=""){
 // ch.advantages, so clearing one side strands the other. A mirror needs one
 // writer (Decision 81).
 function resetArchetypeChoices(ch){
-  ch.archetypeChoices = { rolls:{}, focusAllocation:{}, statBonusAllocation:{},
-    specialization:[], focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
+  // The engine's shape, so a field it grows is reset with the rest.
+  ch.archetypeChoices = Engine.newCharacter().archetypeChoices;
+  // Powers are the archetype's too (Decision 153, XQ3): the one being left
+  // takes them, and one undo brings them back.
+  ch.powers = [];
   // Free advantages belonged to the archetype being left, so they go either
   // way, and so does any the new archetype's classification can't buy
   // (Decision 152: a Supernatural keeps only the Universal ones).
