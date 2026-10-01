@@ -245,6 +245,83 @@ test("every rule that paints a token background leaves readable text on it, in b
   assert.deepEqual(bad, []);
 });
 
+// W43: the W7 check above only sees text on a fill. A word coloured with a
+// token sits on the page's own grounds instead, and Aether Pulse, lit and
+// Neon Veil failed there (2.9–3.8:1) as section labels and as error text.
+// Words take --violet-text and --magenta-text; the brand neons stay on lines,
+// fills and icons. So: every `color: var(--token)` reads on --ground, --panel
+// and --panel-2, in both themes.
+test("every token used for words reads on every ground, in both themes (W43)", () => {
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim().replace(/\s+/g, " "), body: m[2] }));
+  const tokens = sel => Object.fromEntries(rules.filter(r => r.sel === sel)
+    .flatMap(r => [...r.body.matchAll(/--([\w-]+)\s*:\s*([^;]+)/g)].map(m => [m[1], m[2].trim()])));
+  const dark = tokens(":root"), light = Object.assign({}, dark, tokens(':root[data-theme="light"]'));
+  const resolve = (v, t, d = 0) => { const m = /^var\(--([\w-]+)\)$/.exec(v || ""); return m && d < 5 ? resolve(t[m[1]], t, d + 1) : v; };
+  const lum = hex => [0, 2, 4].map(i => parseInt(hex.slice(1 + i, 3 + i), 16) / 255)
+    .map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)
+    .reduce((s, x, i) => s + x * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  // Not words on a ground: icons (3:1 non-text, and they sit beside a label),
+  // text on a fill (the W7 test's job), and the ledger's step numerals and
+  // ▸ glyphs, which repeat what the label beside them says.
+  const exempt = sel => /\.(ico|tico|vico)\b|::(before|after)/.test(sel) || sel === ".step-row .n";
+  const onFill = new Set(["ink", "on-accent"]);
+  const bad = new Set();
+  let checked = 0;
+  for (const r of rules) {
+    const m = /(?:^|;)\s*color\s*:\s*var\(--([\w-]+)\)/.exec(r.body);
+    if (!m || exempt(r.sel) || onFill.has(m[1]) || /(?:^|;)\s*background(?:-color)?\s*:\s*var\(/.test(r.body)) continue;
+    for (const [name, t] of [["dark", dark], ["light", light]]) {
+      const F = resolve(`var(--${m[1]})`, t);
+      if (!/^#[0-9a-f]{6}$/i.test(F || "")) continue;
+      for (const g of ["ground", "panel", "panel-2"]) {
+        checked++;
+        const c = ratio(F, resolve(t[g], t));
+        if (c < 4.5) bad.add(`${name}: --${m[1]} on --${g} is ${c.toFixed(2)}:1 (${r.sel})`);
+      }
+    }
+  }
+  assert.ok(checked > 200, `only ${checked} pairs checked — did the parser break?`);
+  assert.deepEqual([...bad], []);
+});
+
+// W43: the Admin banner's dot pulsed forever, and the vitals drawer slid,
+// with the player's "reduce motion" setting on. Every animation, and every
+// transition that moves or resizes something, is switched off for them.
+test("every animation and every moving transition stops under prefers-reduced-motion (W43)", () => {
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  // Lift each reduced-motion block out, by brace counting, before reading the rest.
+  let rest = css, calm = "";
+  for (let i; (i = rest.search(/@media\s*\(\s*prefers-reduced-motion\s*:\s*reduce\s*\)\s*\{/)) >= 0;) {
+    let j = rest.indexOf("{", i) + 1, depth = 1;
+    for (; depth; j++) depth += rest[j] === "{" ? 1 : rest[j] === "}" ? -1 : 0;
+    calm += rest.slice(rest.indexOf("{", i) + 1, j - 1); rest = rest.slice(0, i) + rest.slice(j);
+  }
+  rest = rest.replace(/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g, "");
+  const parse = src => [...src.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .flatMap(m => m[1].split(",").map(sel => ({ sel: sel.trim().replace(/\s+/g, " ").replace(/^@media[^{]*\{\s*/, ""), body: m[2] })));
+  const off = new Set(parse(calm).filter(r => /(?:^|;)\s*(animation|transition)\s*:\s*none/.test(r.body)).map(r => r.sel));
+  const moving = parse(rest).filter(r =>
+    /(?:^|;)\s*animation\s*:\s*(?!none)/.test(r.body) ||
+    /(?:^|;)\s*transition\s*:[^;]*\b(transform|width|height|left|top|right|bottom|opacity)\b/.test(r.body));
+  assert.ok(moving.length >= 8, `only ${moving.length} moving rules found — did the parser break?`);
+  assert.deepEqual(moving.map(r => r.sel).filter(s => !off.has(s)), []);
+});
+
+// W43: labels had drifted down to 9.3px (.58rem) and a phone at arm's length
+// at the table can't read that. DESIGN.md's label is .7rem; nothing on
+// screen goes under 11px. print.css is paper at its own scale and isn't held
+// to this.
+test("no screen text is set under 11px (W43)", () => {
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const ui = BROWSER_JS.filter(f => f.startsWith("src/ui/")).map(f => readFileSync(join(ROOT, f), "utf8")).join("\n");
+  const sizes = [...(css + "\n" + ui).matchAll(/font-size\s*:\s*([\d.]+)(rem|px)\b/g)];
+  assert.ok(sizes.length > 100, `only ${sizes.length} font sizes found — did the parser break?`);
+  const small = sizes.filter(m => (m[2] === "rem" ? +m[1] * 16 : +m[1]) < 11).map(m => m[0]);
+  assert.deepEqual(small, []);
+});
+
 test("no screen blocks the page with alert() or confirm() (C5)", () => {
   // Refusals go to notice(), confirmations to askFirst() (shared.js).
   for (const f of BROWSER_JS.filter(f => f.startsWith("src/ui/"))) {

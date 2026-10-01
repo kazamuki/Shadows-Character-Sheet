@@ -57,12 +57,19 @@ engine reader first. Decision 5 needs superseding, and the CRB's Luck section
 
 ### The sheet at the table (from the design critique)
 
-W42–W46 are what's left of the 2026-09-30 design critique (score 28/40, snapshot
-in `.impeccable/critique/`) after its combat-table finding shipped in 0.32.1.
-All are **player-facing layout or behaviour**, so most are the *Rule or shape*
-tier ("propose before building"). None touches a rule. Measurements are from a
-375px viewport; the Main tab was seen running, the other tabs were read from
-`DESIGN.md` and the code.
+W42 and W44–W46 are what's left of the 2026-09-30 design critique (score
+28/40, snapshot in `.impeccable/critique/`) after its combat-table finding and
+W43 (tap targets and small text) shipped in 0.32.1. All are **player-facing
+layout or behaviour**, so they're the *Rule or shape* tier ("propose before
+building"). None touches a rule. Measurements are from a 375px viewport; the
+Main tab was seen running, the other tabs were read from `DESIGN.md` and the
+code.
+
+Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
+when built, checked against the code rather than guessed. Since W43, controls
+are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
+or on text under 11px, so a new control inherits the floor rather than
+re-arguing it.
 
 **W42 — Hurt, Heal and Take a hit are not visible on Main.** *Claude · 🔎 · critique P1*
 The most common change mid-fight lives behind tapping the Health card (or on
@@ -71,15 +78,13 @@ Hurt / Heal / Hit row under the Health and Pain cards, bound by
 `bindVitalControls` so it can't drift from the popover. *To respect:* every
 change is a `commit()` with its undo toast; DESIGN.md's "shadows are for things
 that float" and no new neon.
-
-**W43 — Small tap targets and sub-floor text.** *Claude · ⏭ · critique P1*
-Measured: the `?` tip is 18px (`.skill-q`, `shadows.css`), "+ Add a condition"
-26px, steppers and action rows 30px. "What's new" is 10.56px and "GDG ▴" 9.6px,
-under the 11px floor, and `#9b4dba` on `#0d1731` is 3.5:1 against the 4.5:1
-needed. The `?` tips also lean on hover. *The fix:* 44px hit areas (padding or a
-pseudo-element, so the look stays), 40px+ on steppers, the two labels to 11px or
-more, the violet text lifted by a token change so the light-theme fold still
-holds. Check that every tip opens from keyboard and touch.
+*Harden.* Each tap is its own `commit()` and its own toast, so five quick
+Hurt 1s are five undo steps. That's right (each can be taken back), but the
+toast must not stack five deep over the row being tapped. Hurt has no upper
+clamp in `bindVitalControls` (`setDamage` floors at 0 only), so the row must
+read sensibly past the last Health Level, where Massive damage and Helpless
+already mean something. On a phone the row has to fit three 44px buttons
+beside each other at 320px without wrapping into the Pain card.
 
 **W44 — The wizard's vitals rail buries the step on small screens.** *Claude · 🔎 · critique P2*
 At 1060px and below the vitals rail (BOD to LUCK) sits above step 1, and at 800px
@@ -89,6 +94,15 @@ placeholders before anything is chosen. *The fix:* collapse the rail to one
 sticky HP / SAN / LUCK line, show one title, shorten the strip labels. The
 `[ 1 0 ]` eyebrow means nothing to a first-timer, and Campaign Power Level asks a
 question a new player can't answer without a stated default.
+*Harden.* Step 7's jump bar is already sticky under the header
+(`top:var(--hdr-live)`), so a sticky vitals line stacks with it and the two
+must share one offset, not overlap. On iOS a sticky bar plus the open
+keyboard can cover the field being typed in, so try it with a field focused
+near the bottom of the screen. The short strip labels have to come from the
+data (today the strip cuts `st.label` at its first colon or dash), not from a
+list in `wizard.js`, or a new step needs an app change. A stated default for
+Campaign Power Level is a choice for Ken and the GM text, not a value the UI
+picks.
 
 **W45 — Main repeats identity before the first number.** *Claude · 🔎 · critique P2*
 On a phone the name appears in the header and again in the hero, with a "LIVE
@@ -99,15 +113,31 @@ though the code comments say combat leads. A veteran mid-fight has to scroll pas
 all of Stats to reach their weapon. *Open:* does Main become Health, Pain,
 armour and weapons, with stats on their own tab? That's an information-architecture
 call for Ken. The Çredits card sits alone in its grid row; go three across or span it.
+*Harden.* The header already cuts a long name with an ellipsis on a phone and
+a portrait tablet (`phone-check` shows it), so if the hero drops the name, a
+long name is never shown whole anywhere. Keep one place where it wraps
+instead of cutting. The hero's TAG line has three states, not one: a TAG, a
+Ghost or Black TAG's label (Decision 146), and TAGless, which reads "Off grid"
+(148). An unnamed character's title is "Unnamed" today. Any move has to read
+right in all of them.
 
 **W46 — The lock moment has no ceremony.** *Claude · 💡 · critique, Ken chose "one short beat"*
 Locking is the best emotional beat in the product and it becomes the sheet with
 an immediate export. Ken picked a sub-second NYTE City beat, for instance the
 TAG barcode drawing in. *To respect:* short, state-driven, off under
 `prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). The
-detector also flagged an infinite pulse on `.admin-banner .dot`, a zero-offset
-cyan glow and a striped gradient. Check those against DESIGN.md when this is
-picked up, and `sheet.js:1726`'s `.76rem`, which is off the type ramp.
+detector also flagged a zero-offset cyan glow and a striped gradient. Check
+those against DESIGN.md when this is picked up, and `sheet.js:1726`'s `.76rem`,
+which is off the type ramp. (Its infinite pulse on `.admin-banner .dot` was
+fixed with W43: it stops under reduced motion, and a test now holds every
+animation to that.)
+*Harden.* The lock handler (`wizard.js`, `[data-lock]`) saves, renders the
+sheet and calls `exportChar()` in the same click. The beat must run alongside
+that, never in front of it: a download started from a timer after the
+animation can lose the click's permission to download, and the export is
+what keeps the character safe. A TAGless character has no barcode, so the
+beat needs a version for "Off grid". It plays on the lock and never again: not
+on a reload, a theme switch or a re-render of a sheet that's already locked.
 
 ### Beyond one sheet
 
