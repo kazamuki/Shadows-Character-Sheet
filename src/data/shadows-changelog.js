@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.33.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Werewolves and Vampires can buy Advantages now: the Universal ones.** Every archetype is Mortal or Supernatural. A Mortal can buy any Advantage; a Supernatural, who starts with a great deal of power already, can buy only the fifteen marked **Universal**, like Lucky, Contacts or Hard to Kill. The Character Points step lists them first and tags them, and says which aren't open. Disadvantages are open to everyone, as before. Changing archetype drops any Advantage the new one can't buy."
+    ]
+  },
+  {
     "version": "0.32.1",
     "date": "2026-10-01",
     "intro": [],

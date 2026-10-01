@@ -53,9 +53,9 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.25",
+    "gamedataVersion": "0.26",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-09-27"
+    "updated": "2026-09-30"
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -1000,11 +1000,31 @@ window.SHADOWS_DATA = {
   // matching was by NAME, not id (it's by id since Decision 134). The flag outlived the work it described and was still
   // rendering to players; the whole block is removed rather than set to false,
   // because dead data that looks live is the defect class this batch closes.
+  /* CLASSIFICATIONS -- what kind of being an archetype is (Decision 151). Every
+     archetype names one in `classification`. `advantages` says which Advantages
+     it may buy: "all", or "universal" (only those with `universal: true`).
+     Disadvantages are open to every classification. Werewolves and Vampires
+     start with a great deal of power; the Mortal-only Advantages close some of
+     that gap. */
+  "classifications": [
+    {
+      "id": "mortal",
+      "name": "Mortal",
+      "description": "Human, whatever they've done to themselves. Every Advantage is open to them.",
+      "advantages": "all"
+    },
+    {
+      "id": "supernatural",
+      "name": "Supernatural",
+      "description": "Something more than human, and powerful from the first night. Only the Universal Advantages are open to them.",
+      "advantages": "universal"
+    }
+  ],
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
-     marks traits any archetype may take. Multi-rank scaling lives in the prose
-     `description`. Supernatural archetypes with `canPurchaseAdvantages:false`
-     cannot buy any of these (Decision 12). Professional "natural" advantages are
+     marks 043's Universal Advantages, the only ones a classification with
+     `advantages: "universal"` may buy (Decision 151; see CLASSIFICATIONS).
+     Multi-rank scaling lives in the prose `description`. Professional "natural" advantages are
      stored on the character as normal entries with source:"natural" at 0 CP
      (Decisions 17, 142) -- they are NOT a separate list here. `id` is referenced by
      milestone/advantage prerequisites, so do not rename existing ids.
@@ -1803,7 +1823,8 @@ window.SHADOWS_DATA = {
           majorMilestones)
      `status`: "final" | "draft" | "tbd" -- the app shows a badge and treats
      tbd/draft content as reference text, never blocking on un-modeled rules.
-     `canPurchaseAdvantages:false` (supernatural) is enforced by the wizard.
+     `classification` (Decision 151) names a CLASSIFICATIONS id: which
+     Advantages the archetype may buy.
 
      PANELS are how archetypes stay generic: `coreMechanic.panels` DECLARES the
      extra sheet UI an archetype needs from a small vocabulary -- "rankedList"
@@ -1827,9 +1848,7 @@ window.SHADOWS_DATA = {
 
      REVIEW (F7 - SFR per archetype): Werewolf SFR is defined (WILL x 3 + N
        w/ RoU, as `startingSFR` in its scaling table); Vampire Blood Pool is still TBD.
-     REVIEW (F13 - Vampire): vampire `canPurchaseAdvantages` is ASSUMED from the
-       Werewolf supernatural baseline -- confirm with D. (see vampire entry).
-     See SCHEMA.md section 5 for both. */
+     See SCHEMA.md section 5. */
   "archetypes": [
     {
       "id": "arcanist",
@@ -1843,7 +1862,7 @@ window.SHADOWS_DATA = {
       "summary": "Wizards, sorcerers, mages - many names exist for those who unlocked the ability to manipulate Aether and wield its power like a weapon. What they gain in power, they trade for risk of ripping themselves, or the world, apart. The Aether doesn't care how curious you are. It only cares whether you can hold on.",
       "gameplayStyle": "Arcanists reshape reality through study and will. You solve problems by bending the rules of the world - rewriting physics, enchanting tools, or unraveling what others do not understand. Your power is immense, but every spell carries risk. Control is everything.",
       "lore": "An Arcanist is what happens when someone looks at the fabric of reality, understands that it can be pulled apart and rewoven, and decides that knowing how is worth whatever it costs them. They have traded normalcy for comprehension. Their spells are not tricks. They are statements made directly to the universe, and the universe listens. The Aether leaves marks. Arcanists wear them.",
-      "canPurchaseAdvantages": true,
+      "classification": "mortal",
       "campaignPowerScaling": {
         "columns": [
           "Focus Stat Bonus Points",
@@ -2040,7 +2059,7 @@ window.SHADOWS_DATA = {
       "summary": "Some people love technology, others become it. Cyborgs are humans who have gone all in, complete with a Neurocybernetic Interpreter, cyber-limbs, nanobots, and more. Cyborgs pay for their cybernetics with a combination of Credits and humanity.",
       "gameplayStyle": "You redefine yourself piece by piece. Cyborgs adapt by installing the tools they need - social infiltrator, heavy hitter, data ghost, or battlefield support. Your limits are defined by tolerance and humanity, not imagination.",
       "lore": "A Cyborg has looked at the flesh and decided it was a rough draft. What comes next is intentional. This is not modification. This is authorship. Eventually, a normal person becomes a cyborg when upgrading their Neurocybernetic Interpreter (NCI) to beta or higher - the link between flesh and machine with pseudo-AI managing the systems and user intent. Every enhancement is a decision you don't get to walk back.",
-      "canPurchaseAdvantages": true,
+      "classification": "mortal",
       "campaignPowerScaling": {
         "byPowerLevel": {}
       },
@@ -2090,7 +2109,7 @@ window.SHADOWS_DATA = {
       "summary": "The quintessential human. Focusing on adaptability, Professionals make a living working in NYTE City and have become experts at surviving. They bring skills, techniques and Tweaks to situations that expect a mundane human; Professionals teach them otherwise.",
       "gameplayStyle": "Professionals thrive on preparation and precision. Where others rely on supernatural gifts or tech, you rely on training, foresight, and execution. You excel in skill-driven play, turning planning, equipment, and expertise into decisive advantages.",
       "lore": "No bloodline. No implants rewriting their nervous system. No covenant with forces older than language. Just a person who decided that wasn't going to be enough of a reason to lose. They are not the most powerful thing in any room. They are frequently the most dangerous.",
-      "canPurchaseAdvantages": true,
+      "classification": "mortal",
       "campaignPowerScaling": {
         "columns": [
           "Focused Skill Max Bonus",
@@ -2343,14 +2362,12 @@ window.SHADOWS_DATA = {
         "majorMilestones": "general"
       }
     },
-    // REVIEW (F13): `canPurchaseAdvantages:false` below is ASSUMED from the
-    // Werewolf supernatural baseline; confirm with D. (also noted in data field).
     {
       "id": "vampire",
       "name": "Vampire",
       "status": "tbd",
       "flagged": true,
-      "flagNote": "F7, F13: WIP contains narrative only - no Campaign Power Scaling, Baseline Traits, Specialization (Bloodline), Core Mechanic, or Powers yet.",
+      "flagNote": "F7: WIP contains narrative only - no Campaign Power Scaling, Baseline Traits, Specialization (Bloodline), Core Mechanic, or Powers yet.",
       "primaryStats": [
         "BOD",
         "REF",
@@ -2359,8 +2376,7 @@ window.SHADOWS_DATA = {
       "summary": "As old as civilization itself. Vampires have had centuries to accumulate power, influence, and everything that comes with both. Vampires can be part of many different houses, each with their own strengths, resources, allies, and enemies.",
       "gameplayStyle": "Vampires navigate hunger, power, and eternity in equal measure. You walk a different version of NYTE City - one shaped by blood, secrecy, and influence. Your abilities are potent and intoxicating, but indulgence always carries consequences.",
       "lore": "In NYTE City, Vampires thrive in the shadows, concealed by the chaos of urban decay. While they remain hidden from public knowledge, Vampires are not hiding. They are waiting. The Unseen Court, a secretive governing body, ensures their kind stays in the shadows while exerting influence over corporations, criminal syndicates, and political figures. You are undead. You consume blood to survive. Sunlight kills you - and NYTE City, to its credit, never fully sees the sun. Whatever path you choose, feeding is not optional.",
-      "canPurchaseAdvantages": false,
-      "canPurchaseAdvantagesNote": "Assumed per the supernatural baseline established in the Werewolf section - confirm.",
+      "classification": "supernatural",
       "campaignPowerScaling": {
         "byPowerLevel": {}
       },
@@ -2403,7 +2419,7 @@ window.SHADOWS_DATA = {
       "summary": "Lycanthropy is both a curse and a gift: immense strength, savage instinct, and the weight of a tribe and lineage older than the city. Werewolves can shift into their beast form when words stop working and something more permanent is required.",
       "gameplayStyle": "Werewolves live between restraint and release. Bound to a tribe and driven by instinct, you navigate loyalty, territory, and transformation. When the beast emerges, subtlety fades and raw power takes over - but that power always demands something in return.",
       "lore": "For as long as there have been people, there have been wolves in the shadows - protectors not from mankind, but for mankind, against the things that lurk beyond the Veil. They are the knife in the dark, the last line of defense against things that humanity cannot, or should not, know about. The beast is not a separate creature. It is the same person, with different priorities.",
-      "canPurchaseAdvantages": false,
+      "classification": "supernatural",
       "campaignPowerScaling": {
         "columns": [
           "Stat Bonus",

@@ -79,6 +79,16 @@ const Engine = (() => {
   const skillById  = id => D().skills.find(s=>s.id===id);
   const advById    = id => D().advantages.find(a=>a.id===id);
   const disById    = id => D().disadvantages.find(d=>d.id===id);
+  // Decision 151: what kind of being the archetype is, and so which Advantages
+  // it may buy: "all", or "universal" (only those carrying 043's Universal
+  // tag). No archetype, or none named, gates nothing.
+  const classification = ch => { const a = archetype(ch); return (a && (D().classifications||[]).find(c=>c.id===a.classification)) || null; };
+  function canBuyAdvantage(ch, adv){
+    const c = classification(ch);
+    if (!c || c.advantages!=="universal") return true;
+    const def = typeof adv==="string" ? advById(adv) : adv;
+    return !!(def && def.universal===true);
+  }
 
   // Modifier curve. Past 10 (Arcanist focus bonus, supernaturals) gains slow
   // down: +1 more for every `stepEvery` points, so 11-15 = +5, 16-20 = +6
@@ -2786,8 +2796,11 @@ const Engine = (() => {
       else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
       overCap(true);
-      if (a && a.canPurchaseAdvantages===false && ch.advantages.some(x=>x.source!=="natural"))
-        E(`${a.name}s cannot purchase Advantages.`);
+      // Decision 151. A Professional's free Advantages are the archetype's, not bought.
+      const cls = classification(ch);
+      const barred = ch.advantages.filter(x=>x.source!=="natural" && !canBuyAdvantage(ch, x.id));
+      if (barred.length)
+        E(`${cls.name}s can't buy ${barred.map(x=>(advById(x.id)||{name:x.id}).name).join(", ")}. Only Universal Advantages are open to them.`);
       // The discipline cap (Decision 135) is the data's `maxRankBy`. The
       // stepper stops at it, so only an edited file or a lower power level
       // chosen afterwards can pass it.
@@ -2922,7 +2935,7 @@ const Engine = (() => {
     // The character file: create, load, check, export
     newCharacter, isIntakeId, tagReading, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
-    powerLevel, archetype, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
