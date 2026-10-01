@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.32.1
+## v0.32.1 — 2026-10-01
 
 - **Skill lists read properly on a phone.** The Combat skills on Main and the Skills tab
   were squeezed so narrow that every skill name broke one letter per line. Each skill is
