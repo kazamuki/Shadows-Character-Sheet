@@ -72,6 +72,16 @@ function showActiveTab(nav){
   tabRowFades(nav);
 }
 
+// Pinned vitals (Decision 160): a preference of this browser, not of the
+// character. The body class lays the panel beside the sheet, and the CSS only
+// honours it from 1280px; narrower, the bar and the flyout come back.
+const PIN_KEY = "shadows.ui.vitalsPinned", PIN_MEDIA = "(min-width:1280px)";
+function vitalsPinned(){ try{ return localStorage.getItem(PIN_KEY)==="pinned"; }catch(e){ return false; } }
+function pinRoom(){ return !!(window.matchMedia && window.matchMedia(PIN_MEDIA).matches); }
+function setVitalsPinned(on){
+  try{ localStorage.setItem(PIN_KEY, on?"pinned":"unpinned"); }catch(e){}
+  closePopover(false); closeVitals(); renderDrawer();
+}
 function closeVitals(){
   S.vitalsOpen=false;
   const dr=$("vdrawer"), sc=$("vscrim");
@@ -81,12 +91,16 @@ function closeVitals(){
 function renderDrawer(){
   const dr=$("vdrawer"), sc=$("vscrim");
   if (!dr) return;
+  const pinned = S.screen==="sheet" && !!S.ch && vitalsPinned();
+  document.body.classList.toggle("vitals-pinned", pinned);
   if (S.screen==="sheet" && S.ch){
     dr.innerHTML = vitalsPanelHtml(S.ch);
     dr.classList.toggle("open", !!S.vitalsOpen);
-    dr.setAttribute("aria-hidden", S.vitalsOpen?"false":"true");
+    dr.setAttribute("aria-hidden", S.vitalsOpen || (pinned && pinRoom()) ? "false" : "true");
     if (sc) sc.classList.toggle("open", !!S.vitalsOpen);
     dr.querySelectorAll("[data-vitals-close]").forEach(b=>b.onclick=closeVitals);
+    dr.querySelectorAll("[data-vitals-pin]").forEach(b=>b.onclick=()=>setVitalsPinned(!vitalsPinned()));
+    dr.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop, "#vdrawer"));
     if (sc) sc.onclick=closeVitals;
   } else {
     dr.innerHTML=""; closeVitals();
@@ -259,6 +273,9 @@ function boot(){
   }
   initWhatsNew();
   migrateLegacySlots();
+  // Crossing 1280px moves a pinned panel in or out of the page.
+  if (window.matchMedia){ const mq=window.matchMedia(PIN_MEDIA), re=()=>{ if (S.screen==="sheet") renderDrawer(); };
+    if (mq.addEventListener) mq.addEventListener("change", re); else if (mq.addListener) mq.addListener(re); }
   renderFooter();
   wireThemeToggle();
   // The sticky header is two rows on the sheet and one elsewhere, so a

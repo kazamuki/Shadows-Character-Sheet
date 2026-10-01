@@ -987,6 +987,7 @@ No cascade logic to maintain — it falls out of the architecture.
     supersedes Decision 32's "rail hidden on Main only" — the rail is now hidden
     across the whole locked sheet, recovering the right-hand whitespace. (Ken,
     2026-06-16)
+    → **Superseded in part by Decision 160** — a pinned vitals panel brings back a right-hand column from 1280px.
 36. **(Phase 3.2)** **Four-sphere stat layout on Main.** Stats cluster into
     Physical (BOD/REF/MOB) · Mental (INT/TECH/COOL) · Social (MAG/EMP) · Soul
     (TOL/WILL), rendered as four side-by-side columns (cells stacked vertically,
@@ -1006,6 +1007,7 @@ No cascade logic to maintain — it falls out of the architecture.
     `S.vitalsOpen`; the drawer element is reused (not recreated) so the transform
     animates and the open state survives data-driven re-renders. (Ken,
     2026-06-16)
+    → **Superseded in part by Decision 160** — the flyout can be pinned beside the sheet on a wide screen.
 38. **(Phase 3.2)** **Sticky in-header navigation.** The section tabs move out of
     the scrolling content into a **sticky** header that reads
     **`Shadows // <character name>`**; the active tab underlines at the header's
@@ -3008,6 +3010,7 @@ No cascade logic to maintain — it falls out of the architecture.
       redraw, focus not returned on Esc, a click elsewhere not closing it,
       and Take a hit leaving the popover open. Each fails a test.
     Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+    → **Superseded in part by Decision 160** — the pinned panel's vitals open the same popovers, to the left.
 
 120. **(Weapon mods and rounds in the magazine — W16, data + engine + app,
     character schema 0.10)** **A catalog weapon takes mods into its fixed
@@ -3595,6 +3598,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 46 in part (the raise lists are modals, not open sections).
      - **Revisit if:** something else is spent with IP often enough to want its own button.
      - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+
+160. **On a wide screen the vitals panel can be pinned beside the sheet, and its vitals open their popovers to the left.**
+     *2026-10-01 · Ken + Claude · Touches: vitals drawer, vdrawer, Pin, Unpin, vitals-pinned, vitalsPinned, PIN_MEDIA, vitals bar, vbar, vrow, openPopover scope, popTrigger, from-rail, header, Main, footer, toast*
+     - **Decided:** The vitals panel has **Pin** from 1280px. Pinned, it is a column on the right at full height on every tab, Main included: the header (⋮ and the theme button with it), the page, the footer and the undo toast make room, and the vitals bar's pills go. HP, Pain, Conditions, SAN, LUCK and Ç in the panel open the same popovers as the bar, to the panel's left. The pin is this browser's, not the character's. Below 1280px it is ignored: the bar and the flyout come back, and pinning resumes on a wide screen.
+     - **Why:** Ken: on a big screen the vitals are wanted all the time, beside the sheet rather than over it, without opening and closing a flyout.
+     - **Rejected:**
+       - Hiding the panel on Main, where the cards repeat it: the page would jump sideways on every switch to or from Main, which a player moving between tabs feels every time.
+       - Pinning on any width: under 1280px the sheet's own columns would lose more than the panel gives.
+       - A pin in the character file: it's how this screen is laid out, like the theme.
+     - **Replaces:** Decision 35 in part (a pinned panel brings back a right-hand column on the locked sheet); Decision 37 in part (the flyout can be pinned); Decision 119 in part (the panel's vitals open popovers too, to the left).
+     - **Revisit if:** a narrower screen wants the pin, or the panel's stats and derived rows prove to be what's used least and want trimming.
+     - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested; `npm run phone-check` passes. Log 2026-10-01.
 
 ## 5. Open Flags
 

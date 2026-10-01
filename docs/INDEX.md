@@ -300,9 +300,9 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll. → **superseded in part by 158**
 - **31** *(Phase 3.1)* — Iconography lives in shadows-icons.js (see §1).
 - **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35**
-- **35** *(Phase 3.2)* — Full-width sheet on every tab.
+- **35** *(Phase 3.2)* — Full-width sheet on every tab. → **superseded in part by 160**
 - **36** *(Phase 3.2)* — Four-sphere stat layout on Main.
-- **37** *(Phase 3.2)* — Vitals flyout drawer.
+- **37** *(Phase 3.2)* — Vitals flyout drawer. → **superseded in part by 160**
 - **38** *(Phase 3.2)* — Sticky in-header navigation. → **superseded in part by 140**
 - **39** *(Phase 3.2)* — Header overflow menu.
 - **40** *(Phase 3.2)* — Collapsible page footer.
@@ -332,7 +332,8 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **112** *(Modals, the skill line and Trackers' layout — wishlist pass)* — The modal gains a sticky footer and is centred; W6 Take a hit in the modal, Apply disabled with its reason; W23–W26 row click, dimmed rows that say why, sticky search, Done; W20/W21 a skill's stats as icons with the character's numbers; W1/W10 Trackers in two columns, the HL track in Damage banded by Pain Level.
 - **117** *(Let a hit land — W15)* — `commit()` notes when damage went up; the next render flashes the HP readouts and the Health Level boxes that took it, twice on Pain if its level rose, once only, never on heal or undo, none under reduced motion.
 - **118** *(The catalog browser — W4)* — Loadout's pickers are a modal: search, section, What I can afford, sort, and every number before Add/Buy from `Engine.catalogLine()`, the reader Loadout's own rows share. Buy says why it's off; a row click opens its details.
-- **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal.
+- **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal. → **superseded in part by 160**
+- **160** *(Pinned vitals)* — From 1280px the vitals panel pins as a right-hand column on every tab, Main included; the header, page, footer and toast make room, the bar's pills go, and the panel's vitals open their popovers to the left. The pin is the browser's; narrower, it's ignored.
 - **151** *(Health verbs on Main — W42)* — Heal 1 · Hurt 1 · Take a hit as a full-width row after Pain in Main's card grid, the popover's own controls; at zero Main's Hurt 1 greys out and says to use Take a hit, which asks 054's WILL check. F36 opened.
 - **120** *(Weapon mods and rounds — W16)* — Schema 0.10: `weapons[i].mods` and `roundsSpent`. Single/Burst/Full Auto spend 1/3/10 (053) from a capacity read as its number + chambered round; Fire and Reload on Loadout and Main. Mods fill fixed slots, fit per data (`onlyFor`/`notFor`), add tags and damage; a sight's ACC is aimed, apart from Single's. F26 opened. → **superseded in part by 145**
 - **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog. → **superseded in part by 143**

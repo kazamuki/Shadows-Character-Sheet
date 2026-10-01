@@ -326,11 +326,24 @@ function popEl(){
   }
   return el;
 }
-const popTrigger = key => document.querySelector(`#main [data-vpop="${key}"]`);
+// A popover's trigger lives in the page (#main) or in the vitals panel
+// (#vdrawer, Decision 160); `scope` says which, since both can hold one key.
+const popTrigger = (key, scope="#main") => document.querySelector(`${scope} [data-vpop="${key}"]`);
 function placePopover(){
-  const el=popEl(), a=popState && popTrigger(popState.key); if (!a) return;
+  const el=popEl(), a=popState && popTrigger(popState.key, popState.scope); if (!a) return;
   const r=a.getBoundingClientRect(), vw=document.documentElement.clientWidth||window.innerWidth||0;
+  const vh=document.documentElement.clientHeight||window.innerHeight||0;
   const w=el.offsetWidth||320;
+  // From the vitals panel it opens to the left of the row, fixed beside the
+  // panel, kept on screen.
+  const side = popState.scope==="#vdrawer";
+  el.classList.toggle("from-rail", side);
+  if (side){
+    const h=el.offsetHeight||0;
+    el.style.top=`${Math.round(Math.max(8, Math.min(r.top, vh - h - 8)))}px`;
+    el.style.left=`${Math.round(Math.max(8, r.left - w - 10))}px`;
+    return;
+  }
   el.style.top=`${Math.round(r.bottom + (window.scrollY||0) + 6)}px`;
   el.style.left=`${Math.round(Math.max(8, Math.min(r.left + (window.scrollX||0), (window.scrollX||0) + vw - w - 8)))}px`;
 }
@@ -341,12 +354,12 @@ function drawPopover(){
     <button class="modal-x" data-popclose aria-label="Close">×</button></div><div class="pop-body">${p.html}</div>`;
   el.querySelectorAll("[data-popclose]").forEach(b=>b.onclick=()=>closePopover(true));
   if (st.bind) st.bind(el.querySelector(".pop-body"));
-  const t=popTrigger(st.key); if (t) t.setAttribute("aria-expanded","true");
+  const t=popTrigger(st.key, st.scope); if (t) t.setAttribute("aria-expanded","true");
 }
-function openPopover({ key, render, bind }){
-  if (popState && popState.key===key){ closePopover(true); return; }   // the trigger toggles
+function openPopover({ key, render, bind, scope="#main" }){
+  if (popState && popState.key===key && popState.scope===scope){ closePopover(true); return; }   // the trigger toggles
   if (popState) closePopover(false);
-  popState={ key, render, bind };
+  popState={ key, render, bind, scope };
   const el=popEl(); el.hidden=false;
   drawPopover(); placePopover();
   const first=el.querySelector(".pop-body button:not([disabled]), .pop-body input");
@@ -355,7 +368,7 @@ function openPopover({ key, render, bind }){
 // After a render: same trigger, fresh numbers, focus where it was.
 function refreshPopover(){
   if (!popState) return;
-  if (!popTrigger(popState.key)){ closePopover(false); return; }
+  if (!popTrigger(popState.key, popState.scope)){ closePopover(false); return; }
   const el=popEl(), f=document.activeElement;
   const attr=f && el.contains(f) ? [...f.attributes].find(a=>a.name.startsWith("data-")) : null;
   drawPopover(); placePopover();
@@ -366,7 +379,7 @@ function closePopover(returnFocus){
   const st=popState; if (!st) return;
   popState=null;
   const el=popEl(); el.hidden=true; el.innerHTML="";
-  const t=popTrigger(st.key);
+  const t=popTrigger(st.key, st.scope);
   if (t){ t.setAttribute("aria-expanded","false"); if (returnFocus) t.focus(); }
 }
 
@@ -537,12 +550,16 @@ function applyPickFilter(root, q){
 // ── Vitals row — the one visual atom the creation rail and the sheet's
 // flyout drawer both render (vrow lives here so both can call it). ────────
 let lastVitals = {};
-function vrow(k,v,cls="",ico=""){
+// `pop`, when given, makes the row a button that opens that vital's popover
+// (the pinned vitals panel, Decision 160).
+function vrow(k,v,cls="",ico="",pop=""){
   const changed = lastVitals[k]!==undefined && lastVitals[k]!==String(v);
   lastVitals[k]=String(v);
   const svg = ico && iconSvg(ico);
   const key = svg ? `<span class="k withico"><span class="ico">${svg}</span>${k}</span>` : `<span class="k">${k}</span>`;
-  return `<div class="vrow">${key}<span class="v ${cls} ${changed?"pulse":""}">${v}</span></div>`;
+  const inner = `${key}<span class="v ${cls} ${changed?"pulse":""}">${v}</span>`;
+  return pop ? `<button type="button" class="vrow act" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>`
+    : `<div class="vrow">${inner}</div>`;
 }
 
 // Changing archetype invalidates every archetype-specific choice. Both change

@@ -216,16 +216,23 @@ function vitalsPanelHtml(ch){
   const der=Engine.derived(ch), hp=Engine.health(ch), t=Engine.statTable(ch);
   const pain=Engine.painState(ch), luck=Engine.luckState(ch), san=Engine.sanState(ch);
   const ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), sfr=Engine.sfr(ch);
-  let h = `<div class="dhead"><h2>Vitals</h2><button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>`;
+  // Pin (Decision 160): on a wide screen the panel can sit beside the sheet.
+  const pinned = vitalsPinned();
+  let h = `<div class="dhead"><h2>Vitals</h2>
+    <button class="dpin" data-vitals-pin aria-pressed="${pinned}" title="${pinned?"Put the vitals back in the bar":"Keep the vitals beside the sheet"}">${pinned?"Unpin":"Pin"}</button>
+    <button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>`;
   h += `<div class="vgroup"><div class="vname">${esc(ch.identity.name)||"&mdash;"}</div>
     <div class="vsub">${a?esc(Engine.archetypeContent(ch).name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
   h += `<div class="vgroup">`;
-  h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp");
-  h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"");
-  h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"");
-  h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold");
+  // Each one the vitals bar opens, this opens too, to the left (Decision 160).
+  const cs=Engine.conditionState(ch);
+  h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp", "", "hp");
+  h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"", "", "pain");
+  if (cs.active.length) h += vrow("Cond", cs.isHelpless?"HELPLESS":cs.active.length, "over", "", "cond");
+  h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
+  h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold", "", "luck");
   if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
-  h += vrow(CR, ch.trackers.credits.current, "gold");
+  h += vrow(CR, ch.trackers.credits.current, "gold", "", "cred");
   h += `</div><div class="vgroup">`;
   h += vrow("IP", ip.available, ip.available<0?"over":"");
   h += vrow("Milestone Pts", ms.mp);
@@ -2580,11 +2587,11 @@ function bindVitalControls(root){
 // W2/W3: a vital's popover, from its pill or its card on Main. The body is
 // Trackers' own controls, bound by the same binder; Take a hit closes the
 // popover and opens the hit modal, whose focus comes back to the vital.
-function openVitalPopover(key){
-  openPopover({ key, render: ()=>S.ch ? vitalPopover(S.ch, key) : null, bind: body=>{
+function openVitalPopover(key, scope="#main"){
+  openPopover({ key, scope, render: ()=>S.ch ? vitalPopover(S.ch, key) : null, bind: body=>{
     bindVitalControls(body);
     body.querySelectorAll("[data-pophit]").forEach(b=>b.onclick=()=>{
-      closePopover(true); openHitModal(`[data-vpop="${key}"]`);
+      closePopover(true); openHitModal(`${scope} [data-vpop="${key}"]`);
     });
     body.querySelectorAll("[data-popgo]").forEach(b=>b.onclick=()=>{
       closePopover(false); S.section=normSection(b.dataset.popgo); window.scrollTo(0,0); update();
