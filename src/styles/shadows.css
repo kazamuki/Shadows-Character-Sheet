@@ -756,6 +756,24 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .skill-table .c-break{width:38%}
 .skill-table th,.skill-table td{overflow-wrap:anywhere}
 .ref td.bd{font-family:var(--mono); font-size:.72rem; color:var(--dim)}
+/* On a phone the fixed grid left the name column about 25px wide and every
+   skill broke one letter per line. Each skill becomes a line of its own: the
+   name across the top, Rank and Check labelled beside each other, the
+   breakdown under them. Same pattern as .cat-results above. */
+@media (max-width:640px){
+  .skill-table, .skill-table tbody{display:block}
+  .skill-table colgroup, .skill-table thead{display:none}
+  .skill-table tr.skill-line{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 18px; padding:9px 0; border-bottom:1px solid rgba(32,63,123,.35)}
+  .skill-table tr.skill-line td{border:0; padding:0; overflow-wrap:normal}
+  .skill-table tr.skill-line td:first-child{flex-basis:100%; font-size:.9rem}
+  .skill-table tr.skill-line td[data-k]::before{content:attr(data-k); margin-right:6px; font-family:var(--mono); font-size:.62rem;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+  .skill-table tr.skill-line td.bd{flex-basis:100%; margin-top:1px}
+  .skill-table tr.cat-row{display:block}
+  .skill-table tr.cat-row td{display:block}
+  .skill-table tr.skill-desc{display:block} .skill-table tr.skill-desc[hidden]{display:none}
+  .skill-table tr.skill-desc td{display:block; border-bottom:1px solid rgba(32,63,123,.35)}
+}
 .cat-row td{font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; text-transform:uppercase;
   color:var(--violet-hi); padding-top:15px; border-bottom:1px solid var(--frame)}
 .skill-q{background:none; border:1px solid var(--frame); color:var(--dim); border-radius:50%;
