@@ -368,7 +368,8 @@ test("changing archetype clears the natural-advantage mirror (review #4)", () =>
   ch.archetypeChoices.specialization = ["cleaner"];
   ch.archetypeChoices.naturalAdvantages = [{ id: "iron-will", rank: 1 }];
   ch.advantages = [{ id: "iron-will", rank: 1, notes: "", source: "natural" },
-                   { id: "ambidextrous", rank: 1, notes: "" }];
+                   { id: "ambidextrous", rank: 1, notes: "" },
+                   { id: "lucky", rank: 1, notes: "" }];
 
   const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("archetype"), maxReached: steps.length - 1 } } });
   app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
@@ -384,11 +385,35 @@ test("changing archetype clears the natural-advantage mirror (review #4)", () =>
     "a legitimately purchased advantage was thrown away");
   assert.deepEqual([...now.archetypeChoices.naturalAdvantages], []);
 
-  // ...and a supernatural archetype, which cannot purchase at all, keeps none.
+  // ...and a Supernatural keeps only the Universal ones (Decision 151).
   app.click('[data-arch="werewolf"]');
   now = stored(app, { locked: false });
-  assert.deepEqual([...now.advantages], [],
-    "a Werewolf kept advantages it cannot hold");
+  assert.equal(now.advantages.map(a => a.id).join(), "lucky",
+    "a Werewolf kept an Advantage it cannot buy, or lost a Universal one it can");
+});
+
+test("a Werewolf's Character Points step opens the Universal Advantages and no others (Decision 151)", () => {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = "werewolf";
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  // A held Mortal-only Advantage, as an edited file might carry: it can still be taken off.
+  ch.advantages = [{ id: "ambidextrous", rank: 1, notes: "" }];
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("character-points"), maxReached: steps.length - 1 } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const up = id => app.$(`[data-step="adv|${id}|1"]`), down = id => app.$(`[data-step="adv|${id}|-1"]`);
+  assert.ok(up("lucky") && !up("lucky").disabled, "a Universal Advantage can't be bought");
+  assert.equal(up("animal-ken"), null, "a Mortal-only Advantage offers a + to a Werewolf");
+  assert.match(app.$("#main").textContent, /Not for Supernaturals/);
+  assert.match(app.$("#main").textContent, /only Universal Advantages are open/);
+  const names = app.$$("#main .pick h4").map(h => h.textContent);
+  assert.ok(names.indexOf("Time Sense") < names.indexOf("Ambidextrous"),
+    "the Universal Advantages aren't listed before the Mortal-only ones");
+  assert.ok(down("ambidextrous") && !down("ambidextrous").disabled, "a held Mortal-only Advantage can't be removed");
+  assert.ok(up("ambidextrous").disabled, "a held Mortal-only Advantage can be raised");
+  assert.deepEqual(app.errors, []);
 });
 
 test("a free-only pick-bearing advantage is fillable on the step that demands it (review #2)", () => {

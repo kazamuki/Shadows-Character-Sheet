@@ -23,6 +23,15 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.33.0
+
+- **Werewolves and Vampires can buy Advantages now: the Universal ones.** Every archetype
+  is Mortal or Supernatural. A Mortal can buy any Advantage; a Supernatural, who starts
+  with a great deal of power already, can buy only the fifteen marked **Universal**, like
+  Lucky, Contacts or Hard to Kill. The Character Points step lists them first and tags
+  them, and says which aren't open. Disadvantages are open to everyone, as before. Changing archetype drops
+  any Advantage the new one can't buy.
+
 ## v0.32.1 — 2026-10-01
 
 - **Skill lists read properly on a phone.** The Combat skills on Main and the Skills tab
