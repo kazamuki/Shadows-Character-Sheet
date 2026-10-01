@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.33.0
+## v0.33.0 — 2026-10-01
 
 - **Heal, Hurt and Take a hit, right on Main.** Under the Health and Pain cards there's
   now a row with **Heal 1**, **Hurt 1** and **Take a hit**, so a hit mid-fight is one tap
