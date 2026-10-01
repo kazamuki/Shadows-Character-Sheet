@@ -7,7 +7,8 @@ window.SHADOWS_CHANGELOG = [
     "intro": [],
     "items": [
       "**Everyone starts with 4 LUCK.** It was 2. LUCK you bought with Character Points still sits on top, so every character, locked ones included, has 2 more than before.",
-      "**A power rank costs 5 Character Points** while you make a character, one price for every power. For an Arcanist that's each rank of Evocation, Enchantment or Alchemy, down from 6."
+      "**A power rank costs 5 Character Points** while you make a character, one price for every power. For an Arcanist that's each rank of Evocation, Enchantment or Alchemy, down from 6.",
+      "**Traits and Archetype are one tab: Character.** Your archetype comes first, with its traits, powers and vulnerabilities side by side on a wide screen, then your Advantages beside your Disadvantages. The buttons along the top jump to each part and stay in view as you scroll. **Expand all** opens every Advantage and Disadvantage at once and stays that way until you collapse them. The buttons at the bottom take you to Loadout & Powers and Trackers."
     ]
   },
   {

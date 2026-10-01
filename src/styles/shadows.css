@@ -848,6 +848,19 @@ details.pick.trait>summary::before{content:"▸"; color:var(--frame); font-famil
 details.pick.trait[open]>summary::before{content:"▾"}
 details.pick.trait>summary .th{font-size:.92rem; font-weight:600; color:var(--text)}
 details.pick.trait>summary .cost{margin-left:auto}
+
+/* Character (Decision 158): the archetype's traits, powers and vulnerabilities
+   a column each, and Advantages beside Disadvantages, from 1000px, like Skills.
+   One column below that. A column's own heading keeps its top margin off. */
+.arch-cols,.trait-cols{display:grid; grid-template-columns:1fr; column-gap:24px; align-items:start}
+@media (min-width:1000px){
+  .arch-cols.n2,.trait-cols{grid-template-columns:1fr 1fr}
+  .arch-cols.n3{grid-template-columns:repeat(3, minmax(0,1fr))}
+}
+.arch-col,.trait-col{min-width:0}
+.jump-end{margin-left:auto}
+.tab-links{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:18px}
+.tab-links .step-note{margin:0}
 details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 
 /* Main tab: condition strip + two-column command console (stats beside combat). */
