@@ -8,7 +8,9 @@ colors:
   deep-circuit: "#203F7B"
   aether-pulse: "#712B8C"
   aether-pulse-lit: "#9B4DBA"
+  aether-pulse-read: "#B47AD0"
   neon-veil: "#BC489A"
+  neon-veil-read: "#D36FB3"
   static-cyan: "#1BBBC4"
   ghostly-green: "#71C388"
   signal-gold: "#F2C94C"
@@ -185,13 +187,15 @@ A cold navy night with five neons, each of which means exactly one thing.
 
 ### Primary
 - **Aether Pulse** (#712B8C): the brand's hand. Primary buttons, the on-state of a form toggle, text selection, the Take-a-hit panel's frame, the violet haze in the header. Fixed across both themes.
-- **Aether Pulse, lit** (#9B4DBA): the hover of anything violet, section labels (`.sect`, group summaries), stat and tab icons at rest, the accent edge on toasts and modals, the Spell Power readout.
+- **Aether Pulse, lit** (#9B4DBA): the hover of anything violet, stat and tab icons at rest, the accent edge on toasts and modals. A line, a fill or an icon; never words on the ground (2.9–3.5:1 there).
+- **Aether Pulse, read** (#B47AD0, `--violet-text`): violet in words. Section labels (`.sect`, group summaries), the Spell Power readout, the What's-new version. 4.7:1 or better on every dark surface; folds to Aether Pulse in the light theme.
 
 ### Secondary
 - **Static Cyan** (#1BBBC4): a value and where you are. Numeric readouts in text, the active tab underline and wizard step, a selected card's ring, the focus outline on every control, tip and What's-new accent edges, the Go button's fill.
 
 ### Tertiary
 - **Neon Veil** (#BC489A): harm and error. Damage fill on Health Levels, Pain bands, Conditions, negative modifiers, validation errors, over-budget costs, the landed-hit flash. Also the eyebrow above a step title — its one non-harm use.
+- **Neon Veil, read** (#D36FB3, `--magenta-text`): Neon Veil in words, everywhere it's text rather than a line or a fill: errors, negative numbers, over-budget costs, the eyebrow. Neon Veil itself is 3.2–3.8:1 on the dark grounds, under the 4.5:1 text needs.
 
 ### Semantic
 - **Ghostly Green** (#71C388): health and done. HP, a completed wizard step, positive modifiers, a picked advantage, final status, granted (free) costs, the locked banner.
@@ -214,7 +218,9 @@ Light theme: **Pale Concrete** ground (#F5F4F2), white panels, a warm raised pan
 
 **The One Meaning Rule.** Each neon has one job and keeps it on every screen. Magenta never marks something good; green never marks something spent. A new readout takes the colour of what it *is* (a pool of Luck is gold wherever it appears).
 
-**The Fold Rule.** In the light theme, cyan and green fold onto Deep Circuit and gold and magenta fold onto Aether Pulse, because the neons fail contrast on a pale ground. Never hard-code a neon hex; use the token so the fold happens.
+**The Fold Rule.** In the light theme, cyan and green fold onto Deep Circuit and gold and magenta fold onto Aether Pulse, because the neons fail contrast on a pale ground. The two *read* tokens fold onto Aether Pulse too. Never hard-code a neon hex; use the token so the fold happens.
+
+**The Read Rule.** A colour that works as a line or a fill can fail as words. Violet and magenta words take their *read* token; `tests/build.test.mjs` checks every token used for words against all three grounds, in both themes.
 
 ## Typography
 
@@ -230,13 +236,13 @@ Light theme: **Pale Concrete** ground (#F5F4F2), white panels, a warm raised pan
 - **Headline** (600, 1.7rem, .04em): a wizard step's title.
 - **Title** (600, .95–1.2rem, .04–.06em): card, review-block, hit-panel and modal headings; the character's name in the vitals rail.
 - **Body** (400, 15px, 1.55): prose, descriptions, notes. Step notes cap at 62ch, lore at 72ch, reference text at 80ch. Secondary text steps down to .8–.86rem.
-- **Label** (500, .58–.74rem, .12–.2em, uppercase): field labels, section rules, table heads, chips, badges, the eyebrow, the vitals keys.
+- **Label** (500, .7–.74rem, .12–.2em, uppercase; never under 11px on screen): field labels, section rules, table heads, chips, badges, the eyebrow, the vitals keys.
 - **Readout** (600, 1.5–1.9rem, tabular figures): stat scores and the Condition cards' big numbers. Inline numbers in text use Roboto Mono at body size instead.
 
 ### Named Rules
 **The Four Voices Rule.** Display names things, Inter explains them, mono labels and counts them, Oxanium shows the number you came for. Don't cross them: no Inter labels in capitals, no display face in a paragraph, no big numbers in Inter.
 
-**The Mono Caps Rule.** Every label that names a field or a section is Roboto Mono, uppercase, letter-spaced at least .12em, in Overcast Steel (Aether Pulse, lit for section rules). It's the system's handwriting.
+**The Mono Caps Rule.** Every label that names a field or a section is Roboto Mono, uppercase, letter-spaced at least .12em, in Overcast Steel (Aether Pulse, read for section rules). It's the system's handwriting.
 
 ## Layout
 
@@ -305,8 +311,11 @@ Engineered at rest, lit on touch.
 - **Focus:** a 2px Static Cyan outline, offset 1px.
 - **Error:** the field stays; the issue list below it speaks in magenta (errors) or gold (warnings).
 
+### Touch targets
+Nothing you can press is under 24px. On a touchscreen (`pointer: coarse`) it's 44px. A small control on its own (the round `?`, the close ✕, the theme toggle) keeps its look and grows an invisible `::after` hit area. A control in a row (buttons, chips, tabs, steppers, tags, step rows) grows for real, so two hit areas never overlap. Fields are 16px on a touchscreen, so iOS doesn't zoom the page when one takes focus. `npm run phone-check` measures all of it in a real browser.
+
 ### Steppers and toggles
-- **Stepper:** a framed 4px strip of two 30px Raised Panel keys around a mono value; a key lights Deep Circuit with on-accent text on hover, and fades to 30% at its limit.
+- **Stepper:** a framed 4px strip of two 30px Raised Panel keys (44px on a touchscreen) around a mono value; a key lights Deep Circuit with on-accent text on hover, and fades to 30% at its limit.
 - **Form toggle:** joined segments in one frame; the on segment fills Aether Pulse.
 
 ### Navigation

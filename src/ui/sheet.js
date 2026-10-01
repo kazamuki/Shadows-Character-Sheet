@@ -1239,7 +1239,7 @@ function renderShSessions(){
     </div>
     <label class="field"><span>Notes</span><textarea data-sesnotes style="min-height:70px" placeholder="Leads, debts, names to remember"></textarea></label>
     <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap">
-      <label style="display:flex; gap:8px; align-items:center; font-size:.84rem"><input type="checkbox" data-sesmp checked style="width:auto"> Milestone Point</label>
+      <label class="check ses-mp"><input type="checkbox" data-sesmp checked> Milestone Point</label>
       <button class="btn go" data-seslog="1">Log session</button>
     </div></div>`;
   h += `<div class="sect">History — ${ch.sessions.length} session${ch.sessions.length===1?"":"s"} · ${ms.mp} MP · ${ip.earned} IP earned</div>`;

@@ -23,12 +23,21 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.32.1
+## v0.32.1 — 2026-10-01
 
 - **Skill lists read properly on a phone.** The Combat skills on Main and the Skills tab
   were squeezed so narrow that every skill name broke one letter per line. Each skill is
   now its own line: the name across the top, Rank and Check beside each other, the
   breakdown underneath.
+- **Made for thumbs.** On a phone or tablet, every button, tab, chip, stepper and `?` is
+  now big enough to hit without aiming, and tapping into a field no longer zooms the page.
+  With a mouse, the sheet looks as it did.
+- **Small print you can read.** The smallest labels were down to 9px; nothing is under 11px
+  now. Violet headings and magenta warnings, errors and damage numbers are a shade
+  brighter, so they stand clear of the dark background. In the light theme, the footer's
+  GDG button no longer shows as a blank grey box.
+- **Reduce motion means it.** With your device set to reduce motion, the blinking dot in
+  Admin mode and the sliding Vitals drawer now stay still.
 
 ## v0.32.0 — 2026-09-28
 
