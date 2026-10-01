@@ -2171,9 +2171,9 @@ function pSkillsTableHtml(ch){
   const table = rows => `<table class="p-table p-skilltable">${thead}<tbody>${rows}</tbody></table>`;
   return `<div class="p-skillcols">${table(pSkillRowsHtml(ch,left))}${table(pSkillRowsHtml(ch,right))}</div>`;
 }
-function pRowsTableHtml(rows, cols, labels, blankRows){
+function pRowsTableHtml(rows, cols, labels, blankRows, cls){
   const data = rows && rows.length ? rows : Array.from({length:blankRows},()=>({}));
-  return `<table class="p-table"><thead><tr>${labels.map(l=>`<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>` +
+  return `<table class="p-table${cls?" "+cls:""}"><thead><tr>${labels.map(l=>`<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>` +
     data.map(r=>`<tr>${cols.map(c=>`<td>${pLine(r[c])}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
 }
 function pTraitsTableHtml(list, lookupFn, label, blankRows){
@@ -2220,7 +2220,25 @@ function renderPrintView(ch){
         `<div><div class="p-section">Disadvantages</div>${pTraitsTableHtml(ch&&ch.disadvantages, Engine.disById, "Disadvantage", 5)}</div></div>`;
   p3 += `<div class="p-section">Notes</div><div class="p-notes small">${ch&&ch.notes?esc(ch.notes):""}</div>`;
 
-  return `<div class="p-page">${p1}</div><div class="p-page">${p2}</div><div class="p-page">${p3}</div>`;
+  return `<div class="p-page">${p1}</div><div class="p-page">${p2}</div><div class="p-page">${p3}</div><div class="p-page">${pArchetypePage(ch)}</div>`;
+}
+
+// The archetype on paper (Decision 153, XQ4): every archetype, since paper
+// showed none of one before. The front page is full (Decision 96), so it's a
+// page of its own. Blank, it's lines to write a Custom archetype by hand.
+function pArchetypePage(ch){
+  const content = ch ? Engine.archetypeContent(ch) : null, cls = content && content.classification;
+  const spec = ch ? Engine.specializationLabel(ch) : "";
+  const named = list => (list||[]).filter(x=>x && x.name);
+  let h = pHead(ch, "Archetype");
+  h += `<div class="p-fieldrow p-archfields">${pField("Archetype", content && content.name)}${pField("Classification", cls && (cls.name + (cls.text ? `: ${cls.text}` : "")))}${spec?pField("Specialization", spec):""}</div>`;
+  h += content && content.description ? `<p class="p-note p-archdesc">${esc(content.description)}</p>` : (ch ? "" : `<div class="p-fieldrow p-archfields wide">${pField("Description", null)}</div>`);
+  const textRows = list => named(list).map(x=>({ name:x.name, description:[x.description, x.benefit].filter(Boolean).join(" ") }));
+  h += `<div class="p-section">Baseline Traits</div>${pRowsTableHtml(textRows(content && content.traits), ["name","description"], ["Trait","What it does"], 5, "p-archtable")}`;
+  const powers = named(content && content.powers).map(p=>({ name:p.name, uses:p.uses||p.drain||"", effect:[p.effect||p.description, p.notes].filter(Boolean).join(" — ") }));
+  h += `<div class="p-section">Powers</div>${pRowsTableHtml(powers, ["name","uses","effect"], ["Power","Uses","Effect"], 8, "p-archtable p-powertable")}`;
+  h += `<div class="p-section">Vulnerabilities</div>${pRowsTableHtml(textRows(content && content.vulnerabilities), ["name","description"], ["Vulnerability","What it does"], 4, "p-archtable")}`;
+  return h;
 }
 
 const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, traits:renderShTraits,

@@ -2385,3 +2385,28 @@ test("Admin edits a written-in archetype's words and lists, and removes a power 
   assert.equal(activeChar(app).powers.length, 0);
   assert.deepEqual(app.errors, []);
 });
+
+// ── The archetype on paper (Decision 153, custom archetype S5, XQ4) ─────
+test("print gives every archetype a page of its own: a written-in one's words, a built-in's data, and lines when blank", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  const page = html => { const box = app.doc.createElement("div"); box.innerHTML = html; const p = box.querySelectorAll(".p-page"); return p[p.length - 1]; };
+  const rows = (pg, sel) => [...pg.querySelectorAll(sel + " tbody tr")].map(tr => [...tr.cells].map(td => td.textContent.trim()));
+  const custom = page(app.window.renderPrintView(activeChar(app)));
+  const text = custom.textContent;
+  for (const t of ["Changeling", "Other: Fae", "Stolen as a child."]) assert.ok(text.includes(t), `the archetype page is missing ${t}`);
+  assert.equal(JSON.stringify(rows(custom, ".p-powertable")), JSON.stringify([["Fade", "SFR", "Unseen for a round."]]));
+  assert.ok(text.includes("Glamour") && text.includes("Cold iron"));
+
+  const ww = lockedCharacter();
+  ww.identity.archetype = "werewolf"; ww.archetypeChoices.specialization = ["trueborn"];
+  const built = page(app.window.renderPrintView(ww)), def = D.archetypes.find(a => a.id === "werewolf");
+  assert.ok(built.textContent.includes("Supernatural") && built.textContent.includes("Trueborn"));
+  for (const t of def.baselineTraits) assert.ok(built.textContent.includes(t.name), `print is missing the Werewolf's ${t.name}`);
+
+  const blank = page(app.window.renderPrintView(null));
+  assert.equal(JSON.stringify([".p-archtable", ".p-powertable"].map(s => blank.querySelectorAll(s + " tbody tr").length)), JSON.stringify([5 + 8 + 4, 8]),
+    "the blank page's write-in lines changed");
+  assert.ok(blank.querySelector(".p-archfields .p-line"), "the blank page has no Archetype line to write on");
+  assert.equal(blank.textContent.includes("Changeling"), false);
+  assert.deepEqual(app.errors, []);
+});

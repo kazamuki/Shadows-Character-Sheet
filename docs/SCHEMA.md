@@ -3504,8 +3504,8 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Built:** app 0.33.0, game data 0.26, no schema change. Closes F13. Log 2026-09-30.
 
 153. **A custom archetype is written in by the player, and checkboxes switch on the panels it uses.**
-     *2026-09-30 · Ken + Deighton + Claude · Touches: custom archetype, writeIn, archetypeChoices.writeIn, powers, addPower, newPower, archetypeContent, when, mechanics, powerUses, Other, written-in status, versionCheck, schema 0.16, XQ2, XQ3, XQ5, XQ6*
-     - **Decided:** An archetype declaring `writeIn` has no content of its own. The character stores its name, description, classification (the new **Other** takes its own words), ticked mechanics, traits and vulnerabilities in `archetypeChoices.writeIn`, and powers in `powers` (`{ id, custom: true, name, uses, effect, notes }`). A panel's `when` follows a ticked mechanic: magic is TOL Spent and the Cascade, not the Grimoire (XQ6). `Engine.archetypeContent` reads any archetype. `addPower` takes an optional IP cost, a journal spend refused if IP is short; creation's powers are free (XQ2). Name and classification are required; the rest warns. Changing archetype clears both, one undo (XQ3). The badge reads "GM-built" (XQ5).
+     *2026-09-30 · Ken + Deighton + Claude · Touches: custom archetype, writeIn, archetypeChoices.writeIn, powers, addPower, newPower, archetypeContent, when, mechanics, powerUses, Other, written-in status, versionCheck, print archetype page, schema 0.16, XQ2–XQ6*
+     - **Decided:** An archetype declaring `writeIn` has no content of its own. The character stores its name, description, classification (the new **Other** takes its own words), ticked mechanics, traits and vulnerabilities in `archetypeChoices.writeIn`, and powers in `powers` (`{ id, custom: true, name, uses, effect, notes }`). A panel's `when` follows a ticked mechanic: magic is TOL Spent and the Cascade, not the Grimoire (XQ6). `Engine.archetypeContent` reads any archetype. `addPower` takes an optional IP cost, a journal spend refused if IP is short; creation's powers are free (XQ2). Name and classification are required; the rest warns. Changing archetype clears both, one undo (XQ3). The badge reads "GM-built" (XQ5). Print gives every archetype a page of its own (XQ4).
      - **Why:** Deighton builds characters no archetype covers, and needs one on the live sheet by 2026-10-03.
      - **Rejected:**
        - Written-in Advantages or Disadvantages: a priced one writes its own points economy (Decision 78's line). Use a power or a vulnerability.
@@ -3515,7 +3515,7 @@ No cascade logic to maintain — it falls out of the architecture.
        - The Grimoire under magic: its Spell Power needs an Evocation rank.
      - **Replaces:** nothing. Extends Decision 15's statuses and 152's classifications.
      - **Revisit if:** powers need a catalog, a price or mechanical fields; Deighton rules on Magical being (W53); W48–W50 are wanted.
-     - **Built:** schema 0.16, game data 0.27, app 0.33.0 (unreleased). Engine in S2; wizard, sheet and print in S3–S5. Log 2026-09-30.
+     - **Built:** schema 0.16, game data 0.27, app 0.33.0 (unreleased). Engine in S2; wizard, sheet and print in S3–S5. Log 2026-09-30 and 2026-10-01.
 
 ## 5. Open Flags
 

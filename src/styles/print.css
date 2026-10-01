@@ -210,4 +210,11 @@
 #printSheet .p-notes.small{ min-height:25mm }
 
 #printSheet .p-note{ font-size:8pt; color:var(--p-dim); margin:0 0 8px }
+/* The archetype page (Decision 153): fields long enough to write a name in
+ * by hand, and a name column narrower than what it does. */
+#printSheet .p-archfields .p-field{ flex:1 1 28% }
+#printSheet .p-archfields.wide .p-field{ flex-basis:100% }
+#printSheet table.p-archtable th:first-child{ width:24% }
+#printSheet table.p-powertable th:nth-child(2){ width:14% }
+#printSheet table.p-archtable td .p-line{ display:block; min-height:1.3em }
 #printSheet .p-blankrows td{ height:16px }
