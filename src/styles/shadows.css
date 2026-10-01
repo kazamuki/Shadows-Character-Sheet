@@ -522,7 +522,7 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .vrow .k.withico{display:flex; align-items:center}
 
 /* "right now" condition strip on the Main tab */
-.cond-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; margin:6px 0 4px}
+.cond-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); grid-auto-flow:row dense; gap:10px; margin:6px 0 4px}
 .cond{background:var(--panel); border:1px solid var(--frame); border-radius:8px; padding:13px 15px; position:relative; overflow:hidden}
 .cond .lab{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
 .cond .big{font-family:var(--numeric); font-weight:600; font-variant-numeric:tabular-nums; font-size:1.9rem; line-height:1.1; color:var(--text); margin-top:3px}
@@ -540,6 +540,13 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .cond .corner{position:absolute; top:9px; right:11px; opacity:.16; width:34px; height:34px; color:var(--text)}
 .cond .corner svg{width:100%; height:100%; display:block}
 /* Conditions (Decision 95) — chips on Main, cards on Trackers, one add row */
+/* W42: Heal 1 · Hurt 1 · Take a hit, a full-width row of the card grid right
+   after Pain, so on a phone it sits under Health; `dense` lets the cards after
+   it backfill the first row on a wide screen. One equal column per button, so
+   three 44px touch targets fit side by side at 320px. */
+.vital-verbs{grid-column:1/-1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; max-width:420px}
+.vital-verbs .btn{padding-left:6px; padding-right:6px; white-space:nowrap}
+.vital-verbs-note{grid-column:1/-1; margin:0; font-size:.8rem; color:var(--dim)}
 .main-conditions{margin:14px 0 4px}
 .cond-chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px}
 .cond-chip{display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--magenta);

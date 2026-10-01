@@ -25,12 +25,18 @@ own in the footer.
 
 ## [Unreleased] — app 0.33.0
 
+- **Heal, Hurt and Take a hit, right on Main.** Under the Health and Pain cards there's
+  now a row with **Heal 1**, **Hurt 1** and **Take a hit**, so a hit mid-fight is one tap
+  without opening anything. Each tap is its own change with its own Undo. Tap the Health
+  card for Heal 5, Hurt 5, an exact total or Heal all, as before.
+- **At zero, a hit goes through Take a hit.** Once your last Health Level empties, Main's
+  Hurt 1 greys out: every hit at zero asks for a WILL check, and Take a hit is what asks.
 - **Werewolves and Vampires can buy Advantages now: the Universal ones.** Every archetype
   is Mortal or Supernatural. A Mortal can buy any Advantage; a Supernatural, who starts
   with a great deal of power already, can buy only the fifteen marked **Universal**, like
   Lucky, Contacts or Hard to Kill. The Character Points step lists them first and tags
-  them, and says which aren't open. Disadvantages are open to everyone, as before. Changing archetype drops
-  any Advantage the new one can't buy.
+  them, and says which aren't open. Disadvantages are open to everyone, as before.
+  Changing archetype drops any Advantage the new one can't buy.
 
 ## v0.32.1 — 2026-10-01
 

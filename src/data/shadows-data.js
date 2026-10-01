@@ -1000,7 +1000,7 @@ window.SHADOWS_DATA = {
   // matching was by NAME, not id (it's by id since Decision 134). The flag outlived the work it described and was still
   // rendering to players; the whole block is removed rather than set to false,
   // because dead data that looks live is the defect class this batch closes.
-  /* CLASSIFICATIONS -- what kind of being an archetype is (Decision 151). Every
+  /* CLASSIFICATIONS -- what kind of being an archetype is (Decision 152). Every
      archetype names one in `classification`. `advantages` says which Advantages
      it may buy: "all", or "universal" (only those with `universal: true`).
      Disadvantages are open to every classification. Werewolves and Vampires
@@ -1023,7 +1023,7 @@ window.SHADOWS_DATA = {
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
      marks 043's Universal Advantages, the only ones a classification with
-     `advantages: "universal"` may buy (Decision 151; see CLASSIFICATIONS).
+     `advantages: "universal"` may buy (Decision 152; see CLASSIFICATIONS).
      Multi-rank scaling lives in the prose `description`. Professional "natural" advantages are
      stored on the character as normal entries with source:"natural" at 0 CP
      (Decisions 17, 142) -- they are NOT a separate list here. `id` is referenced by
@@ -1823,7 +1823,7 @@ window.SHADOWS_DATA = {
           majorMilestones)
      `status`: "final" | "draft" | "tbd" -- the app shows a badge and treats
      tbd/draft content as reference text, never blocking on un-modeled rules.
-     `classification` (Decision 151) names a CLASSIFICATIONS id: which
+     `classification` (Decision 152) names a CLASSIFICATIONS id: which
      Advantages the archetype may buy.
 
      PANELS are how archetypes stay generic: `coreMechanic.panels` DECLARES the
