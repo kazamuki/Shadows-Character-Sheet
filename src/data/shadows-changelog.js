@@ -2,6 +2,18 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.35.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Making a character on a phone opens on the step, not on your vitals.** The vitals used to fill the screen above everything else. Now one line under the header shows what you have left to spend (Stat Points, Skill Points and CP), and **Vitals** opens the full readout over the page. On the Character Points step, whose bar already counts your CP, the line scrolls away.",
+      "**Each step has one title.** The step bar and the heading use the step's short name (Stats, Skills, Character Points), and the instruction sits once underneath.",
+      "**Your stats read — until you spend a Stat Point,** instead of a row of 1s you never chose.",
+      "**Typing on a phone gets the room back.** While you're in a text box, the points line and Back and Continue stop sticking, so the keyboard doesn't box in what you're typing.",
+      "**Back and Continue no longer sit under the page footer,** and a jump on the Character Points step lands its heading in full view."
+    ]
+  },
+  {
     "version": "0.35.0",
     "date": "2026-10-01",
     "intro": [],

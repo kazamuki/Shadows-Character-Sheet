@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-10-01
-**Versions:** app `0.35.0` · game data `0.28` · character schema `0.16` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.35.1` · game data `0.28` · character schema `0.16` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,7 +41,7 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Every archetype is Mortal or Supernatural, and a Supernatural buys only the Universal Advantages (152). A **Custom** archetype is written by the player with the GM: what it is, an Other classification in its own words, the panels it ticks on, traits, powers and vulnerabilities, in the wizard, on the sheet and on paper; in play a power reads as written, and **Improve** rewrites it for IP; Admin edits it free (153, 154). A TAGless number drops its TAG- prefix (155), the Skills tab lists every skill in two columns (156), and the wizard's Continue sticks to the bottom of the screen. Everyone starts with 4 LUCK and a power rank costs 5 CP at creation, every power's (157). Traits and Archetype are one **Character** tab (158), Progression's raises are modals (159), and from 1280px the vitals panel pins beside the sheet (160). Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Every archetype is Mortal or Supernatural, and a Supernatural buys only the Universal Advantages (152). A **Custom** archetype is written by the player with the GM: what it is, an Other classification in its own words, the panels it ticks on, traits, powers and vulnerabilities, in the wizard, on the sheet and on paper; in play a power reads as written, and **Improve** rewrites it for IP; Admin edits it free (153, 154). A TAGless number drops its TAG- prefix (155), the Skills tab lists every skill in two columns (156), and the wizard's Continue sticks to the bottom of the screen. Everyone starts with 4 LUCK and a power rank costs 5 CP at creation, every power's (157). Traits and Archetype are one **Character** tab (158), Progression's raises are modals (159), and from 1280px the vitals panel pins beside the sheet (160). On a phone the wizard's rail is one sticky line of the points left, with the full rail in the flyout, and each step has one title (161). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). Four pages in all, the archetype's last (153). **One known defect:** the frame/texture decoration shows
@@ -131,7 +131,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160): LUCK 4, power ranks at 5 CP, the Character tab, raise modals and pinned vitals, live for Saturday 2026-10-03. The critique's W44–W46 are next.
+**The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160): LUCK 4, power ranks at 5 CP, the Character tab, raise modals and pinned vitals, live for Saturday 2026-10-03. W44, the wizard on a phone, is built for 0.35.1 (Decision 161) and not yet released; the critique's W45 and W46 are next. W45 was written before the Character tab (158) and the pinned panel (160) reshaped Main and the vitals, so re-run the critique on Main before building it.
 Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3). The wishlist: W29, W39, W54 and W55.
 

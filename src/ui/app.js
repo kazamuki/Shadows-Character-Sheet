@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.35.0";
+const APP_VERSION = "0.35.1";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -83,10 +83,13 @@ function setVitalsPinned(on){
   closePopover(false); closeVitals(); renderDrawer();
 }
 function closeVitals(){
+  const was=S.vitalsOpen;
   S.vitalsOpen=false;
   const dr=$("vdrawer"), sc=$("vscrim");
   if (dr){ dr.classList.remove("open"); dr.setAttribute("aria-hidden","true"); }
   if (sc) sc.classList.remove("open");
+  // The wizard's flyout hands focus back to the Vitals pill that opened it.
+  if (was && S.screen==="wizard"){ const t=document.querySelector("#vitals [data-wiz-vitals]"); if (t) t.focus(); }
 }
 function renderDrawer(){
   const dr=$("vdrawer"), sc=$("vscrim");
@@ -102,6 +105,14 @@ function renderDrawer(){
     dr.querySelectorAll("[data-vitals-pin]").forEach(b=>b.onclick=()=>setVitalsPinned(!vitalsPinned()));
     dr.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop, "#vdrawer"));
     if (sc) sc.onclick=closeVitals;
+  } else if (S.screen==="wizard" && S.ch && S.vitalsOpen){
+    // The wizard's rail, in the same flyout, from the narrow screen's
+    // Vitals pill (Decision 161). No pin: wide enough to pin, the rail shows.
+    dr.innerHTML = `<div class="dhead"><h2>Vitals</h2>
+      <button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>` + wizardRailHtml(S.ch);
+    dr.classList.add("open"); dr.setAttribute("aria-hidden","false");
+    if (sc){ sc.classList.add("open"); sc.onclick=closeVitals; }
+    const x=dr.querySelector("[data-vitals-close]"); x.onclick=closeVitals; x.focus();
   } else {
     dr.innerHTML=""; closeVitals();
   }
@@ -286,6 +297,15 @@ function boot(){
     setH();
     if (window.ResizeObserver) new ResizeObserver(setH).observe(hdr);
   }
+  // The wizard's narrow rail line and the fixed footer are measured the same
+  // way: step 7's jump bar sticks under the line, and Back/Continue sit clear
+  // of the footer (Decision 161).
+  [["vitals","--vstrip-live"],["footer","--ftr-live"]].forEach(([id,prop])=>{
+    const el=$(id); if (!el) return;
+    const set=()=>document.documentElement.style.setProperty(prop, el.offsetHeight+"px");
+    set();
+    if (window.ResizeObserver) new ResizeObserver(set).observe(el);
+  });
   // A plain mouse wheel scrolls the tab row sideways, until it can't.
   if (nav){
     nav.addEventListener("scroll", ()=>tabRowFades(nav), { passive:true });

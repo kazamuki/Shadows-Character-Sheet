@@ -302,7 +302,7 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35**
 - **35** *(Phase 3.2)* — Full-width sheet on every tab. → **superseded in part by 160**
 - **36** *(Phase 3.2)* — Four-sphere stat layout on Main.
-- **37** *(Phase 3.2)* — Vitals flyout drawer. → **superseded in part by 160**
+- **37** *(Phase 3.2)* — Vitals flyout drawer. → **superseded in part by 160 and 161**
 - **38** *(Phase 3.2)* — Sticky in-header navigation. → **superseded in part by 140**
 - **39** *(Phase 3.2)* — Header overflow menu.
 - **40** *(Phase 3.2)* — Collapsible page footer.
@@ -325,6 +325,7 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **109** *(Deighton's magic rulings)* — Starting spells gated by TH ≤ Evocation rank (MQ1); Drained −2 max TOL (never below 0), current unchanged either way, so TOL Spent −2 on / +2 off (MQ2); Phantom Pain PL 1 at full health (MQ3); Spell Attack = Evocation + raw REF + raw WILL. Docs only; built by the plan's sessions.
 - **110** *(Aberrations on the character, and the Magic reference — magic plan Session 2)* — `trackers.aberrations` holds `{ id, permanence, note? }`, one per id; the catalog's `painLevels` (Phantom Pain) and `adjust` (Drained, max TOL −2, floor 0) are read every time, and every tracker on `max: "TOL"` shifts so current TOL never moves. Record it = note + Aberration in one undo. Spell Attack from the scores. A `reference` panel type (the Arcanist's Magic reference). Unique Aberrations synced to 041. → **superseded in part by 115**
 - **111** *(Starting spells in the wizard, and the spell picker modal — magic plan Session 3)* — TOL + the power level's roll of book spells, chosen on the Character Points step where Evocation and TOL are final; at creation TH ≤ Evocation rank, after lock nothing gates it and a TH beyond the pool is marked (exploding 10s only). Picks are Grimoire rows; no schema bump. The picker is a native `<dialog>` modal shared by sheet and wizard — the first focus-and-dismiss primitive.
+- **161** *(The wizard on a small screen — W44)* — Below 1060px the rail is one sticky line of Stat, Skill and CP left with a Vitals pill opening the full rail in the flyout (it scrolls away on step 7, whose jump bar counts CP, and lets go while typing); each step is named by `short` in the strip and its title, its sentence under it once; stats read — until one is spent.
 - **114** *(Jump bars — W5, W22)* — `sectionList` headings feed a bar that jumps to each section a page drew (archetype panels included) and focuses it; step 7's bar sticks, filters Advantages/Disadvantages keeping what you hold, and shows the CP left.
 - **115** *(The GM runs the Cascade)* — The Cascade panel gives the instruction (d10 + Rupture degree, tell your GM) and opens one Aberration picker, a modal of cards with each one's text, also used by Trackers' Add. The pick's note is dated; nothing goes into Notes. `recordCascade`/`logCascade` removed; the tables stay in the reference.
 - **116** *(Spell tag AP)* — `AP` on a spell means Armor Piercing, as the weapon tag does (skips RES, PROT still rolls). Unflagged; Iron Lance's own effect already said so.
