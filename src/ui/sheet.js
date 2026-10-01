@@ -2841,7 +2841,7 @@ function bindSheet(){
     // A refusal leaves the form as typed: try it on a copy first.
     const r = Engine.addPower(clone(ch), input, { free });
     if (!r.ok) { notice(r.why); return; }
-    commit(free?"admin":"power", `${free?"Admin: power":"Power"}: ${input.name.trim()}${r.cost?` (${r.cost} IP)`:""}`, ()=>{ Engine.addPower(ch, input, { free }); });
+    commit(free?"admin":"power", `${free?"Admin: added power ":"Power: "}${input.name.trim()}${r.cost?` (${r.cost} IP)`:""}`, ()=>{ Engine.addPower(ch, input, { free }); });
   });
   main.querySelectorAll("[data-pwdel]").forEach(b=>b.onclick=()=>{
     const p = (ch.powers||[]).find(x=>x && x.id===b.dataset.pwdel); if (!p) return;
