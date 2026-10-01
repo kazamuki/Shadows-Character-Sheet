@@ -241,7 +241,8 @@ Each has the default the build takes; an answer before that session changes it.
   shows none of an archetype's content today. If it doesn't fit, only a custom
   one, and the rest goes to the wishlist.
 - **XQ5 (Ken):** What does a custom archetype's badge say? *Default: a new
-  status reading "GM-built".*
+  status reading "GM-built".* **Answered 2026-10-01 (Ken):** a new status,
+  `written-in`, whose label reads "off the books".
 - **XQ6 (build check):** Does "Uses magic" switch on the Grimoire too? Its Spell
   Power reads an Evocation rank a custom character doesn't have. *Default:
   TOL Spent and Cascade only*, unless the Grimoire's numbers read right with
