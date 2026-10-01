@@ -79,7 +79,7 @@ const Engine = (() => {
   const skillById  = id => D().skills.find(s=>s.id===id);
   const advById    = id => D().advantages.find(a=>a.id===id);
   const disById    = id => D().disadvantages.find(d=>d.id===id);
-  // Decision 151: what kind of being the archetype is, and so which Advantages
+  // Decision 152: what kind of being the archetype is, and so which Advantages
   // it may buy: "all", or "universal" (only those carrying 043's Universal
   // tag). No archetype, or none named, gates nothing.
   const classification = ch => { const a = archetype(ch); return (a && (D().classifications||[]).find(c=>c.id===a.classification)) || null; };
@@ -2796,7 +2796,7 @@ const Engine = (() => {
       else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
       overCap(true);
-      // Decision 151. A Professional's free Advantages are the archetype's, not bought.
+      // Decision 152. A Professional's free Advantages are the archetype's, not bought.
       const cls = classification(ch);
       const barred = ch.advantages.filter(x=>x.source!=="natural" && !canBuyAdvantage(ch, x.id));
       if (barred.length)

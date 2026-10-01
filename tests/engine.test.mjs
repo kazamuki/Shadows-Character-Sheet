@@ -76,7 +76,7 @@ test("validate returns issues for every step once the wizard's gates are met", (
   }
 });
 
-// Decision 151: a classification says which Advantages are open. Mortal buys
+// Decision 152: a classification says which Advantages are open. Mortal buys
 // all; Supernatural only those carrying 043's Universal tag.
 test("every archetype names a classification the data defines", () => {
   const ids = D.classifications.map(c => c.id);

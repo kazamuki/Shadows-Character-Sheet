@@ -77,6 +77,21 @@ action — "Took 12 damage · Undo" — calling the same LIFO undo (Decision 49)
 would make every button feel safe to press. Probably the highest
 value-per-line item on this list.
 
+**W42 — Hurt, Heal and Take a hit are not visible on Main.** *Claude · critique P1 · → Decision 151, app 0.33.0: Heal 1 · Hurt 1 · Take a hit after Pain on Main; Hurt 1 greys out at zero*
+The most common change mid-fight lives behind tapping the Health card (or on
+Trackers). Main shows the numbers well but no verb. *The fix:* a visible
+Hurt / Heal / Hit row under the Health and Pain cards, bound by
+`bindVitalControls` so it can't drift from the popover. *To respect:* every
+change is a `commit()` with its undo toast; DESIGN.md's "shadows are for things
+that float" and no new neon.
+*Harden.* Each tap is its own `commit()` and its own toast, so five quick
+Hurt 1s are five undo steps. That's right (each can be taken back), but the
+toast must not stack five deep over the row being tapped. Hurt has no upper
+clamp in `bindVitalControls` (`setDamage` floors at 0 only), so the row must
+read sensibly past the last Health Level, where Massive damage and Helpless
+already mean something. On a phone the row has to fit three 44px buttons
+beside each other at 320px without wrapping into the Pain card.
+
 ### Loadout & catalog
 
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*

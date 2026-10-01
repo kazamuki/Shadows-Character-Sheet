@@ -389,7 +389,7 @@ function renderSkills(){
 function renderCP(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const bal = Engine.cp(ch);
-  // Decision 151: the classification says which Advantages are open.
+  // Decision 152: the classification says which Advantages are open.
   const cls = Engine.classification(ch), gated = !!cls && cls.advantages==="universal";
   const secs = sectionList("cp");
   let top = `<div class="roll-entry">

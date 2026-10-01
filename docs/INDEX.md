@@ -144,6 +144,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F32` | Arcanist Major Milestones: bring in REF_CRB's, or wait for 041? | Ken |
 | `F33` | Jack of All Trades: does "treated as Focused" raise every skill's starting cap, and open Skill Paragon to any skill? Stubbed: the price only | Deighton |
 | `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
+| `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
@@ -196,10 +197,10 @@ What a number *is*. Change one of these and characters change.
 - **9** — Derived attributes: TOL = 1 + INT/COOL/EMP mods (floor 1); WILL = 1 + BOD/INT/EMP mods (floor 1); SAN = EMP×10 (flo... → **superseded in part by 103 and 109**
 - **10** — Hard caps: the wizard enforces all table limits strictly.
 - **11** — All rolls are physical: the app never rolls dice for creation pools.
-- **12** ~~— Supernatural restriction: archetypes with canPurchaseAdvantages: false (Werewolf; Vampire assumed) cannot buy Advan...~~ → **superseded by 151**
+- **12** ~~— Supernatural restriction: archetypes with canPurchaseAdvantages: false (Werewolf; Vampire assumed) cannot buy Advan...~~ → **superseded by 152**
 - **13** — Milestone cadence: 1 Milestone Point per session; Minor at 5/15/25…, Major at 10/20/30…; 10 IP per session (WIP Pro...
 - **150** *(The stat buy and the Power Level table — W34, W35, F8)* — Stat Points are the level's flat pool or a roll, the GM's pick (`creation.statMethod`, schema 0.15); a stat point costs 1 up to 6 and 2 from 7 to 10, from a free 1; Skill Points are base + INT + REF, Boosts included; CP 5/10/15/20, Max Skill Rank 4/5/6/7; a roll is 5 below the flat pool + 1d10. F8 and F35 closed.
-- **151** *(Classification — F13)* — Every archetype is Mortal or Supernatural (`classifications`); a Mortal buys every Advantage, a Supernatural only the 15 Universal ones; Disadvantages are open to all. `canPurchaseAdvantages` is gone; `Engine.canBuyAdvantage` is the one reader.
+- **152** *(Classification — F13)* — Every archetype is Mortal or Supernatural (`classifications`); a Mortal buys every Advantage, a Supernatural only the 15 Universal ones; Disadvantages are open to all. `canPurchaseAdvantages` is gone; `Engine.canBuyAdvantage` is the one reader.
 - **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via... → **superseded in part by 97**
 - **16** *(Phase 2)* — Ranked Advantages cost cost per rank (Archery Master rank 2 = 12 CP).
 - **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10. → **superseded in part by 98**
@@ -325,6 +326,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **117** *(Let a hit land — W15)* — `commit()` notes when damage went up; the next render flashes the HP readouts and the Health Level boxes that took it, twice on Pain if its level rose, once only, never on heal or undo, none under reduced motion.
 - **118** *(The catalog browser — W4)* — Loadout's pickers are a modal: search, section, What I can afford, sort, and every number before Add/Buy from `Engine.catalogLine()`, the reader Loadout's own rows share. Buy says why it's off; a row click opens its details.
 - **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal.
+- **151** *(Health verbs on Main — W42)* — Heal 1 · Hurt 1 · Take a hit as a full-width row after Pain in Main's card grid, the popover's own controls; at zero Main's Hurt 1 greys out and says to use Take a hit, which asks 054's WILL check. F36 opened.
 - **120** *(Weapon mods and rounds — W16)* — Schema 0.10: `weapons[i].mods` and `roundsSpent`. Single/Burst/Full Auto spend 1/3/10 (053) from a capacity read as its number + chambered round; Fire and Reload on Loadout and Main. Mods fill fixed slots, fit per data (`onlyFor`/`notFor`), add tags and damage; a sight's ACC is aimed, apart from Single's. F26 opened. → **superseded in part by 145**
 - **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog. → **superseded in part by 143**
 - **145** *(Reload from what you carry — W30)* — ammo's `reload` names what it fits and whether a unit fills the magazine or one round; Reload takes it from the gear you carry, and with none asks "Reload anyway?" and says so in the audit. → **superseded in part by 149**

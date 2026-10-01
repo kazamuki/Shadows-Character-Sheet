@@ -64,7 +64,7 @@ Most of Deighton's process already has a slot. The plan fills the rest.
 - **Game data gets `classifications`**, one row each:
   `mortal` (Advantages: `"all"`), `supernatural` (`"universal"`), and `other`
   (`"all"`, `writeIn: true` — it takes a line of text). "Magical being" is a
-  row added later (W52), not a code change.
+  row added later (W53), not a code change.
 - **Each archetype declares `classification`.** Professional, Arcanist and
   Cyborg are `mortal`; Werewolf and Vampire are `supernatural` (XQ1).
 - **`canPurchaseAdvantages` goes**, with Vampire's `canPurchaseAdvantagesNote`
@@ -202,7 +202,7 @@ powers: [ { id: "pw-…", custom: true, name, uses, effect, notes } ]
   pricing them is a design question.
 - **Classification can't be changed in Admin after lock.** It would strand
   bought Advantages. That's Admin's existing gap (C2), not a new one.
-- **To the wishlist (W47–W52):** Natural Armor the hit panel uses, a pool the
+- **To the wishlist (W48–W53):** Natural Armor the hit panel uses, a pool the
   player names, stat changes at creation, a shapeshifting form toggle,
   written-in Major Milestones, and the Magical being classification.
 
@@ -213,8 +213,8 @@ useful on its own, so it lands first.
 
 | # | What | Decision | Versions |
 |---|---|---|---|
-| **S1** | Classification (§3a): data, `canBuyAdvantage`, the three call sites, wizard display and pruning, `validate`; F13 closed; outputs diffed before and after | **151**, superseding 12 | game data |
-| **S2** | The custom archetype's engine and schema (§3b): the data entry, `when`, `writeIn`, `powers`, `migrate()`, `archetypeContent`, `validate`, `addPower`, `versionCheck`; engine and hostile tests | **152** | schema 0.16, game data |
+| **S1** | Classification (§3a): data, `canBuyAdvantage`, the three call sites, wizard display and pruning, `validate`; F13 closed; outputs diffed before and after | **152**, superseding 12 | game data |
+| **S2** | The custom archetype's engine and schema (§3b): the data entry, `when`, `writeIn`, `powers`, `migrate()`, `archetypeContent`, `validate`, `addPower`, `versionCheck`; engine and hostile tests | **153** | schema 0.16, game data |
 | **S3** | The wizard's write-in block (§3c), jsdom smoke | — | — |
 | **S4** | Sheet: Archetype tab, powers panel and Add power, Admin, roster and header names | — | — |
 | **S5** | Print, filled and blank; `phone-check` | — | — |

@@ -556,7 +556,7 @@ function resetArchetypeChoices(ch){
     specialization:[], focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
   // Free advantages belonged to the archetype being left, so they go either
   // way, and so does any the new archetype's classification can't buy
-  // (Decision 151: a Supernatural keeps only the Universal ones).
+  // (Decision 152: a Supernatural keeps only the Universal ones).
   ch.advantages = ch.advantages.filter(x=>x.source!=="natural" && Engine.canBuyAdvantage(ch, x.id));
   // Starting spells are the Grimoire's own rows (Decision 111), so in the
   // wizard they go with the archetype that chose them. A locked sheet's panels
