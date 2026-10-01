@@ -2235,3 +2235,65 @@ test("Decision 150: Admin doesn't measure a character locked under the earlier t
   assert.match(now.$("#main").textContent, /Stat Points \d+ (left|over)/, "a current character lost its budgets");
   assert.deepEqual([sheet.errors, now.errors], [[], []]);
 });
+
+// ── The wizard's write-in block (Decision 153, custom archetype S3) ─────
+test("a Custom archetype is written on the Archetype step: what it is, its classification, mechanics and three lists", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  const type = (sel, v) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.focus(); el.value = v; el.dispatchEvent(new app.window.Event("input", { bubbles: true })); return el; };
+  const next = () => app.$('[data-nav="1"]');
+  const issues = () => app.$$(".issues li").map(l => l.textContent);
+  assert.equal(app.$$("[data-spec]").length, 0, "a write-in archetype drew a specialization");
+  assert.equal(next().disabled, true, "Continue is open with no name and no classification");
+
+  // Typing saves without a redraw, so the field keeps focus.
+  const name = type('[data-wi="name"]', "Changeling");
+  assert.equal(app.doc.activeElement, name, "typing the name lost focus");
+  app.click('[data-wicls="other"]');
+  type('[data-wi="classificationText"]', "Fae");
+  const box = app.$('[data-wimech="sfr"]');
+  box.checked = true; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(next().disabled, false, `still blocked: ${issues().join(" | ")}`);
+
+  app.click('[data-wiadd="traits"]');
+  assert.equal(app.doc.activeElement, app.$('[data-wirow="traits|0|name"]'), "a new trait's name doesn't take focus");
+  type('[data-wirow="traits|0|name"]', "Glamour");
+  app.click("[data-pwadd]");
+  type('[data-pwf$="|name"]', "Fade");
+  type('[data-pwf$="|uses"]', "SFR");
+  assert.ok(app.$$("#power-uses option").map(o => o.value).includes("SFR"), "Uses has no suggestions");
+  app.click('[data-wiadd="vulnerabilities"]');
+  type('[data-wirow="vulnerabilities|0|description"]', "Cold iron burns.");
+  assert.ok(issues().some(t => /no name/.test(t)), "a nameless vulnerability with words says nothing");
+  assert.equal(next().disabled, false, "a nameless row blocked Continue: it should only warn");
+
+  const ch = stored(app, { locked: false });
+  const w = ch.archetypeChoices.writeIn;
+  assert.equal(JSON.stringify([w.name, w.classification, w.classificationText, w.mechanics, w.traits.map(t => t.name)]),
+    JSON.stringify(["Changeling", "other", "Fae", ["sfr"], ["Glamour"]]));
+  assert.equal(JSON.stringify(ch.powers.map(p => [p.name, p.uses])), JSON.stringify([["Fade", "SFR"]]));
+  assert.ok(ch.progression.ip.log.length === 0, "a creation power touched IP");
+
+  // Remove takes the row; choosing another archetype clears it all (XQ3).
+  app.click('[data-wirm="vulnerabilities|0"]');
+  assert.equal(stored(app, { locked: false }).archetypeChoices.writeIn.vulnerabilities.length, 0);
+  app.click('[data-arch="werewolf"]');
+  app.click(`[data-arch="${custom.id}"]`);
+  const after = stored(app, { locked: false });
+  assert.equal(JSON.stringify([after.archetypeChoices.writeIn.name, after.powers.length]), JSON.stringify(["", 0]));
+  assert.deepEqual(app.errors, []);
+});
+
+test("picking Supernatural for a Custom archetype drops a Mortal-only Advantage it held", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  app.click('[data-wicls="mortal"]');
+  // A Mortal bought an Advantage a Supernatural can't, then went back.
+  const held = D.advantages.find(a => !a.universal);
+  const ch = stored(app, { locked: false });
+  assert.equal(ch.archetypeChoices.writeIn.classification, "mortal");
+  app.window.eval(`S.ch.advantages.push({ id: ${JSON.stringify(held.id)}, rank: 1, notes: "" })`);
+  app.click('[data-wicls="supernatural"]');
+  assert.equal(stored(app, { locked: false }).advantages.some(x => x.id === held.id), false);
+  assert.deepEqual(app.errors, []);
+});

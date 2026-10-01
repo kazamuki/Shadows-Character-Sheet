@@ -3504,7 +3504,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Built:** app 0.33.0, game data 0.26, no schema change. Closes F13. Log 2026-09-30.
 
 153. **A custom archetype is written in by the player, and checkboxes switch on the panels it uses.**
-     *2026-09-30 · Ken + Deighton + Claude · Touches: custom archetype, writeIn, archetypeChoices.writeIn, powers, addPower, archetypeContent, when, mechanics, powerUses, Other, written-in status, versionCheck, schema 0.16, XQ2, XQ3, XQ5, XQ6*
+     *2026-09-30 · Ken + Deighton + Claude · Touches: custom archetype, writeIn, archetypeChoices.writeIn, powers, addPower, newPower, archetypeContent, when, mechanics, powerUses, Other, written-in status, versionCheck, schema 0.16, XQ2, XQ3, XQ5, XQ6*
      - **Decided:** An archetype declaring `writeIn` has no content of its own. The character stores its name, description, classification (the new **Other** takes its own words), ticked mechanics, traits and vulnerabilities in `archetypeChoices.writeIn`, and powers in `powers` (`{ id, custom: true, name, uses, effect, notes }`). A panel's `when` follows a ticked mechanic: magic is TOL Spent and the Cascade, not the Grimoire (XQ6). `Engine.archetypeContent` reads any archetype. `addPower` takes an optional IP cost, a journal spend refused if IP is short; creation's powers are free (XQ2). Name and classification are required; the rest warns. Changing archetype clears both, one undo (XQ3). The badge reads "GM-built" (XQ5).
      - **Why:** Deighton builds characters no archetype covers, and needs one on the live sheet by 2026-10-03.
      - **Rejected:**

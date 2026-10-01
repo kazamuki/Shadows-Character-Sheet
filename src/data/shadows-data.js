@@ -3131,6 +3131,11 @@ window.SHADOWS_DATA = {
     },
     "archetypeUnwritten": "{name}'s rules aren't finished yet. You can build one — your GM fills the gaps.",
     "archetypeWrittenIn": "{name} is written by you and your GM. Their word is the rule for it.",
+    "writeInIntro": "Nobody in NYTE City has a file on what you are. Write one with your GM.",
+    "writeInClassification": "What kind of being you are decides which Advantages you can buy.",
+    "writeInTraits": "What's always true of you, with no roll and no cost.",
+    "writeInPowers": "What you can do that others can't, and what it spends. Powers you start with are free. Any stat change a power makes goes in Adjustments once your character is locked.",
+    "writeInVulnerabilities": "What hurts you, holds you back or gives you away.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
     "applyFromText": "Apply these from their text.",
     "ranksAdvanceInPlay": "Ranks advance through play."
