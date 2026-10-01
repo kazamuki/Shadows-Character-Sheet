@@ -2062,7 +2062,7 @@ const withDisciplines = d => d.archetypes.find(a => a.coreMechanic && a.coreMech
 
 test("the wizard draws Disciplines, Focus Stats and the Stat Bonus from the data (Decision 135)", () => {
   const arc = withDisciplines(D).id;
-  const cp = draftOn(arc, "character-points", d => { withDisciplines(d).coreMechanic.disciplines.cpPerRank = 7; });
+  const cp = draftOn(arc, "character-points", d => { d.creationFlow.boostRules.cpPerPowerRank = 7; });
   assert.match(cp.$("#main").textContent, /Disciplines — 7 CP per rank · cap \d/);
   assert.deepEqual(cp.errors, []);
 

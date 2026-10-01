@@ -133,6 +133,17 @@ test('CRB: "Boosting a roll costs 2 Luck. Exploding a roll costs 3 Luck."', () =
   assert.equal(by("explode").cost, 3);
 });
 
+test("Design ruling: everyone starts with 4 LUCK, and LUCK bought with CP sits on top (Decision 157)", () => {
+  const ch = subject();
+  assert.equal(Engine.luckState(ch).max, 4);
+  ch.trackers.luck.bonus = 3;                    // bought up to 5 under the old base of 2
+  assert.equal(Engine.luckState(ch).max, 7, "a character keeps the points it paid for, on the new base");
+});
+
+test("Design ruling: a power rank costs 5 CP at creation, a Discipline's included (Decision 157)", () => {
+  assert.equal(Engine.powerRankCost(), 5);
+});
+
 // ── Stat modifiers ────────────────────────────────────────────────────
 
 test('CRB: "-1 per point below 4" and "+1 per point above 6"', () => {

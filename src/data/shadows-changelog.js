@@ -2,6 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.35.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Everyone starts with 4 LUCK.** It was 2. LUCK you bought with Character Points still sits on top, so every character, locked ones included, has 2 more than before.",
+      "**A power rank costs 5 Character Points** while you make a character, one price for every power. For an Arcanist that's each rank of Evocation, Enchantment or Alchemy, down from 6."
+    ]
+  },
+  {
     "version": "0.34.0",
     "date": "2026-10-01",
     "intro": [],

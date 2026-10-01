@@ -350,6 +350,20 @@ closes F8 (three edits: SCHEMA §5, `flagged` in the data, INDEX §2). The
 meeting leaned toward revisiting it together with W34 and W35 rather than
 fixing it alone, and that's why it's here rather than a quick data edit.
 
+**W37 — Starting LUCK of 6, maybe by Campaign level.** *Ken · → Decision 157, app 0.35.0: 4 at every level, the split between 6 and 2*
+Everyone starts with 2 LUCK today (Decision 5, `resources.luck.startingValue`).
+The meeting wants 6. The other idea discussed was to vary it by Campaign
+level, and the direction is undecided: more LUCK at Street level (to help a
+fragile character survive) or more at World Coming Down (to fit the scale).
+*To respect:* **maximum LUCK is computed, not stored** (constraint 7). It's
+`startingValue` plus bought LUCK, so changing the base raises every existing
+character's maximum too, locked ones included. That's probably right, but it
+should be a choice, and it's a `gamedataVersion` bump. A per-level value means
+moving the number onto `powerLevels[*]`, and the four places in `wizard.js`
+and `sheet.js` that read `luck.startingValue` directly should go through one
+engine reader first. Decision 5 needs superseding, and the CRB's Luck section
+(030) needs the new number.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first

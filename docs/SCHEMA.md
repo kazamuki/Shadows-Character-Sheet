@@ -284,7 +284,6 @@ window.SHADOWS_DATA = {
         // (Decision 135) Bought in the Character Points step. A path reads a
         // number from the scaling row or the power level, like `countBy`.
         disciplines: {
-          cpPerRank: 6,
           maxRankBy: "powerLevel.maxPowerRank",
           list: [ { id: "evocation", name: "Evocation", description: "...",
                     startingRankBy: "campaignPowerScaling.evocationStartingRank" } ]
@@ -677,7 +676,7 @@ It renders on the Archetype tab.
                                      // (Decision 134); migrate() keeps only strings
     naturalAdvantages: [],           // Professional: [{ id, rank }] — also mirrored into
                                      // `advantages` with source:"natural", cost 0 CP (0.13)
-    disciplines: {},                 // Arcanist: CP-bought ranks { enchantment: 1 } (6 CP each;
+    disciplines: {},                 // Arcanist: CP-bought ranks { enchantment: 1 } (5 CP each, Decision 157;
                                      // Evocation starting rank from scaling table is NOT stored)
     // (0.16, Decision 153) What a write-in archetype is, in the player's
     // words. Read only when the archetype declares `writeIn`; every field is
@@ -852,6 +851,7 @@ No cascade logic to maintain — it falls out of the architecture.
     → **Superseded in part by Decision 150** — a stat point costs 1 up to 6 and 2 from 7 to 10; Skill Points and CP stand.
 5. **LUCK:** everyone starts at 2. Buy-ups use CP, treated like an advantage
    purchase, **exempt from Max Boost**.
+    → **Superseded in part by Decision 157** — everyone starts at 4.
 6. **Health Levels:** 1 HL per point of BOD, 5 HP per HL.
 7. **Çredits:** player rolls physically, enters result; pool = table formula.
 8. **Skill checks:** 1d10 + Rank + Primary Stat (full score) + Synergy Bonus
@@ -896,6 +896,7 @@ No cascade logic to maintain — it falls out of the architecture.
 19. **(Phase 2)** Arcanist Disciplines are purchasable in the CP step at
     6 CP/rank, capped at the power level's Max Power Rank. Evocation's
     starting rank comes from the scaling table and is computed, not stored.
+    → **Superseded in part by Decision 157** — a rank costs 5 CP, the price of any power rank.
 20. **(Phase 2)** Aberration prose benefits display as reference text only;
     only structured fields (e.g. `tolBonus`) auto-apply to computed values.
     → Resolved in Phase 3 by Decision 26 (manual adjustments ledger).
@@ -2036,6 +2037,7 @@ No cascade logic to maintain — it falls out of the architecture.
     open**: the designers want to playtest how many Stat Points people
     realistically end up with before choosing between the flat and scaled
     rolls. (Ken + Scott + Deighton + Claude, 2026-09-22)
+    → **Superseded in part by Decision 157** — a power rank costs 5 CP, not 1 CP a boost.
 
 98. **(Design-team rulings, part 2, 2026-09-22 — rules + data + engine)**
     **The stat curve past 10 is settled, the three Conditions stubs close,
@@ -3555,6 +3557,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 44 in part: one table per column, not one for all three categories.
      - **Revisit if:** a category is added, or the print sheet's Skills panels (Decision 94) want the same order.
      - **Built:** app 0.34.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+
+157. **Everyone starts with 4 LUCK, and any power rank bought at creation costs 5 CP.**
+     *2026-10-01 · Ken + Deighton + Scott + Claude · Touches: LUCK, resources.luck.startingValue, luckState, power rank, Discipline, Evocation, Enchantment, Alchemy, cpPerRank, boostRules.cpPerPowerRank, powerRankCost, disciplineSpent, Max Power Rank, W37*
+     - **Decided:** Starting LUCK is 4 at every Campaign Power Level. LUCK bought with CP sits on top, so every character gains 2, locked ones included (bought up to 5 becomes 7). A power rank bought at creation costs 5 CP, one price for every power: a Discipline, Evocation included, today; Vampire, Cyborg and anything else ranked when it comes. The Campaign Power Level's Max Power Rank still caps it. The price is `creationFlow.boostRules.cpPerPowerRank`, read through `Engine.powerRankCost()`.
+     - **Why:** Deighton said 6 LUCK, Ken and Scott had heard 2; 4 splits the difference. The power price is written as a rule about powers, not about one archetype, so the next ranked power doesn't need its own.
+     - **Rejected:**
+       - LUCK by Campaign level (W37's other idea): the direction was never agreed.
+       - Holding a bought total where it was (5 stays 5): the CP a player spent bought points, not a total.
+       - A price per archetype (`disciplines.cpPerRank`): the rule is one price for every power.
+     - **Replaces:** Decision 5 in part (start at 4, not 2); Decision 19 in part (5 CP, not 6); Decision 97 in part (a power is no longer boosted at 1 CP a point). Decision 135 stands: the price is still data, now one key for every power. Closes W37.
+     - **Revisit if:** LUCK is wanted by Campaign level after all, or a power needs a price of its own.
+     - **Built:** app 0.35.0, game data 0.28, no schema bump; `rules.test.mjs` pins both. Log 2026-10-01.
 
 ## 5. Open Flags
 
