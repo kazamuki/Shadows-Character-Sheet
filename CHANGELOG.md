@@ -23,6 +23,21 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.35.1
+
+- **Making a character on a phone opens on the step, not on your vitals.** The vitals used
+  to fill the screen above everything else. Now one line under the header shows what
+  you have left to spend (Stat Points, Skill Points and CP), and **Vitals** opens the
+  full readout over the page. On the Character Points step, whose bar already counts
+  your CP, the line scrolls away.
+- **Each step has one title.** The step bar and the heading use the step's short name
+  (Stats, Skills, Character Points), and the instruction sits once underneath.
+- **Your stats read — until you spend a Stat Point,** instead of a row of 1s you never chose.
+- **Typing on a phone gets the room back.** While you're in a text box, the points line
+  and Back and Continue stop sticking, so the keyboard doesn't box in what you're typing.
+- **Back and Continue no longer sit under the page footer,** and a jump on the Character
+  Points step lands its heading in full view.
+
 ## v0.35.0 — 2026-10-01
 
 - **Everyone starts with 4 LUCK.** It was 2. LUCK you bought with Character Points still

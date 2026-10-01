@@ -2302,6 +2302,93 @@ test("the wizard's nav sticks to the screen's bottom, counts what blocks Continu
   assert.match(why().textContent, new RegExp(`^${count()} things? to fix first$`), "the count didn't follow the redraw");
 });
 
+// ── The wizard on a small screen (Decision 161, W44) ────────────────────
+// Below 1060px the rail was a block of every vital above the header and the
+// step, so a phone opened on vitals and step 1's choice sat off the screen.
+// Now: the strip and the title read each step's short name from the data, the
+// sentence sits under the title once, and the rail is one sticky line of the
+// points left with a Vitals pill that opens the whole rail in the flyout.
+function newCharacterApp() {
+  const app = boot();
+  app.$$("#main button").find(b => /New character/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  return app;
+}
+const wizCss = () => readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+
+test("the step strip and the step title read the data's short name, with the step's sentence under it once (Decision 161)", () => {
+  for (const s of D.creationFlow.steps) {
+    assert.ok(s.short && s.short.length < s.label.length, `step ${s.id} has no short name shorter than its label`);
+  }
+  const home = boot();
+  assert.doesNotMatch(home.$("#main").textContent, /\[ 1 0 \]/, "Home still shows the [ 1 0 ] glyph");
+
+  const app = newCharacterApp();
+  const names = app.$$("#ledger [data-goto]").map(r => r.textContent.replace(r.querySelector(".n").textContent, "").trim());
+  assert.deepEqual(names, [...D.creationFlow.steps.map(s => s.short), "Review"]);
+  const first = D.creationFlow.steps[0];
+  assert.equal(app.$(".step-title").textContent, first.short);
+  assert.ok(app.$(".step-note").textContent.startsWith(first.label), "the step's sentence isn't under its title");
+  assert.notEqual(app.$(".step-title").textContent, app.$(".step-note").textContent, "the title and the sentence under it are the same");
+  assert.deepEqual(app.errors, []);
+});
+
+test("the rail's stats read — until a Stat Point is spent, then their scores (Decision 161)", () => {
+  const app = newCharacterApp();
+  const bod = () => app.$$("#vitals .vfull .vrow").find(r => r.querySelector(".k").textContent.trim() === "BOD");
+  const will = () => app.$$("#vitals .vfull .vrow").find(r => r.querySelector(".k").textContent.trim() === "WILL");
+  assert.equal(bod().querySelector(".v").textContent, "—", "an unchosen stat reads as a score");
+  assert.equal(will().querySelector(".v").textContent, "—", "a value worked out from unchosen stats reads as a score");
+  app.$(`[data-pl="${D.powerLevels[0].id}"]`).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  for (const _ of [1, 2]) app.$('[data-nav="1"]').dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const up = app.$('[data-step="stat|BOD|1"]');
+  assert.ok(up, "no way to raise BOD on the Stats step");
+  up.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.match(bod().querySelector(".v").textContent, /^2 \(/, "a spent Stat Point didn't show its score");
+  assert.deepEqual(app.errors, []);
+});
+
+test("below 1060px the rail is one sticky line of points left, and Vitals opens the whole rail in the flyout (Decision 161)", () => {
+  const css = wizCss();
+  assert.doesNotMatch(css, /aside\.vitals\{[^}]*order:-1/, "the rail is still ordered above the header");
+  assert.match(css, /aside\.vitals\{order:1; position:sticky; top:var\(--hdr-off\)/, "the narrow rail isn't a sticky line under the header");
+  assert.match(css, /\.app:not\(\.sheet-mode\) main\{order:2\}/, "the step doesn't come after the rail's line");
+  assert.match(css, /\.vitals \.vfull\{display:none\}/, "the full rail still shows on a narrow screen");
+  assert.match(css, /\.app:has\(\.jumpbar\.sticky\) aside\.vitals\{position:static\}/,
+    "step 7 pins the line and its jump bar both, two CP counts");
+  assert.match(css, /:focus\) aside\.vitals,\s*\.app:has\([^{]*:focus\) \.wiznav\{position:static\}/,
+    "the line and Back/Continue still stick while a field is being typed in");
+
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 3;
+  ch.trackers.luck.bonus = 1;   // a point of LUCK bought, so CP left isn't the whole budget
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("stats"), maxReached: steps.indexOf("stats") } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const live = app.window.eval("S.ch");
+  const sp = Engine.statPool(live), kp = Engine.skillPool(live), cp = Engine.cp(live);
+  assert.ok(cp.left < cp.budget && Engine.statSpent(live) > 0, "the probe spends nothing, so left and total can't be told apart");
+  const pills = app.$$("#vitals .vstrip .vpill:not(.toggle)").map(p => p.querySelector(".vk").textContent + " " + p.querySelector(".vv").textContent);
+  assert.deepEqual(pills, [
+    `Stats ${sp.total - Engine.statSpent(live)}/${sp.total}`,
+    `Skills ${kp.total - Engine.skillSpent(live)}/${kp.total}`,
+    `CP ${cp.left}/${cp.budget}`]);
+
+  const dr = app.$("#vdrawer");
+  assert.ok(!dr.classList.contains("open"));
+  app.$("#vitals [data-wiz-vitals]").dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.ok(dr.classList.contains("open"), "Vitals didn't open the flyout");
+  assert.equal(dr.getAttribute("aria-hidden"), "false");
+  assert.ok(app.$$("#vdrawer .vrow").some(r => /BOD/.test(r.textContent)), "the flyout doesn't hold the whole rail");
+  assert.ok(!app.$("#vdrawer [data-vitals-pin]"), "the wizard's flyout offers a pin");
+  app.$("#vdrawer [data-vitals-close]").dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.ok(!dr.classList.contains("open"), "✕ didn't close the flyout");
+  assert.equal(app.window.document.activeElement, app.$("#vitals [data-wiz-vitals]"), "closing didn't hand focus back to Vitals");
+  assert.deepEqual(app.errors, []);
+});
+
 // ── The wizard's write-in block (Decision 153, custom archetype S3) ─────
 test("a Custom archetype is written on the Archetype step: what it is, its classification, mechanics and three lists", () => {
   const custom = D.archetypes.find(a => a.writeIn);

@@ -364,6 +364,50 @@ and `sheet.js` that read `luck.startingValue` directly should go through one
 engine reader first. Decision 5 needs superseding, and the CRB's Luck section
 (030) needs the new number.
 
+**W44 — The wizard's vitals rail buries the step on small screens.** *Claude · critique P2 · → Decision 161, app 0.35.1: one sticky line of the points left, Vitals opens the full rail in the flyout, one title per step*
+At 1060px and below the vitals rail (BOD to LUCK) sits above step 1, and at 800px
+the actual choice is off screen. The step title and its subtitle are the same
+sentence, and the step strip truncates its labels. The rail also shows "1 (-3)"
+placeholders before anything is chosen. *The fix:* collapse the rail to one
+sticky HP / SAN / LUCK line, show one title, shorten the strip labels. The
+`[ 1 0 ]` eyebrow means nothing to a first-timer, and Campaign Power Level asks a
+question a new player can't answer without a stated default.
+*Harden.* Step 7's jump bar is already sticky under the header
+(`top:var(--hdr-live)`), so a sticky vitals line stacks with it and the two
+must share one offset, not overlap. On iOS a sticky bar plus the open
+keyboard can cover the field being typed in, so try it with a field focused
+near the bottom of the screen. The short strip labels have to come from the
+data (today the strip cuts `st.label` at its first colon or dash), not from a
+list in `wizard.js`, or a new step needs an app change. A stated default for
+Campaign Power Level is a choice for Ken and the GM text, not a value the UI
+picks.
+*Re-checked 2026-10-01, before building.* A day of changes had landed since
+the critique, none of them on the rail, so the target held, but running the
+wizard at 375px corrected the entry. The rail sat above the **header** too, not
+only above step 1: a new character opened on 443px of vitals, and step 1's
+first card was at y=800 on an 812px screen. The strip didn't cut its labels at
+all: none of the eight contained the colon or dash the code cut at, so it
+showed whole sentences, one step per screen. Since the critique, Back and
+Continue had come to stick to the bottom (0.33.1), so a sticky line would be
+squeezed from both ends, and the fixed footer's bottom 31px already sat over
+the nav. The sheet had gained its own vitals pattern (Decision 160), a bar plus
+a flyout, which a wizard line should reuse rather than add a third. And the
+fix's HP / SAN / LUCK line was the wrong line: while building, a player spends
+Stat Points, Skill Points and CP; HP, SAN and LUCK are the sheet's.
+*Built (Decision 161).* Below 1060px the rail is one line sticking under the
+header, after the step strip: Stats, Skills and CP left, and a Vitals pill
+opening the whole rail in the sheet's flyout (no pin; focus goes back to the
+pill). On step 7 the line scrolls away, since the jump bar already counts CP
+and pinning both took 40% of a phone. While a field has focus the line and
+Back/Continue stop sticking. Each step's `short` in the data names it in the
+strip and as its title, the sentence under it once. Stats read "—" until a
+Stat Point is spent. Back/Continue clear the footer (its height is measured,
+like the header's); a jump on step 7 reads the bar's own sticky `top`, so it
+lands under whatever is pinned. The strip's "second look" callout, which
+wrapped 140px tall and stretched every step, keeps to one line. Home's
+`[ 1 0 ]` glyph went. Campaign Power Level's stated default was left open: it
+is Ken's call for the GM text, not the UI's.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first

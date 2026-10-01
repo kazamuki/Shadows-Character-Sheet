@@ -36,10 +36,10 @@ does more than show them.
 
 ### The sheet at the table (from the design critique)
 
-W44–W46 are what's left of the 2026-09-30 design critique (score
+W45–W46 are what's left of the 2026-09-30 design critique (score
 28/40, snapshot in `.impeccable/critique/`) after its combat-table finding,
-W43 (tap targets and small text, 0.32.1) and W42 (Health verbs on Main, 0.33.0)
-shipped. All are **player-facing
+W43 (tap targets and small text, 0.32.1), W42 (Health verbs on Main, 0.33.0)
+and W44 (the wizard on a phone, 0.35.1) shipped. All are **player-facing
 layout or behaviour**, so they're the *Rule or shape* tier ("propose before
 building"). None touches a rule. Measurements are from a 375px viewport; the
 Main tab was seen running, the other tabs were read from `DESIGN.md` and the
@@ -50,24 +50,6 @@ when built, checked against the code rather than guessed. Since W43, controls
 are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
 or on text under 11px, so a new control inherits the floor rather than
 re-arguing it.
-
-**W44 — The wizard's vitals rail buries the step on small screens.** *Claude · 🔎 · critique P2*
-At 1060px and below the vitals rail (BOD to LUCK) sits above step 1, and at 800px
-the actual choice is off screen. The step title and its subtitle are the same
-sentence, and the step strip truncates its labels. The rail also shows "1 (-3)"
-placeholders before anything is chosen. *The fix:* collapse the rail to one
-sticky HP / SAN / LUCK line, show one title, shorten the strip labels. The
-`[ 1 0 ]` eyebrow means nothing to a first-timer, and Campaign Power Level asks a
-question a new player can't answer without a stated default.
-*Harden.* Step 7's jump bar is already sticky under the header
-(`top:var(--hdr-live)`), so a sticky vitals line stacks with it and the two
-must share one offset, not overlap. On iOS a sticky bar plus the open
-keyboard can cover the field being typed in, so try it with a field focused
-near the bottom of the screen. The short strip labels have to come from the
-data (today the strip cuts `st.label` at its first colon or dash), not from a
-list in `wizard.js`, or a new step needs an app change. A stated default for
-Campaign Power Level is a choice for Ken and the GM text, not a value the UI
-picks.
 
 **W45 — Main repeats identity before the first number.** *Claude · 🔎 · critique P2*
 On a phone the name appears in the header and again in the hero, with a "LIVE
