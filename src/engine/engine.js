@@ -175,10 +175,19 @@ const Engine = (() => {
         const def = e && Number(e.rank)>0 && lookup(e.id), r = def && def.tagReads;
         if (r && typeof r==="object" && typeof r.label==="string"){
           const text = typeof r.text==="string" ? r.text : "";
-          return { label:r.label, text: off ? `${text} ${off.text}`.trim() : text, tagless: !!off };
+          return { label:r.label, text: off ? `${text} ${off.text}`.trim() : text, tagless: !!off, counterfeit:true };
         }
       }
     return off;
+  }
+  // Decision 155: the number as it reads. A TAGless character's drops the
+  // TAG- (it was only ever the prefix); a counterfeit is a TAG, so a Ghost
+  // TAG keeps it. The stored number never changes (Decision 133). "" when
+  // the character has none.
+  function tagNumber(ch){
+    const id = ch && ch.meta && isIntakeId(ch.meta.id) ? ch.meta.id : "";
+    const r = id && tagReading(ch);
+    return r && r.tagless && !r.counterfeit ? id.replace(/^TAG-/, "") : id;
   }
 
   // Final stat value = creation base + archetype bonus + CP boosts + IPE + adjustments
@@ -2163,25 +2172,54 @@ const Engine = (() => {
     do id = `pw-${randomChars(8)}`; while (held.has(id));
     return id;
   }
-  // A power is written either way, and audited by the caller's commit(). With
-  // an IP cost it is also a journal spend of the amount as typed, refused if
-  // IP is short; with none, nothing touches IP. One commit, one Undo.
-  function addPower(ch, input){
+  // What a power costs in play (Decision 154): a whole number of IP, at least
+  // 1, and IP enough to pay it. `free` is Admin's: blank or 0 is allowed, for
+  // what creation missed. { cost } or { why }.
+  function powerCost(ch, raw, free){
+    const blank = raw==null || String(raw).trim()==="";
+    if (blank && free) return { cost:0 };
+    if (blank) return { why:"A power costs IP in play. Enter what your GM says it costs." };
+    const cost = Number(raw);
+    if (!Number.isInteger(cost) || cost < 0) return { why:"An IP cost is a whole number." };
+    if (cost < 1 && !free) return { why:"A power costs at least 1 IP in play. Admin adds one free." };
+    if (cost && ipState(ch).available < cost) return { why:`Not enough IP (need ${cost}).` };
+    return { cost };
+  }
+  const spendOnPower = (ch, cost, id, name, note) => {
+    if (cost) ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:cost,
+      targetType:"power", targetId:id, name, note:txt(note) });
+  };
+  // A power is written, and audited by the caller's commit(), with its IP
+  // cost as a journal spend: one commit, one Undo. Admin's `free` adds one at
+  // no cost.
+  function addPower(ch, input, { free=false }={}){
     if (!hasPowers(ch)) return { ok:false, why:"Powers aren't on this sheet." };
     const i = isPlainObj(input) ? input : {}, name = txt(i.name).trim();
     if (!name) return { ok:false, why:"Give the power a name." };
-    let cost = 0;
-    if (i.cost!=null && String(i.cost).trim()!==""){
-      cost = Number(i.cost);
-      if (!Number.isInteger(cost) || cost < 0) return { ok:false, why:"An IP cost is a whole number." };
-    }
-    if (cost && ipState(ch).available < cost) return { ok:false, why:`Not enough IP (need ${cost}).` };
+    const c = powerCost(ch, i.cost, free);
+    if (c.why) return { ok:false, why:c.why };
     const row = powerRow({ id:newPowerId(ch), name, uses:txt(i.uses).trim(), effect:i.effect, notes:i.notes });
     if (!Array.isArray(ch.powers)) ch.powers = [];
     ch.powers.push(row);
-    if (cost) ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:cost,
-      targetType:"power", targetId:row.id, name, note:txt(i.note) });
-    return { ok:true, id:row.id, cost };
+    spendOnPower(ch, c.cost, row.id, name, i.note);
+    return { ok:true, id:row.id, cost:c.cost };
+  }
+  // Decision 154: in play a power's name, uses and effect change only by
+  // improving it, for IP; Admin edits them in place. Notes are the player's.
+  // The new words and the spend are one commit, one Undo.
+  function improvePower(ch, id, input){
+    if (!hasPowers(ch)) return { ok:false, why:"Powers aren't on this sheet." };
+    const p = listOf(ch, "powers").find(x=>isPlainObj(x) && x.id===id);
+    if (!p) return { ok:false, why:"That power isn't on this sheet." };
+    const i = isPlainObj(input) ? input : {};
+    const next = { name:txt(i.name).trim(), uses:txt(i.uses).trim(), effect:txt(i.effect) };
+    if (!next.name) return { ok:false, why:"Give the power a name." };
+    if (["name","uses","effect"].every(k=>next[k]===txt(p[k]))) return { ok:false, why:"Nothing changed. Rewrite its name, uses or effect to improve it." };
+    const c = powerCost(ch, i.cost, false);
+    if (c.why) return { ok:false, why:c.why };
+    Object.assign(p, next);
+    spendOnPower(ch, c.cost, p.id, next.name, i.note);
+    return { ok:true, cost:c.cost };
   }
   // A blank row for the wizard's powers editor, where the player types into
   // it (XQ2: creation's powers are free). Play adds powers through addPower.
@@ -3089,9 +3127,9 @@ const Engine = (() => {
     D, dataPath, formulaText, creditSymbol, glossary, skillById, advById, disById,
     conditionById, locationById, damageTypeById, damageCategoryById, aberrationById, spellById,
     // The character file: create, load, check, export
-    newCharacter, isIntakeId, tagReading, migrate, versionCheck, buildExport,
+    newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, newPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, improvePower, newPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,

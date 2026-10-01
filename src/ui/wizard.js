@@ -128,14 +128,21 @@ function constraintHtml(kind, id){
   else if (req.met.length) h += `<span class="cost grant">requires ${esc(req.met.join(", "))}</span>`;
   return h;
 }
+// The nav sticks to the bottom of the screen, so Continue is in reach from
+// anywhere on a long step. The issues sit just above it, and while one
+// blocks, the bar says so and jumps to them.
+// refreshNav redraws the same two pieces in place.
+const navErrors = issues => issues.filter(i=>i.level==="error").length;
+const wizIssuesHtml = issues => `<div id="wiz-issues">${issuesHtml(issues)}</div>`;
+const wizWhyHtml = n => n ? `<a class="wiznav-why" href="#wiz-issues">${n===1?"1 thing":`${n} things`} to fix first</a>` : "";
 function wizNav(stepId){
-  const issues = Engine.validate(stepId, S.ch);
-  const blocked = issues.some(i=>i.level==="error");
+  const issues = Engine.validate(stepId, S.ch), errors = navErrors(issues);
   const last = S.step===STEPS.length-1;
-  return `<div class="wiznav">
+  return `${wizIssuesHtml(issues)}<div class="wiznav">
     ${S.step>0?`<button class="btn" data-nav="-1">Back</button>`:""}
-    ${!last?`<button class="btn primary" data-nav="1" ${blocked?"disabled":""}>Continue</button>`:""}
-  </div>${issuesHtml(issues)}`;
+    ${!last?`<button class="btn primary" data-nav="1" ${errors?"disabled":""}>Continue</button>`:""}
+    ${wizWhyHtml(errors)}
+  </div>`;
 }
 
 // ── Step renderers ───────────────────────────────────────────────────
@@ -573,11 +580,12 @@ function renderReview(){
     <span class="k">Disadvantages</span><span class="v">${ch.disadvantages.map(x=>{const d2=Engine.disById(x.id);return esc(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");}).join(" · ")||"—"}</span>
     <span class="k">Boost ledger</span><span class="v">${ch.creation.boosts.map(b=>esc(b.targetId)+" ×"+b.times).join(" · ")||"—"}</span>
   </div></div>`;
-  h += issuesHtml(issues);
+  h += wizIssuesHtml(issues);
   h += `<div class="wiznav">
     <button class="btn" data-nav="-1">Back</button>
     <button class="btn" data-export="draft">Export draft</button>
     <button class="btn go" data-lock="1" ${blocked?"disabled":""}>Lock &amp; Export</button>
+    ${wizWhyHtml(navErrors(issues))}
   </div>
   <p class="step-note" style="margin-top:12px">Locking finalizes creation. The exported <span style="font-family:var(--mono)">.shadows.json</span> is the character — keep it, share it, bring it to the table.</p>`;
   return h;
@@ -606,7 +614,7 @@ function rosterCardHtml(e){
   const bits=[arch?Engine.archetypeContent(c).name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card" data-card="${id}">
     <div class="roster-top"><b class="roster-name">${esc(String(c.identity.name||"").trim() || "Unnamed")}</b><span class="roster-where">${esc(where)}</span></div>
-    <div class="roster-meta"><span class="roster-tag">${id}</span>${bits?" · "+bits:""}</div>
+    <div class="roster-meta"><span class="roster-tag">${esc(Engine.tagNumber(c)||e.id)}</span>${bits?" · "+bits:""}</div>
     ${unexported(e)?`<div class="roster-unexported">Changes not exported yet</div>`:""}
     <div class="roster-actions">
       <button class="btn primary sm" data-open="${id}">${locked?"Open sheet":"Resume draft"}</button>
@@ -691,7 +699,7 @@ function renderHome(){
       // older than the copy this browser keeps of the same character (B18).
       const have=(savedChar(id)||{}).ch;
       guardReplace(have, c, { title:`Open an older copy of ${charName(have)}?`,
-        lead:`This file is an older copy of <b>${esc(charName(c))}</b> (${esc(id)}) than the one saved in this browser. Opening it puts it in place of the newer one.`,
+        lead:`This file is an older copy of <b>${esc(charName(c))}</b> (${esc(Engine.tagNumber(c))}) than the one saved in this browser. Opening it puts it in place of the newer one.`,
         go:"Open the older copy" }, ()=>{
           lastSaved=null; untouched=null;
           S=Object.assign({screen: locked?"sheet":"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, loadFindings(c));
@@ -885,13 +893,15 @@ function refreshNav(){
   // re-evaluate Continue button + issue list without nuking input focus
   const st=STEPS[S.step]; if(!st) return;
   const nav=document.querySelector(".wiznav"); if(!nav) return;
-  const issues=Engine.validate(st.id,S.ch);
+  const issues=Engine.validate(st.id,S.ch), errors=navErrors(issues);
   const btn=nav.querySelector('[data-nav="1"]');
-  if(btn) btn.disabled=issues.some(i=>i.level==="error");
-  const ul=document.querySelector(".issues"); if(ul) ul.remove();
-  nav.insertAdjacentHTML("afterend", issuesHtml(issues));
+  if(btn) btn.disabled=errors>0;
   const lock=nav.querySelector("[data-lock]");
-  if(lock) lock.disabled=issues.some(i=>i.level==="error");
+  if(lock) lock.disabled=errors>0;
+  const old=document.getElementById("wiz-issues"); if(old) old.remove();
+  nav.insertAdjacentHTML("beforebegin", wizIssuesHtml(issues));
+  const why=nav.querySelector(".wiznav-why"); if(why) why.remove();
+  nav.insertAdjacentHTML("beforeend", wizWhyHtml(errors));
 }
 
 function applyStep(key, delta){

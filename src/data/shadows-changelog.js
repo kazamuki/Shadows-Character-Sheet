@@ -2,6 +2,17 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.34.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Continue stays on screen.** While you make a character, Back and Continue sit at the bottom of the screen however far down a step you are, so fixing something halfway up the Character Points list no longer means scrolling back to the end. While Continue is greyed out, the bar says how many things need fixing; tap that to jump to them.",
+      "**Every skill on the Skills tab, in two columns.** Untrained skills are listed in their category with the rest, at Rank 0 with the check they really roll, so every character's Skills tab reads the same and nothing hides behind an expander. On a wide screen, Combat and Utility sit on the left and General on the right; on a phone it's one column.",
+      "**A power reads as written.** On Loadout & Powers your own powers are cards now, not open fields. To change one, tap **Improve**: rewrite what changes and enter the IP your GM says it costs, and the new words and the spend are one change with one Undo. Adding a power in play costs IP too. Your notes on a power are still yours to edit any time. Forgot one at creation? **Admin** adds it free, and edits a power's words in place.",
+      "**TAGless means no TAG.** A TAGless character's number drops its TAG- prefix wherever it shows: on the sheet, the review, the print header and the Home list. A Ghost TAG is still a TAG, so it keeps the prefix."
+    ]
+  },
+  {
     "version": "0.33.0",
     "date": "2026-10-01",
     "intro": [],
