@@ -4197,7 +4197,9 @@ window.SHADOWS_DATA = {
   ],
 
   /* CREATION FLOW -- the ordered wizard steps and the rules for leftover CP.
-     `steps` is the 8-step sequence the wizard renders (label + optional note).
+     `steps` is the 8-step sequence the wizard renders: `short` names a step in
+     the step strip and as its title, `label` is the sentence under the title,
+     and an optional `note` follows it (Decision 161).
      `boostRules.cpCostPerPoint` is what one Boost of a stat or skill costs from
      leftover Character Points (F2, closed by Decision 97), and
      `boostRules.cpPerPowerRank` what one rank of any power costs, a Discipline
@@ -4213,37 +4215,44 @@ window.SHADOWS_DATA = {
       {
         "id": "power-level",
         "n": 1,
+        "short": "Power Level",
         "label": "Determine the Campaign Power Level with your GM"
       },
       {
         "id": "concept",
         "n": 2,
+        "short": "Concept",
         "label": "Decide who you want to be in NYTE City"
       },
       {
         "id": "stats",
         "n": 3,
+        "short": "Stats",
         "label": "Roll for your Stat Points and assign your Base Stats",
         "note": "Explosions do not happen on creation rolls."
       },
       {
         "id": "archetype",
         "n": 4,
+        "short": "Archetype",
         "label": "Choose your Archetype - the pivot that sharpens who you are becoming"
       },
       {
         "id": "history",
         "n": 5,
+        "short": "History",
         "label": "Build your character's history: What shaped them? What do they owe, fear, or want?"
       },
       {
         "id": "skills",
         "n": 6,
+        "short": "Skills",
         "label": "Allocate Skill Points to reflect your training and expertise"
       },
       {
         "id": "character-points",
         "n": 7,
+        "short": "Character Points",
         "label": "Spend Character Points on Advantages, Disadvantages, and powers. Allocate any remaining points.",
         "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may boost powers, skills, or stats - any single target at most maxBoost times. LUCK buy-ups are exempt from the boost cap."
       }

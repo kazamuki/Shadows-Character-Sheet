@@ -84,7 +84,7 @@ header.top{
 /* On a narrow screen the character's name gets the room. */
 @media (max-width:480px){ .brand .pre{display:none} }
 /* A short screen (a phone on its side) can't spare two pinned rows. */
-@media (max-height:540px){ header.top{position:static} .jumpbar.sticky{top:0} }
+@media (max-height:540px){ header.top{position:static} }
 /* Tabs, hosted in the header on the live sheet: one row, scrolled sideways
    where it doesn't fit, with a fade on the side that has more (set in app.js). */
 nav.topnav{grid-area:nav; min-width:0; display:flex; gap:2px; flex-wrap:nowrap;
@@ -268,9 +268,10 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 
 /* footer nav */
 .wiznav{display:flex; gap:12px; margin-top:30px; align-items:center; flex-wrap:wrap;
-  position:sticky; bottom:0; z-index:30; padding:12px 0; background:var(--ground); border-top:1px solid var(--frame)}
+  position:sticky; bottom:0; z-index:30; padding:12px 0; background:var(--ground); border-top:1px solid var(--frame);
+  padding-bottom:calc(12px + var(--ftr-live, 0px))}   /* clear of the fixed footer, measured in boot */
 .wiznav-why{font-size:.82rem; color:var(--magenta-text)}
-#wiz-issues{scroll-margin-top:calc(var(--hdr-live, var(--header-h)) + 12px)}
+#wiz-issues{scroll-margin-top:calc(var(--hdr-off) + 12px)}
 .btn{border-radius:4px; padding:10px 22px; font-size:.9rem; font-weight:600; border:1px solid var(--frame);
   background:var(--panel-2); color:var(--text)}
 .btn:hover{border-color:var(--violet-hi)}
@@ -294,6 +295,8 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .vitals h2{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.18em;
   text-transform:uppercase; color:var(--dim); margin-bottom:14px; display:flex; align-items:center; gap:8px}
 .vitals h2::after{content:""; flex:1; height:1px; background:var(--frame)}
+.vstrip{display:none}
+aside.vitals:empty{display:none}
 .vrow{display:flex; justify-content:space-between; align-items:baseline; padding:5px 0;
   border-bottom:1px solid rgba(32,63,123,.3); font-size:.8rem}
 .vrow .k{color:var(--dim)}
@@ -308,7 +311,6 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 
 /* home + review */
 .home-hero{margin:48px auto 0; max-width:560px; text-align:center}
-.home-hero .glyph{font-family:var(--mono); color:var(--violet-text); font-size:.8rem; letter-spacing:.4em; margin-bottom:14px}
 .home-hero h1{font-family:var(--display); font-size:2.2rem; letter-spacing:.1em; font-weight:700; margin-bottom:8px}
 .home-hero p{color:var(--dim); margin-bottom:28px}
 .home-actions{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
@@ -910,8 +912,6 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   .ledger h2{display:none}
   .step-row{white-space:nowrap; border-left:0; border-bottom:2px solid transparent; padding:8px 12px}
   .step-row.active{border-bottom-color:var(--cyan)}
-  aside.vitals{position:static; max-height:none; border-left:0; border-bottom:1px solid var(--frame); order:-1}
-  .vitals .vgroup{display:inline-block; vertical-align:top; margin-right:26px}
   main{padding:20px 16px 70px}
   .grid-2,.grid-3{grid-template-columns:1fr}
 }
@@ -985,9 +985,46 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 /* W5/W22: the jump bar. On step 7 it sticks under the header, which can wrap
    to more than one line, so its height is measured (--hdr-live, set in boot). */
 .jumpbar{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px}
-.jumpbar.sticky{position:sticky; top:var(--hdr-live, var(--header-h)); z-index:20; background:var(--ground);
+.jumpbar.sticky{position:sticky; top:var(--hdr-off); z-index:20; background:var(--ground);
   padding:8px 0; border-bottom:1px solid var(--frame)}
 .jumpbar input[type=search]{flex:1 1 220px; min-width:0; width:auto}
+/* Decision 161: below 1060px the wizard's rail is one sticky line under the
+   header, the points left in each pool and a Vitals pill for the flyout, after
+   the step strip and before the step. --hdr-off is what the header pins and
+   --strip-off what the line adds (--vstrip-live, measured in boot), so a jump
+   to the issues lands under both. Step 7's sticky jump bar counts the CP left
+   itself, so there the line scrolls away and the bar sticks under the header.
+   While a field has focus the line and Back/Continue let go, so an on-screen
+   keyboard doesn't leave the field squeezed between bars. */
+:root{--hdr-off:var(--hdr-live, var(--header-h))}
+@media (max-width:1060px){
+  .app:not(.sheet-mode){--strip-off:var(--vstrip-live, 0px)}
+  .app:not(.sheet-mode) main{order:2}
+  aside.vitals{order:1; position:sticky; top:var(--hdr-off); z-index:25; max-height:none; overflow:visible;
+    border-left:0; border-bottom:1px solid var(--frame); padding:8px 16px; background:var(--ground)}
+  .vitals .vfull{display:none}
+  /* The strip is one line: the "second look" callout keeps to it, at its end,
+     rather than wrapping tall and stretching every step with it. */
+  .ledger-callout{flex:none; width:auto; white-space:nowrap; margin:0 0 0 8px; align-self:center}
+  .vstrip{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none}
+  .vstrip::-webkit-scrollbar{display:none}
+  .vstrip .vpill{flex:none; padding:5px 11px}
+  .vstrip .toggle{margin-left:auto}
+  #wiz-issues{scroll-margin-top:calc(var(--hdr-off) + var(--strip-off, 0px) + 12px)}
+  .app:has(.jumpbar.sticky){--strip-off:0px}
+  .app:has(.jumpbar.sticky) aside.vitals{position:static}
+  .app:has(#main :is(input:not([type=checkbox],[type=radio]),textarea,select):focus){--strip-off:0px}
+  .app:has(#main :is(input:not([type=checkbox],[type=radio]),textarea,select):focus) aside.vitals,
+  .app:has(#main :is(input:not([type=checkbox],[type=radio]),textarea,select):focus) .wiznav{position:static}
+}
+/* A short screen (a phone on its side) pins only what it must: the header
+   lets go (header.top, near the top of this file), so the jump bar sticks at
+   the top and the rail's line scrolls away with the page. */
+@media (max-height:540px){
+  :root{--hdr-off:0px}
+  .app:not(.sheet-mode){--strip-off:0px}
+  aside.vitals{position:static}
+}
 .jump{background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit;
   font-size:.74rem; padding:4px 11px; cursor:pointer}
 .jump:hover, .jump:focus-visible{border-color:var(--violet-hi)}

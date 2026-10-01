@@ -49,8 +49,10 @@ function skillStatsHtml(line){
 
 
 // ── State ─────────────────────────────────────────────────────────────
-const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, label:s.label, note:s.note}))
-  .concat([{id:"review", n:D.creationFlow.steps.length+1, label:"Review, lock, and export"}]);
+// `short` names a step in the strip and as its title; a step without one
+// falls back to its whole label (Decision 161).
+const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, short:s.short||s.label, label:s.label, note:s.note}))
+  .concat([{id:"review", n:D.creationFlow.steps.length+1, short:"Review", label:"Review, lock, and export"}]);
 const SHEET_SECTIONS = [
   {id:"main",        label:"Main",        ui:"tab_main"},
   {id:"skills",      label:"Skills",      ui:"tab_skills"},
@@ -528,8 +530,11 @@ function jumpBarHtml(list, { sticky=false, filter=null, extra="" }={}){
 // give it focus, so the keyboard carries on from there.
 function jumpTo(id){
   const el=document.getElementById(id); if (!el) return;
+  // A sticky bar's own `top` already counts what's pinned above it: the
+  // header, and on a narrow wizard the rail's line (Decision 161).
   const hdr=document.querySelector("header.top"), bar=document.querySelector(".jumpbar.sticky");
-  const off=(hdr?hdr.offsetHeight:0)+(bar?bar.offsetHeight:0)+8;
+  const barTop=bar ? parseFloat(getComputedStyle(bar).top) : NaN;
+  const off=(bar && !isNaN(barTop) ? barTop+bar.offsetHeight : (hdr?hdr.offsetHeight:0)+(bar?bar.offsetHeight:0))+8;
   const calm=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   try{ window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: calm?"auto":"smooth" }); }catch(e){}
   el.focus({ preventScroll:true });
