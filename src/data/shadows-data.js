@@ -3136,7 +3136,9 @@ window.SHADOWS_DATA = {
     "writeInTraits": "What's always true of you, with no roll and no cost.",
     "writeInPowers": "What you can do that others can't, and what it burns. The ones you start with are free. If one changes a stat, log it in Adjustments once you're locked.",
     "writeInVulnerabilities": "What hurts you, holds you back or gives you away.",
-    "powerAddNote": "A power learned in play costs what your GM says, or nothing. Leave the cost blank for none.",
+    "powerAddNote": "What you learn in NYTE City, you pay for; your GM names the price.",
+    "powerAddAdminNote": "Leave the cost blank to add it free, for a power creation missed.",
+    "powerImproveNote": "A power that grows costs IP; your GM names it. Rewrite what changed. Your notes stay yours.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
     "applyFromText": "Apply these from their text.",
     "ranksAdvanceInPlay": "Ranks advance through play."

@@ -591,7 +591,7 @@ function guardReplace(saved, incoming, words, proceed){
   const who = esc(charName(saved)), id = intakeOf(saved);
   openModal({ title: words.title,
     html: `<p>${words.lead}</p>
-      <p class="step-note">Anything about <b>${who}</b>${id?` (${esc(id)})`:""} that you haven't exported is lost.</p>`,
+      <p class="step-note">Anything about <b>${who}</b>${id?` (${esc(Engine.tagNumber(saved))})`:""} that you haven't exported is lost.</p>`,
     foot: `<button class="btn" data-replaceexport>Export ${who} first</button>
       <button class="btn primary" data-replacego>${esc(words.go)}</button>
       <button class="btn" data-modalclose>Cancel</button>`,
@@ -625,7 +625,7 @@ function taglessToggleHtml(ch, attr){
 // W31: a Ghost TAG says so over the number, and hovering says what it is.
 function intakeHtml(ch){
   const id = intakeOf(ch), r = Engine.tagReading(ch);
-  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(id)}</span></div>` : "";
+  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(Engine.tagNumber(ch))}</span></div>` : "";
 }
 
 // C4: what versionCheck found when this character was loaded. Content the

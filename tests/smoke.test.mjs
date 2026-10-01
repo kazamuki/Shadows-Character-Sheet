@@ -108,6 +108,36 @@ test("the sheet survives a game-data change without code changes", () => {
   assert.ok(app.$("#main").textContent.length > 200);
 });
 
+// Decision 156: every character's Skills tab lists the same skills in the same
+// places, so a player finds one without knowing what they trained.
+test("the Skills tab lists every skill in its category, untrained at Rank 0 with its true check, in two balanced columns", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /@media \(min-width:1000px\)\{[^}]*\.skill-cols\{grid-template-columns:1fr 1fr\}/, "the Skills tab has no two-column rule");
+  const app = openSheet(lockedCharacter(), "skills");
+  const ch = activeChar(app);
+  const rows = app.$$("#main .skill-line");
+  assert.equal(rows.length, D.skills.length, "a skill is missing from the Skills tab");
+  assert.equal(app.$$("#main details > summary").filter(x => /^Untrained/.test(x.textContent)).length, 0, "untrained skills are still behind an expander");
+  for (const r of rows) {
+    const l = D.skills.map(s => Engine.skillLine(ch, s.id)).find(x => r.textContent.startsWith(x.def.name));
+    assert.ok(l, `a row names no skill: ${r.textContent.slice(0, 30)}`);
+    assert.equal(r.querySelector('[data-k="Rank"]').textContent, String(l.trained ? l.rank : 0), `${l.def.name}'s rank`);
+    assert.equal(r.querySelector('[data-k="Check"]').textContent, `1d10 + ${l.checkBonus}`, `${l.def.name}'s check`);
+    assert.equal(r.classList.contains("untrained"), !l.trained);
+    assert.ok(!r.getAttribute("style"), `${l.def.name} is dimmed as a whole row`);
+  }
+  // Columns: the categories in data order, never split, the first holding
+  // them until it has half the skills.
+  const cols = app.$$("#main .skill-col").map(c => [...c.querySelectorAll(".cat-row")].map(x => x.textContent));
+  const count = cid => D.skills.filter(s => s.category === cid).length;
+  const cats = ["combat", "utility", "general"].filter(count), half = D.skills.length / 2, want = [[], []];
+  let left = 0;
+  for (const c of cats) { const i = left < half ? 0 : 1; want[i].push(c[0].toUpperCase() + c.slice(1)); if (!i) left += count(c); }
+  assert.deepEqual(cols, want);
+  assert.ok(cols[1].length, "everything went in one column");
+  assert.deepEqual(app.errors, []);
+});
+
 test("the Skills tab shows the Martial Arts styles chosen, with their bonuses, and lists every style (W33)", () => {
   const ma = D.skills.find(s => s.id === "martial-arts"), [a, b] = ma.styles;
   const ch = lockedCharacter();
@@ -1936,7 +1966,12 @@ test("W41: the Identity step asks TAG'd or TAGless, and Admin changes it later, 
   assert.equal(activeChar(sheet).identity.tagless, true);
   sheet.click('[data-sec="main"]');
   assert.equal(sheet.$("#main .intake .intake-label").textContent, D.tag.tagless.label);
-  assert.ok(sheet.$("#main .intake").textContent.includes(ch.meta.id), "the number went away");
+  // Decision 155: the number stays, without its TAG- prefix, everywhere it shows.
+  const bare = ch.meta.id.slice(4);
+  assert.equal(sheet.$("#main .intake .intake-no").textContent, bare, "a TAGless number still reads TAG-, or went away");
+  assert.equal(activeChar(sheet).meta.id, ch.meta.id, "the stored number moved");
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-print]");
+  assert.equal(sheet.$("#printSheet .p-intake span").textContent, bare, "print still reads TAG-");
   sheet.click("[data-toastundo]");
   assert.equal(activeChar(sheet).identity.tagless, false, "undo didn't put the TAG back");
   assert.deepEqual(sheet.errors, []);
@@ -2236,6 +2271,35 @@ test("Decision 150: Admin doesn't measure a character locked under the earlier t
   assert.deepEqual([sheet.errors, now.errors], [[], []]);
 });
 
+// ── The wizard's nav sticks to the bottom of a long step ────────────────
+// Continue is in reach from anywhere; the issues sit above it, and while one
+// blocks, the bar counts them and links there. Typing redraws all of it in
+// place, and the issues stay above the bar.
+test("the wizard's nav sticks to the screen's bottom, counts what blocks Continue, and keeps the issues above it", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const rule = (css.match(/\.wiznav\{([^}]*)\}/) || [])[1] || "";
+  assert.match(rule, /position:sticky/, "the nav doesn't stick");
+  assert.match(rule, /bottom:0/, "the nav doesn't stick to the bottom");
+
+  const app = onArchetypeStep(D.archetypes.find(a => a.writeIn).id);
+  const nav = () => app.$(".wiznav"), why = () => app.$(".wiznav-why");
+  const count = () => app.$$("#wiz-issues .issues li.error").length;
+  const above = () => app.$$("#wiz-issues").length === 1 && app.$("#wiz-issues").nextElementSibling === nav();
+  assert.ok(count() > 0, "a nameless Custom archetype has nothing to fix");
+  assert.equal(app.$('[data-nav="1"]').disabled, true);
+  assert.ok(why(), "Continue is disabled and the bar doesn't say why");
+  assert.match(why().textContent, new RegExp(`^${count()} things? to fix first$`));
+  assert.equal(why().getAttribute("href"), "#wiz-issues");
+  assert.ok(above(), "the issues aren't just above the nav");
+
+  const before = count(), el = app.$('[data-wi="name"]');
+  el.value = "Changeling"; el.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(count(), before - 1, "naming the archetype didn't clear its error");
+  assert.ok(above(), "a redraw in place put the issues below the nav, or twice");
+  assert.equal(app.$$(".wiznav-why").length, 1, "a redraw in place doubled the count");
+  assert.match(why().textContent, new RegExp(`^${count()} things? to fix first$`), "the count didn't follow the redraw");
+});
+
 // ── The wizard's write-in block (Decision 153, custom archetype S3) ─────
 test("a Custom archetype is written on the Archetype step: what it is, its classification, mechanics and three lists", () => {
   const custom = D.archetypes.find(a => a.writeIn);
@@ -2327,7 +2391,10 @@ test("the sheet draws a written-in archetype: its name everywhere, its classific
   assert.ok(app.$$("#main .trk h4").some(h => h.textContent === "SFR"), "Uses SFR didn't put SFR on Trackers");
   assert.ok(!app.$$("#main .trk h4").some(h => h.textContent === "TOL Spent"), "TOL Spent showed without Uses magic");
   app.click(`[data-sec="${loadoutSec(app)}"]`);
-  assert.equal(app.$$("[data-pwedit]").length, 4, "the powers panel didn't draw Fade's four fields");
+  // Decision 154: in play a power reads as written, its notes free to edit.
+  assert.deepEqual(app.$$("[data-pwedit]").map(e => e.dataset.pwedit.split("|")[1]), ["notes"], "a power's words are editable in play");
+  assert.match(app.$(".pw-card").textContent, /Fade[\s\S]*uses SFR[\s\S]*Unseen/, "the power doesn't read as written");
+  assert.equal(app.$$("[data-pwimprove]").length, 1, "a power has no Improve");
   assert.equal(app.$$("[data-pwdel]").length, 0, "Remove is Admin's, not play's");
   // A built-in archetype draws none of it.
   const b = openSheet(lockedCharacter(), "archetype");
@@ -2340,7 +2407,11 @@ test("Add power with an IP cost is one change: the row and the spend, and one Un
   const app = openSheet(writtenInCharacter(), "main");
   app.click(`[data-sec="${loadoutSec(app)}"]`);
   const fill = (k, v) => { app.$(`[data-pwnew="${k}"]`).value = v; };
-  fill("name", "Thorn hedge"); fill("effect", "Briars erupt."); fill("cost", "99");
+  fill("name", "Thorn hedge"); fill("effect", "Briars erupt.");
+  app.click("[data-pwadd-go]");
+  assert.equal(activeChar(app).powers.length, 1, "a power was added in play with no cost (Decision 154)");
+  assert.match(app.$("#undotoast").textContent, /costs IP/);
+  fill("cost", "99");
   app.click("[data-pwadd-go]");
   assert.equal(activeChar(app).powers.length, 1, "a refused power was written");
   assert.equal(app.$('[data-pwnew="name"]').value, "Thorn hedge", "a refusal threw away what was typed");
@@ -2356,12 +2427,39 @@ test("Add power with an IP cost is one change: the row and the spend, and one Un
   c = activeChar(app);
   assert.equal(JSON.stringify([c.powers.length, c.progression.ip.log.length]), "[1,0]", "one Undo didn't take back both");
 
-  // An edit is one logged change when the field is left.
-  const eff = app.$('[data-pwedit$="|effect"]');
-  eff.value = "Unseen for two rounds."; eff.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  // A note is one logged change when the field is left.
+  const note = app.$('[data-pwedit$="|notes"]');
+  note.value = "Twice tonight."; note.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   c = activeChar(app);
-  assert.equal(c.powers[0].effect, "Unseen for two rounds.");
-  assert.match(c.audit[c.audit.length - 1].label, /Fade: effect/);
+  assert.equal(c.powers[0].notes, "Twice tonight.");
+  assert.match(c.audit[c.audit.length - 1].label, /Fade: notes/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Improve rewrites a power for IP: the cost is required, a refusal keeps the form, and one Undo takes back both (Decision 154)", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click("[data-pwimprove]");
+  assert.ok(app.$("#modal[open]"), "Improve didn't open");
+  const field = k => app.$(`#modal [data-pwimp="${k}"]`);
+  assert.equal(field("name").value, "Fade", "Improve didn't start from the power's words");
+  field("effect").value = "Unseen for two rounds.";
+  app.click("#modal [data-pwimp-go]");
+  assert.ok(app.$("#modal[open]"), "a refusal closed the form");
+  assert.match(app.$("#undotoast").textContent, /costs IP/);
+  assert.equal(field("effect").value, "Unseen for two rounds.", "a refusal threw away what was typed");
+  assert.equal(activeChar(app).powers[0].effect, "Unseen for a round.", "a refused improvement was written");
+
+  field("cost").value = "10";
+  app.click("#modal [data-pwimp-go]");
+  let c = activeChar(app);
+  assert.ok(!app.$("#modal[open]"), "Improve stayed open after it worked");
+  assert.equal(JSON.stringify([c.powers[0].effect, c.progression.ip.log.map(e => [e.targetType, e.amount])]),
+    JSON.stringify(["Unseen for two rounds.", [["power", 10]]]));
+  assert.match(c.audit[c.audit.length - 1].label, /Improved Fade \(10 IP\)/);
+  app.click("[data-toastundo]");
+  c = activeChar(app);
+  assert.equal(JSON.stringify([c.powers[0].effect, c.progression.ip.log.length]), JSON.stringify(["Unseen for a round.", 0]), "one Undo didn't take back both");
   assert.deepEqual(app.errors, []);
 });
 
@@ -2378,6 +2476,19 @@ test("Admin edits a written-in archetype's words and lists, and removes a power 
   assert.equal(JSON.stringify([w.name, w.traits.length, w.vulnerabilities.length]), JSON.stringify(["Fetch", 0, 2]));
 
   app.click(`[data-sec="${loadoutSec(app)}"]`);
+  // Decision 154: Admin edits a power's words in place, and adds one free.
+  assert.equal(app.$$("[data-pwedit]").length, 4, "Admin can't edit a power's words");
+  const eff = app.$('[data-pwedit$="|effect"]');
+  eff.value = "Unseen for two rounds."; eff.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  let c = activeChar(app);
+  assert.equal(c.powers[0].effect, "Unseen for two rounds.");
+  assert.match(c.audit[c.audit.length - 1].label, /^Admin: Fade: effect/);
+  app.$('[data-pwnew="name"]').value = "Forgotten";
+  app.click("[data-pwadd-go]");
+  c = activeChar(app);
+  assert.equal(JSON.stringify([c.powers.map(p => p.name), c.progression.ip.log.length]), JSON.stringify([["Fade", "Forgotten"], 0]), "Admin's blank cost wasn't free");
+  assert.equal(c.audit[c.audit.length - 1].label, "Admin: added power Forgotten");
+  app.click("[data-toastundo]");
   app.click("[data-pwdel]");
   assert.ok(app.$("#modal[open]"), "removing a power didn't ask first");
   assert.equal(activeChar(app).powers.length, 1, "it removed before the answer");
