@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.32.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Skill lists read properly on a phone.** The Combat skills on Main and the Skills tab were squeezed so narrow that every skill name broke one letter per line. Each skill is now its own line: the name across the top, Rank and Check beside each other, the breakdown underneath."
+    ]
+  },
+  {
     "version": "0.32.0",
     "date": "2026-09-28",
     "intro": [],

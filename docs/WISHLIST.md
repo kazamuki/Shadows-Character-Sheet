@@ -55,6 +55,60 @@ and `sheet.js` that read `luck.startingValue` directly should go through one
 engine reader first. Decision 5 needs superseding, and the CRB's Luck section
 (030) needs the new number.
 
+### The sheet at the table (from the design critique)
+
+W42–W46 are what's left of the 2026-09-30 design critique (score 28/40, snapshot
+in `.impeccable/critique/`) after its combat-table finding shipped in 0.32.1.
+All are **player-facing layout or behaviour**, so most are the *Rule or shape*
+tier ("propose before building"). None touches a rule. Measurements are from a
+375px viewport; the Main tab was seen running, the other tabs were read from
+`DESIGN.md` and the code.
+
+**W42 — Hurt, Heal and Take a hit are not visible on Main.** *Claude · 🔎 · critique P1*
+The most common change mid-fight lives behind tapping the Health card (or on
+Trackers). Main shows the numbers well but no verb. *The fix:* a visible
+Hurt / Heal / Hit row under the Health and Pain cards, bound by
+`bindVitalControls` so it can't drift from the popover. *To respect:* every
+change is a `commit()` with its undo toast; DESIGN.md's "shadows are for things
+that float" and no new neon.
+
+**W43 — Small tap targets and sub-floor text.** *Claude · ⏭ · critique P1*
+Measured: the `?` tip is 18px (`.skill-q`, `shadows.css`), "+ Add a condition"
+26px, steppers and action rows 30px. "What's new" is 10.56px and "GDG ▴" 9.6px,
+under the 11px floor, and `#9b4dba` on `#0d1731` is 3.5:1 against the 4.5:1
+needed. The `?` tips also lean on hover. *The fix:* 44px hit areas (padding or a
+pseudo-element, so the look stays), 40px+ on steppers, the two labels to 11px or
+more, the violet text lifted by a token change so the light-theme fold still
+holds. Check that every tip opens from keyboard and touch.
+
+**W44 — The wizard's vitals rail buries the step on small screens.** *Claude · 🔎 · critique P2*
+At 1060px and below the vitals rail (BOD to LUCK) sits above step 1, and at 800px
+the actual choice is off screen. The step title and its subtitle are the same
+sentence, and the step strip truncates its labels. The rail also shows "1 (-3)"
+placeholders before anything is chosen. *The fix:* collapse the rail to one
+sticky HP / SAN / LUCK line, show one title, shorten the strip labels. The
+`[ 1 0 ]` eyebrow means nothing to a first-timer, and Campaign Power Level asks a
+question a new player can't answer without a stated default.
+
+**W45 — Main repeats identity before the first number.** *Claude · 🔎 · critique P2*
+On a phone the name appears in the header and again in the hero, with a "LIVE
+SHEET" eyebrow, the barcode and TAG, and the archetype line: about 190px before
+any number. *The fix:* the name once, in the header; the hero keeps TAG and
+archetype. Same pass: on a phone the stat grid comes before weapons and armour,
+though the code comments say combat leads. A veteran mid-fight has to scroll past
+all of Stats to reach their weapon. *Open:* does Main become Health, Pain,
+armour and weapons, with stats on their own tab? That's an information-architecture
+call for Ken. The Çredits card sits alone in its grid row; go three across or span it.
+
+**W46 — The lock moment has no ceremony.** *Claude · 💡 · critique, Ken chose "one short beat"*
+Locking is the best emotional beat in the product and it becomes the sheet with
+an immediate export. Ken picked a sub-second NYTE City beat, for instance the
+TAG barcode drawing in. *To respect:* short, state-driven, off under
+`prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). The
+detector also flagged an infinite pulse on `.admin-banner .dot`, a zero-offset
+cyan glow and a striped gradient. Check those against DESIGN.md when this is
+picked up, and `sheet.js:1726`'s `.76rem`, which is off the type ramp.
+
 ### Beyond one sheet
 
 **W29 — A GM mode: link to the table's characters, read them, leave notes.** *Ken · 💡 · a different tier of product: needs a server*
@@ -132,7 +186,7 @@ without storage, so the listener is guarded like every other read.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W42.** Everything above is open; W38 has a plan,
+- **Next free number: W47.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
