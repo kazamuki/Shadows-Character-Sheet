@@ -42,6 +42,9 @@ own in the footer.
   traits it always has, its powers and its weaknesses. Tick **Uses magic** or **Uses SFR**
   and the sheet tracks TOL or an SFR pool for it. Powers learned in play can cost IP, and
   one Undo takes back the power and the IP together.
+- **Your archetype on paper.** The printed sheet has a fourth page for your archetype:
+  what it is, its classification, its traits, powers and weaknesses. The blank sheet's
+  version is lines to write a Custom archetype by hand.
 
 ## v0.32.1 — 2026-10-01
 
