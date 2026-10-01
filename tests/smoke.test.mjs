@@ -157,7 +157,7 @@ test("Arcanist offers exactly one set of aberration controls (A1)", () => {
 test("one specialization pick clears validation for every archetype (A1)", () => {
   // The two-model bug made an Arcanist pick BOTH a single-select specialization
   // and N aberrations. One pick per required slot must now be enough.
-  for (const arch of D.archetypes.filter(a => (a.specialization.options || []).length)) {
+  for (const arch of D.archetypes.filter(a => ((a.specialization || {}).options || []).length)) {
     const ch = Engine.newCharacter();
     ch.identity.archetype = arch.id;
     ch.creation.powerLevel = D.powerLevels[0].id;
@@ -348,7 +348,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.15");
+  assert.equal(resumed.meta.schemaVersion, "0.16");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });

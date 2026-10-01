@@ -1179,6 +1179,7 @@ function renderShProgression(){
   h += ip.log.length ? `<div class="journal">` + ip.log.slice().reverse().map(e=>{
     const what = e.kind==="grant" ? `Grant` :
       e.targetType==="spell" ? `Mastered ${(Engine.spellById(e.targetId)||{name:e.targetId}).name}` :
+      e.targetType==="power" ? `Power: ${typeof e.name==="string" && e.name ? e.name : "unnamed"}` :
       `${e.targetType==="stat"?e.targetId:(Engine.skillById(e.targetId)||{name:e.targetId}).name} ${e.from} → ${e.to}`;
     return `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
       <span class="amt ${e.kind==="grant"?"grant":"spend"}">${e.kind==="grant"?"+":"−"}${e.amount}</span>
