@@ -1007,7 +1007,7 @@ No cascade logic to maintain — it falls out of the architecture.
     `S.vitalsOpen`; the drawer element is reused (not recreated) so the transform
     animates and the open state survives data-driven re-renders. (Ken,
     2026-06-16)
-    → **Superseded in part by Decision 160** — the flyout can be pinned beside the sheet on a wide screen.
+    → **Superseded in part by Decisions 160 and 161** — the flyout can be pinned beside the sheet on a wide screen (160), and the wizard's narrow rail opens it too, without a pin (161).
 38. **(Phase 3.2)** **Sticky in-header navigation.** The section tabs move out of
     the scrolling content into a **sticky** header that reads
     **`Shadows // <character name>`**; the active tab underlines at the header's
@@ -3610,6 +3610,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 35 in part (a pinned panel brings back a right-hand column on the locked sheet); Decision 37 in part (the flyout can be pinned); Decision 119 in part (the panel's vitals open popovers too, to the left).
      - **Revisit if:** a narrower screen wants the pin, or the panel's stats and derived rows prove to be what's used least and want trimming.
      - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested; `npm run phone-check` passes. Log 2026-10-01.
+
+161. **Below 1060px the wizard's rail is one sticky line of the points left, the full rail is a tap away in the flyout, and each step has one title.**
+     *2026-10-01 · Ken + Claude · Touches: vitals rail, aside.vitals, vstrip, Vitals pill, vdrawer, wizardRailHtml, step strip, ledger, step title, stepHeader, creationFlow.steps.short, jump bar, jumpTo, wiznav, Back, Continue, footer, Home glyph, W44*
+     - **Decided:** Below 1060px the rail is one line that sticks under the header, after the step strip: Stat Points, Skill Points and CP left, and a **Vitals** pill that opens the whole rail in the sheet's flyout. On step 7, whose sticky jump bar counts the CP left, the line scrolls away. While a field has focus the line and Back/Continue stop sticking. Each step names itself with `short` from the data, in the strip and as its title, and its sentence sits under the title once. The rail shows "—" for stats and what they make until a Stat Point is spent. Home loses the `[ 1 0 ]` glyph.
+     - **Why:** On a phone the rail stood above the header and step 1's choice sat below the screen. While building, the numbers a player spends are the pools, not HP, SAN and LUCK, which the sheet already pins.
+     - **Rejected:**
+       - The critique's HP / SAN / LUCK line: no one spends them in creation.
+       - Folding the rail inline behind a toggle: it would push the step down again; the flyout already overlays.
+       - Short names in a list in `wizard.js`: a new step would need an app change (Decision 135).
+       - The line sticking on step 7 too: two CP counts and four pinned bars, 40% of a phone.
+     - **Replaces:** Decision 37 in part (the flyout serves the wizard as well, without a pin).
+     - **Revisit if:** a step gets its own sticky bar without a pool count, or players want a pool the line doesn't show.
+     - **Built:** app 0.35.1; `smoke.test.mjs`, 12 mutations; `phone-check` passes. Log 2026-10-01.
 
 ## 5. Open Flags
 

@@ -22,7 +22,7 @@ function renderLedger(){
     const icon = state==="attn" ? "!" : state==="done" ? "✓" : st.n;
     const cls = ["step-row", i===S.step?"active":"", state].join(" ");
     const dis = i>S.maxReached ? "disabled":"";
-    return `<button class="${cls}" data-goto="${i}" ${dis}><span class="n">${icon}</span>${esc(st.label.split(":")[0].split(" - ")[0])}</button>`;
+    return `<button class="${cls}" data-goto="${i}" ${dis}><span class="n">${icon}</span>${esc(st.short)}</button>`;
   }).join("");
   const callout = attnCount ? `<button class="ledger-callout" data-goto="${firstAttn}">
     ⚠ ${attnCount} step${attnCount>1?"s":""} could still use a second look</button>` : "";
@@ -31,15 +31,37 @@ function renderLedger(){
 }
 
 // ── Vitals rail ──────────────────────────────────────────────────────
+// The rail is the wizard's live readout only. Once locked, the sheet hides it
+// and uses the horizontal vitals bar (sheetVitalsBar) instead.
+// Below 1060px the full rail would push the step off the screen, so the rail
+// is one sticky line of what's left to spend, and Vitals opens the whole rail
+// in the sheet's flyout (Decision 161). Both are drawn; the CSS shows one.
 function renderVitals(){
   const el = $("vitals");
-  // The rail is the wizard's live readout only. Once locked, the sheet hides it
-  // and uses the horizontal vitals bar (sheetVitalsBar) instead.
   if (!S.ch || S.screen==="sheet"){ el.innerHTML=""; return; }
-  const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
+  el.innerHTML = wizardStripHtml(S.ch) + `<div class="vfull"><h2>Vitals</h2>${wizardRailHtml(S.ch)}</div>`;
+  el.querySelectorAll("[data-wiz-vitals]").forEach(b=>b.onclick=()=>{ S.vitalsOpen=true; renderDrawer(); });
+}
+// The one line: the points left in each creation pool, which is what a
+// player is spending, then the way to everything else.
+function wizardStripHtml(ch){
+  const pill=(k,v,over)=>`<div class="vpill${over?" danger":""}"><span class="vtext"><span class="vk">${k}</span><span class="vv">${v}</span></span></div>`;
+  let h = `<div class="vstrip" aria-label="Points left">`;
+  if (Engine.powerLevel(ch) && !ch.creation.locked){
+    const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), cp=Engine.cp(ch);
+    const sLeft = sp.total==null ? null : sp.total-Engine.statSpent(ch), kLeft = kp.total-Engine.skillSpent(ch);
+    h += pill("Stats", sLeft==null ? "roll "+esc(sp.rollDie) : `${sLeft}<small>/${sp.total}</small>`, sLeft!=null && sLeft<0);
+    h += pill("Skills", `${kLeft}<small>/${kp.total}</small>`, kLeft<0);
+    h += pill("CP", `${cp.left}<small>/${cp.budget}</small>`, cp.left<0);
+  }
+  return h + `<button type="button" class="vpill toggle" data-wiz-vitals aria-haspopup="dialog" aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button></div>`;
+}
+// Everything the rail shows, for the rail beside the step and for the flyout.
+function wizardRailHtml(ch){
+  const pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const der=Engine.derived(ch), hp=Engine.health(ch), t=Engine.statTable(ch);
   const locked = ch.creation.locked;
-  let h = `<h2>Vitals</h2><div class="vgroup">
+  let h = `<div class="vgroup">
     <div class="vname">${esc(ch.identity.name)||"&mdash;"}</div>
     <div class="vsub">${a?esc(a.name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
   if (pl && !locked){
@@ -67,21 +89,25 @@ function renderVitals(){
     h += vrow("Milestone Pts", ms.mp);
     h += `</div>`;
   }
+  // Before any Stat Point is spent the stats are only their floor, so the
+  // rail says "not yet" rather than a score nobody chose (Decision 161).
+  const unset = !locked && Engine.statSpent(ch)===0 && D.stats.every(s=>t[s.id].value===ch.stats[s.id].base);
+  const dash = "&mdash;";
   h += `<div class="vgroup">` + D.stats.map(s=>{
     const m=t[s.id].mod;
-    return vrow(s.id, t[s.id].value+" ("+(m>=0?"+":"")+m+")", "", s.id);
+    return vrow(s.id, unset ? dash : t[s.id].value+" ("+(m>=0?"+":"")+m+")", "", s.id);
   }).join("") + `</div>`;
   h += `<div class="vgroup">`;
-  h += vrow("TOL", der.TOL, "", "TOL") + vrow("WILL", der.WILL, "", "WILL");
+  h += vrow("TOL", unset?dash:der.TOL, "", "TOL") + vrow("WILL", unset?dash:der.WILL, "", "WILL");
   if (!locked){
-    h += vrow("SAN", der.SAN+"%", "", "SAN");
-    h += vrow("Health", hp.levels+" HL · "+hp.total+" HP","hp");
+    h += vrow("SAN", unset?dash:der.SAN+"%", "", "SAN");
+    h += vrow("Health", unset?dash:hp.levels+" HL · "+hp.total+" HP","hp");
     h += vrow("LUCK", D.resources.luck.startingValue + ch.trackers.luck.bonus);
     const sfr = Engine.sfr(ch);
     if (sfr && sfr.value!=null) h += vrow("SFR", sfr.value+" · RoU "+sfr.rou);
   }
   h += `</div>`;
-  el.innerHTML = h;
+  return h;
 }
 
 // ── Wizard-only widgets ──────────────────────────────────────────────
@@ -146,9 +172,10 @@ function wizNav(stepId){
 }
 
 // ── Step renderers ───────────────────────────────────────────────────
+// One title (the step's short name), then the step's sentence under it.
 function stepHeader(st){
   return importIssuesHtml() + `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
-    <h1 class="step-title">${esc(st.label.split(" - ")[0].split(":")[0])}</h1>
+    <h1 class="step-title">${esc(st.short)}</h1>
     <p class="step-note">${esc(st.label)}${st.note?` <em>${esc(st.note)}</em>`:""}</p>`;
 }
 
@@ -655,7 +682,6 @@ function renderHome(){
   renderTopChrome(); closeVitals();
   const roster = rosterEntries();
   $("main").innerHTML = `<div class="home-hero">
-    <div class="glyph">[ 1 0 ]</div>
     <h1>Character Intake</h1>
     <p>NYTE City doesn't care who you were. Build who you're going to be.</p>
     <div class="home-actions">
