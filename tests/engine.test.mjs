@@ -379,12 +379,12 @@ const withData = (obj, key, value, fn) => {
   try { fn(); } finally { if (had) obj[key] = old; else delete obj[key]; }
 };
 
-test("the Arcanist's Discipline price, cap and Evocation start are read from the data (A8, Decision 135)", () => {
+test("the Arcanist's Discipline price, cap and Evocation start are read from the data (A8, Decisions 135, 157)", () => {
   const disc = D.archetypes.find(a => a.coreMechanic && a.coreMechanic.disciplines).coreMechanic.disciplines;
   const ch = subject();
   ch.archetypeChoices.disciplines = { enchantment: 2 };
-  assert.equal(Engine.disciplineSpent(ch), 2 * disc.cpPerRank);
-  withData(disc, "cpPerRank", 9, () => assert.equal(Engine.disciplineSpent(ch), 18));
+  assert.equal(Engine.disciplineSpent(ch), 10, "a Discipline rank costs 5 CP, the price of any power rank");
+  withData(D.creationFlow.boostRules, "cpPerPowerRank", 9, () => assert.equal(Engine.disciplineSpent(ch), 18));
 
   const pl = Engine.powerLevel(ch);
   assert.equal(Engine.disciplineCap(ch), pl.maxPowerRank);

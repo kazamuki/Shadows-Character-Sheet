@@ -270,7 +270,7 @@ window.SHADOWS_DATA = {
         countBy: "campaignPowerScaling.aberrations",
         options: [
           { id: "...", name: "...", description: "...", grants: [],
-            // (Decision 126) rendered on the Archetype tab and the wizard card.
+            // (Decision 126) rendered on the Character tab and the wizard card.
             // A power's array of plain objects (e.g. `phases`) shows as a
             // table; a power with no description reads "not written yet".
             starterPower: { name: "...", description: "...", phases: [ { phase, boon, effect } ] },
@@ -284,7 +284,6 @@ window.SHADOWS_DATA = {
         // (Decision 135) Bought in the Character Points step. A path reads a
         // number from the scaling row or the power level, like `countBy`.
         disciplines: {
-          cpPerRank: 6,
           maxRankBy: "powerLevel.maxPowerRank",
           list: [ { id: "evocation", name: "Evocation", description: "...",
                     startingRankBy: "campaignPowerScaling.evocationStartingRank" } ]
@@ -298,7 +297,7 @@ window.SHADOWS_DATA = {
           { id: "grimoire", type: "grimoire",
             columns: ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"] },
           // (0.13, Decision 110) read-only rules from the named data sections,
-          // on the Archetype tab.
+          // on the Character tab (Decision 158).
           { id: "magic-reference", type: "reference", title: "Magic reference",
             shows: ["spellcraftRules", "spellTiers", "cascadeTable", "aberrationTable", "aberrations"] }
         ]
@@ -609,7 +608,7 @@ marked as reachable only by an exploding 10).
 
 A `reference` panel (Decision 110) names the data sections it `shows`. The
 sheet has one renderer per section name and skips a name it has none for.
-It renders on the Archetype tab.
+It renders on the Character tab (Decision 158).
 
 ---
 
@@ -677,7 +676,7 @@ It renders on the Archetype tab.
                                      // (Decision 134); migrate() keeps only strings
     naturalAdvantages: [],           // Professional: [{ id, rank }] — also mirrored into
                                      // `advantages` with source:"natural", cost 0 CP (0.13)
-    disciplines: {},                 // Arcanist: CP-bought ranks { enchantment: 1 } (6 CP each;
+    disciplines: {},                 // Arcanist: CP-bought ranks { enchantment: 1 } (5 CP each, Decision 157;
                                      // Evocation starting rank from scaling table is NOT stored)
     // (0.16, Decision 153) What a write-in archetype is, in the player's
     // words. Read only when the archetype declares `writeIn`; every field is
@@ -852,6 +851,7 @@ No cascade logic to maintain — it falls out of the architecture.
     → **Superseded in part by Decision 150** — a stat point costs 1 up to 6 and 2 from 7 to 10; Skill Points and CP stand.
 5. **LUCK:** everyone starts at 2. Buy-ups use CP, treated like an advantage
    purchase, **exempt from Max Boost**.
+    → **Superseded in part by Decision 157** — everyone starts at 4.
 6. **Health Levels:** 1 HL per point of BOD, 5 HP per HL.
 7. **Çredits:** player rolls physically, enters result; pool = table formula.
 8. **Skill checks:** 1d10 + Rank + Primary Stat (full score) + Synergy Bonus
@@ -896,6 +896,7 @@ No cascade logic to maintain — it falls out of the architecture.
 19. **(Phase 2)** Arcanist Disciplines are purchasable in the CP step at
     6 CP/rank, capped at the power level's Max Power Rank. Evocation's
     starting rank comes from the scaling table and is computed, not stored.
+    → **Superseded in part by Decision 157** — a rank costs 5 CP, the price of any power rank.
 20. **(Phase 2)** Aberration prose benefits display as reference text only;
     only structured fields (e.g. `tolBonus`) auto-apply to computed values.
     → Resolved in Phase 3 by Decision 26 (manual adjustments ledger).
@@ -951,6 +952,7 @@ No cascade logic to maintain — it falls out of the architecture.
     Older saved files with `section:"overview"` migrate to `main` via a
     `LEGACY_SECTION` map; any unknown section normalizes to `main`. (Ken,
     2026-06-15)
+    → **Superseded in part by Decision 158** — eight tabs: Traits and Archetype are one Character tab.
 31. **(Phase 3.1)** Iconography lives in `shadows-icons.js` (see §1). Two sets:
     the **brand stat set** (Get Dangerous Games, game-icons.net style, filled,
     recolored to `currentColor`) keyed by stat/derived id, and a **free-to-use
@@ -985,6 +987,7 @@ No cascade logic to maintain — it falls out of the architecture.
     supersedes Decision 32's "rail hidden on Main only" — the rail is now hidden
     across the whole locked sheet, recovering the right-hand whitespace. (Ken,
     2026-06-16)
+    → **Superseded in part by Decision 160** — a pinned vitals panel brings back a right-hand column from 1280px.
 36. **(Phase 3.2)** **Four-sphere stat layout on Main.** Stats cluster into
     Physical (BOD/REF/MOB) · Mental (INT/TECH/COOL) · Social (MAG/EMP) · Soul
     (TOL/WILL), rendered as four side-by-side columns (cells stacked vertically,
@@ -1004,6 +1007,7 @@ No cascade logic to maintain — it falls out of the architecture.
     `S.vitalsOpen`; the drawer element is reused (not recreated) so the transform
     animates and the open state survives data-driven re-renders. (Ken,
     2026-06-16)
+    → **Superseded in part by Decision 160** — the flyout can be pinned beside the sheet on a wide screen.
 38. **(Phase 3.2)** **Sticky in-header navigation.** The section tabs move out of
     the scrolling content into a **sticky** header that reads
     **`Shadows // <character name>`**; the active tab underlines at the header's
@@ -1047,12 +1051,14 @@ No cascade logic to maintain — it falls out of the architecture.
 45. **(Phase 3.2)** **Traits collapsible.** Advantages and disadvantages render
     as collapsible cards (`<details>`): the summary shows name + CP cost,
     expanding to the description. Default collapsed. (Ken, 2026-06-16)
+    → **Superseded in part by Decision 158** — Expand all opens every card, and the choice stays.
 46. **(Phase 3.2)** **Progression collapsible.** The long sections become
     `<details>`: Raise-a-Stat and Raise-a-Skill open by default (the primary
     spend actions), IP Journal collapsed (history), and Minor/Major Milestones
     open *only* when picks are available (`minorLeft`/`majorLeft` > 0). The IP
     status + grant block and the MP status block stay always-visible. (Ken,
     2026-06-16)
+    → **Superseded in part by Decision 159** — Raise a Stat and Raise a Skill are buttons that open a modal.
 47. **(Phase 3.2)** No schema bump. All Phase 3.2 work is presentation/UI; the
     character (0.3) and game-data (0.2) schemas are unchanged and the pure engine
     (`/*ENGINE-START*/…/*ENGINE-END*/`) is byte-for-byte identical, so the 58
@@ -2036,6 +2042,7 @@ No cascade logic to maintain — it falls out of the architecture.
     open**: the designers want to playtest how many Stat Points people
     realistically end up with before choosing between the flat and scaled
     rolls. (Ken + Scott + Deighton + Claude, 2026-09-22)
+    → **Superseded in part by Decision 157** — a power rank costs 5 CP, not 1 CP a boost.
 
 98. **(Design-team rulings, part 2, 2026-09-22 — rules + data + engine)**
     **The stat curve past 10 is settled, the three Conditions stubs close,
@@ -3003,6 +3010,7 @@ No cascade logic to maintain — it falls out of the architecture.
       redraw, focus not returned on Esc, a click elsewhere not closing it,
       and Take a hit leaving the popover open. Each fails a test.
     Ships in app **0.22.0**. (Ken + Claude, 2026-09-24)
+    → **Superseded in part by Decision 160** — the pinned panel's vitals open the same popovers, to the left.
 
 120. **(Weapon mods and rounds in the magazine — W16, data + engine + app,
     character schema 0.10)** **A catalog weapon takes mods into its fixed
@@ -3555,6 +3563,53 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 44 in part: one table per column, not one for all three categories.
      - **Revisit if:** a category is added, or the print sheet's Skills panels (Decision 94) want the same order.
      - **Built:** app 0.34.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+
+157. **Everyone starts with 4 LUCK, and any power rank bought at creation costs 5 CP.**
+     *2026-10-01 · Ken + Deighton + Scott + Claude · Touches: LUCK, resources.luck.startingValue, luckState, power rank, Discipline, Evocation, Enchantment, Alchemy, cpPerRank, boostRules.cpPerPowerRank, powerRankCost, disciplineSpent, Max Power Rank, W37*
+     - **Decided:** Starting LUCK is 4 at every Campaign Power Level. LUCK bought with CP sits on top, so every character gains 2, locked ones included (bought up to 5 becomes 7). A power rank bought at creation costs 5 CP, one price for every power: a Discipline, Evocation included, today; Vampire, Cyborg and anything else ranked when it comes. The Campaign Power Level's Max Power Rank still caps it. The price is `creationFlow.boostRules.cpPerPowerRank`, read through `Engine.powerRankCost()`.
+     - **Why:** Deighton said 6 LUCK, Ken and Scott had heard 2; 4 splits the difference. The power price is written as a rule about powers, not about one archetype, so the next ranked power doesn't need its own.
+     - **Rejected:**
+       - LUCK by Campaign level (W37's other idea): the direction was never agreed.
+       - Holding a bought total where it was (5 stays 5): the CP a player spent bought points, not a total.
+       - A price per archetype (`disciplines.cpPerRank`): the rule is one price for every power.
+     - **Replaces:** Decision 5 in part (start at 4, not 2); Decision 19 in part (5 CP, not 6); Decision 97 in part (a power is no longer boosted at 1 CP a point). Decision 135 stands: the price is still data, now one key for every power. Closes W37.
+     - **Revisit if:** LUCK is wanted by Campaign level after all, or a power needs a price of its own.
+     - **Built:** app 0.35.0, game data 0.28, no schema bump; `rules.test.mjs` pins both. Log 2026-10-01.
+
+158. **Traits and Archetype are one Character tab: the archetype, then Advantages beside Disadvantages.**
+     *2026-10-01 · Ken + Claude · Touches: Character tab, Traits tab, Archetype tab, SHEET_SECTIONS, LEGACY_SECTION, renderShCharacter, arch-cols, trait-cols, Expand all, Collapse all, traitsOpen, data-gotab, jump bar, Baseline Traits, Powers, Vulnerabilities, Advantages, Disadvantages*
+     - **Decided:** One **Character** tab replaces Traits and Archetype, so the sheet has eight tabs. It reads: the archetype (name, description, classification, Lineage, core mechanic); Baseline Traits, Powers and Vulnerabilities a column each from 1000px; Specialization, Permanent Aberrations, Disciplines; Advantages beside Disadvantages from 1000px; the reference panels. A sticky jump bar reaches each section. **Expand all / Collapse all** opens or closes every Advantage and Disadvantage card, remembered in the browser, not the character. Loadout & Powers and Trackers are buttons at its foot. A saved `traits` or `archetype` section opens Character.
+     - **Why:** Ken: both pages are who the character is, read more than edited at the table; one fewer tab helps a row that scrolls on a phone; a big screen can show every card at once.
+     - **Rejected:**
+       - Keeping both tabs and only adding columns: the jump bar already makes one long page easy to move through.
+       - Calling it Archetype: it holds the Advantages too.
+       - Expand all in the character file: it's how this screen reads, not the character.
+     - **Replaces:** Decision 30 in part (eight tabs, not nine); Decision 45 in part (Expand all opens every card, and stays).
+     - **Revisit if:** an archetype's reference grows so long the Advantages are hard to reach, or the print sheet's archetype page wants the same order.
+     - **Built:** app 0.35.0, no data or schema bump; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+
+159. **Progression's Raise a Stat and Raise a Skill are buttons that open a modal; a raise keeps it open.**
+     *2026-10-01 · Ken + Claude · Touches: Progression tab, Raise a Stat, Raise a Skill, Learn a new skill, openRaisePicker, raiseIP, data-raiseopen, data-ipbuy, Milestones, IP Journal, openModal*
+     - **Decided:** Progression shows the IP card and two buttons, **Raise a Stat** and **Raise a Skill**, then the IP Journal and the Milestones. Each opens a modal listing every stat, or every skill (yours first, then the ones to learn, with a search), with the move, the price and a button, off and saying why when it can't be bought. A raise is one IP spend with its undo toast, and the modal stays open with the new prices until Done.
+     - **Why:** Ken: the two lists took most of the page, so the Milestones meant collapsing them or scrolling past.
+     - **Rejected:**
+       - The lists collapsed by default: still a long page once opened, and opening them is the common case.
+       - Closing the modal after each raise: spending a session's IP is usually several raises at once.
+     - **Replaces:** Decision 46 in part (the raise lists are modals, not open sections).
+     - **Revisit if:** something else is spent with IP often enough to want its own button.
+     - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+
+160. **On a wide screen the vitals panel can be pinned beside the sheet, and its vitals open their popovers to the left.**
+     *2026-10-01 · Ken + Claude · Touches: vitals drawer, vdrawer, Pin, Unpin, vitals-pinned, vitalsPinned, PIN_MEDIA, vitals bar, vbar, vrow, openPopover scope, popTrigger, from-rail, header, Main, footer, toast*
+     - **Decided:** The vitals panel has **Pin** from 1280px. Pinned, it is a column on the right at full height on every tab, Main included: the header (⋮ and the theme button with it), the page, the footer and the undo toast make room, and the vitals bar's pills go. HP, Pain, Conditions, SAN, LUCK and Ç in the panel open the same popovers as the bar, to the panel's left. The pin is this browser's, not the character's. Below 1280px it is ignored: the bar and the flyout come back, and pinning resumes on a wide screen.
+     - **Why:** Ken: on a big screen the vitals are wanted all the time, beside the sheet rather than over it, without opening and closing a flyout.
+     - **Rejected:**
+       - Hiding the panel on Main, where the cards repeat it: the page would jump sideways on every switch to or from Main, which a player moving between tabs feels every time.
+       - Pinning on any width: under 1280px the sheet's own columns would lose more than the panel gives.
+       - A pin in the character file: it's how this screen is laid out, like the theme.
+     - **Replaces:** Decision 35 in part (a pinned panel brings back a right-hand column on the locked sheet); Decision 37 in part (the flyout can be pinned); Decision 119 in part (the panel's vitals open popovers too, to the left).
+     - **Revisit if:** a narrower screen wants the pin, or the panel's stats and derived rows prove to be what's used least and want trimming.
+     - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested; `npm run phone-check` passes. Log 2026-10-01.
 
 ## 5. Open Flags
 

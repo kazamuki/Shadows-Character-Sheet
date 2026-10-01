@@ -202,7 +202,7 @@ test("no element renders a raw status as its own text", () => {
     const s = boot({ storage: { "shadows.active.v1": { ch: locked, section: "archetype" } } });
     const open = s.$$("#main button").find(b => /Open sheet/.test(b.textContent));
     open.dispatchEvent(new s.window.MouseEvent("click", { bubbles: true }));
-    for (const sec of ["main", "archetype"]) { s.click(`[data-sec="${sec}"]`); scan(s); }
+    for (const sec of ["main", "character"]) { s.click(`[data-sec="${sec}"]`); scan(s); }
   }
   assert.deepEqual(offenders, [], "a status badge is printing the raw status instead of appCopy.statusLabel");
 });

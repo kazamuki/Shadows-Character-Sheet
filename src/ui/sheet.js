@@ -1,4 +1,4 @@
-// The locked character's live sheet: nine tabs plus the hidden Admin section,
+// The locked character's live sheet: eight tabs plus the hidden Admin section,
 // their renderers, then their binders (bindSheet and the pickers and modals).
 // Reads/writes the shared state and helpers declared in shared.js.
 
@@ -216,16 +216,23 @@ function vitalsPanelHtml(ch){
   const der=Engine.derived(ch), hp=Engine.health(ch), t=Engine.statTable(ch);
   const pain=Engine.painState(ch), luck=Engine.luckState(ch), san=Engine.sanState(ch);
   const ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), sfr=Engine.sfr(ch);
-  let h = `<div class="dhead"><h2>Vitals</h2><button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>`;
+  // Pin (Decision 160): on a wide screen the panel can sit beside the sheet.
+  const pinned = vitalsPinned();
+  let h = `<div class="dhead"><h2>Vitals</h2>
+    <button class="dpin" data-vitals-pin aria-pressed="${pinned}" title="${pinned?"Put the vitals back in the bar":"Keep the vitals beside the sheet"}">${pinned?"Unpin":"Pin"}</button>
+    <button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>`;
   h += `<div class="vgroup"><div class="vname">${esc(ch.identity.name)||"&mdash;"}</div>
     <div class="vsub">${a?esc(Engine.archetypeContent(ch).name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
   h += `<div class="vgroup">`;
-  h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp");
-  h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"");
-  h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"");
-  h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold");
+  // Each one the vitals bar opens, this opens too, to the left (Decision 160).
+  const cs=Engine.conditionState(ch);
+  h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp", "", "hp");
+  h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"", "", "pain");
+  if (cs.active.length) h += vrow("Cond", cs.isHelpless?"HELPLESS":cs.active.length, "over", "", "cond");
+  h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
+  h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold", "", "luck");
   if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
-  h += vrow(CR, ch.trackers.credits.current, "gold");
+  h += vrow(CR, ch.trackers.credits.current, "gold", "", "cred");
   h += `</div><div class="vgroup">`;
   h += vrow("IP", ip.available, ip.available<0?"over":"");
   h += vrow("Milestone Pts", ms.mp);
@@ -406,36 +413,6 @@ function renderShSkills(){
   return h;
 }
 
-// ── Sheet: TRAITS (advantages & disadvantages) ───────────────────────
-function renderShTraits(){
-  const ch=S.ch;
-  let h = sheetHeader("Traits", "Advantages bought with Character Points and the disadvantages that paid for them. Tap a trait to read what it does.");
-  const traitCard = (name, costHtml, desc, selHtml) =>
-    `<details class="pick trait"><summary><span class="th">${esc(name)}</span>${costHtml}</summary>
-      <div class="desc">${esc(desc||"No description on file.")}</div>${selHtml||""}</details>`;
-  // What the player actually chose, resolved to names. Without this the sheet
-  // states "Favored Skill ×2" and never says which skills.
-  const selHtml = (kind, id) => Engine.picksFor(ch, kind, id).map(st=>{
-    const vals = st.pick.type==="text" ? (st.chosen ? [st.chosen] : [])
-      : st.chosen.filter(Boolean).map(v=>(st.options.find(o=>o.id===v)||{name:v}).name);
-    return vals.length ? `<div class="desc"><b>${esc(st.pick.label||"Chosen")}:</b> ${esc(vals.join(", "))}</div>` : "";
-  }).join("");
-  h += `<div class="sect">Advantages</div>`;
-  const advs = ch.advantages.map(x=>{ const d2=Engine.advById(x.id);
-    const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
-    const cost=x.source==="natural" ? '<span class="cost grant">natural</span>'
-      : (d2?`<span class="cost">${d2.cost*(x.rank||1)} CP</span>`:"");
-    return traitCard(name, cost, d2?d2.description:"", selHtml("advantage",x.id)); }).join("");
-  h += advs || `<p class="step-note">No advantages.</p>`;
-  h += `<div class="sect">Disadvantages</div>`;
-  const diss = ch.disadvantages.map(x=>{ const d2=Engine.disById(x.id);
-    const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
-    const cost=d2?`<span class="cost grant">+${d2.pointsGranted*(x.rank||1)} CP</span>`:"";
-    return traitCard(name, cost, d2?d2.description:"", selHtml("disadvantage",x.id)); }).join("");
-  h += diss || `<p class="step-note">No disadvantages.</p>`;
-  return h;
-}
-
 // How a check works (Decision 139): the roll, the target numbers, the 10
 // that explodes and the 1 that botches, from skillCheckRules, collapsed.
 function checkRulesHtml(){
@@ -448,85 +425,124 @@ function checkRulesHtml(){
     ${tns?`<p>Target numbers: ${tns}</p>`:""}</div></details>`;
 }
 
-// ── Sheet: ARCHETYPE (everything about the chosen archetype) ──────────
-function renderShArchetype(){
-  const ch=S.ch, a=Engine.archetype(ch);
-  if (!a) return sheetHeader("Archetype","No archetype selected.");
-  const badge = a.status!=="final"?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${esc(statusLabel(a.status))}</span>`:"";
-  // What the archetype is, from the data or the player's own words (Decision 153).
-  const content = Engine.archetypeContent(ch), cls = content.classification;
-  const specLabel = Engine.specializationLabel(ch);
-  let h = sheetHeader(content.name+(specLabel?" · "+specLabel:""),
-    esc(content.description||a.gameplayStyle||""));   // the note is markup, and a write-in's is the player's text
-  if (cls) h += `<p class="step-note arch-class"><b>${esc(cls.name)}</b>${cls.text?`: ${esc(cls.text)}`:""}${content.writeIn?` <span class="chip">${esc(statusLabel(a.status))}</span>`:""}</p>`;
+// ── Sheet: CHARACTER (the archetype, then Advantages and Disadvantages) ──
+// One page for who the character is (Decision 158): the archetype's own
+// traits, powers and vulnerabilities side by side, then the Advantages and
+// Disadvantages bought for it, then the archetype's reference panels.
+// A jump bar reaches each section the page drew.
+const TRAITS_OPEN_KEY = "shadows.ui.traitsOpen";
+function traitsOpen(){ try{ return localStorage.getItem(TRAITS_OPEN_KEY)==="open"; }catch(e){ return false; } }
+function renderShCharacter(){
+  const ch=S.ch, a=Engine.archetype(ch), secs=sectionList("chr");
+  let h = "";
 
-  // Lineage (AQ4 2): the archetype's lore, collapsed.
-  if (a.lore) h += `<details class="group lineage"><summary>Lineage</summary><div class="ref-body"><p class="flavor">${esc(a.lore)}</p></div></details>`;
+  if (a){
+    const badge = a.status!=="final"?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${esc(statusLabel(a.status))}</span>`:"";
+    // What the archetype is, from the data or the player's own words (Decision 153).
+    const content = Engine.archetypeContent(ch), cls = content.classification;
+    const specLabel = Engine.specializationLabel(ch);
+    h += secs.sect("Archetype", `${esc(content.name+(specLabel?" · "+specLabel:""))}`);
+    // A write-in's description is the player's text, so it's escaped like the rest.
+    if (content.description||a.gameplayStyle) h += `<p class="step-note">${esc(content.description||a.gameplayStyle)}</p>`;
+    if (cls) h += `<p class="step-note arch-class"><b>${esc(cls.name)}</b>${cls.text?`: ${esc(cls.text)}`:""}${content.writeIn?` <span class="chip">${esc(statusLabel(a.status))}</span>`:""}</p>`;
 
-  if (a.coreMechanic && (a.coreMechanic.name || a.coreMechanic.description)){
-    h += `<div class="sect">${esc(a.coreMechanic.name||"Core Mechanic")}${badge}</div>`;
-    if (a.coreMechanic.description) h += `<p class="step-note">${esc(a.coreMechanic.description)}</p>`;
-  }
+    // Lineage (AQ4 2): the archetype's lore, collapsed.
+    if (a.lore) h += `<details class="group lineage"><summary>Lineage</summary><div class="ref-body"><p class="flavor">${esc(a.lore)}</p></div></details>`;
 
-  // Baseline traits
-  const traits = content.traits.filter(t=>t.name);
-  if (traits.length){
-    h += `<div class="sect">Baseline Traits</div>` + traits.map(tr=>
+    if (a.coreMechanic && (a.coreMechanic.name || a.coreMechanic.description)){
+      h += secs.sect(a.coreMechanic.name||"Core Mechanic", `${esc(a.coreMechanic.name||"Core Mechanic")}${badge}`);
+      if (a.coreMechanic.description) h += `<p class="step-note">${esc(a.coreMechanic.description)}</p>`;
+    }
+
+    // Baseline traits, powers and vulnerabilities: a column each on a wide
+    // screen, stacked on a narrow one. Powers are the data's, then the
+    // character's own (`uses`, `effect`), which Loadout & Powers edits.
+    const traits = content.traits.filter(t=>t.name);
+    const powers = content.powers.filter(p=>p.name);
+    const vulns = content.vulnerabilities.filter(v=>v.name);
+    const cols = [];
+    if (traits.length) cols.push(secs.sect("Baseline Traits") + traits.map(tr=>
       `<div class="pick"><div class="head"><h4>${esc(tr.name)}</h4></div>
-        <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join("");
-  }
-
-  // Specialization — chosen options. A2 closed here: this read only
-  // `aberrations`, so a Professional's subtype or a Werewolf's Origin showed
-  // "none chosen" while the header above it displayed the very same pick.
-  const chosen = Engine.specializationChosen(ch);
-  if (a.specialization && a.specialization.options){
-    h += `<div class="sect">${esc(a.specialization.label||"Specialization")}${chosen.length?"":" <span class='chip'>none chosen</span>"}</div>`;
-    h += chosen.map(o=>`<div class="pick selected"><div class="head"><h4>${esc(o.name)}</h4>
-      ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-      <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div>${optionPowersHtml(o)}</div>`).join("");
-  }
-
-  // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
-  // Trackers tab records and removes them.
-  const abPerm = Engine.aberrationState(ch).permanent;
-  if (abPerm.length){
-    h += `<div class="sect">Permanent Aberrations</div>` + abPerm.map(x=>`<div class="pick selected"><div class="head"><h4>${esc(x.name)}</h4>
-      ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
-      <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
-  }
-
-  // Disciplines (computed ranks: scaling base + CP-bought), read-only
-  const dr = (Engine.disciplineRanks && Engine.disciplineRanks(ch)) || [];
-  if (dr.length){
-    h += `<div class="sect">Disciplines</div><table class="ref"><thead><tr><th>Discipline</th><th>Rank</th></tr></thead><tbody>` +
-      dr.map(d=>`<tr><td>${esc(d.name||d.id)}</td><td class="num">${d.rank}</td></tr>`).join("") +
-      `</tbody></table>`;
-  }
-
-  // Powers: the data's, then the character's own (`uses`, `effect`), which
-  // the Loadout & Powers tab edits.
-  const powers = content.powers.filter(p=>p.name);
-  if (powers.length){
-    h += `<div class="sect">Powers</div>` + powers.map(p=>
+        <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join(""));
+    if (powers.length) cols.push(secs.sect("Powers") + powers.map(p=>
       `<div class="pick"><div class="head"><h4>${esc(p.name)}</h4>
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
-        <div class="desc">${esc(p.description||p.effect||"")}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join("");
+        <div class="desc">${esc(p.description||p.effect||"")}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join(""));
+    if (vulns.length) cols.push(secs.sect("Vulnerabilities") + vulns.map(v=>
+      `<div class="pick"><div class="head"><h4>${esc(v.name)}</h4></div>
+        <div class="desc">${esc(v.description||"")}</div></div>`).join(""));
+    if (cols.length) h += `<div class="arch-cols n${cols.length}">${cols.map(c=>`<div class="arch-col">${c}</div>`).join("")}</div>`;
+
+    // Specialization — chosen options. A2 closed here: this read only
+    // `aberrations`, so a Professional's subtype or a Werewolf's Origin showed
+    // "none chosen" while the header above it displayed the very same pick.
+    const chosen = Engine.specializationChosen(ch);
+    if (a.specialization && a.specialization.options){
+      const label = a.specialization.label||"Specialization";
+      h += secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`);
+      h += chosen.map(o=>`<div class="pick selected"><div class="head"><h4>${esc(o.name)}</h4>
+        ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div>${optionPowersHtml(o)}</div>`).join("");
+    }
+
+    // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
+    // Trackers tab records and removes them.
+    const abPerm = Engine.aberrationState(ch).permanent;
+    if (abPerm.length){
+      h += secs.sect("Permanent Aberrations") + abPerm.map(x=>`<div class="pick selected"><div class="head"><h4>${esc(x.name)}</h4>
+        ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
+        <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
+    }
+
+    // Disciplines (computed ranks: scaling base + CP-bought), read-only
+    const dr = (Engine.disciplineRanks && Engine.disciplineRanks(ch)) || [];
+    if (dr.length){
+      h += secs.sect("Disciplines") + `<table class="ref"><thead><tr><th>Discipline</th><th>Rank</th></tr></thead><tbody>` +
+        dr.map(d=>`<tr><td>${esc(d.name||d.id)}</td><td class="num">${d.rank}</td></tr>`).join("") +
+        `</tbody></table>`;
+    }
+  } else {
+    h += `<p class="step-note">No archetype selected.</p>`;
   }
 
-  // Vulnerabilities
-  const vulns = content.vulnerabilities.filter(v=>v.name);
-  if (vulns.length){
-    h += `<div class="sect">Vulnerabilities</div>` + vulns.map(v=>
-      `<div class="pick"><div class="head"><h4>${esc(v.name)}</h4></div>
-        <div class="desc">${esc(v.description||"")}</div></div>`).join("");
-  }
+  // Advantages and Disadvantages: two columns from 1000px, like Skills. Each
+  // is a card that opens on a tap; Expand all opens every one, and the
+  // choice is remembered in this browser for the next visit.
+  const open = traitsOpen();
+  const traitCard = (name, costHtml, desc, selHtml) =>
+    `<details class="pick trait"${open?" open":""}><summary><span class="th">${esc(name)}</span>${costHtml}</summary>
+      <div class="desc">${esc(desc||"No description on file.")}</div>${selHtml||""}</details>`;
+  // What the player actually chose, resolved to names. Without this the sheet
+  // states "Favored Skill ×2" and never says which skills.
+  const selHtml = (kind, id) => Engine.picksFor(ch, kind, id).map(st=>{
+    const vals = st.pick.type==="text" ? (st.chosen ? [st.chosen] : [])
+      : st.chosen.filter(Boolean).map(v=>(st.options.find(o=>o.id===v)||{name:v}).name);
+    return vals.length ? `<div class="desc"><b>${esc(st.pick.label||"Chosen")}:</b> ${esc(vals.join(", "))}</div>` : "";
+  }).join("");
+  const advs = ch.advantages.map(x=>{ const d2=Engine.advById(x.id);
+    const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
+    const cost=x.source==="natural" ? '<span class="cost grant">natural</span>'
+      : (d2?`<span class="cost">${d2.cost*(x.rank||1)} CP</span>`:"");
+    return traitCard(name, cost, d2?d2.description:"", selHtml("advantage",x.id)); }).join("");
+  const diss = ch.disadvantages.map(x=>{ const d2=Engine.disById(x.id);
+    const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
+    const cost=d2?`<span class="cost grant">+${d2.pointsGranted*(x.rank||1)} CP</span>`:"";
+    return traitCard(name, cost, d2?d2.description:"", selHtml("disadvantage",x.id)); }).join("");
+  const any = ch.advantages.length + ch.disadvantages.length;
+  h += `<div class="trait-cols">
+    <div class="trait-col">${secs.sect("Advantages")}${advs || `<p class="step-note">No advantages.</p>`}</div>
+    <div class="trait-col">${secs.sect("Disadvantages")}${diss || `<p class="step-note">No disadvantages.</p>`}</div></div>`;
 
   // Reference panels (Decision 110): rules text straight from the data.
-  for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p);
+  if (a) for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p, secs.sect);
 
-  h += `<p class="step-note" style="margin-top:18px">Tracker pools and editable manifests (grimoire, augments, forms) live on the <b>Loadout &amp; Powers</b> and <b>Trackers</b> tabs.</p>`;
-  return h;
+  h += `<div class="tab-links"><span class="step-note">Tracker pools and editable manifests (grimoire, augments, forms) are on</span>
+    <button class="btn sm" data-gotab="loadout">Loadout &amp; Powers</button>
+    <button class="btn sm" data-gotab="trackers">Trackers</button></div>`;
+
+  const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
+  return sheetHeader("Character", "Who you are: your archetype, and the Advantages and Disadvantages you bought for it. Tap an Advantage or Disadvantage to read what it does.")
+    + jumpBarHtml(secs.list, { sticky:true, extra:toggle }) + h;
 }
 
 // ── Reference panels (magic plan M9, Decision 110) ───────────────────
@@ -598,11 +614,12 @@ function spellcraftWorkings(R){
     <div class="subsect">Teaching</div><table class="ref"><tbody>${row("Taught", te.taught)}${row("Copied cold", te.copiedCold)}</tbody></table>` };
 }
 
-function referencePanelHtml(ch, p){
+// `sect`, when given, is a page's sectionList heading, so its jump bar lists the panel.
+function referencePanelHtml(ch, p, sect){
   // A section may draw more than one heading from its block (the Spellcraft rules do).
   const parts = (p.shows||[]).filter(k=>REFERENCE_SECTIONS[k] && D[k]).flatMap(k=>REFERENCE_SECTIONS[k](D[k], ch));
   if (!parts.length) return "";
-  return `<div class="sect">${esc(p.title||"Reference")}</div><div class="reference" data-reference="${esc(p.id)}">` +
+  return `${sect?sect(p.title||"Reference"):`<div class="sect">${esc(p.title||"Reference")}</div>`}<div class="reference" data-reference="${esc(p.id)}">` +
     parts.map(x=>`<details class="group"><summary>${esc(x.title)}</summary><div class="ref-body">${x.html}</div></details>`).join("") + `</div>`;
 }
 
@@ -1142,37 +1159,11 @@ function renderShProgression(){
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">
     <button class="btn sm" data-ipgrant="1">Grant IP</button></div>`;
 
-  // Spend: stats
-  h += `<details class="group" open><summary>Raise a Stat — current value × ${D.ip.statIncreaseCost.perPoint} IP</summary><div class="alloc">`;
-  for (const s of D.stats){
-    const c = Engine.ipCost(ch,"stat",s.id);
-    const v = Engine.statValue(ch,s.id), ipe = ch.stats[s.id].ipe;
-    h += `<div class="alloc-row"><div class="name">${s.id} <small>value ${v}${ipe?` · +${ipe} from IP`:""}</small></div>
-      <div>${c.ok?`<button class="btn sm ${ip.available>=c.cost?"primary":""}" data-ipbuy="stat|${s.id}" ${ip.available>=c.cost?"":"disabled"}>${v} → ${c.to} · ${c.cost} IP</button>`:`<span class="chip">${esc(c.why)}</span>`}</div>
-      <span class="mod"></span></div>`;
-  }
-  h += `</div><p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p></details>`;
-
-  // Spend: skills
-  const price = D.ip.skillIncreaseCost, focused = Engine.focusedSkillIds(ch);
-  const trained = D.skills.filter(s=>Engine.skillLine(ch,s.id).trained);
-  const untrained = D.skills.filter(s=>!Engine.skillLine(ch,s.id).trained);
-  h += `<details class="group" open><summary>Raise a Skill — ${price.perRank} × current rank · Focused ${price.focusedPerRank} × · new skill ${price.newSkill} · cap ${D.ip.rankCap}</summary><div class="alloc">`;
-  for (const s of trained){
-    const line=Engine.skillLine(ch,s.id), c=Engine.ipCost(ch,"skill",s.id);
-    h += `<div class="alloc-row"><div class="name">${esc(s.name)}${c.ok&&c.focused?' <span class="chip gold">focused</span>':""} <small>rank ${line.rank}</small></div>
-      <div>${c.ok?`<button class="btn sm ${ip.available>=c.cost?"primary":""}" data-ipbuy="skill|${s.id}" ${ip.available>=c.cost?"":"disabled"}>${c.from} → ${c.to} · ${c.cost} IP</button>`:`<span class="chip">${esc(c.why)}</span>`}</div>
-      <span class="mod pos">+${line.checkBonus}</span></div>`;
-  }
-  if (!trained.length) h += `<p class="step-note">No trained skills yet.</p>`;
-  h += `</div>`;
-  h += `<details class="group" style="margin-left:14px"><summary>Learn a new skill (${untrained.length})</summary>
-    ${D.ip.flagged?flagHtml(D.ip):""}<div class="alloc">` +
-    untrained.map(s=>{
-      const c=Engine.ipCost(ch,"skill",s.id);
-      return `<div class="alloc-row"><div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} <small>${esc(s.description)}</small></div>
-        <div><button class="btn sm" data-ipbuy="skill|${s.id}" ${ip.available>=c.cost?"":"disabled"}>learn · ${c.cost} IP</button></div><span class="mod"></span></div>`;
-    }).join("") + `</div></details></details>`;
+  // Spend (Decision 159): a button each, opening a modal that lists every
+  // stat or skill with its price, so the Milestones below stay in reach.
+  h += `<div class="raise-row">
+    <button class="btn primary" data-raiseopen="stat">Raise a Stat</button>
+    <button class="btn primary" data-raiseopen="skill">Raise a Skill</button></div>`;
 
   // IP journal
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
@@ -1810,7 +1801,7 @@ function renderShLoadout(){
   // specializationText / toggle
   for (const p of Engine.archPanels(ch)){
     if (p.type==="tracker") continue; // lives in Trackers
-    if (p.type==="reference") continue; // lives on the Archetype tab
+    if (p.type==="reference") continue; // lives on the Character tab
     h += secs.sect(p.title);
     if (p.type==="rankedList"){
       const ranks = Engine.disciplineRanks(ch);
@@ -2260,8 +2251,8 @@ function pArchetypePage(ch){
   return h;
 }
 
-const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, traits:renderShTraits,
-  archetype:renderShArchetype, trackers:renderShTrackers,
+const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, character:renderShCharacter,
+  trackers:renderShTrackers,
   progression:renderShProgression, sessions:renderShSessions,
   loadout:renderShLoadout, notes:renderShNotes, admin:renderShAdmin };
 
@@ -2333,6 +2324,81 @@ function openCatalog(kind){
         if (!pre.ok){ notice(pre.why); return; }
         const n = pre.added>1 ? ` ×${pre.added}` : "";
         commit("loadout", buy ? `Bought ${pre.name}${n} (−${pre.paid}${Engine.creditSymbol()})` : `Added ${pre.name}${n}`, ()=>{ Engine.addLoadout(ch, kind, id, { buy }); });
+        refresh();
+      };
+    } });
+}
+
+// ── Raise a Stat / Raise a Skill (Decision 159) ──────────────────────
+// Two modals over the IP journal: every stat, or every skill (trained first,
+// then the ones you'd learn), each with its price, and a button that's off
+// with its reason. Each raise is one commit() with its undo toast, and the
+// modal stays open for the next, as the catalog does.
+function raiseIP(ch, type, id){
+  const c=Engine.ipCost(ch,type,id);
+  const nm = type==="stat" ? id : (Engine.skillById(id)||{name:id}).name;
+  const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
+  commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
+}
+function raiseStatusHtml(ch, type){
+  const ip = Engine.ipState(ch).available;
+  if (type==="stat") return `You have <b>${ip} IP</b> · a Stat costs its current value × ${D.ip.statIncreaseCost.perPoint} IP`;
+  const price = D.ip.skillIncreaseCost;
+  return `You have <b>${ip} IP</b> · a Skill costs ${price.perRank} × its current rank, Focused ${price.focusedPerRank} × · a new skill ${price.newSkill} · cap ${D.ip.rankCap}`;
+}
+// One row: the name and what's under it, the move, the price, the button.
+// `why` dims the row and says why the button is off.
+function raiseRowHtml({ name, sub, move, cost, btn, key, why }){
+  return `<tr class="${why?"off":"pickrow"}"><td><b>${name}</b>${sub?`<div class="sub">${sub}</div>`:""}${why?`<div class="why">${esc(why)}</div>`:""}</td>
+    <td class="num" data-k="Raise">${move}</td><td class="num" data-k="Cost">${cost}</td>
+    <td><button class="btn sm primary" data-raise="${key}" ${why?"disabled":""}>${btn}</button></td></tr>`;
+}
+function raiseResultsHtml(ch, type){
+  const ip = Engine.ipState(ch).available;
+  const short = c => c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+  if (type==="stat"){
+    const rows = D.stats.map(s=>{
+      const c = Engine.ipCost(ch,"stat",s.id), v = Engine.statValue(ch,s.id), ipe = ch.stats[s.id].ipe;
+      return raiseRowHtml({ name: esc(s.id), sub: esc(`${s.name||""}${ipe?` · +${ipe} from IP`:""}`), move: c.ok?`${v} → ${c.to}`:`${v}`,
+        cost: c.ok?`${c.cost} IP`:"—", btn:"Raise", key:`stat|${s.id}`, why: c.ok ? short(c) : c.why });
+    }).join("");
+    return `<table class="ref spell-results raise-results"><tbody>${rows}</tbody></table>
+      <p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p>`;
+  }
+  const q = String((S.raisePick||{}).q||"").trim().toLowerCase(), focused = Engine.focusedSkillIds(ch);
+  const hit = s => !q || `${s.name} ${s.description||""}`.toLowerCase().includes(q);
+  const row = (s, learn) => { const line=Engine.skillLine(ch,s.id), c=Engine.ipCost(ch,"skill",s.id);
+    const isFocused = c.ok ? c.focused : focused.includes(s.id);
+    return raiseRowHtml({ name: esc(s.name)+(isFocused?' <span class="chip gold">focused</span>':""),
+      sub: learn ? esc(s.description||"") : `rank ${line.rank} · check +${line.checkBonus}`,
+      move: c.ok?`${c.from} → ${c.to}`:`${line.rank}`, cost: c.ok?`${c.cost} IP`:"—",
+      btn: learn?"Learn":"Raise", key:`skill|${s.id}`, why: c.ok ? short(c) : c.why }); };
+  const trained = D.skills.filter(s=>Engine.skillLine(ch,s.id).trained && hit(s));
+  const untrained = D.skills.filter(s=>!Engine.skillLine(ch,s.id).trained && hit(s));
+  if (!trained.length && !untrained.length) return `<p class="step-note">No skill matches that.</p>`;
+  return (trained.length ? `<div class="sect">Your skills</div><table class="ref spell-results raise-results"><tbody>${trained.map(s=>row(s,false)).join("")}</tbody></table>` : "")
+    + (untrained.length ? `<div class="sect">Learn a new skill</div>${D.ip.flagged?flagHtml(D.ip):""}<table class="ref spell-results raise-results"><tbody>${untrained.map(s=>row(s,true)).join("")}</tbody></table>` : "");
+}
+function openRaisePicker(type){
+  const ch = S.ch; if (!ch || !["stat","skill"].includes(type)) return;
+  S.raisePick = { q:"" };
+  const search = type==="skill" ? `<div class="hitrow"><input type="search" data-raiseq placeholder="Search skills" aria-label="Search skills"></div>` : "";
+  openModal({ title: type==="stat" ? "Raise a Stat" : "Raise a Skill",
+    html: `<div class="spell-pick raise-pick"><div class="pick-head">${search}<p class="pick-status" data-raisestatus aria-live="polite">${raiseStatusHtml(ch, type)}</p></div>
+      <div data-raiseresults>${raiseResultsHtml(ch, type)}</div></div>`,
+    foot: pickerFootHtml(), returnTo: `[data-raiseopen="${type}"]`, onClose: ()=>{ S.raisePick=null; },
+    bind: body => {
+      const results = body.querySelector("[data-raiseresults]"), status = body.querySelector("[data-raisestatus]");
+      const refresh = () => { results.innerHTML = raiseResultsHtml(S.ch, type); status.innerHTML = raiseStatusHtml(S.ch, type); };
+      const q = body.querySelector("[data-raiseq]");
+      if (q) q.oninput = e => { S.raisePick.q = e.target.value; refresh(); };
+      // W23: a click anywhere on a row is its button's click.
+      results.onclick = e => {
+        let b = e.target.closest("button");
+        if (!b){ const tr = e.target.closest("tr"); b = tr && tr.querySelector("button"); }
+        if (!b || b.disabled || !b.dataset.raise) return;
+        const [t, id] = b.dataset.raise.split("|");
+        raiseIP(S.ch, t, id);
         refresh();
       };
     } });
@@ -2521,11 +2587,11 @@ function bindVitalControls(root){
 // W2/W3: a vital's popover, from its pill or its card on Main. The body is
 // Trackers' own controls, bound by the same binder; Take a hit closes the
 // popover and opens the hit modal, whose focus comes back to the vital.
-function openVitalPopover(key){
-  openPopover({ key, render: ()=>S.ch ? vitalPopover(S.ch, key) : null, bind: body=>{
+function openVitalPopover(key, scope="#main"){
+  openPopover({ key, scope, render: ()=>S.ch ? vitalPopover(S.ch, key) : null, bind: body=>{
     bindVitalControls(body);
     body.querySelectorAll("[data-pophit]").forEach(b=>b.onclick=()=>{
-      closePopover(true); openHitModal(`[data-vpop="${key}"]`);
+      closePopover(true); openHitModal(`${scope} [data-vpop="${key}"]`);
     });
     body.querySelectorAll("[data-popgo]").forEach(b=>b.onclick=()=>{
       closePopover(false); S.section=normSection(b.dataset.popgo); window.scrollTo(0,0); update();
@@ -2544,6 +2610,16 @@ function bindSheet(){
     if (sc) sc.classList.toggle("open", S.vitalsOpen);
   });
   main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
+  // A button that goes to another tab, the way the header's tabs do.
+  main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>{ S.section=normSection(b.dataset.gotab); window.scrollTo(0,0); update(); });
+  // Character: Expand all / Collapse all opens or closes every Advantage and
+  // Disadvantage card in place, and remembers the choice in this browser.
+  main.querySelectorAll("[data-traits-all]").forEach(b=>b.onclick=()=>{
+    const open = b.getAttribute("aria-pressed")!=="true";
+    main.querySelectorAll("details.pick.trait").forEach(d=>{ d.open=open; });
+    b.setAttribute("aria-pressed", String(open)); b.textContent = open ? "Collapse all" : "Expand all";
+    try{ localStorage.setItem(TRAITS_OPEN_KEY, open?"open":"closed"); }catch(e){}
+  });
   // Skill description toggles (no full re-render — flip the hidden detail row)
   main.querySelectorAll("[data-skilldesc]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.skilldesc; S.openSkills=S.openSkills||new Set();
@@ -2675,13 +2751,7 @@ function bindSheet(){
   });
 
   // IP
-  main.querySelectorAll("[data-ipbuy]").forEach(b=>b.onclick=()=>{
-    const [type,id]=b.dataset.ipbuy.split("|");
-    const c=Engine.ipCost(ch,type,id);
-    const nm = type==="stat" ? id : (Engine.skillById(id)||{name:id}).name;
-    const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
-    commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
-  });
+  main.querySelectorAll("[data-raiseopen]").forEach(b=>b.onclick=()=>openRaisePicker(b.dataset.raiseopen));
   main.querySelectorAll("[data-ipgrant]").forEach(b=>b.onclick=()=>{
     const amt=num(main.querySelector("[data-ipamt]"));
     const note=(main.querySelector("[data-ipnote]")||{}).value||"";

@@ -34,27 +34,6 @@ what +1 Stun adds to. *Needs:* how a style is trained after creation (IP?
 GM's word?) and what each bonus modifies, both Deighton's, before the sheet
 does more than show them.
 
-### Wizard
-
-W37 came out of the weekly meeting's walk through character creation on
-2026-09-24, with W34–W36, which Deighton ruled on 2026-09-27 (Decision 150,
-now in `log/wishes-granted.md`). It's a **rules question for the design
-team**, so it's blocked on Deighton.
-
-**W37 — Starting LUCK of 6, maybe by Campaign level.** *Ken · 🔎 · rules: Deighton*
-Everyone starts with 2 LUCK today (Decision 5, `resources.luck.startingValue`).
-The meeting wants 6. The other idea discussed was to vary it by Campaign
-level, and the direction is undecided: more LUCK at Street level (to help a
-fragile character survive) or more at World Coming Down (to fit the scale).
-*To respect:* **maximum LUCK is computed, not stored** (constraint 7). It's
-`startingValue` plus bought LUCK, so changing the base raises every existing
-character's maximum too, locked ones included. That's probably right, but it
-should be a choice, and it's a `gamedataVersion` bump. A per-level value means
-moving the number onto `powerLevels[*]`, and the four places in `wizard.js`
-and `sheet.js` that read `luck.startingValue` directly should go through one
-engine reader first. Decision 5 needs superseding, and the CRB's Luck section
-(030) needs the new number.
-
 ### The sheet at the table (from the design critique)
 
 W44–W46 are what's left of the 2026-09-30 design critique (score

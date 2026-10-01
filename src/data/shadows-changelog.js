@@ -2,6 +2,18 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.35.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Everyone starts with 4 LUCK.** It was 2. LUCK you bought with Character Points still sits on top, so every character, locked ones included, has 2 more than before.",
+      "**A power rank costs 5 Character Points** while you make a character, one price for every power. For an Arcanist that's each rank of Evocation, Enchantment or Alchemy, down from 6.",
+      "**Traits and Archetype are one tab: Character.** Your archetype comes first, with its traits, powers and vulnerabilities side by side on a wide screen, then your Advantages beside your Disadvantages. The buttons along the top jump to each part and stay in view as you scroll. **Expand all** opens every Advantage and Disadvantage at once and stays that way until you collapse them. The buttons at the bottom take you to Loadout & Powers and Trackers.",
+      "**Raise a Stat and Raise a Skill are buttons on Progression.** Each opens a window listing every stat, or every skill with a search, with what a raise costs and why one is out of reach. Raise as many as you like before closing it, and the Milestones are no longer below two long lists.",
+      "**Pin your vitals beside the sheet.** On a wide screen, open Vitals and press **Pin**: the panel stays on the right of every tab, the sheet makes room for it, and the row of vitals above each page goes, since the panel has them. Tap HP, Pain, SAN, LUCK or Çredits in the panel to change them, the same as from the row. **Unpin** puts it back. On a narrower screen the row returns on its own."
+    ]
+  },
+  {
     "version": "0.34.0",
     "date": "2026-10-01",
     "intro": [],
