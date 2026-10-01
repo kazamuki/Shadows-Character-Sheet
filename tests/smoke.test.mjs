@@ -2108,7 +2108,9 @@ test("the sheet's price and SAN lines are written from the data (Decision 135)",
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   app.click('[data-sec="progression"]');
-  assert.match(app.$("#main").textContent, /Raise a Stat — current value × 12 IP/);
+  app.click('[data-raiseopen="stat"]');
+  assert.match(app.$("#modal").textContent, /a Stat costs its current value × 12 IP/);
+  app.click("#modal [data-modalclose]");
   app.click('[data-sec="trackers"]');
   assert.match(app.$("#main").textContent, /Max is EMP × 7, computed\./);
   assert.match(app.window.eval("derivedBreakdownStr(S.ch, 'SAN')"), /^EMP 5 × 7 = 35%/);
@@ -2410,6 +2412,41 @@ test("Character: the archetype, then Advantages beside Disadvantages, one tab, w
 
   app.click('[data-gotab="trackers"]');
   assert.equal(app.$(".tab.active").dataset.sec, "trackers", "the Trackers button didn't go to Trackers");
+});
+
+// Decision 159: Raise a Stat and Raise a Skill are buttons that open a modal,
+// so the Milestones aren't below two long lists. A raise is one undoable IP
+// spend and the modal stays open with the new prices; a raise you can't
+// afford is off and says why.
+test("Progression: Raise a Stat and Raise a Skill open modals, and a raise keeps it open (Decision 159)", () => {
+  const ch = lockedCharacter();
+  ch.progression.ip.earned = 60;
+  const skill = D.skills[0];
+  ch.skills[skill.id] = { rank: 2 };
+  const app = openSheet(ch, "progression");
+  assert.equal(app.$$("#main [data-raiseopen]").length, 2, "Progression has no Raise buttons");
+  assert.ok(!app.$("#main [data-raise]"), "the raise lists are still on the page");
+  const modal = () => app.$("#modal");
+
+  app.click('[data-raiseopen="stat"]');
+  assert.ok(modal().open, "Raise a Stat didn't open a modal");
+  assert.match(modal().textContent, /You have 60 IP/);
+  app.click('#modal [data-raise="stat|BOD"]');            // 5 → 6 for 50 IP
+  assert.equal(activeChar(app).stats.BOD.ipe, 1, "the raise didn't land");
+  assert.ok(modal().open, "the modal closed after one raise");
+  assert.match(modal().textContent, /You have 10 IP/, "the modal's IP didn't refresh");
+  const bod = app.$('#modal [data-raise="stat|BOD"]');
+  assert.ok(bod.disabled && /Needs 60 IP; you have 10\./.test(bod.closest("tr").textContent), "an unaffordable raise doesn't say why");
+  app.click("#modal [data-modalclose]");
+  assert.ok(!modal().open);
+
+  app.click('[data-raiseopen="skill"]');
+  assert.match(modal().textContent, /Your skills[\s\S]*Learn a new skill/);
+  const q = app.$("#modal [data-raiseq]");
+  q.value = skill.name; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(app.$(`#modal [data-raise="skill|${skill.id}"]`), "searching hid the skill it names");
+  assert.ok(!app.$(`#modal [data-raise="skill|${D.skills.find(s => !s.name.includes(skill.name) && !(s.description||"").includes(skill.name)).id}"]`), "the search didn't narrow the list");
+  assert.deepEqual(app.errors, []);
 });
 
 const loadoutSec = app => app.$$("[data-sec]").map(b => b.dataset.sec).find(s => /loadout/.test(s));

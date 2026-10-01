@@ -861,6 +861,11 @@ details.pick.trait>summary .cost{margin-left:auto}
 .jump-end{margin-left:auto}
 .tab-links{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:18px}
 .tab-links .step-note{margin:0}
+/* Progression (Decision 159): Raise a Stat and Raise a Skill open modals. */
+.raise-row{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 18px}
+.raise-results{table-layout:fixed; width:100%}
+.raise-results td.num{white-space:nowrap; width:84px}
+.raise-results td:last-child{width:84px; text-align:right}
 details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 
 /* Main tab: condition strip + two-column command console (stats beside combat). */

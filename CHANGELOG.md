@@ -35,6 +35,10 @@ own in the footer.
   as you scroll. **Expand all** opens every Advantage and Disadvantage at once and stays
   that way until you collapse them. The buttons at the bottom take you to Loadout & Powers
   and Trackers.
+- **Raise a Stat and Raise a Skill are buttons on Progression.** Each opens a window
+  listing every stat, or every skill with a search, with what a raise costs and why one
+  is out of reach. Raise as many as you like before closing it, and the Milestones are
+  no longer below two long lists.
 
 ## v0.34.0 — 2026-10-01
 

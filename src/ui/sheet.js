@@ -1152,37 +1152,11 @@ function renderShProgression(){
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">
     <button class="btn sm" data-ipgrant="1">Grant IP</button></div>`;
 
-  // Spend: stats
-  h += `<details class="group" open><summary>Raise a Stat — current value × ${D.ip.statIncreaseCost.perPoint} IP</summary><div class="alloc">`;
-  for (const s of D.stats){
-    const c = Engine.ipCost(ch,"stat",s.id);
-    const v = Engine.statValue(ch,s.id), ipe = ch.stats[s.id].ipe;
-    h += `<div class="alloc-row"><div class="name">${s.id} <small>value ${v}${ipe?` · +${ipe} from IP`:""}</small></div>
-      <div>${c.ok?`<button class="btn sm ${ip.available>=c.cost?"primary":""}" data-ipbuy="stat|${s.id}" ${ip.available>=c.cost?"":"disabled"}>${v} → ${c.to} · ${c.cost} IP</button>`:`<span class="chip">${esc(c.why)}</span>`}</div>
-      <span class="mod"></span></div>`;
-  }
-  h += `</div><p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p></details>`;
-
-  // Spend: skills
-  const price = D.ip.skillIncreaseCost, focused = Engine.focusedSkillIds(ch);
-  const trained = D.skills.filter(s=>Engine.skillLine(ch,s.id).trained);
-  const untrained = D.skills.filter(s=>!Engine.skillLine(ch,s.id).trained);
-  h += `<details class="group" open><summary>Raise a Skill — ${price.perRank} × current rank · Focused ${price.focusedPerRank} × · new skill ${price.newSkill} · cap ${D.ip.rankCap}</summary><div class="alloc">`;
-  for (const s of trained){
-    const line=Engine.skillLine(ch,s.id), c=Engine.ipCost(ch,"skill",s.id);
-    h += `<div class="alloc-row"><div class="name">${esc(s.name)}${c.ok&&c.focused?' <span class="chip gold">focused</span>':""} <small>rank ${line.rank}</small></div>
-      <div>${c.ok?`<button class="btn sm ${ip.available>=c.cost?"primary":""}" data-ipbuy="skill|${s.id}" ${ip.available>=c.cost?"":"disabled"}>${c.from} → ${c.to} · ${c.cost} IP</button>`:`<span class="chip">${esc(c.why)}</span>`}</div>
-      <span class="mod pos">+${line.checkBonus}</span></div>`;
-  }
-  if (!trained.length) h += `<p class="step-note">No trained skills yet.</p>`;
-  h += `</div>`;
-  h += `<details class="group" style="margin-left:14px"><summary>Learn a new skill (${untrained.length})</summary>
-    ${D.ip.flagged?flagHtml(D.ip):""}<div class="alloc">` +
-    untrained.map(s=>{
-      const c=Engine.ipCost(ch,"skill",s.id);
-      return `<div class="alloc-row"><div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} <small>${esc(s.description)}</small></div>
-        <div><button class="btn sm" data-ipbuy="skill|${s.id}" ${ip.available>=c.cost?"":"disabled"}>learn · ${c.cost} IP</button></div><span class="mod"></span></div>`;
-    }).join("") + `</div></details></details>`;
+  // Spend (Decision 159): a button each, opening a modal that lists every
+  // stat or skill with its price, so the Milestones below stay in reach.
+  h += `<div class="raise-row">
+    <button class="btn primary" data-raiseopen="stat">Raise a Stat</button>
+    <button class="btn primary" data-raiseopen="skill">Raise a Skill</button></div>`;
 
   // IP journal
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
@@ -2348,6 +2322,81 @@ function openCatalog(kind){
     } });
 }
 
+// ── Raise a Stat / Raise a Skill (Decision 159) ──────────────────────
+// Two modals over the IP journal: every stat, or every skill (trained first,
+// then the ones you'd learn), each with its price, and a button that's off
+// with its reason. Each raise is one commit() with its undo toast, and the
+// modal stays open for the next, as the catalog does.
+function raiseIP(ch, type, id){
+  const c=Engine.ipCost(ch,type,id);
+  const nm = type==="stat" ? id : (Engine.skillById(id)||{name:id}).name;
+  const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
+  commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
+}
+function raiseStatusHtml(ch, type){
+  const ip = Engine.ipState(ch).available;
+  if (type==="stat") return `You have <b>${ip} IP</b> · a Stat costs its current value × ${D.ip.statIncreaseCost.perPoint} IP`;
+  const price = D.ip.skillIncreaseCost;
+  return `You have <b>${ip} IP</b> · a Skill costs ${price.perRank} × its current rank, Focused ${price.focusedPerRank} × · a new skill ${price.newSkill} · cap ${D.ip.rankCap}`;
+}
+// One row: the name and what's under it, the move, the price, the button.
+// `why` dims the row and says why the button is off.
+function raiseRowHtml({ name, sub, move, cost, btn, key, why }){
+  return `<tr class="${why?"off":"pickrow"}"><td><b>${name}</b>${sub?`<div class="sub">${sub}</div>`:""}${why?`<div class="why">${esc(why)}</div>`:""}</td>
+    <td class="num" data-k="Raise">${move}</td><td class="num" data-k="Cost">${cost}</td>
+    <td><button class="btn sm primary" data-raise="${key}" ${why?"disabled":""}>${btn}</button></td></tr>`;
+}
+function raiseResultsHtml(ch, type){
+  const ip = Engine.ipState(ch).available;
+  const short = c => c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+  if (type==="stat"){
+    const rows = D.stats.map(s=>{
+      const c = Engine.ipCost(ch,"stat",s.id), v = Engine.statValue(ch,s.id), ipe = ch.stats[s.id].ipe;
+      return raiseRowHtml({ name: esc(s.id), sub: esc(`${s.name||""}${ipe?` · +${ipe} from IP`:""}`), move: c.ok?`${v} → ${c.to}`:`${v}`,
+        cost: c.ok?`${c.cost} IP`:"—", btn:"Raise", key:`stat|${s.id}`, why: c.ok ? short(c) : c.why });
+    }).join("");
+    return `<table class="ref spell-results raise-results"><tbody>${rows}</tbody></table>
+      <p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p>`;
+  }
+  const q = String((S.raisePick||{}).q||"").trim().toLowerCase(), focused = Engine.focusedSkillIds(ch);
+  const hit = s => !q || `${s.name} ${s.description||""}`.toLowerCase().includes(q);
+  const row = (s, learn) => { const line=Engine.skillLine(ch,s.id), c=Engine.ipCost(ch,"skill",s.id);
+    const isFocused = c.ok ? c.focused : focused.includes(s.id);
+    return raiseRowHtml({ name: esc(s.name)+(isFocused?' <span class="chip gold">focused</span>':""),
+      sub: learn ? esc(s.description||"") : `rank ${line.rank} · check +${line.checkBonus}`,
+      move: c.ok?`${c.from} → ${c.to}`:`${line.rank}`, cost: c.ok?`${c.cost} IP`:"—",
+      btn: learn?"Learn":"Raise", key:`skill|${s.id}`, why: c.ok ? short(c) : c.why }); };
+  const trained = D.skills.filter(s=>Engine.skillLine(ch,s.id).trained && hit(s));
+  const untrained = D.skills.filter(s=>!Engine.skillLine(ch,s.id).trained && hit(s));
+  if (!trained.length && !untrained.length) return `<p class="step-note">No skill matches that.</p>`;
+  return (trained.length ? `<div class="sect">Your skills</div><table class="ref spell-results raise-results"><tbody>${trained.map(s=>row(s,false)).join("")}</tbody></table>` : "")
+    + (untrained.length ? `<div class="sect">Learn a new skill</div>${D.ip.flagged?flagHtml(D.ip):""}<table class="ref spell-results raise-results"><tbody>${untrained.map(s=>row(s,true)).join("")}</tbody></table>` : "");
+}
+function openRaisePicker(type){
+  const ch = S.ch; if (!ch || !["stat","skill"].includes(type)) return;
+  S.raisePick = { q:"" };
+  const search = type==="skill" ? `<div class="hitrow"><input type="search" data-raiseq placeholder="Search skills" aria-label="Search skills"></div>` : "";
+  openModal({ title: type==="stat" ? "Raise a Stat" : "Raise a Skill",
+    html: `<div class="spell-pick raise-pick"><div class="pick-head">${search}<p class="pick-status" data-raisestatus aria-live="polite">${raiseStatusHtml(ch, type)}</p></div>
+      <div data-raiseresults>${raiseResultsHtml(ch, type)}</div></div>`,
+    foot: pickerFootHtml(), returnTo: `[data-raiseopen="${type}"]`, onClose: ()=>{ S.raisePick=null; },
+    bind: body => {
+      const results = body.querySelector("[data-raiseresults]"), status = body.querySelector("[data-raisestatus]");
+      const refresh = () => { results.innerHTML = raiseResultsHtml(S.ch, type); status.innerHTML = raiseStatusHtml(S.ch, type); };
+      const q = body.querySelector("[data-raiseq]");
+      if (q) q.oninput = e => { S.raisePick.q = e.target.value; refresh(); };
+      // W23: a click anywhere on a row is its button's click.
+      results.onclick = e => {
+        let b = e.target.closest("button");
+        if (!b){ const tr = e.target.closest("tr"); b = tr && tr.querySelector("button"); }
+        if (!b || b.disabled || !b.dataset.raise) return;
+        const [t, id] = b.dataset.raise.split("|");
+        raiseIP(S.ch, t, id);
+        refresh();
+      };
+    } });
+}
+
 // ── The Aberration picker (Decision 115) ─────────────────────────────
 // One pick, then it closes: the pick is one commit() with its undo toast. From
 // a Cascade the entry's note says so, which the player can rewrite.
@@ -2695,13 +2744,7 @@ function bindSheet(){
   });
 
   // IP
-  main.querySelectorAll("[data-ipbuy]").forEach(b=>b.onclick=()=>{
-    const [type,id]=b.dataset.ipbuy.split("|");
-    const c=Engine.ipCost(ch,type,id);
-    const nm = type==="stat" ? id : (Engine.skillById(id)||{name:id}).name;
-    const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
-    commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
-  });
+  main.querySelectorAll("[data-raiseopen]").forEach(b=>b.onclick=()=>openRaisePicker(b.dataset.raiseopen));
   main.querySelectorAll("[data-ipgrant]").forEach(b=>b.onclick=()=>{
     const amt=num(main.querySelector("[data-ipamt]"));
     const note=(main.querySelector("[data-ipnote]")||{}).value||"";
