@@ -76,6 +76,49 @@ test("validate returns issues for every step once the wizard's gates are met", (
   }
 });
 
+// Decision 152: a classification says which Advantages are open. Mortal buys
+// all; Supernatural only those carrying 043's Universal tag.
+test("every archetype names a classification the data defines", () => {
+  const ids = D.classifications.map(c => c.id);
+  for (const a of D.archetypes)
+    assert.ok(ids.includes(a.classification), `${a.id} names classification "${a.classification}"`);
+  for (const c of D.classifications)
+    assert.ok(["all", "universal"].includes(c.advantages), `${c.id}: advantages "${c.advantages}"`);
+  assert.equal(D.archetypes.some(a => "canPurchaseAdvantages" in a), false,
+    "canPurchaseAdvantages is back beside classification");
+});
+
+test("a Supernatural buys Universal Advantages only; a Mortal buys any", () => {
+  const ch = Engine.newCharacter();
+  ch.identity.archetype = "werewolf";
+  assert.equal(Engine.classification(ch).id, "supernatural");
+  assert.equal(Engine.canBuyAdvantage(ch, "lucky"), true, "a Universal Advantage");
+  assert.equal(Engine.canBuyAdvantage(ch, "ambidextrous"), false, "a Mortal-only Advantage");
+  assert.equal(Engine.canBuyAdvantage(ch, Engine.advById("lucky")), true, "by definition, not only id");
+  ch.identity.archetype = "vampire";
+  assert.equal(Engine.canBuyAdvantage(ch, "ambidextrous"), false, "the Vampire too");
+  ch.identity.archetype = "arcanist";
+  assert.equal(Engine.canBuyAdvantage(ch, "ambidextrous"), true, "a Mortal");
+  ch.identity.archetype = null;
+  assert.equal(Engine.canBuyAdvantage(ch, "ambidextrous"), true, "no archetype gates nothing");
+  ch.identity.archetype = "no-such-archetype";
+  assert.equal(Engine.classification(ch), null);
+  assert.equal(Engine.canBuyAdvantage(ch, "no-such-advantage"), true, "total on junk");
+});
+
+test("validate refuses a Supernatural's Mortal-only Advantage, not its Universal one", () => {
+  const ch = Engine.newCharacter();
+  ch.identity.archetype = "werewolf";
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  const errs = () => Engine.validate("character-points", ch).filter(i => i.level === "error").map(i => i.msg).join(" | ");
+  ch.advantages = [{ id: "lucky", rank: 1, notes: "" }];
+  assert.doesNotMatch(errs(), /can't buy/, "a Universal Advantage was refused");
+  ch.advantages.push({ id: "ambidextrous", rank: 1, notes: "" });
+  assert.match(errs(), /Supernaturals can't buy Ambidextrous/);
+  ch.identity.archetype = "professional";
+  assert.doesNotMatch(errs(), /can't buy/, "a Mortal was refused");
+});
+
 test("validate is total even on a character with no power level (B7)", () => {
   const blank = Engine.newCharacter();
   for (const step of [...D.creationFlow.steps.map(s => s.id), "review"]) {
@@ -281,7 +324,6 @@ const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$
 // leaves this list the day code reads it; the test says when.
 const NOT_YET_SHOWN = {
   growth: "hidden until the archetype Majors are written (AQ4 5, F32)",
-  universal: "043's 'Universal' tag on an Advantage; what it means is a CRB question for Ken",
 };
 
 function dataKeys() {

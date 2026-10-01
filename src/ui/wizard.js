@@ -389,12 +389,13 @@ function renderSkills(){
 function renderCP(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const bal = Engine.cp(ch);
-  const canBuyAdv = !a || a.canPurchaseAdvantages!==false;
+  // Decision 152: the classification says which Advantages are open.
+  const cls = Engine.classification(ch), gated = !!cls && cls.advantages==="universal";
   const secs = sectionList("cp");
   let top = `<div class="roll-entry">
     <span class="pool" style="margin-left:0">Base <b>${bal.base}</b> + Disadvantages <b>${bal.granted}</b> = Budget <b>${bal.budget}</b> · Spent <b>${bal.spent}</b> · <span style="color:${bal.left<0?"var(--magenta)":"var(--gold)"}">Remaining <b>${bal.left}</b></span></span>
     <span class="dice-note">${esc(D.creationFlow.steps.find(s=>s.id==="character-points").note||"")}</span></div>`;
-  if (!canBuyAdv) top += ruleHtml(`${a.name}s are Supernatural — unable to purchase Advantages. Disadvantages, LUCK, and boosts remain open.`);
+  if (gated) top += ruleHtml(`${a.name} · ${cls.name}: only Universal Advantages are open. Disadvantages, LUCK, and boosts remain open.`);
 
   // Disadvantages
   let h = secs.sect("Disadvantages", "Disadvantages — grant Character Points (no cap)");
@@ -413,19 +414,25 @@ function renderCP(){
 
   // Advantages
   h += secs.sect("Advantages", "Advantages — cost Character Points");
-  h += `<details class="group" open data-filterable><summary>${D.advantages.length} available</summary>` +
-    D.advantages.map(ad=>{
+  // A gated classification sees what it can buy first, in the book's order, so a
+  // Werewolf doesn't scroll past every Mortal-only Advantage to find its fifteen.
+  const advList = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).concat(D.advantages.filter(ad=>!Engine.canBuyAdvantage(ch, ad))) : D.advantages;
+  const openCount = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).length : D.advantages.length;
+  h += `<details class="group" open data-filterable><summary>${openCount} available${gated?` · ${D.advantages.length-openCount} not open to ${esc(cls.name)}s`:""}</summary>` +
+    advList.map(ad=>{
       const cur = (ch.advantages.find(x=>x.id===ad.id && x.source!=="natural")||{rank:0}).rank;
       const natural = ch.advantages.find(x=>x.id===ad.id && x.source==="natural");
       const affordable = bal.left>=ad.cost;
       const lock = Engine.optionLock(ch,"advantage",ad.id);
       const req  = Engine.requirementState(ch,"advantage",ad.id);
+      const open = Engine.canBuyAdvantage(ch, ad);
       return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad):""}
         <div class="head"><h4>${esc(ad.name)}</h4><span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
         ${natural?`<span class="cost grant">natural ×${natural.rank}</span>`:""}
         ${ad.creationOnly?`<span class="cost">creation only</span>`:""}
+        ${gated&&ad.universal?`<span class="cost grant">Universal</span>`:""}
         ${constraintHtml("advantage",ad.id)}
-        <div class="controls">${canBuyAdv?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok):"<span class='cost'>locked</span>"}</div></div>
+        <div class="controls">${open?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok):cur>0?stepper(cur,"adv|"+ad.id, true, false):`<span class="cost">Not for ${esc(cls.name)}s</span>`}</div></div>
         <div class="desc">${esc(ad.description)}</div>
         ${(cur>0||(natural&&natural.rank>0))?picksHtml("advantage",ad.id):""}</div>`;
     }).join("") + `</details>`;

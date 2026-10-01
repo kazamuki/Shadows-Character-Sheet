@@ -2832,7 +2832,7 @@ function bindSheet(){
     sel.value=ch.identity.archetype||"";   // until the answer is yes
     const nm = v ? (D.archetypes.find(a=>a.id===v)||{name:v}).name : "none";
     askFirst({ title:`Change archetype to ${nm}?`,
-      text:"This clears every archetype-specific choice: focus and stat-bonus allocations, specialization, disciplines and natural advantages. It's logged, so one undo restores everything.",
+      text:"This clears every archetype-specific choice: focus and stat-bonus allocations, specialization, disciplines, natural advantages, and any Advantage the new archetype can't buy. It's logged, so one undo restores everything.",
       yes:"Change archetype", then:()=>commit("admin", `Admin: archetype → ${nm}`, ()=>{
         ch.identity.archetype=v;
         resetArchetypeChoices(ch);

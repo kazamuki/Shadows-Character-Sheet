@@ -209,11 +209,52 @@ writes the entry for the open character, stop saving from this tab and say so,
 with a button to reload from the newer copy. *To respect:* the app works
 without storage, so the listener is guarded like every other read.
 
+### Custom characters
+
+Raised 2026-09-30 while planning the custom archetype
+(`plans/custom-archetype.md`), by walking a made-up character through every
+step. Each is a place someone might want to write something in that the plan
+leaves out on purpose. None blocks it.
+
+**W48 — Natural Armor a custom character writes in, which the hit panel uses.** *Claude · 🔎 · touches F25*
+A tough creature's "hide like stone" can be written as a trait, but the hit
+resolver won't subtract it. Natural Armor's sources are `grants` on
+advantages, Major Milestones and specializations (Decision 104); a written-in
+trait has no `grants`. *To respect:* how Natural Armor answers a hit is the
+F25 stub, still Deighton's.
+
+**W49 — A resource pool the player names.** *Claude · 💡*
+Glamour, Chi, a Blood Pool. The plan's checkboxes cover what the rules have
+today (TOL, SFR). A third, **Uses another pool**, would give a tracker whose
+title and max the player types. Tracker titles come from the data today, so
+this needs a little code.
+
+**W50 — Stat changes at creation.** *Claude · 💡*
+Deighton sets a custom character's stat changes "in the same stroke as
+powers", but the Adjustments ledger is only on the sheet, after lock. Fine at a
+table where characters lock together; awkward for someone building alone.
+*To respect:* a stat change at creation must not read as Stat Points spent.
+
+**W51 — A shapeshifting form toggle for a custom character.** *Claude · 💡*
+The Werewolf's form toggle has fixed options from the data. A custom
+shapeshifter writes its forms as powers for now; a toggle with options the
+player names would put the form on the sheet.
+
+**W52 — Written-in Major Milestones.** *Claude · 💡*
+A custom archetype has no Major Milestones of its own; the general Majors are
+open to it. The Adjustments ledger covers a GM's custom reward meanwhile.
+
+**W53 — "Magical being" as a classification.** *Ken, from Deighton · 💡 · rules: Deighton*
+Fae and beings like them: a third axis of power, distinct from Supernatural.
+The plan's **Other** classification, with its own text, covers it until then.
+*Needs:* what a Magical being can buy, Deighton's. Then it's one row in
+`classifications`.
+
 ---
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W47.** Everything above is open; W38 has a plan,
+- **Next free number: W54.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for

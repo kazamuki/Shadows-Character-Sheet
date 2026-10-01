@@ -554,11 +554,10 @@ function vrow(k,v,cls="",ico=""){
 function resetArchetypeChoices(ch){
   ch.archetypeChoices = { rolls:{}, focusAllocation:{}, statBonusAllocation:{},
     specialization:[], focusedSkillPicks:[], naturalAdvantages:[], disciplines:{} };
-  const a = Engine.archetype(ch);
   // Free advantages belonged to the archetype being left, so they go either
-  // way. A supernatural archetype cannot purchase at all, so it keeps none.
-  ch.advantages = (a && a.canPurchaseAdvantages===false)
-    ? [] : ch.advantages.filter(x=>x.source!=="natural");
+  // way, and so does any the new archetype's classification can't buy
+  // (Decision 152: a Supernatural keeps only the Universal ones).
+  ch.advantages = ch.advantages.filter(x=>x.source!=="natural" && Engine.canBuyAdvantage(ch, x.id));
   // Starting spells are the Grimoire's own rows (Decision 111), so in the
   // wizard they go with the archetype that chose them. A locked sheet's panels
   // are play history, and the admin change leaves them to its single undo.
