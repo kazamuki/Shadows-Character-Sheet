@@ -99,7 +99,7 @@ is the authority on a flag's full text.
 |---|---|---|
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), **F36** (is damage past zero kept for healing?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
-| **Custom archetype & classification** — `plans/custom-archetype.md` | ✅ S1–S5 built (Decisions 152–153, F13 closed), XQ1–XQ6 on their defaults (XQ5's badge reads "off the books") · copy voice-passed · PR #88 open; the release waits on the merge. Wanted for Saturday 2026-10-03 | **Ken:** merge, then run the release before Saturday. W48–W54 are its follow-ons |
+| **Custom archetype & classification** — `plans/custom-archetype.md` | ✅ S1–S5 built (Decisions 152–153, F13 closed), XQ1–XQ6 on their defaults (XQ5's badge reads "off the books") · copy voice-passed · merged (#88) and released in v0.33.0, for Saturday 2026-10-03 | Nobody. W48–W54 are its follow-ons |
 | **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed | Deighton: **W37**, starting LUCK 6, maybe by level. It doesn't block the wizard |
 | **Milestones & doc reconciliation** — F9, F12, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -131,8 +131,8 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.32.1** (data 0.25, schema 0.15): skill lists on a phone, then touch targets, an 11px type floor and read tokens for violet and magenta words (W43). **Unreleased, 0.33.0:** Health verbs on Main (W42, 151), classification (152) and the custom archetype (153), wanted live by Saturday 2026-10-03; the critique's W44–W46 are next.
-Ken alone: **merge and release the custom archetype** (its copy had his voice pass). Then F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
+**The live site is v0.33.0** (data 0.27, schema 0.16): Health verbs on Main (W42, 151), classification (152) and the custom archetype (153), live for Saturday 2026-10-03. The critique's W44–W46 are next.
+Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3). The wishlist: W29, W37, W39 and W54.
 
 **Waiting on others:**
