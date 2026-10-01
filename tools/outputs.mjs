@@ -46,7 +46,7 @@ function worked(archId, plId, { locked }) {
     .map(s => s.id).filter(id => !Engine.focusedSkillIds(ch).includes(id)).slice(0, fp.need);
   if (arch.coreMechanic && arch.coreMechanic.disciplines) ac.disciplines = { enchantment: 1 };
   D.skills.slice(0, 8).forEach((s, i) => { ch.skills[s.id] = { rank: 1 + (i % 3), ipe: 0 }; });
-  if (arch.canPurchaseAdvantages !== false) ch.advantages = [{ id: D.advantages[0].id, rank: 1, notes: "" }];
+  if (Engine.canBuyAdvantage(ch, D.advantages[0])) ch.advantages = [{ id: D.advantages[0].id, rank: 1, notes: "" }];
   ch.trackers.luck.bonus = 1;
   ch.creation.boosts = [{ targetType: "stat", targetId: "REF", times: 1 }, { targetType: "skill", targetId: D.skills[0].id, times: 1 }];
   ch.progression.ip.log = [{ date: "2026-01-02T00:00:00.000Z", kind: "grant", amount: 300, note: "" }];

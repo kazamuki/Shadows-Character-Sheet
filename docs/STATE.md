@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-30
-**Versions:** app `0.33.0` · game data `0.25` · character schema `0.15` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.33.0` · game data `0.26` · character schema `0.15` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,7 +41,7 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Every archetype is Mortal or Supernatural, and a Supernatural buys only the Universal Advantages (152). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). **One known defect:** the frame/texture decoration shows
@@ -99,17 +99,17 @@ is the authority on a flag's full text.
 |---|---|---|
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), **F36** (is damage past zero kept for healing?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
+| **Custom archetype & classification** — `plans/custom-archetype.md` | 🔶 S1 (classification, Decision 152, F13 closed) built · S2–S6 next, wanted for Saturday 2026-10-03 | Nobody: XQ1–XQ6 each carry a default |
 | **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed | Deighton: **W37**, starting LUCK 6, maybe by level. It doesn't block the wizard |
-| **Milestones & doc reconciliation** — F9, F12, F13, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
+| **Milestones & doc reconciliation** — F9, F12, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
-| **Vampire** — F7 (Vampire half), F13 | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
+| **Vampire** — F7 (Vampire half) | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked; three Origins and four Trueborn powers unwritten |
 | **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · catalog matches the whole 2026-09-24 book, Inscribed Spells included (Decision 136) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
-F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling;
-don't ask it separately.
+F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling; don't ask it separately.
 
 Archetype status in the data: `arcanist: draft · professional: draft ·
 werewolf: draft · cyborg: tbd · vampire: tbd`.
@@ -131,8 +131,8 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.32.1** (data 0.25, schema 0.15): skill lists on a phone, then touch targets, an 11px type floor and read tokens for violet and magenta words (W43). **Unreleased, 0.33.0:** Health verbs on Main (W42, 151); the critique's W44–W46 are next.
-Ken alone: F9, F12, F13, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
+**The live site is v0.32.1** (data 0.25, schema 0.15): skill lists on a phone, then touch targets, an 11px type floor and read tokens for violet and magenta words (W43). **Unreleased, 0.33.0:** Health verbs on Main (W42, 151) and classification (152); the critique's W44–W46 are next.
+Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3). The wishlist: W29, W37 and W39.
 
 **Waiting on others:**
@@ -169,8 +169,8 @@ questions' history is in `plans/combat-and-conditions.md` §6):
   app's reading, Ken's answer: 4 → 5 is standard). The Mercenary's "Handgun"
   and the Slayer's and True Warrior's "Occult" are Handguns and Occult Lore.
 - **Magic:** say how ½ Spell Power rounds (up, per Ken; the sheet does, Decision 147).
-- **043:** 15 Advantages are tagged "Universal" (Common Sense, Lucky…) and the
-  chapter never says what that means. The data keeps the tag, unread.
+- **043:** say what "Universal" means: open to every classification, the rest
+  Mortal-only, so Werewolves and Vampires buy only the 15 Universal ones (152).
 - **The new-skill price** (a flat 25 IP, Decision 97) and **the stat curve
   past 10** (Decision 98) need writing into the CRB. F23 may want a line in
   Gear's RES text once ruled.

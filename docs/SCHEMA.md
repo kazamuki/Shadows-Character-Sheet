@@ -220,6 +220,15 @@ window.SHADOWS_DATA = {
     // Same optional selection fields as advantages.
   ],
 
+  // ── Classifications (Decision 152) ──────────────────────
+  // What kind of being an archetype is, and which Advantages it may buy:
+  // "all", or "universal" (only those with `universal: true`). Disadvantages
+  // are open to every classification.
+  classifications: [
+    { id: "mortal", name: "Mortal", description: "...", advantages: "all" },
+    { id: "supernatural", name: "Supernatural", description: "...", advantages: "universal" }
+  ],
+
   // ── Archetypes (generic, designer-fillable) ─────────────
   // Mirrors the "Reading Archetypes" six-block structure exactly.
   archetypes: [
@@ -228,6 +237,7 @@ window.SHADOWS_DATA = {
       status: "draft",                // draft | tbd | final — app shows badge
       summary: "...", gameplayStyle: "...",
       primaryStats: ["INT", "COOL", "EMP"],
+      classification: "mortal",       // a classifications id (Decision 152)
 
       campaignPowerScaling: {
         notes: "...",
@@ -817,6 +827,7 @@ No cascade logic to maintain — it falls out of the architecture.
 12. **Supernatural restriction:** archetypes with `canPurchaseAdvantages:
     false` (Werewolf; Vampire assumed) cannot buy Advantages — the wizard
     must enforce this.
+    → **Superseded by Decision 152** — a Supernatural buys the Universal Advantages, and the gate is the archetype's classification.
 13. **Milestone cadence:** 1 Milestone Point per session; Minor at 5/15/25…,
     Major at 10/20/30…; 10 IP per session (WIP Professional).
 14. **IP costs:** stat increase = current value ×10; skill rank = 5× current
@@ -3438,6 +3449,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** Deighton rules on F36, or the vitals popovers change shape.
      - **Built:** app 0.33.0, PR (this batch), log 2026-09-30 (W42). One smoke test, mutation-tested.
 
+152. **Every archetype has a classification, and a Supernatural buys Universal Advantages only.**
+     *2026-09-30 · Ken + Deighton + Claude · Touches: classifications, classification, canPurchaseAdvantages, universal, Universal Advantages, Mortal, Supernatural, Werewolf, Vampire, canBuyAdvantage, Character Points step, resetArchetypeChoices, validate, F13, plans/custom-archetype.md S1*
+     - **Decided:** Game data lists `classifications`; each says which Advantages it may buy, `"all"` or `"universal"` (the 15 that carry 043's Universal tag). Professional, Arcanist and Cyborg are Mortal (all); Werewolf and Vampire are Supernatural (Universal only). Disadvantages are open to every classification. `Engine.canBuyAdvantage` is the one reader: the wizard shows what can't be bought and why, changing archetype drops what the new one can't buy, and `validate` refuses a held one. A Professional's free Advantages are exempt.
+     - **Why:** Deighton's ruling, relayed by Ken: Werewolves and Vampires start with a great deal of power, and the Mortal-only Advantages exist to close some of that gap. Magic is something a character does, not a classification, so the Arcanist is Mortal.
+     - **Rejected:**
+       - Keeping `canPurchaseAdvantages` beside `classification`: two fields for one fact (Decision 135).
+       - Supernaturals buying none, as before: the Universal tag already said which ones everyone may take; the CRB just never said so.
+       - Waiting for the CRB to define Universal: Deighton ruled it, and the app follows the answer while Ken writes it into 043.
+     - **Replaces:** Decision 12 (wholly: a Supernatural buys the Universal Advantages, not none, and the gate is the classification, not `canPurchaseAdvantages`).
+     - **Revisit if:** Deighton rules on Magical being (W53), or a classification needs a rule other than all or Universal.
+     - **Built:** app 0.33.0, game data 0.26, no schema change. Closes F13. Log 2026-09-30.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -3449,7 +3472,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -3459,7 +3482,6 @@ here are in `log/archive.md`.
 | F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked. The Vampire and Werewolf entries' notes on unwritten content (Vampire's missing blocks, the Werewolf's name-only powers and undefined Origins) are filed here too | Ken → docs | No |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
-| F13 | Vampire `canPurchaseAdvantages: false` is assumed from the Werewolf supernatural baseline — confirm | Ken/D | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 | F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and to Elemental, Spirit and Aether (a Warding each, Decision 143), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
