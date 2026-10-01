@@ -190,7 +190,7 @@ What a number *is*. Change one of these and characters change.
 - **2** — Terminology: stat pool = Stat Points (old "Character Points" column); old "Freebie Points" = Character Points (CP).
 - **3** — Max Boost semantics: after advantages are bought, leftover CP may boost powers, skills, or stats — but any single t...
 - **4** — Costs at creation: Stat Points 1:1 (stats start at base 1, max 10). → **superseded in part by 150**
-- **5** — LUCK: everyone starts at 2.
+- **5** — LUCK: everyone starts at 2. → **superseded in part by 157**
 - **6** — Health Levels: 1 HL per point of BOD, 5 HP per HL.
 - **7** — Çredits: player rolls physically, enters result; pool = table formula.
 - **8** — Skill checks: 1d10 + Rank + Primary Stat (full score) + Synergy Bonus (modifier).
@@ -200,17 +200,18 @@ What a number *is*. Change one of these and characters change.
 - **12** ~~— Supernatural restriction: archetypes with canPurchaseAdvantages: false (Werewolf; Vampire assumed) cannot buy Advan...~~ → **superseded by 152**
 - **13** — Milestone cadence: 1 Milestone Point per session; Minor at 5/15/25…, Major at 10/20/30…; 10 IP per session (WIP Pro...
 - **150** *(The stat buy and the Power Level table — W34, W35, F8)* — Stat Points are the level's flat pool or a roll, the GM's pick (`creation.statMethod`, schema 0.15); a stat point costs 1 up to 6 and 2 from 7 to 10, from a free 1; Skill Points are base + INT + REF, Boosts included; CP 5/10/15/20, Max Skill Rank 4/5/6/7; a roll is 5 below the flat pool + 1d10. F8 and F35 closed.
+- **157** *(Starting LUCK and power ranks — W37)* — Everyone starts with 4 LUCK, bought LUCK on top; a power rank costs 5 CP at creation, every power's, Disciplines included (`boostRules.cpPerPowerRank`), capped by Max Power Rank.
 - **152** *(Classification — F13)* — Every archetype is Mortal or Supernatural (`classifications`); a Mortal buys every Advantage, a Supernatural only the 15 Universal ones; Disadvantages are open to all. `canPurchaseAdvantages` is gone; `Engine.canBuyAdvantage` is the one reader.
 - **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via... → **superseded in part by 97**
 - **16** *(Phase 2)* — Ranked Advantages cost cost per rank (Archery Master rank 2 = 12 CP).
 - **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10. → **superseded in part by 98**
-- **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank.
+- **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank. → **superseded in part by 157**
 - **64** *(B3)* — 1 Health Level per BOD is an invariant, not a tunable.
 - **66** *(B8)* — The two Pain Level floors are numbers the engine carries and the sheet states.
 - **67** *(B9)* — The milestone cadence comes from the data, once.
 - **135** *(Audit S4 — A8, A9)* — A data field is read by code or named as text; formulas and paths are numbers the engine reads (`{ stat, times, plus }`, `dataPath`); fields restating the code are deleted; no archetype id in code. The R6 key guard enforces it.
 - **98** *(Design-team rulings, part 2)* — Stats past 10: +5 at 11–15, +1 per 5 after. F20–F22 closed: Skill Checks only, a −8 cap on one roll, only Injured/Maimed take a body part. Plan CQ4–CQ7/CQ10 answered for Session 3.
-- **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open.
+- **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open. → **superseded in part by 157**
 - **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened. → **superseded in part by 100, 112 and 143**
 - **100** *(Loadout & recovery — combat plan Session 4)* — Catalog pickers with Add/Buy, one worn piece per slot, upgrades by slot and quality; weapon lines (attack = skill check, ACC apart, `BOD+X` resolved). Wear, repair, Rest, Focused Healing (the only way back for Massive levels and Injured), Turn Reset (ticks aren't hits: no armor, no Shock). Stand-in armor gone. F24 opened. → **superseded in part by 104 and 105**
 - **104** *(Natural Armor — combat plan cleanup)* — One derived value from `grants` on advantages, Major Milestones and specializations; conditional sources (Iron Shirt, a waning moon) shown, never summed, asked for on a hit. How it answers a hit is the F25 stub. Print's Nat column fills. `migrate()` drops junk held entries. → **superseded in part by 143**

@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.27",
+    "gamedataVersion": "0.28",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-30"
   },
@@ -255,7 +255,7 @@ window.SHADOWS_DATA = {
       }
     },
     "luck": {
-      "startingValue": 2,
+      "startingValue": 4,
       "cpCostPerPoint": 1,
       "spend": [
         {
@@ -1854,8 +1854,8 @@ window.SHADOWS_DATA = {
      `resource` keeps the count on that resource's own tracker, like SFR), "text",
      "powers" (the character's own written powers, Decision 153).
 
-     DISCIPLINES (Decision 135): `cpPerRank` is what a rank costs at creation,
-     `maxRankBy` a path to the cap and a discipline's `startingRankBy` a path to
+     DISCIPLINES (Decision 135): a rank costs `creationFlow.boostRules.cpPerPowerRank`
+     like any power (Decision 157), `maxRankBy` a path to the cap and a discipline's `startingRankBy` a path to
      its starting rank. A path reads "campaignPowerScaling.<key>" from the
      current power level's row, or "powerLevel.<key>" from the power level,
      the same way `specialization.countBy` does. `campaignPowerScaling.focusStats`
@@ -1989,7 +1989,6 @@ window.SHADOWS_DATA = {
         "name": "Magic",
         "description": "Channeling the flow of Aether through your body. Every spell is a Spellcraft roll: Discipline rank sets the d10 pool, dice meeting the Target Number (TN) are Hits, and any 1 is a Dud. Net Hits measured against the spell's Threshold (TH) decide the outcome. If Duds exceed Hits, the Aether ruptures back on the caster and Tolerance (TOL) drops by the difference. At 0 TOL the Arcanist is Exhausted and cannot cast until TOL recovers above zero (one hour of rest restores 1 point); a Rupture that would push TOL below zero is a Cascade. Your Grimoire, under Loadout & Powers, holds the Known spells you take from the book. The Magic reference on the Archetype tab holds the Spellcraft roll, the spell tiers, the Cascade and the Aberrations.",
         "disciplines": {
-          "cpPerRank": 6,
           "maxRankBy": "powerLevel.maxPowerRank",
           "list": [
             {
@@ -4200,7 +4199,9 @@ window.SHADOWS_DATA = {
   /* CREATION FLOW -- the ordered wizard steps and the rules for leftover CP.
      `steps` is the 8-step sequence the wizard renders (label + optional note).
      `boostRules.cpCostPerPoint` is what one Boost of a stat or skill costs from
-     leftover Character Points (F2, closed by Decision 97). The rest of the
+     leftover Character Points (F2, closed by Decision 97), and
+     `boostRules.cpPerPowerRank` what one rank of any power costs, a Discipline
+     included, up to the power level's Max Power Rank (Decision 157). The rest of the
      boost rules are the engine's, not settings: any one target is boosted at
      most the power level's `maxBoost` times (Decision 3), the stat cap and
      Max Skill Rank still bound it, and LUCK is bought on its own line, so the
@@ -4248,7 +4249,8 @@ window.SHADOWS_DATA = {
       }
     ],
     "boostRules": {
-      "cpCostPerPoint": 1
+      "cpCostPerPoint": 1,
+      "cpPerPowerRank": 5
     }
   }
 };

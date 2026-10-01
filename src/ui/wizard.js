@@ -505,7 +505,7 @@ function renderCP(){
   // Disciplines: price, cap and starting ranks are the data's (Decision 135).
   const discs = Engine.disciplineRanks(ch);
   if (discs.length){
-    const per = Number(a.coreMechanic.disciplines.cpPerRank)||0, cap = Engine.disciplineCap(ch);
+    const per = Engine.powerRankCost(), cap = Engine.disciplineCap(ch);
     h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank${cap==null?"":` · cap ${cap}`}`);
     h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h4>${esc(d.name)}</h4>
         <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}</span>

@@ -23,6 +23,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.35.0
+
+- **Everyone starts with 4 LUCK.** It was 2. LUCK you bought with Character Points still
+  sits on top, so every character, locked ones included, has 2 more than before.
+- **A power rank costs 5 Character Points** while you make a character, one price for every
+  power. For an Arcanist that's each rank of Evocation, Enchantment or Alchemy, down from 6.
+
 ## v0.34.0 — 2026-10-01
 
 - **Continue stays on screen.** While you make a character, Back and Continue sit at the
