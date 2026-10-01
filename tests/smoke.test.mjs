@@ -2297,3 +2297,91 @@ test("picking Supernatural for a Custom archetype drops a Mortal-only Advantage 
   assert.equal(stored(app, { locked: false }).advantages.some(x => x.id === held.id), false);
   assert.deepEqual(app.errors, []);
 });
+
+// ── A written-in archetype on the sheet (Decision 153, custom archetype S4) ──
+function writtenInCharacter() {
+  const ch = lockedCharacter();
+  ch.identity.archetype = D.archetypes.find(a => a.writeIn).id;
+  Object.assign(ch.archetypeChoices.writeIn, { name: "Changeling", description: "Stolen as a child.",
+    classification: "other", classificationText: "Fae", mechanics: ["sfr"],
+    traits: [{ name: "Glamour", description: "Looks like whoever you expect." }],
+    vulnerabilities: [{ name: "Cold iron", description: "Burns." }] });
+  Engine.newPower(ch);
+  Object.assign(ch.powers[0], { name: "Fade", uses: "SFR", effect: "Unseen for a round." });
+  ch.progression.ip.earned = 30;
+  return ch;
+}
+const loadoutSec = app => app.$$("[data-sec]").map(b => b.dataset.sec).find(s => /loadout/.test(s));
+
+test("the sheet draws a written-in archetype: its name everywhere, its classification, traits, powers and vulnerabilities", () => {
+  const home = boot({ storage: { "shadows.active.v1": { ch: writtenInCharacter(), section: "main" } } });
+  assert.match(home.$("#main .roster-card").textContent, /Changeling/, "Home's roster names the archetype's data name");
+  const app = openSheet(writtenInCharacter(), "archetype");
+  const main = () => app.$("#main").textContent;
+  assert.equal(app.$("#main .step-title").textContent, "Changeling");
+  assert.match(app.$("#main .arch-class").textContent, /Other: Fae/);
+  for (const t of ["Glamour", "Fade", "uses SFR", "Cold iron", "Stolen as a child."]) assert.ok(main().includes(t), `the Archetype tab is missing ${t}`);
+  app.click('[data-sec="main"]');
+  assert.match(main(), /Changeling ·/, "Main's header still says the archetype's data name");
+  app.click('[data-sec="trackers"]');
+  assert.ok(app.$$("#main .trk h4").some(h => h.textContent === "SFR"), "Uses SFR didn't put SFR on Trackers");
+  assert.ok(!app.$$("#main .trk h4").some(h => h.textContent === "TOL Spent"), "TOL Spent showed without Uses magic");
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  assert.equal(app.$$("[data-pwedit]").length, 4, "the powers panel didn't draw Fade's four fields");
+  assert.equal(app.$$("[data-pwdel]").length, 0, "Remove is Admin's, not play's");
+  // A built-in archetype draws none of it.
+  const b = openSheet(lockedCharacter(), "archetype");
+  assert.equal(b.$("#main .step-title").textContent, "Arcanist");
+  assert.match(b.$("#main .arch-class").textContent, /Mortal/);
+  assert.deepEqual([app.errors, b.errors], [[], []]);
+});
+
+test("Add power with an IP cost is one change: the row and the spend, and one Undo takes both", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  const fill = (k, v) => { app.$(`[data-pwnew="${k}"]`).value = v; };
+  fill("name", "Thorn hedge"); fill("effect", "Briars erupt."); fill("cost", "99");
+  app.click("[data-pwadd-go]");
+  assert.equal(activeChar(app).powers.length, 1, "a refused power was written");
+  assert.equal(app.$('[data-pwnew="name"]').value, "Thorn hedge", "a refusal threw away what was typed");
+  assert.match(app.$("#undotoast").textContent, /Not enough IP/);
+
+  fill("cost", "15");
+  app.click("[data-pwadd-go]");
+  let c = activeChar(app);
+  assert.equal(JSON.stringify([c.powers.map(p => p.name), c.progression.ip.log.map(e => [e.targetType, e.amount])]),
+    JSON.stringify([["Fade", "Thorn hedge"], [["power", 15]]]));
+  assert.equal(Engine.ipState(c).available, 15);
+  app.click("[data-toastundo]");
+  c = activeChar(app);
+  assert.equal(JSON.stringify([c.powers.length, c.progression.ip.log.length]), "[1,0]", "one Undo didn't take back both");
+
+  // An edit is one logged change when the field is left.
+  const eff = app.$('[data-pwedit$="|effect"]');
+  eff.value = "Unseen for two rounds."; eff.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  c = activeChar(app);
+  assert.equal(c.powers[0].effect, "Unseen for two rounds.");
+  assert.match(c.audit[c.audit.length - 1].label, /Fade: effect/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Admin edits a written-in archetype's words and lists, and removes a power behind a question", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  app.click("[data-admin-open]");
+  const name = app.$('[data-admin-wi="name"]');
+  assert.ok(name, "Admin has no written-in archetype block");
+  name.value = "Fetch"; name.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  app.click('[data-admin-wiadd="vulnerabilities"]');
+  app.click('[data-admin-wirm="traits|0"]');
+  let w = activeChar(app).archetypeChoices.writeIn;
+  assert.equal(JSON.stringify([w.name, w.traits.length, w.vulnerabilities.length]), JSON.stringify(["Fetch", 0, 2]));
+
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click("[data-pwdel]");
+  assert.ok(app.$("#modal[open]"), "removing a power didn't ask first");
+  assert.equal(activeChar(app).powers.length, 1, "it removed before the answer");
+  app.$$("#modal[open] button").find(b => /Remove power/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(activeChar(app).powers.length, 0);
+  assert.deepEqual(app.errors, []);
+});

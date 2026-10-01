@@ -603,7 +603,7 @@ function rosterCardHtml(e){
   const arch=D.archetypes.find(a=>a.id===c.identity.archetype);
   const where = locked ? "Sheet · "+((SHEET_SECTIONS.find(s=>s.id===normSection(e.section))||SHEET_SECTIONS[0]).label)
                        : `Draft · step ${stepOf(e.step)+1} of ${STEPS.length}`;
-  const bits=[arch?arch.name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
+  const bits=[arch?Engine.archetypeContent(c).name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card" data-card="${id}">
     <div class="roster-top"><b class="roster-name">${esc(String(c.identity.name||"").trim() || "Unnamed")}</b><span class="roster-where">${esc(where)}</span></div>
     <div class="roster-meta"><span class="roster-tag">${id}</span>${bits?" · "+bits:""}</div>
