@@ -131,7 +131,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.34.0** (data 0.27, schema 0.16): the custom archetype (153) with Ken's playtest feedback on it (154–156, the sticky wizard nav), live for Saturday 2026-10-03. **0.35.0 is unreleased**: Ken's and Deighton's sheet feedback (157–160), on main once its PR merges. The critique's W44–W46 are next.
+**The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160): LUCK 4, power ranks at 5 CP, the Character tab, raise modals and pinned vitals, live for Saturday 2026-10-03. The critique's W44–W46 are next.
 Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3). The wishlist: W29, W39, W54 and W55.
 

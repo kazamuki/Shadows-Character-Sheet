@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.35.0",
-    "date": null,
+    "date": "2026-10-01",
     "intro": [],
     "items": [
       "**Everyone starts with 4 LUCK.** It was 2. LUCK you bought with Character Points still sits on top, so every character, locked ones included, has 2 more than before.",
