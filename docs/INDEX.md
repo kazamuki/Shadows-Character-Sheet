@@ -297,7 +297,7 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **26** *(Phase 3)* — Un-modeled effects (milestone benefits, aberration prose, items) are applied through a manual adjustments ledger: s...
 - **27** *(Phase 3)* — The IP journal is the audit trail: entries are spend or grant; spends update the target's IPE atomically; the last... → **superseded in part by 49**
 - **29** *(Phase 3)* — Milestone enforcement: Minor duplicates blocked until all five have been selected once; Major prerequisites are mac...
-- **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll.
+- **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll. → **superseded in part by 158**
 - **31** *(Phase 3.1)* — Iconography lives in shadows-icons.js (see §1).
 - **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35**
 - **35** *(Phase 3.2)* — Full-width sheet on every tab.
@@ -310,7 +310,8 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **43** *(Phase 3.2)* — Date-input theming.
 - **44** *(Phase 3.2)* — Skills aligned + per-skill descriptions. → **superseded in part by 156**
 - **156** *(Skills tab — every skill, two columns)* — Every skill in its category, untrained at Rank 0 and full strength; two columns from 1000px, categories never split, the first holding half the skills.
-- **45** *(Phase 3.2)* — Traits collapsible.
+- **45** *(Phase 3.2)* — Traits collapsible. → **superseded in part by 158**
+- **158** *(The Character tab)* — Traits and Archetype are one Character tab (eight tabs): the archetype, its traits, powers and vulnerabilities a column each from 1000px, then Advantages beside Disadvantages, a sticky jump bar, Expand all remembered in the browser, buttons to Loadout & Powers and Trackers.
 - **46** *(Phase 3.2)* — Progression collapsible.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.
 - **83** *(Batch 3a)* — The ledger's ✓ meant "no errors," not "nothing left to do."

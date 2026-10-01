@@ -270,7 +270,7 @@ window.SHADOWS_DATA = {
         countBy: "campaignPowerScaling.aberrations",
         options: [
           { id: "...", name: "...", description: "...", grants: [],
-            // (Decision 126) rendered on the Archetype tab and the wizard card.
+            // (Decision 126) rendered on the Character tab and the wizard card.
             // A power's array of plain objects (e.g. `phases`) shows as a
             // table; a power with no description reads "not written yet".
             starterPower: { name: "...", description: "...", phases: [ { phase, boon, effect } ] },
@@ -297,7 +297,7 @@ window.SHADOWS_DATA = {
           { id: "grimoire", type: "grimoire",
             columns: ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"] },
           // (0.13, Decision 110) read-only rules from the named data sections,
-          // on the Archetype tab.
+          // on the Character tab (Decision 158).
           { id: "magic-reference", type: "reference", title: "Magic reference",
             shows: ["spellcraftRules", "spellTiers", "cascadeTable", "aberrationTable", "aberrations"] }
         ]
@@ -608,7 +608,7 @@ marked as reachable only by an exploding 10).
 
 A `reference` panel (Decision 110) names the data sections it `shows`. The
 sheet has one renderer per section name and skips a name it has none for.
-It renders on the Archetype tab.
+It renders on the Character tab (Decision 158).
 
 ---
 
@@ -952,6 +952,7 @@ No cascade logic to maintain — it falls out of the architecture.
     Older saved files with `section:"overview"` migrate to `main` via a
     `LEGACY_SECTION` map; any unknown section normalizes to `main`. (Ken,
     2026-06-15)
+    → **Superseded in part by Decision 158** — eight tabs: Traits and Archetype are one Character tab.
 31. **(Phase 3.1)** Iconography lives in `shadows-icons.js` (see §1). Two sets:
     the **brand stat set** (Get Dangerous Games, game-icons.net style, filled,
     recolored to `currentColor`) keyed by stat/derived id, and a **free-to-use
@@ -1048,6 +1049,7 @@ No cascade logic to maintain — it falls out of the architecture.
 45. **(Phase 3.2)** **Traits collapsible.** Advantages and disadvantages render
     as collapsible cards (`<details>`): the summary shows name + CP cost,
     expanding to the description. Default collapsed. (Ken, 2026-06-16)
+    → **Superseded in part by Decision 158** — Expand all opens every card, and the choice stays.
 46. **(Phase 3.2)** **Progression collapsible.** The long sections become
     `<details>`: Raise-a-Stat and Raise-a-Skill open by default (the primary
     spend actions), IP Journal collapsed (history), and Minor/Major Milestones
@@ -3569,6 +3571,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 5 in part (start at 4, not 2); Decision 19 in part (5 CP, not 6); Decision 97 in part (a power is no longer boosted at 1 CP a point). Decision 135 stands: the price is still data, now one key for every power. Closes W37.
      - **Revisit if:** LUCK is wanted by Campaign level after all, or a power needs a price of its own.
      - **Built:** app 0.35.0, game data 0.28, no schema bump; `rules.test.mjs` pins both. Log 2026-10-01.
+
+158. **Traits and Archetype are one Character tab: the archetype, then Advantages beside Disadvantages.**
+     *2026-10-01 · Ken + Claude · Touches: Character tab, Traits tab, Archetype tab, SHEET_SECTIONS, LEGACY_SECTION, renderShCharacter, arch-cols, trait-cols, Expand all, Collapse all, traitsOpen, data-gotab, jump bar, Baseline Traits, Powers, Vulnerabilities, Advantages, Disadvantages*
+     - **Decided:** One **Character** tab replaces Traits and Archetype, so the sheet has eight tabs. It reads: the archetype (name, description, classification, Lineage, core mechanic); Baseline Traits, Powers and Vulnerabilities a column each from 1000px; Specialization, Permanent Aberrations, Disciplines; Advantages beside Disadvantages from 1000px; the reference panels. A sticky jump bar reaches each section. **Expand all / Collapse all** opens or closes every Advantage and Disadvantage card, remembered in the browser, not the character. Loadout & Powers and Trackers are buttons at its foot. A saved `traits` or `archetype` section opens Character.
+     - **Why:** Ken: both pages are who the character is, read more than edited at the table; one fewer tab helps a row that scrolls on a phone; a big screen can show every card at once.
+     - **Rejected:**
+       - Keeping both tabs and only adding columns: the jump bar already makes one long page easy to move through.
+       - Calling it Archetype: it holds the Advantages too.
+       - Expand all in the character file: it's how this screen reads, not the character.
+     - **Replaces:** Decision 30 in part (eight tabs, not nine); Decision 45 in part (Expand all opens every card, and stays).
+     - **Revisit if:** an archetype's reference grows so long the Advantages are hard to reach, or the print sheet's archetype page wants the same order.
+     - **Built:** app 0.35.0, no data or schema bump; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
 
 ## 5. Open Flags
 

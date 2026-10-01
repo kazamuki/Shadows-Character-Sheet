@@ -54,8 +54,7 @@ const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, label:s.label, note:
 const SHEET_SECTIONS = [
   {id:"main",        label:"Main",        ui:"tab_main"},
   {id:"skills",      label:"Skills",      ui:"tab_skills"},
-  {id:"traits",      label:"Traits",      ui:"tab_traits"},
-  {id:"archetype",   label:"Archetype",   ui:"tab_archetype"},
+  {id:"character",   label:"Character",   ui:"tab_archetype"},
   {id:"trackers",    label:"Trackers",    ui:"tab_trackers"},
   {id:"progression", label:"Progression", ui:"tab_progression"},
   {id:"sessions",    label:"Session Log", ui:"tab_sessions"},
@@ -63,7 +62,8 @@ const SHEET_SECTIONS = [
   {id:"notes",       label:"Notes",       ui:"tab_notes"}
 ];
 const SHEET_IDS = SHEET_SECTIONS.map(s=>s.id);
-const LEGACY_SECTION = { overview:"main" };   // migrate older saved sections
+// Older saved sections: Traits and Archetype became Character (Decision 158).
+const LEGACY_SECTION = { overview:"main", traits:"character", archetype:"character" };
 // "admin" is a hidden section (no tab) reachable only while admin mode is on.
 const normSection = s => s==="admin" ? (S.admin?"admin":"main")
                         : (SHEET_IDS.includes(s) ? s : (LEGACY_SECTION[s] || "main"));
