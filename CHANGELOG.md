@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.35.0
+## v0.35.0 — 2026-10-01
 
 - **Everyone starts with 4 LUCK.** It was 2. LUCK you bought with Character Points still
   sits on top, so every character, locked ones included, has 2 more than before.
