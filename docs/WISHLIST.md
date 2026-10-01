@@ -57,9 +57,10 @@ engine reader first. Decision 5 needs superseding, and the CRB's Luck section
 
 ### The sheet at the table (from the design critique)
 
-W42 and W44–W46 are what's left of the 2026-09-30 design critique (score
-28/40, snapshot in `.impeccable/critique/`) after its combat-table finding and
-W43 (tap targets and small text) shipped in 0.32.1. All are **player-facing
+W44–W46 are what's left of the 2026-09-30 design critique (score
+28/40, snapshot in `.impeccable/critique/`) after its combat-table finding,
+W43 (tap targets and small text, 0.32.1) and W42 (Health verbs on Main, 0.33.0)
+shipped. All are **player-facing
 layout or behaviour**, so they're the *Rule or shape* tier ("propose before
 building"). None touches a rule. Measurements are from a 375px viewport; the
 Main tab was seen running, the other tabs were read from `DESIGN.md` and the
@@ -70,21 +71,6 @@ when built, checked against the code rather than guessed. Since W43, controls
 are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
 or on text under 11px, so a new control inherits the floor rather than
 re-arguing it.
-
-**W42 — Hurt, Heal and Take a hit are not visible on Main.** *Claude · 🔎 · critique P1*
-The most common change mid-fight lives behind tapping the Health card (or on
-Trackers). Main shows the numbers well but no verb. *The fix:* a visible
-Hurt / Heal / Hit row under the Health and Pain cards, bound by
-`bindVitalControls` so it can't drift from the popover. *To respect:* every
-change is a `commit()` with its undo toast; DESIGN.md's "shadows are for things
-that float" and no new neon.
-*Harden.* Each tap is its own `commit()` and its own toast, so five quick
-Hurt 1s are five undo steps. That's right (each can be taken back), but the
-toast must not stack five deep over the row being tapped. Hurt has no upper
-clamp in `bindVitalControls` (`setDamage` floors at 0 only), so the row must
-read sensibly past the last Health Level, where Massive damage and Helpless
-already mean something. On a phone the row has to fit three 44px buttons
-beside each other at 320px without wrapping into the Pain card.
 
 **W44 — The wizard's vitals rail buries the step on small screens.** *Claude · 🔎 · critique P2*
 At 1060px and below the vitals rail (BOD to LUCK) sits above step 1, and at 800px
@@ -138,6 +124,17 @@ animation can lose the click's permission to download, and the export is
 what keeps the character safe. A TAGless character has no barcode, so the
 beat needs a version for "Off grid". It plays on the lock and never again: not
 on a reload, a theme switch or a re-render of a sheet that's already locked.
+
+**W47 — A keyboard tap on Trackers loses its place.** *Claude · 🔎 · found building W42*
+Every `commit()` re-renders `#main`, which replaces the button that was
+pressed, so focus falls to `<body>`: press Enter on Trackers' Hurt 1 and the
+next Enter does nothing, and Tab starts again from the top. The vitals
+popover already puts focus back (`refreshPopover`), and Main's W42 row does
+too (Decision 151). Trackers' stepper, SAN, LUCK and the recovery panels
+don't. *The fix:* one rule in `renderMain` rather than a patch per control:
+note the focused element's `data-*` key before the render and focus its twin
+after, falling back to somewhere harmless, never to a control that changes
+something (W42 found Heal 1 handing Enter to Hurt 1).
 
 ### Beyond one sheet
 

@@ -2,6 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.33.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Heal, Hurt and Take a hit, right on Main.** Under the Health and Pain cards there's now a row with **Heal 1**, **Hurt 1** and **Take a hit**, so a hit mid-fight is one tap without opening anything. Each tap is its own change with its own Undo. Tap the Health card for Heal 5, Hurt 5, an exact total or Heal all, as before.",
+      "**At zero, a hit goes through Take a hit.** Once your last Health Level empties, Main's Hurt 1 greys out: every hit at zero asks for a WILL check, and Take a hit is what asks."
+    ]
+  },
+  {
     "version": "0.32.1",
     "date": "2026-10-01",
     "intro": [],
