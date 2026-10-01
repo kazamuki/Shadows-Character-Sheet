@@ -239,14 +239,11 @@ function vitalsPanelHtml(ch){
      + `</div>`;
   return h;
 }
-// One skill category as a check table. cats: trained rows; opt. untrained too.
 // Skill rendering -----------------------------------------------------
 // A fixed colgroup keeps Rank / Check / Breakdown aligned across categories,
 // and each row carries a "?" that expands the skill's description from data.
-function skillColgroup(withRank=true){
-  return withRank
-    ? `<colgroup><col class="c-name"><col class="c-rank"><col class="c-check"><col class="c-break"></colgroup>`
-    : `<colgroup><col class="c-name"><col class="c-check"><col class="c-break"></colgroup>`;
+function skillColgroup(){
+  return `<colgroup><col class="c-name"><col class="c-rank"><col class="c-check"><col class="c-break"></colgroup>`;
 }
 // A skill's option picks (Martial Arts styles), read from the data through
 // Engine.picksFor, so no skill is named here (W33). What was chosen shows on
@@ -266,7 +263,7 @@ function skillDescRow(ch, def, cols, open){
     <div class="skill-desc-body">${esc(def.description||"No description on file.")}${covers?`<div class="covers">Covers: ${esc(covers)}</div>`:""}${offered}</div></td></tr>`;
 }
 // Returns the skill's main row plus its (hidden) description row.
-function skillRowPair(ch, l, {withRank=true}={}){
+function skillRowPair(ch, l){
   const open = !!(S.openSkills && S.openSkills.has(l.def.id));
   const focused = Engine.focusedSkillIds(ch);
   const b=l.breakdown;
@@ -277,21 +274,22 @@ function skillRowPair(ch, l, {withRank=true}={}){
   if (b.conditions) parts.push(`<span style="color:var(--magenta)">${b.conditions} conditions</span>`);
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
-  let tr = `<tr class="skill-line"${l.trained?"":' style="opacity:.72"'}>`;
+  // Decision 156: an untrained skill reads at full strength, Rank 0 dimmed.
+  let tr = `<tr class="skill-line${l.trained?"":" untrained"}">`;
   tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
-  if (withRank) tr += `<td class="num" data-k="Rank">${l.trained?l.rank:"—"}</td>`;
+  tr += `<td class="num" data-k="Rank">${l.trained?l.rank:0}</td>`;
   tr += `<td class="num" data-k="Check">1d10 + ${l.checkBonus}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
-  return tr + skillDescRow(ch, l.def, withRank?4:3, open);
+  return tr + skillDescRow(ch, l.def, 4, open);
 }
 // One category as a standalone aligned table (used on Main for Combat).
 function skillTableHtml(ch, cid, cname, {includeUntrained=false}={}){
   const all = D.skills.filter(s=>s.category===cid).map(s=>Engine.skillLine(ch,s.id));
   const rows = includeUntrained ? all : all.filter(l=>l.trained);
   if (!rows.length) return "";
-  return `<table class="ref skill-table">${skillColgroup(true)}
+  return `<table class="ref skill-table">${skillColgroup()}
     <thead><tr><th>${esc(cname)}</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead>
-    <tbody>` + rows.map(l=>skillRowPair(ch,l,{withRank:true})).join("") + `</tbody></table>`;
+    <tbody>` + rows.map(l=>skillRowPair(ch,l)).join("") + `</tbody></table>`;
 }
 
 // ── Sheet: MAIN (what you need right now) ────────────────────────────
@@ -389,27 +387,22 @@ function renderShSkills(){
   let h = sheetHeader("Skills", "Every skill, grouped by category. Trained skills roll 1d10 + Rank + Primary Stat + Synergy; untrained roll 1d10 + Primary Stat only. Tap <b>?</b> on any skill for what it covers.");
   if (pain.level) h += `<p class="step-note">${esc(pain.label)} — all skill checks take ${pain.skillPenalty}; the totals below already include it.${painChip(pain)}</p>`;
   h += conditionTotalsNote(ch, false);
-  // One table, category subheader rows — columns stay aligned across all three.
-  let body="";
-  for (const [cid,cname] of [["combat","Combat"],["utility","Utility"],["general","General"]]){
-    const trained = D.skills.filter(s=>s.category===cid).map(s=>Engine.skillLine(ch,s.id)).filter(l=>l.trained);
-    if (!trained.length) continue;
-    body += `<tr class="cat-row"><td colspan="4">${esc(cname)}</td></tr>`;
-    body += trained.map(l=>skillRowPair(ch,l,{withRank:true})).join("");
-  }
-  if (body){
-    h += `<table class="ref skill-table">${skillColgroup(true)}
-      <thead><tr><th>Skill</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead>
-      <tbody>${body}</tbody></table>`;
-  } else h += `<p class="step-note">No trained skills.</p>`;
+  // Decision 156: every skill, trained or not, in its category, so every
+  // character's list reads the same. Two columns from 1000px: the categories
+  // in order, the first column taking them until it holds half the skills.
+  const cats = [["combat","Combat"],["utility","Utility"],["general","General"]]
+    .map(([cid,cname])=>({ cname, lines: D.skills.filter(s=>s.category===cid).map(s=>Engine.skillLine(ch,s.id)) }))
+    .filter(c=>c.lines.length);
+  const half = cats.reduce((n,c)=>n+c.lines.length, 0) / 2, cols = [[], []];
+  let left = 0;
+  for (const c of cats){ const i = left < half ? 0 : 1; cols[i].push(c); if (!i) left += c.lines.length; }
+  const colHtml = col => col.length ? `<table class="ref skill-table">${skillColgroup()}
+      <thead><tr><th>Skill</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead><tbody>` +
+    col.map(c=>`<tr class="cat-row"><td colspan="4">${esc(c.cname)}</td></tr>` + c.lines.map(l=>skillRowPair(ch,l)).join("")).join("") +
+    `</tbody></table>` : "";
+  h += cats.length ? `<div class="skill-cols">${cols.map(c=>`<div class="skill-col">${colHtml(c)}</div>`).join("")}</div>`
+                   : `<p class="step-note">No skills defined.</p>`;
   h += checkRulesHtml();
-  const untrained = D.skills.map(s=>Engine.skillLine(ch,s.id)).filter(l=>!l.trained);
-  if (untrained.length){
-    h += `<details class="group"><summary>Untrained — 1d10 + Primary Stat only (${untrained.length})</summary>
-      <table class="ref skill-table">${skillColgroup(false)}<tbody>` +
-      untrained.map(l=>skillRowPair(ch,l,{withRank:false})).join("") +
-      `</tbody></table></details>`;
-  }
   return h;
 }
 
@@ -1433,36 +1426,62 @@ function adminWriteInHtml(ch){
     <div class="sect">Vulnerabilities</div>${rows("vulnerabilities", "Vulnerability")}`;
 }
 
-// The character's own powers (Decision 153). Each field is edited in place
-// and logged when it changes, like an armor field; Add power takes an
-// optional IP cost, and the power and its spend are one change, one Undo.
-// Removing one is Admin's: a bought power's IP stays spent.
+// The character's own powers (Decisions 153, 154). In play a power reads as
+// written: its name, uses and effect change by Improve, for IP, and Add power
+// costs IP too; each is the change and its spend, one Undo. Admin edits the
+// words in place, adds a power free and removes one (its IP stays spent).
+// Notes are the player's, always.
+function powerFieldsHtml(attr, p, uses){
+  const v = k => p ? esc(p[k]) : "";
+  return `<div class="wi-pair">
+      <label class="field"><span>Name</span><input type="text" ${attr("name")} value="${v("name")}"></label>
+      <label class="field"><span>Uses</span><input type="text" list="power-uses" ${attr("uses")} value="${v("uses")}" placeholder="SFR, TOL, a Kicker die…"></label>
+    </div>
+    <label class="field"><span>Effect</span><textarea rows="2" ${attr("effect")}>${v("effect")}</textarea></label>`;
+}
+function powerCostHtml(attr, free){
+  return `<div class="wi-pair">
+      <label class="field"><span>${free?"IP cost (blank for none)":"IP cost"}</span><input type="text" inputmode="numeric" pattern="[0-9]*" ${attr("cost")} placeholder="${free?"0":""}"></label>
+      <label class="field"><span>Note for the IP journal</span><input type="text" ${attr("note")}></label>
+    </div>`;
+}
 function powersPanelHtml(ch){
   const powers = Engine.archetypeContent(ch).powers.filter(p=>p.custom), wi = Engine.writeInOptions(ch);
   const uses = wi ? wi.powerUses : [], ip = Engine.ipState(ch);
   let h = `<datalist id="power-uses">${uses.map(u=>`<option value="${esc(u)}">`).join("")}</datalist>`;
-  h += powers.map(p=>`<div class="pick wi-row">
-    <div class="wi-pair">
-      <label class="field"><span>Name</span><input type="text" data-pwedit="${esc(p.id)}|name" value="${esc(p.name)}"></label>
-      <label class="field"><span>Uses</span><input type="text" list="power-uses" data-pwedit="${esc(p.id)}|uses" value="${esc(p.uses)}"></label>
-    </div>
-    <label class="field"><span>Effect</span><textarea rows="2" data-pwedit="${esc(p.id)}|effect">${esc(p.effect)}</textarea></label>
-    <label class="field"><span>Notes</span><input type="text" data-pwedit="${esc(p.id)}|notes" value="${esc(p.notes)}"></label>
-    ${S.admin?`<button class="btn sm danger" data-pwdel="${esc(p.id)}">Remove</button>`:""}</div>`).join("");
+  const notes = p => `<label class="field"><span>Notes</span><input type="text" data-pwedit="${esc(p.id)}|notes" value="${esc(p.notes)}"></label>`;
+  h += powers.map(p=> S.admin
+    ? `<div class="pick wi-row">${powerFieldsHtml(k=>`data-pwedit="${esc(p.id)}|${k}"`, p, uses)}${notes(p)}
+        <button class="btn sm danger" data-pwdel="${esc(p.id)}">Remove</button></div>`
+    : `<div class="pick wi-row pw-card"><div class="head"><h4>${esc(p.name)||"Unnamed power"}</h4>${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}
+        <button class="btn sm" data-pwimprove="${esc(p.id)}">Improve</button></div>
+        <div class="desc">${esc(p.effect)||"No effect written."}</div>${notes(p)}</div>`).join("");
   if (!powers.length) h += `<p class="step-note">No powers yet.</p>`;
   h += `<details class="group pw-add"><summary>Add a power</summary><div class="ref-body">
-    <div class="wi-pair">
-      <label class="field"><span>Name</span><input type="text" data-pwnew="name"></label>
-      <label class="field"><span>Uses</span><input type="text" list="power-uses" data-pwnew="uses" placeholder="SFR, TOL, a Kicker die…"></label>
-    </div>
-    <label class="field"><span>Effect</span><textarea rows="2" data-pwnew="effect"></textarea></label>
-    <div class="wi-pair">
-      <label class="field"><span>IP cost (optional)</span><input type="text" inputmode="numeric" pattern="[0-9]*" data-pwnew="cost" placeholder="0"></label>
-      <label class="field"><span>Note for the IP journal</span><input type="text" data-pwnew="note"></label>
-    </div>
-    <p class="step-note">${esc(copy("powerAddNote"))} You have ${ip.available} IP.</p>
+    ${powerFieldsHtml(k=>`data-pwnew="${k}"`, null, uses)}${powerCostHtml(k=>`data-pwnew="${k}"`, S.admin)}
+    <p class="step-note">${esc(copy(S.admin?"powerAddAdminNote":"powerAddNote"))} You have ${ip.available} IP.</p>
     <button class="btn" data-pwadd-go>Add power</button></div></details>`;
   return h;
+}
+// Improve: the power's words as they stand, to rewrite, and what it costs.
+function openImprovePower(ch, id){
+  const p = (ch.powers||[]).find(x=>x && x.id===id); if (!p) return;
+  const wi = Engine.writeInOptions(ch), uses = wi ? wi.powerUses : [];
+  openModal({ title:`Improve ${p.name||"this power"}`,
+    html:`${powerFieldsHtml(k=>`data-pwimp="${k}"`, p, uses)}${powerCostHtml(k=>`data-pwimp="${k}"`, false)}
+      <p class="step-note">${esc(copy("powerImproveNote"))} You have ${Engine.ipState(ch).available} IP.</p>`,
+    foot:`<button class="btn primary" data-pwimp-go>Improve</button><button class="btn" data-modalclose>Cancel</button>`,
+    bind(body, foot){
+      foot.querySelector("[data-pwimp-go]").onclick=()=>{
+        const input = {};
+        body.querySelectorAll("[data-pwimp]").forEach(el=>{ input[el.dataset.pwimp] = el.value; });
+        // A refusal leaves the form as typed: try it on a copy first.
+        const r = Engine.improvePower(clone(ch), id, input);
+        if (!r.ok) { notice(r.why); return; }
+        closeModal();
+        commit("power", `Improved ${input.name.trim()} (${r.cost} IP)`, ()=>{ Engine.improvePower(ch, id, input); });
+      };
+    } });
 }
 
 function gearRowsHtml(ch){
@@ -1983,7 +2002,7 @@ function pBuildTag(){
 function pHead(ch, title){
   return `<div class="p-head">
     <div><div class="p-wordmark">Shadows<small>Adventures in NYTE City</small></div>${pBuildTag()}</div>
-    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}${ch && intakeOf(ch)?`<div class="p-intake">${Engine.tagReading(ch)?`<b>${esc(Engine.tagReading(ch).label)}</b>`:""}${intakeBarsSvg(intakeOf(ch))}<span>${esc(intakeOf(ch))}</span></div>`:""}</div>
+    <div class="p-name"><span class="p-label">${esc(title)}</span>${pLine(ch && ch.identity.name)}${ch && intakeOf(ch)?`<div class="p-intake">${Engine.tagReading(ch)?`<b>${esc(Engine.tagReading(ch).label)}</b>`:""}${intakeBarsSvg(intakeOf(ch))}<span>${esc(Engine.tagNumber(ch))}</span></div>`:""}</div>
   </div>`;
 }
 function pStatIcon(id){
@@ -2807,19 +2826,22 @@ function bindSheet(){
     const [kind,i]=b.dataset.lorm.split("|"), n=loName(kind, Number(i));
     commit("loadout", `Removed ${n}`, ()=>{ Engine.removeLoadout(ch, kind, Number(i)); });
   });
-  // Powers (Decision 153): a field edit is one logged change when it's left.
+  // Powers (Decisions 153, 154): a field edit is one logged change when it's
+  // left. Notes are anyone's; the words are Admin's, and logged as Admin.
   main.querySelectorAll("[data-pwedit]").forEach(el=>el.onchange=()=>{
     const [id, k] = el.dataset.pwedit.split("|"), p = (ch.powers||[]).find(x=>x && x.id===id);
-    if (!p || p[k]===el.value) return;
-    commit("power", `${p.name||"Power"}: ${k} → ${el.value===""?"—":el.value.slice(0,40)}`, ()=>{ p[k] = el.value; });
+    if (!p || p[k]===el.value || (k!=="notes" && !S.admin)) return;
+    const label = `${p.name||"Power"}: ${k} → ${el.value===""?"—":el.value.slice(0,40)}`;
+    commit(k==="notes"?"power":"admin", k==="notes"?label:`Admin: ${label}`, ()=>{ p[k] = el.value; });
   });
+  main.querySelectorAll("[data-pwimprove]").forEach(b=>b.onclick=()=>openImprovePower(ch, b.dataset.pwimprove));
   main.querySelectorAll("[data-pwadd-go]").forEach(b=>b.onclick=()=>{
-    const input = {};
+    const input = {}, free = !!S.admin;
     main.querySelectorAll("[data-pwnew]").forEach(el=>{ input[el.dataset.pwnew] = el.value; });
     // A refusal leaves the form as typed: try it on a copy first.
-    const r = Engine.addPower(clone(ch), input);
+    const r = Engine.addPower(clone(ch), input, { free });
     if (!r.ok) { notice(r.why); return; }
-    commit("power", `Power: ${input.name.trim()}${r.cost?` (${r.cost} IP)`:""}`, ()=>{ Engine.addPower(ch, input); });
+    commit(free?"admin":"power", `${free?"Admin: power":"Power"}: ${input.name.trim()}${r.cost?` (${r.cost} IP)`:""}`, ()=>{ Engine.addPower(ch, input, { free }); });
   });
   main.querySelectorAll("[data-pwdel]").forEach(b=>b.onclick=()=>{
     const p = (ch.powers||[]).find(x=>x && x.id===b.dataset.pwdel); if (!p) return;

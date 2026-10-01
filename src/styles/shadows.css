@@ -229,6 +229,7 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .pick.selected{border-color:var(--green)}
 .pick .head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
 .pick .head h4{font-size:.92rem; font-weight:600}
+.pw-card .head [data-pwimprove]{margin-left:auto}
 .pick .cost{font-family:var(--mono); font-size:.72rem; color:var(--gold)}
 .pick .cost.grant{color:var(--green)}
 .pick .desc{font-size:.8rem; color:var(--dim); margin-top:5px; white-space:pre-line}
@@ -779,6 +780,9 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .skill-table .c-check{width:120px}
 .skill-table .c-break{width:38%}
 .skill-table th,.skill-table td{overflow-wrap:anywhere}
+.skill-table tr.untrained td.num[data-k="Rank"]{color:var(--dim)}
+.skill-cols{display:grid; grid-template-columns:1fr; column-gap:28px}
+@media (min-width:1000px){ .skill-cols{grid-template-columns:1fr 1fr} .skill-cols .skill-table .c-break{width:34%} }
 .ref td.bd{font-family:var(--mono); font-size:.72rem; color:var(--dim)}
 /* On a phone the fixed grid left the name column about 25px wide and every
    skill broke one letter per line. Each skill becomes a line of its own: the

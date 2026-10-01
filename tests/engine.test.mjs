@@ -2387,12 +2387,19 @@ test("W41: a TAGless character's TAG reads Off grid, a Ghost TAG over it still w
   const r = Engine.tagReading(c);
   same([r.label, r.tagless], [D.tag.tagless.label, true]);
   assert.match(r.text, /skrip/);
+  // Decision 155: a TAGless number reads without its TAG- prefix.
+  assert.equal(Engine.tagNumber(c), id.slice(4), "a TAGless number still reads TAG-");
+  assert.ok(/^TAG-/.test(id) && !/^TAG-/.test(Engine.tagNumber(c)));
   c.advantages.push({ id: "ghost-tag-s", rank: 1 });
+  assert.equal(Engine.tagNumber(c), id, "a Ghost TAG is a TAG: it keeps the prefix");
   const g = Engine.tagReading(c);
   assert.equal(g.label, "Ghost TAG", "a counterfeit is what a scanner reads");
   assert.ok(g.text.includes(D.tag.tagless.text) && /Black TAG/.test(g.text), "the tip doesn't say both");
   c.identity.tagless = false;
   assert.equal(Engine.tagReading(c).tagless, false);
+  c.advantages = [];
+  assert.equal(Engine.tagNumber(c), id, "a TAG'd number lost its prefix");
+  same([Engine.tagNumber(null), Engine.tagNumber({ meta: { id: 7 } }), Engine.tagNumber({})], ["", "", ""]);
   assert.equal(c.meta.id, id, "reading the TAG changed the stored number");
 });
 
@@ -2649,10 +2656,13 @@ test("validate: a write-in archetype needs a name and a classification; Other's 
   assert.ok(!issues(subject(), "review").includes(`warn: ${copy}`));
 });
 
-test("addPower writes a row either way, and an IP cost is a journal spend one undo takes back with it", () => {
+test("addPower costs IP in play, Admin's is free, and the spend is a journal entry one undo takes back with it", () => {
   const ch = writtenIn();
   ch.progression.ip.earned = 20;
-  const free = Engine.addPower(ch, { name: " Fade ", uses: "SFR", effect: "Unseen for a round." });
+  const refusedHere = input => { const n = JSON.stringify(ch); const r = Engine.addPower(ch, input); assert.equal(JSON.stringify(ch), n, `refused but wrote: ${r.why}`); return r; };
+  assert.match(refusedHere({ name: "Fade" }).why || "", /costs IP/, "a power was added in play with no cost (Decision 154)");
+  assert.equal(refusedHere({ name: "Fade", cost: "0" }).ok, false, "a power was added in play for 0 IP");
+  const free = Engine.addPower(ch, { name: " Fade ", uses: "SFR", effect: "Unseen for a round." }, { free: true });
   assert.ok(free.ok && /^pw-/.test(free.id), JSON.stringify(free));
   same([ch.powers[0].name, ch.powers[0].custom, ch.progression.ip.log.length], ["Fade", true, 0], "a free power touched IP");
 
@@ -2673,8 +2683,34 @@ test("addPower writes a row either way, and an IP cost is a journal spend one un
   assert.equal(refused({ name: "  " }), false, "no name");
   assert.equal(refused("junk"), false);
   const built = subject();
-  assert.equal(Engine.addPower(built, { name: "Fade" }).ok, false, "an archetype with no powers panel took a power");
-  assert.ok(Engine.addPower(ch, { name: "Free again", cost: "" }).ok, "a blank cost is free");
+  assert.equal(Engine.addPower(built, { name: "Fade" }, { free: true }).ok, false, "an archetype with no powers panel took a power");
+  assert.ok(Engine.addPower(ch, { name: "Free again", cost: "" }, { free: true }).ok, "Admin's blank cost isn't free");
+});
+
+test("improvePower rewrites a power's name, uses and effect for IP, as one undoable change (Decision 154)", () => {
+  const ch = writtenIn();
+  ch.progression.ip.earned = 20;
+  const { id } = Engine.addPower(ch, { name: "Fade", uses: "SFR", effect: "Unseen for a round.", notes: "mine" }, { free: true });
+  const refused = (input, why) => { const n = JSON.stringify(ch); const r = Engine.improvePower(ch, id, input); assert.equal(JSON.stringify(ch), n, `refused but wrote: ${r.why}`); assert.match(r.why || "", why); };
+  const better = { name: "Fade", uses: "SFR", effect: "Unseen for two rounds." };
+  refused(better, /costs IP/);
+  refused({ ...better, cost: 0 }, /at least 1/);
+  refused({ ...better, cost: 21 }, /Not enough IP/);
+  refused({ name: "Fade", uses: "SFR", effect: "Unseen for a round.", cost: 5 }, /Nothing/);
+  refused({ ...better, name: " ", cost: 5 }, /name/);
+  assert.equal(Engine.improvePower(ch, "pw-nothere", { ...better, cost: 5 }).ok, false);
+  assert.equal(Engine.improvePower(subject(), id, { ...better, cost: 5 }).ok, false, "an archetype with no powers panel improved a power");
+
+  const before = JSON.parse(JSON.stringify(ch));
+  const r = Engine.improvePower(ch, id, { ...better, cost: "8", note: "trained with the coven" });
+  assert.ok(r.ok, r.why);
+  Engine.recordAction(ch, "power", "Improved Fade", before);
+  same([ch.powers[0].effect, ch.powers[0].notes, ch.powers[0].id], ["Unseen for two rounds.", "mine", id], "notes or id moved");
+  const spend = ch.progression.ip.log[0];
+  same([spend.amount, spend.targetType, spend.targetId, spend.note], [8, "power", id, "trained with the coven"]);
+  same(Engine.versionCheck(ch).filter(x => /power/i.test(x)), [], "a second spend on one power looks like a hand edit");
+  assert.ok(Engine.undoLastAction(ch).ok);
+  same([ch.powers[0].effect, ch.progression.ip.log.length], ["Unseen for a round.", 0], "one undo didn't take back both");
 });
 
 test("versionCheck matches a power's spend to its row, and says when the power is gone", () => {

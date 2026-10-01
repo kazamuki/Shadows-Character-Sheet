@@ -1043,6 +1043,7 @@ No cascade logic to maintain — it falls out of the architecture.
     inline detail row (description + "Covers:" from `shadows-data.js`); open state
     is tracked in `S.openSkills` and toggled without a full re-render. Extended to
     the Main combat table for consistency. (Ken, 2026-06-16)
+    → **Superseded in part by Decision 156** — each column of the Skills tab is its own table, and untrained skills are listed in it.
 45. **(Phase 3.2)** **Traits collapsible.** Advantages and disadvantages render
     as collapsible cards (`<details>`): the summary shows name + CP cost,
     expanding to the description. Default collapsed. (Ken, 2026-06-16)
@@ -3257,7 +3258,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 128 in part: the `NCR-` format and the "Intake No." label.
      - **Revisit if:** W31 gives the character a way to be TAGless or carry a Ghost TAG, which changes the label, never the stored number.
      - **Built:** app 0.24.1, character schema 0.12; `engine.test.mjs` and `smoke.test.mjs` (Decision 133), mutation-tested.
-     → **Superseded in part by Decision 146**: a held Ghost TAG labels the TAG.
+     → **Superseded in part by Decisions 146 and 155** — 146: a held Ghost TAG labels the TAG. 155: a TAGless character's number is shown without the TAG- prefix.
 
 134. **Focused Skills are data: ids, a category pick and an all-skills price, read by one generic reader.**
      *2026-09-24 · Ken + Claude · Touches: focusedSkills, focusedSkillPicks, Focused Skill Max Bonus, maxSkillRank, skillRankCap, canBoost, ipCost, ip.skillIncreaseCost, Jack of All Trades, Mercenary, Cleaner, Natural Advantages, focusedSkills panel, specializationText panel, A8, B12–B14, F33*
@@ -3452,6 +3453,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 146 in part: `tagReading` reads TAGless too, and a Ghost TAG's text says so when both hold.
      - **Revisit if:** the CRB gives going TAGless a mechanical cost, or the app starts computing the UBI.
      - **Built:** app 0.31.0, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W41), mutation-tested. Log 2026-09-26.
+     → **Superseded in part by Decision 155**: a TAGless character's number reads without its TAG- prefix.
 
 149. **A weapon remembers the specialty rounds it's loaded with, their tags join its line, and Reload asks which rounds when more than one kind fits.**
      *2026-09-26 · Ken + Claude · Touches: weapons[i].loaded, reloadWeapon, reload.specialty, reload.needsMod, firesOnly, Angel Mod, silver-rounds, holy-points, angel-rounds, weaponLine.loaded, reloadFrom.swap, weaponRules.swap, character schema 0.14, W40, F26, F34*
@@ -3516,6 +3518,43 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing. Extends Decision 15's statuses and 152's classifications.
      - **Revisit if:** powers need a catalog, a price or mechanical fields; Deighton rules on Magical being (W53); W48–W50 are wanted.
      - **Built:** schema 0.16, game data 0.27, app 0.33.0 (unreleased). Engine in S2; wizard, sheet and print in S3–S5. Log 2026-09-30 and 2026-10-01.
+     → **Superseded in part by Decision 154**: a power's text isn't editable in play; Improve and Add power cost IP outside Admin.
+
+154. **In play a power reads as written: its words change by Improve, for IP, and Admin edits them free.**
+     *2026-10-01 · Ken + Claude · Touches: powers, improvePower, addPower, powerCost, Improve, Add power, IP cost, IP journal, Admin mode, Loadout & Powers, notes, powerAddNote, powerAddAdminNote, powerImproveNote, custom archetype*
+     - **Decided:** On Loadout & Powers a character's own power is a read-only card: name, uses, effect. **Improve** opens its words with a required IP cost (a whole number, at least 1) and a journal note; the new words and the spend are one commit, one Undo (`Engine.improvePower`). **Add power** in play costs IP too. **Admin** edits the words in place, logged as Admin, and adds a power free (`addPower(ch, input, { free:true })`), for what creation missed. Notes stay free to edit for everyone. Creation's powers stay free (XQ2).
+     - **Why:** Ken's playtest: a power anyone can quietly rewrite isn't a power. A free Improve or Add would be open editing with an extra click, and free fixes are what Admin is for.
+     - **Rejected:**
+       - Admin-only, with no way to grow a power in play: the IP economy is how a character grows.
+       - An optional cost, as Add power had: a blank cost made it free editing again (Ken agreed).
+       - Locking Notes: they're the player's scratch, not the power's rules. Sticky-note cards on Notes are W55.
+       - A history of versions on the power row: the IP journal and the audit trail already hold it, with no schema change.
+     - **Replaces:** Decision 153 in part: a power's text is no longer editable in play, and Add power's IP cost is required outside Admin.
+     - **Revisit if:** powers gain a price list or ranks (Decision 153's Revisit), or a GM wants free rewording in play without Admin.
+     - **Built:** app 0.34.0; `engine.test.mjs` and `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+
+155. **A TAGless character's number reads without its TAG- prefix; the stored number keeps it.**
+     *2026-10-01 · Ken + Claude · Touches: tagNumber, tagReading, meta.id, TAG, TAGless, identity.tagless, Ghost TAG, counterfeit, intake, print header, Review, roster, replace guard, W41*
+     - **Decided:** `Engine.tagNumber(ch)` is how the number reads everywhere it shows (Main's header, Review, the print header, Home's roster and the replace and import prompts): a TAGless character's drops `TAG-`, so it reads `XXXX-XXXX-XXXX` under "Off grid". A held Ghost TAG keeps the prefix, since the counterfeit is a TAG. The bars are drawn from the same twelve characters either way.
+     - **Why:** Ken: the TAG- prefix is flavour, and a character with no TAG shouldn't carry one.
+     - **Rejected:**
+       - Rewriting the stored `meta.id`: `migrate()` reissues anything not shaped `TAG-…`, the roster is keyed by it, and every file needs the number (Decision 133). It would need a schema bump for no gain.
+       - Dropping the prefix under a Ghost TAG too: a scanner reads a TAG there (Decision 148's reason for its label winning).
+     - **Replaces:** Decision 148 in part, and Decision 133 in part: the number shown is no longer always `meta.id` itself.
+     - **Revisit if:** the CRB gives the number a meaning of its own for TAGless people, or W31's labels change.
+     - **Built:** app 0.34.0; `engine.test.mjs` and `smoke.test.mjs` (W41), mutation-tested. Log 2026-10-01.
+
+156. **The Skills tab lists every skill in its category, trained or not, in two columns from 1000px.**
+     *2026-10-01 · Ken + Claude · Touches: Skills tab, renderShSkills, skill-table, skill-cols, untrained, Rank 0, skillRowPair, skillColgroup, cat-row, Combat, Utility, General*
+     - **Decided:** Every skill is listed in its category, trained or not, so every character's Skills tab reads the same; the Untrained expander is gone. An untrained skill shows Rank 0, dimmed, its check as the engine computes it (1d10 + Primary Stat), and its row at full strength, Main's combat table included. From 1000px the categories split into two columns, in data order and never split, the first taking them until it holds half the skills (today Combat and Utility, then General); one column on a phone.
+     - **Why:** Ken's playtest: one long column left a gulf between a skill's name and its numbers on a desktop, and hiding untrained skills made each character's list different.
+     - **Rejected:**
+       - Dimming untrained rows: the point is that every list reads the same; Rank 0 and "untrained" in the breakdown tell them apart.
+       - One table across both columns, for alignment: Rank, Check and Breakdown line up within a column, which is where the eye travels.
+       - A column per category: three columns don't fit beside the breakdown, and General alone outweighs the other two.
+     - **Replaces:** Decision 44 in part: one table per column, not one for all three categories.
+     - **Revisit if:** a category is added, or the print sheet's Skills panels (Decision 94) want the same order.
+     - **Built:** app 0.34.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
 
 ## 5. Open Flags
 
