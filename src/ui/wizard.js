@@ -220,6 +220,9 @@ function renderArchetype(){
       <p>${esc(a.summary||"")}</p>
     </button>`).join("") + `</div>`;
   if (!sel) return h;
+  // A write-in archetype (Decision 153) is the player's to describe.
+  const wi = Engine.writeInOptions(ch);
+  if (wi) return h + writeInHtml(ch, wi);
   if (sel.flagged) h += flagHtml(sel);
   if (sel.lore) h += `<p class="flavor arch-lore">${esc(sel.lore)}</p>`;
   if (sel.gameplayStyle) h += `<p class="step-note" style="margin-top:16px">${esc(sel.gameplayStyle)}</p>`;
@@ -345,6 +348,52 @@ function renderArchetype(){
       sel.baselineTraits.map(t=>`<div class="pick"><div class="head"><h4>${esc(t.name)}</h4></div>
         <div class="desc">${esc(t.description||"")}${t.benefit?"\n"+esc(t.benefit):""}${t.effects?"\n• "+t.effects.map(esc).join("\n• "):""}</div></div>`).join("") + `</details>`;
   }
+  return h;
+}
+
+// The write-in block (Decision 153): what it is, its classification, the
+// mechanics it uses, then three lists the player writes. Text fields save as
+// they're typed without a redraw, so focus stays put; a click redraws.
+function writeInHtml(ch, wi){
+  const w = ch.archetypeChoices.writeIn, cls = Engine.classification(ch);
+  let h = `<div class="sect">Your archetype</div>
+    <p class="step-note">${esc(copy("writeInIntro"))}</p>
+    <label class="field"><span>What are you?</span>
+      <input type="text" data-wi="name" value="${esc(w.name)}" placeholder="Changeling, ghoul, something worse" maxlength="80"></label>
+    <label class="field"><span>Description (optional)</span>
+      <textarea data-wi="description" rows="2" placeholder="A sentence or two the table will read.">${esc(w.description||"")}</textarea></label>`;
+  h += `<div class="sect">Classification</div>
+    <p class="step-note">${esc(copy("writeInClassification"))}</p>
+    <div class="cards three">` + wi.classifications.map(c=>`
+    <button class="card ${cls&&cls.id===c.id?"selected":""}" data-wicls="${esc(c.id)}" aria-pressed="${cls&&cls.id===c.id}">
+      <h3>${esc(c.name)}</h3><p>${esc(c.description||"")}</p></button>`).join("") + `</div>`;
+  if (cls && cls.writeIn) h += `<label class="field"><span>${esc(cls.name)}: in your words</span>
+    <input type="text" data-wi="classificationText" value="${esc(w.classificationText)}" placeholder="Magical being" maxlength="60"></label>`;
+  h += `<div class="sect">What it uses</div><div class="wi-mechanics">` + wi.mechanics.map(m=>`
+    <label class="check"><input type="checkbox" data-wimech="${esc(m.id)}" ${m.on?"checked":""}>
+      <span><b>${esc(m.label)}</b>${m.note?` <small>${esc(m.note)}</small>`:""}</span></label>`).join("") + `</div>`;
+  const textList = (key, title, note, noun) => {
+    const rows = Array.isArray(w[key]) ? w[key] : [];
+    return `<div class="sect">${esc(title)}</div><p class="step-note">${esc(note)}</p>` +
+      rows.map((r, i)=>`<div class="pick wi-row">
+        <label class="field"><span>Name</span><input type="text" data-wirow="${key}|${i}|name" value="${esc(r.name)}"></label>
+        <label class="field"><span>What it does</span><textarea rows="2" data-wirow="${key}|${i}|description">${esc(r.description)}</textarea></label>
+        <button class="btn sm" data-wirm="${key}|${i}" aria-label="Remove this ${noun}">Remove</button></div>`).join("") +
+      `<button class="btn sm" data-wiadd="${key}">+ Add a ${noun}</button>`;
+  };
+  h += textList("traits", "Baseline traits", copy("writeInTraits"), "trait");
+  const powers = Engine.archetypeContent(ch).powers;
+  h += `<div class="sect">Powers</div><p class="step-note">${esc(copy("writeInPowers"))}</p>
+    <datalist id="power-uses">${wi.powerUses.map(u=>`<option value="${esc(u)}">`).join("")}</datalist>` +
+    powers.map(p=>`<div class="pick wi-row">
+      <div class="wi-pair">
+        <label class="field"><span>Name</span><input type="text" data-pwf="${esc(p.id)}|name" value="${esc(p.name)}"></label>
+        <label class="field"><span>Uses</span><input type="text" list="power-uses" data-pwf="${esc(p.id)}|uses" value="${esc(p.uses)}" placeholder="SFR, TOL, a Kicker die…"></label>
+      </div>
+      <label class="field"><span>Effect</span><textarea rows="2" data-pwf="${esc(p.id)}|effect">${esc(p.effect)}</textarea></label>
+      <button class="btn sm" data-pwrm="${esc(p.id)}" aria-label="Remove this power">Remove</button></div>`).join("") +
+    `<button class="btn sm" data-pwadd>+ Add a power</button>`;
+  h += textList("vulnerabilities", "Vulnerabilities", copy("writeInVulnerabilities"), "vulnerability");
   return h;
 }
 
@@ -515,7 +564,7 @@ function renderReview(){
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
     <span class="pool">Starting ${CR} <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
   h += `<div class="review-block"><h3>${esc(ch.identity.name)||"Unnamed"}</h3>${intakeHtml(ch)}<div class="kv">
-    <span class="k">Archetype</span><span class="v">${a?esc(a.name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
+    <span class="k">Archetype</span><span class="v">${a?esc(Engine.archetypeContent(ch).name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
     <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
     <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
     <span class="k">Derived</span><span class="v">TOL ${der.TOL} · WILL ${der.WILL} · SAN ${der.SAN}% · ${hp.levels} HL / ${hp.total} HP · LUCK ${D.resources.luck.startingValue+ch.trackers.luck.bonus}</span>
@@ -554,7 +603,7 @@ function rosterCardHtml(e){
   const arch=D.archetypes.find(a=>a.id===c.identity.archetype);
   const where = locked ? "Sheet · "+((SHEET_SECTIONS.find(s=>s.id===normSection(e.section))||SHEET_SECTIONS[0]).label)
                        : `Draft · step ${stepOf(e.step)+1} of ${STEPS.length}`;
-  const bits=[arch?arch.name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
+  const bits=[arch?Engine.archetypeContent(c).name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card" data-card="${id}">
     <div class="roster-top"><b class="roster-name">${esc(String(c.identity.name||"").trim() || "Unnamed")}</b><span class="roster-where">${esc(where)}</span></div>
     <div class="roster-meta"><span class="roster-tag">${id}</span>${bits?" · "+bits:""}</div>
@@ -768,6 +817,7 @@ function bindMain(){
     update(false); refreshNav();
   });
   main.querySelectorAll("[data-tagless]").forEach(b=>b.onclick=()=>{ ch.identity.tagless = b.dataset.tagless==="1"; update(); });
+  bindWriteIn(main, ch);
   // export / lock
   main.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>exportChar());
   main.querySelectorAll("[data-lock]").forEach(b=>b.onclick=()=>{
@@ -780,6 +830,55 @@ function bindMain(){
     window.scrollTo(0,0); update();
     exportChar();
   });
+}
+
+// The write-in block's controls (Decision 153). Typing saves without a
+// redraw; adding, removing and picking redraw, and an added row takes focus.
+function bindWriteIn(main, ch){
+  const w = ch.archetypeChoices.writeIn;
+  if (!w || typeof w!=="object") return;
+  const typed = () => { update(false); refreshNav(); };
+  const focusLast = sel => { const all = main.querySelectorAll(sel); if (all.length) all[all.length-1].focus(); };
+  main.querySelectorAll("[data-wi]").forEach(inp=>inp.oninput=()=>{
+    const k = inp.dataset.wi;
+    w[k] = k==="description" && inp.value==="" ? null : inp.value;
+    typed();
+  });
+  main.querySelectorAll("[data-wicls]").forEach(b=>b.onclick=()=>{
+    w.classification = b.dataset.wicls;
+    // Decision 152: a classification that can't buy an Advantage drops it.
+    ch.advantages = ch.advantages.filter(x=>x.source==="natural" || Engine.canBuyAdvantage(ch, x.id));
+    update();
+  });
+  main.querySelectorAll("[data-wimech]").forEach(box=>box.onchange=()=>{
+    const id = box.dataset.wimech, on = new Set(Array.isArray(w.mechanics) ? w.mechanics : []);
+    box.checked ? on.add(id) : on.delete(id);
+    w.mechanics = [...on];
+    update();
+  });
+  main.querySelectorAll("[data-wirow]").forEach(inp=>inp.oninput=()=>{
+    const [key, i, field] = inp.dataset.wirow.split("|"), row = (w[key]||[])[Number(i)];
+    if (row) { row[field] = inp.value; typed(); }
+  });
+  main.querySelectorAll("[data-wiadd]").forEach(b=>b.onclick=()=>{
+    const key = b.dataset.wiadd;
+    if (!Array.isArray(w[key])) w[key] = [];
+    w[key].push({ name:"", description:"" });
+    update(); focusLast(`[data-wirow^="${key}|"][data-wirow$="|name"]`);
+  });
+  main.querySelectorAll("[data-wirm]").forEach(b=>b.onclick=()=>{
+    const [key, i] = b.dataset.wirm.split("|");
+    if (Array.isArray(w[key])) w[key].splice(Number(i), 1);
+    update();
+  });
+  main.querySelectorAll("[data-pwf]").forEach(inp=>inp.oninput=()=>{
+    const [id, field] = inp.dataset.pwf.split("|"), row = (ch.powers||[]).find(p=>p && p.id===id);
+    if (row) { row[field] = inp.value; typed(); }
+  });
+  main.querySelectorAll("[data-pwadd]").forEach(b=>b.onclick=()=>{
+    if (Engine.newPower(ch).ok) { update(); focusLast(`[data-pwf$="|name"]`); }
+  });
+  main.querySelectorAll("[data-pwrm]").forEach(b=>b.onclick=()=>{ Engine.removePower(ch, b.dataset.pwrm); update(); });
 }
 
 function refreshNav(){

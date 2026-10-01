@@ -27,7 +27,7 @@ authority and is never read front to back; §1 below says which section to open.
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The architecture, the shape of the game data or a character file | `SCHEMA.md` §1, §2 and §3 |
 | What a change must touch (docs, versions, decision, changelog) | `../CLAUDE.md`, *Change tiers* (Decision 131) |
-| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **proposed:** `custom-archetype.md` (a custom archetype, and classification for every archetype, `XQ`_n_), `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **built, release pending:** `custom-archetype.md` (a custom archetype, and classification for every archetype, `XQ`_n_). **Proposed:** `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` — open items only |
 | A wishlist item that was built, and what it was before | `log/wishes-granted.md` — moved whole from `WISHLIST.md`, never edited |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
@@ -245,6 +245,7 @@ The generic archetype structure, and the pick that defines one.
 - **79** *(A3 — closes A1 and A2)* — One specialization model, and the count comes from the data.
 - **126** *(Option powers — B17)* — `starterPower`/`additionalPowers` render from the data; an array of plain objects on a power is a table; no text means "not written yet".
 - **134** *(Audit S3 — B12–B14)* — Focused Skills are data (`ids`, a category `choose`, an `all` price), read by one generic reader; the Focused cap and the IP prices are numbers the engine reads.
+- **153** *(Custom archetype — schema 0.16)* — An archetype with `writeIn` is written by the player (`archetypeChoices.writeIn`, `powers`); a panel's `when` follows a ticked mechanic; `archetypeContent` is the one reader; `addPower` takes an optional IP cost; Other classification; "off the books" badge.
 
 ### Character file & migration
 

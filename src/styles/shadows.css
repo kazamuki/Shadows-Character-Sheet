@@ -133,6 +133,15 @@ h1.step-title{font-family:var(--display); font-weight:600; font-size:1.7rem; let
 /* cards */
 .cards{display:grid; gap:12px}
 .cards.two{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.cards.three{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+/* A write-in archetype's editors (Decision 153) */
+.wi-mechanics{display:grid; gap:8px; margin-bottom:6px}
+.wi-mechanics label.check{display:flex; align-items:flex-start; gap:8px; font-size:.86rem}
+.wi-mechanics label.check small{display:block; color:var(--dim); font-size:.78rem}
+.wi-row label.field{margin-bottom:10px}
+.wi-row textarea, textarea[data-wi], .pw-add textarea{min-height:72px}
+.cards.three{margin-bottom:14px}
+.wi-pair{display:grid; gap:0 12px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 .card{background:var(--panel); border:1px solid var(--frame); border-radius:6px;
   padding:16px 18px; text-align:left; color:var(--text); position:relative}
 button.card:hover{border-color:var(--violet-hi)}
@@ -148,6 +157,7 @@ button.card:hover{border-color:var(--violet-hi)}
 .badge.draft{color:var(--gold); border-color:var(--gold)}
 .badge.tbd{color:var(--magenta-text); border-color:var(--magenta)}
 .badge.final{color:var(--green); border-color:var(--green)}
+.badge.written-in{color:var(--violet-text); border-color:var(--violet)}
 
 /* flags */
 .flag{display:flex; gap:10px; background:rgba(242,201,76,.07); border:1px solid rgba(242,201,76,.45);
