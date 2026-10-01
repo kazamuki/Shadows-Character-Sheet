@@ -1024,7 +1024,7 @@ window.SHADOWS_DATA = {
     {
       "id": "other",
       "name": "Other",
-      "description": "Neither, or something the city has no word for. Say what in your own words. Every Advantage is open to them.",
+      "description": "Neither one, or something the city has no word for. Every Advantage is open to them.",
       "advantages": "all",
       "writeIn": true
     }
@@ -2472,10 +2472,10 @@ window.SHADOWS_DATA = {
         {
           "id": "supernatural",
           "name": "Supernatural",
-          "description": "A connection to the spirit grants access to Spiritual Force Rating (SFR) to fuel powers; SFR spent per round is limited by Rate of Use (RoU). Being supernatural grants mighty power, but locks you out of Advantages that normal humans use to level the playing field.",
+          "description": "A connection to the spirit grants access to Spiritual Force Rating (SFR) to fuel powers; SFR spent per round is limited by Rate of Use (RoU). Being supernatural grants mighty power, but locks you out of the Advantages that normal humans use to level the playing field. Only the Universal Advantages are open to you.",
           "effects": [
             "Gains SFR and RoU per Campaign Power Scaling.",
-            "Unable to purchase Advantages."
+            "Can purchase Universal Advantages only."
           ]
         },
         {
@@ -2587,18 +2587,18 @@ window.SHADOWS_DATA = {
       "id": "custom",
       "name": "Custom",
       "status": "written-in",
-      "summary": "Something the city doesn't have a file for yet. You and your GM write it: what it is, what it can do, and what it costs.",
+      "summary": "Something the city never catalogued. You and your GM write it: what it is, what it can do, and what it costs you.",
       "writeIn": {
         "mechanics": [
           {
             "id": "magic",
             "label": "Uses magic",
-            "note": "Adds TOL Spent and the Cascade, the way an Arcanist tracks them."
+            "note": "Tracks TOL Spent and the Cascade, as an Arcanist does."
           },
           {
             "id": "sfr",
             "label": "Uses SFR",
-            "note": "Adds an SFR pool. You set its size with your GM."
+            "note": "Tracks an SFR pool. Its size is your GM's call."
           }
         ],
         "powerUses": [
@@ -3127,14 +3127,14 @@ window.SHADOWS_DATA = {
     "statusLabel": {
       "draft": "in progress",
       "tbd": "not written yet",
-      "written-in": "GM-built"
+      "written-in": "off the books"
     },
     "archetypeUnwritten": "{name}'s rules aren't finished yet. You can build one — your GM fills the gaps.",
-    "archetypeWrittenIn": "{name} is written by you and your GM. Their word is the rule for it.",
+    "archetypeWrittenIn": "{name} is yours and your GM's. Where the book is silent, your GM's word is the rule.",
     "writeInIntro": "Nobody in NYTE City has a file on what you are. Write one with your GM.",
     "writeInClassification": "What kind of being you are decides which Advantages you can buy.",
     "writeInTraits": "What's always true of you, with no roll and no cost.",
-    "writeInPowers": "What you can do that others can't, and what it spends. Powers you start with are free. Any stat change a power makes goes in Adjustments once your character is locked.",
+    "writeInPowers": "What you can do that others can't, and what it burns. The ones you start with are free. If one changes a stat, log it in Adjustments once you're locked.",
     "writeInVulnerabilities": "What hurts you, holds you back or gives you away.",
     "powerAddNote": "A power learned in play costs what your GM says, or nothing. Leave the cost blank for none.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
