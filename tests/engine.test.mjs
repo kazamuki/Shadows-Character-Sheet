@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.15");
+  assert.equal(ch.meta.schemaVersion, "0.16");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -78,10 +78,12 @@ test("validate returns issues for every step once the wizard's gates are met", (
 
 // Decision 152: a classification says which Advantages are open. Mortal buys
 // all; Supernatural only those carrying 043's Universal tag.
-test("every archetype names a classification the data defines", () => {
+test("every archetype names a classification the data defines, or the player picks one", () => {
   const ids = D.classifications.map(c => c.id);
+  // Decision 153: a write-in archetype names none; the character's pick is its classification.
   for (const a of D.archetypes)
-    assert.ok(ids.includes(a.classification), `${a.id} names classification "${a.classification}"`);
+    if (a.writeIn) assert.equal("classification" in a, false, `${a.id} is written in and names a classification too`);
+    else assert.ok(ids.includes(a.classification), `${a.id} names classification "${a.classification}"`);
   for (const c of D.classifications)
     assert.ok(["all", "universal"].includes(c.advantages), `${c.id}: advantages "${c.advantages}"`);
   assert.equal(D.archetypes.some(a => "canPurchaseAdvantages" in a), false,
@@ -155,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.15");
+  assert.equal(old.meta.schemaVersion, "0.16");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -167,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.15");
+  assert.equal(old.meta.schemaVersion, "0.16");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -315,7 +317,8 @@ const CODE = CODE_FILES.map(code).join("\n");
 const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
   /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/,
-  /\.sp(\.\*)?$/]; // W32: keyed by the text an amount sits beside, read by spAmounts
+  /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
+  /^appCopy\.statusLabel$/]; // keyed by an archetype's `status`, read by statusLabel()
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
 const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$/;
@@ -536,7 +539,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.15");
+  assert.equal(old.meta.schemaVersion, "0.16");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -647,7 +650,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.15");
+  assert.equal(bare.meta.schemaVersion, "0.16");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -883,7 +886,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.15");
+    assert.equal(c.meta.schemaVersion, "0.16");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1157,7 +1160,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.15");
+  assert.equal(old.meta.schemaVersion, "0.16");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1232,7 +1235,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.15");
+  assert.equal(m.meta.schemaVersion, "0.16");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2255,7 +2258,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.15");
+  assert.equal(m.meta.schemaVersion, "0.16");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2341,7 +2344,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.15");
+  assert.equal(m.meta.schemaVersion, "0.16");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2358,7 +2361,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.15");
+  assert.equal(m.meta.schemaVersion, "0.16");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2397,7 +2400,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.15"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.16"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2541,7 +2544,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.15");
+  assert.equal(a.meta.schemaVersion, "0.16");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -2558,4 +2561,168 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const m = Engine.migrate(e);
   assert.equal(m.creation.statMethod, "flat");
   assert.equal("earlierTable" in m.creation, false);
+});
+
+// ── A write-in archetype (Decision 153) ──────────────────────────────
+// The custom archetype has no content of its own: the character writes it.
+const WRITE_IN = D.archetypes.find(a => a.writeIn);
+function writtenIn({ cls = "mortal", mechanics = [] } = {}) {
+  const ch = subject();
+  ch.identity.archetype = WRITE_IN.id;
+  Object.assign(ch.archetypeChoices.writeIn, { name: "Changeling", classification: cls, mechanics });
+  return ch;
+}
+
+test("a write-in archetype's classification is the character's pick, and gates Advantages like any other", () => {
+  assert.ok(WRITE_IN, "no archetype declares writeIn");
+  const ch = writtenIn({ cls: null });
+  assert.equal(Engine.classification(ch), null);
+  assert.equal(Engine.canBuyAdvantage(ch, "ambidextrous"), true, "no pick yet gates nothing");
+  ch.archetypeChoices.writeIn.classification = "supernatural";
+  assert.equal(Engine.canBuyAdvantage(ch, "ambidextrous"), false);
+  assert.equal(Engine.canBuyAdvantage(ch, "lucky"), true);
+  ch.archetypeChoices.writeIn.classification = "other";
+  assert.equal(Engine.canBuyAdvantage(ch, "ambidextrous"), true, "Other buys every Advantage");
+  // A built-in archetype ignores a writeIn it happens to carry.
+  ch.identity.archetype = "werewolf";
+  assert.equal(Engine.classification(ch).id, "supernatural");
+});
+
+test("a panel with `when` shows only while its mechanic is ticked; no other archetype changes", () => {
+  const ids = ch => Engine.archPanels(ch).map(p => p.id);
+  const ch = writtenIn();
+  same(ids(ch), ["powers"]);
+  ch.archetypeChoices.writeIn.mechanics = ["sfr"];
+  same(ids(ch), ["sfr", "powers"]);
+  ch.archetypeChoices.writeIn.mechanics = ["magic", "sfr", "flight"];
+  same(ids(ch), ["tol-spent", "sfr", "powers"], "an unknown mechanic turns nothing on");
+  const opts = Engine.writeInOptions(ch);
+  same(opts.mechanics.map(m => [m.id, m.on]), [["magic", true], ["sfr", true]]);
+  same(opts.powerUses, WRITE_IN.writeIn.powerUses);
+  for (const a of D.archetypes.filter(x => !x.writeIn)) {
+    const b = subject(); b.identity.archetype = a.id;
+    b.archetypeChoices.writeIn.mechanics = ["magic", "sfr"];
+    same(ids(b), a.coreMechanic.panels.map(p => p.id), `${a.id}'s panels moved`);
+    assert.equal(Engine.writeInOptions(b), null);
+  }
+});
+
+test("archetypeContent reads the data for a built-in archetype and the character's words for a write-in one", () => {
+  const b = subject();
+  const built = Engine.archetypeContent(b), arc = D.archetypes.find(a => a.id === "arcanist");
+  same([built.writeIn, built.name, built.description, built.classification.id], [false, arc.name, arc.summary, "mortal"]);
+  assert.equal(built.traits, arc.baselineTraits);
+
+  const ch = writtenIn({ cls: "other" });
+  const w = ch.archetypeChoices.writeIn;
+  w.classificationText = "  Magical being ";
+  w.description = "Stolen as a child.";
+  w.traits = [{ name: "Glamour", description: "Looks like whoever you expect." }, "junk"];
+  w.vulnerabilities = [{ name: "Cold iron", description: 7 }];
+  ch.powers = [{ id: "pw-1", custom: true, name: "Fade", uses: "SFR", effect: "Unseen for a round.", notes: "" }];
+  const c = Engine.archetypeContent(ch);
+  same([c.writeIn, c.name, c.description, c.classification], [true, "Changeling", "Stolen as a child.", { id: "other", name: "Other", text: "Magical being" }]);
+  same(c.traits, [{ name: "Glamour", description: "Looks like whoever you expect." }]);
+  same(c.vulnerabilities, [{ name: "Cold iron", description: "" }], "a field that isn't text reads as empty");
+  same(c.powers.map(p => p.name), ["Fade"]);
+  w.name = "   "; w.description = ""; w.classification = "mortal";
+  const d = Engine.archetypeContent(ch);
+  same([d.name, d.description, d.classification.text], [WRITE_IN.name, null, ""], "no name falls back; Mortal takes no words");
+  assert.equal(Engine.archetypeContent(Engine.newCharacter()), null);
+});
+
+test("validate: a write-in archetype needs a name and a classification; Other's words and the GM's call only warn", () => {
+  const issues = (ch, step = "archetype") => Engine.validate(step, ch).map(i => `${i.level}: ${i.msg}`);
+  const ch = writtenIn({ cls: null });
+  ch.archetypeChoices.writeIn.name = "";
+  const e = issues(ch).filter(x => x.startsWith("error"));
+  assert.equal(e.length, 2, e.join(" | "));
+  ch.archetypeChoices.writeIn.name = "Changeling";
+  ch.archetypeChoices.writeIn.classification = "a-made-up-id";
+  assert.ok(issues(ch).some(x => /error: Choose a classification/.test(x)), "an unknown classification passed");
+  ch.archetypeChoices.writeIn.classification = "other";
+  same(issues(ch).map(x => x.split(":")[0]), ["warn"], "Other with no words of its own warns, never blocks");
+  ch.archetypeChoices.writeIn.classificationText = "Fae";
+  same(issues(ch), []);
+  const copy = D.appCopy.archetypeWrittenIn.replace("{name}", "Changeling");
+  assert.ok(issues(ch, "review").includes(`warn: ${copy}`), "review doesn't say a write-in is the GM's call");
+  assert.ok(!issues(subject(), "review").includes(`warn: ${copy}`));
+});
+
+test("addPower writes a row either way, and an IP cost is a journal spend one undo takes back with it", () => {
+  const ch = writtenIn();
+  ch.progression.ip.earned = 20;
+  const free = Engine.addPower(ch, { name: " Fade ", uses: "SFR", effect: "Unseen for a round." });
+  assert.ok(free.ok && /^pw-/.test(free.id), JSON.stringify(free));
+  same([ch.powers[0].name, ch.powers[0].custom, ch.progression.ip.log.length], ["Fade", true, 0], "a free power touched IP");
+
+  const before = JSON.parse(JSON.stringify(ch));
+  const bought = Engine.addPower(ch, { name: "Thorn hedge", cost: "15", note: "after the raid" });
+  assert.ok(bought.ok);
+  Engine.recordAction(ch, "power", "Power: Thorn hedge", before);
+  const spend = ch.progression.ip.log[0];
+  same([spend.kind, spend.amount, spend.targetType, spend.targetId, spend.name], ["spend", 15, "power", bought.id, "Thorn hedge"]);
+  same([Engine.ipState(ch).available, Engine.versionCheck(ch).filter(x => /power/.test(x))], [5, []]);
+  assert.ok(Engine.undoLastAction(ch).ok);
+  same([ch.powers.length, ch.progression.ip.log.length, Engine.ipState(ch).available], [1, 0, 20], "one undo took back both");
+
+  const refused = input => { const n = JSON.stringify(ch); const r = Engine.addPower(ch, input); assert.equal(JSON.stringify(ch), n, `refused but wrote: ${r.why}`); return r.ok; };
+  assert.equal(refused({ name: "Too dear", cost: 21 }), false, "short of IP");
+  assert.equal(refused({ name: "Odd", cost: "1.5" }), false);
+  assert.equal(refused({ name: "Odd", cost: -3 }), false);
+  assert.equal(refused({ name: "  " }), false, "no name");
+  assert.equal(refused("junk"), false);
+  const built = subject();
+  assert.equal(Engine.addPower(built, { name: "Fade" }).ok, false, "an archetype with no powers panel took a power");
+  assert.ok(Engine.addPower(ch, { name: "Free again", cost: "" }).ok, "a blank cost is free");
+});
+
+test("versionCheck matches a power's spend to its row, and says when the power is gone", () => {
+  const ch = writtenIn();
+  ch.progression.ip.earned = 30;
+  const r = Engine.addPower(ch, { name: "Thorn hedge", cost: 10 });
+  same(Engine.versionCheck(ch).filter(x => /power/i.test(x)), []);
+  assert.ok(Engine.removePower(ch, r.id).ok);
+  assert.equal(Engine.removePower(ch, r.id).ok, false);
+  const issues = Engine.versionCheck(ch).filter(x => /power/i.test(x));
+  assert.equal(issues.length, 1);
+  assert.match(issues[0], /Thorn hedge/);
+  assert.equal(Engine.ipState(ch).available, 20, "IP spent on a removed power stays spent");
+});
+
+test("schema 0.16: an older file gets an empty write-in, and a file's own is kept only as text", () => {
+  const old = Engine.newCharacter();
+  old.meta.schemaVersion = "0.15";
+  delete old.archetypeChoices.writeIn; delete old.powers;
+  const m = Engine.migrate(old);
+  same(m.archetypeChoices.writeIn, Engine.newCharacter().archetypeChoices.writeIn);
+  same(m.powers, []);
+
+  const h = Engine.newCharacter();
+  h.archetypeChoices.writeIn = { name: 7, description: { a: 1 }, classification: ["mortal"], classificationText: null,
+    mechanics: ["sfr", 3, "sfr", null], traits: [{ name: "Glamour", description: "x", extra: "<b>" }, null, "t"],
+    vulnerabilities: "iron", stray: "dropped" };
+  h.powers = [{ name: "A" }, { id: "pw-x", name: "B" }, { id: "pw-x", name: "C", effect: 4 }, null, "D", [1]];
+  const w = Engine.migrate(h);
+  same(w.archetypeChoices.writeIn, { name: "", description: null, classification: null, classificationText: "",
+    mechanics: ["sfr"], traits: [{ name: "Glamour", description: "x" }], vulnerabilities: [] });
+  same(w.powers.map(p => [p.name, p.effect, p.custom]), [["A", "", true], ["B", "", true], ["C", "", true]]);
+  const ids = w.powers.map(p => p.id);
+  assert.equal(new Set(ids).size, 3, `power ids collide: ${ids}`);
+  assert.equal(ids[1], "pw-x", "the first holder of an id keeps it");
+  assert.ok(ids.every(id => /^pw-/.test(id)));
+  same(Engine.migrate(JSON.parse(JSON.stringify(w))), w, "migrate() isn't stable on its own output");
+});
+
+test("newPower gives the wizard a blank row; a nameless row with words warns, an empty one doesn't", () => {
+  const ch = writtenIn();
+  const r = Engine.newPower(ch);
+  assert.ok(r.ok && ch.powers.length === 1 && ch.powers[0].name === "");
+  assert.equal(Engine.newPower(subject()).ok, false, "an archetype with no powers panel");
+  const warns = () => Engine.validate("archetype", ch).filter(i => /no name/.test(i.msg)).map(i => i.level);
+  same(warns(), [], "an empty row is just unused");
+  ch.powers[0].effect = "Unseen for a round.";
+  ch.archetypeChoices.writeIn.traits = [{ name: "", description: "Glamour" }, { name: "", description: "Thorns" }];
+  same(warns(), ["warn", "warn"]);
+  assert.ok(Engine.validate("archetype", ch).some(i => i.msg.startsWith("2 traits")));
 });

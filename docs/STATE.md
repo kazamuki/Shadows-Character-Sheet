@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-09-30
-**Versions:** app `0.33.0` · game data `0.26` · character schema `0.15` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-10-01
+**Versions:** app `0.33.0` · game data `0.27` · character schema `0.16` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,10 +41,10 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Every archetype is Mortal or Supernatural, and a Supernatural buys only the Universal Advantages (152). Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Every archetype is Mortal or Supernatural, and a Supernatural buys only the Universal Advantages (152). A **Custom** archetype is written by the player with the GM: what it is, an Other classification in its own words, the panels it ticks on, traits, powers and vulnerabilities, in the wizard, on the sheet and on paper; a power learned in play can cost IP (153). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
-page (Decision 96). **One known defect:** the frame/texture decoration shows
+page (Decision 96). Four pages in all, the archetype's last (153). **One known defect:** the frame/texture decoration shows
 on screen but not in Chrome's print/PDF output (Decision 94). Cosmetic only.
 
 ---
@@ -99,7 +99,7 @@ is the authority on a flag's full text.
 |---|---|---|
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), **F36** (is damage past zero kept for healing?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
-| **Custom archetype & classification** — `plans/custom-archetype.md` | 🔶 S1 (classification, Decision 152, F13 closed) built · S2–S6 next, wanted for Saturday 2026-10-03 | Nobody: XQ1–XQ6 each carry a default |
+| **Custom archetype & classification** — `plans/custom-archetype.md` | ✅ S1–S5 built (Decisions 152–153, F13 closed), XQ1–XQ6 on their defaults (XQ5's badge reads "off the books") · copy voice-passed · PR #88 open; the release waits on the merge. Wanted for Saturday 2026-10-03 | **Ken:** merge, then run the release before Saturday. W48–W54 are its follow-ons |
 | **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed | Deighton: **W37**, starting LUCK 6, maybe by level. It doesn't block the wizard |
 | **Milestones & doc reconciliation** — F9, F12, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -131,9 +131,9 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.32.1** (data 0.25, schema 0.15): skill lists on a phone, then touch targets, an 11px type floor and read tokens for violet and magenta words (W43). **Unreleased, 0.33.0:** Health verbs on Main (W42, 151) and classification (152); the critique's W44–W46 are next.
-Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
-TQ1–TQ3). The wishlist: W29, W37 and W39.
+**The live site is v0.32.1** (data 0.25, schema 0.15): skill lists on a phone, then touch targets, an 11px type floor and read tokens for violet and magenta words (W43). **Unreleased, 0.33.0:** Health verbs on Main (W42, 151), classification (152) and the custom archetype (153), wanted live by Saturday 2026-10-03; the critique's W44–W46 are next.
+Ken alone: **merge and release the custom archetype** (its copy had his voice pass). Then F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
+TQ1–TQ3). The wishlist: W29, W37, W39 and W54.
 
 **Waiting on others:**
 - **Deighton, on creation:** W37 (starting LUCK).
@@ -170,7 +170,7 @@ questions' history is in `plans/combat-and-conditions.md` §6):
   and the Slayer's and True Warrior's "Occult" are Handguns and Occult Lore.
 - **Magic:** say how ½ Spell Power rounds (up, per Ken; the sheet does, Decision 147).
 - **043:** say what "Universal" means: open to every classification, the rest
-  Mortal-only, so Werewolves and Vampires buy only the 15 Universal ones (152).
+  Mortal-only, so Werewolves and Vampires buy only the 15 Universal ones (152). 041's Werewolf trait "Unable to Purchase Advantages" becomes Universal only; the app already says so.
 - **The new-skill price** (a flat 25 IP, Decision 97) and **the stat curve
   past 10** (Decision 98) need writing into the CRB. F23 may want a line in
   Gear's RES text once ruled.

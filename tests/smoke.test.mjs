@@ -157,7 +157,7 @@ test("Arcanist offers exactly one set of aberration controls (A1)", () => {
 test("one specialization pick clears validation for every archetype (A1)", () => {
   // The two-model bug made an Arcanist pick BOTH a single-select specialization
   // and N aberrations. One pick per required slot must now be enough.
-  for (const arch of D.archetypes.filter(a => (a.specialization.options || []).length)) {
+  for (const arch of D.archetypes.filter(a => ((a.specialization || {}).options || []).length)) {
     const ch = Engine.newCharacter();
     ch.identity.archetype = arch.id;
     ch.creation.powerLevel = D.powerLevels[0].id;
@@ -348,7 +348,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.15");
+  assert.equal(resumed.meta.schemaVersion, "0.16");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -2234,4 +2234,179 @@ test("Decision 150: Admin doesn't measure a character locked under the earlier t
   now.click("[data-menu-toggle]"); now.click("[data-admin]");
   assert.match(now.$("#main").textContent, /Stat Points \d+ (left|over)/, "a current character lost its budgets");
   assert.deepEqual([sheet.errors, now.errors], [[], []]);
+});
+
+// ── The wizard's write-in block (Decision 153, custom archetype S3) ─────
+test("a Custom archetype is written on the Archetype step: what it is, its classification, mechanics and three lists", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  const type = (sel, v) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.focus(); el.value = v; el.dispatchEvent(new app.window.Event("input", { bubbles: true })); return el; };
+  const next = () => app.$('[data-nav="1"]');
+  const issues = () => app.$$(".issues li").map(l => l.textContent);
+  assert.equal(app.$$("[data-spec]").length, 0, "a write-in archetype drew a specialization");
+  assert.equal(next().disabled, true, "Continue is open with no name and no classification");
+
+  // Typing saves without a redraw, so the field keeps focus.
+  const name = type('[data-wi="name"]', "Changeling");
+  assert.equal(app.doc.activeElement, name, "typing the name lost focus");
+  app.click('[data-wicls="other"]');
+  type('[data-wi="classificationText"]', "Fae");
+  const box = app.$('[data-wimech="sfr"]');
+  box.checked = true; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(next().disabled, false, `still blocked: ${issues().join(" | ")}`);
+
+  app.click('[data-wiadd="traits"]');
+  assert.equal(app.doc.activeElement, app.$('[data-wirow="traits|0|name"]'), "a new trait's name doesn't take focus");
+  type('[data-wirow="traits|0|name"]', "Glamour");
+  app.click("[data-pwadd]");
+  type('[data-pwf$="|name"]', "Fade");
+  type('[data-pwf$="|uses"]', "SFR");
+  assert.ok(app.$$("#power-uses option").map(o => o.value).includes("SFR"), "Uses has no suggestions");
+  app.click('[data-wiadd="vulnerabilities"]');
+  type('[data-wirow="vulnerabilities|0|description"]', "Cold iron burns.");
+  assert.ok(issues().some(t => /no name/.test(t)), "a nameless vulnerability with words says nothing");
+  assert.equal(next().disabled, false, "a nameless row blocked Continue: it should only warn");
+
+  const ch = stored(app, { locked: false });
+  const w = ch.archetypeChoices.writeIn;
+  assert.equal(JSON.stringify([w.name, w.classification, w.classificationText, w.mechanics, w.traits.map(t => t.name)]),
+    JSON.stringify(["Changeling", "other", "Fae", ["sfr"], ["Glamour"]]));
+  assert.equal(JSON.stringify(ch.powers.map(p => [p.name, p.uses])), JSON.stringify([["Fade", "SFR"]]));
+  assert.ok(ch.progression.ip.log.length === 0, "a creation power touched IP");
+
+  // Remove takes the row; choosing another archetype clears it all (XQ3).
+  app.click('[data-wirm="vulnerabilities|0"]');
+  assert.equal(stored(app, { locked: false }).archetypeChoices.writeIn.vulnerabilities.length, 0);
+  app.click('[data-arch="werewolf"]');
+  app.click(`[data-arch="${custom.id}"]`);
+  const after = stored(app, { locked: false });
+  assert.equal(JSON.stringify([after.archetypeChoices.writeIn.name, after.powers.length]), JSON.stringify(["", 0]));
+  assert.deepEqual(app.errors, []);
+});
+
+test("picking Supernatural for a Custom archetype drops a Mortal-only Advantage it held", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  app.click('[data-wicls="mortal"]');
+  // A Mortal bought an Advantage a Supernatural can't, then went back.
+  const held = D.advantages.find(a => !a.universal);
+  const ch = stored(app, { locked: false });
+  assert.equal(ch.archetypeChoices.writeIn.classification, "mortal");
+  app.window.eval(`S.ch.advantages.push({ id: ${JSON.stringify(held.id)}, rank: 1, notes: "" })`);
+  app.click('[data-wicls="supernatural"]');
+  assert.equal(stored(app, { locked: false }).advantages.some(x => x.id === held.id), false);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── A written-in archetype on the sheet (Decision 153, custom archetype S4) ──
+function writtenInCharacter() {
+  const ch = lockedCharacter();
+  ch.identity.archetype = D.archetypes.find(a => a.writeIn).id;
+  Object.assign(ch.archetypeChoices.writeIn, { name: "Changeling", description: "Stolen as a child.",
+    classification: "other", classificationText: "Fae", mechanics: ["sfr"],
+    traits: [{ name: "Glamour", description: "Looks like whoever you expect." }],
+    vulnerabilities: [{ name: "Cold iron", description: "Burns." }] });
+  Engine.newPower(ch);
+  Object.assign(ch.powers[0], { name: "Fade", uses: "SFR", effect: "Unseen for a round." });
+  ch.progression.ip.earned = 30;
+  return ch;
+}
+const loadoutSec = app => app.$$("[data-sec]").map(b => b.dataset.sec).find(s => /loadout/.test(s));
+
+test("the sheet draws a written-in archetype: its name everywhere, its classification, traits, powers and vulnerabilities", () => {
+  const home = boot({ storage: { "shadows.active.v1": { ch: writtenInCharacter(), section: "main" } } });
+  assert.match(home.$("#main .roster-card").textContent, /Changeling/, "Home's roster names the archetype's data name");
+  const app = openSheet(writtenInCharacter(), "archetype");
+  const main = () => app.$("#main").textContent;
+  assert.equal(app.$("#main .step-title").textContent, "Changeling");
+  assert.match(app.$("#main .arch-class").textContent, /Other: Fae/);
+  for (const t of ["Glamour", "Fade", "uses SFR", "Cold iron", "Stolen as a child."]) assert.ok(main().includes(t), `the Archetype tab is missing ${t}`);
+  app.click('[data-sec="main"]');
+  assert.match(main(), /Changeling ·/, "Main's header still says the archetype's data name");
+  app.click('[data-sec="trackers"]');
+  assert.ok(app.$$("#main .trk h4").some(h => h.textContent === "SFR"), "Uses SFR didn't put SFR on Trackers");
+  assert.ok(!app.$$("#main .trk h4").some(h => h.textContent === "TOL Spent"), "TOL Spent showed without Uses magic");
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  assert.equal(app.$$("[data-pwedit]").length, 4, "the powers panel didn't draw Fade's four fields");
+  assert.equal(app.$$("[data-pwdel]").length, 0, "Remove is Admin's, not play's");
+  // A built-in archetype draws none of it.
+  const b = openSheet(lockedCharacter(), "archetype");
+  assert.equal(b.$("#main .step-title").textContent, "Arcanist");
+  assert.match(b.$("#main .arch-class").textContent, /Mortal/);
+  assert.deepEqual([app.errors, b.errors], [[], []]);
+});
+
+test("Add power with an IP cost is one change: the row and the spend, and one Undo takes both", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  const fill = (k, v) => { app.$(`[data-pwnew="${k}"]`).value = v; };
+  fill("name", "Thorn hedge"); fill("effect", "Briars erupt."); fill("cost", "99");
+  app.click("[data-pwadd-go]");
+  assert.equal(activeChar(app).powers.length, 1, "a refused power was written");
+  assert.equal(app.$('[data-pwnew="name"]').value, "Thorn hedge", "a refusal threw away what was typed");
+  assert.match(app.$("#undotoast").textContent, /Not enough IP/);
+
+  fill("cost", "15");
+  app.click("[data-pwadd-go]");
+  let c = activeChar(app);
+  assert.equal(JSON.stringify([c.powers.map(p => p.name), c.progression.ip.log.map(e => [e.targetType, e.amount])]),
+    JSON.stringify([["Fade", "Thorn hedge"], [["power", 15]]]));
+  assert.equal(Engine.ipState(c).available, 15);
+  app.click("[data-toastundo]");
+  c = activeChar(app);
+  assert.equal(JSON.stringify([c.powers.length, c.progression.ip.log.length]), "[1,0]", "one Undo didn't take back both");
+
+  // An edit is one logged change when the field is left.
+  const eff = app.$('[data-pwedit$="|effect"]');
+  eff.value = "Unseen for two rounds."; eff.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  c = activeChar(app);
+  assert.equal(c.powers[0].effect, "Unseen for two rounds.");
+  assert.match(c.audit[c.audit.length - 1].label, /Fade: effect/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Admin edits a written-in archetype's words and lists, and removes a power behind a question", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  app.click("[data-admin-open]");
+  const name = app.$('[data-admin-wi="name"]');
+  assert.ok(name, "Admin has no written-in archetype block");
+  name.value = "Fetch"; name.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  app.click('[data-admin-wiadd="vulnerabilities"]');
+  app.click('[data-admin-wirm="traits|0"]');
+  let w = activeChar(app).archetypeChoices.writeIn;
+  assert.equal(JSON.stringify([w.name, w.traits.length, w.vulnerabilities.length]), JSON.stringify(["Fetch", 0, 2]));
+
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click("[data-pwdel]");
+  assert.ok(app.$("#modal[open]"), "removing a power didn't ask first");
+  assert.equal(activeChar(app).powers.length, 1, "it removed before the answer");
+  app.$$("#modal[open] button").find(b => /Remove power/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(activeChar(app).powers.length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── The archetype on paper (Decision 153, custom archetype S5, XQ4) ─────
+test("print gives every archetype a page of its own: a written-in one's words, a built-in's data, and lines when blank", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  const page = html => { const box = app.doc.createElement("div"); box.innerHTML = html; const p = box.querySelectorAll(".p-page"); return p[p.length - 1]; };
+  const rows = (pg, sel) => [...pg.querySelectorAll(sel + " tbody tr")].map(tr => [...tr.cells].map(td => td.textContent.trim()));
+  const custom = page(app.window.renderPrintView(activeChar(app)));
+  const text = custom.textContent;
+  for (const t of ["Changeling", "Other: Fae", "Stolen as a child."]) assert.ok(text.includes(t), `the archetype page is missing ${t}`);
+  assert.equal(JSON.stringify(rows(custom, ".p-powertable")), JSON.stringify([["Fade", "SFR", "Unseen for a round."]]));
+  assert.ok(text.includes("Glamour") && text.includes("Cold iron"));
+
+  const ww = lockedCharacter();
+  ww.identity.archetype = "werewolf"; ww.archetypeChoices.specialization = ["trueborn"];
+  const built = page(app.window.renderPrintView(ww)), def = D.archetypes.find(a => a.id === "werewolf");
+  assert.ok(built.textContent.includes("Supernatural") && built.textContent.includes("Trueborn"));
+  for (const t of def.baselineTraits) assert.ok(built.textContent.includes(t.name), `print is missing the Werewolf's ${t.name}`);
+
+  const blank = page(app.window.renderPrintView(null));
+  assert.equal(JSON.stringify([".p-archtable", ".p-powertable"].map(s => blank.querySelectorAll(s + " tbody tr").length)), JSON.stringify([5 + 8 + 4, 8]),
+    "the blank page's write-in lines changed");
+  assert.ok(blank.querySelector(".p-archfields .p-line"), "the blank page has no Archetype line to write on");
+  assert.equal(blank.textContent.includes("Changeling"), false);
+  assert.deepEqual(app.errors, []);
 });

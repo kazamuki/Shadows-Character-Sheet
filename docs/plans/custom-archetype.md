@@ -1,7 +1,8 @@
 # Plan — A custom archetype, and classification for every archetype
 
-**Status:** proposed 2026-09-30, approved in shape by Ken the same day; not
-started. Nothing here is a decision until the session that builds it numbers
+**Status:** proposed 2026-09-30, approved in shape by Ken the same day. S1
+built (Decision 152), S2 built (Decision 153, schema 0.16), S3 built (the wizard), S4 built (the sheet), S5 built (print); S6 next. XQ2,
+XQ3, XQ5 and XQ6 took their defaults in S2. Nothing here is a decision until the session that builds it numbers
 it in `SCHEMA.md` §4. Its open questions are `XQ`_n_ (§6), each with the
 default the build takes if nobody answers first.
 **Wanted by:** Saturday 2026-10-03. Deighton is running Shadows for his son's
@@ -240,7 +241,8 @@ Each has the default the build takes; an answer before that session changes it.
   shows none of an archetype's content today. If it doesn't fit, only a custom
   one, and the rest goes to the wishlist.
 - **XQ5 (Ken):** What does a custom archetype's badge say? *Default: a new
-  status reading "GM-built".*
+  status reading "GM-built".* **Answered 2026-10-01 (Ken):** a new status,
+  `written-in`, whose label reads "off the books".
 - **XQ6 (build check):** Does "Uses magic" switch on the Grimoire too? Its Spell
   Power reads an Evocation rank a custom character doesn't have. *Default:
   TOL Spent and Cascade only*, unless the Grimoire's numbers read right with

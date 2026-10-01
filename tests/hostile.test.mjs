@@ -23,11 +23,16 @@ const { Engine, D } = loadEngine();
 // becomes markup, an <i data-pwn> lands in the DOM, named for its field.
 const P = tag => `"'><i data-pwn="${tag}"></i>`;
 
-function hostileCharacter({ locked = true } = {}) {
+// Decision 153: the write-in archetype draws the character's own words, so
+// every rendering test runs once on it too.
+const WRITE_IN = D.archetypes.find(a => a.writeIn).id;
+const ARCHETYPES = ["arcanist", WRITE_IN];
+
+function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   const ch = Engine.newCharacter();
   const handgun = D.weapons.find(w => w.category === "handguns").id;
   Object.assign(ch.identity, { name: P("name"), age: P("age"), build: P("build"), hair: P("hair"),
-    eyes: P("eyes"), skin: P("skin"), history: P("history"), archetype: "arcanist" });
+    eyes: P("eyes"), skin: P("skin"), history: P("history"), archetype });
   ch.creation.powerLevel = "heroic";
   ch.creation.rolls = { statPoints: P("roll.stat"), skillPoints: P("roll.skill"), credits: P("roll.credits") };
   ch.creation.boosts = [{ targetType: "stat", targetId: P("boost.target"), times: P("boost.times") }];
@@ -37,7 +42,11 @@ function hostileCharacter({ locked = true } = {}) {
   ch.archetypeChoices = { rolls: { focusStatBonus: P("roll.focus"), startingSpells: P("roll.spells") },
     focusAllocation: { INT: P("focus") }, statBonusAllocation: {}, specialization: [P("spec.id"), "aethereal-link"],
     focusedSkillPicks: [P("fskill")], naturalAdvantages: [{ id: P("natadv.id"), rank: P("natadv.rank") }],
-    disciplines: { enchantment: P("disc") } };
+    disciplines: { enchantment: P("disc") },
+    writeIn: { name: P("wi.name"), description: P("wi.desc"), classification: P("wi.cls"), classificationText: P("wi.clstext"),
+      mechanics: [P("wi.mech"), "sfr", "magic"], traits: [{ name: P("wi.trait"), description: P("wi.traitdesc") }],
+      vulnerabilities: [{ name: P("wi.vul"), description: P("wi.vuldesc") }] } };
+  ch.powers = [{ id: P("pw.id"), custom: true, name: P("pw.name"), uses: P("pw.uses"), effect: P("pw.effect"), notes: P("pw.notes") }];
   ch.skills = { athletics: { rank: P("skill.rank"), ipe: P("skill.ipe") }, [P("skill.id")]: { rank: 1, ipe: 0 },
     "martial-arts": { rank: 1, ipe: 0, selections: { style: [P("sel.style")] } } };
   ch.advantages = [{ id: P("adv.id"), rank: P("adv.rank"), notes: P("adv.notes") },
@@ -73,7 +82,8 @@ function hostileCharacter({ locked = true } = {}) {
   ch.progression = { ip: { earned: P("ip.earned"), log: [
       { date: P("ip.date"), kind: "spend", amount: P("ip.amount"), targetType: "skill", targetId: P("ip.target"),
         from: P("ip.from"), to: P("ip.to"), note: P("ip.note") },
-      { date: P("ip.date2"), kind: "grant", amount: P("ip.amount2"), note: P("ip.note2") }] },
+      { date: P("ip.date2"), kind: "grant", amount: P("ip.amount2"), note: P("ip.note2") },
+      { date: P("ip.date3"), kind: "spend", amount: 5, targetType: "power", targetId: P("ip.power"), name: P("ip.powername"), note: "" }] },
     milestonePoints: P("mp"),
     milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }] } };
   ch.sessions = [{ date: P("s.date"), title: P("s.title"), ipEarned: P("s.ip"), milestonePoint: true, notes: P("s.notes") }];
@@ -100,8 +110,9 @@ function closeOverlays(app) {
   if (p) p.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
 }
 
-test("a hostile character file renders as text on every tab, in Admin, in print and in every picker (B16, R9)", () => {
-  const app = boot({ storage: { "shadows.active.v1": { ch: hostileCharacter(), section: "main" } } });
+for (const archetype of ARCHETYPES)
+test(`a hostile ${archetype} file renders as text on every tab, in Admin, in print and in every picker (B16, R9)`, () => {
+  const app = boot({ storage: { "shadows.active.v1": { ch: hostileCharacter({ archetype }), section: "main" } } });
   app.window.print = () => {};
   const found = [];
   let overlays = 0;   // proof the pickers were reached, not just their tabs
@@ -137,8 +148,9 @@ test("a hostile character file renders as text on every tab, in Admin, in print 
   assert.deepEqual(app.errors, [], "the hostile file threw while rendering");
 });
 
-test("a hostile draft renders as text on every wizard step (R9)", () => {
-  const ch = hostileCharacter({ locked: false });
+for (const archetype of ARCHETYPES)
+test(`a hostile ${archetype} draft renders as text on every wizard step (R9)`, () => {
+  const ch = hostileCharacter({ locked: false, archetype });
   const app = boot({ storage: { "shadows.draft.v1": { ch, step: 0, maxReached: D.creationFlow.steps.length } } });
   app.click("[data-open]");
   const found = [];

@@ -226,7 +226,10 @@ window.SHADOWS_DATA = {
   // are open to every classification.
   classifications: [
     { id: "mortal", name: "Mortal", description: "...", advantages: "all" },
-    { id: "supernatural", name: "Supernatural", description: "...", advantages: "universal" }
+    { id: "supernatural", name: "Supernatural", description: "...", advantages: "universal" },
+    // Decision 153: `writeIn` takes the player's own words. Only a write-in
+    // archetype offers a pick of classification, so only it can be Other.
+    { id: "other", name: "Other", description: "...", advantages: "all", writeIn: true }
   ],
 
   // ── Archetypes (generic, designer-fillable) ─────────────
@@ -234,7 +237,7 @@ window.SHADOWS_DATA = {
   archetypes: [
     {
       id: "arcanist", name: "Arcanist",
-      status: "draft",                // draft | tbd | final — app shows badge
+      status: "draft",                // draft | tbd | final | written-in — app shows badge
       summary: "...", gameplayStyle: "...",
       primaryStats: ["INT", "COOL", "EMP"],
       classification: "mortal",       // a classifications id (Decision 152)
@@ -314,6 +317,23 @@ window.SHADOWS_DATA = {
     }
     // cyborg/biomech (status: "tbd" pending rewrite), professional,
     // vampire (tbd), werewolf (tbd)
+
+    // A WRITE-IN archetype (Decision 153): no classification, scaling,
+    // specialization or content of its own. The character writes all of it
+    // (archetypeChoices.writeIn, `powers`); `writeIn` is what marks it, never
+    // its id. `status: "written-in"` reads as appCopy.statusLabel says.
+    { id: "custom", name: "Custom", status: "written-in", summary: "...",
+      writeIn: {
+        mechanics: [ { id: "magic", label: "Uses magic", note: "..." },   // checkboxes
+                     { id: "sfr",   label: "Uses SFR",   note: "..." } ],
+        powerUses: [ "SFR", "TOL", "Kicker die" ]   // suggestions; free text allowed
+      },
+      coreMechanic: { panels: [
+        // `when` names a mechanic: the panel shows only while it's ticked.
+        { id: "tol-spent", type: "tracker", max: "TOL", overMax: "cascade", when: "magic", ... },
+        { id: "sfr", type: "tracker", counts: "down", resource: "sfr", when: "sfr", ... },  // no max: the player sets it
+        { id: "powers", type: "powers", title: "Powers" }   // the character's own powers
+      ] } }
   ],
 
   // ── Milestones ───────────────────────────────────────────
@@ -548,7 +568,7 @@ Archetypes differ wildly in what their sheet needs — a grimoire, an augment
 manifest, forms, a blood pool. Rather than hardcoding a Cyborg page and an
 Arcanist page, each archetype's `coreMechanic.panels` *declares* what UI it
 needs from a small set of panel types: `rankedList`, `table`, `tracker`,
-`toggle`, `grimoire`, `reference`, `focusedSkills` and `specializationText`, each described below or
+`toggle`, `grimoire`, `reference`, `focusedSkills`, `specializationText` and `powers`, each described below or
 in the decision that added it. The app renders whatever is declared. When the
 Cyborg rewrite lands, you describe its NCI tiers and augment slots as panel
 declarations in the data file — no app changes. `focusedSkills` draws the
@@ -569,6 +589,11 @@ three. The value lives in `trackers.panel[id]` like any other tracker. Two
 more (Decision 135): `counts: "down"` shows what's left of the max, and
 `resource` keeps the count on that resource's own tracker. The Werewolf's
 `sfr` panel has both, so its spend is `trackers.sfr.spent`, which Main reads.
+
+Any panel may carry `when` (Decision 153): it names one of a write-in
+archetype's `writeIn.mechanics`, and `Engine.archPanels` leaves the panel out
+unless the character ticked that box. A `powers` panel draws the character's
+own `powers` rows; `Engine.addPower` refuses on an archetype without one.
 
 A `grimoire` panel (Decision 108) draws the book from `spells` and keeps
 `columns` for the player's own spells. Its rows live in `panelData[id]`. The
@@ -593,7 +618,7 @@ It renders on the Archetype tab.
 ```js
 {
   meta: {
-    schemaVersion: "0.15",
+    schemaVersion: "0.16",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -652,8 +677,20 @@ It renders on the Archetype tab.
                                      // (Decision 134); migrate() keeps only strings
     naturalAdvantages: [],           // Professional: [{ id, rank }] — also mirrored into
                                      // `advantages` with source:"natural", cost 0 CP (0.13)
-    disciplines: {}                  // Arcanist: CP-bought ranks { enchantment: 1 } (6 CP each;
+    disciplines: {},                 // Arcanist: CP-bought ranks { enchantment: 1 } (6 CP each;
                                      // Evocation starting rank from scaling table is NOT stored)
+    // (0.16, Decision 153) What a write-in archetype is, in the player's
+    // words. Read only when the archetype declares `writeIn`; every field is
+    // text (or null), and migrate() drops anything else.
+    writeIn: {
+      name: "",                      // "Changeling"; blank shows the archetype's own name
+      description: null,             // a sentence or two, optional
+      classification: null,          // a classifications id
+      classificationText: "",        // a writeIn classification's own words: "Magical being"
+      mechanics: [],                 // ticked writeIn.mechanics ids: ["sfr"]
+      traits: [],                    // [{ name, description }], always on
+      vulnerabilities: []            // [{ name, description }], text only
+    }
   },
 
   // Inputs only. base = creation value; ipe = points added via IP after.
@@ -717,7 +754,12 @@ It renders on the Archetype tab.
                            { custom: true, "Spell Name": "...", "TN": "...", "Notes": "..." } ],
                form: "Human" },
 
-  powers:  [ /* instances with per-character notes */ ],
+  // (0.16, Decision 153) The character's own powers, written at creation or
+  // added in play. `id` is local to the character (an IP spend names it with
+  // targetType "power"); `custom: true` leaves room for a powers catalog,
+  // whose rows would reference it by another key, as a Grimoire row's
+  // `spellId` does. Every other field is text.
+  powers:  [ { id: "pw-7K2M9QXA", custom: true, name: "Fade", uses: "SFR", effect: "...", notes: "" } ],
   // (0.10, Decision 121) A gear row is a catalog reference (`id` into
   // `equipment`, `qty` carried, `chargesUsed` on a charged Talisman) or typed
   // (`custom: true`, name/type/notes as before). migrate() tags every older
@@ -3460,6 +3502,20 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 12 (wholly: a Supernatural buys the Universal Advantages, not none, and the gate is the classification, not `canPurchaseAdvantages`).
      - **Revisit if:** Deighton rules on Magical being (W53), or a classification needs a rule other than all or Universal.
      - **Built:** app 0.33.0, game data 0.26, no schema change. Closes F13. Log 2026-09-30.
+
+153. **A custom archetype is written in by the player, and checkboxes switch on the panels it uses.**
+     *2026-09-30 · Ken + Deighton + Claude · Touches: custom archetype, writeIn, archetypeChoices.writeIn, powers, addPower, newPower, archetypeContent, when, mechanics, powerUses, Other, written-in status, versionCheck, print archetype page, schema 0.16, XQ2–XQ6*
+     - **Decided:** An archetype declaring `writeIn` has no content of its own. The character stores its name, description, classification (the new **Other** takes its own words), ticked mechanics, traits and vulnerabilities in `archetypeChoices.writeIn`, and powers in `powers` (`{ id, custom: true, name, uses, effect, notes }`). A panel's `when` follows a ticked mechanic: magic is TOL Spent and the Cascade, not the Grimoire (XQ6). `Engine.archetypeContent` reads any archetype. `addPower` takes an optional IP cost, a journal spend refused if IP is short; creation's powers are free (XQ2). Name and classification are required; the rest warns. Changing archetype clears both, one undo (XQ3). The badge reads "off the books" (XQ5, Ken's voice pass). Print gives every archetype a page of its own (XQ4).
+     - **Why:** Deighton builds characters no archetype covers, and needs one on the live sheet by 2026-10-03.
+     - **Rejected:**
+       - Written-in Advantages or Disadvantages: a priced one writes its own points economy (Decision 78's line). Use a power or a vulnerability.
+       - CP or ranks for powers: pricing them is design nobody asked for.
+       - Traits and vulnerabilities in `powers`: they define the archetype and don't grow in play.
+       - Branching on the archetype's id (Decision 135): `writeIn` is a key any archetype could carry.
+       - The Grimoire under magic: its Spell Power needs an Evocation rank.
+     - **Replaces:** nothing. Extends Decision 15's statuses and 152's classifications.
+     - **Revisit if:** powers need a catalog, a price or mechanical fields; Deighton rules on Magical being (W53); W48–W50 are wanted.
+     - **Built:** schema 0.16, game data 0.27, app 0.33.0 (unreleased). Engine in S2; wizard, sheet and print in S3–S5. Log 2026-09-30 and 2026-10-01.
 
 ## 5. Open Flags
 

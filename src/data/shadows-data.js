@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.26",
+    "gamedataVersion": "0.27",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-30"
   },
@@ -1003,6 +1003,8 @@ window.SHADOWS_DATA = {
   /* CLASSIFICATIONS -- what kind of being an archetype is (Decision 152). Every
      archetype names one in `classification`. `advantages` says which Advantages
      it may buy: "all", or "universal" (only those with `universal: true`).
+     `writeIn: true` takes the player's own words for what they are (Other,
+     Decision 153); only a write-in archetype offers a pick of classification.
      Disadvantages are open to every classification. Werewolves and Vampires
      start with a great deal of power; the Mortal-only Advantages close some of
      that gap. */
@@ -1018,6 +1020,13 @@ window.SHADOWS_DATA = {
       "name": "Supernatural",
       "description": "Something more than human, and powerful from the first night. Only the Universal Advantages are open to them.",
       "advantages": "universal"
+    },
+    {
+      "id": "other",
+      "name": "Other",
+      "description": "Neither one, or something the city has no word for. Every Advantage is open to them.",
+      "advantages": "all",
+      "writeIn": true
     }
   ],
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
@@ -1821,10 +1830,19 @@ window.SHADOWS_DATA = {
        5. coreMechanic:  the signature system + `panels` (see below)
        6. powers + vulnerabilities, then growth (minorMilestones + archetype
           majorMilestones)
-     `status`: "final" | "draft" | "tbd" -- the app shows a badge and treats
-     tbd/draft content as reference text, never blocking on un-modeled rules.
+     `status`: "final" | "draft" | "tbd" | "written-in" -- the app shows a badge
+     (`appCopy.statusLabel`) and treats tbd/draft content as reference text,
+     never blocking on un-modeled rules.
      `classification` (Decision 152) names a CLASSIFICATIONS id: which
      Advantages the archetype may buy.
+     WRITE-IN (Decision 153): an archetype with `writeIn` has no content of its
+     own and no classification. The character writes it in
+     `archetypeChoices.writeIn` -- a name, a description, a classification of
+     its choosing, baseline traits and vulnerabilities -- and keeps its powers
+     in `powers`. `writeIn.mechanics` are checkboxes; a panel with
+     `when: "<mechanic id>"` shows only when that box is ticked.
+     `writeIn.powerUses` suggests what a power spends; the player may type
+     anything else. Nothing reads the archetype's id.
 
      PANELS are how archetypes stay generic: `coreMechanic.panels` DECLARES the
      extra sheet UI an archetype needs from a small vocabulary -- "rankedList"
@@ -1833,7 +1851,8 @@ window.SHADOWS_DATA = {
      your own in its columns, Decision 108), "reference" (read-only rules drawn
      from the data sections its `shows` names, Decision 110), "tracker" (e.g. Tolerance Load,
      max = a derived id; `counts: "down"` shows what's left of the max, and
-     `resource` keeps the count on that resource's own tracker, like SFR), "text".
+     `resource` keeps the count on that resource's own tracker, like SFR), "text",
+     "powers" (the character's own written powers, Decision 153).
 
      DISCIPLINES (Decision 135): `cpPerRank` is what a rank costs at creation,
      `maxRankBy` a path to the cap and a discipline's `startingRankBy` a path to
@@ -2453,10 +2472,10 @@ window.SHADOWS_DATA = {
         {
           "id": "supernatural",
           "name": "Supernatural",
-          "description": "A connection to the spirit grants access to Spiritual Force Rating (SFR) to fuel powers; SFR spent per round is limited by Rate of Use (RoU). Being supernatural grants mighty power, but locks you out of Advantages that normal humans use to level the playing field.",
+          "description": "A connection to the spirit grants access to Spiritual Force Rating (SFR) to fuel powers; SFR spent per round is limited by Rate of Use (RoU). Being supernatural grants mighty power, but locks you out of the Advantages that normal humans use to level the playing field. Only the Universal Advantages are open to you.",
           "effects": [
             "Gains SFR and RoU per Campaign Power Scaling.",
-            "Unable to purchase Advantages."
+            "Can purchase Universal Advantages only."
           ]
         },
         {
@@ -2562,6 +2581,59 @@ window.SHADOWS_DATA = {
       "growth": {
         "minorMilestones": "shared",
         "majorMilestones": []
+      }
+    },
+    {
+      "id": "custom",
+      "name": "Custom",
+      "status": "written-in",
+      "summary": "Something the city never catalogued. You and your GM write it: what it is, what it can do, and what it costs you.",
+      "writeIn": {
+        "mechanics": [
+          {
+            "id": "magic",
+            "label": "Uses magic",
+            "note": "Tracks TOL Spent and the Cascade, as an Arcanist does."
+          },
+          {
+            "id": "sfr",
+            "label": "Uses SFR",
+            "note": "Tracks an SFR pool. Its size is your GM's call."
+          }
+        ],
+        "powerUses": [
+          "SFR",
+          "TOL",
+          "Kicker die"
+        ]
+      },
+      "coreMechanic": {
+        "panels": [
+          {
+            "id": "tol-spent",
+            "type": "tracker",
+            "title": "TOL Spent",
+            "max": "TOL",
+            "note": "Spend TOL as your powers say. Past zero, you Cascade.",
+            "atMax": "Exhausted. No more TOL to spend until it's back above zero. An hour's rest restores 1.",
+            "overMax": "cascade",
+            "when": "magic"
+          },
+          {
+            "id": "sfr",
+            "type": "tracker",
+            "title": "SFR",
+            "counts": "down",
+            "resource": "sfr",
+            "note": "Set the pool's size with your GM, then count down as you spend.",
+            "when": "sfr"
+          },
+          {
+            "id": "powers",
+            "type": "powers",
+            "title": "Powers"
+          }
+        ]
       }
     }
   ],
@@ -3054,9 +3126,17 @@ window.SHADOWS_DATA = {
     "houseRuleLabel": "How this works",
     "statusLabel": {
       "draft": "in progress",
-      "tbd": "not written yet"
+      "tbd": "not written yet",
+      "written-in": "off the books"
     },
     "archetypeUnwritten": "{name}'s rules aren't finished yet. You can build one — your GM fills the gaps.",
+    "archetypeWrittenIn": "{name} is yours and your GM's. Where the book is silent, your GM's word is the rule.",
+    "writeInIntro": "Nobody in NYTE City has a file on what you are. Write one with your GM.",
+    "writeInClassification": "What kind of being you are decides which Advantages you can buy.",
+    "writeInTraits": "What's always true of you, with no roll and no cost.",
+    "writeInPowers": "What you can do that others can't, and what it burns. The ones you start with are free. If one changes a stat, log it in Adjustments once you're locked.",
+    "writeInVulnerabilities": "What hurts you, holds you back or gives you away.",
+    "powerAddNote": "A power learned in play costs what your GM says, or nothing. Leave the cost blank for none.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
     "applyFromText": "Apply these from their text.",
     "ranksAdvanceInPlay": "Ranks advance through play."

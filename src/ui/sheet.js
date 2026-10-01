@@ -218,7 +218,7 @@ function vitalsPanelHtml(ch){
   const ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), sfr=Engine.sfr(ch);
   let h = `<div class="dhead"><h2>Vitals</h2><button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>`;
   h += `<div class="vgroup"><div class="vname">${esc(ch.identity.name)||"&mdash;"}</div>
-    <div class="vsub">${a?esc(a.name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
+    <div class="vsub">${a?esc(Engine.archetypeContent(ch).name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
   h += `<div class="vgroup">`;
   h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp");
   h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"");
@@ -303,7 +303,7 @@ function renderShMain(){
   // The specialization is derived (schema 0.5, Decision 79). This line read
   // the removed identity.specialization and never showed it.
   const spec=Engine.specializationLabel(ch);
-  let h = sheetHeader(id.name||"Unnamed", `${a?esc(a.name):"—"}${spec?" · "+esc(spec):""} · ${pl?esc(pl.name):"—"}`, intakeHtml(ch));
+  let h = sheetHeader(id.name||"Unnamed", `${a?esc(Engine.archetypeContent(ch).name):"—"}${spec?" · "+esc(spec):""} · ${pl?esc(pl.name):"—"}`, intakeHtml(ch));
 
   // Condition strip — replaces the Vitals rail on this tab (full width)
   const pct = (n,d)=> d>0 ? Math.max(0,Math.min(100,Math.round(n/d*100))) : 0;
@@ -460,21 +460,25 @@ function renderShArchetype(){
   const ch=S.ch, a=Engine.archetype(ch);
   if (!a) return sheetHeader("Archetype","No archetype selected.");
   const badge = a.status!=="final"?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${esc(statusLabel(a.status))}</span>`:"";
+  // What the archetype is, from the data or the player's own words (Decision 153).
+  const content = Engine.archetypeContent(ch), cls = content.classification;
   const specLabel = Engine.specializationLabel(ch);
-  let h = sheetHeader(a.name+(specLabel?" · "+specLabel:""),
-    a.summary||a.gameplayStyle||"");
+  let h = sheetHeader(content.name+(specLabel?" · "+specLabel:""),
+    esc(content.description||a.gameplayStyle||""));   // the note is markup, and a write-in's is the player's text
+  if (cls) h += `<p class="step-note arch-class"><b>${esc(cls.name)}</b>${cls.text?`: ${esc(cls.text)}`:""}${content.writeIn?` <span class="chip">${esc(statusLabel(a.status))}</span>`:""}</p>`;
 
   // Lineage (AQ4 2): the archetype's lore, collapsed.
   if (a.lore) h += `<details class="group lineage"><summary>Lineage</summary><div class="ref-body"><p class="flavor">${esc(a.lore)}</p></div></details>`;
 
-  if (a.coreMechanic){
+  if (a.coreMechanic && (a.coreMechanic.name || a.coreMechanic.description)){
     h += `<div class="sect">${esc(a.coreMechanic.name||"Core Mechanic")}${badge}</div>`;
     if (a.coreMechanic.description) h += `<p class="step-note">${esc(a.coreMechanic.description)}</p>`;
   }
 
   // Baseline traits
-  if (a.baselineTraits && a.baselineTraits.length){
-    h += `<div class="sect">Baseline Traits</div>` + a.baselineTraits.map(tr=>
+  const traits = content.traits.filter(t=>t.name);
+  if (traits.length){
+    h += `<div class="sect">Baseline Traits</div>` + traits.map(tr=>
       `<div class="pick"><div class="head"><h4>${esc(tr.name)}</h4></div>
         <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join("");
   }
@@ -507,17 +511,20 @@ function renderShArchetype(){
       `</tbody></table>`;
   }
 
-  // Powers
-  if (a.powers && a.powers.length && a.powers.some(p=>p.name)){
-    h += `<div class="sect">Powers</div>` + a.powers.filter(p=>p.name).map(p=>
+  // Powers: the data's, then the character's own (`uses`, `effect`), which
+  // the Loadout & Powers tab edits.
+  const powers = content.powers.filter(p=>p.name);
+  if (powers.length){
+    h += `<div class="sect">Powers</div>` + powers.map(p=>
       `<div class="pick"><div class="head"><h4>${esc(p.name)}</h4>
-        ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}</div>
-        <div class="desc">${esc(p.description||"")}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join("");
+        ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
+        <div class="desc">${esc(p.description||p.effect||"")}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join("");
   }
 
   // Vulnerabilities
-  if (a.vulnerabilities && a.vulnerabilities.length && a.vulnerabilities.some(v=>v.name)){
-    h += `<div class="sect">Vulnerabilities</div>` + a.vulnerabilities.filter(v=>v.name).map(v=>
+  const vulns = content.vulnerabilities.filter(v=>v.name);
+  if (vulns.length){
+    h += `<div class="sect">Vulnerabilities</div>` + vulns.map(v=>
       `<div class="pick"><div class="head"><h4>${esc(v.name)}</h4></div>
         <div class="desc">${esc(v.description||"")}</div></div>`).join("");
   }
@@ -1179,6 +1186,7 @@ function renderShProgression(){
   h += ip.log.length ? `<div class="journal">` + ip.log.slice().reverse().map(e=>{
     const what = e.kind==="grant" ? `Grant` :
       e.targetType==="spell" ? `Mastered ${(Engine.spellById(e.targetId)||{name:e.targetId}).name}` :
+      e.targetType==="power" ? `Power: ${typeof e.name==="string" && e.name ? e.name : "unnamed"}` :
       `${e.targetType==="stat"?e.targetId:(Engine.skillById(e.targetId)||{name:e.targetId}).name} ${e.from} → ${e.to}`;
     return `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
       <span class="amt ${e.kind==="grant"?"grant":"spend"}">${e.kind==="grant"?"+":"−"}${e.amount}</span>
@@ -1404,6 +1412,59 @@ function loadoutAddHtml(kind){
 // one off with Use one; a charged Talisman shows its charges; an inscribed
 // object names the spell it holds, from the book when the book has it. Your
 // own rows are the typed table they always were.
+// Admin's half of a write-in archetype (Decision 153): its name, description,
+// Other's words, traits and vulnerabilities. Classification stays as locked,
+// since changing it would strand bought Advantages (plan §4). Each edit is
+// one logged change.
+function adminWriteInHtml(ch){
+  if (!Engine.writeInOptions(ch)) return "";
+  const w = ch.archetypeChoices.writeIn, cls = Engine.classification(ch);
+  const rows = (key, noun) => (Array.isArray(w[key]) ? w[key] : []).map((r, i)=>`<div class="pick wi-row">
+      <label class="field"><span>${esc(noun)} name</span><input type="text" data-admin-wirow="${key}|${i}|name" value="${esc(r && r.name)}"></label>
+      <label class="field"><span>What it does</span><textarea rows="2" data-admin-wirow="${key}|${i}|description">${esc(r && r.description)}</textarea></label>
+      <button class="btn sm danger" data-admin-wirm="${key}|${i}">remove</button></div>`).join("") +
+    `<button class="btn sm" data-admin-wiadd="${key}">+ Add a ${esc(noun.toLowerCase())}</button>`;
+  return `<div class="sect">Written-in archetype</div>
+    <label class="field"><span>What they are</span><input type="text" data-admin-wi="name" value="${esc(w.name)}"></label>
+    <label class="field"><span>Description</span><textarea rows="2" data-admin-wi="description">${esc(w.description||"")}</textarea></label>
+    ${cls && cls.writeIn ? `<label class="field"><span>${esc(cls.name)}: in their words</span><input type="text" data-admin-wi="classificationText" value="${esc(w.classificationText)}"></label>` : ""}
+    <p class="step-note">Classification: <b>${esc(cls ? cls.name : "none")}</b>. It stays as it was at lock. Powers are edited, added and removed on Loadout &amp; Powers.</p>
+    <div class="sect">Baseline traits</div>${rows("traits", "Trait")}
+    <div class="sect">Vulnerabilities</div>${rows("vulnerabilities", "Vulnerability")}`;
+}
+
+// The character's own powers (Decision 153). Each field is edited in place
+// and logged when it changes, like an armor field; Add power takes an
+// optional IP cost, and the power and its spend are one change, one Undo.
+// Removing one is Admin's: a bought power's IP stays spent.
+function powersPanelHtml(ch){
+  const powers = Engine.archetypeContent(ch).powers.filter(p=>p.custom), wi = Engine.writeInOptions(ch);
+  const uses = wi ? wi.powerUses : [], ip = Engine.ipState(ch);
+  let h = `<datalist id="power-uses">${uses.map(u=>`<option value="${esc(u)}">`).join("")}</datalist>`;
+  h += powers.map(p=>`<div class="pick wi-row">
+    <div class="wi-pair">
+      <label class="field"><span>Name</span><input type="text" data-pwedit="${esc(p.id)}|name" value="${esc(p.name)}"></label>
+      <label class="field"><span>Uses</span><input type="text" list="power-uses" data-pwedit="${esc(p.id)}|uses" value="${esc(p.uses)}"></label>
+    </div>
+    <label class="field"><span>Effect</span><textarea rows="2" data-pwedit="${esc(p.id)}|effect">${esc(p.effect)}</textarea></label>
+    <label class="field"><span>Notes</span><input type="text" data-pwedit="${esc(p.id)}|notes" value="${esc(p.notes)}"></label>
+    ${S.admin?`<button class="btn sm danger" data-pwdel="${esc(p.id)}">Remove</button>`:""}</div>`).join("");
+  if (!powers.length) h += `<p class="step-note">No powers yet.</p>`;
+  h += `<details class="group pw-add"><summary>Add a power</summary><div class="ref-body">
+    <div class="wi-pair">
+      <label class="field"><span>Name</span><input type="text" data-pwnew="name"></label>
+      <label class="field"><span>Uses</span><input type="text" list="power-uses" data-pwnew="uses" placeholder="SFR, TOL, a Kicker die…"></label>
+    </div>
+    <label class="field"><span>Effect</span><textarea rows="2" data-pwnew="effect"></textarea></label>
+    <div class="wi-pair">
+      <label class="field"><span>IP cost (optional)</span><input type="text" inputmode="numeric" pattern="[0-9]*" data-pwnew="cost" placeholder="0"></label>
+      <label class="field"><span>Note for the IP journal</span><input type="text" data-pwnew="note"></label>
+    </div>
+    <p class="step-note">${esc(copy("powerAddNote"))} You have ${ip.available} IP.</p>
+    <button class="btn" data-pwadd-go>Add power</button></div></details>`;
+  return h;
+}
+
 function gearRowsHtml(ch){
   const lines = (ch.gear||[]).map((e,i)=>Engine.gearLine(ch,i)).filter(Boolean);
   const cat = lines.filter(l=>!l.custom), own = lines.filter(l=>l.custom);
@@ -1743,6 +1804,7 @@ function renderShLoadout(){
     }
     if (p.type==="table") h += editTable(panelRows(ch, p.id), p.columns, p.id, "Add row");
     if (p.type==="grimoire") h += grimoireHtml(ch, p);
+    if (p.type==="powers") h += powersPanelHtml(ch);
     // Decision 134: both read the chosen specialization's data. Nothing here
     // knows which archetype declared them.
     if (p.type==="focusedSkills"){
@@ -1821,6 +1883,7 @@ function renderShAdmin(){
   h += `<div class="trk"><h4>Archetype</h4>
     <select data-admin-arch><option value="">— none —</option>${D.archetypes.map(a=>`<option value="${a.id}" ${ch.identity.archetype===a.id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>
     <span class="sub" style="color:var(--magenta)">⚠ Changing archetype clears every archetype-specific choice — focus / stat-bonus allocations, specialization, disciplines, natural advantages. One undo brings it all back.</span></div>`;
+  h += adminWriteInHtml(ch);
 
   // Stats — base + IP
   h += `<div class="sect">Stats — base + IP</div><div class="alloc">`;
@@ -2108,9 +2171,9 @@ function pSkillsTableHtml(ch){
   const table = rows => `<table class="p-table p-skilltable">${thead}<tbody>${rows}</tbody></table>`;
   return `<div class="p-skillcols">${table(pSkillRowsHtml(ch,left))}${table(pSkillRowsHtml(ch,right))}</div>`;
 }
-function pRowsTableHtml(rows, cols, labels, blankRows){
+function pRowsTableHtml(rows, cols, labels, blankRows, cls){
   const data = rows && rows.length ? rows : Array.from({length:blankRows},()=>({}));
-  return `<table class="p-table"><thead><tr>${labels.map(l=>`<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>` +
+  return `<table class="p-table${cls?" "+cls:""}"><thead><tr>${labels.map(l=>`<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>` +
     data.map(r=>`<tr>${cols.map(c=>`<td>${pLine(r[c])}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
 }
 function pTraitsTableHtml(list, lookupFn, label, blankRows){
@@ -2128,7 +2191,7 @@ function renderPrintView(ch){
   const ip = ch ? Engine.ipState(ch) : null, id = ch ? ch.identity : {};
 
   let p1main = pHead(ch, "Character Sheet");
-  p1main += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&arch.name)}${pField("Power Level", pl&&pl.name)}</div>`;
+  p1main += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&Engine.archetypeContent(ch).name)}${pField("Power Level", pl&&pl.name)}</div>`;
   p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch&&ch.trackers.credits.current)}</div>`;
   p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}</div>`;
   p1main += `<div class="p-frontbody">`;
@@ -2157,7 +2220,25 @@ function renderPrintView(ch){
         `<div><div class="p-section">Disadvantages</div>${pTraitsTableHtml(ch&&ch.disadvantages, Engine.disById, "Disadvantage", 5)}</div></div>`;
   p3 += `<div class="p-section">Notes</div><div class="p-notes small">${ch&&ch.notes?esc(ch.notes):""}</div>`;
 
-  return `<div class="p-page">${p1}</div><div class="p-page">${p2}</div><div class="p-page">${p3}</div>`;
+  return `<div class="p-page">${p1}</div><div class="p-page">${p2}</div><div class="p-page">${p3}</div><div class="p-page">${pArchetypePage(ch)}</div>`;
+}
+
+// The archetype on paper (Decision 153, XQ4): every archetype, since paper
+// showed none of one before. The front page is full (Decision 96), so it's a
+// page of its own. Blank, it's lines to write a Custom archetype by hand.
+function pArchetypePage(ch){
+  const content = ch ? Engine.archetypeContent(ch) : null, cls = content && content.classification;
+  const spec = ch ? Engine.specializationLabel(ch) : "";
+  const named = list => (list||[]).filter(x=>x && x.name);
+  let h = pHead(ch, "Archetype");
+  h += `<div class="p-fieldrow p-archfields">${pField("Archetype", content && content.name)}${pField("Classification", cls && (cls.name + (cls.text ? `: ${cls.text}` : "")))}${spec?pField("Specialization", spec):""}</div>`;
+  h += content && content.description ? `<p class="p-note p-archdesc">${esc(content.description)}</p>` : (ch ? "" : `<div class="p-fieldrow p-archfields wide">${pField("Description", null)}</div>`);
+  const textRows = list => named(list).map(x=>({ name:x.name, description:[x.description, x.benefit].filter(Boolean).join(" ") }));
+  h += `<div class="p-section">Baseline Traits</div>${pRowsTableHtml(textRows(content && content.traits), ["name","description"], ["Trait","What it does"], 5, "p-archtable")}`;
+  const powers = named(content && content.powers).map(p=>({ name:p.name, uses:p.uses||p.drain||"", effect:[p.effect||p.description, p.notes].filter(Boolean).join(" — ") }));
+  h += `<div class="p-section">Powers</div>${pRowsTableHtml(powers, ["name","uses","effect"], ["Power","Uses","Effect"], 8, "p-archtable p-powertable")}`;
+  h += `<div class="p-section">Vulnerabilities</div>${pRowsTableHtml(textRows(content && content.vulnerabilities), ["name","description"], ["Vulnerability","What it does"], 4, "p-archtable")}`;
+  return h;
 }
 
 const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, traits:renderShTraits,
@@ -2726,6 +2807,26 @@ function bindSheet(){
     const [kind,i]=b.dataset.lorm.split("|"), n=loName(kind, Number(i));
     commit("loadout", `Removed ${n}`, ()=>{ Engine.removeLoadout(ch, kind, Number(i)); });
   });
+  // Powers (Decision 153): a field edit is one logged change when it's left.
+  main.querySelectorAll("[data-pwedit]").forEach(el=>el.onchange=()=>{
+    const [id, k] = el.dataset.pwedit.split("|"), p = (ch.powers||[]).find(x=>x && x.id===id);
+    if (!p || p[k]===el.value) return;
+    commit("power", `${p.name||"Power"}: ${k} → ${el.value===""?"—":el.value.slice(0,40)}`, ()=>{ p[k] = el.value; });
+  });
+  main.querySelectorAll("[data-pwadd-go]").forEach(b=>b.onclick=()=>{
+    const input = {};
+    main.querySelectorAll("[data-pwnew]").forEach(el=>{ input[el.dataset.pwnew] = el.value; });
+    // A refusal leaves the form as typed: try it on a copy first.
+    const r = Engine.addPower(clone(ch), input);
+    if (!r.ok) { notice(r.why); return; }
+    commit("power", `Power: ${input.name.trim()}${r.cost?` (${r.cost} IP)`:""}`, ()=>{ Engine.addPower(ch, input); });
+  });
+  main.querySelectorAll("[data-pwdel]").forEach(b=>b.onclick=()=>{
+    const p = (ch.powers||[]).find(x=>x && x.id===b.dataset.pwdel); if (!p) return;
+    askFirst({ title:`Remove ${p.name||"this power"}?`,
+      text:"Any IP spent on it stays spent. It's logged, so one undo brings it back.",
+      yes:"Remove power", then:()=>commit("admin", `Admin: removed power ${p.name||""}`.trim(), ()=>{ Engine.removePower(ch, p.id); }) });
+  });
   main.querySelectorAll("[data-lonote]").forEach(inp=>inp.oninput=()=>{
     const [kind,i]=inp.dataset.lonote.split("|"), e=(ch[kind]||[])[Number(i)];
     if (e) e.notes=inp.value;
@@ -2837,6 +2938,29 @@ function bindSheet(){
         ch.identity.archetype=v;
         resetArchetypeChoices(ch);
       }) });
+  });
+  // A written-in archetype's own words (Decision 153), one logged change each.
+  const wi = (ch.archetypeChoices||{}).writeIn;
+  main.querySelectorAll("[data-admin-wi]").forEach(el=>el.onchange=()=>{
+    const k = el.dataset.adminWi, v = k==="description" && el.value==="" ? null : el.value;
+    if (!wi || wi[k]===v) return;
+    commit("admin", `Admin: archetype ${k} → ${v==null||v===""?"—":v.slice(0,40)}`, ()=>{ wi[k] = v; });
+  });
+  main.querySelectorAll("[data-admin-wirow]").forEach(el=>el.onchange=()=>{
+    const [key, i, f] = el.dataset.adminWirow.split("|"), row = wi && Array.isArray(wi[key]) ? wi[key][Number(i)] : null;
+    if (!row || row[f]===el.value) return;
+    commit("admin", `Admin: ${row.name||key} ${f} → ${el.value===""?"—":el.value.slice(0,40)}`, ()=>{ row[f] = el.value; });
+  });
+  main.querySelectorAll("[data-admin-wiadd]").forEach(b=>b.onclick=()=>{
+    const key = b.dataset.adminWiadd; if (!wi) return;
+    commit("admin", `Admin: added a ${key==="traits"?"trait":"vulnerability"}`, ()=>{
+      if (!Array.isArray(wi[key])) wi[key] = [];
+      wi[key].push({ name:"", description:"" }); });
+  });
+  main.querySelectorAll("[data-admin-wirm]").forEach(b=>b.onclick=()=>{
+    const [key, i] = b.dataset.adminWirm.split("|"), list = wi && Array.isArray(wi[key]) ? wi[key] : null;
+    if (!list || !list[Number(i)]) return;
+    commit("admin", `Admin: removed ${list[Number(i)].name||(key==="traits"?"a trait":"a vulnerability")}`, ()=>{ list.splice(Number(i), 1); });
   });
   main.querySelectorAll("[data-admin-stat]").forEach(b=>b.onclick=()=>{
     const [id,field,d]=b.dataset.adminStat.split("|"), delta=Number(d);

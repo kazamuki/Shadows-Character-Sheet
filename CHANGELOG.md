@@ -37,6 +37,14 @@ own in the footer.
   Lucky, Contacts or Hard to Kill. The Character Points step lists them first and tags
   them, and says which aren't open. Disadvantages are open to everyone, as before.
   Changing archetype drops any Advantage the new one can't buy.
+- **Build your own archetype.** Pick **Custom** and write it yourself with your GM: what
+  it's called, whether it's Mortal, Supernatural or something else in your own words, the
+  traits it always has, its powers and its weaknesses. Tick **Uses magic** or **Uses SFR**
+  and the sheet tracks TOL or an SFR pool for it. Powers learned in play can cost IP, and
+  one Undo takes back the power and the IP together.
+- **Your archetype on paper.** The printed sheet has a fourth page for your archetype:
+  what it is, its classification, its traits, powers and weaknesses. The blank sheet's
+  version is lines to write a Custom archetype by hand.
 
 ## v0.32.1 — 2026-10-01
 

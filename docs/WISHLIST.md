@@ -269,3 +269,9 @@ The plan's **Other** classification, with its own text, covers it until then.
 - Most of these don't touch rules. If one starts to — e.g. it wants to show a
   computed number the engine doesn't have yet — that part stops and goes to
   Deighton.
+
+**W54 — Main's SFR card for a written-in pool.** *Claude · 💡*
+A Custom character who ticks **Uses SFR** counts its pool on Trackers, but
+Main's SFR card and the vitals read `Engine.sfr()`, which takes its size from
+the archetype's scaling row, and a written-in archetype has none. Main could
+read the tracker panel's player-set max instead.

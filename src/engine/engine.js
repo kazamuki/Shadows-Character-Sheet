@@ -22,13 +22,16 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.15";
+  const SCHEMA_VERSION = "0.16";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
-  function newIntakeId(){
+  function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
-    const bytes = new Uint8Array(12);
-    if (c) c.getRandomValues(bytes); else for (let i=0;i<12;i++) bytes[i] = Math.floor(Math.random()*256);
-    const s = [...bytes].map(b=>INTAKE_ALPHABET[b & 31]).join("");
+    const bytes = new Uint8Array(n);
+    if (c) c.getRandomValues(bytes); else for (let i=0;i<n;i++) bytes[i] = Math.floor(Math.random()*256);
+    return [...bytes].map(b=>INTAKE_ALPHABET[b & 31]).join("");
+  }
+  function newIntakeId(){
+    const s = randomChars(12);
     return `TAG-${s.slice(0,4)}-${s.slice(4,8)}-${s.slice(8,12)}`;
   }
 
@@ -49,7 +52,13 @@ const Engine = (() => {
       // Archetype-specific creation inputs (schema 0.2 addition; see SCHEMA.md §3)
       archetypeChoices:{ rolls:{}, focusAllocation:{}, statBonusAllocation:{},
                          specialization:[], focusedSkillPicks:[],
-                         naturalAdvantages:[], disciplines:{} },
+                         naturalAdvantages:[], disciplines:{},
+                         // Schema 0.16 (Decision 153): what a write-in archetype
+                         // is, in the player's words. Read only when the
+                         // archetype declares `writeIn`; its powers are `powers`.
+                         writeIn:{ name:"", description:null, classification:null,
+                                   classificationText:"", mechanics:[],
+                                   traits:[], vulnerabilities:[] } },
       stats: Object.fromEntries(D().stats.map(s=>[s.id,{base:1, ipe:0}])),
       skills:{},                       // id -> {rank, ipe}
       advantages:[], disadvantages:[], // {id, rank, notes, selections?}
@@ -81,8 +90,16 @@ const Engine = (() => {
   const disById    = id => D().disadvantages.find(d=>d.id===id);
   // Decision 152: what kind of being the archetype is, and so which Advantages
   // it may buy: "all", or "universal" (only those carrying 043's Universal
-  // tag). No archetype, or none named, gates nothing.
-  const classification = ch => { const a = archetype(ch); return (a && (D().classifications||[]).find(c=>c.id===a.classification)) || null; };
+  // tag). No archetype, or none named, gates nothing. A write-in archetype
+  // (Decision 153) has none of its own: the character's pick is its classification.
+  const writeInSpec = ch => { const a = archetype(ch); return a && a.writeIn && typeof a.writeIn==="object" ? a.writeIn : null; };
+  const writeInOf = ch => { const w = ((ch||{}).archetypeChoices||{}).writeIn; return w && typeof w==="object" && !Array.isArray(w) ? w : {}; };
+  const classificationById = id => (D().classifications||[]).find(c=>c.id===id) || null;
+  const classification = ch => {
+    const a = archetype(ch);
+    if (!a) return null;
+    return classificationById(writeInSpec(ch) ? writeInOf(ch).classification : a.classification);
+  };
   function canBuyAdvantage(ch, adv){
     const c = classification(ch);
     if (!c || c.advantages!=="universal") return true;
@@ -2046,9 +2063,12 @@ const Engine = (() => {
   }
 
   // ── Archetype sheet panels (declared in data; rendered generically) ──
+  // A panel with `when` shows only while its write-in mechanic is ticked
+  // (Decision 153): "Uses magic" turns on TOL Spent, and nothing names an id.
   const archPanels = ch => {
     const a = archetype(ch);
-    return (a && a.coreMechanic && a.coreMechanic.panels) || [];
+    const on = mechanicsOn(ch);
+    return ((a && a.coreMechanic && a.coreMechanic.panels) || []).filter(p=>!p.when || on.includes(p.when));
   };
   function panelMax(ch, p){
     if (p.max==="TOL") return derived(ch).TOL;
@@ -2090,6 +2110,95 @@ const Engine = (() => {
       const bought = (ch.archetypeChoices.disciplines||{})[d.id]||0;
       return { id:d.id, name:d.name, base, bought, rank: base+bought, cap, description:d.description };
     });
+  }
+
+  // ── A write-in archetype (Decision 153) ─────────────────────────────
+  // An archetype that declares `writeIn` has no content of its own: the
+  // character writes it in archetypeChoices.writeIn and keeps its powers in
+  // `powers`. Every reader normalizes what it reads, since an undo can put
+  // anything a file's audit holds back into these fields.
+  const txt = v => typeof v==="string" ? v : "";
+  const isPlainObj = o => !!o && typeof o==="object" && !Array.isArray(o);
+  const textRow = r => ({ name:txt(r.name), description:txt(r.description) });
+  const textRows = v => (Array.isArray(v) ? v : []).filter(isPlainObj).map(textRow);
+  const powerRow = r => ({ id:txt(r.id), custom:true, name:txt(r.name), uses:txt(r.uses), effect:txt(r.effect), notes:txt(r.notes) });
+  // The mechanics a character ticked, of those its archetype offers.
+  function mechanicsOn(ch){
+    const spec = writeInSpec(ch);
+    if (!spec) return [];
+    const offered = (spec.mechanics||[]).map(m=>m.id), ticked = writeInOf(ch).mechanics;
+    return Array.isArray(ticked) ? offered.filter(id=>ticked.includes(id)) : [];
+  }
+  // What the wizard offers a write-in archetype: its checkboxes, each with
+  // whether it's ticked, and what a power might spend. Null for any other.
+  function writeInOptions(ch){
+    const spec = writeInSpec(ch);
+    if (!spec) return null;
+    const on = mechanicsOn(ch);
+    return { mechanics:(spec.mechanics||[]).map(m=>({ id:m.id, label:m.label, note:m.note||"", on:on.includes(m.id) })),
+             powerUses:(spec.powerUses||[]).slice(),
+             classifications:(D().classifications||[]).slice() };
+  }
+  const hasPowers = ch => archPanels(ch).some(p=>p.type==="powers");
+  const ownPowers = ch => hasPowers(ch) ? listOf(ch, "powers").filter(isPlainObj).map(powerRow) : [];
+  // The one reader for what an archetype is, whichever kind: the Archetype
+  // tab, the wizard card, the header, the roster and print all draw this.
+  function archetypeContent(ch){
+    const a = archetype(ch);
+    if (!a) return null;
+    const c = classification(ch), spec = writeInSpec(ch), w = writeInOf(ch);
+    const text = spec && c && c.writeIn ? txt(w.classificationText).trim() : "";
+    const cls = c ? { id:c.id, name:c.name, text } : null;
+    if (!spec) return { writeIn:false, name:a.name, description:a.summary||null, status:a.status, classification:cls,
+      traits:a.baselineTraits||[], powers:[...(a.powers||[]), ...ownPowers(ch)], vulnerabilities:a.vulnerabilities||[] };
+    const desc = txt(w.description).trim();
+    return { writeIn:true, name:txt(w.name).trim() || a.name, description:desc || null, status:a.status, classification:cls,
+      traits:textRows(w.traits), powers:ownPowers(ch), vulnerabilities:textRows(w.vulnerabilities) };
+  }
+  // A power row's id is local to the character, so the IP journal can name
+  // the row a spend bought. Never reissued within one character.
+  function newPowerId(ch){
+    const held = new Set(listOf(ch, "powers").map(p=>p && p.id));
+    let id;
+    do id = `pw-${randomChars(8)}`; while (held.has(id));
+    return id;
+  }
+  // A power is written either way, and audited by the caller's commit(). With
+  // an IP cost it is also a journal spend of the amount as typed, refused if
+  // IP is short; with none, nothing touches IP. One commit, one Undo.
+  function addPower(ch, input){
+    if (!hasPowers(ch)) return { ok:false, why:"Powers aren't on this sheet." };
+    const i = isPlainObj(input) ? input : {}, name = txt(i.name).trim();
+    if (!name) return { ok:false, why:"Give the power a name." };
+    let cost = 0;
+    if (i.cost!=null && String(i.cost).trim()!==""){
+      cost = Number(i.cost);
+      if (!Number.isInteger(cost) || cost < 0) return { ok:false, why:"An IP cost is a whole number." };
+    }
+    if (cost && ipState(ch).available < cost) return { ok:false, why:`Not enough IP (need ${cost}).` };
+    const row = powerRow({ id:newPowerId(ch), name, uses:txt(i.uses).trim(), effect:i.effect, notes:i.notes });
+    if (!Array.isArray(ch.powers)) ch.powers = [];
+    ch.powers.push(row);
+    if (cost) ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:cost,
+      targetType:"power", targetId:row.id, name, note:txt(i.note) });
+    return { ok:true, id:row.id, cost };
+  }
+  // A blank row for the wizard's powers editor, where the player types into
+  // it (XQ2: creation's powers are free). Play adds powers through addPower.
+  function newPower(ch){
+    if (!hasPowers(ch)) return { ok:false, why:"Powers aren't on this sheet." };
+    const row = powerRow({ id:newPowerId(ch) });
+    if (!Array.isArray(ch.powers)) ch.powers = [];
+    ch.powers.push(row);
+    return { ok:true, id:row.id };
+  }
+  // Removing a power leaves its IP spend in the journal: IP spent stays spent,
+  // and versionCheck says the power is gone.
+  function removePower(ch, id){
+    const list = listOf(ch, "powers"), at = list.findIndex(p=>p && p.id===id);
+    if (at < 0) return { ok:false, why:"That power isn't on this sheet." };
+    list.splice(at, 1);
+    return { ok:true };
   }
 
   // ════ AUDIT TRAIL & UNDO ═════════════════════════════════════════════
@@ -2348,7 +2457,17 @@ const Engine = (() => {
     for (const k of ["advantages","disadvantages"]) c[k] = Array.isArray(c[k]) ? c[k].filter(isEntry) : [];
     for (const k of ["minor","major"]) pr.milestones[k] = Array.isArray(pr.milestones[k]) ? pr.milestones[k].filter(isEntry) : [];
     if (!Array.isArray(c.sessions)) c.sessions=[];
-    c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.powers=c.powers||[]; c.armor=c.armor||[];
+    c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.armor=c.armor||[];
+    // Schema 0.16 (Decision 153): a power is the player's own row, every
+    // field text, with an id local to the character. A row with no id, or one
+    // another row already holds, gets a new one, so a spend names one row.
+    const powerIds = new Set();
+    c.powers = (Array.isArray(c.powers) ? c.powers : []).filter(isPlainObj).map(r=>{
+      const p = powerRow(r);
+      while (!p.id || powerIds.has(p.id)) p.id = `pw-${randomChars(8)}`;
+      powerIds.add(p.id);
+      return p;
+    });
     // Schema 0.6 (Weapons/Ammo/Armor data batch): a weapons entry may now
     // reference the gear catalog by id (notes only, stats computed from the
     // catalog) or stay freeform (custom:true, every field preserved as typed).
@@ -2433,6 +2552,15 @@ const Engine = (() => {
     // Focused Skill picks are skill ids (Decision 134): anything else is junk.
     ac.focusedSkillPicks = (Array.isArray(ac.focusedSkillPicks) ? ac.focusedSkillPicks : []).filter(x=>typeof x==="string");
     if (c.identity && typeof c.identity==="object") delete c.identity.specialization;
+    // Schema 0.16 (Decision 153): a write-in archetype's own words. Every file
+    // from before has none, which _fillDefaults seeded; a file's own is kept
+    // field by field, as text, and anything else in it is dropped.
+    const w = isPlainObj(ac.writeIn) ? ac.writeIn : {};
+    ac.writeIn = { name:txt(w.name), description: typeof w.description==="string" ? w.description : null,
+      classification: typeof w.classification==="string" ? w.classification : null,
+      classificationText:txt(w.classificationText),
+      mechanics:[...new Set((Array.isArray(w.mechanics) ? w.mechanics : []).filter(x=>typeof x==="string"))],
+      traits:textRows(w.traits), vulnerabilities:textRows(w.vulnerabilities) };
     // Schema 0.14 (W41): TAGless only when a file says so, as `true`. Every
     // character from before is TAG'd, which _fillDefaults already seeded.
     c.identity.tagless = c.identity.tagless===true;
@@ -2713,6 +2841,20 @@ const Engine = (() => {
     }
     if (stepId==="archetype"){
       if (!a) { E("Choose an Archetype."); return out; }
+      // Decision 153: a write-in archetype needs a name and a classification.
+      // Other's own words are the table's business: warned, never blocked (78).
+      if (writeInSpec(ch)){
+        const w = writeInOf(ch), c = classification(ch);
+        if (!txt(w.name).trim()) E("Name your archetype. What are you?");
+        if (!c) E("Choose a classification for your archetype.");
+        else if (c.writeIn && !txt(w.classificationText).trim()) W(`Say what ${c.name} means for you, in a word or two.`);
+        // A row with words but no name never shows on the sheet; an empty one is just unused.
+        const nameless = rows => rows.filter(r=>!r.name.trim() && [r.description, r.uses, r.effect, r.notes].some(v=>txt(v).trim())).length;
+        for (const [rows, noun] of [[textRows(w.traits), "trait"], [ownPowers(ch), "power"], [textRows(w.vulnerabilities), "vulnerability"]]){
+          const n = nameless(rows);
+          if (n) W(`${n===1?`A ${noun}`:`${n} ${noun==="vulnerability"?"vulnerabilities":noun+"s"}`} with no name won't show on your sheet. Name ${n===1?"it":"them"}.`);
+        }
+      }
       // A3: one rule for every archetype. The count comes from the data
       // (`countBy`, or 1 by default), so an archetype that wants three picks
       // needs no app change — which is the point of unifying the two models.
@@ -2853,6 +2995,12 @@ const Engine = (() => {
       if (ch.creation.rolls.credits==null) W(`Enter your starting Çredits roll (${pl?pl.startingCredits.roll+" × "+pl.startingCredits.multiplier:""}).`);
       for (const s of ["power-level","concept","stats","archetype","skills","character-points"])
         for (const i of validate(s,ch)) out.push(i);
+      // At lock, a written-in archetype is the GM's call (Decision 153). Copy
+      // from appCopy, so the voice stays a data edit (Decision 71).
+      if (writeInSpec(ch)){
+        const t = ((D().appCopy||{}).archetypeWrittenIn) || "{name} is your GM's call.";
+        W(t.replace("{name}", archetypeContent(ch).name));
+      }
     }
     return out;
   }
@@ -2920,6 +3068,14 @@ const Engine = (() => {
           issues.push(`IP journal shows ${name} Mastered, but the Grimoire doesn't — it may have been edited by hand.`);
         continue;
       }
+      // A power's spend bought a row (Decision 153); its id names the row.
+      if (type==="power"){
+        if (!listOf(c, "powers").some(p=>p && p.id===id)){
+          const e = log.find(x=>x.targetType==="power" && x.targetId===id);
+          issues.push(`IP journal shows IP spent on ${e && txt(e.name) ? e.name : "a power"}, but that power isn't on the sheet any more.`);
+        }
+        continue;
+      }
       const ipe = type==="stat" ? ((c.stats||{})[id]||{}).ipe||0
                                 : ((c.skills||{})[id]||{}).ipe||0;
       if (ipe !== n) issues.push(`IP journal shows ${n} increase${n>1?"s":""} on ${id} but IPE is ${ipe} — totals may have been edited by hand.`);
@@ -2935,7 +3091,7 @@ const Engine = (() => {
     // The character file: create, load, check, export
     newCharacter, isIntakeId, tagReading, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, newPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
