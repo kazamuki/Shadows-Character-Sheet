@@ -6,6 +6,8 @@
   --frame:#203F7B;         /* Deep Circuit */
   --violet:#712B8C;        /* Aether Pulse */
   --violet-hi:#9B4DBA;
+  --violet-text:#B47AD0;   /* Aether Pulse, read: violet words on the dark ground (W43) */
+  --magenta-text:#D36FB3;  /* Neon Veil, read: harm and error in words (W43) */
   --magenta:#BC489A;       /* Neon Veil */
   --cyan:#1BBBC4;          /* Static Cyan */
   --green:#71C388;         /* Ghostly Green */
@@ -42,6 +44,8 @@
   --green:var(--frame);
   --gold:var(--violet);
   --magenta:var(--violet);
+  --violet-text:var(--violet);
+  --magenta-text:var(--violet);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scrollbar-color:var(--frame) var(--ground)}
@@ -75,7 +79,7 @@ header.top{
 .brand{grid-area:brand; overflow:hidden; text-overflow:ellipsis;
   font-family:var(--display); font-weight:700; font-size:1.3rem;
   letter-spacing:.12em; text-transform:uppercase; color:var(--text); white-space:nowrap}
-.brand .x{color:var(--violet-hi)}
+.brand .x{color:var(--violet-text)}
 .brand .ctx{letter-spacing:.06em}
 /* On a narrow screen the character's name gets the room. */
 @media (max-width:480px){ .brand .pre{display:none} }
@@ -100,7 +104,7 @@ nav.topnav .tab{padding:7px 12px 12px; flex:none}
 
 /* ── Left rail: intake ledger ───────────────────────────────────────── */
 nav.ledger{border-right:1px solid var(--frame); padding:20px 0 28px; background:rgba(17,30,61,.45)}
-.ledger h2{font-family:var(--mono); font-size:.68rem; font-weight:500; letter-spacing:.18em;
+.ledger h2{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.18em;
   text-transform:uppercase; color:var(--dim); padding:0 18px 10px}
 .step-row{display:flex; align-items:center; gap:10px; width:100%; text-align:left;
   background:none; border:0; color:var(--dim); padding:9px 18px; font-size:.84rem;
@@ -121,7 +125,7 @@ nav.ledger{border-right:1px solid var(--frame); padding:20px 0 28px; background:
 
 /* ── Main column ────────────────────────────────────────────────────── */
 main{padding:26px 30px 80px; max-width:920px; min-width:0}
-.eyebrow{font-family:var(--mono); font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; color:var(--magenta); margin-bottom:4px}
+.eyebrow{font-family:var(--mono); font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; color:var(--magenta-text); margin-bottom:4px}
 h1.step-title{font-family:var(--display); font-weight:600; font-size:1.7rem; letter-spacing:.04em; color:var(--text); margin-bottom:6px}
 .step-note{color:var(--dim); max-width:62ch; margin-bottom:22px}
 .step-note em{color:var(--text); font-style:normal}
@@ -139,10 +143,10 @@ button.card:hover{border-color:var(--violet-hi)}
 .card .stat-line{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:10px;
   font-family:var(--mono); font-size:.72rem; color:var(--text)}
 .card .stat-line span b{color:var(--cyan); font-weight:500}
-.badge{font-family:var(--mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase;
+.badge{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase;
   padding:2px 7px; border-radius:3px; border:1px solid; position:absolute; top:12px; right:12px}
 .badge.draft{color:var(--gold); border-color:var(--gold)}
-.badge.tbd{color:var(--magenta); border-color:var(--magenta)}
+.badge.tbd{color:var(--magenta-text); border-color:var(--magenta)}
 .badge.final{color:var(--green); border-color:var(--green)}
 
 /* flags */
@@ -206,9 +210,9 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .stepper button:disabled{opacity:.3; cursor:default}
 .stepper .val{font-family:var(--mono); width:42px; text-align:center; font-size:.95rem}
 .mod{font-family:var(--mono); font-size:.78rem; width:3.2em; text-align:right; color:var(--dim)}
-.mod.pos{color:var(--green)} .mod.neg{color:var(--magenta)}
+.mod.pos{color:var(--green)} .mod.neg{color:var(--magenta-text)}
 .sect{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--violet-hi); border-bottom:1px solid var(--frame); padding-bottom:5px; margin:24px 0 12px; grid-column:1/-1}
+  color:var(--violet-text); border-bottom:1px solid var(--frame); padding-bottom:5px; margin:24px 0 12px; grid-column:1/-1}
 
 /* pick lists (advantages, skills detail, aberrations) */
 .pick{background:var(--panel); border:1px solid var(--frame); border-radius:5px; padding:12px 14px; margin-bottom:10px}
@@ -233,20 +237,20 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .picks{margin-top:10px; padding-left:12px; border-left:2px solid var(--frame);
   display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 .picks-label{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--violet-hi); flex-basis:100%}
+  text-transform:uppercase; color:var(--violet-text); flex-basis:100%}
 .picks select,.picks input[type=text]{font-size:.8rem; padding:5px 8px; min-width:180px}
 .picks .field{flex:1 1 100%; margin:0}
 .picks .step-note{flex-basis:100%; margin-top:2px}
 .search{margin-bottom:12px}
 details.group{margin-bottom:8px}
 details.group>summary{cursor:pointer; font-family:var(--mono); font-size:.74rem;
-  letter-spacing:.14em; text-transform:uppercase; color:var(--violet-hi); padding:6px 0; list-style:none}
+  letter-spacing:.14em; text-transform:uppercase; color:var(--violet-text); padding:6px 0; list-style:none}
 details.group>summary::before{content:"▸ "; color:var(--frame)}
 details.group[open]>summary::before{content:"▾ "}
 
 /* tables */
 table.ref{width:100%; border-collapse:collapse; font-size:.82rem; margin:8px 0 16px}
-table.ref th{font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+table.ref th{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
   color:var(--dim); text-align:left; padding:6px 10px; border-bottom:1px solid var(--frame)}
 table.ref td{padding:6px 10px; border-bottom:1px solid rgba(32,63,123,.35)}
 table.ref td.num{font-family:var(--mono); color:var(--cyan)}
@@ -261,19 +265,19 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .btn.go{background:var(--cyan); border-color:var(--cyan); color:var(--ink)}
 .btn:disabled{opacity:.45; cursor:default}
 .issues{margin-top:14px; font-size:.82rem}
-.issues li{color:var(--magenta); margin-left:18px; margin-bottom:3px}
+.issues li{color:var(--magenta-text); margin-left:18px; margin-bottom:3px}
 .issues li.warn{color:var(--gold)}
 .intake{display:flex; align-items:center; gap:10px; margin:2px 0 8px; color:var(--dim)}
 .intake-bars{flex:none; opacity:.85}
 .intake-no{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase}
-.intake-label{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--magenta)}
+.intake-label{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--magenta-text)}
 .import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
 .import-issues .issues{margin-top:0}
 
 /* ── Vitals rail (signature) ────────────────────────────────────────── */
 aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:rgba(17,30,61,.45);
   position:sticky; top:var(--header-h); align-self:start; max-height:calc(100vh - var(--header-h)); overflow-y:auto}
-.vitals h2{font-family:var(--mono); font-size:.68rem; font-weight:500; letter-spacing:.18em;
+.vitals h2{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.18em;
   text-transform:uppercase; color:var(--dim); margin-bottom:14px; display:flex; align-items:center; gap:8px}
 .vitals h2::after{content:""; flex:1; height:1px; background:var(--frame)}
 .vrow{display:flex; justify-content:space-between; align-items:baseline; padding:5px 0;
@@ -282,20 +286,20 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .vrow .v{font-family:var(--mono); font-size:.92rem; color:var(--cyan); transition:text-shadow .4s}
 .vrow .v.hp{color:var(--green)}
 .vrow .v.gold{color:var(--gold)}
-.vrow .v.over{color:var(--magenta)}
+.vrow .v.over{color:var(--magenta-text)}
 .vrow .v.pulse{text-shadow:0 0 10px currentColor}
 .vgroup{margin-bottom:18px}
 .vname{font-family:var(--display); font-size:.95rem; letter-spacing:.06em; color:var(--text); margin-bottom:2px; word-break:break-word}
-.vsub{font-family:var(--mono); font-size:.68rem; color:var(--dim); margin-bottom:10px}
+.vsub{font-family:var(--mono); font-size:.7rem; color:var(--dim); margin-bottom:10px}
 
 /* home + review */
 .home-hero{margin:48px auto 0; max-width:560px; text-align:center}
-.home-hero .glyph{font-family:var(--mono); color:var(--violet-hi); font-size:.8rem; letter-spacing:.4em; margin-bottom:14px}
+.home-hero .glyph{font-family:var(--mono); color:var(--violet-text); font-size:.8rem; letter-spacing:.4em; margin-bottom:14px}
 .home-hero h1{font-family:var(--display); font-size:2.2rem; letter-spacing:.1em; font-weight:700; margin-bottom:8px}
 .home-hero p{color:var(--dim); margin-bottom:28px}
 .home-actions{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
 .review-block{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:16px 18px; margin-bottom:14px}
-.review-block h3{font-family:var(--display); font-size:1rem; letter-spacing:.05em; color:var(--violet-hi); margin-bottom:8px}
+.review-block h3{font-family:var(--display); font-size:1rem; letter-spacing:.05em; color:var(--violet-text); margin-bottom:8px}
 .kv{display:grid; grid-template-columns:auto 1fr; gap:3px 16px; font-size:.84rem}
 .kv .k{color:var(--dim)} .kv .v{font-family:var(--mono)}
 .locked-banner{border:1px solid var(--green); color:var(--green); border-radius:5px;
@@ -304,10 +308,10 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 /* ── Phase 3: live sheet ────────────────────────────────────────────── */
 .sheet-toolbar{display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap}
 .sheet-toolbar .spacer{flex:1}
-.chip{font-family:var(--mono); font-size:.64rem; letter-spacing:.08em; text-transform:uppercase;
+.chip{font-family:var(--mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase;
   padding:2px 7px; border-radius:3px; border:1px solid var(--frame); color:var(--dim); white-space:nowrap}
 .chip.gold{color:var(--gold); border-color:var(--gold)}
-.chip.pain{color:var(--magenta); border-color:var(--magenta)}
+.chip.pain{color:var(--magenta-text); border-color:var(--magenta)}
 .chip.ok{color:var(--green); border-color:var(--green)}
 .chip.cyan{color:var(--cyan); border-color:var(--cyan)}
 /* Tags and tips (Decision 139): a tag the glossary knows is a chip that
@@ -332,7 +336,7 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .tip .tip-note{color:var(--gold)}
 .hl-track{display:flex; gap:5px; flex-wrap:wrap; margin:12px 0}
 .hl{width:46px; height:34px; border:1px solid var(--frame); border-radius:4px; position:relative;
-  font-family:var(--mono); font-size:.68rem; display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-size:.7rem; display:flex; align-items:center; justify-content:center;
   color:var(--dim); background:var(--panel); overflow:hidden}
 .hl .fill{position:absolute; inset:0; background:rgba(188,72,154,.32); transform-origin:left; z-index:0}
 /* W1: Trackers in two columns on a wide screen, one on a phone. */
@@ -344,7 +348,7 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hl-track{gap:12px}
 .hl-band{display:flex; flex-direction:column; gap:3px}
 .hl-band-cells{display:flex; gap:5px; flex-wrap:wrap}
-.hl-band-k{font-family:var(--mono); font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+.hl-band-k{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
 .hl-band.here .hl-band-k{color:var(--text)}
 .hl-band.here .hl-band-k::before{content:"▸ "}
 .hl-band.pl-1 .hl{border-color:var(--violet-hi)}
@@ -352,7 +356,7 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hl-band.pl-3 .hl{border-color:var(--magenta); border-width:2px}
 .hl-band .hl.massive{border-color:var(--magenta)}   /* Massive stays Massive in any band */
 .hl span{position:relative; z-index:1}
-.hl.gone{border-color:var(--magenta); color:var(--magenta)}
+.hl.gone{border-color:var(--magenta); color:var(--magenta-text)}
 .hl.gone .fill{background:rgba(188,72,154,.5)}
 /* Phase 3.3 — Main health as HL segments (no numbers) */
 .hl-mini{display:flex; gap:3px; margin-top:9px}
@@ -363,7 +367,7 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 .hl-mini .seg.gone i{background:var(--magenta)}
 /* Decision 99 — Health Levels removed by Massive damage: gone, not emptied.
    Hatched and dashed so they never read as ordinary damage. */
-.hl.massive{border-style:dashed; border-color:var(--magenta); color:var(--magenta)}
+.hl.massive{border-style:dashed; border-color:var(--magenta); color:var(--magenta-text)}
 .hl.massive .fill{background:repeating-linear-gradient(135deg, rgba(188,72,154,.55) 0 4px, transparent 4px 8px)}
 .hl-mini .seg.massive{border-style:dashed}
 .hl-mini .seg.massive i{background:repeating-linear-gradient(135deg, var(--magenta) 0 3px, transparent 3px 6px)}
@@ -372,7 +376,7 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
    Level went up. Only once per action; none under reduced motion. */
 @keyframes landed{0%{box-shadow:0 0 0 2px var(--magenta), 0 0 18px var(--magenta); background-color:rgba(188,72,154,.35)}
   100%{box-shadow:0 0 0 0 transparent; background-color:transparent}}
-@keyframes struck{0%{text-shadow:0 0 14px var(--magenta); color:var(--magenta)} 100%{}}
+@keyframes struck{0%{text-shadow:0 0 14px var(--magenta); color:var(--magenta-text)} 100%{}}
 .hl.landed, .hl-mini .seg.landed, .cond.painup, .vpill.painup, .pick.painup{animation:landed .7s ease-out}
 .cond.painup, .vpill.painup, .pick.painup{animation-iteration-count:2}
 .cond.struck .big, .vpill.struck .vv, .big.struck{animation:struck .7s ease-out}
@@ -395,7 +399,7 @@ aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:r
 /* W6: where the character stands, atop the Take a hit modal */
 .hit-now{display:flex; align-items:baseline; gap:12px; margin:6px 0 0}
 .hit-now .big{font-family:var(--mono); font-size:1.25rem; color:var(--cyan)}
-.hit-now .big.hp{color:var(--green)} .hit-now .big.bad{color:var(--magenta)}
+.hit-now .big.hp{color:var(--green)} .hit-now .big.bad{color:var(--magenta-text)}
 .hit-now .sub{font-size:.8rem; color:var(--dim)}
 .hitcheck{border:1px solid var(--frame); border-radius:6px; padding:9px 12px; margin:8px 0; font-size:.84rem}
 .hitcheck.bad{border-color:var(--magenta)}
@@ -415,7 +419,7 @@ table.lo-weapons td{vertical-align:top}
 table.lo-weapons input[type=text]{padding:4px 6px; font-size:.78rem; min-width:90px}
 table.lo-weapons td.rm{width:34px; text-align:center}
 table.lo-weapons .x,.lo-armor .x,.lo-gear-row .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
-table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--magenta)}
+table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--magenta-text)}
 .lo-armor{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:10px 14px; margin-bottom:10px}
 .lo-armor.worn{border-color:var(--cyan)}
 .lo-armor-head{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
@@ -434,8 +438,8 @@ table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--m
 .deriv-q{margin:5px auto 0; display:block; width:18px; height:18px; border-radius:50%; border:1px solid var(--frame);
   background:var(--panel-2); color:var(--dim); font-family:var(--mono); font-size:.7rem; line-height:1; cursor:pointer}
 .deriv-q:hover{border-color:var(--cyan); color:var(--cyan)}
-.statcell .dvbd{margin-top:6px; font-family:var(--mono); font-size:.6rem; line-height:1.45; color:var(--dim); letter-spacing:.01em}
-.vbd{font-family:var(--mono); font-size:.62rem; color:var(--dim); padding:1px 0 7px; line-height:1.45}
+.statcell .dvbd{margin-top:6px; font-family:var(--mono); font-size:.7rem; line-height:1.45; color:var(--dim); letter-spacing:.01em}
+.vbd{font-family:var(--mono); font-size:.7rem; color:var(--dim); padding:1px 0 7px; line-height:1.45}
 /* Phase 3.3 — admin mode */
 .admin-banner{display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:rgba(214,168,72,.1);
   border:1px solid var(--gold); border-radius:6px; padding:9px 13px; margin-bottom:12px; font-size:.82rem}
@@ -445,38 +449,38 @@ table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--m
 .admin-banner .dot{width:9px; height:9px; border-radius:50%; background:var(--gold); animation:pulseDot 1.6s infinite}
 @keyframes pulseDot{0%,100%{opacity:1} 50%{opacity:.3}}
 .admin-steppers{display:flex; align-items:center; gap:5px; flex-wrap:wrap}
-.admin-steppers .lbl{font-family:var(--mono); font-size:.68rem; color:var(--dim); min-width:46px}
+.admin-steppers .lbl{font-family:var(--mono); font-size:.7rem; color:var(--dim); min-width:46px}
 /* Phase 3.3 — audit log rows */
 .auditlog .jrow .d{min-width:118px}
 .auditlog .jrow .what{flex:1}
 .auditlog .jrow .x{background:none; border:0; color:var(--dim); cursor:pointer; font-size:.9rem}
-.auditlog .jrow .x:hover{color:var(--magenta)}
+.auditlog .jrow .x:hover{color:var(--magenta-text)}
 .trk{display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--panel);
   border:1px solid var(--frame); border-radius:6px; padding:13px 16px; margin-bottom:12px}
 .trk h4{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; min-width:110px}
 .trk .big{font-family:var(--mono); font-size:1.25rem; color:var(--cyan)}
-.trk .big.bad{color:var(--magenta)} .trk .big.gold{color:var(--gold)} .trk .big.hp{color:var(--green)}
+.trk .big.bad{color:var(--magenta-text)} .trk .big.gold{color:var(--gold)} .trk .big.hp{color:var(--green)}
 .trk .sub{font-size:.74rem; color:var(--dim); flex-basis:100%}
 .trk input[type=number]{width:84px; text-align:center}
 .trk input[type=text]{width:auto; flex:1; min-width:140px}
 .btn.sm{padding:5px 12px; font-size:.78rem; font-weight:500}
-.btn.danger{border-color:var(--magenta); color:var(--magenta); background:transparent}
+.btn.danger{border-color:var(--magenta); color:var(--magenta-text); background:transparent}
 .btn.danger:hover{background:rgba(188,72,154,.12)}
 .journal{font-size:.78rem}
 .journal .jrow{display:flex; gap:10px; padding:6px 2px; border-bottom:1px solid rgba(32,63,123,.3); align-items:baseline}
-.journal .jrow .d{font-family:var(--mono); font-size:.66rem; color:var(--dim); min-width:78px}
+.journal .jrow .d{font-family:var(--mono); font-size:.7rem; color:var(--dim); min-width:78px}
 .journal .jrow .amt{font-family:var(--mono); min-width:54px; text-align:right}
-.journal .jrow .amt.spend{color:var(--magenta)} .journal .jrow .amt.grant{color:var(--green)}
+.journal .jrow .amt.spend{color:var(--magenta-text)} .journal .jrow .amt.grant{color:var(--green)}
 .journal .jrow .what{flex:1}
 .journal .jrow .note{color:var(--dim); font-size:.72rem}
 table.edit{width:100%; border-collapse:collapse; font-size:.8rem; margin:8px 0 6px}
-table.edit th{font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase;
+table.edit th{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
   color:var(--dim); text-align:left; padding:4px 6px; border-bottom:1px solid var(--frame)}
 table.edit td{padding:3px 4px; border-bottom:1px solid rgba(32,63,123,.25); vertical-align:top}
 table.edit input,table.edit textarea{padding:5px 7px; font-size:.8rem; min-height:0; min-width:70px}
 table.edit td.rm{width:34px; text-align:center}
 table.edit .x,.journal .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
-table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
+table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .ms{position:relative}
 .ms .req{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
 .ms.taken{border-color:var(--green)}
@@ -486,10 +490,10 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .bar.warn i{background:var(--gold)} .bar.bad i{background:var(--magenta)}
 .statgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(108px,1fr)); gap:10px; margin:10px 0 4px}
 .statcell{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:10px 12px; text-align:center}
-.statcell .sid{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; color:var(--dim)}
+.statcell .sid{font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; color:var(--dim)}
 .statcell .sv{font-family:var(--numeric); font-weight:600; font-variant-numeric:tabular-nums; font-size:1.5rem; color:var(--text)}
 .statcell .sm2{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
-.statcell .sm2.pos{color:var(--green)} .statcell .sm2.neg{color:var(--magenta)}
+.statcell .sm2.pos{color:var(--green)} .statcell .sm2.neg{color:var(--magenta-text)}
 .form-toggle{display:flex; gap:0; border:1px solid var(--frame); border-radius:4px; overflow:hidden}
 .form-toggle button{background:var(--panel-2); border:0; color:var(--dim); padding:6px 16px; font-size:.8rem}
 .form-toggle button.on{background:var(--violet); color:var(--on-accent)}
@@ -520,19 +524,19 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 /* "right now" condition strip on the Main tab */
 .cond-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; margin:6px 0 4px}
 .cond{background:var(--panel); border:1px solid var(--frame); border-radius:8px; padding:13px 15px; position:relative; overflow:hidden}
-.cond .lab{font-family:var(--mono); font-size:.64rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
+.cond .lab{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
 .cond .big{font-family:var(--numeric); font-weight:600; font-variant-numeric:tabular-nums; font-size:1.9rem; line-height:1.1; color:var(--text); margin-top:3px}
 .cond .big small{font-family:var(--mono); font-size:.8rem; color:var(--dim)}
-.cond .meta{font-family:var(--mono); font-size:.68rem; color:var(--dim); margin-top:3px}
+.cond .meta{font-family:var(--mono); font-size:.7rem; color:var(--dim); margin-top:3px}
 .cond .meter{height:5px; border-radius:3px; background:var(--panel-2); overflow:hidden; margin-top:9px}
 .cond .meter i{display:block; height:100%; background:var(--green); transition:width .35s}
 .cond.hp .big{color:var(--green)} .cond.hp .meter i{background:var(--green)}
 .cond.san .meter i{background:var(--cyan)} .cond.san .big{color:var(--cyan)}
 .cond.luck .big{color:var(--gold)} .cond.luck .meter i{background:var(--gold)}
-.cond.sfr .big{color:var(--violet-hi)} .cond.sfr .meter i{background:var(--violet-hi)}
+.cond.sfr .big{color:var(--violet-text)} .cond.sfr .meter i{background:var(--violet-hi)}
 .cond.cred .big{color:var(--gold)}
 .cond.danger{border-color:var(--magenta)}
-.cond.danger .big{color:var(--magenta)} .cond.danger .meter i{background:var(--magenta)}
+.cond.danger .big{color:var(--magenta-text)} .cond.danger .meter i{background:var(--magenta)}
 .cond .corner{position:absolute; top:9px; right:11px; opacity:.16; width:34px; height:34px; color:var(--text)}
 .cond .corner svg{width:100%; height:100%; display:block}
 /* Conditions (Decision 95) — chips on Main, cards on Trackers, one add row */
@@ -540,30 +544,30 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .cond-chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px}
 .cond-chip{display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--magenta);
   border-radius:4px; padding:4px 6px 4px 9px; font-size:.8rem}
-.cond-chip b{font-weight:600; color:var(--magenta)}
-.cond-chip small{font-family:var(--mono); font-size:.66rem; color:var(--dim)}
+.cond-chip b{font-weight:600; color:var(--magenta-text)}
+.cond-chip small{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
 .cond-chip.bad{background:rgba(188,72,154,.14)}
 .cond-chip .x, .cond-card .x{background:none; border:0; color:var(--dim); cursor:pointer; font-size:.85rem; padding:0 2px}
-.cond-chip .x:hover{color:var(--magenta)}
+.cond-chip .x:hover{color:var(--magenta-text)}
 .cond-none{margin-bottom:10px}
 .cond-alert{border:1px solid var(--magenta); background:rgba(188,72,154,.14); border-radius:5px;
   padding:9px 13px; margin-bottom:10px; font-size:.84rem}
-.cond-alert b{color:var(--magenta); font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase}
+.cond-alert b{color:var(--magenta-text); font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase}
 .cond-counter{display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin-bottom:10px; font-family:var(--mono); font-size:.74rem}
 .cond-counter .k{color:var(--dim); letter-spacing:.12em; text-transform:uppercase}
 .cond-counter .pip{width:20px; height:20px; border-radius:50%; border:1px solid var(--magenta); background:transparent; cursor:pointer; padding:0}
 .cond-counter .pip.on{background:var(--magenta)}
-.cond-counter .at-max{color:var(--magenta); font-family:var(--body); font-size:.8rem; flex-basis:100%}
+.cond-counter .at-max{color:var(--magenta-text); font-family:var(--body); font-size:.8rem; flex-basis:100%}
 .cond-card{border-color:var(--magenta)}
 .cond-card .desc b{color:var(--text); font-weight:600}
 .cond-card .cond-note{width:100%; margin-top:8px}
 /* Grimoire (Decision 108): book spells as expandable lines, the picker's
    results as a reference table, your own spells as the edit table. */
 .grim-sp{margin:4px 0 12px; font-size:.9rem}
-.grim-sp b{font-family:var(--mono); color:var(--violet-hi); font-size:1.05rem}
+.grim-sp b{font-family:var(--mono); color:var(--violet-text); font-size:1.05rem}
 .grim-sp .sub{color:var(--dim); font-size:.78rem; margin-left:6px}
 /* W32: a Spell Power amount worked out, the book's words beside it */
-.sp-num{font-family:var(--mono); color:var(--violet-hi)}
+.sp-num{font-family:var(--mono); color:var(--violet-text)}
 .sp-book{color:var(--dim)}
 .sp-tail{display:block; margin-top:4px; font-size:.84rem; color:var(--dim)}
 .spell{border:1px solid var(--frame); border-radius:4px; margin-bottom:6px; background:var(--panel)}
@@ -585,8 +589,8 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 .spell-pick .hitrow select{width:auto; min-width:150px}
 /* Decision 111: a book spell whose TH is past the Evocation pool can still be
    cast, but only an exploding 10 reaches it. A starting spell over the cap. */
-.beyond{font-family:var(--mono); font-size:.66rem; letter-spacing:.06em; text-transform:uppercase; color:var(--gold)}
-.pick .cost.over{color:var(--magenta); border-color:var(--magenta)}
+.beyond{font-family:var(--mono); font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; color:var(--gold)}
+.pick .cost.over{color:var(--magenta-text); border-color:var(--magenta)}
 .pick-status{margin:8px 0 10px; font-size:.84rem; color:var(--dim)}
 .pick-status b{color:var(--text)}
 /* W25: the search, filters and status line stay in view over the results. */
@@ -615,7 +619,7 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
   .cat-results tr.catrow{display:flex; flex-wrap:wrap; gap:4px 14px; padding:8px 0; border-top:1px solid var(--frame)}
   .cat-results tr.catrow td{border:0; padding:0}
   .cat-results tr.catrow td:first-child{flex-basis:100%}
-  .cat-results tr.catrow td[data-k]::before{content:attr(data-k); display:block; font-family:var(--mono); font-size:.58rem;
+  .cat-results tr.catrow td[data-k]::before{content:attr(data-k); display:block; font-family:var(--mono); font-size:.7rem;
     letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
   .cat-results tr.catrow td.cat-act{flex-basis:100%; display:flex; gap:8px; justify-content:flex-end}
   .cat-results tr.cat-detail{display:block} .cat-results tr.cat-detail[hidden]{display:none}
@@ -623,13 +627,13 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta)}
 /* W16: the magazine and a weapon's mods. */
 .lo-rounds{white-space:nowrap}
 .lo-rounds .rounds{font-family:var(--mono); color:var(--cyan); margin-right:6px}
-.lo-rounds .rounds.empty{color:var(--magenta)}
+.lo-rounds .rounds.empty{color:var(--magenta-text)}
 .btn.sm.dry{border-style:dashed}
 .lo-rounds .rounds small{color:var(--dim)}
 .lo-rounds .fire{display:inline-flex; gap:3px; flex-wrap:wrap; vertical-align:middle}
 .lo-rounds .fire .btn.sm{padding:3px 8px}
 /* W40: the specialty rounds in the magazine, and Reload's "which rounds?" */
-.lo-rounds .loaded{display:block; margin-top:3px; font-family:var(--mono); font-size:.7rem; letter-spacing:.06em; color:var(--magenta)}
+.lo-rounds .loaded{display:block; margin-top:3px; font-family:var(--mono); font-size:.7rem; letter-spacing:.06em; color:var(--magenta-text)}
 .ammo-pick{display:flex; flex-direction:column; gap:8px}
 .ammo-opt{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 10px; border:1px solid var(--frame); border-radius:4px; background:var(--panel)}
 .ammo-opt .sub{color:var(--dim); font-size:.8rem}
@@ -643,21 +647,21 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .lo-gear-ctl{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
 .gear-count{font-family:var(--mono); color:var(--cyan); margin-right:4px}
 .gear-count small{color:var(--dim)}
-.gear-count.empty{color:var(--magenta)}
+.gear-count.empty{color:var(--magenta-text)}
 @media (max-width:640px){ .lo-gear-row{grid-template-columns:1fr auto} .lo-gear-name, .lo-gear-ctl{grid-column:1 / -1} }
-.subsect{font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px}
+.subsect{font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px}
 /* W14: the add palette. Catalog chips are outlined until picked; one you
    already have is greyed out. Active chips on Main open their details. */
 .cond-add{margin-bottom:14px}
 .cond-add > summary{cursor:pointer; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--violet-hi); padding:4px 0; list-style:none}
+  text-transform:uppercase; color:var(--violet-text); padding:4px 0; list-style:none}
 .cond-add > summary::before{content:"+ "}
 .cond-add[open] > summary::before{content:"− "}
 .cond-chips.palette{margin:8px 0 6px}
 .cond-chip.add{cursor:pointer; border-color:var(--frame); color:var(--text); font:inherit; font-size:.8rem; padding:4px 9px}
 .cond-chip.add b{color:var(--text)}
 .cond-chip.add:hover:not(:disabled), .cond-chip.add.on{border-color:var(--magenta)}
-.cond-chip.add.on b{color:var(--magenta)}
+.cond-chip.add.on b{color:var(--magenta-text)}
 .cond-chip.add:disabled{opacity:.4; cursor:default}
 .cond-chip-body{background:none; border:0; padding:0; color:inherit; font:inherit; cursor:pointer; display:inline-flex; align-items:center; gap:6px}
 .cond-chip.on{box-shadow:0 0 0 1px var(--magenta)}
@@ -671,7 +675,7 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .ab-card b{font-weight:600; font-size:.86rem}
 .ab-card .desc{color:var(--dim); line-height:1.4}
 .ab-card.bad{background:rgba(188,72,154,.14)}
-.ab-card.bad b{color:var(--magenta)}
+.ab-card.bad b{color:var(--magenta-text)}
 .ab-card:hover:not(:disabled), .ab-card:focus-visible{border-color:var(--magenta)}
 .ab-card:disabled{opacity:.55; cursor:default}
 .ab-card .why{font-size:.72rem; color:var(--gold)}
@@ -688,13 +692,13 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .vpill .vico{width:17px; height:17px; color:var(--violet-hi); flex:none}
 .vpill .vico svg{width:100%; height:100%; display:block}
 .vpill .vtext{display:flex; flex-direction:column; line-height:1.15}
-.vpill .vk{font-family:var(--mono); font-size:.58rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
+.vpill .vk{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
 .vpill .vv{font-family:var(--mono); font-size:.98rem; color:var(--cyan)}
 .vpill .vv small{font-size:.72rem; color:var(--dim)}
 .vpill.hp .vv{color:var(--green)} .vpill.san .vv{color:var(--cyan)} .vpill.luck .vv{color:var(--gold)}
-.vpill.cred .vv{color:var(--gold)} .vpill.sfr .vv{color:var(--violet-hi)}
+.vpill.cred .vv{color:var(--gold)} .vpill.sfr .vv{color:var(--violet-text)}
 .vpill.danger{border-color:var(--magenta)}
-.vpill.danger .vv{color:var(--magenta)} .vpill.danger .vico{color:var(--magenta)}
+.vpill.danger .vv{color:var(--magenta-text)} .vpill.danger .vico{color:var(--magenta)}
 /* W2/W3: a vital that opens its popover. The pill and Main's card are
    buttons, so they reset a button's own look and show they can be pressed. */
 .vpill.act, .cond.act{font:inherit; color:inherit; text-align:left; cursor:pointer}
@@ -707,10 +711,10 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   border-radius:6px; box-shadow:0 10px 36px rgba(5,10,22,.55); padding:10px 14px 14px; animation:modalIn .12s ease-out}
 .popover[hidden]{display:none}
 .pop-head{display:flex; align-items:center; gap:10px}
-.pop-head h3{flex:1; margin:0; font-family:var(--mono); font-size:.68rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
+.pop-head h3{flex:1; margin:0; font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
 .pop-now{display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 10px; margin:2px 0 10px}
 .pop-now .big{font-family:var(--mono); font-size:1.35rem}
-.pop-now .big.hp{color:var(--green)} .pop-now .big.san{color:var(--cyan)} .pop-now .big.gold{color:var(--gold)} .pop-now .big.bad{color:var(--magenta)}
+.pop-now .big.hp{color:var(--green)} .pop-now .big.san{color:var(--cyan)} .pop-now .big.gold{color:var(--gold)} .pop-now .big.bad{color:var(--magenta-text)}
 .pop-now .sub{font-size:.78rem; color:var(--dim)}
 .pop-body .trk-row{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px}
 .pop-body .trk-row input[type=number]{width:74px}
@@ -728,11 +732,11 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   transform:translateX(100%); transition:transform .26s ease; overflow-y:auto; padding:18px 18px 48px}
 .vdrawer.open{transform:translateX(0)}
 .vdrawer .dhead{display:flex; align-items:center; margin-bottom:12px}
-.vdrawer .dhead h2{font-family:var(--mono); font-size:.68rem; font-weight:500; letter-spacing:.18em;
+.vdrawer .dhead h2{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.18em;
   text-transform:uppercase; color:var(--dim)}
 .vdrawer .dclose{margin-left:auto; background:none; border:1px solid var(--frame); border-radius:4px;
   color:var(--dim); padding:3px 9px; font-size:.9rem; line-height:1}
-.vdrawer .dclose:hover{border-color:var(--magenta); color:var(--magenta)}
+.vdrawer .dclose:hover{border-color:var(--magenta); color:var(--magenta-text)}
 .vdrawer-scrim{position:fixed; inset:0; background:rgba(5,10,22,.5); z-index:70;
   opacity:0; visibility:hidden; transition:opacity .26s}
 .vdrawer-scrim.open{opacity:1; visibility:visible}
@@ -742,11 +746,11 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   gap:12px; padding:5px 16px; pointer-events:none;
   background:linear-gradient(0deg, var(--ground) 35%, rgba(13,23,49,0))}
 .footer > *{pointer-events:auto}
-.footer .fmeta{font-family:var(--mono); font-size:.66rem; color:var(--dim); letter-spacing:.04em}
+.footer .fmeta{font-family:var(--mono); font-size:.7rem; color:var(--dim); letter-spacing:.04em}
 .footer .fmeta b{color:var(--cyan); font-weight:500}
 .footer.collapsed .fmeta{display:none}
-.footer .ftoggle{margin-left:auto; background:rgba(17,30,61,.7); border:1px solid var(--frame); border-radius:4px;
-  color:var(--dim); padding:2px 9px; font-family:var(--mono); font-size:.6rem; letter-spacing:.1em; text-transform:uppercase}
+.footer .ftoggle{margin-left:auto; background:var(--panel); border:1px solid var(--frame); border-radius:4px;
+  color:var(--dim); padding:2px 9px; font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase}
 .footer .ftoggle:hover{border-color:var(--violet-hi); color:var(--text)}
 
 /* Skills: one fixed grid so Rank / Check / Breakdown line up across categories. */
@@ -766,7 +770,7 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   .skill-table tr.skill-line{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 18px; padding:9px 0; border-bottom:1px solid rgba(32,63,123,.35)}
   .skill-table tr.skill-line td{border:0; padding:0; overflow-wrap:normal}
   .skill-table tr.skill-line td:first-child{flex-basis:100%; font-size:.9rem}
-  .skill-table tr.skill-line td[data-k]::before{content:attr(data-k); margin-right:6px; font-family:var(--mono); font-size:.62rem;
+  .skill-table tr.skill-line td[data-k]::before{content:attr(data-k); margin-right:6px; font-family:var(--mono); font-size:.7rem;
     letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
   .skill-table tr.skill-line td.bd{flex-basis:100%; margin-top:1px}
   .skill-table tr.cat-row{display:block}
@@ -774,8 +778,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   .skill-table tr.skill-desc{display:block} .skill-table tr.skill-desc[hidden]{display:none}
   .skill-table tr.skill-desc td{display:block; border-bottom:1px solid rgba(32,63,123,.35)}
 }
-.cat-row td{font-family:var(--mono); font-size:.64rem; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--violet-hi); padding-top:15px; border-bottom:1px solid var(--frame)}
+.cat-row td{font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--violet-text); padding-top:15px; border-bottom:1px solid var(--frame)}
 .skill-q{background:none; border:1px solid var(--frame); color:var(--dim); border-radius:50%;
   width:18px; height:18px; font-size:.7rem; line-height:1; padding:0; margin-left:7px; vertical-align:middle}
 .skill-q:hover,.skill-q[aria-expanded="true"]{border-color:var(--cyan); color:var(--cyan)}
@@ -883,9 +887,9 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .wn-rel{border-bottom:1px solid var(--frame); padding:10px 0}
 .wn-rel:last-child{border-bottom:0}
 .wn-rel summary{cursor:pointer; display:flex; align-items:baseline; gap:10px; list-style-position:outside}
-.wn-ver{font-family:var(--numeric); font-size:1.05rem; letter-spacing:.05em; color:var(--violet-hi); font-weight:600}
+.wn-ver{font-family:var(--numeric); font-size:1.05rem; letter-spacing:.05em; color:var(--violet-text); font-weight:600}
 .wn-date{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
-.wn-new{font-family:var(--mono); font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--cyan);
+.wn-new{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--cyan);
   border:1px solid var(--cyan); border-radius:3px; padding:0 5px}
 .wn-intro{font-size:.78rem; color:var(--dim); margin:8px 0 0}
 .wn-rel ul{margin:8px 0 0; padding-left:20px}
@@ -908,7 +912,9 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 @media (max-width:640px){ .modal{width:100vw; max-width:100vw; max-height:100vh; height:100vh; border-radius:0; margin:0}
   .modal-inner{max-height:100vh; height:100%}
   .modal-head{padding:14px 16px 4px} .modal-body{padding:0 16px 16px} .modal-foot{padding:10px 16px} }
-@media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} .toast{animation:none} .modal{animation:none} }
+@media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} .toast{animation:none} .modal{animation:none}
+  .admin-banner .dot{animation:none}
+  .vdrawer, .vdrawer-scrim, .hl-mini .seg i, .cond .meter i{transition:none} }
 /* W5/W22: the jump bar. On step 7 it sticks under the header, which can wrap
    to more than one line, so its height is measured (--hdr-live, set in boot). */
 .jumpbar{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px}
@@ -920,7 +926,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .jump:hover, .jump:focus-visible{border-color:var(--violet-hi)}
 .jump-count{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
 .jump-cp{margin-left:auto; font-family:var(--mono); font-size:.76rem; color:var(--gold); white-space:nowrap}
-.jump-cp.over{color:var(--magenta)}
+.jump-cp.over{color:var(--magenta-text)}
 .sect[tabindex]:focus{outline:none}
 .pick[hidden]{display:none}
 
@@ -939,3 +945,36 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .roster-unexported::before{content:"● "}
 .roster-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
 .roster + .home-news, .roster .step-note{margin-top:10px}
+
+/* ── Touch targets (W43) ──────────────────────────────────────────────
+   Two floors. Everywhere: nothing you can press is under 24px (WCAG 2.2,
+   2.5.8). The small round and close buttons reach it with an invisible
+   ::after, so they look the same. On a touchscreen: 44px. A control on its
+   own keeps the invisible hit area, grown to 44px. A control in a row
+   (buttons, chips, tabs, steppers, tags) grows for real, because a hit
+   area that overlaps its neighbour is how a thumb lands on the wrong one. */
+.skill-q, .deriv-q, .wn-x, .vdrawer .dclose, .footer .ftoggle, .theme-toggle, .kebab{position:relative}
+.skill-q::after, .deriv-q::after, .wn-x::after, .vdrawer .dclose::after, .footer .ftoggle::after,
+.theme-toggle::after, .kebab::after{content:""; position:absolute; left:50%; top:50%;
+  width:max(100%, 26px); height:max(100%, 26px); transform:translate(-50%, -50%)}
+button.x{display:inline-flex; align-items:center; justify-content:center; min-width:24px; min-height:24px}
+.tags .tag{display:inline-flex; align-items:center; min-height:24px}
+label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
+.ses-mp{font-size:.84rem}
+@media (pointer:coarse){
+  .skill-q::after, .deriv-q::after, .wn-x::after, .vdrawer .dclose::after, .footer .ftoggle::after,
+  .theme-toggle::after, .kebab::after{width:max(100%, 44px); height:max(100%, 44px)}
+  .btn, .pick .toggle, .jump, .cond-chip, .tab, .hdr-menu button, .form-toggle button, .step-row{min-height:44px}
+  .btn{min-width:44px}
+  button.x{min-width:44px; min-height:44px}
+  .stepper button{width:44px; height:44px}
+  details.group > summary, .cond-add > summary{padding-block:13px}
+  .tags{gap:6px}
+  .tags .tag{min-height:44px}
+  label.check{min-height:44px}
+  /* iOS zooms the page into any field under 16px when it takes focus. */
+  input[type=text], input[type=search], input[type=number], input[type=date], textarea, select,
+  .picks select, .picks input[type=text], table.lo-weapons input[type=text],
+  table.edit input, table.edit textarea{font-size:16px}
+  input[type=text], input[type=search], input[type=number], input[type=date], select{min-height:44px}
+}
