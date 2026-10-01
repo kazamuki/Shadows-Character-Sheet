@@ -279,8 +279,8 @@ function skillRowPair(ch, l, {withRank=true}={}){
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   let tr = `<tr class="skill-line"${l.trained?"":' style="opacity:.72"'}>`;
   tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
-  if (withRank) tr += `<td class="num">${l.trained?l.rank:"—"}</td>`;
-  tr += `<td class="num">1d10 + ${l.checkBonus}</td>`;
+  if (withRank) tr += `<td class="num" data-k="Rank">${l.trained?l.rank:"—"}</td>`;
+  tr += `<td class="num" data-k="Check">1d10 + ${l.checkBonus}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
   return tr + skillDescRow(ch, l.def, withRank?4:3, open);
 }

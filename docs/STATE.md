@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-09-27
-**Versions:** app `0.32.0` · game data `0.25` · character schema `0.15` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.32.1` · game data `0.25` · character schema `0.15` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
