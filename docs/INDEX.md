@@ -245,7 +245,8 @@ The generic archetype structure, and the pick that defines one.
 - **79** *(A3 — closes A1 and A2)* — One specialization model, and the count comes from the data.
 - **126** *(Option powers — B17)* — `starterPower`/`additionalPowers` render from the data; an array of plain objects on a power is a table; no text means "not written yet".
 - **134** *(Audit S3 — B12–B14)* — Focused Skills are data (`ids`, a category `choose`, an `all` price), read by one generic reader; the Focused cap and the IP prices are numbers the engine reads.
-- **153** *(Custom archetype — schema 0.16)* — An archetype with `writeIn` is written by the player (`archetypeChoices.writeIn`, `powers`); a panel's `when` follows a ticked mechanic; `archetypeContent` is the one reader; `addPower` takes an optional IP cost; Other classification; "off the books" badge.
+- **153** *(Custom archetype — schema 0.16)* — An archetype with `writeIn` is written by the player (`archetypeChoices.writeIn`, `powers`); a panel's `when` follows a ticked mechanic; `archetypeContent` is the one reader; `addPower` takes an optional IP cost; Other classification; "off the books" badge. → **superseded in part by 154**
+- **154** *(Powers in play — custom archetype feedback)* — A power reads as written; **Improve** rewrites it for a required IP cost (`improvePower`), Add power costs IP too, Admin edits and adds free; Notes stay free.
 
 ### Character file & migration
 
@@ -261,11 +262,12 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **95** *(Conditions — catalog and schema 0.8)* — Conditions are a data catalog with structured hooks; active ones are inputs, one per id (per body part for location-bearing ones); game data 0.7 → 0.8, character schema 0.7 → 0.8, with the plan's damage and armor fields landed in the same migration.
 - **125** *(Load findings — C4)* — what `versionCheck` finds stays until dismissed; a bare game-data version difference shows once.
 - **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first. → **superseded in part by 133 and 141**
-- **133** *(The TAG)* — `meta.id` is `TAG-XXXX-XXXX-XXXX`, shown as itself; a 0.11 `NCR-` number keeps its twelve characters under the new prefix; schema 0.12. → **superseded in part by 146**
+- **133** *(The TAG)* — `meta.id` is `TAG-XXXX-XXXX-XXXX`, shown as itself; a 0.11 `NCR-` number keeps its twelve characters under the new prefix; schema 0.12. → **superseded in part by 146 and 155**
 - **141** *(The roster — R10, AQ5)* — one `localStorage` entry per TAG, draft through locked; Home lists them with Open, Export and Remove and marks play no file holds; only an older copy of the same character asks before it replaces.
 - **142** *(The natural-advantage marker — A11)* — a Professional's free advantage is `source: "natural"`, not a note; schema 0.13 moves the old marker, in the undo history too.
 - **146** *(Ghost TAG reads — W31)* — an Advantage held with `tagReads` labels the TAG and says what it is; Ghost TAG does, and Black TAG is the same counterfeit. The number never moves. → **superseded in part by 148**
-- **148** *(TAGless — W41)* — `identity.tagless` (schema 0.14) is picked on the Identity step and in Admin; `tagReading` labels the TAG "Off grid" from the data's `tag`, a Ghost TAG's label wins and its tip says both.
+- **148** *(TAGless — W41)* — `identity.tagless` (schema 0.14) is picked on the Identity step and in Admin; `tagReading` labels the TAG "Off grid" from the data's `tag`, a Ghost TAG's label wins and its tip says both. → **superseded in part by 155**
+- **155** *(A TAGless number — W41)* — `tagNumber` drops the TAG- prefix for a TAGless character wherever the number shows; a Ghost TAG keeps it; `meta.id` never changes.
 - **143** *(Warding by kind — W28)* — Elemental, Spirit and Aether replace the Magical damage type, each with its own Warding upgrade; Gear's one Warding is retired and still answers all three where installed; Self-mending is text.
 
 ### Engine contracts
@@ -305,7 +307,8 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **40** *(Phase 3.2)* — Collapsible page footer.
 - **41** *(Phase 3.2)* — Number-entry caret fix.
 - **43** *(Phase 3.2)* — Date-input theming.
-- **44** *(Phase 3.2)* — Skills aligned + per-skill descriptions.
+- **44** *(Phase 3.2)* — Skills aligned + per-skill descriptions. → **superseded in part by 156**
+- **156** *(Skills tab — every skill, two columns)* — Every skill in its category, untrained at Rank 0 and full strength; two columns from 1000px, categories never split, the first holding half the skills.
 - **45** *(Phase 3.2)* — Traits collapsible.
 - **46** *(Phase 3.2)* — Progression collapsible.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.

@@ -614,7 +614,7 @@ function rosterCardHtml(e){
   const bits=[arch?Engine.archetypeContent(c).name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card" data-card="${id}">
     <div class="roster-top"><b class="roster-name">${esc(String(c.identity.name||"").trim() || "Unnamed")}</b><span class="roster-where">${esc(where)}</span></div>
-    <div class="roster-meta"><span class="roster-tag">${id}</span>${bits?" · "+bits:""}</div>
+    <div class="roster-meta"><span class="roster-tag">${esc(Engine.tagNumber(c)||e.id)}</span>${bits?" · "+bits:""}</div>
     ${unexported(e)?`<div class="roster-unexported">Changes not exported yet</div>`:""}
     <div class="roster-actions">
       <button class="btn primary sm" data-open="${id}">${locked?"Open sheet":"Resume draft"}</button>
@@ -699,7 +699,7 @@ function renderHome(){
       // older than the copy this browser keeps of the same character (B18).
       const have=(savedChar(id)||{}).ch;
       guardReplace(have, c, { title:`Open an older copy of ${charName(have)}?`,
-        lead:`This file is an older copy of <b>${esc(charName(c))}</b> (${esc(id)}) than the one saved in this browser. Opening it puts it in place of the newer one.`,
+        lead:`This file is an older copy of <b>${esc(charName(c))}</b> (${esc(Engine.tagNumber(c))}) than the one saved in this browser. Opening it puts it in place of the newer one.`,
         go:"Open the older copy" }, ()=>{
           lastSaved=null; untouched=null;
           S=Object.assign({screen: locked?"sheet":"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, loadFindings(c));

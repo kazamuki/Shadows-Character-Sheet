@@ -254,7 +254,7 @@ The plan's **Other** classification, with its own text, covers it until then.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W54.** Everything above is open; W38 has a plan,
+- **Next free number: W56.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
@@ -275,3 +275,11 @@ A Custom character who ticks **Uses SFR** counts its pool on Trackers, but
 Main's SFR card and the vitals read `Engine.sfr()`, which takes its size from
 the archetype's scaling row, and a written-in archetype has none. Main could
 read the tracker panel's player-set max instead.
+
+**W55 — Sticky notes on the Notes tab.** *Ken · 💡*
+Small notes a player pins as cards at the top of Notes (a contact's number,
+a debt, tonight's lead), with the free-form page still below them. A note is
+added, edited and removed like a gear row, and logged. Raised 2026-10-01 while
+locking a power's words (Decision 154), whose Notes field stays free.
+*To respect:* the free-form page stays as it is; cards are the player's, not
+derived from anything.
