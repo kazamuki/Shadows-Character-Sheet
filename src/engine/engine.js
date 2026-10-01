@@ -2181,7 +2181,7 @@ const Engine = (() => {
     if (blank) return { why:"A power costs IP in play. Enter what your GM says it costs." };
     const cost = Number(raw);
     if (!Number.isInteger(cost) || cost < 0) return { why:"An IP cost is a whole number." };
-    if (cost < 1 && !free) return { why:"A power costs at least 1 IP in play." };
+    if (cost < 1 && !free) return { why:"A power costs at least 1 IP in play. Admin adds one free." };
     if (cost && ipState(ch).available < cost) return { why:`Not enough IP (need ${cost}).` };
     return { cost };
   }
@@ -2214,7 +2214,7 @@ const Engine = (() => {
     const i = isPlainObj(input) ? input : {};
     const next = { name:txt(i.name).trim(), uses:txt(i.uses).trim(), effect:txt(i.effect) };
     if (!next.name) return { ok:false, why:"Give the power a name." };
-    if (["name","uses","effect"].every(k=>next[k]===txt(p[k]))) return { ok:false, why:"Nothing about the power changed." };
+    if (["name","uses","effect"].every(k=>next[k]===txt(p[k]))) return { ok:false, why:"Nothing changed. Rewrite its name, uses or effect to improve it." };
     const c = powerCost(ch, i.cost, false);
     if (c.why) return { ok:false, why:c.why };
     Object.assign(p, next);

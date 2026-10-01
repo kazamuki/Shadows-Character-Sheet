@@ -2487,6 +2487,7 @@ test("Admin edits a written-in archetype's words and lists, and removes a power 
   app.click("[data-pwadd-go]");
   c = activeChar(app);
   assert.equal(JSON.stringify([c.powers.map(p => p.name), c.progression.ip.log.length]), JSON.stringify([["Fade", "Forgotten"], 0]), "Admin's blank cost wasn't free");
+  assert.equal(c.audit[c.audit.length - 1].label, "Admin: added power Forgotten");
   app.click("[data-toastundo]");
   app.click("[data-pwdel]");
   assert.ok(app.$("#modal[open]"), "removing a power didn't ask first");
