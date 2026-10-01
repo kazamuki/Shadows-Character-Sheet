@@ -48,7 +48,7 @@ test("a locked character resumes from storage and every sheet tab renders", () =
   open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
 
   const tabs = app.$$("[data-sec]").map(t => t.dataset.sec);
-  assert.equal(tabs.length, 9, `expected 9 sheet tabs, got ${tabs.length}`);
+  assert.equal(tabs.length, 8, `expected 8 sheet tabs, got ${tabs.length}`);
   for (const id of tabs) {
     app.click(`[data-sec="${id}"]`);
     assert.deepEqual(app.errors, [], `runtime error on tab: ${id}`);
@@ -57,15 +57,15 @@ test("a locked character resumes from storage and every sheet tab renders", () =
 });
 
 test("the tab row keeps the active tab in view and fades the side with more (B19)", () => {
-  // jsdom has no layout, so give the row one: nine 100 px tabs in 390 px.
+  // jsdom has no layout, so give the row one: eight 100 px tabs in 390 px.
   const app = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   const nav = app.$("#topnav");
   let left = 0;
-  const max = 900 - 390;
+  const max = 800 - 390;
   Object.defineProperty(nav, "scrollLeft", { get: () => left, set: v => { left = Math.max(0, Math.min(max, v)); } });
-  Object.defineProperty(nav, "scrollWidth", { get: () => 900 });
+  Object.defineProperty(nav, "scrollWidth", { get: () => 800 });
   Object.defineProperty(nav, "clientWidth", { get: () => 390 });
   const rect = (l, w) => ({ left: l, right: l + w, top: 0, bottom: 40, width: w, height: 40 });
   const proto = app.window.HTMLElement.prototype, real = proto.getBoundingClientRect;
@@ -215,7 +215,7 @@ test("the sheet shows a non-Arcanist specialization (A2)", () => {
   const app = boot({ storage: { "shadows.active.v1": { ch, section: "archetype" } } });
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
      .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
-  app.click('[data-sec="archetype"]');
+  app.click('[data-sec="character"]');
   const text = app.$("#main").textContent;
   assert.match(text, new RegExp(sub.name), "the chosen subtype is not on the sheet");
   assert.doesNotMatch(text, /none chosen/, "the specialization section still reports none chosen");
@@ -332,7 +332,7 @@ test("a pick chosen in the wizard survives export and reaches the sheet", () => 
   const sheet = boot({ storage: { "shadows.active.v1": { ch: locked, section: "traits" } } });
   sheet.$$("#main button").find(b => /Open sheet/.test(b.textContent))
        .dispatchEvent(new sheet.window.MouseEvent("click", { bubbles: true }));
-  sheet.click('[data-sec="traits"]');
+  sheet.click('[data-sec="character"]');
   assert.match(sheet.$("#main").textContent, /Handguns/, "the chosen skill is not on the Traits tab");
   assert.deepEqual(sheet.errors, []);
 });
@@ -1031,7 +1031,7 @@ test("Aberrations: the picker adds one by hand, Drained moves max TOL but not cu
 test("Aberrations: a permanent one shows on the Archetype tab, Phantom Pain names itself on Main, and the Magic reference and Spell Attack render", () => {
   const ch = lockedCharacter();
   ch.trackers.aberrations = [{ id: "phantom-pain", permanence: "permanent", note: "since the warehouse" }];
-  const app = openSheet(ch, "archetype");
+  const app = openSheet(ch, "character");
   const text = app.$("#main").textContent;
   assert.match(text, /Permanent Aberrations[\s\S]*Phantom Pain[\s\S]*since the warehouse/);
   const ref = app.$('[data-reference="magic-reference"]');
@@ -1063,7 +1063,7 @@ test("W32: a spell's Spell Power reads as a number beside the book's words, wher
   search(app, "zap");
   assert.match(app.$("#modal [data-spellresults]").textContent, new RegExp(`${half} \\(½ SP Damage, or shorts simple electronics\\)`), "the picker shows the words alone");
   app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-  app.click('[data-sec="archetype"]');
+  app.click('[data-sec="character"]');
   const ref = app.$('[data-reference="magic-reference"]');
   assert.match(ref.textContent, new RegExp(`${sp} \\(Spirit damage equal to your Spell Power\\.\\)`), "Backlash in the Cascade table");
   assert.match(app.$("#main").textContent, new RegExp(`½ Spell Power: ${half}`), "Electrocytes on the Archetype tab");
@@ -1676,7 +1676,7 @@ test("B17: a Trueborn sees the Lunar Phase Blessing, its four phases, and which 
   const tb = D.archetypes.find(a => a.id === "werewolf").specialization.options.find(o => o.id === "trueborn");
   const app = boot({ storage: { "shadows.active.v1": { ch, section: "archetype" } } });
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
-  app.click('[data-sec="archetype"]');
+  app.click('[data-sec="character"]');
   const text = app.$("#main").textContent;
   assert.match(text, new RegExp(tb.starterPower.name), "the starting power isn't on the sheet");
   for (const p of tb.starterPower.phases) assert.ok(text.includes(p.boon) && text.includes(p.effect), `${p.phase}'s boon isn't on the sheet`);
@@ -2062,7 +2062,7 @@ const withDisciplines = d => d.archetypes.find(a => a.coreMechanic && a.coreMech
 
 test("the wizard draws Disciplines, Focus Stats and the Stat Bonus from the data (Decision 135)", () => {
   const arc = withDisciplines(D).id;
-  const cp = draftOn(arc, "character-points", d => { withDisciplines(d).coreMechanic.disciplines.cpPerRank = 7; });
+  const cp = draftOn(arc, "character-points", d => { d.creationFlow.boostRules.cpPerPowerRank = 7; });
   assert.match(cp.$("#main").textContent, /Disciplines — 7 CP per rank · cap \d/);
   assert.deepEqual(cp.errors, []);
 
@@ -2108,7 +2108,9 @@ test("the sheet's price and SAN lines are written from the data (Decision 135)",
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   app.click('[data-sec="progression"]');
-  assert.match(app.$("#main").textContent, /Raise a Stat — current value × 12 IP/);
+  app.click('[data-raiseopen="stat"]');
+  assert.match(app.$("#modal").textContent, /a Stat costs its current value × 12 IP/);
+  app.click("#modal [data-modalclose]");
   app.click('[data-sec="trackers"]');
   assert.match(app.$("#main").textContent, /Max is EMP × 7, computed\./);
   assert.match(app.window.eval("derivedBreakdownStr(S.ch, 'SAN')"), /^EMP 5 × 7 = 35%/);
@@ -2171,7 +2173,7 @@ test("a stat's score says what it means (Decision 139)", () => {
 });
 
 test("rules text: Lineage and the whole Magic reference on Archetype, How a check works on Skills (AQ4)", () => {
-  const app = openSheet(lockedCharacter(), "archetype");
+  const app = openSheet(lockedCharacter(), "character");
   const arc = D.archetypes.find(a => a.id === "arcanist");
   const main = () => app.$("#main").textContent;
   assert.match(app.$("#main details.lineage").textContent, new RegExp(arc.lore.slice(0, 30)));
@@ -2375,14 +2377,117 @@ function writtenInCharacter() {
   ch.progression.ip.earned = 30;
   return ch;
 }
+// Decision 158: Traits and Archetype are one Character tab. A saved section
+// from before lands on it, its jump bar reaches every section, Expand all
+// opens every Advantage and Disadvantage and is remembered, and the buttons
+// at its foot go to Loadout & Powers and Trackers.
+test("Character: the archetype, then Advantages beside Disadvantages, one tab, with Expand all (Decision 158)", () => {
+  const ch = lockedCharacter();
+  ch.advantages = [{ id: D.advantages[0].id, rank: 1 }];
+  ch.disadvantages = [{ id: D.disadvantages[0].id, rank: 1 }];
+  for (const legacy of ["traits", "archetype"]) {
+    const app = boot({ storage: { "shadows.active.v1": { ch, section: legacy } } });
+    app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+      .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+    assert.equal(app.$(".tab.active").dataset.sec, "character", `a saved "${legacy}" section didn't land on Character`);
+  }
+  const app = openSheet(ch, "character");
+  assert.deepEqual(app.errors, []);
+  const jumps = app.$$("#main .jumpbar [data-jump]").map(b => b.textContent);
+  for (const s of ["Archetype", "Baseline Traits", "Advantages", "Disadvantages", "Magic reference"]) assert.ok(jumps.includes(s), `the jump bar has no ${s}: ${jumps}`);
+  assert.ok(app.$("#main .jumpbar.sticky"), "the jump bar doesn't stay in view");
+  assert.equal(app.$$("#main .trait-cols > .trait-col").length, 2, "Advantages and Disadvantages aren't two columns");
+  assert.match(app.$$("#main .trait-col")[0].textContent, new RegExp(D.advantages[0].name));
+  assert.match(app.$$("#main .trait-col")[1].textContent, new RegExp(D.disadvantages[0].name));
+
+  const cards = () => app.$$("#main details.pick.trait");
+  assert.ok(cards().length === 2 && cards().every(d => !d.open), "trait cards should start closed");
+  app.click("[data-traits-all]");
+  assert.ok(cards().every(d => d.open), "Expand all didn't open every card");
+  assert.equal(app.$("[data-traits-all]").textContent, "Collapse all");
+  app.click('[data-sec="main"]'); app.click('[data-sec="character"]');
+  assert.ok(cards().every(d => d.open), "Expand all wasn't remembered across a re-render");
+  app.click("[data-traits-all]");
+  assert.ok(cards().every(d => !d.open), "Collapse all didn't close every card");
+
+  app.click('[data-gotab="trackers"]');
+  assert.equal(app.$(".tab.active").dataset.sec, "trackers", "the Trackers button didn't go to Trackers");
+});
+
+// Decision 159: Raise a Stat and Raise a Skill are buttons that open a modal,
+// so the Milestones aren't below two long lists. A raise is one undoable IP
+// spend and the modal stays open with the new prices; a raise you can't
+// afford is off and says why.
+test("Progression: Raise a Stat and Raise a Skill open modals, and a raise keeps it open (Decision 159)", () => {
+  const ch = lockedCharacter();
+  ch.progression.ip.earned = 60;
+  const skill = D.skills[0];
+  ch.skills[skill.id] = { rank: 2 };
+  const app = openSheet(ch, "progression");
+  assert.equal(app.$$("#main [data-raiseopen]").length, 2, "Progression has no Raise buttons");
+  assert.ok(!app.$("#main [data-raise]"), "the raise lists are still on the page");
+  const modal = () => app.$("#modal");
+
+  app.click('[data-raiseopen="stat"]');
+  assert.ok(modal().open, "Raise a Stat didn't open a modal");
+  assert.match(modal().textContent, /You have 60 IP/);
+  app.click('#modal [data-raise="stat|BOD"]');            // 5 → 6 for 50 IP
+  assert.equal(activeChar(app).stats.BOD.ipe, 1, "the raise didn't land");
+  assert.ok(modal().open, "the modal closed after one raise");
+  assert.match(modal().textContent, /You have 10 IP/, "the modal's IP didn't refresh");
+  const bod = app.$('#modal [data-raise="stat|BOD"]');
+  assert.ok(bod.disabled && /Needs 60 IP; you have 10\./.test(bod.closest("tr").textContent), "an unaffordable raise doesn't say why");
+  app.click("#modal [data-modalclose]");
+  assert.ok(!modal().open);
+
+  app.click('[data-raiseopen="skill"]');
+  assert.match(modal().textContent, /Your skills[\s\S]*Learn a new skill/);
+  const q = app.$("#modal [data-raiseq]");
+  q.value = skill.name; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(app.$(`#modal [data-raise="skill|${skill.id}"]`), "searching hid the skill it names");
+  assert.ok(!app.$(`#modal [data-raise="skill|${D.skills.find(s => !s.name.includes(skill.name) && !(s.description||"").includes(skill.name)).id}"]`), "the search didn't narrow the list");
+  assert.deepEqual(app.errors, []);
+});
+
+// Decision 160: the vitals panel pins beside the sheet. The pin is the
+// browser's (CSS honours it from 1280px, which jsdom can't lay out), the
+// panel's vitals open the same popovers as the bar, from the panel, and
+// Unpin puts it back.
+test("Pinned vitals: Pin keeps the panel, its vitals open their popovers, Unpin returns the bar (Decision 160)", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const body = app.window.document.body, drawer = () => app.$("#vdrawer");
+  assert.ok(!body.classList.contains("vitals-pinned"), "pinned before anyone asked");
+  app.click("#vdrawer [data-vitals-pin]");
+  assert.ok(body.classList.contains("vitals-pinned"), "Pin didn't pin");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.vitalsPinned"), "pinned", "the pin isn't remembered");
+  assert.equal(drawer().querySelector("[data-vitals-pin]").textContent, "Unpin");
+  for (const k of ["hp", "pain", "san", "luck", "cred"]) assert.ok(drawer().querySelector(`[data-vpop="${k}"]`), `the panel's ${k} doesn't open anything`);
+
+  app.click('#vdrawer [data-vpop="luck"]');
+  const pop = app.$("#vpop");
+  assert.ok(!pop.hidden && pop.classList.contains("from-rail"), "the panel's LUCK didn't open its popover from the panel");
+  assert.match(pop.textContent, /Boost the roll/);
+  assert.equal(drawer().querySelector('[data-vpop="luck"]').getAttribute("aria-expanded"), "true");
+  app.click('#main [data-vpop="luck"]');                  // the bar's own LUCK is a different trigger
+  assert.ok(!pop.hidden && !pop.classList.contains("from-rail"), "the bar's LUCK didn't take the popover over");
+
+  app.click('[data-sec="main"]');
+  assert.ok(body.classList.contains("vitals-pinned") && drawer().querySelector('[data-vpop="hp"]'), "the panel left Main");
+  app.click("#vdrawer [data-vitals-pin]");
+  assert.ok(!body.classList.contains("vitals-pinned"), "Unpin didn't unpin");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.vitalsPinned"), "unpinned");
+  assert.deepEqual(app.errors, []);
+});
+
 const loadoutSec = app => app.$$("[data-sec]").map(b => b.dataset.sec).find(s => /loadout/.test(s));
 
 test("the sheet draws a written-in archetype: its name everywhere, its classification, traits, powers and vulnerabilities", () => {
   const home = boot({ storage: { "shadows.active.v1": { ch: writtenInCharacter(), section: "main" } } });
   assert.match(home.$("#main .roster-card").textContent, /Changeling/, "Home's roster names the archetype's data name");
-  const app = openSheet(writtenInCharacter(), "archetype");
+  const app = openSheet(writtenInCharacter(), "character");
   const main = () => app.$("#main").textContent;
-  assert.equal(app.$("#main .step-title").textContent, "Changeling");
+  assert.equal(app.$("#chr-0").textContent, "Changeling", "the Character tab doesn't open on the archetype's name");
+  assert.ok(app.$("#main .arch-cols.n3"), "traits, powers and vulnerabilities aren't a column each");
   assert.match(app.$("#main .arch-class").textContent, /Other: Fae/);
   for (const t of ["Glamour", "Fade", "uses SFR", "Cold iron", "Stolen as a child."]) assert.ok(main().includes(t), `the Archetype tab is missing ${t}`);
   app.click('[data-sec="main"]');
@@ -2397,8 +2502,8 @@ test("the sheet draws a written-in archetype: its name everywhere, its classific
   assert.equal(app.$$("[data-pwimprove]").length, 1, "a power has no Improve");
   assert.equal(app.$$("[data-pwdel]").length, 0, "Remove is Admin's, not play's");
   // A built-in archetype draws none of it.
-  const b = openSheet(lockedCharacter(), "archetype");
-  assert.equal(b.$("#main .step-title").textContent, "Arcanist");
+  const b = openSheet(lockedCharacter(), "character");
+  assert.equal(b.$("#chr-0").textContent, "Arcanist");
   assert.match(b.$("#main .arch-class").textContent, /Mortal/);
   assert.deepEqual([app.errors, b.errors], [[], []]);
 });

@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-10-01
-**Versions:** app `0.34.0` · game data `0.27` · character schema `0.16` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.35.0` · game data `0.28` · character schema `0.16` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -15,7 +15,7 @@ schemas, decisions and flags is `SCHEMA.md`; `INDEX.md` finds anything else.
 ## 1. Where things stand
 
 The app is a browser character creator and live play sheet for **Shadows**
-(Synergy system). Eight-step wizard → lock → nine-tab sheet. It runs from
+(Synergy system). Eight-step wizard → lock → eight-tab sheet. It runs from
 `file://` with no server and no build step, which drives most of the
 architecture and is enforced by tests.
 
@@ -41,7 +41,7 @@ a release is one workflow a cloud session can run (138). **Any rule the sheet
 names is a hover or tap away** (139): tags, stat scores, the check rules, lore
 and the whole Magic reference, through one tip primitive, and Ammo is in the
 shop. The header is two thin rows, its tabs one scrolling line (140), and
-Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Every archetype is Mortal or Supernatural, and a Supernatural buys only the Universal Advantages (152). A **Custom** archetype is written by the player with the GM: what it is, an Other classification in its own words, the panels it ticks on, traits, powers and vulnerabilities, in the wizard, on the sheet and on paper; in play a power reads as written, and **Improve** rewrites it for IP; Admin edits it free (153, 154). A TAGless number drops its TAG- prefix (155), the Skills tab lists every skill in two columns (156), and the wizard's Continue sticks to the bottom of the screen. Tests enforce all of it.
+Home lists a roster, one entry per TAG (141). A free advantage is `source` (142). Reload takes the rounds you carry, and asks before reloading from none (145); a held Ghost TAG labels the TAG (146). Spell Power amounts read as numbers (147), a character can be TAGless (148), and a weapon remembers the specialty rounds in it (149). Stat Points are a flat pool or a roll, the GM's pick, and a stat point costs 2 past 6 (150). Main has Heal 1, Hurt 1 and Take a hit under its Health and Pain cards, and at zero a hit goes through Take a hit (151). Every archetype is Mortal or Supernatural, and a Supernatural buys only the Universal Advantages (152). A **Custom** archetype is written by the player with the GM: what it is, an Other classification in its own words, the panels it ticks on, traits, powers and vulnerabilities, in the wizard, on the sheet and on paper; in play a power reads as written, and **Improve** rewrites it for IP; Admin edits it free (153, 154). A TAGless number drops its TAG- prefix (155), the Skills tab lists every skill in two columns (156), and the wizard's Continue sticks to the bottom of the screen. Everyone starts with 4 LUCK and a power rank costs 5 CP at creation, every power's (157). Traits and Archetype are one **Character** tab (158), Progression's raises are modals (159), and from 1280px the vitals panel pins beside the sheet (160). Tests enforce all of it.
 
 **The print front page is full.** Anything more there breaks to a second
 page (Decision 96). Four pages in all, the archetype's last (153). **One known defect:** the frame/texture decoration shows
@@ -100,7 +100,7 @@ is the authority on a flag's full text.
 | **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), **F36** (is damage past zero kept for healing?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
 | **Custom archetype & classification** — `plans/custom-archetype.md` | ✅ S1–S5 built (Decisions 152–153, F13 closed), XQ1–XQ6 on their defaults (XQ5's badge reads "off the books") · copy voice-passed · released in v0.33.0 · Ken's playtest feedback built and released in v0.34.0 (Decisions 154–156) | Nobody. W48–W55 are its follow-ons |
-| **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed | Deighton: **W37**, starting LUCK 6, maybe by level. It doesn't block the wizard |
+| **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed · LUCK starts at 4 and a power rank costs 5 CP (Decision 157, W37 granted) | Nobody |
 | **Milestones & doc reconciliation** — F9, F12, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
@@ -131,12 +131,11 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.34.0** (data 0.27, schema 0.16): the custom archetype (153) with Ken's playtest feedback on it (154–156, the sticky wizard nav), live for Saturday 2026-10-03. The critique's W44–W46 are next.
+**The live site is v0.34.0** (data 0.27, schema 0.16): the custom archetype (153) with Ken's playtest feedback on it (154–156, the sticky wizard nav), live for Saturday 2026-10-03. **0.35.0 is unreleased**: Ken's and Deighton's sheet feedback (157–160), on main once its PR merges. The critique's W44–W46 are next.
 Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
-TQ1–TQ3). The wishlist: W29, W37, W39, W54 and W55.
+TQ1–TQ3). The wishlist: W29, W39, W54 and W55.
 
 **Waiting on others:**
-- **Deighton, on creation:** W37 (starting LUCK).
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31, F33, F34 and F36 — plus
   W39's two halves. Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103); the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab).
@@ -163,6 +162,7 @@ questions' history is in `plans/combat-and-conditions.md` §6):
 - **CQ13:** 054 and 055 should agree on how Injured ends.
 - **041:** Hardcore Parkour's prerequisites become 1 Major Milestone,
   Acrobatics 4 and Danger Sense 1 (Decision 129).
+- **030, Luck:** everyone starts with 4 LUCK. **Creation:** a power rank costs 5 CP, any power's, up to Max Power Rank; it replaces "1 CP per point" for powers (157).
 - **Gear, The TAG:** Black TAG is the Ghost TAG Advantage (Ken, 146); a line saying so.
 - **043:** "Ambidextrousa" is a typo for Ambidextrous (Scott's pass).
 - **041, Master of None:** say whether "up to rank 4" is the rank bought (the

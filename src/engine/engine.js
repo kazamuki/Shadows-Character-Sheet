@@ -354,14 +354,17 @@ const Engine = (() => {
   const boostSpent = ch => ch.creation.boosts
     .filter(b=>b.targetType!=="power")
     .reduce((s,b)=>s + b.times * D().creationFlow.boostRules.cpCostPerPoint, 0);
-  // Disciplines (Decision 135): what a rank costs at creation, the cap and
-  // each one's starting rank all come from the archetype's data, so any
-  // archetype that declares `coreMechanic.disciplines` gets them.
+  // A power rank bought at creation costs one price for every power, a
+  // Discipline included (Decision 157). The cap is the power level's.
+  const powerRankCost = () => Number(D().creationFlow.boostRules.cpPerPowerRank)||0;
+  // Disciplines (Decision 135): the cap and each one's starting rank come from
+  // the archetype's data, so any archetype that declares
+  // `coreMechanic.disciplines` gets them.
   const disciplineSpec = ch => { const a = archetype(ch); return (a && a.coreMechanic && a.coreMechanic.disciplines) || null; };
   function disciplineSpent(ch){
     const spec = disciplineSpec(ch);
     if (!spec) return 0;
-    const cost = Number(spec.cpPerRank)||0;
+    const cost = powerRankCost();
     return Object.values(ch.archetypeChoices.disciplines||{}).reduce((s,r)=>s + r*cost, 0);
   }
   const disciplineCap = ch => { const spec = disciplineSpec(ch); return spec && spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null; };
@@ -3133,7 +3136,7 @@ const Engine = (() => {
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
-    advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, cp, grants, validate,
+    advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, validate,
     // Focused Skills and natural advantages (Decision 134)
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,
     focusedCategoryName, naturalAdvantagePool,

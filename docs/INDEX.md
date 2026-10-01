@@ -190,7 +190,7 @@ What a number *is*. Change one of these and characters change.
 - **2** — Terminology: stat pool = Stat Points (old "Character Points" column); old "Freebie Points" = Character Points (CP).
 - **3** — Max Boost semantics: after advantages are bought, leftover CP may boost powers, skills, or stats — but any single t...
 - **4** — Costs at creation: Stat Points 1:1 (stats start at base 1, max 10). → **superseded in part by 150**
-- **5** — LUCK: everyone starts at 2.
+- **5** — LUCK: everyone starts at 2. → **superseded in part by 157**
 - **6** — Health Levels: 1 HL per point of BOD, 5 HP per HL.
 - **7** — Çredits: player rolls physically, enters result; pool = table formula.
 - **8** — Skill checks: 1d10 + Rank + Primary Stat (full score) + Synergy Bonus (modifier).
@@ -200,17 +200,18 @@ What a number *is*. Change one of these and characters change.
 - **12** ~~— Supernatural restriction: archetypes with canPurchaseAdvantages: false (Werewolf; Vampire assumed) cannot buy Advan...~~ → **superseded by 152**
 - **13** — Milestone cadence: 1 Milestone Point per session; Minor at 5/15/25…, Major at 10/20/30…; 10 IP per session (WIP Pro...
 - **150** *(The stat buy and the Power Level table — W34, W35, F8)* — Stat Points are the level's flat pool or a roll, the GM's pick (`creation.statMethod`, schema 0.15); a stat point costs 1 up to 6 and 2 from 7 to 10, from a free 1; Skill Points are base + INT + REF, Boosts included; CP 5/10/15/20, Max Skill Rank 4/5/6/7; a roll is 5 below the flat pool + 1d10. F8 and F35 closed.
+- **157** *(Starting LUCK and power ranks — W37)* — Everyone starts with 4 LUCK, bought LUCK on top; a power rank costs 5 CP at creation, every power's, Disciplines included (`boostRules.cpPerPowerRank`), capped by Max Power Rank.
 - **152** *(Classification — F13)* — Every archetype is Mortal or Supernatural (`classifications`); a Mortal buys every Advantage, a Supernatural only the 15 Universal ones; Disadvantages are open to all. `canPurchaseAdvantages` is gone; `Engine.canBuyAdvantage` is the one reader.
 - **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via... → **superseded in part by 97**
 - **16** *(Phase 2)* — Ranked Advantages cost cost per rank (Archery Master rank 2 = 12 CP).
 - **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10. → **superseded in part by 98**
-- **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank.
+- **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank. → **superseded in part by 157**
 - **64** *(B3)* — 1 Health Level per BOD is an invariant, not a tunable.
 - **66** *(B8)* — The two Pain Level floors are numbers the engine carries and the sheet states.
 - **67** *(B9)* — The milestone cadence comes from the data, once.
 - **135** *(Audit S4 — A8, A9)* — A data field is read by code or named as text; formulas and paths are numbers the engine reads (`{ stat, times, plus }`, `dataPath`); fields restating the code are deleted; no archetype id in code. The R6 key guard enforces it.
 - **98** *(Design-team rulings, part 2)* — Stats past 10: +5 at 11–15, +1 per 5 after. F20–F22 closed: Skill Checks only, a −8 cap on one roll, only Injured/Maimed take a body part. Plan CQ4–CQ7/CQ10 answered for Session 3.
-- **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open.
+- **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open. → **superseded in part by 157**
 - **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened. → **superseded in part by 100, 112 and 143**
 - **100** *(Loadout & recovery — combat plan Session 4)* — Catalog pickers with Add/Buy, one worn piece per slot, upgrades by slot and quality; weapon lines (attack = skill check, ACC apart, `BOD+X` resolved). Wear, repair, Rest, Focused Healing (the only way back for Massive levels and Injured), Turn Reset (ticks aren't hits: no armor, no Shock). Stand-in armor gone. F24 opened. → **superseded in part by 104 and 105**
 - **104** *(Natural Armor — combat plan cleanup)* — One derived value from `grants` on advantages, Major Milestones and specializations; conditional sources (Iron Shirt, a waning moon) shown, never summed, asked for on a hit. How it answers a hit is the F25 stub. Print's Nat column fills. `migrate()` drops junk held entries. → **superseded in part by 143**
@@ -288,7 +289,7 @@ Promises the engine makes and the guards behind them.
 
 ### Sheet & play tracking
 
-The nine-tab running sheet, damage, IP, milestones, sessions.
+The eight-tab running sheet, damage, IP, milestones, sessions.
 
 - **23** *(Phase 3)* — Logging a session auto-grants the per-session IP (10 per WIP Professional cadence, overridable per session), 1 Mile...
 - **24** *(Phase 3)* — Pain Level penalties are applied to every displayed skill-check total, with the reason shown inline (breakdown colu...
@@ -296,12 +297,12 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **26** *(Phase 3)* — Un-modeled effects (milestone benefits, aberration prose, items) are applied through a manual adjustments ledger: s...
 - **27** *(Phase 3)* — The IP journal is the audit trail: entries are spend or grant; spends update the target's IPE atomically; the last... → **superseded in part by 49**
 - **29** *(Phase 3)* — Milestone enforcement: Minor duplicates blocked until all five have been selected once; Major prerequisites are mac...
-- **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll.
+- **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll. → **superseded in part by 158**
 - **31** *(Phase 3.1)* — Iconography lives in shadows-icons.js (see §1).
 - **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35**
-- **35** *(Phase 3.2)* — Full-width sheet on every tab.
+- **35** *(Phase 3.2)* — Full-width sheet on every tab. → **superseded in part by 160**
 - **36** *(Phase 3.2)* — Four-sphere stat layout on Main.
-- **37** *(Phase 3.2)* — Vitals flyout drawer.
+- **37** *(Phase 3.2)* — Vitals flyout drawer. → **superseded in part by 160**
 - **38** *(Phase 3.2)* — Sticky in-header navigation. → **superseded in part by 140**
 - **39** *(Phase 3.2)* — Header overflow menu.
 - **40** *(Phase 3.2)* — Collapsible page footer.
@@ -309,8 +310,10 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **43** *(Phase 3.2)* — Date-input theming.
 - **44** *(Phase 3.2)* — Skills aligned + per-skill descriptions. → **superseded in part by 156**
 - **156** *(Skills tab — every skill, two columns)* — Every skill in its category, untrained at Rank 0 and full strength; two columns from 1000px, categories never split, the first holding half the skills.
-- **45** *(Phase 3.2)* — Traits collapsible.
-- **46** *(Phase 3.2)* — Progression collapsible.
+- **45** *(Phase 3.2)* — Traits collapsible. → **superseded in part by 158**
+- **158** *(The Character tab)* — Traits and Archetype are one Character tab (eight tabs): the archetype, its traits, powers and vulnerabilities a column each from 1000px, then Advantages beside Disadvantages, a sticky jump bar, Expand all remembered in the browser, buttons to Loadout & Powers and Trackers.
+- **46** *(Phase 3.2)* — Progression collapsible. → **superseded in part by 159**
+- **159** *(Raise modals)* — Progression's Raise a Stat and Raise a Skill are buttons opening a modal of every stat or skill with its price and why it's off; a raise keeps the modal open.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.
 - **83** *(Batch 3a)* — The ledger's ✓ meant "no errors," not "nothing left to do."
 - **89** *(Print view)* — A printable sheet is a second rendering path, not a second data model.
@@ -329,7 +332,8 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **112** *(Modals, the skill line and Trackers' layout — wishlist pass)* — The modal gains a sticky footer and is centred; W6 Take a hit in the modal, Apply disabled with its reason; W23–W26 row click, dimmed rows that say why, sticky search, Done; W20/W21 a skill's stats as icons with the character's numbers; W1/W10 Trackers in two columns, the HL track in Damage banded by Pain Level.
 - **117** *(Let a hit land — W15)* — `commit()` notes when damage went up; the next render flashes the HP readouts and the Health Level boxes that took it, twice on Pain if its level rose, once only, never on heal or undo, none under reduced motion.
 - **118** *(The catalog browser — W4)* — Loadout's pickers are a modal: search, section, What I can afford, sort, and every number before Add/Buy from `Engine.catalogLine()`, the reader Loadout's own rows share. Buy says why it's off; a row click opens its details.
-- **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal.
+- **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal. → **superseded in part by 160**
+- **160** *(Pinned vitals)* — From 1280px the vitals panel pins as a right-hand column on every tab, Main included; the header, page, footer and toast make room, the bar's pills go, and the panel's vitals open their popovers to the left. The pin is the browser's; narrower, it's ignored.
 - **151** *(Health verbs on Main — W42)* — Heal 1 · Hurt 1 · Take a hit as a full-width row after Pain in Main's card grid, the popover's own controls; at zero Main's Hurt 1 greys out and says to use Take a hit, which asks 054's WILL check. F36 opened.
 - **120** *(Weapon mods and rounds — W16)* — Schema 0.10: `weapons[i].mods` and `roundsSpent`. Single/Burst/Full Auto spend 1/3/10 (053) from a capacity read as its number + chambered round; Fire and Reload on Loadout and Main. Mods fill fixed slots, fit per data (`onlyFor`/`notFor`), add tags and damage; a sight's ACC is aimed, apart from Single's. F26 opened. → **superseded in part by 145**
 - **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog. → **superseded in part by 143**
