@@ -2183,6 +2183,15 @@ const Engine = (() => {
       targetType:"power", targetId:row.id, name, note:txt(i.note) });
     return { ok:true, id:row.id, cost };
   }
+  // A blank row for the wizard's powers editor, where the player types into
+  // it (XQ2: creation's powers are free). Play adds powers through addPower.
+  function newPower(ch){
+    if (!hasPowers(ch)) return { ok:false, why:"Powers aren't on this sheet." };
+    const row = powerRow({ id:newPowerId(ch) });
+    if (!Array.isArray(ch.powers)) ch.powers = [];
+    ch.powers.push(row);
+    return { ok:true, id:row.id };
+  }
   // Removing a power leaves its IP spend in the journal: IP spent stays spent,
   // and versionCheck says the power is gone.
   function removePower(ch, id){
@@ -2839,6 +2848,12 @@ const Engine = (() => {
         if (!txt(w.name).trim()) E("Name your archetype. What are you?");
         if (!c) E("Choose a classification for your archetype.");
         else if (c.writeIn && !txt(w.classificationText).trim()) W(`Say what ${c.name} means for you, in a word or two.`);
+        // A row with words but no name never shows on the sheet; an empty one is just unused.
+        const nameless = rows => rows.filter(r=>!r.name.trim() && [r.description, r.uses, r.effect, r.notes].some(v=>txt(v).trim())).length;
+        for (const [rows, noun] of [[textRows(w.traits), "trait"], [ownPowers(ch), "power"], [textRows(w.vulnerabilities), "vulnerability"]]){
+          const n = nameless(rows);
+          if (n) W(`${n===1?`A ${noun}`:`${n} ${noun==="vulnerability"?"vulnerabilities":noun+"s"}`} with no name won't show on your sheet. Name ${n===1?"it":"them"}.`);
+        }
       }
       // A3: one rule for every archetype. The count comes from the data
       // (`countBy`, or 1 by default), so an archetype that wants three picks
@@ -3076,7 +3091,7 @@ const Engine = (() => {
     // The character file: create, load, check, export
     newCharacter, isIntakeId, tagReading, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, newPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,

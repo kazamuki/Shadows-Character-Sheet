@@ -2713,3 +2713,16 @@ test("schema 0.16: an older file gets an empty write-in, and a file's own is kep
   assert.ok(ids.every(id => /^pw-/.test(id)));
   same(Engine.migrate(JSON.parse(JSON.stringify(w))), w, "migrate() isn't stable on its own output");
 });
+
+test("newPower gives the wizard a blank row; a nameless row with words warns, an empty one doesn't", () => {
+  const ch = writtenIn();
+  const r = Engine.newPower(ch);
+  assert.ok(r.ok && ch.powers.length === 1 && ch.powers[0].name === "");
+  assert.equal(Engine.newPower(subject()).ok, false, "an archetype with no powers panel");
+  const warns = () => Engine.validate("archetype", ch).filter(i => /no name/.test(i.msg)).map(i => i.level);
+  same(warns(), [], "an empty row is just unused");
+  ch.powers[0].effect = "Unseen for a round.";
+  ch.archetypeChoices.writeIn.traits = [{ name: "", description: "Glamour" }, { name: "", description: "Thorns" }];
+  same(warns(), ["warn", "warn"]);
+  assert.ok(Engine.validate("archetype", ch).some(i => i.msg.startsWith("2 traits")));
+});
