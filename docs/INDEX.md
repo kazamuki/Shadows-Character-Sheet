@@ -289,7 +289,7 @@ Promises the engine makes and the guards behind them.
 
 ### Sheet & play tracking
 
-The nine-tab running sheet, damage, IP, milestones, sessions.
+The eight-tab running sheet, damage, IP, milestones, sessions.
 
 - **23** *(Phase 3)* — Logging a session auto-grants the per-session IP (10 per WIP Professional cadence, overridable per session), 1 Mile...
 - **24** *(Phase 3)* — Pain Level penalties are applied to every displayed skill-check total, with the reason shown inline (breakdown colu...

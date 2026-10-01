@@ -31,7 +31,7 @@ picture but not the design picture.
 
 A browser character creator and live play sheet for **Shadows**, a cyberpunk-noir
 urban fantasy RPG running on the **Synergy** system (Get Dangerous Games).
-Eight-step intake wizard → lock → a nine-tab running sheet with damage and Pain
+Eight-step intake wizard → lock → an eight-tab running sheet with damage and Pain
 Levels, Sanity, Luck, Çredits, IP and Milestones, session log, loadout, and an
 undo-able audit trail. Deighton is the lead designer and holds all rules
 authority. Scott works on the GM toolkit and magic system. Ken writes and
