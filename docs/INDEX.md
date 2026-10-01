@@ -312,7 +312,8 @@ The nine-tab running sheet, damage, IP, milestones, sessions.
 - **156** *(Skills tab — every skill, two columns)* — Every skill in its category, untrained at Rank 0 and full strength; two columns from 1000px, categories never split, the first holding half the skills.
 - **45** *(Phase 3.2)* — Traits collapsible. → **superseded in part by 158**
 - **158** *(The Character tab)* — Traits and Archetype are one Character tab (eight tabs): the archetype, its traits, powers and vulnerabilities a column each from 1000px, then Advantages beside Disadvantages, a sticky jump bar, Expand all remembered in the browser, buttons to Loadout & Powers and Trackers.
-- **46** *(Phase 3.2)* — Progression collapsible.
+- **46** *(Phase 3.2)* — Progression collapsible. → **superseded in part by 159**
+- **159** *(Raise modals)* — Progression's Raise a Stat and Raise a Skill are buttons opening a modal of every stat or skill with its price and why it's off; a raise keeps the modal open.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.
 - **83** *(Batch 3a)* — The ledger's ✓ meant "no errors," not "nothing left to do."
 - **89** *(Print view)* — A printable sheet is a second rendering path, not a second data model.

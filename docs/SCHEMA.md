@@ -1056,6 +1056,7 @@ No cascade logic to maintain — it falls out of the architecture.
     open *only* when picks are available (`minorLeft`/`majorLeft` > 0). The IP
     status + grant block and the MP status block stay always-visible. (Ken,
     2026-06-16)
+    → **Superseded in part by Decision 159** — Raise a Stat and Raise a Skill are buttons that open a modal.
 47. **(Phase 3.2)** No schema bump. All Phase 3.2 work is presentation/UI; the
     character (0.3) and game-data (0.2) schemas are unchanged and the pure engine
     (`/*ENGINE-START*/…/*ENGINE-END*/`) is byte-for-byte identical, so the 58
@@ -3583,6 +3584,17 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 30 in part (eight tabs, not nine); Decision 45 in part (Expand all opens every card, and stays).
      - **Revisit if:** an archetype's reference grows so long the Advantages are hard to reach, or the print sheet's archetype page wants the same order.
      - **Built:** app 0.35.0, no data or schema bump; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+
+159. **Progression's Raise a Stat and Raise a Skill are buttons that open a modal; a raise keeps it open.**
+     *2026-10-01 · Ken + Claude · Touches: Progression tab, Raise a Stat, Raise a Skill, Learn a new skill, openRaisePicker, raiseIP, data-raiseopen, data-ipbuy, Milestones, IP Journal, openModal*
+     - **Decided:** Progression shows the IP card and two buttons, **Raise a Stat** and **Raise a Skill**, then the IP Journal and the Milestones. Each opens a modal listing every stat, or every skill (yours first, then the ones to learn, with a search), with the move, the price and a button, off and saying why when it can't be bought. A raise is one IP spend with its undo toast, and the modal stays open with the new prices until Done.
+     - **Why:** Ken: the two lists took most of the page, so the Milestones meant collapsing them or scrolling past.
+     - **Rejected:**
+       - The lists collapsed by default: still a long page once opened, and opening them is the common case.
+       - Closing the modal after each raise: spending a session's IP is usually several raises at once.
+     - **Replaces:** Decision 46 in part (the raise lists are modals, not open sections).
+     - **Revisit if:** something else is spent with IP often enough to want its own button.
+     - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
 
 ## 5. Open Flags
 
