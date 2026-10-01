@@ -1,4 +1,4 @@
-// The locked character's live sheet: nine tabs plus the hidden Admin section,
+// The locked character's live sheet: eight tabs plus the hidden Admin section,
 // their renderers, then their binders (bindSheet and the pickers and modals).
 // Reads/writes the shared state and helpers declared in shared.js.
 
