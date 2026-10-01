@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.33.0",
-    "date": null,
+    "date": "2026-10-01",
     "intro": [],
     "items": [
       "**Heal, Hurt and Take a hit, right on Main.** Under the Health and Pain cards there's now a row with **Heal 1**, **Hurt 1** and **Take a hit**, so a hit mid-fight is one tap without opening anything. Each tap is its own change with its own Undo. Tap the Health card for Heal 5, Hurt 5, an exact total or Heal all, as before.",
