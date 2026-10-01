@@ -1328,6 +1328,53 @@ test("W3: Main's cards open the same popovers — LUCK spends, Pain adds a Condi
   assert.deepEqual(app.errors, []);
 });
 
+test("W42: Main's Heal 1 · Hurt 1 · Take a hit row is the popover's own controls, under Health and Pain, and a held Enter on Heal never hurts", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const row = () => app.$("#main .cond-grid .vital-verbs");
+  assert.ok(row(), "Main has no Health verbs row in its card grid");
+  const order = [...app.$("#main .cond-grid").children].map(e => e.dataset.vpop || "verbs");
+  assert.deepEqual(order.slice(0, 3), ["hp", "pain", "verbs"], "the row isn't straight after Health and Pain");
+  assert.ok(row().querySelector('[data-dmg="-1"]').disabled, "Heal 1 is live with nothing to heal");
+
+  // Hurt 1: the same commit as the popover's, one toast, one undo each.
+  const hurt = () => row().querySelector('[data-dmg="1"]');
+  hurt().focus(); app.click('#main .vital-verbs [data-dmg="1"]');
+  hurt().focus(); app.click('#main .vital-verbs [data-dmg="1"]');
+  assert.equal(activeChar(app).trackers.damage, 2);
+  assert.equal(app.window.document.querySelectorAll("#undotoast").length, 1, "the toasts stacked");
+  assert.match(app.$("#undotoast").textContent, /Hurt 1/, "not the popover's own label");
+  assert.equal(app.window.document.activeElement, hurt(), "focus didn't come back to Hurt 1 after the re-render");
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.damage, 1, "the toast undid more than the last tap");
+
+  // Heal 1 down to nothing: focus goes to the Health card, not to Hurt 1.
+  const heal = row().querySelector('[data-dmg="-1"]');
+  heal.focus(); app.click('#main .vital-verbs [data-dmg="-1"]');
+  assert.equal(activeChar(app).trackers.damage, 0);
+  assert.equal(app.window.document.activeElement, app.$('#main [data-vpop="hp"]'), "a greyed Heal 1 handed focus to Hurt 1");
+
+  // At zero, Main's Hurt 1 greys out and says why (Decision 151): a raw Hurt
+  // would skip 054's At Zero WILL check, which Take a hit asks. The
+  // popover's stepper stays a raw correction, with no ceiling.
+  const total = Engine.health(activeChar(app)).total;
+  assert.ok(!app.$("#main .vital-verbs-note"), "the at-zero note shows above zero");
+  for (let i = 0; i <= total; i++) app.click('#main .vital-verbs [data-dmg="1"]');
+  assert.equal(activeChar(app).trackers.damage, total, "Main's Hurt 1 went past zero");
+  assert.ok(hurt().disabled, "Hurt 1 is live at zero");
+  assert.match(app.$("#main .vital-verbs-note").textContent, /WILL check.*Take a hit/, "a greyed Hurt 1 doesn't say why");
+  app.click('#main .cond[data-vpop="hp"]');
+  app.click('#vpop [data-dmg="1"]');
+  assert.equal(activeChar(app).trackers.damage, total + 1, "the popover's stepper clamped at zero");
+  app.window.document.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+  app.$("#main .vital-verbs [data-hitopen]").focus();                     // a browser focuses what's clicked
+  app.click('#main .vital-verbs [data-hitopen]');
+  assert.ok(app.$("#modal").open && /Take a hit/.test(app.$("#modal").textContent), "Take a hit didn't open the hit modal");
+  app.click("[data-hitcancel]");
+  assert.equal(app.window.document.activeElement, app.$("#main .vital-verbs [data-hitopen]"), "focus didn't come back to Take a hit");
+  assert.deepEqual(app.errors, []);
+});
+
 test("W16: install a mod on Loadout, fire a Burst from Main, Reload, and each is one undo", () => {
   const ch = lockedCharacter();
   ch.weapons.push({ id: "ar9x-guardian", notes: "", mods: [], roundsSpent: 0 });   // 30+1, S/B/F, 1 slot

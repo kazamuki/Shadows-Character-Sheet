@@ -318,6 +318,7 @@ function renderShMain(){
     `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
   h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
     pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null, "", "pain");
+  h += vitalVerbsHtml(ch);     // W42: its own row, straight under Health and Pain
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
     `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
@@ -962,7 +963,20 @@ function damageStepperHtml(ch){
     <button class="btn sm" data-dmg="5">Hurt 5</button>
     <button class="btn sm danger" data-dmgheal="1">Heal all</button></div>`;
 }
-const sanControlsHtml = ch => `<button class="btn sm" data-san="-1">−1 loss</button>
+// W42: the three Health verbs a fight uses most, out on Main under the cards.
+// The same data-dmg / data-hitopen as above, so bindVitalControls wires them
+// and they can't drift; the ×5 steps, a typed total and Heal all stay in the
+// card's popover. At zero Hurt 1 greys out (Decision 151): a raw Hurt skips
+// the WILL check and Death Marks a hit at zero brings, which Take a hit asks.
+function vitalVerbsHtml(ch){
+  const d=ch.trackers.damage, down=Engine.hlState(ch).down;
+  return `<div class="vital-verbs" role="group" aria-label="Health">
+    <button class="btn sm" data-dmg="-1" ${d?"":"disabled"}>Heal 1</button>
+    <button class="btn sm" data-dmg="1" ${down?'disabled aria-describedby="vital-verbs-zero"':""}>Hurt 1</button>
+    <button class="btn sm primary" data-hitopen="1">Take a hit</button>
+    ${down?`<p class="vital-verbs-note" id="vital-verbs-zero">At zero, every hit asks a WILL check. Use Take a hit.</p>`:""}</div>`;
+}
+const sanControlsHtml = ch =>`<button class="btn sm" data-san="-1">−1 loss</button>
     <input type="number" min="0" data-sanset value="${ch.trackers.san.loss}" aria-label="SAN lost">
     <button class="btn sm" data-san="1">+1 loss</button>`;
 const luckControlsHtml = luck => luck.spendActions.map(sa=>`<button class="btn sm" data-luckspend="${sa.cost}" ${luck.current<sa.cost?"disabled":""} title="${esc(sa.effect)}">${esc(sa.action)} (−${sa.cost})</button>`).join("") +
@@ -2319,8 +2333,14 @@ function bindVitalControls(root){
   const setDamage = v => { ch.trackers.damage=v;
     ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
   root.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
-    const d=Number(b.dataset.dmg);
+    if (b.disabled) return;           // a greyed button (W42's Hurt 1 at zero) does nothing
+    const d=Number(b.dataset.dmg), keep=document.activeElement===b && b.closest(".vital-verbs");
     commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
+    // W42: the re-render replaced Main's button, so focus comes back to its
+    // twin and Enter can tap again. Once Heal 1 greys out it goes to the
+    // Health card, never to Hurt 1: a held Enter on Heal must not start hurting.
+    if (keep){ const again=[`.vital-verbs [data-dmg="${d}"]`, `[data-vpop="hp"]`].map(s=>document.querySelector(s)).find(x=>x && !x.disabled);
+      if (again) again.focus(); }
   });
   const ds=root.querySelector("[data-dmgset]");
   if (ds) ds.onchange=()=>{ const v=Math.max(0,Number(ds.value)||0); commit("damage", `Set damage → ${v}`, ()=>{ setDamage(v); }); };
