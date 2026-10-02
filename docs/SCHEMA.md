@@ -353,7 +353,7 @@ window.SHADOWS_DATA = {
   },
 
   // ── Gear: weapons, ammunition, armor (0.6) ────────────────
-  // Merged from the CRB v4 equipment chapter (docs/reference/crb/Gear.md).
+  // Merged from the CRB v4 equipment chapter (private/crb/Gear.md).
   // One flat `weapons` array with a `category` discriminator, same shape as
   // `skills` — a new weapon needs zero app changes. Tags/Features are stored
   // as the exact strings the book prints (including any "(Xm)" parameter)
@@ -487,7 +487,7 @@ window.SHADOWS_DATA = {
   },
 
   // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
-  // Merged from docs/reference/crb/Magic.md. Origins (Book/Blood/Bound) are
+  // Merged from private/crb/Magic.md. Origins (Book/Blood/Bound) are
   // deliberately NOT here — that's the Arcanist subtype question, still
   // blocked on the archetype four-way comparison (STATE.md §3). Everything
   // below applies to any caster regardless of subtype.
@@ -1652,6 +1652,7 @@ No cascade logic to maintain — it falls out of the architecture.
     unmirrored until they actually gate a batch — `055_Downtime` in particular
     is short in the source because the Advancement section F12 needs hasn't
     been written yet. (Ken + Claude, 2026-09-04)
+    → **Superseded in part by Decision 167** — the mirror moved to the private `Shadows-Private` repo, mounted at `private/crb/`; it's still a mirror, never a second master.
 
 85. **(Docs)** **`GUIDE_Shadows_Voice.md` is re-pulled with pandoc.** Its first
     pull (Decision 69, 2026-09-02) predates pandoc being available in-session
@@ -3687,6 +3688,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 37 in part (its open state still survives a data render, not a tab switch). It extends 160 (a pinned panel goes when the sheet does).
      - **Revisit if:** the flyout grows controls a player edits in place, or a browser the app supports drops `inert`.
      - **Built:** app 0.36.0; four smoke tests (the harness gains a screen width for `matchMedia`), mutation-tested; Tab checked in Chromium. Log 2026-10-02 (W58).
+
+167. **The CRB mirror lives in a private repo, mounted as the `private/` submodule; the public repo holds only the pointer.**
+     *2026-10-02 · Ken + Claude · Touches: CRB mirror, docs/reference/crb, private/crb, Shadows-Private, .gitmodules, submodule, PRIVATE_REPO_TOKEN, verify.yml, release.yml, session-start.mjs, rules.test.mjs, Threat Codex, GQ12, W29*
+     - **Decided:** the CRB v4 mirror moves from `docs/reference/crb/` to the private repo `kazamuki/Shadows-Private`, folder `crb/`, mounted here at `private/`. CI fetches it with a read-only fine-grained token (`PRIVATE_REPO_TOKEN`); the session-start hook initialises it. The CRB conformance tests read `private/crb/` and fail, with the command to run, when it's missing. The Threat Codex and Scott's proposals live there too. The voice guide stays in `docs/reference/`.
+     - **Why:** this repo is public, so the whole mirrored CRB was readable by anyone, and the Threat Codex is marked confidential (GQ12). Sessions and CI still need the text.
+     - **Rejected:**
+       - Making this repo private: Pages on GitHub's free plan serves only public repos, so the release workflow and the host would change.
+       - A gitignored local folder: cloud sessions and CI never see it, and the conformance tests would have nothing to read.
+       - Skipping the conformance tests when the mirror is absent: CI would stop checking the CRB's own examples without saying so.
+     - **Replaces:** Decision 84 in part (where the mirror lives; it's still a mirror, never a second master).
+     - **Revisit if:** the CRB is published, so the mirror needn't be private; or the token can't be kept current.
+     - **Built:** no app, data or schema change. The mirror stays in this repo's history from 2026-09-04 until a history rewrite, which waits on Ken. Log 2026-10-02 (the private mirror).
 
 ## 5. Open Flags
 

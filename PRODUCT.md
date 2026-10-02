@@ -106,7 +106,7 @@ limit design work:
 
 ## Evidence on Hand
 
-- The CRB mirror is in `docs/reference/crb/`. It is read-only here.
+- The CRB mirror is in `private/crb/`. It is read-only here.
 - The app's own content is in `src/data/shadows-data.js`, and its release notes
   in `CHANGELOG.md`.
 - The live demo is at charactersheet.shadowsrpg.com.

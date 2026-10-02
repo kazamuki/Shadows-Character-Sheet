@@ -15,10 +15,18 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
+
+// The CRB mirror is a private submodule (Decision 167). Missing, it fails
+// loudly with the fix, rather than skipping the CRB's own examples.
+function crb(name) {
+  const p = join(ROOT, "private/crb", name);
+  assert.ok(existsSync(p), `private/crb/${name} is missing: run \`git submodule update --init private\` (needs read access to kazamuki/Shadows-Private)`);
+  return readFileSync(p, "utf8");
+}
 
 const { Engine, D } = loadEngine();
 
@@ -985,7 +993,7 @@ test('CRB 041, Master of None: "3 x current skill rank up to rank 4. At Rank 5 a
 });
 
 test("R13: the Professional's Campaign Power Scaling table matches 041, row for row", () => {
-  const md = readFileSync(join(ROOT, "docs/reference/crb/041_Archetypes.md"), "utf8");
+  const md = crb("041_Archetypes.md");
   const head = md.search(/\|\s*\*\*Power Level\*\*\s*\|\s*\*\*Focused Skill Max Bonus\*\*\s*\|\s*\*\*Natural Advantages\*\*\s*\|/);
   assert.ok(head >= 0, "041's Professional scaling table moved or was renamed");
   const lines = md.slice(head).split("\n").slice(2);
@@ -1013,7 +1021,7 @@ test("R14: every spell in the Book of Known Spells is in the catalog, as the boo
   // keeps the tier's own TH, so those are checked through Engine.spellForm,
   // and the Ench./Alch. tag has to agree with `disciplines`. Four traps are
   // printed in both parts; the Inscribed copy is the newer text and wins.
-  const md = readFileSync(join(ROOT, "docs/reference/crb/Appendix_Book_of_Known_Spells.md"), "utf8").replace(/\r/g, "");
+  const md = crb("Appendix_Book_of_Known_Spells.md").replace(/\r/g, "");
   const from = md.search(/^# \*\*Cantrips\*\*/m); // after "How to Read a Spell Entry" and its example
   const inscribedAt = md.search(/^# \*\*Inscribed Spells\*\*/m);
   assert.ok(from > 0 && inscribedAt > from, "the book's Cantrips or Inscribed Spells heading moved; this walk needs both");
