@@ -178,6 +178,9 @@ input[type=text],input[type=search],input[type=number],input[type=date],textarea
   width:100%; background:var(--ground); border:1px solid var(--frame); border-radius:4px;
   padding:9px 11px; font-size:.92rem}
 input[type=number]{font-family:var(--mono)}
+/* W60: the browser's grey placeholder is 3.8:1 on the ground, and Firefox
+   fades it further. --dim passes in both themes (the contrast guard checks it). */
+::placeholder{color:var(--dim); opacity:1}
 input[type=date]{font-family:var(--mono); color-scheme:dark}
 input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.75)}
 :root[data-theme="light"] input[type=date]{color-scheme:light}
@@ -228,14 +231,14 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .pick{background:var(--panel); border:1px solid var(--frame); border-radius:5px; padding:12px 14px; margin-bottom:10px}
 .pick.selected{border-color:var(--green)}
 .pick .head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
-.pick .head h4{font-size:.92rem; font-weight:600}
+.pick .head h2{font-size:.92rem; font-weight:600}
 .pw-card .head [data-pwimprove]{margin-left:auto}
 .pick .cost{font-family:var(--mono); font-size:.72rem; color:var(--gold)}
 .pick .cost.grant{color:var(--green)}
 .pick .desc{font-size:.8rem; color:var(--dim); margin-top:5px; white-space:pre-line}
 .pick .powers{margin-top:8px; font-size:.8rem}
 .pick .power{margin-top:8px}
-.pick .power h5{margin:0 0 3px; font-size:.82rem; color:var(--text)}
+.pick .power h3{margin:0 0 3px; font-size:.82rem; color:var(--text)}
 .pick .power p{margin:0 0 5px; color:var(--dim)}
 .pick .power table.ref{margin-top:4px}
 .pick .controls{margin-left:auto; display:flex; align-items:center; gap:8px}
@@ -315,7 +318,7 @@ aside.vitals:empty{display:none}
 .home-hero p{color:var(--dim); margin-bottom:28px}
 .home-actions{display:flex; gap:14px; justify-content:center; flex-wrap:wrap}
 .review-block{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:16px 18px; margin-bottom:14px}
-.review-block h3{font-family:var(--display); font-size:1rem; letter-spacing:.05em; color:var(--violet-text); margin-bottom:8px}
+.review-block h2{font-family:var(--display); font-size:1rem; letter-spacing:.05em; color:var(--violet-text); margin-bottom:8px}
 .kv{display:grid; grid-template-columns:auto 1fr; gap:3px 16px; font-size:.84rem}
 .kv .k{color:var(--dim)} .kv .v{font-family:var(--mono)}
 .locked-banner{border:1px solid var(--green); color:var(--green); border-radius:5px;
@@ -412,7 +415,7 @@ aside.vitals:empty{display:none}
 }
 /* Decision 99 — the Take a hit panel on Trackers */
 .hitpanel{background:var(--panel); border:1px solid var(--violet); border-radius:8px; padding:14px 16px; margin:4px 0 16px}
-.hitpanel h4{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; margin-bottom:8px}
+.hitpanel h3{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; margin-bottom:8px}
 .hitrow{display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin:8px 0}
 .hitrow label.field{margin:0; min-width:110px}
 .hitrow input[type=number], .hitrow input[inputmode=numeric]{width:84px; text-align:center}
@@ -483,7 +486,7 @@ table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--m
 .auditlog .jrow .x:hover{color:var(--magenta-text)}
 .trk{display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--panel);
   border:1px solid var(--frame); border-radius:6px; padding:13px 16px; margin-bottom:12px}
-.trk h4{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; min-width:110px}
+.trk h2{font-family:var(--display); font-size:.95rem; letter-spacing:.05em; min-width:110px}
 .trk .big{font-family:var(--mono); font-size:1.25rem; color:var(--cyan)}
 .trk .big.bad{color:var(--magenta-text)} .trk .big.gold{color:var(--gold)} .trk .big.hp{color:var(--green)}
 .trk .sub{font-size:.74rem; color:var(--dim); flex-basis:100%}
@@ -555,7 +558,7 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .cond .big small{font-family:var(--mono); font-size:.8rem; color:var(--dim)}
 .cond .meta{font-family:var(--mono); font-size:.7rem; color:var(--dim); margin-top:3px}
 .cond .meter{height:5px; border-radius:3px; background:var(--panel-2); overflow:hidden; margin-top:9px}
-.cond .meter i{display:block; height:100%; background:var(--green); transition:width .35s}
+.cond .meter i{display:block; height:100%; background:var(--green)}
 .cond.hp .big{color:var(--green)} .cond.hp .meter i{background:var(--green)}
 .cond.san .meter i{background:var(--cyan)} .cond.san .big{color:var(--cyan)}
 .cond.luck .big{color:var(--gold)} .cond.luck .meter i{background:var(--gold)}
@@ -991,7 +994,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   .modal-head{padding:14px 16px 4px} .modal-body{padding:0 16px 16px} .modal-foot{padding:10px 16px} }
 @media (prefers-reduced-motion:reduce){ .vrow .v{transition:none} .toast{animation:none} .modal{animation:none}
   .admin-banner .dot{animation:none}
-  .vdrawer, .vdrawer-scrim, .hl-mini .seg i, .cond .meter i{transition:none} }
+  .vdrawer, .vdrawer-scrim, .hl-mini .seg i{transition:none} }
 /* W5/W22: the jump bar. On step 7 it sticks under the header, which can wrap
    to more than one line, so its height is measured (--hdr-live, set in boot). */
 .jumpbar{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 14px}

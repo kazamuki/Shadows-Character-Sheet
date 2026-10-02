@@ -438,7 +438,7 @@ test("a Werewolf's Character Points step opens the Universal Advantages and no o
   assert.equal(up("animal-ken"), null, "a Mortal-only Advantage offers a + to a Werewolf");
   assert.match(app.$("#main").textContent, /Not for Supernaturals/);
   assert.match(app.$("#main").textContent, /only Universal Advantages are open/);
-  const names = app.$$("#main .pick h4").map(h => h.textContent);
+  const names = app.$$("#main .pick h2").map(h => h.textContent);
   assert.ok(names.indexOf("Time Sense") < names.indexOf("Ambidextrous"),
     "the Universal Advantages aren't listed before the Mortal-only ones");
   assert.ok(down("ambidextrous") && !down("ambidextrous").disabled, "a held Mortal-only Advantage can't be removed");
@@ -1195,7 +1195,7 @@ test("W1/W10: Trackers reads in two columns, and the Health Levels sit in Damage
   const app = openSheet(ch, "trackers");
   const cols = app.$$("#main .trk-grid > .trk-col");
   assert.equal(cols.length, 2, "Trackers isn't split into two columns");
-  const card = h => app.$$("#main .trk").find(t => (t.querySelector("h4") || {}).textContent === h);
+  const card = h => app.$$("#main .trk").find(t => (t.querySelector("h2") || {}).textContent === h);
   assert.ok(cols[0].contains(card("Damage")) && cols[1].contains(card("Sanity")), "Damage and Sanity aren't in their own columns");
   const track = card("Damage").querySelector(".hl-track");
   assert.ok(track, "the Health Levels aren't inside the Damage card");
@@ -1231,7 +1231,7 @@ test("W22: step 7's sticky bar filters the picks, keeps what you hold, and survi
   for (const l of ["Disadvantages", "Advantages", "Starting spells", "Boosts"]) assert.ok(labels.includes(l), `no jump to ${l}`);
   assert.match(bar.textContent, /Remaining \d+ CP/, "the bar doesn't keep the CP left in view");
   const filter = () => app.$("#main [data-jumpfilter]");
-  const shown = () => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h4").textContent);
+  const shown = () => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h2").textContent);
   const all = app.$$("#main [data-filterable] .pick").length;
   filter().value = "berserk"; filter().dispatchEvent(new app.window.Event("input"));
   assert.deepEqual(shown(), ["Berserker", "Danger Sense"], "the filter didn't narrow to the match plus what's held");
@@ -1680,7 +1680,7 @@ test("B17: a Trueborn sees the Lunar Phase Blessing, its four phases, and which 
   const text = app.$("#main").textContent;
   assert.match(text, new RegExp(tb.starterPower.name), "the starting power isn't on the sheet");
   for (const p of tb.starterPower.phases) assert.ok(text.includes(p.boon) && text.includes(p.effect), `${p.phase}'s boon isn't on the sheet`);
-  const unwritten = app.$$("#main .power").filter(el => /not written yet/.test(el.textContent)).map(el => el.querySelector("h5").textContent);
+  const unwritten = app.$$("#main .power").filter(el => /not written yet/.test(el.textContent)).map(el => el.querySelector("h3").textContent);
   assert.equal(unwritten.length, tb.additionalPowers.length, "the powers still to come don't say they aren't written yet");
 
   const draft = lockedCharacter();
@@ -2580,8 +2580,8 @@ test("the sheet draws a written-in archetype: its name everywhere, its classific
   app.click('[data-sec="main"]');
   assert.match(main(), /Changeling ·/, "Main's header still says the archetype's data name");
   app.click('[data-sec="trackers"]');
-  assert.ok(app.$$("#main .trk h4").some(h => h.textContent === "SFR"), "Uses SFR didn't put SFR on Trackers");
-  assert.ok(!app.$$("#main .trk h4").some(h => h.textContent === "TOL Spent"), "TOL Spent showed without Uses magic");
+  assert.ok(app.$$("#main .trk h2").some(h => h.textContent === "SFR"), "Uses SFR didn't put SFR on Trackers");
+  assert.ok(!app.$$("#main .trk h2").some(h => h.textContent === "TOL Spent"), "TOL Spent showed without Uses magic");
   app.click(`[data-sec="${loadoutSec(app)}"]`);
   // Decision 154: in play a power reads as written, its notes free to edit.
   assert.deepEqual(app.$$("[data-pwedit]").map(e => e.dataset.pwedit.split("|")[1]), ["notes"], "a power's words are editable in play");
@@ -2852,4 +2852,66 @@ test("W47: a press that hides the flyout hands focus to what opens it", () => {
   assert.equal(app.$("#vdrawer").getAttribute("aria-hidden"), "true", "too narrow to pin, the flyout should close");
   assert.equal(focused(app), app.$("#main [data-vitals-toggle]"), "focus stayed in a hidden flyout");
   assert.deepEqual(app.errors, []);
+});
+
+// ── W60: small accessibility and copy fixes from the critique re-run ──
+// A heading inside a <button> isn't read as one, so it's left out.
+const outline = root => [...root.querySelectorAll("h1,h2,h3,h4,h5,h6")]
+  .filter(h => !h.closest("button")).map(h => Number(h.tagName[1]));
+function assertNoSkips(levels, where) {
+  assert.equal(levels[0], 1, `${where} doesn't open on its h1`);
+  levels.forEach((l, i) => { if (i) assert.ok(l <= levels[i - 1] + 1, `${where} jumps h${levels[i - 1]} → h${l}`); });
+}
+
+test("W60: every wizard step's headings go down one level at a time, its sentence ends as one, and no card reads pressed=null", () => {
+  const writeIn = D.archetypes.find(a => a.writeIn).id;
+  const app = draftOn(writeIn, "power-level");
+  const steps = app.window.eval("STEPS.length");
+  for (let i = 0; i < steps; i++) {
+    app.window.eval(`S.step=${i}; update();`);
+    const id = app.window.eval("STEPS[S.step].id");
+    assertNoSkips(outline(app.$("#main")), `step ${id}`);
+    const note = app.$(".step-note").textContent, label = app.window.eval("STEPS[S.step].label");
+    assert.match(note.slice(0, label.length + 1).trimEnd(), /[.?!…]$/, `step ${id}'s sentence runs into its note`);
+    assert.doesNotMatch(note, / - /, `step ${id} uses " - " for a dash`);
+    assert.doesNotMatch(note, /\b[a-z]+[A-Z]\w*\b/, `step ${id} shows a field name to the player`);
+    for (const b of app.$$("#main [aria-pressed]"))
+      assert.match(b.getAttribute("aria-pressed"), /^(true|false)$/, `step ${id}: ${b.outerHTML.slice(0, 60)}`);
+  }
+  // The picked card says so; the others say they aren't.
+  app.window.eval(`S.step=STEPS.findIndex(s=>s.id==="power-level"); update();`);
+  assert.deepEqual(app.$$("[data-pl]").filter(b => b.getAttribute("aria-pressed") === "true").map(b => b.dataset.pl), [D.powerLevels[0].id]);
+  app.window.eval(`S.step=STEPS.findIndex(s=>s.id==="archetype"); update();`);
+  assert.deepEqual(app.$$("[data-arch]").filter(b => b.getAttribute("aria-pressed") === "true").map(b => b.dataset.arch), [writeIn]);
+  assert.ok(app.$$("[data-wicls]").length && app.$$("[data-wicls]").every(b => b.getAttribute("aria-pressed") === "false"),
+    "with no classification picked, every card should read not pressed");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W60: every sheet tab's headings go down one level at a time", () => {
+  const app = openSheet(writtenInCharacter(), "main");
+  for (const sec of ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"]) {
+    app.click(`[data-sec="${sec}"]`);
+    assertNoSkips(outline(app.$("#main")), `the ${sec} tab`);
+  }
+  assert.deepEqual(app.errors, []);
+});
+
+test("W60: the window's title names the character on the sheet, and lets go of it at Home", () => {
+  const doc = () => app.window.document;
+  const app = openSheet(lockedCharacter(), "main");
+  assert.equal(doc().title, "Test Subject — Shadows");
+  app.click("[data-home]");
+  assert.equal(doc().title, "Shadows — Character Intake", "Home kept the last character's name");
+  const blank = lockedCharacter(); blank.identity.name = "   ";
+  const unnamed = openSheet(blank, "main");
+  assert.equal(unnamed.window.document.title, "Unnamed — Shadows");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W60: placeholders take a token colour at full strength, so the contrast guard checks them", () => {
+  const rule = /::placeholder\{([^}]*)\}/.exec(wizCss());
+  assert.ok(rule, "no ::placeholder rule: the browser's grey is 3.8:1 on the ground");
+  assert.match(rule[1], /color\s*:\s*var\(--[\w-]+\)/, "a placeholder colour that isn't a token escapes the contrast guard");
+  assert.match(rule[1], /opacity\s*:\s*1\b/, "Firefox fades placeholders unless opacity is 1");
 });

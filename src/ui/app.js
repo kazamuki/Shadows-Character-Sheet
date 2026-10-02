@@ -19,6 +19,10 @@ const APP_VERSION = "0.36.0";
 // sticky header rather than inside the scrolling content).
 function renderTopChrome(){
   const ctx=$("brandctx"), nav=$("topnav"), act=$("hdractions");
+  // The window's title names the character on the sheet (W60). It's also the
+  // file name a browser suggests when the sheet is printed to PDF.
+  const name = S.ch && String(S.ch.identity.name||"").trim();
+  document.title = S.screen==="sheet" ? `${name||"Unnamed"} — Shadows` : "Shadows — Character Intake";
   if (!ctx || !nav) return;
   if (S.screen==="sheet"){
     ctx.textContent = (S.ch && S.ch.identity.name) ? S.ch.identity.name : "Unnamed";
