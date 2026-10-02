@@ -37,13 +37,19 @@ does more than show them.
 ### The sheet at the table (from the design critique)
 
 W45–W46 are what's left of the 2026-09-30 design critique (score
-28/40, snapshot in `.impeccable/critique/`) after its combat-table finding,
+27/40, snapshot in `.impeccable/critique/`) after its combat-table finding,
 W43 (tap targets and small text, 0.32.1), W42 (Health verbs on Main, 0.33.0)
-and W44 (the wizard on a phone, 0.35.1) shipped. All are **player-facing
-layout or behaviour**, so they're the *Rule or shape* tier ("propose before
-building"). None touches a rule. Measurements are from a 375px viewport; the
-Main tab was seen running, the other tabs were read from `DESIGN.md` and the
-code.
+and W44 (the wizard on a phone, 0.35.1) shipped. W45 and W46 are
+**player-facing layout or behaviour**, so they're the *Rule or shape* tier
+("propose before building"). None touches a rule.
+
+**Re-checked 2026-10-01 (critique re-run, 29/40)** against 0.35.1, after the
+Character tab (158), the Raise modals (159), the pinned vitals panel (160) and
+W44 (161). Every tab was run live at 375px and on a wide screen, and focus was
+tested with real key presses. W45–W47 all still stand. W45 and W47 turned out
+broader than first written and are reworded below. W57–W60 are new from the
+same run. Ken's order: the lock flow (W46 with W57) first; W45's shape for
+Main on a phone is left open.
 
 Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
 when built, checked against the code rather than guessed. Since W43, controls
@@ -51,15 +57,27 @@ are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
 or on text under 11px, so a new control inherits the floor rather than
 re-arguing it.
 
-**W45 — Main repeats identity before the first number.** *Claude · 🔎 · critique P2*
-On a phone the name appears in the header and again in the hero, with a "LIVE
-SHEET" eyebrow, the barcode and TAG, and the archetype line: about 190px before
-any number. *The fix:* the name once, in the header; the hero keeps TAG and
-archetype. Same pass: on a phone the stat grid comes before weapons and armour,
-though the code comments say combat leads. A veteran mid-fight has to scroll past
-all of Stats to reach their weapon. *Open:* does Main become Health, Pain,
-armour and weapons, with stats on their own tab? That's an information-architecture
-call for Ken. The Çredits card sits alone in its grid row; go three across or span it.
+**W45 — On a phone, every tab spends a third of the screen before its content.** *Claude · 🔎 · critique P2, widened 2026-10-01*
+*Main:* below the 94px header come a "LIVE SHEET" eyebrow, the name again as
+the hero's h1, the barcode and TAG, and the archetype line. That's 213px
+before the HP number, and 357px before the first card with a long name that
+wraps to three lines. Stats still come before weapons and armour on a phone:
+`.main-stats` starts at about 825px and `.main-combat` at about 1600px (the
+grid stacks at ≤900px, `shadows.css`), so a veteran mid-fight scrolls past
+all of Stats to reach their weapon. *Every other tab:* the eyebrow plus a
+vitals bar of 8 pills wrapping to 3 rows put each tab's title at 335px.
+*Character (158):* its sticky jump bar wraps 7 chips to 3 rows, 161px, so
+with the header 31% of the screen stays pinned while reading. The Çredits
+card still sits alone in its grid row, now because the W42 verbs row splits
+the grid; go three across or span it.
+*The fix:* the name once, in the header (the hero keeps TAG and archetype);
+combat before stats on a phone; a one-row vitals bar and no eyebrow on the
+other tabs; Character's jump bar one row that scrolls sideways, as the header
+tabs do. *Open, Ken's call:* does Main on a phone become Health, Pain, the
+verbs, weapons and armour, with stats moving to Skills where checks are
+rolled? And once the panel is pinned on a wide screen, should Main's vitals
+cards slim down? (Decision 160 rejected *hiding* the panel, not slimming the
+cards.)
 *Harden.* The header already cuts a long name with an ellipsis on a phone and
 a portrait tablet (`phone-check` shows it), so if the hero drops the name, a
 long name is never shown whole anywhere. Keep one place where it wraps
@@ -72,12 +90,18 @@ right in all of them.
 Locking is the best emotional beat in the product and it becomes the sheet with
 an immediate export. Ken picked a sub-second NYTE City beat, for instance the
 TAG barcode drawing in. *To respect:* short, state-driven, off under
-`prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). The
-detector also flagged a zero-offset cyan glow and a striped gradient. Check
-those against DESIGN.md when this is picked up, and `sheet.js:1726`'s `.76rem`,
-which is off the type ramp. (Its infinite pulse on `.admin-banner .dot` was
-fixed with W43: it stops under reduced motion, and a test now holds every
-animation to that.)
+`prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). Build
+it with W57, so the beat rewards a lock the player confirmed rather than
+replacing the confirmation.
+*Checked 2026-10-01:* after Lock & Export, `document.getAnimations()` is
+empty, there's no toast, and focus falls to `<body>`; the beat should leave
+focus somewhere sensible (the sheet's heading). The detector's zero-offset
+cyan glow is `.card.selected`'s ring and its striped gradient is the Massive
+hatching; DESIGN.md sanctions both, so they're closed. `.76rem` is off the
+type ramp at `sheet.js:1811` (an inline style; it was `:1726`) and in about
+nine rules in `shadows.css`, so it's a ramp question, not one line. (The
+infinite pulse on `.admin-banner .dot` stops under reduced motion since W43,
+and a test holds every animation to that.)
 *Harden.* The lock handler (`wizard.js`, `[data-lock]`) saves, renders the
 sheet and calls `exportChar()` in the same click. The beat must run alongside
 that, never in front of it: a download started from a timer after the
@@ -86,16 +110,74 @@ what keeps the character safe. A TAGless character has no barcode, so the
 beat needs a version for "Off grid". It plays on the lock and never again: not
 on a reload, a theme switch or a re-render of a sheet that's already locked.
 
-**W47 — A keyboard tap on Trackers loses its place.** *Claude · 🔎 · found building W42*
-Every `commit()` re-renders `#main`, which replaces the button that was
+**W47 — A keyboard press loses its place almost everywhere off Main.** *Claude · 🔎 · found building W42, widened 2026-10-01*
+A commit or `update()` re-renders, which replaces the button that was
 pressed, so focus falls to `<body>`: press Enter on Trackers' Hurt 1 and the
-next Enter does nothing, and Tab starts again from the top. The vitals
-popover already puts focus back (`refreshPopover`), and Main's W42 row does
-too (Decision 151). Trackers' stepper, SAN, LUCK and the recovery panels
-don't. *The fix:* one rule in `renderMain` rather than a patch per control:
-note the focused element's `data-*` key before the render and focus its twin
-after, falling back to somewhere harmless, never to a control that changes
-something (W42 found Heal 1 handing Enter to Hurt 1).
+next Enter does nothing, and Tab starts again from the top. Tested with real
+key presses on 0.35.1, focus is lost after: every Trackers commit (Hurt and
+Heal, SAN, LUCK, condition quick-add, Rest); Progression's Grant IP; the
+flyout's Pin and Unpin (`setVitalsPinned`, `app.js`); **Raise in a Raise
+modal** (159), whose `refresh()` rebuilds the results, so focus even leaves
+the dialog; and every wizard stepper and the Custom classification cards.
+Main's W42 row keeps focus (Decision 151), and so does the popover
+(`refreshPopover`, `shared.js`), except that a control the press disables
+(LUCK Regain reaching 4/4) has no fallback. Esc from a Raise modal returns
+focus correctly.
+*The fix:* one rule rather than a patch per control, applied in `renderMain`,
+the modal's `refresh()` and `refreshPopover`: note the focused element's
+`data-*` key before the render and focus its twin after. If the twin is gone
+or disabled, fall back to somewhere harmless (the section, or the popover's
+trigger), never to a control that changes something (W42 found Heal 1
+handing Enter to Hurt 1). The lock's focus is W46's.
+
+**W57 — The lock asks nothing, and its warnings are hidden when it's pressed.** *Claude · 🔎 · critique P1, 2026-10-01 · Ken: build first, with W46*
+Lock & Export went through with 4 Stat Points, 21 Skill Points and 5 CP
+unspent: those are warnings, not errors, so nothing stops it, and the sheet
+has no unlock, only Admin free-edit. At 375px the sticky `.wiznav` is 156px
+tall and covers the issues list just as the Lock button comes into view.
+"Locking finalizes creation…" sits below the fold. *The fix:* a review beat
+before the commit that lists what's unspent and what the lock gives up, then
+the commit, then W46's beat. The export still fires in the same click as the
+commit (W46's *Harden*). Decision 141 has Lock add or update a roster entry
+"without asking". That ruling was about replacing a character, not about an
+unspent pool, so a confirmation sits beside it rather than reversing it, but
+the decision that builds this should say so.
+
+**W58 — The closed vitals flyout is still in the tab order.** *Claude · 🔎 · critique P2, 2026-10-01*
+`.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`
+(`shadows.css`), so its Close button and six vital buttons stay focusable:
+Tab walks into invisible controls on every sheet tab, and `aria-hidden`
+content that takes focus is an accessibility failure in itself. Opening it on
+the sheet leaves focus on the toggle; the wizard's branch in `app.js` moves
+it in. *The fix:* `inert` (or `visibility:hidden` after the slide) while
+closed, and move focus in on open and back to the toggle on close. Seen once
+and not confirmed: widening past the pin breakpoint left `aria-hidden` stale
+until the next render.
+
+**W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01*
+Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,
+the stepper helper): the Skills step has 36 buttons that all read "increase,
+button", and the value beside them isn't a live region, so a screen reader
+never hears the new number. *The fix:* name the target ("Raise BOD",
+"Lower Firearms") from the same data the row shows, and announce the value
+after a press, politely, once.
+
+**W60 — Small accessibility and copy fixes from the re-run.** *Claude · 🔎 · critique P2–P3, 2026-10-01 · Fix tier*
+None of these needs a proposal. Each is a named finding to fix in place.
+- Input placeholders render the browser's `#757575` on `--bg` at 3.8:1
+  (Trackers' "amount", "note (what for)", "±"); there's no `::placeholder`
+  rule. AA needs 4.5:1, in both themes.
+- The Custom classification cards render `aria-pressed="null"` before one is
+  picked (`wizard.js`, `cls&&cls.id===c.id`): coerce it with `!!`.
+- A step's label runs into its note with no full stop ("…assign your Base
+  Stats Explosions do not happen…", `stepHeader`), and step 4's label uses
+  " - " for a dash.
+- `document.title` stays "Shadows — Character Intake" on a locked sheet.
+- Heading levels skip: the wizard's h1 → h3, Trackers' h1 → h4.
+- `.cond .meter i` transitions `width`, a layout property; `transform:scaleX`
+  does the same without reflow.
+- Pin lives only in the flyout, and Main has no vitals toggle, so Pin can't
+  be found from Main.
 
 ### Beyond one sheet
 
@@ -290,7 +372,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W57.** Everything above is open; W38 has a plan,
+- **Next free number: W61.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for

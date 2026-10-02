@@ -131,7 +131,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160): LUCK 4, power ranks at 5 CP, the Character tab, raise modals and pinned vitals, live for Saturday 2026-10-03. W44, the wizard on a phone, is built for 0.35.1 (Decision 161) and not yet released; the critique's W45 and W46 are next. W45 was written before the Character tab (158) and the pinned panel (160) reshaped Main and the vitals, so re-run the critique on Main before building it.
+**The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160): LUCK 4, power ranks at 5 CP, the Character tab, raise modals and pinned vitals, live for Saturday 2026-10-03. W44, the wizard on a phone, is built for 0.35.1 (Decision 161) and not yet released; the critique was re-run on 0.35.1 (29/40) and W45–W47 still stand, reworded. Next is the lock flow: W57 (a review before the commit) with W46 (the beat), proposed before it's built. W45's shape for Main on a phone is Ken's open call.
 Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3). The wishlist: W29, W39, W54 and W55.
 
