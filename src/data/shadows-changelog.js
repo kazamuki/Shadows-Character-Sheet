@@ -13,7 +13,11 @@ window.SHADOWS_CHANGELOG = [
       "**Back and Continue no longer sit under the page footer,** and a jump on the Character Points step lands its heading in full view.",
       "**Spend every point before you lock.** Lock & Export waits until your Stat Points, Skill Points and CP are all spent, and the Review step lists what's left. You can still move between steps with points in hand. A point too small to buy anything never holds you up; Review just tells you it's there.",
       "**Locking a character prints its TAG.** When the sheet opens, the barcode draws in and the number takes a stamp, and a line at the bottom tells you the file you just got. It plays once, and not at all if your device asks for less motion.",
-      "**The keyboard keeps its place.** Press Enter on Hurt 1, a tab, a stepper, Raise or Pin, and the next Enter presses it again; Tab carries on from there instead of starting over at the top. When a press greys its button out (the last Stat Point, a Condition you now have, LUCK back to full), focus stays on that row or card instead of jumping to the button beside it. Undo in the toast lands on the tab's title."
+      "**The keyboard keeps its place.** Press Enter on Hurt 1, a tab, a stepper, Raise or Pin, and the next Enter presses it again; Tab carries on from there instead of starting over at the top. When a press greys its button out (the last Stat Point, a Condition you now have, LUCK back to full), focus stays on that row or card instead of jumping to the button beside it. Undo in the toast lands on the tab's title.",
+      "**Hints in empty boxes are easier to read,** in both themes, so \"amount\" and \"note (what for)\" no longer fade into the background.",
+      "**Printing a character to PDF suggests its name for the file,** and the browser tab shows whose sheet it is.",
+      "**Screen readers hear which card is picked** for Power Level, Archetype and a custom character's classification, and every page's headings now nest in order.",
+      "**Each step's instruction ends where it should,** instead of running into the note after it."
     ]
   },
   {
