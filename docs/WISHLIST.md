@@ -54,7 +54,8 @@ Main on a phone is left open.
 
 Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
 when built, checked against the code rather than guessed. W58 and W60 got
-theirs on 2026-10-01, against 0.36.0; W59 has none yet. Since W43, controls
+theirs on 2026-10-01, against 0.36.0. On 2026-10-02 W45's was redone and W58's
+re-run, live in Chromium, against 0.36.0. W59 has none yet. Since W43, controls
 are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
 or on text under 11px, so a new control inherits the floor rather than
 re-arguing it.
@@ -81,13 +82,57 @@ rolled? And once the panel is pinned on a wide screen, should Main's vitals
 cards slim down? (Decision 160 rejected *hiding* the panel, not slimming the
 cards.) And Pin can't be found from Main today (W60): if Main keeps
 its vitals cards, where does Pin live there?
-*Harden.* The header already cuts a long name with an ellipsis on a phone and
-a portrait tablet (`phone-check` shows it), so if the hero drops the name, a
-long name is never shown whole anywhere. Keep one place where it wraps
-instead of cutting. The hero's TAG line has three states, not one: a TAG, a
-Ghost or Black TAG's label (Decision 146), and TAGless, which reads "Off grid"
-(148). An unnamed character's title is "Unnamed" today. Any move has to read
-right in all of them.
+*Harden (2026-10-02, run live in Chromium at 375×812 against 0.36.0, with a
+51-character name, a weapon, worn armour and one Condition).* What the fix
+has to survive:
+- **The name is Main's h1.** The header shows "SERAPHINE DELA…", 14
+  characters. The hero's h1 wraps to four lines (169px), so the HP card starts
+  at 399px, half the screen. That's the case for the fix, but dropping the
+  name from the hero means a long name is never shown whole on the sheet;
+  only the roster card on Home wraps it. Keep one place on the sheet where it
+  wraps. The hero's name is also Main's only h1, and W60's smoke test needs
+  every tab to open on one, while the header's name is a `div`. So the h1
+  moves or goes visually hidden. It isn't deleted.
+- **"No name" has three predicates.** `document.title` trims the name (W60),
+  but the header (`renderTopChrome`) and the hero (`renderShMain`) don't. A
+  name of spaces, from an import or Admin mode (`validate()` checks only at
+  the lock), gives a blank header and an empty h1 0px tall while the window
+  says "Unnamed". Confirmed live. Make it one display-name helper before the
+  name moves. On its own that's Fix tier, and it can ship ahead of W45.
+- **The TAG line changes height.** At 375px the intake line is 36px with a
+  TAG, 54px TAGless ("Off grid", 148) and 71px with a Ghost TAG's label
+  (146): the label and the 18-character number wrap separately. A hero
+  measured on a plain TAG comes up 35px short for a Ghost. Measure all three.
+- **Combat first only helps a character carrying something.** `.main-combat`
+  shows Weapons and Armor only when there are some. With neither, it opens on
+  the full combat-skill table, so combat-first puts a long table ahead of
+  Stats for nothing. Reorder the DOM, not CSS `order`: the grid stacks at
+  ≤900px, and `order` would leave Tab and a screen reader walking Stats first
+  while the eye sees Combat.
+- **One row of vitals doesn't fit.** The bar holds 7 to 10 pills plus the
+  toggle: Cond shows with any Condition, SFR when the archetype has one. At
+  375px, 9 of them need 737px against 343, so a one-row bar either scrolls
+  or loses pills. If it scrolls, the Vitals toggle is the last child and
+  starts off screen, and it's the only way to the flyout and to Pin (W60),
+  and W58's focus-return target. Put it first or outside the scroller. A pill
+  scrolled off screen also plays its W15 flash unseen.
+- **The jump bar is shared.** `jumpBarHtml` draws three: Character (sticky,
+  ending in Expand all), Loadout (not sticky, 5 chips on 2 rows) and wizard
+  step 7 (sticky, with a filter set to `flex:1 1 220px` and a CP total on
+  `margin-left:auto`). A sideways rule on `.jumpbar` changes all three, so
+  scope it with a modifier or decide all three. In a scroller,
+  `margin-left:auto` sends Expand all to the far end, off screen. A chip
+  reached by keyboard off screen has to scroll into view, as `showActiveTab`
+  does for the header's tabs. `jumpTo` already reads the bar's live height,
+  so a shorter bar needs nothing there.
+- **Where the space is.** The eyebrow comes from `sheetHeader`, which every tab
+  shares, Main included. It's 21px with its margin. The vitals bar is 178px.
+- **Scope the breakpoint.** The grid stacks at ≤900px, which covers the
+  portrait tablet, where play is expected (AQ10). Each change names the width
+  it starts at, and `phone-check` measures 390, 768 and 1024.
+- **Proof.** jsdom has no layout. Put "HP card within N px of the top", "the
+  vitals bar is one row" and "the jump bar is one row" into `phone-check` at
+  390px, mutation-tested against 0.36.0.
 
 **W58 — The closed vitals flyout is still in the tab order.** *Claude · 🔎 · critique P2, 2026-10-01*
 `.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`
@@ -137,6 +182,33 @@ whatever its scrim suggests, so don't make the page behind it inert the way
 jsdom doesn't implement it: the smoke suite can pin the attribute and where
 focus goes, but only real Chromium (`phone-check`'s) proves that Tab skips
 the closed panel. Mutation-test against 0.36.0.
+
+*Re-run 2026-10-02 in Chromium, against 0.36.0.* No flyout code has changed
+since the pass above, and all four points still hold. Three more:
+- **Confirmed in a real browser.** At 375px, Tab from the Skills tab's last
+  control lands on Close vitals at x=454, off a 375px screen. The closed
+  count depends on state: Close plus one row per vital is 7, 8 with a
+  Condition, plus Pin from 1280px. The guard asserts none, not a number.
+- **A pinned panel outlives the sheet.** With Pin on at 1400px, Home keeps
+  the last character's panel on screen beside it, and so does New character
+  in the wizard: `body.vitals-pinned` stays set, the panel's markup stays,
+  and `aria-hidden` says `"true"` over a painted panel. `renderHome` and the
+  wizard's branch of `renderMain` call `closeVitals`, which leaves both
+  alone, and never `renderDrawer`. The rows do nothing there (`S.ch` is
+  null), but they show another character's numbers and still take focus.
+  So the one setter also runs on leaving the sheet: empty the panel, drop
+  the class, then go inert. Run `inert` alone on that path and it freezes a
+  panel that's still painted.
+- **The 1280px sighting is likely an artifact.** It reproduced only with the
+  browser pane hidden. A page that isn't painting runs no rendering steps, so
+  the media query's change event never fired and `aria-hidden` stayed
+  `"false"` after the CSS had unpinned. A visible window fires the event on
+  its next frame. Test the crossing in `phone-check`'s Playwright, on a page
+  that renders.
+
+W45 meets W58 at the toggle: if W45 turns the bar into a sideways scroller,
+focus that returns to the toggle scrolls the bar to it. That's fine, as long
+as the toggle stays in the phone's bar.
 
 **W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01*
 Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,
