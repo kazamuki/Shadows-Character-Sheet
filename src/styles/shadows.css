@@ -906,15 +906,25 @@ details.pick.trait[open]>summary::before{content:"▾"}
 details.pick.trait>summary .th{font-size:.92rem; font-weight:600; color:var(--text)}
 details.pick.trait>summary .cost{margin-left:auto}
 
-/* Character (Decision 158): the archetype's traits, powers and vulnerabilities
-   a column each, and Advantages beside Disadvantages, from 1000px, like Skills.
-   One column below that. A column's own heading keeps its top margin off. */
-.arch-cols,.trait-cols{display:grid; grid-template-columns:1fr; column-gap:24px; align-items:start}
-@media (min-width:1000px){
-  .arch-cols.n2,.trait-cols{grid-template-columns:1fr 1fr}
-  .arch-cols.n3{grid-template-columns:repeat(3, minmax(0,1fr))}
-}
-.arch-col,.trait-col{min-width:0}
+/* Character (Decisions 158, 168). Every count here follows the width the page
+   has, not the screen's, so pinning the vitals panel takes its columns back.
+   The top band: what the archetype is beside its core mechanic, once both fit. */
+.arch-top{display:flex; flex-wrap:wrap; gap:0 32px; align-items:flex-start}
+.arch-top-part{flex:1 1 420px; min-width:0}
+/* The archetype's parts flow into ~340px columns. A column may break between
+   two cards, never inside one, and a heading stays with its first card, so
+   four traits share the width instead of standing in one column. */
+.arch-flow{columns:340px; column-gap:28px; margin-top:24px}
+.arch-part{padding-bottom:18px}
+.arch-part>.sect:first-child{margin-top:0; break-after:avoid}
+.arch-part .pick,.arch-part .ref{break-inside:avoid}
+.arch-part .ref{width:100%}
+/* Advantages beside Disadvantages from 1000px, like Skills; inside each, the
+   cards sit as many across as fit, and opening one doesn't stretch its row. */
+.trait-cols{display:grid; grid-template-columns:1fr; column-gap:24px; align-items:start}
+@media (min-width:1000px){ .trait-cols{grid-template-columns:1fr 1fr} }
+.trait-col{min-width:0}
+.trait-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(260px,100%),1fr)); column-gap:10px; align-items:start}
 .jump-end{margin-left:auto}
 .tab-links{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:18px}
 .tab-links .step-note{margin:0}

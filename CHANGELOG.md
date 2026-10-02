@@ -23,6 +23,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.36.1
+
+- **The Character tab uses a wide screen.** Your archetype sits beside its core mechanic,
+  your Baseline Traits, Specialization and Disciplines share the row instead of stacking
+  down one side, and Advantages and Disadvantages show two or three cards across. Pin
+  your vitals and the page makes room on its own. On a phone it reads as before.
+
 ## v0.36.0 — 2026-10-02
 
 - **Making a character on a phone opens on the step, not on your vitals.** The vitals used
