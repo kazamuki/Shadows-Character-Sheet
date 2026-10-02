@@ -13,3 +13,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# The design hook's per-session cache (local paths)
+.impeccable/hook.cache.json
