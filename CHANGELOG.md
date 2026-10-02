@@ -57,6 +57,18 @@ own in the footer.
   character's classification, and every page's headings now nest in order.
 - **Each step's instruction ends where it should,** instead of running into the note
   after it.
+- **On a phone, the sheet gets to the point.** Each tab's title is smaller, the vitals
+  across the top are one row you swipe sideways (with **Vitals** always at the end), and
+  Character's and Loadout's section buttons are one row too. On Main your weapons and
+  armor now come before your stats, at every width, so a fight starts where you need it.
+- **Pin your vitals from Main.** On a wide screen, Main has a **Pin vitals** button.
+- **The vitals panel stays out of the keyboard's way.** Closed, Tab no longer walks into
+  it. Opening it puts you on its Close button, and closing it brings you back. One Esc
+  closes one thing: a popover first, then the panel. Switching tabs closes it.
+- **A pinned vitals panel goes away with the sheet.** On a wide screen it used to stay
+  beside Home and a new character's steps, still showing the last character's numbers.
+- **A character whose name is only spaces reads "Unnamed"** in the header and at the
+  top of Main, instead of leaving both blank.
 
 ## v0.35.0 — 2026-10-01
 

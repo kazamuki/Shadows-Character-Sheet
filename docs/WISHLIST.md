@@ -36,107 +36,14 @@ does more than show them.
 
 ### The sheet at the table (from the design critique)
 
-W45 is what's left of the 2026-09-30 design critique (score
-27/40, snapshot in `.impeccable/critique/`) after its combat-table finding,
-W43 (tap targets and small text, 0.32.1), W42 (Health verbs on Main, 0.33.0),
-W44 (the wizard on a phone, 0.35.1), W46 (the lock's beat, 0.36.0) and W47
-(a keyboard press keeps its place, 0.36.0) shipped. W45 is **player-facing
-layout**, so it's the *Rule or shape* tier ("propose before building"). It
-touches no rule.
-
-**Re-checked 2026-10-01 (critique re-run, 29/40)** against 0.35.1, after the
-Character tab (158), the Raise modals (159), the pinned vitals panel (160) and
-W44 (161). Every tab was run live at 375px and on a wide screen, and focus was
-tested with real key presses. W45–W47 all still stand. W45 and W47 turned out
-broader than first written and are reworded below. W57–W60 are new from the
-same run; W57, W46 and W47 are built (Decisions 162–164). W45's shape for
-Main on a phone is left open.
-
-Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
-when built, checked against the code rather than guessed. W58 and W60 got
-theirs on 2026-10-01, against 0.36.0; W59 has none yet. Since W43, controls
-are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
-or on text under 11px, so a new control inherits the floor rather than
-re-arguing it.
-
-**W45 — On a phone, every tab spends a third of the screen before its content.** *Claude · 🔎 · critique P2, widened 2026-10-01*
-*Main:* below the 94px header come a "LIVE SHEET" eyebrow, the name again as
-the hero's h1, the barcode and TAG, and the archetype line. That's 213px
-before the HP number, and 357px before the first card with a long name that
-wraps to three lines. Stats still come before weapons and armour on a phone:
-`.main-stats` starts at about 825px and `.main-combat` at about 1600px (the
-grid stacks at ≤900px, `shadows.css`), so a veteran mid-fight scrolls past
-all of Stats to reach their weapon. *Every other tab:* the eyebrow plus a
-vitals bar of 8 pills wrapping to 3 rows put each tab's title at 335px.
-*Character (158):* its sticky jump bar wraps 7 chips to 3 rows, 161px, so
-with the header 31% of the screen stays pinned while reading. The Çredits
-card still sits alone in its grid row, now because the W42 verbs row splits
-the grid; go three across or span it.
-*The fix:* the name once, in the header (the hero keeps TAG and archetype);
-combat before stats on a phone; a one-row vitals bar and no eyebrow on the
-other tabs; Character's jump bar one row that scrolls sideways, as the header
-tabs do. *Open, Ken's call:* does Main on a phone become Health, Pain, the
-verbs, weapons and armour, with stats moving to Skills where checks are
-rolled? And once the panel is pinned on a wide screen, should Main's vitals
-cards slim down? (Decision 160 rejected *hiding* the panel, not slimming the
-cards.) And Pin can't be found from Main today (W60): if Main keeps
-its vitals cards, where does Pin live there?
-*Harden.* The header already cuts a long name with an ellipsis on a phone and
-a portrait tablet (`phone-check` shows it), so if the hero drops the name, a
-long name is never shown whole anywhere. Keep one place where it wraps
-instead of cutting. The hero's TAG line has three states, not one: a TAG, a
-Ghost or Black TAG's label (Decision 146), and TAGless, which reads "Off grid"
-(148). An unnamed character's title is "Unnamed" today. Any move has to read
-right in all of them.
-
-**W58 — The closed vitals flyout is still in the tab order.** *Claude · 🔎 · critique P2, 2026-10-01*
-`.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`
-(`shadows.css`), so its Close button and six vital buttons stay focusable:
-Tab walks into invisible controls on every sheet tab, and `aria-hidden`
-content that takes focus is an accessibility failure in itself. Opening it on
-the sheet leaves focus on the toggle; the wizard's branch in `app.js` moves
-it in. *The fix:* `inert` (or `visibility:hidden` after the slide) while
-closed, and move focus in on open and back to the toggle on close. Seen once
-and not confirmed: widening past the pin breakpoint left `aria-hidden` stale
-until the next render.
-*Harden (2026-10-01, run in jsdom against 0.36.0).* Closed, the flyout holds
-seven focusable controls. Four things the fix has to survive:
-- **One predicate, one place.** Three paths set the open state by hand: the
-  toggle in `bindSheet` (`sheet.js`), `renderDrawer` and `closeVitals`
-  (`app.js`). `inert` added to two of them drifts from the third. Funnel them
-  through one setter that writes `open`, `aria-hidden`, `inert` and the scrim
-  together. **Pinned is not closed.** At 1280px and up a pinned panel is the
-  panel, so the predicate is `renderDrawer`'s own (`S.vitalsOpen || pinned &&
-  pinRoom()`), not `S.vitalsOpen`. That makes the 1280px `matchMedia`
-  listener load-bearing: a stale `aria-hidden` misleads a screen reader, but a
-  stale `inert` on a pinned panel blocks the mouse too. Test both directions
-  of the crossing with focus inside the panel.
-- **Move focus before going inert.** A focused control inside a subtree that
-  turns inert loses focus only at the browser's next frame, so a synchronous
-  check still sees it focused. `renderDrawer` is safe (it replaces the
-  panel's markup, so W47's `keepPlace` finds no live twin and falls back to
-  the toggle), but `closeVitals` and the toggle don't redraw: they must move
-  focus to the toggle themselves, then set `inert`.
-- **Esc closes one layer.** Today one Esc with a popover open from the
-  flyout closes both, the document's handler in `app.js` and the popover's in
-  `shared.js` each firing, and focus lands on the row inside the closed
-  flyout. With `inert` that becomes `<body>`. The flyout's Esc should stand
-  down while a popover (or a modal, which already guards its own) is open.
-  A hit modal opened from a flyout popover returns focus to a flyout row, so
-  the flyout must still be open when it closes.
-- **The toggle isn't always there.** The flyout stays open across a tab
-  switch, and Main has no toggle, so focus has nowhere to return to there.
-  Either a tab switch closes the flyout, or the fallback is the active header
-  tab. In the wizard, `closeVitals` already returns focus to the Vitals pill,
-  which is gone once the window is wide enough to show the rail.
-
-While open, Tab still walks out from under the scrim into the page. That
-stays: **the flyout does not trap focus** (Ken, 2026-10-01). It isn't a modal,
-whatever its scrim suggests, so don't make the page behind it inert the way
-`showModal()` does. `inert` is in every current browser, but
-jsdom doesn't implement it: the smoke suite can pin the attribute and where
-focus goes, but only real Chromium (`phone-check`'s) proves that Tab skips
-the closed panel. Mutation-test against 0.36.0.
+The 2026-09-30 design critique (27/40, snapshot in `.impeccable/critique/`)
+and its 2026-10-01 re-run (29/40) are mostly built: W43, W42, W44, W46, W47
+and W57, then W45 and W58 (Decisions 165 and 166). What's left is W59 and
+the last of W60. Since W43, controls are 44px on a touchscreen and
+`npm run phone-check` fails on anything smaller, or on text under 11px; since
+W45 it also fails on a vitals bar or a sheet's jump bar of two rows, and on a
+phone's Health card below 30% of the screen. A new control inherits those
+floors rather than re-arguing them.
 
 **W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01*
 Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,
@@ -147,21 +54,18 @@ never hears the new number. *The fix:* name the target ("Raise BOD",
 after a press, politely, once.
 
 **W60 — Small accessibility and copy fixes from the re-run.** *Claude · 🔎 · critique P2–P3, 2026-10-01 · mostly shipped in 0.36.0*
-Six of the eight shipped in 0.36.0 (`docs/log/shipped.md`): placeholders at
-`--dim`, the picked wizard card reads pressed, step sentences end as
+Seven of the eight shipped in 0.36.0 (`docs/log/shipped.md`). Pin from Main
+came with W45 (Decision 165). The other six: placeholders at `--dim`, the picked wizard card reads pressed, step sentences end as
 sentences (and step 7's note no longer says "maxBoost"), the window's title
 names the character, headings no longer skip a level, and the meter's
 transition, which never played, is gone. Each has a W60 smoke test. What's
-left:
+left is one:
 - `.76rem` is off the type ramp: an inline style at `sheet.js:1811` and about
   nine rules in `shadows.css`. A ramp question for a typeset pass, moved here
   from W46. *Harden.* Anything that steps down stays at or above 11px
   (`.7rem` is 11.2px; `phone-check` fails below 11), and the inline style
   should become a class first, since a ramp sweep of `shadows.css` won't find
   it.
-- Pin lives only in the flyout, and Main has no vitals toggle, so Pin can't
-  be found from Main. Not Fix tier: a new control on Main is layout, so it's
-  part of W45's open question.
 
 ### Beyond one sheet
 
