@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.36.1
+## v0.36.1 — 2026-10-02
 
 - **The Character tab uses a wide screen.** Your archetype sits beside its core mechanic,
   your Baseline Traits, Specialization and Disciplines share the row instead of stacking

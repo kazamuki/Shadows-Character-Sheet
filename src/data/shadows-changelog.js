@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.36.1",
-    "date": null,
+    "date": "2026-10-02",
     "intro": [],
     "items": [
       "**The Character tab uses a wide screen.** Your archetype sits beside its core mechanic, your Baseline Traits, Specialization and Disciplines share the row instead of stacking down one side, and Advantages and Disadvantages show two or three cards across. Pin your vitals and the page makes room on its own. On a phone it reads as before."

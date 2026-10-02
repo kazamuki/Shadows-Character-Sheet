@@ -132,7 +132,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.36.0** (data 0.28, schema 0.16), released 2026-10-02: W44, the wizard on a phone (161), spend every point before the lock (162, W57), the lock's beat (163, W46), a keyboard press keeping its place (164, W47), the sheet on a phone (165, W45), the flyout out of the tab order (166, W58), and seven of W60's eight small fixes. It went out ahead of W59, so 164's re-focus doesn't yet tell a screen reader the new number. Next: W59. W60's last item waits on a typeset pass.
+**The live site is v0.36.1** (data 0.28, schema 0.16), released 2026-10-02: the Character tab filling a wide screen (168), on top of v0.36.0's W44, the wizard on a phone (161), spend every point before the lock (162, W57), the lock's beat (163, W46), a keyboard press keeping its place (164, W47), the sheet on a phone (165, W45), the flyout out of the tab order (166, W58), and seven of W60's eight small fixes. It went out ahead of W59, so 164's re-focus doesn't yet tell a screen reader the new number. Next: W59. W60's last item waits on a typeset pass.
 Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3), and **W29's plan** (`plans/gm-mode.md`, GQ1–GQ14; Scott and Deighton review it before anything is built). The wishlist: W39, W54 and W55.
 
