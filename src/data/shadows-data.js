@@ -3164,7 +3164,7 @@ window.SHADOWS_DATA = {
     "ipeNote": "Track IP Enhancement (IPE) per stat/skill/advantage/power on the character sheet."
   },
   /* GEAR -- weapons, ammunition and armor, merged from the CRB v4 equipment
-     chapter (`docs/reference/crb/Gear.md`, mirrored 2026-09-04, re-confirmed
+     chapter (`private/crb/Gear.md`, mirrored 2026-09-04, re-confirmed
      2026-09-12). Batch "Weapons, Ammo & Armor" (2026-09). Same designer-
      fillable philosophy as skills/advantages: a new weapon or armor entry
      needs zero app changes.
@@ -3872,7 +3872,7 @@ window.SHADOWS_DATA = {
       "helpless": true, "counter": { "max": 3, "label": "Death Marks", "atMax": "Three Death Marks. You're dead, and your options are seriously limited." } }
   ],
 
-  /* MAGIC -- merged from the CRB v4 Magic chapter (docs/reference/crb/Magic.md),
+  /* MAGIC -- merged from the CRB v4 Magic chapter (private/crb/Magic.md),
      the archetype-INDEPENDENT half only (Decision 93). `domains` is the Glyph
      taxonomy; `spells` is the full Known-spell catalog (id + tier + domain +
      glyph + TN/TH/range/type/target/effect/duration/defending/overflow/tags);

@@ -134,7 +134,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 **The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160), live for Saturday 2026-10-03. **0.36.0 is built, not released:** W44, the wizard on a phone (161), spend every point before the lock (162, W57), the lock's beat (163, W46), a keyboard press keeping its place (164, W47), the sheet on a phone (165, W45), the flyout out of the tab order (166, W58), and seven of W60's eight small fixes. Next: W59 (its live region is what makes 164's re-focus tell a screen reader the new number), then release 0.36.0. W60's last item waits on a typeset pass.
 Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
-TQ1–TQ3). The wishlist: W29, W39, W54 and W55.
+TQ1–TQ3), and **W29's plan** (`plans/gm-mode.md`, GQ1–GQ14; Scott and Deighton review it before anything is built). The wishlist: W39, W54 and W55.
 
 **Waiting on others:**
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31, F33, F34 and F36 — plus

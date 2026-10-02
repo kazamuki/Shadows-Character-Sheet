@@ -11,6 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # The CRB mirror is a private submodule (Decision 167). Fetched on its
+      # own, at the commit this repo points at, with a read-only token that
+      # never becomes this job's git credential.
+      - name: Which private commit
+        id: private
+        run: echo "sha=$(git rev-parse HEAD:private)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          repository: kazamuki/Shadows-Private
+          ref: ${{ steps.private.outputs.sha }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: private
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
