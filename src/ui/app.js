@@ -83,16 +83,43 @@ function vitalsPinned(){ try{ return localStorage.getItem(PIN_KEY)==="pinned"; }
 function pinRoom(){ return !!(window.matchMedia && window.matchMedia(PIN_MEDIA).matches); }
 function setVitalsPinned(on){
   try{ localStorage.setItem(PIN_KEY, on?"pinned":"unpinned"); }catch(e){}
-  closePopover(false); closeVitals(); renderDrawer();
+  // Not closeVitals: the panel is redrawn first, so an Unpin's focus finds
+  // the bar's toggle once the bar is back.
+  closePopover(false); S.vitalsOpen=false; renderDrawer();
+}
+// W58: whether the panel is on screen, in one place. Open, or pinned with
+// room to pin, it's the panel; otherwise it's out of sight and inert, so Tab
+// can't walk into it. Pinned is not closed.
+const vitalsShown = () => !!S.vitalsOpen || (S.screen==="sheet" && !!S.ch && vitalsPinned() && pinRoom());
+// Where focus goes when the panel leaves: what opens it again, or failing
+// that (Main has no toggle; a wide wizard shows the rail instead of its
+// pill) the active tab or the step's title.
+function vitalsHandBack(){
+  const at = ["#main [data-vitals-toggle]", "#vitals [data-wiz-vitals]", "#topnav .tab.active", "#main h1"];
+  for (const s of at) if (takeFocus(document.querySelector(s), s==="#main h1")) return;
+}
+function syncVitals(){
+  const dr=$("vdrawer"), sc=$("vscrim"); if (!dr) return;
+  const shown=vitalsShown();
+  // Focus leaves before inert lands: a focused control in a subtree that
+  // turns inert only loses focus at the browser's next frame.
+  if (!shown && dr.contains(document.activeElement)) vitalsHandBack();
+  dr.classList.toggle("open", !!S.vitalsOpen);
+  dr.setAttribute("aria-hidden", shown?"false":"true");
+  dr.toggleAttribute("inert", !shown);
+  if (sc) sc.classList.toggle("open", !!S.vitalsOpen);
+}
+function openVitals(){
+  S.vitalsOpen=true; S.vitalsFrom=S.section;
+  syncVitals();
+  const x=$("vdrawer") && $("vdrawer").querySelector("[data-vitals-close]"); if (x) x.focus();
 }
 function closeVitals(){
   const was=S.vitalsOpen;
   S.vitalsOpen=false;
-  const dr=$("vdrawer"), sc=$("vscrim");
-  if (dr){ dr.classList.remove("open"); dr.setAttribute("aria-hidden","true"); }
-  if (sc) sc.classList.remove("open");
-  // The wizard's flyout hands focus back to the Vitals pill that opened it.
-  if (was && S.screen==="wizard"){ const t=document.querySelector("#vitals [data-wiz-vitals]"); if (t) t.focus(); }
+  syncVitals();
+  // A click on the scrim leaves focus nowhere; it goes back to the toggle.
+  if (was && (!document.activeElement || document.activeElement===document.body)) vitalsHandBack();
 }
 function renderDrawer(){
   const dr=$("vdrawer"), sc=$("vscrim");
@@ -104,10 +131,8 @@ function renderDrawer(){
     // focus to whatever opens it again.
     keepPlace(dr, ()=>{
       dr.innerHTML = vitalsPanelHtml(S.ch);
-      dr.classList.toggle("open", !!S.vitalsOpen);
-      dr.setAttribute("aria-hidden", S.vitalsOpen || (pinned && pinRoom()) ? "false" : "true");
+      syncVitals();
     }, ["#main [data-vitals-toggle]", "#main [data-vpop]"]);
-    if (sc) sc.classList.toggle("open", !!S.vitalsOpen);
     dr.querySelectorAll("[data-vitals-close]").forEach(b=>b.onclick=closeVitals);
     dr.querySelectorAll("[data-vitals-pin]").forEach(b=>b.onclick=()=>setVitalsPinned(!vitalsPinned()));
     dr.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop, "#vdrawer"));
@@ -117,8 +142,8 @@ function renderDrawer(){
     // Vitals pill (Decision 161). No pin: wide enough to pin, the rail shows.
     dr.innerHTML = `<div class="dhead"><h2>Vitals</h2>
       <button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>` + wizardRailHtml(S.ch);
-    dr.classList.add("open"); dr.setAttribute("aria-hidden","false");
-    if (sc){ sc.classList.add("open"); sc.onclick=closeVitals; }
+    syncVitals();
+    if (sc) sc.onclick=closeVitals;
     const x=dr.querySelector("[data-vitals-close]"); x.onclick=closeVitals; x.focus();
   } else {
     dr.innerHTML=""; closeVitals();
@@ -144,6 +169,9 @@ function renderMain(){
   if (S.screen==="home") return renderHome();
   if (S.screen==="sheet"){
     S.section = normSection(S.section);
+    // W58: the flyout is a look from the tab it opened on; a move to another
+    // tab closes it (Main has no toggle to hand focus back to).
+    if (S.vitalsOpen && S.vitalsFrom!==S.section) S.vitalsOpen=false;
     landedNow = S.landed || null; S.landed = null;     // W15: flash once
     issuedNow = !!S.issued; S.issued = false;          // W46: the TAG prints once
     const body = SHEET_RENDER[S.section] ? SHEET_RENDER[S.section]() : SHEET_RENDER.main();
@@ -327,6 +355,9 @@ function boot(){
     set();
     if (window.ResizeObserver) new ResizeObserver(set).observe(el);
   });
+  // The sheet's sideways rows (W45) re-check their fades when the window
+  // changes width.
+  window.addEventListener("resize", ()=>document.querySelectorAll("#main .scroll-row").forEach(tabRowFades));
   // A plain mouse wheel scrolls the tab row sideways, until it can't.
   if (nav){
     nav.addEventListener("scroll", ()=>tabRowFades(nav), { passive:true });
@@ -338,7 +369,13 @@ function boot(){
   }
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{
-    if (e.key==="Escape"){ const dr=$("vdrawer"); if (dr && dr.classList.contains("open")) closeVitals(); closeMenu(); }
+    // W58: Esc closes one layer. A modal or a popover handles its own Esc
+    // first (the popover's is on this same document, the modal's before it).
+    if (e.key==="Escape"){
+      const layer = e.defaultPrevented || popState || document.querySelector("dialog.modal[open]");
+      if (!layer && S.vitalsOpen) closeVitals();
+      closeMenu();
+    }
   });
   document.addEventListener("click", e=>{ const a=$("hdractions"); if (a && !a.contains(e.target)) closeMenu(); });
   // What's new opens from the home screen, the sheet's menu and the footer.

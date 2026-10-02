@@ -300,10 +300,10 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **29** *(Phase 3)* — Milestone enforcement: Minor duplicates blocked until all five have been selected once; Major prerequisites are mac...
 - **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll. → **superseded in part by 158**
 - **31** *(Phase 3.1)* — Iconography lives in shadows-icons.js (see §1).
-- **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35**
+- **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35 and 165**
 - **35** *(Phase 3.2)* — Full-width sheet on every tab. → **superseded in part by 160**
 - **36** *(Phase 3.2)* — Four-sphere stat layout on Main.
-- **37** *(Phase 3.2)* — Vitals flyout drawer. → **superseded in part by 160 and 161**
+- **37** *(Phase 3.2)* — Vitals flyout drawer. → **superseded in part by 160, 161 and 166**
 - **38** *(Phase 3.2)* — Sticky in-header navigation. → **superseded in part by 140**
 - **39** *(Phase 3.2)* — Header overflow menu.
 - **40** *(Phase 3.2)* — Collapsible page footer.
@@ -338,6 +338,8 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal. → **superseded in part by 160**
 - **160** *(Pinned vitals)* — From 1280px the vitals panel pins as a right-hand column on every tab, Main included; the header, page, footer and toast make room, the bar's pills go, and the panel's vitals open their popovers to the left. The pin is the browser's; narrower, it's ignored.
 - **151** *(Health verbs on Main — W42)* — Heal 1 · Hurt 1 · Take a hit as a full-width row after Pain in Main's card grid, the popover's own controls; at zero Main's Hurt 1 greys out and says to use Take a hit, which asks 054's WILL check. F36 opened.
+- **165** *(The sheet on a phone — W45)* — No "Live Sheet" eyebrow; below 640px the title and Main's name are smaller and still wrap; Combat before Stats in the page at every width (the left column when wide); the vitals bar and the sheet's jump bars are one sideways row with the toggle and Expand all outside; Çredits takes a row alone; Pin vitals on Main from 1280px. `phone-check` guards the rows and the fold.
+- **166** *(The flyout and focus — W58)* — One setter writes the flyout's open state, `aria-hidden`, `inert` and the scrim from open-or-pinned-with-room; focus moves in on open and back on close before it goes inert; Esc closes one layer; a tab switch closes it; leaving the sheet empties it. Still no focus trap.
 - **164** *(Keeping your place — W47)* — `keepPlace` wraps every redraw a press causes (`#main` on the same view, header, flyout, popover, pickers): focus goes to the twin by all its `data-*` attributes in the same root, else the card or row it sat in, else the root's title; never `<body>` or a neighbour; a tap is left alone.
 - **120** *(Weapon mods and rounds — W16)* — Schema 0.10: `weapons[i].mods` and `roundsSpent`. Single/Burst/Full Auto spend 1/3/10 (053) from a capacity read as its number + chambered round; Fire and Reload on Loadout and Main. Mods fill fixed slots, fit per data (`onlyFor`/`notFor`), add tags and damage; a sight's ACC is aimed, apart from Single's. F26 opened. → **superseded in part by 145**
 - **121** *(Equipment you carry — W17, W27)* — `equipment` (116, Gear's Equipment + Magic's Tools of the Trade) and schema-0.10 gear rows `{ id, qty, chargesUsed? }` or typed; stackable consumables with Use one, Talismans with charges and their spell; Nanomed/Speed Heal/Field Repair Kit take from what you carry in the same action. The browser's third catalog. → **superseded in part by 143**

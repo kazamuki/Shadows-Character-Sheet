@@ -17,7 +17,12 @@ import { buildHtml, ROOT } from "../tools/build.mjs";
  * `storage` seeds localStorage *before* the scripts run, so resume paths
  * (draft / active sheet) can be exercised.
  */
-export function boot({ storage = null } = {}) {
+// `width` gives the window a matchMedia that answers min-width queries for a
+// screen that wide (jsdom has none), and `resize(w)` crosses to another
+// width, firing the queries whose answer changed. Anything else matches
+// nothing, as before.
+export function boot({ storage = null, width = null } = {}) {
+  const screen = { width, queries: [] };
   const errors = [];
   const skipped = [];
   // jsdom has no layout, so scrollTo/scrollIntoView raise "Not implemented".
@@ -33,6 +38,13 @@ export function boot({ storage = null } = {}) {
     url: "https://shadows.test/",
     virtualConsole: vc,
     beforeParse(win) {
+      if (width != null) win.matchMedia = media => {
+        const min = /min-width:\s*(\d+)px/.exec(media), fns = [];
+        const q = { media, get matches() { return !!min && screen.width >= Number(min[1]); },
+          addEventListener: (t, f) => fns.push(f), addListener: f => fns.push(f), removeEventListener() {}, fns };
+        screen.queries.push(q);
+        return q;
+      };
       if (storage) for (const [k, v] of Object.entries(storage)) {
         win.localStorage.setItem(k, typeof v === "string" ? v : JSON.stringify(v));
       }
@@ -55,6 +67,11 @@ export function boot({ storage = null } = {}) {
       return el;
     },
     text: () => window.document.body.textContent,
+    resize(w) {
+      const was = screen.queries.map(q => q.matches);
+      screen.width = w;
+      screen.queries.forEach((q, i) => { if (q.matches !== was[i]) q.fns.forEach(f => f({ matches: q.matches, media: q.media })); });
+    },
   };
 }
 

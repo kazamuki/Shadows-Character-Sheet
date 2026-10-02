@@ -515,8 +515,8 @@ test("raising a free advantage's rank does not wipe the picks already made", () 
 
 // ── Conditions (Decision 95) ──────────────────────────────────────────
 
-function openSheet(ch, section) {
-  const app = boot({ storage: { "shadows.active.v1": { ch, section } } });
+function openSheet(ch, section, opts = {}) {
+  const app = boot({ storage: { "shadows.active.v1": { ch, section } }, ...opts });
   const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
   open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   app.click(`[data-sec="${section}"]`);
@@ -2580,6 +2580,109 @@ test("W58: a pinned panel goes with the sheet, to Home and on into the wizard", 
   app.click("#btn-new");
   assert.ok(!body.classList.contains("vitals-pinned") && !drawer().innerHTML, "the wizard kept the pinned panel");
   assert.equal(app.window.localStorage.getItem("shadows.ui.vitalsPinned"), "pinned", "leaving the sheet forgot the pin");
+  assert.deepEqual(app.errors, []);
+});
+
+// W58: the closed flyout is inert, so Tab can't walk into controls nobody
+// can see. jsdom doesn't implement inert, so these pin the attribute and
+// where focus goes; real Chromium is what proves Tab skips it.
+const esc = app => (app.window.document.activeElement || app.window.document.body)
+  .dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+
+test("W58: closed, the flyout is inert on every tab; open, focus goes in; closed again, it comes back to the toggle", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const drawer = () => app.$("#vdrawer");
+  for (const sec of ["main", "skills", "character", "trackers", "loadout"]) {
+    app.click(`[data-sec="${sec}"]`);
+    assert.ok(drawer().hasAttribute("inert"), `the closed flyout takes focus on ${sec}`);
+    assert.equal(drawer().getAttribute("aria-hidden"), "true");
+  }
+  app.click('[data-sec="skills"]');
+  app.click("#main [data-vitals-toggle]");
+  assert.ok(!drawer().hasAttribute("inert") && drawer().classList.contains("open"), "the toggle didn't open it");
+  assert.ok(focused(app).matches("#vdrawer [data-vitals-close]"), "opening left focus behind on the toggle");
+  app.click("#vdrawer [data-vitals-close]");
+  assert.ok(drawer().hasAttribute("inert"), "closed, it isn't inert");
+  assert.ok(focused(app).matches("#main [data-vitals-toggle]"), "closing didn't hand focus back to the toggle");
+  app.click("#main [data-vitals-toggle]");
+  app.click("#vscrim");
+  assert.ok(drawer().hasAttribute("inert") && focused(app).matches("#main [data-vitals-toggle]"), "the scrim left focus nowhere");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W58: Esc closes one layer, and a move to another tab closes the flyout", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const drawer = () => app.$("#vdrawer");
+  app.click("#main [data-vitals-toggle]");
+  app.click('#vdrawer [data-vpop="luck"]');
+  assert.ok(!app.$("#vpop").hidden, "the flyout's LUCK didn't open its popover");
+  esc(app);
+  assert.ok(app.$("#vpop").hidden, "Esc didn't close the popover");
+  assert.ok(drawer().classList.contains("open") && !drawer().hasAttribute("inert"), "one Esc closed the flyout under the popover too");
+  assert.ok(focused(app).matches('#vdrawer [data-vpop="luck"]'), "focus didn't go back to the row that opened the popover");
+  esc(app);
+  assert.ok(drawer().hasAttribute("inert") && focused(app).matches("#main [data-vitals-toggle]"), "the second Esc didn't close the flyout");
+
+  app.click("#main [data-vitals-toggle]");
+  app.click('[data-sec="main"]');
+  assert.ok(!drawer().classList.contains("open") && drawer().hasAttribute("inert"), "the flyout followed the player to Main");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W58: pinned with room is not closed, and crossing 1280px with focus in the panel hands it to the toggle", () => {
+  const app = openSheet(lockedCharacter(), "skills", { width: 1400 });
+  const drawer = () => app.$("#vdrawer");
+  app.click("#main [data-vitals-toggle]");
+  app.click("#vdrawer [data-vitals-pin]");
+  assert.ok(!drawer().hasAttribute("inert") && drawer().getAttribute("aria-hidden") === "false", "the pinned panel is inert");
+  app.$('#vdrawer [data-vpop="hp"]').focus();
+  app.resize(1000);
+  assert.ok(drawer().hasAttribute("inert"), "narrower than the pin, the panel isn't inert");
+  assert.ok(focused(app).matches("#main [data-vitals-toggle]"), "focus stayed in the panel as it left");
+  app.resize(1400);
+  assert.ok(!drawer().hasAttribute("inert") && drawer().getAttribute("aria-hidden") === "false", "back past 1280px the pinned panel is still inert");
+  assert.deepEqual(app.errors, []);
+});
+
+// W45: on a phone every tab spent a third of the screen before its content.
+// jsdom has no layout, so these pin the structure; `npm run phone-check`
+// measures the rows and the fold in real Chromium.
+test("W45: Main puts combat before Stats, and no sheet tab carries the Live Sheet eyebrow", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const grid = [...app.$("#main .main-grid").children].map(e => e.className);
+  assert.deepEqual(grid, ["main-combat", "main-stats"], "Stats come before the weapon on a phone");
+  for (const sec of ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"]) {
+    app.click(`[data-sec="${sec}"]`);
+    assert.ok(!app.$("#main .eyebrow"), `the ${sec} tab still opens on an eyebrow`);
+  }
+  assert.deepEqual(app.errors, []);
+});
+
+test("W45: the vitals bar and the sheet's jump bars are one row each, with what rides with them outside the scroller", () => {
+  const ch = lockedCharacter(); ch.advantages.push({ id: "danger-sense", rank: 1, notes: "" });
+  const app = openSheet(ch, "skills");
+  const row = app.$("#main .vbar > .vbar-row.scroll-row");
+  assert.ok(row && row.querySelector('[data-vpop="hp"]'), "the vitals bar's pills aren't in a sideways row");
+  assert.ok(app.$("#main .vbar > [data-vitals-toggle]") && !row.querySelector("[data-vitals-toggle]"),
+    "the Vitals toggle scrolls away with the pills");
+  app.click('[data-sec="character"]');
+  assert.ok(app.$("#main .jumpbar.row > .jump-row.scroll-row [data-jump]"), "Character's jump bar isn't one row");
+  assert.ok(app.$("#main .jumpbar.row > [data-traits-all]"), "Expand all scrolls away with the chips");
+  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  assert.ok(app.$("#main .jumpbar.row .jump-row [data-jump]"), "Loadout's jump bar isn't one row");
+  // Step 7's bar keeps its filter and wraps, as before.
+  const wiz = arcanistOnCP();
+  assert.ok(wiz.$("#main .jumpbar.sticky [data-jumpfilter]") && !wiz.$("#main .jumpbar.row"), "step 7's bar changed");
+  assert.deepEqual([...app.errors, ...wiz.errors], []);
+});
+
+test("W45: Çredits alone takes its row, and Pin is reachable from Main", () => {
+  const app = openSheet(lockedCharacter(), "main", { width: 1400 });   // Pin shows from 1280px
+  assert.ok(app.$("#main .cond.cred.alone"), "Çredits doesn't know it's alone on its row");
+  app.click("[data-vitals-pin-main]");
+  assert.ok(app.window.document.body.classList.contains("vitals-pinned"), "Pin from Main didn't pin");
+  assert.equal(focused(app), app.$("#vdrawer [data-vitals-pin]"), "focus didn't follow the panel to Unpin");
+  assert.equal(focused(app).textContent, "Unpin");
   assert.deepEqual(app.errors, []);
 });
 
