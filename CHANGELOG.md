@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.36.0
+## v0.36.0 — 2026-10-02
 
 - **Making a character on a phone opens on the step, not on your vitals.** The vitals used
   to fill the screen above everything else. Now one line under the header shows what
