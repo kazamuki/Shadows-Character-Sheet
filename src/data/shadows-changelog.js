@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.36.0",
-    "date": null,
+    "date": "2026-10-02",
     "intro": [],
     "items": [
       "**Making a character on a phone opens on the step, not on your vitals.** The vitals used to fill the screen above everything else. Now one line under the header shows what you have left to spend (Stat Points, Skill Points and CP), and **Vitals** opens the full readout over the page. On the Character Points step, whose bar already counts your CP, the line scrolls away.",
