@@ -396,9 +396,19 @@ aside.vitals:empty{display:none}
 .hl.landed, .hl-mini .seg.landed, .cond.painup, .vpill.painup, .pick.painup{animation:landed .7s ease-out}
 .cond.painup, .vpill.painup, .pick.painup{animation-iteration-count:2}
 .cond.struck .big, .vpill.struck .vv, .big.struck{animation:struck .7s ease-out}
+/* W46 (Decision 163) — a lock prints the TAG: the bars wipe in left to right,
+   then the number (and a Ghost TAG's or Off grid's label) takes one stamp
+   that fades back to rest. Once, on the render after the lock; under a second. */
+@keyframes tagPrint{from{clip-path:inset(0 100% 0 0)} to{clip-path:inset(0 0 0 0)}}
+@keyframes tagStamp{0%{color:var(--cyan); text-shadow:0 0 10px currentColor} 100%{}}
+.intake.issued .intake-bars{animation:tagPrint .5s cubic-bezier(.16,1,.3,1)}
+.intake.issued .intake-no, .intake.issued .intake-label{animation:tagStamp .35s ease-out .4s}
+.intake.issued .intake-label{animation-name:tagStampLabel}
+@keyframes tagStampLabel{0%{text-shadow:0 0 10px currentColor} 100%{}}
 @media (prefers-reduced-motion: reduce){
   .hl.landed, .hl-mini .seg.landed, .cond.painup, .vpill.painup, .pick.painup,
-  .cond.struck .big, .vpill.struck .vv, .big.struck{animation:none}
+  .cond.struck .big, .vpill.struck .vv, .big.struck,
+  .intake.issued .intake-bars, .intake.issued .intake-no, .intake.issued .intake-label{animation:none}
 }
 /* Decision 99 — the Take a hit panel on Trackers */
 .hitpanel{background:var(--panel); border:1px solid var(--violet); border-radius:8px; padding:14px 16px; margin:4px 0 16px}

@@ -41,6 +41,9 @@ own in the footer.
   Points and CP are all spent, and the Review step lists what's left. You can still move
   between steps with points in hand. A point too small to buy anything never holds you up;
   Review just tells you it's there.
+- **Locking a character prints its TAG.** When the sheet opens, the barcode draws in and
+  the number takes a stamp, and a line at the bottom tells you the file you just got.
+  It plays once, and not at all if your device asks for less motion.
 
 ## v0.35.0 — 2026-10-01
 

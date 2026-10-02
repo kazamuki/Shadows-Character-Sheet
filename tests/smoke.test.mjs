@@ -2725,3 +2725,24 @@ test("Decision 162: Review's Lock waits until every point that can buy something
   assert.match(app.$(".wiznav-why").textContent, /to fix first/, "the nav doesn't say what's holding the lock");
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 163: a lock prints the TAG once, beside the export, and says where the file went", () => {
+  for (const tagless of [false, true]) {
+    const half = named(tagless ? "Wren" : "Rook Vance"); half.creation.locked = false; half.identity.tagless = tagless;
+    const app = boot({ storage: { "shadows.draft.v1": { ch: half, step: 7, maxReached: 7 } } });
+    const got = withDownloads(app);
+    card(app, half.identity.name).querySelector("[data-open]").click();
+    app.window.eval("S.ch.creation.rolls.credits = 5; update();");
+    app.click("[data-lock]");
+    assert.equal(got.length, 1, "the export left the lock's click");
+    assert.ok(app.$("#main .intake.issued"), "the sheet after a lock didn't print the TAG");
+    const file = tagless ? "Wren.shadows.json" : "Rook_Vance.shadows.json";
+    const C = app.window.SHADOWS_DATA.appCopy, say = tagless ? C.lockIssuedTagless : C.lockIssued;
+    assert.equal(app.$("#undotoast").textContent.replace("×", "").trim(),
+      say.replace("{tag}", app.Engine.tagNumber(app.window.eval("S.ch"))).replace("{file}", file));
+    assert.equal(app.window.document.activeElement, app.$("#main h1"), "focus wasn't handed to the character");
+    app.window.eval("update();");
+    assert.equal(app.$("#main .intake.issued"), null, "the TAG printed again on a re-render");
+    assert.deepEqual(app.errors, []);
+  }
+});

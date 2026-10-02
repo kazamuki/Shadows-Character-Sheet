@@ -11,7 +11,8 @@ window.SHADOWS_CHANGELOG = [
       "**Your stats read — until you spend a Stat Point,** instead of a row of 1s you never chose.",
       "**Typing on a phone gets the room back.** While you're in a text box, the points line and Back and Continue stop sticking, so the keyboard doesn't box in what you're typing.",
       "**Back and Continue no longer sit under the page footer,** and a jump on the Character Points step lands its heading in full view.",
-      "**Spend every point before you lock.** Lock & Export waits until your Stat Points, Skill Points and CP are all spent, and the Review step lists what's left. You can still move between steps with points in hand. A point too small to buy anything never holds you up; Review just tells you it's there."
+      "**Spend every point before you lock.** Lock & Export waits until your Stat Points, Skill Points and CP are all spent, and the Review step lists what's left. You can still move between steps with points in hand. A point too small to buy anything never holds you up; Review just tells you it's there.",
+      "**Locking a character prints its TAG.** When the sheet opens, the barcode draws in and the number takes a stamp, and a line at the bottom tells you the file you just got. It plays once, and not at all if your device asks for less motion."
     ]
   },
   {
