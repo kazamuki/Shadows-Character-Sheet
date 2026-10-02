@@ -12,7 +12,9 @@
  *     test name is short, so an ellipsis means the header gave it no room;
  *   - controls smaller than a finger: under 24px anywhere (WCAG 2.2, 2.5.8),
  *     under 44px on the touch phone, counting an invisible ::after hit area;
- *   - text under 11px (W43). Collapsed <details> are opened to look inside.
+ *   - text under 11px (W43). Collapsed <details> are opened to look inside;
+ *   - the fold (W45): the vitals bar and a sheet's jump bar on one row, and
+ *     on a phone Main's Health card within a share of the screen.
  *
  * Outside `npm test` on purpose: it needs a browser, and CI doesn't install
  * one. playwright-core (a devDependency) drives whichever Chromium is here:
@@ -35,6 +37,9 @@ import { loadEngine } from "../tests/harness.mjs";
 
 // The share of the screen's height the pinned header may take, once scrolled.
 const HEADER_MAX_SHARE = 0.2;
+// W45: on a phone, how far down Main's Health card may start, as a share of the screen's
+// height, so HP is read without scrolling past a heading block.
+const HP_MAX_SHARE = 0.3;
 const LONG = "a long name";
 const WIDTHS = [
   { name: "phone", width: 390, height: 844 },
@@ -107,20 +112,30 @@ try {
           if (fs < 11) tiny.add(`${label(el)} ${fs}px`);
         }
         shut.forEach(d => { d.open = false; });
+        // W45: the vitals bar and a sheet's jump bar are one row each, and
+        // Main's Health card starts near the top. Measured from the top.
+        window.scrollTo(0, 0);
+        const lines = sel => new Set([...document.querySelectorAll(sel)].filter(shown).map(e => Math.round(e.getBoundingClientRect().top))).size;
+        const hp = document.querySelector("#main .cond-grid");
+        const bars = { vbar: lines("#main .vbar .vpill"), jump: lines("#main .jumpbar .jump"),
+          hp: hp ? Math.round(hp.getBoundingClientRect().top) : null };
         window.scrollTo(0, document.documentElement.scrollHeight);
         const h = document.querySelector("header.top").getBoundingClientRect();
         const de = document.documentElement;
         const brand = document.querySelector("header.top .brand");
         return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth,
-          nameCut: brand.scrollWidth > brand.clientWidth, small: [...small], tiny: [...tiny] };
+          nameCut: brand.scrollWidth > brand.clientWidth, small: [...small], tiny: [...tiny], bars };
       }, w.touch ? 44 : 24);
       const share = m.header / w.height;
+      const b = m.bars, rowsOk = b.vbar <= 1 && b.jump <= 1, hpOk = b.hp == null || w.width >= 640 || b.hp <= w.height * HP_MAX_SHARE;
       rows.push({ width: w.name, screen, header: `${m.header}px (${Math.round(share * 100)}%)`,
         overflow: m.overflow ? `${m.overflow}px` : "none",
         name: screen === "home" ? "" : m.nameCut ? "cut" : "fits",
         targets: m.small.length ? m.small.join(", ") : "ok",
         text: m.tiny.length ? m.tiny.join(", ") : "ok",
-        ok: share <= HEADER_MAX_SHARE && m.overflow <= 0 && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
+        fold: [b.hp != null ? `HP ${b.hp}px (${Math.round(b.hp / w.height * 100)}%)` : "",
+          b.vbar > 1 ? `vitals ${b.vbar} rows` : "", b.jump > 1 ? `jump ${b.jump} rows` : ""].filter(Boolean).join(", ") || "ok",
+        ok: rowsOk && hpOk && share <= HEADER_MAX_SHARE && m.overflow <= 0 && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
     };
     const mustFit = screen => screen !== "home" && screen !== LONG;
     await page.goto(pathToFileURL(file).href);
@@ -144,7 +159,8 @@ try {
 }
 
 console.log(`Header budget: ${HEADER_MAX_SHARE * 100}% of the screen's height, pinned after scrolling. Overflow budget: none. On the sheet, the name should fit.`);
-console.log(`Controls: 24px or more, 44px on the touch phone. Text: 11px or more.\n`);
+console.log(`Controls: 24px or more, 44px on the touch phone. Text: 11px or more.`);
+console.log(`Fold: on a phone, Main's Health card within ${HP_MAX_SHARE * 100}% of the screen's height; the vitals bar and a sheet's jump bar one row.\n`);
 console.table(rows.map(r => ({ ...r, ok: r.ok ? "ok" : "OVER" })));
 const bad = rows.filter(r => !r.ok);
 const byWidth = [...new Set(bad.map(r => r.width))];

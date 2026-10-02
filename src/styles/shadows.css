@@ -127,6 +127,9 @@ nav.ledger{border-right:1px solid var(--frame); padding:20px 0 28px; background:
 main{padding:26px 30px 80px; max-width:920px; min-width:0}
 .eyebrow{font-family:var(--mono); font-size:.7rem; letter-spacing:.2em; text-transform:uppercase; color:var(--magenta-text); margin-bottom:4px}
 h1.step-title{font-family:var(--display); font-weight:600; font-size:1.7rem; letter-spacing:.04em; color:var(--text); margin-bottom:6px}
+/* W45: on a phone a sheet tab's title, and the name on Main, give the screen
+   back to what's under them. A long name still wraps whole. */
+@media (max-width:640px){ .app.sheet-mode h1.step-title{font-size:1.3rem; margin-bottom:4px} }
 .step-note{color:var(--dim); max-width:62ch; margin-bottom:22px}
 .step-note em{color:var(--text); font-style:normal}
 
@@ -722,7 +725,20 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 
 /* horizontal vitals bar — replaces the right rail on every tab except Main
    (Main carries the larger condition strip instead). Sits below the tab bar. */
-.vbar{display:flex; flex-wrap:wrap; gap:9px; margin:0 0 22px; padding-bottom:18px; border-bottom:1px solid var(--frame)}
+/* W45: one row. The pills scroll sideways inside .vbar-row; the toggle stays
+   outside it, always in view. */
+.vbar{display:flex; align-items:stretch; gap:9px; margin:0 0 22px; padding-bottom:18px; border-bottom:1px solid var(--frame)}
+.vbar-row{display:flex; gap:9px; flex:1 1 auto; min-width:0}
+.vbar-row > .vpill, .vbar > .vpill.toggle{flex:none}
+@media (max-width:640px){ .vbar{margin-bottom:14px; padding-bottom:12px} }
+/* A row that scrolls sideways (the vitals bar, a sheet's jump bar) fades on
+   the side with more, as the header's tabs do. The padding keeps a focus
+   ring from being clipped by the scroll box. */
+.scroll-row{overflow-x:auto; overflow-y:hidden; scrollbar-width:none; padding:3px 2px; margin:-3px -2px}
+.scroll-row::-webkit-scrollbar{display:none}
+.scroll-row.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
+.scroll-row.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px); mask-image:linear-gradient(90deg,transparent,#000 40px)}
+.scroll-row.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent); mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
 .vpill{display:flex; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--frame);
   border-radius:8px; padding:7px 13px}
 .vpill .vico{width:17px; height:17px; color:var(--violet-hi); flex:none}
@@ -761,6 +777,7 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .vpill.toggle{cursor:pointer; background:var(--panel-2)}
 .vpill.toggle:hover{border-color:var(--cyan)}
 .vpill.toggle .vk{color:var(--cyan)}
+.vpill.toggle .vv{font-size:.82rem}
 
 /* Vitals flyout — the creation rail's format, on demand, from any tab. */
 .vdrawer{position:fixed; top:0; right:0; height:100vh; width:300px; max-width:86vw; z-index:80;
@@ -909,7 +926,7 @@ details.pick.trait>summary .cost{margin-left:auto}
 details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 
 /* Main tab: condition strip + two-column command console (stats beside combat). */
-.main-grid{display:grid; grid-template-columns:minmax(260px,0.85fr) minmax(360px,1.15fr); gap:14px 30px; align-items:start}
+.main-grid{display:grid; grid-template-columns:minmax(360px,1.15fr) minmax(260px,0.85fr); gap:14px 30px; align-items:start}
 .main-grid .sect:first-child{margin-top:6px}
 /* Stats clustered into the four spheres — no labels, grouping carried by spacing. */
 .statgroups{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:10px 0 4px; align-items:start}
@@ -1097,3 +1114,17 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
   table.edit input, table.edit textarea{font-size:16px}
   input[type=text], input[type=search], input[type=number], input[type=date], select{min-height:44px}
 }
+
+/* W45: a sheet's jump bar is one row that scrolls sideways; what rides
+   with it (Expand all) stays outside, in view. The wizard's keeps wrapping. */
+.jumpbar.row{flex-wrap:nowrap}
+.jump-row{display:flex; gap:6px; flex:1 1 auto; min-width:0}
+.jump-row .jump, .jumpbar.row .jump-end{flex:none}
+.jumpbar.row .jump-end{margin-left:0}
+/* W45: in two columns, Çredits alone on its row takes the whole row. */
+.cond-grid{container-type:inline-size}
+@container (max-width:415px){ .cond-grid > .cond.alone{grid-column:1/-1} }
+/* W45: Pin, from Main, where there's no vitals bar: only on a screen wide
+   enough to pin (Decision 160), and only until it's pinned. */
+.main-pin{display:none}
+@media (min-width:1280px){ body:not(.vitals-pinned) .app.sheet-mode .main-pin{display:flex; justify-content:flex-end; margin:-4px 0 8px} }
