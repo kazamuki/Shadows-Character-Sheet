@@ -162,6 +162,64 @@ function migrateLegacySlots(){
   }
 }
 
+// ── Keeping your place (W47) ──────────────────────────────────────────
+// A press that re-renders replaces the button that was pressed, so focus
+// would fall to <body>: the next Enter does nothing and Tab starts over.
+// keepPlace() notes the focused control's data-* attributes, all of them
+// (Main's eight stat buttons share data-tip="stat"), and after `draw` focuses
+// its twin in the same root and nowhere else (the vitals keys are in #main
+// and the flyout both). A twin that's gone, greyed, hidden or inert falls
+// back to the card it sat in (PLACES), then to `fallbacks`: somewhere that
+// changes nothing, never the control beside it (W42: Heal 1 handed Enter to
+// Hurt 1). Focus outside `root`, on <body> after a tap, or put somewhere on
+// purpose by `draw` is left alone.
+const PLACES = ".trk, .alloc-row, .pick, details, tr, .sect";
+const attrSel = (name, v) => `[${name}="${String(v).replace(/["\\]/g, "\\$&")}"]`;
+function dataKey(el){
+  const a=[...el.attributes].filter(x=>x.name.startsWith("data-"));
+  return a.length ? a.map(x=>attrSel(x.name, x.value)).join("") : null;
+}
+function pathIn(root, el){
+  const p=[];
+  for (let e=el; e && e!==root; e=e.parentElement) p.unshift([...e.parentElement.children].indexOf(e));
+  return p;
+}
+function atPath(root, p){ let e=root; for (const i of p) e = e && e.children[i]; return e||null; }
+// Focus `el` if it can really take it. A place (a card, a row) is made
+// focusable for the purpose and shows the ring the keyboard expects.
+function takeFocus(el, place){
+  // A row laid out with display:contents (the wizard's .alloc-row) has no box
+  // to focus, so its first cell, the name, stands in for it.
+  if (place && el && el.isConnected && getComputedStyle(el).display==="contents") el=el.firstElementChild;
+  if (!el || !el.isConnected || el.disabled || el.closest("[hidden],[inert],[aria-hidden='true']")) return false;
+  const shut = el.closest("details:not([open])");
+  if (shut && shut!==el && !el.matches("details > summary")) return false;
+  // A button stays as it is; a card or a heading is made focusable, out of
+  // the Tab order, and shows the ring the keyboard expects.
+  if (place && el.tabIndex<0){ if (!el.hasAttribute("tabindex")) el.tabIndex=-1; el.classList.add("kept-place"); }
+  el.focus({ preventScroll:true });
+  return document.activeElement===el;
+}
+function keepPlace(root, draw, fallbacks=[]){
+  const f=document.activeElement;
+  if (!root || !f || f===root || !root.contains(f)){ draw(); return; }
+  const key=dataKey(f), place=f.closest(PLACES);
+  const where = place && place!==root && root.contains(place) ? { path: pathIn(root, place), tag: place.tagName } : null;
+  draw();
+  const now=document.activeElement;
+  if (now && now!==document.body && now.isConnected) return;
+  const twin = key && root.querySelector(key);
+  if (takeFocus(twin)) return;
+  const near = twin && twin.closest(PLACES);              // there but greyed: its own card
+  if (near && near!==root && root.contains(near) && takeFocus(near, true)) return;
+  const again = where && atPath(root, where.path);
+  if (again && again.tagName===where.tag && takeFocus(again, true)) return;
+  for (const fb of fallbacks){
+    const el = typeof fb==="function" ? fb() : document.querySelector(fb);
+    if (takeFocus(el, true)) return;
+  }
+}
+
 function update(rerenderMain=true){
   saveChar();
   if (rerenderMain){ renderMain(); sweepTip(); }
@@ -225,9 +283,19 @@ function undoToastEl(){
   if (el.parentNode!==host) host.appendChild(el);
   return el;
 }
+// W47: the toast's buttons go when it does, and it doesn't know where the
+// change was made, so focus that was on them lands on the page it belongs
+// to: an open dialog's heading, or the tab's first heading.
+function toastLanding(){
+  const m=document.getElementById("modal");
+  takeFocus(m && m.open ? m.querySelector("#modal-title") : document.querySelector("#main h1, #main h2, #main .sect"), true);
+}
 function hideUndoToast(){
   clearTimeout(toastTimer); toastTimer=null;
-  const el=document.getElementById("undotoast"); if (el){ el.hidden=true; el.innerHTML=""; }
+  const el=document.getElementById("undotoast"); if (!el) return;
+  const had=el.contains(document.activeElement);
+  el.hidden=true; el.innerHTML="";
+  if (had) toastLanding();
 }
 function showUndoToast(ch, entry, label, done){
   const el=undoToastEl();
@@ -242,7 +310,9 @@ function showUndoToast(ch, entry, label, done){
     const log=ch.audit||[];
     if (S.ch!==ch || !entry || log[log.length-1]!==entry){ hideUndoToast(); return; }
     const r=Engine.undoLastAction(ch); if (!r.ok){ hideUndoToast(); return; }
+    const had=el.contains(document.activeElement);
     update(); showUndoToast(ch, entry, label, true);
+    if (had && !el.contains(document.activeElement)) toastLanding();
   };
   const x=el.querySelector("[data-toastclose]"); if (x) x.onclick=hideUndoToast;
 }
@@ -371,11 +441,9 @@ function openPopover({ key, render, bind, scope="#main" }){
 function refreshPopover(){
   if (!popState) return;
   if (!popTrigger(popState.key, popState.scope)){ closePopover(false); return; }
-  const el=popEl(), f=document.activeElement;
-  const attr=f && el.contains(f) ? [...f.attributes].find(a=>a.name.startsWith("data-")) : null;
-  drawPopover(); placePopover();
-  const again=attr && el.querySelector(`[${attr.name}="${attr.value.replace(/"/g,'\\"')}"]`);
-  if (again) again.focus();
+  // A press the popover greys out (LUCK Regain at 4/4) stays in the popover.
+  const st=popState;
+  keepPlace(popEl(), ()=>{ drawPopover(); placePopover(); }, ["#vpop-title", ()=>popTrigger(st.key, st.scope)]);
 }
 function closePopover(returnFocus){
   const st=popState; if (!st) return;

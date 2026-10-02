@@ -2746,3 +2746,110 @@ test("Decision 163: a lock prints the TAG once, beside the export, and says wher
     assert.deepEqual(app.errors, []);
   }
 });
+
+// ── W47: a keyboard press keeps its place ────────────────────────────
+// Enter on a button is its click, and a browser focuses what the keyboard
+// is on, so a "press" here is focus, then click. After the re-render, focus
+// is on the pressed control's twin, or, where the press greyed or hid it, on
+// something nearby that changes nothing: never <body>, never the neighbour.
+const press = (app, sel) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.focus(); el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true })); };
+const focused = app => app.window.document.activeElement;
+
+test("W47: Trackers keeps the keyboard on the button pressed, and a chip that greys out hands it to its palette", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  press(app, '#main [data-dmg="1"]'); press(app, '#main [data-dmg="1"]');
+  assert.equal(activeChar(app).trackers.damage, 2, "the second Enter did nothing");
+  assert.equal(focused(app), app.$('#main [data-dmg="1"]'), "focus didn't stay on Hurt 1");
+
+  app.window.eval("S.condPalette=true; update();");
+  press(app, '#main [data-condquick="stunned"]');
+  assert.deepEqual(activeChar(app).trackers.conditions.map(c => c.id), ["stunned"]);
+  assert.ok(app.$('#main [data-condquick="stunned"]').disabled, "the chip should grey out once it's on");
+  assert.equal(focused(app), app.$("#main details.cond-add"), "focus didn't land on the palette");
+  assert.ok(!focused(app).matches("button"), "a greyed chip handed Enter to a control");
+
+  // A tap focuses nothing (Safari), and the rule leaves it that way.
+  focused(app).blur();
+  app.click('#main [data-dmg="1"]');
+  assert.equal(focused(app), app.window.document.body, "a tap was handed a focus it never had");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W47: a twin is matched on every data-* attribute, in the root the focus was in", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  // Main's stat buttons all start data-tip="stat"; only data-term tells them apart.
+  const cool = '#main [data-tip="stat"][data-term="COOL"]';
+  assert.ok(app.$(cool), "Main has no COOL stat button");
+  app.$(cool).focus(); app.window.eval("update();");
+  assert.equal(focused(app), app.$(cool), "focus went to another stat");
+
+  // The vitals keys are in #main and the flyout both, #main first: the
+  // flyout's stays in the flyout.
+  app.click('[data-sec="trackers"]');
+  app.click("#main [data-vitals-toggle]");
+  app.$('#vdrawer [data-vpop="hp"]').focus(); app.window.eval("update();");
+  assert.equal(focused(app), app.$('#vdrawer [data-vpop="hp"]'), "focus left the flyout for #main");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W47: Enter on a tab keeps the tab row's place, and Undo in the toast lands on the tab's title", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  press(app, '#topnav [data-sec="skills"]');
+  assert.equal(focused(app), app.$('#topnav [data-sec="skills"]'), "focus fell out of the tab row");
+
+  press(app, '#topnav [data-sec="trackers"]');
+  press(app, '#main [data-dmg="1"]');
+  press(app, "[data-toastundo]");
+  assert.equal(activeChar(app).trackers.damage, 0, "Undo didn't undo");
+  assert.equal(focused(app), app.$("#main h1"), "focus fell to <body> with the toast's buttons");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W47: the popover and the Raise modal keep focus inside them, even when the press greys the button", () => {
+  const ch = lockedCharacter();
+  ch.trackers.luck.spent = 1;
+  ch.progression.ip.earned = 60;
+  const app = openSheet(ch, "trackers");
+  app.click('#main [data-vpop="luck"]');
+  press(app, "#vpop [data-luckregain]");
+  assert.ok(app.$("#vpop [data-luckregain]").disabled, "Regain should grey out at full LUCK");
+  assert.equal(focused(app), app.$("#vpop-title"), "focus left the popover");
+
+  app.window.eval("closePopover(false);");
+  app.click('[data-sec="progression"]');
+  app.click('[data-raiseopen="stat"]');
+  press(app, '#modal [data-raise="stat|BOD"]');           // 50 of 60 IP: BOD greys out after
+  assert.equal(activeChar(app).stats.BOD.ipe, 1);
+  assert.ok(app.$('#modal [data-raise="stat|BOD"]').disabled);
+  assert.equal(focused(app), app.$('#modal [data-raise="stat|BOD"]').closest("tr"), "focus didn't land on BOD's row");
+  assert.ok(app.$("#modal").contains(focused(app)), "focus left the dialog");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W47: a wizard stepper keeps its place, and one that greys out lands on its row, never the − beside it", () => {
+  const app = draftOn("arcanist", "stats");
+  press(app, '[data-step="stat|BOD|1"]');
+  assert.equal(focused(app), app.$('[data-step="stat|BOD|1"]'), "focus didn't stay on BOD's +");
+
+  const ch = draft(app);
+  Object.assign(ch.stats, { BOD: { base: 6, ipe: 0 }, REF: { base: 10, ipe: 0 }, MOB: { base: 10, ipe: 0 }, INT: { base: 8, ipe: 0 },
+    TECH: { base: 2, ipe: 0 }, COOL: { base: 2, ipe: 0 }, MAG: { base: 2, ipe: 0 }, EMP: { base: 2, ipe: 0 } });
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const again = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("stats"), maxReached: steps.length - 1 } } });
+  again.$$("#main button").find(b => /Resume draft/.test(b.textContent)).click();
+  press(again, '[data-step="stat|TECH|1"]');                // the last point
+  assert.ok(again.$('[data-step="stat|TECH|1"]').disabled, "TECH's + should grey out with the pool spent");
+  const row = again.$('[data-step="stat|TECH|1"]').closest(".alloc-row");
+  assert.ok(row.contains(focused(again)), "focus left TECH's row");
+  assert.ok(!focused(again).matches("button"), "a greyed + handed Enter to a control");
+  assert.deepEqual(again.errors, []);
+});
+
+test("W47: a press that hides the flyout hands focus to what opens it", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  app.click("#main [data-vitals-toggle]");
+  press(app, "#vdrawer [data-vitals-pin]");
+  assert.equal(app.$("#vdrawer").getAttribute("aria-hidden"), "true", "too narrow to pin, the flyout should close");
+  assert.equal(focused(app), app.$("#main [data-vitals-toggle]"), "focus stayed in a hidden flyout");
+  assert.deepEqual(app.errors, []);
+});

@@ -2273,7 +2273,8 @@ function openSpellPicker(mode){
   openModal({ title: M.title, html: spellPickerHtml(ch, mode), foot: pickerFootHtml(), returnTo: `[data-spellpickopen="${mode}"]`,
     bind: body => {
       const results = body.querySelector("[data-spellresults]"), status = body.querySelector("[data-spellstatus]");
-      const refresh = () => { results.innerHTML = spellResultsHtml(S.ch, mode); status.innerHTML = M.status(S.ch); };
+      // W47: a pick keeps the keyboard on its row; a greyed one, on the row itself.
+      const refresh = () => keepPlace(results, ()=>{ results.innerHTML = spellResultsHtml(S.ch, mode); status.innerHTML = M.status(S.ch); }, ["#modal-title"]);
       body.querySelector("[data-spellq]").oninput = e => { S.spellPick.q = e.target.value; refresh(); };
       body.querySelectorAll("[data-spellf]").forEach(sel=>sel.onchange=()=>{ S.spellPick[sel.dataset.spellf] = sel.value; refresh(); });
       // W23: a click anywhere on a row is its button's click. The button stays
@@ -2307,7 +2308,8 @@ function openCatalog(kind){
     foot: pickerFootHtml(), returnTo: `[data-lobrowse="${kind}"]`, onClose: ()=>{ S.loPick=null; },
     bind: body => {
       const results = body.querySelector("[data-catresults]"), status = body.querySelector("[data-catstatus]");
-      const refresh = () => { if (!S.loPick) return; results.innerHTML = catalogResultsHtml(S.ch, kind); status.innerHTML = catalogStatusHtml(S.ch, kind); };
+      const refresh = () => { if (!S.loPick) return;
+        keepPlace(results, ()=>{ results.innerHTML = catalogResultsHtml(S.ch, kind); status.innerHTML = catalogStatusHtml(S.ch, kind); }, ["#modal-title"]); };
       body.querySelector("[data-catq]").oninput = e => { S.loPick.q = e.target.value; refresh(); };
       body.querySelectorAll("[data-catf]").forEach(sel=>sel.onchange=()=>{ S.loPick[sel.dataset.catf] = sel.value; refresh(); });
       body.querySelector("[data-catafford]").onchange = e => { S.loPick.afford = e.target.checked; refresh(); };
@@ -2389,7 +2391,7 @@ function openRaisePicker(type){
     foot: pickerFootHtml(), returnTo: `[data-raiseopen="${type}"]`, onClose: ()=>{ S.raisePick=null; },
     bind: body => {
       const results = body.querySelector("[data-raiseresults]"), status = body.querySelector("[data-raisestatus]");
-      const refresh = () => { results.innerHTML = raiseResultsHtml(S.ch, type); status.innerHTML = raiseStatusHtml(S.ch, type); };
+      const refresh = () => keepPlace(results, ()=>{ results.innerHTML = raiseResultsHtml(S.ch, type); status.innerHTML = raiseStatusHtml(S.ch, type); }, ["#modal-title"]);
       const q = body.querySelector("[data-raiseq]");
       if (q) q.oninput = e => { S.raisePick.q = e.target.value; refresh(); };
       // W23: a click anywhere on a row is its button's click.

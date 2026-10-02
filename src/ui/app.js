@@ -97,9 +97,13 @@ function renderDrawer(){
   const pinned = S.screen==="sheet" && !!S.ch && vitalsPinned();
   document.body.classList.toggle("vitals-pinned", pinned);
   if (S.screen==="sheet" && S.ch){
-    dr.innerHTML = vitalsPanelHtml(S.ch);
-    dr.classList.toggle("open", !!S.vitalsOpen);
-    dr.setAttribute("aria-hidden", S.vitalsOpen || (pinned && pinRoom()) ? "false" : "true");
+    // W47: Pin keeps its place as Unpin; an Unpin that closes the panel hands
+    // focus to whatever opens it again.
+    keepPlace(dr, ()=>{
+      dr.innerHTML = vitalsPanelHtml(S.ch);
+      dr.classList.toggle("open", !!S.vitalsOpen);
+      dr.setAttribute("aria-hidden", S.vitalsOpen || (pinned && pinRoom()) ? "false" : "true");
+    }, ["#main [data-vitals-toggle]", "#main [data-vpop]"]);
     if (sc) sc.classList.toggle("open", !!S.vitalsOpen);
     dr.querySelectorAll("[data-vitals-close]").forEach(b=>b.onclick=closeVitals);
     dr.querySelectorAll("[data-vitals-pin]").forEach(b=>b.onclick=()=>setVitalsPinned(!vitalsPinned()));
@@ -118,10 +122,22 @@ function renderDrawer(){
   }
 }
 
+// W47: a render that redraws the view it replaced keeps the keyboard's place
+// (keepPlace, shared.js). A move to another tab, step or character doesn't:
+// the step title, the lock's h1 and a modal set focus on purpose.
+let lastView=null;
+function sameView(){
+  const v={ screen:S.screen, section:S.section, step:S.step, ch:S.ch, admin:S.admin };
+  const same=!!lastView && Object.keys(v).every(k=>v[k]===lastView[k]);
+  lastView=v;
+  return same;
+}
 function renderMain(){
   const app=$("app");
   if (app) app.classList.toggle("sheet-mode", S.screen==="sheet");
-  renderTopChrome();
+  keepPlace(document.querySelector("header.top"), renderTopChrome, ["[data-menu-toggle]"]);
+  const same=sameView(), main=$("main");
+  const fill = html => same ? keepPlace(main, ()=>{ main.innerHTML=html; }) : (main.innerHTML=html);
   if (S.screen==="home") return renderHome();
   if (S.screen==="sheet"){
     S.section = normSection(S.section);
@@ -131,7 +147,7 @@ function renderMain(){
     // Main carries its own condition strip; every other tab gets the vitals bar.
     const bar = S.section==="main" ? "" : sheetVitalsBar(S.ch);
     const banner = S.admin ? adminBannerHtml() : "";
-    $("main").innerHTML = bar + banner + body;
+    fill(bar + banner + body);
     landedNow = null; issuedNow = false;
     renderDrawer();
     bindMain(); bindSheet();
@@ -142,7 +158,7 @@ function renderMain(){
   const st = STEPS[S.step];
   let h = stepHeader(st) + RENDER[st.id]();
   if (st.id!=="review") h += wizNav(st.id);
-  $("main").innerHTML = h;
+  fill(h);
   bindMain();
 }
 

@@ -3650,6 +3650,20 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** Main's hero loses the TAG (W45), or the export stops being a download.
      - **Built:** app 0.36.0; `smoke.test.mjs`, five mutations caught (one by the reduced-motion guard). Log 2026-10-01.
 
+164. **A press that re-renders keeps the keyboard's place: focus goes to the pressed control's twin, or to the card it sat in, never to `<body>` or the control beside it.**
+     *2026-10-01 · Ken + Claude · Touches: keepPlace, PLACES, kept-place, renderMain, renderDrawer, refreshPopover, toastLanding, undo toast, Raise modal, pickers, steppers, tab row, focus, W47*
+     - **Decided:** `keepPlace(root, draw, fallbacks)` (`shared.js`) wraps every redraw a press causes: `#main` on the same view, the header, the flyout, the popover, and three pickers. It refocuses the pressed control's twin, matched on all its `data-*` attributes, in the same root. A twin that's gone, greyed or hidden hands focus to the card or row it sat in (`PLACES`), then to the root's title or opener. The toast's Undo or × lands on the tab's title. A tap, which focuses nothing, is left alone.
+     - **Why:** every commit replaced the button pressed, so focus fell to `<body>`: a second Enter did nothing and Tab started over. One rule covers every control, future ones included.
+     - **Rejected:**
+       - A patch per control, as W42 did: 30-odd sites, and the next control would miss it.
+       - Keying on the first `data-*` attribute, as `refreshPopover` did: Main's eight stat buttons share `data-tip="stat"`.
+       - Searching the whole document: the vitals keys are in `#main` and the flyout both.
+       - Falling back to the nearest enabled control: a held Enter on a greyed + would start pressing − (W42's Heal 1 to Hurt 1).
+       - Rendering only what changed, so nothing is replaced: a rewrite of every renderer for the same result.
+     - **Replaces:** nothing. It extends 119 (the popover's redraw now falls back to its title) and 151 (W42's own keeper stays, and runs after it).
+     - **Revisit if:** the UI moves to a renderer that patches the DOM in place, or W59's live region changes what a re-focus should announce.
+     - **Built:** app 0.36.0; six smoke tests, mutation-tested. Log 2026-10-01 (W47).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

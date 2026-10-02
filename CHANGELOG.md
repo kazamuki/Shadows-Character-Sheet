@@ -44,6 +44,11 @@ own in the footer.
 - **Locking a character prints its TAG.** When the sheet opens, the barcode draws in and
   the number takes a stamp, and a line at the bottom tells you the file you just got.
   It plays once, and not at all if your device asks for less motion.
+- **The keyboard keeps its place.** Press Enter on Hurt 1, a tab, a stepper, Raise or
+  Pin, and the next Enter presses it again; Tab carries on from there instead of starting
+  over at the top. When a press greys its button out (the last Stat Point, a Condition
+  you now have, LUCK back to full), focus stays on that row or card instead of jumping
+  to the button beside it. Undo in the toast lands on the tab's title.
 
 ## v0.35.0 — 2026-10-01
 

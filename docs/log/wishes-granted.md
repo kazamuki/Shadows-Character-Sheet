@@ -92,6 +92,91 @@ read sensibly past the last Health Level, where Massive damage and Helpless
 already mean something. On a phone the row has to fit three 44px buttons
 beside each other at 320px without wrapping into the Pain card.
 
+**W47 — A keyboard press loses its place almost everywhere off Main.** *Claude · found building W42, widened 2026-10-01 · → Decision 164, app 0.36.0: focus goes to the pressed control's twin, else the card it sat in; the tab row, the toast, the flyout, the popover and the pickers too*
+A commit or `update()` re-renders, which replaces the button that was
+pressed, so focus falls to `<body>`: press Enter on Trackers' Hurt 1 and the
+next Enter does nothing, and Tab starts again from the top. Tested with real
+key presses on 0.35.1, focus is lost after: every Trackers commit (Hurt and
+Heal, SAN, LUCK, condition quick-add, Rest); Progression's Grant IP; the
+flyout's Pin and Unpin (`setVitalsPinned`, `app.js`); **Raise in a Raise
+modal** (159), whose `refresh()` rebuilds the results, so focus even leaves
+the dialog; and every wizard stepper and the Custom classification cards.
+Main's W42 row keeps focus (Decision 151), and so does the popover
+(`refreshPopover`, `shared.js`), except that a control the press disables
+(LUCK Regain reaching 4/4) has no fallback. Esc from a Raise modal returns
+focus correctly.
+*The fix:* one rule rather than a patch per control, applied in `renderMain`,
+the modal's `refresh()` and `refreshPopover`: note the focused element's
+`data-*` key before the render and focus its twin after. If the twin is gone
+or disabled, fall back to somewhere harmless (the section, or the popover's
+trigger), never to a control that changes something (W42 found Heal 1
+handing Enter to Hurt 1). The lock already hands focus to the name (163).
+*Harden* (2026-10-01, against 0.36.0's code and the running sheet, real key
+presses where it says so). The rule as written breaks in seven ways:
+- *The key is every `data-*` attribute, not the first.* `refreshPopover`
+  keys on the first. That holds inside a popover, where every first key is
+  unique, but Main's eight stat buttons all start `data-tip="stat"` and
+  differ only in `data-term`, so a first-attribute key sends any stat to BOD.
+  The wizard's keys are unique on all eight steps.
+- *Look where the focus was, not in the whole document.* The five
+  `data-vpop` keys are in both `#main` and the flyout, and
+  `bindVitalControls` binds the same `data-dmg` buttons in Trackers and a
+  popover. Search only the root the focus was in: `#main`, the drawer, the
+  popover, the dialog, the header, the toast. A render of one root leaves
+  focus in another alone: Raise's `commit()` re-renders `#main` behind the
+  dialog, and that render must not reach into the dialog.
+- *The fallback is the common case, not an edge.* Condition quick-add
+  disables its own button every time, because the condition is now on. LUCK
+  Spend greys out at the bottom of the pool. Every wizard + greys out when its
+  pool empties (124 of the Character Points step's 209 controls start
+  disabled). After an Unpin at 1280px or wider, the Pin twin is inside the
+  closed flyout. A twin can also be *hidden*: filtered out by the jump filter
+  (`S.cpFilter`), or made `inert` by W58. One check covers all of these: focus
+  the twin, and if `document.activeElement` isn't the twin, fall back.
+- *The fallback holds the control and changes nothing.* Use the `.sect`
+  heading `sectionList` already makes focusable for the jump bar, the card,
+  the popover's trigger, or the dialog's heading. Never use the sibling
+  stepper: a − beside a greyed + is W42's trap again, where a held Enter on +
+  starts lowering. Inside a dialog, the fallback stays inside the dialog.
+- *Navigation owns its own focus.* Restore focus only when the render shows
+  the view it replaced (same screen, section, step). The wizard focuses the
+  step title on a step change, the lock focuses the sheet's h1 (163), and
+  opening a modal focuses its first field. The rule must not run after those
+  or pull focus back to a key both views share. The tab row needs this most:
+  `renderTopChrome` rebuilds `#topnav` on every render, so **Enter on a tab
+  loses focus today** (real key press). The twin is the newly active tab, in
+  the header's root. The kebab menu's Admin mode re-renders the header too;
+  its item is hidden afterwards, so focus falls back to the kebab.
+- *Don't steal focus a tap didn't give.* Safari doesn't focus a clicked
+  button (`closeModal` says so), so after a tap `activeElement` is `<body>`
+  and the rule does nothing. That is correct: restoring focus would show a
+  ring nobody asked for, and on a phone focusing an input opens the keyboard.
+- *Synchronous, and without scrolling.* A held Enter repeats, so the twin is
+  focused within the render, not on a `requestAnimationFrame`. Pass
+  `preventScroll`: the re-render keeps the scroll position, and with no
+  `scroll-padding-top` on the page, a scroll from `focus()` can tuck the
+  control under the sticky header on a phone.
+
+Three more places it has to reach. **The undo toast:** Enter on Undo redraws
+the toast as "Undone: …" without its buttons, so focus falls to `<body>`
+(real key press). Focus also falls to `<body>` when the toast times out with
+Undo or × focused (`TOAST_MS`). The toast doesn't know where the change was
+made, so its fallback is the current tab's first `.sect` heading. **The
+grimoire and catalog pickers** rebuild their results with the same
+`refresh()` as Raise (`sheet.js`), so the dialog half of the rule covers three
+pickers, not one. **Inputs already keep their caret** (`rerenderKeepFocus` in
+`wizard.js`, the hit modal's `redraw`). The rule keeps the caret too, and W42's
+keeper in `bindVitalControls`, which is this rule in miniature, folds into it
+once its Heal-to-card fallback moves across.
+
+Two neighbours. Focusing the twin again makes a screen reader say the button
+("Hurt 1, button") but not the new number. That is W59's polite live region,
+so build the two together, or a screen reader user gets their place back
+without the result. The guards are smoke tests in the shape already in
+`smoke.test.mjs` (focus, click, assert `activeElement`): one per root plus
+one per fallback. Mutation-test them against today's code; all of them should
+fail there except Main's row and the popover's happy path.
+
 ### Loadout & catalog
 
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*
