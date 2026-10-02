@@ -277,6 +277,63 @@ The plan's **Other** classification, with its own text, covers it until then.
 *Needs:* what a Magical being can buy, Deighton's. Then it's one row in
 `classifications`.
 
+**W61 — A retired archetype folds its characters into Custom.** *Ken · 🔎 · raised 2026-10-01 with the Cyborg cut; Rule or shape*
+The team has cut the Cyborg (`plans/crb-catch-up.md`), and an id can never
+just be deleted (constraint 6). Today a removed archetype leaves a character
+on an orphan that `versionCheck` reports and every reader has to step around.
+Ken's idea: the Custom archetype's write-in fields can hold an orphaned
+character, so make that the endpoint for **any** archetype that's removed or
+reshaped out from under its players. It shouldn't happen often, but it's
+cheap hardening against it.
+
+*The shape Claude proposed.* A data key on the archetype, e.g.
+`"retired": { "into": "custom" }`, and not an id check in `migrate()`
+(Decision 135 bans archetype ids in code). On load, a character on a retired
+archetype gets the archetype's name, summary, classification, baseline traits,
+vulnerabilities and powers copied into `archetypeChoices.writeIn` and
+`powers`. Then it switches to Custom, a notice says what happened and to see
+the GM, and the journal records it. This is triggered by the game data, not
+the save-file schema, so it's a load-time conversion beside `migrate()`, not
+a schema step, and it has to be safe to run twice. The cousin pattern is
+Decision 143's `retired` armor upgrade, which still works but isn't offered.
+That's the other option to weigh: **retire in place** (the archetype keeps
+working for those who have it and just can't be picked) vs. **fold into
+Custom** (its rules are gone, so the character shouldn't keep running on
+them).
+
+*Caveats to relitigate before building:*
+1. **Computed bonuses vanish silently.** Constraint 7 means an archetype's
+   bonuses aren't stored on the character; they're computed from its data.
+   Fold a character into Custom and anything the archetype computed is gone:
+   an Arcanist's TOL bonus and focus-stat bonus, a Professional's Focused
+   Skill price and starting-cap bonus, Natural Advantages' free ranks, a
+   Werewolf's SFR and RoU. The conversion either writes them down first (as
+   Adjustments or trait text) or names each one the player is losing.
+2. **Panels without a Custom twin.** Custom has no `table` panel, so an
+   archetype's table rows (Cyborg's Installed Cybernetics) would have to
+   become trait text or notes. Trackers with no matching mechanic
+   (Cyborg's Tolerance Load) have no home; Custom's "magic" box means TOL
+   Spent and the Cascade, which is the wrong fit.
+3. **Choices that only made sense inside the archetype**: a specialization
+   pick, focus allocations, Disciplines. Each becomes text, or is dropped
+   with a note.
+4. **It's one way.** A converted file that's saved stays Custom, even if the
+   archetype later returns.
+5. **Custom is a holding pen, not always the destination.** A chromed ex-Cyborg
+   really belongs on the Professional with cybernetics, and the subtype is the
+   player's and GM's pick, not something a migration can guess. The notice
+   has to say "your GM rebuilds this in Admin", not imply the job is done.
+6. **Is it a rescue or insurance?** The wizard lets a player pick Cyborg today
+   (with a warning), and the Cyborg has no content, so a saved one holds at
+   most table rows and a tracker count. Ask whether anyone has one. Either way
+   it's worth having for Vampire and Werewolf, both still draft.
+
+*To respect:* constraints 6–8 and 10 (the conversion runs on untrusted files
+and must stay total), Decision 135, Decision 153's write-in shape, and
+Decision 152 (the folded character keeps its classification, so what it may
+buy doesn't change under it). Lands with the Cyborg's retirement, which needs
+its own numbered decision.
+
 ---
 
 ### For the designers
@@ -356,7 +413,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W61.** Everything above is open; W38 has a plan,
+- **Next free number: W62.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
