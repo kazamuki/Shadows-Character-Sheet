@@ -408,6 +408,19 @@ wrapped 140px tall and stretched every step, keeps to one line. Home's
 `[ 1 0 ]` glyph went. Campaign Power Level's stated default was left open: it
 is Ken's call for the GM text, not the UI's.
 
+**W57 — The lock asks nothing, and its warnings are hidden when it's pressed.** *Claude · → Decision 162, app 0.36.0: Ken ruled every point is spent, so points left that can still buy something block the lock; no modal*
+Lock & Export went through with 4 Stat Points, 21 Skill Points and 5 CP
+unspent: those are warnings, not errors, so nothing stops it, and the sheet
+has no unlock, only Admin free-edit. At 375px the sticky `.wiznav` is 156px
+tall and covers the issues list just as the Lock button comes into view.
+"Locking finalizes creation…" sits below the fold. *The fix:* a review beat
+before the commit that lists what's unspent and what the lock gives up, then
+the commit, then W46's beat. The export still fires in the same click as the
+commit (W46's *Harden*). Decision 141 has Lock add or update a roster entry
+"without asking". That ruling was about replacing a character, not about an
+unspent pool, so a confirmation sits beside it rather than reversing it, but
+the decision that builds this should say so.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first

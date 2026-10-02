@@ -48,8 +48,8 @@ Character tab (158), the Raise modals (159), the pinned vitals panel (160) and
 W44 (161). Every tab was run live at 375px and on a wide screen, and focus was
 tested with real key presses. W45–W47 all still stand. W45 and W47 turned out
 broader than first written and are reworded below. W57–W60 are new from the
-same run. Ken's order: the lock flow (W46 with W57) first; W45's shape for
-Main on a phone is left open.
+same run; W57 is built (Decision 162). Ken's order: the lock flow first, so
+W46 is next; W45's shape for Main on a phone is left open.
 
 Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
 when built, checked against the code rather than guessed. Since W43, controls
@@ -90,9 +90,9 @@ right in all of them.
 Locking is the best emotional beat in the product and it becomes the sheet with
 an immediate export. Ken picked a sub-second NYTE City beat, for instance the
 TAG barcode drawing in. *To respect:* short, state-driven, off under
-`prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). Build
-it with W57, so the beat rewards a lock the player confirmed rather than
-replacing the confirmation.
+`prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). W57
+(Decision 162) made the lock wait until every point is spent, so the beat
+rewards a finished build.
 *Checked 2026-10-01:* after Lock & Export, `document.getAnimations()` is
 empty, there's no toast, and focus falls to `<body>`; the beat should leave
 focus somewhere sensible (the sheet's heading). The detector's zero-offset
@@ -129,19 +129,6 @@ the modal's `refresh()` and `refreshPopover`: note the focused element's
 or disabled, fall back to somewhere harmless (the section, or the popover's
 trigger), never to a control that changes something (W42 found Heal 1
 handing Enter to Hurt 1). The lock's focus is W46's.
-
-**W57 — The lock asks nothing, and its warnings are hidden when it's pressed.** *Claude · 🔎 · critique P1, 2026-10-01 · Ken: build first, with W46*
-Lock & Export went through with 4 Stat Points, 21 Skill Points and 5 CP
-unspent: those are warnings, not errors, so nothing stops it, and the sheet
-has no unlock, only Admin free-edit. At 375px the sticky `.wiznav` is 156px
-tall and covers the issues list just as the Lock button comes into view.
-"Locking finalizes creation…" sits below the fold. *The fix:* a review beat
-before the commit that lists what's unspent and what the lock gives up, then
-the commit, then W46's beat. The export still fires in the same click as the
-commit (W46's *Harden*). Decision 141 has Lock add or update a roster entry
-"without asking". That ruling was about replacing a character, not about an
-unspent pool, so a confirmation sits beside it rather than reversing it, but
-the decision that builds this should say so.
 
 **W58 — The closed vitals flyout is still in the tab order.** *Claude · 🔎 · critique P2, 2026-10-01*
 `.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`

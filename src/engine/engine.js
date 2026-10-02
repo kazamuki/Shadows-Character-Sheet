@@ -2846,9 +2846,37 @@ const Engine = (() => {
   // The display string that identity.specialization used to store.
   const specializationLabel = ch => specializationChosen(ch).map(o=>o.name).join(" · ");
 
+  // Decision 162: every creation point is spent before a character locks.
+  // A pool with points left blocks the lock only while one of them can still
+  // buy something, so a player whose last point fits nowhere (a stat's next
+  // point costs 2, every skill at its cap) is never stuck.
+  function spendable(ch, pool){
+    const max = D().statRules.max;
+    if (pool==="stats"){
+      const p = statPool(ch);
+      if (!p || p.total==null) return false;
+      const left = p.total - statSpent(ch);
+      return D().stats.some(s => ch.stats[s.id].base < max && nextStatCost(ch, s.id) <= left);
+    }
+    if (pool==="skills") return D().skills.some(s => {
+      const cap = skillRankCap(ch, s.id);
+      return cap!=null && (ch.skills[s.id] ? ch.skills[s.id].rank : 0) < cap;
+    });
+    if (pool==="focusBonus") return true;
+    if (pool==="statBonus") return D().stats.some(s => statValue(ch, s.id) < max);
+    if (pool==="cp"){
+      const bal = cp(ch), luck = D().resources.luck;
+      if (!bal) return false;
+      return bal.left >= luck.cpCostPerPoint
+        || D().stats.some(s => canBoost(ch, "stat", s.id).ok)
+        || D().skills.some(s => canBoost(ch, "skill", s.id).ok);
+    }
+    return false;
+  }
+
   function validate(stepId, ch){
     const out = [], pl = powerLevel(ch), a = archetype(ch);
-    const E=(m)=>out.push({level:"error",msg:m}), W=(m)=>out.push({level:"warn",msg:m});
+    const E=(m)=>out.push({level:"error",msg:m}), W=(m, pool)=>out.push(pool ? {level:"warn",msg:m,pool} : {level:"warn",msg:m});
     // The starting cap (Decision 134): the stepper and canBoost refuse to pass
     // it, but changing Subtype after assigning ranks can leave a skill over.
     // The skills step reports a rank over the cap; Character Points reports
@@ -2877,7 +2905,7 @@ const Engine = (() => {
       else {
         const left = p.total - statSpent(ch);
         if (left < 0) E(`Stat Points overspent by ${-left}.`);
-        else if (left > 0) W(`${left} Stat Points unspent.`);
+        else if (left > 0) W(`${left} Stat Points unspent.`, "stats");
       }
     }
     if (stepId==="archetype"){
@@ -2920,7 +2948,7 @@ const Engine = (() => {
         else {
           const used = Object.values(ch.archetypeChoices.focusAllocation).reduce((s,v)=>s+v,0);
           if (used > r) E(`Focus Stat bonus overspent by ${used-r}.`);
-          else if (used < r) W(`${r-used} Focus Stat bonus points unallocated.`);
+          else if (used < r) W(`${r-used} Focus Stat bonus points unallocated.`, "focusBonus");
         }
       }
       if (row && row.statBonusRoll){
@@ -2929,7 +2957,7 @@ const Engine = (() => {
         else {
           const used = Object.values(ch.archetypeChoices.statBonusAllocation).reduce((s,v)=>s+v,0);
           if (used > r) E(`Stat Bonus overspent by ${used-r}.`);
-          else if (used < r) W(`${r-used} Stat Bonus points unallocated.`);
+          else if (used < r) W(`${r-used} Stat Bonus points unallocated.`, "statBonus");
         }
       }
       // Decision 91: a specialization's gate is `requires` data, read by
@@ -2960,7 +2988,7 @@ const Engine = (() => {
       else {
         const left = p.total - skillSpent(ch);
         if (left < 0) E(`Skill Points overspent by ${-left}.`);
-        else if (left > 0) W(`${left} Skill Points unspent.`);
+        else if (left > 0) W(`${left} Skill Points unspent.`, "skills");
       }
       overCap(false);
       // Skills host picks too (Martial Arts styles). Same rule, same voice.
@@ -2977,7 +3005,7 @@ const Engine = (() => {
       const bal = cp(ch);
       if (!bal) E("Choose a Campaign Power Level before spending Character Points.");
       else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
-      else if (bal.left > 0) W(`${bal.left} Character Points unspent.`);
+      else if (bal.left > 0) W(`${bal.left} Character Points unspent.`, "cp");
       overCap(true);
       // Decision 152. A Professional's free Advantages are the archetype's, not bought.
       const cls = classification(ch);
@@ -3034,8 +3062,14 @@ const Engine = (() => {
     }
     if (stepId==="review"){
       if (ch.creation.rolls.credits==null) W(`Enter your starting Çredits roll (${pl?pl.startingCredits.roll+" × "+pl.startingCredits.multiplier:""}).`);
+      // Decision 162: a step only warns of points left, so the player can
+      // move freely; the lock needs them spent while any can still buy.
       for (const s of ["power-level","concept","stats","archetype","skills","character-points"])
-        for (const i of validate(s,ch)) out.push(i);
+        for (const i of validate(s,ch)){
+          if (!i.pool) out.push(i);
+          else if (spendable(ch, i.pool)) E(`${i.msg.replace(/\.$/, "")}. Spend them before you lock.`);
+          else W(`${i.msg.replace(/\.$/, "")}, and nothing left they can buy.`);
+        }
       // At lock, a written-in archetype is the GM's call (Decision 153). Copy
       // from appCopy, so the voice stays a data edit (Decision 71).
       if (writeInSpec(ch)){
@@ -3135,7 +3169,7 @@ const Engine = (() => {
     powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, improvePower, newPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
     // Creation: pools, costs, grants and the wizard's checks
-    boostsFor, addBoost, canBoost, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
+    boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
     advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, validate,
     // Focused Skills and natural advantages (Decision 134)
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,

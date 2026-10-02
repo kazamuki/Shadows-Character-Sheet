@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.35.1
+## [Unreleased] — app 0.36.0
 
 - **Making a character on a phone opens on the step, not on your vitals.** The vitals used
   to fill the screen above everything else. Now one line under the header shows what
@@ -37,6 +37,10 @@ own in the footer.
   and Back and Continue stop sticking, so the keyboard doesn't box in what you're typing.
 - **Back and Continue no longer sit under the page footer,** and a jump on the Character
   Points step lands its heading in full view.
+- **Spend every point before you lock.** Lock & Export waits until your Stat Points, Skill
+  Points and CP are all spent, and the Review step lists what's left. You can still move
+  between steps with points in hand. A point too small to buy anything never holds you up;
+  Review just tells you it's there.
 
 ## v0.35.0 — 2026-10-01
 
