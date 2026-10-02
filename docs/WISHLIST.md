@@ -97,8 +97,9 @@ has to survive:
   but the header (`renderTopChrome`) and the hero (`renderShMain`) don't. A
   name of spaces, from an import or Admin mode (`validate()` checks only at
   the lock), gives a blank header and an empty h1 0px tall while the window
-  says "Unnamed". Confirmed live. Make it one display-name helper before the
-  name moves. On its own that's Fix tier, and it can ship ahead of W45.
+  says "Unnamed". Confirmed live. **Fixed in 0.36.0:** every place that shows
+  the name goes through `charName` (`shared.js`), with a W45 smoke test. A
+  name that moves keeps using it.
 - **The TAG line changes height.** At 375px the intake line is 36px with a
   TAG, 54px TAGless ("Off grid", 148) and 71px with a Ghost TAG's label
   (146): the label and the 18-character number wrap separately. A hero
@@ -198,7 +199,10 @@ since the pass above, and all four points still hold. Three more:
   null), but they show another character's numbers and still take focus.
   So the one setter also runs on leaving the sheet: empty the panel, drop
   the class, then go inert. Run `inert` alone on that path and it freezes a
-  panel that's still painted.
+  panel that's still painted. **Fixed in 0.36.0:** both paths now call
+  `renderDrawer` too, whose off-sheet branch already empties the panel and
+  drops the class, with a W58 smoke test. The setter W58 still needs takes
+  this path in with the others.
 - **The 1280px sighting is likely an artifact.** It reproduced only with the
   browser pane hidden. A page that isn't painting runs no rendering steps, so
   the media query's change event never fired and `aria-hidden` stayed

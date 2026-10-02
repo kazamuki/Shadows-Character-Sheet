@@ -21,11 +21,10 @@ function renderTopChrome(){
   const ctx=$("brandctx"), nav=$("topnav"), act=$("hdractions");
   // The window's title names the character on the sheet (W60). It's also the
   // file name a browser suggests when the sheet is printed to PDF.
-  const name = S.ch && String(S.ch.identity.name||"").trim();
-  document.title = S.screen==="sheet" ? `${name||"Unnamed"} — Shadows` : "Shadows — Character Intake";
+  document.title = S.screen==="sheet" ? `${charName(S.ch, "Unnamed")} — Shadows` : "Shadows — Character Intake";
   if (!ctx || !nav) return;
   if (S.screen==="sheet"){
-    ctx.textContent = (S.ch && S.ch.identity.name) ? S.ch.identity.name : "Unnamed";
+    ctx.textContent = charName(S.ch, "Unnamed");
     nav.innerHTML = tabButtonsHtml();
     nav.querySelectorAll("[data-sec]").forEach(b=>b.onclick=()=>{
       S.section=normSection(b.dataset.sec); window.scrollTo(0,0); update();
@@ -52,7 +51,7 @@ function renderTopChrome(){
       act.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{ S={screen:"home",ch:null,step:0,maxReached:0,section:"main",admin:false}; renderHome(); });
     }
   } else if (S.screen==="wizard"){
-    ctx.textContent = (S.ch && S.ch.identity.name) ? S.ch.identity.name : "Character Intake";
+    ctx.textContent = charName(S.ch, "Character Intake");
     nav.innerHTML = ""; if (act) act.innerHTML = "";
   } else {
     ctx.textContent = "Character Intake"; nav.innerHTML = ""; if (act) act.innerHTML = "";
@@ -158,7 +157,7 @@ function renderMain(){
     refreshPopover();
     return;
   }
-  closeVitals(); closePopover(false);
+  closeVitals(); renderDrawer(); closePopover(false);   // a pinned panel goes with the sheet
   const st = STEPS[S.step];
   let h = stepHeader(st) + RENDER[st.id]();
   if (st.id!=="review") h += wizNav(st.id);
