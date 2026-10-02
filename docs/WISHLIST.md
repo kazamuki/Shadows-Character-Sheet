@@ -36,20 +36,20 @@ does more than show them.
 
 ### The sheet at the table (from the design critique)
 
-W45–W46 are what's left of the 2026-09-30 design critique (score
+W45 is what's left of the 2026-09-30 design critique (score
 27/40, snapshot in `.impeccable/critique/`) after its combat-table finding,
-W43 (tap targets and small text, 0.32.1), W42 (Health verbs on Main, 0.33.0)
-and W44 (the wizard on a phone, 0.35.1) shipped. W45 and W46 are
-**player-facing layout or behaviour**, so they're the *Rule or shape* tier
-("propose before building"). None touches a rule.
+W43 (tap targets and small text, 0.32.1), W42 (Health verbs on Main, 0.33.0),
+W44 (the wizard on a phone, 0.35.1) and W46 (the lock's beat, 0.36.0)
+shipped. W45 is **player-facing layout**, so it's the *Rule or shape* tier
+("propose before building"). It touches no rule.
 
 **Re-checked 2026-10-01 (critique re-run, 29/40)** against 0.35.1, after the
 Character tab (158), the Raise modals (159), the pinned vitals panel (160) and
 W44 (161). Every tab was run live at 375px and on a wide screen, and focus was
 tested with real key presses. W45–W47 all still stand. W45 and W47 turned out
 broader than first written and are reworded below. W57–W60 are new from the
-same run; W57 is built (Decision 162). Ken's order: the lock flow first, so
-W46 is next; W45's shape for Main on a phone is left open.
+same run; W57 and W46 are built (Decisions 162 and 163). W45's shape for
+Main on a phone is left open.
 
 Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
 when built, checked against the code rather than guessed. Since W43, controls
@@ -86,30 +86,6 @@ Ghost or Black TAG's label (Decision 146), and TAGless, which reads "Off grid"
 (148). An unnamed character's title is "Unnamed" today. Any move has to read
 right in all of them.
 
-**W46 — The lock moment has no ceremony.** *Claude · 💡 · critique, Ken chose "one short beat"*
-Locking is the best emotional beat in the product and it becomes the sheet with
-an immediate export. Ken picked a sub-second NYTE City beat, for instance the
-TAG barcode drawing in. *To respect:* short, state-driven, off under
-`prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). W57
-(Decision 162) made the lock wait until every point is spent, so the beat
-rewards a finished build.
-*Checked 2026-10-01:* after Lock & Export, `document.getAnimations()` is
-empty, there's no toast, and focus falls to `<body>`; the beat should leave
-focus somewhere sensible (the sheet's heading). The detector's zero-offset
-cyan glow is `.card.selected`'s ring and its striped gradient is the Massive
-hatching; DESIGN.md sanctions both, so they're closed. `.76rem` is off the
-type ramp at `sheet.js:1811` (an inline style; it was `:1726`) and in about
-nine rules in `shadows.css`, so it's a ramp question, not one line. (The
-infinite pulse on `.admin-banner .dot` stops under reduced motion since W43,
-and a test holds every animation to that.)
-*Harden.* The lock handler (`wizard.js`, `[data-lock]`) saves, renders the
-sheet and calls `exportChar()` in the same click. The beat must run alongside
-that, never in front of it: a download started from a timer after the
-animation can lose the click's permission to download, and the export is
-what keeps the character safe. A TAGless character has no barcode, so the
-beat needs a version for "Off grid". It plays on the lock and never again: not
-on a reload, a theme switch or a re-render of a sheet that's already locked.
-
 **W47 — A keyboard press loses its place almost everywhere off Main.** *Claude · 🔎 · found building W42, widened 2026-10-01*
 A commit or `update()` re-renders, which replaces the button that was
 pressed, so focus falls to `<body>`: press Enter on Trackers' Hurt 1 and the
@@ -128,7 +104,7 @@ the modal's `refresh()` and `refreshPopover`: note the focused element's
 `data-*` key before the render and focus its twin after. If the twin is gone
 or disabled, fall back to somewhere harmless (the section, or the popover's
 trigger), never to a control that changes something (W42 found Heal 1
-handing Enter to Hurt 1). The lock's focus is W46's.
+handing Enter to Hurt 1). The lock already hands focus to the name (163).
 
 **W58 — The closed vitals flyout is still in the tab order.** *Claude · 🔎 · critique P2, 2026-10-01*
 `.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`
@@ -163,6 +139,9 @@ None of these needs a proposal. Each is a named finding to fix in place.
 - Heading levels skip: the wizard's h1 → h3, Trackers' h1 → h4.
 - `.cond .meter i` transitions `width`, a layout property; `transform:scaleX`
   does the same without reflow.
+- `.76rem` is off the type ramp: an inline style at `sheet.js:1811` and about
+  nine rules in `shadows.css`. A ramp question for a typeset pass, moved here
+  from W46.
 - Pin lives only in the flyout, and Main has no vitals toggle, so Pin can't
   be found from Main.
 

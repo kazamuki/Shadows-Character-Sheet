@@ -3637,6 +3637,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** the CRB lets creation points carry into play, or a pool gains a sink `spendable` doesn't know.
      - **Built:** app 0.36.0; `engine.test.mjs` and `smoke.test.mjs`, each mutation-tested. Log 2026-10-01.
 
+163. **Locking prints the TAG once: the barcode draws in, the number takes a stamp, a toast names the file, and focus lands on the name.**
+     *2026-10-01 · Ken + Claude · Touches: Lock & Export, data-lock, intake, intakeHtml, intake-bars, issued, S.issued, issuedNow, exportChar, exportCharacter, notice, toast, appCopy.lockIssued, appCopy.lockIssuedTagless, Off grid, TAGless, Ghost TAG, focus, prefers-reduced-motion, W46*
+     - **Decided:** The render after a lock gives Main's intake the `issued` class once (`S.issued`, taken by `renderMain` as it takes a hit's flash). The bars wipe in left to right over .5s, then the number and any label (a Ghost TAG's, Off grid) take a .35s stamp that fades to rest. The export stays synchronous in the lock's click and returns its filename; a toast in city voice from `appCopy` names it, with a TAGless line of its own. Focus moves to Main's heading. Reduced motion drops the wipe and the stamp, not the toast or the focus.
+     - **Why:** The lock is the product's emotional peak and it cut flat to the sheet with no word about the download (the 2026-09-30 critique; Ken chose "one short beat"). The TAG is the one mark that exists only because the character is now real.
+     - **Rejected:**
+       - A full-screen "intake complete" card: it blocks the sheet, reads as generic cyberpunk, and competes with the download.
+       - Holding the sheet until the beat ends: a download from a timer can lose the click's permission, and the export is what keeps the character safe.
+       - Flashing every card on Main: the flash means harm (W15).
+       - A sound: unreliable to autoplay, and it plays at someone's table.
+     - **Replaces:** nothing.
+     - **Revisit if:** Main's hero loses the TAG (W45), or the export stops being a download.
+     - **Built:** app 0.36.0; `smoke.test.mjs`, five mutations caught (one by the reduced-motion guard). Log 2026-10-01.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
