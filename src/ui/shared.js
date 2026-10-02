@@ -645,9 +645,12 @@ function taglessToggleHtml(ch, attr){
     <p class="step-note">${esc((C[off?"tagless":"tagged"]||{}).text||"")}</p></div>`;
 }
 // W31: a Ghost TAG says so over the number, and hovering says what it is.
+// W46 (Decision 163): the render after a lock prints the TAG once. The lock
+// sets S.issued and renderMain takes it, as it takes a hit's flash.
+let issuedNow=false;
 function intakeHtml(ch){
   const id = intakeOf(ch), r = Engine.tagReading(ch);
-  return id ? `<div class="intake" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(Engine.tagNumber(ch))}</span></div>` : "";
+  return id ? `<div class="intake${issuedNow?" issued":""}" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(Engine.tagNumber(ch))}</span></div>` : "";
 }
 
 // C4: what versionCheck found when this character was loaded. Content the

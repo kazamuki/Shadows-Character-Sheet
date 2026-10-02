@@ -126,12 +126,13 @@ function renderMain(){
   if (S.screen==="sheet"){
     S.section = normSection(S.section);
     landedNow = S.landed || null; S.landed = null;     // W15: flash once
+    issuedNow = !!S.issued; S.issued = false;          // W46: the TAG prints once
     const body = SHEET_RENDER[S.section] ? SHEET_RENDER[S.section]() : SHEET_RENDER.main();
     // Main carries its own condition strip; every other tab gets the vitals bar.
     const bar = S.section==="main" ? "" : sheetVitalsBar(S.ch);
     const banner = S.admin ? adminBannerHtml() : "";
     $("main").innerHTML = bar + banner + body;
-    landedNow = null;
+    landedNow = null; issuedNow = false;
     renderDrawer();
     bindMain(); bindSheet();
     refreshPopover();
@@ -155,7 +156,7 @@ function printSheet(ch){
   window.print();
 }
 
-function exportChar(){ exportCharacter(S.ch); }
+function exportChar(){ return exportCharacter(S.ch); }
 // Any character, not only the open one: the replace guard exports the saved
 // character it's about to overwrite (B18).
 function exportCharacter(ch){
@@ -167,6 +168,7 @@ function exportCharacter(ch){
   const a=document.createElement("a");
   a.href=url; a.download=name+".shadows.json"; a.click();
   setTimeout(()=>URL.revokeObjectURL(url),2000);
+  return a.download;
 }
 
 // ── Light/dark theme toggle (Decision 90) ─────────────────────────────

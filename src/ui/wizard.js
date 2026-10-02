@@ -860,9 +860,15 @@ function bindMain(){
     // exports, so the file holds what's stored and Home shows no marker.
     ch.creation.locked=true;
     S.ch=Engine.migrate(Engine.buildExport(ch));
-    S.screen="sheet"; S.section="main";
+    S.screen="sheet"; S.section="main"; S.issued=true;
     window.scrollTo(0,0); update();
-    exportChar();
+    // W46 (Decision 163): the export stays in this click, so the download
+    // keeps its permission; the TAG prints alongside it, never in front.
+    const file=exportChar(), C=D.appCopy||{};
+    const say=(S.ch.identity.tagless ? C.lockIssuedTagless : C.lockIssued)||"";
+    if (say) notice(say.replace("{tag}", Engine.tagNumber(S.ch)).replace("{file}", file));
+    const title=document.querySelector("#main h1");
+    if (title){ title.tabIndex=-1; title.focus({preventScroll:true}); }
   });
 }
 

@@ -3140,7 +3140,9 @@ window.SHADOWS_DATA = {
     "powerImproveNote": "A power that grows costs IP; your GM names it. Rewrite what changed. Your notes stay yours.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
     "applyFromText": "Apply these from their text.",
-    "ranksAdvanceInPlay": "Ranks advance through play."
+    "ranksAdvanceInPlay": "Ranks advance through play.",
+    "lockIssued": "NYTE City knows your name now. {tag}. Your copy is {file}.",
+    "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}."
   },
   "ip": {
     "perSession": 10,

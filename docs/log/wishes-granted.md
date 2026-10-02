@@ -421,6 +421,30 @@ commit (W46's *Harden*). Decision 141 has Lock add or update a roster entry
 unspent pool, so a confirmation sits beside it rather than reversing it, but
 the decision that builds this should say so.
 
+**W46 — The lock moment has no ceremony.** *Claude · → Decision 163, app 0.36.0: the TAG prints in (a bar wipe, then a stamp on the number), a toast in voice names the file, focus lands on the name*
+Locking is the best emotional beat in the product and it becomes the sheet with
+an immediate export. Ken picked a sub-second NYTE City beat, for instance the
+TAG barcode drawing in. *To respect:* short, state-driven, off under
+`prefers-reduced-motion`, and no glow on a resting surface (DESIGN.md). Build
+it with W57, so the beat rewards a lock the player confirmed rather than
+replacing the confirmation.
+*Checked 2026-10-01:* after Lock & Export, `document.getAnimations()` is
+empty, there's no toast, and focus falls to `<body>`; the beat should leave
+focus somewhere sensible (the sheet's heading). The detector's zero-offset
+cyan glow is `.card.selected`'s ring and its striped gradient is the Massive
+hatching; DESIGN.md sanctions both, so they're closed. `.76rem` is off the
+type ramp at `sheet.js:1811` (an inline style; it was `:1726`) and in about
+nine rules in `shadows.css`, so it's a ramp question, not one line. (The
+infinite pulse on `.admin-banner .dot` stops under reduced motion since W43,
+and a test holds every animation to that.)
+*Harden.* The lock handler (`wizard.js`, `[data-lock]`) saves, renders the
+sheet and calls `exportChar()` in the same click. The beat must run alongside
+that, never in front of it: a download started from a timer after the
+animation can lose the click's permission to download, and the export is
+what keeps the character safe. A TAGless character has no barcode, so the
+beat needs a version for "Off grid". It plays on the lock and never again: not
+on a reload, a theme switch or a re-render of a sheet that's already locked.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first
