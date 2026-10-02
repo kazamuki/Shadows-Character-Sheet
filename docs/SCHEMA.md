@@ -3624,6 +3624,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** a step gets its own sticky bar without a pool count, or players want a pool the line doesn't show.
      - **Built:** app 0.35.1; `smoke.test.mjs`, 12 mutations; `phone-check` passes. Log 2026-10-01.
 
+162. **A character locks only once every creation point that can still buy something is spent.**
+     *2026-10-01 · Ken + Claude · Touches: validate, review, Lock & Export, data-lock, Stat Points, Skill Points, Character Points, Focus Stat bonus, Stat Bonus, unspent, unallocated, spendable, wiznav-why, W57*
+     - **Decided:** On Review, Stat Points, Skill Points, CP and an archetype's Focus Stat and Stat Bonus points left over are **errors** while `Engine.spendable(ch, pool)` finds something they can still buy, so Lock & Export stays disabled and the nav says what's left. A point that fits nowhere (every stat's next point costs more, every skill at its cap) stays a warning that says so. Each step still only warns, so Continue never waits on a pool. Starting spells short of the count still warn: they aren't points.
+     - **Why:** Ken: you should spend all your points. The critique found a lock going through with 21 Skill Points unspent while the warnings sat under the sticky nav on a phone. The app can tell whether a pool is spent, so Decision 78's test (*can the app tell whether this is right?*) makes it an error.
+     - **Rejected:**
+       - A confirmation modal that lets the player lock anyway: it asks a question whose only right answer is "go back".
+       - Blocking on every step: the pools feed each other (a CP Boost raises Skill Points), so Continue would trap a player mid-build.
+       - Blocking on any point left: a 1-point remainder no stat's next point fits would leave a player stuck.
+       - Blocking on the GM's-call warnings (`gmApproval`, a written-in archetype): they're for the table, not undone work (78, 153).
+     - **Replaces:** nothing. Decision 78's warning-not-error line is about what the app can't check; 83's ledger states read the steps and are unchanged; 141's lock still asks nothing about the roster.
+     - **Revisit if:** the CRB lets creation points carry into play, or a pool gains a sink `spendable` doesn't know.
+     - **Built:** app 0.36.0; `engine.test.mjs` and `smoke.test.mjs`, each mutation-tested. Log 2026-10-01.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

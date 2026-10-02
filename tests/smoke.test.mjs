@@ -2713,3 +2713,15 @@ test("print gives every archetype a page of its own: a written-in one's words, a
   assert.equal(blank.textContent.includes("Changeling"), false);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 162: Review's Lock waits until every point that can buy something is spent", () => {
+  const half = named("Unspent"); half.creation.locked = false; half.skills = {};
+  const app = boot({ storage: { "shadows.draft.v1": { ch: half, step: 7, maxReached: 7 } } });
+  card(app, "Unspent").querySelector("[data-open]").click();
+  const lock = () => app.$("[data-lock]");
+  assert.ok(lock(), "Review didn't render");
+  assert.equal(lock().disabled, true, "Lock was open with Skill Points unspent");
+  assert.match(app.$("#wiz-issues").textContent, /Skill Points unspent\. Spend them before you lock\./);
+  assert.match(app.$(".wiznav-why").textContent, /to fix first/, "the nav doesn't say what's holding the lock");
+  assert.deepEqual(app.errors, []);
+});
