@@ -4237,7 +4237,7 @@ window.SHADOWS_DATA = {
         "id": "archetype",
         "n": 4,
         "short": "Archetype",
-        "label": "Choose your Archetype - the pivot that sharpens who you are becoming"
+        "label": "Choose your Archetype — the pivot that sharpens who you are becoming"
       },
       {
         "id": "history",
@@ -4256,7 +4256,7 @@ window.SHADOWS_DATA = {
         "n": 7,
         "short": "Character Points",
         "label": "Spend Character Points on Advantages, Disadvantages, and powers. Allocate any remaining points.",
-        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may boost powers, skills, or stats - any single target at most maxBoost times. LUCK buy-ups are exempt from the boost cap."
+        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may boost powers, skills, or stats, up to a cap on each. LUCK buy-ups are exempt from that cap."
       }
     ],
     "boostRules": {
