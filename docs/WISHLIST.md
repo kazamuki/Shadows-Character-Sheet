@@ -79,7 +79,8 @@ tabs do. *Open, Ken's call:* does Main on a phone become Health, Pain, the
 verbs, weapons and armour, with stats moving to Skills where checks are
 rolled? And once the panel is pinned on a wide screen, should Main's vitals
 cards slim down? (Decision 160 rejected *hiding* the panel, not slimming the
-cards.)
+cards.) And Pin can't be found from Main today (W60): if Main keeps
+its vitals cards, where does Pin live there?
 *Harden.* The header already cuts a long name with an ellipsis on a phone and
 a portrait tablet (`phone-check` shows it), so if the hero drops the name, a
 long name is never shown whole anywhere. Keep one place where it wraps
@@ -145,84 +146,22 @@ never hears the new number. *The fix:* name the target ("Raise BOD",
 "Lower Firearms") from the same data the row shows, and announce the value
 after a press, politely, once.
 
-**W60 — Small accessibility and copy fixes from the re-run.** *Claude · 🔎 · critique P2–P3, 2026-10-01 · Fix tier*
-None of these needs a proposal. Each is a named finding to fix in place.
-- Input placeholders render the browser's `#757575` on `--bg` at 3.8:1
-  (Trackers' "amount", "note (what for)", "±"); there's no `::placeholder`
-  rule. AA needs 4.5:1, in both themes.
-- The Custom classification cards render `aria-pressed="null"` before one is
-  picked (`wizard.js`, `cls&&cls.id===c.id`): coerce it with `!!`.
-- A step's label runs into its note with no full stop ("…assign your Base
-  Stats Explosions do not happen…", `stepHeader`), and step 4's label uses
-  " - " for a dash.
-- `document.title` stays "Shadows — Character Intake" on a locked sheet.
-- Heading levels skip: the wizard's h1 → h3, Trackers' h1 → h4.
-- `.cond .meter i` transitions `width`, a layout property; `transform:scaleX`
-  does the same without reflow.
+**W60 — Small accessibility and copy fixes from the re-run.** *Claude · 🔎 · critique P2–P3, 2026-10-01 · mostly shipped in 0.36.0*
+Six of the eight shipped in 0.36.0 (`docs/log/shipped.md`): placeholders at
+`--dim`, the picked wizard card reads pressed, step sentences end as
+sentences (and step 7's note no longer says "maxBoost"), the window's title
+names the character, headings no longer skip a level, and the meter's
+transition, which never played, is gone. Each has a W60 smoke test. What's
+left:
 - `.76rem` is off the type ramp: an inline style at `sheet.js:1811` and about
   nine rules in `shadows.css`. A ramp question for a typeset pass, moved here
-  from W46.
+  from W46. *Harden.* Anything that steps down stays at or above 11px
+  (`.7rem` is 11.2px; `phone-check` fails below 11), and the inline style
+  should become a class first, since a ramp sweep of `shadows.css` won't find
+  it.
 - Pin lives only in the flyout, and Main has no vitals toggle, so Pin can't
-  be found from Main.
-
-*Harden (2026-10-01, checked against 0.36.0).* Item by item, in the list's
-order:
-- **Placeholders.** It isn't just Trackers: 28 inputs carry one, across
-  `sheet.js`, `wizard.js` and the filter helper in `shared.js`. The light
-  theme fails too: `#757575` on Pale Concrete is 4.2:1. Use `--dim` (6.1:1
-  dark, 5.4:1 light), not a hex. The build's contrast guard
-  (`build.test.mjs`) checks every `color: var(--…)` rule against every
-  ground in both themes and skips only `::before`/`::after`, so a token-based
-  `::placeholder` rule is covered for free and a hex one isn't. Firefox also
-  dims placeholders with `opacity:.54` by default, so the rule needs
-  `opacity:1`, or `--dim` lands at 2.2–2.7:1 there. At `--dim`, an
-  example like "amount" sits close to a typed value, and `--text` is what
-  tells them apart. Every placeholder input already has an `aria-label`, so
-  this is contrast only, not naming.
-- **`aria-pressed="null"`.** `!!` fixes the one site, but the step's sibling
-  cards are worse: Power Level (`data-pl`) and Archetype (`data-arch`) are
-  selectable `<button class="card">`s with no `aria-pressed` at all, so a
-  screen reader can't tell which is picked. Fix all three the same way.
-- **Step labels.** The renderer can't just add a full stop: step 7's label
-  already ends in one and step 5's (history) in a question mark.
-  Add one only when the label lacks closing punctuation. The " - " is in
-  step 4's label *and* step 7's note, both in `shadows-data.js`. The same
-  note also shows a field name to players: "…at most maxBoost times."
-  Constraint 9 territory, and `voice.test.mjs` doesn't catch it. Drop the
-  clause, since the Boosts section already says "max N× per target" with the
-  real number. It's copy only, so `gamedataVersion` stays (Decision 68).
-- **`document.title`.** It's also the default file name when a player prints
-  to PDF (`printSheet`, `app.js`), so every character saves as "Shadows —
-  Character Intake.pdf" today. Set it per screen: home and wizard as now, the
-  sheet with the character's name, "Unnamed" without one. Reset it on
-  leaving the sheet, so Home doesn't keep the last character's name. A name
-  comes from an untrusted file, but `document.title` is set as text, so a
-  long name only gets cut in the tab. The blank sheet's own title is in
-  `build.mjs` and is already right.
-- **Heading levels.** The wizard's card headings sit inside `<button>`s,
-  whose content isn't read as headings anyway, so retag the ones outside
-  buttons: `.pick` and `.review-block`. The CSS keys on the tag: `.card h3`,
-  `.head h4`, `.trk h4`, `.review-block h3`, `.hitpanel h4`, `.pop-head h3`.
-  Move each selector with its tag, or key it on a class, or the restyle is
-  silent. Five smoke-test selectors query `.pick h4` and `.trk h4`: update
-  them, don't drop them. `print.css` has no heading selectors, so print is
-  safe.
-- **The meter.** Run it before porting it. Every render replaces `#main`'s
-  markup, so the meter's `<i>` is a new element each time and its `width`
-  transition never plays. Swapping in `scaleX` changes nothing anyone can
-  see. Either delete the transition, along with its entry in the
-  reduced-motion rule, or make it actually animate, following `.hl-mini .seg
-  i`'s `transform-origin:left` pattern. `pct()` already clamps to 0–100, so
-  `scaleX` can't overflow or flip.
-- **`.76rem`.** Still a typeset-pass question, not a fix here. Two
-  constraints for whoever does it: anything that steps down stays at or
-  above 11px (`.7rem` is 11.2px; `phone-check` fails below 11), and the
-  inline style at `sheet.js:1811` should become a class first, since a ramp
-  sweep of `shadows.css` won't find it.
-- **Pin from Main.** This one isn't Fix tier. A new control on Main is
-  player-facing layout, and W45 already has Main's vitals open as Ken's call
-  (whether its cards slim down once the panel is pinned). Fold it into W45's
-  proposal rather than adding a button ahead of it.
+  be found from Main. Not Fix tier: a new control on Main is layout, so it's
+  part of W45's open question.
 
 ### Beyond one sheet
 

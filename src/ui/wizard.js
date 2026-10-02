@@ -173,17 +173,20 @@ function wizNav(stepId){
 
 // ── Step renderers ───────────────────────────────────────────────────
 // One title (the step's short name), then the step's sentence under it.
+// The label is a sentence whether or not the data ends it with one (W60:
+// "…assign your Base Stats Explosions do not happen…").
+const sentence = s => /[.?!…]$/.test(s) ? s : s+".";
 function stepHeader(st){
   return importIssuesHtml() + `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
     <h1 class="step-title">${esc(st.short)}</h1>
-    <p class="step-note">${esc(st.label)}${st.note?` <em>${esc(st.note)}</em>`:""}</p>`;
+    <p class="step-note">${esc(sentence(st.label))}${st.note?` <em>${esc(st.note)}</em>`:""}</p>`;
 }
 
 function renderPowerLevel(){
   const ch=S.ch;
   let h = "";
   h += `<div class="cards two">` + D.powerLevels.map(p=>`
-    <button class="card ${ch.creation.powerLevel===p.id?"selected":""}" data-pl="${p.id}">
+    <button class="card ${ch.creation.powerLevel===p.id?"selected":""}" data-pl="${p.id}" aria-pressed="${ch.creation.powerLevel===p.id}">
       <h3>${esc(p.name)}</h3>
       <p>${esc(p.description||"")}</p>
       <div class="stat-line">
@@ -247,7 +250,7 @@ function renderStats(){
 function renderArchetype(){
   const ch=S.ch, ac=ch.archetypeChoices, sel=Engine.archetype(ch);
   let h = `<div class="cards two">` + D.archetypes.map(a=>`
-    <button class="card ${ch.identity.archetype===a.id?"selected":""}" data-arch="${a.id}">
+    <button class="card ${ch.identity.archetype===a.id?"selected":""}" data-arch="${a.id}" aria-pressed="${ch.identity.archetype===a.id}">
       <span class="badge ${a.status}">${esc(statusLabel(a.status))}</span>
       <h3>${esc(a.name)}</h3>
       <div class="sub">${(a.primaryStats||[]).join(" · ")||""}</div>
@@ -290,7 +293,7 @@ function renderArchetype(){
         req = `<span class="cost ${unmet.length?"":"grant"}">requires ${Object.entries(o.requires.stats).map(([s,r])=>s+" "+r).join(", ")}</span>`;
       }
       return `<div class="pick ${seld?"selected":""}">${o.flagged?flagHtml(o):""}
-        <div class="head"><h4>${esc(o.name)}</h4>${req}
+        <div class="head"><h2>${esc(o.name)}</h2>${req}
           <div class="controls"><button class="toggle" data-spec="${o.id}">${need>1?(seld?"Chosen":"Choose"):(seld?"Selected":"Select")}</button></div></div>
         <div class="desc">${esc(o.description||"")}</div>
         ${o.focusedSkills?`<div class="desc"><b>Focused Skills:</b> ${esc(focusedSkillsText(o.focusedSkills))}</div>`:""}
@@ -367,7 +370,7 @@ function renderArchetype(){
       h += nat.pool.map(p=>{
         const def = Engine.advById(p.advantageId);
         const cur = (ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank;
-        return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h4>${esc(def?def.name:p.advantageId)}</h4>
+        return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h2>${esc(def?def.name:p.advantageId)}</h2>
           <span class="cost grant">max rank ${p.maxRank}</span>
           <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks)}</div></div>
           <div class="desc">${esc(def?def.description:"")}</div>
@@ -379,7 +382,7 @@ function renderArchetype(){
   // Baseline traits reference
   if (sel.baselineTraits && sel.baselineTraits.length){
     h += `<details class="group"><summary>Baseline Traits — ${esc(sel.name)}</summary>` +
-      sel.baselineTraits.map(t=>`<div class="pick"><div class="head"><h4>${esc(t.name)}</h4></div>
+      sel.baselineTraits.map(t=>`<div class="pick"><div class="head"><h2>${esc(t.name)}</h2></div>
         <div class="desc">${esc(t.description||"")}${t.benefit?"\n"+esc(t.benefit):""}${t.effects?"\n• "+t.effects.map(esc).join("\n• "):""}</div></div>`).join("") + `</details>`;
   }
   return h;
@@ -399,7 +402,7 @@ function writeInHtml(ch, wi){
   h += `<div class="sect">Classification</div>
     <p class="step-note">${esc(copy("writeInClassification"))}</p>
     <div class="cards three">` + wi.classifications.map(c=>`
-    <button class="card ${cls&&cls.id===c.id?"selected":""}" data-wicls="${esc(c.id)}" aria-pressed="${cls&&cls.id===c.id}">
+    <button class="card ${cls&&cls.id===c.id?"selected":""}" data-wicls="${esc(c.id)}" aria-pressed="${!!cls&&cls.id===c.id}">
       <h3>${esc(c.name)}</h3><p>${esc(c.description||"")}</p></button>`).join("") + `</div>`;
   if (cls && cls.writeIn) h += `<label class="field"><span>${esc(cls.name)}: in your words</span>
     <input type="text" data-wi="classificationText" value="${esc(w.classificationText)}" placeholder="Magical being" maxlength="60"></label>`;
@@ -488,7 +491,7 @@ function renderCP(){
       const lock = Engine.optionLock(ch,"disadvantage",dd.id);
       const req  = Engine.requirementState(ch,"disadvantage",dd.id);
       return `<div class="pick ${cur>0?"selected":""}">${dd.flagged?flagHtml(dd):""}
-        <div class="head"><h4>${esc(dd.name)}</h4><span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
+        <div class="head"><h2>${esc(dd.name)}</h2><span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
         ${constraintHtml("disadvantage",dd.id)}
         <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank && !lock.locked && req.ok)}</div></div>
         <div class="desc">${esc(dd.description)}</div>
@@ -510,7 +513,7 @@ function renderCP(){
       const req  = Engine.requirementState(ch,"advantage",ad.id);
       const open = Engine.canBuyAdvantage(ch, ad);
       return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad):""}
-        <div class="head"><h4>${esc(ad.name)}</h4><span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
+        <div class="head"><h2>${esc(ad.name)}</h2><span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
         ${natural?`<span class="cost grant">natural ×${natural.rank}</span>`:""}
         ${ad.creationOnly?`<span class="cost">creation only</span>`:""}
         ${gated&&ad.universal?`<span class="cost grant">Universal</span>`:""}
@@ -524,7 +527,7 @@ function renderCP(){
   const luck = D.resources.luck;
   h += secs.sect("LUCK");
   if (luck.flagged) h += flagHtml(luck);
-  h += `<div class="pick"><div class="head"><h4>Buy up LUCK</h4>
+  h += `<div class="pick"><div class="head"><h2>Buy up LUCK</h2>
     <span class="cost">${luck.cpCostPerPoint} CP/point · exempt from Max Boost</span>
     <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, bal.left>=luck.cpCostPerPoint)}</div></div>
     <div class="desc">Everyone starts at ${luck.startingValue}. ${esc(luck.refresh)}</div></div>`;
@@ -534,7 +537,7 @@ function renderCP(){
   if (discs.length){
     const per = Engine.powerRankCost(), cap = Engine.disciplineCap(ch);
     h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank${cap==null?"":` · cap ${cap}`}`);
-    h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h4>${esc(d.name)}</h4>
+    h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h2>${esc(d.name)}</h2>
         <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}</span>
         <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, (cap==null || d.rank<cap) && bal.left>=per)}</div></div>
         <div class="desc">${esc(d.description)}</div></div>`).join("");
@@ -553,7 +556,7 @@ function renderCP(){
       <p class="step-note">${esc(ss.text)}</p>`;
     h += book.map(l=>{
       const over = ss.over.some(o=>o.id===l.id);
-      return `<div class="pick selected"><div class="head"><h4>${esc(l.name)}</h4>
+      return `<div class="pick selected"><div class="head"><h2>${esc(l.name)}</h2>
         <span class="cost">${esc(l.tier)} · TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}</span>
         ${over?`<span class="cost over">needs ${esc(ss.discipline)} ${l.printedTH}</span>`:""}
         <div class="controls"><button class="toggle" data-startrm="${l.index}">Remove</button></div></div>
@@ -597,7 +600,7 @@ function renderReview(){
   let h = `<div class="roll-entry"><span class="die">Çredits: ${esc(pl.startingCredits.roll)} × ${pl.startingCredits.multiplier}</span>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
     <span class="pool">Starting ${CR} <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
-  h += `<div class="review-block"><h3>${esc(ch.identity.name)||"Unnamed"}</h3>${intakeHtml(ch)}<div class="kv">
+  h += `<div class="review-block"><h2>${esc(ch.identity.name)||"Unnamed"}</h2>${intakeHtml(ch)}<div class="kv">
     <span class="k">Archetype</span><span class="v">${a?esc(Engine.archetypeContent(ch).name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
     <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
     <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
