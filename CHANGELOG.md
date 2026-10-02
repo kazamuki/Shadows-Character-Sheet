@@ -49,6 +49,14 @@ own in the footer.
   over at the top. When a press greys its button out (the last Stat Point, a Condition
   you now have, LUCK back to full), focus stays on that row or card instead of jumping
   to the button beside it. Undo in the toast lands on the tab's title.
+- **Hints in empty boxes are easier to read,** in both themes, so "amount" and "note
+  (what for)" no longer fade into the background.
+- **Printing a character to PDF suggests its name for the file,** and the browser tab
+  shows whose sheet it is.
+- **Screen readers hear which card is picked** for Power Level, Archetype and a custom
+  character's classification, and every page's headings now nest in order.
+- **Each step's instruction ends where it should,** instead of running into the note
+  after it.
 
 ## v0.35.0 — 2026-10-01
 
