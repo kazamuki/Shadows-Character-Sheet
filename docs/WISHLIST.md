@@ -53,7 +53,8 @@ same run; W57, W46 and W47 are built (Decisions 162–164). W45's shape for
 Main on a phone is left open.
 
 Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
-when built, checked against the code rather than guessed. Since W43, controls
+when built, checked against the code rather than guessed. W58 and W60 got
+theirs on 2026-10-01, against 0.36.0; W59 has none yet. Since W43, controls
 are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
 or on text under 11px, so a new control inherits the floor rather than
 re-arguing it.
@@ -97,6 +98,44 @@ it in. *The fix:* `inert` (or `visibility:hidden` after the slide) while
 closed, and move focus in on open and back to the toggle on close. Seen once
 and not confirmed: widening past the pin breakpoint left `aria-hidden` stale
 until the next render.
+*Harden (2026-10-01, run in jsdom against 0.36.0).* Closed, the flyout holds
+seven focusable controls. Four things the fix has to survive:
+- **One predicate, one place.** Three paths set the open state by hand: the
+  toggle in `bindSheet` (`sheet.js`), `renderDrawer` and `closeVitals`
+  (`app.js`). `inert` added to two of them drifts from the third. Funnel them
+  through one setter that writes `open`, `aria-hidden`, `inert` and the scrim
+  together. **Pinned is not closed.** At 1280px and up a pinned panel is the
+  panel, so the predicate is `renderDrawer`'s own (`S.vitalsOpen || pinned &&
+  pinRoom()`), not `S.vitalsOpen`. That makes the 1280px `matchMedia`
+  listener load-bearing: a stale `aria-hidden` misleads a screen reader, but a
+  stale `inert` on a pinned panel blocks the mouse too. Test both directions
+  of the crossing with focus inside the panel.
+- **Move focus before going inert.** A focused control inside a subtree that
+  turns inert loses focus only at the browser's next frame, so a synchronous
+  check still sees it focused. `renderDrawer` is safe (it replaces the
+  panel's markup, so W47's `keepPlace` finds no live twin and falls back to
+  the toggle), but `closeVitals` and the toggle don't redraw: they must move
+  focus to the toggle themselves, then set `inert`.
+- **Esc closes one layer.** Today one Esc with a popover open from the
+  flyout closes both, the document's handler in `app.js` and the popover's in
+  `shared.js` each firing, and focus lands on the row inside the closed
+  flyout. With `inert` that becomes `<body>`. The flyout's Esc should stand
+  down while a popover (or a modal, which already guards its own) is open.
+  A hit modal opened from a flyout popover returns focus to a flyout row, so
+  the flyout must still be open when it closes.
+- **The toggle isn't always there.** The flyout stays open across a tab
+  switch, and Main has no toggle, so focus has nowhere to return to there.
+  Either a tab switch closes the flyout, or the fallback is the active header
+  tab. In the wizard, `closeVitals` already returns focus to the Vitals pill,
+  which is gone once the window is wide enough to show the rail.
+
+While open, Tab still walks out from under the scrim into the page. That
+stays: **the flyout does not trap focus** (Ken, 2026-10-01). It isn't a modal,
+whatever its scrim suggests, so don't make the page behind it inert the way
+`showModal()` does. `inert` is in every current browser, but
+jsdom doesn't implement it: the smoke suite can pin the attribute and where
+focus goes, but only real Chromium (`phone-check`'s) proves that Tab skips
+the closed panel. Mutation-test against 0.36.0.
 
 **W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01*
 Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,
@@ -125,6 +164,65 @@ None of these needs a proposal. Each is a named finding to fix in place.
   from W46.
 - Pin lives only in the flyout, and Main has no vitals toggle, so Pin can't
   be found from Main.
+
+*Harden (2026-10-01, checked against 0.36.0).* Item by item, in the list's
+order:
+- **Placeholders.** It isn't just Trackers: 28 inputs carry one, across
+  `sheet.js`, `wizard.js` and the filter helper in `shared.js`. The light
+  theme fails too: `#757575` on Pale Concrete is 4.2:1. Use `--dim` (6.1:1
+  dark, 5.4:1 light), not a hex. The build's contrast guard
+  (`build.test.mjs`) checks every `color: var(--…)` rule against every
+  ground in both themes and skips only `::before`/`::after`, so a token-based
+  `::placeholder` rule is covered for free and a hex one isn't. Firefox also
+  dims placeholders with `opacity:.54` by default, so the rule needs
+  `opacity:1`, or `--dim` lands at 2.2–2.7:1 there. At `--dim`, an
+  example like "amount" sits close to a typed value, and `--text` is what
+  tells them apart. Every placeholder input already has an `aria-label`, so
+  this is contrast only, not naming.
+- **`aria-pressed="null"`.** `!!` fixes the one site, but the step's sibling
+  cards are worse: Power Level (`data-pl`) and Archetype (`data-arch`) are
+  selectable `<button class="card">`s with no `aria-pressed` at all, so a
+  screen reader can't tell which is picked. Fix all three the same way.
+- **Step labels.** The renderer can't just add a full stop: step 7's label
+  already ends in one and step 5's (history) in a question mark.
+  Add one only when the label lacks closing punctuation. The " - " is in
+  step 4's label *and* step 7's note, both in `shadows-data.js`. The same
+  note also shows a field name to players: "…at most maxBoost times."
+  Constraint 9 territory, and `voice.test.mjs` doesn't catch it. Drop the
+  clause, since the Boosts section already says "max N× per target" with the
+  real number. It's copy only, so `gamedataVersion` stays (Decision 68).
+- **`document.title`.** It's also the default file name when a player prints
+  to PDF (`printSheet`, `app.js`), so every character saves as "Shadows —
+  Character Intake.pdf" today. Set it per screen: home and wizard as now, the
+  sheet with the character's name, "Unnamed" without one. Reset it on
+  leaving the sheet, so Home doesn't keep the last character's name. A name
+  comes from an untrusted file, but `document.title` is set as text, so a
+  long name only gets cut in the tab. The blank sheet's own title is in
+  `build.mjs` and is already right.
+- **Heading levels.** The wizard's card headings sit inside `<button>`s,
+  whose content isn't read as headings anyway, so retag the ones outside
+  buttons: `.pick` and `.review-block`. The CSS keys on the tag: `.card h3`,
+  `.head h4`, `.trk h4`, `.review-block h3`, `.hitpanel h4`, `.pop-head h3`.
+  Move each selector with its tag, or key it on a class, or the restyle is
+  silent. Five smoke-test selectors query `.pick h4` and `.trk h4`: update
+  them, don't drop them. `print.css` has no heading selectors, so print is
+  safe.
+- **The meter.** Run it before porting it. Every render replaces `#main`'s
+  markup, so the meter's `<i>` is a new element each time and its `width`
+  transition never plays. Swapping in `scaleX` changes nothing anyone can
+  see. Either delete the transition, along with its entry in the
+  reduced-motion rule, or make it actually animate, following `.hl-mini .seg
+  i`'s `transform-origin:left` pattern. `pct()` already clamps to 0–100, so
+  `scaleX` can't overflow or flip.
+- **`.76rem`.** Still a typeset-pass question, not a fix here. Two
+  constraints for whoever does it: anything that steps down stays at or
+  above 11px (`.7rem` is 11.2px; `phone-check` fails below 11), and the
+  inline style at `sheet.js:1811` should become a class first, since a ramp
+  sweep of `shadows.css` won't find it.
+- **Pin from Main.** This one isn't Fix tier. A new control on Main is
+  player-facing layout, and W45 already has Main's vitals open as Ken's call
+  (whether its cards slim down once the panel is pinned). Fold it into W45's
+  proposal rather than adding a button ahead of it.
 
 ### Beyond one sheet
 
