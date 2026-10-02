@@ -221,7 +221,7 @@ function vitalsPanelHtml(ch){
   let h = `<div class="dhead"><h2>Vitals</h2>
     <button class="dpin" data-vitals-pin aria-pressed="${pinned}" title="${pinned?"Put the vitals back in the bar":"Keep the vitals beside the sheet"}">${pinned?"Unpin":"Pin"}</button>
     <button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>`;
-  h += `<div class="vgroup"><div class="vname">${esc(ch.identity.name)||"&mdash;"}</div>
+  h += `<div class="vgroup"><div class="vname">${esc(charName(ch, "—"))}</div>
     <div class="vsub">${a?esc(Engine.archetypeContent(ch).name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
   h += `<div class="vgroup">`;
   // Each one the vitals bar opens, this opens too, to the left (Decision 160).
@@ -308,7 +308,7 @@ function renderShMain(){
   // The specialization is derived (schema 0.5, Decision 79). This line read
   // the removed identity.specialization and never showed it.
   const spec=Engine.specializationLabel(ch);
-  let h = sheetHeader(id.name||"Unnamed", `${a?esc(Engine.archetypeContent(ch).name):"—"}${spec?" · "+esc(spec):""} · ${pl?esc(pl.name):"—"}`, intakeHtml(ch));
+  let h = sheetHeader(charName(ch, "Unnamed"), `${a?esc(Engine.archetypeContent(ch).name):"—"}${spec?" · "+esc(spec):""} · ${pl?esc(pl.name):"—"}`, intakeHtml(ch));
 
   // Condition strip — replaces the Vitals rail on this tab (full width)
   const pct = (n,d)=> d>0 ? Math.max(0,Math.min(100,Math.round(n/d*100))) : 0;

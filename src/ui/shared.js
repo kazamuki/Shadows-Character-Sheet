@@ -662,7 +662,10 @@ function resetArchetypeChoices(ch){
 // character is simply added. The one thing still asked about is a file that
 // would put an older copy of a character in place of a newer saved one, with
 // a way to export what's there first.
-const charName = c => String(((c && c.identity) || {}).name || "").trim() || "your unnamed character";
+// The name a character goes by, wherever it's shown. A name of only spaces
+// is no name: it used to leave the header and Main's heading blank while the
+// window's title said "Unnamed".
+const charName = (c, none="your unnamed character") => String(((c && c.identity) || {}).name || "").trim() || none;
 const intakeOf = c => (c && c.meta && Engine.isIntakeId(c.meta.id)) ? c.meta.id : "";
 function supersedes(incoming, saved){
   if (!saved) return true;

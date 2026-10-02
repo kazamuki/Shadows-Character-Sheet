@@ -57,6 +57,10 @@ own in the footer.
   character's classification, and every page's headings now nest in order.
 - **Each step's instruction ends where it should,** instead of running into the note
   after it.
+- **A pinned vitals panel goes away with the sheet.** On a wide screen it used to stay
+  beside Home and a new character's steps, still showing the last character's numbers.
+- **A character whose name is only spaces reads "Unnamed"** in the header and at the
+  top of Main, instead of leaving both blank.
 
 ## v0.35.0 — 2026-10-01
 

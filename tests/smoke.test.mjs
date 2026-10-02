@@ -2566,6 +2566,34 @@ test("Pinned vitals: Pin keeps the panel, its vitals open their popovers, Unpin 
   assert.deepEqual(app.errors, []);
 });
 
+// W58's harden re-run: Home and the wizard only closed the flyout, so a
+// pinned panel stayed beside them with the last character's numbers in it.
+test("W58: a pinned panel goes with the sheet, to Home and on into the wizard", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const body = app.window.document.body, drawer = () => app.$("#vdrawer");
+  app.click("#vdrawer [data-vitals-pin]");
+  assert.ok(body.classList.contains("vitals-pinned"), "Pin didn't pin");
+  app.click("[data-menu-toggle]"); app.click("[data-home]");
+  assert.ok(!body.classList.contains("vitals-pinned"), "Home kept the pinned panel beside it");
+  assert.equal(drawer().innerHTML, "", "Home kept the last character's vitals in the panel");
+  assert.equal(drawer().getAttribute("aria-hidden"), "true");
+  app.click("#btn-new");
+  assert.ok(!body.classList.contains("vitals-pinned") && !drawer().innerHTML, "the wizard kept the pinned panel");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.vitalsPinned"), "pinned", "leaving the sheet forgot the pin");
+  assert.deepEqual(app.errors, []);
+});
+
+// W45's harden pass: a name of only spaces is no name, everywhere it shows.
+test("W45: a name of only spaces reads Unnamed in the header, Main's heading and the panel", () => {
+  const blank = lockedCharacter(); blank.identity.name = "   ";
+  const app = openSheet(blank, "main");
+  assert.equal(app.$("#brandctx").textContent, "Unnamed", "the header went blank");
+  assert.equal(app.$("#main h1").textContent, "Unnamed", "Main's heading went blank");
+  assert.equal(app.$("#vdrawer .vname").textContent, "—", "the panel's name went blank");
+  assert.equal(app.window.document.title, "Unnamed — Shadows");
+  assert.deepEqual(app.errors, []);
+});
+
 const loadoutSec = app => app.$$("[data-sec]").map(b => b.dataset.sec).find(s => /loadout/.test(s));
 
 test("the sheet draws a written-in archetype: its name everywhere, its classification, traits, powers and vulnerabilities", () => {

@@ -17,7 +17,9 @@ window.SHADOWS_CHANGELOG = [
       "**Hints in empty boxes are easier to read,** in both themes, so \"amount\" and \"note (what for)\" no longer fade into the background.",
       "**Printing a character to PDF suggests its name for the file,** and the browser tab shows whose sheet it is.",
       "**Screen readers hear which card is picked** for Power Level, Archetype and a custom character's classification, and every page's headings now nest in order.",
-      "**Each step's instruction ends where it should,** instead of running into the note after it."
+      "**Each step's instruction ends where it should,** instead of running into the note after it.",
+      "**A pinned vitals panel goes away with the sheet.** On a wide screen it used to stay beside Home and a new character's steps, still showing the last character's numbers.",
+      "**A character whose name is only spaces reads \"Unnamed\"** in the header and at the top of Main, instead of leaving both blank."
     ]
   },
   {

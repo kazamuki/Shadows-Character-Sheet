@@ -62,7 +62,7 @@ function wizardRailHtml(ch){
   const der=Engine.derived(ch), hp=Engine.health(ch), t=Engine.statTable(ch);
   const locked = ch.creation.locked;
   let h = `<div class="vgroup">
-    <div class="vname">${esc(ch.identity.name)||"&mdash;"}</div>
+    <div class="vname">${esc(charName(ch, "—"))}</div>
     <div class="vsub">${a?esc(a.name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
   if (pl && !locked){
     const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), cp=Engine.cp(ch);
@@ -600,7 +600,7 @@ function renderReview(){
   let h = `<div class="roll-entry"><span class="die">Çredits: ${esc(pl.startingCredits.roll)} × ${pl.startingCredits.multiplier}</span>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
     <span class="pool">Starting ${CR} <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
-  h += `<div class="review-block"><h2>${esc(ch.identity.name)||"Unnamed"}</h2>${intakeHtml(ch)}<div class="kv">
+  h += `<div class="review-block"><h2>${esc(charName(ch, "Unnamed"))}</h2>${intakeHtml(ch)}<div class="kv">
     <span class="k">Archetype</span><span class="v">${a?esc(Engine.archetypeContent(ch).name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
     <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
     <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
@@ -643,7 +643,7 @@ function rosterCardHtml(e){
                        : `Draft · step ${stepOf(e.step)+1} of ${STEPS.length}`;
   const bits=[arch?Engine.archetypeContent(c).name:"", whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card" data-card="${id}">
-    <div class="roster-top"><b class="roster-name">${esc(String(c.identity.name||"").trim() || "Unnamed")}</b><span class="roster-where">${esc(where)}</span></div>
+    <div class="roster-top"><b class="roster-name">${esc(charName(c, "Unnamed"))}</b><span class="roster-where">${esc(where)}</span></div>
     <div class="roster-meta"><span class="roster-tag">${esc(Engine.tagNumber(c)||e.id)}</span>${bits?" · "+bits:""}</div>
     ${unexported(e)?`<div class="roster-unexported">Changes not exported yet</div>`:""}
     <div class="roster-actions">
@@ -682,7 +682,7 @@ function askRemove(e){
 }
 function renderHome(){
   const app=$("app"); if (app) app.classList.remove("sheet-mode");
-  renderTopChrome(); closeVitals();
+  renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
   const roster = rosterEntries();
   $("main").innerHTML = `<div class="home-hero">
     <h1>Character Intake</h1>
