@@ -49,12 +49,12 @@ Character tab (158), the Raise modals (159), the pinned vitals panel (160) and
 W44 (161). Every tab was run live at 375px and on a wide screen, and focus was
 tested with real key presses. W45–W47 all still stand. W45 and W47 turned out
 broader than first written and are reworded below. W57–W60 are new from the
-same run; W57, W46 and W47 are built (Decisions 162–164). W45's shape for
-Main on a phone is left open.
+same run; W57, W46 and W47 are built (Decisions 162–164), and W58 and
+most of W60 shipped in 0.36.0. W45's shape for Main on a phone is left open.
 
 Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
-when built, checked against the code rather than guessed. W58 and W60 got
-theirs on 2026-10-01, against 0.36.0; W59 has none yet. Since W43, controls
+when built, checked against the code rather than guessed. W60 got its own
+on 2026-10-01, against 0.36.0; W59 has none yet. Since W43, controls
 are 44px on a touchscreen and `npm run phone-check` fails on anything smaller,
 or on text under 11px, so a new control inherits the floor rather than
 re-arguing it.
@@ -88,55 +88,6 @@ instead of cutting. The hero's TAG line has three states, not one: a TAG, a
 Ghost or Black TAG's label (Decision 146), and TAGless, which reads "Off grid"
 (148). An unnamed character's title is "Unnamed" today. Any move has to read
 right in all of them.
-
-**W58 — The closed vitals flyout is still in the tab order.** *Claude · 🔎 · critique P2, 2026-10-01*
-`.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`
-(`shadows.css`), so its Close button and six vital buttons stay focusable:
-Tab walks into invisible controls on every sheet tab, and `aria-hidden`
-content that takes focus is an accessibility failure in itself. Opening it on
-the sheet leaves focus on the toggle; the wizard's branch in `app.js` moves
-it in. *The fix:* `inert` (or `visibility:hidden` after the slide) while
-closed, and move focus in on open and back to the toggle on close. Seen once
-and not confirmed: widening past the pin breakpoint left `aria-hidden` stale
-until the next render.
-*Harden (2026-10-01, run in jsdom against 0.36.0).* Closed, the flyout holds
-seven focusable controls. Four things the fix has to survive:
-- **One predicate, one place.** Three paths set the open state by hand: the
-  toggle in `bindSheet` (`sheet.js`), `renderDrawer` and `closeVitals`
-  (`app.js`). `inert` added to two of them drifts from the third. Funnel them
-  through one setter that writes `open`, `aria-hidden`, `inert` and the scrim
-  together. **Pinned is not closed.** At 1280px and up a pinned panel is the
-  panel, so the predicate is `renderDrawer`'s own (`S.vitalsOpen || pinned &&
-  pinRoom()`), not `S.vitalsOpen`. That makes the 1280px `matchMedia`
-  listener load-bearing: a stale `aria-hidden` misleads a screen reader, but a
-  stale `inert` on a pinned panel blocks the mouse too. Test both directions
-  of the crossing with focus inside the panel.
-- **Move focus before going inert.** A focused control inside a subtree that
-  turns inert loses focus only at the browser's next frame, so a synchronous
-  check still sees it focused. `renderDrawer` is safe (it replaces the
-  panel's markup, so W47's `keepPlace` finds no live twin and falls back to
-  the toggle), but `closeVitals` and the toggle don't redraw: they must move
-  focus to the toggle themselves, then set `inert`.
-- **Esc closes one layer.** Today one Esc with a popover open from the
-  flyout closes both, the document's handler in `app.js` and the popover's in
-  `shared.js` each firing, and focus lands on the row inside the closed
-  flyout. With `inert` that becomes `<body>`. The flyout's Esc should stand
-  down while a popover (or a modal, which already guards its own) is open.
-  A hit modal opened from a flyout popover returns focus to a flyout row, so
-  the flyout must still be open when it closes.
-- **The toggle isn't always there.** The flyout stays open across a tab
-  switch, and Main has no toggle, so focus has nowhere to return to there.
-  Either a tab switch closes the flyout, or the fallback is the active header
-  tab. In the wizard, `closeVitals` already returns focus to the Vitals pill,
-  which is gone once the window is wide enough to show the rail.
-
-While open, Tab still walks out from under the scrim into the page. That
-stays: **the flyout does not trap focus** (Ken, 2026-10-01). It isn't a modal,
-whatever its scrim suggests, so don't make the page behind it inert the way
-`showModal()` does. `inert` is in every current browser, but
-jsdom doesn't implement it: the smoke suite can pin the attribute and where
-focus goes, but only real Chromium (`phone-check`'s) proves that Tab skips
-the closed panel. Mutation-test against 0.36.0.
 
 **W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01*
 Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,

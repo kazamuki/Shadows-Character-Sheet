@@ -2915,3 +2915,104 @@ test("W60: placeholders take a token colour at full strength, so the contrast gu
   assert.match(rule[1], /color\s*:\s*var\(--[\w-]+\)/, "a placeholder colour that isn't a token escapes the contrast guard");
   assert.match(rule[1], /opacity\s*:\s*1\b/, "Firefox fades placeholders unless opacity is 1");
 });
+
+// ── W58: the closed vitals flyout leaves the Tab order ──
+// jsdom doesn't implement inert, so these pin the attribute and where focus
+// goes; Tab skipping the panel is checked in real Chromium.
+const escKey = app => (focused(app) || app.window.document.body)
+  .dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+const shut = app => { const d = app.$("#vdrawer"); return d.hasAttribute("inert") && d.getAttribute("aria-hidden") === "true" && !d.classList.contains("open"); };
+const shownOpen = app => { const d = app.$("#vdrawer"); return !d.hasAttribute("inert") && d.getAttribute("aria-hidden") === "false"; };
+
+test("W58: the flyout is inert while closed, and focus goes in when it opens and back when it closes", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  assert.ok(shut(app), "the closed flyout's controls are still reachable");
+  press(app, "#main [data-vitals-toggle]");
+  assert.ok(shownOpen(app), "the open flyout is still inert");
+  assert.equal(focused(app), app.$("#vdrawer [data-vitals-close]"), "opening left focus behind the flyout");
+  press(app, "#vdrawer [data-vitals-close]");
+  assert.ok(shut(app));
+  assert.equal(focused(app), app.$("#main [data-vitals-toggle]"), "closing dropped focus");
+  press(app, "#main [data-vitals-toggle]"); escKey(app);
+  assert.ok(shut(app), "Esc didn't close the flyout");
+  assert.equal(focused(app), app.$("#main [data-vitals-toggle]"), "Esc dropped focus");
+  press(app, "#main [data-vitals-toggle]"); press(app, "#main [data-vitals-toggle]");
+  assert.ok(shut(app), "the toggle didn't close what it opened");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W58: one Esc closes one layer: a popover or a modal from the flyout first, then the flyout", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  press(app, "#main [data-vitals-toggle]");
+  press(app, '#vdrawer [data-vpop="luck"]');
+  assert.ok(!app.$("#vpop").hidden, "the flyout's LUCK opened nothing");
+  escKey(app);
+  assert.ok(app.$("#vpop").hidden, "Esc left the popover open");
+  assert.ok(shownOpen(app), "one Esc closed the popover and the flyout");
+  assert.equal(focused(app), app.$('#vdrawer [data-vpop="luck"]'), "focus didn't return to the flyout's LUCK");
+  escKey(app);
+  assert.ok(shut(app));
+  assert.equal(focused(app), app.$("#main [data-vitals-toggle]"));
+
+  press(app, "#main [data-vitals-toggle]");
+  press(app, '#vdrawer [data-vpop="hp"]');
+  press(app, "#vpop [data-pophit]");
+  assert.ok(app.$("dialog.modal[open]"), "Take a hit didn't open from the flyout");
+  escKey(app);
+  assert.ok(!app.$("dialog.modal[open]"), "Esc left the modal open");
+  assert.ok(shownOpen(app), "one Esc closed the modal and the flyout");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W58: the scrim takes the flyout's popover with it, and closing where no toggle is lands on the active tab", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  press(app, "#main [data-vitals-toggle]");
+  press(app, '#vdrawer [data-vpop="luck"]');
+  app.click("#vscrim");
+  assert.ok(shut(app));
+  assert.ok(app.$("#vpop").hidden, "the popover outlived the flyout it came from");
+
+  press(app, "#main [data-vitals-toggle]");
+  app.click('[data-sec="main"]');                       // Main has no Vitals toggle
+  assert.ok(!app.$("#main [data-vitals-toggle]") && shownOpen(app));
+  press(app, "#vdrawer [data-vitals-close]");
+  assert.ok(shut(app));
+  assert.equal(focused(app), app.$("#topnav .tab.active"), "with no toggle on Main, focus fell to <body>");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W58: pinned beside a wide page the panel stays live, and narrowing hands focus out before it goes inert", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  let wide = true;
+  app.window.matchMedia = () => ({ matches: wide });
+  app.window.localStorage.setItem("shadows.ui.vitalsPinned", "pinned");
+  app.window.eval("update();");
+  assert.ok(shownOpen(app), "a pinned panel went inert");
+  assert.equal(app.$("#vdrawer").getAttribute("aria-hidden"), "false");
+  press(app, "#vdrawer [data-vitals-pin]");             // Unpin, wide: the flyout closes
+  assert.ok(shut(app));
+  assert.equal(focused(app), app.$("#main [data-vitals-toggle]"), "Unpin left focus in a closed panel");
+  press(app, "#main [data-vitals-toggle]"); press(app, "#vdrawer [data-vitals-pin]");   // Pin again: keeps its place
+  assert.ok(!app.$("#vdrawer").hasAttribute("inert"));
+  assert.equal(focused(app), app.$("#vdrawer [data-vitals-pin]"), "Pin lost its place");
+
+  wide = false;                                         // narrower than 1280px: the pin is ignored
+  app.window.eval("renderDrawer();");
+  assert.ok(shut(app), "a panel pinned off screen stayed reachable");
+  assert.equal(focused(app), app.$("#main [data-vitals-toggle]"), "narrowing left focus in the inert panel");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W58: off the sheet the flyout is inert, and the wizard's still hands focus to its pill", () => {
+  const home = boot();
+  assert.ok(home.$("#vdrawer").hasAttribute("inert"), "Home's empty flyout isn't inert");
+  const app = draftOn("arcanist", "stats");
+  assert.ok(app.$("#vdrawer").hasAttribute("inert"));
+  press(app, "#vitals [data-wiz-vitals]");
+  assert.ok(shownOpen(app));
+  assert.equal(focused(app), app.$("#vdrawer [data-vitals-close]"));
+  escKey(app);
+  assert.ok(shut(app));
+  assert.equal(focused(app), app.$("#vitals [data-wiz-vitals]"));
+  assert.deepEqual(app.errors, []);
+});

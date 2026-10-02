@@ -177,6 +177,55 @@ without the result. The guards are smoke tests in the shape already in
 one per fallback. Mutation-test them against today's code; all of them should
 fail there except Main's row and the popover's happy path.
 
+**W58 — The closed vitals flyout is still in the tab order.** *Claude · critique P2, 2026-10-01 · → app 0.36.0, Fix tier: inert while closed and not pinned, focus in on open and back on close (the active tab where no toggle is), one Esc closes one layer, no focus trap*
+`.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`
+(`shadows.css`), so its Close button and six vital buttons stay focusable:
+Tab walks into invisible controls on every sheet tab, and `aria-hidden`
+content that takes focus is an accessibility failure in itself. Opening it on
+the sheet leaves focus on the toggle; the wizard's branch in `app.js` moves
+it in. *The fix:* `inert` (or `visibility:hidden` after the slide) while
+closed, and move focus in on open and back to the toggle on close. Seen once
+and not confirmed: widening past the pin breakpoint left `aria-hidden` stale
+until the next render.
+*Harden (2026-10-01, run in jsdom against 0.36.0).* Closed, the flyout holds
+seven focusable controls. Four things the fix has to survive:
+- **One predicate, one place.** Three paths set the open state by hand: the
+  toggle in `bindSheet` (`sheet.js`), `renderDrawer` and `closeVitals`
+  (`app.js`). `inert` added to two of them drifts from the third. Funnel them
+  through one setter that writes `open`, `aria-hidden`, `inert` and the scrim
+  together. **Pinned is not closed.** At 1280px and up a pinned panel is the
+  panel, so the predicate is `renderDrawer`'s own (`S.vitalsOpen || pinned &&
+  pinRoom()`), not `S.vitalsOpen`. That makes the 1280px `matchMedia`
+  listener load-bearing: a stale `aria-hidden` misleads a screen reader, but a
+  stale `inert` on a pinned panel blocks the mouse too. Test both directions
+  of the crossing with focus inside the panel.
+- **Move focus before going inert.** A focused control inside a subtree that
+  turns inert loses focus only at the browser's next frame, so a synchronous
+  check still sees it focused. `renderDrawer` is safe (it replaces the
+  panel's markup, so W47's `keepPlace` finds no live twin and falls back to
+  the toggle), but `closeVitals` and the toggle don't redraw: they must move
+  focus to the toggle themselves, then set `inert`.
+- **Esc closes one layer.** Today one Esc with a popover open from the
+  flyout closes both, the document's handler in `app.js` and the popover's in
+  `shared.js` each firing, and focus lands on the row inside the closed
+  flyout. With `inert` that becomes `<body>`. The flyout's Esc should stand
+  down while a popover (or a modal, which already guards its own) is open.
+  A hit modal opened from a flyout popover returns focus to a flyout row, so
+  the flyout must still be open when it closes.
+- **The toggle isn't always there.** The flyout stays open across a tab
+  switch, and Main has no toggle, so focus has nowhere to return to there.
+  Either a tab switch closes the flyout, or the fallback is the active header
+  tab. In the wizard, `closeVitals` already returns focus to the Vitals pill,
+  which is gone once the window is wide enough to show the rail.
+
+While open, Tab still walks out from under the scrim into the page. That
+stays: **the flyout does not trap focus** (Ken, 2026-10-01). It isn't a modal,
+whatever its scrim suggests, so don't make the page behind it inert the way
+`showModal()` does. `inert` is in every current browser, but
+jsdom doesn't implement it: the smoke suite can pin the attribute and where
+focus goes, but only real Chromium (`phone-check`'s) proves that Tab skips
+the closed panel. Mutation-test against 0.36.0.
+
 ### Loadout & catalog
 
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*

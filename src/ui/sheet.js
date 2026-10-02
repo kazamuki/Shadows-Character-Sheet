@@ -2605,12 +2605,7 @@ function openVitalPopover(key, scope="#main"){
 function bindSheet(){
   const main=$("main"), ch=S.ch;
   // Vitals flyout (the bar's "Vitals" toggle on non-Main tabs)
-  main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{
-    S.vitalsOpen=!S.vitalsOpen;
-    const dr=$("vdrawer"), sc=$("vscrim");
-    if (dr){ dr.classList.toggle("open", S.vitalsOpen); dr.setAttribute("aria-hidden", S.vitalsOpen?"false":"true"); }
-    if (sc) sc.classList.toggle("open", S.vitalsOpen);
-  });
+  main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{ if (S.vitalsOpen) closeVitals(); else openVitals(); });
   main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
   // A button that goes to another tab, the way the header's tabs do.
   main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>{ S.section=normSection(b.dataset.gotab); window.scrollTo(0,0); update(); });

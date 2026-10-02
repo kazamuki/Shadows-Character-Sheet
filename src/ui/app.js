@@ -86,14 +86,44 @@ function setVitalsPinned(on){
   try{ localStorage.setItem(PIN_KEY, on?"pinned":"unpinned"); }catch(e){}
   closePopover(false); closeVitals(); renderDrawer();
 }
+// W58: the panel is shown while the flyout is open, or pinned beside a page
+// wide enough to hold it. Otherwise it's off screen, and inert: out of the Tab
+// order and the accessibility tree, not just aria-hidden. Every path that
+// opens, closes or redraws it ends in syncDrawer, so the three can't drift.
+function drawerShown(){ return !!S.vitalsOpen || (S.screen==="sheet" && !!S.ch && vitalsPinned() && pinRoom()); }
+function syncDrawer(){
+  const dr=$("vdrawer"), sc=$("vscrim"), shown=drawerShown();
+  if (dr){
+    dr.classList.toggle("open", !!S.vitalsOpen);
+    dr.setAttribute("aria-hidden", shown?"false":"true");
+    dr.toggleAttribute("inert", !shown);
+  }
+  if (sc) sc.classList.toggle("open", !!S.vitalsOpen);
+}
+// Where focus goes when the panel leaves: what opens it again, or, where
+// nothing does (Main has no toggle; the wizard's pill is gone on a wide
+// screen), the active tab or the page's title.
+function focusVitalsOpener(){
+  const sel = S.screen==="wizard" ? ["#vitals [data-wiz-vitals]", "#main .step-title"]
+    : ["#main [data-vitals-toggle]", "#topnav .tab.active", "#main .step-title"];
+  sel.some(s=>{ const el=document.querySelector(s); return el && takeFocus(el, s==="#main .step-title"); });
+}
+function openVitals(){
+  S.vitalsOpen=true;
+  syncDrawer();
+  const x=document.querySelector("#vdrawer [data-vitals-close]"); if (x) x.focus();
+}
 function closeVitals(){
   const was=S.vitalsOpen;
   S.vitalsOpen=false;
-  const dr=$("vdrawer"), sc=$("vscrim");
-  if (dr){ dr.classList.remove("open"); dr.setAttribute("aria-hidden","true"); }
-  if (sc) sc.classList.remove("open");
-  // The wizard's flyout hands focus back to the Vitals pill that opened it.
-  if (was && S.screen==="wizard"){ const t=document.querySelector("#vitals [data-wiz-vitals]"); if (t) t.focus(); }
+  const dr=$("vdrawer");
+  // A popover the panel opened goes with it.
+  if (popState && popState.scope==="#vdrawer") closePopover(false);
+  // Focus leaves before the panel goes inert: a browser only drops focus from
+  // an inert subtree at its next frame, so it would sit there unseen till then.
+  const lost=document.activeElement, inside=!!(dr && lost && dr.contains(lost));
+  if (!drawerShown() && (inside || (was && (!lost || lost===document.body)))) focusVitalsOpener();
+  syncDrawer();
 }
 function renderDrawer(){
   const dr=$("vdrawer"), sc=$("vscrim");
@@ -105,10 +135,8 @@ function renderDrawer(){
     // focus to whatever opens it again.
     keepPlace(dr, ()=>{
       dr.innerHTML = vitalsPanelHtml(S.ch);
-      dr.classList.toggle("open", !!S.vitalsOpen);
-      dr.setAttribute("aria-hidden", S.vitalsOpen || (pinned && pinRoom()) ? "false" : "true");
-    }, ["#main [data-vitals-toggle]", "#main [data-vpop]"]);
-    if (sc) sc.classList.toggle("open", !!S.vitalsOpen);
+      syncDrawer();
+    }, ["#main [data-vitals-toggle]", "#main [data-vpop]", "#topnav .tab.active"]);
     dr.querySelectorAll("[data-vitals-close]").forEach(b=>b.onclick=closeVitals);
     dr.querySelectorAll("[data-vitals-pin]").forEach(b=>b.onclick=()=>setVitalsPinned(!vitalsPinned()));
     dr.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop, "#vdrawer"));
@@ -118,8 +146,8 @@ function renderDrawer(){
     // Vitals pill (Decision 161). No pin: wide enough to pin, the rail shows.
     dr.innerHTML = `<div class="dhead"><h2>Vitals</h2>
       <button class="dclose" data-vitals-close aria-label="Close vitals">✕</button></div>` + wizardRailHtml(S.ch);
-    dr.classList.add("open"); dr.setAttribute("aria-hidden","false");
-    if (sc){ sc.classList.add("open"); sc.onclick=closeVitals; }
+    syncDrawer();
+    if (sc) sc.onclick=closeVitals;
     const x=dr.querySelector("[data-vitals-close]"); x.onclick=closeVitals; x.focus();
   } else {
     dr.innerHTML=""; closeVitals();
@@ -339,7 +367,12 @@ function boot(){
   }
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{
-    if (e.key==="Escape"){ const dr=$("vdrawer"); if (dr && dr.classList.contains("open")) closeVitals(); closeMenu(); }
+    if (e.key!=="Escape") return;
+    // One Esc closes one layer (W58): a modal or a popover on top of
+    // the flyout closes first, and the flyout waits for the next press.
+    const above = e.defaultPrevented || popState || document.querySelector("dialog.modal[open]");
+    const dr=$("vdrawer"); if (!above && dr && dr.classList.contains("open")) closeVitals();
+    closeMenu();
   });
   document.addEventListener("click", e=>{ const a=$("hdractions"); if (a && !a.contains(e.target)) closeMenu(); });
   // What's new opens from the home screen, the sheet's menu and the footer.

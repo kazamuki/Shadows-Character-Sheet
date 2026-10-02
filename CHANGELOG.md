@@ -57,6 +57,9 @@ own in the footer.
   character's classification, and every page's headings now nest in order.
 - **Each step's instruction ends where it should,** instead of running into the note
   after it.
+- **The keyboard skips the vitals panel while it's closed.** Opening it puts you on its
+  close button, and closing it (×, Esc or a tap outside) puts you back on **Vitals**. Esc
+  closes one thing at a time: a box opened from the panel first, then the panel.
 
 ## v0.35.0 — 2026-10-01
 

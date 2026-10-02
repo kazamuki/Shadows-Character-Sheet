@@ -131,7 +131,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160), live for Saturday 2026-10-03. **0.36.0 is built, not released:** W44, the wizard on a phone (161), spend every point before the lock (162, W57), the lock's beat (163, W46), and a keyboard press keeping its place (164, W47), plus six of W60's small accessibility and copy fixes. The critique was re-run on 0.35.1 (29/40); W45 still stands, reworded, and W58–W60 are new. Next: W58 and W59 (W59's live region is what makes 164's re-focus tell a screen reader the new number). W60's last two wait on a typeset pass and on W45. W45's shape for Main on a phone is Ken's open call.
+**The live site is v0.35.0** (data 0.28, schema 0.16): the custom archetype (153–156) and Ken's and Deighton's sheet feedback (157–160), live for Saturday 2026-10-03. **0.36.0 is built, not released:** W44, the wizard on a phone (161), spend every point before the lock (162, W57), the lock's beat (163, W46), and a keyboard press keeping its place (164, W47), plus six of W60's small accessibility and copy fixes, and the closed vitals flyout out of the Tab order (W58). The critique was re-run on 0.35.1 (29/40); W45 still stands, reworded, and W58–W60 are new. Next: W59 (its live region is what makes 164's re-focus tell a screen reader the new number). W60's last two wait on a typeset pass and on W45. W45's shape for Main on a phone is Ken's open call.
 Ken alone: F9, F12, F32 and **W38's plan** (`plans/two-tabs-one-character.md`,
 TQ1–TQ3). The wishlist: W29, W39, W54 and W55.
 
