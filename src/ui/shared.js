@@ -756,7 +756,7 @@ function powerHtml(p){
   const rows = Object.values(p).find(v=>Array.isArray(v) && v.length && v.every(r=>r && typeof r==="object" && !Array.isArray(r)));
   const cols = rows ? Object.keys(rows[0]) : [];
   const head = c => esc(String(c).replace(/^./, x=>x.toUpperCase()));
-  return `<div class="power"><h5>${esc(p.name||"")}${p.description?"":` <span class="chip">${esc(statusLabel("tbd"))}</span>`}</h5>`
+  return `<div class="power"><h3>${esc(p.name||"")}${p.description?"":` <span class="chip">${esc(statusLabel("tbd"))}</span>`}</h3>`
     + (p.description?`<p>${esc(p.description)}</p>`:"")
     + (rows?`<table class="ref"><thead><tr>${cols.map(c=>`<th>${head(c)}</th>`).join("")}</tr></thead><tbody>${
         rows.map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c]==null?"":r[c])}</td>`).join("")}</tr>`).join("")}</tbody></table>`:"")
@@ -805,7 +805,7 @@ function focusedPickHtml(ch, attr){
   return `<p class="step-note"><em>${fp.have}/${fp.need} chosen.</em></p>` + [...fp.options, ...fp.invalid].map(id=>{
     const s = Engine.skillById(id) || { name:id };
     const on = fp.picks.includes(id), bad = fp.invalid.includes(id);
-    return `<div class="pick ${on?"selected":""}"><div class="head"><h4>${esc(s.name)}</h4>
+    return `<div class="pick ${on?"selected":""}"><div class="head"><h2>${esc(s.name)}</h2>
       <div class="controls"><button class="toggle" ${attr}="${esc(id)}" ${!on && !bad && full?"disabled":""}>${bad?"Remove":on?"Chosen":"Choose"}</button></div></div></div>`;
   }).join("");
 }

@@ -72,7 +72,7 @@ function conditionsHtml(ch, full){
       <button class="cond-chip-body" data-condinfo="${a.index}" aria-expanded="${S.condInfo===a.index}" title="${esc(a.def?a.def.effect:"")}"><b>${esc(a.label)}</b>${a.def?` <small>${esc(a.def.short)}</small>`:""}</button>
       <button class="x" data-condrm="${a.index}" aria-label="Clear ${esc(a.label)}" title="Clear">✕</button></span>`).join("") + `</div>` + conditionInfoHtml(st);
   } else {
-    h += st.active.map(a=>`<div class="pick cond-card"><div class="head"><h4>${esc(a.label)}</h4>
+    h += st.active.map(a=>`<div class="pick cond-card"><div class="head"><h2>${esc(a.label)}</h2>
       ${a.def?`<span class="cost">${esc(a.def.short)}</span>`:""}
       <div class="controls"><button class="btn sm" data-condrm="${a.index}">Clear</button></div></div>
       <div class="desc">${a.def?esc(a.def.effect)+"\n<b>Recovery:</b> "+esc(a.def.recovery):"This Condition isn't in the game data any more."}</div>
@@ -462,14 +462,14 @@ function renderShCharacter(){
     const vulns = content.vulnerabilities.filter(v=>v.name);
     const cols = [];
     if (traits.length) cols.push(secs.sect("Baseline Traits") + traits.map(tr=>
-      `<div class="pick"><div class="head"><h4>${esc(tr.name)}</h4></div>
+      `<div class="pick"><div class="head"><h2>${esc(tr.name)}</h2></div>
         <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join(""));
     if (powers.length) cols.push(secs.sect("Powers") + powers.map(p=>
-      `<div class="pick"><div class="head"><h4>${esc(p.name)}</h4>
+      `<div class="pick"><div class="head"><h2>${esc(p.name)}</h2>
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
         <div class="desc">${esc(p.description||p.effect||"")}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join(""));
     if (vulns.length) cols.push(secs.sect("Vulnerabilities") + vulns.map(v=>
-      `<div class="pick"><div class="head"><h4>${esc(v.name)}</h4></div>
+      `<div class="pick"><div class="head"><h2>${esc(v.name)}</h2></div>
         <div class="desc">${esc(v.description||"")}</div></div>`).join(""));
     if (cols.length) h += `<div class="arch-cols n${cols.length}">${cols.map(c=>`<div class="arch-col">${c}</div>`).join("")}</div>`;
 
@@ -480,7 +480,7 @@ function renderShCharacter(){
     if (a.specialization && a.specialization.options){
       const label = a.specialization.label||"Specialization";
       h += secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`);
-      h += chosen.map(o=>`<div class="pick selected"><div class="head"><h4>${esc(o.name)}</h4>
+      h += chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
         ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
         <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div>${optionPowersHtml(o)}</div>`).join("");
     }
@@ -489,7 +489,7 @@ function renderShCharacter(){
     // Trackers tab records and removes them.
     const abPerm = Engine.aberrationState(ch).permanent;
     if (abPerm.length){
-      h += secs.sect("Permanent Aberrations") + abPerm.map(x=>`<div class="pick selected"><div class="head"><h4>${esc(x.name)}</h4>
+      h += secs.sect("Permanent Aberrations") + abPerm.map(x=>`<div class="pick selected"><div class="head"><h2>${esc(x.name)}</h2>
         ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
         <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
     }
@@ -630,7 +630,7 @@ function referencePanelHtml(ch, p, sect){
 // panel gives the instruction and opens the Aberration picker for whatever
 // the GM names. The tables stay in the Magic reference for anyone to read.
 function cascadePanelHtml(ch){
-  return `<div class="hitpanel" data-cascadepanel><h4>Cascade</h4>
+  return `<div class="hitpanel" data-cascadepanel><h3>Cascade</h3>
     <p>The Aether broke through. Roll a d10, add your Rupture's degree, and tell your GM the total. What it left behind is their call.</p>
     <div class="hitrow"><button class="btn primary sm" data-abpickopen="cascade">Record what your GM tells you</button></div>
     <p class="hitnote">Backlash, a Cosmetic Mutation and Burned Out aren't Aberrations. Your GM runs those, and anything that lasts goes in your Notes.</p></div>`;
@@ -646,7 +646,7 @@ function aberrationsHtml(ch){
   const chip = a => `<span class="cond-chip${a.def&&a.def.category==="bad"?" bad":""}" title="${esc(a.def?a.def.description:"")}">
       <span class="cond-chip-body"><b>${esc(a.name)}</b>${a.category?` <small>${esc(a.category)}</small>`:""}${a.missing?` <small>no longer in the game data</small>`:""}</span>
       <button class="x" data-abrm="${a.index}" aria-label="${a.permanence==="permanent"?"Remove":"Clear"} ${esc(a.name)}" title="${a.permanence==="permanent"?"Remove (a quest or ritual undid it)":"Clear (it wore off)"}">✕</button></span>`;
-  const card = a => `<div class="pick cond-card"><div class="head"><h4>${esc(a.name)}</h4>
+  const card = a => `<div class="pick cond-card"><div class="head"><h2>${esc(a.name)}</h2>
       ${a.category?`<span class="cost">${esc(a.category)}</span>`:""}
       <div class="controls"><button class="btn sm" data-abrm="${a.index}">${a.permanence==="permanent"?"Remove":"Clear"}</button></div></div>
       <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description)+spTail((Engine.spAmounts(ch, a.def)||{}).description):"This Aberration isn't in the game data any more."}</div>
@@ -846,7 +846,7 @@ function actInput(ch, st){
 }
 function resetPanelHtml(ch, st){
   const r=Engine.resolveReset(ch, actInput(ch, st));
-  let h=`<div class="hitpanel" data-actpanel="reset"><h4>Turn Reset</h4>`;
+  let h=`<div class="hitpanel" data-actpanel="reset"><h3>Turn Reset</h3>`;
   if (r.ticks.length) h+=`<div class="hitrow">` + r.ticks.map(t=> t.source
     ? actNum({ [`src:${t.index}`]: st.sources[t.index]==null?"":st.sources[t.index] }, `src:${t.index}`, `${esc(t.name)} damage this round`)
     : `<span class="hitarmor">${esc(t.name)}: ${t.hp} HP</span>`).join("") + `</div>`;
@@ -870,7 +870,7 @@ function resetPanelHtml(ch, st){
 function restPanelHtml(ch, st){
   const nh=Engine.naturalHealing(ch), inp=actInput(ch, st), hs=Engine.hlState(ch);
   const r=Engine.heal(clone(ch), inp);
-  let h=`<div class="hitpanel" data-actpanel="rest"><h4>Rest</h4><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>
+  let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>
     <div class="hitrow">${actNum(st,"days","Days of rest")}
       <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
       ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP recovered")}</div>${st.speed?gearUseHtml(ch, st, "speed-heal", "fromGear"):""}`;
@@ -882,7 +882,7 @@ function restPanelHtml(ch, st){
 function focusedPanelHtml(ch, st){
   const F=(D.recoveryRules||{}).focusedHealing||{}, hs=Engine.hlState(ch);
   const r=Engine.heal(clone(ch), actInput(ch, st));
-  let h=`<div class="hitpanel" data-actpanel="focused"><h4>Focused Healing</h4><p class="hitnote">${esc(F.text||"")}</p>
+  let h=`<div class="hitpanel" data-actpanel="focused"><h3>Focused Healing</h3><p class="hitnote">${esc(F.text||"")}</p>
     <div class="hitrow">${actNum(st,"hp","HP restored")}${hs.massive?actNum(st,"massive","Massive levels restored",`max="${hs.massive}"`):""}</div>`;
   if (hs.massive) h+=`<p class="hitnote">${esc(F.massiveText||"")}</p>`;
   const clearable = (ch.trackers.conditions||[]).map((e,i)=>({e,i})).filter(x=>(F.clears||[]).includes(x.e.id));
@@ -914,7 +914,7 @@ function nanomedPanelHtml(ch, st){
   const inp=actInput(ch, st), kit=Engine.nanomedKit(ch, st.dose), hs=Engine.hlState(ch);
   const r=Engine.heal(clone(ch), inp);
   const doses=["First","Second","Third","Fourth","Fifth"];
-  let h=`<div class="hitpanel" data-actpanel="nanomed"><h4>Nanomed Kit</h4><p class="hitnote">${esc(kit.text)} ${esc(kit.doseText)}</p>
+  let h=`<div class="hitpanel" data-actpanel="nanomed"><h3>Nanomed Kit</h3><p class="hitnote">${esc(kit.text)} ${esc(kit.doseText)}</p>
     <div class="hitrow"><label class="field"><span>Kit today</span><select data-act="dose">${doses.map((l,i)=>actOpt(String(i+1), l, String(st.dose)===String(i+1))).join("")}</select></label>
       ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP regenerated")}</div>
     <p class="hitnote">${esc(`1 HP every ${kit.everyRounds===1?"round":kit.everyRounds+" rounds"} for ${kit.rounds} rounds. If it's cut short, lower the number.`)}</p>${gearUseHtml(ch, st, "nanomed-kit", "fromGear")}`;
@@ -928,7 +928,7 @@ function nanomedPanelHtml(ch, st){
 }
 function wearPanelHtml(ch, st){
   const R=D.armorRules||{}, w=Engine.armorState(ch).worn;
-  let h=`<div class="hitpanel" data-actpanel="wear"><h4>After the fight</h4><p class="hitnote">${esc(R.wearNote||"")}</p>`;
+  let h=`<div class="hitpanel" data-actpanel="wear"><h3>After the fight</h3><p class="hitnote">${esc(R.wearNote||"")}</p>`;
   if (!w) return h + `<p class="hitwhy">No body armor worn.</p>` + actButtons(false, "Apply wear") + `</div>`;
   const dice=R.integrityLossByDifficulty||{};
   h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · Integrity ${w.integrity}/${w.integrityMax}</span>
@@ -1044,7 +1044,7 @@ function renderShTrackers(){
 
   // Damage. The headline is HP left, so the stepper says Heal and Hurt
   // rather than signs on the damage total it edits (W11).
-  h += `<div class="trk"><h4>Damage</h4>
+  h += `<div class="trk"><h2>Damage</h2>
     <span class="big ${pain.down?"bad":"hp"}${landedCls("hp")}">${pain.hpLeft} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}
     ${damageStepperHtml(ch)}
@@ -1062,7 +1062,7 @@ function renderShTrackers(){
 
   // Armor: the worn body piece's Integrity, and the after-fight wear roll.
   const worn = Engine.armorState(ch).worn;
-  h += `<div class="trk"><h4>Armor</h4>` + (worn
+  h += `<div class="trk"><h2>Armor</h2>` + (worn
     ? `<span class="hitarmor">${esc(worn.name)} · ${armorStatLine(worn)}</span>
        <div class="lo-armor-int" style="flex-basis:100%">${intBar(worn)}</div>
        <button class="btn sm" data-actopen="wear" ${open?"disabled":""}>After the fight</button>
@@ -1070,7 +1070,7 @@ function renderShTrackers(){
     : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
     + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
-  h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h4>${esc(pain.label)}</h4>
+  h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${esc(pain.label)}</h2>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
     <div class="desc">${esc(pain.description)}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
@@ -1079,13 +1079,13 @@ function renderShTrackers(){
   h += `</div><div class="trk-col">`;
 
   // SAN
-  h += `<div class="trk"><h4>Sanity</h4>
+  h += `<div class="trk"><h2>Sanity</h2>
     <span class="big ${san.current<=san.max/2?"bad":""}">${san.current} / ${san.max}%</span>
     ${sanControlsHtml(ch)}
     <span class="sub">Max is ${esc(Engine.formulaText((D.derived.find(d=>d.id==="SAN")||{}).formula))}, computed. Track loss here; recovery is a story, not a button.</span></div>`;
 
   // LUCK
-  h += `<div class="trk"><h4>LUCK</h4>
+  h += `<div class="trk"><h2>LUCK</h2>
     <span class="big ${luck.current===0?"bad":"gold"}">${luck.current} / ${luck.max}</span>${luckControlsHtml(luck)}
     <span class="sub">${esc(luck.refresh)} Logging a session refreshes it automatically.</span></div>`;
 
@@ -1097,7 +1097,7 @@ function renderShTrackers(){
     const manualMax = max==null ? ((ch.trackers.panel[p.id]||{}).max??"") : null;
     const effMax = max!=null ? max : (manualMax===""?null:Number(manualMax));
     const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
-    h += `<div class="trk"><h4>${esc(p.title)}</h4>
+    h += `<div class="trk"><h2>${esc(p.title)}</h2>
       <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
       <button class="btn sm" data-trk="${p.id}|-1">−1</button>
       <button class="btn sm" data-trk="${p.id}|1">+1</button>
@@ -1113,7 +1113,7 @@ function renderShTrackers(){
 
   // Çredits
   h += `<div class="sect">Çredits</div>
-    <div class="trk"><h4>Balance</h4><span class="big gold">${CR} ${ch.trackers.credits.current}</span>
+    <div class="trk"><h2>Balance</h2><span class="big gold">${CR} ${ch.trackers.credits.current}</span>
     ${creditControlsHtml()}</div>`;
   const ledger = ch.trackers.credits.ledger||[];
   if (ledger.length){
@@ -1128,7 +1128,7 @@ function renderShTrackers(){
   // Manual adjustments
   h += `<div class="sect">Manual Adjustments</div>
     <p class="step-note">For milestone benefits and other effects the engine doesn't model yet — e.g. <em>Honed</em> grants a Stat point (any Stat, including WILL, LUCK, or TOL). Stat adjustments cascade through everything downstream; the rest apply flat.</p>
-    <div class="trk"><h4>Add</h4>
+    <div class="trk"><h2>Add</h2>
     <select data-adjtarget aria-label="adjustment target">
       ${D.stats.map(s=>`<option value="${s.id}">${s.id} (cascades)</option>`).join("")}
       <option value="TOL">TOL</option><option value="WILL">WILL</option>
@@ -1153,7 +1153,7 @@ function renderShProgression(){
   const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
   let h = sheetHeader("Progression", `Improvement Points and Milestones. Every spend is a journal entry — auditable, undoable, and everything downstream recalculates on its own.`);
 
-  h += `<div class="trk"><h4>IP</h4><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
+  h += `<div class="trk"><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
     <span class="sub" style="flex-basis:auto">earned ${ip.earned} · spent ${ip.spent}</span>
     <input type="number" min="0" data-ipamt placeholder="amount" aria-label="IP grant amount">
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">
@@ -1180,7 +1180,7 @@ function renderShProgression(){
 
   // Milestones
   h += `<div class="sect">Milestones — ${ms.mp} Milestone Point${ms.mp===1?"":"s"}</div>
-    <div class="trk"><h4>MP</h4><span class="big">${ms.mp}</span>
+    <div class="trk"><h2>MP</h2><span class="big">${ms.mp}</span>
     <span class="sub" style="flex-basis:auto">${ms.sessionMP} from sessions · ${ms.manualMP} manual</span>
     <button class="btn sm" data-mp="-1" ${ms.manualMP<=0?"disabled":""}>−1 manual</button>
     <button class="btn sm" data-mp="1">+1 manual</button>
@@ -1188,7 +1188,7 @@ function renderShProgression(){
 
   // Minor
   h += `<details class="group" ${ms.minorLeft>0?"open":""}><summary>Minor Milestones ${ms.minorLeft>0?`— <b style="color:var(--green)">${ms.minorLeft} to pick</b>`:""}</summary>`;
-  if (S.askImproved) h += `<div class="trk"><h4>Improved</h4>
+  if (S.askImproved) h += `<div class="trk"><h2>Improved</h2>
     <span class="sub" style="flex-basis:auto">Roll 2d10+15 at the table (10s explode) and enter the result:</span>
     <input type="number" min="0" data-improvroll aria-label="Improved milestone IP roll">
     <button class="btn sm go" data-improvok="1">Take + grant IP</button>
@@ -1197,7 +1197,7 @@ function renderShProgression(){
     const taken = ms.minorTaken.filter(t=>t.id===m.id).length;
     const can = Engine.canTakeMinor(ch, m.id);
     return `<div class="pick ms ${taken?"taken":""} ${can.ok?"":"locked-ms"}"><div class="head">
-      <h4>${esc(m.name)}${taken?` <span class="chip ok">taken${taken>1?" ×"+taken:""}</span>`:""}</h4>
+      <h2>${esc(m.name)}${taken?` <span class="chip ok">taken${taken>1?" ×"+taken:""}</span>`:""}</h2>
       <div class="controls"><button class="toggle" data-takeminor="${m.id}" ${can.ok?"":"disabled"} title="${esc(can.ok?"":can.why)}">Take</button></div></div>
       <div class="desc">${esc(m.benefit)}</div></div>`;
   }).join("");
@@ -1218,7 +1218,7 @@ function renderShProgression(){
       .concat(pre.unmet.filter(x=>!/Already taken/.test(x)).map(x=>`<span class="chip pain">${esc(x)}</span>`))
       .concat(pre.manual.map(x=>`<span class="chip gold">GM: ${esc(x)}</span>`)).join("");
     return `<div class="pick ms ${taken?"taken":""} ${canTake||taken?"":"locked-ms"}">${m.flagged?flagHtml(m):""}
-      <div class="head"><h4>${esc(m.name)}${taken?' <span class="chip ok">taken</span>':""}</h4>
+      <div class="head"><h2>${esc(m.name)}${taken?' <span class="chip ok">taken</span>':""}</h2>
       <div class="controls"><button class="toggle" data-takemajor="${m.id}" data-gm="${pre.manual.length?1:0}" ${canTake?"":"disabled"}
         title="${esc(canTake?"":(taken?"Once each.":pre.unmet.concat(ms.majorLeft<=0?["No Major unlocked."]:[]).join(" ")))}">Take</button></div></div>
       ${m.flavor?`<div class="desc" style="font-style:italic">${esc(m.flavor)}</div>`:""}
@@ -1237,7 +1237,7 @@ function renderShProgression(){
 function renderShSessions(){
   const ch=S.ch, ms=Engine.milestoneState(ch), ip=Engine.ipState(ch);
   let h = sheetHeader("Session Log", `Logging a session grants <em>${D.ip.perSession} IP</em> (override below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
-  h += `<div class="review-block"><h3>Log a session</h3>
+  h += `<div class="review-block"><h2>Log a session</h2>
     <div class="grid-3">
       <label class="field"><span>Date</span><input type="date" data-sesdate value="${new Date().toISOString().slice(0,10)}"></label>
       <label class="field"><span>Title</span><input type="text" data-sestitle placeholder="What the city did to you this time"></label>
@@ -1250,7 +1250,7 @@ function renderShSessions(){
     </div></div>`;
   h += `<div class="sect">History — ${ch.sessions.length} session${ch.sessions.length===1?"":"s"} · ${ms.mp} MP · ${ip.earned} IP earned</div>`;
   h += ch.sessions.length ? ch.sessions.map((s,i)=>`<div class="pick"><div class="head">
-      <h4>${esc(s.title)||"Session "+(i+1)}</h4>
+      <h2>${esc(s.title)||"Session "+(i+1)}</h2>
       <span class="cost">${esc(s.date)} · +${s.ipEarned} IP${s.milestonePoint?" · +1 MP":""}</span>
       <div class="controls"><button class="x" data-sesdel="${i}" title="delete" style="background:none;border:0;color:var(--dim);cursor:pointer">✕</button></div></div>
       ${s.notes?`<div class="desc">${esc(s.notes)}</div>`:""}</div>`).reverse().join("")
@@ -1259,7 +1259,7 @@ function renderShSessions(){
   // Activity Log — the full audit trail. Undo is last-in-first-out.
   const log=ch.audit||[];
   h += `<div class="sect">Activity Log — ${log.length} action${log.length===1?"":"s"}</div>`;
-  h += `<div class="trk"><h4>Undo</h4>
+  h += `<div class="trk"><h2>Undo</h2>
     <button class="btn sm danger" data-undolast ${log.length?"":"disabled"}>Undo last action</button>
     <span class="sub">Peels back the most recent action — damage, IP, milestones, credits, and admin edits all land here. To fix an <em>older</em> mistake, switch on Admin mode (⋮ menu) and edit the value directly; that edit is logged here too and is itself undoable.</span></div>`;
   if (log.length){
@@ -1444,7 +1444,7 @@ function powersPanelHtml(ch){
   h += powers.map(p=> S.admin
     ? `<div class="pick wi-row">${powerFieldsHtml(k=>`data-pwedit="${esc(p.id)}|${k}"`, p, uses)}${notes(p)}
         <button class="btn sm danger" data-pwdel="${esc(p.id)}">Remove</button></div>`
-    : `<div class="pick wi-row pw-card"><div class="head"><h4>${esc(p.name)||"Unnamed power"}</h4>${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}
+    : `<div class="pick wi-row pw-card"><div class="head"><h2>${esc(p.name)||"Unnamed power"}</h2>${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}
         <button class="btn sm" data-pwimprove="${esc(p.id)}">Improve</button></div>
         <div class="desc">${esc(p.effect)||"No effect written."}</div>${notes(p)}</div>`).join("");
   if (!powers.length) h += `<p class="step-note">No powers yet.</p>`;
@@ -1834,7 +1834,7 @@ function renderShLoadout(){
     }
     if (p.type==="specializationText"){
       const entries = Engine.specializationChosen(ch).map(o=>o[p.field]).filter(x=>x && typeof x==="object");
-      h += entries.length ? entries.map(t=>`<div class="pick"><div class="head"><h4>${esc(t.name||"")}</h4></div>
+      h += entries.length ? entries.map(t=>`<div class="pick"><div class="head"><h2>${esc(t.name||"")}</h2></div>
         <div class="desc">${esc(t.description||"")}${(t.benefits||[]).length?"\n• "+t.benefits.map(esc).join("\n• "):""}</div></div>`).join("")
         : `<p class="step-note">No ${esc(p.title||"entry")} on record.</p>`;
     }
@@ -1871,9 +1871,9 @@ function renderShAdmin(){
   const fmt=(n)=> n==null?"—":(n>=0?n+" left":(-n)+" over");
   // Decision 150: a character locked under the earlier creation table can't
   // be measured against today's pools, so it isn't.
-  h += ch.creation.earlierTable ? `<div class="trk"><h4>Budgets</h4>
+  h += ch.creation.earlierTable ? `<div class="trk"><h2>Budgets</h2>
     <span class="sub" style="flex-basis:auto">Built under the earlier creation table, so there's nothing to measure these edits against.</span></div>`
-    : `<div class="trk"><h4>Budgets</h4>
+    : `<div class="trk"><h2>Budgets</h2>
     <span class="sub" style="flex-basis:auto">Stat Points ${fmt(sLeft)} · Skill Points ${fmt(kLeft)} · CP ${bal?fmt(bal.left):"—"}</span>
     <span class="sub">Reference only — admin edits never block on these.</span></div>`;
 
@@ -1887,10 +1887,10 @@ function renderShAdmin(){
 
   // Campaign & archetype (destructive)
   h += `<div class="sect">Campaign &amp; Archetype</div>`;
-  h += `<div class="trk"><h4>Power Level</h4>
+  h += `<div class="trk"><h2>Power Level</h2>
     <select data-admin-pl>${D.powerLevels.map(p=>`<option value="${p.id}" ${ch.creation.powerLevel===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
     <span class="sub">Changes every cap (Max Skill/Power Rank, Max Boost) and the CP budget. Stored values don't move, so the sheet may read "over" until you adjust them.</span></div>`;
-  h += `<div class="trk"><h4>Archetype</h4>
+  h += `<div class="trk"><h2>Archetype</h2>
     <select data-admin-arch><option value="">— none —</option>${D.archetypes.map(a=>`<option value="${a.id}" ${ch.identity.archetype===a.id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>
     <span class="sub" style="color:var(--magenta)">⚠ Changing archetype clears every archetype-specific choice — focus / stat-bonus allocations, specialization, disciplines, natural advantages. One undo brings it all back.</span></div>`;
   h += adminWriteInHtml(ch);
@@ -1926,7 +1926,7 @@ function renderShAdmin(){
   }
   h += `</div>`;
   const untr=D.skills.filter(s=>!ch.skills[s.id]);
-  if (untr.length) h += `<div class="trk"><h4>Add skill</h4>
+  if (untr.length) h += `<div class="trk"><h2>Add skill</h2>
     <select data-admin-addskill><option value="">— pick —</option>${untr.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select>
     <button class="btn sm" data-admin-addskill-go="1">Add at rank 1</button></div>`;
 
@@ -1946,7 +1946,7 @@ function renderShAdmin(){
   });
   h += `</div>`;
   const addAdv=D.advantages.filter(d=>!ch.advantages.some(a=>a.id===d.id && a.source!=="natural"));
-  if (addAdv.length) h += `<div class="trk"><h4>Add advantage</h4>
+  if (addAdv.length) h += `<div class="trk"><h2>Add advantage</h2>
     <select data-admin-addadv><option value="">— pick —</option>${addAdv.map(d=>`<option value="${d.id}">${esc(d.name)} (${d.cost} CP)</option>`).join("")}</select>
     <button class="btn sm" data-admin-addadv-go="1">Add</button></div>`;
 
@@ -1963,13 +1963,13 @@ function renderShAdmin(){
   });
   h += `</div>`;
   const addDis=D.disadvantages.filter(x=>!ch.disadvantages.some(d=>d.id===x.id));
-  if (addDis.length) h += `<div class="trk"><h4>Add disadvantage</h4>
+  if (addDis.length) h += `<div class="trk"><h2>Add disadvantage</h2>
     <select data-admin-adddis><option value="">— pick —</option>${addDis.map(x=>`<option value="${x.id}">${esc(x.name)} (+${x.pointsGranted} CP)</option>`).join("")}</select>
     <button class="btn sm" data-admin-adddis-go="1">Add</button></div>`;
 
   // LUCK bonus
   h += `<div class="sect">Resources</div>
-    <div class="trk"><h4>LUCK bonus</h4><span class="big gold">${ch.trackers.luck.bonus}</span>
+    <div class="trk"><h2>LUCK bonus</h2><span class="big gold">${ch.trackers.luck.bonus}</span>
     <button class="btn sm" data-admin-luck="-1">−1</button><button class="btn sm" data-admin-luck="1">+1</button>
     <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}. Current LUCK during play is tracked on the Trackers tab.</span></div>`;
   return h;
