@@ -39,16 +39,17 @@ does more than show them.
 W45 is what's left of the 2026-09-30 design critique (score
 27/40, snapshot in `.impeccable/critique/`) after its combat-table finding,
 W43 (tap targets and small text, 0.32.1), W42 (Health verbs on Main, 0.33.0),
-W44 (the wizard on a phone, 0.35.1) and W46 (the lock's beat, 0.36.0)
-shipped. W45 is **player-facing layout**, so it's the *Rule or shape* tier
-("propose before building"). It touches no rule.
+W44 (the wizard on a phone, 0.35.1), W46 (the lock's beat, 0.36.0) and W47
+(a keyboard press keeps its place, 0.36.0) shipped. W45 is **player-facing
+layout**, so it's the *Rule or shape* tier ("propose before building"). It
+touches no rule.
 
 **Re-checked 2026-10-01 (critique re-run, 29/40)** against 0.35.1, after the
 Character tab (158), the Raise modals (159), the pinned vitals panel (160) and
 W44 (161). Every tab was run live at 375px and on a wide screen, and focus was
 tested with real key presses. W45–W47 all still stand. W45 and W47 turned out
 broader than first written and are reworded below. W57–W60 are new from the
-same run; W57 and W46 are built (Decisions 162 and 163). W45's shape for
+same run; W57, W46 and W47 are built (Decisions 162–164). W45's shape for
 Main on a phone is left open.
 
 Each carries a **Harden** note from a 2026-09-30 pass: what it has to survive
@@ -85,26 +86,6 @@ instead of cutting. The hero's TAG line has three states, not one: a TAG, a
 Ghost or Black TAG's label (Decision 146), and TAGless, which reads "Off grid"
 (148). An unnamed character's title is "Unnamed" today. Any move has to read
 right in all of them.
-
-**W47 — A keyboard press loses its place almost everywhere off Main.** *Claude · 🔎 · found building W42, widened 2026-10-01*
-A commit or `update()` re-renders, which replaces the button that was
-pressed, so focus falls to `<body>`: press Enter on Trackers' Hurt 1 and the
-next Enter does nothing, and Tab starts again from the top. Tested with real
-key presses on 0.35.1, focus is lost after: every Trackers commit (Hurt and
-Heal, SAN, LUCK, condition quick-add, Rest); Progression's Grant IP; the
-flyout's Pin and Unpin (`setVitalsPinned`, `app.js`); **Raise in a Raise
-modal** (159), whose `refresh()` rebuilds the results, so focus even leaves
-the dialog; and every wizard stepper and the Custom classification cards.
-Main's W42 row keeps focus (Decision 151), and so does the popover
-(`refreshPopover`, `shared.js`), except that a control the press disables
-(LUCK Regain reaching 4/4) has no fallback. Esc from a Raise modal returns
-focus correctly.
-*The fix:* one rule rather than a patch per control, applied in `renderMain`,
-the modal's `refresh()` and `refreshPopover`: note the focused element's
-`data-*` key before the render and focus its twin after. If the twin is gone
-or disabled, fall back to somewhere harmless (the section, or the popover's
-trigger), never to a control that changes something (W42 found Heal 1
-handing Enter to Hurt 1). The lock already hands focus to the name (163).
 
 **W58 — The closed vitals flyout is still in the tab order.** *Claude · 🔎 · critique P2, 2026-10-01*
 `.vdrawer` is hidden by `transform:translateX(100%)` and `aria-hidden="true"`
