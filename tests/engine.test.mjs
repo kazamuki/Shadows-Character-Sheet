@@ -2762,3 +2762,28 @@ test("newPower gives the wizard a blank row; a nameless row with words warns, an
   same(warns(), ["warn", "warn"]);
   assert.ok(Engine.validate("archetype", ch).some(i => i.msg.startsWith("2 traits")));
 });
+
+test("Decision 162: points left only warn on their step, block the lock while they can buy, and never trap a player whose last point fits nowhere", () => {
+  const at = (ch, step) => Engine.validate(step, ch).filter(i => /Skill Points unspent|Stat Points unspent/.test(i.msg)).map(i => `${i.level}: ${i.msg}`);
+  const ch = subject(); ch.creation.locked = false; ch.skills = {};
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base;
+  const stats = Engine.statPool(ch).total - Engine.statSpent(ch), skills = Engine.skillPool(ch).total;
+  assert.ok(stats > 0 && skills > 0, "the subject has no points left to test with");
+  same(at(ch, "skills"), [`warn: ${skills} Skill Points unspent.`], "the Skills step blocked Continue on points left");
+  same(at(ch, "stats"), [`warn: ${stats} Stat Points unspent.`], "the Stats step blocked Continue on points left");
+  const review = at(ch, "review");
+  assert.ok(review.includes(`error: ${skills} Skill Points unspent. Spend them before you lock.`), review.join(" | "));
+  assert.ok(review.includes(`error: ${stats} Stat Points unspent. Spend them before you lock.`), review.join(" | "));
+
+  // Nothing they can buy: every stat's next point costs more than is left, and every skill sits at its cap.
+  const rc = D.statRules.raiseCost, pl = D.powerLevels.find(p => p.id === ch.creation.powerLevel), cap = pl.maxSkillRank;
+  try {
+    D.statRules.raiseCost = Object.fromEntries(Object.keys(rc).map(k => [k, 999]));
+    pl.maxSkillRank = 0;
+    assert.equal(Engine.spendable(ch, "stats"), false);
+    assert.equal(Engine.spendable(ch, "skills"), false);
+    same(at(ch, "review").map(x => x.split(":")[0]), ["warn", "warn"], "a point that can buy nothing blocked the lock");
+    assert.ok(at(ch, "review").every(x => /and nothing left they can buy\.$/.test(x)));
+  } finally { D.statRules.raiseCost = rc; pl.maxSkillRank = cap; }
+  assert.equal(Engine.spendable(ch, "nonsense"), false);
+});
