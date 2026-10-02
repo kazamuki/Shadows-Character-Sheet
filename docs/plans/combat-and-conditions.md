@@ -3,7 +3,8 @@
 > **Done, see Decisions 95–106.** Every box in §5 is ticked (the last, the
 > Magic-tables side session, 2026-09-23). This file stays as history. What's
 > still open from it lives elsewhere: F23/F24/F25 in `SCHEMA.md` §5, and Ken's
-> CRB fixes (CQ8, CQ9, CQ11–CQ13) in `STATE.md` §5.
+> CRB fixes in `plans/crb-catch-up.md` (CQ5, CQ9, CQ12, CQ13 still open; CQ4,
+> CQ8 and CQ11 were done in the book by 2026-10-01).
 
 **Status:** §3 signed off by Ken 2026-09-22 (P1–P7, P9 as written; P8 renamed "Turn Reset") · Session 2 done (Decisions 95–96) · Session 3 done (Decision 99, F23) · Session 4 done (Decision 100, F24) · cleanup done (Decisions 103–105, F25) · Magic-tables side session done (Decision 106)
 **Covers:** F18's engine half (Decision 92 deferred it), plus the Conditions system

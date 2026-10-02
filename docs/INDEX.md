@@ -27,7 +27,7 @@ authority and is never read front to back; §1 below says which section to open.
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The architecture, the shape of the game data or a character file | `SCHEMA.md` §1, §2 and §3 |
 | What a change must touch (docs, versions, decision, changelog) | `../CLAUDE.md`, *Change tiers* (Decision 131) |
-| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **built, release pending:** `custom-archetype.md` (a custom archetype, and classification for every archetype, `XQ`_n_). **Proposed:** `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **open, Ken's CRB pass:** `crb-catch-up.md` (every CRB fix the sheet is waiting on, by chapter and heading, and the Cyborg cut). **Built, release pending:** `custom-archetype.md` (a custom archetype, and classification for every archetype, `XQ`_n_). **Proposed:** `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` — open items only |
 | A wishlist item that was built, and what it was before | `log/wishes-granted.md` — moved whole from `WISHLIST.md`, never edited |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
@@ -65,7 +65,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `TQ`_n_ | A question the two-tabs plan (W38) raises for Ken | `plans/two-tabs-one-character.md` §5 |
 | `XQ`_n_ | A question the custom-archetype plan raises for Ken | `plans/custom-archetype.md` §6 |
 | `PQ`_n_ | A question the print-sheet plan raises for Scott, Deighton or Ken | `plans/print-sheet-scotts-look.md` §6 |
-| `CQ`_n_, `MQ`_n_ | Questions the combat and magic plans raised; all answered except Ken's open CRB fixes, now listed in `STATE.md` §5 | `plans/combat-and-conditions.md` §6 · `plans/magic-on-the-sheet.md` |
+| `CQ`_n_, `MQ`_n_ | Questions the combat and magic plans raised; all answered; the CRB edits they left (CQ5, CQ9, CQ12, CQ13) are in `plans/crb-catch-up.md` | `plans/combat-and-conditions.md` §6 · `plans/magic-on-the-sheet.md` |
 | `F`_n_ | Open design flag — a rules question the app must not answer | `SCHEMA.md` §5 |
 | `D`_n_ | Shorthand used here for decision _n_ | `SCHEMA.md` §4 |
 | `W`_n_ | Wishlist item — an idea, not a commitment; statuses live with the item | open: `WISHLIST.md` §1 · built: `log/wishes-granted.md` |
