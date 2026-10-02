@@ -1042,6 +1042,8 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .jump-cp{margin-left:auto; font-family:var(--mono); font-size:.76rem; color:var(--gold); white-space:nowrap}
 .jump-cp.over{color:var(--magenta-text)}
 .sect[tabindex]:focus{outline:none}
+/* W47: the card or row a greyed control hands the keyboard to shows where it is. */
+.kept-place[tabindex]:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
 .pick[hidden]{display:none}
 
 /* ── The roster on Home (R10, Decision 141) ── */
