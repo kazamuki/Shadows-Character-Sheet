@@ -3588,6 +3588,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 30 in part (eight tabs, not nine); Decision 45 in part (Expand all opens every card, and stays).
      - **Revisit if:** an archetype's reference grows so long the Advantages are hard to reach, or the print sheet's archetype page wants the same order.
      - **Built:** app 0.35.0, no data or schema bump; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+     → **Superseded in part by Decision 168** — traits, powers and vulnerabilities flow into columns by the page's width, not a column each; the archetype sits beside its core mechanic.
 
 159. **Progression's Raise a Stat and Raise a Skill are buttons that open a modal; a raise keeps it open.**
      *2026-10-01 · Ken + Claude · Touches: Progression tab, Raise a Stat, Raise a Skill, Learn a new skill, openRaisePicker, raiseIP, data-raiseopen, data-ipbuy, Milestones, IP Journal, openModal*
@@ -3700,6 +3701,18 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 84 in part (where the mirror lives; it's still a mirror, never a second master).
      - **Revisit if:** the CRB is published, so the mirror needn't be private; or the token can't be kept current.
      - **Built:** no app, data or schema change. The mirror stays in this repo's history from 2026-09-04 until a history rewrite, which waits on Ken. Log 2026-10-02 (the private mirror).
+
+168. **The Character tab fills the width it has: the archetype beside its core mechanic, its parts in flowing columns, Advantage cards as many across as fit.**
+     *2026-10-02 · Ken + Claude · Touches: Character tab, renderShCharacter, arch-top, arch-flow, arch-part, arch-cols, trait-cols, trait-grid, Core Mechanic, Baseline Traits, Powers, Vulnerabilities, Specialization, Permanent Aberrations, Disciplines, Advantages, Disadvantages, vitals pinned*
+     - **Decided:** The archetype (description, classification, Lineage) sits beside its core mechanic once both fit. Baseline Traits, Powers, Vulnerabilities, Specialization, Permanent Aberrations and Disciplines flow into ~340px columns that break between cards, never inside one, a heading kept with its first card. Advantages beside Disadvantages stays; inside each, cards sit as many across as fit, and opening one doesn't stretch its row. Every count follows the page's own width, not the screen's. A phone reads as before.
+     - **Why:** Ken: on a wide screen the page was mostly empty. Measured at 1600px, the archetype's text used 587 of 1525px, a trait card the whole row, and 158's three columns never showed: no archetype in the data has Powers or Vulnerabilities, only a Custom one can. A Werewolf's page is about 40% shorter.
+     - **Rejected:**
+       - A column per category (158's): it counts categories, not space, so it was one column of traits in practice.
+       - Keeping a part whole in one column: a Werewolf's four traits stood in one column with two empty beside them.
+       - Screen-width breakpoints: pinning the vitals panel takes ~300px the screen width can't see.
+     - **Replaces:** Decision 158 in part (its "a column each from 1000px" for traits, powers and vulnerabilities; the order, the jump bar and Expand all stand).
+     - **Revisit if:** a column that opens on a card instead of its heading reads as a separate section at the table, or the print sheet's archetype page wants the same layout.
+     - **Built:** app 0.36.1, no data or schema bump; `smoke.test.mjs`, mutation-tested; checked in Chromium at 1600, 1300 pinned, 1100 and 390px. Log 2026-10-02 (the Character layout).
 
 ## 5. Open Flags
 

@@ -2487,6 +2487,16 @@ test("Character: the archetype, then Advantages beside Disadvantages, one tab, w
   assert.match(app.$$("#main .trait-col")[0].textContent, new RegExp(D.advantages[0].name));
   assert.match(app.$$("#main .trait-col")[1].textContent, new RegExp(D.disadvantages[0].name));
 
+  // Decision 168: the archetype beside its core mechanic, its parts in one
+  // flow of columns, and each side's cards in a grid as many across as fit.
+  const top = app.$$("#main .arch-top > .arch-top-part");
+  assert.equal(top.length, 2, "the archetype and its core mechanic aren't one band");
+  assert.match(top[0].textContent, /Arcanist/);
+  assert.match(top[1].textContent, new RegExp(D.archetypes.find(a => a.id === "arcanist").coreMechanic.name));
+  const parts = app.$$("#main .arch-flow > .arch-part").map(p => p.querySelector(".sect").textContent);
+  assert.ok(parts[0] === "Baseline Traits" && parts.includes("Disciplines"), `the archetype's parts aren't one flow: ${parts}`);
+  assert.equal(app.$$("#main .trait-col > .trait-grid details.pick.trait").length, 2, "the trait cards aren't in a grid");
+
   const cards = () => app.$$("#main details.pick.trait");
   assert.ok(cards().length === 2 && cards().every(d => !d.open), "trait cards should start closed");
   app.click("[data-traits-all]");
@@ -2705,7 +2715,8 @@ test("the sheet draws a written-in archetype: its name everywhere, its classific
   const app = openSheet(writtenInCharacter(), "character");
   const main = () => app.$("#main").textContent;
   assert.equal(app.$("#chr-0").textContent, "Changeling", "the Character tab doesn't open on the archetype's name");
-  assert.ok(app.$("#main .arch-cols.n3"), "traits, powers and vulnerabilities aren't a column each");
+  const parts = app.$$("#main .arch-flow > .arch-part").map(p => p.querySelector(".sect").textContent);
+  for (const s of ["Baseline Traits", "Powers", "Vulnerabilities"]) assert.ok(parts.includes(s), `${s} isn't in the archetype's flow: ${parts}`);
   assert.match(app.$("#main .arch-class").textContent, /Other: Fae/);
   for (const t of ["Glamour", "Fade", "uses SFR", "Cold iron", "Stolen as a child."]) assert.ok(main().includes(t), `the Archetype tab is missing ${t}`);
   app.click('[data-sec="main"]');

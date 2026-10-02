@@ -450,37 +450,42 @@ function renderShCharacter(){
     // What the archetype is, from the data or the player's own words (Decision 153).
     const content = Engine.archetypeContent(ch), cls = content.classification;
     const specLabel = Engine.specializationLabel(ch);
-    h += secs.sect("Archetype", `${esc(content.name+(specLabel?" · "+specLabel:""))}`);
+    // The top band: what the archetype is beside its core mechanic, side by
+    // side wherever the page has room for both (Decision 168).
+    let who = secs.sect("Archetype", `${esc(content.name+(specLabel?" · "+specLabel:""))}`);
     // A write-in's description is the player's text, so it's escaped like the rest.
-    if (content.description||a.gameplayStyle) h += `<p class="step-note">${esc(content.description||a.gameplayStyle)}</p>`;
-    if (cls) h += `<p class="step-note arch-class"><b>${esc(cls.name)}</b>${cls.text?`: ${esc(cls.text)}`:""}${content.writeIn?` <span class="chip">${esc(statusLabel(a.status))}</span>`:""}</p>`;
+    if (content.description||a.gameplayStyle) who += `<p class="step-note">${esc(content.description||a.gameplayStyle)}</p>`;
+    if (cls) who += `<p class="step-note arch-class"><b>${esc(cls.name)}</b>${cls.text?`: ${esc(cls.text)}`:""}${content.writeIn?` <span class="chip">${esc(statusLabel(a.status))}</span>`:""}</p>`;
 
     // Lineage (AQ4 2): the archetype's lore, collapsed.
-    if (a.lore) h += `<details class="group lineage"><summary>Lineage</summary><div class="ref-body"><p class="flavor">${esc(a.lore)}</p></div></details>`;
+    if (a.lore) who += `<details class="group lineage"><summary>Lineage</summary><div class="ref-body"><p class="flavor">${esc(a.lore)}</p></div></details>`;
 
+    const top = [who];
     if (a.coreMechanic && (a.coreMechanic.name || a.coreMechanic.description)){
-      h += secs.sect(a.coreMechanic.name||"Core Mechanic", `${esc(a.coreMechanic.name||"Core Mechanic")}${badge}`);
-      if (a.coreMechanic.description) h += `<p class="step-note">${esc(a.coreMechanic.description)}</p>`;
+      let core = secs.sect(a.coreMechanic.name||"Core Mechanic", `${esc(a.coreMechanic.name||"Core Mechanic")}${badge}`);
+      if (a.coreMechanic.description) core += `<p class="step-note">${esc(a.coreMechanic.description)}</p>`;
+      top.push(core);
     }
+    h += `<div class="arch-top">${top.map(x=>`<div class="arch-top-part">${x}</div>`).join("")}</div>`;
 
-    // Baseline traits, powers and vulnerabilities: a column each on a wide
-    // screen, stacked on a narrow one. Powers are the data's, then the
-    // character's own (`uses`, `effect`), which Loadout & Powers edits.
+    // The archetype's parts flow into as many columns as the page has room
+    // for, and a part never splits across two (Decision 168). Powers are the
+    // data's, then the character's own (`uses`, `effect`), which Loadout &
+    // Powers edits.
+    const parts = [];
     const traits = content.traits.filter(t=>t.name);
     const powers = content.powers.filter(p=>p.name);
     const vulns = content.vulnerabilities.filter(v=>v.name);
-    const cols = [];
-    if (traits.length) cols.push(secs.sect("Baseline Traits") + traits.map(tr=>
+    if (traits.length) parts.push(secs.sect("Baseline Traits") + traits.map(tr=>
       `<div class="pick"><div class="head"><h2>${esc(tr.name)}</h2></div>
         <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join(""));
-    if (powers.length) cols.push(secs.sect("Powers") + powers.map(p=>
+    if (powers.length) parts.push(secs.sect("Powers") + powers.map(p=>
       `<div class="pick"><div class="head"><h2>${esc(p.name)}</h2>
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
         <div class="desc">${esc(p.description||p.effect||"")}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join(""));
-    if (vulns.length) cols.push(secs.sect("Vulnerabilities") + vulns.map(v=>
+    if (vulns.length) parts.push(secs.sect("Vulnerabilities") + vulns.map(v=>
       `<div class="pick"><div class="head"><h2>${esc(v.name)}</h2></div>
         <div class="desc">${esc(v.description||"")}</div></div>`).join(""));
-    if (cols.length) h += `<div class="arch-cols n${cols.length}">${cols.map(c=>`<div class="arch-col">${c}</div>`).join("")}</div>`;
 
     // Specialization — chosen options. A2 closed here: this read only
     // `aberrations`, so a Professional's subtype or a Werewolf's Origin showed
@@ -488,33 +493,35 @@ function renderShCharacter(){
     const chosen = Engine.specializationChosen(ch);
     if (a.specialization && a.specialization.options){
       const label = a.specialization.label||"Specialization";
-      h += secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`);
-      h += chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
+      parts.push(secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`)
+        + chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
         ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div>${optionPowersHtml(o)}</div>`).join("");
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div>${optionPowersHtml(o)}</div>`).join(""));
     }
 
     // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
     // Trackers tab records and removes them.
     const abPerm = Engine.aberrationState(ch).permanent;
     if (abPerm.length){
-      h += secs.sect("Permanent Aberrations") + abPerm.map(x=>`<div class="pick selected"><div class="head"><h2>${esc(x.name)}</h2>
+      parts.push(secs.sect("Permanent Aberrations") + abPerm.map(x=>`<div class="pick selected"><div class="head"><h2>${esc(x.name)}</h2>
         ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
-        <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join("");
+        <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join(""));
     }
 
     // Disciplines (computed ranks: scaling base + CP-bought), read-only
     const dr = (Engine.disciplineRanks && Engine.disciplineRanks(ch)) || [];
     if (dr.length){
-      h += secs.sect("Disciplines") + `<table class="ref"><thead><tr><th>Discipline</th><th>Rank</th></tr></thead><tbody>` +
+      parts.push(secs.sect("Disciplines") + `<table class="ref"><thead><tr><th>Discipline</th><th>Rank</th></tr></thead><tbody>` +
         dr.map(d=>`<tr><td>${esc(d.name||d.id)}</td><td class="num">${d.rank}</td></tr>`).join("") +
-        `</tbody></table>`;
+        `</tbody></table>`);
     }
+    if (parts.length) h += `<div class="arch-flow">${parts.map(x=>`<section class="arch-part">${x}</section>`).join("")}</div>`;
   } else {
     h += `<p class="step-note">No archetype selected.</p>`;
   }
 
-  // Advantages and Disadvantages: two columns from 1000px, like Skills. Each
+  // Advantages and Disadvantages: two columns from 1000px, like Skills, and
+  // inside each the cards sit as many across as fit (Decision 168). Each
   // is a card that opens on a tap; Expand all opens every one, and the
   // choice is remembered in this browser for the next visit.
   const open = traitsOpen();
@@ -539,8 +546,8 @@ function renderShCharacter(){
     return traitCard(name, cost, d2?d2.description:"", selHtml("disadvantage",x.id)); }).join("");
   const any = ch.advantages.length + ch.disadvantages.length;
   h += `<div class="trait-cols">
-    <div class="trait-col">${secs.sect("Advantages")}${advs || `<p class="step-note">No advantages.</p>`}</div>
-    <div class="trait-col">${secs.sect("Disadvantages")}${diss || `<p class="step-note">No disadvantages.</p>`}</div></div>`;
+    <div class="trait-col">${secs.sect("Advantages")}${advs ? `<div class="trait-grid">${advs}</div>` : `<p class="step-note">No advantages.</p>`}</div>
+    <div class="trait-col">${secs.sect("Disadvantages")}${diss ? `<div class="trait-grid">${diss}</div>` : `<p class="step-note">No disadvantages.</p>`}</div></div>`;
 
   // Reference panels (Decision 110): rules text straight from the data.
   if (a) for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p, secs.sect);

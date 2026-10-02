@@ -314,7 +314,8 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **44** *(Phase 3.2)* — Skills aligned + per-skill descriptions. → **superseded in part by 156**
 - **156** *(Skills tab — every skill, two columns)* — Every skill in its category, untrained at Rank 0 and full strength; two columns from 1000px, categories never split, the first holding half the skills.
 - **45** *(Phase 3.2)* — Traits collapsible. → **superseded in part by 158**
-- **158** *(The Character tab)* — Traits and Archetype are one Character tab (eight tabs): the archetype, its traits, powers and vulnerabilities a column each from 1000px, then Advantages beside Disadvantages, a sticky jump bar, Expand all remembered in the browser, buttons to Loadout & Powers and Trackers.
+- **158** *(The Character tab)* — Traits and Archetype are one Character tab (eight tabs): the archetype, its traits, powers and vulnerabilities a column each from 1000px, then Advantages beside Disadvantages, a sticky jump bar, Expand all remembered in the browser, buttons to Loadout & Powers and Trackers. → **superseded in part by 168**
+- **168** *(Character tab — fill the width)* — The archetype beside its core mechanic; its parts flow into ~340px columns that break between cards; Advantage and Disadvantage cards as many across as fit; every count by the page's width, so pinned vitals take their columns back.
 - **46** *(Phase 3.2)* — Progression collapsible. → **superseded in part by 159**
 - **159** *(Raise modals)* — Progression's Raise a Stat and Raise a Skill are buttons opening a modal of every stat or skill with its price and why it's off; a raise keeps the modal open.
 - **52** *(Phase 3.3)* — Main health as HL segments; TOL/WILL derivation surfaced.
