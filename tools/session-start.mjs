@@ -10,13 +10,21 @@
  * It never fails the session: a failed install is reported, and verify will
  * say the rest.
  */
-import { statSync } from "node:fs";
+import { statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 // Not ./build.mjs's ROOT: that imports jsdom, which is what may be missing.
 const ROOT_DIR = fileURLToPath(new URL("..", import.meta.url));
+
+// The CRB mirror is a private submodule (Decision 167). A new worktree or
+// clone starts with the folder empty; fill it, quietly if it works.
+if (!existsSync(join(ROOT_DIR, "private/crb/README.md"))) {
+  const s = spawnSync("git", ["submodule", "update", "--init", "private"], { cwd: ROOT_DIR, encoding: "utf8" });
+  if (s.status === 0) console.log("SessionStart: fetched the private CRB mirror (`private/`).");
+  else console.log(`SessionStart: couldn't fetch the private CRB mirror; the CRB conformance tests will fail until \`git submodule update --init private\` works.\n${(s.stderr || "").trim().split("\n").slice(-3).join("\n")}`);
+}
 
 const mtime = f => { try { return statSync(join(ROOT_DIR, f)).mtimeMs; } catch { return 0; } };
 // npm rewrites node_modules/.package-lock.json on every install.

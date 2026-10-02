@@ -69,7 +69,7 @@ left is one:
 
 ### Beyond one sheet
 
-**W29 — A GM mode: link to the table's characters, read them, leave notes.** *Ken · 💡 · a different tier of product: needs a server*
+**W29 — A GM mode: link to the table's characters, read them, leave notes.** *Ken · 🔎 · planned, not approved: `plans/gm-mode.md` (the file-based stage and the GM toolkit; live sync stays here)*
 Raised 2026-09-24, at the end of the whole-app audit. Today a GM who wants a
 player's HP, Conditions or loadout asks for it, or collects exported files by
 hand. The wish: the GM links up with the characters at the table, sees their

@@ -135,6 +135,8 @@ tools/                  build.mjs (inlines everything into dist/), changelog.mjs
                         dev server), skills/ (the procedures as runbooks).
 docs/                   STATE, INDEX, SCHEMA, VOICE-APP, WISHLIST, and audits/,
                         plans/, log/, reference/ — INDEX §1 says what's in each.
+private/                The CRB mirror and the Threat Codex: a private repo,
+                        mounted as a submodule (Decision 167). Never public.
 ```
 
 Adding a stat, skill, advantage, archetype, or panel should require **zero** app
@@ -293,7 +295,7 @@ work, flag it for a voice pass rather than shipping a guess.
 **Watch for mechanical drift.** Rewording an entry can quietly change what it
 does — an absolute floor becoming a relative modifier, a cost shifting, a
 stacking rule inverting. Any edit that touches rules text gets cross-checked
-against the CRB (mirrored in `docs/reference/`, never edited here) before it
+against the CRB (mirrored in `private/crb/`, never edited here) before it
 lands, and if the CRB states a worked example, pin it in `tests/rules.test.mjs`.
 
 **Ideas for later go to `docs/WISHLIST.md`** as `W` ids, rather than being done

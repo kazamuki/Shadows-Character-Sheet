@@ -27,7 +27,7 @@ authority and is never read front to back; §1 below says which section to open.
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
 | The architecture, the shape of the game data or a character file | `SCHEMA.md` §1, §2 and §3 |
 | What a change must touch (docs, versions, decision, changelog) | `../CLAUDE.md`, *Change tiers* (Decision 131) |
-| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **open, Ken's CRB pass:** `crb-catch-up.md` (every CRB fix the sheet is waiting on, by chapter and heading, and the Cyborg cut). **Built, release pending:** `custom-archetype.md` (a custom archetype, and classification for every archetype, `XQ`_n_). **Proposed:** `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
+| A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **open, Ken's CRB pass:** `crb-catch-up.md` (every CRB fix the sheet is waiting on, by chapter and heading, and the Cyborg cut). **Built, release pending:** `custom-archetype.md` (a custom archetype, and classification for every archetype, `XQ`_n_). **Proposed:** `gm-mode.md` (W29: the table, its cast and its city, `GQ`_n_), `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` — open items only |
 | A wishlist item that was built, and what it was before | `log/wishes-granted.md` — moved whole from `WISHLIST.md`, never edited |
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
@@ -36,7 +36,7 @@ authority and is never read front to back; §1 below says which section to open.
 | Whether a string is allowed to say that | `VOICE-APP.md` |
 | Who the app is for, what sets it apart, the accessibility floor: product truth for design work | `../PRODUCT.md` — points back here and at `SCHEMA.md` rather than restating them |
 | The screen's visual system: colour roles, type, layout, components, what to avoid | `../DESIGN.md` (screen only; the print sheet is `print.css` and its plan). `../.impeccable/design.json` is the same system in machine-readable form, for design tools |
-| Whether the current WIP text already answers an open flag | `reference/crb/README.md` — mirrors of CRB documents, **never edited here**; re-pull instead |
+| Whether the current WIP text already answers an open flag | `../private/crb/README.md` (a private submodule, Decision 167) — mirrors of CRB documents, **never edited here**; re-pull instead |
 | What shipped in a release | `../CHANGELOG.md` — backward-looking only, in player voice |
 | How to work on this repo at all | `../CLAUDE.md` |
 | The commands and scripts (bump, release, test:fast, phone-check, dev server) | `../CLAUDE.md`, *Commands* |
@@ -62,6 +62,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `C`_n_ | Carried note — real but not yet actionable | C1–C3: rev 9 audit §3 · C4–C16: 2026-09-24 audit §6 |
 | `R`_n_ | Recommended practice — a proposal until Ken adopts it and it is numbered | 2026-09-24 audit §8 |
 | `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/audit-2026-09-remediation.md` §5 |
+| `GQ`_n_ | A question the GM-mode plan (W29) raises for Scott, Deighton or Ken | `plans/gm-mode.md` §9 |
 | `TQ`_n_ | A question the two-tabs plan (W38) raises for Ken | `plans/two-tabs-one-character.md` §5 |
 | `XQ`_n_ | A question the custom-archetype plan raises for Ken | `plans/custom-archetype.md` §6 |
 | `PQ`_n_ | A question the print-sheet plan raises for Scott, Deighton or Ken | `plans/print-sheet-scotts-look.md` §6 |
@@ -228,7 +229,8 @@ Where game text comes from and how it is merged.
 - **56** *(CRB v4 content pass)* — Martial Arts: two styles at creation, more trainable in play.
 - **57** *(CRB v4 content pass)* — Rank tables stay prose; rankTable waits for the renderer.
 - **65** *(Mechanism 3)* — The rulebook's worked examples run as tests.
-- **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`.
+- **84** *(Docs)* — Nine CRB v4 chapters are mirrored into `docs/reference/crb/`. → **superseded in part by 167**
+- **167** *(The private mirror — GQ12)* — The CRB mirror, the Threat Codex and Scott's proposals live in the private `Shadows-Private` repo, mounted at `private/` as a submodule; CI reads it with a read-only token, and the public repo keeps only the pointer.
 - **113** *(Quick Study's Intuition — F11)* — Quick Study's prerequisite is the Intuition skill at Rank 1, per 041; the old "Intuition Advantage" matched no entry, so no one could take it.
 - **129** *(Hardcore Parkour's prerequisites — F27)* — 1 Major Milestone, Acrobatics 4 and Danger Sense 1; Cat Like Balance becomes Acrobatics 4, Time Sense is dropped (Deighton).
 - **136** *(A spell's forms — the Inscribed Spells)* — A spell lists the Disciplines it can be made with (default: all three, Magic's Three Forms); its tier and `th` stay, and another form's TH and time come from `enchantmentTimeTable`. Inscribed-only spells aren't starting spells, and Mastery prices their own TH.
