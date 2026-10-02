@@ -103,13 +103,13 @@ is the authority on a flag's full text.
 | **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed · LUCK starts at 4 and a power rank costs 5 CP (Decision 157, W37 granted) | Nobody |
 | **Milestones & doc reconciliation** — F9, F12, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
-| **Cyborg** — F6, F19 | ⏸ blocked · `status: "tbd"` | Ken + Deighton + Scott: the design ruling (F6), then F19's install-cost pick |
+| **Cyborg** — F6, F19 | ⏸ **cut as an archetype** (team meetings, late 2026-09): cybernetics become a list and a mini-game, Professionals only; Arcanists, Vampires and Werewolves can't take them · data still `status: "tbd"` | Design: the cybernetics list and mini-game. Then the app retires `cyborg` (Rule or shape: a numbered decision, and `migrate()` for any saved Cyborg), closes F6 and F19, and moves Installed Cybernetics to the Professional. W61 proposes folding a saved Cyborg into Custom |
 | **Vampire** — F7 (Vampire half) | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
 | **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked; three Origins and four Trueborn powers unwritten |
 | **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · catalog matches the whole 2026-09-24 book, Inscribed Spells included (Decision 136) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
-F5 (Cyber-Prophetical) isn't its own row — it waits wholly on Cyborg's ruling; don't ask it separately.
+F5 (Cyber-Prophetical) isn't its own row — it waits wholly on the cybernetics mini-game; don't ask it separately.
 
 Archetype status in the data: `arcanist: draft · professional: draft ·
 werewolf: draft · cyborg: tbd · vampire: tbd`.
@@ -138,42 +138,15 @@ TQ1–TQ3). The wishlist: W29, W39, W54 and W55.
 **Waiting on others:**
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31, F33, F34 and F36 — plus
   W39's two halves. Each flag's stub and question are in `SCHEMA.md` §5.
-- **Scott:** the CRB's TOL rewrite (1 + INT + BOD + COOL, Decision 103); the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab).
+- **Scott:** the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab), and whether the four inscribed Cantrips are TN 8 (the Book of Known Spells) or keep TN 7 (Magic). His TOL rewrite is in 020 and 040.
 
-**For Scott, from the Book of Known Spells** (R14 checks the catalog against
-it): it dropped Counterspell and Silence (kept: Magic still uses Counterspell);
-four inscribed Cantrip-level spells print TN 8 where Magic keeps the spell's TN
-(7); Mastery of an inscribed spell costs up to 270 IP.
-
-**Ken's CRB fixes** (the app already follows the answer in each; the
-questions' history is in `plans/combat-and-conditions.md` §6):
-- **040, Rolling Stat Points:** Deighton's table, the stat buy and Skill Points as base + INT + REF (150).
-- **CQ4:** Gear's Siege tag should say Siege causes Massive damage, to people too.
-- **CQ5:** 053 should say only Massive damage causes Injured/Maimed; a Called
-  Shot counts only when the weapon deals Massive.
-- **CQ8:** Gear's Conditions table becomes a pointer to 054's, the master. Half
-  done: its sentence now points at Conditions & Recovery, but the table is still there.
-- **CQ9:** 054's Conditions table needs a Dying row (Helpless, Death Marks;
-  recovery Medical 20 or a Nanomed Kit).
-- **CQ11:** 053's worked attack example has enemy armor rolling PROT and skips
-  RES, against its own rules. One of them moves.
-- **CQ12:** Gear's Nanomed Kit entry adds Paralyzed, matching 054.
-- **Gear's Warding** becomes Magic's three and Self-mending, a mod slot each (143).
-- **CQ13:** 054 and 055 should agree on how Injured ends.
-- **041:** Hardcore Parkour's prerequisites become 1 Major Milestone,
-  Acrobatics 4 and Danger Sense 1 (Decision 129).
-- **030, Luck:** everyone starts with 4 LUCK. **Creation:** a power rank costs 5 CP, any power's, up to Max Power Rank; it replaces "1 CP per point" for powers (157).
-- **Gear, The TAG:** Black TAG is the Ghost TAG Advantage (Ken, 146); a line saying so.
-- **043:** "Ambidextrousa" is a typo for Ambidextrous (Scott's pass).
-- **041, Master of None:** say whether "up to rank 4" is the rank bought (the
-  app's reading, Ken's answer: 4 → 5 is standard). The Mercenary's "Handgun"
-  and the Slayer's and True Warrior's "Occult" are Handguns and Occult Lore.
-- **Magic:** say how ½ Spell Power rounds (up, per Ken; the sheet does, Decision 147).
-- **043:** say what "Universal" means: open to every classification, the rest
-  Mortal-only, so Werewolves and Vampires buy only the 15 Universal ones (152). 041's Werewolf trait "Unable to Purchase Advantages" becomes Universal only; the app already says so.
-- **The new-skill price** (a flat 25 IP, Decision 97) and **the stat curve
-  past 10** (Decision 98) need writing into the CRB. F23 may want a line in
-  Gear's RES text once ruled.
+**Ken's CRB fixes are a plan now: `plans/crb-catch-up.md`** — the sheet checked
+against every CRB v4 chapter on 2026-10-01, item by item, with the file and
+heading each one goes under, what's already done in the book, the questions
+that block text, and every Cyborg mention to cut. The app follows the answer
+in every ⚖ item. It also lists where the book is now ahead of the sheet:
+045 Advancement (5 IP an hour, new Minor Milestones and IP prices), Gear's
+Suppression and Blast rules (F28, F29), and two spells.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `041` (Decision 110), and Ken expects the Origins subtypes to replace
