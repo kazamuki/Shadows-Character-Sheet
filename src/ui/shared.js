@@ -588,11 +588,26 @@ function sectionList(prefix){
     return `<div class="sect" id="${id}" tabindex="-1">${html==null?esc(label):html}</div>`; } };
 }
 // `filter` adds a search box over the page's [data-filterable] picks (W22);
-// `extra` is anything else the bar should keep in view.
-function jumpBarHtml(list, { sticky=false, filter=null, extra="" }={}){
-  return `<nav class="jumpbar${sticky?" sticky":""}" aria-label="Jump to a section">${
+// `extra` is anything else the bar should keep in view. `row` (W45) keeps
+// the chips to one line that scrolls sideways, with `extra` outside it.
+function jumpBarHtml(list, { sticky=false, filter=null, extra="", row=false }={}){
+  const chips = list.map(s=>`<button class="jump" data-jump="${esc(s.id)}">${esc(s.label)}</button>`).join("");
+  return `<nav class="jumpbar${sticky?" sticky":""}${row?" row":""}" aria-label="Jump to a section">${
     filter?`<input type="search" data-jumpfilter value="${esc(filter.value||"")}" placeholder="${esc(filter.placeholder)}" aria-label="${esc(filter.placeholder)}"><span class="jump-count" data-jumpcount aria-live="polite"></span>`:""}${
-    list.map(s=>`<button class="jump" data-jump="${esc(s.id)}">${esc(s.label)}</button>`).join("")}${extra}</nav>`;
+    row ? `<div class="jump-row scroll-row" data-row="jump">${chips}</div>` : chips}${extra}</nav>`;
+}
+// W45: a row that scrolls sideways (the vitals bar, a sheet's jump bar)
+// fades on the side with more, as the header's tabs do, and keeps its place
+// across a re-render, so a popover opened from a pill past the edge still
+// opens beside it. Keyboard focus scrolls a chip into view on its own.
+const rowScroll = {};
+function bindScrollRows(root){
+  root.querySelectorAll(".scroll-row").forEach(r=>{
+    const k = `${r.dataset.row}|${S.section}`;
+    if (rowScroll[k]) r.scrollLeft = rowScroll[k];
+    tabRowFades(r);
+    r.addEventListener("scroll", ()=>{ rowScroll[k]=r.scrollLeft; tabRowFades(r); }, { passive:true });
+  });
 }
 // Scroll a heading to just under the sticky header (and a sticky bar), then
 // give it focus, so the keyboard carries on from there.

@@ -970,7 +970,7 @@ No cascade logic to maintain — it falls out of the architecture.
     hand) + a read-only Weapons quick-reference on the right. Identity drops to a
     collapsible at the bottom. The rail still shows on every other tab. Stacks to
     one column under 900px. (Ken, 2026-06-15)
-    → **Superseded in part by Decision 35** — the rail is hidden on every locked tab, not Main only.
+    → **Superseded in part by Decisions 35 and 165** — the rail is hidden on every locked tab, not Main only (35); Combat comes first in the page and is the left column, Stats the right (165).
 33. **(Phase 3.1)** Fixed: the REF/Hand brand icon rendered as a solid blob.
     `hand.svg` used a full-canvas background **circle** (r≈256, opacity 1) rather
     than the transparent rect the other ten use; the normalizer now strips any
@@ -1007,7 +1007,7 @@ No cascade logic to maintain — it falls out of the architecture.
     `S.vitalsOpen`; the drawer element is reused (not recreated) so the transform
     animates and the open state survives data-driven re-renders. (Ken,
     2026-06-16)
-    → **Superseded in part by Decisions 160 and 161** — the flyout can be pinned beside the sheet on a wide screen (160), and the wizard's narrow rail opens it too, without a pin (161).
+    → **Superseded in part by Decisions 160, 161 and 166** — the flyout can be pinned beside the sheet on a wide screen (160), the wizard's narrow rail opens it too, without a pin (161), and a move to another tab closes it (166).
 38. **(Phase 3.2)** **Sticky in-header navigation.** The section tabs move out of
     the scrolling content into a **sticky** header that reads
     **`Shadows // <character name>`**; the active tab underlines at the header's
@@ -3663,6 +3663,30 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** nothing. It extends 119 (the popover's redraw now falls back to its title) and 151 (W42's own keeper stays, and runs after it).
      - **Revisit if:** the UI moves to a renderer that patches the DOM in place, or W59's live region changes what a re-focus should announce.
      - **Built:** app 0.36.0; six smoke tests, mutation-tested. Log 2026-10-01 (W47).
+165. **On a phone the sheet gives the screen to play: no eyebrow, a smaller title, combat before Stats, and one-row vitals and jump bars.**
+     *2026-10-02 · Ken + Claude · Touches: Main tab, eyebrow, Live Sheet, step-title, main-grid, main-combat, main-stats, vitals bar, vbar-row, scroll-row, jump bar, jumpBarHtml row, Expand all, Çredits, main-pin, Pin, phone-check, W45, W60*
+     - **Decided:** No sheet tab has the "Live Sheet" eyebrow; below 640px titles, Main's name included, are 1.3rem and still wrap. Main puts Combat before Stats in the page at every width (the left column when wide). The vitals bar is one sideways row with the Vitals toggle outside it; Character's and Loadout's jump bars too, with Expand all outside. Çredits alone on its row takes the row. From 1280px, unpinned, Main has **Pin vitals**. `phone-check` fails on a two-row bar, or a phone's Health card below 30% of the screen.
+     - **Why:** at 375px titles sat at 335px, HP at 273px and Weapons near 1800px, after all of Stats; now 188, 233 and 909. Pin couldn't be found from Main (W60).
+     - **Rejected:**
+       - The name only in the header: a long name would never be seen whole on the sheet, and the lock's focus (163) would land on an invisible heading.
+       - Combat first on a phone only, by CSS `order`: Tab and a screen reader would meet Stats first while the eye saw Combat.
+       - Stats moving to Skills on a phone: a phone and a tablet would show different tabs' contents.
+       - Fewer pills on a phone: they still don't fit at 343px without shrinking below a finger.
+       - Slimmer Main cards beside a pinned panel: not a phone problem.
+     - **Replaces:** Decision 32 in part (Combat is the left column, Stats the right). It extends 35 (the bar is one row), 122 (Main is the fight view) and 160 (Pin from Main).
+     - **Revisit if:** players on phones miss the pills past the fade.
+     - **Built:** app 0.36.0; smoke tests and `phone-check` measures, mutation-tested. Log 2026-10-02 (W45).
+166. **The closed vitals flyout is inert; it takes focus when it opens, gives it back when it closes, Esc closes one layer, and a move to another tab closes it.**
+     *2026-10-02 · Ken + Claude · Touches: vdrawer, vscrim, vitals flyout, syncVitals, vitalsShown, vitalsHandBack, openVitals, closeVitals, renderDrawer, setVitalsPinned, inert, aria-hidden, S.vitalsOpen, S.vitalsFrom, Escape, popover, modal, PIN_MEDIA, renderHome, W58*
+     - **Decided:** One setter, `syncVitals` (`app.js`), writes `open`, `aria-hidden`, `inert` and the scrim from one predicate: open, or pinned with room to pin. Focus leaves before the panel goes inert, for the toggle, the wizard's pill, the active tab or the title, in that order. Opening moves focus to Close. Esc stands down while a popover or modal is open. A move to another tab closes the flyout. Leaving the sheet empties the panel and drops the pin's class. The flyout still doesn't trap focus.
+     - **Why:** closed, the flyout held seven or eight controls Tab walked into, off screen, under `aria-hidden`. One Esc closed a popover and the flyout under it. A pinned panel stayed beside Home with the last character's numbers.
+     - **Rejected:**
+       - `visibility:hidden` after the slide: it needs a transition delay, and still leaves three paths to keep in step.
+       - Keeping the flyout open across a tab switch: Main has no toggle, so focus would have nowhere to go back to, and the flyout is a quick look.
+       - Trapping focus in the open flyout (Ken, 2026-10-01): it isn't a modal, whatever its scrim suggests.
+     - **Replaces:** Decision 37 in part (its open state still survives a data render, not a tab switch). It extends 160 (a pinned panel goes when the sheet does).
+     - **Revisit if:** the flyout grows controls a player edits in place, or a browser the app supports drops `inert`.
+     - **Built:** app 0.36.0; four smoke tests (the harness gains a screen width for `matchMedia`), mutation-tested; Tab checked in Chromium. Log 2026-10-02 (W58).
 
 ## 5. Open Flags
 

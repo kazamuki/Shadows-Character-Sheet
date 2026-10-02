@@ -18,7 +18,7 @@ function painPenaltyLine(pain, long){
 // `under` is HTML that sits beneath the title: Main puts the intake number there.
 function sheetHeader(title, note, under){
   let h = importIssuesHtml();
-  h += `<div class="eyebrow">Live Sheet</div><h1 class="step-title">${esc(title)}</h1>${under||""}`;
+  h += `<h1 class="step-title">${esc(title)}</h1>${under||""}`;
   if (note) h += `<p class="step-note">${note}</p>`;
   return h;
 }
@@ -193,7 +193,9 @@ function sheetVitalsBar(ch){
   // W2: a pill with a `pop` key is a button that opens that vital's popover.
   const pill=(cls,ui,k,v,pop)=>{ const inner=`${ui?`<span class="vico">${uiIcon(ui)}</span>`:""}<span class="vtext"><span class="vk">${k}</span><span class="vv">${v}</span></span>`;
     return pop ? `<button class="vpill act ${cls}" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>` : `<div class="vpill ${cls}">${inner}</div>`; };
-  let h=`<div class="vbar" aria-label="Vitals">`;
+  // W45: one row that scrolls sideways on a phone; the toggle sits outside
+  // it, so what opens the full panel (and Pin) is never scrolled away.
+  let h=`<div class="vbar" aria-label="Vitals"><div class="vbar-row scroll-row" data-row="vbar">`;
   h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`,"hp");
   h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"),"pain");
   const cs=Engine.conditionState(ch);
@@ -205,7 +207,7 @@ function sheetVitalsBar(ch){
   h+=pill("cred","credits",CR,`${ch.trackers.credits.current}`,"cred");
   h+=pill(ip.available<0?"danger":"","","IP",`${ip.available}`);
   h+=pill("","","MP",`${ms.mp}`);
-  h+=`<button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv" style="font-size:.82rem">View ▸</span></span></button>`;
+  h+=`</div><button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button>`;
   return h+`</div>`;
 }
 
@@ -318,6 +320,9 @@ function renderShMain(){
     const inner=`<span class="corner">${uiIcon(uiName)}</span>
     <span class="lab">${name}</span><span class="big">${big}</span>${meta?`<span class="meta">${meta}</span>`:""}${seg?seg:(meter!=null?`<span class="meter"><i style="width:${meter}%"></i></span>`:"")}`;
     return pop ? `<button class="cond act ${cls}" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>` : `<div class="cond ${cls}">${inner}</div>`; };
+  // W45: Pin, from Main. Main has no vitals bar, so on a screen wide enough
+  // to pin, this is how the panel gets there (CSS shows it from 1280px).
+  h += `<div class="main-pin"><button class="btn ghost" data-vitals-pin-main>Pin vitals</button></div>`;
   h += `<div class="cond-grid">`;
   h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
     `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
@@ -328,21 +333,22 @@ function renderShMain(){
     `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
     `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max), "", "luck");
-  if (sf && sf.value!=null){
+  const hasSfr = sf && sf.value!=null;
+  if (hasSfr){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
   }
-  h += cond("cred","Çredits","credits", `${CR}${ch.trackers.credits.current}`, "", null, "", "cred");
+  // W45: alone on its row in two columns, Çredits takes the whole row.
+  h += cond(hasSfr?"cred":"cred alone","Çredits","credits", `${CR}${ch.trackers.credits.current}`, "", null, "", "cred");
   h += `</div>`;
   h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
-  // Two-column command console: stats on the left, combat on the right
+  // Two-column command console: combat on the left, stats on the right.
+  // W45: combat comes first at every width, so a phone reaches the weapon
+  // before Stats, and Tab and a screen reader meet them in the order shown.
   h += `<div class="main-grid">`;
 
-  // ── left: stats, clustered into the four spheres ──
-  h += `<section class="main-stats"><div class="sect">Stats</div>${groupedStatBlockHtml(ch)}</section>`;
-
-  // ── right: what gets rolled in a fight (W13) ──
+  // ── left: what gets rolled in a fight (W13) ──
   // The weapons you carry come first, with their magazines (W16), then the
   // armor that answers, then every combat skill. The skill table is long, and
   // it was pushing the lines a player actually rolls below the fold.
@@ -372,7 +378,10 @@ function renderShMain(){
   if (natMain) h += `<p class="hitarmor">${esc(natMain)}</p>`;
   if (lines.length || worn || natMain) h += `<div class="sect">Combat skills</div>`;
   h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
-  h += `</section></div>`;   // /main-grid
+  h += `</section>`;
+  // ── right: stats, clustered into the four spheres ──
+  h += `<section class="main-stats"><div class="sect">Stats</div>${groupedStatBlockHtml(ch)}</section>`;
+  h += `</div>`;   // /main-grid
 
   // Identity — reference, kept at the bottom and collapsible
   if (id.age!=null || id.build || id.hair || id.eyes || id.skin || id.history){
@@ -542,7 +551,7 @@ function renderShCharacter(){
 
   const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
   return sheetHeader("Character", "Who you are: your archetype, and the Advantages and Disadvantages you bought for it. Tap an Advantage or Disadvantage to read what it does.")
-    + jumpBarHtml(secs.list, { sticky:true, extra:toggle }) + h;
+    + jumpBarHtml(secs.list, { sticky:true, extra:toggle, row:true }) + h;
 }
 
 // ── Reference panels (magic plan M9, Decision 110) ───────────────────
@@ -1845,7 +1854,7 @@ function renderShLoadout(){
         <p class="step-note">${esc(copy("applyFromText"))}</p>`;
     }
   }
-  return head + jumpBarHtml(secs.list) + h;
+  return head + jumpBarHtml(secs.list, { row:true }) + h;
 }
 
 // ── Sheet: notes ─────────────────────────────────────────────────────
@@ -2605,12 +2614,10 @@ function openVitalPopover(key, scope="#main"){
 function bindSheet(){
   const main=$("main"), ch=S.ch;
   // Vitals flyout (the bar's "Vitals" toggle on non-Main tabs)
-  main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{
-    S.vitalsOpen=!S.vitalsOpen;
-    const dr=$("vdrawer"), sc=$("vscrim");
-    if (dr){ dr.classList.toggle("open", S.vitalsOpen); dr.setAttribute("aria-hidden", S.vitalsOpen?"false":"true"); }
-    if (sc) sc.classList.toggle("open", S.vitalsOpen);
-  });
+  main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{ if (S.vitalsOpen) closeVitals(); else openVitals(); });
+  main.querySelectorAll("[data-vitals-pin-main]").forEach(b=>b.onclick=()=>{
+    setVitalsPinned(true); takeFocus($("vdrawer").querySelector("[data-vitals-pin]")); });
+  bindScrollRows(main);
   main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
   // A button that goes to another tab, the way the header's tabs do.
   main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>{ S.section=normSection(b.dataset.gotab); window.scrollTo(0,0); update(); });
