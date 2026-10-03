@@ -140,6 +140,29 @@ writes the entry for the open character, stop saving from this tab and say so,
 with a button to reload from the newer copy. *To respect:* the app works
 without storage, so the listener is guarded like every other read.
 
+**W62 — Slotting a file in reads it on screen, like a script loading in NYTE City.** *Ken · 💡 · raised 2026-10-02 with GQ10's packs*
+Today a character file imports with a toast that names it, and a Codex pack
+(GQ10) would do the same. Ken's idea: a terminal opens, reads through what's
+in the file, and closes on what landed, so loading a character or slotting in
+the Codex feels like jacking a script into a deck rather than opening a file.
+*What the shape has to respect,* as Claude sees it:
+- **It reads what's really there.** The lines are the file's own contents as
+  the gate checks them (the character's name, archetype and TAG; the pack's
+  entries and traits by name), and the last line is the real outcome: counts,
+  what was repaired. Not a canned script on a timer.
+- **Short and skippable.** About a second, any key or tap finishes it, and it
+  never sits between a GM and a fight. Repeating the same load in one sitting
+  goes straight to the summary.
+- **Reduced motion gets the summary only** (the app already honours
+  `prefers-reduced-motion`), and a screen reader hears the outcome once, not
+  every line.
+- **A refused file drops the fiction.** That's the player being stuck, so it
+  speaks in tool voice (`VOICE-APP.md`) and says what to do.
+- **The copy is data** (`appCopy`, Decision 76) and gets a voice pass; the
+  mono font is already embedded, so nothing touches the network (137).
+- One primitive in `shared.js`, used by every import: a character, a table,
+  a pack, and a dispatch once that exists.
+
 ### Custom characters
 
 Raised 2026-09-30 while planning the custom archetype
@@ -317,7 +340,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W62.** Everything above is open; W38 has a plan,
+- **Next free number: W63.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
