@@ -5,14 +5,20 @@ it goes to Scott and Deighton before anything is built, since they are the
 GMs who'd use it. Nothing here is a decision until the session that builds
 it numbers it in `SCHEMA.md` §4. Its open questions are `GQ`_n_ (§9), each
 with the default the build takes if nobody answers first.
+**Revised 2026-10-02, the same day:** Scott answered the GM questionnaire and
+sent *Threat Codex v2*. His answers reorder the sessions (§6) and add three
+records (threads, interactions, the award log). §1a has his answers and what
+each one changed. Deighton's answers are still to come.
 **Wanted by:** no date. Scope is the whole of W29's file-based stage, plus
 the GM toolkit on top of it. Live sync (W29 stages 2–3) is out of scope and
 gets its own plan when this one is built (§8).
 **Sources:** W29 (`WISHLIST.md`); the GM Workshop, Parts I–VI (`private/crb/200`–`253`);
 the World of Shadows (`100`–`130`); Scott's *Threat Codex — Intro + Human*
 (front matter, 42 entries, 29 encounter groups, the drone reference, the
-Trait Glossary v3 and the Trait Library); Scott's *Threat Codex Expansion*
-proposal (2026-09-29, unapproved); Ken's *Origin Matrix* page; Decisions 48,
+Trait Glossary v3 and the Trait Library); Scott's *Threat Codex v2* (WIP,
+2026-10-02: the front matter rewritten, Orders folded in, the NPC roster
+moved in); Scott's *Threat Codex Expansion* proposal (2026-09-29, unapproved);
+Scott's questionnaire answers (§1a); Ken's *Origin Matrix* page; Decisions 48,
 49, 68, 115, 118, 124, 128, 135, 137, 139, 141, 150, 153.
 **Tier:** *Rule or shape*, many times over. A second kind of saved file (the
 table), a third (the dispatch), a character-schema bump (CRANK reputation and
@@ -44,6 +50,41 @@ inventing a GM toolkit.
 **Not in scope.** Live sync (§8); maps, tokens, a virtual tabletop; dice
 rolling for players (they roll real dice); voice or video; accounts.
 
+## 1a. What the GMs told us
+
+Scott's answers to the questionnaire, 2026-10-02, summarized. Deighton's go
+here when they arrive.
+
+| Asked | Scott | What it changes |
+|---|---|---|
+| What do you run with now? Where? | Paper with electronic references. In person; players have phones and tablets | GQ2 answered. Files between sessions are enough to start. The GM is probably on a tablet too: everything in an encounter has to work by touch (Decision 165's phone rules apply) |
+| How do you prep? What do you wish was done? | Reread last session for threads still open, check them against the campaign's long plan. **Wants a to-do list from last session** | **Threads** become a record (§4g), and opening a table lands on **Next session**: the open threads, last session's seed, and clocks near full |
+| Where do you look for an NPC in a hurry? | **A roster with affiliations**, so it isn't "Bob the Goblin" thirty times | The cast (S8) and the Codex (S9) move to the front of the order. Affiliation is the cast record's `factions`, filterable |
+| What do you need on a PC mid-session? | **Health, Awareness and Conditions** | The card spread leads with those three. But Health and Conditions change mid-fight and the card is a snapshot from the last export (GQ19) |
+| What do you track in a fight? What do you lose? | Turn order, enemy health, conditions, rounds. **Loses Conditions most** | The encounter tracker (S10) is built around Conditions: each with its duration, ticked at Reset, and its rule a tap away (139) |
+| What do you look up most? | **Conditions and enemy stats** | The same two. The Codex rolodex and the Conditions reference are the GM screen's first two panels |
+| How do you keep an improvised NPC? | A tracker at the end of the session | Quick-add mid-session (a name and a line), and closing a session asks "anyone new?" |
+| What do you hand out? How is it recorded? | IP and **a Milestone Point**; sometimes Çredits and gear when it's plot. Players track their own, **but there should be a log of what each person got** | GQ8 answered: one Milestone Point a session, which the sheet already gives from its session log. **The award log** is the GM's record, per session and per character (§4g). It doesn't need the dispatch to exist (GQ20) |
+| What do you write after a session? | What happened, threads resolved, threads started, threads still open | The Campaign Journal's six parts stay, but its threads are records, so "still open" is computed rather than copied forward |
+| What do you track across the campaign? What do you forget? | **Who the crew has dealt with, what was shared, who was killed or wronged.** Forgets what info went to whom, and **what the current quest is** | **Interactions** become a record (§4e): who, which session, what kind (shared, learned, helped, wronged, killed, owes), and what. The current quest is the thread marked **current** |
+| One tool tomorrow? | **A roster of enemies to quickly reference** | Confirms the reorder |
+
+**The 50,000-foot reading.** The plan as first written was ordered by
+engineering risk: storage, the dispatch and the read-only sheet first,
+because everything else sits on them. Scott's answers say the value is
+almost all at the other end: **NPCs, enemies, Conditions in a fight, and a
+memory of the campaign.** None of that needs a seated character, a dispatch
+or a read-only sheet. So the order flips (§6): the table file first, then the
+cast and the Codex, then the fight, then sessions and threads, and the
+character-facing machinery last. The risky shapes still get settled; they
+just stop gating the part Scott asked for.
+
+**What he didn't ask for** is worth saying too: nothing about getting the
+players' sheets in, or sending them changes. At an in-person table the
+players are across the table with their phones, and he says the award out
+loud. The dispatch is still the right shape if a table goes remote (§8), but
+it is no longer early work (GQ20).
+
 ## 2. What the books already decide
 
 | The GM needs | The book's answer | Where |
@@ -52,10 +93,14 @@ rolling for players (they roll real dice); voice or video; accounts.
 | How much to stat an NPC | **Partial** (stats, a few skills) for the disposable; **full** for anyone who persists or adapts; a partial block is finished between sessions if the NPC turns out to matter | `223` *When to Fully Stat an NPC* |
 | The stat block | Ten stats (TOL and WILL derived, as floors), Health as HP and Health Levels, armor from Gear, skills as **totals**, gear, traits, GM note, If Pushed | Codex *How to Read an Entry* |
 | Threat weight | Tiers T1–T4, each with stat ranges and a trait budget; Apex is never pre-built | Codex *Tier Reference* |
-| Origins | Seven mortal origins, each a stat modifier set applied **at construction** | Codex *Origin Reference* |
+| Origins | Seven mortal origins, each a stat modifier set applied **at construction** | Codex *Origin Reference*; v2 unchanged |
+| NPC Roles | **Nine** in v2: Civilian, Contact, Operator, Specialist, Authority, Power Broker, Wild Card, **Patron** (no longer "in review") and Nemesis | Codex v2 *NPC Roles* |
+| Enemy Roles and tier | Eight roles, and v2's table **gives each role a tier**: Grunt T1; Sneak, Brute, Artillery T2; Controller, Enforcer, Elite T3; Apex T4. An entry still prints both (GQ16) | Codex v2 *Enemy Roles*, *Tiers* |
+| NPC armor | Roll PROT + RES ("1d4+2") **or use the average, 5** (GQ18) | Codex v2 *Reading the Enemy Matrix* |
 | Pre-built threats | 42 entries, 29 encounter groups, two drones, ~100 named traits in three kinds (Universal, Origin, Signature) | Codex Parts B–C |
-| Named NPCs | Ten roster NPCs (Bob, Splice, Chen, …) in *Motivation · Resources · Their Line · stats · If Pushed* form | `200` Part VI *NPC Roster* |
-| Supernatural and environmental threats | **Proposed, not approved:** seven Orders beside Origin, Bound/Changed/Other modifier rules, three new fields, named lieutenants, Site Profiles with tracks and clocks | Expansion proposal |
+| Named NPCs | Eleven roster NPCs (Bob and NPC-01 to 10), **moved into the Codex** in v2, in *Motivation · Resources · Their Line · stats · skills · If Pushed* form, each with a **Push Profile**: the Codex entry or encounter group they become when pushed, or none | Codex v2 *NPC Roster* (was `200` Part VI) |
+| Supernatural threats | **In the Codex draft now**, modifiers still headed "proposed" (GQ17): seven Orders (Undead, Vampiric, Therianthropic, Fae, Spirit, Elemental, Beast) beside Origin; **Bound** (Origin modifiers, one Order trait instead of Order's), **Changed** (both), **Other** (Order only); a +1 both give becomes +1 and an Order trait; −1s cap at −1, a −2 is reviewed by hand; a bodiless Changed takes only Origin's mental and social modifiers | Codex v2 *Origins and Orders* |
+| Environmental threats | **Proposed, not approved:** three new fields, named lieutenants, Site Profiles with tracks and clocks | Expansion proposal |
 | Places | Territory → Zone → District → Neighborhood; six Territories with Zones, Supernatural Sites, Business Interests and Factions; eleven places beyond the city | `100`, `110` |
 | Powers | Five corporations, the Unseen Court and its houses, the Chrome Berets, the Goblin Market | `120` |
 | GM notes | Four worksheets: **Session 0 Shared Overlap**, **Encounter Design**, **Campaign Journal** (six parts a session), **Faction Tracker** (tipping points, a Hostile↔Allied stance) | `220`, `224`, `227`, `200` *Tracking* |
@@ -76,6 +121,15 @@ rolling for players (they roll real dice); voice or video; accounts.
   and a stat block **stores** TOL and WILL and the engine checks the floor.
 - **TOL is above its formula on two** (08 Corporate Sniper, 10 Tactical
   Analyst), and the Codex's note covers only WILL (GQ6).
+- **The v2 roster breaks the floor both ways** (checked 2026-10-02, the
+  engine's TOL = 1 + INT/BOD/COOL and WILL = 1 + BOD/INT/EMP over its eleven
+  blocks): TOL is **below** its formula on seven (Chen, the Archivist, Kira,
+  Threadbare, the Warden, Juno, the Patron), by up to four; WILL is below on
+  one (Marta) and above on four. So "a stored value with a derived floor"
+  holds for the 42 entries and fails for the roster (GQ6).
+- **Bob has his own block and also says "use Entry 05 for Bob's stats"** when
+  pushed (GQ15). The other ten keep their block and push into an entry or a
+  group, which the cast record's `ifPushed.links` already models.
 - **Eleven gear items aren't in the Gear tables** (the Codex's own ⚠ list:
   Leather Jacket, Denim Jacket, Road Warrior's Jacket, Layered Street Clothes,
   four rifles and weapons, two drones and their controllers). Gear on an NPC
@@ -215,8 +269,8 @@ One record, from a name on a napkin to an Apex (§2's first row):
 ```
 CastMember: {
   id, name, flavor, description,
-  origin, order?,                    // order only once the Expansion is approved
-  npcRoles: [ ],                     // "Civilian / Wild Card" is two
+  origin?, order?,                   // origin absent for "Various" (the Patron); order once GQ17 settles
+  npcRoles: [ ],                     // "Civilian / Wild Card" is two; nine in v2
   enemyRole?, tier?,                 // absent until they'd fight
   motivation, resources, line,       // "every NPC has a goal, a resource, and a line"
   rules?, resolution?, vulnerabilities?,   // the Expansion's fields; text
@@ -226,6 +280,13 @@ CastMember: {
   places: [link], factions: [link],  // where they turn up, who they answer to
   status: "alive" | "dead" | "missing" | "gone",
   firstMet?: sessionId, gmNote, history: [ { session, text } ]
+}
+
+Interaction: {                       // Scott: "what info was shared with who"
+  id, session, cast: [link],         // who the crew dealt with
+  crew: [seat or name],              // which characters were there
+  kind: "shared" | "learned" | "helped" | "wronged" | "killed" | "owes" | "owed",
+  text, threads: [link]
 }
 
 StatBlock: {
@@ -239,9 +300,17 @@ StatBlock: {
 ```
 
 - **Derived, never stored:** Health Levels and HP from BOD (the players'
-  rule), the stat bonuses, and the **floors** of TOL and WILL. The engine
-  warns when a stored TOL or WILL is under its floor, never when it's above
-  (the Codex's rule, and 34 of its 42 entries).
+  rule) and the stat bonuses. **TOL and WILL are stored as authored.** The
+  first draft said the engine warns under a floor; the v2 roster is under
+  TOL's formula on seven of eleven, so a warning would fire on Scott's own
+  NPCs. The engine shows the formula's value beside the stored one and says
+  nothing more until GQ6 is answered.
+- **Interactions are the campaign's memory** (§1a). They're written from the
+  session (quick, mid-play or at close), and read from either end: a cast
+  member's card lists everything the crew told them, learned from them, owes
+  them or did to them; the crew's view lists who knows what. "Killed" sets
+  the cast member's status. **Affiliation** is `factions`, and the Cast tab
+  filters by it, by origin and by role ("a roster with affiliations").
 - **Skills are totals.** The Codex prints a total, not a rank, so the block
   stores the total and nothing derives it. A skill named in the data's
   catalog links to its description; one that isn't stays text.
@@ -281,10 +350,27 @@ deadline and the Encounter Design worksheet's escalation.
 ### 4g. Sessions
 
 A `SessionRecord` holds a date, a number, **attendance** (which seats were
-present), **hours**, and the **Campaign Journal**'s six parts, each a text
-field with links where the worksheet asks "who": what happened, consequences
-and fallout, new threads, faction and city impact, the close reflection, and
-the seed for next session.
+present; a typed name before seats exist), **hours**, the **Campaign
+Journal**'s six parts, each a text field with links where the worksheet asks
+"who": what happened, consequences and fallout, new threads, faction and city
+impact, the close reflection, and the seed for next session; its
+interactions; and **the award log**: what each character got (IP, the
+Milestone Point, Çredits, gear, CRANK rep), each line with a reason. The
+award log is the GM's record whether or not a dispatch carries it (GQ20).
+
+**Threads** are their own record, because Scott's whole prep is threads:
+
+```
+Thread: { id, title, status: "open" | "resolved" | "dropped", current?: true,
+          opened: sessionId, closed?: sessionId, links: [link], notes }
+```
+
+One open thread can be **current** ("what the current quest is"). A
+journal's "new threads" creates them; closing a session asks which open ones
+moved, resolved or dropped. **Next session**, the table's landing page, is
+then computed, never typed: the current thread, every other open thread
+oldest first, last session's seed, clocks one or two segments from full, and
+anyone met last session who has no stat block yet.
 
 **Closing a session** is one sheet the GM reads before anything is sent:
 
@@ -292,10 +378,16 @@ the seed for next session.
    (`226`), editable before it goes.
 2. Each absent character → an optional **off-screen CRANK job**: Çredits
    rolled in the lower half of their tier's payout range (`242`).
-3. The micro-arc counter: the 5th and 10th sessions remind the GM a Minor or
-   Major Milestone cycle has turned (`240`). A reminder, not an award (GQ8).
-4. **One dispatch per character** with the lot. Nothing is sent without
-   the GM seeing it.
+3. **The Milestone Point:** one to each character present. The sheet already
+   gives one per session in its log (`milestonePointsPerSession`), so this
+   is a line in the award log, not a new rule (GQ8, answered).
+4. The micro-arc counter: the 5th and 10th sessions remind the GM a Minor or
+   Major Milestone cycle has turned (`240`).
+5. Threads: which moved, which resolved, which dropped, which is current.
+6. **Anyone new?** Improvised NPCs quick-added during play get their line
+   (goal, resource, Line) or stay a name.
+7. The award log is written. **A dispatch per character** is offered once
+   S2 exists, never required. Nothing is sent without the GM seeing it.
 
 The **Session 0 Shared Overlap** worksheet (shared location, contact,
 dependency, recent event) is the table's first note, and its answers can
@@ -308,9 +400,22 @@ objectives beyond "defeat the enemy", escalation, finding an out, hooks, GM
 prompts, when momentum stalls) is the encounter's prep half. The running
 half:
 
-- **Participants:** seated characters (by reference: their order, never a
-  second copy of their HP), cast members, Codex entries ×n (each copy its own
-  damage track), and encounter groups unpacked into their parts.
+- **Participants:** player characters, cast members, Codex entries ×n (each
+  copy its own damage track), and encounter groups unpacked into their parts.
+  A PC is a seat once seats exist (S3b) and **a typed name before then**, so
+  the tracker doesn't wait on the character-facing half.
+- **A PC's row shows Health, Awareness and Conditions** (Scott's three).
+  Awareness comes from the snapshot and doesn't move in a fight. Health and
+  Conditions do, so the row keeps **the GM's own scratch copy**, seeded from
+  the snapshot when there is one and changed as players call out hits. It is
+  never written back to anyone's sheet. This reverses the first draft's "never
+  a second copy of their HP": at an in-person table the GM is tracking it
+  anyway, on paper (GQ19).
+- **Conditions are the centre of the tracker**, because they are what Scott
+  loses. Each Condition on a row carries its source, its duration in rounds
+  or "until saved", and its rule a tap away (the tip, 139). **Reset** lists
+  every Condition that ticks, ends or asks for a save that round, row by row,
+  before the next round starts. Nothing ends silently.
 - **Order of Engagement:** each participant's Combat Sense total, rolled or
   entered; ties flagged for a reroll (`053`).
 - **The round:** a pointer, then **Reset**'s checklist: one Fast Action each,
@@ -321,9 +426,9 @@ half:
 - **Traits as reminders**, shown on the active participant's row, and a
   trait with a trigger ("at their last Health Level") lights when its
   trigger's state is visible to the engine.
-- **Damage to a player character** is a dispatch line, queued, not applied:
-  "Nyx took 14 Ballistic to the torso". The table at a physical table already
-  says it aloud; the dispatch is the record.
+- **Damage to a player character** is the player's to apply on their own
+  sheet; the GM's row is the scratch copy above. Once S2 exists, a hit can
+  also be queued as a dispatch line, which is the record for a remote table.
 - **Ending it:** survivors among Codex copies can be kept as cast members;
   cast members write a history line; the session journal gets a line.
 
@@ -359,29 +464,49 @@ meets a GM mode sees one new number.
 
 ## 6. What ships when: the sessions
 
+**Each session is built from a work order** in [`gm-mode/`](gm-mode/README.md),
+written one session ahead, approved by Ken, built in a fresh session and
+reviewed against the order before it merges. The README has the cadence and
+the template. **S1's order is approved:** [`gm-mode/S01-crank-rep.md`](gm-mode/S01-crank-rep.md).
+
 Each session is one batch, ends with `npm run verify` green and a log entry,
 and leaves the app openable. Each says what it depends on, what decides it,
-and what's done. **The order is chosen so the riskiest shape questions
-(storage, the dispatch, the read-only sheet) are answered first**, and
-content-heavy work (the Codex, the gazetteer) lands on a shape that's
-already been used.
+and what's done.
+
+**The order changed on 2026-10-02** (§1a). The first draft answered the
+riskiest shapes first (storage, the dispatch, the read-only sheet). Scott's
+answers put the value in NPCs, enemies, Conditions and the campaign's
+memory, none of which needs a seated character. So S3 splits: **S3a** is the
+table file and its storage, which everything needs; **S3b** is seats, the
+card spread and the read-only sheet, which only the character-facing half
+needs. The S-numbers stay as ids, since the log and §9 cite them; the table
+below is in **build order**.
+
+The Codex never ships in the app (GQ10): S9 builds the pack a GM slots in,
+and the Codex pack itself is built from `private/`.
 
 | # | Session | Tier | Depends on | Visible to a player? |
 |---|---|---|---|---|
 | S0 | This plan, the mirror, the questions page | Docs | — | No |
-| S1 | CRANK reputation on the sheet | Rule or shape | — | **Yes** |
-| S2 | The dispatch and the inbox | Rule or shape | S1 (rep is a dispatch kind) | Yes, once a GM sends one |
-| S3 | The table: players, seats, import, the card spread, the read-only sheet | Rule or shape | — | No |
-| S4 | GM writes: notes and the dispatch composer, and reconciliation | Rule or shape | S2, S3 | No |
-| S5 | Sessions: attendance, close-out, the Journal, Session 0 | Rule or shape | S4 | No |
-| S6 | The gazetteer and the crew's places | Content + shape | S3 | No |
-| S7 | Factions and clocks | Rule or shape | S6 | No |
-| S8 | The cast: the record, partial blocks, the NPC roster | Rule or shape | S3, S6 | No |
-| S9 | The Threat Codex as data: rolodex and builder | Content + shape | S8 | No |
-| S10 | The encounter tracker | Rule or shape | S8, S9 | No |
-| S11 | CRANK work: the generator and the jobs board | Content + shape | S1, S4 | No |
-| S12 | Supernatural Orders and Site Profiles | Content | Scott's proposal approved; S9, S7 | No |
-| S13 | The GM screen: the reference, handouts, print | Fix + content | — | No |
+| S1 | CRANK reputation on the sheet (independent; can go to main any time, GQ14) | Rule or shape | — | **Yes** |
+| S3a | The table file: new, open, export, import, the storage key, `migrateTable()` | Rule or shape | — | No |
+| S8 | The cast: the record, partial blocks, interactions, affiliation filters, the roster | Rule or shape | S3a | No |
+| S9 | The Threat Codex as a pack: the pack shape and import, rolodex and builder | Content + shape | S8 | No |
+| S10 | The encounter tracker, built around Conditions; PCs by typed name | Rule or shape | S8, S9 | No |
+| S5 | Sessions: attendance, threads, Next session, the award log, close-out, the Journal, Session 0 | Rule or shape | S8 | No |
+| S13 | The GM screen: Conditions and the Codex first, then the rest of the reference | Fix + content | S9 | No |
+| S6 | The gazetteer and the crew's places | Content + shape | S3a | No |
+| S7 | Factions and clocks | Rule or shape | S6, S8 | No |
+| S3b | Seats: players, import, the card spread (Health, Awareness, Conditions first), the read-only sheet | Rule or shape | S3a | No |
+| S2 | The dispatch and the inbox | Rule or shape | S1 | Yes, once a GM sends one |
+| S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b, S5 | No |
+| S11 | CRANK work: the generator and the jobs board | Content + shape | S1, S5 | No |
+| S12 | Supernatural Orders and Site Profiles | Content | GQ17 and the Expansion approved; S9, S7 | No |
+
+**The first point a GM gets real value** is after S10: a table holding a
+cast, the Codex to pull from, and a fight that keeps its Conditions. That is
+the natural place to merge the branch (§7) and put it in Scott's hands, and
+his use of it should reorder whatever comes after.
 
 ### S0 — This plan (Docs)
 
@@ -420,17 +545,27 @@ or defaulted every *They* question in §9.
   only proposes what the sheet's own controls can do*). Schema bump for the
   audit field, if `migrate()` needs to know it.
 
-### S3 — The table
+### S3a — The table file
 
-The riskiest session, because it settles storage, the table file, and the
-read-only sheet.
+Settles storage and the file, which everything after it needs.
 
 - **Run a table** on Home; new, open, export, import, remove, with the
   roster's unexported marker.
+- **Decisions:** the table file and `migrateTable()`; the storage key; the
+  table-schema version (and `CLAUDE.md`'s versions table). **Tests:** hostile
+  table files.
+
+### S3b — Seats and the card spread
+
+The character-facing half, and the plan's main engineering cost (the
+read-only sheet). Moved late on 2026-10-02 because nothing Scott asked for
+waits on it.
+
 - Players and seats; import a character onto a seat (drop several files at
   once); a newer copy of the same TAG updates the seat; an older one asks.
-- **The card spread:** one card per active seat, grouped by player. Name,
-  archetype, TAG, Health and Pain, SAN, Luck, Conditions, Çredits, IP
+- **The card spread:** one card per active seat, grouped by player. **Health,
+  Awareness and Conditions first** (Scott's three), then name,
+  archetype, TAG, Pain, SAN, Luck, Çredits, IP
   unspent, CRANK tier, and **how old the copy is** ("as of Tuesday's
   export"). Benched, retired and dead seats fold below.
 - **The read-only sheet:** the real renderer with a `readOnly` flag: every
@@ -439,10 +574,9 @@ read-only sheet.
   (GQ13).
 - **Measure storage:** build a realistic table (six characters, long audits)
   and record its size in the log.
-- **Decisions:** the table file and `migrateTable()`; the storage key; the
-  table-schema version (and `CLAUDE.md`'s versions table); seats outside the
-  roster. **Tests:** hostile table files; a character imported twice; the
-  read-only sheet has no reachable write.
+- **Decisions:** seats outside the roster. **Tests:** a character imported
+  twice; the read-only sheet has no reachable write. A typed-name PC from S5
+  or S10 can be **claimed** by a seat, so its history carries over.
 
 ### S4 — GM writes
 
@@ -454,13 +588,17 @@ read-only sheet.
 
 ### S5 — Sessions
 
-- The session list; attendance by seat; hours.
+- The session list; attendance by typed name (by seat once S3b exists); hours.
+- **Threads** and **Next session**, the table's landing page (§4g): Scott's
+  "to-do list from last session", computed.
+- **Interactions** written from the session, mid-play or at close.
 - **Close the session** (§4g): IP at 5 an hour to those present, the
-  absent's off-screen job, the arc counter, one dispatch each.
+  Milestone Point, the absent's off-screen job, the arc counter, threads,
+  anyone new, and **the award log**.
 - The **Campaign Journal** per session; the **Session 0 Shared Overlap**
   worksheet as the table's first note.
-- **Decision:** the close-out rule as built (present only, 5 an hour as a
-  default the GM edits, a reminder for milestones, not an award).
+- **Decisions:** the close-out rule as built (present only, 5 an hour as a
+  default the GM edits, one Milestone Point a session); threads as records.
 
 ### S6 — The gazetteer and the crew's places
 
@@ -481,21 +619,32 @@ read-only sheet.
 
 ### S8 — The cast
 
-- The cast record and the stat block (§4e), partial or full.
+- The cast record and the stat block (§4e), partial or full, and
+  **quick-add**: a name and a line, mid-session, one press.
+- **Interactions** (§4e) on the cast member's card, and filters by
+  affiliation, origin and role: "a roster with affiliations".
 - The engine's NPC reader: `Engine.npc(block)` → Health Levels, HP, bonuses,
-  TOL and WILL floors, warnings. Total, like every reader.
-- **The NPC roster** from Part VI (Bob, Splice, Chen, the Archivist, Kira,
-  Marta, Threadbare, the Warden, Juno, Marcus, the Patron) as **examples to
-  copy**, not as cast: a GM's cast starts empty.
+  TOL and WILL beside their formulas, warnings. Total, like every reader.
+- **The NPC roster**, now in the Codex (Bob, Splice, Chen, the Archivist,
+  Kira, Marta, Threadbare, the Warden, Juno, Marcus, the Patron) as
+  **examples to copy**, not as cast: a GM's cast starts empty. Confidential
+  like the rest of the Codex, so it ships in S9's Codex pack; S8 tests
+  against a synthetic roster.
 - Keep, Promote (a fought copy into the cast), history, status.
 - **Decisions:** the cast record; the stat block; *NPC TOL and WILL are
-  stored with a derived floor* (a deliberate exception to constraint 7's
-  letter, because the Codex says the value is authored above the formula).
+  stored as authored* (a deliberate exception to constraint 7's letter,
+  because the Codex authors them), with whatever GQ6 says about the formula.
 
-### S9 — The Threat Codex as data
+### S9 — The Threat Codex as a pack
 
-- **Data:** origins (seven), NPC roles (eight, plus Patron if GQ4 says so),
-  enemy roles (eight), tiers (four), entries (42), encounter groups (29),
+GQ10 is answered: the Codex isn't in the app's data. It's a **pack**, built
+from `private/` and slotted in by the GM (W62 is how it should feel). S9
+builds the pack shape, its gate, its storage key and the import, tests them
+against a synthetic pack, and builds the real Codex pack in `private/`.
+
+
+- **Data:** origins (seven), NPC roles (nine, Patron included: GQ4
+  answered by v2), enemy roles (eight, each with v2's tier), tiers (four), entries (42), encounter groups (29),
   traits (the glossary), the drone reference. Gear by catalog id where the
   Gear tables have it; text where the ⚠ list says they don't.
 - **The rolodex:** browse by origin, role and tier, through `openCatalog`
@@ -513,9 +662,13 @@ read-only sheet.
 
 ### S10 — The encounter tracker
 
-- The Encounter Design worksheet; participants; Order of Engagement; rounds
-  and Reset; NPC damage through the engine's pipeline; Conditions on NPCs;
-  traits as reminders; PC damage queued as dispatch lines; ending it.
+- The Encounter Design worksheet; participants (PCs by typed name until
+  S3b); Order of Engagement; rounds and Reset; NPC damage through the
+  engine's pipeline; **Conditions with durations on every row, PCs
+  included, and Reset's list of what ticks or ends** (§4h); traits as
+  reminders; the GM's scratch Health for PCs; ending it.
+- **Built for a tablet at the table** (§1a): every control a tap, the active
+  row and the round always on screen.
 - Encounter groups unpack into their entries.
 - **Decision:** the NPC adapter onto the damage pipeline, and what it
   doesn't model (traits).
@@ -527,17 +680,20 @@ read-only sheet.
 
 ### S12 — Supernatural Orders and Site Profiles
 
-**Waits on Scott's proposal being approved.** The shape is already there
+**Waits on GQ17 and the Expansion being approved.** v2 has put the Orders in
+the Codex itself, which suggests they're close. The shape is already there
 (`order`, `rules`, `resolution`, `vulnerabilities`, `overrides`, clocks), so
 this should be content: the seven Orders and their modifiers, the
-Bound/Changed/Other rule in the builder, the ~28 entries, the lieutenants as
+Bound/Changed/Other rule in the builder (its overlap and cap rules are
+arithmetic the builder can do, and a −2 it flags for the GM, as v2 says), the ~28 entries, the lieutenants as
 roster examples, the Site Profiles on places with their tracks and clocks. If
 it turns out to need code, that's a finding about S8 and S9's shape.
 
 ### S13 — The GM screen
 
-The reference tips (139) gathered on one screen: defenses, default TN and
-TH, Pain Levels, Conditions, the tier table. Handouts (a dispatch kind).
+The reference tips (139) gathered on one screen, **Conditions and the
+Codex first** (what Scott looks up most), then defenses, default TN and TH,
+Pain Levels, the tier table. Handouts (a dispatch kind).
 Printing a cast member, an encounter, a session's journal.
 
 ## 7. How the branch works
@@ -554,11 +710,12 @@ Ken asked for one branch for the whole feature. That works, with two rules:
 with no GM dependency. It could go to main and ship on its own, which also
 tests the schema bump on real players before the table depends on it (GQ14).
 
-**Merging early.** The Home door appears in S3, and the app has no feature
+**Merging early.** The Home door appears in S3a, and the app has no feature
 switch to hide a half-built mode (and the app doesn't narrate its build
 state, constraint 9). So the branch merges at a point where what's there is
-finished: after S5, the first point a GM gets real value, or at the end.
-The default is the end.
+finished. **The default is now after S10** (cast, Codex, the fight), since
+that's what Scott asked for, and his use of it is the best guide to the
+rest. The Codex reaches him as a pack either way.
 
 ## 8. Later: live sync (W29 stages 2–3)
 
@@ -576,17 +733,23 @@ Deighton.
 
 | # | Question | For | Default |
 |---|---|---|---|
-| GQ1 | Which tabs, in what order? Is anything in §4b missing or not worth it? | They | §4b as written |
-| GQ2 | Do you run in person, online or both, and do players have devices at the table? Is files between sessions enough, or is a live view the point? | They | Files are enough to start; live sync is a later plan |
+| GQ1 | Which tabs, in what order? Is anything in §4b missing or not worth it? | They | **Scott, 2026-10-02:** the cast, the Codex and the fight matter most, and threads and interactions are missing (§1a; both added). Order still open; default §4b with **Next session** as the landing page. Deighton to come |
+| GQ2 | Do you run in person, online or both, and do players have devices at the table? Is files between sessions enough, or is a live view the point? | They | **Scott, 2026-10-02:** in person; players on phones and tablets; GM on paper with electronic references. Files are enough to start; live sync is a later plan. Deighton to come |
 | GQ3 | One dispatch file per character, or one per table that each player's sheet reads its own part of? | Ken | One per table: one file to drop in a chat channel |
-| GQ4 | Is **Patron** an NPC Role? The Codex says "in review"; the Workshop's roster uses it | Scott | Not a role; the Patron is an example NPC |
+| GQ4 | Is **Patron** an NPC Role? The Codex says "in review"; the Workshop's roster uses it | Scott | **Answered by Codex v2:** yes. Nine roles, Nemesis included |
 | GQ5 | Is the Origin Matrix's 7 × 8 concept grid canon, and with which origins? (The page has Elite and the old modifiers; the Codex has Agency) | Scott | Not in the app until it's in the Codex |
-| GQ6 | Entries 08 and 10 have TOL above the formula. Is TOL, like WILL, a floor an author can exceed? | Scott | Yes, the same rule as WILL |
-| GQ7 | CRANK reputation and the **Reputation** Advantage share a word. Should either say how they differ? | Deighton | A tip on CRANK rep says it's the platform's score |
-| GQ8 | Milestone cycles (5 and 10 sessions): does the GM award them, or does the sheet already handle it? | Deighton | A reminder to the GM, no award |
+| GQ6 | Entries 08 and 10 have TOL above the formula, and **the v2 roster has TOL below it on seven of eleven** (Chen, the Archivist, Kira, Threadbare, the Warden, Juno, the Patron) and WILL below on one (Marta). Is an NPC's TOL and WILL the formula, a floor, or simply authored? | Scott | Authored: stored as printed, with the formula's value shown beside it and no warning |
+| GQ7 | CRANK reputation and the **Reputation** Advantage share a word. Should either say how they differ? | Deighton | **Ken, 2026-10-02: open, and bigger than wording.** The team wants to discuss the Reputation Advantage setting a character's starting CRANK rep, or something like it. Until then S1 keeps CRANK's copy clean: no mention of the Advantage |
+| GQ8 | Milestone cycles (5 and 10 sessions): does the GM award them, or does the sheet already handle it? | Deighton | **Scott, 2026-10-02:** he awards a Milestone Point each session, which the sheet already gives from its session log. The award log records it; the 5- and 10-session cycles stay a reminder. Deighton to confirm |
 | GQ9 | If a table outgrows browser storage, is "the table file is the save" acceptable, or does it need to fit? | Ken | Acceptable, with the unexported marker |
-| GQ10 | Does the GM's content (the Codex, the gazetteer) ship in the one file every player gets, or in a separate GM build? | Ken | **Proposed 2026-10-02:** two builds. The GM content lives in `private/gm/`; the public site ships the player app and the GM mode's code, tested against a synthetic fixture; `shadows-gm.html` is built with the private data and handed out, never deployed. A passphrase-encrypted edition only if that file starts circulating |
-| GQ11 | CRANK rep on the printed sheet, when the front page is full (Decision 96)? | Ken | Page 2, by Çredits |
+| GQ10 | Does the GM's content (the Codex, the gazetteer) ship in the one file every player gets, or in a separate GM build? | Ken | **Answered 2026-10-02 (Ken): one app, and the Codex is a pack the GM slots in.** The GM mode's code ships to everyone, empty; the Codex, the roster and CRANK's tables are a `.shadows-pack.json` built from `private/` and handed to a GM, imported once, checked like any untrusted file (124). Core player content stays free in the sheet, Vampire and Werewolf included. The repo stays public, as a matter of trust. How expansions hook in, and what stays private when they do, waits for the first expansion. Replaces the two-build proposal: two builds meant two version histories and a GM file to re-hand on every release. Needs a numbered decision when S9 builds it |
+| GQ11 | CRANK rep on the printed sheet, when the front page is full (Decision 96)? | Ken | **Ken, 2026-10-02: the front page.** Its third field row has two of four places free |
 | GQ12 | **This repo is public.** Where do the CRB mirror and the Codex live? | Ken | **Answered 2026-10-02:** a private repo, mounted at `private/` (Decision 167). Whether the Codex ships is GQ10 |
 | GQ13 | If the read-only sheet turns out expensive, is a summary card plus the printed sheet enough for a GM to read a character? | Ken | Build the real read-only sheet |
 | GQ14 | Ship S1 (CRANK rep) to main on its own, or keep it on the branch? | Ken | Ship it on its own |
+| GQ15 | Bob has his own stat block and also says to use Entry 05's when he's pushed. When a roster NPC turns hostile, do they fight with their own block or their Push Profile's entry? | Scott | The Push Profile's entry; their own block is for social scenes. The cast record keeps both |
+| GQ16 | v2's Enemy Roles table gives each role a tier (Brute is T2), and an entry prints both. Can an entry's tier differ from its role's, a T3 Brute? | Scott | Yes: tier is stored, and the builder notes when it differs from the role's usual |
+| GQ17 | The Orders are in the Codex now, under a "proposed modifier" heading. Are they approved? | Scott | Not yet: the builder offers Origin only until the heading drops "proposed" |
+| GQ18 | NPC armor is "PROT + RES (1d4+2), or the average (5)". 1d4+2 averages 4.5; is the 5 rounded up on purpose? And is this the players' armor rule simplified for the GM, or its own NPC rule? It touches the RES question in F23 and F25 | Deighton | The tracker offers both, roll or 5, exactly as printed |
+| GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8 |
+| GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts |
