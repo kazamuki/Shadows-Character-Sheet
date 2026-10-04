@@ -45,6 +45,23 @@ W45 it also fails on a vitals bar or a sheet's jump bar of two rows, and on a
 phone's Health card below 30% of the screen. A new control inherits those
 floors rather than re-arguing them.
 
+**W64 — Go back Home from character creation.** *Ken · ⏭ · raised 2026-10-04*
+In the wizard there's no way back to the Home screen. The sheet has **Home**
+in its ⋮ menu, but the wizard header is empty (`renderTopChrome` clears the
+actions on the wizard screen), so a player who wants their roster, or
+to start over, refreshes the page. Ken's choice: **a Home control in the
+wizard header**, matching the sheet's.
+*To respect:* nothing is lost by leaving. A new character is saved the moment
+the player changes something (`btn-new` in `renderHome`) and appears under
+Your characters, so Home needs no "are you sure?" for a touched character.
+An untouched one was never saved and just disappears, which is fine. The
+control is 44px on a touchscreen (`phone-check` fails below that) and must not
+push the header to a second row. It reuses the `data-home` handler in
+`bindMain`, which the sheet's menu also reaches.
+Worth a look while there: the Home reset sets only `{screen, ch, step,
+maxReached}` in `bindMain` but also `section` and `admin` in the sheet's
+version in `renderTopChrome`; one helper would stop the two drifting.
+
 **W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01*
 Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,
 the stepper helper): the Skills step has 36 buttons that all read "increase,
@@ -162,6 +179,69 @@ the Codex feels like jacking a script into a deck rather than opening a file.
   mono font is already embedded, so nothing touches the network (137).
 - One primitive in `shared.js`, used by every import: a character, a table,
   a pack, and a dispatch once that exists.
+
+**W63 — The hosted sheet is a demo; the full game is a pack you slot in.** *Ken · 🔎 · Rule or shape · raised 2026-10-04 · reopens GQ10 in part*
+Today `charactersheet.shadowsrpg.com` is the whole sheet: every archetype,
+the full catalog, all of it, free. Ken wants the live site to be a **demo**: a
+real taste of Shadows and its data that everyone gets, with the full CRB
+content arriving as a file the player adds to unlock the rest. It is the same
+move as GQ10's Codex pack, applied to the core game: the mode and its logic
+ship in every build, and a pack supplies the content.
+*Settled with Ken, 2026-10-04:*
+- **A slice is free.** The demo carries a limited set of archetypes and data,
+  not the whole book. The player builds and plays **one real character**
+  through the whole wizard and sheet, with save and export working.
+- **Demo characters carry over.** A character made in the demo stays valid
+  once the pack is added. IDs are immutable (constraint 6), so this holds if
+  the demo's data is a strict subset of the full data, and a test should
+  prove it (every demo id exists in the full data).
+- **The unlock is the same `.shadows-pack.json` as the Codex.** One pack
+  mechanism, imported once, checked like any untrusted file (Decision 124).
+  The CRB is a core pack and the Codex is a GM pack. The file is built from
+  `private/` (Decision 167).
+*What the shape has to respect, as Claude sees it:*
+- **GQ10 changes in part.** It says "core player content stays free in the
+  sheet, Vampire and Werewolf included," and that the repo stays public "as a
+  matter of trust." Taking this up means a numbered decision that narrows
+  GQ10 and marks it superseded in part. It must also say which archetypes
+  are in the slice. That is a content call (Ken, and Deighton for what the
+  demo shows of the rules), not an engineering one.
+- **The "slice" is the hard design question.** Candidate cuts: a few
+  archetypes, or all archetypes with trimmed catalogs, or the full rules with
+  a character cap. Each decides what a demo player can miss. This is the
+  first thing to settle, because the data split follows from it.
+- **The app must still make no network request** (constraint 1, Decision
+  137). The pack is a file the player adds, never a fetch. The site and the
+  offline file both work the same way: demo until a pack is slotted in.
+- **One app, one version history.** Same reasoning as GQ10's rejection of two
+  builds. The demo is the data subset, not a second codebase. `gamedataVersion`
+  moves with the data a character can observe (Decision 68), and a pack
+  carries its own content version.
+- **The engine is total** (constraint 8). A character that references an id
+  the loaded data lacks (a full character opened in a demo, or a pack removed
+  afterwards) must not throw. It should open read-only or say plainly what's
+  missing, in tool voice. Same rule for a pack older than the character.
+- **Repo vs. protection.** This repo is public, so the demo is a **trust and
+  product line, not DRM**: anyone can read the data from the source. Say so
+  in the decision, so nobody later treats it as access control. The CRB text
+  itself is in `private/` and stays out of the public tree already. Whether
+  the *game data* (370KB of descriptions and rules text in `shadows-data.js`)
+  also moves into the pack is part of the slice question.
+- **How the full pack reaches people** (Patreon, a store, handed out, free
+  for backers) and whether it is paid is Ken's and Deighton's, and not an app
+  question. The app only needs a good "add your pack" moment (W62's loading
+  screen fits) and an honest demo state.
+- **Voice.** The demo's framing ("you're seeing a slice of NYTE City") is
+  player copy and gets a voice pass (`VOICE-APP.md`). It is data in
+  `appCopy`, and it never narrates build state (constraint 9).
+- **The pack's gate is shared work.** S9 of `plans/gm-mode.md` builds the
+  pack shape, gate, storage key and import. Build the demo after that, or
+  with it, so there is one pack mechanism.
+*Open for whoever picks it up:* the slice (which archetypes, which catalogs);
+whether the demo is also a quickstart path (a guided first character) or
+just a trimmed sheet; what the Home screen says before a pack is slotted
+in; whether a pack can be removed, and what that does to characters that
+use it.
 
 ### Custom characters
 
@@ -340,7 +420,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W63.** Everything above is open; W38 has a plan,
+- **Next free number: W65.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
