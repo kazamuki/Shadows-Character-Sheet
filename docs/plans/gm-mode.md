@@ -748,7 +748,7 @@ Deighton.
 | GQ11 | CRANK rep on the printed sheet, when the front page is full (Decision 96)? | Ken | **Ken, 2026-10-02: the front page.** Its third field row has two of four places free |
 | GQ12 | **This repo is public.** Where do the CRB mirror and the Codex live? | Ken | **Answered 2026-10-02:** a private repo, mounted at `private/` (Decision 167). Whether the Codex ships is GQ10 |
 | GQ13 | If the read-only sheet turns out expensive, is a summary card plus the printed sheet enough for a GM to read a character? | Ken | Build the real read-only sheet |
-| GQ14 | Ship S1 (CRANK rep) to main on its own, or keep it on the branch? | Ken | Ship it on its own |
+| GQ14 | Ship S1 (CRANK rep) to main on its own, or keep it on the branch? | Ken | **Built 2026-10-05:** shipped on its own (PR #111) |
 | GQ15 | Bob has his own stat block and also says to use Entry 05's when he's pushed. When a roster NPC turns hostile, do they fight with their own block or their Push Profile's entry? | Scott | The Push Profile's entry; their own block is for social scenes. The cast record keeps both |
 | GQ16 | v2's Enemy Roles table gives each role a tier (Brute is T2), and an entry prints both. Can an entry's tier differ from its role's, a T3 Brute? | Scott | Yes: tier is stored, and the builder notes when it differs from the role's usual |
 | GQ17 | The Orders are in the Codex now, under a "proposed modifier" heading. Are they approved? | Scott | Not yet: the builder offers Origin only until the heading drops "proposed" |

@@ -3114,3 +3114,30 @@ test("CRANK: the print view has the field, blank and filled", () => {
   assert.match(blank, /CRANK/);
   assert.doesNotMatch(blank, /Novice/);
 });
+
+test("CRANK: Admin corrects rep through the ledger, and Undo takes a correction back", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  app.click('[data-admin-crank="1"]');
+  assert.equal(activeChar(app).trackers.crank.rep, 1);
+  app.click('[data-admin-crank="-1"]');
+  assert.equal(activeChar(app).trackers.crank.rep, 0);
+  const led = [...activeChar(app).trackers.crank.ledger];
+  assert.deepEqual([led.map(e => e.amount), led.map(e => e.note)], [[1, -1], ["Admin correction", "Admin correction"]]);
+  app.click('[data-sec="sessions"]');
+  app.click("button[data-undolast]");
+  assert.equal(activeChar(app).trackers.crank.rep, 1, "Undo didn't take the last correction back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("CRANK: Main's card label opens the popover, and the tip lives on the tier name inside it", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const card = app.$('#main [data-vpop="crank"]');
+  assert.ok(!card.querySelector("[data-tip]"), "a tip trigger inside the card's button swallows the tap");
+  clickIn(app, card.querySelector(".lab"));
+  assert.ok(!app.$("#vpop").hidden, "tapping the label didn't open the popover");
+  assert.match(app.$("#vpop").textContent, /CRANK rep/);
+  clickIn(app, app.$('#vpop [data-tip="crank"]'));
+  assert.match(tipShown(app), /gray market/, "the tier name didn't open the tip");
+  assert.deepEqual(app.errors, []);
+});

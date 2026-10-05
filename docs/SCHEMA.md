@@ -3681,6 +3681,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 32 in part (Combat is the left column, Stats the right). It extends 35 (the bar is one row), 122 (Main is the fight view) and 160 (Pin from Main).
      - **Revisit if:** players on phones miss the pills past the fade.
      - **Built:** app 0.36.0; smoke tests and `phone-check` measures, mutation-tested. Log 2026-10-02 (W45).
+     → **Superseded in part by Decision 169**: CRANK is alone.
 166. **The closed vitals flyout is inert; it takes focus when it opens, gives it back when it closes, Esc closes one layer, and a move to another tab closes it.**
      *2026-10-02 · Ken + Claude · Touches: vdrawer, vscrim, vitals flyout, syncVitals, vitalsShown, vitalsHandBack, openVitals, closeVitals, renderDrawer, setVitalsPinned, inert, aria-hidden, S.vitalsOpen, S.vitalsFrom, Escape, popover, modal, PIN_MEDIA, renderHome, W58*
      - **Decided:** One setter, `syncVitals` (`app.js`), writes `open`, `aria-hidden`, `inert` and the scrim from one predicate: open, or pinned with room to pin. Focus leaves before the panel goes inert, for the toggle, the wizard's pill, the active tab or the title, in that order. Opening moves focus to Close. Esc stands down while a popover or modal is open. A move to another tab closes the flyout. Leaving the sheet empties the panel and drops the pin's class. The flyout still doesn't trap focus.
@@ -3719,14 +3720,14 @@ No cascade logic to maintain — it falls out of the architecture.
 
 169. **CRANK reputation is a resource on the character: +1 a job done, −2 a job walked out on, read as five tiers from the data.**
      *2026-10-05 · Ken + Claude · Touches: CRANK, crank rep, trackers.crank, resources.crank, crankState, addCrankRep, Main CRANK card, Trackers CRANK section, crank tip, print front page, Reputation Advantage, schema 0.17, F37, W29, GQ7, GQ11, GQ14*
-     - **Decided:** A character stores `trackers.crank: { rep, ledger }`, the Çredits shape; the tier, the next tier and the pay are derived from `resources.crank.tiers`, never stored. The sheet raises it by the job (+1 done, −2 walked out), each with a note and an undo; Admin corrects anything else. It shows on Main beside Çredits, on Trackers with its ledger, in a tip with the tier table, and on the printed front page.
-     - **Why:** Ken (2026-10-02): rep goes on the sheet. It's the player's record ("a career resource, not a running score", `200` Part VI), and the GM mode's session close and job board (W29) will award it. A tracked number with a ledger is the shape Çredits already has.
+     - **Decided:** A character stores `trackers.crank: { rep, ledger }`, the Çredits shape; the tier, the next tier and the pay are derived from `resources.crank.tiers`, never stored. The sheet raises it by the job (+1 done, −2 walked out), each with a note and an undo; Admin corrects anything else. It shows on Main, on Trackers with its ledger, in a tip, and on the front page.
+     - **Why:** Ken (2026-10-02): rep goes on the sheet. It's the player's record ("a career resource, not a running score", `200` Part VI), and the GM mode's session close and job board (W29) will award it. A number with a ledger is Çredits' shape.
      - **Rejected:**
        - Free amounts with Raise/Lower, like Çredits: the book moves rep only by +1 and −2, so two job buttons say the rule; a correction is Admin's.
        - Storing the tier: it's derived from rep and the data, so storing it could only disagree (constraint 7).
-       - Page 2 of the print sheet (GQ11's first default; Ken chose the front page): the front page's third field row had two of four places free, so CRANK fits there without adding height.
+       - Page 2 of the print sheet (GQ11's first default; Ken chose the front page): the front page's third field row had two places free; no added height.
        - A pill in the header: the header is two thin rows (Decision 140) and rep changes once a session at most.
-     - **Replaces:** nothing.
+     - **Replaces:** Decision 165 in part: the card alone on its row is CRANK (with SFR), not Çredits.
      - **Revisit if:** the team links the Reputation Advantage to starting rep (GQ7), F37 is answered (rep below zero), the GM Workshop changes the tier table or the +1/−2, or the GM mode's dispatch needs a rep change the two buttons can't express.
      - **Built:** app 0.37.0, game data 0.29, schema 0.17; PR #111; log 2026-10-05 (CRANK rep).
 

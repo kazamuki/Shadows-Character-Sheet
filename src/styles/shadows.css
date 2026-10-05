@@ -1131,7 +1131,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .jump-row{display:flex; gap:6px; flex:1 1 auto; min-width:0}
 .jump-row .jump, .jumpbar.row .jump-end{flex:none}
 .jumpbar.row .jump-end{margin-left:0}
-/* W45: in two columns, Çredits alone on its row takes the whole row. */
+/* W45: in two columns, the card alone on its row (CRANK, with SFR) takes the whole row. */
 .cond-grid{container-type:inline-size}
 @container (max-width:415px){ .cond-grid > .cond.alone{grid-column:1/-1} }
 /* W45: Pin, from Main, where there's no vitals bar: only on a screen wide

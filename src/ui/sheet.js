@@ -338,10 +338,10 @@ function renderShMain(){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
   }
-  // W45: alone on its row in two columns, Çredits takes the whole row.
+  // W45: whichever card is alone on its row in two columns takes the whole row (CRANK, with SFR: Decision 169).
   h += cond("cred","Çredits","credits", `${CR}${ch.trackers.credits.current}`, "", null, "", "cred");
   // Decision 169: with SFR the row above is full, so CRANK takes the next one alone.
-  h += cond(hasSfr?"crank alone":"crank", `<span data-tip="crank">CRANK</span>`, "luck", `${crk.rep}`, esc(crk.tier?crk.tier.name:""), null, "", "crank");
+  h += cond(hasSfr?"crank alone":"crank", "CRANK", "crank", `${crk.rep}`, esc(crk.tier?crk.tier.name:""), null, "", "crank");
   h += `</div>`;
   h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
@@ -1051,7 +1051,7 @@ function vitalPopover(ch, key){
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
   if (key==="crank"){ const st=Engine.crankState(ch);
     return { title:D.resources.crank.name,
-      html: now(`${st.rep} · ${esc(st.tier?st.tier.name:"")}`, "", crankSubHtml(st)) + `<div class="trk-row pop-cred">${crankControlsHtml()}</div>
+      html: now(`${st.rep} · <span data-tip="crank" tabindex="0">${esc(st.tier?st.tier.name:"")}</span>`, "", crankSubHtml(st)) + `<div class="trk-row pop-cred">${crankControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` }; }
   return null;
 }
@@ -2014,7 +2014,10 @@ function renderShAdmin(){
   h += `<div class="sect">Resources</div>
     <div class="trk"><h2>LUCK bonus</h2><span class="big gold">${ch.trackers.luck.bonus}</span>
     <button class="btn sm" data-admin-luck="-1">−1</button><button class="btn sm" data-admin-luck="1">+1</button>
-    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}. Current LUCK during play is tracked on the Trackers tab.</span></div>`;
+    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}. Current LUCK during play is tracked on the Trackers tab.</span></div>
+    <div class="trk"><h2>CRANK rep</h2><span class="big">${Engine.crankState(ch).rep}</span>
+    <button class="btn sm" data-admin-crank="-1">−1</button><button class="btn sm" data-admin-crank="1">+1</button>
+    <span class="sub">Corrections only. Jobs done and walked out are on Main and Trackers.</span></div>`;
   return h;
 }
 
@@ -3161,6 +3164,11 @@ function bindSheet(){
   main.querySelectorAll("[data-admin-luck]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.adminLuck);
     commit("admin", `Admin: LUCK bonus ${d>0?"+":""}${d}`, ()=>{ ch.trackers.luck.bonus=Math.max(0,(ch.trackers.luck.bonus||0)+d); });
+  });
+
+  main.querySelectorAll("[data-admin-crank]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.adminCrank);
+    commit("admin", `Admin: CRANK rep ${d>0?"+":"−"}${Math.abs(d)}`, ()=>{ Engine.addCrankRep(ch, d, "Admin correction"); });
   });
 
   // Notes

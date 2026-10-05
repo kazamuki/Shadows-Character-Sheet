@@ -284,7 +284,7 @@ window.SHADOWS_DATA = {
       "jobWalkedOut": -2,
       "flagged": true,
       "flagNote": "F37: can rep go below zero? Stubbed: it can, and reads Novice.",
-      "playerNote": "Below zero isn't settled yet. Until it is, you read Novice and your GM has the last word.",
+      "playerNote": "Rep below zero: you read Novice until it's ruled, and your GM has the last word.",
       "tiers": [
         { "id": "novice",    "name": "Novice",    "rep": 0,  "pay": { "min": 50,    "max": 200 } },
         { "id": "competent", "name": "Competent", "rep": 5,  "pay": { "min": 300,   "max": 800 } },
