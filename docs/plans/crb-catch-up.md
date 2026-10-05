@@ -42,19 +42,19 @@ This chapter carries most of the creation economy, and almost none of it is writ
   - **Classification:** Arcanist and Professional are **Mortal**; Werewolf and Vampire are **Supernatural** (Decision 152).
   - **The Custom archetype**, written by the player with the GM. It names its own classification, which can be Mortal, Supernatural, or **Other** in its own words (Decision 153). 045 and 253 already mention custom archetypes, but 041 doesn't.
 - ✅ ⚖ **Werewolf › Baseline Traits › Supernatural.** "Unable to Purchase Advantages" should become **"Universal Advantages only"** (Decision 152, Deighton). The sheet already says so.
-- ☐ ⚖ **Professional › Mercenary › Focused Skills.** "Handgun" should be **Handguns**.
-- ☐ ⚖ **Professional › Slayer** and **› True Warrior › Focused Skills.** "Occult" should be **Occult Lore**.
-- ☐ ⚖ **Professional › Jack of All Trades › Master of None.** Say that "up to rank 4" means ranks bought up to 4 cost 3 × rank, and that 4 → 5 is at the standard price (Ken's reading, which the sheet uses). Whether it also raises every skill's starting cap is still F33 for Deighton.
-- ☐ ⚖ **Professional › Growth & Milestones reminder.** "Every session completed grants you ten IP" should read **5 IP per hour of play**, with Minor Milestones at 5, 15, 25 and Major Milestones at 10, 20, 30. This matches 045 and its own conformance callout.
-- ☐ ⚖ **General Milestones › 1 Major Milestone Required › Hardcore Parkour.** Prerequisites should be **1 Major Milestone, Acrobatics 4, Danger Sense 1**. Drop Cat Like Balance and Time Sense (Decision 129, Deighton).
-- ☐ **General Milestones › 2 Major Milestones Required › Cyber Psion.** "Cyber Prothetical Advantage" should be **Cyber-Prophetical**. *(New typo.)*
-- ☐ **End of the Arcanist section.** "Sythnosapien (Under Construction)": *now just delete it (see Cyborg removal below).* It also has no heading of its own, so it sits inside the Arcanist's Growth & Milestones. *(New since the 09-24 mirror: the Cyborg narrative was cut and replaced with this line.)*
+- ✅ ⚖ **Professional › Mercenary › Focused Skills.** "Handgun" should be **Handguns**.
+- ✅ ⚖ **Professional › Slayer** and **› True Warrior › Focused Skills.** "Occult" should be **Occult Lore**.
+- ✅ ⚖ **Professional › Jack of All Trades › Master of None.** Say that "up to rank 4" means ranks bought up to 4 cost 3 × rank, and that 4 → 5 is at the standard price (Ken's reading, which the sheet uses). Whether it also raises every skill's starting cap is still F33 for Deighton.
+- ✅⚖ **Professional › Growth & Milestones reminder.** "Every session completed grants you ten IP" should read **5 IP per hour of play**, with Minor Milestones at 5, 15, 25 and Major Milestones at 10, 20, 30. This matches 045 and its own conformance callout.
+- ✅ ⚖ **General Milestones › 1 Major Milestone Required › Hardcore Parkour.** Prerequisites should be **1 Major Milestone, Acrobatics 4, Danger Sense 1**. Drop Cat Like Balance and Time Sense (Decision 129, Deighton).
+- ✅ **General Milestones › 2 Major Milestones Required › Cyber Psion.** "Cyber Prothetical Advantage" should be **Cyber-Prophetical**. *(New typo.)*
+- ✅ **End of the Arcanist section.** "Sythnosapien (Under Construction)": *now just delete it (see Cyborg removal below).* It also has no heading of its own, so it sits inside the Arcanist's Growth & Milestones. *(New since the 09-24 mirror: the Cyborg narrative was cut and replaced with this line.)*
 - ❓ **Arcanist › Growth & Milestones** is empty (F32, Ken): bring in REF's Arcanist Majors, or wait for the Origins rewrite.
 - ❓ **General Milestones placement** (F9, Ken/D): they sit under Professional, but the sheet treats them as open to everyone. The Exceptions List's AR-08 moves four of them to a universal list. Whatever happens, they need a home outside the Professional section.
 
 ## 042_Skills.docx
 
-- ☐ ⚖ **Skills › Campaign Power Level table.** This whole table moved in Decision 150:
+- ✅ ⚖ **Skills › Campaign Power Level table.** This whole table moved in Decision 150:
 
   | Power Level | Skill Points (book now → should be) | Max Skill Rank (book now → should be) |
   |---|---|---|
@@ -67,16 +67,16 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 ## 043_Advantages.docx
 
-- ☐ ⚖ **Advantages & Disadvantages › Campaign Power Level table.** CP should be **5 / 10 / 15 / 20**. The book says 10 / 15 / 20 / 25 (Decision 150).
-- ☐ ⚖ **Intro: define "Universal".** Fifteen entries carry the tag, but the book never says what it means. Universal Advantages are open to every classification; the rest are Mortal-only, so **Werewolves and Vampires buy only the 15 Universal ones** (Decision 152). 253 › Creating a Custom Advantage already has a sentence you can borrow ("Universal means it lands on every character sheet…").
-- ☐ ⚖ **Long-Lived.** Say that ranks **stack**, so rank 3 gives 2 Minor + 1 Major Milestone, and that it's creation-only. The table as printed reads like each rank replaces the last (Decision 97, F17).
-- ☐ ⚖ **Ghost TAG(s).** Add a line saying that the street calls this a Black TAG. *(Or put it in Gear's TAG section, below. One place is enough.)*
+- ✅ ⚖ **Advantages & Disadvantages › Campaign Power Level table.** CP should be **5 / 10 / 15 / 20**. The book says 10 / 15 / 20 / 25 (Decision 150).
+- ✅ ⚖ **Intro: define "Universal".** Fifteen entries carry the tag, but the book never says what it means. Universal Advantages are open to every classification; the rest are Mortal-only, so **Werewolves and Vampires buy only the 15 Universal ones** (Decision 152). 253 › Creating a Custom Advantage already has a sentence you can borrow ("Universal means it lands on every character sheet…").
+- ✅ ⚖ **Long-Lived.** Say that ranks **stack**, so rank 3 gives 2 Minor + 1 Major Milestone, and that it's creation-only. The table as printed reads like each rank replaces the last (Decision 97, F17).
+- ✅ ⚖ **Ghost TAG(s).** Add a line saying that the street calls this a Black TAG. *(Or put it in Gear's TAG section, below. One place is enough.)*
 - ✅ The "Ambidextrousa" typo is fixed.
 
 ## 044_Disadvantages.docx
 
-- ☐ **Faultlessly Honest.** The heading reads "Faultlessly Honest**1**", with a stray "1". *(New since the 09-24 mirror.)*
-- ☐ **Minor Insanity.** "You may spend IP during play to buy out this Disadvantage" should say **between sessions**, matching 045 and its own callout.
+- ✅ **Faultlessly Honest.** The heading reads "Faultlessly Honest**1**", with a stray "1". *(New since the 09-24 mirror.)*
+- ✅ **Minor Insanity.** "You may spend IP during play to buy out this Disadvantage" should say **between sessions**, matching 045 and its own callout.
 
 ## 045_Advancement.docx (new tonight)
 
@@ -140,8 +140,8 @@ This chapter carries most of the creation economy, and almost none of it is writ
 *Added after the 2026-10-01 decision. Cyborg is no longer an archetype. Cybernetics become a list, plus a mini-game that's still in flux, open to Professionals only. Arcanists, Vampires and Werewolves can't take cybernetics.*
 
 **Rules chapters**
-- ☐ **000_Index** › Archetypes: "3. Cyborg". Remove it. 047 Cybernetics stays.
-- ☐ **020_Synergy_System** › Attributes › Tolerance: "running cybernetics that feed on your bioelectricity". Keep it or cut it, depending on whether the mini-game uses TOL (question below).
+- ✅ **000_Index** › Archetypes: "3. Cyborg". Remove it. 047 Cybernetics stays.
+- ✅ **020_Synergy_System** › Attributes › Tolerance: "running cybernetics that feed on your bioelectricity". Keep it or cut it, depending on whether the mini-game uses TOL (question below).
 - ☐ **030_Core_Mechanics** › Resources › Credits: "for anyone running on hardware – cyborgs especially". Reword to anyone running chrome.
 - ☐ **041_Archetypes** › Archetypes (opening list): remove the Cyborg entry. Also remove the "Sythnosapien (Under Construction)" line, which makes that typo fix moot. Reading Archetypes lists "Chrome Loadout" as a specialization example; drop it.
 - ☐ **045_Advancement** › Spending IP: "Cyborgs spend IP to make new hardware their own" should be **Professionals with cybernetics**, or wherever the mini-game prices it.
