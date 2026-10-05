@@ -239,3 +239,60 @@ test("a hostile CRANK tracker reads as numbers and a list (Decision 169)", () =>
   assert.deepEqual([s.trackers.crank.rep, s.trackers.crank.ledger.length], [7, 0], "a non-array ledger should read as empty");
   assert.equal(Engine.crankState(Engine.migrate({ trackers: { crank: "lots" } })).rep, 0);
 });
+
+// ── A table file is untrusted too (Decisions 170, 124) ──────────────────
+function hostileTable() {
+  const t = Engine.newTable(P("tbl.name"));
+  Object.assign(t.meta, { created: P("tbl.created"), updated: P("tbl.updated") });
+  t.notes = [
+    { id: P("note.id"), title: P("note.title"), text: P("note.text"), created: P("note.created"), updated: P("note.updated") },
+    { id: "N-ABCDEFGH", title: P("note2.title"), text: P("note2.text") },
+    null, 5, "x", { title: 7, text: {} },
+  ];
+  t.cast = [{ name: P("future.cast") }];
+  return t;
+}
+
+test("a hostile table file renders as text on Home, the table screen and both modals, and pollutes nothing (Decisions 124, 170)", async () => {
+  const t = hostileTable();
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  const found = [];
+  found.push(...injected(app, "Home"));
+  assert.ok(app.$("#main .tables .roster-card"), "the hostile table isn't on Home");
+  app.$("[data-topen]").click();
+  assert.equal(app.window.eval("S.screen"), "table");
+  found.push(...injected(app, "the table screen"));
+  assert.equal(app.doc.title, `${P("tbl.name")} — Shadows`, "the window's title isn't the name as text");
+  assert.equal(app.$("#brandctx").textContent, P("tbl.name"));
+  assert.ok(app.$$("[data-note]").length >= 3, "the notes weren't drawn");
+  // A note whose text was an object or a number reads as empty text, not as its String().
+  assert.ok(app.$$("[data-ntext]").every(el => el.value !== "[object Object]" && el.value !== "7"), "a non-string note field wasn't read as text");
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a note field drew an object as text");
+  app.click("[data-menu-toggle]"); app.click("[data-trename]");
+  found.push(...injected(app, "the Rename modal"));
+  app.click("#modal [data-modalclose]");
+  app.$("[data-ndel]").click();
+  found.push(...injected(app, "the Delete modal"));
+  app.click("#modal [data-modalclose]");
+  app.click("[data-menu-toggle]"); app.click("[data-thome]");
+  app.$("[data-tremove]").click();
+  found.push(...injected(app, "the Remove modal"));
+  app.click("#modal [data-modalclose]");
+  assert.deepEqual(found, [], "a table's text became markup");
+  assert.deepEqual(app.errors, [], "the hostile table threw while rendering");
+
+  // The same table through Import, with a __proto__ key in it.
+  const raw = JSON.stringify(t).replace(/^\{/, '{"__proto__":{"pwn":1},');
+  const imp = boot({ storage: { "shadows.feature.gm": "on" } });
+  const input = imp.$("#file-import");
+  const file = new imp.window.File([raw], "x.shadows-table.json", { type: "application/json" });
+  Object.defineProperty(input, "files", { value: [file], configurable: true });
+  input.dispatchEvent(new imp.window.Event("change"));
+  for (let i = 0; i < 50 && imp.window.eval("S.screen") === "home"; i++) await new Promise(r => setTimeout(r, 10));
+  assert.equal(imp.window.eval("S.screen"), "table", "the hostile table didn't open");
+  assert.deepEqual(injected(imp, "an imported table"), []);
+  assert.equal(({}).pwn, undefined);
+  assert.equal(imp.window.eval("({}).pwn"), undefined, "the page's Object.prototype was polluted");
+  assert.deepEqual(imp.errors, []);
+});

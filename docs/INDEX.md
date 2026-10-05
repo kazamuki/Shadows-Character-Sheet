@@ -25,7 +25,7 @@ authority and is never read front to back; §1 below says which section to open.
 | Whether a question is already settled | search `SCHEMA.md` §4's **Touches** lines for the thing it touches, then read that entry's **Rejected** and **Revisit if** (Decision 130) |
 | What an id like `A1` / `B7` / `C2` means | §2 below |
 | What an open flag `F8` is waiting on | §2 below, then `SCHEMA.md` §5 |
-| The architecture, the shape of the game data or a character file | `SCHEMA.md` §1, §2 and §3 |
+| The architecture, the shape of the game data, a character file or a table file (`.shadows-table.json`, `TBL-`) | `SCHEMA.md` §1, §2 and §3 |
 | What a change must touch (docs, versions, decision, changelog) | `../CLAUDE.md`, *Change tiers* (Decision 131) |
 | A multi-session plan — its sessions, open questions (`CQ`_n_, `MQ`_n_, `AQ`_n_), and why it's ordered that way | `plans/` — **open, Ken's CRB pass:** `crb-catch-up.md` (every CRB fix the sheet is waiting on, by chapter and heading, and the Cyborg cut). **Built, release pending:** `custom-archetype.md` (a custom archetype, and classification for every archetype, `XQ`_n_). **Proposed:** `gm-mode.md` (W29: the table, its cast and its city, `GQ`_n_; its per-session work orders are in `plans/gm-mode/`), `two-tabs-one-character.md` (W38, `TQ`_n_) and `print-sheet-scotts-look.md` (Scott's export, `PQ`_n_). Three closed and kept as history: `audit-2026-09-remediation.md` (the 2026-09-24 audit, `AQ`_n_), `combat-and-conditions.md` (Decisions 95–106) and `magic-on-the-sheet.md` (Decisions 108–111) |
 | An idea nobody has scheduled yet (`W`_n_) — UX, table feel | `WISHLIST.md` — open items only |
@@ -268,7 +268,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **125** *(Load findings — C4)* — what `versionCheck` finds stays until dismissed; a bare game-data version difference shows once.
 - **128** *(Intake number and replace guard — B18)* — `meta.id` is a permanent NYTE City intake number (schema 0.11); `meta.updated` is last changed; Import, New and Lock ask before replacing a different or newer character, with Export first. → **superseded in part by 133 and 141**
 - **133** *(The TAG)* — `meta.id` is `TAG-XXXX-XXXX-XXXX`, shown as itself; a 0.11 `NCR-` number keeps its twelve characters under the new prefix; schema 0.12. → **superseded in part by 146 and 155**
-- **141** *(The roster — R10, AQ5)* — one `localStorage` entry per TAG, draft through locked; Home lists them with Open, Export and Remove and marks play no file holds; only an older copy of the same character asks before it replaces.
+- **141** *(The roster — R10, AQ5)* — one `localStorage` entry per TAG, draft through locked; Home lists them with Open, Export and Remove and marks play no file holds; only an older copy of the same character asks before it replaces. → **superseded in part by 171**
 - **142** *(The natural-advantage marker — A11)* — a Professional's free advantage is `source: "natural"`, not a note; schema 0.13 moves the old marker, in the undo history too.
 - **146** *(Ghost TAG reads — W31)* — an Advantage held with `tagReads` labels the TAG and says what it is; Ghost TAG does, and Black TAG is the same counterfeit. The number never moves. → **superseded in part by 148**
 - **148** *(TAGless — W41)* — `identity.tagless` (schema 0.14) is picked on the Identity step and in Admin; `tagReading` labels the TAG "Off grid" from the data's `tag`, a Ghost TAG's label wins and its tip says both. → **superseded in part by 155**
@@ -354,6 +354,15 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **139** *(Rules a tap away — A10, C5, AQ4)* — one tip primitive reads tags (`Engine.glossary`), stat ranges and rules text on hover or tap; Lineage, How a check works and the whole Magic reference render; Ammo is an equipment category; `notice()` and `askFirst()` replace `alert()` and `confirm()`.
 - **140** *(The header — B19, AQ10)* — two thin rows: the name with ⋮ and theme, then the tabs in one line that scrolls sideways (active tab kept in view, fades, mouse wheel); a long name ends in "…", the `Shadows //` prefix goes below 480 px, and the header un-sticks below 540 px tall.
 
+### GM mode
+
+W29, built a session at a time behind a feature switch (173). The plan is `plans/gm-mode.md`.
+
+- **170** *(The table file — W29 S3a, GQ9)* — a GM's table is `.shadows-table.json`: `{ meta: { kind, id: TBL-…, name, tableSchemaVersion, created, updated }, notes }`, table schema 0.1, gated by `migrateTable()` (total, typed, keeps unknown keys, invents no dates). `fileKind()` tells it from a character. A fifth version in CLAUDE.md; every shape change bumps it with a step.
+- **171** *(Tables in the browser, and Home's door — W29 S3a)* — `shadows.table.v1.<id>` beside the roster, by its rules; with GM mode on Home has *Run a table*, *Your tables* and one **Import a file** that reads either kind; a table opens on its own screen (name, Notes tab, Rename / Export / What's new / Home). No undo on a table yet.
+- **172** *(GM mode's own script — W29 S3a)* — `src/ui/gm.js` after `sheet.js`, its engine a *Tables* section of `engine.js`; the other UI files call in at three places only. The code-file guards read the script list from `index.html`.
+- **173** *(The feature switch — W29 S3a)* — `FEATURES.gm` is false; `?gm=on` / `?gm=off` set this browser's `shadows.feature.gm`; switched off, Home is as it was and a table file is refused, not read as a character. Sessions merge to `main`, releases go on, and the release that sets it true is GM mode's launch.
+
 ### Audit trail, undo & admin
 
 The reversible action log and admin mode.
@@ -393,7 +402,7 @@ How the project itself is organised.
 - **54** *(Phase 3.4)* — The app becomes a repository.
 - **61** *(B5)* — The review step's number derives from creationFlow.steps.
 - **74** *(Docs)* — HANDOFF.md is retired, and volatile facts live in exactly one place. → **superseded in part by 101, 127 and 132**
-- **86** *(Repository)* — Decision 54's deferred refactor lands: `src/ui/app.js` splits into four classic scripts.
+- **86** *(Repository)* — Decision 54's deferred refactor lands: `src/ui/app.js` splits into four classic scripts. → **superseded in part by 172**
 - **101** *(Docs)* — The batch board leaves `STATE.md` for `docs/log/shipped.md`, and unscheduled ideas get `docs/WISHLIST.md`. → **superseded in part by 144**
 - **102** *(Docs)* — A decision that replaces another marks it in the same change — in SCHEMA §4 and here — and a test holds the two together.
 - **127** *(STATE's suite line — AQ2)* — STATE states the todo count only; no pass total, no live version.

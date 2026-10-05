@@ -304,7 +304,9 @@ test("every data path and formula resolves to a number at every power level (Dec
 // ── The data contract (R6's key guard, Decision 135) ──────────────────
 // Engine and UI source with comments stripped, so a key named only in a
 // comment doesn't count as read. A `//` after a colon is a URL, not a comment.
-const CODE_FILES = ["src/engine/engine.js", "src/ui/shared.js", "src/ui/wizard.js", "src/ui/sheet.js", "src/ui/app.js"];
+// Derived from index.html's <script src> tags (Decision 172), so a new UI file is covered without being remembered.
+const CODE_FILES = [...readFileSync(join(ROOT, "index.html"), "utf8").matchAll(/<script[^>]*src=["']([^"']+)["']/g)]
+  .map(m => m[1]).filter(s => /^src\/(engine|ui)\//.test(s) && !s.endsWith("theme-init.js"));
 const code = file => readFileSync(join(ROOT, file), "utf8")
   .replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`\\])\/\/.*$/gm, "$1");
 const CODE = CODE_FILES.map(code).join("\n");
@@ -2845,4 +2847,123 @@ test("CRANK: the data's tiers are ascending by rep with unique ids", () => {
   assert.ok(t.length > 0);
   for (let i = 1; i < t.length; i++) assert.ok(t[i].rep > t[i-1].rep, `${t[i].id} is not above ${t[i-1].id}`);
   assert.equal(new Set(t.map(x => x.id)).size, t.length);
+});
+
+// ── Tables (Decisions 170–173) ────────────────────────────────────────
+test("the code guards read every engine and UI script, gm.js included (Decision 172)", () => {
+  assert.ok(CODE_FILES.includes("src/ui/gm.js"), CODE_FILES.join(", "));
+  assert.ok(CODE_FILES.includes("src/engine/engine.js") && CODE_FILES.includes("src/ui/app.js"));
+  assert.ok(!CODE_FILES.some(f => f.includes("theme-init")));
+});
+
+test("newTable stamps kind, a TBL- id, the name, schema 0.1 and no notes", () => {
+  const t = Engine.newTable("Tuesday");
+  assert.equal(t.meta.kind, "shadows-table");
+  assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
+  assert.equal(t.meta.name, "Tuesday");
+  assert.equal(t.meta.tableSchemaVersion, "0.1");
+  assert.equal(t.notes.length, 0);
+  for (const k of ["created", "updated"]) assert.ok(Number.isFinite(Date.parse(t.meta[k])));
+  assert.notEqual(Engine.newTable().meta.id, Engine.newTable().meta.id);
+  assert.equal(Engine.newTable().meta.name, "");
+});
+
+test("fileKind tells a table from a character from anything else", () => {
+  assert.equal(Engine.fileKind(Engine.newCharacter()), "character");
+  assert.equal(Engine.fileKind({}), "character");
+  assert.equal(Engine.fileKind(Engine.newTable()), "table");
+  assert.equal(Engine.fileKind({ meta: { kind: "shadows-pack" } }), "unknown");
+  for (const v of [null, 5, "x", [], undefined]) assert.equal(Engine.fileKind(v), "unknown", String(v));
+});
+
+test("migrateTable keeps a real table whole, and is idempotent", () => {
+  const t = Engine.newTable("Keep");
+  Engine.addTableNote(t, { title: "A", text: "one" });
+  Engine.addTableNote(t, { title: "B", text: "two" });
+  const m = Engine.migrateTable(t);
+  assert.deepEqual(JSON.parse(JSON.stringify(m)), JSON.parse(JSON.stringify(t)));
+  assert.notEqual(m, t);
+  assert.equal(JSON.stringify(Engine.migrateTable(m)), JSON.stringify(m));
+  assert.equal(Engine.fileKind(m), "table");
+});
+
+test("migrateTable is total and typed over junk", () => {
+  const junk = [null, 5, "x", [], {}, { meta: 5 }, { meta: { id: "TAG-0000-0000-0000" } }, { notes: "x" },
+    { notes: [null, 5, "x", {}, { title: 5, text: {} }] }, { meta: { tableSchemaVersion: 9 } }];
+  for (const j of junk) {
+    const m = Engine.migrateTable(j);
+    assert.ok(Engine.isTableId(m.meta.id), JSON.stringify(j));
+    assert.equal(m.meta.kind, "shadows-table");
+    assert.equal(typeof m.meta.name, "string");
+    assert.ok(Array.isArray(m.notes));
+    const ids = new Set();
+    for (const n of m.notes) {
+      assert.equal(typeof n.title, "string"); assert.equal(typeof n.text, "string");
+      assert.match(n.id, /^N-[0-9A-HJKMNP-TV-Z]{8}$/); ids.add(n.id);
+    }
+    assert.equal(ids.size, m.notes.length);
+    assert.equal(JSON.stringify(Engine.migrateTable(m)), JSON.stringify(m), "idempotent");
+    assert.equal(Engine.tableCheck(m).length, 0);
+  }
+});
+
+test("migrateTable keeps a valid id and replaces anything else; duplicate note ids split", () => {
+  const good = Engine.newTable().meta.id;
+  assert.equal(Engine.migrateTable({ meta: { id: good } }).meta.id, good);
+  for (const bad of ["TAG-0000-0000-0000", "", "TBL-0000", 42, null]) {
+    const id = Engine.migrateTable({ meta: { id: bad } }).meta.id;
+    assert.ok(Engine.isTableId(id) && id !== bad, String(bad));
+  }
+  const m = Engine.migrateTable({ notes: [{ id: "N-ABCDEFGH" }, { id: "N-ABCDEFGH" }] });
+  assert.equal(m.notes[0].id, "N-ABCDEFGH");
+  assert.notEqual(m.notes[1].id, "N-ABCDEFGH");
+});
+
+test("migrateTable invents no timestamps (Decision 63)", () => {
+  const m = Engine.migrateTable({ meta: { created: "yesterday", updated: 5 }, notes: [{ created: "soon" }] });
+  assert.equal(m.meta.created, null); assert.equal(m.meta.updated, null); assert.equal(m.notes[0].created, null);
+  const k = Engine.migrateTable({ meta: { created: "2026-10-05T10:00:00.000Z" } });
+  assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
+});
+
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.1", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.2" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.2");
+  assert.equal(Engine.tableCheck(n).length, 1);
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.2");
+  for (const v of ["0.1", "0.0", "junk", undefined]) {
+    const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
+    assert.equal(m.meta.tableSchemaVersion, "0.1", String(v));
+    assert.equal(Engine.tableCheck(m).length, 0);
+  }
+});
+
+test("migrateTable keeps keys it doesn't know, and never reads them", () => {
+  const m = Engine.migrateTable({ cast: [{ id: "x", hp: 3 }], meta: { future: 1 }, notes: [{ extra: true }] });
+  assert.deepEqual(JSON.parse(JSON.stringify(m.cast)), [{ id: "x", hp: 3 }]);
+  assert.equal(m.meta.future, 1);
+  assert.equal(m.notes[0].extra, true);
+});
+
+test("a __proto__ key in a table file pollutes nothing (Decision 124)", () => {
+  const m = Engine.migrateTable(JSON.parse('{"__proto__":{"pwn":1},"meta":{"__proto__":{"pwn":1}},"notes":[{"__proto__":{"pwn":1}}]}'));
+  assert.equal(({}).pwn, undefined);
+  assert.equal(m.pwn, undefined); assert.equal(m.meta.pwn, undefined); assert.equal(m.notes[0].pwn, undefined);
+});
+
+test("table notes: add, edit, remove stamp updated, coerce text, and refuse an unknown id", () => {
+  const t = Engine.newTable("N");
+  t.meta.updated = "2000-01-01T00:00:00.000Z";
+  const a = Engine.addTableNote(t, { title: "T", text: 7 });
+  assert.ok(a.ok); assert.equal(t.notes[0].id, a.id); assert.equal(t.notes[0].text, "");
+  assert.ok(t.meta.updated > "2001");
+  t.meta.updated = "2000-01-01T00:00:00.000Z";
+  assert.ok(Engine.editTableNote(t, a.id, { title: "U", text: { x: 1 } }).ok);
+  assert.equal(t.notes[0].title, "U"); assert.equal(t.notes[0].text, "");
+  assert.ok(t.meta.updated > "2001");
+  assert.equal(JSON.stringify(Engine.editTableNote(t, "N-NOPE0000", { title: "x" })), JSON.stringify({ ok: false, why: "No such note." }));
+  t.meta.updated = "2000-01-01T00:00:00.000Z";
+  assert.ok(Engine.removeTableNote(t, a.id).ok);
+  assert.equal(t.notes.length, 0); assert.ok(t.meta.updated > "2001");
+  assert.equal(JSON.stringify(Engine.removeTableNote(t, a.id)), JSON.stringify({ ok: false, why: "No such note." }));
 });
