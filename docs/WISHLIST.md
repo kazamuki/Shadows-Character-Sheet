@@ -45,6 +45,41 @@ W45 it also fails on a vitals bar or a sheet's jump bar of two rows, and on a
 phone's Health card below 30% of the screen. A new control inherits those
 floors rather than re-arguing them.
 
+**W65 — LUCK bought with CP counts against the Max Character Point Boost.** *Ken · ⏭ · Rule or shape · raised 2026-10-04 from the CRB's Campaign Power Level table*
+Today a player can buy any amount of LUCK with CP at creation: Decision 5
+makes it "exempt from Max Boost", and the wizard's Luck row says so
+(`wizard.js`, "exempt from Max Boost"; `luckSpent` in the engine has no cap
+and `canBoost` never sees it). The CRB table says Max Character Point Boost
+caps how many times CP may raise any one stat, skill, power or Luck at
+creation, so a Street Level character can put at most 2 points into Luck this
+way (2 / 3 / 4 / 5 by level, the same numbers as `powerLevels[].maxBoost`).
+**Ken's rulings, confirmed by Deighton (2026-10-04):** only CP spent on Luck counts, so the 4 free
+starting LUCK are outside the cap; and Luck is capped like everything else,
+because consistency is the right place to start. That reverses Decision 5's
+exemption and Decision 157's "bought up to 5 becomes 7" example.
+*To build:* a numbered decision superseding Decision 5 in part (marks in
+SCHEMA and INDEX); the Luck buy-up held to `pl.maxBoost` in the stepper and
+`validate`; the "exempt" copy in the wizard and in `creationFlow` step 7's note
+removed; `gamedataVersion` per Decision 68, since what a character can choose
+moves. A character file already over the cap must load untouched, with
+`validate` warning and nothing in the file changing (constraints 7, 8, 10).
+Deighton confirmed both rulings (Ken asked, 2026-10-04); playtests and player
+feedback may revisit them, so the decision's **Revisit if** should say so. No
+open flag. Do it with W66, which touches the same row's text.
+
+**W66 — Rename "Max Boost" to "Max Character Point Boost" in the app.** *Ken · ⏭ · Fix (copy) · raised 2026-10-04*
+The CRB's table column still reads "Max Freebie Boost", which is the old name
+(Decision 2 renamed Freebie Points to Character Points but left this one as
+"Max Boost"). Ken's name is **Character Point Boost**; the column becomes Max
+Character Point Boost. Player-facing strings that say "Max Boost" or "Boosts"
+for the CP purchase: `wizard.js` (the level summary chip, the Boosts section
+heading, the Luck row), `sheet.js` (the power-level change note), and engine
+messages (`canBoost`'s "Max Boost reached"). *To respect:* **ids and data keys
+stay** (`maxBoost`, `boosts`, constraint 6), since a saved file may name them.
+Only display text moves, and `docs/VOICE-APP.md` decides the wording. Do it with
+W65, since both touch the Luck row's text. It is a player-visible change, so it
+needs a CHANGELOG line and a patch bump.
+
 **W64 — Go back Home from character creation.** *Ken · ⏭ · raised 2026-10-04*
 In the wizard there's no way back to the Home screen. The sheet has **Home**
 in its ⋮ menu, but the wizard header is empty (`renderTopChrome` clears the
@@ -420,7 +455,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W65.** Everything above is open; W38 has a plan,
+- **Next free number: W68.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
