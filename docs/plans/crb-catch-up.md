@@ -28,7 +28,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
   - **Flat:** Street 45 · Heroic 50 · Shadows 55 · World Coming Down 60.
   - **Rolled:** 5 below the flat number + 1d10, so 40 / 45 / 50 / 55 + 1d10.
   - **The climbing buy:** every stat starts at 1 for free. Each point up to 6 costs 1 Stat Point, and each point from 7 to 10 costs 2, so **a 10 costs 13**. (Deighton confirmed that the base 1 is free.)
-- ✅ ⚖ **Bonuses & Penalties table.** Add the rows past 10 from Decision 98 (see 020).
+- ☐ ⚖ **Bonuses & Penalties table.** Add the rows past 10 from Decision 98 (see 020). *(2026-10-04: not in the book yet. Ken is putting them at the end of character creation, after the Archetype is chosen, so mortals never see them while buying stats. 020's sidebar already points to "character creation".)*
 - ☐ ⚖ **Step 7, "Allocate any remaining points".** The book never says what leftover CP buys. The sheet uses these rules, all of them ruled:
   - Boosting a **stat or skill costs 1 CP per point** (Decision 97).
   - **A power rank costs 5 CP**, for any power: Disciplines today, Vampire powers later. It's capped by **Max Power Rank: 2 / 3 / 4 / 5** (Decision 157).
@@ -76,6 +76,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 ## 044_Disadvantages.docx
 
 - ✅ **Faultlessly Honest.** The heading reads "Faultlessly Honest**1**", with a stray "1". *(New since the 09-24 mirror.)*
+- ☐ ⚖ **End of the section: buying LUCK with CP.** Add a line on buying extra LUCK at **1 CP a point**, at creation, exempt from Max Boost (Decisions 5, 97). 030 › Luck states the price, but this is where players spend leftover CP (Ken, 2026-10-04).
 - ✅ **Minor Insanity.** "You may spend IP during play to buy out this Disadvantage" should say **between sessions**, matching 045 and its own callout.
 
 ## 045_Advancement.docx (new tonight)
