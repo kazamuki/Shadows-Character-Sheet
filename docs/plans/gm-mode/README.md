@@ -112,8 +112,9 @@ decision and flag numbers in advance and does the bookkeeping merge.
 | Order | Session | Status |
 |---|---|---|
 | [S01-crank-rep.md](S01-crank-rep.md) | S1 — CRANK reputation on the sheet | **Built and reviewed 2026-10-05**, merged in PR #111 after one fix round |
-| [S03a-table-file.md](S03a-table-file.md) | S3a — The table file, its gate and Home's door, behind the feature switch | **Built 2026-10-05** (PR #113, awaiting review): Decisions 170–173, table schema 0.1, switched off |
-| S8 | The cast | **Next to write**, after S3a is reviewed |
+| [S03a-table-file.md](S03a-table-file.md) | S3a — The table file, its gate and Home's door, behind the feature switch | **Built and reviewed 2026-10-05**, merged in PR #113 after one fix round (focus, wrapping, the launch test, the notes copy) |
+| [S08a-cast.md](S08a-cast.md) | S8a — The cast: the record, the stat block, the Cast tab | **Approved 2026-10-05** (SQ1–SQ6 answered), ready to build. The plan's S8 is split: S8b is interactions and history; Keep and Promote move to S10 |
+| S8b | The cast's interactions, history and affiliation | Next to write, after S8a is reviewed |
 
 ## What a work order contains
 
