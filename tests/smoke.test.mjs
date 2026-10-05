@@ -378,7 +378,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.16");
+  assert.equal(resumed.meta.schemaVersion, "0.17");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -2686,9 +2686,16 @@ test("W45: the vitals bar and the sheet's jump bars are one row each, with what 
   assert.deepEqual([...app.errors, ...wiz.errors], []);
 });
 
-test("W45: Çredits alone takes its row, and Pin is reachable from Main", () => {
+test("W45: CRANK alone takes its row (Decision 169), and Pin is reachable from Main", () => {
   const app = openSheet(lockedCharacter(), "main", { width: 1400 });   // Pin shows from 1280px
-  assert.ok(app.$("#main .cond.cred.alone"), "Çredits doesn't know it's alone on its row");
+  assert.ok(!app.$("#main .cond.sfr"), "the fixture grew an SFR card");
+  assert.ok(app.$("#main .cond.cred") && app.$("#main .cond.crank") && !app.$("#main .cond.alone"), "without SFR, Çredits and CRANK share a row");
+  // With SFR the row above is full, so CRANK takes the next one alone.
+  const sfr = lockedCharacter(); sfr.identity.archetype = "werewolf";
+  const withSfr = openSheet(sfr, "main", { width: 1400 });
+  assert.ok(withSfr.$("#main .cond.sfr"), "the werewolf fixture has no SFR card");
+  assert.ok(withSfr.$("#main .cond.crank.alone"), "CRANK doesn't know it's alone on its row");
+  assert.ok(!withSfr.$("#main .cond.cred.alone"), "Çredits shares the row with SFR");
   app.click("[data-vitals-pin-main]");
   assert.ok(app.window.document.body.classList.contains("vitals-pinned"), "Pin from Main didn't pin");
   assert.equal(focused(app), app.$("#vdrawer [data-vitals-pin]"), "focus didn't follow the panel to Unpin");
@@ -3056,4 +3063,54 @@ test("W60: placeholders take a token colour at full strength, so the contrast gu
   assert.ok(rule, "no ::placeholder rule: the browser's grey is 3.8:1 on the ground");
   assert.match(rule[1], /color\s*:\s*var\(--[\w-]+\)/, "a placeholder colour that isn't a token escapes the contrast guard");
   assert.match(rule[1], /opacity\s*:\s*1\b/, "Firefox fades placeholders unless opacity is 1");
+});
+
+// ── CRANK rep (Decision 169) ──────────────────────────────────────────
+test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, writes a ledger line, and Undo makes it 0", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const card = () => app.$('#main [data-vpop="crank"]');
+  assert.ok(card(), "Main has no CRANK card");
+  assert.match(card().textContent, /CRANK/);
+  assert.match(card().textContent, /0.*Novice/);
+  app.click('[data-vpop="crank"]');
+  assert.match(app.$("#vpop").textContent, /0 · Novice/);
+  assert.match(app.$("#vpop").textContent, /5 to Competent/);
+  app.$("#vpop [data-crknote]").value = "the Kessel job";
+  app.click("#vpop [data-crk=\"1\"]");
+  assert.equal(activeChar(app).trackers.crank.rep, 1);
+  assert.match(app.$("#vpop").textContent, /1 · Novice/);
+  assert.match(app.$("#undotoast").textContent, /CRANK rep \+1 \(the Kessel job\)/);
+  app.click('[data-sec="trackers"]');
+  assert.match(app.$("#main").textContent, /Kessel job/, "the ledger line isn't on Trackers");
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.crank.rep, 0, "Undo didn't take the job back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("CRANK: Walked out at 0 shows -2 and Novice, and the tip carries the unsettled note", () => {
+  const app = openSheet(lockedCharacter(), "trackers");
+  app.click('#main [data-crk="-2"]');
+  assert.equal(activeChar(app).trackers.crank.rep, -2);
+  assert.match(app.$("#main").textContent, /-2/);
+  assert.match(app.$("#main").textContent, /Novice/);
+  clickIn(app, app.$('#main [data-tip="crank"]'));
+  const shown = tipShown(app);
+  assert.match(shown, /gray market/);
+  for (const t of D.resources.crank.tiers) assert.ok(shown.includes(t.name) && shown.includes(Engine.crankPayText(t)), `the tip lacks ${t.name}`);
+  assert.ok(shown.includes(D.resources.crank.playerNote), "the unsettled note is missing below zero");
+  app.click('#main [data-crk="1"]'); app.click('#main [data-crk="1"]'); app.click('#main [data-crk="1"]');
+  clickIn(app, app.$('#main [data-tip="crank"]'));
+  assert.ok(!tipShown(app).includes(D.resources.crank.playerNote), "the note shows while rep is not below zero");
+  assert.deepEqual(app.errors, []);
+});
+
+test("CRANK: the print view has the field, blank and filled", () => {
+  const ch = lockedCharacter();
+  ch.trackers.crank.rep = 7;
+  const app = openSheet(ch, "main");
+  const filled = app.window.renderPrintView(ch);
+  assert.match(filled, /CRANK<\/span>.*7 · Competent/s);
+  const blank = app.window.renderPrintView(null);
+  assert.match(blank, /CRANK/);
+  assert.doesNotMatch(blank, /Novice/);
 });

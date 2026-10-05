@@ -146,6 +146,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F33` | Jack of All Trades: does "treated as Focused" raise every skill's starting cap, and open Skill Paragon to any skill? Stubbed: the price only | Deighton |
 | `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
 | `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
+| `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
@@ -340,6 +341,7 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **118** *(The catalog browser — W4)* — Loadout's pickers are a modal: search, section, What I can afford, sort, and every number before Add/Buy from `Engine.catalogLine()`, the reader Loadout's own rows share. Buy says why it's off; a row click opens its details.
 - **119** *(Vitals popovers — W2, W3)* — HP, Pain/Cond, SAN, LUCK and Ç on the vitals bar and Main's cards open a popover (`openPopover`, non-modal, follows the render) holding Trackers' own controls, bound by the one `bindVitalControls(root)`; Take a hit hands over to the hit modal. → **superseded in part by 160**
 - **160** *(Pinned vitals)* — From 1280px the vitals panel pins as a right-hand column on every tab, Main included; the header, page, footer and toast make room, the bar's pills go, and the panel's vitals open their popovers to the left. The pin is the browser's; narrower, it's ignored.
+- **169** *(CRANK reputation — W29 S1, F37)* — `trackers.crank: { rep, ledger }`, schema 0.17; +1 a job done, −2 a job walked out on, two buttons with a note and an undo (Admin corrects the rest); the tier, next tier and pay derive from `resources.crank.tiers`. On Main beside Çredits, on Trackers with its ledger, in a tip, and on the print front page's third field row. F37 opened (rep below zero).
 - **151** *(Health verbs on Main — W42)* — Heal 1 · Hurt 1 · Take a hit as a full-width row after Pain in Main's card grid, the popover's own controls; at zero Main's Hurt 1 greys out and says to use Take a hit, which asks 054's WILL check. F36 opened.
 - **165** *(The sheet on a phone — W45)* — No "Live Sheet" eyebrow; below 640px the title and Main's name are smaller and still wrap; Combat before Stats in the page at every width (the left column when wide); the vitals bar and the sheet's jump bars are one sideways row with the toggle and Expand all outside; Çredits takes a row alone; Pin vitals on Main from 1280px. `phone-check` guards the rows and the fold.
 - **166** *(The flyout and focus — W58)* — One setter writes the flyout's open state, `aria-hidden`, `inert` and the scrim from open-or-pinned-with-room; focus moves in on open and back on close before it goes inert; Esc closes one layer; a tab switch closes it; leaving the sheet empties it. Still no focus trap.

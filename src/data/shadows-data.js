@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.28",
+    "gamedataVersion": "0.29",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-09-30"
   },
@@ -276,6 +276,22 @@ window.SHADOWS_DATA = {
     "credits": {
       "symbol": "Ç",
       "description": "A Universal Basic Income keeps you fed, sheltered, and connected. Credits become relevant when you want something beyond survival - gear, favors, transport, information. Tracked as a simple numerical total."
+    },
+    "crank": {
+      "name": "CRANK rep",
+      "description": "CRANK is the gray market's job board, on every device in NYTE City. Your rep is your record there: one job at a time, and it doesn't fade. Walking out on a client is the one thing that follows you.",
+      "jobDone": 1,
+      "jobWalkedOut": -2,
+      "flagged": true,
+      "flagNote": "F37: can rep go below zero? Stubbed: it can, and reads Novice.",
+      "playerNote": "Below zero isn't settled yet. Until it is, you read Novice and your GM has the last word.",
+      "tiers": [
+        { "id": "novice",    "name": "Novice",    "rep": 0,  "pay": { "min": 50,    "max": 200 } },
+        { "id": "competent", "name": "Competent", "rep": 5,  "pay": { "min": 300,   "max": 800 } },
+        { "id": "skilled",   "name": "Skilled",   "rep": 12, "pay": { "min": 1000,  "max": 3000 } },
+        { "id": "expert",    "name": "Expert",    "rep": 20, "pay": { "min": 4000,  "max": 8000 } },
+        { "id": "legendary", "name": "Legendary", "rep": 30, "pay": { "min": 10000, "max": null } }
+      ]
     },
     "sfr": {
       "name": "Spiritual Force Rating",

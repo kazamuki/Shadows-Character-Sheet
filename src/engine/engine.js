@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.16";
+  const SCHEMA_VERSION = "0.17";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -72,6 +72,7 @@ const Engine = (() => {
                  // Schema 0.9 (magic plan M7): Aberrations a Cascade left.
                  aberrations:[],               // { id, permanence: "temporary"|"permanent", note? }
                  credits:{current:0, ledger:[]},
+                 crank:{rep:0, ledger:[]},     // schema 0.17 (Decision 169); the tier is derived, never stored
                  adjustments:[],               // manual adjustments ledger
                  panel:{} },                   // generic archetype tracker panels
       panelData:{},                            // archetype table/toggle panel content
@@ -1786,6 +1787,34 @@ const Engine = (() => {
     return {ok:true};
   }
 
+  // ── CRANK reputation (Decision 169) ──────────────────────────────────
+  // rep is the input; tier, next tier and pay come from resources.crank.tiers
+  // (read in data order, ascending by rep -- a test pins that).
+  const crankData = () => (D().resources||{}).crank || {};
+  function crankState(ch){
+    const c = crankData(), tiers = Array.isArray(c.tiers) ? c.tiers : [];
+    const cr = ch && ch.trackers && ch.trackers.crank;
+    const rep = Number(cr && cr.rep) || 0;
+    let i = -1;
+    tiers.forEach((t, k) => { if (t.rep <= rep) i = k; });
+    if (i < 0 && tiers.length) i = 0;          // below every tier reads the first (F37's stub)
+    const tier = i >= 0 ? tiers[i] : null, next = tier && tiers[i+1] || null;
+    return { rep, tier, next, toNext: next ? next.rep - rep : null, unsettled: rep < 0 };
+  }
+  function addCrankRep(ch, amount, note){
+    amount = Math.trunc(Number(amount)||0);
+    if (!amount) return {ok:false, why:"Enter an amount."};
+    ch.trackers.crank.rep = (ch.trackers.crank.rep||0) + amount;
+    ch.trackers.crank.ledger.push({date:new Date().toISOString(), amount, note:note||""});
+    return {ok:true};
+  }
+  function crankPayText(tier){
+    const p = tier && tier.pay;
+    if (!p) return "";
+    const n = v => Number(v).toLocaleString("en-US"), cr = creditSymbol();
+    return p.max==null ? `${cr}${n(p.min)}+` : `${cr}${n(p.min)}–${n(p.max)}`;
+  }
+
   // ── Cascade (Decision 106) ──
   // Lookups on the player's own dice (Decision 11): `cascadeTable` for 1d10 +
   // the Rupture's degree, then `aberrationTable` if that row calls for one.
@@ -2431,6 +2460,11 @@ const Engine = (() => {
         t.credits.ledger = rows(t.credits.ledger);
         t.credits.ledger.forEach(e=>{ e.amount = _num(e.amount, 0); });
       }
+      if (isObj(t.crank)){
+        fix(t.crank, "rep", 0);
+        t.crank.ledger = rows(t.crank.ledger);
+        t.crank.ledger.forEach(e=>{ e.amount = _num(e.amount, 0); });
+      }
       if (Array.isArray(t.adjustments)){ t.adjustments = rows(t.adjustments); t.adjustments.forEach(e=>{ e.amount = _num(e.amount, 0); }); }
       if (Array.isArray(t.conditions)) t.conditions.forEach(e=>fix(e, "marks", 0));
       if (isObj(t.panel)) for (const id of Object.keys(t.panel)){
@@ -2473,6 +2507,8 @@ const Engine = (() => {
     t.sfr     = Object.assign({spent:0}, t.sfr);
     t.credits = Object.assign({current:0, ledger:[]}, t.credits);
     if (!Array.isArray(t.credits.ledger)) t.credits.ledger=[];
+    t.crank = Object.assign({rep:0, ledger:[]}, t.crank);
+    if (!Array.isArray(t.crank.ledger)) t.crank.ledger=[];
     if (!Array.isArray(t.adjustments)) t.adjustments=[];
     if (!t.panel || typeof t.panel!=="object") t.panel={};
     // Schema 0.8 (Decision 95): Conditions, plus the two damage inputs the hit
@@ -3192,7 +3228,7 @@ const Engine = (() => {
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP,
     milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
-    logSession, addCredits, archPanels, panelMax, panelTracker, adjustPanelTracker,
+    logSession, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
     // Audit trail and undo
     diffChar, recordAction, undoLastAction };
 })();

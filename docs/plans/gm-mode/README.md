@@ -43,7 +43,7 @@ decision and flag numbers in advance and does the bookkeeping merge.
 
 | Order | Session | Status |
 |---|---|---|
-| [S01-crank-rep.md](S01-crank-rep.md) | S1 — CRANK reputation on the sheet | **Approved 2026-10-02**, ready to build |
+| [S01-crank-rep.md](S01-crank-rep.md) | S1 — CRANK reputation on the sheet | **Built 2026-10-05**, PR open for review |
 | S3a | The table file | Next to write, after S1 is reviewed |
 
 ## What a work order contains

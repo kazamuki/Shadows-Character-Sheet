@@ -518,6 +518,8 @@ or defaulted every *They* question in §9.
 
 ### S1 — CRANK reputation on the sheet
 
+**Built 2026-10-05** (Decision 169, app 0.37.0; PR open). The bullets below are the plan as written; the work order and the decision are what was built. GQ11 and GQ14 answered as built; GQ7 stays open.
+
 - **Data:** `crankTiers` (five rows, rep thresholds, payout ranges). Bumps
   `gamedataVersion`.
 - **Schema:** `trackers.crank: { rep: 0, ledger: [] }`, the Çredits shape;
