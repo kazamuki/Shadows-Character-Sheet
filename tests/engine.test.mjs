@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.16");
+  assert.equal(ch.meta.schemaVersion, "0.17");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -157,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.16");
+  assert.equal(old.meta.schemaVersion, "0.17");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -169,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.16");
+  assert.equal(old.meta.schemaVersion, "0.17");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -539,7 +539,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.16");
+  assert.equal(old.meta.schemaVersion, "0.17");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -650,7 +650,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.16");
+  assert.equal(bare.meta.schemaVersion, "0.17");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -660,7 +660,7 @@ test("no exported reader throws on any character migrate() can return", () => {
   const readers = ["powerLevel","archetype","statTable","scalingRow","derived","health","sfr",
                    "statPool","statSpent","skillPool","skillSpent","advSpent","disGranted",
                    "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalArmor","naturalHealing","resolveReset","luckState",
-                   "sanState","focusedSkillIds","focusedSkillSpec","focusedPicks","ipState","milestoneState","archPanels",
+                   "sanState","crankState","focusedSkillIds","focusedSkillSpec","focusedPicks","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
                    "disciplineRanks","buildExport","versionCheck","aberrationState","spellAttack","spellPower","grimoire"];
   const failures = [];
@@ -886,7 +886,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.16");
+    assert.equal(c.meta.schemaVersion, "0.17");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1160,7 +1160,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.16");
+  assert.equal(old.meta.schemaVersion, "0.17");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1235,7 +1235,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.16");
+  assert.equal(m.meta.schemaVersion, "0.17");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2258,7 +2258,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.16");
+  assert.equal(m.meta.schemaVersion, "0.17");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2344,7 +2344,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.16");
+  assert.equal(m.meta.schemaVersion, "0.17");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2361,7 +2361,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.16");
+  assert.equal(m.meta.schemaVersion, "0.17");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2407,7 +2407,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.16"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.17"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2551,7 +2551,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.16");
+  assert.equal(a.meta.schemaVersion, "0.17");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -2786,4 +2786,63 @@ test("Decision 162: points left only warn on their step, block the lock while th
     assert.ok(at(ch, "review").every(x => /and nothing left they can buy\.$/.test(x)));
   } finally { D.statRules.raiseCost = rc; pl.maxSkillRank = cap; }
   assert.equal(Engine.spendable(ch, "nonsense"), false);
+});
+
+// ── CRANK reputation (Decision 169) ───────────────────────────────────
+test("CRANK: a new character has rep 0, and a rep and its ledger survive a migrate round trip", () => {
+  const ch = Engine.newCharacter();
+  assert.deepEqual(JSON.parse(JSON.stringify(ch.trackers.crank)), { rep: 0, ledger: [] });
+  assert.equal(Object.keys(ch.trackers.crank).includes("tier"), false, "the tier is derived, never stored");
+  Engine.addCrankRep(ch, 7, "a long week");
+  const back = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  assert.equal(back.trackers.crank.rep, 7);
+  assert.equal(back.trackers.crank.ledger[0].note, "a long week");
+});
+
+test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
+  const old = JSON.parse(JSON.stringify(Engine.newCharacter()));
+  delete old.trackers.crank; old.meta.schemaVersion = "0.16";
+  const m = Engine.migrate(old);
+  assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
+  assert.equal(m.meta.schemaVersion, "0.17");
+});
+
+test("CRANK: crankState reads the tier at every boundary", () => {
+  const at = rep => { const c = Engine.newCharacter(); c.trackers.crank.rep = rep; return Engine.crankState(c); };
+  const want = [[-2,"novice","competent",7], [0,"novice","competent",5], [4,"novice","competent",1],
+    [5,"competent","skilled",7], [11,"competent","skilled",1], [12,"skilled","expert",8], [19,"skilled","expert",1],
+    [20,"expert","legendary",10], [29,"expert","legendary",1], [30,"legendary",null,null], [100,"legendary",null,null]];
+  for (const [rep, tier, next, toNext] of want){
+    const s = at(rep);
+    assert.deepEqual([s.rep, s.tier.id, s.next && s.next.id, s.toNext], [rep, tier, next, toNext], `rep ${rep}`);
+  }
+  assert.equal(at(-2).unsettled, true);
+  assert.equal(at(0).unsettled, false);
+  assert.equal(Engine.crankState(null).tier.id, "novice");
+});
+
+test("CRANK: addCrankRep writes a ledger line for +1 and -2, and refuses nothing-amounts", () => {
+  const ch = Engine.newCharacter();
+  const r = D.resources.crank;
+  assert.deepEqual([Engine.addCrankRep(ch, r.jobDone, "job").ok, Engine.addCrankRep(ch, r.jobWalkedOut, "").ok], [true, true]);
+  assert.equal(ch.trackers.crank.rep, -1);
+  assert.deepEqual([...ch.trackers.crank.ledger.map(e => e.amount)], [1, -2]);
+  for (const bad of [0, "x", NaN]){
+    assert.equal(Engine.addCrankRep(ch, bad, "").ok, false);
+  }
+  assert.equal(ch.trackers.crank.ledger.length, 2);
+});
+
+test("CRANK: crankPayText joins the sign and the range, and a top tier has no cap", () => {
+  const t = D.resources.crank.tiers;
+  assert.equal(Engine.crankPayText(t[0]), "Ç50–200");
+  assert.equal(Engine.crankPayText(t[4]), "Ç10,000+");
+  assert.equal(Engine.crankPayText(null), "");
+});
+
+test("CRANK: the data's tiers are ascending by rep with unique ids", () => {
+  const t = D.resources.crank.tiers;
+  assert.ok(t.length > 0);
+  for (let i = 1; i < t.length; i++) assert.ok(t[i].rep > t[i-1].rep, `${t[i].id} is not above ${t[i-1].id}`);
+  assert.equal(new Set(t.map(x => x.id)).size, t.length);
 });

@@ -471,6 +471,12 @@ const TIPS = {
     return { title:`${r.name} ${r.value}`, text:r.description,
       more:[r.range && `${statRangeText(r.range)}: ${r.range.meaning}`, r.rule, r.beyond, r.health].filter(Boolean) };
   },
+  // Decision 169: what CRANK is and what each tier pays. The playerNote shows
+  // only while rep is below zero (F37).
+  crank: () => { const R=D.resources.crank, st=S.ch && Engine.crankState(S.ch); if (!R) return null;
+    return { title:R.name, text:R.description,
+      more:R.tiers.map(t=>`${t.name} · ${t.rep} rep · ${Engine.crankPayText(t)}`),
+      note: st && st.unsettled ? `${copy("unsettledLabel")}: ${R.playerNote}` : "" }; },
 };
 // Tags as chips: one the glossary knows opens its sentence; one it doesn't
 // stays a plain word.

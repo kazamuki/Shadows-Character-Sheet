@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.37.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**CRANK rep.** Your standing on the city's job board now sits beside your Çredits on Main: +1 for a job done, −2 for one you walked out on, and your tier from Novice to Legendary, with what each tier's jobs pay. It prints on the front page too."
+    ]
+  },
+  {
     "version": "0.36.1",
     "date": "2026-10-02",
     "intro": [],
