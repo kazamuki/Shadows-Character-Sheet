@@ -57,6 +57,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
     damage: P("damage"), massiveLevels: P("massive"), witheringDamage: P("withering"),
     luck: { bonus: P("luck.bonus"), spent: P("luck.spent") }, san: { loss: P("san") }, sfr: { spent: P("sfr") },
     credits: { current: P("credits"), ledger: [{ date: P("cr.date"), amount: P("cr.amount"), note: P("cr.note") }] },
+    crank: { rep: "lots", ledger: [{ date: P("crk.date"), amount: "5", note: P("crk.note") }] },
     adjustments: [{ target: P("adj.target"), amount: P("adj.amount"), note: P("adj.note"), date: P("adj.date") }],
     conditions: [{ id: P("cond.id") }, { id: "agonized", note: P("cond.note") },
       { id: "injured", location: P("cond.loc") }, { id: "dying", marks: P("marks") }],
@@ -169,6 +170,7 @@ test("migrate() reads every stored number as a number, and drops an undo entry t
     "advantages[0].rank": c.advantages[0].rank, "disadvantages[1].rank": c.disadvantages[1].rank,
     "trackers.damage": c.trackers.damage, "luck.bonus": c.trackers.luck.bonus, "san.loss": c.trackers.san.loss,
     "credits.current": c.trackers.credits.current, "ledger.amount": c.trackers.credits.ledger[0].amount,
+    "crank.rep": c.trackers.crank.rep, "crank.ledger.amount": c.trackers.crank.ledger[0].amount,
     "adjustments.amount": c.trackers.adjustments[0].amount, "panel.value": c.trackers.panel["tol-spent"].value,
     "ip.earned": c.progression.ip.earned, "ip.log.amount": c.progression.ip.log[0].amount,
     "milestonePoints": c.progression.milestonePoints, "sessions.ipEarned": c.sessions[0].ipEarned,
@@ -226,4 +228,14 @@ test("Admin edits the row it drew: a purchased copy beside a free one, and a row
   assert.deepEqual(live(), ["-:2", "a|b:2"], "remove took the wrong row");
   assert.deepEqual(injected(app, "admin"), [], "an unknown advantage id became markup");
   assert.deepEqual(app.errors, []);
+});
+
+test("a hostile CRANK tracker reads as numbers and a list (Decision 169)", () => {
+  const c = Engine.migrate(hostileCharacter());
+  assert.equal(c.trackers.crank.rep, 0, "\"lots\" should read as 0");
+  assert.equal(c.trackers.crank.ledger[0].amount, 5, "\"5\" is the number it spells");
+  assert.equal(typeof c.trackers.crank.ledger[0].note, "string");
+  const s = Engine.migrate({ trackers: { crank: { rep: "7", ledger: "none" } } });
+  assert.deepEqual([s.trackers.crank.rep, s.trackers.crank.ledger.length], [7, 0], "a non-array ledger should read as empty");
+  assert.equal(Engine.crankState(Engine.migrate({ trackers: { crank: "lots" } })).rep, 0);
 });

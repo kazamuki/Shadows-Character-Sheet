@@ -121,6 +121,8 @@ window.SHADOWS_DATA = {
       // wound penalties per level: extract from WIP in Phase 1
     },
     credits: { symbol: "Ç", description: "..." },   // the sign every price shows (Decision 135); the starting roll is on the power level
+    crank: { name, description, jobDone: 1, jobWalkedOut: -2, flagged, flagNote, playerNote,   // CRANK rep (Decision 169, F37)
+             tiers: [ { id, name, rep, pay: { min, max /* null = no cap */ } } ] },             // ascending by rep; ids permanent
     sfr: { /* SFR / Blood Pool — archetype-dependent, Phase 1 */ }
   },
 
@@ -617,7 +619,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.16",
+    schemaVersion: "0.17",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -719,6 +721,7 @@ It renders on the Character tab (Decision 158).
     // spends TOL directly; Exhausted is what 0 TOL is called, not a second
     // tracked value (Decision 93).
     credits: { current: 800, ledger: [ { date, amount, note } ] },
+    crank: { rep: 0, ledger: [ { date, amount, note } ] },          // (0.17) CRANK rep (Decision 169); tier is derived
     // (0.8) Active Conditions (Decision 95). One entry per id ("you have it or
     // you don't"), except a location-bearing Condition, which is one per body
     // part (Decision 98). Pain, penalties and Helpless are derived, never stored.
@@ -3678,6 +3681,7 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Replaces:** Decision 32 in part (Combat is the left column, Stats the right). It extends 35 (the bar is one row), 122 (Main is the fight view) and 160 (Pin from Main).
      - **Revisit if:** players on phones miss the pills past the fade.
      - **Built:** app 0.36.0; smoke tests and `phone-check` measures, mutation-tested. Log 2026-10-02 (W45).
+     → **Superseded in part by Decision 169**: CRANK is alone.
 166. **The closed vitals flyout is inert; it takes focus when it opens, gives it back when it closes, Esc closes one layer, and a move to another tab closes it.**
      *2026-10-02 · Ken + Claude · Touches: vdrawer, vscrim, vitals flyout, syncVitals, vitalsShown, vitalsHandBack, openVitals, closeVitals, renderDrawer, setVitalsPinned, inert, aria-hidden, S.vitalsOpen, S.vitalsFrom, Escape, popover, modal, PIN_MEDIA, renderHome, W58*
      - **Decided:** One setter, `syncVitals` (`app.js`), writes `open`, `aria-hidden`, `inert` and the scrim from one predicate: open, or pinned with room to pin. Focus leaves before the panel goes inert, for the toggle, the wizard's pill, the active tab or the title, in that order. Opening moves focus to Close. Esc stands down while a popover or modal is open. A move to another tab closes the flyout. Leaving the sheet empties the panel and drops the pin's class. The flyout still doesn't trap focus.
@@ -3714,6 +3718,19 @@ No cascade logic to maintain — it falls out of the architecture.
      - **Revisit if:** a column that opens on a card instead of its heading reads as a separate section at the table, or the print sheet's archetype page wants the same layout.
      - **Built:** app 0.36.1, no data or schema bump; `smoke.test.mjs`, mutation-tested; checked in Chromium at 1600, 1300 pinned, 1100 and 390px. Log 2026-10-02 (the Character layout).
 
+169. **CRANK reputation is a resource on the character: +1 a job done, −2 a job walked out on, read as five tiers from the data.**
+     *2026-10-05 · Ken + Claude · Touches: CRANK, crank rep, trackers.crank, resources.crank, crankState, addCrankRep, Main CRANK card, Trackers CRANK section, crank tip, print front page, Reputation Advantage, schema 0.17, F37, W29, GQ7, GQ11, GQ14*
+     - **Decided:** A character stores `trackers.crank: { rep, ledger }`, the Çredits shape; the tier, the next tier and the pay are derived from `resources.crank.tiers`, never stored. The sheet raises it by the job (+1 done, −2 walked out), each with a note and an undo; Admin corrects anything else. It shows on Main, on Trackers with its ledger, in a tip, and on the front page.
+     - **Why:** Ken (2026-10-02): rep goes on the sheet. It's the player's record ("a career resource, not a running score", `200` Part VI), and the GM mode's session close and job board (W29) will award it. A number with a ledger is Çredits' shape.
+     - **Rejected:**
+       - Free amounts with Raise/Lower, like Çredits: the book moves rep only by +1 and −2, so two job buttons say the rule; a correction is Admin's.
+       - Storing the tier: it's derived from rep and the data, so storing it could only disagree (constraint 7).
+       - Page 2 of the print sheet (GQ11's first default; Ken chose the front page): the front page's third field row had two places free; no added height.
+       - A pill in the header: the header is two thin rows (Decision 140) and rep changes once a session at most.
+     - **Replaces:** Decision 165 in part: the card alone on its row is CRANK (with SFR), not Çredits.
+     - **Revisit if:** the team links the Reputation Advantage to starting rep (GQ7), F37 is answered (rep below zero), the GM Workshop changes the tier table or the +1/−2, or the GM mode's dispatch needs a rep change the two buttons can't express.
+     - **Built:** app 0.37.0, game data 0.29, schema 0.17; PR #111; log 2026-10-05 (CRANK rep).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -3749,6 +3766,7 @@ here are in `log/archive.md`.
 | F33 | **Jack of All Trades: how far does "treated as Focused" go?** Master of None says all skills are "treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4". Does that also give every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7)? And can Skill Paragon's "a focused skill from your chosen Profession" be any skill for a Jack? Stubbed (Decision 134): the price only, for ranks bought up to 4 (4 → 5 is standard, Ken); no cap bonus | Deighton | No |
 | F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 053 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
 | F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 054 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
+| F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 
-F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question.
+F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.
 

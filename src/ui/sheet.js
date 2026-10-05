@@ -333,13 +333,15 @@ function renderShMain(){
     `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
     `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max), "", "luck");
-  const hasSfr = sf && sf.value!=null;
+  const hasSfr = sf && sf.value!=null, crk = Engine.crankState(ch);
   if (hasSfr){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
   }
-  // W45: alone on its row in two columns, Çredits takes the whole row.
-  h += cond(hasSfr?"cred":"cred alone","Çredits","credits", `${CR}${ch.trackers.credits.current}`, "", null, "", "cred");
+  // W45: whichever card is alone on its row in two columns takes the whole row (CRANK, with SFR: Decision 169).
+  h += cond("cred","Çredits","credits", `${CR}${ch.trackers.credits.current}`, "", null, "", "cred");
+  // Decision 169: with SFR the row above is full, so CRANK takes the next one alone.
+  h += cond(hasSfr?"crank alone":"crank", "CRANK", "crank", `${crk.rep}`, esc(crk.tier?crk.tier.name:""), null, "", "crank");
   h += `</div>`;
   h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
@@ -1019,6 +1021,13 @@ const creditControlsHtml = () => `<input type="number" data-cramt placeholder="a
     <button class="btn sm" data-cr="1">+ Earn</button>
     <button class="btn sm" data-cr="-1">− Spend</button>`;
 
+const crankControlsHtml = () => { const R=D.resources.crank, up=R.jobDone, down=R.jobWalkedOut;
+  const sg = n => `${n>0?"+":"−"}${Math.abs(n)}`;
+  return `<input type="text" data-crknote placeholder="which job" aria-label="CRANK job note">
+    <button class="btn sm" data-crk="${up}">Job done ${sg(up)}</button>
+    <button class="btn sm" data-crk="${down}">Walked out ${sg(down)}</button>`; };
+const crankSubHtml = st => st.next ? `${st.toNext} to ${esc(st.next.name)}` : "Top tier";
+
 // W2/W3: what each vital's popover holds. The same five on the vitals bar
 // and on Main's cards; `null` when the key isn't one (the popover closes).
 function vitalPopover(ch, key){
@@ -1040,6 +1049,10 @@ function vitalPopover(ch, key){
   if (key==="cred") return { title:"Çredits",
     html: now(`${CR} ${ch.trackers.credits.current}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
+  if (key==="crank"){ const st=Engine.crankState(ch);
+    return { title:D.resources.crank.name,
+      html: now(`${st.rep} · <span data-tip="crank" tabindex="0">${esc(st.tier?st.tier.name:"")}</span>`, "", crankSubHtml(st)) + `<div class="trk-row pop-cred">${crankControlsHtml()}</div>
+      <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` }; }
   return null;
 }
 
@@ -1135,6 +1148,20 @@ function renderShTrackers(){
   if (ledger.length){
     h += `<details class="group" open><summary>Ledger (${ledger.length})</summary><div class="journal">` +
       ledger.slice().reverse().map(e=>`<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
+        <span class="amt ${e.amount<0?"spend":"grant"}">${e.amount>0?"+":""}${e.amount}</span>
+        <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
+  }
+
+  // CRANK rep (Decision 169)
+  const crk = Engine.crankState(ch);
+  h += `<div class="sect"><span data-tip="crank" tabindex="0">CRANK</span></div>
+    <div class="trk"><h2>Rep</h2><span class="big">${crk.rep}</span>
+    <span class="sub">${esc(crk.tier?crk.tier.name:"")} · ${crankSubHtml(crk)}</span>
+    ${crankControlsHtml()}</div>`;
+  const crkLedger = ch.trackers.crank.ledger||[];
+  if (crkLedger.length){
+    h += `<details class="group" open><summary>CRANK ledger (${crkLedger.length})</summary><div class="journal">` +
+      crkLedger.slice().reverse().map(e=>`<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
         <span class="amt ${e.amount<0?"spend":"grant"}">${e.amount>0?"+":""}${e.amount}</span>
         <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
   }
@@ -1987,7 +2014,10 @@ function renderShAdmin(){
   h += `<div class="sect">Resources</div>
     <div class="trk"><h2>LUCK bonus</h2><span class="big gold">${ch.trackers.luck.bonus}</span>
     <button class="btn sm" data-admin-luck="-1">−1</button><button class="btn sm" data-admin-luck="1">+1</button>
-    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}. Current LUCK during play is tracked on the Trackers tab.</span></div>`;
+    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}. Current LUCK during play is tracked on the Trackers tab.</span></div>
+    <div class="trk"><h2>CRANK rep</h2><span class="big">${Engine.crankState(ch).rep}</span>
+    <button class="btn sm" data-admin-crank="-1">−1</button><button class="btn sm" data-admin-crank="1">+1</button>
+    <span class="sub">Corrections only. Jobs done and walked out are on Main and Trackers.</span></div>`;
   return h;
 }
 
@@ -2219,7 +2249,8 @@ function renderPrintView(ch){
   let p1main = pHead(ch, "Character Sheet");
   p1main += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&Engine.archetypeContent(ch).name)}${pField("Power Level", pl&&pl.name)}</div>`;
   p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch&&ch.trackers.credits.current)}</div>`;
-  p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}</div>`;
+  const crkSt = ch && Engine.crankState(ch);
+  p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}${pField("CRANK", crkSt&&`${crkSt.rep} · ${crkSt.tier?crkSt.tier.name:""}`)}</div>`;
   p1main += `<div class="p-frontbody">`;
   p1main += `<div class="p-frontleft">${pCard("Stats", pStatsHtml(ch))}${pCard("Conditions", pConditionsHtml(ch), "magenta p-condcard")}</div>`;
   p1main += `<div class="p-frontright">` +
@@ -2598,6 +2629,12 @@ function bindVitalControls(root){
     if (amt==null || !amt) return;
     const signed=Math.abs(amt)*Number(b.dataset.cr);
     commit("credits", `Çredits ${signed>0?"+":""}${signed}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, signed, note); });
+  });
+
+  // CRANK rep (Decision 169): the amount is the data's, never typed.
+  root.querySelectorAll("[data-crk]").forEach(b=>b.onclick=()=>{
+    const amt=Number(b.dataset.crk), note=(root.querySelector("[data-crknote]")||{}).value||"";
+    commit("crank", `CRANK rep ${amt>0?"+":""}${amt}${note?` (${note})`:""}`, ()=>{ Engine.addCrankRep(ch, amt, note); });
   });
 
 }
@@ -3127,6 +3164,11 @@ function bindSheet(){
   main.querySelectorAll("[data-admin-luck]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.adminLuck);
     commit("admin", `Admin: LUCK bonus ${d>0?"+":""}${d}`, ()=>{ ch.trackers.luck.bonus=Math.max(0,(ch.trackers.luck.bonus||0)+d); });
+  });
+
+  main.querySelectorAll("[data-admin-crank]").forEach(b=>b.onclick=()=>{
+    const d=Number(b.dataset.adminCrank);
+    commit("admin", `Admin: CRANK rep ${d>0?"+":"−"}${Math.abs(d)}`, ()=>{ Engine.addCrankRep(ch, d, "Admin correction"); });
   });
 
   // Notes

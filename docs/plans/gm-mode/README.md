@@ -111,7 +111,7 @@ decision and flag numbers in advance and does the bookkeeping merge.
 
 | Order | Session | Status |
 |---|---|---|
-| [S01-crank-rep.md](S01-crank-rep.md) | S1 — CRANK reputation on the sheet | **Built and reviewed 2026-10-05**, PR #111; one fix round |
+| [S01-crank-rep.md](S01-crank-rep.md) | S1 — CRANK reputation on the sheet | **Built and reviewed 2026-10-05**, merged in PR #111 after one fix round |
 | [S03a-table-file.md](S03a-table-file.md) | S3a — The table file, its gate and Home's door, behind the feature switch | **§4 answered 2026-10-05**; rewritten around the switch (173), awaiting Ken's approval |
 | S8 | The cast | Next to write, after S3a is reviewed |
 

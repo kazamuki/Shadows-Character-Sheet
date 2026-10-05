@@ -23,6 +23,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.37.0
+
+- **CRANK rep.** Your standing on the city's job board now sits beside
+  your Çredits on Main: +1 for a job done, −2 for one you walked out on,
+  and your tier from Novice to Legendary, with what each tier's jobs pay.
+  It prints on the front page too.
+
 ## v0.36.1 — 2026-10-02
 
 - **The Character tab uses a wide screen.** Your archetype sits beside its core mechanic,

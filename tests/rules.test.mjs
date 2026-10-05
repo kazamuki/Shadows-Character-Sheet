@@ -1114,3 +1114,19 @@ test("Skill Points are the level's base + INT + REF, with no roll", () => {
   assert.equal(p.total, 40 + 6 + 7);
   assert.equal(Engine.validate("skills", ch).some(i => /roll/i.test(i.msg)), false, "the Skills step still asks for a roll");
 });
+
+test("CRANK: the tier table and the +1 / -2 rules are the Workshop's (Decision 169)", () => {
+  const md = crb("200_GM_Workshop.md").replace(/\r/g, "");
+  const sect = md.slice(md.indexOf("### Reputation"), md.indexOf("### The Job Generator"));
+  assert.ok(sect.length > 100, "couldn't find the Reputation section");
+  const rows = [...sect.matchAll(/^\|\s*\d+\s*\|\s*([A-Za-z]+)\s*\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*$/gm)];
+  const tiers = D.resources.crank.tiers;
+  assert.equal(rows.length, tiers.length, "the book's tier count");
+  rows.forEach((m, i) => {
+    assert.deepEqual([tiers[i].name, tiers[i].rep, Engine.crankPayText(tiers[i])],
+      [m[1], Number(m[2]), m[3].replace(/\s+/g, "")], `tier ${i + 1}`);
+  });
+  assert.match(sect, /completion earns \+1 rep/);
+  assert.match(sect, /costs -2 rep/);
+  assert.deepEqual([D.resources.crank.jobDone, D.resources.crank.jobWalkedOut], [1, -2]);
+});
