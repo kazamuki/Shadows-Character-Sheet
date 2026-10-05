@@ -12,23 +12,23 @@
 
 ## 020_Synergy_System.docx
 
-- ☐ ⚖ **The Core of Synergy › Stats › sidebar "Beyond Human Limits".** It says "the exact mechanics for this are explained later", but nothing later explains them. The curve was ruled on 2026-09-22 (Decision 98): **11–15 = +5, 16–20 = +6, 21–25 = +7, then +1 for every 5 points after that.** Write it into 040's Bonuses table (below) and point this sidebar there.
+- ✅ ⚖ **The Core of Synergy › Stats › sidebar "Beyond Human Limits".** It says "the exact mechanics for this are explained later", but nothing later explains them. The curve was ruled on 2026-09-22 (Decision 98): **11–15 = +5, 16–20 = +6, 21–25 = +7, then +1 for every 5 points after that.** Write it into 040's Bonuses table (below) and point this sidebar there.
 - ✅ The TOL formula (Attributes) already reads INT, BOD and COOL. The Exceptions List's **AD-05** can close for 020 and 040. It still names a `Stats_and_Attributes` file that isn't in the v4 folder.
 
 ## 030_Core_Mechanics.docx
 
-- ☐ ⚖ **Resources › Luck.** The book never says what Luck you start with. **Everyone starts with 4 LUCK** at every Power Level (Decision 157), and more can be bought at creation for **1 CP a point** (Decision 97). A bought point sits on top of the 4.
-- ☐ ❓ **Resources › Credits.** The book never says what Çredits you start with. The sheet rolls **Street 3d4 × 100 · Heroic 4d4 × 100 · Shadows 5d4 × 100 · World Coming Down 5d10 × 100**. Those numbers came from the older REF draft. Confirm they still stand (Ken/D), then put them here or in 040's table.
+- ✅ ⚖ **Resources › Luck.** The book never says what Luck you start with. **Everyone starts with 4 LUCK** at every Power Level (Decision 157), and more can be bought at creation for **1 CP a point** (Decision 97). A bought point sits on top of the 4.
+- ✅ ❓ **Resources › Credits.** The book never says what Çredits you start with. The sheet rolls **Street 3d4 × 100 · Heroic 4d4 × 100 · Shadows 5d4 × 100 · World Coming Down 5d10 × 100**. Those numbers came from the older REF draft. Confirm they still stand (Ken/D), then put them here or in 040's table.
 
 ## 040_Character_Creation.docx
 
 This chapter carries most of the creation economy, and almost none of it is written down.
 
-- ☐ ⚖ **Rolling Stat Points.** Replace "Roll 3d10 + 30" with Deighton's playtested table (Decision 150). The GM picks one of two methods:
+- ✅ ⚖ **Rolling Stat Points.** Replace "Roll 3d10 + 30" with Deighton's playtested table (Decision 150). The GM picks one of two methods:
   - **Flat:** Street 45 · Heroic 50 · Shadows 55 · World Coming Down 60.
   - **Rolled:** 5 below the flat number + 1d10, so 40 / 45 / 50 / 55 + 1d10.
   - **The climbing buy:** every stat starts at 1 for free. Each point up to 6 costs 1 Stat Point, and each point from 7 to 10 costs 2, so **a 10 costs 13**. (Deighton confirmed that the base 1 is free.)
-- ☐ ⚖ **Bonuses & Penalties table.** Add the rows past 10 from Decision 98 (see 020).
+- ✅ ⚖ **Bonuses & Penalties table.** Add the rows past 10 from Decision 98 (see 020).
 - ☐ ⚖ **Step 7, "Allocate any remaining points".** The book never says what leftover CP buys. The sheet uses these rules, all of them ruled:
   - Boosting a **stat or skill costs 1 CP per point** (Decision 97).
   - **A power rank costs 5 CP**, for any power: Disciplines today, Vampire powers later. It's capped by **Max Power Rank: 2 / 3 / 4 / 5** (Decision 157).
@@ -38,10 +38,10 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 ## 041_Archetypes.docx
 
-- ☐ ⚖ **Archetypes (opening list).** Two things are missing:
+- ✅ ⚖ **Archetypes (opening list).** Two things are missing:
   - **Classification:** Arcanist and Professional are **Mortal**; Werewolf and Vampire are **Supernatural** (Decision 152).
   - **The Custom archetype**, written by the player with the GM. It names its own classification, which can be Mortal, Supernatural, or **Other** in its own words (Decision 153). 045 and 253 already mention custom archetypes, but 041 doesn't.
-- ☐ ⚖ **Werewolf › Baseline Traits › Supernatural.** "Unable to Purchase Advantages" should become **"Universal Advantages only"** (Decision 152, Deighton). The sheet already says so.
+- ✅ ⚖ **Werewolf › Baseline Traits › Supernatural.** "Unable to Purchase Advantages" should become **"Universal Advantages only"** (Decision 152, Deighton). The sheet already says so.
 - ☐ ⚖ **Professional › Mercenary › Focused Skills.** "Handgun" should be **Handguns**.
 - ☐ ⚖ **Professional › Slayer** and **› True Warrior › Focused Skills.** "Occult" should be **Occult Lore**.
 - ☐ ⚖ **Professional › Jack of All Trades › Master of None.** Say that "up to rank 4" means ranks bought up to 4 cost 3 × rank, and that 4 → 5 is at the standard price (Ken's reading, which the sheet uses). Whether it also raises every skill's starting cap is still F33 for Deighton.
