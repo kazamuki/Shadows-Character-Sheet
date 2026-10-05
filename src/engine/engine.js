@@ -3194,6 +3194,118 @@ const Engine = (() => {
     return issues;
   }
 
+  // ── Tables (GM mode, Decisions 170–173) ─────────────────────────────────
+  // A GM's table is its own file, .shadows-table.json, with its own id and its
+  // own schema version. migrateTable() is its gate, as migrate() is a
+  // character's: a table file is made to be shared, so it's untrusted
+  // (Decision 124). The engine knows nothing of the feature switch (173).
+  const TABLE_ID_RE = new RegExp(`^TBL-${INTAKE_BODY}$`);
+  const NOTE_ID_RE = /^N-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const isTableId = v => typeof v==="string" && TABLE_ID_RE.test(v);
+  function newTableId(){
+    const s = randomChars(12);
+    return `TBL-${s.slice(0,4)}-${s.slice(4,8)}-${s.slice(8,12)}`;
+  }
+  const _str = v => typeof v==="string" ? v : "";
+  const _isoOrNull = v => typeof v==="string" && Number.isFinite(Date.parse(v)) ? v : null;
+  const _isObj = o => !!o && typeof o==="object" && !Array.isArray(o);
+  // Is `v` a version string newer than `base`? (_schemaBefore reads
+  // meta.schemaVersion, so a table's own stamp needs its own twin.)
+  function _versionNewer(v, base){
+    if (typeof v!=="string") return false;
+    const parse = x => x.split(".").map(Number);
+    const have = parse(v), want = parse(base);
+    if (have.some(n=>!Number.isFinite(n))) return false;
+    for (let i=0;i<Math.max(have.length, want.length);i++){
+      const d = (have[i]||0) - (want[i]||0);
+      if (d) return d > 0;
+    }
+    return false;
+  }
+  function newTableNoteId(used){
+    let id;
+    do id = `N-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  // The table file's shape. A bump needs a migrateTable() step in the same change.
+  const TABLE_SCHEMA_VERSION = "0.1";
+  function newTable(name){
+    const now = new Date().toISOString();
+    return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
+                    tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
+             notes:[] };
+  }
+  // Which kind of file is this? A file with no kind is a character: every file
+  // ever exported is. Only a table says so.
+  function fileKind(obj){
+    if (!_isObj(obj)) return "unknown";
+    const m = obj.meta;
+    if (!_isObj(m) || !("kind" in m)) return "character";
+    return m.kind==="shadows-table" ? "table" : "unknown";
+  }
+  function migrateTable(t){
+    // Work on a copy, so nothing aliases the caller's object. Unknown keys
+    // ride along untouched and are never read; known ones are set by name.
+    let c;
+    try { c = _isObj(t) ? JSON.parse(JSON.stringify(t)) : {}; } catch (e) { c = {}; }
+    if (!_isObj(c.meta)) c.meta = {};
+    const m = c.meta;
+    m.kind = "shadows-table";
+    if (!isTableId(m.id)) m.id = newTableId();
+    m.name = _str(m.name);
+    // Decision 63: the gate invents no timestamps.
+    m.created = _isoOrNull(m.created);
+    m.updated = _isoOrNull(m.updated);
+    // A newer stamp is kept (and reported by tableCheck): an older app must
+    // not lower it and so hide that it dropped what it didn't know.
+    if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
+    // Version-gated steps go here, in the order migrate() keeps its own:
+    //   Schema 0.2 (Decision N): …
+    const used = new Set();
+    c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
+    for (const n of c.notes){
+      n.title = _str(n.title);
+      n.text = _str(n.text);
+      if (!(typeof n.id==="string" && NOTE_ID_RE.test(n.id)) || used.has(n.id)) n.id = newTableNoteId(used);
+      used.add(n.id);
+      n.created = _isoOrNull(n.created);
+      n.updated = _isoOrNull(n.updated);
+    }
+    return c;
+  }
+  function tableCheck(t){
+    const v = _isObj(t) && _isObj(t.meta) ? t.meta.tableSchemaVersion : null;
+    return _versionNewer(v, TABLE_SCHEMA_VERSION)
+      ? ["This table was saved by a newer version of the app. What this version doesn't know is kept, but not shown."]
+      : [];
+  }
+  const _tableStamp = (t, n) => { const now = new Date().toISOString(); t.meta.updated = now; if (n) n.updated = now; };
+  function addTableNote(t, f){
+    const now = new Date().toISOString();
+    const used = new Set(t.notes.map(n=>n.id));
+    const n = { id:newTableNoteId(used), title:_str((f||{}).title), text:_str((f||{}).text), created:now, updated:now };
+    t.notes.unshift(n);
+    _tableStamp(t);
+    return { ok:true, id:n.id };
+  }
+  function editTableNote(t, id, f){
+    const n = t.notes.find(x=>x.id===id);
+    if (!n) return { ok:false, why:"No such note." };
+    if (_isObj(f)){
+      if ("title" in f) n.title = _str(f.title);
+      if ("text" in f) n.text = _str(f.text);
+    }
+    _tableStamp(t, n);
+    return { ok:true };
+  }
+  function removeTableNote(t, id){
+    const i = t.notes.findIndex(x=>x.id===id);
+    if (i < 0) return { ok:false, why:"No such note." };
+    t.notes.splice(i, 1);
+    _tableStamp(t);
+    return { ok:true };
+  }
+
   // The engine's surface, grouped by domain.
   return {
     // Data: lookups by id, paths and formulas the data holds
@@ -3230,6 +3342,8 @@ const Engine = (() => {
     milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
     logSession, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
     // Audit trail and undo
-    diffChar, recordAction, undoLastAction };
+    diffChar, recordAction, undoLastAction,
+    // The table file (GM mode): create, tell its kind, load, check, edit notes
+    newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote };
 })();
 /*ENGINE-END*/

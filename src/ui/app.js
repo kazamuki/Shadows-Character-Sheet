@@ -18,6 +18,7 @@ const APP_VERSION = "0.37.0";
 // Header chrome: brand context + the section tabs (which now live in the
 // sticky header rather than inside the scrolling content).
 function renderTopChrome(){
+  if (S.screen==="table") return renderTableChrome();   // gm.js (Decision 172)
   const ctx=$("brandctx"), nav=$("topnav"), act=$("hdractions");
   // The window's title names the character on the sheet (W60). It's also the
   // file name a browser suggests when the sheet is printed to PDF.
@@ -167,6 +168,7 @@ function renderMain(){
   const same=sameView(), main=$("main");
   const fill = html => same ? keepPlace(main, ()=>{ main.innerHTML=html; }) : (main.innerHTML=html);
   if (S.screen==="home") return renderHome();
+  if (S.screen==="table") return renderTable();   // gm.js (Decision 172)
   if (S.screen==="sheet"){
     S.section = normSection(S.section);
     // W58: the flyout is a look from the tab it opened on; a move to another
@@ -331,6 +333,7 @@ function boot(){
       <p>Place <span style="font-family:var(--mono)">shadows-data.js</span> next to this file and reload.</p></div>`;
     return;
   }
+  applyFeatureQuery(location.search);   // before the first render (Decision 173)
   initWhatsNew();
   migrateLegacySlots();
   // Crossing 1280px moves a pinned panel in or out of the page.

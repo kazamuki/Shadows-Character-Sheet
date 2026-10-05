@@ -329,3 +329,10 @@ test("the in-app release notes are generated from the current CHANGELOG.md (Deci
   assert.match(want, new RegExp(`"version": "${app.replace(/\./g, "\.")}"`),
     `What's new has no section for app ${app}`);
 });
+
+test("the table schema version in STATE.md is the one newTable() stamps (Decision 170)", () => {
+  const m = /character schema `[\d.]+` · table schema `([\d.]+)`/.exec(STATE);
+  assert.ok(m, "STATE.md's Versions line lost its table schema number");
+  const { Engine } = loadEngine();
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, m[1], "STATE.md's table schema version is stale");
+});

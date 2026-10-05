@@ -71,6 +71,27 @@ const normSection = s => s==="admin" ? (S.admin?"admin":"main")
                         : (SHEET_IDS.includes(s) ? s : (LEGACY_SECTION[s] || "main"));
 let S = { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false };
 
+// Decision 173: an unfinished feature ships switched off. A browser turns
+// one on with ?<name>=on (and off with ?<name>=off); the launch release sets
+// it true here. Guarded: without storage, a feature is as the constant says.
+const FEATURES = { gm:false };
+const FEATURE_PREFIX = "shadows.feature.";
+function featureOn(name){
+  if (!Object.prototype.hasOwnProperty.call(FEATURES, name)) return false;
+  if (FEATURES[name]===true) return true;
+  try{ return localStorage.getItem(FEATURE_PREFIX+name)==="on"; }catch(e){ return false; }
+}
+function applyFeatureQuery(search){
+  let q; try{ q=new URLSearchParams(search||""); }catch(e){ return; }
+  for (const name of Object.keys(FEATURES)){
+    const v=q.get(name);
+    try{
+      if (v==="on") localStorage.setItem(FEATURE_PREFIX+name, "on");
+      else if (v==="off") localStorage.removeItem(FEATURE_PREFIX+name);
+    }catch(e){}
+  }
+}
+
 // ── The roster (R10, Decision 141) ────────────────────────────────────
 // Every character this browser keeps is one localStorage key named by its
 // TAG, draft and sheet alike: locking updates the same entry, and a second
@@ -222,6 +243,7 @@ function keepPlace(root, draw, fallbacks=[]){
 
 function update(rerenderMain=true){
   saveChar();
+  if (S.screen==="table") saveTable();   // gm.js (Decision 172)
   if (rerenderMain){ renderMain(); sweepTip(); }
   renderLedger(); renderVitals();
 }

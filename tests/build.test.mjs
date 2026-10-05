@@ -19,6 +19,7 @@ const BROWSER_JS = [
   "src/ui/shared.js",
   "src/ui/wizard.js",
   "src/ui/sheet.js",
+  "src/ui/gm.js",
   "src/ui/app.js",
   "src/data/shadows-data.js",
   "src/data/shadows-changelog.js",
@@ -115,7 +116,7 @@ test("inlining keeps a stylesheet's media gate (the blank demo site, v0.13.0–v
       assert.match(attrs, /media=["']print["']/, "a stylesheet hiding #app is not gated to print");
 });
 
-test("script order in the shell is theme-init → data → icons → engine → ui", () => {
+test("script order in the shell is theme-init → data → icons → engine → ui (gm.js between sheet.js and app.js)", () => {
   // theme-init.js runs first and alone, in <head> before the shadows.css
   // <link> — it has to beat first paint (Decision 90), which is a different
   // concern from the data → icons → engine → ui pipeline that follows it in
@@ -131,6 +132,7 @@ test("script order in the shell is theme-init → data → icons → engine → 
     "src/ui/shared.js",
     "src/ui/wizard.js",
     "src/ui/sheet.js",
+    "src/ui/gm.js",
     "src/ui/app.js",
   ]);
 });
@@ -328,4 +330,15 @@ test("no screen blocks the page with alert() or confirm() (C5)", () => {
     const src = readFileSync(join(ROOT, f), "utf8").replace(/\/\/.*$/gm, "");
     assert.doesNotMatch(src, /\b(alert|confirm|prompt)\s*\(/, `${f} calls a blocking dialog`);
   }
+});
+
+test("an unfinished feature ships switched off: FEATURES.gm is false unless the launch's changelog line is in (Decision 173)", () => {
+  const src = readFileSync(join(ROOT, "src/ui/shared.js"), "utf8");
+  const m = /const FEATURES = \{([^}]*)\}/.exec(src);
+  assert.ok(m, "shared.js lost its FEATURES object");
+  const on = /\bgm:\s*true\b/.test(m[1]);
+  const log = readFileSync(join(ROOT, "CHANGELOG.md"), "utf8");
+  // Anywhere in the file: release:prep renames [Unreleased], so after the launch release the line sits under a version heading.
+  const launched = /^- \*\*Run a table\.\*\*/m.test(log);
+  assert.ok(!on || launched, "FEATURES.gm is true, but CHANGELOG.md has no `- **Run a table.**` line: GM mode's launch needs it");
 });

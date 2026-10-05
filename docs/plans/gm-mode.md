@@ -549,6 +549,8 @@ or defaulted every *They* question in §9.
 
 ### S3a — The table file
 
+**Built 2026-10-05** (Decisions 170–173, table schema 0.1, switched off; PR #113). The bullets below are the plan as written; the work order and the decisions are what was built.
+
 Settles storage and the file, which everything after it needs.
 
 - **Run a table** on Home; new, open, export, import, remove, with the
@@ -699,6 +701,10 @@ Pain Levels, the tier table. Handouts (a dispatch kind).
 Printing a cast member, an encounter, a session's journal.
 
 ## 7. How the branch works
+
+**Replaced by Decision 173 (2026-10-05).** There is no long branch: each session
+merges to `main` like any batch, behind `FEATURES.gm` (off), and releases go
+on as usual. What follows is the plan as first written, kept for its reasons.
 
 Ken asked for one branch for the whole feature. That works, with two rules:
 

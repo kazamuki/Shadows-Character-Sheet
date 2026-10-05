@@ -122,9 +122,10 @@ src/data/               Game content + icons. Designers edit these. Also the
                         release notes, generated from CHANGELOG.md — never
                         edited by hand (Decision 123).
 src/engine/engine.js    Pure rules engine. No DOM.
-src/ui/                 Wizard + sheet, as four classic scripts sharing one
-                        global scope (shared, wizard, sheet, then app for
-                        chrome/boot) — no namespace object, see Decision 86.
+src/ui/                 Wizard + sheet + GM mode, as five classic scripts sharing
+                        one global scope (shared, wizard, sheet, gm, then app
+                        for chrome/boot) — no namespace object, see Decisions
+                        86 and 172.
 src/styles/             shadows.css (brand tokens + screen), print.css, and
                         fonts.css, generated, with its licences in fonts/.
 tests/                  Engine units, CRB conformance, hostile files, voice, smoke, guards.
@@ -146,9 +147,9 @@ as text (`…Text`, `…Note`, `description`), never a setting the code ignores.
 `tests/engine.test.mjs` fails on an archetype id in code and on a data key
 nothing reads (Decision 135).
 
-## Versions — four of them, four different triggers
+## Versions — five of them, five different triggers
 
-Four numbers move independently. Bumping the wrong one, or none, is how a
+Five numbers move independently. Bumping the wrong one, or none, is how a
 session ends up debugging a build the other person isn't looking at. Current
 values are in `docs/STATE.md`; the app renders its own in the footer, so **the
 first move when something looks wrong is to compare the footer against STATE**.
@@ -158,6 +159,7 @@ first move when something looks wrong is to compare the footer against STATE**.
 | **App** | `APP_VERSION` at the top of `src/ui/app.js`, mirrored in `package.json` | **A player can see a difference.** patch = visible fix · minor = new capability · major = existing character files or the workflow break |
 | **Game data** | `meta.gamedataVersion` in `shadows-data.js` | **A character's computed values or available choices can change** — content added or removed, a cost or cap altered, an id retired. *Never* for a change no character can observe (Decision 68) |
 | **Character schema** | `meta.schemaVersion` on the character, stamped by `newCharacter()` and `migrate()` | **The shape of a saved `.shadows.json` changes.** Always needs a `migrate()` step in the same commit |
+| **Table schema** | `meta.tableSchemaVersion` on a GM's table, stamped by `newTable()` and `migrateTable()` | **The shape of a saved `.shadows-table.json` changes.** Always needs a `migrateTable()` step in the same commit, switched on or not (Decision 170) |
 | **Ruleset** | `meta.rulesetVersion` in `shadows-data.js` | The CRB moves. Not ours to bump on a whim — it tracks Ken's document |
 
 Two traps worth knowing:
@@ -316,7 +318,9 @@ unasked.
   creates the tag and the Release (its notes are that CHANGELOG section, both
   files attached) and deploys the live site (`charactersheet.shadowsrpg.com`).
   A cloud session can do all of it. Check a deploy by loading the page and
-  reading its footer. The `cut-a-release` skill walks it.
+  reading its footer. The `cut-a-release` skill walks it. An unfinished feature
+  ships switched off (`FEATURES`, Decision 173); a release never turns one on
+  except as that feature's launch.
 
 ## What's next
 

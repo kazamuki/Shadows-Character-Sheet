@@ -683,22 +683,22 @@ function askRemove(e){
 function renderHome(){
   const app=$("app"); if (app) app.classList.remove("sheet-mode");
   renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
-  const roster = rosterEntries();
+  const roster = rosterEntries(), tables = gmTableEntries();
   $("main").innerHTML = `<div class="home-hero">
     <h1>Character Intake</h1>
     <p>NYTE City doesn't care who you were. Build who you're going to be.</p>
     <div class="home-actions">
       <button class="btn go" id="btn-new">New character</button>
-      <button class="btn" id="btn-import">Import .shadows.json</button>
+      <button class="btn" id="btn-import">${featureOn("gm")?"Import a file":"Import .shadows.json"}</button>
       <input type="file" id="file-import" accept=".json,.shadows.json" style="display:none">
     </div>
     ${roster.length?`<section class="roster" aria-labelledby="roster-h">
       <h2 id="roster-h" class="roster-h">Your characters</h2>
       <ul class="roster-list">${roster.map(rosterCardHtml).join("")}</ul>
       <p class="step-note">Characters stay in this browser until you remove them, but it isn't a backup: clearing site data erases every one. The exported <span style="font-family:var(--mono)">.shadows.json</span> is the copy that lasts.</p>
-    </section>`:""}
+    </section>`:""}${gmTablesHtml(tables)}
     <div class="home-news" id="homenews">${whatsNewHomeHtml()}</div>
-    <p class="step-note" style="margin-top:14px">Playing at the table instead? <button class="btn sm" id="btn-print-blank">Print a blank character sheet</button></p>
+    <p class="step-note" style="margin-top:14px">Playing at the table instead? <button class="btn sm" id="btn-print-blank">Print a blank character sheet</button></p>${gmDoorHtml()}
     </div>`;
   $("btn-new").onclick=()=>{
     // A new character is saved once the player changes something, so a
@@ -720,8 +720,16 @@ function renderHome(){
     const f=e.target.files[0]; if(!f) return;
     const rd=new FileReader();
     rd.onload=()=>{
+      let raw;
+      try{ raw=JSON.parse(rd.result); }
+      catch(err){ notice(featureOn("gm") ? GM_NOT_A_FILE : "That file didn't parse as a character: "+err.message); return; }
+      // Read the file's kind before anything else: migrate() reads any object as
+      // a character, so a table file used to open as a blank one (Decision 170).
+      const kind=Engine.fileKind(raw);
+      if (kind==="table" && featureOn("gm")){ gmImportTable(raw); return; }
+      if (kind!=="character"){ notice(featureOn("gm") ? GM_NOT_A_FILE : "That file isn't a character."); return; }
       let c;
-      try{ c=Engine.migrate(JSON.parse(rd.result)); }
+      try{ c=Engine.migrate(raw); }
       catch(err){ notice("That file didn't parse as a character: "+err.message); return; }
       const locked=!!(c.creation && c.creation.locked), id=intakeOf(c);
       // A different character is added. The only question left is a file
@@ -739,6 +747,7 @@ function renderHome(){
     rd.readAsText(f);
     e.target.value="";      // the same file can be chosen again after a Cancel
   };
+  bindGmHome(tables);
   renderLedger(); renderVitals();
 }
 

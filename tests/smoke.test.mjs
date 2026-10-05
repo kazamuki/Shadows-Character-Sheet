@@ -3141,3 +3141,287 @@ test("CRANK: Main's card label opens the popover, and the tip lives on the tier 
   assert.match(tipShown(app), /gray market/, "the tier name didn't open the tip");
   assert.deepEqual(app.errors, []);
 });
+
+// ── Tables and the feature switch (Decisions 171, 173) ──────────────────
+const GM_ON = { "shadows.feature.gm": "on" };
+const tableKeys = app => {
+  const ls = app.window.localStorage, out = [];
+  for (let i = 0; i < ls.length; i++) if (ls.key(i).startsWith("shadows.table.v1.")) out.push(ls.key(i));
+  return out;
+};
+const tableEntryOf = (app, id) => JSON.parse(app.window.localStorage.getItem("shadows.table.v1." + id));
+const tableCard = (app, name) => app.$$("#main .tables .roster-card").find(c => c.querySelector(".roster-name").textContent === name);
+const seedTable = (name, extra = {}) => {
+  const t = Engine.newTable(name);
+  Object.assign(t.meta, extra);
+  return [t, { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null } }];
+};
+const type = (app, sel, value) => {
+  const el = app.$(sel);
+  el.value = value;
+  el.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+};
+const runTable = (app, name) => {
+  app.click("#btn-run-table");
+  app.$("#tbl-name").value = name;
+  app.click("#modal [data-nameyes]");
+};
+const tableHome = app => { app.click("[data-menu-toggle]"); app.click("[data-thome]"); };
+const tableFile = async blob => JSON.parse(await blob.text());
+
+test("Decision 173: switched off, Home is today's, even with a table saved, and a table file is refused", async () => {
+  const [t, storage] = seedTable("Tuesday");
+  const app = boot({ storage });
+  assert.equal(app.$("#btn-run-table"), null, "Run a table shows with the switch off");
+  assert.equal(app.$("#main .tables"), null, "Your tables shows with the switch off");
+  assert.equal(app.$("#btn-import").textContent, "Import .shadows.json");
+  assert.doesNotMatch(app.$("#main").textContent, /Running the game/);
+  await importFile(app, t);
+  assert.match(app.$("#undotoast").textContent, /That file isn't a character\./);
+  assert.equal(charKeys(app).length, 0, "a table file became a character");
+  assert.equal(tableKeys(app).length, 1, "a table was written with the switch off");
+  assert.equal(app.window.eval("S.screen"), "home");
+  await importFile(app, { meta: { kind: "shadows-pack" } });
+  assert.equal(charKeys(app).length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 173: ?gm=on turns the switch on and keeps it, ?gm=off turns it off, anything else changes nothing", () => {
+  const app = boot();
+  const w = app.window;
+  assert.equal(w.eval('featureOn("gm")'), false);
+  for (const q of ["?gm=yes", "?other=on", "", "?gm="]) { w.eval(`applyFeatureQuery(${JSON.stringify(q)})`); assert.equal(w.eval('featureOn("gm")'), false, q); }
+  w.eval('applyFeatureQuery("?gm=on")');
+  assert.equal(w.localStorage.getItem("shadows.feature.gm"), "on");
+  assert.equal(w.eval('featureOn("gm")'), true);
+  for (const q of ["?gm=yes", "?other=off", ""]) { w.eval(`applyFeatureQuery(${JSON.stringify(q)})`); assert.equal(w.eval('featureOn("gm")'), true, q); }
+  assert.equal(w.eval('featureOn("nope")'), false);
+  w.eval('applyFeatureQuery("?gm=off")');
+  assert.equal(w.localStorage.getItem("shadows.feature.gm"), null);
+  assert.equal(w.eval('featureOn("gm")'), false);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: switched on, Home has the door, and no list until a table exists", () => {
+  const app = boot({ storage: GM_ON });
+  assert.ok(app.$("#btn-run-table"));
+  assert.match(app.$("#main").textContent, /Running the game\? *Run a table/);
+  assert.equal(app.$("#main .tables"), null);
+  assert.equal(app.$("#btn-import").textContent, "Import a file");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: Run a table asks for a name, opens the table, and Home lists it as not exported", () => {
+  const app = boot({ storage: GM_ON });
+  withDownloads(app);
+  runTable(app, "Tuesday nights");
+  assert.equal(app.window.eval("S.screen"), "table");
+  assert.equal(app.$("#brandctx").textContent, "Tuesday nights");
+  assert.equal(app.$("h1.step-title").textContent, "Tuesday nights");
+  assert.equal(app.$("#modal[open]"), null);
+  assert.equal(charKeys(app).length, 0, "a table wrote a character");
+  assert.equal(tableKeys(app).length, 1);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Notes"]);
+  assert.equal(app.$("#topnav [data-sec]"), null, "the table's tabs are the sheet's");
+  assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "What's new", "Home"]);
+  tableHome(app);
+  assert.equal(app.window.eval("S.screen"), "home");
+  assert.ok(tableCard(app, "Tuesday nights"));
+  assert.match(tableCard(app, "Tuesday nights").textContent, /Table · 0 notes/);
+  assert.match(tableCard(app, "Tuesday nights").textContent, /Changes not exported yet/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: Enter in the name field creates; Cancel leaves Home as it was", () => {
+  const app = boot({ storage: GM_ON });
+  app.click("#btn-run-table");
+  app.click("#modal [data-modalclose]");
+  assert.equal(tableKeys(app).length, 0);
+  app.click("#btn-run-table");
+  app.$("#tbl-name").value = "Enter table";
+  app.$("#tbl-name").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  assert.equal(app.window.eval("S.screen"), "table");
+  assert.equal(app.$("#brandctx").textContent, "Enter table");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: notes save as they're typed and survive a reload; Delete asks, and focus lands on the next control", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Notes table");
+  assert.match(app.$("#main").textContent, /Nothing on file yet. What you write here stays with the table/);
+  app.click("[data-tnew]");
+  assert.equal(app.doc.activeElement && app.doc.activeElement.hasAttribute("data-ntitle"), true, "New note didn't focus its title");
+  const id = app.doc.activeElement.dataset.ntitle;
+  type(app, `[data-ntitle="${id}"]`, "The fixer");
+  type(app, `[data-ntext="${id}"]`, "Owes us a favour.");
+  assert.equal(app.doc.activeElement.dataset.ntitle, id, "typing redrew the page and dropped focus");
+  // Straight to Home with no change event: nothing typed is lost.
+  tableHome(app);
+  const tid = tableKeys(app)[0].slice("shadows.table.v1.".length);
+  const again = boot({ storage: { ["shadows.table.v1." + tid]: tableEntryOf(app, tid), ...GM_ON } });
+  tableCard(again, "Notes table").querySelector("[data-topen]").click();
+  assert.equal(again.$(`[data-ntitle="${id}"]`).value, "The fixer");
+  assert.equal(again.$(`[data-ntext="${id}"]`).value, "Owes us a favour.");
+  // two more notes, then Delete the middle one
+  again.click("[data-tnew]"); again.click("[data-tnew]");
+  const ids = again.$$("[data-note]").map(n => n.dataset.note);
+  assert.equal(ids.length, 3);
+  again.click(`[data-ndel="${ids[1]}"]`);
+  assert.ok(again.$("#modal[open]"), "Delete didn't ask");
+  again.click("#modal [data-modalclose]");
+  assert.equal(again.$$("[data-note]").length, 3, "Cancel deleted the note");
+  again.click(`[data-ndel="${ids[1]}"]`);
+  again.click("#modal [data-askyes]");
+  assert.deepEqual(again.$$("[data-note]").map(n => n.dataset.note), [ids[0], ids[2]]);
+  assert.equal(again.doc.activeElement.dataset.ntitle, ids[2], "after Delete focus isn't on the next note");
+  again.click(`[data-ndel="${ids[2]}"]`); again.click("#modal [data-askyes]");
+  again.click(`[data-ndel="${ids[0]}"]`); again.click("#modal [data-askyes]");
+  assert.ok(again.doc.activeElement.hasAttribute("data-tnew"), "with no notes left focus isn't on New note");
+  assert.deepEqual([...app.errors, ...again.errors], []);
+});
+
+test("Decision 171: Rename changes the header, the window's title and Home's card at once", () => {
+  const [t, storage] = seedTable("Old name");
+  const app = boot({ storage: { ...storage, ...GM_ON } });
+  tableCard(app, "Old name").querySelector("[data-topen]").click();
+  app.click("[data-menu-toggle]"); app.click("[data-trename]");
+  assert.equal(app.$("#tbl-name").value, "Old name");
+  app.$("#tbl-name").value = "New name";
+  app.click("#modal [data-nameyes]");
+  assert.equal(app.$("#brandctx").textContent, "New name");
+  assert.equal(app.$("h1.step-title").textContent, "New name");
+  assert.equal(app.doc.title, "New name — Shadows");
+  tableHome(app);
+  assert.ok(tableCard(app, "New name"));
+  assert.equal(tableCard(app, "Old name"), undefined);
+  assert.equal(tableEntryOf(app, t.meta.id).table.meta.name, "New name");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: Export downloads a .shadows-table.json that reads as a table, and clears Home's marker", async () => {
+  const app = boot({ storage: GM_ON });
+  const downloads = withDownloads(app);
+  runTable(app, "Export me");
+  const names = [];
+  app.window.HTMLAnchorElement.prototype.click = function () { names.push(this.download); };
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  assert.equal(downloads.length, 1);
+  assert.match(names[0], /^Export_me\.shadows-table\.json$/);
+  assert.equal(app.window.eval("Engine.fileKind(" + JSON.stringify(await tableFile(downloads[0])) + ")"), "table");
+  tableHome(app);
+  assert.doesNotMatch(tableCard(app, "Export me").textContent, /not exported/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: importing a file opens a table, a character its sheet, and a pack nothing; neither kind becomes the other", async () => {
+  const app = boot({ storage: GM_ON });
+  withDownloads(app);
+  const t = Engine.newTable("Imported"); Engine.addTableNote(t, { title: "Hello", text: "there" });
+  await importFile(app, t);
+  assert.equal(app.window.eval("S.screen"), "table");
+  assert.equal(app.$("[data-ntitle]").value, "Hello");
+  assert.equal(charKeys(app).length, 0, "a table file wrote a character");
+  tableHome(app);
+  assert.doesNotMatch(tableCard(app, "Imported").textContent, /not exported/, "a table just opened from its file says it isn't exported");
+  await importFile(app, Engine.migrate(named("Vex Morrow")));
+  assert.equal(app.window.eval("S.screen"), "sheet");
+  assert.equal(charKeys(app).length, 1);
+  assert.equal(tableKeys(app).length, 1, "a character file wrote a table");
+  sheetHome(app);
+  await importFile(app, { meta: { kind: "shadows-pack" } });
+  assert.match(app.$("#undotoast").textContent, /isn't a character or a table/);
+  assert.equal(charKeys(app).length, 1); assert.equal(tableKeys(app).length, 1);
+  const newer = JSON.parse(JSON.stringify(t));
+  newer.meta.tableSchemaVersion = "0.2";
+  await importFile(app, newer);
+  assert.match(app.$("#undotoast").textContent, /newer version of the app/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: an older copy of a saved table asks; a newer one replaces silently", async () => {
+  const [t] = seedTable("Saved", { updated: "2026-10-05T12:00:00.000Z" });
+  t.notes.push({ id: "N-AAAAAAAA", title: "saved", text: "", created: null, updated: null });
+  const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T12:00:00.000Z", exported: null }, ...GM_ON } });
+  const downloads = withDownloads(app);
+  const older = JSON.parse(JSON.stringify(t)); older.meta.updated = "2026-10-04T09:00:00.000Z"; older.notes[0].title = "older";
+  await importFile(app, older);
+  assert.ok(app.$("#modal[open]"), "an older copy replaced the saved table without asking");
+  assert.match(app.$("#modal").textContent, /older copy of Saved/);
+  app.click("#modal [data-modalclose]");
+  assert.equal(tableEntryOf(app, t.meta.id).table.notes[0].title, "saved", "Cancel replaced it");
+  await importFile(app, older);
+  app.click("#modal [data-replaceexport]");
+  assert.equal(downloads.length, 1);
+  assert.equal((await tableFile(downloads[0])).notes[0].title, "saved", "Export first downloaded the wrong copy");
+  assert.equal(tableEntryOf(app, t.meta.id).table.notes[0].title, "older", "the older copy didn't open");
+  tableHome(app);
+  const newer = JSON.parse(JSON.stringify(t)); newer.meta.updated = "2026-10-06T09:00:00.000Z"; newer.notes[0].title = "newer";
+  await importFile(app, newer);
+  assert.equal(app.$("#modal[open]"), null, "a newer copy asked");
+  assert.equal(tableEntryOf(app, t.meta.id).table.notes[0].title, "newer");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: Remove asks, and Export, then remove downloads the table before it goes", async () => {
+  const [t, storage] = seedTable("Doomed");
+  const app = boot({ storage: { ...storage, ...GM_ON } });
+  const downloads = withDownloads(app);
+  tableCard(app, "Doomed").querySelector("[data-tremove]").click();
+  assert.ok(app.$("#modal[open]"));
+  assert.match(app.$("#modal").textContent, /only copy/);
+  app.click("#modal [data-modalclose]");
+  assert.ok(tableCard(app, "Doomed"), "Cancel removed it");
+  tableCard(app, "Doomed").querySelector("[data-tremove]").click();
+  app.click("#modal [data-removeexport]");
+  assert.equal(downloads.length, 1);
+  assert.equal((await tableFile(downloads[0])).meta.name, "Doomed");
+  assert.equal(tableCard(app, "Doomed"), undefined);
+  assert.equal(app.window.localStorage.getItem("shadows.table.v1." + t.meta.id), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: a character and a table in one browser each show only their own list", () => {
+  const vex = Engine.migrate(named("Vex Morrow"));
+  const [, storage] = seedTable("Tuesday");
+  const app = boot({ storage: { ...storage, ...GM_ON, ["shadows.char.v1." + vex.meta.id]: { ch: vex, section: "main", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  assert.deepEqual(app.$$("#main .roster:not(.tables) .roster-name").map(n => n.textContent), ["Vex Morrow"]);
+  assert.deepEqual(app.$$("#main .tables .roster-name").map(n => n.textContent), ["Tuesday"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 171: a tap on a table card opens it, and its buttons only do their own thing", () => {
+  const [, storage] = seedTable("Tuesday");
+  const app = boot({ storage: { ...storage, ...GM_ON } });
+  withDownloads(app);
+  tableCard(app, "Tuesday").querySelector("[data-texport]").click();
+  assert.equal(app.window.eval("S.screen"), "home", "Export opened the table");
+  tableCard(app, "Tuesday").querySelector(".roster-meta").click();
+  assert.equal(app.window.eval("S.screen"), "table");
+});
+
+test("Decision 173: with the switch off, a table can't be opened onto the screen", () => {
+  const app = boot();
+  app.window.eval('S = { screen:"table", ch:null, table:Engine.newTable("x"), tsection:"notes" }; renderMain();');
+  assert.equal(app.window.eval("S.screen"), "home");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 164: Create lands focus on New note and Rename's Save on the header's menu, never <body>", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Focus table");
+  assert.ok(app.doc.activeElement.hasAttribute("data-tnew"), "after Create focus isn't on New note");
+  app.click("[data-menu-toggle]"); app.click("[data-trename]");
+  app.$("#tbl-name").value = "Renamed";
+  app.click("#modal [data-nameyes]");
+  assert.notEqual(app.doc.activeElement, app.doc.body, "after Rename focus fell to <body>");
+  assert.ok(app.doc.activeElement.hasAttribute("data-menu-toggle"), "after Rename focus isn't on the header's menu");
+  assert.deepEqual(app.errors, []);
+});
+
+test("a long table name wraps: the title carries overflow-wrap, as the roster's name does", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "A".repeat(40));
+  const css = wizCss();
+  assert.ok(app.$("h1.step-title").classList.contains("tbl-title"));
+  assert.match(css, /.tbl-title{[^}]*overflow-wrap:anywhere/);
+});

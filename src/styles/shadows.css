@@ -1138,3 +1138,8 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
    enough to pin (Decision 160), and only until it's pinned. */
 .main-pin{display:none}
 @media (min-width:1280px){ body:not(.vitals-pinned) .app.sheet-mode .main-pin{display:flex; justify-content:flex-end; margin:-4px 0 8px} }
+
+/* GM mode (Decision 171): a table's note is a plain card, its fields the card's width. */
+.tbl-note{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:13px 16px; margin-bottom:12px; min-width:0}
+.tbl-note textarea{min-height:120px}
+.tbl-title{overflow-wrap:anywhere}

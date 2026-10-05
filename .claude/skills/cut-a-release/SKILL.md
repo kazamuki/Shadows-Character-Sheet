@@ -11,6 +11,12 @@ the release workflow. The version itself was bumped when the work was done
 
 ## 1. On a branch from an up-to-date main
 
+First, check the switches: every `FEATURES` entry in `src/ui/shared.js` is
+`false` unless **this release is that feature's launch** (Decision 173), in
+which case its pending changelog lines are already in the `[Unreleased]`
+section (GM mode's live in `docs/plans/gm-mode/changelog-pending.md`; the
+build test enforces it).
+
 ```bash
 npm run release:prep            # "## [Unreleased] — app X" → "## vX — <today>", regenerates What's new
 ```
