@@ -850,13 +850,35 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.1",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.2",       // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
-  notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ]
+  notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
+  cast: [ {                          // 0.2: cast (Decisions 174–176)
+    id: "C-XXXXXXXX",                // unique in the table; a bad or repeated one is replaced
+    name: "", flavor: "", description: "",
+    origin: "", npcRoles: [ "" ], enemyRole: "",   // the GM's text until S9's pack names them (174)
+    tier: null,                      // a whole number from 1, or null
+    motivation: "", resources: "", line: "", ifPushed: "", gmNote: "",
+    status: "alive",                 // alive | dead | missing | gone ("Out of the picture": alive, out of the story)
+    block: null,                     // or a stat block, below
+    created: "<ISO>", updated: "<ISO>"
+  } ]
   // Keys the gate doesn't know are kept, at any level, and never read.
 }
+
+StatBlock: {                         // Decision 175: what the Codex prints, nothing derived
+  stats:    { BOD: null, … },        // every stat id in the data; a whole number or null
+  authored: { TOL: null, WILL: null },   // every sumOfModifiers derived id; as authored, the formula's value is read, never stored
+  skills:   [ { skill: null, name: "", total: null } ],   // skill: the data's id when it is one, else null
+  armor: [ "" ], gear: [ "" ],       // text lines (S10 links the catalog)
+  traits: [ { name: "", text: "" } ]
+}
 ```
+
+Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
+one). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -3782,10 +3804,11 @@ The browser keeps each table as `shadows.table.v1.<id>` =
        - Tables inside the roster's keys: it's keyed by TAG, and every roster reader would need a branch.
        - A second Import button: two buttons for one action, and the wrong pick gets an error instead of the file.
        - *Run a table* among the hero's buttons: it puts a GM's action in front of every player.
-       - Undo on the table now: notes are the only content and they're text. S8 is the first session whose edits are numbers, and it decides the table's audit trail.
+       - Undo on the table now: notes are the only content and they're text.
      - **Replaces:** Decision 141 in part, with GM mode on: Home lists tables too, and its Import reads a table file.
      - **Revisit if:** storage fills (GQ9), a GM loses work to a deleted note, or S8 designs the table's audit trail.
      - **Built:** as 170.
+     → **Superseded in part by Decision 176** — S10, not S8, decides the table's audit trail.
 
 172. **GM mode's interface is a fifth classic script, `src/ui/gm.js`, after `sheet.js`; its engine stays in `engine.js`.**
      *2026-10-05 · Ken + Claude · Touches: src/ui/gm.js, script order, index.html, build.test.mjs, BROWSER_JS, CODE_FILES, Decision 86, engine.js, Tables section, harness*
@@ -3811,6 +3834,44 @@ The browser keeps each table as `shadows.table.v1.<id>` =
      - **Replaces:** nothing numbered. It replaces the plan's §7 (one long branch), which was never a decision.
      - **Revisit if:** a second unfinished feature needs hiding at the same time, or a player finding `?gm=on` turns out to matter.
      - **Built:** as 170.
+
+174. **A table keeps a cast: one record per NPC, from a name to a stat block, whose Codex vocabulary is the GM's text until a pack names it.**
+     *2026-10-05 · Ken + Claude · Touches: cast, cast member, table.cast, C- id, quick-add, origin, npcRoles, enemyRole, tier, motivation, resources, line, ifPushed, gmNote, status, table schema 0.2, migrateTable, W29, GQ6, GQ10*
+     - **Decided:** Table schema 0.2 adds `cast: [ … ]` (shape in SCHEMA §3). A member has an id (`C-` and eight characters), a name and every §4e text field, `origin`, `npcRoles` (a list) and `enemyRole` as text, `tier` a whole number or null, `status` one of alive, dead, missing or gone, and `block`, null or a stat block (175). `migrateTable()`'s first step gives a 0.1 table an empty cast; every later load coerces each member as it does a note.
+     - **Why:** Scott's answers put the cast first (§1a). The Codex's origins, roles and tiers are confidential and ship in S9's pack (GQ10), so the public app can't list them; text now, matched to the pack by name in S9, means a GM's cast never waits on the pack and never changes under it.
+     - **Rejected:**
+       - Waiting for S9's pack to give the vocabulary: the cast is the most-wanted thing, and a GM writes NPCs who belong to no entry.
+       - Ids for origin and roles now, from a list in the data: the list is the Codex's, which the public repo can't hold.
+       - Interactions, history and affiliation in the same record now: each needs sessions (S5) or factions (S7) to mean anything (S8b).
+     - **Replaces:** nothing. 170 foresaw it: each later record is added by its own session.
+     - **Revisit if:** S9's pack names a vocabulary the GM's text can't match, or S8b's interactions need a field this lacks.
+     - **Built:** table schema 0.2; PR #115; log 2026-10-05 (the cast).
+
+175. **An NPC's stat block stores what the Codex prints: stats and skill totals as authored, TOL and WILL as authored, and Health and the bonuses derived.**
+     *2026-10-05 · Ken + Claude · Touches: stat block, block.stats, block.authored, skill totals, armor lines, gear lines, traits, Engine.npc, Health Levels, HP, statMod, TOL, WILL, constraint 7, GQ6, Decision 98*
+     - **Decided:** A block keys `stats` by the data's stats and `authored` by the data's `sumOfModifiers` derived stats (TOL and WILL today), each a whole number or null; `skills` are `{ skill, name, total }` (`skill` the data's id when the name matches, else null); armor and gear are text lines; traits are `{ name, text }`. `Engine.npc(block)` derives Health Levels and HP from BOD by the players' rule, each stat's bonus by `statMod`, and each authored stat's formula value, and lists what's blank. It stores nothing and warns about nothing.
+     - **Why:** the Codex prints totals, not ranks, and prints TOL and WILL below their formula on seven of eleven roster NPCs; storing the formula would rewrite Scott's NPCs (GQ6's default). Health it doesn't author differently, so it's derived as a character's is (constraint 7).
+     - **Rejected:**
+       - TOL and WILL derived: changes the Codex's own numbers.
+       - A warning under the formula: fires on most of Scott's NPCs.
+       - Skill ranks plus the derivation: the Codex has no ranks to store.
+       - Armor and gear from the catalog now: `openCatalog` is the character's, and nothing reads an NPC's PROT before S10.
+       - A completeness tier ("partial", "full"): a block is a block with blanks.
+     - **Replaces:** nothing. It is a deliberate exception to constraint 7's letter for TOL and WILL, which the Codex authors.
+     - **Revisit if:** GQ6 is answered as a formula or a floor, or S10 needs armor numbers.
+     - **Built:** as 174.
+
+176. **The table opens on its Cast tab: quick-add at the top, a filtered list, and a page per member; a cast still has no undo, and Delete asks.**
+     *2026-10-05 · Ken + Claude · Touches: Cast tab, TABLE_SECTIONS, quick-add, cast list, cast filters, member page, data-cast, Delete, table undo, Decision 171, W29, GQ1*
+     - **Decided:** `TABLE_SECTIONS` gains **Cast**, first; a table opens on it. Quick-add takes a name (and an optional line), adds on Enter or **Add**, and keeps the keyboard in the field. The list filters by a search over name, line, origin and roles, and by status (alive by default). A member's page edits every field in place and saves as it's typed; Delete asks first. Nothing on a table is undoable yet: S10 is the first session where numbers change in play (damage), and it decides the table's audit trail.
+     - **Why:** mid-session, a GM has one hand and three seconds (§1a); quick-add is the reason the cast is used. Typed fields are the GM's authoring, not play, and the audit trail is for play.
+     - **Rejected:**
+       - Notes first: the cast is what Scott runs the table from.
+       - A modal for quick-add: one more press, and it hides the list it adds to.
+       - Undo now, by the character's structural diff: a second audit to design before anything at the table changes in play.
+     - **Replaces:** Decision 171 in part: S10, not S8, decides the table's audit trail.
+     - **Revisit if:** a GM loses work to a deleted member, or GQ1's tab order says otherwise.
+     - **Built:** as 174.
 
 ## 5. Open Flags
 

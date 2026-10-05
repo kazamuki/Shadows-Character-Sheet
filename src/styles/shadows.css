@@ -1143,3 +1143,31 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .tbl-note{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:13px 16px; margin-bottom:12px; min-width:0}
 .tbl-note textarea{min-height:120px}
 .tbl-title{overflow-wrap:anywhere}
+/* The cast (Decisions 174–176). A GM's text is a heading or a meta line here,
+   so every one of them wraps; the stat grid wraps to the screen. */
+.cast-add, .cast-filters{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px; align-items:end}
+.cast-add .btn{justify-self:start; margin-bottom:14px}
+.cast-filters{margin-bottom:6px}
+.cast-card{cursor:pointer; min-width:0}
+.cast-open{background:none; border:0; padding:0; color:var(--text); font:inherit; font-weight:600; font-size:1rem; text-align:left; cursor:pointer; max-width:100%; overflow-wrap:anywhere}
+.cast-open:hover{color:var(--cyan)}
+.cast-line, .cast-meta{overflow-wrap:anywhere; min-width:0}
+.cast-line{margin-top:3px; font-style:italic; color:var(--dim)}
+.cast-title, .cast-h{overflow-wrap:anywhere}
+.cast-h{margin:26px 0 10px; font-size:1.1rem}
+.cast-codex{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px}
+.cast-health{margin:0 0 10px; overflow-wrap:anywhere}
+.cast-stats{display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:10px; margin-bottom:16px}
+.cast-stat{display:flex; flex-direction:column; gap:4px; min-width:0}
+.cast-stat-id{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+.cast-fig{font-family:var(--mono); font-size:.8rem; color:var(--dim); min-height:1.2em; overflow-wrap:anywhere}
+.cast-lines{margin-bottom:16px}
+.cast-sub{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin-bottom:5px}
+.cast-row{display:flex; gap:8px; align-items:center; margin-bottom:8px; min-width:0}
+.cast-row input[type=text]{flex:1 1 0; min-width:0}
+.cast-row .cast-total{flex:none; width:84px; text-align:center}
+.cast-row .btn{flex:none}
+.cast-trait{display:grid; gap:8px; margin-bottom:12px; justify-items:start}
+.cast-trait input, .cast-trait textarea{min-width:0}
+.cast-trait textarea{min-height:80px}
+.cast-delete{margin-top:28px}

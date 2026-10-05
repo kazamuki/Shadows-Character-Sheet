@@ -2856,13 +2856,14 @@ test("the code guards read every engine and UI script, gm.js included (Decision 
   assert.ok(!CODE_FILES.some(f => f.includes("theme-init")));
 });
 
-test("newTable stamps kind, a TBL- id, the name, schema 0.1 and no notes", () => {
+test("newTable stamps kind, a TBL- id, the name, schema 0.2, no notes and no cast", () => {
   const t = Engine.newTable("Tuesday");
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.1");
+  assert.equal(t.meta.tableSchemaVersion, "0.2");
   assert.equal(t.notes.length, 0);
+  assert.equal(JSON.stringify(t.cast), "[]");
   for (const k of ["created", "updated"]) assert.ok(Number.isFinite(Date.parse(t.meta[k])));
   assert.notEqual(Engine.newTable().meta.id, Engine.newTable().meta.id);
   assert.equal(Engine.newTable().meta.name, "");
@@ -2926,21 +2927,21 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.1", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.2" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.2");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.2", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.3" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.3");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.2");
-  for (const v of ["0.1", "0.0", "junk", undefined]) {
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.3");
+  for (const v of ["0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.1", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.2", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
 
 test("migrateTable keeps keys it doesn't know, and never reads them", () => {
-  const m = Engine.migrateTable({ cast: [{ id: "x", hp: 3 }], meta: { future: 1 }, notes: [{ extra: true }] });
-  assert.deepEqual(JSON.parse(JSON.stringify(m.cast)), [{ id: "x", hp: 3 }]);
+  const m = Engine.migrateTable({ future: 2, meta: { future: 1 }, notes: [{ extra: true }] });
+  assert.equal(m.future, 2);
   assert.equal(m.meta.future, 1);
   assert.equal(m.notes[0].extra, true);
 });
@@ -2966,4 +2967,196 @@ test("table notes: add, edit, remove stamp updated, coerce text, and refuse an u
   assert.ok(Engine.removeTableNote(t, a.id).ok);
   assert.equal(t.notes.length, 0); assert.ok(t.meta.updated > "2001");
   assert.equal(JSON.stringify(Engine.removeTableNote(t, a.id)), JSON.stringify({ ok: false, why: "No such note." }));
+});
+
+// ── The cast (Decisions 174–176) ──────────────────────────────────────
+// A synthetic NPC only: Dez, a courier. Nothing here is the Codex's.
+const STAT_IDS = D.stats.map(s => s.id);
+const AUTHORED = D.derived.filter(d => d.type === "sumOfModifiers");
+const dez = (over = {}) => {
+  const stats = {}; for (const id of STAT_IDS) stats[id] = 5;
+  return { stats, authored: {}, skills: [], armor: [], gear: [], traits: [], ...over };
+};
+const plain = x => JSON.parse(JSON.stringify(x));
+const eq = (a, b, m) => assert.deepEqual(plain(a), plain(b), m);
+
+test("a 0.1 table migrates to 0.2 with an empty cast and its notes untouched", () => {
+  const old = Engine.newTable("Old");
+  Engine.addTableNote(old, { title: "A", text: "one" });
+  Engine.addTableNote(old, { title: "B", text: "two" });
+  old.meta.tableSchemaVersion = "0.1"; delete old.cast;
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.2");
+  eq(m.cast, []);
+  assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
+  assert.equal(Engine.tableCheck(m).length, 0);
+});
+
+test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.3" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.3");
+  assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
+  assert.equal(Engine.tableCheck(m).length, 1);
+});
+
+test("migrateTable is total and typed over cast junk, and idempotent", () => {
+  eq(Engine.migrateTable({ cast: "x" }).cast, []);
+  const m = Engine.migrateTable({ cast: [null, 5, "x", {},
+    { name: 5, npcRoles: "Fixer", tier: "3", status: "zombie", block: "x" },
+    { block: { stats: { BOD: "6", REF: 6.5, MOB: {} }, skills: [null, { name: 5, total: "7", skill: "not-a-skill" }],
+               armor: [5, "Vest"], traits: [{}] } }] });
+  assert.equal(m.cast.length, 3);
+  for (const n of m.cast) {
+    for (const k of ["name", "flavor", "description", "origin", "enemyRole", "motivation", "resources", "line", "ifPushed", "gmNote"]) assert.equal(typeof n[k], "string", k);
+    assert.match(n.id, /^C-[0-9A-HJKMNP-TV-Z]{8}$/);
+    assert.equal(n.status, "alive");
+  }
+  const a = m.cast[1];
+  assert.equal(a.name, ""); eq(a.npcRoles, ["Fixer"]); assert.equal(a.tier, 3); assert.equal(a.block, null);
+  const b = m.cast[2].block;
+  assert.equal(b.stats.BOD, 6); assert.equal(b.stats.REF, null); assert.equal(b.stats.MOB, null);
+  assert.equal(b.skills.length, 1);
+  eq(plain(b.skills[0]), { name: "", total: 7, skill: null });
+  eq(b.armor, ["Vest"]);
+  eq(plain(b.traits), [{ name: "", text: "" }]);
+  assert.equal(JSON.stringify(Engine.migrateTable(m)), JSON.stringify(m));
+});
+
+test("a tier is a whole number from 1, or nothing", () => {
+  for (const [v, want] of [["3", 3], [3, 3], [1, 1], [0, null], [-1, null], [2.5, null], ["x", null], ["", null], [null, null], [{}, null]])
+    assert.equal(Engine.migrateTable({ cast: [{ tier: v }] }).cast[0].tier, want, JSON.stringify(v));
+});
+
+test("a skill row keeps its data id when it is one", () => {
+  const id = D.skills[0].id;
+  const m = Engine.migrateTable({ cast: [{ block: { skills: [{ name: "x", skill: id }] } }] });
+  assert.equal(m.cast[0].block.skills[0].skill, id);
+});
+
+test("two members sharing an id: the first keeps it; a TAG- id is replaced", () => {
+  const m = Engine.migrateTable({ cast: [{ id: "C-ABCDEFGH" }, { id: "C-ABCDEFGH" }, { id: "TAG-0000-0000-0000" }] });
+  assert.equal(m.cast[0].id, "C-ABCDEFGH");
+  assert.notEqual(m.cast[1].id, "C-ABCDEFGH");
+  assert.match(m.cast[2].id, /^C-/);
+  assert.equal(new Set(m.cast.map(n => n.id)).size, 3);
+});
+
+test("a cast member keeps keys it doesn't know, in a block and in stats", () => {
+  const m = Engine.migrateTable({ cast: [{ future: 1, block: { extra: 2, stats: { LUCKY: 3 } } }] });
+  assert.equal(m.cast[0].future, 1); assert.equal(m.cast[0].block.extra, 2); assert.equal(m.cast[0].block.stats.LUCKY, 3);
+});
+
+test("a __proto__ key at the cast, member, block and stats levels pollutes nothing", () => {
+  const m = Engine.migrateTable(JSON.parse('{"cast":[{"__proto__":{"pwn":1},"block":{"__proto__":{"pwn":1},"stats":{"__proto__":{"pwn":1}},"authored":{"__proto__":{"pwn":1}},"skills":[{"__proto__":{"pwn":1}}]}}],"__proto__":{"pwn":1}}'));
+  assert.equal(({}).pwn, undefined);
+  const n = m.cast[0];
+  assert.equal(n.pwn, undefined); assert.equal(n.block.pwn, undefined); assert.equal(n.block.stats.pwn, undefined);
+  assert.equal(n.block.skills[0].pwn, undefined);
+});
+
+test("Engine.npc: Health from BOD by the players' rule, past 10 included", () => {
+  const hl = D.resources.healthLevels;
+  const at = bod => Engine.npc(dez({ stats: { ...dez().stats, BOD: bod } })).health;
+  eq(at(6), { levels: 6, hpPer: hl.hpPerLevel, total: 6 * hl.hpPerLevel });
+  eq(at(12), { levels: hl.maxLevels, hpPer: hl.hpPerLevel + 2, total: hl.maxLevels * (hl.hpPerLevel + 2) });
+  assert.equal(at(null), null);
+});
+
+test("Engine.npc: Health agrees with health() for a character of the same BOD", () => {
+  const ch = Engine.newCharacter();
+  for (const bod of [4, 7, 12]) {
+    ch.stats.BOD.base = bod;
+    const want = Engine.health(ch);
+    const got = Engine.npc(dez({ stats: { ...dez().stats, BOD: Engine.statValue(ch, "BOD") } })).health;
+    assert.equal(got.levels, want.levels, String(bod)); assert.equal(got.hpPer, want.hpPer, String(bod));
+  }
+});
+
+test("Engine.npc: each stat's mod is statMod; ids come from the data", () => {
+  const n = Engine.npc(dez());
+  eq(Object.keys(n.stats), STAT_IDS);
+  for (const id of STAT_IDS) assert.equal(n.stats[id].mod, Engine.statMod(5), id);
+  const blank = Engine.npc(dez({ stats: {} }));
+  for (const id of STAT_IDS) { assert.equal(blank.stats[id].value, null); assert.ok(blank.blanks.includes(id), id); }
+});
+
+test("Engine.npc: an authored stat reads as stored, with the formula's value beside it", () => {
+  assert.ok(AUTHORED.length > 0);
+  for (const d of AUTHORED) {
+    const stats = dez().stats;
+    const want = Math.max(d.floor ?? -Infinity, d.base + d.inputs.reduce((s, id) => s + Engine.statMod(stats[id]), 0));
+    const n = Engine.npc(dez({ authored: { [d.id]: want + 2 } }));
+    assert.equal(n.authored[d.id].value, want + 2);
+    assert.equal(n.authored[d.id].formula, want);
+    assert.equal(Engine.npc(dez({ stats: { ...stats, [d.inputs[0]]: null } })).authored[d.id].formula, null, d.id);
+  }
+});
+
+test("Engine.npc is total", () => {
+  for (const v of [null, undefined, "x", 5, [], {}, { stats: 5 }, { stats: { BOD: "6" } }, { skills: "x" }]) {
+    const n = Engine.npc(v);
+    eq(Object.keys(n.stats), STAT_IDS);
+    assert.ok(Array.isArray(n.blanks));
+  }
+  assert.equal(Engine.npc({ stats: { BOD: "6" } }).health.levels, 6);
+  const cyc = {}; cyc.self = cyc; assert.doesNotThrow(() => Engine.npc(cyc));
+});
+
+test("constraint 7: a block stores no Health, HP, bonus or formula", () => {
+  const t = Engine.newTable("T");
+  const { id } = Engine.addCastMember(t, { name: "Dez" });
+  Engine.setCastBlock(t, id, dez({ authored: { TOL: 1 } }));
+  Engine.npc(t.cast[0].block);
+  const text = JSON.stringify(Engine.migrateTable(t));
+  for (const k of ["health", "hp", "levels", "hpPer", "mod", "formula"]) assert.ok(!new RegExp('"' + k + '"', "i").test(text), k);
+  eq(Object.keys(t.cast[0].block).sort(), ["armor", "authored", "gear", "skills", "stats", "traits"]);
+});
+
+test("cast: add, edit, set a block, remove stamp updated, coerce, and refuse an unknown id", () => {
+  const t = Engine.newTable("C");
+  const old = "2000-01-01T00:00:00.000Z";
+  t.meta.updated = old;
+  const a = Engine.addCastMember(t, { name: "Dez", line: "runs the café" });
+  assert.ok(a.ok); assert.equal(t.cast[0].id, a.id); assert.equal(t.cast[0].flavor, "runs the café"); assert.equal(t.cast[0].line, "");
+  assert.equal(t.cast[0].status, "alive"); assert.equal(t.cast[0].block, null);
+  assert.ok(t.meta.updated > "2001");
+  const b = Engine.addCastMember(t, { name: 7 });
+  assert.equal(t.cast[0].id, b.id, "newest first"); assert.equal(t.cast[0].name, "");
+  t.meta.updated = old; t.cast[1].updated = old;
+  assert.ok(Engine.editCastMember(t, a.id, { name: "Dez R", npcRoles: "Fixer", tier: "4", status: "gone", origin: {} }).ok);
+  const n = t.cast[1];
+  assert.equal(n.name, "Dez R"); eq(n.npcRoles, ["Fixer"]); assert.equal(n.tier, 4); assert.equal(n.status, "gone"); assert.equal(n.origin, "");
+  assert.ok(n.updated > "2001" && t.meta.updated > "2001");
+  assert.ok(Engine.editCastMember(t, a.id, { status: "zombie", tier: 0 }).ok);
+  assert.equal(n.status, "gone"); assert.equal(n.tier, null);
+  t.meta.updated = old;
+  assert.ok(Engine.setCastBlock(t, a.id, { stats: { BOD: "6" } }).ok);
+  assert.equal(n.block.stats.BOD, 6); assert.ok(t.meta.updated > "2001");
+  assert.ok(Engine.setCastBlock(t, a.id, null).ok); assert.equal(n.block, null);
+  const no = JSON.stringify({ ok: false, why: "No such cast member." });
+  for (const f of [() => Engine.editCastMember(t, "C-NOPE0000", {}), () => Engine.setCastBlock(t, "C-NOPE0000", null), () => Engine.removeCastMember(t, "C-NOPE0000")])
+    assert.equal(JSON.stringify(f()), no);
+  t.meta.updated = old;
+  assert.ok(Engine.removeCastMember(t, a.id).ok);
+  assert.equal(t.cast.length, 1); assert.ok(t.meta.updated > "2001");
+});
+
+test("castFilter: q over name, line, origin and roles; status all or one", () => {
+  const t = Engine.newTable("F");
+  const mk = (f, e) => { const r = Engine.addCastMember(t, f); Engine.editCastMember(t, r.id, e); };
+  mk({ name: "Dez", line: "a courier" }, { npcRoles: ["Fixer"], origin: "Born here" });
+  mk({ name: "Moth" }, { status: "dead" });
+  mk({ name: "Orla" }, { status: "gone" });
+  const names = f => Engine.castFilter(t, f).map(n => n.name).sort().join();
+  assert.equal(names({}), "Dez,Moth,Orla");
+  assert.equal(names({ status: "all" }), "Dez,Moth,Orla");
+  assert.equal(names({ status: "alive" }), "Dez");
+  assert.equal(names({ status: "dead" }), "Moth");
+  assert.equal(names({ status: "gone" }), "Orla");
+  assert.equal(names({ q: "FIXER" }), "Dez");
+  assert.equal(names({ q: "courier" }), "Dez");
+  assert.equal(names({ q: "born" }), "Dez");
+  assert.equal(names({ q: " mo " }), "Moth");
+  assert.equal(names({ q: "mo", status: "alive" }), "");
+  eq(Engine.castFilter(null, {}), []);
 });

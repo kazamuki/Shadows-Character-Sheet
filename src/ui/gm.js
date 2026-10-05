@@ -27,7 +27,7 @@ function readTableEntry(key){
 }
 function savedTable(id){ return Engine.isTableId(id) ? readTableEntry(tableKey(id)) : null; }
 function writeTableEntry(id, table, section, changed, exported){
-  localStorage.setItem(tableKey(id), JSON.stringify({ table, section:section||"notes", changed, exported:exported||null }));
+  localStorage.setItem(tableKey(id), JSON.stringify({ table, section:section||TABLE_SECTIONS[0].id, changed, exported:exported||null }));
 }
 function saveTable(){
   const t=S.table, id=t && t.meta && t.meta.id; if (!Engine.isTableId(id)) return;
@@ -196,7 +196,7 @@ function bindGmHome(tables){
   if (!featureOn("gm")) return;
   const main=$("main"), byId = id => tables.find(e=>e.id===id);
   const run=$("btn-run-table");
-  if (run) run.onclick=()=>openNameModal({ title:"Run a table", yes:"Create", then:name=>{ openTable(Engine.newTable(name)); const b=document.querySelector("[data-tnew]"); if (b) b.focus(); } });
+  if (run) run.onclick=()=>openNameModal({ title:"Run a table", yes:"Create", then:name=>{ openTable(Engine.newTable(name)); const b=document.querySelector("[data-cadd-name]"); if (b) b.focus(); } });
   const open = e => e && openTable(Engine.migrateTable(clone(e.table)), e.section);
   main.querySelectorAll("[data-topen]").forEach(b=>b.onclick=()=>open(byId(b.dataset.topen)));
   main.querySelectorAll("[data-texport]").forEach(b=>b.onclick=()=>{ exportTable(byId(b.dataset.texport).table); renderHome(); });
@@ -206,7 +206,8 @@ function bindGmHome(tables){
 }
 
 // ── The table screen ───────────────────────────────────────────────────
-const TABLE_SECTIONS = [{ id:"notes", label:"Notes", ui:"tab_notes" }];
+// The cast is first: a table opens on it (Decision 176).
+const TABLE_SECTIONS = [{ id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
 // A twin of the sheet's tabButtonsHtml, with its own attribute, so the
 // sheet's [data-sec] binder never sees these.
 function tableTabButtonsHtml(){
@@ -222,7 +223,8 @@ function renderTableChrome(){
   if (!ctx || !nav) return;
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; window.scrollTo(0,0); update(); });
+  // The tab you're on also takes you back from a member's page to the list.
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast") S.castOpen=null; window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
@@ -246,23 +248,33 @@ function noteCardHtml(n){
     <label class="field"><span>Note</span><textarea data-ntext="${id}" placeholder="Leads, debts, names to remember.">${esc(n.text)}</textarea></label>
     <button class="btn sm danger" data-ndel="${id}">Delete</button></div>`;
 }
+function notesTabHtml(t){
+  return `<p><button class="btn primary" data-tnew>New note</button></p>
+    ${t.notes.length ? t.notes.map(noteCardHtml).join("")
+      : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}`;
+}
 function renderTable(){
   // Only reachable with the switch on: with it off, Home draws instead.
   if (!featureOn("gm") || !S.table){ S=homeState(); return renderHome(); }
   closeVitals(); renderDrawer(); closePopover(false);
+  if (!TABLE_SECTIONS.some(s=>s.id===S.tsection)) S.tsection=TABLE_SECTIONS[0].id;
   const t=S.table, main=$("main");
   const made=Date.parse(t.meta.created);
   const failed = saveFailed ? `<div class="import-issues" role="alert">${issuesHtml([{level:"error", msg:"This browser couldn't save your last change. Export the table now so nothing is lost."}])}</div>` : "";
-  main.innerHTML = failed +
+  const onPage = S.tsection==="cast" && castOpenMember();
+  const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
-    <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>
-    <p><button class="btn primary" data-tnew>New note</button></p>
-    ${t.notes.length ? t.notes.map(noteCardHtml).join("")
-      : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}`;
-  bindTable();
+    <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
+  const body = S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t)) : notesTabHtml(t);
+  // A redraw a press causes keeps the keyboard's place (Decision 164).
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]"]);
 }
 function bindTable(){
   const main=$("main");
+  if (main.querySelector("[data-tnew]")) bindNotes(main);
+  else if (S.tsection==="cast") bindCast(main);
+}
+function bindNotes(main){
   const titleOf = id => main.querySelector(`[data-ntitle="${id}"]`);
   // Saved on `input`, not `change`: a GM who types and goes Home at once
   // would otherwise lose the last words. No redraw while typing.
@@ -283,4 +295,195 @@ function bindTable(){
         if (el) el.focus();
       } });
   });
+}
+
+// ── The cast (Decisions 174–176) ───────────────────────────────────────
+// State is on S, so it goes with the open table and no further: S.castOpen
+// (a member's id, or null for the list), S.castQ and S.castStatus (the filters).
+const CAST_STATUS_LABELS = { alive:"Alive", dead:"Dead", missing:"Missing", gone:"Out of the picture" };
+const CAST_FILTER_STATUSES = ["alive","all","dead","missing","gone"];
+const castStatusLabel = s => s==="all" ? "All" : CAST_STATUS_LABELS[s] || "Alive";
+const castFilterNow = () => ({ q:S.castQ||"", status:S.castStatus||"alive" });
+function castOpenMember(){ return S.castOpen ? S.table.cast.find(n=>n.id===S.castOpen) || null : null; }
+const numAttr = v => typeof v==="number" && Number.isFinite(v) ? v : "";
+const castSigned = n => n===0 ? "0" : signed(n);   // sheet.js's, with a zero
+const hasNumber = b => !!b && (Object.values(b.stats||{}).concat(Object.values(b.authored||{}), (b.skills||[]).map(k=>k.total)).some(v=>typeof v==="number"));
+
+function castCardHtml(n){
+  const id=esc(n.id);
+  const bits=[ n.origin, n.npcRoles.length ? n.npcRoles.join(" / ") : "", n.enemyRole ? `Enemy: ${n.enemyRole}` : "",
+    n.tier!==null ? `Tier ${n.tier}` : "", n.status!=="alive" ? castStatusLabel(n.status) : "", hasNumber(n.block) ? "Stat block" : ""
+  ].filter(Boolean).map(esc).join(" · ");
+  return `<li class="roster-card cast-card" data-ccard="${id}">
+    <button class="cast-open" data-copen="${id}">${esc(n.name.trim() || "Unnamed")}</button>
+    ${n.flavor ? `<div class="cast-line">${esc(n.flavor)}</div>` : ""}
+    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
+}
+function castListHtml(t){
+  if (!t.cast.length) return `<p class="step-note">Nobody yet. The city fills up fast.</p>`;
+  const list=Engine.castFilter(t, castFilterNow());
+  if (!list.length) return `<p class="step-note">No one matches.</p><p><button class="btn sm" data-cclear>Clear the filter</button></p>`;
+  return `<ul class="roster-list">${list.map(castCardHtml).join("")}</ul>`;
+}
+function castTabHtml(t){
+  const f=castFilterNow();
+  return `<div class="cast-add">
+      <label class="field"><span>Name</span><input type="text" data-cadd-name placeholder="Who did they meet?" autocomplete="off"></label>
+      <label class="field"><span>Who they are</span><input type="text" data-cadd-line placeholder="One line: who they are" autocomplete="off"></label>
+      <button class="btn primary" data-cadd>Add</button></div>
+    <div class="cast-filters">
+      <label class="field"><span>Search</span><input type="search" data-csearch placeholder="Search the cast" autocomplete="off" value="${esc(f.q)}"></label>
+      <label class="field"><span>Show</span><select data-cstatus>${CAST_FILTER_STATUSES.map(s=>`<option value="${s}"${s===f.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
+    </div>
+    <div data-castlist>${castListHtml(t)}</div>`;
+}
+
+// ── A member's page ──
+const castText = (n, key, label, ph, area) => `<label class="field"><span>${esc(label)}</span>${area
+  ? `<textarea data-cf="${key}" placeholder="${esc(ph||"")}">${esc(n[key])}</textarea>`
+  : `<input type="text" data-cf="${key}" value="${esc(n[key])}" placeholder="${esc(ph||"")}" autocomplete="off">`}</label>`;
+function castStatBlockHtml(n){
+  const b=n.block || {}, st=b.stats||{}, au=b.authored||{};
+  const num = (attr, v, label) => `<input type="number" step="1" inputmode="numeric" ${attr} value="${numAttr(v)}" aria-label="${esc(label)}">`;
+  const stats = D.stats.map(s=>`<div class="cast-stat"><span class="cast-stat-id">${esc(s.id)}</span>${num(`data-cstat="${esc(s.id)}"`, st[s.id], s.name||s.id)}<span class="cast-fig" data-cbonus="${esc(s.id)}"></span></div>`).join("");
+  const authored = D.derived.filter(d=>d.type==="sumOfModifiers").map(d=>`<div class="cast-stat"><span class="cast-stat-id">${esc(d.id)}</span>${num(`data-cauth="${esc(d.id)}"`, au[d.id], d.name||d.id)}<span class="cast-fig" data-cformula="${esc(d.id)}"></span></div>`).join("");
+  const skills = (b.skills||[]).map((k,i)=>`<div class="cast-row" data-cskill="${i}">
+      <input type="text" data-cskname="${i}" value="${esc(k.name)}" placeholder="Skill" aria-label="Skill name" autocomplete="off">
+      <input type="number" step="1" inputmode="numeric" data-csktotal="${i}" value="${numAttr(k.total)}" aria-label="Total" class="cast-total">
+      <button class="btn sm danger" data-cskdel="${i}" aria-label="Remove skill">Remove</button></div>`).join("");
+  const lines = (key, label) => `<div class="cast-lines"><span class="cast-sub">${esc(label)}</span>${(b[key]||[]).map((l,i)=>`<div class="cast-row" data-cline="${key}|${i}">
+      <input type="text" data-clinev="${key}|${i}" value="${esc(l)}" aria-label="${esc(label)} line" autocomplete="off">
+      <button class="btn sm danger" data-clinedel="${key}|${i}" aria-label="Remove line">Remove</button></div>`).join("")}
+      <button class="btn sm" data-clineadd="${key}">Add a line</button></div>`;
+  const traits = (b.traits||[]).map((k,i)=>`<div class="cast-trait" data-ctrait="${i}">
+      <input type="text" data-ctname="${i}" value="${esc(k.name)}" placeholder="Trait" aria-label="Trait name" autocomplete="off">
+      <textarea data-cttext="${i}" aria-label="Trait text" placeholder="What it does.">${esc(k.text)}</textarea>
+      <button class="btn sm danger" data-ctdel="${i}">Remove</button></div>`).join("");
+  return `<h2 class="cast-h">Stat block</h2>
+    <p class="cast-health" data-chealth-row hidden>Health <b data-chealth></b></p>
+    <div class="cast-stats">${stats}${authored}</div>
+    <div class="cast-lines"><span class="cast-sub">Skills</span>${skills}<button class="btn sm" data-cskadd>Add a skill</button></div>
+    ${lines("armor","Armor")}${lines("gear","Gear")}
+    <div class="cast-lines"><span class="cast-sub">Traits</span>${traits}<button class="btn sm" data-ctadd>Add a trait</button></div>`;
+}
+function castPageHtml(n){
+  return `<p><button class="btn sm" data-cback>Back to the cast</button></p>
+    <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
+    ${castText(n,"name","Name","Who did they meet?")}
+    ${castText(n,"flavor","Who they are","One line: who they are")}
+    ${castText(n,"description","Description","What you'd see.",true)}
+    <div class="cast-codex">
+      ${castText(n,"origin","Origin")}
+      <label class="field"><span>NPC roles</span><input type="text" data-cf="npcRoles" value="${esc(n.npcRoles.join(" / "))}" placeholder="Separate with / or ," autocomplete="off"></label>
+      ${castText(n,"enemyRole","Enemy role")}
+      <label class="field"><span>Tier</span><input type="number" step="1" min="1" inputmode="numeric" data-cf="tier" value="${numAttr(n.tier)}"></label>
+      <label class="field"><span>Status</span><select data-cf="status">${["alive","dead","missing","gone"].map(s=>`<option value="${s}"${s===n.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
+    </div>
+    ${castText(n,"motivation","What they want","",true)}
+    ${castText(n,"resources","What they've got","",true)}
+    ${castText(n,"line","Their line","Where they stop.",true)}
+    ${castText(n,"ifPushed","If pushed","What happens when they are.",true)}
+    ${castText(n,"gmNote","GM note","Yours alone.",true)}
+    ${castStatBlockHtml(n)}
+    <p class="cast-delete"><button class="btn danger" data-cdel>Delete</button></p>`;
+}
+
+// ── Binding ──
+function bindCast(main){
+  const m=castOpenMember();
+  if (m) bindCastPage(main, m); else bindCastList(main);
+}
+function redrawCastList(){
+  const box=$("main").querySelector("[data-castlist]"); if (!box) return;
+  box.innerHTML=castListHtml(S.table);
+  bindCastCards($("main"));
+}
+function bindCastCards(main){
+  const open = id => { S.castOpen=id; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
+  main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); open(b.dataset.copen); });
+  main.querySelectorAll("[data-ccard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) open(li.dataset.ccard); });
+  const clear=main.querySelector("[data-cclear]");
+  if (clear) clear.onclick=()=>{ S.castQ=""; S.castStatus="all"; const q=main.querySelector("[data-csearch]"), s=main.querySelector("[data-cstatus]");
+    if (q) q.value=""; if (s) s.value="all"; redrawCastList(); if (q) q.focus(); };
+}
+function bindCastList(main){
+  const nameEl=main.querySelector("[data-cadd-name]"), lineEl=main.querySelector("[data-cadd-line]");
+  const add=()=>{
+    const name=nameEl.value; if (!name.trim()) return;
+    let id; tableChange(()=>{ id=Engine.addCastMember(S.table, { name, line:lineEl.value }).id; });
+    // A new member the filters would hide is shown anyway: clear them.
+    if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===id)){ S.castQ=""; S.castStatus="alive"; renderTable(); }
+    const el=$("main").querySelector("[data-cadd-name]"); if (el) el.focus();
+  };
+  main.querySelector("[data-cadd]").onclick=add;
+  for (const el of [nameEl, lineEl]) el.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
+  main.querySelector("[data-csearch]").oninput=ev=>{ S.castQ=ev.target.value; redrawCastList(); };
+  const st=main.querySelector("[data-cstatus]");
+  st.onchange=()=>{ S.castStatus=st.value; redrawCastList(); };
+  bindCastCards(main);
+}
+// The figures beside the fields: worked out from the block, never stored.
+function castFigures(main, n){
+  const r=Engine.npc(n.block);
+  main.querySelectorAll("[data-cbonus]").forEach(el=>{ const s=r.stats[el.dataset.cbonus]; el.textContent = s && s.mod!==null ? castSigned(s.mod) : ""; });
+  main.querySelectorAll("[data-cformula]").forEach(el=>{ const a=r.authored[el.dataset.cformula]; el.textContent = a && a.formula!==null ? `formula ${a.formula}` : ""; });
+  const row=main.querySelector("[data-chealth-row]");
+  if (row){
+    row.hidden = !r.health;
+    if (r.health) main.querySelector("[data-chealth]").textContent = `${r.health.total} (${r.health.levels} Health Level${r.health.levels===1?"":"s"})`;
+  }
+}
+function bindCastPage(main, n){
+  const id=n.id, own=()=>castOpenMember();
+  const edit = (key, v) => tableChange(()=>Engine.editCastMember(S.table, id, { [key]:v }), false);
+  main.querySelectorAll("[data-cf]").forEach(el=>{
+    const key=el.dataset.cf, fn=()=>{
+      edit(key, key==="npcRoles" ? el.value.split(/[\/,]/).map(s=>s.trim()).filter(Boolean) : el.value);
+      if (key==="name"){ const h=main.querySelector("[data-ctitle]"); if (h) h.textContent=el.value.trim() || "Unnamed"; }
+    };
+    el.addEventListener("input", fn); el.addEventListener("change", fn);
+  });
+  // A change to the block: `redraw` for a row added or removed, else the
+  // fields keep their place and only the figures beside them are rewritten.
+  const block = (fn, redraw) => tableChange(()=>{
+    const cur=own(), b=cur.block ? JSON.parse(JSON.stringify(cur.block)) : { stats:{}, authored:{}, skills:[], armor:[], gear:[], traits:[] };
+    fn(b); Engine.setCastBlock(S.table, id, b);
+  }, redraw);
+  const typed = (sel, fn) => main.querySelectorAll(sel).forEach(el=>el.oninput=()=>{ block(b=>fn(b, el), false); castFigures(main, own()); });
+  const num = el => el.value.trim()==="" ? null : Number(el.value);
+  typed("[data-cstat]", (b,el)=>{ b.stats[el.dataset.cstat]=num(el); });
+  typed("[data-cauth]", (b,el)=>{ b.authored[el.dataset.cauth]=num(el); });
+  typed("[data-cskname]", (b,el)=>{ const k=b.skills[+el.dataset.cskname]; if (!k) return; k.name=el.value;
+    const want=el.value.trim().toLowerCase(), hit=want && D.skills.find(s=>String(s.name).toLowerCase()===want); k.skill=hit ? hit.id : null; });
+  typed("[data-csktotal]", (b,el)=>{ const k=b.skills[+el.dataset.csktotal]; if (k) k.total=num(el); });
+  typed("[data-clinev]", (b,el)=>{ const [key,i]=el.dataset.clinev.split("|"); if (b[key] && i in b[key]) b[key][+i]=el.value; });
+  typed("[data-ctname]", (b,el)=>{ const k=b.traits[+el.dataset.ctname]; if (k) k.name=el.value; });
+  typed("[data-cttext]", (b,el)=>{ const k=b.traits[+el.dataset.cttext]; if (k) k.text=el.value; });
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); };
+  // Rows: a new one puts the keyboard in its first field, a removed one on
+  // that list's Add button.
+  const rows = (addSel, delAttr, list, fresh, firstSel, addFocus) => {
+    const add=main.querySelector(addSel);
+    add.onclick=()=>{ let at; block(b=>{ b[list].push(fresh()); at=b[list].length-1; }, true); focus(firstSel(at)); };
+    main.querySelectorAll(`[${delAttr}]`).forEach(btn=>btn.onclick=()=>{ block(b=>{ b[list].splice(+btn.getAttribute(delAttr), 1); }, true); focus(addFocus); });
+  };
+  rows("[data-cskadd]", "data-cskdel", "skills", ()=>({ skill:null, name:"", total:null }), i=>`[data-cskname="${i}"]`, "[data-cskadd]");
+  rows("[data-ctadd]", "data-ctdel", "traits", ()=>({ name:"", text:"" }), i=>`[data-ctname="${i}"]`, "[data-ctadd]");
+  for (const key of ["armor","gear"]){
+    main.querySelector(`[data-clineadd="${key}"]`).onclick=()=>{ let at; block(b=>{ b[key].push(""); at=b[key].length-1; }, true); focus(`[data-clinev="${key}|${at}"]`); };
+    main.querySelectorAll(`[data-clinedel^="${key}|"]`).forEach(btn=>btn.onclick=()=>{
+      const i=+btn.dataset.clinedel.split("|")[1]; block(b=>{ b[key].splice(i, 1); }, true); focus(`[data-clineadd="${key}"]`); });
+  }
+  castFigures(main, n);
+  main.querySelector("[data-cback]").onclick=()=>{ S.castOpen=null; window.scrollTo(0,0); update(); focus(`[data-copen="${id}"]`); if (document.activeElement===document.body) focus("[data-cadd-name]"); };
+  main.querySelector("[data-cdel]").onclick=()=>{
+    const order=Engine.castFilter(S.table, castFilterNow()), at=order.findIndex(x=>x.id===id);
+    askFirst({ title:`Delete ${n.name.trim() || "Unnamed"}?`, text:"Their page goes with them. Nothing else at the table changes.", yes:"Delete",
+      then(){
+        S.castOpen=null;
+        tableChange(()=>Engine.removeCastMember(S.table, id));
+        const next=order[at+1], el=next && $("main").querySelector(`[data-copen="${next.id}"]`) || $("main").querySelector("[data-cadd-name]");
+        if (el) el.focus();
+      } });
+  };
 }
