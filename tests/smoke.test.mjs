@@ -3248,7 +3248,7 @@ test("Decision 171: Enter in the name field creates; Cancel leaves Home as it wa
 test("Decision 171: notes save as they're typed and survive a reload; Delete asks, and focus lands on the next control", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Notes table");
-  assert.match(app.$("#main").textContent, /Nothing written yet/);
+  assert.match(app.$("#main").textContent, /Nothing on file yet. What you write here stays with the table/);
   app.click("[data-tnew]");
   assert.equal(app.doc.activeElement && app.doc.activeElement.hasAttribute("data-ntitle"), true, "New note didn't focus its title");
   const id = app.doc.activeElement.dataset.ntitle;
@@ -3404,4 +3404,24 @@ test("Decision 173: with the switch off, a table can't be opened onto the screen
   app.window.eval('S = { screen:"table", ch:null, table:Engine.newTable("x"), tsection:"notes" }; renderMain();');
   assert.equal(app.window.eval("S.screen"), "home");
   assert.deepEqual(app.errors, []);
+});
+
+test("Decision 164: Create lands focus on New note and Rename's Save on the header's menu, never <body>", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Focus table");
+  assert.ok(app.doc.activeElement.hasAttribute("data-tnew"), "after Create focus isn't on New note");
+  app.click("[data-menu-toggle]"); app.click("[data-trename]");
+  app.$("#tbl-name").value = "Renamed";
+  app.click("#modal [data-nameyes]");
+  assert.notEqual(app.doc.activeElement, app.doc.body, "after Rename focus fell to <body>");
+  assert.ok(app.doc.activeElement.hasAttribute("data-menu-toggle"), "after Rename focus isn't on the header's menu");
+  assert.deepEqual(app.errors, []);
+});
+
+test("a long table name wraps: the title carries overflow-wrap, as the roster's name does", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "A".repeat(40));
+  const css = wizCss();
+  assert.ok(app.$("h1.step-title").classList.contains("tbl-title"));
+  assert.match(css, /.tbl-title{[^}]*overflow-wrap:anywhere/);
 });

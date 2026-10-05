@@ -338,7 +338,7 @@ test("an unfinished feature ships switched off: FEATURES.gm is false unless the 
   assert.ok(m, "shared.js lost its FEATURES object");
   const on = /\bgm:\s*true\b/.test(m[1]);
   const log = readFileSync(join(ROOT, "CHANGELOG.md"), "utf8");
-  const unreleased = /^## \[Unreleased\][^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(log);
-  const launched = !!unreleased && /^- \*\*Run a table\.\*\*/m.test(unreleased[1]);
-  assert.ok(!on || launched, "FEATURES.gm is true, but CHANGELOG.md's [Unreleased] has no `- **Run a table.**` line: GM mode's launch needs it");
+  // Anywhere in the file: release:prep renames [Unreleased], so after the launch release the line sits under a version heading.
+  const launched = /^- \*\*Run a table\.\*\*/m.test(log);
+  assert.ok(!on || launched, "FEATURES.gm is true, but CHANGELOG.md has no `- **Run a table.**` line: GM mode's launch needs it");
 });

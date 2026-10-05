@@ -196,7 +196,7 @@ function bindGmHome(tables){
   if (!featureOn("gm")) return;
   const main=$("main"), byId = id => tables.find(e=>e.id===id);
   const run=$("btn-run-table");
-  if (run) run.onclick=()=>openNameModal({ title:"Run a table", yes:"Create", then:name=>openTable(Engine.newTable(name)) });
+  if (run) run.onclick=()=>openNameModal({ title:"Run a table", yes:"Create", then:name=>{ openTable(Engine.newTable(name)); const b=document.querySelector("[data-tnew]"); if (b) b.focus(); } });
   const open = e => e && openTable(Engine.migrateTable(clone(e.table)), e.section);
   main.querySelectorAll("[data-topen]").forEach(b=>b.onclick=()=>open(byId(b.dataset.topen)));
   main.querySelectorAll("[data-texport]").forEach(b=>b.onclick=()=>{ exportTable(byId(b.dataset.texport).table); renderHome(); });
@@ -235,7 +235,7 @@ function renderTableChrome(){
   const menu=$("hdrmenu"), kb=act.querySelector("[data-menu-toggle]");
   kb.onclick=e=>{ e.stopPropagation(); const willOpen=menu.hidden; menu.hidden=!willOpen; kb.setAttribute("aria-expanded", willOpen?"true":"false"); };
   act.querySelector("[data-trename]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false");
-    openNameModal({ title:"Rename table", value:t.meta.name, yes:"Save", then:name=>tableChange(()=>{ t.meta.name=name; }) }); };
+    openNameModal({ title:"Rename table", value:t.meta.name, yes:"Save", then:name=>{ tableChange(()=>{ t.meta.name=name; }); const k=document.querySelector("[data-menu-toggle]"); if (k) k.focus(); } }); };
   act.querySelector("[data-texport-open]").onclick=()=>{ menu.hidden=true; exportTable(S.table); };
   act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; S=homeState(); renderHome(); };
 }
@@ -243,7 +243,7 @@ function noteCardHtml(n){
   const id=esc(n.id);
   return `<div class="tbl-note" data-note="${id}">
     <label class="field"><span>Title</span><input type="text" data-ntitle="${id}" value="${esc(n.title)}" placeholder="Untitled note" autocomplete="off"></label>
-    <label class="field"><span>Note</span><textarea data-ntext="${id}">${esc(n.text)}</textarea></label>
+    <label class="field"><span>Note</span><textarea data-ntext="${id}" placeholder="Leads, debts, names to remember.">${esc(n.text)}</textarea></label>
     <button class="btn sm danger" data-ndel="${id}">Delete</button></div>`;
 }
 function renderTable(){
@@ -254,11 +254,11 @@ function renderTable(){
   const made=Date.parse(t.meta.created);
   const failed = saveFailed ? `<div class="import-issues" role="alert">${issuesHtml([{level:"error", msg:"This browser couldn't save your last change. Export the table now so nothing is lost."}])}</div>` : "";
   main.innerHTML = failed +
-    `<h1 class="step-title">${esc(tableName(t))}</h1>
+    `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>
     <p><button class="btn primary" data-tnew>New note</button></p>
     ${t.notes.length ? t.notes.map(noteCardHtml).join("")
-      : `<p class="step-note">Nothing written yet. Notes stay with the table and travel in its file.</p>`}`;
+      : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}`;
   bindTable();
 }
 function bindTable(){
