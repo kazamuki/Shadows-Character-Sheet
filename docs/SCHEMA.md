@@ -3728,7 +3728,7 @@ No cascade logic to maintain — it falls out of the architecture.
        - A pill in the header: the header is two thin rows (Decision 140) and rep changes once a session at most.
      - **Replaces:** nothing.
      - **Revisit if:** the team links the Reputation Advantage to starting rep (GQ7), F37 is answered (rep below zero), the GM Workshop changes the tier table or the +1/−2, or the GM mode's dispatch needs a rep change the two buttons can't express.
-     - **Built:** app 0.37.0, game data 0.29, schema 0.17; PR #__; log 2026-10-05 (CRANK rep).
+     - **Built:** app 0.37.0, game data 0.29, schema 0.17; PR #111; log 2026-10-05 (CRANK rep).
 
 ## 5. Open Flags
 
