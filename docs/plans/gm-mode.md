@@ -549,7 +549,7 @@ or defaulted every *They* question in §9.
 
 ### S3a — The table file
 
-**Built 2026-10-05** (Decisions 170–173, table schema 0.1, switched off; PR #__). The bullets below are the plan as written; the work order and the decisions are what was built.
+**Built 2026-10-05** (Decisions 170–173, table schema 0.1, switched off; PR #113). The bullets below are the plan as written; the work order and the decisions are what was built.
 
 Settles storage and the file, which everything after it needs.
 

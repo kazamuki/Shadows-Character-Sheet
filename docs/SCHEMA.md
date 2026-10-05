@@ -3772,7 +3772,7 @@ The browser keeps each table as `shadows.table.v1.<id>` =
        - Reshaping 0.1 freely until launch: real tables will exist behind the switch.
      - **Replaces:** nothing. It extends 124's rule (one typed gate) to a second kind of file.
      - **Revisit if:** a pack (S9) or dispatch (S2) needs a kind this can't name, or a seat (S3b) needs a character in the table.
-     - **Built:** table schema 0.1, no other bump (switched off, 173); PR #__; log 2026-10-05 (the table file).
+     - **Built:** table schema 0.1, no other bump (switched off, 173); PR #113; log 2026-10-05 (the table file).
 
 171. **Tables live in the browser beside the roster, one key each; Home lists them, its one Import reads either kind, and a table opens on its own screen.**
      *2026-10-05 · Ken + Claude · Touches: shadows.table.v1, Home, Run a table, Your tables, Import a file, table screen, table tabs, Notes, Rename, Remove, replace guard, table undo, W29, GQ9*
