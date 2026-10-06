@@ -94,7 +94,10 @@ From the build itself (*Where the order didn't fit*):
   prints 3 and 2, and its review register cites a compiled
   `Shadows_Threat_Codex_Complete_v1_1` the mirror doesn't have. Nothing in
   S9b reads the Codex's numbers (the tests use the synthetic pack), so
-  S9b doesn't wait on it. S9c does: it builds from the compiled file.
+  S9b doesn't wait on it, and neither does S9c: a pack is rebuilt and
+  re-imported whenever the mirror moves (a newer copy replaces the old,
+  181), and cast copies keep their own numbers (182). What S9c must get
+  right instead is ids that survive the book renumbering its entries.
 - **GQ6 looks answered by the audit**, not by a ruling: TOL is the formula
   (an override allowed: the supernatural Wight's is fixed at 0), and WILL
   is a floor (above it allowed, below it "an error"). That meets 175's
