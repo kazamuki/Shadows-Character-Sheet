@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.37.0
+## v0.37.0 — 2026-10-06
 
 - **CRANK rep.** Your standing on the city's job board now sits beside
   your Çredits on Main: +1 for a job done, −2 for one you walked out on,
