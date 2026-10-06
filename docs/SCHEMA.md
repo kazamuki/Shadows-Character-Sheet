@@ -4030,7 +4030,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The glossary as a separate file: a pack is the book, and the traits are in it.
      - **Replaces:** nothing. 180's unread `traits` key is now read.
      - **Revisit if:** the tier table becomes a rule the entries keep (GQ21 answered it as a guide), or GQ17's Orders need modifiers, a case or a trait kind of their own.
-     - **Built:** pack schema 0.2; PR #PRNUM; log 2026-10-06.
+     - **Built:** pack schema 0.2; PR #121; log 2026-10-06.
 
 184. **The builder is the cast member's page reading the packs by name: it offers their origins, roles and tiers, and shows each one's guidance beside the block, never applying it and never warning.**
      *2026-10-06 · Ken + Claude · Touches: builder, cast member page, origin, npcRoles, enemyRole, tier, datalist, role toggles, Engine.castPackMatch, castGuide, origin modifiers, statGuide, traitGuide, Decision 174, Decision 175, Decision 176, Decision 182, GQ6, GQ16, GQ21*
