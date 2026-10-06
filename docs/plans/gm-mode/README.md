@@ -27,21 +27,34 @@ build it without making a design choice of its own.
    and nothing checked that the card still did. It re-runs the PR's mutation
    tests itself, then either approves or lists fixes. Each fix is marked as
    the order's or the build's: the order's go into the next order's
-   *Carried over* note.
+   *Carried over* note. A fix that changes what the order specified, not
+   just how it was built, is Ken's call: the review recommends it, and it
+   goes into the prompt once he agrees (S9a's Back to the cast member).
+   When the order builds a shape that later content will fill (a file
+   kind, a data section), the review also checks that shape against the
+   content's source, since the session that fills it is meant to need no
+   code (S9a's pack against the Codex).
 6. Fixes go back as one pasted prompt **to the session that built the PR**:
    it already knows the code it wrote (S8a's knew `signed` was taken).
    Write the prompt self-contained anyway, and start a fresh session only
    if that one has been compacted or closed. The orchestrator reviews the
-   fix commit the same way; Ken merges. The same orchestrating session then
-   writes the next order, using what it learned.
+   fix commit the same way; Ken merges.
 
    A decision in a PR that **hasn't merged** is reworded in place by the fix
    round, never superseded: nothing has cited it yet (S8a's 176). Once
    merged, the ledger's supersession rules apply.
 
-   An order drafted while the last PR is still open is **a file only**
-   until that PR merges: its README row and STATE line wait, because the
-   open PR edits the same lines.
+7. **Only then does the same orchestrating session write the next order**,
+   from `main` with the last PR merged (Ken, 2026-10-06). Never while
+   that PR is open, for three reasons:
+   - its *Carried over* note is what the fix round actually changed, not
+     what the review expected;
+   - its pre-flight reads the code it will be built from, with no "re-run
+     once #N merges" step;
+   - its README row, STATE line and decision numbers can't collide with
+     the open PR's.
+
+   S9a was the last order drafted early.
 
 Review sits **before** the merge. It costs much less than the build, and it's
 where a missed decision or an untested guard gets caught.
@@ -136,7 +149,8 @@ decision and flag numbers in advance and does the bookkeeping merge.
 | [S03a-table-file.md](S03a-table-file.md) | S3a — The table file, its gate and Home's door, behind the feature switch | **Built and reviewed 2026-10-05**, merged in PR #113 after one fix round (focus, wrapping, the launch test, the notes copy) |
 | [S08a-cast.md](S08a-cast.md) | S8a — The cast: the record, the stat block, the Cast tab | **Built and reviewed 2026-10-05**, merged in PR #115 after one fix round (the *In play* default and status order, refused numbers, blank rows, trimmed roles). The plan's S8 is split: S8b is interactions; Keep and Promote move to S10 |
 | [S08b-interactions.md](S08b-interactions.md) | S8b — Who knows what: interactions, affiliations, the crew's view | **Built and reviewed 2026-10-05**, merged in PR #117 after one fix round (a line with no crew name reachable, the What draft kept, Back keyed by crew name, the removed name spoken, wrapping rows). History moves to a later session (SQ1) |
-| [S09a-pack.md](S09a-pack.md) | S9a — The pack: a file a GM slots in, and the Threats tab | **Built 2026-10-06** (PR #119), awaiting review. SQ1–SQ9 answered by Ken (every default). The plan's S9 is split: S9b is the builder, S9c the real Codex pack |
+| [S09a-pack.md](S09a-pack.md) | S9a — The pack: a file a GM slots in, and the Threats tab | **Built and reviewed 2026-10-06**, merged in PR #119 after one fix round (roles labelled on an entry's page, a group's composition on its card, the filters two to a row on a phone, the tier as a tip, Back to the cast member, the `TIPS` guard). The plan's S9 is split: S9b is the builder, S9c the real Codex pack |
+| [S09b-builder.md](S09b-builder.md) | S9b — The builder: a cast member's page that reads the pack | **Drafted 2026-10-06**, the first order written after the last PR merged (step 7); SQ1–SQ8 await Ken |
 
 ## What a work order contains
 
