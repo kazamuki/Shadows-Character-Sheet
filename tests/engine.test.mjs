@@ -3584,3 +3584,15 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   eq(j.cast[0].from, ok);
   for (const n of j.cast.slice(1)) assert.equal(n.from, null);
 });
+
+test("gm.js may add a tip kind to shared.js's TIPS, never replace one (the script-scope guard)", () => {
+  const shared = readFileSync(join(ROOT, "src/ui/shared.js"), "utf8");
+  const block = /const TIPS = \{([\s\S]*?)\n\};/.exec(shared);
+  assert.ok(block, "shared.js's TIPS object moved");
+  const have = new Set([...block[1].matchAll(/^  (\w+):/gm)].map(m => m[1]));
+  assert.ok(have.has("tag") && have.has("stat"), "the guard didn't read shared.js's tip kinds: " + [...have]);
+  const gm = readFileSync(join(ROOT, "src/ui/gm.js"), "utf8");
+  const added = [...gm.matchAll(/\bTIPS\.(\w+)\s*=[^=]/g)].map(m => m[1]).concat([...gm.matchAll(/\bTIPS\[["'](\w+)["']\]\s*=[^=]/g)].map(m => m[1]));
+  assert.ok(added.includes("packrec"), "the guard didn't see gm.js's tip kind");
+  for (const k of added) assert.ok(!have.has(k), `gm.js assigns TIPS.${k}, which shared.js already defines`);
+});

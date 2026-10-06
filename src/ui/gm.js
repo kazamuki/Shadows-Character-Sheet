@@ -232,7 +232,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast") S.castOpen=null; if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast") S.castOpen=null; if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
@@ -591,7 +591,7 @@ function bindCastPage(main, n){
   });
   bindInteractions(main, n);
   const fromBtn=main.querySelector("[data-tfrom]");
-  if (fromBtn) fromBtn.onclick=()=>openThreat(fromBtn.dataset.tfrom, null);
+  if (fromBtn) fromBtn.onclick=()=>openThreat(fromBtn.dataset.tfrom, null, n.id);
   // A change to the block: `redraw` for a row added or removed, else the
   // fields keep their place and only the figures beside them are rewritten.
   const block = (fn, redraw) => tableChange(()=>{
@@ -781,17 +781,18 @@ function bindPacksHome(main){
 const THREAT_VIEWS = [["threat","Threats"], ["npc","People"], ["group","Groups"]];
 const THREAT_WORDS = { threat:"threats", npc:"people", group:"groups" };
 const entryKey = (pack, id) => `${pack}|${id}`;
+// A tip kind gm.js adds must be new: it may add one to shared.js's TIPS, never replace one (a test reads both files).
 // What a pack says about one of its own words, as a tip (139). A word with no text says nothing.
 TIPS.packrec = term => {
   const [pid, sec, id]=String(term).split("|");
-  const pack=packsMemo.find(p=>p.meta.id===pid), list=pack && ["origins","npcRoles","enemyRoles"].includes(sec) ? pack[sec] : null;
-  const r=list && list.find(x=>x.id===id);
-  return r && String(r.text||"").trim() ? { title:r.name.trim() || "Unnamed", text:r.text } : null;
+  const pack=packsMemo.find(p=>p.meta.id===pid), list=pack && ["origins","npcRoles","enemyRoles","tiers"].includes(sec) ? pack[sec] : null;
+  const r=list && list.find(x=>String(x.id)===id);   // a tier's id is a number
+  return r && String(r.text||"").trim() ? { title:r.name.trim() || (sec==="tiers" ? `Tier ${id}` : "Unnamed"), text:r.text } : null;
 };
-function packChipHtml(pack, sec, rec){
-  const term=`${pack.meta.id}|${sec}|${rec.id}`;
-  return TIPS.packrec(term) ? `<button type="button" class="tag" data-tip="packrec" data-term="${esc(term)}">${esc(rec.name)}</button>`
-    : `<span class="tag plain">${esc(rec.name)}</span>`;
+function packChipHtml(pack, sec, rec, label){
+  const term=`${pack.meta.id}|${sec}|${rec.id}`, shown=label || rec.name;
+  return TIPS.packrec(term) ? `<button type="button" class="tag" data-tip="packrec" data-term="${esc(term)}">${esc(shown)}</button>`
+    : `<span class="tag plain">${esc(shown)}</span>`;
 }
 function threatFilterNow(){
   const choices=Engine.packChoices(packsMemo);
@@ -816,7 +817,7 @@ function threatCardHtml({ pack, entry }, multi){
 }
 function threatGroupCardHtml({ pack, group, members }, multi){
   const key=esc(entryKey(pack.meta.id, group.id)), o=group.origin && pack.origins.find(x=>x.id===group.origin);
-  const bits=[ group.ref, o && o.name, `${members.length} member${members.length===1?"":"s"}`, multi ? packName(pack) : "" ].filter(Boolean).map(esc).join(" · ");
+  const bits=[ group.ref, o && o.name, members.map(m=>`${m.count}× ${m.entry.name.trim() || "Unnamed"}`).join(" · "), multi ? packName(pack) : "" ].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card cast-card" data-tcard="${key}">
     <button class="cast-open" data-tgroup="${key}">${esc(group.name.trim() || "Unnamed")}</button>
     <div class="roster-meta cast-meta">${bits}</div></li>`;
@@ -842,10 +843,10 @@ function threatsTabHtml(){
     `<option value="${esc(o)}"${String(o)===String(now)?" selected":""}>${esc(text(o))}</option>`).join("")}</select></label>`;
   return `<div class="form-toggle cast-view" role="group" aria-label="View">${THREAT_VIEWS.map(([k,name])=>
       `<button type="button" data-tview="${k}" class="${k===f.view?"on":""}" aria-pressed="${k===f.view}">${esc(name)}</button>`).join("")}</div>
-    <div class="cast-filters">
+    <div class="threat-filters">
       <label class="field"><span>Search</span><input type="search" data-tsearch placeholder="Search ${esc(THREAT_WORDS[f.view])}" autocomplete="off" value="${esc(f.q)}"></label>
       ${f.view==="group" ? "" : sel("data-torigin","Origin", f.origin, c.origins)
-        + sel("data-trole","Role", f.npcRole, c.npcRoles) + sel("data-tenemy","Enemy role", f.enemyRole, c.enemyRoles)
+        + sel("data-trole","NPC role", f.npcRole, c.npcRoles) + sel("data-tenemy","Enemy role", f.enemyRole, c.enemyRoles)
         + sel("data-ttier","Tier", f.tier===null ? "" : f.tier, c.tiers, n=>`Tier ${n}`)}
     </div>
     <div data-threatlist>${threatListHtml()}</div>`;
@@ -871,10 +872,14 @@ function readBlockHtml(block){
 const threatText = (label, text) => String(text||"").trim() ? `<h2 class="cast-h">${esc(label)}</h2><p class="threat-text">${esc(text)}</p>` : "";
 function entryPageHtml(found){
   const { pack, entry:e }=found, multi=packsMemo.length>1;
+  const tier=e.tier!==null && (pack.tiers.find(t=>t.id===e.tier) || { id:e.tier, name:"" });
   const meta=[ e.ref.trim() && esc(e.ref), found.origin && packChipHtml(pack, "origins", found.origin),
-    ...found.npcRoles.map(r=>packChipHtml(pack, "npcRoles", r)), found.enemyRole && packChipHtml(pack, "enemyRoles", found.enemyRole),
-    e.tier!==null && `Tier ${e.tier}`, multi && esc(packName(pack)) ].filter(Boolean).join(" · ");
-  return `<p><button class="btn sm" data-tback="entry">${S.threatGroup ? "Back to the group" : "Back to threats"}</button></p>
+    found.npcRoles.length && `NPC role: ${found.npcRoles.map(r=>packChipHtml(pack, "npcRoles", r)).join(" / ")}`,
+    found.enemyRole && `Enemy: ${packChipHtml(pack, "enemyRoles", found.enemyRole)}`,
+    tier && packChipHtml(pack, "tiers", tier, `Tier ${e.tier}`), multi && esc(packName(pack)) ].filter(Boolean).join(" · ");
+  const member=S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
+  const backText = member ? `Back to ${esc(member.name.trim() || "Unnamed")}` : S.threatGroup ? "Back to the group" : "Back to threats";
+  return `<p><button class="btn sm" data-tback="entry">${backText}</button></p>
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(e.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
     ${e.flavor.trim() ? `<p class="cast-line">${esc(e.flavor)}</p>` : ""}
@@ -904,9 +909,10 @@ function threatPageNow(){
   return null;
 }
 // An entry's page, from a card, a group's member or a cast member's From.
-function openThreat(key, group){
+// `group` or `member` (a cast member's id) says where Back returns; any other way in clears both.
+function openThreat(key, group, member){
   const [pack, id]=String(key).split("|"), found=Engine.packEntry(packsMemo, pack, id); if (!found) return;
-  S.tsection="threats"; S.threatOpen={ pack, id }; S.threatGroup=group||null;
+  S.tsection="threats"; S.threatOpen={ pack, id }; S.threatGroup=group||null; S.threatMember=member||null;
   if (!group) S.threatView = found.entry.kind==="npc" ? "npc" : "threat";
   window.scrollTo(0,0); update();
   const el=$("main").querySelector("[data-ttitle]"); if (el) el.focus();
@@ -955,6 +961,12 @@ function bindThreats(main){
 function bindThreatPage(main, back, focusFirst){
   const entry=S.threatOpen, group=S.threatGroup;
   back.onclick=()=>{
+    const member=entry && S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
+    if (member){
+      S.tsection="cast"; S.castOpen=member.id; S.castFrom=null; S.intAdd=null; S.threatOpen=null; S.threatMember=null;
+      window.scrollTo(0,0); update(); focusFirst("[data-tfrom]", "[data-cback]"); return;
+    }
+    S.threatMember=null;
     if (entry && group){ S.threatOpen=null; window.scrollTo(0,0); update(); focusFirst(attrSel("data-tmember", entryKey(entry.pack, entry.id)), "[data-tback]"); return; }
     const key = entry ? entryKey(entry.pack, entry.id) : group ? entryKey(group.pack, group.id) : "";
     S.threatOpen=null; S.threatGroup=null; window.scrollTo(0,0); update();
@@ -966,7 +978,7 @@ function bindThreatPage(main, back, focusFirst){
     const found=Engine.packEntry(packsMemo, entry.pack, entry.id); if (!found){ notice("No such entry."); return; }
     const r=Engine.castFromEntry(S.table, found.pack, entry.id); if (!r.ok){ notice(r.why); return; }
     // The copy opens, in the cast, with its name selected: a Street Tough is Vinnie from here. A filter that would hide it is cleared.
-    S.tsection="cast"; S.castOpen=r.id; S.castFrom=null; S.intAdd=null; S.castView="cast";
+    S.tsection="cast"; S.castOpen=r.id; S.castFrom=null; S.intAdd=null; S.castView="cast"; S.threatMember=null;
     if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===r.id)){ S.castQ=""; S.castStatus="inplay"; S.castAff=""; }
     window.scrollTo(0,0); update();
     const el=$("main").querySelector('[data-cf="name"]'); if (el){ el.focus(); el.select(); }

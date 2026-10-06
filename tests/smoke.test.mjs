@@ -4334,10 +4334,52 @@ test("Decision 182: an origin or role on an entry's page is a tip carrying the p
   const app = tableWithPack();
   entryButton(app, "wren").click();
   const chips = app.$$('#main [data-tip="packrec"]');
-  assert.deepEqual(chips.map(c => c.textContent), ["Spire", "Lookout", "Bruiser"]);
+  assert.deepEqual(chips.map(c => c.textContent), ["Spire", "Lookout", "Bruiser", "Tier 2"]);
   clickIn(app, chips[0]);
   assert.match(tipShown(app), /Lives high\./);
+  // The tier is a tip too, titled by its name, with the pack's text.
+  clickIn(app, chips[3]);
+  assert.match(tipShown(app), /Middling/); assert.match(tipShown(app), /Middling\./);
+  // A tier with no text stays a plain word, as an origin or role does.
+  const bare = syntheticPack(); bare.tiers = [{ id: 2, name: "Bare", text: "" }];
+  const app2 = tableWithPack(bare);
+  entryButton(app2, "wren").click();
+  assert.deepEqual(app2.$$('#main [data-tip="packrec"]').map(c => c.textContent), ["Spire", "Lookout", "Bruiser"]);
+  assert.match(app2.$("#main .cast-meta").textContent, /Tier 2/);
+  assert.deepEqual([...app.errors, ...app2.errors], []);
+});
+
+test("Decision 182 (review): an entry's page names each kind of role, and the filter says NPC role", () => {
+  const app = tableWithPack();
+  assert.equal(app.$("[data-trole]").closest("label").textContent.replace(/Any.*/s, "").trim(), "NPC role");
+  entryButton(app, "wren").click();
+  const meta = app.$("#main .cast-meta").textContent.replace(/\s+/g, " ");
+  assert.match(meta, /Entry 02 · Spire · NPC role: Lookout · Enemy: Bruiser · Tier 2/);
+  app.click("[data-tback]"); app.click('[data-tview="npc"]'); entryButton(app, "moss").click();
+  assert.match(app.$("#main .cast-meta").textContent.replace(/\s+/g, " "), /NPC role: Gatherer \/ Lookout/);
+  assert.doesNotMatch(app.$("#main .cast-meta").textContent, /Enemy:/, "a person with no enemy role says Enemy");
   assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182 (review): a group's card shows who is in it, not how many kinds", () => {
+  const app = tableWithPack();
+  app.click('[data-tview="group"]');
+  assert.match(app.$("[data-tcard]").textContent.replace(/\s+/g, " "), /Group 01 · Dock · 3× Gull · 1× Wren/);
+  assert.doesNotMatch(app.$("[data-tcard]").textContent, /members/);
+  const pack = syntheticPack(); pack.groups[0].members[0] = { entry: "gull", count: 3 }; pack.entries[1].name = '<i data-pwn="x"></i>';
+  const hostile = tableWithPack(pack); hostile.click('[data-tview="group"]');
+  assert.equal(hostile.$$("[data-pwn]").length, 0, "a member's name became markup on the group card");
+  assert.deepEqual([...app.errors, ...hostile.errors], []);
+});
+
+test("Decision 182 (review): the Threats filters have their own class, and on a phone sit two to a row under a full-width search", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const app = tableWithPack();
+  assert.ok(app.$(".threat-filters [data-tsearch]") && app.$$(".threat-filters select").length === 4);
+  assert.equal(app.$(".cast-filters"), null, "the Threats tab still uses the Cast tab's filters class");
+  assert.match(css, /@media \(max-width:640px\)\{\s*\.threat-filters\{grid-template-columns:1fr 1fr/);
+  assert.match(css, /\.threat-filters \.field:first-child\{grid-column:1 \/ -1\}/);
+  assert.match(css, /\.cast-filters\{display:grid; grid-template-columns:repeat\(auto-fit,minmax\(200px,1fr\)\)/, "the Cast tab's filters changed");
 });
 
 test("Decision 182: a person is under People, with what they want, and a group's member opens the entry, Back returning to the group", () => {
@@ -4400,8 +4442,12 @@ test("Decision 182: From on a member's page opens the entry; Back goes to the Th
   assert.equal(app.window.eval("S.tsection"), "threats");
   assert.equal(app.doc.activeElement, app.$("[data-ttitle]"));
   assert.match(app.$("[data-ttitle]").textContent, /Wren/);
-  assert.equal(app.$("[data-tback]").textContent, "Back to threats");
+  assert.equal(app.$("[data-tback]").textContent, "Back to Wren");
   app.click("[data-tback]");
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  assert.equal(app.$('[data-cf="name"]').value, "Wren", "Back didn't return to the member's page");
+  assert.equal(app.doc.activeElement, app.$("[data-tfrom]"), "Back didn't land on the From button");
+  app.click('[data-tsec="threats"]');
   assert.deepEqual(threatNames(app), ["Wren", "Gull"]);
   app.click('[data-tsec="cast"]');
   type(app, "[data-csearch]", "nobody");
@@ -4412,6 +4458,39 @@ test("Decision 182: From on a member's page opens the entry; Back goes to the Th
   app.click("[data-cback]");
   assert.deepEqual(castNames(app).sort(), ["Gull", "Wren"]);
   assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182 (review): Back from an entry opened by From returns to that member, by id, named as they are now; any other way in, or a member gone, goes to the list", () => {
+  const app = tableWithPack();
+  entryButton(app, "gull").click(); app.click("[data-tuse]");
+  type(app, '[data-cf="name"]', "Vinnie");
+  app.$("[data-tfrom]").click();
+  assert.equal(app.$("[data-tback]").textContent, "Back to Vinnie");
+  app.click("[data-tuse]");   // Use on that page still copies the entry and opens the new copy
+  assert.equal(app.window.eval("S.table.cast.length"), 2);
+  assert.equal(app.window.eval("S.threatMember"), null, "Use left the member state behind");
+  const app2 = tableWithPack();
+  entryButton(app2, "gull").click(); app2.click("[data-tuse]");
+  type(app2, '[data-cf="name"]', "   ");
+  app2.$("[data-tfrom]").click();
+  assert.equal(app2.$("[data-tback]").textContent, "Back to Unnamed");
+  // Opening the entry any other way clears it: through the tab's list.
+  app2.click("[data-tback]");
+  assert.equal(app2.window.eval("S.tsection"), "cast", "Back didn't return to the member's page");
+  assert.equal(app2.$('[data-cf="name"]').value, "   ");
+  app2.click('[data-tsec="threats"]');
+  entryButton(app2, "gull").click();
+  assert.equal(app2.$("[data-tback]").textContent, "Back to threats");
+  // The member deleted while the page was open: Back falls to the list.
+  app2.click("[data-tback]"); app2.click('[data-tsec="cast"]'); app2.click("[data-copen]");
+  app2.$("[data-tfrom]").click();
+  const id = app2.window.eval("S.threatMember");
+  assert.ok(id, "the member isn't remembered by id");
+  app2.window.eval("S.table.cast.length = 0");
+  app2.click("[data-tback]");
+  assert.equal(app2.window.eval("S.tsection"), "threats");
+  assert.deepEqual(threatNames(app2), ["Wren", "Gull"]);
+  assert.deepEqual([...app.errors, ...app2.errors], []);
 });
 
 test("Decision 182: removing the pack leaves every copy whole; From reads as text, and the Threats tab is empty", () => {
