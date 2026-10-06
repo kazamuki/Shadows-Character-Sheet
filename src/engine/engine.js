@@ -3618,7 +3618,8 @@ const Engine = (() => {
   // the browser outside every table. migratePack() is its gate. An id is the
   // author's, so a bad one is nothing (never a new one): the pack is refused,
   // the record is dropped. The app never makes a pack.
-  const PACK_SCHEMA_VERSION = "0.1";
+  const PACK_SCHEMA_VERSION = "0.2";
+  const PACK_TRAIT_KINDS = ["universal","origin","signature"];
   const isPackId = v => typeof v==="string" && PACK_ID_RE.test(v);
   const _recordId = v => typeof v==="string" && RECORD_ID_RE.test(v) ? v : null;
   // Coerce a section's records in place: objects with a good id, the first of each id.
@@ -3648,10 +3649,23 @@ const Engine = (() => {
     m.updated = _isoOrNull(m.updated);
     if (!_versionNewer(m.packSchemaVersion, PACK_SCHEMA_VERSION)) m.packSchemaVersion = PACK_SCHEMA_VERSION;
     const named = r => { r.name = _str(r.name); r.text = _str(r.text); };
-    c.origins = _packSection(c.origins, named, _recordId);
+    // Pack schema 0.2 (Decision 183) adds fields, and every one is gated here on
+    // every load. So a 0.1 pack, whatever it carried, needs no step of its own:
+    // the stamp above is the whole of 0.1 → 0.2.
+    const statIds = new Set(D().stats.map(s=>s.id));
+    c.origins = _packSection(c.origins, r=>{
+      named(r);
+      const src = _isObj(r.modifiers) ? r.modifiers : {}, mods = {};
+      for (const k of Object.keys(src)){
+        if (!statIds.has(k)) continue;
+        const v = _int(src[k]);
+        if (v) mods[k] = v;
+      }
+      r.modifiers = mods;
+    }, _recordId);
     c.npcRoles = _packSection(c.npcRoles, named, _recordId);
     c.enemyRoles = _packSection(c.enemyRoles, r=>{ named(r); r.tier = _tier(r.tier); }, _recordId);
-    c.tiers = _packSection(c.tiers, named, _tier);
+    c.tiers = _packSection(c.tiers, r=>{ named(r); r.statGuide = _str(r.statGuide); r.traitGuide = _str(r.traitGuide); }, _tier);
     const originIds = new Set(c.origins.map(o=>o.id)), roleIds = new Set(c.npcRoles.map(o=>o.id)),
           enemyIds = new Set(c.enemyRoles.map(o=>o.id));
     const textKeys = ["ref","name","flavor","description","motivation","resources","line","ifPushed","gmNote"];
@@ -3663,6 +3677,12 @@ const Engine = (() => {
       e.enemyRole = typeof e.enemyRole==="string" && enemyIds.has(e.enemyRole) ? e.enemyRole : null;
       e.tier = _tier(e.tier);
       e.block = _block(e.block);
+    }, _recordId);
+    c.traits = _packSection(c.traits, r=>{
+      named(r);
+      const k = _str(r.kind).toLowerCase();
+      r.kind = PACK_TRAIT_KINDS.includes(k) ? k : null;
+      r.origin = typeof r.origin==="string" && originIds.has(r.origin) ? r.origin : null;
     }, _recordId);
     const entryIds = new Set(c.entries.map(e=>e.id));
     c.groups = _packSection(c.groups, g=>{
@@ -3722,7 +3742,48 @@ const Engine = (() => {
       for (const r of _list(p.tiers)){ const n = _tier(r.id); if (n!==null) tiers.add(n); }
       for (const e of _list(p.entries)){ const n = _tier(e.tier); if (n!==null) tiers.add(n); }
     }
-    return { origins:pick("origins"), npcRoles:pick("npcRoles"), enemyRoles:pick("enemyRoles"), tiers:[...tiers].sort((a, b)=>a - b) };
+    const traitOrigins = new Map();
+    for (const p of _packList(packs)) for (const t of _list(p.traits)){
+      const s = _nameOf(p.origins, t.origin).trim(); if (s && !traitOrigins.has(s.toLowerCase())) traitOrigins.set(s.toLowerCase(), s);
+    }
+    return { origins:pick("origins"), npcRoles:pick("npcRoles"), enemyRoles:pick("enemyRoles"), tiers:[...tiers].sort((a, b)=>a - b),
+             traitOrigins:[...traitOrigins.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase())) };
+  }
+  // The glossary (Decision 185): every slotted pack's traits, packs in the order given and
+  // traits in each pack's order. Reads only; nothing it returns is written anywhere.
+  function packTraits(packs, f){
+    f = _isObj(f) ? f : {};
+    const q = _folded(f.q), kind = PACK_TRAIT_KINDS.includes(f.kind) ? f.kind : "", origin = _folded(f.origin), out = [];
+    for (const pack of _packList(packs)) for (const trait of _list(pack.traits)){
+      if (kind && trait.kind!==kind) continue;
+      if (origin && _folded(_nameOf(pack.origins, trait.origin))!==origin) continue;
+      if (q && ![trait.name, trait.text].some(x=>_str(x).toLowerCase().includes(q))) continue;
+      out.push({ pack, trait });
+    }
+    return out;
+  }
+  // What a cast member's page shows beside its fields (Decision 184): each name the member
+  // typed matched, folded, against the slotted packs. Read on every draw, stored nowhere. Total.
+  function castPackMatch(packs, member){
+    const list = _packList(packs), m = _isObj(member) ? member : {};
+    const first = (key, test) => {
+      for (const pack of list) for (const rec of _list(pack[key])) if (test(rec)) return { pack, rec };
+      return null;
+    };
+    const byName = (key, name) => { const w = _folded(name); return w ? first(key, r=>_folded(r.name)===w) : null; };
+    const tierN = _tier(m.tier);
+    const traits = (_isObj(m.block) && Array.isArray(m.block.traits) ? m.block.traits : []).filter(_isObj).map(t=>{
+      const hit = byName("traits", t.name);
+      return { name:_str(t.name), pack:hit ? hit.pack : null, rec:hit ? hit.rec : null };
+    });
+    const counts = { total:traits.length, universal:0, origin:0, signature:0, written:0 };
+    for (const t of traits) counts[t.rec && PACK_TRAIT_KINDS.includes(t.rec.kind) ? t.rec.kind : "written"]++;
+    return {
+      origin:byName("origins", m.origin),
+      npcRoles:_roleList(m.npcRoles).map(name=>{ const hit = byName("npcRoles", name); return { name, pack:hit ? hit.pack : null, rec:hit ? hit.rec : null }; }),
+      enemyRole:byName("enemyRoles", m.enemyRole),
+      tier:tierN===null ? null : first("tiers", r=>r.id===tierN),
+      traits, counts };
   }
   // One entry with its records, not its ids: what a page reads. Null when there isn't one.
   function packEntry(packs, packId, id){
@@ -3810,7 +3871,7 @@ const Engine = (() => {
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
-    isPackId, migratePack, packCheck, packFilter, packChoices, packEntry, packGroups, castFromEntry, entryLink,
+    isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, packGroups, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it

@@ -897,7 +897,7 @@ The browser keeps each table as `shadows.table.v1.<id>` =
 
 ### The pack file (*.shadows-pack.json)
 
-A book a GM slots in (Decisions 180–182): the Threat Codex, in time, and W63's
+A book a GM slots in (Decisions 180–185): the Threat Codex, in time, and W63's
 core game after it. A third kind of file, with its own schema version, its own
 gate (`migratePack()`) and its own id, which the app never issues — whoever
 builds the pack does, and keeps it across versions. It is kept in the browser,
@@ -911,14 +911,19 @@ table file never carries its content. **A change to this shape bumps
     kind: "shadows-pack",            // fileKind() reads this; migratePack() forces it
     id: "PK-XXXXXXXX",               // the author's; a bad one reads null and the pack is refused (packCheck)
     name: "",
-    packSchemaVersion: "0.1",        // a newer stamp is kept, and packCheck() reports it
+    packSchemaVersion: "0.2",        // a newer stamp is kept, and packCheck() reports it
     contentVersion: "",              // the author's text, shown, never compared
     created: "<ISO>", updated: "<ISO>"   // updated decides which copy is newer; null when unreadable
   },
-  origins:    [ { id, name, text } ],              // id: letters, digits, _ and -, up to 32
+  origins:    [ { id, name, text,                  // id: letters, digits, _ and -, up to 32
+                  modifiers: { BOD: 1 } } ],     // (0.2) the data's stat ids, whole numbers, zeros dropped; shown beside a stat, never applied (184)
   npcRoles:   [ { id, name, text } ],
   enemyRoles: [ { id, name, tier, text } ],        // tier: a whole number from 1, or null
-  tiers:      [ { id, name, text } ],              // id: a whole number from 1
+  tiers:      [ { id, name, text,                  // id: a whole number from 1
+                  statGuide, traitGuide } ],     // (0.2) the book's words for the tier's stats and traits, text; never a range, never a warning (183, 184)
+  traits:     [ { id, name, text,                  // (0.2) the glossary
+                  kind,                          // "universal" | "origin" | "signature", else null
+                  origin } ],                    // an origins id, or null
   entries: [ {
     id, kind: "threat",              // "threat" | "npc"; anything else reads "threat"
     ref: "",                         // what the book calls it, shown small
@@ -932,11 +937,13 @@ table file never carries its content. **A change to this shape bumps
   groups: [ { id, ref, name, origin, members: [ { entry, count } ], situation, tactics } ]
   // A record with a bad id, or one repeated within its section, is dropped, never renamed.
   // A group member naming no entry is dropped; count is a whole number from 1, else 1.
-  // Keys the gate doesn't know (a `traits` section, say) are kept, at any level, and never read.
+  // Keys the gate doesn't know are kept, at any level, and never read.
+  // 0.2: traits, modifiers and guides; stamps only. A 0.1 pack's sections go through the same gate on every load, a `traits` key included,
+  // so the step has nothing to convert; a 0.1 pack reads with no traits, modifiers or guides.
 }
 ```
 
-`Engine.packFilter`, `packChoices`, `packEntry`, `packGroups`, `castFromEntry` and
+`Engine.packFilter`, `packChoices`, `packTraits`, `castPackMatch`, `packEntry`, `packGroups`, `castFromEntry` and
 `entryLink` read a *list* of packs, so two slotted in at once cost nothing. The
 cast member's `from` (table schema 0.4) is the only link back, and it stores the
 entry's name because the pack lives outside the table (Decisions 178, 182).
@@ -4012,6 +4019,43 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 174 in part: matching cast text to the pack moves to S9b. Decision 178 in part: a link to a record outside the table stores its name.
      - **Revisit if:** S10's fight needs a live entry, or W63's core pack shares this tab.
      - **Built:** as 180.
+
+183. **A pack carries its trait glossary, each origin's stat modifiers and each tier's guidance in the book's words; pack schema 0.2.**
+     *2026-10-06 · Ken + Claude · Touches: pack schema 0.2, migratePack, traits, trait kind, origins.modifiers, tiers.statGuide, tiers.traitGuide, enemyRoles.tier, Decision 180, GQ10, GQ16, GQ21*
+     - **Decided:** Pack schema 0.2 adds `traits: [ { id, name, kind, origin, text } ]` (`kind` universal, origin or signature, else null; `origin` an origins id or null), `origins[].modifiers` (`{ <stat id>: whole number }`, the data's stats only, zeros dropped) and `tiers[].statGuide` and `traitGuide`, text. `migratePack()` gates each as 180 does. A 0.1 pack reads with none of them. Enemy roles' `tier` is read for the first time (184).
+     - **Why:** the builder (184, 185) needs the glossary, the modifiers and the tier's words, and S9c's pack must hold them with no app change. Numbers where the book prints numbers; words where it prints a judgement.
+     - **Rejected:**
+       - Tier ranges as numbers (a low and high per stat, a trait count) so the app could warn: the book's entries break them (14 of 17 Tier 3 entries have a stat outside the band; 10 have more Signatures than allowed), so the numbers would be our reading, not the book's (GQ21).
+       - A trait's kind stored on the block when copied: the table would carry pack words, and a renamed trait would keep a kind it no longer has (185).
+       - The glossary as a separate file: a pack is the book, and the traits are in it.
+     - **Replaces:** nothing. 180's unread `traits` key is now read.
+     - **Revisit if:** the tier table becomes a rule the entries keep (GQ21 answered it as a guide), or GQ17's Orders need modifiers, a case or a trait kind of their own.
+     - **Built:** pack schema 0.2; PR #PRNUM; log 2026-10-06.
+
+184. **The builder is the cast member's page reading the packs by name: it offers their origins, roles and tiers, and shows each one's guidance beside the block, never applying it and never warning.**
+     *2026-10-06 · Ken + Claude · Touches: builder, cast member page, origin, npcRoles, enemyRole, tier, datalist, role toggles, Engine.castPackMatch, castGuide, origin modifiers, statGuide, traitGuide, Decision 174, Decision 175, Decision 176, Decision 182, GQ6, GQ16, GQ21*
+     - **Decided:** Origin, NPC roles and enemy role stay the GM's text (174). The page offers every slotted pack's names for each (a list to pick from; roles as toggles beside the text) and matches what's typed by name, case-folded, as it reads. A matched origin's modifiers show beside each stat (*Street +1*), a matched tier's `statGuide` above the stats and `traitGuide` by the traits, and an enemy role whose tier differs from the member's says so. Nothing is applied to the block, nothing about a match is stored, and nothing warns.
+     - **Why:** the Codex's first advice is to reskin, and Use (182) already makes the copy; building from scratch is the same page with guidance. A block stores what the book prints (175), and a copied entry's modifiers are already in it.
+     - **Rejected:**
+       - A builder screen: a second editor for one record.
+       - Applying an origin's modifiers when it's chosen (the plan's sketch): a block can't tell a fresh stat from a printed one, and a table has no undo (176) to take it back.
+       - A warning outside the tier's guidance: the book breaks it (183, GQ21), as TOL broke its formula (175).
+       - Storing the matched pack's id on the member: the cast is the GM's and outlives the pack (182).
+     - **Replaces:** nothing. It builds what 174 deferred and 182 moved here.
+     - **Revisit if:** the tier table becomes a rule the entries keep (GQ21), GQ17 adds Orders, or a GM asks for the modifiers applied.
+     - **Built:** as 183.
+
+185. **A trait from a pack is copied into the block as its name and text, and the page counts the block's traits by kind, matching each name to the glossaries as it reads.**
+     *2026-10-06 · Ken + Claude · Touches: traits, block.traits, Add from a pack, trait picker, Engine.packTraits, trait kind, trait count, traitGuide, Decision 175, Decision 182, S13*
+     - **Decided:** The block's Traits gain **Add from a pack**: a picker over every slotted pack's traits, by search, kind and origin, each with its text. Adding copies `{ name, text }` into the block (175's shape) and closes; the search and filters stay on `S`. By Traits the page counts them by kind (*4 traits: 1 Universal · 1 Origin · 2 Signature*); a name no glossary has counts as *written*, a renamed copy included.
+     - **Why:** traits are text the GM applies (rule 6), and the copy is the GM's to edit, as Use's is. Reading the kind by name keeps pack words out of the table and stays right after an edit.
+     - **Rejected:**
+       - A stored reference to the pack's trait: the pack lives outside the table (182), and an edited trait would keep a kind it no longer has.
+       - The glossary as a fourth view on the Threats tab now: gathering the references is the GM screen's (S13).
+       - A picker that stays open for several adds: the next thing a GM does is read or trim what they added.
+     - **Replaces:** nothing.
+     - **Revisit if:** S13's GM screen wants the glossary as a page, or S10's fight needs a trait's kind.
+     - **Built:** as 183.
 
 ## 5. Open Flags
 

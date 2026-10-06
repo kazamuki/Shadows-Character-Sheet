@@ -1,18 +1,36 @@
 /**
- * A synthetic pack for the tests of Decisions 180–182. Nothing in it is the
+ * A synthetic pack for the tests of Decisions 180–185. Nothing in it is the
  * Codex's: the names are made up for the test and say nothing about the book.
  * The entries are deliberately not in A–Z order, so a sort shows.
  */
 export const PACK_ID = "PK-ABCD2345";
 
+/** The same pack as a 0.1 file wrote it: no traits, modifiers or guides. */
+export function syntheticPack01() {
+  const p = syntheticPack();
+  p.meta.packSchemaVersion = "0.1";
+  delete p.traits;
+  for (const o of p.origins) delete o.modifiers;
+  for (const t of p.tiers) { delete t.statGuide; delete t.traitGuide; }
+  return p;
+}
+
 export function syntheticPack(over = {}) {
   const p = {
-    meta: { kind: "shadows-pack", id: PACK_ID, name: "Test Pack", packSchemaVersion: "0.1",
+    meta: { kind: "shadows-pack", id: PACK_ID, name: "Test Pack", packSchemaVersion: "0.2",
             contentVersion: "v2 (test)", created: "2026-10-01T10:00:00.000Z", updated: "2026-10-02T10:00:00.000Z" },
-    origins: [{ id: "dock", name: "Dock", text: "Works the water." }, { id: "spire", name: "Spire", text: "Lives high." }],
+    origins: [{ id: "dock", name: "Dock", text: "Works the water.", modifiers: { BOD: 1, REF: -1 } },
+              { id: "spire", name: "Spire", text: "Lives high.", modifiers: { MOB: 1 } }],
     npcRoles: [{ id: "gatherer", name: "Gatherer", text: "Collects things." }, { id: "lookout", name: "Lookout", text: "Watches." }],
     enemyRoles: [{ id: "bruiser", name: "Bruiser", tier: 1, text: "Hits first." }],
-    tiers: [{ id: 1, name: "Slight", text: "Slight." }, { id: 2, name: "Middling", text: "Middling." }],
+    tiers: [{ id: 1, name: "Slight", text: "Slight.", statGuide: "Mostly low scores, one standout.", traitGuide: "A trait or two, no more." },
+            { id: 2, name: "Middling", text: "Middling.", statGuide: "Scores in the middle, a few high.", traitGuide: "A few traits, one that defines them." }],
+    traits: [
+      { id: "salt-nerve", name: "Salt Nerve", kind: "universal", origin: null, text: "Stays calm near water." },
+      { id: "pier-legs", name: "Pier Legs", kind: "origin", origin: "dock", text: "Never loses footing on a deck." },
+      { id: "gulls-cry", name: "Gull's Cry", kind: "signature", origin: "dock", text: "Shouts; everyone nearby turns." },
+      { id: "rope-trick", name: "Rope Trick", kind: "origin", origin: "spire", text: "Climbs any rope at full speed." },
+    ],
     entries: [
       { id: "wren", kind: "threat", ref: "Entry 02", name: "Wren", flavor: "Quick and quiet.", description: "A rooftop runner.",
         motivation: "", resources: "", line: "", ifPushed: "", gmNote: "Wren flees at half Health.",

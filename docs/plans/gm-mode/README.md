@@ -150,7 +150,7 @@ decision and flag numbers in advance and does the bookkeeping merge.
 | [S08a-cast.md](S08a-cast.md) | S8a — The cast: the record, the stat block, the Cast tab | **Built and reviewed 2026-10-05**, merged in PR #115 after one fix round (the *In play* default and status order, refused numbers, blank rows, trimmed roles). The plan's S8 is split: S8b is interactions; Keep and Promote move to S10 |
 | [S08b-interactions.md](S08b-interactions.md) | S8b — Who knows what: interactions, affiliations, the crew's view | **Built and reviewed 2026-10-05**, merged in PR #117 after one fix round (a line with no crew name reachable, the What draft kept, Back keyed by crew name, the removed name spoken, wrapping rows). History moves to a later session (SQ1) |
 | [S09a-pack.md](S09a-pack.md) | S9a — The pack: a file a GM slots in, and the Threats tab | **Built and reviewed 2026-10-06**, merged in PR #119 after one fix round (roles labelled on an entry's page, a group's composition on its card, the filters two to a row on a phone, the tier as a tip, Back to the cast member, the `TIPS` guard). The plan's S9 is split: S9b is the builder, S9c the real Codex pack |
-| [S09b-builder.md](S09b-builder.md) | S9b — The builder: a cast member's page that reads the pack | **Drafted 2026-10-06**, the first order written after the last PR merged (step 7); SQ1–SQ8 await Ken |
+| [S09b-builder.md](S09b-builder.md) | S9b — The builder: a cast member's page that reads the pack | **Built 2026-10-06**, switched off, PR #PRNUM awaiting review; Ken answered SQ1–SQ9 (the tier table is a guide: shown, never a warning; GQ6 answered, its change to the block a session of its own) |
 
 ## What a work order contains
 
