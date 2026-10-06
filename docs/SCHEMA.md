@@ -3986,7 +3986,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - A Codex-only kind: W63's core pack would need a second.
      - **Replaces:** nothing. It answers 170's *Revisit if* (a pack needs a kind) with a third kind beside it.
      - **Revisit if:** W63's core pack needs a section a GM pack can't hold, or two packs need to name each other.
-     - **Built:** pack schema 0.1, table schema 0.4; PR #TBD; log 2026-10-06 (the pack and the Threats tab).
+     - **Built:** pack schema 0.1, table schema 0.4; PR #119; log 2026-10-06 (the pack and the Threats tab).
 
 181. **Packs live in the browser, one key each, outside every table; Home's one Import slots one in, and Home lists them with Remove.**
      *2026-10-06 · Ken + Claude · Touches: shadows.pack.v1, Your packs, Import a file, gmImportFile, GM_NOT_A_FILE, Remove, replace guard, Home, wizard.js, Decision 171, Decision 172, W62, GQ9, GQ10*
