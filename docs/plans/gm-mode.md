@@ -648,7 +648,14 @@ to a later session: S5 or S10, whichever first writes it (Ken, 2026-10-05).
 **Moved to S10:** **Keep** and **Promote** (a fought copy into the cast),
 with the fight they come from.
 
-### S9 — The Threat Codex as a pack
+### S9 — The Threat Codex as a pack (split: S9a next, then S9b and S9c)
+
+**Split 2026-10-05 (Ken, SQ1 of the [S9a order](gm-mode/S09a-pack.md)):**
+**S9a** is the pack file, its gate, storage and import, and a **Threats** tab
+whose **Use** copies an entry into the cast; **S9b** is the builder and
+matching the cast's text to the pack; **S9c** is the real Codex pack, built
+in `private/`. The rolodex is a tab, not an `openCatalog` kind: that picker
+is the character's, in `sheet.js`.
 
 GQ10 is answered: the Codex isn't in the app's data. It's a **pack**, built
 from `private/` and slotted in by the GM (W62 is how it should feel). S9
