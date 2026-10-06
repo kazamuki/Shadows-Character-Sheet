@@ -3240,8 +3240,12 @@ const Engine = (() => {
   }
   const _tier = v => { const n = _int(v); return n!==null && n>=1 ? n : null; };
   const CAST_STATUSES = ["alive","dead","missing","gone"];
+  // The list's order, whatever the filter: who is in play first, the dead last.
+  const CAST_ORDER = ["alive","missing","gone","dead"];
   const CAST_TEXT = ["name","flavor","description","origin","enemyRole","motivation","resources","line","ifPushed","gmNote"];
   const _strList = v => (Array.isArray(v) ? v : typeof v==="string" ? [v] : []).filter(x=>typeof x==="string");
+  // Roles are trimmed and never empty, so a card never reads "Fixer /".
+  const _roleList = v => _strList(v).map(x=>x.trim()).filter(Boolean);
   // The ids a block is keyed by come from the data (Decision 135): the stats,
   // and the derived stats of type sumOfModifiers, which the Codex authors.
   const _authoredDefs = () => D().derived.filter(d=>d.type==="sumOfModifiers");
@@ -3267,7 +3271,7 @@ const Engine = (() => {
   // One cast member, coerced the way a note is. `used` holds the ids taken.
   function _castMember(n, used){
     for (const k of CAST_TEXT) n[k] = _str(n[k]);
-    n.npcRoles = _strList(n.npcRoles);
+    n.npcRoles = _roleList(n.npcRoles);
     n.tier = _tier(n.tier);
     if (!CAST_STATUSES.includes(n.status)) n.status = "alive";
     if (!(typeof n.id==="string" && CAST_ID_RE.test(n.id)) || used.has(n.id)) n.id = newCastId(used);
@@ -3392,7 +3396,12 @@ const Engine = (() => {
       authored[d.id] = { value:b.authored[d.id], formula };
       if (b.authored[d.id]===null) blanks.push(d.id);
     }
-    for (const k of ["skills","armor","gear","traits"]) if (!b[k].length) blanks.push(k);
+    // Rows are kept while a GM is mid-edit, so a list is blank when no row has content.
+    const filled = {
+      skills: b.skills.some(k=>k.name.trim() || k.total!==null),
+      armor: b.armor.some(l=>l.trim()), gear: b.gear.some(l=>l.trim()),
+      traits: b.traits.some(k=>k.name.trim() || k.text.trim()) };
+    for (const k of ["skills","armor","gear","traits"]) if (!filled[k]) blanks.push(k);
     return { stats, health, authored, blanks };
   }
   function addCastMember(t, f){
@@ -3410,7 +3419,7 @@ const Engine = (() => {
     if (!n) return { ok:false, why:"No such cast member." };
     if (_isObj(f)){
       for (const k of CAST_TEXT) if (k in f) n[k] = _str(f[k]);
-      if ("npcRoles" in f) n.npcRoles = _strList(f.npcRoles);
+      if ("npcRoles" in f) n.npcRoles = _roleList(f.npcRoles);
       if ("tier" in f) n.tier = _tier(f.tier);
       if ("status" in f && CAST_STATUSES.includes(f.status)) n.status = f.status;
     }
@@ -3435,10 +3444,11 @@ const Engine = (() => {
   }
   function castFilter(t, f){
     const q = _str((f||{}).q).trim().toLowerCase(), st = (f||{}).status;
+    const rank = n => CAST_ORDER.indexOf(n.status);
     return (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>{
-      if (CAST_STATUSES.includes(st) && n.status!==st) return false;
+      if (st==="inplay" ? n.status!=="alive" && n.status!=="missing" : CAST_STATUSES.includes(st) && n.status!==st) return false;
       return !q || [n.name, n.flavor, n.origin, ...(n.npcRoles||[])].some(x=>_str(x).toLowerCase().includes(q));
-    });
+    }).sort((a, b)=>rank(a) - rank(b));   // stable: each group keeps the cast's own order
   }
 
   // The engine's surface, grouped by domain.

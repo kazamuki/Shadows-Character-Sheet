@@ -3863,12 +3863,13 @@ The browser keeps each table as `shadows.table.v1.<id>` =
 
 176. **The table opens on its Cast tab: quick-add at the top, a filtered list, and a page per member; a cast still has no undo, and Delete asks.**
      *2026-10-05 · Ken + Claude · Touches: Cast tab, TABLE_SECTIONS, quick-add, cast list, cast filters, member page, data-cast, Delete, table undo, Decision 171, W29, GQ1*
-     - **Decided:** `TABLE_SECTIONS` gains **Cast**, first; a table opens on it. Quick-add takes a name (and an optional line), adds on Enter or **Add**, and keeps the keyboard in the field. The list filters by a search over name, line, origin and roles, and by status (alive by default). A member's page edits every field in place and saves as it's typed; Delete asks first. Nothing on a table is undoable yet: S10 is the first session where numbers change in play (damage), and it decides the table's audit trail.
+     - **Decided:** `TABLE_SECTIONS` gains **Cast**, first; a table opens on it. Quick-add takes a name (and an optional line), adds on Enter or **Add**, and keeps the keyboard in the field. The list filters by a search over name, line, origin and roles, and by status, *In play* (alive and missing) by default, ordered alive, missing, out of the picture, dead, newest first within each. A member's page edits every field in place and saves as it's typed; Delete asks first. Nothing on a table is undoable yet: S10 is the first session where numbers change in play (damage), and it decides the table's audit trail.
      - **Why:** mid-session, a GM has one hand and three seconds (§1a); quick-add is the reason the cast is used. Typed fields are the GM's authoring, not play, and the audit trail is for play.
      - **Rejected:**
        - Notes first: the cast is what Scott runs the table from.
        - A modal for quick-add: one more press, and it hides the list it adds to.
        - Undo now, by the character's structural diff: a second audit to design before anything at the table changes in play.
+       - *Alive* as the default: it hides the missing, who are still threads.
      - **Replaces:** Decision 171 in part: S10, not S8, decides the table's audit trail.
      - **Revisit if:** a GM loses work to a deleted member, or GQ1's tab order says otherwise.
      - **Built:** as 174.

@@ -364,7 +364,7 @@ W29, built a session at a time behind a feature switch (173). The plan is `plans
 - **173** *(The feature switch — W29 S3a)* — `FEATURES.gm` is false; `?gm=on` / `?gm=off` set this browser's `shadows.feature.gm`; switched off, Home is as it was and a table file is refused, not read as a character. Sessions merge to `main`, releases go on, and the release that sets it true is GM mode's launch.
 - **174** *(The cast — W29 S8a, GQ6, GQ10)* — table schema 0.2: `cast`, one record per NPC (`C-` id, name, the §4e text fields, origin, roles and enemy role as the GM's text until S9's pack, `tier`, `status` alive / dead / missing / gone, `block`); `migrateTable()`'s first step.
 - **175** *(The stat block — W29 S8a, GQ6)* — a block stores what the Codex prints: stats and skill totals, TOL and WILL as authored (an exception to constraint 7's letter), armor and gear as text, traits; `Engine.npc` derives Health, HP, bonuses and each formula's value and stores nothing.
-- **176** *(The Cast tab — W29 S8a, GQ1)* — a table opens on Cast: quick-add, a search and status filter, a page per member saved as typed; Delete asks; still no undo on a table (S10 decides its audit trail). → supersedes 171 in part.
+- **176** *(The Cast tab — W29 S8a, GQ1)* — a table opens on Cast: quick-add, a search and a status filter (*In play*, alive and missing, by default; listed alive, missing, out of the picture, dead), a page per member saved as typed; Delete asks; still no undo on a table (S10 decides its audit trail). → supersedes 171 in part.
 
 ### Audit trail, undo & admin
 

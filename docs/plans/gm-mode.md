@@ -628,13 +628,16 @@ waits on it.
 - The cast record and the stat block (§4e), partial or full, and
   **quick-add**: a name and a line, mid-session, one press.
 - The engine's NPC reader: `Engine.npc(block)` → Health Levels, HP, bonuses,
-  TOL and WILL beside their formulas, warnings. Total, like every reader.
+  TOL and WILL beside their formulas. Total, like every reader.
 - **The NPC roster**, now in the Codex (Bob, Splice, Chen, the Archivist,
   Kira, Marta, Threadbare, the Warden, Juno, Marcus, the Patron) as
   **examples to copy**, not as cast: a GM's cast starts empty. Confidential
   like the rest of the Codex, so it ships in S9's Codex pack; S8 tests
   against a synthetic roster.
 - Status (alive, dead, missing, out of the picture).
+- **Decisions:** the cast record; the stat block; *NPC TOL and WILL are
+  stored as authored* (a deliberate exception to constraint 7's letter,
+  because the Codex authors them), with whatever GQ6 says about the formula.
 
 **S8b (next):** **interactions** (§4e) on a member's page, history, the
 crew's-view list, and filters by affiliation, origin and role ("a roster
@@ -642,9 +645,6 @@ with affiliations"), the affiliation as text until S7 makes it a link.
 
 **Moved to S10:** **Keep** and **Promote** (a fought copy into the cast),
 with the fight they come from.
-- **Decisions:** the cast record; the stat block; *NPC TOL and WILL are
-  stored as authored* (a deliberate exception to constraint 7's letter,
-  because the Codex authors them), with whatever GQ6 says about the formula.
 
 ### S9 — The Threat Codex as a pack
 

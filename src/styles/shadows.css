@@ -1149,6 +1149,9 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .cast-add .btn{justify-self:start; margin-bottom:14px}
 .cast-filters{margin-bottom:6px}
 .cast-card{cursor:pointer; min-width:0}
+/* Status on a card (Decision 176): missing is a thread still, so dashed; dead and out of the picture are quieter, with no accent on hover. Text stays at full contrast. */
+.cast-card[data-status="missing"]{border-style:dashed}
+.cast-card[data-status="dead"]:hover, .cast-card[data-status="gone"]:hover{border-color:var(--frame)}
 .cast-open{background:none; border:0; padding:0; color:var(--text); font:inherit; font-weight:600; font-size:1rem; text-align:left; cursor:pointer; max-width:100%; overflow-wrap:anywhere}
 .cast-open:hover{color:var(--cyan)}
 .cast-line, .cast-meta{overflow-wrap:anywhere; min-width:0}

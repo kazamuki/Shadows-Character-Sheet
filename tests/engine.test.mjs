@@ -3160,3 +3160,35 @@ test("castFilter: q over name, line, origin and roles; status all or one", () =>
   assert.equal(names({ q: "mo", status: "alive" }), "");
   eq(Engine.castFilter(null, {}), []);
 });
+
+test("castFilter: In play is alive and missing, and the list is ordered alive, missing, gone, dead, each in cast order", () => {
+  const t = Engine.newTable("O");
+  // Added oldest first, so the cast reads (newest first): D2, G1, M1, A2, D1, A1, M2
+  for (const [n, st] of [["M2", "missing"], ["A1", "alive"], ["D1", "dead"], ["A2", "alive"], ["M1", "missing"], ["G1", "gone"], ["D2", "dead"]]) {
+    const r = Engine.addCastMember(t, { name: n }); Engine.editCastMember(t, r.id, { status: st });
+  }
+  const names = f => Engine.castFilter(t, f).map(n => n.name).join();
+  assert.equal(names({ status: "inplay" }), "A2,A1,M1,M2");
+  assert.equal(names({ status: "all" }), "A2,A1,M1,M2,G1,D2,D1");
+  assert.equal(names({}), "A2,A1,M1,M2,G1,D2,D1");
+  assert.equal(names({ status: "nonsense" }), "A2,A1,M1,M2,G1,D2,D1");
+  assert.equal(names({ status: "dead" }), "D2,D1");
+  assert.equal(names({ status: "inplay", q: "m" }), "M1,M2");
+});
+
+test("Engine.npc: a list of empty rows is still blank, and one real entry fills it", () => {
+  const empty = Engine.npc({ armor: [" "], gear: [""], traits: [{ name: "", text: "" }], skills: [{ name: "", total: null, skill: null }] });
+  for (const k of ["armor", "gear", "traits", "skills"]) assert.ok(empty.blanks.includes(k), k);
+  const full = Engine.npc({ armor: ["", "Vest"], gear: ["Phone"], traits: [{ name: "", text: "Quick" }], skills: [{ name: "", total: 0, skill: null }] });
+  for (const k of ["armor", "gear", "traits", "skills"]) assert.ok(!full.blanks.includes(k), k);
+  assert.ok(!Engine.npc({ traits: [{ name: "Fast", text: "" }], skills: [{ name: "Streetwise", total: null }] }).blanks.includes("traits"));
+});
+
+test("roles are trimmed with no empties, on load and on edit, and that is idempotent", () => {
+  const m = Engine.migrateTable({ cast: [{ npcRoles: ["Fixer", "", " Informant ", "  "] }] });
+  eq(m.cast[0].npcRoles, ["Fixer", "Informant"]);
+  eq(Engine.migrateTable(m).cast[0].npcRoles, ["Fixer", "Informant"]);
+  const t = Engine.newTable("R"); const { id } = Engine.addCastMember(t, { name: "x" });
+  Engine.editCastMember(t, id, { npcRoles: ["Fixer", "", " Informant "] });
+  eq(t.cast[0].npcRoles, ["Fixer", "Informant"]);
+});

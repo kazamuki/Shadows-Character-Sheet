@@ -301,9 +301,9 @@ function bindNotes(main){
 // State is on S, so it goes with the open table and no further: S.castOpen
 // (a member's id, or null for the list), S.castQ and S.castStatus (the filters).
 const CAST_STATUS_LABELS = { alive:"Alive", dead:"Dead", missing:"Missing", gone:"Out of the picture" };
-const CAST_FILTER_STATUSES = ["alive","all","dead","missing","gone"];
-const castStatusLabel = s => s==="all" ? "All" : CAST_STATUS_LABELS[s] || "Alive";
-const castFilterNow = () => ({ q:S.castQ||"", status:S.castStatus||"alive" });
+const CAST_FILTER_STATUSES = ["inplay","alive","all","dead","missing","gone"];
+const castStatusLabel = s => s==="all" ? "All" : s==="inplay" ? "In play" : CAST_STATUS_LABELS[s] || "Alive";
+const castFilterNow = () => ({ q:S.castQ||"", status:S.castStatus||"inplay" });
 function castOpenMember(){ return S.castOpen ? S.table.cast.find(n=>n.id===S.castOpen) || null : null; }
 const numAttr = v => typeof v==="number" && Number.isFinite(v) ? v : "";
 const castSigned = n => n===0 ? "0" : signed(n);   // sheet.js's, with a zero
@@ -314,7 +314,7 @@ function castCardHtml(n){
   const bits=[ n.origin, n.npcRoles.length ? n.npcRoles.join(" / ") : "", n.enemyRole ? `Enemy: ${n.enemyRole}` : "",
     n.tier!==null ? `Tier ${n.tier}` : "", n.status!=="alive" ? castStatusLabel(n.status) : "", hasNumber(n.block) ? "Stat block" : ""
   ].filter(Boolean).map(esc).join(" · ");
-  return `<li class="roster-card cast-card" data-ccard="${id}">
+  return `<li class="roster-card cast-card" data-ccard="${id}" data-status="${esc(n.status)}">
     <button class="cast-open" data-copen="${id}">${esc(n.name.trim() || "Unnamed")}</button>
     ${n.flavor ? `<div class="cast-line">${esc(n.flavor)}</div>` : ""}
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
@@ -412,7 +412,7 @@ function bindCastList(main){
     const name=nameEl.value; if (!name.trim()) return;
     let id; tableChange(()=>{ id=Engine.addCastMember(S.table, { name, line:lineEl.value }).id; });
     // A new member the filters would hide is shown anyway: clear them.
-    if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===id)){ S.castQ=""; S.castStatus="alive"; renderTable(); }
+    if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===id)){ S.castQ=""; S.castStatus="inplay"; renderTable(); }
     const el=$("main").querySelector("[data-cadd-name]"); if (el) el.focus();
   };
   main.querySelector("[data-cadd]").onclick=add;
@@ -474,6 +474,14 @@ function bindCastPage(main, n){
     main.querySelectorAll(`[data-clinedel^="${key}|"]`).forEach(btn=>btn.onclick=()=>{
       const i=+btn.dataset.clinedel.split("|")[1]; block(b=>{ b[key].splice(i, 1); }, true); focus(`[data-clineadd="${key}"]`); });
   }
+  // On blur or Enter a number field shows what was stored: blank if it was refused.
+  const stored = el => { const m=own(), b=m.block||{};
+    if (el.dataset.cf==="tier") return m.tier;
+    if (el.dataset.cstat) return (b.stats||{})[el.dataset.cstat];
+    if (el.dataset.cauth) return (b.authored||{})[el.dataset.cauth];
+    const k=(b.skills||[])[+el.dataset.csktotal]; return k ? k.total : null; };
+  main.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener("change", ()=>{
+    const v=stored(el); el.value = typeof v==="number" ? v : ""; castFigures(main, own()); }));
   castFigures(main, n);
   main.querySelector("[data-cback]").onclick=()=>{ S.castOpen=null; window.scrollTo(0,0); update(); focus(`[data-copen="${id}"]`); if (document.activeElement===document.body) focus("[data-cadd-name]"); };
   main.querySelector("[data-cdel]").onclick=()=>{

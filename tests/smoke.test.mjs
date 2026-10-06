@@ -3552,7 +3552,7 @@ test("Decision 176: the list filters as you type, by status, and Clear the filte
   pick(app, "[data-cstatus]", "dead");
   assert.deepEqual(castNames(app), ["Moth"]);
   assert.match(app.$("[data-ccard]").textContent, /Dead/);
-  assert.deepEqual(app.$$("[data-cstatus] option").map(o => o.textContent), ["Alive", "All", "Dead", "Missing", "Out of the picture"]);
+  assert.deepEqual(app.$$("[data-cstatus] option").map(o => o.textContent), ["In play", "Alive", "All", "Dead", "Missing", "Out of the picture"]);
   assert.deepEqual(app.errors, []);
 });
 
@@ -3716,4 +3716,48 @@ test("a long unbroken name wraps wherever the cast shows a GM's words (the pixel
   app.click("[data-copen]");
   assert.ok(app.$("h1.cast-title.tbl-title"));
   assert.ok(app.$(".cast-stats"));
+});
+
+test("Decision 176: the filter defaults to In play, and a member marked Missing is still listed, after the alive ones, dashed, with focus on them", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "In play");
+  for (const n of ["Dez", "Moth", "Orla"]) castAdd(app, n);   // Orla, Moth, Dez
+  assert.equal(app.$("[data-cstatus]").value, "inplay");
+  assert.deepEqual(app.$$("[data-cstatus] option").map(o => o.textContent), ["In play", "Alive", "All", "Dead", "Missing", "Out of the picture"]);
+  const ids = Object.fromEntries(app.$$("[data-copen]").map(b => [b.textContent, b.dataset.copen]));
+  app.click(`[data-copen="${ids.Orla}"]`);
+  pick(app, '[data-cf="status"]', "missing");
+  app.click("[data-cback]");
+  assert.deepEqual(castNames(app), ["Moth", "Dez", "Orla"], "the missing member vanished or isn't after the alive ones");
+  assert.equal(app.doc.activeElement.dataset.copen, ids.Orla, "focus isn't on their card's button");
+  assert.equal(app.$(`[data-ccard="${ids.Orla}"]`).dataset.status, "missing");
+  assert.match(app.$(`[data-ccard="${ids.Orla}"]`).textContent, /Missing/);
+  assert.match(wizCss(), /\.cast-card\[data-status="missing"\]\{border-style:dashed/);
+  pick(app, "[data-cstatus]", "all");
+  assert.deepEqual(app.$$("[data-ccard]").map(c => c.dataset.status), ["alive", "alive", "missing"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("a number field shows what was stored once it loses focus: a refused value reads blank", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Numbers");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  const changed = sel => app.$(sel).dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  type(app, '[data-cf="tier"]', "0");
+  assert.equal(app.$('[data-cf="tier"]').value, "0", "typing was interrupted");
+  changed('[data-cf="tier"]');
+  assert.equal(app.$('[data-cf="tier"]').value, "");
+  type(app, '[data-cstat="REF"]', "6.5"); changed('[data-cstat="REF"]');
+  assert.equal(app.$('[data-cstat="REF"]').value, "");
+  assert.equal(app.$('[data-cbonus="REF"]').textContent, "");
+  type(app, '[data-cstat="REF"]', "6"); changed('[data-cstat="REF"]');
+  assert.equal(app.$('[data-cstat="REF"]').value, "6");
+  type(app, '[data-cf="tier"]', "2"); changed('[data-cf="tier"]');
+  assert.equal(app.$('[data-cf="tier"]').value, "2");
+  app.click("[data-cskadd]"); type(app, '[data-csktotal="0"]', "2.5"); changed('[data-csktotal="0"]');
+  assert.equal(app.$('[data-csktotal="0"]').value, "");
+  type(app, '[data-cauth="TOL"]', "1.5"); changed('[data-cauth="TOL"]');
+  assert.equal(app.$('[data-cauth="TOL"]').value, "");
+  assert.deepEqual(app.errors, []);
 });
