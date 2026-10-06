@@ -135,7 +135,8 @@ decision and flag numbers in advance and does the bookkeeping merge.
 | [S01-crank-rep.md](S01-crank-rep.md) | S1 — CRANK reputation on the sheet | **Built and reviewed 2026-10-05**, merged in PR #111 after one fix round |
 | [S03a-table-file.md](S03a-table-file.md) | S3a — The table file, its gate and Home's door, behind the feature switch | **Built and reviewed 2026-10-05**, merged in PR #113 after one fix round (focus, wrapping, the launch test, the notes copy) |
 | [S08a-cast.md](S08a-cast.md) | S8a — The cast: the record, the stat block, the Cast tab | **Built and reviewed 2026-10-05**, merged in PR #115 after one fix round (the *In play* default and status order, refused numbers, blank rows, trimmed roles). The plan's S8 is split: S8b is interactions; Keep and Promote move to S10 |
-| [S08b-interactions.md](S08b-interactions.md) | S8b — Who knows what: interactions, affiliations, the crew's view | **Built 2026-10-05**, PR #117, switched off; awaiting review. History moves to a later session (SQ1) |
+| [S08b-interactions.md](S08b-interactions.md) | S8b — Who knows what: interactions, affiliations, the crew's view | **Built and reviewed 2026-10-05**, merged in PR #117 after one fix round (a line with no crew name reachable, the What draft kept, Back keyed by crew name, the removed name spoken, wrapping rows). History moves to a later session (SQ1) |
+| [S09a-pack.md](S09a-pack.md) | S9a — The pack: a file a GM slots in, and the Threats tab | **Drafted 2026-10-05**, SQ1–SQ9 answered by Ken (every default); awaiting approval. The plan's S9 is split: S9b is the builder, S9c the real Codex pack |
 
 ## What a work order contains
 
