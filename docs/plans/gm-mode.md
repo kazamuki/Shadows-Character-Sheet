@@ -648,7 +648,7 @@ to a later session: S5 or S10, whichever first writes it (Ken, 2026-10-05).
 **Moved to S10:** **Keep** and **Promote** (a fought copy into the cast),
 with the fight they come from.
 
-### S9 — The Threat Codex as a pack (split: S9a and S9b built, then S9c)
+### S9 — The Threat Codex as a pack (split: S9a, S9b and S9c, all built)
 
 **Split 2026-10-05 (Ken, SQ1 of the [S9a order](gm-mode/S09a-pack.md)):**
 **S9a** is the pack file, its gate, storage and import, and a **Threats** tab
@@ -665,8 +665,8 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 
 - **Data:** origins (seven), NPC roles (nine, Patron included: GQ4
   answered by v2), enemy roles (eight, each with v2's tier), tiers (four), entries (42), encounter groups (29),
-  traits (the glossary), the drone reference. Gear by catalog id where the
-  Gear tables have it; text where the ⚠ list says they don't.
+  traits (the glossary), the drone reference. Gear as text, one line per item
+  (the ⚠ marks stripped: S9c's fix round).
 - **The rolodex:** browse by origin, role and tier, as a **Threats** tab of
   the table (S9a, Decision 182: not `openCatalog`, which is the character's);
   a card per entry; **Use** copies it into the cast (S9a) or into a fight (S10).
@@ -677,6 +677,12 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
   a Use copy already has them), the tier's guidance **the book's words, never
   a warning** (the book's own entries break its tier table: GQ21), the trait
   count by kind, and traits picked from the glossary or written.
+- **The Codex pack (S9c, built; Decisions 186–187):** `npm run codex-pack` builds
+  `private/gm/threat-codex.shadows-pack.json` from the mirror: 42 threats, the
+  11 roster people, 29 groups, the 114-trait glossary, seven origins, nine NPC
+  roles, eight enemy roles and four tiers, with the Stat Audit's numbers and an
+  id ledger that survives the book's renumbering. Apostrophes fold in name
+  matching. The drone reference and the Trait Library are not in it (S10, S13).
 - **The matrix:** the Origin × Role concept grid, if GQ5 makes it canon,
   with **Pull from the city**.
 - **Decisions:** the Codex's data shape; that GM content bumps no
@@ -784,3 +790,4 @@ Deighton.
 | GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8 |
 | GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts |
 | GQ21 | The Tier table against the entries: on Scott's Stat Audit (2026-10-03), 14 of 17 human Tier 3 entries and all 18 supernatural Tier 3 drafts have a stat outside the table's band ("All stats 5–8; 2–3 exceptional at 8–9"); by the mirror, one Tier 1 entry has a Signature ("no Signatures") and 10 of 17 Tier 3 entries have three or four ("1–2"). The supernatural copy treats the trait budget as binding. Is the table a guide, or are the entries off it? | Scott | **Answered 2026-10-06 (Ken):** a general guide, where to start looking for the power you want; the GM overrides it as the story needs. The builder shows it as the book's words and never warns (S9b, 183–184) |
+| GQ22 | Eight trait names on entries aren't in the glossary under that name. The Pointman's *Controlled Violence*, *Clear the Room* and *Take the Hit* have no glossary row. *Ghost Roads* (the Drifter) and *Terrain Native* (the Wraith) are the glossary's *Know the Gaps* under entry names. The Architect's and the Converted's last "trait" are design notes set in bold (*Interface (17) / Programming (17)*, *TOL 7 / WILL 5*). *Sanctified Rosary — if carried* carries a condition in its name; the glossary's row is *Sanctified Rosary*. The Codex pack keeps each as printed. Which is right? Also: the entries print *Handgun*, *Rifle* and *SMG*; the game's skills are *Handguns*, *Rifles* and *SMGs*. The pack matches the plural by one letter | Scott | **Open** (S9c, 186). Each stays as the book prints it until he answers; the builder's trait count reads them as *written*, which is true |

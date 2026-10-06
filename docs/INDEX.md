@@ -374,6 +374,8 @@ W29, built a session at a time behind a feature switch (173). The plan is `plans
 - **183** *(The pack's glossary, modifiers and guides — W29 S9b, GQ16, GQ21)* — pack schema 0.2: `traits` (`kind` universal / origin / signature, `origin`), `origins[].modifiers` on the data's stat ids, `tiers[].statGuide` and `traitGuide` as the book's words, and `enemyRoles[].tier` read; no tier ranges as numbers, since the book's entries break them.
 - **184** *(The builder is the member's page — W29 S9b)* — the cast member's page reads the packs by name: lists for origin and enemy role, toggles for NPC roles, the origin's modifiers beside each stat, the tier's guides as the book's words, and an enemy role's usual tier; never applied, stored or warned.
 - **185** *(Traits from the glossary — W29 S9b)* — **Add from a pack** copies a trait's name and text into the block; the page counts the block's traits by kind, reading each name against the glossaries, a renamed copy counting as *written*.
+- **186** *(The Codex pack is built — W29 S9c, GQ6, GQ10)* — `private/gm/build-codex-pack.mjs` builds the Threat Codex pack from the mirror (the human Codex, v2, the Stat Audit for every stat, TOL and WILL); `private/gm/ids.json` keeps each record's id by the book's name, so renumbering moves only `ref` and a new or renamed name stops the build; `npm run codex-pack`.
+- **187** *(Apostrophes fold in name matching — W29 S9c)* — `’`, `‘` and `ʼ` read as `'`, on both sides of every pack match and search (`_fold`). → refines 184 and 185.
 
 ### Audit trail, undo & admin
 
