@@ -3202,6 +3202,7 @@ const Engine = (() => {
   const TABLE_ID_RE = new RegExp(`^TBL-${INTAKE_BODY}$`);
   const NOTE_ID_RE = /^N-[0-9A-HJKMNP-TV-Z]{8}$/;
   const CAST_ID_RE = /^C-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const INTERACTION_ID_RE = /^I-[0-9A-HJKMNP-TV-Z]{8}$/;
   const isTableId = v => typeof v==="string" && TABLE_ID_RE.test(v);
   function newTableId(){
     const s = randomChars(12);
@@ -3231,6 +3232,11 @@ const Engine = (() => {
   function newCastId(used){
     let id;
     do id = `C-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newInteractionId(used){
+    let id;
+    do id = `I-${randomChars(8)}`; while (used.has(id));
     return id;
   }
   // A whole number, or null: "6" is 6, and 6.5, {} and "x" are nothing.
@@ -3272,6 +3278,7 @@ const Engine = (() => {
   function _castMember(n, used){
     for (const k of CAST_TEXT) n[k] = _str(n[k]);
     n.npcRoles = _roleList(n.npcRoles);
+    n.affiliations = _roleList(n.affiliations);
     n.tier = _tier(n.tier);
     if (!CAST_STATUSES.includes(n.status)) n.status = "alive";
     if (!(typeof n.id==="string" && CAST_ID_RE.test(n.id)) || used.has(n.id)) n.id = newCastId(used);
@@ -3280,13 +3287,42 @@ const Engine = (() => {
     n.created = _isoOrNull(n.created);
     n.updated = _isoOrNull(n.updated);
   }
+  // What passed between the crew and the cast (Decision 177). The kind is the
+  // only part anything reads, so it is a fixed list; anything else is null.
+  const INTERACTION_KINDS = ["shared","learned","helped","wronged","killed","owes","owed"];
+  const _kind = v => INTERACTION_KINDS.includes(v) ? v : null;
+  // A local day, YYYY-MM-DD, that is a real one: 2026-02-30 is nothing.
+  function _day(v){
+    const m = typeof v==="string" && /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+    if (!m) return null;
+    const d = new Date(Date.UTC(+m[1], +m[2]-1, +m[3]));
+    return d.getUTCFullYear()===+m[1] && d.getUTCMonth()===+m[2]-1 && d.getUTCDate()===+m[3] ? v : null;
+  }
+  // A link to a cast member (Decision 178). One that points at nobody is kept:
+  // it reads as the name it was given, or as gone.
+  function _castLinks(v){
+    const out = (Array.isArray(v) ? v : []).filter(l=>_isObj(l) && l.kind==="cast" && typeof l.id==="string" && CAST_ID_RE.test(l.id));
+    for (const l of out) if (typeof l.name!=="string") delete l.name;
+    return out;
+  }
+  function _interaction(x, used){
+    x.kind = _kind(x.kind);
+    x.cast = _castLinks(x.cast);
+    x.crew = _roleList(x.crew);
+    x.text = _str(x.text);
+    x.date = _day(x.date);
+    if (!(typeof x.id==="string" && INTERACTION_ID_RE.test(x.id)) || used.has(x.id)) x.id = newInteractionId(used);
+    used.add(x.id);
+    x.created = _isoOrNull(x.created);
+    x.updated = _isoOrNull(x.updated);
+  }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.2";
+  const TABLE_SCHEMA_VERSION = "0.3";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[], cast:[] };
+             notes:[], cast:[], interactions:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -3318,6 +3354,10 @@ const Engine = (() => {
     if (typeof arrived!=="string" || _versionNewer("0.2", arrived)){
       if (!Array.isArray(c.cast)) c.cast = [];
     }
+    //   Schema 0.3 (Decision 177): a table gets interactions, and a cast member affiliations.
+    if (typeof arrived!=="string" || _versionNewer("0.3", arrived)){
+      if (!Array.isArray(c.interactions)) c.interactions = [];
+    }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
     c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
@@ -3332,6 +3372,9 @@ const Engine = (() => {
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
     for (const n of c.cast) _castMember(n, usedCast);
+    const usedInteraction = new Set();
+    c.interactions = (Array.isArray(c.interactions) ? c.interactions : []).filter(_isObj);
+    for (const x of c.interactions) _interaction(x, usedInteraction);
     return c;
   }
   function tableCheck(t){
@@ -3408,7 +3451,7 @@ const Engine = (() => {
     const now = new Date().toISOString();
     const used = new Set(t.cast.map(n=>n.id));
     const n = { id:newCastId(used), name:_str((f||{}).name), flavor:_str((f||{}).line), description:"",
-                origin:"", npcRoles:[], enemyRole:"", tier:null, motivation:"", resources:"", line:"",
+                origin:"", npcRoles:[], affiliations:[], enemyRole:"", tier:null, motivation:"", resources:"", line:"",
                 ifPushed:"", gmNote:"", status:"alive", block:null, created:now, updated:now };
     t.cast.unshift(n);
     _tableStamp(t);
@@ -3420,6 +3463,7 @@ const Engine = (() => {
     if (_isObj(f)){
       for (const k of CAST_TEXT) if (k in f) n[k] = _str(f[k]);
       if ("npcRoles" in f) n.npcRoles = _roleList(f.npcRoles);
+      if ("affiliations" in f) n.affiliations = _roleList(f.affiliations);
       if ("tier" in f) n.tier = _tier(f.tier);
       if ("status" in f && CAST_STATUSES.includes(f.status)) n.status = f.status;
     }
@@ -3438,17 +3482,114 @@ const Engine = (() => {
   function removeCastMember(t, id){
     const i = t.cast.findIndex(x=>x.id===id);
     if (i < 0) return { ok:false, why:"No such cast member." };
+    // What they had to do with the crew stays, under their name (Decision 178).
+    const name = _str(t.cast[i].name);
+    if (name.trim()) for (const x of _interactions(t)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l) && l.id===id) l.name = name;
     t.cast.splice(i, 1);
     _tableStamp(t);
     return { ok:true };
   }
+  const _folded = v => _str(v).trim().toLowerCase();
   function castFilter(t, f){
-    const q = _str((f||{}).q).trim().toLowerCase(), st = (f||{}).status;
+    const q = _folded((f||{}).q), st = (f||{}).status, aff = _folded((f||{}).affiliation);
     const rank = n => CAST_ORDER.indexOf(n.status);
     return (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>{
       if (st==="inplay" ? n.status!=="alive" && n.status!=="missing" : CAST_STATUSES.includes(st) && n.status!==st) return false;
-      return !q || [n.name, n.flavor, n.origin, ...(n.npcRoles||[])].some(x=>_str(x).toLowerCase().includes(q));
+      const affs = Array.isArray(n.affiliations) ? n.affiliations : [];
+      if (aff && !affs.some(a=>_folded(a)===aff)) return false;
+      return !q || [n.name, n.flavor, n.origin, ...(n.npcRoles||[]), ...affs].some(x=>_str(x).toLowerCase().includes(q));
     }).sort((a, b)=>rank(a) - rank(b));   // stable: each group keeps the cast's own order
+  }
+  // Every affiliation in the cast, once (case folded), A–Z, as first spelled.
+  function castAffiliations(t){
+    const seen = new Map();
+    for (const n of (Array.isArray(t && t.cast) ? t.cast : []).slice().reverse())   // oldest first, so the first spelling is the first written
+      for (const a of (Array.isArray(n.affiliations) ? n.affiliations : [])){
+        const s = _str(a).trim(); if (s && !seen.has(s.toLowerCase())) seen.set(s.toLowerCase(), s);
+      }
+    return [...seen.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+  }
+
+  // ── Interactions (Decisions 177–179) ────────────────────────────────────
+  const _interactions = t => Array.isArray(t && t.interactions) ? t.interactions.filter(_isObj) : [];
+  // Newest first: the later day, a day-less line after the dated, then the later created.
+  function _newest(a, b){
+    if (a.date!==b.date){ if (!a.date) return 1; if (!b.date) return -1; return a.date < b.date ? 1 : -1; }
+    const x = _str(a.created), y = _str(b.created);
+    return x===y ? 0 : x < y ? 1 : -1;
+  }
+  // The link rule (Decision 178): a live link reads its target's name, a link
+  // with no target the name it was left, else a stand-in. Never throws.
+  function linkName(t, link){
+    const id = _isObj(link) ? link.id : null;
+    const n = (Array.isArray(t && t.cast) ? t.cast : []).find(x=>_isObj(x) && x.id===id);
+    if (n) return { name:_str(n.name).trim() || "Unnamed", gone:false };
+    const kept = _isObj(link) ? _str(link.name).trim() : "";
+    return { name:kept || "Someone removed", gone:true };
+  }
+  function _killLinked(t, x){
+    if (x.kind!=="killed") return;
+    for (const l of (Array.isArray(x.cast) ? x.cast : [])){
+      const n = _isObj(l) && (Array.isArray(t.cast) ? t.cast : []).find(c=>c.id===l.id);
+      if (n){ n.status = "dead"; _tableStamp(t, n); }
+    }
+  }
+  function addInteraction(t, f){
+    f = _isObj(f) ? f : {};
+    const kind = _kind(f.kind), text = _str(f.text);
+    if (!kind && !text.trim()) return { ok:false, why:"Say what happened." };
+    if (!Array.isArray(t.interactions)) t.interactions = [];
+    const now = new Date().toISOString();
+    const used = new Set(t.interactions.map(x=>x && x.id));
+    const x = { id:newInteractionId(used), kind,
+                cast:_castLinks((Array.isArray(f.cast) ? f.cast : []).filter(id=>typeof id==="string").map(id=>({ kind:"cast", id }))),
+                crew:_roleList(f.crew), text, date:_day(f.date), created:now, updated:now };
+    t.interactions.unshift(x);
+    _killLinked(t, x);
+    _tableStamp(t);
+    return { ok:true, id:x.id };
+  }
+  function editInteraction(t, id, f){
+    const x = _interactions(t).find(i=>i.id===id);
+    if (!x) return { ok:false, why:"No such interaction." };
+    if (_isObj(f)){
+      const was = x.kind;
+      if ("kind" in f) x.kind = _kind(f.kind);
+      if ("crew" in f) x.crew = _roleList(f.crew);
+      if ("text" in f) x.text = _str(f.text);
+      if ("date" in f) x.date = _day(f.date);
+      if (x.kind==="killed" && was!=="killed") _killLinked(t, x);
+    }
+    _tableStamp(t, x);
+    return { ok:true };
+  }
+  function removeInteraction(t, id){
+    const i = Array.isArray(t && t.interactions) ? t.interactions.findIndex(x=>_isObj(x) && x.id===id) : -1;
+    if (i < 0) return { ok:false, why:"No such interaction." };
+    t.interactions.splice(i, 1);
+    _tableStamp(t);
+    return { ok:true };
+  }
+  function interactionsFor(t, castId){
+    return _interactions(t).filter(x=>(Array.isArray(x.cast) ? x.cast : []).some(l=>_isObj(l) && l.id===castId)).sort(_newest);
+  }
+  // Who knows what: the same records, from the crew's end. Names that differ
+  // only in case or spaces are one person, shown as first spelled.
+  function crewView(t, f){
+    const q = _folded((f||{}).q), groups = new Map();
+    const hit = (x, name) => !q || name.includes(q) || _str(x.text).toLowerCase().includes(q)
+      || (Array.isArray(x.cast) ? x.cast : []).some(l=>linkName(t, l).name.toLowerCase().includes(q));
+    for (const x of _interactions(t).reverse())   // oldest first, so the heading is the spelling first written
+      for (const raw of (Array.isArray(x.crew) ? x.crew : [])){
+        const name = _str(raw).trim(), key = name.toLowerCase();
+        if (!name || !hit(x, key)) continue;
+        if (!groups.has(key)) groups.set(key, { name, interactions:[] });
+        const g = groups.get(key);
+        if (!g.interactions.includes(x)) g.interactions.push(x);
+      }
+    const out = [...groups.entries()].sort((a, b)=>a[0].localeCompare(b[0])).map(e=>e[1]);
+    for (const g of out) g.interactions.sort(_newest);
+    return out;
   }
 
   // The engine's surface, grouped by domain.
@@ -3491,6 +3632,8 @@ const Engine = (() => {
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote,
     // The cast: a stat block read, and a member added, edited, removed, found
-    npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter };
+    npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
+    // Interactions: what passed between the crew and the cast, and who knows it
+    addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName };
 })();
 /*ENGINE-END*/

@@ -303,7 +303,23 @@ function bindNotes(main){
 const CAST_STATUS_LABELS = { alive:"Alive", dead:"Dead", missing:"Missing", gone:"Out of the picture" };
 const CAST_FILTER_STATUSES = ["inplay","alive","all","dead","missing","gone"];
 const castStatusLabel = s => s==="all" ? "All" : s==="inplay" ? "In play" : CAST_STATUS_LABELS[s] || "Alive";
-const castFilterNow = () => ({ q:S.castQ||"", status:S.castStatus||"inplay" });
+// The affiliation filter names what the cast has: one that has since left it filters nothing.
+const castAffNow = () => { const w=String(S.castAff||"").toLowerCase(); return w && Engine.castAffiliations(S.table).find(a=>a.toLowerCase()===w) || ""; };
+const castFilterNow = () => ({ q:S.castQ||"", status:S.castStatus||"inplay", affiliation:castAffNow() });
+// The seven kinds, read from the crew's side (Decision 177), in the order they're pressed.
+const INTERACTION_KINDS = [["shared","Told them"], ["learned","Learned from them"], ["helped","Helped them"], ["wronged","Wronged them"],
+  ["killed","Killed them"], ["owes","Owes them"], ["owed","They owe"]];
+const interactionLabel = k => (INTERACTION_KINDS.find(x=>x[0]===k)||[])[1] || "";
+// The GM's local day, YYYY-MM-DD. Not toISOString(): that's UTC, and after 7 pm in New York it says tomorrow.
+function localDay(d=new Date()){
+  const p = n => String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+const splitList = (v, re) => String(v).split(re).map(s=>s.trim()).filter(Boolean);
+// The add row's draft: kept while the page is open, so three lines in a scene are three Enters.
+const intAdd = () => S.intAdd || (S.intAdd={ kind:null, crew:"", date:localDay() });
+const kindToggleHtml = (attr, current, label, prefix="") => `<div class="form-toggle int-kinds" role="group" aria-label="${esc(label)}">${INTERACTION_KINDS.map(([k,name])=>
+  `<button type="button" ${attr}="${esc(prefix+k)}" class="${k===current?"on":""}" aria-pressed="${k===current}">${esc(name)}</button>`).join("")}</div>`;
 function castOpenMember(){ return S.castOpen ? S.table.cast.find(n=>n.id===S.castOpen) || null : null; }
 const numAttr = v => typeof v==="number" && Number.isFinite(v) ? v : "";
 const castSigned = n => n===0 ? "0" : signed(n);   // sheet.js's, with a zero
@@ -311,7 +327,7 @@ const hasNumber = b => !!b && (Object.values(b.stats||{}).concat(Object.values(b
 
 function castCardHtml(n){
   const id=esc(n.id);
-  const bits=[ n.origin, n.npcRoles.length ? n.npcRoles.join(" / ") : "", n.enemyRole ? `Enemy: ${n.enemyRole}` : "",
+  const bits=[ n.affiliations.length ? n.affiliations.join(" / ") : "", n.origin, n.npcRoles.length ? n.npcRoles.join(" / ") : "", n.enemyRole ? `Enemy: ${n.enemyRole}` : "",
     n.tier!==null ? `Tier ${n.tier}` : "", n.status!=="alive" ? castStatusLabel(n.status) : "", hasNumber(n.block) ? "Stat block" : ""
   ].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card cast-card" data-ccard="${id}" data-status="${esc(n.status)}">
@@ -320,20 +336,46 @@ function castCardHtml(n){
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
 }
 function castListHtml(t){
+  if (S.castView==="crew") return crewViewHtml(t);
   if (!t.cast.length) return `<p class="step-note">Nobody yet. The city fills up fast.</p>`;
   const list=Engine.castFilter(t, castFilterNow());
   if (!list.length) return `<p class="step-note">No one matches.</p><p><button class="btn sm" data-cclear>Clear the filter</button></p>`;
   return `<ul class="roster-list">${list.map(castCardHtml).join("")}</ul>`;
 }
+// A gone member is a struck-through name, not a button (Decision 178).
+function linkNameHtml(t, link, where){
+  const r=Engine.linkName(t, link);
+  return r.gone ? `<s aria-label="${esc(r.name)}, removed">${esc(r.name)}</s>`
+    : `<button class="cast-open int-who" data-copen="${esc(link.id)}" data-cwhere="${esc(where)}">${esc(r.name)}</button>`;
+}
+// Who knows what (Decision 179): the same records, by crew name.
+function crewViewHtml(t){
+  const groups=Engine.crewView(t, { q:S.castQ||"" });
+  if (!groups.length) return S.castQ && String(S.castQ).trim() ? `<p class="step-note">No one matches.</p>` : `<p class="step-note">Nothing between the crew and anyone yet.</p>`;
+  return groups.map((g,gi)=>`<section class="crew-group"><h2 class="cast-h crew-name">${esc(g.name)}</h2><ul class="int-list">${g.interactions.map(x=>{
+    const who=(x.cast||[]).map((l,li)=>linkNameHtml(t, l, `${gi}|${x.id}|${li}`)).join(", ");
+    const bits=[ interactionLabel(x.kind) ? `<span class="int-kind">${esc(interactionLabel(x.kind))}</span>` : "", who,
+      x.date ? `<span class="int-date">${esc(dayText(x.date))}</span>` : "", x.text ? `<span class="int-text">${esc(x.text)}</span>` : "" ].filter(Boolean);
+    return `<li class="int-line">${bits.join(" ")}</li>`; }).join("")}</ul></section>`).join("");
+}
+// A day as the GM's locale shows it. Built from its parts, so it is the day it says in any zone.
+function dayText(day){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(day||""); if (!m) return "";
+  return new Date(+m[1], +m[2]-1, +m[3]).toLocaleDateString();
+}
 function castTabHtml(t){
-  const f=castFilterNow();
-  return `<div class="cast-add">
+  const f=castFilterNow(), crew=S.castView==="crew", affs=Engine.castAffiliations(t);
+  const view=[["cast","The cast"],["crew","Who knows what"]];
+  return `<div class="form-toggle cast-view" role="group" aria-label="View">${view.map(([k,name])=>
+      `<button type="button" data-cview="${k}" class="${(k==="crew")===crew?"on":""}" aria-pressed="${(k==="crew")===crew}">${esc(name)}</button>`).join("")}</div>
+    ${crew ? "" : `<div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-cadd-name placeholder="Who did they meet?" autocomplete="off"></label>
       <label class="field"><span>Who they are</span><input type="text" data-cadd-line placeholder="One line: who they are" autocomplete="off"></label>
-      <button class="btn primary" data-cadd>Add</button></div>
+      <button class="btn primary" data-cadd>Add</button></div>`}
     <div class="cast-filters">
-      <label class="field"><span>Search</span><input type="search" data-csearch placeholder="Search the cast" autocomplete="off" value="${esc(f.q)}"></label>
-      <label class="field"><span>Show</span><select data-cstatus>${CAST_FILTER_STATUSES.map(s=>`<option value="${s}"${s===f.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
+      <label class="field"><span>Search</span><input type="search" data-csearch placeholder="${crew?"Search who knows what":"Search the cast"}" autocomplete="off" value="${esc(f.q)}"></label>
+      ${crew ? "" : `<label class="field"><span>Show</span><select data-cstatus>${CAST_FILTER_STATUSES.map(s=>`<option value="${s}"${s===f.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
+      <label class="field"><span>Affiliation</span><select data-caff><option value="">Any</option>${affs.map(a=>`<option value="${esc(a)}"${a===f.affiliation?" selected":""}>${esc(a)}</option>`).join("")}</select></label>`}
     </div>
     <div data-castlist>${castListHtml(t)}</div>`;
 }
@@ -366,6 +408,31 @@ function castStatBlockHtml(n){
     ${lines("armor","Armor")}${lines("gear","Gear")}
     <div class="cast-lines"><span class="cast-sub">Traits</span>${traits}<button class="btn sm" data-ctadd>Add a trait</button></div>`;
 }
+// What passed between this member and the crew (Decisions 177–179).
+function interactionRowHtml(x){
+  const id=esc(x.id);
+  return `<li class="int-row" data-int="${id}">
+    ${kindToggleHtml("data-ikind", x.kind, "What kind", x.id+"|")}
+    <div class="int-fields">
+      <input type="text" data-icrew="${id}" list="crew-names" value="${esc(x.crew.join(", "))}" placeholder="Crew" aria-label="Crew" autocomplete="off">
+      <input type="date" data-idate="${id}" value="${esc(x.date||"")}" aria-label="When">
+      <input type="text" data-itext="${id}" value="${esc(x.text)}" placeholder="What passed between them" aria-label="What" autocomplete="off">
+      <button class="btn sm danger" data-idel="${id}">Delete</button></div></li>`;
+}
+function castInteractionsHtml(n){
+  const a=intAdd(), rows=Engine.interactionsFor(S.table, n.id);
+  const names=Engine.crewView(S.table, {}).map(g=>g.name);
+  return `<h2 class="cast-h">Between them and the crew</h2>
+    <datalist id="crew-names">${names.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
+    <div class="int-add">
+      ${kindToggleHtml("data-iakind", a.kind, "What kind")}
+      <div class="int-fields">
+        <label class="field"><span>Crew</span><input type="text" data-iacrew list="crew-names" value="${esc(a.crew)}" placeholder="Who from the crew" autocomplete="off"></label>
+        <label class="field"><span>When</span><input type="date" data-iadate value="${esc(a.date||"")}"></label>
+        <label class="field"><span>What</span><input type="text" data-iwhat placeholder="What passed between them" autocomplete="off"></label>
+        <button class="btn primary" data-iadd>Add</button></div></div>
+    <ul class="int-list" data-intlist>${rows.map(interactionRowHtml).join("")}</ul>`;
+}
 function castPageHtml(n){
   return `<p><button class="btn sm" data-cback>Back to the cast</button></p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
@@ -384,6 +451,8 @@ function castPageHtml(n){
     ${castText(n,"line","Their line","Where they stop.",true)}
     ${castText(n,"ifPushed","If pushed","What happens when they are.",true)}
     ${castText(n,"gmNote","GM note","Yours alone.",true)}
+    <label class="field"><span>Affiliations</span><input type="text" data-cf="affiliations" value="${esc(n.affiliations.join(" / "))}" placeholder="Who they answer to" autocomplete="off"></label>
+    ${castInteractionsHtml(n)}
     ${castStatBlockHtml(n)}
     <p class="cast-delete"><button class="btn danger" data-cdel>Delete</button></p>`;
 }
@@ -399,12 +468,15 @@ function redrawCastList(){
   bindCastCards($("main"));
 }
 function bindCastCards(main){
-  const open = id => { S.castOpen=id; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
-  main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); open(b.dataset.copen); });
+  // A member opened from Who knows what remembers which name it was, so Back lands on it.
+  const open = (id, from) => { S.castOpen=id; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
+  main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
+    open(b.dataset.copen, b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null); });
   main.querySelectorAll("[data-ccard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) open(li.dataset.ccard); });
   const clear=main.querySelector("[data-cclear]");
-  if (clear) clear.onclick=()=>{ S.castQ=""; S.castStatus="all"; const q=main.querySelector("[data-csearch]"), s=main.querySelector("[data-cstatus]");
-    if (q) q.value=""; if (s) s.value="all"; redrawCastList(); if (q) q.focus(); };
+  if (clear) clear.onclick=()=>{ S.castQ=""; S.castStatus="all"; S.castAff="";
+    const q=main.querySelector("[data-csearch]"), s=main.querySelector("[data-cstatus]"), a=main.querySelector("[data-caff]");
+    if (q) q.value=""; if (s) s.value="all"; if (a) a.value=""; redrawCastList(); if (q) q.focus(); };
 }
 function bindCastList(main){
   const nameEl=main.querySelector("[data-cadd-name]"), lineEl=main.querySelector("[data-cadd-line]");
@@ -412,14 +484,20 @@ function bindCastList(main){
     const name=nameEl.value; if (!name.trim()) return;
     let id; tableChange(()=>{ id=Engine.addCastMember(S.table, { name, line:lineEl.value }).id; });
     // A new member the filters would hide is shown anyway: clear them.
-    if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===id)){ S.castQ=""; S.castStatus="inplay"; renderTable(); }
+    if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===id)){ S.castQ=""; S.castStatus="inplay"; S.castAff=""; renderTable(); }
     const el=$("main").querySelector("[data-cadd-name]"); if (el) el.focus();
   };
-  main.querySelector("[data-cadd]").onclick=add;
-  for (const el of [nameEl, lineEl]) el.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
+  if (nameEl){
+    main.querySelector("[data-cadd]").onclick=add;
+    for (const el of [nameEl, lineEl]) el.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
+  }
   main.querySelector("[data-csearch]").oninput=ev=>{ S.castQ=ev.target.value; redrawCastList(); };
-  const st=main.querySelector("[data-cstatus]");
-  st.onchange=()=>{ S.castStatus=st.value; redrawCastList(); };
+  const st=main.querySelector("[data-cstatus]"), af=main.querySelector("[data-caff]");
+  if (st) st.onchange=()=>{ S.castStatus=st.value; redrawCastList(); };
+  if (af) af.onchange=()=>{ S.castAff=af.value; redrawCastList(); };
+  main.querySelectorAll("[data-cview]").forEach(b=>b.onclick=()=>{
+    S.castView=b.dataset.cview; renderTable();
+    const el=$("main").querySelector(`[data-cview="${S.castView}"]`); if (el) el.focus(); });
   bindCastCards(main);
 }
 // The figures beside the fields: worked out from the block, never stored.
@@ -433,16 +511,70 @@ function castFigures(main, n){
     if (r.health) main.querySelector("[data-chealth]").textContent = `${r.health.total} (${r.health.levels} Health Level${r.health.levels===1?"":"s"})`;
   }
 }
+// The add row keeps its kind, crew and date between entries (they're on S, so a
+// redraw keeps them too); Enter in What adds. Only a Killed them goes back to none.
+function bindInteractions(main, n){
+  const id=n.id, a=intAdd(), whatEl=main.querySelector("[data-iwhat]");
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); };
+  const found = xid => S.table.interactions.find(x=>x.id===xid);
+  main.querySelectorAll("[data-iakind]").forEach(b=>b.onclick=()=>{
+    a.kind = a.kind===b.dataset.iakind ? null : b.dataset.iakind;
+    main.querySelectorAll("[data-iakind]").forEach(x=>{ const on=x.dataset.iakind===a.kind; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });
+  });
+  const crewEl=main.querySelector("[data-iacrew]"), dateEl=main.querySelector("[data-iadate]");
+  crewEl.oninput=()=>{ a.crew=crewEl.value; };
+  crewEl.onchange=()=>{ a.crew=splitList(crewEl.value, /,/).join(", "); crewEl.value=a.crew; };
+  dateEl.oninput=dateEl.onchange=()=>{ a.date=dateEl.value||null; };
+  const add=()=>{
+    const text=whatEl.value;
+    if (!a.kind && !text.trim()) return;
+    let r; tableChange(()=>{ r=Engine.addInteraction(S.table, { kind:a.kind, cast:[id], crew:splitList(a.crew, /,/), text, date:a.date }); }, false);
+    if (!r.ok) return;
+    if (a.kind==="killed") a.kind=null;
+    renderTable(); focus("[data-iwhat]");
+  };
+  main.querySelector("[data-iadd]").onclick=add;
+  whatEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
+  // The rows are saved on input, with no redraw, so a GM who types and goes Home keeps the words.
+  const edit = (xid, f) => tableChange(()=>Engine.editInteraction(S.table, xid, f), false);
+  main.querySelectorAll("[data-ikind]").forEach(b=>b.onclick=()=>{
+    const [xid, k]=b.dataset.ikind.split("|"), cur=found(xid); if (!cur) return;
+    edit(xid, { kind: cur.kind===k ? null : k });
+    renderTable(); focus(`[data-ikind="${xid}|${k}"]`);
+  });
+  main.querySelectorAll("[data-itext]").forEach(el=>el.oninput=()=>edit(el.dataset.itext, { text:el.value }));
+  main.querySelectorAll("[data-icrew]").forEach(el=>{
+    el.oninput=()=>edit(el.dataset.icrew, { crew:splitList(el.value, /,/) });
+    el.onchange=()=>{ edit(el.dataset.icrew, { crew:splitList(el.value, /,/) }); const x=found(el.dataset.icrew); el.value = x ? x.crew.join(", ") : ""; };
+  });
+  main.querySelectorAll("[data-idate]").forEach(el=>{
+    const save=()=>edit(el.dataset.idate, { date:el.value });
+    el.oninput=save;
+    el.onchange=()=>{ save(); const x=found(el.dataset.idate); el.value = x && x.date || ""; };
+  });
+  main.querySelectorAll("[data-idel]").forEach(b=>b.onclick=()=>{
+    const xid=b.dataset.idel, order=Engine.interactionsFor(S.table, id), at=order.findIndex(x=>x.id===xid);
+    askFirst({ title:"Delete this?", text:"It goes from the crew's view too.", yes:"Delete",
+      then(){
+        tableChange(()=>Engine.removeInteraction(S.table, xid));
+        const next=order[at+1], el=next && $("main").querySelector(`[data-ikind^="${next.id}|"]`) || $("main").querySelector("[data-iwhat]");
+        if (el) el.focus();
+      } });
+  });
+}
 function bindCastPage(main, n){
   const id=n.id, own=()=>castOpenMember();
   const edit = (key, v) => tableChange(()=>Engine.editCastMember(S.table, id, { [key]:v }), false);
   main.querySelectorAll("[data-cf]").forEach(el=>{
-    const key=el.dataset.cf, fn=()=>{
-      edit(key, key==="npcRoles" ? el.value.split(/[\/,]/).map(s=>s.trim()).filter(Boolean) : el.value);
+    const key=el.dataset.cf, list=key==="npcRoles" || key==="affiliations", fn=()=>{
+      edit(key, list ? splitList(el.value, /[\/,]/) : el.value);
       if (key==="name"){ const h=main.querySelector("[data-ctitle]"); if (h) h.textContent=el.value.trim() || "Unnamed"; }
     };
     el.addEventListener("input", fn); el.addEventListener("change", fn);
+    // On blur a list shows what was stored: trimmed, empties dropped.
+    if (key==="affiliations") el.addEventListener("change", ()=>{ el.value=own().affiliations.join(" / "); });
   });
+  bindInteractions(main, n);
   // A change to the block: `redraw` for a row added or removed, else the
   // fields keep their place and only the figures beside them are rewritten.
   const block = (fn, redraw) => tableChange(()=>{
@@ -483,14 +615,22 @@ function bindCastPage(main, n){
   main.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener("change", ()=>{
     const v=stored(el); el.value = typeof v==="number" ? v : ""; castFigures(main, own()); }));
   castFigures(main, n);
-  main.querySelector("[data-cback]").onclick=()=>{ S.castOpen=null; window.scrollTo(0,0); update(); focus(`[data-copen="${id}"]`); if (document.activeElement===document.body) focus("[data-cadd-name]"); };
+  main.querySelector("[data-cback]").onclick=()=>{
+    const from=S.castFrom;
+    S.castOpen=null; S.castFrom=null; S.intAdd=null; window.scrollTo(0,0); update();
+    // Back to Who knows what lands on the name that was pressed; to the list, on the card, or quick-add if the filter hides them.
+    if (from) focus(from); else focus(`[data-copen="${id}"]`);
+    if (document.activeElement===document.body) focus("[data-cadd-name]");
+    if (document.activeElement===document.body) focus(`[data-cview="${S.castView==="crew"?"crew":"cast"}"]`);
+  };
   main.querySelector("[data-cdel]").onclick=()=>{
     const order=Engine.castFilter(S.table, castFilterNow()), at=order.findIndex(x=>x.id===id);
-    askFirst({ title:`Delete ${n.name.trim() || "Unnamed"}?`, text:"Their page goes with them. Nothing else at the table changes.", yes:"Delete",
+    askFirst({ title:`Delete ${n.name.trim() || "Unnamed"}?`, text:"Their page goes with them. What they had to do with the crew stays, under their name.", yes:"Delete",
       then(){
-        S.castOpen=null;
+        S.castOpen=null; S.castFrom=null; S.intAdd=null;
         tableChange(()=>Engine.removeCastMember(S.table, id));
-        const next=order[at+1], el=next && $("main").querySelector(`[data-copen="${next.id}"]`) || $("main").querySelector("[data-cadd-name]");
+        const crew=S.castView==="crew", next=!crew && order[at+1];
+        const el=next && $("main").querySelector(`[data-copen="${next.id}"]`) || $("main").querySelector("[data-cadd-name]") || $("main").querySelector("[data-cview]");
         if (el) el.focus();
       } });
   };

@@ -1174,3 +1174,20 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .cast-trait input, .cast-trait textarea{min-width:0}
 .cast-trait textarea{min-height:80px}
 .cast-delete{margin-top:28px}
+/* Interactions and Who knows what (Decisions 177–179). The kinds wrap to rows on a phone; every GM-written name, date and line wraps. */
+.cast-view{margin-bottom:14px; width:max-content; max-width:100%}
+.int-kinds{flex-wrap:wrap; width:auto; max-width:100%; margin-bottom:10px}
+.int-kinds button{overflow-wrap:anywhere}
+.int-add{margin-bottom:14px}
+.int-fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px; align-items:end; min-width:0}
+.int-fields .btn{justify-self:start; margin-bottom:14px}
+.int-row .int-fields{gap:8px 14px; align-items:center}
+.int-row .int-fields input{min-width:0; width:100%}
+.int-list{list-style:none; margin:0; padding:0}
+.int-row{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:12px 14px 14px; margin-bottom:10px; min-width:0}
+.int-line{padding:6px 0; border-bottom:1px solid var(--frame); overflow-wrap:anywhere; min-width:0}
+.int-kind{font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim)}
+.int-date{color:var(--dim)}
+.int-who{display:inline; width:auto}
+.crew-name{overflow-wrap:anywhere}
+.int-line s{color:var(--dim)}

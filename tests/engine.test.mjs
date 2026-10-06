@@ -2856,14 +2856,15 @@ test("the code guards read every engine and UI script, gm.js included (Decision 
   assert.ok(!CODE_FILES.some(f => f.includes("theme-init")));
 });
 
-test("newTable stamps kind, a TBL- id, the name, schema 0.2, no notes and no cast", () => {
+test("newTable stamps kind, a TBL- id, the name, schema 0.3, no notes, cast or interactions", () => {
   const t = Engine.newTable("Tuesday");
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.2");
+  assert.equal(t.meta.tableSchemaVersion, "0.3");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
+  assert.equal(JSON.stringify(t.interactions), "[]");
   for (const k of ["created", "updated"]) assert.ok(Number.isFinite(Date.parse(t.meta[k])));
   assert.notEqual(Engine.newTable().meta.id, Engine.newTable().meta.id);
   assert.equal(Engine.newTable().meta.name, "");
@@ -2927,14 +2928,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.2", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.3" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.3");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.3", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.4");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.3");
-  for (const v of ["0.2", "0.1", "0.0", "junk", undefined]) {
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.4");
+  for (const v of ["0.3", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.2", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.3", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -2980,21 +2981,21 @@ const dez = (over = {}) => {
 const plain = x => JSON.parse(JSON.stringify(x));
 const eq = (a, b, m) => assert.deepEqual(plain(a), plain(b), m);
 
-test("a 0.1 table migrates to 0.2 with an empty cast and its notes untouched", () => {
+test("a 0.1 table migrates to 0.3 with an empty cast and its notes untouched", () => {
   const old = Engine.newTable("Old");
   Engine.addTableNote(old, { title: "A", text: "one" });
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.2");
-  eq(m.cast, []);
+  assert.equal(m.meta.tableSchemaVersion, "0.3");
+  eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.3" }, cast: [{ name: 5, tier: "2" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.3");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.4");
   assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3191,4 +3192,192 @@ test("roles are trimmed with no empties, on load and on edit, and that is idempo
   const t = Engine.newTable("R"); const { id } = Engine.addCastMember(t, { name: "x" });
   Engine.editCastMember(t, id, { npcRoles: ["Fixer", "", " Informant "] });
   eq(t.cast[0].npcRoles, ["Fixer", "Informant"]);
+});
+
+// ── Interactions and affiliations (Decisions 177–179) ─────────────────
+// Synthetic only: Dez and Ivo at the cast, Nyx and Rook as the crew.
+const castWith = (...names) => {
+  const t = Engine.newTable("I");
+  const ids = names.map(n => Engine.addCastMember(t, { name: n }).id);
+  return [t, ...ids];
+};
+const KINDS = ["shared", "learned", "helped", "wronged", "killed", "owes", "owed"];
+
+test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and the rest is byte-identical", () => {
+  const old = Engine.newTable("Two");
+  Engine.addCastMember(old, { name: "Dez" }); Engine.addCastMember(old, { name: "Ivo" });
+  Engine.addTableNote(old, { title: "A", text: "one" });
+  delete old.interactions; old.meta.tableSchemaVersion = "0.2";
+  for (const n of old.cast) delete n.affiliations;
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.3");
+  eq(m.interactions, []);
+  for (const n of m.cast) eq(n.affiliations, []);
+  const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.affiliations; return JSON.stringify(c); };
+  assert.equal(strip(m), strip(old));
+  assert.equal(Engine.tableCheck(m).length, 0);
+});
+
+test("a 0.4 table keeps its stamp and its interactions, and tableCheck says so", () => {
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" }, interactions: [{ kind: "shared", text: "x" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.4");
+  assert.equal(m.interactions.length, 1);
+  assert.equal(Engine.tableCheck(m).length, 1);
+});
+
+test("interactions are typed over junk, kind null for an unknown one, links kept only if valid, and idempotent", () => {
+  eq(Engine.migrateTable({ interactions: "x" }).interactions, []);
+  const good = "C-ABCDEFGH";
+  const m = Engine.migrateTable({ interactions: [null, 5, {},
+    { kind: "zombie", cast: "C-1", crew: "Nyx", text: 5, date: "2026-02-30" },
+    { cast: [null, { kind: "place", id: good }, { kind: "cast", id: "bad" }, { kind: "cast", id: good, name: 7 }], crew: [" Nyx ", "", 5] }] });
+  assert.equal(m.interactions.length, 3);
+  for (const x of m.interactions) {
+    assert.match(x.id, /^I-[0-9A-HJKMNP-TV-Z]{8}$/);
+    assert.equal(typeof x.text, "string");
+  }
+  const a = m.interactions[1];
+  assert.equal(a.kind, null); eq(a.cast, []); eq(a.crew, ["Nyx"]); assert.equal(a.text, ""); assert.equal(a.date, null);
+  const b = m.interactions[2];
+  eq(b.cast, [{ kind: "cast", id: good }]); eq(b.crew, ["Nyx"]); assert.equal(b.kind, null);
+  assert.equal(JSON.stringify(Engine.migrateTable(m)), JSON.stringify(m));
+  for (const [d, want] of [["2026-10-05", "2026-10-05"], ["2026-02-29", null], ["2028-02-29", "2028-02-29"], ["2026-13-01", null], ["10/05/2026", null], ["2026-10-5", null], [20261005, null]])
+    assert.equal(Engine.migrateTable({ interactions: [{ date: d }] }).interactions[0].date, want, String(d));
+  for (const k of KINDS) assert.equal(Engine.migrateTable({ interactions: [{ kind: k }] }).interactions[0].kind, k);
+});
+
+test("a link to a member who isn't in the cast is kept; a link's name survives; ids are unique", () => {
+  const m = Engine.migrateTable({ cast: [{ id: "C-AAAAAAAA", name: "Dez" }], interactions: [
+    { id: "I-AAAAAAAA", cast: [{ kind: "cast", id: "C-BBBBBBBB", name: "Moth" }] }, { id: "I-AAAAAAAA" }] });
+  eq(m.interactions[0].cast, [{ kind: "cast", id: "C-BBBBBBBB", name: "Moth" }]);
+  assert.notEqual(m.interactions[0].id, m.interactions[1].id);
+  eq(Engine.linkName(m, m.interactions[0].cast[0]), { name: "Moth", gone: true });
+});
+
+test("affiliations are trimmed with no empties, a string is one, and that is idempotent", () => {
+  eq(Engine.migrateTable({ cast: [{ affiliations: "Eclipse" }] }).cast[0].affiliations, ["Eclipse"]);
+  const m = Engine.migrateTable({ cast: [{ affiliations: ["Eclipse", " "] }, { affiliations: 5 }] });
+  eq(m.cast[0].affiliations, ["Eclipse"]); eq(m.cast[1].affiliations, []);
+  assert.equal(JSON.stringify(Engine.migrateTable(m)), JSON.stringify(m));
+});
+
+test("a __proto__ key at the interaction, link and crew levels pollutes nothing", () => {
+  const raw = '{"interactions":[{"__proto__":{"pwn":1},"cast":[{"__proto__":{"pwn":1},"kind":"cast","id":"C-ABCDEFGH"}],"crew":["__proto__",{"__proto__":{"pwn":1}}]}]}';
+  const m = Engine.migrateTable(JSON.parse(raw));
+  assert.equal(({}).pwn, undefined);
+  const x = m.interactions[0];
+  assert.equal(x.pwn, undefined); assert.equal(x.cast[0].pwn, undefined);
+  eq(x.crew, ["__proto__"]);
+  assert.equal(Engine.crewView(m, {}).length, 1);
+});
+
+test("addInteraction: first in the list, refused with no kind and no text, links and a killed kind set the member dead", () => {
+  const [t, dez, ivo] = castWith("Dez", "Ivo");
+  const a = Engine.addInteraction(t, { kind: "shared", cast: [dez], crew: ["Nyx"], text: "the warehouse is a front", date: "2026-10-05" });
+  assert.ok(a.ok); assert.match(a.id, /^I-/);
+  const b = Engine.addInteraction(t, { kind: "learned", cast: [dez], crew: [" Nyx "], text: "", date: "nope" });
+  assert.equal(t.interactions[0].id, b.id); assert.equal(t.interactions[1].id, a.id);
+  eq(t.interactions[0].crew, ["Nyx"]); assert.equal(t.interactions[0].date, null);
+  eq(t.interactions[1].cast, [{ kind: "cast", id: dez }]);
+  for (const f of [{}, { text: "  " }, { kind: "zombie" }, null, 5])
+    assert.equal(JSON.stringify(Engine.addInteraction(t, f)), JSON.stringify({ ok: false, why: "Say what happened." }));
+  assert.equal(t.interactions.length, 2);
+  assert.ok(Engine.addInteraction(t, { text: "no kind is fine" }).ok);
+  assert.equal(t.cast.find(n => n.id === dez).status, "alive");
+  const k = Engine.addInteraction(t, { kind: "killed", cast: [dez, "C-NOPE0000"], crew: ["Rook"] });
+  assert.ok(k.ok);
+  assert.equal(t.cast.find(n => n.id === dez).status, "dead");
+  assert.equal(t.cast.find(n => n.id === ivo).status, "alive");
+});
+
+test("editInteraction: a change to killed sets dead, a change from killed leaves it, and an unknown id is refused", () => {
+  const [t, dez] = castWith("Dez");
+  const { id } = Engine.addInteraction(t, { kind: "shared", cast: [dez], text: "x" });
+  assert.ok(Engine.editInteraction(t, id, { kind: "killed" }).ok);
+  assert.equal(t.cast[0].status, "dead");
+  Engine.editCastMember(t, dez, { status: "alive" });
+  assert.ok(Engine.editInteraction(t, id, { text: "still killed", kind: "killed" }).ok);
+  assert.equal(t.cast[0].status, "alive", "a line that was already killed doesn't kill again");
+  Engine.editCastMember(t, dez, { status: "dead" });
+  assert.ok(Engine.editInteraction(t, id, { kind: "helped" }).ok);
+  assert.equal(t.cast[0].status, "dead");
+  assert.ok(Engine.editInteraction(t, id, { crew: " ", text: 5, date: "2026-02-30", kind: "zombie" }).ok);
+  const x = t.interactions[0];
+  eq(x.crew, []); assert.equal(x.text, ""); assert.equal(x.date, null); assert.equal(x.kind, null);
+  assert.equal(t.interactions.length, 1, "an emptied one stays");
+  const no = JSON.stringify({ ok: false, why: "No such interaction." });
+  assert.equal(JSON.stringify(Engine.editInteraction(t, "I-NOPE0000", {})), no);
+  assert.ok(Engine.removeInteraction(t, id).ok);
+  assert.equal(JSON.stringify(Engine.removeInteraction(t, id)), no);
+  assert.equal(t.interactions.length, 0);
+});
+
+test("removeCastMember writes the name into every link to them; linkName reads live, gone with a name, and gone without", () => {
+  const [t, dez, ivo] = castWith("Dez", "Ivo");
+  Engine.addInteraction(t, { kind: "shared", cast: [dez, ivo], crew: ["Nyx"], text: "x" });
+  eq(Engine.linkName(t, t.interactions[0].cast[0]), { name: "Dez", gone: false });
+  assert.equal(t.interactions[0].cast[0].name, undefined, "a live link stores no name");
+  assert.ok(Engine.removeCastMember(t, dez).ok);
+  const [gone, live] = t.interactions[0].cast;
+  assert.equal(gone.name, "Dez"); assert.equal(live.name, undefined);
+  eq(Engine.linkName(t, gone), { name: "Dez", gone: true });
+  eq(Engine.linkName(t, live), { name: "Ivo", gone: false });
+  eq(Engine.linkName(t, { kind: "cast", id: "C-NOPE0000" }), { name: "Someone removed", gone: true });
+  for (const v of [null, "x", 5, [], undefined, {}]) assert.doesNotThrow(() => Engine.linkName(t, v), String(v));
+  eq(Engine.linkName(t, null), { name: "Someone removed", gone: true });
+  assert.doesNotThrow(() => Engine.linkName(null, { id: "x" }));
+  assert.equal(JSON.stringify(Engine.migrateTable(t).interactions[0].cast[0]), JSON.stringify(gone));
+});
+
+test("interactionsFor is newest first: the later day, then no day, then the later created", () => {
+  const [t, dez, ivo] = castWith("Dez", "Ivo");
+  const mk = (text, date, created, cast = [dez]) => { const r = Engine.addInteraction(t, { kind: "shared", cast, text, date }); t.interactions.find(x => x.id === r.id).created = created; };
+  mk("old", "2026-10-01", "2026-10-01T10:00:00.000Z");
+  mk("none", null, "2026-10-09T10:00:00.000Z");
+  mk("new", "2026-10-05", "2026-10-05T08:00:00.000Z");
+  mk("same-later", "2026-10-05", "2026-10-05T09:00:00.000Z");
+  mk("other", "2026-10-06", "2026-10-06T09:00:00.000Z", [ivo]);
+  assert.equal(Engine.interactionsFor(t, dez).map(x => x.text).join(), "same-later,new,old,none");
+  assert.equal(Engine.interactionsFor(t, ivo).map(x => x.text).join(), "other");
+  eq(Engine.interactionsFor(t, "C-NOPE0000"), []); eq(Engine.interactionsFor(null, dez), []);
+});
+
+test("crewView: Nyx, nyx and 'Nyx ' are one group shown as first spelled; A–Z; q reads text, crew and a gone member's name", () => {
+  const [t, dez, ivo] = castWith("Dez", "Ivo");
+  Engine.addInteraction(t, { kind: "shared", cast: [dez], crew: ["Nyx"], text: "one", date: "2026-10-01" });
+  Engine.addInteraction(t, { kind: "learned", cast: [ivo], crew: ["NYX", "Rook"], text: "two", date: "2026-10-02" });
+  Engine.addInteraction(t, { kind: "helped", cast: [ivo], crew: ["nYx "], text: "three", date: "2026-10-03" });
+  Engine.addInteraction(t, { kind: "helped", cast: [ivo], crew: [], text: "nobody's" });
+  const v = Engine.crewView(t, {});
+  assert.equal(v.map(g => g.name).join(), "Nyx,Rook");
+  assert.equal(v[0].interactions.map(x => x.text).join(), "three,two,one");
+  assert.equal(v[1].interactions.map(x => x.text).join(), "two");
+  assert.equal(Engine.crewView(t, { q: "ROOK" }).map(g => g.name).join(), "Rook");
+  assert.equal(Engine.crewView(t, { q: "one" }).map(g => g.name).join(), "Nyx");
+  Engine.removeCastMember(t, dez);
+  assert.equal(Engine.crewView(t, { q: "dez" })[0].interactions[0].text, "one");
+  eq(Engine.crewView(null, {}), []); eq(Engine.crewView(t, { q: "zzz" }), []);
+});
+
+test("castFilter by affiliation is case folded, q reads affiliations, and castAffiliations is distinct and sorted", () => {
+  const [t, a, b, c] = castWith("A", "B", "C");
+  Engine.editCastMember(t, a, { affiliations: ["Eclipse", "Zed"] });
+  Engine.editCastMember(t, b, { affiliations: [" eclipse "] });
+  Engine.editCastMember(t, c, { affiliations: ["Anchor"] });
+  eq(Engine.castAffiliations(t), ["Anchor", "Eclipse", "Zed"]);
+  assert.equal(Engine.castFilter(t, { affiliation: "ECLIPSE" }).map(n => n.name).sort().join(), "A,B");
+  assert.equal(Engine.castFilter(t, { affiliation: "" }).length, 3);
+  assert.equal(Engine.castFilter(t, { affiliation: "nobody" }).length, 0);
+  assert.equal(Engine.castFilter(t, { q: "anch" }).map(n => n.name).join(), "C");
+  eq(Engine.castAffiliations(null), []);
+});
+
+test("castFilter with an affiliation chosen is still in CAST_ORDER, each group in cast order", () => {
+  const t = Engine.newTable("O");
+  for (const [n, st] of [["M2", "missing"], ["A1", "alive"], ["D1", "dead"], ["A2", "alive"], ["M1", "missing"], ["G1", "gone"]]) {
+    const r = Engine.addCastMember(t, { name: n }); Engine.editCastMember(t, r.id, { status: st, affiliations: ["Eclipse"] });
+  }
+  assert.equal(t.cast.map(n => n.name).join(), "G1,M1,A2,D1,A1,M2", "insertion order isn't status order");
+  assert.equal(Engine.castFilter(t, { affiliation: "eclipse", status: "all" }).map(n => n.name).join(), "A2,A1,M1,M2,G1,D1");
+  assert.equal(Engine.castFilter(t, { affiliation: "eclipse", status: "inplay" }).map(n => n.name).join(), "A2,A1,M1,M2");
 });

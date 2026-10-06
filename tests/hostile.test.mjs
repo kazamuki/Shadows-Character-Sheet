@@ -249,7 +249,13 @@ function hostileTable() {
     { id: "N-ABCDEFGH", title: P("note2.title"), text: P("note2.text") },
     null, 5, "x", { title: 7, text: {} },
   ];
-  t.cast = [{ name: P("future.cast") }];
+  t.cast = [{ id: "C-ABCDEFGH", name: P("future.cast"), affiliations: [P("future.aff"), 5, " "] }];
+  t.interactions = [
+    { id: P("int.id"), kind: P("int.kind"), cast: [{ kind: "cast", id: "C-ABCDEFGH" }, { kind: "cast", id: "C-ZZZZZZZZ", name: P("int.linkname") }],
+      crew: [P("int.crew"), 5], text: P("int.text"), date: P("int.date"), created: P("int.created") },
+    { kind: "shared", cast: [{ kind: "cast", id: "C-ABCDEFGH", name: { x: 1 } }, { kind: "place", id: "C-ABCDEFGH" }], crew: P("int2.crew"), text: P("int2.text"), date: "2026-10-05" },
+    null, 5, "x",
+  ];
   return t;
 }
 
@@ -344,4 +350,36 @@ test("a cast file with __proto__ keys at every level pollutes nothing on import"
   assert.equal(({}).pwn, undefined);
   assert.equal(imp.window.eval("({}).pwn"), undefined, "the page's Object.prototype was polluted");
   assert.deepEqual(imp.errors, []);
+});
+
+// ── Interactions and affiliations are untrusted too (Decisions 177–179, 124) ──
+test("hostile interactions and affiliations render as text on a member's page, the filtered Cast list and Who knows what, and every kind, date and link comes out valid or blank", () => {
+  const t = hostileTable();
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  found.push(...injected(app, "the Cast list"));
+  const aff = app.$("[data-caff]");
+  assert.equal(aff.options.length, 2, "the payload wasn't the one affiliation offered");
+  aff.value = aff.options[1].value;
+  aff.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(app.$$("[data-ccard]").length, 1, "the affiliation filter didn't narrow the list");
+  found.push(...injected(app, "the Cast list with an affiliation chosen"));
+  app.click('[data-cview="crew"]');
+  assert.ok(app.$$(".crew-group").length >= 2, "Who knows what wasn't drawn");
+  assert.ok(app.$("s[aria-label$=', removed']"), "a gone name wasn't struck through");
+  found.push(...injected(app, "Who knows what"));
+  app.click("[data-copen]");
+  found.push(...injected(app, "a member's page"));
+  assert.ok(app.$$("[data-int]").length >= 2, "the member's interactions weren't drawn");
+  for (const el of app.$$("[data-idate]")) assert.ok(el.value === "" || /^\d{4}-\d{2}-\d{2}$/.test(el.value), "a date field read " + el.value);
+  assert.ok(app.$$("[data-ikind].on").every(b => /\|(shared|learned|helped|wronged|killed|owes|owed)$/.test(b.dataset.ikind)), "a payload kind was pressed");
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a field drew an object as text");
+  app.click("[data-idel]");
+  found.push(...injected(app, "the Delete question"));
+  app.click("#modal [data-modalclose]");
+  assert.deepEqual(found, [], "an interaction's or affiliation's text became markup");
+  assert.deepEqual(app.errors, [], "the hostile interactions threw while rendering");
 });
