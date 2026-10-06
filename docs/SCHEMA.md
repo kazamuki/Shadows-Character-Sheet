@@ -4073,7 +4073,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The mirror's stats over the audit's: the audit is Scott's newer copy, with TOL corrected (GQ6).
      - **Replaces:** nothing.
      - **Revisit if:** Scott keeps the Codex as structured data of his own, his documents are combined (a reconciliation pass over the ledger, the whole Codex at once), or GQ17 brings the supernatural sections in.
-     - **Built:** pack content `Codex 2026-09 · v2 2026-10-02 · audit 2026-10-03`; PR __PR__; private repo `c28d5b3`; log 2026-10-06.
+     - **Built:** pack content `Codex 2026-09 · v2 2026-10-02 · audit 2026-10-03`; PR #123; private repo `c28d5b3`; log 2026-10-06.
 
 187. **Pack names match with case and apostrophes folded: `’`, `‘` and `ʼ` read as `'`, in every match and search.**
      *2026-10-06 · Ken + Claude · Touches: _folded, castPackMatch, packFilter, packTraits, packGroups, castFilter, crewView, castAffiliations, trait count, Decision 184, Decision 185*
@@ -4084,7 +4084,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Folding every punctuation mark: dashes and quotes carry meaning in names (*Sanctified Rosary — if carried*).
      - **Replaces:** nothing. 184 and 185's "case-folded" now also folds apostrophes.
      - **Revisit if:** a pack's names differ by another character a GM can't type.
-     - **Built:** engine only (every changed reader is GM-only and switched off; no app bump); PR __PR__; log 2026-10-06.
+     - **Built:** engine only (every changed reader is GM-only and switched off; no app bump); PR #123; log 2026-10-06.
 
 ## 5. Open Flags
 
