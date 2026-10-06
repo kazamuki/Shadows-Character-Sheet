@@ -13,3 +13,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Saved test output (npm run verify > some.log)
+*.log
