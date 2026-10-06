@@ -630,7 +630,7 @@ function bindCastPage(main, n){
         S.castOpen=null; S.castFrom=null; S.intAdd=null;
         tableChange(()=>Engine.removeCastMember(S.table, id));
         const crew=S.castView==="crew", next=!crew && order[at+1];
-        const el=next && $("main").querySelector(`[data-copen="${next.id}"]`) || $("main").querySelector("[data-cadd-name]") || $("main").querySelector("[data-cview]");
+        const el=next && $("main").querySelector(`[data-copen="${next.id}"]`) || $("main").querySelector("[data-cadd-name]") || $("main").querySelector("[data-cview][aria-pressed=true]");
         if (el) el.focus();
       } });
   };

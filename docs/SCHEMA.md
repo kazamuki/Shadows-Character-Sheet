@@ -850,7 +850,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.2",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.3",       // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
@@ -858,10 +858,20 @@ commit** — a GM's table must never change under them.
     id: "C-XXXXXXXX",                // unique in the table; a bad or repeated one is replaced
     name: "", flavor: "", description: "",
     origin: "", npcRoles: [ "" ], enemyRole: "",   // the GM's text until S9's pack names them (174)
+    affiliations: [ "" ],            // 0.3: text, trimmed, no empties; S7 links them (179)
     tier: null,                      // a whole number from 1, or null
     motivation: "", resources: "", line: "", ifPushed: "", gmNote: "",
     status: "alive",                 // alive | dead | missing | gone ("Out of the picture": alive, out of the story)
     block: null,                     // or a stat block, below
+    created: "<ISO>", updated: "<ISO>"
+  } ],
+  interactions: [ {                  // 0.3: what passed between the crew and the cast (Decisions 177–179)
+    id: "I-XXXXXXXX",                // the TAG alphabet; unique in the table
+    kind: "shared",                  // shared | learned | helped | wronged | killed | owes | owed | null (anything else reads null)
+    cast: [ { kind: "cast", id: "C-XXXXXXXX" } ],   // links (178); a name joins one only when its member is deleted
+    crew: [ "" ],                    // typed names, trimmed, no empties, until S3b's seats claim them
+    text: "",
+    date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     created: "<ISO>", updated: "<ISO>"
   } ]
   // Keys the gate doesn't know are kept, at any level, and never read.
@@ -877,7 +887,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -3846,6 +3856,7 @@ The browser keeps each table as `shadows.table.v1.<id>` =
      - **Replaces:** nothing. 170 foresaw it: each later record is added by its own session.
      - **Revisit if:** S9's pack names a vocabulary the GM's text can't match, or S8b's interactions need a field this lacks.
      - **Built:** table schema 0.2; PR #115; log 2026-10-05 (the cast).
+    → **Superseded in part by Decision 177** — interactions don't wait for sessions; the date carries them until S5.
 
 175. **An NPC's stat block stores what the Codex prints: stats and skill totals as authored, TOL and WILL as authored, and Health and the bonuses derived.**
      *2026-10-05 · Ken + Claude · Touches: stat block, block.stats, block.authored, skill totals, armor lines, gear lines, traits, Engine.npc, Health Levels, HP, statMod, TOL, WILL, constraint 7, GQ6, Decision 98*
@@ -3873,6 +3884,47 @@ The browser keeps each table as `shadows.table.v1.<id>` =
      - **Replaces:** Decision 171 in part: S10, not S8, decides the table's audit trail.
      - **Revisit if:** a GM loses work to a deleted member, or GQ1's tab order says otherwise.
      - **Built:** as 174.
+    → **Superseded in part by Decision 179** — the list also filters by affiliation, and the tab has a second view.
+
+177. **A table keeps the crew's interactions with its cast: dated records of what was shared, learned, done or owed, with the crew as typed names until seats exist.**
+     *2026-10-05 · Ken + Claude · Touches: interactions, table.interactions, I- id, interaction kind, shared, learned, helped, wronged, killed, owes, owed, crew names, date, cast status, history, table schema 0.3, migrateTable, Decision 174, W29, GQ19*
+     - **Decided:** Table schema 0.3 adds `interactions: [ … ]` (shape in SCHEMA §3): an id (`I-` and eight characters), a `kind` (one of seven, or null), `cast` (links, 178), `crew` (names as text), `text`, a local `date` (`YYYY-MM-DD` or null) and the stamps. Adding a *killed* interaction sets each linked member's status to dead; nothing sets it back but the GM. A member has no `history` field: until sessions (S5) and fights (S10) write one, the interactions are it.
+     - **Why:** Scott forgets "what info went to whom" (§1a), and a dated line holds it without a session to hang it on. S5 offers each interaction a session by its date; it never converts on load (the gear row's rule, Decisions 120–121).
+     - **Rejected:**
+       - Waiting for S5: Scott's memory would wait behind the Codex and the fight.
+       - Interactions inside the member: one can name several members, and the crew's view reads them from the other end.
+       - A `history` list now: a third place for the same sentence, with nothing yet to write it.
+       - Crew as seats: seats are S3b, last in the order; S3b claims the typed names.
+       - An unknown kind read as *shared*: it invents what happened.
+       - Kinds a GM types: one kind splits across spellings nothing can read; a line with no kind holds the rest.
+     - **Replaces:** Decision 174 in part: interactions don't wait for sessions; the date carries them until S5.
+     - **Revisit if:** S5's sessions can't match interactions by date, or a GM needs a kind the seven lack.
+     - **Built:** table schema 0.3; PR #117; log 2026-10-05 (interactions and affiliations).
+
+178. **A table record links another as `{ kind, id }`; deleting the target writes its last name into each link, and a link with no target reads as that name, struck through.**
+     *2026-10-05 · Ken + Claude · Touches: links, cast link, { kind, id }, removeCastMember, deleted link, struck-through name, linkName, interactions, constraint 7, constraint 8, W29*
+     - **Decided:** A link is `{ kind: "cast", id }`, the plan's §4c shape; `kind` is "cast" until another record needs linking. A live link stores no name: it reads its target's. `removeCastMember` writes the member's name into every link to them as `name`. `Engine.linkName(t, link)` returns `{ name, gone }`: the target's name, else the link's stored name with `gone: true`, else *Someone removed* with `gone: true`. It never throws.
+     - **Why:** a dead NPC deleted from the cast still told the crew things, and the crew's view must still say so (constraint 8: a link to something deleted is never an error). A name copied into every live link would be a second copy to keep in step, which constraint 7 exists to avoid.
+     - **Rejected:**
+       - Deleting a member's interactions with them: loses who knows what.
+       - Asking at Delete: a question whose safe answer is always *keep*.
+       - A name in every link, refreshed on rename: a stored copy of a derived value.
+       - Refusing to delete a member who has interactions: the GM can't tidy the cast.
+     - **Replaces:** nothing. It's the plan's §4c rule, built for its first record.
+     - **Revisit if:** S5 or S7 links a kind whose deletion should cascade.
+     - **Built:** as 177.
+
+179. **A member carries affiliations as text; the Cast list filters by one; a member's page lists their interactions; and the Cast tab's second view, Who knows what, lists them by crew name.**
+     *2026-10-05 · Ken + Claude · Touches: affiliations, cast filters, affiliation filter, castFilter, Cast tab, member page, Between them and the crew, Who knows what, crewView, quick entry, datalist, Decision 176, W29, GQ1*
+     - **Decided:** `affiliations` is a list of text, split on `/` or `,` like roles, shown first on a card. The Cast list adds an **Affiliation** filter (*Any*, then each one in the cast) and the search reads affiliations. A member's page adds **Between them and the crew**: an add row keeping kind and crew between entries, and every interaction with them, newest first, editable in place. A toggle above the list, *The cast · Who knows what*, shows the same records grouped by crew name.
+     - **Why:** Scott's "roster with affiliations, so it isn't Bob the Goblin thirty times" (§1a). Origin and role are already in the search; three more pickers on a phone cost more than they find. Kind and crew rarely change within a scene, so entry is one field.
+     - **Rejected:**
+       - Filters for origin and role too: the search already finds them.
+       - A Crew tab: the same records, so a view of the Cast tab, not a third place to look.
+       - A modal to add an interaction: it hides the list it adds to (176's reason).
+     - **Replaces:** Decision 176 in part: the list filters by affiliation as well as status, and the tab has a second view.
+     - **Revisit if:** S7 makes affiliations faction links, or a GM's crew list outgrows typed names before S3b.
+     - **Built:** as 177.
 
 ## 5. Open Flags
 
