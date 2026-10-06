@@ -67,6 +67,15 @@ Deighton confirmed both rulings (Ken asked, 2026-10-04); playtests and player
 feedback may revisit them, so the decision's **Revisit if** should say so. No
 open flag. Do it with W66, which touches the same row's text.
 
+**W67 — The session log's default date is UTC, so it says tomorrow in the evening.** *Claude · ⏭ · Fix · raised 2026-10-05 in W29 S8b*
+`sheet.js` defaults a new session's date with `toISOString().slice(0,10)`,
+which is the UTC day: after 7 pm in New York (or whenever the local day is
+behind UTC's) a player's new session is dated tomorrow. `gm.js`'s `localDay()`
+builds the day from `getFullYear`, `getMonth` and `getDate` and is the pattern.
+*To respect:* a session already saved keeps its date; only the default moves.
+Player-visible, so a CHANGELOG line and a patch bump, and a test that builds the
+date in local time (as S8b's `localDay` test does) and runs under a UTC+ zone.
+
 **W66 — Rename "Max Boost" to "Max Character Point Boost" in the app.** *Ken · ⏭ · Fix (copy) · raised 2026-10-04*
 The CRB's table column still reads "Max Freebie Boost", which is the old name
 (Decision 2 renamed Freebie Points to Character Points but left this one as

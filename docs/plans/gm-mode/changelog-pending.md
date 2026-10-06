@@ -10,3 +10,6 @@ something a GM can see adds its line here.
   in it, and export it as a file of its own. Home's Import reads it.
 - **The cast.** A table keeps its NPCs: a name in one press mid-session,
   or a whole stat block, with Health worked out for you.
+- **Who knows what.** The cast remembers what passed between them and
+  the crew, and a second view lists it by who was there. Affiliations
+  too, so a roster of goblins comes apart.

@@ -279,7 +279,7 @@ CastMember: {
   codexEntry?,                       // "built from Entry 05"
   places: [link], factions: [link],  // where they turn up, who they answer to
   status: "alive" | "dead" | "missing" | "gone",
-  firstMet?: sessionId, gmNote, history: [ { session, text } ]
+  firstMet?: sessionId, gmNote, history: [ { session, text } ]   // not built in S8b (SQ1): the interactions are a member's history until S5 or S10 writes this
 }
 
 Interaction: {                       // Scott: "what info was shared with who"
@@ -621,7 +621,7 @@ waits on it.
 - The stance line, tipping points, key NPCs as cast links (stubs until S8).
 - **Clocks**, shared, on factions first.
 
-### S8 — The cast (split: S8a built, S8b next)
+### S8 — The cast (split: S8a and S8b built)
 
 **S8a (built, Decisions 174–176, switched off):**
 
@@ -639,7 +639,7 @@ waits on it.
   stored as authored* (a deliberate exception to constraint 7's letter,
   because the Codex authors them), with whatever GQ6 says about the formula.
 
-**S8b (next, [order](gm-mode/S08b-interactions.md)):** **interactions**
+**S8b (built, Decisions 177–179, switched off; [order](gm-mode/S08b-interactions.md)):** **interactions**
 (§4e) on a member's page, dated until S5's sessions; the crew's view (*Who
 knows what*); and affiliations as text until S7 makes them links, with one
 Affiliation filter (origin and role stay in the search). **History** moves
