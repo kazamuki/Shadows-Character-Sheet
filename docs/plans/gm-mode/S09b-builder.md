@@ -4,7 +4,7 @@
 GQ17, GQ21 (new).
 **Status:** drafted 2026-10-06 by Claude (Opus), after #119 (S9a) merged
 with its fix round: the first order drafted under the README's step 7.
-**§4 answered by Ken, 2026-10-06, but SQ3**, which he asked to have clarified.
+**§4 answered by Ken, 2026-10-06**, every default but SQ9's placement detail (below). Approved to build.
 **Branch:** from `main` at or after `fb2706a`, PR to `main`, switched off
 (Decision 173).
 **Runs alone.** It touches `engine.js`'s Packs section, `gm.js`, the CSS,
@@ -86,7 +86,7 @@ From the build itself (*Where the order didn't fit*):
   outside the table's band, 3 of 19 at Tier 2, and so do all 18 of the
   supernatural Tier 3 drafts. A range warning would fire on most of the
   book: the same finding as TOL's formula (175). So the guidance is shown
-  as the book's words, and the plan gains **GQ21** for Scott. The script
+  as the book's words, and the plan gains **GQ21**, which Ken answered with SQ3: the table is a guide. The script
   is the order's, not the build's. Rerun it in the review if the mirror
   changes.
 - **The mirror is behind Scott's Codex.** The audit lists the roster's
@@ -228,7 +228,7 @@ goes over, trim its *Why*, not a *Rejected* line.
        - A trait's kind stored on the block when copied: the table would carry pack words, and a renamed trait would keep a kind it no longer has (185).
        - The glossary as a separate file: a pack is the book, and the traits are in it.
      - **Replaces:** nothing. 180's unread `traits` key is now read.
-     - **Revisit if:** Scott answers GQ21 with numbers the entries keep, or GQ17's Orders need modifiers, a case or a trait kind of their own.
+     - **Revisit if:** the tier table becomes a rule the entries keep (GQ21 answered it as a guide), or GQ17's Orders need modifiers, a case or a trait kind of their own.
      - **Built:** pack schema 0.2; PR #__; log 2026-10-0X.
 
 184. **The builder is the cast member's page reading the packs by name: it offers their origins, roles and tiers, and shows each one's guidance beside the block, never applying it and never warning.**
@@ -241,7 +241,7 @@ goes over, trim its *Why*, not a *Rejected* line.
        - A warning outside the tier's guidance: the book breaks it (183, GQ21), as TOL broke its formula (175).
        - Storing the matched pack's id on the member: the cast is the GM's and outlives the pack (182).
      - **Replaces:** nothing. It builds what 174 deferred and 182 moved here.
-     - **Revisit if:** GQ21 gives numbers the entries keep, GQ17 adds Orders, or a GM asks for the modifiers applied.
+     - **Revisit if:** the tier table becomes a rule the entries keep (GQ21), GQ17 adds Orders, or a GM asks for the modifiers applied.
      - **Built:** as 183.
 
 185. **A trait from a pack is copied into the block as its name and text, and the page counts the block's traits by kind, matching each name to the glossaries as it reads.**
@@ -262,13 +262,13 @@ If the ledger search at build time finds otherwise, stop and ask.
 
 ## 4. Questions for Ken
 
-Answered by Ken, 2026-10-06, but SQ3. Each row keeps the default it offered.
+Answered by Ken, 2026-10-06. Each row keeps the default it offered.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
 | SQ1 | **The builder is the cast member's page** with the pack's guidance beside it, not a screen of its own? | **Yes.** One record, one editor; Use already makes the copy a GM reskins | **Yes** |
 | SQ2 | **Origin modifiers shown beside each stat, never applied** (the plan said "applied at construction")? Applying can't tell a printed stat from a fresh one, a Use copy already has them, and the table has no undo | **Shown, not applied** | **Shown** |
-| SQ3 | **The tier's guidance as the book's words, no warnings**, and GQ21 to Scott (the book's entries break its own table)? | **Yes** | *Ken asked for a clarification (2026-10-06); open* |
+| SQ3 | **The tier's guidance as the book's words, no warnings**, and GQ21 to Scott (the book's entries break its own table)? | **Yes** | **Words, no warnings.** The table is a general guide, a place to start looking for the power you want; the GM overrides it as the story needs (Ken, which also answers GQ21) |
 | SQ4 | **A trait's kind is read by name** each time (a renamed copy counts as *written*), rather than stored on the trait? | **By name**; nothing new stored | **By name** |
 | SQ5 | The picker **closes on Add** with focus in the new trait, or **stays open** for several adds? | **Closes.** The GM reads or trims what they added; reopening keeps the search | **Closes** |
 | SQ6 | **The glossary only inside the picker**, or also a **Traits** view on the Threats tab? | **Picker only.** References gathered on one screen are S13's | **Picker only**; references gathered on one screen later (S13) |
