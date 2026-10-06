@@ -428,8 +428,10 @@ after each step.
    page's modifiers note, guides and trait count; the picker's glossary with
    *Origin* and *Signature*; a roster NPC's page. Remove and re-import:
    *Replace* (181), and the copy still opens its entry.
-8. **The private repo:** commit `private/gm/` and the README row there and
-   push it, then commit the moved submodule pointer here. The two commits
+8. **The private repo:** the submodule is checked out on a detached HEAD, so
+   first `git -C private switch main` (it must be at the pinned commit; if
+   `main` has moved past it, stop and ask). Commit `private/gm/` and the
+   README row there and push `main`, then commit the moved submodule pointer here. The two commits
    are named in the PR.
 9. Ledger, plan (§6 S9 *built*, §9 GQ22), docs, close-out.
 
