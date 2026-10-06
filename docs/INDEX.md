@@ -359,9 +359,12 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 W29, built a session at a time behind a feature switch (173). The plan is `plans/gm-mode.md`.
 
 - **170** *(The table file — W29 S3a, GQ9)* — a GM's table is `.shadows-table.json`: `{ meta: { kind, id: TBL-…, name, tableSchemaVersion, created, updated }, notes }`, table schema 0.1, gated by `migrateTable()` (total, typed, keeps unknown keys, invents no dates). `fileKind()` tells it from a character. A fifth version in CLAUDE.md; every shape change bumps it with a step.
-- **171** *(Tables in the browser, and Home's door — W29 S3a)* — `shadows.table.v1.<id>` beside the roster, by its rules; with GM mode on Home has *Run a table*, *Your tables* and one **Import a file** that reads either kind; a table opens on its own screen (name, Notes tab, Rename / Export / What's new / Home). No undo on a table yet.
+- **171** *(Tables in the browser, and Home's door — W29 S3a)* — `shadows.table.v1.<id>` beside the roster, by its rules; with GM mode on Home has *Run a table*, *Your tables* and one **Import a file** that reads either kind; a table opens on its own screen (name, Notes tab, Rename / Export / What's new / Home). No undo on a table yet. → **superseded in part by 176**
 - **172** *(GM mode's own script — W29 S3a)* — `src/ui/gm.js` after `sheet.js`, its engine a *Tables* section of `engine.js`; the other UI files call in at three places only. The code-file guards read the script list from `index.html`.
 - **173** *(The feature switch — W29 S3a)* — `FEATURES.gm` is false; `?gm=on` / `?gm=off` set this browser's `shadows.feature.gm`; switched off, Home is as it was and a table file is refused, not read as a character. Sessions merge to `main`, releases go on, and the release that sets it true is GM mode's launch.
+- **174** *(The cast — W29 S8a, GQ6, GQ10)* — table schema 0.2: `cast`, one record per NPC (`C-` id, name, the §4e text fields, origin, roles and enemy role as the GM's text until S9's pack, `tier`, `status` alive / dead / missing / gone, `block`); `migrateTable()`'s first step.
+- **175** *(The stat block — W29 S8a, GQ6)* — a block stores what the Codex prints: stats and skill totals, TOL and WILL as authored (an exception to constraint 7's letter), armor and gear as text, traits; `Engine.npc` derives Health, HP, bonuses and each formula's value and stores nothing.
+- **176** *(The Cast tab — W29 S8a, GQ1)* — a table opens on Cast: quick-add, a search and a status filter (*In play*, alive and missing, by default; listed alive, missing, out of the picture, dead), a page per member saved as typed; Delete asks; still no undo on a table (S10 decides its audit trail). → supersedes 171 in part.
 
 ### Audit trail, undo & admin
 

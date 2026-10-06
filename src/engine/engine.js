@@ -3201,6 +3201,7 @@ const Engine = (() => {
   // (Decision 124). The engine knows nothing of the feature switch (173).
   const TABLE_ID_RE = new RegExp(`^TBL-${INTAKE_BODY}$`);
   const NOTE_ID_RE = /^N-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const CAST_ID_RE = /^C-[0-9A-HJKMNP-TV-Z]{8}$/;
   const isTableId = v => typeof v==="string" && TABLE_ID_RE.test(v);
   function newTableId(){
     const s = randomChars(12);
@@ -3227,13 +3228,65 @@ const Engine = (() => {
     do id = `N-${randomChars(8)}`; while (used.has(id));
     return id;
   }
+  function newCastId(used){
+    let id;
+    do id = `C-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  // A whole number, or null: "6" is 6, and 6.5, {} and "x" are nothing.
+  function _int(v){
+    if (typeof v==="string" && /^\s*-?\d+\s*$/.test(v)) v = Number(v);
+    return typeof v==="number" && Number.isSafeInteger(v) ? v : null;
+  }
+  const _tier = v => { const n = _int(v); return n!==null && n>=1 ? n : null; };
+  const CAST_STATUSES = ["alive","dead","missing","gone"];
+  // The list's order, whatever the filter: who is in play first, the dead last.
+  const CAST_ORDER = ["alive","missing","gone","dead"];
+  const CAST_TEXT = ["name","flavor","description","origin","enemyRole","motivation","resources","line","ifPushed","gmNote"];
+  const _strList = v => (Array.isArray(v) ? v : typeof v==="string" ? [v] : []).filter(x=>typeof x==="string");
+  // Roles are trimmed and never empty, so a card never reads "Fixer /".
+  const _roleList = v => _strList(v).map(x=>x.trim()).filter(Boolean);
+  // The ids a block is keyed by come from the data (Decision 135): the stats,
+  // and the derived stats of type sumOfModifiers, which the Codex authors.
+  const _authoredDefs = () => D().derived.filter(d=>d.type==="sumOfModifiers");
+  // A stat block, coerced (Decision 175). Unknown keys ride along, never read.
+  function _block(b){
+    if (!_isObj(b)) return null;
+    if (!_isObj(b.stats)) b.stats = {};
+    for (const s of D().stats) b.stats[s.id] = _int(b.stats[s.id]);
+    if (!_isObj(b.authored)) b.authored = {};
+    for (const d of _authoredDefs()) b.authored[d.id] = _int(b.authored[d.id]);
+    b.skills = (Array.isArray(b.skills) ? b.skills : []).filter(_isObj);
+    for (const k of b.skills){
+      k.name = _str(k.name);
+      k.total = _int(k.total);
+      k.skill = typeof k.skill==="string" && skillById(k.skill) ? k.skill : null;
+    }
+    b.armor = (Array.isArray(b.armor) ? b.armor : []).filter(x=>typeof x==="string");
+    b.gear = (Array.isArray(b.gear) ? b.gear : []).filter(x=>typeof x==="string");
+    b.traits = (Array.isArray(b.traits) ? b.traits : []).filter(_isObj);
+    for (const k of b.traits){ k.name = _str(k.name); k.text = _str(k.text); }
+    return b;
+  }
+  // One cast member, coerced the way a note is. `used` holds the ids taken.
+  function _castMember(n, used){
+    for (const k of CAST_TEXT) n[k] = _str(n[k]);
+    n.npcRoles = _roleList(n.npcRoles);
+    n.tier = _tier(n.tier);
+    if (!CAST_STATUSES.includes(n.status)) n.status = "alive";
+    if (!(typeof n.id==="string" && CAST_ID_RE.test(n.id)) || used.has(n.id)) n.id = newCastId(used);
+    used.add(n.id);
+    n.block = _block(n.block);
+    n.created = _isoOrNull(n.created);
+    n.updated = _isoOrNull(n.updated);
+  }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.1";
+  const TABLE_SCHEMA_VERSION = "0.2";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[] };
+             notes:[], cast:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -3258,9 +3311,14 @@ const Engine = (() => {
     m.updated = _isoOrNull(m.updated);
     // A newer stamp is kept (and reported by tableCheck): an older app must
     // not lower it and so hide that it dropped what it didn't know.
+    // Version-gated steps go here, in the order migrate() keeps its own. They
+    // read the stamp the file arrived with, so they run before it's rewritten.
+    //   Schema 0.2 (Decision 174): a table gets a cast.
+    const arrived = m.tableSchemaVersion;
+    if (typeof arrived!=="string" || _versionNewer("0.2", arrived)){
+      if (!Array.isArray(c.cast)) c.cast = [];
+    }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
-    // Version-gated steps go here, in the order migrate() keeps its own:
-    //   Schema 0.2 (Decision N): …
     const used = new Set();
     c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
     for (const n of c.notes){
@@ -3271,6 +3329,9 @@ const Engine = (() => {
       n.created = _isoOrNull(n.created);
       n.updated = _isoOrNull(n.updated);
     }
+    const usedCast = new Set();
+    c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
+    for (const n of c.cast) _castMember(n, usedCast);
     return c;
   }
   function tableCheck(t){
@@ -3304,6 +3365,90 @@ const Engine = (() => {
     t.notes.splice(i, 1);
     _tableStamp(t);
     return { ok:true };
+  }
+
+  // ── The cast (Decisions 174–176) ────────────────────────────────────────
+  // Health and the bonuses are derived here and stored nowhere (constraint 7);
+  // TOL and WILL are stored as the Codex authors them, with the formula's
+  // value beside (Decision 175). The players' Health rule is copied from
+  // health(), which reads a character, not a block.
+  function npc(block){
+    let copy = {};
+    try { copy = _isObj(block) ? JSON.parse(JSON.stringify(block)) : {}; } catch (e) {}
+    const b = _block(copy);
+    const stats = {}, blanks = [];
+    for (const s of D().stats){
+      const v = b.stats[s.id];
+      stats[s.id] = v===null ? { value:null, mod:null } : { value:v, mod:statMod(v) };
+      if (v===null) blanks.push(s.id);
+    }
+    const hl = D().resources.healthLevels, bod = b.stats.BOD;
+    let health = null;
+    if (typeof bod==="number" && bod>=1){
+      const levels = Math.min(bod, hl.maxLevels), hpPer = hl.hpPerLevel + Math.max(0, bod - hl.maxLevels);
+      health = { levels, hpPer, total: levels*hpPer };
+    }
+    const authored = {};
+    for (const d of _authoredDefs()){
+      const mods = d.inputs.map(id=>stats[id] ? stats[id].mod : null);
+      let formula = mods.some(m=>m===null) ? null : d.base + mods.reduce((a,m)=>a+m, 0);
+      if (formula!==null && d.floor!=null) formula = Math.max(d.floor, formula);
+      authored[d.id] = { value:b.authored[d.id], formula };
+      if (b.authored[d.id]===null) blanks.push(d.id);
+    }
+    // Rows are kept while a GM is mid-edit, so a list is blank when no row has content.
+    const filled = {
+      skills: b.skills.some(k=>k.name.trim() || k.total!==null),
+      armor: b.armor.some(l=>l.trim()), gear: b.gear.some(l=>l.trim()),
+      traits: b.traits.some(k=>k.name.trim() || k.text.trim()) };
+    for (const k of ["skills","armor","gear","traits"]) if (!filled[k]) blanks.push(k);
+    return { stats, health, authored, blanks };
+  }
+  function addCastMember(t, f){
+    const now = new Date().toISOString();
+    const used = new Set(t.cast.map(n=>n.id));
+    const n = { id:newCastId(used), name:_str((f||{}).name), flavor:_str((f||{}).line), description:"",
+                origin:"", npcRoles:[], enemyRole:"", tier:null, motivation:"", resources:"", line:"",
+                ifPushed:"", gmNote:"", status:"alive", block:null, created:now, updated:now };
+    t.cast.unshift(n);
+    _tableStamp(t);
+    return { ok:true, id:n.id };
+  }
+  function editCastMember(t, id, f){
+    const n = t.cast.find(x=>x.id===id);
+    if (!n) return { ok:false, why:"No such cast member." };
+    if (_isObj(f)){
+      for (const k of CAST_TEXT) if (k in f) n[k] = _str(f[k]);
+      if ("npcRoles" in f) n.npcRoles = _roleList(f.npcRoles);
+      if ("tier" in f) n.tier = _tier(f.tier);
+      if ("status" in f && CAST_STATUSES.includes(f.status)) n.status = f.status;
+    }
+    _tableStamp(t, n);
+    return { ok:true };
+  }
+  function setCastBlock(t, id, block){
+    const n = t.cast.find(x=>x.id===id);
+    if (!n) return { ok:false, why:"No such cast member." };
+    let copy = null;
+    try { copy = _isObj(block) ? JSON.parse(JSON.stringify(block)) : null; } catch (e) {}
+    n.block = _block(copy);
+    _tableStamp(t, n);
+    return { ok:true };
+  }
+  function removeCastMember(t, id){
+    const i = t.cast.findIndex(x=>x.id===id);
+    if (i < 0) return { ok:false, why:"No such cast member." };
+    t.cast.splice(i, 1);
+    _tableStamp(t);
+    return { ok:true };
+  }
+  function castFilter(t, f){
+    const q = _str((f||{}).q).trim().toLowerCase(), st = (f||{}).status;
+    const rank = n => CAST_ORDER.indexOf(n.status);
+    return (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>{
+      if (st==="inplay" ? n.status!=="alive" && n.status!=="missing" : CAST_STATUSES.includes(st) && n.status!==st) return false;
+      return !q || [n.name, n.flavor, n.origin, ...(n.npcRoles||[])].some(x=>_str(x).toLowerCase().includes(q));
+    }).sort((a, b)=>rank(a) - rank(b));   // stable: each group keeps the cast's own order
   }
 
   // The engine's surface, grouped by domain.
@@ -3344,6 +3489,8 @@ const Engine = (() => {
     // Audit trail and undo
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes
-    newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote };
+    newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote,
+    // The cast: a stat block read, and a member added, edited, removed, found
+    npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter };
 })();
 /*ENGINE-END*/

@@ -296,3 +296,52 @@ test("a hostile table file renders as text on Home, the table screen and both mo
   assert.equal(imp.window.eval("({}).pwn"), undefined, "the page's Object.prototype was polluted");
   assert.deepEqual(imp.errors, []);
 });
+
+// ── A table's cast is untrusted too (Decisions 174–176, 124) ────────────
+test("a hostile cast renders as text in the list, a member's page and the Delete question, and every number comes out a number or blank", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  const stats = {}; for (const s of D.stats) stats[s.id] = P("stat." + s.id);
+  const text = {}; for (const k of ["name", "flavor", "description", "origin", "enemyRole", "motivation", "resources", "line", "ifPushed", "gmNote"]) text[k] = P("cast." + k);
+  t.cast = [
+    { id: P("cast.id"), ...text, npcRoles: [P("cast.role"), 5, null], tier: P("cast.tier"), status: P("cast.status"),
+      block: { stats, authored: { TOL: P("auth.TOL"), WILL: { x: 1 } },
+               skills: [{ name: P("skill.name"), total: P("skill.total"), skill: P("skill.id") }, null, 7],
+               armor: [P("armor.line"), 5], gear: [P("gear.line")], traits: [{ name: P("trait.name"), text: P("trait.text") }, "x"] },
+      created: P("cast.created"), updated: P("cast.updated") },
+    null, 5, "x", { name: 7, block: "x", tier: { a: 1 } },
+  ];
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  found.push(...injected(app, "the Cast list"));
+  assert.ok(app.$$("[data-ccard]").length >= 2, "the hostile cast wasn't drawn");
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "the list drew an object as text");
+  app.$("[data-copen]").click();
+  found.push(...injected(app, "a member's page"));
+  assert.ok(app.$$("[data-cstat]").length > 0);
+  for (const el of app.$$("#main input[type=number]")) assert.ok(el.value === "" || Number.isFinite(Number(el.value)), `a number field read ${el.value}`);
+  assert.ok(app.$$("[data-cstat]").every(el => el.value === ""), "a payload string became a stat");
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "the page drew an object as text");
+  app.click("[data-cdel]");
+  found.push(...injected(app, "the Delete question"));
+  app.click("#modal [data-modalclose]");
+  assert.deepEqual(found, [], "a cast member's text became markup");
+  assert.deepEqual(app.errors, [], "the hostile cast threw while rendering");
+});
+
+test("a cast file with __proto__ keys at every level pollutes nothing on import", async () => {
+  const raw = '{"__proto__":{"pwn":1},"meta":{"kind":"shadows-table"},"cast":[{"__proto__":{"pwn":1},"name":"x","block":{"__proto__":{"pwn":1},"stats":{"__proto__":{"pwn":1}},"authored":{"__proto__":{"pwn":1}},"skills":[{"__proto__":{"pwn":1}}],"traits":[{"__proto__":{"pwn":1}}]}}]}';
+  const imp = boot({ storage: { "shadows.feature.gm": "on" } });
+  const input = imp.$("#file-import");
+  const file = new imp.window.File([raw], "x.shadows-table.json", { type: "application/json" });
+  Object.defineProperty(input, "files", { value: [file], configurable: true });
+  input.dispatchEvent(new imp.window.Event("change"));
+  for (let i = 0; i < 50 && imp.window.eval("S.screen") === "home"; i++) await new Promise(r => setTimeout(r, 10));
+  assert.equal(imp.window.eval("S.screen"), "table");
+  imp.$("[data-copen]").click();
+  assert.equal(({}).pwn, undefined);
+  assert.equal(imp.window.eval("({}).pwn"), undefined, "the page's Object.prototype was polluted");
+  assert.deepEqual(imp.errors, []);
+});

@@ -8,3 +8,5 @@ something a GM can see adds its line here.
 
 - **Run a table.** A GM can keep a table in the app: name it, write notes
   in it, and export it as a file of its own. Home's Import reads it.
+- **The cast.** A table keeps its NPCs: a name in one press mid-session,
+  or a whole stat block, with Health worked out for you.

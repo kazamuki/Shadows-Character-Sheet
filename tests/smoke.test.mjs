@@ -3166,6 +3166,7 @@ const runTable = (app, name) => {
   app.$("#tbl-name").value = name;
   app.click("#modal [data-nameyes]");
 };
+const notesTab = app => app.click('[data-tsec="notes"]');
 const tableHome = app => { app.click("[data-menu-toggle]"); app.click("[data-thome]"); };
 const tableFile = async blob => JSON.parse(await blob.text());
 
@@ -3221,7 +3222,7 @@ test("Decision 171: Run a table asks for a name, opens the table, and Home lists
   assert.equal(app.$("#modal[open]"), null);
   assert.equal(charKeys(app).length, 0, "a table wrote a character");
   assert.equal(tableKeys(app).length, 1);
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Notes"]);
   assert.equal(app.$("#topnav [data-sec]"), null, "the table's tabs are the sheet's");
   assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "What's new", "Home"]);
   tableHome(app);
@@ -3248,6 +3249,7 @@ test("Decision 171: Enter in the name field creates; Cancel leaves Home as it wa
 test("Decision 171: notes save as they're typed and survive a reload; Delete asks, and focus lands on the next control", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Notes table");
+  notesTab(app);
   assert.match(app.$("#main").textContent, /Nothing on file yet. What you write here stays with the table/);
   app.click("[data-tnew]");
   assert.equal(app.doc.activeElement && app.doc.activeElement.hasAttribute("data-ntitle"), true, "New note didn't focus its title");
@@ -3260,6 +3262,7 @@ test("Decision 171: notes save as they're typed and survive a reload; Delete ask
   const tid = tableKeys(app)[0].slice("shadows.table.v1.".length);
   const again = boot({ storage: { ["shadows.table.v1." + tid]: tableEntryOf(app, tid), ...GM_ON } });
   tableCard(again, "Notes table").querySelector("[data-topen]").click();
+  notesTab(again);
   assert.equal(again.$(`[data-ntitle="${id}"]`).value, "The fixer");
   assert.equal(again.$(`[data-ntext="${id}"]`).value, "Owes us a favour.");
   // two more notes, then Delete the middle one
@@ -3319,6 +3322,7 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   const t = Engine.newTable("Imported"); Engine.addTableNote(t, { title: "Hello", text: "there" });
   await importFile(app, t);
   assert.equal(app.window.eval("S.screen"), "table");
+  notesTab(app);
   assert.equal(app.$("[data-ntitle]").value, "Hello");
   assert.equal(charKeys(app).length, 0, "a table file wrote a character");
   tableHome(app);
@@ -3332,7 +3336,7 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   assert.match(app.$("#undotoast").textContent, /isn't a character or a table/);
   assert.equal(charKeys(app).length, 1); assert.equal(tableKeys(app).length, 1);
   const newer = JSON.parse(JSON.stringify(t));
-  newer.meta.tableSchemaVersion = "0.2";
+  newer.meta.tableSchemaVersion = "0.3";
   await importFile(app, newer);
   assert.match(app.$("#undotoast").textContent, /newer version of the app/);
   assert.deepEqual(app.errors, []);
@@ -3406,10 +3410,10 @@ test("Decision 173: with the switch off, a table can't be opened onto the screen
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 164: Create lands focus on New note and Rename's Save on the header's menu, never <body>", () => {
+test("Decision 164: Create lands focus on quick-add's name and Rename's Save on the header's menu, never <body>", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Focus table");
-  assert.ok(app.doc.activeElement.hasAttribute("data-tnew"), "after Create focus isn't on New note");
+  assert.ok(app.doc.activeElement.hasAttribute("data-cadd-name"), "after Create focus isn't on the name field");
   app.click("[data-menu-toggle]"); app.click("[data-trename]");
   app.$("#tbl-name").value = "Renamed";
   app.click("#modal [data-nameyes]");
@@ -3424,4 +3428,336 @@ test("a long table name wraps: the title carries overflow-wrap, as the roster's 
   const css = wizCss();
   assert.ok(app.$("h1.step-title").classList.contains("tbl-title"));
   assert.match(css, /.tbl-title{[^}]*overflow-wrap:anywhere/);
+});
+
+// ── The cast (Decisions 174–176) ────────────────────────────────────────
+// A synthetic NPC only: Dez, a courier. Nothing here is the Codex's.
+const keyIn = (app, sel, k) => app.$(sel).dispatchEvent(new app.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }));
+const castAdd = (app, name, line = "") => {
+  type(app, "[data-cadd-name]", name); type(app, "[data-cadd-line]", line);
+  keyIn(app, "[data-cadd-name]", "Enter");
+};
+const castNames = app => app.$$("[data-copen]").map(b => b.textContent);
+const focusedKey = app => { const a = app.doc.activeElement; return a && [...a.attributes].map(x => x.name + "=" + x.value).filter(x => x.startsWith("data-")).join(" "); };
+const pick = (app, sel, value) => { const el = app.$(sel); el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
+
+test("Decision 176: a table opens on Cast, with Notes beside it, and Notes still works", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Cast table");
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Notes"]);
+  assert.ok(app.$("[data-cadd-name]") && app.$("[data-csearch]"));
+  assert.match(app.$("#main").textContent, /Nobody yet\. The city fills up fast\./);
+  notesTab(app);
+  assert.ok(app.$("[data-tnew]"));
+  app.click("[data-tnew]");
+  assert.ok(app.$("[data-ntitle]"));
+  app.click('[data-tsec="cast"]');
+  assert.ok(app.$("[data-cadd-name]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 176: quick-add takes a name on Enter, keeps the keyboard in an empty field, five in a row, and an empty name adds nothing", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Quick");
+  castAdd(app, "   ");
+  assert.equal(castNames(app).length, 0, "an empty name added someone");
+  castAdd(app, "Bex");
+  assert.deepEqual(castNames(app), ["Bex"]);
+  assert.ok(app.doc.activeElement.hasAttribute("data-cadd-name"), "focus isn't in the name field");
+  assert.equal(app.doc.activeElement.value, "");
+  assert.equal(app.$("[data-cadd-line]").value, "");
+  castAdd(app, "Dez", "runs the café");
+  for (const n of ["Moth", "Orla", "Wren"]) castAdd(app, n);
+  assert.deepEqual(castNames(app), ["Wren", "Orla", "Moth", "Dez", "Bex"], "newest first");
+  assert.match(app.$$("[data-ccard]")[3].textContent, /runs the café/);
+  assert.ok(app.doc.activeElement.hasAttribute("data-cadd-name"));
+  type(app, "[data-cadd-name]", "Press Add"); app.click("[data-cadd]");
+  assert.equal(castNames(app)[0], "Press Add");
+  assert.ok(app.doc.activeElement.hasAttribute("data-cadd-name"), "Add left focus elsewhere");
+  assert.equal(app.window.eval("S.table.cast[0].flavor"), "");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 175: BOD 6 shows Health as it's typed without the field being redrawn; TOL shows its formula", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Block");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  assert.ok(app.$("[data-chealth-row]").hidden, "Health shows with BOD blank");
+  const bod = app.$('[data-cstat="BOD"]'); bod.focus();
+  type(app, '[data-cstat="BOD"]', "6");
+  assert.equal(app.$('[data-cstat="BOD"]'), bod, "typing redrew the field");
+  assert.equal(app.doc.activeElement, bod);
+  assert.equal(app.$("[data-chealth-row]").hidden, false);
+  assert.match(app.$("[data-chealth]").textContent, /^30 \(6 Health Levels\)$/);
+  const m = Engine.statMod(6);
+  assert.equal(app.$('[data-cbonus="BOD"]').textContent, m === 0 ? "0" : m > 0 ? "+" + m : "−" + -m);
+  assert.equal(app.$('[data-cformula="TOL"]').textContent, "", "a formula shows with an input blank");
+  type(app, '[data-cstat="INT"]', "5");
+  assert.equal(app.$('[data-cformula="TOL"]').textContent, "", "a formula shows with COOL blank");
+  type(app, '[data-cstat="COOL"]', "5");
+  const want = Engine.npc({ stats: { BOD: 6, INT: 5, COOL: 5 } }).authored.TOL.formula;
+  type(app, '[data-cauth="TOL"]', "1");
+  assert.equal(app.$('[data-cformula="TOL"]').textContent, `formula ${want}`);
+  assert.equal(app.window.eval("S.table.cast[0].block.authored.TOL"), 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 176: a field typed in, then Home at once, is there when the table reopens", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Home now");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  const id = app.window.eval("S.castOpen");
+  type(app, '[data-cf="motivation"]', "Out of the city.");
+  type(app, '[data-cf="npcRoles"]', "Fixer / Courier, Snitch");
+  type(app, '[data-cf="tier"]', "3");
+  type(app, '[data-cstat="REF"]', "7");
+  app.click("[data-cskadd]"); type(app, '[data-cskname="0"]', "Streetwise"); type(app, '[data-csktotal="0"]', "6");
+  tableHome(app);
+  const tid = tableKeys(app)[0].slice("shadows.table.v1.".length);
+  const again = boot({ storage: { ["shadows.table.v1." + tid]: tableEntryOf(app, tid), ...GM_ON } });
+  tableCard(again, "Home now").querySelector("[data-topen]").click();
+  again.click(`[data-copen="${id}"]`);
+  assert.equal(again.$('[data-cf="motivation"]').value, "Out of the city.");
+  assert.equal(again.$('[data-cf="npcRoles"]').value, "Fixer / Courier / Snitch");
+  assert.equal(again.$('[data-cf="tier"]').value, "3");
+  assert.equal(again.$('[data-cstat="REF"]').value, "7");
+  assert.equal(again.$('[data-cskname="0"]').value, "Streetwise");
+  assert.equal(again.$('[data-csktotal="0"]').value, "6");
+  assert.deepEqual([...app.errors, ...again.errors], []);
+});
+
+test("Decision 176: the list filters as you type, by status, and Clear the filter brings everyone back and focuses search", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Filters");
+  for (const n of ["Dez", "Moth", "Orla"]) castAdd(app, n);
+  const ids = Object.fromEntries(app.$$("[data-copen]").map(b => [b.textContent, b.dataset.copen]));
+  app.click(`[data-copen="${ids.Moth}"]`);
+  pick(app, '[data-cf="status"]', "dead");
+  assert.equal(app.window.eval("S.table.cast.find(n=>n.name==='Moth').status"), "dead");
+  app.click("[data-cback]");
+  assert.deepEqual(castNames(app), ["Orla", "Dez"], "the default filter shows the dead");
+  const search = app.$("[data-csearch]"); search.focus();
+  type(app, "[data-csearch]", "OR");
+  assert.deepEqual(castNames(app), ["Orla"]);
+  assert.equal(app.$("[data-csearch]"), search, "typing redrew the search field");
+  assert.equal(app.doc.activeElement, search);
+  type(app, "[data-csearch]", "zzz");
+  assert.match(app.$("[data-castlist]").textContent, /No one matches\./);
+  app.click("[data-cclear]");
+  assert.equal(app.doc.activeElement, app.$("[data-csearch]"), "Clear the filter left focus elsewhere");
+  assert.deepEqual(castNames(app).sort(), ["Dez", "Moth", "Orla"]);
+  pick(app, "[data-cstatus]", "dead");
+  assert.deepEqual(castNames(app), ["Moth"]);
+  assert.match(app.$("[data-ccard]").textContent, /Dead/);
+  assert.deepEqual(app.$$("[data-cstatus] option").map(o => o.textContent), ["In play", "Alive", "All", "Dead", "Missing", "Out of the picture"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 176: a new member the filters would hide is shown anyway", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Hidden");
+  castAdd(app, "Dez");
+  type(app, "[data-csearch]", "zzz");
+  castAdd(app, "Bex");
+  assert.equal(castNames(app)[0], "Bex");
+  assert.equal(app.$("[data-csearch]").value, "");
+});
+
+test("Decision 176: Delete asks, Cancel keeps, Delete removes and focus lands on the next card or quick-add", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Delete");
+  for (const n of ["Dez", "Moth", "Orla"]) castAdd(app, n);   // Orla, Moth, Dez
+  const ids = Object.fromEntries(app.$$("[data-copen]").map(b => [b.textContent, b.dataset.copen]));
+  app.click(`[data-copen="${ids.Moth}"]`);
+  app.click("[data-cdel]");
+  assert.ok(app.$("#modal[open]"), "Delete didn't ask");
+  assert.match(app.$("#modal").textContent, /Delete Moth\?/);
+  assert.match(app.$("#modal").textContent, /Their page goes with them\. Nothing else at the table changes\./);
+  app.click("#modal [data-modalclose]");
+  assert.equal(app.window.eval("S.table.cast.length"), 3, "Cancel deleted");
+  app.click("[data-cdel]"); app.click("#modal [data-askyes]");
+  assert.deepEqual(castNames(app), ["Orla", "Dez"]);
+  assert.equal(app.doc.activeElement.dataset.copen, ids.Dez, "focus isn't on the next card");
+  app.click(`[data-copen="${ids.Dez}"]`); app.click("[data-cdel]"); app.click("#modal [data-askyes]");
+  assert.equal(app.doc.activeElement.dataset.copen, undefined);
+  assert.ok(app.$("[data-copen]"), "Orla should remain");
+  app.click("[data-copen]"); app.click("[data-cdel]"); app.click("#modal [data-askyes]");
+  assert.ok(app.doc.activeElement.hasAttribute("data-cadd-name"), "with no next card, focus isn't on quick-add");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 164: after every press that redraws on a member's page, focus is on what the order names, never <body>", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Focus");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  assert.notEqual(app.doc.activeElement, app.doc.body, "opening a card dropped focus");
+  app.click("[data-cskadd]");
+  assert.equal(focusedKey(app), "data-cskname=0");
+  app.click("[data-cskadd]"); app.click("[data-cskadd]");
+  app.click('[data-cskdel="1"]');
+  assert.equal(focusedKey(app), "data-cskadd=");
+  assert.equal(app.$$("[data-cskill]").length, 2);
+  for (const key of ["armor", "gear"]) {
+    app.click(`[data-clineadd="${key}"]`);
+    assert.equal(focusedKey(app), `data-clinev=${key}|0`);
+    app.click(`[data-clinedel="${key}|0"]`);
+    assert.equal(focusedKey(app), `data-clineadd=${key}`);
+  }
+  app.click("[data-ctadd]");
+  assert.equal(focusedKey(app), "data-ctname=0");
+  app.click('[data-ctdel="0"]');
+  assert.equal(focusedKey(app), "data-ctadd=");
+  app.click("[data-cback]");
+  assert.ok(app.doc.activeElement.hasAttribute("data-copen"), "Back to the cast dropped focus");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 176: the tab button and Back return to the list, with the filters as they were", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Back");
+  castAdd(app, "Dez"); castAdd(app, "Bex");
+  type(app, "[data-csearch]", "dez");
+  app.click("[data-copen]");
+  assert.ok(app.$("[data-cback]"));
+  app.click('[data-tsec="cast"]');
+  assert.deepEqual(castNames(app), ["Dez"]);
+  assert.equal(app.$("[data-csearch]").value, "dez");
+  app.click("[data-copen]"); app.click("[data-cback]");
+  assert.deepEqual(castNames(app), ["Dez"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 174: a card shows what's known, the status when it isn't alive, and Stat block when a number is in it", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Cards");
+  castAdd(app, "Dez", "a courier");
+  app.click("[data-copen]");
+  type(app, '[data-cf="origin"]', "Born here"); type(app, '[data-cf="enemyRole"]', "Boss"); type(app, '[data-cf="tier"]', "2");
+  type(app, '[data-cf="npcRoles"]', "Fixer/Courier");
+  type(app, '[data-cstat="BOD"]', "5");
+  app.click("[data-cback]");
+  const text = app.$("[data-ccard]").textContent.replace(/\s+/g, " ");
+  assert.match(text, /Dez/); assert.match(text, /a courier/);
+  assert.match(text, /Born here · Fixer \/ Courier · Enemy: Boss · Tier 2 · Stat block/);
+  assert.doesNotMatch(text, /Alive/);
+  app.click("[data-copen]");
+  pick(app, '[data-cf="status"]', "gone");
+  assert.equal(app.window.eval("S.table.cast[0].status"), "gone");
+  assert.deepEqual(app.$$('[data-cf="status"] option').map(o => o.textContent), ["Alive", "Dead", "Missing", "Out of the picture"]);
+  app.click("[data-cback]");
+  assert.match(app.$("[data-castlist]").textContent, /No one matches/);
+  app.click("[data-cclear]");
+  assert.match(app.$("[data-ccard]").textContent, /Out of the picture/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 174: a member's whole page survives export and import on a fresh browser, and Health is nowhere in the file", async () => {
+  const app = boot({ storage: GM_ON });
+  const downloads = withDownloads(app);
+  runTable(app, "Round trip");
+  castAdd(app, "Dez", "a courier");
+  app.click("[data-copen]");
+  for (const [k, v] of [["description", "Quick."], ["origin", "Here"], ["enemyRole", "Boss"], ["motivation", "Out"], ["resources", "A van"], ["line", "No kids"], ["ifPushed", "Runs"], ["gmNote", "Secret"]])
+    type(app, `[data-cf="${k}"]`, v);
+  type(app, '[data-cstat="BOD"]', "6"); type(app, '[data-cauth="TOL"]', "1");
+  app.click("[data-cskadd]"); type(app, '[data-cskname="0"]', "Streetwise"); type(app, '[data-csktotal="0"]', "6");
+  app.click('[data-clineadd="armor"]'); type(app, '[data-clinev="armor|0"]', "Vest");
+  app.click('[data-clineadd="gear"]'); type(app, '[data-clinev="gear|0"]', "Phone");
+  app.click("[data-ctadd]"); type(app, '[data-ctname="0"]', "Quick"); type(app, '[data-cttext="0"]', "Moves first.");
+  const before = JSON.parse(JSON.stringify(app.window.eval("S.table.cast")));
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  const file = await tableFile(downloads[0]);
+  assert.equal(JSON.stringify(file.cast), JSON.stringify(before));
+  assert.doesNotMatch(JSON.stringify(file.cast), /"(health|hp|levels|hpPer|mod|formula)"/i);
+  const fresh = boot({ storage: GM_ON });
+  withDownloads(fresh);
+  await importFile(fresh, file);
+  assert.equal(fresh.window.eval("S.screen"), "table");
+  assert.equal(JSON.stringify(fresh.window.eval("S.table.cast")), JSON.stringify(before));
+  assert.match(fresh.$("[data-ccard]").textContent, /Dez/);
+  assert.deepEqual([...app.errors, ...fresh.errors], []);
+});
+
+test("Decision 174: a saved 0.1 table opens as 0.2 with its notes, and Remove takes the cast with it", () => {
+  const t = Engine.newTable("Old one");
+  Engine.addTableNote(t, { title: "Kept", text: "still here" });
+  t.meta.tableSchemaVersion = "0.1"; delete t.cast;
+  const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
+  tableCard(app, "Old one").querySelector("[data-topen]").click();
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.2");
+  assert.equal(app.window.eval("S.table.cast.length"), 0);
+  assert.equal(app.$("[data-ntitle]").value, "Kept");
+  app.click('[data-tsec="cast"]');
+  castAdd(app, "Dez");
+  const saved = tableEntryOf(app, t.meta.id).table;
+  assert.equal(saved.meta.tableSchemaVersion, "0.2");
+  assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
+  tableHome(app);
+  tableCard(app, "Old one").querySelector("[data-tremove]").click();
+  app.click("#modal [data-removego]");
+  assert.equal(app.window.localStorage.getItem("shadows.table.v1." + t.meta.id), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("a long unbroken name wraps wherever the cast shows a GM's words (the pixels are checked by hand: jsdom has no layout)", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Wrap");
+  castAdd(app, "W".repeat(60), "L".repeat(60));
+  const css = wizCss();
+  for (const re of [/\.cast-open\{[^}]*overflow-wrap:anywhere/, /\.cast-line, \.cast-meta\{[^}]*overflow-wrap:anywhere/,
+                    /\.cast-title, \.cast-h\{[^}]*overflow-wrap:anywhere/, /\.cast-health\{[^}]*overflow-wrap:anywhere/,
+                    /\.cast-stats\{[^}]*grid-template-columns:repeat\(auto-fill/, /\.cast-row input\[type=text\]\{[^}]*min-width:0/])
+    assert.match(css, re);
+  assert.ok(app.$(".cast-open")); assert.ok(app.$(".cast-line"));
+  app.click("[data-copen]");
+  assert.ok(app.$("h1.cast-title.tbl-title"));
+  assert.ok(app.$(".cast-stats"));
+});
+
+test("Decision 176: the filter defaults to In play, and a member marked Missing is still listed, after the alive ones, dashed, with focus on them", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "In play");
+  for (const n of ["Dez", "Moth", "Orla"]) castAdd(app, n);   // Orla, Moth, Dez
+  assert.equal(app.$("[data-cstatus]").value, "inplay");
+  assert.deepEqual(app.$$("[data-cstatus] option").map(o => o.textContent), ["In play", "Alive", "All", "Dead", "Missing", "Out of the picture"]);
+  const ids = Object.fromEntries(app.$$("[data-copen]").map(b => [b.textContent, b.dataset.copen]));
+  app.click(`[data-copen="${ids.Orla}"]`);
+  pick(app, '[data-cf="status"]', "missing");
+  app.click("[data-cback]");
+  assert.deepEqual(castNames(app), ["Moth", "Dez", "Orla"], "the missing member vanished or isn't after the alive ones");
+  assert.equal(app.doc.activeElement.dataset.copen, ids.Orla, "focus isn't on their card's button");
+  assert.equal(app.$(`[data-ccard="${ids.Orla}"]`).dataset.status, "missing");
+  assert.match(app.$(`[data-ccard="${ids.Orla}"]`).textContent, /Missing/);
+  assert.match(wizCss(), /\.cast-card\[data-status="missing"\]\{border-style:dashed/);
+  pick(app, "[data-cstatus]", "all");
+  assert.deepEqual(app.$$("[data-ccard]").map(c => c.dataset.status), ["alive", "alive", "missing"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("a number field shows what was stored once it loses focus: a refused value reads blank", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Numbers");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  const changed = sel => app.$(sel).dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  type(app, '[data-cf="tier"]', "0");
+  assert.equal(app.$('[data-cf="tier"]').value, "0", "typing was interrupted");
+  changed('[data-cf="tier"]');
+  assert.equal(app.$('[data-cf="tier"]').value, "");
+  type(app, '[data-cstat="REF"]', "6.5"); changed('[data-cstat="REF"]');
+  assert.equal(app.$('[data-cstat="REF"]').value, "");
+  assert.equal(app.$('[data-cbonus="REF"]').textContent, "");
+  type(app, '[data-cstat="REF"]', "6"); changed('[data-cstat="REF"]');
+  assert.equal(app.$('[data-cstat="REF"]').value, "6");
+  type(app, '[data-cf="tier"]', "2"); changed('[data-cf="tier"]');
+  assert.equal(app.$('[data-cf="tier"]').value, "2");
+  app.click("[data-cskadd]"); type(app, '[data-csktotal="0"]', "2.5"); changed('[data-csktotal="0"]');
+  assert.equal(app.$('[data-csktotal="0"]').value, "");
+  type(app, '[data-cauth="TOL"]', "1.5"); changed('[data-cauth="TOL"]');
+  assert.equal(app.$('[data-cauth="TOL"]').value, "");
+  assert.deepEqual(app.errors, []);
 });
