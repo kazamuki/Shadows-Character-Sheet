@@ -648,7 +648,7 @@ to a later session: S5 or S10, whichever first writes it (Ken, 2026-10-05).
 **Moved to S10:** **Keep** and **Promote** (a fought copy into the cast),
 with the fight they come from.
 
-### S9 — The Threat Codex as a pack (split: S9a built, S9b next, then S9c)
+### S9 — The Threat Codex as a pack (split: S9a built, S9b's order drafted, then S9c)
 
 **Split 2026-10-05 (Ken, SQ1 of the [S9a order](gm-mode/S09a-pack.md)):**
 **S9a** is the pack file, its gate, storage and import, and a **Threats** tab
@@ -670,6 +670,12 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 - **The rolodex:** browse by origin, role and tier, as a **Threats** tab of
   the table (S9a, Decision 182: not `openCatalog`, which is the character's);
   a card per entry; **Use** copies it into the cast (S9a) or into a fight (S10).
+- **The builder, as [S9b's order](gm-mode/S09b-builder.md) drafts it:** the
+  cast member's page, reading the pack by name. The pre-flight changed the
+  sketch below it: origin modifiers are **shown** beside each stat, not
+  applied (a block stores what the book prints, and a Use copy already has
+  them), and the tier's guidance is **the book's words, never a warning**
+  (the book's own entries break its tier table: GQ21).
 - **The builder:** origin, NPC role, enemy role and tier; origin modifiers
   applied at construction; the tier's ranges shown beside each stat, and a
   warning (never a block) outside them; the trait budget counted; traits
@@ -692,6 +698,9 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 - Encounter groups unpack into their entries.
 - **Decision:** the NPC adapter onto the damage pipeline, and what it
   doesn't model (traits).
+- **Use's verb.** S9a's **Use** copies an entry into the cast; S10 adds a
+  copy into a fight. Design both buttons together here (S9b's SQ7), so one
+  word doesn't lead two places.
 
 ### S11 — CRANK work
 
@@ -777,3 +786,4 @@ Deighton.
 | GQ18 | NPC armor is "PROT + RES (1d4+2), or the average (5)". 1d4+2 averages 4.5; is the 5 rounded up on purpose? And is this the players' armor rule simplified for the GM, or its own NPC rule? It touches the RES question in F23 and F25 | Deighton | The tracker offers both, roll or 5, exactly as printed |
 | GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8 |
 | GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts |
+| GQ21 | The Tier table against the entries: by a script over the mirror, 13 of 17 Tier 3 entries have a stat under the table's "All stats 5–8" (most often MAG 4), one Tier 1 entry has a Signature ("no Signatures"), and 10 of 17 Tier 3 entries have three or four ("1–2"). Is the table a guide, or are the entries off it? | Scott | A guide: the builder shows it as the book's words and never warns (S9b, 183–184) |
