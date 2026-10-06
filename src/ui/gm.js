@@ -317,7 +317,7 @@ function localDay(d=new Date()){
 }
 const splitList = (v, re) => String(v).split(re).map(s=>s.trim()).filter(Boolean);
 // The add row's draft: kept while the page is open, so three lines in a scene are three Enters.
-const intAdd = () => S.intAdd || (S.intAdd={ kind:null, crew:"", date:localDay() });
+const intAdd = () => S.intAdd || (S.intAdd={ kind:null, crew:"", date:localDay(), what:"" });
 const kindToggleHtml = (attr, current, label, prefix="") => `<div class="form-toggle int-kinds" role="group" aria-label="${esc(label)}">${INTERACTION_KINDS.map(([k,name])=>
   `<button type="button" ${attr}="${esc(prefix+k)}" class="${k===current?"on":""}" aria-pressed="${k===current}">${esc(name)}</button>`).join("")}</div>`;
 function castOpenMember(){ return S.castOpen ? S.table.cast.find(n=>n.id===S.castOpen) || null : null; }
@@ -345,15 +345,15 @@ function castListHtml(t){
 // A gone member is a struck-through name, not a button (Decision 178).
 function linkNameHtml(t, link, where){
   const r=Engine.linkName(t, link);
-  return r.gone ? `<s aria-label="${esc(r.name)}, removed">${esc(r.name)}</s>`
+  return r.gone ? `<s>${esc(r.name)}</s><span class="vh">, removed</span>`
     : `<button class="cast-open int-who" data-copen="${esc(link.id)}" data-cwhere="${esc(where)}">${esc(r.name)}</button>`;
 }
 // Who knows what (Decision 179): the same records, by crew name.
 function crewViewHtml(t){
   const groups=Engine.crewView(t, { q:S.castQ||"" });
   if (!groups.length) return S.castQ && String(S.castQ).trim() ? `<p class="step-note">No one matches.</p>` : `<p class="step-note">Nothing between the crew and anyone yet.</p>`;
-  return groups.map((g,gi)=>`<section class="crew-group"><h2 class="cast-h crew-name">${esc(g.name)}</h2><ul class="int-list">${g.interactions.map(x=>{
-    const who=(x.cast||[]).map((l,li)=>linkNameHtml(t, l, `${gi}|${x.id}|${li}`)).join(", ");
+  return groups.map(g=>`<section class="crew-group"><h2 class="cast-h crew-name">${esc(g.name || "No one named")}</h2><ul class="int-list">${g.interactions.map(x=>{
+    const who=(x.cast||[]).map((l,li)=>linkNameHtml(t, l, `${g.name.trim().toLowerCase()}|${x.id}|${li}`)).join(", ");
     const bits=[ interactionLabel(x.kind) ? `<span class="int-kind">${esc(interactionLabel(x.kind))}</span>` : "", who,
       x.date ? `<span class="int-date">${esc(dayText(x.date))}</span>` : "", x.text ? `<span class="int-text">${esc(x.text)}</span>` : "" ].filter(Boolean);
     return `<li class="int-line">${bits.join(" ")}</li>`; }).join("")}</ul></section>`).join("");
@@ -416,7 +416,7 @@ function interactionRowHtml(x){
     <div class="int-fields">
       <input type="text" data-icrew="${id}" list="crew-names" value="${esc(x.crew.join(", "))}" placeholder="Crew" aria-label="Crew" autocomplete="off">
       <input type="date" data-idate="${id}" value="${esc(x.date||"")}" aria-label="When">
-      <input type="text" data-itext="${id}" value="${esc(x.text)}" placeholder="What passed between them" aria-label="What" autocomplete="off">
+      <textarea rows="2" data-itext="${id}" placeholder="What passed between them" aria-label="What">${esc(x.text)}</textarea>
       <button class="btn sm danger" data-idel="${id}">Delete</button></div></li>`;
 }
 function castInteractionsHtml(n){
@@ -429,7 +429,7 @@ function castInteractionsHtml(n){
       <div class="int-fields">
         <label class="field"><span>Crew</span><input type="text" data-iacrew list="crew-names" value="${esc(a.crew)}" placeholder="Who from the crew" autocomplete="off"></label>
         <label class="field"><span>When</span><input type="date" data-iadate value="${esc(a.date||"")}"></label>
-        <label class="field"><span>What</span><input type="text" data-iwhat placeholder="What passed between them" autocomplete="off"></label>
+        <label class="field"><span>What</span><input type="text" data-iwhat value="${esc(a.what||"")}" placeholder="What passed between them" autocomplete="off"></label>
         <button class="btn primary" data-iadd>Add</button></div></div>
     <ul class="int-list" data-intlist>${rows.map(interactionRowHtml).join("")}</ul>`;
 }
@@ -525,12 +525,14 @@ function bindInteractions(main, n){
   crewEl.oninput=()=>{ a.crew=crewEl.value; };
   crewEl.onchange=()=>{ a.crew=splitList(crewEl.value, /,/).join(", "); crewEl.value=a.crew; };
   dateEl.oninput=dateEl.onchange=()=>{ a.date=dateEl.value||null; };
+  whatEl.addEventListener("input", ()=>{ a.what=whatEl.value; });
   const add=()=>{
     const text=whatEl.value;
     if (!a.kind && !text.trim()) return;
     let r; tableChange(()=>{ r=Engine.addInteraction(S.table, { kind:a.kind, cast:[id], crew:splitList(a.crew, /,/), text, date:a.date }); }, false);
     if (!r.ok) return;
     if (a.kind==="killed") a.kind=null;
+    a.what="";
     renderTable(); focus("[data-iwhat]");
   };
   main.querySelector("[data-iadd]").onclick=add;

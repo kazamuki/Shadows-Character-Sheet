@@ -369,7 +369,7 @@ test("hostile interactions and affiliations render as text on a member's page, t
   found.push(...injected(app, "the Cast list with an affiliation chosen"));
   app.click('[data-cview="crew"]');
   assert.ok(app.$$(".crew-group").length >= 2, "Who knows what wasn't drawn");
-  assert.ok(app.$("s[aria-label$=', removed']"), "a gone name wasn't struck through");
+  assert.ok(app.$(".int-line s + .vh"), "a gone name wasn't struck through");
   found.push(...injected(app, "Who knows what"));
   app.click("[data-copen]");
   found.push(...injected(app, "a member's page"));

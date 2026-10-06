@@ -3574,20 +3574,25 @@ const Engine = (() => {
     return _interactions(t).filter(x=>(Array.isArray(x.cast) ? x.cast : []).some(l=>_isObj(l) && l.id===castId)).sort(_newest);
   }
   // Who knows what: the same records, from the crew's end. Names that differ
-  // only in case or spaces are one person, shown as first spelled.
+  // only in case or spaces are one person, shown as first spelled. A line with
+  // no crew name is the last group, named "", so it can always be read.
   function crewView(t, f){
-    const q = _folded((f||{}).q), groups = new Map();
+    const q = _folded((f||{}).q), groups = new Map(), nameless = [];
     const hit = (x, name) => !q || name.includes(q) || _str(x.text).toLowerCase().includes(q)
       || (Array.isArray(x.cast) ? x.cast : []).some(l=>linkName(t, l).name.toLowerCase().includes(q));
-    for (const x of _interactions(t).reverse())   // oldest first, so the heading is the spelling first written
-      for (const raw of (Array.isArray(x.crew) ? x.crew : [])){
-        const name = _str(raw).trim(), key = name.toLowerCase();
-        if (!name || !hit(x, key)) continue;
+    for (const x of _interactions(t).reverse()){   // oldest first, so the heading is the spelling first written
+      const names = (Array.isArray(x.crew) ? x.crew : []).map(r=>_str(r).trim()).filter(Boolean);
+      if (!names.length){ if (hit(x, "")) nameless.push(x); continue; }
+      for (const name of names){
+        const key = name.toLowerCase();
+        if (!hit(x, key)) continue;
         if (!groups.has(key)) groups.set(key, { name, interactions:[] });
         const g = groups.get(key);
         if (!g.interactions.includes(x)) g.interactions.push(x);
       }
+    }
     const out = [...groups.entries()].sort((a, b)=>a[0].localeCompare(b[0])).map(e=>e[1]);
+    if (nameless.length) out.push({ name:"", interactions:nameless });
     for (const g of out) g.interactions.sort(_newest);
     return out;
   }

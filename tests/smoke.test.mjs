@@ -3987,7 +3987,9 @@ test("Decision 178: delete a member and Who knows what keeps their name struck t
   app.click('[data-cview="crew"]');
   const s = app.$(".int-line s");
   assert.ok(s, "the name isn't struck through");
-  assert.equal(s.textContent, "Dez"); assert.equal(s.getAttribute("aria-label"), "Dez, removed");
+  assert.equal(s.textContent, "Dez");
+  assert.equal(s.nextElementSibling.textContent, ", removed", "a screen reader isn't told the name was removed");
+  assert.ok(s.nextElementSibling.classList.contains("vh")); assert.equal(s.getAttribute("aria-label"), null);
   assert.equal(app.$(".int-line [data-copen]"), null, "a removed name is still a button");
   type(app, "[data-csearch]", "dez");
   assert.equal(app.$$(".int-line").length, 1);
@@ -4065,6 +4067,75 @@ test("Decision 177: a day is the GM's local day, not UTC's", () => {
 test("Decisions 177–179: the headings, crew names and kind toggle wrap at 390px (the pixels are checked by hand: jsdom has no layout)", () => {
   const css = wizCss();
   for (const re of [/\.int-kinds\{[^}]*flex-wrap:wrap/, /\.int-kinds button\{[^}]*overflow-wrap:anywhere/, /\.crew-name\{[^}]*overflow-wrap:anywhere/,
-                    /\.int-line\{[^}]*overflow-wrap:anywhere/, /\.int-row \.int-fields input\{[^}]*min-width:0/, /\.cast-view\{[^}]*max-width:100%/])
+                    /\.int-line\{[^}]*overflow-wrap:anywhere/, /\.int-row \.int-fields input, \.int-row \.int-fields textarea\{[^}]*min-width:0/, /\.int-kinds button\{[^}]*flex:1 1 auto/, /\.vh\{[^}]*clip/, /\.cast-view\{[^}]*max-width:100%/])
     assert.match(css, re);
+});
+
+test("S8b review 1: a line with no crew name is still on screen once its member is deleted, in a last group", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Nameless");
+  castAdd(app, "Dez"); openFirst(app);
+  app.click('[data-iakind="shared"]'); addLine(app, "told them nothing");
+  app.click("[data-cdel]"); app.click("#modal [data-askyes]");
+  assert.equal(app.window.eval("S.table.interactions.length"), 1);
+  app.click('[data-cview="crew"]');
+  assert.deepEqual(app.$$(".crew-name").map(h => h.textContent), ["No one named"]);
+  assert.match(app.$(".int-line").textContent, /told them nothing/);
+  assert.equal(app.$(".int-line s").textContent, "Dez");
+  type(app, "[data-csearch]", "dez");
+  assert.equal(app.$$(".int-line").length, 1, "the search doesn't reach it by the member's name");
+  assert.deepEqual(app.errors, []);
+});
+
+test("S8b review 2: What on the add row survives a redraw a press elsewhere causes, and is emptied by Add", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Draft");
+  castAdd(app, "Dez"); openFirst(app);
+  app.click('[data-iakind="shared"]'); addLine(app, "first");
+  type(app, "[data-iwhat]", "half typed");
+  const xid = app.$("[data-int]").dataset.int;
+  app.click(`[data-ikind="${xid}|helped"]`);
+  assert.equal(app.$("[data-iwhat]").value, "half typed", "a kind on a row cost the draft");
+  app.click("[data-cskadd]");
+  assert.equal(app.$("[data-iwhat]").value, "half typed", "a stat-block line cost the draft");
+  app.click(`[data-idel="${xid}"]`); app.click("#modal [data-askyes]");
+  assert.equal(app.$("[data-iwhat]").value, "half typed", "a Delete cost the draft");
+  keyIn(app, "[data-iwhat]", "Enter");
+  assert.equal(app.$("[data-iwhat]").value, "");
+  assert.deepEqual(intTexts(app), ["half typed"]);
+  type(app, "[data-iwhat]", "more"); app.click("[data-cback]"); openFirst(app);
+  assert.equal(app.$("[data-iwhat]").value, "", "the draft outlived the page");
+  assert.deepEqual(app.errors, []);
+});
+
+test("S8b review 3: Back from Who knows what lands on the same name even after a new group moves it", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Keyed");
+  castAdd(app, "Bob"); openFirst(app);
+  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); addLine(app, "one");
+  app.click("[data-cback]"); app.click('[data-cview="crew"]');
+  const who = app.$(".crew-group .int-line [data-copen]");
+  const where = who.dataset.cwhere;
+  who.click();
+  type(app, "[data-iacrew]", "Ash"); addLine(app, "two");
+  app.click("[data-cback]");
+  assert.deepEqual(app.$$(".crew-name").map(h => h.textContent), ["Ash", "Nyx"], "Nyx's group didn't move");
+  assert.equal(app.doc.activeElement.dataset.cwhere, where, "focus isn't on the name that was pressed");
+  assert.ok(where.startsWith("nyx|"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("S8b review 5: an existing line's What is a wrapping textarea, and Enter in it is a newline, not Add", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Long");
+  castAdd(app, "Dez"); openFirst(app);
+  app.click('[data-iakind="shared"]'); addLine(app, "x");
+  const el = app.$("[data-itext]");
+  assert.equal(el.tagName, "TEXTAREA"); assert.equal(el.getAttribute("rows"), "2");
+  type(app, "[data-itext]", "a very long line ".repeat(10));
+  keyIn(app, "[data-itext]", "Enter");
+  assert.equal(app.$$("[data-int]").length, 1, "Enter in a row's What added a line");
+  assert.equal(app.window.eval("S.table.interactions[0].text"), "a very long line ".repeat(10));
+  assert.equal(app.$("[data-iwhat]").tagName, "INPUT");
+  assert.deepEqual(app.errors, []);
 });

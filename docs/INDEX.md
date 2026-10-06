@@ -367,7 +367,7 @@ W29, built a session at a time behind a feature switch (173). The plan is `plans
 - **176** *(The Cast tab — W29 S8a, GQ1)* — a table opens on Cast: quick-add, a search and a status filter (*In play*, alive and missing, by default; listed alive, missing, out of the picture, dead), a page per member saved as typed; Delete asks; still no undo on a table (S10 decides its audit trail). → supersedes 171 in part. → **superseded in part by 179**
 - **177** *(Interactions — W29 S8b, GQ19)* — table schema 0.3: `interactions`, dated records of what passed between the crew and the cast (`I-` id, a kind of seven or null, links, crew as typed names, a local date, text); a *killed* line sets its members dead, one way; no `history` until S5 or S10 writes one. → supersedes 174 in part.
 - **178** *(Links — W29 S8b)* — a record links another as `{ kind, id }`; deleting the target writes its name into each link, and `Engine.linkName` reads a link with no target as that name, struck through, or *Someone removed*; never an error.
-- **179** *(Affiliations and Who knows what — W29 S8b, GQ1)* — `affiliations` as text on a member, one Affiliation filter on the Cast list, **Between them and the crew** on a member's page, and a second view of the Cast tab, *Who knows what*, by crew name. → supersedes 176 in part.
+- **179** *(Affiliations and Who knows what — W29 S8b, GQ1)* — `affiliations` as text on a member, one Affiliation filter on the Cast list, **Between them and the crew** on a member's page, and a second view of the Cast tab, *Who knows what*, by crew name, lines with none last. → supersedes 176 in part.
 
 ### Audit trail, undo & admin
 

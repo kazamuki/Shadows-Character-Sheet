@@ -3349,7 +3349,7 @@ test("crewView: Nyx, nyx and 'Nyx ' are one group shown as first spelled; A–Z;
   Engine.addInteraction(t, { kind: "helped", cast: [ivo], crew: ["nYx "], text: "three", date: "2026-10-03" });
   Engine.addInteraction(t, { kind: "helped", cast: [ivo], crew: [], text: "nobody's" });
   const v = Engine.crewView(t, {});
-  assert.equal(v.map(g => g.name).join(), "Nyx,Rook");
+  assert.equal(v.map(g => g.name).join(), "Nyx,Rook,", "the line with no crew is the last group");
   assert.equal(v[0].interactions.map(x => x.text).join(), "three,two,one");
   assert.equal(v[1].interactions.map(x => x.text).join(), "two");
   assert.equal(Engine.crewView(t, { q: "ROOK" }).map(g => g.name).join(), "Rook");
@@ -3380,4 +3380,19 @@ test("castFilter with an affiliation chosen is still in CAST_ORDER, each group i
   assert.equal(t.cast.map(n => n.name).join(), "G1,M1,A2,D1,A1,M2", "insertion order isn't status order");
   assert.equal(Engine.castFilter(t, { affiliation: "eclipse", status: "all" }).map(n => n.name).join(), "A2,A1,M1,M2,G1,D1");
   assert.equal(Engine.castFilter(t, { affiliation: "eclipse", status: "inplay" }).map(n => n.name).join(), "A2,A1,M1,M2");
+});
+
+test("S8b review 1: crewView puts lines with no crew name in a last group named '', which q still reaches", () => {
+  const [t, dez] = castWith("Dez");
+  Engine.addInteraction(t, { kind: "shared", cast: [dez], crew: ["Nyx"], text: "named", date: "2026-10-01" });
+  Engine.addInteraction(t, { kind: "learned", cast: [dez], crew: [], text: "nobody's", date: "2026-10-03" });
+  Engine.addInteraction(t, { kind: "helped", cast: [dez], crew: ["Zed"], text: "last by name" });
+  Engine.removeCastMember(t, dez);
+  const v = Engine.crewView(t, {});
+  assert.equal(v.map(g => g.name).join("|"), "Nyx|Zed|", "the nameless group isn't last");
+  assert.equal(v[2].interactions.map(x => x.text).join(), "nobody's");
+  assert.equal(Engine.crewView(t, { q: "nobody" }).map(g => g.name).join("|"), "");
+  assert.equal(Engine.crewView(t, { q: "dez" }).map(g => g.name).join("|"), "Nyx|Zed|", "a gone member's name doesn't reach every group");
+  assert.equal(Engine.crewView(t, { q: "dez" }).length, 3);
+  assert.equal(Engine.crewView(t, { q: "zzz" }).length, 0);
 });
