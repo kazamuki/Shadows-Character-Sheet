@@ -393,13 +393,17 @@ function castTabHtml(t){
 }
 
 // ── A member's page ──
-const castText = (n, key, label, ph, area) => `<label class="field"><span>${esc(label)}</span>${area
+const castText = (n, key, label, ph, area, list) => `<label class="field"><span>${esc(label)}</span>${area
   ? `<textarea data-cf="${key}" placeholder="${esc(ph||"")}">${esc(n[key])}</textarea>`
-  : `<input type="text" data-cf="${key}" value="${esc(n[key])}" placeholder="${esc(ph||"")}" autocomplete="off">`}</label>`;
+  : `<input type="text" data-cf="${key}" value="${esc(n[key])}" placeholder="${esc(ph||"")}" autocomplete="off"${list ? ` list="${list}"` : ""}>`}</label>`;
+const PACK_KINDS = [["universal","Universal"], ["origin","Origin"], ["signature","Signature"]];
+const packKindLabel = k => (PACK_KINDS.find(x=>x[0]===k) || [])[1] || "";
+const foldName = v => String(v||"").trim().toLowerCase();
 function castStatBlockHtml(n){
+  const packs=packsMemo.length, hasTraits=packs && Engine.packTraits(packsMemo, {}).length>0;
   const b=n.block || {}, st=b.stats||{}, au=b.authored||{};
   const num = (attr, v, label) => `<input type="number" step="1" inputmode="numeric" ${attr} value="${numAttr(v)}" aria-label="${esc(label)}">`;
-  const stats = D.stats.map(s=>`<div class="cast-stat"><span class="cast-stat-id">${esc(s.id)}</span>${num(`data-cstat="${esc(s.id)}"`, st[s.id], s.name||s.id)}<span class="cast-fig" data-cbonus="${esc(s.id)}"></span></div>`).join("");
+  const stats = D.stats.map(s=>`<div class="cast-stat"><span class="cast-stat-id">${esc(s.id)}</span>${num(`data-cstat="${esc(s.id)}"`, st[s.id], s.name||s.id)}<span class="cast-fig" data-cbonus="${esc(s.id)}"></span>${packs ? `<span class="cast-fig cast-mod" data-cmod="${esc(s.id)}"></span>` : ""}</div>`).join("");
   const authored = D.derived.filter(d=>d.type==="sumOfModifiers").map(d=>`<div class="cast-stat"><span class="cast-stat-id">${esc(d.id)}</span>${num(`data-cauth="${esc(d.id)}"`, au[d.id], d.name||d.id)}<span class="cast-fig" data-cformula="${esc(d.id)}"></span></div>`).join("");
   const skills = (b.skills||[]).map((k,i)=>`<div class="cast-row" data-cskill="${i}">
       <input type="text" data-cskname="${i}" value="${esc(k.name)}" placeholder="Skill" aria-label="Skill name" autocomplete="off">
@@ -415,10 +419,12 @@ function castStatBlockHtml(n){
       <button class="btn sm danger" data-ctdel="${i}">Remove</button></div>`).join("");
   return `<h2 class="cast-h">Stat block</h2>
     <p class="cast-health" data-chealth-row hidden>Health <b data-chealth></b></p>
+    ${packs ? `<p class="cast-guide" data-cmodnote hidden></p><p class="cast-guide" data-cstatguide hidden></p>` : ""}
     <div class="cast-stats">${stats}${authored}</div>
     <div class="cast-lines"><span class="cast-sub">Skills</span>${skills}<button class="btn sm" data-cskadd>Add a skill</button></div>
     ${lines("armor","Armor")}${lines("gear","Gear")}
-    <div class="cast-lines"><span class="cast-sub">Traits</span>${traits}<button class="btn sm" data-ctadd>Add a trait</button></div>`;
+    <div class="cast-lines"><span class="cast-sub">Traits</span>${packs ? `<p class="cast-guide" data-ctcount hidden></p><p class="cast-guide" data-ctguide hidden></p>` : ""}${traits}
+      <button class="btn sm" data-ctadd>Add a trait</button>${hasTraits ? ` <button class="btn sm" data-ctpick>Add from a pack</button>` : ""}</div>`;
 }
 // What passed between this member and the crew (Decisions 177–179).
 function interactionRowHtml(x){
@@ -445,7 +451,15 @@ function castInteractionsHtml(n){
         <button class="btn primary" data-iadd>Add</button></div></div>
     <ul class="int-list" data-intlist>${rows.map(interactionRowHtml).join("")}</ul>`;
 }
+// The pack's names for the fields the GM types (Decision 184): a list to pick from, and the roles as toggles.
+function castRolesHtml(n){
+  const roles=Engine.packChoices(packsMemo).npcRoles;
+  return roles.length ? `<div class="form-toggle cast-roles" role="group" aria-label="Roles in the pack">${roles.map(r=>
+    `<button type="button" data-crole="${esc(r)}" aria-pressed="false">${esc(r)}</button>`).join("")}</div>` : "";
+}
+const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length;
   return `<p><button class="btn sm" data-cback>Back to the cast</button></p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
@@ -453,10 +467,10 @@ function castPageHtml(n){
     ${castText(n,"flavor","Who they are","One line: who they are")}
     ${castText(n,"description","Description","What you'd see.",true)}
     <div class="cast-codex">
-      ${castText(n,"origin","Origin")}
-      <label class="field"><span>NPC roles</span><input type="text" data-cf="npcRoles" value="${esc(n.npcRoles.join(" / "))}" placeholder="Separate with / or ," autocomplete="off"></label>
-      ${castText(n,"enemyRole","Enemy role")}
-      <label class="field"><span>Tier</span><input type="number" step="1" min="1" inputmode="numeric" data-cf="tier" value="${numAttr(n.tier)}"></label>
+      ${castText(n,"origin","Origin","",false,c.origins.length ? "cast-origins" : "")}${datalistHtml("cast-origins", c.origins)}
+      <div><label class="field"><span>NPC roles</span><input type="text" data-cf="npcRoles" value="${esc(n.npcRoles.join(" / "))}" placeholder="Separate with / or ," autocomplete="off"></label>${castRolesHtml(n)}</div>
+      ${castText(n,"enemyRole","Enemy role","",false,c.enemyRoles.length ? "cast-enemies" : "")}${datalistHtml("cast-enemies", c.enemyRoles)}
+      <div><label class="field"><span>Tier</span><input type="number" step="1" min="1" inputmode="numeric" data-cf="tier" value="${numAttr(n.tier)}"></label>${packs ? `<p class="cast-guide" data-ctier hidden></p>` : ""}</div>
       <label class="field"><span>Status</span><select data-cf="status">${["alive","dead","missing","gone"].map(s=>`<option value="${s}"${s===n.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
     </div>
     ${castText(n,"motivation","What they want","",true)}
@@ -524,6 +538,79 @@ function castFigures(main, n){
     if (r.health) main.querySelector("[data-chealth]").textContent = `${r.health.total} (${r.health.levels} Health Level${r.health.levels===1?"":"s"})`;
   }
 }
+// What the slotted packs say about what's typed, beside it (Decision 184). Rewritten in place like
+// castFigures, on every input: never a redraw, so the caret stays. Nothing here is stored, and
+// nothing is a warning: the tier's words are the book's, and the GM overrides them as the story needs.
+function castGuide(main, n){
+  if (!packsMemo.length) return;
+  const m=Engine.castPackMatch(packsMemo, n), set=(sel, html)=>{ const el=main.querySelector(sel); if (el){ el.innerHTML=html; el.hidden=!html; } };
+  const mods=m.origin ? m.origin.rec.modifiers || {} : {}, who=m.origin ? m.origin.rec.name.trim() || "Origin" : "";
+  main.querySelectorAll("[data-cmod]").forEach(el=>{ const v=mods[el.dataset.cmod]; el.textContent = v ? `${who} ${castSigned(v)}` : ""; });
+  const have=new Set((Array.isArray(n.npcRoles) ? n.npcRoles : []).map(foldName));
+  main.querySelectorAll("[data-crole]").forEach(b=>{ const on=have.has(foldName(b.dataset.crole)); b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); });
+  const t=m.tier, tn=t ? t.rec.id : null, guide=(key)=>t && String(t.rec[key]||"").trim() ? `Tier ${tn}: ${esc(t.rec[key])}` : "";
+  const e=m.enemyRole, usual=e && e.rec.tier!==null && e.rec.tier!==n.tier ? e.rec.name.trim() || "Enemy role" : "";
+  set("[data-ctier]", [ t && packChipHtml(t.pack, "tiers", t.rec, t.rec.name.trim() || `Tier ${tn}`),
+    usual && `${/^[aeiou]/i.test(usual) ? "An" : "A"} ${esc(usual)} is usually Tier ${e.rec.tier}` ].filter(Boolean).join(" · "));
+  // A Use copy's numbers are the book's, which already include its origin: say so while the origin is still its entry's.
+  const from=n.from, src=from && from.kind==="entry" ? Engine.packEntry(packsMemo, from.pack, from.id) : null;
+  const same=src && m.origin && src.origin && m.origin.pack.meta.id===from.pack && m.origin.rec.id===src.origin.id && Object.keys(mods).length>0;
+  set("[data-cmodnote]", same ? `The book's stats for ${esc(src.entry.name.trim() || String(from.name||"").trim() || "Unnamed")} already include ${esc(who)}'s modifiers.` : "");
+  set("[data-cstatguide]", guide("statGuide"));
+  set("[data-ctguide]", guide("traitGuide"));
+  const c=m.counts, bits=PACK_KINDS.map(([k,name])=>c[k] ? `${c[k]} ${name}` : "").concat(c.written ? `${c.written} written` : "").filter(Boolean);
+  set("[data-ctcount]", c.total ? `${c.total} trait${c.total===1 ? "" : "s"}: ${bits.join(" · ")}` : "");
+}
+// The glossary picker: every slotted pack's traits, by search, kind and origin (Decision 185).
+// Its filters sit on S for as long as the table is open. `add` gets the chosen trait.
+function traitFilterNow(){
+  const origins=Engine.packChoices(packsMemo).traitOrigins, w=foldName(S.traitOrigin);
+  return { q:S.traitQ||"", kind:PACK_KINDS.some(k=>k[0]===S.traitKind) ? S.traitKind : "", origin:w && origins.find(o=>foldName(o)===w) || "" };
+}
+function traitRowHtml({ pack, trait }, multi){
+  const o=pack.origins.find(x=>x.id===trait.origin);
+  const meta=[ packKindLabel(trait.kind), o && o.name, multi ? packName(pack) : "" ].filter(Boolean).map(esc).join(" · ");
+  const name=trait.name.trim() || "Unnamed";
+  return `<li class="trait-pick"><div class="trait-pick-head"><b>${esc(name)}</b>${meta ? ` <span class="roster-meta">${meta}</span>` : ""}</div>
+    ${trait.text.trim() ? `<p class="threat-text">${esc(trait.text)}</p>` : ""}
+    <button class="btn sm" data-tpadd="${esc(`${pack.meta.id}|${trait.id}`)}" aria-label="Add ${esc(name)}">Add</button></li>`;
+}
+function traitListHtml(){
+  const f=traitFilterNow(), rows=Engine.packTraits(packsMemo, f), multi=packsMemo.length>1;
+  if (!rows.length) return `<p class="step-note">Nothing matches.</p><p><button class="btn sm" data-tpclear>Clear the filters</button></p>`;
+  return `<ul class="roster-list trait-picks">${rows.map(r=>traitRowHtml(r, multi)).join("")}</ul>`;
+}
+function traitPickerHtml(){
+  const f=traitFilterNow(), c=Engine.packChoices(packsMemo);
+  const sel = (attr, label, now, opts) => `<label class="field"><span>${esc(label)}</span><select ${attr}><option value="">Any</option>${opts.map(([v,name])=>
+    `<option value="${esc(v)}"${v===now?" selected":""}>${esc(name)}</option>`).join("")}</select></label>`;
+  return `<div class="threat-filters">
+      <label class="field"><span>Search</span><input type="search" data-tpsearch placeholder="Search traits" autocomplete="off" value="${esc(f.q)}"></label>
+      ${sel("data-tpkind","Kind", f.kind, PACK_KINDS)}${sel("data-tporigin","Origin", f.origin, c.traitOrigins.map(o=>[o,o]))}
+    </div>
+    <div data-tplist>${traitListHtml()}</div>`;
+}
+function openTraitPicker(add){
+  openModal({ title:"Add a trait", html:traitPickerHtml(), returnTo:"[data-ctpick]", foot:`<button class="btn" data-modalclose>Cancel</button>`,
+    bind(body){
+      const box=body.querySelector("[data-tplist]");
+      const draw=()=>{
+        box.innerHTML=traitListHtml();
+        box.querySelectorAll("[data-tpadd]").forEach(b=>b.onclick=()=>{
+          const [pid, id]=b.dataset.tpadd.split("|"), hit=Engine.packTraits(packsMemo, {}).find(x=>x.pack.meta.id===pid && x.trait.id===id);
+          if (hit) add({ name:hit.trait.name, text:hit.trait.text });
+        });
+        const clear=box.querySelector("[data-tpclear]");
+        if (clear) clear.onclick=()=>{ S.traitQ=""; S.traitKind=""; S.traitOrigin="";
+          for (const sel of ["[data-tpsearch]","[data-tpkind]","[data-tporigin]"]) body.querySelector(sel).value="";
+          draw(); body.querySelector("[data-tpsearch]").focus(); };
+      };
+      const q=body.querySelector("[data-tpsearch]");
+      q.oninput=()=>{ S.traitQ=q.value; draw(); };
+      for (const [sel, key] of [["[data-tpkind]","traitKind"], ["[data-tporigin]","traitOrigin"]]) body.querySelector(sel).onchange=ev=>{ S[key]=ev.target.value; draw(); };
+      draw();
+    } });
+}
 // The add row keeps its kind, crew and date between entries (they're on S, so a
 // redraw keeps them too); Enter in What adds. Only a Killed them goes back to none.
 function bindInteractions(main, n){
@@ -583,6 +670,7 @@ function bindCastPage(main, n){
   main.querySelectorAll("[data-cf]").forEach(el=>{
     const key=el.dataset.cf, list=key==="npcRoles" || key==="affiliations", fn=()=>{
       edit(key, list ? splitList(el.value, /[\/,]/) : el.value);
+      castGuide(main, own());
       if (key==="name"){ const h=main.querySelector("[data-ctitle]"); if (h) h.textContent=el.value.trim() || "Unnamed"; }
     };
     el.addEventListener("input", fn); el.addEventListener("change", fn);
@@ -598,7 +686,7 @@ function bindCastPage(main, n){
     const cur=own(), b=cur.block ? JSON.parse(JSON.stringify(cur.block)) : { stats:{}, authored:{}, skills:[], armor:[], gear:[], traits:[] };
     fn(b); Engine.setCastBlock(S.table, id, b);
   }, redraw);
-  const typed = (sel, fn) => main.querySelectorAll(sel).forEach(el=>el.oninput=()=>{ block(b=>fn(b, el), false); castFigures(main, own()); });
+  const typed = (sel, fn) => main.querySelectorAll(sel).forEach(el=>el.oninput=()=>{ block(b=>fn(b, el), false); castFigures(main, own()); castGuide(main, own()); });
   const num = el => el.value.trim()==="" ? null : Number(el.value);
   typed("[data-cstat]", (b,el)=>{ b.stats[el.dataset.cstat]=num(el); });
   typed("[data-cauth]", (b,el)=>{ b.authored[el.dataset.cauth]=num(el); });
@@ -632,6 +720,20 @@ function bindCastPage(main, n){
   main.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener("change", ()=>{
     const v=stored(el); el.value = typeof v==="number" ? v : ""; castFigures(main, own()); }));
   castFigures(main, n);
+  castGuide(main, n);
+  // A role toggle edits the field's list: the pack's spelling in, or the matching entry out.
+  main.querySelectorAll("[data-crole]").forEach(btn=>btn.onclick=()=>{
+    const w=foldName(btn.dataset.crole), cur=own().npcRoles, has=cur.some(r=>foldName(r)===w);
+    edit("npcRoles", has ? cur.filter(r=>foldName(r)!==w) : [...cur, btn.dataset.crole]);
+    main.querySelector('[data-cf="npcRoles"]').value=own().npcRoles.join(" / ");
+    castGuide(main, own());
+  });
+  const pick=main.querySelector("[data-ctpick]");
+  if (pick) pick.onclick=()=>openTraitPicker(t=>{
+    let at; closeModal();
+    block(b=>{ b.traits.push({ name:t.name, text:t.text }); at=b.traits.length-1; }, true);
+    focus(`[data-ctname="${at}"]`);
+  });
   main.querySelector("[data-cback]").onclick=()=>{
     const from=S.castFrom;
     S.castOpen=null; S.castFrom=null; S.intAdd=null; window.scrollTo(0,0); update();
@@ -806,7 +908,7 @@ function threatFilterNow(){
 const threatFiltering = f => !!(f.q.trim() || (f.view!=="group" && (f.origin || f.npcRole || f.enemyRole || f.tier!==null)));
 function entryMetaText(pack, entry, multi){
   const found=Engine.packEntry([pack], pack.meta.id, entry.id);
-  return [ entry.ref, found.origin && found.origin.name, found.npcRoles.map(r=>r.name).join(" / "), found.enemyRole && `Enemy: ${found.enemyRole.name}`,
+  return [ entry.ref, found.origin && found.origin.name, found.npcRoles.length && `NPC role: ${found.npcRoles.map(r=>r.name).join(" / ")}`, found.enemyRole && `Enemy: ${found.enemyRole.name}`,
     entry.tier!==null ? `Tier ${entry.tier}` : "", multi ? packName(pack) : "" ].filter(Boolean).map(esc).join(" · ");
 }
 function threatCardHtml({ pack, entry }, multi){

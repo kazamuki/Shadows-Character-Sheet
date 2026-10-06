@@ -391,12 +391,14 @@ const PK = "PK-ABCD2345";
 function hostilePack() {
   const text = tag => P(tag);
   return {
-    meta: { kind: "shadows-pack", id: PK, name: text("pk.name"), packSchemaVersion: "0.1", contentVersion: text("pk.version"),
+    meta: { kind: "shadows-pack", id: PK, name: text("pk.name"), packSchemaVersion: "0.2", contentVersion: text("pk.version"),
             created: "2026-10-01T10:00:00.000Z", updated: "2026-10-02T10:00:00.000Z" },
-    origins: [{ id: "o1", name: text("origin.name"), text: text("origin.text") }, null, 5],
+    origins: [{ id: "o1", name: text("origin.name"), text: text("origin.text"), modifiers: { BOD: 1, [text("mod.key")]: 2, REF: text("mod.val") } }, null, 5],
     npcRoles: [{ id: "r1", name: text("role.name"), text: text("role.text") }],
     enemyRoles: [{ id: "e1", name: text("enemy.name"), tier: 1, text: text("enemy.text") }],
-    tiers: [{ id: 1, name: text("tier.name"), text: text("tier.text") }],
+    tiers: [{ id: 1, name: text("tier.name"), text: text("tier.text"), statGuide: text("tier.stat"), traitGuide: text("tier.trait") }],
+    traits: [{ id: "t1", name: text("trait.name"), text: text("gl.text"), kind: text("gl.kind"), origin: "o1" },
+             { id: "t2", name: text("gl.name2"), text: text("gl.text2"), kind: "signature", origin: text("gl.origin") }, null, 5],
     entries: [
       { id: "a", kind: "threat", ref: text("ref"), name: text("entry.name"), flavor: text("entry.flavor"), description: text("entry.desc"),
         motivation: text("entry.mot"), resources: text("entry.res"), line: text("entry.line"), ifPushed: text("entry.push"), gmNote: text("entry.gm"),
@@ -445,6 +447,17 @@ test("a hostile pack renders as text on Home, every Threats view, an entry, a gr
   app.click("[data-tuse]");
   found.push(...injected(app, "the copy's page"));
   assert.match(app.$(".cast-from").textContent, /^From /);
+  // The builder (Decisions 183–185): the origin and tier match, so the modifiers and guides draw; the picker lists the glossary.
+  assert.match(app.$('[data-cmod="BOD"]').textContent, /\+1$/, "the matched origin's modifier didn't draw");
+  assert.ok(app.$("[data-cstatguide]") && !app.$("[data-cstatguide]").hidden && !app.$("[data-ctguide]").hidden, "the matched guides didn't draw");
+  found.push(...injected(app, "the builder's guidance"));
+  app.click("[data-ctpick]");
+  assert.equal(app.$$("#modal [data-tpadd]").length, 2);
+  found.push(...injected(app, "the trait picker"));
+  app.click("#modal [data-tpadd]");
+  found.push(...injected(app, "the page after Add"));
+  assert.ok(app.$("[data-ctcount]").textContent.length > 0);
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"));
   app.click("[data-tfrom]");
   found.push(...injected(app, "the entry again, from the copy"));
   app.click("[data-tback]");

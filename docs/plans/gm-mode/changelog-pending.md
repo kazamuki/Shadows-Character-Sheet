@@ -15,3 +15,6 @@ something a GM can see adds its line here.
   too, so a roster of goblins comes apart.
 - **Threats.** Slot in a pack and its threats, people and groups are a
   tab away, ready to read or to copy into your cast.
+- **Build from the book.** With a pack slotted in, a cast member's page
+  offers its origins, roles and tiers, shows what each means beside the
+  stat block, and adds traits straight from the glossary.

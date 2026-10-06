@@ -3399,7 +3399,7 @@ test("S8b review 1: crewView puts lines with no crew name in a last group named 
 });
 
 // ── Packs (Decisions 180–182) ──────────────────────────────────────────────
-import { syntheticPack, PACK_ID } from "./packfixture.mjs";
+import { syntheticPack, syntheticPack01, PACK_ID } from "./packfixture.mjs";
 
 test("fileKind: a pack is 'pack'; a table, a character and junk are as they were", () => {
   assert.equal(Engine.fileKind(syntheticPack()), "pack");
@@ -3446,14 +3446,14 @@ test("migratePack: every text field a string, unknown keys kept, a pack's own or
   assert.equal(Engine.migratePack({ meta: { id: PACK_ID, updated: "nope" } }).meta.updated, null, "the gate invents no timestamps");
 });
 
-test("a newer packSchemaVersion is kept, and packCheck warns; an older or unreadable one reads 0.1", () => {
-  const n = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: "0.2" } });
-  assert.equal(n.meta.packSchemaVersion, "0.2");
+test("a newer packSchemaVersion is kept, and packCheck warns; an older or unreadable one reads as the current one", () => {
+  const n = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: "0.3" } });
+  assert.equal(n.meta.packSchemaVersion, "0.3");
   assert.equal(Engine.packCheck(n).warnings.length, 1);
-  assert.equal(Engine.migratePack(n).meta.packSchemaVersion, "0.2");
-  for (const v of ["0.1", "0.0", "junk", undefined, 3]) {
+  assert.equal(Engine.migratePack(n).meta.packSchemaVersion, "0.3");
+  for (const v of ["0.1", "0.2", "0.0", "junk", undefined, 3]) {
     const m = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: v } });
-    assert.equal(m.meta.packSchemaVersion, "0.1", String(v));
+    assert.equal(m.meta.packSchemaVersion, "0.2", String(v));
     assert.equal(Engine.packCheck(m).warnings.length, 0);
   }
   assert.notEqual(Engine.packCheck(null).refuse, null);
@@ -3510,7 +3510,7 @@ test("packChoices: distinct, first spelling, A–Z; tiers ascending", () => {
   eq(c.npcRoles, ["Gatherer", "Lookout"]);
   eq(c.enemyRoles, ["Bruiser"]);
   eq(c.tiers, [1, 2, 3]);
-  eq(Engine.packChoices(null), { origins: [], npcRoles: [], enemyRoles: [], tiers: [] });
+  eq(Engine.packChoices(null), { origins: [], npcRoles: [], enemyRoles: [], tiers: [], traitOrigins: [] });
 });
 
 test("packEntry and packGroups read the records, not the ids", () => {
@@ -3595,4 +3595,99 @@ test("gm.js may add a tip kind to shared.js's TIPS, never replace one (the scrip
   const added = [...gm.matchAll(/\bTIPS\.(\w+)\s*=[^=]/g)].map(m => m[1]).concat([...gm.matchAll(/\bTIPS\[["'](\w+)["']\]\s*=[^=]/g)].map(m => m[1]));
   assert.ok(added.includes("packrec"), "the guard didn't see gm.js's tip kind");
   for (const k of added) assert.ok(!have.has(k), `gm.js assigns TIPS.${k}, which shared.js already defines`);
+});
+
+// ── Packs 0.2 and the builder (Decisions 183–185) ──────────────────────────
+test("migratePack 0.2 over junk: modifiers, traits and guides come out valid or dropped", () => {
+  const raw = syntheticPack();
+  raw.origins[0].modifiers = JSON.parse('{ "BOD": "2", "XYZ": 3, "MOB": 0, "REF": 1.5, "__proto__": { "pwn": 1 } }');
+  raw.origins[1].modifiers = "x";
+  raw.tiers[0].statGuide = 5; raw.tiers[1].traitGuide = { a: 1 };
+  raw.traits = [null, 5, {}, { id: "bad id!", name: "Bad" }, { id: "a", name: "A", kind: "SIGNATURE", origin: "dock", extra: 1 },
+    { id: "a", name: "Dup" }, { id: "b", kind: "weird", origin: "nowhere", name: 7, text: null }];
+  const m = Engine.migratePack(raw);
+  eq(m.origins[0].modifiers, { BOD: 2 }); eq(m.origins[1].modifiers, {});
+  assert.equal(m.tiers[0].statGuide, ""); assert.equal(m.tiers[1].traitGuide, "");
+  eq(m.traits.map(t => t.id), ["a", "b"]);
+  assert.equal(m.traits[0].kind, "signature"); assert.equal(m.traits[0].origin, "dock"); assert.equal(m.traits[0].extra, 1);
+  assert.equal(m.traits[1].kind, null); assert.equal(m.traits[1].origin, null);
+  assert.equal(m.traits[1].name, ""); assert.equal(m.traits[1].text, "");
+  assert.equal(JSON.stringify(Engine.migratePack(m)), JSON.stringify(m), "idempotent");
+  assert.equal(({}).pwn, undefined);
+  const bare = Engine.migratePack({ meta: { id: PACK_ID }, origins: [{ id: "o" }], tiers: [{ id: 1 }] });
+  eq(bare.traits, []); eq(bare.origins[0].modifiers, {}); assert.equal(bare.tiers[0].statGuide, "");
+});
+
+test("a 0.1 pack reads as 0.2: stamped, no traits or modifiers, the rest identical; its ad-hoc traits key is gated", () => {
+  const old = syntheticPack01();
+  const m = Engine.migratePack(old);
+  assert.equal(m.meta.packSchemaVersion, "0.2");
+  eq(m.traits, []);
+  eq(m.origins.map(o => [o.id, o.name, o.text, o.modifiers]), old.origins.map(o => [o.id, o.name, o.text, {}]));
+  eq(m.tiers.map(t => [t.id, t.name, t.text, t.statGuide, t.traitGuide]), old.tiers.map(t => [t.id, t.name, t.text, "", ""]));
+  const now = Engine.migratePack(syntheticPack());
+  for (const k of ["npcRoles", "enemyRoles", "entries", "groups"]) eq(m[k], now[k], k);
+  const adhoc = syntheticPack01(); adhoc.traits = [{ id: "t", kind: "UNIVERSAL", name: 4 }];
+  const g = Engine.migratePack(adhoc);
+  assert.equal(g.traits[0].kind, "universal"); assert.equal(g.traits[0].name, "");
+});
+
+test("packTraits: each filter, name and text, a folded origin across packs, the packs' order", () => {
+  const a = Engine.migratePack(syntheticPack());
+  const b = Engine.migratePack(syntheticPack({
+    meta: { ...syntheticPack().meta, id: "PK-ZZZZ9999", name: "Second" },
+    origins: [{ id: "o1", name: "DOCK", text: "" }],
+    traits: [{ id: "x", name: "Barnacle", kind: "origin", origin: "o1", text: "Clings." }] }));
+  const names = f => Engine.packTraits([a, b], f).map(x => x.trait.name).join();
+  assert.equal(names({}), "Salt Nerve,Pier Legs,Gull's Cry,Rope Trick,Barnacle", "pack order, not A–Z");
+  assert.equal(names({ kind: "signature" }), "Gull's Cry");
+  assert.equal(names({ kind: "weird" }), names({}), "an unknown kind is no filter");
+  assert.equal(names({ origin: "dock" }), "Pier Legs,Gull's Cry,Barnacle", "two packs' Dock are one");
+  assert.equal(names({ q: "ROPE" }), "Rope Trick"); assert.equal(names({ q: "everyone nearby" }), "Gull's Cry", "text too");
+  assert.equal(names({ q: "nothing" }), "");
+  assert.equal(Engine.packTraits([a, b], {}).map(x => x.pack.meta.name).pop(), "Second");
+  eq(Engine.packTraits(null, null), []);
+  eq(Engine.packChoices([a, b]).traitOrigins, ["Dock", "Spire"]);
+});
+
+test("castPackMatch: folded names, a role list part matched, tier by id, the first pack wins, counts by kind", () => {
+  const a = Engine.migratePack(syntheticPack());
+  const b = Engine.migratePack(syntheticPack({
+    meta: { ...syntheticPack().meta, id: "PK-ZZZZ9999", name: "Second" },
+    origins: [{ id: "o1", name: "DOCK", text: "" }], tiers: [{ id: 2, name: "Other", text: "" }, { id: 3, name: "Heavy", text: "" }] }));
+  const member = { origin: " dock ", npcRoles: ["Lookout", "Nobody"], enemyRole: "BRUISER", tier: 2,
+    block: { traits: [{ name: "gull's cry", text: "x" }, { name: "Salt Nerve" }, { name: "Rope Trick" }, { name: "Mine" }, { name: "Gull's Cry (mine)" }] } };
+  const r = Engine.castPackMatch([a, b], member);
+  assert.equal(r.origin.rec.id, "dock"); assert.equal(r.origin.pack, a, "the first pack with a match");
+  eq(r.npcRoles.map(x => [x.name, x.rec && x.rec.id]), [["Lookout", "lookout"], ["Nobody", null]]);
+  assert.equal(r.enemyRole.rec.id, "bruiser");
+  assert.equal(r.tier.rec.name, "Middling"); assert.equal(r.tier.pack, a);
+  assert.equal(Engine.castPackMatch([b], { tier: 3 }).tier.rec.name, "Heavy");
+  eq(r.counts, { total: 5, universal: 1, origin: 1, signature: 1, written: 2 });
+  eq(r.traits.map(t => t.rec && t.rec.id), ["gulls-cry", "salt-nerve", "rope-trick", null, null]);
+  const kindless = syntheticPack(); kindless.traits[0].kind = null;
+  assert.equal(Engine.castPackMatch([Engine.migratePack(kindless)], { block: { traits: [{ name: "Salt Nerve" }] } }).counts.written, 1, "a glossary entry with no kind is written");
+  assert.equal(Engine.castPackMatch([], member).origin, null);
+  for (const x of [null, "x", 5, { block: "x" }, { block: { traits: "x" } }, { npcRoles: 5, tier: "z" }, {}]) {
+    const e = Engine.castPackMatch([a, null, 5], x);
+    assert.equal(e.origin, null); assert.equal(e.enemyRole, null); assert.equal(e.tier, null);
+    eq(e.npcRoles, []); eq(e.traits, []); eq(e.counts, { total: 0, universal: 0, origin: 0, signature: 0, written: 0 });
+  }
+  eq(Engine.castPackMatch(null, member).counts.written, 5);
+});
+
+test("nothing stored: castPackMatch and packTraits leave the member and the pack as they were", () => {
+  const p = Engine.migratePack(syntheticPack());
+  const member = { origin: "Dock", npcRoles: ["Lookout"], enemyRole: "Bruiser", tier: 2, block: { stats: { BOD: 5 }, traits: [{ name: "Pier Legs", text: "t" }] } };
+  const before = JSON.stringify([p, member]);
+  Engine.castPackMatch([p], member); Engine.packTraits([p], { q: "a", kind: "origin", origin: "dock" }); Engine.packChoices([p]);
+  assert.equal(JSON.stringify([p, member]), before);
+});
+
+test("castPackMatch: a row with neither name nor text isn't counted, but still comes back in block order", () => {
+  const p = Engine.migratePack(syntheticPack());
+  const r = Engine.castPackMatch([p], { block: { traits: [{ name: "", text: "" }, { name: "Gull's Cry", text: "" }, { name: "  ", text: "x" }] } });
+  assert.equal(r.traits.length, 3);
+  eq(r.counts, { total: 2, universal: 0, origin: 0, signature: 1, written: 1 });
+  eq(Engine.castPackMatch([p], { block: { traits: [{ name: "", text: "" }, { name: " ", text: " " }] } }).counts, { total: 0, universal: 0, origin: 0, signature: 0, written: 0 });
 });

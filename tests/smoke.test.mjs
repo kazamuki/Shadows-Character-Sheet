@@ -4269,7 +4269,7 @@ test("Decision 182: the list keeps the pack's order, the filters narrow it, the 
   const app = tableWithPack();
   assert.deepEqual(threatNames(app), ["Wren", "Gull"], "not in the pack's own order");
   assert.deepEqual(app.$$('[data-tview]').map(b => b.textContent), ["Threats", "People", "Groups"]);
-  assert.match(app.$("[data-tcard]").textContent, /Entry 02 · Spire · Lookout · Enemy: Bruiser · Tier 2/);
+  assert.match(app.$("[data-tcard]").textContent, /Entry 02 · Spire · NPC role: Lookout · Enemy: Bruiser · Tier 2/);
   assert.doesNotMatch(app.$("[data-tcard]").textContent, /Test Pack/, "a pack's name shows with only one slotted in");
   const q = app.$("[data-tsearch]");
   type(app, "[data-tsearch]", "gull");
@@ -4530,4 +4530,265 @@ test("Decision 182: the Threats tab's new words and long names wrap", () => {
   assert.match(css, /\.threat-list\{[^}]*overflow-wrap:anywhere/);
   assert.match(css, /\.cast-meta \.tag\{[^}]*overflow-wrap:anywhere/);
   assert.match(css, /\.cast-view\{flex-wrap:wrap\}/);
+});
+
+// ── The builder (Decisions 183–185) ─────────────────────────────────────
+const memberFromGull = (pack = syntheticPack()) => {
+  const app = tableWithPack(pack);
+  entryButton(app, "gull").click(); app.click("[data-tuse]");
+  return app;
+};
+const castSel = app => JSON.parse(app.window.eval("JSON.stringify(S.table.cast[0])"));
+const modOf = (app, id) => app.$(`[data-cmod="${id}"]`).textContent;
+const caretIn = (app, sel, v) => {
+  const el = app.$(sel); el.focus(); el.value = v; el.setSelectionRange(2, 2);
+  el.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  return el;
+};
+
+test("Decision 184: with no pack slotted in, a member's page has no lists, toggles, guidance or Add from a pack", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Bare"); castAdd(app, "Dez");
+  app.click("[data-copen]");
+  type(app, '[data-cf="origin"]', "Dock"); type(app, '[data-cf="tier"]', "2");
+  app.click("[data-ctadd]");
+  for (const s of ["#cast-origins", "#cast-enemies", "[list=cast-origins]", "[data-crole]", ".cast-guide", "[data-cmod]", "[data-ctpick]", "[data-ctcount]"]) assert.equal(app.$(`#main ${s}`), null, s);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184: a pack offers its origins and enemy roles as lists that still take anything, and roles as toggles", () => {
+  const app = memberFromGull();
+  const opts = id => app.$$(`#${id} option`).map(o => o.value);
+  assert.deepEqual(opts("cast-origins"), ["Dock", "Spire"]);
+  assert.deepEqual(opts("cast-enemies"), ["Bruiser"]);
+  assert.equal(app.$('[data-cf="origin"]').getAttribute("list"), "cast-origins");
+  assert.equal(app.$('[data-cf="npcRoles"]').getAttribute("list"), null, "NPC roles can't use a list: it doesn't suggest after a slash");
+  assert.deepEqual(app.$$("[data-crole]").map(b => b.textContent), ["Gatherer", "Lookout"]);
+  type(app, '[data-cf="origin"]', "Somewhere else");
+  assert.equal(castSel(app).origin, "Somewhere else", "free text was refused");
+  assert.ok(app.$('[role="group"][aria-label="Roles in the pack"]'));
+});
+
+test("Decision 184: a typed origin (any case) shows its modifiers beside the stats, keeps the caret, and stores nothing new", () => {
+  const app = memberFromGull();
+  assert.equal(modOf(app, "BOD"), "Dock +1"); assert.equal(modOf(app, "REF"), "Dock −1"); assert.equal(modOf(app, "MOB"), "");
+  const shape = () => JSON.stringify(Object.keys(castSel(app)).sort()) + JSON.stringify(Object.keys(castSel(app).block).sort());
+  const before = shape();
+  app.window.eval("window.__renders = 0; const __r = renderTable; renderTable = function(){ window.__renders++; return __r.apply(this, arguments); };");
+  const el = caretIn(app, '[data-cf="origin"]', "spire");
+  assert.equal(modOf(app, "MOB"), "Spire +1"); assert.equal(modOf(app, "BOD"), "");
+  caretIn(app, '[data-cf="origin"]', "dock");
+  assert.equal(modOf(app, "BOD"), "Dock +1"); assert.equal(modOf(app, "REF"), "Dock −1");
+  assert.equal(app.$('[data-cf="origin"]'), el, "typing redrew the field");
+  assert.equal(app.doc.activeElement, el); assert.equal(el.selectionStart, 2, "the caret moved");
+  assert.equal(app.window.eval("window.__renders"), 0, "typing in Origin redrew the page");
+  assert.equal(castSel(app).block.stats.BOD, 8, "a modifier was applied to the stored stat");
+  assert.equal(app.$('[data-cstat="BOD"]').value, "8");
+  assert.equal(shape(), before, "a key was added to the member or its block");
+  type(app, '[data-cf="origin"]', "nowhere"); assert.equal(modOf(app, "BOD"), "");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184: a role toggle writes the field and the member, and typing presses the toggles", () => {
+  const app = memberFromGull();
+  const on = () => app.$$("[data-crole]").filter(b => b.getAttribute("aria-pressed") === "true").map(b => b.textContent).join();
+  assert.equal(on(), "");
+  const look = app.$('[data-crole="Lookout"]'); look.focus(); look.click();
+  assert.equal(app.$('[data-cf="npcRoles"]').value, "Lookout"); assert.deepEqual(castSel(app).npcRoles, ["Lookout"]);
+  assert.equal(look.getAttribute("aria-pressed"), "true"); assert.equal(app.doc.activeElement, look, "the toggle lost focus");
+  app.click('[data-crole="Gatherer"]');
+  assert.equal(app.$('[data-cf="npcRoles"]').value, "Lookout / Gatherer");
+  app.click('[data-crole="Lookout"]');
+  assert.equal(app.$('[data-cf="npcRoles"]').value, "Gatherer"); assert.deepEqual(castSel(app).npcRoles, ["Gatherer"]);
+  type(app, '[data-cf="npcRoles"]', "lookout, my own");
+  assert.equal(on(), "Lookout", "typing didn't press the toggle"); assert.deepEqual(castSel(app).npcRoles, ["lookout", "my own"]);
+  app.click('[data-crole="Lookout"]');
+  assert.deepEqual(castSel(app).npcRoles, ["my own"], "removing took the matching entry out, whatever its case");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184: the tier's name is a tip, its guides show, and an enemy role of another tier says so", () => {
+  const app = memberFromGull();
+  const note = () => app.$("[data-ctier]").textContent.replace(/\s+/g, " ");
+  assert.match(note(), /^Slight$/, "Gull is Tier 1, a Bruiser's tier");
+  type(app, '[data-cf="tier"]', "2");
+  assert.match(note(), /^Middling · A Bruiser is usually Tier 1$/);
+  assert.match(app.$("[data-cstatguide]").textContent, /^Tier 2: Scores in the middle, a few high\.$/);
+  assert.match(app.$("[data-ctguide]").textContent, /^Tier 2: A few traits, one that defines them\.$/);
+  clickIn(app, app.$('[data-ctier] [data-tip="packrec"]'));
+  assert.match(tipShown(app), /Middling/); assert.match(tipShown(app), /Middling\./);
+  type(app, '[data-cf="tier"]', "1");
+  assert.doesNotMatch(note(), /usually/);
+  assert.match(app.$("[data-cstatguide]").textContent, /^Tier 1: Mostly low scores/);
+  type(app, '[data-cf="tier"]', "7");
+  assert.equal(app.$("[data-cstatguide]").hidden, true); assert.match(note(), /^A Bruiser is usually Tier 1$/);
+  type(app, '[data-cf="tier"]', "");
+  assert.equal(castSel(app).tier, null); assert.equal(app.$("[data-ctier]").hidden, false);
+  type(app, '[data-cf="enemyRole"]', "Brute");
+  assert.equal(app.$("[data-ctier]").hidden, true, "an unmatched enemy role said something");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184: a page with every guide matched shows no warning anywhere", () => {
+  const app = memberFromGull();
+  type(app, '[data-cf="tier"]', "2"); type(app, '[data-cf="origin"]', "Spire"); app.click('[data-crole="Lookout"]');
+  type(app, '[data-cstat="BOD"]', "1"); type(app, '[data-cstat="MOB"]', "20");
+  assert.ok(app.$("[data-cstatguide]") && !app.$("[data-cstatguide]").hidden);
+  assert.equal(app.$$('#main [role="alert"], #main .flag, #main .warn, #main .issues, #main [aria-invalid]').length, 0);
+  assert.equal(castSel(app).block.stats.BOD, 1, "a value outside the guide was changed");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 185: Add from a pack opens the glossary: pack order, filters narrow, the search keeps its caret", () => {
+  const app = memberFromGull();
+  const rows = () => app.$$("#modal [data-tpadd]").map(b => b.getAttribute("aria-label").replace("Add ", ""));
+  const open = app.$("[data-ctpick]"); open.focus(); open.click();
+  assert.match(app.$("#modal .modal-head").textContent, /Add a trait/);
+  assert.equal(app.doc.activeElement, app.$("[data-tpsearch]"), "the search isn't focused");
+  assert.deepEqual(rows(), ["Salt Nerve", "Pier Legs", "Gull's Cry", "Rope Trick"], "not the pack's own order");
+  assert.match(app.$("#modal .trait-pick").textContent, /Salt Nerve\s*Universal/);
+  assert.match(app.$$("#modal .trait-pick")[2].textContent, /Gull's Cry\s*Signature · Dock/);
+  assert.match(app.$$("#modal .trait-pick")[2].textContent, /Shouts; everyone nearby turns\./, "a trait's text isn't shown");
+  pick(app, "[data-tpkind]", "origin"); assert.deepEqual(rows(), ["Pier Legs", "Rope Trick"]);
+  pick(app, "[data-tporigin]", "Spire"); assert.deepEqual(rows(), ["Rope Trick"]);
+  pick(app, "[data-tpkind]", ""); pick(app, "[data-tporigin]", "");
+  const q = caretIn(app, "[data-tpsearch]", "ROPE");
+  assert.deepEqual(rows(), ["Rope Trick"]); assert.equal(app.$("[data-tpsearch]"), q); assert.equal(q.selectionStart, 2);
+  type(app, "[data-tpsearch]", "zzz");
+  assert.match(app.$("#modal").textContent, /Nothing matches\./);
+  app.click("[data-tpclear]");
+  assert.equal(rows().length, 4); assert.equal(app.$("[data-tpsearch]").value, ""); assert.equal(app.doc.activeElement, app.$("[data-tpsearch]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 185: Add copies the name and text only, closes, focuses the new name, and the count follows a rename", () => {
+  const app = memberFromGull();
+  const countText = () => app.$("[data-ctcount]").textContent;
+  assert.equal(app.$("[data-ctcount]").hidden, true, "a count with no traits");
+  app.click("[data-ctpick]");
+  app.click(`[data-tpadd="${PACK_ID}|gulls-cry"]`);
+  assert.equal(app.$("#modal").hasAttribute("open"), false, "the picker stayed open");
+  assert.deepEqual(castSel(app).block.traits, [{ name: "Gull's Cry", text: "Shouts; everyone nearby turns." }], "the copy carries more than a name and text");
+  assert.equal(app.doc.activeElement, app.$('[data-ctname="0"]'));
+  assert.equal(countText(), "1 trait: 1 Signature");
+  type(app, '[data-ctname="0"]', "Gull's Shout");
+  assert.equal(countText(), "1 trait: 1 written");
+  app.click("[data-ctpick]"); app.click(`[data-tpadd="${PACK_ID}|salt-nerve"]`); app.click("[data-ctpick]"); app.click(`[data-tpadd="${PACK_ID}|pier-legs"]`);
+  assert.equal(countText(), "3 traits: 1 Universal · 1 Origin · 1 written");
+  assert.equal(JSON.stringify(Object.keys(castSel(app).block.traits[1])), '["name","text"]');
+  app.click('[data-ctdel="2"]');
+  assert.equal(countText(), "2 traits: 1 Universal · 1 written"); assert.equal(app.doc.activeElement, app.$("[data-ctadd]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 185: Cancel and Escape return to Add from a pack, and the search is there next time", () => {
+  const app = memberFromGull();
+  app.$("[data-ctpick]").focus(); app.click("[data-ctpick]");
+  type(app, "[data-tpsearch]", "rope"); pick(app, "[data-tpkind]", "origin");
+  app.click("#modal .modal-foot [data-modalclose]");
+  assert.equal(app.doc.activeElement, app.$("[data-ctpick]"), "Cancel didn't return focus");
+  assert.equal(castSel(app).block.traits.length, 0);
+  app.click("[data-ctpick]");
+  assert.equal(app.$("[data-tpsearch]").value, "rope"); assert.equal(app.$("[data-tpkind]").value, "origin");
+  assert.equal(app.$$("#modal [data-tpadd]").length, 1);
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  assert.equal(app.doc.activeElement, app.$("[data-ctpick]"), "Escape didn't return focus");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 185: a pack with no traits has no Add from a pack; two packs show each trait's pack", () => {
+  const bare = syntheticPack(); bare.traits = [];
+  assert.equal(memberFromGull(bare).$("[data-ctpick]"), null);
+  const second = syntheticPack(); second.meta = { ...second.meta, id: "PK-ZZZZ9999", name: "Second" };
+  second.traits = [{ id: "x", name: "Barnacle", kind: "origin", origin: "dock", text: "Clings." }];
+  const app = boot({ storage: { ...GM_ON, ...packStored(syntheticPack()), ...packStored(second) } });
+  runTable(app, "Two"); threatsTab(app); app.$$("[data-tentry]").find(b => b.textContent === "Gull").click(); app.click("[data-tuse]"); app.click("[data-ctpick]");
+  assert.match(app.$("#modal").textContent, /Barnacle\s*Origin · Dock · Second/);
+  assert.match(app.$("#modal").textContent, /Gull's Cry\s*Signature · Dock · Test Pack/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184: removing the pack leaves every member as typed, with no guidance", () => {
+  const app = memberFromGull();
+  app.click("[data-ctpick]"); app.click(`[data-tpadd="${PACK_ID}|gulls-cry"]`);
+  type(app, '[data-cf="origin"]', "Dock");
+  const before = JSON.stringify(castSel(app));
+  for (const k of packKeys(app)) app.window.localStorage.removeItem(k);
+  app.click("[data-cback]"); app.click("[data-copen]");
+  assert.equal(JSON.stringify(castSel(app)), before);
+  assert.equal(app.$('[data-cf="origin"]').value, "Dock"); assert.equal(app.$('[data-ctname="0"]').value, "Gull's Cry");
+  for (const s of ["#cast-origins", "#cast-enemies", "[list=cast-origins]", "[data-crole]", ".cast-guide", "[data-cmod]", "[data-ctpick]"]) assert.equal(app.$(`#main ${s}`), null, s);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184: the Threats card names each kind of role as the entry page does", () => {
+  const app = tableWithPack();
+  assert.match(app.$("[data-tcard]").textContent, /Entry 02 · Spire · NPC role: Lookout · Enemy: Bruiser · Tier 2/);
+  app.click('[data-tview="npc"]');
+  assert.match(app.$("[data-tcard]").textContent, /NPC role: Gatherer \/ Lookout/);
+});
+
+test("Decisions 183–185: at a phone's width the toggles, a modifier and the picker's rows wrap", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /\.cast-roles\{flex-wrap:wrap/);
+  assert.match(css, /\.cast-guide\{[^}]*overflow-wrap:anywhere/);
+  assert.match(css, /\.trait-pick-head\{[^}]*overflow-wrap:anywhere/);
+  assert.match(css, /\.cast-fig\{[^}]*overflow-wrap:anywhere/);
+});
+
+test("Decision 185 (review): a blank trait row isn't counted", () => {
+  const app = memberFromGull();
+  app.click("[data-ctadd]");
+  assert.equal(app.$("[data-ctcount]").hidden, true, "a blank row was counted");
+  app.click("[data-ctpick]"); app.click(`[data-tpadd="${PACK_ID}|gulls-cry"]`);
+  app.click("[data-ctadd]");
+  assert.equal(castSel(app).block.traits.length, 3);
+  assert.equal(app.$("[data-ctcount]").textContent, "1 trait: 1 Signature");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184 (review): a Use copy says the book's stats already include its origin, while the origin is still its entry's", () => {
+  const app = memberFromGull();
+  const note = () => app.$("[data-cmodnote]");
+  assert.equal(note().hidden, false);
+  assert.equal(note().textContent, "The book's stats for Gull already include Dock's modifiers.");
+  assert.equal(modOf(app, "BOD"), "Dock +1");
+  assert.equal(castSel(app).block.stats.BOD, 8);
+  const el = caretIn(app, '[data-cf="origin"]', "spire");
+  assert.equal(note().hidden, true, "the note stayed after the origin changed");
+  assert.equal(modOf(app, "MOB"), "Spire +1");
+  caretIn(app, '[data-cf="origin"]', "dock");
+  assert.equal(note().hidden, false);
+  assert.equal(app.doc.activeElement, el); assert.equal(el.selectionStart, 2);
+  assert.equal(app.$$('#main [role="alert"], #main .flag, #main .warn, #main .issues').length, 0);
+  type(app, '[data-cf="origin"]', "");
+  assert.equal(note().hidden, true, "no origin, no note");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184 (review): a quick-added member gets modifiers and no note; a copy whose pack is gone has no note at all", () => {
+  const app = tableWithPack();
+  app.click('[data-tsec="cast"]'); castAdd(app, "Dez"); app.click("[data-copen]");
+  type(app, '[data-cf="origin"]', "Dock");
+  assert.equal(app.$("[data-cmodnote]").hidden, true);
+  assert.equal(modOf(app, "BOD"), "Dock +1");
+  app.click("[data-cback]");
+  app.click('[data-tsec="threats"]'); app.$$("[data-tentry]").find(b => b.textContent === "Gull").click(); app.click("[data-tuse]");
+  assert.equal(app.$("[data-cmodnote]").hidden, false);
+  // The gate admits only kind "entry" today; the page checks it itself, so a future kind says nothing until it's decided.
+  app.window.eval('S.table.cast[0].from.kind = "other"');
+  type(app, '[data-cf="origin"]', "Dock");
+  assert.equal(app.$("[data-cmodnote]").hidden, true, "a link of another kind said the book's stats include the origin");
+  app.window.eval('S.table.cast[0].from.kind = "entry"');
+  type(app, '[data-cf="origin"]', "Dock");
+  assert.equal(app.$("[data-cmodnote]").hidden, false);
+  for (const k of packKeys(app)) app.window.localStorage.removeItem(k);
+  app.click("[data-cback]"); app.click("[data-copen]");
+  assert.equal(app.$("[data-cmodnote]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184 (review): the note wraps", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /\.cast-guide\{[^}]*overflow-wrap:anywhere/);
 });
