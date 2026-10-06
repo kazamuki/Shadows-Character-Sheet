@@ -4,7 +4,7 @@
 GQ17, GQ21 (new).
 **Status:** drafted 2026-10-06 by Claude (Opus), after #119 (S9a) merged
 with its fix round: the first order drafted under the README's step 7.
-Awaiting Ken's answers to §4.
+**§4 answered by Ken, 2026-10-06, but SQ3**, which he asked to have clarified.
 **Branch:** from `main` at or after `fb2706a`, PR to `main`, switched off
 (Decision 173).
 **Runs alone.** It touches `engine.js`'s Packs section, `gm.js`, the CSS,
@@ -262,19 +262,19 @@ If the ledger search at build time finds otherwise, stop and ask.
 
 ## 4. Questions for Ken
 
-Each has the default the build takes.
+Answered by Ken, 2026-10-06, but SQ3. Each row keeps the default it offered.
 
-| # | Question | Default |
-|---|---|---|
-| SQ1 | **The builder is the cast member's page** with the pack's guidance beside it, not a screen of its own? | **Yes.** One record, one editor; Use already makes the copy a GM reskins |
-| SQ2 | **Origin modifiers shown beside each stat, never applied** (the plan said "applied at construction")? Applying can't tell a printed stat from a fresh one, a Use copy already has them, and the table has no undo | **Shown, not applied** |
-| SQ3 | **The tier's guidance as the book's words, no warnings**, and GQ21 to Scott (the book's entries break its own table)? | **Yes** |
-| SQ4 | **A trait's kind is read by name** each time (a renamed copy counts as *written*), rather than stored on the trait? | **By name**; nothing new stored |
-| SQ5 | The picker **closes on Add** with focus in the new trait, or **stays open** for several adds? | **Closes.** The GM reads or trims what they added; reopening keeps the search |
-| SQ6 | **The glossary only inside the picker**, or also a **Traits** view on the Threats tab? | **Picker only.** References gathered on one screen are S13's |
-| SQ7 | **Rename Use** now (S10 adds "into a fight", so one verb would lead two places)? | **Not now.** S10 designs both buttons together; the plan's S10 gets a line saying so |
-| SQ8 | **NPC roles as toggles** under the text field (a datalist can't suggest after a `/`), or a datalist for the first role only? | **Toggles**, nine at most, wrapping |
-| SQ9 | **GQ6 looks answered by Scott's Stat Audit** (TOL the formula, with an override; WILL a floor, below it an error). Confirm with Scott and change what the block shows (175) in a small session of its own, or fold it into S9b? | **Confirm with Scott first, then its own session.** S9b stays as drafted |
+| # | Question | Default | Answer |
+|---|---|---|---|
+| SQ1 | **The builder is the cast member's page** with the pack's guidance beside it, not a screen of its own? | **Yes.** One record, one editor; Use already makes the copy a GM reskins | **Yes** |
+| SQ2 | **Origin modifiers shown beside each stat, never applied** (the plan said "applied at construction")? Applying can't tell a printed stat from a fresh one, a Use copy already has them, and the table has no undo | **Shown, not applied** | **Shown** |
+| SQ3 | **The tier's guidance as the book's words, no warnings**, and GQ21 to Scott (the book's entries break its own table)? | **Yes** | *Ken asked for a clarification (2026-10-06); open* |
+| SQ4 | **A trait's kind is read by name** each time (a renamed copy counts as *written*), rather than stored on the trait? | **By name**; nothing new stored | **By name** |
+| SQ5 | The picker **closes on Add** with focus in the new trait, or **stays open** for several adds? | **Closes.** The GM reads or trims what they added; reopening keeps the search | **Closes** |
+| SQ6 | **The glossary only inside the picker**, or also a **Traits** view on the Threats tab? | **Picker only.** References gathered on one screen are S13's | **Picker only**; references gathered on one screen later (S13) |
+| SQ7 | **Rename Use** now (S10 adds "into a fight", so one verb would lead two places)? | **Not now.** S10 designs both buttons together; the plan's S10 gets a line saying so | **Not now**; picked up with S10's fight |
+| SQ8 | **NPC roles as toggles** under the text field (a datalist can't suggest after a `/`), or a datalist for the first role only? | **Toggles**, nine at most, wrapping | **Yes** |
+| SQ9 | **GQ6 looks answered by Scott's Stat Audit** (TOL the formula, with an override; WILL a floor, below it an error). Confirm with Scott and change what the block shows (175) in a small session of its own, or fold it into S9b? | **Confirm with Scott first, then its own session.** S9b stays as drafted | **The formula, with an override** (Ken: what Scott has been working with). GQ6 is answered; the change to the block is its own session after S9b, not this order |
 
 ## 5. Read first
 
