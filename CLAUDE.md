@@ -147,9 +147,9 @@ as text (`…Text`, `…Note`, `description`), never a setting the code ignores.
 `tests/engine.test.mjs` fails on an archetype id in code and on a data key
 nothing reads (Decision 135).
 
-## Versions — five of them, five different triggers
+## Versions — six of them, six different triggers
 
-Five numbers move independently. Bumping the wrong one, or none, is how a
+Six numbers move independently. Bumping the wrong one, or none, is how a
 session ends up debugging a build the other person isn't looking at. Current
 values are in `docs/STATE.md`; the app renders its own in the footer, so **the
 first move when something looks wrong is to compare the footer against STATE**.
@@ -161,6 +161,7 @@ first move when something looks wrong is to compare the footer against STATE**.
 | **Character schema** | `meta.schemaVersion` on the character, stamped by `newCharacter()` and `migrate()` | **The shape of a saved `.shadows.json` changes.** Always needs a `migrate()` step in the same commit |
 | **Table schema** | `meta.tableSchemaVersion` on a GM's table, stamped by `newTable()` and `migrateTable()` | **The shape of a saved `.shadows-table.json` changes.** Always needs a `migrateTable()` step in the same commit, switched on or not (Decision 170) |
 | **Ruleset** | `meta.rulesetVersion` in `shadows-data.js` | The CRB moves. Not ours to bump on a whim — it tracks Ken's document |
+| **Pack schema** | `meta.packSchemaVersion` on a pack, stamped by `migratePack()` | **The shape of a saved `.shadows-pack.json` changes.** Always needs a `migratePack()` step in the same commit, switched on or not (Decision 180) |
 
 Two traps worth knowing:
 

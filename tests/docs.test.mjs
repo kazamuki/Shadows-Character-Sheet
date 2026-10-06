@@ -330,6 +330,14 @@ test("the in-app release notes are generated from the current CHANGELOG.md (Deci
     `What's new has no section for app ${app}`);
 });
 
+test("the pack schema version in STATE.md and CLAUDE.md is the one migratePack() stamps (Decision 180)", () => {
+  const m = /table schema `[\d.]+` · pack schema `([\d.]+)`/.exec(STATE);
+  assert.ok(m, "STATE.md's Versions line lost its pack schema number");
+  const { Engine } = loadEngine();
+  assert.equal(Engine.migratePack({}).meta.packSchemaVersion, m[1], "STATE.md's pack schema version is stale");
+  assert.match(read("CLAUDE.md"), /\| \*\*Pack schema\*\* \| `meta\.packSchemaVersion`/, "CLAUDE.md's versions table lost its Pack schema row");
+});
+
 test("the table schema version in STATE.md is the one newTable() stamps (Decision 170)", () => {
   const m = /character schema `[\d.]+` · table schema `([\d.]+)`/.exec(STATE);
   assert.ok(m, "STATE.md's Versions line lost its table schema number");

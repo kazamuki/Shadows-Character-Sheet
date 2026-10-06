@@ -383,3 +383,98 @@ test("hostile interactions and affiliations render as text on a member's page, t
   assert.deepEqual(found, [], "an interaction's or affiliation's text became markup");
   assert.deepEqual(app.errors, [], "the hostile interactions threw while rendering");
 });
+
+// ── A pack file is untrusted too (Decisions 180–182, 124) ───────────────
+// Every id here is valid, so the records survive the gate and their text is
+// what gets drawn; the junk ids and numbers are the engine tests'.
+const PK = "PK-ABCD2345";
+function hostilePack() {
+  const text = tag => P(tag);
+  return {
+    meta: { kind: "shadows-pack", id: PK, name: text("pk.name"), packSchemaVersion: "0.1", contentVersion: text("pk.version"),
+            created: "2026-10-01T10:00:00.000Z", updated: "2026-10-02T10:00:00.000Z" },
+    origins: [{ id: "o1", name: text("origin.name"), text: text("origin.text") }, null, 5],
+    npcRoles: [{ id: "r1", name: text("role.name"), text: text("role.text") }],
+    enemyRoles: [{ id: "e1", name: text("enemy.name"), tier: 1, text: text("enemy.text") }],
+    tiers: [{ id: 1, name: text("tier.name"), text: text("tier.text") }],
+    entries: [
+      { id: "a", kind: "threat", ref: text("ref"), name: text("entry.name"), flavor: text("entry.flavor"), description: text("entry.desc"),
+        motivation: text("entry.mot"), resources: text("entry.res"), line: text("entry.line"), ifPushed: text("entry.push"), gmNote: text("entry.gm"),
+        origin: "o1", npcRoles: ["r1"], enemyRole: "e1", tier: 1,
+        block: { stats: { BOD: 5 }, authored: { TOL: 2 }, skills: [{ name: text("skill.name"), total: 4 }], armor: [text("armor")], gear: [text("gear")],
+                 traits: [{ name: text("trait.name"), text: text("trait.text") }] } },
+      { id: "b", kind: "npc", ref: text("ref2"), name: text("person.name"), motivation: text("person.mot"), origin: "nowhere", npcRoles: ["r1", "nope"],
+        block: { stats: { BOD: "x" }, traits: [{}] } },
+    ],
+    groups: [{ id: "g", ref: text("group.ref"), name: text("group.name"), origin: "o1", members: [{ entry: "a", count: 2 }, { entry: "zz", count: 9 }],
+               situation: text("group.situation"), tactics: text("group.tactics") }],
+  };
+}
+
+test("a hostile pack renders as text on Home, every Threats view, an entry, a group, its tips, Use and the copy (Decisions 124, 180–182)", () => {
+  const key = "shadows.pack.v1." + PK;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { pack: hostilePack(), imported: "2026-10-05T10:00:00.000Z" } } });
+  const found = [];
+  found.push(...injected(app, "Home"));
+  assert.ok(app.$("#main .packs .roster-card"), "the hostile pack isn't on Home");
+  app.click("#btn-run-table"); app.$("#tbl-name").value = "Pier"; app.click("#modal [data-nameyes]");
+  app.click('[data-tsec="threats"]');
+  found.push(...injected(app, "the Threats list"));
+  assert.ok(app.$("[data-tentry]"), "the hostile entry isn't listed");
+  for (const v of ["npc", "group", "threat"]) {
+    app.click(`[data-tview="${v}"]`);
+    found.push(...injected(app, `the ${v} view`));
+  }
+  for (const [sel, i] of [["[data-torigin]", 1], ["[data-trole]", 1], ["[data-tenemy]", 1], ["[data-ttier]", 1]]) {
+    const el = app.$(sel);
+    assert.equal(el.options.length, 2, sel + " didn't offer the payload as its one choice");
+    el.value = el.options[i].value; el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+    found.push(...injected(app, "a filtered list " + sel));
+  }
+  app.click('[data-tview="group"]');
+  app.$("[data-tgroup]").click();
+  found.push(...injected(app, "a group's page"));
+  assert.match(app.$("#main").textContent, /2× /);
+  app.$("[data-tmember]").click();
+  found.push(...injected(app, "an entry's page"));
+  for (const chip of app.$$('[data-tip="packrec"]')) {
+    chip.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+    found.push(...injected(app, "a pack tip"));
+  }
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a field drew an object as text");
+  app.click("[data-tuse]");
+  found.push(...injected(app, "the copy's page"));
+  assert.match(app.$(".cast-from").textContent, /^From /);
+  app.click("[data-tfrom]");
+  found.push(...injected(app, "the entry again, from the copy"));
+  app.click("[data-tback]");
+  app.click('[data-tsec="cast"]');
+  found.push(...injected(app, "the cast list"));
+  app.click("[data-menu-toggle]"); app.click("[data-thome]");
+  app.click("[data-premove]");
+  found.push(...injected(app, "the Remove modal"));
+  app.click("#modal [data-modalclose]");
+  assert.deepEqual(found, [], "a pack's text became markup");
+  assert.deepEqual(app.errors, [], "the hostile pack threw while rendering");
+});
+
+test("a pack file with __proto__ keys at every level pollutes nothing on import, and a pack with a payload for an id is refused", async () => {
+  const raw = '{"__proto__":{"pwn":1},"meta":{"__proto__":{"pwn":1},"kind":"shadows-pack","id":"PK-ABCD2345"},"entries":[{"__proto__":{"pwn":1},"id":"a","name":"x","block":{"__proto__":{"pwn":1},"stats":{"__proto__":{"pwn":1}}}}],"groups":[{"__proto__":{"pwn":1},"id":"g","members":[{"__proto__":{"pwn":1},"entry":"a"}]}]}';
+  const imp = boot({ storage: { "shadows.feature.gm": "on" } });
+  const pickFile = async text => {
+    const input = imp.$("#file-import");
+    const file = new imp.window.File([text], "x.shadows-pack.json", { type: "application/json" });
+    Object.defineProperty(input, "files", { value: [file], configurable: true });
+    input.dispatchEvent(new imp.window.Event("change"));
+    await new Promise(r => setTimeout(r, 200));
+  };
+  await pickFile(raw);
+  assert.ok(imp.$("#main .packs .roster-card"), "the pack wasn't slotted in");
+  assert.equal(({}).pwn, undefined);
+  assert.equal(imp.window.eval("({}).pwn"), undefined, "the page's Object.prototype was polluted");
+  const bad = JSON.parse(raw); bad.meta.id = P("pk.id");
+  await pickFile(JSON.stringify(bad));
+  assert.match(imp.$("#undotoast").textContent, /no id/);
+  assert.deepEqual(injected(imp, "the refusal"), []);
+  assert.deepEqual(imp.errors, []);
+});

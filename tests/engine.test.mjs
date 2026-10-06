@@ -2856,12 +2856,12 @@ test("the code guards read every engine and UI script, gm.js included (Decision 
   assert.ok(!CODE_FILES.some(f => f.includes("theme-init")));
 });
 
-test("newTable stamps kind, a TBL- id, the name, schema 0.3, no notes, cast or interactions", () => {
+test("newTable stamps kind, a TBL- id, the name, schema 0.4, no notes, cast or interactions", () => {
   const t = Engine.newTable("Tuesday");
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.3");
+  assert.equal(t.meta.tableSchemaVersion, "0.4");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -2874,7 +2874,8 @@ test("fileKind tells a table from a character from anything else", () => {
   assert.equal(Engine.fileKind(Engine.newCharacter()), "character");
   assert.equal(Engine.fileKind({}), "character");
   assert.equal(Engine.fileKind(Engine.newTable()), "table");
-  assert.equal(Engine.fileKind({ meta: { kind: "shadows-pack" } }), "unknown");
+  assert.equal(Engine.fileKind({ meta: { kind: "shadows-pack" } }), "pack");
+  assert.equal(Engine.fileKind({ meta: { kind: "shadows-other" } }), "unknown");
   for (const v of [null, 5, "x", [], undefined]) assert.equal(Engine.fileKind(v), "unknown", String(v));
 });
 
@@ -2928,14 +2929,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.3", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.4");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.4", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.5" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.5");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.4");
-  for (const v of ["0.3", "0.2", "0.1", "0.0", "junk", undefined]) {
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.5");
+  for (const v of ["0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.3", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.4", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -2981,21 +2982,21 @@ const dez = (over = {}) => {
 const plain = x => JSON.parse(JSON.stringify(x));
 const eq = (a, b, m) => assert.deepEqual(plain(a), plain(b), m);
 
-test("a 0.1 table migrates to 0.3 with an empty cast and its notes untouched", () => {
+test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", () => {
   const old = Engine.newTable("Old");
   Engine.addTableNote(old, { title: "A", text: "one" });
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.3");
+  assert.equal(m.meta.tableSchemaVersion, "0.4");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" }, cast: [{ name: 5, tier: "2" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.4");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.5" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.5");
   assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3210,17 +3211,17 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.3");
+  assert.equal(m.meta.tableSchemaVersion, "0.4");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
-  const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.affiliations; return JSON.stringify(c); };
+  const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a 0.4 table keeps its stamp and its interactions, and tableCheck says so", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" }, interactions: [{ kind: "shared", text: "x" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.4");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.5" }, interactions: [{ kind: "shared", text: "x" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.5");
   assert.equal(m.interactions.length, 1);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3395,4 +3396,203 @@ test("S8b review 1: crewView puts lines with no crew name in a last group named 
   assert.equal(Engine.crewView(t, { q: "dez" }).map(g => g.name).join("|"), "Nyx|Zed|", "a gone member's name doesn't reach every group");
   assert.equal(Engine.crewView(t, { q: "dez" }).length, 3);
   assert.equal(Engine.crewView(t, { q: "zzz" }).length, 0);
+});
+
+// ── Packs (Decisions 180–182) ──────────────────────────────────────────────
+import { syntheticPack, PACK_ID } from "./packfixture.mjs";
+
+test("fileKind: a pack is 'pack'; a table, a character and junk are as they were", () => {
+  assert.equal(Engine.fileKind(syntheticPack()), "pack");
+  assert.equal(Engine.fileKind(Engine.newTable("T")), "table");
+  assert.equal(Engine.fileKind(Engine.newCharacter()), "character");
+  assert.equal(Engine.fileKind({ meta: { kind: "other" } }), "unknown");
+  assert.equal(Engine.fileKind(null), "unknown");
+});
+
+test("migratePack over junk: every record coerced or dropped, ids the author's, idempotent", () => {
+  const raw = syntheticPack();
+  raw.entries.push(null, 5, {}, { id: "bad id!", name: "Bad" }, { id: "gull", name: "Dup of Gull" },
+    { id: "odd", name: 7, origin: "nowhere", npcRoles: ["gatherer", "nope", 5], enemyRole: "nope", tier: "2", kind: "boss",
+      block: { stats: { BOD: "x" } } },
+    { id: "zero", tier: 0 });
+  raw.groups[0].members.push({ entry: "ghost", count: 2 }, { entry: "wren", count: 0 }, null, 5);
+  const m = Engine.migratePack(raw);
+  eq(m.entries.map(e => e.id), ["wren", "gull", "moss", "odd", "zero"], "bad and repeated ids are dropped, not renamed");
+  const odd = m.entries.find(e => e.id === "odd");
+  assert.equal(odd.name, ""); assert.equal(odd.origin, null); assert.equal(odd.enemyRole, null);
+  eq(odd.npcRoles, ["gatherer"]); assert.equal(odd.tier, 2); assert.equal(odd.kind, "threat");
+  assert.equal(odd.block.stats.BOD, null, "a block goes through the cast's gate");
+  assert.equal(m.entries.find(e => e.id === "zero").tier, null);
+  assert.equal(m.entries.find(e => e.id === "gull").name, "Gull", "the first of a repeated id stays");
+  eq(m.groups[0].members.map(x => [x.entry, x.count]), [["gull", 3], ["wren", 1], ["wren", 1]]);
+  const j = Engine.migratePack({ meta: { id: "PK-bad" }, entries: "x", origins: [null, 5, {}], tiers: [{ id: "2" }, { id: 0 }, { id: "x" }, { id: 2 }] });
+  assert.equal(j.meta.id, null); assert.equal(j.meta.kind, "shadows-pack");
+  eq(j.entries, []); eq(j.origins, []);
+  eq(j.tiers.map(t => t.id), [2], "a tier id is a whole number of 1 or more, and once");
+  assert.equal(Engine.packCheck(j).refuse, "This pack has no id, so it can't be slotted in.");
+  assert.equal(Engine.packCheck(m).refuse, null);
+  assert.equal(JSON.stringify(Engine.migratePack(m)), JSON.stringify(m), "idempotent");
+  for (const x of [null, 5, "x", [], undefined]) assert.equal(Engine.migratePack(x).meta.id, null);
+});
+
+test("migratePack: every text field a string, unknown keys kept, a pack's own order kept", () => {
+  const raw = syntheticPack(); raw.future = { x: 1 }; raw.traits = [{ id: "t" }]; raw.entries[0].extra = 2;
+  raw.entries[1].name = { a: 1 }; raw.meta.name = 5; raw.meta.contentVersion = null;
+  const m = Engine.migratePack(raw);
+  assert.equal(m.future.x, 1); assert.equal(m.traits[0].id, "t"); assert.equal(m.entries[0].extra, 2);
+  assert.equal(m.entries[1].name, ""); assert.equal(m.meta.name, ""); assert.equal(m.meta.contentVersion, "");
+  eq(m.entries.map(e => e.id), ["wren", "gull", "moss"]);
+  assert.equal(m.meta.created, "2026-10-01T10:00:00.000Z");
+  assert.equal(Engine.migratePack({ meta: { id: PACK_ID, updated: "nope" } }).meta.updated, null, "the gate invents no timestamps");
+});
+
+test("a newer packSchemaVersion is kept, and packCheck warns; an older or unreadable one reads 0.1", () => {
+  const n = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: "0.2" } });
+  assert.equal(n.meta.packSchemaVersion, "0.2");
+  assert.equal(Engine.packCheck(n).warnings.length, 1);
+  assert.equal(Engine.migratePack(n).meta.packSchemaVersion, "0.2");
+  for (const v of ["0.1", "0.0", "junk", undefined, 3]) {
+    const m = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: v } });
+    assert.equal(m.meta.packSchemaVersion, "0.1", String(v));
+    assert.equal(Engine.packCheck(m).warnings.length, 0);
+  }
+  assert.notEqual(Engine.packCheck(null).refuse, null);
+});
+
+test("a __proto__ key at the pack, meta, entry, block and group levels pollutes nothing", () => {
+  const raw = '{"__proto__":{"pwn":1},"meta":{"__proto__":{"pwn":1},"id":"' + PACK_ID + '"},"entries":[{"__proto__":{"pwn":1},"id":"a","block":{"__proto__":{"pwn":1},"stats":{"__proto__":{"pwn":1}}}}],"groups":[{"__proto__":{"pwn":1},"id":"g","members":[{"__proto__":{"pwn":1},"entry":"a"}]}]}';
+  const m = Engine.migratePack(JSON.parse(raw));
+  assert.equal(({}).pwn, undefined);
+  assert.equal(m.entries.length, 1); assert.equal(m.groups[0].members.length, 1);
+});
+
+const twoPacks = () => {
+  const a = Engine.migratePack(syntheticPack());
+  const b = Engine.migratePack(syntheticPack({
+    meta: { ...syntheticPack().meta, id: "PK-ZZZZ9999", name: "Second" },
+    origins: [{ id: "o1", name: "DOCK", text: "again" }, { id: "o2", name: "Alley", text: "" }],
+    npcRoles: [], enemyRoles: [{ id: "e1", name: "bruiser", text: "" }],
+    entries: [{ id: "sly", name: "Sly", ref: "Z-9", origin: "o1", enemyRole: "e1", tier: 1 }, { id: "ab", name: "Ab", origin: "o2", tier: 3 }],
+    groups: [] }));
+  return [a, b];
+};
+
+test("packFilter: each filter alone, case-folded across two packs; people apart from threats", () => {
+  const packs = twoPacks();
+  const names = f => Engine.packFilter(packs, f).map(x => x.entry.name).join();
+  assert.equal(names({}), "Wren,Gull,Sly,Ab", "threats only, packs in the order given");
+  assert.equal(names({ view: "npc" }), "Moss");
+  assert.equal(names({ origin: "dock" }), "Gull,Sly", "two packs' Dock are one choice");
+  assert.equal(names({ enemyRole: "BRUISER" }), "Wren,Gull,Sly");
+  assert.equal(names({ view: "npc", npcRole: "lookout" }), "Moss");
+  assert.equal(names({ npcRole: "lookout" }), "Wren");
+  assert.equal(names({ tier: 1 }), "Gull,Sly"); assert.equal(names({ tier: "3" }), "Ab");
+  assert.equal(names({ origin: "dock", tier: 2 }), "");
+  assert.equal(names({ q: "spire" }), "Wren", "q reads the origin's name");
+  assert.equal(names({ q: "entry 01" }), "Gull", "q reads the ref");
+  assert.equal(names({ q: "QUICK" }), "Wren", "q reads the flavor");
+  assert.equal(names({ q: "bruis" }), "Wren,Gull,Sly", "q reads the role names");
+  assert.equal(names({ q: "z-9" }), "Sly");
+  assert.equal(Engine.packFilter(null, {}).length, 0);
+  assert.equal(Engine.packFilter([5, null, {}], null).length, 0);
+});
+
+test("packFilter keeps each pack's own order, not A–Z", () => {
+  const p = Engine.migratePack(syntheticPack());
+  assert.equal(Engine.packFilter([p], {}).map(x => x.entry.name).join(), "Wren,Gull", "the fixture isn't alphabetical");
+  p.entries.reverse();
+  assert.equal(Engine.packFilter([p], {}).map(x => x.entry.name).join(), "Gull,Wren", "and the order is the pack's, both ways");
+});
+
+test("packChoices: distinct, first spelling, A–Z; tiers ascending", () => {
+  const c = Engine.packChoices(twoPacks());
+  eq(c.origins, ["Alley", "Dock", "Spire"]);
+  eq(c.npcRoles, ["Gatherer", "Lookout"]);
+  eq(c.enemyRoles, ["Bruiser"]);
+  eq(c.tiers, [1, 2, 3]);
+  eq(Engine.packChoices(null), { origins: [], npcRoles: [], enemyRoles: [], tiers: [] });
+});
+
+test("packEntry and packGroups read the records, not the ids", () => {
+  const packs = twoPacks();
+  const f = Engine.packEntry(packs, PACK_ID, "moss");
+  assert.equal(f.entry.name, "Moss"); assert.equal(f.origin.name, "Dock");
+  eq(f.npcRoles.map(r => r.name), ["Gatherer", "Lookout"]); assert.equal(f.enemyRole, null);
+  assert.equal(Engine.packEntry(packs, PACK_ID, "nope"), null);
+  assert.equal(Engine.packEntry(packs, "PK-NOPE0000", "moss"), null);
+  assert.equal(Engine.packEntry(null, null, null), null);
+  const g = Engine.packGroups(packs, {});
+  assert.equal(g.length, 1); assert.equal(g[0].members.map(x => x.count + "x" + x.entry.name).join(), "3xGull,1xWren");
+  assert.equal(Engine.packGroups(packs, { q: "pier" }).length, 1);
+  assert.equal(Engine.packGroups(packs, { q: "gull" }).length, 1, "q reads a member's name");
+  assert.equal(Engine.packGroups(packs, { q: "zzz" }).length, 0);
+});
+
+test("castFromEntry: first in the cast, names not ids, a block that's a copy, and where it came from", () => {
+  const pack = Engine.migratePack(syntheticPack());
+  const t = Engine.newTable("T"); Engine.addCastMember(t, { name: "Earlier" });
+  const r = Engine.castFromEntry(t, pack, "moss");
+  assert.equal(r.ok, true); assert.equal(t.cast[0].id, r.id); assert.equal(t.cast.length, 2);
+  const n = t.cast[0];
+  assert.equal(n.name, "Moss"); assert.equal(n.origin, "Dock"); eq(n.npcRoles, ["Gatherer", "Lookout"]);
+  assert.equal(n.motivation, "Quiet money."); assert.equal(n.line, "Never the kids."); assert.equal(n.status, "alive");
+  eq(n.affiliations, []);
+  eq(n.from, { kind: "entry", pack: PACK_ID, id: "moss", name: "Moss" });
+  const w = Engine.castFromEntry(t, pack, "wren"); const wn = t.cast[0];
+  assert.equal(wn.enemyRole, "Bruiser"); assert.equal(wn.tier, 2);
+  assert.equal(JSON.stringify(Engine.npc(wn.block)), JSON.stringify(Engine.npc(pack.entries[0].block)));
+  pack.entries[0].block.stats.BOD = 99; pack.entries[0].block.traits[0].text = "changed"; pack.entries[0].name = "Renamed";
+  assert.equal(wn.block.stats.BOD, 5, "the member's block doesn't move with the pack's");
+  assert.equal(wn.block.traits[0].text, "Never falls far.");
+  assert.equal(wn.name, "Wren");
+  assert.equal(w.ok, true);
+  assert.equal(JSON.stringify(Engine.migrateTable(t).cast[0].from), JSON.stringify(wn.from), "from survives the gate");
+  const bad = Engine.castFromEntry(t, pack, "nope");
+  assert.equal(bad.ok, false); assert.equal(bad.why, "No such entry.");
+  assert.equal(Engine.castFromEntry(t, null, "x").ok, false);
+  assert.equal(t.cast.length, 3);
+});
+
+test("entryLink: here, the pack gone, the entry gone from a newer pack; junk doesn't throw", () => {
+  const pack = Engine.migratePack(syntheticPack());
+  const from = { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" };
+  eq(Engine.entryLink([pack], from), { name: "Gull", packId: PACK_ID, id: "gull", here: true });
+  assert.equal(Engine.entryLink([], from).here, false);
+  assert.equal(Engine.entryLink([], from).name, "Gull");
+  const newer = Engine.migratePack(syntheticPack({ entries: [] }));
+  assert.equal(Engine.entryLink([newer], from).here, false);
+  for (const x of [null, "x", 5, {}, [], { kind: "entry" }]) assert.equal(Engine.entryLink(null, x).here, false);
+  assert.equal(Engine.entryLink(undefined, from).here, false);
+  assert.equal(Engine.entryLink([5, null], from).here, false);
+});
+
+test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identical; junk from is null, a valid one kept", () => {
+  const old = Engine.newTable("Three");
+  Engine.addCastMember(old, { name: "Dez" }); Engine.addCastMember(old, { name: "Ivo" });
+  Engine.addTableNote(old, { title: "A", text: "one" });
+  for (const n of old.cast) delete n.from;
+  old.meta.tableSchemaVersion = "0.3";
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.4");
+  for (const n of m.cast) assert.equal(n.from, null);
+  const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
+  assert.equal(strip(m), strip(old));
+  const ok = { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" };
+  const j = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" }, cast: [
+    { from: ok }, { from: "x" }, { from: { kind: "cast", pack: PACK_ID, id: "gull", name: "x" } }, { from: { ...ok, pack: "PK-bad" } },
+    { from: { ...ok, id: "bad id!" } }, { from: { ...ok, name: 5 } }, {}] });
+  eq(j.cast[0].from, ok);
+  for (const n of j.cast.slice(1)) assert.equal(n.from, null);
+});
+
+test("gm.js may add a tip kind to shared.js's TIPS, never replace one (the script-scope guard)", () => {
+  const shared = readFileSync(join(ROOT, "src/ui/shared.js"), "utf8");
+  const block = /const TIPS = \{([\s\S]*?)\n\};/.exec(shared);
+  assert.ok(block, "shared.js's TIPS object moved");
+  const have = new Set([...block[1].matchAll(/^  (\w+):/gm)].map(m => m[1]));
+  assert.ok(have.has("tag") && have.has("stat"), "the guard didn't read shared.js's tip kinds: " + [...have]);
+  const gm = readFileSync(join(ROOT, "src/ui/gm.js"), "utf8");
+  const added = [...gm.matchAll(/\bTIPS\.(\w+)\s*=[^=]/g)].map(m => m[1]).concat([...gm.matchAll(/\bTIPS\[["'](\w+)["']\]\s*=[^=]/g)].map(m => m[1]));
+  assert.ok(added.includes("packrec"), "the guard didn't see gm.js's tip kind");
+  for (const k of added) assert.ok(!have.has(k), `gm.js assigns TIPS.${k}, which shared.js already defines`);
 });

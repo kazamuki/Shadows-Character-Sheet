@@ -1174,6 +1174,25 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .cast-trait input, .cast-trait textarea{min-width:0}
 .cast-trait textarea{min-height:80px}
 .cast-delete{margin-top:28px}
+/* Packs and the Threats tab (Decisions 180–182). Every word a pack carries wraps; its stat block reads, never edits. */
+.packs .roster-card{cursor:default}
+.threat-text{white-space:pre-wrap; overflow-wrap:anywhere; margin:0 0 6px}
+.threat-list{margin:0 0 6px; padding-left:20px; overflow-wrap:anywhere}
+.threat-members{list-style:none; padding-left:0}
+.threat-members li{margin-bottom:6px}
+.threat-val{font-family:var(--mono); font-size:1.05rem}
+.cast-from{margin:0 0 12px; color:var(--dim); overflow-wrap:anywhere}
+.cast-from .cast-open{font-weight:600}
+.cast-meta .tag{overflow-wrap:anywhere; max-width:100%; text-align:left}
+.cast-view{flex-wrap:wrap}
+.threat-filters{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px; align-items:end; margin-bottom:6px}
+/* On a phone the search takes a row and the four selects sit two to a row, so the first card isn't below the fold. */
+@media (max-width:640px){
+  .threat-filters{grid-template-columns:1fr 1fr; gap:0 10px}
+  .threat-filters .field:first-child{grid-column:1 / -1}
+  .threat-filters .field{margin-bottom:8px; min-width:0}
+  .threat-filters select{min-width:0; max-width:100%}
+}
 /* Interactions and Who knows what (Decisions 177–179). The kinds wrap to rows on a phone; every GM-written name, date and line wraps. */
 .cast-view{margin-bottom:14px; width:max-content; max-width:100%}
 .int-kinds{flex-wrap:wrap; width:auto; max-width:100%; margin-bottom:10px}

@@ -3222,7 +3222,7 @@ test("Decision 171: Run a table asks for a name, opens the table, and Home lists
   assert.equal(app.$("#modal[open]"), null);
   assert.equal(charKeys(app).length, 0, "a table wrote a character");
   assert.equal(tableKeys(app).length, 1);
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Notes"]);
   assert.equal(app.$("#topnav [data-sec]"), null, "the table's tabs are the sheet's");
   assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "What's new", "Home"]);
   tableHome(app);
@@ -3332,11 +3332,11 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   assert.equal(charKeys(app).length, 1);
   assert.equal(tableKeys(app).length, 1, "a character file wrote a table");
   sheetHome(app);
-  await importFile(app, { meta: { kind: "shadows-pack" } });
-  assert.match(app.$("#undotoast").textContent, /isn't a character or a table/);
+  await importFile(app, { meta: { kind: "shadows-other" } });
+  assert.match(app.$("#undotoast").textContent, /isn't a character, a table or a pack/);
   assert.equal(charKeys(app).length, 1); assert.equal(tableKeys(app).length, 1);
   const newer = JSON.parse(JSON.stringify(t));
-  newer.meta.tableSchemaVersion = "0.4";
+  newer.meta.tableSchemaVersion = "0.5";
   await importFile(app, newer);
   assert.match(app.$("#undotoast").textContent, /newer version of the app/);
   assert.deepEqual(app.errors, []);
@@ -3445,7 +3445,7 @@ test("Decision 176: a table opens on Cast, with Notes beside it, and Notes still
   const app = boot({ storage: GM_ON });
   runTable(app, "Cast table");
   assert.equal(app.window.eval("S.tsection"), "cast");
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Notes"]);
   assert.ok(app.$("[data-cadd-name]") && app.$("[data-csearch]"));
   assert.match(app.$("#main").textContent, /Nobody yet\. The city fills up fast\./);
   notesTab(app);
@@ -3682,19 +3682,19 @@ test("Decision 174: a member's whole page survives export and import on a fresh 
   assert.deepEqual([...app.errors, ...fresh.errors], []);
 });
 
-test("Decision 174: a saved 0.1 table opens as 0.3 with its notes, and Remove takes the cast with it", () => {
+test("Decision 174: a saved 0.1 table opens as the current schema with its notes, and Remove takes the cast with it", () => {
   const t = Engine.newTable("Old one");
   Engine.addTableNote(t, { title: "Kept", text: "still here" });
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.3");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.4");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.3");
+  assert.equal(saved.meta.tableSchemaVersion, "0.4");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4035,7 +4035,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.3");
+  assert.equal(file.meta.tableSchemaVersion, "0.4");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4047,7 +4047,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.3");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.4");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4138,4 +4138,396 @@ test("S8b review 5: an existing line's What is a wrapping textarea, and Enter in
   assert.equal(app.window.eval("S.table.interactions[0].text"), "a very long line ".repeat(10));
   assert.equal(app.$("[data-iwhat]").tagName, "INPUT");
   assert.deepEqual(app.errors, []);
+});
+
+// ── Packs (Decisions 180–182) ───────────────────────────────────────────
+// A synthetic pack only (tests/packfixture.mjs): nothing here is the Codex's.
+import { syntheticPack, PACK_ID } from "./packfixture.mjs";
+const packKeys = app => {
+  const ls = app.window.localStorage, out = [];
+  for (let i = 0; i < ls.length; i++) if (ls.key(i).startsWith("shadows.pack.v1.")) out.push(ls.key(i));
+  return out;
+};
+const packStored = (pack = syntheticPack(), imported = "2026-10-05T10:00:00.000Z") =>
+  ({ ["shadows.pack.v1." + pack.meta.id]: { pack: Engine.migratePack(pack), imported } });
+const packCards = app => app.$$("#main .packs .roster-card");
+const threatsTab = app => app.click('[data-tsec="threats"]');
+const threatNames = app => app.$$("[data-tentry]").map(b => b.textContent);
+const pickPack = async (app, obj) => {
+  const input = app.$("#pack-file");
+  const file = new app.window.File([JSON.stringify(obj)], "x.shadows-pack.json", { type: "application/json" });
+  Object.defineProperty(input, "files", { value: [file], configurable: true });
+  input.dispatchEvent(new app.window.Event("change"));
+  for (let i = 0; i < 50 && app.$("#pack-file"); i++) await new Promise(r => setTimeout(r, 10));
+};
+// A table with the pack slotted in, open on its Threats tab.
+const tableWithPack = (pack = syntheticPack()) => {
+  const app = boot({ storage: { ...GM_ON, ...packStored(pack) } });
+  runTable(app, "Pier night");
+  threatsTab(app);
+  return app;
+};
+const entryButton = (app, id) => app.$(`[data-tentry="${PACK_ID}|${id}"]`);
+
+test("Decision 181: switched off, a pack file is refused as not a character, and nothing is stored", async () => {
+  const app = boot();
+  await importFile(app, syntheticPack());
+  assert.match(app.$("#undotoast").textContent, /That file isn't a character\./);
+  assert.equal(packKeys(app).length, 0, "a pack was stored with the switch off");
+  assert.equal(app.$("#main .packs"), null);
+  assert.equal(app.window.eval("S.screen"), "home");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 181: Home's Import slots a pack in; Your packs lists it with no tables; Remove asks, and Cancel keeps it", async () => {
+  const app = boot({ storage: GM_ON });
+  await importFile(app, syntheticPack());
+  assert.equal(app.window.eval("S.screen"), "home");
+  assert.match(app.$("#undotoast").textContent, /Test Pack slotted in: 3 entries\./);
+  assert.equal(packKeys(app).length, 1);
+  assert.equal(app.$("#main .tables"), null, "a pack made a table list");
+  assert.equal(packCards(app).length, 1);
+  const c = packCards(app)[0];
+  assert.match(c.textContent, /Test Pack/); assert.match(c.textContent, /version v2 \(test\)/); assert.match(c.textContent, /3 entries/); assert.match(c.textContent, /slotted in/);
+  assert.equal(app.doc.activeElement, c, "focus isn't on the new pack's card");
+  assert.equal(app.$("h2#packs-h").textContent, "Your packs");
+  app.click("[data-premove]");
+  assert.match(app.$("#modal").textContent, /Remove Test Pack\?/);
+  assert.match(app.$("#modal").textContent, /Your tables keep everyone you've used from it\. Import the file to bring it back\./);
+  app.click("#modal [data-modalclose]");
+  assert.equal(packKeys(app).length, 1, "Cancel removed the pack");
+  app.click("[data-premove]"); app.click("#modal [data-askyes]");
+  assert.equal(packKeys(app).length, 0);
+  assert.equal(packCards(app).length, 0);
+  assert.equal(app.doc.activeElement, app.$("#btn-import"), "after the last Remove, focus isn't on Import");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 181: Your packs shows beside Your tables, and a Remove moves focus to the next pack's Remove", () => {
+  const [, tables] = seedTable("Tuesday");
+  const b = syntheticPack({ meta: { ...syntheticPack().meta, id: "PK-ZZZZ9999", name: "Zed Pack" } });
+  const app = boot({ storage: { ...GM_ON, ...tables, ...packStored(), ...packStored(b) } });
+  assert.deepEqual(app.$$("#main .tables .roster-name").map(n => n.textContent), ["Tuesday"]);
+  assert.deepEqual(packCards(app).map(c => c.querySelector(".roster-name").textContent), ["Test Pack", "Zed Pack"], "packs aren't by name");
+  app.click('[data-premove="PK-ZZZZ9999"]'); app.click("#modal [data-askyes]");
+  assert.deepEqual(packCards(app).map(c => c.querySelector(".roster-name").textContent), ["Test Pack"]);
+  assert.equal(app.doc.activeElement, app.$("#btn-import"), "the last pack's Remove didn't hand focus to Import");
+  const app2 = boot({ storage: { ...GM_ON, ...packStored(), ...packStored(b) } });
+  app2.click(`[data-premove="${PACK_ID}"]`); app2.click("#modal [data-askyes]");
+  assert.equal(app2.doc.activeElement.dataset.premove, "PK-ZZZZ9999", "focus didn't go to the next pack's Remove");
+  assert.deepEqual([...app.errors, ...app2.errors], []);
+});
+
+test("Decision 181: an older copy of a pack asks, a newer one replaces silently, and a pack with no id is refused", async () => {
+  const app = boot({ storage: { ...GM_ON, ...packStored() } });
+  const older = syntheticPack({ meta: { ...syntheticPack().meta, updated: "2026-10-01T10:00:00.000Z", name: "Older" } });
+  await importFile(app, older);
+  assert.match(app.$("#modal").textContent, /Put an older copy of Test Pack in place of the newer one\?/);
+  app.click("#modal [data-modalclose]");
+  assert.equal(JSON.parse(app.window.localStorage.getItem("shadows.pack.v1." + PACK_ID)).pack.meta.name, "Test Pack", "Cancel replaced the pack");
+  await importFile(app, older);
+  app.click("#modal [data-replacego]");
+  assert.equal(JSON.parse(app.window.localStorage.getItem("shadows.pack.v1." + PACK_ID)).pack.meta.name, "Older");
+  const newer = syntheticPack({ meta: { ...syntheticPack().meta, updated: "2026-10-09T10:00:00.000Z", name: "Newer" } });
+  await importFile(app, newer);
+  assert.equal(app.$("#modal[open]"), null, "a newer copy asked first");
+  assert.equal(JSON.parse(app.window.localStorage.getItem("shadows.pack.v1." + PACK_ID)).pack.meta.name, "Newer");
+  assert.equal(packKeys(app).length, 1);
+  await importFile(app, { meta: { kind: "shadows-pack", id: "PK-bad" }, entries: [{ id: "a" }] });
+  assert.match(app.$("#undotoast").textContent, /This pack has no id, so it can't be slotted in\./);
+  assert.equal(packKeys(app).length, 1);
+  await importFile(app, { meta: { kind: "other" } });
+  assert.match(app.$("#undotoast").textContent, /isn't a character, a table or a pack/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: a table has a Threats tab, second; with no pack it says so and offers to slot one in", async () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Bare");
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Notes"]);
+  threatsTab(app);
+  assert.match(app.$("#main").textContent, /No pack slotted in\./);
+  assert.ok(app.$("[data-pslot]"));
+  await pickPack(app, { meta: { kind: "shadows-table" } });
+  assert.match(app.$("#undotoast").textContent, /That file isn't a pack\./);
+  assert.equal(packKeys(app).length, 0);
+  await pickPack(app, syntheticPack());
+  assert.equal(packKeys(app).length, 1);
+  assert.deepEqual(threatNames(app), ["Wren", "Gull"]);
+  assert.equal(app.doc.activeElement, app.$("[data-tsearch]"), "after slotting in, focus isn't on the search");
+  assert.equal(app.window.eval("S.tsection"), "threats");
+  // A pack slotted in while a table is open goes to the browser, never into the table.
+  const downloads = withDownloads(app);
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  const file = await tableFile(downloads[0]);
+  assert.equal(Object.keys(file).sort().join(), "cast,interactions,meta,notes", "the exported table carries more than a table");
+  assert.ok(!JSON.stringify(file).includes("Lives high") && !JSON.stringify(file).includes("Test Pack"), "the exported table carries pack content");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: the list keeps the pack's order, the filters narrow it, the search keeps its place, Clear the filters resets", () => {
+  const app = tableWithPack();
+  assert.deepEqual(threatNames(app), ["Wren", "Gull"], "not in the pack's own order");
+  assert.deepEqual(app.$$('[data-tview]').map(b => b.textContent), ["Threats", "People", "Groups"]);
+  assert.match(app.$("[data-tcard]").textContent, /Entry 02 · Spire · Lookout · Enemy: Bruiser · Tier 2/);
+  assert.doesNotMatch(app.$("[data-tcard]").textContent, /Test Pack/, "a pack's name shows with only one slotted in");
+  const q = app.$("[data-tsearch]");
+  type(app, "[data-tsearch]", "gull");
+  assert.equal(app.$("[data-tsearch]"), q, "typing redrew the search field");
+  assert.equal(q.value, "gull");
+  assert.deepEqual(threatNames(app), ["Gull"]);
+  type(app, "[data-tsearch]", "");
+  pick(app, "[data-torigin]", "Dock"); assert.deepEqual(threatNames(app), ["Gull"]);
+  pick(app, "[data-torigin]", "Spire"); assert.deepEqual(threatNames(app), ["Wren"]);
+  pick(app, "[data-torigin]", ""); pick(app, "[data-ttier]", "1"); assert.deepEqual(threatNames(app), ["Gull"]);
+  pick(app, "[data-ttier]", ""); pick(app, "[data-trole]", "Lookout"); assert.deepEqual(threatNames(app), ["Wren"]);
+  pick(app, "[data-trole]", ""); pick(app, "[data-tenemy]", "Bruiser"); assert.deepEqual(threatNames(app), ["Wren", "Gull"]);
+  pick(app, "[data-torigin]", "Dock"); pick(app, "[data-ttier]", "2");
+  assert.match(app.$("#main").textContent, /Nothing matches\./);
+  app.click("[data-tclear]");
+  assert.deepEqual(threatNames(app), ["Wren", "Gull"]);
+  for (const s of ["[data-torigin]", "[data-ttier]", "[data-tenemy]", "[data-tsearch]"]) assert.equal(app.$(s).value, "", s);
+  assert.equal(app.doc.activeElement, app.$("[data-tsearch]"));
+  app.click('[data-tview="npc"]');
+  assert.deepEqual(threatNames(app), ["Moss"]);
+  assert.equal(app.$('[data-tview="npc"]').getAttribute("aria-pressed"), "true");
+  assert.equal(app.doc.activeElement, app.$('[data-tview="npc"]'), "the toggle lost focus");
+  app.click('[data-tview="group"]');
+  assert.deepEqual(app.$$("[data-tgroup]").map(b => b.textContent), ["Pier Watch"]);
+  assert.equal(app.$("[data-torigin]"), null, "Groups filter by search only");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: with two packs slotted in, a card names its pack; with one it doesn't", () => {
+  const b = syntheticPack({ meta: { ...syntheticPack().meta, id: "PK-ZZZZ9999", name: "Zed Pack" }, entries: [syntheticPack().entries[1]], groups: [] });
+  const app = boot({ storage: { ...GM_ON, ...packStored(), ...packStored(b) } });
+  runTable(app, "Two"); threatsTab(app);
+  assert.deepEqual(threatNames(app), ["Wren", "Gull", "Gull"]);
+  assert.match(app.$$("[data-tcard]")[2].textContent, /Zed Pack/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: an entry's page shows the book's fields, Health as Engine.npc works it out, nothing to edit; Back lands on that card", () => {
+  const app = tableWithPack();
+  const pack = Engine.migratePack(syntheticPack()), h = Engine.npc(pack.entries[1].block).health;
+  entryButton(app, "gull").click();
+  assert.equal(app.doc.activeElement, app.$("[data-ttitle]"), "the page's title doesn't take focus");
+  const t = app.$("#main").textContent;
+  assert.match(t, /Gull/); assert.match(t, /Entry 01/); assert.match(t, /Loud and mean\./); assert.match(t, /A dockside heavy\./);
+  assert.match(t, new RegExp(`Health ${h.total} \\(${h.levels} Health Levels\\)`));
+  assert.match(t, /BOD/); assert.match(t, /Tier 1/);
+  assert.equal(app.$$("#main input, #main textarea, #main select").length, 0, "a pack's entry is editable");
+  assert.equal(app.$("[data-tback]").textContent, "Back to threats");
+  assert.equal(app.$$("#main .tbl-title").length, 1, "the table's own title shows over the page");
+  app.click("[data-tback]");
+  assert.deepEqual(threatNames(app), ["Wren", "Gull"]);
+  assert.equal(app.doc.activeElement, entryButton(app, "gull"), "Back didn't land on Gull's card");
+  // The filter survives the round trip.
+  pick(app, "[data-torigin]", "Dock");
+  entryButton(app, "gull").click(); app.click("[data-tback]");
+  assert.equal(app.$("[data-torigin]").value, "Dock"); assert.equal(app.window.eval("S.threatOrigin"), "Dock");
+  assert.deepEqual(threatNames(app), ["Gull"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: an origin or role on an entry's page is a tip carrying the pack's text", () => {
+  const app = tableWithPack();
+  entryButton(app, "wren").click();
+  const chips = app.$$('#main [data-tip="packrec"]');
+  assert.deepEqual(chips.map(c => c.textContent), ["Spire", "Lookout", "Bruiser", "Tier 2"]);
+  clickIn(app, chips[0]);
+  assert.match(tipShown(app), /Lives high\./);
+  // The tier is a tip too, titled by its name, with the pack's text.
+  clickIn(app, chips[3]);
+  assert.match(tipShown(app), /Middling/); assert.match(tipShown(app), /Middling\./);
+  // A tier with no text stays a plain word, as an origin or role does.
+  const bare = syntheticPack(); bare.tiers = [{ id: 2, name: "Bare", text: "" }];
+  const app2 = tableWithPack(bare);
+  entryButton(app2, "wren").click();
+  assert.deepEqual(app2.$$('#main [data-tip="packrec"]').map(c => c.textContent), ["Spire", "Lookout", "Bruiser"]);
+  assert.match(app2.$("#main .cast-meta").textContent, /Tier 2/);
+  assert.deepEqual([...app.errors, ...app2.errors], []);
+});
+
+test("Decision 182 (review): an entry's page names each kind of role, and the filter says NPC role", () => {
+  const app = tableWithPack();
+  assert.equal(app.$("[data-trole]").closest("label").textContent.replace(/Any.*/s, "").trim(), "NPC role");
+  entryButton(app, "wren").click();
+  const meta = app.$("#main .cast-meta").textContent.replace(/\s+/g, " ");
+  assert.match(meta, /Entry 02 · Spire · NPC role: Lookout · Enemy: Bruiser · Tier 2/);
+  app.click("[data-tback]"); app.click('[data-tview="npc"]'); entryButton(app, "moss").click();
+  assert.match(app.$("#main .cast-meta").textContent.replace(/\s+/g, " "), /NPC role: Gatherer \/ Lookout/);
+  assert.doesNotMatch(app.$("#main .cast-meta").textContent, /Enemy:/, "a person with no enemy role says Enemy");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182 (review): a group's card shows who is in it, not how many kinds", () => {
+  const app = tableWithPack();
+  app.click('[data-tview="group"]');
+  assert.match(app.$("[data-tcard]").textContent.replace(/\s+/g, " "), /Group 01 · Dock · 3× Gull · 1× Wren/);
+  assert.doesNotMatch(app.$("[data-tcard]").textContent, /members/);
+  const pack = syntheticPack(); pack.groups[0].members[0] = { entry: "gull", count: 3 }; pack.entries[1].name = '<i data-pwn="x"></i>';
+  const hostile = tableWithPack(pack); hostile.click('[data-tview="group"]');
+  assert.equal(hostile.$$("[data-pwn]").length, 0, "a member's name became markup on the group card");
+  assert.deepEqual([...app.errors, ...hostile.errors], []);
+});
+
+test("Decision 182 (review): the Threats filters have their own class, and on a phone sit two to a row under a full-width search", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const app = tableWithPack();
+  assert.ok(app.$(".threat-filters [data-tsearch]") && app.$$(".threat-filters select").length === 4);
+  assert.equal(app.$(".cast-filters"), null, "the Threats tab still uses the Cast tab's filters class");
+  assert.match(css, /@media \(max-width:640px\)\{\s*\.threat-filters\{grid-template-columns:1fr 1fr/);
+  assert.match(css, /\.threat-filters \.field:first-child\{grid-column:1 \/ -1\}/);
+  assert.match(css, /\.cast-filters\{display:grid; grid-template-columns:repeat\(auto-fit,minmax\(200px,1fr\)\)/, "the Cast tab's filters changed");
+});
+
+test("Decision 182: a person is under People, with what they want, and a group's member opens the entry, Back returning to the group", () => {
+  const app = tableWithPack();
+  app.click('[data-tview="npc"]');
+  entryButton(app, "moss").click();
+  const t = app.$("#main").textContent;
+  assert.match(t, /Quiet money\./); assert.match(t, /A boat\./); assert.match(t, /Never the kids\./); assert.match(t, /Sells you out\./);
+  app.click("[data-tback]");
+  app.click('[data-tview="group"]');
+  app.$("[data-tgroup]").click();
+  assert.equal(app.doc.activeElement, app.$("[data-ttitle]"));
+  assert.match(app.$("#main").textContent, /3× Gull/); assert.match(app.$("#main").textContent, /1× Wren/);
+  assert.match(app.$("#main").textContent, /They guard the pier at night\./); assert.match(app.$("#main").textContent, /Gull leads, Wren scouts\./);
+  assert.equal(app.$("[data-tback]").textContent, "Back to threats");
+  app.$(`[data-tmember="${PACK_ID}|wren"]`).click();
+  assert.match(app.$("#main").textContent, /A rooftop runner\./);
+  assert.equal(app.$("[data-tback]").textContent, "Back to the group");
+  app.click("[data-tback]");
+  assert.ok(app.$("[data-tmember]") && /Pier Watch/.test(app.$("[data-ttitle]").textContent), "Back didn't return to the group");
+  assert.equal(app.doc.activeElement, app.$(`[data-tmember="${PACK_ID}|wren"]`), "Back didn't land on the member that was opened");
+  app.click("[data-tback]");
+  assert.equal(app.doc.activeElement, app.$(`[data-tgroup="${PACK_ID}|pier-watch"]`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: Use copies the entry into the cast and opens it, name selected; it says From, and a table exported holds no pack", async () => {
+  const app = tableWithPack(); const downloads = withDownloads(app);
+  entryButton(app, "gull").click();
+  app.click("[data-tuse]");
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  const name = app.$('[data-cf="name"]');
+  assert.equal(app.doc.activeElement, name, "Use didn't put the keyboard in the name");
+  assert.equal(name.value, "Gull"); assert.equal(name.selectionStart, 0); assert.equal(name.selectionEnd, 4, "the name isn't selected");
+  assert.equal(app.$('[data-cf="origin"]').value, "Dock"); assert.equal(app.$('[data-cf="enemyRole"]').value, "Bruiser");
+  assert.match(app.$(".cast-from").textContent, /^From Gull/);
+  assert.equal(app.window.eval("S.table.cast.length"), 1);
+  assert.equal(app.$('[data-cstat="BOD"]').value, "8");
+  // Rename: the copy is the GM's now.
+  type(app, '[data-cf="name"]', "Vinnie");
+  assert.match(app.$(".cast-from").textContent, /^From Gull/);
+  assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  const file = await tableFile(downloads[0]);
+  assert.equal(file.meta.tableSchemaVersion, "0.4");
+  assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
+  const json = JSON.stringify(file);
+  for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
+  assert.equal(Object.keys(file).sort().join(), "cast,interactions,meta,notes");
+  const fresh = boot({ storage: GM_ON }); withDownloads(fresh);
+  await importFile(fresh, file);
+  assert.deepEqual(JSON.parse(fresh.window.eval("JSON.stringify(S.table.cast[0].from)")), { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
+  assert.deepEqual([...app.errors, ...fresh.errors], []);
+});
+
+test("Decision 182: From on a member's page opens the entry; Back goes to the Threats list; Use after a filter that would hide the copy clears it", () => {
+  const app = tableWithPack();
+  entryButton(app, "wren").click(); app.click("[data-tuse]");
+  app.$('[data-tfrom]').click();
+  assert.equal(app.window.eval("S.tsection"), "threats");
+  assert.equal(app.doc.activeElement, app.$("[data-ttitle]"));
+  assert.match(app.$("[data-ttitle]").textContent, /Wren/);
+  assert.equal(app.$("[data-tback]").textContent, "Back to Wren");
+  app.click("[data-tback]");
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  assert.equal(app.$('[data-cf="name"]').value, "Wren", "Back didn't return to the member's page");
+  assert.equal(app.doc.activeElement, app.$("[data-tfrom]"), "Back didn't land on the From button");
+  app.click('[data-tsec="threats"]');
+  assert.deepEqual(threatNames(app), ["Wren", "Gull"]);
+  app.click('[data-tsec="cast"]');
+  type(app, "[data-csearch]", "nobody");
+  app.click('[data-tsec="threats"]');
+  entryButton(app, "gull").click(); app.click("[data-tuse]");
+  assert.equal(app.window.eval("S.castQ"), "", "a filter hid the new member");
+  assert.equal(app.window.eval("S.table.cast.length"), 2);
+  app.click("[data-cback]");
+  assert.deepEqual(castNames(app).sort(), ["Gull", "Wren"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182 (review): Back from an entry opened by From returns to that member, by id, named as they are now; any other way in, or a member gone, goes to the list", () => {
+  const app = tableWithPack();
+  entryButton(app, "gull").click(); app.click("[data-tuse]");
+  type(app, '[data-cf="name"]', "Vinnie");
+  app.$("[data-tfrom]").click();
+  assert.equal(app.$("[data-tback]").textContent, "Back to Vinnie");
+  app.click("[data-tuse]");   // Use on that page still copies the entry and opens the new copy
+  assert.equal(app.window.eval("S.table.cast.length"), 2);
+  assert.equal(app.window.eval("S.threatMember"), null, "Use left the member state behind");
+  const app2 = tableWithPack();
+  entryButton(app2, "gull").click(); app2.click("[data-tuse]");
+  type(app2, '[data-cf="name"]', "   ");
+  app2.$("[data-tfrom]").click();
+  assert.equal(app2.$("[data-tback]").textContent, "Back to Unnamed");
+  // Opening the entry any other way clears it: through the tab's list.
+  app2.click("[data-tback]");
+  assert.equal(app2.window.eval("S.tsection"), "cast", "Back didn't return to the member's page");
+  assert.equal(app2.$('[data-cf="name"]').value, "   ");
+  app2.click('[data-tsec="threats"]');
+  entryButton(app2, "gull").click();
+  assert.equal(app2.$("[data-tback]").textContent, "Back to threats");
+  // The member deleted while the page was open: Back falls to the list.
+  app2.click("[data-tback]"); app2.click('[data-tsec="cast"]'); app2.click("[data-copen]");
+  app2.$("[data-tfrom]").click();
+  const id = app2.window.eval("S.threatMember");
+  assert.ok(id, "the member isn't remembered by id");
+  app2.window.eval("S.table.cast.length = 0");
+  app2.click("[data-tback]");
+  assert.equal(app2.window.eval("S.tsection"), "threats");
+  assert.deepEqual(threatNames(app2), ["Wren", "Gull"]);
+  assert.deepEqual([...app.errors, ...app2.errors], []);
+});
+
+test("Decision 182: removing the pack leaves every copy whole; From reads as text, and the Threats tab is empty", () => {
+  const app = tableWithPack();
+  entryButton(app, "gull").click(); app.click("[data-tuse]");
+  type(app, '[data-cf="name"]', "Vinnie");
+  tableHome(app);
+  app.click("[data-premove]"); app.click("#modal [data-askyes]");
+  assert.equal(packKeys(app).length, 0);
+  app.$("[data-topen]").click();
+  assert.equal(app.window.eval("S.table.cast.length"), 1);
+  assert.deepEqual(castNames(app), ["Vinnie"]);
+  app.$("[data-copen]").click();
+  assert.match(app.$(".cast-from").textContent, /^From Gull/);
+  assert.equal(app.$("[data-tfrom]"), null, "From is still a button with the pack gone");
+  assert.equal(app.$('[data-cf="name"]').value, "Vinnie"); assert.equal(app.$('[data-cstat="BOD"]').value, "8");
+  assert.equal(app.window.eval("S.table.cast[0].from.name"), "Gull");
+  threatsTab(app);
+  assert.match(app.$("#main").textContent, /No pack slotted in\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every member's from null", () => {
+  const t = Engine.newTable("Three"); Engine.addCastMember(t, { name: "Dez" });
+  delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
+  const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
+  tableCard(app, "Three").querySelector("[data-topen]").click();
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.4");
+  assert.equal(app.window.eval("S.table.cast[0].from"), null);
+  assert.deepEqual(castNames(app), ["Dez"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 182: the Threats tab's new words and long names wrap", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /\.threat-text\{[^}]*overflow-wrap:anywhere/);
+  assert.match(css, /\.threat-list\{[^}]*overflow-wrap:anywhere/);
+  assert.match(css, /\.cast-meta \.tag\{[^}]*overflow-wrap:anywhere/);
+  assert.match(css, /\.cast-view\{flex-wrap:wrap\}/);
 });

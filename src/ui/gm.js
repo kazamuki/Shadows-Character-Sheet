@@ -7,9 +7,9 @@
 // The three places the other UI files call in: update() saves the open table
 // (saveTable), renderMain() draws the table screen (renderTable, and
 // renderTableChrome for the header), and Home draws its table list and routes
-// an imported table (gmTablesHtml, gmDoorHtml, bindGmHome, gmImportTable).
+// an imported table or pack (gmTablesHtml, gmDoorHtml, bindGmHome, gmImportFile).
 
-const GM_NOT_A_FILE = "That file isn't a character or a table.";
+const GM_NOT_A_FILE = "That file isn't a character, a table or a pack.";
 
 // ── Storage: one key per table, beside the roster's (Decision 171) ─────
 // An entry is { table, section, changed, exported }, by the roster's rules:
@@ -122,7 +122,11 @@ function guardReplaceTable(saved, incoming, proceed){
       foot.querySelector("[data-replacego]").onclick=()=>{ closeModal(); proceed(); };
     } });
 }
-// Home's one Import hands a table file here, already known to be one.
+// Home's one Import hands a table or a pack here, already known to be one
+// (Decision 181): the third call-in point, widened.
+function gmImportFile(raw, kind){
+  if (kind==="pack") gmImportPack(raw); else gmImportTable(raw);
+}
 function gmImportTable(raw){
   const t=Engine.migrateTable(raw), id=t.meta.id;
   guardReplaceTable((savedTable(id)||{}).table, t, ()=>{
@@ -148,6 +152,9 @@ function gmTableCardHtml(e){
 }
 // Switched off, both of these are empty and Home is as it was.
 function gmTablesHtml(tables){
+  return gmTableListHtml(tables) + gmPacksHtml();
+}
+function gmTableListHtml(tables){
   if (!featureOn("gm") || !tables.length) return "";
   return `<section class="roster tables" aria-labelledby="tables-h">
       <h2 id="tables-h" class="roster-h">Your tables</h2>
@@ -195,6 +202,7 @@ function askRemoveTable(e){
 function bindGmHome(tables){
   if (!featureOn("gm")) return;
   const main=$("main"), byId = id => tables.find(e=>e.id===id);
+  bindPacksHome(main);
   const run=$("btn-run-table");
   if (run) run.onclick=()=>openNameModal({ title:"Run a table", yes:"Create", then:name=>{ openTable(Engine.newTable(name)); const b=document.querySelector("[data-cadd-name]"); if (b) b.focus(); } });
   const open = e => e && openTable(Engine.migrateTable(clone(e.table)), e.section);
@@ -207,7 +215,7 @@ function bindGmHome(tables){
 
 // ── The table screen ───────────────────────────────────────────────────
 // The cast is first: a table opens on it (Decision 176).
-const TABLE_SECTIONS = [{ id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
+const TABLE_SECTIONS = [{ id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
 // A twin of the sheet's tabButtonsHtml, with its own attribute, so the
 // sheet's [data-sec] binder never sees these.
 function tableTabButtonsHtml(){
@@ -224,7 +232,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast") S.castOpen=null; window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast") S.castOpen=null; if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
@@ -261,18 +269,22 @@ function renderTable(){
   const t=S.table, main=$("main");
   const made=Date.parse(t.meta.created);
   const failed = saveFailed ? `<div class="import-issues" role="alert">${issuesHtml([{level:"error", msg:"This browser couldn't save your last change. Export the table now so nothing is lost."}])}</div>` : "";
-  const onPage = S.tsection==="cast" && castOpenMember();
+  packsNow();   // a fresh read of the browser's packs on every full draw
+  const threatPage = S.tsection==="threats" && threatPageNow();
+  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage;
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
-  const body = S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t)) : notesTabHtml(t);
+  const body = S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
+    : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
-  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]"]);
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]"]);
 }
 function bindTable(){
   const main=$("main");
   if (main.querySelector("[data-tnew]")) bindNotes(main);
   else if (S.tsection==="cast") bindCast(main);
+  else if (S.tsection==="threats") bindThreats(main);
 }
 function bindNotes(main){
   const titleOf = id => main.querySelector(`[data-ntitle="${id}"]`);
@@ -436,6 +448,7 @@ function castInteractionsHtml(n){
 function castPageHtml(n){
   return `<p><button class="btn sm" data-cback>Back to the cast</button></p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
+    ${castFromHtml(n)}
     ${castText(n,"name","Name","Who did they meet?")}
     ${castText(n,"flavor","Who they are","One line: who they are")}
     ${castText(n,"description","Description","What you'd see.",true)}
@@ -577,6 +590,8 @@ function bindCastPage(main, n){
     if (key==="affiliations") el.addEventListener("change", ()=>{ el.value=own().affiliations.join(" / "); });
   });
   bindInteractions(main, n);
+  const fromBtn=main.querySelector("[data-tfrom]");
+  if (fromBtn) fromBtn.onclick=()=>openThreat(fromBtn.dataset.tfrom, null, n.id);
   // A change to the block: `redraw` for a row added or removed, else the
   // fields keep their place and only the figures beside them are rewritten.
   const block = (fn, redraw) => tableChange(()=>{
@@ -635,5 +650,337 @@ function bindCastPage(main, n){
         const el=next && $("main").querySelector(`[data-copen="${next.id}"]`) || $("main").querySelector("[data-cadd-name]") || $("main").querySelector("[data-cview][aria-pressed=true]");
         if (el) el.focus();
       } });
+  };
+}
+
+// ── Packs: a book a GM slots in, one key each, outside every table ─────
+// (Decisions 180–181.) An entry is { pack, imported }. Every table in the
+// browser reads every pack here; no table file carries pack content. A pack
+// in storage goes back through the gate on every read: a person could have
+// edited it.
+const PACK_PREFIX = "shadows.pack.v1.";
+const packKey = id => PACK_PREFIX + id;
+let packsMemo = [];   // the packs the last table draw read, in the order packEntries() gives
+const packName = (p, none="Untitled pack") => String((p && p.meta && p.meta.name) || "").trim() || none;
+function readPackEntry(key){
+  try{
+    const r=localStorage.getItem(key), v=r && JSON.parse(r);
+    return v && typeof v==="object" && v.pack && typeof v.pack==="object" ? v : null;
+  }catch(e){ return null; }
+}
+function savedPack(id){ return Engine.isPackId(id) ? readPackEntry(packKey(id)) : null; }
+// Every slotted pack, by name.
+function packEntries(){
+  const out=[];
+  try{
+    for (let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if (!k || k.indexOf(PACK_PREFIX)!==0 || !Engine.isPackId(k.slice(PACK_PREFIX.length))) continue;
+      const e=readPackEntry(k); if (!e) continue;
+      const pack=Engine.migratePack(e.pack), id=k.slice(PACK_PREFIX.length);
+      if (pack.meta.id===id) out.push({ id, pack, imported:e.imported });
+    }
+  }catch(e){}
+  return out.sort((a,b)=>packName(a.pack).toLowerCase().localeCompare(packName(b.pack).toLowerCase()) || (a.id<b.id ? -1 : 1));
+}
+function removePack(id){ try{ localStorage.removeItem(packKey(id)); }catch(e){} }
+function packsNow(){ packsMemo = featureOn("gm") ? packEntries().map(e=>e.pack) : []; return packsMemo; }
+
+// The newer copy of a pack is the one with the later meta.updated, as a table's is.
+function packSupersedes(incoming, saved){
+  if (!saved) return true;
+  const a=Date.parse(incoming.meta.updated), b=Date.parse(saved.meta.updated);
+  return Number.isFinite(a) && Number.isFinite(b) && a>=b;
+}
+function gmImportPack(raw){
+  const p=Engine.migratePack(raw), chk=Engine.packCheck(p);
+  if (chk.refuse){ notice(chk.refuse); return; }
+  const have=savedPack(p.meta.id), haveP=have && Engine.migratePack(have.pack);
+  if (haveP && !packSupersedes(p, haveP)){
+    openModal({ title:`Put an older copy of ${packName(haveP)} in place of the newer one?`,
+      html:`<p>This file is older than the copy of <b>${esc(packName(haveP))}</b> slotted in here. Slotting it in puts it in place of the newer one.</p>`,
+      foot:`<button class="btn" data-modalclose>Cancel</button><button class="btn primary" data-replacego>Put the older copy in place</button>`,
+      bind(body, foot){
+        foot.querySelector("[data-replacego]").onclick=()=>{ closeModal(); slotPack(p, chk.warnings); };
+        foot.querySelector("[data-modalclose]").focus();
+      } });
+    return;
+  }
+  slotPack(p, chk.warnings);
+}
+// One setItem, so a pack that doesn't fit leaves what was there as it was.
+function slotPack(p, warnings){
+  try{ localStorage.setItem(packKey(p.meta.id), JSON.stringify({ pack:p, imported:new Date().toISOString() })); }
+  catch(e){ notice("This browser is out of room for that pack."); return; }
+  const n=p.entries.length;
+  notice(`${packName(p)} slotted in: ${n} ${n===1?"entry":"entries"}.${warnings.length ? " "+warnings[0] : ""}`);
+  if (S.screen==="table"){
+    renderTable();
+    const el=$("main").querySelector("[data-tsearch]"); if (el) el.focus();
+  } else {
+    renderHome();
+    const el=$("main").querySelector(attrSel("data-pcard", p.meta.id)); if (el) el.focus();
+  }
+}
+// The picker on the empty Threats tab: its own input, and only a pack goes through.
+function bindPackPicker(main){
+  const btn=main.querySelector("[data-pslot]"), input=main.querySelector("#pack-file"); if (!btn || !input) return;
+  btn.onclick=()=>input.click();
+  input.onchange=()=>{
+    const f=input.files[0]; if (!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      let raw;
+      try{ raw=JSON.parse(rd.result); }catch(err){ notice("That file isn't a pack."); return; }
+      if (Engine.fileKind(raw)!=="pack"){ notice("That file isn't a pack."); return; }
+      gmImportFile(raw, "pack");
+    };
+    rd.readAsText(f);
+    input.value="";
+  };
+}
+
+// ── Home: Your packs ──
+function gmPackCardHtml(e){
+  const p=e.pack, n=p.entries.length, id=esc(e.id);
+  const bits=[ p.meta.contentVersion.trim() ? `version ${p.meta.contentVersion.trim()}` : "", `${n} ${n===1?"entry":"entries"}`,
+    whenText(e.imported) ? "slotted in "+whenText(e.imported) : "" ].filter(Boolean).map(esc).join(" · ");
+  return `<li class="roster-card" data-pcard="${id}" tabindex="-1">
+    <div class="roster-top"><b class="roster-name">${esc(packName(p))}</b></div>
+    <div class="roster-meta">${bits}</div>
+    <div class="roster-actions"><button class="btn sm" data-premove="${id}">Remove</button></div></li>`;
+}
+function gmPacksHtml(){
+  if (!featureOn("gm")) return "";
+  const list=packEntries(); if (!list.length) return "";
+  return `<section class="roster packs" aria-labelledby="packs-h">
+      <h2 id="packs-h" class="roster-h">Your packs</h2>
+      <ul class="roster-list">${list.map(gmPackCardHtml).join("")}</ul>
+      <p class="step-note">Packs stay in this browser until you remove them. The file you imported is the copy that lasts.</p>
+    </section>`;
+}
+function askRemovePack(e){
+  const order=packEntries().map(x=>x.id), at=order.indexOf(e.id);
+  askFirst({ title:`Remove ${packName(e.pack)}?`, text:"Your tables keep everyone you've used from it. Import the file to bring it back.", yes:"Remove",
+    then(){
+      removePack(e.id); renderHome();
+      const next=order[at+1], el=next && $("main").querySelector(attrSel("data-premove", next)) || $("btn-import");
+      if (el) el.focus();
+    } });
+}
+function bindPacksHome(main){
+  const list=packEntries();
+  main.querySelectorAll("[data-premove]").forEach(b=>b.onclick=()=>{ const e=list.find(x=>x.id===b.dataset.premove); if (e) askRemovePack(e); });
+}
+
+// ── The Threats tab (Decision 182) ─────────────────────────────────────
+// State is on S, as the cast's is: S.threatView ("threat", "npc" or "group"),
+// S.threatQ and the four filters, S.threatOpen ({ pack, id }: an entry's page)
+// and S.threatGroup (a group's page, or the one an entry was opened from).
+// Every focus target carries an entry, group or pack id, never a position.
+const THREAT_VIEWS = [["threat","Threats"], ["npc","People"], ["group","Groups"]];
+const THREAT_WORDS = { threat:"threats", npc:"people", group:"groups" };
+const entryKey = (pack, id) => `${pack}|${id}`;
+// A tip kind gm.js adds must be new: it may add one to shared.js's TIPS, never replace one (a test reads both files).
+// What a pack says about one of its own words, as a tip (139). A word with no text says nothing.
+TIPS.packrec = term => {
+  const [pid, sec, id]=String(term).split("|");
+  const pack=packsMemo.find(p=>p.meta.id===pid), list=pack && ["origins","npcRoles","enemyRoles","tiers"].includes(sec) ? pack[sec] : null;
+  const r=list && list.find(x=>String(x.id)===id);   // a tier's id is a number
+  return r && String(r.text||"").trim() ? { title:r.name.trim() || (sec==="tiers" ? `Tier ${id}` : "Unnamed"), text:r.text } : null;
+};
+function packChipHtml(pack, sec, rec, label){
+  const term=`${pack.meta.id}|${sec}|${rec.id}`, shown=label || rec.name;
+  return TIPS.packrec(term) ? `<button type="button" class="tag" data-tip="packrec" data-term="${esc(term)}">${esc(shown)}</button>`
+    : `<span class="tag plain">${esc(shown)}</span>`;
+}
+function threatFilterNow(){
+  const choices=Engine.packChoices(packsMemo);
+  // A choice a pack no longer offers filters nothing.
+  const keep = (v, list) => { const w=String(v||"").toLowerCase(); return w && list.find(a=>a.toLowerCase()===w) || ""; };
+  const tier=Number(S.threatTier);
+  return { choices, view:S.threatView==="npc" || S.threatView==="group" ? S.threatView : "threat", q:S.threatQ||"",
+    origin:keep(S.threatOrigin, choices.origins), npcRole:keep(S.threatRole, choices.npcRoles), enemyRole:keep(S.threatEnemy, choices.enemyRoles),
+    tier:choices.tiers.includes(tier) ? tier : null };
+}
+const threatFiltering = f => !!(f.q.trim() || (f.view!=="group" && (f.origin || f.npcRole || f.enemyRole || f.tier!==null)));
+function entryMetaText(pack, entry, multi){
+  const found=Engine.packEntry([pack], pack.meta.id, entry.id);
+  return [ entry.ref, found.origin && found.origin.name, found.npcRoles.map(r=>r.name).join(" / "), found.enemyRole && `Enemy: ${found.enemyRole.name}`,
+    entry.tier!==null ? `Tier ${entry.tier}` : "", multi ? packName(pack) : "" ].filter(Boolean).map(esc).join(" · ");
+}
+function threatCardHtml({ pack, entry }, multi){
+  const key=esc(entryKey(pack.meta.id, entry.id)), bits=entryMetaText(pack, entry, multi);
+  return `<li class="roster-card cast-card" data-tcard="${key}">
+    <button class="cast-open" data-tentry="${key}">${esc(entry.name.trim() || "Unnamed")}</button>
+    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
+}
+function threatGroupCardHtml({ pack, group, members }, multi){
+  const key=esc(entryKey(pack.meta.id, group.id)), o=group.origin && pack.origins.find(x=>x.id===group.origin);
+  const bits=[ group.ref, o && o.name, members.map(m=>`${m.count}× ${m.entry.name.trim() || "Unnamed"}`).join(" · "), multi ? packName(pack) : "" ].filter(Boolean).map(esc).join(" · ");
+  return `<li class="roster-card cast-card" data-tcard="${key}">
+    <button class="cast-open" data-tgroup="${key}">${esc(group.name.trim() || "Unnamed")}</button>
+    <div class="roster-meta cast-meta">${bits}</div></li>`;
+}
+function threatListHtml(){
+  const f=threatFilterNow(), multi=packsMemo.length>1;
+  const rows = f.view==="group" ? Engine.packGroups(packsMemo, { q:f.q }) : Engine.packFilter(packsMemo, f);
+  if (!rows.length){
+    return threatFiltering(f)
+      ? `<p class="step-note">Nothing matches.</p><p><button class="btn sm" data-tclear>Clear the filters</button></p>`
+      : `<p class="step-note">Nothing in ${multi ? "these packs" : "this pack"} under ${esc(THREAT_WORDS[f.view])}.</p>`;
+  }
+  return `<ul class="roster-list">${rows.map(r=>f.view==="group" ? threatGroupCardHtml(r, multi) : threatCardHtml(r, multi)).join("")}</ul>`;
+}
+function threatsTabHtml(){
+  if (!packsMemo.length){
+    return `<p class="step-note">No pack slotted in. A pack is a file of threats your GM material came with.</p>
+      <p><button class="btn primary" data-pslot>Slot in a pack</button>
+      <input type="file" id="pack-file" accept=".json,.shadows-pack.json" hidden></p>`;
+  }
+  const f=threatFilterNow(), c=f.choices;
+  const sel = (attr, label, now, opts, text=x=>x) => `<label class="field"><span>${esc(label)}</span><select ${attr}><option value="">Any</option>${opts.map(o=>
+    `<option value="${esc(o)}"${String(o)===String(now)?" selected":""}>${esc(text(o))}</option>`).join("")}</select></label>`;
+  return `<div class="form-toggle cast-view" role="group" aria-label="View">${THREAT_VIEWS.map(([k,name])=>
+      `<button type="button" data-tview="${k}" class="${k===f.view?"on":""}" aria-pressed="${k===f.view}">${esc(name)}</button>`).join("")}</div>
+    <div class="threat-filters">
+      <label class="field"><span>Search</span><input type="search" data-tsearch placeholder="Search ${esc(THREAT_WORDS[f.view])}" autocomplete="off" value="${esc(f.q)}"></label>
+      ${f.view==="group" ? "" : sel("data-torigin","Origin", f.origin, c.origins)
+        + sel("data-trole","NPC role", f.npcRole, c.npcRoles) + sel("data-tenemy","Enemy role", f.enemyRole, c.enemyRoles)
+        + sel("data-ttier","Tier", f.tier===null ? "" : f.tier, c.tiers, n=>`Tier ${n}`)}
+    </div>
+    <div data-threatlist>${threatListHtml()}</div>`;
+}
+
+// ── An entry's page: what the book prints, and nothing to edit ──
+function readBlockHtml(block){
+  if (!block) return "";
+  const r=Engine.npc(block), b=block, rows=[];
+  for (const s of D.stats){ const v=r.stats[s.id]; if (v.value!==null) rows.push([s.id, v.value, castSigned(v.mod)]); }
+  for (const d of D.derived.filter(x=>x.type==="sumOfModifiers")){ const a=r.authored[d.id]; if (a && a.value!==null) rows.push([d.id, a.value, a.formula!==null ? `formula ${a.formula}` : ""]); }
+  const stats=rows.map(([id, v, fig])=>`<div class="cast-stat"><span class="cast-stat-id">${esc(id)}</span><b class="threat-val">${esc(v)}</b><span class="cast-fig">${esc(fig)}</span></div>`).join("");
+  const skills=b.skills.filter(k=>k.name.trim() || k.total!==null).map(k=>`<li>${esc(k.name.trim() || "Skill")}${k.total!==null ? " "+esc(k.total) : ""}</li>`).join("");
+  const list=(label, items)=>{ const l=items.filter(x=>x.trim()); return l.length ? `<div class="cast-lines"><span class="cast-sub">${esc(label)}</span><ul class="threat-list">${l.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>` : ""; };
+  const traits=b.traits.filter(k=>k.name.trim() || k.text.trim()).map(k=>`<li>${k.name.trim() ? `<b>${esc(k.name)}</b> ` : ""}${esc(k.text)}</li>`).join("");
+  const health=r.health ? `<p class="cast-health">Health <b>${r.health.total}</b> (${r.health.levels} Health Level${r.health.levels===1?"":"s"})</p>` : "";
+  if (!stats && !skills && !health && !traits && !b.armor.some(x=>x.trim()) && !b.gear.some(x=>x.trim())) return "";
+  return `<h2 class="cast-h">Stat block</h2>${health}${stats ? `<div class="cast-stats">${stats}</div>` : ""}
+    ${skills ? `<div class="cast-lines"><span class="cast-sub">Skills</span><ul class="threat-list">${skills}</ul></div>` : ""}
+    ${list("Armor", b.armor)}${list("Gear", b.gear)}
+    ${traits ? `<div class="cast-lines"><span class="cast-sub">Traits</span><ul class="threat-list">${traits}</ul></div>` : ""}`;
+}
+const threatText = (label, text) => String(text||"").trim() ? `<h2 class="cast-h">${esc(label)}</h2><p class="threat-text">${esc(text)}</p>` : "";
+function entryPageHtml(found){
+  const { pack, entry:e }=found, multi=packsMemo.length>1;
+  const tier=e.tier!==null && (pack.tiers.find(t=>t.id===e.tier) || { id:e.tier, name:"" });
+  const meta=[ e.ref.trim() && esc(e.ref), found.origin && packChipHtml(pack, "origins", found.origin),
+    found.npcRoles.length && `NPC role: ${found.npcRoles.map(r=>packChipHtml(pack, "npcRoles", r)).join(" / ")}`,
+    found.enemyRole && `Enemy: ${packChipHtml(pack, "enemyRoles", found.enemyRole)}`,
+    tier && packChipHtml(pack, "tiers", tier, `Tier ${e.tier}`), multi && esc(packName(pack)) ].filter(Boolean).join(" · ");
+  const member=S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
+  const backText = member ? `Back to ${esc(member.name.trim() || "Unnamed")}` : S.threatGroup ? "Back to the group" : "Back to threats";
+  return `<p><button class="btn sm" data-tback="entry">${backText}</button></p>
+    <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(e.name.trim() || "Unnamed")}</h1>
+    ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
+    ${e.flavor.trim() ? `<p class="cast-line">${esc(e.flavor)}</p>` : ""}
+    <p><button class="btn primary" data-tuse>Use</button></p>
+    ${threatText("Description", e.description)}${threatText("What they want", e.motivation)}${threatText("What they've got", e.resources)}
+    ${threatText("Their line", e.line)}${threatText("If pushed", e.ifPushed)}
+    ${readBlockHtml(e.block)}
+    ${threatText("GM note", e.gmNote)}`;
+}
+function groupPageHtml({ pack, group:g, members }){
+  const o=g.origin && pack.origins.find(x=>x.id===g.origin);
+  const meta=[ g.ref.trim() && esc(g.ref), o && packChipHtml(pack, "origins", o), packsMemo.length>1 && esc(packName(pack)) ].filter(Boolean).join(" · ");
+  return `<p><button class="btn sm" data-tback="group">Back to threats</button></p>
+    <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(g.name.trim() || "Unnamed")}</h1>
+    ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
+    ${members.length ? `<h2 class="cast-h">Who's in it</h2><ul class="threat-list threat-members">${members.map(m=>
+      `<li>${m.count}× <button class="cast-open" data-tmember="${esc(entryKey(pack.meta.id, m.entry.id))}">${esc(m.entry.name.trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
+    ${threatText("The situation", g.situation)}${threatText("Tactics", g.tactics)}`;
+}
+// The page to draw, if one is open and its record is still there: a pack
+// removed in another tab leaves the list, not a page about nothing.
+function threatPageNow(){
+  const o=S.threatOpen;
+  if (o){ const found=Engine.packEntry(packsMemo, o.pack, o.id); if (found) return { html:entryPageHtml(found) }; S.threatOpen=null; }
+  const g=S.threatGroup;
+  if (g){ const hit=Engine.packGroups(packsMemo, {}).find(x=>x.pack.meta.id===g.pack && x.group.id===g.id); if (hit) return { html:groupPageHtml(hit) }; S.threatGroup=null; }
+  return null;
+}
+// An entry's page, from a card, a group's member or a cast member's From.
+// `group` or `member` (a cast member's id) says where Back returns; any other way in clears both.
+function openThreat(key, group, member){
+  const [pack, id]=String(key).split("|"), found=Engine.packEntry(packsMemo, pack, id); if (!found) return;
+  S.tsection="threats"; S.threatOpen={ pack, id }; S.threatGroup=group||null; S.threatMember=member||null;
+  if (!group) S.threatView = found.entry.kind==="npc" ? "npc" : "threat";
+  window.scrollTo(0,0); update();
+  const el=$("main").querySelector("[data-ttitle]"); if (el) el.focus();
+}
+// Under a member's title: where the copy came from, a button while the pack is here.
+function castFromHtml(n){
+  const l=Engine.entryLink(packsMemo, n.from); if (!l.packId) return "";
+  const name=esc(l.name.trim() || "Unnamed");
+  return `<p class="cast-from">From ${l.here ? `<button class="cast-open" data-tfrom="${esc(entryKey(l.packId, l.id))}">${name}</button>` : name}</p>`;
+}
+
+function redrawThreatList(){
+  const box=$("main").querySelector("[data-threatlist]"); if (!box) return;
+  box.innerHTML=threatListHtml();
+  bindThreatCards($("main"));
+}
+function bindThreatCards(main){
+  main.querySelectorAll("[data-tentry]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); openThreat(b.dataset.tentry); });
+  main.querySelectorAll("[data-tgroup]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); openGroup(b.dataset.tgroup); });
+  main.querySelectorAll("[data-tcard]").forEach(li=>li.onclick=ev=>{ if (ev.target.closest("button")) return;
+    const b=li.querySelector("[data-tentry], [data-tgroup]"); if (b) b.click(); });
+  const clear=main.querySelector("[data-tclear]");
+  if (clear) clear.onclick=()=>{ S.threatQ=""; S.threatOrigin=""; S.threatRole=""; S.threatEnemy=""; S.threatTier="";
+    for (const sel of ["[data-tsearch]","[data-torigin]","[data-trole]","[data-tenemy]","[data-ttier]"]){ const el=main.querySelector(sel); if (el) el.value=""; }
+    redrawThreatList(); const q=main.querySelector("[data-tsearch]"); if (q) q.focus(); };
+}
+function openGroup(key){
+  const [pack, id]=String(key).split("|");
+  if (!Engine.packGroups(packsMemo, {}).some(x=>x.pack.meta.id===pack && x.group.id===id)) return;
+  S.threatGroup={ pack, id }; S.threatOpen=null; window.scrollTo(0,0); update();
+  const el=$("main").querySelector("[data-ttitle]"); if (el) el.focus();
+}
+function bindThreats(main){
+  bindPackPicker(main);
+  const focusFirst = (...sels) => { for (const s of sels){ const el=$("main").querySelector(s); if (el){ el.focus(); if (document.activeElement===el) return; } } };
+  const back=main.querySelector("[data-tback]");
+  if (back){ bindThreatPage(main, back, focusFirst); return; }
+  main.querySelectorAll("[data-tview]").forEach(b=>b.onclick=()=>{ S.threatView=b.dataset.tview; renderTable(); focusFirst(attrSel("data-tview", S.threatView)); });
+  const q=main.querySelector("[data-tsearch]"); if (!q) return;
+  q.oninput=()=>{ S.threatQ=q.value; redrawThreatList(); };
+  for (const [sel, key] of [["[data-torigin]","threatOrigin"], ["[data-trole]","threatRole"], ["[data-tenemy]","threatEnemy"], ["[data-ttier]","threatTier"]]){
+    const el=main.querySelector(sel); if (el) el.onchange=()=>{ S[key]=el.value; redrawThreatList(); };
+  }
+  bindThreatCards(main);
+}
+function bindThreatPage(main, back, focusFirst){
+  const entry=S.threatOpen, group=S.threatGroup;
+  back.onclick=()=>{
+    const member=entry && S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
+    if (member){
+      S.tsection="cast"; S.castOpen=member.id; S.castFrom=null; S.intAdd=null; S.threatOpen=null; S.threatMember=null;
+      window.scrollTo(0,0); update(); focusFirst("[data-tfrom]", "[data-cback]"); return;
+    }
+    S.threatMember=null;
+    if (entry && group){ S.threatOpen=null; window.scrollTo(0,0); update(); focusFirst(attrSel("data-tmember", entryKey(entry.pack, entry.id)), "[data-tback]"); return; }
+    const key = entry ? entryKey(entry.pack, entry.id) : group ? entryKey(group.pack, group.id) : "";
+    S.threatOpen=null; S.threatGroup=null; window.scrollTo(0,0); update();
+    focusFirst(attrSel(entry ? "data-tentry" : "data-tgroup", key), "[data-tsearch]", "[data-tview]");
+  };
+  main.querySelectorAll("[data-tmember]").forEach(b=>b.onclick=()=>openThreat(b.dataset.tmember, group));
+  const use=main.querySelector("[data-tuse]");
+  if (use) use.onclick=()=>{
+    const found=Engine.packEntry(packsMemo, entry.pack, entry.id); if (!found){ notice("No such entry."); return; }
+    const r=Engine.castFromEntry(S.table, found.pack, entry.id); if (!r.ok){ notice(r.why); return; }
+    // The copy opens, in the cast, with its name selected: a Street Tough is Vinnie from here. A filter that would hide it is cleared.
+    S.tsection="cast"; S.castOpen=r.id; S.castFrom=null; S.intAdd=null; S.castView="cast"; S.threatMember=null;
+    if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===r.id)){ S.castQ=""; S.castStatus="inplay"; S.castAff=""; }
+    window.scrollTo(0,0); update();
+    const el=$("main").querySelector('[data-cf="name"]'); if (el){ el.focus(); el.select(); }
   };
 }

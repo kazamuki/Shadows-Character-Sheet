@@ -3,7 +3,7 @@
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §2, §4b, §6 *S9*, GQ10; W62 and
 W63 (`WISHLIST.md`).
 **Status:** drafted 2026-10-05 by Claude (Opus), after reviewing S8b's PR
-(#117). **§4 answered by Ken, 2026-10-05** (every default taken). Ready to build once Ken approves the order.
+(#117). **§4 answered by Ken, 2026-10-05** (every default taken). **Built 2026-10-06** (PR #119). **Review fix round landed** (six fixes, no decision touched): in §8's table, *From <name>* on a member's page now has **Back to <member>** return to that member's page on the Cast tab and focus its From button (it falls back to the Threats list if the member is gone); every other way into an entry is as the table says.
 **Branch:** from `main` **once #117 and its fix round are merged**, PR to
 `main`, switched off (Decision 173).
 **Runs alone.** It touches `engine.js`'s Tables section, `gm.js`, one line
