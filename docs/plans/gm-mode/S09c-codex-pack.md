@@ -3,7 +3,7 @@
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §6 *S9*, GQ6, GQ10, GQ12, GQ17,
 GQ22 (new).
 **Status:** drafted 2026-10-06 by Claude (Opus), after #121 (S9b) merged
-with its fix round (README step 7). **§4 awaits Ken.**
+with its fix round (README step 7). **§4 answered by Ken, 2026-10-06**, SQ9 changed to the book's labels on the orchestrator's recommendation. Approved to build.
 **Branch:** from `main` at or after `aab360b`, PR to `main`. The pack itself
 is committed in the private repo; the public PR carries the build's tests,
 one engine fix, the npm script and the moved submodule pointer.
@@ -161,7 +161,7 @@ Paste after 185, under INDEX §3's **GM mode** heading, filling **Built**.
 ```
 186. **The Threat Codex pack is built by a script in `private/` from the mirror, and an id ledger keyed by the book's names keeps every record's id across rebuilds.**
      *2026-10-0X · Ken + Claude · Touches: Threat Codex pack, private/gm, build-codex-pack, ids.json, npm run codex-pack, pack meta.id, contentVersion, Stat Audit, Decision 167, Decision 180, Decision 181, Decision 182, GQ6, GQ10, GQ17, GQ22*
-     - **Decided:** `private/gm/build-codex-pack.mjs` reads the mirror (the human Codex for entries, groups and the glossary; v2 for roles, origins, tiers and the roster; the Stat Audit for every stat it lists) and writes `private/gm/threat-codex.shadows-pack.json`, committed in the private repo. `private/gm/ids.json` maps each record's name in the book to a permanent id; renumbering changes only `ref`, and a name the ledger doesn't know stops the build until a person says whether it is new or renamed. Ids are never reused.
+     - **Decided:** `private/gm/build-codex-pack.mjs` reads the mirror (the human Codex for entries, groups, the glossary and the tiers' names; v2 for roles, origins, tiers and the roster; the Stat Audit for every stat it lists) and writes `private/gm/threat-codex.shadows-pack.json`, committed in the private repo. `private/gm/ids.json` maps each record's name in the book to a permanent id; renumbering changes only `ref`, and a name the ledger doesn't know stops the build until a person says whether it is new or renamed. Ids are never reused.
      - **Why:** the Codex is still moving, and a rebuilt pack replaces the old (181); cast copies point at entries by id (182), so ids must outlive the book's numbering and survive a re-pull. A person decides a rename because no script can tell a rename from a new entry.
      - **Rejected:**
        - The pack typed by hand: 53 entries and 114 traits re-typed on every Codex change.
@@ -170,7 +170,7 @@ Paste after 185, under INDEX §3's **GM mode** heading, filling **Built**.
        - The builder in the public `tools/`: it encodes the book's structure, and the public repo shouldn't have to change when the book's layout does (167).
        - The mirror's stats over the audit's: the audit is Scott's newer copy, with TOL corrected (GQ6).
      - **Replaces:** nothing.
-     - **Revisit if:** Scott keeps the Codex as structured data of his own, or GQ17 brings the supernatural sections in.
+     - **Revisit if:** Scott keeps the Codex as structured data of his own, his documents are combined (a reconciliation pass over the ledger, the whole Codex at once), or GQ17 brings the supernatural sections in.
      - **Built:** pack content `<contentVersion>`; PR #__; private repo `<commit>`; log 2026-10-0X.
 
 187. **Pack names match with case and apostrophes folded: `’`, `‘` and `ʼ` read as `'`, in every match and search.**
@@ -190,18 +190,20 @@ decision either overrides, stop and ask.
 
 ## 4. Questions for Ken
 
-| # | Question | Default |
-|---|---|---|
-| SQ1 | **The builder, its ledger and the built pack live in `private/gm/`**, run from the public repo by `npm run codex-pack`. The public repo carries only the tests, which read no Codex words. | **Yes** |
-| SQ2 | **Where each part comes from:** entries, groups and glossary from the human Codex; roles, enemy roles, origins, tiers and the roster from v2; **every stat, TOL and WILL from the Stat Audit** where it lists the record (9 TOLs differ from the mirror; the audit is newer). | **Yes** |
-| SQ3 | **Ids:** a ledger keyed by the book's name. Renumbering changes `ref` only. A new or renamed name stops the build; `--add "<name>"` records a new one as a slug, `--rename "<old>" "<new>"` moves an id to a new name. A retired id is kept in the ledger and never reused. | **Yes** |
-| SQ4 | **Out of the pack:** the drone reference (S10), the Trait Library (S13), anything supernatural (S12, GQ17). The T4 tier row is in. | **Yes** |
-| SQ5 | **The book's quirks kept as printed** (175: a block is what the book prints): the Architect's and the Converted's bold design notes stay in their traits; *Sanctified Rosary — if carried* keeps its name. All eight trait mismatches go to Scott as **GQ22**. Or move the two design notes into the entry's GM Note? | **As printed**, and GQ22 |
-| SQ6 | **Gear:** one block line per `;`-separated part, *or* and *optionally* kept inside the line, as the book wrote them. | **Yes** |
-| SQ7 | **The roster:** `kind: "npc"`, `name` the person (*Bob*), `ref` the title (*The Café Owner*), the Push Profile and the *Use Entry 05…* line under it in `ifPushed`, no Health or armor (the roster prints none), and a block with the stats and skills. | **Yes** |
-| SQ8 | **The pack's name and version:** `name` *Threat Codex (human origins)*; `contentVersion` the sources' dates, *Codex 2026-09 · v2 2026-10-02 · audit 2026-10-03*. `meta.id` fixed once in the ledger: `PK-C0DEX7H4`. | **Yes** |
-| SQ9 | **Tier names:** v2's table has none, so `name` is empty and the builder chip reads *Tier 2* (S9b's fallback). Or use the *How to Read* labels (*Baseline pressure*, *Specialist function*…)? | **Empty**, the book names none |
-| SQ10 | **Apostrophe folding (187) in this PR**, not a fix session of its own. | **Yes**: it's what makes the real pack's count right |
+Answered by Ken, 2026-10-06. Each row keeps the default it offered.
+
+| # | Question | Default | Answer |
+|---|---|---|---|
+| SQ1 | **The builder, its ledger and the built pack live in `private/gm/`**, run from the public repo by `npm run codex-pack`. The public repo carries only the tests, which read no Codex words. | **Yes** | **Yes** |
+| SQ2 | **Where each part comes from:** entries, groups and glossary from the human Codex; roles, enemy roles, origins, tiers and the roster from v2; **every stat, TOL and WILL from the Stat Audit** where it lists the record (9 TOLs differ from the mirror; the audit is newer). | **Yes** | **Yes.** The sources may change; the shape holds |
+| SQ3 | **Ids:** a ledger keyed by the book's name. Renumbering changes `ref` only. A new or renamed name stops the build; `--add "<name>"` records a new one as a slug, `--rename "<old>" "<new>"` moves an id to a new name. A retired id is kept in the ledger and never reused. | **Yes** | **Yes.** A later pass may reconcile the ledger when Scott combines documents: the whole Codex at once, a session of its own |
+| SQ4 | **Out of the pack:** the drone reference (S10), the Trait Library (S13), anything supernatural (S12, GQ17). The T4 tier row is in. | **Yes** | **Yes.** None of the four is built here; each comes in once approved |
+| SQ5 | **The book's quirks kept as printed** (175: a block is what the book prints): the Architect's and the Converted's bold design notes stay in their traits; *Sanctified Rosary — if carried* keeps its name. All eight trait mismatches go to Scott as **GQ22**. Or move the two design notes into the entry's GM Note? | **As printed**, and GQ22 | **As printed**, and GQ22 |
+| SQ6 | **Gear:** one block line per `;`-separated part, *or* and *optionally* kept inside the line, as the book wrote them. | **Yes** | **Yes** |
+| SQ7 | **The roster:** `kind: "npc"`, `name` the person (*Bob*), `ref` the title (*The Café Owner*), the Push Profile and the *Use Entry 05…* line under it in `ifPushed`, no Health or armor (the roster prints none), and a block with the stats and skills. | **Yes** | **Yes** |
+| SQ8 | **The pack's name and version:** `name` *Threat Codex (human origins)*; `contentVersion` the sources' dates, *Codex 2026-09 · v2 2026-10-02 · audit 2026-10-03*. `meta.id` fixed once in the ledger: `PK-C0DEX7H4`. | **Yes** | **Yes** |
+| SQ9 | **Tier names:** v2's table has none, so `name` is empty and the builder chip reads *Tier 2* (S9b's fallback). Or use the *How to Read* labels (*Baseline pressure*, *Specialist function*…)? | **Empty**, the book names none | **The book's labels** (Ken took the recommendation: a chip reading *Tier 2* beside a field reading 2 tells the GM nothing). Only the first letter is capitalised |
+| SQ10 | **Apostrophe folding (187) in this PR**, not a fix session of its own. | **Yes**: it's what makes the real pack's count right | **Yes** |
 
 ## 5. Read first
 
@@ -264,7 +266,7 @@ private/gm/threat-codex.shadows-pack.json   // the output, committed
     lists;
   - a stat in the audit that isn't a whole number;
   - a section the parser expected and didn't find (no glossary, no tier
-    table): a structure change in the book.
+    table, no tier label in *How to Read*): a structure change in the book.
 - Deterministic: records in the book's order, keys in a fixed order, no
   timestamps but `meta.created` and `meta.updated`, which come from the
   ledger (`created` fixed at first build; `updated` the newest source date).
@@ -310,7 +312,7 @@ private/gm/threat-codex.shadows-pack.json   // the output, committed
 | `origins[]` | v2 *Origin Modifiers* | `name` as printed (*Street*); `text` the stat profile and formation notes, two paragraphs; `modifiers` parsed from the modifier cell (`–` is a minus) |
 | `npcRoles[]` | v2 *NPC Roles* | `name`; `text` the three columns as three short lines, each with its column's heading |
 | `enemyRoles[]` | v2 *Enemy Roles* | `name`; `tier` from *T1*–*T4*; `text` the function, what removing them does, and the pressure, as three lines |
-| `tiers[]` | v2 *Tiers* | `id` 1–4; `name` "" (SQ9); `text` the encounter-role column; `statGuide` the stat-profile column; `traitGuide` the traits column |
+| `tiers[]` | v2 *Tiers*; the human Codex's *How to Read an Entry* | `id` 1–4; `name` the *Tier* row's label for that tier (*T2 (specialist function)* → *Specialist function*; each the whole bracketed label, first letter capitalised: T4/Apex's is *Campaign-level, one-of-a-kind*; SQ9); `text` the encounter-role column; `statGuide` the stat-profile column; `traitGuide` the traits column |
 | `traits[]` | human *Trait Glossary* | `name`, `text` the mechanical summary; `kind` from the type column, lower-cased; `origin` from the section head it sits under (an origin's id), `null` under Universal and Drone |
 | `entries[]` (42 threats) | human *ENTRY NN* | `kind: "threat"`; `ref` *Entry NN*; `name`; `flavor` the blockquote line; `description` the paragraphs before the stat table; `gmNote` the GM Note blockquote's text; `origin` the section's origin; `npcRoles` and `enemyRole` the role line, split on `/`, `None` → null; `tier` the number; `motivation`, `resources`, `line`, `ifPushed` "" |
 | `entries[].block` | the stat table, the audit | `stats` and `authored` (TOL, WILL) **from the audit row** (SQ2); `skills` `[{ name, total, skill }]` with `skill` the data's id by name, else by name + `s`, else `null`; `armor` the Armor line's text, one line; `gear` one line per `;` part (SQ6); `traits` `[{ name, text }]` from each bold-named paragraph under TRAITS, as printed (SQ5) |
