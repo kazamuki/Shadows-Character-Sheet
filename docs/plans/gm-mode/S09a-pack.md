@@ -3,7 +3,7 @@
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §2, §4b, §6 *S9*, GQ10; W62 and
 W63 (`WISHLIST.md`).
 **Status:** drafted 2026-10-05 by Claude (Opus), after reviewing S8b's PR
-(#117). **Not approved.** §4's questions wait on Ken.
+(#117). **§4 answered by Ken, 2026-10-05** (every default taken). Ready to build once Ken approves the order.
 **Branch:** from `main` **once #117 and its fix round are merged**, PR to
 `main`, switched off (Decision 173).
 **Runs alone.** It touches `engine.js`'s Tables section, `gm.js`, one line
@@ -224,9 +224,9 @@ over, trim its *Why*, not a *Rejected* line.
 
 ## 4. Questions for Ken
 
-Each has the default the build takes. **Answer before approving.**
+All nine answered by Ken, 2026-10-05: every default taken. On SQ1, Ken: splitting keeps each review cycle small, which has worked so far. On SQ2: the app reads our own file kinds rather than inventing a new one per use.
 
-| # | Question | Default |
+| # | Question | Answer |
 |---|---|---|
 | SQ1 | **Split S9** into S9a (pack, Threats tab, Use), S9b (builder, glossary, matching cast text), S9c (the real Codex pack, built in `private/`)? | **Yes** |
 | SQ2 | **One pack kind for the GM's book and W63's core game?** `meta.kind: "shadows-pack"`, sections by name; S9a reads the GM sections and keeps any other | **Yes**: W63 would otherwise need a second file kind |
