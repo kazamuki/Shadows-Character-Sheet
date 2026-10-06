@@ -3733,3 +3733,20 @@ test("187: crewView's search folds apostrophes too", () => {
   assert.equal(Engine.crewView(t, { q: "marta’s" }).length, 1);
   assert.equal(Engine.crewView(t, { q: "marta‘x" }).length, 0);
 });
+
+test("187: castAffiliations and packChoices list a name once when it differs only by an apostrophe", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "A" }); Engine.addCastMember(t, { name: "B" });
+  Engine.editCastMember(t, t.cast[1].id, { affiliations: ["Harbor’s Own"] });
+  Engine.editCastMember(t, t.cast[0].id, { affiliations: ["harbor's own", "Other"] });
+  eq(Engine.castAffiliations(t), ["Harbor’s Own", "Other"]);
+  const a = Engine.migratePack(syntheticPack({
+    origins: [{ id: "o1", name: "Gull’s Reach", text: "" }],
+    traits: [{ id: "x", name: "X", kind: "origin", origin: "o1", text: "" }] }));
+  const b = Engine.migratePack(syntheticPack({
+    meta: { ...syntheticPack().meta, id: "PK-ZZZZ9999", name: "Second" },
+    origins: [{ id: "o1", name: "GULL'S REACH", text: "" }],
+    traits: [{ id: "x", name: "X", kind: "origin", origin: "o1", text: "" }] }));
+  const c = Engine.packChoices([a, b]);
+  eq(c.origins, ["Gull’s Reach"]); eq(c.traitOrigins, ["Gull’s Reach"]);
+});

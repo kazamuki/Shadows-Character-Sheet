@@ -3524,7 +3524,7 @@ const Engine = (() => {
     const seen = new Map();
     for (const n of (Array.isArray(t && t.cast) ? t.cast : []).slice().reverse())   // oldest first, so the first spelling is the first written
       for (const a of (Array.isArray(n.affiliations) ? n.affiliations : [])){
-        const s = _str(a).trim(); if (s && !seen.has(s.toLowerCase())) seen.set(s.toLowerCase(), s);
+        const s = _str(a).trim(); if (s && !seen.has(_fold(s))) seen.set(_fold(s), s);
       }
     return [...seen.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
   }
@@ -3736,7 +3736,7 @@ const Engine = (() => {
     const pick = key => {
       const seen = new Map();
       for (const p of _packList(packs)) for (const r of _list(p[key])){
-        const s = _str(r.name).trim(); if (s && !seen.has(s.toLowerCase())) seen.set(s.toLowerCase(), s);
+        const s = _str(r.name).trim(); if (s && !seen.has(_fold(s))) seen.set(_fold(s), s);
       }
       return [...seen.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
     };
@@ -3747,7 +3747,7 @@ const Engine = (() => {
     }
     const traitOrigins = new Map();
     for (const p of _packList(packs)) for (const t of _list(p.traits)){
-      const s = _nameOf(p.origins, t.origin).trim(); if (s && !traitOrigins.has(s.toLowerCase())) traitOrigins.set(s.toLowerCase(), s);
+      const s = _nameOf(p.origins, t.origin).trim(); if (s && !traitOrigins.has(_fold(s))) traitOrigins.set(_fold(s), s);
     }
     return { origins:pick("origins"), npcRoles:pick("npcRoles"), enemyRoles:pick("enemyRoles"), tiers:[...tiers].sort((a, b)=>a - b),
              traitOrigins:[...traitOrigins.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase())) };

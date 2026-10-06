@@ -32,8 +32,8 @@ const RECORD_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
 const STATS = ["BOD", "REF", "MOB", "INT", "TECH", "COOL", "MAG", "EMP", "TOL", "WILL"];
 const ENTRIES = [
   { key: "a", n: 1, name: "Brindle Hound", sec: 0, role: "Lampwright", enemy: "Grindstone", tier: 1, s: [6, 5, 6, 3, 4, 5, 4, 5, 1, 2], audit: { TOL: 3 },
-    skills: "Combat Sense (6), Handgun (6), Lampwork (4)", armor: "Tin Coat (PROT 1d4, RES +2)",
-    gear: "Tin Spoon (DMG 1); Brass Fist (DMG 2) or Salt Gun (DMG 3)", traits: [["Salt Rampart", "Holds the door."], ["Fennick’s Promise", "Keeps one back."]] },
+    skills: "Combat Sense (6), Handgun (6), Lampwork (4)", armor: "Tin Coat (PROT 1d4, RES +2) ⚠",
+    gear: "Tin Spoon (DMG 1, 1,200Ç) ⚠, Brass Fist (DMG 2) or Salt Gun (DMG 3), Slate Knife 1,200Ç; Pocket Watch — kept, wound nightly, Glass Eye", traits: [["Salt Rampart", "Holds the door."], ["Fennick’s Promise", "Keeps one back."]] },
   { key: "b", n: 2, name: "Ashwick Clerk", sec: 0, role: "Tidecaller", enemy: "Skimmer", tier: 2, s: [5, 7, 8, 3, 4, 6, 4, 5, 1, 2], audit: {},
     skills: "Combat Sense (7), Handguns (8)", armor: "Denim Rag (PROT 1d4)", gear: "Slate Pen (DMG 1)", traits: [["Salt Rampart", "Holds the door."]] },
   { key: "c", n: 3, name: "Tallow Saint", sec: 1, role: "Lampwright / Tidecaller", enemy: "None", tier: 2, s: [8, 5, 5, 3, 4, 6, 4, 4, 2, 3], audit: {},
@@ -284,14 +284,16 @@ const idsOf = (pack, sec) => Object.fromEntries(pack[sec].map(r => [r.name, r.id
 // ── buildPack() on the made-up codex ────────────────────────────────────────
 test("the made-up codex builds, and what it builds is a pack the engine keeps whole", () => {
   const src = codex(), ledger = ledgerFor(src), r = build(src, ledger);
-  assert.deepEqual(r.problems, []); assert.deepEqual(r.warnings, []);
+  assert.deepEqual(r.problems, []);
+  assert.equal(r.warnings.length, 1, r.warnings.join("\n")); assert.match(r.warnings[0], /Entry 01.*comma after a dash.*Pocket Watch/);
   const p = r.pack;
   assert.equal(p.entries.length, 4); assert.equal(p.groups.length, 2); assert.equal(p.traits.length, 3);
   assert.deepEqual(plain(Engine.migratePack(plain(p))), plain(p), "nothing dropped, nothing coerced");
   const a = p.entries[0];
   assert.equal(a.ref, "Entry 01"); assert.equal(a.origin, "zephyrine"); assert.deepEqual(a.npcRoles, ["lampwright"]); assert.equal(a.enemyRole, "grindstone");
   assert.equal(a.block.authored.TOL, 3, "TOL is the audit's, not the table's 1");
-  assert.deepEqual(a.block.gear, ["Tin Spoon (DMG 1)", "Brass Fist (DMG 2) or Salt Gun (DMG 3)"], "one line per ;, an or kept inside the line");
+  assert.deepEqual(a.block.gear, ["Tin Spoon (DMG 1, 1,200Ç)", "Brass Fist (DMG 2) or Salt Gun (DMG 3)", "Slate Knife 1,200Ç", "Pocket Watch — kept, wound nightly, Glass Eye"],
+    "one line per item: split on ; and on , outside parentheses; 1,200 and an or stay whole; a comma after a dash stays in its line; the ⚠ and its space are gone");
   assert.deepEqual(a.block.armor, ["Tin Coat (PROT 1d4, RES +2)"]);
   assert.equal(a.description, "A description of Brindle Hound.\n\nA second paragraph.");
   assert.equal(a.gmNote, "Run Brindle Hound quietly.", "the GEAR FLAG note lands nowhere");
@@ -500,4 +502,55 @@ test("every entry's authored TOL and WILL, and every stat, are its Stat Audit ro
     assert.equal(e.block.authored.TOL, row.TOL, `${e.name} TOL`); assert.equal(e.block.authored.WILL, row.WILL, `${e.name} WILL`);
     assert.deepEqual(e.block.stats, row.stats, `${e.name} stats`);
   }
+});
+
+test("the ledger's rename and retire: the normal cases, and what each refuses", () => {
+  const { ledgerRename, ledgerRetire } = builder();
+  const ledger = () => ({ sections: { entries: { Old: "old", Taken: "taken", Kept: "kept" }, groups: { Twin: "twin-g" }, traits: { Twin: "twin-t" },
+    origins: {}, npcRoles: {}, enemyRoles: {} }, retired: {} });
+  const book = (o = {}) => ({ entries: [], groups: [], traits: [], origins: [], npcRoles: [], enemyRoles: [], ...o });
+  // rename: the id moves
+  let l = ledger();
+  ledgerRename(l, book({ entries: ["New", "Taken", "Kept"] }), "Old", "New");
+  assert.deepEqual(l.sections.entries, { Taken: "taken", Kept: "kept", New: "old" });
+  // refused: the new name already has an id (nothing else changes)
+  l = ledger();
+  assert.throws(() => ledgerRename(l, book({ entries: ["Taken", "Kept"] }), "Old", "Taken"), /entries: "Taken" already has an id \(taken\)/);
+  assert.deepEqual(l, ledger(), "a refusal changes nothing");
+  // refused: the old name is still in the book
+  assert.throws(() => ledgerRename(l, book({ entries: ["Old", "New"] }), "Old", "New"), /"Old" is still in the book/);
+  assert.deepEqual(l, ledger());
+  assert.throws(() => ledgerRename(l, book({ entries: ["Other"] }), "Old", "Other2"), /Nothing to rename/);
+  assert.deepEqual(l, ledger());
+  // retire: a name gone from the book
+  l = ledger();
+  ledgerRetire(l, book({ entries: ["Taken", "Kept"] }), "Old");
+  assert.deepEqual(l.retired, { entries: ["old"] }); assert.equal("Old" in l.sections.entries, false);
+  // retire acts only where the book no longer has the name: Twin is a group and a trait, and the book still prints the trait
+  l = ledger();
+  ledgerRetire(l, book({ traits: ["Twin"] }), "Twin");
+  assert.deepEqual(l.retired, { groups: ["twin-g"] }); assert.equal(l.sections.traits.Twin, "twin-t"); assert.equal("Twin" in l.sections.groups, false);
+  // refused: still in the book everywhere, or not in the ledger
+  l = ledger();
+  assert.throws(() => ledgerRetire(l, book({ groups: ["Twin"], traits: ["Twin"] }), "Twin"), /still in the book/);
+  assert.throws(() => ledgerRetire(l, book(), "Nobody"), /not in the ledger/);
+  assert.deepEqual(l, ledger());
+});
+
+test("no ⚠ reaches the made-up pack, in gear or armor", () => {
+  const src = codex(), p = build(src, ledgerFor(src)).pack;
+  assert.ok(!JSON.stringify(p).includes("⚠"));
+  assert.equal(p.entries[0].block.armor[0], "Tin Coat (PROT 1d4, RES +2)");
+});
+
+test("no text anywhere in the Codex pack carries the maintainers' ⚠ mark", () => {
+  assert.ok(!real().committed.includes("⚠"));
+});
+
+test("the Codex pack's gear is one line per item: none is over a long list, and none splits a price", () => {
+  const p = JSON.parse(real().committed), lines = p.entries.filter(e => e.kind === "threat").flatMap(e => e.block.gear);
+  assert.ok(lines.length > 100, `${lines.length} gear lines`);
+  assert.ok(lines.every(l => l.trim() === l && l.length > 0 && !l.startsWith(", ")));
+  assert.ok(lines.every(l => (l.match(/\(/g) || []).length === (l.match(/\)/g) || []).length), "no line cuts a parenthesis in two");
+  assert.ok(lines.every(l => !/[;]/.test(l.replace(/\([^)]*\)/g, ""))), "no ; left outside parentheses");
 });

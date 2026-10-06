@@ -665,8 +665,8 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 
 - **Data:** origins (seven), NPC roles (nine, Patron included: GQ4
   answered by v2), enemy roles (eight, each with v2's tier), tiers (four), entries (42), encounter groups (29),
-  traits (the glossary), the drone reference. Gear by catalog id where the
-  Gear tables have it; text where the ⚠ list says they don't.
+  traits (the glossary), the drone reference. Gear as text, one line per item
+  (the ⚠ marks stripped: S9c's fix round).
 - **The rolodex:** browse by origin, role and tier, as a **Threats** tab of
   the table (S9a, Decision 182: not `openCatalog`, which is the character's);
   a card per entry; **Use** copies it into the cast (S9a) or into a fight (S10).

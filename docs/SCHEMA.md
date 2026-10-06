@@ -4076,8 +4076,8 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** pack content `Codex 2026-09 · v2 2026-10-02 · audit 2026-10-03`; PR #123; private repo `c28d5b3`; log 2026-10-06.
 
 187. **Pack names match with case and apostrophes folded: `’`, `‘` and `ʼ` read as `'`, in every match and search.**
-     *2026-10-06 · Ken + Claude · Touches: _folded, castPackMatch, packFilter, packTraits, packGroups, castFilter, crewView, castAffiliations, trait count, Decision 184, Decision 185*
-     - **Decided:** the engine's name folding maps the three typographic apostrophes to `'` before comparing, on both sides of every comparison: a typed name against a record, and a search against the text it searches.
+     *2026-10-06 · Ken + Claude · Touches: _folded, castPackMatch, packFilter, packTraits, packGroups, castFilter, crewView, castAffiliations, packChoices, traitOrigins, trait count, Decision 184, Decision 185*
+     - **Decided:** the engine's name folding maps the three typographic apostrophes to `'` before comparing, on both sides of every comparison: a typed name against a record, and a search against the text it searches. The lists that show each name once (affiliations, the filters' origins and roles) key on the same fold.
      - **Why:** the book prints `’` in entries and `'` in the glossary, so a Use copy's trait counted as *written*; and a GM's keyboard types `'`.
      - **Rejected:**
        - Normalising the apostrophes in the built pack: it fixes the book's own mismatch but not a GM typing, and it changes the book's text.
