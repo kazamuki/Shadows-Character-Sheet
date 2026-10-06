@@ -3776,8 +3776,14 @@ const Engine = (() => {
       const hit = byName("traits", t.name);
       return { name:_str(t.name), pack:hit ? hit.pack : null, rec:hit ? hit.rec : null };
     });
-    const counts = { total:traits.length, universal:0, origin:0, signature:0, written:0 };
-    for (const t of traits) counts[t.rec && PACK_TRAIT_KINDS.includes(t.rec.kind) ? t.rec.kind : "written"]++;
+    // A row with neither name nor text isn't a trait yet (npc()'s rule for a filled one): it stays in `traits`, out of the count.
+    const rows = (_isObj(m.block) && Array.isArray(m.block.traits) ? m.block.traits : []).filter(_isObj);
+    const counts = { total:0, universal:0, origin:0, signature:0, written:0 };
+    traits.forEach((t, i)=>{
+      if (!_str(rows[i].name).trim() && !_str(rows[i].text).trim()) return;
+      counts.total++;
+      counts[t.rec && PACK_TRAIT_KINDS.includes(t.rec.kind) ? t.rec.kind : "written"]++;
+    });
     return {
       origin:byName("origins", m.origin),
       npcRoles:_roleList(m.npcRoles).map(name=>{ const hit = byName("npcRoles", name); return { name, pack:hit ? hit.pack : null, rec:hit ? hit.rec : null }; }),

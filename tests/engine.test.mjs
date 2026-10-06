@@ -3683,3 +3683,11 @@ test("nothing stored: castPackMatch and packTraits leave the member and the pack
   Engine.castPackMatch([p], member); Engine.packTraits([p], { q: "a", kind: "origin", origin: "dock" }); Engine.packChoices([p]);
   assert.equal(JSON.stringify([p, member]), before);
 });
+
+test("castPackMatch: a row with neither name nor text isn't counted, but still comes back in block order", () => {
+  const p = Engine.migratePack(syntheticPack());
+  const r = Engine.castPackMatch([p], { block: { traits: [{ name: "", text: "" }, { name: "Gull's Cry", text: "" }, { name: "  ", text: "x" }] } });
+  assert.equal(r.traits.length, 3);
+  eq(r.counts, { total: 2, universal: 0, origin: 0, signature: 1, written: 1 });
+  eq(Engine.castPackMatch([p], { block: { traits: [{ name: "", text: "" }, { name: " ", text: " " }] } }).counts, { total: 0, universal: 0, origin: 0, signature: 0, written: 0 });
+});

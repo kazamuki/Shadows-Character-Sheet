@@ -448,7 +448,8 @@ test("a hostile pack renders as text on Home, every Threats view, an entry, a gr
   found.push(...injected(app, "the copy's page"));
   assert.match(app.$(".cast-from").textContent, /^From /);
   // The builder (Decisions 183–185): the origin and tier match, so the modifiers and guides draw; the picker lists the glossary.
-  assert.ok(app.$("[data-cmod]").textContent !== undefined && app.$("[data-cstatguide]") && !app.$("[data-cstatguide]").hidden, "the matched guides didn't draw");
+  assert.match(app.$('[data-cmod="BOD"]').textContent, /\+1$/, "the matched origin's modifier didn't draw");
+  assert.ok(app.$("[data-cstatguide]") && !app.$("[data-cstatguide]").hidden && !app.$("[data-ctguide]").hidden, "the matched guides didn't draw");
   found.push(...injected(app, "the builder's guidance"));
   app.click("[data-ctpick]");
   assert.equal(app.$$("#modal [data-tpadd]").length, 2);

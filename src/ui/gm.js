@@ -419,7 +419,7 @@ function castStatBlockHtml(n){
       <button class="btn sm danger" data-ctdel="${i}">Remove</button></div>`).join("");
   return `<h2 class="cast-h">Stat block</h2>
     <p class="cast-health" data-chealth-row hidden>Health <b data-chealth></b></p>
-    ${packs ? `<p class="cast-guide" data-cstatguide hidden></p>` : ""}
+    ${packs ? `<p class="cast-guide" data-cmodnote hidden></p><p class="cast-guide" data-cstatguide hidden></p>` : ""}
     <div class="cast-stats">${stats}${authored}</div>
     <div class="cast-lines"><span class="cast-sub">Skills</span>${skills}<button class="btn sm" data-cskadd>Add a skill</button></div>
     ${lines("armor","Armor")}${lines("gear","Gear")}
@@ -552,6 +552,10 @@ function castGuide(main, n){
   const e=m.enemyRole, usual=e && e.rec.tier!==null && e.rec.tier!==n.tier ? e.rec.name.trim() || "Enemy role" : "";
   set("[data-ctier]", [ t && packChipHtml(t.pack, "tiers", t.rec, t.rec.name.trim() || `Tier ${tn}`),
     usual && `${/^[aeiou]/i.test(usual) ? "An" : "A"} ${esc(usual)} is usually Tier ${e.rec.tier}` ].filter(Boolean).join(" · "));
+  // A Use copy's numbers are the book's, which already include its origin: say so while the origin is still its entry's.
+  const from=n.from, src=from && from.kind==="entry" ? Engine.packEntry(packsMemo, from.pack, from.id) : null;
+  const same=src && m.origin && src.origin && m.origin.pack.meta.id===from.pack && m.origin.rec.id===src.origin.id && Object.keys(mods).length>0;
+  set("[data-cmodnote]", same ? `The book's stats for ${esc(src.entry.name.trim() || String(from.name||"").trim() || "Unnamed")} already include ${esc(who)}'s modifiers.` : "");
   set("[data-cstatguide]", guide("statGuide"));
   set("[data-ctguide]", guide("traitGuide"));
   const c=m.counts, bits=PACK_KINDS.map(([k,name])=>c[k] ? `${c[k]} ${name}` : "").concat(c.written ? `${c.written} written` : "").filter(Boolean);

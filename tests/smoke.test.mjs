@@ -4735,3 +4735,60 @@ test("Decisions 183–185: at a phone's width the toggles, a modifier and the pi
   assert.match(css, /\.trait-pick-head\{[^}]*overflow-wrap:anywhere/);
   assert.match(css, /\.cast-fig\{[^}]*overflow-wrap:anywhere/);
 });
+
+test("Decision 185 (review): a blank trait row isn't counted", () => {
+  const app = memberFromGull();
+  app.click("[data-ctadd]");
+  assert.equal(app.$("[data-ctcount]").hidden, true, "a blank row was counted");
+  app.click("[data-ctpick]"); app.click(`[data-tpadd="${PACK_ID}|gulls-cry"]`);
+  app.click("[data-ctadd]");
+  assert.equal(castSel(app).block.traits.length, 3);
+  assert.equal(app.$("[data-ctcount]").textContent, "1 trait: 1 Signature");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184 (review): a Use copy says the book's stats already include its origin, while the origin is still its entry's", () => {
+  const app = memberFromGull();
+  const note = () => app.$("[data-cmodnote]");
+  assert.equal(note().hidden, false);
+  assert.equal(note().textContent, "The book's stats for Gull already include Dock's modifiers.");
+  assert.equal(modOf(app, "BOD"), "Dock +1");
+  assert.equal(castSel(app).block.stats.BOD, 8);
+  const el = caretIn(app, '[data-cf="origin"]', "spire");
+  assert.equal(note().hidden, true, "the note stayed after the origin changed");
+  assert.equal(modOf(app, "MOB"), "Spire +1");
+  caretIn(app, '[data-cf="origin"]', "dock");
+  assert.equal(note().hidden, false);
+  assert.equal(app.doc.activeElement, el); assert.equal(el.selectionStart, 2);
+  assert.equal(app.$$('#main [role="alert"], #main .flag, #main .warn, #main .issues').length, 0);
+  type(app, '[data-cf="origin"]', "");
+  assert.equal(note().hidden, true, "no origin, no note");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184 (review): a quick-added member gets modifiers and no note; a copy whose pack is gone has no note at all", () => {
+  const app = tableWithPack();
+  app.click('[data-tsec="cast"]'); castAdd(app, "Dez"); app.click("[data-copen]");
+  type(app, '[data-cf="origin"]', "Dock");
+  assert.equal(app.$("[data-cmodnote]").hidden, true);
+  assert.equal(modOf(app, "BOD"), "Dock +1");
+  app.click("[data-cback]");
+  app.click('[data-tsec="threats"]'); app.$$("[data-tentry]").find(b => b.textContent === "Gull").click(); app.click("[data-tuse]");
+  assert.equal(app.$("[data-cmodnote]").hidden, false);
+  // The gate admits only kind "entry" today; the page checks it itself, so a future kind says nothing until it's decided.
+  app.window.eval('S.table.cast[0].from.kind = "other"');
+  type(app, '[data-cf="origin"]', "Dock");
+  assert.equal(app.$("[data-cmodnote]").hidden, true, "a link of another kind said the book's stats include the origin");
+  app.window.eval('S.table.cast[0].from.kind = "entry"');
+  type(app, '[data-cf="origin"]', "Dock");
+  assert.equal(app.$("[data-cmodnote]").hidden, false);
+  for (const k of packKeys(app)) app.window.localStorage.removeItem(k);
+  app.click("[data-cback]"); app.click("[data-copen]");
+  assert.equal(app.$("[data-cmodnote]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 184 (review): the note wraps", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /\.cast-guide\{[^}]*overflow-wrap:anywhere/);
+});
