@@ -78,11 +78,34 @@ From the build itself (*Where the order didn't fit*):
     "most stats 4–6".
   - **Signatures.** One Tier 1 entry has a Signature ("no Signatures"), and
     10 of the 17 Tier 3 entries have three or four ("1–2 Signatures").
+    The audit has no trait column, so these counts are the mirror's.
 
-  A range warning would fire on most of the book: the same finding as TOL's
-  formula (175, GQ6). So the guidance is shown as the book's words, and the
-  plan gains **GQ21** for Scott. The script is the order's, not the
-  build's. Rerun it in the review if the mirror changes.
+  **Rechecked 2026-10-06 against Scott's newer Stat Audit**
+  (`Threat_Codex - Stat Audit.xlsx`, 2026-10-03, which holds every
+  entry's current stats and tier): 14 of the 17 human Tier 3 entries sit
+  outside the table's band, 3 of 19 at Tier 2, and so do all 18 of the
+  supernatural Tier 3 drafts. A range warning would fire on most of the
+  book: the same finding as TOL's formula (175). So the guidance is shown
+  as the book's words, and the plan gains **GQ21** for Scott. The script
+  is the order's, not the build's. Rerun it in the review if the mirror
+  changes.
+- **The mirror is behind Scott's Codex.** The audit lists the roster's
+  TOL at its formula (Director Chen 5, Juno Park 3) where the mirror still
+  prints 3 and 2, and its review register cites a compiled
+  `Shadows_Threat_Codex_Complete_v1_1` the mirror doesn't have. Nothing in
+  S9b reads the Codex's numbers (the tests use the synthetic pack), so
+  S9b doesn't wait on it. S9c does: it builds from the compiled file.
+- **GQ6 looks answered by the audit**, not by a ruling: TOL is the formula
+  (an override allowed: the supernatural Wight's is fixed at 0), and WILL
+  is a floor (above it allowed, below it "an error"). That meets 175's
+  *Revisit if*. It changes what the block shows for TOL and WILL, not what
+  S9b builds, so it's SQ9, not part of this order.
+- **The supernatural review copy** (sections 08–14, 58 entries, "nothing
+  in this file is approved") adds an Order and a case (Bound, Changed,
+  Other) to each entry, and Order traits per section. GQ17 is still open,
+  so 183 doesn't add them. It's a pack schema bump of its own in S12. The
+  copy does treat the trait budget as binding (*Shown with a Syndicate
+  origin to stay within the trait budget*), which is for GQ21.
 - **The Codex's shape** (README step 5's new check, done here first):
   - The roster's Push Profiles are prose with references (*EG-04*,
     *Entry 11*), held by `ifPushed` as text. Linking them is S10's.
@@ -201,11 +224,11 @@ goes over, trim its *Why*, not a *Rejected* line.
      - **Decided:** Pack schema 0.2 adds `traits: [ { id, name, kind, origin, text } ]` (`kind` universal, origin or signature, else null; `origin` an origins id or null), `origins[].modifiers` (`{ <stat id>: whole number }`, the data's stats only, zeros dropped) and `tiers[].statGuide` and `traitGuide`, text. `migratePack()` gates each as 180 does. A 0.1 pack reads with none of them. Enemy roles' `tier` is read for the first time (184).
      - **Why:** the builder (184, 185) needs the glossary, the modifiers and the tier's words, and S9c's pack must hold them with no app change. Numbers where the book prints numbers; words where it prints a judgement.
      - **Rejected:**
-       - Tier ranges as numbers (a low and high per stat, a trait count) so the app could warn: the book's entries break them (13 of 17 Tier 3 entries have a stat under 5; 10 have more Signatures than allowed), so the numbers would be our reading, not the book's (GQ21).
+       - Tier ranges as numbers (a low and high per stat, a trait count) so the app could warn: the book's entries break them (14 of 17 Tier 3 entries have a stat outside the band; 10 have more Signatures than allowed), so the numbers would be our reading, not the book's (GQ21).
        - A trait's kind stored on the block when copied: the table would carry pack words, and a renamed trait would keep a kind it no longer has (185).
        - The glossary as a separate file: a pack is the book, and the traits are in it.
      - **Replaces:** nothing. 180's unread `traits` key is now read.
-     - **Revisit if:** Scott answers GQ21 with numbers the entries keep, or GQ17's Orders need modifiers of their own.
+     - **Revisit if:** Scott answers GQ21 with numbers the entries keep, or GQ17's Orders need modifiers, a case or a trait kind of their own.
      - **Built:** pack schema 0.2; PR #__; log 2026-10-0X.
 
 184. **The builder is the cast member's page reading the packs by name: it offers their origins, roles and tiers, and shows each one's guidance beside the block, never applying it and never warning.**
@@ -251,6 +274,7 @@ Each has the default the build takes.
 | SQ6 | **The glossary only inside the picker**, or also a **Traits** view on the Threats tab? | **Picker only.** References gathered on one screen are S13's |
 | SQ7 | **Rename Use** now (S10 adds "into a fight", so one verb would lead two places)? | **Not now.** S10 designs both buttons together; the plan's S10 gets a line saying so |
 | SQ8 | **NPC roles as toggles** under the text field (a datalist can't suggest after a `/`), or a datalist for the first role only? | **Toggles**, nine at most, wrapping |
+| SQ9 | **GQ6 looks answered by Scott's Stat Audit** (TOL the formula, with an override; WILL a floor, below it an error). Confirm with Scott and change what the block shows (175) in a small session of its own, or fold it into S9b? | **Confirm with Scott first, then its own session.** S9b stays as drafted |
 
 ## 5. Read first
 
