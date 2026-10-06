@@ -639,9 +639,11 @@ waits on it.
   stored as authored* (a deliberate exception to constraint 7's letter,
   because the Codex authors them), with whatever GQ6 says about the formula.
 
-**S8b (next):** **interactions** (§4e) on a member's page, history, the
-crew's-view list, and filters by affiliation, origin and role ("a roster
-with affiliations"), the affiliation as text until S7 makes it a link.
+**S8b (next, [order](gm-mode/S08b-interactions.md)):** **interactions**
+(§4e) on a member's page, dated until S5's sessions; the crew's view (*Who
+knows what*); and affiliations as text until S7 makes them links, with one
+Affiliation filter (origin and role stay in the search). **History** moves
+to a later session: S5 or S10, whichever first writes it (Ken, 2026-10-05).
 
 **Moved to S10:** **Keep** and **Promote** (a fought copy into the cast),
 with the fight they come from.
