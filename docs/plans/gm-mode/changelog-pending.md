@@ -13,3 +13,5 @@ something a GM can see adds its line here.
 - **Who knows what.** The cast remembers what passed between them and
   the crew, and a second view lists it by who was there. Affiliations
   too, so a roster of goblins comes apart.
+- **Threats.** Slot in a pack and its threats, people and groups are a
+  tab away, ready to read or to copy into your cast.

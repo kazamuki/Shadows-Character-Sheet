@@ -3274,6 +3274,17 @@ const Engine = (() => {
     for (const k of b.traits){ k.name = _str(k.name); k.text = _str(k.text); }
     return b;
   }
+  // Where a copy came from (Decision 182): an entry in a pack, by the pack's id,
+  // the entry's id and the name it had. The pack lives outside the table, so the
+  // name is stored; anything that isn't exactly that is nothing.
+  const PACK_ID_RE = /^PK-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const RECORD_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/;
+  function _castFrom(f){
+    if (!_isObj(f) || f.kind!=="entry" || typeof f.name!=="string") return null;
+    if (!(typeof f.pack==="string" && PACK_ID_RE.test(f.pack))) return null;
+    if (!(typeof f.id==="string" && RECORD_ID_RE.test(f.id))) return null;
+    return f;
+  }
   // One cast member, coerced the way a note is. `used` holds the ids taken.
   function _castMember(n, used){
     for (const k of CAST_TEXT) n[k] = _str(n[k]);
@@ -3284,6 +3295,7 @@ const Engine = (() => {
     if (!(typeof n.id==="string" && CAST_ID_RE.test(n.id)) || used.has(n.id)) n.id = newCastId(used);
     used.add(n.id);
     n.block = _block(n.block);
+    n.from = _castFrom(n.from);
     n.created = _isoOrNull(n.created);
     n.updated = _isoOrNull(n.updated);
   }
@@ -3317,7 +3329,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.3";
+  const TABLE_SCHEMA_VERSION = "0.4";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -3330,7 +3342,7 @@ const Engine = (() => {
     if (!_isObj(obj)) return "unknown";
     const m = obj.meta;
     if (!_isObj(m) || !("kind" in m)) return "character";
-    return m.kind==="shadows-table" ? "table" : "unknown";
+    return m.kind==="shadows-table" ? "table" : m.kind==="shadows-pack" ? "pack" : "unknown";
   }
   function migrateTable(t){
     // Work on a copy, so nothing aliases the caller's object. Unknown keys
@@ -3357,6 +3369,10 @@ const Engine = (() => {
     //   Schema 0.3 (Decision 177): a table gets interactions, and a cast member affiliations.
     if (typeof arrived!=="string" || _versionNewer("0.3", arrived)){
       if (!Array.isArray(c.interactions)) c.interactions = [];
+    }
+    //   Schema 0.4 (Decision 182): a cast member remembers the pack entry it was copied from.
+    if (typeof arrived!=="string" || _versionNewer("0.4", arrived)){
+      for (const n of (Array.isArray(c.cast) ? c.cast : [])) if (_isObj(n)) n.from = null;
     }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
@@ -3452,7 +3468,7 @@ const Engine = (() => {
     const used = new Set(t.cast.map(n=>n.id));
     const n = { id:newCastId(used), name:_str((f||{}).name), flavor:_str((f||{}).line), description:"",
                 origin:"", npcRoles:[], affiliations:[], enemyRole:"", tier:null, motivation:"", resources:"", line:"",
-                ifPushed:"", gmNote:"", status:"alive", block:null, created:now, updated:now };
+                ifPushed:"", gmNote:"", status:"alive", block:null, from:null, created:now, updated:now };
     t.cast.unshift(n);
     _tableStamp(t);
     return { ok:true, id:n.id };
@@ -3597,6 +3613,163 @@ const Engine = (() => {
     return out;
   }
 
+  // ── Packs (Decisions 180–182) ───────────────────────────────────────────
+  // A pack is a book a GM slots in: its own file, .shadows-pack.json, kept in
+  // the browser outside every table. migratePack() is its gate. An id is the
+  // author's, so a bad one is nothing (never a new one): the pack is refused,
+  // the record is dropped. The app never makes a pack.
+  const PACK_SCHEMA_VERSION = "0.1";
+  const isPackId = v => typeof v==="string" && PACK_ID_RE.test(v);
+  const _recordId = v => typeof v==="string" && RECORD_ID_RE.test(v) ? v : null;
+  // Coerce a section's records in place: objects with a good id, the first of each id.
+  function _packSection(list, fix, idOf){
+    const seen = new Set(), out = [];
+    for (const r of (Array.isArray(list) ? list : [])){
+      if (!_isObj(r)) continue;
+      const id = idOf(r.id);
+      if (id===null || seen.has(id)) continue;
+      seen.add(id);
+      r.id = id;
+      fix(r);
+      out.push(r);
+    }
+    return out;
+  }
+  function migratePack(p){
+    let c;
+    try { c = _isObj(p) ? JSON.parse(JSON.stringify(p)) : {}; } catch (e) { c = {}; }
+    if (!_isObj(c.meta)) c.meta = {};
+    const m = c.meta;
+    m.kind = "shadows-pack";
+    if (!(typeof m.id==="string" && PACK_ID_RE.test(m.id))) m.id = null;
+    m.name = _str(m.name);
+    m.contentVersion = _str(m.contentVersion);
+    m.created = _isoOrNull(m.created);
+    m.updated = _isoOrNull(m.updated);
+    if (!_versionNewer(m.packSchemaVersion, PACK_SCHEMA_VERSION)) m.packSchemaVersion = PACK_SCHEMA_VERSION;
+    const named = r => { r.name = _str(r.name); r.text = _str(r.text); };
+    c.origins = _packSection(c.origins, named, _recordId);
+    c.npcRoles = _packSection(c.npcRoles, named, _recordId);
+    c.enemyRoles = _packSection(c.enemyRoles, r=>{ named(r); r.tier = _tier(r.tier); }, _recordId);
+    c.tiers = _packSection(c.tiers, named, _tier);
+    const originIds = new Set(c.origins.map(o=>o.id)), roleIds = new Set(c.npcRoles.map(o=>o.id)),
+          enemyIds = new Set(c.enemyRoles.map(o=>o.id));
+    const textKeys = ["ref","name","flavor","description","motivation","resources","line","ifPushed","gmNote"];
+    c.entries = _packSection(c.entries, e=>{
+      for (const k of textKeys) e[k] = _str(e[k]);
+      if (e.kind!=="npc") e.kind = "threat";
+      e.origin = typeof e.origin==="string" && originIds.has(e.origin) ? e.origin : null;
+      e.npcRoles = [...new Set((Array.isArray(e.npcRoles) ? e.npcRoles : []).filter(x=>typeof x==="string" && roleIds.has(x)))];
+      e.enemyRole = typeof e.enemyRole==="string" && enemyIds.has(e.enemyRole) ? e.enemyRole : null;
+      e.tier = _tier(e.tier);
+      e.block = _block(e.block);
+    }, _recordId);
+    const entryIds = new Set(c.entries.map(e=>e.id));
+    c.groups = _packSection(c.groups, g=>{
+      for (const k of ["ref","name","situation","tactics"]) g[k] = _str(g[k]);
+      g.origin = typeof g.origin==="string" && originIds.has(g.origin) ? g.origin : null;
+      g.members = (Array.isArray(g.members) ? g.members : []).filter(x=>_isObj(x) && typeof x.entry==="string" && entryIds.has(x.entry));
+      for (const x of g.members) x.count = _tier(x.count) || 1;
+    }, _recordId);
+    return c;
+  }
+  function packCheck(p){
+    const m = _isObj(p) && _isObj(p.meta) ? p.meta : {};
+    const refuse = typeof m.id==="string" && PACK_ID_RE.test(m.id) ? null : "This pack has no id, so it can't be slotted in.";
+    const warnings = _versionNewer(m.packSchemaVersion, PACK_SCHEMA_VERSION)
+      ? ["This pack was saved by a newer version of the app. What this version doesn't know is kept, but not shown."] : [];
+    return { refuse, warnings };
+  }
+  // Every reader takes a list of packs, so two slotted in at once cost nothing
+  // (Decision 182). What isn't a pack, or has no list where a list belongs, is skipped.
+  const _packList = packs => (Array.isArray(packs) ? packs : []).filter(p=>_isObj(p) && _isObj(p.meta));
+  const _list = v => Array.isArray(v) ? v.filter(_isObj) : [];
+  const _byId = (list, id) => _list(list).find(r=>r.id===id) || null;
+  const _nameOf = (list, id) => { const r = _byId(list, id); return r ? _str(r.name) : ""; };
+  // The words a search and a filter read from an entry: its origin's and roles' names.
+  function _entryWords(p, e){
+    return { origin:_nameOf(p.origins, e.origin),
+             roles:(Array.isArray(e.npcRoles) ? e.npcRoles : []).map(id=>_nameOf(p.npcRoles, id)).filter(Boolean),
+             enemy:_nameOf(p.enemyRoles, e.enemyRole) };
+  }
+  function packFilter(packs, f){
+    f = _isObj(f) ? f : {};
+    const q = _folded(f.q), origin = _folded(f.origin), role = _folded(f.npcRole), enemy = _folded(f.enemyRole),
+          tier = _tier(f.tier), view = f.view==="npc" ? "npc" : "threat", out = [];
+    for (const pack of _packList(packs)) for (const entry of _list(pack.entries)){
+      if ((entry.kind==="npc" ? "npc" : "threat")!==view) continue;
+      const w = _entryWords(pack, entry);
+      if (origin && _folded(w.origin)!==origin) continue;
+      if (role && !w.roles.some(r=>_folded(r)===role)) continue;
+      if (enemy && _folded(w.enemy)!==enemy) continue;
+      if (tier!==null && _tier(entry.tier)!==tier) continue;
+      if (q && ![entry.name, entry.ref, entry.flavor, w.origin, w.enemy, ...w.roles].some(x=>_str(x).toLowerCase().includes(q))) continue;
+      out.push({ pack, entry });
+    }
+    return out;
+  }
+  // The choices a filter offers: each name once (case folded), as first spelled, A–Z.
+  function packChoices(packs){
+    const pick = key => {
+      const seen = new Map();
+      for (const p of _packList(packs)) for (const r of _list(p[key])){
+        const s = _str(r.name).trim(); if (s && !seen.has(s.toLowerCase())) seen.set(s.toLowerCase(), s);
+      }
+      return [...seen.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+    };
+    const tiers = new Set();
+    for (const p of _packList(packs)){
+      for (const r of _list(p.tiers)){ const n = _tier(r.id); if (n!==null) tiers.add(n); }
+      for (const e of _list(p.entries)){ const n = _tier(e.tier); if (n!==null) tiers.add(n); }
+    }
+    return { origins:pick("origins"), npcRoles:pick("npcRoles"), enemyRoles:pick("enemyRoles"), tiers:[...tiers].sort((a, b)=>a - b) };
+  }
+  // One entry with its records, not its ids: what a page reads. Null when there isn't one.
+  function packEntry(packs, packId, id){
+    const pack = _packList(packs).find(p=>p.meta.id===packId);
+    const entry = pack ? _byId(pack.entries, id) : null;
+    if (!pack || !entry) return null;
+    return { pack, entry, origin:_byId(pack.origins, entry.origin),
+             npcRoles:(Array.isArray(entry.npcRoles) ? entry.npcRoles : []).map(r=>_byId(pack.npcRoles, r)).filter(Boolean),
+             enemyRole:_byId(pack.enemyRoles, entry.enemyRole) };
+  }
+  function packGroups(packs, f){
+    const q = _folded((f||{}).q), out = [];
+    for (const pack of _packList(packs)) for (const group of _list(pack.groups)){
+      const members = _list(group.members).map(x=>({ entry:_byId(pack.entries, x.entry), count:_tier(x.count) || 1 })).filter(x=>x.entry);
+      if (q && ![group.name, group.ref, ...members.map(x=>x.entry.name)].some(x=>_str(x).toLowerCase().includes(q))) continue;
+      out.push({ pack, group, members });
+    }
+    return out;
+  }
+  // Use (Decision 182): a copy of an entry, first in the cast. Names, not ids,
+  // for the origin and roles, since the copy outlives the pack. Never changes
+  // with the pack afterwards.
+  function castFromEntry(t, pack, id){
+    const found = _isObj(pack) && _isObj(pack.meta) ? packEntry([pack], pack.meta.id, id) : null;
+    if (!found) return { ok:false, why:"No such entry." };
+    const e = found.entry, now = new Date().toISOString();
+    const used = new Set(t.cast.map(n=>n.id));
+    let block = null;
+    try { block = _isObj(e.block) ? JSON.parse(JSON.stringify(e.block)) : null; } catch (x) {}
+    const n = { id:newCastId(used), name:_str(e.name), flavor:_str(e.flavor), description:_str(e.description),
+                origin:found.origin ? _str(found.origin.name) : "", npcRoles:found.npcRoles.map(r=>_str(r.name)).filter(Boolean),
+                affiliations:[], enemyRole:found.enemyRole ? _str(found.enemyRole.name) : "", tier:_tier(e.tier),
+                motivation:_str(e.motivation), resources:_str(e.resources), line:_str(e.line), ifPushed:_str(e.ifPushed),
+                gmNote:_str(e.gmNote), status:"alive", block:_block(block),
+                from:{ kind:"entry", pack:pack.meta.id, id:e.id, name:_str(e.name) }, created:now, updated:now };
+    t.cast.unshift(n);
+    _tableStamp(t);
+    return { ok:true, id:n.id };
+  }
+  // Where a copy came from, and whether it can still be opened. Never throws.
+  function entryLink(packs, from){
+    const f = _castFrom(from);
+    if (!f) return { name:"", packId:null, id:null, here:false };
+    const found = packEntry(packs, f.pack, f.id);
+    return { name:_str(f.name).trim() || (found ? _str(found.entry.name) : ""), packId:f.pack, id:f.id, here:!!found };
+  }
+
   // The engine's surface, grouped by domain.
   return {
     // Data: lookups by id, paths and formulas the data holds
@@ -3636,6 +3809,8 @@ const Engine = (() => {
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote,
+    // The pack file (GM mode): load, check, read, and copy an entry into the cast
+    isPackId, migratePack, packCheck, packFilter, packChoices, packEntry, packGroups, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it

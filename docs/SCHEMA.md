@@ -31,6 +31,7 @@ enforces the order.
 | `index.html` | A shell: markup and `<script src>`/`<link>` tags only. No inline logic, no inline styles | Structural changes only |
 | `*.shadows.json` | One character per file. Exported/imported through the app. Portable, player-owned | The app (players via UI) |
 | `*.shadows-table.json` | One GM's table per file (Decisions 170–173), behind a feature switch. Its own schema version and gate; never read as a character | The app (GMs via UI) |
+| `*.shadows-pack.json` | A book a GM slots in, kept in the browser outside every table (Decisions 180–182), behind the same switch. Its own schema version and gate; never read as a character or a table | Whoever builds the pack; the app reads it |
 
 **Why icons are a `.js` file, not loose `.svg` files (Phase 3.1 decision).** Three
 options were on the table: (a) loose `.svg` files referenced by path, (b) an SVG
@@ -850,7 +851,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.3",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.4",       // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
@@ -863,6 +864,7 @@ commit** — a GM's table must never change under them.
     motivation: "", resources: "", line: "", ifPushed: "", gmNote: "",
     status: "alive",                 // alive | dead | missing | gone ("Out of the picture": alive, out of the story)
     block: null,                     // or a stat block, below
+    from: null,                      // 0.4: or { kind: "entry", pack: "PK-…", id, name }, where a Use copied it from (182); the name is stored, the pack lives outside the table
     created: "<ISO>", updated: "<ISO>"
   } ],
   interactions: [ {                  // 0.3: what passed between the crew and the cast (Decisions 177–179)
@@ -887,11 +889,57 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
+
+### The pack file (*.shadows-pack.json)
+
+A book a GM slots in (Decisions 180–182): the Threat Codex, in time, and W63's
+core game after it. A third kind of file, with its own schema version, its own
+gate (`migratePack()`) and its own id, which the app never issues — whoever
+builds the pack does, and keeps it across versions. It is kept in the browser,
+outside every table (`shadows.pack.v1.<id>` = `{ pack, imported }`), and a
+table file never carries its content. **A change to this shape bumps
+`packSchemaVersion` and adds a `migratePack()` step in the same commit.**
+
+```js
+{
+  meta: {
+    kind: "shadows-pack",            // fileKind() reads this; migratePack() forces it
+    id: "PK-XXXXXXXX",               // the author's; a bad one reads null and the pack is refused (packCheck)
+    name: "",
+    packSchemaVersion: "0.1",        // a newer stamp is kept, and packCheck() reports it
+    contentVersion: "",              // the author's text, shown, never compared
+    created: "<ISO>", updated: "<ISO>"   // updated decides which copy is newer; null when unreadable
+  },
+  origins:    [ { id, name, text } ],              // id: letters, digits, _ and -, up to 32
+  npcRoles:   [ { id, name, text } ],
+  enemyRoles: [ { id, name, tier, text } ],        // tier: a whole number from 1, or null
+  tiers:      [ { id, name, text } ],              // id: a whole number from 1
+  entries: [ {
+    id, kind: "threat",              // "threat" | "npc"; anything else reads "threat"
+    ref: "",                         // what the book calls it, shown small
+    name, flavor, description, motivation, resources, line, ifPushed, gmNote,
+    origin: null,                    // an origins id, or null
+    npcRoles: [ ],                   // npcRoles ids; one that names nothing is dropped
+    enemyRole: null,                 // an enemyRoles id, or null
+    tier: null,                      // a whole number from 1, or null
+    block: null                      // a stat block (above), or null
+  } ],
+  groups: [ { id, ref, name, origin, members: [ { entry, count } ], situation, tactics } ]
+  // A record with a bad id, or one repeated within its section, is dropped, never renamed.
+  // A group member naming no entry is dropped; count is a whole number from 1, else 1.
+  // Keys the gate doesn't know (a `traits` section, say) are kept, at any level, and never read.
+}
+```
+
+`Engine.packFilter`, `packChoices`, `packEntry`, `packGroups`, `castFromEntry` and
+`entryLink` read a *list* of packs, so two slotted in at once cost nothing. The
+cast member's `from` (table schema 0.4) is the only link back, and it stores the
+entry's name because the pack lives outside the table (Decisions 178, 182).
 
 ---
 
@@ -3818,7 +3866,7 @@ The browser keeps each table as `shadows.table.v1.<id>` =
      - **Replaces:** Decision 141 in part, with GM mode on: Home lists tables too, and its Import reads a table file.
      - **Revisit if:** storage fills (GQ9), a GM loses work to a deleted note, or S8 designs the table's audit trail.
      - **Built:** as 170.
-     → **Superseded in part by Decision 176** — S10, not S8, decides the table's audit trail.
+     → **Superseded in part by Decisions 176 and 181** — audit trail is S10's; Import reads packs.
 
 172. **GM mode's interface is a fifth classic script, `src/ui/gm.js`, after `sheet.js`; its engine stays in `engine.js`.**
      *2026-10-05 · Ken + Claude · Touches: src/ui/gm.js, script order, index.html, build.test.mjs, BROWSER_JS, CODE_FILES, Decision 86, engine.js, Tables section, harness*
@@ -3856,7 +3904,7 @@ The browser keeps each table as `shadows.table.v1.<id>` =
      - **Replaces:** nothing. 170 foresaw it: each later record is added by its own session.
      - **Revisit if:** S9's pack names a vocabulary the GM's text can't match, or S8b's interactions need a field this lacks.
      - **Built:** table schema 0.2; PR #115; log 2026-10-05 (the cast).
-    → **Superseded in part by Decision 177** — interactions don't wait for sessions; the date carries them until S5.
+    → **Superseded in part by Decisions 177 and 182** — interactions don't wait for sessions; the date carries them until S5; matching cast text to a pack moves to S9b.
 
 175. **An NPC's stat block stores what the Codex prints: stats and skill totals as authored, TOL and WILL as authored, and Health and the bonuses derived.**
      *2026-10-05 · Ken + Claude · Touches: stat block, block.stats, block.authored, skill totals, armor lines, gear lines, traits, Engine.npc, Health Levels, HP, statMod, TOL, WILL, constraint 7, GQ6, Decision 98*
@@ -3913,6 +3961,7 @@ The browser keeps each table as `shadows.table.v1.<id>` =
      - **Replaces:** nothing. It's the plan's §4c rule, built for its first record.
      - **Revisit if:** S5 or S7 links a kind whose deletion should cascade.
      - **Built:** as 177.
+    → **Superseded in part by Decision 182** — a link to a record outside the table stores its name.
 
 179. **A member carries affiliations as text; the Cast list filters by one; a member's page lists their interactions; and the Cast tab's second view, Who knows what, lists them by crew name.**
      *2026-10-05 · Ken + Claude · Touches: affiliations, cast filters, affiliation filter, castFilter, Cast tab, member page, Between them and the crew, Who knows what, crewView, quick entry, datalist, Decision 176, W29, GQ1*
@@ -3925,6 +3974,44 @@ The browser keeps each table as `shadows.table.v1.<id>` =
      - **Replaces:** Decision 176 in part: the list filters by affiliation as well as status, and the tab has a second view.
      - **Revisit if:** S7 makes affiliations faction links, or a GM's crew list outgrows typed names before S3b.
      - **Built:** as 177.
+
+180. **A pack is its own file, `.shadows-pack.json`, gated by `migratePack()`, with its own id, a pack schema version, and the author's content version.**
+     *2026-10-06 · Ken + Claude · Touches: pack, .shadows-pack.json, migratePack, packCheck, fileKind, meta.kind, PK- id, packSchemaVersion, contentVersion, origins, npcRoles, enemyRoles, tiers, entries, groups, versions table, CLAUDE.md, Decision 170, W63, GQ10*
+     - **Decided:** A pack is `{ meta, origins, npcRoles, enemyRoles, tiers, entries, groups }` (shape in SCHEMA §3). `meta.kind` is `"shadows-pack"`; `meta.id` is `PK-` and eight TAG-alphabet characters, issued by whoever builds the pack and kept across its versions. `migratePack()` is its gate, as `migrateTable()` is a table's: total, every string a string, every number a whole number or null, a record with a bad or repeated id dropped, an entry's block through 175's gate, unknown keys kept, never read. A pack with no valid id is refused. The pack schema is a sixth version with its own row in `CLAUDE.md`. `contentVersion` is the author's text; the app shows it and never compares it.
+     - **Why:** GQ10 made the Codex a file a GM slots in; a file made to be handed around is untrusted (124). W63 wants the same mechanism for the core game, so the kind names a pack, not a Codex.
+     - **Rejected:**
+       - A pack as a kind of table: a table is the GM's own work, exported and shared; a pack is someone else's book, imported once.
+       - Renaming a bad id, as a table does: a cast copy would point at nothing on the next import.
+       - Comparing content versions to decide which copy is newer: authors write them as they like; `meta.updated` decides, as a table's does.
+       - A Codex-only kind: W63's core pack would need a second.
+     - **Replaces:** nothing. It answers 170's *Revisit if* (a pack needs a kind) with a third kind beside it.
+     - **Revisit if:** W63's core pack needs a section a GM pack can't hold, or two packs need to name each other.
+     - **Built:** pack schema 0.1, table schema 0.4; PR #TBD; log 2026-10-06 (the pack and the Threats tab).
+
+181. **Packs live in the browser, one key each, outside every table; Home's one Import slots one in, and Home lists them with Remove.**
+     *2026-10-06 · Ken + Claude · Touches: shadows.pack.v1, Your packs, Import a file, gmImportFile, GM_NOT_A_FILE, Remove, replace guard, Home, wizard.js, Decision 171, Decision 172, W62, GQ9, GQ10*
+     - **Decided:** Each pack is one `localStorage` key, `shadows.pack.v1.<id>`, holding `{ pack, imported }`. Every table reads every pack in the browser; no table file holds pack content. With GM mode on, Home's **Import a file** reads a pack (the line in `wizard.js` that routes a table routes either, through `gmImportFile`), and Home lists **Your packs** with **Remove**, which asks. A newer copy of a pack (`meta.updated`) replaces the old silently; an older one asks.
+     - **Why:** one Codex serves every table a GM runs, and a table file a GM shares with a co-GM must not carry a confidential book with it (167, GQ10). It is the third call-in point 172 already allows, widened, not a fourth.
+     - **Rejected:**
+       - The pack inside each table: a copy per table, and the Codex leaves with every exported table.
+       - A second Import button on Home: 171's reason.
+       - Export on a pack: the GM was handed the file; Remove says so.
+       - W62's loading screen now: it's one primitive for every import, a session of its own.
+     - **Replaces:** Decision 171 in part: Home's one Import reads a pack too, and Home lists packs.
+     - **Revisit if:** storage fills (GQ9), or a GM wants a pack for one table only.
+     - **Built:** as 180.
+
+182. **A table's Threats tab reads the packs: threats, people and groups, filtered by search, origin, role and tier; Use copies an entry into the cast, which keeps where it came from.**
+     *2026-10-06 · Ken + Claude · Touches: Threats tab, TABLE_SECTIONS, rolodex, packFilter, entry page, group page, Use, castFromEntry, from, { kind: "entry" } link, cast member, table schema 0.4, migrateTable, openCatalog, Decision 118, Decision 174, Decision 178, W29, GQ1*
+     - **Decided:** `TABLE_SECTIONS` gains **Threats**, second. It lists every slotted pack's entries, a toggle showing threats, people or groups, filtered by search, origin, NPC role, enemy role and tier, in the pack's order. An entry's page shows the book's fields and `Engine.npc`'s Health; a group's lists its members. **Use** adds a copy to the cast: its text, roles and origin as their names, its block copied, and `from: { kind: "entry", pack, id, name }` (table schema 0.4). The copy never changes with the pack. The name is stored, because the pack lives outside the table (178's link otherwise). Matching a hand-made member's text to a pack's names is S9b's.
+     - **Why:** Scott's one tool tomorrow is "a roster of enemies to quickly reference" (§1a). A tab keeps the list in view on a tablet.
+     - **Rejected:**
+       - The rolodex as an `openCatalog` kind (the plan's sketch): it is the character's, in `sheet.js`, and a modal hides the list.
+       - A live link to the entry: a pack update would rewrite a GM's NPC.
+       - Use into a fight: S10.
+     - **Replaces:** Decision 174 in part: matching cast text to the pack moves to S9b. Decision 178 in part: a link to a record outside the table stores its name.
+     - **Revisit if:** S10's fight needs a live entry, or W63's core pack shares this tab.
+     - **Built:** as 180.
 
 ## 5. Open Flags
 

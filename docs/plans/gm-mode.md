@@ -276,7 +276,7 @@ CastMember: {
   rules?, resolution?, vulnerabilities?,   // the Expansion's fields; text
   block?: StatBlock,                 // absent, partial or full
   ifPushed: { text, links: [ ] },    // to a Codex entry, an EG, another cast member
-  codexEntry?,                       // "built from Entry 05"
+  from?,                             // "built from Entry 05": { kind: "entry", pack, id, name }, built in S9a (182)
   places: [link], factions: [link],  // where they turn up, who they answer to
   status: "alive" | "dead" | "missing" | "gone",
   firstMet?: sessionId, gmNote, history: [ { session, text } ]   // not built in S8b (SQ1): the interactions are a member's history until S5 or S10 writes this
@@ -648,7 +648,7 @@ to a later session: S5 or S10, whichever first writes it (Ken, 2026-10-05).
 **Moved to S10:** **Keep** and **Promote** (a fought copy into the cast),
 with the fight they come from.
 
-### S9 — The Threat Codex as a pack (split: S9a next, then S9b and S9c)
+### S9 — The Threat Codex as a pack (split: S9a built, S9b next, then S9c)
 
 **Split 2026-10-05 (Ken, SQ1 of the [S9a order](gm-mode/S09a-pack.md)):**
 **S9a** is the pack file, its gate, storage and import, and a **Threats** tab
@@ -667,9 +667,9 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
   answered by v2), enemy roles (eight, each with v2's tier), tiers (four), entries (42), encounter groups (29),
   traits (the glossary), the drone reference. Gear by catalog id where the
   Gear tables have it; text where the ⚠ list says they don't.
-- **The rolodex:** browse by origin, role and tier, through `openCatalog`
-  (118) as a new `kind`; a card per entry; **Use** copies it into a fight or
-  into the cast.
+- **The rolodex:** browse by origin, role and tier, as a **Threats** tab of
+  the table (S9a, Decision 182: not `openCatalog`, which is the character's);
+  a card per entry; **Use** copies it into the cast (S9a) or into a fight (S10).
 - **The builder:** origin, NPC role, enemy role and tier; origin modifiers
   applied at construction; the tier's ranges shown beside each stat, and a
   warning (never a block) outside them; the trait budget counted; traits

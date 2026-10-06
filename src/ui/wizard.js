@@ -726,7 +726,7 @@ function renderHome(){
       // Read the file's kind before anything else: migrate() reads any object as
       // a character, so a table file used to open as a blank one (Decision 170).
       const kind=Engine.fileKind(raw);
-      if (kind==="table" && featureOn("gm")){ gmImportTable(raw); return; }
+      if ((kind==="table" || kind==="pack") && featureOn("gm")){ gmImportFile(raw, kind); return; }
       if (kind!=="character"){ notice(featureOn("gm") ? GM_NOT_A_FILE : "That file isn't a character."); return; }
       let c;
       try{ c=Engine.migrate(raw); }
