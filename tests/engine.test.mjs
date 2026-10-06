@@ -3691,3 +3691,45 @@ test("castPackMatch: a row with neither name nor text isn't counted, but still c
   eq(r.counts, { total: 2, universal: 0, origin: 0, signature: 1, written: 1 });
   eq(Engine.castPackMatch([p], { block: { traits: [{ name: "", text: "" }, { name: " ", text: " " }] } }).counts, { total: 0, universal: 0, origin: 0, signature: 0, written: 0 });
 });
+
+// ── Apostrophes fold in name matching (Decision 187) ───────────────────────
+test("187: ’ ‘ and ʼ read as ' in castPackMatch, whichever side carries them", () => {
+  const p = Engine.migratePack(syntheticPack());   // the glossary spells it Gull's Cry
+  for (const mark of ["’", "‘", "ʼ"]) {
+    const r = Engine.castPackMatch([p], { block: { traits: [{ name: `Gull${mark}s Cry`, text: "x" }] } });
+    assert.equal(r.traits[0].rec && r.traits[0].rec.id, "gulls-cry", `${mark} matches '`);
+    eq(r.counts, { total: 1, universal: 0, origin: 0, signature: 1, written: 0 });
+  }
+  const typo = syntheticPack(); typo.traits.find(t => t.id === "gulls-cry").name = "Gull’s Cry";
+  const r = Engine.castPackMatch([Engine.migratePack(typo)], { block: { traits: [{ name: "Gull's Cry", text: "x" }] } });
+  assert.equal(r.counts.written, 0, "and the glossary may be the typographic one");
+});
+
+test("187: packTraits, packFilter, packGroups and castFilter fold the haystack as well as the query", () => {
+  const raw = syntheticPack();
+  raw.traits.find(t => t.id === "gulls-cry").name = "Gull’s Cry";
+  raw.entries.find(e => e.id === "gull").name = "Gull’s Mate";
+  raw.groups[0].name = "Gull’s Pier";
+  const p = Engine.migratePack(raw);
+  const traits = q => Engine.packTraits([p], { q }).map(x => x.trait.name).join();
+  assert.equal(traits("gull's"), "Gull’s Cry", "a straight query finds a curly name");
+  assert.equal(traits("gull’s"), "Gull’s Cry", "and a curly one finds it too");
+  assert.equal(traits("gullʼs cry"), "Gull’s Cry");
+  const entries = q => Engine.packFilter([p], { q }).map(x => x.entry.name).join();
+  assert.equal(entries("gull's"), "Gull’s Mate"); assert.equal(entries("GULL‘S"), "Gull’s Mate");
+  const groups = q => Engine.packGroups([p], { q }).map(x => x.group.name).join();
+  assert.equal(groups("gull's"), "Gull’s Pier"); assert.equal(groups("gull’s mate"), "Gull’s Pier", "a member's name");
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "O’Hara" }); Engine.addCastMember(t, { name: "Plain" });
+  assert.equal(Engine.castFilter(t, { q: "o'hara" }).map(n => n.name).join(), "O’Hara");
+  assert.equal(Engine.castFilter(t, { q: "o’hara" }).length, 1);
+});
+
+test("187: crewView's search folds apostrophes too", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Dez" });
+  Engine.addInteraction(t, { kind: "shared", text: "Told them about Marta’s place.", crew: ["Wren"], cast: [t.cast[0].id] });
+  assert.equal(Engine.crewView(t, { q: "marta's" }).length, 1);
+  assert.equal(Engine.crewView(t, { q: "marta’s" }).length, 1);
+  assert.equal(Engine.crewView(t, { q: "marta‘x" }).length, 0);
+});

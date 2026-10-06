@@ -48,6 +48,7 @@ npm run changelog  # CHANGELOG.md → src/data/shadows-changelog.js (the app's W
 npm run bump -- X.Y.Z  # the app version, everywhere it's written, plus CHANGELOG's [Unreleased] heading
 npm run release:check  # is this commit ready to tag? (release:prep dates the heading first)
 npm run phone-check    # header height and sideways overflow at phone and tablet widths, in real Chromium
+npm run codex-pack     # the GM's pack, built from private/
 npm run fonts          # regenerate src/styles/fonts.css from the font packages (rarely)
 ```
 

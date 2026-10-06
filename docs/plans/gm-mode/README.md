@@ -151,7 +151,7 @@ decision and flag numbers in advance and does the bookkeeping merge.
 | [S08b-interactions.md](S08b-interactions.md) | S8b — Who knows what: interactions, affiliations, the crew's view | **Built and reviewed 2026-10-05**, merged in PR #117 after one fix round (a line with no crew name reachable, the What draft kept, Back keyed by crew name, the removed name spoken, wrapping rows). History moves to a later session (SQ1) |
 | [S09a-pack.md](S09a-pack.md) | S9a — The pack: a file a GM slots in, and the Threats tab | **Built and reviewed 2026-10-06**, merged in PR #119 after one fix round (roles labelled on an entry's page, a group's composition on its card, the filters two to a row on a phone, the tier as a tip, Back to the cast member, the `TIPS` guard). The plan's S9 is split: S9b is the builder, S9c the real Codex pack |
 | [S09b-builder.md](S09b-builder.md) | S9b — The builder: a cast member's page that reads the pack | **Built and reviewed 2026-10-06**, merged in PR #121 after one fix round (a blank trait row not counted, a hostile assertion that could fail, and a Use copy saying the book's stats already include its origin) |
-| [S09c-codex-pack.md](S09c-codex-pack.md) | S9c — The Codex pack: the real book, built from the mirror | **Drafted 2026-10-06**, after #121 merged (step 7); SQ1–SQ10 await Ken |
+| [S09c-codex-pack.md](S09c-codex-pack.md) | S9c — The Codex pack: the real book, built from the mirror | **Built 2026-10-06** (Decisions 186–187): the pack built from the mirror by `private/gm/build-codex-pack.mjs`, its id ledger, and apostrophes folded in name matching; SQ1–SQ10 answered by Ken. GQ22 is Scott's |
 
 ## What a work order contains
 

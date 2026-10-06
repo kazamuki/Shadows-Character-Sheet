@@ -943,6 +943,10 @@ table file never carries its content. **A change to this shape bumps
 }
 ```
 
+The Threat Codex pack is built from the mirror by
+`private/gm/build-codex-pack.mjs`; its ids are kept in
+`private/gm/ids.json` (186).
+
 `Engine.packFilter`, `packChoices`, `packTraits`, `castPackMatch`, `packEntry`, `packGroups`, `castFromEntry` and
 `entryLink` read a *list* of packs, so two slotted in at once cost nothing. The
 cast member's `from` (table schema 0.4) is the only link back, and it stores the
@@ -4056,6 +4060,31 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** S13's GM screen wants the glossary as a page, or S10's fight needs a trait's kind.
      - **Built:** as 183.
+
+186. **The Threat Codex pack is built by a script in `private/` from the mirror, and an id ledger keyed by the book's names keeps every record's id across rebuilds.**
+     *2026-10-06 · Ken + Claude · Touches: Threat Codex pack, private/gm, build-codex-pack, ids.json, npm run codex-pack, pack meta.id, contentVersion, Stat Audit, Decision 167, Decision 180, Decision 181, Decision 182, GQ6, GQ10, GQ17, GQ22*
+     - **Decided:** `private/gm/build-codex-pack.mjs` reads the mirror (the human Codex for entries, groups, the glossary and the tiers' names; v2 for roles, origins, tiers and the roster; the Stat Audit for every stat it lists) and writes `private/gm/threat-codex.shadows-pack.json`, committed in the private repo. `private/gm/ids.json` maps each record's name in the book to a permanent id; renumbering changes only `ref`, and a name the ledger doesn't know stops the build until a person says whether it is new or renamed. Ids are never reused.
+     - **Why:** the Codex is still moving, and a rebuilt pack replaces the old (181); cast copies point at entries by id (182), so ids must outlive the book's numbering and survive a re-pull. A person decides a rename because no script can tell a rename from a new entry.
+     - **Rejected:**
+       - The pack typed by hand: 53 entries and 114 traits re-typed on every Codex change.
+       - Ids from the entry number (`entry-07`): the book renumbers.
+       - Ids from the name, unrecorded: a rename would silently orphan every copy.
+       - The builder in the public `tools/`: it encodes the book's structure, and the public repo shouldn't have to change when the book's layout does (167).
+       - The mirror's stats over the audit's: the audit is Scott's newer copy, with TOL corrected (GQ6).
+     - **Replaces:** nothing.
+     - **Revisit if:** Scott keeps the Codex as structured data of his own, his documents are combined (a reconciliation pass over the ledger, the whole Codex at once), or GQ17 brings the supernatural sections in.
+     - **Built:** pack content `Codex 2026-09 · v2 2026-10-02 · audit 2026-10-03`; PR __PR__; private repo `c28d5b3`; log 2026-10-06.
+
+187. **Pack names match with case and apostrophes folded: `’`, `‘` and `ʼ` read as `'`, in every match and search.**
+     *2026-10-06 · Ken + Claude · Touches: _folded, castPackMatch, packFilter, packTraits, packGroups, castFilter, crewView, castAffiliations, trait count, Decision 184, Decision 185*
+     - **Decided:** the engine's name folding maps the three typographic apostrophes to `'` before comparing, on both sides of every comparison: a typed name against a record, and a search against the text it searches.
+     - **Why:** the book prints `’` in entries and `'` in the glossary, so a Use copy's trait counted as *written*; and a GM's keyboard types `'`.
+     - **Rejected:**
+       - Normalising the apostrophes in the built pack: it fixes the book's own mismatch but not a GM typing, and it changes the book's text.
+       - Folding every punctuation mark: dashes and quotes carry meaning in names (*Sanctified Rosary — if carried*).
+     - **Replaces:** nothing. 184 and 185's "case-folded" now also folds apostrophes.
+     - **Revisit if:** a pack's names differ by another character a GM can't type.
+     - **Built:** engine only (every changed reader is GM-only and switched off; no app bump); PR __PR__; log 2026-10-06.
 
 ## 5. Open Flags
 

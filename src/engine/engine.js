@@ -3505,7 +3505,10 @@ const Engine = (() => {
     _tableStamp(t);
     return { ok:true };
   }
-  const _folded = v => _str(v).trim().toLowerCase();
+  // Names and searches compare folded (Decisions 184, 187): case, and the three typographic
+  // apostrophes as ', on both sides, so a typed name and the text it searches agree.
+  const _fold = v => _str(v).replace(/[‘’ʼ]/g, "'").trim().toLowerCase();
+  const _folded = _fold;
   function castFilter(t, f){
     const q = _folded((f||{}).q), st = (f||{}).status, aff = _folded((f||{}).affiliation);
     const rank = n => CAST_ORDER.indexOf(n.status);
@@ -3513,7 +3516,7 @@ const Engine = (() => {
       if (st==="inplay" ? n.status!=="alive" && n.status!=="missing" : CAST_STATUSES.includes(st) && n.status!==st) return false;
       const affs = Array.isArray(n.affiliations) ? n.affiliations : [];
       if (aff && !affs.some(a=>_folded(a)===aff)) return false;
-      return !q || [n.name, n.flavor, n.origin, ...(n.npcRoles||[]), ...affs].some(x=>_str(x).toLowerCase().includes(q));
+      return !q || [n.name, n.flavor, n.origin, ...(n.npcRoles||[]), ...affs].some(x=>_fold(x).includes(q));
     }).sort((a, b)=>rank(a) - rank(b));   // stable: each group keeps the cast's own order
   }
   // Every affiliation in the cast, once (case folded), A–Z, as first spelled.
@@ -3594,8 +3597,8 @@ const Engine = (() => {
   // no crew name is the last group, named "", so it can always be read.
   function crewView(t, f){
     const q = _folded((f||{}).q), groups = new Map(), nameless = [];
-    const hit = (x, name) => !q || name.includes(q) || _str(x.text).toLowerCase().includes(q)
-      || (Array.isArray(x.cast) ? x.cast : []).some(l=>linkName(t, l).name.toLowerCase().includes(q));
+    const hit = (x, name) => !q || _fold(name).includes(q) || _fold(x.text).includes(q)
+      || (Array.isArray(x.cast) ? x.cast : []).some(l=>_fold(linkName(t, l).name).includes(q));
     for (const x of _interactions(t).reverse()){   // oldest first, so the heading is the spelling first written
       const names = (Array.isArray(x.crew) ? x.crew : []).map(r=>_str(r).trim()).filter(Boolean);
       if (!names.length){ if (hit(x, "")) nameless.push(x); continue; }
@@ -3723,7 +3726,7 @@ const Engine = (() => {
       if (role && !w.roles.some(r=>_folded(r)===role)) continue;
       if (enemy && _folded(w.enemy)!==enemy) continue;
       if (tier!==null && _tier(entry.tier)!==tier) continue;
-      if (q && ![entry.name, entry.ref, entry.flavor, w.origin, w.enemy, ...w.roles].some(x=>_str(x).toLowerCase().includes(q))) continue;
+      if (q && ![entry.name, entry.ref, entry.flavor, w.origin, w.enemy, ...w.roles].some(x=>_fold(x).includes(q))) continue;
       out.push({ pack, entry });
     }
     return out;
@@ -3757,7 +3760,7 @@ const Engine = (() => {
     for (const pack of _packList(packs)) for (const trait of _list(pack.traits)){
       if (kind && trait.kind!==kind) continue;
       if (origin && _folded(_nameOf(pack.origins, trait.origin))!==origin) continue;
-      if (q && ![trait.name, trait.text].some(x=>_str(x).toLowerCase().includes(q))) continue;
+      if (q && ![trait.name, trait.text].some(x=>_fold(x).includes(q))) continue;
       out.push({ pack, trait });
     }
     return out;
@@ -3804,7 +3807,7 @@ const Engine = (() => {
     const q = _folded((f||{}).q), out = [];
     for (const pack of _packList(packs)) for (const group of _list(pack.groups)){
       const members = _list(group.members).map(x=>({ entry:_byId(pack.entries, x.entry), count:_tier(x.count) || 1 })).filter(x=>x.entry);
-      if (q && ![group.name, group.ref, ...members.map(x=>x.entry.name)].some(x=>_str(x).toLowerCase().includes(q))) continue;
+      if (q && ![group.name, group.ref, ...members.map(x=>x.entry.name)].some(x=>_fold(x).includes(q))) continue;
       out.push({ pack, group, members });
     }
     return out;
