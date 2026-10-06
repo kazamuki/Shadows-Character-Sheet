@@ -28,9 +28,20 @@ build it without making a design choice of its own.
    tests itself, then either approves or lists fixes. Each fix is marked as
    the order's or the build's: the order's go into the next order's
    *Carried over* note.
-6. Fixes go back to a building session as one pasted prompt; the
-   orchestrator reviews the fix commit the same way; Ken merges. The same
-   session then writes the next order, using what it learned.
+6. Fixes go back as one pasted prompt **to the session that built the PR**:
+   it already knows the code it wrote (S8a's knew `signed` was taken).
+   Write the prompt self-contained anyway, and start a fresh session only
+   if that one has been compacted or closed. The orchestrator reviews the
+   fix commit the same way; Ken merges. The same orchestrating session then
+   writes the next order, using what it learned.
+
+   A decision in a PR that **hasn't merged** is reworded in place by the fix
+   round, never superseded: nothing has cited it yet (S8a's 176). Once
+   merged, the ledger's supersession rules apply.
+
+   An order drafted while the last PR is still open is **a file only**
+   until that PR merges: its README row and STATE line wait, because the
+   open PR edits the same lines.
 
 Review sits **before** the merge. It costs much less than the build, and it's
 where a missed decision or an untested guard gets caught.
@@ -86,6 +97,16 @@ in the order's header:
   is a tap away"), and give markup only as a suggestion. An order that
   dictates markup passes its interaction bugs through intact (S1's tip
   inside a button).
+- **Where things land.** For every press that changes a status, a filter
+  or a view, the order says where the record ends up and where focus goes,
+  in one table. S8a specified its status and its filter apart, and a member
+  marked Missing vanished on Back; only the browser review caught it.
+- **What a refused or empty value shows.** A field the gate refuses shows
+  what was stored once it loses focus; an empty row is either not added or
+  doesn't count as filled. Say which (S8a's tier field, its blank rows).
+- **Proof at phone width** is metrics when the screenshot tool times out,
+  as it does here: the document's `scrollWidth` against `clientWidth`, and
+  no element in `main` past the viewport's right edge.
 - **Size the order to its tier.** A *Rule or shape* order earns all
   thirteen sections. A *Content* or *Fix* session (S13, S12) gets a page:
   goal, tier, scope, tests, review checklist.
@@ -113,8 +134,8 @@ decision and flag numbers in advance and does the bookkeeping merge.
 |---|---|---|
 | [S01-crank-rep.md](S01-crank-rep.md) | S1 — CRANK reputation on the sheet | **Built and reviewed 2026-10-05**, merged in PR #111 after one fix round |
 | [S03a-table-file.md](S03a-table-file.md) | S3a — The table file, its gate and Home's door, behind the feature switch | **Built and reviewed 2026-10-05**, merged in PR #113 after one fix round (focus, wrapping, the launch test, the notes copy) |
-| [S08a-cast.md](S08a-cast.md) | S8a — The cast: the record, the stat block, the Cast tab | **Built 2026-10-05**, PR #115, awaiting review (switched off). The plan's S8 is split: S8b is interactions and history; Keep and Promote move to S10 |
-| S8b | The cast's interactions, history and affiliation | Next to write, after S8a is reviewed and merged |
+| [S08a-cast.md](S08a-cast.md) | S8a — The cast: the record, the stat block, the Cast tab | **Built and reviewed 2026-10-05**, merged in PR #115 after one fix round (the *In play* default and status order, refused numbers, blank rows, trimmed roles). The plan's S8 is split: S8b is interactions; Keep and Promote move to S10 |
+| [S08b-interactions.md](S08b-interactions.md) | S8b — Who knows what: interactions, affiliations, the crew's view | **Drafted 2026-10-05**, SQ1–SQ7 answered by Ken; awaiting approval. History moves to a later session (SQ1) |
 
 ## What a work order contains
 
