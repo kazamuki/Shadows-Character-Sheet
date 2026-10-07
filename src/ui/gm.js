@@ -215,7 +215,7 @@ function bindGmHome(tables){
 
 // ── The table screen ───────────────────────────────────────────────────
 // The cast is first: a table opens on it (Decision 176).
-const TABLE_SECTIONS = [{ id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
+const TABLE_SECTIONS = [{ id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"encounters", label:"Encounters", ui:"tab_trackers" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
 // A twin of the sheet's tabButtonsHtml, with its own attribute, so the
 // sheet's [data-sec] binder never sees these.
 function tableTabButtonsHtml(){
@@ -232,7 +232,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast") S.castOpen=null; if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
@@ -271,20 +271,23 @@ function renderTable(){
   const failed = saveFailed ? `<div class="import-issues" role="alert">${issuesHtml([{level:"error", msg:"This browser couldn't save your last change. Export the table now so nothing is lost."}])}</div>` : "";
   packsNow();   // a fresh read of the browser's packs on every full draw
   const threatPage = S.tsection==="threats" && threatPageNow();
-  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage;
+  const encPage = S.tsection==="encounters" && encOpenNow();
+  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage;
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
   const body = S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
-    : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : notesTabHtml(t);
+    : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
-  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]"]);
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]"]);
 }
 function bindTable(){
   const main=$("main");
+  main.onclick=main.onchange=main.oninput=main.onsubmit=main.onkeydown=null;   // the Encounters tab delegates; no other tab does
   if (main.querySelector("[data-tnew]")) bindNotes(main);
   else if (S.tsection==="cast") bindCast(main);
   else if (S.tsection==="threats") bindThreats(main);
+  else if (S.tsection==="encounters") bindEncounters(main);
 }
 function bindNotes(main){
   const titleOf = id => main.querySelector(`[data-ntitle="${id}"]`);
@@ -459,8 +462,8 @@ function castRolesHtml(n){
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
-  const c=Engine.packChoices(packsMemo), packs=packsMemo.length;
-  return `<p><button class="btn sm" data-cback>Back to the cast</button></p>
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle();
+  return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", encTarget())}</p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
     ${castText(n,"name","Name","Who did they meet?")}
@@ -496,7 +499,7 @@ function redrawCastList(){
 }
 function bindCastCards(main){
   // A member opened from Who knows what remembers which name it was, so Back lands on it.
-  const open = (id, from) => { S.castOpen=id; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
+  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     open(b.dataset.copen, b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null); });
   main.querySelectorAll("[data-ccard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) open(li.dataset.ccard); });
@@ -734,7 +737,18 @@ function bindCastPage(main, n){
     block(b=>{ b.traits.push({ name:t.name, text:t.text }); at=b.traits.length-1; }, true);
     focus(`[data-ctname="${at}"]`);
   });
+  const addEnc=main.querySelector("[data-cenc]");
+  if (addEnc) addEnc.onclick=()=>{
+    const e=encTarget(); if (!e) return;
+    const r=Engine.addParticipant(S.table, e.id, { kind:"cast", id }); if (!r.ok){ notice(r.why); return; }
+    tableChange(()=>{}, false); notice(`${own().name.trim() || "Unnamed"} is in ${Engine.encounterTitle(e)}.`);
+  };
   main.querySelector("[data-cback]").onclick=()=>{
+    if (S.backEnc && encList().some(e=>e.id===S.backEnc)){
+      S.encOpen=S.backEnc; S.backEnc=null; S.castOpen=null; S.tsection="encounters"; window.scrollTo(0,0); update();
+      focus(attrSel("data-eopencast", id)) || focus("[data-enext]"); return;
+    }
+    S.backEnc=null;
     const from=S.castFrom;
     S.castOpen=null; S.castFrom=null; S.intAdd=null; window.scrollTo(0,0); update();
     // Back to Who knows what lands on the name that was pressed; to the list, on the card, or quick-add if the filter hides them.
@@ -980,12 +994,13 @@ function entryPageHtml(found){
     found.enemyRole && `Enemy: ${packChipHtml(pack, "enemyRoles", found.enemyRole)}`,
     tier && packChipHtml(pack, "tiers", tier, `Tier ${e.tier}`), multi && esc(packName(pack)) ].filter(Boolean).join(" · ");
   const member=S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
-  const backText = member ? `Back to ${esc(member.name.trim() || "Unnamed")}` : S.threatGroup ? "Back to the group" : "Back to threats";
+  const enc = S.threatEnc && encList().find(x=>x.id===S.threatEnc);
+  const backText = enc ? `Back to ${esc(Engine.encounterTitle(enc))}` : member ? `Back to ${esc(member.name.trim() || "Unnamed")}` : S.threatGroup ? "Back to the group" : "Back to threats";
   return `<p><button class="btn sm" data-tback="entry">${backText}</button></p>
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(e.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
     ${e.flavor.trim() ? `<p class="cast-line">${esc(e.flavor)}</p>` : ""}
-    <p><button class="btn primary" data-tuse>Use</button></p>
+    <p><button class="btn primary" data-tuse>Add to cast</button>${encAddBtnHtml("data-tenc", encTarget())}</p>
     ${threatText("Description", e.description)}${threatText("What they want", e.motivation)}${threatText("What they've got", e.resources)}
     ${threatText("Their line", e.line)}${threatText("If pushed", e.ifPushed)}
     ${readBlockHtml(e.block)}
@@ -994,7 +1009,7 @@ function entryPageHtml(found){
 function groupPageHtml({ pack, group:g, members }){
   const o=g.origin && pack.origins.find(x=>x.id===g.origin);
   const meta=[ g.ref.trim() && esc(g.ref), o && packChipHtml(pack, "origins", o), packsMemo.length>1 && esc(packName(pack)) ].filter(Boolean).join(" · ");
-  return `<p><button class="btn sm" data-tback="group">Back to threats</button></p>
+  return `<p><button class="btn sm" data-tback="group">Back to threats</button>${encAddBtnHtml("data-tgrpenc", encTarget())}</p>
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(g.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
     ${members.length ? `<h2 class="cast-h">Who's in it</h2><ul class="threat-list threat-members">${members.map(m=>
@@ -1012,9 +1027,9 @@ function threatPageNow(){
 }
 // An entry's page, from a card, a group's member or a cast member's From.
 // `group` or `member` (a cast member's id) says where Back returns; any other way in clears both.
-function openThreat(key, group, member){
+function openThreat(key, group, member, enc){
   const [pack, id]=String(key).split("|"), found=Engine.packEntry(packsMemo, pack, id); if (!found) return;
-  S.tsection="threats"; S.threatOpen={ pack, id }; S.threatGroup=group||null; S.threatMember=member||null;
+  S.tsection="threats"; S.threatOpen={ pack, id }; S.threatGroup=group||null; S.threatMember=member||null; S.threatEnc=enc||null; S.backEnc=null;
   if (!group) S.threatView = found.entry.kind==="npc" ? "npc" : "threat";
   window.scrollTo(0,0); update();
   const el=$("main").querySelector("[data-ttitle]"); if (el) el.focus();
@@ -1063,6 +1078,11 @@ function bindThreats(main){
 function bindThreatPage(main, back, focusFirst){
   const entry=S.threatOpen, group=S.threatGroup;
   back.onclick=()=>{
+    if (S.threatEnc && encList().some(e=>e.id===S.threatEnc)){
+      S.encOpen=S.threatEnc; S.threatEnc=null; S.threatOpen=null; S.threatGroup=null; S.tsection="encounters"; window.scrollTo(0,0); update();
+      focusFirst(attrSel("data-eopenentry", entryKey(entry.pack, entry.id)), "[data-enext]"); return;
+    }
+    S.threatEnc=null;
     const member=entry && S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
     if (member){
       S.tsection="cast"; S.castOpen=member.id; S.castFrom=null; S.intAdd=null; S.threatOpen=null; S.threatMember=null;
@@ -1075,6 +1095,21 @@ function bindThreatPage(main, back, focusFirst){
     focusFirst(attrSel(entry ? "data-tentry" : "data-tgroup", key), "[data-tsearch]", "[data-tview]");
   };
   main.querySelectorAll("[data-tmember]").forEach(b=>b.onclick=()=>openThreat(b.dataset.tmember, group));
+  const encBtn=main.querySelector("[data-tenc]"), grpBtn=main.querySelector("[data-tgrpenc]");
+  // Add to the encounter open on the Encounters tab: one row (a group, all its members), a notice, and the page stays.
+  if (encBtn) encBtn.onclick=()=>{
+    const e=encTarget(), found=Engine.packEntry(packsMemo, entry.pack, entry.id); if (!e) return; if (!found){ notice("No such entry."); return; }
+    const r=Engine.participantFromEntry(S.table, e.id, found.pack, entry.id); if (!r.ok){ notice(r.why); return; }
+    tableChange(()=>{}, false);
+    const row=Engine.encounterView(S.table, e.id, packsMemo).rows.find(x=>x.row.id===r.id);
+    notice(`${row ? row.name : "They"} is in ${Engine.encounterTitle(e)}.`);
+  };
+  if (grpBtn) grpBtn.onclick=()=>{
+    const e=encTarget(), hit=group && Engine.packGroups(packsMemo, {}).find(x=>x.pack.meta.id===group.pack && x.group.id===group.id); if (!e || !hit) return;
+    const r=Engine.participantsFromGroup(S.table, e.id, hit.pack, group.id); if (!r.ok){ notice(r.why); return; }
+    tableChange(()=>{}, false);
+    notice(`${hit.group.name.trim() || "Unnamed"}: ${r.ids.length} added to ${Engine.encounterTitle(e)}.`);
+  };
   const use=main.querySelector("[data-tuse]");
   if (use) use.onclick=()=>{
     const found=Engine.packEntry(packsMemo, entry.pack, entry.id); if (!found){ notice("No such entry."); return; }
@@ -1085,4 +1120,307 @@ function bindThreatPage(main, back, focusFirst){
     window.scrollTo(0,0); update();
     const el=$("main").querySelector('[data-cf="name"]'); if (el){ el.focus(); el.select(); }
   };
+}
+
+// ── The Encounters tab (Decisions 188–190) ─────────────────────────────
+// Who's in an encounter, whose turn it is, and every Condition on everyone. State is on S, so it
+// goes with the open table and no further: S.encOpen (an encounter's id; it stays when the GM
+// moves to Threats or Cast, which name it on their Add buttons), S.encPick and S.encQ (the cast
+// picker), S.encDmg (a Take or Heal field open on a row), S.encCond (the Add a Condition
+// draft), S.encMore (rows whose More is open) and S.encReset (the numbers and Keeps typed at a Reset).
+// A rule the sheet names is a tap away, through the same tip (139): a Condition's, and a Pain Level's.
+TIPS.condition = id => { const d=Engine.conditionById(id); return d && { title:d.name, text:d.effect, more:[d.recovery].filter(Boolean) }; };
+TIPS.painlevel = lv => { const p=D.resources.healthLevels.painLevels.find(x=>String(x.level)===String(lv)); return p && { title:p.label, text:p.description }; };
+const encList = () => Array.isArray(S.table.encounters) ? S.table.encounters : [];
+function encOpenNow(){
+  const e=S.encOpen && encList().find(x=>x.id===S.encOpen);
+  if (!e) S.encOpen=null;
+  return e || null;
+}
+// The encounter an Add to button puts a row in: the one open on the tab, until it ends.
+const encTarget = () => { const e=encOpenNow(); return e && e.status!=="ended" ? e : null; };
+const encAddBtnHtml = (attr, e) => e ? ` <button class="btn" ${attr}>Add to ${esc(Engine.encounterTitle(e))}</button>` : "";
+// Where Back goes from a member's page the encounter sent the GM to.
+const encBackTitle = () => { const e=S.backEnc && encList().find(x=>x.id===S.backEnc); return e ? Engine.encounterTitle(e) : ""; };
+const encRounds = n => `${n} round${n===1?"":"s"}`;
+const encCount = n => n ? `${n} in it` : "Nobody yet";
+
+function encListHtml(t){
+  const all=encList(), by=s=>all.filter(e=>e.status===s);
+  const day = e => { const d=Date.parse(e.updated || e.created); return Number.isFinite(d) ? new Date(d).toLocaleDateString() : ""; };
+  const card = (e, meta) => `<li class="roster-card cast-card" data-ecard="${esc(e.id)}">
+    <button class="cast-open" data-enc-open="${esc(e.id)}">${esc(Engine.encounterTitle(e))}</button>
+    <div class="roster-meta cast-meta">${esc(meta)}</div></li>`;
+  const sect = (h, items) => items.length ? `<h2 class="cast-h">${h}</h2><ul class="roster-list">${items.join("")}</ul>` : "";
+  return `<div class="cast-add">
+      <label class="field"><span>Name</span><input type="text" data-enc-name placeholder="Warehouse job (optional)" autocomplete="off"></label>
+      <button class="btn primary" data-enc-new>New encounter</button></div>
+    ${all.length ? "" : `<p class="step-note">Nothing on the books.</p>`}
+    ${sect("Running", by("running").map(e=>card(e, `Round ${e.round} · ${encCount(e.rows.length)}`)))}
+    ${sect("Planned", by("planned").map(e=>card(e, encCount(e.rows.length))))}
+    ${sect("Past encounters", by("ended").map(e=>card(e, [e.round ? encRounds(e.round) : "Not run", day(e)].filter(Boolean).join(" · "))))}`;
+}
+
+// ── A row ──
+function encHealthHtml(v){
+  const h=v.health, bits=[];
+  if (h.total!==null) bits.push(h.down ? `<b class="enc-down">Down</b>` : `HP ${h.left} / ${h.total}`);
+  bits.push(`${h.taken} taken`);
+  if (h.levels!==null) bits.push(`${h.levelsLeft} of ${h.levels} Health Levels`);
+  if (h.pain) bits.push(`<button type="button" class="tag" data-tip="painlevel" data-term="${esc(h.pain.level)}">${esc(h.pain.label)}</button>`);
+  return `<p class="enc-health">${bits.join(" · ")}</p>`;
+}
+function encCondHtml(v, c, ended){
+  const id=esc(v.row.id), label=c.name + (c.locationName ? ` (${c.locationName})` : "");
+  const name = c.def ? `<button type="button" class="tag" data-tip="condition" data-term="${esc(c.id)}">${esc(label)}</button>` : `<span class="tag plain">${esc(label)}</span>`;
+  const marks = c.counter ? `<span class="enc-marks">${esc(c.counter.label)} ${c.marks}/${c.counter.max}${ended ? "" :
+    ` <button class="btn sm" data-emarks="${id}|${c.index}|-1" aria-label="Fewer ${esc(c.counter.label)}">−</button><button class="btn sm" data-emarks="${id}|${c.index}|1" aria-label="More ${esc(c.counter.label)}">+</button>`}</span>` : "";
+  return `<li class="cond-chip enc-cond">${name}
+    ${c.rounds ? `<small>${esc(encRounds(c.rounds))}</small>` : ""}${c.source ? `<small class="enc-src">${esc(c.source)}</small>` : ""}
+    ${c.note ? `<small class="enc-src">${esc(c.note)}</small>` : ""}${marks}
+    ${ended ? "" : `<button class="btn sm" data-econdrm="${id}|${c.index}" aria-label="Remove ${esc(label)}">Remove</button>`}</li>`;
+}
+function encCondFormHtml(v){
+  const d=S.encCond, def=Engine.conditionById(d.id);
+  return `<div class="enc-condform" data-econdform="${esc(v.row.id)}">
+    <label class="field"><span>Condition</span><select data-econd-id><option value="">Choose…</option>${D.conditions.map(c=>
+      `<option value="${esc(c.id)}"${c.id===d.id?" selected":""}>${esc(c.name)}</option>`).join("")}</select></label>
+    ${def && def.location ? `<label class="field"><span>Body part</span><select data-econd-loc><option value="">Body part…</option>${D.bodyLocations.map(l=>
+      `<option value="${esc(l.id)}"${l.id===d.loc?" selected":""}>${esc(l.name)}</option>`).join("")}</select></label>` : ""}
+    <label class="field"><span>Source</span><input type="text" data-econd-src value="${esc(d.source)}" placeholder="Corner Shot's burst" autocomplete="off"></label>
+    <label class="field"><span>Rounds</span><input type="number" min="1" step="1" inputmode="numeric" data-econd-rounds value="${esc(d.rounds)}" placeholder="Until it's dealt with"></label>
+    <div class="enc-condbtns"><button class="btn sm primary" data-econd-add>Add</button><button class="btn sm" data-econd-cancel>Cancel</button></div>
+    ${d.err ? `<p class="enc-err" role="alert">${esc(d.err)}</p>` : ""}</div>`;
+}
+function encRowHtml(v, e){
+  const r=v.row, id=esc(r.id), ended=e.status==="ended", running=e.status==="running", pc=r.kind==="pc";
+  const ref = r.kind==="entry" && v.from && v.from.packId ? (()=>{
+    const f=Engine.packEntry(packsMemo, v.from.packId, v.from.id), label=(f && f.entry.ref.trim()) || v.from.name.trim() || "Codex";
+    return v.from.here ? `<button type="button" class="tag" data-eopenentry="${esc(entryKey(v.from.packId, v.from.id))}">${esc(label)}</button>` : `<span class="tag plain">${esc(label)}</span>`; })() : "";
+  const name = r.kind==="cast" && !v.gone ? `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.cast.id)}">${esc(v.name)}</button>`
+    : v.gone ? `<s class="enc-name">${esc(v.name)}</s><span class="vh">, removed</span>` : `<b class="enc-name">${esc(v.name)}</b>`;
+  const mark = pc ? `<span class="tag plain">PC</span>` : r.kind==="cast" ? `<span class="tag plain">Cast</span>` : ref;
+  const num = (attr, val, label) => ended ? `${esc(label)} ${val===null ? "—" : esc(val)}`
+    : `<label class="enc-num"><span>${esc(label)}</span><input type="number" step="1" inputmode="numeric" ${attr}="${id}" value="${numAttr(val)}"></label>`;
+  const aware = pc ? num("data-eaware", v.awareness, "Awareness") : v.awareness!==null ? `<span class="enc-num">Awareness ${esc(v.awareness)}</span>` : "";
+  const acts = ended ? "" : `<div class="enc-acts">
+      <button class="btn sm" data-edmg="${id}|1">Take</button><button class="btn sm" data-edmg="${id}|-1">Heal</button>
+      <button class="btn sm" data-econdopen="${id}">Add a Condition</button>
+      <details class="enc-more" data-emore="${id}"${S.encMore && S.encMore[r.id] ? " open" : ""}><summary>More</summary>
+        ${r.kind==="cast" ? "" : `<label class="field"><span>Name</span><input type="text" data-ename="${id}" value="${esc(r.name)}" autocomplete="off"></label>`}
+        <div class="form-toggle" role="group" aria-label="${esc(v.name)}">
+          <button type="button" data-elast="${id}" class="${r.last?"on":""}" aria-pressed="${r.last}">Goes last</button>
+          <button type="button" data-eout="${id}" class="${r.out?"on":""}" aria-pressed="${r.out}">Out</button></div>
+        <button class="btn sm danger" data-erm="${id}">Remove</button></details></div>
+    ${S.encDmg && S.encDmg.row===r.id ? `<form class="enc-dmg" data-edmgform="${id}">
+        <input type="number" step="1" inputmode="numeric" data-edmgn aria-label="${S.encDmg.sign>0?"HP taken":"HP healed"}">
+        <button class="btn sm primary" type="submit">OK</button><button class="btn sm" type="button" data-edmgcancel>Cancel</button></form>` : ""}
+    ${S.encCond && S.encCond.row===r.id ? encCondFormHtml(v) : ""}`;
+  const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
+  return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
+    <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${r.out ? ` <span class="tag plain">Out</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
+      ${num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
+    ${encHealthHtml(v)}${pcFields}
+    ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
+    ${acts}</li>`;
+}
+
+// ── Reset: what ticks, what runs out, what asks for a save ──
+function encResetNow(){ return S.encReset || (S.encReset={ sources:{}, keep:{} }); }
+function encResetInput(){
+  const s=encResetNow().sources, out={};
+  for (const k of Object.keys(s)){ out[k]={}; for (const i of Object.keys(s[k])) out[k][i]=s[k][i]; }
+  return { sources:out };
+}
+function encResetHtml(e, v){
+  const st=encResetNow(), res=Engine.resolveEncounterReset(S.table, e.id, encResetInput());
+  const rows=res.rows, quiet=[];
+  const body = rows.map(x=>{
+    if (!x.ticks.length && !x.expiring.length && !x.recovery.length && !x.dying){ quiet.push(x.name.trim() || "Unnamed"); return ""; }
+    const id=esc(x.rowId), view=v.rows.find(r=>r.row.id===x.rowId);
+    const ticks = x.ticks.map(k=> k.source
+      ? `<li><label class="enc-num"><span>${esc(k.name)}:</span><input type="number" min="0" step="1" inputmode="numeric" required data-esrc="${id}|${k.index}" value="${esc(((st.sources[x.rowId]||{})[k.index])??"")}"><span>HP</span></label></li>`
+      : `<li>${esc(k.name)}: ${k.hp} HP</li>`).join("");
+    const out = x.expiring.map(k=>{
+      const key=`${x.rowId}|${k.index}`, keep=!!st.keep[key];
+      return `<li>${esc(k.name)}${k.source ? ` <small class="enc-src">${esc(k.source)}</small>` : ""}
+        <span class="form-toggle" role="group" aria-label="${esc(k.name)}">
+          <button type="button" data-ekeep="${esc(key)}|end" class="${keep?"":"on"}" aria-pressed="${!keep}">End</button>
+          <button type="button" data-ekeep="${esc(key)}|keep" class="${keep?"on":""}" aria-pressed="${keep}">Keep</button></span></li>`; }).join("");
+    const saves = x.recovery.map(k=>`<li><b>${esc(k.name)}:</b> ${esc(k.recovery)}</li>`).join("");
+    const dc = x.dying ? view && view.conditions.find(c=>c.index===x.dyingIndex) : null;
+    const dying = x.dying ? `<li><b>Dying:</b> ${esc(x.dying)}${dc && dc.counter ? ` <span class="enc-marks">${esc(dc.counter.label)} ${dc.marks}/${dc.counter.max}
+        <button class="btn sm" data-emarks="${id}|${dc.index}|-1" aria-label="Fewer ${esc(dc.counter.label)}">−</button><button class="btn sm" data-emarks="${id}|${dc.index}|1" aria-label="More ${esc(dc.counter.label)}">+</button></span>` : ""}</li>` : "";
+    return `<section class="enc-reset-row"><h3 class="cast-h">${esc(x.name.trim() || "Unnamed")}</h3>
+      ${ticks || dying ? `<ul class="enc-list">${ticks}${dying}</ul>` : ""}
+      ${out ? `<p class="cast-sub">Runs out now</p><ul class="enc-list">${out}</ul>` : ""}
+      ${saves ? `<p class="cast-sub">Calls for a check</p><ul class="enc-list">${saves}</ul>` : ""}</section>`;
+  }).join("");
+  return `<section class="enc-reset" aria-labelledby="enc-reset-h"><h2 class="cast-h" id="enc-reset-h" tabindex="-1">Reset: round ${e.round} ends</h2>
+    ${body}${quiet.length ? `<p class="step-note">Nothing on: ${esc(quiet.join(", "))}.</p>` : ""}
+    <p><button class="btn primary" data-efinish${res.ok ? "" : " disabled"}>Finish the round</button></p>
+    ${res.ok ? "" : `<p class="step-note">${esc(res.why)}</p>`}</section>`;
+}
+
+// ── The encounter ──
+function encPickHtml(e){
+  const q=foldName(S.encQ);
+  const inIt=new Set(e.rows.filter(r=>r.cast).map(r=>r.cast.id));
+  const members=Engine.castFilter(S.table, { q:S.encQ||"", status:"all" });
+  return `<div data-encpicklist>${members.length ? `<ul class="roster-list">${members.map(n=>`<li class="roster-card enc-pickrow"><span class="enc-name">${esc(n.name.trim() || "Unnamed")}</span>
+      ${inIt.has(n.id) ? `<span class="step-note">Already in</span>` : `<button class="btn sm" data-enc-addcast="${esc(n.id)}" aria-label="Add ${esc(n.name.trim() || "Unnamed")}">Add</button>`}</li>`).join("")}</ul>`
+    : `<p class="step-note">${q ? "No one matches." : "No one in the cast yet."}</p>`}</div>`;
+}
+function encAddHtml(e){
+  return `<section class="enc-add"><h2 class="cast-h">Add</h2>
+    <p><button class="btn" data-enc-pick aria-expanded="${!!S.encPick}">From the cast</button></p>
+    ${S.encPick ? `<label class="field"><span>Search the cast</span><input type="search" data-enc-q value="${esc(S.encQ||"")}" autocomplete="off"></label>${encPickHtml(e)}` : ""}
+    <div class="cast-add"><label class="field"><span>PC name</span><input type="text" data-enc-pcname placeholder="Who's at the table?" autocomplete="off"></label>
+      <button class="btn" data-enc-addpc>Add a PC</button></div>
+    <p class="step-note">From the Codex: open an entry or a group on Threats.</p></section>`;
+}
+function encPageHtml(e){
+  const v=Engine.encounterView(S.table, e.id, packsMemo), title=v.title, ended=e.status==="ended", running=e.status==="running";
+  const status = running ? `Round ${e.round}` : ended ? (e.round ? `Ended · ${encRounds(e.round)}` : "Ended · not run") : "Planned";
+  const bar = `<div class="enc-bar"><b class="enc-status">${esc(status)}</b>
+    ${e.status==="planned" ? `<button class="btn primary" data-enc-start>Start</button><button class="btn" data-enc-end>End</button>` : ""}
+    ${running ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
+  const rows = v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
+  return `<p><button class="btn sm" data-enc-back>Back to encounters</button></p>
+    ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
+      : `<label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>`}
+    ${bar}
+    ${v.atReset ? encResetHtml(e, v) : rows}
+    ${ended || v.atReset ? "" : encAddHtml(e)}
+    <p class="cast-delete"><button class="btn danger" data-enc-del>Delete</button></p>`;
+}
+function encountersTabHtml(t){
+  const e=encOpenNow();
+  return e ? encPageHtml(e) : encListHtml(t);
+}
+
+function bindEncounters(main){
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  const redraw = () => { renderTable(); };
+  const change = fn => { tableChange(fn); };
+  const open = id => {
+    S.encOpen=id; S.encReset=null; S.encDmg=null; S.encCond=null; S.encPick=false; S.encQ="";
+    window.scrollTo(0,0); redraw();
+    const e=encOpenNow(); if (!e) return;
+    if (e.status==="planned") focus("[data-enc-title]");
+    else if (e.status==="running") focus("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || focus("[data-efinish]");
+    else focus("[data-enc-h]");
+  };
+  const eid = () => S.encOpen;
+  const edit = (rowId, f) => change(()=>Engine.editParticipant(S.table, eid(), rowId, f));
+  const rowEl = id => $("main").querySelector(attrSel("data-erow", id));
+  const toActive = () => { const el=$("main").querySelector(".enc-row.active"); if (el && el.scrollIntoView) el.scrollIntoView({ block:"nearest" }); };
+  const next = () => { const r=Engine.nextTurn(S.table, eid()); if (!r.ok){ notice(r.why); return; } tableChange(()=>{});
+    if (r.reset) focus("[data-esrc]") || focus("[data-efinish]"); else { focus("[data-enext]"); toActive(); } };
+  const pickNextAdd = id => { const ids=[...$("main").querySelectorAll("[data-enc-addcast]")].map(b=>b.dataset.encAddcast); const at=ids.indexOf(id); return ids[at+1] || ids[at-1] || null; };
+  const act = {
+    "data-enc-new": () => { const input=main.querySelector("[data-enc-name]"); let id; change(()=>{ id=Engine.addEncounter(S.table, { name:input.value }).id; }); open(id); },
+    "data-enc-open": b => open(b.dataset.encOpen),
+    "data-enc-back": () => { const id=S.encOpen; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
+    "data-enc-start": () => { const r=Engine.startEncounter(S.table, eid()); if (!r.ok){ notice(r.why); return; } S.encReset=null; tableChange(()=>{}); focus("[data-enext]"); toActive(); },
+    "data-enc-end": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
+      askFirst({ title:`End ${t}?`, text:"It's kept, read-only, under Past encounters.", yes:"End it", danger:false, then(){
+        const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encCond=null; change(()=>Engine.endEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
+    "data-enc-del": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
+      askFirst({ title:`Delete ${t}?`, text:"It isn't kept anywhere else unless you've exported the table.", yes:"Delete", then(){
+        const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encCond=null; change(()=>Engine.removeEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
+    "data-enext": next,
+    "data-enc-pick": () => { S.encPick=!S.encPick; redraw(); if (S.encPick) focus("[data-enc-q]"); else focus("[data-enc-pick]"); },
+    "data-enc-addcast": b => { const id=b.dataset.encAddcast, after=pickNextAdd(id), r=Engine.addParticipant(S.table, eid(), { kind:"cast", id });
+      if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(after ? attrSel("data-enc-addcast", after) : "[data-enc-q]"); },
+    "data-enc-addpc": () => addPc(),
+    "data-eopencast": b => { const id=b.dataset.eopencast; if (!S.table.cast.some(n=>n.id===id)) return;
+      S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
+    "data-eopenentry": b => openThreat(b.dataset.eopenentry, null, null, eid()),
+    "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encCond=null; redraw(); focus("[data-edmgn]"); },
+    "data-edmgcancel": () => { const row=S.encDmg && S.encDmg.row, sign=S.encDmg ? S.encDmg.sign : 1; S.encDmg=null; redraw(); focus(attrSel("data-edmg", `${row}|${sign}`)); },
+    "data-econdopen": b => { S.encCond={ row:b.dataset.econdopen, id:"", loc:"", source:"", rounds:"", err:"" }; S.encDmg=null; redraw(); focus("[data-econd-id]"); },
+    "data-econd-cancel": () => { const row=S.encCond.row; S.encCond=null; redraw(); focus(attrSel("data-econdopen", row)); },
+    "data-econd-add": () => { const d=S.encCond, rowId=d.row, rounds=d.rounds.trim();
+      const r=Engine.participantAddCondition(S.table, eid(), rowId, { id:d.id, location:d.loc, source:d.source, rounds:rounds==="" ? null : rounds });
+      if (!r.ok){ d.err=r.why; redraw(); focus("[data-econd-add]"); return; }
+      S.encCond=null; tableChange(()=>{});
+      const chips=$("main").querySelectorAll(`${attrSel("data-erow", rowId)} .enc-cond [data-tip]`);
+      if (chips.length) chips[chips.length-1].focus(); else focus(attrSel("data-econdopen", rowId)); },
+    "data-econdrm": b => { const [row, i]=b.dataset.econdrm.split("|"); change(()=>Engine.participantRemoveCondition(S.table, eid(), row, +i)); focus(attrSel("data-econdopen", row)); },
+    "data-emarks": b => { const [row, i, d]=b.dataset.emarks.split("|"), e=encOpenNow(), r=e && e.rows.find(x=>x.id===row), c=r && r.conditions[+i];
+      if (c) change(()=>Engine.participantConditionMarks(S.table, eid(), row, +i, (c.marks||0) + (+d))); },
+    "data-elast": b => { const id=b.dataset.elast, r=encOpenNow().rows.find(x=>x.id===id); S.encMore=Object.assign(S.encMore||{}, { [id]:true }); edit(id, { last:!r.last }); focus(attrSel("data-elast", id)); },
+    "data-eout": b => { const id=b.dataset.eout, r=encOpenNow().rows.find(x=>x.id===id); S.encMore=Object.assign(S.encMore||{}, { [id]:true }); edit(id, { out:!r.out }); focus(attrSel("data-eout", id)); },
+    "data-erm": b => { const id=b.dataset.erm, e=encOpenNow(), at=e.rows.findIndex(x=>x.id===id), r=e.rows[at];
+      askFirst({ title:`Remove ${r.name.trim() || "this row"}?`, text:"Their damage and Conditions in this encounter go with them.", yes:"Remove", then(){
+        const ids=Engine.encounterView(S.table, eid(), packsMemo).rows.map(x=>x.row.id), pos=ids.indexOf(id), after=ids[pos+1] || ids[pos-1];
+        change(()=>Engine.removeParticipant(S.table, eid(), id));
+        const el=after && rowEl(after); if (el) el.focus(); else focus("[data-enc-pcname]"); } }); },
+    "data-ekeep": b => { const [row, i, what]=b.dataset.ekeep.split("|"); encResetNow().keep[`${row}|${i}`]= what==="keep"; redraw(); focus(attrSel("data-ekeep", b.dataset.ekeep)); },
+    "data-efinish": () => { const st=encResetNow(), keep=Object.keys(st.keep).filter(k=>st.keep[k]).map(k=>{ const [row, i]=k.split("|"); return [row, +i]; });
+      const r=Engine.applyEncounterReset(S.table, eid(), encResetInput(), { keep }); if (!r.ok){ notice(r.why); return; }
+      S.encReset=null; tableChange(()=>{}); focus("[data-enext]"); toActive(); },
+    // Last: a tap on a row's name area makes it active, and a tap on anything with its own job does that job.
+    "data-eturn": (el, ev) => { if (ev.target.closest("button, input, select, label, a, summary")) return;
+      const r=Engine.setTurn(S.table, eid(), el.dataset.eturn); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); toActive(); },
+  };
+  function addPc(){
+    const input=$("main").querySelector("[data-enc-pcname]"); if (!input || !input.value.trim()) return;
+    const r=Engine.addParticipant(S.table, eid(), { kind:"pc", name:input.value });
+    if (!r.ok){ notice(r.why); return; }
+    tableChange(()=>{}); focus("[data-enc-pcname]");
+  }
+  if (!encOpenNow()){
+    main.onclick = ev => { const b=ev.target.closest("[data-enc-new], [data-enc-open], [data-ecard]"); if (!b) return;
+      if (b.matches("[data-enc-new]")) act["data-enc-new"](); else if (b.matches("[data-enc-open]")) act["data-enc-open"](b);
+      else if (!ev.target.closest("button")) open(b.dataset.ecard); };
+    const input=main.querySelector("[data-enc-name]");
+    if (input) input.onkeydown = ev => { if (ev.key==="Enter"){ ev.preventDefault(); act["data-enc-new"](); } };
+    return;
+  }
+  main.onclick = ev => {
+    for (const attr of Object.keys(act)){
+      const el=ev.target.closest(`[${attr}]`);
+      if (el && main.contains(el)){ act[attr](el, ev); return; }
+    }
+  };
+  // Typed fields save on change; a number field that can't be a whole number shows what was stored (the redraw).
+  main.onchange = ev => {
+    const el=ev.target, d=el.dataset;
+    if ("encTitle" in d){ tableChange(()=>Engine.editEncounter(S.table, eid(), { name:el.value }), false); return; }
+    const row = (key, f) => { edit(el.dataset[key], f(el.value)); focus(attrSel(`data-${key.replace(/[A-Z]/g, c=>"-"+c.toLowerCase())}`, el.dataset[key])); };
+    if ("eorder" in d) row("eorder", v=>({ order:v })); else if ("ehp" in d) row("ehp", v=>({ hp:v }));
+    else if ("elevels" in d) row("elevels", v=>({ levels:v })); else if ("eaware" in d) row("eaware", v=>({ awareness:v }));
+    else if ("ename" in d) { edit(d.ename, { name:el.value }); focus(attrSel("data-ename", d.ename)); }
+    else if ("econdId" in d){ S.encCond.id=el.value; S.encCond.loc=""; S.encCond.err=""; redraw(); focus("[data-econd-id]"); }
+    else if ("econdLoc" in d) S.encCond.loc=el.value;
+  };
+  main.oninput = ev => {
+    const el=ev.target, d=el.dataset;
+    if ("encTitle" in d) tableChange(()=>Engine.editEncounter(S.table, eid(), { name:el.value }), false);
+    else if ("econdSrc" in d) S.encCond.source=el.value;
+    else if ("econdRounds" in d) S.encCond.rounds=el.value;
+    else if ("encQ" in d){ S.encQ=el.value; const box=main.querySelector("[data-encpicklist]"); if (box) box.outerHTML=encPickHtml(encOpenNow()); }
+    else if ("esrc" in d){
+      const [row, i]=d.esrc.split("|"), st=encResetNow(); (st.sources[row]||(st.sources[row]={}))[i]=el.value;
+      const fin=main.querySelector("[data-efinish]"), res=Engine.resolveEncounterReset(S.table, eid(), encResetInput());
+      if (fin) fin.disabled=!res.ok;
+    }
+  };
+  main.onsubmit = ev => {
+    const f=ev.target.closest("[data-edmgform]"); if (!f) return;
+    ev.preventDefault();
+    const row=f.dataset.edmgform, sign=S.encDmg ? S.encDmg.sign : 1, raw=f.querySelector("[data-edmgn]").value.trim();
+    if (raw==="") { S.encDmg=null; redraw(); focus(attrSel("data-edmg", `${row}|${sign}`)); return; }
+    const r=Engine.participantDamage(S.table, eid(), row, Number(raw) * sign);
+    if (!r.ok){ notice(r.why); return; }
+    S.encDmg=null; tableChange(()=>{}); focus(attrSel("data-edmg", `${row}|1`));
+  };
+  main.onkeydown = ev => {
+    if (ev.key==="Enter" && ev.target.matches("[data-enc-pcname]")){ ev.preventDefault(); addPc(); }
+    else if (ev.key==="Enter" && ev.target.matches("[data-econd-src], [data-econd-rounds]")){ ev.preventDefault(); act["data-econd-add"](); }
+  };
+  // A More that was opened stays open through a redraw.
+  main.querySelectorAll("[data-emore]").forEach(d=>d.ontoggle=()=>{ S.encMore=Object.assign(S.encMore||{}, { [d.dataset.emore]:d.open }); });
 }

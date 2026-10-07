@@ -3203,6 +3203,8 @@ const Engine = (() => {
   const NOTE_ID_RE = /^N-[0-9A-HJKMNP-TV-Z]{8}$/;
   const CAST_ID_RE = /^C-[0-9A-HJKMNP-TV-Z]{8}$/;
   const INTERACTION_ID_RE = /^I-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const ENCOUNTER_ID_RE = /^EN-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const ROW_ID_RE = /^R-[0-9A-HJKMNP-TV-Z]{8}$/;
   const isTableId = v => typeof v==="string" && TABLE_ID_RE.test(v);
   function newTableId(){
     const s = randomChars(12);
@@ -3329,12 +3331,12 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.4";
+  const TABLE_SCHEMA_VERSION = "0.5";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[], cast:[], interactions:[] };
+             notes:[], cast:[], interactions:[], encounters:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -3374,6 +3376,10 @@ const Engine = (() => {
     if (typeof arrived!=="string" || _versionNewer("0.4", arrived)){
       for (const n of (Array.isArray(c.cast) ? c.cast : [])) if (_isObj(n)) n.from = null;
     }
+    //   Schema 0.5 (Decision 188): a table gets encounters.
+    if (typeof arrived!=="string" || _versionNewer("0.5", arrived)){
+      if (!Array.isArray(c.encounters)) c.encounters = [];
+    }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
     c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
@@ -3391,6 +3397,7 @@ const Engine = (() => {
     const usedInteraction = new Set();
     c.interactions = (Array.isArray(c.interactions) ? c.interactions : []).filter(_isObj);
     for (const x of c.interactions) _interaction(x, usedInteraction);
+    _encounters(c);
     return c;
   }
   function tableCheck(t){
@@ -3501,6 +3508,8 @@ const Engine = (() => {
     // What they had to do with the crew stays, under their name (Decision 178).
     const name = _str(t.cast[i].name);
     if (name.trim()) for (const x of _interactions(t)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l) && l.id===id) l.name = name;
+    if (name.trim()) for (const e of _encList(t)) for (const r of (Array.isArray(e.rows) ? e.rows : []))
+      if (_isObj(r) && _isObj(r.cast) && r.cast.id===id) r.cast.name = name;
     t.cast.splice(i, 1);
     _tableStamp(t);
     return { ok:true };
@@ -3840,6 +3849,479 @@ const Engine = (() => {
     return { name:_str(f.name).trim() || (found ? _str(found.entry.name) : ""), packId:f.pack, id:f.id, here:!!found };
   }
 
+  // ── Encounters (Decisions 188–190) ──────────────────────────────────────
+  // A table keeps its encounters: who is in one, whose turn it is, and what is
+  // still on them. An encounter has no type (188). A row stores damage taken and
+  // its Conditions; HP left, Health Levels and Pain are derived on every read
+  // (constraint 7). Nothing here writes to the cast, a pack or a character, and
+  // nothing rolls. The rules it applies are the sheet's, read from the data:
+  // conditionKey and addCondition for the Conditions, the Health and Pain
+  // bands for the figures, resolveReset's `ongoing` for Reset (Decisions 95,
+  // 96, 100).
+  const ENCOUNTER_STATUSES = ["planned","running","ended"];
+  const ROW_KINDS = ["pc","cast","entry"];
+  const _rounds = _tier;   // a whole number of 1 or more, else "until it's dealt with"
+  const _encList = t => Array.isArray(t && t.encounters) ? t.encounters.filter(_isObj) : [];
+  const _rowList = e => Array.isArray(e && e.rows) ? e.rows.filter(_isObj) : [];
+  function newEncounterId(used){
+    let id;
+    do id = `EN-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newRowId(used){
+    let id;
+    do id = `R-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  // A row's Conditions, coerced: the character's entry shape plus a source and rounds.
+  // One entry per conditionKey, the first kept.
+  function _rowConditions(list){
+    const out = [], seen = new Set();
+    for (const e of (Array.isArray(list) ? list : [])){
+      if (!_isObj(e) || typeof e.id!=="string") continue;
+      const def = conditionById(e.id);
+      if (!def) continue;
+      const c = { id:def.id };
+      if (def.location){
+        if (typeof e.location==="string" && locationById(e.location)) c.location = e.location;
+        else continue;
+      }
+      if (def.counter){
+        const m = _int(e.marks);
+        c.marks = Math.max(0, Math.min(def.counter.max||0, m===null ? 0 : m));
+      }
+      if (typeof e.note==="string" && e.note) c.note = e.note;
+      c.source = _str(e.source);
+      c.rounds = _rounds(e.rounds);
+      const key = conditionKey(c);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(c);
+    }
+    return out;
+  }
+  // One row, coerced in place (Decision 188). `used` holds the row ids taken in this encounter.
+  function _encRow(r, used){
+    r.kind = ROW_KINDS.includes(r.kind) ? r.kind : "pc";
+    if (!(typeof r.id==="string" && ROW_ID_RE.test(r.id)) || used.has(r.id)) r.id = newRowId(used);
+    used.add(r.id);
+    r.name = _str(r.name);
+    const link = _castLinks([r.cast])[0];
+    r.cast = r.kind==="cast" && link ? link : null;
+    r.from = r.kind==="entry" ? _castFrom(r.from) : null;
+    r.block = r.kind==="entry" ? _block(r.block) : null;
+    r.order = _int(r.order);
+    r.last = r.last===true;
+    r.out = r.out===true;
+    const d = _int(r.damage);
+    r.damage = d!==null && d > 0 ? d : 0;
+    const pc = r.kind==="pc", pos = v => { const n = _int(v); return pc && n!==null && n>=1 ? n : null; };
+    r.hp = pos(r.hp);
+    r.levels = pos(r.levels);
+    r.awareness = pc ? _int(r.awareness) : null;
+    r.conditions = _rowConditions(r.conditions);
+  }
+  // The gate for t.encounters: called by migrateTable on every load.
+  function _encounters(c){
+    const used = new Set();
+    c.encounters = (Array.isArray(c.encounters) ? c.encounters : []).filter(_isObj);
+    for (const e of c.encounters){
+      if (!(typeof e.id==="string" && ENCOUNTER_ID_RE.test(e.id)) || used.has(e.id)) e.id = newEncounterId(used);
+      used.add(e.id);
+      e.name = _str(e.name);
+      if (!ENCOUNTER_STATUSES.includes(e.status)) e.status = "planned";
+      const round = _int(e.round);
+      e.round = round!==null && round > 0 ? round : 0;
+      const usedRows = new Set();
+      e.rows = (Array.isArray(e.rows) ? e.rows : []).filter(_isObj);
+      for (const r of e.rows) _encRow(r, usedRows);
+      e.created = _isoOrNull(e.created);
+      e.updated = _isoOrNull(e.updated);
+    }
+    // One running at most: the newest keeps going, the rest are ended, none dropped.
+    const running = c.encounters.filter(e=>e.status==="running");
+    if (running.length > 1){
+      const when = e => { const n = Date.parse(e.updated); return Number.isFinite(n) ? n : -Infinity; };
+      let keep = running[0];
+      for (const e of running) if (when(e) > when(keep)) keep = e;
+      for (const e of running) if (e!==keep) e.status = "ended";
+    }
+    for (const e of c.encounters)
+      e.turn = e.status==="running" && typeof e.turn==="string" && e.rows.some(r=>r.id===e.turn) ? e.turn : null;
+  }
+
+  // A name the GM left blank reads as the day it was made.
+  function encounterTitle(e){
+    const n = _str(e && e.name).trim();
+    if (n) return n;
+    const day = _str(e && e.created).slice(0, 10);
+    return day ? `Encounter ${day}` : "Encounter";
+  }
+  const _enc = (t, id) => _encList(t).find(e=>e.id===id) || null;
+  // The encounter to write to: it exists and hasn't ended.
+  function _live(t, encId){
+    const e = _enc(t, encId);
+    if (!e) return { why:"No such encounter." };
+    if (e.status==="ended") return { why:`${encounterTitle(e)} has ended.` };
+    return { e };
+  }
+  function _liveRow(t, encId, rowId){
+    const l = _live(t, encId);
+    if (l.why) return l;
+    const r = _rowList(l.e).find(x=>x.id===rowId);
+    return r ? { e:l.e, r } : { why:"No such row." };
+  }
+  function runningEncounter(t){ return _encList(t).find(e=>e.status==="running") || null; }
+
+  function addEncounter(t, f){
+    if (!Array.isArray(t.encounters)) t.encounters = [];
+    const now = new Date().toISOString();
+    const used = new Set(t.encounters.map(e=>e && e.id));
+    const e = { id:newEncounterId(used), name:_str((f||{}).name).trim(), status:"planned", round:0, turn:null, rows:[], created:now, updated:now };
+    t.encounters.unshift(e);
+    _tableStamp(t);
+    return { ok:true, id:e.id };
+  }
+  function editEncounter(t, id, f){
+    const l = _live(t, id);
+    if (l.why) return { ok:false, why:l.why };
+    if (_isObj(f) && "name" in f) l.e.name = _str(f.name);
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+  // The one writer that works on an ended encounter: Delete.
+  function removeEncounter(t, id){
+    const i = Array.isArray(t && t.encounters) ? t.encounters.findIndex(e=>_isObj(e) && e.id===id) : -1;
+    if (i < 0) return { ok:false, why:"No such encounter." };
+    t.encounters.splice(i, 1);
+    _tableStamp(t);
+    return { ok:true };
+  }
+
+  // The order shown (Decision 189): Combat Sense highest first, a row with no result after those
+  // that have one in the order added, and Goes last after everyone by the same rule.
+  // Ties are shown, never broken. A stable sort keeps the order added.
+  function _encOrder(rows){
+    const key = r => [r.last ? 1 : 0, r.order===null ? 1 : 0, r.order===null ? 0 : -r.order];
+    const sorted = rows.map((r, i)=>({ r, i })).sort((a, b)=>{
+      const x = key(a.r), y = key(b.r);
+      for (let k = 0; k < 3; k++) if (x[k]!==y[k]) return x[k] - y[k];
+      return a.i - b.i;
+    }).map(o=>o.r);
+    const count = new Map();
+    for (const r of rows) if (!r.last && r.order!==null) count.set(r.order, (count.get(r.order)||0) + 1);
+    return { rows:sorted, tied:r => !r.last && r.order!==null && count.get(r.order) > 1 };
+  }
+
+  function addParticipant(t, encId, f){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    f = _isObj(f) ? f : {};
+    const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null,
+      order:null, last:false, out:false, damage:0, hp:null, levels:null, awareness:null, conditions:[] };
+    if (f.kind==="cast"){
+      const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===f.id);
+      if (!m) return { ok:false, why:"No such cast member." };
+      if (_rowList(l.e).some(r=>r.kind==="cast" && _isObj(r.cast) && r.cast.id===m.id)) return { ok:false, why:"Already in." };
+      const name = _str(m.name).trim() || "Unnamed";
+      row.kind = "cast"; row.name = name; row.cast = { kind:"cast", id:m.id, name };
+    } else {
+      const name = _str(f.name).trim();
+      if (!name) return { ok:false, why:"Name them first." };
+      row.name = name;
+    }
+    l.e.rows.push(row);
+    _tableStamp(t, l.e);
+    return { ok:true, id:row.id };
+  }
+  // The first of "X", "X 2", "X 3"… that no row in the encounter has.
+  function _numbered(e, base){
+    const taken = new Set(_rowList(e).map(r=>r.name));
+    let name = base;
+    for (let n = 2; taken.has(name); n++) name = `${base} ${n}`;
+    return name;
+  }
+  // An entry row is its own copy of the entry's block (Decision 188), as castFromEntry's is,
+  // so two copies never share one and the pack is never touched.
+  function _entryRow(e, pack, entry){
+    let block = null;
+    try { block = _isObj(entry.block) ? JSON.parse(JSON.stringify(entry.block)) : null; } catch (x) {}
+    const used = new Set(_rowList(e).map(r=>r.id)), base = _str(entry.name).trim() || "Unnamed";
+    return { id:newRowId(used), kind:"entry", name:_numbered(e, base), cast:null,
+             from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block),
+             order:null, last:false, out:false, damage:0, hp:null, levels:null, awareness:null, conditions:[] };
+  }
+  function participantFromEntry(t, encId, pack, entryId){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    const found = _isObj(pack) && _isObj(pack.meta) ? packEntry([pack], pack.meta.id, entryId) : null;
+    if (!found) return { ok:false, why:"No such entry." };
+    const row = _entryRow(l.e, pack, found.entry);
+    l.e.rows.push(row);
+    _tableStamp(t, l.e);
+    return { ok:true, id:row.id };
+  }
+  function participantsFromGroup(t, encId, pack, groupId){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    const hit = _isObj(pack) && _isObj(pack.meta) ? packGroups([pack], {}).find(x=>x.group.id===groupId) : null;
+    if (!hit) return { ok:false, why:"No such group." };
+    if (!hit.members.length) return { ok:false, why:"Nobody in that group can be found." };
+    const ids = [];
+    for (const m of hit.members) for (let i = 0; i < m.count; i++){
+      const row = _entryRow(l.e, pack, m.entry);
+      l.e.rows.push(row);
+      ids.push(row.id);
+    }
+    _tableStamp(t, l.e);
+    return { ok:true, ids };
+  }
+  function editParticipant(t, encId, rowId, f){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    const r = l.r;
+    if (_isObj(f)){
+      if ("name" in f) r.name = _str(f.name);
+      if ("order" in f) r.order = _int(f.order);
+      if ("last" in f) r.last = f.last===true;
+      if ("out" in f) r.out = f.out===true;
+      if (r.kind==="pc"){
+        const pos = v => { const n = _int(v); return n!==null && n>=1 ? n : null; };
+        if ("hp" in f) r.hp = pos(f.hp);
+        if ("levels" in f) r.levels = pos(f.levels);
+        if ("awareness" in f) r.awareness = _int(f.awareness);
+      }
+    }
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+  // Rows after `id` in the order shown that are still in the encounter; the next one, or null.
+  function _nextIn(e, id){
+    const rows = _encOrder(_rowList(e)).rows;
+    for (let i = rows.findIndex(r=>r.id===id) + 1; i < rows.length; i++) if (!rows[i].out) return rows[i];
+    return null;
+  }
+  function removeParticipant(t, encId, rowId){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    const e = l.e;
+    if (e.turn===rowId){ const n = _nextIn(e, rowId); e.turn = n ? n.id : null; }
+    e.rows.splice(e.rows.indexOf(l.r), 1);
+    _tableStamp(t, e);
+    return { ok:true };
+  }
+  // HP straight onto a row: no armor, no Shock (Decision 189). A negative number heals.
+  function participantDamage(t, encId, rowId, n){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    const v = typeof n==="number" || typeof n==="string" ? _int(n) : null;
+    if (v===null) return { ok:false, why:"Enter a whole number." };
+    l.r.damage = Math.max(0, l.r.damage + v);
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+  // The sheet's Conditions rule, run on the row's list: addCondition's refusals, word for word.
+  const _condShim = r => ({ trackers:{ conditions:r.conditions } });
+  function participantAddCondition(t, encId, rowId, entry){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    const res = addCondition(_condShim(l.r), entry);
+    if (!res.ok) return res;
+    const c = l.r.conditions[l.r.conditions.length - 1];
+    c.source = _str(entry.source).trim();
+    c.rounds = _rounds(entry.rounds);
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+  function participantRemoveCondition(t, encId, rowId, index){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    const res = removeCondition(_condShim(l.r), index);
+    if (res.ok) _tableStamp(t, l.e);
+    return res;
+  }
+  function participantConditionMarks(t, encId, rowId, index, marks){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    const res = setConditionMarks(_condShim(l.r), index, marks);
+    if (res.ok) _tableStamp(t, l.e);
+    return res;
+  }
+
+  function startEncounter(t, encId){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    const e = l.e;
+    if (e.status!=="planned") return { ok:false, why:`${encounterTitle(e)} is already running.` };
+    const other = runningEncounter(t);
+    if (other) return { ok:false, why:`${encounterTitle(other)} is still running. End it first.` };
+    const first = _encOrder(_rowList(e)).rows.find(r=>!r.out);
+    if (!first) return { ok:false, why:"Add someone to the encounter first." };
+    e.status = "running"; e.round = 1; e.turn = first.id;
+    _tableStamp(t, e);
+    return { ok:true };
+  }
+  function nextTurn(t, encId){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    const e = l.e;
+    if (e.status!=="running") return { ok:false, why:`${encounterTitle(e)} isn't running.` };
+    if (e.turn===null) return { ok:false, why:"Finish the round first." };
+    const n = _nextIn(e, e.turn);
+    e.turn = n ? n.id : null;
+    _tableStamp(t, e);
+    return n ? { ok:true } : { ok:true, reset:true };
+  }
+  function setTurn(t, encId, rowId){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    if (l.e.status!=="running") return { ok:false, why:`${encounterTitle(l.e)} isn't running.` };
+    if (l.r.out) return { ok:false, why:`${l.r.name.trim() || "They"} are out of it.` };
+    l.e.turn = l.r.id;
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+
+  // Reset, row by row (Decision 189), with resolveReset's rule read from the same data:
+  // `ongoing` ticks (a number entered for a source), the Conditions whose rounds run out
+  // now, every other Condition's recovery as the save to call, and Dying's check by name.
+  // `input`: { sources: { [row id]: { [condition index]: hp } } }. Pure.
+  function resolveEncounterReset(t, encId, input){
+    const e = _enc(t, encId);
+    if (!e) return { ok:false, why:"No such encounter." };
+    if (e.status!=="running") return { ok:false, why:`${encounterTitle(e)} isn't running.` };
+    const W = (D().damageRules||{}).whileDying || {};
+    const src = _isObj(input) && _isObj(input.sources) ? input.sources : {};
+    const rows = [];
+    let missing = null;   // the first tick with no number: the rows are still all drawn, so the screen can ask
+    for (const r of _encOrder(_rowList(e)).rows){
+      const mine = _isObj(src[r.id]) ? src[r.id] : {};
+      const ticks = [], expiring = [], recovery = [];
+      let dying = null, dyingIndex = null;
+      r.conditions.forEach((c, index)=>{
+        const def = conditionById(c.id);
+        if (!def) return;
+        const loc = c.location ? locationById(c.location) : null, name = def.name + (loc ? ` (${loc.name})` : "");
+        if (W.condition && def.id===W.condition){ dying = _str(W.resetCheck) || null; dyingIndex = index; }
+        const o = def.ongoing;
+        if (o){
+          const v = o.source ? mine[index] : o.hp;
+          ticks.push({ index, id:def.id, name:def.name, source:!!o.source, hp:v==null || v==="" ? null : nonNegInt(v) });
+        }
+        if (c.rounds===1) expiring.push({ index, id:def.id, name, source:c.source });
+        else if (_str(def.recovery).trim()) recovery.push({ index, id:def.id, name, recovery:def.recovery, source:c.source });
+      });
+      const gap = ticks.find(x=>x.hp===null);
+      if (gap && !missing) missing = { tick:gap, rowName:r.name };
+      rows.push({ rowId:r.id, name:r.name, ticks, expiring, recovery, dying, dyingIndex,
+                  total:ticks.reduce((n, x)=>n + (x.hp||0), 0) });
+    }
+    if (missing) return { ok:false, why:`Enter this round's ${missing.tick.name} damage for ${missing.rowName.trim() || "them"}. Put 0 if it's out.`, rows };
+    return { ok:true, round:e.round, rows };
+  }
+  // The one writer, re-resolving from its inputs like applyReset. `choices`: { keep: [[row id, index]] }.
+  function applyEncounterReset(t, encId, input, choices){
+    const res = resolveEncounterReset(t, encId, input);
+    if (!res.ok) return res;
+    const e = _enc(t, encId);
+    if (e.turn!==null) return { ok:false, why:"The round isn't over yet." };
+    const keep = new Set((_isObj(choices) && Array.isArray(choices.keep) ? choices.keep : [])
+      .filter(k=>Array.isArray(k) && typeof k[0]==="string").map(k=>`${k[0]}|${k[1]}`));
+    for (const out of res.rows){
+      const r = _rowList(e).find(x=>x.id===out.rowId);
+      r.damage += out.total;
+      const gone = [];
+      r.conditions.forEach((c, i)=>{
+        if (c.rounds===null) return;
+        if (c.rounds===1 && !keep.has(`${r.id}|${i}`)) gone.push(i);
+        else c.rounds = c.rounds===1 ? 1 : c.rounds - 1;
+      });
+      for (const i of gone.reverse()) r.conditions.splice(i, 1);
+    }
+    e.round += 1;
+    const first = _encOrder(_rowList(e)).rows.find(r=>!r.out);
+    e.turn = first ? first.id : null;
+    _tableStamp(t, e);
+    return { ok:true, round:e.round };
+  }
+  function endEncounter(t, encId){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    l.e.status = "ended"; l.e.turn = null;
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+
+  // Pain for a count of Health Levels lost, by painState's rule (Decision 96): the highest band
+  // the levels lost reach, plus the Pain the Conditions add, clamped to the table. painState
+  // reads a character; a row has no character, so this is the band and the clamp on their own,
+  // and a test holds the two together.
+  function painFor(levelsLost, conditionPain){
+    const hl = D().resources.healthLevels, lost = Number(levelsLost)||0;
+    let band = hl.painLevels[0];
+    for (const p of hl.painLevels) if (lost >= p.hlLostThreshold && p.hlLostThreshold >= band.hlLostThreshold) band = p;
+    const top = hl.painLevels.reduce((m, p)=>Math.max(m, p.level), 0);
+    const target = Math.max(0, Math.min(top, band.level + (Number(conditionPain)||0)));
+    const lvl = hl.painLevels.find(p=>p.level===target) || band;
+    return { level:lvl.level, label:lvl.label, description:lvl.description };
+  }
+  // A row's totals: a PC's are the GM's own numbers, an NPC's come from the block (npc()).
+  // Every figure is null when its inputs aren't there.
+  function _rowTotals(t, r){
+    const none = { total:null, levels:null, hpPer:null };
+    if (r.kind==="pc"){
+      const hp = r.hp, lv = r.levels;
+      return { total:hp, levels:hp!==null && lv!==null && hp % lv===0 ? lv : null, hpPer:hp!==null && lv!==null && hp % lv===0 ? hp / lv : null };
+    }
+    const block = r.kind==="cast"
+      ? (() => { const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && _isObj(r.cast) && n.id===r.cast.id); return m ? m.block : null; })()
+      : r.block;
+    const h = npc(block).health;
+    return h ? { total:h.total, levels:h.levels, hpPer:h.hpPer } : none;
+  }
+  function _rowBlock(t, r){
+    if (r.kind==="entry") return r.block;
+    if (r.kind!=="cast") return null;
+    const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && _isObj(r.cast) && n.id===r.cast.id);
+    return m ? m.block : null;
+  }
+  // The encounter as the screen reads it: the rows in order, each with its figures. Total.
+  function encounterView(t, encId, packs){
+    const e = _enc(t, encId);
+    if (!e) return null;
+    const ord = _encOrder(_rowList(e));
+    const rows = ord.rows.map(r=>{
+      const conditions = r.conditions.map((c, index)=>{
+        const def = conditionById(c.id), loc = c.location ? locationById(c.location) : null;
+        return { index, id:c.id, def, name:def ? def.name : String(c.id), location:c.location||null, locationName:loc ? loc.name : null,
+                 rounds:c.rounds, source:c.source, note:_str(c.note), marks:def && def.counter ? c.marks : null, counter:def ? def.counter||null : null };
+      });
+      const condPain = conditions.reduce((n, c)=>n + (c.def && typeof c.def.painLevels==="number" ? c.def.painLevels : 0), 0);
+      const tot = _rowTotals(t, r), taken = r.damage;
+      const levelsLost = tot.levels!==null && tot.hpPer ? Math.min(tot.levels, Math.floor(taken / tot.hpPer)) : null;
+      let pain = null;
+      if (levelsLost!==null || condPain!==0){
+        const p = painFor(levelsLost || 0, condPain);
+        pain = { level:p.level, label:p.label, description:p.description, fromConditions:condPain };
+      }
+      const left = tot.total!==null ? Math.max(0, tot.total - taken) : null;
+      const health = { taken, total:tot.total, left, down:left!==null && left===0,
+                       levels:tot.levels, levelsLeft:levelsLost!==null ? tot.levels - levelsLost : null, pain };
+      let awareness = null;
+      if (r.kind==="pc") awareness = r.awareness;
+      else {
+        const b = _rowBlock(t, r), k = _isObj(b) && Array.isArray(b.skills) ? b.skills.find(x=>_isObj(x) && x.skill==="awareness") : null;
+        awareness = k ? _int(k.total) : null;
+      }
+      const name = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).name : r.name;
+      const gone = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).gone : false;
+      return { row:r, name:_str(name).trim() || "Unnamed", gone, health, awareness, ties:ord.tied(r), active:e.status==="running" && e.turn===r.id,
+               from:r.kind==="entry" ? entryLink(packs, r.from) : null, conditions };
+    });
+    return { encounter:e, title:encounterTitle(e), rows, atReset:e.status==="running" && e.turn===null };
+  }
+
+
   // The engine's surface, grouped by domain.
   return {
     // Data: lookups by id, paths and formulas the data holds
@@ -3884,6 +4366,11 @@ const Engine = (() => {
     // The cast: a stat block read, and a member added, edited, removed, found
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it
-    addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName };
+    addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName,
+    // Encounters: who is in one, whose turn it is, and what is still on them
+    addEncounter, editEncounter, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,
+    participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
+    participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, resolveEncounterReset,
+    applyEncounterReset, endEncounter, encounterView, painFor };
 })();
 /*ENGINE-END*/

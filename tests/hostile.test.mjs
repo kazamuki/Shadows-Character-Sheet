@@ -491,3 +491,109 @@ test("a pack file with __proto__ keys at every level pollutes nothing on import,
   assert.deepEqual(injected(imp, "the refusal"), []);
   assert.deepEqual(imp.errors, []);
 });
+
+// ── An encounter is untrusted too (Decisions 188–190, 124) ─────────────
+function hostileEncounters() {
+  const t = Engine.newTable(P("tbl.name"));
+  t.cast = [{ id: "C-ABCDEFGH", name: P("enc.cast") }];
+  const cond = (o = {}) => ({ id: "burning", source: P("cond.source"), note: P("cond.note"), rounds: 3, ...o });
+  t.encounters = [
+    { id: "EN-ABCDEFGH", name: P("enc.name"), status: "running", round: "4", turn: "R-ABCDEFGH", created: P("enc.created"), updated: "2026-10-05T10:00:00.000Z",
+      rows: [
+        { id: "R-ABCDEFGH", kind: "pc", name: P("row.name"), order: "7", damage: "-5", hp: 0, levels: -3, awareness: "x", last: "yes", out: 1,
+          conditions: [cond(), cond(), cond({ id: P("cond.id") }), cond({ id: "injured" }), cond({ id: "injured", location: P("cond.loc") }),
+                       cond({ id: "dying", marks: "9", rounds: -1 }), cond({ id: "bleeding", rounds: "x" }), 5, null, "x"] },
+        { id: "R-ABCDEFGH", kind: "cast", name: P("row2.name"), cast: { kind: "cast", id: "C-ZZZZZZZZ", name: P("row2.link") }, hp: 30, levels: 6, awareness: 4,
+          damage: 1e400, order: 1e400, conditions: "x" },
+        { kind: "entry", name: P("row3.name"), from: { kind: "entry", pack: P("pk"), id: "x", name: P("row3.from") },
+          block: { stats: { BOD: "8" }, skills: [{ name: P("sk"), total: "5", skill: "awareness" }], traits: [{ name: P("tr"), text: P("tr.text") }] },
+          cast: { kind: "cast", id: "C-ABCDEFGH" }, hp: 20, damage: 2.5 },
+        { kind: P("kind"), name: 7, cast: { kind: "cast", id: "C-ABCDEFGH" } },
+        null, 5, "x", { name: { x: 1 }, conditions: [{ id: "bleeding", rounds: 2 }] },
+      ] },
+    { id: "EN-ABCDEFGH", name: 5, status: "running", round: -2, turn: "R-NOTHERE", updated: "2026-10-06T10:00:00.000Z", rows: [{ id: "R-ZZZZZZZZ", name: "B" }] },
+    { name: P("enc3.name"), status: "running", turn: "R-ZZZZZZZZ", updated: "2026-10-01T10:00:00.000Z", rows: "x" },
+    { status: P("status"), rows: [{ name: "C", kind: "pc" }] },
+    null, 5, "x",
+  ];
+  return t;
+}
+
+test("a hostile encounter comes out of the gate typed: numbers are numbers or null, one runs, ids are unique, nothing is dropped but junk", () => {
+  const m = Engine.migrateTable(hostileEncounters());
+  assert.equal(m.encounters.length, 4, "an encounter that is an object was dropped");
+  assert.equal(m.encounters.filter(e => e.status === "running").length, 1, "more than one running");
+  assert.equal(m.encounters[1].status, "running", "the newest running one should have kept running");
+  assert.equal(new Set(m.encounters.map(e => e.id)).size, 4, "an encounter id repeated");
+  for (const e of m.encounters) {
+    assert.ok(/^EN-[0-9A-HJKMNP-TV-Z]{8}$/.test(e.id));
+    assert.equal(typeof e.name, "string"); assert.ok(["planned", "running", "ended"].includes(e.status));
+    assert.ok(Number.isSafeInteger(e.round) && e.round >= 0);
+    assert.ok(e.turn === null || (e.status === "running" && e.rows.some(r => r.id === e.turn)), "a turn names nothing, or an encounter that isn't running");
+    assert.equal(new Set(e.rows.map(r => r.id)).size, e.rows.length, "a row id repeated");
+    for (const r of e.rows) {
+      assert.ok(["pc", "cast", "entry"].includes(r.kind));
+      assert.ok(/^R-[0-9A-HJKMNP-TV-Z]{8}$/.test(r.id));
+      for (const k of ["order", "hp", "levels", "awareness"]) assert.ok(r[k] === null || Number.isSafeInteger(r[k]), `${k}: ${r[k]}`);
+      assert.ok(Number.isSafeInteger(r.damage) && r.damage >= 0, `damage: ${r.damage}`);
+      assert.equal(typeof r.last, "boolean"); assert.equal(typeof r.out, "boolean");
+      if (r.kind !== "pc") for (const k of ["hp", "levels", "awareness"]) assert.equal(r[k], null, `${k} on a ${r.kind} row`);
+      if (r.kind !== "cast") assert.equal(r.cast, null);
+      if (r.kind !== "entry") { assert.equal(r.from, null); assert.equal(r.block, null); }
+      for (const c of r.conditions) {
+        assert.ok(D.conditions.some(x => x.id === c.id), "a Condition the data doesn't have");
+        assert.ok(c.rounds === null || (Number.isSafeInteger(c.rounds) && c.rounds >= 1));
+        assert.equal(typeof c.source, "string");
+        if (c.id === "dying") assert.ok(c.marks >= 0 && c.marks <= 3, `marks ${c.marks}`);
+        if (c.id === "injured") assert.ok(D.bodyLocations.some(l => l.id === c.location), "a location Condition with no valid location");
+      }
+      assert.equal(new Set(r.conditions.map(c => c.id + "@" + (c.location || ""))).size, r.conditions.length, "a Condition twice");
+    }
+  }
+  const first = m.encounters.find(e => e.name === P("enc.name"));
+  const pc = first.rows[0];
+  assert.equal(pc.order, 7); assert.equal(pc.damage, 0, "damage -5 → 0"); assert.equal(pc.hp, null); assert.equal(pc.levels, null);
+  assert.equal(first.rows[1].hp, null, "hp survived on a cast row");
+  assert.equal(first.rows[1].order, null); assert.equal(first.rows[1].damage, 0);
+  assert.equal(first.rows[2].cast, null, "a cast link survived on an entry row");
+  assert.equal(first.rows[2].damage, 0);
+  assert.equal(first.rows[3].kind, "pc");
+  assert.equal(first.rows.length, 5, "junk rows weren't the only ones dropped");
+  assert.equal(pc.conditions.map(c => c.id).join(), "burning,dying,bleeding");
+  assert.equal(pc.conditions.map(c => c.rounds).join(), "3,,");
+  assert.equal(pc.conditions[1].marks, 3, "marks 9 → the counter's max");
+  // Idempotent: a second pass changes nothing.
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrateTable(m))), JSON.parse(JSON.stringify(m)));
+});
+
+test("a hostile encounter file with __proto__ keys at every level pollutes nothing", () => {
+  const raw = '{"__proto__":{"pwn":1},"meta":{"kind":"shadows-table"},"encounters":[{"__proto__":{"pwn":1},"name":"x","status":"running","rows":[{"__proto__":{"pwn":1},"name":"y","conditions":[{"__proto__":{"pwn":1},"id":"burning","constructor":{"x":1}}],"block":null}],"constructor":{"prototype":{"pwn":2}}}]}';
+  const m = Engine.migrateTable(JSON.parse(raw));
+  assert.equal(({}).pwn, undefined);
+  assert.equal(m.encounters.length, 1);
+  assert.equal(m.encounters[0].rows[0].conditions[0].id, "burning");
+});
+
+test("hostile encounters render as text on the list, the page, the Reset and Past encounters, and the Add to buttons", () => {
+  const t = hostileEncounters();
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "encounters", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  assert.equal(app.window.eval("S.tsection"), "encounters");
+  found.push(...injected(app, "the Encounters list"));
+  assert.ok(app.$$("[data-enc-open]").length >= 4, "the encounters weren't listed");
+  for (const e of app.window.eval("S.table.encounters.map(e => e.id)")) {
+    app.window.eval(`S.encOpen = ${JSON.stringify(e)}; renderTable();`);
+    for (const d of app.$$("[data-emore] summary")) d.click();
+    const open = app.$("[data-econdopen]"); if (open) open.click();
+    found.push(...injected(app, "an encounter page"));
+    app.window.eval("S.tsection = 'threats'; renderTable();");
+    found.push(...injected(app, "Threats with an encounter open"));
+    app.window.eval("S.tsection = 'encounters'; renderTable();");
+  }
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "an object was drawn as text");
+  assert.equal(app.window.eval("({}).pwn"), undefined, "the page's Object.prototype was polluted");
+  assert.deepEqual(found, [], "an encounter's text became markup");
+  assert.deepEqual(app.errors, [], "the hostile encounter threw while rendering");
+});

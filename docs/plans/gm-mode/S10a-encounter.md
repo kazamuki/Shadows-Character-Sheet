@@ -2,11 +2,11 @@
 
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §1a, §4h and §6 *S10*; GQ15, GQ16,
 GQ18, GQ19, GQ23 (new).
-**Status:** drafted 2026-10-06 by Claude (Opus), after #123 (S9c) merged
+**Status:** **built 2026-10-07, PR #126 (in review).** Drafted 2026-10-06 by Claude (Opus), after #123 (S9c) merged
 with its fix round (README step 7). **§4 answered by Ken, 2026-10-07**; SQ2,
 SQ8 and SQ10 changed by his answers (an encounter, not a fight; HP, Health
 Levels and Pain shown together), written in here on the orchestrator's
-recommendation. **Waits on Ken's OK of those three before it's built.**
+recommendation. Ken's go-ahead to build came 2026-10-07.
 **Branch:** from `main` at or after `365b26b` (v0.37.0), PR to `main`,
 switched off (Decision 173).
 **Runs alone.** It touches `engine.js`'s Tables section, `gm.js`, the CSS,
