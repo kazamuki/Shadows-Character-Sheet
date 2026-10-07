@@ -1213,12 +1213,12 @@ function encRowHtml(v, e){
           <button type="button" data-eout="${id}" class="${r.out?"on":""}" aria-pressed="${r.out}">Out</button></div>
         <button class="btn sm danger" data-erm="${id}">Remove</button></details></div>
     ${S.encDmg && S.encDmg.row===r.id ? `<form class="enc-dmg" data-edmgform="${id}">
-        <input type="number" step="1" inputmode="numeric" data-edmgn aria-label="${S.encDmg.sign>0?"HP taken":"HP healed"}">
+        <input type="number" min="0" step="1" inputmode="numeric" data-edmgn aria-label="${S.encDmg.sign>0?"HP taken":"HP healed"}">
         <button class="btn sm primary" type="submit">OK</button><button class="btn sm" type="button" data-edmgcancel>Cancel</button></form>` : ""}
     ${S.encCond && S.encCond.row===r.id ? encCondFormHtml(v) : ""}`;
   const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
   return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
-    <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${r.out ? ` <span class="tag plain">Out</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
+    <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted ? ` <span class="tag plain">Done</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
       ${num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
     ${encHealthHtml(v)}${pcFields}
     ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
@@ -1248,8 +1248,9 @@ function encResetHtml(e, v){
           <button type="button" data-ekeep="${esc(key)}|end" class="${keep?"":"on"}" aria-pressed="${!keep}">End</button>
           <button type="button" data-ekeep="${esc(key)}|keep" class="${keep?"on":""}" aria-pressed="${keep}">Keep</button></span></li>`; }).join("");
     const saves = x.recovery.map(k=>`<li><b>${esc(k.name)}:</b> ${esc(k.recovery)}</li>`).join("");
-    const dc = x.dying ? view && view.conditions.find(c=>c.index===x.dyingIndex) : null;
-    const dying = x.dying ? `<li><b>Dying:</b> ${esc(x.dying)}${dc && dc.counter ? ` <span class="enc-marks">${esc(dc.counter.label)} ${dc.marks}/${dc.counter.max}
+    const dc = x.dyingIndex!==null ? view && view.conditions.find(c=>c.index===x.dyingIndex) : null;
+    const dyingWords = x.dying ? esc(x.dying) : `${esc(x.dyingText)} ${x.dyingMarks} source${x.dyingMarks===1 ? "" : "s"} ticked.`;
+    const dying = x.dying || x.dyingMarks ? `<li><b>Dying:</b> ${dyingWords}${dc && dc.counter ? ` <span class="enc-marks">${esc(dc.counter.label)} ${dc.marks}/${dc.counter.max}
         <button class="btn sm" data-emarks="${id}|${dc.index}|-1" aria-label="Fewer ${esc(dc.counter.label)}">−</button><button class="btn sm" data-emarks="${id}|${dc.index}|1" aria-label="More ${esc(dc.counter.label)}">+</button></span>` : ""}</li>` : "";
     return `<section class="enc-reset-row"><h3 class="cast-h">${esc(x.name.trim() || "Unnamed")}</h3>
       ${ticks || dying ? `<ul class="enc-list">${ticks}${dying}</ul>` : ""}
@@ -1388,7 +1389,6 @@ function bindEncounters(main){
   // Typed fields save on change; a number field that can't be a whole number shows what was stored (the redraw).
   main.onchange = ev => {
     const el=ev.target, d=el.dataset;
-    if ("encTitle" in d){ tableChange(()=>Engine.editEncounter(S.table, eid(), { name:el.value }), false); return; }
     const row = (key, f) => { edit(el.dataset[key], f(el.value)); focus(attrSel(`data-${key.replace(/[A-Z]/g, c=>"-"+c.toLowerCase())}`, el.dataset[key])); };
     if ("eorder" in d) row("eorder", v=>({ order:v })); else if ("ehp" in d) row("ehp", v=>({ hp:v }));
     else if ("elevels" in d) row("elevels", v=>({ levels:v })); else if ("eaware" in d) row("eaware", v=>({ awareness:v }));
@@ -1413,6 +1413,7 @@ function bindEncounters(main){
     ev.preventDefault();
     const row=f.dataset.edmgform, sign=S.encDmg ? S.encDmg.sign : 1, raw=f.querySelector("[data-edmgn]").value.trim();
     if (raw==="") { S.encDmg=null; redraw(); focus(attrSel("data-edmg", `${row}|${sign}`)); return; }
+    if (Number(raw) < 0){ notice("Enter a whole number."); return; }
     const r=Engine.participantDamage(S.table, eid(), row, Number(raw) * sign);
     if (!r.ok){ notice(r.why); return; }
     S.encDmg=null; tableChange(()=>{}); focus(attrSel("data-edmg", `${row}|1`));

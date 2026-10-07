@@ -3915,9 +3915,9 @@ const Engine = (() => {
     r.out = r.out===true;
     const d = _int(r.damage);
     r.damage = d!==null && d > 0 ? d : 0;
-    const pc = r.kind==="pc", pos = v => { const n = _int(v); return pc && n!==null && n>=1 ? n : null; };
-    r.hp = pos(r.hp);
-    r.levels = pos(r.levels);
+    const pc = r.kind==="pc";
+    r.hp = pc ? _tier(r.hp) : null;
+    r.levels = pc ? _tier(r.levels) : null;
     r.awareness = pc ? _int(r.awareness) : null;
     r.conditions = _rowConditions(r.conditions);
   }
@@ -3935,6 +3935,12 @@ const Engine = (() => {
       const usedRows = new Set();
       e.rows = (Array.isArray(e.rows) ? e.rows : []).filter(_isObj);
       for (const r of e.rows) _encRow(r, usedRows);
+      // A member is in an encounter once: a second row for one becomes a PC row with its name.
+      const inIt = new Set();
+      for (const r of e.rows) if (r.kind==="cast" && r.cast){
+        if (inIt.has(r.cast.id)){ r.kind = "pc"; r.name = r.name.trim() ? r.name : _str(r.cast.name); r.cast = null; }
+        else inIt.add(r.cast.id);
+      }
       e.created = _isoOrNull(e.created);
       e.updated = _isoOrNull(e.updated);
     }
@@ -3946,8 +3952,13 @@ const Engine = (() => {
       for (const e of running) if (when(e) > when(keep)) keep = e;
       for (const e of running) if (e!==keep) e.status = "ended";
     }
-    for (const e of c.encounters)
-      e.turn = e.status==="running" && typeof e.turn==="string" && e.rows.some(r=>r.id===e.turn) ? e.turn : null;
+    for (const e of c.encounters){
+      const live = e.status==="running";
+      e.turn = live && typeof e.turn==="string" && e.rows.some(r=>r.id===e.turn) ? e.turn : null;
+      // Who has acted this round: only while running, existing rows, each once.
+      e.acted = live ? [...new Set((Array.isArray(e.acted) ? e.acted : []).filter(id=>typeof id==="string" && e.rows.some(r=>r.id===id)))] : [];
+      if (live && e.round < 1) e.round = 1;
+    }
   }
 
   // A name the GM left blank reads as the day it was made.
@@ -3977,7 +3988,7 @@ const Engine = (() => {
     if (!Array.isArray(t.encounters)) t.encounters = [];
     const now = new Date().toISOString();
     const used = new Set(t.encounters.map(e=>e && e.id));
-    const e = { id:newEncounterId(used), name:_str((f||{}).name).trim(), status:"planned", round:0, turn:null, rows:[], created:now, updated:now };
+    const e = { id:newEncounterId(used), name:_str((f||{}).name).trim(), status:"planned", round:0, turn:null, acted:[], rows:[], created:now, updated:now };
     t.encounters.unshift(e);
     _tableStamp(t);
     return { ok:true, id:e.id };
@@ -4086,27 +4097,28 @@ const Engine = (() => {
       if ("last" in f) r.last = f.last===true;
       if ("out" in f) r.out = f.out===true;
       if (r.kind==="pc"){
-        const pos = v => { const n = _int(v); return n!==null && n>=1 ? n : null; };
-        if ("hp" in f) r.hp = pos(f.hp);
-        if ("levels" in f) r.levels = pos(f.levels);
+        if ("hp" in f) r.hp = _tier(f.hp);
+        if ("levels" in f) r.levels = _tier(f.levels);
         if ("awareness" in f) r.awareness = _int(f.awareness);
       }
     }
     _tableStamp(t, l.e);
     return { ok:true };
   }
-  // Rows after `id` in the order shown that are still in the encounter; the next one, or null.
-  function _nextIn(e, id){
-    const rows = _encOrder(_rowList(e)).rows;
-    for (let i = rows.findIndex(r=>r.id===id) + 1; i < rows.length; i++) if (!rows[i].out) return rows[i];
-    return null;
+  // The next to act: the first row in the order shown that is neither out nor has acted this round.
+  // The turn follows who has acted, not a place in the sort, so a result changed mid-round
+  // can neither skip a row nor let one act twice (Decision 189).
+  const _actedIds = e => Array.isArray(e.acted) ? e.acted : [];
+  function _pick(e){
+    return _encOrder(_rowList(e)).rows.find(r=>!r.out && !_actedIds(e).includes(r.id)) || null;
   }
   function removeParticipant(t, encId, rowId){
     const l = _liveRow(t, encId, rowId);
     if (l.why) return { ok:false, why:l.why };
     const e = l.e;
-    if (e.turn===rowId){ const n = _nextIn(e, rowId); e.turn = n ? n.id : null; }
     e.rows.splice(e.rows.indexOf(l.r), 1);
+    e.acted = _actedIds(e).filter(id=>id!==rowId);
+    if (e.turn===rowId){ const n = _pick(e); e.turn = n ? n.id : null; }
     _tableStamp(t, e);
     return { ok:true };
   }
@@ -4155,9 +4167,9 @@ const Engine = (() => {
     if (e.status!=="planned") return { ok:false, why:`${encounterTitle(e)} is already running.` };
     const other = runningEncounter(t);
     if (other) return { ok:false, why:`${encounterTitle(other)} is still running. End it first.` };
-    const first = _encOrder(_rowList(e)).rows.find(r=>!r.out);
+    const first = _pick({ rows:e.rows, acted:[] });
     if (!first) return { ok:false, why:"Add someone to the encounter first." };
-    e.status = "running"; e.round = 1; e.turn = first.id;
+    e.status = "running"; e.round = 1; e.turn = first.id; e.acted = [];
     _tableStamp(t, e);
     return { ok:true };
   }
@@ -4167,7 +4179,8 @@ const Engine = (() => {
     const e = l.e;
     if (e.status!=="running") return { ok:false, why:`${encounterTitle(e)} isn't running.` };
     if (e.turn===null) return { ok:false, why:"Finish the round first." };
-    const n = _nextIn(e, e.turn);
+    if (!_actedIds(e).includes(e.turn)) e.acted = [..._actedIds(e), e.turn];
+    const n = _pick(e);
     e.turn = n ? n.id : null;
     _tableStamp(t, e);
     return n ? { ok:true } : { ok:true, reset:true };
@@ -4176,6 +4189,7 @@ const Engine = (() => {
     const l = _liveRow(t, encId, rowId);
     if (l.why) return { ok:false, why:l.why };
     if (l.e.status!=="running") return { ok:false, why:`${encounterTitle(l.e)} isn't running.` };
+    if (l.e.turn===null) return { ok:false, why:"Finish the round first." };
     if (l.r.out) return { ok:false, why:`${l.r.name.trim() || "They"} are out of it.` };
     l.e.turn = l.r.id;
     _tableStamp(t, l.e);
@@ -4197,12 +4211,12 @@ const Engine = (() => {
     for (const r of _encOrder(_rowList(e)).rows){
       const mine = _isObj(src[r.id]) ? src[r.id] : {};
       const ticks = [], expiring = [], recovery = [];
-      let dying = null, dyingIndex = null;
+      let hasDying = false, dyingIndex = null;
       r.conditions.forEach((c, index)=>{
         const def = conditionById(c.id);
         if (!def) return;
         const loc = c.location ? locationById(c.location) : null, name = def.name + (loc ? ` (${loc.name})` : "");
-        if (W.condition && def.id===W.condition){ dying = _str(W.resetCheck) || null; dyingIndex = index; }
+        if (W.condition && def.id===W.condition){ hasDying = true; dyingIndex = index; }
         const o = def.ongoing;
         if (o){
           const v = o.source ? mine[index] : o.hp;
@@ -4213,7 +4227,12 @@ const Engine = (() => {
       });
       const gap = ticks.find(x=>x.hp===null);
       if (gap && !missing) missing = { tick:gap, rowName:r.name };
-      rows.push({ rowId:r.id, name:r.name, ticks, expiring, recovery, dying, dyingIndex,
+      // F24's stub, as resolveReset has it: while Dying, each source that ticks is a Death Mark and
+      // stands in for the check; with nothing ticking, the check is asked. The marks are the GM's to press.
+      const dyingMarks = hasDying ? ticks.filter(x=>x.hp > 0).length : 0;
+      const dying = hasDying && !dyingMarks ? _str(W.resetCheck) || null : null;
+      const dyingText = dyingMarks ? _str(W.text) : null;
+      rows.push({ rowId:r.id, name:r.name, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
                   total:ticks.reduce((n, x)=>n + (x.hp||0), 0) });
     }
     if (missing) return { ok:false, why:`Enter this round's ${missing.tick.name} damage for ${missing.rowName.trim() || "them"}. Put 0 if it's out.`, rows };
@@ -4225,6 +4244,7 @@ const Engine = (() => {
     if (!res.ok) return res;
     const e = _enc(t, encId);
     if (e.turn!==null) return { ok:false, why:"The round isn't over yet." };
+    if (!_pick({ rows:e.rows, acted:[] })) return { ok:false, why:"Everyone's out. Bring someone back or end the encounter." };
     const keep = new Set((_isObj(choices) && Array.isArray(choices.keep) ? choices.keep : [])
       .filter(k=>Array.isArray(k) && typeof k[0]==="string").map(k=>`${k[0]}|${k[1]}`));
     for (const out of res.rows){
@@ -4239,7 +4259,8 @@ const Engine = (() => {
       for (const i of gone.reverse()) r.conditions.splice(i, 1);
     }
     e.round += 1;
-    const first = _encOrder(_rowList(e)).rows.find(r=>!r.out);
+    e.acted = [];
+    const first = _pick(e);
     e.turn = first ? first.id : null;
     _tableStamp(t, e);
     return { ok:true, round:e.round };
@@ -4273,10 +4294,7 @@ const Engine = (() => {
       const hp = r.hp, lv = r.levels;
       return { total:hp, levels:hp!==null && lv!==null && hp % lv===0 ? lv : null, hpPer:hp!==null && lv!==null && hp % lv===0 ? hp / lv : null };
     }
-    const block = r.kind==="cast"
-      ? (() => { const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && _isObj(r.cast) && n.id===r.cast.id); return m ? m.block : null; })()
-      : r.block;
-    const h = npc(block).health;
+    const h = npc(_rowBlock(t, r)).health;
     return h ? { total:h.total, levels:h.levels, hpPer:h.hpPer } : none;
   }
   function _rowBlock(t, r){
@@ -4316,6 +4334,7 @@ const Engine = (() => {
       const name = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).name : r.name;
       const gone = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).gone : false;
       return { row:r, name:_str(name).trim() || "Unnamed", gone, health, awareness, ties:ord.tied(r), active:e.status==="running" && e.turn===r.id,
+               acted:e.status==="running" && _actedIds(e).includes(r.id),
                from:r.kind==="entry" ? entryLink(packs, r.from) : null, conditions };
     });
     return { encounter:e, title:encounterTitle(e), rows, atReset:e.status==="running" && e.turn===null };

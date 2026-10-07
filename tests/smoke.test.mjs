@@ -5035,3 +5035,33 @@ test("Decision 188: export and import mid-round and at Reset keep the same encou
   assert.match(fresh.$("#main").textContent, /Reset: round 1 ends/);
   assert.deepEqual([...app.errors, ...fresh.errors], []);
 });
+
+// ── Fix round (review of #126) ─────────────────────────────────────────
+test("Decision 189 (review): the Encounters tab's listeners on <main> go when the table closes; Done tags who has acted; a negative Take is refused; Dying shows F24's line", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); encTab(app); newEncounter(app, "E");
+  const a = addPcRow(app, "A"), b = addPcRow(app, "B");
+  const [ia, ib] = [a, b].map(rowId);
+  changeTo(app, `[data-eorder="${ia}"]`, "9"); changeTo(app, `[data-eorder="${ib}"]`, "5");
+  app.click(`[data-econdopen="${ia}"]`); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
+  app.click(`[data-econdopen="${ia}"]`); changeTo(app, "[data-econd-id]", "bleeding"); app.click("[data-econd-add]");
+  app.click("[data-enc-start]"); app.click("[data-enext]");
+  assert.match(app.$(`[data-erow="${ia}"]`).textContent, /Done/);
+  assert.doesNotMatch(app.$(`[data-erow="${ib}"]`).textContent, /Done/);
+  // A negative number in Take or Heal is refused, not applied.
+  app.click(`[data-edmg="${ib}|1"]`);
+  assert.equal(app.$("[data-edmgn]").min, "0");
+  app.$("[data-edmgn]").value = "-4"; submit(app, "[data-edmgform]");
+  assert.match(app.$("#undotoast").textContent, /Enter a whole number\./);
+  assert.equal(app.window.eval("S.table.encounters[0].rows.find(r => r.id === " + JSON.stringify(ib) + ").damage"), 0);
+  app.click("[data-edmgcancel]");
+  app.click("[data-enext]");
+  const W = app.D.damageRules.whileDying;
+  assert.match(app.$(".enc-reset").textContent, new RegExp(W.text.slice(0, 20)));
+  assert.match(app.$(".enc-reset").textContent, /1 source ticked/);
+  assert.doesNotMatch(app.$(".enc-reset").textContent, new RegExp(W.resetCheck));
+  assert.ok(app.$("main").onclick, "the tab's listener wasn't there to begin with");
+  app.click("[data-menu-toggle]"); app.click("[data-thome]");
+  for (const k of ["onclick", "onchange", "oninput", "onsubmit", "onkeydown"]) assert.equal(app.$("main")[k], null, `main.${k} survived the table`);
+  assert.deepEqual(app.errors, []);
+});

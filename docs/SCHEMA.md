@@ -881,6 +881,7 @@ commit** — a GM's table must never change under them.
     name: "",                        // the GM's; blank reads "Encounter" and its day
     status: "planned",               // planned | running | ended; any number planned, one running at most (the gate ends all but the newest)
     round: 0, turn: null,            // 1… while running; turn is a row id, null at Reset, planned and ended
+    acted: [],                       // row ids that have had their turn this round; kept only while running, cleared at Start and at each Reset
     rows: [ {
       id: "R-XXXXXXXX",              // unique in its encounter
       kind: "pc",                    // pc (typed name, the GM's scratch copy, 188) | cast (a link, read live) | entry (its own copy of a pack entry's block)
@@ -4107,7 +4108,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 188. **A table keeps its encounters, of no fixed type: rows from the cast, the Codex and typed names, each with its own damage and Conditions, and a PC's row is the GM's scratch copy.**
      *2026-10-07 · Ken + Claude · Touches: encounters, encounter row, table schema 0.5, migrateTable, cast link, block copy, PC row, scratch HP, Conditions on a row, source, rounds, Encounters tab, GQ19, Decision 178, Decision 182*
-     - **Decided:** a table has `encounters`, each with a name, a status (planned, running, ended), a round, whose turn it is, and rows; any number planned, one running, ended ones kept read-only. An encounter has no type. A row is a **cast** row (a link to the member, read live), an **entry** row (its own copy of the entry's block and a `from`), or a **PC** row (a typed name, with the GM's own HP, Health Levels and Awareness). Every row stores damage taken and its Conditions, each with a source and rounds left.
+     - **Decided:** a table has `encounters`, each with a name, a status (planned, running, ended), a round, whose turn it is, who has acted this round, and rows; any number planned, one running, ended ones kept read-only. An encounter has no type. A row is a **cast** row (a link to the member, read live), an **entry** row (its own copy of the entry's block and a `from`), or a **PC** row (a typed name, with the GM's own HP, Health Levels and Awareness). Every row stores damage taken and its Conditions, each with a source and rounds left.
      - **Why:** Scott tracks every Condition at the table and loses them (§1a). The book's encounter types are "a spectrum", so a negotiation that turns violent stays one record. At an in-person table the GM keeps a copy of the PCs' numbers anyway (GQ19); it is never written back.
      - **Rejected:**
        - A fight record, or a type field: the book says the types blend, and the worksheet would need a rename.
@@ -4120,15 +4121,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** table schema 0.5; PR #126; log 2026-10-07.
 
 189. **An encounter's round is the book's: Combat Sense highest first, ties shown and never broken, and a Reset that lists, row by row, what ticks, what runs out and what asks for a save.**
-     *2026-10-07 · Ken + Claude · Touches: Order of Engagement, Combat Sense, ties, Goes last, Out, turn, round, Next, Reset, Turn Reset, resolveReset, ongoing, recovery, whileDying.resetCheck, rounds, End, Keep, Take, Heal, Down, Health Levels, Pain Level, painState, GQ23, Decision 95, Decision 96, Decision 100, F24*
-     - **Decided:** the GM enters each row's Combat Sense result; rows sort highest first, a tie is flagged on both rows for a reroll, and *Goes last* follows everyone. Reset, after the last row, applies the data's `ongoing` ticks (an entered number for a source), counts GM-entered durations down, and lists each Condition that runs out with *End* pressed and *Keep* a tap away, every other Condition's recovery as text, and Dying's check by name. Damage is HP straight onto a row (no armor, no Shock); the row shows HP left, damage taken, Health Levels and Pain by the players' rule, and applies no penalty.
-     - **Why:** `053` says what a round is, for every encounter type; the sheet's Turn Reset (100) already reads the data this way. A duration is the GM's: the data gives recovery, not rounds.
+     *2026-10-07 · Ken + Claude · Touches: Order of Engagement, Combat Sense, ties, turn, acted, round, Reset, resolveReset, ongoing, recovery, whileDying, rounds, Keep, Take, Heal, Health Levels, Pain Level, GQ23, Decision 96, Decision 100, F24*
+     - **Decided:** the GM enters each row's Combat Sense result; rows sort highest first, a tie is flagged on both rows for a reroll, and *Goes last* follows everyone. Reset, after the last row, applies the data's `ongoing` ticks (an entered number for a source), counts GM-entered durations down, and lists each Condition that runs out with *End* pressed and *Keep* a tap away, every other Condition's recovery as text, and, on a Dying row, F24's stub as the sheet has it: the check when no source ticks, else the data's damage-while-Dying line and how many sources ticked, the marks the GM's. The turn follows who has acted, not a place in the sort. Damage is HP straight onto a row (no armor, no Shock), shown with Health Levels and Pain by the players' rule; no penalty is applied.
+     - **Why:** `053` says what a round is, for every encounter type; the sheet's Turn Reset (100) reads the data this way. A duration is the GM's: the data gives recovery, not rounds.
      - **Rejected:**
-       - Rolled initiative: the GM and players roll at the table (GQ2).
+       - Rolled initiative: the table rolls (GQ2).
        - Ties broken by the app: `053` says reroll.
-       - Durations from the data: there are none; a guess answers a rules question in code.
-       - A Condition that runs out ending unseen: nothing ends silently.
-       - HP alone: the GM needs the Pain Level to describe the hit (Ken, SQ10).
+       - Durations from the data: there are none.
+       - A Condition ending unseen.
+       - HP alone: the GM needs the Pain Level (SQ10).
+       - The turn as a place in the sort: a changed result skips a row.
      - **Replaces:** nothing. Turn Reset (100) and Pain (96) are unchanged; this applies them per row.
      - **Revisit if:** the app rolls checks, S10b's pipeline makes a tick a hit, GQ23 says NPCs don't take Pain, or F24 is answered.
      - **Built:** as 188.

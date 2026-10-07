@@ -683,6 +683,7 @@ function askRemove(e){
 function renderHome(){
   const app=$("app"); if (app) app.classList.remove("sheet-mode");
   renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
+  releaseMain();
   const roster = rosterEntries(), tables = gmTableEntries();
   $("main").innerHTML = `<div class="home-hero">
     <h1>Character Intake</h1>

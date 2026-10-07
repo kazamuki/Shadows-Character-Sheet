@@ -161,11 +161,17 @@ function sameView(){
   lastView=v;
   return same;
 }
+// The Encounters tab delegates its events to <main> (gm.js); every other screen that draws it lets them go.
+function releaseMain(){
+  const main=$("main");
+  if (main) main.onclick=main.onchange=main.oninput=main.onsubmit=main.onkeydown=null;
+}
 function renderMain(){
   const app=$("app");
   if (app) app.classList.toggle("sheet-mode", S.screen==="sheet");
   keepPlace(document.querySelector("header.top"), renderTopChrome, ["[data-menu-toggle]"]);
   const same=sameView(), main=$("main");
+  if (S.screen!=="table") releaseMain();
   const fill = html => same ? keepPlace(main, ()=>{ main.innerHTML=html; }) : (main.innerHTML=html);
   if (S.screen==="home") return renderHome();
   if (S.screen==="table") return renderTable();   // gm.js (Decision 172)

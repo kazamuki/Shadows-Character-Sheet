@@ -4161,3 +4161,118 @@ test("190: the Condition tip kind is gm.js's alone", () => {
   assert.ok([...gm.matchAll(/\bTIPS\.(\w+)\s*=[^=]/g)].some(m => m[1] === "condition"), "gm.js adds TIPS.condition");
   assert.ok(!/^  condition:/m.test(/const TIPS = \{([\s\S]*?)\n\};/.exec(shared)[1]), "shared.js must not define its own");
 });
+
+// ── Fix round (review of #126) ─────────────────────────────────────────
+test("189: Dying at Reset follows the sheet's F24 stub: a source that ticks is a mark and stands in for the check", () => {
+  const { t, e } = encTable();
+  const W = D.damageRules.whileDying;
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 }), c = addPc(t, e, "C", { order: 7 });
+  for (const id of [a, b, c]) Engine.participantAddCondition(t, e, id, { id: "dying" });
+  Engine.participantAddCondition(t, e, a, { id: "bleeding" });
+  Engine.participantAddCondition(t, e, c, { id: "burning" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const r = Engine.resolveEncounterReset(t, e, { sources: { [c]: { 1: 0 } } });
+  assert.ok(r.ok);
+  const [ra, rb, rc] = r.rows;
+  assert.equal(ra.dying, null, "Dying + Bleeding: the check isn't asked");
+  assert.equal(ra.dyingMarks, 1); assert.equal(ra.dyingText, W.text);
+  assert.equal(rb.dying, W.resetCheck, "Dying alone: the check is asked");
+  assert.equal(rb.dyingMarks, 0); assert.equal(rb.dyingText, null);
+  assert.equal(rc.dying, W.resetCheck, "Dying + Burning entered as 0: nothing ticked, so the check is asked");
+  assert.equal(rc.dyingMarks, 0);
+  const again = Engine.resolveEncounterReset(t, e, { sources: { [c]: { 1: 4 } } }).rows[2];
+  assert.deepEqual([again.dying, again.dyingMarks], [null, 1]);
+  assert.ok(!JSON.stringify(r).includes(W.resetText) && !JSON.stringify(r).includes(W.playerNote), "resetText or playerNote reached a row");
+  const before = JSON.stringify(t);
+  Engine.applyEncounterReset(t, e, {}, {});
+  assert.equal(JSON.stringify(t), before, "a refusal changes nothing");
+  Engine.nextTurn(t, e); Engine.nextTurn(t, e); Engine.nextTurn(t, e);
+  Engine.applyEncounterReset(t, e, { sources: { [c]: { 1: 4 } } });
+  assert.equal(rowOf(t, e, a).conditions.find(x => x.id === "dying").marks, 0, "the app applied a Death Mark");
+});
+
+test("189: the turn follows who has acted, not a place in the sort", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 10 }), b = addPc(t, e, "B", { order: 8 }), c = addPc(t, e, "C", { order: 5 });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.deepEqual(plain(encOf(t, e).acted), []);
+  Engine.nextTurn(t, e);
+  assert.equal(encOf(t, e).turn, b);
+  Engine.editParticipant(t, e, c, { order: 20 });   // the repro: the 5 is raised to 20 after two rows
+  const r = Engine.nextTurn(t, e);
+  assert.equal(r.reset, undefined, "the raised row was skipped");
+  assert.equal(encOf(t, e).turn, c);
+  assert.equal(Engine.nextTurn(t, e).reset, true);
+  eq(encOf(t, e).acted.slice().sort(), [a, b, c].sort());
+  // An acted row lowered below the active one doesn't act twice.
+  const x = encTable(); const p = addPc(x.t, x.e, "P", { order: 10 }), q = addPc(x.t, x.e, "Q", { order: 8 }), s = addPc(x.t, x.e, "S", { order: 5 });
+  Engine.startEncounter(x.t, x.e); Engine.nextTurn(x.t, x.e);
+  Engine.editParticipant(x.t, x.e, p, { order: 1 });
+  Engine.nextTurn(x.t, x.e);
+  assert.equal(encOf(x.t, x.e).turn, s);
+  assert.equal(Engine.nextTurn(x.t, x.e).reset, true, "P acted twice");
+  void q;
+});
+
+test("189: Delay doesn't mark the row it leaves; Finish and Start clear who acted; removal picks the same way", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 }), c = addPc(t, e, "C", { order: 7 });
+  Engine.startEncounter(t, e);
+  assert.ok(Engine.setTurn(t, e, c).ok);
+  assert.deepEqual(plain(encOf(t, e).acted), [], "Delay marked the row it left");
+  Engine.nextTurn(t, e);
+  eq(encOf(t, e).acted, [c]); assert.equal(encOf(t, e).turn, a, "A still hasn't acted");
+  // removing the active row picks the first that hasn't acted
+  assert.ok(Engine.removeParticipant(t, e, a).ok);
+  assert.equal(encOf(t, e).turn, b);
+  // removing an acted row drops it from acted
+  assert.ok(Engine.removeParticipant(t, e, c).ok);
+  eq(encOf(t, e).acted, []);
+  Engine.nextTurn(t, e); assert.equal(encOf(t, e).turn, null);
+  Engine.applyEncounterReset(t, e, {});
+  eq(encOf(t, e).acted, []); assert.equal(encOf(t, e).turn, b);
+  Engine.nextTurn(t, e); Engine.endEncounter(t, e);
+});
+
+test("189: setTurn refuses at Reset, and a Reset with everyone Out refuses instead of starting another round", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 });
+  Engine.startEncounter(t, e); Engine.nextTurn(t, e); Engine.nextTurn(t, e);
+  assert.equal(encOf(t, e).turn, null);
+  const s = Engine.setTurn(t, e, a);
+  assert.equal(s.ok, false); assert.equal(s.why, "Finish the round first.");
+  assert.equal(encOf(t, e).turn, null);
+  Engine.editParticipant(t, e, a, { out: true }); Engine.editParticipant(t, e, b, { out: true });
+  const before = JSON.stringify(t);
+  const r = Engine.applyEncounterReset(t, e, {});
+  assert.equal(r.ok, false); assert.equal(r.why, "Everyone's out. Bring someone back or end the encounter.");
+  assert.equal(JSON.stringify(t), before);
+  assert.equal(encOf(t, e).round, 1);
+});
+
+test("188: the gate keeps acted only while running with real rows once each, a running round is at least 1, and a second row for one member becomes a PC row", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Dez" });
+  const dez = t.cast[0].id;
+  const mk = (status, extra = {}) => ({ id: "EN-AAAAAAAA", name: "x", status, round: 0, acted: ["R-AAAAAAAA", "R-AAAAAAAA", "R-ZZZZZZZZ", 5, null], turn: "R-AAAAAAAA",
+    rows: [{ id: "R-AAAAAAAA", kind: "pc", name: "A" },
+      { id: "R-BBBBBBBB", kind: "cast", name: "Dez", cast: { kind: "cast", id: dez, name: "Dez" } },
+      { id: "R-CCCCCCCC", kind: "cast", name: "", cast: { kind: "cast", id: dez, name: "Dez Again" }, hp: 9 }], ...extra });
+  t.encounters = [mk("running"), { ...mk("planned"), id: "EN-BBBBBBBB" }, { ...mk("ended"), id: "EN-CCCCCCCC" }];
+  const m = Engine.migrateTable(t);
+  const [run, plan, end] = m.encounters;
+  eq(run.acted, ["R-AAAAAAAA"]); assert.equal(run.round, 1, "a running round is at least 1");
+  eq(plan.acted, []); eq(end.acted, []); assert.equal(plan.round, 0);
+  assert.equal(run.rows[1].kind, "cast");
+  assert.equal(run.rows[2].kind, "pc"); assert.equal(run.rows[2].cast, null); assert.equal(run.rows[2].name, "Dez Again");
+  eq(Engine.migrateTable(m), m);
+  assert.equal(JSON.stringify(Engine.migrateTable({ meta: {}, encounters: [{ status: "running", acted: "x", rows: [{ id: "R-AAAAAAAA" }] }] }).encounters[0].acted), "[]");
+});
+
+test("188: a PC row's HP and Health Levels stay whole numbers of 1 or more", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e, "P", { hp: "7", levels: 1 });
+  eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels], [7, 1]);
+  Engine.editParticipant(t, e, p, { hp: -2, levels: 0 });
+  eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels], [null, null]);
+});
