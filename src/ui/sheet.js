@@ -286,7 +286,7 @@ function skillRowPair(ch, l){
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   // Decision 156: an untrained skill reads at full strength, Rank 0 dimmed.
   let tr = `<tr class="skill-line${l.trained?"":" untrained"}">`;
-  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
+  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${l.formPenalty?` <span class="chip pain">${l.formPenalty} while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
   tr += `<td class="num" data-k="Rank">${l.trained?l.rank:0}</td>`;
   tr += `<td class="num" data-k="Check">1d10 + ${l.checkBonus}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
@@ -1266,9 +1266,11 @@ function renderShProgression(){
   h += `</details>`;
 
   // Major
-  h += `<details class="group" ${ms.majorLeft>0?"open":""}><summary>Major Milestones — General ${ms.majorLeft>0?`— <b style="color:var(--green)">${ms.majorLeft} to pick</b>`:""}</summary>
+  const offered = Engine.majorOffered(ch), shared = new Set((D.milestones.majorGeneral||[]).map(m=>m.id));
+  const own = offered.filter(m=>!shared.has(m.id)), arch = D.archetypes.find(a=>a.id===ch.identity.archetype);
+  h += `<details class="group" ${ms.majorLeft>0?"open":""}><summary>Major Milestones ${ms.majorLeft>0?`— <b style="color:var(--green)">${ms.majorLeft} to pick</b>`:""}</summary>
     <p class="step-note">Once each, any order, subject to prerequisites. Prose prerequisites are the table's call — taking one with a <span class="chip gold">GM</span> requirement will ask you to confirm.</p>`;
-  h += (D.milestones.majorGeneral||[]).map(m=>{
+  const majorHtml = m=>{
     const taken = ms.majorTaken.some(t=>t.id===m.id);
     const pre = Engine.majorPrereqs(ch, m);
     const canTake = !taken && pre.ok && ms.majorLeft>0;
@@ -1282,9 +1284,11 @@ function renderShProgression(){
       ${m.flavor?`<div class="desc" style="font-style:italic">${esc(m.flavor)}</div>`:""}
       <div class="desc">${esc(m.benefit)}${(Array.isArray(m.details)?m.details:[]).map(d=>"\n"+esc(d)).join("")}</div>
       ${reqs?`<div class="req">${reqs}</div>`:""}</div>`;
-  }).join("");
+  };
+  if (own.length) h += `<div class="sect">${esc(arch?arch.name:"Your archetype")}</div>` + own.map(majorHtml).join("") + `<div class="sect">General</div>`;
+  h += offered.filter(m=>shared.has(m.id)).map(majorHtml).join("");
   if (ms.majorTaken.length) h += `<div class="journal">` + ms.majorTaken.map((t,i)=>{
-    const m=(D.milestones.majorGeneral||[]).find(x=>x.id===t.id)||{name:t.id};
+    const m=Engine.majorById(ch, t.id)||{name:t.id};
     return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}</span>
       <button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
@@ -1922,6 +1926,7 @@ function togglePanelHtml(ch, p){
   if (f && f.panelId===p.id){
     if (f.ended) h += noticeHtml(f.name, f.endsText);
     if (f.summary) h += `<p class="step-note">${esc(f.summary)}</p>`;
+    h += (f.changedBy||[]).map(c=>`<p class="step-note"><b>${esc(c.name)}:</b> ${esc(c.text)}</p>`).join("");
   } else if (!opts.some(o=>o.does)) h += `<p class="step-note">${esc(copy("applyFromText"))}</p>`;
   return h;
 }
@@ -1929,7 +1934,7 @@ function togglePanelHtml(ch, p){
 // weapon's: the skill's total to hit, BOD+n to damage.
 function formWeaponRowsHtml(ch){
   const f = Engine.formView(ch);
-  return f ? f.weapons.map(w=>`<tr><td>${esc(w.name)}<div class="lo-sub">${esc(f.name)} form${w.skill?` · ${esc(w.skill)}`:""}</div></td>
+  return f ? f.weapons.map(w=>`<tr><td>${esc(w.name)}<div class="lo-sub">${esc(f.name)} form${w.skill?` · ${esc(w.skill)}`:""}</div>${(w.tags||[]).length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}</td>
     <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}</td>
     <td class="num">—</td><td class="num">—</td></tr>`).join("") : "";
 }
@@ -2896,7 +2901,7 @@ function bindSheet(){
   main.querySelectorAll("[data-improvcancel]").forEach(b=>b.onclick=()=>{ S.askImproved=false; update(); });
   main.querySelectorAll("[data-takemajor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takemajor;
-    const nm=((D.milestones.majorGeneral||[]).find(m=>m.id===id)||{name:id}).name;
+    const nm=(Engine.majorById(ch, id)||{name:id}).name;
     const take=()=>commit("milestone", `Take Major: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"major",id); if(!r.ok) notice(r.why); });
     if (b.dataset.gm!=="1") return take();
     askFirst({ title:`Take ${nm}?`, text:"This Milestone has prerequisites your table decides (the gold chips). Take it once your GM has signed off.",
@@ -2910,7 +2915,7 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-delmajor]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.delmajor), t=(ch.progression.milestones.major[i]||{});
-    const nm=((D.milestones.majorGeneral||[]).find(m=>m.id===t.id)||{name:t.id||""}).name;
+    const nm=(Engine.majorById(ch, t.id)||{name:t.id||""}).name;
     askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record.`, yes:"Remove it",
       then:()=>commit("milestone", `Remove Major: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"major",i); }) });
   });

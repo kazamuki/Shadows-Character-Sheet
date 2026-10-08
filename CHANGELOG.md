@@ -50,6 +50,15 @@ own in the footer.
   vulnerabilities.
 - **A Werewolf's bonus stat points go on BOD, REF or MOB,** and can push past
   10. A Werewolf you've already made keeps every point it placed.
+- **The Werewolf's own Major Milestones.** Progression lists the Werewolf's
+  Majors above the shared ones: those open to every Werewolf, the ones you
+  earn with Majors already taken, and your Origin's own, ending in **The
+  Calling** or **Off the Leash**. Another Origin's don't clutter the list.
+  **Tireless** and **Deep Reserves** raise your RoU and SFR on the sheet.
+  **Hardline Shift** makes a Forge Fang's shift cost ordinary damage, so the
+  switch stops recording it as Withering. **Iron Jaw** puts AP on your Claws
+  and Fangs, and **Clear Head** lets you use TECH skills in form at −2. The
+  Form switch says what each one changed.
 - **Stat Points start from the book's pool.** The Power Level step shows each
   level's one pool, the same for everyone. If your GM wants the dice to decide,
   tick **Roll for Stat Points instead**, and the step says what you'll roll.

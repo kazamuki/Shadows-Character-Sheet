@@ -2,8 +2,7 @@
 
 **Plan:** [`../crb-v4-sync.md`](../crb-v4-sync.md) §2 (P3b). Follows [`P3-werewolf.md`](P3-werewolf.md), built
 2026-10-08 (Decisions 195–197). Decisions 29, 91, 104, 135 and 194 bear on it.
-**Status:** **scoped 2026-10-08 by Claude (Opus)**, in the session that built P3, at Ken's request (VQ13:
-"scope it out; a follow-up session is fine"). §4 is for Ken.
+**Status:** **built 2026-10-08** (Decision 199, app 0.39.0, game data 0.32). Ken took §4's four recommendations the same day.
 **Branch:** a new session, from `main` after P3 merges. PR to `main`.
 **Tier:** *Rule or shape*. **Propose before building:** bring Ken §3's shape and §4's answers first.
 

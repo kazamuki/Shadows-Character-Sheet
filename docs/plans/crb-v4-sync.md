@@ -1,6 +1,6 @@
 # Plan — CRB v4 sync: the sheet catches up to the 2026-10-07 mirror
 
-**Status:** open, Ken's. P0, P1 (Decision 198), P2 (W71, Decision 194) and P3 (the Werewolf, Decisions 195–197) are built. Ken answered VQ1–VQ15 on 2026-10-08. Next: P3b or P4.
+**Status:** open, Ken's. P0, P1 (Decision 198), P2 (W71, Decision 194) and P3 and P3b (the Werewolf, Decisions 195–197 and 199) are built. Ken answered VQ1–VQ19 on 2026-10-08. Next: P4 (VQ20–VQ27).
 **Compiled:** 2026-10-08, against the mirror at `private/` `cea99a8` (the 2026-10-07 re-mirror under the
 four-digit numbers, merged with S10c's Codex fix), game data 0.29 and app 0.37.0.
 **The other direction:** `crb-catch-up.md` is what the *book* still needs from the sheet. This plan is what
@@ -55,7 +55,7 @@ Each pass is a branch and a PR. They're ordered by what unblocks what, not by si
 | **P1** | Small content: the rolled Stat Point pool as an opt-in (VQ1); Long-Lived's "ranks stack" and Ghost TAG's Black TAG line in their descriptions; the grenade table's 1x / 2x+ and Defense as catalog text; the grenades as printed (VQ8) | Content | ✅ **Built** 2026-10-08: Decision 198 (the rolled pool a box), app 0.39.0, no data bump (Decision 68: nothing computed moves) |
 | **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | ✅ **Built** 2026-10-08: Decision 194, app 0.38.0, schema 0.18 |
 | **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 | Rule or shape | ✅ **Built** 2026-10-08: Decisions 195–197, app 0.39.0, game data 0.31. Work order: [`crb-v4-sync/P3-werewolf.md`](crb-v4-sync/P3-werewolf.md) |
-| **P3b** | **The Werewolf's Major Milestones** (VQ13): `0414`'s 29, archetype Majors read at all, an Origin prerequisite, and the few that change a derived number | Rule or shape | Ken on VQ16–VQ19. **Work order: [`crb-v4-sync/P3b-werewolf-majors.md`](crb-v4-sync/P3b-werewolf-majors.md)** |
+| **P3b** | **The Werewolf's Major Milestones** (VQ13): `0414`'s 29, archetype Majors read at all, an Origin prerequisite, and the few that change a derived number | Rule or shape | ✅ **Built** 2026-10-08: Decision 199, app 0.39.0, game data 0.32; Ken took VQ16–VQ19 as recommended. **Work order: [`crb-v4-sync/P3b-werewolf-majors.md`](crb-v4-sync/P3b-werewolf-majors.md)** |
 | **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2; F39 (stubbed if open). Ken on VQ20–VQ27. **Work order: [`crb-v4-sync/P4-vampire.md`](crb-v4-sync/P4-vampire.md)** |
 | **P5** | **Advancement to `0450`**: IP by the hour, the new IP purchases (Advantages, buy-offs, SAN, Health Levels), the new Minor Milestones and repeats, Training | Rule or shape | 0450's own open questions (AD-02, AD-03) for the prices; the repeat rule (VQ7) can go now |
 
@@ -82,7 +82,7 @@ one from `0450`. P2 is the proposal Ken signs off before anything is built.
 ## 4. Questions
 
 VQ1–VQ9 went to Ken on 2026-10-08, and VQ10–VQ15 (from P3's work order) the same day. Answers are
-in the third column; two parts went on to Deighton and Scott as flags. VQ16–VQ19 are P3b's and VQ20–VQ27 P4's, in their work orders.
+in the third column; two parts went on to Deighton and Scott as flags. VQ16–VQ19 are P3b's (answered as recommended: both pools, compute the SFR two, the `form` grant, the rest text) and VQ20–VQ27 P4's, in their work orders.
 
 | Id | Question | Answer |
 |---|---|---|

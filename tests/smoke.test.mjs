@@ -5491,3 +5491,33 @@ test("a Trueborn's sheet: the powers with ranks and costs, Base Powers with its 
   assert.equal(barred.sort().join(), tech.sort().join(), "Feral Mind didn't bar exactly the TECH skills");
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 199: Progression lists a Trueborn's own Majors above the shared ones, greys an unmet one, and takes one; the form says what a Major changed", () => {
+  const ch = wolf("trueborn");
+  ch.progression.milestonePoints = 100;
+  const app = openSheet(ch, "progression");
+  const text = app.$("#main").textContent;
+  assert.match(text, /Werewolf\s*Tireless.*Swift Change.*Between Forms.*The Calling.*General/s, "the Werewolf's Majors aren't listed before the shared ones");
+  assert.doesNotMatch(text, /Forge Fang Mark|Wildblood Mark|Off the Leash/, "a Trueborn is offered another Origin's Majors");
+  const take = id => app.$(`[data-takemajor="${id}"]`);
+  assert.ok(take("between-forms").disabled, "Between Forms is takeable with no Major");
+  assert.match(take("between-forms").closest(".pick").textContent, /1 Major Milestone taken/);
+  assert.ok(take("clear-head").disabled, "Clear Head is takeable with no Major");
+  app.click('[data-takemajor="tireless"]');
+  assert.deepEqual(activeChar(app).progression.milestones.major.map(m => m.id), ["tireless"]);
+  assert.match(app.$("#main .journal").textContent, /Tireless/, "the journal doesn't name the Werewolf Major");
+  assert.ok(!take("between-forms").disabled, "Between Forms stayed locked after a Major");
+  app.click('[data-takemajor="clear-head"]');
+  app.click('[data-takemajor="iron-jaw"]');
+
+  app.click('[data-sec="main"]');
+  app.click('[data-ptoggle="form|Werewolf"]');
+  const main = app.$("#main").textContent;
+  assert.match(main, /Clear Head: In Werewolf form, you can use TECH-based skills at −2\./, "the form doesn't say what Clear Head changed");
+  const claws = app.$$("#main tr").find(r => /^Claws/.test(r.textContent));
+  assert.match(claws.textContent, /AP/, "Iron Jaw's AP isn't on the claws");
+  app.click('[data-sec="skills"]');
+  assert.match(app.$("#main").textContent, /−2 while shifted|-2 while shifted/, "a TECH skill doesn't show Clear Head's penalty");
+  assert.doesNotMatch(app.$("#main").textContent, /not while shifted/, "a TECH skill is still barred");
+  assert.deepEqual(app.errors, []);
+});

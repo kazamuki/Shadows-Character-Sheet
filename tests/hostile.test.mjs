@@ -89,7 +89,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
       { date: P("ip.date2"), kind: "grant", amount: P("ip.amount2"), note: P("ip.note2") },
       { date: P("ip.date3"), kind: "spend", amount: 5, targetType: "power", targetId: P("ip.power"), name: P("ip.powername"), note: "" }] },
     milestonePoints: P("mp"),
-    milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }] },
+    milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }, { id: "swift-change", date: P("major2.date") }, { id: "hardline-shift", date: P("major3.date") }] },
     powerIpe: { evocation: P("pipe"), [P("pipe.key")]: 2, enchantment: "1e999", alchemy: -4, [P("pw.id")]: "3",
                 "steel-fangs": P("pipe.ww"), "apex-fury": 2 } };
   ch.sessions = [{ date: P("s.date"), title: P("s.title"), ipEarned: P("s.ip"), milestonePoint: true, notes: P("s.notes") }];

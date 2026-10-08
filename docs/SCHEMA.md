@@ -2575,6 +2575,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     Character schema unchanged (0.8). (Ken + Claude, 2026-09-23)
     → **Superseded in part by Decision 143** — Resilient Spirit answers Elemental, Spirit and Aether, not "Magical"; the F25 stub stands.
     → **Superseded in part by Decision 196** — Resilient Spirit is gone with Lunar Phase Blessing; `resAgainst` stays, with no source in the data.
+    → **Superseded in part by Decision 199** — `grants()` now reads taken Major Milestones too (types `rou`, `sfrMax`, `form`); Natural Armor keeps its own scan, through `majorById`.
 105. **(Nanomed Kit — combat plan cleanup, CQ12, data + engine + app)**
     **054's "With Çredits" list is the master: a Nanomed Kit clears
     Agonized, Bleeding, Paralyzed and Poisoned and stabilizes the Dying.**
@@ -4275,6 +4276,17 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 150 in part (the pick is a box, not a toggle of equals).
      - **Revisit if:** the book prints the rolled pool again, or a table wants the GM's pick set once for everyone (GM mode).
      - **Built:** app 0.39.0, no data or schema bump. Log 2026-10-08 (P1).
+199. **An archetype's own Major Milestones are offered beside the shared ones, gated by Origin; a taken Major's grants count, and a Major can change the form.**
+     *2026-10-08 · Ken + Claude · Touches: growth.majorMilestones, majorGeneral, majorPool, majorOffered, majorById, formGrants, checkPrereqs, prerequisites.specialization, grants(), rou, sfrMax, sfr, form grant, toggleCost, formState, formView, skillLine.formPenalty, versionCheck, Progression, Tireless, Deep Reserves, Hardline Shift, Iron Jaw, Clear Head, F9, VQ16–VQ19, crb-v4-sync P3b*
+     - **Decided:** `0414`'s 29 Werewolf Majors are data, offered on Progression above the shared `majorGeneral` (VQ16: both, until F9), less the ones only another Origin can take. A prerequisite's `specialization` lists the Origins that may take it, any of. `grants()` reads taken Majors once each: `rou` and `sfrMax` add to SFR (Tireless, Deep Reserves, VQ17); a `form` grant changes the form a toggle carries (VQ18): Hardline Shift's HL is Regular, Iron Jaw tags Claws and Fangs AP, Clear Head turns Feral Mind's bar into −2. Every other Werewolf Major, Bone and Sinew included, is text (VQ19).
+     - **Why:** The book gives the Werewolf its own pool; the numbers it changes are ones the sheet already shows, and Hardline Shift left as text would keep the switch writing Withering the character doesn't take.
+     - **Rejected:**
+       - The Werewolf pool alone, as `0414` says: whether the shared list is shared at all is F9's, not this pass's.
+       - Greying another Origin's Majors rather than hiding them: they can never be taken, so they're noise.
+       - Computing Bone and Sinew: Regeneration isn't computed anywhere yet.
+     - **Replaces:** Decision 104 in part (`grants()` now reads Majors). Extends 29 and 91 (an Origin key in the one prerequisite vocabulary) and 195 (a Major can change a form).
+     - **Revisit if:** F9 settles the shared list; the Vampire's Majors (P4b) need a grant this vocabulary can't say; Regeneration gets computed.
+     - **Built:** app 0.39.0, game data 0.32; no schema bump. Log 2026-10-08 (P3b).
 
 ## 5. Open Flags
 

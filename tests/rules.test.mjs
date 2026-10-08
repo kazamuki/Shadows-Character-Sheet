@@ -1282,3 +1282,38 @@ test("CRB 0460: every grenade carries its 1x / 2x+ column and its Defense as pri
     assert.equal(w.radius, radius, `${name}'s radius isn't the book's`);
   }
 });
+
+// ── 0414's Major Milestones (crb-v4-sync P3b, Decision 199) ───────────
+
+test("CRB 0414: the Werewolf's 29 Major Milestones, by name, effect and prerequisite, in the book's order", () => {
+  const md = crb("0414_Werewolf.md");
+  const at = md.indexOf("## Growth & Milestones");
+  assert.ok(at >= 0, "0414 has no Growth & Milestones section");
+  const rows = md.slice(at).split("\n").filter(l => /^\| [A-Z]/.test(l) && !/^\| Milestone \|/.test(l))
+    .map(l => l.split("|").slice(1, -1).map(c => c.trim()));
+  const ww = D.archetypes.find(a => a.id === "werewolf");
+  const data = ww.growth.majorMilestones;
+  assert.equal(data.length, rows.length, "the book and the data list a different number of Majors");
+  const origin = id => ww.specialization.options.find(o => o.id === id).name;
+  const name = id => data.find(m => m.id === id).name;
+  rows.forEach(([n, effect, pre], i) => {
+    const m = data[i];
+    assert.equal(m.name, n, `Major ${i + 1} isn't the book's ${n}`);
+    assert.equal(m.benefit, effect, `${n}'s effect isn't the book's`);
+    const p = m.prerequisites, parts = [];
+    if (p.specialization) parts.push(p.specialization.map(origin).join(" or "));
+    for (const id of p.milestones || []) parts.push(name(id));
+    if (p.majorCount) parts.push(`${p.majorCount} Major Milestone${p.majorCount > 1 ? "s" : ""}`);
+    assert.equal(parts.join(", ") || "None", pre, `${n}'s prerequisite isn't the book's`);
+  });
+});
+
+test('CRB 0414: "Tireless: +2 RoU." and "Deep Reserves: +5 maximum SFR."', () => {
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = "street";
+  ch.identity.archetype = "werewolf";
+  const before = Engine.sfr(ch);
+  ch.progression.milestones.major.push({ id: "tireless", date: "2026-10-08" }, { id: "deep-reserves", date: "2026-10-08" });
+  assert.equal(Engine.sfr(ch).rou - before.rou, 2);
+  assert.equal(Engine.sfr(ch).value - before.value, 5);
+});

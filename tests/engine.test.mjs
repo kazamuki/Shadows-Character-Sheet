@@ -324,11 +324,10 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
 const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$/;
-// Merged content no screen shows yet. AQ4 answered each one: S6 shows them,
-// except `growth`, which stays hidden until the Majors are written. An entry
-// leaves this list the day code reads it; the test says when.
+// Merged content no screen shows yet. AQ4 answered each one: S6 showed them,
+// and P3b `growth` (Decision 199). An entry leaves this list the day code
+// reads it; the test says when.
 const NOT_YET_SHOWN = {
-  growth: "hidden until the archetype Majors are written (AQ4 5, F32)",
 };
 
 function dataKeys() {
@@ -5050,4 +5049,94 @@ test("193 (review): killed only when this fight moves the member to dead", () =>
   Engine.editCastMember(d.t, d.dez.id, { status: "dead" });
   assert.ok(Engine.endEncounter(d.t, d.e, { rows: { [d.dezRow]: { line: true, status: "dead" } } }).ok);
   assert.equal(d.t.interactions[0].kind, "fought");
+});
+
+// ── The Werewolf's Major Milestones (crb-v4-sync P3b, Decision 199) ──
+const WWMAJ = () => WWD().growth.majorMilestones;
+const withMajors = (ch, ...ids) => { ids.forEach(id => ch.progression.milestones.major.push({ id, date: "2026-10-08" })); return ch; };
+
+test("Decision 199: each Origin is offered the shared Majors, the open and earned ones, and its own, never another Origin's", () => {
+  const shared = D.milestones.majorGeneral.map(m => m.id);
+  const anyOrigin = WWMAJ().filter(m => !m.prerequisites.specialization).map(m => m.id);
+  assert.equal(anyOrigin.length, 9, "the open four and the earned five");
+  for (const o of WWD().specialization.options) {
+    const own = WWMAJ().filter(m => (m.prerequisites.specialization || []).includes(o.id)).map(m => m.id);
+    assert.equal(own.length, 7, `${o.name} has ${own.length} of its own, with its capstone`);
+    const offered = Engine.majorOffered(werewolf(o.id)).map(m => m.id);
+    same([...offered].sort(), [...shared, ...WWMAJ().filter(m => anyOrigin.includes(m.id) || own.includes(m.id)).map(m => m.id)].sort(), `${o.name} is offered the wrong Majors`);
+  }
+  assert.equal(Engine.majorOffered(werewolf(null)).length, shared.length + 29, "a Werewolf with no Origin yet doesn't see all of them");
+  same(Engine.majorOffered(subject()).map(m => m.id), shared, "an Arcanist is offered a Werewolf's Majors");
+  const clash = WWMAJ().map(m => m.id).filter(id => shared.includes(id));
+  same(clash, [], "a Werewolf Major's id collides with a shared one; progression stores bare ids");
+});
+
+test("Decision 199: a Werewolf Major gates on its Origin, its count and the Milestone it names, and takes like any Major", () => {
+  const m = id => Engine.majorById(werewolf("trueborn"), id);
+  const pre = (ch, id) => Engine.majorPrereqs(ch, Engine.majorById(ch, id));
+  assert.equal(pre(werewolf("trueborn"), "swift-change").ok, true);
+  same(pre(werewolf("wildblood"), "swift-change").unmet, ["Trueborn"], "a Wildblood can take a Trueborn's Major");
+  assert.equal(pre(werewolf("trueborn"), "between-forms").ok, false, "Between Forms didn't wait on a Major");
+  assert.equal(pre(withMajors(werewolf("trueborn"), "tireless"), "between-forms").ok, true);
+  same(pre(werewolf("wildblood"), "two-riders").unmet, ["Milestone: Spirit's Favor"], "Two Riders doesn't name Spirit's Favor");
+  assert.equal(pre(withMajors(werewolf("wildblood"), "spirits-favor"), "two-riders").ok, true);
+  const three = ["tireless", "deep-reserves", "lead-the-pack"];
+  assert.equal(pre(withMajors(werewolf("trueborn"), ...three), "the-calling").ok, true, "The Calling refused a Trueborn");
+  assert.equal(pre(withMajors(werewolf("wildblood"), ...three), "the-calling").ok, true, "The Calling refused a Wildblood");
+  same(pre(withMajors(werewolf("forge-fang"), ...three), "the-calling").unmet, ["Trueborn or Wildblood"]);
+  assert.equal(pre(withMajors(werewolf("forge-fang"), ...three), "off-the-leash").ok, true);
+  assert.ok(m("the-calling"), "The Calling isn't in the pool");
+
+  const ch = werewolf("trueborn");
+  ch.progression.milestonePoints = 100;
+  assert.equal(Engine.takeMilestone(ch, "major", "swift-change").ok, true, "a Werewolf can't take its own Major");
+  assert.equal(Engine.takeMilestone(ch, "major", "hardline-shift").ok, false, "a Trueborn took a Forge Fang's Major");
+  assert.equal(Engine.takeMilestone(subject(), "major", "swift-change").ok, false, "an Arcanist took a Werewolf's Major");
+});
+
+test("Decision 199: Tireless adds 2 RoU and Deep Reserves 5 SFR, once each, and nobody else's SFR moves", () => {
+  const before = Engine.sfr(werewolf("trueborn"));
+  const ch = withMajors(werewolf("trueborn"), "tireless", "deep-reserves");
+  const after = Engine.sfr(ch);
+  assert.equal(after.rou, before.rou + 2);
+  assert.equal(after.value, before.value + 5);
+  withMajors(ch, "tireless");
+  assert.equal(Engine.sfr(ch).rou, before.rou + 2, "a Major listed twice counted twice");
+  assert.equal(Engine.panelMax(ch, WWD().coreMechanic.panels.find(p => p.id === "sfr")), before.value + 5, "the SFR tracker's max didn't move");
+});
+
+test("Decision 199: Hardline Shift makes the shift's HL ordinary damage, Iron Jaw tags the claws AP, Clear Head turns Feral Mind's bar into -2", () => {
+  const ff = () => werewolf("forge-fang", { base: 8 });
+  same(Engine.setToggle(withMajors(ff(), "hardline-shift"), "form", "Werewolf").cost, { hl: 1, hp: 7, withering: false, category: "Regular" }, "Hardline Shift still writes Withering");
+  const hs = withMajors(ff(), "hardline-shift");
+  Engine.setToggle(hs, "form", "Werewolf");
+  assert.equal(hs.trackers.witheringDamage, 0, "the HL was recorded as Withering");
+  assert.equal(hs.trackers.damage, 7);
+
+  const jaw = withMajors(werewolf("trueborn"), "iron-jaw");
+  jaw.panelData = { form: "Werewolf" };
+  same(Engine.formView(jaw).weapons.map(w => [w.name, w.tags]), [["Claws", ["AP"]], ["Fangs", ["AP"]]]);
+  const bare = werewolf("trueborn"); bare.panelData = { form: "Werewolf" };
+  same(Engine.formView(bare).weapons.map(w => w.tags), [[], []], "claws carry AP without Iron Jaw");
+
+  const tech = D.skills.find(s => s.primaryStat === "TECH").id;
+  const clear = withMajors(werewolf("trueborn"), "clear-head");
+  const human = Engine.skillLine(clear, tech).checkBonus;
+  clear.panelData = { form: "Werewolf" };
+  const l = Engine.skillLine(clear, tech);
+  assert.equal(l.barred, null, "Clear Head left the TECH skill barred");
+  assert.equal(l.formPenalty, -2);
+  assert.equal(l.checkBonus, human - 2);
+  bare.panelData = { form: "Werewolf" };
+  assert.ok(Engine.skillLine(bare, tech).barred, "Feral Mind stopped barring TECH without Clear Head");
+  same(Engine.formView(clear).changedBy.map(c => c.name), ["Clear Head"], "the form doesn't say what changed it");
+});
+
+test("Decision 199: a taken Werewolf Major resolves for a Werewolf, and versionCheck names one held by anyone else or with a junk id", () => {
+  const issues = ch => Engine.versionCheck(ch).filter(x => /Major Milestone/.test(x));
+  same(issues(withMajors(werewolf("trueborn"), "swift-change")), [], "a Werewolf's own Major reads as missing");
+  same(issues(withMajors(subject(), "swift-change")), ['Major Milestone "swift-change" no longer exists in game data.']);
+  same(issues(withMajors(werewolf("trueborn"), "<b>gone</b>")), ['Major Milestone "<b>gone</b>" no longer exists in game data.']);
+  assert.equal(Engine.majorById(werewolf("trueborn"), "swift-change").name, "Swift Change");
+  assert.equal(Engine.grants(withMajors(werewolf("trueborn"), "<b>gone</b>", "")).rou, 0, "a junk Major id granted something");
 });

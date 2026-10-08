@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.31",
+    "gamedataVersion": "0.32",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2699,7 +2699,43 @@ window.SHADOWS_DATA = {
       ],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": []
+        /* 0414's own Majors, offered beside the shared `majorGeneral` (VQ16,
+           until F9). `prerequisites.specialization` names the Origins that
+           may take one (any of). A `form` grant changes the form a toggle
+           carries (Decision 195): `withering: false` makes its cost ordinary
+           damage, `weaponTags` tag its natural weapons, `barsPenalty` turns
+           its bar into a penalty. `rou` and `sfrMax` add to SFR (Decision 199). */
+        "majorMilestones": [
+          { "id": "tireless", "name": "Tireless", "prerequisites": {}, "benefit": "+2 RoU.", "grants": [{"type": "rou", "amount": 2}] },
+          { "id": "deep-reserves", "name": "Deep Reserves", "prerequisites": {}, "benefit": "+5 maximum SFR.", "grants": [{"type": "sfrMax", "amount": 5}] },
+          { "id": "lead-the-pack", "name": "Lead the Pack", "prerequisites": {}, "benefit": "Allies attacking a target you're attacking at Close range gain +1 to their attacks." },
+          { "id": "master-of-the-change", "name": "Master of the Change", "prerequisites": {}, "benefit": "+1 Hit on WILL Essence checks made under Call of the Wild." },
+          { "id": "trueborn-mark", "name": "Trueborn Mark", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Predator's Mark returns 1 more SFR when you remove your prey." },
+          { "id": "trueborn-tracking", "name": "Trueborn Tracking", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Scent Tracking also detects supernatural beings and magical effects." },
+          { "id": "trueborn-pheromones", "name": "Trueborn Pheromones", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "While Pheromone Aura is active, allies gain +1 Hit on WILL Essence checks." },
+          { "id": "trueborn-howl", "name": "Trueborn Howl", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Ferocious Howl also grants allies +1 MOB and +1 COOL." },
+          { "id": "swift-change", "name": "Swift Change", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Shifting takes a Fast Action instead of a full round." },
+          { "id": "between-forms", "name": "Between Forms", "prerequisites": {"specialization": ["trueborn"], "majorCount": 1}, "benefit": "Once per scene, take on one piece of Werewolf form without fully shifting, either Natural Weapons or Regeneration, for up to WILL rounds. You keep your human face, your TECH skills, and your place in the room." },
+          { "id": "wildblood-mark", "name": "Wildblood Mark", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "Allies gain +1 to melee and Martial Arts attacks against your marked prey." },
+          { "id": "wildblood-tracking", "name": "Wildblood Tracking", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "Scent Tracking also locates wounded or bleeding targets." },
+          { "id": "wildblood-pheromones", "name": "Wildblood Pheromones", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "While Pheromone Aura is active, allies gain +1 to melee and Martial Arts attacks." },
+          { "id": "wildblood-howl", "name": "Wildblood Howl", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "Ferocious Howl also grants allies +1 to Combat Sense checks." },
+          { "id": "spirits-favor", "name": "Spirit's Favor", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "When you shift, roll 1d6 twice and choose which spirit takes you. Calling a specific spirit costs 1 SFR instead of 2." },
+          { "id": "two-riders", "name": "Two Riders", "prerequisites": {"specialization": ["wildblood"], "milestones": ["spirits-favor"]}, "benefit": "When you pay to call a spirit, the spirit you rolled stays too, and you carry both Aspects." },
+          { "id": "forge-fang-mark", "name": "Forge Fang Mark", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Predator's Mark pays out when anyone in your crew removes the prey." },
+          { "id": "forge-fang-tracking", "name": "Forge Fang Tracking", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Scent Tracking also includes infrared detection." },
+          { "id": "forge-fang-pheromones", "name": "Forge Fang Pheromones", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Pheromone Aura emits a high-pitched frequency that gives enemies −1 Hit on WILL Essence checks." },
+          { "id": "forge-fang-howl", "name": "Forge Fang Howl", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Ferocious Howl disrupts electronics: drones and devices within 20 meters lose their next action." },
+          { "id": "override-protocol", "name": "Override Protocol", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "While dosed, shifting back to human form is automatic. In Seta-16 withdrawal, the WILL Essence check returns." },
+          { "id": "hardline-shift", "name": "Hardline Shift", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "The HL you spend to shift no longer counts as Withering, so Regeneration restores it.", "grants": [{"type": "form", "withering": false}] },
+          { "id": "the-wolf-beneath", "name": "The Wolf Beneath", "prerequisites": {"majorCount": 1}, "benefit": "Choose one Innate power; it works in human form." },
+          { "id": "clear-head", "name": "Clear Head", "prerequisites": {"majorCount": 1}, "benefit": "In Werewolf form, you can use TECH-based skills at −2.", "grants": [{"type": "form", "barsPenalty": -2}] },
+          { "id": "iron-jaw", "name": "Iron Jaw", "prerequisites": {"majorCount": 1}, "benefit": "Your claws and fangs gain AP.", "grants": [{"type": "form", "weaponTags": ["AP"]}] },
+          { "id": "silverscar", "name": "Silverscar", "prerequisites": {"majorCount": 2}, "benefit": "Withering damage from silver is halved (never below 1)." },
+          { "id": "bone-and-sinew", "name": "Bone and Sinew", "prerequisites": {"majorCount": 2}, "benefit": "Regeneration restores 2 HL per round, and shifting into Werewolf form ends Maimed." },
+          { "id": "the-calling", "name": "The Calling", "prerequisites": {"specialization": ["trueborn", "wildblood"], "majorCount": 3}, "benefit": "You can pass the wolf on. Bite someone brought to 0 HL and let the spirit follow. They make a WILL Essence check (TN 9, TH 3). On a success, they rise Wildblood. With fewer than 3 Hits, the spirit doesn't take and the wound heals as a wound. On a botch, the spirit takes them completely, and what gets up is no longer a person." },
+          { "id": "off-the-leash", "name": "Off the Leash", "prerequisites": {"specialization": ["forge-fang"], "majorCount": 3}, "benefit": "You can cook your own Seta-16. Given a night of downtime, a working lab, and a batch of precursors, make a Medical check against 15. On a success, the batch yields 5 doses, plus 1 more for every 5 points you beat the difficulty by. On a failure, the precursors are wasted. On a botch, the batch is tainted: a tainted dose counts as a missed day, and you won't know which ones they are until you take one." }
+        ]
       }
     },
     {
