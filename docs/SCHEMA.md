@@ -4217,7 +4217,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - CP ranks for a written power at creation: not asked for. It starts at 1, free (XQ2).
      - **Replaces:** Decision 153 in part (a written power now has a rank); Decision 154 in part (Add power in play is the new-power price, not the GM's). Extends Decision 14's IP costs and 157's one price for every power.
      - **Revisit if:** `0450`'s Supernatural ceilings pass 10, or the Werewolf's 3 and Vampire's 5 bind play.
-     - **Built:** app 0.38.0, game data 0.30, schema 0.18; tests mutation-tested. Log 2026-10-08 (W71).
+     - **Built:** app 0.38.0, game data 0.30, schema 0.18; PR #132; tests mutation-tested. Log 2026-10-08 (W71).
 
 ## 5. Open Flags
 
