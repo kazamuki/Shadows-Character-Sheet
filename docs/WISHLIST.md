@@ -287,6 +287,26 @@ just a trimmed sheet; what the Home screen says before a pack is slotted
 in; whether a pack can be removed, and what that does to characters that
 use it.
 
+**W68 — How well a cast member knows each of the crew: a face, a regular, a name.** *Ken · 💡 · Rule or shape · raised 2026-10-07 in W29 S10c's order*
+A GM's hint for the scene: does Dez half-recognise Rook ("you look familiar"),
+know them by sight ("I know you"), or know their name ("hey there, Rook")?
+Nothing records it today. S10c's wrap-up writes a *fought* interaction with
+every PC in the room as its crew, so *Who knows what* already lists who has
+crossed paths with whom, and how often. A GM can read the first two levels
+off that list.
+*The idea in two parts.* **Seen them** is derived: a count of the
+interactions a member and a crew name share (fights, words, favours), shown
+as a hint on the member's page and in *Who knows what*, and never stored
+(constraint 7). **Knows their name** can't be counted, because one meeting can
+give it away and ten might not. It's a fact the GM records, as an interaction
+kind (*learned their name*) or a mark on the interaction that gave it away.
+*To respect:* Decision 177 (interactions are the history; no second place for
+the same sentence), 179 (*Who knows what*). The Reputation advantage (`043`,
+Rank 2: "people occasionally recognize you") and CRANK rep (169) are player
+rules about being recognised; a level the GM sets must not quietly contradict
+them, so ask Deighton and Scott how they meet before choosing levels. Crew are
+typed names until S3b's seats claim them.
+
 ### Custom characters
 
 Raised 2026-09-30 while planning the custom archetype
@@ -464,7 +484,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W68.** Everything above is open; W38 has a plan,
+- **Next free number: W69.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
