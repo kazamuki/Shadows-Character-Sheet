@@ -1361,7 +1361,7 @@ function catalogGroups(kind){
     .filter(g=>g.items.length);
   if (kind==="weapons"){
     const known = new Set((D.weaponCategories||[]).map(c=>c.id));
-    return (D.weaponCategories||[]).map(c=>({ id:c.id, label:c.name, items:D.weapons.filter(w=>w.category===c.id) }))
+    return (D.weaponCategories||[]).map(c=>({ id:c.id, label:c.name, note:c.note||"", items:D.weapons.filter(w=>w.category===c.id) }))
       .concat([{ id:"other", label:"Other", items:D.weapons.filter(w=>!known.has(w.category)) }]).filter(g=>g.items.length);
   }
   const slots = [...new Set(D.armor.map(a=>a.slot||"body"))];
@@ -1388,13 +1388,17 @@ function catalogMatches(ch, kind){
   if (f) list.sort((a,b)=>{ const x=f(a), y=f(b); return (x<y?-1:x>y?1:0)*(desc?-1:1); });
   return { list, total: rows.length };
 }
+// A grenade's column as printed (0460): what each explosion on the throw adds,
+// and the check that gets you clear. Read out, never applied.
+const escalationText = l => l.escalation ? `On a 10: ${Object.entries(l.escalation).map(([k,v])=>`${k} ${v}`).join(" · ")}.` : null;
+const defenseText = l => l.defense ? `Defense ${l.defense}` : null;
 const perPurchase = l => l.chargesMax ? `${l.chargesMax} charges${l.startsEmpty?" (sold empty)":""}` : l.pack>1 ? `${l.pack} ${esc(l.unit||"")}s` : l.unit ? `1 ${esc(l.unit)}` : "1";
 function catalogCellsHtml(kind, l){
   if (kind==="gear")
     return `<td data-k="Notes">${esc(l.itemNotes||"—")}${l.spell?`<div class="sub">${esc(l.spell.name)}: ${esc(tnth(l.spell))}, ${esc(l.spell.effect)}</div>`:""}</td>
       <td class="num" data-k="Comes as">${perPurchase(l)}</td>`;
   if (kind==="weapons"){
-    const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
+    const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null, defenseText(l)].filter(Boolean).join(" · ");
     return `<td class="num" data-k="Attack">${attackText(l.attack)}${l.acc?`<div class="sub">+${l.acc} ACC Single</div>`:""}${l.skill&&!l.skill.trained?`<div class="sub">untrained</div>`:""}</td>
       <td class="num" data-k="Damage">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="sub">${esc(l.damageFormula)}</div>`:""}</td>
       <td data-k="Range">${esc(range||"—")}</td><td class="num" data-k="RoF">${esc(l.rof||"—")}</td><td class="num" data-k="Cap.">${esc(l.capacity||"—")}</td>`;
@@ -1416,7 +1420,7 @@ function catalogResultsHtml(ch, kind){
         ? [g.label, l.skill&&l.skill.name, l.style, l.damageType&&l.damageType!=="Normal"?l.damageType:null]
         : kind==="gear" ? [g.label, l.material, l.spellName?`Holds ${l.spellName}`:null, l.action?`${l.action} Action`:null]
         : [g.label, l.quality, ...(l.slot==="body"?l.features:[])];
-      const det = [l.flavorLine, l.weaponNotes, kind==="gear"?g.note:null].filter(Boolean);
+      const det = [l.flavorLine, l.weaponNotes, kind==="weapons"?escalationText(l):null, g.note].filter(Boolean);
       return `<tr class="catrow${open===l.id?" open":""}" data-catrow="${esc(l.id)}" aria-expanded="${open===l.id}">
         <td><b>${esc(l.name)}</b><div class="sub">${esc([...new Set(sub.filter(Boolean))].join(" · "))}</div>${
           kind!=="armor" && (l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...new Set([...(l.tags||[]), ...(l.features||[])])])}</div>`:""}${l.buy.ok||l.price==null?"":`<div class="why">${esc(l.buy.why)}</div>`}</td>
@@ -1631,13 +1635,13 @@ function weaponRowsHtml(ch){
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
         const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null].filter(Boolean);
-        const range = [l.reach ? `Reach ${l.reach}` : l.range, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
+        const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
         const mods = weaponModsHtml(ch, l);
         return `<tr><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
           <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
             l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}</td>
-          <td>${esc(range||"—")}</td><td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td>
+          <td>${esc(range||"—")}${l.defense?`<div class="lo-sub">${esc(defenseText(l))}</div>`:""}${l.escalation?`<div class="lo-sub">${esc(escalationText(l))}</div>`:""}</td><td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>${
           mods?`<tr class="lo-modrow"><td colspan="8">${mods}</td></tr>`:""}`;

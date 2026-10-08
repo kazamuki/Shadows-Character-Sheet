@@ -50,6 +50,16 @@ own in the footer.
   vulnerabilities.
 - **A Werewolf's bonus stat points go on BOD, REF or MOB,** and can push past
   10. A Werewolf you've already made keeps every point it placed.
+- **Stat Points start from the book's pool.** The Power Level step shows each
+  level's one pool, the same for everyone. If your GM wants the dice to decide,
+  tick **Roll for Stat Points instead**, and the step says what you'll roll.
+- **Grenades read as the book prints them.** The catalog and your Loadout show
+  each grenade's radius, its **Defense** (the check to get clear), and what
+  each 10 on the throw adds: the **1x** and **2x+** column. The catalog spells
+  out how a grenade escalates. The Shockwave, Curtain and Sunburst notes match
+  the book, and the Blackout's damage reads EMP.
+- **Ghost TAG** says what the street calls it, and **Long-Lived** says its
+  ranks stack.
 
 ## v0.38.0 — 2026-10-08
 

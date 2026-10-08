@@ -1225,6 +1225,7 @@ const Engine = (() => {
              style: def.style||null, damageType: def.damageType||null,
              reach: def.reach||null, parry: def.parry||null, range: def.range||null, radius: def.radius||null,
              rof: def.rof||null, capacity: def.capacity||null,
+             escalation: def.escalation&&typeof def.escalation==="object" ? def.escalation : null, defense: def.defense||null,
              tags: def.tags||[], features: def.features||[], weaponNotes: def.notes||null };
   }
 

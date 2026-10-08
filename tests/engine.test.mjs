@@ -312,11 +312,11 @@ const code = file => readFileSync(join(ROOT, file), "utf8")
 const CODE = CODE_FILES.map(code).join("\n");
 
 // Where a key is content, not a field: a power level's row, a stat value's
-// modifier, a spell's overflow degrees, a tier's TH and time per Discipline
+// modifier, a spell's overflow degrees and a grenade's, a tier's TH and time per Discipline
 // (Decision 136), an integrity die or a TN per
 // difficulty, an armor slot's name, and a specialization's powers (shared.js
 // draws any array of plain objects on a power as a table, columns from keys).
-const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
+const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\[\]\.overflow$/, /^weapons\[\]\.escalation$/,/^enchantmentTimeTable\[\]\.(th|minTime)$/,
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts

@@ -3657,6 +3657,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 4 in part: Stat Points no longer buy 1:1.
      - **Revisit if:** Deighton wants the rolled pools to differ, or playtesting moves the flat pools or the cost past 6.
      - **Built:** app 0.32.0, game data 0.25, character schema 0.15; tests mutation-tested. Closes F8, W34–W36. Log 2026-09-27.
+     → **Superseded in part by Decision 198** — the pick is a box for rolling under the flat pool, not two equal buttons.
 151. **Main carries Heal 1 · Hurt 1 · Take a hit under its Health and Pain cards, and at zero Health Levels its Hurt 1 greys out so a hit goes through Take a hit.**
      *2026-09-30 · Ken + Claude · Touches: Main tab, vital-verbs, vitalVerbsHtml, bindVitalControls, data-dmg, data-hitopen, Hurt 1, Heal 1, Take a hit, At Zero, Dying, Death Marks, cond-grid, undo toast, focus, W42, F36*
      - **Decided:** A full-width row in Main's card grid, straight after Pain (on a phone, under Health), holds Heal 1, Hurt 1 and Take a hit with the popover's own `data-dmg` / `data-hitopen`, so `bindVitalControls` wires them. The ×5 steps, a typed total and Heal all stay in the Health popover. At zero, Main's Hurt 1 is disabled with a line saying why; Trackers' and the popover's steppers stay raw corrections with no ceiling.
@@ -4266,6 +4267,14 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 18 in part (the Werewolf's bonus no longer goes on any stat or stops at 10).
      - **Revisit if:** an archetype's book row goes back to a Stat Bonus on any stat.
      - **Built:** app 0.39.0, game data 0.31. Log 2026-10-08 (P3).
+198. **The Power Level step offers the book's flat Stat Point pool; rolling is a box the GM's table ticks, not an equal choice.**
+     *2026-10-08 · Ken + Claude · Touches: creation.statMethod, statPoints.flat, statPoints.rolled, Power Level step, statMethodHtml, data-stat-rolled, data-stat-method, VQ1, crb-v4-sync P1*
+     - **Decided:** The Power Level cards show the flat pool alone. Under them, **Roll for Stat Points instead** is a checkbox, unticked for a new character, that says it's the GM's call and names the chosen level's roll against its flat pool; ticked, the cards show the rolled pool and Stats asks for the dice. `creation.statMethod` and both pools are unchanged.
+     - **Why:** `0400` prints only the flat pool. Ken kept rolling for a GM who wants it, "perhaps as a tickbox in the creator rather than an equal choice" (VQ1).
+     - **Rejected:** dropping the rolled pool, since Ken kept it; the two-button toggle, since it reads as two equal rules and the book has one.
+     - **Replaces:** Decision 150 in part (the pick is a box, not a toggle of equals).
+     - **Revisit if:** the book prints the rolled pool again, or a table wants the GM's pick set once for everyone (GM mode).
+     - **Built:** app 0.39.0, no data or schema bump. Log 2026-10-08 (P1).
 
 ## 5. Open Flags
 

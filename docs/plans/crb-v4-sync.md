@@ -1,6 +1,6 @@
 # Plan — CRB v4 sync: the sheet catches up to the 2026-10-07 mirror
 
-**Status:** open, Ken's. P0, P2 (W71, Decision 194) and P3 (the Werewolf, Decisions 195–197) are built. Ken answered VQ1–VQ15 on 2026-10-08. Next: P1, P3b or P4.
+**Status:** open, Ken's. P0, P1 (Decision 198), P2 (W71, Decision 194) and P3 (the Werewolf, Decisions 195–197) are built. Ken answered VQ1–VQ15 on 2026-10-08. Next: P3b or P4.
 **Compiled:** 2026-10-08, against the mirror at `private/` `cea99a8` (the 2026-10-07 re-mirror under the
 four-digit numbers, merged with S10c's Codex fix), game data 0.29 and app 0.37.0.
 **The other direction:** `crb-catch-up.md` is what the *book* still needs from the sheet. This plan is what
@@ -31,10 +31,10 @@ character.
 | `0413_Vampire` | **Written.** Was a forty-line stub. Scaling table (Stat Bonus, SFR, RoU, Base Powers, Max Starting Rank), baseline traits, three Bloodlines (Strigoi, Upyr, Draugur), The Thirst (Hunger, Feeding), Innate and Bloodline powers **with ranks to 5**, Vulnerabilities, Growth | 🔧 P4 · ❓ VQ4, VQ5 |
 | `0414_Werewolf` | **Rewritten.** Origins are Trueborn, **Wildblood** and Forge Fang, each with Shifting, Refuel, Need and a Starter Power; baseline traits (Feral Instincts, Regeneration, Pack Mentality); Werewolf Form; SFR refills three ways; Call of the Wild's withdrawal steps; five Innate and eighteen Origin powers **with ranks to 3**; Base Powers and Max Starting Rank columns | ✅ **P3** (Major Milestones: P3b) · F38 stubbed |
 | `0420`–`0423` Skills | Split three ways; Skill Points are base + INT + REF; Max Skill Rank is **4 / 5 / 6 / 6** | ✅ skills match by script · ❓ VQ6 |
-| `0430_Advantages` | CP 5/10/15/20; "Universal" defined; Long-Lived's ranks stack; Ghost TAG is "a Black TAG" on the street | ✅ rules · 🔧 P1 (two descriptions) |
+| `0430_Advantages` | CP 5/10/15/20; "Universal" defined; Long-Lived's ranks stack; Ghost TAG is "a Black TAG" on the street | ✅ rules · ✅ P1 (two descriptions) |
 | `0440_Disadvantages` | Minor Insanity buys out between sessions | — |
 | `0450_Advancement` | **New to the mirror.** IP 5 an hour; prices for Powers (×20), a new Power (40), Advantages and buy-offs (×10 a rank), SAN (5 a point), Health Levels (25); IPE; new Minor Milestones (Skilled, Improved 3d10+30, Talented, Redeemed, Honed, **Steadied**), and they repeat; a Training option | 🔧 P2 (powers), P5 (the rest) · ❓ VQ7 |
-| `0460_Gear` | Massive no longer "deals double"; **Blast** is defined; the grenade table gains 1x / 2x+ and Defense columns and new notes; the old Conditions table is gone | 🔧 P1 · ❓ VQ8, VQ9 |
+| `0460_Gear` | Massive no longer "deals double"; **Blast** is defined; the grenade table gains 1x / 2x+ and Defense columns and new notes; the old Conditions table is gone | ✅ P1 (VQ8) · F28 and F29 closed (VQ9) |
 | `0470_Cybernetics` | **New to the mirror.** Still an outline, written for the Cyborg | — waits on the cybernetics design (STATE §3) |
 | `0480_Magic`, `1200_Powers`, `0540`, Appendix_Aberrations | Unchanged | — |
 | `0530_Combat_Encounters` | Massive also inflicts Injured and Maimed | ✅ CQ5 |
@@ -52,7 +52,7 @@ Each pass is a branch and a PR. They're ordered by what unblocks what, not by si
 | Pass | What | Tier | Waits on |
 |---|---|---|---|
 | **P0** | The mirror moves: `private/` to `cea99a8`, live citations to four-digit names, R13/R14/CRANK read the new files, the four spell fields | Docs + Fix | ✅ **Built** 2026-10-08, app 0.37.1 (released with P2 as 0.38.0) |
-| **P1** | Small content: the rolled Stat Point pool as an opt-in (VQ1); Long-Lived's "ranks stack" and Ghost TAG's Black TAG line in their descriptions; the grenade table's 1x / 2x+ and Defense as catalog text; the grenades as printed (VQ8) | Content | Nothing. F28, F29 and F33 closed already, with W71 |
+| **P1** | Small content: the rolled Stat Point pool as an opt-in (VQ1); Long-Lived's "ranks stack" and Ghost TAG's Black TAG line in their descriptions; the grenade table's 1x / 2x+ and Defense as catalog text; the grenades as printed (VQ8) | Content | ✅ **Built** 2026-10-08: Decision 198 (the rolled pool a box), app 0.39.0, no data bump (Decision 68: nothing computed moves) |
 | **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | ✅ **Built** 2026-10-08: Decision 194, app 0.38.0, schema 0.18 |
 | **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 | Rule or shape | ✅ **Built** 2026-10-08: Decisions 195–197, app 0.39.0, game data 0.31. Work order: [`crb-v4-sync/P3-werewolf.md`](crb-v4-sync/P3-werewolf.md) |
 | **P3b** | **The Werewolf's Major Milestones** (VQ13): `0414`'s 29, archetype Majors read at all, an Origin prerequisite, and the few that change a derived number | Rule or shape | Ken on VQ16–VQ19. **Work order: [`crb-v4-sync/P3b-werewolf-majors.md`](crb-v4-sync/P3b-werewolf-majors.md)** |

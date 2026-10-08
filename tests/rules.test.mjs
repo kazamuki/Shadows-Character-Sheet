@@ -1260,3 +1260,25 @@ test("R15: Werewolf form is the book's +2 REF, +2 MOB, +4 BOD, Claws BOD+8 and F
   // Vulnerabilities: four, EMP the Forge Fang's alone.
   assert.equal(WW().vulnerabilities.map(v => v.name + (v.origin ? `@${v.origin}` : "")).join(", "), "Silver, Feral Mind, Call of the Wild, EMP@forge-fang");
 });
+
+// ── 0460's grenade table (crb-v4-sync P1, VQ8) ─────────────────────────
+
+test("CRB 0460: every grenade carries its 1x / 2x+ column and its Defense as printed", () => {
+  const md = crb("0460_Gear.md");
+  const at = md.indexOf("### Grenades");
+  assert.ok(at >= 0, "0460 has no Grenades section");
+  const rows = md.slice(at, md.indexOf("###", at + 4)).split("\n")
+    .filter(l => /^\|/.test(l) && /\| Melee \|/.test(l))
+    .map(l => l.split("|").slice(1, -1).map(c => c.trim()));
+  const grenades = D.weapons.filter(w => w.category === "grenades");
+  assert.equal(rows.length, grenades.length, "the book and the data list a different number of grenades");
+  const norm = s => s.replace(/[“”"]/g, "").toLowerCase();
+  for (const [name, , , esc, radius, defense] of rows) {
+    const w = grenades.find(g => norm(g.name) === norm(name));
+    assert.ok(w, `no grenade in the data for the book's ${name}`);
+    const [x1, x2] = esc.split(" / ");
+    assert.deepEqual({ ...w.escalation }, { "1x": x1, "2x+": x2 }, `${name}'s 1x / 2x+ isn't the book's`);
+    assert.equal(w.defense, defense, `${name}'s Defense isn't the book's`);
+    assert.equal(w.radius, radius, `${name}'s radius isn't the book's`);
+  }
+});
