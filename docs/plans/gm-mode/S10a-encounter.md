@@ -2,7 +2,7 @@
 
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §1a, §4h and §6 *S10*; GQ15, GQ16,
 GQ18, GQ19, GQ23 (new).
-**Status:** **built 2026-10-07, PR #126 (in review).** Drafted 2026-10-06 by Claude (Opus), after #123 (S9c) merged
+**Status:** **built and reviewed 2026-10-07, merged in PR #126 after one fix round.** Drafted 2026-10-06 by Claude (Opus), after #123 (S9c) merged
 with its fix round (README step 7). **§4 answered by Ken, 2026-10-07**; SQ2,
 SQ8 and SQ10 changed by his answers (an encounter, not a fight; HP, Health
 Levels and Pain shown together), written in here on the orchestrator's
