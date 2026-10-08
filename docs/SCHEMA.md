@@ -599,6 +599,15 @@ archetype's `writeIn.mechanics`, and `Engine.archPanels` leaves the panel out
 unless the character ticked that box. A `powers` panel draws the character's
 own `powers` rows; `Engine.addPower` refuses on an archetype without one.
 
+A `toggle` stores its option's name in `panelData[id]`. An option may be an
+object whose fields say what being in it does (Decision 195): `stats`
+(`{ stat, plus }` added to every played value), `naturalWeapons`, `bars` (a
+stat whose skills are out of reach), `costFrom` (a key on the chosen
+specialization naming what entering it costs) and `endsAtWithering`. The
+Werewolf's Form is one. A `tracker` with `stepsFrom` (Decision 196) reads
+`{ need, steps }` off the chosen specialization under that key, shows the
+current step's text and stops at its `max`: Call of the Wild.
+
 A `grimoire` panel (Decision 108) draws the book from `spells` and keeps
 `columns` for the player's own spells. Its rows live in `panelData[id]`. The
 numbers it shows come from two `spellcraftRules` entries: `spellPower`
@@ -1046,6 +1055,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     Decision 98: +1 per 5 points). Werewolf stat bonus
     allocates to any stat but respects the cap of 10.
     → **Superseded in part by Decision 98** — the curve past 10.
+    → **Superseded in part by Decision 197** — the Werewolf's bonus goes on its Focus Stats and can pass 10.
 19. **(Phase 2)** Arcanist Disciplines are purchasable in the CP step at
     6 CP/rank, capped at the power level's Max Power Rank. Evocation's
     starting rank comes from the scaling table and is computed, not stored.
@@ -2564,6 +2574,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     Game data **0.9 → 0.10** and app **0.15.0**, shared with 103 and 105.
     Character schema unchanged (0.8). (Ken + Claude, 2026-09-23)
     → **Superseded in part by Decision 143** — Resilient Spirit answers Elemental, Spirit and Aether, not "Magical"; the F25 stub stands.
+    → **Superseded in part by Decision 196** — Resilient Spirit is gone with Lunar Phase Blessing; `resAgainst` stays, with no source in the data.
 105. **(Nanomed Kit — combat plan cleanup, CQ12, data + engine + app)**
     **054's "With Çredits" list is the master: a Nanomed Kit clears
     Agonized, Bleeding, Paralyzed and Poisoned and stabilizes the Dying.**
@@ -3357,6 +3368,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Game data stays 0.17: display only, no computed value (Decision 68).
      - **Revisit if:** powers gain mechanical fields the engine should read.
      - **Built:** app 0.23.1; `smoke.test.mjs` B17.
+     → **Superseded in part by Decision 196** — `additionalPowers` and the phases table are gone; a starter power still renders any table it carries.
 
 127. **STATE states the todo count, not the pass count or the live version.**
      *2026-09-24 · Ken · Touches: STATE suite line, Live line, docs.test.mjs, volatile facts, AQ2*
@@ -3553,6 +3565,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decisions 99, 104 and 121 in part (the Magical type; Resilient Spirit's class; the Services left out). F23 and F25 stand.
      - **Revisit if:** Deighton rules how much Self-mending restores, or a source deals magic damage that isn't one of the three.
      - **Built:** app 0.29.0, game data 0.22. Log 2026-09-25 (W28, W33). CRB fix for Ken: Gear's Warding entry.
+     → **Superseded in part by Decision 196** — Resilient Spirit is gone; the three Wardings stand.
 
 144. **A wishlist item that is built moves, whole, to `log/wishes-granted.md`; `WISHLIST.md` shows only what's open.**
      *2026-09-25 · Ken + Claude · Touches: WISHLIST.md, log/wishes-granted.md, W ids, struck-through wishlist entries, INDEX §1 and §2, close-the-session*
@@ -4219,6 +4232,41 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** `0450`'s Supernatural ceilings pass 10, or the Werewolf's 3 and Vampire's 5 bind play.
      - **Built:** app 0.38.0, game data 0.30, schema 0.18; PR #132; tests mutation-tested. Log 2026-10-08 (W71).
 
+195. **Werewolf form is computed: a toggle option carries what being in it does, and skills, Health Levels and weapon damage read the shifted stats while WILL, TOL, prices and caps read the stored ones. A Forge Fang's shift spends 1 HL of Withering.**
+     *2026-10-08 · Ken + Claude · Touches: toggle panel, panelData.form, toggleOptions, toggleView, setToggle, formState, formView, statTable, baseStatTable, statValue, health, derived, skillLine barred, Feral Mind, naturalWeapons, Claws, Fangs, shiftCost, costFrom, endsAtWithering, Withering, Main Form switch, crb-v4-sync P3, VQ11*
+     - **Decided:** A `toggle` option may be an object (`stats`, `naturalWeapons`, `bars`, `costFrom`, `endsAtWithering`); `panelData` still stores its name. While a form is on, `statTable` adds its `stats` (+2 REF, +2 MOB, +4 BOD), so skills, Health Levels and damage follow; `baseStatTable` and `statValue` stay stored for `derived()` (WILL, TOL, SFR), prices, caps and prerequisites. Claws and Fangs are lines on Main; `bars` marks TECH skills (Feral Mind). Entering an option whose `costFrom` the Origin answers (`shiftCost`) writes that damage, priced at the form entered's HL, in the switch's commit. The form says when Withering ends it; it never shifts back itself. Main has the switch.
+     - **Why:** `0414`: the shift "enhances your skills, speed, and Health Levels". Ken (VQ11): compute it, HL cost included. Nothing shifted is stored (constraint 7).
+     - **Rejected:**
+       - Lifting WILL and TOL too: the book names skills, speed and HL, and a shift that grew the SFR pool would refill it.
+       - The HL priced in human form: the track would show a part-box gone while shifted, and Hardline Shift regenerates "the HL you spend".
+       - Forcing the form off at half Withering: the engine says so; the player shifts back.
+       - The switch on Loadout only: shifting is a combat action (Ken).
+     - **Replaces:** nothing. Extends Decision 15's panels (a toggle option can do something) and 135 (`costFrom` names the key it reads).
+     - **Revisit if:** a buff with a duration (Apex Fury, Moonsworn, Adaptive Skeleton) should compute too; that's an activation, not a form.
+     - **Built:** app 0.39.0, game data 0.31; tests mutation-tested. Log 2026-10-08 (P3).
+
+196. **A Werewolf carries `0414`'s whole kit: every Innate power and its Origin's at rank 1, raised with IP; three Origins with Shifting, Refuel, Need, a starter power and withdrawal steps; Call of the Wild as a stepper; Resilient Spirit retired.**
+     *2026-10-08 · Ken + Claude · Touches: archetypes[].powers, origin, perRank, maxRank, archetypePowers, powerRanks, powerAllowance, Base Powers, Max Starting Rank, F38, vulnerabilities origin, EMP, powersText, features, withdrawal, starterPower rows, Aspect of the Beast, CyberWolf Protocol, stepsFrom, Call of the Wild, Wildblood, Forge Fang, Lunar Phase Blessing, Resilient Spirit, additionalPowers, F7, P3, VQ10–VQ15*
+     - **Decided:** An archetype's `powers` are `{ id, name, cost, effect, perRank, maxRank, origin? }`. A character holds those with no `origin` or its Origin's, at 1 + `powerIpe` (F38's stub: Base Powers shown, nothing spent), raised at Decision 194's prices. **`maxRank` (3) binds creation only; play stops at 10, and Raise a Power says when a rank passes the book's (VQ14). Ken may revisit this.** A vulnerability with `origin` is that Origin's alone. An Origin has `features`, a `starterPower` (tables are reference: VQ15) and `withdrawal`, which a `stepsFrom` tracker shows and stops at. Lunar Phase Blessing, Resilient Spirit, `transformation` and `additionalPowers` are gone. Majors are P3b (VQ13).
+     - **Why:** `0414` rewrote the Werewolf; Ken answered VQ10–VQ15. The same shape serves the Vampire (P4).
+     - **Rejected:**
+       - `maxRank` binding play: Ken (VQ14), for now.
+       - A stored Aspect or augmentation: the roll is at the table (VQ15).
+       - A day clock on Call of the Wild: the app doesn't know the day (VQ12).
+       - Keeping Resilient Spirit: the book dropped it (VQ10). `resAgainst` stays, on a fixture.
+     - **Replaces:** Decisions 104 and 143 in part (Resilient Spirit, the one `resAgainst` source, is gone); Decision 126 in part (`additionalPowers` and the phases table are gone; a starter power still renders its table). Extends Decision 194: archetype powers join `powerRanks`.
+     - **Revisit if:** Deighton and Scott answer F38, or `0450`'s Supernatural ceilings make the book's 3 bind play.
+     - **Built:** app 0.39.0, game data 0.31; R15 reads `0414`'s tables. Log 2026-10-08 (P3).
+
+197. **A Werewolf's Stat Bonus goes on its Focus Stats, BOD, REF and MOB, and can pass 10; a saved one's roll and points move across.**
+     *2026-10-08 · Ken + Claude · Touches: focusStatBonusRoll, statBonusRoll, focusStats, focusAllocation, statBonusAllocation, rolls.statBonus, Stat Bonus, Focus Stat bonus, migrate, _statBonusToFocus, Werewolf, crb-v4-sync P3*
+     - **Decided:** The Werewolf's scaling row rolls `focusStatBonusRoll` with `focusStats` BOD, REF and MOB, as the Arcanist's does. `migrate()` moves a file's `rolls.statBonus` and `statBonusAllocation` into the Focus pool wherever the row rolls a Focus bonus and no Stat Bonus: a locked character keeps every point, so no stat moves; a draft gets back a point on a stat that isn't a Focus Stat, to place again. No schema bump: no field changes shape. The any-stat Stat Bonus reader stays, tested on a fixture row.
+     - **Why:** `0414`: "The Focus Stats for the Werewolf are BOD, REF, and MOB. Bonus points can push a base stat beyond 10." The book wins (Ken, 2026-10-08).
+     - **Rejected:** leaving it for P3b, since the book and the app disagreed; dropping a draft's off-Focus point silently, since validate then says a point is back.
+     - **Replaces:** Decision 18 in part (the Werewolf's bonus no longer goes on any stat or stops at 10).
+     - **Revisit if:** an archetype's book row goes back to a Stat Bonus on any stat.
+     - **Built:** app 0.39.0, game data 0.31. Log 2026-10-08 (P3).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4237,7 +4285,7 @@ here are in `log/archive.md`.
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
-| F7 | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed, not locked. The Vampire and Werewolf entries' notes on unwritten content (Vampire's missing blocks, the Werewolf's name-only powers and undefined Origins) are filed here too | Ken → docs | No |
+| F7 | SFR per archetype, **now the Vampire's half only**: the Werewolf half closed with `0414` (Decision 196: its Origins, powers and Predator's Mark's flat 2 SFR are written and in the data). Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed; `0414` wrote it in. The Vampire entry's note on unwritten content (its missing blocks) is filed here too; `crb-v4-sync.md` P4 brings `0413` in | Ken → docs | No |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
@@ -4252,7 +4300,7 @@ here are in `log/archive.md`.
 | F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 0530 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
 | F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 0540 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
-| F38 | **What a Werewolf's Base Powers buy.** `0414` says a Werewolf "doesn't choose its powers; it carries the whole kit", every Innate and Origin power at Rank 1, yet its scaling table has a **Base Powers** column (1 / 2 / 2 / 3) beside Max Starting Rank (1 / 1 / 2 / 2). Extra ranks to place up to Max Starting Rank, or something else? Not stubbed yet: the Werewolf's powers come into the data in `crb-v4-sync.md` P3, which stubs it | Deighton/Scott | No (P3 stubs it) |
+| F38 | **What a Werewolf's Base Powers buy.** `0414` says a Werewolf "doesn't choose its powers; it carries the whole kit", every Innate and Origin power at Rank 1, yet its scaling table has a **Base Powers** column (1 / 2 / 2 / 3) beside Max Starting Rank (1 / 1 / 2 / 2). Extra ranks to place up to Max Starting Rank, or something else? **Stub (Decision 196):** every power held at rank 1, Base Powers and Max Starting Rank shown beside the powers with a `playerNote` saying it's the GM's call, nothing spent at creation | Deighton/Scott | No |
 | F39 | **How a Vampire spends Base Powers.** `0413`: "Spend your Base Powers (2 / 3 / 4 / 5) on Innate and Bloodline powers; no power starts above your Max Starting Rank." Is one Base Power one rank, so a Street Vampire places two ranks, none above 1? Ken ruled the other half: Cursed Evolution's second bloodline is bought at `0450`'s New Power price. Not stubbed yet: `crb-v4-sync.md` P4 stubs it | Deighton/Scott | No (P4 stubs it) |
 
 F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.

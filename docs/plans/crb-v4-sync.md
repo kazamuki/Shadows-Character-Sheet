@@ -1,6 +1,6 @@
 # Plan — CRB v4 sync: the sheet catches up to the 2026-10-07 mirror
 
-**Status:** open, Ken's. P0 and P2 (W71, Decision 194) are built. Ken answered §4 on 2026-10-08. Next: P3 or P1.
+**Status:** open, Ken's. P0, P2 (W71, Decision 194) and P3 (the Werewolf, Decisions 195–197) are built. Ken answered VQ1–VQ15 on 2026-10-08. Next: P1, P3b or P4.
 **Compiled:** 2026-10-08, against the mirror at `private/` `cea99a8` (the 2026-10-07 re-mirror under the
 four-digit numbers, merged with S10c's Codex fix), game data 0.29 and app 0.37.0.
 **The other direction:** `crb-catch-up.md` is what the *book* still needs from the sheet. This plan is what
@@ -29,7 +29,7 @@ character.
 | `0411_Arcanist` | Heading levels only | — |
 | `0412_Professional` | Handguns, Occult Lore, Hardcore Parkour's prerequisites, Cyber-Prophetical; IP is 5 an hour; **"Master of None does not raise your starting rank max"** | ✅ all but F33 · ❓ VQ2 |
 | `0413_Vampire` | **Written.** Was a forty-line stub. Scaling table (Stat Bonus, SFR, RoU, Base Powers, Max Starting Rank), baseline traits, three Bloodlines (Strigoi, Upyr, Draugur), The Thirst (Hunger, Feeding), Innate and Bloodline powers **with ranks to 5**, Vulnerabilities, Growth | 🔧 P4 · ❓ VQ4, VQ5 |
-| `0414_Werewolf` | **Rewritten.** Origins are Trueborn, **Wildblood** and Forge Fang, each with Shifting, Refuel, Need and a Starter Power; baseline traits (Feral Instincts, Regeneration, Pack Mentality); Werewolf Form; SFR refills three ways; Call of the Wild's withdrawal steps; five Innate and eighteen Origin powers **with ranks to 3**; Base Powers and Max Starting Rank columns | 🔧 P3 · ❓ VQ3, VQ5 |
+| `0414_Werewolf` | **Rewritten.** Origins are Trueborn, **Wildblood** and Forge Fang, each with Shifting, Refuel, Need and a Starter Power; baseline traits (Feral Instincts, Regeneration, Pack Mentality); Werewolf Form; SFR refills three ways; Call of the Wild's withdrawal steps; five Innate and eighteen Origin powers **with ranks to 3**; Base Powers and Max Starting Rank columns | ✅ **P3** (Major Milestones: P3b) · F38 stubbed |
 | `0420`–`0423` Skills | Split three ways; Skill Points are base + INT + REF; Max Skill Rank is **4 / 5 / 6 / 6** | ✅ skills match by script · ❓ VQ6 |
 | `0430_Advantages` | CP 5/10/15/20; "Universal" defined; Long-Lived's ranks stack; Ghost TAG is "a Black TAG" on the street | ✅ rules · 🔧 P1 (two descriptions) |
 | `0440_Disadvantages` | Minor Insanity buys out between sessions | — |
@@ -54,7 +54,8 @@ Each pass is a branch and a PR. They're ordered by what unblocks what, not by si
 | **P0** | The mirror moves: `private/` to `cea99a8`, live citations to four-digit names, R13/R14/CRANK read the new files, the four spell fields | Docs + Fix | ✅ **Built** 2026-10-08, app 0.37.1 (released with P2 as 0.38.0) |
 | **P1** | Small content: the rolled Stat Point pool as an opt-in (VQ1); Long-Lived's "ranks stack" and Ghost TAG's Black TAG line in their descriptions; the grenade table's 1x / 2x+ and Defense as catalog text; the grenades as printed (VQ8) | Content | Nothing. F28, F29 and F33 closed already, with W71 |
 | **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | ✅ **Built** 2026-10-08: Decision 194, app 0.38.0, schema 0.18 |
-| **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 if the book stops saying "Under Construction" | Rule or shape | P2 (built); Ken on VQ10–VQ15. **Work order: [`crb-v4-sync/P3-werewolf.md`](crb-v4-sync/P3-werewolf.md)** |
+| **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 | Rule or shape | ✅ **Built** 2026-10-08: Decisions 195–197, app 0.39.0, game data 0.31. Work order: [`crb-v4-sync/P3-werewolf.md`](crb-v4-sync/P3-werewolf.md) |
+| **P3b** | **The Werewolf's Major Milestones** (VQ13): `0414`'s 29, archetype Majors read at all, an Origin prerequisite, and the few that change a derived number | Rule or shape | Ken on VQ16–VQ19. **Work order: [`crb-v4-sync/P3b-werewolf-majors.md`](crb-v4-sync/P3b-werewolf-majors.md)** |
 | **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2; F39 (stubbed if open) |
 | **P5** | **Advancement to `0450`**: IP by the hour, the new IP purchases (Advantages, buy-offs, SAN, Health Levels), the new Minor Milestones and repeats, Training | Rule or shape | 0450's own open questions (AD-02, AD-03) for the prices; the repeat rule (VQ7) can go now |
 
@@ -80,8 +81,8 @@ one from `0450`. P2 is the proposal Ken signs off before anything is built.
 
 ## 4. Questions
 
-All nine went to Ken on 2026-10-08. Answers are in the second column; two parts went on to
-Deighton and Scott as flags.
+VQ1–VQ9 went to Ken on 2026-10-08, and VQ10–VQ15 (from P3's work order) the same day. Answers are
+in the third column; two parts went on to Deighton and Scott as flags. VQ16–VQ19 are P3b's, in its work order.
 
 | Id | Question | Answer |
 |---|---|---|
@@ -94,6 +95,12 @@ Deighton and Scott as flags.
 | **VQ7** | `0450`'s Minor Milestones: build now, and do they repeat? | **Any Minor Milestone, any time.** Each one reached lets you pick any of them; you don't have to take them all before repeating. That supersedes Decision 29 in part, in P5 |
 | **VQ8** | Grenades' 1x / 2x+ column escalates to Injured without Massive (CQ5). Show it as printed? | **Yes**, as printed |
 | **VQ9** | Do the book's Blast and Suppression close F28 and F29? | **Yes, closed for now.** Playtests may reopen them |
+| **VQ10** | Retire Lunar Phase Blessing's Resilient Spirit (Natural Armor under a waning moon)? | **Yes, retire it.** Decision 196 |
+| **VQ11** | Compute Werewolf Form? | **Yes, and a shift that costs an HL (Forge Fang) takes it.** Decision 195 |
+| **VQ12** | Call of the Wild: a tracker or text? | **A stepper panel.** Decision 196 |
+| **VQ13** | Werewolf Major Milestones in P3? | **Scope it; a follow-up session is fine.** P3b's work order |
+| **VQ14** | The powers' printed max 3: shown, or a cap in play? | **Printed caps are for creation; play stops at 10. May be revisited**, so Decision 196 flags it |
+| **VQ15** | Aspect of the Beast and CyberWolf Protocol: reference tables or stored picks? | **Reference tables.** Decision 196 |
 
 **For the book, not the sheet** (noted here because the diff found them): `0422_Utility_Skills.md`
 carries the sixteen General skills after the Utility ones, so they print twice across `0422` and
