@@ -4192,7 +4192,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Keep after the end, from Past encounters: an ended encounter is read-only (188).
      - **Replaces:** Decision 177 in part: an eighth kind, `fought`, which an encounter's end writes.
      - **Revisit if:** GQ26 says wounds carry, S5's sessions give downtime, or a GM wants to keep someone after the fact.
-     - **Built:** table schema 0.7, switched off (173); PR #__; log 2026-10-07 (the encounter's end).
+     - **Built:** table schema 0.7, switched off (173); PR #130; log 2026-10-07 (the encounter's end).
 
 ## 5. Open Flags
 
