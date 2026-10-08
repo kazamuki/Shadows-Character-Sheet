@@ -1317,6 +1317,25 @@ test("W4: the catalog browser shows the numbers before you buy, searches, filter
   assert.deepEqual(app.errors, []);
 });
 
+test("P1: a grenade reads its column as printed: radius, Defense, what each 10 adds, and the section's escalation rule", () => {
+  const app = openSheet(lockedCharacter(), "loadout");
+  app.click('[data-lobrowse="weapons"]');
+  const row = () => app.$('#modal [data-catrow="fg1-thunderclap"]');
+  assert.match(row().textContent, /Radius 5m · Defense TN 8 TH 2/, "the catalog row doesn't show the grenade's Defense");
+  app.click('#modal [data-catrow="fg1-thunderclap"] td');
+  const detail = row().nextElementSibling.textContent;
+  assert.match(detail, /On a 10: 1x \+5 dmg · 2x\+ Injured\./, "the details don't show the 1x / 2x+ column");
+  assert.match(detail, /Every grenade escalates on the throw/, "the details don't carry the section's rule");
+  assert.doesNotMatch(app.$('#modal [data-catrow="combat-knife"]').nextElementSibling.textContent, /escalates|On a 10/, "a knife carries the grenade rule");
+  app.click('#modal [data-catadd="sg2-shockwave"]');
+  app.click("#modal [data-modalclose]");
+  const carried = app.$("#main .lo-weapons tbody tr").textContent;
+  assert.match(carried, /Radius 10m/, "a carried grenade doesn't show its radius");
+  assert.match(carried, /Defense TN 8 TH 3/);
+  assert.match(carried, /On a 10: 1x Stunned · 2x\+ Unconscious\./, "a carried grenade doesn't show what a 10 does");
+  assert.deepEqual(app.errors, []);
+});
+
 test("W2: a vitals pill opens its popover, whose buttons are Trackers' own — same audit label, same undo — and it follows the render", () => {
   const app = openSheet(lockedCharacter(), "skills");
   const hp = Engine.health(activeChar(app)).total;
@@ -2234,14 +2253,18 @@ test("deleting a session asks in the modal: Cancel keeps it, the button deletes 
 
 // ── The stat buy (Decision 150) ───────────────────────────────────────
 
-test("Decision 150: the GM picks flat or rolled on the Power Level step, and Stats asks for dice only when rolling", () => {
+test("Decision 198: the Power Level step offers the book's flat pool, rolling is a box the GM ticks, and Stats asks for dice only when rolling", () => {
   const pl = draftOn("arcanist", "power-level");
-  const pick = k => pl.$(`[data-stat-method="${k}"]`);
-  assert.ok(pick("flat") && pick("rolled"), "no flat/rolled choice on the Power Level step");
-  assert.equal(pick("flat").getAttribute("aria-pressed"), "true", "a new character isn't on the flat pool");
-  assert.match(pl.$("#main").textContent, /Stats 45 or 40\+1d10/, "the Street card doesn't show both pools");
-  pick("rolled").click();
+  const box = () => pl.$("[data-stat-rolled]");
+  assert.ok(box(), "no box to roll for Stat Points on the Power Level step");
+  assert.equal(box().checked, false, "a new character isn't on the flat pool");
+  assert.equal(pl.$("[data-stat-method]"), null, "flat and rolled are still an equal choice");
+  assert.match(pl.$("#main").textContent, /Stats 45\s*Skills/, "the Street card doesn't show the flat pool alone");
+  box().checked = true; box().dispatchEvent(new pl.window.Event("change"));
   assert.equal(draft(pl).creation.statMethod, "rolled");
+  assert.ok(box().checked, "the box didn't stay ticked");
+  assert.match(pl.$("#main").textContent, /Stats 40\+1d10\s*Skills/, "the card doesn't show the rolled pool once ticked");
+  assert.match(pl.$("#main .stat-method").textContent, /Street Level is 40 \+ 1d10 instead of 45/);
   assert.deepEqual(pl.errors, []);
 
   const flat = draftOn("arcanist", "stats");                         // all 5s: 32 of 45
@@ -5466,5 +5489,35 @@ test("a Trueborn's sheet: the powers with ranks and costs, Base Powers with its 
   const tech = D.skills.filter(s => s.primaryStat === "TECH").map(s => s.name);
   const barred = app.$$("#main tr.skill-line").filter(r => /not while shifted/.test(r.textContent)).map(r => r.querySelector("td").firstChild.textContent.trim());
   assert.equal(barred.sort().join(), tech.sort().join(), "Feral Mind didn't bar exactly the TECH skills");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 199: Progression lists a Trueborn's own Majors above the shared ones, greys an unmet one, and takes one; the form says what a Major changed", () => {
+  const ch = wolf("trueborn");
+  ch.progression.milestonePoints = 100;
+  const app = openSheet(ch, "progression");
+  const text = app.$("#main").textContent;
+  assert.match(text, /Werewolf\s*Tireless.*Swift Change.*Between Forms.*The Calling.*General/s, "the Werewolf's Majors aren't listed before the shared ones");
+  assert.doesNotMatch(text, /Forge Fang Mark|Wildblood Mark|Off the Leash/, "a Trueborn is offered another Origin's Majors");
+  const take = id => app.$(`[data-takemajor="${id}"]`);
+  assert.ok(take("between-forms").disabled, "Between Forms is takeable with no Major");
+  assert.match(take("between-forms").closest(".pick").textContent, /1 Major Milestone taken/);
+  assert.ok(take("clear-head").disabled, "Clear Head is takeable with no Major");
+  app.click('[data-takemajor="tireless"]');
+  assert.deepEqual(activeChar(app).progression.milestones.major.map(m => m.id), ["tireless"]);
+  assert.match(app.$("#main .journal").textContent, /Tireless/, "the journal doesn't name the Werewolf Major");
+  assert.ok(!take("between-forms").disabled, "Between Forms stayed locked after a Major");
+  app.click('[data-takemajor="clear-head"]');
+  app.click('[data-takemajor="iron-jaw"]');
+
+  app.click('[data-sec="main"]');
+  app.click('[data-ptoggle="form|Werewolf"]');
+  const main = app.$("#main").textContent;
+  assert.match(main, /Clear Head: In Werewolf form, you can use TECH-based skills at −2\./, "the form doesn't say what Clear Head changed");
+  const claws = app.$$("#main tr").find(r => /^Claws/.test(r.textContent));
+  assert.match(claws.textContent, /AP/, "Iron Jaw's AP isn't on the claws");
+  app.click('[data-sec="skills"]');
+  assert.match(app.$("#main").textContent, /−2 while shifted|-2 while shifted/, "a TECH skill doesn't show Clear Head's penalty");
+  assert.doesNotMatch(app.$("#main").textContent, /not while shifted/, "a TECH skill is still barred");
   assert.deepEqual(app.errors, []);
 });

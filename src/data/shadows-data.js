@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.31",
+    "gamedataVersion": "0.32",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -1259,7 +1259,7 @@ window.SHADOWS_DATA = {
       "name": "Ghost TAG(s)",
       "cost": 8,
       "maxRank": 1,
-      "description": "In NYTE City, your TAG is your face. A Ghost TAG gives you a different one.\n\nYour Trusted Authentication Gateway (TAG) is a complex high quality counterfeit. When scanned it will provide the false identity you've constructed and tie it to finances, contact info, and a fabricated background.\n\nAn opponent must do an Investigation or Security skill check at 30 difficulty to learn the truth. Using corporate resources like artificial intelligence lowers the difficulty to 27. A successful Investigation or security skill check will only reveal that the TAG is fake, not the holder’s true identity.",
+      "description": "In NYTE City, your TAG is your face. A Ghost TAG gives you a different one.\n\nYour Trusted Authentication Gateway (TAG) is a complex high quality counterfeit. When scanned it will provide the false identity you've constructed and tie it to finances, contact info, and a fabricated background.\n\nAn opponent must do an Investigation or Security skill check at 30 difficulty to learn the truth. Using corporate resources like artificial intelligence lowers the difficulty to 27. A successful Investigation or security skill check will only reveal that the TAG is fake, not the holder’s true identity.\n\nOn the street, it’s a Black TAG.",
       "universal": true,
       "tagReads": { "label": "Ghost TAG", "text": "A counterfeit. The street calls it a Black TAG. Scanned, it shows the life you built. Seeing it's fake takes Investigation or Security at 30 (27 with corporate AI), and even that doesn't say who you are." }
     },
@@ -1336,7 +1336,7 @@ window.SHADOWS_DATA = {
       "name": "Long-Lived",
       "cost": 5,
       "maxRank": 3,
-      "description": "NYTE City has been here a long time. So have you.\n\nYou have an exceptionally long life span. You are older than you seem.\n\n- Rank 1 — Minimum Age: 70 · Maximum Age: 140 years · Effect: 1 Minor Milestone\n\n- Rank 2 — Minimum Age: 110 · Maximum Age: 220 years · Effect: 1 Minor Milestone\n\n- Rank 3 — Minimum Age: 150 · Maximum Age: 300 years · Effect: 1 Major Milestone\n\nYou may only purchase this Advantage during character creation.",
+      "description": "NYTE City has been here a long time. So have you.\n\nYou have an exceptionally long life span. You are older than you seem.\n\n- Rank 1 — Minimum Age: 70 · Maximum Age: 140 years · Effect: 1 Minor Milestone\n\n- Rank 2 — Minimum Age: 110 · Maximum Age: 220 years · Effect: 1 Minor Milestone\n\n- Rank 3 — Minimum Age: 150 · Maximum Age: 300 years · Effect: 1 Major Milestone\n\nYou may only purchase this Advantage during character creation. Ranks stack: Rank 3 brings two Minor Milestones and a Major.",
       "grants": [
         { "type": "milestone", "kind": "minor", "atRank": 1 },
         { "type": "milestone", "kind": "minor", "atRank": 2 },
@@ -2699,7 +2699,43 @@ window.SHADOWS_DATA = {
       ],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": []
+        /* 0414's own Majors, offered beside the shared `majorGeneral` (VQ16,
+           until F9). `prerequisites.specialization` names the Origins that
+           may take one (any of). A `form` grant changes the form a toggle
+           carries (Decision 195): `withering: false` makes its cost ordinary
+           damage, `weaponTags` tag its natural weapons, `barsPenalty` turns
+           its bar into a penalty. `rou` and `sfrMax` add to SFR (Decision 199). */
+        "majorMilestones": [
+          { "id": "tireless", "name": "Tireless", "prerequisites": {}, "benefit": "+2 RoU.", "grants": [{"type": "rou", "amount": 2}] },
+          { "id": "deep-reserves", "name": "Deep Reserves", "prerequisites": {}, "benefit": "+5 maximum SFR.", "grants": [{"type": "sfrMax", "amount": 5}] },
+          { "id": "lead-the-pack", "name": "Lead the Pack", "prerequisites": {}, "benefit": "Allies attacking a target you're attacking at Close range gain +1 to their attacks." },
+          { "id": "master-of-the-change", "name": "Master of the Change", "prerequisites": {}, "benefit": "+1 Hit on WILL Essence checks made under Call of the Wild." },
+          { "id": "trueborn-mark", "name": "Trueborn Mark", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Predator's Mark returns 1 more SFR when you remove your prey." },
+          { "id": "trueborn-tracking", "name": "Trueborn Tracking", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Scent Tracking also detects supernatural beings and magical effects." },
+          { "id": "trueborn-pheromones", "name": "Trueborn Pheromones", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "While Pheromone Aura is active, allies gain +1 Hit on WILL Essence checks." },
+          { "id": "trueborn-howl", "name": "Trueborn Howl", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Ferocious Howl also grants allies +1 MOB and +1 COOL." },
+          { "id": "swift-change", "name": "Swift Change", "prerequisites": {"specialization": ["trueborn"]}, "benefit": "Shifting takes a Fast Action instead of a full round." },
+          { "id": "between-forms", "name": "Between Forms", "prerequisites": {"specialization": ["trueborn"], "majorCount": 1}, "benefit": "Once per scene, take on one piece of Werewolf form without fully shifting, either Natural Weapons or Regeneration, for up to WILL rounds. You keep your human face, your TECH skills, and your place in the room." },
+          { "id": "wildblood-mark", "name": "Wildblood Mark", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "Allies gain +1 to melee and Martial Arts attacks against your marked prey." },
+          { "id": "wildblood-tracking", "name": "Wildblood Tracking", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "Scent Tracking also locates wounded or bleeding targets." },
+          { "id": "wildblood-pheromones", "name": "Wildblood Pheromones", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "While Pheromone Aura is active, allies gain +1 to melee and Martial Arts attacks." },
+          { "id": "wildblood-howl", "name": "Wildblood Howl", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "Ferocious Howl also grants allies +1 to Combat Sense checks." },
+          { "id": "spirits-favor", "name": "Spirit's Favor", "prerequisites": {"specialization": ["wildblood"]}, "benefit": "When you shift, roll 1d6 twice and choose which spirit takes you. Calling a specific spirit costs 1 SFR instead of 2." },
+          { "id": "two-riders", "name": "Two Riders", "prerequisites": {"specialization": ["wildblood"], "milestones": ["spirits-favor"]}, "benefit": "When you pay to call a spirit, the spirit you rolled stays too, and you carry both Aspects." },
+          { "id": "forge-fang-mark", "name": "Forge Fang Mark", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Predator's Mark pays out when anyone in your crew removes the prey." },
+          { "id": "forge-fang-tracking", "name": "Forge Fang Tracking", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Scent Tracking also includes infrared detection." },
+          { "id": "forge-fang-pheromones", "name": "Forge Fang Pheromones", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Pheromone Aura emits a high-pitched frequency that gives enemies −1 Hit on WILL Essence checks." },
+          { "id": "forge-fang-howl", "name": "Forge Fang Howl", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "Ferocious Howl disrupts electronics: drones and devices within 20 meters lose their next action." },
+          { "id": "override-protocol", "name": "Override Protocol", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "While dosed, shifting back to human form is automatic. In Seta-16 withdrawal, the WILL Essence check returns." },
+          { "id": "hardline-shift", "name": "Hardline Shift", "prerequisites": {"specialization": ["forge-fang"]}, "benefit": "The HL you spend to shift no longer counts as Withering, so Regeneration restores it.", "grants": [{"type": "form", "withering": false}] },
+          { "id": "the-wolf-beneath", "name": "The Wolf Beneath", "prerequisites": {"majorCount": 1}, "benefit": "Choose one Innate power; it works in human form." },
+          { "id": "clear-head", "name": "Clear Head", "prerequisites": {"majorCount": 1}, "benefit": "In Werewolf form, you can use TECH-based skills at −2.", "grants": [{"type": "form", "barsPenalty": -2}] },
+          { "id": "iron-jaw", "name": "Iron Jaw", "prerequisites": {"majorCount": 1}, "benefit": "Your claws and fangs gain AP.", "grants": [{"type": "form", "weaponTags": ["AP"]}] },
+          { "id": "silverscar", "name": "Silverscar", "prerequisites": {"majorCount": 2}, "benefit": "Withering damage from silver is halved (never below 1)." },
+          { "id": "bone-and-sinew", "name": "Bone and Sinew", "prerequisites": {"majorCount": 2}, "benefit": "Regeneration restores 2 HL per round, and shifting into Werewolf form ends Maimed." },
+          { "id": "the-calling", "name": "The Calling", "prerequisites": {"specialization": ["trueborn", "wildblood"], "majorCount": 3}, "benefit": "You can pass the wolf on. Bite someone brought to 0 HL and let the spirit follow. They make a WILL Essence check (TN 9, TH 3). On a success, they rise Wildblood. With fewer than 3 Hits, the spirit doesn't take and the wound heals as a wound. On a botch, the spirit takes them completely, and what gets up is no longer a person." },
+          { "id": "off-the-leash", "name": "Off the Leash", "prerequisites": {"specialization": ["forge-fang"], "majorCount": 3}, "benefit": "You can cook your own Seta-16. Given a night of downtime, a working lab, and a batch of precursors, make a Medical check against 15. On a success, the batch yields 5 doses, plus 1 more for every 5 points you beat the difficulty by. On a failure, the precursors are wasted. On a botch, the batch is tainted: a tainted dose counts as a missed day, and you won't know which ones they are until you take one." }
+        ]
       }
     },
     {
@@ -3393,7 +3429,7 @@ window.SHADOWS_DATA = {
     { "id": "martialArts", "name": "Martial Arts" },
     { "id": "handguns", "name": "Handguns" },
     { "id": "smgs", "name": "Submachine Guns" },
-    { "id": "grenades", "name": "Grenades" },
+    { "id": "grenades", "name": "Grenades", "note": "Every grenade escalates on the throw. Each 10 on the Melee check explodes and moves it one step up its column: 1x for the first, 2x+ for the second and any past it. One throw, one result, for everyone who didn't get clear. Damage and duration stack as it climbs; Conditions replace rather than pile up. BOD doesn't add to a grenade's damage." },
     { "id": "urbanRifles", "name": "Urban Combat Rifles" },
     { "id": "shotguns", "name": "Shotguns" },
     { "id": "sniperRifles", "name": "Sniper Rifles" },
@@ -3434,14 +3470,14 @@ window.SHADOWS_DATA = {
     { "id": "vs12-rampart", "name": "VS-12 \"Rampart\"", "category": "smgs", "skill": "smgs", "damage": 7, "acc": 0, "range": "Medium", "rof": "S/B/F", "capacity": "40+1", "mods": 1, "availability": "Uncommon", "cost": 2400, "tags": [], "flavorLine": "A squad support tool. The drum magazine keeps it running through sustained fire." },
     { "id": "ads-sr1-specter", "name": "ADS SR-1 \"Specter\"", "category": "smgs", "skill": "smgs", "damage": 6, "acc": 2, "range": "Medium", "rof": "S/B/F", "capacity": "30+1", "mods": 2, "availability": "Rare", "cost": 6000, "tags": [], "features": ["Suppressor"], "flavorLine": "Suppressed, accurate, and fully controllable on full-auto." },
 
-    { "id": "fg1-thunderclap", "name": "FG-1 \"Thunderclap\"", "category": "grenades", "skill": "melee", "damage": 10, "radius": "5m", "availability": "Uncommon", "cost": 400, "notes": "Frag", "flavorLine": "Hammerlock's standard fragmentation grenade -- the benchmark other frags are measured against." },
-    { "id": "sg2-shockwave", "name": "SG-2 \"Shockwave\"", "category": "grenades", "skill": "melee", "radius": "10m", "availability": "Common", "cost": 200, "notes": "Stun, Non-lethal", "flavorLine": "Non-lethal concussive grenade for incapacitation and crowd control." },
-    { "id": "eg3-blackout", "name": "EG-3 \"Blackout\"", "category": "grenades", "skill": "melee", "radius": "5m", "availability": "Uncommon", "cost": 600, "notes": "EMP", "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage." },
-    { "id": "vs3-curtain", "name": "VS-3 \"Curtain\"", "category": "grenades", "skill": "melee", "radius": "10m", "availability": "Common", "cost": 150, "notes": "Smoke", "flavorLine": "A ten-meter obscurement cloud that lasts long enough to matter." },
-    { "id": "ig7-cinder", "name": "IG-7 \"Cinder\"", "category": "grenades", "skill": "melee", "damage": "6/round", "radius": "5m", "availability": "Rare", "cost": 800, "notes": "Incendiary, Burning", "flavorLine": "Creates a sustained burn zone for area denial. Hammerlock recommends against indoor use." },
-    { "id": "junk-bomb", "name": "\"Junk Bomb\"", "category": "grenades", "skill": "melee", "damage": "Varies", "radius": "Varies", "availability": "Common", "cost": 75, "notes": "Unstable -- roll 1d4 (1 Frag DMG8/5m, 2 Stun 10m non-lethal, 3 Smoke 10m, 4 Dud)", "flavorLine": "Somebody's best guess at a grenade, assembled from optimism and scavenged casings." },
-    { "id": "star-dust-grenade", "name": "Star Dust Grenade", "category": "grenades", "skill": "melee", "damage": "1/round", "radius": "5m cloud", "availability": "By Practice", "cost": 600, "tags": ["Withering"], "notes": "Anti-Regen -- disperses a silver-laced cloud making regeneration impossible for 1d4+1 minutes", "flavorLine": "Developed by those who hunt lycanthropes and their kindred." },
-    { "id": "sunburst-grenade", "name": "Sunburst Grenade", "category": "grenades", "skill": "melee", "radius": "10m", "availability": "By Practice", "cost": 500, "tags": ["Withering", "Stunning"], "notes": "Withering (Undead) -- a modified flashbang; the concussive effect hits everyone in range regardless of supernatural status", "flavorLine": "A concentrated burst of UV radiation alongside a standard concussive discharge." },
+    { "id": "fg1-thunderclap", "name": "FG-1 \"Thunderclap\"", "category": "grenades", "skill": "melee", "damage": 10, "radius": "5m", "escalation": { "1x": "+5 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 400, "notes": "Frag", "flavorLine": "Hammerlock's standard fragmentation grenade -- the benchmark other frags are measured against." },
+    { "id": "sg2-shockwave", "name": "SG-2 \"Shockwave\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "Stunned", "2x+": "Unconscious" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 200, "notes": "Disoriented, Non-lethal", "flavorLine": "Non-lethal concussive grenade for incapacitation and crowd control." },
+    { "id": "eg3-blackout", "name": "EG-3 \"Blackout\"", "category": "grenades", "skill": "melee", "damage": "EMP", "radius": "5m", "escalation": { "1x": "DeSync", "2x+": "Cyberware offline until repaired" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 600, "notes": "EMP", "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage." },
+    { "id": "vs3-curtain", "name": "VS-3 \"Curtain\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 150, "notes": "Smoke, Blinded, 3 rounds", "flavorLine": "A ten-meter obscurement cloud that lasts long enough to matter." },
+    { "id": "ig7-cinder", "name": "IG-7 \"Cinder\"", "category": "grenades", "skill": "melee", "damage": "6/round", "radius": "5m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 2", "availability": "Rare", "cost": 800, "notes": "Incendiary, Burning", "flavorLine": "Creates a sustained burn zone for area denial. Hammerlock recommends against indoor use." },
+    { "id": "junk-bomb", "name": "\"Junk Bomb\"", "category": "grenades", "skill": "melee", "damage": "Varies", "radius": "Varies", "escalation": { "1x": "+1d4 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Common", "cost": 75, "notes": "Unstable -- roll 1d4 (1 Frag DMG8/5m, 2 Stun 10m non-lethal, 3 Smoke 10m, 4 Dud)", "flavorLine": "Somebody's best guess at a grenade, assembled from optimism and scavenged casings." },
+    { "id": "star-dust-grenade", "name": "Star Dust Grenade", "category": "grenades", "skill": "melee", "damage": "1/round", "radius": "5m cloud", "escalation": { "1x": "+1 min", "2x+": "+2 min" }, "defense": "TN 8 TH 2", "availability": "By Practice", "cost": 600, "tags": ["Withering"], "notes": "Anti-Regen -- disperses a silver-laced cloud making regeneration impossible for 1d4+1 minutes", "flavorLine": "Developed by those who hunt lycanthropes and their kindred." },
+    { "id": "sunburst-grenade", "name": "Sunburst Grenade", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "Blinded", "2x+": "Stunned" }, "defense": "TN 8 TH 3", "availability": "By Practice", "cost": 500, "tags": ["Withering", "Stunning"], "notes": "Disoriented, Withering (UV) -- a modified flashbang; the concussive effect hits everyone in range regardless of supernatural status", "flavorLine": "A concentrated burst of UV radiation alongside a standard concussive discharge." },
 
     { "id": "vr8-sentinel", "name": "VR-8 \"Sentinel\"", "category": "urbanRifles", "skill": "rifles", "damage": 7, "acc": 1, "range": "Long", "rof": "S/B/F", "capacity": "30+1", "mods": 1, "damageType": "Ballistic", "availability": "Common", "cost": 2800, "tags": [], "flavorLine": "What front-line professionals carry when they expect a long field assignment." },
     { "id": "ar9x-guardian", "name": "AR-9X \"Guardian\"", "category": "urbanRifles", "skill": "rifles", "damage": 7, "acc": 2, "range": "Long", "rof": "S/B/F", "capacity": "30+1", "mods": 1, "damageType": "Ballistic", "availability": "Uncommon", "cost": 4500, "tags": [], "features": ["SMART Link"], "flavorLine": "AI targeting compensation for marksman precision without giving up full-auto." },

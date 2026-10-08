@@ -145,10 +145,12 @@ const Engine = (() => {
   // the character (constraint #7), so buying/selling one just changes what
   // this returns next render.
   function grants(ch){
-    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0 };
+    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0 };
     const scan = (list, lookup) => (list||[]).forEach(entry=>{
-      const def = lookup(entry.id);
+      const def = entry && lookup(entry.id);
       for (const g of (def && def.grants) || []){
+        if (!g) continue;
+        if (g.type==="rou" || g.type==="sfrMax"){ out[g.type] += Number(g.amount)||0; continue; }
         if (g.type==="skillPoints") out.skillPoints += (g.perRank||0) * entry.rank;
         else if (g.type==="hpPerLevel") out.hpPerLevel += (g.perRank||0) * entry.rank;
         else if (g.type==="luckCost") out.luckCost[g.spendId] = (out.luckCost[g.spendId]||0) + (g.delta||0);
@@ -160,6 +162,50 @@ const Engine = (() => {
     });
     scan(ch.advantages, advById);
     scan(ch.disadvantages, disById);
+    // Decision 199: a taken Major's grants count too. Majors are once each,
+    // so each counts once however many times a file lists it.
+    const taken = [...new Set(majorTakenIds(ch))].map(id=>({ id, rank:1 }));
+    scan(taken, id=>majorById(ch, id));
+    return out;
+  }
+
+  // ── Major Milestones: the pool (Decision 199) ─────────────────────────
+  // The Majors a character can take: the shared list and its archetype's own
+  // (`growth.majorMilestones`, when it's a list). Every lookup of a taken id
+  // goes through here, so one from either list keeps its name.
+  function majorPool(ch){
+    const a = ch && ch.identity && archetype(ch), g = a && a.growth;
+    const own = g && Array.isArray(g.majorMilestones) ? g.majorMilestones.filter(m=>m && typeof m==="object" && typeof m.id==="string") : [];
+    return (D().milestones.majorGeneral||[]).concat(own);
+  }
+  const majorById = (ch, id) => majorPool(ch).find(m=>m.id===id) || null;
+  const majorTakenIds = ch => ((((ch||{}).progression||{}).milestones||{}).major || [])
+    .filter(m=>m && typeof m.id==="string").map(m=>m.id);
+  // What Progression offers: the pool without the Majors only another
+  // Origin can take. Before an Origin is chosen, all of them show.
+  function majorOffered(ch){
+    const mine = specializationIds(ch);
+    return majorPool(ch).filter(m=>{
+      const only = m.prerequisites && Array.isArray(m.prerequisites.specialization) ? m.prerequisites.specialization : null;
+      return !only || !mine.length || only.some(id=>mine.includes(id));
+    });
+  }
+  // A held Major's `form` grants, merged: what they change on a form
+  // (Decision 199). `by` names the Majors, for the sheet to say why.
+  function formGrants(ch){
+    const out = { withering:null, weaponTags:[], barsPenalty:null, by:[] };
+    for (const id of new Set(majorTakenIds(ch))){
+      const m = majorById(ch, id);
+      const gs = ((m && Array.isArray(m.grants)) ? m.grants : []).filter(g=>g && g.type==="form");
+      if (!gs.length) continue;
+      out.by.push({ name: txt(m.name), text: txt(m.benefit) });
+      for (const g of gs){
+        if (g.withering===false) out.withering = false;
+        if (Array.isArray(g.weaponTags)) out.weaponTags.push(...g.weaponTags.filter(t=>typeof t==="string"));
+        if (Number.isFinite(Number(g.barsPenalty)) && g.barsPenalty!=null) out.barsPenalty = Number(g.barsPenalty);
+      }
+    }
+    out.weaponTags = [...new Set(out.weaponTags)];
     return out;
   }
 
@@ -247,8 +293,9 @@ const Engine = (() => {
         const id = s && normStat(s.stat), n = Number(s && s.plus);
         if (id && Number.isFinite(n)) stats[id] = (stats[id]||0) + n;
       }
-      const bars = o.bars && normStat(o.bars.stat) ? { stat:normStat(o.bars.stat), name:txt(o.bars.name) } : null;
-      return { panelId:p.id, name:o.name, stats, bars,
+      const fg = formGrants(ch);
+      const bars = o.bars && normStat(o.bars.stat) ? { stat:normStat(o.bars.stat), name:txt(o.bars.name), penalty:fg.barsPenalty } : null;
+      return { panelId:p.id, name:o.name, stats, bars, weaponTags:fg.weaponTags, changedBy:fg.by,
                naturalWeapons: (Array.isArray(o.naturalWeapons) ? o.naturalWeapons : []).filter(isPlainObj),
                endsAtWithering: Number(o.endsAtWithering) || null, summary:txt(o.summaryText), endsText:txt(o.endsText) };
     }
@@ -263,7 +310,7 @@ const Engine = (() => {
     const weapons = f.naturalWeapons.map(w=>{
       const d = weaponDamage(ch, w.damage), skill = skillById(w.skill) ? skillLine(ch, w.skill) : null;
       return { name:txt(w.name), skill: skill ? skill.def.name : "", attack: skill ? skill.checkBonus : null,
-               damage:d.value, damageFormula:d.formula };
+               damage:d.value, damageFormula:d.formula, tags:f.weaponTags };
     });
     const hs = hlState(ch), withering = nonNegInt((ch.trackers||{}).witheringDamage);
     const ended = !!f.endsAtWithering && hs.total>0 && withering >= hs.total * f.endsAtWithering;
@@ -280,7 +327,7 @@ const Engine = (() => {
   function toggleCost(ch, p, o){
     const c = o && o.costFrom && specializationChosen(ch).map(s=>s[o.costFrom]).find(isPlainObj);
     if (!c || !(nonNegInt(c.hl) > 0)) return null;
-    const cat = damageCategoryById(c.category);
+    const cat = formGrants(ch).withering===false && hasForm(o) ? damageCategoryById("regular") : damageCategoryById(c.category);
     const pd = Object.assign({}, isPlainObj(ch.panelData) ? ch.panelData : {}, { [p.id]: o.name });
     const hpPer = health(Object.assign({}, ch, { panelData: pd })).hpPer;
     return { hl:nonNegInt(c.hl), hp:nonNegInt(c.hl) * hpPer, withering: !!(cat && cat.recordsWithering), category: cat ? cat.name : "" };
@@ -387,10 +434,12 @@ const Engine = (() => {
     const row = scalingRow(ch);
     if (!row || !row.startingSFR) return null;
     const f = row.startingSFR;
-    if (!isFormula(f)) return { value:null, rou:row.rou, formula:"" };
+    const g = grants(ch), rou = typeof row.rou==="number" ? row.rou + g.rou : row.rou;
+    if (!isFormula(f)) return { value:null, rou, formula:"" };
     const d = derived(ch);
     const input = typeof d[f.stat]==="number" ? d[f.stat] : D().stats.some(s=>s.id===f.stat) ? statValue(ch, f.stat) : null;
-    return { value: formulaValue(f, input), rou: row.rou, formula: formulaText(f) };
+    const v = formulaValue(f, input);
+    return { value: v==null ? v : v + g.sfrMax, rou, formula: formulaText(f), fromMilestones: { rou:g.rou, sfrMax:g.sfrMax } };
   }
 
   // ── Pools ────────────────────────────────────────────────────────────
@@ -552,9 +601,12 @@ const Engine = (() => {
     const base = rank>0 ? rank + priVal + synMod : priVal;
     // A form can put a stat's skills out of reach (Feral Mind): `barred`
     // names what does. The total still shows; the sheet says it can't be used.
-    const form = formState(ch), barred = form && form.bars && pri===form.bars.stat ? (form.bars.name || form.name) : null;
-    return { def, rank, trained:rank>0, checkBonus: base + pain + conditions, barred,
-             breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain, conditions },
+    // Clear Head (Decision 199) turns the bar into a penalty: `formPenalty`.
+    const form = formState(ch), hit = form && form.bars && pri===form.bars.stat;
+    const formPenalty = hit && form.bars.penalty!=null ? form.bars.penalty : 0;
+    const barred = hit && form.bars.penalty==null ? (form.bars.name || form.name) : null;
+    return { def, rank, trained:rank>0, checkBonus: base + pain + conditions + formPenalty, barred, formPenalty,
+             breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain, conditions, form:formPenalty },
              dataWarning: (pri && syn) ? null : `Skill "${def.name}" references an unknown stat (${!pri?def.primaryStat:def.synergyStat}).` };
   }
 
@@ -790,7 +842,7 @@ const Engine = (() => {
     const taken = {};
     ((((ch||{}).progression||{}).milestones||{}).major || []).forEach(m=>{ if (m && m.id) taken[m.id] = (taken[m.id]||0) + 1; });
     Object.keys(taken).forEach(id=>{
-      const def = (D().milestones.majorGeneral||[]).find(x=>x.id===id);
+      const def = majorById(ch, id);
       ((def && def.grants) || []).forEach(g=>add(g, def, taken[id]));
     });
     specializationChosen(ch).forEach(o=>(o.grants||[]).forEach(g=>add(g, o, 1)));
@@ -1225,6 +1277,7 @@ const Engine = (() => {
              style: def.style||null, damageType: def.damageType||null,
              reach: def.reach||null, parry: def.parry||null, range: def.range||null, radius: def.radius||null,
              rof: def.rof||null, capacity: def.capacity||null,
+             escalation: def.escalation&&typeof def.escalation==="object" ? def.escalation : null, defense: def.defense||null,
              tags: def.tags||[], features: def.features||[], weaponNotes: def.notes||null };
   }
 
@@ -1855,8 +1908,14 @@ const Engine = (() => {
     }
     if (p.milestones){
       const ok = p.milestones.every(id=>milestoneState(ch).majorTaken.some(t=>t.id===id));
-      const names = p.milestones.map(id=>((D().milestones.majorGeneral||[]).find(x=>x.id===id)||{name:id}).name);
+      const names = p.milestones.map(id=>(majorById(ch, id)||{name:id}).name);
       (ok?met:unmet).push("Milestone: "+names.join(", "));
+    }
+    // Decision 199: `specialization` names the Origins (any of) that may take it.
+    if (Array.isArray(p.specialization) && p.specialization.length){
+      const mine = specializationIds(ch), opts = ((archetype(ch)||{}).specialization||{}).options || [];
+      const name = id => txt((opts.find(o=>o.id===id)||{}).name) || String(id);
+      (p.specialization.some(id=>mine.includes(id)) ? met : unmet).push(p.specialization.map(name).join(" or "));
     }
     if (p.gear) manual.push(typeof p.gear==="string" ? p.gear : "Gear requirement — see text");
     if (p.note) manual.push(p.note);
@@ -1876,7 +1935,7 @@ const Engine = (() => {
       const c = canTakeMinor(ch, id); if (!c.ok) return c;
       ch.progression.milestones.minor.push({id, date:new Date().toISOString()});
     } else {
-      const m = (D().milestones.majorGeneral||[]).find(x=>x.id===id);
+      const m = majorPool(ch).find(x=>x.id===id);
       if (!m) return {ok:false, why:"Unknown milestone."};
       const st = milestoneState(ch);
       if (st.majorLeft<=0) return {ok:false, why:noneUnlocked("Major", st.nextMajorAt)};
@@ -3381,7 +3440,7 @@ const Engine = (() => {
       if (!(D().milestones.minorShared||[]).some(m=>m.id===t.id))
         issues.push(`Minor Milestone "${t.id}" no longer exists in game data.`);
     for (const t of ((c.progression||{}).milestones||{}).major||[])
-      if (!(D().milestones.majorGeneral||[]).some(m=>m.id===t.id))
+      if (!majorById(c, t && t.id))
         issues.push(`Major Milestone "${t.id}" no longer exists in game data.`);
     const log = (((c.progression||{}).ip)||{}).log||[];
     const perTarget = {};
@@ -4873,7 +4932,7 @@ const Engine = (() => {
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP,
-    milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
+    milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorById, formGrants, takeMilestone, untakeMilestone,
     logSession, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,

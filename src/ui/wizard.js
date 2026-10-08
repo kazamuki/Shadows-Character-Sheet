@@ -183,14 +183,14 @@ function stepHeader(st){
 }
 
 function renderPowerLevel(){
-  const ch=S.ch;
+  const ch=S.ch, rolled = ch.creation.statMethod==="rolled";
   let h = "";
   h += `<div class="cards two">` + D.powerLevels.map(p=>`
     <button class="card ${ch.creation.powerLevel===p.id?"selected":""}" data-pl="${p.id}" aria-pressed="${ch.creation.powerLevel===p.id}">
       <h3>${esc(p.name)}</h3>
       <p>${esc(p.description||"")}</p>
       <div class="stat-line">
-        <span>Stats <b>${p.statPoints.flat}</b> or <b>${p.statPoints.rolled.base}+${p.statPoints.rolled.roll}</b></span>
+        <span>Stats <b>${rolled ? `${p.statPoints.rolled.base}+${p.statPoints.rolled.roll}` : p.statPoints.flat}</b></span>
         <span>Skills <b>${p.skillPoints.base}+${(p.skillPoints.plusStats||[]).join("+")}</b></span>
         <span>CP <b>${p.characterPoints}</b></span>
         <span>Skill cap <b>${p.maxSkillRank}</b></span>
@@ -202,15 +202,14 @@ function renderPowerLevel(){
   return h + statMethodHtml(ch);
 }
 
-// Decision 150: the GM picks how Stat Points are set, for the whole table.
-const STAT_METHODS = [
-  ["flat", "Same for everyone", "Everyone at the table starts with the same Stat Points. Nobody's out-built on the first night."],
-  ["rolled", "Roll for them", "Each player rolls, and the dice decide who starts ahead."]];
+// Decision 150: Stat Points are a flat pool or a rolled one, the GM's pick.
+// The book prints the flat pool, so that's the default and rolling is a box
+// a GM's table ticks (Decision 198).
 function statMethodHtml(ch){
-  const m = ch.creation.statMethod==="rolled" ? "rolled" : "flat";
-  return `<div class="field stat-method"><span>Stat Points — your GM's call</span><div class="form-toggle" role="group" aria-label="Stat Points">${STAT_METHODS.map(([k,name])=>
-      `<button type="button" data-stat-method="${k}" class="${m===k?"on":""}" aria-pressed="${m===k}">${esc(name)}</button>`).join("")}</div>
-    <p class="step-note">${esc(STAT_METHODS.find(x=>x[0]===m)[2])}</p></div>`;
+  const on = ch.creation.statMethod==="rolled";
+  const p = D.powerLevels.find(x=>x.id===ch.creation.powerLevel) || D.powerLevels[0], sp = p.statPoints;
+  return `<div class="field stat-method"><label class="check"><input type="checkbox" data-stat-rolled ${on?"checked":""}>
+      <span><b>Roll for Stat Points instead</b> <small>Only if your GM says so. The book gives everyone the same pool; rolling starts lower and the dice decide: ${esc(p.name)} is ${sp.rolled.base} + ${esc(sp.rolled.roll)} instead of ${sp.flat}.</small></span></label></div>`;
 }
 
 function renderConcept(){
@@ -770,7 +769,7 @@ function bindMain(){
   main.querySelectorAll("[data-importdismiss]").forEach(b=>b.onclick=()=>{ S.importIssues=[]; update(); });
   // selections
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ ch.creation.powerLevel=b.dataset.pl; update(); });
-  main.querySelectorAll("[data-stat-method]").forEach(b=>b.onclick=()=>{ ch.creation.statMethod=b.dataset.statMethod; update(); });
+  main.querySelectorAll("[data-stat-rolled]").forEach(b=>b.onchange=()=>{ ch.creation.statMethod=b.checked?"rolled":"flat"; update(); });
   main.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
     if (ch.identity.archetype!==b.dataset.arch){
       ch.identity.archetype=b.dataset.arch;
