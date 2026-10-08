@@ -3336,7 +3336,7 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   assert.match(app.$("#undotoast").textContent, /isn't a character, a table or a pack/);
   assert.equal(charKeys(app).length, 1); assert.equal(tableKeys(app).length, 1);
   const newer = JSON.parse(JSON.stringify(t));
-  newer.meta.tableSchemaVersion = "0.6";
+  newer.meta.tableSchemaVersion = "0.7";
   await importFile(app, newer);
   assert.match(app.$("#undotoast").textContent, /newer version of the app/);
   assert.deepEqual(app.errors, []);
@@ -3688,13 +3688,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.5");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.6");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.5");
+  assert.equal(saved.meta.tableSchemaVersion, "0.6");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4035,7 +4035,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.5");
+  assert.equal(file.meta.tableSchemaVersion, "0.6");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4047,7 +4047,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.5");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.6");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4424,7 +4424,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.5");
+  assert.equal(file.meta.tableSchemaVersion, "0.6");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -4518,7 +4518,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.5");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.6");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -5063,5 +5063,180 @@ test("Decision 189 (review): the Encounters tab's listeners on <main> go when th
   assert.ok(app.$("main").onclick, "the tab's listener wasn't there to begin with");
   app.click("[data-menu-toggle]"); app.click("[data-thome]");
   for (const k of ["onclick", "onchange", "oninput", "onsubmit", "onkeydown"]) assert.equal(app.$("main")[k], null, `main.${k} survived the table`);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── The hit (Decisions 191–192) ────────────────────────────────────────
+const JACKET_LINE = "Leather Jacket (PROT 1d4, RES +2, INT 10, Medium Coverage, Uncommon, 1 mod, 175Ç)";
+// A running encounter with Dez (BOD 8, a Leather Jacket, two traits) as a cast row and Wren as a PC row.
+const hitApp = (block = {}) => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" }); Engine.setCastBlock(S.table, S.table.cast[0].id, ${JSON.stringify({
+    stats: { BOD: 8 }, armor: [JACKET_LINE], traits: [{ name: "Cold", text: "Never flinches." }, { name: "Loud", text: "Shouts." }], ...block })});
+    const e = Engine.addEncounter(S.table, { name: "Job" }).id;
+    Engine.addParticipant(S.table, e, { kind: "cast", id: S.table.cast[0].id });
+    Engine.editParticipant(S.table, e, Engine.addParticipant(S.table, e, { kind: "pc", name: "Wren" }).id, { hp: 30, levels: 6 });
+    Engine.editParticipant(S.table, e, S.table.encounters[0].rows[0].id, { order: 9 });
+    Engine.startEncounter(S.table, e);`);
+  encTab(app);
+  app.click("[data-enc-open]");
+  return app;
+};
+const hitBtn = (app, name) => app.$(`[data-ehit="${rowId(encRowByName(app, name))}"]`);
+const preview = app => app.$("[data-ehit-preview]").textContent;
+const fillHit = (app, damage, kind = "ballistic", from = "") => {
+  type(app, "[data-ehit-damage]", String(damage)); changeTo(app, "[data-ehit-type]", kind);
+  if (from) type(app, "[data-ehit-from]", from);
+};
+
+test("Decision 191: the armor line, then a hit previews what the armor stops and Apply lands it on the row", () => {
+  const app = hitApp();
+  const dez = () => encRowByName(app, "Dez");
+  assert.match(dez().querySelector(".enc-armor").textContent, /^Leather Jacket · stops 5 · INT 10\/10$/);
+  assert.equal(app.$$(".enc-armor").length, 1, "PC rows show no armor line");
+  assert.ok(hitBtn(app, "Wren"), "a PC row has Hit too");
+  hitBtn(app, "Dez").click();
+  assert.equal(app.doc.activeElement, app.$("[data-ehit-damage]"), "Hit didn't land on Damage");
+  assert.equal(preview(app), "Enter the damage.");
+  for (const g of app.$$("[data-ehitpanel] [role=group]")) assert.ok((g.getAttribute("aria-label") || "").trim() || g.getAttribute("aria-labelledby"), "a toggle group in the Hit panel has no accessible name");
+  assert.ok(app.$$("[data-ehitpanel] [role=group]").length >= 2, "the Hit panel's toggle groups weren't found");
+  assert.ok(app.$("[data-ehit-apply]").disabled, "Apply was live with no damage");
+  fillHit(app, 12, "ballistic", "Rook's SMG");
+  assert.equal(preview(app), "Leather Jacket stops 5 (PROT 3 + RES 2) · 7 through · 1 Health Level");
+  assert.match(app.$(".enc-hit").textContent, /Enemy armor is static and doesn't roll\./);
+  assert.equal(app.$("[data-ehit-damage]").value, "12", "typing in a later field cleared an earlier one");
+  const bleeding = app.$('[data-ehit-cond="bleeding"]');
+  assert.ok(bleeding, "Bleeding isn't offered"); assert.equal(bleeding.checked, false);
+  assert.ok(app.$('.enc-hit [data-tip="condition"][data-term="bleeding"]'), "the Condition's rule isn't a tap away");
+  bleeding.click();
+  app.click("[data-ehit-apply]");
+  assert.equal(app.$("[data-ehitpanel]"), null, "the panel stayed open");
+  assert.match(dez().textContent, /HP 33 \/ 40 · 7 taken · 7 of 8 Health Levels/);
+  assert.match(dez().querySelector(".enc-conds").textContent, /Bleeding/); assert.match(dez().querySelector(".enc-conds").textContent, /Rook's SMG/);
+  assert.equal(app.doc.activeElement, hitBtn(app, "Dez"), "Apply didn't return to Hit");
+  // A soaked hit costs the piece 1 INT.
+  hitBtn(app, "Dez").click(); fillHit(app, 4); app.click("[data-ehit-apply]");
+  assert.match(dez().querySelector(".enc-armor").textContent, /INT 9\/10/);
+  // Cancel returns to Hit and writes nothing.
+  const before = JSON.stringify(statesOf(app));
+  hitBtn(app, "Dez").click(); fillHit(app, 50); app.click("[data-ehit-cancel]");
+  assert.equal(app.$("[data-ehitpanel]"), null); assert.equal(app.doc.activeElement, hitBtn(app, "Dez"));
+  assert.equal(JSON.stringify(statesOf(app)), before);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 192: Shock and At Zero show the check and the Conditions, never the rule's own words; Failed adds them, unanswered adds nothing", () => {
+  const app = hitApp();
+  const dez = () => encRowByName(app, "Dez"), conds = () => statesOf(app)[0].rows.find(r => r.name === "Dez").conditions.map(c => [c.id, c.source]);
+  hitBtn(app, "Dez").click(); fillHit(app, 30, "ballistic", "Rook");
+  const panel = app.$("[data-ehitpanel]").textContent;
+  assert.match(panel, /Shock: BOD Essence Check TN 8 TH 2\. Failed: Unconscious, Prone\./);
+  assert.doesNotMatch(panel, /took half|\byour\b/i, "a prompt's own words reached the GM's panel");
+  assert.equal(app.$$("[data-ehit-ans]").length, 2);
+  const fail = () => app.$('[data-ehit-ans="shock|fail"]');
+  fail().click();
+  assert.equal(fail().getAttribute("aria-pressed"), "true"); assert.equal(app.doc.activeElement, fail(), "Failed lost the keyboard");
+  fail().click();
+  assert.equal(fail().getAttribute("aria-pressed"), "false", "a second press clears the answer");
+  fail().click();
+  app.click("[data-ehit-apply]");
+  assert.deepEqual(JSON.parse(JSON.stringify(conds())), [["unconscious", "Rook"], ["prone", "Rook"]]);
+  assert.match(dez().querySelector(".enc-conds").textContent, /Unconscious/);
+  // To zero: the At Zero prompt; left unanswered the row reads Down and gains nothing.
+  hitBtn(app, "Dez").click(); fillHit(app, 60);
+  assert.match(app.$("[data-ehitpanel]").textContent, /At zero: WILL Essence Check TN 8 TH 2\. Passed: Unconscious, Prone\. Failed: Dying\./);
+  app.click("[data-ehit-apply]");
+  assert.match(dez().textContent, /Down/); assert.equal(conds().length, 2);
+  // Down and hit again: At Zero is asked again; Failed is Dying; then a hit while Dying is a Death Mark.
+  hitBtn(app, "Dez").click(); fillHit(app, 20);
+  app.click('[data-ehit-ans="atZero|fail"]'); app.click("[data-ehit-apply]");
+  assert.ok(conds().some(c => c[0] === "dying"));
+  hitBtn(app, "Dez").click(); fillHit(app, 20);
+  assert.match(app.$("[data-ehitpanel]").textContent, /Dying: this hit is a Death Mark\./);
+  app.click("[data-ehit-apply]");
+  assert.match(dez().querySelector(".enc-conds").textContent, /Death Marks 1\/3/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 191: Massive takes Health Levels and scraps the armor; an arm on a Light piece isn't covered; AP skips RES", () => {
+  const app = hitApp({ armor: ["Kevlar Vest (PROT 1d6, RES +2, INT 20, Light Coverage, Mid, 900Ç)"] });
+  const dez = () => encRowByName(app, "Dez");
+  assert.match(dez().querySelector(".enc-armor").textContent, /^Kevlar Vest · stops 6 · INT 20\/20$/);
+  hitBtn(app, "Dez").click(); fillHit(app, 12); changeTo(app, "[data-ehit-loc]", "left-arm");
+  assert.equal(preview(app), "Not covered: Left Arm · 12 through · 2 Health Levels");
+  changeTo(app, "[data-ehit-loc]", "torso"); app.click("[data-ehit-ap]");
+  assert.equal(preview(app), "Kevlar Vest stops 4 (PROT 4) · RES doesn't apply: AP · 8 through · 1 Health Level");
+  changeTo(app, "[data-ehit-type]", "energy"); app.click("[data-ehit-ap]");
+  assert.match(preview(app), /RES doesn't apply: not against Energy/);
+  assert.equal(app.doc.activeElement, app.$("[data-ehit-ap]"));
+  app.click('[data-ehit-cat="massive"]');
+  type(app, "[data-ehit-damage]", "25");
+  assert.equal(preview(app), "Massive: 3 Health Levels gone · Kevlar Vest scrapped");
+  app.click("[data-ehit-apply]");
+  assert.match(dez().textContent, /5 of 8 Health Levels/);
+  assert.match(dez().querySelector(".enc-armor").textContent, /^Kevlar Vest · Scrap$/);
+  assert.equal(statesOf(app)[0].rows[0].massive, 3);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 191: a PC row takes what got through; Shock and At Zero are reminders with nothing to answer", () => {
+  const app = hitApp();
+  const wren = () => encRowByName(app, "Wren");
+  hitBtn(app, "Wren").click();
+  assert.match(app.$("[data-ehitpanel]").textContent, /Got through/);
+  assert.equal(app.$("[data-ehit-ap]"), null, "a PC row has no AP");
+  fillHit(app, 12, "ballistic");
+  assert.equal(preview(app), "12 through · 2 Health Levels");
+  app.$('[data-ehit-cond="bleeding"]').click();
+  app.click("[data-ehit-apply]");
+  assert.match(wren().textContent, /HP 18 \/ 30 · 12 taken · 4 of 6 Health Levels/);
+  assert.match(wren().querySelector(".enc-conds").textContent, /Bleeding/);
+  hitBtn(app, "Wren").click(); fillHit(app, 15, "energy");
+  assert.match(app.$("[data-ehitpanel]").textContent, /Shock: they make a BOD Essence Check TN 8 TH 2 on their sheet\. Failed: Unconscious, Prone\./);
+  assert.equal(app.$$("[data-ehit-ans]").length, 0, "a PC row's Shock is a reminder, not a question");
+  app.click('[data-ehit-cat="massive"]');
+  assert.match(app.$("[data-ehitpanel]").textContent, /Health Levels gone/);
+  type(app, "[data-ehit-damage]", "2");
+  assert.equal(preview(app), "Massive: 2 Health Levels gone");
+  app.click("[data-ehit-apply]");
+  assert.match(wren().textContent, /HP 8 \/ 30/); assert.equal(statesOf(app)[0].rows.find(r => r.name === "Wren").massive, 2);
+  // A cast member with no BOD has no Hit.
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Ivo" }); Engine.addParticipant(S.table, S.table.encounters[0].id, { kind: "cast", id: S.table.cast.find(n => n.name === "Ivo").id }); renderTable();`);
+  assert.equal(hitBtn(app, "Ivo"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 192: the active row lists its traits, and a trait's text is a tap away; Next keeps a Hit panel open on its row", () => {
+  const app = hitApp();
+  const active = () => app.$("[aria-current=step]");
+  assert.match(active().querySelector(".enc-traits").textContent, /Traits:\s*Cold\s*Loud/);
+  clickIn(app, active().querySelector('[data-tip="enctrait"]'));
+  assert.match(tipShown(app), /Never flinches\./);
+  assert.equal(app.$$(".enc-traits").length, 1, "only the active row shows its traits");
+  hitBtn(app, "Dez").click(); fillHit(app, 5);
+  app.click("[data-enext]");
+  assert.equal(app.$$("[aria-current=step] .enc-name").map(x => x.textContent).join(), "Wren");
+  assert.ok(app.$("[data-ehitpanel]"), "Next closed the panel");
+  assert.equal(app.$("[data-ehit-damage]").value, "5", "its fields were lost");
+  assert.equal(app.doc.activeElement, app.$("[data-enext]"));
+  assert.equal(app.$(".enc-traits"), null, "a row with no traits shows none");
+  // Opening Take closes Hit, and the other way round.
+  app.click(`[data-edmg="${rowId(encRowByName(app, "Wren"))}|1"]`);
+  assert.equal(app.$("[data-ehitpanel]"), null);
+  hitBtn(app, "Wren").click();
+  assert.equal(app.$("[data-edmgform]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 191 (hostile): a block's armor line of markup is text, and the panel's fields come out as text", () => {
+  const app = hitApp({ armor: ["<img src=x onerror=window.__pwn=1> (PROT 1d4)"], traits: [{ name: "<b>x</b>", text: "<img src=y onerror=window.__pwn=1>" }] });
+  assert.match(encRowByName(app, "Dez").querySelector(".enc-armor").textContent, /^<img src=x onerror=window\.__pwn=1> \(PROT 1d4\) · not in the Gear tables$/);
+  hitBtn(app, "Dez").click(); fillHit(app, 5, "blade", "<img src=z onerror=window.__pwn=1>");
+  app.click('[data-ehit-cond="bleeding"]'); app.click("[data-ehit-apply]");
+  clickIn(app, app.$('[data-tip="enctrait"]'));
+  assert.equal(app.window.__pwn, undefined, "markup ran");
+  assert.equal(app.$("#main img"), null);
+  assert.equal(app.$("#tip img"), null);
   assert.deepEqual(app.errors, []);
 });

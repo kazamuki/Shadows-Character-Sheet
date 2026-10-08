@@ -3394,6 +3394,7 @@ window.SHADOWS_DATA = {
     },
     "defaultCoverage": "light",
     "defaultHitLocation": "torso",
+    "enemyText": "Enemy armor is static and doesn't roll.",
     "soakedIntegrityLoss": 1,
     "soakedNote": "A hit the armor stops completely still costs it 1 Integrity.",
     "scrapNote": "Armor driven to 0 Integrity by Massive damage is scrap. It can't be repaired.",

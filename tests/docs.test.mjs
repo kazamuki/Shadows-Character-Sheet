@@ -274,6 +274,19 @@ test("a superseded decision says so in SCHEMA and in INDEX, the same way", () =>
   }
 });
 
+// A supersession mark (`→ **Superseded …`) is bookkeeping about another decision, so it
+// doesn't count toward the 350 words (Ken).
+const decisionWords = text => text.split("\n").filter(l => !/^\s*→ \*\*Superseded/.test(l)).join("\n").split(/\s+/).filter(Boolean).length;
+
+test("a supersession mark doesn't count toward a decision's 350 words, and an entry over 350 without one still does", () => {
+  const body = Array(340).fill("word").join(" ");
+  const mark = "    → **Superseded in part by Decision 999** — " + Array(30).fill("more").join(" ");
+  assert.ok(decisionWords(body) <= 350);
+  assert.equal(decisionWords(body + "\n" + mark), decisionWords(body), "the mark was counted");
+  assert.ok(decisionWords(Array(360).fill("word").join(" ") + "\n" + mark) > 350, "an entry over the cap passed");
+  assert.ok(decisionWords(body + " " + mark.trim()) > 350, "a mark inside a line of the entry is its text, not a mark");
+});
+
 test("a decision from 124 on is a short record, and a load-bearing one says what it rejected", () => {
   // Decisions 99 and 100 ran past a hundred lines each: build detail, test
   // names and review notes buried the choice, and a settled question got
@@ -300,7 +313,7 @@ test("a decision from 124 on is a short record, and a load-bearing one says what
     if (!/^\s+\*\d{4}-\d{2}-\d{2} · .+ · Touches: .+\*$/.test(second)) bad.push(`${n}: line 2 should be *YYYY-MM-DD · who · Touches: …*`);
     const got = [...text.matchAll(/^\s+- \*\*([A-Za-z ]+):\*\*/gm)].map(m => m[1]);
     if (got.join("|") !== FIELDS.join("|")) bad.push(`${n}: has ${got.join(", ") || "no fields"}; needs ${FIELDS.join(", ")}, in that order`);
-    const words = text.split(/\s+/).length;
+    const words = decisionWords(text);
     if (words > 350) bad.push(`${n}: ${words} words; a decision is a short record, and build detail goes to log/ or the PR`);
   }
   assert.ok(checked >= 6, `checked only ${checked} decisions from 124 on — did §4's format change?`);

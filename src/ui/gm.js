@@ -1126,10 +1126,15 @@ function bindThreatPage(main, back, focusFirst){
 // Who's in an encounter, whose turn it is, and every Condition on everyone. State is on S, so it
 // goes with the open table and no further: S.encOpen (an encounter's id; it stays when the GM
 // moves to Threats or Cast, which name it on their Add buttons), S.encPick and S.encQ (the cast
-// picker), S.encDmg (a Take or Heal field open on a row), S.encCond (the Add a Condition
-// draft), S.encMore (rows whose More is open) and S.encReset (the numbers and Keeps typed at a Reset).
+// picker), S.encDmg (a Take or Heal field open on a row), S.encHit (the Hit panel open on a row, with
+// its fields and answers), S.encCond (the Add a Condition draft), S.encMore (rows whose More is open)
+// and S.encReset (the numbers and Keeps typed at a Reset). One of Take, Hit and the Condition form is
+// open at a time.
 // A rule the sheet names is a tap away, through the same tip (139): a Condition's, and a Pain Level's.
 TIPS.condition = id => { const d=Engine.conditionById(id); return d && { title:d.name, text:d.effect, more:[d.recovery].filter(Boolean) }; };
+// A trait's text on the active row (Decision 192): keyed row id | index in the block.
+TIPS.enctrait = key => { const [row, i]=String(key).split("|"), e=encOpenNow(), v=e && Engine.encounterView(S.table, e.id, packsMemo).rows.find(x=>x.row.id===row),
+  k=v && v.traits.find(x=>String(x.index)===i); return k && { title:k.name.trim() || "Trait", text:k.text }; };
 TIPS.painlevel = lv => { const p=D.resources.healthLevels.painLevels.find(x=>String(x.level)===String(lv)); return p && { title:p.label, text:p.description }; };
 const encList = () => Array.isArray(S.table.encounters) ? S.table.encounters : [];
 function encOpenNow(){
@@ -1180,6 +1185,88 @@ function encCondHtml(v, c, ended){
     ${c.note ? `<small class="enc-src">${esc(c.note)}</small>` : ""}${marks}
     ${ended ? "" : `<button class="btn sm" data-econdrm="${id}|${c.index}" aria-label="Remove ${esc(label)}">Remove</button>`}</li>`;
 }
+// The armor on one line (Decision 191): the Gear piece, what it stops, its Integrity; or the printed line, marked.
+function encArmorHtml(v){
+  const a=v.armor; if (!a || a.line===null) return "";
+  let main;
+  if (!a.piece) main = `${esc(a.line)} · not in the Gear tables`;
+  else if (a.scrapped) main = `${esc(a.piece.name)} · Scrap`;
+  else main = `${esc(a.piece.name)} · stops ${a.stops.prot + (a.compromised ? 0 : a.stops.res)} · INT ${a.integrity}/${a.integrityMax}${a.compromised ? " · Compromised: RES is gone" : ""}`;
+  return `<p class="enc-armor">${main}</p>${a.extra ? `<p class="enc-armor enc-armor-extra">${esc(a.extra)}</p>` : ""}`;
+}
+function encTraitsHtml(v, running){
+  if (!running || !v.active || !v.traits.length) return "";
+  return `<p class="enc-traits"><span>Traits:</span> ${v.traits.map(k=>
+    `<button type="button" class="tag" data-tip="enctrait" data-term="${esc(v.row.id)}|${k.index}">${esc(k.name.trim() || "Trait")}</button>`).join(" ")}</p>`;
+}
+
+// ── Hit: the panel, its preview and the prompts the hit raises ──
+const hlWords = n => `${n} Health Level${n===1 ? "" : "s"}`;
+const condNames = ids => (ids||[]).map(id=>{ const c=Engine.conditionById(id); return c ? c.name : id; }).join(", ");
+const encHitNew = row => ({ row, damage:"", type:D.damageTypes[0].id, cat:"regular", ap:false, loc:D.armorRules.defaultHitLocation, from:"", shock:"", atZero:"", conds:{}, err:"" });
+const encHitInput = d => ({ damage:d.damage, gone:d.damage, damageType:d.type, category:d.cat, ap:d.ap, location:d.loc, from:d.from });
+function encHitRow(){ const e=encOpenNow(), d=S.encHit; return e && d ? e.rows.find(r=>r.id===d.row) || null : null; }
+function encHitTicked(d, res){ return res.prompts.conditions.filter(id=>id in d.conds ? d.conds[id] : res.prompts.always.includes(id)); }
+function encHitPreview(res, pc){
+  const bits=[];
+  if (res.bypassesArmor){
+    bits.push(`Massive: ${hlWords(pc ? res.gone : res.levelsLost)} gone`);
+    if (!pc && res.scrap) bits.push(`${res.armor.name} scrapped`);
+  } else if (pc){
+    bits.push(res.after.levels!==null ? `${res.through} through` : `${res.through} taken`);
+    if (res.after.levels!==null) bits.push(hlWords(res.lostThisHit));
+  } else {
+    const a=res.armor;
+    if (a && a.piece && res.covered){
+      bits.push(`${a.name} stops ${res.absorbed} (PROT ${res.prot}${res.res ? ` + RES ${res.res}` : ""})`);
+      if (res.resSkipped) bits.push(`RES doesn't apply: ${res.resSkipped==="ap" ? "AP" : res.resSkipped==="compromised" ? "Compromised" : `not against ${res.type.name}`}`);
+    } else if (a && a.piece) bits.push(`Not covered: ${(Engine.locationById(res.location)||{}).name || res.location}`);
+    bits.push(`${res.through} through`, hlWords(res.lostThisHit));
+  }
+  if (res.after.down) bits.push("Down");
+  return bits.join(" · ");
+}
+function encPromptHtml(d, res, pc){
+  const out=[], names=condNames;
+  const ask = (key, label) => pc ? "" : `<span class="form-toggle" role="group" aria-label="${esc(label)}">
+      <button type="button" data-ehit-ans="${key}|pass" class="${d[key]==="pass" ? "on" : ""}" aria-pressed="${d[key]==="pass"}">Passed</button>
+      <button type="button" data-ehit-ans="${key}|fail" class="${d[key]==="fail" ? "on" : ""}" aria-pressed="${d[key]==="fail"}">Failed</button></span>`;
+  const p=res.prompts, who = pc ? "they make a" : "";
+  if (p.shock) out.push(`<div class="enc-prompt"><p>Shock: ${who ? `${who} ` : ""}${esc(p.shock.check)}${pc ? " on their sheet" : ""}. Failed: ${esc(names(p.shock.onFail))}.</p>${ask("shock", "Shock check")}</div>`);
+  if (p.atZero) out.push(`<div class="enc-prompt"><p>At zero: ${who ? `${who} ` : ""}${esc(p.atZero.check)}${pc ? " on their sheet" : ""}. Passed: ${esc(names(p.atZero.onPass))}. Failed: ${esc(names(p.atZero.onFail))}.</p>${ask("atZero", "At Zero check")}</div>`);
+  if (p.deathMark) out.push(`<div class="enc-prompt"><p>Dying: this hit is a Death Mark.</p></div>`);
+  if (p.conditions.length){
+    const on=encHitTicked(d, res);
+    out.push(`<div class="enc-prompt"><p>This hit can cause:</p><ul class="enc-offered">${p.conditions.map(id=>{
+      const c=Engine.conditionById(id), loc=c.location ? Engine.locationById(res.location) : null;
+      return `<li><label class="enc-check"><input type="checkbox" data-ehit-cond="${esc(id)}"${on.includes(id) ? " checked" : ""}> ${esc(c.name + (loc ? ` (${loc.name})` : ""))}</label>
+        <button type="button" class="tag" data-tip="condition" data-term="${esc(id)}" aria-label="What ${esc(c.name)} does">?</button></li>`; }).join("")}</ul></div>`);
+  }
+  return out.join("");
+}
+function encHitLiveHtml(d, r){
+  const pc=r.kind==="pc", res=Engine.resolveEncounterHit(S.table, S.encOpen, r.id, encHitInput(d));
+  const body = res.ok
+    ? `<p class="enc-preview" data-ehit-preview>${esc(encHitPreview(res, pc))}</p>
+       ${!pc && res.armor && res.armor.piece ? `<p class="enc-armor enc-armor-extra">${esc(D.armorRules.enemyText)}</p>` : ""}
+       ${(res.notes||[]).map(n=>`<p class="enc-armor enc-armor-extra">${esc(n)}</p>`).join("")}${encPromptHtml(d, res, pc)}`
+    : `<p class="enc-preview enc-refusal" data-ehit-preview>${esc(res.why)}</p>`;
+  return `<div data-ehit-live>${body}${d.err ? `<p class="enc-err" role="alert">${esc(d.err)}</p>` : ""}
+    <div class="enc-condbtns"><button class="btn sm primary" data-ehit-apply${res.ok ? "" : " disabled"}>Apply</button><button class="btn sm" data-ehit-cancel>Cancel</button></div></div>`;
+}
+function encHitHtml(v){
+  const d=S.encHit, r=v.row, pc=r.kind==="pc", massive=d.cat==="massive";
+  const toggle = (attr, label, items) => `<span class="form-toggle" role="group" aria-label="${esc(label)}">${items.map(([val, label, on])=>
+    `<button type="button" ${attr}="${esc(val)}" class="${on ? "on" : ""}" aria-pressed="${on}">${esc(label)}</button>`).join("")}</span>`;
+  return `<div class="enc-hit" data-ehitpanel="${esc(r.id)}">
+    <label class="field"><span>${pc ? (massive ? "Health Levels gone" : "Got through") : "Damage"}</span><input type="number" min="0" step="1" inputmode="numeric" data-ehit-damage value="${esc(d.damage)}"></label>
+    <label class="field"><span>Type</span><select data-ehit-type>${D.damageTypes.map(t=>`<option value="${esc(t.id)}"${t.id===d.type ? " selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
+    <div class="field"><span>Kind</span>${toggle("data-ehit-cat", "Kind", D.damageCategories.map(c=>[c.id, c.name, c.id===d.cat]))}</div>
+    ${pc ? "" : `<div class="field"><span>Armor-piercing</span>${toggle("data-ehit-ap", "Armor-piercing", [["1", "AP", d.ap]])}</div>`}
+    <label class="field"><span>Where</span><select data-ehit-loc>${D.bodyLocations.map(l=>`<option value="${esc(l.id)}"${l.id===d.loc ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+    <label class="field"><span>From</span><input type="text" data-ehit-from value="${esc(d.from)}" placeholder="Rook's SMG" autocomplete="off"></label>
+    ${encHitLiveHtml(d, r)}</div>`;
+}
 function encCondFormHtml(v){
   const d=S.encCond, def=Engine.conditionById(d.id);
   return `<div class="enc-condform" data-econdform="${esc(v.row.id)}">
@@ -1204,7 +1291,7 @@ function encRowHtml(v, e){
     : `<label class="enc-num"><span>${esc(label)}</span><input type="number" step="1" inputmode="numeric" ${attr}="${id}" value="${numAttr(val)}"></label>`;
   const aware = pc ? num("data-eaware", v.awareness, "Awareness") : v.awareness!==null ? `<span class="enc-num">Awareness ${esc(v.awareness)}</span>` : "";
   const acts = ended ? "" : `<div class="enc-acts">
-      <button class="btn sm" data-edmg="${id}|1">Take</button><button class="btn sm" data-edmg="${id}|-1">Heal</button>
+      <button class="btn sm" data-edmg="${id}|1">Take</button>${v.canHit ? `<button class="btn sm" data-ehit="${id}">Hit</button>` : ""}<button class="btn sm" data-edmg="${id}|-1">Heal</button>
       <button class="btn sm" data-econdopen="${id}">Add a Condition</button>
       <details class="enc-more" data-emore="${id}"${S.encMore && S.encMore[r.id] ? " open" : ""}><summary>More</summary>
         ${r.kind==="cast" ? "" : `<label class="field"><span>Name</span><input type="text" data-ename="${id}" value="${esc(r.name)}" autocomplete="off"></label>`}
@@ -1215,12 +1302,13 @@ function encRowHtml(v, e){
     ${S.encDmg && S.encDmg.row===r.id ? `<form class="enc-dmg" data-edmgform="${id}">
         <input type="number" min="0" step="1" inputmode="numeric" data-edmgn aria-label="${S.encDmg.sign>0?"HP taken":"HP healed"}">
         <button class="btn sm primary" type="submit">OK</button><button class="btn sm" type="button" data-edmgcancel>Cancel</button></form>` : ""}
+    ${S.encHit && S.encHit.row===r.id && v.canHit ? encHitHtml(v) : ""}
     ${S.encCond && S.encCond.row===r.id ? encCondFormHtml(v) : ""}`;
   const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
   return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
     <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted ? ` <span class="tag plain">Done</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
       ${num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
-    ${encHealthHtml(v)}${pcFields}
+    ${encHealthHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
     ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
     ${acts}</li>`;
 }
@@ -1305,7 +1393,7 @@ function bindEncounters(main){
   const redraw = () => { renderTable(); };
   const change = fn => { tableChange(fn); };
   const open = id => {
-    S.encOpen=id; S.encReset=null; S.encDmg=null; S.encCond=null; S.encPick=false; S.encQ="";
+    S.encOpen=id; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ="";
     window.scrollTo(0,0); redraw();
     const e=encOpenNow(); if (!e) return;
     if (e.status==="planned") focus("[data-enc-title]");
@@ -1319,17 +1407,19 @@ function bindEncounters(main){
   const next = () => { const r=Engine.nextTurn(S.table, eid()); if (!r.ok){ notice(r.why); return; } tableChange(()=>{});
     if (r.reset) focus("[data-esrc]") || focus("[data-efinish]"); else { focus("[data-enext]"); toActive(); } };
   const pickNextAdd = id => { const ids=[...$("main").querySelectorAll("[data-enc-addcast]")].map(b=>b.dataset.encAddcast); const at=ids.indexOf(id); return ids[at+1] || ids[at-1] || null; };
+  // The preview and prompts redraw on their own, so a field keeps its value and its caret.
+  const hitLive = () => { const box=main.querySelector("[data-ehit-live]"), r=encHitRow(); if (box && r) box.outerHTML=encHitLiveHtml(S.encHit, r); };
   const act = {
     "data-enc-new": () => { const input=main.querySelector("[data-enc-name]"); let id; change(()=>{ id=Engine.addEncounter(S.table, { name:input.value }).id; }); open(id); },
     "data-enc-open": b => open(b.dataset.encOpen),
-    "data-enc-back": () => { const id=S.encOpen; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
+    "data-enc-back": () => { const id=S.encOpen; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
     "data-enc-start": () => { const r=Engine.startEncounter(S.table, eid()); if (!r.ok){ notice(r.why); return; } S.encReset=null; tableChange(()=>{}); focus("[data-enext]"); toActive(); },
     "data-enc-end": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
       askFirst({ title:`End ${t}?`, text:"It's kept, read-only, under Past encounters.", yes:"End it", danger:false, then(){
-        const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encCond=null; change(()=>Engine.endEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
+        const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; change(()=>Engine.endEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
     "data-enc-del": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
       askFirst({ title:`Delete ${t}?`, text:"It isn't kept anywhere else unless you've exported the table.", yes:"Delete", then(){
-        const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encCond=null; change(()=>Engine.removeEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
+        const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; change(()=>Engine.removeEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
     "data-enext": next,
     "data-enc-pick": () => { S.encPick=!S.encPick; redraw(); if (S.encPick) focus("[data-enc-q]"); else focus("[data-enc-pick]"); },
     "data-enc-addcast": b => { const id=b.dataset.encAddcast, after=pickNextAdd(id), r=Engine.addParticipant(S.table, eid(), { kind:"cast", id });
@@ -1338,9 +1428,20 @@ function bindEncounters(main){
     "data-eopencast": b => { const id=b.dataset.eopencast; if (!S.table.cast.some(n=>n.id===id)) return;
       S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
     "data-eopenentry": b => openThreat(b.dataset.eopenentry, null, null, eid()),
-    "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encCond=null; redraw(); focus("[data-edmgn]"); },
+    "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encHit=null; S.encCond=null; redraw(); focus("[data-edmgn]"); },
+    "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit); S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },
+    "data-ehit-cancel": () => { const row=S.encHit.row; S.encHit=null; redraw(); focus(attrSel("data-ehit", row)); },
+    "data-ehit-cat": b => { const d=S.encHit; d.cat=b.dataset.ehitCat; d.conds={}; d.shock=""; d.atZero=""; d.err=""; redraw(); focus(attrSel("data-ehit-cat", d.cat)); },
+    "data-ehit-ap": () => { const d=S.encHit; d.ap=!d.ap; d.err=""; redraw(); focus("[data-ehit-ap]"); },
+    "data-ehit-ans": b => { const d=S.encHit, [k, a]=b.dataset.ehitAns.split("|"); d[k]= d[k]===a ? "" : a; d.err=""; hitLive(); focus(attrSel("data-ehit-ans", b.dataset.ehitAns)); },
+    "data-ehit-apply": () => { const d=S.encHit, row=d.row, r=encHitRow(); if (!r) return;
+      const res=Engine.resolveEncounterHit(S.table, eid(), row, encHitInput(d));
+      const choices={ shock:d.shock, atZero:d.atZero, conditions: res.ok ? encHitTicked(d, res) : [] };
+      const a=Engine.applyEncounterHit(S.table, eid(), row, encHitInput(d), choices);
+      if (!a.ok){ d.err=a.why; hitLive(); focus("[data-ehit-apply]"); return; }
+      S.encHit=null; tableChange(()=>{}); focus(attrSel("data-ehit", row)); },
     "data-edmgcancel": () => { const row=S.encDmg && S.encDmg.row, sign=S.encDmg ? S.encDmg.sign : 1; S.encDmg=null; redraw(); focus(attrSel("data-edmg", `${row}|${sign}`)); },
-    "data-econdopen": b => { S.encCond={ row:b.dataset.econdopen, id:"", loc:"", source:"", rounds:"", err:"" }; S.encDmg=null; redraw(); focus("[data-econd-id]"); },
+    "data-econdopen": b => { S.encCond={ row:b.dataset.econdopen, id:"", loc:"", source:"", rounds:"", err:"" }; S.encDmg=null; S.encHit=null; redraw(); focus("[data-econd-id]"); },
     "data-econd-cancel": () => { const row=S.encCond.row; S.encCond=null; redraw(); focus(attrSel("data-econdopen", row)); },
     "data-econd-add": () => { const d=S.encCond, rowId=d.row, rounds=d.rounds.trim();
       const r=Engine.participantAddCondition(S.table, eid(), rowId, { id:d.id, location:d.loc, source:d.source, rounds:rounds==="" ? null : rounds });
@@ -1395,12 +1496,17 @@ function bindEncounters(main){
     else if ("ename" in d) { edit(d.ename, { name:el.value }); focus(attrSel("data-ename", d.ename)); }
     else if ("econdId" in d){ S.encCond.id=el.value; S.encCond.loc=""; S.encCond.err=""; redraw(); focus("[data-econd-id]"); }
     else if ("econdLoc" in d) S.encCond.loc=el.value;
+    else if ("ehitType" in d){ S.encHit.type=el.value; S.encHit.conds={}; S.encHit.err=""; hitLive(); }
+    else if ("ehitLoc" in d){ S.encHit.loc=el.value; S.encHit.err=""; hitLive(); }
+    else if ("ehitCond" in d){ S.encHit.conds[d.ehitCond]=el.checked; }
   };
   main.oninput = ev => {
     const el=ev.target, d=el.dataset;
     if ("encTitle" in d) tableChange(()=>Engine.editEncounter(S.table, eid(), { name:el.value }), false);
     else if ("econdSrc" in d) S.encCond.source=el.value;
     else if ("econdRounds" in d) S.encCond.rounds=el.value;
+    else if ("ehitDamage" in d){ S.encHit.damage=el.value; S.encHit.err=""; hitLive(); }
+    else if ("ehitFrom" in d){ S.encHit.from=el.value; hitLive(); }
     else if ("encQ" in d){ S.encQ=el.value; const box=main.querySelector("[data-encpicklist]"); if (box) box.outerHTML=encPickHtml(encOpenNow()); }
     else if ("esrc" in d){
       const [row, i]=d.esrc.split("|"), st=encResetNow(); (st.sources[row]||(st.sources[row]={}))[i]=el.value;
@@ -1421,6 +1527,7 @@ function bindEncounters(main){
   main.onkeydown = ev => {
     if (ev.key==="Enter" && ev.target.matches("[data-enc-pcname]")){ ev.preventDefault(); addPc(); }
     else if (ev.key==="Enter" && ev.target.matches("[data-econd-src], [data-econd-rounds]")){ ev.preventDefault(); act["data-econd-add"](); }
+    else if (ev.key==="Enter" && ev.target.matches("[data-ehit-damage], [data-ehit-from]")){ ev.preventDefault(); const b=main.querySelector("[data-ehit-apply]"); if (b && !b.disabled) act["data-ehit-apply"](); }
   };
   // A More that was opened stays open through a redraw.
   main.querySelectorAll("[data-emore]").forEach(d=>d.ontoggle=()=>{ S.encMore=Object.assign(S.encMore||{}, { [d.dataset.emore]:d.open }); });

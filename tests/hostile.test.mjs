@@ -597,3 +597,49 @@ test("hostile encounters render as text on the list, the page, the Reset and Pas
   assert.deepEqual(found, [], "an encounter's text became markup");
   assert.deepEqual(app.errors, [], "the hostile encounter threw while rendering");
 });
+
+// ── The hit's numbers are untrusted too (Decision 191, 124) ────────────
+test("a hostile row's Massive levels and armor wear come out numbers, a PC keeps only its Massive, and an armor line of markup matches nothing", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  const row = (kind, o) => ({ kind, name: P("row." + kind), hp: 30, levels: 6, ...o });
+  const bad = [["x", "x", "yes"], [-3, -3, 1], ["1e400", "1e400", {}], [{ x: 1 }, { x: 1 }, []], [1e400, 1e400, "true"], ["4", "2", true]];
+  t.encounters = [{ id: "EN-ABCDEFGH", name: "e", status: "planned", rows: [
+    ...bad.map(([m, a, s]) => row("pc", { massive: m, armorLoss: a, scrapped: s })),
+    ...bad.map(([m, a, s]) => row("entry", { massive: m, armorLoss: a, scrapped: s, block: { stats: { BOD: 4 }, armor: [P("armor.line")] } })),
+    row("entry", { massive: 99, armorLoss: 99, scrapped: true, armorId: "leather-jacket", block: { stats: { BOD: 4 }, armor: ["Leather Jacket (PROT 1d4, RES +2, INT 10)"] } }),
+  ] }];
+  const m = Engine.migrateTable(t), rows = m.encounters[0].rows;
+  for (const r of rows) {
+    assert.ok(Number.isSafeInteger(r.massive) && r.massive >= 0, `massive ${r.massive}`);
+    assert.ok(Number.isSafeInteger(r.armorLoss) && r.armorLoss >= 0, `armorLoss ${r.armorLoss}`);
+    assert.equal(typeof r.scrapped, "boolean");
+  }
+  const pcs = rows.filter(r => r.kind === "pc"), npcs = rows.filter(r => r.kind === "entry");
+  assert.equal(JSON.stringify(pcs.map(r => [r.armorLoss, r.scrapped])), JSON.stringify(pcs.map(() => [0, false])), "a PC row has no armor to wear");
+  assert.equal(JSON.stringify(pcs.map(r => r.massive)), "[0,0,0,0,0,4]", "a PC row keeps its Massive levels");
+  assert.equal(JSON.stringify(npcs.slice(0, 6).map(r => r.massive)), "[0,0,0,0,0,4]");
+  assert.equal(JSON.stringify(npcs.slice(0, 6).map(r => r.armorLoss)), "[0,0,0,0,0,2]");
+  assert.equal(JSON.stringify(npcs.slice(0, 6).map(r => r.scrapped)), "[false,false,false,false,false,true]");
+  // BOD 4, Massive 99: it opens, reads every level gone, and a hit still resolves.
+  const view = Engine.encounterView(m, m.encounters[0].id, []).rows.find(v => v.row === npcs[6]);
+  assert.equal(view.health.levelsLeft, 0); assert.equal(view.health.gone, 4); assert.equal(view.armor.integrity, 0);
+  assert.equal(view.armor.compromised, true);
+  assert.equal(Engine.resolveEncounterHit(m, m.encounters[0].id, npcs[6].id, { damage: 5, damageType: "blade" }).ok, true);
+  // The markup armor line matches no piece: it is text, and stops nothing.
+  const bare = Engine.encounterView(m, m.encounters[0].id, []).rows.find(v => v.row === npcs[0]);
+  assert.equal(bare.armor.piece, null); assert.equal(bare.armor.line, P("armor.line"));
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrateTable(m))), JSON.parse(JSON.stringify(m)));
+});
+
+test("a hostile row's armorId is an id string or null, and always null on a PC row", () => {
+  const t = Engine.newTable("T");
+  const ids = [{ x: 1 }, 5, ["leather-jacket"], P("armor.id"), "<img src=x onerror=1>", "a b", "", null, true, "x".repeat(80), "leather-jacket"];
+  t.encounters = [{ id: "EN-ABCDEFGH", name: "e", status: "planned", rows: [
+    ...ids.map(a => ({ kind: "entry", name: "n", armorId: a, block: { stats: { BOD: 4 } } })),
+    ...ids.map(a => ({ kind: "pc", name: "p", armorId: a })),
+  ] }];
+  const rows = Engine.migrateTable(t).encounters[0].rows;
+  const npcs = rows.filter(r => r.kind === "entry"), pcs = rows.filter(r => r.kind === "pc");
+  assert.equal(JSON.stringify(npcs.map(r => r.armorId)), JSON.stringify([null, null, null, null, null, null, null, null, null, null, "leather-jacket"]));
+  assert.ok(pcs.every(r => r.armorId === null), "a PC row has no armor to belong to");
+});

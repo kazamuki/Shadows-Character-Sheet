@@ -3331,7 +3331,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.5";
+  const TABLE_SCHEMA_VERSION = "0.6";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -3379,6 +3379,11 @@ const Engine = (() => {
     //   Schema 0.5 (Decision 188): a table gets encounters.
     if (typeof arrived!=="string" || _versionNewer("0.5", arrived)){
       if (!Array.isArray(c.encounters)) c.encounters = [];
+    }
+    //   Schema 0.6 (Decision 191): a row keeps its Massive levels and its armor's wear.
+    if (typeof arrived!=="string" || _versionNewer("0.6", arrived)){
+      for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e))
+        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.massive = 0; r.armorLoss = 0; r.scrapped = false; r.armorId = null; }
     }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
@@ -3920,6 +3925,13 @@ const Engine = (() => {
     r.levels = pc ? _tier(r.levels) : null;
     r.awareness = pc ? _int(r.awareness) : null;
     r.conditions = _rowConditions(r.conditions);
+    // Schema 0.6 (Decision 191). The readers cap these (hlState, armorPiece), so no cap here.
+    const wholeOrZero = v => { const n = _int(v); return n!==null && n > 0 ? n : 0; };
+    r.massive = wholeOrZero(r.massive);
+    r.armorLoss = pc ? 0 : wholeOrZero(r.armorLoss);
+    r.scrapped = !pc && r.scrapped===true;
+    // The piece the wear belongs to, so a block edited to another piece doesn't inherit it.
+    r.armorId = !pc && typeof r.armorId==="string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(r.armorId) ? r.armorId : null;
   }
   // The gate for t.encounters: called by migrateTable on every load.
   function _encounters(c){
@@ -4029,7 +4041,7 @@ const Engine = (() => {
     if (l.why) return { ok:false, why:l.why };
     f = _isObj(f) ? f : {};
     const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null,
-      order:null, last:false, out:false, damage:0, hp:null, levels:null, awareness:null, conditions:[] };
+      order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
     if (f.kind==="cast"){
       const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===f.id);
       if (!m) return { ok:false, why:"No such cast member." };
@@ -4060,7 +4072,7 @@ const Engine = (() => {
     const used = new Set(_rowList(e).map(r=>r.id)), base = _str(entry.name).trim() || "Unnamed";
     return { id:newRowId(used), kind:"entry", name:_numbered(e, base), cast:null,
              from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block),
-             order:null, last:false, out:false, damage:0, hp:null, levels:null, awareness:null, conditions:[] };
+             order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
   }
   function participantFromEntry(t, encId, pack, entryId){
     const l = _live(t, encId);
@@ -4273,6 +4285,145 @@ const Engine = (() => {
     return { ok:true };
   }
 
+  // ── The hit (Decisions 191–192) ─────────────────────────────────────────
+  // A row takes a hit the way the sheet does. An NPC row is hit by resolveHit and
+  // applyHit on a stand-in: a newCharacter() with the block's stats and the row's
+  // damage, Massive levels and Conditions, wearing the Gear catalog's piece the
+  // block names. Nothing in the sheet's pipeline changes. A PC row takes what got
+  // through, after the player's own armor, on the GM's own numbers.
+  // Enemy armor is static (053): PROT is the die's average, rounded up.
+  const _staticProt = piece => {
+    const max = piece ? dieMax(piece.prot) : null;
+    return max ? Math.ceil((max + 1) / 2) : null;
+  };
+  // The first armor line whose name, before " (", is a body piece in the Gear catalog.
+  function encounterArmor(block){
+    const lines = _isObj(block) && Array.isArray(block.armor) ? block.armor.filter(x=>typeof x==="string" && x.trim()) : [];
+    for (const line of lines){
+      const open = line.indexOf(" (");
+      const name = _fold(open < 0 ? line : line.slice(0, open));
+      const piece = (D().armor||[]).find(a=>a && a.slot==="body" && _fold(a.name)===name) || null;
+      const prot = _staticProt(piece);
+      if (!piece || prot===null) continue;
+      const close = open < 0 ? -1 : line.indexOf(")", open);
+      const extra = close < 0 ? "" : line.slice(close + 1).replace(/^\s*[—–-]?\s*/, "").trim();
+      return { line, piece, extra, stops:{ prot, res:Number(piece.res)||0 } };
+    }
+    return { line:lines.length ? lines[0] : null, piece:null, extra:"", stops:null };
+  }
+  // A character for the sheet's pipeline to hit. A deep copy of what the row stores,
+  // so the stand-in never shares an object with it.
+  function _standIn(t, r){
+    if (!r || r.kind==="pc") return null;
+    const block = _rowBlock(t, r), b = npc(block);
+    if (!b.health) return null;
+    const ch = newCharacter(), arm = encounterArmor(block);
+    for (const s of D().stats) if (b.stats[s.id].value!==null) ch.stats[s.id].base = b.stats[s.id].value;
+    // The wear is the row's only while the block names the piece it was taken on; any other piece reads fresh.
+    if (arm.piece){
+      const mine = r.armorId===arm.piece.id;
+      ch.armor = [{ id:arm.piece.id, worn:true, integrityLoss:mine ? nonNegInt(r.armorLoss) : 0, scrapped:mine && r.scrapped===true }];
+    }
+    ch.trackers.damage = nonNegInt(r.damage);
+    ch.trackers.massiveLevels = nonNegInt(r.massive);
+    ch.trackers.conditions = JSON.parse(JSON.stringify(r.conditions));
+    return ch;
+  }
+  // A PC row's Health on the GM's own numbers, by hlState's rule: whole Health Levels need HP that
+  // divides by them. `over` asks what it would be after a hit, as hlState's does.
+  function _pcHealth(r, over){
+    const pick = k => (over && over[k]!=null) ? over[k] : r[k];
+    const damage = nonNegInt(pick("damage"));
+    const hp = r.hp, lv = r.levels, whole = hp!==null && lv!==null && hp % lv===0;
+    if (hp===null) return { total:null, left:null, levels:null, levelsLeft:null, lost:null, down:false, massive:nonNegInt(pick("massive")), hpPer:null, damage };
+    if (!whole) return { total:hp, left:Math.max(0, hp - damage), levels:null, levelsLeft:null, lost:null, down:damage >= hp, massive:nonNegInt(pick("massive")), hpPer:null, damage };
+    const hpPer = hp / lv, massive = Math.min(lv, nonNegInt(pick("massive")));
+    const emptied = Math.max(0, Math.min(lv - massive, Math.floor(damage / hpPer))), capacity = Math.max(0, hp - massive*hpPer);
+    return { total:hp, left:Math.max(0, capacity - damage), levels:lv, levelsLeft:lv - emptied - massive, lost:emptied + massive, down:damage >= capacity, massive, hpPer, damage };
+  }
+  const NO_BOD = "Their block has no BOD, so there are no Health Levels to hit. Use Take.";
+  // A PC row: what got through is the damage; for Massive, the Health Levels the player calls out.
+  function _resolvePcHit(r, hit){
+    hit = _isObj(hit) ? hit : {};
+    const category = hit.category || "regular", cat = damageCategoryById(category), massive = !!(cat && cat.bypassesArmor);
+    const raw = massive ? hit.gone : hit.damage, n = Math.floor(Number(raw));
+    if (raw==null || raw==="" || !(n>=0)) return { ok:false, why: massive ? "Enter the Health Levels gone." : "Enter the damage." };
+    const type = damageTypeById(hit.damageType);
+    if (!type) return { ok:false, why:"Choose a damage type." };
+    if (!cat) return { ok:false, why:"Choose Regular, Withering or Massive." };
+    const DR = D().damageRules || {};
+    const before = _pcHealth(r);
+    const gone = massive ? (before.levels!==null ? Math.max(0, Math.min(n, before.levels - before.massive)) : n) : 0;
+    const through = massive ? 0 : n;
+    const after = _pcHealth(r, { damage:r.damage + through, massive:before.massive + gone });
+    const lostThisHit = before.lost!==null ? after.lost - before.lost : 0;
+    const tookDamage = through > 0 || gone > 0, dying = isDying(_condShim(r));
+    const offered = tookDamage ? [...new Set([...(type.inflicts||[]), ...(cat.inflicts||[])])].filter(id=>conditionById(id)) : [];
+    const shockAt = after.levels!==null ? Math.ceil(after.levels * ((DR.shock||{}).fractionOfMaxLevels ?? 0.5)) : 0;
+    const loc = locationById(hit.location) ? hit.location : ((D().armorRules||{}).defaultHitLocation || "torso");
+    return { ok:true, pc:true, type, category, cat, bypassesArmor:massive, damage:n, through, gone,
+      location:loc, before, after, lostThisHit, tookDamage, from:_str(hit.from).trim(),
+      prompts:{
+        shock: tookDamage && !after.down && shockAt>0 && lostThisHit >= shockAt ? { check:DR.shock.check, onFail:DR.shock.onFail||[], threshold:shockAt } : null,
+        atZero: tookDamage && after.down && !dying && DR.atZero ? { check:DR.atZero.check, onPass:DR.atZero.onPass||[], onFail:DR.atZero.onFail||[] } : null,
+        deathMark: tookDamage && dying ? DR.whileDying : null,
+        conditions:offered, always:(type.always||[]).filter(id=>offered.includes(id)) } };
+  }
+  // Pure: what a hit WOULD do to a row. An NPC row's `hit` is resolveHit's, plus `from`, and the
+  // GM's protRoll is ignored. A PC row's is { damage | gone, damageType, category, location, from }.
+  function resolveEncounterHit(t, encId, rowId, hit){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    const r = l.r;
+    if (r.kind==="pc") return _resolvePcHit(r, hit);
+    const s = _standIn(t, r);
+    if (!s) return { ok:false, why:NO_BOD };
+    const arm = encounterArmor(_rowBlock(t, r));
+    const res = resolveHit(s, Object.assign({}, hit, { protRoll:arm.stops ? arm.stops.prot : undefined, natural:undefined }));
+    if (!res.ok) return res;
+    return Object.assign(res, { armor:Object.assign({}, res.armor, arm), from:_str(_isObj(hit) ? hit.from : "").trim() });
+  }
+  // The one writer. Re-resolves first, so a row that changed under an open panel is read as it is
+  // now; nothing is written on a refusal. `choices` is applyHit's, and an unanswered prompt adds
+  // nothing. Withering's bookkeeping is dropped: an encounter has no downtime to heal over.
+  function applyEncounterHit(t, encId, rowId, hit, choices){
+    const res = resolveEncounterHit(t, encId, rowId, hit);
+    if (!res.ok) return res;
+    const { e, r } = _liveRow(t, encId, rowId);
+    choices = _isObj(choices) ? choices : {};
+    const source = res.from;
+    if (res.pc){
+      // The player rolls Shock and At Zero on their sheet; the GM adds what they call out (Decision 192).
+      const pick = (Array.isArray(choices.conditions) ? choices.conditions : []).map(c=>typeof c==="string" ? c : (c && c.id)).filter(id=>res.prompts.conditions.includes(id));
+      const added = [], skipped = [];
+      r.damage += res.through;
+      r.massive = res.after.levels!==null ? Math.min(res.after.levels, r.massive + res.gone) : r.massive + res.gone;
+      for (const id of pick){
+        const a = addCondition(_condShim(r), (conditionById(id)||{}).location ? { id, location:res.location } : { id });
+        if (a.ok){ const c = r.conditions[r.conditions.length - 1]; c.source = source; c.rounds = null; added.push(id); } else skipped.push(id);
+      }
+      if (res.prompts.deathMark){
+        const i = r.conditions.findIndex(c=>c.id===res.prompts.deathMark.condition);
+        if (i>=0) setConditionMarks(_condShim(r), i, (Number(r.conditions[i].marks)||0) + 1);
+      }
+      _tableStamp(t, e);
+      return { ok:true, result:res, added, skipped };
+    }
+    const s = _standIn(t, r), old = r.conditions.length;
+    const ap = applyHit(s, Object.assign({}, hit, { protRoll:res.armor && res.armor.stops ? res.armor.stops.prot : undefined, natural:undefined }), choices);
+    if (!ap.ok) return ap;
+    r.damage = s.trackers.damage;
+    r.massive = s.trackers.massiveLevels;
+    // A hit that wore the armor writes the wear with the piece's id; a new piece starts its own.
+    if (s.armor[0] && res.patch.armor){ r.armorId = s.armor[0].id; r.armorLoss = nonNegInt(s.armor[0].integrityLoss); r.scrapped = s.armor[0].scrapped===true; }
+    s.trackers.conditions.forEach((c, i)=>{
+      if (i < old){ if (c.marks!==undefined) r.conditions[i].marks = c.marks; }
+      else r.conditions.push(Object.assign({}, c, { source, rounds:null }));
+    });
+    _tableStamp(t, e);
+    return { ok:true, result:res, added:ap.added, skipped:ap.skipped };
+  }
+
   // Pain for a count of Health Levels lost, by painState's rule (Decision 96): the highest band
   // the levels lost reach, plus the Pain the Conditions add, clamped to the table. painState
   // reads a character; a row has no character, so this is the band and the clamp on their own,
@@ -4285,17 +4436,6 @@ const Engine = (() => {
     const target = Math.max(0, Math.min(top, band.level + (Number(conditionPain)||0)));
     const lvl = hl.painLevels.find(p=>p.level===target) || band;
     return { level:lvl.level, label:lvl.label, description:lvl.description };
-  }
-  // A row's totals: a PC's are the GM's own numbers, an NPC's come from the block (npc()).
-  // Every figure is null when its inputs aren't there.
-  function _rowTotals(t, r){
-    const none = { total:null, levels:null, hpPer:null };
-    if (r.kind==="pc"){
-      const hp = r.hp, lv = r.levels;
-      return { total:hp, levels:hp!==null && lv!==null && hp % lv===0 ? lv : null, hpPer:hp!==null && lv!==null && hp % lv===0 ? hp / lv : null };
-    }
-    const h = npc(_rowBlock(t, r)).health;
-    return h ? { total:h.total, levels:h.levels, hpPer:h.hpPer } : none;
   }
   function _rowBlock(t, r){
     if (r.kind==="entry") return r.block;
@@ -4315,16 +4455,31 @@ const Engine = (() => {
                  rounds:c.rounds, source:c.source, note:_str(c.note), marks:def && def.counter ? c.marks : null, counter:def ? def.counter||null : null };
       });
       const condPain = conditions.reduce((n, c)=>n + (c.def && typeof c.def.painLevels==="number" ? c.def.painLevels : 0), 0);
-      const tot = _rowTotals(t, r), taken = r.damage;
-      const levelsLost = tot.levels!==null && tot.hpPer ? Math.min(tot.levels, Math.floor(taken / tot.hpPer)) : null;
-      let pain = null;
-      if (levelsLost!==null || condPain!==0){
-        const p = painFor(levelsLost || 0, condPain);
-        pain = { level:p.level, label:p.label, description:p.description, fromConditions:condPain };
+      // An NPC with a BOD is read off its stand-in, by the sheet's own hlState and painState (Decision 191);
+      // a PC's are the GM's own numbers; an NPC with no BOD has no totals.
+      const taken = r.damage, stand = _standIn(t, r), block = _rowBlock(t, r);
+      let health;
+      if (stand){
+        const hs = hlState(stand), ps = painState(stand);
+        health = { taken, total:hs.total, left:hs.hpLeft, down:hs.down, levels:hs.levels, levelsLeft:hs.levels - hs.lost, gone:hs.massive,
+                   pain:{ level:ps.level, label:ps.label, description:ps.description, fromConditions:ps.fromConditions } };
+      } else {
+        const ph = r.kind==="pc" ? _pcHealth(r) : { total:null, left:null, down:false, levels:null, lost:null, levelsLeft:null, massive:0 };
+        let pain = null;
+        if (ph.lost!==null || condPain!==0){
+          const p = painFor(ph.lost || 0, condPain);
+          pain = { level:p.level, label:p.label, description:p.description, fromConditions:condPain };
+        }
+        health = { taken, total:ph.total, left:ph.left, down:ph.down, levels:ph.levels, levelsLeft:ph.levelsLeft,
+                   gone:ph.levels!==null ? ph.massive : r.massive, pain };
       }
-      const left = tot.total!==null ? Math.max(0, tot.total - taken) : null;
-      const health = { taken, total:tot.total, left, down:left!==null && left===0,
-                       levels:tot.levels, levelsLeft:levelsLost!==null ? tot.levels - levelsLost : null, pain };
+      const wear = r.kind==="pc" ? null : encounterArmor(block);
+      const armor = wear && Object.assign({}, wear, wear.piece ? (()=>{
+        const mine = r.armorId===wear.piece.id, p = armorPiece({ id:wear.piece.id, integrityLoss:mine ? r.armorLoss : 0, scrapped:mine && r.scrapped }, 0);
+        return { integrity:p.integrity, integrityMax:p.integrityMax, compromised:p.compromised, scrapped:p.scrapped };
+      })() : {});
+      const traits = (_isObj(block) && Array.isArray(block.traits) ? block.traits : []).map((k, index)=>({ index, name:_str(k && k.name), text:_str(k && k.text) }))
+        .filter(k=>k.name.trim() || k.text.trim());
       let awareness = null;
       if (r.kind==="pc") awareness = r.awareness;
       else {
@@ -4335,7 +4490,7 @@ const Engine = (() => {
       const gone = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).gone : false;
       return { row:r, name:_str(name).trim() || "Unnamed", gone, health, awareness, ties:ord.tied(r), active:e.status==="running" && e.turn===r.id,
                acted:e.status==="running" && _actedIds(e).includes(r.id),
-               from:r.kind==="entry" ? entryLink(packs, r.from) : null, conditions };
+               from:r.kind==="entry" ? entryLink(packs, r.from) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
     });
     return { encounter:e, title:encounterTitle(e), rows, atReset:e.status==="running" && e.turn===null };
   }
@@ -4390,6 +4545,8 @@ const Engine = (() => {
     addEncounter, editEncounter, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
     participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, resolveEncounterReset,
-    applyEncounterReset, endEncounter, encounterView, painFor };
+    applyEncounterReset, endEncounter, encounterView, painFor,
+    // The hit: an encounter row takes damage the way a character does
+    encounterArmor, resolveEncounterHit, applyEncounterHit };
 })();
 /*ENGINE-END*/

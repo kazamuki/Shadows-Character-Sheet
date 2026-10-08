@@ -851,7 +851,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.5",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.6",       // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
@@ -889,7 +889,10 @@ commit** — a GM's table must never change under them.
       cast: null,                    // cast rows: { kind: "cast", id, name } (178's link; the name is kept when the member is deleted)
       from: null, block: null,       // entry rows: 182's from, and the row's own stat block
       order: null, last: false, out: false,   // Combat Sense result; Goes last; out of it (skipped by Next)
-      damage: 0,                     // HP taken: the only health a row stores
+      damage: 0,                     // HP taken
+      massive: 0,                    // 0.6: Health Levels gone to Massive damage (Decision 191); every kind of row
+      armorLoss: 0, scrapped: false, // 0.6: Integrity its armor has lost and whether Massive scrapped it; NPC rows (0 and false on a PC row)
+      armorId: null,                 // 0.6: the catalog piece that wear belongs to (a string or null; null on a PC row). It applies only while the block's armor line names that piece; any other piece reads fresh
       hp: null, levels: null, awareness: null,   // pc rows only: the GM's copy of the sheet's numbers
       conditions: [ { id, location, marks, note, source: "", rounds: null } ]   // the character's entry, plus where it came from and rounds left (null: until it's dealt with)
     } ],
@@ -908,7 +911,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -4134,6 +4137,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Turn Reset (100) and Pain (96) are unchanged; this applies them per row.
      - **Revisit if:** the app rolls checks, S10b's pipeline makes a tick a hit, GQ23 says NPCs don't take Pain, or F24 is answered.
      - **Built:** as 188.
+    → **Superseded in part by Decision 191** — every row also takes a hit; Take and Heal stand.
 
 190. **Use has two verbs: Add to cast, and Add to the encounter open on the Encounters tab, on an entry, a group and a cast member.**
      *2026-10-07 · Ken + Claude · Touches: Use, data-tuse, Add to cast, Add to encounter, entry page, group page, cast member page, castFromEntry, Decision 182*
@@ -4146,6 +4150,33 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 182 in part: its button's label, *Use*.
      - **Revisit if:** a third place to copy an entry appears (a session's prep).
      - **Built:** as 188.
+
+191. **An encounter row takes a hit: an NPC's through the sheet's own pipeline, standing in as a character, its armor the Gear catalog's piece by name and static (053); a PC's after their armor.**
+     *2026-10-07 · Ken + Claude · Touches: hit, NPC adapter, stand-in, resolveHit, applyHit, encounter row, armor, Gear catalog, PROT, RES, static armor, Integrity, scrap, Massive, Withering, PC row, table schema 0.6, massive, armorLoss, scrapped, GQ18, Decision 99, Decision 100, Decision 175, Decision 189*
+     - **Decided:** an NPC row whose block has a BOD is hit by `resolveHit` and `applyHit` on a stand-in: `newCharacter()` with the block's stats and the row's damage, Massive levels and Conditions, wearing the first armor line whose name is a catalog body piece. Enemy armor doesn't roll: PROT is the die's average rounded up, so 1d4 + 2 stops 5. A line the catalog lacks stops nothing. A PC row takes what got through, as the player calls it, read against the GM's own numbers. Rows store Massive levels, NPC rows their armor's wear.
+     - **Why:** one pipeline (§4h); the stand-in's Health matches `npc()` at every BOD. The Codex's armor is the catalog's. 053 says enemy armor is static, and the Codex's (5) is the 1d4 + 2 piece's average rounded up. A PC's armor is on their sheet.
+     - **Rejected:**
+       - An NPC-only pipeline: two rules to keep in step.
+       - A PC row through the pipeline on the GM's numbers: it would guess their armor and advantages.
+       - A flat 5: true for 7 of 42 armored entries.
+       - Parsing the printed PROT and RES: the catalog has them.
+       - Wear written to the cast: S10c's.
+     - **Replaces:** Decision 189 in part: "Damage is HP straight onto a row (no armor, no Shock)" now holds for Take and Heal only.
+     - **Revisit if:** seats arrive (S3b: a claimed PC row takes the whole hit on a copy of the character, never written back), GQ18 is answered otherwise, or NPC natural armor arrives.
+     - **Built:** table schema 0.6; PR #128; log 2026-10-07.
+
+192. **A hit asks an NPC what it asks a player: Shock, At Zero and a Death Mark while Dying, each offered and none forced, and the active row shows its traits as reminders.**
+     *2026-10-07 · Ken + Claude · Touches: Shock, At Zero, Dying, Death Mark, onFail, onPass, inflicts, Conditions from a hit, source, traits, reminders, active row, GQ23, GQ24, GQ25, F24, F36, Decision 99, Decision 151, Decision 189*
+     - **Decided:** the Hit panel shows each prompt `resolveHit` raises by its `check` and the names of the Conditions it leads to, never its player-voiced `text`. On an NPC row the GM answers Passed or Failed, or leaves it: an unanswered prompt adds nothing, and the row reads Down. On a PC row Shock and At Zero are reminders of the check the player makes on their sheet, with nothing to answer. A hit while Dying adds a Death Mark, as on the sheet. The Conditions a hit's type causes are offered, the type's always-ones ticked, and land on the row with the hit's From as their source and no rounds. The active row lists its block's traits by name, each one's text a tap away; nothing lights on a trigger.
+     - **Why:** the players' rule, applied as GQ23's default applies Pain; a GM who drops an NPC at zero just doesn't answer. Triggers are prose in the Codex, so lighting them would be a guess.
+     - **Rejected:**
+       - At Zero forced for every NPC: a mook doesn't need a check (GQ24).
+       - Prompts' text as written: it speaks to the player.
+       - Triggers parsed from trait text: a guess at the book's meaning.
+       - Traits on every row: thirteen rows of text; the GM needs the one whose turn it is.
+     - **Replaces:** nothing.
+     - **Revisit if:** GQ24 says NPCs drop at zero, GQ25 gives traits a trigger field, F24 or F36 is answered.
+     - **Built:** as 191.
 
 ## 5. Open Flags
 

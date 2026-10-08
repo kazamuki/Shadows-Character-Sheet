@@ -2856,12 +2856,12 @@ test("the code guards read every engine and UI script, gm.js included (Decision 
   assert.ok(!CODE_FILES.some(f => f.includes("theme-init")));
 });
 
-test("newTable stamps kind, a TBL- id, the name, schema 0.5, no notes, cast or interactions", () => {
+test("newTable stamps kind, a TBL- id, the name, schema 0.6, no notes, cast or interactions", () => {
   const t = Engine.newTable("Tuesday");
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.5");
+  assert.equal(t.meta.tableSchemaVersion, "0.6");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -2929,14 +2929,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.5", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.6" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.6");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.6", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.7" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.7");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.6");
-  for (const v of ["0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.7");
+  for (const v of ["0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.5", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.6", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -2988,15 +2988,15 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.5");
+  assert.equal(m.meta.tableSchemaVersion, "0.6");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.6" }, cast: [{ name: 5, tier: "2" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.7" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
   assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3211,7 +3211,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.5");
+  assert.equal(m.meta.tableSchemaVersion, "0.6");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3220,8 +3220,8 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
 });
 
 test("a newer table keeps its stamp and its interactions, and tableCheck says so", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.6" }, interactions: [{ kind: "shared", text: "x" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.7" }, interactions: [{ kind: "shared", text: "x" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
   assert.equal(m.interactions.length, 1);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3573,7 +3573,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.5");
+  assert.equal(m.meta.tableSchemaVersion, "0.6");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -3782,7 +3782,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.5");
+  assert.equal(m.meta.tableSchemaVersion, "0.6");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4102,6 +4102,7 @@ test("188: every writer refuses on an ended encounter and leaves the table as it
     addCond: () => Engine.participantAddCondition(t, e, a, { id: "deafened" }),
     removeCond: () => Engine.participantRemoveCondition(t, e, a, 0),
     marks: () => Engine.participantConditionMarks(t, e, a, 0, 1),
+    hit: () => Engine.applyEncounterHit(t, e, a, { damage: 3, damageType: "blade" }, {}),
     start: () => Engine.startEncounter(t, e),
     next: () => Engine.nextTurn(t, e),
     turn: () => Engine.setTurn(t, e, a),
@@ -4275,4 +4276,320 @@ test("188: a PC row's HP and Health Levels stay whole numbers of 1 or more", () 
   eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels], [7, 1]);
   Engine.editParticipant(t, e, p, { hp: -2, levels: 0 });
   eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels], [null, null]);
+});
+
+// ── The hit (Decisions 191–192) ─────────────────────────────────────────────
+// An NPC row is hit by the sheet's own pipeline on a stand-in; a PC row takes what got through.
+function hitTable(block = {}) {
+  const { t, e } = encTable();
+  const pack = Engine.migratePack(syntheticPack());
+  Object.assign(pack.entries.find(x => x.id === "gull").block, block);
+  const id = Engine.participantFromEntry(t, e, pack, "gull").id;
+  return { t, e, id };
+}
+const JACKET = ["Leather Jacket (PROT 1d4, RES +2, INT 10, Medium Coverage, Uncommon, 1 mod, 175Ç)"];
+const shot = (over = {}) => ({ damage: 12, damageType: "ballistic", category: "regular", location: "torso", ...over });
+
+test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table opens with none of either", () => {
+  const { t, e, id } = hitTable();
+  const pc = addPc(t, e, "P", { hp: 10 });
+  for (const r of [rowOf(t, e, id), rowOf(t, e, pc)]) eq([r.massive, r.armorLoss, r.scrapped], [0, 0, false]);
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.5";
+  for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
+});
+
+test("191: encounterArmor reads the Gear catalog by name, apostrophes folded, and shows what it can't match", () => {
+  let a = Engine.encounterArmor({ armor: JACKET });
+  assert.equal(a.piece.id, "leather-jacket");
+  eq(a.stops, { prot: 3, res: 2 }, "1d4 + 2 stops 5: the Codex's own example");
+  assert.equal(a.extra, "");
+  assert.equal(Engine.encounterArmor({ armor: ["Road Warrior’s Jacket (PROT 1d4, RES +6, INT 10)"] }).piece.id, "road-warriors-jacket");
+  a = Engine.encounterArmor({ armor: ["Kevlar Vest (PROT 1d6, RES +2, INT 20)"] });
+  eq(a.stops, { prot: 4, res: 2 });
+  a = Engine.encounterArmor({ armor: ["DarkSun Elite Undershirt (PROT 1d8, RES +2, INT 30, Light Coverage) — preparation has its privileges"] });
+  eq(a.stops, { prot: 5, res: 2 });
+  assert.equal(a.extra, "preparation has its privileges");
+  a = Engine.encounterArmor({ armor: ["Leather Jacket (PROT 1d4, RES +2) over integrated subdermal plating"] });
+  assert.equal(a.extra, "over integrated subdermal plating");
+  a = Engine.encounterArmor({ armor: ["Layered Street Clothes (PROT 1d4, RES +2, INT 10)"] });
+  assert.equal(a.piece, null); assert.equal(a.stops, null); assert.equal(a.line, "Layered Street Clothes (PROT 1d4, RES +2, INT 10)");
+  a = Engine.encounterArmor({ armor: ["Layered Street Clothes (PROT 1d4)", "Kevlar Vest (PROT 1d6)", "Leather Jacket (PROT 1d4)"] });
+  assert.equal(a.piece.id, "kevlar-vest", "the first line the catalog knows");
+  a = Engine.encounterArmor({ armor: ["Leather Jacket (PROT 1d4)", "Kevlar Vest (PROT 1d6)"] });
+  assert.equal(a.piece.id, "leather-jacket", "the first matched wins");
+  for (const b of [null, undefined, {}, { armor: [] }, { armor: ["", "  "] }, { armor: [5, null] }, "x"]) {
+    const n = Engine.encounterArmor(b);
+    eq([n.line, n.piece, n.extra, n.stops], [null, null, "", null], JSON.stringify(b));
+  }
+  assert.equal(Engine.encounterArmor({ armor: ["<img onerror=x>"] }).piece, null);
+});
+
+test("191: an NPC row's Health is the stand-in's, and it matches npc() at every BOD", () => {
+  for (let bod = 1; bod <= 14; bod++) {
+    const { t, e, id } = hitTable({ stats: { BOD: bod } });
+    const want = Engine.npc(rowOf(t, e, id).block).health, h = viewRow(t, e, id).health;
+    eq([h.total, h.levels, h.levelsLeft], [want.total, want.levels, want.levels], `BOD ${bod}`);
+    assert.equal(h.left, want.total);
+  }
+});
+
+test("191: resolveEncounterHit: refuses a row with no BOD, an ended encounter, and passes resolveHit's words through", () => {
+  const { t, e, id } = hitTable({ stats: { BOD: null } });
+  assert.match(Engine.resolveEncounterHit(t, e, id, shot()).why, /no BOD.*Use Take\./);
+  assert.equal(viewRow(t, e, id).canHit, false);
+  const h = hitTable({ armor: JACKET });
+  assert.equal(viewRow(h.t, h.e, h.id).canHit, true);
+  const words = [[{ damage: "" }, "Enter the damage."], [{ damage: -1 }, "Enter the damage."], [{ damageType: "nope" }, "Choose a damage type."], [{ category: "nope" }, "Choose Regular, Withering or Massive."]];
+  for (const [over, why] of words) eq(Engine.resolveEncounterHit(h.t, h.e, h.id, shot(over)), { ok: false, why });
+  assert.equal(Engine.resolveEncounterHit(h.t, h.e, "R-ZZZZZZZZ", shot()).why, "No such row.");
+  assert.equal(Engine.resolveEncounterHit(h.t, "EN-ZZZZZZZZ", h.id, shot()).why, "No such encounter.");
+  Engine.endEncounter(h.t, h.e);
+  assert.match(Engine.resolveEncounterHit(h.t, h.e, h.id, shot()).why, /has ended/);
+});
+
+test("191: resolveEncounterHit uses the static PROT, ignores the GM's, and is pure", () => {
+  const { t, e, id } = hitTable({ armor: JACKET });
+  const before = JSON.stringify(t);
+  const r = Engine.resolveEncounterHit(t, e, id, shot({ protRoll: 4 }));
+  assert.equal(r.ok, true);
+  eq([r.prot, r.res, r.absorbed, r.through, r.levelsLost], [3, 2, 5, 7, 0]);
+  assert.equal(r.armor.name, "Leather Jacket"); assert.equal(r.armor.stops.prot, 3); assert.equal(r.armor.integrityBefore, 10);
+  assert.equal(JSON.stringify(t), before, "nothing written");
+  assert.equal(Engine.resolveEncounterHit(t, e, id, shot({ protRoll: 1 })).through, 7, "the roll is ignored");
+});
+
+test("191: the adapter against the sheet: the same BOD and piece, the same hit, the same answer", () => {
+  const { t, e, id } = hitTable({ armor: JACKET, stats: { BOD: 8 } });
+  const ch = Engine.newCharacter();
+  ch.stats.BOD.base = 8;
+  ch.armor = [{ id: "leather-jacket", worn: true }];
+  const cases = [shot(), shot({ damage: 3 }), shot({ damage: 40, damageType: "blade" }), shot({ damage: 12, damageType: "energy" }), shot({ ap: true }),
+    shot({ location: "head" }), shot({ location: "left-arm" }), shot({ damage: 25, category: "massive" }), shot({ damage: 12, category: "withering" })];
+  for (const c of cases) {
+    const sheet = Engine.resolveHit(ch, { ...c, protRoll: 3 }), row = Engine.resolveEncounterHit(t, e, id, c);
+    for (const k of ["absorbed", "through", "levelsLost", "soaked", "integrityLost", "scrap", "covered", "location", "prot", "res", "resSkipped"])
+      assert.equal(row[k], sheet[k], `${k} for ${JSON.stringify(c)}`);
+    eq(row.after.lost, sheet.after.lost); eq(row.prompts, sheet.prompts);
+  }
+});
+
+test("191: applyEncounterHit: damage, Massive and wear land on the row", () => {
+  let { t, e, id } = hitTable({ armor: JACKET });
+  assert.ok(Engine.applyEncounterHit(t, e, id, shot(), {}).ok);
+  eq([rowOf(t, e, id).damage, rowOf(t, e, id).massive, rowOf(t, e, id).armorLoss, rowOf(t, e, id).scrapped], [7, 0, 0, false]);
+  assert.ok(Engine.applyEncounterHit(t, e, id, shot({ damage: 4 }), {}).ok);
+  eq([rowOf(t, e, id).damage, rowOf(t, e, id).armorLoss], [7, 1], "a soaked hit costs 1 INT and no HP");
+  let v = viewRow(t, e, id);
+  eq([v.armor.integrity, v.armor.integrityMax, v.armor.compromised], [9, 10, false]);
+  // Massive: 25 strips the piece to 0 (scrap) and costs 2 levels, and 1 more for the armor going.
+  assert.ok(Engine.applyEncounterHit(t, e, id, shot({ damage: 25, category: "massive" }), {}).ok);
+  v = viewRow(t, e, id);
+  eq([rowOf(t, e, id).massive, rowOf(t, e, id).scrapped, v.armor.integrity, v.armor.compromised, v.health.gone], [3, true, 0, true, 3]);
+  eq([v.health.levels, v.health.levelsLeft], [8, 8 - 3 - Math.floor(7 / 5)]);
+  assert.equal("witheringDamage" in rowOf(t, e, id), false);
+  // Compromised: RES is gone; PROT 3 only.
+  ({ t, e, id } = hitTable({ armor: JACKET }));
+  rowOf(t, e, id).armorLoss = 10; rowOf(t, e, id).armorId = "leather-jacket";
+  const r = Engine.resolveEncounterHit(t, e, id, shot());
+  eq([r.res, r.resSkipped, r.absorbed, r.through], [0, "compromised", 3, 9]);
+  // AP skips RES; an uncovered location skips the armor.
+  ({ t, e, id } = hitTable({ armor: JACKET }));
+  const ap = Engine.resolveEncounterHit(t, e, id, shot({ ap: true }));
+  eq([ap.resSkipped, ap.through], ["ap", 9]);
+  const head = Engine.resolveEncounterHit(t, e, id, shot({ location: "head" }));
+  eq([head.covered, head.through], [false, 12]);
+  // An unmatched armor line stops nothing.
+  ({ t, e, id } = hitTable({ armor: ["Layered Street Clothes (PROT 1d4, RES +2, INT 10)"] }));
+  const bare = Engine.resolveEncounterHit(t, e, id, shot());
+  eq([bare.covered, bare.through, bare.armor.piece], [false, 12, null]);
+});
+
+test("192: a hit's Conditions: an old one keeps its source and rounds, a new one takes the From, a location one lands where the hit did", () => {
+  const { t, e, id } = hitTable({ armor: JACKET });
+  assert.ok(Engine.participantAddCondition(t, e, id, { id: "burning", source: "Rook's torch", rounds: 3 }).ok);
+  const r = Engine.applyEncounterHit(t, e, id, shot({ from: "  Rook's SMG " }), { conditions: ["bleeding", "unconscious"] });
+  assert.ok(r.ok);
+  const cs = rowOf(t, e, id).conditions;
+  eq(cs[0], { id: "burning", source: "Rook's torch", rounds: 3 });
+  assert.equal(cs[1].id, "bleeding"); assert.equal(cs[1].source, "Rook's SMG"); assert.equal(cs[1].rounds, null);
+  assert.equal(cs.length, 2, "only what the hit offers: unconscious isn't a ballistic Condition");
+  const inj = hitTable({ armor: JACKET });
+  Engine.applyEncounterHit(inj.t, inj.e, inj.id, shot({ damage: 25, category: "massive", location: "left-arm", from: "A gun" }), { conditions: ["injured"] });
+  const c = rowOf(inj.t, inj.e, inj.id).conditions.find(x => x.id === "injured");
+  assert.equal(c.location, "left-arm"); assert.equal(c.source, "A gun");
+});
+
+test("192: Shock and At Zero are offered, never forced: Failed adds the Conditions, unanswered adds nothing", () => {
+  const big = shot({ damage: 30, from: "Rook" });
+  let { t, e, id } = hitTable({ armor: JACKET });
+  const p = Engine.resolveEncounterHit(t, e, id, big).prompts;
+  assert.ok(p.shock, "25 through is five levels of eight");
+  assert.equal(p.atZero, null);
+  assert.ok(Engine.applyEncounterHit(t, e, id, big, {}).ok);
+  eq(rowOf(t, e, id).conditions, [], "unanswered adds nothing");
+  ({ t, e, id } = hitTable({ armor: JACKET }));
+  Engine.applyEncounterHit(t, e, id, big, { shock: "fail" });
+  eq(rowOf(t, e, id).conditions.map(c => [c.id, c.source, c.rounds]), [["unconscious", "Rook", null], ["prone", "Rook", null]]);
+  // To zero: unanswered, the row reads Down with nothing added; Failed adds Dying.
+  ({ t, e, id } = hitTable({ armor: JACKET }));
+  const zero = shot({ damage: 60 });
+  assert.ok(Engine.resolveEncounterHit(t, e, id, zero).prompts.atZero);
+  Engine.applyEncounterHit(t, e, id, zero, {});
+  assert.equal(viewRow(t, e, id).health.down, true); eq(rowOf(t, e, id).conditions, []);
+  ({ t, e, id } = hitTable({ armor: JACKET }));
+  Engine.applyEncounterHit(t, e, id, zero, { atZero: "fail" });
+  eq(rowOf(t, e, id).conditions.map(c => c.id), ["dying"]);
+  ({ t, e, id } = hitTable({ armor: JACKET }));
+  Engine.applyEncounterHit(t, e, id, zero, { atZero: "pass" });
+  eq(rowOf(t, e, id).conditions.map(c => c.id), ["unconscious", "prone"]);
+});
+
+test("192: a hit while Dying is a Death Mark, and the Dying entry keeps its source and rounds", () => {
+  const { t, e, id } = hitTable({ armor: JACKET });
+  assert.ok(Engine.participantAddCondition(t, e, id, { id: "dying", source: "Rook", rounds: 4 }).ok);
+  rowOf(t, e, id).damage = 60;
+  const r = Engine.resolveEncounterHit(t, e, id, shot());
+  assert.ok(r.prompts.deathMark); assert.equal(r.prompts.atZero, null, "already Dying");
+  Engine.applyEncounterHit(t, e, id, shot(), {});
+  const d = rowOf(t, e, id).conditions[0];
+  eq([d.id, d.marks, d.source, d.rounds], ["dying", 1, "Rook", 4]);
+  Engine.applyEncounterHit(t, e, id, shot(), {});
+  assert.equal(rowOf(t, e, id).conditions[0].marks, 2);
+});
+
+test("191: the re-resolve: a row that changed under an open panel is hit as it is now, and a refusal writes nothing", () => {
+  const { t, e, id } = hitTable({ armor: JACKET });
+  Engine.participantAddCondition(t, e, id, { id: "dying" });
+  const hit = shot({ damage: 9 });
+  assert.ok(Engine.resolveEncounterHit(t, e, id, hit).prompts.deathMark);
+  Engine.participantRemoveCondition(t, e, id, 0);
+  Engine.applyEncounterHit(t, e, id, hit, {});
+  eq(rowOf(t, e, id).conditions, [], "no Dying, so no mark, and nothing invented");
+  rowOf(t, e, id).block.stats.BOD = null;
+  const before = JSON.stringify(t);
+  assert.equal(Engine.applyEncounterHit(t, e, id, hit, {}).ok, false);
+  assert.equal(JSON.stringify(t), before, "a refused apply changes nothing, the stamp included");
+  rowOf(t, e, id).block.stats.BOD = 3;
+  const small = Engine.resolveEncounterHit(t, e, id, shot({ damage: 40, damageType: "blade" }));
+  assert.equal(small.before.levels, 3, "the block's BOD as it is now");
+});
+
+test("191: a PC row takes what got through, on the GM's own numbers", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e, "P", { hp: 30, levels: 6 });
+  const r = Engine.resolveEncounterHit(t, e, p, { damage: 12, damageType: "ballistic", from: "Rook" });
+  eq([r.pc, r.through, r.after.left, r.after.levelsLeft, r.lostThisHit], [true, 12, 18, 4, 2]);
+  eq(r.prompts.conditions, ["bleeding"]);
+  assert.equal(r.prompts.shock, null);
+  const a = Engine.applyEncounterHit(t, e, p, { damage: 12, damageType: "ballistic", from: "Rook" }, { conditions: ["bleeding", "unconscious"] });
+  assert.ok(a.ok);
+  eq([rowOf(t, e, p).damage, rowOf(t, e, p).conditions.map(c => [c.id, c.source, c.rounds])], [12, [["bleeding", "Rook", null]]]);
+  const h = viewRow(t, e, p).health;
+  eq([h.left, h.total, h.levelsLeft, h.levels], [18, 30, 4, 6]);
+  assert.equal(viewRow(t, e, p).armor, null);
+  // Massive: the Health Levels the player calls out, capped at what is left.
+  const m = Engine.resolveEncounterHit(t, e, p, { damage: 99, gone: 2, damageType: "blunt", category: "massive" });
+  eq([m.gone, m.through], [2, 0]);
+  Engine.applyEncounterHit(t, e, p, { gone: 2, damageType: "blunt", category: "massive" }, {});
+  eq([rowOf(t, e, p).massive, viewRow(t, e, p).health.gone, viewRow(t, e, p).health.left, viewRow(t, e, p).health.levelsLeft], [2, 2, 8, 2]);
+  Engine.applyEncounterHit(t, e, p, { gone: 9, damageType: "blunt", category: "massive" }, {});
+  assert.equal(rowOf(t, e, p).massive, 6, "capped at the levels");
+  assert.equal(Engine.resolveEncounterHit(t, e, p, { gone: "", damageType: "blunt", category: "massive" }).ok, false);
+  assert.equal(Engine.resolveEncounterHit(t, e, p, { damage: "", damageType: "blunt" }).why, "Enter the damage.");
+  assert.equal(Engine.resolveEncounterHit(t, e, p, { damage: 3, damageType: "x" }).why, "Choose a damage type.");
+});
+
+test("192: a PC row's Shock and At Zero are reminders, and apply adds neither Condition", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e, "P", { hp: 30, levels: 6 });
+  const r = Engine.resolveEncounterHit(t, e, p, { damage: 15, damageType: "energy" });
+  assert.ok(r.prompts.shock); assert.equal(r.prompts.shock.check, "BOD Essence Check TN 8 TH 2");
+  Engine.applyEncounterHit(t, e, p, { damage: 15, damageType: "energy" }, { shock: "fail", atZero: "fail", conditions: [] });
+  eq(rowOf(t, e, p).conditions, []);
+  const z = Engine.resolveEncounterHit(t, e, p, { damage: 15, damageType: "elemental" });
+  assert.ok(z.prompts.atZero); assert.equal(z.prompts.shock, null, "down is not shock");
+  Engine.applyEncounterHit(t, e, p, { damage: 15, damageType: "elemental" }, { atZero: "fail", shock: "fail" });
+  eq(rowOf(t, e, p).conditions, [], "an atZero passed in is ignored");
+  // Dying: a mark.
+  Engine.participantAddCondition(t, e, p, { id: "dying", source: "x", rounds: 2 });
+  Engine.applyEncounterHit(t, e, p, { damage: 1, damageType: "elemental" }, {});
+  const d = rowOf(t, e, p).conditions[0];
+  eq([d.marks, d.source, d.rounds], [1, "x", 2]);
+  // No HP and no Health Levels: the damage lands with no figures.
+  const bare = addPc(t, e, "Bare");
+  const b = Engine.resolveEncounterHit(t, e, bare, { damage: 7, damageType: "blade" });
+  eq([b.after.total, b.after.left, b.after.levels, b.after.down, b.prompts.shock, b.prompts.atZero], [null, null, null, false, null, null]);
+  Engine.applyEncounterHit(t, e, bare, { damage: 7, damageType: "blade" }, {});
+  assert.equal(rowOf(t, e, bare).damage, 7);
+});
+
+test("191: a PC row reads its Health as hlState does, with Massive levels, at every BOD, damage and Massive count", () => {
+  for (let bod = 1; bod <= 14; bod++) {
+    const ch = Engine.newCharacter();
+    ch.stats.BOD.base = bod;
+    const h = Engine.health(ch);
+    const { t, e } = encTable();
+    const p = addPc(t, e, "P", { hp: h.total, levels: h.levels });
+    const row = rowOf(t, e, p);
+    for (let m = 0; m <= 2; m++) for (let d = 0; d <= h.total; d++) {
+      row.damage = d; row.massive = m;
+      const want = Engine.hlState(ch, { damage: d, massiveLevels: m }), got = viewRow(t, e, p).health;
+      const tag = `BOD ${bod} damage ${d} massive ${m}`;
+      eq([got.total, got.left, got.down, got.levels, got.levelsLeft, got.gone], [want.total, want.hpLeft, want.down, want.levels, want.levels - want.lost, want.massive], tag);
+      if (d % Math.max(1, h.hpPer - 1) !== 0 && d !== h.total) continue;
+      for (const k of [1, h.hpPer, Math.ceil(h.total / 2), h.total]) {
+        const c = Engine.newCharacter();
+        c.stats = ch.stats; c.trackers.damage = d; c.trackers.massiveLevels = m;
+        const sheet = Engine.resolveHit(c, { damage: k, damageType: "elemental", location: "torso" });
+        const mine = Engine.resolveEncounterHit(t, e, p, { damage: k, damageType: "elemental" });
+        eq([mine.after.lost, mine.after.left, mine.lostThisHit, !!mine.prompts.shock, !!mine.prompts.atZero],
+           [sheet.after.lost, sheet.after.hpLeft, sheet.lostThisHit, !!sheet.prompts.shock, !!sheet.prompts.atZero], `${tag} hit ${k}`);
+      }
+    }
+  }
+});
+
+test("191: a PC row whose HP per level no BOD gives is read by the same helper", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e, "P", { hp: 36, levels: 6 });
+  rowOf(t, e, p).damage = 13; rowOf(t, e, p).massive = 1;
+  const h = viewRow(t, e, p).health;
+  eq([h.total, h.left, h.levelsLeft, h.gone, h.down], [36, 17, 3, 1, false]);
+});
+
+test("191: a row's traits are named for the active row to show, and a PC has none", () => {
+  const { t, e, id } = hitTable();
+  rowOf(t, e, id).block.traits = [{ name: "Cold", text: "Never flinches." }, { name: "", text: "" }, { name: "Loud", text: "" }];
+  eq(viewRow(t, e, id).traits.map(k => [k.index, k.name, k.text]), [[0, "Cold", "Never flinches."], [2, "Loud", ""]]);
+  const pc = addPc(t, e, "P");
+  eq(viewRow(t, e, pc).traits, []);
+});
+
+test("191 (review): armor wear follows its piece: another piece in the block reads fresh, and the jacket's wear is kept", () => {
+  const { t, e, id } = hitTable({ armor: JACKET });
+  for (let i = 0; i < 3; i++) assert.ok(Engine.applyEncounterHit(t, e, id, shot({ damage: 3 }), {}).ok);
+  eq([rowOf(t, e, id).armorLoss, rowOf(t, e, id).armorId], [3, "leather-jacket"]);
+  assert.equal(viewRow(t, e, id).armor.integrity, 7);
+  rowOf(t, e, id).block.armor = ["Security Rig (PROT 1d6)"];
+  let a = viewRow(t, e, id).armor;
+  eq([a.piece.id, a.integrity, a.integrityMax], ["security-rig", 20, 20]);
+  assert.equal(Engine.resolveEncounterHit(t, e, id, shot()).armor.integrityBefore, 20, "the hit reads it fresh too");
+  eq([rowOf(t, e, id).armorLoss, rowOf(t, e, id).armorId], [3, "leather-jacket"], "the wear is kept, not cleared");
+  rowOf(t, e, id).block.armor = JACKET;
+  assert.equal(viewRow(t, e, id).armor.integrity, 7, "back to the jacket, 7/10 again");
+  // A hit that wears the new piece starts its own wear rather than adding to the old one's.
+  rowOf(t, e, id).block.armor = ["Security Rig (PROT 1d6)"];
+  assert.ok(Engine.applyEncounterHit(t, e, id, shot({ damage: 3 }), {}).ok);
+  eq([rowOf(t, e, id).armorLoss, rowOf(t, e, id).armorId], [1, "security-rig"]);
+  assert.equal(viewRow(t, e, id).armor.integrity, 19);
+  // A scrapped piece's scrap goes with its id as well.
+  const s = hitTable({ armor: JACKET });
+  Engine.applyEncounterHit(s.t, s.e, s.id, shot({ damage: 25, category: "massive" }), {});
+  assert.equal(viewRow(s.t, s.e, s.id).armor.scrapped, true);
+  rowOf(s.t, s.e, s.id).block.armor = ["Security Rig (PROT 1d6)"];
+  assert.equal(viewRow(s.t, s.e, s.id).armor.scrapped, false);
 });
