@@ -3,7 +3,7 @@
 **Plan:** [`../crb-v4-sync.md`](../crb-v4-sync.md) §1 (the `0414` row), §2 (P3), §3 (a power with ranks).
 Decisions 104 (Natural Armor grants), 152 (Supernatural buys Universal only), 157 (5 CP a power rank),
 194 (every power has a rank; `progression.powerIpe`).
-**Status:** **drafted 2026-10-08 by Claude (Opus)**, in the session that built P0 and P2. §4 is for Ken.
+**Status:** **built 2026-10-08** (Decisions 195–197, app 0.39.0, game data 0.31). Ken answered §4 the same day; VQ13 became [`P3b-werewolf-majors.md`](P3b-werewolf-majors.md).
 **Branch:** a new session, from `main` after the P0 + P2 PR merges. PR to `main`.
 **Tier:** *Rule or shape*. **Propose before building:** bring Ken §3's shape and §4's answers first.
 

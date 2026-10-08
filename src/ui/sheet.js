@@ -127,7 +127,7 @@ const STAT_GROUPS = [
 // A human-readable derivation of a computed attribute, generated
 // from shadows-data.js (base + inputs) so it stays correct if a formula changes.
 function derivedBreakdownStr(ch, id){
-  const def=(D.derived||[]).find(d=>d.id===id), t=Engine.statTable(ch);
+  const def=(D.derived||[]).find(d=>d.id===id), t=Engine.baseStatTable(ch);   // as derived() reads them (Decision 195)
   if (def && def.type==="sumOfModifiers"){
     const sum=def.inputs.reduce((s,sid)=>s+t[sid].mod,0);
     const raw=def.base+sum, core=Math.max(def.floor!=null?def.floor:raw, raw);
@@ -148,8 +148,9 @@ function statCellHtml(ch, id){
   const t=Engine.statTable(ch);
   if (t[id]){
     const m=t[id].mod;
-    return `<div class="statcell" data-tip="stat" data-term="${esc(id)}" tabindex="0">${statIco(id)}<div class="sid">${id}</div><div class="sv">${t[id].value}</div>
-      <div class="sm2 ${m>0?"pos":m<0?"neg":""}">${m>=0?"+":""}${m}</div></div>`;
+    // A form's lift (Decision 195) is in the value, and said under it.
+    return `<div class="statcell${t[id].form?" shifted":""}" data-tip="stat" data-term="${esc(id)}" tabindex="0">${statIco(id)}<div class="sid">${id}</div><div class="sv">${t[id].value}</div>
+      <div class="sm2 ${m>0?"pos":m<0?"neg":""}">${m>=0?"+":""}${m}</div>${t[id].form?`<div class="sform">${t[id].form>0?"+":"−"}${Math.abs(t[id].form)} form</div>`:""}</div>`;
   }
   // derived (TOL/WILL): value only, with a "?" that reveals how it's derived
   const der=Engine.derived(ch), open=!!(S.openDerived && S.openDerived.has(id)), bd=derivedBreakdownStr(ch,id);
@@ -285,7 +286,7 @@ function skillRowPair(ch, l){
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   // Decision 156: an untrained skill reads at full strength, Rank 0 dimmed.
   let tr = `<tr class="skill-line${l.trained?"":" untrained"}">`;
-  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
+  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
   tr += `<td class="num" data-k="Rank">${l.trained?l.rank:0}</td>`;
   tr += `<td class="num" data-k="Check">1d10 + ${l.checkBonus}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
@@ -359,10 +360,15 @@ function renderShMain(){
   h += conditionTotalsNote(ch, true);
   // Weapons: a catalog piece is computed (Decision 100); a custom one reads
   // back what was typed.
+  // A form the archetype shifts into (Decision 195) is switched here as well
+  // as on Loadout, and while it's on, its natural weapons lead the weapons.
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="toggle" && Engine.toggleView(ch, x).some(o=>o.does)))
+    h += `<div class="main-form"><div class="sect">${esc(p.title)}</div>${togglePanelHtml(ch, p)}</div>`;
   const lines = (ch.weapons||[]).map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
-  if (lines.length){
+  const natural = formWeaponRowsHtml(ch);
+  if (lines.length || natural){
     h += `<div class="sect">Weapons</div>
-      <table class="ref"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` +
+      <table class="ref"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` + natural +
       lines.map(l=>{
         if (l.custom){ const w=ch.weapons[l.index];
           return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td><td class="num">—</td><td class="num">${esc(w.damage)||"—"}</td>
@@ -378,7 +384,7 @@ function renderShMain(){
   if (worn) h += `<div class="lo-armor worn"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
     <div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(worn)}</span></div><div class="lo-armor-int">${intBar(worn)}</div></div>`;
   if (natMain) h += `<p class="hitarmor">${esc(natMain)}</p>`;
-  if (lines.length || worn || natMain) h += `<div class="sect">Combat skills</div>`;
+  if (lines.length || natural || worn || natMain) h += `<div class="sect">Combat skills</div>`;
   h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
   h += `</section>`;
   // ── right: stats, clustered into the four spheres ──
@@ -481,10 +487,15 @@ function renderShCharacter(){
     if (traits.length) parts.push(secs.sect("Baseline Traits") + traits.map(tr=>
       `<div class="pick"><div class="head"><h2>${esc(tr.name)}</h2></div>
         <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join(""));
-    if (powers.length) parts.push(secs.sect("Powers") + powers.map(p=>
+    // An archetype's own powers carry a cost and what a rank adds (Decision
+    // 196); its Base Powers are F38's stub, shown beside them and spending nothing.
+    const allow = Engine.powerAllowance(ch);
+    const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${a.flagged?flagHtml(a):""}` : "";
+    if (powers.length) parts.push(secs.sect("Powers") + allowHtml + powers.map(p=>
       `<div class="pick"><div class="head"><h2>${esc(p.name)}</h2>
-        ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
-        <div class="desc">${esc(p.description||p.effect||"")}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join(""));
+        ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
+        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join("")
+      + (content.powersText ? `<p class="step-note">${esc(content.powersText)}</p>` : ""));
     if (vulns.length) parts.push(secs.sect("Vulnerabilities") + vulns.map(v=>
       `<div class="pick"><div class="head"><h2>${esc(v.name)}</h2></div>
         <div class="desc">${esc(v.description||"")}</div></div>`).join(""));
@@ -498,7 +509,7 @@ function renderShCharacter(){
       parts.push(secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`)
         + chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
         ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${o.transformation?"\n"+esc(o.transformation):""}</div>${optionPowersHtml(o)}</div>`).join(""));
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}</div>`).join(""));
     }
 
     // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
@@ -1131,7 +1142,8 @@ function renderShTrackers(){
       <button class="btn sm" data-trk="${p.id}|-1">−1</button>
       <button class="btn sm" data-trk="${p.id}|1">+1</button>
       ${max==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
-      <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span></div>`;
+      <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span>
+      ${t.need!=null?`<span class="sub trk-step">${t.need?`<b>Need:</b> ${esc(t.need)}. `:""}${t.step?`<b>Step ${val}:</b> ${esc(t.step)}`:"No withdrawal."}</span>`:""}</div>`;
     // A tracker that declares `overMax: "cascade"` (the Arcanist's TOL Spent) opens the
     // Cascade panel once it's past its max: TOL below zero (Decision 106).
     if (p.overMax==="cascade" && effMax!=null && cur>effMax) h += cascadePanelHtml(ch);
@@ -1889,14 +1901,33 @@ function renderShLoadout(){
         <div class="desc">${esc(t.description||"")}${(t.benefits||[]).length?"\n• "+t.benefits.map(esc).join("\n• "):""}</div></div>`).join("")
         : `<p class="step-note">No ${esc(p.title||"entry")} on record.</p>`;
     }
-    if (p.type==="toggle"){
-      const cur = ch.panelData[p.id] || p.options[0];
-      h += `<div class="form-toggle">` + p.options.map(o=>
-        `<button class="${cur===o?"on":""}" data-ptoggle="${p.id}|${esc(o)}">${esc(o)}</button>`).join("") + `</div>
-        <p class="step-note">${esc(copy("applyFromText"))}</p>`;
-    }
+    if (p.type==="toggle") h += togglePanelHtml(ch, p);
   }
   return head + jumpBarHtml(secs.list, { row:true }) + h;
+}
+
+// A toggle panel (Decision 195): one switch of its options. An option that
+// does something says what, and what entering it costs (a Forge Fang's HL);
+// one that does nothing the engine models still says to apply it by hand.
+// Main draws the same switch, since shifting is a combat action.
+function togglePanelHtml(ch, p){
+  const opts = Engine.toggleView(ch, p), f = Engine.formView(ch);
+  const costText = c => `${c.hl} HL${c.category?` of ${c.category} damage`:""}`;
+  let h = `<div class="form-toggle" role="group" aria-label="${esc(p.title||"")}">` + opts.map(o=>
+    `<button class="${o.on?"on":""}" aria-pressed="${o.on}" data-ptoggle="${esc(p.id)}|${esc(o.name)}">${esc(o.name)}${o.cost?` <small>(${esc(costText(o.cost))})</small>`:""}</button>`).join("") + `</div>`;
+  if (f && f.panelId===p.id){
+    if (f.ended) h += noticeHtml(f.name, f.endsText);
+    if (f.summary) h += `<p class="step-note">${esc(f.summary)}</p>`;
+  } else if (!opts.some(o=>o.does)) h += `<p class="step-note">${esc(copy("applyFromText"))}</p>`;
+  return h;
+}
+// The form's natural weapons as Main's weapon rows, computed like a catalog
+// weapon's: the skill's total to hit, BOD+n to damage.
+function formWeaponRowsHtml(ch){
+  const f = Engine.formView(ch);
+  return f ? f.weapons.map(w=>`<tr><td>${esc(w.name)}<div class="lo-sub">${esc(f.name)} form${w.skill?` · ${esc(w.skill)}`:""}</div></td>
+    <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}</td>
+    <td class="num">—</td><td class="num">—</td></tr>`).join("") : "";
 }
 
 // ── Sheet: notes ─────────────────────────────────────────────────────
@@ -2300,7 +2331,7 @@ function pArchetypePage(ch){
   h += content && content.description ? `<p class="p-note p-archdesc">${esc(content.description)}</p>` : (ch ? "" : `<div class="p-fieldrow p-archfields wide">${pField("Description", null)}</div>`);
   const textRows = list => named(list).map(x=>({ name:x.name, description:[x.description, x.benefit].filter(Boolean).join(" ") }));
   h += `<div class="p-section">Baseline Traits</div>${pRowsTableHtml(textRows(content && content.traits), ["name","description"], ["Trait","What it does"], 5, "p-archtable")}`;
-  const powers = named(content && content.powers).map(p=>({ name:p.rank!=null ? `${p.name} (rank ${p.rank})` : p.name, uses:p.uses||p.drain||"", effect:[p.effect||p.description, p.notes].filter(Boolean).join(" — ") }));
+  const powers = named(content && content.powers).map(p=>({ name:p.rank!=null ? `${p.name} (rank ${p.rank})` : p.name, uses:p.uses||p.drain||p.cost||"", effect:[p.effect||p.description, p.perRank && `Per rank: ${p.perRank}`, p.notes].filter(Boolean).join(" — ") }));
   h += `<div class="p-section">Powers</div>${pRowsTableHtml(powers, ["name","uses","effect"], ["Power","Uses","Effect"], 8, "p-archtable p-powertable")}`;
   h += `<div class="p-section">Vulnerabilities</div>${pRowsTableHtml(textRows(content && content.vulnerabilities), ["name","description"], ["Vulnerability","What it does"], 4, "p-archtable")}`;
   return h;
@@ -2428,7 +2459,10 @@ function raiseResultsHtml(ch, type){
   if (type==="power"){
     const rows = Engine.powerRanks(ch).map(p=>{
       const c = Engine.ipCost(ch,"power",p.id), learn = p.rank===0;
-      const sub = [p.kind==="discipline" ? "Discipline" : "Your power", learn ? "not trained yet" : `rank ${p.rank}`, p.ipe ? `+${p.ipe} from IP` : ""].filter(Boolean).join(" · ");
+      // VQ14: the book's printed maximum is a creation cap, so a raise past
+      // it goes ahead and says so (Decision 196).
+      const past = c.ok && p.maxRank && c.to > p.maxRank ? `past the book's ${p.maxRank}` : "";
+      const sub = [p.kind==="discipline" ? "Discipline" : p.kind==="archetype" ? "Archetype power" : "Your power", learn ? "not trained yet" : `rank ${p.rank}`, p.ipe ? `+${p.ipe} from IP` : "", past].filter(Boolean).join(" · ");
       return raiseRowHtml({ name: esc(p.name), sub: esc(sub), move: c.ok?`${c.from} → ${c.to}`:`${p.rank}`,
         cost: c.ok?`${c.cost} IP`:"—", btn: learn?"Learn":"Raise", key:`power|${esc(p.id)}`, why: c.ok ? short(c) : c.why });
     }).join("");
@@ -3070,10 +3104,14 @@ function bindSheet(){
     commit("loadout", had?`Focused Skill removed: ${name}`:`Focused Skill: ${name}`, ()=>{ Engine.toggleFocusedPick(ch, id); });
   });
 
-  // Form toggle (e.g. Werewolf Human/Werewolf)
+  // A toggle panel (Decision 195): a Werewolf's Form. What entering an option
+  // costs (a Forge Fang's HL) is written in the same commit, so one Undo
+  // takes back the shift and its cost together.
   main.querySelectorAll("[data-ptoggle]").forEach(b=>b.onclick=()=>{
-    const [pid,opt]=b.dataset.ptoggle.split("|");
-    commit("loadout", `${pid}: ${opt}`, ()=>{ ch.panelData[pid]=opt; });
+    if (b.classList.contains("on")) return;
+    const at=b.dataset.ptoggle.indexOf("|"), pid=b.dataset.ptoggle.slice(0,at), opt=b.dataset.ptoggle.slice(at+1);
+    const p=Engine.archPanels(ch).find(x=>x.id===pid), cost=(Engine.toggleView(ch, p||{}).find(o=>o.name===opt)||{}).cost;
+    commit("loadout", `${p?p.title:pid}: ${opt}${cost?` (${cost.hl} HL${cost.category?` ${cost.category}`:""})`:""}`, ()=>{ Engine.setToggle(ch, pid, opt); });
   });
 
   // ── Admin: free edits (each logged via commit) ───────────────────────

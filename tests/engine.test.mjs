@@ -318,7 +318,7 @@ const CODE = CODE_FILES.map(code).join("\n");
 // draws any array of plain objects on a power as a table, columns from keys).
 const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\[\]\.overflow$/, /^enchantmentTimeTable\[\]\.(th|minTime)$/,
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
-  /\.(starterPower|additionalPowers\[\])$/, /\.(starterPower|additionalPowers\[\])\.\*\[\]$/,
+  /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
   /^appCopy\.statusLabel$/]; // keyed by an archetype's `status`, read by statusLabel()
 // Display and maintainer text by name. A key named like this has to hold text,
@@ -346,6 +346,8 @@ function dataKeys() {
         if (/By$/.test(k) && typeof x === "string") for (const seg of x.split(".")) viaPath.add(seg);
         // A pick's `from.optionsFrom` names the list pickOptions reads off its entry (Martial Arts' `styles`).
         if (k === "optionsFrom" && typeof x === "string") viaPath.add(x);
+        // A panel's `stepsFrom` and a toggle option's `costFrom` name the key the engine reads off the chosen specialization (Decisions 195, 196).
+        if ((k === "stepsFrom" || k === "costFrom") && typeof x === "string") viaPath.add(x);
       }
       walk(x, path ? `${path}.${isMap ? "*" : k}` : k);
     }
@@ -1610,14 +1612,22 @@ test("a hit: Natural Armor comes off after worn armor, anywhere, and AP doesn't 
   assert.equal(ch.trackers.damage, 1, "applyHit didn't write the post-skin damage");
 });
 
-test("Resilient Spirit (Waning Moon) lets Natural Armor answer magical damage while it's on", () => {
+// Resilient Spirit was the one `resAgainst` grant the book printed, and 0414
+// dropped it (VQ10, Decision 196). The mechanism stays, on a fixture.
+test("a conditional Natural Armor grant with resAgainst answers magical damage only while it's on (Decision 104)", () => {
   const ch = subject();
   ch.identity.archetype = "werewolf";
   ch.archetypeChoices.specialization = ["trueborn"];
   ch.progression.milestones.major.push({ id: "shake-it-off" });
+  const tb = D.archetypes.find(a => a.id === "werewolf").specialization.options.find(o => o.id === "trueborn");
+  assert.equal(tb.grants, undefined, "Resilient Spirit is back in the Trueborn's data");
   const hit = natural => Engine.resolveHit(ch, { damage: 8, damageType: "spirit", natural });
-  assert.equal(hit([]).through, 8);
-  assert.equal(hit(["resilient-spirit"]).through, 3);
+  assert.equal(hit(["fixture-ward"]).through, 8, "Shake it Off answered magical damage on its own");
+  withData(tb, "grants", [{ type: "naturalArmor", id: "fixture-ward", name: "Fixture Ward",
+                            resAgainst: ["elemental", "spirit", "aether"], while: "while the fixture says so" }], () => {
+    assert.equal(hit([]).through, 8);
+    assert.equal(hit(["fixture-ward"]).through, 3);
+  });
 });
 
 // ── Nanomed Kit (Decision 105, CQ12: 0540's list) ──────────────────────
@@ -2796,6 +2806,141 @@ test("versionCheck matches a power's spend to its row, and says when the power i
   assert.equal(issues.length, 1);
   assert.match(issues[0], /Thorn hedge/);
   assert.equal(Engine.ipState(ch).available, 20, "IP spent on a removed power stays spent");
+});
+
+// ── The Werewolf to 0414 (crb-v4-sync P3, Decisions 195–197) ─────────
+function werewolf(origin, { base = 6 } = {}) {
+  const ch = subject({ base, bod: base });
+  ch.identity.archetype = "werewolf";
+  ch.archetypeChoices.specialization = origin ? [origin] : [];
+  ch.progression.ip.earned = 1000;
+  return ch;
+}
+const WWD = () => D.archetypes.find(a => a.id === "werewolf");
+
+test("a Werewolf of each Origin holds the Innate five and only its Origin's powers, at rank 1, and raises them at rank × 20 past the book's 3 (Decision 196)", () => {
+  const innate = WWD().powers.filter(p => !p.origin).map(p => p.id);
+  assert.equal(innate.length, 5);
+  for (const o of WWD().specialization.options) {
+    const ch = werewolf(o.id), own = WWD().powers.filter(p => p.origin === o.id).map(p => p.id);
+    assert.equal(own.length, 6, `${o.name} has ${own.length} powers`);
+    same(Engine.powerRanks(ch).map(p => `${p.id}:${p.kind}:${p.rank}`), [...innate, ...own].map(id => `${id}:archetype:1`), `${o.name} doesn't hold the kit at rank 1`);
+    same(Engine.archetypeContent(ch).powers.map(p => p.id), [...innate, ...own], `${o.name}'s Character tab lists other powers`);
+  }
+  same(Engine.powerRanks(werewolf(null)).map(p => p.id), innate, "a Werewolf with no Origin yet holds an Origin's powers");
+
+  const ch = werewolf("trueborn"), P = D.ip.powerIncreaseCost;
+  for (const r of [1, 2, 3]) {
+    const c = Engine.ipCost(ch, "power", "apex-fury");
+    same([c.from, c.to, c.cost], [r, r + 1, P.perRank * r]);
+    assert.ok(Engine.spendIP(ch, "power", "apex-fury").ok);
+  }
+  same([rankOf(ch, "apex-fury").rank, rankOf(ch, "apex-fury").maxRank, ch.progression.powerIpe["apex-fury"]], [4, 3, 3],
+    "VQ14: the book's max 3 binds creation only, so IP takes a power past it");
+  same(Engine.versionCheck(ch).filter(x => /power/i.test(x)), []);
+  ch.progression.powerIpe["apex-fury"] = D.ip.rankCap - 1;
+  assert.match(Engine.ipCost(ch, "power", "apex-fury").why || "", /Rank cap 10/, "play doesn't stop at IPE's 10");
+
+  // An Origin's power is its own: a Wildblood can't raise a Trueborn's.
+  assert.equal(Engine.ipCost(werewolf("wildblood"), "power", "apex-fury").ok, false);
+});
+
+test("the Werewolf's vulnerabilities: EMP is the Forge Fang's alone, and Resilient Spirit is gone (VQ10, Decision 196)", () => {
+  same(Engine.archetypeContent(werewolf("trueborn")).vulnerabilities.map(v => v.id), ["silver", "feral-mind", "call-of-the-wild"]);
+  same(Engine.archetypeContent(werewolf("forge-fang")).vulnerabilities.map(v => v.id), ["silver", "feral-mind", "call-of-the-wild", "emp"]);
+  const tb = werewolf("trueborn");
+  same([Engine.naturalArmor(tb).conditional.length, Engine.naturalArmor(tb).total], [0, 0], "a Trueborn still has a moon's Natural Armor");
+  for (const o of WWD().specialization.options) for (const k of ["transformation", "additionalPowers", "grants"])
+    assert.equal(o[k], undefined, `${o.name} still carries ${k}`);
+});
+
+test("Werewolf form lifts REF, MOB and BOD in skills, Health and weapon damage, but not WILL, TOL, prices or caps (Decision 195)", () => {
+  const ch = werewolf("trueborn", { base: 8 });
+  const hp0 = Engine.health(ch), der0 = Engine.derived(ch), melee0 = Engine.skillLine(ch, "melee").checkBonus;
+  const ip0 = Engine.ipCost(ch, "stat", "BOD").cost, tech = D.skills.find(s => s.primaryStat === "TECH").id;
+  assert.equal(Engine.formState(ch), null, "a Werewolf starts shifted");
+  assert.equal(Engine.skillLine(ch, tech).barred, null);
+  assert.ok(Engine.setToggle(ch, "form", "Werewolf").ok);
+  const t = Engine.statTable(ch);
+  same([t.BOD.value, t.REF.value, t.MOB.value, t.INT.value, t.BOD.form], [12, 10, 10, 8, 4]);
+  same(Engine.baseStatTable(ch).BOD.value, 8, "the stored BOD moved");
+  same(Engine.statValue(ch, "BOD"), 8);
+  const hp = Engine.health(ch);
+  same([hp0.levels, hp0.hpPer, hp.levels, hp.hpPer], [8, 5, 10, 7], "Health Levels don't read the shifted BOD");
+  same(Engine.derived(ch), der0, "WILL or TOL moved with the shift");
+  assert.equal(Engine.ipCost(ch, "stat", "BOD").cost, ip0, "shifting changed what IP costs");
+  assert.equal(Engine.skillLine(ch, "melee").checkBonus, melee0 + 2, "Melee doesn't read the shifted REF");
+  assert.equal(Engine.skillLine(ch, tech).barred, "Feral Mind", "a TECH skill isn't barred while shifted");
+  const w = Engine.formView(ch).weapons;
+  same(w.map(x => [x.name, x.damage, x.damageFormula, x.attack]), [["Claws", 20, "BOD+8", melee0 + 2], ["Fangs", 22, "BOD+10", melee0 + 2]]);
+  assert.equal(Engine.statReading(ch, "BOD").value, 12, "the stat tip reads the stored value while shifted");
+  assert.ok(Engine.setToggle(ch, "form", "Human").ok);
+  same([Engine.statTable(ch).BOD.value, Engine.formView(ch)], [8, null]);
+  same([ch.trackers.damage, ch.trackers.witheringDamage], [0, 0], "a Trueborn's shift cost Health");
+  assert.equal(Engine.setToggle(ch, "form", "Wolfish").ok, false);
+  assert.equal(Engine.setToggle(subject(), "form", "Werewolf").ok, false, "an Arcanist shifted");
+});
+
+test("a Forge Fang's shift spends 1 HL of the form it enters, as Withering, one Undo takes it back, and half its HL in Withering ends the form (Decision 195)", () => {
+  const ch = werewolf("forge-fang", { base: 8 });
+  const view = Engine.toggleView(ch, Engine.archPanels(ch).find(p => p.id === "form"));
+  same(view.map(o => [o.name, o.on, o.cost && o.cost.hp]), [["Human", true, null], ["Werewolf", false, 7]], "the shift's price isn't the shifted HL");
+  const before = JSON.parse(JSON.stringify(ch));
+  same(Engine.setToggle(ch, "form", "Werewolf").cost, { hl: 1, hp: 7, withering: true, category: "Withering" });
+  Engine.recordAction(ch, "loadout", "Form: Werewolf", before);
+  same([ch.trackers.damage, ch.trackers.witheringDamage, Engine.hlState(ch).emptied], [7, 7, 1], "1 HL isn't one Health Level gone");
+  same(Engine.setToggle(ch, "form", "Werewolf").cost, null, "pressing the form you're in cost again");
+  same(Engine.setToggle(ch, "form", "Human").cost, null, "shifting back cost Health");
+  ch.panelData.form = "Werewolf";
+  assert.ok(Engine.undoLastAction(ch).ok);
+  same([ch.trackers.damage, ch.trackers.witheringDamage, ch.panelData.form || null], [0, 0, null], "one Undo didn't take back the shift and its cost");
+
+  Engine.setToggle(ch, "form", "Werewolf");
+  assert.equal(Engine.formView(ch).ended, false);
+  ch.trackers.witheringDamage = ch.trackers.damage = Engine.health(ch).total / 2;
+  assert.equal(Engine.formView(ch).ended, true, "half the HL in Withering didn't end the form");
+  ch.trackers.witheringDamage = 0;
+  assert.equal(Engine.formView(ch).ended, false, "ordinary damage ended the form");
+});
+
+test("Call of the Wild counts withdrawal steps 0 to 3 in the Origin's own words, and stops at 3 (Decision 196)", () => {
+  for (const o of WWD().specialization.options) {
+    const ch = werewolf(o.id), p = Engine.archPanels(ch).find(x => x.id === "call-of-the-wild");
+    same([Engine.panelTracker(ch, p).need, Engine.panelTracker(ch, p).step], [o.withdrawal.need, ""]);
+    for (const n of [1, 2, 3]) {
+      assert.ok(Engine.adjustPanelTracker(ch, p.id, 1).ok);
+      same([Engine.panelTracker(ch, p).count, Engine.panelTracker(ch, p).step], [n, o.withdrawal.steps[n - 1]], `${o.name} step ${n}`);
+    }
+    Engine.adjustPanelTracker(ch, p.id, 5);
+    assert.equal(Engine.panelTracker(ch, p).count, 3, "withdrawal went past its last step");
+    Engine.adjustPanelTracker(ch, p.id, -3);
+    assert.equal(Engine.panelTracker(ch, p).count, 0, "meeting the Need doesn't reset it");
+  }
+  // A tracker with no steps still counts past its max, as before.
+  const arc = subject(), tol = Engine.archPanels(arc).find(x => x.type === "tracker" && typeof x.max !== "number" || x.max === "TOL");
+  if (tol) { Engine.adjustPanelTracker(arc, tol.id, 99); assert.equal(Engine.panelTracker(arc, tol).count, 99); }
+});
+
+test("a saved Werewolf's Stat Bonus becomes its Focus Stat bonus: a locked one keeps every stat, a draft gets back a point off its Focus Stats (Decision 197)", () => {
+  const old = werewolf("trueborn");
+  old.archetypeChoices.rolls = { statBonus: 3 };
+  old.archetypeChoices.statBonusAllocation = { BOD: 2, COOL: 1 };
+  const stats = Engine.statTable(old);
+  const locked = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  same([locked.archetypeChoices.rolls, locked.archetypeChoices.focusAllocation, locked.archetypeChoices.statBonusAllocation],
+       [{ focusStatBonus: 3 }, { BOD: 2, COOL: 1 }, {}]);
+  same(Engine.statTable(locked), stats, "a locked Werewolf's stats moved");
+  same(Engine.migrate(JSON.parse(JSON.stringify(locked))).archetypeChoices, locked.archetypeChoices, "migrate() isn't idempotent");
+
+  old.creation.locked = false;
+  const draft = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  same(draft.archetypeChoices.focusAllocation, { BOD: 2 });
+  assert.ok(Engine.validate("archetype", draft).some(i => /1 Focus Stat bonus points? unallocated/.test(i.msg)), "the draft isn't told its point is back");
+  // The rule is the scaling row's, not the Werewolf's: an archetype whose row
+  // rolls no Focus Stat bonus keeps what it has.
+  const pro = subject(); pro.identity.archetype = "professional";
+  pro.archetypeChoices.rolls = { statBonus: 2 }; pro.archetypeChoices.statBonusAllocation = { INT: 2 };
+  same(Engine.migrate(JSON.parse(JSON.stringify(pro))).archetypeChoices.statBonusAllocation, { INT: 2 });
 });
 
 test("schema 0.16: an older file gets an empty write-in, and a file's own is kept only as text", () => {

@@ -1156,3 +1156,107 @@ test('0450: a Power or Discipline costs "Current rank × 20" ("Evocation 3 → 4
   assert.deepEqual([c.from, c.to, c.cost], [3, 4, 60], "the book's own example");
   assert.equal(Engine.ipCost(ch, "power", "alchemy").cost, 40, "rank 1 in a Discipline never trained");
 });
+
+// ── The Werewolf (0414), as data (crb-v4-sync P3, Decisions 195–197) ───
+// The book prints its power tables two ways (pipe tables and HTML), so this
+// reads both. Text is compared with curly quotes straightened, line breaks
+// and periods dropped, and runs of space collapsed: the data writes "Rank 2:
+// anywhere. Rank 3: anytime." where the book breaks a cell over two lines.
+const flat = s => String(s).replace(/<br\s*\/?>/g, " ").replace(/[’‘]/g, "'").replace(/[.;]/g, "").replace(/\s+/g, " ").trim();
+const WW = () => D.archetypes.find(a => a.id === "werewolf");
+function crbTableAfter(md, heading) {
+  const at = md.indexOf(heading);
+  assert.ok(at >= 0, `0414 has no "${heading}" any more`);
+  const rest = md.slice(at + heading.length);
+  const next = rest.search(/\n#{2,5} /);
+  const part = next < 0 ? rest : rest.slice(0, next);
+  if (/<table>/.test(part)) {
+    return [...part.matchAll(/<tr>([\s\S]*?)<\/tr>/g)].map(m => [...m[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)].map(c => flat(c[1])))
+      .filter(r => r.length && !/^(Power|Augmentation)$/.test(r[0]));
+  }
+  const lines = part.split("\n").filter(l => l.startsWith("|"));
+  return lines.slice(2).map(l => l.split("|").slice(1, -1).map(c => flat(c)));
+}
+
+test("R15: the Werewolf's Campaign Power Scaling matches 0414, row for row, Base Powers and Max Starting Rank too", () => {
+  const md = crb("0414_Werewolf.md");
+  const rows = crbTableAfter(md, "The following table represents the Werewolf Campaign Power Scaling:");
+  const byPl = WW().campaignPowerScaling.byPowerLevel, seen = [];
+  for (const [name, bonus, sfr, rou, base, maxStart] of rows) {
+    const pl = D.powerLevels.find(p => p.name === name);
+    assert.ok(pl, `0414 names a power level the data doesn't: ${name}`);
+    const r = byPl[pl.id];
+    assert.equal(r.focusStatBonusRoll, bonus, `${name}: Stat Bonus`);
+    assert.equal(`WILL x ${r.startingSFR.times} + ${r.startingSFR.plus}`, sfr, `${name}: Starting SFR`);
+    assert.equal(JSON.stringify([r.rou, r.basePowers, r.maxStartingRank]), JSON.stringify([rou, base, maxStart].map(Number)), `${name}: RoU, Base Powers, Max Starting Rank`);
+    seen.push(pl.id);
+  }
+  assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join());
+  // "The Focus Stats for the Werewolf are BOD, REF, and MOB. Bonus points can push a base stat beyond 10."
+  assert.match(md, /The Focus Stats for the Werewolf are BOD, REF, and MOB/);
+  assert.equal(WW().campaignPowerScaling.focusStats.join(" "), "BOD REF MOB");
+});
+
+test("R15: every Innate and Origin power is the book's, by name, cost, effect and Per Rank, max rank 3", () => {
+  const md = crb("0414_Werewolf.md"), ww = WW();
+  const tables = { "": "### Innate Powers", trueborn: "#### Trueborn Powers", wildblood: "#### Wildblood Powers", "forge-fang": "#### Forge Fang Powers" };
+  let count = 0;
+  for (const [origin, heading] of Object.entries(tables)) {
+    const rows = crbTableAfter(md, heading);
+    assert.ok(rows.length >= 5, `${heading} read ${rows.length} rows`);
+    const mine = ww.powers.filter(p => (p.origin || "") === origin);
+    assert.equal(mine.map(p => p.name).join(" | "), rows.map(r => r[0]).join(" | "), `${heading}: the data's powers aren't the book's, in its order`);
+    for (const [name, cost, effect, perRank] of rows) {
+      const p = mine.find(x => x.name === name);
+      assert.equal(JSON.stringify([flat(p.cost), flat(p.effect), flat(p.perRank)]), JSON.stringify([cost, effect, perRank]), `${name} isn't as 0414 prints it`);
+      assert.equal(p.maxRank, 3, `${name}: "can eventually raise them up to Rank 3"`);
+      count++;
+    }
+  }
+  assert.equal(count, ww.powers.length, "a power in the data isn't in the book");
+  const disciplines = D.archetypes.flatMap(a => ((a.coreMechanic || {}).disciplines || {}).list || []).map(d => d.id);
+  assert.equal(ww.powers.map(p => p.id).filter(id => disciplines.includes(id)).join(), "", "a power id collides with a Discipline's (progression.powerIpe keys both)");
+  assert.equal(new Set(ww.powers.map(p => p.id)).size, ww.powers.length, "two powers share an id");
+});
+
+test("R15: each Origin's Shifting, Refuel, Need, starter power and withdrawal steps are the book's", () => {
+  const md = crb("0414_Werewolf.md"), opts = WW().specialization.options;
+  assert.equal(opts.map(o => o.name).join(" "), "Trueborn Wildblood Forge Fang");
+  // Call of the Wild: a column per Origin, Need then three steps.
+  const cotw = crbTableAfter(md, "### Call of the Wild");
+  for (const [i, o] of opts.entries()) {
+    const col = cotw.map(r => r[i + 1]);
+    assert.equal(flat(o.withdrawal.need), col[0], `${o.name}'s Need`);
+    assert.equal(JSON.stringify(o.withdrawal.steps.map(flat)), JSON.stringify(col.slice(1, 4)), `${o.name}'s withdrawal steps`);
+    const sect = md.slice(md.indexOf(`### ${o.name} —`));
+    for (const f of o.features) {
+      const m = new RegExp(`\\*\\*${f.name}:\\*\\* ([^\\n]+)`).exec(sect);
+      assert.ok(m, `0414's ${o.name} has no ${f.name}`);
+      assert.equal(flat(f.text), flat(m[1]), `${o.name}'s ${f.name}`);
+    }
+    assert.match(sect.slice(0, sect.indexOf("Starter Power") + 200).replace(/\*/g, ""), new RegExp(`Starter Power\\s*—\\s*${o.starterPower.name}`), `${o.name}'s starter power isn't ${o.starterPower.name}`);
+  }
+  // VQ15: the two tables are reference, row for row.
+  const aspect = crbTableAfter(md, "on the table below to see which spirit takes you");
+  assert.equal(JSON.stringify(opts[1].starterPower.rows.map(r => [r.d6, r.aspect, r.effect].map(flat))), JSON.stringify(aspect));
+  const cyber = crbTableAfter(md, "Unlike every other Werewolf power, it works in both forms.");
+  assert.equal(JSON.stringify(opts[2].starterPower.rows.map(r => [r.augmentation, r.cost, r.effect].map(flat))), JSON.stringify(cyber));
+  // Forge Fang alone spends 1 HL, as Withering, to shift.
+  assert.equal(JSON.stringify(opts.map(o => o.shiftCost ? `${o.shiftCost.hl} ${o.shiftCost.category}` : null)), JSON.stringify([null, null, "1 withering"]));
+  assert.match(md, /Shift into Werewolf form by spending 1 HL\. This counts as Withering damage\./);
+});
+
+test("R15: Werewolf form is the book's +2 REF, +2 MOB, +4 BOD, Claws BOD+8 and Fangs BOD+10, and bars TECH", () => {
+  const md = crb("0414_Werewolf.md");
+  assert.match(md, /\*\*Enhanced Stats:\*\* Gain \+2 REF, \+2 MOB, and \+4 BOD\./);
+  assert.match(md, /Claws deal BOD\+8 damage and Fangs deal BOD\+10 damage, both as Melee attacks/);
+  assert.match(md, /While shifted, you can’t use TECH-based skills/);
+  const form = WW().coreMechanic.panels.find(p => p.type === "toggle").options.find(o => o.stats);
+  assert.equal(form.stats.map(s => `${s.stat}+${s.plus}`).join(" "), "REF+2 MOB+2 BOD+4");
+  assert.equal(form.naturalWeapons.map(w => `${w.name} ${w.skill} ${w.damage}`).join(", "), "Claws melee BOD+8, Fangs melee BOD+10");
+  assert.equal(form.bars.stat, "TECH");
+  assert.match(md, /when Withering damage taken reaches half your HL/);
+  assert.equal(form.endsAtWithering, 0.5);
+  // Vulnerabilities: four, EMP the Forge Fang's alone.
+  assert.equal(WW().vulnerabilities.map(v => v.name + (v.origin ? `@${v.origin}` : "")).join(", "), "Silver, Feral Mind, Call of the Wild, EMP@forge-fang");
+});

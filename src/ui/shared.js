@@ -809,9 +809,12 @@ function powerHtml(p){
     + `</div>`;
 }
 function optionPowersHtml(o){
-  const list = [o && o.starterPower, ...((o && o.additionalPowers) || [])].filter(Boolean);
-  return list.length ? `<div class="powers">${list.map(powerHtml).join("")}</div>` : "";
+  return o && o.starterPower ? `<div class="powers">${powerHtml(o.starterPower)}</div>` : "";
 }
+// A specialization's named features (a Werewolf Origin's Shifting, Refuel
+// and Need), each "Name: text" on its own line, escaped for a .desc block.
+const optionFeatures = o => (o && Array.isArray(o.features) ? o.features : []).filter(f=>f && f.name && f.text);
+const optionFeaturesText = o => optionFeatures(o).map(f=>`\n${esc(f.name)}: ${esc(f.text)}`).join("");
 
 function issuesHtml(list){
   if (!list.length) return "";

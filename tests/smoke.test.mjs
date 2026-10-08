@@ -1667,29 +1667,35 @@ test("C4: what the load check found stays on every page until it's dismissed; a 
   assert.deepEqual([...app.errors, ...v.errors, ...w.errors], []);
 });
 
-test("B17: a Trueborn sees the Lunar Phase Blessing, its four phases, and which powers aren't written yet — on the sheet and in the wizard", () => {
-  // The option's starterPower and additionalPowers were in the data and
-  // nowhere on screen: a Werewolf's sheet never mentioned its starting power.
-  const ch = lockedCharacter();
-  ch.identity.archetype = "werewolf";
-  ch.archetypeChoices.specialization = ["trueborn"];
-  const tb = D.archetypes.find(a => a.id === "werewolf").specialization.options.find(o => o.id === "trueborn");
-  const app = boot({ storage: { "shadows.active.v1": { ch, section: "archetype" } } });
-  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
-  app.click('[data-sec="character"]');
-  const text = app.$("#main").textContent;
-  assert.match(text, new RegExp(tb.starterPower.name), "the starting power isn't on the sheet");
-  for (const p of tb.starterPower.phases) assert.ok(text.includes(p.boon) && text.includes(p.effect), `${p.phase}'s boon isn't on the sheet`);
-  const unwritten = app.$$("#main .power").filter(el => /not written yet/.test(el.textContent)).map(el => el.querySelector("h3").textContent);
-  assert.equal(unwritten.length, tb.additionalPowers.length, "the powers still to come don't say they aren't written yet");
-
+test("B17, 0414: each Origin shows its Shifting, Refuel and Need and its starter power, its table too, on the sheet and in the wizard", () => {
+  // The option's starter power was in the data and nowhere on screen: a
+  // Werewolf's sheet never mentioned it. 0414 gave every Origin one, and two
+  // of them a table (VQ15: reference, never rolled).
+  const ww = D.archetypes.find(a => a.id === "werewolf");
+  const shows = (text, o, where) => {
+    for (const f of o.features) assert.ok(text.includes(f.text), `${o.name}'s ${f.name} isn't ${where}`);
+    assert.ok(text.includes(o.starterPower.name) && text.includes(o.starterPower.description), `${o.name}'s starter power isn't ${where}`);
+    for (const r of o.starterPower.rows || []) for (const v of Object.values(r)) assert.ok(text.includes(v), `${o.starterPower.name}'s row "${v}" isn't ${where}`);
+  };
+  assert.equal(ww.specialization.options.map(o => o.id).join(" "), "trueborn wildblood forge-fang");
+  for (const o of ww.specialization.options){
+    const ch = lockedCharacter();
+    ch.identity.archetype = "werewolf";
+    ch.archetypeChoices.specialization = [o.id];
+    const app = boot({ storage: { "shadows.active.v1": { ch, section: "archetype" } } });
+    app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+    app.click('[data-sec="character"]');
+    shows(app.$("#main").textContent, o, "on the sheet");
+    assert.equal(app.$$("#main .power .chip").length, 0, "a starter power says it isn't written yet");
+    assert.deepEqual(app.errors, []);
+  }
   const draft = lockedCharacter();
   draft.creation.locked = false;
   draft.identity.archetype = "werewolf";
   const w = boot({ storage: { "shadows.draft.v1": { ch: draft, step: 3, maxReached: 3 } } });
   w.click("[data-open]");
-  assert.match(w.$("#main").textContent, new RegExp(tb.starterPower.name), "the wizard's Trueborn card doesn't show its starting power");
-  assert.deepEqual([...app.errors, ...w.errors], []);
+  for (const o of ww.specialization.options) shows(w.$("#main").textContent, o, "on the wizard's card");
+  assert.deepEqual(w.errors, []);
 });
 
 // ── B18: nothing replaces a saved character without asking ──────────────
@@ -2073,12 +2079,18 @@ test("the wizard draws Disciplines, Focus Stats and the Stat Bonus from the data
   assert.equal(focusStats, "EMP INT", "the Focus Stat steppers aren't the data's focusStats");
   assert.match(focus.$("#main").textContent, /Evocation starts at rank \d+\. You choose your starting spells \(TOL \+ \dd4\) in Step 7/);
 
-  // The Stat Bonus block is keyed by the scaling row, not the archetype.
-  const ww = D.archetypes.find(a => Object.values((a.campaignPowerScaling || {}).byPowerLevel || {}).some(r => r.statBonusRoll)).id;
-  const sb = draftOn(ww, "archetype");
+  // A Werewolf's bonus goes on its Focus Stats, BOD, REF and MOB (0414, Decision 197).
+  const ww = D.archetypes.find(a => Object.values((a.campaignPowerScaling || {}).byPowerLevel || {}).some(r => r.startingSFR)).id;
+  const wf = draftOn(ww, "archetype");
+  assert.match(wf.$("#main").textContent, /Allocate among BOD · REF · MOB — these points can push a stat past 10/);
+  assert.match(wf.$("#main").textContent, /WILL × 3 \+ 5/, "the starting SFR formula didn't read as text");
+
+  // The Stat Bonus block is keyed by the scaling row, not the archetype. No
+  // archetype rolls one since 0414, so a fixture row does.
+  const sb = draftOn(ww, "archetype", d => { const row = d.archetypes.find(a => a.id === ww).campaignPowerScaling.byPowerLevel.street;
+    row.statBonusRoll = row.focusStatBonusRoll; delete row.focusStatBonusRoll; });
   assert.match(sb.$("#main").textContent, /Stat Bonus.*Allocate to any Stats \(cap 10\)/s);
-  assert.match(sb.$("#main").textContent, /WILL × 3 \+ 5/, "the starting SFR formula didn't read as text");
-  assert.deepEqual([...focus.errors, ...sb.errors], []);
+  assert.deepEqual([...focus.errors, ...wf.errors, ...sb.errors], []);
 });
 
 test("the SFR tracker counts down by its data, and a Major Milestone shows its details (Decision 135)", () => {
@@ -5386,4 +5398,73 @@ test("Decision 193: Add an interaction offers Fought them last", () => {
   const kinds = app.$$("[data-iakind]");
   assert.equal(kinds[kinds.length - 1].textContent, "Fought them");
   assert.equal(kinds.length, 8);
+});
+
+// ── The Werewolf to 0414 (crb-v4-sync P3, Decisions 195–197) ─────────
+function wolf(origin) {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf";
+  ch.archetypeChoices.specialization = [origin];
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
+  ch.progression.ip.earned = 200;
+  return ch;
+}
+
+test("Main shifts a Forge Fang: the switch names the HL it costs, Claws and Fangs lead the weapons, BOD reads 12, and one Undo takes it all back", () => {
+  const app = openSheet(wolf("forge-fang"), "main");
+  const btn = () => app.$('#main .main-form [data-ptoggle="form|Werewolf"]');
+  assert.ok(btn(), "Main has no Form switch");
+  assert.match(btn().textContent, /Werewolf \(1 HL of Withering damage\)/, "the switch doesn't say what shifting costs");
+  assert.equal(app.$$("#main .main-combat tbody tr").filter(r => /Claws|Fangs/.test(r.textContent)).length, 0, "claws before the shift");
+  app.click('#main .main-form [data-ptoggle="form|Werewolf"]');
+  const ch = activeChar(app);
+  assert.equal(ch.panelData.form, "Werewolf");
+  assert.deepEqual([ch.trackers.damage, ch.trackers.witheringDamage], [7, 7], "the shift didn't spend one shifted HL as Withering");
+  const rows = app.$$("#main .main-combat tbody tr").map(r => r.textContent.replace(/\s+/g, " "));
+  assert.match(rows[0], /^ ?Claws ?Werewolf form · Melee ?1d10 \+ \d+ ?20 ?—/);
+  assert.match(rows[1], /^ ?Fangs ?Werewolf form · Melee ?1d10 \+ \d+ ?22 ?—/);
+  assert.match(app.$("#main .main-form").textContent, /\+2 REF, \+2 MOB and \+4 BOD/);
+  const bod = app.$$("#main .statcell").find(c => c.querySelector(".sid").textContent === "BOD");
+  assert.match(bod.textContent, /12.*\+4 form/s, "the stat block doesn't show the shifted BOD");
+  assert.match(app.$("#main .cond.hp").textContent, /10 HL × 7/);
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Form: Werewolf \(1 HL Withering\)/, "the Activity Log doesn't name the shift and its cost");
+  app.click("button[data-undolast]");
+  const back = activeChar(app);
+  assert.deepEqual([back.panelData.form || null, back.trackers.damage, back.trackers.witheringDamage], [null, 0, 0]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("a Trueborn's sheet: the powers with ranks and costs, Base Powers with its note, Raise a Power past the book's 3, Call of the Wild's step, and TECH barred while shifted", () => {
+  const ch = wolf("trueborn");
+  ch.progression.powerIpe = { "apex-fury": 2 };
+  ch.progression.ip.log.push({ date: "2026-10-08", kind: "spend", amount: 20, targetType: "power", targetId: "apex-fury", from: 1, to: 2, name: "Apex Fury", note: "" },
+                             { date: "2026-10-08", kind: "spend", amount: 40, targetType: "power", targetId: "apex-fury", from: 2, to: 3, name: "Apex Fury", note: "" });
+  ch.panelData.form = "Werewolf";
+  const app = openSheet(ch, "character");
+  const text = app.$("#main").textContent;
+  assert.match(text, /Base Powers 1 · Max Starting Rank 1/);
+  assert.match(text, /What your Base Powers add on top is your GM's call for now/, "F38's player note isn't beside the powers");
+  const apex = app.$$("#main .pick").find(p => /^Apex Fury/.test(p.querySelector("h2").textContent));
+  assert.match(apex.textContent, /rank 3.*3 SFR.*Per rank: Rank 2: anywhere\. Rank 3: anytime\./s);
+  assert.ok(!/Steel Fangs|Predator's Allure|EMP/.test(text), "a Trueborn sees another Origin's powers or EMP");
+  assert.match(text, /summon a pack of allied wolves/, "the pack text isn't under the powers");
+
+  app.click('[data-sec="progression"]');
+  app.click('[data-raiseopen="power"]');
+  const row = app.$$("[data-raiseresults] tr").find(r => /Apex Fury/.test(r.textContent));
+  assert.match(row.textContent, /Archetype power · rank 3 · \+2 from IP · past the book's 3.*3 → 4.*60 IP/s);
+  assert.equal(app.$$("[data-raiseresults] tr").length, 11, "Raise a Power doesn't list the Innate five and the Trueborn six");
+  app.click("#modal [data-modalclose]");
+
+  app.click('[data-sec="trackers"]');
+  app.click('#main [data-trk="call-of-the-wild|1"]');
+  const cotw = app.$$("#main .trk").find(t => /Call of the Wild/.test(t.textContent));
+  assert.match(cotw.textContent, /Need: An hour of moonlit time under the night sky\. Step 1: Weakened: Moonsworn's passive bonuses fade\./);
+
+  app.click('[data-sec="skills"]');
+  const tech = D.skills.filter(s => s.primaryStat === "TECH").map(s => s.name);
+  const barred = app.$$("#main tr.skill-line").filter(r => /not while shifted/.test(r.textContent)).map(r => r.querySelector("td").firstChild.textContent.trim());
+  assert.equal(barred.sort().join(), tech.sort().join(), "Feral Mind didn't bar exactly the TECH skills");
+  assert.deepEqual(app.errors, []);
 });

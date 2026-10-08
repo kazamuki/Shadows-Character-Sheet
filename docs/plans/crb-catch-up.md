@@ -52,6 +52,11 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ✅ **End of the Arcanist section.** "Sythnosapien (Under Construction)": *now just delete it (see Cyborg removal below).* It also has no heading of its own, so it sits inside the Arcanist's Growth & Milestones. *(New since the 09-24 mirror: the Cyborg narrative was cut and replaced with this line.)*
 - ❓ **Arcanist › Growth & Milestones** is empty (F32, Ken): bring in REF's Arcanist Majors, or wait for the Origins rewrite.
 - ❓ **General Milestones placement** (F9, Ken/D): they sit under Professional, but the sheet treats them as open to everyone. The Exceptions List's AR-08 moves four of them to a universal list. Whatever happens, they need a home outside the Professional section.
+- ☐ **0414 Werewolf › slips** (found by `crb-v4-sync` P3, 2026-10-08; the sheet's data has the right words): "Not all Werewolves **carries**" (Werewolves in NYTE City's lead-in) → *carry*; "Trueborn **ar** the oldest" → *are*; "how you **refule**" (Origin intro) → *refuel*; "If your shifting check **fales**" → *fails*; "Most of what **make** a Werewolf dangerous" → *makes*; "the moon **nd** the bloodline … the **odl** duty" (Trueborn Powers) → *and*, *old*. A stray empty `##` heading sits above Playing a Werewolf.
+- ☐ **0414 Werewolf › Baseline Traits › Supernatural** prints two empty bullets under SFR/RoU and three more after the list closes. Fill or delete them.
+- ☐ **0414 Werewolf › Wildblood** has an empty four-column table and four empty `#####` headings before its Features. Delete them, or they were meant to hold something (the spirits?).
+- ☐ **0414 Werewolf › the heading still says "(Under Construction)".** The chapter is complete enough that the sheet carries all of it (Decisions 195–197). Drop the tag when you agree.
+- ❓ **0414 Werewolf › Forge Fang's shift.** "Shift into Werewolf form by spending 1 HL." The sheet spends one Health Level *as the werewolf form counts them* (BOD +4 can make each Level bigger), so the track shows exactly one Level gone while shifted (Decision 195). Say which form's HL it is, if it matters to you.
 
 ## 0420–0423: Skills
 
@@ -87,7 +92,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 - ❓ **Minor Milestones: repeats.** 0450 says "any option can be taken again". The sheet (Decision 29, from the old REF) won't repeat one until all five have been taken once. Pick one. It's a team call.
 - ❓ **Your own editorial callouts:** Talented scope (AD-02), Advantage rank pricing (AD-03), Milestones past IPE (AD-04), Supernatural ceilings, and the MD threshold (AD-06). Each one blocks text elsewhere.
-- ❓ **Supernatural ceilings vs. the Werewolf section.** 0450 says Werewolf and Vampire stats go past 10 "and their archetype sections set how far", but 0410's Werewolf never says how far. The sheet currently caps a Werewolf's Stat Bonus at 10 (Decision 18) and lets an Arcanist's focus bonus go past it. 0410 needs a sentence either way.
+- ❓ **Supernatural ceilings vs. the Werewolf section.** 0450 says Werewolf and Vampire stats go past 10 "and their archetype sections set how far". *(10-08)* 0414 now says a Werewolf's bonus points go on its Focus Stats and "can push a base stat beyond 10", and the sheet follows it (Decision 197), but it still never says how far. One sentence on the ceiling, in 0414 and 0413.
 
 ## 0460_Gear
 

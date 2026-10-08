@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.30",
+    "gamedataVersion": "0.31",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2442,42 +2442,59 @@ window.SHADOWS_DATA = {
       "name": "Werewolf",
       "status": "draft",
       "flagged": true,
-      "flagNote": "F7: Trueborn origin is partially complete (powers list trails off: Moonlit Vitality, Ancestral Wisdom, Spirit Pack, Ancestral Dominance are name-only). Other Origins (Unblooded, Forge Fang) referenced in lore but not defined. (0414_Werewolf, 2026-10-07, now writes all three, Unblooded as Wildblood: crb-v4-sync P3.) F38: a Werewolf carries every Innate and Origin power at Rank 1, so what do the table's Base Powers (1/2/2/3) buy? Extra ranks up to Max Starting Rank (1/1/2/2)? Deighton/Scott.",
+      "flagNote": "F38: a Werewolf carries every Innate and Origin power at Rank 1, so what do the table's Base Powers (1/2/2/3) buy? Extra ranks up to Max Starting Rank (1/1/2/2)? Stubbed: shown, spends nothing. Deighton/Scott.",
+      "playerNote": "You carry every power below at Rank 1. What your Base Powers add on top is your GM's call for now.",
       "primaryStats": [
         "BOD",
         "REF",
         "MOB"
       ],
-      "summary": "Lycanthropy is both a curse and a gift: immense strength, savage instinct, and the weight of a tribe and lineage older than the city. Werewolves can shift into their beast form when words stop working and something more permanent is required.",
-      "gameplayStyle": "Werewolves live between restraint and release. Bound to a tribe and driven by instinct, you navigate loyalty, territory, and transformation. When the beast emerges, subtlety fades and raw power takes over - but that power always demands something in return.",
-      "lore": "For as long as there have been people, there have been wolves in the shadows - protectors not from mankind, but for mankind, against the things that lurk beyond the Veil. They are the knife in the dark, the last line of defense against things that humanity cannot, or should not, know about. The beast is not a separate creature. It is the same person, with different priorities.",
+      "summary": "Lycanthropy is a gift, a curse or a transaction: immense strength, savage instinct, and a duty older than the city. A Werewolf shifts into its beast form when words stop working and something more permanent is required.",
+      "gameplayStyle": "A Werewolf doesn't choose what they are. They choose what they do with it. You work the spaces between the city's factions carrying a secret that would send most people running. Loyalty matters. Territory matters. The beast is always there, with its own opinions, and learning to work with it is the difference between a Werewolf who survives and one who becomes a problem.",
+      "lore": "For as long as there have been people, there have been wolves in the shadows, watching and waiting. They don't hunt mankind. They stand between it and the things beyond the Veil. Werewolves are a myth in NYTE City; the corporations keep what they know under lock and key. They are the knife in the dark, the last line of defense against things humanity cannot, or should not, know about. The beast is not a separate creature. It is the same person, with different priorities.",
       "classification": "supernatural",
       "campaignPowerScaling": {
         "columns": [
           "Stat Bonus",
           "Starting SFR",
-          "Rate of Use (RoU)"
+          "Rate of Use (RoU)",
+          "Base Powers",
+          "Max Starting Rank"
+        ],
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10, and Werewolf form adds +2 REF, +2 MOB and +4 BOD on top.",
+        "focusStats": [
+          "BOD",
+          "REF",
+          "MOB"
         ],
         "byPowerLevel": {
           "street": {
-            "statBonusRoll": "1d4",
+            "focusStatBonusRoll": "1d4",
             "startingSFR": { "stat": "WILL", "times": 3, "plus": 5 },
-            "rou": 3
+            "rou": 3,
+            "basePowers": 1,
+            "maxStartingRank": 1
           },
           "heroic": {
-            "statBonusRoll": "1d4+1",
+            "focusStatBonusRoll": "1d4+1",
             "startingSFR": { "stat": "WILL", "times": 3, "plus": 10 },
-            "rou": 5
+            "rou": 5,
+            "basePowers": 2,
+            "maxStartingRank": 1
           },
           "shadows": {
-            "statBonusRoll": "1d4+2",
+            "focusStatBonusRoll": "1d4+2",
             "startingSFR": { "stat": "WILL", "times": 3, "plus": 15 },
-            "rou": 7
+            "rou": 7,
+            "basePowers": 2,
+            "maxStartingRank": 2
           },
           "wcd": {
-            "statBonusRoll": "1d4+3",
+            "focusStatBonusRoll": "1d4+3",
             "startingSFR": { "stat": "WILL", "times": 3, "plus": 20 },
-            "rou": 9
+            "rou": 9,
+            "basePowers": 3,
+            "maxStartingRank": 2
           }
         }
       },
@@ -2485,89 +2502,121 @@ window.SHADOWS_DATA = {
         {
           "id": "supernatural",
           "name": "Supernatural",
-          "description": "A connection to the spirit grants access to Spiritual Force Rating (SFR) to fuel powers; SFR spent per round is limited by Rate of Use (RoU). Being supernatural grants mighty power, but locks you out of the Advantages that normal humans use to level the playing field. Only the Universal Advantages are open to you.",
+          "description": "You use your Spiritual Force Rating (SFR) to fuel your powers. Each round, the SFR you can spend at once is limited by your Rate of Use (RoU). As a supernatural creature, you are limited to the Universal Advantages.",
           "effects": [
             "Gains SFR and RoU per Campaign Power Scaling.",
             "Can purchase Universal Advantages only."
           ]
         },
         {
-          "id": "werewolf-form",
-          "name": "Werewolf Form",
-          "description": "Transform into a beastly form granting boons while channeling the wolf spirit.",
-          "effects": [
-            "While transformed: REF +2, MOB +2, BOD +4.",
-            "Natural Weapons - Claws: Melee, Damage 8 + BOD. Fangs: Melee, Damage 10 + BOD."
-          ]
-        },
-        {
           "id": "feral-instincts",
           "name": "Feral Instincts",
-          "description": "Predator senses, with a predator's limitations.",
-          "effects": [
-            "+2 to Awareness Skill Checks involving sight, smell, or hearing.",
-            "While transformed, cannot make TECH-based Skill Checks."
-          ]
+          "description": "Your senses never fully left the wild. Never switches off.",
+          "benefit": "+2 to Awareness Skill checks that rely on sight, smell, or hearing."
         },
         {
           "id": "regeneration",
           "name": "Regeneration",
-          "description": "Werewolves regenerate 1 HL of damage per round, unless inflicted with Withering Damage (such as from silver).",
-          "effects": [
-            "Regenerate 1 HL per round; blocked by Withering Damage."
-          ]
+          "description": "In Werewolf form, flesh and bone knit back together almost as fast as they tear.",
+          "benefit": "While transformed, regenerate 1 HL per round. Regeneration never restores Withering damage, and in human form you heal like anyone else."
+        },
+        {
+          "id": "pack-mentality",
+          "name": "Pack Mentality",
+          "description": "Werewolves hunt best together. Never switches off.",
+          "benefit": "+1 to Close-range Melee and Martial Arts attacks against a target an ally is also attacking in Close range. Summons, minions, and constructs count as allies."
         }
       ],
       "specialization": {
         "label": "Origin",
         "required": true,
-        "intro": "Every werewolf has an origin - a bloodline, or something you were forced into. Each Origin grants unique powers.",
+        "intro": "Every Werewolf carries the wolf in one of three ways: to the Trueborn it's a gift, to the Wildblood a curse, and to the Forge Fang a transaction. Your Origin shapes your grip on the shift, how you refuel, and what the beast needs from you in return.",
         "options": [
           {
             "id": "trueborn",
             "name": "Trueborn",
-            "description": "Trueborn werewolves have always been lycanthrope: heritage, tradition, and family ties that bind them. Spirits embodying the power, force, and will of the wolf bound themselves to family bloodlines, passing the gift down through generations.",
-            "transformation": "Transform at will with a WILL Essence Check (TN 7, TH 2); takes 1 round. A botch prevents attempting transformation for 1d4 rounds. Transform back at will; forced back if knocked unconscious or after losing more than 50% of health as Withering Damage.",
-            "starterPower": {
-              "name": "Lunar Phase Blessing",
-              "description": "An intrinsic connection to the moon grants boons during each phase, active during the corresponding week of the cycle.",
-              "phases": [
-                {
-                  "phase": "New Moon",
-                  "boon": "Shroud of Shadows",
-                  "effect": "+2 to Stealth and Deception Skill Checks"
-                },
-                {
-                  "phase": "Waxing Moon",
-                  "boon": "Hunter's Edge",
-                  "effect": "+1 REF and BOD"
-                },
-                {
-                  "phase": "Full Moon",
-                  "boon": "Apex Fury",
-                  "effect": "For 3 SFR: gain +2 REF, BOD, and MOB until unconscious or reduced to 50% Health"
-                },
-                {
-                  "phase": "Waning Moon",
-                  "boon": "Resilient Spirit",
-                  "effect": "Natural Armor treated as Warding"
-                }
+            "description": "The Wolf is a Gift. The oldest Werewolves, from the days of Mesopotamia, when human families made a pact with the spirits of the wolf and the spirits bound themselves to those bloodlines for good. It passes from parent to child, and the family treats the first shift as a coming of age. The Trueborn don't lose themselves to the beast. They become it, and they are strongest anywhere they can see the night sky.",
+            "features": [
+              { "name": "Shifting", "text": "Shift into Werewolf form with a WILL Essence check (TN 7, TH 1). Shift back at will." },
+              { "name": "Refuel", "text": "Recover 1 SFR per 10 minutes of time spent outdoors at night." },
+              { "name": "Need", "text": "1 hour of moonlit time each day (see Call of the Wild)." }
+            ],
+            "withdrawal": {
+              "need": "An hour of moonlit time under the night sky",
+              "steps": [
+                "Weakened: Moonsworn's passive bonuses fade.",
+                "SFR can't refill above half.",
+                "Losing control: shifting back takes a WILL Essence check (TN 7, TH 2), and when wounded, make the same check or shift."
               ]
             },
-            "grants": [{ "type": "naturalArmor", "id": "resilient-spirit", "name": "Resilient Spirit",
-                         "resAgainst": ["elemental", "spirit", "aether"], "while": "under a waning moon" }],
-            "additionalPowers": [
-              { "name": "Moonlit Vitality" },
-              { "name": "Ancestral Wisdom" },
-              { "name": "Spirit Pack" },
-              { "name": "Ancestral Dominance" }
-            ]
+            "starterPower": {
+              "name": "Moonsworn",
+              "description": "In Werewolf form under the night sky, outdoors after dark, you gain +1 REF, +1 BOD, and +1 Hit on Essence checks to resist magic and supernatural effects. Smog and cloud don't matter; the moon is up there whether NYTE City shows it or not."
+            }
+          },
+          {
+            "id": "wildblood",
+            "name": "Wildblood",
+            "description": "The Wolf is a Curse. In the 1800s, alchemists tried to recreate the joining that made the Trueborn, and their experiments worked: they bound a wolf spirit to a human being, and the binding has passed down those families ever since. The spirit rides alongside you like a passenger with its own opinions. It doesn't talk. It wants. Many spirits answer a Wildblood, from every corner of the old world, and each one changes the shape of the wolf it rides.",
+            "features": [
+              { "name": "Shifting", "text": "Shift into Werewolf form with a WILL Essence check (TN 7, TH 2). Shift back at will." },
+              { "name": "Refuel", "text": "Recover 1 SFR per 10 minutes of time spent in a wild place — a park, a riverbank, an overgrown lot, anywhere the veil runs thin." },
+              { "name": "Need", "text": "1 hour in a wild place each day (see Call of the Wild)." }
+            ],
+            "withdrawal": {
+              "need": "An hour in a wild place",
+              "steps": [
+                "Restless: +1 to the TN of WILL and COOL Essence checks.",
+                "When wounded or cornered, WILL Essence check (TN 7, TH 2) or shift; you can't pay to choose the spirit.",
+                "At nightfall, WILL Essence check (TN 7, TH 2) or the spirit takes you into the wild, transformed, until dawn."
+              ]
+            },
+            "starterPower": {
+              "name": "Aspect of the Beast",
+              "description": "A spirit always rides your shift. When you shift, roll 1d6 on the table to see which spirit takes you, or pay 2 SFR to call any spirit you choose. You can choose a different spirit at any time by paying 2 SFR.",
+              "rows": [
+                { "d6": "1", "aspect": "Rougarou (Louisiana French)", "effect": "+2 to Melee attacks and Intimidation checks" },
+                { "d6": "2", "aspect": "Vilkacis (Latvian)", "effect": "+2 to Stealth checks; mimic any voice you have heard" },
+                { "d6": "3", "aspect": "Faoladh (Irish)", "effect": "+2 Natural Armor and +2 to Medical checks" },
+                { "d6": "4", "aspect": "Cŵn Annwn (Welsh)", "effect": "+2 MOB and +2 to Tracking checks" },
+                { "d6": "5", "aspect": "Amarok (Inuit)", "effect": "+2 BOD and +2 to Martial Arts attacks" },
+                { "d6": "6", "aspect": "Ōkami (Japanese)", "effect": "+2 REF and +2 to Combat Sense checks" }
+              ]
+            }
+          },
+          {
+            "id": "forge-fang",
+            "name": "Forge Fang",
+            "description": "The Wolf is Property. Modern labs set out to isolate what makes the rumored beastkin what they are, to build a super soldier that could hold its own against the horrors in NYTE City's shadows. Only the wolf ever took, and every Forge Fang carries chrome. Regeneration should reject that hardware; Seta-16 suppresses it just enough for the implants to hold, and keeps the wolf fed and under control. The corporations own the supply, which means they own the wolf. Some obey. Others break free.",
+            "features": [
+              { "name": "Shifting", "text": "Shift into Werewolf form by spending 1 HL. This counts as Withering damage. Shifting back takes a WILL Essence check (TN 7, TH 2)." },
+              { "name": "Refuel", "text": "A Seta-16 dose restores SFR equal to your RoU at the end of the scene." },
+              { "name": "Need", "text": "A daily Seta-16 dose (see Call of the Wild)." }
+            ],
+            "shiftCost": { "hl": 1, "category": "withering" },
+            "withdrawal": {
+              "need": "A Seta-16 dose",
+              "steps": [
+                "−1 RoU.",
+                "SFR can't refill above half.",
+                "When wounded, WILL Essence check (TN 7, TH 2) or shift, and you can't shift back until dosed; each time you take damage, one active augmentation is DeSynced."
+              ]
+            },
+            "starterPower": {
+              "name": "CyberWolf Protocol",
+              "description": "The lab's chrome and conditioning. Unlike every other Werewolf power, it works in both forms.",
+              "rows": [
+                { "augmentation": "Corporate Conditioning", "cost": "Passive", "effect": "+1 Hit on WILL Essence checks against fear or mind control" },
+                { "augmentation": "Adaptive Skeleton", "cost": "2 SFR", "effect": "+2 BOD, +2 REF, and Natural Armor 2 until end of scene" },
+                { "augmentation": "Active Camouflage", "cost": "2 SFR", "effect": "+2 to Stealth checks, and invisible to electronic surveillance. Both end the moment you attack." }
+              ]
+            }
           }
         ]
       },
       "coreMechanic": {
-        "name": "Transformation & SFR",
-        "description": "The beast is always there - an instinct, a pressure, a part of you with its own opinions about how situations should be resolved.",
+        "name": "The Shift",
+        "description": "The person steps aside and the wolf steps forward. The change takes one round; if the shifting check fails, try again next turn, and on a Botch wait 1d4 turns. The form costs no SFR once it arrives, and it ends when you shift back, are knocked unconscious, or take Withering damage reaching half your HL. Every Innate and Origin power works only in Werewolf form, except CyberWolf Protocol. Spend up to your RoU in SFR each round; no single power can cost more than your RoU, and a sustained power pays again each round (once per scene outside an encounter). SFR comes back three ways: a full night's rest refills it, your Origin refuels you between scenes, and Predator's Mark returns 2 SFR when you remove your prey.",
         "panels": [
           {
             "id": "sfr",
@@ -2576,21 +2625,78 @@ window.SHADOWS_DATA = {
             "max": "startingSFR",
             "counts": "down",
             "resource": "sfr",
-            "note": "Counts spend against a computed pool — RoU caps a single turn."
+            "note": "Counts spend against a computed pool. RoU caps a single round."
           },
           {
             "id": "form",
             "type": "toggle",
             "title": "Form",
             "options": [
-              "Human",
-              "Werewolf"
+              { "name": "Human" },
+              {
+                "name": "Werewolf",
+                "stats": [
+                  { "stat": "REF", "plus": 2 },
+                  { "stat": "MOB", "plus": 2 },
+                  { "stat": "BOD", "plus": 4 }
+                ],
+                "naturalWeapons": [
+                  { "name": "Claws", "skill": "melee", "damage": "BOD+8" },
+                  { "name": "Fangs", "skill": "melee", "damage": "BOD+10" }
+                ],
+                "bars": { "stat": "TECH", "name": "Feral Mind" },
+                "costFrom": "shiftCost",
+                "endsAtWithering": 0.5,
+                "summaryText": "+2 REF, +2 MOB and +4 BOD, in your skills, speed and Health Levels. Claws and Fangs. No TECH-based skills (Feral Mind).",
+                "endsText": "Withering damage has reached half your HL: the form ends."
+              }
             ]
+          },
+          {
+            "id": "call-of-the-wild",
+            "type": "tracker",
+            "title": "Call of the Wild",
+            "max": 3,
+            "stepsFrom": "withdrawal",
+            "note": "Every day without meeting your Need adds a withdrawal step. Meeting it resets you."
           }
         ]
       },
-      "powers": [],
-      "vulnerabilities": [],
+      "powers": [
+        { "id": "predators-mark", "name": "Predator's Mark", "cost": "1 SFR", "effect": "Mark one target you can sense: +1 to melee attacks against it until it is removed as a threat or the encounter ends. Regain 2 SFR when you remove it.", "perRank": "+1 to melee attacks (max 3)", "maxRank": 3 },
+        { "id": "primal-leap", "name": "Primal Leap", "cost": "1 SFR", "effect": "Leap BOD × 2 meters horizontally or BOD meters vertically in one motion.", "perRank": "+2 meters across and +1 meter up (max 3)", "maxRank": 3 },
+        { "id": "scent-tracking", "name": "Scent Tracking", "cost": "1 SFR per scene", "effect": "+2 to Tracking checks for creatures within a mile.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "pheromone-aura", "name": "Pheromone Aura", "cost": "1 SFR per scene", "effect": "+2 to Intimidation checks.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "ferocious-howl", "name": "Ferocious Howl", "cost": "2 SFR", "effect": "Allies within 20 meters gain +1 Hit on WILL Essence checks for 1 round.", "perRank": "+1 round (max 3)", "maxRank": 3 },
+
+        { "id": "apex-fury", "origin": "trueborn", "name": "Apex Fury", "cost": "3 SFR", "effect": "In Werewolf form under the night sky, gain +2 REF, BOD, and MOB until the encounter ends.", "perRank": "Rank 2: anywhere. Rank 3: anytime.", "maxRank": 3 },
+        { "id": "moonlit-vitality", "origin": "trueborn", "name": "Moonlit Vitality", "cost": "None", "effect": "+1 SFR per 10-minute interval under the night sky, on top of your base recovery.", "perRank": "+1 SFR per interval (max 3)", "maxRank": 3 },
+        { "id": "ancestral-wisdom", "origin": "trueborn", "name": "Ancestral Wisdom", "cost": "1 SFR per scene", "effect": "+3 to Occult Lore checks about supernatural matters.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "ancestral-dominance", "origin": "trueborn", "name": "Ancestral Dominance", "cost": "Rank", "effect": "Targets within 10 meters make a WILL Essence check (TN 8, TH 2) or gain Frightened for 1 minute.", "perRank": "+1 TH (max 3)", "maxRank": 3 },
+        { "id": "spirit-pack", "origin": "trueborn", "name": "Spirit Pack", "cost": "1 SFR per wolf (up to 3)", "effect": "Spirit wolves for recon: unseen by mortals, able to pass through walls, immune to Physical damage, and sharing what they see and smell. They don't attack, but they count as allies for Pack Mentality.", "perRank": "+1 minute (max 3)", "maxRank": 3 },
+        { "id": "shield-of-the-tribe", "origin": "trueborn", "name": "Shield of the Tribe", "cost": "Rank, as a reaction", "effect": "When an ally at Close range is hit, take the hit instead and reduce its damage by 2.", "perRank": "+2 reduction (max 3)", "maxRank": 3 },
+
+        { "id": "predators-allure", "origin": "wildblood", "name": "Predator's Allure", "cost": "1 SFR per scene", "effect": "+2 to Persuasion or Seduction checks within 10 meters.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "instinctive-awareness", "origin": "wildblood", "name": "Instinctive Awareness", "cost": "1 SFR per scene", "effect": "+2 to Intuition checks to sense threats or the emotional state of a target within 10 meters.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "predators-silence", "origin": "wildblood", "name": "Predator's Silence", "cost": "1 SFR for 5 minutes", "effect": "+2 to Stealth checks.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "shadow-pack", "origin": "wildblood", "name": "Shadow Pack", "cost": "1 SFR per wolf (up to 3)", "effect": "Shadow wolves built for ambush: +2 to attacks in darkness. They dissolve in bright light.", "perRank": "+1 minute (max 3)", "maxRank": 3 },
+        { "id": "the-passengers-eyes", "origin": "wildblood", "name": "The Passenger's Eyes", "cost": "1 SFR per scene", "effect": "Let the spirit look out: you see Unbodied spirits, and you can sense where the veil runs thin. Spirits know you can see them.", "perRank": "Rank 2: you can speak with what you see. Rank 3: you sense what holds a spirit here, a glimpse of its anchor or of what it needs to be laid to rest.", "maxRank": 3 },
+        { "id": "let-it-loose", "origin": "wildblood", "name": "Let It Loose", "cost": "Rank, sustained", "effect": "While active, the spirit pours into your claws and fangs. Your natural weapons deal Spirit damage instead of Physical and can strike Unbodied creatures.", "perRank": "+1 damage with natural weapons (max 3)", "maxRank": 3 },
+
+        { "id": "steel-fangs", "origin": "forge-fang", "name": "Steel Fangs", "cost": "Rank", "effect": "Extend until retracted or the scene ends: Bite attacks gain +2 damage and AP. Extending again costs again.", "perRank": "+1 damage from bite attacks (max 3)", "maxRank": 3 },
+        { "id": "serrated-claws", "origin": "forge-fang", "name": "Serrated Claws", "cost": "Rank", "effect": "Extend until retracted or the scene ends: claw attacks cause Bleeding for rounds equal to rank. Extending again costs again.", "perRank": "+1 round of Bleeding (max 3)", "maxRank": 3 },
+        { "id": "seta-16-surge", "origin": "forge-fang", "name": "Seta-16 Surge", "cost": "None", "effect": "Once per encounter, regain SFR equal to your rank × 3. When the encounter ends, gain one withdrawal step; no dose clears it until you've had a night's rest.", "perRank": "+3 SFR regained (max 3)", "maxRank": 3 },
+        { "id": "drone-pack", "origin": "forge-fang", "name": "Drone Pack", "cost": "1 SFR / drone (up to 3)", "effect": "Wolf drones with Natural Armor 1 and EMP Vulnerable. They power down at the end of the duration, and destroyed drones cost Çredits to replace.", "perRank": "+1 minute (max 3)", "maxRank": 3 },
+        { "id": "combat-analytics", "origin": "forge-fang", "name": "Combat Analytics", "cost": "Rank", "effect": "Scan one target you can see. You learn its defenses, immunities, and vulnerabilities, and gain +1 to your attacks against it for the scene.", "perRank": "+1 to attacks (max 3)", "maxRank": 3 },
+        { "id": "null-field", "origin": "forge-fang", "name": "Null Field", "cost": "Rank", "effect": "Absorbs up to 5 Elemental, Spirit, or Aether damage, until used up or the scene ends.", "perRank": "+5 absorbed (max 3)", "maxRank": 3 }
+      ],
+      "powersText": "Each Origin can also summon a pack of allied wolves. Each summoned wolf has 1 HL, Claw (+5 Melee, 5 damage), and Bite (+3 Melee, 8 damage), arrives within 10 meters, and stays for 1 minute. Each Origin's pack has its own nature.",
+      "vulnerabilities": [
+        { "id": "silver", "name": "Silver", "description": "Silver deals Withering damage. Regeneration can't restore it; it heals only naturally. Withering damage that reaches half your HL forces you out of Werewolf form." },
+        { "id": "feral-mind", "name": "Feral Mind", "description": "While shifted, TECH-based skills are out of reach." },
+        { "id": "call-of-the-wild", "name": "Call of the Wild", "description": "Every Origin has a Need, and withdrawal follows when it goes unmet (see the Call of the Wild tracker)." },
+        { "id": "emp", "origin": "forge-fang", "name": "EMP", "description": "Your chrome is EMP Vulnerable. Make a TECH Essence check (TN 8, TH 2) to resist. Failure results in 1d4 rounds of DeSync on all cybernetic parts and powers: CyberWolf Protocol, Steel Fangs, Serrated Claws, Combat Analytics, and Null Field." }
+      ],
       "growth": {
         "minorMilestones": "shared",
         "majorMilestones": []

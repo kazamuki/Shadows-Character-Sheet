@@ -131,7 +131,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 |---|---|---|
 | `F5` | Adv/Disadv audit flags — three of four closed by the CRB v4 pass. Remaining: Cyber-Prophe… | Design (after F6) |
 | `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
-| `F7` | SFR per archetype: Werewolf defined (WILL×3+N, RoU); Vampire Blood Pool TBD — 2026-09-10 meeting added unlocked direction | Design |
+| `F7` | SFR per archetype, the Vampire's half: Blood Pool TBD — 2026-09-10 meeting added unlocked direction. The Werewolf half closed with `0414` (Decision 196) | Design |
 | `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99), Loadout and recovery done (Decision 100); only the MD1/2/3 ratings are left | Design (small gap) |
@@ -146,7 +146,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
 | `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
 | `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
-| `F38` | What a Werewolf's Base Powers buy, when it carries every power at Rank 1 | Deighton/Scott |
+| `F38` | What a Werewolf's Base Powers buy, when it carries every power at Rank 1 (stubbed: shown, spends nothing, Decision 196) | Deighton/Scott |
 | `F39` | How a Vampire spends Base Powers across Innate and Bloodline powers | Deighton/Scott |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
@@ -208,7 +208,7 @@ What a number *is*. Change one of these and characters change.
 - **162** *(Spend every point — W57)* — Review's points left are errors while `Engine.spendable` finds something they can buy, so Lock waits; a point that fits nowhere only warns; each step still only warns.
 - **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via... → **superseded in part by 97**
 - **16** *(Phase 2)* — Ranked Advantages cost cost per rank (Archery Master rank 2 = 12 CP).
-- **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10. → **superseded in part by 98**
+- **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10. → **superseded in part by 98** → **superseded in part by 197**
 - **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank. → **superseded in part by 157**
 - **64** *(B3)* — 1 Health Level per BOD is an invariant, not a tunable.
 - **66** *(B8)* — The two Pain Level floors are numbers the engine carries and the sheet states.
@@ -218,7 +218,7 @@ What a number *is*. Change one of these and characters change.
 - **97** *(Design-team rulings)* — F1/F2 confirmed 1:1 CP, F17 confirmed stacking; F14: a new skill after creation costs a flat 25 IP. F8 stays open. → **superseded in part by 157**
 - **99** *(Taking a hit — combat plan Session 3)* — `resolveHit` is pure, `applyHit` is one undoable action. PROT + matching RES; AP and Compromised skip RES; a fully soaked hit costs 1 INT. Massive strips INT, removes HL from the right (counted as lost), +1 with no armor left; Shock at ⌈½ max HL⌉ of levels this hit took; At Zero / Death Mark while Dying. F23 opened. → **superseded in part by 100, 112 and 143**
 - **100** *(Loadout & recovery — combat plan Session 4)* — Catalog pickers with Add/Buy, one worn piece per slot, upgrades by slot and quality; weapon lines (attack = skill check, ACC apart, `BOD+X` resolved). Wear, repair, Rest, Focused Healing (the only way back for Massive levels and Injured), Turn Reset (ticks aren't hits: no armor, no Shock). Stand-in armor gone. F24 opened. → **superseded in part by 104 and 105**
-- **104** *(Natural Armor — combat plan cleanup)* — One derived value from `grants` on advantages, Major Milestones and specializations; conditional sources (Iron Shirt, a waning moon) shown, never summed, asked for on a hit. How it answers a hit is the F25 stub. Print's Nat column fills. `migrate()` drops junk held entries. → **superseded in part by 143**
+- **104** *(Natural Armor — combat plan cleanup)* — One derived value from `grants` on advantages, Major Milestones and specializations; conditional sources (Iron Shirt, a waning moon) shown, never summed, asked for on a hit. How it answers a hit is the F25 stub. Print's Nat column fills. `migrate()` drops junk held entries. → **superseded in part by 143** → **superseded in part by 196**
 - **105** *(Nanomed Kit — CQ12)* — 0540's list is the master: clears Agonized, Bleeding, Paralyzed, Poisoned and stabilizes the Dying; proposes floor(BOD / dose) HP; a third kind in `heal()`.
 - **103** *(Deighton's TOL ruling)* — TOL = 1 + INT/BOD/COOL mods (floor 1), was INT/COOL/EMP; WILL and SAN unchanged. Data only; the CRB's rewritten example is pinned in `rules.test.mjs`. → **superseded in part by 109**
 - **96** *(Conditions — the numbers)* — Pain = HL band + Condition Pain, clamped 0–3; a flat Condition penalty lands on every Skill Check; attack/defense and conditional penalties are shown, never summed. → **superseded in part by 107 and 110**
@@ -249,11 +249,14 @@ The generic archetype structure, and the pick that defines one.
 - **77** *(Batch 3)* — One selection system, three hosts.
 - **78** *(Batch 3)* — The mechanical picks are the app's business; the fiction is the table's.
 - **79** *(A3 — closes A1 and A2)* — One specialization model, and the count comes from the data.
-- **126** *(Option powers — B17)* — `starterPower`/`additionalPowers` render from the data; an array of plain objects on a power is a table; no text means "not written yet".
+- **126** *(Option powers — B17)* — `starterPower`/`additionalPowers` render from the data; an array of plain objects on a power is a table; no text means "not written yet". → **superseded in part by 196**
 - **134** *(Audit S3 — B12–B14)* — Focused Skills are data (`ids`, a category `choose`, an `all` price), read by one generic reader; the Focused cap and the IP prices are numbers the engine reads.
 - **153** *(Custom archetype — schema 0.16)* — An archetype with `writeIn` is written by the player (`archetypeChoices.writeIn`, `powers`); a panel's `when` follows a ticked mechanic; `archetypeContent` is the one reader; `addPower` takes an optional IP cost; Other classification; "off the books" badge. → **superseded in part by 154, 194**
 - **154** *(Powers in play — custom archetype feedback)* — A power reads as written; **Improve** rewrites it for a required IP cost (`improvePower`), Add power costs IP too, Admin edits and adds free; Notes stay free. → **superseded in part by 194**
 - **194** *(Powers with ranks — W71, crb-v4-sync P2)* — schema 0.18: every power has a rank; a Discipline's is start + CP + IP, a written power's 1 + IP (`progression.powerIpe`). **Raise a Power** on Progression at rank × 20, a new one 40 (`0450`); written caps are creation caps, play stops at 10; Add power in play costs the new-power price.
+- **195** *(Werewolf form — crb-v4-sync P3, VQ11)* — A toggle option carries what being in it does; shifted, skills, Health Levels and weapon damage read +2 REF, +2 MOB, +4 BOD, WILL/TOL/prices/caps don't; Claws and Fangs on Main; Feral Mind bars TECH skills; a Forge Fang's shift writes 1 HL of Withering, priced in the form entered; Main has the switch.
+- **196** *(The Werewolf to 0414 — crb-v4-sync P3, VQ10, VQ12–VQ15)* — Every Innate power and the Origin's at rank 1 + IP (F38 stubbed); the book's max 3 binds creation only, play stops at 10 (VQ14, may be revisited); three Origins with features, starter powers (tables are reference) and withdrawal; Call of the Wild a stepper; EMP the Forge Fang's; Resilient Spirit retired. Majors are P3b.
+- **197** *(Werewolf Focus Stats — crb-v4-sync P3)* — The Werewolf's bonus goes on BOD, REF, MOB and can pass 10; `migrate()` moves a saved Stat Bonus across.
 
 ### Character file & migration
 
@@ -275,7 +278,7 @@ The saved `.shadows.json`: shape, versions, upgrades.
 - **146** *(Ghost TAG reads — W31)* — an Advantage held with `tagReads` labels the TAG and says what it is; Ghost TAG does, and Black TAG is the same counterfeit. The number never moves. → **superseded in part by 148**
 - **148** *(TAGless — W41)* — `identity.tagless` (schema 0.14) is picked on the Identity step and in Admin; `tagReading` labels the TAG "Off grid" from the data's `tag`, a Ghost TAG's label wins and its tip says both. → **superseded in part by 155**
 - **155** *(A TAGless number — W41)* — `tagNumber` drops the TAG- prefix for a TAGless character wherever the number shows; a Ghost TAG keeps it; `meta.id` never changes.
-- **143** *(Warding by kind — W28)* — Elemental, Spirit and Aether replace the Magical damage type, each with its own Warding upgrade; Gear's one Warding is retired and still answers all three where installed; Self-mending is text.
+- **143** *(Warding by kind — W28)* — Elemental, Spirit and Aether replace the Magical damage type, each with its own Warding upgrade; Gear's one Warding is retired and still answers all three where installed; Self-mending is text. → **superseded in part by 196**
 
 ### Engine contracts
 
