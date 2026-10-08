@@ -3398,9 +3398,6 @@ window.SHADOWS_DATA = {
     "soakedIntegrityLoss": 1,
     "soakedNote": "A hit the armor stops completely still costs it 1 Integrity.",
     "scrapNote": "Armor driven to 0 Integrity by Massive damage is scrap. It can't be repaired.",
-    "flagged": true,
-    "flagNote": "F38 -- does scrap armor still stop its PROT? Armor taken to 0 Integrity by Massive damage is scrap and can't be repaired, but 053 never says whether it still stops damage. Ken leans 'it should stop working'. Stubbed as today: a scrapped piece loses its RES (as a Compromised one does) and still stops its PROT, on the sheet and on an encounter row. mitigateArmor is untouched.",
-    "playerNote": "Whether scrap armor still stops its PROT is still being settled. For now it does, and only its RES stops working.",
     /* Loadout & recovery (combat plan Session 4, Decision 100). Upgrades take
        one mod slot each and need the armor's quality to be at least the
        upgrade's `minQuality`, ranked by `qualityOrder`; an upgrade marked

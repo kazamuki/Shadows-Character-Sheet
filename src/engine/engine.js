@@ -4381,7 +4381,7 @@ const Engine = (() => {
     const arm = encounterArmor(_rowBlock(t, r));
     const res = resolveHit(s, Object.assign({}, hit, { protRoll:arm.stops ? arm.stops.prot : undefined, natural:undefined }));
     if (!res.ok) return res;
-    return Object.assign(res, { armor:Object.assign({}, res.armor, arm, { scrapped:!!(s.armor[0] && s.armor[0].scrapped) }), from:_str(_isObj(hit) ? hit.from : "").trim() });
+    return Object.assign(res, { armor:Object.assign({}, res.armor, arm), from:_str(_isObj(hit) ? hit.from : "").trim() });
   }
   // The one writer. Re-resolves first, so a row that changed under an open panel is read as it is
   // now; nothing is written on a refusal. `choices` is applyHit's, and an unanswered prompt adds

@@ -138,7 +138,7 @@ TQ1–TQ3), and **W29's plan** (`plans/gm-mode.md`, GQ1–GQ21; Scott answered t
 
 **Waiting on others:**
 - **Deighton:** one grouped question — F23, F24, F25, F26, F28–F31, F33, F34 and F36 — plus
-  W39's two halves; with **Scott**, F37 (can CRANK rep go below zero?) and F38 (does scrap armor still stop its PROT?). Each flag's stub and question are in `SCHEMA.md` §5.
+  W39's two halves; with **Scott**, F37 (can CRANK rep go below zero?). Each flag's stub and question are in `SCHEMA.md` §5.
 - **Scott:** the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab), and whether the four inscribed Cantrips are TN 8 (the Book of Known Spells) or keep TN 7 (Magic). His TOL rewrite is in 020 and 040.
 
 **Ken's CRB fixes are a plan now: `plans/crb-catch-up.md`** — the sheet checked

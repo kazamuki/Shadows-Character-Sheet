@@ -147,7 +147,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
 | `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
 | `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
-| `F38` | Does scrap armor still stop its PROT? Stubbed: it does, and only its RES stops working | Scott/Deighton |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).

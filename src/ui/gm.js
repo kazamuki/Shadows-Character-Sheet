@@ -1249,7 +1249,6 @@ function encHitLiveHtml(d, r){
   const body = res.ok
     ? `<p class="enc-preview" data-ehit-preview>${esc(encHitPreview(res, pc))}</p>
        ${!pc && res.armor && res.armor.piece ? `<p class="enc-armor enc-armor-extra">${esc(D.armorRules.enemyText)}</p>` : ""}
-       ${!pc && res.armor && res.armor.piece && res.armor.scrapped && D.armorRules.flagged && D.armorRules.playerNote ? `<p class="enc-armor enc-armor-extra">${esc(D.armorRules.playerNote)}</p>` : ""}
        ${(res.notes||[]).map(n=>`<p class="enc-armor enc-armor-extra">${esc(n)}</p>`).join("")}${encPromptHtml(d, res, pc)}`
     : `<p class="enc-preview enc-refusal" data-ehit-preview>${esc(res.why)}</p>`;
   return `<div data-ehit-live>${body}${d.err ? `<p class="enc-err" role="alert">${esc(d.err)}</p>` : ""}
