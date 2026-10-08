@@ -2450,7 +2450,7 @@ test("every tag in the data reads out, bar the few no glossary defines (Decision
   assert.deepEqual(bare, [...BARE].sort());
 });
 
-test("a flagged tag reads as something a player can use, not a note to us (F28–F31)", () => {
+test("a flagged tag reads as something a player can use, not a note to us (F30–F31)", () => {
   for (const g of [...D.weaponTagGlossary, ...D.weaponFeatureGlossary, ...D.spellTagGlossary].filter(g => g.flagged)) {
     assert.ok(g.playerNote, `${g.id}: flagged with no playerNote`);
     assert.doesNotMatch(g.description, /flagNote|Undefined|CRB|Deighton|\bF\d+\b/, `${g.id}: the description is maintainer text`);

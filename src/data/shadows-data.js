@@ -2281,12 +2281,10 @@ window.SHADOWS_DATA = {
               "description": "Real mastery comes from understanding all your options and using what you have available to the best of your ability.",
               "benefits": [
                 "Once per encounter, apply a +1d4 kicker die to a number of skills up to your INT bonus. Once assigned, the bonus can't be reassigned for the remainder of that encounter.",
-                "All skills are treated as Focused Skills and may be improved at 3 x current rank up to rank 4. At Rank 5 and above, the standard cost of 5 x current rank returns."
+                "All skills are treated as Focused Skills and may be improved at 3 x current rank up to rank 4. From rank 5 on, the standard 5 x current rank applies.",
+                "Master of None doesn't raise any skill's starting rank past your Campaign Power Level's Max Skill Rank."
               ]
-            },
-            "flagged": true,
-            "flagNote": "F33. Master of None: 'All skills are treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4.' Unclear whether 'treated as Focused' also gives every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7), and whether Skill Paragon's 'a focused skill from your chosen Profession' can be any skill for a Jack. Stub: the price only, through rank 4 (Ken, 2026-09-24: 4 to 5 is normal cost); no cap bonus. Confirm with Deighton.",
-            "playerNote": "Every skill advances at the Focused price up to rank 4. Whether it also raises every skill's starting cap is still being settled. For now it doesn't."
+            }
           },
           {
             "id": "mercenary",
@@ -2401,7 +2399,7 @@ window.SHADOWS_DATA = {
       "name": "Vampire",
       "status": "tbd",
       "flagged": true,
-      "flagNote": "F7: WIP contains narrative only - no Campaign Power Scaling, Baseline Traits, Specialization (Bloodline), Core Mechanic, or Powers yet.",
+      "flagNote": "F7: WIP contains narrative only - no Campaign Power Scaling, Baseline Traits, Specialization (Bloodline), Core Mechanic, or Powers yet. (0413_Vampire, 2026-10-07, now writes all of it: crb-v4-sync P4.) F39: how a Vampire's Base Powers (2/3/4/5) are spent across Innate and Bloodline powers: is one Base Power one rank, none above Max Starting Rank? Deighton/Scott.",
       "primaryStats": [
         "BOD",
         "REF",
@@ -2444,7 +2442,7 @@ window.SHADOWS_DATA = {
       "name": "Werewolf",
       "status": "draft",
       "flagged": true,
-      "flagNote": "F7: Trueborn origin is partially complete (powers list trails off: Moonlit Vitality, Ancestral Wisdom, Spirit Pack, Ancestral Dominance are name-only). Other Origins (Unblooded, Forge Fang) referenced in lore but not defined.",
+      "flagNote": "F7: Trueborn origin is partially complete (powers list trails off: Moonlit Vitality, Ancestral Wisdom, Spirit Pack, Ancestral Dominance are name-only). Other Origins (Unblooded, Forge Fang) referenced in lore but not defined. (0414_Werewolf, 2026-10-07, now writes all three, Unblooded as Wildblood: crb-v4-sync P3.) F38: a Werewolf carries every Innate and Origin power at Rank 1, so what do the table's Base Powers (1/2/2/3) buy? Extra ranks up to Max Starting Rank (1/1/2/2)? Deighton/Scott.",
       "primaryStats": [
         "BOD",
         "REF",
@@ -3221,8 +3219,8 @@ window.SHADOWS_DATA = {
     { "id": "Volatile", "description": "Experimental or hybrid systems carry a risk of malfunction. On a botched attack roll, roll on the Volatile Misfire table (1: no effect; 2-3: jam, one Action to clear; 4: misfire, 5 damage ignoring armor, then jams)." },
     { "id": "Wither Cloud (Lycanthropes)", "description": "Creates a zone of particulate matter converting all damage dealt to lycanthropes and their kindred within the area into Withering damage for the duration. Non-supernatural targets are unaffected by the cloud itself." },
     { "id": "Withering", "description": "Damage of this type cannot be regenerated supernaturally -- it must heal at the natural rate regardless of the target's normal recovery. The damage amount is not necessarily greater; the permanence is." },
-    { "id": "Suppression", "flagged": true, "flagNote": "F28: Appears on the Titan and Ironwall heavy weapons. No formal rule is given anywhere in the CRB v4 equipment chapter -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "Found on heavy weapons built for sustained fire.", "playerNote": "The book doesn't say what Suppression does in a fight yet. Until it does, your GM rules on it." },
-    { "id": "Blast", "flagged": true, "flagNote": "F29: Appears (with a radius parameter) on several heavy/beam weapons alongside or instead of Area/Siege. The equipment chapter never states how Blast differs mechanically from Area or Siege -- confirm with Deighton before the engine batch treats it as more than flavor.", "description": "An explosive burst with a radius, printed beside or instead of Area and Siege.", "playerNote": "The book doesn't say yet how Blast differs from Area or Siege. Until it does, your GM rules on it." },
+    { "id": "Suppression", "description": "Sustained fire across an area rather than at a target. Declare the zone: until the start of the firer's next turn, that ground is Difficult Terrain. No attack roll and no damage; the rounds are aimed at the space, not at anyone in it. Whether a target gets hit is a matter of cover and line of sight, as ever. What it costs them is the ability to get anywhere useful." },
+    { "id": "Blast", "description": "The weapon detonates at a point and catches everything within the radius: allies, enemies, bystanders and objects alike. The attack is made against the place, at Difficulty 10. Everyone caught Scrambles on a REF Essence Check at TN 8, TH 2, and the Threshold rises by one for every five meters of radius beyond the first five. Damage is the same for all of them; the Scramble decides what it costs. A lobbed blast needs no line of sight and reaches a target in Full Cover. A cone starts at the wielder and reaches only what the wielder can see." },
     { "id": "Anti-Materiel", "flagged": true, "flagNote": "F30: Appears on the VR-50 'Verdict'. The vehicle-combat rules (same chapter) say weapons with the Anti-Materiel, Siege, or Blast tags deal full damage to vehicles, but no rule defines an Anti-Materiel effect against personal targets -- confirm with Deighton.", "description": "Deals full damage to vehicles (per the vehicle-combat rules); no separate personal-combat effect is defined yet.", "playerNote": "What it does to a person isn't written yet. Your GM rules on it." },
     { "id": "Reach", "flagged": true, "flagNote": "F31: Appears as a weapon Tag on the Razorwhip and Orion MW-1 'Filament', distinct from the Reach column both weapons already carry. The equipment chapter never explains what the tag adds beyond the column value -- confirm with Deighton.", "description": "The weapon reaches as far as its Reach column says.", "playerNote": "What the tag adds beyond that number isn't written yet. Your GM rules on it." }
   ],

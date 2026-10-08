@@ -140,15 +140,14 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F24` | Ongoing damage while Dying at a Reset: one Death Mark per ticking source standing in for the check (stub), or the check plus a mark per source | Deighton |
 | `F25` | How Natural Armor answers a hit: stubbed as flat, after PROT and RES, anywhere, Kinetic unless Warded, ignores AP, skipped by Massive | Deighton |
 | `F26` | Does a shotgun count as a rifle for the Scope and the Angel Mod? Stubbed: no | Deighton |
-| `F28` | Suppression (weapon tag): no rule anywhere in the CRB | Deighton |
-| `F29` | Blast (weapon tag): how it differs from Area and Siege | Deighton |
 | `F30` | Anti-Materiel (weapon tag): what it does to a person | Deighton |
 | `F31` | Reach (weapon tag): what it adds to the Reach column | Deighton |
 | `F32` | Arcanist Major Milestones: bring in REF_CRB's, or wait for 0411? | Ken |
-| `F33` | Jack of All Trades: does "treated as Focused" raise every skill's starting cap, and open Skill Paragon to any skill? Stubbed: the price only | Deighton |
 | `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
 | `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
 | `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
+| `F38` | What a Werewolf's Base Powers buy, when it carries every power at Rank 1 | Deighton/Scott |
+| `F39` | How a Vampire spends Base Powers across Innate and Bloodline powers | Deighton/Scott |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).

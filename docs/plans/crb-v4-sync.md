@@ -1,6 +1,6 @@
 # Plan — CRB v4 sync: the sheet catches up to the 2026-10-07 mirror
 
-**Status:** open, Ken's. P0 is in this branch; P1 onward wait for Ken's yes, and some for the answers in §4.
+**Status:** open, Ken's. P0 is done; P2 (W71) is being built. Ken answered §4 on 2026-10-08.
 **Compiled:** 2026-10-08, against the mirror at `private/` `cea99a8` (the 2026-10-07 re-mirror under the
 four-digit numbers, merged with S10c's Codex fix), game data 0.29 and app 0.37.0.
 **The other direction:** `crb-catch-up.md` is what the *book* still needs from the sheet. This plan is what
@@ -52,11 +52,11 @@ Each pass is a branch and a PR. They're ordered by what unblocks what, not by si
 | Pass | What | Tier | Waits on |
 |---|---|---|---|
 | **P0** | The mirror moves: `private/` to `cea99a8`, live citations to four-digit names, R13/R14/CRANK read the new files, the four spell fields | Docs + Fix | Nothing. **This branch** |
-| **P1** | Small content: Long-Lived's "ranks stack" and Ghost TAG's Black TAG line in their descriptions; the grenade table's 1x / 2x+ and Defense as catalog text; Blast's rule in the tag glossary; F33 closed if VQ2 says so | Content | VQ2, VQ8, VQ9 |
-| **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | Ken's yes on the proposal; VQ5 for the supernatural cap |
-| **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 if the book stops saying "Under Construction" | Rule or shape | P2, VQ3, VQ5 |
-| **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2, VQ4, VQ5 |
-| **P5** | **Advancement to `0450`**: IP by the hour, the new IP purchases (Advantages, buy-offs, SAN, Health Levels), the new Minor Milestones and repeats, Training | Rule or shape | VQ7, and 0450's own open questions (AD-02, AD-03) |
+| **P1** | Small content: the rolled Stat Point pool as an opt-in (VQ1); Long-Lived's "ranks stack" and Ghost TAG's Black TAG line in their descriptions; the grenade table's 1x / 2x+ and Defense as catalog text; the grenades as printed (VQ8) | Content | Nothing. F28, F29 and F33 closed already, with W71 |
+| **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | Nothing: Ken said yes 2026-10-08. **In progress** |
+| **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 if the book stops saying "Under Construction" | Rule or shape | P2; F38 (stubbed if open) |
+| **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2; F39 (stubbed if open) |
+| **P5** | **Advancement to `0450`**: IP by the hour, the new IP purchases (Advantages, buy-offs, SAN, Health Levels), the new Minor Milestones and repeats, Training | Rule or shape | 0450's own open questions (AD-02, AD-03) for the prices; the repeat rule (VQ7) can go now |
 
 **P0 fixed, beyond the rename:** R14 now reads a trailing `\` as pandoc's hard line break (the
 2026-10-07 pull prints one on some entries) and accepts a spell with no Threshold or Overflow
@@ -80,17 +80,20 @@ one from `0450`. P2 is the proposal Ken signs off before anything is built.
 
 ## 4. Questions
 
-| Id | Question | For |
+All nine went to Ken on 2026-10-08. Answers are in the second column; two parts went on to
+Deighton and Scott as flags.
+
+| Id | Question | Answer |
 |---|---|---|
-| **VQ1** | `0400` prints only the flat Stat Point pool. The sheet still offers the rolled pool (5 below + 1d10) as the GM's pick, which Ken asked for in Decision 150. Keep it, and write it into `0400`? | Ken |
-| **VQ2** | `0412` now says "Master of None does not raise your starting rank max from campaign power level." That is F33's question, and the sheet already behaves that way (the stub). Is the note Deighton's ruling, so F33 closes? | Ken (Deighton) |
-| **VQ3** | The Werewolf "carries the whole kit": every Innate and Origin power at Rank 1. Then what do the table's **Base Powers** (1 / 2 / 2 / 3) buy: extra ranks to place, up to Max Starting Rank (1 / 1 / 2 / 2)? | Ken (Deighton) |
-| **VQ4** | The Vampire spends Base Powers (2 / 3 / 4 / 5) on Innate and Bloodline powers. Is one Base Power one rank, so a Street Vampire has two ranks across any powers, none above 1? And Cursed Evolution's second bloodline is "bought with IP": at `0450`'s New Power price? | Ken (Deighton) |
-| **VQ5** | How do the archetype's power maximum (Werewolf 3, Vampire 5), its Max Starting Rank, and the Campaign Power Level's **Max Power Rank** (2 / 3 / 4 / 5) fit together? Proposed: the archetype's Max Starting Rank caps creation, its printed maximum caps play, and the Power Level's Max Power Rank goes on capping only Disciplines. `0450`'s "Supernatural ceilings" open question is the same one | Ken (Deighton) |
-| **VQ6** | `0420` prints Max Skill Rank **6** for World Coming Down; the sheet has **7** (Decision 150, Deighton's table). Shadows moved from 5 to 6 in the book, so it looks like WCD was missed. Is it 7? (`crb-catch-up.md` has the book edit) | Ken |
-| **VQ7** | `0450`'s Minor Milestone values are marked "rebalanced proposals" in its own Open Questions, and they now repeat freely (the sheet's Decision 29 waits until each is taken once). Build P5's Milestones now, or when 0450's questions close? IP at 5 an hour is canon (AR-09) and can go ahead either way | Ken |
-| **VQ8** | The grenade table's **1x / 2x+** column escalates the Thunderclap and the Junk Bomb to **Injured**, which only Massive damage causes (CQ5). `crb-catch-up.md` already asks this; P1 shows the column as printed until it's answered. Fine? | Ken (Deighton) |
-| **VQ9** | `0460` now defines **Blast** and (per the Exceptions List's GR-05) **Suppression**. Those are F29 and F28, Deighton's flags. Are the book's definitions his ruling, so both close? | Ken (Deighton) |
+| **VQ1** | `0400` prints only the flat Stat Point pool. The sheet still offers the rolled pool (5 below + 1d10) as the GM's pick (Decision 150). Keep it? | **Keep it, as an option.** The CRB goes with flat; rolled is there for a GM who wants it, perhaps as a tickbox in the creator rather than an equal choice. P1 looks at the Power Level step's control |
+| **VQ2** | `0412` says "Master of None does not raise your starting rank max". Does F33 close? | **Yes. F33 closed.** The sheet already behaved this way; the stub became the rule and the benefit says so |
+| **VQ3** | What do a Werewolf's **Base Powers** (1 / 2 / 2 / 3) buy, when it carries every power at Rank 1? | **Open: F38**, for Deighton and Scott. P3 stubs it |
+| **VQ4** | Is one Vampire Base Power one rank? Is Cursed Evolution's second bloodline the New Power price? | **New Power price, yes.** The Base Powers half is **open: F39**, for Deighton and Scott. P4 stubs it |
+| **VQ5** | How do the archetype's power maximum, its Max Starting Rank and the Power Level's Max Power Rank fit together? | **Every written cap is a creation cap.** In play a power stops at **10**, as stats and skills do (IPE). That may change for supernaturals (`0450`'s open question), so the cap is data |
+| **VQ6** | WCD's Max Skill Rank: the book's 6 or Decision 150's 7? | **7.** The book is behind; `crb-catch-up.md` carries the edit |
+| **VQ7** | `0450`'s Minor Milestones: build now, and do they repeat? | **Any Minor Milestone, any time.** Each one reached lets you pick any of them; you don't have to take them all before repeating. That supersedes Decision 29 in part, in P5 |
+| **VQ8** | Grenades' 1x / 2x+ column escalates to Injured without Massive (CQ5). Show it as printed? | **Yes**, as printed |
+| **VQ9** | Do the book's Blast and Suppression close F28 and F29? | **Yes, closed for now.** Playtests may reopen them |
 
 **For the book, not the sheet** (noted here because the diff found them): `0422_Utility_Skills.md`
 carries the sixteen General skills after the Utility ones, so they print twice across `0422` and

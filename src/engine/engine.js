@@ -1561,7 +1561,7 @@ const Engine = (() => {
   }
   // The skills that are Focused by name: the specialization's own plus valid
   // picks. An `all` rule (Jack of All Trades) is a price, not a list, and is
-  // read by focusedPrice() alone (F33).
+  // read by focusedPrice() alone: it raises no starting cap (0412, F33 closed).
   function focusedSkillIds(ch){
     const f = focusedSkillSpec(ch);
     if (!f) return [];

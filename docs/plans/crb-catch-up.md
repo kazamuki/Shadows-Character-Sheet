@@ -55,7 +55,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 ## 0420–0423: Skills
 
-- ☐ ⚖ **Skills › Campaign Power Level table.** *(10-07: Skill Points and Shadows are in; **World Coming Down still prints Max Skill Rank 6**, where Decision 150 has 7.)* This whole table moved in Decision 150:
+- ☐ ⚖ **Skills › Campaign Power Level table.** *(10-07: Skill Points and Shadows are in; **World Coming Down still prints Max Skill Rank 6**, where Decision 150 has 7; Ken confirmed 7, VQ6.)* This whole table moved in Decision 150:
 
   | Power Level | Skill Points (book now → should be) | Max Skill Rank (book now → should be) |
   |---|---|---|

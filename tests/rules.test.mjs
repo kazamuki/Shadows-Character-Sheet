@@ -988,7 +988,7 @@ test('CRB 0412, Master of None: "3 x current skill rank up to rank 4. From rank 
   assert.equal(cost(5), 25);
   delete ch.skills.stealth;
   assert.equal(Engine.ipCost(ch, "skill", "stealth").cost, D.ip.skillIncreaseCost.newSkill, "Decision 97's flat price for a new skill");
-  // F33: the price only. No starting-cap bonus until Deighton rules.
+  // F33, closed 2026-10-08: 0412 says Master of None raises no starting cap.
   assert.equal(Engine.skillRankCap(ch, "stealth"), D.powerLevels.find(p => p.id === "heroic").maxSkillRank);
 });
 
