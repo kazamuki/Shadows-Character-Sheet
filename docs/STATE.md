@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-10-07
-**Versions:** app `0.37.0` · game data `0.29` · character schema `0.17` · table schema `0.7` · pack schema `0.2` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-10-08
+**Versions:** app `0.37.1` · game data `0.29` · character schema `0.17` · table schema `0.7` · pack schema `0.2` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -101,11 +101,11 @@ is the authority on a flag's full text.
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton, one grouped question:** F23 + F25 (the same RES-class question), F24, F26 (is a shotgun a rifle for mods?), **F28–F31**, **F34** (does a magazine swapped out keep its rounds?), **F36** (is damage past zero kept for healing?), the Suppression, Blast, Anti-Materiel and Reach weapon tags, and **F33** (does Jack of All Trades' Master of None raise every skill's starting cap?). All stubbed; none blocks anything. MD1/2/3 ratings (Design, small) |
 | **Custom archetype & classification** — `plans/custom-archetype.md` | ✅ S1–S5 built (Decisions 152–153, F13 closed), XQ1–XQ6 on their defaults (XQ5's badge reads "off the books") · copy voice-passed · released in v0.33.0 · Ken's playtest feedback built and released in v0.34.0 (Decisions 154–156) | Nobody. W48–W55 are its follow-ons |
 | **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed · LUCK starts at 4 and a power rank costs 5 CP (Decision 157, W37 granted) | Nobody |
-| **Milestones & doc reconciliation** — F9, F12, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 041 (hidden until then, AQ4) |
+| **Milestones & doc reconciliation** — F9, F12, F32 | ⏭ ready | Ken alone. F32: bring REF_CRB's Arcanist Majors in, or wait for 0411 (hidden until then, AQ4) |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ **cut as an archetype** (team meetings, late 2026-09): cybernetics become a list and a mini-game, Professionals only; Arcanists, Vampires and Werewolves can't take them · data still `status: "tbd"` | Design: the cybernetics list and mini-game. Then the app retires `cyborg` (Rule or shape: a numbered decision, and `migrate()` for any saved Cyborg), closes F6 and F19, and moves Installed Cybernetics to the Professional. W61 proposes folding a saved Cyborg into Custom |
-| **Vampire** — F7 (Vampire half) | ⏸ blocked · `status: "tbd"` | Design. Blood Pool/SFR direction proposed 2026-09-10, not locked |
-| **Werewolf** — F7 (Werewolf half) | 🔶 mostly stable · `status: "draft"` | Design, low urgency — predator's-mark rework proposed, not locked; three Origins and four Trueborn powers unwritten |
+| **Vampire** — F7 (Vampire half) | 📋 **the book wrote it** (`0413_Vampire`, 2026-10-07): Bloodlines, The Thirst, ranked powers · data still `status: "tbd"` | Ken: VQ4, VQ5. Then `crb-v4-sync.md` P4, after P2 |
+| **Werewolf** — F7 (Werewolf half) | 📋 **the book rewrote it** (`0414_Werewolf`, 2026-10-07): three Origins, Werewolf Form, Call of the Wild, ranked powers · data still the old draft | Ken: VQ3, VQ5. Then `crb-v4-sync.md` P3, after P2 |
 | **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · catalog matches the whole 2026-09-24 book, Inscribed Spells included (Decision 136) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
@@ -145,12 +145,19 @@ TQ1–TQ3), and **W29's plan** (`plans/gm-mode.md`, GQ1–GQ21; Scott answered t
 against every CRB v4 chapter on 2026-10-01, item by item, with the file and
 heading each one goes under, what's already done in the book, the questions
 that block text, and every Cyborg mention to cut. The app follows the answer
-in every ⚖ item. It also lists where the book is now ahead of the sheet:
-045 Advancement (5 IP an hour, new Minor Milestones and IP prices), Gear's
-Suppression and Blast rules (F28, F29), and two spells.
+in every ⚖ item. It was re-ticked against the 2026-10-07 mirror.
+
+**The book is ahead of the sheet: `plans/crb-v4-sync.md`.** Ken and Scott
+renumbered the CRB to four digits (`054` is now `0540`; the mapping is in
+`log/2026.md`, 2026-10-08) and wrote a lot. P0, the rename and four spell
+fields, is in v0.37.1. Next is **P2, W71: every power has a rank and
+Progression raises one with IP** (`0450`: rank × 20, a new power 40), which
+the Werewolf (P3) and Vampire (P4) passes fill. VQ1–VQ9 are Ken's, some for
+Deighton through him. W69 (gear modifiers while worn) and W70 (a custom item
+folds when done) are new on the wishlist.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
-follow `041` (Decision 110), and Ken expects the Origins subtypes to replace
+follow `0411` (Decision 110), and Ken expects the Origins subtypes to replace
 them.
 
 ---

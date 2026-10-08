@@ -926,7 +926,7 @@ function gearUseHtml(ch, st, id, key){
   const on = st[key]==null ? true : !!st[key];
   return `<div class="hitrow"><label class="check"><input type="checkbox" data-act="${key}" ${on?"checked":""}> Use one you carry: ${esc(def.name)} (${c.qty} left)</label></div>`;
 }
-// A Nanomed Kit (Decision 105): clears 054's list and Dying on its own, and
+// A Nanomed Kit (Decision 105): clears 0540's list and Dying on its own, and
 // proposes the regeneration for the dose. The player can lower the number.
 function nanomedPanelHtml(ch, st){
   const inp=actInput(ch, st), kit=Engine.nanomedKit(ch, st.dose), hs=Engine.hlState(ch);
@@ -1553,7 +1553,7 @@ function gearRowsHtml(ch){
 }
 // W16: the magazine, where a weapon line is drawn (Loadout and Main). One
 // button per rate of fire the weapon has, each spending that mode's rounds
-// (053), and Reload. A weapon whose capacity doesn't read shows it as text.
+// (0530), and Reload. A weapon whose capacity doesn't read shows it as text.
 function roundsHtml(l, capacityText){
   const r=l.rounds;
   if (!r) return esc(capacityText||"—");

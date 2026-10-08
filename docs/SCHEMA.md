@@ -357,7 +357,7 @@ window.SHADOWS_DATA = {
   },
 
   // ── Gear: weapons, ammunition, armor (0.6) ────────────────
-  // Merged from the CRB v4 equipment chapter (private/crb/Gear.md).
+  // Merged from the CRB v4 equipment chapter (private/crb/0460_Gear.md).
   // One flat `weapons` array with a `category` discriminator, same shape as
   // `skills` — a new weapon needs zero app changes. Tags/Features are stored
   // as the exact strings the book prints (including any "(Xm)" parameter)
@@ -491,7 +491,7 @@ window.SHADOWS_DATA = {
   },
 
   // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
-  // Merged from private/crb/Magic.md. Origins (Book/Blood/Bound) are
+  // Merged from private/crb/0480_Magic.md. Origins (Book/Blood/Bound) are
   // deliberately NOT here — that's the Arcanist subtype question, still
   // blocked on the archetype four-way comparison (STATE.md §3). Everything
   // below applies to any caster regardless of subtype.
@@ -536,7 +536,7 @@ window.SHADOWS_DATA = {
   ],
 
   // ── Cascade and Aberrations (0.11, Decision 106) ─────────────────────
-  // Magic.md's two tables and Appendix_Aberrations.md's lists. Rows are
+  // 0480_Magic.md's two tables and Appendix_Aberrations.md's lists. Rows are
   // ranges on a die the player rolls and enters; `Engine.cascade()` looks
   // them up. `max: null` is open-ended. The Cascade Table starts at 3: a
   // Cascade's Rupture is degree 2 or more, since casting needs TOL above 0.
@@ -4219,17 +4219,17 @@ here are in `log/archive.md`.
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 | F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and to Elemental, Spirit and Aether (a Warding each, Decision 143), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
-| F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
+| F24 | **Ongoing damage while Dying, at a Reset** — 0540 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 | F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
 | F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both | Deighton | No |
 | F28 | **Suppression (weapon tag).** On the Titan and the Ironwall. The CRB v4 equipment chapter gives it no rule. Carried as a tag with no effect | Deighton | No |
 | F29 | **Blast (weapon tag).** On several heavy and beam weapons, with a radius, beside or instead of Area and Siege. How it differs from them is never stated. Carried as a tag with no effect | Deighton | No |
 | F30 | **Anti-Materiel (weapon tag).** On the VR-50 'Verdict'. The vehicle rules give it full damage against vehicles; nothing says what it does to a person | Deighton | No |
 | F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated | Deighton | No |
-| F32 | **Arcanist Major Milestones.** 041's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 041? `growth` stays hidden until then (AQ4) | Ken | No |
+| F32 | **Arcanist Major Milestones.** 0411's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 0411? `growth` stays hidden until then (AQ4) | Ken | No |
 | F33 | **Jack of All Trades: how far does "treated as Focused" go?** Master of None says all skills are "treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4". Does that also give every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7)? And can Skill Paragon's "a focused skill from your chosen Profession" be any skill for a Jack? Stubbed (Decision 134): the price only, for ranks bought up to 4 (4 → 5 is standard, Ken); no cap bonus | Deighton | No |
-| F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 053 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
-| F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 054 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
+| F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 0530 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
+| F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 0540 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 
 F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.

@@ -77,7 +77,7 @@ test("validate returns issues for every step once the wizard's gates are met", (
 });
 
 // Decision 152: a classification says which Advantages are open. Mortal buys
-// all; Supernatural only those carrying 043's Universal tag.
+// all; Supernatural only those carrying 0430's Universal tag.
 test("every archetype names a classification the data defines, or the player picks one", () => {
   const ids = D.classifications.map(c => c.id);
   // Decision 153: a write-in archetype names none; the character's pick is its classification.
@@ -1090,7 +1090,7 @@ test("the Conditions catalog is well-formed: unique ids, typed hooks, real locat
       if (k in c) assert.equal(typeof c[k], "number", `${c.id}.${k}`);
     if (c.counter) assert.ok(c.counter.max > 0 && c.counter.label, `${c.id}.counter`);
   }
-  // Every row of 054's table, plus Dying (plan CQ9).
+  // Every row of 0540's table, plus Dying (plan CQ9).
   assert.equal(D.conditions.length, 20);
   assert.ok(D.bodyLocations.length >= 6);
 });
@@ -1620,9 +1620,9 @@ test("Resilient Spirit (Waning Moon) lets Natural Armor answer magical damage wh
   assert.equal(hit(["resilient-spirit"]).through, 3);
 });
 
-// ── Nanomed Kit (Decision 105, CQ12: 054's list) ──────────────────────
+// ── Nanomed Kit (Decision 105, CQ12: 0540's list) ──────────────────────
 
-test("a Nanomed Kit clears 054's four, stabilizes the Dying, and proposes BOD / dose", () => {
+test("a Nanomed Kit clears 0540's four, stabilizes the Dying, and proposes BOD / dose", () => {
   const ch = subject({ bod: 7 });
   ch.trackers.damage = 20;
   ch.trackers.conditions = [{ id: "bleeding" }, { id: "injured", location: "left-arm" },
@@ -1654,7 +1654,7 @@ test("the Cascade and Aberration tables have no gaps or overlaps, and every cate
     assert.ok(cats.has(r[k]), `${k} ${r.min}-${r.max} → "${r[k]}" isn't a category`);
     assert.ok(D.aberrations.some(a => a.category === r[k]), `nothing to pick in "${r[k]}"`);
   }
-  // "treat a Good result as Neutral" (Magic.md) — the permanent column never says good.
+  // "treat a Good result as Neutral" (0480_Magic.md) — the permanent column never says good.
   assert.ok(!ab.some(r => r.permanent === "good"), "a permanent Aberration can come out Good");
   const perm = rows.filter(r => r.aberration).map(r => r.aberration).sort();
   same(perm, ["permanent", "temporary"]);
@@ -2102,7 +2102,7 @@ test("W16: a capacity reads as its rounds, chambered one included; one that does
   assert.equal(rounds("the-preacher"), 2);            // "2"
   assert.equal(rounds("combat-knife"), null);         // no capacity
   const modes = Engine.weaponLine(armed("ts7-bulldog"), 0).fireModes.map(f => `${f.id}${f.rounds}`);
-  assert.deepEqual([...modes], ["S1", "B3", "F10"], "053: Single 1, Burst 3, Full Auto 10");
+  assert.deepEqual([...modes], ["S1", "B3", "F10"], "0530: Single 1, Burst 3, Full Auto 10");
 });
 
 test("W16: firing spends the mode's rounds, refuses what the magazine can't pay or the weapon can't do, and Reload fills it", () => {

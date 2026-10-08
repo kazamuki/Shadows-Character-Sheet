@@ -23,6 +23,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.37.1
+
+- **Four spells read as the book now prints them.** Counterspell is Instant,
+  Silence lasts while you concentrate and its first Overflow adds a round, and
+  Consecrate no longer mentions cyborgs.
+
 ## v0.37.0 — 2026-10-06
 
 - **CRANK rep.** Your standing on the city's job board now sits beside

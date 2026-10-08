@@ -90,7 +90,7 @@ const Engine = (() => {
   const advById    = id => D().advantages.find(a=>a.id===id);
   const disById    = id => D().disadvantages.find(d=>d.id===id);
   // Decision 152: what kind of being the archetype is, and so which Advantages
-  // it may buy: "all", or "universal" (only those carrying 043's Universal
+  // it may buy: "all", or "universal" (only those carrying 0430's Universal
   // tag). No archetype, or none named, gates nothing. A write-in archetype
   // (Decision 153) has none of its own: the character's pick is its classification.
   const writeInSpec = ch => { const a = archetype(ch); return a && a.writeIn && typeof a.writeIn==="object" ? a.writeIn : null; };
@@ -557,7 +557,7 @@ const Engine = (() => {
   }
 
   // Pain Level = the band for Health Levels lost, plus any Condition Pain
-  // (Agonized), clamped to the table — "never below 0 or above 3" (054).
+  // (Agonized), clamped to the table — "never below 0 or above 3" (0540).
   function painState(ch){
     const hl = D().resources.healthLevels;
     const hs = hlState(ch);
@@ -711,7 +711,7 @@ const Engine = (() => {
     return { aimed, location: rd ? rd.to : aimed, redirectedBy: rd };
   }
 
-  // 053 Massive: skips PROT and RES; strips INT equal to the damage; 1 HL per
+  // 0530 Massive: skips PROT and RES; strips INT equal to the damage; 1 HL per
   // 10; +1 if the armor ends at 0 or there was none. Ending at 0 is scrap.
   function mitigateBypass(damage, armor, covered){
     const M = (D().damageRules||{}).massive || {};
@@ -723,7 +723,7 @@ const Engine = (() => {
              scrap: covered && damage>0 && gone };
   }
 
-  // 053 regular: PROT (the die rolled) + RES if the type matches and the hit
+  // 0530 regular: PROT (the die rolled) + RES if the type matches and the hit
   // isn't AP and the armor isn't Compromised/scrap. Fully soaked costs INT.
   function mitigateArmor(damage, type, hit, armor, covered){
     let prot = 0, res = 0, resSkipped = null;
@@ -762,9 +762,9 @@ const Engine = (() => {
     return out;
   }
 
-  // 054's consequences of taking damage, hit or not: At Zero, and the Death
+  // 0540's consequences of taking damage, hit or not: At Zero, and the Death
   // Mark while Dying. Turn Reset's ongoing damage shares this. Shock doesn't:
-  // 054 asks it of "a single hit", and a Bleeding tick isn't one.
+  // 0540 asks it of "a single hit", and a Bleeding tick isn't one.
   function isDying(ch){
     const dyingId = ((D().damageRules||{}).whileDying||{}).condition;
     return !!dyingId && (((ch||{}).trackers||{}).conditions||[]).some(e=>e && e.id===dyingId);
@@ -911,7 +911,7 @@ const Engine = (() => {
     return { ok:true, value:n };
   }
 
-  // "BOD+3" is "calculated by adding the BOD score to the bonus" (053): BOD 5
+  // "BOD+3" is "calculated by adding the BOD score to the bonus" (0530): BOD 5
   // does 8. A number is fixed damage; anything else ("6/round") stays text.
   function weaponDamage(ch, d){
     if (typeof d==="number") return { value:d, formula:null };
@@ -923,7 +923,7 @@ const Engine = (() => {
 
   // Everything a player reads off the sheet to make an attack with a catalog
   // weapon. The attack total is the skill's, so Pain and Conditions are in it;
-  // ACC is apart because only Single fire adds it (053). A custom weapon is
+  // ACC is apart because only Single fire adds it (0530). A custom weapon is
   // whatever was typed, so there's nothing to compute.
   function weaponLine(ch, index){
     const e = listOf(ch, "weapons")[index];
@@ -1040,7 +1040,7 @@ const Engine = (() => {
   // sheet it's refused, saying so, unless the player reloads anyway (`anyway`),
   // which the result marks so the audit can say it was. W40: with more than
   // one kind carried it asks which (`choose`, answered with `opts.ammo`), and
-  // a full weapon reloads only to swap kinds (053). What was left in the
+  // a full weapon reloads only to swap kinds (0530). What was left in the
   // magazine isn't kept (F34's stub).
   function reloadWeapon(ch, index, opts){
     const e = weaponEntry(ch, index), l = e && weaponLine(ch, index);
@@ -1339,7 +1339,7 @@ const Engine = (() => {
     return { ok:true };
   }
 
-  // The after-fight wear roll (053): the die is the GM's call by difficulty,
+  // The after-fight wear roll (0530): the die is the GM's call by difficulty,
   // and the roll comes off the top of Integrity. It can leave armor
   // Compromised, never scrap -- only Massive does that. A feature with an
   // `afterEncounter` roll (Self-Healing) is asked for in the same action.
@@ -1374,7 +1374,7 @@ const Engine = (() => {
              before:p.integrity, after:p.integrityMax - loss };
   }
   // Repair: a Field Repair Kit (the player's roll on `repairKitDie`) or an
-  // armorer (all of it). Scrap can't be repaired (053).
+  // armorer (all of it). Scrap can't be repaired (0530).
   function repairArmor(ch, index, input){
     input = input || {};
     const e = listOf(ch, "armor")[index];
@@ -1393,7 +1393,7 @@ const Engine = (() => {
     return { ok:true, name:p.name, restored, after:p.integrityMax - e.integrityLoss };
   }
 
-  // Natural Healing (055): BOD per day of real rest. The engine proposes the
+  // Natural Healing (0550): BOD per day of real rest. The engine proposes the
   // number; the GM may halve it for pushing on, so the player can change it.
   function naturalHealing(ch){
     const N = ((D().recoveryRules||{}).naturalHealing) || {};
@@ -1407,7 +1407,7 @@ const Engine = (() => {
   // also clear the Conditions `recoveryRules.focusedHealing.clears` names
   // (Injured), by index, and restore Massive levels (CQ6: with a replacement).
   // Withering is trimmed to the damage left, as every lowering of it is.
-  // A Nanomed Kit (Decision 105, 054's list): dose n inside a day regenerates
+  // A Nanomed Kit (Decision 105, 0540's list): dose n inside a day regenerates
   // 1 HP every n rounds for BOD rounds, so it proposes floor(BOD / n). The
   // player can change the number: a fight that ends early stops it.
   function nanomedKit(ch, dose){
@@ -1449,7 +1449,7 @@ const Engine = (() => {
   // Condition with `ongoing` damage ticks -- a fixed amount (Bleeding) or the
   // number entered for its source (Burning, Shocked). The damage goes straight
   // onto the total: it isn't a hit, so armor and Shock don't come into it
-  // (054 asks Shock of "a single hit"), but At Zero and Dying do. `input`:
+  // (0540 asks Shock of "a single hit"), but At Zero and Dying do. `input`:
   //   { sources: { [condition index]: hp } }
   // Every Condition's recovery is listed as text; no check is run.
   function resolveReset(ch, input){
@@ -1580,7 +1580,7 @@ const Engine = (() => {
     const f = focusedSkillSpec(ch);
     return !!(f && f.all && toRank <= (Number(f.all.throughRank)||0));
   }
-  // The most a skill can start at. 042: the Power Level's Max Skill Rank caps
+  // The most a skill can start at. 0420: the Power Level's Max Skill Rank caps
   // starting rank only, so this is a creation rule; play is capped by
   // ip.rankCap. A Focused Skill adds the scaling row's focusedSkillMaxBonus.
   function skillRankCap(ch, skillId){
@@ -1997,7 +1997,7 @@ const Engine = (() => {
     const t = th===undefined ? s && s.th : th;
     return typeof t==="number" && t>=1 && M.ipPerTH ? M.ipPerTH * t : null;
   }
-  // The dice a live cast rolls: the named Discipline's rank (Magic.md, Step 2).
+  // The dice a live cast rolls: the named Discipline's rank (0480_Magic.md, Step 2).
   // A TH above it can still be cast, but only an exploding 10 reaches it
   // (Ken, Decision 111). Concentration's held dice are the table's to count.
   function castingPool(ch){
@@ -3930,7 +3930,7 @@ const Engine = (() => {
     // Schema 0.7 (Decision 193): the member an entry row was kept as. A link, with the name it had.
     const kept = _castLinks([r.kept])[0];
     r.kept = r.kind==="entry" && kept ? kept : null;
-    // Hit at all, by the armor or the body: whoever was rolls for wear after the fight (053). Never cleared by Heal.
+    // Hit at all, by the armor or the body: whoever was rolls for wear after the fight (0530). Never cleared by Heal.
     r.struck = r.struck===true;
     r.order = _int(r.order);
     r.last = r.last===true;
@@ -4405,7 +4405,7 @@ const Engine = (() => {
   // damage, Massive levels and Conditions, wearing the Gear catalog's piece the
   // block names. Nothing in the sheet's pipeline changes. A PC row takes what got
   // through, after the player's own armor, on the GM's own numbers.
-  // Enemy armor is static (053): PROT is the die's average, rounded up.
+  // Enemy armor is static (0530): PROT is the die's average, rounded up.
   const _staticProt = piece => {
     const max = piece ? dieMax(piece.prot) : null;
     return max ? Math.ceil((max + 1) / 2) : null;

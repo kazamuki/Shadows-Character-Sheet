@@ -1409,7 +1409,7 @@ test("W42: Main's Heal 1 · Hurt 1 · Take a hit row is the popover's own contro
   assert.equal(app.window.document.activeElement, app.$('#main [data-vpop="hp"]'), "a greyed Heal 1 handed focus to Hurt 1");
 
   // At zero, Main's Hurt 1 greys out and says why (Decision 151): a raw Hurt
-  // would skip 054's At Zero WILL check, which Take a hit asks. The
+  // would skip 0540's At Zero WILL check, which Take a hit asks. The
   // popover's stepper stays a raw correction, with no ceiling.
   const total = Engine.health(activeChar(app)).total;
   assert.ok(!app.$("#main .vital-verbs-note"), "the at-zero note shows above zero");

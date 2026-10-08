@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.37.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Four spells read as the book now prints them.** Counterspell is Instant, Silence lasts while you concentrate and its first Overflow adds a round, and Consecrate no longer mentions cyborgs."
+    ]
+  },
+  {
     "version": "0.37.0",
     "date": "2026-10-06",
     "intro": [],

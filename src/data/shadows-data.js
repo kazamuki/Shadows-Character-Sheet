@@ -1047,7 +1047,7 @@ window.SHADOWS_DATA = {
   ],
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
-     marks 043's Universal Advantages, the only ones a classification with
+     marks 0430's Universal Advantages, the only ones a classification with
      `advantages: "universal"` may buy (Decision 152; see CLASSIFICATIONS).
      Multi-rank scaling lives in the prose `description`. Professional "natural" advantages are
      stored on the character as normal entries with source:"natural" at 0 CP
@@ -2910,7 +2910,7 @@ window.SHADOWS_DATA = {
               ]
             ]
           },
-          // F11, closed by Decision 113: 041 now reads "Intuition skill at
+          // F11, closed by Decision 113: 0412 now reads "Intuition skill at
           // least Rank 1". It had said "Intuition Advantage", which no entry is.
           "skills": {
             "all": [
@@ -3180,7 +3180,7 @@ window.SHADOWS_DATA = {
     "ipeNote": "Track IP Enhancement (IPE) per stat/skill/advantage/power on the character sheet."
   },
   /* GEAR -- weapons, ammunition and armor, merged from the CRB v4 equipment
-     chapter (`private/crb/Gear.md`, mirrored 2026-09-04, re-confirmed
+     chapter (`private/crb/0460_Gear.md`, first mirrored as `Gear.md` 2026-09-04, re-confirmed
      2026-09-12). Batch "Weapons, Ammo & Armor" (2026-09). Same designer-
      fillable philosophy as skills/advantages: a new weapon or armor entry
      needs zero app changes.
@@ -3257,7 +3257,7 @@ window.SHADOWS_DATA = {
     { "id": "Angel Mod", "slots": 2, "damageBonus": 4, "grantsTags": ["AP", "Burning", "Agonized"], "firesOnly": ["angel-rounds"], "onlyFor": { "categories": ["handguns", "smgs", "urbanRifles", "sniperRifles"] }, "flagged": true, "flagNote": "F26. The Angel Mod fires Angel Rounds only, and the ammunition table lists Angel Rounds for 'Handgun, Rifle, SMG'. So it fits handguns, SMGs and rifles; whether shotguns count as rifles is the same question as the Scope's. Stub: not shotguns. Confirm with Deighton.", "playerNote": "Whether an Angel Mod fits a shotgun is still being settled. For now it goes on handguns, SMGs and rifles.", "description": "Plasma-coated projectile system requiring a powered magazine and Angel Rounds. Grants +4 DMG, AP, Burning, and Agonized on every hit. On a botched attack roll, roll 1d100: 50 or below jams, 51+ destroys the weapon. Ammunition/cleaning/magazine costs 5x standard. Requires specialist installation." }
   ],
 
-  /* Rate of fire and the magazine (W16, Decision 120). 053: "Ammunition is
+  /* Rate of fire and the magazine (W16, Decision 120). 0530: "Ammunition is
      spent by mode" -- Single 1 round, Burst 3, Full Auto 10. A weapon's
      `capacity` ("15+1", "100 (belt)", "10 bursts") is read for its leading
      number plus any chambered "+N"; one the engine can't read isn't tracked. */
@@ -3673,10 +3673,10 @@ window.SHADOWS_DATA = {
   ],
 
   /* CONDITIONS -- one entry per row of the Conditions table in
-     `054_Conditions_and_Recovery.md`, plus Dying (054 treats it as a Condition
+     `0540_Conditions_and_Recovery.md`, plus Dying (0540 treats it as a Condition
      in prose and recovery but gives it no table row -- plan CQ9, a CRB doc fix).
-     Gear's older Conditions table disagrees with 054 in five places (plan CQ8);
-     054 is the one this follows. `effect`/`recovery` are display text; `short`
+     Gear's older Conditions table disagrees with 0540 in five places (plan CQ8);
+     0540 is the one this follows. `effect`/`recovery` are display text; `short`
      is the chip label. The engine computes ONLY the structured hooks below, and
      everything else stays text on the chip (Decision 95):
        painLevels        adds to Pain Level before the 0-3 clamp (Agonized)
@@ -3727,7 +3727,7 @@ window.SHADOWS_DATA = {
      `bypassesArmor` (skip PROT/RES, strip Integrity, remove Health Levels by
      `damageRules.massive`), `recordsWithering` (what gets through can't
      regenerate), `inflicts` (Conditions the category adds to the type's --
-     Injured/Maimed only on Massive, CQ5). `damageRules` holds 053/054's
+     Injured/Maimed only on Massive, CQ5). `damageRules` holds 0530/0540's
      Massive, Shock, At Zero and Dying numbers. */
   "damageTypes": [
     { "id": "blade",     "name": "Blade",     "resClass": "kinetic", "inflicts": ["bleeding"] },
@@ -3775,17 +3775,17 @@ window.SHADOWS_DATA = {
       "resetCheck": "WILL Essence Check TN 8 TH 2",
       "resetText": "You're Dying. Make the check at every Reset, and Pain doesn't apply to it. Fail and it's a Death Mark. Pass and you've bought the round, nothing more.",
       "flagged": true,
-      "flagNote": "F24 -- 054 says any damage while Dying is 'an automatic failure and a mark', and that ongoing damage ticking is 'another mark'. At a Reset where Bleeding or Burning ticks, is that one mark (the check fails automatically) or the check plus a mark per source? Stubbed: each ticking source is one mark and stands in for the check, which isn't asked.",
+      "flagNote": "F24 -- 0540 says any damage while Dying is 'an automatic failure and a mark', and that ongoing damage ticking is 'another mark'. At a Reset where Bleeding or Burning ticks, is that one mark (the check fails automatically) or the check plus a mark per source? Stubbed: each ticking source is one mark and stands in for the check, which isn't asked.",
       "playerNote": "How ongoing damage and the Dying check add up at a Reset is still being settled. For now each source that ticks is one Death Mark, and it takes the place of the check."
     }
   },
 
-  /* RECOVERY -- Natural and Focused Healing from 055 Downtime and 054's
+  /* RECOVERY -- Natural and Focused Healing from 0550 Downtime and 0540's
      "Getting Back on your Feet" (combat plan Session 4, Decision 100). The
      app never rolls and never decides a GM's call: Natural Healing proposes
      BOD per day and the player can change the number (the GM may halve it for
      pushing on); Focused Healing takes what the care restored. `clears` are
-     the Conditions Focused Healing ends (055 says Injured needs it; 054's
+     the Conditions Focused Healing ends (0550 says Injured needs it; 0540's
      table also allows a week of downtime -- plan CQ13, a CRB doc fix). Massive levels come back only
      here, and only with a replacement (Decision 98, CQ6). */
   "recoveryRules": {
@@ -3800,7 +3800,7 @@ window.SHADOWS_DATA = {
       "text": "Med kits, chems, nanites, or real care in a clinic. How much comes back depends on the care. It also clears Injured.",
       "massiveText": "A Health Level lost to Massive damage comes back with Focused Healing and a replacement: a prosthetic, or something stranger."
     },
-    /* 054 "With Çredits" is the master list (Decision 105, CQ12): Gear's
+    /* 0540 "With Çredits" is the master list (Decision 105, CQ12): Gear's
        entry leaves out Paralyzed. Regeneration is 1 HP every `dose` rounds
        for `roundsStat` rounds, so dose n proposes floor(BOD / n) HP. */
     "nanomed": {
@@ -3889,7 +3889,7 @@ window.SHADOWS_DATA = {
       "helpless": true, "counter": { "max": 3, "label": "Death Marks", "atMax": "Three Death Marks. You're dead, and your options are seriously limited." } }
   ],
 
-  /* MAGIC -- merged from the CRB v4 Magic chapter (private/crb/Magic.md),
+  /* MAGIC -- merged from the CRB v4 Magic chapter (private/crb/0480_Magic.md),
      the archetype-INDEPENDENT half only (Decision 93). `domains` is the Glyph
      taxonomy; `spells` is the full Known-spell catalog (id + tier + domain +
      glyph + TN/TH/range/type/target/effect/duration/defending/overflow/tags);
@@ -3973,7 +3973,7 @@ window.SHADOWS_DATA = {
       "copiedCold": "From a library find or someone else's grimoire: 1 hour per Threshold working through the notation, then a Spellcraft roll (Evocation rank only) against the spell's own TN/TH. Manifest: the spell is Known. Fizzle: the hours are gone, try again. Rupture: the entry looks correct and isn't -- found out on the next cast. (Book Arcanists get a free second attempt on a Fizzle via Between the Lines -- archetype content, not encoded here.)"
     }
   },
-  /* Cascade and Aberrations (Decision 106) -- merged from Magic.md's Cascade
+  /* Cascade and Aberrations (Decision 106) -- merged from 0480_Magic.md's Cascade
      Table and Aberration Table and Appendix_Aberrations.md's three lists,
      2026-09-23. Rows are ranges on a physical roll the player enters; the
      engine looks them up (`Engine.cascade`) and never rolls (Decision 11).
@@ -4158,7 +4158,7 @@ window.SHADOWS_DATA = {
     { "id": "rewrite-memory", "name": "Rewrite Memory", "tier": "standard", "domain": "mind", "glyph": "Memory", "tn": 8, "th": 2, "range": "Touch", "spellType": "utility", "damageType": "spirit", "target": "1 person within reach", "effect": "Alters a brief, recent memory", "duration": "Permanent", "defending": "WILL Essence", "overflow": { "1x": "Clarity of the implanted memory improves, or the window altered extends.", "2x+": "Both, or corroborating detail is implanted alongside it." }, "flavorLine": "A few minutes rewritten, a face swapped out. It holds under casual recall and frays under pressure. The target almost always knows something happened, even when they cannot say what. Sovereign Soul applies." },
     { "id": "fumble", "name": "Fumble", "tier": "standard", "domain": "mind", "glyph": ["Compulsion", "Telekinesis"], "tn": 8, "th": 2, "range": "Short", "spellType": "offensive", "target": "1 person", "effect": "Target is Disarmed", "duration": "Instant", "defending": "REF Essence", "overflow": { "1x": "The dropped item lands 2m away.", "2x+": "The item lands away from them, and the target is Prone reaching for it." }, "flavorLine": "Their grip decides, briefly, that it belongs to someone else." },
     { "id": "cleanse", "name": "Cleanse", "tier": "standard", "domain": "soul", "glyph": "Vitality", "tn": 8, "th": 2, "range": "Touch", "spellType": "utility", "target": "1 person within reach", "effect": "Removes Bleeding, Blinded, Deafened, Disoriented, Frightened, or Poisoned", "duration": "Instant", "defending": "WILL Essence, if unwilling", "overflow": { "1x": "A second condition is removed.", "2x+": "A second condition is removed, and the target resists reacquiring it this scene." }, "flavorLine": "An affliction drawn out and dispersed. Does not reach what the body has already accepted as permanent. Sovereign Soul applies." },
-    { "id": "counterspell", "name": "Counterspell", "tier": "standard", "domain": "soul", "glyph": "Decay", "tn": 8, "th": null, "range": "Short", "spellType": "utility", "target": "1 creature charging a spell, within line of sight", "effect": "If successful, the spell is dispersed and the caster loses their progress.","defending": "Opposed Spellcraft (Evocation) check", "overflow": null, "notes": "Has no Threshold and no Overflow.", "flavorLine": "You attempt to unravel the Aether another caster is still gathering. Nothing about a charged spell wants to hold together, and you're helping to rip it apart." },
+    { "id": "counterspell", "name": "Counterspell", "tier": "standard", "domain": "soul", "glyph": "Decay", "tn": 8, "th": null, "range": "Short", "spellType": "utility", "target": "1 creature charging a spell, within line of sight", "effect": "If successful, the spell is dispersed and the caster loses their progress.", "duration": "Instant", "defending": "Opposed Spellcraft (Evocation) check", "overflow": null, "notes": "Has no Threshold and no Overflow.", "flavorLine": "You attempt to unravel the Aether another caster is still gathering. Nothing about a charged spell wants to hold together, and you're helping to rip it apart." },
     { "id": "decay-burst", "name": "Decay Burst", "tier": "standard", "domain": "soul", "glyph": "Decay", "tn": 8, "th": 2, "range": "Short", "spellType": "offensive", "damageType": "spirit", "target": "1 person's worn or carried gear", "effect": "Strips SP Integrity from armor or equipment", "duration": "Until repaired", "defending": "BOD Essence", "overflow": { "1x": "Integrity stripped increases by ½ SP, or a second item is affected.", "2x+": "Both, or the affected item is destroyed outright." }, "sp": { "effect": { "times": 1 }, "overflow": { "1x": { "adds": 0.5 } } }, "flavorLine": "Decay accelerated through cloth, plate, and casing alike. The Aether does not respect material science." },
     { "id": "soul-anchor", "name": "Soul Anchor", "tier": "standard", "domain": "soul", "glyph": "Binding", "tn": 8, "th": 2, "range": "Touch", "spellType": "utility", "target": "1 person within reach", "effect": "Prevents astral travel, possession, or departure at death", "duration": "WILL hours", "defending": "WILL Essence, if unwilling", "overflow": { "1x": "Duration extends significantly.", "2x+": "Duration extends, and a second anchor point is established." }, "flavorLine": "A significant working with significant implications, and one that should be entered into deliberately. Sovereign Soul applies." },
     { "id": "spirit-ward", "name": "Spirit Ward", "tier": "standard", "domain": "soul", "glyph": "Spirit", "tn": 8, "th": 2, "range": "Self / Touch", "spellType": "defensive", "target": "Self or 1 ally within reach", "effect": "Absorbs SP × 2 Spirit damage; resists possession and compulsion", "duration": "1 round", "defending": "None", "overflow": { "1x": "Absorbed damage increases by ½ SP.", "2x+": "Absorbed damage increases, and the ward holds an additional round." }, "sp": { "effect": { "times": 2 }, "overflow": { "1x": { "adds": 0.5 } } }, "flavorLine": "A spirit anchored against intrusion. Does not stop physical harm. Stops the other thing." },
@@ -4190,9 +4190,9 @@ window.SHADOWS_DATA = {
     { "id": "mirror-image", "name": "Mirror Image", "tier": "advanced", "domain": "mind", "glyph": "Illusion", "tn": 8, "th": 3, "range": "Self", "spellType": "defensive", "target": "Self", "effect": "1-3 illusory duplicates; attacks may strike a duplicate instead", "duration": "Concentration", "defending": "INT Essence to identify the original", "overflow": { "1x": "One additional duplicate.", "2x+": "Additional duplicates, and they act independently for 1 round." }, "tags": ["Concentration"], "flavorLine": "Duplicates moving in imperfect synchrony with the original. Each one dissipates when hit." },
     { "id": "invisicloak", "name": "Invisicloak", "tier": "advanced", "domain": "mind", "glyph": ["Illusion", "Barrier"], "tn": 8, "th": 3, "range": "Close", "spellType": "utility", "target": "An area, centered on a point within reach", "effect": "A dome of up to 3m radius, placed where it is cast. Anything inside is invisible from outside; vision from inside is unaffected", "duration": "Concentration", "defending": "INT Essence to notice the seam", "overflow": { "1x": "Extend the dome by up to 2m.", "2x+": "Extend the dome, and it moves with the caster rather than staying where it was placed." }, "tags": ["AOE", "Concentration"], "flavorLine": "A dome of shaped air that does not carry light out of itself. From outside there is nothing. From inside, everything is exactly where you left it." },
     { "id": "purge", "name": "Purge", "tier": "advanced", "domain": "soul", "glyph": "Vitality", "tn": 8, "th": 3, "range": "Touch", "spellType": "utility", "target": "1 person within reach", "effect": "Removes Agonized, Paralyzed, Restrained, Stunned, or DeSync", "duration": "Instant", "defending": "WILL Essence, if unwilling", "overflow": { "1x": "A second condition is removed.", "2x+": "All conditions from the Cleanse list are removed as well." }, "flavorLine": "A harder working than Cleanse, reaching what has set deeper. The Aether does not heal these so much as refuse them. Sovereign Soul applies." },
-    { "id": "silence", "name": "Silence", "tier": "advanced", "domain": "soul", "glyph": "Binding", "tn": 8, "th": 3, "range": "Short", "spellType": "offensive", "target": "1 person", "effect": "Target cannot speak or make vocal sound. They cannot cast.", "defending": "BOD Essence", "overflow": { "1x": "Duration extends by [X] rounds.", "2x+": "Duration extends, and the target is Disoriented." }, "tags": ["Concentration"], "flavorLine": "The vocal cords stop answering. Breath still moves, the jaw still works, and nothing at all comes out. It stops them from speaking. It does not stop them from shooting you." },
+    { "id": "silence", "name": "Silence", "tier": "advanced", "domain": "soul", "glyph": "Binding", "tn": 8, "th": 3, "range": "Short", "spellType": "offensive", "target": "1 person", "effect": "Target cannot speak or make vocal sound. They cannot cast.", "duration": "Concentration", "defending": "BOD Essence", "overflow": { "1x": "Duration extends by 1 round.", "2x+": "Duration extends, and the target is Disoriented." }, "tags": ["Concentration"], "flavorLine": "The vocal cords stop answering. Breath still moves, the jaw still works, and nothing at all comes out. It stops them from speaking. It does not stop them from shooting you." },
     { "id": "tether", "name": "Tether", "tier": "advanced", "domain": "soul", "glyph": "Binding", "tn": 8, "th": 3, "range": "Touch", "spellType": "utility", "target": "1 Dying person within reach", "effect": "Next Death check is an automatic success", "duration": "Until the next Reset", "defending": "None", "overflow": { "1x": "The automatic success covers the next two Resets.", "2x+": "Two Resets are covered, and the target stabilizes, ending Dying." }, "notes": "Cannot be cast twice on the same target in a scene -- the Aether will hold a thread, but it will not hold it twice.", "flavorLine": "It does not stabilize them and does not wake them. It buys one round. Sovereign Soul applies." },
-    { "id": "consecrate", "name": "Consecrate", "tier": "advanced", "domain": "soul", "glyph": ["Spirit", "Wrath"], "tn": 8, "th": 3, "range": "Touch", "spellType": "utility", "target": "1 weapon, or the caster's own hands", "effect": "The weapon gains the Withering (Holy) tag on the next successful attack. Holy affects vampires and things like them; werewolves, Arcanists, cyborgs and ordinary people feel nothing.", "duration": "Until your next attack", "defending": "None", "overflow": { "1x": "The tag applies to attacks for 1 round.", "2x+": "The tag applies for 2 rounds." }, "flavorLine": "Some things do not care about steel. They care about this." },
+    { "id": "consecrate", "name": "Consecrate", "tier": "advanced", "domain": "soul", "glyph": ["Spirit", "Wrath"], "tn": 8, "th": 3, "range": "Touch", "spellType": "utility", "target": "1 weapon, or the caster's own hands", "effect": "The weapon gains the Withering (Holy) tag on the next successful attack. Holy affects vampires and things like them; werewolves, Arcanists, and ordinary people feel nothing.", "duration": "Until your next attack", "defending": "None", "overflow": { "1x": "The tag applies to attacks for 1 round.", "2x+": "The tag applies for 2 rounds." }, "flavorLine": "Some things do not care about steel. They care about this." },
     { "id": "second-wind", "name": "Second Wind", "tier": "advanced", "domain": "soul", "glyph": ["Vitality", "Binding"], "tn": 8, "th": 3, "spellType": "utility", "disciplines": ["enchantment"], "target": "The bearer", "effect": "Washes away 1 point of accumulated strain, restoring 1 TOL", "duration": "Until triggered", "defending": "None", "overflow": { "1x": "Restores 2 TOL.", "2x+": "Restores 3 TOL." }, "tags": ["Ench."], "flavorLine": "Tolerance does not travel well, but it can be set down somewhere and picked up later. This is storage, not generation -- charging costs the usual 1 TOL per charge, so nobody profits by filling and emptying one. What it buys is timing, and generosity: the Arcanist who fills it need not be the one who uses it." },
     { "id": "consecration", "name": "Consecration", "tier": "advanced", "domain": "soul", "glyph": ["Spirit", "Wrath"], "tn": 8, "th": 3, "spellType": "utility", "disciplines": ["alchemy"], "target": "One weapon", "effect": "The weapon permanently gains the Withering (Holy) tag. Holy affects vampires and things like them; werewolves, Arcanists, cyborgs and ordinary people feel nothing.", "duration": "Permanent", "defending": "None", "overflow": { "1x": "Also functions against things that would normally ignore the tag.", "2x+": "The weapon is visibly marked, and things that should fear it do." }, "tags": ["Alch."], "flavorLine": "The weapon was always going to cut this way. Consecration does not add anything; it settles an argument the blade was already having." },
     { "id": "warding-spirit", "name": "Warding — Spirit", "tier": "advanced", "domain": "soul", "glyph": ["Binding", "Barrier"], "tn": 8, "th": 3, "spellType": "defensive", "disciplines": ["alchemy"], "target": "One suit of armor, Mid quality or better", "effect": "The armor's RES applies to Spirit damage. Occupies one mod slot.", "duration": "Permanent", "defending": "None", "overflow": { "1x": "RES against Spirit damage increases by 1.", "2x+": "RES against Spirit damage increases by 2." }, "tags": ["Alch."], "flavorLine": "The same working, pitched at something harder to argue with." },
