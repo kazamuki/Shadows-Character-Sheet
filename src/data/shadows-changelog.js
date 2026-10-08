@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.38.0",
-    "date": null,
+    "date": "2026-10-08",
     "intro": [],
     "items": [
       "**Raise your powers with IP.** Progression has a **Raise a Power** button beside Raise a Stat and Raise a Skill. A power's next rank costs 20 × its current rank, and learning a Discipline you've never trained costs 40. Every power you write yourself now has a rank too, shown on its card, starting at 1.",
