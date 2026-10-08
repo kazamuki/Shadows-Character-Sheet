@@ -53,9 +53,9 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.29",
+    "gamedataVersion": "0.30",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-09-30"
+    "updated": "2026-10-08"
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -3100,7 +3100,11 @@ window.SHADOWS_DATA = {
      Stat raise = `statIncreaseCost.perPoint` x the CURRENT value, so it
      scales as the stat grows (Decision 135). Skill raise = `perRank` x current rank, Focused
      skills `focusedPerRank` x current rank (Decision 134: numbers the engine
-     reads, not formula text). `rankCap` caps skills/powers at 10 via IP. WILL and TOL are
+     reads, not formula text). A power or Discipline raise is
+     `powerIncreaseCost.perRank` x current rank, and rank 0 -> 1 (a new power,
+     or a Discipline never trained) is a flat `newPower` (0450, Decision 194).
+     `rankCap` caps skills/powers at 10 via IP: every cap an archetype prints
+     is a creation cap (Ken, 2026-10-08). WILL and TOL are
      in `cannotRaiseDirectly` -- they only move via their input stats or manual
      adjustments. IPE = IP-purchased enhancement, tracked per target on the sheet.
      Learning a NEW skill after creation (rank 0 -> 1) is a flat
@@ -3149,12 +3153,12 @@ window.SHADOWS_DATA = {
     "writeInTraits": "What's always true of you, with no roll and no cost.",
     "writeInPowers": "What you can do that others can't, and what it burns. The ones you start with are free. If one changes a stat, log it in Adjustments once you're locked.",
     "writeInVulnerabilities": "What hurts you, holds you back or gives you away.",
-    "powerAddNote": "What you learn in NYTE City, you pay for; your GM names the price.",
+    "powerAddNote": "What you learn in NYTE City, you pay for: a new power costs {cost} IP and starts at rank 1.",
     "powerAddAdminNote": "Leave the cost blank to add it free, for a power creation missed.",
-    "powerImproveNote": "A power that grows costs IP; your GM names it. Rewrite what changed. Your notes stay yours.",
+    "powerImproveNote": "Rewording a power costs IP; your GM names it. Rewrite what changed. Its rank rises on Progression. Your notes stay yours.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
     "applyFromText": "Apply these from their text.",
-    "ranksAdvanceInPlay": "Ranks advance through play.",
+    "ranksAdvanceInPlay": "Ranks rise with IP, on Progression.",
     "lockIssued": "NYTE City knows your name now. {tag}. Your copy is {file}.",
     "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}."
   },
@@ -3168,6 +3172,10 @@ window.SHADOWS_DATA = {
       "perRank": 5,
       "focusedPerRank": 3,
       "newSkill": 25
+    },
+    "powerIncreaseCost": {
+      "perRank": 20,
+      "newPower": 40
     },
     "rankCap": 10,
     "statCapNote": "Stats are generally capped at 10 for Humans but may be increased via magical or mechanical enhancements, items, etc.",

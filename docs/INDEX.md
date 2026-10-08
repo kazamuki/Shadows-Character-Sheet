@@ -251,8 +251,9 @@ The generic archetype structure, and the pick that defines one.
 - **79** *(A3 — closes A1 and A2)* — One specialization model, and the count comes from the data.
 - **126** *(Option powers — B17)* — `starterPower`/`additionalPowers` render from the data; an array of plain objects on a power is a table; no text means "not written yet".
 - **134** *(Audit S3 — B12–B14)* — Focused Skills are data (`ids`, a category `choose`, an `all` price), read by one generic reader; the Focused cap and the IP prices are numbers the engine reads.
-- **153** *(Custom archetype — schema 0.16)* — An archetype with `writeIn` is written by the player (`archetypeChoices.writeIn`, `powers`); a panel's `when` follows a ticked mechanic; `archetypeContent` is the one reader; `addPower` takes an optional IP cost; Other classification; "off the books" badge. → **superseded in part by 154**
-- **154** *(Powers in play — custom archetype feedback)* — A power reads as written; **Improve** rewrites it for a required IP cost (`improvePower`), Add power costs IP too, Admin edits and adds free; Notes stay free.
+- **153** *(Custom archetype — schema 0.16)* — An archetype with `writeIn` is written by the player (`archetypeChoices.writeIn`, `powers`); a panel's `when` follows a ticked mechanic; `archetypeContent` is the one reader; `addPower` takes an optional IP cost; Other classification; "off the books" badge. → **superseded in part by 154, 194**
+- **154** *(Powers in play — custom archetype feedback)* — A power reads as written; **Improve** rewrites it for a required IP cost (`improvePower`), Add power costs IP too, Admin edits and adds free; Notes stay free. → **superseded in part by 194**
+- **194** *(Powers with ranks — W71, crb-v4-sync P2)* — schema 0.18: every power has a rank; a Discipline's is start + CP + IP, a written power's 1 + IP (`progression.powerIpe`). **Raise a Power** on Progression at rank × 20, a new one 40 (`0450`); written caps are creation caps, play stops at 10; Add power in play costs the new-power price.
 
 ### Character file & migration
 

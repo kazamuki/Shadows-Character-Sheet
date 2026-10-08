@@ -352,7 +352,8 @@ window.SHADOWS_DATA = {
   ip: {
     statIncreaseCost: { perPoint: 10, example: "..." },   // × current value: REF 6→7 = 60 IP (Decision 135)
     skillIncreaseCost: { perRank: 5, focusedPerRank: 3, newSkill: 25 },  // Decisions 97, 134
-    rankCap: 10,                      // skills & powers cap at 10 via IP
+    powerIncreaseCost: { perRank: 20, newPower: 40 },  // × current rank; rank 0 → 1 is newPower (0450, Decision 194)
+    rankCap: 10,                      // skills & powers cap at 10 via IP; an archetype's printed caps are creation caps
     cannotRaiseDirectly: ["WILL", "TOL"]
   },
 
@@ -621,7 +622,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.17",
+    schemaVersion: "0.18",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -808,10 +809,17 @@ It renders on the Character tab (Decision 158).
         // Spends update the target's IPE atomically and are undoable;
         // versionCheck flags IPE/journal divergence on import.
         // { date, kind, amount, targetType, targetId, from, to, note }
+        // (0.16) targetType "power" also carries `name`: a written power's
+        // Add or Improve has no from/to; a rank bought (0.18) has both.
       ]
     },
     milestonePoints: 0,              // manual MP only — session MP is computed
-    milestones: { minor: [ { id, date } ], major: [ { id, date } ] }
+    milestones: { minor: [ { id, date } ], major: [ { id, date } ] },
+    // (0.18, Decision 194) Ranks IP bought, per power id: a Discipline's data
+    // id or a written power's row id. A Discipline's rank is its starting rank
+    // + CP-bought + this; a written power's is 1 + this. Removing a written
+    // power drops its key. migrate() keeps only whole positive counts.
+    powerIpe: { evocation: 1, "pw-3k9x2qmd": 2 }
   },
 
   // (0.3) Logging a session grants ipEarned (default 10, overridable),
@@ -3674,7 +3682,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decision 15's statuses and 152's classifications.
      - **Revisit if:** powers need a catalog, a price or mechanical fields; Deighton rules on Magical being (W53); W48–W50 are wanted.
      - **Built:** schema 0.16, game data 0.27, app 0.33.0 (unreleased). Engine in S2; wizard, sheet and print in S3–S5. Log 2026-09-30 and 2026-10-01.
-     → **Superseded in part by Decision 154**: a power's text isn't editable in play; Improve and Add power cost IP outside Admin.
+     → **Superseded in part by Decisions 154 and 194**: a power's text isn't editable in play, and Improve and Add power cost IP outside Admin (154); a written power has a rank, 1 + what IP bought, which Progression raises (194).
 
 154. **In play a power reads as written: its words change by Improve, for IP, and Admin edits them free.**
      *2026-10-01 · Ken + Claude · Touches: powers, improvePower, addPower, powerCost, Improve, Add power, IP cost, IP journal, Admin mode, Loadout & Powers, notes, powerAddNote, powerAddAdminNote, powerImproveNote, custom archetype*
@@ -3688,6 +3696,8 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 153 in part: a power's text is no longer editable in play, and Add power's IP cost is required outside Admin.
      - **Revisit if:** powers gain a price list or ranks (Decision 153's Revisit), or a GM wants free rewording in play without Admin.
      - **Built:** app 0.34.0; `engine.test.mjs` and `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+     → **Superseded in part by Decision 194**: Add power in play costs `0450`'s new-power price, not the GM's; Improve is unchanged.
+
 
 155. **A TAGless character's number reads without its TAG- prefix; the stored number keeps it.**
      *2026-10-01 · Ken + Claude · Touches: tagNumber, tagReading, meta.id, TAG, TAGless, identity.tagless, Ghost TAG, counterfeit, intake, print header, Review, roster, replace guard, W41*
@@ -4194,6 +4204,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 177 in part: an eighth kind, `fought`, which an encounter's end writes.
      - **Revisit if:** GQ26 says wounds carry, S5's sessions give downtime, or a GM wants to keep someone after the fact.
      - **Built:** table schema 0.7, switched off (173); PR #130; log 2026-10-07 (the encounter's end).
+
+194. **Every power a character holds has a rank, and Progression raises it with IP at `0450`'s prices; a new power in play costs the book's flat price.**
+     *2026-10-08 · Ken + Claude · Touches: powerRanks, progression.powerIpe, disciplineRanks, ipCost, spendIP, ip.powerIncreaseCost, ip.rankCap, Max Power Rank, Raise a Power, IP journal, addPower, removePower, versionCheck, Disciplines, written power, character schema 0.18, W71, VQ5*
+     - **Decided:** A Discipline's rank is start + CP + IP; a written power's is 1 + IP. IP ranks live in `progression.powerIpe`, by power id. **Raise a Power** on Progression costs current rank × 20, and 40 for rank 1 in a Discipline never trained (`ip.powerIncreaseCost`). Printed caps are creation caps; play stops at IPE's 10. **Add power** in play costs the new-power price; Admin adds free. Improve is unchanged.
+     - **Why:** `0450` prices powers, and Ken asked that every power have a rank to raise. One map serves every kind, so the Werewolf and Vampire passes fill the same shape.
+     - **Rejected:**
+       - A rank on the written power's row: Disciplines have no row, so two places for one idea.
+       - Max Power Rank as the cap in play: Ken (VQ5), printed caps are creation caps.
+       - Add power at the GM's price: `0450` sets it; Admin covers a free one.
+       - Raise also rewording: Improve does that.
+       - CP ranks for a written power at creation: not asked for. It starts at 1, free (XQ2).
+     - **Replaces:** Decision 153 in part (a written power now has a rank); Decision 154 in part (Add power in play is the new-power price, not the GM's). Extends Decision 14's IP costs and 157's one price for every power.
+     - **Revisit if:** `0450`'s Supernatural ceilings pass 10, or the Werewolf's 3 and Vampire's 5 bind play.
+     - **Built:** app 0.38.0, game data 0.30, schema 0.18; tests mutation-tested. Log 2026-10-08 (W71).
 
 ## 5. Open Flags
 

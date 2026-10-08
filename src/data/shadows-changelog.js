@@ -2,10 +2,13 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.37.1",
+    "version": "0.38.0",
     "date": null,
     "intro": [],
     "items": [
+      "**Raise your powers with IP.** Progression has a **Raise a Power** button beside Raise a Stat and Raise a Skill. A power's next rank costs 20 × its current rank, and learning a Discipline you've never trained costs 40. Every power you write yourself now has a rank too, shown on its card, starting at 1.",
+      "**A new power costs 40 IP in play**, the book's price, instead of a price your GM names. Rewording a power is still your GM's call.",
+      "**Suppression and Blast say what they do.** Both weapon tags now carry the book's rules. Master of None says plainly that it doesn't raise a skill's starting cap.",
       "**Four spells read as the book now prints them.** Counterspell is Instant, Silence lasts while you concentrate and its first Overflow adds a round, and Consecrate no longer mentions cyborgs."
     ]
   },

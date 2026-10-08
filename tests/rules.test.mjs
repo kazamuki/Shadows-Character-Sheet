@@ -1133,3 +1133,26 @@ test("CRANK: the tier table and the +1 / -2 rules are the Workshop's (Decision 1
   assert.match(sect, /costs -2 rep/);
   assert.deepEqual([D.resources.crank.jobDone, D.resources.crank.jobWalkedOut], [1, -2]);
 });
+
+// ── Raising a power with IP (W71, Decision 194) ───────────────────────
+// Source: 0450_Advancement, *Spending Improvement Points*: "Power or
+// Discipline · Current rank × 20 · Evocation 3 → 4 costs 60", and "New Power ·
+// 40 · Rank 1 in a Power your archetype can learn".
+
+test('0450: a Power or Discipline costs "Current rank × 20" ("Evocation 3 → 4 costs 60"), and a New Power 40', () => {
+  const md = crb("0450_Advancement.md").replace(/\r/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+  const row = name => { const m = md.match(new RegExp(`${name} (.+?) (\S+ ?\S* ?→|Rank 1)`)); return m && m[1]; };
+  assert.match(row("Power or Discipline") || "", /Current rank × (\d+)/, "0450's Power or Discipline row moved");
+  assert.equal(Number(row("Power or Discipline").match(/× (\d+)/)[1]), D.ip.powerIncreaseCost.perRank);
+  assert.equal(Number((row("New Power") || "").trim()), D.ip.powerIncreaseCost.newPower, "0450's New Power price");
+  assert.match(md, /Evocation 3 → 4 costs 60/, "0450's worked example moved");
+
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  const evo = () => Engine.disciplineRanks(ch).find(d => d.id === "evocation");
+  ch.archetypeChoices.disciplines.evocation = 3 - evo().base;
+  assert.equal(evo().rank, 3);
+  const c = Engine.ipCost(ch, "power", "evocation");
+  assert.deepEqual([c.from, c.to, c.cost], [3, 4, 60], "the book's own example");
+  assert.equal(Engine.ipCost(ch, "power", "alchemy").cost, 40, "rank 1 in a Discipline never trained");
+});

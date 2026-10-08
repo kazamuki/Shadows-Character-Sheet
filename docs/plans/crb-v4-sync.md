@@ -1,6 +1,6 @@
 # Plan — CRB v4 sync: the sheet catches up to the 2026-10-07 mirror
 
-**Status:** open, Ken's. P0 is done; P2 (W71) is being built. Ken answered §4 on 2026-10-08.
+**Status:** open, Ken's. P0 and P2 (W71, Decision 194) are built. Ken answered §4 on 2026-10-08. Next: P3 or P1.
 **Compiled:** 2026-10-08, against the mirror at `private/` `cea99a8` (the 2026-10-07 re-mirror under the
 four-digit numbers, merged with S10c's Codex fix), game data 0.29 and app 0.37.0.
 **The other direction:** `crb-catch-up.md` is what the *book* still needs from the sheet. This plan is what
@@ -51,9 +51,9 @@ Each pass is a branch and a PR. They're ordered by what unblocks what, not by si
 
 | Pass | What | Tier | Waits on |
 |---|---|---|---|
-| **P0** | The mirror moves: `private/` to `cea99a8`, live citations to four-digit names, R13/R14/CRANK read the new files, the four spell fields | Docs + Fix | Nothing. **This branch** |
+| **P0** | The mirror moves: `private/` to `cea99a8`, live citations to four-digit names, R13/R14/CRANK read the new files, the four spell fields | Docs + Fix | ✅ **Built** 2026-10-08, app 0.37.1 (released with P2 as 0.38.0) |
 | **P1** | Small content: the rolled Stat Point pool as an opt-in (VQ1); Long-Lived's "ranks stack" and Ghost TAG's Black TAG line in their descriptions; the grenade table's 1x / 2x+ and Defense as catalog text; the grenades as printed (VQ8) | Content | Nothing. F28, F29 and F33 closed already, with W71 |
-| **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | Nothing: Ken said yes 2026-10-08. **In progress** |
+| **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | ✅ **Built** 2026-10-08: Decision 194, app 0.38.0, schema 0.18 |
 | **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 if the book stops saying "Under Construction" | Rule or shape | P2; F38 (stubbed if open) |
 | **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2; F39 (stubbed if open) |
 | **P5** | **Advancement to `0450`**: IP by the hour, the new IP purchases (Advantages, buy-offs, SAN, Health Levels), the new Minor Milestones and repeats, Training | Rule or shape | 0450's own open questions (AD-02, AD-03) for the prices; the repeat rule (VQ7) can go now |
