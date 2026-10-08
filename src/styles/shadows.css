@@ -1272,3 +1272,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-offered{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px 16px}
 .enc-offered li{display:inline-flex; align-items:center; gap:6px}
 .enc-check{display:inline-flex; align-items:center; gap:6px; min-height:36px}
+.enc-wrap textarea{width:100%; min-width:0; box-sizing:border-box}
+.enc-wrap select, .enc-wrap input[type=text]{max-width:100%; min-width:0}
+.enc-wrap .enc-condbtns{flex-wrap:wrap}
+.enc-kept{margin:4px 0; overflow-wrap:anywhere}

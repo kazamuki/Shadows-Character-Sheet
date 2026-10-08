@@ -650,7 +650,7 @@ Affiliation filter (origin and role stay in the search). **History** moves
 to a later session: S5 or S10, whichever first writes it (Ken, 2026-10-05).
 
 **Moved to S10:** **Keep** and **Promote** (a fought copy into the cast),
-with the fight they come from.
+with the fight they come from. **Keep and Promote are one verb, Keep** (S10c, Decision 193).
 
 ### S9 — The Threat Codex as a pack (split: S9a, S9b and S9c, all built)
 
@@ -698,6 +698,8 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 **Split (Ken, 2026-10-07).** **S10a is built** (`gm-mode/S10a-encounter.md`, Decisions 188–190): the encounter record, rows from the cast, the Codex and typed names, Order of Engagement, the round, Conditions with a source and rounds on every row, Reset's checklist, damage as HP on a row shown with Health Levels and Pain, ending an encounter, and Use's two verbs. **S10b** is next: a hit through the engine's pipeline (armor, Shock, Massive Damage) with an NPC adapter and armor numbers (GQ18), At Zero and Dying for NPCs, traits as reminders with their triggers, Keep and Promote at an encounter's end, a cast member's history line. Later: the Encounter Design worksheet, an encounter's clocks (S7), Surprise, Ambush and Delay. The list below is the whole of S10, as drafted.
 
 **S10b is built** (`gm-mode/S10b-hit.md`, Decisions 191–192, table schema 0.6, switched off): a hit on a row through the sheet's own pipeline, an NPC's on a stand-in wearing the Gear catalog's piece with static PROT, a PC's after their armor, Shock, At Zero and Dying's Death Mark offered and none forced, and the active row's traits a tap away. **S10c** is the encounter's end: Keep and Promote, the history line, the end-of-encounter wear roll, and anything Scott's use of S10a and S10b turns up. **Carried over from S10b's review:** the Codex pack builder should strip flag references (the Thrall's armor line reads "— see Entry 24 flag; civilian clothing" on the GM's screen) from armor lines, the way S9c stripped the ⚠ marks.
+
+**S10c is built** (`gm-mode/S10c-encounter-end.md`, Decision 193, table schema 0.7, switched off): End on a running encounter opens a wrap-up. A cast member's fight is written as an interaction of a new kind, *fought* (*killed* when the GM sets them dead), with the crew's names; a Codex copy worth keeping is Kept into the cast; the players are told the wear die. Wounds and NPC wear don't carry (GQ26). S10 is done but for the Encounter Design worksheet, Surprise, Ambush, Delay and an encounter's clocks (S7).
 
 - The Encounter Design worksheet; participants (PCs by typed name until
   S3b); Order of Engagement; rounds and Reset; NPC damage through the
@@ -801,4 +803,5 @@ Deighton.
 | GQ23 | Do NPCs take Pain Levels as players do? The Codex prints their Health Levels, and traits like Scar Tissue assume pain slows them. | Scott | Default: yes, shown on the encounter's row by the players' rule and applied by the GM (S10a shows it and applies nothing; 189). Not an F-flag: no player rule changes |
 | GQ24 | Do NPCs make the At Zero check, or drop at zero? | Scott | Default: offered, never forced; the GM leaves it unanswered to drop them (192) |
 | GQ25 | Should a trait carry a trigger the app can light, "at their last Health Level", as a field in the pack? | Scott | Default: no; traits are text, shown on the active row (192) |
+| GQ26 | Does a cast member carry their wounds into the next fight? | Scott | Default: no; the wrap-up's line says how they ended, the next fight starts them unhurt, and S5's downtime is where healing would live (193) |
 | GQ22 | Eight trait names on entries aren't in the glossary under that name. The Pointman's *Controlled Violence*, *Clear the Room* and *Take the Hit* have no glossary row. *Ghost Roads* (the Drifter) and *Terrain Native* (the Wraith) are the glossary's *Know the Gaps* under entry names. The Architect's and the Converted's last "trait" are design notes set in bold (*Interface (17) / Programming (17)*, *TOL 7 / WILL 5*). *Sanctified Rosary — if carried* carries a condition in its name; the glossary's row is *Sanctified Rosary*. The Codex pack keeps each as printed. Which is right? Also: the entries print *Handgun*, *Rifle* and *SMG*; the game's skills are *Handguns*, *Rifles* and *SMGs*. The pack matches the plural by one letter | Scott | **Open** (S9c, 186). Each stays as the book prints it until he answers; the builder's trait count reads them as *written*, which is true |

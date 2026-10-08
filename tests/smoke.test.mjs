@@ -3336,7 +3336,7 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   assert.match(app.$("#undotoast").textContent, /isn't a character, a table or a pack/);
   assert.equal(charKeys(app).length, 1); assert.equal(tableKeys(app).length, 1);
   const newer = JSON.parse(JSON.stringify(t));
-  newer.meta.tableSchemaVersion = "0.7";
+  newer.meta.tableSchemaVersion = "0.8";
   await importFile(app, newer);
   assert.match(app.$("#undotoast").textContent, /newer version of the app/);
   assert.deepEqual(app.errors, []);
@@ -3688,13 +3688,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.6");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.7");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.6");
+  assert.equal(saved.meta.tableSchemaVersion, "0.7");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4035,7 +4035,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.6");
+  assert.equal(file.meta.tableSchemaVersion, "0.7");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4047,7 +4047,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.6");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.7");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4424,7 +4424,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.6");
+  assert.equal(file.meta.tableSchemaVersion, "0.7");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -4518,7 +4518,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.6");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.7");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -4893,7 +4893,7 @@ test("Decisions 188–189: plan an encounter, run a round with Take, Bleeding an
   assert.deepEqual(w.conditions.map(c => [c.id, c.rounds]), [["burning", 2]], "Bleeding ran out, Burning counted down");
   assert.equal(app.doc.activeElement, app.$("[data-enext]"));
   // End it: it heads Past encounters.
-  app.click("[data-enc-end]"); app.click("#modal [data-askyes]");
+  app.click("[data-enc-end]"); app.click("[data-ew-end]");
   assert.equal(app.doc.activeElement, app.$("[data-enc-new]"));
   assert.match(app.$("#main").textContent, /Past encounters/); assert.match(app.$("#main").textContent, /Warehouse job/);
   app.click("[data-enc-open]");
@@ -5239,4 +5239,115 @@ test("Decision 191 (hostile): a block's armor line of markup is text, and the pa
   assert.equal(app.$("#main img"), null);
   assert.equal(app.$("#tip img"), null);
   assert.deepEqual(app.errors, []);
+});
+
+// ── The encounter's end (Decision 193) ─────────────────────────────────
+// Synthetic names only: Dez at the cast, two Gulls from a pack, Wren (hit) and Rook as the crew.
+const wrapApp = () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" }); Engine.setCastBlock(S.table, S.table.cast[0].id, { stats: { BOD: 8 }, skills: [] });
+    const pack = Engine.migratePack(${JSON.stringify(syntheticPack())});
+    const e = Engine.addEncounter(S.table, { name: "Job" }).id;
+    const dez = Engine.addParticipant(S.table, e, { kind: "cast", id: S.table.cast[0].id }).id;
+    Engine.participantFromEntry(S.table, e, pack, "gull"); Engine.participantFromEntry(S.table, e, pack, "gull");
+    const wren = Engine.addParticipant(S.table, e, { kind: "pc", name: "Wren" }).id;
+    Engine.addParticipant(S.table, e, { kind: "pc", name: "Rook" });
+    Engine.startEncounter(S.table, e);
+    Engine.participantDamage(S.table, e, dez, 2); Engine.participantDamage(S.table, e, wren, 5);
+    Engine.participantAddCondition(S.table, e, dez, { id: "prone" });`);
+  encTab(app);
+  app.click("[data-enc-open]");
+  return app;
+};
+const wrapRow = (app, name) => app.$$("[data-ewrow]").find(li => li.querySelector(".enc-name").textContent === name);
+const castLine193 = app => app.window.eval("S.table.cast.map(n => n.name + ':' + n.status).join('|')");
+
+test("Decision 193: End on a running encounter opens the wrap-up, the cast row's line on and Keep off", () => {
+  const app = wrapApp();
+  app.click("[data-enc-end]");
+  assert.equal(app.$("#modal [data-askyes]"), null, "a running encounter's End opens a wrap-up, not a question");
+  assert.equal(app.doc.activeElement, app.$("[data-ew-h]"));
+  assert.match(app.$("[data-ew-h]").textContent, /Wrap up Job/);
+  assert.equal(app.$("[data-enext]"), null);
+  assert.equal(app.$$("[data-ewrow]").length, 3, "PC rows aren't wrapped up");
+  const dez = wrapRow(app, "Dez");
+  assert.match(dez.textContent, /\d+ of 8 Health Levels · Prone/);
+  assert.equal(dez.querySelector("[data-ew-line]").checked, true);
+  assert.match(dez.querySelector("[data-ew-text]").value, /^Fought them in Job: \d+ of 8 Health Levels left; Prone\.$/);
+  for (const n of ["Gull", "Gull 2"]) assert.equal(wrapRow(app, n).querySelector("[data-ew-keep]").checked, false);
+  assert.equal(wrapRow(app, "Gull").querySelector("[data-ew-name]"), null, "Keep's fields show once it's ticked");
+  // How hard was it names the die, and only the PC who was hit.
+  assert.equal(app.$("[data-ew-says]").textContent, "");
+  changeTo(app, "[data-ew-diff]", "hard");
+  assert.equal(app.$("[data-ew-says]").textContent, "Wren: roll 1d8 for armor wear on your sheet.");
+  assert.equal(app.doc.activeElement, app.$("[data-ew-diff]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 193: Keep one, rename it, set another Dead, End the encounter: the cast, the lines and Kept as", () => {
+  const app = wrapApp();
+  app.click("[data-enc-end]");
+  const keep = wrapRow(app, "Gull").querySelector("[data-ew-keep]");
+  keep.checked = true; keep.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(app.doc.activeElement, app.$(`[data-ew-keep="${keep.dataset.ewKeep}"]`));
+  const name = wrapRow(app, "Gull").querySelector("[data-ew-name]");
+  assert.equal(name.value, "Gull");
+  type(app, `[data-ew-name="${name.dataset.ewName}"]`, "Old Gull");
+  changeTo(app, `[data-ewrow] [data-ew-status="${wrapRow(app, "Dez").dataset.ewrow}"]`, "dead");
+  assert.equal(app.window.eval("S.table.cast.length"), 1, "nothing is written before End the encounter");
+  app.click("[data-ew-end]");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-new]"));
+  assert.equal(castLine193(app), "Old Gull:alive|Dez:dead");
+  assert.equal(app.window.eval("S.table.interactions.map(x => x.kind).sort().join()"), "fought,killed");
+  // Past encounters: the kept row reads Kept as, and it opens the member, whose Back returns.
+  app.click("[data-enc-open]");
+  assert.equal(app.$("[data-ew-h]"), null);
+  const kept = app.$$("[data-erow] .enc-kept").map(p => p.textContent);
+  assert.deepEqual(kept, ["Kept as Old Gull"]);
+  app.click("[data-erow] .enc-kept [data-eopencast]");
+  assert.match(app.$("#main").textContent, /Old Gull/);
+  assert.match(app.$("#main").textContent, /Fought them/);
+  app.click("[data-cback]");
+  assert.match(app.$(".enc-status").textContent, /Ended/);
+  // Dez's page lists the Killed line.
+  app.click("[data-eopencast]");
+  assert.match(app.$("#main").textContent, /Killed them/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 193: Cancel writes nothing and returns to the running encounter", () => {
+  const app = wrapApp();
+  const before = app.window.eval("JSON.stringify(S.table)");
+  app.click("[data-enc-end]");
+  const keep = wrapRow(app, "Gull").querySelector("[data-ew-keep]");
+  keep.checked = true; keep.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  changeTo(app, `[data-ew-status="${wrapRow(app, "Dez").dataset.ewrow}"]`, "dead");
+  app.click("[data-ew-cancel]");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-end]"));
+  assert.ok(app.$("[data-enext]"), "the running encounter is back");
+  assert.equal(app.window.eval("JSON.stringify(S.table)"), before);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 193: a planned encounter's End asks as before and opens no wrap-up", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  encTab(app); newEncounter(app, "Soon");
+  app.click("[data-enc-end]");
+  assert.ok(app.$("#modal [data-askyes]"));
+  app.click("#modal [data-askyes]");
+  assert.equal(app.$("[data-ew-h]"), null);
+  assert.equal(app.window.eval("S.table.encounters[0].status"), "ended");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 193: Add an interaction offers Fought them last", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" })`);
+  app.click('[data-tsec="cast"]'); app.click("[data-copen]");
+  const kinds = app.$$("[data-iakind]");
+  assert.equal(kinds[kinds.length - 1].textContent, "Fought them");
+  assert.equal(kinds.length, 8);
 });

@@ -375,7 +375,7 @@ test("hostile interactions and affiliations render as text on a member's page, t
   found.push(...injected(app, "a member's page"));
   assert.ok(app.$$("[data-int]").length >= 2, "the member's interactions weren't drawn");
   for (const el of app.$$("[data-idate]")) assert.ok(el.value === "" || /^\d{4}-\d{2}-\d{2}$/.test(el.value), "a date field read " + el.value);
-  assert.ok(app.$$("[data-ikind].on").every(b => /\|(shared|learned|helped|wronged|killed|owes|owed)$/.test(b.dataset.ikind)), "a payload kind was pressed");
+  assert.ok(app.$$("[data-ikind].on").every(b => /\|(shared|learned|helped|wronged|killed|owes|owed|fought)$/.test(b.dataset.ikind)), "a payload kind was pressed");
   assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a field drew an object as text");
   app.click("[data-idel]");
   found.push(...injected(app, "the Delete question"));
@@ -642,4 +642,50 @@ test("a hostile row's armorId is an id string or null, and always null on a PC r
   const npcs = rows.filter(r => r.kind === "entry"), pcs = rows.filter(r => r.kind === "pc");
   assert.equal(JSON.stringify(npcs.map(r => r.armorId)), JSON.stringify([null, null, null, null, null, null, null, null, null, null, "leather-jacket"]));
   assert.ok(pcs.every(r => r.armorId === null), "a PC row has no armor to belong to");
+});
+
+// ── What an entry row was kept as is untrusted too (Decision 193, 124) ──
+test("a hostile row's kept comes out a link on an entry row or null, and a kept name of markup renders as text", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  const link = { kind: "cast", id: "C-ABCDEFGH", name: P("kept.name") };
+  const bad = ["x", 5, [], { kind: "cast", id: "bad id" }, { kind: "pc", id: "C-ABCDEFGH" }, null, undefined, true];
+  const row = (kind, kept) => ({ kind, name: P("row." + kind), block: kind === "entry" ? { stats: { BOD: 4 } } : null, kept });
+  t.encounters = [{ id: "EN-ABCDEFGH", name: "e", status: "ended", rows: [
+    ...bad.map(k => row("entry", k)), row("entry", link), row("pc", link), { ...row("cast", link), cast: { kind: "cast", id: "C-ZZZZZZZZ", name: "Gone" } }, row("pc", bad[3]),
+  ] }];
+  t.interactions = [{ kind: "fought", text: P("line.text"), cast: [], crew: [P("line.crew")] }, { kind: "fought!", text: "x" }];
+  const m = Engine.migrateTable(t), rows = m.encounters[0].rows;
+  assert.equal(JSON.stringify(rows.slice(0, 8).map(r => r.kept)), JSON.stringify(Array(8).fill(null)), "a bad kept was kept");
+  assert.equal(JSON.stringify(rows[8].kept), JSON.stringify(link), "a good link on an entry row survives, name and all");
+  assert.equal(JSON.stringify(rows.slice(9).map(r => r.kept)), "[null,null,null]", "a PC or cast row was kept as someone");
+  assert.equal(m.interactions[0].kind, "fought"); assert.equal(m.interactions[1].kind, null);
+  const key = "shadows.table.v1." + m.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: m, section: "encounters", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  app.window.eval(`S.tsection = 'encounters'; S.encOpen = ${JSON.stringify(m.encounters[0].id)}; renderTable();`);
+  const found = injected(app, "Past encounters with a kept row");
+  assert.match(app.$("#main").textContent, /Kept as/);
+  assert.ok(app.$("#main .enc-kept s"), "a removed member's name wasn't struck through");
+  assert.deepEqual(found, [], "a kept name became markup");
+  assert.deepEqual(app.errors, []);
+});
+
+test("a hostile table's wrap-up renders as text, and its fields come out as text", () => {
+  const t = hostileEncounters();
+  const m = Engine.migrateTable(t);
+  m.encounters.forEach(e => { e.status = "running"; });
+  const key = "shadows.table.v1." + m.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: m, section: "encounters", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  const found = [];
+  for (const e of app.window.eval("S.table.encounters.filter(e => e.status === 'running').map(e => e.id)")) {
+    app.window.eval(`S.encOpen = ${JSON.stringify(e)}; renderTable();`);
+    const end = app.$("[data-enc-end]"); if (!end) continue;
+    end.click();
+    for (const k of app.$$("[data-ew-keep]")) { k.checked = true; k.dispatchEvent(new app.window.Event("change", { bubbles: true })); }
+    found.push(...injected(app, "a wrap-up"));
+  }
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"));
+  assert.deepEqual(found, [], "the wrap-up drew markup");
+  assert.deepEqual(app.errors, []);
 });

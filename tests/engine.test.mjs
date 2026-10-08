@@ -2861,7 +2861,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.6, no notes, cast or i
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.6");
+  assert.equal(t.meta.tableSchemaVersion, "0.7");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -2929,14 +2929,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.6", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.7" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.7");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.7", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.8" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.8");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.7");
-  for (const v of ["0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.8");
+  for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.6", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.7", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -2988,15 +2988,15 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.7" }, cast: [{ name: 5, tier: "2" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.8" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3202,7 +3202,7 @@ const castWith = (...names) => {
   const ids = names.map(n => Engine.addCastMember(t, { name: n }).id);
   return [t, ...ids];
 };
-const KINDS = ["shared", "learned", "helped", "wronged", "killed", "owes", "owed"];
+const KINDS = ["shared", "learned", "helped", "wronged", "killed", "owes", "owed", "fought"];
 
 test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and the rest is byte-identical", () => {
   const old = Engine.newTable("Two");
@@ -3211,7 +3211,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3220,8 +3220,8 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
 });
 
 test("a newer table keeps its stamp and its interactions, and tableCheck says so", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.7" }, interactions: [{ kind: "shared", text: "x" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.8" }, interactions: [{ kind: "shared", text: "x" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   assert.equal(m.interactions.length, 1);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3573,7 +3573,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -3782,7 +3782,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4298,7 +4298,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.6");
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -4592,4 +4592,191 @@ test("191 (review): armor wear follows its piece: another piece in the block rea
   assert.equal(viewRow(s.t, s.e, s.id).armor.scrapped, true);
   rowOf(s.t, s.e, s.id).block.armor = ["Security Rig (PROT 1d6)"];
   assert.equal(viewRow(s.t, s.e, s.id).armor.scrapped, false);
+});
+
+// ── The encounter's end (Decision 193) ──────────────────────────────────────
+// Synthetic names only. Dez is a cast member with a block; Gull is a pack entry; Wren and Rook are the crew.
+function endTable() {
+  const { t, e, dez } = encTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const dezRow = Engine.addParticipant(t, e, { kind: "cast", id: dez.id }).id;
+  const gull = Engine.participantFromEntry(t, e, pack, "gull").id;
+  const gull2 = Engine.participantFromEntry(t, e, pack, "gull").id;
+  const wren = addPc(t, e, "Wren", { hp: 10, levels: 5 }), rook = addPc(t, e, "Rook");
+  assert.ok(Engine.startEncounter(t, e).ok);
+  return { t, e, dez, dezRow, gull, gull2, wren, rook, pack };
+}
+const castOf = (t, id) => t.cast.find(n => n.id === id);
+
+test("193: encounterWrapUp reads the non-PC rows, the crew, the dice and who was hit; it never throws", () => {
+  const { t, e, dezRow, wren } = endTable();
+  Engine.participantDamage(t, e, dezRow, 7);
+  Engine.participantDamage(t, e, wren, 3);
+  const w = Engine.encounterWrapUp(t, e);
+  eq(w.rows.map(x => x.kind), ["cast", "entry", "entry"], "PC rows are left out");
+  const d = w.rows[0];
+  eq([d.name, d.status, d.row.id], ["Dez", "alive", dezRow]);
+  const hl = Engine.encounterView(t, e, []).rows.find(r => r.row.id === dezRow).health;
+  eq([d.ended.left, d.ended.levels, d.ended.levelsLeft, d.ended.down, d.ended.conditions], [hl.left, hl.levels, hl.levelsLeft, hl.down, []]);
+  assert.equal(d.line, `Fought them in Warehouse: ${hl.levelsLeft} of ${hl.levels} Health Levels left.`);
+  eq(w.crew, ["Wren", "Rook"]);
+  eq(w.hit, [{ id: wren, name: "Wren" }], "only the PC who took damage");
+  eq(w.dice.map(x => x.id), Object.keys(D.armorRules.integrityLossByDifficulty), "the data's order");
+  eq(w.dice[0], { id: "easy", name: "Easy", die: "1d4" });
+  // A Condition and Down read into the default line.
+  Engine.participantAddCondition(t, e, dezRow, { id: "bleeding", location: LOC });
+  Engine.participantDamage(t, e, dezRow, 400);
+  const w2 = Engine.encounterWrapUp(t, e).rows[0];
+  assert.ok(w2.ended.down);
+  assert.match(w2.line, /Health Levels left, Down; [A-Z]/);
+  // An entry row with no BOD has no totals.
+  const g = w.rows[2];
+  rowOf(t, e, g.row.id).block.stats = {};
+  const bare = Engine.encounterWrapUp(t, e).rows[2];
+  assert.equal(bare.ended.levels, null);
+  assert.equal(bare.line, "Fought them in Warehouse.");
+  // Planned, ended, unknown: empty lists, same dice.
+  const p = encTable();
+  for (const [tt, id] of [[p.t, p.e], [p.t, "EN-NOPE0000"], [null, "x"], [{}, "x"]]) {
+    const r = Engine.encounterWrapUp(tt, id);
+    eq([r.rows, r.crew, r.hit], [[], [], []]); assert.equal(r.dice.length, 4);
+  }
+  Engine.endEncounter(t, e);
+  eq(Engine.encounterWrapUp(t, e).rows, []);
+});
+
+test("193: encounterWrapUp's crew leaves out a PC row with no name", () => {
+  const { t, e } = endTable();
+  Engine.addParticipant(t, e, { kind: "pc", name: "x" });
+  encOf(t, e).rows[encOf(t, e).rows.length - 1].name = "   ";
+  eq(Engine.encounterWrapUp(t, e).crew, ["Wren", "Rook"]);
+});
+
+test("193: endEncounter with no wrap is exactly what it was", () => {
+  const { t, e } = endTable();
+  const before = plain(t);
+  assert.ok(Engine.endEncounter(t, e).ok);
+  assert.equal(encOf(t, e).status, "ended");
+  eq(t.cast, before.cast); eq(t.interactions, []);
+  assert.equal(Engine.endEncounter(t, e).ok, false);
+});
+
+test("193: a cast row's line lands as a fought interaction with the crew, today and the text; blank writes the default", () => {
+  const { t, e, dez, dezRow } = endTable();
+  const def = Engine.encounterWrapUp(t, e).rows[0].line;
+  const r = Engine.endEncounter(t, e, { rows: { [dezRow]: { line: true, text: "  " } } });
+  assert.ok(r.ok, r.why);
+  assert.equal(t.interactions.length, 1);
+  const x = t.interactions[0];
+  eq([x.kind, x.crew, x.text, x.cast.map(l => l.id)], ["fought", ["Wren", "Rook"], def, [dez.id]]);
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  assert.equal(x.date, `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
+  eq(Engine.interactionsFor(t, dez.id).map(i => i.id), [x.id]);
+  // The GM's own text wins.
+  const s = endTable();
+  Engine.endEncounter(s.t, s.e, { rows: { [s.dezRow]: { line: true, text: " They ran. " } } });
+  assert.equal(s.t.interactions[0].text, "They ran.");
+});
+
+test("193: a status set to dead writes killed and the member reads dead; missing writes fought and missing", () => {
+  const a = endTable();
+  assert.ok(Engine.endEncounter(a.t, a.e, { rows: { [a.dezRow]: { line: true, status: "dead" } } }).ok);
+  eq([a.t.interactions[0].kind, castOf(a.t, a.dez.id).status], ["killed", "dead"]);
+  const b = endTable();
+  assert.ok(Engine.endEncounter(b.t, b.e, { rows: { [b.dezRow]: { line: true, status: "missing" } } }).ok);
+  eq([b.t.interactions[0].kind, castOf(b.t, b.dez.id).status], ["fought", "missing"]);
+  // A status with the line off still changes; no line is written.
+  const c = endTable();
+  Engine.endEncounter(c.t, c.e, { rows: { [c.dezRow]: { line: false, status: "gone" } } });
+  eq([c.t.interactions.length, castOf(c.t, c.dez.id).status], [0, "gone"]);
+});
+
+test("193: a kept entry row is a new member first in the cast, with a copy of the row's block, and the line links them", () => {
+  const { t, e, gull, gull2, pack } = endTable();
+  const castBefore = t.cast.length;
+  const r = Engine.endEncounter(t, e, { rows: { [gull]: { keep: true, name: "  Old Gull ", status: "missing", line: true, text: "Got away." } } }, [pack]);
+  assert.ok(r.ok, r.why);
+  assert.equal(r.kept.length, 1);
+  const m = t.cast[0];
+  eq([m.id, t.cast.length], [r.kept[0], castBefore + 1]);
+  eq([m.name, m.status], ["Old Gull", "missing"]);
+  eq(m.from, { kind: "entry", pack: pack.meta.id, id: "gull", name: "Gull" });
+  const row = rowOf(t, e, gull);
+  eq(m.block, row.block);
+  const rowBlock = plain(row.block);
+  m.block.stats = { BOD: 1 }; m.block.skills = [{ name: "X", total: 1 }];
+  eq(row.block, rowBlock, "a copy: editing the member leaves the row's block alone");
+  eq(row.kept, { kind: "cast", id: m.id, name: "Old Gull" });
+  eq([t.interactions[0].cast.map(l => l.id), t.interactions[0].text, t.interactions[0].kind], [[m.id], "Got away.", "fought"]);
+  assert.equal(m.flavor, pack.entries.find(x => x.id === "gull").flavor, "the entry's text when its pack is slotted");
+  assert.equal(rowOf(t, e, gull2).kept, null, "an unticked row writes nothing");
+  assert.equal(Engine.encounterView(t, e, []).rows.find(v => v.row.id === gull).kept.name, "Old Gull");
+  // No pack slotted: the name, the block and from, no text. A blank name keeps the row's.
+  const s = endTable();
+  assert.ok(Engine.endEncounter(s.t, s.e, { rows: { [s.gull]: { keep: true, name: "  " } } }, []).ok);
+  eq([s.t.cast[0].name, s.t.cast[0].flavor, s.t.cast[0].status, s.t.cast[0].from.id], ["Gull", "", "alive", "gull"]);
+  eq(s.t.cast[0].block, rowOf(s.t, s.e, s.gull).block);
+  assert.equal(s.t.interactions.length, 0, "keeping alone writes no line");
+});
+
+test("193: an unticked row writes nothing, and a wrap key that isn't a row is ignored", () => {
+  const { t, e, gull } = endTable();
+  const before = plain(t);
+  assert.ok(Engine.endEncounter(t, e, { rows: { [gull]: { keep: false, line: false }, "R-NOPE0000": { keep: true, line: true } } }).ok);
+  eq(t.cast, before.cast); eq(t.interactions, []);
+});
+
+test("193: all or nothing: an unknown status on the last row refuses and the table is unchanged", () => {
+  const { t, e, dezRow, gull, gull2, pack } = endTable();
+  const before = plain(t);
+  const r = Engine.endEncounter(t, e, { rows: {
+    [dezRow]: { line: true, status: "dead" }, [gull]: { keep: true, name: "Kept", line: true }, [gull2]: { keep: true, status: "nonsense" } } }, [pack]);
+  assert.equal(r.ok, false); assert.equal(r.why, "Choose a status.");
+  eq(plain(t), before);
+  // Keeping a row that isn't an entry row refuses the same way.
+  const o = Engine.endEncounter(t, e, { rows: { [gull]: { keep: true }, [dezRow]: { keep: true } } }, [pack]);
+  assert.equal(o.why, "Only a copy from a pack can be kept.");
+  eq(plain(t), before);
+});
+
+test("193: a planned encounter refuses a wrap, and an ended one refuses everything", () => {
+  const p = encTable();
+  assert.equal(Engine.endEncounter(p.t, p.e, { rows: {} }).why, "It hasn't started, so there's nothing to wrap up.");
+  assert.equal(encOf(p.t, p.e).status, "planned");
+  assert.ok(Engine.endEncounter(p.t, p.e).ok, "a planned one still ends with no wrap");
+  const { t, e } = endTable();
+  Engine.endEncounter(t, e, { rows: {} });
+  assert.equal(Engine.endEncounter(t, e, { rows: {} }).ok, false);
+  assert.equal(Engine.endEncounter(t, e).ok, false);
+});
+
+test("193: removeCastMember writes the name into a kept link; the ended row reads gone", () => {
+  const { t, e, gull, pack } = endTable();
+  const r = Engine.endEncounter(t, e, { rows: { [gull]: { keep: true, name: "Old Gull" } } }, [pack]);
+  Engine.editCastMember(t, r.kept[0], { name: "Renamed Gull" });
+  Engine.removeCastMember(t, r.kept[0]);
+  eq(rowOf(t, e, gull).kept, { kind: "cast", id: r.kept[0], name: "Renamed Gull" });
+  const k = Engine.encounterView(t, e, []).rows.find(v => v.row.id === gull).kept;
+  eq(k, { name: "Renamed Gull", gone: true });
+});
+
+test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept and everything else the same", () => {
+  assert.equal(KINDS.length, 8);
+  const x = Engine.migrateTable({ interactions: [{ kind: "fought", text: "a" }, { kind: "bogus", text: "b" }] });
+  eq(x.interactions.map(i => i.kind), ["fought", null]);
+  const { t, gull } = endTable();
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.6";
+  for (const en of old.encounters) for (const r of en.rows) delete r.kept;
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  assert.ok(m.encounters[0].rows.every(r => r.kept === null));
+  eq(m, Engine.migrateTable(t));
+  // The gate: kept is a link on an entry row, else null.
+  const h = plain(t);
+  h.encounters[0].rows.find(r => r.id === gull).kept = { kind: "cast", id: "C-AAAAAAAA", name: "Gone" };
+  h.encounters[0].rows.find(r => r.kind === "cast").kept = { kind: "cast", id: "C-AAAAAAAA" };
+  const g = Engine.migrateTable(h);
+  assert.equal(g.encounters[0].rows.find(r => r.id === gull).kept.name, "Gone");
+  assert.ok(g.encounters[0].rows.filter(r => r.kind !== "entry").every(r => r.kept === null));
 });
