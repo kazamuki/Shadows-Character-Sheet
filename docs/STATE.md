@@ -153,7 +153,7 @@ renumbered the CRB to four digits (`054` is now `0540`; the mapping is in
 fields) and P2 (W71, Decision 194: powers with ranks, raised with IP) are
 built, unreleased, for 0.38.0, with F28, F29 and F33 closed. Ken answered
 VQ1–VQ9; F38 and F39 went to Deighton and Scott. Next: **P3, the Werewolf**
-to `0414`, into P2's shape, or P1's small content. W69 (gear modifiers while
+to `0414` (work order `plans/crb-v4-sync/P3-werewolf.md`, VQ10–VQ15 for Ken), or P1. W69 (gear modifiers while
 worn) and W70 (a custom item folds when done) are new on the wishlist.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
