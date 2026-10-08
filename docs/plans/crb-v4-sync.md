@@ -56,7 +56,7 @@ Each pass is a branch and a PR. They're ordered by what unblocks what, not by si
 | **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | ✅ **Built** 2026-10-08: Decision 194, app 0.38.0, schema 0.18 |
 | **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 | Rule or shape | ✅ **Built** 2026-10-08: Decisions 195–197, app 0.39.0, game data 0.31. Work order: [`crb-v4-sync/P3-werewolf.md`](crb-v4-sync/P3-werewolf.md) |
 | **P3b** | **The Werewolf's Major Milestones** (VQ13): `0414`'s 29, archetype Majors read at all, an Origin prerequisite, and the few that change a derived number | Rule or shape | Ken on VQ16–VQ19. **Work order: [`crb-v4-sync/P3b-werewolf-majors.md`](crb-v4-sync/P3b-werewolf-majors.md)** |
-| **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2; F39 (stubbed if open) |
+| **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2; F39 (stubbed if open). Ken on VQ20–VQ27. **Work order: [`crb-v4-sync/P4-vampire.md`](crb-v4-sync/P4-vampire.md)** |
 | **P5** | **Advancement to `0450`**: IP by the hour, the new IP purchases (Advantages, buy-offs, SAN, Health Levels), the new Minor Milestones and repeats, Training | Rule or shape | 0450's own open questions (AD-02, AD-03) for the prices; the repeat rule (VQ7) can go now |
 
 **P0 fixed, beyond the rename:** R14 now reads a trailing `\` as pandoc's hard line break (the
@@ -82,7 +82,7 @@ one from `0450`. P2 is the proposal Ken signs off before anything is built.
 ## 4. Questions
 
 VQ1–VQ9 went to Ken on 2026-10-08, and VQ10–VQ15 (from P3's work order) the same day. Answers are
-in the third column; two parts went on to Deighton and Scott as flags. VQ16–VQ19 are P3b's, in its work order.
+in the third column; two parts went on to Deighton and Scott as flags. VQ16–VQ19 are P3b's and VQ20–VQ27 P4's, in their work orders.
 
 | Id | Question | Answer |
 |---|---|---|
