@@ -851,7 +851,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.4",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.5",       // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
@@ -875,6 +875,25 @@ commit** — a GM's table must never change under them.
     text: "",
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     created: "<ISO>", updated: "<ISO>"
+  } ],
+  encounters: [ {                    // 0.5: who is in an encounter and what is still on them (Decisions 188–190)
+    id: "EN-XXXXXXXX",               // unique in the table
+    name: "",                        // the GM's; blank reads "Encounter" and its day
+    status: "planned",               // planned | running | ended; any number planned, one running at most (the gate ends all but the newest)
+    round: 0, turn: null,            // 1… while running; turn is a row id, null at Reset, planned and ended
+    acted: [],                       // row ids that have had their turn this round; kept only while running, cleared at Start and at each Reset
+    rows: [ {
+      id: "R-XXXXXXXX",              // unique in its encounter
+      kind: "pc",                    // pc (typed name, the GM's scratch copy, 188) | cast (a link, read live) | entry (its own copy of a pack entry's block)
+      name: "",
+      cast: null,                    // cast rows: { kind: "cast", id, name } (178's link; the name is kept when the member is deleted)
+      from: null, block: null,       // entry rows: 182's from, and the row's own stat block
+      order: null, last: false, out: false,   // Combat Sense result; Goes last; out of it (skipped by Next)
+      damage: 0,                     // HP taken: the only health a row stores
+      hp: null, levels: null, awareness: null,   // pc rows only: the GM's copy of the sheet's numbers
+      conditions: [ { id, location, marks, note, source: "", rounds: null } ]   // the character's entry, plus where it came from and rounds left (null: until it's dealt with)
+    } ],
+    created: "<ISO>", updated: "<ISO>"
   } ]
   // Keys the gate doesn't know are kept, at any level, and never read.
 }
@@ -889,7 +908,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -4023,6 +4042,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 174 in part: matching cast text to the pack moves to S9b. Decision 178 in part: a link to a record outside the table stores its name.
      - **Revisit if:** S10's fight needs a live entry, or W63's core pack shares this tab.
      - **Built:** as 180.
+    → **Superseded in part by Decision 190** — Use's button now reads **Add to cast**, beside **Add to <the encounter open>**; what it does stands.
 
 183. **A pack carries its trait glossary, each origin's stat modifiers and each tier's guidance in the book's words; pack schema 0.2.**
      *2026-10-06 · Ken + Claude · Touches: pack schema 0.2, migratePack, traits, trait kind, origins.modifiers, tiers.statGuide, tiers.traitGuide, enemyRoles.tier, Decision 180, GQ10, GQ16, GQ21*
@@ -4085,6 +4105,47 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. 184 and 185's "case-folded" now also folds apostrophes.
      - **Revisit if:** a pack's names differ by another character a GM can't type.
      - **Built:** engine only (every changed reader is GM-only and switched off; no app bump); PR #123; log 2026-10-06.
+
+188. **A table keeps its encounters, of no fixed type: rows from the cast, the Codex and typed names, each with its own damage and Conditions, and a PC's row is the GM's scratch copy.**
+     *2026-10-07 · Ken + Claude · Touches: encounters, encounter row, table schema 0.5, migrateTable, cast link, block copy, PC row, scratch HP, Conditions on a row, source, rounds, Encounters tab, GQ19, Decision 178, Decision 182*
+     - **Decided:** a table has `encounters`, each with a name, a status (planned, running, ended), a round, whose turn it is, who has acted this round, and rows; any number planned, one running, ended ones kept read-only. An encounter has no type. A row is a **cast** row (a link to the member, read live), an **entry** row (its own copy of the entry's block and a `from`), or a **PC** row (a typed name, with the GM's own HP, Health Levels and Awareness). Every row stores damage taken and its Conditions, each with a source and rounds left.
+     - **Why:** Scott tracks every Condition at the table and loses them (§1a). The book's encounter types are "a spectrum", so a negotiation that turns violent stays one record. At an in-person table the GM keeps a copy of the PCs' numbers anyway (GQ19); it is never written back.
+     - **Rejected:**
+       - A fight record, or a type field: the book says the types blend, and the worksheet would need a rename.
+       - Entry rows linked to the pack: a pack can be replaced (181), and two copies would share a block.
+       - Cast rows copied: they'd act from a stale block.
+       - PCs only once seats exist (S3b): Scott needs this first.
+       - Several running: two encounters in one room are one encounter.
+     - **Replaces:** nothing.
+     - **Revisit if:** seats arrive (S3b: a PC row is claimed by a seat), the Encounter Design worksheet needs a type, or live sync makes the scratch copy unnecessary (§8).
+     - **Built:** table schema 0.5; PR #126; log 2026-10-07.
+
+189. **An encounter's round is the book's: Combat Sense highest first, ties shown and never broken, and a Reset that lists, row by row, what ticks, what runs out and what asks for a save.**
+     *2026-10-07 · Ken + Claude · Touches: Order of Engagement, Combat Sense, ties, turn, acted, round, Reset, resolveReset, ongoing, recovery, whileDying, rounds, Keep, Take, Heal, Health Levels, Pain Level, GQ23, Decision 96, Decision 100, F24*
+     - **Decided:** the GM enters each row's Combat Sense result; rows sort highest first, a tie is flagged on both rows for a reroll, and *Goes last* follows everyone. Reset, after the last row, applies the data's `ongoing` ticks (an entered number for a source), counts GM-entered durations down, and lists each Condition that runs out with *End* pressed and *Keep* a tap away, every other Condition's recovery as text, and, on a Dying row, F24's stub as the sheet has it: the check when no source ticks, else the data's damage-while-Dying line and how many sources ticked, the marks the GM's. The turn follows who has acted, not a place in the sort. Damage is HP straight onto a row (no armor, no Shock), shown with Health Levels and Pain by the players' rule; no penalty is applied.
+     - **Why:** `053` says what a round is, for every encounter type; the sheet's Turn Reset (100) reads the data this way. A duration is the GM's: the data gives recovery, not rounds.
+     - **Rejected:**
+       - Rolled initiative: the table rolls (GQ2).
+       - Ties broken by the app: `053` says reroll.
+       - Durations from the data: there are none.
+       - A Condition ending unseen.
+       - HP alone: the GM needs the Pain Level (SQ10).
+       - The turn as a place in the sort: a changed result skips a row.
+     - **Replaces:** nothing. Turn Reset (100) and Pain (96) are unchanged; this applies them per row.
+     - **Revisit if:** the app rolls checks, S10b's pipeline makes a tick a hit, GQ23 says NPCs don't take Pain, or F24 is answered.
+     - **Built:** as 188.
+
+190. **Use has two verbs: Add to cast, and Add to the encounter open on the Encounters tab, on an entry, a group and a cast member.**
+     *2026-10-07 · Ken + Claude · Touches: Use, data-tuse, Add to cast, Add to encounter, entry page, group page, cast member page, castFromEntry, Decision 182*
+     - **Decided:** the entry page's **Use** becomes **Add to cast**, which does what Use did (182: the copy opens, its name selected). Beside it, and on a group's page and a cast member's page, **Add to <name>** adds to the encounter open on the Encounters tab, planned or running, and shows only while one is. Each press adds one row (a group, all its members), says so, and stays on the page.
+     - **Why:** one word leading two places is a word the GM has to stop and read (S9b's SQ7). Naming the encounter says where the row goes when several are planned. Staying on the page lets a GM add three Street Toughs in three taps.
+     - **Rejected:**
+       - *Use* opening a choice: two taps for the commonest act.
+       - Adding only from the Encounters tab: a GM reading an entry is already where they decide to field it.
+       - Adding to the newest planned encounter: invisible when there are two.
+     - **Replaces:** Decision 182 in part: its button's label, *Use*.
+     - **Revisit if:** a third place to copy an entry appears (a session's prep).
+     - **Built:** as 188.
 
 ## 5. Open Flags
 

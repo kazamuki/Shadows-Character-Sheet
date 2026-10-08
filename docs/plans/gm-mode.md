@@ -395,6 +395,8 @@ become a place, a cast member and a clock in one press each.
 
 ### 4h. Encounters
 
+The record is an **encounter of no type** (188): the book's social, environmental and combat encounters "aren't separate modes", so a negotiation that turns into a firefight is one record.
+
 The **Encounter Design worksheet** (basics, NPCs, environment and hazards,
 objectives beyond "defeat the enemy", escalation, finding an out, hooks, GM
 prompts, when momentum stalls) is the encounter's prep half. The running
@@ -691,6 +693,8 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 
 ### S10 — The encounter tracker
 
+**Split (Ken, 2026-10-07).** **S10a is built** (`gm-mode/S10a-encounter.md`, Decisions 188–190): the encounter record, rows from the cast, the Codex and typed names, Order of Engagement, the round, Conditions with a source and rounds on every row, Reset's checklist, damage as HP on a row shown with Health Levels and Pain, ending an encounter, and Use's two verbs. **S10b** is next: a hit through the engine's pipeline (armor, Shock, Massive Damage) with an NPC adapter and armor numbers (GQ18), At Zero and Dying for NPCs, traits as reminders with their triggers, Keep and Promote at an encounter's end, a cast member's history line. Later: the Encounter Design worksheet, an encounter's clocks (S7), Surprise, Ambush and Delay. The list below is the whole of S10, as drafted.
+
 - The Encounter Design worksheet; participants (PCs by typed name until
   S3b); Order of Engagement; rounds and Reset; NPC damage through the
   engine's pipeline; **Conditions with durations on every row, PCs
@@ -790,4 +794,5 @@ Deighton.
 | GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8 |
 | GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts |
 | GQ21 | The Tier table against the entries: on Scott's Stat Audit (2026-10-03), 14 of 17 human Tier 3 entries and all 18 supernatural Tier 3 drafts have a stat outside the table's band ("All stats 5–8; 2–3 exceptional at 8–9"); by the mirror, one Tier 1 entry has a Signature ("no Signatures") and 10 of 17 Tier 3 entries have three or four ("1–2"). The supernatural copy treats the trait budget as binding. Is the table a guide, or are the entries off it? | Scott | **Answered 2026-10-06 (Ken):** a general guide, where to start looking for the power you want; the GM overrides it as the story needs. The builder shows it as the book's words and never warns (S9b, 183–184) |
+| GQ23 | Do NPCs take Pain Levels as players do? The Codex prints their Health Levels, and traits like Scar Tissue assume pain slows them. | Scott | Default: yes, shown on the encounter's row by the players' rule and applied by the GM (S10a shows it and applies nothing; 189). Not an F-flag: no player rule changes |
 | GQ22 | Eight trait names on entries aren't in the glossary under that name. The Pointman's *Controlled Violence*, *Clear the Room* and *Take the Hit* have no glossary row. *Ghost Roads* (the Drifter) and *Terrain Native* (the Wraith) are the glossary's *Know the Gaps* under entry names. The Architect's and the Converted's last "trait" are design notes set in bold (*Interface (17) / Programming (17)*, *TOL 7 / WILL 5*). *Sanctified Rosary — if carried* carries a condition in its name; the glossary's row is *Sanctified Rosary*. The Codex pack keeps each as printed. Which is right? Also: the entries print *Handgun*, *Rifle* and *SMG*; the game's skills are *Handguns*, *Rifles* and *SMGs*. The pack matches the plural by one letter | Scott | **Open** (S9c, 186). Each stays as the book prints it until he answers; the builder's trait count reads them as *written*, which is true |

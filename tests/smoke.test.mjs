@@ -3222,7 +3222,7 @@ test("Decision 171: Run a table asks for a name, opens the table, and Home lists
   assert.equal(app.$("#modal[open]"), null);
   assert.equal(charKeys(app).length, 0, "a table wrote a character");
   assert.equal(tableKeys(app).length, 1);
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Encounters", "Notes"]);
   assert.equal(app.$("#topnav [data-sec]"), null, "the table's tabs are the sheet's");
   assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "What's new", "Home"]);
   tableHome(app);
@@ -3336,7 +3336,7 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   assert.match(app.$("#undotoast").textContent, /isn't a character, a table or a pack/);
   assert.equal(charKeys(app).length, 1); assert.equal(tableKeys(app).length, 1);
   const newer = JSON.parse(JSON.stringify(t));
-  newer.meta.tableSchemaVersion = "0.5";
+  newer.meta.tableSchemaVersion = "0.6";
   await importFile(app, newer);
   assert.match(app.$("#undotoast").textContent, /newer version of the app/);
   assert.deepEqual(app.errors, []);
@@ -3445,7 +3445,7 @@ test("Decision 176: a table opens on Cast, with Notes beside it, and Notes still
   const app = boot({ storage: GM_ON });
   runTable(app, "Cast table");
   assert.equal(app.window.eval("S.tsection"), "cast");
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Encounters", "Notes"]);
   assert.ok(app.$("[data-cadd-name]") && app.$("[data-csearch]"));
   assert.match(app.$("#main").textContent, /Nobody yet\. The city fills up fast\./);
   notesTab(app);
@@ -3688,13 +3688,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.4");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.5");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.4");
+  assert.equal(saved.meta.tableSchemaVersion, "0.5");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4035,7 +4035,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.4");
+  assert.equal(file.meta.tableSchemaVersion, "0.5");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4047,7 +4047,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.4");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.5");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4244,7 +4244,7 @@ test("Decision 181: an older copy of a pack asks, a newer one replaces silently,
 test("Decision 182: a table has a Threats tab, second; with no pack it says so and offers to slot one in", async () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Bare");
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Cast", "Threats", "Encounters", "Notes"]);
   threatsTab(app);
   assert.match(app.$("#main").textContent, /No pack slotted in\./);
   assert.ok(app.$("[data-pslot]"));
@@ -4260,7 +4260,7 @@ test("Decision 182: a table has a Threats tab, second; with no pack it says so a
   const downloads = withDownloads(app);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(Object.keys(file).sort().join(), "cast,interactions,meta,notes", "the exported table carries more than a table");
+  assert.equal(Object.keys(file).sort().join(), "cast,encounters,interactions,meta,notes", "the exported table carries more than a table");
   assert.ok(!JSON.stringify(file).includes("Lives high") && !JSON.stringify(file).includes("Test Pack"), "the exported table carries pack content");
   assert.deepEqual(app.errors, []);
 });
@@ -4424,11 +4424,11 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.4");
+  assert.equal(file.meta.tableSchemaVersion, "0.5");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
-  assert.equal(Object.keys(file).sort().join(), "cast,interactions,meta,notes");
+  assert.equal(Object.keys(file).sort().join(), "cast,encounters,interactions,meta,notes");
   const fresh = boot({ storage: GM_ON }); withDownloads(fresh);
   await importFile(fresh, file);
   assert.deepEqual(JSON.parse(fresh.window.eval("JSON.stringify(S.table.cast[0].from)")), { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
@@ -4518,7 +4518,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.4");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.5");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -4791,4 +4791,277 @@ test("Decision 184 (review): a quick-added member gets modifiers and no note; a 
 test("Decision 184 (review): the note wraps", () => {
   const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
   assert.match(css, /\.cast-guide\{[^}]*overflow-wrap:anywhere/);
+});
+
+// ── The Encounters tab (Decisions 188–190) ─────────────────────────────
+const encTab = app => app.click('[data-tsec="encounters"]');
+const changeTo = (app, sel, value) => {
+  const el = app.$(sel);
+  el.value = value;
+  el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+};
+const submit = (app, sel) => app.$(sel).dispatchEvent(new app.window.Event("submit", { bubbles: true, cancelable: true }));
+const encRowByName = (app, name) => app.$$("[data-erow]").find(li => li.querySelector(".enc-name").textContent === name);
+const encId = (app, i = 0) => app.window.eval(`S.table.encounters[${i}].id`);
+const rowId = (li) => li.dataset.erow;
+const newEncounter = (app, name) => { type(app, "[data-enc-name]", name); app.click("[data-enc-new]"); };
+const addPcRow = (app, name) => { type(app, "[data-enc-pcname]", name); app.click("[data-enc-addpc]"); return encRowByName(app, name); };
+const statesOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters)"));
+
+test("Decision 188: switched off there is no Encounters tab; switched on it sits between Threats and Notes", () => {
+  const off = boot();
+  assert.equal(off.$("#btn-run-table"), null);
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["cast", "threats", "encounters", "notes"]);
+  encTab(app);
+  assert.match(app.$("#main").textContent, /Nothing on the books\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decisions 188–189: plan an encounter, run a round with Take, Bleeding and Burning at Reset, and end it", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" }); Engine.setCastBlock(S.table, S.table.cast[0].id, { stats: { BOD: 4 }, skills: [] });`);
+  encTab(app);
+  newEncounter(app, "Warehouse job");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-title]"), "New encounter didn't put the keyboard in the name");
+  assert.equal(app.$("[data-enc-title]").value, "Warehouse job");
+  // Rows: a PC, then a cast member from the picker (which stays open and says Already in).
+  const wren = addPcRow(app, "Wren");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-pcname]"), "Add a PC didn't return to the name field");
+  assert.equal(app.$("[data-enc-pcname]").value, "");
+  changeTo(app, `[data-ehp="${rowId(wren)}"]`, "30"); changeTo(app, `[data-elevels="${rowId(wren)}"]`, "6");
+  app.click("[data-enc-pick]");
+  app.click("[data-enc-addcast]");
+  assert.match(app.$("[data-encpicklist]").textContent, /Already in/);
+  const dez = encRowByName(app, "Dez");
+  assert.ok(dez, "the cast member isn't a row");
+  // Results: the order re-sorts, a tie is flagged on both rows.
+  changeTo(app, `[data-eorder="${rowId(encRowByName(app, "Dez"))}"]`, "9");
+  changeTo(app, `[data-eorder="${rowId(encRowByName(app, "Wren"))}"]`, "9");
+  assert.equal(app.$$(".enc-tied").length, 2, "a tie wasn't flagged on both rows");
+  assert.equal(app.doc.activeElement, app.$(`[data-eorder="${rowId(encRowByName(app, "Wren"))}"]`), "the field lost the keyboard when the rows moved");
+  changeTo(app, `[data-eorder="${rowId(encRowByName(app, "Wren"))}"]`, "12");
+  assert.deepEqual(app.$$("[data-erow] .enc-name").map(x => x.textContent), ["Wren", "Dez"]);
+  assert.equal(app.$$(".enc-tied").length, 0);
+  // Start.
+  app.click("[data-enc-start]");
+  assert.equal(app.doc.activeElement, app.$("[data-enext]"), "Start didn't land on Next");
+  assert.match(app.$(".enc-status").textContent, /Round 1/);
+  assert.equal(app.$$("[aria-current=step] .enc-name").map(x => x.textContent).join(), "Wren");
+  // Take 12 on the PC: HP, damage taken, Health Levels and the data's Pain for two levels lost.
+  app.click(`[data-edmg="${rowId(encRowByName(app, "Wren"))}|1"]`);
+  assert.equal(app.doc.activeElement, app.$("[data-edmgn]"));
+  app.$("[data-edmgn]").value = "12"; submit(app, "[data-edmgform]");
+  const painLabel = app.D.resources.healthLevels.painLevels.find(p => p.hlLostThreshold === 2).label;
+  assert.match(encRowByName(app, "Wren").textContent, new RegExp(`HP 18 / 30 · 12 taken · 4 of 6 Health Levels · ${painLabel}`));
+  assert.equal(app.doc.activeElement, app.$(`[data-edmg="${rowId(encRowByName(app, "Wren"))}|1"]`), "OK didn't return to Take");
+  // Heal 2 puts it back.
+  app.click(`[data-edmg="${rowId(encRowByName(app, "Wren"))}|-1"]`); app.$("[data-edmgn]").value = "2"; submit(app, "[data-edmgform]");
+  assert.match(encRowByName(app, "Wren").textContent, /HP 20 \/ 30 · 10 taken/);
+  // Conditions: a refusal shows in the picker; Bleeding with a source and rounds; Burning.
+  const wid = rowId(encRowByName(app, "Wren"));
+  app.click(`[data-econdopen="${wid}"]`);
+  assert.equal(app.doc.activeElement, app.$("[data-econd-id]"));
+  changeTo(app, "[data-econd-id]", "bleeding");
+  type(app, "[data-econd-src]", "Corner Shot's burst"); type(app, "[data-econd-rounds]", "1");
+  app.click("[data-econd-add]");
+  assert.match(encRowByName(app, "Wren").textContent, /Bleeding/); assert.match(encRowByName(app, "Wren").textContent, /1 round/); assert.match(encRowByName(app, "Wren").textContent, /Corner Shot's burst/);
+  app.click(`[data-econdopen="${wid}"]`); changeTo(app, "[data-econd-id]", "bleeding"); app.click("[data-econd-add]");
+  assert.match(app.$("[data-econdform] .enc-err").textContent, /Already Bleeding/);
+  changeTo(app, "[data-econd-id]", "burning"); type(app, "[data-econd-rounds]", "3"); app.click("[data-econd-add]");
+  assert.equal(app.$("[data-econdform]"), null);
+  assert.ok(app.$(`${attrSelTest("data-erow", wid)} .enc-cond [data-tip="condition"]`), "the Condition's rule isn't a tap away");
+  // Next to the end: Dez, then Reset.
+  app.click("[data-enext]");
+  assert.equal(app.$$("[aria-current=step] .enc-name").map(x => x.textContent).join(), "Dez");
+  app.click("[data-enext]");
+  assert.match(app.$("#main").textContent, /Reset: round 1 ends/);
+  const fin = app.$("[data-efinish]");
+  assert.equal(fin.disabled, true, "Finish was open with a Burning number missing");
+  assert.match(app.$("#main").textContent, /Bleeding: 1 HP/);
+  assert.match(app.$("#main").textContent, /Runs out now/);
+  assert.match(app.$("#main").textContent, /Nothing on: Dez\./);
+  const src = app.$(`[data-esrc^="${wid}|"]`);
+  src.value = "3"; src.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(app.$("[data-efinish]").disabled, false);
+  app.click("[data-efinish]");
+  assert.match(app.$(".enc-status").textContent, /Round 2/);
+  const e = statesOf(app)[0], w = e.rows.find(r => r.id === wid);
+  assert.equal(w.damage, 10 + 1 + 3, "Bleeding 1 and Burning 3 ticked");
+  assert.deepEqual(w.conditions.map(c => [c.id, c.rounds]), [["burning", 2]], "Bleeding ran out, Burning counted down");
+  assert.equal(app.doc.activeElement, app.$("[data-enext]"));
+  // End it: it heads Past encounters.
+  app.click("[data-enc-end]"); app.click("#modal [data-askyes]");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-new]"));
+  assert.match(app.$("#main").textContent, /Past encounters/); assert.match(app.$("#main").textContent, /Warehouse job/);
+  app.click("[data-enc-open]");
+  assert.equal(app.$("[data-edmg]"), null, "an ended encounter has controls");
+  assert.equal(app.$("[data-eorder]"), null);
+  assert.match(app.$("#main").textContent, /Ended · 2 rounds/);
+  assert.deepEqual(app.errors, []);
+});
+
+const attrSelTest = (name, v) => `[${name}="${String(v).replace(/["\\]/g, "\\$&")}"]`;
+
+test("Decision 189: Keep leaves a Condition at 1 round; Dying's check is named; marks move; Out is skipped by Next", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  encTab(app); newEncounter(app, "E");
+  const a = addPcRow(app, "A"), b = addPcRow(app, "B"), c = addPcRow(app, "C");
+  const [ia, ib, ic] = [a, b, c].map(rowId);
+  for (const [id, n] of [[ia, 9], [ib, 8], [ic, 7]]) changeTo(app, `[data-eorder="${id}"]`, String(n));
+  // B is Out: open More, press Out.
+  app.$(`[data-emore="${ib}"] summary`).click();
+  app.click(`[data-eout="${ib}"]`);
+  assert.equal(app.$(`[data-erow="${ib}"]`).classList.contains("out"), true);
+  assert.equal(app.doc.activeElement, app.$(`[data-eout="${ib}"]`));
+  for (const [id, cond, rounds] of [[ia, "deafened", "1"], [ic, "dying", ""]]) {
+    app.click(`[data-econdopen="${id}"]`); changeTo(app, "[data-econd-id]", cond); type(app, "[data-econd-rounds]", rounds); app.click("[data-econd-add]");
+  }
+  app.click("[data-enc-start]");
+  app.click("[data-enext]");
+  assert.equal(app.$$("[aria-current=step]").map(x => x.dataset.erow).join(), ic, "Next skipped Out");
+  app.click("[data-enext]");
+  assert.match(app.$("#main").textContent, new RegExp(`Dying: ${app.D.damageRules.whileDying.resetCheck}`));
+  app.click(`[data-emarks$="|1"]`);
+  assert.match(app.$(".enc-reset").textContent, /Death Marks 1\/3/);
+  // Deafened: End is pressed; Keep keeps it.
+  const keep = app.$(`[data-ekeep="${ia}|0|keep"]`), end = app.$(`[data-ekeep="${ia}|0|end"]`);
+  assert.equal(end.getAttribute("aria-pressed"), "true");
+  keep.click();
+  assert.equal(app.$(`[data-ekeep="${ia}|0|keep"]`).getAttribute("aria-pressed"), "true");
+  app.click("[data-efinish]");
+  const e = statesOf(app)[0];
+  assert.deepEqual(e.rows.find(r => r.id === ia).conditions.map(x => [x.id, x.rounds]), [["deafened", 1]]);
+  assert.equal(e.round, 2);
+  assert.equal(e.rows.find(r => r.id === ic).conditions[0].marks, 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 190: Add to cast and Add to the encounter open; two planned, the button names the one open; a group adds every member", () => {
+  const app = tableWithPack();
+  app.window.eval(`Engine.addEncounter(S.table, { name: "First" }); Engine.addEncounter(S.table, { name: "Second" });`);
+  entryButton(app, "gull").click();
+  assert.equal(app.$("[data-tuse]").textContent, "Add to cast");
+  assert.equal(app.$("[data-tenc]"), null, "an encounter button with none open");
+  app.click('[data-tsec="encounters"]');
+  app.$$("[data-enc-open]").find(b => b.textContent === "Second").click();
+  app.click('[data-tsec="threats"]');
+  assert.equal(app.window.eval("S.threatOpen"), null, "the Threats tab kept its page across a tab switch");
+  entryButton(app, "gull").click();
+  assert.equal(app.$("[data-tenc]").textContent, "Add to Second");
+  const btn = app.$("[data-tenc]"); btn.focus();
+  app.click("[data-tenc]"); app.click("[data-tenc]");
+  assert.match(app.$("#undotoast").textContent, /Gull 2 is in Second\./);
+  assert.equal(app.window.eval("S.tsection"), "threats", "the page didn't stay");
+  assert.equal(app.$("[data-tenc]"), btn, "the page was redrawn under the button");
+  assert.equal(app.doc.activeElement, btn);
+  const ids = app.window.eval("S.table.encounters.map(e => e.name + ':' + e.rows.map(r => r.name).join('|'))");
+  assert.deepEqual([...ids], ["Second:Gull|Gull 2", "First:"]);
+  assert.equal(app.window.eval("S.table.cast.length"), 0, "Add to the encounter touched the cast");
+  // A group: every member, and back on the list the button names the other one.
+  app.click("[data-tback]"); app.click('[data-tview="group"]'); app.click("[data-tgroup]");
+  assert.equal(app.$("[data-tgrpenc]").textContent, "Add to Second");
+  app.click("[data-tgrpenc]");
+  assert.match(app.$("#undotoast").textContent, /Pier Watch: 4 added to Second\./);
+  assert.equal(app.window.eval("S.table.encounters[0].rows.length"), 6);
+  app.click('[data-tsec="encounters"]'); app.click("[data-enc-back]");
+  app.$$("[data-enc-open]").find(b => b.textContent === "First").click();
+  app.click('[data-tsec="threats"]'); app.click('[data-tview="group"]'); app.click("[data-tgroup]");
+  assert.equal(app.$("[data-tgrpenc]").textContent, "Add to First");
+  // Add to cast does what Use did.
+  app.click("[data-tback]"); app.click('[data-tview="threat"]'); entryButton(app, "gull").click(); app.click("[data-tuse]");
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  assert.equal(app.window.eval("S.table.cast.length"), 1);
+  // A cast member's page offers the encounter, and Back from a row returns to it.
+  assert.equal(app.$("[data-cenc]").textContent, "Add to First");
+  app.click("[data-cenc]");
+  assert.match(app.$("#undotoast").textContent, /Gull is in First\./);
+  app.click("[data-cenc]");
+  assert.match(app.$("#undotoast").textContent, /Already in\./);
+  app.click('[data-tsec="encounters"]');
+  assert.ok(app.$("[data-enc-back]"), "the encounter wasn't kept open");
+  app.click("[data-eopencast]");
+  assert.equal(app.$("[data-cback]").textContent, "Back to First");
+  app.click("[data-cback]");
+  assert.equal(app.window.eval("S.tsection"), "encounters");
+  assert.ok(app.$("[data-enc-title]"));
+  assert.equal(app.doc.activeElement, app.$("[data-eopencast]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 188: an ended encounter offers no Add to, a cast row survives its member being removed, and export keeps the encounters", async () => {
+  const app = tableWithPack(); const downloads = withDownloads(app);
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" }); Engine.addEncounter(S.table, { name: "Done" }); Engine.addParticipant(S.table, S.table.encounters[0].id, { kind: "cast", id: S.table.cast[0].id });`);
+  app.click('[data-tsec="encounters"]'); app.click("[data-enc-open]");
+  app.click("[data-eopencast]"); app.click("[data-cdel]"); app.click("#modal [data-askyes]");
+  app.click('[data-tsec="encounters"]');
+  const li = app.$("[data-erow]");
+  assert.equal(li.querySelector(".enc-name").textContent, "Dez");
+  assert.equal(li.querySelector("[data-eopencast]"), null, "a removed member is a button");
+  assert.match(li.textContent, /0 taken/);
+  app.click("[data-enc-end]"); app.click("#modal [data-askyes]");
+  app.click('[data-tsec="threats"]'); entryButton(app, "gull").click();
+  assert.equal(app.$("[data-tenc]"), null, "an ended encounter is a target");
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  const file = await tableFile(downloads[0]);
+  assert.equal(file.encounters.length, 1); assert.equal(file.encounters[0].status, "ended");
+  const fresh = boot({ storage: GM_ON }); withDownloads(fresh);
+  await importFile(fresh, file);
+  assert.equal(JSON.parse(fresh.window.eval("JSON.stringify(S.table.encounters)"))[0].rows[0].name, "Dez");
+  assert.deepEqual([...app.errors, ...fresh.errors], []);
+});
+
+test("Decision 188: export and import mid-round and at Reset keep the same encounter and turn", async () => {
+  const app = boot({ storage: GM_ON }); const downloads = withDownloads(app);
+  runTable(app, "T"); encTab(app); newEncounter(app, "E");
+  const a = addPcRow(app, "A"), b = addPcRow(app, "B");
+  changeTo(app, `[data-eorder="${rowId(a)}"]`, "5"); changeTo(app, `[data-eorder="${rowId(b)}"]`, "3");
+  app.click("[data-enc-start]"); app.click("[data-enext]");
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  let file = await tableFile(downloads[0]);
+  assert.equal(file.encounters[0].turn, rowId(b)); assert.equal(file.encounters[0].round, 1);
+  app.click("[data-enext]");
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  file = await tableFile(downloads[1]);
+  assert.equal(file.encounters[0].turn, null); assert.equal(file.encounters[0].status, "running");
+  const fresh = boot({ storage: GM_ON }); withDownloads(fresh);
+  await importFile(fresh, file);
+  fresh.click('[data-tsec="encounters"]');
+  assert.match(fresh.$("#main").textContent, /Round 1/);
+  fresh.click("[data-enc-open]");
+  assert.match(fresh.$("#main").textContent, /Reset: round 1 ends/);
+  assert.deepEqual([...app.errors, ...fresh.errors], []);
+});
+
+// ── Fix round (review of #126) ─────────────────────────────────────────
+test("Decision 189 (review): the Encounters tab's listeners on <main> go when the table closes; Done tags who has acted; a negative Take is refused; Dying shows F24's line", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); encTab(app); newEncounter(app, "E");
+  const a = addPcRow(app, "A"), b = addPcRow(app, "B");
+  const [ia, ib] = [a, b].map(rowId);
+  changeTo(app, `[data-eorder="${ia}"]`, "9"); changeTo(app, `[data-eorder="${ib}"]`, "5");
+  app.click(`[data-econdopen="${ia}"]`); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
+  app.click(`[data-econdopen="${ia}"]`); changeTo(app, "[data-econd-id]", "bleeding"); app.click("[data-econd-add]");
+  app.click("[data-enc-start]"); app.click("[data-enext]");
+  assert.match(app.$(`[data-erow="${ia}"]`).textContent, /Done/);
+  assert.doesNotMatch(app.$(`[data-erow="${ib}"]`).textContent, /Done/);
+  // A negative number in Take or Heal is refused, not applied.
+  app.click(`[data-edmg="${ib}|1"]`);
+  assert.equal(app.$("[data-edmgn]").min, "0");
+  app.$("[data-edmgn]").value = "-4"; submit(app, "[data-edmgform]");
+  assert.match(app.$("#undotoast").textContent, /Enter a whole number\./);
+  assert.equal(app.window.eval("S.table.encounters[0].rows.find(r => r.id === " + JSON.stringify(ib) + ").damage"), 0);
+  app.click("[data-edmgcancel]");
+  app.click("[data-enext]");
+  const W = app.D.damageRules.whileDying;
+  assert.match(app.$(".enc-reset").textContent, new RegExp(W.text.slice(0, 20)));
+  assert.match(app.$(".enc-reset").textContent, /1 source ticked/);
+  assert.doesNotMatch(app.$(".enc-reset").textContent, new RegExp(W.resetCheck));
+  assert.ok(app.$("main").onclick, "the tab's listener wasn't there to begin with");
+  app.click("[data-menu-toggle]"); app.click("[data-thome]");
+  for (const k of ["onclick", "onchange", "oninput", "onsubmit", "onkeydown"]) assert.equal(app.$("main")[k], null, `main.${k} survived the table`);
+  assert.deepEqual(app.errors, []);
 });

@@ -1223,3 +1223,38 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .trait-pick{padding:10px 0; border-bottom:1px solid var(--line, rgba(128,128,128,.25)); min-width:0}
 .trait-pick-head{overflow-wrap:anywhere; margin-bottom:4px}
 .trait-pick .threat-text{margin-bottom:8px}
+/* Encounters (Decisions 188–190). Built for a tablet at the table: the status bar and Next stay in view while the rows scroll, and everything a GM or a
+   pack wrote wraps. The active row has a rule down its left side and nothing else moves, so it reads at a glance. */
+.enc-bar{position:sticky; top:var(--hdr-off); z-index:20; display:flex; flex-wrap:wrap; align-items:center; gap:8px; background:var(--ground); padding:8px 0; margin:0 0 10px; border-bottom:1px solid var(--frame)}
+.enc-status{font-family:var(--mono); font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; margin-right:auto}
+.enc-rows{list-style:none; margin:0 0 14px; padding:0; display:grid; gap:10px}
+.enc-row{background:var(--panel); border:1px solid var(--frame); border-left:4px solid var(--frame); border-radius:6px; padding:10px 14px 12px; min-width:0; scroll-margin-top:calc(var(--hdr-off) + 72px); scroll-margin-bottom:12px}
+.enc-row.active{border-left-color:var(--cyan); background:var(--panel-2)}
+.enc-row.out{opacity:.65}
+.enc-head{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; min-width:0}
+.enc-head[data-eturn]{cursor:pointer}
+.enc-name{overflow-wrap:anywhere; font-size:1.02rem; min-width:0}
+.enc-num{display:inline-flex; align-items:center; gap:6px; font-size:.85rem; color:var(--dim); overflow-wrap:anywhere}
+.enc-num input{width:76px; min-width:0; text-align:center}
+.enc-pcnums{display:flex; flex-wrap:wrap; gap:6px 16px; margin:4px 0}
+.enc-health{margin:6px 0 4px; overflow-wrap:anywhere; font-family:var(--mono); font-size:.85rem}
+.enc-down{color:var(--magenta-text)}
+.enc-tied{border-color:var(--magenta)}
+.enc-conds{list-style:none; margin:6px 0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
+.enc-cond{flex-wrap:wrap; max-width:100%; min-width:0; overflow-wrap:anywhere}
+.enc-src{font-style:italic}
+.enc-marks{display:inline-flex; align-items:center; gap:4px; font-size:.8rem}
+.enc-acts{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; margin-top:8px}
+.enc-more{flex:1 1 100%}
+.enc-more summary{cursor:pointer; color:var(--dim); font-size:.85rem; padding:6px 0}
+.enc-more .form-toggle{margin:4px 0 10px; width:max-content; max-width:100%}
+.enc-dmg{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px}
+.enc-dmg input{width:96px}
+.enc-condform{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0 14px; align-items:end; margin-top:10px}
+.enc-condform select, .enc-condform input{min-width:0; max-width:100%}
+.enc-condbtns{display:flex; gap:8px; margin-bottom:14px}
+.enc-err{grid-column:1 / -1; color:var(--magenta-text); margin:0 0 10px}
+.enc-pickrow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 14px; min-width:0}
+.enc-list{margin:0 0 10px; padding-left:20px; overflow-wrap:anywhere}
+.enc-list li{margin-bottom:6px}
+.enc-reset-row .cast-h{margin:16px 0 6px}

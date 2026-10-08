@@ -18,3 +18,7 @@ something a GM can see adds its line here.
 - **Build from the book.** With a pack slotted in, a cast member's page
   offers its origins, roles and tiers, shows what each means beside the
   stat block, and adds traits straight from the glossary.
+- **Encounters.** Plan them ahead and run them at the table, from a
+  negotiation to a firefight: who goes when, everyone's Health and Pain,
+  their Conditions with where they came from and when they run out, and a
+  Reset that lists what ticks, what ends and what needs a check.

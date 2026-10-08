@@ -2856,12 +2856,12 @@ test("the code guards read every engine and UI script, gm.js included (Decision 
   assert.ok(!CODE_FILES.some(f => f.includes("theme-init")));
 });
 
-test("newTable stamps kind, a TBL- id, the name, schema 0.4, no notes, cast or interactions", () => {
+test("newTable stamps kind, a TBL- id, the name, schema 0.5, no notes, cast or interactions", () => {
   const t = Engine.newTable("Tuesday");
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.4");
+  assert.equal(t.meta.tableSchemaVersion, "0.5");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -2929,14 +2929,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.4", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.5" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.5");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.5", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.6" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.6");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.5");
-  for (const v of ["0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.6");
+  for (const v of ["0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.4", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.5", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -2988,15 +2988,15 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.4");
+  assert.equal(m.meta.tableSchemaVersion, "0.5");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.5" }, cast: [{ name: 5, tier: "2" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.5");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.6" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.6");
   assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3211,7 +3211,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.4");
+  assert.equal(m.meta.tableSchemaVersion, "0.5");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3219,9 +3219,9 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
-test("a 0.4 table keeps its stamp and its interactions, and tableCheck says so", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.5" }, interactions: [{ kind: "shared", text: "x" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.5");
+test("a newer table keeps its stamp and its interactions, and tableCheck says so", () => {
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.6" }, interactions: [{ kind: "shared", text: "x" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.6");
   assert.equal(m.interactions.length, 1);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3573,12 +3573,12 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.4");
+  assert.equal(m.meta.tableSchemaVersion, "0.5");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
   const ok = { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" };
-  const j = Engine.migrateTable({ meta: { tableSchemaVersion: "0.4" }, cast: [
+  const j = Engine.migrateTable({ meta: { tableSchemaVersion: "0.5" }, cast: [
     { from: ok }, { from: "x" }, { from: { kind: "cast", pack: PACK_ID, id: "gull", name: "x" } }, { from: { ...ok, pack: "PK-bad" } },
     { from: { ...ok, id: "bad id!" } }, { from: { ...ok, name: 5 } }, {}] });
   eq(j.cast[0].from, ok);
@@ -3749,4 +3749,530 @@ test("187: castAffiliations and packChoices list a name once when it differs onl
     traits: [{ id: "x", name: "X", kind: "origin", origin: "o1", text: "" }] }));
   const c = Engine.packChoices([a, b]);
   eq(c.origins, ["Gull’s Reach"]); eq(c.traitOrigins, ["Gull’s Reach"]);
+});
+
+// ── Encounters (Decisions 188–190) ─────────────────────────────────────────
+const LOC = D.bodyLocations[0].id;
+/** A table with one planned encounter and a cast of two (Dez with a block, Ivo without). */
+function encTable() {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Ivo" });
+  Engine.addCastMember(t, { name: "Dez" });
+  const dez = t.cast.find(n => n.name === "Dez"), ivo = t.cast.find(n => n.name === "Ivo");
+  Engine.setCastBlock(t, dez.id, { stats: { BOD: 6 }, skills: [{ name: "Awareness", total: 7, skill: "awareness" }] });
+  const e = Engine.addEncounter(t, { name: "Warehouse" }).id;
+  return { t, e, dez, ivo };
+}
+const addPc = (t, e, name = "Wren", f = {}) => {
+  const r = Engine.addParticipant(t, e, { kind: "pc", name });
+  assert.ok(r.ok, r.why);
+  if (Object.keys(f).length) assert.ok(Engine.editParticipant(t, e, r.id, f).ok);
+  return r.id;
+};
+const encOf = (t, e) => t.encounters.find(x => x.id === e);
+const rowOf = (t, e, id) => encOf(t, e).rows.find(r => r.id === id);
+const viewRow = (t, e, id) => Engine.encounterView(t, e, []).rows.find(r => r.row.id === id);
+
+test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none and everything else untouched", () => {
+  assert.equal(JSON.stringify(Engine.newTable().encounters), "[]");
+  const old = Engine.newTable("Old");
+  Engine.addCastMember(old, { name: "Dez" });
+  Engine.addTableNote(old, { title: "A", text: "one" });
+  Engine.addInteraction(old, { kind: "shared", text: "x", cast: [old.cast[0].id] });
+  delete old.encounters;
+  old.meta.tableSchemaVersion = "0.4";
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.5");
+  eq(m.encounters, []);
+  eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
+});
+
+test("188: any number of encounters can be planned; one runs at a time, and an ended one frees the slot", () => {
+  const { t, e } = encTable();
+  const e2 = Engine.addEncounter(t, { name: "Docks" }).id, e3 = Engine.addEncounter(t, {}).id;
+  assert.equal(t.encounters.filter(x => x.status === "planned").length, 3);
+  assert.equal(t.encounters[0].id, e3, "newest first");
+  for (const id of [e, e2]) addPc(t, id);
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.equal(Engine.runningEncounter(t).id, e);
+  const refused = Engine.startEncounter(t, e2);
+  assert.equal(refused.ok, false);
+  assert.match(refused.why, /Warehouse is still running\. End it first\./);
+  assert.equal(encOf(t, e2).status, "planned");
+  assert.ok(Engine.endEncounter(t, e).ok);
+  assert.ok(Engine.startEncounter(t, e2).ok);
+  assert.equal(Engine.endEncounter(t, e3).ok, true, "a planned one ends unrun");
+  assert.equal(encOf(t, e3).round, 0);
+  assert.equal(Engine.startEncounter(t, e3).ok, false);
+});
+
+test("188: a blank name reads as the day it was made", () => {
+  const t = Engine.newTable("T");
+  const id = Engine.addEncounter(t, { name: "  " }).id;
+  assert.match(Engine.encounterView(t, id, []).title, /^Encounter \d{4}-\d{2}-\d{2}$/);
+});
+
+test("188: startEncounter wants someone in it who isn't out", () => {
+  const { t, e } = encTable();
+  assert.equal(Engine.startEncounter(t, e).why, "Add someone to the encounter first.");
+  const a = addPc(t, e, "A", { out: true });
+  assert.equal(Engine.startEncounter(t, e).ok, false);
+  assert.ok(Engine.editParticipant(t, e, a, { out: false }).ok);
+  assert.ok(Engine.startEncounter(t, e).ok);
+});
+
+test("188: addParticipant: a PC needs a name, a cast member can be in once, and the row is linked", () => {
+  const { t, e, dez } = encTable();
+  assert.equal(Engine.addParticipant(t, e, { kind: "pc", name: "   " }).ok, false);
+  assert.equal(Engine.addParticipant(t, e, { kind: "cast", id: "C-ZZZZZZZZ" }).ok, false);
+  const r = Engine.addParticipant(t, e, { kind: "cast", id: dez.id });
+  assert.ok(r.ok);
+  eq(rowOf(t, e, r.id).cast, { kind: "cast", id: dez.id, name: "Dez" });
+  assert.equal(rowOf(t, e, r.id).block, null, "a cast row reads the member live, it has no copy");
+  const again = Engine.addParticipant(t, e, { kind: "cast", id: dez.id });
+  assert.equal(again.ok, false); assert.equal(again.why, "Already in.");
+  assert.equal(encOf(t, e).rows.length, 1);
+});
+
+test("188: participantFromEntry copies the block: two rows, X and X 2, nothing shared with each other or the pack", () => {
+  const { t, e } = encTable();
+  const pack = Engine.migratePack(syntheticPack()), before = JSON.stringify(pack);
+  const a = Engine.participantFromEntry(t, e, pack, "gull"), b = Engine.participantFromEntry(t, e, pack, "gull"), c = Engine.participantFromEntry(t, e, pack, "gull");
+  eq([a, b, c].map(r => rowOf(t, e, r.id).name), ["Gull", "Gull 2", "Gull 3"]);
+  const ra = rowOf(t, e, a.id), rb = rowOf(t, e, b.id);
+  assert.notEqual(ra.block, rb.block);
+  assert.notEqual(ra.block, pack.entries.find(x => x.id === "gull").block);
+  eq(ra.from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
+  ra.block.stats.BOD = 99; ra.block.traits.push({ name: "x", text: "y" });
+  assert.equal(rb.block.stats.BOD, 8);
+  assert.equal(JSON.stringify(pack), before, "the pack is untouched");
+  assert.equal(Engine.participantFromEntry(t, e, pack, "nobody").ok, false);
+  assert.equal(t.cast.length, 2, "the cast is untouched");
+});
+
+test("188: participantsFromGroup adds every member x its count; a group of nobody is refused", () => {
+  const { t, e } = encTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const r = Engine.participantsFromGroup(t, e, pack, "pier-watch");
+  assert.ok(r.ok); assert.equal(r.ids.length, 4);
+  eq(encOf(t, e).rows.map(x => x.name), ["Gull", "Gull 2", "Gull 3", "Wren"]);
+  const empty = Engine.migratePack(syntheticPack());
+  empty.groups[0].members = [{ entry: "gone", count: 2 }];
+  const before = JSON.stringify(t);
+  assert.equal(Engine.participantsFromGroup(t, e, empty, "pier-watch").ok, false);
+  assert.equal(Engine.participantsFromGroup(t, e, pack, "no-such").ok, false);
+  assert.equal(JSON.stringify(t), before);
+});
+
+test("189: encounterView orders by result, blanks after in the order added, Goes last after all, and flags ties", () => {
+  const { t, e } = encTable();
+  addPc(t, e, "A", { order: 5 }); addPc(t, e, "B"); addPc(t, e, "C", { order: 9 }); const d = addPc(t, e, "D", { order: 5 });
+  addPc(t, e, "Z", { order: 99, last: true }); addPc(t, e, "Y", { order: 99, last: true }); addPc(t, e, "W", { last: true });
+  const v = Engine.encounterView(t, e, []);
+  eq(v.rows.map(r => r.name), ["C", "A", "D", "B", "Z", "Y", "W"]);
+  const tied = Object.fromEntries(v.rows.map(r => [r.name, r.ties]));
+  eq(tied, { C: false, A: true, D: true, B: false, Z: false, Y: false, W: false }, "ties on both rows, never on a last one");
+  assert.ok(Engine.editParticipant(t, e, d, { order: 6 }).ok);
+  assert.equal(Engine.encounterView(t, e, []).rows.some(r => r.ties), false);
+});
+
+test("189: health for each kind of row, and what's missing is null", () => {
+  const { t, e, dez, ivo } = encTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const p1 = addPc(t, e, "P1", { hp: 30 });
+  Engine.participantDamage(t, e, p1, 12);
+  let h = viewRow(t, e, p1).health;
+  eq([h.taken, h.total, h.left, h.down, h.levels, h.levelsLeft], [12, 30, 18, false, null, null]);
+  assert.equal(h.pain, null);
+  const p2 = addPc(t, e, "P2", { hp: 30, levels: 6 });
+  Engine.participantDamage(t, e, p2, 12);
+  h = viewRow(t, e, p2).health;
+  eq([h.taken, h.total, h.left, h.levels, h.levelsLeft], [12, 30, 18, 6, 4]);
+  assert.equal(h.pain.level, Engine.painFor(2, 0).level);
+  assert.equal(h.pain.label, Engine.painFor(2, 0).label);
+  const p3 = addPc(t, e, "P3", { hp: 31, levels: 6 });
+  Engine.participantDamage(t, e, p3, 12);
+  h = viewRow(t, e, p3).health;
+  eq([h.total, h.left, h.levels, h.levelsLeft], [31, 19, null, null]);
+  const p4 = addPc(t, e, "P4");
+  Engine.participantDamage(t, e, p4, 7);
+  h = viewRow(t, e, p4).health;
+  eq([h.taken, h.total, h.left, h.down, h.levels, h.pain], [7, null, null, false, null, null]);
+  const p5 = addPc(t, e, "P5", { levels: 6 });
+  assert.equal(viewRow(t, e, p5).health.levels, null);
+  const c1 = Engine.addParticipant(t, e, { kind: "cast", id: dez.id }).id;
+  Engine.participantDamage(t, e, c1, 40);
+  h = viewRow(t, e, c1).health;
+  eq([h.total, h.left, h.levels, h.levelsLeft, h.down], [30, 0, 6, 0, true], "floored at 0, and down");
+  assert.equal(viewRow(t, e, c1).awareness, 7);
+  const c2 = Engine.addParticipant(t, e, { kind: "cast", id: ivo.id }).id;
+  Engine.participantDamage(t, e, c2, 5);
+  h = viewRow(t, e, c2).health;
+  eq([h.taken, h.total, h.left, h.levels], [5, null, null, null]);
+  pack.entries.find(x => x.id === "gull").block.skills = [{ name: "Awareness", total: 4, skill: "awareness" }];
+  const en = Engine.participantFromEntry(t, e, pack, "gull").id;
+  h = viewRow(t, e, en).health;
+  eq([h.total, h.levels], [40, 8]);
+  assert.equal(viewRow(t, e, en).awareness, 4);
+  assert.equal(viewRow(t, e, p1).awareness, null);
+  assert.ok(Engine.editParticipant(t, e, p1, { awareness: 6 }).ok);
+  assert.equal(viewRow(t, e, p1).awareness, 6);
+});
+
+test("189: a cast row whose member was removed keeps its name and shows taken only", () => {
+  const { t, e, dez } = encTable();
+  const c = Engine.addParticipant(t, e, { kind: "cast", id: dez.id }).id;
+  Engine.participantDamage(t, e, c, 8);
+  Engine.editCastMember(t, dez.id, { name: "Dez the Younger" });
+  assert.equal(viewRow(t, e, c).name, "Dez the Younger", "a link reads the member's current name");
+  Engine.removeCastMember(t, dez.id);
+  const r = viewRow(t, e, c);
+  assert.equal(r.name, "Dez the Younger"); assert.equal(r.gone, true);
+  eq([r.health.taken, r.health.total, r.health.left, r.health.levels], [8, null, null, null]);
+  assert.equal(r.awareness, null);
+});
+
+test("189: painFor holds to painState at every count of levels lost, with Agonized and without (the parity test)", () => {
+  const ch = subject({ bod: 6 });
+  const hs = Engine.hlState(ch);
+  assert.equal(hs.levels, 6);
+  for (const agonized of [false, true]) {
+    ch.trackers.conditions = agonized ? [{ id: "agonized" }] : [];
+    for (let k = 0; k <= hs.levels; k++) {
+      ch.trackers.damage = k * hs.hpPer;
+      const sheet = Engine.painState(ch), mine = Engine.painFor(k, agonized ? 1 : 0);
+      assert.equal(sheet.hlLost, k);
+      assert.equal(mine.level, sheet.level, `${k} lost, agonized ${agonized}`);
+      assert.equal(mine.label, sheet.label);
+    }
+  }
+});
+
+test("189: on a row, levels lost give the band, Agonized adds one, and the clamp holds at the top", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e, "P", { hp: 30, levels: 6 });
+  const pain = () => viewRow(t, e, p).health.pain;
+  Engine.participantDamage(t, e, p, 5);
+  assert.equal(pain().level, 0);
+  Engine.participantDamage(t, e, p, 5);
+  assert.equal(pain().level, 1, "two levels lost");
+  assert.ok(Engine.participantAddCondition(t, e, p, { id: "agonized" }).ok);
+  assert.equal(pain().level, 2);
+  assert.equal(pain().fromConditions, 1);
+  Engine.participantDamage(t, e, p, 100);
+  const top = D.resources.healthLevels.painLevels.reduce((m, x) => Math.max(m, x.level), 0);
+  assert.equal(pain().level, top, "never above the table");
+  const q = addPc(t, e, "Q");
+  assert.equal(viewRow(t, e, q).health.pain, null);
+  Engine.participantAddCondition(t, e, q, { id: "agonized" });
+  assert.equal(viewRow(t, e, q).health.pain.level, 1);
+});
+
+test("189: participantDamage: negative heals, floored at 0, a non-integer refused", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e);
+  assert.ok(Engine.participantDamage(t, e, p, 10).ok);
+  assert.ok(Engine.participantDamage(t, e, p, -4).ok);
+  assert.equal(rowOf(t, e, p).damage, 6);
+  assert.ok(Engine.participantDamage(t, e, p, -50).ok);
+  assert.equal(rowOf(t, e, p).damage, 0);
+  for (const bad of [1.5, "x", NaN, null, undefined, {}, Infinity]) {
+    assert.equal(Engine.participantDamage(t, e, p, bad).ok, false, String(bad));
+    assert.equal(rowOf(t, e, p).damage, 0);
+  }
+});
+
+test("189: participantAddCondition: addCondition's refusals word for word, a body part when needed, rounds a whole number or none", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e);
+  const ch = { trackers: { conditions: [] } };
+  assert.ok(Engine.participantAddCondition(t, e, p, { id: "bleeding", source: " Corner Shot ", rounds: 3 }).ok);
+  assert.ok(Engine.addCondition(ch, { id: "bleeding" }).ok);
+  const mine = Engine.participantAddCondition(t, e, p, { id: "bleeding" }), sheets = Engine.addCondition(ch, { id: "bleeding" });
+  assert.equal(mine.ok, false); assert.equal(mine.why, sheets.why);
+  assert.equal(Engine.participantAddCondition(t, e, p, { id: "nope" }).why, Engine.addCondition(ch, { id: "nope" }).why);
+  assert.equal(Engine.participantAddCondition(t, e, p, { id: "injured" }).ok, false, "needs a body part");
+  assert.ok(Engine.participantAddCondition(t, e, p, { id: "injured", location: LOC }).ok);
+  assert.equal(Engine.participantAddCondition(t, e, p, { id: "injured", location: LOC }).ok, false);
+  const [bleed] = rowOf(t, e, p).conditions;
+  assert.equal(bleed.source, "Corner Shot"); assert.equal(bleed.rounds, 3);
+  const ids = ["blinded", "deafened", "desynced", "disarmed", "agonized", "burning"];
+  [0, -1, "x", 1.5, null, undefined].forEach((bad, i) => {
+    assert.ok(Engine.participantAddCondition(t, e, p, { id: ids[i], rounds: bad }).ok, ids[i]);
+    assert.equal(rowOf(t, e, p).conditions.at(-1).rounds, null, String(bad));
+  });
+  assert.ok(Engine.participantAddCondition(t, e, p, { id: "dying" }).ok);
+  const di = rowOf(t, e, p).conditions.length - 1;
+  assert.ok(Engine.participantConditionMarks(t, e, p, di, 2).ok);
+  assert.equal(rowOf(t, e, p).conditions[di].marks, 2);
+  assert.equal(Engine.participantConditionMarks(t, e, p, 0, 1).ok, false, "Bleeding has no counter");
+  assert.ok(Engine.participantRemoveCondition(t, e, p, 0).ok);
+  assert.equal(Engine.participantRemoveCondition(t, e, p, 99).ok, false);
+});
+
+test("189: Start, Next (skips Out, reset after the last), setTurn, and removing the active row moves the turn", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8, out: true }), c = addPc(t, e, "C", { order: 7 }), d = addPc(t, e, "D", { order: 6 });
+  assert.equal(Engine.nextTurn(t, e).ok, false, "not running");
+  assert.ok(Engine.startEncounter(t, e).ok);
+  eq([encOf(t, e).status, encOf(t, e).round, encOf(t, e).turn], ["running", 1, a]);
+  assert.ok(Engine.nextTurn(t, e).ok); assert.equal(encOf(t, e).turn, c, "B is out");
+  assert.equal(Engine.setTurn(t, e, b).ok, false, "an out row can't be made active");
+  assert.ok(Engine.setTurn(t, e, d).ok); assert.equal(encOf(t, e).turn, d);
+  assert.ok(Engine.setTurn(t, e, c).ok);
+  assert.ok(Engine.removeParticipant(t, e, c).ok);
+  assert.equal(encOf(t, e).turn, d, "the turn moves on");
+  const last = Engine.nextTurn(t, e);
+  eq([last.ok, last.reset, encOf(t, e).turn], [true, true, null]);
+  assert.equal(Engine.encounterView(t, e, []).atReset, true);
+  assert.equal(Engine.nextTurn(t, e).ok, false, "already at Reset");
+});
+
+test("189: resolveEncounterReset ticks, lists what runs out, what asks for a save, Dying's check; and changes nothing", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 });
+  addPc(t, e, "C", { order: 7 });
+  Engine.participantAddCondition(t, e, a, { id: "bleeding", rounds: 1, source: "knife" });
+  Engine.participantAddCondition(t, e, a, { id: "burning", rounds: 4 });
+  Engine.participantAddCondition(t, e, a, { id: "blinded" });
+  Engine.participantAddCondition(t, e, b, { id: "dying" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const before = JSON.stringify(t);
+  const refused = Engine.resolveEncounterReset(t, e, {});
+  assert.equal(refused.ok, false);
+  assert.match(refused.why, /Enter this round's Burning damage for A\. Put 0 if it's out\./);
+  assert.equal(JSON.stringify(t), before);
+  const zero = Engine.resolveEncounterReset(t, e, { sources: { [a]: { 1: 0 } } });
+  assert.ok(zero.ok); assert.equal(zero.rows[0].ticks.find(x => x.id === "burning").hp, 0);
+  const r = Engine.resolveEncounterReset(t, e, { sources: { [a]: { 1: "3" } } });
+  assert.ok(r.ok);
+  const [ra, rb, rc] = r.rows;
+  eq(ra.ticks.map(x => [x.id, x.hp]), [["bleeding", 1], ["burning", 3]]);
+  assert.equal(ra.total, 4);
+  eq(ra.expiring.map(x => x.id), ["bleeding"], "rounds 1 runs out now");
+  eq(ra.recovery.map(x => x.id).sort(), ["blinded", "burning"], "the rest ask for their save, as the data words it");
+  assert.equal(ra.recovery.find(x => x.id === "blinded").recovery, D.conditions.find(x => x.id === "blinded").recovery);
+  assert.equal(rb.dying, D.damageRules.whileDying.resetCheck);
+  assert.equal(rc.dying, null); eq([rc.ticks, rc.expiring, rc.recovery], [[], [], []]);
+  assert.equal(JSON.stringify(t), before, "pure");
+  assert.equal(Engine.resolveEncounterReset(t, "EN-ZZZZZZZZ", {}).ok, false);
+});
+
+test("189: applyEncounterReset adds the ticks, counts rounds down, ends what ran out unless kept, and starts the next round", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8, out: true });
+  Engine.participantAddCondition(t, e, a, { id: "bleeding", rounds: 1 });
+  Engine.participantAddCondition(t, e, a, { id: "burning", rounds: 3 });
+  Engine.participantAddCondition(t, e, a, { id: "blinded" });
+  Engine.participantAddCondition(t, e, a, { id: "deafened", rounds: 1 });
+  Engine.participantAddCondition(t, e, b, { id: "bleeding" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.equal(Engine.applyEncounterReset(t, e, { sources: { [a]: { 1: 2 } } }).ok, false, "not at Reset yet");
+  Engine.nextTurn(t, e);   // A was first and B is out: after A comes Reset
+  assert.equal(encOf(t, e).turn, null);
+  const before = JSON.stringify(t);
+  assert.equal(Engine.applyEncounterReset(t, e, {}).ok, false);
+  assert.equal(JSON.stringify(t), before, "a refusal changes nothing");
+  const r = Engine.applyEncounterReset(t, e, { sources: { [a]: { 1: 2 } } }, { keep: [[a, 3]] });
+  assert.ok(r.ok);
+  const A = rowOf(t, e, a), B = rowOf(t, e, b);
+  assert.equal(A.damage, 3, "Bleeding 1 + Burning 2");
+  assert.equal(B.damage, 1, "an Out row's Bleeding still ticks");
+  eq(A.conditions.map(c => [c.id, c.rounds]), [["burning", 2], ["blinded", null], ["deafened", 1]], "Bleeding ran out and went; Deafened was kept at 1");
+  assert.equal(B.conditions[0].rounds, null);
+  eq([encOf(t, e).round, encOf(t, e).turn], [2, a]);
+});
+
+test("188: every writer refuses on an ended encounter and leaves the table as it was", () => {
+  const { t, e, dez } = encTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const a = addPc(t, e, "A");
+  Engine.participantAddCondition(t, e, a, { id: "blinded" });
+  assert.ok(Engine.endEncounter(t, e).ok);
+  const before = JSON.stringify(t);
+  const attempts = {
+    edit: () => Engine.editEncounter(t, e, { name: "X" }),
+    pc: () => Engine.addParticipant(t, e, { kind: "pc", name: "N" }),
+    cast: () => Engine.addParticipant(t, e, { kind: "cast", id: dez.id }),
+    entry: () => Engine.participantFromEntry(t, e, pack, "gull"),
+    group: () => Engine.participantsFromGroup(t, e, pack, "pier-watch"),
+    editRow: () => Engine.editParticipant(t, e, a, { name: "X" }),
+    removeRow: () => Engine.removeParticipant(t, e, a),
+    damage: () => Engine.participantDamage(t, e, a, 3),
+    addCond: () => Engine.participantAddCondition(t, e, a, { id: "deafened" }),
+    removeCond: () => Engine.participantRemoveCondition(t, e, a, 0),
+    marks: () => Engine.participantConditionMarks(t, e, a, 0, 1),
+    start: () => Engine.startEncounter(t, e),
+    next: () => Engine.nextTurn(t, e),
+    turn: () => Engine.setTurn(t, e, a),
+    apply: () => Engine.applyEncounterReset(t, e, {}),
+    end: () => Engine.endEncounter(t, e),
+  };
+  for (const [name, fn] of Object.entries(attempts)) {
+    const r = fn();
+    assert.equal(r.ok, false, name);
+    assert.equal(typeof r.why, "string", name);
+    assert.equal(JSON.stringify(t), before, name);
+  }
+  assert.ok(Engine.removeEncounter(t, e).ok, "Delete works on an ended one");
+  assert.equal(Engine.removeEncounter(t, e).ok, false);
+});
+
+test("188: a refused or missing target changes nothing, whatever the writer", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e);
+  const before = JSON.stringify(t);
+  for (const r of [Engine.editEncounter(t, "EN-ZZZZZZZZ", {}), Engine.addParticipant(t, "EN-ZZZZZZZZ", { kind: "pc", name: "x" }),
+    Engine.editParticipant(t, e, "R-ZZZZZZZZ", {}), Engine.removeParticipant(t, e, "R-ZZZZZZZZ"), Engine.participantDamage(t, e, "R-ZZZZZZZZ", 1),
+    Engine.setTurn(t, e, a), Engine.nextTurn(t, e), Engine.endEncounter(t, "EN-ZZZZZZZZ")]) assert.equal(r.ok, false);
+  assert.equal(JSON.stringify(t), before);
+});
+
+test("188: editParticipant: HP, Health Levels and Awareness are a PC's alone", () => {
+  const { t, e, dez } = encTable();
+  const p = addPc(t, e, "P", { hp: "30", levels: 6, awareness: "4", order: "12" });
+  eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels, rowOf(t, e, p).awareness, rowOf(t, e, p).order], [30, 6, 4, 12]);
+  Engine.editParticipant(t, e, p, { hp: 0, levels: -3, awareness: "x", order: 2.5 });
+  eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels, rowOf(t, e, p).awareness, rowOf(t, e, p).order], [null, null, null, null]);
+  const c = Engine.addParticipant(t, e, { kind: "cast", id: dez.id }).id;
+  Engine.editParticipant(t, e, c, { hp: 50, levels: 5, awareness: 3 });
+  eq([rowOf(t, e, c).hp, rowOf(t, e, c).levels, rowOf(t, e, c).awareness], [null, null, null]);
+});
+
+test("188: removing a cast member stamps its name on the encounter rows that link it", () => {
+  const { t, e, dez } = encTable();
+  const c = Engine.addParticipant(t, e, { kind: "cast", id: dez.id }).id;
+  Engine.editCastMember(t, dez.id, { name: "Dez II" });
+  Engine.removeCastMember(t, dez.id);
+  assert.equal(rowOf(t, e, c).cast.name, "Dez II");
+});
+
+test("190: castFromEntry is unchanged: a copy first in the cast, with its from, and no encounter touched", () => {
+  const t = Engine.newTable("T");
+  const pack = Engine.migratePack(syntheticPack());
+  const r = Engine.castFromEntry(t, pack, "gull");
+  assert.ok(r.ok);
+  eq(t.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
+  assert.equal(t.encounters.length, 0);
+});
+
+test("190: the Condition tip kind is gm.js's alone", () => {
+  const gm = readFileSync(join(ROOT, "src/ui/gm.js"), "utf8"), shared = readFileSync(join(ROOT, "src/ui/shared.js"), "utf8");
+  assert.ok([...gm.matchAll(/\bTIPS\.(\w+)\s*=[^=]/g)].some(m => m[1] === "condition"), "gm.js adds TIPS.condition");
+  assert.ok(!/^  condition:/m.test(/const TIPS = \{([\s\S]*?)\n\};/.exec(shared)[1]), "shared.js must not define its own");
+});
+
+// ── Fix round (review of #126) ─────────────────────────────────────────
+test("189: Dying at Reset follows the sheet's F24 stub: a source that ticks is a mark and stands in for the check", () => {
+  const { t, e } = encTable();
+  const W = D.damageRules.whileDying;
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 }), c = addPc(t, e, "C", { order: 7 });
+  for (const id of [a, b, c]) Engine.participantAddCondition(t, e, id, { id: "dying" });
+  Engine.participantAddCondition(t, e, a, { id: "bleeding" });
+  Engine.participantAddCondition(t, e, c, { id: "burning" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const r = Engine.resolveEncounterReset(t, e, { sources: { [c]: { 1: 0 } } });
+  assert.ok(r.ok);
+  const [ra, rb, rc] = r.rows;
+  assert.equal(ra.dying, null, "Dying + Bleeding: the check isn't asked");
+  assert.equal(ra.dyingMarks, 1); assert.equal(ra.dyingText, W.text);
+  assert.equal(rb.dying, W.resetCheck, "Dying alone: the check is asked");
+  assert.equal(rb.dyingMarks, 0); assert.equal(rb.dyingText, null);
+  assert.equal(rc.dying, W.resetCheck, "Dying + Burning entered as 0: nothing ticked, so the check is asked");
+  assert.equal(rc.dyingMarks, 0);
+  const again = Engine.resolveEncounterReset(t, e, { sources: { [c]: { 1: 4 } } }).rows[2];
+  assert.deepEqual([again.dying, again.dyingMarks], [null, 1]);
+  assert.ok(!JSON.stringify(r).includes(W.resetText) && !JSON.stringify(r).includes(W.playerNote), "resetText or playerNote reached a row");
+  const before = JSON.stringify(t);
+  Engine.applyEncounterReset(t, e, {}, {});
+  assert.equal(JSON.stringify(t), before, "a refusal changes nothing");
+  Engine.nextTurn(t, e); Engine.nextTurn(t, e); Engine.nextTurn(t, e);
+  Engine.applyEncounterReset(t, e, { sources: { [c]: { 1: 4 } } });
+  assert.equal(rowOf(t, e, a).conditions.find(x => x.id === "dying").marks, 0, "the app applied a Death Mark");
+});
+
+test("189: the turn follows who has acted, not a place in the sort", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 10 }), b = addPc(t, e, "B", { order: 8 }), c = addPc(t, e, "C", { order: 5 });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.deepEqual(plain(encOf(t, e).acted), []);
+  Engine.nextTurn(t, e);
+  assert.equal(encOf(t, e).turn, b);
+  Engine.editParticipant(t, e, c, { order: 20 });   // the repro: the 5 is raised to 20 after two rows
+  const r = Engine.nextTurn(t, e);
+  assert.equal(r.reset, undefined, "the raised row was skipped");
+  assert.equal(encOf(t, e).turn, c);
+  assert.equal(Engine.nextTurn(t, e).reset, true);
+  eq(encOf(t, e).acted.slice().sort(), [a, b, c].sort());
+  // An acted row lowered below the active one doesn't act twice.
+  const x = encTable(); const p = addPc(x.t, x.e, "P", { order: 10 }), q = addPc(x.t, x.e, "Q", { order: 8 }), s = addPc(x.t, x.e, "S", { order: 5 });
+  Engine.startEncounter(x.t, x.e); Engine.nextTurn(x.t, x.e);
+  Engine.editParticipant(x.t, x.e, p, { order: 1 });
+  Engine.nextTurn(x.t, x.e);
+  assert.equal(encOf(x.t, x.e).turn, s);
+  assert.equal(Engine.nextTurn(x.t, x.e).reset, true, "P acted twice");
+  void q;
+});
+
+test("189: Delay doesn't mark the row it leaves; Finish and Start clear who acted; removal picks the same way", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 }), c = addPc(t, e, "C", { order: 7 });
+  Engine.startEncounter(t, e);
+  assert.ok(Engine.setTurn(t, e, c).ok);
+  assert.deepEqual(plain(encOf(t, e).acted), [], "Delay marked the row it left");
+  Engine.nextTurn(t, e);
+  eq(encOf(t, e).acted, [c]); assert.equal(encOf(t, e).turn, a, "A still hasn't acted");
+  // removing the active row picks the first that hasn't acted
+  assert.ok(Engine.removeParticipant(t, e, a).ok);
+  assert.equal(encOf(t, e).turn, b);
+  // removing an acted row drops it from acted
+  assert.ok(Engine.removeParticipant(t, e, c).ok);
+  eq(encOf(t, e).acted, []);
+  Engine.nextTurn(t, e); assert.equal(encOf(t, e).turn, null);
+  Engine.applyEncounterReset(t, e, {});
+  eq(encOf(t, e).acted, []); assert.equal(encOf(t, e).turn, b);
+  Engine.nextTurn(t, e); Engine.endEncounter(t, e);
+});
+
+test("189: setTurn refuses at Reset, and a Reset with everyone Out refuses instead of starting another round", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 });
+  Engine.startEncounter(t, e); Engine.nextTurn(t, e); Engine.nextTurn(t, e);
+  assert.equal(encOf(t, e).turn, null);
+  const s = Engine.setTurn(t, e, a);
+  assert.equal(s.ok, false); assert.equal(s.why, "Finish the round first.");
+  assert.equal(encOf(t, e).turn, null);
+  Engine.editParticipant(t, e, a, { out: true }); Engine.editParticipant(t, e, b, { out: true });
+  const before = JSON.stringify(t);
+  const r = Engine.applyEncounterReset(t, e, {});
+  assert.equal(r.ok, false); assert.equal(r.why, "Everyone's out. Bring someone back or end the encounter.");
+  assert.equal(JSON.stringify(t), before);
+  assert.equal(encOf(t, e).round, 1);
+});
+
+test("188: the gate keeps acted only while running with real rows once each, a running round is at least 1, and a second row for one member becomes a PC row", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Dez" });
+  const dez = t.cast[0].id;
+  const mk = (status, extra = {}) => ({ id: "EN-AAAAAAAA", name: "x", status, round: 0, acted: ["R-AAAAAAAA", "R-AAAAAAAA", "R-ZZZZZZZZ", 5, null], turn: "R-AAAAAAAA",
+    rows: [{ id: "R-AAAAAAAA", kind: "pc", name: "A" },
+      { id: "R-BBBBBBBB", kind: "cast", name: "Dez", cast: { kind: "cast", id: dez, name: "Dez" } },
+      { id: "R-CCCCCCCC", kind: "cast", name: "", cast: { kind: "cast", id: dez, name: "Dez Again" }, hp: 9 }], ...extra });
+  t.encounters = [mk("running"), { ...mk("planned"), id: "EN-BBBBBBBB" }, { ...mk("ended"), id: "EN-CCCCCCCC" }];
+  const m = Engine.migrateTable(t);
+  const [run, plan, end] = m.encounters;
+  eq(run.acted, ["R-AAAAAAAA"]); assert.equal(run.round, 1, "a running round is at least 1");
+  eq(plan.acted, []); eq(end.acted, []); assert.equal(plan.round, 0);
+  assert.equal(run.rows[1].kind, "cast");
+  assert.equal(run.rows[2].kind, "pc"); assert.equal(run.rows[2].cast, null); assert.equal(run.rows[2].name, "Dez Again");
+  eq(Engine.migrateTable(m), m);
+  assert.equal(JSON.stringify(Engine.migrateTable({ meta: {}, encounters: [{ status: "running", acted: "x", rows: [{ id: "R-AAAAAAAA" }] }] }).encounters[0].acted), "[]");
+});
+
+test("188: a PC row's HP and Health Levels stay whole numbers of 1 or more", () => {
+  const { t, e } = encTable();
+  const p = addPc(t, e, "P", { hp: "7", levels: 1 });
+  eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels], [7, 1]);
+  Engine.editParticipant(t, e, p, { hp: -2, levels: 0 });
+  eq([rowOf(t, e, p).hp, rowOf(t, e, p).levels], [null, null]);
 });
