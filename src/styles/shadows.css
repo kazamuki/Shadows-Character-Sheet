@@ -169,8 +169,8 @@ button.card:hover{border-color:var(--violet-hi)}
 .flag b{color:var(--gold); font-weight:600}
 
 /* inputs */
-label.field{display:block; margin-bottom:14px}
-label.field span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
+label.field, .enc-hit div.field{display:block; margin-bottom:14px}
+label.field span, .enc-hit div.field > span{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em;
   text-transform:uppercase; color:var(--dim); margin-bottom:5px}
 /* W41: TAG'd or TAGless, a field that's a toggle rather than a box */
 .tag-choice, .stat-method{margin-bottom:14px}
@@ -1258,3 +1258,17 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-list{margin:0 0 10px; padding-left:20px; overflow-wrap:anywhere}
 .enc-list li{margin-bottom:6px}
 .enc-reset-row .cast-h{margin:16px 0 6px}
+.enc-armor{margin:2px 0 4px; overflow-wrap:anywhere; font-family:var(--mono); font-size:.8rem; color:var(--dim)}
+.enc-armor-extra{font-size:.75rem; font-style:italic}
+.enc-traits{margin:4px 0; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:.85rem; color:var(--dim)}
+.enc-hit{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:0 14px; align-items:end; margin-top:10px; min-width:0}
+.enc-hit select, .enc-hit input[type="text"], .enc-hit input[type="number"]{min-width:0; max-width:100%}
+.enc-hit .form-toggle{width:max-content; max-width:100%; flex-wrap:wrap}
+.enc-hit [data-ehit-live]{grid-column:1 / -1; min-width:0}
+.enc-preview{margin:4px 0 6px; font-family:var(--mono); font-size:.9rem; overflow-wrap:anywhere}
+.enc-refusal{color:var(--dim)}
+.enc-prompt{margin:0 0 10px; min-width:0}
+.enc-prompt p{margin:0 0 6px; overflow-wrap:anywhere}
+.enc-offered{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px 16px}
+.enc-offered li{display:inline-flex; align-items:center; gap:6px}
+.enc-check{display:inline-flex; align-items:center; gap:6px; min-height:36px}

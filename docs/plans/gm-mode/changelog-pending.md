@@ -22,3 +22,6 @@ something a GM can see adds its line here.
   negotiation to a firefight: who goes when, everyone's Health and Pain,
   their Conditions with where they came from and when they run out, and a
   Reset that lists what ticks, what ends and what needs a check.
+- **The hit.** Hit an NPC the way the sheet takes a hit: their armor,
+  Shock, Massive damage, At Zero and Dying, by the book's rules for enemies,
+  and their traits on screen when it's their turn.

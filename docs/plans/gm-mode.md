@@ -582,7 +582,9 @@ waits on it.
   and record its size in the log.
 - **Decisions:** seats outside the roster. **Tests:** a character imported
   twice; the read-only sheet has no reachable write. A typed-name PC from S5
-  or S10 can be **claimed** by a seat, so its history carries over.
+  or S10 can be **claimed** by a seat, so its history carries over. **A PC row
+  claimed by a seat takes the whole hit on a copy of the seated character, never
+  written back (191).**
 
 ### S4 — GM writes
 
@@ -695,6 +697,8 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 
 **Split (Ken, 2026-10-07).** **S10a is built** (`gm-mode/S10a-encounter.md`, Decisions 188–190): the encounter record, rows from the cast, the Codex and typed names, Order of Engagement, the round, Conditions with a source and rounds on every row, Reset's checklist, damage as HP on a row shown with Health Levels and Pain, ending an encounter, and Use's two verbs. **S10b** is next: a hit through the engine's pipeline (armor, Shock, Massive Damage) with an NPC adapter and armor numbers (GQ18), At Zero and Dying for NPCs, traits as reminders with their triggers, Keep and Promote at an encounter's end, a cast member's history line. Later: the Encounter Design worksheet, an encounter's clocks (S7), Surprise, Ambush and Delay. The list below is the whole of S10, as drafted.
 
+**S10b is built** (`gm-mode/S10b-hit.md`, Decisions 191–192, table schema 0.6, switched off): a hit on a row through the sheet's own pipeline, an NPC's on a stand-in wearing the Gear catalog's piece with static PROT, a PC's after their armor, Shock, At Zero and Dying's Death Mark offered and none forced, and the active row's traits a tap away. **S10c** is the encounter's end: Keep and Promote, the history line, the end-of-encounter wear roll, and anything Scott's use of S10a and S10b turns up.
+
 - The Encounter Design worksheet; participants (PCs by typed name until
   S3b); Order of Engagement; rounds and Reset; NPC damage through the
   engine's pipeline; **Conditions with durations on every row, PCs
@@ -790,9 +794,11 @@ Deighton.
 | GQ15 | Bob has his own stat block and also says to use Entry 05's when he's pushed. When a roster NPC turns hostile, do they fight with their own block or their Push Profile's entry? | Scott | The Push Profile's entry; their own block is for social scenes. The cast record keeps both |
 | GQ16 | v2's Enemy Roles table gives each role a tier (Brute is T2), and an entry prints both. Can an entry's tier differ from its role's, a T3 Brute? | Scott | Yes: tier is stored, and the builder notes when it differs from the role's usual |
 | GQ17 | The Orders are in the Codex now, under a "proposed modifier" heading. Are they approved? | Scott | Not yet: the builder offers Origin only until the heading drops "proposed" |
-| GQ18 | NPC armor is "PROT + RES (1d4+2), or the average (5)". 1d4+2 averages 4.5; is the 5 rounded up on purpose? And is this the players' armor rule simplified for the GM, or its own NPC rule? It touches the RES question in F23 and F25 | Deighton | The tracker offers both, roll or 5, exactly as printed |
+| GQ18 | NPC armor is "PROT + RES (1d4+2), or the average (5)". 1d4+2 averages 4.5; is the 5 rounded up on purpose? And is this the players' armor rule simplified for the GM, or its own NPC rule? It touches the RES question in F23 and F25 | Deighton | **Answered 2026-10-07 (Ken, SQ2):** 053 says enemy armor is static and doesn't roll; the static number is the PROT die's average rounded up, plus RES. The Codex's "(5)" is the 1d4 + 2 piece's (Leather and Denim Jacket), not a rule for every NPC (191) |
 | GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8 |
 | GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts |
 | GQ21 | The Tier table against the entries: on Scott's Stat Audit (2026-10-03), 14 of 17 human Tier 3 entries and all 18 supernatural Tier 3 drafts have a stat outside the table's band ("All stats 5–8; 2–3 exceptional at 8–9"); by the mirror, one Tier 1 entry has a Signature ("no Signatures") and 10 of 17 Tier 3 entries have three or four ("1–2"). The supernatural copy treats the trait budget as binding. Is the table a guide, or are the entries off it? | Scott | **Answered 2026-10-06 (Ken):** a general guide, where to start looking for the power you want; the GM overrides it as the story needs. The builder shows it as the book's words and never warns (S9b, 183–184) |
 | GQ23 | Do NPCs take Pain Levels as players do? The Codex prints their Health Levels, and traits like Scar Tissue assume pain slows them. | Scott | Default: yes, shown on the encounter's row by the players' rule and applied by the GM (S10a shows it and applies nothing; 189). Not an F-flag: no player rule changes |
+| GQ24 | Do NPCs make the At Zero check, or drop at zero? | Scott | Default: offered, never forced; the GM leaves it unanswered to drop them (192) |
+| GQ25 | Should a trait carry a trigger the app can light, "at their last Health Level", as a field in the pack? | Scott | Default: no; traits are text, shown on the active row (192) |
 | GQ22 | Eight trait names on entries aren't in the glossary under that name. The Pointman's *Controlled Violence*, *Clear the Room* and *Take the Hit* have no glossary row. *Ghost Roads* (the Drifter) and *Terrain Native* (the Wraith) are the glossary's *Know the Gaps* under entry names. The Architect's and the Converted's last "trait" are design notes set in bold (*Interface (17) / Programming (17)*, *TOL 7 / WILL 5*). *Sanctified Rosary — if carried* carries a condition in its name; the glossary's row is *Sanctified Rosary*. The Codex pack keeps each as printed. Which is right? Also: the entries print *Handgun*, *Rifle* and *SMG*; the game's skills are *Handguns*, *Rifles* and *SMGs*. The pack matches the plural by one letter | Scott | **Open** (S9c, 186). Each stays as the book prints it until he answers; the builder's trait count reads them as *written*, which is true |
