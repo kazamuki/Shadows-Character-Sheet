@@ -733,3 +733,23 @@ download can't be traced back through it. The history already exists in
 tag, written for what a player would notice. It should also decide whether the
 file keeps up per release or points at `log/shipped.md`, so it can't go stale
 the same way again.
+
+### Progression
+
+**W71 — Raise a power with IP, and give every power ranks.** *Ken · → Decision 194, app 0.38.0: Raise a Power on Progression, every power ranked*
+Progression offers **Raise a Stat** and **Raise a Skill**, but not a power,
+though `0450_Advancement` prices it: **Power or Discipline, current rank × 20**
+(Evocation 3 → 4 costs 60) and **a new Power, 40** for rank 1 in a power the
+archetype can learn. Today an Arcanist's Disciplines have ranks but only CP
+buys them, at creation; a Custom archetype's powers are text with no rank,
+improved by a rewrite at an IP price the GM names (Decision 154); and no
+archetype's powers are data at all (every `archetypes[].powers` is empty).
+`0413_Vampire` and `0414_Werewolf` now print every power with a rank and a
+**Per Rank** column (Werewolf to 3, Vampire to 5), so the book gives the shape.
+Ken's ask: every power has a rank, Custom ones included, so a player can raise
+any power through a campaign.
+*To respect:* IDs are immutable (constraint 6) and a Custom power's IP spend
+already lives in the journal by row id (Decision 154). The cap is IPE's 10 for
+mortals (`ip.rankCap`); Werewolf and Vampire powers stop at their own printed
+maximums. Whether a raise needs anything beyond IP (fiction, a teacher) is the
+GM's, as with stats and skills.

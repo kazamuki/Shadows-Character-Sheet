@@ -34,7 +34,7 @@ const statIco = (id, cls="ico") => { const s=iconSvg(id); return s?`<div class="
 
 // W20/W21: a skill's two stats as the brand icons with this character's own
 // numbers, on the wizard's skill line and in the sheet's breakdown. The
-// primary adds its score and the synergy its modifier (030), so the synergy
+// primary adds its score and the synergy its modifier (0300), so the synergy
 // reads as a bonus. Violet and magenta match the print sheet's badges. The
 // synergy is dimmed on an untrained skill, whose check leaves it out.
 function skillStatsHtml(line){

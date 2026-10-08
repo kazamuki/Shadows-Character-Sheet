@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.17";
+  const SCHEMA_VERSION = "0.18";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -77,8 +77,10 @@ const Engine = (() => {
                  panel:{} },                   // generic archetype tracker panels
       panelData:{},                            // archetype table/toggle panel content
       powers:[], gear:[], weapons:[], armor:[],
+      // Schema 0.18 (Decision 194): `powerIpe` is the ranks IP bought, per
+      // power id: a Discipline's data id or a written power's row id.
       progression:{ ip:{earned:0, log:[]}, milestonePoints:0,
-                    milestones:{minor:[], major:[]} },
+                    milestones:{minor:[], major:[]}, powerIpe:{} },
       sessions:[], notes:"",
       audit:[]                                 // reversible action log
     };
@@ -90,7 +92,7 @@ const Engine = (() => {
   const advById    = id => D().advantages.find(a=>a.id===id);
   const disById    = id => D().disadvantages.find(d=>d.id===id);
   // Decision 152: what kind of being the archetype is, and so which Advantages
-  // it may buy: "all", or "universal" (only those carrying 043's Universal
+  // it may buy: "all", or "universal" (only those carrying 0430's Universal
   // tag). No archetype, or none named, gates nothing. A write-in archetype
   // (Decision 153) has none of its own: the character's pick is its classification.
   const writeInSpec = ch => { const a = archetype(ch); return a && a.writeIn && typeof a.writeIn==="object" ? a.writeIn : null; };
@@ -557,7 +559,7 @@ const Engine = (() => {
   }
 
   // Pain Level = the band for Health Levels lost, plus any Condition Pain
-  // (Agonized), clamped to the table — "never below 0 or above 3" (054).
+  // (Agonized), clamped to the table — "never below 0 or above 3" (0540).
   function painState(ch){
     const hl = D().resources.healthLevels;
     const hs = hlState(ch);
@@ -711,7 +713,7 @@ const Engine = (() => {
     return { aimed, location: rd ? rd.to : aimed, redirectedBy: rd };
   }
 
-  // 053 Massive: skips PROT and RES; strips INT equal to the damage; 1 HL per
+  // 0530 Massive: skips PROT and RES; strips INT equal to the damage; 1 HL per
   // 10; +1 if the armor ends at 0 or there was none. Ending at 0 is scrap.
   function mitigateBypass(damage, armor, covered){
     const M = (D().damageRules||{}).massive || {};
@@ -723,7 +725,7 @@ const Engine = (() => {
              scrap: covered && damage>0 && gone };
   }
 
-  // 053 regular: PROT (the die rolled) + RES if the type matches and the hit
+  // 0530 regular: PROT (the die rolled) + RES if the type matches and the hit
   // isn't AP and the armor isn't Compromised/scrap. Fully soaked costs INT.
   function mitigateArmor(damage, type, hit, armor, covered){
     let prot = 0, res = 0, resSkipped = null;
@@ -762,9 +764,9 @@ const Engine = (() => {
     return out;
   }
 
-  // 054's consequences of taking damage, hit or not: At Zero, and the Death
+  // 0540's consequences of taking damage, hit or not: At Zero, and the Death
   // Mark while Dying. Turn Reset's ongoing damage shares this. Shock doesn't:
-  // 054 asks it of "a single hit", and a Bleeding tick isn't one.
+  // 0540 asks it of "a single hit", and a Bleeding tick isn't one.
   function isDying(ch){
     const dyingId = ((D().damageRules||{}).whileDying||{}).condition;
     return !!dyingId && (((ch||{}).trackers||{}).conditions||[]).some(e=>e && e.id===dyingId);
@@ -911,7 +913,7 @@ const Engine = (() => {
     return { ok:true, value:n };
   }
 
-  // "BOD+3" is "calculated by adding the BOD score to the bonus" (053): BOD 5
+  // "BOD+3" is "calculated by adding the BOD score to the bonus" (0530): BOD 5
   // does 8. A number is fixed damage; anything else ("6/round") stays text.
   function weaponDamage(ch, d){
     if (typeof d==="number") return { value:d, formula:null };
@@ -923,7 +925,7 @@ const Engine = (() => {
 
   // Everything a player reads off the sheet to make an attack with a catalog
   // weapon. The attack total is the skill's, so Pain and Conditions are in it;
-  // ACC is apart because only Single fire adds it (053). A custom weapon is
+  // ACC is apart because only Single fire adds it (0530). A custom weapon is
   // whatever was typed, so there's nothing to compute.
   function weaponLine(ch, index){
     const e = listOf(ch, "weapons")[index];
@@ -1040,7 +1042,7 @@ const Engine = (() => {
   // sheet it's refused, saying so, unless the player reloads anyway (`anyway`),
   // which the result marks so the audit can say it was. W40: with more than
   // one kind carried it asks which (`choose`, answered with `opts.ammo`), and
-  // a full weapon reloads only to swap kinds (053). What was left in the
+  // a full weapon reloads only to swap kinds (0530). What was left in the
   // magazine isn't kept (F34's stub).
   function reloadWeapon(ch, index, opts){
     const e = weaponEntry(ch, index), l = e && weaponLine(ch, index);
@@ -1339,7 +1341,7 @@ const Engine = (() => {
     return { ok:true };
   }
 
-  // The after-fight wear roll (053): the die is the GM's call by difficulty,
+  // The after-fight wear roll (0530): the die is the GM's call by difficulty,
   // and the roll comes off the top of Integrity. It can leave armor
   // Compromised, never scrap -- only Massive does that. A feature with an
   // `afterEncounter` roll (Self-Healing) is asked for in the same action.
@@ -1374,7 +1376,7 @@ const Engine = (() => {
              before:p.integrity, after:p.integrityMax - loss };
   }
   // Repair: a Field Repair Kit (the player's roll on `repairKitDie`) or an
-  // armorer (all of it). Scrap can't be repaired (053).
+  // armorer (all of it). Scrap can't be repaired (0530).
   function repairArmor(ch, index, input){
     input = input || {};
     const e = listOf(ch, "armor")[index];
@@ -1393,7 +1395,7 @@ const Engine = (() => {
     return { ok:true, name:p.name, restored, after:p.integrityMax - e.integrityLoss };
   }
 
-  // Natural Healing (055): BOD per day of real rest. The engine proposes the
+  // Natural Healing (0550): BOD per day of real rest. The engine proposes the
   // number; the GM may halve it for pushing on, so the player can change it.
   function naturalHealing(ch){
     const N = ((D().recoveryRules||{}).naturalHealing) || {};
@@ -1407,7 +1409,7 @@ const Engine = (() => {
   // also clear the Conditions `recoveryRules.focusedHealing.clears` names
   // (Injured), by index, and restore Massive levels (CQ6: with a replacement).
   // Withering is trimmed to the damage left, as every lowering of it is.
-  // A Nanomed Kit (Decision 105, 054's list): dose n inside a day regenerates
+  // A Nanomed Kit (Decision 105, 0540's list): dose n inside a day regenerates
   // 1 HP every n rounds for BOD rounds, so it proposes floor(BOD / n). The
   // player can change the number: a fight that ends early stops it.
   function nanomedKit(ch, dose){
@@ -1449,7 +1451,7 @@ const Engine = (() => {
   // Condition with `ongoing` damage ticks -- a fixed amount (Bleeding) or the
   // number entered for its source (Burning, Shocked). The damage goes straight
   // onto the total: it isn't a hit, so armor and Shock don't come into it
-  // (054 asks Shock of "a single hit"), but At Zero and Dying do. `input`:
+  // (0540 asks Shock of "a single hit"), but At Zero and Dying do. `input`:
   //   { sources: { [condition index]: hp } }
   // Every Condition's recovery is listed as text; no check is run.
   function resolveReset(ch, input){
@@ -1561,7 +1563,7 @@ const Engine = (() => {
   }
   // The skills that are Focused by name: the specialization's own plus valid
   // picks. An `all` rule (Jack of All Trades) is a price, not a list, and is
-  // read by focusedPrice() alone (F33).
+  // read by focusedPrice() alone: it raises no starting cap (0412, F33 closed).
   function focusedSkillIds(ch){
     const f = focusedSkillSpec(ch);
     if (!f) return [];
@@ -1580,7 +1582,7 @@ const Engine = (() => {
     const f = focusedSkillSpec(ch);
     return !!(f && f.all && toRank <= (Number(f.all.throughRank)||0));
   }
-  // The most a skill can start at. 042: the Power Level's Max Skill Rank caps
+  // The most a skill can start at. 0420: the Power Level's Max Skill Rank caps
   // starting rank only, so this is a creation rule; play is capped by
   // ip.rankCap. A Focused Skill adds the scaling row's focusedSkillMaxBonus.
   function skillRankCap(ch, skillId){
@@ -1616,6 +1618,16 @@ const Engine = (() => {
       if (line.masteryCost==null) return {ok:false, why:`${line.name} has no Threshold to master.`};
       return {ok:true, cost: line.masteryCost, from:"known", to:"mastered", index: line.index};
     }
+    // Decision 194 (0450): a power or Discipline costs its current rank × 20,
+    // and rank 1 in one never trained is a new power's flat price. The cap is
+    // IPE's, as for skills.
+    if (targetType==="power"){
+      const p = powerRanks(ch).find(x=>x.id===targetId);
+      if (!p) return {ok:false, why:"That power isn't on this sheet."};
+      if (p.rank >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
+      const price = D().ip.powerIncreaseCost;
+      return {ok:true, cost: p.rank===0 ? price.newPower : price.perRank * p.rank, from:p.rank, to:p.rank+1, name:p.name};
+    }
     const line = skillLine(ch, targetId);
     const cur = line.rank;
     if (cur >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
@@ -1632,9 +1644,15 @@ const Engine = (() => {
     if (ipState(ch).available < c.cost) return {ok:false, why:`Not enough IP (need ${c.cost}).`};
     if (targetType==="stat") ch.stats[targetId].ipe += 1;
     else if (targetType==="spell") grimoireRows(ch)[c.index].stage = "mastered";
+    else if (targetType==="power"){
+      const ipe = powerIpeOf(ch, targetId) + 1, pr = ch.progression;
+      if (!isPlainObj(pr.powerIpe)) pr.powerIpe = {};
+      pr.powerIpe[targetId] = ipe;
+    }
     else { if (!ch.skills[targetId]) ch.skills[targetId]={rank:0, ipe:0}; ch.skills[targetId].ipe += 1; }
-    ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:c.cost,
-      targetType, targetId, from:c.from, to:c.to, note:note||"" });
+    // A power's entry carries its name, as a written power's Add and Improve do.
+    ch.progression.ip.log.push(Object.assign({ date:new Date().toISOString(), kind:"spend", amount:c.cost,
+      targetType, targetId, from:c.from, to:c.to, note:note||"" }, targetType==="power" ? { name:c.name } : {}));
     return {ok:true, cost:c.cost};
   }
   function grantIP(ch, amount, note){
@@ -1997,7 +2015,7 @@ const Engine = (() => {
     const t = th===undefined ? s && s.th : th;
     return typeof t==="number" && t>=1 && M.ipPerTH ? M.ipPerTH * t : null;
   }
-  // The dice a live cast rolls: the named Discipline's rank (Magic.md, Step 2).
+  // The dice a live cast rolls: the named Discipline's rank (0480_Magic.md, Step 2).
   // A TH above it can still be cast, but only an exploding 10 reaches it
   // (Ken, Decision 111). Concentration's held dice are the table's to count.
   function castingPool(ch){
@@ -2149,8 +2167,27 @@ const Engine = (() => {
     return (spec.list||[]).map(d=>{
       const base = d.startingRankBy ? (dataPath(ch, d.startingRankBy)||0) : 0;
       const bought = (ch.archetypeChoices.disciplines||{})[d.id]||0;
-      return { id:d.id, name:d.name, base, bought, rank: base+bought, cap, description:d.description };
+      const ipe = powerIpeOf(ch, d.id);
+      // `cap` is the creation cap (Max Power Rank): it bounds base + bought,
+      // never what IP buys afterwards (Ken, 2026-10-08).
+      return { id:d.id, name:d.name, base, bought, ipe, start: base+bought, rank: base+bought+ipe, cap, description:d.description };
     });
+  }
+  // Ranks IP bought for one power (Decision 194). An undo can put anything a
+  // file's audit holds back into the map, so the read normalizes.
+  function powerIpeOf(ch, id){
+    const m = (((ch||{}).progression)||{}).powerIpe;
+    return isPlainObj(m) && Object.prototype.hasOwnProperty.call(m, id) ? nonNegInt(m[id]) : 0;
+  }
+  // Every power the character holds that has a rank, and so can be raised:
+  // Disciplines (rank 0 is one not yet trained), then the character's own
+  // written powers, rank 1 at creation (XQ2: creation's powers are free).
+  // Werewolf and Vampire powers join here when their data does (crb-v4-sync P3, P4).
+  function powerRanks(ch){
+    const ds = disciplineRanks(ch).map(d=>({ id:d.id, name:d.name, kind:"discipline", rank:d.rank, ipe:d.ipe }));
+    const own = ownPowers(ch).filter(p=>p.id).map(p=>{ const ipe = powerIpeOf(ch, p.id);
+      return { id:p.id, name:p.name || "Unnamed power", kind:"written", rank:1+ipe, ipe }; });
+    return [...ds, ...own];
   }
 
   // ── A write-in archetype (Decision 153) ─────────────────────────────
@@ -2182,6 +2219,8 @@ const Engine = (() => {
   }
   const hasPowers = ch => archPanels(ch).some(p=>p.type==="powers");
   const ownPowers = ch => hasPowers(ch) ? listOf(ch, "powers").filter(isPlainObj).map(powerRow) : [];
+  // As read for display: each with its rank, 1 + what IP bought (Decision 194).
+  const rankedOwnPowers = ch => ownPowers(ch).map(p=>Object.assign(p, { rank: 1 + powerIpeOf(ch, p.id) }));
   // The one reader for what an archetype is, whichever kind: the Archetype
   // tab, the wizard card, the header, the roster and print all draw this.
   function archetypeContent(ch){
@@ -2191,10 +2230,10 @@ const Engine = (() => {
     const text = spec && c && c.writeIn ? txt(w.classificationText).trim() : "";
     const cls = c ? { id:c.id, name:c.name, text } : null;
     if (!spec) return { writeIn:false, name:a.name, description:a.summary||null, status:a.status, classification:cls,
-      traits:a.baselineTraits||[], powers:[...(a.powers||[]), ...ownPowers(ch)], vulnerabilities:a.vulnerabilities||[] };
+      traits:a.baselineTraits||[], powers:[...(a.powers||[]), ...rankedOwnPowers(ch)], vulnerabilities:a.vulnerabilities||[] };
     const desc = txt(w.description).trim();
     return { writeIn:true, name:txt(w.name).trim() || a.name, description:desc || null, status:a.status, classification:cls,
-      traits:textRows(w.traits), powers:ownPowers(ch), vulnerabilities:textRows(w.vulnerabilities) };
+      traits:textRows(w.traits), powers:rankedOwnPowers(ch), vulnerabilities:textRows(w.vulnerabilities) };
   }
   // A power row's id is local to the character, so the IP journal can name
   // the row a spend bought. Never reissued within one character.
@@ -2204,9 +2243,10 @@ const Engine = (() => {
     do id = `pw-${randomChars(8)}`; while (held.has(id));
     return id;
   }
-  // What a power costs in play (Decision 154): a whole number of IP, at least
-  // 1, and IP enough to pay it. `free` is Admin's: blank or 0 is allowed, for
-  // what creation missed. { cost } or { why }.
+  // What rewriting a power costs (Decision 154), the price the GM names: a
+  // whole number of IP, at least 1, and IP enough to pay it. `free` is
+  // Admin's adding one: blank or 0 is allowed, for what creation missed.
+  // { cost } or { why }.
   function powerCost(ch, raw, free){
     const blank = raw==null || String(raw).trim()==="";
     if (blank && free) return { cost:0 };
@@ -2221,14 +2261,20 @@ const Engine = (() => {
     if (cost) ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:cost,
       targetType:"power", targetId:id, name, note:txt(note) });
   };
+  // A new power in play is 0450's flat price (Decision 194), not one the GM
+  // names, as Decision 154 had it.
+  function newPowerCost(ch){
+    const cost = D().ip.powerIncreaseCost.newPower;
+    return ipState(ch).available < cost ? { why:`Not enough IP (need ${cost}).` } : { cost };
+  }
   // A power is written, and audited by the caller's commit(), with its IP
   // cost as a journal spend: one commit, one Undo. Admin's `free` adds one at
-  // no cost.
+  // no cost, or at a cost Admin types.
   function addPower(ch, input, { free=false }={}){
     if (!hasPowers(ch)) return { ok:false, why:"Powers aren't on this sheet." };
     const i = isPlainObj(input) ? input : {}, name = txt(i.name).trim();
     if (!name) return { ok:false, why:"Give the power a name." };
-    const c = powerCost(ch, i.cost, free);
+    const c = free ? powerCost(ch, i.cost, true) : newPowerCost(ch);
     if (c.why) return { ok:false, why:c.why };
     const row = powerRow({ id:newPowerId(ch), name, uses:txt(i.uses).trim(), effect:i.effect, notes:i.notes });
     if (!Array.isArray(ch.powers)) ch.powers = [];
@@ -2263,11 +2309,13 @@ const Engine = (() => {
     return { ok:true, id:row.id };
   }
   // Removing a power leaves its IP spend in the journal: IP spent stays spent,
-  // and versionCheck says the power is gone.
+  // and versionCheck says the power is gone. The ranks it bought go with it.
   function removePower(ch, id){
     const list = listOf(ch, "powers"), at = list.findIndex(p=>p && p.id===id);
     if (at < 0) return { ok:false, why:"That power isn't on this sheet." };
     list.splice(at, 1);
+    const m = ((ch||{}).progression||{}).powerIpe;
+    if (isPlainObj(m)) delete m[id];
     return { ok:true };
   }
 
@@ -2528,6 +2576,10 @@ const Engine = (() => {
     pr.ip = Object.assign({earned:0, log:[]}, pr.ip);
     if (!Array.isArray(pr.ip.log)) pr.ip.log=[];
     pr.milestones = Object.assign({minor:[], major:[]}, pr.milestones);
+    // Schema 0.18 (Decision 194): ranks IP bought, per power id. A file from
+    // before has none; a file's own keeps only whole, finite, positive counts.
+    pr.powerIpe = Object.fromEntries(Object.entries(isPlainObj(pr.powerIpe) ? pr.powerIpe : {})
+      .map(([k, v])=>[k, nonNegInt(_num(v, 0))]).filter(([, v])=>v > 0));
     // Decision 104: a held entry that isn't an object with an id was reaching
     // grants()/advSpent() and throwing. Drop it, as conditions already do.
     const isEntry = e => !!e && typeof e==="object" && typeof e.id==="string";
@@ -3052,7 +3104,7 @@ const Engine = (() => {
       // stepper stops at it, so only an edited file or a lower power level
       // chosen afterwards can pass it.
       for (const d of disciplineRanks(ch))
-        if (d.cap!=null && d.rank > d.cap) E(`${d.name} is rank ${d.rank}. It can start at ${d.cap} at most.`);
+        if (d.cap!=null && d.start > d.cap) E(`${d.name} is rank ${d.start}. It can start at ${d.cap} at most.`);
       // Starting spells (Decision 111). Evocation and TOL are only final on
       // this step, so the picks are checked here. Short of the count warns,
       // like an unspent pool; a spell above the rank or one too many blocks.
@@ -3179,12 +3231,19 @@ const Engine = (() => {
           issues.push(`IP journal shows ${name} Mastered, but the Grimoire doesn't — it may have been edited by hand.`);
         continue;
       }
-      // A power's spend bought a row (Decision 153); its id names the row.
+      // A power's spend bought a row (Decision 153) or a rank (Decision 194);
+      // its id names the row or the Discipline. A rank's entry has a `to`,
+      // and their count is the IPE the power should hold.
       if (type==="power"){
-        if (!listOf(c, "powers").some(p=>p && p.id===id)){
-          const e = log.find(x=>x.targetType==="power" && x.targetId===id);
-          issues.push(`IP journal shows IP spent on ${e && txt(e.name) ? e.name : "a power"}, but that power isn't on the sheet any more.`);
+        const e = log.find(x=>x.targetType==="power" && x.targetId===id);
+        const name = e && txt(e.name) ? e.name : "a power";
+        if (!powerRanks(c).some(p=>p.id===id)){
+          issues.push(`IP journal shows IP spent on ${name}, but that power isn't on the sheet any more.`);
+          continue;
         }
+        const raises = log.filter(x=>x && x.kind!=="grant" && x.targetType==="power" && x.targetId===id && typeof x.to==="number").length;
+        const ipe = powerIpeOf(c, id);
+        if (raises !== ipe) issues.push(`IP journal shows ${raises} rank${raises===1?"":"s"} bought for ${name} but it holds ${ipe} — totals may have been edited by hand.`);
         continue;
       }
       const ipe = type==="stat" ? ((c.stats||{})[id]||{}).ipe||0
@@ -3930,7 +3989,7 @@ const Engine = (() => {
     // Schema 0.7 (Decision 193): the member an entry row was kept as. A link, with the name it had.
     const kept = _castLinks([r.kept])[0];
     r.kept = r.kind==="entry" && kept ? kept : null;
-    // Hit at all, by the armor or the body: whoever was rolls for wear after the fight (053). Never cleared by Heal.
+    // Hit at all, by the armor or the body: whoever was rolls for wear after the fight (0530). Never cleared by Heal.
     r.struck = r.struck===true;
     r.order = _int(r.order);
     r.last = r.last===true;
@@ -4405,7 +4464,7 @@ const Engine = (() => {
   // damage, Massive levels and Conditions, wearing the Gear catalog's piece the
   // block names. Nothing in the sheet's pipeline changes. A PC row takes what got
   // through, after the player's own armor, on the GM's own numbers.
-  // Enemy armor is static (053): PROT is the die's average, rounded up.
+  // Enemy armor is static (0530): PROT is the die's average, rounded up.
   const _staticProt = piece => {
     const max = piece ? dieMax(piece.prot) : null;
     return max ? Math.ceil((max + 1) / 2) : null;
@@ -4622,7 +4681,7 @@ const Engine = (() => {
     newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
     powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, improvePower, newPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
-    derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks,
+    derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
     advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, validate,

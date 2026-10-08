@@ -926,7 +926,7 @@ function gearUseHtml(ch, st, id, key){
   const on = st[key]==null ? true : !!st[key];
   return `<div class="hitrow"><label class="check"><input type="checkbox" data-act="${key}" ${on?"checked":""}> Use one you carry: ${esc(def.name)} (${c.qty} left)</label></div>`;
 }
-// A Nanomed Kit (Decision 105): clears 054's list and Dying on its own, and
+// A Nanomed Kit (Decision 105): clears 0540's list and Dying on its own, and
 // proposes the regeneration for the dose. The player can lower the number.
 function nanomedPanelHtml(ch, st){
   const inp=actInput(ch, st), kit=Engine.nanomedKit(ch, st.dose), hs=Engine.hlState(ch);
@@ -1203,17 +1203,20 @@ function renderShProgression(){
     <button class="btn sm" data-ipgrant="1">Grant IP</button></div>`;
 
   // Spend (Decision 159): a button each, opening a modal that lists every
-  // stat or skill with its price, so the Milestones below stay in reach.
+  // stat, skill or power with its price, so the Milestones below stay in
+  // reach. Powers only when the character holds one with a rank (Decision 194).
   h += `<div class="raise-row">
     <button class="btn primary" data-raiseopen="stat">Raise a Stat</button>
-    <button class="btn primary" data-raiseopen="skill">Raise a Skill</button></div>`;
+    <button class="btn primary" data-raiseopen="skill">Raise a Skill</button>
+    ${Engine.powerRanks(ch).length ? `<button class="btn primary" data-raiseopen="power">Raise a Power</button>` : ""}</div>`;
 
   // IP journal
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
   h += ip.log.length ? `<div class="journal">` + ip.log.slice().reverse().map(e=>{
     const what = e.kind==="grant" ? `Grant` :
       e.targetType==="spell" ? `Mastered ${(Engine.spellById(e.targetId)||{name:e.targetId}).name}` :
-      e.targetType==="power" ? `Power: ${typeof e.name==="string" && e.name ? e.name : "unnamed"}` :
+      e.targetType==="power" ? (typeof e.to==="number" ? `${typeof e.name==="string" && e.name ? e.name : "A power"} ${e.from} → ${e.to}`
+                                                     : `Power: ${typeof e.name==="string" && e.name ? e.name : "unnamed"}`) :
       `${e.targetType==="stat"?e.targetId:(Engine.skillById(e.targetId)||{name:e.targetId}).name} ${e.from} → ${e.to}`;
     return `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
       <span class="amt ${e.kind==="grant"?"grant":"spend"}">${e.kind==="grant"?"+":"−"}${e.amount}</span>
@@ -1460,10 +1463,11 @@ function adminWriteInHtml(ch){
     <div class="sect">Vulnerabilities</div>${rows("vulnerabilities", "Vulnerability")}`;
 }
 
-// The character's own powers (Decisions 153, 154). In play a power reads as
-// written: its name, uses and effect change by Improve, for IP, and Add power
-// costs IP too; each is the change and its spend, one Undo. Admin edits the
-// words in place, adds a power free and removes one (its IP stays spent).
+// The character's own powers (Decisions 153, 154, 194). In play a power reads
+// as written, with its rank: its name, uses and effect change by Improve, for
+// the IP the GM names; its rank rises on Progression; and Add power costs a
+// new power's price. Each is the change and its spend, one Undo. Admin edits
+// the words in place, adds a power free and removes one (its IP stays spent).
 // Notes are the player's, always.
 function powerFieldsHtml(attr, p, uses){
   const v = k => p ? esc(p[k]) : "";
@@ -1473,10 +1477,14 @@ function powerFieldsHtml(attr, p, uses){
     </div>
     <label class="field"><span>Effect</span><textarea rows="2" ${attr("effect")}>${v("effect")}</textarea></label>`;
 }
-function powerCostHtml(attr, free){
+// `priced`: the cost is fixed, so only the journal note is asked (Add power
+// in play, Decision 194).
+function powerCostHtml(attr, free, priced){
+  const note = `<label class="field"><span>Note for the IP journal</span><input type="text" ${attr("note")}></label>`;
+  if (priced) return note;
   return `<div class="wi-pair">
       <label class="field"><span>${free?"IP cost (blank for none)":"IP cost"}</span><input type="text" inputmode="numeric" pattern="[0-9]*" ${attr("cost")} placeholder="${free?"0":""}"></label>
-      <label class="field"><span>Note for the IP journal</span><input type="text" ${attr("note")}></label>
+      ${note}
     </div>`;
 }
 function powersPanelHtml(ch){
@@ -1487,13 +1495,13 @@ function powersPanelHtml(ch){
   h += powers.map(p=> S.admin
     ? `<div class="pick wi-row">${powerFieldsHtml(k=>`data-pwedit="${esc(p.id)}|${k}"`, p, uses)}${notes(p)}
         <button class="btn sm danger" data-pwdel="${esc(p.id)}">Remove</button></div>`
-    : `<div class="pick wi-row pw-card"><div class="head"><h2>${esc(p.name)||"Unnamed power"}</h2>${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}
+    : `<div class="pick wi-row pw-card"><div class="head"><h2>${esc(p.name)||"Unnamed power"} <span class="chip">rank ${p.rank}</span></h2>${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}
         <button class="btn sm" data-pwimprove="${esc(p.id)}">Improve</button></div>
         <div class="desc">${esc(p.effect)||"No effect written."}</div>${notes(p)}</div>`).join("");
   if (!powers.length) h += `<p class="step-note">No powers yet.</p>`;
   h += `<details class="group pw-add"><summary>Add a power</summary><div class="ref-body">
-    ${powerFieldsHtml(k=>`data-pwnew="${k}"`, null, uses)}${powerCostHtml(k=>`data-pwnew="${k}"`, S.admin)}
-    <p class="step-note">${esc(copy(S.admin?"powerAddAdminNote":"powerAddNote"))} You have ${ip.available} IP.</p>
+    ${powerFieldsHtml(k=>`data-pwnew="${k}"`, null, uses)}${powerCostHtml(k=>`data-pwnew="${k}"`, S.admin, !S.admin)}
+    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))} You have ${ip.available} IP.</p>
     <button class="btn" data-pwadd-go>Add power</button></div></details>`;
   return h;
 }
@@ -1553,7 +1561,7 @@ function gearRowsHtml(ch){
 }
 // W16: the magazine, where a weapon line is drawn (Loadout and Main). One
 // button per rate of fire the weapon has, each spending that mode's rounds
-// (053), and Reload. A weapon whose capacity doesn't read shows it as text.
+// (0530), and Reload. A weapon whose capacity doesn't read shows it as text.
 function roundsHtml(l, capacityText){
   const r=l.rounds;
   if (!r) return esc(capacityText||"—");
@@ -2292,7 +2300,7 @@ function pArchetypePage(ch){
   h += content && content.description ? `<p class="p-note p-archdesc">${esc(content.description)}</p>` : (ch ? "" : `<div class="p-fieldrow p-archfields wide">${pField("Description", null)}</div>`);
   const textRows = list => named(list).map(x=>({ name:x.name, description:[x.description, x.benefit].filter(Boolean).join(" ") }));
   h += `<div class="p-section">Baseline Traits</div>${pRowsTableHtml(textRows(content && content.traits), ["name","description"], ["Trait","What it does"], 5, "p-archtable")}`;
-  const powers = named(content && content.powers).map(p=>({ name:p.name, uses:p.uses||p.drain||"", effect:[p.effect||p.description, p.notes].filter(Boolean).join(" — ") }));
+  const powers = named(content && content.powers).map(p=>({ name:p.rank!=null ? `${p.name} (rank ${p.rank})` : p.name, uses:p.uses||p.drain||"", effect:[p.effect||p.description, p.notes].filter(Boolean).join(" — ") }));
   h += `<div class="p-section">Powers</div>${pRowsTableHtml(powers, ["name","uses","effect"], ["Power","Uses","Effect"], 8, "p-archtable p-powertable")}`;
   h += `<div class="p-section">Vulnerabilities</div>${pRowsTableHtml(textRows(content && content.vulnerabilities), ["name","description"], ["Vulnerability","What it does"], 4, "p-archtable")}`;
   return h;
@@ -2378,20 +2386,23 @@ function openCatalog(kind){
     } });
 }
 
-// ── Raise a Stat / Raise a Skill (Decision 159) ──────────────────────
-// Two modals over the IP journal: every stat, or every skill (trained first,
-// then the ones you'd learn), each with its price, and a button that's off
-// with its reason. Each raise is one commit() with its undo toast, and the
-// modal stays open for the next, as the catalog does.
+// ── Raise a Stat / a Skill / a Power (Decisions 159, 194) ────────────
+// Modals over the IP journal: every stat, every skill (trained first, then
+// the ones you'd learn), or every power with a rank, each with its price, and
+// a button that's off with its reason. Each raise is one commit() with its
+// undo toast, and the modal stays open for the next, as the catalog does.
+const RAISE_TITLE = { stat:"Raise a Stat", skill:"Raise a Skill", power:"Raise a Power" };
 function raiseIP(ch, type, id){
   const c=Engine.ipCost(ch,type,id);
-  const nm = type==="stat" ? id : (Engine.skillById(id)||{name:id}).name;
+  const nm = type==="stat" ? id : type==="power" ? (c.name || "a power") : (Engine.skillById(id)||{name:id}).name;
   const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
   commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
 }
 function raiseStatusHtml(ch, type){
   const ip = Engine.ipState(ch).available;
   if (type==="stat") return `You have <b>${ip} IP</b> · a Stat costs its current value × ${D.ip.statIncreaseCost.perPoint} IP`;
+  if (type==="power"){ const p = D.ip.powerIncreaseCost;
+    return `You have <b>${ip} IP</b> · a Power costs ${p.perRank} × its current rank · a new one ${p.newPower} · cap ${D.ip.rankCap}`; }
   const price = D.ip.skillIncreaseCost;
   return `You have <b>${ip} IP</b> · a Skill costs ${price.perRank} × its current rank, Focused ${price.focusedPerRank} × · a new skill ${price.newSkill} · cap ${D.ip.rankCap}`;
 }
@@ -2414,6 +2425,16 @@ function raiseResultsHtml(ch, type){
     return `<table class="ref spell-results raise-results"><tbody>${rows}</tbody></table>
       <p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p>`;
   }
+  if (type==="power"){
+    const rows = Engine.powerRanks(ch).map(p=>{
+      const c = Engine.ipCost(ch,"power",p.id), learn = p.rank===0;
+      const sub = [p.kind==="discipline" ? "Discipline" : "Your power", learn ? "not trained yet" : `rank ${p.rank}`, p.ipe ? `+${p.ipe} from IP` : ""].filter(Boolean).join(" · ");
+      return raiseRowHtml({ name: esc(p.name), sub: esc(sub), move: c.ok?`${c.from} → ${c.to}`:`${p.rank}`,
+        cost: c.ok?`${c.cost} IP`:"—", btn: learn?"Learn":"Raise", key:`power|${esc(p.id)}`, why: c.ok ? short(c) : c.why });
+    }).join("");
+    return rows ? `<table class="ref spell-results raise-results"><tbody>${rows}</tbody></table>`
+                : `<p class="step-note">No powers to raise.</p>`;
+  }
   const q = String((S.raisePick||{}).q||"").trim().toLowerCase(), focused = Engine.focusedSkillIds(ch);
   const hit = s => !q || `${s.name} ${s.description||""}`.toLowerCase().includes(q);
   const row = (s, learn) => { const line=Engine.skillLine(ch,s.id), c=Engine.ipCost(ch,"skill",s.id);
@@ -2429,10 +2450,10 @@ function raiseResultsHtml(ch, type){
     + (untrained.length ? `<div class="sect">Learn a new skill</div>${D.ip.flagged?flagHtml(D.ip):""}<table class="ref spell-results raise-results"><tbody>${untrained.map(s=>row(s,true)).join("")}</tbody></table>` : "");
 }
 function openRaisePicker(type){
-  const ch = S.ch; if (!ch || !["stat","skill"].includes(type)) return;
+  const ch = S.ch; if (!ch || !RAISE_TITLE[type]) return;
   S.raisePick = { q:"" };
   const search = type==="skill" ? `<div class="hitrow"><input type="search" data-raiseq placeholder="Search skills" aria-label="Search skills"></div>` : "";
-  openModal({ title: type==="stat" ? "Raise a Stat" : "Raise a Skill",
+  openModal({ title: RAISE_TITLE[type],
     html: `<div class="spell-pick raise-pick"><div class="pick-head">${search}<p class="pick-status" data-raisestatus aria-live="polite">${raiseStatusHtml(ch, type)}</p></div>
       <div data-raiseresults>${raiseResultsHtml(ch, type)}</div></div>`,
     foot: pickerFootHtml(), returnTo: `[data-raiseopen="${type}"]`, onClose: ()=>{ S.raisePick=null; },
@@ -2446,7 +2467,7 @@ function openRaisePicker(type){
         let b = e.target.closest("button");
         if (!b){ const tr = e.target.closest("tr"); b = tr && tr.querySelector("button"); }
         if (!b || b.disabled || !b.dataset.raise) return;
-        const [t, id] = b.dataset.raise.split("|");
+        const at = b.dataset.raise.indexOf("|"), t = b.dataset.raise.slice(0, at), id = b.dataset.raise.slice(at+1);
         raiseIP(S.ch, t, id);
         refresh();
       };

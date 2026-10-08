@@ -12,8 +12,8 @@ each one changed. Deighton's answers are still to come.
 **Wanted by:** no date. Scope is the whole of W29's file-based stage, plus
 the GM toolkit on top of it. Live sync (W29 stages 2–3) is out of scope and
 gets its own plan when this one is built (§8).
-**Sources:** W29 (`WISHLIST.md`); the GM Workshop, Parts I–VI (`private/crb/200`–`253`);
-the World of Shadows (`100`–`130`); Scott's *Threat Codex — Intro + Human*
+**Sources:** W29 (`WISHLIST.md`); the GM Workshop, Parts I–VI (`private/crb/2000`–`2530`);
+the World of Shadows (`1000`–`1300`); Scott's *Threat Codex — Intro + Human*
 (front matter, 42 entries, 29 encounter groups, the drone reference, the
 Trait Glossary v3 and the Trait Library); Scott's *Threat Codex v2* (WIP,
 2026-10-02: the front matter rewritten, Orders folded in, the NPC roster
@@ -98,21 +98,21 @@ it is no longer early work (GQ20).
 | Enemy Roles and tier | Eight roles, and v2's table **gives each role a tier**: Grunt T1; Sneak, Brute, Artillery T2; Controller, Enforcer, Elite T3; Apex T4. An entry still prints both (GQ16) | Codex v2 *Enemy Roles*, *Tiers* |
 | NPC armor | Roll PROT + RES ("1d4+2") **or use the average, 5** (GQ18) | Codex v2 *Reading the Enemy Matrix* |
 | Pre-built threats | 42 entries, 29 encounter groups, two drones, ~100 named traits in three kinds (Universal, Origin, Signature) | Codex Parts B–C |
-| Named NPCs | Eleven roster NPCs (Bob and NPC-01 to 10), **moved into the Codex** in v2, in *Motivation · Resources · Their Line · stats · skills · If Pushed* form, each with a **Push Profile**: the Codex entry or encounter group they become when pushed, or none | Codex v2 *NPC Roster* (was `200` Part VI) |
+| Named NPCs | Eleven roster NPCs (Bob and NPC-01 to 10), **moved into the Codex** in v2, in *Motivation · Resources · Their Line · stats · skills · If Pushed* form, each with a **Push Profile**: the Codex entry or encounter group they become when pushed, or none | Codex v2 *NPC Roster* (was `2000` Part VI) |
 | Supernatural threats | **In the Codex draft now**, modifiers still headed "proposed" (GQ17): seven Orders (Undead, Vampiric, Therianthropic, Fae, Spirit, Elemental, Beast) beside Origin; **Bound** (Origin modifiers, one Order trait instead of Order's), **Changed** (both), **Other** (Order only); a +1 both give becomes +1 and an Order trait; −1s cap at −1, a −2 is reviewed by hand; a bodiless Changed takes only Origin's mental and social modifiers | Codex v2 *Origins and Orders* |
 | Environmental threats | **Proposed, not approved:** three new fields, named lieutenants, Site Profiles with tracks and clocks | Expansion proposal |
-| Places | Territory → Zone → District → Neighborhood; six Territories with Zones, Supernatural Sites, Business Interests and Factions; eleven places beyond the city | `100`, `110` |
-| Powers | Five corporations, the Unseen Court and its houses, the Chrome Berets, the Goblin Market | `120` |
-| GM notes | Four worksheets: **Session 0 Shared Overlap**, **Encounter Design**, **Campaign Journal** (six parts a session), **Faction Tracker** (tipping points, a Hostile↔Allied stance) | `220`, `224`, `227`, `200` *Tracking* |
-| Ending a session | About **5 IP an hour, to players present only**; write the consequence log | `226`, `242` |
-| An absent player | Their character took a **CRANK job off-screen**: Çredits from the lower half of their tier's range, no rep | `242`, `200` *CRANK* |
-| Milestone pacing | A 5-session micro-arc is a Minor Milestone cycle; a 10-session arc a Major | `240` |
-| Work | **CRANK**: a five-column d10 job generator, and a **personal reputation** with five tiers and payouts | `200` *Crank and Bank* |
-| Turn order | Order of Engagement by Combat Sense, ties rerolled; Reset closes the round (bleeding, fire, durations) | `053` |
+| Places | Territory → Zone → District → Neighborhood; six Territories with Zones, Supernatural Sites, Business Interests and Factions; eleven places beyond the city | `1000`, `1100` |
+| Powers | Five corporations, the Unseen Court and its houses, the Chrome Berets, the Goblin Market | `1200` |
+| GM notes | Four worksheets: **Session 0 Shared Overlap**, **Encounter Design**, **Campaign Journal** (six parts a session), **Faction Tracker** (tipping points, a Hostile↔Allied stance) | `220`, `224`, `227`, `2000` *Tracking* |
+| Ending a session | About **5 IP an hour, to players present only**; write the consequence log | `2260`, `2420` |
+| An absent player | Their character took a **CRANK job off-screen**: Çredits from the lower half of their tier's range, no rep | `2420`, `2000` *CRANK* |
+| Milestone pacing | A 5-session micro-arc is a Minor Milestone cycle; a 10-session arc a Major | `2400` |
+| Work | **CRANK**: a five-column d10 job generator, and a **personal reputation** with five tiers and payouts | `2000` *Crank and Bank* |
+| Turn order | Order of Engagement by Combat Sense, ties rerolled; Reset closes the round (bleeding, fire, durations) | `0530` |
 
 **Checked against the engine, 2026-10-02** (a script over the Codex, not a read):
 
-- **Health is right on all 42 entries**: BOD Health Levels at 5 HP, as `030`
+- **Health is right on all 42 entries**: BOD Health Levels at 5 HP, as `0300`
   and the engine compute it. Bob's 16 was a typo (Ken, 2026-10-02); NPCs use
   the players' rule.
 - **The stat bonus table matches** `statRules.modifiers` exactly (3 → −1 … 10 → +4).
@@ -146,7 +146,7 @@ it is no longer early work (GQ20).
    the GM does to a character is a **dispatch**: a note or a proposed change
    the player accepts or declines on their own sheet, where an accepted one
    becomes an ordinary undoable action (Decisions 48–49). Two people editing
-   one file is the merge problem this avoids. `226` agrees: players track IP
+   one file is the merge problem this avoids. `2260` agrees: players track IP
    on their own sheets.
 2. **The transport is swappable.** A dispatch is a shape; today it travels as
    a file, later through a service (§8). Nothing in the GM mode knows which.
@@ -327,10 +327,10 @@ StatBlock: {
 
 ### 4f. The city
 
-**The gazetteer is data** (`110`, `120`, `130`): Territories and their Zones,
+**The gazetteer is data** (`1100`, `1200`, `1300`): Territories and their Zones,
 Supernatural Sites, Business Interests and Factions; the powers; Beyond NYTE
 City; the five environmental kinds. Each entry an id, a name, its Territory
-(and Zone, where `110` gives one), its kind, and **one line** of summary. Not
+(and Zone, where `1100` gives one), its kind, and **one line** of summary. Not
 the chapter's prose. A player's file carries this data too, and the full
 text is the book's job (GQ10).
 
@@ -375,14 +375,14 @@ anyone met last session who has no stat block yet.
 **Closing a session** is one sheet the GM reads before anything is sent:
 
 1. Attendance and hours → **IP**: 5 an hour to each character present
-   (`226`), editable before it goes.
+   (`2260`), editable before it goes.
 2. Each absent character → an optional **off-screen CRANK job**: Çredits
-   rolled in the lower half of their tier's payout range (`242`).
+   rolled in the lower half of their tier's payout range (`2420`).
 3. **The Milestone Point:** one to each character present. The sheet already
    gives one per session in its log (`milestonePointsPerSession`), so this
    is a line in the award log, not a new rule (GQ8, answered).
 4. The micro-arc counter: the 5th and 10th sessions remind the GM a Minor or
-   Major Milestone cycle has turned (`240`).
+   Major Milestone cycle has turned (`2400`).
 5. Threads: which moved, which resolved, which dropped, which is current.
 6. **Anyone new?** Improvised NPCs quick-added during play get their line
    (goal, resource, Line) or stay a name.
@@ -419,9 +419,9 @@ half:
   every Condition that ticks, ends or asks for a save that round, row by row,
   before the next round starts. Nothing ends silently.
 - **Order of Engagement:** each participant's Combat Sense total, rolled or
-  entered; ties flagged for a reroll (`053`).
+  entered; ties flagged for a reroll (`0530`).
 - **The round:** a pointer, then **Reset**'s checklist: one Fast Action each,
-  bleeding, burning, durations, saves (`053`).
+  bleeding, burning, durations, saves (`0530`).
 - **Damage to NPCs** runs the engine's own pipeline: damage through armor,
   Health Levels, Pain Levels, Conditions (Decisions 95–100). The engine gets
   an NPC adapter, not a second pipeline.
@@ -512,7 +512,7 @@ his use of it should reorder whatever comes after.
 
 ### S0 — This plan (Docs)
 
-The CRB mirror gains `100`–`130`, `200`–`253`, the Codex and the proposal,
+The CRB mirror gains `1000`–`1300`, `2000`–`2530`, the Codex and the proposal,
 all in the private `private/crb/` (Decision 167, GQ12). This plan, its questions, W29 pointing here, and a
 page for Scott and Deighton that leads with §9.
 **Done when:** Ken approves the shape, and Scott and Deighton have answered
@@ -533,7 +533,7 @@ or defaulted every *They* question in §9.
   (Decision 96 says it's full — GQ11).
 - **Decision:** one, *CRANK reputation is a tracked resource on the
   character*. **Tests:** migrate round-trip, the hostile file, tier
-  boundaries pinned against `200`'s table.
+  boundaries pinned against `2000`'s table.
 - **Can ship to main on its own** (§7).
 
 ### S2 — The dispatch and the inbox
@@ -610,7 +610,7 @@ waits on it.
 
 ### S6 — The gazetteer and the crew's places
 
-- **Data:** `gazetteer` from `110`, `120`, `130`, with one-line summaries
+- **Data:** `gazetteer` from `1100`, `1200`, `1300`, with one-line summaries
   written for it and voice-passed. Ids are permanent.
 - A place picker: Territory → Zone, then a typed District and Neighborhood;
   custom places; the five environmental kinds as tags.

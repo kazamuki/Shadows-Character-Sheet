@@ -352,12 +352,13 @@ window.SHADOWS_DATA = {
   ip: {
     statIncreaseCost: { perPoint: 10, example: "..." },   // × current value: REF 6→7 = 60 IP (Decision 135)
     skillIncreaseCost: { perRank: 5, focusedPerRank: 3, newSkill: 25 },  // Decisions 97, 134
-    rankCap: 10,                      // skills & powers cap at 10 via IP
+    powerIncreaseCost: { perRank: 20, newPower: 40 },  // × current rank; rank 0 → 1 is newPower (0450, Decision 194)
+    rankCap: 10,                      // skills & powers cap at 10 via IP; an archetype's printed caps are creation caps
     cannotRaiseDirectly: ["WILL", "TOL"]
   },
 
   // ── Gear: weapons, ammunition, armor (0.6) ────────────────
-  // Merged from the CRB v4 equipment chapter (private/crb/Gear.md).
+  // Merged from the CRB v4 equipment chapter (private/crb/0460_Gear.md).
   // One flat `weapons` array with a `category` discriminator, same shape as
   // `skills` — a new weapon needs zero app changes. Tags/Features are stored
   // as the exact strings the book prints (including any "(Xm)" parameter)
@@ -491,7 +492,7 @@ window.SHADOWS_DATA = {
   },
 
   // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
-  // Merged from private/crb/Magic.md. Origins (Book/Blood/Bound) are
+  // Merged from private/crb/0480_Magic.md. Origins (Book/Blood/Bound) are
   // deliberately NOT here — that's the Arcanist subtype question, still
   // blocked on the archetype four-way comparison (STATE.md §3). Everything
   // below applies to any caster regardless of subtype.
@@ -536,7 +537,7 @@ window.SHADOWS_DATA = {
   ],
 
   // ── Cascade and Aberrations (0.11, Decision 106) ─────────────────────
-  // Magic.md's two tables and Appendix_Aberrations.md's lists. Rows are
+  // 0480_Magic.md's two tables and Appendix_Aberrations.md's lists. Rows are
   // ranges on a die the player rolls and enters; `Engine.cascade()` looks
   // them up. `max: null` is open-ended. The Cascade Table starts at 3: a
   // Cascade's Rupture is degree 2 or more, since casting needs TOL above 0.
@@ -621,7 +622,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.17",
+    schemaVersion: "0.18",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -808,10 +809,17 @@ It renders on the Character tab (Decision 158).
         // Spends update the target's IPE atomically and are undoable;
         // versionCheck flags IPE/journal divergence on import.
         // { date, kind, amount, targetType, targetId, from, to, note }
+        // (0.16) targetType "power" also carries `name`: a written power's
+        // Add or Improve has no from/to; a rank bought (0.18) has both.
       ]
     },
     milestonePoints: 0,              // manual MP only — session MP is computed
-    milestones: { minor: [ { id, date } ], major: [ { id, date } ] }
+    milestones: { minor: [ { id, date } ], major: [ { id, date } ] },
+    // (0.18, Decision 194) Ranks IP bought, per power id: a Discipline's data
+    // id or a written power's row id. A Discipline's rank is its starting rank
+    // + CP-bought + this; a written power's is 1 + this. Removing a written
+    // power drops its key. migrate() keeps only whole positive counts.
+    powerIpe: { evocation: 1, "pw-3k9x2qmd": 2 }
   },
 
   // (0.3) Logging a session grants ipEarned (default 10, overridable),
@@ -3674,7 +3682,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decision 15's statuses and 152's classifications.
      - **Revisit if:** powers need a catalog, a price or mechanical fields; Deighton rules on Magical being (W53); W48–W50 are wanted.
      - **Built:** schema 0.16, game data 0.27, app 0.33.0 (unreleased). Engine in S2; wizard, sheet and print in S3–S5. Log 2026-09-30 and 2026-10-01.
-     → **Superseded in part by Decision 154**: a power's text isn't editable in play; Improve and Add power cost IP outside Admin.
+     → **Superseded in part by Decisions 154 and 194**: a power's text isn't editable in play, and Improve and Add power cost IP outside Admin (154); a written power has a rank, 1 + what IP bought, which Progression raises (194).
 
 154. **In play a power reads as written: its words change by Improve, for IP, and Admin edits them free.**
      *2026-10-01 · Ken + Claude · Touches: powers, improvePower, addPower, powerCost, Improve, Add power, IP cost, IP journal, Admin mode, Loadout & Powers, notes, powerAddNote, powerAddAdminNote, powerImproveNote, custom archetype*
@@ -3688,6 +3696,8 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 153 in part: a power's text is no longer editable in play, and Add power's IP cost is required outside Admin.
      - **Revisit if:** powers gain a price list or ranks (Decision 153's Revisit), or a GM wants free rewording in play without Admin.
      - **Built:** app 0.34.0; `engine.test.mjs` and `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+     → **Superseded in part by Decision 194**: Add power in play costs `0450`'s new-power price, not the GM's; Improve is unchanged.
+
 
 155. **A TAGless character's number reads without its TAG- prefix; the stored number keeps it.**
      *2026-10-01 · Ken + Claude · Touches: tagNumber, tagReading, meta.id, TAG, TAGless, identity.tagless, Ghost TAG, counterfeit, intake, print header, Review, roster, replace guard, W41*
@@ -4195,6 +4205,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** GQ26 says wounds carry, S5's sessions give downtime, or a GM wants to keep someone after the fact.
      - **Built:** table schema 0.7, switched off (173); PR #130; log 2026-10-07 (the encounter's end).
 
+194. **Every power a character holds has a rank, and Progression raises it with IP at `0450`'s prices; a new power in play costs the book's flat price.**
+     *2026-10-08 · Ken + Claude · Touches: powerRanks, progression.powerIpe, disciplineRanks, ipCost, spendIP, ip.powerIncreaseCost, ip.rankCap, Max Power Rank, Raise a Power, IP journal, addPower, removePower, versionCheck, Disciplines, written power, character schema 0.18, W71, VQ5*
+     - **Decided:** A Discipline's rank is start + CP + IP; a written power's is 1 + IP. IP ranks live in `progression.powerIpe`, by power id. **Raise a Power** on Progression costs current rank × 20, and 40 for rank 1 in a Discipline never trained (`ip.powerIncreaseCost`). Printed caps are creation caps; play stops at IPE's 10. **Add power** in play costs the new-power price; Admin adds free. Improve is unchanged.
+     - **Why:** `0450` prices powers, and Ken asked that every power have a rank to raise. One map serves every kind, so the Werewolf and Vampire passes fill the same shape.
+     - **Rejected:**
+       - A rank on the written power's row: Disciplines have no row, so two places for one idea.
+       - Max Power Rank as the cap in play: Ken (VQ5), printed caps are creation caps.
+       - Add power at the GM's price: `0450` sets it; Admin covers a free one.
+       - Raise also rewording: Improve does that.
+       - CP ranks for a written power at creation: not asked for. It starts at 1, free (XQ2).
+     - **Replaces:** Decision 153 in part (a written power now has a rank); Decision 154 in part (Add power in play is the new-power price, not the GM's). Extends Decision 14's IP costs and 157's one price for every power.
+     - **Revisit if:** `0450`'s Supernatural ceilings pass 10, or the Werewolf's 3 and Vampire's 5 bind play.
+     - **Built:** app 0.38.0, game data 0.30, schema 0.18; PR #132; tests mutation-tested. Log 2026-10-08 (W71).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4206,7 +4230,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -4219,18 +4243,17 @@ here are in `log/archive.md`.
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 | F23 | **RES against Electric and Burning, and the Resistance upgrade** — the CRB gives base (Kinetic) RES to Blade/Blunt/Ballistic and extends it to Energy (Ablative Plating) and to Elemental, Spirit and Aether (a Warding each, Decision 143), but never says where Electric or Burning damage falls. Stubbed as Energy: no RES without Ablative. Separately, the Resistance upgrade's 50% reduction (Thermal/Electric/Freezing) has no stated order against PROT and RES, so the hit resolver doesn't apply it and tells the player to adjust by hand. One grouped question for Deighton (Decision 99) | Deighton | No |
-| F24 | **Ongoing damage while Dying, at a Reset** — 054 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
+| F24 | **Ongoing damage while Dying, at a Reset** — 0540 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 | Deighton | No |
 | F25 | **How Natural Armor answers a hit** — the CRB grants it in four places (Thick Skin +1/rank, Shake it Off 5, Iron Shirt BOD bonus + 1, Waning Moon "treated as Warding") but never says how it applies. Stated: "unaffected by Armor Piercing" (Thick Skin) and "treated as Warding". Stubbed (Decision 104): a flat reduction after PROT and RES, on every body part, Kinetic only unless Warded, ignores AP, skipped by Massive, and every source stacks. Ask with F23: they're the same RES-class question | Deighton | No |
 | F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both | Deighton | No |
-| F28 | **Suppression (weapon tag).** On the Titan and the Ironwall. The CRB v4 equipment chapter gives it no rule. Carried as a tag with no effect | Deighton | No |
-| F29 | **Blast (weapon tag).** On several heavy and beam weapons, with a radius, beside or instead of Area and Siege. How it differs from them is never stated. Carried as a tag with no effect | Deighton | No |
 | F30 | **Anti-Materiel (weapon tag).** On the VR-50 'Verdict'. The vehicle rules give it full damage against vehicles; nothing says what it does to a person | Deighton | No |
 | F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated | Deighton | No |
-| F32 | **Arcanist Major Milestones.** 041's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 041? `growth` stays hidden until then (AQ4) | Ken | No |
-| F33 | **Jack of All Trades: how far does "treated as Focused" go?** Master of None says all skills are "treated as Focused Skills and may be improved at a rate of 3 x current skill rank up to rank 4". Does that also give every skill the Focused Skill Max Bonus at creation (a Heroic Jack could start all 36 skills at 7)? And can Skill Paragon's "a focused skill from your chosen Profession" be any skill for a Jack? Stubbed (Decision 134): the price only, for ranks bought up to 4 (4 → 5 is standard, Ken); no cap bonus | Deighton | No |
-| F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 053 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
-| F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 054 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
+| F32 | **Arcanist Major Milestones.** 0411's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 0411? `growth` stays hidden until then (AQ4) | Ken | No |
+| F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 0530 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
+| F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 0540 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
+| F38 | **What a Werewolf's Base Powers buy.** `0414` says a Werewolf "doesn't choose its powers; it carries the whole kit", every Innate and Origin power at Rank 1, yet its scaling table has a **Base Powers** column (1 / 2 / 2 / 3) beside Max Starting Rank (1 / 1 / 2 / 2). Extra ranks to place up to Max Starting Rank, or something else? Not stubbed yet: the Werewolf's powers come into the data in `crb-v4-sync.md` P3, which stubs it | Deighton/Scott | No (P3 stubs it) |
+| F39 | **How a Vampire spends Base Powers.** `0413`: "Spend your Base Powers (2 / 3 / 4 / 5) on Innate and Bloodline powers; no power starts above your Max Starting Rank." Is one Base Power one rank, so a Street Vampire places two ranks, none above 1? Ken ruled the other half: Cursed Evolution's second bloodline is bought at `0450`'s New Power price. Not stubbed yet: `crb-v4-sync.md` P4 stubs it | Deighton/Scott | No (P4 stubs it) |
 
 F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.
 

@@ -378,7 +378,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.17");
+  assert.equal(resumed.meta.schemaVersion, "0.18");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1409,7 +1409,7 @@ test("W42: Main's Heal 1 · Hurt 1 · Take a hit row is the popover's own contro
   assert.equal(app.window.document.activeElement, app.$('#main [data-vpop="hp"]'), "a greyed Heal 1 handed focus to Hurt 1");
 
   // At zero, Main's Hurt 1 greys out and says why (Decision 151): a raw Hurt
-  // would skip 054's At Zero WILL check, which Take a hit asks. The
+  // would skip 0540's At Zero WILL check, which Take a hit asks. The
   // popover's stepper stays a raw correction, with no ceiling.
   const total = Engine.health(activeChar(app)).total;
   assert.ok(!app.$("#main .vital-verbs-note"), "the at-zero note shows above zero");
@@ -1979,7 +1979,7 @@ test("W41: the Identity step asks TAG'd or TAGless, and Admin changes it later, 
 
 // ── The Professional as data (Decision 134) ──────────────────────────
 
-test("B12: the wizard asks a Mercenary for its fifth Focused Skill, and Jack's card says what isn't settled", () => {
+test("B12: the wizard asks a Mercenary for its fifth Focused Skill, and Jack's card says it raises no starting cap", () => {
   const app = onArchetypeStep("professional", "heroic");
   app.click('[data-spec="mercenary"]');
   const card = app.$('[data-spec="mercenary"]').closest(".pick");
@@ -1992,8 +1992,9 @@ test("B12: the wizard asks a Mercenary for its fifth Focused Skill, and Jack's c
   assert.equal(draft(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
   assert.ok(app.$('[data-fskill="melee"]').disabled, "a second pick is offered when one is the count");
   const jack = app.$('[data-spec="jack-of-all-trades"]').closest(".pick");
-  const note = D.archetypes.find(a => a.id === "professional").specialization.options.find(o => o.id === "jack-of-all-trades").playerNote;
-  assert.ok(jack.textContent.includes(note), "Jack of All Trades doesn't say its cap question is unsettled");
+  // F33 closed (0412): the rule is in the benefit, and nothing says it's unsettled.
+  assert.match(jack.textContent, /doesn't raise any skill's starting rank/, "Jack of All Trades doesn't say it raises no starting cap");
+  assert.doesNotMatch(jack.textContent, /still being settled/, "Jack's card still calls a closed question unsettled");
   assert.doesNotMatch(jack.textContent, /F33/, "maintainer text reached the card");
   assert.deepEqual(app.errors, []);
 });
@@ -2521,7 +2522,7 @@ test("Progression: Raise a Stat and Raise a Skill open modals, and a raise keeps
   const skill = D.skills[0];
   ch.skills[skill.id] = { rank: 2 };
   const app = openSheet(ch, "progression");
-  assert.equal(app.$$("#main [data-raiseopen]").length, 2, "Progression has no Raise buttons");
+  assert.equal(app.$$("#main [data-raiseopen]").length, 3, "an Arcanist's Progression lacks Raise a Stat, a Skill or a Power");
   assert.ok(!app.$("#main [data-raise]"), "the raise lists are still on the page");
   const modal = () => app.$("#modal");
 
@@ -2544,6 +2545,38 @@ test("Progression: Raise a Stat and Raise a Skill open modals, and a raise keeps
   assert.ok(app.$(`#modal [data-raise="skill|${skill.id}"]`), "searching hid the skill it names");
   assert.ok(!app.$(`#modal [data-raise="skill|${D.skills.find(s => !s.name.includes(skill.name) && !(s.description||"").includes(skill.name)).id}"]`), "the search didn't narrow the list");
   assert.deepEqual(app.errors, []);
+});
+
+test("Raise a Power: a Discipline and a written power rise on Progression, the journal says from what to what, and a Professional has no button (Decision 194)", () => {
+  const ch = lockedCharacter();
+  ch.progression.ip.earned = 100;
+  const evo = Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank;
+  const app = openSheet(ch, "progression");
+  app.click('[data-raiseopen="power"]');
+  const modal = app.$("#modal");
+  assert.ok(modal.open && /Raise a Power/.test(modal.textContent), "Raise a Power didn't open its modal");
+  assert.match(modal.textContent, /Evocation[\s\S]*Enchantment[\s\S]*Alchemy/);
+  assert.match(app.$('#modal [data-raise="power|alchemy"]').closest("tr").textContent, /Learn|40 IP/);
+  app.click('#modal [data-raise="power|evocation"]');
+  const c = activeChar(app);
+  assert.equal(Engine.disciplineRanks(c).find(d => d.id === "evocation").rank, evo + 1, "the raise didn't land");
+  assert.ok(modal.open, "the modal closed after one raise");
+  assert.match(modal.textContent, new RegExp(`You have ${100 - 20 * evo} IP`), "the modal's IP didn't refresh");
+  app.click("#modal [data-modalclose]");
+  assert.match(app.$("#main .journal").textContent, new RegExp(`Evocation ${evo} → ${evo + 1}`), "the journal doesn't say what the raise bought");
+  assert.deepEqual(app.errors, []);
+
+  const w = writtenInCharacter(); w.progression.ip.earned = 100;
+  const wapp = openSheet(w, "progression");
+  wapp.click('[data-raiseopen="power"]');
+  wapp.click(`#modal [data-raise="power|${w.powers[0].id}"]`);
+  wapp.click("#modal [data-modalclose]");
+  wapp.click(`[data-sec="${loadoutSec(wapp)}"]`);
+  assert.match(wapp.$(".pw-card").textContent, /Fade\s*rank 2/, "Loadout doesn't show the written power's new rank");
+  assert.deepEqual(wapp.errors, []);
+
+  const pro = lockedCharacter(); pro.identity.archetype = "professional";
+  assert.equal(openSheet(pro, "progression").$('[data-raiseopen="power"]'), null, "a Professional is offered powers to raise");
 });
 
 // Decision 160: the vitals panel pins beside the sheet. The pin is the
@@ -2744,26 +2777,29 @@ test("the sheet draws a written-in archetype: its name everywhere, its classific
   assert.deepEqual([app.errors, b.errors], [[], []]);
 });
 
-test("Add power with an IP cost is one change: the row and the spend, and one Undo takes both", () => {
-  const app = openSheet(writtenInCharacter(), "main");
+test("Add power in play costs a new power's price: the row and the spend are one change, and one Undo takes both (Decision 194)", () => {
+  const NEW = D.ip.powerIncreaseCost.newPower;
+  const short = openSheet(writtenInCharacter(), "main");      // 30 IP
+  short.click(`[data-sec="${loadoutSec(short)}"]`);
+  assert.ok(!short.$('[data-pwnew="cost"]'), "play still asks for a price the book sets");
+  assert.match(short.$(".pw-add").textContent, new RegExp(`a new power costs ${NEW} IP`));
+  short.$('[data-pwnew="name"]').value = "Thorn hedge";
+  short.click("[data-pwadd-go]");
+  assert.equal(activeChar(short).powers.length, 1, "a power was added short of its price");
+  assert.equal(short.$('[data-pwnew="name"]').value, "Thorn hedge", "a refusal threw away what was typed");
+  assert.match(short.$("#undotoast").textContent, new RegExp(`Not enough IP \\(need ${NEW}\\)`));
+
+  const ch = writtenInCharacter(); ch.progression.ip.earned = NEW + 15;
+  const app = openSheet(ch, "main");
   app.click(`[data-sec="${loadoutSec(app)}"]`);
   const fill = (k, v) => { app.$(`[data-pwnew="${k}"]`).value = v; };
-  fill("name", "Thorn hedge"); fill("effect", "Briars erupt.");
-  app.click("[data-pwadd-go]");
-  assert.equal(activeChar(app).powers.length, 1, "a power was added in play with no cost (Decision 154)");
-  assert.match(app.$("#undotoast").textContent, /costs IP/);
-  fill("cost", "99");
-  app.click("[data-pwadd-go]");
-  assert.equal(activeChar(app).powers.length, 1, "a refused power was written");
-  assert.equal(app.$('[data-pwnew="name"]').value, "Thorn hedge", "a refusal threw away what was typed");
-  assert.match(app.$("#undotoast").textContent, /Not enough IP/);
-
-  fill("cost", "15");
+  fill("name", "Thorn hedge"); fill("effect", "Briars erupt."); fill("note", "after the raid");
   app.click("[data-pwadd-go]");
   let c = activeChar(app);
-  assert.equal(JSON.stringify([c.powers.map(p => p.name), c.progression.ip.log.map(e => [e.targetType, e.amount])]),
-    JSON.stringify([["Fade", "Thorn hedge"], [["power", 15]]]));
+  assert.equal(JSON.stringify([c.powers.map(p => p.name), c.progression.ip.log.map(e => [e.targetType, e.amount, e.note])]),
+    JSON.stringify([["Fade", "Thorn hedge"], [["power", NEW, "after the raid"]]]));
   assert.equal(Engine.ipState(c).available, 15);
+  assert.match(app.$$(".pw-card")[1].textContent, /rank 1/, "a new power doesn't say its rank");
   app.click("[data-toastundo]");
   c = activeChar(app);
   assert.equal(JSON.stringify([c.powers.length, c.progression.ip.log.length]), "[1,0]", "one Undo didn't take back both");
@@ -2846,7 +2882,7 @@ test("print gives every archetype a page of its own: a written-in one's words, a
   const custom = page(app.window.renderPrintView(activeChar(app)));
   const text = custom.textContent;
   for (const t of ["Changeling", "Other: Fae", "Stolen as a child."]) assert.ok(text.includes(t), `the archetype page is missing ${t}`);
-  assert.equal(JSON.stringify(rows(custom, ".p-powertable")), JSON.stringify([["Fade", "SFR", "Unseen for a round."]]));
+  assert.equal(JSON.stringify(rows(custom, ".p-powertable")), JSON.stringify([["Fade (rank 1)", "SFR", "Unseen for a round."]]), "a written power prints without its rank (Decision 194)");
   assert.ok(text.includes("Glamour") && text.includes("Cold iron"));
 
   const ww = lockedCharacter();

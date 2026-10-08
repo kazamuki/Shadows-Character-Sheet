@@ -1,7 +1,7 @@
 /**
  * CRB conformance — the rulebook's own worked examples, run as tests.
  *
- * Source: `030_Core_Mechanics.docx`, CRB v4 (WIP), read 2026-09-02.
+ * Source: `0300_Core_Mechanics.md`, CRB v4 (WIP), read 2026-09-02.
  *
  * Every assertion here pins a number the Core Rulebook states outright, and
  * quotes the line it comes from. This is the third mechanism from the debt
@@ -187,7 +187,7 @@ test("Milestone Points per session come from the data, not a hardcode (B9)", () 
 });
 
 // ── Selection & constraint system (Decision 58's corpus) ──────────────
-// Source: `043_Advantages.docx` / `044_Disadvantages.docx`, CRB v4 (WIP).
+// Source: `0430_Advantages.md` / `0440_Disadvantages.md`, CRB v4 (WIP).
 // Decision 58 named these ~15 entries as the test corpus for the machinery.
 // Each assertion below pins a sentence the CRB states outright.
 
@@ -273,9 +273,9 @@ test('CRB: the entries that say "with your GM" ask for text and never block the 
   }
 });
 
-// ── Conditions and Pain (054_Conditions_and_Recovery.md, pulled 2026-09-22) ──
+// ── Conditions and Pain (0540_Conditions_and_Recovery.md) ──
 
-test('CRB 054: "A high BOD character on Pain Level 3 will experience -3 ... -3 die ... -15%"', () => {
+test('CRB 0540: "A high BOD character on Pain Level 3 will experience -3 ... -3 die ... -15%"', () => {
   const ch = subject({ bod: 10 });
   ch.trackers.damage = 40;                       // 8 of 10 HL lost
   const p = Engine.painState(ch);
@@ -285,7 +285,7 @@ test('CRB 054: "A high BOD character on Pain Level 3 will experience -3 ... -3 d
   assert.equal(p.breakerPenalty, -15);
 });
 
-test('CRB 054: Agonized — "Operate at 1 Pain Level higher, to a max PL 3"', () => {
+test('CRB 0540: Agonized — "Operate at 1 Pain Level higher, to a max PL 3"', () => {
   const ch = subject({ bod: 10 });
   assert.equal(Engine.addCondition(ch, { id: "agonized" }).ok, true);
   const at = dmg => { ch.trackers.damage = dmg; return Engine.painState(ch); };
@@ -297,7 +297,7 @@ test('CRB 054: Agonized — "Operate at 1 Pain Level higher, to a max PL 3"', ()
   assert.equal(at(40).fromConditions, 1);
 });
 
-test('CRB 054: Pain "never falls below 0 or climbs above 3"', () => {
+test('CRB 0540: Pain "never falls below 0 or climbs above 3"', () => {
   // Drive condition Pain past the clamp with synthetic entries, rather than
   // inventing a second Pain-raising Condition in the real data.
   D.conditions.push({ id: "__fixture-pain", name: "Fixture", painLevels: 5 },
@@ -312,7 +312,7 @@ test('CRB 054: Pain "never falls below 0 or climbs above 3"', () => {
   } finally { D.conditions.splice(-2, 2); }
 });
 
-test("CRB 054: a Condition doesn't stack with itself — but Blinded, Disoriented and Burning together", () => {
+test("CRB 0540: a Condition doesn't stack with itself — but Blinded, Disoriented and Burning together", () => {
   const ch = subject();
   assert.equal(Engine.addCondition(ch, { id: "burning" }).ok, true);
   const again = Engine.addCondition(ch, { id: "burning" });
@@ -323,7 +323,7 @@ test("CRB 054: a Condition doesn't stack with itself — but Blinded, Disoriente
   assert.equal(ch.trackers.conditions.length, 3);
 });
 
-test('CRB 054: Helpless — "Any attack roll of 2 or better is a guaranteed hit"', () => {
+test('CRB 0540: Helpless — "Any attack roll of 2 or better is a guaranteed hit"', () => {
   for (const id of ["paralyzed", "stunned", "unconscious", "dying"]) {
     const ch = subject();
     Engine.addCondition(ch, { id });
@@ -335,7 +335,7 @@ test('CRB 054: Helpless — "Any attack roll of 2 or better is a guaranteed hit"
   assert.match(D.conditionRules.helpless, /2 or better/);
 });
 
-test('CRB 054: "After three Death Marks against you, you die"', () => {
+test('CRB 0540: "After three Death Marks against you, you die"', () => {
   const ch = subject();
   Engine.addCondition(ch, { id: "dying" });
   const i = ch.trackers.conditions.findIndex(e => e.id === "dying");
@@ -368,7 +368,7 @@ test('Design ruling: "For BOD above 10, you gain 1 HP per HL (max is 10 HLs)"', 
   assert.equal(h.hpPer, 11);
 });
 
-// ── Taking a hit (053 Damage and Armor, 054 Going Down — Decision 99) ──
+// ── Taking a hit (0530 Damage and Armor, 0540 Going Down — Decision 99) ──
 
 /** Wear one catalog piece. Kevlar Vest: PROT 1d6, RES +2, INT 20, torso. */
 function wearing(ch, id = "kevlar-vest", extra = {}) {
@@ -376,7 +376,7 @@ function wearing(ch, id = "kevlar-vest", extra = {}) {
   return ch;
 }
 
-test('CRB 053: Massive "strips Integrity equal to the weapon\'s damage and takes 1 Health Level per 10 points"', () => {
+test('CRB 0530: Massive "strips Integrity equal to the weapon\'s damage and takes 1 Health Level per 10 points"', () => {
   // With a Kevlar Vest (INT 20): the +1 only lands when the vest is driven to 0.
   for (const [dmg, levels, intLeft] of [[9, 0, 11], [10, 1, 10], [25, 3, 0]]) {
     const r = Engine.resolveHit(wearing(subject({ bod: 10 })), { damage: dmg, damageType: "ballistic", category: "massive" });
@@ -392,7 +392,7 @@ test('CRB 053: Massive "strips Integrity equal to the weapon\'s damage and takes
   }
 });
 
-test('CRB 053: Massive Health Levels "are gone rather than emptied", and count toward Pain (CQ6)', () => {
+test('CRB 0530: Massive Health Levels "are gone rather than emptied", and count toward Pain (CQ6)', () => {
   const ch = subject({ bod: 5 });
   Engine.applyHit(ch, { damage: 10, damageType: "ballistic", category: "massive" });
   assert.equal(ch.trackers.massiveLevels, 2);
@@ -403,7 +403,7 @@ test('CRB 053: Massive Health Levels "are gone rather than emptied", and count t
   assert.equal(p.hpLeft, 15, "three levels of 5 HP left");
 });
 
-test('CRB 053: "Armor-piercing skips RES entirely, though PROT still rolls"', () => {
+test('CRB 0530: "Armor-piercing skips RES entirely, though PROT still rolls"', () => {
   const hit = { damage: 10, damageType: "ballistic", protRoll: 3 };
   const plain = Engine.resolveHit(wearing(subject()), hit);
   assert.deepEqual([plain.prot, plain.res, plain.through], [3, 2, 5]);
@@ -411,14 +411,14 @@ test('CRB 053: "Armor-piercing skips RES entirely, though PROT still rolls"', ()
   assert.deepEqual([ap.prot, ap.res, ap.through, ap.resSkipped], [3, 0, 7, "ap"]);
 });
 
-test('CRB 053: "At Integrity 0 ... RES is gone until somebody repairs it, and PROT remains"', () => {
+test('CRB 0530: "At Integrity 0 ... RES is gone until somebody repairs it, and PROT remains"', () => {
   const ch = wearing(subject(), "kevlar-vest", { integrityLoss: 20 });
   assert.equal(Engine.armorState(ch).worn.compromised, true);
   const r = Engine.resolveHit(ch, { damage: 10, damageType: "ballistic", protRoll: 4 });
   assert.deepEqual([r.prot, r.res, r.through, r.resSkipped], [4, 0, 6, "compromised"]);
 });
 
-test('CRB 053: "A hit that armor soaks entirely still costs the armor 1 integrity"', () => {
+test('CRB 0530: "A hit that armor soaks entirely still costs the armor 1 integrity"', () => {
   const ch = wearing(subject());
   const soaked = Engine.resolveHit(ch, { damage: 5, damageType: "ballistic", protRoll: 3 });
   assert.equal(soaked.soaked, true);
@@ -448,7 +448,7 @@ test("Gear: RES answers only the damage it matches. Kinetic by default, Energy w
   assert.equal(tw.worn.integrityMax, 40);
 });
 
-test('CRB 053 Playing it Out: "PROT: 2, plus RES 3. That\'s 5 defended of 15 ... 10 gets through. That\'s two Health Levels ... Pain Level 1"', () => {
+test('CRB 0530 Playing it Out: "PROT: 2, plus RES 3. That\'s 5 defended of 15 ... 10 gets through. That\'s two Health Levels ... Pain Level 1"', () => {
   // His vest isn't in the catalog, so it goes on the sheet as a custom piece.
   const ch = wearing(subject({ bod: 5 }), undefined, { id: undefined, custom: true, name: "Vest", prot: "1d6", res: 3, integrity: 20 });
   const hit = { damage: 15, damageType: "ballistic", protRoll: 2 };
@@ -458,7 +458,7 @@ test('CRB 053 Playing it Out: "PROT: 2, plus RES 3. That\'s 5 defended of 15 ...
   assert.equal(Engine.painState(ch).level, 1);
 });
 
-test('CRB 054 Shock: "A single hit that takes half your Health Levels or more", half of max rounded up (CQ10)', () => {
+test('CRB 0540 Shock: "A single hit that takes half your Health Levels or more", half of max rounded up (CQ10)', () => {
   // BOD 5: 5 HL of 5 HP, so the threshold is 3 HL.
   assert.equal(Engine.resolveHit(subject({ bod: 5 }), { damage: 15, damageType: "blunt" }).prompts.shock.threshold, 3);
   assert.equal(Engine.resolveHit(subject({ bod: 5 }), { damage: 14, damageType: "blunt" }).prompts.shock, null, "2 HL isn't half");
@@ -474,7 +474,7 @@ test('CRB 054 Shock: "A single hit that takes half your Health Levels or more", 
   assert.equal(f.trackers.conditions.map(c => c.id).join(","), ["unconscious", "prone"].join(","));
 });
 
-test('CRB 054: "If a hit drops you to zero Health Levels ... you skip the Shock check entirely"', () => {
+test('CRB 0540: "If a hit drops you to zero Health Levels ... you skip the Shock check entirely"', () => {
   const r = Engine.resolveHit(subject({ bod: 5 }), { damage: 25, damageType: "blunt" });
   assert.equal(r.prompts.shock, null);
   assert.ok(r.prompts.atZero, "At Zero instead");
@@ -488,7 +488,7 @@ test('CRB 054: "If a hit drops you to zero Health Levels ... you skip the Shock 
   assert.ok(Engine.resolveHit(pass, { damage: 1, damageType: "blunt" }).prompts.atZero);
 });
 
-test('CRB 054: "Any damage you take while Dying is an automatic failure and a mark against you"', () => {
+test('CRB 0540: "Any damage you take while Dying is an automatic failure and a mark against you"', () => {
   const ch = subject({ bod: 5 });
   Engine.applyHit(ch, { damage: 25, damageType: "blunt" }, { atZero: "fail" });
   const r = Engine.resolveHit(ch, { damage: 3, damageType: "blade" });
@@ -526,9 +526,9 @@ test("Design ruling (CQ5): only Massive damage offers Injured and Maimed", () =>
   assert.ok(mas.prompts.conditions.includes("injured") && mas.prompts.conditions.includes("maimed"));
 });
 
-// ── Loadout & recovery (053 Weapons/Wear, 055 Downtime, Gear — Decision 100) ──
+// ── Loadout & recovery (0530 Weapons/Wear, 0550 Downtime, Gear — Decision 100) ──
 
-test('CRB 053: "A character with BOD 5 using a BOD+3 weapon does 8 damage per strike"', () => {
+test('CRB 0530: "A character with BOD 5 using a BOD+3 weapon does 8 damage per strike"', () => {
   const ch = subject({ bod: 5 });
   ch.weapons.push({ id: "combat-knife", notes: "" });          // BOD+3
   const l = Engine.weaponLine(ch, 0);
@@ -540,7 +540,7 @@ test('CRB 053: "A character with BOD 5 using a BOD+3 weapon does 8 damage per st
   assert.equal(Engine.weaponLine(subject({ bod: 9 }), 0), null, "no weapon, no line");
 });
 
-test('CRB 053: "Roll the attack. 1d10 + your Skill + modifiers" — Single fire adds the weapon\'s ACC', () => {
+test('CRB 0530: "Roll the attack. 1d10 + your Skill + modifiers" — Single fire adds the weapon\'s ACC', () => {
   const ch = subject();
   ch.skills.handguns = { rank: 4, ipe: 0 };
   ch.weapons.push({ id: "vs4-ironside", notes: "" });          // ACC +1
@@ -551,7 +551,7 @@ test('CRB 053: "Roll the attack. 1d10 + your Skill + modifiers" — Single fire 
   assert.equal(Engine.weaponLine(ch, 0).attack, l.attack - 1, "Pain comes off the attack like any check");
 });
 
-test('CRB 055: "A BOD 5 character rebuilds a Health Level a day; five hard days puts the whole ladder back"', () => {
+test('CRB 0550: "A BOD 5 character rebuilds a Health Level a day; five hard days puts the whole ladder back"', () => {
   const ch = subject({ bod: 5 });
   assert.equal(Engine.naturalHealing(ch).perDay, 5);
   ch.trackers.damage = 25;
@@ -572,7 +572,7 @@ test("Design ruling (CQ6): rest never brings back a Massive level; Focused Heali
   assert.equal(ch.trackers.massiveLevels, 1);
 });
 
-test('CRB 055: "The Injured Condition must be resolved through Focused Healing"', () => {
+test('CRB 0550: "The Injured Condition must be resolved through Focused Healing"', () => {
   const ch = subject();
   ch.trackers.damage = 6;
   ch.trackers.conditions = [{ id: "bleeding" }, { id: "injured", location: "left-arm" }];
@@ -595,7 +595,7 @@ test('Gear: after the fight, "roll a die determined by encounter difficulty" —
   assert.deepEqual([w.integrity, w.compromised, w.scrapped], [0, true, false]);
 });
 
-test('Gear: "A Field Repair Kit restores 1d6 INT"; 053: armor driven to 0 by Massive "isn\'t repairable"', () => {
+test('Gear: "A Field Repair Kit restores 1d6 INT"; 0530: armor driven to 0 by Massive "isn\'t repairable"', () => {
   const ch = wearing(subject(), "kevlar-vest", { integrityLoss: 10 });
   assert.equal(Engine.repairArmor(ch, 0, { roll: 7 }).ok, false, "a d6 can't roll 7");
   assert.equal(Engine.repairArmor(ch, 0, { roll: 4 }).restored, 4);
@@ -638,7 +638,7 @@ test('Gear: upgrades take a mod slot each, need their minimum quality, and Tri-W
   assert.equal(Engine.addUpgrade(wearing(subject(), "reinforced-denim-vest"), 0, "EMP Shielding").ok, false, "Low quality has no mod slots");
 });
 
-test('CRB 054 Dying: ongoing damage "will continue to tick while you\'re dying. Each time you take damage, that\'s another mark" (F24 stub)', () => {
+test('CRB 0540 Dying: ongoing damage "will continue to tick while you\'re dying. Each time you take damage, that\'s another mark" (F24 stub)', () => {
   const ch = subject({ bod: 5 });
   ch.trackers.damage = 25;
   ch.trackers.conditions = [{ id: "dying", marks: 0 }, { id: "bleeding" }];
@@ -658,7 +658,7 @@ test('CRB 054 Dying: ongoing damage "will continue to tick while you\'re dying. 
   assert.equal(ch.trackers.conditions[0].marks, 2);
 });
 
-test('CRB 054 At Zero: the check comes "again every time you take damage" — a Bleeding tick included, and no Shock for it', () => {
+test('CRB 0540 At Zero: the check comes "again every time you take damage" — a Bleeding tick included, and no Shock for it', () => {
   const ch = subject({ bod: 5 });
   ch.trackers.damage = 24;
   ch.trackers.conditions = [{ id: "bleeding" }, { id: "burning" }];
@@ -673,7 +673,7 @@ test('CRB 054 At Zero: the check comes "again every time you take damage" — a 
 
 // ── Tolerance (Decision 103) ──────────────────────────────────────────
 // Deighton's ruling, 2026-09-22: TOL = 1 + INT + BOD + COOL bonuses (it was
-// INT/COOL/EMP). WILL stands at 1 + BOD + INT + EMP. Source: `040` l.88–89,
+// INT/COOL/EMP). WILL stands at 1 + BOD + INT + EMP. Source: `0400`'s derived Attributes,
 // as Scott rewrote it on 2026-09-23.
 
 function withStats(stats) {
@@ -701,9 +701,9 @@ test('Decision 103: BOD feeds TOL and EMP no longer does; WILL keeps BOD/INT/EMP
   assert.equal(at({ INT: 1, BOD: 1, COOL: 1 }).TOL, 1, "floor 1");
 });
 
-// ── Cascade (Magic.md, Decision 106) ──────────────────────────────────
+// ── Cascade (0480_Magic.md, Decision 106) ──────────────────────────────────
 
-test('Magic.md: "roll 1d10 and add the degree of the Rupture that caused it" — each band of the Cascade Table', () => {
+test('0480_Magic.md: "roll 1d10 and add the degree of the Rupture that caused it" — each band of the Cascade Table', () => {
   const ch = subject();
   const at = (roll, degree) => Engine.cascade(ch, { roll, degree }).result.id;
   assert.equal(at(1, 2), "cosmetic-mutation");      // 3
@@ -718,7 +718,7 @@ test('Magic.md: "roll 1d10 and add the degree of the Rupture that caused it" —
   assert.equal(at(10, 9), "burned-out");
 });
 
-test("Magic.md: casting needs TOL above zero, so a Cascade's Rupture is at least 2 and the table starts at 3", () => {
+test("0480_Magic.md: casting needs TOL above zero, so a Cascade's Rupture is at least 2 and the table starts at 3", () => {
   // Not a gap in the table: 1d10 + 1 can't happen, since a Rupture of 1 can
   // only take TOL from 1 to 0 (Exhausted), never below it.
   const r = Engine.cascade(subject(), { roll: 1, degree: 1 });
@@ -727,7 +727,7 @@ test("Magic.md: casting needs TOL above zero, so a Cascade's Rupture is at least
   assert.equal(D.cascadeTable.rows[0].min, 3);
 });
 
-test('Magic.md Aberration Table: 1–3 is Good temporary but Neutral permanent; 8–10 is Bad either way', () => {
+test('0480_Magic.md Aberration Table: 1–3 is Good temporary but Neutral permanent; 8–10 is Bad either way', () => {
   const ch = subject();
   const cat = (roll, degree, aberrationRoll) => Engine.cascade(ch, { roll, degree, aberrationRoll }).aberration.category.id;
   // 5 + 2 = 7, Temporary; 7 + 2 = 9, Permanent.
@@ -748,9 +748,9 @@ test("Appendix Aberrations: fifteen Good, fifteen Neutral, nine Bad, and the one
   assert.equal(Object.keys(as).length, 8);
 });
 
-// ── Grimoire (Magic.md, Decision 108) ─────────────────────────────────
+// ── Grimoire (0480_Magic.md, Decision 108) ─────────────────────────────────
 
-test('Magic.md: "Spell Power = Evocation Rank + WILL"', () => {
+test('0480_Magic.md: "Spell Power = Evocation Rank + WILL"', () => {
   const ch = subject();
   ch.identity.archetype = "arcanist";
   const sp = Engine.spellPower(ch);
@@ -760,7 +760,7 @@ test('Magic.md: "Spell Power = Evocation Rank + WILL"', () => {
   assert.equal(Engine.spellPower(ch).value, sp.value + 2, "buying Evocation didn't raise Spell Power");
 });
 
-test('Magic.md: Mastered "Costs 30 IP x TH ... TH is reduced by 1"; "A Mastered TH 1 spell requires no roll at all"', () => {
+test('0480_Magic.md: Mastered "Costs 30 IP x TH ... TH is reduced by 1"; "A Mastered TH 1 spell requires no roll at all"', () => {
   const ch = subject();
   ch.identity.archetype = "arcanist";
   ch.panelData.grimoire = [{ spellId: "zap", stage: "mastered", notes: "" }, { spellId: "firebolt", stage: "known", notes: "" }];
@@ -843,9 +843,9 @@ test('Decision 109: "Spell Attack = Evocation Rank + REF + WILL", the scores and
   assert.equal(Engine.grimoire(ch).spellAttack.value, sa.value + 1, "the Grimoire doesn't carry Spell Attack");
 });
 
-// ── Starting spells (041_Archetypes, the Arcanist; Decisions 109 and 111) ──
+// ── Starting spells (0411_Arcanist; Decisions 109 and 111) ──
 
-test('041: "Known Spells" is TOL + 1d4 / 2d4 / 3d4 / 4d4 by power level, and the count is TOL + the roll', () => {
+test('0411: "Known Spells" is TOL + 1d4 / 2d4 / 3d4 / 4d4 by power level, and the count is TOL + the roll', () => {
   const want = { street: "1d4", heroic: "2d4", shadows: "3d4", wcd: "4d4" };
   for (const [pl, die] of Object.entries(want)){
     const ch = subject();
@@ -868,8 +868,8 @@ test('Decision 109 (Deighton, MQ1): a new Arcanist "would need the ranks in Evoc
   assert.equal(Engine.canAddStartingSpell(ch, superior).ok, true, "ranks bought at creation didn't count");
 });
 
-test("041: Quick Study needs a Major, Danger Sense 1 and the Intuition skill at 1 (F11)", () => {
-  // 041: "Prerequisites: 1 Major Milestone already selected, Danger Sense
+test("0412: Quick Study needs a Major, Danger Sense 1 and the Intuition skill at 1 (F11)", () => {
+  // 0412: "Prerequisites: 1 Major Milestone already selected, Danger Sense
   // Advantage at least Rank 1, Intuition skill at least Rank 1". The data
   // asked for an Intuition *advantage*, which doesn't exist, so no one could
   // ever take it.
@@ -887,7 +887,7 @@ test("041: Quick Study needs a Major, Danger Sense 1 and the Intuition skill at 
 });
 
 test("Hardcore Parkour needs a Major, Acrobatics 4 and Danger Sense 1, and nothing else (Deighton, Decision 129; F27)", () => {
-  // 041 asked for Cat Like Balance (an Advantage culled from an earlier
+  // 041 (now 0412) asked for Cat Like Balance (an Advantage culled from an earlier
   // version, so the Milestone could never be taken), Time Sense and Danger
   // Sense. Deighton, 2026-09-24: Cat Like Balance becomes "Acrobatics rank of
   // 4 or better", and Time Sense is removed.
@@ -907,7 +907,7 @@ test("Hardcore Parkour needs a Major, Acrobatics 4 and Danger Sense 1, and nothi
   assert.notEqual(hp.flagged, true, "Hardcore Parkour is still flagged after the ruling");
 });
 
-// ── The Professional (041), as data (Decision 134) ───────────────────
+// ── The Professional (0412), as data (Decision 134) ───────────────────
 
 /** A Professional of one Subtype at one Campaign Power Level. */
 function professional(subtype, pl = "heroic") {
@@ -921,7 +921,7 @@ function professional(subtype, pl = "heroic") {
 // a local [] even when both are empty (see engine.test.mjs).
 const focusedErrors = ch => [...Engine.validate("archetype", ch)].filter(i => /Focused Skill/.test(i.msg)).map(i => String(i.msg));
 
-test('CRB 041, Mercenary: "Athletics, Awareness, Combat Sense, Handgun, and 1 Additional Combat Skill" (B12)', () => {
+test('CRB 0412, Mercenary: "Athletics, Awareness, Combat Sense, Handguns, and 1 Additional Combat Skill" (B12)', () => {
   const ch = professional("mercenary");
   assert.equal([...Engine.focusedSkillIds(ch)].sort().join(), "athletics,awareness,combat-sense,handguns");
   const p = Engine.focusedPicks(ch);
@@ -935,7 +935,7 @@ test('CRB 041, Mercenary: "Athletics, Awareness, Combat Sense, Handgun, and 1 Ad
   assert.equal(Engine.toggleFocusedPick(ch, "melee").ok, false, "a second pick went through");
 });
 
-test('CRB 041, Cleaner: "Acrobatics, Combat Sense, Security, Stealth, and 2 Combat Skills" is six, never five', () => {
+test('CRB 0412, Cleaner: "Acrobatics, Combat Sense, Security, Stealth, and 2 Combat Skills" is six, never five', () => {
   const ch = professional("cleaner");
   assert.equal(Engine.toggleFocusedPick(ch, "combat-sense").ok, false, "a pick went on Combat Sense, which the Cleaner already has");
   assert.equal(Engine.toggleFocusedPick(ch, "stealth").ok, false, "a General skill passed as a Combat pick");
@@ -947,8 +947,8 @@ test('CRB 041, Cleaner: "Acrobatics, Combat Sense, Security, Stealth, and 2 Comb
   assert.equal(Engine.focusedSkillIds(ch).length, 6);
 });
 
-test('CRB 041: the Focused Skill Max Bonus (+1/+2/+3/+4) raises the starting cap of Focused Skills only (B13)', () => {
-  // 042: "The cap on starting rank is a function of Campaign Power Level.
+test('CRB 0412: the Focused Skill Max Bonus (+1/+2/+3/+4) raises the starting cap of Focused Skills only (B13)', () => {
+  // 0420: "The cap on starting rank is a function of Campaign Power Level.
   // Once the campaign begins, it doesn't apply."
   for (const [pl, bonus] of [["street", 1], ["heroic", 2], ["shadows", 3], ["wcd", 4]]) {
     const ch = professional("mercenary", pl);
@@ -976,7 +976,7 @@ test("the starting cap is checked, not only held by the stepper: changing Subtyp
     "a Boost past the cap passes");
 });
 
-test('CRB 041, Master of None: "3 x current skill rank up to rank 4. At Rank 5 and above, the standard cost ... returns" (B14)', () => {
+test('CRB 0412, Master of None: "3 x current skill rank up to rank 4. From rank 5 on, the standard 5 × current rank applies" (B14)', () => {
   // Ken, 2026-09-24: "up to rank 4" is the rank being bought, so 4 → 5 is
   // the standard price.
   const ch = professional("jack-of-all-trades");
@@ -988,26 +988,26 @@ test('CRB 041, Master of None: "3 x current skill rank up to rank 4. At Rank 5 a
   assert.equal(cost(5), 25);
   delete ch.skills.stealth;
   assert.equal(Engine.ipCost(ch, "skill", "stealth").cost, D.ip.skillIncreaseCost.newSkill, "Decision 97's flat price for a new skill");
-  // F33: the price only. No starting-cap bonus until Deighton rules.
+  // F33, closed 2026-10-08: 0412 says Master of None raises no starting cap.
   assert.equal(Engine.skillRankCap(ch, "stealth"), D.powerLevels.find(p => p.id === "heroic").maxSkillRank);
 });
 
-test("R13: the Professional's Campaign Power Scaling table matches 041, row for row", () => {
-  const md = crb("041_Archetypes.md");
+test("R13: the Professional's Campaign Power Scaling table matches 0412, row for row", () => {
+  const md = crb("0412_Professional.md");
   const head = md.search(/\|\s*\*\*Power Level\*\*\s*\|\s*\*\*Focused Skill Max Bonus\*\*\s*\|\s*\*\*Natural Advantages\*\*\s*\|/);
-  assert.ok(head >= 0, "041's Professional scaling table moved or was renamed");
+  assert.ok(head >= 0, "0412's Professional scaling table moved or was renamed");
   const lines = md.slice(head).split("\n").slice(2);
   const rows = lines.slice(0, lines.findIndex(l => !l.startsWith("|"))).map(l => l.split("|").slice(1, -1).map(c => c.trim()));
   const byPl = D.archetypes.find(a => a.id === "professional").campaignPowerScaling.byPowerLevel;
   const seen = [];
   for (const [name, bonus, ranks] of rows) {
     const pl = D.powerLevels.find(p => p.name === name);
-    assert.ok(pl, `041 names a power level the data doesn't: ${name}`);
+    assert.ok(pl, `0412 names a power level the data doesn't: ${name}`);
     assert.equal(byPl[pl.id].focusedSkillMaxBonus, Number(bonus.replace("+", "")), `${name}: Focused Skill Max Bonus`);
     assert.equal(byPl[pl.id].naturalAdvantageRanks, parseInt(ranks, 10), `${name}: Natural Advantages`);
     seen.push(pl.id);
   }
-  assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join(), "041's table and the data cover different power levels");
+  assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join(), "0412's table and the data cover different power levels");
 });
 
 test("R14: every spell in the Book of Known Spells is in the catalog, as the book prints it", () => {
@@ -1027,7 +1027,9 @@ test("R14: every spell in the Book of Known Spells is in the catalog, as the boo
   assert.ok(from > 0 && inscribedAt > from, "the book's Cantrips or Inscribed Spells heading moved; this walk needs both");
   const dash = s => s.replace(/—/g, "--").replace(/–/g, "-").replace(/[‘’]/g, "'");
   const read = text => {
-    const lines = text.split("\n").map(l => l.replace(/^>\s?/, "").trim()), out = [];
+    // A trailing backslash is pandoc's hard line break, which the 2026-10-07
+    // pull prints on some entries' lines.
+    const lines = text.split("\n").map(l => l.replace(/^>\s?/, "").replace(/\\$/, "").trim()), out = [];
     for (let i = 0; i < lines.length; i++) {
       const name = lines[i].match(/^\*\*([^*]+)\*\*$/);
       const head = name && lines.slice(i + 1).find(l => l);
@@ -1063,16 +1065,17 @@ test("R14: every spell in the Book of Known Spells is in the catalog, as the boo
     if (b.form) {
       assert.equal(f.th, Number(b.head[tn + 1].slice(3)), `${b.name}: its ${only} TH isn't the Enchantment table's for ${s.tier}`);
       assert.equal(f.time, b.head[tn + 2], `${b.name}: its ${only} time`);
-    } else assert.equal(s.th, Number(b.head[tn + 1].slice(3)), `${b.name}: TH`);
+    } else assert.equal(s.th, /^TH \d+$/.test(b.head[tn + 1]) ? Number(b.head[tn + 1].slice(3)) : null, `${b.name}: TH`); // Counterspell prints none
     for (const k of ["target", "effect", "duration", "defending"]) assert.equal(s[k], b[k], `${b.name}: ${k}`);
-    assert.equal(JSON.stringify(s.overflow), JSON.stringify(b.overflow), `${b.name}: Overflow`); // D lives in another realm
+    const overflow = Object.keys(b.overflow).length ? b.overflow : null;           // Counterspell has none
+    assert.equal(JSON.stringify(s.overflow), JSON.stringify(overflow), `${b.name}: Overflow`); // D lives in another realm
   }
 });
 
 // ── Character Points and Power Level (Decision 150) ───────────────────
 // Source: Deighton's playtested Campaign Power Level table and STAT Point
-// Costs, relayed by Ken on 2026-09-27 (the CRB's 040 text still says 3d10+30
-// until it's rewritten). The base of 1 is free: "going to 7 costs 2".
+// Costs, relayed by Ken on 2026-09-27 (0400 and 0420 print it now). The base
+// of 1 is free: "going to 7 costs 2".
 
 test("Deighton's table: flat Stat Points, Skill Points, CP and Max Skill Rank by Campaign level", () => {
   const want = {
@@ -1116,7 +1119,7 @@ test("Skill Points are the level's base + INT + REF, with no roll", () => {
 });
 
 test("CRANK: the tier table and the +1 / -2 rules are the Workshop's (Decision 169)", () => {
-  const md = crb("200_GM_Workshop.md").replace(/\r/g, "");
+  const md = crb("2000_GM_Workshop.md").replace(/\r/g, "");
   const sect = md.slice(md.indexOf("### Reputation"), md.indexOf("### The Job Generator"));
   assert.ok(sect.length > 100, "couldn't find the Reputation section");
   const rows = [...sect.matchAll(/^\|\s*\d+\s*\|\s*([A-Za-z]+)\s*\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*$/gm)];
@@ -1129,4 +1132,27 @@ test("CRANK: the tier table and the +1 / -2 rules are the Workshop's (Decision 1
   assert.match(sect, /completion earns \+1 rep/);
   assert.match(sect, /costs -2 rep/);
   assert.deepEqual([D.resources.crank.jobDone, D.resources.crank.jobWalkedOut], [1, -2]);
+});
+
+// ── Raising a power with IP (W71, Decision 194) ───────────────────────
+// Source: 0450_Advancement, *Spending Improvement Points*: "Power or
+// Discipline · Current rank × 20 · Evocation 3 → 4 costs 60", and "New Power ·
+// 40 · Rank 1 in a Power your archetype can learn".
+
+test('0450: a Power or Discipline costs "Current rank × 20" ("Evocation 3 → 4 costs 60"), and a New Power 40', () => {
+  const md = crb("0450_Advancement.md").replace(/\r/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+  const row = name => { const m = md.match(new RegExp(`${name} (.+?) (\S+ ?\S* ?→|Rank 1)`)); return m && m[1]; };
+  assert.match(row("Power or Discipline") || "", /Current rank × (\d+)/, "0450's Power or Discipline row moved");
+  assert.equal(Number(row("Power or Discipline").match(/× (\d+)/)[1]), D.ip.powerIncreaseCost.perRank);
+  assert.equal(Number((row("New Power") || "").trim()), D.ip.powerIncreaseCost.newPower, "0450's New Power price");
+  assert.match(md, /Evocation 3 → 4 costs 60/, "0450's worked example moved");
+
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  const evo = () => Engine.disciplineRanks(ch).find(d => d.id === "evocation");
+  ch.archetypeChoices.disciplines.evocation = 3 - evo().base;
+  assert.equal(evo().rank, 3);
+  const c = Engine.ipCost(ch, "power", "evocation");
+  assert.deepEqual([c.from, c.to, c.cost], [3, 4, 60], "the book's own example");
+  assert.equal(Engine.ipCost(ch, "power", "alchemy").cost, 40, "rank 1 in a Discipline never trained");
 });

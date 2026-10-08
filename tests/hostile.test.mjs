@@ -86,7 +86,8 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
       { date: P("ip.date2"), kind: "grant", amount: P("ip.amount2"), note: P("ip.note2") },
       { date: P("ip.date3"), kind: "spend", amount: 5, targetType: "power", targetId: P("ip.power"), name: P("ip.powername"), note: "" }] },
     milestonePoints: P("mp"),
-    milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }] } };
+    milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }] },
+    powerIpe: { evocation: P("pipe"), [P("pipe.key")]: 2, enchantment: "1e999", alchemy: -4, [P("pw.id")]: "3" } };
   ch.sessions = [{ date: P("s.date"), title: P("s.title"), ipEarned: P("s.ip"), milestonePoint: true, notes: P("s.notes") }];
   ch.notes = P("notes");
   ch.audit = [
@@ -179,6 +180,10 @@ test("migrate() reads every stored number as a number, and drops an undo entry t
   };
   const bad = Object.entries(numbers).filter(([, v]) => typeof v !== "number" || !Number.isFinite(v)).map(([k, v]) => `${k} = ${JSON.stringify(v)}`);
   assert.deepEqual(bad, [], "a stored number survived migrate() as something else");
+  // Decision 194: a power's IP ranks are whole positive counts, or no key at all.
+  const pipe = Object.entries(c.progression.powerIpe).filter(([, v]) => !Number.isInteger(v) || v < 1);
+  assert.deepEqual(pipe, [], "migrate() kept a power rank that isn't a whole positive count");
+  assert.equal(c.progression.powerIpe[P("pw.id")], 3, "a plain numeric string is the count it spells");
   assert.equal(c.creation.rolls.statPoints, null, "an unreadable roll should read as not entered");
   assert.equal(c.identity.age, null, "an unreadable age should read as blank");
   assert.ok(!c.audit.some(e => e.label === "crafted"), "migrate() kept an undo entry whose path leaves the character");

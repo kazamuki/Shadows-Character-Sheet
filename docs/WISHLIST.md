@@ -24,6 +24,51 @@ items here too, marked as such; Ken triages them.
 
 ### Loadout & catalog
 
+**W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · 🔎 · Rule or shape · raised 2026-10-08 · touches F23, F25*
+Deighton's ask: powered armor worn over the body should show its bonuses where
+they land. Armor giving +5 to BOD skills and damage should raise Melee and
+Martial Arts while it's checked as worn, **without touching the BOD bonus**,
+because it reinforces the body for a while rather than changing it. The same
+goes for REF, MOB and the rest. Today a worn piece answers a hit and nothing
+else; a bonus it prints is text the player applies by hand.
+**Ken's reading (2026-10-08):** a piece of gear or armor carries **modifiers**
+that apply only while it's worn, to **stats, skills, weapons and powers**.
+Weapons are addressed by class, **ranged or melee** and **kinetic or energy**,
+so a modifier can read "+2 ACC to ranged weapons" or "+2 damage to energy
+weapons". Modifiers are **never negative**. A skill modifier adds **ranks
+only**: an untrained skill gets the ranks but not its Synergy. A power
+modifier applies only to a power held at **rank 1 or more**, so +2 Evocation
+on a Professional does nothing.
+*Later, not in the first cut:* gear that **grants a power** while worn, and
+modifiers on **stunts**.
+*To respect:* constraint 7, store inputs: the modifier lives on the catalog
+entry (or the custom row), "worn" is the stored input, and every number it
+moves is computed, never written to the character. Constraint 6 for any new
+catalog key. *Questions before a proposal:* what a stat modifier reaches if
+not the stat's bonus (its skills' checks and damage only, per Deighton? Health
+Levels and WILL/TOL, which BOD feeds?); whether two worn pieces' modifiers to
+one target stack; how "kinetic or energy" maps onto `damageType`, which only
+29 of the 54 weapons carry today (`Normal`, `Ballistic`, `Electric`, `Energy`,
+`Burning`), and whether Electric and Burning count as energy (that's F23's
+question from the other side); and whether the cap of 10 (IPE) binds a worn
+bonus (`0450` says chrome and talismans can carry a score past 10). Prices
+and caps (`ipCost`, `canBoost`) must keep reading the rank without the worn
+bonus, or taking armor off would change what the next rank costs.
+
+**W70 — A custom item the player is done writing reads like the catalog's.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
+A custom gear, weapon or armor row (`custom: true`, Decisions 120–121) stays
+a set of open inputs on Loadout for as long as the character has it, so it
+looks unfinished beside catalog rows and is easy to change by accident.
+Ken's ask: a **Done** (or "complete") control that folds the row into the same
+read-only line a catalog item gets, with an **Edit** to reopen it.
+*To respect:* whether a row is open is either view state (nothing saved) or a
+stored flag on the row. A stored flag is a save-file shape change (a schema
+bump and a `migrate()` step, and an old file's custom rows come in folded or
+open by rule), so prefer view state unless Ken wants the choice to survive a
+reload. The folded line goes through `Engine.catalogLine` or its custom
+equivalent, so a custom item reads exactly as a catalog one does. Player-
+visible: a CHANGELOG line and a patch bump.
+
 **W39 — Train a Martial Arts style in play, and apply its bonus.** *Claude · 🔎 · the bonus half is Deighton's*
 Raised 2026-09-25, finishing W33. The wizard lets a player choose up to two
 styles, and Martial Arts says "you may train additional styles later in
@@ -301,7 +346,7 @@ as a hint on the member's page and in *Who knows what*, and never stored
 give it away and ten might not. It's a fact the GM records, as an interaction
 kind (*learned their name*) or a mark on the interaction that gave it away.
 *To respect:* Decision 177 (interactions are the history; no second place for
-the same sentence), 179 (*Who knows what*). The Reputation advantage (`043`,
+the same sentence), 179 (*Who knows what*). The Reputation advantage (`0430`,
 Rank 2: "people occasionally recognize you") and CRANK rep (169) are player
 rules about being recognised; a level the GM sets must not quietly contradict
 them, so ask Deighton and Scott how they meet before choosing levels. Crew are
@@ -484,7 +529,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W69.** Everything above is open; W38 has a plan,
+- **Next free number: W72.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for

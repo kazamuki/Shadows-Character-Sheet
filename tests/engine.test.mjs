@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.17");
+  assert.equal(ch.meta.schemaVersion, "0.18");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -77,7 +77,7 @@ test("validate returns issues for every step once the wizard's gates are met", (
 });
 
 // Decision 152: a classification says which Advantages are open. Mortal buys
-// all; Supernatural only those carrying 043's Universal tag.
+// all; Supernatural only those carrying 0430's Universal tag.
 test("every archetype names a classification the data defines, or the player picks one", () => {
   const ids = D.classifications.map(c => c.id);
   // Decision 153: a write-in archetype names none; the character's pick is its classification.
@@ -157,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.17");
+  assert.equal(old.meta.schemaVersion, "0.18");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -169,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.17");
+  assert.equal(old.meta.schemaVersion, "0.18");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -541,7 +541,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.17");
+  assert.equal(old.meta.schemaVersion, "0.18");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -652,7 +652,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.17");
+  assert.equal(bare.meta.schemaVersion, "0.18");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -888,7 +888,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.17");
+    assert.equal(c.meta.schemaVersion, "0.18");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1090,7 +1090,7 @@ test("the Conditions catalog is well-formed: unique ids, typed hooks, real locat
       if (k in c) assert.equal(typeof c[k], "number", `${c.id}.${k}`);
     if (c.counter) assert.ok(c.counter.max > 0 && c.counter.label, `${c.id}.counter`);
   }
-  // Every row of 054's table, plus Dying (plan CQ9).
+  // Every row of 0540's table, plus Dying (plan CQ9).
   assert.equal(D.conditions.length, 20);
   assert.ok(D.bodyLocations.length >= 6);
 });
@@ -1162,7 +1162,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.17");
+  assert.equal(old.meta.schemaVersion, "0.18");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1237,7 +1237,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.17");
+  assert.equal(m.meta.schemaVersion, "0.18");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -1620,9 +1620,9 @@ test("Resilient Spirit (Waning Moon) lets Natural Armor answer magical damage wh
   assert.equal(hit(["resilient-spirit"]).through, 3);
 });
 
-// ── Nanomed Kit (Decision 105, CQ12: 054's list) ──────────────────────
+// ── Nanomed Kit (Decision 105, CQ12: 0540's list) ──────────────────────
 
-test("a Nanomed Kit clears 054's four, stabilizes the Dying, and proposes BOD / dose", () => {
+test("a Nanomed Kit clears 0540's four, stabilizes the Dying, and proposes BOD / dose", () => {
   const ch = subject({ bod: 7 });
   ch.trackers.damage = 20;
   ch.trackers.conditions = [{ id: "bleeding" }, { id: "injured", location: "left-arm" },
@@ -1654,7 +1654,7 @@ test("the Cascade and Aberration tables have no gaps or overlaps, and every cate
     assert.ok(cats.has(r[k]), `${k} ${r.min}-${r.max} → "${r[k]}" isn't a category`);
     assert.ok(D.aberrations.some(a => a.category === r[k]), `nothing to pick in "${r[k]}"`);
   }
-  // "treat a Good result as Neutral" (Magic.md) — the permanent column never says good.
+  // "treat a Good result as Neutral" (0480_Magic.md) — the permanent column never says good.
   assert.ok(!ab.some(r => r.permanent === "good"), "a permanent Aberration can come out Good");
   const perm = rows.filter(r => r.aberration).map(r => r.aberration).sort();
   same(perm, ["permanent", "temporary"]);
@@ -2102,7 +2102,7 @@ test("W16: a capacity reads as its rounds, chambered one included; one that does
   assert.equal(rounds("the-preacher"), 2);            // "2"
   assert.equal(rounds("combat-knife"), null);         // no capacity
   const modes = Engine.weaponLine(armed("ts7-bulldog"), 0).fireModes.map(f => `${f.id}${f.rounds}`);
-  assert.deepEqual([...modes], ["S1", "B3", "F10"], "053: Single 1, Burst 3, Full Auto 10");
+  assert.deepEqual([...modes], ["S1", "B3", "F10"], "0530: Single 1, Burst 3, Full Auto 10");
 });
 
 test("W16: firing spends the mode's rounds, refuses what the magazine can't pay or the weapon can't do, and Reload fills it", () => {
@@ -2260,7 +2260,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.17");
+  assert.equal(m.meta.schemaVersion, "0.18");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2346,7 +2346,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.17");
+  assert.equal(m.meta.schemaVersion, "0.18");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2363,7 +2363,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.17");
+  assert.equal(m.meta.schemaVersion, "0.18");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2409,7 +2409,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.17"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.18"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2450,7 +2450,7 @@ test("every tag in the data reads out, bar the few no glossary defines (Decision
   assert.deepEqual(bare, [...BARE].sort());
 });
 
-test("a flagged tag reads as something a player can use, not a note to us (F28–F31)", () => {
+test("a flagged tag reads as something a player can use, not a note to us (F30–F31)", () => {
   for (const g of [...D.weaponTagGlossary, ...D.weaponFeatureGlossary, ...D.spellTagGlossary].filter(g => g.flagged)) {
     assert.ok(g.playerNote, `${g.id}: flagged with no playerNote`);
     assert.doesNotMatch(g.description, /flagNote|Undefined|CRB|Deighton|\bF\d+\b/, `${g.id}: the description is maintainer text`);
@@ -2553,7 +2553,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.17");
+  assert.equal(a.meta.schemaVersion, "0.18");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -2658,12 +2658,14 @@ test("validate: a write-in archetype needs a name and a classification; Other's 
   assert.ok(!issues(subject(), "review").includes(`warn: ${copy}`));
 });
 
-test("addPower costs IP in play, Admin's is free, and the spend is a journal entry one undo takes back with it", () => {
+test("addPower in play costs a new power's price, Admin's is free, and the spend is a journal entry one undo takes back with it", () => {
   const ch = writtenIn();
-  ch.progression.ip.earned = 20;
+  const NEW = D.ip.powerIncreaseCost.newPower;
+  ch.progression.ip.earned = NEW - 1;
   const refusedHere = input => { const n = JSON.stringify(ch); const r = Engine.addPower(ch, input); assert.equal(JSON.stringify(ch), n, `refused but wrote: ${r.why}`); return r; };
-  assert.match(refusedHere({ name: "Fade" }).why || "", /costs IP/, "a power was added in play with no cost (Decision 154)");
-  assert.equal(refusedHere({ name: "Fade", cost: "0" }).ok, false, "a power was added in play for 0 IP");
+  assert.match(refusedHere({ name: "Fade" }).why || "", /Not enough IP/, "a power was added in play short of its price (Decision 194)");
+  assert.equal(refusedHere({ name: "Fade", cost: "0" }).ok, false, "a typed cost of 0 bought a power in play");
+  ch.progression.ip.earned = NEW + 5;
   const free = Engine.addPower(ch, { name: " Fade ", uses: "SFR", effect: "Unseen for a round." }, { free: true });
   assert.ok(free.ok && /^pw-/.test(free.id), JSON.stringify(free));
   same([ch.powers[0].name, ch.powers[0].custom, ch.progression.ip.log.length], ["Fade", true, 0], "a free power touched IP");
@@ -2673,13 +2675,13 @@ test("addPower costs IP in play, Admin's is free, and the spend is a journal ent
   assert.ok(bought.ok);
   Engine.recordAction(ch, "power", "Power: Thorn hedge", before);
   const spend = ch.progression.ip.log[0];
-  same([spend.kind, spend.amount, spend.targetType, spend.targetId, spend.name], ["spend", 15, "power", bought.id, "Thorn hedge"]);
+  same([spend.kind, spend.amount, spend.targetType, spend.targetId, spend.name, spend.note], ["spend", NEW, "power", bought.id, "Thorn hedge", "after the raid"], "a typed cost set the price in play");
   same([Engine.ipState(ch).available, Engine.versionCheck(ch).filter(x => /power/.test(x))], [5, []]);
   assert.ok(Engine.undoLastAction(ch).ok);
-  same([ch.powers.length, ch.progression.ip.log.length, Engine.ipState(ch).available], [1, 0, 20], "one undo took back both");
+  same([ch.powers.length, ch.progression.ip.log.length, Engine.ipState(ch).available], [1, 0, NEW + 5], "one undo took back both");
 
-  const refused = input => { const n = JSON.stringify(ch); const r = Engine.addPower(ch, input); assert.equal(JSON.stringify(ch), n, `refused but wrote: ${r.why}`); return r.ok; };
-  assert.equal(refused({ name: "Too dear", cost: 21 }), false, "short of IP");
+  const refused = input => { const n = JSON.stringify(ch); const r = Engine.addPower(ch, input, { free: true }); assert.equal(JSON.stringify(ch), n, `refused but wrote: ${r.why}`); return r.ok; };
+  assert.equal(refused({ name: "Too dear", cost: NEW + 6 }), false, "Admin's typed cost, short of IP");
   assert.equal(refused({ name: "Odd", cost: "1.5" }), false);
   assert.equal(refused({ name: "Odd", cost: -3 }), false);
   assert.equal(refused({ name: "  " }), false, "no name");
@@ -2715,10 +2717,78 @@ test("improvePower rewrites a power's name, uses and effect for IP, as one undoa
   same([ch.powers[0].effect, ch.progression.ip.log.length], ["Unseen for a round.", 0], "one undo didn't take back both");
 });
 
+// ── Powers with ranks (W71, Decision 194) ───────────────────────────
+function arcanist() {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  ch.progression.ip.earned = 1000;
+  return ch;
+}
+const rankOf = (ch, id) => Engine.powerRanks(ch).find(p => p.id === id);
+
+test("a Discipline is raised with IP at rank × 20, one never trained is learned at 40, and IPE's 10 stops it (Decision 194)", () => {
+  const ch = arcanist(), P = D.ip.powerIncreaseCost;
+  const evo = rankOf(ch, "evocation");
+  assert.ok(evo && evo.kind === "discipline", "Evocation isn't a power the Arcanist can raise");
+  same(Engine.ipCost(ch, "power", "evocation"), { ok: true, cost: P.perRank * evo.rank, from: evo.rank, to: evo.rank + 1, name: "Evocation" });
+  same(Engine.ipCost(ch, "power", "alchemy").cost, P.newPower, "Alchemy at rank 0 isn't a new power's price");
+  assert.equal(Engine.ipCost(ch, "power", "telekinesis").ok, false, "a power the character doesn't hold was priced");
+
+  const attack = Engine.spellAttack(ch).value, before = JSON.parse(JSON.stringify(ch));
+  assert.ok(Engine.spendIP(ch, "power", "evocation").ok);
+  Engine.recordAction(ch, "ip", "IP: Evocation", before);
+  const d = Engine.disciplineRanks(ch).find(x => x.id === "evocation");
+  same([d.rank, d.ipe, d.start], [evo.rank + 1, 1, evo.rank], "the raise didn't land on IPE alone");
+  assert.equal(Engine.spellAttack(ch).value, attack + 1, "Spell Attack didn't read the raised rank");
+  const e = ch.progression.ip.log.at(-1);
+  same([e.targetType, e.targetId, e.name, e.from, e.to, e.amount], ["power", "evocation", "Evocation", evo.rank, evo.rank + 1, P.perRank * evo.rank]);
+  same(Engine.versionCheck(ch).filter(x => /Evocation|power/.test(x)), []);
+  ch.progression.powerIpe.evocation = 2;
+  assert.match(Engine.versionCheck(ch).join(" "), /1 rank bought for Evocation but it holds 2/, "a hand-edited rank passed versionCheck");
+  ch.progression.powerIpe.evocation = 1;
+  assert.ok(Engine.undoLastAction(ch).ok);
+  same([rankOf(ch, "evocation").rank, ch.progression.ip.log.length], [evo.rank, 0], "one undo didn't take back the rank and its spend");
+
+  // Max Power Rank caps creation only (Ken, 2026-10-08): IP past it is no error.
+  ch.progression.powerIpe.evocation = Engine.disciplineCap(ch) + 1;
+  same(Engine.validate("character-points", ch).filter(i => /Evocation/.test(i.msg)), [], "an IP rank tripped the creation cap");
+  ch.archetypeChoices.disciplines.evocation = Engine.disciplineCap(ch);    // bought past it at creation
+  assert.ok(Engine.validate("character-points", ch).some(i => /Evocation is rank .* start at/.test(i.msg)), "the creation cap stopped checking");
+  ch.archetypeChoices.disciplines.evocation = 0;
+  ch.progression.powerIpe.evocation = D.ip.rankCap - evo.rank;
+  assert.match(Engine.ipCost(ch, "power", "evocation").why || "", /Rank cap 10/, "a power went past IPE's 10");
+});
+
+test("a written power is rank 1, rises at rank × 20, and its ranks go when it does (Decision 194)", () => {
+  const ch = writtenIn();
+  ch.progression.ip.earned = 100;
+  const { id } = Engine.addPower(ch, { name: "Fade" }, { free: true });
+  same([rankOf(ch, id).rank, rankOf(ch, id).kind, Engine.ipCost(ch, "power", id).cost], [1, "written", D.ip.powerIncreaseCost.perRank]);
+  assert.ok(Engine.spendIP(ch, "power", id).ok);
+  assert.ok(Engine.spendIP(ch, "power", id).ok);
+  same([rankOf(ch, id).rank, Engine.ipState(ch).available], [3, 100 - 20 - 40]);
+  assert.ok(Engine.removePower(ch, id).ok);
+  same([ch.progression.powerIpe[id], Engine.powerRanks(ch).length], [undefined, 0], "a removed power's ranks stayed behind");
+  assert.match(Engine.versionCheck(ch).join(" "), /Fade, but that power isn't on the sheet/);
+  const pro = subject(); pro.identity.archetype = "professional";
+  same(Engine.powerRanks(pro), [], "a Professional has a power to raise");
+});
+
+test("migrate() gives a file from before 0.18 no power ranks, and an undo can't make one read as anything but a count", () => {
+  const old = JSON.parse(JSON.stringify(arcanist()));
+  delete old.progression.powerIpe; old.meta.schemaVersion = "0.17";
+  same(Engine.migrate(old).progression.powerIpe, {});
+  const ch = arcanist();
+  ch.progression.powerIpe = { evocation: "lots" };            // what a crafted undo could restore
+  assert.equal(rankOf(ch, "evocation").ipe, 0);
+  ch.progression.powerIpe = ["evocation"];
+  assert.equal(rankOf(ch, "evocation").ipe, 0);
+});
+
 test("versionCheck matches a power's spend to its row, and says when the power is gone", () => {
   const ch = writtenIn();
-  ch.progression.ip.earned = 30;
-  const r = Engine.addPower(ch, { name: "Thorn hedge", cost: 10 });
+  ch.progression.ip.earned = D.ip.powerIncreaseCost.newPower + 20;
+  const r = Engine.addPower(ch, { name: "Thorn hedge" });
   same(Engine.versionCheck(ch).filter(x => /power/i.test(x)), []);
   assert.ok(Engine.removePower(ch, r.id).ok);
   assert.equal(Engine.removePower(ch, r.id).ok, false);
@@ -2806,7 +2876,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.17");
+  assert.equal(m.meta.schemaVersion, "0.18");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
