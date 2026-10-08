@@ -2,6 +2,19 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.39.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**The Werewolf, as the book now writes it.** Three Origins to choose from: **Trueborn**, **Wildblood** and **Forge Fang**, each with how it shifts, how it refuels, what the beast needs, and a starter power. Wildblood's Aspect of the Beast and the Forge Fang's CyberWolf Protocol come with their tables. The Trueborn's Lunar Phase Blessing is gone from the book, and from the sheet.",
+      "**A Werewolf carries the whole kit.** Every Innate power and every power of your Origin is on the Character tab at Rank 1, with its cost and what each rank adds, and **Raise a Power** raises them with IP. The book prints a maximum of 3; that caps a starting character, and in play a power goes on to 10, like a skill. Raise a Power tells you when a rank passes the book's.",
+      "**Shift, and the sheet shifts with you.** Switch Form to **Werewolf** on Main or on Loadout & Powers: +2 REF, +2 MOB and +4 BOD land in your skills, your Health Levels and your damage, Claws and Fangs head your weapons, and TECH skills are marked as out of reach. WILL, TOL and your SFR don't move. A Forge Fang's shift spends a Health Level of Withering damage, and the switch says so before you press it. One Undo takes back the shift and its cost.",
+      "**Call of the Wild** is a tracker: a step for each day your Need goes unmet, up to three, each in your Origin's own words.",
+      "**Pack Mentality** joins the Werewolf's traits, and **Silver**, **Feral Mind**, **Call of the Wild** and, for a Forge Fang, **EMP** are its vulnerabilities.",
+      "**A Werewolf's bonus stat points go on BOD, REF or MOB,** and can push past 10. A Werewolf you've already made keeps every point it placed."
+    ]
+  },
+  {
     "version": "0.38.0",
     "date": "2026-10-08",
     "intro": [],

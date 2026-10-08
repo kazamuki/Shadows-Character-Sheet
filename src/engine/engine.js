@@ -198,13 +198,115 @@ const Engine = (() => {
     return ch.stats[id].base + archStatBonus(ch,id)
          + boostsFor(ch,"stat",id) + ch.stats[id].ipe + adjFor(ch,id);
   }
-  function statTable(ch){
+  // The stats as stored: what prices, caps, prerequisites and the derived
+  // attributes read (Decision 195), so a shift never moves an IP price or WILL.
+  function baseStatTable(ch){
     const out = {};
     for (const s of D().stats){
       const v = statValue(ch, s.id);
       out[s.id] = { value:v, mod:statMod(v) };
     }
     return out;
+  }
+  // The stats as played: the stored values plus whatever the form the
+  // character is in adds (Werewolf form's +2 REF, +2 MOB, +4 BOD). Skills,
+  // Health Levels and weapon damage read this. `form` is what the form added.
+  function statTable(ch){
+    const out = baseStatTable(ch), lift = (formState(ch)||{}).stats || {};
+    for (const id of Object.keys(lift)) if (out[id]){
+      const v = out[id].value + lift[id];
+      out[id] = { value:v, mod:statMod(v), form:lift[id] };
+    }
+    return out;
+  }
+
+  // ── A form (Decision 195) ─────────────────────────────────────────────
+  // A toggle panel's options are names, or objects whose `name` is what the
+  // character stores in panelData. An option can carry what being in it does:
+  // `stats` ({ stat, plus }), `naturalWeapons`, `bars` (a stat whose skills
+  // are out of reach), `costFrom` (a key on the chosen specialization naming
+  // what entering it costs) and `endsAtWithering` (the share of Health that
+  // Withering takes to end it). Nothing names an archetype.
+  const toggleOptions = p => (Array.isArray(p && p.options) ? p.options : [])
+    .map(o => typeof o==="string" ? { name:o } : (o && typeof o==="object" && typeof o.name==="string") ? o : null)
+    .filter(Boolean);
+  const toggleCurrent = (ch, p) => {
+    const opts = toggleOptions(p), pd = ch && ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
+    return opts.find(o=>o.name===pd[p.id]) || opts[0] || null;
+  };
+  const hasForm = o => !!o && ["stats","naturalWeapons","bars"].some(k=>o[k]!=null);
+  // The form the character is in, or null when none of its toggles is on an
+  // option that does anything. Stored nowhere but the toggle (constraint 7).
+  function formState(ch){
+    for (const p of archPanels(ch)){
+      if (p.type!=="toggle") continue;
+      const o = toggleCurrent(ch, p);
+      if (!hasForm(o)) continue;
+      const stats = {};
+      for (const s of Array.isArray(o.stats) ? o.stats : []){
+        const id = s && normStat(s.stat), n = Number(s && s.plus);
+        if (id && Number.isFinite(n)) stats[id] = (stats[id]||0) + n;
+      }
+      const bars = o.bars && normStat(o.bars.stat) ? { stat:normStat(o.bars.stat), name:txt(o.bars.name) } : null;
+      return { panelId:p.id, name:o.name, stats, bars,
+               naturalWeapons: (Array.isArray(o.naturalWeapons) ? o.naturalWeapons : []).filter(isPlainObj),
+               endsAtWithering: Number(o.endsAtWithering) || null, summary:txt(o.summaryText), endsText:txt(o.endsText) };
+    }
+    return null;
+  }
+  // The form as the sheet shows it: its natural weapons computed like any
+  // weapon (the attack is the skill's, the damage BOD+n), and whether the
+  // Withering taken has ended it. The engine says so; it never shifts back.
+  function formView(ch){
+    const f = formState(ch);
+    if (!f) return null;
+    const weapons = f.naturalWeapons.map(w=>{
+      const d = weaponDamage(ch, w.damage), skill = skillById(w.skill) ? skillLine(ch, w.skill) : null;
+      return { name:txt(w.name), skill: skill ? skill.def.name : "", attack: skill ? skill.checkBonus : null,
+               damage:d.value, damageFormula:d.formula };
+    });
+    const hs = hlState(ch), withering = nonNegInt((ch.trackers||{}).witheringDamage);
+    const ended = !!f.endsAtWithering && hs.total>0 && withering >= hs.total * f.endsAtWithering;
+    return Object.assign({}, f, { weapons, ended });
+  }
+  // Switching a toggle. Entering an option whose `costFrom` the chosen
+  // specialization answers (a Forge Fang's `shiftCost`) takes that cost:
+  // `hl` Health Levels of damage, at the Health Level the character has now,
+  // in the damage category named, so Withering is recorded as Withering. The
+  // caller's commit() makes it one Undo. Leaving costs nothing.
+  // What entering one option costs this character: null when free. An HL is
+  // priced in the form being entered, so the track shows exactly the Health
+  // Levels spent while it's on (a Forge Fang at BOD 12 shifted spends 7 HP).
+  function toggleCost(ch, p, o){
+    const c = o && o.costFrom && specializationChosen(ch).map(s=>s[o.costFrom]).find(isPlainObj);
+    if (!c || !(nonNegInt(c.hl) > 0)) return null;
+    const cat = damageCategoryById(c.category);
+    const pd = Object.assign({}, isPlainObj(ch.panelData) ? ch.panelData : {}, { [p.id]: o.name });
+    const hpPer = health(Object.assign({}, ch, { panelData: pd })).hpPer;
+    return { hl:nonNegInt(c.hl), hp:nonNegInt(c.hl) * hpPer, withering: !!(cat && cat.recordsWithering), category: cat ? cat.name : "" };
+  }
+  function setToggle(ch, panelId, name){
+    const p = archPanels(ch).find(x=>x.id===panelId && x.type==="toggle");
+    if (!p) return { ok:false, why:"That isn't on this sheet." };
+    const o = toggleOptions(p).find(x=>x.name===name);
+    if (!o) return { ok:false, why:"That isn't one of its options." };
+    const was = toggleCurrent(ch, p);
+    if (!ch.panelData || typeof ch.panelData!=="object") ch.panelData = {};
+    const cost = was && was.name===o.name ? null : toggleCost(ch, p, o);
+    if (cost){
+      const t = ch.trackers;
+      t.damage = nonNegInt(t.damage) + cost.hp;
+      if (cost.withering) t.witheringDamage = nonNegInt(t.witheringDamage) + cost.hp;
+    }
+    ch.panelData[p.id] = o.name;
+    return { ok:true, cost };
+  }
+  // A toggle panel as the sheet draws it: each option, which is on, and
+  // what pressing an option that isn't would cost.
+  function toggleView(ch, p){
+    const cur = toggleCurrent(ch, p);
+    return toggleOptions(p).map(o=>({ name:o.name, on: !!cur && cur.name===o.name, does: hasForm(o),
+      cost: cur && cur.name===o.name ? null : toggleCost(ch, p, o) }));
   }
 
   // Scaling row for the chosen archetype at the chosen power level
@@ -236,8 +338,10 @@ const Engine = (() => {
   const formulaValue = (f, input) => typeof input==="number" ? input * f.times + (Number(f.plus)||0) : null;
   const formulaText = f => isFormula(f) ? `${f.stat} × ${f.times}${f.plus ? ` + ${f.plus}` : ""}` : "";
 
+  // Derived attributes read the stats as stored: the book's shift enhances
+  // skills, speed and Health Levels, not WILL or TOL (Decision 195).
   function derived(ch){
-    const t = statTable(ch), out = {};
+    const t = baseStatTable(ch), out = {};
     for (const d of D().derived){
       if (d.type === "sumOfModifiers"){
         let v = d.base + d.inputs.reduce((s,id)=>s + t[id].mod, 0);
@@ -269,7 +373,7 @@ const Engine = (() => {
 
   function health(ch){
     const hl = D().resources.healthLevels;
-    const bod = statValue(ch,"BOD");
+    const bod = statTable(ch).BOD.value;   // a form's BOD counts (Decision 195)
     const levels = Math.min(bod, hl.maxLevels);
     const hpPer  = hl.hpPerLevel + Math.max(0, bod - hl.maxLevels) // BOD>10 rule
                  + grants(ch).hpPerLevel;                          // Hard to Kill
@@ -446,7 +550,10 @@ const Engine = (() => {
     // Check total, separately from Pain so the breakdown can say why (F20/F21).
     const conditions = conditionState(ch).rollPenalty;
     const base = rank>0 ? rank + priVal + synMod : priVal;
-    return { def, rank, trained:rank>0, checkBonus: base + pain + conditions,
+    // A form can put a stat's skills out of reach (Feral Mind): `barred`
+    // names what does. The total still shows; the sheet says it can't be used.
+    const form = formState(ch), barred = form && form.bars && pri===form.bars.stat ? (form.bars.name || form.name) : null;
+    return { def, rank, trained:rank>0, checkBonus: base + pain + conditions, barred,
              breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain, conditions },
              dataWarning: (pri && syn) ? null : `Skill "${def.name}" references an unknown stat (${!pri?def.primaryStat:def.synergyStat}).` };
   }
@@ -1146,7 +1253,7 @@ const Engine = (() => {
   function statReading(ch, id){
     const R = D().statRules||{}, def = (D().stats||[]).find(s=>s.id===id);
     if (!def) return null;
-    const v = statValue(ch, id);
+    const v = statTable(ch)[id].value;     // as played: a form's lift counts
     const range = (R.ranges||[]).find(r=>(r.min==null || v>=r.min) && (r.max==null || v<=r.max)) || null;
     const hlRule = (((D().resources||{}).healthLevels)||{}).bodAbove10Rule;
     return { id, name:def.name||id, description:def.description||"", value:v, mod:statMod(v), range,
@@ -2148,16 +2255,29 @@ const Engine = (() => {
     if (!panel) t.panel = {};
     return { obj: (t.panel[p.id] = { value:0 }), key:"value" };
   };
+  // A tracker with `stepsFrom` counts steps whose text the chosen
+  // specialization holds under that key ({ need, steps }): Call of the Wild's
+  // withdrawal, a column per Origin (Decision 196). It stops at its last step.
+  const panelSteps = (ch, p) => {
+    if (!p.stepsFrom) return null;
+    const w = specializationChosen(ch).map(o=>o[p.stepsFrom]).find(isPlainObj);
+    return w ? { need:txt(w.need), steps:(Array.isArray(w.steps) ? w.steps : []).map(txt) } : { need:"", steps:[] };
+  };
   function panelTracker(ch, p){
     const max = panelMax(ch, p), s = panelStore(ch, p, false), count = Number(s.obj[s.key])||0;
-    const down = p.counts==="down";
-    return { count, max, down, shown: down ? (max!=null ? Math.max(0, max-count) : null) : count };
+    const down = p.counts==="down", st = panelSteps(ch, p);
+    const out = { count, max, down, shown: down ? (max!=null ? Math.max(0, max-count) : null) : count };
+    if (st) Object.assign(out, { need:st.need, step: count>0 ? (st.steps[Math.min(count, st.steps.length)-1] || "") : "" });
+    return out;
   }
   function adjustPanelTracker(ch, panelId, delta){
     const p = archPanels(ch).find(x=>x.id===panelId && x.type==="tracker");
     if (!p) return { ok:false, why:"That tracker isn't on this sheet." };
     const s = panelStore(ch, p, true);
-    s.obj[s.key] = Math.max(0, (Number(s.obj[s.key])||0) + (Number(delta)||0));
+    let v = Math.max(0, (Number(s.obj[s.key])||0) + (Number(delta)||0));
+    const max = panelMax(ch, p);
+    if (p.stepsFrom && max!=null) v = Math.min(max, v);
+    s.obj[s.key] = v;
     return { ok:true };
   }
   function disciplineRanks(ch){
@@ -2179,15 +2299,38 @@ const Engine = (() => {
     const m = (((ch||{}).progression)||{}).powerIpe;
     return isPlainObj(m) && Object.prototype.hasOwnProperty.call(m, id) ? nonNegInt(m[id]) : 0;
   }
+  // The archetype's own powers the character holds (Decision 196): every
+  // Innate one (no `origin`) and every one of the chosen specialization's,
+  // at rank 1 + what IP bought. A Werewolf "carries the whole kit"; what its
+  // Base Powers add is F38, so nothing is bought at creation. `maxRank` is
+  // the book's printed maximum, a creation cap: play stops at IPE's 10 (VQ14).
+  function archetypePowers(ch){
+    const a = archetype(ch);
+    if (!a || writeInSpec(ch)) return [];
+    const origins = specializationIds(ch);
+    return (Array.isArray(a.powers) ? a.powers : []).filter(p=>isPlainObj(p) && p.id && (!p.origin || origins.includes(p.origin)))
+      .map(p=>{ const ipe = powerIpeOf(ch, p.id);
+        return Object.assign({}, p, { rank:1+ipe, ipe, maxRank: Number(p.maxRank) || null }); });
+  }
+  // A Werewolf's Base Powers and Max Starting Rank, read off the scaling row
+  // for the Character tab (F38's stub: shown, spending nothing). Null when the
+  // row has neither.
+  function powerAllowance(ch){
+    const row = scalingRow(ch);
+    if (!row || (row.basePowers==null && row.maxStartingRank==null)) return null;
+    return { basePowers: typeof row.basePowers==="number" ? row.basePowers : null,
+             maxStartingRank: typeof row.maxStartingRank==="number" ? row.maxStartingRank : null };
+  }
   // Every power the character holds that has a rank, and so can be raised:
-  // Disciplines (rank 0 is one not yet trained), then the character's own
-  // written powers, rank 1 at creation (XQ2: creation's powers are free).
-  // Werewolf and Vampire powers join here when their data does (crb-v4-sync P3, P4).
+  // Disciplines (rank 0 is one not yet trained), the archetype's own powers,
+  // then the character's own written powers, rank 1 at creation (XQ2:
+  // creation's powers are free).
   function powerRanks(ch){
     const ds = disciplineRanks(ch).map(d=>({ id:d.id, name:d.name, kind:"discipline", rank:d.rank, ipe:d.ipe }));
+    const arch = archetypePowers(ch).map(p=>({ id:p.id, name:p.name, kind:"archetype", rank:p.rank, ipe:p.ipe, maxRank:p.maxRank }));
     const own = ownPowers(ch).filter(p=>p.id).map(p=>{ const ipe = powerIpeOf(ch, p.id);
       return { id:p.id, name:p.name || "Unnamed power", kind:"written", rank:1+ipe, ipe }; });
-    return [...ds, ...own];
+    return [...ds, ...arch, ...own];
   }
 
   // ── A write-in archetype (Decision 153) ─────────────────────────────
@@ -2229,11 +2372,15 @@ const Engine = (() => {
     const c = classification(ch), spec = writeInSpec(ch), w = writeInOf(ch);
     const text = spec && c && c.writeIn ? txt(w.classificationText).trim() : "";
     const cls = c ? { id:c.id, name:c.name, text } : null;
+    // A power or vulnerability with an `origin` belongs to that
+    // specialization alone (a Forge Fang's EMP): the others never see it.
+    const origins = specializationIds(ch);
     if (!spec) return { writeIn:false, name:a.name, description:a.summary||null, status:a.status, classification:cls,
-      traits:a.baselineTraits||[], powers:[...(a.powers||[]), ...rankedOwnPowers(ch)], vulnerabilities:a.vulnerabilities||[] };
+      traits:a.baselineTraits||[], powers:[...archetypePowers(ch), ...rankedOwnPowers(ch)], powersText:txt(a.powersText),
+      vulnerabilities:(a.vulnerabilities||[]).filter(v=>!v || !v.origin || origins.includes(v.origin)) };
     const desc = txt(w.description).trim();
     return { writeIn:true, name:txt(w.name).trim() || a.name, description:desc || null, status:a.status, classification:cls,
-      traits:textRows(w.traits), powers:rankedOwnPowers(ch), vulnerabilities:textRows(w.vulnerabilities) };
+      traits:textRows(w.traits), powers:rankedOwnPowers(ch), powersText:"", vulnerabilities:textRows(w.vulnerabilities) };
   }
   // A power row's id is local to the character, so the IP journal can name
   // the row a spend bought. Never reissued within one character.
@@ -2539,6 +2686,26 @@ const Engine = (() => {
     return c;
   }
 
+  // Decision 197 (0414): an archetype whose scaling row rolls a Focus Stat
+  // bonus, and no Stat Bonus, spends its roll on its Focus Stats. A file
+  // from when it rolled a Stat Bonus on any stat (a Werewolf before game
+  // data 0.31) has the roll and its points moved across, so a locked
+  // character's stats don't move. A draft's points on a stat that isn't a
+  // Focus Stat are given back to place again: the wizard shows only the
+  // Focus Stats, so they'd be points nobody could take off.
+  function _statBonusToFocus(c){
+    const a = archetype(c), row = scalingRow(c), ac = c.archetypeChoices;
+    if (!a || !row || !row.focusStatBonusRoll || row.statBonusRoll) return;
+    if (![ac, ac && ac.rolls, ac && ac.statBonusAllocation, ac && ac.focusAllocation].every(isPlainObj)) return;
+    const pts = Object.entries(ac.statBonusAllocation).filter(([, v])=>v > 0);
+    if (ac.rolls.statBonus==null && !pts.length) return;
+    const focus = ((a.campaignPowerScaling||{}).focusStats) || [];
+    if (ac.rolls.focusStatBonus==null && ac.rolls.statBonus!=null) ac.rolls.focusStatBonus = ac.rolls.statBonus;
+    delete ac.rolls.statBonus;
+    for (const [id, v] of pts) if (c.creation.locked===true || focus.includes(id))
+      ac.focusAllocation[id] = (ac.focusAllocation[id]||0) + v;
+    ac.statBonusAllocation = {};
+  }
   function migrate(c){
     if (!c || typeof c !== "object") c = {};
     // meta is filled explicitly below: seeding gamedataVersion from the current
@@ -2722,6 +2889,7 @@ const Engine = (() => {
     if (cr.statMethod!=="rolled") cr.statMethod = "flat";
     if (cr.earlierTable!==true) delete cr.earlierTable;
     _coerceNumbers(c);
+    _statBonusToFocus(c);
     // meta exists but gamedataVersion is deliberately NOT seeded: inventing it
     // from the loaded data would mask the mismatch versionCheck must report.
     if (!c.meta || typeof c.meta!=="object") c.meta = {};
@@ -4680,8 +4848,8 @@ const Engine = (() => {
     // The character file: create, load, check, export
     newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, improvePower, newPower, removePower, statMod, statValue, statTable, statReading, archStatBonus, scalingRow,
-    derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, archStatBonus, scalingRow,
+    derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
     advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, validate,
@@ -4707,6 +4875,8 @@ const Engine = (() => {
     ipState, ipCost, spendIP, grantIP,
     milestoneState, canTakeMinor, majorPrereqs, takeMilestone, untakeMilestone,
     logSession, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
+    // A form (Decision 195): what a toggle is on, what it does, and switching it
+    toggleOptions, toggleView, formState, formView, setToggle,
     // Audit trail and undo
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes

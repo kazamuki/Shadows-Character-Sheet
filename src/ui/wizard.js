@@ -299,7 +299,7 @@ function renderArchetype(){
         ${o.focusedSkills?`<div class="desc"><b>Focused Skills:</b> ${esc(focusedSkillsText(o.focusedSkills))}</div>`:""}
         ${o.tweak?`<div class="desc"><b>Tweak — ${esc(o.tweak.name)}:</b> ${esc(o.tweak.description)} ${(o.tweak.benefits||[]).map(esc).join(" ")}</div>`:""}
         ${o.benefit?`<div class="desc"><b>Benefit:</b> ${esc(o.benefit)}</div>`:""}
-        ${o.transformation?`<div class="desc"><b>Transformation:</b> ${esc(o.transformation)}</div>`:""}
+        ${optionFeatures(o).map(f=>`<div class="desc"><b>${esc(f.name)}:</b> ${esc(f.text)}</div>`).join("")}
         ${optionPowersHtml(o)}
       </div>`;
     }).join("");

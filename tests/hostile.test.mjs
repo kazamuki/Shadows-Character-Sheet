@@ -26,7 +26,9 @@ const P = tag => `"'><i data-pwn="${tag}"></i>`;
 // Decision 153: the write-in archetype draws the character's own words, so
 // every rendering test runs once on it too.
 const WRITE_IN = D.archetypes.find(a => a.writeIn).id;
-const ARCHETYPES = ["arcanist", WRITE_IN];
+// crb-v4-sync P3: the Werewolf's Origin, Form and Call of the Wild are read off
+// the file too, so it runs as well, with a junk Origin beside a real one.
+const ARCHETYPES = ["arcanist", "werewolf", WRITE_IN];
 
 function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   const ch = Engine.newCharacter();
@@ -39,8 +41,9 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   ch.creation.locked = locked;
   for (const s of D.stats) ch.stats[s.id].base = 6;
   ch.stats.BOD.base = P("stat.base"); ch.stats.REF.ipe = P("stat.ipe");
-  ch.archetypeChoices = { rolls: { focusStatBonus: P("roll.focus"), startingSpells: P("roll.spells") },
-    focusAllocation: { INT: P("focus") }, statBonusAllocation: {}, specialization: [P("spec.id"), "aethereal-link"],
+  ch.archetypeChoices = { rolls: { focusStatBonus: P("roll.focus"), startingSpells: P("roll.spells"), statBonus: P("roll.sb") },
+    focusAllocation: { INT: P("focus") }, statBonusAllocation: archetype === "werewolf" ? { BOD: P("sb"), [P("sb.key")]: 1 } : {},
+    specialization: [P("spec.id"), archetype === "werewolf" ? "forge-fang" : "aethereal-link"],
     focusedSkillPicks: [P("fskill")], naturalAdvantages: [{ id: P("natadv.id"), rank: P("natadv.rank") }],
     disciplines: { enchantment: P("disc") },
     writeIn: { name: P("wi.name"), description: P("wi.desc"), classification: P("wi.cls"), classificationText: P("wi.clstext"),
@@ -62,7 +65,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
     conditions: [{ id: P("cond.id") }, { id: "agonized", note: P("cond.note") },
       { id: "injured", location: P("cond.loc") }, { id: "dying", marks: P("marks") }],
     aberrations: [{ id: P("ab.id"), permanence: P("ab.perm") }, { id: "drained", permanence: "permanent", note: P("ab.note") }],
-    panel: { "tol-spent": { value: P("panel") } },
+    panel: { "tol-spent": { value: P("panel") }, "call-of-the-wild": { value: P("cotw") } },
   });
   ch.weapons = [
     { custom: true, name: P("w.name"), type: P("w.type"), damage: P("w.dmg"), rof: P("w.rof"), capacity: P("w.cap"),
@@ -75,7 +78,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
     { id: D.armor[0].id, integrityLoss: P("a.loss2"), notes: P("a.notes2"), worn: false, scrapped: false, upgrades: [P("a.upg2")] }];
   ch.gear = [{ custom: true, name: P("g.name"), type: P("g.type"), notes: P("g.notes") },
     { id: P("g.id"), qty: P("g.qty") }, { id: D.equipment[0].id, qty: P("g.qty2"), notes: P("g.notes2") }];
-  ch.panelData = { grimoire: [
+  ch.panelData = { form: archetype === "werewolf" ? "Werewolf" : P("form"), grimoire: [
     { custom: true, "Spell Name": P("sp.name"), Discipline: P("sp.disc"), TN: P("sp.tn"), TH: P("sp.th"),
       Effect: P("sp.effect"), Overflow: P("sp.over"), Notes: P("sp.notes") },
     { spellId: P("sp.id"), stage: P("sp.stage"), notes: P("sp.notes2") },
@@ -87,7 +90,8 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
       { date: P("ip.date3"), kind: "spend", amount: 5, targetType: "power", targetId: P("ip.power"), name: P("ip.powername"), note: "" }] },
     milestonePoints: P("mp"),
     milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }] },
-    powerIpe: { evocation: P("pipe"), [P("pipe.key")]: 2, enchantment: "1e999", alchemy: -4, [P("pw.id")]: "3" } };
+    powerIpe: { evocation: P("pipe"), [P("pipe.key")]: 2, enchantment: "1e999", alchemy: -4, [P("pw.id")]: "3",
+                "steel-fangs": P("pipe.ww"), "apex-fury": 2 } };
   ch.sessions = [{ date: P("s.date"), title: P("s.title"), ipEarned: P("s.ip"), milestonePoint: true, notes: P("s.notes") }];
   ch.notes = P("notes");
   ch.audit = [

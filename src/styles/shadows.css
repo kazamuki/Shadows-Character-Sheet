@@ -493,6 +493,7 @@ table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--m
 .trk .big{font-family:var(--mono); font-size:1.25rem; color:var(--cyan)}
 .trk .big.bad{color:var(--magenta-text)} .trk .big.gold{color:var(--gold)} .trk .big.hp{color:var(--green)}
 .trk .sub{font-size:.74rem; color:var(--dim); flex-basis:100%}
+.trk .sub.trk-step{color:var(--text)}
 .trk input[type=number]{width:84px; text-align:center}
 .trk input[type=text]{width:auto; flex:1; min-width:140px}
 .btn.sm{padding:5px 12px; font-size:.78rem; font-weight:500}
@@ -526,6 +527,7 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .statcell .sv{font-family:var(--numeric); font-weight:600; font-variant-numeric:tabular-nums; font-size:1.5rem; color:var(--text)}
 .statcell .sm2{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
 .statcell .sm2.pos{color:var(--green)} .statcell .sm2.neg{color:var(--magenta-text)}
+.statcell.shifted{border-color:var(--gold)} .statcell .sform{font-family:var(--mono); font-size:.7rem; color:var(--gold)}
 .form-toggle{display:flex; gap:0; border:1px solid var(--frame); border-radius:4px; overflow:hidden}
 .form-toggle button{background:var(--panel-2); border:0; color:var(--dim); padding:6px 16px; font-size:.8rem}
 .form-toggle button.on{background:var(--violet); color:var(--on-accent)}
