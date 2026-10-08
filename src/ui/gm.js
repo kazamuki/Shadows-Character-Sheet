@@ -321,9 +321,9 @@ const castStatusLabel = s => s==="all" ? "All" : s==="inplay" ? "In play" : CAST
 // The affiliation filter names what the cast has: one that has since left it filters nothing.
 const castAffNow = () => { const w=String(S.castAff||"").toLowerCase(); return w && Engine.castAffiliations(S.table).find(a=>a.toLowerCase()===w) || ""; };
 const castFilterNow = () => ({ q:S.castQ||"", status:S.castStatus||"inplay", affiliation:castAffNow() });
-// The seven kinds, read from the crew's side (Decision 177), in the order they're pressed.
+// The eight kinds, read from the crew's side (Decisions 177, 193), in the order they're pressed.
 const INTERACTION_KINDS = [["shared","Told them"], ["learned","Learned from them"], ["helped","Helped them"], ["wronged","Wronged them"],
-  ["killed","Killed them"], ["owes","Owes them"], ["owed","They owe"]];
+  ["killed","Killed them"], ["owes","Owes them"], ["owed","They owe"], ["fought","Fought them"]];
 const interactionLabel = k => (INTERACTION_KINDS.find(x=>x[0]===k)||[])[1] || "";
 // The GM's local day, YYYY-MM-DD. Not toISOString(): that's UTC, and after 7 pm in New York it says tomorrow.
 function localDay(d=new Date()){
@@ -1128,7 +1128,7 @@ function bindThreatPage(main, back, focusFirst){
 // moves to Threats or Cast, which name it on their Add buttons), S.encPick and S.encQ (the cast
 // picker), S.encDmg (a Take or Heal field open on a row), S.encHit (the Hit panel open on a row, with
 // its fields and answers), S.encCond (the Add a Condition draft), S.encMore (rows whose More is open)
-// and S.encReset (the numbers and Keeps typed at a Reset). One of Take, Hit and the Condition form is
+// S.encReset (the numbers and Keeps typed at a Reset) and S.encWrap (the wrap-up's draft, Decision 193). One of Take, Hit and the Condition form is
 // open at a time.
 // A rule the sheet names is a tap away, through the same tip (139): a Condition's, and a Pain Level's.
 TIPS.condition = id => { const d=Engine.conditionById(id); return d && { title:d.name, text:d.effect, more:[d.recovery].filter(Boolean) }; };
@@ -1284,7 +1284,7 @@ function encRowHtml(v, e){
   const ref = r.kind==="entry" && v.from && v.from.packId ? (()=>{
     const f=Engine.packEntry(packsMemo, v.from.packId, v.from.id), label=(f && f.entry.ref.trim()) || v.from.name.trim() || "Codex";
     return v.from.here ? `<button type="button" class="tag" data-eopenentry="${esc(entryKey(v.from.packId, v.from.id))}">${esc(label)}</button>` : `<span class="tag plain">${esc(label)}</span>`; })() : "";
-  const name = r.kind==="cast" && !v.gone ? `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.cast.id)}">${esc(v.name)}</button>`
+  const name = r.kind==="cast" && r.cast && !v.gone ? `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.cast.id)}">${esc(v.name)}</button>`
     : v.gone ? `<s class="enc-name">${esc(v.name)}</s><span class="vh">, removed</span>` : `<b class="enc-name">${esc(v.name)}</b>`;
   const mark = pc ? `<span class="tag plain">PC</span>` : r.kind==="cast" ? `<span class="tag plain">Cast</span>` : ref;
   const num = (attr, val, label) => ended ? `${esc(label)} ${val===null ? "—" : esc(val)}`
@@ -1305,10 +1305,13 @@ function encRowHtml(v, e){
     ${S.encHit && S.encHit.row===r.id && v.canHit ? encHitHtml(v) : ""}
     ${S.encCond && S.encCond.row===r.id ? encCondFormHtml(v) : ""}`;
   const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
+  // The member an entry row was kept as (Decision 193): a tap to their page, struck through once they're removed.
+  const kept = v.kept ? `<p class="enc-kept">Kept as ${v.kept.gone ? `<s>${esc(v.kept.name)}</s><span class="vh">, removed</span>`
+    : `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.kept.id)}">${esc(v.kept.name)}</button>`}</p>` : "";
   return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
     <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted ? ` <span class="tag plain">Done</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
       ${num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
-    ${encHealthHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
+    ${kept}${encHealthHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
     ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
     ${acts}</li>`;
 }
@@ -1351,6 +1354,57 @@ function encResetHtml(e, v){
     ${res.ok ? "" : `<p class="step-note">${esc(res.why)}</p>`}</section>`;
 }
 
+// ── The wrap-up: End on a running encounter (Decision 193) ──
+// The draft is S.encWrap = { enc, rows:{ [rowId]:{ keep, name, status, line, text } }, diff, err }; nothing is
+// written until End the encounter. A field left alone is absent, so it reads the engine's default.
+function encWrapNow(e){ return S.encWrap && S.encWrap.enc===e.id && e.status==="running" ? S.encWrap : null; }
+function encWrapDraft(id){ return S.encWrap.rows[id] || (S.encWrap.rows[id]={}); }
+function encEndedWords(u){
+  const x=u.ended, bits=[];
+  if (x.levels!==null) bits.push(x.down ? "Down" : `${Math.max(0, x.levelsLeft)} of ${x.levels} Health Levels`);
+  if (x.conditions.length) bits.push(x.conditions.join(", "));
+  return bits.join(" · ") || "Nothing recorded";
+}
+function encWrapRowHtml(u){
+  const st=S.encWrap.rows[u.row.id]||{}, id=esc(u.row.id), name=esc(u.name);
+  const statusSel = cur => `<label class="field"><span>Status</span><select data-ew-status="${id}">${Object.keys(CAST_STATUS_LABELS).map(k=>
+    `<option value="${esc(k)}"${k===cur?" selected":""}>${esc(CAST_STATUS_LABELS[k])}</option>`).join("")}</select></label>`;
+  const lineOn = st.line!==false;
+  const lineBox = `<label class="enc-check"><input type="checkbox" data-ew-line="${id}"${lineOn?" checked":""}> Add this fight to their record</label>
+    ${lineOn ? `<label class="field"><span>What the record says</span><textarea data-ew-text="${id}" rows="2">${esc(st.text ?? u.line)}</textarea></label>` : ""}`;
+  let body;
+  if (u.kind==="cast"){
+    body = u.gone ? `<p class="step-note">Removed from the cast, so there is no record to add to.</p>`
+      : `${statusSel(st.status ?? u.status)}${lineBox}`;
+  } else {
+    body = `<label class="enc-check"><input type="checkbox" data-ew-keep="${id}"${st.keep?" checked":""}> Keep as a cast member</label>
+      ${st.keep ? `<label class="field"><span>Name</span><input type="text" data-ew-name="${id}" value="${esc(st.name ?? u.row.name)}" autocomplete="off"></label>
+        ${statusSel(st.status ?? "alive")}${lineBox}` : ""}`;
+  }
+  return `<li class="enc-row" data-ewrow="${id}"><div class="enc-head"><b class="enc-name">${u.gone ? `<s>${name}</s>` : name}</b>
+      <span class="tag plain">${u.kind==="cast" ? "Cast" : "Codex"}</span></div>
+    <p class="enc-health">${esc(encEndedWords(u))}</p>${body}</li>`;
+}
+// What the players are told about armor wear: the die for the fight, and who rolls it.
+function encWearHtml(w){
+  if (!w.crew.length && !w.hit.length) return "";
+  const die = (w.dice.find(d=>d.id===S.encWrap.diff)||{}).die;
+  const says = !die ? "" : w.hit.length ? `${w.hit.map(h=>h.name).join(", ")}: roll ${die} for armor wear on your sheet.` : "No player took a hit.";
+  return `<section class="enc-wear"><h3 class="cast-h">Armor wear</h3>
+    <label class="field"><span>How hard was it</span><select data-ew-diff><option value="">Choose…</option>${w.dice.map(d=>
+      `<option value="${esc(d.id)}"${d.id===S.encWrap.diff?" selected":""}>${esc(`${d.name} (${d.die})`)}</option>`).join("")}</select></label>
+    <p class="step-note" data-ew-says>${esc(says)}</p></section>`;
+}
+function encWrapHtml(e, title){
+  const w=Engine.encounterWrapUp(S.table, e.id);
+  return `<section class="enc-wrap" aria-labelledby="enc-wrap-h"><h2 class="cast-h" id="enc-wrap-h" data-ew-h tabindex="-1">Wrap up ${esc(title)}</h2>
+    <p class="step-note">Nothing is saved until you end it.</p>
+    ${w.rows.length ? `<ul class="enc-rows">${w.rows.map(encWrapRowHtml).join("")}</ul>` : ""}
+    ${encWearHtml(w)}
+    <p class="enc-condbtns"><button class="btn primary" data-ew-end>End the encounter</button><button class="btn" data-ew-cancel>Cancel</button></p>
+    ${S.encWrap.err ? `<p class="enc-err" role="alert">${esc(S.encWrap.err)}</p>` : ""}</section>`;
+}
+
 // ── The encounter ──
 function encPickHtml(e){
   const q=foldName(S.encQ);
@@ -1369,18 +1423,18 @@ function encAddHtml(e){
     <p class="step-note">From the Codex: open an entry or a group on Threats.</p></section>`;
 }
 function encPageHtml(e){
-  const v=Engine.encounterView(S.table, e.id, packsMemo), title=v.title, ended=e.status==="ended", running=e.status==="running";
+  const v=Engine.encounterView(S.table, e.id, packsMemo), title=v.title, ended=e.status==="ended", running=e.status==="running", wrapping=!!encWrapNow(e);
   const status = running ? `Round ${e.round}` : ended ? (e.round ? `Ended · ${encRounds(e.round)}` : "Ended · not run") : "Planned";
   const bar = `<div class="enc-bar"><b class="enc-status">${esc(status)}</b>
     ${e.status==="planned" ? `<button class="btn primary" data-enc-start>Start</button><button class="btn" data-enc-end>End</button>` : ""}
-    ${running ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
+    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
   const rows = v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
   return `<p><button class="btn sm" data-enc-back>Back to encounters</button></p>
     ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
       : `<label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>`}
     ${bar}
-    ${v.atReset ? encResetHtml(e, v) : rows}
-    ${ended || v.atReset ? "" : encAddHtml(e)}
+    ${wrapping ? encWrapHtml(e, title) : v.atReset ? encResetHtml(e, v) : rows}
+    ${ended || v.atReset || wrapping ? "" : encAddHtml(e)}
     <p class="cast-delete"><button class="btn danger" data-enc-del>Delete</button></p>`;
 }
 function encountersTabHtml(t){
@@ -1393,7 +1447,7 @@ function bindEncounters(main){
   const redraw = () => { renderTable(); };
   const change = fn => { tableChange(fn); };
   const open = id => {
-    S.encOpen=id; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ="";
+    S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ="";
     window.scrollTo(0,0); redraw();
     const e=encOpenNow(); if (!e) return;
     if (e.status==="planned") focus("[data-enc-title]");
@@ -1412,14 +1466,24 @@ function bindEncounters(main){
   const act = {
     "data-enc-new": () => { const input=main.querySelector("[data-enc-name]"); let id; change(()=>{ id=Engine.addEncounter(S.table, { name:input.value }).id; }); open(id); },
     "data-enc-open": b => open(b.dataset.encOpen),
-    "data-enc-back": () => { const id=S.encOpen; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
+    "data-enc-back": () => { const id=S.encOpen; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
     "data-enc-start": () => { const r=Engine.startEncounter(S.table, eid()); if (!r.ok){ notice(r.why); return; } S.encReset=null; tableChange(()=>{}); focus("[data-enext]"); toActive(); },
     "data-enc-end": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
+      if (e.status==="running"){ S.encWrap={ enc:e.id, rows:{}, diff:"", err:"" }; S.encDmg=null; S.encHit=null; S.encCond=null; redraw(); focus("[data-ew-h]"); return; }
       askFirst({ title:`End ${t}?`, text:"It's kept, read-only, under Past encounters.", yes:"End it", danger:false, then(){
         const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; change(()=>Engine.endEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
     "data-enc-del": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
       askFirst({ title:`Delete ${t}?`, text:"It isn't kept anywhere else unless you've exported the table.", yes:"Delete", then(){
         const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; change(()=>Engine.removeEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
+    "data-ew-cancel": () => { S.encWrap=null; redraw(); focus("[data-enc-end]"); },
+    "data-ew-end": () => { const e=encOpenNow(), w=Engine.encounterWrapUp(S.table, e.id), rows={};
+      for (const u of w.rows){
+        const st=S.encWrap.rows[u.row.id]||{}, keep=u.kind==="entry" && !!st.keep;
+        rows[u.row.id]={ keep, name:st.name, status:st.status, line:(u.kind==="cast" || keep) && st.line!==false, text:st.text };
+      }
+      const id=e.id, r=Engine.endEncounter(S.table, id, { rows }, packsMemo);
+      if (!r.ok){ S.encWrap.err=r.why; redraw(); focus("[data-ew-end]"); return; }
+      S.encWrap=null; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; tableChange(()=>{}); focus("[data-enc-new]"); },
     "data-enext": next,
     "data-enc-pick": () => { S.encPick=!S.encPick; redraw(); if (S.encPick) focus("[data-enc-q]"); else focus("[data-enc-pick]"); },
     "data-enc-addcast": b => { const id=b.dataset.encAddcast, after=pickNextAdd(id), r=Engine.addParticipant(S.table, eid(), { kind:"cast", id });
@@ -1499,10 +1563,16 @@ function bindEncounters(main){
     else if ("ehitType" in d){ S.encHit.type=el.value; S.encHit.conds={}; S.encHit.err=""; hitLive(); }
     else if ("ehitLoc" in d){ S.encHit.loc=el.value; S.encHit.err=""; hitLive(); }
     else if ("ehitCond" in d){ S.encHit.conds[d.ehitCond]=el.checked; }
+    else if ("ewKeep" in d){ encWrapDraft(d.ewKeep).keep=el.checked; redraw(); focus(attrSel("data-ew-keep", d.ewKeep)); }
+    else if ("ewLine" in d){ encWrapDraft(d.ewLine).line=el.checked; redraw(); focus(attrSel("data-ew-line", d.ewLine)); }
+    else if ("ewStatus" in d){ encWrapDraft(d.ewStatus).status=el.value; focus(attrSel("data-ew-status", d.ewStatus)); }
+    else if ("ewDiff" in d){ S.encWrap.diff=el.value; redraw(); focus("[data-ew-diff]"); }
   };
   main.oninput = ev => {
     const el=ev.target, d=el.dataset;
     if ("encTitle" in d) tableChange(()=>Engine.editEncounter(S.table, eid(), { name:el.value }), false);
+    else if ("ewText" in d) encWrapDraft(d.ewText).text=el.value;
+    else if ("ewName" in d) encWrapDraft(d.ewName).name=el.value;
     else if ("econdSrc" in d) S.encCond.source=el.value;
     else if ("econdRounds" in d) S.encCond.rounds=el.value;
     else if ("ehitDamage" in d){ S.encHit.damage=el.value; S.encHit.err=""; hitLive(); }

@@ -25,3 +25,6 @@ something a GM can see adds its line here.
 - **The hit.** Hit an NPC the way the sheet takes a hit: their armor,
   Shock, Massive damage, At Zero and Dying, by the book's rules for enemies,
   and their traits on screen when it's their turn.
+- **The encounter's end.** End a fight with a wrap-up: keep the survivors
+  worth keeping, write the fight onto each NPC's record, and tell the
+  players which die to roll for armor wear.

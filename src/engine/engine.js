@@ -3303,7 +3303,8 @@ const Engine = (() => {
   }
   // What passed between the crew and the cast (Decision 177). The kind is the
   // only part anything reads, so it is a fixed list; anything else is null.
-  const INTERACTION_KINDS = ["shared","learned","helped","wronged","killed","owes","owed"];
+  // "fought" is written by an encounter's end (Decision 193).
+  const INTERACTION_KINDS = ["shared","learned","helped","wronged","killed","owes","owed","fought"];
   const _kind = v => INTERACTION_KINDS.includes(v) ? v : null;
   // A local day, YYYY-MM-DD, that is a real one: 2026-02-30 is nothing.
   function _day(v){
@@ -3331,7 +3332,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.6";
+  const TABLE_SCHEMA_VERSION = "0.7";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -3384,6 +3385,11 @@ const Engine = (() => {
     if (typeof arrived!=="string" || _versionNewer("0.6", arrived)){
       for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e))
         for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.massive = 0; r.armorLoss = 0; r.scrapped = false; r.armorId = null; }
+    }
+    //   Schema 0.7 (Decision 193): a row remembers who it was kept as, and whether it was hit.
+    if (typeof arrived!=="string" || _versionNewer("0.7", arrived)){
+      for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e))
+        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.kept = null; r.struck = false; }
     }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
@@ -3514,7 +3520,10 @@ const Engine = (() => {
     const name = _str(t.cast[i].name);
     if (name.trim()) for (const x of _interactions(t)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l) && l.id===id) l.name = name;
     if (name.trim()) for (const e of _encList(t)) for (const r of (Array.isArray(e.rows) ? e.rows : []))
-      if (_isObj(r) && _isObj(r.cast) && r.cast.id===id) r.cast.name = name;
+      if (_isObj(r)){
+        if (_isObj(r.cast) && r.cast.id===id) r.cast.name = name;
+        if (_isObj(r.kept) && r.kept.id===id) r.kept.name = name;
+      }
     t.cast.splice(i, 1);
     _tableStamp(t);
     return { ok:true };
@@ -3829,19 +3838,22 @@ const Engine = (() => {
   // Use (Decision 182): a copy of an entry, first in the cast. Names, not ids,
   // for the origin and roles, since the copy outlives the pack. Never changes
   // with the pack afterwards.
-  function castFromEntry(t, pack, id){
-    const found = _isObj(pack) && _isObj(pack.meta) ? packEntry([pack], pack.meta.id, id) : null;
-    if (!found) return { ok:false, why:"No such entry." };
+  function _memberFromEntry(t, pack, found, blockSrc){
     const e = found.entry, now = new Date().toISOString();
     const used = new Set(t.cast.map(n=>n.id));
     let block = null;
-    try { block = _isObj(e.block) ? JSON.parse(JSON.stringify(e.block)) : null; } catch (x) {}
-    const n = { id:newCastId(used), name:_str(e.name), flavor:_str(e.flavor), description:_str(e.description),
+    try { block = _isObj(blockSrc) ? JSON.parse(JSON.stringify(blockSrc)) : null; } catch (x) {}
+    return { id:newCastId(used), name:_str(e.name), flavor:_str(e.flavor), description:_str(e.description),
                 origin:found.origin ? _str(found.origin.name) : "", npcRoles:found.npcRoles.map(r=>_str(r.name)).filter(Boolean),
                 affiliations:[], enemyRole:found.enemyRole ? _str(found.enemyRole.name) : "", tier:_tier(e.tier),
                 motivation:_str(e.motivation), resources:_str(e.resources), line:_str(e.line), ifPushed:_str(e.ifPushed),
                 gmNote:_str(e.gmNote), status:"alive", block:_block(block),
                 from:{ kind:"entry", pack:pack.meta.id, id:e.id, name:_str(e.name) }, created:now, updated:now };
+  }
+  function castFromEntry(t, pack, id){
+    const found = _isObj(pack) && _isObj(pack.meta) ? packEntry([pack], pack.meta.id, id) : null;
+    if (!found) return { ok:false, why:"No such entry." };
+    const n = _memberFromEntry(t, pack, found, found.entry.block);
     t.cast.unshift(n);
     _tableStamp(t);
     return { ok:true, id:n.id };
@@ -3858,8 +3870,8 @@ const Engine = (() => {
   // A table keeps its encounters: who is in one, whose turn it is, and what is
   // still on them. An encounter has no type (188). A row stores damage taken and
   // its Conditions; HP left, Health Levels and Pain are derived on every read
-  // (constraint 7). Nothing here writes to the cast, a pack or a character, and
-  // nothing rolls. The rules it applies are the sheet's, read from the data:
+  // (constraint 7). Nothing here writes to a pack or a character, and nothing
+  // rolls; an encounter writes to the cast only when it ends (Decision 193). The rules it applies are the sheet's, read from the data:
   // conditionKey and addCondition for the Conditions, the Health and Pain
   // bands for the figures, resolveReset's `ongoing` for Reset (Decisions 95,
   // 96, 100).
@@ -3915,6 +3927,11 @@ const Engine = (() => {
     r.cast = r.kind==="cast" && link ? link : null;
     r.from = r.kind==="entry" ? _castFrom(r.from) : null;
     r.block = r.kind==="entry" ? _block(r.block) : null;
+    // Schema 0.7 (Decision 193): the member an entry row was kept as. A link, with the name it had.
+    const kept = _castLinks([r.kept])[0];
+    r.kept = r.kind==="entry" && kept ? kept : null;
+    // Hit at all, by the armor or the body: whoever was rolls for wear after the fight (053). Never cleared by Heal.
+    r.struck = r.struck===true;
     r.order = _int(r.order);
     r.last = r.last===true;
     r.out = r.out===true;
@@ -4040,7 +4057,7 @@ const Engine = (() => {
     const l = _live(t, encId);
     if (l.why) return { ok:false, why:l.why };
     f = _isObj(f) ? f : {};
-    const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null,
+    const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null, kept:null, struck:false,
       order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
     if (f.kind==="cast"){
       const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===f.id);
@@ -4071,7 +4088,7 @@ const Engine = (() => {
     try { block = _isObj(entry.block) ? JSON.parse(JSON.stringify(entry.block)) : null; } catch (x) {}
     const used = new Set(_rowList(e).map(r=>r.id)), base = _str(entry.name).trim() || "Unnamed";
     return { id:newRowId(used), kind:"entry", name:_numbered(e, base), cast:null,
-             from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block),
+             from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block), kept:null, struck:false,
              order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
   }
   function participantFromEntry(t, encId, pack, entryId){
@@ -4141,6 +4158,7 @@ const Engine = (() => {
     const v = typeof n==="number" || typeof n==="string" ? _int(n) : null;
     if (v===null) return { ok:false, why:"Enter a whole number." };
     l.r.damage = Math.max(0, l.r.damage + v);
+    if (v > 0) l.r.struck = true;
     _tableStamp(t, l.e);
     return { ok:true };
   }
@@ -4277,12 +4295,108 @@ const Engine = (() => {
     _tableStamp(t, e);
     return { ok:true, round:e.round };
   }
-  function endEncounter(t, encId){
+  // ── The encounter's end (Decision 193) ──────────────────────────────────
+  // The wrap-up reads how each non-PC row ended; endEncounter with a wrap writes
+  // it all at once: the end, the kept members, the statuses and the lines, or nothing.
+  const _titleCase = k => _str(k).charAt(0).toUpperCase() + _str(k).slice(1);
+  function _wearDice(){
+    const dice = (D().armorRules||{}).integrityLossByDifficulty || {};
+    return Object.keys(dice).map(id=>({ id, name:_titleCase(id), die:dice[id] }));
+  }
+  // The default text of a fight's line, from a row's ended figures.
+  function _endLine(t, e, ended){
+    const conds = ended.conditions.length ? `; ${ended.conditions.join(", ")}` : "";
+    const hl = ended.levels!==null ? `: ${Math.max(0, ended.levelsLeft)} of ${ended.levels} Health Levels left${ended.down ? ", Down" : ""}` : "";
+    return `Fought them in ${encounterTitle(e)}${hl}${conds}.`;
+  }
+  function encounterWrapUp(t, encId){
+    const out = { rows:[], crew:[], dice:_wearDice(), hit:[] };
+    const e = _enc(t, encId);
+    if (!e || e.status!=="running") return out;
+    const view = encounterView(t, encId);
+    for (const v of view.rows){
+      const r = v.row;
+      if (r.kind==="pc"){
+        const nm = _str(r.name).trim();
+        if (nm) out.crew.push(nm);
+        if (r.struck || r.damage > 0 || r.massive > 0) out.hit.push({ id:r.id, name:v.name });
+        continue;
+      }
+      const h = v.health;
+      const ended = { left:h.left, levels:h.levels, levelsLeft:h.levelsLeft, down:h.down, gone:h.gone, conditions:v.conditions.map(c=>c.name) };
+      const m = r.kind==="cast" && _isObj(r.cast) ? (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===r.cast.id) : null;
+      out.rows.push({ row:r, kind:r.kind, name:v.name, gone:r.kind==="cast" && !m, ended,
+                      status:m ? m.status : "alive", line:_endLine(t, e, ended) });
+    }
+    return out;
+  }
+  // A cast member from an entry row: the row's own name and block, and the entry's text when its pack is slotted.
+  function castFromRow(t, packs, r, name){
+    const from = _castFrom(r.from);
+    const pack = from ? (Array.isArray(packs) ? packs : []).find(p=>_isObj(p) && _isObj(p.meta) && p.meta.id===from.pack) : null;
+    const found = pack ? packEntry([pack], from.pack, from.id) : null;
+    let n;
+    if (found) n = _memberFromEntry(t, pack, found, r.block);
+    else {
+      const now = new Date().toISOString(), used = new Set(t.cast.map(c=>c.id));
+      let block = null;
+      try { block = _isObj(r.block) ? JSON.parse(JSON.stringify(r.block)) : null; } catch (x) {}
+      n = { id:newCastId(used), name:"", flavor:"", description:"", origin:"", npcRoles:[], affiliations:[], enemyRole:"", tier:null,
+            motivation:"", resources:"", line:"", ifPushed:"", gmNote:"", status:"alive", block:_block(block), from, created:now, updated:now };
+    }
+    n.name = _str(name).trim() || _str(r.name).trim();
+    n.from = from;
+    t.cast.unshift(n);
+    return n;
+  }
+  const _today = () => { const d = new Date(), p = n=>String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; };
+  function endEncounter(t, encId, wrap, packs){
     const l = _live(t, encId);
     if (l.why) return { ok:false, why:l.why };
-    l.e.status = "ended"; l.e.turn = null;
-    _tableStamp(t, l.e);
-    return { ok:true };
+    const e = l.e;
+    if (wrap===undefined || wrap===null){
+      e.status = "ended"; e.turn = null;
+      _tableStamp(t, e);
+      return { ok:true };
+    }
+    if (e.status!=="running") return { ok:false, why:"It hasn't started, so there's nothing to wrap up." };
+    const ups = encounterWrapUp(t, encId), asked = _isObj(wrap) && _isObj(wrap.rows) ? wrap.rows : {};
+    // Validate every row before anything is written.
+    const plan = [];
+    for (const u of ups.rows){
+      const w = asked[u.row.id];
+      if (!_isObj(w)) continue;
+      const keep = w.keep===true;
+      if (keep && u.kind!=="entry") return { ok:false, why:"Only a copy from a pack can be kept." };
+      const takesStatus = u.kind==="cast" ? !u.gone : keep;
+      const hasStatus = w.status!==undefined && w.status!==null && w.status!=="";
+      if (takesStatus && hasStatus && !CAST_STATUSES.includes(w.status)) return { ok:false, why:"Choose a status." };
+      plan.push({ u, w, keep, status:takesStatus && hasStatus ? w.status : null });
+    }
+    e.status = "ended"; e.turn = null;
+    const out = { ok:true, kept:[], lines:[] };
+    const date = _today();
+    for (const p of plan){
+      const r = p.u.row;
+      let member = null, killed = false;
+      if (p.keep){
+        member = castFromRow(t, packs, r, p.w.name);
+        if (p.status) member.status = p.status;
+        killed = member.status==="dead";
+        r.kept = { kind:"cast", id:member.id, name:member.name };
+        out.kept.push(member.id);
+      } else if (p.u.kind==="cast" && !p.u.gone){
+        member = t.cast.find(n=>n.id===r.cast.id);
+        if (p.status && member.status!==p.status){ killed = p.status==="dead"; member.status = p.status; _tableStamp(t, member); }
+      }
+      if (member && p.w.line===true){
+        const text = _str(p.w.text).trim() || p.u.line;
+        const a = addInteraction(t, { kind:killed ? "killed" : "fought", cast:[member.id], crew:ups.crew, text, date });
+        if (a.ok) out.lines.push(a.id);
+      }
+    }
+    _tableStamp(t, e);
+    return out;
   }
 
   // ── The hit (Decisions 191–192) ─────────────────────────────────────────
@@ -4393,6 +4507,7 @@ const Engine = (() => {
     choices = _isObj(choices) ? choices : {};
     const source = res.from;
     if (res.pc){
+      r.struck = true;
       // The player rolls Shock and At Zero on their sheet; the GM adds what they call out (Decision 192).
       const pick = (Array.isArray(choices.conditions) ? choices.conditions : []).map(c=>typeof c==="string" ? c : (c && c.id)).filter(id=>res.prompts.conditions.includes(id));
       const added = [], skipped = [];
@@ -4412,6 +4527,7 @@ const Engine = (() => {
     const s = _standIn(t, r), old = r.conditions.length;
     const ap = applyHit(s, Object.assign({}, hit, { protRoll:res.armor && res.armor.stops ? res.armor.stops.prot : undefined, natural:undefined }), choices);
     if (!ap.ok) return ap;
+    r.struck = true;
     r.damage = s.trackers.damage;
     r.massive = s.trackers.massiveLevels;
     // A hit that wore the armor writes the wear with the piece's id; a new piece starts its own.
@@ -4490,7 +4606,8 @@ const Engine = (() => {
       const gone = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).gone : false;
       return { row:r, name:_str(name).trim() || "Unnamed", gone, health, awareness, ties:ord.tied(r), active:e.status==="running" && e.turn===r.id,
                acted:e.status==="running" && _actedIds(e).includes(r.id),
-               from:r.kind==="entry" ? entryLink(packs, r.from) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
+               from:r.kind==="entry" ? entryLink(packs, r.from) : null,
+               kept:r.kind==="entry" && r.kept ? linkName(t, r.kept) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
     });
     return { encounter:e, title:encounterTitle(e), rows, atReset:e.status==="running" && e.turn===null };
   }
@@ -4545,7 +4662,7 @@ const Engine = (() => {
     addEncounter, editEncounter, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
     participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, resolveEncounterReset,
-    applyEncounterReset, endEncounter, encounterView, painFor,
+    applyEncounterReset, endEncounter, encounterWrapUp, encounterView, painFor,
     // The hit: an encounter row takes damage the way a character does
     encounterArmor, resolveEncounterHit, applyEncounterHit };
 })();

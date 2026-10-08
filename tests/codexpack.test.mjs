@@ -35,7 +35,7 @@ const ENTRIES = [
     skills: "Combat Sense (6), Handgun (6), Lampwork (4)", armor: "Tin Coat (PROT 1d4, RES +2) ⚠",
     gear: "Tin Spoon (DMG 1, 1,200Ç) ⚠, Brass Fist (DMG 2) or Salt Gun (DMG 3), Slate Knife 1,200Ç; Pocket Watch — kept, wound nightly, Glass Eye", traits: [["Salt Rampart", "Holds the door."], ["Fennick’s Promise", "Keeps one back."]] },
   { key: "b", n: 2, name: "Ashwick Clerk", sec: 0, role: "Tidecaller", enemy: "Skimmer", tier: 2, s: [5, 7, 8, 3, 4, 6, 4, 5, 1, 2], audit: {},
-    skills: "Combat Sense (7), Handguns (8)", armor: "Denim Rag (PROT 1d4)", gear: "Slate Pen (DMG 1)", traits: [["Salt Rampart", "Holds the door."]] },
+    skills: "Combat Sense (7), Handguns (8)", armor: "Denim Rag (PROT 1d4) — see Entry 24 flag; civilian clothing", gear: "Slate Pen (DMG 1)", traits: [["Salt Rampart", "Holds the door."]] },
   { key: "c", n: 3, name: "Tallow Saint", sec: 1, role: "Lampwright / Tidecaller", enemy: "None", tier: 2, s: [8, 5, 5, 3, 4, 6, 4, 4, 2, 3], audit: {},
     skills: "Combat Sense (5), Melee (9)", armor: "Wax Duster (PROT 1d6)", gear: "Candle Staff (BOD+2)", traits: [["Hollow Bell", "Rings twice."]] },
 ];
@@ -541,6 +541,17 @@ test("no ⚠ reaches the made-up pack, in gear or armor", () => {
   const src = codex(), p = build(src, ledgerFor(src)).pack;
   assert.ok(!JSON.stringify(p).includes("⚠"));
   assert.equal(p.entries[0].block.armor[0], "Tin Coat (PROT 1d4, RES +2)");
+});
+
+test("no armor line in the made-up or the real pack carries a flag reference", () => {
+  const src = codex(), p = build(src, ledgerFor(src)).pack;
+  assert.equal(p.entries[1].block.armor[0], "Denim Rag (PROT 1d4)");
+  const lines = (pack) => pack.entries.filter(e => e.block).flatMap(e => e.block.armor || []);
+  for (const l of lines(p)) assert.ok(!/\bflag\b/i.test(l), l);
+  const real_ = lines(JSON.parse(real().committed));
+  assert.ok(real_.length > 30, `${real_.length} armor lines`);
+  for (const l of real_) assert.ok(!/\bflag\b/i.test(l), l);
+  assert.ok(real_.includes("Layered Street Clothes (PROT 1d4, RES +2, INT 10)"));
 });
 
 test("no text anywhere in the Codex pack carries the maintainers' ⚠ mark", () => {
