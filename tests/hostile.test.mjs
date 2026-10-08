@@ -606,7 +606,7 @@ test("a hostile row's Massive levels and armor wear come out numbers, a PC keeps
   t.encounters = [{ id: "EN-ABCDEFGH", name: "e", status: "planned", rows: [
     ...bad.map(([m, a, s]) => row("pc", { massive: m, armorLoss: a, scrapped: s })),
     ...bad.map(([m, a, s]) => row("entry", { massive: m, armorLoss: a, scrapped: s, block: { stats: { BOD: 4 }, armor: [P("armor.line")] } })),
-    row("entry", { massive: 99, armorLoss: 99, scrapped: true, block: { stats: { BOD: 4 }, armor: ["Leather Jacket (PROT 1d4, RES +2, INT 10)"] } }),
+    row("entry", { massive: 99, armorLoss: 99, scrapped: true, armorId: "leather-jacket", block: { stats: { BOD: 4 }, armor: ["Leather Jacket (PROT 1d4, RES +2, INT 10)"] } }),
   ] }];
   const m = Engine.migrateTable(t), rows = m.encounters[0].rows;
   for (const r of rows) {
@@ -629,4 +629,17 @@ test("a hostile row's Massive levels and armor wear come out numbers, a PC keeps
   const bare = Engine.encounterView(m, m.encounters[0].id, []).rows.find(v => v.row === npcs[0]);
   assert.equal(bare.armor.piece, null); assert.equal(bare.armor.line, P("armor.line"));
   assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrateTable(m))), JSON.parse(JSON.stringify(m)));
+});
+
+test("a hostile row's armorId is an id string or null, and always null on a PC row", () => {
+  const t = Engine.newTable("T");
+  const ids = [{ x: 1 }, 5, ["leather-jacket"], P("armor.id"), "<img src=x onerror=1>", "a b", "", null, true, "x".repeat(80), "leather-jacket"];
+  t.encounters = [{ id: "EN-ABCDEFGH", name: "e", status: "planned", rows: [
+    ...ids.map(a => ({ kind: "entry", name: "n", armorId: a, block: { stats: { BOD: 4 } } })),
+    ...ids.map(a => ({ kind: "pc", name: "p", armorId: a })),
+  ] }];
+  const rows = Engine.migrateTable(t).encounters[0].rows;
+  const npcs = rows.filter(r => r.kind === "entry"), pcs = rows.filter(r => r.kind === "pc");
+  assert.equal(JSON.stringify(npcs.map(r => r.armorId)), JSON.stringify([null, null, null, null, null, null, null, null, null, null, "leather-jacket"]));
+  assert.ok(pcs.every(r => r.armorId === null), "a PC row has no armor to belong to");
 });

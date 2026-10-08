@@ -892,6 +892,7 @@ commit** — a GM's table must never change under them.
       damage: 0,                     // HP taken
       massive: 0,                    // 0.6: Health Levels gone to Massive damage (Decision 191); every kind of row
       armorLoss: 0, scrapped: false, // 0.6: Integrity its armor has lost and whether Massive scrapped it; NPC rows (0 and false on a PC row)
+      armorId: null,                 // 0.6: the catalog piece that wear belongs to (a string or null; null on a PC row). It applies only while the block's armor line names that piece; any other piece reads fresh
       hp: null, levels: null, awareness: null,   // pc rows only: the GM's copy of the sheet's numbers
       conditions: [ { id, location, marks, note, source: "", rounds: null } ]   // the character's entry, plus where it came from and rounds left (null: until it's dealt with)
     } ],
@@ -910,7 +911,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss` and `scrapped`, 0 and false for everyone already there. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -4134,9 +4135,9 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - HP alone: the GM needs the Pain Level (SQ10).
        - The turn as a place in the sort: a changed result skips a row.
      - **Replaces:** nothing. Turn Reset (100) and Pain (96) are unchanged; this applies them per row.
-     - **Revisit if:** the app rolls checks, GQ23 says NPCs don't take Pain, or F24 is answered.
+     - **Revisit if:** the app rolls checks, S10b's pipeline makes a tick a hit, GQ23 says NPCs don't take Pain, or F24 is answered.
      - **Built:** as 188.
-    → **Superseded in part by Decision 191** — rows take hits; Take and Heal stand.
+    → **Superseded in part by Decision 191** — every row also takes a hit; Take and Heal stand.
 
 190. **Use has two verbs: Add to cast, and Add to the encounter open on the Encounters tab, on an entry, a group and a cast member.**
      *2026-10-07 · Ken + Claude · Touches: Use, data-tuse, Add to cast, Add to encounter, entry page, group page, cast member page, castFromEntry, Decision 182*
@@ -4213,6 +4214,7 @@ here are in `log/archive.md`.
 | F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 053 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried | Deighton | No |
 | F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 054 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
+| F38 | **Does scrap armor still stop its PROT?** Armor driven to 0 Integrity by Massive damage is scrap and can't be repaired (`053`), but nothing says whether it still stops damage. Ken leans "it should stop working". Stubbed: a scrapped piece loses its RES, as a Compromised one does, and still stops its PROT, on the sheet and on an encounter row (Decisions 99, 191). The Hit panel shows the data's note when a row's armor is scrapped | Scott/Deighton | No |
 
-F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.
+F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 and F38 with Scott, who wrote CRANK and the Gear chapter's armor rules.
 

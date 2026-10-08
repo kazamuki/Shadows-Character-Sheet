@@ -3383,7 +3383,7 @@ const Engine = (() => {
     //   Schema 0.6 (Decision 191): a row keeps its Massive levels and its armor's wear.
     if (typeof arrived!=="string" || _versionNewer("0.6", arrived)){
       for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e))
-        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.massive = 0; r.armorLoss = 0; r.scrapped = false; }
+        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.massive = 0; r.armorLoss = 0; r.scrapped = false; r.armorId = null; }
     }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
@@ -3930,6 +3930,8 @@ const Engine = (() => {
     r.massive = wholeOrZero(r.massive);
     r.armorLoss = pc ? 0 : wholeOrZero(r.armorLoss);
     r.scrapped = !pc && r.scrapped===true;
+    // The piece the wear belongs to, so a block edited to another piece doesn't inherit it.
+    r.armorId = !pc && typeof r.armorId==="string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(r.armorId) ? r.armorId : null;
   }
   // The gate for t.encounters: called by migrateTable on every load.
   function _encounters(c){
@@ -4039,7 +4041,7 @@ const Engine = (() => {
     if (l.why) return { ok:false, why:l.why };
     f = _isObj(f) ? f : {};
     const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null,
-      order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, hp:null, levels:null, awareness:null, conditions:[] };
+      order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
     if (f.kind==="cast"){
       const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===f.id);
       if (!m) return { ok:false, why:"No such cast member." };
@@ -4070,7 +4072,7 @@ const Engine = (() => {
     const used = new Set(_rowList(e).map(r=>r.id)), base = _str(entry.name).trim() || "Unnamed";
     return { id:newRowId(used), kind:"entry", name:_numbered(e, base), cast:null,
              from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block),
-             order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, hp:null, levels:null, awareness:null, conditions:[] };
+             order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
   }
   function participantFromEntry(t, encId, pack, entryId){
     const l = _live(t, encId);
@@ -4317,7 +4319,11 @@ const Engine = (() => {
     if (!b.health) return null;
     const ch = newCharacter(), arm = encounterArmor(block);
     for (const s of D().stats) if (b.stats[s.id].value!==null) ch.stats[s.id].base = b.stats[s.id].value;
-    if (arm.piece) ch.armor = [{ id:arm.piece.id, worn:true, integrityLoss:nonNegInt(r.armorLoss), scrapped:r.scrapped===true }];
+    // The wear is the row's only while the block names the piece it was taken on; any other piece reads fresh.
+    if (arm.piece){
+      const mine = r.armorId===arm.piece.id;
+      ch.armor = [{ id:arm.piece.id, worn:true, integrityLoss:mine ? nonNegInt(r.armorLoss) : 0, scrapped:mine && r.scrapped===true }];
+    }
     ch.trackers.damage = nonNegInt(r.damage);
     ch.trackers.massiveLevels = nonNegInt(r.massive);
     ch.trackers.conditions = JSON.parse(JSON.stringify(r.conditions));
@@ -4375,7 +4381,7 @@ const Engine = (() => {
     const arm = encounterArmor(_rowBlock(t, r));
     const res = resolveHit(s, Object.assign({}, hit, { protRoll:arm.stops ? arm.stops.prot : undefined, natural:undefined }));
     if (!res.ok) return res;
-    return Object.assign(res, { armor:Object.assign({}, res.armor, arm), from:_str(_isObj(hit) ? hit.from : "").trim() });
+    return Object.assign(res, { armor:Object.assign({}, res.armor, arm, { scrapped:!!(s.armor[0] && s.armor[0].scrapped) }), from:_str(_isObj(hit) ? hit.from : "").trim() });
   }
   // The one writer. Re-resolves first, so a row that changed under an open panel is read as it is
   // now; nothing is written on a refusal. `choices` is applyHit's, and an unanswered prompt adds
@@ -4408,7 +4414,8 @@ const Engine = (() => {
     if (!ap.ok) return ap;
     r.damage = s.trackers.damage;
     r.massive = s.trackers.massiveLevels;
-    if (s.armor[0]){ r.armorLoss = nonNegInt(s.armor[0].integrityLoss); r.scrapped = s.armor[0].scrapped===true; }
+    // A hit that wore the armor writes the wear with the piece's id; a new piece starts its own.
+    if (s.armor[0] && res.patch.armor){ r.armorId = s.armor[0].id; r.armorLoss = nonNegInt(s.armor[0].integrityLoss); r.scrapped = s.armor[0].scrapped===true; }
     s.trackers.conditions.forEach((c, i)=>{
       if (i < old){ if (c.marks!==undefined) r.conditions[i].marks = c.marks; }
       else r.conditions.push(Object.assign({}, c, { source, rounds:null }));
@@ -4468,7 +4475,7 @@ const Engine = (() => {
       }
       const wear = r.kind==="pc" ? null : encounterArmor(block);
       const armor = wear && Object.assign({}, wear, wear.piece ? (()=>{
-        const p = armorPiece({ id:wear.piece.id, integrityLoss:r.armorLoss, scrapped:r.scrapped }, 0);
+        const mine = r.armorId===wear.piece.id, p = armorPiece({ id:wear.piece.id, integrityLoss:mine ? r.armorLoss : 0, scrapped:mine && r.scrapped }, 0);
         return { integrity:p.integrity, integrityMax:p.integrityMax, compromised:p.compromised, scrapped:p.scrapped };
       })() : {});
       const traits = (_isObj(block) && Array.isArray(block.traits) ? block.traits : []).map((k, index)=>({ index, name:_str(k && k.name), text:_str(k && k.text) }))

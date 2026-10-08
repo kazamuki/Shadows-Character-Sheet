@@ -1249,6 +1249,7 @@ function encHitLiveHtml(d, r){
   const body = res.ok
     ? `<p class="enc-preview" data-ehit-preview>${esc(encHitPreview(res, pc))}</p>
        ${!pc && res.armor && res.armor.piece ? `<p class="enc-armor enc-armor-extra">${esc(D.armorRules.enemyText)}</p>` : ""}
+       ${!pc && res.armor && res.armor.piece && res.armor.scrapped && D.armorRules.flagged && D.armorRules.playerNote ? `<p class="enc-armor enc-armor-extra">${esc(D.armorRules.playerNote)}</p>` : ""}
        ${(res.notes||[]).map(n=>`<p class="enc-armor enc-armor-extra">${esc(n)}</p>`).join("")}${encPromptHtml(d, res, pc)}`
     : `<p class="enc-preview enc-refusal" data-ehit-preview>${esc(res.why)}</p>`;
   return `<div data-ehit-live>${body}${d.err ? `<p class="enc-err" role="alert">${esc(d.err)}</p>` : ""}
@@ -1256,13 +1257,13 @@ function encHitLiveHtml(d, r){
 }
 function encHitHtml(v){
   const d=S.encHit, r=v.row, pc=r.kind==="pc", massive=d.cat==="massive";
-  const toggle = (attr, items) => `<span class="form-toggle" role="group">${items.map(([val, label, on])=>
+  const toggle = (attr, label, items) => `<span class="form-toggle" role="group" aria-label="${esc(label)}">${items.map(([val, label, on])=>
     `<button type="button" ${attr}="${esc(val)}" class="${on ? "on" : ""}" aria-pressed="${on}">${esc(label)}</button>`).join("")}</span>`;
   return `<div class="enc-hit" data-ehitpanel="${esc(r.id)}">
     <label class="field"><span>${pc ? (massive ? "Health Levels gone" : "Got through") : "Damage"}</span><input type="number" min="0" step="1" inputmode="numeric" data-ehit-damage value="${esc(d.damage)}"></label>
     <label class="field"><span>Type</span><select data-ehit-type>${D.damageTypes.map(t=>`<option value="${esc(t.id)}"${t.id===d.type ? " selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
-    <div class="field"><span>Kind</span>${toggle("data-ehit-cat", D.damageCategories.map(c=>[c.id, c.name, c.id===d.cat]))}</div>
-    ${pc ? "" : `<div class="field"><span>Armor-piercing</span>${toggle("data-ehit-ap", [["1", "AP", d.ap]])}</div>`}
+    <div class="field"><span>Kind</span>${toggle("data-ehit-cat", "Kind", D.damageCategories.map(c=>[c.id, c.name, c.id===d.cat]))}</div>
+    ${pc ? "" : `<div class="field"><span>Armor-piercing</span>${toggle("data-ehit-ap", "Armor-piercing", [["1", "AP", d.ap]])}</div>`}
     <label class="field"><span>Where</span><select data-ehit-loc>${D.bodyLocations.map(l=>`<option value="${esc(l.id)}"${l.id===d.loc ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
     <label class="field"><span>From</span><input type="text" data-ehit-from value="${esc(d.from)}" placeholder="Rook's SMG" autocomplete="off"></label>
     ${encHitLiveHtml(d, r)}</div>`;

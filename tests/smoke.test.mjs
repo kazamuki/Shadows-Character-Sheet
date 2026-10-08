@@ -5099,6 +5099,8 @@ test("Decision 191: the armor line, then a hit previews what the armor stops and
   hitBtn(app, "Dez").click();
   assert.equal(app.doc.activeElement, app.$("[data-ehit-damage]"), "Hit didn't land on Damage");
   assert.equal(preview(app), "Enter the damage.");
+  for (const g of app.$$("[data-ehitpanel] [role=group]")) assert.ok((g.getAttribute("aria-label") || "").trim() || g.getAttribute("aria-labelledby"), "a toggle group in the Hit panel has no accessible name");
+  assert.ok(app.$$("[data-ehitpanel] [role=group]").length >= 2, "the Hit panel's toggle groups weren't found");
   assert.ok(app.$("[data-ehit-apply]").disabled, "Apply was live with no damage");
   fillHit(app, 12, "ballistic", "Rook's SMG");
   assert.equal(preview(app), "Leather Jacket stops 5 (PROT 3 + RES 2) · 7 through · 1 Health Level");
@@ -5175,6 +5177,12 @@ test("Decision 191: Massive takes Health Levels and scraps the armor; an arm on 
   assert.match(dez().textContent, /5 of 8 Health Levels/);
   assert.match(dez().querySelector(".enc-armor").textContent, /^Kevlar Vest · Scrap$/);
   assert.equal(statesOf(app)[0].rows[0].massive, 3);
+  // F38's stub: a scrapped piece still stops its PROT, and the panel says that is unsettled.
+  hitBtn(app, "Dez").click(); fillHit(app, 12);
+  assert.match(preview(app), /Kevlar Vest stops 4 [(]PROT 4[)] · RES doesn't apply: Compromised/);
+  assert.match(app.$("[data-ehitpanel]").textContent, /Whether scrap armor still stops its PROT is still being settled/);
+  assert.doesNotMatch(app.$("[data-ehitpanel]").textContent, /F38/);
+  app.click("[data-ehit-cancel]");
   assert.deepEqual(app.errors, []);
 });
 

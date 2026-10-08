@@ -4393,7 +4393,7 @@ test("191: applyEncounterHit: damage, Massive and wear land on the row", () => {
   assert.equal("witheringDamage" in rowOf(t, e, id), false);
   // Compromised: RES is gone; PROT 3 only.
   ({ t, e, id } = hitTable({ armor: JACKET }));
-  rowOf(t, e, id).armorLoss = 10;
+  rowOf(t, e, id).armorLoss = 10; rowOf(t, e, id).armorId = "leather-jacket";
   const r = Engine.resolveEncounterHit(t, e, id, shot());
   eq([r.res, r.resSkipped, r.absorbed, r.through], [0, "compromised", 3, 9]);
   // AP skips RES; an uncovered location skips the armor.
@@ -4567,4 +4567,29 @@ test("191: a row's traits are named for the active row to show, and a PC has non
   eq(viewRow(t, e, id).traits.map(k => [k.index, k.name, k.text]), [[0, "Cold", "Never flinches."], [2, "Loud", ""]]);
   const pc = addPc(t, e, "P");
   eq(viewRow(t, e, pc).traits, []);
+});
+
+test("191 (review): armor wear follows its piece: another piece in the block reads fresh, and the jacket's wear is kept", () => {
+  const { t, e, id } = hitTable({ armor: JACKET });
+  for (let i = 0; i < 3; i++) assert.ok(Engine.applyEncounterHit(t, e, id, shot({ damage: 3 }), {}).ok);
+  eq([rowOf(t, e, id).armorLoss, rowOf(t, e, id).armorId], [3, "leather-jacket"]);
+  assert.equal(viewRow(t, e, id).armor.integrity, 7);
+  rowOf(t, e, id).block.armor = ["Security Rig (PROT 1d6)"];
+  let a = viewRow(t, e, id).armor;
+  eq([a.piece.id, a.integrity, a.integrityMax], ["security-rig", 20, 20]);
+  assert.equal(Engine.resolveEncounterHit(t, e, id, shot()).armor.integrityBefore, 20, "the hit reads it fresh too");
+  eq([rowOf(t, e, id).armorLoss, rowOf(t, e, id).armorId], [3, "leather-jacket"], "the wear is kept, not cleared");
+  rowOf(t, e, id).block.armor = JACKET;
+  assert.equal(viewRow(t, e, id).armor.integrity, 7, "back to the jacket, 7/10 again");
+  // A hit that wears the new piece starts its own wear rather than adding to the old one's.
+  rowOf(t, e, id).block.armor = ["Security Rig (PROT 1d6)"];
+  assert.ok(Engine.applyEncounterHit(t, e, id, shot({ damage: 3 }), {}).ok);
+  eq([rowOf(t, e, id).armorLoss, rowOf(t, e, id).armorId], [1, "security-rig"]);
+  assert.equal(viewRow(t, e, id).armor.integrity, 19);
+  // A scrapped piece's scrap goes with its id as well.
+  const s = hitTable({ armor: JACKET });
+  Engine.applyEncounterHit(s.t, s.e, s.id, shot({ damage: 25, category: "massive" }), {});
+  assert.equal(viewRow(s.t, s.e, s.id).armor.scrapped, true);
+  rowOf(s.t, s.e, s.id).block.armor = ["Security Rig (PROT 1d6)"];
+  assert.equal(viewRow(s.t, s.e, s.id).armor.scrapped, false);
 });
