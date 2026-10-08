@@ -3386,10 +3386,10 @@ const Engine = (() => {
       for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e))
         for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.massive = 0; r.armorLoss = 0; r.scrapped = false; r.armorId = null; }
     }
-    //   Schema 0.7 (Decision 193): a row remembers who it was kept as.
+    //   Schema 0.7 (Decision 193): a row remembers who it was kept as, and whether it was hit.
     if (typeof arrived!=="string" || _versionNewer("0.7", arrived)){
       for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e))
-        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)) r.kept = null;
+        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.kept = null; r.struck = false; }
     }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
@@ -3930,6 +3930,8 @@ const Engine = (() => {
     // Schema 0.7 (Decision 193): the member an entry row was kept as. A link, with the name it had.
     const kept = _castLinks([r.kept])[0];
     r.kept = r.kind==="entry" && kept ? kept : null;
+    // Hit at all, by the armor or the body: whoever was rolls for wear after the fight (053). Never cleared by Heal.
+    r.struck = r.struck===true;
     r.order = _int(r.order);
     r.last = r.last===true;
     r.out = r.out===true;
@@ -4055,7 +4057,7 @@ const Engine = (() => {
     const l = _live(t, encId);
     if (l.why) return { ok:false, why:l.why };
     f = _isObj(f) ? f : {};
-    const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null, kept:null,
+    const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null, kept:null, struck:false,
       order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
     if (f.kind==="cast"){
       const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===f.id);
@@ -4086,7 +4088,7 @@ const Engine = (() => {
     try { block = _isObj(entry.block) ? JSON.parse(JSON.stringify(entry.block)) : null; } catch (x) {}
     const used = new Set(_rowList(e).map(r=>r.id)), base = _str(entry.name).trim() || "Unnamed";
     return { id:newRowId(used), kind:"entry", name:_numbered(e, base), cast:null,
-             from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block), kept:null,
+             from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block), kept:null, struck:false,
              order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
   }
   function participantFromEntry(t, encId, pack, entryId){
@@ -4156,6 +4158,7 @@ const Engine = (() => {
     const v = typeof n==="number" || typeof n==="string" ? _int(n) : null;
     if (v===null) return { ok:false, why:"Enter a whole number." };
     l.r.damage = Math.max(0, l.r.damage + v);
+    if (v > 0) l.r.struck = true;
     _tableStamp(t, l.e);
     return { ok:true };
   }
@@ -4316,7 +4319,7 @@ const Engine = (() => {
       if (r.kind==="pc"){
         const nm = _str(r.name).trim();
         if (nm) out.crew.push(nm);
-        if (r.damage > 0 || r.massive > 0) out.hit.push({ id:r.id, name:v.name });
+        if (r.struck || r.damage > 0 || r.massive > 0) out.hit.push({ id:r.id, name:v.name });
         continue;
       }
       const h = v.health;
@@ -4375,19 +4378,20 @@ const Engine = (() => {
     const date = _today();
     for (const p of plan){
       const r = p.u.row;
-      let member = null;
+      let member = null, killed = false;
       if (p.keep){
         member = castFromRow(t, packs, r, p.w.name);
         if (p.status) member.status = p.status;
+        killed = member.status==="dead";
         r.kept = { kind:"cast", id:member.id, name:member.name };
         out.kept.push(member.id);
       } else if (p.u.kind==="cast" && !p.u.gone){
         member = t.cast.find(n=>n.id===r.cast.id);
-        if (p.status && member.status!==p.status){ member.status = p.status; _tableStamp(t, member); }
+        if (p.status && member.status!==p.status){ killed = p.status==="dead"; member.status = p.status; _tableStamp(t, member); }
       }
       if (member && p.w.line===true){
         const text = _str(p.w.text).trim() || p.u.line;
-        const a = addInteraction(t, { kind:member.status==="dead" ? "killed" : "fought", cast:[member.id], crew:ups.crew, text, date });
+        const a = addInteraction(t, { kind:killed ? "killed" : "fought", cast:[member.id], crew:ups.crew, text, date });
         if (a.ok) out.lines.push(a.id);
       }
     }
@@ -4503,6 +4507,7 @@ const Engine = (() => {
     choices = _isObj(choices) ? choices : {};
     const source = res.from;
     if (res.pc){
+      r.struck = true;
       // The player rolls Shock and At Zero on their sheet; the GM adds what they call out (Decision 192).
       const pick = (Array.isArray(choices.conditions) ? choices.conditions : []).map(c=>typeof c==="string" ? c : (c && c.id)).filter(id=>res.prompts.conditions.includes(id));
       const added = [], skipped = [];
@@ -4522,6 +4527,7 @@ const Engine = (() => {
     const s = _standIn(t, r), old = r.conditions.length;
     const ap = applyHit(s, Object.assign({}, hit, { protRoll:res.armor && res.armor.stops ? res.armor.stops.prot : undefined, natural:undefined }), choices);
     if (!ap.ok) return ap;
+    r.struck = true;
     r.damage = s.trackers.damage;
     r.massive = s.trackers.massiveLevels;
     // A hit that wore the armor writes the wear with the piece's id; a new piece starts its own.

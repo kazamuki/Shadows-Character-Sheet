@@ -689,3 +689,28 @@ test("a hostile table's wrap-up renders as text, and its fields come out as text
   assert.deepEqual(found, [], "the wrap-up drew markup");
   assert.deepEqual(app.errors, []);
 });
+
+test("a cast row with no link, a null link or a bad id renders running, ended and in the wrap-up, with no error", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  const row = (cast, o = {}) => ({ kind: "cast", name: P("row.name"), cast, ...o });
+  const rows = [row(undefined), row(null), row({ kind: "cast", id: "bad id" }), row({ kind: "cast", id: "C-ZZZZZZZZ", name: P("gone.name") })];
+  t.encounters = [{ id: "EN-AAAAAAAA", name: "r", status: "running", round: 1, rows: JSON.parse(JSON.stringify(rows)) },
+                  { id: "EN-BBBBBBBB", name: "e", status: "ended", rows }];
+  const m = Engine.migrateTable(t);
+  m.encounters[0].turn = m.encounters[0].rows[0].id;
+  const key = "shadows.table.v1." + m.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: m, section: "encounters", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  const found = [];
+  for (const id of ["EN-AAAAAAAA", "EN-BBBBBBBB"]) {
+    app.window.eval(`S.tsection = 'encounters'; S.encOpen = ${JSON.stringify(id)}; renderTable();`);
+    assert.ok(app.$$("[data-erow]").length >= 4, "the rows weren't drawn");
+    found.push(...injected(app, "an encounter with linkless cast rows"));
+  }
+  app.window.eval(`S.encOpen = "EN-AAAAAAAA"; renderTable();`);
+  app.$("[data-enc-end]").click();
+  assert.ok(app.$("[data-ew-h]"), "the wrap-up didn't open");
+  found.push(...injected(app, "the wrap-up"));
+  assert.deepEqual(found, []);
+  assert.deepEqual(app.errors, [], "a linkless cast row threw");
+});

@@ -893,6 +893,7 @@ commit** — a GM's table must never change under them.
       massive: 0,                    // 0.6: Health Levels gone to Massive damage (Decision 191); every kind of row
       armorLoss: 0, scrapped: false, // 0.6: Integrity its armor has lost and whether Massive scrapped it; NPC rows (0 and false on a PC row)
       kept: null,                    // 0.7: entry rows only: { kind: "cast", id, name }, the member it was kept as when its encounter ended (Decision 193; 178's link, the name kept when the member is deleted); null on a PC or cast row
+      struck: false,                 // 0.7: hit at all, by the armor or the body (a hit the armor stopped entirely, or one healed back to 0, still counts); set by a hit or a positive Take, never cleared by Heal. Whoever it's true for rolls for wear after the fight (Decision 193, 053). Every kind of row; read as true only when it is exactly true
       armorId: null,                 // 0.6: the catalog piece that wear belongs to (a string or null; null on a PC row). It applies only while the block's armor line names that piece; any other piece reads fresh
       hp: null, levels: null, awareness: null,   // pc rows only: the GM's copy of the sheet's numbers
       conditions: [ { id, location, marks, note, source: "", rounds: null } ]   // the character's entry, plus where it came from and rounds left (null: until it's dealt with)
@@ -912,7 +913,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept`, null for everyone already there, and an interaction may be of kind `fought`. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -4182,14 +4183,14 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 193. **An encounter ends with a wrap-up: a cast member gets the fight as an interaction of a new kind, *fought*; a Codex copy worth keeping is kept into the cast; the players are told the wear die. Wounds and NPC wear don't carry.**
      *2026-10-07 · Ken + Claude · Touches: End, endEncounter, wrap-up, Keep, Promote, kept, interaction, fought, killed, cast status, crew, history, armor wear, table schema 0.7, GQ26, Decision 100, Decision 177, Decision 182, Decision 188*
-     - **Decided:** End on a running encounter opens a wrap-up. Each cast row's fight is offered as an interaction, kind `fought` (or `killed` when the GM sets the member dead), with the crew's names, the day and how they ended; their status can change. An entry row can be **Kept**: a new cast member with the row's name, block and `from` (and the entry's text when its pack is slotted), recorded on the row as `kept`. How hard the fight was names the wear die, listed against the PCs who were hit. One writer applies it all, or nothing. A member starts their next encounter unhurt.
+     - **Decided:** End on a running encounter opens a wrap-up. Each cast row's fight is offered as an interaction, kind `fought` (or `killed` when the GM sets the member dead), with the crew's names, the day and how they ended; their status can change. An entry row can be **Kept**: a new cast member with the row's name, block and `from` (and the entry's text when its pack is slotted), recorded on the row as `kept`. How hard the fight was names the wear die, listed against the PCs who were hit, by their armor or their body (a row remembers it was `struck`). One writer applies it all, or nothing. A member starts their next encounter unhurt.
      - **Why:** the interactions are a member's history already (177, 179), and *Who knows what* then has the fight. Keep is what Promote meant (S8a). A PC's wear is on their sheet (100). Carrying wounds needs downtime and healing, which are S5's.
      - **Rejected:**
        - A `history` field: 177's third place for one sentence.
        - Keep and Promote as two verbs: one act, two words (190).
-       - Wounds written to the cast: a member would need running health, and something to heal it (GQ26).
-       - NPC wear written to the cast: the armor is a text line with no wear.
-       - Keep after the end, from Past encounters: an ended encounter is read-only (188).
+       - Wounds written to the cast: they need running health and healing (GQ26).
+       - NPC wear on the cast: its armor is a text line.
+       - Keep from Past encounters: ended is read-only (188).
      - **Replaces:** Decision 177 in part: an eighth kind, `fought`, which an encounter's end writes.
      - **Revisit if:** GQ26 says wounds carry, S5's sessions give downtime, or a GM wants to keep someone after the fact.
      - **Built:** table schema 0.7, switched off (173); PR #130; log 2026-10-07 (the encounter's end).

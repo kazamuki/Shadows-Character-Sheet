@@ -4780,3 +4780,59 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   assert.equal(g.encounters[0].rows.find(r => r.id === gull).kept.name, "Gone");
   assert.ok(g.encounters[0].rows.filter(r => r.kind !== "entry").every(r => r.kept === null));
 });
+
+// ── S10c review round 1 ─────────────────────────────────────────────────────
+test("193 (review): anyone hit is listed for wear, by their armor or their body, and Heal never takes it back", () => {
+  const { t, e, wren, rook } = endTable();
+  const three = addPc(t, e, "Nyx", { hp: 10, levels: 5 });
+  eq(Engine.encounterWrapUp(t, e).hit, [], "nobody hit yet");
+  // A hit the armor stops entirely: nothing through, still hit.
+  const a = Engine.applyEncounterHit(t, e, wren, { damage: 0, damageType: "ballistic", category: "regular", location: "torso" }, {});
+  assert.ok(a.ok, a.why);
+  assert.equal(rowOf(t, e, wren).damage, 0);
+  eq(Engine.encounterWrapUp(t, e).hit.map(h => h.name), ["Wren"]);
+  // A hit healed back to zero is still a hit.
+  Engine.participantDamage(t, e, rook, 4); Engine.participantDamage(t, e, rook, -4);
+  assert.equal(rowOf(t, e, rook).damage, 0);
+  eq(Engine.encounterWrapUp(t, e).hit.map(h => h.name), ["Wren", "Rook"]);
+  // A Heal alone hits nobody, and a PC never hit is not listed.
+  Engine.participantDamage(t, e, three, -3);
+  assert.equal(rowOf(t, e, three).struck, false);
+  eq(Engine.encounterWrapUp(t, e).hit.map(h => h.name), ["Wren", "Rook"]);
+  // Massive alone counts, and so does an NPC's hit (the flag is every row's).
+  const { t: u, e: f, dezRow } = endTable();
+  assert.ok(Engine.applyEncounterHit(u, f, dezRow, { damage: 9, damageType: "ballistic", category: "regular", location: "torso" }, {}).ok);
+  assert.equal(rowOf(u, f, dezRow).struck, true);
+});
+
+test("193 (review): a 0.6 table opens with struck: false on every row, and struck comes out a boolean", () => {
+  const { t } = endTable();
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.6";
+  for (const en of old.encounters) for (const r of en.rows) { delete r.kept; delete r.struck; }
+  const m = Engine.migrateTable(old);
+  assert.ok(m.encounters[0].rows.every(r => r.struck === false));
+  eq(m, Engine.migrateTable(t));
+  for (const [v, want] of [["true", false], [1, false], [{}, false], [true, true], [null, false]]) {
+    const h = plain(t); h.encounters[0].rows[0].struck = v;
+    assert.equal(Engine.migrateTable(h).encounters[0].rows[0].struck, want, JSON.stringify(v));
+  }
+});
+
+test("193 (review): killed only when this fight moves the member to dead", () => {
+  const a = endTable();
+  Engine.editCastMember(a.t, a.dez.id, { status: "dead" });
+  assert.ok(Engine.endEncounter(a.t, a.e, { rows: { [a.dezRow]: { line: true } } }).ok);
+  assert.equal(a.t.interactions[0].kind, "fought", "already dead: the crew didn't kill them here");
+  const b = endTable();
+  assert.ok(Engine.endEncounter(b.t, b.e, { rows: { [b.dezRow]: { line: true, status: "dead" } } }).ok);
+  assert.equal(b.t.interactions[0].kind, "killed");
+  const c = endTable();
+  assert.ok(Engine.endEncounter(c.t, c.e, { rows: { [c.gull]: { keep: true, status: "dead", line: true } } }, [c.pack]).ok);
+  eq([c.t.interactions[0].kind, c.t.cast[0].status], ["killed", "dead"]);
+  // Already dead and set to dead again: no kill either.
+  const d = endTable();
+  Engine.editCastMember(d.t, d.dez.id, { status: "dead" });
+  assert.ok(Engine.endEncounter(d.t, d.e, { rows: { [d.dezRow]: { line: true, status: "dead" } } }).ok);
+  assert.equal(d.t.interactions[0].kind, "fought");
+});

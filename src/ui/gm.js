@@ -1284,7 +1284,7 @@ function encRowHtml(v, e){
   const ref = r.kind==="entry" && v.from && v.from.packId ? (()=>{
     const f=Engine.packEntry(packsMemo, v.from.packId, v.from.id), label=(f && f.entry.ref.trim()) || v.from.name.trim() || "Codex";
     return v.from.here ? `<button type="button" class="tag" data-eopenentry="${esc(entryKey(v.from.packId, v.from.id))}">${esc(label)}</button>` : `<span class="tag plain">${esc(label)}</span>`; })() : "";
-  const name = r.kind==="cast" && !v.gone ? `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.cast.id)}">${esc(v.name)}</button>`
+  const name = r.kind==="cast" && r.cast && !v.gone ? `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.cast.id)}">${esc(v.name)}</button>`
     : v.gone ? `<s class="enc-name">${esc(v.name)}</s><span class="vh">, removed</span>` : `<b class="enc-name">${esc(v.name)}</b>`;
   const mark = pc ? `<span class="tag plain">PC</span>` : r.kind==="cast" ? `<span class="tag plain">Cast</span>` : ref;
   const num = (attr, val, label) => ended ? `${esc(label)} ${val===null ? "—" : esc(val)}`
