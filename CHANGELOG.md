@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.38.0
+## v0.38.0 — 2026-10-08
 
 - **Raise your powers with IP.** Progression has a **Raise a Power** button
   beside Raise a Stat and Raise a Skill. A power's next rank costs 20 × its
