@@ -5757,9 +5757,9 @@ test("205: writeCloseOut refuses a bad line and changes nothing; a blank IP or Ã
 test("205: a Milestone Point is only on a present line, an off-screen tier only on an absent one, whatever was sent", () => {
   const t = Engine.newTable("x");
   const a = crew(t, 4, "2026-10-01", ["Wren"], 3);
-  assert.ok(Engine.writeCloseOut(t, a, { lines: [away("Dez", "competent", 400), { ...away("Rook", null), milestone: true }, here("Wren", 5, { tier: "expert" })] }).ok);
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [away("Dez", "competent", 400), { ...away("Rook", "novice"), milestone: true }, here("Wren", 5, { tier: "expert" })] }).ok);
   const l = closeOf(t, a).lines;
-  eq(l.map(x => [x.name, x.present, x.milestone, x.tier]), [["Dez", false, false, "competent"], ["Rook", false, false, null], ["Wren", true, true, null]]);
+  eq(l.map(x => [x.name, x.present, x.milestone, x.tier]), [["Dez", false, false, "competent"], ["Rook", false, false, "novice"], ["Wren", true, true, null]]);
   assert.ok(Engine.writeCloseOut(t, a, { lines: [{ ...here("Wren", 5), milestone: false }] }).ok);
   assert.equal(closeOf(t, a).lines[0].milestone, false, "the GM can leave the point off");
 });
@@ -5800,4 +5800,19 @@ test("206: the draft's arc reminder goes by the session's number, not how many s
   eq(Engine.closeOutDraft(u, ten).arc, { minor: false, major: true });
   const none = Engine.addSession(u, { number: null, date: "2026-10-09" });
   eq(Engine.closeOutDraft(u, none.id).arc, { minor: false, major: false });
+});
+
+test("206: an off-screen job needs a tier: a blank one is refused with the field named, and the table is untouched; the gate stays lenient", () => {
+  const t = Engine.newTable("x");
+  const a = crew(t, 4, "2026-10-01", ["Wren"], 3);
+  Engine.writeCloseOut(t, a, { lines: [here("Wren", 5)] });
+  const before = plain(t);
+  for (const tier of [null, "", undefined]) {
+    eq(Engine.writeCloseOut(t, a, { lines: [here("Wren", 5), away("Dez", tier)] }), { ok: false, why: "Choose a tier.", field: "tier", name: "Dez" });
+    eq(t, before, "a refusal changes nothing");
+  }
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [here("Wren", 5, { tier: null })] }).ok, "a present line needs none");
+  const old = plain(t);
+  old.sessions[0].close.lines.push(away("Dez", null));
+  eq(Engine.migrateTable(old).sessions[0].close.lines.map(l => l.tier), [null, null], "a stored away line with no tier still loads");
 });

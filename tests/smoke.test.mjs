@@ -6030,7 +6030,7 @@ test("206: the absent are the earlier names; a tier is picked, its range shows, 
   coType(app, "Dez", "credits", "400");
   app.click("[data-co-write]");
   assert.equal(app.doc.activeElement, app.$("[data-sco-h]"));
-  assert.match(app.$(".co-log").textContent, /Dez \(away\): an off-screen job, Competent; \+400 Çredits\./);
+  assert.match(app.$(".co-log").textContent, /Dez \(away\): no session to log; an off-screen job, Competent; \+400 Çredits\./);
   app.click("[data-sback]");
   openSess(app, ids.b);
   app.click("[data-co-open]");
@@ -6202,5 +6202,47 @@ test("205: deleting a session drops its draft", () => {
   app.click("[data-co-back]");
   app.click("[data-sdel]"); app.click("#modal [data-askyes]");
   assert.ok(app.window.eval("S.closeOut") == null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("206 (review): a typed IP survives correcting a letter in Who was there, and an away line's tier and Çredits survive being typed present and back", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Rook", "Dez"], 2); return mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5); });
+  closeSheet(app, ids);
+  coType(app, "Rook", "ip", "20");
+  type(app, '[data-cosf="present"]', "Wren, Roo");
+  type(app, '[data-cosf="present"]', "Wren, Rook");
+  assert.equal(coField(app, "Rook", "ip").value, "20", "Rook's typed IP");
+  type(app, '[data-cosf="hours"]', "3");
+  assert.equal(coField(app, "Rook", "ip").value, "20", "still typed after an Hours change");
+  assert.equal(coField(app, "Wren", "ip").value, "15");
+  typeChange(app, `[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="tier"]`, "competent");
+  coType(app, "Dez", "credits", "400");
+  type(app, '[data-cosf="present"]', "Wren, Rook, Dez");
+  assert.ok(coField(app, "Dez", "ip"), "Dez is present now");
+  type(app, '[data-cosf="present"]', "Wren, Rook");
+  assert.equal(coField(app, "Dez", "tier").value, "competent");
+  assert.equal(coField(app, "Dez", "credits").value, "400");
+  assert.deepEqual(app.errors, []);
+});
+
+test("206 (review): Redo leaves an IP that still matches the hours to the app, so changing Hours moves it; a typed one stays", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5));
+  closeSheet(app, ids);
+  coType(app, "Rook", "ip", "20");
+  app.click("[data-co-write]");
+  app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
+  type(app, '[data-cosf="hours"]', "5");
+  assert.equal(coField(app, "Wren", "ip").value, "25");
+  assert.equal(coField(app, "Rook", "ip").value, "20");
+  assert.deepEqual(app.errors, []);
+});
+
+test("206 (review): Write with Took a job ticked and no tier is refused, focused on that row's Tier", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Dez"], 2); return mkSession(t, 4, "2026-09-08", ["Wren"], 3); });
+  closeSheet(app, ids);
+  app.click("[data-co-write]");
+  assert.match(app.$("#undotoast").textContent, /Choose a tier\./);
+  assert.equal(app.doc.activeElement, coField(app, "Dez", "tier"));
+  assert.ok(app.window.eval("S.table.sessions.find(s => s.number === 4).close") == null);
   assert.deepEqual(app.errors, []);
 });

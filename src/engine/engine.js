@@ -4510,9 +4510,9 @@ const Engine = (() => {
       for (const [field, v] of [["ip", ip], ["credits", credits]])
         if (!_blank(l[field]) && (v===null || v<0)) return { ok:false, why:"Enter a whole number.", field, name };
       const present = l.present===true;
-      if (!present && !_blank(l.tier) && !tiers.some(e=>e.id===l.tier)) return { ok:false, why:"Choose a tier.", field:"tier", name };
+      if (!present && !tiers.some(e=>e.id===l.tier)) return { ok:false, why:"Choose a tier.", field:"tier", name };
       lines.push({ name, present, ip, milestone:present && l.milestone===true, credits,
-                   tier:!present && !_blank(l.tier) ? l.tier : null, note:_str(l.note) });
+                   tier:present ? null : l.tier, note:_str(l.note) });
     }
     x.close = { at:new Date().toISOString(), lines };
     _tableStamp(t, x);

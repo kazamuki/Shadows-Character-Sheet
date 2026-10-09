@@ -1052,26 +1052,37 @@ function closeDraftNew(id, written){
   if (written) for (const w of written.lines) if (!c.lines.some(l=>coKey(l.name)===coKey(w.name)))
     c.lines.push(w.present ? { name:w.name, present:true, ip:coNum(w.ip), milestone:w.milestone, credits:coNum(w.credits), note:w.note }
       : { name:w.name, present:false, took:true, tier:w.tier||"", credits:coNum(w.credits), note:w.note });
-  if (written) for (const l of c.lines) for (const f of ["ip","credits","note","tier"]) c.typed[`${coKey(l.name)}|${f}`]=true;
+  // What was written stays as typed, but an IP that still matches the hours is the app's: changing Hours should move it.
+  if (written){
+    const mine=new Map(d.present.map(p=>[coKey(p.name), p.ip]));
+    for (const l of c.lines){
+      const k=coKey(l.name);
+      for (const f of ["credits","note","tier"]) c.typed[`${k}|${f}`]=true;
+      const worked=mine.get(k);
+      if (!l.present || l.ip==="" || worked===undefined || worked===null || String(worked)!==l.ip) c.typed[`${k}|ip`]=true;
+    }
+  }
   return c;
 }
 // Who was there or Hours changed: rebuild the lists, keeping what the GM set.
 function closeSync(){
   const c=S.closeOut, d=Engine.closeOutDraft(S.table, c.id); if (!d) return;
   // A name typed away mid-edit comes back with what the GM had set: lines that drop out wait in c.gone.
-  const old=new Map([...Object.entries(c.gone||{}), ...c.lines.map(l=>[coKey(l.name), l])]), lines=[];
+  // Carried by name and side: a name typed away is away for a moment (seen earlier), and must not take the present line's place.
+  const side = l => `${coKey(l.name)}|${l.present ? "p" : "a"}`;
+  const old=new Map([...Object.entries(c.gone||{}), ...c.lines.map(l=>[side(l), l])]), lines=[];
   for (const p of d.present){
-    const o=old.get(coKey(p.name)), mine=o && o.present;
-    lines.push({ name:p.name, present:true, ip:mine && coTyped(c, o, "ip") ? o.ip : coNum(p.ip),
-      milestone:mine ? o.milestone : true, credits:mine ? o.credits : "", note:mine ? o.note : "" });
+    const o=old.get(`${coKey(p.name)}|p`);
+    lines.push({ name:p.name, present:true, ip:o && coTyped(c, o, "ip") ? o.ip : coNum(p.ip),
+      milestone:o ? o.milestone : true, credits:o ? o.credits : "", note:o ? o.note : "" });
   }
   for (const a of d.absent){
-    const o=old.get(coKey(a.name)), mine=o && !o.present;
-    lines.push({ name:a.name, present:false, took:mine ? o.took : true, tier:mine && coTyped(c, o, "tier") ? o.tier : (a.tier||""),
-      credits:mine ? o.credits : "", note:mine ? o.note : "" });
+    const o=old.get(`${coKey(a.name)}|a`);
+    lines.push({ name:a.name, present:false, took:o ? o.took : true, tier:o && coTyped(c, o, "tier") ? o.tier : (a.tier||""),
+      credits:o ? o.credits : "", note:o ? o.note : "" });
   }
-  for (const o of old.values()) if (!o.present && !lines.some(l=>coKey(l.name)===coKey(o.name)) && !d.present.some(p=>coKey(p.name)===coKey(o.name))) lines.push(o);
-  c.gone=Object.fromEntries([...old].filter(([k])=>!lines.some(l=>coKey(l.name)===k)));
+  for (const o of old.values()) if (!o.present && !lines.some(l=>side(l)===side(o)) && !d.present.some(p=>coKey(p.name)===coKey(o.name))) lines.push(o);
+  c.gone=Object.fromEntries([...old].filter(([k])=>!lines.some(l=>side(l)===k)));
   c.lines=lines;
 }
 function coLogLine(l){
@@ -1082,7 +1093,7 @@ function coLogLine(l){
     return `${who}: ${[bits ? bits + "." : "", note].filter(Boolean).join(" ") || "nothing this time."}`;
   }
   const job=`an off-screen job${crankTierName(l.tier) ? `, ${esc(crankTierName(l.tier))}` : ""}`;
-  return `${who} (away): ${job}${l.credits!==null ? `; +${coMoney(l.credits)} Çredits` : ""}.${note ? ` ${note}` : ""}`;
+  return `${who} (away): no session to log; ${job}${l.credits!==null ? `; +${coMoney(l.credits)} Çredits` : ""}.${note ? ` ${note}` : ""}`;
 }
 function writtenDay(at){
   const d=new Date(at); if (typeof at!=="string" || isNaN(d)) return "";
@@ -1106,7 +1117,7 @@ function coIpRows(c){
   const rows=c.lines.map((l, i)=>[l, i]).filter(([l])=>l.present);
   const s=sessionById(c.id);
   return `<h2 class="cast-h" tabindex="-1" data-co-ip-h>Improvement Points</h2>
-    <p class="field-hint">5 an hour, rounded up. Change any of it.</p>
+    <p class="field-hint">${esc(D.ip.perHour)} an hour, rounded up. Change any of it.</p>
     ${!rows.length ? `<p class="step-note">Add who was there to work out IP.</p>` : s && typeof s.hours!=="number" ? `<p class="step-note">Add the hours to work out IP.</p>` : ""}
     <ul class="int-list co-rows">${rows.map(([l, i])=>`<li class="co-row" data-co-row="${i}">
       <span class="co-name">${esc(l.name)}</span>
