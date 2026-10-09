@@ -34,3 +34,6 @@ something a GM can see adds its line here.
 - **Close out a session.** Everyone's IP worked out from the hours, the
   Milestone Point, an off-screen job for whoever missed it, and a written
   award log to read out at the table.
+- **A Reference tab.** Conditions, the Codex's tiers, roles and traits,
+  defense, checks, modifiers and the rest of the book's quick reference, on
+  one page you can search.

@@ -5816,3 +5816,170 @@ test("206: an off-screen job needs a tier: a blank one is refused with the field
   old.sessions[0].close.lines.push(away("Dez", null));
   eq(Engine.migrateTable(old).sessions[0].close.lines.map(l => l.tier), [null, null], "a stored away line with no tier still loads");
 });
+
+// ── The Reference (Decision 207) ────────────────────────────────────────
+
+const refEq = (a, b, m) => assert.deepEqual(JSON.parse(JSON.stringify(a)), JSON.parse(JSON.stringify(b)), m);   // the engine runs in its own realm
+const refIds = () => D.gmReference.panels.map(p => p.id);
+const refPanel = (v, id) => v.find(p => p.id === id);
+const refStrings = v => {
+  const out = [];
+  (function walk(x) { if (typeof x === "string") out.push(x); else if (x && typeof x === "object") Object.values(x).forEach(walk); })(v);
+  return out;
+};
+
+test("207: gmReference with no pack and no search returns every panel in the data, in order, each with every key; the Codex is there with no parts", () => {
+  const v = Engine.gmReference([], {});
+  refEq(v.map(p => p.id), refIds());
+  for (const p of v) {
+    refEq(Object.keys(p).sort(), ["id", "parts", "title"]);
+    assert.ok(p.title && Array.isArray(p.parts));
+    for (const part of p.parts) {
+      refEq(Object.keys(part).sort(), ["columns", "footText", "items", "rows", "text", "title"]);
+      for (const i of part.items) refEq(Object.keys(i).sort(), ["more", "term", "text"]);
+    }
+  }
+  refEq(refPanel(v, "codex").parts, []);
+  assert.ok(v.filter(p => p.id !== "codex").every(p => p.parts.length), "every other panel has something");
+});
+
+test("207: every `from` in the data resolves, and a bad panel is left out, not thrown", () => {
+  const froms = D.gmReference.panels.filter(p => p.from).map(p => p.from);
+  refEq(froms, ["conditions", "packs", "hits", "pain", "recovery", "weaponTags", "crank"]);
+  assert.equal(Engine.gmReference([], {}).length, D.gmReference.panels.length, "no panel the data lists is left out");
+  withData(D, "weaponTagGlossary", [], () => assert.ok(!Engine.gmReference([], {}).some(p => p.id === "tags"), "a panel with nothing to show is left out, not drawn empty"));
+  const old = D.gmReference.panels;
+  try {
+    D.gmReference.panels = [{ id: "a", title: "A", from: "nowhere" }, { title: "No id", parts: [] }, { id: "bad id", title: "x", parts: [] },
+      { id: "c", title: "C", parts: [{ rows: "x", items: "y" }] },
+      { id: "d", title: "D", parts: [{ columns: [1], rows: [[1, null, "ok"], "x", 5] }] }];
+    const v = Engine.gmReference([], {});
+    refEq(v.map(p => p.id), ["c", "d"], "an unknown `from`, no id and a bad id are left out");
+    refEq(v[0].parts[0].rows, []);
+    refEq(v[1].parts[0].rows, [["", "", "ok"]], "cells that aren't strings read empty; a row that isn't a list is dropped");
+    refEq(v[1].parts[0].columns, [""]);
+  } finally { D.gmReference.panels = old; }
+});
+
+test("207: gmReference is total: any packs, any filter, a hostile pack", () => {
+  const hostile = Engine.migratePack(syntheticPack({
+    origins: [{ id: "o1", name: "<img onerror=x>", text: "t", modifiers: { BOD: "x", REF: 2, "__proto__": 1 } }, null, 5],
+    traits: [{ id: "t1", name: null, text: 5, kind: "nope", origin: "o1" }, { id: "t2", name: "n", text: "t", kind: "origin", origin: "zz" }],
+    tiers: [{ id: "x", name: 5, text: null }] }));
+  for (const packs of [undefined, null, "x", 5, [{}], [null, 5, { meta: 1 }], [hostile], twoPacks()])
+    for (const f of [undefined, null, 5, "prone", { q: {} }, { q: 5 }, { q: "prone" }, { q: "  " }]) {
+      const v = Engine.gmReference(packs, f);
+      assert.ok(Array.isArray(v));
+    }
+  const old = D.gmReference;
+  try {
+    for (const bad of [undefined, null, "x", {}, { panels: "x" }, { panels: [null, 5, "x"] }]) {
+      D.gmReference = bad;
+      refEq(Engine.gmReference([], { q: "x" }), []);
+      assert.ok(Array.isArray(Engine.gmReference([], {})));
+    }
+  } finally { D.gmReference = old; }
+});
+
+test("207: no flagNote reaches the Reference", () => {
+  const notes = [];
+  (function walk(x) { if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) { if (k === "flagNote" && typeof v === "string") notes.push(v); else walk(v); } })(D);
+  assert.ok(notes.length > 5, "found the data's flag notes");
+  const all = refStrings(Engine.gmReference(twoPacks(), {}));
+  for (const n of notes) for (const s of all) assert.ok(!s.includes(n.slice(0, 30)), `a flagNote reached the Reference: ${n.slice(0, 40)}`);
+  assert.ok(!all.some(s => /\bF\d{1,2}\b/.test(s)), "no flag id reaches the Reference");
+  const dying = D.damageRules.whileDying;
+  const hits = refPanel(Engine.gmReference([], {}), "hits");
+  assert.ok(refStrings(hits).includes(dying.playerNote), "the player note shows");
+  assert.ok(!refStrings(hits).includes(dying.flagNote));
+});
+
+test("207: Conditions: one item per Condition, in order, with its effect and recovery, then how they work", () => {
+  const [list, how] = refPanel(Engine.gmReference([], {}), "conditions").parts;
+  refEq(list.items.map(i => i.term), D.conditions.map(c => c.name));
+  list.items.forEach((i, n) => { assert.equal(i.text, D.conditions[n].effect); assert.ok(i.more.includes(D.conditions[n].recovery)); });
+  assert.equal(how.title, "How Conditions work");
+  refEq(how.items.map(i => i.text), [D.conditionRules.noStacking, D.conditionRules.helpless, D.conditionRules.painClamp,
+    D.conditionRules.rollPenalty.text, D.conditionRules.penaltyStacking.text]);
+  assert.ok(how.items.every(i => i.term === "" && i.more.length === 0));
+});
+
+test("207: the Codex: a pack's tiers, roles, origins and traits; two packs each name theirs", () => {
+  const one = refPanel(Engine.gmReference([Engine.migratePack(syntheticPack())], {}), "codex").parts;
+  refEq(one.map(p => p.title), ["Tiers", "Enemy roles", "NPC roles", "Origins", "Traits"]);
+  const [tiers, enemy, npc, origins, traits] = one;
+  refEq(tiers.items.map(i => i.term), ["Slight", "Middling"]);
+  refEq(tiers.items[0].more, ["Mostly low scores, one standout.", "A trait or two, no more."]);
+  refEq(enemy.items[0].more, ["Tier 1"]);
+  refEq(npc.items.map(i => i.term), ["Gatherer", "Lookout"]);
+  refEq(origins.items[0].more, ["BOD +1 · REF −1"], "the modifiers as STAT +n, in the stats' order");
+  refEq(traits.items.map(i => i.more[0]), ["Universal", "Origin · Dock", "Signature", "Origin · Spire"]);
+  assert.ok(one.every(p => p.items.every(i => !i.more.includes("Test Pack"))), "one pack: its name isn't repeated");
+  const two = refPanel(Engine.gmReference(twoPacks(), {}), "codex").parts;
+  refEq(two.find(p => p.title === "Origins").items.map(i => i.more.at(-1)), ["Test Pack", "Test Pack", "Second", "Second"]);
+  assert.ok(two.every(p => p.items.every(i => ["Test Pack", "Second"].includes(i.more.at(-1)))), "each item ends with its pack");
+});
+
+test("207: Pain Levels: the text's three numbers follow painPenaltiesPerLevel", () => {
+  const text = () => refPanel(Engine.gmReference([], {}), "pain").parts[0].text;
+  assert.equal(text(), "Each Pain Level: −1 to Skill Checks, −1 Essence die, −5% on Breaker Checks.");
+  const pp = D.resources.healthLevels.painPenaltiesPerLevel;
+  withData(pp, "skillChecks", -2, () => assert.match(text(), /−2 to Skill Checks/));
+  withData(pp, "essenceCheckDice", -3, () => assert.match(text(), /−3 Essence dice/));
+  withData(pp, "breakerCheckPercent", -7, () => assert.match(text(), /−7% on Breaker/));
+  const rows = refPanel(Engine.gmReference([], {}), "pain").parts[0].rows;
+  refEq(rows, D.resources.healthLevels.painLevels.map(l => [l.label, l.description]));
+});
+
+test("207: CRANK: a row per tier, Legendary's off-screen range is offScreenPay's", () => {
+  const part = refPanel(Engine.gmReference([], {}), "crank").parts[0];
+  assert.equal(part.text, D.resources.crank.description);
+  refEq(part.rows.map(r => r[0]), D.resources.crank.tiers.map(t => t.name));
+  const leg = part.rows.at(-1), off = Engine.offScreenPay("legendary");
+  assert.equal(leg[2], Engine.crankPayText(D.resources.crank.tiers.at(-1)));
+  assert.equal(leg[3], `${Engine.creditSymbol()}${off.min.toLocaleString("en-US")}–${off.max.toLocaleString("en-US")}`);
+});
+
+test("207: Rate of fire agrees with the data: the Mode and Rounds columns are weaponRules.rofModes", () => {
+  const rows = refPanel(Engine.gmReference([], {}), "rof").parts[0].rows;
+  refEq(rows.map(r => [r[0], Number(r[1])]), D.weaponRules.rofModes.map(m => [m.name, m.rounds]));
+});
+
+test("207: the search folds case, space and the minus, and keeps what matches", () => {
+  const ids = (q, packs = []) => Engine.gmReference(packs, { q }).map(p => p.id);
+  refEq(ids("prone"), ["conditions", "actions", "hits", "tags"]);
+  const v = Engine.gmReference([], { q: "prone" });
+  refEq(refPanel(v, "conditions").parts.flatMap(p => p.items).map(i => i.term), ["Prone"]);
+  refEq(refPanel(v, "actions").parts.flatMap(p => p.items).map(i => i.term), ["Drop prone"]);
+  refEq(refPanel(v, "hits").parts.map(p => p.title), ["Shock", "At zero"]);
+  refEq(refPanel(v, "tags").parts.flatMap(p => p.items).map(i => i.term), ["Knockdown"]);
+  refEq(ids("PRONE"), ids("prone"));
+  refEq(ids("  prone "), ids("prone"));
+  // A part's title keeps the whole part; a panel's, the whole panel.
+  const mv = refPanel(Engine.gmReference([], { q: "movement" }), "actions").parts;
+  refEq(mv.map(p => p.title), ["Movement"]);
+  assert.equal(mv[0].rows.length, 3, "no cell says movement, the part's title does");
+  assert.equal(refPanel(Engine.gmReference([], { q: "conditions" }), "conditions").parts.length, 2);
+  assert.equal(refPanel(Engine.gmReference([], { q: "conditions" }), "conditions").parts[0].items.length, D.conditions.length);
+  // A minus is a minus: U+2212 folds to a hyphen; nothing else does.
+  const partial = q => refPanel(Engine.gmReference([], { q }), "modifiers");
+  refEq(partial("-1").parts[0].rows.map(r => r[0]), ["Partial −1"], "a hyphen finds the true minus");
+  assert.ok(partial("−1"), "and so does the minus itself");
+  assert.ok(!Engine.gmReference([], { q: "–5" }).some(p => p.id === "modifiers"), "an en dash isn't a minus");
+  // A column heading or a footnote that matches keeps the whole part.
+  const cover = refPanel(Engine.gmReference([], { q: "cover" }), "modifiers").parts;
+  refEq(cover.map(p => p.title), ["Modifiers"]);
+  assert.equal(cover[0].rows.length, 4); assert.match(cover[0].footText, /Area attacks/);
+  refEq(refPanel(Engine.gmReference([], { q: "extreme" }), "modifiers").parts.map(p => p.title), ["Range bands"]);
+  assert.equal(refPanel(Engine.gmReference([], { q: "off-screen" }), "crank").parts[0].rows.length, D.resources.crank.tiers.length);
+  assert.ok(refPanel(Engine.gmReference([], { q: "area attacks" }), "modifiers"), "the footnote is searched");
+  refEq(Engine.gmReference([], { q: "zzzz" }), []);
+  refEq(Engine.gmReference([], { q: "" }), Engine.gmReference([], {}));
+  // A kept row keeps its footnote; a part kept whole keeps everything.
+  assert.equal(partial("blind").parts[0].footText, D.gmReference.panels.find(p => p.id === "modifiers").parts[0].footText);
+  assert.equal(partial("range bands").parts[0].footText, "", "the Range bands part has none");
+  // The Codex: no pack, no search keeps the panel; a search with no pack drops it.
+  assert.ok(ids("").includes("codex"));
+  assert.ok(!ids("tier").includes("codex"));
+  assert.ok(ids("salt nerve", twoPacks()).includes("codex"));
+});

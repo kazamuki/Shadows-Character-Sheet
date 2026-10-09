@@ -197,7 +197,7 @@ caution, louder), and S3 measures a realistic table before going on (GQ9).
 | **Work** | CRANK jobs and the generator | S11 |
 | **Notes** | The Session 0 worksheet, freeform notes | S5 |
 
-**As built (S5a, Decision 204):** the table's tabs are Sessions, Cast, Threats, Encounters, Notes; Sessions is first, and a new table opens on it.
+**As built (S5a, Decision 204; S13a, Decision 207):** the table's tabs are Sessions, Cast, Threats, Encounters, Reference, Notes; Sessions is first, and a new table opens on it.
 
 The tab list is a design sketch for S3; the order and grouping are Scott's
 and Deighton's call (GQ1).
@@ -742,6 +742,8 @@ Codex first** (what Scott looks up most), then defenses, default TN and TH,
 Pain Levels, the tier table. Handouts (a dispatch kind).
 Printing a cast member, an encounter, a session's journal.
 
+**Split (S13a, SQ4).** **S13a is built** (Decision 207, switched off): the Reference tab. Handouts wait on S2; printing is **S13b** (W84).
+
 ## 7. How the branch works
 
 **Replaced by Decision 173 (2026-10-05).** There is no long branch: each session
@@ -810,4 +812,5 @@ Deighton.
 | GQ26 | Does a cast member carry their wounds into the next fight? | Scott | Default: no; the wrap-up's line says how they ended, the next fight starts them unhurt, and S5's downtime is where healing would live (193) |
 | GQ27 | The Campaign Journal's prompts (2270): one box per part with the prompts as hints, or a box per prompt? | Scott | Default: one per part; S5a built six boxes with the prompts under each label |
 | GQ28 | Legendary's CRANK pay has no top. What should an off-screen Legendary job pay? | Deighton | Default: 10,000–15,000, editable (`offScreenMax` in the data); S5b's close-out shows it as the range (206) |
+| GQ29 | What's in your reference, and in what order? | Scott | Default: the thirteen panels as built, Conditions and the Codex first; the order is a data edit (`gmReference.panels`, 207) |
 | GQ22 | Eight trait names on entries aren't in the glossary under that name. The Pointman's *Controlled Violence*, *Clear the Room* and *Take the Hit* have no glossary row. *Ghost Roads* (the Drifter) and *Terrain Native* (the Wraith) are the glossary's *Know the Gaps* under entry names. The Architect's and the Converted's last "trait" are design notes set in bold (*Interface (17) / Programming (17)*, *TOL 7 / WILL 5*). *Sanctified Rosary — if carried* carries a condition in its name; the glossary's row is *Sanctified Rosary*. The Codex pack keeps each as printed. Which is right? Also: the entries print *Handgun*, *Rifle* and *SMG*; the game's skills are *Handguns*, *Rifles* and *SMGs*. The pack matches the plural by one letter | Scott | **Open** (S9c, 186). Each stays as the book prints it until he answers; the builder's trait count reads them as *written*, which is true |

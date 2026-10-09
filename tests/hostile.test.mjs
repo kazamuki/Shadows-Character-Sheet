@@ -900,3 +900,20 @@ test("a hostile award log and the close-out sheet render as text, with no error"
   assert.deepEqual(found, [], "an award log became markup");
   assert.deepEqual(app.errors, [], "the hostile award log threw while rendering");
 });
+
+test("a hostile pack renders as text on the Reference, drawn and searched (Decision 207)", () => {
+  const key = "shadows.pack.v1." + PK;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { pack: hostilePack(), imported: "2026-10-05T10:00:00.000Z" } } });
+  app.click("#btn-run-table"); app.$("#tbl-name").value = "Pier"; app.click("#modal [data-nameyes]");
+  app.click('[data-tsec="reference"]');
+  assert.ok(app.$("#gr-codex").parentElement.textContent.includes("<i data-pwn="), "the payload didn't show as text");
+  const found = injected(app, "the Reference");
+  const q = app.$("[data-jumpfilter]");
+  q.value = "<i data-pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(app.$("#gr-codex"), "the payload wasn't found by the search");
+  found.push(...injected(app, "a Reference search"));
+  assert.equal(app.$("#main img"), null);
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a field drew an object as text");
+  assert.deepEqual(found, [], "a pack's text became markup");
+  assert.deepEqual(app.errors, []);
+});
