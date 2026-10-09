@@ -8,7 +8,8 @@ with the default the build takes if nobody answers first.
 **Revised 2026-10-02, the same day:** Scott answered the GM questionnaire and
 sent *Threat Codex v2*. His answers reorder the sessions (§6) and add three
 records (threads, interactions, the award log). §1a has his answers and what
-each one changed. Deighton's answers are still to come.
+each one changed. **Deighton answered on 2026-10-09** (the questionnaire and a
+follow-up); §1a has those too.
 **Wanted by:** no date. Scope is the whole of W29's file-based stage, plus
 the GM toolkit on top of it. Live sync (W29 stages 2–3) is out of scope and
 gets its own plan when this one is built (§8).
@@ -52,8 +53,8 @@ rolling for players (they roll real dice); voice or video; accounts.
 
 ## 1a. What the GMs told us
 
-Scott's answers to the questionnaire, 2026-10-02, summarized. Deighton's go
-here when they arrive.
+Scott's answers to the questionnaire, 2026-10-02, summarized. Deighton's
+follow, below his.
 
 | Asked | Scott | What it changes |
 |---|---|---|
@@ -84,6 +85,35 @@ players' sheets in, or sending them changes. At an in-person table the
 players are across the table with their phones, and he says the award out
 loud. The dispatch is still the right shape if a table goes remote (§8), but
 it is no longer early work (GQ20).
+
+**Deighton's answers, 2026-10-09**, summarized: the questionnaire, then a
+follow-up that asked about what his first answers left open.
+
+| Asked | Deighton | What it changes |
+|---|---|---|
+| What do you run with now? Where? | Paper, OneNote, docs, Discord and Foundry, some or all of them; **Obsidian** for his notes. In person and online; online, the players keep their own sheets in Discord | GQ2: both, so a remote table is real, not hypothetical. Still files first: his players manage their own sheets |
+| How do you prep? What do you wish was done? | Get the character sheets in order and start, or vanish into research and writing. Wants **enough of the setting to make anything up on the spot** | The setting as a **reference to improvise from**: S6's places, read and searched, more than a record of where the crew went |
+| Where do you look for an NPC in a hurry? | **His head**: he makes them up | Quick-add (a name and a line, S8a) is his whole use of the cast; the Codex rolodex is Scott's |
+| What do you need on a PC mid-session? | Nothing he doesn't have at the start; the rest comes out in play | GQ19: no live view needed. S3b's card spread drops further |
+| What do you track in a fight? What do you lose? | Loosely. **Wave initiative**: the players' side, then the enemies'. He notes damage, Conditions and kills as the players act, then runs the enemies. Clocks only with a big or unruly table | 0530 allows it ("as individuals or as sides, in waves"); the encounter tracker only orders individuals by Combat Sense. A by-sides turn is a gap (§6 S10) |
+| What do you look up most? | **Skills, Powers and Equipment**: a skill's base and its roll, a power's SFR cost and effect, and whether a character has a piece of gear. Mostly on the player's sheet, else the CRB | GQ29: putting them on the Reference "wouldn't take away anything". Most of it is a character's own sheet, which a GM sees only at the table |
+| How do you keep an improvised NPC? | Memory, and sometimes a player writes it down; he asks them afterwards and adds what he needs | **W85**, the secretary: a line jotted from any tab, if it's "fast and easy to use", on whatever device is nearest |
+| What do you hand out? How is it recorded? | IP, at what feels right, which comes to **5 an hour plus bonus points for coolness**. **No Milestone Points from him**: the players record those by playing. Players write everything down | Matches 206's 5 an hour, typed over for a bonus. GQ8: the sheet's session log already gives the Milestone Point, so the award log's Milestone column is a record, not an award |
+| What do you write after a session? | As much as he can remember, "like a police report", **as an outline of bulleted lists** | GQ27: one box per journal part suits him if the other five can stay empty. Obsidian and an outline suggest a Markdown copy of a session |
+| What do you track across the campaign? What do you forget? | Nothing between sessions: **the world is frozen until the players play**. Forgets the small details first, names above all, then, as time passes, the plot and why anyone was doing anything | S7's factions and clocks have no customer in him. **W85**: a search over the whole table, for the names first |
+| One tool tomorrow? | **A secretary**, to keep track of the details | W85 |
+| CRANK (GQ7, GQ28) | **Doesn't know it**: "something you guys joked about a long while back"; never used it | GQ7 and GQ28 can't be answered by him as asked. CRANK is in the CRB (0300, 0450, 0460, 0550, 1100, the Workshop) and on the sheet (169); whether it stays is Ken and Deighton's, not this plan's |
+
+**The 50,000-foot reading, with both.** Scott preps, tracks and wants
+records; Deighton improvises, tracks little and wants a memory he doesn't
+have to keep. They agree on the parts already built (the cast's quick-add,
+turn order, an award log the players copy themselves, files over a live
+view) and on what wasn't asked for (getting sheets in, sending changes). They
+differ on what comes next: Scott's is enemies and Conditions, which are
+built; Deighton's is **finding a detail again**, which isn't. So W85's
+search and jot are worth more to the second GM than anything left in §6,
+and S7's factions and clocks are worth less than the plan assumed. Places
+stay (S6), as a setting to read and search, not a log to keep.
 
 ## 2. What the books already decide
 
@@ -718,6 +748,11 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 - **Use's verb.** S9a's **Use** copies an entry into the cast; S10 adds a
   copy into a fight. Design both buttons together here (S9b's SQ7), so one
   word doesn't lead two places.
+- **Still open: turns by side** (Deighton, §1a). 0530 lets the Order of
+  Engagement run "as individuals or as sides, in waves"; S10a orders
+  individuals only. Deighton runs the players' side, then the enemies'. A
+  by-sides turn on an encounter is a session of its own, or a Fix on S10a's
+  turn, when it's picked up.
 
 ### S11 — CRANK work
 
@@ -785,14 +820,14 @@ Deighton.
 
 | # | Question | For | Default |
 |---|---|---|---|
-| GQ1 | Which tabs, in what order? Is anything in §4b missing or not worth it? | They | **Scott, 2026-10-02:** the cast, the Codex and the fight matter most, and threads and interactions are missing (§1a; both added). Order still open; default §4b with **Next session** as the landing page. Deighton to come |
-| GQ2 | Do you run in person, online or both, and do players have devices at the table? Is files between sessions enough, or is a live view the point? | They | **Scott, 2026-10-02:** in person; players on phones and tablets; GM on paper with electronic references. Files are enough to start; live sync is a later plan. Deighton to come |
+| GQ1 | Which tabs, in what order? Is anything in §4b missing or not worth it? | They | **Scott, 2026-10-02:** the cast, the Codex and the fight matter most, and threads and interactions are missing (§1a; both added). Order still open; default §4b with **Next session** as the landing page. **Deighton, 2026-10-09:** asked for no tab; the detail he loses is the gap (W85) |
+| GQ2 | Do you run in person, online or both, and do players have devices at the table? Is files between sessions enough, or is a live view the point? | They | **Scott, 2026-10-02:** in person; players on phones and tablets; GM on paper with electronic references. Files are enough to start; live sync is a later plan. **Deighton, 2026-10-09:** both in person and online (Discord, players keep their own sheets), so remote is real; files still first |
 | GQ3 | One dispatch file per character, or one per table that each player's sheet reads its own part of? | Ken | One per table: one file to drop in a chat channel |
 | GQ4 | Is **Patron** an NPC Role? The Codex says "in review"; the Workshop's roster uses it | Scott | **Answered by Codex v2:** yes. Nine roles, Nemesis included |
 | GQ5 | Is the Origin Matrix's 7 × 8 concept grid canon, and with which origins? (The page has Elite and the old modifiers; the Codex has Agency) | Scott | Not in the app until it's in the Codex |
 | GQ6 | Entries 08 and 10 have TOL above the formula, and **the v2 roster has TOL below it on seven of eleven** (Chen, the Archivist, Kira, Threadbare, the Warden, Juno, the Patron) and WILL below on one (Marta). Is an NPC's TOL and WILL the formula, a floor, or simply authored? | Scott | Authored: stored as printed, with the formula's value shown beside it and no warning. **Answered 2026-10-06 (Ken, from Scott's Stat Audit):** TOL is the formula, with an override where an entry means it (the Wight's is 0). The audit reads WILL as a floor (above allowed, below an error). This reopens 175: a session of its own after S9b (S9b's SQ9). Still open for that session: whether WILL is a floor, as the audit reads it, or the formula with an override, as TOL is |
-| GQ7 | CRANK reputation and the **Reputation** Advantage share a word. Should either say how they differ? | Deighton | **Ken, 2026-10-02: open, and bigger than wording.** The team wants to discuss the Reputation Advantage setting a character's starting CRANK rep, or something like it. Until then S1 keeps CRANK's copy clean: no mention of the Advantage |
-| GQ8 | Milestone cycles (5 and 10 sessions): does the GM award them, or does the sheet already handle it? | Deighton | **Scott, 2026-10-02:** he awards a Milestone Point each session, which the sheet already gives from its session log. The award log records it; the 5- and 10-session cycles stay a reminder. Deighton to confirm |
+| GQ7 | CRANK reputation and the **Reputation** Advantage share a word. Should either say how they differ? | Deighton | **Ken, 2026-10-02: open, and bigger than wording.** The team wants to discuss the Reputation Advantage setting a character's starting CRANK rep, or something like it. Until then S1 keeps CRANK's copy clean: no mention of the Advantage. **Deighton, 2026-10-09:** doesn't know CRANK, so the question goes back to Ken and Deighton together (§1a) |
+| GQ8 | Milestone cycles (5 and 10 sessions): does the GM award them, or does the sheet already handle it? | Deighton | **Scott, 2026-10-02:** he awards a Milestone Point each session, which the sheet already gives from its session log. The award log records it; the 5- and 10-session cycles stay a reminder. **Deighton, 2026-10-09:** he gives none; the players record a Milestone Point by playing. Same result: the sheet gives it, the award log only records it |
 | GQ9 | If a table outgrows browser storage, is "the table file is the save" acceptable, or does it need to fit? | Ken | Acceptable, with the unexported marker |
 | GQ10 | Does the GM's content (the Codex, the gazetteer) ship in the one file every player gets, or in a separate GM build? | Ken | **Answered 2026-10-02 (Ken): one app, and the Codex is a pack the GM slots in.** The GM mode's code ships to everyone, empty; the Codex, the roster and CRANK's tables are a `.shadows-pack.json` built from `private/` and handed to a GM, imported once, checked like any untrusted file (124). Core player content stays free in the sheet, Vampire and Werewolf included. The repo stays public, as a matter of trust. How expansions hook in, and what stays private when they do, waits for the first expansion. Replaces the two-build proposal: two builds meant two version histories and a GM file to re-hand on every release. Needs a numbered decision when S9 builds it |
 | GQ11 | CRANK rep on the printed sheet, when the front page is full (Decision 96)? | Ken | **Ken, 2026-10-02: the front page.** Its third field row has two of four places free |
@@ -803,14 +838,14 @@ Deighton.
 | GQ16 | v2's Enemy Roles table gives each role a tier (Brute is T2), and an entry prints both. Can an entry's tier differ from its role's, a T3 Brute? | Scott | Yes: tier is stored, and the builder notes when it differs from the role's usual |
 | GQ17 | The Orders are in the Codex now, under a "proposed modifier" heading. Are they approved? | Scott | Not yet: the builder offers Origin only until the heading drops "proposed" |
 | GQ18 | NPC armor is "PROT + RES (1d4+2), or the average (5)". 1d4+2 averages 4.5; is the 5 rounded up on purpose? And is this the players' armor rule simplified for the GM, or its own NPC rule? It touches the RES question in F23 and F25 | Deighton | **Answered 2026-10-07 (Ken, SQ2):** 053 says enemy armor is static and doesn't roll; the static number is the PROT die's average rounded up, plus RES. The Codex's "(5)" is the 1d4 + 2 piece's (Leather and Denim Jacket), not a rule for every NPC (191) |
-| GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8 |
-| GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts |
+| GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8. **Deighton, 2026-10-09:** needs nothing on a PC mid-session |
+| GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts. **Deighton, 2026-10-09:** players write their own; he says it |
 | GQ21 | The Tier table against the entries: on Scott's Stat Audit (2026-10-03), 14 of 17 human Tier 3 entries and all 18 supernatural Tier 3 drafts have a stat outside the table's band ("All stats 5–8; 2–3 exceptional at 8–9"); by the mirror, one Tier 1 entry has a Signature ("no Signatures") and 10 of 17 Tier 3 entries have three or four ("1–2"). The supernatural copy treats the trait budget as binding. Is the table a guide, or are the entries off it? | Scott | **Answered 2026-10-06 (Ken):** a general guide, where to start looking for the power you want; the GM overrides it as the story needs. The builder shows it as the book's words and never warns (S9b, 183–184) |
 | GQ23 | Do NPCs take Pain Levels as players do? The Codex prints their Health Levels, and traits like Scar Tissue assume pain slows them. | Scott | Default: yes, shown on the encounter's row by the players' rule and applied by the GM (S10a shows it and applies nothing; 189). Not an F-flag: no player rule changes |
 | GQ24 | Do NPCs make the At Zero check, or drop at zero? | Scott | Default: offered, never forced; the GM leaves it unanswered to drop them (192) |
 | GQ25 | Should a trait carry a trigger the app can light, "at their last Health Level", as a field in the pack? | Scott | Default: no; traits are text, shown on the active row (192) |
 | GQ26 | Does a cast member carry their wounds into the next fight? | Scott | Default: no; the wrap-up's line says how they ended, the next fight starts them unhurt, and S5's downtime is where healing would live (193) |
-| GQ27 | The Campaign Journal's prompts (2270): one box per part with the prompts as hints, or a box per prompt? | Scott | Default: one per part; S5a built six boxes with the prompts under each label |
-| GQ28 | Legendary's CRANK pay has no top. What should an off-screen Legendary job pay? | Deighton | Default: 10,000–15,000, editable (`offScreenMax` in the data); S5b's close-out shows it as the range (206) |
-| GQ29 | What's in your reference, and in what order? | Scott | Default: the thirteen panels as built, Conditions and the Codex first; the order is a data edit (`gmReference.panels`, 207) |
+| GQ27 | The Campaign Journal's prompts (2270): one box per part with the prompts as hints, or a box per prompt? | Scott | Default: one per part; S5a built six boxes with the prompts under each label. **Deighton, 2026-10-09:** writes one outline of bulleted lists, so the parts he skips must stay empty without asking |
+| GQ28 | Legendary's CRANK pay has no top. What should an off-screen Legendary job pay? | Deighton | Default: 10,000–15,000, editable (`offScreenMax` in the data); S5b's close-out shows it as the range (206). **Deighton, 2026-10-09:** doesn't know CRANK (GQ7) |
+| GQ29 | What's in your reference, and in what order? | Scott | Default: the thirteen panels as built, Conditions and the Codex first; the order is a data edit (`gmReference.panels`, 207). **Deighton, 2026-10-09:** looks up Skills, Powers and Equipment most; adding them "wouldn't take away anything" |
 | GQ22 | Eight trait names on entries aren't in the glossary under that name. The Pointman's *Controlled Violence*, *Clear the Room* and *Take the Hit* have no glossary row. *Ghost Roads* (the Drifter) and *Terrain Native* (the Wraith) are the glossary's *Know the Gaps* under entry names. The Architect's and the Converted's last "trait" are design notes set in bold (*Interface (17) / Programming (17)*, *TOL 7 / WILL 5*). *Sanctified Rosary — if carried* carries a condition in its name; the glossary's row is *Sanctified Rosary*. The Codex pack keeps each as printed. Which is right? Also: the entries print *Handgun*, *Rifle* and *SMG*; the game's skills are *Handguns*, *Rifles* and *SMGs*. The pack matches the plural by one letter | Scott | **Open** (S9c, 186). Each stays as the book prints it until he answers; the builder's trait count reads them as *written*, which is true |
