@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.39.0
+## v0.39.0 — 2026-10-09
 
 - **The Werewolf, as the book now writes it.** Three Origins to choose from:
   **Trueborn**, **Wildblood** and **Forge Fang**, each with how it shifts,
