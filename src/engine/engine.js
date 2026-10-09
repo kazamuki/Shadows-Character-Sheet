@@ -4825,13 +4825,13 @@ const Engine = (() => {
     return { id:panel.id, title:_str(panel.title), parts, from:panel.from===undefined ? null : panel.from };
   }
   // The search: folded, with the minus folded. A panel title that matches keeps the whole panel; else a part
-  // title or lead that matches keeps the whole part; else the rows and items that match.
+  // title, lead, column heading or footnote that matches keeps the whole part; else the rows and items that match.
   function _refFilter(panel, q){
     const has = s => _refFold(s).includes(q);
     if (has(panel.title)) return panel;
     const parts = [];
     for (const p of panel.parts){
-      if (has(p.title) || has(p.text)){ parts.push(p); continue; }
+      if (has(p.title) || has(p.text) || has(p.footText) || p.columns.some(has)){ parts.push(p); continue; }
       const rows = p.rows.filter(r=>r.some(has)), items = p.items.filter(i=>has(i.term) || has(i.text) || i.more.some(has));
       if (rows.length || items.length) parts.push(Object.assign({}, p, { rows, items, footText:rows.length ? p.footText : "" }));
     }
@@ -4842,7 +4842,7 @@ const Engine = (() => {
     const data = _isObj(D().gmReference) && Array.isArray(D().gmReference.panels) ? D().gmReference.panels : [];
     for (const raw of data){
       const panel = _refResolve(raw, packs); if (!panel) continue;
-      if (!q){ panels.push(panel); continue; }
+      if (!q){ if (panel.parts.length || panel.from==="packs") panels.push(panel); continue; }
       const kept = _refFilter(panel, q);
       if (kept.parts.length) panels.push(kept);
     }

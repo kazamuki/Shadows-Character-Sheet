@@ -5847,6 +5847,7 @@ test("207: every `from` in the data resolves, and a bad panel is left out, not t
   const froms = D.gmReference.panels.filter(p => p.from).map(p => p.from);
   refEq(froms, ["conditions", "packs", "hits", "pain", "recovery", "weaponTags", "crank"]);
   assert.equal(Engine.gmReference([], {}).length, D.gmReference.panels.length, "no panel the data lists is left out");
+  withData(D, "weaponTagGlossary", [], () => assert.ok(!Engine.gmReference([], {}).some(p => p.id === "tags"), "a panel with nothing to show is left out, not drawn empty"));
   const old = D.gmReference.panels;
   try {
     D.gmReference.panels = [{ id: "a", title: "A", from: "nowhere" }, { title: "No id", parts: [] }, { id: "bad id", title: "x", parts: [] },
@@ -5965,6 +5966,13 @@ test("207: the search folds case, space and the minus, and keeps what matches", 
   refEq(partial("-1").parts[0].rows.map(r => r[0]), ["Partial −1"], "a hyphen finds the true minus");
   assert.ok(partial("−1"), "and so does the minus itself");
   assert.ok(!Engine.gmReference([], { q: "–5" }).some(p => p.id === "modifiers"), "an en dash isn't a minus");
+  // A column heading or a footnote that matches keeps the whole part.
+  const cover = refPanel(Engine.gmReference([], { q: "cover" }), "modifiers").parts;
+  refEq(cover.map(p => p.title), ["Modifiers"]);
+  assert.equal(cover[0].rows.length, 4); assert.match(cover[0].footText, /Area attacks/);
+  refEq(refPanel(Engine.gmReference([], { q: "extreme" }), "modifiers").parts.map(p => p.title), ["Range bands"]);
+  assert.equal(refPanel(Engine.gmReference([], { q: "off-screen" }), "crank").parts[0].rows.length, D.resources.crank.tiers.length);
+  assert.ok(refPanel(Engine.gmReference([], { q: "area attacks" }), "modifiers"), "the footnote is searched");
   refEq(Engine.gmReference([], { q: "zzzz" }), []);
   refEq(Engine.gmReference([], { q: "" }), Engine.gmReference([], {}));
   // A kept row keeps its footnote; a part kept whole keeps everything.

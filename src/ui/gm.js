@@ -338,7 +338,7 @@ function refPanelsHtml(view){
   return view.map(p=>{
     const none = !p.parts.length;
     const body = !none ? p.parts.map(x=>refPartHtml(x, p.title)).join("")
-      : `<p class="step-note">${packsMemo.length ? "The slotted pack has no tiers, roles, origins or traits." : "Slot a pack on the Threats tab, and its tiers, roles, origins and traits show here."}</p>`;
+      : `<p class="step-note">${packsMemo.length>1 ? "The slotted packs have no tiers, roles, origins or traits." : packsMemo.length ? "The slotted pack has no tiers, roles, origins or traits." : "Slot a pack on the Threats tab, and its tiers, roles, origins and traits show here."}</p>`;
     return `<section class="ref-panel"><h2 class="ref-h" id="gr-${esc(p.id)}" tabindex="-1">${esc(p.title)}</h2>${body}</section>`;
   }).join("");
 }

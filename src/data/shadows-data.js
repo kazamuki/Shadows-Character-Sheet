@@ -4371,7 +4371,7 @@ window.SHADOWS_DATA = {
           { "items": [
               { "term": "Total the damage first.", "text": "Burst and Full Auto arrive as one packet." },
               { "term": "Then armor answers.", "text": "Roll PROT, add RES where the damage type allows. AP skips RES. Enemy armor is static." },
-              { "term": "What’s left", "text": "comes off Health Levels, left to right." },
+              { "text": "What’s left comes off Health Levels, left to right." },
               { "term": "Withering", "text": "heals only with rest and medicine, and not until you're clear of the source. Armor works as normal." },
               { "term": "Massive", "text": "skips all of the above. Strips Integrity equal to the weapon's damage and takes 1 Health Level per 10 points of it, plus another if the armor drops to 0 or there was none. Those Levels don't come back with rest." },
               { "term": "Integrity", "text": "1 point for every hit the armor stops outright. Anyone hit at all rolls once for wear at the end of the encounter, 1d4 to 1d10, depending on difficulty." },

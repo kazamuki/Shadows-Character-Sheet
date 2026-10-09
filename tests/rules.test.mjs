@@ -1446,5 +1446,26 @@ test("CRB: the Reference's book panels are quoted verbatim from the mirror", () 
       if (!bit) continue;
       assert.ok(book.includes(norm(bit)), `${p.id}: "${bit}" is not in ${file}${m[2] ? ` under "${m[2]}"` : ""}`);
     }
+    // Where each piece sits, not just that it's there: a row is a row of the book's, cell for cell, the columns are
+    // a header row, and an item's term and text read as one run of the book's (the run-in dash aside).
+    const cell = s => norm(s).replace(/( ·)+ /g, " · ").split(" · ").filter(Boolean).join(" · ");
+    const bookRows = [];
+    for (const line of text.split("\n")) {
+      if (!/^\s*\|/.test(line) || /^\s*\|[\s:|-]+\|\s*$/.test(line)) continue;
+      bookRows.push(line.trim().replace(/^\||\|$/g, "").split("|").map(cell));
+    }
+    for (const tr of text.match(/<tr>[\s\S]*?<\/tr>/g) || [])
+      bookRows.push((tr.match(/<t[dh]>[\s\S]*?<\/t[dh]>/g) || []).map(c => cell(c.replace(/<br\s*\/?>/g, " · "))));
+    const key = row => row.map(cell).join("\u0001");
+    const have = new Set(bookRows.map(key));
+    const noDash = s => norm(s).replace(/ — /g, " ");
+    for (const part of p.parts) {
+      if ((part.columns || []).length) assert.ok(have.has(key(part.columns)), `${p.id}: the columns ${JSON.stringify(part.columns)} are not a header row in ${file}`);
+      for (const row of part.rows || []) assert.ok(have.has(key(row)), `${p.id}: the row ${JSON.stringify(row)} is not a row of the book's`);
+      for (const it of part.items || []) {
+        const run = noDash([it.term, it.text].filter(Boolean).join(" "));
+        assert.ok(noDash(text).includes(run), `${p.id}: "${run}" isn't one item of the book's`);
+      }
+    }
   }
 });
