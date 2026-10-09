@@ -360,6 +360,7 @@ test("a cast file with __proto__ keys at every level pollutes nothing on import"
   input.dispatchEvent(new imp.window.Event("change"));
   for (let i = 0; i < 50 && imp.window.eval("S.screen") === "home"; i++) await new Promise(r => setTimeout(r, 10));
   assert.equal(imp.window.eval("S.screen"), "table");
+  imp.click('[data-tsec="cast"]');
   imp.$("[data-copen]").click();
   assert.equal(({}).pwn, undefined);
   assert.equal(imp.window.eval("({}).pwn"), undefined, "the page's Object.prototype was polluted");
@@ -727,4 +728,109 @@ test("a cast row with no link, a null link or a bad id renders running, ended an
   found.push(...injected(app, "the wrap-up"));
   assert.deepEqual(found, []);
   assert.deepEqual(app.errors, [], "a linkless cast row threw");
+});
+
+// ── Sessions and threads are untrusted too (Decisions 203–204, 124) ─────
+function hostileSessionsTable() {
+  const t = Engine.newTable(P("tbl.name"));
+  const dup = "SE-AAAAAAAA";
+  t.cast = [{ id: "C-AAAAAAAA", name: P("cast.name") }];
+  t.sessions = [
+    { id: dup, number: "1", date: "2026-10-01", present: [P("present"), 5, null], hours: 3.5,
+      journal: { happened: P("j.happened"), fallout: P("j.fallout"), threads: P("j.threads"), impact: P("j.impact"), reflection: P("j.reflection"), seed: P("j.seed") } },
+    { id: dup, number: -1, date: "2026-02-30", present: "x", hours: "4", journal: "a string" },
+    { id: P("session.id"), number: 1.5, date: P("session.date"), present: [], hours: 0.3, journal: [P("j.array")] },
+    { id: "SE-BBBBBBBB", number: {}, hours: 25, journal: { happened: { x: 1 } } },
+    { id: "SE-CCCCCCCC", number: 7, hours: "x" }, null, 5, "x",
+  ];
+  t.threads = [
+    { id: "TH-AAAAAAAA", title: P("th.title"), notes: P("th.notes"), status: "bogus", current: "true", opened: P("th.opened"), closed: dup },
+    { id: "TH-BBBBBBBB", title: "second", status: "open", current: true, opened: dup, closed: dup },
+    { id: "TH-CCCCCCCC", title: "third", status: "open", current: true },
+    { id: "TH-DDDDDDDD", title: "resolved", status: "resolved", current: true, closed: "SE-NOBODY00", opened: "SE-NOBODY00" },
+    { id: "TH-DDDDDDDD", title: P("th.dup"), status: P("th.status") }, null, 5, "x",
+  ];
+  t.interactions = [
+    { id: "I-AAAAAAAA", kind: "shared", text: P("int.text"), date: "2026-10-01", cast: [{ kind: "cast", id: "C-AAAAAAAA" }], session: "SE-NOBODY00" },
+    { id: "I-BBBBBBBB", kind: "shared", text: "b", session: 5 },
+    { id: "I-CCCCCCCC", kind: "shared", text: "c", session: { x: 1 } },
+    { id: "I-DDDDDDDD", kind: "shared", text: "d", session: dup, cast: [{ kind: "cast", id: "C-AAAAAAAA" }] },
+  ];
+  return t;
+}
+
+test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
+  const J = x => JSON.parse(JSON.stringify(x));
+  const m = Engine.migrateTable(hostileSessionsTable());
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  const ids = m.sessions.map(s => s.id);
+  assert.equal(new Set(ids).size, ids.length, "session ids repeat");
+  assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
+  assert.equal(m.sessions.length, 5, "only junk is dropped");
+  const by = n => m.sessions.filter(s => s.number === n);
+  assert.deepEqual(J(m.sessions.map(s => s.number)), [1, null, null, null, 7], "\"1\" is 1; -1, 1.5 and {} are nothing");
+  assert.deepEqual(J(m.sessions.map(s => s.hours)), [3.5, null, null, null, null], "\"4\", 0.3, 25 and \"x\" are nothing");
+  assert.deepEqual(J(m.sessions.map(s => s.date)), ["2026-10-01", null, null, null, null]);
+  assert.deepEqual(J(m.sessions[0].present), [P("present")], "a number is not a name");
+  assert.deepEqual(J(m.sessions[1].present), ["x"]);
+  for (const s of m.sessions) {
+    assert.deepEqual(J(Object.keys(s.journal).sort()), ["fallout", "happened", "impact", "reflection", "seed", "threads"]);
+    assert.ok(Object.values(s.journal).every(v => typeof v === "string"));
+  }
+  assert.ok(by(1).length === 1);
+  const th = m.threads;
+  assert.equal(new Set(th.map(h => h.id)).size, th.length, "thread ids repeat");
+  assert.ok(th.every(h => ["open", "resolved", "dropped"].includes(h.status)), "a bad status reads open");
+  assert.equal(th[0].status, "open");
+  assert.equal(th[0].current, false, "current: \"true\" is not true");
+  assert.equal(th.filter(h => h.current).length, 1, "at most one current");
+  assert.equal(th[1].current, true, "the first of two currents is kept");
+  assert.equal(th[2].current, false);
+  assert.equal(th[3].current, false, "a resolved thread is never current");
+  assert.deepEqual(J(th.map(h => h.opened)), [null, ids[0], null, null, null]);
+  assert.deepEqual(J(th.map(h => h.closed)), [null, null, null, null, null], "closed on an open thread, or on nobody, is null");
+  assert.deepEqual(J(m.interactions.map(x => x.session)), [null, null, null, ids[0]]);
+  assert.ok(th.every(h => typeof h.title === "string" && typeof h.notes === "string"));
+});
+
+test("a hostile table's Sessions tab, Next session, a session's page and a thread's More render as text, with no error", () => {
+  const t = hostileSessionsTable();
+  const m = Engine.migrateTable(t);
+  // Give Next session something to say: the current thread is the second; last session is the highest number.
+  m.sessions.find(s => s.number === 7).journal.seed = P("seed");
+  m.interactions[3].session = m.sessions.find(s => s.number === 7).id;
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  assert.equal(app.window.eval("S.tsection"), "sessions");
+  const found = [];
+  found.push(...injected(app, "the Sessions tab"));
+  assert.ok(app.$$("[data-sopen]").length >= 5, "the sessions weren't drawn");
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"));
+  // Every thread's More, and the Closed fold.
+  for (const d of app.$$("[data-thmore],[data-thshut]")) d.open = true;
+  found.push(...injected(app, "the Threads rows"));
+  for (const b of app.$$("[data-sopen].sess-open")) {
+    b.click();
+    found.push(...injected(app, "a session's page"));
+    assert.ok(app.$("[data-sback]"), "a session's page didn't open");
+    assert.ok(!app.$("#main").innerHTML.includes("[object Object]"));
+    app.$("[data-sback]").click();
+  }
+  assert.deepEqual(found, [], "a table's sessions or threads became markup");
+  assert.deepEqual(app.errors, [], "the hostile sessions threw while rendering");
+});
+
+test("a table opens on Sessions when its session, thread or interaction links name nothing, and a session page with a stray journal draws", () => {
+  const t = Engine.newTable("x");
+  t.sessions = [{ id: "SE-AAAAAAAA", number: 1, journal: "junk" }];
+  t.threads = [{ id: "TH-AAAAAAAA", title: "t", opened: "SE-GONE0000", closed: "SE-GONE0000", status: "resolved" }];
+  t.interactions = [{ id: "I-AAAAAAAA", kind: "shared", text: "x", session: "SE-GONE0000", cast: [{ kind: "cast", id: "C-ZZZZZZZZ", name: P("gone") }] }];
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  app.$(".sess-open").click();
+  assert.ok(app.$("[data-sj=happened]"));
+  assert.deepEqual(injected(app, "the page"), []);
+  assert.deepEqual(app.errors, []);
 });

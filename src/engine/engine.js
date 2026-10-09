@@ -3749,6 +3749,8 @@ const Engine = (() => {
   const INTERACTION_ID_RE = /^I-[0-9A-HJKMNP-TV-Z]{8}$/;
   const ENCOUNTER_ID_RE = /^EN-[0-9A-HJKMNP-TV-Z]{8}$/;
   const ROW_ID_RE = /^R-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const SESSION_ID_RE = /^SE-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const THREAD_ID_RE = /^TH-[0-9A-HJKMNP-TV-Z]{8}$/;
   const isTableId = v => typeof v==="string" && TABLE_ID_RE.test(v);
   function newTableId(){
     const s = randomChars(12);
@@ -3783,6 +3785,16 @@ const Engine = (() => {
   function newInteractionId(used){
     let id;
     do id = `I-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newSessionId(used){
+    let id;
+    do id = `SE-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newThreadId(used){
+    let id;
+    do id = `TH-${randomChars(8)}`; while (used.has(id));
     return id;
   }
   // A whole number, or null: "6" is 6, and 6.5, {} and "x" are nothing.
@@ -3864,7 +3876,42 @@ const Engine = (() => {
     for (const l of out) if (typeof l.name!=="string") delete l.name;
     return out;
   }
-  function _interaction(x, used){
+  // A session (Decision 203): the number is the GM's, the journal is the Campaign
+  // Journal's six parts (227). Unknown keys ride along, never read.
+  const JOURNAL_PARTS = ["happened","fallout","threads","impact","reflection","seed"];
+  // Hours are half hours from 0 to 24, else nothing.
+  const _hours = v => {
+    if (typeof v==="string" && /^\s*\d+(\.\d+)?\s*$/.test(v)) v = Number(v);
+    return typeof v==="number" && Number.isFinite(v) && v>=0 && v<=24 && v*2===Math.round(v*2) ? v : null;
+  };
+  const _number = v => { const n = _int(v); return n!==null && n>=0 ? n : null; };
+  function _session(x, used){
+    x.number = _number(x.number);
+    x.date = _day(x.date);
+    x.present = _roleList(x.present);
+    x.hours = typeof x.hours==="number" ? _hours(x.hours) : null;
+    if (!_isObj(x.journal)) x.journal = {};
+    for (const k of JOURNAL_PARTS) x.journal[k] = _str(x.journal[k]);
+    if (!(typeof x.id==="string" && SESSION_ID_RE.test(x.id)) || used.has(x.id)) x.id = newSessionId(used);
+    used.add(x.id);
+    x.created = _isoOrNull(x.created);
+    x.updated = _isoOrNull(x.updated);
+  }
+  const THREAD_STATUSES = ["open","resolved","dropped"];
+  function _thread(x, used, sessions){
+    x.title = _str(x.title);
+    x.notes = _str(x.notes);
+    if (!THREAD_STATUSES.includes(x.status)) x.status = "open";
+    x.opened = typeof x.opened==="string" && sessions.has(x.opened) ? x.opened : null;
+    x.closed = x.status!=="open" && typeof x.closed==="string" && sessions.has(x.closed) ? x.closed : null;
+    x.current = x.current===true && x.status==="open";
+    if (!(typeof x.id==="string" && THREAD_ID_RE.test(x.id)) || used.has(x.id)) x.id = newThreadId(used);
+    used.add(x.id);
+    x.created = _isoOrNull(x.created);
+    x.updated = _isoOrNull(x.updated);
+  }
+  function _interaction(x, used, sessions){
+    x.session = typeof x.session==="string" && sessions && sessions.has(x.session) ? x.session : null;
     x.kind = _kind(x.kind);
     x.cast = _castLinks(x.cast);
     x.crew = _roleList(x.crew);
@@ -3876,12 +3923,12 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.7";
+  const TABLE_SCHEMA_VERSION = "0.8";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[], cast:[], interactions:[], encounters:[] };
+             notes:[], cast:[], interactions:[], encounters:[], sessions:[], threads:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -3935,6 +3982,12 @@ const Engine = (() => {
       for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e))
         for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)){ r.kept = null; r.struck = false; }
     }
+    //   Schema 0.8 (Decisions 203–204): a table keeps its sessions and threads; an interaction, its session.
+    if (typeof arrived!=="string" || _versionNewer("0.8", arrived)){
+      if (!Array.isArray(c.sessions)) c.sessions = [];
+      if (!Array.isArray(c.threads)) c.threads = [];
+      for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.session = null;
+    }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
     c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
@@ -3949,9 +4002,18 @@ const Engine = (() => {
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
     for (const n of c.cast) _castMember(n, usedCast);
+    // Sessions first: the ids threads and interactions name are checked against them.
+    const usedSession = new Set();
+    c.sessions = (Array.isArray(c.sessions) ? c.sessions : []).filter(_isObj);
+    for (const x of c.sessions) _session(x, usedSession);
+    const usedThread = new Set();
+    c.threads = (Array.isArray(c.threads) ? c.threads : []).filter(_isObj);
+    for (const x of c.threads) _thread(x, usedThread, usedSession);
+    let sawCurrent = false;
+    for (const x of c.threads){ if (x.current){ if (sawCurrent) x.current = false; sawCurrent = true; } }
     const usedInteraction = new Set();
     c.interactions = (Array.isArray(c.interactions) ? c.interactions : []).filter(_isObj);
-    for (const x of c.interactions) _interaction(x, usedInteraction);
+    for (const x of c.interactions) _interaction(x, usedInteraction, usedSession);
     _encounters(c);
     return c;
   }
@@ -4127,9 +4189,13 @@ const Engine = (() => {
     if (!Array.isArray(t.interactions)) t.interactions = [];
     const now = new Date().toISOString();
     const used = new Set(t.interactions.map(x=>x && x.id));
+    const date = _day(f.date);
+    // A new line takes the one session dated that day (Decision 203); a gate never does.
+    const days = date ? _sessions(t).filter(e=>e.date===date) : [];
+    const session = _sessions(t).some(e=>e.id===f.session) ? f.session : days.length===1 ? days[0].id : null;
     const x = { id:newInteractionId(used), kind,
                 cast:_castLinks((Array.isArray(f.cast) ? f.cast : []).filter(id=>typeof id==="string").map(id=>({ kind:"cast", id }))),
-                crew:_roleList(f.crew), text, date:_day(f.date), created:now, updated:now };
+                crew:_roleList(f.crew), text, date, session, created:now, updated:now };
     t.interactions.unshift(x);
     _killLinked(t, x);
     _tableStamp(t);
@@ -4138,8 +4204,11 @@ const Engine = (() => {
   function editInteraction(t, id, f){
     const x = _interactions(t).find(i=>i.id===id);
     if (!x) return { ok:false, why:"No such interaction." };
+    if (_isObj(f) && "session" in f && f.session!==null && !_sessions(t).some(e=>e.id===f.session))
+      return { ok:false, why:"No such session." };
     if (_isObj(f)){
       const was = x.kind;
+      if ("session" in f) x.session = f.session;
       if ("kind" in f) x.kind = _kind(f.kind);
       if ("crew" in f) x.crew = _roleList(f.crew);
       if ("text" in f) x.text = _str(f.text);
@@ -4159,6 +4228,8 @@ const Engine = (() => {
   function interactionsFor(t, castId){
     return _interactions(t).filter(x=>(Array.isArray(x.cast) ? x.cast : []).some(l=>_isObj(l) && l.id===castId)).sort(_newest);
   }
+  const _sessions = t => Array.isArray(t && t.sessions) ? t.sessions.filter(_isObj) : [];
+  const _threads = t => Array.isArray(t && t.threads) ? t.threads.filter(_isObj) : [];
   // Who knows what: the same records, from the crew's end. Names that differ
   // only in case or spaces are one person, shown as first spelled. A line with
   // no crew name is the last group, named "", so it can always be read.
@@ -4181,6 +4252,146 @@ const Engine = (() => {
     if (nameless.length) out.push({ name:"", interactions:nameless });
     for (const g of out) g.interactions.sort(_newest);
     return out;
+  }
+
+  // ── Sessions and threads (Decisions 203–204) ────────────────────────────
+  // A blank number or hours is null, not a refusal; anything else must be right.
+  const _blank = v => v===null || v===undefined || (typeof v==="string" && !v.trim());
+  function addSession(t, f){
+    f = _isObj(f) ? f : {};
+    if (!Array.isArray(t.sessions)) t.sessions = [];
+    const list = _sessions(t);
+    const number = _number(f.number) ?? list.reduce((m, s)=>Math.max(m, s.number ?? -1), 0) + 1;
+    const now = new Date().toISOString();
+    const used = new Set(list.map(s=>s.id));
+    const x = { id:newSessionId(used), number, date:"date" in f ? _day(f.date) : _today(), present:[], hours:null,
+                journal:Object.fromEntries(JOURNAL_PARTS.map(k=>[k, ""])), created:now, updated:now };
+    t.sessions.unshift(x);
+    _tableStamp(t);
+    return { ok:true, id:x.id };
+  }
+  function editSession(t, id, f){
+    const x = _sessions(t).find(s=>s.id===id);
+    if (!x) return { ok:false, why:"No such session." };
+    f = _isObj(f) ? f : {};
+    let number, hours;
+    if ("number" in f){
+      number = _blank(f.number) ? null : _number(f.number);
+      if (number===null && !_blank(f.number)) return { ok:false, why:"Enter a whole number." };
+    }
+    if ("hours" in f){
+      hours = _blank(f.hours) ? null : _hours(f.hours);
+      if (hours===null && !_blank(f.hours)) return { ok:false, why:"Enter hours, in halves." };
+    }
+    if ("number" in f) x.number = number;
+    if ("hours" in f) x.hours = hours;
+    if ("date" in f) x.date = _day(f.date);
+    if ("present" in f) x.present = _roleList(f.present);
+    if (_isObj(f.journal)){
+      if (!_isObj(x.journal)) x.journal = {};
+      for (const k of JOURNAL_PARTS) if (k in f.journal) x.journal[k] = _str(f.journal[k]);
+    }
+    _tableStamp(t, x);
+    return { ok:true };
+  }
+  function removeSession(t, id){
+    const x = _sessions(t).find(s=>s.id===id);
+    if (!x) return { ok:false, why:"No such session." };
+    t.sessions.splice(t.sessions.indexOf(x), 1);
+    for (const i of _interactions(t)) if (i.session===id) i.session = null;
+    for (const h of _threads(t)){ if (h.opened===id) h.opened = null; if (h.closed===id) h.closed = null; }
+    _tableStamp(t);
+    return { ok:true };
+  }
+  // By number, highest first (none last), then the later day, then the later made.
+  function sessionList(t){
+    return _sessions(t).slice().sort((a, b)=>{
+      if (a.number!==b.number){ if (a.number===null) return 1; if (b.number===null) return -1; return b.number - a.number; }
+      if (a.date!==b.date){ if (!a.date) return 1; if (!b.date) return -1; return a.date < b.date ? 1 : -1; }
+      const x = _str(a.created), y = _str(b.created);
+      return x===y ? 0 : x < y ? 1 : -1;
+    });
+  }
+  function sessionTitle(s){
+    return _isObj(s) && Number.isFinite(s.number) ? `Session ${s.number}` : "Session";
+  }
+  const sessionInteractions = (t, id) => _interactions(t).filter(x=>x.session===id).sort(_newest);
+  function sessionOffered(t, id){
+    const s = _sessions(t).find(e=>e.id===id);
+    if (!s || !s.date) return [];
+    return _interactions(t).filter(x=>!x.session && x.date===s.date).sort(_newest);
+  }
+  function addThread(t, f){
+    f = _isObj(f) ? f : {};
+    const title = _str(f.title).trim();
+    if (!title) return { ok:false, why:"Name the thread." };
+    if (!Array.isArray(t.threads)) t.threads = [];
+    const now = new Date().toISOString();
+    const used = new Set(_threads(t).map(h=>h.id));
+    const x = { id:newThreadId(used), title, status:"open", current:false,
+                opened:_sessions(t).some(s=>s.id===f.opened) ? f.opened : null, closed:null, notes:"", created:now, updated:now };
+    t.threads.unshift(x);
+    _tableStamp(t);
+    return { ok:true, id:x.id };
+  }
+  function editThread(t, id, f){
+    const x = _threads(t).find(h=>h.id===id);
+    if (!x) return { ok:false, why:"No such thread." };
+    f = _isObj(f) ? f : {};
+    const hasSession = v => _sessions(t).some(s=>s.id===v);
+    if ("title" in f && !_str(f.title).trim()) return { ok:false, why:"Name the thread." };
+    if ("status" in f && !THREAD_STATUSES.includes(f.status)) return { ok:false, why:"Choose a status." };
+    const status = "status" in f ? f.status : x.status;
+    if (f.current===true && status!=="open") return { ok:false, why:"Only an open thread can be current." };
+    if ("title" in f) x.title = f.title.trim();
+    if ("notes" in f) x.notes = _str(f.notes);
+    if (status!==x.status){
+      if (status==="open") x.closed = null;
+      else {
+        const first = sessionList(t)[0];
+        x.closed = hasSession(f.closed) ? f.closed : first ? first.id : null;
+      }
+      x.status = status;
+    } else if (status!=="open" && "closed" in f) x.closed = hasSession(f.closed) ? f.closed : null;
+    if (x.status!=="open") x.current = false;
+    else if ("current" in f){
+      if (f.current===true){ for (const h of _threads(t)) h.current = false; x.current = true; }
+      else x.current = false;
+    }
+    _tableStamp(t, x);
+    return { ok:true };
+  }
+  function removeThread(t, id){
+    const h = _threads(t).find(e=>e.id===id);
+    if (!h) return { ok:false, why:"No such thread." };
+    t.threads.splice(t.threads.indexOf(h), 1);
+    _tableStamp(t);
+    return { ok:true };
+  }
+  const _made = (a, b) => { const x = _str(a.created), y = _str(b.created); return x===y ? 0 : x < y ? -1 : 1; };
+  // Open first (the current one, then the oldest), then the closed, the latest touched first.
+  function threadList(t){
+    const all = _threads(t);
+    // New threads go on the front of the list, so of two made in one instant the later in it is the older.
+    const older = (a, b) => all.indexOf(b) - all.indexOf(a);
+    const open = all.filter(h=>h.status==="open").sort((a, b)=>(b.current===true) - (a.current===true) || _made(a, b) || older(a, b));
+    const shut = all.filter(h=>h.status!=="open").sort((a, b)=>_made({ created:b.updated }, { created:a.updated }) || older(b, a));
+    return open.concat(shut);
+  }
+  // Does a stat block hold a number anywhere: a stat, an authored stat or a skill total?
+  function blockHasNumber(b){
+    return _isObj(b) && Object.values(_isObj(b.stats) ? b.stats : {}).concat(Object.values(_isObj(b.authored) ? b.authored : {}),
+      (Array.isArray(b.skills) ? b.skills : []).map(k=>_isObj(k) ? k.total : null)).some(v=>typeof v==="number");
+  }
+  // The Sessions tab's top, read every time and never stored (Decision 204).
+  function nextSession(t){
+    const open = threadList(t).filter(h=>h.status==="open");
+    const current = open.find(h=>h.current) || null;
+    const last = sessionList(t)[0] || null;
+    const met = new Set();
+    if (last) for (const x of sessionInteractions(t, last.id)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l)) met.add(l.id);
+    const unbuilt = (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>_isObj(n) && met.has(n.id) && !blockHasNumber(n.block));
+    return { current, open:open.filter(h=>h!==current), last, seed:last ? _str(last.journal && last.journal.seed).trim() : "", unbuilt };
   }
 
   // ── Packs (Decisions 180–182) ───────────────────────────────────────────
@@ -5205,6 +5416,8 @@ const Engine = (() => {
     // The cast: a stat block read, and a member added, edited, removed, found
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it
+    addSession, editSession, removeSession, sessionList, sessionTitle, sessionInteractions, sessionOffered,
+    addThread, editThread, removeThread, threadList, nextSession, blockHasNumber, JOURNAL_PARTS,
     addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName,
     // Encounters: who is in one, whose turn it is, and what is still on them
     addEncounter, editEncounter, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,

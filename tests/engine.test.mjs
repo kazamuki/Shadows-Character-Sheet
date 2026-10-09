@@ -3076,7 +3076,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.6, no notes, cast or i
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.7");
+  assert.equal(t.meta.tableSchemaVersion, "0.8");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3144,14 +3144,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.7", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.8" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.8");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.8", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.9" } });
+  assert.equal(n.meta.tableSchemaVersion, "0.9");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.8");
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.9");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.7", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.8", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3203,15 +3203,15 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.8" }, cast: [{ name: 5, tier: "2" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.9" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3426,7 +3426,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3435,8 +3435,8 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
 });
 
 test("a newer table keeps its stamp and its interactions, and tableCheck says so", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.8" }, interactions: [{ kind: "shared", text: "x" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.9" }, interactions: [{ kind: "shared", text: "x" }] });
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   assert.equal(m.interactions.length, 1);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3788,7 +3788,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -3997,7 +3997,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4513,7 +4513,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -4984,7 +4984,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.7");
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5339,4 +5339,226 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   const bare = Engine.migrate(JSON.parse(JSON.stringify(vampire(null))));
   same([Engine.archetypePowers(bare), Engine.basePowerState(bare).spent], [[], 0]);
   assert.ok(Engine.validate("archetype", bare).some(i => i.msg === "Choose a Bloodline."));
+});
+
+// ── Sessions and threads (Decisions 203–204) ────────────────────────────────
+const TODAY = (() => { const d = new Date(), p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; })();
+const sessOf = (t, id) => t.sessions.find(s => s.id === id);
+const thrOf = (t, id) => t.threads.find(h => h.id === id);
+
+test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 with both empty and every session null", () => {
+  const t = Engine.newTable("x");
+  eq([t.sessions, t.threads], [[], []]);
+  const a = Engine.addCastMember(t, { name: "Dez" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [a], text: "met", date: "2026-10-01" });
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.7";
+  delete old.sessions; delete old.threads;
+  for (const x of old.interactions) delete x.session;
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  eq([m.sessions, m.threads], [[], []]);
+  assert.ok(m.interactions.every(x => x.session === null));
+  eq(m, Engine.migrateTable(t));
+  // A 0.7 file with sessions on the lines' days (a hand edit) still converts nothing.
+  const odd = plain(t);
+  odd.meta.tableSchemaVersion = "0.7";
+  odd.sessions = [{ id: "SE-AAAAAAAA", date: "2026-10-01" }];
+  odd.interactions[0].session = "SE-AAAAAAAA";
+  assert.equal(Engine.migrateTable(odd).interactions[0].session, null);
+});
+
+test("203: addSession numbers one past the highest, not past the count, and dates today", () => {
+  const t = Engine.newTable("x");
+  const a = Engine.addSession(t);
+  assert.equal(sessOf(t, a.id).number, 1);
+  assert.equal(sessOf(t, a.id).date, TODAY);
+  Engine.addSession(t, { number: 21 });
+  const c = Engine.addSession(t);
+  assert.equal(sessOf(t, c.id).number, 22);
+  assert.ok(Engine.addSession(Engine.newTable("y"), { number: 0 }).ok);
+  assert.ok(Engine.addSession(t, { date: "nope" }).ok);
+  assert.equal(t.sessions[0].date, null);
+  assert.equal(t.sessions.length, 4);
+});
+
+test("203: editSession sets each field, refuses a bad number or hours untouched, and a blank is null", () => {
+  const t = Engine.newTable("x");
+  const id = Engine.addSession(t).id;
+  assert.ok(Engine.editSession(t, id, { number: "4", date: "2026-10-03", present: [" Wren ", "", "Rook"], hours: "3.5",
+    journal: { happened: "a", seed: "b" } }).ok);
+  const s = sessOf(t, id);
+  eq([s.number, s.date, s.present, s.hours, s.journal.happened, s.journal.seed, s.journal.fallout], [4, "2026-10-03", ["Wren", "Rook"], 3.5, "a", "b", ""]);
+  const before = plain(t);
+  for (const f of [{ number: "1.5" }, { number: -1 }, { number: "x" }, { hours: 0.3 }, { hours: 25 }, { hours: "x" }])
+    assert.equal(Engine.editSession(t, id, { ...f, date: "2026-01-01" }).ok, false, JSON.stringify(f));
+  eq(Engine.editSession(t, id, { number: "x" }), { ok: false, why: "Enter a whole number." });
+  eq(Engine.editSession(t, id, { hours: 25 }), { ok: false, why: "Enter hours, in halves." });
+  eq(t, before, "a refusal changes nothing");
+  assert.ok(Engine.editSession(t, id, { number: "", hours: null, date: "2026-02-30" }).ok);
+  eq([s.number, s.hours, s.date], [null, null, null]);
+  assert.equal(Engine.editSession(t, "SE-NOBODY00", {}).ok, false);
+  assert.equal(Engine.sessionTitle(s), "Session");
+  assert.equal(Engine.sessionTitle({ number: 0 }), "Session 0");
+});
+
+test("203: sessionList is by number (none last), then day, then made", () => {
+  const t = Engine.newTable("x");
+  const mk = f => Engine.addSession(t, f).id;
+  const a = mk({ number: 2, date: "2026-10-01" }), b = mk({ number: 10, date: "2026-09-01" });
+  const c = mk({ number: 2, date: "2026-10-05" }), d = mk({ number: 5, date: null });
+  Engine.editSession(t, d, { number: "" });
+  eq(Engine.sessionList(t).map(s => s.id), [b, c, a, d]);
+  eq(Engine.sessionList({}), []);
+});
+
+test("203: removeSession clears every session, opened and closed that named it", () => {
+  const t = Engine.newTable("x");
+  const s1 = Engine.addSession(t, { number: 1 }).id, s2 = Engine.addSession(t, { number: 2 }).id;
+  const i = Engine.addInteraction(t, { kind: "shared", text: "a", session: s1 }).id;
+  const j = Engine.addInteraction(t, { kind: "shared", text: "b", session: s2 }).id;
+  const h = Engine.addThread(t, { title: "T", opened: s1 }).id;
+  Engine.editThread(t, h, { status: "resolved", closed: s1 });
+  assert.equal(thrOf(t, h).closed, s1);
+  assert.ok(Engine.removeSession(t, s1).ok);
+  const x = k => t.interactions.find(v => v.id === k);
+  eq([x(i).session, x(j).session, thrOf(t, h).opened, thrOf(t, h).closed], [null, s2, null, null]);
+  assert.equal(Engine.removeSession(t, s1).ok, false);
+});
+
+test("203: a new interaction takes the one session on its day, and a gate never does", () => {
+  const t = Engine.newTable("x");
+  const n = (text, date, session) => { const id = Engine.addInteraction(t, { kind: "shared", text, date, session }).id; return t.interactions.find(i => i.id === id); };
+  assert.equal(n("none", "2026-10-01").session, null, "no session that day");
+  const a = Engine.addSession(t, { number: 1, date: "2026-10-01" }).id;
+  assert.equal(n("one", "2026-10-01").session, a);
+  assert.equal(n("other day", "2026-10-02").session, null);
+  assert.equal(n("no date", null).session, null);
+  const b = Engine.addSession(t, { number: 2, date: "2026-10-01" }).id;
+  assert.equal(n("two", "2026-10-01").session, null, "two that day: none");
+  assert.equal(n("explicit", "2026-10-01", b).session, b, "f.session wins");
+  assert.equal(n("bad explicit", "2026-10-02", "SE-NOBODY00").session, null);
+  const x = t.interactions[0];
+  assert.ok(Engine.editInteraction(t, x.id, { session: a }).ok);
+  assert.equal(x.session, a);
+  assert.ok(Engine.editInteraction(t, x.id, { session: null }).ok);
+  assert.equal(x.session, null);
+  eq(Engine.editInteraction(t, x.id, { session: "SE-NOBODY00", text: "changed" }), { ok: false, why: "No such session." });
+  assert.notEqual(x.text, "changed");
+});
+
+test("203: an encounter's end on a day with one session links its line", () => {
+  const { t, e, dezRow } = endTable();
+  const s = Engine.addSession(t, { number: 1 }).id;
+  const r = Engine.endEncounter(t, e, { rows: { [dezRow]: { line: true } } });
+  assert.ok(r.ok, r.why);
+  const lines = t.interactions.filter(i => i.kind === "fought");
+  assert.ok(lines.length >= 1);
+  assert.ok(lines.every(i => i.session === s && i.date === TODAY));
+});
+
+test("203: sessionOffered lists the day's unlinked lines, never linked ones, other days or a day-less session's", () => {
+  const t = Engine.newTable("x");
+  const put = (text, date, session) => Engine.addInteraction(t, { kind: "shared", text, date, session }).id;
+  const old = put("old", "2026-10-01");                     // made before the session
+  const s = Engine.addSession(t, { number: 1, date: "2026-10-01" }).id;
+  const linked = put("linked", "2026-10-01"), later = put("later", "2026-10-02");
+  eq(Engine.sessionOffered(t, s).map(x => x.id), [old]);
+  eq(Engine.sessionInteractions(t, s).map(x => x.id), [linked]);
+  Engine.editSession(t, s, { date: "" });
+  eq(Engine.sessionOffered(t, s), []);
+  eq(Engine.sessionOffered(t, "SE-NOBODY00"), []);
+  assert.ok(later);
+});
+
+test("204: threads: a blank title is refused, current moves one at a time, a closed thread can't be current", () => {
+  const t = Engine.newTable("x");
+  eq(Engine.addThread(t, { title: "  " }), { ok: false, why: "Name the thread." });
+  const a = Engine.addThread(t, { title: " Find Wren " }).id, b = Engine.addThread(t, { title: "B" }).id;
+  assert.equal(thrOf(t, a).title, "Find Wren");
+  assert.ok(Engine.editThread(t, a, { current: true }).ok);
+  assert.ok(Engine.editThread(t, b, { current: true }).ok);
+  eq([thrOf(t, a).current, thrOf(t, b).current], [false, true]);
+  eq(Engine.editThread(t, a, { title: "" }), { ok: false, why: "Name the thread." });
+  eq(Engine.editThread(t, a, { status: "bogus" }), { ok: false, why: "Choose a status." });
+  assert.ok(Engine.editThread(t, a, { status: "dropped" }).ok);
+  eq(Engine.editThread(t, a, { current: true }), { ok: false, why: "Only an open thread can be current." });
+  assert.equal(Engine.editThread(t, "TH-NOBODY00", {}).ok, false);
+  assert.equal(Engine.removeThread(t, a).ok, true);
+  assert.equal(Engine.removeThread(t, a).ok, false);
+});
+
+test("204: resolving closes in the newest session by number and clears current; reopening clears closed", () => {
+  const t = Engine.newTable("x");
+  const hi = Engine.addSession(t, { number: 21 }).id, lo = Engine.addSession(t, { number: 3 }).id;   // lo was made later
+  const h = Engine.addThread(t, { title: "T" }).id;
+  Engine.editThread(t, h, { current: true });
+  Engine.editThread(t, h, { status: "resolved" });
+  eq([thrOf(t, h).status, thrOf(t, h).closed, thrOf(t, h).current], ["resolved", hi, false]);
+  Engine.editThread(t, h, { closed: lo });
+  assert.equal(thrOf(t, h).closed, lo);
+  Engine.editThread(t, h, { closed: "SE-NOBODY00" });
+  assert.equal(thrOf(t, h).closed, null);
+  Engine.editThread(t, h, { status: "open" });
+  eq([thrOf(t, h).status, thrOf(t, h).closed], ["open", null]);
+  Engine.editThread(t, h, { status: "dropped", closed: lo });
+  assert.equal(thrOf(t, h).closed, lo);
+  const bare = Engine.newTable("y"), g = Engine.addThread(bare, { title: "G" }).id;
+  Engine.editThread(bare, g, { status: "resolved" });
+  assert.equal(thrOf(bare, g).closed, null, "no sessions: null");
+});
+
+test("204: threadList is open first (current, then oldest), then the closed, latest touched first", () => {
+  const t = Engine.newTable("x");
+  const mk = (title, created) => { const id = Engine.addThread(t, { title }).id; thrOf(t, id).created = created; return id; };
+  const a = mk("a", "2026-01-03T00:00:00.000Z"), b = mk("b", "2026-01-01T00:00:00.000Z"), c = mk("c", "2026-01-02T00:00:00.000Z");
+  const d = mk("d", "2026-01-01T00:00:00.000Z"), e = mk("e", "2026-01-01T00:00:00.000Z");
+  thrOf(t, a).current = true;
+  Engine.editThread(t, d, { status: "resolved" }); thrOf(t, d).updated = "2026-02-01T00:00:00.000Z";
+  Engine.editThread(t, e, { status: "dropped" }); thrOf(t, e).updated = "2026-03-01T00:00:00.000Z";
+  eq(Engine.threadList(t).map(h => h.id), [a, b, c, e, d]);
+  eq(Engine.threadList({}), []);
+});
+
+test("204: blockHasNumber agrees with the old UI test on blocks, and is false for junk", () => {
+  const old = b => !!b && (Object.values(b.stats || {}).concat(Object.values(b.authored || {}), (b.skills || []).map(k => k.total)).some(v => typeof v === "number"));
+  const blocks = [null, undefined, {}, { stats: {} }, { stats: { BOD: 6 } }, { stats: { BOD: null }, authored: { TOL: 1 } },
+    { stats: {}, skills: [{ total: 4 }] }, { stats: {}, skills: [{ total: null }] }, { stats: { BOD: null }, authored: { TOL: null }, skills: [] }];
+  for (const b of blocks) assert.equal(Engine.blockHasNumber(b), old(b), JSON.stringify(b));
+  for (const j of ["x", 5, [], { stats: 5 }, { skills: "x" }, { skills: [null] }]) assert.equal(Engine.blockHasNumber(j), false);
+});
+
+test("204: nextSession is empty on an empty table, orders its threads, and reads the highest-numbered session", () => {
+  const none = { current: null, open: [], last: null, seed: "", unbuilt: [] };
+  eq(Engine.nextSession(Engine.newTable("x")), none);
+  eq(Engine.nextSession(null), none);
+  const t = Engine.newTable("x");
+  const mk = (title, created) => { const id = Engine.addThread(t, { title }).id; thrOf(t, id).created = created; return id; };
+  const a = mk("a", "2026-01-03T00:00:00.000Z"), b = mk("b", "2026-01-01T00:00:00.000Z"), c = mk("c", "2026-01-02T00:00:00.000Z");
+  Engine.editThread(t, a, { current: true });
+  const n = Engine.nextSession(t);
+  eq([n.current.id, n.open.map(h => h.id)], [a, [b, c]]);
+  const hi = Engine.addSession(t, { number: 5 }).id;
+  Engine.addSession(t, { number: 4 });   // made later, numbered lower
+  Engine.editSession(t, hi, { journal: { seed: "  The heist.  " } });
+  const m = Engine.nextSession(t);
+  eq([m.last.id, m.seed], [hi, "The heist."]);
+});
+
+test("204: unbuilt is last session's members with no number, once each, in the cast's order, not the removed", () => {
+  const t = Engine.newTable("x");
+  const mk = n => Engine.addCastMember(t, { name: n }).id;
+  const a = mk("A"), b = mk("B"), c = mk("C"), d = mk("D"), gone = mk("Gone");
+  Engine.setCastBlock(t, c, { stats: { BOD: 6 } });
+  const s1 = Engine.addSession(t, { number: 1 }).id, s2 = Engine.addSession(t, { number: 2 }).id;
+  const put = (ids, session) => Engine.addInteraction(t, { kind: "shared", text: "x", cast: ids, session });
+  put([d], s1);                       // met two sessions ago: not listed
+  put([b, a], s2); put([a, c], s2);   // a twice
+  put([gone], s2);
+  Engine.removeCastMember(t, gone);
+  const order = t.cast.map(n => n.name).filter(n => n === "A" || n === "B");
+  eq(Engine.nextSession(t).unbuilt.map(n => n.name), order);
+  assert.ok(!Engine.nextSession(t).unbuilt.some(n => n.id === c), "a block with a number is not listed");
+  Engine.setCastBlock(t, a, { stats: { REF: 3 } });
+  eq(Engine.nextSession(t).unbuilt.map(n => n.name), ["B"]);
 });

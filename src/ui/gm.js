@@ -204,7 +204,7 @@ function bindGmHome(tables){
   const main=$("main"), byId = id => tables.find(e=>e.id===id);
   bindPacksHome(main);
   const run=$("btn-run-table");
-  if (run) run.onclick=()=>openNameModal({ title:"Run a table", yes:"Create", then:name=>{ openTable(Engine.newTable(name)); const b=document.querySelector("[data-cadd-name]"); if (b) b.focus(); } });
+  if (run) run.onclick=()=>openNameModal({ title:"Run a table", yes:"Create", then:name=>{ openTable(Engine.newTable(name)); const b=document.querySelector("[data-snew]"); if (b) b.focus(); } });
   const open = e => e && openTable(Engine.migrateTable(clone(e.table)), e.section);
   main.querySelectorAll("[data-topen]").forEach(b=>b.onclick=()=>open(byId(b.dataset.topen)));
   main.querySelectorAll("[data-texport]").forEach(b=>b.onclick=()=>{ exportTable(byId(b.dataset.texport).table); renderHome(); });
@@ -214,8 +214,8 @@ function bindGmHome(tables){
 }
 
 // ── The table screen ───────────────────────────────────────────────────
-// The cast is first: a table opens on it (Decision 176).
-const TABLE_SECTIONS = [{ id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"encounters", label:"Encounters", ui:"tab_trackers" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
+// Sessions is first: a table opens on it (Decision 204), and reopens where it was left (171).
+const TABLE_SECTIONS = [{ id:"sessions", label:"Sessions", ui:"tab_sessions" }, { id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"encounters", label:"Encounters", ui:"tab_trackers" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
 // A twin of the sheet's tabButtonsHtml, with its own attribute, so the
 // sheet's [data-sec] binder never sees these.
 function tableTabButtonsHtml(){
@@ -232,7 +232,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
@@ -272,19 +272,22 @@ function renderTable(){
   packsNow();   // a fresh read of the browser's packs on every full draw
   const threatPage = S.tsection==="threats" && threatPageNow();
   const encPage = S.tsection==="encounters" && encOpenNow();
-  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage;
+  const sessPage = S.tsection==="sessions" && sessOpenNow();
+  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage || sessPage;
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
-  const body = S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
+  const body = S.tsection==="sessions" ? (sessPage ? sessionPageHtml(sessPage) : sessionsTabHtml(t))
+    : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
     : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
-  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]"]);
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]"]);
 }
 function bindTable(){
   const main=$("main");
   main.onclick=main.onchange=main.oninput=main.onsubmit=main.onkeydown=null;   // the Encounters tab delegates; no other tab does
   if (main.querySelector("[data-tnew]")) bindNotes(main);
+  else if (S.tsection==="sessions") bindSessions(main);
   else if (S.tsection==="cast") bindCast(main);
   else if (S.tsection==="threats") bindThreats(main);
   else if (S.tsection==="encounters") bindEncounters(main);
@@ -338,7 +341,7 @@ const kindToggleHtml = (attr, current, label, prefix="") => `<div class="form-to
 function castOpenMember(){ return S.castOpen ? S.table.cast.find(n=>n.id===S.castOpen) || null : null; }
 const numAttr = v => typeof v==="number" && Number.isFinite(v) ? v : "";
 const castSigned = n => n===0 ? "0" : signed(n);   // sheet.js's, with a zero
-const hasNumber = b => !!b && (Object.values(b.stats||{}).concat(Object.values(b.authored||{}), (b.skills||[]).map(k=>k.total)).some(v=>typeof v==="number"));
+const hasNumber = b => Engine.blockHasNumber(b);
 
 function castCardHtml(n){
   const id=esc(n.id);
@@ -437,6 +440,7 @@ function interactionRowHtml(x){
     <div class="int-fields">
       <input type="text" data-icrew="${id}" list="crew-names" value="${esc(x.crew.join(", "))}" placeholder="Crew" aria-label="Crew" autocomplete="off">
       <input type="date" data-idate="${id}" value="${esc(x.date||"")}" aria-label="When">
+      ${sessionById(x.session) ? `<span class="int-session">${esc(Engine.sessionTitle(sessionById(x.session)))}</span>` : ""}
       <textarea rows="2" data-itext="${id}" placeholder="What passed between them" aria-label="What">${esc(x.text)}</textarea>
       <button class="btn sm danger" data-idel="${id}">Delete</button></div></li>`;
 }
@@ -462,7 +466,7 @@ function castRolesHtml(n){
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
-  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle();
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backSess ? "sessions" : "");
   return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", encTarget())}</p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
@@ -499,7 +503,7 @@ function redrawCastList(){
 }
 function bindCastCards(main){
   // A member opened from Who knows what remembers which name it was, so Back lands on it.
-  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
+  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     open(b.dataset.copen, b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null); });
   main.querySelectorAll("[data-ccard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) open(li.dataset.ccard); });
@@ -748,6 +752,11 @@ function bindCastPage(main, n){
       S.encOpen=S.backEnc; S.backEnc=null; S.castOpen=null; S.tsection="encounters"; window.scrollTo(0,0); update();
       focus(attrSel("data-eopencast", id)) || focus("[data-enext]"); return;
     }
+    if (S.backSess){
+      const back=S.castFrom; S.backSess=false; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; window.scrollTo(0,0); update();
+      const el=(back && $("main").querySelector(back)) || $("main").querySelector(S.sessOpen ? "[data-sback]" : "[data-snew]"); if (el) el.focus();
+      return;
+    }
     S.backEnc=null;
     const from=S.castFrom;
     S.castOpen=null; S.castFrom=null; S.intAdd=null; window.scrollTo(0,0); update();
@@ -766,6 +775,233 @@ function bindCastPage(main, n){
         const el=next && $("main").querySelector(`[data-copen="${next.id}"]`) || $("main").querySelector("[data-cadd-name]") || $("main").querySelector("[data-cview][aria-pressed=true]");
         if (el) el.focus();
       } });
+  };
+}
+
+// ── Sessions and threads (Decisions 203–204) ───────────────────────────
+// State is on S: S.sessOpen (a session's id, or null for the tab), S.threadAdd
+// (the add field's text), and which Threads rows have their More open. Every
+// field saves as it's typed, like a note, with no draft kept anywhere else.
+const JOURNAL = [
+  ["happened", "What happened", "Major events · Key decisions made by the PCs"],
+  ["fallout", "Consequences and fallout", "Immediate consequences · Unresolved outcomes · Who was affected? · Escalations in motion"],
+  ["threads", "New threads", "Open hooks · Player interests · Questions raised"],
+  ["impact", "Faction and city impact", "Faction shifts · City-level changes"],
+  ["reflection", "Session close reflection", "What worked well? · What felt slow or unclear?"],
+  ["seed", "Seed for next session", "Situation · Likely turning point · Possible escalation"]];
+const THREAD_STATUS_LABELS = { open:"Open", resolved:"Resolved", dropped:"Dropped" };
+function sessOpenNow(){ return S.sessOpen ? (S.table.sessions||[]).find(s=>s.id===S.sessOpen) || null : null; }
+const threadTitle = h => String(h.title||"").trim() || "Untitled";
+const sessionById = id => id ? (S.table.sessions||[]).find(s=>s.id===id) || null : null;
+const hoursText = n => `${n} hour${n===1 ? "" : "s"}`;
+// One line for a session: its number, day, who came and how long.
+function sessionLine(s){
+  return [ Engine.sessionTitle(s), s.date ? dayText(s.date) : "", (s.present||[]).join(", "), typeof s.hours==="number" ? hoursText(s.hours) : "" ].filter(Boolean).join(" · ");
+}
+// Every crew name the table knows, spelled as first written, for the Who was there field.
+function sessionCrewNames(t){
+  const seen=new Map(), add = n => { const k=String(n||"").trim(); if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k); };
+  Engine.crewView(t, {}).forEach(g=>add(g.name));
+  (t.sessions||[]).forEach(s=>(s.present||[]).forEach(add));
+  (t.encounters||[]).forEach(e=>(e.rows||[]).forEach(r=>{ if (r && r.kind==="pc") add(r.name); }));
+  return [...seen.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+}
+function nextSessionHtml(t){
+  const n=Engine.nextSession(t);
+  if (!(t.sessions||[]).length && !(t.threads||[]).length)
+    return `<p class="step-note">Nothing yet. Start a session after you play, or add a thread you want to follow.</p>`;
+  const open = h => `<button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button>`;
+  return `<div class="next-session">
+    ${n.current ? `<p class="next-current"><span class="next-tag">Current</span> ${open(n.current)}</p>` : ""}
+    ${n.open.length ? `<h3 class="next-h">Still open</h3><ul class="int-list next-list">${n.open.map(h=>`<li>${open(h)}</li>`).join("")}</ul>` : ""}
+    ${n.seed ? `<h3 class="next-h">Last session set up</h3>
+      <p><button type="button" class="cast-open" data-sopen="${esc(n.last.id)}" data-sfrom="next">${esc(sessionLine(n.last))}</button></p>
+      <p class="next-seed">${esc(n.seed)}</p>` : ""}
+    ${n.unbuilt.length ? `<h3 class="next-h">Met last session, no stat block yet</h3><ul class="int-list next-list">${n.unbuilt.map(m=>
+      `<li><button type="button" class="cast-open int-who" data-copen="${esc(m.id)}" data-cwhere="met|${esc(m.id)}">${esc(m.name.trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
+  </div>`;
+}
+function threadRowHtml(h){
+  const id=esc(h.id), open=h.status==="open", sessions=Engine.sessionList(S.table);
+  const more=!!(S.threadMore && S.threadMore[h.id]);
+  return `<li class="thread-row" data-thread="${id}">
+    <div class="thread-main">
+      <input type="text" data-thtitle="${id}" value="${esc(h.title)}" placeholder="Name the thread" aria-label="Thread title" autocomplete="off">
+      ${open ? `<button type="button" class="btn sm thread-cur${h.current?" on":""}" data-thcur="${id}" aria-pressed="${h.current}">Current</button>` : ""}
+      <select data-thstatus="${id}" aria-label="Status">${Object.keys(THREAD_STATUS_LABELS).map(k=>`<option value="${k}"${k===h.status?" selected":""}>${THREAD_STATUS_LABELS[k]}</option>`).join("")}</select>
+      ${open ? "" : `<select data-thclosed="${id}" aria-label="Closed in"><option value="">Closed in…</option>${sessions.map(s=>
+        `<option value="${esc(s.id)}"${s.id===h.closed?" selected":""}>${esc(sessionLine(s))}</option>`).join("")}</select>`}
+    </div>
+    <details class="thread-more" data-thmore="${id}"${more?" open":""}><summary>More</summary>
+      <label class="field"><span>Notes</span><textarea data-thnotes="${id}" placeholder="What's known, who's involved.">${esc(h.notes)}</textarea></label>
+      <button type="button" class="btn sm danger" data-thdel="${id}">Delete</button></details></li>`;
+}
+function threadsHtml(t){
+  const all=Engine.threadList(t), open=all.filter(h=>h.status==="open"), shut=all.filter(h=>h.status!=="open");
+  return `<h2 class="cast-h" tabindex="-1" data-threads-h>Threads</h2>
+    <div class="cast-add thread-add">
+      <label class="field"><span>New thread</span><input type="text" data-thadd value="${esc(S.threadAdd||"")}" placeholder="What's still open?" autocomplete="off"></label>
+      <button type="button" class="btn primary" data-thadd-btn>Add</button></div>
+    ${open.length ? `<ul class="int-list">${open.map(threadRowHtml).join("")}</ul>` : all.length ? "" : `<p class="step-note">No threads yet.</p>`}
+    ${shut.length ? `<details class="thread-shut" data-thshut${S.threadsShut?" open":""}><summary>Closed (${shut.length})</summary><ul class="int-list">${shut.map(threadRowHtml).join("")}</ul></details>` : ""}`;
+}
+function sessionsTabHtml(t){
+  const list=Engine.sessionList(t);
+  return `<h2 class="cast-h" tabindex="-1">Next session</h2>${nextSessionHtml(t)}
+    ${threadsHtml(t)}
+    <h2 class="cast-h" tabindex="-1">Sessions</h2>
+    <p><button type="button" class="btn primary" data-snew>New session</button></p>
+    ${list.length ? `<ul class="roster-list sess-list">${list.map(s=>
+      `<li class="sess-item"><button type="button" class="cast-open sess-open" data-sopen="${esc(s.id)}">${esc(sessionLine(s))}</button></li>`).join("")}</ul>`
+      : `<p class="step-note">No sessions yet.</p>`}`;
+}
+function sessionInteractionHtml(t, x, offered){
+  const who=(x.cast||[]).map((l, i)=>linkNameHtml(t, l, `sess|${x.id}|${i}`)).join(", ");
+  const bits=[ interactionLabel(x.kind) ? `<span class="int-kind">${esc(interactionLabel(x.kind))}</span>` : "", who,
+    (x.crew||[]).length ? `<span class="int-crew">${esc(x.crew.join(", "))}</span>` : "",
+    x.date ? `<span class="int-date">${esc(dayText(x.date))}</span>` : "", x.text ? `<span class="int-text">${esc(x.text)}</span>` : "" ].filter(Boolean);
+  return `<li class="int-line">${bits.join(" ")}${offered ? ` <button type="button" class="btn sm" data-sadd="${esc(x.id)}">Add to this session</button>` : ""}</li>`;
+}
+function sessionPageHtml(s){
+  const t=S.table, id=esc(s.id), j=s.journal||{};
+  const opened=(t.threads||[]).filter(h=>h.opened===s.id), closed=(t.threads||[]).filter(h=>h.closed===s.id && h.status!=="open");
+  const lines=Engine.sessionInteractions(t, s.id), offered=Engine.sessionOffered(t, s.id);
+  const threadsBlock = `<div class="sess-threads">
+      ${opened.length ? `<ul class="int-list">${opened.map(h=>`<li><button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button></li>`).join("")}</ul>` : ""}
+      <div class="cast-add"><label class="field"><span>Open a thread</span><input type="text" data-sthadd placeholder="What did this session leave open?" autocomplete="off"></label>
+        <button type="button" class="btn" data-sthadd-btn>Open a thread</button></div>
+      ${closed.length ? `<ul class="int-list">${closed.map(h=>`<li><span class="int-kind">${h.status==="dropped" ? "Dropped" : "Resolved"}</span> ${esc(threadTitle(h))}</li>`).join("")}</ul>` : ""}</div>`;
+  return `<p><button type="button" class="btn sm" data-sback>Back to sessions</button></p>
+    <h1 class="step-title tbl-title">${esc(Engine.sessionTitle(s))}</h1>
+    <div class="sess-head">
+      <label class="field"><span>Number</span><input type="number" step="1" min="0" inputmode="numeric" data-sf="number" value="${numAttr(s.number)}"></label>
+      <label class="field"><span>Day</span><input type="date" data-sf="date" value="${esc(s.date||"")}"></label>
+      <label class="field"><span>Who was there</span><input type="text" data-sf="present" list="sess-crew" value="${esc((s.present||[]).join(", "))}" placeholder="Names, separated by commas" autocomplete="off"></label>
+      <label class="field"><span>Hours</span><input type="number" step="0.5" min="0" max="24" inputmode="decimal" data-sf="hours" value="${numAttr(s.hours)}"></label>
+    </div>
+    ${datalistHtml("sess-crew", sessionCrewNames(t))}
+    ${JOURNAL.map(([k, label, hint])=>`<label class="field sess-part"><span>${esc(label)}</span><small class="field-hint">${esc(hint)}</small>
+      <textarea data-sj="${k}">${esc(j[k]||"")}</textarea></label>${k==="threads" ? threadsBlock : ""}`).join("")}
+    <h2 class="cast-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
+    ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
+    ${offered.length ? `<h3 class="next-h">Also that day</h3><ul class="int-list" data-soffered>${offered.map(x=>sessionInteractionHtml(t, x, true)).join("")}</ul>` : ""}
+    <p class="cast-delete"><button type="button" class="btn danger" data-sdel>Delete</button></p>`;
+}
+function bindSessions(main){
+  const s=sessOpenNow();
+  if (s) bindSessionPage(main, s); else bindSessionsTab(main);
+}
+// A Met-last-session name, a thread in Next session, a session in either: the shared taps.
+function bindSessionOpeners(main){
+  main.querySelectorAll("[data-sopen]").forEach(b=>b.onclick=()=>{
+    S.sessOpen=b.dataset.sopen; window.scrollTo(0,0); update();
+    const el=$("main").querySelector("[data-sback]"); if (el) el.focus(); });
+  main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
+    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=true; S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
+    window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); });
+}
+// Open a thread's row in Threads, its More open, and land on its title.
+function showThread(id){
+  const h=(S.table.threads||[]).find(x=>x.id===id); if (!h) return;
+  (S.threadMore || (S.threadMore={}))[id]=true;
+  if (h.status!=="open") S.threadsShut=true;
+  S.sessOpen=null; window.scrollTo(0,0); renderTable();
+  const el=$("main").querySelector(attrSel("data-thtitle", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
+}
+function bindSessionsTab(main){
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  bindSessionOpeners(main);
+  main.querySelectorAll("[data-thopen]").forEach(b=>b.onclick=()=>showThread(b.dataset.thopen));
+  main.querySelector("[data-snew]").onclick=()=>{
+    let r; tableChange(()=>{ r=Engine.addSession(S.table, {}); }, false);
+    if (!r.ok){ notice(r.why); return; }
+    S.sessOpen=r.id; window.scrollTo(0,0); update(); focus('[data-sf="number"]');
+  };
+  const addEl=main.querySelector("[data-thadd]");
+  const add=()=>{
+    let r; tableChange(()=>{ r=Engine.addThread(S.table, { title:addEl.value }); }, false);
+    if (!r.ok){ notice(r.why); addEl.focus(); return; }
+    S.threadAdd=""; renderTable(); focus("[data-thadd]");
+  };
+  addEl.addEventListener("input", ()=>{ S.threadAdd=addEl.value; });
+  addEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
+  main.querySelector("[data-thadd-btn]").onclick=add;
+  const found = id => S.table.threads.find(h=>h.id===id);
+  const edit = (id, f) => { let r; tableChange(()=>{ r=Engine.editThread(S.table, id, f); }, false); return r; };
+  main.querySelectorAll("[data-thtitle]").forEach(el=>{
+    const id=el.dataset.thtitle;
+    el.addEventListener("input", ()=>{ edit(id, { title:el.value }); });
+    // A blank title is refused: on blur the field shows what's stored.
+    el.addEventListener("change", ()=>{ const r=edit(id, { title:el.value }); if (!r.ok) notice(r.why); const h=found(id); if (h) el.value=h.title; });
+  });
+  main.querySelectorAll("[data-thnotes]").forEach(el=>el.addEventListener("input", ()=>edit(el.dataset.thnotes, { notes:el.value })));
+  main.querySelectorAll("[data-thmore]").forEach(d=>d.addEventListener("toggle", ()=>{ (S.threadMore || (S.threadMore={}))[d.dataset.thmore]=d.open; }));
+  const shut=main.querySelector("[data-thshut]");
+  if (shut) shut.addEventListener("toggle", ()=>{ S.threadsShut=shut.open; });
+  main.querySelectorAll("[data-thcur]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.thcur, h=found(id); if (!h) return;
+    const r=edit(id, { current:!h.current }); if (!r.ok) notice(r.why);
+    renderTable(); focus(attrSel("data-thcur", id));
+  });
+  main.querySelectorAll("[data-thstatus]").forEach(sel=>sel.onchange=()=>{
+    const id=sel.dataset.thstatus, r=edit(id, { status:sel.value }); if (!r.ok) notice(r.why);
+    const h=found(id); if (h && h.status!=="open") S.threadsShut=true;
+    renderTable(); focus(attrSel("data-thtitle", id));
+  });
+  main.querySelectorAll("[data-thclosed]").forEach(sel=>sel.onchange=()=>{
+    const id=sel.dataset.thclosed; edit(id, { closed:sel.value });
+    sel.value=(found(id)||{}).closed||"";
+  });
+  main.querySelectorAll("[data-thdel]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.thdel, h=found(id); if (!h) return;
+    askFirst({ title:`Delete ${threadTitle(h)}?`, text:"It isn't kept anywhere else unless you've exported the table.", yes:"Delete",
+      then(){ tableChange(()=>Engine.removeThread(S.table, id)); focus("[data-thadd]"); } });
+  });
+}
+function bindSessionPage(main, s){
+  const id=s.id, own=()=>sessOpenNow();
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  const edit = f => { let r; tableChange(()=>{ r=Engine.editSession(S.table, id, f); }, false); return r; };
+  const title = () => { const h=main.querySelector(".tbl-title"); if (h && own()) h.textContent=Engine.sessionTitle(own()); };
+  // Saved as typed. A refused number or hours changes nothing; on blur the field shows what's stored.
+  main.querySelectorAll("[data-sf]").forEach(el=>{
+    const key=el.dataset.sf, val = () => key==="present" ? splitList(el.value, /,/) : el.value;
+    el.addEventListener("input", ()=>{ const r=edit({ [key]:val() }); if (r.ok && key==="number") title(); });
+    el.addEventListener("change", ()=>{
+      const r=edit({ [key]:val() }); if (!r.ok) notice(r.why);
+      const cur=own(); if (!cur) return;
+      el.value = key==="present" ? cur.present.join(", ") : key==="number" || key==="hours" ? numAttr(cur[key]) : (cur[key]||"");
+      title();
+    });
+  });
+  // The journal's boxes grow with what's written, so a long part reads without a scroll inside it.
+  const grow = el => { el.style.height="auto"; el.style.height=(el.scrollHeight+el.offsetHeight-el.clientHeight)+"px"; };
+  main.querySelectorAll("[data-sj]").forEach(el=>{ grow(el); el.addEventListener("input", ()=>{ edit({ journal:{ [el.dataset.sj]:el.value } }); grow(el); }); });
+  main.querySelector("[data-sback]").onclick=()=>{
+    S.sessOpen=null; window.scrollTo(0,0); update(); focus(".sess-open" + attrSel("data-sopen", id));
+  };
+  main.querySelectorAll("[data-thopen]").forEach(b=>b.onclick=()=>showThread(b.dataset.thopen));
+  bindSessionOpeners(main);
+  const thEl=main.querySelector("[data-sthadd]");
+  const open=()=>{
+    let r; tableChange(()=>{ r=Engine.addThread(S.table, { title:thEl.value, opened:id }); }, false);
+    if (!r.ok){ notice(r.why); thEl.focus(); return; }
+    renderTable(); focus("[data-sthadd]");
+  };
+  thEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); open(); } });
+  main.querySelector("[data-sthadd-btn]").onclick=open;
+  main.querySelectorAll("[data-sadd]").forEach(b=>b.onclick=()=>{
+    const xid=b.dataset.sadd, order=Engine.sessionOffered(S.table, id), at=order.findIndex(x=>x.id===xid);
+    let r; tableChange(()=>{ r=Engine.editInteraction(S.table, xid, { session:id }); }, false);
+    if (!r.ok){ notice(r.why); return; }
+    renderTable();
+    // The next offer takes the place of the one added; with none left, the list's heading.
+    const btns=$("main").querySelectorAll("[data-sadd]");
+    if (btns.length) btns[Math.min(at, btns.length-1)].focus(); else focus("[data-sint-h]");
+  });
+  main.querySelector("[data-sdel]").onclick=()=>{
+    askFirst({ title:`Delete ${Engine.sessionTitle(s)}?`, text:"Its threads and interactions stay; they just won't say which session they were in.", yes:"Delete",
+      then(){ S.sessOpen=null; tableChange(()=>Engine.removeSession(S.table, id)); focus("[data-snew]"); } });
   };
 }
 
@@ -1490,7 +1726,7 @@ function bindEncounters(main){
       if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(after ? attrSel("data-enc-addcast", after) : "[data-enc-q]"); },
     "data-enc-addpc": () => addPc(),
     "data-eopencast": b => { const id=b.dataset.eopencast; if (!S.table.cast.some(n=>n.id===id)) return;
-      S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
+      S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backSess=false; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
     "data-eopenentry": b => openThreat(b.dataset.eopenentry, null, null, eid()),
     "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encHit=null; S.encCond=null; redraw(); focus("[data-edmgn]"); },
     "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit); S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },

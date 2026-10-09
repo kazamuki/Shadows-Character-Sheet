@@ -4,6 +4,7 @@
 quest), §4g (*Sessions*) and §6 *S5*; Decisions 171, 176, 177, 178, 179, 193.
 **Status:** **drafted 2026-10-08 by Claude (Opus)**, after #130 (S10c) merged
 with its one fix round (README step 7). **§4 answered by Ken, 2026-10-08.**
+**Built 2026-10-08** with Decisions **203 and 204** (194–195 were taken by 0.38.0 and 0.39.0 after this was drafted; Ken's call); read 194/195 below as 203/204.
 **Branch:** from `main` at or after `0c36eaf`, PR to `main`, switched off
 (Decision 173).
 **Runs alone.** It touches `engine.js` (the Tables section only), `gm.js`,
