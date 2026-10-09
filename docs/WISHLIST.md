@@ -543,7 +543,7 @@ and 176.
 The plan's S13 lists printing beside the GM screen: a cast member's page
 (the stat block, If Pushed, their line), an encounter (its rows, Conditions
 and the round, for a GM who runs the fight on paper), and a session's
-journal with its award log. S13a built the Screen alone; this is **S13b**.
+journal with its award log. S13a builds the Reference tab alone; this is **S13b**.
 *To respect:* `print.css` is the sheet's, with its own front page (Decision
 96), so a table page's print styles must not move the character's; no new
 markup in `index.html` (constraint 3); and the award log prints in the
