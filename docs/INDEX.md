@@ -131,7 +131,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 |---|---|---|
 | `F5` | Adv/Disadv audit flags — three of four closed by the CRB v4 pass. Remaining: Cyber-Prophe… | Design (after F6) |
 | `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
-| `F7` | SFR per archetype, the Vampire's half: Blood Pool TBD — 2026-09-10 meeting added unlocked direction. The Werewolf half closed with `0414` (Decision 196) | Design |
 | `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99), Loadout and recovery done (Decision 100); only the MD1/2/3 ratings are left | Design (small gap) |
@@ -147,7 +146,8 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
 | `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
 | `F38` | What a Werewolf's Base Powers buy, when it carries every power at Rank 1 (stubbed: shown, spends nothing, Decision 196) | Deighton/Scott |
-| `F39` | How a Vampire spends Base Powers across Innate and Bloodline powers | Deighton/Scott |
+| `F39` | How a Vampire spends Base Powers across Innate and Bloodline powers. Stubbed: one is one rank, none above Max Starting Rank (Decision 200) | Deighton/Scott |
+| `F41` | Is the Upyr's Built to Last a creation pick, or two powers that don't stack? Stubbed: a pick, as Ken reads it (Decision 200) | Deighton |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
@@ -259,6 +259,9 @@ The generic archetype structure, and the pick that defines one.
 - **196** *(The Werewolf to 0414 — crb-v4-sync P3, VQ10, VQ12–VQ15)* — Every Innate power and the Origin's at rank 1 + IP (F38 stubbed); the book's max 3 binds creation only, play stops at 10 (VQ14, may be revisited); three Origins with features, starter powers (tables are reference) and withdrawal; Call of the Wild a stepper; EMP the Forge Fang's; Resilient Spirit retired. Majors are P3b.
 - **197** *(Werewolf Focus Stats — crb-v4-sync P3)* — The Werewolf's bonus goes on BOD, REF, MOB and can pass 10; `migrate()` moves a saved Stat Bonus across.
 - **199** *(Werewolf Major Milestones — crb-v4-sync P3b, VQ16–VQ19)* — `0414`'s 29 Majors offered beside the shared ones, another Origin's hidden; `prerequisites.specialization` (any of); `grants()` reads taken Majors: `rou`, `sfrMax` (Tireless, Deep Reserves) and `form` (Hardline Shift Regular, Iron Jaw AP, Clear Head −2 for Feral Mind's bar); the rest text.
+- **200** *(The Vampire to 0413 — crb-v4-sync P4, VQ20, VQ23–VQ26)* — schema 0.19: `powersBought` holds only the powers Base Powers placed a rank in, none past Max Starting Rank (F39 stubbed); a specialization's `choices` (Built to Last a pick, F41; the Ancient Weapon; the Code as text) in `optionPicks`; the Code a Draugur toggle that silences the weapon; bite, claws and Ancient Weapon on Main; Iron Hide and Icebound Resilience conditional Natural Armor; Admin sets a Bloodline.
+- **201** *(The Thirst — crb-v4-sync P4, VQ21)* — A `feed` panel: Fresh 3 SFR a HL to the max, Stored 2 to half, A day unfed half RoU, Hunger's WILL check at RoU or under; one Undo each, Main and Trackers.
+- **202** *(Pain Immunity — crb-v4-sync P4, VQ22)* — A Vampire's Pain counts only Withering's Health Levels; Conditions add as ever.
 
 ### Character file & migration
 

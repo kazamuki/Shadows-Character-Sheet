@@ -55,6 +55,16 @@ bonus (`0450` says chrome and talismans can carry a score past 10). Prices
 and caps (`ipCost`, `canBoost`) must keep reading the rank without the worn
 bonus, or taking armor off would change what the next rank costs.
 
+**W72 — Learn an archetype power in play.** *Claude · ⏭ · Rule or shape · raised 2026-10-08 in crb-v4-sync P4*
+A Vampire holds only the powers its Base Powers placed a rank in (Decision 200),
+so **Raise a Power** lists only those: an Innate or Bloodline power it never
+took can't be learned with IP. `0450` prices a new power at 40 IP; Raise a
+Power could list the archetype's unheld powers under **Learn**, as it does an
+untrained Discipline. Stored as `powerIpe` alone, a power learned in play
+would need its rank read as `powerIpe` with no Base Power under it. P4b's
+Splice and Cursed Evolution (another Bloodline's powers, VQ4) want the same
+door, so build it there or before.
+
 **W70 — A custom item the player is done writing reads like the catalog's.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
 A custom gear, weapon or armor row (`custom: true`, Decisions 120–121) stays
 a set of open inputs on Loadout for as long as the character has it, so it
@@ -529,7 +539,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W72.** Everything above is open; W38 has a plan,
+- **Next free number: W73.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for

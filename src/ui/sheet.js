@@ -344,6 +344,9 @@ function renderShMain(){
   // Decision 169: with SFR the row above is full, so CRANK takes the next one alone.
   h += cond(hasSfr?"crank alone":"crank", "CRANK", "crank", `${crk.rep}`, esc(crk.tier?crk.tier.name:""), null, "", "crank");
   h += `</div>`;
+  // Feeding (Decision 201) sits under the SFR it refills.
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="feed"))
+    h += `<section class="main-feed"><div class="sect">${esc(p.title)}</div>${feedPanelHtml(ch, p)}</section>`;
   h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
 
   // Two-column command console: combat on the left, stats on the right.
@@ -362,10 +365,10 @@ function renderShMain(){
   // back what was typed.
   // A form the archetype shifts into (Decision 195) is switched here as well
   // as on Loadout, and while it's on, its natural weapons lead the weapons.
-  for (const p of Engine.archPanels(ch).filter(x=>x.type==="toggle" && Engine.toggleView(ch, x).some(o=>o.does)))
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="toggle" && Engine.toggleView(ch, x).some(o=>o.does || o.text)))
     h += `<div class="main-form"><div class="sect">${esc(p.title)}</div>${togglePanelHtml(ch, p)}</div>`;
   const lines = (ch.weapons||[]).map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
-  const natural = formWeaponRowsHtml(ch);
+  const natural = formWeaponRowsHtml(ch) + archetypeWeaponRowsHtml(ch);
   if (lines.length || natural){
     h += `<div class="sect">Weapons</div>
       <table class="ref"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` + natural +
@@ -509,7 +512,7 @@ function renderShCharacter(){
       parts.push(secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`)
         + chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
         ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}</div>`).join(""));
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${chosenChoicesHtml(ch, o)}</div>`).join(""));
     }
 
     // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
@@ -1112,7 +1115,8 @@ function renderShTrackers(){
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${esc(pain.label)}</h2>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
-    <div class="desc">${esc(pain.description)}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
+    <div class="desc">${esc(pain.description)}${pain.immunity?`
+${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
   // Conditions (Decision 95)
   h += `<div class="sect">Conditions</div>${conditionsHtml(ch, true)}`;
@@ -1148,6 +1152,8 @@ function renderShTrackers(){
     // Cascade panel once it's past its max: TOL below zero (Decision 106).
     if (p.overMax==="cascade" && effMax!=null && cur>effMax) h += cascadePanelHtml(ch);
   }
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="feed"))
+    h += `<div class="trk trk-feed"><h2>${esc(p.title)}</h2>${feedPanelHtml(ch, p)}</div>`;
   // What a Cascade leaves behind (Decision 110): shown wherever a Cascade can
   // happen, and on any sheet that already carries an Aberration.
   if (Engine.archPanels(ch).some(x=>x.overMax==="cascade") || Engine.aberrationState(ch).active.length) h += aberrationsHtml(ch);
@@ -1466,6 +1472,18 @@ function loadoutAddHtml(kind){
 // Other's words, traits and vulnerabilities. Classification stays as locked,
 // since changing it would strand bought Advantages (plan §4). Each edit is
 // one logged change.
+// A specialization and what it asked for at creation, set on a locked sheet
+// (Decision 200): a Vampire saved before its Bloodlines were written has
+// none. The wizard's own blocks, each change one logged commit.
+function adminArchChoicesHtml(ch){
+  const a = Engine.archetype(ch), spec = a && a.specialization;
+  if (!a || !spec || !(spec.options||[]).length || Engine.specializationNeed(ch) > 1) return "";
+  const cur = Engine.specializationIds(ch)[0] || "";
+  return `<div class="trk"><h2>${esc(spec.label||"Specialization")}</h2>
+    <select data-admin-spec aria-label="${esc(spec.label||"Specialization")}"><option value="">— none —</option>${spec.options.map(o=>`<option value="${esc(o.id)}" ${cur===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select>
+    <span class="sub">Changing it clears what the old one asked for, and Base Powers placed in its powers.</span></div>`
+    + `<div class="admin-arch">${optionChoicesHtml(ch)}${basePowersHtml(ch, a)}</div>`;
+}
 function adminWriteInHtml(ch){
   if (!Engine.writeInOptions(ch)) return "";
   const w = ch.archetypeChoices.writeIn, cls = Engine.classification(ch);
@@ -1871,7 +1889,7 @@ function renderShLoadout(){
   // Archetype panels: rankedList / table / grimoire / focusedSkills /
   // specializationText / toggle
   for (const p of Engine.archPanels(ch)){
-    if (p.type==="tracker") continue; // lives in Trackers
+    if (p.type==="tracker" || p.type==="feed") continue; // lives in Trackers (feeding on Main too)
     if (p.type==="reference") continue; // lives on the Character tab
     h += secs.sect(p.title);
     if (p.type==="rankedList"){
@@ -1923,11 +1941,13 @@ function togglePanelHtml(ch, p){
   const costText = c => `${c.hl} HL${c.category?` of ${c.category} damage`:""}`;
   let h = `<div class="form-toggle" role="group" aria-label="${esc(p.title||"")}">` + opts.map(o=>
     `<button class="${o.on?"on":""}" aria-pressed="${o.on}" data-ptoggle="${esc(p.id)}|${esc(o.name)}">${esc(o.name)}${o.cost?` <small>(${esc(costText(o.cost))})</small>`:""}</button>`).join("") + `</div>`;
+  const on = opts.find(o=>o.on);
   if (f && f.panelId===p.id){
     if (f.ended) h += noticeHtml(f.name, f.endsText);
     if (f.summary) h += `<p class="step-note">${esc(f.summary)}</p>`;
     h += (f.changedBy||[]).map(c=>`<p class="step-note"><b>${esc(c.name)}:</b> ${esc(c.text)}</p>`).join("");
-  } else if (!opts.some(o=>o.does)) h += `<p class="step-note">${esc(copy("applyFromText"))}</p>`;
+  } else if (on && on.text) h += `<p class="step-note"><b>${esc(on.name)}:</b> ${esc(on.text)}</p>`;
+  else if (!opts.some(o=>o.does || o.text)) h += `<p class="step-note">${esc(copy("applyFromText"))}</p>`;
   return h;
 }
 // The form's natural weapons as Main's weapon rows, computed like a catalog
@@ -1937,6 +1957,41 @@ function formWeaponRowsHtml(ch){
   return f ? f.weapons.map(w=>`<tr><td>${esc(w.name)}<div class="lo-sub">${esc(f.name)} form${w.skill?` · ${esc(w.skill)}`:""}</div>${(w.tags||[]).length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}</td>
     <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}</td>
     <td class="num">—</td><td class="num">—</td></tr>`).join("") : "";
+}
+
+// What a chosen specialization's creation choices hold (Decision 200): the
+// power or weapon picked, or the words written, as the wizard left them.
+function chosenChoicesHtml(ch, o){
+  const rows = Engine.optionChoices(ch).filter(c=>c.origin===o.id).map(c=>{
+    if (c.type==="text") return `<div class="desc"><b>${esc(c.name)}</b>${c.fields.map(f=>`
+${esc(f.name)}: ${f.value.trim()?esc(f.value):"—"}`).join("")}</div>`;
+    return `<div class="desc"><b>${esc(c.name)}:</b> ${c.option?esc(c.option.name||c.value):"none chosen"}</div>`;
+  });
+  return rows.join("");
+}
+// The weapons the archetype gives (Decision 200): a trait's bite, a held
+// power's claws and a creation choice's weapon, computed like the form's. One
+// a toggle silences says so instead of a number.
+function archetypeWeaponRowsHtml(ch){
+  return Engine.archetypeWeapons(ch).map(w=>{
+    const sub = [w.from, w.rank!=null?`rank ${w.rank}`:"", w.skill, ...w.extra].filter(Boolean).map(esc).join(" · ");
+    return `<tr class="${w.off?"off":""}"><td>${esc(w.name)}<div class="lo-sub">${sub}</div>${w.off?`<div class="lo-sub">${esc(w.offText)}</div>`:""}${w.tags.length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}</td>
+    <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}</td>
+    <td class="num">—</td><td class="num">—</td></tr>`; }).join("");
+}
+// Feeding (Decision 201): what the hunger says at RoU or under, the kinds of
+// blood with what each HL gives back, and a day unfed. Each press is one Undo.
+function feedPanelHtml(ch, p){
+  const v = Engine.feedView(ch, p), st = S.feed && S.feed.panel===p.id ? S.feed : { kind:(v.kinds[0]||{}).id, hl:"" };
+  let h = v.low ? noticeHtml(v.lowName || p.title, v.lowText) : "";
+  if (v.max==null) return h + `<p class="step-note">Your SFR has no maximum yet.</p>`;
+  h += `<p class="step-note">${v.kinds.map(k=>`<b>${esc(k.name)}</b> (${esc(k.text)}): ${k.perHL} SFR per HL${k.upTo<v.max?`, up to ${k.upTo}`:""}`).join(" · ")}.</p>`;
+  h += `<div class="hitrow feed-row"><div class="form-toggle" role="group" aria-label="What you're feeding on">${v.kinds.map(k=>
+      `<button class="${st.kind===k.id?"on":""}" aria-pressed="${st.kind===k.id}" data-feedkind="${esc(p.id)}|${esc(k.id)}">${esc(k.name)}</button>`).join("")}</div>
+    <input type="text" inputmode="numeric" pattern="[0-9]*" data-feedhl="${esc(p.id)}" value="${esc(st.hl)}" placeholder="HL" aria-label="${esc(v.unit||"HL drained")}" style="width:64px">
+    <button class="btn sm primary" data-feed="${esc(p.id)}">Feed</button>
+    ${v.unfed?`<button class="btn sm" data-unfed="${esc(p.id)}">${esc(v.unfed.label)} (−${v.unfed.amount})</button>`:""}</div>`;
+  return h;
 }
 
 // ── Sheet: notes ─────────────────────────────────────────────────────
@@ -1984,7 +2039,7 @@ function renderShAdmin(){
   h += `<div class="trk"><h2>Archetype</h2>
     <select data-admin-arch><option value="">— none —</option>${D.archetypes.map(a=>`<option value="${a.id}" ${ch.identity.archetype===a.id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>
     <span class="sub" style="color:var(--magenta)">⚠ Changing archetype clears every archetype-specific choice — focus / stat-bonus allocations, specialization, disciplines, natural advantages. One undo brings it all back.</span></div>`;
-  h += adminWriteInHtml(ch);
+  h += adminWriteInHtml(ch) + adminArchChoicesHtml(ch);
 
   // Stats — base + IP
   h += `<div class="sect">Stats — base + IP</div><div class="alloc">`;
@@ -2845,6 +2900,29 @@ function bindSheet(){
     if (!e) return;
     commit("aberration", `Note on ${abName(i)}`, ()=>{ if (inp.value) e.note=inp.value; else delete e.note; });
   });
+  // Feeding (Decision 201). The kind and the HL typed are the form's, kept in
+  // S.feed across a redraw; Feed and A day unfed are one commit each.
+  const feedForm = pid => (S.feed && S.feed.panel===pid) ? S.feed
+    : (S.feed = { panel:pid, kind:((Engine.feedView(ch, Engine.archPanels(ch).find(x=>x.id===pid)||{}).kinds||[])[0]||{}).id, hl:"" });
+  main.querySelectorAll("[data-feedkind]").forEach(b=>b.onclick=()=>{
+    const [pid, kind]=b.dataset.feedkind.split("|");
+    feedForm(pid).kind=kind; update();
+  });
+  main.querySelectorAll("[data-feedhl]").forEach(inp=>inp.oninput=()=>{
+    const clean=inp.value.replace(/[^0-9]/g,"");
+    if (clean!==inp.value) inp.value=clean;
+    feedForm(inp.dataset.feedhl).hl=clean;
+  });
+  main.querySelectorAll("[data-feed]").forEach(b=>b.onclick=()=>{
+    const pid=b.dataset.feed, f=feedForm(pid), g=Engine.feedGain(ch, pid, f.kind, f.hl);
+    if (!g.ok) return notice(g.why);
+    S.feed=null;
+    commit("tracker", `Fed: ${g.hl} HL ${g.kind.name.toLowerCase()}, +${g.gain} SFR`, ()=>{ Engine.feed(ch, pid, g.kind.id, g.hl); });
+  });
+  main.querySelectorAll("[data-unfed]").forEach(b=>b.onclick=()=>{
+    const pid=b.dataset.unfed, v=Engine.feedView(ch, Engine.archPanels(ch).find(x=>x.id===pid)||{});
+    commit("tracker", `${v.unfed?v.unfed.label:"A day unfed"}: −${v.unfed?Math.min(v.unfed.amount, v.current||0):0} SFR`, ()=>{ Engine.goUnfed(ch, pid); });
+  });
   main.querySelectorAll("[data-trkmax]").forEach(inp=>inp.onchange=()=>{
     const pid=inp.dataset.trkmax, mx=inp.value===""?null:Math.max(0,Number(inp.value));
     commit("tracker", `${pid.toUpperCase()} max → ${mx==null?"—":mx}`, ()=>{
@@ -3151,6 +3229,29 @@ function bindSheet(){
         ch.identity.archetype=v;
         resetArchetypeChoices(ch);
       }) });
+  });
+  // A specialization and its choices on a locked sheet (Decision 200).
+  main.querySelectorAll("[data-admin-spec]").forEach(sel=>sel.onchange=()=>{
+    const v=sel.value, ac=ch.archetypeChoices;
+    if ((Engine.specializationIds(ch)[0]||"")===v) return;
+    const nm=v ? ((Engine.archetype(ch).specialization.options||[]).find(o=>o.id===v)||{name:v}).name : "none";
+    commit("admin", `Admin: ${Engine.archetype(ch).specialization.label||"specialization"} → ${nm}`, ()=>{
+      ac.specialization = v ? [v] : []; ac.optionPicks = {};
+      const pool=new Set(Engine.powerPool(ch).map(p=>p.id));
+      for (const id of Object.keys(ac.basePowers||{})) if (!pool.has(id)) delete ac.basePowers[id];
+    });
+  });
+  main.querySelectorAll(".admin-arch [data-optpick]").forEach(b=>b.onclick=()=>{
+    const [cid, val]=b.dataset.optpick.split("|");
+    commit("admin", `Admin: ${cid} → ${val}`, ()=>{ Engine.setOptionPick(ch, cid, val); });
+  });
+  main.querySelectorAll(".admin-arch [data-opttext]").forEach(inp=>inp.onchange=()=>{
+    const [cid, fid]=inp.dataset.opttext.split("|");
+    commit("admin", `Admin: ${cid} ${fid} → ${inp.value.slice(0,40)||"—"}`, ()=>{ Engine.setOptionPick(ch, cid, inp.value, fid); });
+  });
+  main.querySelectorAll('.admin-arch [data-step^="bp|"]').forEach(b=>b.onclick=()=>{
+    const parts=b.dataset.step.split("|"), id=parts.slice(1, -1).join("|"), d=Number(parts[parts.length-1]);
+    commit("admin", `Admin: Base Power ${d>0?"on":"off"} ${id}`, ()=>{ Engine.placeBasePower(ch, id, d); });
   });
   // A written-in archetype's own words (Decision 153), one logged change each.
   const wi = (ch.archetypeChoices||{}).writeIn;

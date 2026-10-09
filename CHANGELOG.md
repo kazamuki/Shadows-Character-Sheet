@@ -59,6 +59,31 @@ own in the footer.
   switch stops recording it as Withering. **Iron Jaw** puts AP on your Claws
   and Fangs, and **Clear Head** lets you use TECH skills in form at −2. The
   Form switch says what each one changed.
+- **The Vampire, as the book now writes it.** Choose a Bloodline:
+  **Strigoi**, **Upyr** or **Draugur**, each with its features. Pain
+  Immunity, Sanguine Harvest and Fangs of the Fallen are its traits, and
+  Sunlight, Consecration, Staking, Day Rest and Blood Frenzy its
+  vulnerabilities. Its bonus stat points go on BOD, REF or MOB, and its SFR
+  and RoU follow your power level.
+- **A Vampire chooses its powers.** Each Base Power is one rank in an Innate
+  power or one of your Bloodline's, up to your Max Starting Rank; you hold
+  the powers you put ranks in, and **Raise a Power** takes them further. An
+  Upyr chooses Iron Hide or Icebound Resilience (**Built to Last**), and
+  either one is Natural Armor you can count when you take a hit. A Draugur
+  chooses an **Ancient Weapon** and writes the three tenets of its **Code**
+  with the GM.
+- **Feed, and the sheet keeps the Thirst.** Under SFR on Main: feed on fresh
+  blood (3 SFR a Health Level drained) or stored (2, and only to half your
+  SFR), or mark **A day unfed**, which costs half your RoU. At your RoU or
+  under, the sheet tells you the WILL check you owe before a Blood Frenzy.
+- **Your bite, your claws, your blade.** Main lists a Vampire's bite, the
+  claws Bestial Blessings gives at its rank, and a Draugur's Ancient Weapon.
+  Mark the Code **Broken** and the weapon stops answering until you make
+  amends.
+- **Pain Immunity works.** A Vampire takes no Pain from lost Health Levels,
+  except the ones Withering took, and Conditions like Agonized still hurt.
+- **Admin can set a Bloodline** for a Vampire made before the book wrote
+  them, with its choices and Base Powers.
 - **Stat Points start from the book's pool.** The Power Level step shows each
   level's one pool, the same for everyone. If your GM wants the dice to decide,
   tick **Roll for Stat Points instead**, and the step says what you'll roll.

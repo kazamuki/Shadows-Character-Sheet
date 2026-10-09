@@ -231,6 +231,7 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .mod.pos{color:var(--green)} .mod.neg{color:var(--magenta-text)}
 .sect{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
   color:var(--violet-text); border-bottom:1px solid var(--frame); padding-bottom:5px; margin:24px 0 12px; grid-column:1/-1}
+.sub-sect{font-size:.8rem; font-weight:600; color:var(--dim); margin:14px 0 8px}
 
 /* pick lists (advantages, skills detail, aberrations) */
 .pick{background:var(--panel); border:1px solid var(--frame); border-radius:5px; padding:12px 14px; margin-bottom:10px}
@@ -448,6 +449,8 @@ aside.vitals:empty{display:none}
 .lo-add{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0 14px}
 .lo-add select{flex:1; min-width:0; max-width:420px}
 .lo-sub{font-size:.72rem; color:var(--dim); margin:2px 0}
+.ref tr.off td{opacity:.6}
+.feed-row{flex-wrap:wrap; gap:8px; align-items:center}
 .lo-scroll{overflow-x:auto; max-width:100%}
 table.lo-weapons td{vertical-align:top}
 table.lo-weapons input[type=text]{padding:4px 6px; font-size:.78rem; min-width:90px}

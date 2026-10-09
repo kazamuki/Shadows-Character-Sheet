@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.32",
+    "gamedataVersion": "0.33",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2397,41 +2397,270 @@ window.SHADOWS_DATA = {
     {
       "id": "vampire",
       "name": "Vampire",
-      "status": "tbd",
+      "status": "draft",
       "flagged": true,
-      "flagNote": "F7: WIP contains narrative only - no Campaign Power Scaling, Baseline Traits, Specialization (Bloodline), Core Mechanic, or Powers yet. (0413_Vampire, 2026-10-07, now writes all of it: crb-v4-sync P4.) F39: how a Vampire's Base Powers (2/3/4/5) are spent across Innate and Bloodline powers: is one Base Power one rank, none above Max Starting Rank? Deighton/Scott.",
+      "flagNote": "F39: how a Vampire's Base Powers (2/3/4/5) are spent across Innate and Bloodline powers. Stubbed as the book reads: one Base Power is one rank, on an Innate power or the Bloodline's, none above Max Starting Rank; a power with no ranks takes one to hold. Deighton/Scott.",
+      "playerNote": "Each Base Power is one rank in an Innate power or one of your Bloodline's, none above your Max Starting Rank. How Base Powers are spent is your GM's call for now.",
       "primaryStats": [
         "BOD",
         "REF",
         "MOB"
       ],
-      "summary": "As old as civilization itself. Vampires have had centuries to accumulate power, influence, and everything that comes with both. Vampires can be part of many different houses, each with their own strengths, resources, allies, and enemies.",
-      "gameplayStyle": "Vampires navigate hunger, power, and eternity in equal measure. You walk a different version of NYTE City - one shaped by blood, secrecy, and influence. Your abilities are potent and intoxicating, but indulgence always carries consequences.",
-      "lore": "In NYTE City, Vampires thrive in the shadows, concealed by the chaos of urban decay. While they remain hidden from public knowledge, Vampires are not hiding. They are waiting. The Unseen Court, a secretive governing body, ensures their kind stays in the shadows while exerting influence over corporations, criminal syndicates, and political figures. You are undead. You consume blood to survive. Sunlight kills you - and NYTE City, to its credit, never fully sees the sun. Whatever path you choose, feeding is not optional.",
+      "summary": "What happens when hunger outlives the person who carried it. Death took everything that made them ordinary and left the appetite behind, sharpened and patient and wearing a face that still remembers how to smile.",
+      "gameplayStyle": "A Vampire doesn't choose the night. The night is simply where the work gets done. How your hunger expresses itself depends on your blood: some Vampires win at the table, some in the street, and some live between the two, bound by a Code. Every power you use is a debt paid in someone else's blood, and the Thirst keeps an exact account.",
+      "lore": "In NYTE City they hide in plain sight. Turning makes a Vampire leaner and hungrier: the skin cools to shades of gray and violet, and it sharpens who they already were rather than replacing it. In a city where surgery sells razor cheekbones and pale, flawless skin to anyone who can pay, an unearthly Vampire reads as wealth, not as something inhuman. The Unseen Court keeps their kind out of the headlines and inside every room that matters. When someone vanishes off the street, the city blames Fragmentation, the chems, or bad luck. It never blames the stranger who bought them a drink.",
       "classification": "supernatural",
       "campaignPowerScaling": {
-        "byPowerLevel": {}
+        "columns": [
+          "Stat Bonus",
+          "Starting SFR",
+          "Rate of Use (RoU)",
+          "Base Powers",
+          "Max Starting Rank"
+        ],
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10. Spend your Base Powers on Innate and Bloodline powers; no power starts above your Max Starting Rank.",
+        "focusStats": [
+          "BOD",
+          "REF",
+          "MOB"
+        ],
+        "byPowerLevel": {
+          "street": {
+            "focusStatBonusRoll": "1d4",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 8 },
+            "rou": 4,
+            "basePowers": 2,
+            "maxStartingRank": 1
+          },
+          "heroic": {
+            "focusStatBonusRoll": "2d4",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 14 },
+            "rou": 6,
+            "basePowers": 3,
+            "maxStartingRank": 2
+          },
+          "shadows": {
+            "focusStatBonusRoll": "3d4",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 20 },
+            "rou": 8,
+            "basePowers": 4,
+            "maxStartingRank": 2
+          },
+          "wcd": {
+            "focusStatBonusRoll": "4d4",
+            "startingSFR": { "stat": "WILL", "times": 3, "plus": 26 },
+            "rou": 10,
+            "basePowers": 5,
+            "maxStartingRank": 3
+          }
+        }
       },
-      "baselineTraits": [],
+      /* Base Powers are spent at creation (F39's stub, Decision 200): each
+         is one rank in a power this archetype lists, held only once a rank
+         is placed. `countBy` and `maxRankBy` are data paths (Decision 135). */
+      "powersBought": {
+        "countBy": "campaignPowerScaling.basePowers",
+        "maxRankBy": "campaignPowerScaling.maxStartingRank"
+      },
+      "baselineTraits": [
+        {
+          "id": "supernatural",
+          "name": "Supernatural",
+          "description": "You use your Spiritual Force Rating (SFR) to fuel your powers. Each round, the SFR you can spend at once is limited by your Rate of Use (RoU). As a supernatural creature, you are limited to the Universal Advantages.",
+          "effects": [
+            "Gains SFR and RoU per Campaign Power Scaling.",
+            "Can purchase Universal Advantages only."
+          ]
+        },
+        {
+          "id": "pain-immunity",
+          "name": "Pain Immunity",
+          "description": "Your body no longer reports damage as pain.",
+          "benefit": "You suffer no pain penalties from ordinary damage. Sunlight is the one pain you still feel, and it is excruciating.",
+          /* Decision 202 (VQ22): Health Levels lost put you on the Pain
+             table only when Withering took them; Conditions add as ever. */
+          "pain": { "healthLevelsFrom": "withering" }
+        },
+        {
+          "id": "sanguine-harvest",
+          "name": "Sanguine Harvest",
+          "description": "Your fangs open a vein, and the blood refills what your powers spend.",
+          "benefit": "Bite a grappled or helpless target that can bleed and drain its HL. Each HL drained takes one full turn and restores SFR (see the Thirst)."
+        },
+        {
+          "id": "fangs-of-the-fallen",
+          "name": "Fangs of the Fallen",
+          "description": "Your bite is both a weapon and a tool.",
+          "benefit": "In combat, a bite attack uses Melee and deals BOD+3 damage. When you feed on a mortal, your bite dulls pain and closes clean within the hour. The victim gains +1 Hit on BOD Essence checks against disease and poison for 24 hours. They also make an opposed WILL Essence check against you; on a loss, they become compliant and suggestible to your commands. Supernatural creatures are unaffected by these feeding effects."
+        }
+      ],
+      /* Weapon lines on Main, beside the carried ones (Decision 200): one a
+         trait gives, one a held power gives (`power`, +`perRank` damage a rank
+         past the first), and one a creation choice names (`choice`), silent
+         while a toggle is on `offWhen`'s option. */
+      "naturalWeapons": [
+        { "name": "Bite", "from": "Fangs of the Fallen", "skill": "melee", "damage": "BOD+3" },
+        { "name": "Claws", "from": "with Bestial Blessings", "power": "bestial-blessings", "perRank": 1, "skill": "melee", "damage": "BOD+3", "tags": ["AP"] },
+        { "choice": "ancient-weapon", "from": "The Ancient Weapon", "offWhen": { "panel": "code", "option": "Broken", "text": "It doesn't answer while your Code is broken." } }
+      ],
       "specialization": {
         "label": "Bloodline",
         "required": true,
-        "options": []
-      },
-      "coreMechanic": {
-        "name": "Blood & Hunger",
-        "description": "TBD.",
-        "panels": [
+        "intro": "Every Vampire carries the blood of a sire, and every sire carries a bloodline older than any city on the map. The bloodline shapes how you hunt: where you win, what you spend, and what it costs you when the night goes wrong.",
+        "options": [
           {
-            "id": "blood-pool",
-            "type": "tracker",
-            "title": "Blood Pool",
-            "max": null
+            "id": "strigoi",
+            "name": "Strigoi",
+            "description": "Deception & Intellect. \"Blood is Leverage.\" The oldest bloodline, out of Romania and every story told since. The Strigoi own the social side of the night: any table where power is negotiated, from a corporate floor to the Unseen Court itself. Illusion is where they shine, and when the mask drops, what is underneath is a monster.",
+            "features": [
+              { "name": "Masked and Unmasked", "text": "Masked powers work on what people perceive. They hide you, deceive the eye, and slip into the mind while the room still believes nothing is wrong. Unmasked powers are the body itself turned into a weapon. The moment you use one, every Masked power you have running falls away." },
+              { "name": "Glamour", "text": "Shadow Play cast only on your own appearance, voice, and scent costs SFR equal to its rank." },
+              { "name": "Every Mind at the Table", "text": "Masked powers affect supernatural minds as well as mortal ones." }
+            ]
+          },
+          {
+            "id": "upyr",
+            "name": "Upyr",
+            "description": "Raw Savagery. \"Blood is Fuel.\" The Upyr come out of the Russian cold, and the cold came with them. They are the street racers, the underground fighters, the enforcers nobody crosses twice. Their powers are the cheapest in the archetype to run and the hardest to hide, and the hungrier an Upyr gets, the more dangerous it becomes.",
+            "features": [
+              { "name": "Frozen Fire", "text": "At or below half your maximum SFR, your bloodline powers that deal damage gain +2 damage, and Nightmare Visage needs +1 TH to resist. Frenzy checks work as normal." },
+              { "name": "Built to Last", "text": "Choose a long shell (Iron Hide) or a short surge (Icebound Resilience). These powers don't stack." }
+            ],
+            "choices": [
+              {
+                "id": "built-to-last",
+                "name": "Built to Last",
+                "type": "power",
+                "options": ["iron-hide", "icebound-resilience"],
+                "text": "The one you choose is the one your Base Powers and IP can buy.",
+                "flagged": true,
+                "flagNote": "F41: is Built to Last a creation pick (the other power can never be held), or two powers that only don't stack? Stubbed as Ken reads it (VQ25): a creation pick. Deighton.",
+                "playerNote": "Choosing one at creation is how this sheet reads it; your GM has the last word."
+              }
+            ]
+          },
+          {
+            "id": "draugur",
+            "name": "Draugur",
+            "description": "Discipline & War. \"Blood is Oath.\" The Draugur rose in the far north, the dead who never reached Valhalla, and they still call on Odin. They walk NYTE City as weathered bikers and old mercenaries: a fury that could empty a street, bound by a Code it chose for itself. Not good. Not evil. Something with lines it will not cross.",
+            "features": [
+              { "name": "The Ancient Weapon", "text": "At character creation, choose your weapon. It is bound to your blood. As a Fast Action, banish it to wherever such things wait, or call it back to your hand from anywhere. While your Code is broken, it doesn't answer." },
+              { "name": "The Code", "text": "At character creation, write three tenets with your GM: the Hunt (who you will kill), the Bond (who you stand for), and the Word (how you fight and keep your deals)." },
+              { "name": "Acting on the Code", "text": "When a scene puts a tenet in play and you follow it, Battleborn Instinct, Blood of Valhalla, and Hel's Dread each gain +1 to their effect for the scene." },
+              { "name": "Breaking the Code", "text": "You suffer the Pact consequences: +1 TH on every Essence check until you make amends the GM agrees to." }
+            ],
+            "choices": [
+              {
+                "id": "ancient-weapon",
+                "name": "The Ancient Weapon",
+                "type": "weapon",
+                "options": [
+                  { "id": "blade", "name": "Blade", "examples": "sword, axe, seax", "skill": "melee", "damage": "BOD+6", "style": "Blade", "reach": "1m", "parry": "+1", "damageType": "Normal", "tags": ["Bound", "Bleeding"] },
+                  { "id": "blunt", "name": "Blunt", "examples": "hammer, mace, club", "skill": "melee", "damage": "BOD+7", "style": "Blunt", "reach": "1m", "parry": "+1", "damageType": "Normal", "tags": ["Bound", "Knockdown"] },
+                  { "id": "spear", "name": "Spear", "examples": "spear, glaive", "skill": "melee", "damage": "BOD+6", "style": "Blade", "reach": "2m", "parry": "+1", "damageType": "Normal", "tags": ["Bound", "Reach"] }
+                ]
+              },
+              {
+                "id": "code",
+                "name": "The Code",
+                "type": "text",
+                "text": "Write your three tenets with your GM. Some examples are below.",
+                /* `examples[].values` are in `fields`' order. */
+                "fields": [
+                  { "id": "hunt", "name": "The Hunt", "prompt": "Who you will kill" },
+                  { "id": "bond", "name": "The Bond", "prompt": "Who you stand for" },
+                  { "id": "word", "name": "The Word", "prompt": "How you fight and keep your deals" }
+                ],
+                "examples": [
+                  { "name": "The Road", "values": ["Only those who have chosen violence", "Never leave one of your own behind", "A wrong is answered in kind, never more, never less"] },
+                  { "name": "The Hall", "values": ["Never the young, the sick, or the defenseless", "Anyone at your table is under your protection", "Face what you fight: no poison, no traps, no hiding"] },
+                  { "name": "The Contract", "values": ["Never kill for pleasure", "Whoever you are paid to protect, you protect absolutely", "A deal struck is kept to the letter"] }
+                ]
+              }
+            ]
           }
         ]
       },
-      "powers": [],
-      "vulnerabilities": [],
+      "coreMechanic": {
+        "name": "The Thirst",
+        "description": "Every power you use is paid for in blood, and only blood pays it back. Spend up to your RoU in SFR each round. The Thirst takes its toll every day: you lose SFR equal to half your RoU for each full day that passes without feeding. Older Vampires don't feed less often. They feed bigger. Feeding takes time (a full turn for each HL drained), takes control (in combat, a Grapple or a helpless target), and can kill: victims at 0 HL die unless stabilized. Stored blood keeps a Vampire alive. Only the hunt keeps it full.",
+        "panels": [
+          {
+            "id": "sfr",
+            "type": "tracker",
+            "title": "SFR",
+            "max": "startingSFR",
+            "counts": "down",
+            "resource": "sfr",
+            "note": "Counts spend against a computed pool. RoU caps a single round."
+          },
+          /* Decision 201 (VQ21): feeding refills the pool `resource` names, a
+             kind's `perHL` for each HL drained, never past the max, or past
+             `upToShare` of it for stored blood. A day unfed takes `share` of
+             RoU. At `low.at` (RoU) or under, `low` says what's owed. */
+          {
+            "id": "thirst",
+            "type": "feed",
+            "title": "The Thirst",
+            "resource": "sfr",
+            "unit": "HL drained",
+            "kinds": [
+              { "id": "fresh", "name": "Fresh", "text": "a living mortal", "perHL": 3 },
+              { "id": "stored", "name": "Stored", "text": "blood bags, the recently dead", "perHL": 2, "upToShare": 0.5 }
+            ],
+            "unfed": { "label": "A day unfed", "share": 0.5 },
+            "low": { "at": "rou", "name": "Hunger", "text": "Your SFR is at your RoU or lower. Make a WILL Essence check (TN 7, TH 1) or fall into a Blood Frenzy." }
+          },
+          {
+            "id": "code",
+            "type": "toggle",
+            "title": "The Code",
+            "origin": "draugur",
+            "options": [
+              { "name": "Kept" },
+              { "name": "Broken", "effectText": "+1 TH on every Essence check until you make amends the GM agrees to. Your Ancient Weapon doesn't answer." }
+            ]
+          }
+        ]
+      },
+      "powers": [
+        { "id": "bestial-blessings", "name": "Bestial Blessings", "cost": "1 SFR, until dismissed or the encounter ends", "effect": "Retractable claws: BOD+3 melee damage, AP, and +2 MOB for climbing. Claws retract if you are stunned or knocked unconscious.", "perRank": "+1 damage (max 5)", "maxRank": 5 },
+        { "id": "vitality-surge", "name": "Vitality Surge", "cost": "2 SFR per HL healed", "effect": "Fast Action: heal up to your rank in HL per round. Can't restore Withering damage. At Rank 5, severed limbs regenerate.", "perRank": "+1 HL per round (max 5)", "maxRank": 5 },
+        { "id": "preternatural-speed", "name": "Preternatural Speed", "cost": "2 SFR per round, sustained", "effect": "+2 MOB, +2 to defensive actions (Dodge and Parry), and one extra movement action each turn. Doesn't stack with other speed powers.", "perRank": "None", "ranked": false },
+        { "id": "cursed-evolution", "name": "Cursed Evolution", "cost": "None", "effect": "Drink at least 1 HL of another Vampire's blood and win an opposed WILL Essence check to gain access to the bloodline it was made with. Bloodline powers are bought with IP; one bloodline per Vampire. Not available with Pure Blooded.", "perRank": "+1 Hit (max 3)", "maxRank": 3 },
+
+        { "id": "shadow-play", "origin": "strigoi", "name": "Shadow Play (Masked)", "cost": "Rank + 2; rank alone for a glamour on yourself", "effect": "An illusion of an object, person, or scene within WILL meters, real to all senses, lasting 1 hour per WILL. Anyone scrutinizing it makes a WILL Essence check (TN 8, TH = rank) to see through it.", "perRank": "+1 TH (max 5)", "maxRank": 5 },
+        { "id": "nightmare-echo", "origin": "strigoi", "name": "Nightmare Echo (Masked)", "cost": "Rank", "effect": "On a bite, the target makes a WILL Essence check (TN 8, TH = rank + 1) or suffers −1 to all combat checks and −5% to SAN checks for 1d4 hours.", "perRank": "+1 TH and −5% (max 5)", "maxRank": 5 },
+        { "id": "veil-of-night", "origin": "strigoi", "name": "Veil of Night (Masked)", "cost": "Rank per round, sustained", "effect": "Darkness within 20 meters: +2 Stealth, and your aura is hidden unless revealed by a WILL Essence check (TN 8, TH = rank + 1). True Faith and magical light pierce it.", "perRank": "+5m and +1 TH (max 5)", "maxRank": 5 },
+        { "id": "bone-spines", "origin": "strigoi", "name": "Bone Spines (Unmasked)", "cost": "Rank", "effect": "Spines for the encounter: +3 melee damage, +5 while grappling.", "perRank": "+1 damage (max 5)", "maxRank": 5 },
+        { "id": "monstrous-maw", "origin": "strigoi", "name": "Monstrous Maw (Unmasked)", "cost": "Rank + 2", "effect": "For 1 round, your bite gains +10 damage and AP 3, and a hit against an unarmored target severs a limb (Maimed).", "perRank": "+1 round (max 5)", "maxRank": 5 },
+        { "id": "rending-claws", "origin": "strigoi", "name": "Rending Claws (Unmasked)", "cost": "Rank", "effect": "With Bestial Blessings active, your claw attacks this round gain +2 damage per rank and inflict Bleeding for rounds equal to rank.", "perRank": "+2 damage and +1 round of Bleeding (max 5)", "maxRank": 5 },
+
+        /* Iron Hide and Icebound Resilience: Natural Armor while running, asked
+           for on a hit (Decision 104's `while`, read off a held power's rank). */
+        { "id": "icebound-resilience", "origin": "upyr", "name": "Icebound Resilience", "cost": "Rank + 2", "effect": "For 3 rounds: +2 BOD, +2 REF, +1 Natural Armor, and resistance to extreme cold, knockdown, and slowing.", "perRank": "+1 round (max 4)", "maxRank": 4,
+          "grants": [{ "type": "naturalArmor", "plus": 1, "while": "while Icebound Resilience is running" }] },
+        { "id": "iron-hide", "origin": "upyr", "name": "Iron Hide", "cost": "Rank per round, sustained", "effect": "Gain Natural Armor equal to rank + 1.", "perRank": "+1 Natural Armor (max 3)", "maxRank": 3,
+          "grants": [{ "type": "naturalArmor", "perRank": 1, "plus": 1, "while": "while Iron Hide is running" }] },
+        { "id": "rend-and-tear", "origin": "upyr", "name": "Rend and Tear", "cost": "Rank", "effect": "Claws and fangs gain AP 2 and inflict Bleeding for 2 rounds. A kill refunds the SFR spent on this activation.", "perRank": "+1 round of Bleeding (max 5)", "maxRank": 5 },
+        { "id": "cold-embrace", "origin": "upyr", "name": "Cold Embrace", "cost": "Rank per round, sustained", "effect": "Enemies within 3 meters make a BOD Essence check (TN 8, TH = rank) each round or take Pain Levels equal to rank. True Faith and other Vampires are unaffected.", "perRank": "+1 TH and +1 Pain Level (max 5)", "maxRank": 5 },
+        { "id": "nightmare-visage", "origin": "upyr", "name": "Nightmare Visage", "cost": "Rank + 2", "effect": "Enemies within 5 meters make a WILL Essence check (TN 9, TH = rank) or are Frightened for 1 round. Anyone who resists is immune for the encounter.", "perRank": "+1m and +1 TH (max 3)", "maxRank": 3 },
+        { "id": "red-mist", "origin": "upyr", "name": "Red Mist", "cost": "3 SFR", "effect": "For 1 minute, you become mist: immune to Physical damage and able to pass through tight spaces, but unable to attack. Sunlight still burns you, and Elemental, Spirit, and Aether damage still affect you.", "perRank": "+1 minute (max 4)", "maxRank": 4 },
+
+        { "id": "battleborn-instinct", "origin": "draugur", "name": "Battleborn Instinct", "cost": "Rank + 2", "effect": "With an Ancient Weapon: +2 to all combat checks and one extra attack per round for WILL rounds. Ends if you are immobilized or incapacitated.", "perRank": "+1 to combat checks (max 5)", "maxRank": 5 },
+        { "id": "deathless-resilience", "origin": "draugur", "name": "Deathless Resilience", "cost": "3 SFR, once per encounter", "effect": "Always: you don't bleed, need no air, and are immune to fear. As a reaction, when reduced to 0 Health by anything but Withering, rise with 1 HL.", "perRank": "None", "ranked": false },
+        { "id": "blood-of-valhalla", "origin": "draugur", "name": "Blood of Valhalla", "cost": "Rank + 2 per round, sustained", "effect": "+2 melee damage and regenerate HL equal to rank each round (never Withering). Vitality Surge can't be used while active. When it ends, −4 to all combat actions for 1d4 rounds, and it can't restart until then.", "perRank": "+1 HL and −1 to the crash penalty (max 4)", "maxRank": 4 },
+        { "id": "odins-aegis", "origin": "draugur", "name": "Odin's Aegis", "cost": "Rank, as a reaction", "effect": "Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus + 2 × rank. No effect on physical attacks.", "perRank": "+2 reduction (max 5)", "maxRank": 5 },
+        { "id": "spectral-veil", "origin": "draugur", "name": "Spectral Veil", "cost": "Rank + 2 per round, sustained", "effect": "Semi-ethereal: immune to Physical damage, able to pass through walls, +2 Stealth. You can attack only with your Ancient Weapon, and can't handle any other object. Sunlight still burns you, and Elemental, Spirit, and Aether damage still affect you.", "perRank": "+1 Stealth (max 3)", "maxRank": 3 },
+        { "id": "hels-dread", "origin": "draugur", "name": "Hel's Dread", "cost": "Rank", "effect": "Living creatures within 3 meters make a WILL Essence check (TN 9, TH = rank) or take −3 to all combat checks until they pass the same check at the end of a later turn. No effect on the undead or the fear-immune.", "perRank": "+1 TH (max 5)", "maxRank": 5 }
+      ],
+      "vulnerabilities": [
+        { "id": "sunlight", "name": "Sunlight and UV", "description": "Exposure to direct sunlight deals 1d4 Withering damage per round. UV weapons built to mimic natural light, like the Sunburst Grenade, deal Withering damage as well. SFR can't prevent or heal it; it heals only naturally." },
+        { "id": "consecration", "name": "Consecration", "description": "Consecrated weapons, from blessed rounds to consecrated arrowheads, deal Withering damage. The blessing has to be in the weapon. A crucifix around a frightened neck is jewelry. Consecrated ground is a WILL Essence check (TN 8, TH 2) to cross and causes 1d4 Withering damage when entering." },
+        { "id": "staking", "name": "Staking", "description": "Anything through the heart, of any material, paralyzes you until it's removed." },
+        { "id": "day-rest", "name": "Day Rest", "description": "Vampires must rest each day in a dark, secure place and are helpless while resting. Each day skipped adds +2 to that day's Thirst, cumulative." },
+        { "id": "blood-frenzy", "name": "Blood Frenzy", "description": "When your SFR drops to your RoU or lower, make a WILL Essence check (TN 7, TH 1) to resist your hunger. Success delays the Frenzy for one hour, and each later delay adds +1 TH. Failure triggers it the moment you smell or see fresh blood. In Frenzy you don't tell friend from foe and ignore tactics, attacking and draining the nearest living creature until satiated or subdued; with no one near, you roam in search of prey. You can't stop feeding willingly. It ends with a WILL Essence check (TN 8, TH 2) each round once your SFR is above twice your RoU, by being physically restrained, or by being knocked unconscious at 0 HL." }
+      ],
       "growth": {
         "minorMilestones": "shared",
         "majorMilestones": []

@@ -620,6 +620,25 @@ the stats' scores, not their bonuses. Decision 111 adds `startingSpells`
 `castingPool` (`{ discipline: "evocation" }`: a TH above that rank is
 marked as reachable only by an exploding 10).
 
+A panel with `origin` shows only for that specialization (a Draugur's Code,
+Decision 200). A `toggle` option's `effectText` says what being in it means
+when nothing computes it; Main shows the switch and the text. A `feed` panel
+(Decision 201) refills the resource it names: `kinds` (`{ id, name, text,
+perHL, upToShare? }`), `unfed` (`{ label, share }` of RoU), and `low`
+(`{ at: "rou", name, text }`), said at RoU or under.
+
+An archetype with `powersBought` (`{ countBy, maxRankBy }`, data paths)
+holds only the `powers` its Base Powers placed a rank in (Decision 200); a
+power with `ranked: false` takes one to hold and is never raised. A power's
+`grants` count at its rank. A specialization option's `choices` (`{ id, name,
+type: "power" | "weapon" | "text", options | fields, examples? }`) ask for
+something at creation; a `power` choice bars the options not picked. The
+archetype's `naturalWeapons` are weapon lines on Main: a trait's, a held
+power's (`power`, `perRank`), or a choice's (`choice`), silenced while a
+toggle is on `offWhen`. A baseline trait's `pain: { healthLevelsFrom:
+"withering" }` puts only Withering's Health Levels on the Pain table
+(Decision 202).
+
 A `reference` panel (Decision 110) names the data sections it `shows`. The
 sheet has one renderer per section name and skips a name it has none for.
 It renders on the Character tab (Decision 158).
@@ -631,7 +650,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.18",
+    schemaVersion: "0.19",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -692,6 +711,16 @@ It renders on the Character tab (Decision 158).
                                      // `advantages` with source:"natural", cost 0 CP (0.13)
     disciplines: {},                 // Arcanist: CP-bought ranks { enchantment: 1 } (5 CP each, Decision 157;
                                      // Evocation starting rank from scaling table is NOT stored)
+    // (0.19, Decision 200) Base Powers placed at creation, ranks per archetype
+    // power id: a Vampire's { "bestial-blessings": 1, "iron-hide": 1 }. Read
+    // only when the archetype declares `powersBought`; a power is held only
+    // with a rank here. migrate() keeps whole positive counts, at most 10.
+    basePowers: {},
+    // (0.19, Decision 200) What a chosen specialization's `choices` asked for,
+    // per choice id: an option id ("built-to-last": "iron-hide",
+    // "ancient-weapon": "blade") or a text choice's fields as text
+    // ("code": { hunt, bond, word }). migrate() drops anything else.
+    optionPicks: {},
     // (0.16, Decision 153) What a write-in archetype is, in the player's
     // words. Read only when the archetype declares `writeIn`; every field is
     // text (or null), and migrate() drops anything else.
@@ -4288,6 +4317,37 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** F9 settles the shared list; the Vampire's Majors (P4b) need a grant this vocabulary can't say; Regeneration gets computed.
      - **Built:** app 0.39.0, game data 0.32; no schema bump. Log 2026-10-08 (P3b).
 
+200. **A Vampire is `0413`'s: three Bloodlines, Base Powers placed a rank at a time (F39's stub), creation choices a Bloodline asks for, and weapon lines the archetype gives.**
+     *2026-10-08 · Ken + Claude · Touches: vampire, powersBought, archetypeChoices.basePowers, basePowerState, placeBasePower, powerPool, archetypePowers, ranked, archetypeChoices.optionPicks, optionChoices, Built to Last, Iron Hide, Icebound Resilience, Ancient Weapon, The Code, effectText, panel origin, naturalWeapons, archetypeWeapons, Bite, Claws, Admin Bloodline, blood-pool, character schema 0.19, F7, F39, F41, crb-v4-sync P4, VQ20, VQ23–VQ26*
+     - **Decided:** The Vampire is `0413`'s, `draft`. With `powersBought`, an archetype holds only the powers its Base Powers placed a rank in, Innate or its Bloodline's, none above Max Starting Rank or the printed max; `ranked: false` takes one and is never raised (F39's stub). A specialization's `choices` ask at creation: Built to Last a `power` pick that bars the other (F41's stub), the Ancient Weapon, the Code's tenets as text. The Code is a Draugur toggle; Broken says its cost and silences the weapon. Main shows the bite, the claws (+1 a rank past the first) and the Ancient Weapon. Masked and sustained powers are text. Iron Hide and Icebound Resilience are conditional Natural Armor at their rank. Admin sets a Bloodline. Schema 0.19 stores `basePowers` and `optionPicks`.
+     - **Why:** `0413` wrote the archetype on 2026-10-07; Ken answered VQ20–VQ27 the same day.
+     - **Rejected:**
+       - Every power at rank 1, as the Werewolf's: a Vampire chooses its powers.
+       - One power per Base Power: the book caps ranks; that ruling would cap each at 1, same shape.
+       - Built to Last as two powers that only don't stack: Ken reads "choose" as a pick (F41 asks Deighton).
+       - Toggles for Masked and the sustained powers: no number the sheet derives (VQ23).
+     - **Replaces:** nothing. Extends Decisions 196 (`powersBought`), 104 (a power's `grants` are Natural Armor) and 15 (a panel can be one specialization's).
+     - **Revisit if:** Deighton and Scott answer F39 or Deighton F41; the Vampire's Majors (P4b) need Splice's or Cursed Evolution's other-Bloodline powers.
+     - **Built:** app 0.39.0, game data 0.33, schema 0.19. Log 2026-10-08 (P4).
+
+201. **The Thirst is computed: Feed refills SFR by the HL drained, stored blood only to half, A day unfed takes half RoU, and Hunger speaks at RoU or under.**
+     *2026-10-08 · Ken + Claude · Touches: feed panel, feedView, feedGain, feed, goUnfed, Feed, A day unfed, Hunger, Blood Frenzy, trackers.sfr.spent, SFR, RoU, Fresh, Stored, perHL, upToShare, Main, Trackers, crb-v4-sync P4, VQ21*
+     - **Decided:** A `feed` panel refills the resource it names: Fresh 3 SFR and Stored 2 SFR a HL drained, never past the max, and stored never past half of it. **A day unfed** takes half RoU and stops at empty. At RoU or under, the panel says the WILL check (TN 7, TH 1) or Blood Frenzy. Each press is one Undo, on Main under SFR and on Trackers. Blood Frenzy is text.
+     - **Why:** Ken (VQ21): all of it. Each is a number the book states and the sheet already holds.
+     - **Rejected:** a day clock (the app doesn't know the date, as VQ12 found); rolling the WILL check (the app never rolls); computing Frenzy's own behaviour, which is the table's.
+     - **Replaces:** nothing. Extends Decision 15's panels.
+     - **Revisit if:** Day Rest's "+2 to that day's Thirst" is defined (`crb-catch-up.md`), or a Major (Blood Feast, Blood Alchemist, P4b) changes a kind's numbers.
+     - **Built:** app 0.39.0, game data 0.33. Log 2026-10-08 (P4).
+
+202. **Pain Immunity: a Vampire's Pain counts only the Health Levels Withering took; Conditions add as for anyone.**
+     *2026-10-08 · Ken + Claude · Touches: painState, painImmunity, Pain Immunity, Pain Level, Health Levels lost, Withering, witheringDamage, sunlight, Agonized, Conditions, baselineTraits pain, crb-v4-sync P4, VQ22*
+     - **Decided:** A baseline trait with `pain: { healthLevelsFrom: "withering" }` puts only Withering's Health Levels on the Pain table. Conditions' Pain (Agonized) and Aberrations' add on top, clamped as ever. The sheet says why on Trackers. No other archetype changes.
+     - **Why:** `0413`: "no pain penalties from ordinary damage. Sunlight is the one pain you still feel." Ken (VQ22): compute it; Conditions and sunlight still hurt. The sheet only knows Withering, so it stands for sunlight.
+     - **Rejected:** a flag on the Condition half (F40): Ken answered it; consecration's Withering told apart from sunlight's, since the sheet can't tell the source.
+     - **Replaces:** nothing. Extends Decision 98's Pain band (CQ6).
+     - **Revisit if:** a Withering source other than sunlight shouldn't hurt a Vampire, or a GM's PC row (Decision 191) needs the same.
+     - **Built:** app 0.39.0, game data 0.33. Log 2026-10-08 (P4).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4299,14 +4359,13 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
-| F7 | SFR per archetype, **now the Vampire's half only**: the Werewolf half closed with `0414` (Decision 196: its Origins, powers and Predator's Mark's flat 2 SFR are written and in the data). Vampire Blood Pool TBD. **2026-09-10 meeting (Scott/Deighton) added Vampire direction, not yet locked**: blood efficiency scales with age/power, bagged blood restores less SFR than fresh, a feeding vampire is vulnerable (treated as grappled), and sunlight resistance is a rare-power exception — the cost never fully goes away. A Werewolf predator's-mark rework (flat 2 SFR returned on takedown, vs. the current 1-spent/1-returned) was also proposed; `0414` wrote it in. The Vampire entry's note on unwritten content (its missing blocks) is filed here too; `crb-v4-sync.md` P4 brings `0413` in | Ken → docs | No |
 | F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared | Ken/D | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) | Ken/D/Scott | No |
@@ -4322,7 +4381,8 @@ here are in `log/archive.md`.
 | F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 0540 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) | Deighton | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 | F38 | **What a Werewolf's Base Powers buy.** `0414` says a Werewolf "doesn't choose its powers; it carries the whole kit", every Innate and Origin power at Rank 1, yet its scaling table has a **Base Powers** column (1 / 2 / 2 / 3) beside Max Starting Rank (1 / 1 / 2 / 2). Extra ranks to place up to Max Starting Rank, or something else? **Stub (Decision 196):** every power held at rank 1, Base Powers and Max Starting Rank shown beside the powers with a `playerNote` saying it's the GM's call, nothing spent at creation | Deighton/Scott | No |
-| F39 | **How a Vampire spends Base Powers.** `0413`: "Spend your Base Powers (2 / 3 / 4 / 5) on Innate and Bloodline powers; no power starts above your Max Starting Rank." Is one Base Power one rank, so a Street Vampire places two ranks, none above 1? Ken ruled the other half: Cursed Evolution's second bloodline is bought at `0450`'s New Power price. Not stubbed yet: `crb-v4-sync.md` P4 stubs it | Deighton/Scott | No (P4 stubs it) |
+| F39 | **How a Vampire spends Base Powers.** `0413`: "Spend your Base Powers (2 / 3 / 4 / 5) on Innate and Bloodline powers; no power starts above your Max Starting Rank." Is one Base Power one rank, so a Street Vampire places two ranks, none above 1? Ken ruled the other half: Cursed Evolution's second bloodline is bought at `0450`'s New Power price. **Stub (Decision 200, VQ20):** one Base Power is one rank in an Innate power or the Bloodline's, none above Max Starting Rank or the book's printed maximum; a power with no ranks (Preternatural Speed, Deathless Resilience) takes one to hold; a power is held only once a rank is placed. A "one power per Base Power" ruling caps each at 1 and keeps the stored shape | Deighton/Scott | No |
+| F41 | **Is Built to Last a creation pick?** `0413`'s Upyr: "Choose a long shell (Iron Hide) or a short surge (Icebound Resilience). These powers don't stack." One chosen at creation and the other never held, or two powers that only don't stack while running? **Stub (Decision 200), Ken's reading (VQ25):** a creation pick. The power not chosen can't take Base Powers or IP; choosing again takes back the ranks placed | Deighton | No |
 
 F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.
 
