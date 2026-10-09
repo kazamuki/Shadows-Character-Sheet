@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.39.0",
-    "date": null,
+    "date": "2026-10-09",
     "intro": [],
     "items": [
       "**The Werewolf, as the book now writes it.** Three Origins to choose from: **Trueborn**, **Wildblood** and **Forge Fang**, each with how it shifts, how it refuels, what the beast needs, and a starter power. Wildblood's Aspect of the Beast and the Forge Fang's CyberWolf Protocol come with their tables. The Trueborn's Lunar Phase Blessing is gone from the book, and from the sheet.",
