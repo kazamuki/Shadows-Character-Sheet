@@ -227,3 +227,36 @@ test("every flagged entry a player meets says something in voice", () => {
       `${f.id}: playerNote is written in maintainer voice`);
   }
 });
+
+// A minus is a minus (S13a's SQ7, Ken 2026-10-09): a negative number reads −1,
+// the true minus, wherever it's shown. A hyphen is for words, `–` for a range.
+// A hyphen before a digit, with no letter or digit before it (so not 1d4-1 or 5-8),
+// is a hyphen standing in: " -1", "(-2)", "Ç-50".
+const HYPHEN_MINUS = /(^|[^\w-])-\d/;
+
+test("a minus is a minus: no data text a player reads writes one with a hyphen", () => {
+  const found = [];
+  (function walk(v, path) {
+    if (typeof v === "string") { if (HYPHEN_MINUS.test(v)) found.push(`${path}: ${v.slice(0, 60)}`); return; }
+    if (!v || typeof v !== "object") return;
+    for (const [k, x] of Object.entries(v)) if (k !== "flagNote") walk(x, path ? `${path}.${k}` : k);
+  })(D, "");
+  assert.deepEqual(found, [], "write a negative number with − (U+2212), not a hyphen");
+});
+
+test("a minus is a minus: a negative modifier, a spend and a lowered score read −", () => {
+  const ch = lockedCharacter();
+  ch.stats.BOD.base = 3;                       // a −1 modifier, on Main and Stats
+  Engine.addCredits(ch, -50, "a bribe");       // a spend in the Çredits journal
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const seen = [];
+  for (const id of app.$$("[data-sec]").map(t => t.dataset.sec)) {
+    app.click(`[data-sec="${id}"]`);
+    const text = visibleText(app);
+    for (const line of text.split("\n")) if (HYPHEN_MINUS.test(line)) seen.push(`${id}: ${line.trim().slice(0, 80)}`);
+    if (id === "main") assert.ok(text.includes("−1"), "BOD 3's modifier should read −1 on Main");
+  }
+  assert.deepEqual(seen, [], "a negative number rendered with a hyphen");
+});

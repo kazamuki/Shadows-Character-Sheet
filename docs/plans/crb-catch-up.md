@@ -20,6 +20,8 @@
 
 - ✅ ⚖ **Resources › Luck.** The book never says what Luck you start with. **Everyone starts with 4 LUCK** at every Power Level (Decision 157), and more can be bought at creation for **1 CP a point** (Decision 97). A bought point sits on top of the 4.
 - ✅ ❓ **Resources › Credits.** The book never says what Çredits you start with. The sheet rolls **Street 3d4 × 100 · Heroic 4d4 × 100 · Shadows 5d4 × 100 · World Coming Down 5d10 × 100**. Those numbers came from the older REF draft. Confirm they still stand (Ken/D), then put them here or in 0400's table.
+- ☐ ⚖ **A minus is a minus** (Ken, 2026-10-09). Write a negative number with the true minus, `−`, as 0530 already does, not a hyphen. Two places: **Overextension Risk: Essence Checks › Essence Check Outcomes**, the example's *Net Hits = -1* (its `–` there is a separator, and stays), and **Resources › Hit Points & Health Levels**, *Apply -1 modifier to any roll* and the worked example's *(-1 on Skill Checks*. The sheet shows `−` from app 0.39.1.
+- ❓ **Action Risk: Skill Checks: the difficulty names.** 0300 says *10 for easy, 15 for medium, and 20 for hard*; 2130's table (*Core Mechanics in Play*) says *10 (Easy), 15 (Average), 20 (Challenging)*. Pick one set and use it in both. The sheet's data uses easy / medium / hard; GM mode's Reference tab will quote 2130 as written, so whichever you pick, tell the next session and it follows.
 
 ## 0400_Character_Creation
 
@@ -136,6 +138,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
   - **Different Conditions stack with each other**, and all the penalties on one roll stop at **−8**. 0530's Quick Reference has the −8 cap for modifiers but doesn't say it includes Conditions.
 - ☐ ⚖ **Going Down › Shock.** "Half your Health Levels" means **half your maximum, rounded up**: BOD 5 → 3 (CQ10).
 - ☐ (optional) Only **Injured and Maimed** take a body part, and the same one can be on two parts, e.g. an Injured arm and an Injured leg (CQ3).
+- ☐ ⚖ **A minus is a minus** (Ken, 2026-10-09). Write a negative number with `−`, as 0530 does. In the **Conditions** table: Bleeding (*-1 HP per round*), Blinded (*-5*), Burning (*-1*), Disoriented (*-1*), Frightened (*-1*), Grappled (*-5*), Prone (*-3*), Restrained (*-5*) and Shocked (*-1*). Under **Pain**: the three per-level penalties (*-1 to Skill Checks*, *-1 die*, *-5%*) and the high-BOD example (*-3*, *-3*, *-15%*). The sheet shows `−` from app 0.39.1.
 
 ## 0550_Downtime
 

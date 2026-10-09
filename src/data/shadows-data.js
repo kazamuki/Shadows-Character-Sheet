@@ -135,7 +135,7 @@ window.SHADOWS_DATA = {
        rule as a player reads it. */
     "raiseCost": { "2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 2, "8": 2, "9": 2, "10": 2 },
     "buyText": "Every stat starts at 1 for free. Each point up to 6 costs 1 Stat Point, and each point from 7 to 10 costs 2, so a 10 costs 13 in all.",
-    "modifierRuleText": "For each point below 4, a -1 penalty for skills or synergies. For each point above 6, a +1 bonus for skills or synergies.",
+    "modifierRuleText": "For each point below 4, a −1 penalty for skills or synergies. For each point above 6, a +1 bonus for skills or synergies.",
     "beyondHumanLimits": "Some Archetypes (Vampires, Werewolves) are not bound by normal human ceilings; their Basic Stats can exceed 10. Once a stat passes 10, gains slow down: 11-15 is +5, 16-20 is +6, 21-25 is +7, and another +1 for every 5 points after that.",
     "ranges": [
       {
@@ -1515,7 +1515,7 @@ window.SHADOWS_DATA = {
       "name": "True Faith",
       "cost": 15,
       "maxRank": 1,
-      "description": "Whatever’s out there, it blinks first.\n\nThrough sheer faith, you activate an aura that repels supernatural attacks, magic, and psychic assaults for 12 Rounds. This aura applies the following effects:\n\n- Within 10 feet of you, supernatural beings suffer a -3 Pain Penalty on all skill checks even if they're immune to pain effects.\n\n- Reduce Target number of Essence Checks to defend against supernatural abilities and powers by 2.\n\n- Magic and psychic abilities used against you have an 85% chance of failure.\n\nTrue Faith can only be activated once per encounter."
+      "description": "Whatever’s out there, it blinks first.\n\nThrough sheer faith, you activate an aura that repels supernatural attacks, magic, and psychic assaults for 12 Rounds. This aura applies the following effects:\n\n- Within 10 feet of you, supernatural beings suffer a −3 Pain Penalty on all skill checks even if they're immune to pain effects.\n\n- Reduce Target number of Essence Checks to defend against supernatural abilities and powers by 2.\n\n- Magic and psychic abilities used against you have an 85% chance of failure.\n\nTrue Faith can only be activated once per encounter."
     },
     {
       "id": "unshakeable",
@@ -1572,7 +1572,7 @@ window.SHADOWS_DATA = {
       "name": "Berserker",
       "pointsGranted": 7,
       "maxRank": 1,
-      "description": "This isn't just a short temper; there's a brewing storm of fury always within you. It is a challenge to keep it at bay especially if you're in the presence of violence.\n\nSanity is reduced by 15%.\n\nAt the start of combat, roll a Sanity check. Failure means you have lost your ability to keep the beast inside and the following effects are active.\n\n- You're consumed by the need to commit violence. You will attack anyone you consider to be a threat or anyone that attempts to stop you from drawing blood while berserk. This lasts until the end of the encounter and triggers only once per encounter.\n\n- You suffer a -2 penalty to all defensive actions during combat as you aren't concerned about taking injury or avoiding pain.\n\n- Hand to hand attacks with Martial Arts or Melee skills get a +2 to hit and +4 to damage.\n\n- Target Number for other COOL Essence checks increase by 1 while berserk.\n\n- You may attempt to break from berserk once per turn with a COOL Essence Check (Target 9, Threshold 3).\n\n- If you are about to attack an ally, you may make COOL Essence Check (Target 9, Threshold 2) to stop yourself. On a successful check you stop the attack but you're still berserk."
+      "description": "This isn't just a short temper; there's a brewing storm of fury always within you. It is a challenge to keep it at bay especially if you're in the presence of violence.\n\nSanity is reduced by 15%.\n\nAt the start of combat, roll a Sanity check. Failure means you have lost your ability to keep the beast inside and the following effects are active.\n\n- You're consumed by the need to commit violence. You will attack anyone you consider to be a threat or anyone that attempts to stop you from drawing blood while berserk. This lasts until the end of the encounter and triggers only once per encounter.\n\n- You suffer a −2 penalty to all defensive actions during combat as you aren't concerned about taking injury or avoiding pain.\n\n- Hand to hand attacks with Martial Arts or Melee skills get a +2 to hit and +4 to damage.\n\n- Target Number for other COOL Essence checks increase by 1 while berserk.\n\n- You may attempt to break from berserk once per turn with a COOL Essence Check (Target 9, Threshold 3).\n\n- If you are about to attack an ally, you may make COOL Essence Check (Target 9, Threshold 2) to stop yourself. On a successful check you stop the attack but you're still berserk."
     },
     {
       "id": "blood-lust",
@@ -1627,7 +1627,7 @@ window.SHADOWS_DATA = {
           "count": 1,
           "perRank": true,
           "distinct": true,
-          "note": "Checks with the selected Skill suffer -2."
+          "note": "Checks with the selected Skill suffer −2."
         },
         {
           "id": "detail",
@@ -1639,7 +1639,7 @@ window.SHADOWS_DATA = {
       "name": "Defect/Flaw",
       "pointsGranted": 2,
       "maxRank": 4,
-      "description": "You have a specific flaw or defect that makes things more difficult for you. These can be things like being illiterate, suffering from dyslexia, or color blindness. Discuss what the defect is with your GM when you select this Disadvantage. Relevant skills this Disadvantage affects suffer a -2 penalty. Each Rank purchased for this Disadvantage applies to a different defect and skill(s).\n\nPossible defects could be:\n\n- Color Blindness (visual Awareness Checks)\n\n- Hard of hearing (audio Awareness Checks)\n\n- Uncontrollable Stutter (Persuasion Checks)\n\n- Shaky hands (Combat Skills like Handgun or Melee)\n\n- Vertigo (Acrobatics Checks)\n\n- Missing eye or lack of depth perception (combat skills using firearms or Pilot)"
+      "description": "You have a specific flaw or defect that makes things more difficult for you. These can be things like being illiterate, suffering from dyslexia, or color blindness. Discuss what the defect is with your GM when you select this Disadvantage. Relevant skills this Disadvantage affects suffer a −2 penalty. Each Rank purchased for this Disadvantage applies to a different defect and skill(s).\n\nPossible defects could be:\n\n- Color Blindness (visual Awareness Checks)\n\n- Hard of hearing (audio Awareness Checks)\n\n- Uncontrollable Stutter (Persuasion Checks)\n\n- Shaky hands (Combat Skills like Handgun or Melee)\n\n- Vertigo (Acrobatics Checks)\n\n- Missing eye or lack of depth perception (combat skills using firearms or Pilot)"
     },
     {
       "id": "danger-magnet",
@@ -3586,7 +3586,7 @@ window.SHADOWS_DATA = {
     { "id": "EMP", "description": "Disrupts electronic systems and cybernetic implants on hit. Minimal against standard targets; against heavily augmented targets or electronics, the EMP effect triggers separately from the damage." },
     { "id": "Incendiary", "description": "Sets the impact area on fire, causing Burning to all targets in the affected zone until extinguished." },
     { "id": "Knockdown", "description": "Can knock a target prone instead of dealing damage. Declare before the attack roll; a hit knocks the target down, automatically. Choose damage or knockdown, not both." },
-    { "id": "Mounted", "description": "Requires a bipod, hardpoint, or vehicle mount for effective use. Firing without one: BOD Essence Check, success fires at -4 ACC, failure means the weapon is uncontrollable." },
+    { "id": "Mounted", "description": "Requires a bipod, hardpoint, or vehicle mount for effective use. Firing without one: BOD Essence Check, success fires at −4 ACC, failure means the weapon is uncontrollable." },
     { "id": "No Recoil", "description": "Produces no recoil on discharge. The ACC bonus applies to both Single and Burst fire, not just Single." },
     { "id": "Non-lethal", "description": "Designed for incapacitation rather than harm. Descriptor only -- the weapon's damage value (or lack of one) determines the mechanical effect." },
     { "id": "Payload", "description": "The weapon's effect is determined by the equipped arrowhead or bolt type rather than the platform itself." },
@@ -3973,7 +3973,7 @@ window.SHADOWS_DATA = {
     { "id": "silver-tipped-arrowhead", "name": "Silver-Tipped", "category": "ammo", "availability": "By Practice", "cost": 300, "costText": "300Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Withering (Lycanthropes)"], "notes": "Arrowhead. Base weapon DMG." },
     { "id": "iron-cored-arrowhead", "name": "Iron-Cored", "category": "ammo", "availability": "By Practice", "cost": 300, "costText": "300Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Withering (Fae / Spirits)"], "notes": "Arrowhead. Base weapon DMG." },
     { "id": "consecrated-arrowhead", "name": "Consecrated", "category": "ammo", "availability": "By Practice", "cost": 250, "costText": "250Ç / 6", "pack": 6, "unit": "arrow", "consumable": true, "tags": ["Withering (Undead / Demonic)"], "notes": "Arrowhead. Base weapon DMG." },
-    { "id": "void-touched-arrowhead", "name": "Void-Touched", "category": "ammo", "availability": "By Practice", "cost": null, "costText": "No listed price", "pack": 1, "unit": "arrow", "consumable": true, "tags": ["Withering (All Supernaturals)"], "notes": "Arrowhead. Base DMG -2.", "flavorLine": "The only arrowhead effective against the full range of supernatural targets, at the cost of reduced physical impact." },
+    { "id": "void-touched-arrowhead", "name": "Void-Touched", "category": "ammo", "availability": "By Practice", "cost": null, "costText": "No listed price", "pack": 1, "unit": "arrow", "consumable": true, "tags": ["Withering (All Supernaturals)"], "notes": "Arrowhead. Base DMG −2.", "flavorLine": "The only arrowhead effective against the full range of supernatural targets, at the cost of reduced physical impact." },
     { "id": "paper-sheet-standard", "name": "Paper (sheet, standard)", "category": "materials", "availability": "Common", "cost": 5, "costText": "5Ç / 10", "pack": 10, "unit": "sheet", "consumable": true, "notes": "Degradable. Works for any single-charge inscription." },
     { "id": "cloth-square-standard", "name": "Cloth (square, standard)", "category": "materials", "availability": "Common", "cost": 10, "costText": "10Ç / 10", "pack": 10, "unit": "square", "consumable": true, "notes": "Degradable. Flexible — can be worn or wrapped." },
     { "id": "wood-blank-small", "name": "Wood blank (small)", "category": "materials", "availability": "Common", "cost": 15, "consumable": true, "notes": "Once-Living. 3 charges. Coins, discs, small carvings." },
@@ -4080,7 +4080,7 @@ window.SHADOWS_DATA = {
     },
     "penaltyStacking": {
       "cap": -8,
-      "text": "Different Conditions stack. All the penalties on one roll together (Conditions, range, cover, visibility) never go past -8."
+      "text": "Different Conditions stack. All the penalties on one roll together (Conditions, range, cover, visibility) never go past −8."
     }
   },
   "bodyLocations": [
@@ -4195,16 +4195,16 @@ window.SHADOWS_DATA = {
       "effect": "Operate at 1 Pain Level higher, to a max of Pain Level 3.",
       "recovery": "Medical (Difficulty 15) or a Nanomed Kit.",
       "painLevels": 1 },
-    { "id": "bleeding", "name": "Bleeding", "short": "-1 HP each round",
-      "effect": "-1 HP per round.",
+    { "id": "bleeding", "name": "Bleeding", "short": "−1 HP each round",
+      "effect": "−1 HP per round.",
       "recovery": "BOD Essence TN 8 TH 1, Medical (Difficulty 15), or a Nanomed Kit.",
       "ongoing": { "hp": 1, "per": "round" } },
-    { "id": "blinded", "name": "Blinded", "short": "can't see · -5 attack/defense",
-      "effect": "Can't see. Autofail any check requiring sight. Attack/Defense at -5.",
+    { "id": "blinded", "name": "Blinded", "short": "can't see · −5 attack/defense",
+      "effect": "Can't see. Autofail any check requiring sight. Attack/Defense at −5.",
       "recovery": "BOD Essence TN 8 TH 1, or end of scene if temporary.",
       "attackDefense": -5 },
-    { "id": "burning", "name": "Burning", "short": "damage each round · -1 to rolls",
-      "effect": "Ongoing damage based on the source. -1 to all rolls.",
+    { "id": "burning", "name": "Burning", "short": "damage each round · −1 to rolls",
+      "effect": "Ongoing damage based on the source. −1 to all rolls.",
       "recovery": "Remove the source, then treat as Bleeding.",
       "rollPenalty": -1, "ongoing": { "source": true, "per": "round" } },
     { "id": "deafened", "name": "Deafened", "short": "can't hear",
@@ -4216,16 +4216,16 @@ window.SHADOWS_DATA = {
     { "id": "disarmed", "name": "Disarmed", "short": "weapon dropped",
       "effect": "You aren't holding your weapon and can't use it.",
       "recovery": "Recover the weapon, spending a Move, Fast, or Standard action." },
-    { "id": "disoriented", "name": "Disoriented", "short": "-1 to rolls",
-      "effect": "-1 to all rolls.",
+    { "id": "disoriented", "name": "Disoriented", "short": "−1 to rolls",
+      "effect": "−1 to all rolls.",
       "recovery": "BOD Essence TN 8 TH 1, or end of scene if temporary.",
       "rollPenalty": -1 },
-    { "id": "frightened", "name": "Frightened", "short": "-1 near the source",
-      "effect": "-1 to all rolls while the source is present. Can't willingly move toward the source.",
+    { "id": "frightened", "name": "Frightened", "short": "−1 near the source",
+      "effect": "−1 to all rolls while the source is present. Can't willingly move toward the source.",
       "recovery": "Remove the source, or WILL Essence TN 8 TH 2 with the source present.",
       "rollPenaltyWhen": { "amount": -1, "when": "while the source is present" } },
-    { "id": "grappled", "name": "Grappled", "short": "-5 to fine movement",
-      "effect": "-5 to anything requiring sophisticated movement.",
+    { "id": "grappled", "name": "Grappled", "short": "−5 to fine movement",
+      "effect": "−5 to anything requiring sophisticated movement.",
       "recovery": "Remove the source, or a BOD or REF Essence Check opposed by the grappler (your choice)." },
     { "id": "injured", "name": "Injured", "short": "out of action",
       "effect": "This body part is damaged and doesn't work.",
@@ -4242,16 +4242,16 @@ window.SHADOWS_DATA = {
     { "id": "poisoned", "name": "Poisoned", "short": "per the poison",
       "effect": "Inflicts a Condition based on the specific poison. Note which one.",
       "recovery": "BOD Essence TN 8 TH 2-4 (depending on the poison), an antidote, or a Nanomed Kit." },
-    { "id": "prone", "name": "Prone", "short": "half move · -3 attack/defense",
-      "effect": "Movement halved. Attack/Defense at -3.",
+    { "id": "prone", "name": "Prone", "short": "half move · −3 attack/defense",
+      "effect": "Movement halved. Attack/Defense at −3.",
       "recovery": "Spend a Move to stand.",
       "attackDefense": -3 },
-    { "id": "restrained", "name": "Restrained", "short": "can't move · -5 · no Dodge",
-      "effect": "Movement reduced to 0. -5 to all Actions. Cannot Dodge.",
+    { "id": "restrained", "name": "Restrained", "short": "can't move · −5 · no Dodge",
+      "effect": "Movement reduced to 0. −5 to all Actions. Cannot Dodge.",
       "recovery": "Remove the source, or BOD or REF Essence TN 8 TH 2 (your choice).",
       "attackDefense": -5 },
-    { "id": "shocked", "name": "Shocked", "short": "damage each round · -1 to rolls",
-      "effect": "Ongoing damage based on the source. -1 to all rolls.",
+    { "id": "shocked", "name": "Shocked", "short": "damage each round · −1 to rolls",
+      "effect": "Ongoing damage based on the source. −1 to all rolls.",
       "recovery": "Remove the source, then treat as Bleeding.",
       "rollPenalty": -1, "ongoing": { "source": true, "per": "round" } },
     { "id": "stunned", "name": "Stunned", "short": "helpless",

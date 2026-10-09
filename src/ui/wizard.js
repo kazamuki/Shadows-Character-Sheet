@@ -83,7 +83,7 @@ function wizardRailHtml(ch){
     h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold");
     const sfr = Engine.sfr(ch);
     if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
-    h += vrow(CR, ch.trackers.credits.current, "gold");
+    h += vrow(CR, numText(ch.trackers.credits.current), "gold");
     h += `</div><div class="vgroup">`;
     h += vrow("IP", ip.available, ip.available<0?"over":"");
     h += vrow("Milestone Pts", ms.mp);
@@ -95,7 +95,7 @@ function wizardRailHtml(ch){
   const dash = "&mdash;";
   h += `<div class="vgroup">` + D.stats.map(s=>{
     const m=t[s.id].mod;
-    return vrow(s.id, unset ? dash : t[s.id].value+" ("+(m>=0?"+":"")+m+")", "", s.id);
+    return vrow(s.id, unset ? dash : t[s.id].value+" ("+modText(m)+")", "", s.id);
   }).join("") + `</div>`;
   h += `<div class="vgroup">`;
   h += vrow("TOL", unset?dash:der.TOL, "", "TOL") + vrow("WILL", unset?dash:der.WILL, "", "WILL");
@@ -240,7 +240,7 @@ function renderStats(){
     h += `<div class="alloc-row">
       <div class="name">${esc(s.name)} <small>${esc(s.description)}</small>${next>1?`<small class="next-cost">The next point costs ${next}.</small>`:""}</div>
       ${stepper(v, "stat|"+s.id, v>D.statRules.base, next!=null && next<=left && pool.total!=null)}
-      <span class="mod ${m>0?"pos":m<0?"neg":""}">${m>=0?"+":""}${m}</span>
+      <span class="mod ${m>0?"pos":m<0?"neg":""}">${modText(m)}</span>
     </div>`;
   }
   return h + `</div>`;
