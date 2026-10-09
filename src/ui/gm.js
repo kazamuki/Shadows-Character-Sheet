@@ -215,7 +215,7 @@ function bindGmHome(tables){
 
 // ── The table screen ───────────────────────────────────────────────────
 // Sessions is first: a table opens on it (Decision 204), and reopens where it was left (171).
-const TABLE_SECTIONS = [{ id:"sessions", label:"Sessions", ui:"tab_sessions" }, { id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"encounters", label:"Encounters", ui:"tab_trackers" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
+const TABLE_SECTIONS = [{ id:"sessions", label:"Sessions", ui:"tab_sessions" }, { id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"encounters", label:"Encounters", ui:"tab_trackers" }, { id:"reference", label:"Reference", ui:"tab_skills" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
 // A twin of the sheet's tabButtonsHtml, with its own attribute, so the
 // sheet's [data-sec] binder never sees these.
 function tableTabButtonsHtml(){
@@ -279,9 +279,9 @@ function renderTable(){
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
   const body = S.tsection==="sessions" ? (sessPage ? (closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
     : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
-    : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : notesTabHtml(t);
+    : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : S.tsection==="reference" ? referenceTabHtml() : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
-  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]"]);
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
 }
 function bindTable(){
   const main=$("main");
@@ -291,6 +291,7 @@ function bindTable(){
   else if (S.tsection==="cast") bindCast(main);
   else if (S.tsection==="threats") bindThreats(main);
   else if (S.tsection==="encounters") bindEncounters(main);
+  else if (S.tsection==="reference") bindReference(main);
 }
 function bindNotes(main){
   const titleOf = id => main.querySelector(`[data-ntitle="${id}"]`);
@@ -313,6 +314,57 @@ function bindNotes(main){
         if (el) el.focus();
       } });
   });
+}
+
+// ── The Reference (Decision 207) ───────────────────────────────────────
+// Everything a GM looks up, on one page that reads the data and the slotted packs on every
+// draw and stores nothing. State is on S: S.refQ, the search as typed. The field is never
+// redrawn while typing: the panels and the chips below it are.
+const refItemHtml = i => {
+  const sep = !i.term || !i.text ? "" : /[.!?]$/.test(i.term) ? " " : " — ";
+  return `<li>${i.term ? `<b>${esc(i.term)}</b>` : ""}${sep}${esc(i.text)}${i.more.map(m=>`<span class="ref-more">${esc(m)}</span>`).join("")}</li>`;
+};
+function refPartHtml(p, panelTitle){
+  const label = p.title || panelTitle;
+  const table = p.rows.length || p.columns.length ? `<div class="ref-frame" role="region" tabindex="0" aria-label="${esc(label)}"><table class="ref">
+      ${p.columns.length ? `<thead><tr>${p.columns.map(c=>`<th scope="col">${esc(c)}</th>`).join("")}</tr></thead>` : ""}
+      <tbody>${p.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "";
+  return `<div class="ref-part">${p.title ? `<h3 class="ref-sub">${esc(p.title)}</h3>` : ""}${p.text ? `<p class="ref-text">${esc(p.text)}</p>` : ""}${table}${
+    p.footText ? `<p class="ref-foot">${esc(p.footText)}</p>` : ""}${p.items.length ? `<ul class="ref-items">${p.items.map(refItemHtml).join("")}</ul>` : ""}</div>`;
+}
+function refPanelsHtml(view){
+  if (!view.length)
+    return `<p class="step-note">Nothing in the reference matches.</p><p><button class="btn sm" data-refclear>Clear the search</button></p>`;
+  return view.map(p=>{
+    const none = !p.parts.length;
+    const body = !none ? p.parts.map(x=>refPartHtml(x, p.title)).join("")
+      : `<p class="step-note">${packsMemo.length ? "The slotted pack has no tiers, roles, origins or traits." : "Slot a pack on the Threats tab, and its tiers, roles, origins and traits show here."}</p>`;
+    return `<section class="ref-panel"><h2 class="ref-h" id="gr-${esc(p.id)}" tabindex="-1">${esc(p.title)}</h2>${body}</section>`;
+  }).join("");
+}
+const refChipsHtml = view => view.map(p=>`<button class="jump" data-jump="gr-${esc(p.id)}">${esc(p.title)}</button>`).join("");
+function referenceTabHtml(){
+  const view=Engine.gmReference(packsMemo, { q:S.refQ||"" });
+  return `${jumpBarHtml(view.map(p=>({ id:`gr-${p.id}`, label:p.title })), { sticky:true, row:true, filter:{ value:S.refQ||"", placeholder:"Search the reference" } })}
+    <div data-refpanels>${refPanelsHtml(view)}</div>`;
+}
+function redrawReference(main){
+  const view=Engine.gmReference(packsMemo, { q:S.refQ||"" });
+  main.querySelector("[data-refpanels]").innerHTML=refPanelsHtml(view);
+  const row=main.querySelector(".jump-row"); row.innerHTML=refChipsHtml(view); tabRowFades(row);
+  const n=main.querySelector("[data-jumpcount]"); if (n) n.textContent=(S.refQ||"").trim() ? `${view.length} ${view.length===1 ? "panel" : "panels"}` : "";
+  bindReferenceBody(main);
+}
+function bindReferenceBody(main){
+  main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
+  const clear=main.querySelector("[data-refclear]");
+  if (clear) clear.onclick=()=>{ S.refQ=""; const q=main.querySelector("[data-jumpfilter]"); q.value=""; redrawReference(main); q.focus(); };
+}
+function bindReference(main){
+  const q=main.querySelector("[data-jumpfilter]");
+  q.oninput=()=>{ S.refQ=q.value; redrawReference(main); };
+  bindScrollRows(main);
+  bindReferenceBody(main);
 }
 
 // ── The cast (Decisions 174–176) ───────────────────────────────────────

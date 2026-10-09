@@ -491,6 +491,22 @@ window.SHADOWS_DATA = {
                roundsStat: "BOD", text: "...", doseText: "..." }
   },
 
+  // ── GM mode's Reference (Decision 207; no gamedataVersion bump, 68) ─────
+  // Read only by GM mode. A panel with `from` draws what the data or the
+  // slotted packs already hold: conditions, packs, pain, hits, recovery,
+  // weaponTags or crank. One without carries `parts` quoted verbatim from the
+  // CRB section `bookSource` names ("0530 Quick Reference", or "2130"),
+  // which tests/rules.test.mjs checks piece by piece. `id`: letters, digits
+  // and "-", unique; the jump target is gr-<id>. A cell or term that runs
+  // over several lines in the book joins them with " · ".
+  gmReference: { panels: [
+    { id: "conditions", title: "Conditions", from: "conditions" },
+    { id: "defense", title: "Defense", bookSource: "0530 Quick Reference",
+      parts: [ { title: "", text: "", columns: [""], rows: [["", ""]],       // a part: title?, text?, columns?, rows?,
+                 items: [ { term: "", text: "" } ], footText: "" } ] },     // items? ({ term?, text }), footText?
+    // 13 panels
+  ] },
+
   // ── Magic: archetype-independent half only (0.7, Decision 93) ──────
   // Merged from private/crb/0480_Magic.md. Origins (Book/Blood/Bound) are
   // deliberately NOT here — that's the Arcanist subtype question, still
@@ -4430,6 +4446,21 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** S3b's seats give attendance and tiers, GQ28 is answered, or the CRB changes 5 an hour.
      - **Built:** as 205.
+
+207. **A table's Reference tab gathers what a GM looks up on one searchable page: Conditions and the Codex first, then the book's combat and check references, each panel a row in the data.**
+     *2026-10-09 · Ken + Claude · Touches: Reference tab, TABLE_SECTIONS, gmReference, panels, from, parts, bookSource, Engine.gmReference, Conditions, packs, traits glossary, Quick Reference, check table, TN, TH, Defense, Pain Levels, CRANK, jump bar, search, Decision 139, Decision 185, Decision 204, GQ29, W84*
+     - **Decided:** `TABLE_SECTIONS` gains **Reference**, after Encounters. The data's `gmReference.panels` lists its panels in order. A panel with `from` draws what the data or the slotted packs already hold (Conditions, the Codex's tiers, roles, origins and traits, Pain, recovery, CRANK); one without carries `parts` quoted verbatim from the CRB's combat Quick Reference and its table of checks. `Engine.gmReference(packs, { q })` resolves and filters them; one search narrows every panel, and a jump bar reaches each one left. Nothing is stored.
+     - **Why:** Scott looks up Conditions and enemy stats most (§1a), and what a GM looks up is spread across 0530, 0540, 2130 and the Codex. A panel as data keeps a new one a data edit (135).
+     - **Rejected:**
+       - An overlay over any tab: switching tabs already keeps the open encounter (Ken, SQ1).
+       - Panels folded shut: a search is faster (SQ2).
+       - *Screen*, the tabletop word: alone, it reads as a display (SQ6).
+       - The combat tables in the pack: they're the CRB's, as Conditions are (SQ3).
+       - Copying the tips' text into the Reference's data: one edit should move both.
+       - Handouts and printing here: handouts need S2's dispatch; printing is S13b (W84).
+     - **Replaces:** nothing. 185's *Revisit if* (the glossary as a page) is met and its picker stands; 204 kept Next session off the tab row, and the Reference is its own surface.
+     - **Revisit if:** GQ29 reorders the panels, a GM asks for the Reference over a running encounter, or the Quick Reference changes shape.
+     - **Built:** switched off (173); no data or schema bump; log 2026-10-09 (the Reference).
 
 ## 5. Open Flags
 

@@ -3297,7 +3297,7 @@ test("Decision 171: Run a table asks for a name, opens the table, and Home lists
   assert.equal(app.$("#modal[open]"), null);
   assert.equal(charKeys(app).length, 0, "a table wrote a character");
   assert.equal(tableKeys(app).length, 1);
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Reference", "Notes"]);
   assert.equal(app.$("#topnav [data-sec]"), null, "the table's tabs are the sheet's");
   assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "What's new", "Home"]);
   tableHome(app);
@@ -3520,7 +3520,7 @@ test("Decision 176: the Cast tab has quick-add and the filters, with Notes besid
   const app = boot({ storage: GM_ON });
   runTable(app, "Cast table");
   assert.equal(app.window.eval("S.tsection"), "cast");
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Reference", "Notes"]);
   assert.ok(app.$("[data-cadd-name]") && app.$("[data-csearch]"));
   assert.match(app.$("#main").textContent, /Nobody yet\. The city fills up fast\./);
   notesTab(app);
@@ -4320,7 +4320,7 @@ test("Decision 181: an older copy of a pack asks, a newer one replaces silently,
 test("Decision 182: a table has a Threats tab, second; with no pack it says so and offers to slot one in", async () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Bare");
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Reference", "Notes"]);
   threatsTab(app);
   assert.match(app.$("#main").textContent, /No pack slotted in\./);
   assert.ok(app.$("[data-pslot]"));
@@ -4884,12 +4884,12 @@ const newEncounter = (app, name) => { type(app, "[data-enc-name]", name); app.cl
 const addPcRow = (app, name) => { type(app, "[data-enc-pcname]", name); app.click("[data-enc-addpc]"); return encRowByName(app, name); };
 const statesOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters)"));
 
-test("Decision 188: switched off there is no Encounters tab; switched on it sits between Threats and Notes", () => {
+test("Decision 188: switched off there is no Encounters tab; switched on it sits between Threats and Notes (Reference follows it)", () => {
   const off = boot();
   assert.equal(off.$("#btn-run-table"), null);
   const app = boot({ storage: GM_ON });
   runTable(app, "T");
-  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "cast", "threats", "encounters", "notes"]);
+  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "cast", "threats", "encounters", "reference", "notes"]);
   encTab(app);
   assert.match(app.$("#main").textContent, /Nothing on the books\./);
   assert.deepEqual(app.errors, []);
@@ -5669,8 +5669,8 @@ test("Decision 204: a new table opens on Sessions, in this tab order, and a tabl
   const app = boot({ storage: GM_ON });
   runTable(app, "Landing", { stay: true });
   assert.equal(app.window.eval("S.tsection"), "sessions");
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Notes"]);
-  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "cast", "threats", "encounters", "notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Reference", "Notes"]);
+  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "cast", "threats", "encounters", "reference", "notes"]);
   assert.ok(app.$('[data-tsec="sessions"]').classList.contains("active"));
   tableReopen(app, "Landing");
   assert.equal(app.window.eval("S.tsection"), "sessions", "an untouched table reopens where it was");
@@ -6244,5 +6244,86 @@ test("206 (review): Write with Took a job ticked and no tier is refused, focused
   assert.match(app.$("#undotoast").textContent, /Choose a tier\./);
   assert.equal(app.doc.activeElement, coField(app, "Dez", "tier"));
   assert.ok(app.window.eval("S.table.sessions.find(s => s.number === 4).close") == null);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── The Reference (Decision 207) ────────────────────────────────────────
+const refTab = app => app.click('[data-tsec="reference"]');
+const refHeads = app => app.$$("#main .ref-h").map(h => h.textContent);
+const refChips = app => app.$$("#main .jumpbar .jump").map(b => b.textContent);
+
+test("Decision 207: switched off there is no Reference tab; switched on, a panel per row of the data, in order, and a chip for each", () => {
+  const off = boot();
+  assert.equal(off.$("#btn-run-table"), null);
+  assert.equal(off.$('[data-tsec="reference"]'), null);
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); refTab(app);
+  const titles = [...app.D.gmReference.panels.map(p => p.title)];
+  assert.deepEqual(refHeads(app), titles);
+  assert.deepEqual(refChips(app), titles);
+  assert.match(app.$("#main").textContent, /Slot a pack on the Threats tab, and its tiers, roles, origins and traits show here\./);
+  assert.ok(app.$("#main .jumpbar.sticky"), "the bar sticks (SQ8)");
+  assert.equal(app.$$("#main table.ref").length > 6, true);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 207: with a pack slotted the Codex shows its tiers and traits", () => {
+  const app = tableWithPack(); refTab(app);
+  const codex = app.$("#gr-codex").parentElement.textContent;
+  assert.doesNotMatch(codex, /Slot a pack/);
+  for (const s of ["Slight", "Middling", "Bruiser", "Gatherer", "Salt Nerve", "Pier Legs", "BOD +1 · REF −1"]) assert.ok(codex.includes(s), s);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 207: the search keeps the field and its focus while it filters panels and chips; no match says so; Clear brings everything back", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); refTab(app);
+  const q = app.$("[data-jumpfilter]"), all = [...app.D.gmReference.panels.map(p => p.title)];
+  q.focus();
+  type(app, "[data-jumpfilter]", "prone");
+  assert.equal(app.$("[data-jumpfilter]"), q, "typing redrew the search field");
+  assert.equal(q.value, "prone");
+  assert.equal(app.doc.activeElement, q);
+  assert.deepEqual(refHeads(app), ["Conditions", "Actions", "When a hit lands hard", "Weapon tags"]);
+  assert.deepEqual(refChips(app), refHeads(app));
+  assert.equal(app.window.eval("S.refQ"), "prone");
+  type(app, "[data-jumpfilter]", "zzzz");
+  assert.match(app.$("#main").textContent, /Nothing in the reference matches\./);
+  assert.deepEqual(refChips(app), []);
+  app.click("[data-refclear]");
+  assert.deepEqual(refHeads(app), all);
+  assert.equal(app.$("[data-jumpfilter]").value, "");
+  assert.equal(app.doc.activeElement, app.$("[data-jumpfilter]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 207: a chip lands on its panel's heading, whatever is filtered, and the search is kept across a trip to another tab", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); refTab(app);
+  type(app, "[data-jumpfilter]", "tn 8");
+  const chips = app.$$("#main .jumpbar .jump");
+  assert.ok(chips.length >= 3);
+  const last = chips.at(-1);
+  last.click();
+  const head = app.$(`#${last.dataset.jump}`);
+  assert.equal(head.textContent, last.textContent);
+  assert.equal(app.doc.activeElement, head);
+  notesTab(app); refTab(app);
+  assert.equal(app.$("[data-jumpfilter]").value, "tn 8", "the search as left");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 207: a running encounter is kept across a trip to the Reference and back", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); encTab(app);
+  newEncounter(app, "Warehouse job"); addPcRow(app, "Wren");
+  app.click("[data-enc-start]");
+  assert.match(app.$(".enc-status").textContent, /Round 1/);
+  refTab(app);
+  assert.equal(app.$(".enc-status"), null);
+  assert.ok(app.$("#gr-conditions"));
+  encTab(app);
+  assert.match(app.$(".enc-status").textContent, /Round 1/);
+  assert.equal(app.$("[data-enc-title]").value, "Warehouse job");
   assert.deepEqual(app.errors, []);
 });

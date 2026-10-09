@@ -1138,6 +1138,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .jump-row{display:flex; gap:6px; flex:1 1 auto; min-width:0}
 .jump-row .jump, .jumpbar.row .jump-end{flex:none}
 .jumpbar.row .jump-end{margin-left:0}
+.jumpbar.row input[type=search]{flex:0 0 min(14rem,42%)}
 /* W45: in two columns, the card alone on its row (CRANK, with SFR) takes the whole row. */
 .cond-grid{container-type:inline-size}
 @container (max-width:415px){ .cond-grid > .cond.alone{grid-column:1/-1} }
@@ -1328,3 +1329,18 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .co-log li{overflow-wrap:anywhere}
 .co-write{margin:18px 0}
 @media (min-width:1100px){ .co-name{flex:0 0 9ch} }
+
+/* The Reference (Decision 207). A table wider than the screen scrolls inside its own frame, never the page. */
+.ref-panel{margin:0 0 26px; min-width:0}
+.ref-h{margin:18px 0 8px; font-size:1.15rem; scroll-margin-top:calc(var(--hdr-off) + 64px); overflow-wrap:anywhere}
+.ref-sub{margin:14px 0 6px; font-size:.95rem; overflow-wrap:anywhere}
+.ref-text{margin:0 0 6px; max-width:62ch; overflow-wrap:anywhere}
+.ref-text::first-letter{text-transform:uppercase}
+.ref-foot{margin:-8px 0 10px; font-size:.78rem; color:var(--dim); overflow-wrap:anywhere}
+.ref-frame{overflow-x:auto; max-width:100%}
+.ref-frame table.ref{min-width:100%; width:max-content; max-width:none}
+.ref-frame table.ref td, .ref-frame table.ref th{vertical-align:top}
+.ref-items{margin:0 0 6px; padding-left:20px; overflow-wrap:anywhere}
+.ref-items li{margin:0 0 6px; max-width:70ch}
+.ref-more{display:block; font-size:.82rem; color:var(--dim)}
+@media (min-width:640px){ .ref-frame table.ref{width:100%} }

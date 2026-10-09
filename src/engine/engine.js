@@ -4731,6 +4731,124 @@ const Engine = (() => {
     }
     return out;
   }
+  // ── The Reference (Decision 207) ────────────────────────────────────────
+  // What a GM looks up, on one page: each panel a row of `gmReference.panels`. A panel with
+  // `from` draws what the data or the slotted packs already hold; one without carries the
+  // book's words in `parts`. Read on every draw, stored nowhere. Total: it reports, never throws.
+  const _REF_FROM = ["conditions","packs","pain","hits","recovery","weaponTags","crank"];
+  const _REF_ID = /^[A-Za-z0-9-]+$/;
+  const _refFold = v => _fold(v).replace(/−/g, "-");   // a minus is a minus: only U+2212 folds (SQ7)
+  const _refItem = (term, text, more) => ({ term:_str(term), text:_str(text), more:(Array.isArray(more) ? more : []).map(_str).filter(s=>s.trim()) });
+  const _refPart = (title, o) => Object.assign({ title:_str(title), text:"", columns:[], rows:[], items:[], footText:"" }, o);
+  const _refMod = n => (n<0 ? "−" : "+") + Math.abs(n);
+  function _refPacks(packs){
+    const list = _packList(packs), multi = list.length>1, parts = [];
+    const name = p => multi ? [_str(p.meta.name).trim() || "Untitled pack"] : [];
+    const section = (title, key, make) => {
+      const items = [];
+      for (const p of list) for (const r of _list(p[key])) items.push(make(p, r));
+      if (items.length) parts.push(_refPart(title, { items }));
+    };
+    section("Tiers", "tiers", (p, r)=>{ const n = _tier(r.id);
+      return _refItem(_str(r.name).trim() || (n===null ? "Tier" : `Tier ${n}`), r.text, [r.statGuide, r.traitGuide, ...name(p)]); });
+    section("Enemy roles", "enemyRoles", (p, r)=>{ const n = _tier(r.tier);
+      return _refItem(r.name, r.text, [n===null ? "" : `Tier ${n}`, ...name(p)]); });
+    section("NPC roles", "npcRoles", (p, r)=>_refItem(r.name, r.text, name(p)));
+    const stats = _list(D().stats).map(s=>s.id);
+    section("Origins", "origins", (p, r)=>{
+      const m = _isObj(r.modifiers) ? r.modifiers : {};
+      const mods = stats.filter(id=>Number.isFinite(m[id]) && m[id]!==0).map(id=>`${id} ${_refMod(m[id])}`).join(" · ");
+      return _refItem(r.name, r.text, [mods, ...name(p)]); });
+    section("Traits", "traits", (p, r)=>{
+      const kind = PACK_TRAIT_KINDS.includes(r.kind) ? r.kind[0].toUpperCase() + r.kind.slice(1) : "";
+      const from = r.kind==="origin" ? _nameOf(p.origins, r.origin).trim() : "";
+      return _refItem(r.name, r.text, [from ? `${kind} · ${from}` : kind, ...name(p)]); });
+    return parts;
+  }
+  function _refPain(){
+    const h = (D().resources||{}).healthLevels || {}, pp = _isObj(h.painPenaltiesPerLevel) ? h.painPenaltiesPerLevel : {};
+    const num = [pp.skillChecks, pp.essenceCheckDice, pp.breakerCheckPercent];
+    const dice = Math.abs(pp.essenceCheckDice)===1 ? "die" : "dice";
+    return [_refPart("", {
+      text:num.every(Number.isFinite) ? `Each Pain Level: ${_refMod(num[0])} to Skill Checks, ${_refMod(num[1])} Essence ${dice}, ${_refMod(num[2])}% on Breaker Checks.` : "",
+      columns:["Pain Level", "What it means"],
+      rows:_list(h.painLevels).map(l=>[_str(l.label), _str(l.description)]),
+      footText:_str(pp.notes) })];
+  }
+  function _refHits(){
+    const r = _isObj(D().damageRules) ? D().damageRules : {}, o = k => _isObj(r[k]) ? r[k] : {};
+    return [
+      _refPart("Shock", { items:[_refItem("", o("shock").text, [o("shock").check])] }),
+      _refPart("At zero", { items:[_refItem("", o("atZero").text, [o("atZero").check, o("atZero").freePass && o("atZero").freePass.text])] }),
+      _refPart("Massive", { items:[_refItem("", o("massive").text, [])] }),
+      _refPart("Dying", { items:[_refItem("", o("whileDying").text, [o("whileDying").resetText, o("whileDying").playerNote])] })];
+  }
+  function _refRecovery(){
+    const r = _isObj(D().recoveryRules) ? D().recoveryRules : {}, o = k => _isObj(r[k]) ? r[k] : {};
+    return [
+      _refPart("Natural healing", { items:[_refItem("", o("naturalHealing").text, [o("naturalHealing").speedHealText])] }),
+      _refPart("Focused healing", { items:[_refItem("", o("focusedHealing").text, [o("focusedHealing").massiveText])] }),
+      _refPart("Nanomed Kit", { items:[_refItem("", o("nanomed").text, [o("nanomed").doseText])] })];
+  }
+  function _refCrank(){
+    const c = crankData(), cr = creditSymbol(), n = v => Number(v).toLocaleString("en-US");
+    return [_refPart("", {
+      text:_str(c.description),
+      columns:["Tier", "Rep", "Pays", "Off-screen job"],
+      rows:_list(c.tiers).map(t=>{ const off = offScreenPay(t.id);
+        return [_str(t.name), Number.isFinite(t.rep) ? String(t.rep) : "", crankPayText(t), off ? `${cr}${n(off.min)}–${n(off.max)}` : ""]; }) })];
+  }
+  const _REF_READERS = {
+    conditions:()=>[
+      _refPart("", { items:_list(D().conditions).map(c=>_refItem(c.name, c.effect, [c.recovery, c.playerNote])) }),
+      _refPart("How Conditions work", { items:(()=>{ const r = _isObj(D().conditionRules) ? D().conditionRules : {}, o = k => _isObj(r[k]) ? r[k] : {};
+        return [r.noStacking, r.helpless, r.painClamp, o("rollPenalty").text, o("penaltyStacking").text].map(_str).filter(s=>s.trim()).map(s=>_refItem("", s, [])); })() })],
+    packs:null, pain:_refPain, hits:_refHits, recovery:_refRecovery, crank:_refCrank,
+    weaponTags:()=>[_refPart("", { items:_list(D().weaponTagGlossary).map(t=>_refItem(t.id, t.description, [t.playerNote])) })]
+  };
+  // A data panel's parts, copied and coerced: a cell that isn't a string reads "", a row that isn't a list is dropped.
+  function _refBook(parts){
+    return _list(parts).map(p=>_refPart(p.title, {
+      text:_str(p.text), footText:_str(p.footText),
+      columns:(Array.isArray(p.columns) ? p.columns : []).map(_str),
+      rows:(Array.isArray(p.rows) ? p.rows : []).filter(Array.isArray).map(r=>r.map(_str)),
+      items:_list(p.items).map(i=>_refItem(i.term, i.text, i.more)) }));
+  }
+  function _refResolve(panel, packs){
+    if (!_isObj(panel) || typeof panel.id!=="string" || !_REF_ID.test(panel.id)) return null;
+    let parts;
+    try {
+      if (panel.from===undefined || panel.from===null) parts = _refBook(panel.parts);
+      else if (!_REF_FROM.includes(panel.from)) return null;
+      else parts = panel.from==="packs" ? _refPacks(packs) : _REF_READERS[panel.from]().filter(p=>p.items.length || p.rows.length || p.text);
+    } catch (x) { parts = []; }
+    return { id:panel.id, title:_str(panel.title), parts, from:panel.from===undefined ? null : panel.from };
+  }
+  // The search: folded, with the minus folded. A panel title that matches keeps the whole panel; else a part
+  // title or lead that matches keeps the whole part; else the rows and items that match.
+  function _refFilter(panel, q){
+    const has = s => _refFold(s).includes(q);
+    if (has(panel.title)) return panel;
+    const parts = [];
+    for (const p of panel.parts){
+      if (has(p.title) || has(p.text)){ parts.push(p); continue; }
+      const rows = p.rows.filter(r=>r.some(has)), items = p.items.filter(i=>has(i.term) || has(i.text) || i.more.some(has));
+      if (rows.length || items.length) parts.push(Object.assign({}, p, { rows, items, footText:rows.length ? p.footText : "" }));
+    }
+    return Object.assign({}, panel, { parts });
+  }
+  function gmReference(packs, f){
+    const q = _refFold(_isObj(f) ? f.q : ""), panels = [];
+    const data = _isObj(D().gmReference) && Array.isArray(D().gmReference.panels) ? D().gmReference.panels : [];
+    for (const raw of data){
+      const panel = _refResolve(raw, packs); if (!panel) continue;
+      if (!q){ panels.push(panel); continue; }
+      const kept = _refFilter(panel, q);
+      if (kept.parts.length) panels.push(kept);
+    }
+    return panels.map(p=>({ id:p.id, title:p.title, parts:p.parts }));
+  }
+
   // Use (Decision 182): a copy of an entry, first in the cast. Names, not ids,
   // for the origin and roles, since the copy outlives the pack. Never changes
   // with the pack afterwards.
@@ -5553,7 +5671,7 @@ const Engine = (() => {
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
-    isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, packGroups, castFromEntry, entryLink,
+    isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it

@@ -4268,6 +4268,124 @@ window.SHADOWS_DATA = {
       "helpless": true, "counter": { "max": 3, "label": "Death Marks", "atMax": "Three Death Marks. You're dead, and your options are seriously limited." } }
   ],
 
+  /* GM mode's Reference (Decision 207): its panels, in order. A panel with
+     `from` draws what the data or the slotted packs already hold
+     (`conditions`, `packs`, `pain`, `hits`, `recovery`, `weaponTags`,
+     `crank`); one without carries `parts` quoted verbatim from the CRB
+     section its `bookSource` names ("<4-digit file> <heading>", or just the
+     file), which tests/rules.test.mjs checks piece by piece. A part is
+     { title, text, columns, rows, items, footText }; an item is
+     { term, text }. A cell or a term that runs over several lines in the
+     book joins them with " · ". Read only by GM mode: no character can
+     observe it, so it moves no game-data version (Decision 68). */
+  "gmReference": {
+    "panels": [
+      { "id": "conditions", "title": "Conditions", "from": "conditions" },
+      { "id": "codex", "title": "The Codex", "from": "packs" },
+      { "id": "defense", "title": "Defense", "bookSource": "0530 Quick Reference",
+        "parts": [
+          { "text": "free, unlimited, no penalty for being outnumbered",
+            "columns": ["The threat", "The answer"],
+            "rows": [
+              ["Aimed at you", "Dodge — REF Skill"],
+              ["In reach, hand to hand", "Parry — Melee Skill plus the weapon's bonus"],
+              ["Filling the space", "Scramble — MOB Essence, TN 8 TH 2"],
+              ["In your body", "BOD Essence — poison, current, pressure"],
+              ["In your head", "WILL Essence — fear, compulsion, magical illusions"],
+              ["You aren't defending", "Difficulty 10"],
+              ["Helpless", "Hit on 2 or better, natural 1 still botches"]
+            ] }
+        ] },
+      { "id": "checks", "title": "Checks", "bookSource": "2130",
+        "parts": [
+          { "columns": ["Check Type", "What It Measures", "How to Succeed", "Default / Escalation"],
+            "rows": [
+              ["Skill Check (Unopposed)", "Skill use against environment", "Meet or exceed the Difficulty", "10 (Easy) · 15 (Average) · 20 (Challenging) · +5 per difficulty level"],
+              ["Skill Check (Opposed)", "Skilled action against another character, physical combat", "Higher total wins · (tie favors defender)", "No fixed difficulty"],
+              ["Essence Check (Unopposed)", "Raw capacity against the environment", "Meet or exceed the Threshold (TH)", "Default TN 8, TH 2 · (TN ≤ 10, TH ≥ 1)"],
+              ["Essence Check (Opposed)", "Raw capacity against another character", "Higher net Hits wins (tie favors defender)", "Default TN 8, no fixed TH"],
+              ["Breaker Check", "Stability under stress", "Roll equal to or below listed %", "Character Sheet value (adjust sparingly)"],
+              ["Extended Check", "Prolonged contest between two characters", "Higher net Hits after countdown wins. · (tie favors defender)", "Default TN 8, no fixed TH"]
+            ] }
+        ] },
+      { "id": "modifiers", "title": "Modifiers and range", "bookSource": "0530 Quick Reference",
+        "parts": [
+          { "title": "Modifiers", "text": "penalties to the attacker. They add, and they stop at −8.",
+            "columns": ["Cover", "Visibility", "Distance", "Moving"],
+            "rows": [
+              ["None —", "Bright —", "In band —", "Walk —"],
+              ["Partial −1", "Dim −1", "One band past −3", "Run −1"],
+              ["Heavy −3", "Dark −3", "Two past — no shot", "Sprint −3"],
+              ["Full — no shot*", "Blind −5", "", ""]
+            ],
+            "footText": "*Area attacks reach Full Cover. Nothing else does." },
+          { "title": "Range bands",
+            "columns": ["Close", "Short", "Medium", "Long", "Extreme"],
+            "rows": [["0–3m", "3–40m", "40–120m", "120–400m", "400m+"]] }
+        ] },
+      { "id": "actions", "title": "Actions", "bookSource": "0530 Quick Reference",
+        "parts": [
+          { "title": "Movement", "text": "break it up freely around your other actions",
+            "columns": ["Pace", "Distance", "Attacking"],
+            "rows": [["Walk", "MOB", "No penalty"], ["Run", "MOB ×3", "−1"], ["Sprint", "MOB ×6", "−3"]] },
+          { "title": "Free Action", "text": "as many as make sense, on anybody's turn",
+            "items": [
+              { "term": "Talk", "text": "four words, not four sentences" },
+              { "term": "Drop prone", "text": "standing up later costs your Move" },
+              { "term": "Let go of something", "text": "" },
+              { "term": "Look", "text": "" }
+            ] },
+          { "title": "Fast Action", "text": "one on your turn, one at Reset",
+            "items": [
+              { "term": "Reload", "text": "fresh magazine, grenade off the belt, arrow from the quiver; swap ammo type once per turn" },
+              { "term": "Inject", "text": "battle chem or Nanomed Kit, yourself or somebody in reach" },
+              { "term": "Activate an item", "text": "silver card, detonator, lights" },
+              { "term": "Quick check", "text": "Tactics, Occult Lore, anything that doesn't need your hands" },
+              { "term": "Shout", "text": "four words, not four sentences" }
+            ] },
+          { "title": "Standard Action", "text": "one per turn",
+            "items": [
+              { "term": "Attack", "text": "anything from a fist to a Hammerlock" },
+              { "term": "Combat Maneuver", "text": "Martial Arts skill to Grapple, Knockdown, Disarm, Stun" },
+              { "term": "Cast a spell", "text": "Spellcraft check, then an attack roll if it's aimed" },
+              { "term": "Activate a Power", "text": "SFR, up to your Rate of Use" },
+              { "term": "Full-attention work", "text": "breach, hack, drag somebody clear" }
+            ] },
+          { "title": "Stunt", "text": "once per round, replaces your entire turn",
+            "items": [
+              { "text": "Natural 4 or better and beat the opposed roll" },
+              { "text": "Fall short on the die and it resolves as an ordinary roll" }
+            ] }
+        ] },
+      { "id": "rof", "title": "Rate of fire", "bookSource": "0530 Quick Reference",
+        "parts": [
+          { "columns": ["Mode", "Rounds", "Roll", "Result"],
+            "rows": [
+              ["Single", "1", "+ACC", "Hit or miss. Kicker die. Called Shot available."],
+              ["Burst", "3", "flat", "All three or none, as one packet."],
+              ["Full Auto", "10", "−3", "One hit per point of differential, as one packet."]
+            ] }
+        ] },
+      { "id": "armor", "title": "Armor and damage", "bookSource": "0530 Quick Reference",
+        "parts": [
+          { "items": [
+              { "term": "Total the damage first.", "text": "Burst and Full Auto arrive as one packet." },
+              { "term": "Then armor answers.", "text": "Roll PROT, add RES where the damage type allows. AP skips RES. Enemy armor is static." },
+              { "term": "What’s left", "text": "comes off Health Levels, left to right." },
+              { "term": "Withering", "text": "heals only with rest and medicine, and not until you're clear of the source. Armor works as normal." },
+              { "term": "Massive", "text": "skips all of the above. Strips Integrity equal to the weapon's damage and takes 1 Health Level per 10 points of it, plus another if the armor drops to 0 or there was none. Those Levels don't come back with rest." },
+              { "term": "Integrity", "text": "1 point for every hit the armor stops outright. Anyone hit at all rolls once for wear at the end of the encounter, 1d4 to 1d10, depending on difficulty." },
+              { "term": "At Integrity 0", "text": "RES gone, PROT remains. Armor taken to 0 by Massive is scrap." }
+            ] }
+        ] },
+      { "id": "hits", "title": "When a hit lands hard", "from": "hits" },
+      { "id": "pain", "title": "Pain Levels", "from": "pain" },
+      { "id": "recovery", "title": "Recovery", "from": "recovery" },
+      { "id": "tags", "title": "Weapon tags", "from": "weaponTags" },
+      { "id": "crank", "title": "CRANK", "from": "crank" }
+    ]
+  },
+
   /* MAGIC -- merged from the CRB v4 Magic chapter (private/crb/0480_Magic.md),
      the archetype-INDEPENDENT half only (Decision 93). `domains` is the Glyph
      taxonomy; `spells` is the full Known-spell catalog (id + tier + domain +

@@ -2,7 +2,7 @@
 
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §1a (*What do you look up most?*),
 §4b and §6 *S13*; Decisions 135, 139, 182, 185, 204.
-**Status:** **drafted 2026-10-09 by Claude (Opus)**, after #141 (S5b) merged
+**Status:** **built 2026-10-09 (Decision 207, switched off)**; drafted the same day by Claude (Opus), after #141 (S5b) merged
 with one fix round (README step 7). **SQ1–SQ4 answered by Ken 2026-10-09,
 before drafting; SQ5–SQ8 the same day** (SQ6: the tab is *Reference*; SQ7: a
 minus is a minus).

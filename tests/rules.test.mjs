@@ -15,7 +15,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
@@ -1413,4 +1413,38 @@ test("R16: the Thirst is the book's: 3 SFR a fresh HL, 2 a stored one up to half
   assert.match(md, /a bite attack uses Melee and deals BOD\+3 damage/);
   assert.match(md, /Retractable claws: BOD\+3 melee damage, AP/);
   assert.equal(VA().naturalWeapons.filter(w => !w.choice).map(w => `${w.name} ${w.skill} ${w.damage} ${(w.tags || []).join("")}`.trim()).join(", "), "Bite melee BOD+3, Claws melee BOD+3 AP");
+});
+
+// ── The Reference quotes the book (Decision 207) ──────────────────────
+
+test("CRB: the Reference's book panels are quoted verbatim from the mirror", () => {
+  const norm = s => String(s).replace(/<[^>]*>/g, " ").replace(/\*\*|\*|\\/g, "").replace(/[‘’]/g, "'").replace(/−/g, "-").replace(/\s+/g, " ").trim();
+  const panels = D.gmReference.panels.filter(p => p.bookSource);
+  assert.ok(panels.length >= 6, "the data's book panels");
+  const names = readdirSync(join(ROOT, "private/crb"));
+  for (const p of panels) {
+    const m = /^(\d{4})(?: (.+))?$/.exec(p.bookSource);
+    assert.ok(m, `${p.id}: bookSource "${p.bookSource}" is "<4-digit file> <heading>" or "<4-digit file>"`);
+    const file = names.find(n => n.startsWith(m[1]));
+    assert.ok(file, `${p.id}: no file in private/crb starts with ${m[1]}`);
+    let text = crb(file);
+    if (m[2]) {
+      const at = text.indexOf(`## ${m[2]}`);
+      assert.ok(at >= 0, `${p.id}: no "## ${m[2]}" in ${file}`);
+      const rest = text.slice(at + 3);
+      const end = rest.indexOf("\n## ");
+      text = end < 0 ? rest : rest.slice(0, end);
+    }
+    const book = norm(text);
+    const pieces = [];
+    for (const part of p.parts) {
+      pieces.push(part.title, part.text, part.footText, ...(part.columns || []));
+      for (const it of part.items || []) pieces.push(it.term, it.text);
+      for (const row of part.rows || []) pieces.push(...row);
+    }
+    for (const piece of pieces) for (const bit of norm(piece || "").split(" · ")) {
+      if (!bit) continue;
+      assert.ok(book.includes(norm(bit)), `${p.id}: "${bit}" is not in ${file}${m[2] ? ` under "${m[2]}"` : ""}`);
+    }
+  }
 });
