@@ -1139,6 +1139,11 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .jump-row .jump, .jumpbar.row .jump-end{flex:none}
 .jumpbar.row .jump-end{margin-left:0}
 .jumpbar.row input[type=search]{flex:0 0 min(14rem,42%)}
+/* Decision 209: the Reference's chips are all in view. The search keeps the
+   first line; the chips take the next ones, as many as they need. */
+.jump-wrap{flex:1 1 100%; flex-wrap:wrap}
+/* Wrapped on a phone it's five rows, half the screen: it stays at the top of the page. */
+@media (max-width:639px){ .jumpbar.sticky.wrap{position:static} }
 /* W45: in two columns, the card alone on its row (CRANK, with SFR) takes the whole row. */
 .cond-grid{container-type:inline-size}
 @container (max-width:415px){ .cond-grid > .cond.alone{grid-column:1/-1} }

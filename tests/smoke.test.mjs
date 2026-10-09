@@ -6313,7 +6313,7 @@ test("Decision 207: a chip lands on its panel's heading, whatever is filtered, a
   assert.deepEqual(app.errors, []);
 });
 
-test("a mouse wheel scrolls a sideways row of chips, the Reference's and a sheet's, and lets the page have it at the end", () => {
+test("a mouse wheel scrolls a sideways row of chips and lets the page have it at the end", () => {
   // jsdom has no layout: give each row 1200 px of chips in 500. The row hides its scrollbar.
   const wheelable = (app, row) => {
     let left = 0; const max = 700;
@@ -6325,12 +6325,39 @@ test("a mouse wheel scrolls a sideways row of chips, the Reference's and a sheet
     left = max;
     assert.equal(wheel(120), false, "the wheel was swallowed with nowhere to scroll");
   };
-  const app = boot({ storage: GM_ON });
-  runTable(app, "T"); refTab(app);
-  wheelable(app, app.$("#main .jumpbar.row .jump-row.scroll-row"));
   const sheet = openSheet(lockedCharacter(), "character");
   wheelable(sheet, sheet.$("#main .jumpbar.row .jump-row.scroll-row"));
-  assert.deepEqual([...app.errors, ...sheet.errors], []);
+  assert.deepEqual(sheet.errors, []);
+});
+
+test("Decision 209: the Reference's chips all wrap in view, and a bar the CSS lets go on a phone isn't counted by a jump", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); refTab(app);
+  const bar = app.$("#main .jumpbar.sticky.wrap");
+  assert.ok(bar, "the Reference's bar doesn't wrap");
+  assert.equal(bar.querySelector(".scroll-row"), null, "the chips still scroll sideways");
+  assert.deepEqual(app.$$("#main .jump-row.jump-wrap .jump").map(b => b.textContent), [...app.D.gmReference.panels.map(p => p.title)]);
+  type(app, "[data-jumpfilter]", "prone");
+  assert.deepEqual(refChips(app), refHeads(app), "a search's chips land outside the wrapping box");
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /\.jump-wrap\{[^}]*flex-wrap:wrap/);
+  assert.match(css, /@media \(max-width:639px\)\{ \.jumpbar\.sticky\.wrap\{position:static\} \}/);
+  // jsdom has no layout: a 94 px header, a 311 px bar, and the heading 1000 px down.
+  const w = app.window, realStyle = w.getComputedStyle;
+  let position = "static", landed = null;
+  w.getComputedStyle = el => el === bar ? { position, top: "94px" } : realStyle.call(w, el);
+  w.scrollTo = o => { landed = o.top; };
+  Object.defineProperty(app.$("header.top"), "offsetHeight", { get: () => 94 });
+  Object.defineProperty(bar, "offsetHeight", { get: () => 311 });
+  const chip = app.$("#main .jump"), head = app.$(`#${chip.dataset.jump}`);
+  head.getBoundingClientRect = () => ({ top: 1000, bottom: 1030, left: 0, right: 300, width: 300, height: 30 });
+  try {
+    chip.click();
+    assert.equal(landed, 1000 - 94 - 8, "a bar that scrolled away still pushed the heading down");
+    position = "sticky"; chip.click();
+    assert.equal(landed, 1000 - 94 - 311 - 8, "a sticky bar was not counted");
+  } finally { w.getComputedStyle = realStyle; }
+  assert.deepEqual(app.errors, []);
 });
 
 test("Decision 207: a running encounter is kept across a trip to the Reference and back", () => {

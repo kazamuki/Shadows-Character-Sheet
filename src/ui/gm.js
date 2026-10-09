@@ -421,7 +421,8 @@ function openJot(){
 // ── The Reference (Decision 207) ───────────────────────────────────────
 // Everything a GM looks up, on one page that reads the data and the slotted packs on every
 // draw and stores nothing. State is on S: S.refQ, the search as typed. The field is never
-// redrawn while typing: the panels and the chips below it are.
+// redrawn while typing: the panels and the chips below it are. The chips wrap, all in
+// view at every width (Decision 209).
 const refItemHtml = i => {
   const sep = !i.term || !i.text ? "" : /[.!?]$/.test(i.term) ? " " : " — ";
   return `<li>${i.term ? `<b>${esc(i.term)}</b>` : ""}${sep}${esc(i.text)}${i.more.map(m=>`<span class="ref-more">${esc(m)}</span>`).join("")}</li>`;
@@ -447,13 +448,13 @@ function refPanelsHtml(view){
 const refChipsHtml = view => view.map(p=>`<button class="jump" data-jump="gr-${esc(p.id)}">${esc(p.title)}</button>`).join("");
 function referenceTabHtml(){
   const view=Engine.gmReference(packsMemo, { q:S.refQ||"" });
-  return `${jumpBarHtml(view.map(p=>({ id:`gr-${p.id}`, label:p.title })), { sticky:true, row:true, filter:{ value:S.refQ||"", placeholder:"Search the reference" } })}
+  return `${jumpBarHtml(view.map(p=>({ id:`gr-${p.id}`, label:p.title })), { sticky:true, wrap:true, filter:{ value:S.refQ||"", placeholder:"Search the reference" } })}
     <div data-refpanels>${refPanelsHtml(view)}</div>`;
 }
 function redrawReference(main){
   const view=Engine.gmReference(packsMemo, { q:S.refQ||"" });
   main.querySelector("[data-refpanels]").innerHTML=refPanelsHtml(view);
-  const row=main.querySelector(".jump-row"); row.innerHTML=refChipsHtml(view); tabRowFades(row);
+  main.querySelector(".jump-row").innerHTML=refChipsHtml(view);
   const n=main.querySelector("[data-jumpcount]"); if (n) n.textContent=(S.refQ||"").trim() ? `${view.length} ${view.length===1 ? "panel" : "panels"}` : "";
   bindReferenceBody(main);
 }
@@ -465,7 +466,6 @@ function bindReferenceBody(main){
 function bindReference(main){
   const q=main.querySelector("[data-jumpfilter]");
   q.oninput=()=>{ S.refQ=q.value; redrawReference(main); };
-  bindScrollRows(main);
   bindReferenceBody(main);
 }
 

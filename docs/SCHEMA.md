@@ -4481,6 +4481,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** the header can't fit them at phone width, a table grows past what a search per keystroke keeps up with, or seats (S3b) let a player jot.
      - **Built:** table schema 0.10, switched off (173); log 2026-10-09 (the secretary).
 
+209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
+     *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
+     - **Decided:** The Reference's chips sit in a box of their own under the search and wrap, every one in view at every width. From 640px the bar sticks (two rows at 768 and 1300). Below it the bar is static; a chip still lands its panel just under the header, and `jumpTo` counts a bar only while it sticks. The sheet's jump bars and the vitals bar stay one sideways row (165), and every sideways row now takes a mouse wheel.
+     - **Why:** Ken, testing #144 on a desktop: the row hid its scrollbar, so a mouse couldn't reach 8 of the 13 chips. A GM looks for the panel by name; a row that hides most of them makes that a scroll first.
+     - **Rejected:**
+       - Only the wheel fix: it reaches the chips but still hides most of them (Ken).
+       - Sticky at every width: on a 375 × 812 phone the bar is five rows, 311px, and with the header pins half the screen.
+       - A swipeable row on a phone, wrapping above it: the chips past the fade stay hidden there.
+       - Wrapping every jump bar: the sheet's fit a laptop, and 165 kept a phone's to one row on purpose.
+     - **Replaces:** nothing. 207 didn't say how its bar laid out; it had borrowed 165's row. SQ8's sticky bar stands from 640px.
+     - **Revisit if:** the Reference grows past three rows of chips at 768px, or a GM on a phone misses the bar once scrolled.
+     - **Built:** switched off (173); no data or schema bump; log 2026-10-09 (the Reference's chips).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
