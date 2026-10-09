@@ -6,7 +6,7 @@
 with one fix round (README step 7). **SQ1–SQ4 answered by Ken 2026-10-09,
 before drafting; SQ5–SQ8 the same day** (SQ6: the tab is *Reference*; SQ7: a
 minus is a minus).
-**Branch:** from `main` at or after `04ec6e3`, PR to `main`, switched off
+**Branch:** from `main` with #143 (the minus fix) merged, PR to `main`, switched off
 (Decision 173).
 **Runs alone.** It touches `engine.js` (a new reader), `shadows-data.js` (one
 new block that no character can observe), `gm.js`, the CSS, the ledger and
