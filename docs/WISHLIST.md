@@ -539,6 +539,16 @@ character's generic diff possible; storage size (GQ9: a long table's trail
 grows); and 176's *Revisit if*. It needs a numbered decision that marks 171
 and 176.
 
+**W84 — Print a cast member, an encounter, a session's journal.** *Ken · 🔎 · Fix (UI) · raised 2026-10-09 in S13a's order (SQ4)*
+The plan's S13 lists printing beside the GM screen: a cast member's page
+(the stat block, If Pushed, their line), an encounter (its rows, Conditions
+and the round, for a GM who runs the fight on paper), and a session's
+journal with its award log. S13a builds the Reference tab alone; this is **S13b**.
+*To respect:* `print.css` is the sheet's, with its own front page (Decision
+96), so a table page's print styles must not move the character's; no new
+markup in `index.html` (constraint 3); and the award log prints in the
+player's words, as the page reads it (205).
+
 ### Custom characters
 
 Raised 2026-09-30 while planning the custom archetype
@@ -716,7 +726,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W84.** Everything above is open; W38 has a plan,
+- **Next free number: W85.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
