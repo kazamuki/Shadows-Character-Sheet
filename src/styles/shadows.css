@@ -1283,3 +1283,27 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-wrap select, .enc-wrap input[type=text]{max-width:100%; min-width:0}
 .enc-wrap .enc-condbtns{flex-wrap:wrap}
 .enc-kept{margin:4px 0; overflow-wrap:anywhere}
+
+/* Sessions and threads (Decisions 203–204). Everything a GM types wraps; nothing is wider than its column. */
+.next-session{margin-bottom:18px; min-width:0}
+.next-current{font-size:1.05rem; margin:0 0 10px; overflow-wrap:anywhere}
+.next-tag{display:inline-block; background:var(--violet); color:var(--on-accent); border-radius:4px; padding:1px 8px; font-size:.8rem; font-weight:700; margin-right:6px}
+.next-h{margin:14px 0 6px; font-size:.95rem; color:var(--dim)}
+.next-list li{padding:4px 0}
+.next-seed{white-space:pre-wrap; overflow-wrap:anywhere; margin:0 0 6px}
+.thread-row{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:8px 12px; margin-bottom:8px; min-width:0}
+.thread-main{display:flex; flex-wrap:wrap; gap:8px; align-items:center; min-width:0}
+.thread-main input[type=text]{flex:1 1 220px; min-width:0}
+.thread-main select{min-width:0; max-width:100%}
+.thread-cur.on{background:var(--violet); color:var(--on-accent)}
+.thread-more, .thread-shut{margin:6px 0}
+.thread-more summary, .thread-shut summary{cursor:pointer; color:var(--dim)}
+.thread-more textarea{min-height:60px; width:100%}
+.sess-list{padding:0}
+.sess-item{padding:6px 0; border-bottom:1px solid var(--frame)}
+.sess-head{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0 14px; align-items:end}
+.sess-head input{min-width:0; width:100%}
+.sess-part textarea{min-height:130px; width:100%; overflow-y:auto; resize:vertical}
+.field-hint{display:block; color:var(--dim); margin:0 0 4px; overflow-wrap:anywhere}
+.sess-threads{margin:0 0 14px}
+.int-session{color:var(--dim); font-size:.9rem}

@@ -897,7 +897,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.7",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.8",       // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
@@ -920,6 +920,24 @@ commit** — a GM's table must never change under them.
     crew: [ "" ],                    // typed names, trimmed, no empties, until S3b's seats claim them
     text: "",
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
+    session: null,                   // 0.8: a session's id in this table, or null (Decision 203); a new line takes the one session on its day, the gate converts nothing
+    created: "<ISO>", updated: "<ISO>"
+  } ],
+  sessions: [ {                      // 0.8: what happened, session by session (Decision 203)
+    id: "SE-XXXXXXXX",               // the TAG alphabet; unique in the table
+    number: 1,                       // a whole number from 0, or null; the GM's, one past the highest by default
+    date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
+    present: [ "" ],                 // typed names, trimmed, no empties, until S3b's seats claim them
+    hours: null,                     // half hours from 0 to 24, or null; nothing reads it until S5b
+    journal: { happened: "", fallout: "", threads: "", impact: "", reflection: "", seed: "" },   // the Campaign Journal's six parts (2270), text
+    created: "<ISO>", updated: "<ISO>"
+  } ],
+  threads: [ {                       // 0.8: what's still open (Decision 204)
+    id: "TH-XXXXXXXX",               // the TAG alphabet; unique in the table
+    title: "", notes: "",
+    status: "open",                  // open | resolved | dropped (anything else reads open)
+    current: false,                  // true on one open thread at most (the first, when a file has more)
+    opened: null, closed: null,      // session ids in this table, or null; closed only when not open
     created: "<ISO>", updated: "<ISO>"
   } ],
   encounters: [ {                    // 0.5: who is in an encounter and what is still on them (Decisions 188–190)
@@ -959,7 +977,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -4022,6 +4040,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM loses work to a deleted member, or GQ1's tab order says otherwise.
      - **Built:** as 174.
     → **Superseded in part by Decision 179** — the list also filters by affiliation, and the tab has a second view.
+    → **Superseded in part by Decision 204** — a new table opens on Sessions, not Cast; Cast is second.
 
 177. **A table keeps the crew's interactions with its cast: dated records of what was shared, learned, done or owed, with the crew as typed names until seats exist.**
      *2026-10-05 · Ken + Claude · Touches: interactions, table.interactions, I- id, interaction kind, shared, learned, helped, wronged, killed, owes, owed, crew names, date, cast status, history, table schema 0.3, migrateTable, Decision 174, W29, GQ19*
@@ -4347,6 +4366,35 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decision 98's Pain band (CQ6).
      - **Revisit if:** a Withering source other than sunlight shouldn't hurt a Vampire, or a GM's PC row (Decision 191) needs the same.
      - **Built:** app 0.39.0, game data 0.33. Log 2026-10-08 (P4).
+
+203. **A table keeps its sessions: a number, a day, who was there, hours, and the Campaign Journal's six parts; an interaction takes its session when it's made.**
+     *2026-10-08 · Ken + Claude · Touches: sessions, table.sessions, SE- id, session number, session date, present, attendance, hours, Campaign Journal, journal, interaction session, addInteraction, editInteraction, removeSession, table schema 0.8, migrateTable, Decision 177, Decision 193, W29, GQ27*
+     - **Decided:** Table schema 0.8 adds `sessions` (shape in §3): an id (`SE-`), a `number` the GM sets (the next one by default), a local `date`, `present` (names, as an interaction's crew), `hours` (half hours from 0 to 24, or null) and `journal`, the worksheet's six parts as text. An interaction gains `session`, a session's id or null. A new interaction takes the one session on its day; a session's page offers its day's lines that have none. The gate converts nothing. Deleting a session clears every `session`, `opened` and `closed` that named it.
+     - **Why:** Scott's prep starts from last session (§1a), and the journal is the record the book already asks a GM to keep (2270). 177 promised a session by date, never converted on load.
+     - **Rejected:**
+       - A number derived from the order: a campaign moved from paper starts at 21, and a corrected date would renumber it.
+       - A field per prompt (sixteen): a tablet page of boxes; the prompts are hints (GQ27).
+       - Matching every interaction by date on load: two sessions in a day, or none, and the gate would guess (177).
+       - `session` as 178's link with a kept name: a line keeps its own date, so a deleted session leaves nothing to name.
+       - Attendance by seat: seats are S3b.
+       - IP from hours now: the close-out is S5b's.
+     - **Replaces:** nothing. It builds what 177 promised.
+     - **Revisit if:** GQ27 asks for the prompts as fields, S3b's seats claim attendance, or a GM often runs two sessions in a day.
+     - **Built:** table schema 0.8, switched off (173); log 2026-10-08 (sessions and threads).
+
+204. **Threads are records, one of them current; a table opens on Sessions, which leads with Next session, computed from the threads, last session's seed and who was met without a stat block.**
+     *2026-10-08 · Ken + Claude · Touches: threads, table.threads, TH- id, thread status, open, resolved, dropped, current, opened, closed, Next session, Met last session, Sessions tab, TABLE_SECTIONS, landing page, Decision 171, Decision 176, W29, GQ1*
+     - **Decided:** Table schema 0.8 adds `threads`: an id (`TH-`), a title, a status (open, resolved or dropped), `current` (one open thread at most), `opened` and `closed` (session ids or null) and notes. `TABLE_SECTIONS` gains **Sessions**, first: a new table opens on it, and a table reopens where it was left (171). The tab leads with **Next session**, read every time and never stored: the current thread, the other open threads oldest first, last session's seed (the highest-numbered session not dated after today, or, when that one is dated today, the next in the list: the session being played), and the cast members that session's interactions name whose block has no number. Then threads, then sessions, newest first.
+     - **Why:** Scott wants "a to-do list from last session" and forgets "what the current quest is" (§1a). A thread as a record makes *still open* computed, not copied forward by hand.
+     - **Rejected:**
+       - Threads as journal text: *still open* would be copied forward by hand.
+       - Next session as its own tab: one more on a tablet, for what is the top of Sessions.
+       - Always opening on Sessions: a reload mid-fight would leave the GM's tab.
+       - Last session as the newest made (`created`): a session entered later, or from paper, would be out of order; the number is the GM's.
+       - Threads linked to the cast now: the text names them; links wait for a GM who asks.
+     - **Replaces:** Decision 176 in part: a new table opens on Sessions, not Cast.
+     - **Revisit if:** GQ1's tab order says otherwise, S7's clocks join Next session, or a GM wants a thread linked to the cast.
+     - **Built:** as 203.
 
 ## 5. Open Flags
 
