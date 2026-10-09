@@ -370,11 +370,7 @@ function boot(){
   // A plain mouse wheel scrolls the tab row sideways, until it can't.
   if (nav){
     nav.addEventListener("scroll", ()=>tabRowFades(nav), { passive:true });
-    nav.addEventListener("wheel", e=>{
-      if (Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;
-      const was=nav.scrollLeft; nav.scrollLeft+=e.deltaY;
-      if (nav.scrollLeft!==was) e.preventDefault();
-    }, { passive:false });
+    wheelSideways(nav);
   }
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{

@@ -29,6 +29,9 @@ own in the footer.
   everywhere: a stat's modifier (BOD 3 reads **−1**), the Conditions' penalties
   (*Attack/Defense at −5*), a spend in a journal, and a Çredits balance
   below zero.
+- **The wheel reaches the end of the row.** Where a row of section buttons
+  or vitals runs past the edge of the window, your mouse wheel now scrolls
+  it sideways, as it already did for the tabs.
 
 ## v0.39.0 — 2026-10-09
 

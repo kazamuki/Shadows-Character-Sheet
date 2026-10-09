@@ -640,7 +640,17 @@ function bindScrollRows(root){
     if (rowScroll[k]) r.scrollLeft = rowScroll[k];
     tabRowFades(r);
     r.addEventListener("scroll", ()=>{ rowScroll[k]=r.scrollLeft; tabRowFades(r); }, { passive:true });
+    wheelSideways(r);
   });
+}
+// A plain mouse wheel scrolls a sideways row, until it can't. The row hides
+// its scrollbar, so without this a mouse can't reach what's past the edge.
+function wheelSideways(el){
+  el.addEventListener("wheel", e=>{
+    if (Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;
+    const was=el.scrollLeft; el.scrollLeft+=e.deltaY;
+    if (el.scrollLeft!==was) e.preventDefault();
+  }, { passive:false });
 }
 // Scroll a heading to just under the sticky header (and a sticky bar), then
 // give it focus, so the keyboard carries on from there.

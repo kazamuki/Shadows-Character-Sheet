@@ -6313,6 +6313,26 @@ test("Decision 207: a chip lands on its panel's heading, whatever is filtered, a
   assert.deepEqual(app.errors, []);
 });
 
+test("a mouse wheel scrolls a sideways row of chips, the Reference's and a sheet's, and lets the page have it at the end", () => {
+  // jsdom has no layout: give each row 1200 px of chips in 500. The row hides its scrollbar.
+  const wheelable = (app, row) => {
+    let left = 0; const max = 700;
+    Object.defineProperty(row, "scrollLeft", { get: () => left, set: v => { left = Math.max(0, Math.min(max, v)); } });
+    const wheel = (dy, dx = 0) => { const e = new app.window.WheelEvent("wheel", { deltaY: dy, deltaX: dx, bubbles: true, cancelable: true }); row.dispatchEvent(e); return e.defaultPrevented; };
+    assert.equal(wheel(120), true, "the wheel didn't move the row");
+    assert.equal(left, 120);
+    assert.equal(wheel(0, 40), false, "a sideways swipe was taken over");
+    left = max;
+    assert.equal(wheel(120), false, "the wheel was swallowed with nowhere to scroll");
+  };
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); refTab(app);
+  wheelable(app, app.$("#main .jumpbar.row .jump-row.scroll-row"));
+  const sheet = openSheet(lockedCharacter(), "character");
+  wheelable(sheet, sheet.$("#main .jumpbar.row .jump-row.scroll-row"));
+  assert.deepEqual([...app.errors, ...sheet.errors], []);
+});
+
 test("Decision 207: a running encounter is kept across a trip to the Reference and back", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "T"); encTab(app);
