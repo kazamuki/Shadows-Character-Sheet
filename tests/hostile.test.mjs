@@ -762,7 +762,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -833,4 +833,70 @@ test("a table opens on Sessions when its session, thread or interaction links na
   assert.ok(app.$("[data-sj=happened]"));
   assert.deepEqual(injected(app, "the page"), []);
   assert.deepEqual(app.errors, []);
+});
+
+// ── The award log is untrusted too (Decisions 205–206, 124) ─────────────
+function hostileCloseTable() {
+  const t = Engine.newTable(P("tbl.name"));
+  const L = (o) => ({ name: "n", present: true, ip: 5, milestone: true, credits: 1, tier: null, note: "", ...o });
+  const mk = (id, number, close) => ({ id, number, date: "2026-10-0" + number, present: ["Wren", P("present")], hours: 3.5, journal: {}, close });
+  t.sessions = [
+    mk("SE-AAAAAAAA", 1, { at: "2026-10-01T20:00:00.000Z", lines: [
+      L({ name: "Wren", note: P("note"), credits: -5 }), L({ name: " wren " }), L({ name: "   " }), L({ name: P("name") }),
+      L({ name: "ip1", ip: -1 }), L({ name: "ip2", ip: 1.5 }), L({ name: "ip3", ip: "7" }), L({ name: "ip4", ip: {} }),
+      L({ name: "ms1", milestone: "true" }), L({ name: "ms2", present: false, milestone: true }),
+      L({ name: "t1", present: false, tier: "mythic" }), L({ name: "t2", present: true, tier: "expert" }), L({ name: "t3", present: false, tier: "competent", credits: 9 }),
+      null, 5, "x", [],
+    ] }),
+    mk("SE-BBBBBBBB", 2, "a string"),
+    mk("SE-CCCCCCCC", 3, ["x"]),
+    mk("SE-DDDDDDDD", 4, { lines: "x" }),
+    mk("SE-EEEEEEEE", 5, { at: P("at"), lines: [null, 5] }),
+    mk("SE-FFFFFFFF", 6, null),
+  ];
+  return t;
+}
+
+test("a hostile award log comes out of the gate typed: bad lines dropped, numbers whole or null, no stray Milestone or tier", () => {
+  const J = x => JSON.parse(JSON.stringify(x));
+  const m = Engine.migrateTable(hostileCloseTable());
+  const by = n => m.sessions.find(s => s.number === n);
+  const l = Object.fromEntries(by(1).close.lines.map(x => [x.name, x]));
+  assert.deepEqual(Object.keys(l), ["Wren", P("name"), "ip1", "ip2", "ip3", "ip4", "ms1", "ms2", "t1", "t2", "t3"], "blank, repeated and non-object lines are dropped");
+  assert.equal(l.Wren.credits, null, "negative Çredits are nothing");
+  assert.equal(by(1).close.at, "2026-10-01T20:00:00.000Z");
+  assert.deepEqual([l.ip1.ip, l.ip2.ip, l.ip3.ip, l.ip4.ip], [null, null, 7, null]);
+  assert.equal(l.ms1.milestone, false, '"true" is not true');
+  assert.equal(l.ms2.milestone, false, "an absent line has no Milestone Point");
+  assert.equal(l.t1.tier, null, "an unknown tier is nothing");
+  assert.equal(l.t2.tier, null, "a present line has no tier");
+  assert.equal(l.t3.tier, "competent");
+  assert.deepEqual(J([by(2).close, by(3).close, by(4).close, by(6).close]), [null, null, null, null]);
+  assert.deepEqual(J(by(5).close.lines), [], "written, and said nothing");
+  assert.equal(by(5).close.at, null, "an unreadable stamp is nothing");
+  assert.deepEqual(J(Engine.migrateTable(m)), J(m), "the gate is idempotent");
+  for (const s of m.sessions) Engine.closeOutDraft(m, s.id);
+  Engine.awardTotals(m);
+});
+
+test("a hostile award log and the close-out sheet render as text, with no error", () => {
+  const t = hostileCloseTable();
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  const found = [];
+  found.push(...injected(app, "the Sessions tab"));
+  for (const b of app.$$(".sess-open")) {
+    b.click();
+    found.push(...injected(app, "a session's page with its log"));
+    const redo = app.$("[data-co-redo]");
+    if (redo) { redo.click(); app.click("#modal [data-askyes]"); } else app.$("[data-co-open]").click();
+    assert.ok(app.$("[data-co-write]"), "the close-out sheet didn't open");
+    found.push(...injected(app, "the close-out sheet"));
+    assert.ok(!app.$("#main").innerHTML.includes("[object Object]"));
+    app.$("[data-co-back]").click();
+    app.$("[data-sback]").click();
+  }
+  assert.deepEqual(found, [], "an award log became markup");
+  assert.deepEqual(app.errors, [], "the hostile award log threw while rendering");
 });

@@ -124,7 +124,7 @@ window.SHADOWS_DATA = {
     },
     credits: { symbol: "Ç", description: "..." },   // the sign every price shows (Decision 135); the starting roll is on the power level
     crank: { name, description, jobDone: 1, jobWalkedOut: -2, flagged, flagNote, playerNote,   // CRANK rep (Decision 169, F37)
-             tiers: [ { id, name, rep, pay: { min, max /* null = no cap */ } } ] },             // ascending by rep; ids permanent
+             tiers: [ { id, name, rep, pay: { min, max /* null = no cap */ }, offScreenMax? /* Legendary only: the top of an off-screen job's range (Decision 206, GQ28) */ } ] },   // ascending by rep; ids permanent
     sfr: { /* SFR / Blood Pool — archetype-dependent, Phase 1 */ }
   },
 
@@ -897,7 +897,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.8",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.9",       // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
@@ -928,8 +928,17 @@ commit** — a GM's table must never change under them.
     number: 1,                       // a whole number from 0, or null; the GM's, one past the highest by default
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     present: [ "" ],                 // typed names, trimmed, no empties, until S3b's seats claim them
-    hours: null,                     // half hours from 0 to 24, or null; nothing reads it until S5b
+    hours: null,                     // half hours from 0 to 24, or null; the close-out works IP out from it (Decision 206)
     journal: { happened: "", fallout: "", threads: "", impact: "", reflection: "", seed: "" },   // the Campaign Journal's six parts (2270), text
+    close: null,                     // 0.9: null until the GM writes the close-out (Decision 205), then:
+                                     //   { at: "<ISO>",                 // when it was written, or null
+                                     //     lines: [ { name: "",         // trimmed, not empty, unique in the log ignoring case
+                                     //                present: true,    // exactly true, else false
+                                     //                ip: null,         // a whole number from 0, or null
+                                     //                milestone: false, // true only on a present line
+                                     //                credits: null,    // a whole number from 0, or null
+                                     //                tier: null,       // a resources.crank.tiers id, only on an absent line
+                                     //                note: "" } ] }    // a line that makes no sense is dropped; a log whose lines all drop keeps lines: []
     created: "<ISO>", updated: "<ISO>"
   } ],
   threads: [ {                       // 0.8: what's still open (Decision 204)
@@ -977,7 +986,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -4395,6 +4404,32 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 176 in part: a new table opens on Sessions, not Cast.
      - **Revisit if:** GQ1's tab order says otherwise, S7's clocks join Next session, or a GM wants a thread linked to the cast.
      - **Built:** as 203.
+
+205. **A session keeps its award log: what each character got at the close-out, written once, read out to the players.**
+     *2026-10-09 · Ken + Claude · Touches: close-out, award log, session close, close.lines, writeCloseOut, awardTotals, IP so far, Milestone Point, Çredits, Log a session, table schema 0.9, migrateTable, Decision 203, GQ8, GQ20, W29*
+     - **Decided:** Table schema 0.9 gives each session `close`: null until the GM writes the close-out, then `{ at, lines }`, a line per character: a name, present or not, IP, the Milestone Point, Çredits, the tier an off-screen job paid at, and a note. Writing it again (Redo) replaces it. It sends nothing; each line reads as what the player enters on their own sheet. The Sessions tab sums IP per name across every log.
+     - **Why:** the book has the GM hand out IP before anyone leaves and players "track it directly on their character sheets" (2260), and asks the GM to track "the total IP dispensed" (2400). With no seats or dispatch, a written log is the record (GQ20).
+     - **Rejected:**
+       - Computing the awards from hours and attendance every time: the GM changes them (bonus IP, a player who left early), and an edit to hours later would rewrite history.
+       - Lines editable in place after writing: two surfaces for one record; Redo reopens the sheet.
+       - CRANK rep and gear as their own fields: rep is the player's, by the job (169); both fit the note until a dispatch needs them.
+       - A dispatch now: S2 and S3b don't exist (GQ20).
+     - **Replaces:** nothing. It builds the close-out §4g promised.
+     - **Revisit if:** S3b's seats arrive (the lines name seats), S2's dispatch carries the log, or GQ8 says the GM awards Milestones.
+     - **Built:** table schema 0.9, switched off (173); log 2026-10-09 (the close-out).
+
+206. **The close-out works it out: IP at 5 an hour rounded up, the absent at an off-screen job's pay, the Milestone reminder by session number, and tonight's new faces.**
+     *2026-10-09 · Ken + Claude · Touches: closeOutDraft, ip.perHour, IP rounding, absent, off-screen job, offScreenPay, offScreenMax, CRANK tier, Legendary, arc reminder, Minor Milestone, Major Milestone, anyone new, editThread closed, Decision 11, Decision 13, Decision 169, Decision 204, GQ28*
+     - **Decided:** `closeOutDraft` proposes, the GM edits, nothing is written until they press **Write**. IP is `ceil(hours × ip.perHour)` (5, `0450`) for each name present; Hours changed recomputes only the lines not typed. The absent are the names at earlier sessions, not this one; each gets the tier last written for that name and its range: the tier's pay from its minimum to its midpoint, or `offScreenMax` (Legendary: 10,000–15,000, GQ28). The GM types the amount. A reminder shows when the session's number is a Minor or Major Milestone's. A thread settled here closes in this session. *Anyone new?* lists the members this session's lines name, or made on its day, with no motive, resources or Line.
+     - **Why:** Ken, 2026-10-09: round up, remember the tier, absent means seen before. The book: 5 an hour, present only (0450); off-screen pay in the lower half (2000); Milestones at 5 and 10 (2400).
+     - **Rejected:**
+       - A roll for off-screen pay: the app never rolls (11), and the book names no dice.
+       - Rounding down or whole hours: Ken chose up; the book says "roughly".
+       - The absent as every other session's names: a planned session would count.
+       - Changing `ip.perSession` (13) here: a player default, its own fix.
+     - **Replaces:** nothing.
+     - **Revisit if:** S3b's seats give attendance and tiers, GQ28 is answered, or the CRB changes 5 an hour.
+     - **Built:** as 205.
 
 ## 5. Open Flags
 
