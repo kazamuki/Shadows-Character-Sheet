@@ -171,6 +171,13 @@ structural rules do the remembering instead:
 Together these mean the failure mode that produced this file — a maintainer
 note reaching a player — is no longer something you can do by accident.
 
+3. **A minus is a minus** (Ken, 2026-10-09). A negative number reads `−1`, the
+   true minus (U+2212), in the data and in anything the code prints: use
+   `signed`, `modText` or `numText` (`shared.js`), never a bare `${n}` that can
+   go below zero. `–` is for a range (*300–550*), `—` for a break in prose, and
+   a hyphen is for words. `tests/voice.test.mjs` fails on a hyphen standing in
+   for a minus, in the data or on a rendered sheet.
+
 ---
 
 ## Checklist

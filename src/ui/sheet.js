@@ -30,7 +30,6 @@ const painChip = pain => pain.level
 // ── Conditions (Decision 95) — one renderer, two densities: Main shows chips,
 // Trackers shows each Condition's effect and recovery text. Everything shown
 // comes from Engine.conditionState() and the catalog; nothing is decided here.
-const signed = n => (n>0?"+":n<0?"−":"")+Math.abs(n);
 // W14: adding is one click on a chip from the catalog. A body-part Condition
 // asks where first (S.condPick), and one you already have is greyed out.
 // S.condPalette keeps the palette open across the re-render a click causes.
@@ -150,7 +149,7 @@ function statCellHtml(ch, id){
     const m=t[id].mod;
     // A form's lift (Decision 195) is in the value, and said under it.
     return `<div class="statcell${t[id].form?" shifted":""}" data-tip="stat" data-term="${esc(id)}" tabindex="0">${statIco(id)}<div class="sid">${id}</div><div class="sv">${t[id].value}</div>
-      <div class="sm2 ${m>0?"pos":m<0?"neg":""}">${m>=0?"+":""}${m}</div>${t[id].form?`<div class="sform">${t[id].form>0?"+":"−"}${Math.abs(t[id].form)} form</div>`:""}</div>`;
+      <div class="sm2 ${m>0?"pos":m<0?"neg":""}">${modText(m)}</div>${t[id].form?`<div class="sform">${t[id].form>0?"+":"−"}${Math.abs(t[id].form)} form</div>`:""}</div>`;
   }
   // derived (TOL/WILL): value only, with a "?" that reveals how it's derived
   const der=Engine.derived(ch), open=!!(S.openDerived && S.openDerived.has(id)), bd=derivedBreakdownStr(ch,id);
@@ -205,7 +204,7 @@ function sheetVitalsBar(ch){
   h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`,"luck");
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h+=pill("sfr","sfr","SFR",`${left}<small>/${sf.value}</small>`); }
-  h+=pill("cred","credits",CR,`${ch.trackers.credits.current}`,"cred");
+  h+=pill("cred","credits",CR,numText(ch.trackers.credits.current),"cred");
   h+=pill(ip.available<0?"danger":"","","IP",`${ip.available}`);
   h+=pill("","","MP",`${ms.mp}`);
   h+=`</div><button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button>`;
@@ -235,12 +234,12 @@ function vitalsPanelHtml(ch){
   h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
   h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold", "", "luck");
   if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
-  h += vrow(CR, ch.trackers.credits.current, "gold", "", "cred");
+  h += vrow(CR, numText(ch.trackers.credits.current), "gold", "", "cred");
   h += `</div><div class="vgroup">`;
   h += vrow("IP", ip.available, ip.available<0?"over":"");
   h += vrow("Milestone Pts", ms.mp);
   h += `</div><div class="vgroup">` + D.stats.map(s=>{
-    const m=t[s.id].mod; return vrow(s.id, t[s.id].value+" ("+(m>=0?"+":"")+m+")", "", s.id);
+    const m=t[s.id].mod; return vrow(s.id, t[s.id].value+" ("+modText(m)+")", "", s.id);
   }).join("") + `</div>`;
   h += `<div class="vgroup">`
      + vrow("TOL", der.TOL, "", "TOL")   + `<div class="vbd">${esc(derivedBreakdownStr(ch,"TOL"))}</div>`
@@ -340,7 +339,7 @@ function renderShMain(){
     h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
   }
   // W45: whichever card is alone on its row in two columns takes the whole row (CRANK, with SFR: Decision 169).
-  h += cond("cred","Çredits","credits", `${CR}${ch.trackers.credits.current}`, "", null, "", "cred");
+  h += cond("cred","Çredits","credits", `${CR}${numText(ch.trackers.credits.current)}`, "", null, "", "cred");
   // Decision 169: with SFR the row above is full, so CRANK takes the next one alone.
   h += cond(hasSfr?"crank alone":"crank", "CRANK", "crank", `${crk.rep}`, esc(crk.tier?crk.tier.name:""), null, "", "crank");
   h += `</div>`;
@@ -1061,7 +1060,7 @@ function vitalPopover(ch, key){
     return { title:"LUCK", html: now(`${luck.current} / ${luck.max}`, luck.current===0?"bad":"gold", "") +
       `<div class="trk-row">${luckControlsHtml(luck)}</div>` }; }
   if (key==="cred") return { title:"Çredits",
-    html: now(`${CR} ${ch.trackers.credits.current}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
+    html: now(`${CR} ${numText(ch.trackers.credits.current)}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
   if (key==="crank"){ const st=Engine.crankState(ch);
     return { title:D.resources.crank.name,
@@ -1160,13 +1159,13 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
 
   // Çredits
   h += `<div class="sect">Çredits</div>
-    <div class="trk"><h2>Balance</h2><span class="big gold">${CR} ${ch.trackers.credits.current}</span>
+    <div class="trk"><h2>Balance</h2><span class="big gold">${CR} ${numText(ch.trackers.credits.current)}</span>
     ${creditControlsHtml()}</div>`;
   const ledger = ch.trackers.credits.ledger||[];
   if (ledger.length){
     h += `<details class="group" open><summary>Ledger (${ledger.length})</summary><div class="journal">` +
       ledger.slice().reverse().map(e=>`<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
-        <span class="amt ${e.amount<0?"spend":"grant"}">${e.amount>0?"+":""}${e.amount}</span>
+        <span class="amt ${e.amount<0?"spend":"grant"}">${signed(e.amount)}</span>
         <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
   }
 
@@ -1180,7 +1179,7 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
   if (crkLedger.length){
     h += `<details class="group" open><summary>CRANK ledger (${crkLedger.length})</summary><div class="journal">` +
       crkLedger.slice().reverse().map(e=>`<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
-        <span class="amt ${e.amount<0?"spend":"grant"}">${e.amount>0?"+":""}${e.amount}</span>
+        <span class="amt ${e.amount<0?"spend":"grant"}">${signed(e.amount)}</span>
         <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
   }
 
@@ -1202,7 +1201,7 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
   if (adjs.length){
     h += `<div class="journal">` + adjs.map((a2,i)=>`<div class="jrow">
       <span class="d">${esc(String(a2.date||"").slice(0,10))}</span>
-      <span class="amt ${a2.amount<0?"spend":"grant"}">${a2.amount>0?"+":""}${a2.amount}</span>
+      <span class="amt ${a2.amount<0?"spend":"grant"}">${signed(a2.amount)}</span>
       <span class="what">${esc(a2.target)}</span><span class="note">${esc(a2.note)}</span>
       <button class="x" data-adjdel="${i}" title="remove">✕</button></div>`).join("") + `</div>`;
   }
@@ -1443,7 +1442,7 @@ function catalogResultsHtml(ch, kind){
 }
 function catalogStatusHtml(ch, kind){
   const { list, total } = catalogMatches(ch, kind);
-  return `Showing <b>${list.length}</b> of ${total} · You have <b>${(Number(ch.trackers.credits.current)||0).toLocaleString("en-US")}${CR}</b>`;
+  return `Showing <b>${list.length}</b> of ${total} · You have <b>${(n=>(n<0?"−":"")+Math.abs(n).toLocaleString("en-US"))(Number(ch.trackers.credits.current)||0)}${CR}</b>`;
 }
 function catalogPickerHtml(ch, kind){
   const st = S.loPick;
@@ -2045,7 +2044,7 @@ function renderShAdmin(){
   h += `<div class="sect">Stats — base + IP</div><div class="alloc">`;
   for (const s of D.stats){
     const st=ch.stats[s.id], v=Engine.statValue(ch,s.id), m=Engine.statMod(v);
-    h += `<div class="alloc-row"><div class="name">${s.id} <small>value ${v} (${m>=0?"+":""}${m})</small></div>
+    h += `<div class="alloc-row"><div class="name">${s.id} <small>value ${v} (${modText(m)})</small></div>
       <div class="admin-steppers">
         <span class="lbl">base ${st.base}</span>
         <button class="btn sm" data-admin-stat="${s.id}|base|-1">−</button><button class="btn sm" data-admin-stat="${s.id}|base|1">+</button>
@@ -2154,7 +2153,7 @@ function pStatsHtml(ch){
   let h = `<table class="p-stats"><thead><tr><th></th><th>Stat</th><th>Score</th><th>Bonus</th></tr></thead><tbody>` +
     D.stats.map(s=>{
       const row = t ? t[s.id] : null;
-      const mod = row ? (row.mod>=0?"+":"")+row.mod : null;
+      const mod = row ? modText(row.mod) : null;
       return `<tr>${pStatIcon(s.id)}<td>${esc(s.id)}</td><td class="num">${pLine(row&&row.value)}</td><td class="num">${pLine(mod)}</td></tr>`;
     }).join("") + `</tbody></table>`;
   const der = ch ? Engine.derived(ch) : null, luck = ch ? Engine.luckState(ch) : null, san = ch ? Engine.sanState(ch) : null;
@@ -2351,7 +2350,7 @@ function renderPrintView(ch){
 
   let p1main = pHead(ch, "Character Sheet");
   p1main += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&Engine.archetypeContent(ch).name)}${pField("Power Level", pl&&pl.name)}</div>`;
-  p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch&&ch.trackers.credits.current)}</div>`;
+  p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch ? numText(ch.trackers.credits.current) : null)}</div>`;
   const crkSt = ch && Engine.crankState(ch);
   p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}${pField("CRANK", crkSt&&`${crkSt.rep} · ${crkSt.tier?crkSt.tier.name:""}`)}</div>`;
   p1main += `<div class="p-frontbody">`;
@@ -2727,7 +2726,7 @@ function bindVitalControls(root){
   // SAN
   root.querySelectorAll("[data-san]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.san);
-    commit("san", `SAN loss ${d>0?"+":""}${d}`, ()=>{ ch.trackers.san.loss=Math.max(0,(ch.trackers.san.loss||0)+d); });
+    commit("san", `SAN loss ${signed(d)}`, ()=>{ ch.trackers.san.loss=Math.max(0,(ch.trackers.san.loss||0)+d); });
   });
   const ss=root.querySelector("[data-sanset]");
   if (ss) ss.onchange=()=>{ const v=Math.max(0,Number(ss.value)||0); commit("san", `Set SAN loss → ${v}`, ()=>{ ch.trackers.san.loss=v; }); };
@@ -2746,14 +2745,14 @@ function bindVitalControls(root){
     const amt=num(root.querySelector("[data-cramt]"));
     const note=(root.querySelector("[data-crnote]")||{}).value||"";
     if (amt==null || !amt) return;
-    const signed=Math.abs(amt)*Number(b.dataset.cr);
-    commit("credits", `Çredits ${signed>0?"+":""}${signed}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, signed, note); });
+    const by=Math.abs(amt)*Number(b.dataset.cr);
+    commit("credits", `Çredits ${signed(by)}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, by, note); });
   });
 
   // CRANK rep (Decision 169): the amount is the data's, never typed.
   root.querySelectorAll("[data-crk]").forEach(b=>b.onclick=()=>{
     const amt=Number(b.dataset.crk), note=(root.querySelector("[data-crknote]")||{}).value||"";
-    commit("crank", `CRANK rep ${amt>0?"+":""}${amt}${note?` (${note})`:""}`, ()=>{ Engine.addCrankRep(ch, amt, note); });
+    commit("crank", `CRANK rep ${signed(amt)}${note?` (${note})`:""}`, ()=>{ Engine.addCrankRep(ch, amt, note); });
   });
 
 }
@@ -2885,7 +2884,7 @@ function bindSheet(){
   // Generic archetype trackers (SFR / panel trackers)
   main.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
     const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
-    commit("tracker", `${pid.toUpperCase()} ${delta>0?"+":""}${delta}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
+    commit("tracker", `${pid.toUpperCase()} ${signed(delta)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
   });
   // Aberrations on the character (Decision 110); adding one, from a Cascade
   // or by hand, is the picker modal (Decision 115).
@@ -2936,7 +2935,7 @@ function bindSheet(){
     const amt=num(main.querySelector("[data-adjamt]"));
     const note=(main.querySelector("[data-adjnote]")||{}).value||"";
     if (!target || amt==null || !amt) return;
-    commit("adjustment", `Adjust ${target} ${amt>0?"+":""}${Math.trunc(amt)}${note?` (${note})`:""}`, ()=>{
+    commit("adjustment", `Adjust ${target} ${signed(Math.trunc(amt))}${note?` (${note})`:""}`, ()=>{
       ch.trackers.adjustments.push({target, amount:Math.trunc(amt), note, date:new Date().toISOString()});
     });
   });
@@ -2958,7 +2957,7 @@ function bindSheet(){
   // Milestones
   main.querySelectorAll("[data-mp]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.mp);
-    commit("milestone", `Manual MP ${d>0?"+":""}${d}`, ()=>{ ch.progression.milestonePoints=Math.max(0,(ch.progression.milestonePoints||0)+d); });
+    commit("milestone", `Manual MP ${signed(d)}`, ()=>{ ch.progression.milestonePoints=Math.max(0,(ch.progression.milestonePoints||0)+d); });
   });
   main.querySelectorAll("[data-takeminor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takeminor;
@@ -3278,13 +3277,13 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-admin-stat]").forEach(b=>b.onclick=()=>{
     const [id,field,d]=b.dataset.adminStat.split("|"), delta=Number(d);
-    commit("admin", `Admin: ${id} ${field} ${delta>0?"+":""}${delta}`, ()=>{ ch.stats[id][field]=Math.max(0,(ch.stats[id][field]||0)+delta); });
+    commit("admin", `Admin: ${id} ${field} ${signed(delta)}`, ()=>{ ch.stats[id][field]=Math.max(0,(ch.stats[id][field]||0)+delta); });
   });
   main.querySelectorAll("[data-admin-skill]").forEach(b=>b.onclick=()=>{
     const [id,field,d]=b.dataset.adminSkill.split("|"), nm=(Engine.skillById(id)||{name:id}).name;
     if (field==="remove"){ commit("admin", `Admin: remove skill ${nm}`, ()=>{ delete ch.skills[id]; }); return; }
     const delta=Number(d);
-    commit("admin", `Admin: ${nm} ${field} ${delta>0?"+":""}${delta}`, ()=>{
+    commit("admin", `Admin: ${nm} ${field} ${signed(delta)}`, ()=>{
       if (!ch.skills[id]) ch.skills[id]={rank:0,ipe:0};
       ch.skills[id][field]=Math.max(0,(ch.skills[id][field]||0)+delta);
     });
@@ -3303,7 +3302,7 @@ function bindSheet(){
     const find=()=>ch.advantages.includes(row) ? row : null;
     if (op==="x"){ commit("admin", `Admin: remove advantage ${nm}`, ()=>{ ch.advantages=ch.advantages.filter(a=>a!==find()); }); return; }
     const delta=Number(op);
-    commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{
+    commit("admin", `Admin: ${nm} rank ${signed(delta)}`, ()=>{
       const e=find(); if(!e) return; e.rank=Math.max(0,e.rank+delta);
       if (e.rank===0) ch.advantages=ch.advantages.filter(a=>a!==e);
     });
@@ -3320,7 +3319,7 @@ function bindSheet(){
     const find=()=>ch.disadvantages.includes(row) ? row : null;
     if (op==="x"){ commit("admin", `Admin: remove disadvantage ${nm}`, ()=>{ ch.disadvantages=ch.disadvantages.filter(d=>d!==find()); }); return; }
     const delta=Number(op);
-    commit("admin", `Admin: ${nm} rank ${delta>0?"+":""}${delta}`, ()=>{
+    commit("admin", `Admin: ${nm} rank ${signed(delta)}`, ()=>{
       const e=find(); if(!e) return; e.rank=Math.max(0,e.rank+delta);
       if (e.rank===0) ch.disadvantages=ch.disadvantages.filter(d=>d!==e);
     });
@@ -3332,7 +3331,7 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-admin-luck]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.adminLuck);
-    commit("admin", `Admin: LUCK bonus ${d>0?"+":""}${d}`, ()=>{ ch.trackers.luck.bonus=Math.max(0,(ch.trackers.luck.bonus||0)+d); });
+    commit("admin", `Admin: LUCK bonus ${signed(d)}`, ()=>{ ch.trackers.luck.bonus=Math.max(0,(ch.trackers.luck.bonus||0)+d); });
   });
 
   main.querySelectorAll("[data-admin-crank]").forEach(b=>b.onclick=()=>{

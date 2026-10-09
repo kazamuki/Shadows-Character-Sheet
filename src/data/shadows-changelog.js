@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.39.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**A minus sign reads as one.** Negative numbers now show a true minus everywhere: a stat's modifier (BOD 3 reads **−1**), the Conditions' penalties (*Attack/Defense at −5*), a spend in a journal, and a Çredits balance below zero."
+    ]
+  },
+  {
     "version": "0.39.0",
     "date": "2026-10-09",
     "intro": [],
