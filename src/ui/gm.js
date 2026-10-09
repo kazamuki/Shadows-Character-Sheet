@@ -344,10 +344,14 @@ function findResultsHtml(q){
 function openFind(){
   openModal({ title:"Find on this table", returnTo:"[data-tfind]",
     html:`<label class="field"><span>Search</span><input type="search" data-findq value="${esc(S.findQ||"")}" placeholder="Names, places, anything you wrote" autocomplete="off"></label>
-      <div data-findres aria-live="polite">${findResultsHtml(S.findQ)}</div>`,
+      <p class="sr-only" data-findcount role="status" aria-live="polite"></p>
+      <div data-findres>${findResultsHtml(S.findQ)}</div>`,
     bind(body){
       const q=body.querySelector("[data-findq]"), res=body.querySelector("[data-findres]");
-      q.oninput=()=>{ S.findQ=q.value; res.innerHTML=findResultsHtml(q.value); };
+      const count=body.querySelector("[data-findcount]");
+      const redraw=()=>{ res.innerHTML=findResultsHtml(q.value); const n=res.querySelectorAll("[data-fkind]").length;
+        count.textContent = q.value.trim().length<2 ? "" : n ? `${n} found` : "Nothing on the table matches."; };
+      q.oninput=()=>{ S.findQ=q.value; redraw(); };
       res.onclick=ev=>{ const b=ev.target.closest("[data-fkind]"); if (!b) return; const kind=b.dataset.fkind, id=b.dataset.fid; closeModal(); openFound(kind, id); };
     } });
 }
@@ -396,8 +400,10 @@ function openJot(){
       const ta=body.querySelector("[data-jottext]"), why=body.querySelector("[data-jotwhy]");
       ta.oninput=()=>{ S.jotDraft=ta.value; why.textContent=""; };
       const save=()=>{
-        let r; const text=ta.value;
-        tableChange(()=>{ r=Engine.addTableNote(S.table, { text, date:localDay(), jot:true }); }, false);
+        const text=ta.value;
+        // Nothing written, nothing saved: tableChange would stamp the table as changed.
+        if (!text.trim()){ why.textContent="Write something first."; ta.focus(); return; }
+        let r; tableChange(()=>{ r=Engine.addTableNote(S.table, { text, date:localDay(), jot:true }); }, false);
         if (!r.ok){ why.textContent=r.why; ta.focus(); return; }
         S.jotDraft="";
         const note=S.table.notes.find(n=>n.id===r.id);

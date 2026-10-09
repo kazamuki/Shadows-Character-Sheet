@@ -1361,3 +1361,4 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .find-field{color:var(--dim); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em}
 .find-snip{font-size:.88rem}
 .find-snip mark{background:var(--violet-hi); color:inherit; border-radius:2px; padding:0 1px}
+.sr-only{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}

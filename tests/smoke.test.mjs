@@ -6373,6 +6373,7 @@ test("Decision 208: Find keeps its field and focus while typing, groups hits by 
   const app = secretaryApp();
   findOpen(app);
   const q = app.$("[data-findq]");
+  assert.equal(app.$("[data-findres]").getAttribute("aria-live"), null, "the results aren't a live region");
   assert.equal(app.doc.activeElement, q, "focus starts in the field");
   assert.equal(app.$("[data-findres]").textContent.trim(), "", "nothing under two characters");
   typeKeys(app, "[data-findq]", "dock");
@@ -6380,6 +6381,7 @@ test("Decision 208: Find keeps its field and focus while typing, groups hits by 
   assert.equal(app.doc.activeElement, q); assert.equal(q.value, "dock");
   const heads = app.$$("#modal .find-h").map(h => h.textContent.replace(/\s+/g, " ").trim());
   assert.deepEqual(heads, ["Cast 1", "Sessions 1", "Lines 2"]);
+  assert.equal(app.$("[data-findcount]").textContent, "4 found");
   const marks = app.$$("#modal mark").map(m => m.textContent);
   assert.ok(marks.length >= 4 && marks.every(m => m.toLowerCase() === "dock"), marks.join("|"));
   const cast = findHits(app).find(b => b.dataset.fkind === "cast");
@@ -6451,8 +6453,12 @@ test("Decision 208: Jot from a running encounter saves a note with today's sessi
   app.click("[data-tjot]");
   assert.equal(app.doc.activeElement, app.$("[data-jottext]"));
   assert.match(app.$("#modal").textContent, /Goes with Session 6\./);
-  // Empty: refused, nothing added, focus stays.
+  // Empty: refused, nothing added, nothing stamped or saved, focus stays.
+  const stamp = () => [app.window.eval("S.table.meta.updated"), JSON.parse(app.window.localStorage.getItem(tableKeys(app)[0])).changed];
+  const was = stamp();
+  type(app, "[data-jottext]", "  " + String.fromCharCode(10) + " ");
   app.click("[data-jotsave]");
+  assert.deepEqual(stamp(), was, "an empty Save counted as a change");
   assert.match(app.$("[data-jotwhy]").textContent, /Write something first\./);
   assert.equal(app.window.eval("S.table.notes.length"), notesBefore);
   assert.equal(app.doc.activeElement, app.$("[data-jottext]"));

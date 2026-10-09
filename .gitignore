@@ -16,3 +16,6 @@ Thumbs.db
 
 # Saved test output (npm run verify > some.log)
 *.log
+
+# The impeccable hook's session cache (holds local paths)
+.impeccable/hook.cache.json
