@@ -4388,8 +4388,9 @@ const Engine = (() => {
   function nextSession(t){
     const open = threadList(t).filter(h=>h.status==="open");
     const current = open.find(h=>h.current) || null;
-    // Last session is the highest number, unless that one is dated today: it's the session being played, so last is the next in the list.
-    const list = sessionList(t), today = _today();
+    // Last session is the highest number, unless that one is dated today (and never one dated after it): it's the session being played, so last is the next in the list.
+    // A session dated after today is planned, not behind us: it is never last.
+    const today = _today(), list = sessionList(t).filter(x=>!x.date || x.date<=today);
     const last = (list[0] && list[0].date===today ? list[1] : list[0]) || null;
     const met = new Set();
     if (last) for (const x of sessionInteractions(t, last.id)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l)) met.add(l.id);

@@ -5607,3 +5607,18 @@ test("204 (review): Resolved to Dropped keeps the Closed in the GM set; only ope
   Engine.editThread(t, h, { status: "dropped" });
   assert.equal(thrOf(t, h).closed, newest, "reopened and closed again: the newest session");
 });
+
+test("204 (round 2): a session dated after today is never last session; undated ones still count", () => {
+  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 7); const p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; })();
+  const last = (...rows) => { const t = Engine.newTable("x"); const ids = rows.map(([n, d]) => Engine.addSession(t, { number: n, date: d }).id); const l = Engine.nextSession(t).last; return l ? ids[rows.findIndex((_, i) => ids[i] === l.id)] && rows[ids.indexOf(l.id)][0] : null; };
+  assert.equal(last([7, tomorrow], [6, "2026-01-01"]), 6, "next week's is skipped");
+  assert.equal(last([8, tomorrow], [7, TODAY], [6, "2026-01-01"]), 6, "then today's is the one being played");
+  assert.equal(last([6, TODAY], [5, TODAY], [4, "2026-01-01"]), 5, "unchanged");
+  assert.equal(last([7, tomorrow]), null, "only a future session: none");
+  assert.equal(last([7, tomorrow], [2, ""]), 2, "undated stays in");
+  const t = Engine.newTable("y");
+  const six = Engine.addSession(t, { number: 6, date: "2026-10-01" }).id;
+  Engine.editSession(t, six, { journal: { seed: "the seed" } });
+  Engine.addSession(t, { number: 7, date: tomorrow });
+  eq(Engine.nextSession(t).seed, "the seed");
+});

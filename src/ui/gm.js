@@ -812,7 +812,7 @@ function nextSessionHtml(t){
     return `<p class="step-note">Nothing yet. Start a session when you sit down to play, or add a thread you want to follow.</p>`;
   const open = h => `<button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button>`;
   if (!n.current && !n.open.length && !n.seed && !n.unbuilt.length)
-    return `<p class="step-note">Nothing open, and last session set nothing up.</p>`;
+    return `<p class="step-note">${n.last ? "Nothing open, and last session set nothing up." : "Nothing open yet."}</p>`;
   return `<div class="next-session">
     ${n.current ? `<p class="next-current"><span class="next-tag">Current</span> ${open(n.current)}</p>` : ""}
     ${n.open.length ? `<h3 class="next-h">Still open</h3><ul class="int-list next-list">${n.open.map(h=>`<li>${open(h)}</li>`).join("")}</ul>` : ""}
