@@ -3411,7 +3411,7 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   assert.match(app.$("#undotoast").textContent, /isn't a character, a table or a pack/);
   assert.equal(charKeys(app).length, 1); assert.equal(tableKeys(app).length, 1);
   const newer = JSON.parse(JSON.stringify(t));
-  newer.meta.tableSchemaVersion = "0.9";
+  newer.meta.tableSchemaVersion = "9.0";
   await importFile(app, newer);
   assert.match(app.$("#undotoast").textContent, /newer version of the app/);
   assert.deepEqual(app.errors, []);
@@ -3764,13 +3764,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.8");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.8");
+  assert.equal(saved.meta.tableSchemaVersion, "0.9");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4111,7 +4111,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.8");
+  assert.equal(file.meta.tableSchemaVersion, "0.9");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4123,7 +4123,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.8");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4500,7 +4500,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.8");
+  assert.equal(file.meta.tableSchemaVersion, "0.9");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -4594,7 +4594,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.8");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -5938,7 +5938,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.8");
+  assert.equal(file.meta.tableSchemaVersion, "0.9");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -5951,7 +5951,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.8");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -5961,5 +5961,288 @@ test("Decision 173: switched off, there is no table, so no Sessions tab", () => 
   const app = boot();
   assert.equal(app.$("#btn-run-table"), null);
   assert.equal(app.$('[data-tsec="sessions"]'), null);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── The close-out (Decisions 205–206) ───────────────────────────────────
+function closeApp(build) {
+  const t = Engine.newTable("Close");
+  const ids = build(t);
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { ...GM_ON, [key]: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.click("[data-topen]");
+  return { app, t, ids };
+}
+const mkSession = (t, number, date, present, hours) => {
+  const id = Engine.addSession(t, { number, date }).id;
+  Engine.editSession(t, id, { present, hours });
+  return id;
+};
+const openSess = (app, id) => app.click(`.sess-open[data-sopen="${id}"]`);
+const closeSheet = (app, id) => { openSess(app, id); app.click("[data-co-open]"); };
+const coRow = (app, name) => app.$$("[data-co-row]").find(r => r.querySelector(".co-name").textContent === name);
+const coField = (app, name, f) => coRow(app, name).querySelector(`[data-co="${f}"]`);
+const coType = (app, name, f, v) => type(app, `[data-co-row="${coRow(app, name).dataset.coRow}"] [data-co="${f}"]`, v);
+
+test("205–206: Close out opens the sheet on Who was there; IP is 5 an hour rounded up, the Milestone Point ticked", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Dez"], 2); return mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5); });
+  openSess(app, ids);
+  assert.equal(app.$("[data-sco-h]").textContent, "Close-out");
+  assert.equal(app.$("[data-co-open]").textContent, "Close out Session 4");
+  app.click("[data-co-open]");
+  assert.equal(app.$("h1.step-title").textContent, "Close out Session 4");
+  assert.equal(app.doc.activeElement, app.$('[data-cosf="present"]'));
+  assert.equal(app.$("[data-co-back]").textContent, "Back to Session 4");
+  assert.deepEqual(["Wren", "Rook"].map(n => coField(app, n, "ip").value), ["18", "18"]);
+  assert.ok(["Wren", "Rook"].every(n => coField(app, n, "milestone").checked));
+  assert.match(app.$("#main").textContent, /5 an hour, rounded up\. Change any of it\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("206: changing Hours recomputes the IP of lines the GM hasn't typed, and leaves a typed one", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5));
+  closeSheet(app, ids);
+  coType(app, "Rook", "ip", "20");
+  const hours = app.$('[data-cosf="hours"]');
+  type(app, '[data-cosf="hours"]', "3");
+  assert.equal(app.$('[data-cosf="hours"]'), hours, "the field wasn't redrawn");
+  assert.equal(app.window.eval("S.table.sessions[0].hours"), 3, "Hours saves to the session as typed");
+  assert.equal(coField(app, "Wren", "ip").value, "15");
+  assert.equal(coField(app, "Rook", "ip").value, "20", "a typed IP is left alone");
+  type(app, '[data-cosf="hours"]', "");
+  assert.equal(coField(app, "Wren", "ip").value, "", "no hours: blank");
+  assert.equal(coField(app, "Rook", "ip").value, "20");
+  assert.match(app.$("#main").textContent, /Add the hours to work out IP\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("206: the absent are the earlier names; a tier is picked, its range shows, the Çredits are typed, and the next close-out suggests that tier", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Dez"], 2); mkSession(t, 9, "2026-12-01", ["Planned"], 2); const a = mkSession(t, 4, "2026-09-08", ["Wren"], 3); const b = mkSession(t, 5, "2026-09-15", ["Wren"], 2); return { a, b }; });
+  closeSheet(app, ids.a);
+  assert.equal(app.$("[data-co-away-h]").textContent, "Away tonight");
+  assert.doesNotMatch(app.$("#main").textContent, /Planned/);
+  assert.equal(coField(app, "Dez", "took").checked, true);
+  assert.equal(coField(app, "Dez", "tier").value, "");
+  assert.match(coField(app, "Dez", "tier").options[0].textContent, /Choose a tier/);
+  typeChange(app, `[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="tier"]`, "competent");
+  assert.match(coRow(app, "Dez").textContent, /Pays 300–550/);
+  assert.equal(app.doc.activeElement, coField(app, "Dez", "tier"));
+  coType(app, "Dez", "credits", "400");
+  app.click("[data-co-write]");
+  assert.equal(app.doc.activeElement, app.$("[data-sco-h]"));
+  assert.match(app.$(".co-log").textContent, /Dez \(away\): no session to log; an off-screen job, Competent; \+400 Çredits\./);
+  app.click("[data-sback]");
+  openSess(app, ids.b);
+  app.click("[data-co-open]");
+  assert.equal(coField(app, "Dez", "tier").value, "competent", "the last pick is suggested");
+  assert.equal(coField(app, "Dez", "credits").value, "", "the amount isn't");
+  // Unticked: the row folds and writes no line.
+  app.click(`[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="took"]`);
+  assert.equal(coRow(app, "Dez").querySelector('[data-co="tier"]'), null);
+  assert.equal(app.doc.activeElement, coField(app, "Dez", "took"));
+  app.click("[data-co-write]");
+  assert.deepEqual(JSON.parse(JSON.stringify(app.window.eval("S.table.sessions.find(s => s.number === 5).close.lines.map(l => l.name)"))), ["Wren"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("206: the arc reminder goes by the session's number: 5 Minor, 10 Major, 4 neither", () => {
+  const { app, ids } = closeApp(t => ({ four: mkSession(t, 4, "2026-09-01", ["Wren"], 2), five: mkSession(t, 5, "2026-09-08", ["Wren"], 2), ten: mkSession(t, 10, "2026-09-15", ["Wren"], 2) }));
+  closeSheet(app, ids.five);
+  assert.match(app.$("#main").textContent, /Session 5: a Minor Milestone comes due\. Each player's sheet counts their own\./);
+  assert.doesNotMatch(app.$("#main").textContent, /Major Milestone comes due/);
+  app.click("[data-co-back]"); app.click("[data-sback]");
+  closeSheet(app, ids.ten);
+  assert.match(app.$("#main").textContent, /Session 10: a Major Milestone comes due\./);
+  app.click("[data-co-back]"); app.click("[data-sback]");
+  closeSheet(app, ids.four);
+  assert.doesNotMatch(app.$("#main").textContent, /Milestone comes due/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("206: a thread resolved from the sheet closes in this session, though a newer one exists, and focus moves on", () => {
+  const { app, ids } = closeApp(t => {
+    const a = mkSession(t, 4, "2026-09-01", ["Wren"], 2); mkSession(t, 6, "2026-09-15", ["Wren"], 2);
+    Engine.addThread(t, { title: "First" }); Engine.addThread(t, { title: "Second" });
+    return a;
+  });
+  closeSheet(app, ids);
+  assert.equal(app.$$("[data-co-status]").length, 2);
+  const first = app.$$("[data-co-thread]")[0].dataset.coThread;
+  typeChange(app, `[data-co-status="${first}"]`, "resolved");
+  assert.equal(app.window.eval(`S.table.threads.find(h => h.id === "${first}").closed`), ids, "closed in this session");
+  assert.equal(app.$$("[data-co-status]").length, 1, "it left the list");
+  assert.equal(app.doc.activeElement, app.$("[data-co-status]"), "focus lands on the next thread");
+  typeChange(app, "[data-co-status]", "dropped");
+  assert.match(app.$("#main").textContent, /No open threads\./);
+  assert.equal(app.doc.activeElement, app.$("[data-co-threads-h]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("206: Anyone new? lists a member made today with no line; typing saves it; reopening the sheet drops them", () => {
+  const { app, t, ids } = closeApp(t => { Engine.addCastMember(t, { name: "Fresh" }); Engine.addCastMember(t, { name: "Known" }); Engine.editCastMember(t, t.cast.find(n => n.name === "Known").id, { line: "Stop." }); return mkSession(t, 4, dayToday(), ["Wren"], 2); });
+  closeSheet(app, ids);
+  assert.equal(app.$("[data-co-new-h]").textContent, "Anyone new?");
+  const names = app.$$("[data-co-open-cast]").map(b => b.textContent);
+  assert.equal(names.length, 1, names.join());
+  const who = app.$("[data-co-member]");
+  const field = who.querySelector('[data-co-cf="motivation"]');
+  type(app, '[data-co-member] [data-co-cf="motivation"]', "Money.");
+  assert.equal(app.$('[data-co-member] [data-co-cf="motivation"]'), field, "no redraw");
+  assert.equal(app.window.eval("S.table.cast.find(n => n.motivation).motivation"), "Money.");
+  // Still listed until reopened; after Back and in again, gone.
+  assert.ok(app.$("[data-co-member]"));
+  app.click("[data-co-back]"); app.click("[data-co-open]");
+  assert.equal(app.$("[data-co-new-h]"), null);
+  assert.ok(t);
+  assert.deepEqual(app.errors, []);
+});
+
+test("205: a newcomer's name opens their page; its Back says where and returns to the sheet", () => {
+  const { app, ids } = closeApp(t => { Engine.addCastMember(t, { name: "Fresh" }); return mkSession(t, 4, dayToday(), ["Wren"], 2); });
+  closeSheet(app, ids);
+  coType(app, "Wren", "ip", "7");
+  app.click("[data-co-open-cast]");
+  assert.equal(app.$("[data-cback]").textContent, "Back to the close-out");
+  assert.equal(app.doc.activeElement, app.$("[data-cback]"));
+  app.click("[data-cback]");
+  assert.equal(app.$("h1.step-title").textContent, "Close out Session 4");
+  assert.equal(coField(app, "Wren", "ip").value, "7", "the draft was kept");
+  assert.equal(app.doc.activeElement.dataset.coOpenCast, app.window.eval("S.table.cast[0].id"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("205: Back keeps the draft and names the session; the page's button resumes it", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren"], 2));
+  closeSheet(app, ids);
+  coType(app, "Wren", "ip", "99"); coType(app, "Wren", "note", "Bonus");
+  app.click("[data-co-back]");
+  assert.equal(app.$("h1.step-title").textContent, "Session 4");
+  assert.equal(app.doc.activeElement, app.$("[data-co-open]"));
+  assert.equal(app.window.eval("S.table.sessions[0].close"), null, "nothing written");
+  app.click("[data-co-open]");
+  assert.equal(coField(app, "Wren", "ip").value, "99");
+  assert.equal(coField(app, "Wren", "note").value, "Bonus");
+  app.click("[data-co-back]"); app.click("[data-sback]");
+  openSess(app, ids);
+  assert.equal(app.$("h1.step-title").textContent, "Session 4", "another visit opens the page, not the sheet");
+  assert.deepEqual(app.errors, []);
+});
+
+test("205: Write stores the log in the player's words; IP so far shows; reload, export and import keep it; Redo asks and starts from it", async () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Wren", "Dez"], 2); return mkSession(t, 4, "2026-09-08", ["Wren", "Rook", "Blank"], 3.5); });
+  const downloads = withDownloads(app);
+  assert.doesNotMatch(app.$("#main").textContent, /IP so far/);
+  closeSheet(app, ids);
+  coType(app, "Wren", "credits", "250"); coType(app, "Wren", "note", "Kept the gun.");
+  coType(app, "Rook", "ip", ""); app.click(`[data-co-row="${coRow(app, "Rook").dataset.coRow}"] [data-co="milestone"]`);
+  coType(app, "Blank", "ip", "");
+  app.click(`[data-co-row="${coRow(app, "Blank").dataset.coRow}"] [data-co="milestone"]`);
+  app.click(`[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="took"]`);
+  app.click("[data-co-write]");
+  const log = app.$$(".co-log li").map(l => l.textContent);
+  assert.deepEqual(log, ["Wren: log a session with 18 IP and the Milestone Point; +250 Çredits. Kept the gun.", "Rook: nothing this time.", "Blank: nothing this time."]);
+  assert.match(app.$("#main").textContent, /Written \S+/);
+  assert.equal(app.doc.activeElement, app.$("[data-sco-h]"));
+  assert.equal(app.window.eval("S.closeOut"), null);
+  app.click("[data-sback]");
+  assert.match(app.$(".co-totals").textContent, /^IP so far: Wren 18 · Rook 0 · Blank 0$/);
+  // Reload.
+  tableReopen(app, "Close");
+  assert.match(app.$(".co-totals").textContent, /Wren 18/);
+  // Export, import.
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  const file = await tableFile(downloads[0]);
+  const closed = file.sessions.find(s => s.number === 4).close;
+  assert.equal(closed.lines.length, 3);
+  assert.equal(file.sessions.find(s => s.number === 3).close, null);
+  const fresh = boot({ storage: GM_ON });
+  withDownloads(fresh);
+  await importFile(fresh, file);
+  assert.deepEqual(JSON.parse(JSON.stringify(fresh.window.eval("S.table.sessions.find(s => s.number === 4).close"))), closed);
+  // Redo.
+  openSess(app, ids);
+  app.click("[data-co-redo]");
+  assert.match(app.$("#modal").textContent, /Redo the close-out\?[\s\S]*You'll start from what's written; writing again replaces it\./);
+  app.click("#modal [data-modalclose]");
+  assert.ok(app.window.eval("S.closeOut") == null, "Cancel starts nothing");
+  app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
+  assert.equal(app.doc.activeElement, app.$('[data-cosf="present"]'));
+  assert.equal(coField(app, "Wren", "credits").value, "250");
+  assert.equal(coField(app, "Wren", "note").value, "Kept the gun.");
+  assert.equal(coField(app, "Rook", "milestone").checked, false);
+  assert.equal(coField(app, "Dez", "took").checked, false, "who was left out is still on offer");
+  coType(app, "Wren", "ip", "20");
+  app.click("[data-co-write]");
+  assert.equal(app.window.eval("S.table.sessions.find(s => s.number === 4).close.lines.length"), 3, "replaced, not appended");
+  assert.match(app.$(".co-log").textContent, /Wren: log a session with 20 IP/);
+  assert.deepEqual([...app.errors, ...fresh.errors], []);
+});
+
+test("205: Write refused names the field, keeps what was typed and writes nothing", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 2));
+  closeSheet(app, ids);
+  coType(app, "Rook", "ip", "1.5");
+  app.click("[data-co-write]");
+  assert.match(app.$("#undotoast").textContent, /Enter a whole number\./);
+  assert.equal(app.doc.activeElement, coField(app, "Rook", "ip"));
+  assert.equal(coField(app, "Rook", "ip").value, "1.5");
+  assert.equal(app.window.eval("S.table.sessions[0].close"), null);
+  // Nobody: Who was there emptied.
+  type(app, '[data-cosf="present"]', ""); typeChange(app, '[data-cosf="present"]', "");
+  assert.match(app.$("#main").textContent, /Add who was there to work out IP\./);
+  app.click("[data-co-write]");
+  assert.match(app.$("#undotoast").textContent, /Nobody to write down\./);
+  assert.equal(app.doc.activeElement, app.$('[data-cosf="present"]'));
+  assert.deepEqual(app.errors, []);
+});
+
+test("205: deleting a session drops its draft", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren"], 2));
+  closeSheet(app, ids);
+  app.click("[data-co-back]");
+  app.click("[data-sdel]"); app.click("#modal [data-askyes]");
+  assert.ok(app.window.eval("S.closeOut") == null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("206 (review): a typed IP survives correcting a letter in Who was there, and an away line's tier and Çredits survive being typed present and back", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Rook", "Dez"], 2); return mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5); });
+  closeSheet(app, ids);
+  coType(app, "Rook", "ip", "20");
+  type(app, '[data-cosf="present"]', "Wren, Roo");
+  type(app, '[data-cosf="present"]', "Wren, Rook");
+  assert.equal(coField(app, "Rook", "ip").value, "20", "Rook's typed IP");
+  type(app, '[data-cosf="hours"]', "3");
+  assert.equal(coField(app, "Rook", "ip").value, "20", "still typed after an Hours change");
+  assert.equal(coField(app, "Wren", "ip").value, "15");
+  typeChange(app, `[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="tier"]`, "competent");
+  coType(app, "Dez", "credits", "400");
+  type(app, '[data-cosf="present"]', "Wren, Rook, Dez");
+  assert.ok(coField(app, "Dez", "ip"), "Dez is present now");
+  type(app, '[data-cosf="present"]', "Wren, Rook");
+  assert.equal(coField(app, "Dez", "tier").value, "competent");
+  assert.equal(coField(app, "Dez", "credits").value, "400");
+  assert.deepEqual(app.errors, []);
+});
+
+test("206 (review): Redo leaves an IP that still matches the hours to the app, so changing Hours moves it; a typed one stays", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5));
+  closeSheet(app, ids);
+  coType(app, "Rook", "ip", "20");
+  app.click("[data-co-write]");
+  app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
+  type(app, '[data-cosf="hours"]', "5");
+  assert.equal(coField(app, "Wren", "ip").value, "25");
+  assert.equal(coField(app, "Rook", "ip").value, "20");
+  assert.deepEqual(app.errors, []);
+});
+
+test("206 (review): Write with Took a job ticked and no tier is refused, focused on that row's Tier", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Dez"], 2); return mkSession(t, 4, "2026-09-08", ["Wren"], 3); });
+  closeSheet(app, ids);
+  app.click("[data-co-write]");
+  assert.match(app.$("#undotoast").textContent, /Choose a tier\./);
+  assert.equal(app.doc.activeElement, coField(app, "Dez", "tier"));
+  assert.ok(app.window.eval("S.table.sessions.find(s => s.number === 4).close") == null);
   assert.deepEqual(app.errors, []);
 });

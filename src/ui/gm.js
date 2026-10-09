@@ -232,7 +232,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
@@ -277,7 +277,7 @@ function renderTable(){
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
-  const body = S.tsection==="sessions" ? (sessPage ? sessionPageHtml(sessPage) : sessionsTabHtml(t))
+  const body = S.tsection==="sessions" ? (sessPage ? (closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
     : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
     : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
@@ -466,7 +466,7 @@ function castRolesHtml(n){
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
-  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : "");
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : "");
   return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", encTarget())}</p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
@@ -503,7 +503,7 @@ function redrawCastList(){
 }
 function bindCastCards(main){
   // A member opened from Who knows what remembers which name it was, so Back lands on it.
-  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
+  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.backClose=false; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     open(b.dataset.copen, b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null); });
   main.querySelectorAll("[data-ccard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) open(li.dataset.ccard); });
@@ -752,6 +752,11 @@ function bindCastPage(main, n){
       S.encOpen=S.backEnc; S.backEnc=null; S.castOpen=null; S.tsection="encounters"; window.scrollTo(0,0); update();
       focus(attrSel("data-eopencast", id)) || focus("[data-enext]"); return;
     }
+    if (S.backClose && S.closeOut){
+      S.backClose=false; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; S.closeOut.view=true; window.scrollTo(0,0); update();
+      const el=$("main").querySelector(attrSel("data-co-open-cast", id)) || $("main").querySelector('[data-cosf="present"]'); if (el) el.focus();
+      return;
+    }
     if (S.backSess){
       const back=S.castFrom; S.backSess=false; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; window.scrollTo(0,0); update();
       const el=(back && $("main").querySelector(back)) || $("main").querySelector(S.sessOpen ? "[data-sback]" : "[data-snew]"); if (el) el.focus();
@@ -852,6 +857,7 @@ function sessionsTabHtml(t){
   return `<h2 class="cast-h" tabindex="-1">Next session</h2>${nextSessionHtml(t)}
     ${threadsHtml(t)}
     <h2 class="cast-h" tabindex="-1">Sessions</h2>
+    ${coTotalsHtml(t)}
     <p><button type="button" class="btn primary" data-snew>New session</button></p>
     ${list.length ? `<ul class="roster-list sess-list">${list.map(s=>
       `<li class="sess-item"><button type="button" class="cast-open sess-open" data-sopen="${esc(s.id)}">${esc(sessionLine(s))}</button></li>`).join("")}</ul>`
@@ -887,19 +893,22 @@ function sessionPageHtml(s){
     <h2 class="cast-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
     ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
     ${offered.length ? `<h3 class="next-h">Also that day</h3><ul class="int-list" data-soffered>${offered.map(x=>sessionInteractionHtml(t, x, true)).join("")}</ul>` : ""}
+    ${closeOutSectionHtml(s)}
     <p class="cast-delete"><button type="button" class="btn danger" data-sdel>Delete</button></p>`;
 }
 function bindSessions(main){
   const s=sessOpenNow();
-  if (s) bindSessionPage(main, s); else bindSessionsTab(main);
+  if (s && closeSheetNow(s)) bindCloseOut(main, s);
+  else if (s) bindSessionPage(main, s);
+  else bindSessionsTab(main);
 }
 // A Met-last-session name, a thread in Next session, a session in either: the shared taps.
 function bindSessionOpeners(main){
   main.querySelectorAll("[data-sopen]").forEach(b=>b.onclick=()=>{
-    S.sessOpen=b.dataset.sopen; window.scrollTo(0,0); update();
+    S.sessOpen=b.dataset.sopen; if (S.closeOut) S.closeOut.view=false; window.scrollTo(0,0); update();
     const el=$("main").querySelector("[data-sback]"); if (el) el.focus(); });
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
-    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=true; S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
+    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=true; S.backClose=false; S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
     window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); });
 }
 // Open a thread's row in Threads, its More open, and land on its title.
@@ -1003,7 +1012,270 @@ function bindSessionPage(main, s){
   });
   main.querySelector("[data-sdel]").onclick=()=>{
     askFirst({ title:`Delete ${Engine.sessionTitle(s)}?`, text:"Its threads and interactions stay; they just won't say which session they were in.", yes:"Delete",
-      then(){ S.sessOpen=null; tableChange(()=>Engine.removeSession(S.table, id)); focus("[data-snew]"); } });
+      then(){ S.sessOpen=null; if (S.closeOut && S.closeOut.id===id) S.closeOut=null; tableChange(()=>Engine.removeSession(S.table, id)); focus("[data-snew]"); } });
+  };
+  bindCloseOutSection(main, s);
+}
+
+// ── The close-out (Decisions 205–206) ──────────────────────────────────
+// The sheet edits a draft on S before it writes anything, as the encounter's
+// wrap-up does (Decision 193), but Back keeps it: S.closeOut = { id, view,
+// lines, typed, newcomers } until the log is written or the table closes.
+// A line is { name, present, ip, milestone, credits, note } or, for someone
+// away, { name, present:false, took, tier, credits, note }; numbers are the
+// field's text. `typed` holds `<name>|<field>` for what the GM has typed, so
+// a recompute of the hours leaves it be.
+const coKey = name => String(name||"").trim().toLowerCase().replace(/[‘’ʼ]/g, "'");
+const coTyped = (c, l, f) => !!c.typed[`${coKey(l.name)}|${f}`];
+const coNum = v => typeof v==="number" && Number.isFinite(v) ? String(v) : "";
+const coMoney = n => n.toLocaleString("en-US");
+const coRange = r => r ? `${coMoney(r.min)}–${coMoney(r.max)}` : "";
+const crankTiers = () => (((D.resources||{}).crank||{}).tiers)||[];
+const crankTierName = id => (crankTiers().find(k=>k.id===id)||{}).name || "";
+function closeSheetNow(s){ return !!(S.closeOut && S.closeOut.view && S.closeOut.id===s.id); }
+// A new draft from the engine's proposal, or one from what was written.
+function closeDraftNew(id, written){
+  const d=Engine.closeOutDraft(S.table, id); if (!d) return null;
+  const c={ id, view:true, lines:[], typed:{}, newcomers:d.newcomers.map(n=>n.id) };
+  const done=new Map(written ? written.lines.map(l=>[coKey(l.name), l]) : []);
+  for (const p of d.present){
+    const w=done.get(coKey(p.name));
+    c.lines.push(w && w.present ? { name:w.name, present:true, ip:coNum(w.ip), milestone:w.milestone, credits:coNum(w.credits), note:w.note }
+      : { name:p.name, present:true, ip:coNum(p.ip), milestone:true, credits:"", note:"" });
+  }
+  for (const a of d.absent){
+    const w=done.get(coKey(a.name));
+    c.lines.push(w && !w.present ? { name:w.name, present:false, took:true, tier:w.tier||"", credits:coNum(w.credits), note:w.note }
+      : { name:a.name, present:false, took:!written, tier:a.tier||"", credits:"", note:"" });
+  }
+  // What was written but can't be found again (a session since deleted) is kept as it was.
+  if (written) for (const w of written.lines) if (!c.lines.some(l=>coKey(l.name)===coKey(w.name)))
+    c.lines.push(w.present ? { name:w.name, present:true, ip:coNum(w.ip), milestone:w.milestone, credits:coNum(w.credits), note:w.note }
+      : { name:w.name, present:false, took:true, tier:w.tier||"", credits:coNum(w.credits), note:w.note });
+  // What was written stays as typed, but an IP that still matches the hours is the app's: changing Hours should move it.
+  if (written){
+    const mine=new Map(d.present.map(p=>[coKey(p.name), p.ip]));
+    for (const l of c.lines){
+      const k=coKey(l.name);
+      for (const f of ["credits","note","tier"]) c.typed[`${k}|${f}`]=true;
+      const worked=mine.get(k);
+      if (!l.present || l.ip==="" || worked===undefined || worked===null || String(worked)!==l.ip) c.typed[`${k}|ip`]=true;
+    }
+  }
+  return c;
+}
+// Who was there or Hours changed: rebuild the lists, keeping what the GM set.
+function closeSync(){
+  const c=S.closeOut, d=Engine.closeOutDraft(S.table, c.id); if (!d) return;
+  // A name typed away mid-edit comes back with what the GM had set: lines that drop out wait in c.gone.
+  // Carried by name and side: a name typed away is away for a moment (seen earlier), and must not take the present line's place.
+  const side = l => `${coKey(l.name)}|${l.present ? "p" : "a"}`;
+  const old=new Map([...Object.entries(c.gone||{}), ...c.lines.map(l=>[side(l), l])]), lines=[];
+  for (const p of d.present){
+    const o=old.get(`${coKey(p.name)}|p`);
+    lines.push({ name:p.name, present:true, ip:o && coTyped(c, o, "ip") ? o.ip : coNum(p.ip),
+      milestone:o ? o.milestone : true, credits:o ? o.credits : "", note:o ? o.note : "" });
+  }
+  for (const a of d.absent){
+    const o=old.get(`${coKey(a.name)}|a`);
+    lines.push({ name:a.name, present:false, took:o ? o.took : true, tier:o && coTyped(c, o, "tier") ? o.tier : (a.tier||""),
+      credits:o ? o.credits : "", note:o ? o.note : "" });
+  }
+  for (const o of old.values()) if (!o.present && !lines.some(l=>side(l)===side(o)) && !d.present.some(p=>coKey(p.name)===coKey(o.name))) lines.push(o);
+  c.gone=Object.fromEntries([...old].filter(([k])=>!lines.some(l=>side(l)===k)));
+  c.lines=lines;
+}
+function coLogLine(l){
+  const who=esc(l.name), note=l.note ? esc(l.note) : "";
+  if (l.present){
+    const head=(l.ip!==null || l.milestone) ? `log a session${l.ip!==null ? ` with <strong>${l.ip} IP</strong>` : ""}${l.milestone ? `${l.ip!==null ? " and" : " with"} the Milestone Point` : ""}` : "";
+    const bits=[ head, l.credits!==null ? `+${coMoney(l.credits)} Çredits` : "" ].filter(Boolean).join("; ");
+    return `${who}: ${[bits ? bits + "." : "", note].filter(Boolean).join(" ") || "nothing this time."}`;
+  }
+  const job=`an off-screen job${crankTierName(l.tier) ? `, ${esc(crankTierName(l.tier))}` : ""}`;
+  return `${who} (away): no session to log; ${job}${l.credits!==null ? `; +${coMoney(l.credits)} Çredits` : ""}.${note ? ` ${note}` : ""}`;
+}
+function writtenDay(at){
+  const d=new Date(at); if (typeof at!=="string" || isNaN(d)) return "";
+  return d.toLocaleDateString(undefined, { day:"numeric", month:"short" });
+}
+function closeOutSectionHtml(s){
+  const c=s.close, name=Number.isFinite(s.number) ? Engine.sessionTitle(s) : "this session";
+  if (!c) return `<h2 class="cast-h" tabindex="-1" data-sco-h>Close-out</h2>
+    <p><button type="button" class="btn primary" data-co-open>Close out ${esc(name)}</button></p>`;
+  const day=writtenDay(c.at);
+  return `<h2 class="cast-h" tabindex="-1" data-sco-h>Close-out</h2>
+    <p class="step-note">${day ? `Written ${esc(day)}.` : "Written."}</p>
+    ${c.lines.length ? `<ul class="int-list co-log">${c.lines.map(l=>`<li class="int-line">${coLogLine(l)}</li>`).join("")}</ul>` : `<p class="step-note">It said nothing.</p>`}
+    <p><button type="button" class="btn" data-co-redo>Redo the close-out</button></p>`;
+}
+function coTotalsHtml(t){
+  const totals=Engine.awardTotals(t);
+  return totals.length ? `<p class="step-note co-totals">IP so far: ${totals.map(a=>`${esc(a.name)} ${a.ip}`).join(" · ")}</p>` : "";
+}
+function coIpRows(c){
+  const rows=c.lines.map((l, i)=>[l, i]).filter(([l])=>l.present);
+  const s=sessionById(c.id);
+  return `<h2 class="cast-h" tabindex="-1" data-co-ip-h>Improvement Points</h2>
+    <p class="field-hint">${esc(D.ip.perHour)} an hour, rounded up. Change any of it.</p>
+    ${!rows.length ? `<p class="step-note">Add who was there to work out IP.</p>` : s && typeof s.hours!=="number" ? `<p class="step-note">Add the hours to work out IP.</p>` : ""}
+    <ul class="int-list co-rows">${rows.map(([l, i])=>`<li class="co-row" data-co-row="${i}">
+      <span class="co-name">${esc(l.name)}</span>
+      <label class="field"><span>IP</span><input type="number" min="0" step="1" inputmode="numeric" data-co="ip" value="${esc(l.ip)}"></label>
+      <label class="co-check"><input type="checkbox" data-co="milestone"${l.milestone ? " checked" : ""}> <span>Milestone Point</span></label>
+      <label class="field"><span>Çredits</span><input type="number" min="0" step="1" inputmode="numeric" data-co="credits" value="${esc(l.credits)}"></label>
+      <label class="field co-note"><span>Note</span><input type="text" data-co="note" value="${esc(l.note)}" autocomplete="off"></label></li>`).join("")}</ul>`;
+}
+function coAwayRows(c){
+  const rows=c.lines.map((l, i)=>[l, i]).filter(([l])=>!l.present);
+  if (!rows.length) return "";
+  return `<h2 class="cast-h" tabindex="-1" data-co-away-h>Away tonight</h2>
+    <ul class="int-list co-rows">${rows.map(([l, i])=>{
+      const head=`<span class="co-name">${esc(l.name)}</span>
+        <label class="co-check"><input type="checkbox" data-co="took"${l.took ? " checked" : ""}> <span>Took a job</span></label>`;
+      if (!l.took) return `<li class="co-row co-folded" data-co-row="${i}">${head}</li>`;
+      return `<li class="co-row" data-co-row="${i}">${head}
+        <label class="field"><span>Tier</span><select data-co="tier">${l.tier ? "" : `<option value="" selected>Choose a tier</option>`}${crankTiers().map(k=>
+          `<option value="${esc(k.id)}"${k.id===l.tier ? " selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label>
+        <span class="co-range">${l.tier && Engine.offScreenPay(l.tier) ? `Pays ${esc(coRange(Engine.offScreenPay(l.tier)))}` : ""}</span>
+        <label class="field"><span>Çredits</span><input type="number" min="0" step="1" inputmode="numeric" data-co="credits" value="${esc(l.credits)}"></label>
+        <label class="field co-note"><span>Note</span><input type="text" data-co="note" value="${esc(l.note)}" autocomplete="off"></label></li>`;
+    }).join("")}</ul>`;
+}
+function coThreads(){
+  const open=Engine.threadList(S.table).filter(h=>h.status==="open");
+  return `<h2 class="cast-h" tabindex="-1" data-co-threads-h>Threads</h2>
+    ${open.length ? `<ul class="int-list">${open.map(h=>{ const id=esc(h.id); return `<li class="thread-row" data-co-thread="${id}"><div class="thread-main">
+      <span class="co-name">${esc(threadTitle(h))}</span>
+      <button type="button" class="btn sm thread-cur${h.current?" on":""}" data-co-cur="${id}" aria-pressed="${h.current}">Current</button>
+      <select data-co-status="${id}" aria-label="Status">${Object.keys(THREAD_STATUS_LABELS).map(k=>`<option value="${k}"${k===h.status?" selected":""}>${THREAD_STATUS_LABELS[k]}</option>`).join("")}</select></div></li>`; }).join("")}</ul>`
+      : `<p class="step-note">No open threads.</p>`}`;
+}
+function coNewcomers(c){
+  const members=c.newcomers.map(id=>(S.table.cast||[]).find(n=>n.id===id)).filter(Boolean);
+  if (!members.length) return "";
+  return `<h2 class="cast-h" tabindex="-1" data-co-new-h>Anyone new?</h2>
+    <ul class="int-list">${members.map(n=>{ const id=esc(n.id); return `<li class="co-new" data-co-member="${id}">
+      <button type="button" class="cast-open" data-co-open-cast="${id}">${esc(n.name.trim() || "Unnamed")}</button>
+      <div class="co-new-fields">
+      <label class="field"><span>What they want</span><input type="text" data-co-cf="motivation" value="${esc(n.motivation)}" autocomplete="off"></label>
+      <label class="field"><span>What they've got</span><input type="text" data-co-cf="resources" value="${esc(n.resources)}" autocomplete="off"></label>
+      <label class="field"><span>Their line</span><input type="text" data-co-cf="line" value="${esc(n.line)}" autocomplete="off"></label></div></li>`; }).join("")}</ul>`;
+}
+function coArcHtml(s){
+  const a=Engine.arcDue(s.number), t=Engine.sessionTitle(s);
+  return [a.minor ? "a Minor" : "", a.major ? "a Major" : ""].filter(Boolean).map(w=>
+    `<p class="co-arc">${esc(t)}: ${w} Milestone comes due. Each player's sheet counts their own.</p>`).join("");
+}
+function coListsHtml(s){
+  const c=S.closeOut;
+  return `${coIpRows(c)}${coAwayRows(c)}${coArcHtml(s)}${coThreads()}${coNewcomers(c)}`;
+}
+function closeSheetHtml(s){
+  const hasNumber=Number.isFinite(s.number), title=Engine.sessionTitle(s);
+  return `<p><button type="button" class="btn sm" data-co-back>Back to ${hasNumber ? esc(title) : "the session"}</button></p>
+    <h1 class="step-title tbl-title">Close out ${hasNumber ? esc(title) : "this session"}</h1>
+    <div class="sess-head">
+      <label class="field"><span>Who was there</span><input type="text" data-cosf="present" list="sess-crew" value="${esc((s.present||[]).join(", "))}" placeholder="Names, separated by commas" autocomplete="off"></label>
+      <label class="field"><span>Hours</span><input type="number" step="0.5" min="0" max="24" inputmode="decimal" data-cosf="hours" value="${numAttr(s.hours)}"></label>
+    </div>
+    ${datalistHtml("sess-crew", sessionCrewNames(S.table))}
+    <div data-co-lists>${coListsHtml(s)}</div>
+    <p class="co-write"><button type="button" class="btn primary" data-co-write>Write the award log</button></p>`;
+}
+function bindCloseOut(main, s){
+  const id=s.id, c=S.closeOut;
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  const box=main.querySelector("[data-co-lists]");
+  const lineOf = el => c.lines[+el.closest("[data-co-row]").dataset.coRow];
+  const drawLists = () => { box.innerHTML=coListsHtml(sessionById(id)||s); bindLists(); };
+  const edit = f => { let r; tableChange(()=>{ r=Engine.editSession(S.table, id, f); }, false); return r; };
+  const cur = () => sessionById(id) || s;
+  main.querySelectorAll("[data-cosf]").forEach(el=>{
+    const key=el.dataset.cosf, val = () => key==="present" ? splitList(el.value, /,/) : el.value;
+    el.addEventListener("input", ()=>{
+      const r=edit({ [key]:val() });
+      if (r.ok){ closeSync(); drawLists(); }
+    });
+    el.addEventListener("change", ()=>{
+      const r=edit({ [key]:val() }); if (!r.ok) notice(r.why);
+      el.value = key==="present" ? cur().present.join(", ") : numAttr(cur().hours);
+      closeSync(); drawLists();
+    });
+  });
+  main.querySelector("[data-co-back]").onclick=()=>{
+    c.view=false; window.scrollTo(0,0); update(); focus("[data-co-open]");
+  };
+  main.querySelector("[data-co-write]").onclick=()=>{
+    const lines=c.lines.filter(l=>l.present || l.took).map(l=>l.present
+      ? { name:l.name, present:true, ip:l.ip, milestone:l.milestone, credits:l.credits, note:l.note }
+      : { name:l.name, present:false, ip:null, milestone:false, credits:l.credits, tier:l.tier, note:l.note });
+    let r; tableChange(()=>{ r=Engine.writeCloseOut(S.table, id, { lines }); }, false);
+    if (!r.ok){
+      notice(r.why);
+      const at = r.field ? c.lines.findIndex(l=>l.name===r.name) : -1;
+      const el = at>=0 && main.querySelector(`[data-co-row="${at}"] [data-co="${r.field}"]`);
+      if (el) el.focus(); else focus('[data-cosf="present"]');
+      return;
+    }
+    S.closeOut=null; window.scrollTo(0,0); update(); focus("[data-sco-h]");
+  };
+  function bindLists(){
+    box.querySelectorAll("[data-co]").forEach(el=>{
+      const f=el.dataset.co;
+      if (f==="took"){
+        el.onchange=()=>{ const l=lineOf(el); l.took=el.checked; drawLists(); focus(`[data-co-row="${c.lines.indexOf(l)}"] [data-co="took"]`); };
+      } else if (f==="milestone"){
+        el.onchange=()=>{ lineOf(el).milestone=el.checked; };
+      } else if (f==="tier"){
+        el.onchange=()=>{ const l=lineOf(el); l.tier=el.value; c.typed[`${coKey(l.name)}|tier`]=true; drawLists(); focus(`[data-co-row="${c.lines.indexOf(l)}"] [data-co="tier"]`); };
+      } else {
+        el.oninput=()=>{ const l=lineOf(el); l[f]=el.value; c.typed[`${coKey(l.name)}|${f}`]=true; };
+      }
+    });
+    box.querySelectorAll("[data-co-cur]").forEach(b=>b.onclick=()=>{
+      const tid=b.dataset.coCur, h=S.table.threads.find(x=>x.id===tid); if (!h) return;
+      let r; tableChange(()=>{ r=Engine.editThread(S.table, tid, { current:!h.current }); }, false);
+      if (!r.ok) notice(r.why);
+      drawLists(); focus(attrSel("data-co-cur", tid));
+    });
+    box.querySelectorAll("[data-co-status]").forEach(sel=>sel.onchange=()=>{
+      const tid=sel.dataset.coStatus, ids=[...box.querySelectorAll("[data-co-status]")].map(e=>e.dataset.coStatus), at=ids.indexOf(tid);
+      let r; tableChange(()=>{ r=Engine.editThread(S.table, tid, { status:sel.value, closed:id }); }, false);
+      if (!r.ok) notice(r.why);
+      drawLists();
+      // The thread leaves the list: focus goes to the one that took its place, else the heading.
+      const left=[...box.querySelectorAll("[data-co-status]")];
+      if (left.length && sel.value!=="open") left[Math.min(at, left.length-1)].focus();
+      else if (!focus(attrSel("data-co-status", tid))) focus("[data-co-threads-h]");
+    });
+    box.querySelectorAll("[data-co-cf]").forEach(el=>el.oninput=()=>{
+      const mid=el.closest("[data-co-member]").dataset.coMember;
+      tableChange(()=>Engine.editCastMember(S.table, mid, { [el.dataset.coCf]:el.value }), false);
+    });
+    box.querySelectorAll("[data-co-open-cast]").forEach(b=>b.onclick=()=>{
+      S.tsection="cast"; S.castOpen=b.dataset.coOpenCast; S.backEnc=null; S.backSess=false; S.backClose=true; S.castFrom=null; S.intAdd=null;
+      window.scrollTo(0,0); update(); focus("[data-cback]");
+    });
+  }
+  bindLists();
+}
+function bindCloseOutSection(main, s){
+  const id=s.id, focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  const open=main.querySelector("[data-co-open]"), redo=main.querySelector("[data-co-redo]");
+  const show = c => { S.closeOut=c; window.scrollTo(0,0); update(); focus('[data-cosf="present"]'); };
+  if (open) open.onclick=()=>{
+    if (S.closeOut && S.closeOut.id===id){
+      // Resuming: the same lines, and a fresh look at who is new.
+      const d=Engine.closeOutDraft(S.table, id);
+      S.closeOut.view=true; S.closeOut.newcomers=d ? d.newcomers.map(n=>n.id) : [];
+      closeSync(); show(S.closeOut); return;
+    }
+    show(closeDraftNew(id, null));
+  };
+  if (redo) redo.onclick=()=>{
+    askFirst({ title:"Redo the close-out?", text:"You'll start from what's written; writing again replaces it.", yes:"Redo", danger:false,
+      then(){ show(closeDraftNew(id, s.close)); } });
   };
 }
 
@@ -1728,7 +2000,7 @@ function bindEncounters(main){
       if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(after ? attrSel("data-enc-addcast", after) : "[data-enc-q]"); },
     "data-enc-addpc": () => addPc(),
     "data-eopencast": b => { const id=b.dataset.eopencast; if (!S.table.cast.some(n=>n.id===id)) return;
-      S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backSess=false; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
+      S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backSess=false; S.backClose=false; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
     "data-eopenentry": b => openThreat(b.dataset.eopenentry, null, null, eid()),
     "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encHit=null; S.encCond=null; redraw(); focus("[data-edmgn]"); },
     "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit); S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },

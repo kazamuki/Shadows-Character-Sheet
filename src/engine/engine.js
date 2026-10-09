@@ -3885,7 +3885,38 @@ const Engine = (() => {
     return typeof v==="number" && Number.isFinite(v) && v>=0 && v<=24 && v*2===Math.round(v*2) ? v : null;
   };
   const _number = v => { const n = _int(v); return n!==null && n>=0 ? n : null; };
+  // The award log (Decisions 205–206): null until the GM writes the close-out,
+  // then { at, lines }. A line that makes no sense is dropped, never repaired.
+  // An away line has no Milestone Point; a present one has no off-screen tier.
+  function _closeLine(l){
+    if (!_isObj(l)) return null;
+    const name = _str(l.name).trim();
+    if (!name) return null;
+    l.name = name;
+    l.present = l.present===true;
+    const ip = _int(l.ip), credits = _int(l.credits);
+    l.ip = ip!==null && ip>=0 ? ip : null;
+    l.credits = credits!==null && credits>=0 ? credits : null;
+    l.milestone = l.present && l.milestone===true;
+    l.tier = !l.present && typeof l.tier==="string" && (crankData().tiers||[]).some(k=>k.id===l.tier) ? l.tier : null;
+    l.note = _str(l.note);
+    return l;
+  }
+  function _close(c){
+    if (!_isObj(c) || !Array.isArray(c.lines)) return null;
+    c.at = _isoOrNull(c.at);
+    const seen = new Set();
+    c.lines = c.lines.map(_closeLine).filter(l=>{
+      if (!l) return false;
+      const k = _fold(l.name);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    return c;
+  }
   function _session(x, used){
+    x.close = _close(x.close);
     x.number = _number(x.number);
     x.date = _day(x.date);
     x.present = _roleList(x.present);
@@ -3923,7 +3954,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.8";
+  const TABLE_SCHEMA_VERSION = "0.9";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -3987,6 +4018,10 @@ const Engine = (() => {
       if (!Array.isArray(c.sessions)) c.sessions = [];
       if (!Array.isArray(c.threads)) c.threads = [];
       for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.session = null;
+    }
+    //   Schema 0.9 (Decisions 205–206): a session keeps its award log.
+    if (typeof arrived!=="string" || _versionNewer("0.9", arrived)){
+      for (const x of (Array.isArray(c.sessions) ? c.sessions : [])) if (_isObj(x)) x.close = null;
     }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const used = new Set();
@@ -4265,7 +4300,7 @@ const Engine = (() => {
     const now = new Date().toISOString();
     const used = new Set(list.map(s=>s.id));
     const x = { id:newSessionId(used), number, date:"date" in f ? _day(f.date) : _today(), present:[], hours:null,
-                journal:Object.fromEntries(JOURNAL_PARTS.map(k=>[k, ""])), created:now, updated:now };
+                journal:Object.fromEntries(JOURNAL_PARTS.map(k=>[k, ""])), close:null, created:now, updated:now };
     t.sessions.unshift(x);
     _tableStamp(t);
     return { ok:true, id:x.id };
@@ -4396,6 +4431,108 @@ const Engine = (() => {
     if (last) for (const x of sessionInteractions(t, last.id)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l)) met.add(l.id);
     const unbuilt = (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>_isObj(n) && met.has(n.id) && !blockHasNumber(n.block));
     return { current, open:open.filter(h=>h!==current), last, seed:last ? _str(last.journal && last.journal.seed).trim() : "", unbuilt };
+  }
+
+  // ── The close-out (Decisions 205–206) ──────────────────────────────────
+  // What an off-screen CRANK job pays: the tier's minimum to the midpoint of
+  // its range, or to offScreenMax where the book prints no top. Data only.
+  function offScreenPay(tierId){
+    const k = (crankData().tiers||[]).find(e=>_isObj(e) && e.id===tierId);
+    if (!k || !_isObj(k.pay) || !Number.isFinite(k.pay.min)) return null;
+    const max = Number.isFinite(k.offScreenMax) ? k.offScreenMax : Number.isFinite(k.pay.max) ? Math.floor((k.pay.min + k.pay.max)/2) : null;
+    return max===null ? null : { min:k.pay.min, max };
+  }
+  // Does a session number bring a Milestone? By the number, never a count of sessions.
+  function arcDue(number){
+    const r = (D().milestones||{}).rules || {};
+    const due = (first, every) => Number.isFinite(first) && Number.isFinite(every) && every>0 && number>=first && (number - first)%every===0;
+    if (!Number.isInteger(number) || number<1) return { minor:false, major:false };
+    return { minor:due(r.minorFirstAt, r.minorEvery), major:due(r.majorFirstAt, r.majorEvery) };
+  }
+  // The local day a stamp falls on, for matching a cast member to a session's date.
+  function _localDay(iso){
+    const d = new Date(iso);
+    if (typeof iso!=="string" || isNaN(d)) return null;
+    const p = n=>String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  }
+  // The close-out sheet's first draft. It proposes; writeCloseOut writes.
+  function closeOutDraft(t, id){
+    const list = sessionList(t), at = list.findIndex(s=>s.id===id);
+    if (at<0) return null;
+    const session = list[at];
+    const rate = (D().ip||{}).perHour;
+    const perHour = Number.isFinite(rate) ? rate : 0;
+    const seen = new Set(), present = [];
+    for (const name of session.present){
+      const k = _fold(name);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      present.push({ name, ip:session.hours===null ? null : Math.ceil(session.hours * perHour), milestone:true });
+    }
+    // Earlier sessions are the ones after this one in the list; the newest written tier wins.
+    const earlier = list.slice(at + 1), tiers = new Map(), absent = [];
+    for (const s of earlier){
+      for (const name of s.present){
+        const k = _fold(name);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        absent.push({ name, key:k });
+      }
+    }
+    for (const s of earlier) if (s.close) for (const l of s.close.lines){
+      const k = _fold(l.name);
+      if (l.tier && !tiers.has(k)) tiers.set(k, l.tier);
+    }
+    const away = absent.map(a=>{ const tier = tiers.get(a.key) || null; return { name:a.name, tier, range:tier ? offScreenPay(tier) : null }; });
+    const named = new Set();
+    for (const x of sessionInteractions(t, id)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l)) named.add(l.id);
+    const newcomers = (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>_isObj(n)
+      && (named.has(n.id) || (session.date && _localDay(n.created)===session.date))
+      && !_str(n.motivation).trim() && !_str(n.resources).trim() && !_str(n.line).trim())
+      .map(n=>({ id:n.id, name:_str(n.name) }));
+    return { session, perHour, present, absent:away, arc:arcDue(session.number),
+             threads:threadList(t).filter(h=>h.status==="open"), newcomers };
+  }
+  // Write the award log: replaces any earlier one. Each line is checked as the gate checks it.
+  function writeCloseOut(t, id, f){
+    const x = _sessions(t).find(s=>s.id===id);
+    if (!x) return { ok:false, why:"No such session." };
+    const src = _isObj(f) && Array.isArray(f.lines) ? f.lines.filter(_isObj) : [];
+    if (!src.length) return { ok:false, why:"Nobody to write down." };
+    const whole = v => _blank(v) ? null : _int(v);
+    const tiers = crankData().tiers || [], seen = new Set(), lines = [];
+    for (const l of src){
+      const name = _str(l.name).trim(), k = _fold(name);
+      if (!name || seen.has(k)) return { ok:false, why:"Each line needs its own name." };
+      seen.add(k);
+      const ip = whole(l.ip), credits = whole(l.credits);
+      for (const [field, v] of [["ip", ip], ["credits", credits]])
+        if (!_blank(l[field]) && (v===null || v<0)) return { ok:false, why:"Enter a whole number.", field, name };
+      const present = l.present===true;
+      if (!present && !tiers.some(e=>e.id===l.tier)) return { ok:false, why:"Choose a tier.", field:"tier", name };
+      lines.push({ name, present, ip, milestone:present && l.milestone===true, credits,
+                   tier:present ? null : l.tier, note:_str(l.note) });
+    }
+    x.close = { at:new Date().toISOString(), lines };
+    _tableStamp(t, x);
+    return { ok:true };
+  }
+  // What each name has been given, summed over every written log. Oldest log first.
+  function awardTotals(t){
+    const logged = sessionList(t).filter(s=>s.close).reverse()
+      .sort((a, b)=>(a.close.at ?? "") < (b.close.at ?? "") ? -1 : (a.close.at ?? "") > (b.close.at ?? "") ? 1 : 0);
+    const by = new Map();
+    for (const s of logged) for (const l of s.close.lines){
+      const k = _fold(l.name);
+      if (!by.has(k)) by.set(k, { name:l.name, ip:0, milestones:0, credits:0, sessions:0 });
+      const a = by.get(k);
+      a.ip += l.ip ?? 0;
+      a.credits += l.credits ?? 0;
+      if (l.milestone) a.milestones++;
+      if (l.present) a.sessions++;
+    }
+    return [...by.values()];
   }
 
   // ── Packs (Decisions 180–182) ───────────────────────────────────────────
@@ -5422,6 +5559,7 @@ const Engine = (() => {
     // Interactions: what passed between the crew and the cast, and who knows it
     addSession, editSession, removeSession, sessionList, sessionTitle, sessionInteractions, sessionOffered,
     addThread, editThread, removeThread, threadList, nextSession, blockHasNumber, JOURNAL_PARTS,
+    offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
     addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName,
     // Encounters: who is in one, whose turn it is, and what is still on them
     addEncounter, editEncounter, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,

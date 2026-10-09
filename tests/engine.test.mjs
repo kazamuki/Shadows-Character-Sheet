@@ -3076,7 +3076,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.6, no notes, cast or i
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.8");
+  assert.equal(t.meta.tableSchemaVersion, "0.9");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3144,14 +3144,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.8", () => {
-  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "0.9" } });
-  assert.equal(n.meta.tableSchemaVersion, "0.9");
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.9", () => {
+  const n = Engine.migrateTable({ meta: { tableSchemaVersion: "9.0" } });
+  assert.equal(n.meta.tableSchemaVersion, "9.0");
   assert.equal(Engine.tableCheck(n).length, 1);
-  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "0.9");
+  assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.8", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.9", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3203,15 +3203,15 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
 });
 
 test("a newer table keeps its stamp and its cast, coerced, and tableCheck reports it", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.9" }, cast: [{ name: 5, tier: "2" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "9.0" }, cast: [{ name: 5, tier: "2" }] });
+  assert.equal(m.meta.tableSchemaVersion, "9.0");
   assert.equal(m.cast.length, 1); assert.equal(m.cast[0].name, ""); assert.equal(m.cast[0].tier, 2);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3426,7 +3426,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3435,8 +3435,8 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
 });
 
 test("a newer table keeps its stamp and its interactions, and tableCheck says so", () => {
-  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "0.9" }, interactions: [{ kind: "shared", text: "x" }] });
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  const m = Engine.migrateTable({ meta: { tableSchemaVersion: "9.0" }, interactions: [{ kind: "shared", text: "x" }] });
+  assert.equal(m.meta.tableSchemaVersion, "9.0");
   assert.equal(m.interactions.length, 1);
   assert.equal(Engine.tableCheck(m).length, 1);
 });
@@ -3788,7 +3788,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -3997,7 +3997,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4513,7 +4513,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -4984,7 +4984,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5356,7 +5356,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.8");
+  assert.equal(m.meta.tableSchemaVersion, "0.9");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -5621,4 +5621,198 @@ test("204 (round 2): a session dated after today is never last session; undated 
   Engine.editSession(t, six, { journal: { seed: "the seed" } });
   Engine.addSession(t, { number: 7, date: tomorrow });
   eq(Engine.nextSession(t).seed, "the seed");
+});
+
+// ── The close-out (Decisions 205–206) ───────────────────────────────────────
+const closeOf = (t, id) => sessOf(t, id).close;
+function crew(t, n, date, present, hours = null) {
+  const id = Engine.addSession(t, { number: n, date }).id;
+  Engine.editSession(t, id, { present, hours });
+  return id;
+}
+const away = (name, tier, credits = null) => ({ name, present: false, ip: null, milestone: false, credits, tier, note: "" });
+const here = (name, ip, extra = {}) => ({ name, present: true, ip, milestone: true, credits: null, tier: null, note: "", ...extra });
+
+test("205: a new session has close null, and a 0.8 table opens as 0.9 with every close null and nothing else changed", () => {
+  const t = Engine.newTable("x");
+  const id = crew(t, 4, "2026-10-01", ["Wren"], 3);
+  assert.equal(closeOf(t, id), null);
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.8";
+  for (const s of old.sessions) delete s.close;
+  eq(Engine.migrateTable(old), Engine.migrateTable(t));
+  // A 0.8 file that already carries a close (a hand edit) is not converted either.
+  old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
+  assert.equal(Engine.migrateTable(old).sessions[0].close, null);
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.9");
+});
+
+test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
+  eq(Engine.offScreenPay("novice"), { min: 50, max: 125 });
+  eq(Engine.offScreenPay("competent"), { min: 300, max: 550 });
+  eq(Engine.offScreenPay("skilled"), { min: 1000, max: 2000 });
+  eq(Engine.offScreenPay("expert"), { min: 4000, max: 6000 });
+  eq(Engine.offScreenPay("legendary"), { min: 10000, max: 15000 });
+  for (const v of ["mythic", "", null, undefined, 3, {}]) assert.equal(Engine.offScreenPay(v), null);
+});
+
+test("206: arcDue goes by the session's number: Minor at 5, 15, 25; Major at 10, 20, 30; nothing for the rest", () => {
+  for (const n of [5, 15, 25]) eq(Engine.arcDue(n), { minor: true, major: false }, String(n));
+  for (const n of [10, 20, 30]) eq(Engine.arcDue(n), { minor: false, major: true }, String(n));
+  for (const n of [0, 1, 4, 6, 9, 11, -5, 5.5, null, undefined, "5", NaN]) eq(Engine.arcDue(n), { minor: false, major: false }, String(n));
+});
+
+test("206: the draft works IP out at 5 an hour rounded up, and blank with no hours", () => {
+  const t = Engine.newTable("x");
+  const a = crew(t, 4, "2026-10-01", ["Wren", " wren ", "Rook"], 3.5);
+  const d = Engine.closeOutDraft(t, a);
+  eq(d.present.map(p => [p.name, p.ip, p.milestone]), [["Wren", 18, true], ["Rook", 18, true]]);
+  assert.equal(d.perHour, 5);
+  Engine.editSession(t, a, { hours: 3 });
+  eq(Engine.closeOutDraft(t, a).present.map(p => p.ip), [15, 15]);
+  Engine.editSession(t, a, { hours: 0.5 });
+  eq(Engine.closeOutDraft(t, a).present.map(p => p.ip), [3, 3], "2.5 rounds up");
+  Engine.editSession(t, a, { hours: null });
+  eq(Engine.closeOutDraft(t, a).present.map(p => p.ip), [null, null]);
+  assert.equal(Engine.closeOutDraft(t, "SE-NOBODY00"), null);
+  assert.equal(Engine.closeOutDraft({}, "SE-NOBODY00"), null);
+});
+
+test("206: the absent are the names at EARLIER sessions only, folded, first spelling, in the order first met", () => {
+  const t = Engine.newTable("x");
+  const s2 = crew(t, 2, "2026-09-01", ["Dez", "Rook"]);
+  const s3 = crew(t, 3, "2026-09-08", ["dez", "Sol"]);
+  const s4 = crew(t, 4, "2026-09-15", ["Wren"]);
+  crew(t, 9, "2026-12-01", ["Planned"]);
+  crew(t, 5, "2026-09-22", ["Later"]);
+  eq(Engine.closeOutDraft(t, s4).absent.map(a => a.name), ["dez", "Sol", "Rook"]);
+  eq(Engine.closeOutDraft(t, s2).absent, [], "nothing before the first");
+  eq(Engine.closeOutDraft(t, s3).absent.map(a => a.name), ["Rook"]);
+});
+
+test("206: the remembered tier is the newest written line before this session, not the oldest, and none later", () => {
+  const t = Engine.newTable("x");
+  const s1 = crew(t, 1, "2026-09-01", ["Dez"]);
+  const s2 = crew(t, 2, "2026-09-08", ["Wren"]);
+  const s3 = crew(t, 3, "2026-09-15", ["Wren"]);
+  const s4 = crew(t, 4, "2026-09-22", ["Wren"]);
+  assert.ok(Engine.writeCloseOut(t, s2, { lines: [here("Wren", 5), away("dez", "novice")] }).ok);
+  assert.ok(Engine.writeCloseOut(t, s3, { lines: [here("Wren", 5), away("Dez", "skilled")] }).ok);
+  const later = crew(t, 5, "2026-09-29", ["Dez"]);
+  assert.ok(Engine.writeCloseOut(t, later, { lines: [away("Dez", "expert")] }).ok);
+  const d = Engine.closeOutDraft(t, s4);
+  eq(d.absent.map(a => [a.name, a.tier, a.range]), [["Dez", "skilled", { min: 1000, max: 2000 }]]);
+  eq(Engine.closeOutDraft(t, s2).absent.map(a => a.tier), [null]);
+  assert.ok(s1);
+});
+
+test("206: newcomers are the cast this session's lines name or made on its day, with no motive, resources or Line", () => {
+  const t = Engine.newTable("x");
+  const named = Engine.addCastMember(t, { name: "Named" }).id;
+  const given = Engine.addCastMember(t, { name: "HasLine" }).id;
+  const today = Engine.addCastMember(t, { name: "Today" }).id;
+  const old = Engine.addCastMember(t, { name: "Old" }).id;
+  Engine.editCastMember(t, given, { line: "Hello." });
+  t.cast.find(n => n.id === old).created = "2020-01-01T12:00:00.000Z";
+  const s = Engine.addSession(t, { number: 4, date: TODAY }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [named, given, named], text: "x", session: s });
+  const names = () => Engine.closeOutDraft(t, s).newcomers.map(n => n.name).sort();
+  eq(names(), ["Named", "Today"]);
+  Engine.editCastMember(t, today, { motivation: "Money." });
+  eq(names(), ["Named"]);
+  const other = Engine.addSession(t, { number: 3, date: "2020-01-01" }).id;
+  eq(Engine.closeOutDraft(t, other).newcomers.map(n => n.name), ["Old"], "created on that day");
+});
+
+test("205: writeCloseOut stores the lines and stamps; Redo replaces and never appends", () => {
+  const t = Engine.newTable("x");
+  const a = crew(t, 4, "2026-10-01", ["Wren"], 3);
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [here("Wren", "15", { credits: "250", note: "ok" }), here("Rook", "")] }).ok);
+  const c = closeOf(t, a);
+  assert.match(c.at, /^\d{4}-/);
+  eq(c.lines.map(l => [l.name, l.ip, l.credits, l.milestone]), [["Wren", 15, 250, true], ["Rook", null, null, true]]);
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [here("Wren", 20)] }).ok);
+  eq(closeOf(t, a).lines.map(l => [l.name, l.ip]), [["Wren", 20]]);
+  eq(Engine.migrateTable(plain(t)).sessions[0].close, closeOf(t, a), "the gate keeps what was written");
+});
+
+test("205: writeCloseOut refuses a bad line and changes nothing; a blank IP or Çredits is null", () => {
+  const t = Engine.newTable("x");
+  const a = crew(t, 4, "2026-10-01", ["Wren"], 3);
+  Engine.writeCloseOut(t, a, { lines: [here("Wren", 5)] });
+  const before = plain(t);
+  const bad = (lines, why) => { const r = Engine.writeCloseOut(t, a, { lines }); assert.equal(r.ok, false); assert.equal(r.why, why); eq(t, before, "a refusal changes nothing"); };
+  bad([], "Nobody to write down.");
+  bad([here("  ", 1)], "Each line needs its own name.");
+  bad([here("Wren", 1), here(" wren", 2)], "Each line needs its own name.");
+  for (const ip of [-1, 1.5, "x", {}, "2.5"]) bad([here("Wren", ip)], "Enter a whole number.");
+  bad([here("Wren", 1, { credits: -5 })], "Enter a whole number.");
+  bad([away("Dez", "mythic")], "Choose a tier.");
+  eq(Engine.writeCloseOut(t, "SE-NOBODY00", { lines: [here("Wren", 1)] }), { ok: false, why: "No such session." });
+  eq(Engine.writeCloseOut(t, a, null), { ok: false, why: "Nobody to write down." });
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [here("Wren", null, { credits: "" })] }).ok);
+  eq([closeOf(t, a).lines[0].ip, closeOf(t, a).lines[0].credits], [null, null]);
+});
+
+test("205: a Milestone Point is only on a present line, an off-screen tier only on an absent one, whatever was sent", () => {
+  const t = Engine.newTable("x");
+  const a = crew(t, 4, "2026-10-01", ["Wren"], 3);
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [away("Dez", "competent", 400), { ...away("Rook", "novice"), milestone: true }, here("Wren", 5, { tier: "expert" })] }).ok);
+  const l = closeOf(t, a).lines;
+  eq(l.map(x => [x.name, x.present, x.milestone, x.tier]), [["Dez", false, false, "competent"], ["Rook", false, false, "novice"], ["Wren", true, true, null]]);
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [{ ...here("Wren", 5), milestone: false }] }).ok);
+  assert.equal(closeOf(t, a).lines[0].milestone, false, "the GM can leave the point off");
+});
+
+test("205: awardTotals sums across logs by folded name, first spelling, in the order first written", () => {
+  const t = Engine.newTable("x");
+  eq(Engine.awardTotals(t), []);
+  const a = crew(t, 4, "2026-10-01", ["Wren"], 3), b = crew(t, 5, "2026-10-08", ["Wren"], 3);
+  crew(t, 6, "2026-10-15", ["Wren"]);
+  Engine.writeCloseOut(t, a, { lines: [here("Wren", 15, { credits: 100 }), here("Rook", 15)] });
+  Engine.writeCloseOut(t, b, { lines: [here("wren", 20, { credits: 50 }), away(" ROOK", "novice", 80), here("Dez", null, { milestone: false })] });
+  t.sessions.find(s => s.id === a).close.at = "2026-10-01T20:00:00.000Z";
+  t.sessions.find(s => s.id === b).close.at = "2026-10-08T20:00:00.000Z";
+  eq(Engine.awardTotals(t), [
+    { name: "Wren", ip: 35, milestones: 2, credits: 150, sessions: 2 },
+    { name: "Rook", ip: 15, milestones: 1, credits: 80, sessions: 1 },
+    { name: "Dez", ip: 0, milestones: 0, credits: 0, sessions: 1 },
+  ]);
+});
+
+test("206: a thread settled with closed: this closes in this session, not the newest", () => {
+  const t = Engine.newTable("x");
+  const mine = Engine.addSession(t, { number: 4, date: "2026-10-01" }).id;
+  const newest = Engine.addSession(t, { number: 6, date: "2026-10-15" }).id;
+  const h = Engine.addThread(t, { title: "T" }).id;
+  assert.ok(Engine.editThread(t, h, { status: "resolved", closed: mine }).ok);
+  assert.equal(thrOf(t, h).closed, mine);
+  assert.notEqual(thrOf(t, h).closed, newest);
+});
+
+test("206: the draft's arc reminder goes by the session's number, not how many sessions there are", () => {
+  const t = Engine.newTable("x");
+  const five = Engine.addSession(t, { number: 5, date: "2026-10-01" }).id;
+  eq(Engine.closeOutDraft(t, five).arc, { minor: true, major: false }, "a table's only session, numbered 5");
+  const u = Engine.newTable("y");
+  for (let n = 1; n <= 4; n++) Engine.addSession(u, { number: n * 3, date: "2026-10-0" + n });
+  const ten = Engine.addSession(u, { number: 10, date: "2026-10-09" }).id;
+  eq(Engine.closeOutDraft(u, ten).arc, { minor: false, major: true });
+  const none = Engine.addSession(u, { number: null, date: "2026-10-09" });
+  eq(Engine.closeOutDraft(u, none.id).arc, { minor: false, major: false });
+});
+
+test("206: an off-screen job needs a tier: a blank one is refused with the field named, and the table is untouched; the gate stays lenient", () => {
+  const t = Engine.newTable("x");
+  const a = crew(t, 4, "2026-10-01", ["Wren"], 3);
+  Engine.writeCloseOut(t, a, { lines: [here("Wren", 5)] });
+  const before = plain(t);
+  for (const tier of [null, "", undefined]) {
+    eq(Engine.writeCloseOut(t, a, { lines: [here("Wren", 5), away("Dez", tier)] }), { ok: false, why: "Choose a tier.", field: "tier", name: "Dez" });
+    eq(t, before, "a refusal changes nothing");
+  }
+  assert.ok(Engine.writeCloseOut(t, a, { lines: [here("Wren", 5, { tier: null })] }).ok, "a present line needs none");
+  const old = plain(t);
+  old.sessions[0].close.lines.push(away("Dez", null));
+  eq(Engine.migrateTable(old).sessions[0].close.lines.map(l => l.tier), [null, null], "a stored away line with no tier still loads");
 });

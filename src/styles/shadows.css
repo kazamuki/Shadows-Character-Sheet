@@ -1307,3 +1307,24 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .field-hint{display:block; color:var(--dim); margin:0 0 4px; overflow-wrap:anywhere}
 .sess-threads{margin:0 0 14px}
 .int-session{color:var(--dim); font-size:.9rem}
+
+/* The close-out (Decisions 205-206). A row is a name and its fields, wrapping; nothing is wider than its column. */
+.co-rows{margin:0 0 10px}
+.co-row{display:flex; flex-wrap:wrap; gap:4px 12px; align-items:flex-end; background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:8px 12px; margin-bottom:8px; min-width:0}
+.co-row .field{margin:0; min-width:0}
+.co-row .field input[type=number], .co-row .field select{width:9ch; max-width:100%}
+.co-row .field select{width:auto}
+.co-name{flex:1 1 100%; font-weight:700; overflow-wrap:anywhere; min-width:0}
+.co-note{flex:1 1 120px}
+.co-note input{width:100%; min-width:0}
+.co-check{display:flex; align-items:center; gap:6px; min-height:36px}
+.co-range{color:var(--dim); align-self:center; overflow-wrap:anywhere}
+.co-folded{align-items:center}
+.co-folded .co-name{flex:1 1 auto}
+.co-arc{margin:10px 0; overflow-wrap:anywhere}
+.co-new{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:8px 12px; margin-bottom:8px; min-width:0}
+.co-new-fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px}
+.co-new-fields input{width:100%; min-width:0}
+.co-log li{overflow-wrap:anywhere}
+.co-write{margin:18px 0}
+@media (min-width:1100px){ .co-name{flex:0 0 9ch} }

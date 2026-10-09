@@ -31,3 +31,6 @@ something a GM can see adds its line here.
 - **Sessions and threads.** Keep your sessions: who came, what happened and what it
   set up, in the book's Campaign Journal. Threads you can follow, one of them the
   current quest, and a Next session page that says what's still open.
+- **Close out a session.** Everyone's IP worked out from the hours, the
+  Milestone Point, an off-screen job for whoever missed it, and a written
+  award log to read out at the table.

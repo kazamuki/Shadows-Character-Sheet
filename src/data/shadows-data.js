@@ -290,7 +290,7 @@ window.SHADOWS_DATA = {
         { "id": "competent", "name": "Competent", "rep": 5,  "pay": { "min": 300,   "max": 800 } },
         { "id": "skilled",   "name": "Skilled",   "rep": 12, "pay": { "min": 1000,  "max": 3000 } },
         { "id": "expert",    "name": "Expert",    "rep": 20, "pay": { "min": 4000,  "max": 8000 } },
-        { "id": "legendary", "name": "Legendary", "rep": 30, "pay": { "min": 10000, "max": null } }
+        { "id": "legendary", "name": "Legendary", "rep": 30, "pay": { "min": 10000, "max": null }, "offScreenMax": 15000 /* the book prints no top; Ken's default for an off-screen job, GQ28 asks Deighton */ }
       ]
     },
     "sfr": {
@@ -3535,6 +3535,8 @@ window.SHADOWS_DATA = {
   },
   "ip": {
     "perSession": 10,
+    /* GM mode's close-out (Decision 206): 5 IP an hour of play, rounded up (CRB 0450). The sheet's own default stays perSession (Decision 13). */
+    "perHour": 5,
     "statIncreaseCost": {
       "perPoint": 10,
       "example": "REF 6 to 7 costs 60 IP; 9 to 10 costs 90 IP."
