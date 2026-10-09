@@ -6,8 +6,8 @@
 **Status:** **drafted 2026-10-09 by Claude (Opus)**, after #144 (S13a)
 merged with one fix round (README step 7), and with #145 (Deighton's answers
 and W85) open beside it. **Ken chose this session over S6, turns by side and
-the Reference's additions (2026-10-09).** SQ1–SQ8 are open; each has a
-default.
+the Reference's additions (2026-10-09).** **SQ1–SQ8 answered by Ken
+2026-10-09: every default.**
 **Branch:** from `main` with #145 merged, PR to `main`, switched off
 (Decision 173).
 **Runs alone.** It touches `engine.js` (the Tables section), `gm.js`, the
@@ -188,16 +188,16 @@ at build time finds another, stop and ask.
 
 ## 4. Questions for Ken
 
-| # | Question | Default |
-|---|---|---|
-| SQ1 | **Where Find and Jot live.** Row one of the header, as words, before ⋮; below 480px the name loses more to "…" | **Header, as words** |
-| SQ2 | **How words match.** Every word somewhere in the record, any order (*dock fixer* finds a fixer whose flavor says docks) | **Every word, any order** |
-| SQ3 | **The result order.** Cast, sessions, interactions, threads, notes, encounters: names first, since they slip first (Deighton) | **As listed** |
-| SQ4 | **A jot's session.** The one session dated today; none when there's no session today or more than one. The GM can change it on the note's card | **Today's one session** |
-| SQ5 | **A jot's title.** Empty: it reads *Untitled note* on the Notes tab, as an untitled note does now; the session page shows the text | **Empty** |
-| SQ6 | **Where an interaction opens.** Its session's page if it has one; else its first member's page; else Who knows what. Focus on the line | **As listed** |
-| SQ7 | **The shortest search.** Two characters; one returns nothing | **Two** |
-| SQ8 | **A keyboard shortcut.** None now; `/` for Find is a later Fix if a GM at a laptop asks | **None** |
+| # | Question | Default | Answer |
+|---|---|---|---|
+| SQ1 | **Where Find and Jot live.** Row one of the header, as words, before ⋮; below 480px the name loses more to "…" | **Header, as words** | **Default** (Ken) |
+| SQ2 | **How words match.** Every word somewhere in the record, any order (*dock fixer* finds a fixer whose flavor says docks) | **Every word, any order** | **Default** (Ken) |
+| SQ3 | **The result order.** Cast, sessions, interactions, threads, notes, encounters: names first, since they slip first (Deighton) | **As listed** | **Default** (Ken) |
+| SQ4 | **A jot's session.** The one session dated today; none when there's no session today or more than one. The GM can change it on the note's card | **Today's one session** | **Default** (Ken) |
+| SQ5 | **A jot's title.** Empty: it reads *Untitled note* on the Notes tab, as an untitled note does now; the session page shows the text | **Empty** | **Default** (Ken) |
+| SQ6 | **Where an interaction opens.** Its session's page if it has one; else its first member's page; else Who knows what. Focus on the line | **As listed** | **Default** (Ken) |
+| SQ7 | **The shortest search.** Two characters; one returns nothing | **Two** | **Default** (Ken) |
+| SQ8 | **A keyboard shortcut.** None now; `/` for Find is a later Fix if a GM at a laptop asks | **None** | **Default** (Ken) |
 
 ## 5. Read first
 
