@@ -3764,13 +3764,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.9");
+  assert.equal(saved.meta.tableSchemaVersion, "0.10");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4111,7 +4111,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.9");
+  assert.equal(file.meta.tableSchemaVersion, "0.10");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4123,7 +4123,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4500,7 +4500,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.9");
+  assert.equal(file.meta.tableSchemaVersion, "0.10");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -4594,7 +4594,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -5938,7 +5938,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.9");
+  assert.equal(file.meta.tableSchemaVersion, "0.10");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -5951,7 +5951,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.9");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -6325,5 +6325,189 @@ test("Decision 207: a running encounter is kept across a trip to the Reference a
   encTab(app);
   assert.match(app.$(".enc-status").textContent, /Round 1/);
   assert.equal(app.$("[data-enc-title]").value, "Warehouse job");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── The secretary (Decision 208) ───────────────────────────────────────────
+function secretaryApp() {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  app.window.eval(`(() => {
+    const t = S.table, E = Engine;
+    const m = E.addCastMember(t, { name: "Marta Voss" }).id;
+    E.editCastMember(t, m, { flavor: "a fixer at the docks" });
+    const s1 = E.addSession(t, { date: "2026-01-01" }).id;
+    E.editSession(t, s1, { number: 3, journal: { happened: "Marta pointed at the dock crane" } });
+    const s2 = E.addSession(t, { date: localDay() }).id;
+    E.editSession(t, s2, { number: 6 });
+    E.addInteraction(t, { kind: "shared", cast: [m], crew: ["Nyx"], text: "dock gossip", session: s1 });
+    E.addInteraction(t, { kind: "shared", cast: [], crew: ["Nyx"], text: "dock rumour" });
+    E.addThread(t, { title: "The courier" });
+    tableChange(() => {});
+  })()`);
+  return app;
+}
+const findOpen = app => app.click("[data-tfind]");
+const typeKeys = (app, sel, text) => { for (let i = 1; i <= text.length; i++) type(app, sel, text.slice(0, i)); };
+const findHits = app => app.$$("#modal [data-fkind]");
+const pressEsc = app => app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+
+test("Decision 208: Find and Jot sit in the header on every tab and page of a table; switched off, Home has neither", () => {
+  const off = boot();
+  assert.equal(off.$("[data-tfind]"), null); assert.equal(off.$("[data-tjot]"), null);
+  const app = secretaryApp();
+  for (const sec of ["sessions", "cast", "threats", "encounters", "reference", "notes"]) {
+    app.click(`[data-tsec="${sec}"]`);
+    assert.ok(app.$("#hdractions [data-tfind]") && app.$("#hdractions [data-tjot]"), sec);
+    assert.equal(app.$("#hdractions [data-tfind]").textContent, "Find");
+  }
+  app.click('[data-tsec="cast"]'); app.click("[data-copen]");
+  assert.ok(app.$("[data-ctitle]") && app.$("[data-tfind]") && app.$("[data-tjot]"), "a member's page");
+  encTab(app); newEncounter(app, "Docks"); addPcRow(app, "Wren"); app.click("[data-enc-start]");
+  assert.match(app.$(".enc-status").textContent, /Round 1/);
+  assert.ok(app.$("[data-tfind]") && app.$("[data-tjot]"), "a running encounter");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 208: Find keeps its field and focus while typing, groups hits by kind with a count, marks the match; a cast hit opens the member", () => {
+  const app = secretaryApp();
+  findOpen(app);
+  const q = app.$("[data-findq]");
+  assert.equal(app.doc.activeElement, q, "focus starts in the field");
+  assert.equal(app.$("[data-findres]").textContent.trim(), "", "nothing under two characters");
+  typeKeys(app, "[data-findq]", "dock");
+  assert.equal(app.$("[data-findq]"), q, "typing redrew the field");
+  assert.equal(app.doc.activeElement, q); assert.equal(q.value, "dock");
+  const heads = app.$$("#modal .find-h").map(h => h.textContent.replace(/\s+/g, " ").trim());
+  assert.deepEqual(heads, ["Cast 1", "Sessions 1", "Lines 2"]);
+  const marks = app.$$("#modal mark").map(m => m.textContent);
+  assert.ok(marks.length >= 4 && marks.every(m => m.toLowerCase() === "dock"), marks.join("|"));
+  const cast = findHits(app).find(b => b.dataset.fkind === "cast");
+  assert.match(cast.textContent, /Marta Voss/); assert.match(cast.textContent, /Flavor/);
+  cast.click();
+  assert.equal(app.$("#modal").open, false, "the modal closes");
+  assert.equal(app.window.eval("S.castOpen"), cast.dataset.fid);
+  assert.equal(app.doc.activeElement, app.$("[data-ctitle]"));
+  findOpen(app);
+  assert.equal(app.$("[data-findq]").value, "dock"); assert.equal(findHits(app).length, 4, "the same results");
+  typeKeys(app, "[data-findq]", "zzzz");
+  assert.match(app.$("[data-findres]").textContent, /Nothing on the table matches\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 208: a session hit opens its page; an interaction hit opens its session's page on the line, else its member, else Who knows what", () => {
+  const app = secretaryApp();
+  findOpen(app); typeKeys(app, "[data-findq]", "crane");
+  findHits(app)[0].click();
+  assert.equal(app.window.eval("S.tsection"), "sessions");
+  assert.equal(app.$("#main h1").textContent, "Session 3");
+  assert.equal(app.doc.activeElement, app.$("#main h1"));
+  findOpen(app); typeKeys(app, "[data-findq]", "gossip");
+  const line = findHits(app).find(b => b.dataset.fkind === "interaction");
+  line.click();
+  assert.equal(app.window.eval("S.sessOpen"), app.window.eval("S.table.sessions.find(s => s.number === 3).id"));
+  assert.equal(app.doc.activeElement, app.$(`[data-sline="${line.dataset.fid}"]`));
+  findOpen(app); typeKeys(app, "[data-findq]", "rumour");
+  findHits(app)[0].click();
+  assert.equal(app.window.eval("S.tsection"), "cast"); assert.equal(app.window.eval("S.castView"), "crew");
+  assert.equal(app.window.eval("S.castOpen"), null);
+  assert.ok(app.doc.activeElement && app.doc.activeElement !== app.doc.body);
+  // With a live member and no session, the member's page.
+  app.window.eval(`(() => { const x = S.table.interactions.find(i => i.text === "dock rumour"); x.cast = [{ kind: "cast", id: S.table.cast[0].id }]; tableChange(() => {}); })()`);
+  findOpen(app); typeKeys(app, "[data-findq]", "rumour");
+  findHits(app).find(b => b.dataset.fkind === "interaction").click();
+  assert.equal(app.window.eval("S.castOpen"), app.window.eval("S.table.cast[0].id"));
+  assert.equal(app.doc.activeElement.dataset.int, app.window.eval("S.table.interactions.find(i => i.text === 'dock rumour').id"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 208: a thread, a note and an encounter hit each open their record", () => {
+  const app = secretaryApp();
+  app.window.eval(`(() => { Engine.addTableNote(S.table, { title: "Lantern", text: "Ike the bartender" }); tableChange(() => {}); })()`);
+  encTab(app); newEncounter(app, "Harbour fight"); addPcRow(app, "Wren"); app.click("[data-enc-start]");
+  findOpen(app); typeKeys(app, "[data-findq]", "courier");
+  findHits(app).find(b => b.dataset.fkind === "thread").click();
+  assert.equal(app.window.eval("S.tsection"), "sessions");
+  assert.equal(app.doc.activeElement.dataset.thtitle, app.window.eval("S.table.threads[0].id"));
+  findOpen(app); typeKeys(app, "[data-findq]", "bartender");
+  const n = findHits(app).find(b => b.dataset.fkind === "note");
+  n.click();
+  assert.equal(app.window.eval("S.tsection"), "notes");
+  assert.equal(app.doc.activeElement, app.$(`[data-ntext="${n.dataset.fid}"]`));
+  findOpen(app); typeKeys(app, "[data-findq]", "harbour");
+  findHits(app).find(b => b.dataset.fkind === "encounter").click();
+  assert.equal(app.window.eval("S.tsection"), "encounters");
+  assert.equal(app.window.eval("S.encOpen"), app.window.eval("S.table.encounters[0].id"));
+  assert.ok(app.doc.activeElement && app.doc.activeElement !== app.doc.body);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 208: Jot from a running encounter saves a note with today's session and does not redraw the page under it", () => {
+  const app = secretaryApp();
+  encTab(app); newEncounter(app, "Docks"); addPcRow(app, "Wren"); app.click("[data-enc-start]");
+  const before = [...app.$("#main").querySelectorAll("*")];
+  const notesBefore = app.window.eval("S.table.notes.length");
+  app.$("[data-tjot]").focus();   // a click focuses its button in a browser
+  app.click("[data-tjot]");
+  assert.equal(app.doc.activeElement, app.$("[data-jottext]"));
+  assert.match(app.$("#modal").textContent, /Goes with Session 6\./);
+  // Empty: refused, nothing added, focus stays.
+  app.click("[data-jotsave]");
+  assert.match(app.$("[data-jotwhy]").textContent, /Write something first\./);
+  assert.equal(app.window.eval("S.table.notes.length"), notesBefore);
+  assert.equal(app.doc.activeElement, app.$("[data-jottext]"));
+  // Esc keeps the draft.
+  type(app, "[data-jottext]", "Bartender at the Lantern: Ike");
+  pressEsc(app);
+  assert.equal(app.$("#modal").open, false);
+  assert.equal(app.window.eval("S.jotDraft"), "Bartender at the Lantern: Ike");
+  assert.equal(app.doc.activeElement, app.$("[data-tjot]"));
+  app.click("[data-tjot]");
+  assert.equal(app.$("[data-jottext]").value, "Bartender at the Lantern: Ike", "the draft is back");
+  app.click("[data-jotsave]");
+  assert.equal(app.$("#modal").open, false);
+  const after = [...app.$("#main").querySelectorAll("*")];
+  assert.equal(after.length, before.length); assert.ok(after.every((el, i) => el === before[i]), "the page under the jot was redrawn");
+  assert.equal(app.doc.activeElement, app.$("[data-tjot]"));
+  assert.match(app.$("#undotoast").textContent, /Jotted\./);
+  assert.equal(app.window.eval("S.jotDraft"), "");
+  const note = app.window.eval("S.table.notes[0]");
+  assert.equal(note.text, "Bartender at the Lantern: Ike");
+  assert.equal(note.session, app.window.eval("S.table.sessions.find(s => s.number === 6).id"));
+  notesTab(app);
+  assert.equal(app.$(`[data-nsess="${note.id}"]`).value, note.session);
+  sessTab(app); app.window.eval(`S.sessOpen = S.table.sessions.find(s => s.number === 6).id; update()`);
+  assert.match(app.$("#main").textContent, /Jotted/);
+  assert.match(app.$("[data-jotopen]").textContent, /Bartender at the Lantern/);
+  app.click("[data-jotopen]");
+  assert.equal(app.window.eval("S.tsection"), "notes");
+  assert.equal(app.doc.activeElement, app.$(`[data-ntext="${note.id}"]`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 208: a jot on the Notes tab or that session's page appears there; Ctrl+Enter saves; a note's Session select changes and clears", () => {
+  const app = secretaryApp();
+  notesTab(app);
+  app.click("[data-tjot]");
+  type(app, "[data-jottext]", "Owes Rook");
+  app.$("[data-jottext]").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true }));
+  assert.equal(app.$("#modal").open, false);
+  assert.equal(app.$$("[data-ntext]")[0].value, "Owes Rook", "the Notes tab redrew in place");
+  const id = app.$$("[data-ntext]")[0].dataset.ntext;
+  const sel = app.$(`[data-nsess="${id}"]`);
+  assert.deepEqual([...sel.options].map(o => o.textContent.split(" · ")[0]), ["None", "Session 6", "Session 3"]);
+  const three = app.window.eval("S.table.sessions.find(s => s.number === 3).id");
+  changeTo(app, `[data-nsess="${id}"]`, three);
+  assert.equal(app.window.eval(`S.table.notes.find(n => n.id === "${id}").session`), three);
+  changeTo(app, `[data-nsess="${id}"]`, "");
+  assert.equal(app.window.eval(`S.table.notes.find(n => n.id === "${id}").session`), null);
+  // No session today, or two: the line says so and the jot has none.
+  app.window.eval(`S.table.sessions.find(s => s.number === 6).date = "2026-01-02"; update()`);
+  app.click("[data-tjot]");
+  assert.match(app.$("#modal").textContent, /No session is dated today\./);
+  pressEsc(app);
+  app.window.eval(`S.table.sessions.forEach(s => { s.date = localDay(); }); update()`);
+  app.click("[data-tjot]");
+  assert.match(app.$("#modal").textContent, /More than one session is dated today\./);
   assert.deepEqual(app.errors, []);
 });

@@ -235,13 +235,16 @@ function renderTableChrome(){
   nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
-  act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
+  act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
+    <button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
     <div class="hdr-menu" id="hdrmenu" hidden>
       <button data-trename="1">Rename</button>
       <button data-texport-open="1">Export .shadows-table.json</button>
       <button data-whatsnew="1">What's new</button>
       <button data-thome="1">Home</button>
     </div>`;
+  act.querySelector("[data-tfind]").onclick=openFind;
+  act.querySelector("[data-tjot]").onclick=openJot;
   const menu=$("hdrmenu"), kb=act.querySelector("[data-menu-toggle]");
   kb.onclick=e=>{ e.stopPropagation(); const willOpen=menu.hidden; menu.hidden=!willOpen; kb.setAttribute("aria-expanded", willOpen?"true":"false"); };
   act.querySelector("[data-trename]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false");
@@ -254,6 +257,7 @@ function noteCardHtml(n){
   return `<div class="tbl-note" data-note="${id}">
     <label class="field"><span>Title</span><input type="text" data-ntitle="${id}" value="${esc(n.title)}" placeholder="Untitled note" autocomplete="off"></label>
     <label class="field"><span>Note</span><textarea data-ntext="${id}" placeholder="Leads, debts, names to remember.">${esc(n.text)}</textarea></label>
+    <label class="field"><span>Session</span><select data-nsess="${id}"><option value="">None</option>${Engine.sessionList(S.table).map(s=>`<option value="${esc(s.id)}"${s.id===n.session ? " selected" : ""}>${esc(Engine.sessionTitle(s))}${s.date ? ` · ${esc(dayText(s.date))}` : ""}</option>`).join("")}</select></label>
     <button class="btn sm danger" data-ndel="${id}">Delete</button></div>`;
 }
 function notesTabHtml(t){
@@ -301,6 +305,8 @@ function bindNotes(main){
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.ntitle, { title:el.value }), false); });
   main.querySelectorAll("[data-ntext]").forEach(el=>el.oninput=()=>{
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.ntext, { text:el.value }), false); });
+  main.querySelectorAll("[data-nsess]").forEach(el=>el.onchange=()=>{
+    tableChange(()=>Engine.editTableNote(S.table, el.dataset.nsess, { session:el.value || null }), false); });
   main.querySelector("[data-tnew]").onclick=()=>{
     let id; tableChange(()=>{ id=Engine.addTableNote(S.table, { title:"", text:"" }).id; });
     const el=titleOf(id); if (el) el.focus();
@@ -314,6 +320,96 @@ function bindNotes(main){
         if (el) el.focus();
       } });
   });
+}
+
+// ── Find and Jot (Decision 208) ────────────────────────────────────────
+// Both live in the header, so they work from any page of a table, a running encounter
+// included. Find is Engine.tableSearch, computed on every keystroke and stored nowhere;
+// S.findQ is the search as typed, S.jotDraft an unsaved jot, and both go with the table.
+// The field is never redrawn while typing: the results below it are.
+const FIND_KINDS = [["cast", "Cast"], ["session", "Sessions"], ["interaction", "Lines"], ["thread", "Threads"], ["note", "Notes"], ["encounter", "Encounters"]];
+const findFieldLabel = f => f.indexOf("journal.")===0 ? (JOURNAL.find(j=>"journal."+j[0]===f) || [0, f])[1] : f;
+const findSnipHtml = s => `${esc(s.before)}<mark>${esc(s.hit)}</mark>${esc(s.after)}`;
+function findResultsHtml(q){
+  if (String(q||"").trim().length < 2) return "";
+  const hits=Engine.tableSearch(S.table, q);
+  if (!hits.length) return `<p class="step-note">Nothing on the table matches.</p>`;
+  return FIND_KINDS.map(([kind, label])=>{
+    const of=hits.filter(h=>h.kind===kind);
+    return of.length ? `<h3 class="find-h">${esc(label)} <span class="find-n">${of.length}</span></h3><ul class="find-list">${of.map(h=>
+      `<li><button type="button" class="find-hit" data-fkind="${esc(h.kind)}" data-fid="${esc(h.id)}"><span class="find-title">${esc(h.title)}</span>
+        <span class="find-field">${esc(findFieldLabel(h.field))}</span> <span class="find-snip">${findSnipHtml(h.snip)}</span></button></li>`).join("")}</ul>` : "";
+  }).join("");
+}
+function openFind(){
+  openModal({ title:"Find on this table", returnTo:"[data-tfind]",
+    html:`<label class="field"><span>Search</span><input type="search" data-findq value="${esc(S.findQ||"")}" placeholder="Names, places, anything you wrote" autocomplete="off"></label>
+      <div data-findres aria-live="polite">${findResultsHtml(S.findQ)}</div>`,
+    bind(body){
+      const q=body.querySelector("[data-findq]"), res=body.querySelector("[data-findres]");
+      q.oninput=()=>{ S.findQ=q.value; res.innerHTML=findResultsHtml(q.value); };
+      res.onclick=ev=>{ const b=ev.target.closest("[data-fkind]"); if (!b) return; const kind=b.dataset.fkind, id=b.dataset.fid; closeModal(); openFound(kind, id); };
+    } });
+}
+// A hit opens its record and lands on its title (Decision 164: focus never falls to <body>).
+function openFound(kind, id){
+  const t=S.table, main=()=>$("main");
+  const land=sel=>{ const el=main().querySelector(sel); if (el){ takeFocus(el, true); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); } return el; };
+  const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.castFrom=null; S.intAdd=null; };
+  const toSession=sid=>{ S.tsection="sessions"; S.sessOpen=sid; if (S.closeOut) S.closeOut.view=false; };
+  window.scrollTo(0,0);
+  if (kind==="cast"){ toMember(id); update(); land("[data-ctitle]"); }
+  else if (kind==="session"){ toSession(id); update(); land("h1"); }
+  else if (kind==="interaction"){
+    const x=(t.interactions||[]).find(i=>i.id===id); if (!x) return;
+    const live=(x.cast||[]).find(l=>l && (t.cast||[]).some(n=>n.id===l.id));
+    if (x.session && (t.sessions||[]).some(s=>s.id===x.session)){ toSession(x.session); update(); land(attrSel("data-sline", id)) || land("h1"); }
+    else if (live){ toMember(live.id); update(); land(attrSel("data-int", id)) || land("[data-ctitle]"); }
+    else { S.tsection="cast"; S.castOpen=null; S.castView="crew"; update(); land("h1, h2"); }
+  }
+  else if (kind==="thread"){ S.tsection="sessions"; S.sessOpen=null; renderTableChrome(); showThread(id); }
+  else if (kind==="note") openNote(id);
+  else if (kind==="encounter"){
+    S.tsection="encounters"; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ="";
+    update(); land("[data-enc-h]") || land("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || land("[data-enc-title]") || land("h1");
+  }
+}
+// The Notes tab with one note's card in view and its Note field focused.
+function openNote(id){
+  S.tsection="notes"; window.scrollTo(0,0); update();
+  const el=$("main").querySelector(attrSel("data-ntext", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
+}
+// Where a jot would go today, said before it is saved (Decision 203's rule, read for the line).
+function jotWhere(){
+  const today=Engine.sessionList(S.table).filter(s=>s.date===localDay());
+  return today.length===1 ? `Goes with ${Engine.sessionTitle(today[0])}.`
+    : today.length ? "Goes on the table's notes. More than one session is dated today."
+    : "Goes on the table's notes. No session is dated today.";
+}
+function openJot(){
+  openModal({ title:"Jot it down", returnTo:"[data-tjot]",
+    html:`<label class="field"><span>Jot</span><textarea data-jottext rows="5" autofocus placeholder="A name, a debt, a line to keep.">${esc(S.jotDraft||"")}</textarea></label>
+      <p class="step-note" data-jotwhy role="alert"></p>
+      <p class="step-note">${esc(jotWhere())}</p>`,
+    foot:`<button type="button" class="btn primary" data-jotsave>Save</button> <button type="button" class="btn" data-modalclose>Cancel</button>`,
+    bind(body, foot){
+      const ta=body.querySelector("[data-jottext]"), why=body.querySelector("[data-jotwhy]");
+      ta.oninput=()=>{ S.jotDraft=ta.value; why.textContent=""; };
+      const save=()=>{
+        let r; const text=ta.value;
+        tableChange(()=>{ r=Engine.addTableNote(S.table, { text, date:localDay(), jot:true }); }, false);
+        if (!r.ok){ why.textContent=r.why; ta.focus(); return; }
+        S.jotDraft="";
+        const note=S.table.notes.find(n=>n.id===r.id);
+        closeModal();
+        // The page under the jot stays as it was, unless it is the list the jot lands in.
+        if (S.tsection==="notes" || (S.tsection==="sessions" && note && S.sessOpen && S.sessOpen===note.session)) renderTable();
+        notice("Jotted.");
+        const j=document.querySelector("[data-tjot]"); if (j) j.focus();
+      };
+      foot.querySelector("[data-jotsave]").onclick=save;
+      ta.onkeydown=ev=>{ if (ev.key==="Enter" && (ev.ctrlKey || ev.metaKey)){ ev.preventDefault(); save(); } };
+    } });
 }
 
 // ── The Reference (Decision 207) ───────────────────────────────────────
@@ -920,7 +1016,14 @@ function sessionInteractionHtml(t, x, offered){
   const bits=[ interactionLabel(x.kind) ? `<span class="int-kind">${esc(interactionLabel(x.kind))}</span>` : "", who,
     (x.crew||[]).length ? `<span class="int-crew">${esc(x.crew.join(", "))}</span>` : "",
     x.date ? `<span class="int-date">${esc(dayText(x.date))}</span>` : "", x.text ? `<span class="int-text">${esc(x.text)}</span>` : "" ].filter(Boolean);
-  return `<li class="int-line">${bits.join(" ")}${offered ? ` <button type="button" class="btn sm" data-sadd="${esc(x.id)}">Add to this session</button>` : ""}</li>`;
+  return `<li class="int-line" data-sline="${esc(x.id)}">${bits.join(" ")}${offered ? ` <button type="button" class="btn sm" data-sadd="${esc(x.id)}">Add to this session</button>` : ""}</li>`;
+}
+// What was jotted in this session (Decision 208): the text, then the title when it has one.
+function jottedHtml(s){
+  const jots=Engine.sessionNotes(S.table, s.id);
+  return jots.length ? `<h2 class="cast-h">Jotted</h2><ul class="int-list">${jots.map(n=>{
+    const text=n.text.trim(), title=n.title.trim();
+    return `<li class="int-line"><button type="button" class="cast-open" data-jotopen="${esc(n.id)}">${esc(text || title || "Untitled note")}${text && title ? ` <span class="int-kind">${esc(title)}</span>` : ""}</button></li>`; }).join("")}</ul>` : "";
 }
 function sessionPageHtml(s){
   const t=S.table, id=esc(s.id), j=s.journal||{};
@@ -945,10 +1048,12 @@ function sessionPageHtml(s){
     <h2 class="cast-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
     ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
     ${offered.length ? `<h3 class="next-h">Also that day</h3><ul class="int-list" data-soffered>${offered.map(x=>sessionInteractionHtml(t, x, true)).join("")}</ul>` : ""}
+    ${jottedHtml(s)}
     ${closeOutSectionHtml(s)}
     <p class="cast-delete"><button type="button" class="btn danger" data-sdel>Delete</button></p>`;
 }
 function bindSessions(main){
+  main.querySelectorAll("[data-jotopen]").forEach(b=>b.onclick=()=>openNote(b.dataset.jotopen));
   const s=sessOpenNow();
   if (s && closeSheetNow(s)) bindCloseOut(main, s);
   else if (s) bindSessionPage(main, s);

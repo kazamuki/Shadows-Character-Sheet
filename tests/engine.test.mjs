@@ -3071,12 +3071,12 @@ test("the code guards read every engine and UI script, gm.js included (Decision 
   assert.ok(!CODE_FILES.some(f => f.includes("theme-init")));
 });
 
-test("newTable stamps kind, a TBL- id, the name, schema 0.6, no notes, cast or interactions", () => {
+test("newTable stamps kind, a TBL- id, the name, schema 0.10, no notes, cast or interactions", () => {
   const t = Engine.newTable("Tuesday");
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.9");
+  assert.equal(t.meta.tableSchemaVersion, "0.10");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3144,14 +3144,14 @@ test("migrateTable invents no timestamps (Decision 63)", () => {
   assert.equal(k.meta.created, "2026-10-05T10:00:00.000Z");
 });
 
-test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.9", () => {
+test("a newer table schema stamp is kept and reported; an older or unreadable one reads 0.10", () => {
   const n = Engine.migrateTable({ meta: { tableSchemaVersion: "9.0" } });
   assert.equal(n.meta.tableSchemaVersion, "9.0");
   assert.equal(Engine.tableCheck(n).length, 1);
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.9", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.10", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3203,7 +3203,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3426,7 +3426,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3788,7 +3788,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -3997,7 +3997,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4513,7 +4513,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -4984,7 +4984,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5356,7 +5356,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -5644,7 +5644,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.9");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.10");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -5982,4 +5982,158 @@ test("207: the search folds case, space and the minus, and keeps what matches", 
   assert.ok(ids("").includes("codex"));
   assert.ok(!ids("tier").includes("codex"));
   assert.ok(ids("salt nerve", twoPacks()).includes("codex"));
+});
+
+// ── The secretary (Decision 208) ───────────────────────────────────────────
+const eq208 = (a, b, m) => assert.equal(JSON.stringify(a), JSON.stringify(b), m);
+function secretaryTable() {
+  const cond = D.conditions.find(c => !c.location && !c.counter).id;
+  return Engine.migrateTable({
+    meta: { kind: "shadows-table", id: Engine.newTable().meta.id, tableSchemaVersion: "0.10" },
+    cast: [
+      { id: "C-AAAA0001", name: "Marta Voss", flavor: "a fixer", line: "works the docks", affiliations: ["Dockhands"],
+        block: { traits: [{ name: "Quick", text: "never sleeps at the tide" }], armor: ["Duster"], gear: ["grapnel"] } },
+      { id: "C-AAAA0002", name: "Rook’s Cousin", gmNote: "owes the Lantern" },
+    ],
+    sessions: [
+      { id: "SE-AAAAAAA1", number: 3, date: "2026-10-01", journal: { happened: "A long night. ".repeat(14) + "the warehouse burned", seed: "find the courier" },
+        close: { at: "2026-10-01T10:00:00Z", lines: [{ name: "Nyx", present: true, ip: 5, note: "bled for the cause" }] } },
+    ],
+    interactions: [{ id: "I-AAAAAAA1", kind: "shared", cast: [{ kind: "cast", id: "C-GNNE0000", name: "Wendell Ghost" }], text: "met" }],
+    threads: [{ id: "TH-AAAAAAA1", title: "The courier", notes: "ask about the ferry" }],
+    notes: [{ id: "N-AAAAAAA1", title: "Lantern bartender", text: "Ike" }],
+    encounters: [{ id: "EN-AAAAAAA1", name: "Dock fight", status: "planned",
+      rows: [{ id: "R-AAAAAAA1", kind: "pc", name: "Nyx", conditions: [{ id: cond, source: "a rusted harpoon" }] }] }],
+  });
+}
+const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
+
+test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.10");
+  const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
+    notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
+  for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
+  const m = Engine.migrateTable(base("0.10"));
+  eq208(m.notes.map(n => n.session), ["SE-AAAAAAA1", null]);
+  for (const bad of [5, {}, "__proto__", ["SE-AAAAAAA1"], true]) {
+    const x = base("0.10"); x.notes[0].session = bad;
+    assert.equal(Engine.migrateTable(x).notes[0].session, null, JSON.stringify(bad));
+  }
+  // The loop order: a session defined later in its array is still checked against.
+  const later = { meta: { tableSchemaVersion: "0.10" }, notes: [{ id: "N-AAAAAAA1", session: "SE-BBBBBBB2" }],
+    sessions: [{ id: "SE-AAAAAAA1" }, { id: "SE-BBBBBBB2" }] };
+  assert.equal(Engine.migrateTable(later).notes[0].session, "SE-BBBBBBB2");
+});
+
+test("208: a jot takes the one session on its day; two or none, null; an explicit session wins; blank is refused", () => {
+  const t = Engine.newTable("x");
+  const a = Engine.addSession(t, { date: "2026-10-05" }).id;
+  const sess = id => t.notes.find(n => n.id === id).session;
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-05", jot: true }).id), a);
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-06", jot: true }).id), null);
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", jot: true }).id), null);
+  const b = Engine.addSession(t, { date: "2026-10-05" }).id;
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-05", jot: true }).id), null, "two that day");
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-05", session: b }).id), b);
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", session: "S-NOPE0000" }).id), null);
+  const n = t.notes.length;
+  for (const text of ["", "  \n ", undefined, 5]) eq208(Engine.addTableNote(t, { text, jot: true }), { ok: false, why: "Write something first." });
+  assert.equal(t.notes.length, n, "nothing added");
+  assert.ok(Engine.addTableNote(t, {}).ok, "the Notes tab's New note may be empty");
+});
+
+test("208: editTableNote sets and clears session; removeSession nulls its notes; sessionNotes newest first", () => {
+  const t = Engine.newTable("x");
+  const s = Engine.addSession(t, {}).id, other = Engine.addSession(t, {}).id;
+  const mk = (text, created, session) => { const r = Engine.addTableNote(t, { text, session }); t.notes.find(n => n.id === r.id).created = created; return r.id; };
+  const old = mk("old", "2026-10-01T00:00:00Z", s), mid = mk("mid", "2026-10-02T00:00:00Z", s), nu = mk("new", "2026-10-03T00:00:00Z", s);
+  mk("elsewhere", "2026-10-04T00:00:00Z", other);
+  eq208(Engine.sessionNotes(t, s).map(n => n.text), ["new", "mid", "old"]);
+  eq208(Engine.sessionNotes(t, "S-NOPE0000"), []); eq208(Engine.sessionNotes(null, s), []); eq208(Engine.sessionNotes(t, undefined), []);
+  assert.ok(Engine.editTableNote(t, mid, { session: other }).ok);
+  assert.equal(t.notes.find(n => n.id === mid).session, other);
+  assert.ok(Engine.editTableNote(t, mid, { session: null }).ok);
+  assert.equal(t.notes.find(n => n.id === mid).session, null);
+  for (const bad of ["S-NOPE0000", 5, {}, undefined]) {
+    Engine.editTableNote(t, old, { session: bad });
+    assert.equal(t.notes.find(n => n.id === old).session, s, "a stranger leaves it");
+  }
+  Engine.removeSession(t, s);
+  assert.equal(t.notes.find(n => n.id === nu).session, null);
+  assert.equal(t.notes.find(n => n.text === "elsewhere").session, other);
+});
+
+test("208: tableSearch finds each kind by a word only in its least obvious field, and names the record and the field", () => {
+  const t = secretaryTable();
+  eq208(found(t, "tide"), [["cast", "C-AAAA0001", "Trait"]]);
+  eq208(found(t, "grapnel"), [["cast", "C-AAAA0001", "Gear"]]);
+  eq208(found(t, "dockhands"), [["cast", "C-AAAA0001", "Affiliation"]]);
+  eq208(found(t, "bled for"), [["session", "SE-AAAAAAA1", "Close-out"]]);
+  eq208(found(t, "courier").filter(h => h[0] === "session"), [["session", "SE-AAAAAAA1", "journal.seed"]]);
+  eq208(found(t, "wendell"), [["interaction", "I-AAAAAAA1", "With"]]);
+  eq208(found(t, "ferry"), [["thread", "TH-AAAAAAA1", "Notes"]]);
+  eq208(found(t, "bartender"), [["note", "N-AAAAAAA1", "Title"]]);
+  eq208(found(t, "harpoon"), [["encounter", "EN-AAAAAAA1", "Condition"]]);
+  assert.equal(Engine.tableSearch(t, "wendell")[0].title, "Wendell Ghost");
+  assert.equal(Engine.tableSearch(t, "ike")[0].title, "Lantern bartender");
+});
+
+test("208: every word, in any order", () => {
+  const t = secretaryTable();
+  eq208(found(t, "docks fixer"), [["cast", "C-AAAA0001", "Line"]]);
+  eq208(found(t, "fixer dock"), [["cast", "C-AAAA0001", "Flavor"]], "the first word names the field");
+  eq208(found(t, "fixer zzzz"), []);
+});
+
+test("208: folding: case, spaces and apostrophes; hit is the text as written, even past a char that lowercases longer", () => {
+  const t = secretaryTable();
+  for (const q of ["ROOK", "  rook  ", "rook's", "ROOK’S", "rook‘s"]) eq208(found(t, q), [["cast", "C-AAAA0002", "Name"]], q);
+  assert.equal(Engine.tableSearch(t, "rook's")[0].snip.hit, "Rook’s");
+  assert.equal(Engine.tableSearch(t, "ROOK")[0].snip.hit, "Rook");
+  t.cast[1].gmNote = "İİ then Rook’s cut";
+  t.cast[1].name = "Zed";
+  const h = Engine.tableSearch(t, "rook’s")[0];
+  assert.equal(h.field, "GM note"); assert.equal(h.snip.hit, "Rook’s"); assert.equal(h.snip.before, "İİ then ");
+});
+
+test("208: the snippet cuts at a space, with an ellipsis where it cut", () => {
+  const t = secretaryTable();
+  const h = Engine.tableSearch(t, "burned")[0];
+  assert.equal(h.field, "journal.happened");
+  assert.ok(h.snip.before.startsWith("…") && h.snip.before.length <= 61, h.snip.before);
+  assert.match(h.snip.before, /^…(A long night\. )*(long night\. |night\. )?/, "cut after a space: " + h.snip.before);
+  assert.ok(!/^…[a-z]/.test(h.snip.before) || /^…(long|night)/.test(h.snip.before), h.snip.before);
+  assert.equal(h.snip.after, "");
+  const start = Engine.tableSearch(t, "a long night")[0];
+  assert.equal(start.snip.before, "");
+  assert.ok(start.snip.after.endsWith("…") && start.snip.after.length <= 61);
+});
+
+test("208: results come back in order: cast, sessions, interactions, threads, notes, encounters", () => {
+  const t = secretaryTable();
+  t.cast[0].gmNote = "zq"; t.sessions[0].journal.fallout = "zq"; t.interactions[0].text = "zq";
+  t.threads[0].notes = "zq"; t.notes[0].text = "zq"; t.encounters[0].name = "zq";
+  eq208(Engine.tableSearch(t, "zq").map(h => h.kind), ["cast", "session", "interaction", "thread", "note", "encounter"]);
+});
+
+test("208: under two characters is nothing; tableSearch is total and never writes", () => {
+  const t = secretaryTable();
+  for (const q of ["", " ", "d", "  d ", undefined, null, 5, {}, []]) eq208(Engine.tableSearch(t, q), [], String(q));
+  const before = JSON.stringify(t);
+  for (const tt of [undefined, null, {}, 5, "x", [], { cast: 5, sessions: [null], notes: [5], encounters: [{ rows: 5 }] }, Engine.migrateTable({ cast: [{ name: { a: 1 } }], notes: "x" })])
+    for (const q of ["dock", undefined, 5, {}]) assert.ok(Array.isArray(Engine.tableSearch(tt, q)));
+  Engine.tableSearch(t, "dock"); Engine.tableSearch(t, "a long night");
+  assert.equal(JSON.stringify(t), before);
+});
+
+test("208: a search over 200 members and 100 sessions is quick", () => {
+  const t = Engine.newTable("big");
+  for (let i = 0; i < 200; i++) { const r = Engine.addCastMember(t, { name: "Member " + i }); Engine.editCastMember(t, r.id, { flavor: "a person who lives by the docks " + i, gmNote: "x".repeat(300) }); }
+  for (let i = 0; i < 100; i++) { const r = Engine.addSession(t, {}); Engine.editSession(t, r.id, { journal: { happened: "the crew went to the harbor and argued. ".repeat(40), seed: "next" } }); }
+  Engine.tableSearch(t, "warm up");
+  const t0 = performance.now();
+  for (let i = 0; i < 10; i++) Engine.tableSearch(t, "harbor docks");
+  const per = (performance.now() - t0) / 10;
+  console.log(`# tableSearch, 200 members + 100 sessions: ${per.toFixed(1)} ms`);
+  assert.ok(per < 50, `${per} ms`);
 });

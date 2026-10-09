@@ -762,7 +762,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.9");
+  assert.equal(m.meta.tableSchemaVersion, "0.10");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -915,5 +915,44 @@ test("a hostile pack renders as text on the Reference, drawn and searched (Decis
   assert.equal(app.$("#main img"), null);
   assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a field drew an object as text");
   assert.deepEqual(found, [], "a pack's text became markup");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Find and Jot read untrusted text (Decision 208, 124) ──────────────────
+test("a hostile table's Find results and Jot line show its text as text; a note's hostile session reads null", () => {
+  const cond = D.conditions.find(c => !c.location && !c.counter).id;
+  const t = Engine.migrateTable({
+    meta: { kind: "shadows-table", id: Engine.newTable().meta.id, name: P("tbl"), tableSchemaVersion: "0.10" },
+    cast: [{ id: "C-AAAAAAAA", name: P("c.name"), flavor: P("c.flavor"), block: { traits: [{ name: P("c.tname"), text: P("c.ttext") }], gear: [P("c.gear")] } }],
+    sessions: [{ id: "SE-AAAAAAAA", number: 1, present: [P("s.present")], journal: { happened: P("s.happened"), seed: P("s.seed") },
+      close: { lines: [{ name: P("s.close"), note: P("s.closenote"), present: true }] } }],
+    interactions: [{ id: "I-AAAAAAAA", kind: "shared", text: P("i.text"), crew: [P("i.crew")], cast: [{ kind: "cast", id: "C-ZZZZZZZZ", name: P("i.gone") }] }],
+    threads: [{ id: "TH-AAAAAAAA", title: P("th.title"), notes: P("th.notes") }],
+    notes: [{ id: "N-AAAAAAAA", title: P("n.title"), text: P("n.text"), session: "SE-AAAAAAAA" },
+      { id: "N-BBBBBBBB", title: "x", session: "__proto__" }, { id: "N-CCCCCCCC", title: "y", session: { x: 1 } }],
+    encounters: [{ id: "EN-AAAAAAAA", name: P("e.name"), status: "planned", rows: [{ id: "R-AAAAAAAA", kind: "pc", name: P("e.row"), conditions: [{ id: cond, source: P("e.source"), note: P("e.note") }] }] }],
+  });
+  assert.deepEqual([t.notes[1].session, t.notes[2].session], [null, null]);
+  assert.equal(t.notes[0].session, "SE-AAAAAAAA");
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  app.click("[data-tfind]");
+  const q = app.$("[data-findq]");
+  q.value = "pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  const kinds = new Set(app.$$("#modal [data-fkind]").map(b => b.dataset.fkind));
+  assert.deepEqual([...kinds].sort(), ["cast", "encounter", "interaction", "note", "session", "thread"]);
+  assert.deepEqual(injected(app, "Find"), [], "a result became markup");
+  assert.equal(app.$$("#modal i, #modal img, #main i[data-pwn]").length, 0);
+  assert.ok(app.$("#modal").textContent.includes("data-pwn"), "the text is shown as text");
+  for (const b of app.$$("#modal [data-fkind]")) { // every hit opens without error
+    const kind = b.dataset.fkind, id = b.dataset.fid;
+    b.click();
+    assert.deepEqual(injected(app, `a ${kind} hit opened`), []);
+    app.click("[data-tfind]");
+  }
+  app.click("#modal [data-modalclose]");
+  app.click("[data-tjot]");
+  assert.deepEqual(injected(app, "Jot"), []);
   assert.deepEqual(app.errors, []);
 });

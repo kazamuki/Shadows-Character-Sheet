@@ -913,10 +913,12 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.9",       // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.10",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
-  notes: [ { id: "N-XXXXXXXX", title: "", text: "", created: "<ISO>", updated: "<ISO>" } ],
+  notes: [ { id: "N-XXXXXXXX", title: "", text: "",
+             session: null,        // 0.10: a session's id in this table, or null (Decision 208); a jot takes the one session dated today, the gate converts nothing
+             created: "<ISO>", updated: "<ISO>" } ],
   cast: [ {                          // 0.2: cast (Decisions 174–176)
     id: "C-XXXXXXXX",                // unique in the table; a bad or repeated one is replaced
     name: "", flavor: "", description: "",
@@ -1002,7 +1004,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -3599,6 +3601,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 38 in part: the tabs no longer wrap to a second row.
      - **Revisit if:** the sheet gains a tenth tab, or playtesters on tablets don't find the tabs past the fade.
      - **Built:** app 0.27.1. Log 2026-09-25 (S6b); `npm run phone-check` passes all three widths.
+     → **Superseded in part by Decision 208** — on a table's screen, row one also holds Find and Jot.
 
 141. **The browser keeps a roster: one entry per character, keyed by its TAG, and Home says which ones have play no file holds.**
      *2026-09-25 · Ken + Claude · Touches: roster, localStorage, shadows.char.v1, shadows.active.v1, shadows.draft.v1, Home, New character, Import, Lock, Remove, export, unexported marker, replace guard, save failure, R10, AQ5, B18*
@@ -3998,7 +4001,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 141 in part, with GM mode on: Home lists tables too, and its Import reads a table file.
      - **Revisit if:** storage fills (GQ9), a GM loses work to a deleted note, or S8 designs the table's audit trail.
      - **Built:** as 170.
-     → **Superseded in part by Decisions 176 and 181** — audit trail is S10's; Import reads packs.
+     → **Superseded in part by Decisions 176, 181 and 208** — audit trail is S10's; Import reads packs; the header holds Find and Jot beside the menu.
 
 172. **GM mode's interface is a fifth classic script, `src/ui/gm.js`, after `sheet.js`; its engine stays in `engine.js`.**
      *2026-10-05 · Ken + Claude · Touches: src/ui/gm.js, script order, index.html, build.test.mjs, BROWSER_JS, CODE_FILES, Decision 86, engine.js, Tables section, harness*
@@ -4461,6 +4464,22 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. 185's *Revisit if* (the glossary as a page) is met and its picker stands; 204 kept Next session off the tab row, and the Reference is its own surface.
      - **Revisit if:** GQ29 reorders the panels, a GM asks for the Reference over a running encounter, or the Quick Reference changes shape.
      - **Built:** switched off (173); no data or schema bump; log 2026-10-09 (the Reference).
+
+208. **A table's header has Find, one search over every record, and Jot, a line kept as a note with the session it was written in.**
+     *2026-10-09 · Ken + Claude · Touches: Find, Jot, tableSearch, table notes, note session, addTableNote, editTableNote, removeSession, _sessionOnDay, header, hdractions, table schema 0.10, Decision 140, Decision 171, Decision 203, Decision 187, W85, W86*
+     - **Decided:** On a table's screen, row one of the header gains **Find** and **Jot** beside ⋮, on every tab and page. Find searches the cast, sessions, interactions, threads, notes and encounters; every word must appear somewhere in a record; a hit names its record and field, with the words around the match, and opens it. Jot saves a line as a note with `session`: the one session dated today, else none. A session's page lists its notes. Table schema 0.10.
+     - **Why:** Deighton loses details, names first, and asked for a secretary; Scott loses what went to whom (§1a). The table holds both, but only per tab.
+     - **Rejected:**
+       - A seventh tab: Find and Jot are wanted from the page you're on, mid-fight included.
+       - A stored index: constraint 7; the search is computed.
+       - A jot as its own record: a note is already a dated text; two lists for one thing.
+       - Appending the jot to the journal: it writes into the GM's own outline.
+       - A floating Jot button: it covers the encounter's rows on a phone.
+       - Packs and the Reference in Find: they have their own searches.
+       - The whole phrase as typed: words in any order find more.
+     - **Replaces:** Decision 140 in part (row one on a table's screen also holds Find and Jot) and 171 in part (the table's header holds more than its menu). 203's rule now gives a jot its session too.
+     - **Revisit if:** the header can't fit them at phone width, a table grows past what a search per keystroke keeps up with, or seats (S3b) let a player jot.
+     - **Built:** table schema 0.10, switched off (173); log 2026-10-09 (the secretary).
 
 ## 5. Open Flags
 
