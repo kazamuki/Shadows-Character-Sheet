@@ -362,6 +362,166 @@ rules about being recognised; a level the GM sets must not quietly contradict
 them, so ask Deighton and Scott how they meet before choosing levels. Crew are
 typed names until S3b's seats claim them.
 
+### GM mode, from testing the build
+
+Ken's notes from playing with GM mode (switched off) on 2026-10-08. Each sits
+alongside W29's plan (`plans/gm-mode.md`), not inside it. A work order can pick
+any of these up once Ken says yes.
+
+**W73 — A session can have a name.** *Ken · ⏭ · Rule or shape · raised 2026-10-08 in S5a's review*
+A table refers to its past by session: *"when did we learn that? Session 2,
+The Ledger."* S5a (Decisions 203–204) gives a session a number the GM sets and
+a day, and nothing else names it. The wish is an optional `title`, shown after
+the number wherever a session is named: the list, *Closed in*, an
+interaction's *Session 2*, and Next session's *Last session set up*.
+*To respect:* table schema bump and a `migrateTable()` step (`""` for every
+session already there); the number stays the identity and the sort (Ken,
+S5a's review: "last session" is by number), and the title is text only.
+
+**W74 — Search the Codex from inside an encounter.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
+An encounter's **Add** section searches the cast, but for the Codex it says
+"open an entry or a group on Threats". Mid-fight that's three taps out of the
+encounter and back. The wish: a **Search the Codex** field beside *From the
+cast*, listing entries and groups as the Threats tab does (`packFilter`,
+`packGroups`), each with **Add**, putting a row in this encounter the way
+the entry page's **Add to** does.
+*To respect:* Decision 188 (a Codex row is the entry's copy in the encounter;
+nothing goes into the cast until Keep, 193); the encounter page's keyboard places
+(Decision 164).
+
+**W75 — Add to an encounter from anywhere, always.** *Ken · ⏭ · Rule or shape · raised 2026-10-08*
+Today **Add to <encounter>** shows on a member's page and a Codex entry's page
+only while an encounter is **open on the Encounters tab** (`encTarget`). Leave
+that tab's encounter and the button disappears, which reads as "it isn't
+there". The wish:
+- **Always shown** on a cast member's page, a Codex entry's page, and each
+  card in the Threats list (entries and groups).
+- **Which encounter** (Ken, 2026-10-08): the one open on the Encounters tab
+  if there is one; else the **running** one; else the most recently made
+  **planned** one. With none at all, the button reads **Add to a new
+  encounter**, which makes one, planned, with this row in it.
+*To respect:* this reopens **Decision 190** in part (*Add to <the encounter
+open on the Encounters tab>*), so it needs a numbered decision. One encounter
+runs at a time (188); a group adds all
+its members as rows, as the entry page does now; the notice stays and the page
+stays put.
+
+**W76 — Add to cast from a card in the Threats list.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
+An entry's page has **Add to cast**; the list doesn't, so adding five
+Codex entries to the cast is five round trips. The wish: **Add to cast** on
+each entry card in the Threats list, doing what the entry page's button does.
+The entry page keeps its own.
+*To respect:* Decisions 182 and 190 (a cast member made from an entry keeps
+`from`, and its name if the pack goes); W75 puts **Add to <encounter>** on the same
+card, so the two share one row of buttons and must fit at 390px.
+
+**W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*
+Three things about the page a GM opens mid-scene:
+- **Back and Add to <encounter> always in reach.** They sit at the top today
+  and scroll away on a long page. Keep them in a bar that stays put while the
+  page scrolls (with W75's always-shown Add).
+- **Status near the top.** Alive, dead, missing or gone sits in the middle
+  of the Codex fields (after Origin, NPC roles, Enemy role and Tier). It's the
+  first thing a GM checks; put it under the name.
+- **The stat block as a pinned panel on the right**, at widths that have
+  room, like a PC's pinned vitals (Decision 160, `(min-width:1280px)`), so the
+  numbers stay beside the description, motivation and interactions while the
+  page scrolls. Below that width it stays where it is now, at the bottom.
+*To respect:* constraint 3 (the shell stays a shell: the panel is built by
+`gm.js` into existing chrome, or by markup the shell already has); the pin is
+a preference of this browser as 160's is, not of the table.
+*Always in reach* is W80's action rail (Ken, 2026-10-08): Back and Add to
+<encounter> live there, and stay put while the page scrolls.
+
+**W78 — The cast list shows each member's stat block, to read.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*
+A GM scanning the cast for who to throw at the crew opens each member to
+see their numbers. The wish: each card on the Cast tab shows the block as it
+stands now, however partial (a quick-added member with only BOD shows BOD),
+read-only. It's a quick reference; editing stays on the member's page.
+*To respect:* `Engine.npc(block)` computes everything shown (constraint 7);
+`blockHasNumber` (Decision 204) says whether there's anything to show; a long
+cast still has to scroll well on a tablet, so the shape (every card, a fold,
+or a toggle like *Who knows what*) needs a look.
+
+**W79 — An interaction reads as a sentence: who, what they did, with whom, what, when.** *Ken · 🔎 · Rule or shape (copy) · raised 2026-10-08*
+Today a member's line is chosen kind first (*Told them*), then the crew,
+the day and the text, and it reads in that order. Ken's order, crew first:
+- *Scott told Bob "the lake is on fire" on 10/08/26*
+- *D learned from Bob "snakes can fly" on 10/08/26*
+- *PC helped Bob · PC wronged Bob · PC killed Bob · PC owes Bob · PC fought Bob*
+- *They owe* (`owed`) needs its own wording, crew first if it can be (*PC is
+  owed by Bob*?). **Open; a voice pass decides.**
+
+The member's name goes where *them* is today; an unnamed member is *them*.
+The add row follows the same order: crew, then the verb, then what, then the
+day. *Who knows what* (Decision 179) and a session's page (S5a) read the same
+sentence.
+*To respect:* the kinds' ids never change (`shared`, `learned`, `helped`,
+`wronged`, `killed`, `owes`, `owed`, `fought`; constraint 6). Only their
+labels and the order move. S8b's SQ4 chose labels *from the crew's side*,
+and this keeps that. Decision 177 says interactions are the one place for
+the sentence. The day's format follows `dayText`.
+
+**W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*
+Outside the wizard the left column is empty on **every** screen: Home, every
+GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
+table's Cast tab, 218px of nothing beside the page). During the wizard it holds
+the eight steps, and that's the only screen that uses it.
+**Ken's direction:** use it or remove it. Using it means an **action rail**:
+the buttons a GM always wants, held there while the page scrolls. On a cast
+member's page, Back and **Add to <encounter>** (W75, W77). On a session's page,
+Back. On a tab, its one primary action (New session, quick-add, New
+encounter). A screen with nothing to put there gives the column back to the
+page.
+*The catch, and what the fix has to answer:* the rail exists only from
+**1060px** up. Below that, the wizard's steps become a strip across the top and
+the column is gone. A tablet, the device GM mode is built for (plan §1a), is
+below 1060px in portrait and usually in landscape. So the rail can't be the
+only home for "always in reach": the same actions need a bar that stays at the
+top of the page below 1060px. Build it once and place it in the rail or the bar
+by width, the way the wizard's steps already do.
+*To respect:* constraint 3 (the `<nav class="ledger">` the shell already has
+is the place; no new markup in `index.html` beyond what's there); Decision 164
+(focus keeps its place when the rail redraws); and the pinned vitals
+(Decision 160), which take the right side from 1280px, so a GM screen with a
+pinned stat block (W77) and the rail leaves the page the middle.
+
+**W81 — Origin and Enemy role look like what they do.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
+On a cast member's page, **Origin** and **Enemy role** are text fields with a
+list of suggestions from the slotted packs (a `datalist`). They behave like a
+dropdown when tapped, but look like a plain box, so nothing says there's a
+list. The wish: a visible affordance (a ▾ on the field) that still lets the
+GM type a name the packs don't have.
+*To respect:* free text stays allowed (a member can have an origin or role
+no slotted pack lists); the browser's own datalist styling varies, so check it
+on a tablet.
+
+**W82 — A fight's line links to its encounter.** *Ken · ⏭ · Rule or shape · raised 2026-10-09*
+Ending an encounter writes a *fought* line for each cast member in it, with
+every PC in the room as its crew (Decision 193). Ken: "awesome". But the
+encounter's name is baked into the text: *Fought them in New for the Crew: 2 of
+4 Health Levels left.* Rename the encounter and every line says the old name,
+and nothing leads back to the fight.
+The wish: the line **links** to the encounter, and its text keeps only the
+figures. It reads crew first, as W79's sentence does for every kind (Ken,
+2026-10-09):
+> **Scott, D** fought **Bob** in **New for the Crew** on 10/08/26: 2 of 4 Health Levels left
+
+The member and the encounter are taps: the member's page, and the ended
+encounter, read-only (Decision 188).
+*To respect:*
+- **Decision 178's links:** `{ kind:"encounter", id }`, a deleted encounter's
+  name kept in the link and shown struck through, never an error.
+  `Engine.linkName` reads cast members only today, so it learns the encounter
+  kind.
+- **A table schema bump** with its `migrateTable()` step. Lines already written
+  keep their text as is; the gate converts nothing (as Decision 203 did for
+  sessions).
+- **Decision 193's** wrap-up stays the one writer, and its default text loses
+  the *Fought them in …* prefix.
+- **Build it with W79**, since both change how a line reads, on a member's
+  page, in *Who knows what* (179) and on a session's page (S5a).
+
 ### Custom characters
 
 Raised 2026-09-30 while planning the custom archetype
@@ -539,7 +699,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W73.** Everything above is open; W38 has a plan,
+- **Next free number: W83.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
