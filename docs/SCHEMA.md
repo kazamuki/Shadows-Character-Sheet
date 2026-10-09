@@ -929,7 +929,7 @@ commit** — a GM's table must never change under them.
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     present: [ "" ],                 // typed names, trimmed, no empties, until S3b's seats claim them
     hours: null,                     // half hours from 0 to 24, or null; nothing reads it until S5b
-    journal: { happened: "", fallout: "", threads: "", impact: "", reflection: "", seed: "" },   // the Campaign Journal's six parts (227), text
+    journal: { happened: "", fallout: "", threads: "", impact: "", reflection: "", seed: "" },   // the Campaign Journal's six parts (2270), text
     created: "<ISO>", updated: "<ISO>"
   } ],
   threads: [ {                       // 0.8: what's still open (Decision 204)
@@ -4370,7 +4370,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 203. **A table keeps its sessions: a number, a day, who was there, hours, and the Campaign Journal's six parts; an interaction takes its session when it's made.**
      *2026-10-08 · Ken + Claude · Touches: sessions, table.sessions, SE- id, session number, session date, present, attendance, hours, Campaign Journal, journal, interaction session, addInteraction, editInteraction, removeSession, table schema 0.8, migrateTable, Decision 177, Decision 193, W29, GQ27*
      - **Decided:** Table schema 0.8 adds `sessions` (shape in §3): an id (`SE-`), a `number` the GM sets (the next one by default), a local `date`, `present` (names, as an interaction's crew), `hours` (half hours from 0 to 24, or null) and `journal`, the worksheet's six parts as text. An interaction gains `session`, a session's id or null. A new interaction takes the one session on its day; a session's page offers its day's lines that have none. The gate converts nothing. Deleting a session clears every `session`, `opened` and `closed` that named it.
-     - **Why:** Scott's prep starts from last session (§1a), and the journal is the record the book already asks a GM to keep (227). 177 promised a session by date, never converted on load.
+     - **Why:** Scott's prep starts from last session (§1a), and the journal is the record the book already asks a GM to keep (2270). 177 promised a session by date, never converted on load.
      - **Rejected:**
        - A number derived from the order: a campaign moved from paper starts at 21, and a corrected date would renumber it.
        - A field per prompt (sixteen): a tablet page of boxes; the prompts are hints (GQ27).
@@ -4384,12 +4384,13 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 204. **Threads are records, one of them current; a table opens on Sessions, which leads with Next session, computed from the threads, last session's seed and who was met without a stat block.**
      *2026-10-08 · Ken + Claude · Touches: threads, table.threads, TH- id, thread status, open, resolved, dropped, current, opened, closed, Next session, Met last session, Sessions tab, TABLE_SECTIONS, landing page, Decision 171, Decision 176, W29, GQ1*
-     - **Decided:** Table schema 0.8 adds `threads`: an id (`TH-`), a title, a status (open, resolved or dropped), `current` (one open thread at most), `opened` and `closed` (session ids or null) and notes. `TABLE_SECTIONS` gains **Sessions**, first: a new table opens on it, and a table reopens where it was left (171). The tab leads with **Next session**, read every time and never stored: the current thread, the other open threads oldest first, last session's seed, and the cast members last session's interactions name whose block has no number. Then the threads, then the sessions, newest first.
+     - **Decided:** Table schema 0.8 adds `threads`: an id (`TH-`), a title, a status (open, resolved or dropped), `current` (one open thread at most), `opened` and `closed` (session ids or null) and notes. `TABLE_SECTIONS` gains **Sessions**, first: a new table opens on it, and a table reopens where it was left (171). The tab leads with **Next session**, read every time and never stored: the current thread, the other open threads oldest first, last session's seed (the highest-numbered session not dated today, or the one after it in the list when it is: the session being played), and the cast members that session's interactions name whose block has no number. Then the threads, then the sessions, newest first.
      - **Why:** Scott wants "a to-do list from last session" and forgets "what the current quest is" (§1a). A thread as a record makes *still open* computed, not copied forward by hand.
      - **Rejected:**
        - Threads as journal text: *still open* would be copied forward by hand.
        - Next session as its own tab: one more on a tablet, for what is the top of Sessions.
        - Always opening on Sessions: a reload mid-fight would leave the GM's tab.
+       - Last session as the newest made (`created`): a session entered later, or from paper, would be out of order; the number is the GM's.
        - Threads linked to the cast now: the text names them; links wait for a GM who asks.
      - **Replaces:** Decision 176 in part: a new table opens on Sessions, not Cast.
      - **Revisit if:** GQ1's tab order says otherwise, S7's clocks join Next session, or a GM wants a thread linked to the cast.

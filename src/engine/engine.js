@@ -4346,11 +4346,12 @@ const Engine = (() => {
     if ("title" in f) x.title = f.title.trim();
     if ("notes" in f) x.notes = _str(f.notes);
     if (status!==x.status){
+      // Closing from open records the session; between resolved and dropped it stays what the GM set.
       if (status==="open") x.closed = null;
-      else {
+      else if (x.status==="open"){
         const first = sessionList(t)[0];
         x.closed = hasSession(f.closed) ? f.closed : first ? first.id : null;
-      }
+      } else if ("closed" in f) x.closed = hasSession(f.closed) ? f.closed : null;
       x.status = status;
     } else if (status!=="open" && "closed" in f) x.closed = hasSession(f.closed) ? f.closed : null;
     if (x.status!=="open") x.current = false;
@@ -4387,7 +4388,9 @@ const Engine = (() => {
   function nextSession(t){
     const open = threadList(t).filter(h=>h.status==="open");
     const current = open.find(h=>h.current) || null;
-    const last = sessionList(t)[0] || null;
+    // Last session is the highest number, unless that one is dated today: it's the session being played, so last is the next in the list.
+    const list = sessionList(t), today = _today();
+    const last = (list[0] && list[0].date===today ? list[1] : list[0]) || null;
     const met = new Set();
     if (last) for (const x of sessionInteractions(t, last.id)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l)) met.add(l.id);
     const unbuilt = (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>_isObj(n) && met.has(n.id) && !blockHasNumber(n.block));

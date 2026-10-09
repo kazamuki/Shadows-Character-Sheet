@@ -5683,7 +5683,7 @@ test("Decision 204: a new table opens on Sessions, in this tab order, and a tabl
 test("Decision 203: empty, Next session says so in one line; New session opens Session 1 on today, focused on Number", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Empty", { stay: true });
-  assert.match(nextText(app), /Nothing yet\. Start a session after you play, or add a thread you want to follow\./);
+  assert.match(nextText(app), /Nothing yet\. Start a session when you sit down to play, or add a thread you want to follow\./);
   assert.match(app.$("#main").textContent, /No sessions yet\./);
   app.click("[data-snew]");
   assert.equal(app.$("h1.step-title").textContent, "Session 1");
@@ -5831,6 +5831,7 @@ test("Decision 203: an interaction made on a session's day shows its session on 
   // The member's page shows the session on those lines, and Back returns to the session.
   app.click("[data-copen]");
   assert.equal(app.window.eval("S.tsection"), "cast");
+  assert.equal(app.$("[data-cback]").textContent, "Back to Session 1", "opened from a session's page, Back names it");
   assert.equal(app.$$(".int-session").length, 3);
   app.click("[data-cback]");
   assert.equal(app.window.eval("S.tsection"), "sessions");
@@ -5851,6 +5852,8 @@ test("Decision 204: Met last session lists a quick-added member last session nam
   app.click('[data-tsec="cast"]'); app.click("[data-copen]");
   app.click('[data-iakind="helped"]'); type(app, "[data-iwhat]", "in the session"); keyIn(app, "[data-iwhat]", "Enter");
   sessTab(app);
+  assert.doesNotMatch(nextText(app), /Met last session/, "the session being played today isn't last session");
+  app.click(".sess-open"); type(app, '[data-sf="date"]', "2026-09-30"); app.click("[data-sback]");
   assert.match(nextText(app), /Met last session, no stat block yet\s*Dez/);
   app.click(".next-session [data-copen]");
   assert.equal(app.window.eval("S.tsection"), "cast");
@@ -5875,7 +5878,13 @@ test("Decision 204: Next session reads last session's seed under its title, a ta
   const app = boot({ storage: GM_ON });
   runTable(app, "Seed", { stay: true });
   app.click("[data-snew]");
+  type(app, '[data-sf="date"]', "2026-09-30");
   type(app, '[data-sj="seed"]', "The heist goes wrong.");
+  app.click("[data-sback]");
+  assert.match(nextText(app), /Last session set up\s*Session 1[\s\S]*The heist goes wrong\./);
+  // Tonight's session is made: Session 1's seed is still what Next session shows, and tonight isn't last session.
+  app.click("[data-snew]");
+  assert.equal(app.$("h1.step-title").textContent, "Session 2");
   app.click("[data-sback]");
   assert.match(nextText(app), /Last session set up\s*Session 1[\s\S]*The heist goes wrong\./);
   app.click(".next-session [data-sopen]");
@@ -5884,6 +5893,7 @@ test("Decision 204: Next session reads last session's seed under its title, a ta
   type(app, '[data-sj="seed"]', "   ");
   app.click("[data-sback]");
   assert.doesNotMatch(nextText(app), /Last session set up/, "a blank seed shows nothing");
+  assert.match(nextText(app), /Nothing open, and last session set nothing up\./, "sessions but nothing to say still says so");
   assert.deepEqual(app.errors, []);
 });
 

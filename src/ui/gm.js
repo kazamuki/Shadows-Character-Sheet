@@ -466,7 +466,7 @@ function castRolesHtml(n){
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
-  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backSess ? "sessions" : "");
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : "");
   return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", encTarget())}</p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
@@ -809,13 +809,15 @@ function sessionCrewNames(t){
 function nextSessionHtml(t){
   const n=Engine.nextSession(t);
   if (!(t.sessions||[]).length && !(t.threads||[]).length)
-    return `<p class="step-note">Nothing yet. Start a session after you play, or add a thread you want to follow.</p>`;
+    return `<p class="step-note">Nothing yet. Start a session when you sit down to play, or add a thread you want to follow.</p>`;
   const open = h => `<button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button>`;
+  if (!n.current && !n.open.length && !n.seed && !n.unbuilt.length)
+    return `<p class="step-note">Nothing open, and last session set nothing up.</p>`;
   return `<div class="next-session">
     ${n.current ? `<p class="next-current"><span class="next-tag">Current</span> ${open(n.current)}</p>` : ""}
     ${n.open.length ? `<h3 class="next-h">Still open</h3><ul class="int-list next-list">${n.open.map(h=>`<li>${open(h)}</li>`).join("")}</ul>` : ""}
     ${n.seed ? `<h3 class="next-h">Last session set up</h3>
-      <p><button type="button" class="cast-open" data-sopen="${esc(n.last.id)}" data-sfrom="next">${esc(sessionLine(n.last))}</button></p>
+      <p><button type="button" class="cast-open" data-sopen="${esc(n.last.id)}">${esc(sessionLine(n.last))}</button></p>
       <p class="next-seed">${esc(n.seed)}</p>` : ""}
     ${n.unbuilt.length ? `<h3 class="next-h">Met last session, no stat block yet</h3><ul class="int-list next-list">${n.unbuilt.map(m=>
       `<li><button type="button" class="cast-open int-who" data-copen="${esc(m.id)}" data-cwhere="met|${esc(m.id)}">${esc(m.name.trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}

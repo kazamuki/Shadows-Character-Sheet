@@ -5538,8 +5538,8 @@ test("204: nextSession is empty on an empty table, orders its threads, and reads
   Engine.editThread(t, a, { current: true });
   const n = Engine.nextSession(t);
   eq([n.current.id, n.open.map(h => h.id)], [a, [b, c]]);
-  const hi = Engine.addSession(t, { number: 5 }).id;
-  Engine.addSession(t, { number: 4 });   // made later, numbered lower
+  const hi = Engine.addSession(t, { number: 5, date: "2026-01-05" }).id;
+  Engine.addSession(t, { number: 4, date: "2026-01-04" });   // made later, numbered lower
   Engine.editSession(t, hi, { journal: { seed: "  The heist.  " } });
   const m = Engine.nextSession(t);
   eq([m.last.id, m.seed], [hi, "The heist."]);
@@ -5550,7 +5550,7 @@ test("204: unbuilt is last session's members with no number, once each, in the c
   const mk = n => Engine.addCastMember(t, { name: n }).id;
   const a = mk("A"), b = mk("B"), c = mk("C"), d = mk("D"), gone = mk("Gone");
   Engine.setCastBlock(t, c, { stats: { BOD: 6 } });
-  const s1 = Engine.addSession(t, { number: 1 }).id, s2 = Engine.addSession(t, { number: 2 }).id;
+  const s1 = Engine.addSession(t, { number: 1, date: "2026-01-01" }).id, s2 = Engine.addSession(t, { number: 2, date: "2026-01-02" }).id;
   const put = (ids, session) => Engine.addInteraction(t, { kind: "shared", text: "x", cast: ids, session });
   put([d], s1);                       // met two sessions ago: not listed
   put([b, a], s2); put([a, c], s2);   // a twice
@@ -5561,4 +5561,49 @@ test("204: unbuilt is last session's members with no number, once each, in the c
   assert.ok(!Engine.nextSession(t).unbuilt.some(n => n.id === c), "a block with a number is not listed");
   Engine.setCastBlock(t, a, { stats: { REF: 3 } });
   eq(Engine.nextSession(t).unbuilt.map(n => n.name), ["B"]);
+});
+
+test("204 (review): last session is the highest number not dated today; tonight's session being made leaves last session as it was", () => {
+  const t = Engine.newTable("x");
+  const mk = (number, date) => Engine.addSession(t, { number, date }).id;
+  eq(Engine.nextSession(t).last, null);
+  // A single session dated today is the one being played: no last session, no seed.
+  const one = mk(1, TODAY);
+  Engine.editSession(t, one, { journal: { seed: "tonight's" } });
+  eq([Engine.nextSession(t).last, Engine.nextSession(t).seed], [null, ""]);
+  const t2 = Engine.newTable("y");
+  const m2 = (number, date) => Engine.addSession(t2, { number, date }).id;
+  const s5 = m2(5, "2026-09-01"), s6 = m2(6, "2026-09-08");
+  Engine.editSession(t2, s6, { journal: { seed: "last week's seed" } });
+  eq(Engine.nextSession(t2).last.id, s6);
+  // Tonight's session is made: last is still Session 6, and its seed still shows.
+  const s7 = m2(7, TODAY);
+  const n = Engine.nextSession(t2);
+  eq([n.last.id, n.seed], [s6, "last week's seed"]);
+  // Two sessions today: last is the lower-numbered of today's.
+  const t3 = Engine.newTable("z");
+  const a = Engine.addSession(t3, { number: 4, date: "2026-09-01" }).id;
+  const b = Engine.addSession(t3, { number: 5, date: TODAY }).id, c = Engine.addSession(t3, { number: 6, date: TODAY }).id;
+  eq(Engine.nextSession(t3).last.id, b);
+  // No dates at all: the highest number.
+  const t4 = Engine.newTable("w");
+  Engine.addSession(t4, { number: 1, date: "" }); const two = Engine.addSession(t4, { number: 2, date: "nope" }).id;
+  eq(Engine.nextSession(t4).last.id, two);
+  assert.ok(s7 && a && c);
+});
+
+test("204 (review): Resolved to Dropped keeps the Closed in the GM set; only open to closed records the newest session", () => {
+  const t = Engine.newTable("x");
+  const old = Engine.addSession(t, { number: 1, date: "2026-01-01" }).id, newest = Engine.addSession(t, { number: 2, date: "2026-01-02" }).id;
+  const h = Engine.addThread(t, { title: "T" }).id;
+  Engine.editThread(t, h, { status: "resolved" });
+  assert.equal(thrOf(t, h).closed, newest);
+  Engine.editThread(t, h, { closed: old });
+  Engine.editThread(t, h, { status: "dropped" });
+  assert.equal(thrOf(t, h).closed, old, "switching between closed statuses moves nothing");
+  Engine.editThread(t, h, { status: "resolved", closed: newest });
+  assert.equal(thrOf(t, h).closed, newest, "unless the GM names one");
+  Engine.editThread(t, h, { status: "open" });
+  Engine.editThread(t, h, { status: "dropped" });
+  assert.equal(thrOf(t, h).closed, newest, "reopened and closed again: the newest session");
 });
