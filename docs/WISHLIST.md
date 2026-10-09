@@ -549,6 +549,32 @@ journal with its award log. S13a builds the Reference tab alone; this is **S13b*
 markup in `index.html` (constraint 3); and the award log prints in the
 player's words, as the page reads it (205).
 
+**W85 — A table's secretary: one search over everything, and a line jotted from any tab.** *Ken, from Deighton · 🔎 · Rule or shape · raised 2026-10-09 from Deighton's GM questionnaire*
+Deighton's one-tool-tomorrow answer was "a secretary, to keep track of the
+details": he forgets the smaller ones, more as time passes; he keeps an
+improvised NPC in memory or has a player write it down; and he writes a
+session up "like a police report" when he does it right. The table already
+stores most of it (journals, the cast and their interactions, threads,
+notes, encounters), but each tab filters only its own records, so "who was
+that fixer, three sessions ago?" has no single place to ask. In the
+follow-up he said names go first, then the plot itself; that he'd jot
+mid-session "if it's fast and easy", on whatever device is nearest; and
+that he couldn't say what he'd search for, since every game's details are
+its own. So the search can't be built around fixed fields. Two halves:
+- **Search the whole table:** one field that finds a word in every session's
+  journal, every cast member's record and interaction, every thread, note
+  and encounter, each hit naming where it lives and opening it.
+- **Jot from anywhere:** a line the GM can write without leaving the tab
+  they're on, mid-fight included, kept with the session that's running (or
+  the table, with none) and readable later on that session's page.
+*To respect:* a table stores inputs only (constraint 7), so the search is
+computed, never an index stored in the file; the jot is a new record, which
+is a table-schema bump and a `migrateTable()` step (170); built for a
+tablet (§1a: every control a tap); a found word is shown as text (a table
+is untrusted input, 124). It overlaps S13a's Reference search and the
+Notes tab: decide whether the jot is a note, a journal line or its own kind
+before building.
+
 ### Custom characters
 
 Raised 2026-09-30 while planning the custom archetype
@@ -726,7 +752,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W85.** Everything above is open; W38 has a plan,
+- **Next free number: W86.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
