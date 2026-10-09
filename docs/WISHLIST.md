@@ -522,6 +522,23 @@ encounter, read-only (Decision 188).
 - **Build it with W79**, since both change how a line reads, on a member's
   page, in *Who knows what* (179) and on a session's page (S5a).
 
+**W83 — A table keeps an audit trail, with undo.** *Ken · 🔎 · Rule or shape · raised 2026-10-09 in S5b's order (SQ6)*
+A character records every change as a structural diff and undoes any of
+them (Decisions 48–49, constraint 7). A table records nothing: Delete asks,
+and a GM who writes the wrong close-out, deletes a session or settles the
+wrong thread has only Redo, retyping, or an exported copy. Ken: should a
+close-out have an audit log with undo, as a sheet does?
+*The ledger already promised this and dropped it.* Decision 171 left a table
+without undo, to revisit when "S8 designs the table's audit trail"; 176
+moved that to S10 ("audit trail is S10's"); S10a–c built the encounter and no trail. So the
+question is open in the ledger, not just here. When it's picked up, it covers
+the whole table (cast, interactions, sessions, threads, encounters, close-outs),
+not one record.
+*To respect:* a table stores inputs only (constraint 7), which is what made a
+character's generic diff possible; storage size (GQ9: a long table's trail
+grows); and 176's *Revisit if*. It needs a numbered decision that marks 171
+and 176.
+
 ### Custom characters
 
 Raised 2026-09-30 while planning the custom archetype
@@ -699,7 +716,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W83.** Everything above is open; W38 has a plan,
+- **Next free number: W84.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
