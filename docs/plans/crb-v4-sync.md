@@ -1,6 +1,6 @@
 # Plan — CRB v4 sync: the sheet catches up to the 2026-10-07 mirror
 
-**Status:** open, Ken's. P0, P1 (Decision 198), P2 (W71, Decision 194) and P3 and P3b (the Werewolf, Decisions 195–197 and 199) are built. Ken answered VQ1–VQ19 on 2026-10-08. Next: P4 (VQ20–VQ27).
+**Status:** open, Ken's. P0, P1 (Decision 198), P2 (W71, Decision 194), P3 and P3b (the Werewolf, Decisions 195–197 and 199) and P4 (the Vampire, Decisions 200–202) are built. Ken answered VQ1–VQ27 on 2026-10-08. Next: P4b (the Vampire's Majors), then P5.
 **Compiled:** 2026-10-08, against the mirror at `private/` `cea99a8` (the 2026-10-07 re-mirror under the
 four-digit numbers, merged with S10c's Codex fix), game data 0.29 and app 0.37.0.
 **The other direction:** `crb-catch-up.md` is what the *book* still needs from the sheet. This plan is what
@@ -28,7 +28,7 @@ character.
 | `0410_Archetypes` | Split into `0411`–`0414`. Cyborg is out of the list; **Custom** is in, with Mortal / Supernatural / Other | ✅ Decisions 152–153 |
 | `0411_Arcanist` | Heading levels only | — |
 | `0412_Professional` | Handguns, Occult Lore, Hardcore Parkour's prerequisites, Cyber-Prophetical; IP is 5 an hour; **"Master of None does not raise your starting rank max"** | ✅ all but F33 · ❓ VQ2 |
-| `0413_Vampire` | **Written.** Was a forty-line stub. Scaling table (Stat Bonus, SFR, RoU, Base Powers, Max Starting Rank), baseline traits, three Bloodlines (Strigoi, Upyr, Draugur), The Thirst (Hunger, Feeding), Innate and Bloodline powers **with ranks to 5**, Vulnerabilities, Growth | 🔧 P4 · ❓ VQ4, VQ5 |
+| `0413_Vampire` | **Written.** Was a forty-line stub. Scaling table (Stat Bonus, SFR, RoU, Base Powers, Max Starting Rank), baseline traits, three Bloodlines (Strigoi, Upyr, Draugur), The Thirst (Hunger, Feeding), Innate and Bloodline powers **with ranks to 5**, Vulnerabilities, Growth | ✅ P4 (Majors: P4b) · ❓ F39, F41 |
 | `0414_Werewolf` | **Rewritten.** Origins are Trueborn, **Wildblood** and Forge Fang, each with Shifting, Refuel, Need and a Starter Power; baseline traits (Feral Instincts, Regeneration, Pack Mentality); Werewolf Form; SFR refills three ways; Call of the Wild's withdrawal steps; five Innate and eighteen Origin powers **with ranks to 3**; Base Powers and Max Starting Rank columns | ✅ **P3** (Major Milestones: P3b) · F38 stubbed |
 | `0420`–`0423` Skills | Split three ways; Skill Points are base + INT + REF; Max Skill Rank is **4 / 5 / 6 / 6** | ✅ skills match by script · ❓ VQ6 |
 | `0430_Advantages` | CP 5/10/15/20; "Universal" defined; Long-Lived's ranks stack; Ghost TAG is "a Black TAG" on the street | ✅ rules · ✅ P1 (two descriptions) |
@@ -56,7 +56,8 @@ Each pass is a branch and a PR. They're ordered by what unblocks what, not by si
 | **P2** | **W71: every power has a rank, and Progression raises one with IP.** Disciplines and Custom powers first, so P3 and P4 fill a shape that already works | Rule or shape | ✅ **Built** 2026-10-08: Decision 194, app 0.38.0, schema 0.18 |
 | **P3** | **The Werewolf to `0414`**: Origins, baseline traits, Werewolf Form, SFR's three refills, Call of the Wild, every power as data with its ranks. Closes the Werewolf half of F7 | Rule or shape | ✅ **Built** 2026-10-08: Decisions 195–197, app 0.39.0, game data 0.31. Work order: [`crb-v4-sync/P3-werewolf.md`](crb-v4-sync/P3-werewolf.md) |
 | **P3b** | **The Werewolf's Major Milestones** (VQ13): `0414`'s 29, archetype Majors read at all, an Origin prerequisite, and the few that change a derived number | Rule or shape | ✅ **Built** 2026-10-08: Decision 199, app 0.39.0, game data 0.32; Ken took VQ16–VQ19 as recommended. **Work order: [`crb-v4-sync/P3b-werewolf-majors.md`](crb-v4-sync/P3b-werewolf-majors.md)** |
-| **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | P2; F39 (stubbed if open). Ken on VQ20–VQ27. **Work order: [`crb-v4-sync/P4-vampire.md`](crb-v4-sync/P4-vampire.md)** |
+| **P4** | **The Vampire to `0413`**: from `tbd` to `draft`. Bloodlines, The Thirst, Innate and Bloodline powers, Cursed Evolution, Vulnerabilities | Rule or shape | ✅ **Built** 2026-10-08: Decisions 200–202, app 0.39.0, game data 0.33, schema 0.19; F39 and F41 stubbed. **Work order: [`crb-v4-sync/P4-vampire.md`](crb-v4-sync/P4-vampire.md)** |
+| **P4b** | **The Vampire's Major Milestones** (VQ27): `0413`'s 24 on P3b's engine, with Pure Blooded, Splice and Cursed Evolution's second Bloodline at the New Power price (VQ4) | Rule or shape | P4. A work order, written from P3b's, in its own session |
 | **P5** | **Advancement to `0450`**: IP by the hour, the new IP purchases (Advantages, buy-offs, SAN, Health Levels), the new Minor Milestones and repeats, Training | Rule or shape | 0450's own open questions (AD-02, AD-03) for the prices; the repeat rule (VQ7) can go now |
 
 **P0 fixed, beyond the rename:** R14 now reads a trailing `\` as pandoc's hard line break (the
@@ -82,7 +83,7 @@ one from `0450`. P2 is the proposal Ken signs off before anything is built.
 ## 4. Questions
 
 VQ1–VQ9 went to Ken on 2026-10-08, and VQ10–VQ15 (from P3's work order) the same day. Answers are
-in the third column; two parts went on to Deighton and Scott as flags. VQ16–VQ19 are P3b's (answered as recommended: both pools, compute the SFR two, the `form` grant, the rest text) and VQ20–VQ27 P4's, in their work orders.
+in the third column; two parts went on to Deighton and Scott as flags. VQ16–VQ19 are P3b's (answered as recommended: both pools, compute the SFR two, the `form` grant, the rest text) and VQ20–VQ27 P4's, in their work orders (answered 2026-10-08: as recommended, except that Pain Immunity needs no flag, since Conditions and sunlight still hurt, and Built to Last is a creation pick, F41).
 
 | Id | Question | Answer |
 |---|---|---|

@@ -57,6 +57,11 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ **0414 Werewolf › Wildblood** has an empty four-column table and four empty `#####` headings before its Features. Delete them, or they were meant to hold something (the spirits?).
 - ☐ **0414 Werewolf › the heading still says "(Under Construction)".** The chapter is complete enough that the sheet carries all of it (Decisions 195–197). Drop the tag when you agree.
 - ❓ **0414 Werewolf › Forge Fang's shift.** "Shift into Werewolf form by spending 1 HL." The sheet spends one Health Level *as the werewolf form counts them* (BOD +4 can make each Level bigger), so the track shows exactly one Level gone while shifted (Decision 195). Say which form's HL it is, if it matters to you.
+- ☐ **0413 Vampire › slips** (found by `crb-v4-sync` P4, 2026-10-08; the sheet's data has the right words): "Centuries of **patients**" (Vampires in NYTE City) → *patience*; "How you feed is **your** to decide" → *yours*; "prey on the **desparate**" → *desperate*; "drops **to to** their RoU" (Blood Frenzy) → *to*; Odin's Aegis's effect has no full stop. Two empty headings (a `##` above "In NYTE City they hide in plain sight", a `####` under Consecration), an empty `###` with an empty table under the Core Mechanic, and an empty row in the Growth & Milestones table.
+- ☐ **0413 Vampire › Blood Frenzy** says "(T7, S1)" where Hunger says "TN 7, TH 1" for the same check. One form.
+- ❓ **0413 Vampire › Day Rest:** "Each day skipped adds +2 to that day's Thirst, cumulative." The Thirst isn't a number. +2 SFR lost on top of half your RoU? The sheet leaves it as text (Decision 201).
+- ❓ **0413 Vampire › Built to Last** (F41, Deighton): "Choose a long shell (Iron Hide) or a short surge (Icebound Resilience). These powers don't stack." The sheet reads it as a creation pick (Ken, VQ25). If that's the rule, say "at character creation", as the Draugur's features do.
+- ☐ **0413 Vampire › the heading still says "(under construction)".** The sheet carries all of it but the Majors (Decisions 200–202). Drop the tag when you agree.
 
 ## 0420–0423: Skills
 

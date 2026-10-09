@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.18";
+  const SCHEMA_VERSION = "0.19";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -53,6 +53,10 @@ const Engine = (() => {
       archetypeChoices:{ rolls:{}, focusAllocation:{}, statBonusAllocation:{},
                          specialization:[], focusedSkillPicks:[],
                          naturalAdvantages:[], disciplines:{},
+                         // Schema 0.19 (Decision 200): the ranks placed with
+                         // Base Powers, per archetype power id, and what a
+                         // specialization's `choices` asked for, per choice id.
+                         basePowers:{}, optionPicks:{},
                          // Schema 0.16 (Decision 153): what a write-in archetype
                          // is, in the player's words. Read only when the
                          // archetype declares `writeIn`; its powers are `powers`.
@@ -352,7 +356,9 @@ const Engine = (() => {
   // what pressing an option that isn't would cost.
   function toggleView(ch, p){
     const cur = toggleCurrent(ch, p);
-    return toggleOptions(p).map(o=>({ name:o.name, on: !!cur && cur.name===o.name, does: hasForm(o),
+    // `effectText` is what being in an option means when nothing computes it
+    // (a Draugur's broken Code, Decision 200): Main shows it while it's on.
+    return toggleOptions(p).map(o=>({ name:o.name, on: !!cur && cur.name===o.name, does: hasForm(o), text: txt(o.effectText),
       cost: cur && cur.name===o.name ? null : toggleCost(ch, p, o) }));
   }
 
@@ -717,14 +723,26 @@ const Engine = (() => {
              down: h.total>0 && damage >= capacity };
   }
 
+  // The trait that changes which Health Levels count toward Pain, or null.
+  function painImmunity(ch){
+    const a = ch && ch.identity && archetype(ch);
+    if (!a || writeInSpec(ch)) return null;
+    return (Array.isArray(a.baselineTraits) ? a.baselineTraits : [])
+      .find(t=>isPlainObj(t) && isPlainObj(t.pain) && t.pain.healthLevelsFrom==="withering") || null;
+  }
   // Pain Level = the band for Health Levels lost, plus any Condition Pain
   // (Agonized), clamped to the table — "never below 0 or above 3" (0540).
   function painState(ch){
     const hl = D().resources.healthLevels;
     const hs = hlState(ch);
     const hlLost = hs.lost;
+    // Decision 202: a trait whose `pain.healthLevelsFrom` is "withering"
+    // (Pain Immunity) puts only the Health Levels Withering took on the
+    // table: sunlight is the one pain a Vampire feels. Conditions add as ever.
+    const immune = painImmunity(ch);
+    const banded = immune ? (hs.hpPer>0 ? Math.min(hs.emptied, Math.floor(Math.min(hs.damage, nonNegInt(((ch||{}).trackers||{}).witheringDamage)) / hs.hpPer)) : 0) : hlLost;
     let band = hl.painLevels[0];
-    for (const p of hl.painLevels) if (hlLost >= p.hlLostThreshold) band = p;
+    for (const p of hl.painLevels) if (banded >= p.hlLostThreshold) band = p;
     const cs = conditionState(ch), as = aberrationState(ch);
     const fromConditions = cs.painLevels, fromAberrations = as.painLevels;
     // Who's adding Pain, by name, so the sheet can say "Agonized, Phantom Pain".
@@ -735,7 +753,7 @@ const Engine = (() => {
     const lvl = hl.painLevels.find(p=>p.level===target) || band;
     const pen = hl.painPenaltiesPerLevel;
     return { hlLost, level: lvl.level, label: lvl.label, description: lvl.description,
-             fromHealth: band.level, fromConditions, fromAberrations, painSources,
+             fromHealth: band.level, immunity: immune ? { name:immune.name, banded } : null, fromConditions, fromAberrations, painSources,
              // `|| 0` normalises the -0 that `0 * -1` produces at Pain Level 0.
              skillPenalty:   lvl.level * pen.skillChecks || 0,
              essencePenalty: lvl.level * pen.essenceCheckDice || 0,
@@ -846,6 +864,9 @@ const Engine = (() => {
       ((def && def.grants) || []).forEach(g=>add(g, def, taken[id]));
     });
     specializationChosen(ch).forEach(o=>(o.grants||[]).forEach(g=>add(g, o, 1)));
+    // A held archetype power's grants count at its rank (Iron Hide's rank + 1,
+    // Decision 200); every one so far is `while` it's running.
+    archetypePowers(ch).forEach(p=>(Array.isArray(p.grants) ? p.grants : []).forEach(g=>add(g, p, p.rank)));
     const counted = [...always, ...conditional.filter(c=>c.active)];
     const resAgainst = [...new Set([...(R.resAgainst||[]), ...counted.flatMap(c=>c.resAgainst)])];
     return { total: counted.reduce((n,c)=>n + c.amount, 0), base: always.reduce((n,c)=>n + c.amount, 0),
@@ -1784,6 +1805,7 @@ const Engine = (() => {
     if (targetType==="power"){
       const p = powerRanks(ch).find(x=>x.id===targetId);
       if (!p) return {ok:false, why:"That power isn't on this sheet."};
+      if (p.ranked===false) return {ok:false, why:`${p.name} has no ranks.`};
       if (p.rank >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
       const price = D().ip.powerIncreaseCost;
       return {ok:true, cost: p.rank===0 ? price.newPower : price.perRank * p.rank, from:p.rank, to:p.rank+1, name:p.name};
@@ -2290,10 +2312,11 @@ const Engine = (() => {
   // ── Archetype sheet panels (declared in data; rendered generically) ──
   // A panel with `when` shows only while its write-in mechanic is ticked
   // (Decision 153): "Uses magic" turns on TOL Spent, and nothing names an id.
+  // A panel with `origin` is that specialization's alone (a Draugur's Code).
   const archPanels = ch => {
     const a = archetype(ch);
-    const on = mechanicsOn(ch);
-    return ((a && a.coreMechanic && a.coreMechanic.panels) || []).filter(p=>!p.when || on.includes(p.when));
+    const on = mechanicsOn(ch), origins = specializationIds(ch);
+    return ((a && a.coreMechanic && a.coreMechanic.panels) || []).filter(p=>p && (!p.when || on.includes(p.when)) && (!p.origin || origins.includes(p.origin)));
   };
   function panelMax(ch, p){
     if (p.max==="TOL") return derived(ch).TOL;
@@ -2359,17 +2382,214 @@ const Engine = (() => {
     return isPlainObj(m) && Object.prototype.hasOwnProperty.call(m, id) ? nonNegInt(m[id]) : 0;
   }
   // The archetype's own powers the character holds (Decision 196): every
-  // Innate one (no `origin`) and every one of the chosen specialization's,
-  // at rank 1 + what IP bought. A Werewolf "carries the whole kit"; what its
-  // Base Powers add is F38, so nothing is bought at creation. `maxRank` is
-  // the book's printed maximum, a creation cap: play stops at IPE's 10 (VQ14).
+  // one of its pool (powerPool, below), at rank 1 + what IP bought. A
+  // Werewolf "carries the whole kit"; what its Base Powers add is F38, so
+  // nothing is bought at creation. An archetype with `powersBought` (a
+  // Vampire, Decision 200) holds only the powers its Base Powers placed a
+  // rank in, at those ranks + IP. A power with `ranked: false` is held or
+  // not, at rank 1, and IP never raises it. `maxRank` is the book's printed
+  // maximum, a creation cap: play stops at IPE's 10 (VQ14).
   function archetypePowers(ch){
     const a = archetype(ch);
     if (!a || writeInSpec(ch)) return [];
-    const origins = specializationIds(ch);
-    return (Array.isArray(a.powers) ? a.powers : []).filter(p=>isPlainObj(p) && p.id && (!p.origin || origins.includes(p.origin)))
-      .map(p=>{ const ipe = powerIpeOf(ch, p.id);
-        return Object.assign({}, p, { rank:1+ipe, ipe, maxRank: Number(p.maxRank) || null }); });
+    const bought = isPlainObj(a.powersBought), placed = basePowersOf(ch);
+    return powerPool(ch).filter(p=>!bought || (placed[p.id] > 0))
+      .map(p=>{ const ranked = p.ranked!==false, ipe = ranked ? powerIpeOf(ch, p.id) : 0;
+        const start = bought ? (ranked ? placed[p.id] : 1) : 1;
+        return Object.assign({}, p, { rank:start+ipe, start, ipe, ranked, maxRank: Number(p.maxRank) || null }); });
+  }
+  // The archetype's powers this character could hold: every Innate one (no
+  // `origin`), every one of its chosen specialization's, less any a `power`
+  // choice of that specialization offers and the character didn't pick (an
+  // Upyr's Built to Last, F41's stub).
+  function powerPool(ch){
+    const a = archetype(ch);
+    if (!a || writeInSpec(ch)) return [];
+    const origins = specializationIds(ch), barred = new Set();
+    for (const c of optionChoiceDefs(ch)) if (c.type==="power"){
+      const pick = optionPickOf(ch, c.id);
+      for (const id of Array.isArray(c.options) ? c.options : []) if (id!==pick) barred.add(id);
+    }
+    return (Array.isArray(a.powers) ? a.powers : [])
+      .filter(p=>isPlainObj(p) && typeof p.id==="string" && p.id && (!p.origin || origins.includes(p.origin)) && !barred.has(p.id));
+  }
+  // The ranks Base Powers placed, normalized: an undo can put anything a
+  // file's audit holds back into the map.
+  const basePowersOf = ch => {
+    const m = (((ch||{}).archetypeChoices)||{}).basePowers, out = {};
+    if (isPlainObj(m)) for (const k of Object.keys(m)){ const n = nonNegInt(m[k]); if (n > 0) out[k] = n; }
+    return out;
+  };
+  // F39's stub (Decision 200): each Base Power is one rank in a power of the
+  // pool, none above Max Starting Rank or the book's own maximum; a power
+  // with no ranks takes one to hold. Null for an archetype that doesn't buy.
+  function basePowerState(ch){
+    const a = archetype(ch), spec = a && !writeInSpec(ch) && isPlainObj(a.powersBought) ? a.powersBought : null;
+    if (!spec) return null;
+    const count = spec.countBy ? dataPath(ch, spec.countBy) : null, cap = spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null;
+    const placed = basePowersOf(ch), pool = powerPool(ch), ids = new Set(pool.map(p=>p.id));
+    const rows = pool.map(p=>{
+      const ranked = p.ranked!==false, printed = Number(p.maxRank) || null;
+      const most = ranked ? Math.min(cap==null ? Infinity : cap, printed || Infinity) : 1;
+      return { id:p.id, name:txt(p.name), origin:p.origin || null, ranked, placed: placed[p.id] || 0, cap: most===Infinity ? null : most };
+    });
+    const spent = Object.values(placed).reduce((s, n)=>s + n, 0);
+    // Ranks placed in a power the character can't hold (another Bloodline's,
+    // or the Built to Last power not chosen): validate names them.
+    const stray = Object.keys(placed).filter(id=>!ids.has(id)).map(id=>{
+      const p = (a.powers||[]).find(x=>x && x.id===id);
+      return { id, name: p ? txt(p.name) : id, placed: placed[id] };
+    });
+    return { count, cap, spent, left: count==null ? null : count - spent, rows, stray };
+  }
+  // A Base Power placed or taken back, in the wizard. { ok } or { ok, why }.
+  function placeBasePower(ch, id, delta){
+    const st = basePowerState(ch);
+    if (!st) return { ok:false, why:"This archetype doesn't spend Base Powers." };
+    const row = st.rows.find(r=>r.id===id);
+    const ac = ch.archetypeChoices;
+    if (!isPlainObj(ac.basePowers)) ac.basePowers = {};
+    const cur = nonNegInt(ac.basePowers[id]), next = cur + (delta < 0 ? -1 : 1);
+    if (next < cur){ if (next > 0) ac.basePowers[id] = next; else delete ac.basePowers[id]; return { ok:true }; }
+    if (!row) return { ok:false, why:"That power isn't one you can take." };
+    if (row.cap!=null && next > row.cap) return { ok:false, why: row.ranked ? `${row.name} can start at rank ${row.cap} at most.` : `${row.name} has no ranks.` };
+    if (st.left!=null && st.left < 1) return { ok:false, why:"No Base Powers left." };
+    ac.basePowers[id] = next;
+    return { ok:true };
+  }
+
+  // ── A specialization's creation choices (Decision 200) ──────────────
+  // `choices` on a chosen specialization option ask for something at
+  // creation: `power` (one of `options`, power ids, Built to Last), `weapon`
+  // (one of `options`, weapon rows, the Ancient Weapon) or `text` (`fields`
+  // the player writes, the Code). Stored in archetypeChoices.optionPicks.
+  function optionChoiceDefs(ch){
+    return specializationChosen(ch).flatMap(o=>(Array.isArray(o.choices) ? o.choices : [])
+      .filter(c=>isPlainObj(c) && typeof c.id==="string").map(c=>Object.assign({}, c, { origin:o.id })));
+  }
+  const optionPickOf = (ch, id) => {
+    const m = (((ch||{}).archetypeChoices)||{}).optionPicks;
+    return isPlainObj(m) && Object.prototype.hasOwnProperty.call(m, id) ? m[id] : undefined;
+  };
+  // Each choice with what's chosen: `value` is an option's id (or null), or
+  // for text, each field's words. `option` is the chosen option's row.
+  function optionChoices(ch){
+    return optionChoiceDefs(ch).map(c=>{
+      const v = optionPickOf(ch, c.id), opts = Array.isArray(c.options) ? c.options : [];
+      if (c.type==="text"){
+        const w = isPlainObj(v) ? v : {};
+        const fields = (Array.isArray(c.fields) ? c.fields : []).filter(isPlainObj).map(f=>({ id:txt(f.id), name:txt(f.name), prompt:txt(f.prompt), value:txt(w[f.id]) }));
+        return Object.assign({}, c, { fields, done: fields.every(f=>f.value.trim()) });
+      }
+      const ids = opts.map(o=>typeof o==="string" ? o : (isPlainObj(o) ? o.id : null));
+      const value = typeof v==="string" && ids.includes(v) ? v : null;
+      const option = value==null ? null : (c.type==="power" ? ((archetype(ch)||{}).powers||[]).find(p=>p && p.id===value) || { id:value, name:value }
+                                                              : opts.find(o=>isPlainObj(o) && o.id===value));
+      return Object.assign({}, c, { value, option: option || null, done: value!=null });
+    });
+  }
+  // Setting one. A text choice takes a field id and its words; any other an
+  // option's id. Ranks placed in a power the pick now bars are taken back.
+  function setOptionPick(ch, choiceId, value, fieldId){
+    const c = optionChoiceDefs(ch).find(x=>x.id===choiceId);
+    if (!c) return { ok:false, why:"That isn't a choice your character has." };
+    const ac = ch.archetypeChoices;
+    if (!isPlainObj(ac.optionPicks)) ac.optionPicks = {};
+    if (c.type==="text"){
+      if (!(Array.isArray(c.fields) ? c.fields : []).some(f=>f && f.id===fieldId)) return { ok:false, why:"That isn't one of its fields." };
+      const w = isPlainObj(ac.optionPicks[c.id]) ? ac.optionPicks[c.id] : (ac.optionPicks[c.id] = {});
+      w[fieldId] = txt(value);
+      return { ok:true };
+    }
+    const ids = (Array.isArray(c.options) ? c.options : []).map(o=>typeof o==="string" ? o : (isPlainObj(o) ? o.id : null));
+    if (!ids.includes(value)) return { ok:false, why:"That isn't one of its options." };
+    ac.optionPicks[c.id] = value;
+    if (c.type==="power" && isPlainObj(ac.basePowers)) for (const id of ids) if (id!==value) delete ac.basePowers[id];
+    return { ok:true };
+  }
+
+  // ── Weapons an archetype gives (Decision 200) ───────────────────────
+  // `naturalWeapons` on the archetype: one a trait gives (Fangs of the
+  // Fallen's bite), one a held power gives (`power`, plus `perRank` damage
+  // for each rank past the first), and one a creation choice names
+  // (`choice`: its option row is the weapon). `offWhen` names a toggle
+  // option that silences it. Computed like the form's.
+  function archetypeWeapons(ch){
+    const a = archetype(ch);
+    if (!a || writeInSpec(ch) || !Array.isArray(a.naturalWeapons)) return [];
+    const held = archetypePowers(ch), picks = optionChoices(ch);
+    const out = [];
+    for (const w of a.naturalWeapons.filter(isPlainObj)){
+      let src = w, power = null;
+      if (w.power){ power = held.find(p=>p.id===w.power); if (!power) continue; }
+      if (w.choice){ const c = picks.find(x=>x.id===w.choice); if (!c || !isPlainObj(c.option)) continue; src = c.option; }
+      let dmg = src.damage;
+      const m = /^\s*([A-Za-z]+)\s*\+\s*(\d+)\s*$/.exec(String(dmg==null ? "" : dmg));
+      if (power && m && Number(w.perRank)) dmg = `${m[1]}+${Number(m[2]) + Number(w.perRank) * Math.max(0, power.rank - 1)}`;
+      const d = weaponDamage(ch, dmg), skill = skillById(src.skill) ? skillLine(ch, src.skill) : null;
+      const off = isPlainObj(w.offWhen) && (()=>{ const p = archPanels(ch).find(x=>x.id===w.offWhen.panel && x.type==="toggle");
+        const cur = p && toggleCurrent(ch, p); return !!cur && cur.name===w.offWhen.option; })();
+      const extra = [src.reach && `Reach ${src.reach}`, src.parry && `Parry ${src.parry}`].filter(Boolean).map(txt);
+      out.push({ name:txt(src.name), from:txt(w.from), skill: skill ? skill.def.name : "", attack: skill && !off ? skill.checkBonus : null,
+                 damage: off ? null : d.value, damageFormula: off ? null : d.formula, rank: power ? power.rank : null,
+                 tags:(Array.isArray(src.tags) ? src.tags : []).filter(t=>typeof t==="string"), extra,
+                 off: !!off, offText: off ? txt(w.offWhen.text) : "" });
+    }
+    return out;
+  }
+
+  // ── Feeding (Decision 201) ──────────────────────────────────────────
+  // A `feed` panel refills the resource it names (`trackers.<resource>.spent`
+  // counts down from the SFR max): each kind's `perHL` for every HL drained,
+  // never past the max, and never past `upToShare` of it (stored blood) once
+  // there. `unfed` takes `share` of RoU. At `low.at` (RoU) or under, `low` speaks.
+  const feedPanel = (ch, panelId) => archPanels(ch).find(x=>x.id===panelId && x.type==="feed") || null;
+  function feedView(ch, p){
+    const s = sfr(ch), max = s && s.value!=null ? s.value : null, rou = s && typeof s.rou==="number" ? s.rou : null;
+    const store = (ch.trackers||{})[p.resource], spent = nonNegInt(isPlainObj(store) ? store.spent : 0);
+    const current = max==null ? null : Math.max(0, max - spent);
+    const kinds = (Array.isArray(p.kinds) ? p.kinds : []).filter(k=>isPlainObj(k) && typeof k.id==="string").map(k=>({
+      id:k.id, name:txt(k.name), text:txt(k.text), perHL: nonNegInt(k.perHL),
+      upTo: max!=null && Number(k.upToShare) > 0 ? Math.floor(max * Number(k.upToShare)) : max }));
+    const u = isPlainObj(p.unfed) ? p.unfed : null;
+    const unfed = u && rou!=null ? { label:txt(u.label), amount: Math.floor(rou * (Number(u.share)||0)) } : null;
+    const L = isPlainObj(p.low) ? p.low : null;
+    const low = !!L && L.at==="rou" && current!=null && rou!=null && current <= rou;
+    return { current, max, rou, kinds, unfed, low, lowName: low ? txt(L.name) : "", lowText: low ? txt(L.text) : "", unit:txt(p.unit) };
+  }
+  // What feeding on `hl` HL of a kind gives back, before it's done.
+  function feedGain(ch, panelId, kindId, hl){
+    const p = feedPanel(ch, panelId);
+    if (!p) return { ok:false, why:"Feeding isn't on this sheet." };
+    const v = feedView(ch, p), k = v.kinds.find(x=>x.id===kindId);
+    if (!k) return { ok:false, why:"Choose what you're feeding on." };
+    const n = Number(hl);
+    if (!Number.isInteger(n) || n < 1) return { ok:false, why:"Enter the HL drained, 1 or more." };
+    if (v.max==null) return { ok:false, why:"Your SFR has no maximum yet." };
+    const gain = Math.max(0, Math.min(k.perHL * n, k.upTo - v.current));
+    return { ok:true, gain, kind:k, hl:n, capped: gain < k.perHL * n, upTo:k.upTo };
+  }
+  function feed(ch, panelId, kindId, hl){
+    const g = feedGain(ch, panelId, kindId, hl);
+    if (!g.ok) return g;
+    const p = feedPanel(ch, panelId), t = ch.trackers;
+    if (!isPlainObj(t[p.resource])) t[p.resource] = { spent:0 };
+    // Spend past the max (a max that fell since) counts as empty, not deeper.
+    const max = feedView(ch, p).max;
+    t[p.resource].spent = Math.max(0, Math.min(nonNegInt(t[p.resource].spent), max) - g.gain);
+    return g;
+  }
+  // A full day without feeding. The pool stops at empty.
+  function goUnfed(ch, panelId){
+    const p = feedPanel(ch, panelId);
+    if (!p) return { ok:false, why:"Feeding isn't on this sheet." };
+    const v = feedView(ch, p);
+    if (!v.unfed || v.max==null) return { ok:false, why:"Your SFR has no maximum yet." };
+    const t = ch.trackers;
+    if (!isPlainObj(t[p.resource])) t[p.resource] = { spent:0 };
+    const lost = Math.min(v.unfed.amount, v.current);
+    t[p.resource].spent = nonNegInt(t[p.resource].spent) + lost;
+    return { ok:true, lost };
   }
   // A Werewolf's Base Powers and Max Starting Rank, read off the scaling row
   // for the Character tab (F38's stub: shown, spending nothing). Null when the
@@ -2386,7 +2606,7 @@ const Engine = (() => {
   // creation's powers are free).
   function powerRanks(ch){
     const ds = disciplineRanks(ch).map(d=>({ id:d.id, name:d.name, kind:"discipline", rank:d.rank, ipe:d.ipe }));
-    const arch = archetypePowers(ch).map(p=>({ id:p.id, name:p.name, kind:"archetype", rank:p.rank, ipe:p.ipe, maxRank:p.maxRank }));
+    const arch = archetypePowers(ch).map(p=>({ id:p.id, name:p.name, kind:"archetype", rank:p.rank, ipe:p.ipe, maxRank:p.maxRank, ranked:p.ranked }));
     const own = ownPowers(ch).filter(p=>p.id).map(p=>{ const ipe = powerIpeOf(ch, p.id);
       return { id:p.id, name:p.name || "Unnamed power", kind:"written", rank:1+ipe, ipe }; });
     return [...ds, ...arch, ...own];
@@ -2916,6 +3136,20 @@ const Engine = (() => {
       classificationText:txt(w.classificationText),
       mechanics:[...new Set((Array.isArray(w.mechanics) ? w.mechanics : []).filter(x=>typeof x==="string"))],
       traits:textRows(w.traits), vulnerabilities:textRows(w.vulnerabilities) };
+    // Schema 0.19 (Decision 200): Base Powers placed, a whole positive count
+    // per power id, and a specialization's creation picks: an option id, or
+    // a text choice's fields as text. Anything else in a file is dropped;
+    // whether a pick fits the archetype is validate()'s, read when used.
+    const bp = isPlainObj(ac.basePowers) ? ac.basePowers : {};
+    ac.basePowers = Object.fromEntries(Object.keys(bp).map(k=>[k, Math.min(D().ip.rankCap, nonNegInt(_num(bp[k], 0)))]).filter(([, v])=>v > 0));
+    const op = isPlainObj(ac.optionPicks) ? ac.optionPicks : {};
+    ac.optionPicks = {};
+    for (const k of Object.keys(op)){
+      if (typeof op[k]==="string") ac.optionPicks[k] = op[k];
+      else if (isPlainObj(op[k])) ac.optionPicks[k] = Object.fromEntries(Object.keys(op[k]).filter(f=>typeof op[k][f]==="string").map(f=>[f, op[k][f]]));
+    }
+    // The Vampire's Blood Pool panel (a max nobody computed) is its SFR now.
+    if (_schemaBefore(c.meta, "0.19")) delete t.panel["blood-pool"];
     // Schema 0.14 (W41): TAGless only when a file says so, as `true`. Every
     // character from before is TAG'd, which _fillDefaults already seeded.
     c.identity.tagless = c.identity.tagless===true;
@@ -3178,6 +3412,10 @@ const Engine = (() => {
       return cap!=null && (ch.skills[s.id] ? ch.skills[s.id].rank : 0) < cap;
     });
     if (pool==="focusBonus") return true;
+    if (pool==="basePowers"){
+      const st = basePowerState(ch);
+      return !!st && st.left > 0 && st.rows.some(r=>r.cap==null || r.placed < r.cap);
+    }
     if (pool==="statBonus") return D().stats.some(s => statValue(ch, s.id) < max);
     if (pool==="cp"){
       const bal = cp(ch), luck = D().resources.luck;
@@ -3289,6 +3527,26 @@ const Engine = (() => {
         for (const id of fp.invalid) E(`${(skillById(id)||{name:id}).name} can't be one of your Focused Skill picks. Unchoose it.`);
         if (fp.have !== fp.need)
           E(`Choose ${fp.need} ${cat} Skill${fp.need>1?"s":""} for your Focused Skills (${fp.have}/${fp.need}).`);
+      }
+      // Base Powers (F39's stub, Decision 200), once a Bloodline is chosen:
+      // short warns (the lock wants them spent), over or out of reach blocks.
+      const bps = basePowerState(ch);
+      if (bps && specializationIds(ch).length){
+        if (bps.count==null) E("Choose a Campaign Power Level before placing Base Powers.");
+        else if (bps.left < 0) E(`Base Powers overspent by ${-bps.left}.`);
+        else if (bps.left > 0) W(`${bps.left} Base Power${bps.left>1?"s":""} unplaced.`, "basePowers");
+        for (const r of bps.rows) if (r.cap!=null && r.placed > r.cap)
+          E(r.ranked ? `${r.name} is rank ${r.placed}. It can start at ${r.cap} at most.` : `${r.name} has no ranks. Place one Base Power in it.`);
+        for (const r of bps.stray) E(`${r.name} isn't one of your powers. Take back its Base Power${r.placed>1?"s":""}.`);
+      }
+      // A specialization's creation choices (Decision 200). The Code's
+      // tenets are written with the GM: warned, never blocked (Decision 78).
+      for (const c of optionChoices(ch)){
+        if (c.type==="text"){
+          const left = c.fields.filter(f=>!f.value.trim()).map(f=>f.name.replace(/^The /, "the "));
+          if (left.length) W(`${c.name}: write ${left.length>1 ? left.slice(0, -1).join(", ")+" and "+left[left.length-1] : left[0]} with your GM.`);
+        }
+        else if (!c.done) E(`Choose ${c.name}.`);
       }
       const row2 = scalingRow(ch);
       if (specializationIds(ch).length && naturalAdvantagePool(a) && row2 && row2.naturalAdvantageRanks!=null){
@@ -4909,6 +5167,8 @@ const Engine = (() => {
     // Stats, skills and derived values
     powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
+    powerPool, basePowerState, placeBasePower, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
+    feedView, feedGain, feed, goUnfed,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
     advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, validate,

@@ -1317,3 +1317,100 @@ test('CRB 0414: "Tireless: +2 RoU." and "Deep Reserves: +5 maximum SFR."', () =>
   assert.equal(Engine.sfr(ch).rou - before.rou, 2);
   assert.equal(Engine.sfr(ch).value - before.value, 5);
 });
+
+// ── The Vampire (0413), as data (crb-v4-sync P4, Decisions 200–202) ────
+
+const VA = () => D.archetypes.find(a => a.id === "vampire");
+const pipeRows = (md, first) => md.split("\n").filter(l => l.startsWith(`| ${first}`)).map(l => l.split("|").slice(1, -1).map(c => flat(c)));
+
+test("R16: the Vampire's Campaign Power Scaling matches 0413, row for row", () => {
+  const md = crb("0413_Vampire.md");
+  const rows = crbTableAfter(md, "The following table represents the Vampire Campaign Power Scaling");
+  const byPl = VA().campaignPowerScaling.byPowerLevel, seen = [];
+  for (const [name, bonus, sfr, rou, base, maxStart] of rows) {
+    const pl = D.powerLevels.find(p => p.name === name);
+    assert.ok(pl, `0413 names a power level the data doesn't: ${name}`);
+    const r = byPl[pl.id];
+    assert.equal(r.focusStatBonusRoll, bonus, `${name}: Stat Bonus`);
+    assert.equal(`WILL x ${r.startingSFR.times} + ${r.startingSFR.plus}`, sfr, `${name}: Starting SFR`);
+    assert.equal(JSON.stringify([r.rou, r.basePowers, r.maxStartingRank]), JSON.stringify([rou, base, maxStart].map(Number)), `${name}: RoU, Base Powers, Max Starting Rank`);
+    seen.push(pl.id);
+  }
+  assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join());
+  assert.match(md, /The Focus Stats for the Vampire are BOD, REF, and MOB/);
+  assert.equal(VA().campaignPowerScaling.focusStats.join(" "), "BOD REF MOB");
+  // F39's stub reads the book's sentence: Base Powers, Max Starting Rank.
+  assert.match(md, /Spend your Base Powers on Innate and Bloodline powers; no power starts above your Max Starting Rank\./);
+  assert.equal(JSON.stringify(VA().powersBought), JSON.stringify({ countBy: "campaignPowerScaling.basePowers", maxRankBy: "campaignPowerScaling.maxStartingRank" }));
+});
+
+test("R16: every Innate and Bloodline power is the book's, by name, cost, effect, Per Rank and printed maximum", () => {
+  const md = crb("0413_Vampire.md"), va = VA();
+  const tables = { "": "### Innate Powers", strigoi: "#### Strigoi Powers", upyr: "#### Upyr Powers", draugur: "#### Draugur Powers" };
+  let count = 0;
+  for (const [origin, heading] of Object.entries(tables)) {
+    const rows = crbTableAfter(md, heading);
+    assert.ok(rows.length >= 4, `${heading} read ${rows.length} rows`);
+    const mine = va.powers.filter(p => (p.origin || "") === origin);
+    assert.equal(mine.map(p => flat(p.name)).join(" | "), rows.map(r => r[0]).join(" | "), `${heading}: the data's powers aren't the book's, in its order`);
+    for (const [name, cost, effect, perRank] of rows) {
+      const p = mine.find(x => flat(x.name) === name);
+      assert.equal(JSON.stringify([flat(p.cost), flat(p.effect), flat(p.perRank)]), JSON.stringify([cost, effect, perRank]), `${name} isn't as 0413 prints it`);
+      // "(max 5)" is the printed maximum; "None" is a power with no ranks.
+      const max = /\(max (\d+)\)/.exec(perRank);
+      if (perRank === "None") assert.equal(JSON.stringify([p.ranked, p.maxRank]), JSON.stringify([false, undefined]), `${name} has no ranks`);
+      else assert.equal(p.maxRank, Number(max[1]), `${name}'s printed maximum`);
+      count++;
+    }
+  }
+  assert.equal(count, va.powers.length, "a power in the data isn't in the book");
+  const others = D.archetypes.filter(a => a.id !== "vampire").flatMap(a => [...(a.powers || []).map(p => p.id),
+    ...(((a.coreMechanic || {}).disciplines || {}).list || []).map(d => d.id)]);
+  assert.equal(va.powers.map(p => p.id).filter(id => others.includes(id)).join(), "", "a power id collides with another archetype's (progression.powerIpe keys them all)");
+  assert.equal(new Set(va.powers.map(p => p.id)).size, va.powers.length, "two powers share an id");
+  // Iron Hide: "Natural Armor equal to rank + 1"; Icebound Resilience: "+1 Natural Armor".
+  const na = id => va.powers.find(p => p.id === id).grants[0];
+  assert.equal(JSON.stringify([na("iron-hide").perRank, na("iron-hide").plus, na("icebound-resilience").plus]), "[1,1,1]");
+});
+
+test("R16: each Bloodline's features are the book's, and the Draugur's Ancient Weapon and Code tables too", () => {
+  const md = crb("0413_Vampire.md"), opts = VA().specialization.options;
+  assert.equal(opts.map(o => o.name).join(" "), "Strigoi Upyr Draugur");
+  for (const o of opts) {
+    const sect = md.slice(md.indexOf(`### ${o.name} —`));
+    for (const f of o.features) {
+      const m = new RegExp(`\\*\\*${f.name.replace(/'/g, "’")}:\\*\\* ([^\\n]+)`).exec(sect);
+      assert.ok(m, `0413's ${o.name} has no ${f.name}`);
+      // The Code's "Some examples are below." is its choice's text, over the table.
+      assert.equal(flat(f.text), flat(m[1]).replace(/ Some examples are below$/, ""), `${o.name}'s ${f.name}`);
+    }
+  }
+  const draugur = opts.find(o => o.id === "draugur"), choice = id => draugur.choices.find(c => c.id === id);
+  const weapons = ["Blade (", "Blunt (", "Spear ("].flatMap(w => pipeRows(md, w));
+  assert.equal(JSON.stringify(choice("ancient-weapon").options.map(w => [`${w.name} (${w.examples})`, "Melee", w.damage, w.style, w.reach, w.parry, w.damageType, w.tags.join(", ")])),
+    JSON.stringify(weapons), "the Ancient Weapon table isn't the book's");
+  assert.ok(choice("ancient-weapon").options.every(w => w.skill === "melee"));
+  const codes = pipeRows(md, "The ");
+  assert.equal(JSON.stringify(choice("code").examples.map(r => [r.name, ...r.values])), JSON.stringify(codes), "the Code's examples aren't the book's");
+  assert.equal(choice("code").fields.map(f => f.name).join(", "), "The Hunt, The Bond, The Word");
+  // Built to Last names its two powers, both Upyr.
+  const btl = opts.find(o => o.id === "upyr").choices.find(c => c.id === "built-to-last");
+  assert.equal(btl.options.map(id => VA().powers.find(p => p.id === id && p.origin === "upyr").name).join(" or "), "Iron Hide or Icebound Resilience");
+});
+
+test("R16: the Thirst is the book's: 3 SFR a fresh HL, 2 a stored one up to half, half RoU a day unfed, Hunger at RoU", () => {
+  const md = crb("0413_Vampire.md");
+  const blood = pipeRows(md, "Fresh").concat(pipeRows(md, "Stored"));
+  assert.equal(JSON.stringify(blood), JSON.stringify([["Fresh (a living mortal)", "3"], ["Stored (blood bags, the recently dead, etc)", "2, up to half your maximum SFR"]]));
+  assert.match(md, /You lose SFR equal to half your RoU for each full day that passes without feeding\./);
+  assert.match(md, /When your SFR falls to your RoU or lower, the monster starts negotiating\. Make a WILL Essence check \(TN 7, TH 1\) or fall into a Blood Frenzy\./);
+  const p = VA().coreMechanic.panels.find(x => x.type === "feed");
+  assert.equal(JSON.stringify(p.kinds.map(k => [k.id, k.perHL, k.upToShare || null])), JSON.stringify([["fresh", 3, null], ["stored", 2, 0.5]]));
+  assert.equal(p.unfed.share, 0.5);
+  assert.equal(p.low.at, "rou");
+  assert.match(p.low.text, /WILL Essence check \(TN 7, TH 1\) or fall into a Blood Frenzy/);
+  // Fangs of the Fallen: "a bite attack uses Melee and deals BOD+3 damage"; Bestial Blessings' claws BOD+3, AP.
+  assert.match(md, /a bite attack uses Melee and deals BOD\+3 damage/);
+  assert.match(md, /Retractable claws: BOD\+3 melee damage, AP/);
+  assert.equal(VA().naturalWeapons.filter(w => !w.choice).map(w => `${w.name} ${w.skill} ${w.damage} ${(w.tags || []).join("")}`.trim()).join(", "), "Bite melee BOD+3, Claws melee BOD+3 AP");
+});

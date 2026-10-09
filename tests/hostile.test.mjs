@@ -28,7 +28,9 @@ const P = tag => `"'><i data-pwn="${tag}"></i>`;
 const WRITE_IN = D.archetypes.find(a => a.writeIn).id;
 // crb-v4-sync P3: the Werewolf's Origin, Form and Call of the Wild are read off
 // the file too, so it runs as well, with a junk Origin beside a real one.
-const ARCHETYPES = ["arcanist", "werewolf", WRITE_IN];
+// crb-v4-sync P4: the Vampire's Base Powers, Bloodline choices (a Draugur's
+// weapon and Code) and the Code's switch are read off the file too.
+const ARCHETYPES = ["arcanist", "werewolf", "vampire", WRITE_IN];
 
 function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   const ch = Engine.newCharacter();
@@ -43,7 +45,10 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   ch.stats.BOD.base = P("stat.base"); ch.stats.REF.ipe = P("stat.ipe");
   ch.archetypeChoices = { rolls: { focusStatBonus: P("roll.focus"), startingSpells: P("roll.spells"), statBonus: P("roll.sb") },
     focusAllocation: { INT: P("focus") }, statBonusAllocation: archetype === "werewolf" ? { BOD: P("sb"), [P("sb.key")]: 1 } : {},
-    specialization: [P("spec.id"), archetype === "werewolf" ? "forge-fang" : "aethereal-link"],
+    specialization: [P("spec.id"), archetype === "werewolf" ? "forge-fang" : archetype === "vampire" ? "draugur" : "aethereal-link"],
+    basePowers: { [P("bp.key")]: 1, "battleborn-instinct": P("bp"), "bestial-blessings": "2", "deathless-resilience": 1 },
+    optionPicks: { "ancient-weapon": "blade", [P("op.key")]: P("op.val"),
+      code: { hunt: P("code.hunt"), [P("code.key")]: P("code.val"), word: P("code.word"), bond: 5 } },
     focusedSkillPicks: [P("fskill")], naturalAdvantages: [{ id: P("natadv.id"), rank: P("natadv.rank") }],
     disciplines: { enchantment: P("disc") },
     writeIn: { name: P("wi.name"), description: P("wi.desc"), classification: P("wi.cls"), classificationText: P("wi.clstext"),
@@ -78,7 +83,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
     { id: D.armor[0].id, integrityLoss: P("a.loss2"), notes: P("a.notes2"), worn: false, scrapped: false, upgrades: [P("a.upg2")] }];
   ch.gear = [{ custom: true, name: P("g.name"), type: P("g.type"), notes: P("g.notes") },
     { id: P("g.id"), qty: P("g.qty") }, { id: D.equipment[0].id, qty: P("g.qty2"), notes: P("g.notes2") }];
-  ch.panelData = { form: archetype === "werewolf" ? "Werewolf" : P("form"), grimoire: [
+  ch.panelData = { form: archetype === "werewolf" ? "Werewolf" : P("form"), code: archetype === "vampire" ? "Broken" : P("code"), grimoire: [
     { custom: true, "Spell Name": P("sp.name"), Discipline: P("sp.disc"), TN: P("sp.tn"), TH: P("sp.th"),
       Effect: P("sp.effect"), Overflow: P("sp.over"), Notes: P("sp.notes") },
     { spellId: P("sp.id"), stage: P("sp.stage"), notes: P("sp.notes2") },

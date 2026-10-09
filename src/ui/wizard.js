@@ -307,6 +307,10 @@ function renderArchetype(){
       <p class="step-note">${esc(copy("specializationUnwritten").replace("{label}", sel.specialization.label))}</p>`;
   }
 
+  // What the chosen specialization asks for at creation, and the Base Powers
+  // it spends (Decision 200). Both come from the data: no archetype is named.
+  h += optionChoicesHtml(ch) + basePowersHtml(ch, sel);
+
   // Creation rolls the scaling row asks for (Decision 135): a Focus Stat
   // bonus on the stats `focusStats` names, or a Stat Bonus on any stat. The
   // row's own keys say which, so no archetype is named here.
@@ -384,6 +388,56 @@ function renderArchetype(){
       sel.baselineTraits.map(t=>`<div class="pick"><div class="head"><h2>${esc(t.name)}</h2></div>
         <div class="desc">${esc(t.description||"")}${t.benefit?"\n"+esc(t.benefit):""}${t.effects?"\n• "+t.effects.map(esc).join("\n• "):""}</div></div>`).join("") + `</details>`;
   }
+  return h;
+}
+
+// A specialization's creation choices (Decision 200): one of a list of
+// powers (Built to Last), one of a list of weapons (the Ancient Weapon), or
+// fields the player writes with the GM (the Code), with the book's examples.
+function optionChoicesHtml(ch){
+  return Engine.optionChoices(ch).map(c=>{
+    let h = `<div class="sect">${esc(c.name)}</div>${c.flagged?flagHtml(c):""}${c.text?`<p class="step-note">${esc(c.text)}</p>`:""}`;
+    const pickBtn = (id, on) => `<div class="controls"><button class="toggle" data-optpick="${esc(c.id)}|${esc(id)}" aria-pressed="${on}">${on?"Chosen":"Choose"}</button></div>`;
+    if (c.type==="power"){
+      const powers = (Engine.archetype(ch).powers||[]);
+      h += (c.options||[]).map(id=>{ const p = powers.find(x=>x && x.id===id) || { name:id }, on = c.value===id;
+        return `<div class="pick ${on?"selected":""}"><div class="head"><h2>${esc(p.name)}</h2>${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}${pickBtn(id, on)}</div>
+          <div class="desc">${esc(p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}</div></div>`; }).join("");
+    } else if (c.type==="weapon"){
+      h += (c.options||[]).filter(o=>o && o.id).map(o=>{ const on = c.value===o.id;
+        const stats = [o.damage, o.style, o.reach&&`Reach ${o.reach}`, o.parry&&`Parry ${o.parry}`, o.damageType].filter(Boolean).join(" · ");
+        return `<div class="pick ${on?"selected":""}"><div class="head"><h2>${esc(o.name)}</h2><span class="cost">${esc(stats)}</span>${pickBtn(o.id, on)}</div>
+          <div class="desc">${o.examples?esc(o.examples):""}</div>${(o.tags||[]).length?`<div class="tags">${tagChipsHtml(o.tags)}</div>`:""}</div>`; }).join("");
+    } else if (c.type==="text"){
+      h += c.fields.map(f=>`<label class="field"><span>${esc(f.name)}</span>
+        <input type="text" data-opttext="${esc(c.id)}|${esc(f.id)}" value="${esc(f.value)}" placeholder="${esc(f.prompt)}" aria-label="${esc(f.name)}"></label>`).join("");
+      const ex = (Array.isArray(c.examples) ? c.examples : []).filter(r=>r && typeof r==="object");
+      if (ex.length) h += `<table class="ref"><thead><tr><th></th>${c.fields.map(f=>`<th>${esc(f.name)}</th>`).join("")}</tr></thead><tbody>${
+        ex.map(r=>`<tr><td><b>${esc(r.name||"")}</b></td>${c.fields.map((f, i)=>`<td>${esc((Array.isArray(r.values) ? r.values : [])[i]||"")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+    }
+    return h;
+  }).join("");
+}
+// Base Powers (F39's stub, Decision 200): a rank at a time into the powers
+// the archetype and the chosen specialization offer, none past its cap.
+function basePowersHtml(ch, sel){
+  const st = Engine.basePowerState(ch);
+  if (!st || !Engine.specializationIds(ch).length) return "";
+  let h = `<div class="sect">Powers${st.count!=null?` — place ${st.count} Base Power${st.count>1?"s":""}`:""}</div>
+    <p class="step-note">${st.cap!=null?`One Base Power is one rank. No power starts above rank ${st.cap}. `:""}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
+  const spec = Engine.specializationChosen(ch);
+  const groups = [["Innate powers", st.rows.filter(r=>!r.origin)],
+    ...spec.map(o=>[`${o.name} powers`, st.rows.filter(r=>r.origin===o.id)])];
+  const defs = sel.powers||[];
+  const row = r => { const p = defs.find(x=>x && x.id===r.id) || {};
+    const up = (st.left==null || st.left > 0) && (r.cap==null || r.placed < r.cap);
+    return `<div class="pick ${r.placed?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
+      ${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}<span class="cost grant">${r.ranked?`starts at ${r.cap==null?"any rank":"rank "+r.cap+" at most"}`:"no ranks"}</span>
+      <div class="controls">${stepper(r.placed, "bp|"+esc(r.id), r.placed>0, up)}</div></div>
+      <div class="desc">${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
+  for (const [title, rows] of groups) if (rows.length) h += `<h3 class="sub-sect">${esc(title)}</h3>` + rows.map(row).join("");
+  if (st.stray.length) h += st.stray.map(r=>`<div class="pick"><div class="head"><h2>${esc(r.name)}</h2>
+    <span class="cost">not one of your powers</span><div class="controls">${stepper(r.placed, "bp|"+esc(r.id), true, false)}</div></div></div>`).join("");
   return h;
 }
 
@@ -797,8 +851,23 @@ function bindMain(){
     if (ac.specialization[0]!==before){
       ac.focusedSkillPicks=[]; ac.naturalAdvantages=[];
       ch.advantages=ch.advantages.filter(x=>x.source!=="natural");
+      // Decision 200: the choices were the old Bloodline's, and so were the
+      // Base Powers placed in its powers. Innate ones stay where they are.
+      ac.optionPicks={};
+      const pool=new Set(Engine.powerPool(ch).map(p=>p.id));
+      for (const id of Object.keys(ac.basePowers||{})) if (!pool.has(id)) delete ac.basePowers[id];
     }
     update();
+  });
+  // A specialization's creation choices (Decision 200). Picking redraws;
+  // typing a tenet saves without one, so focus stays put.
+  main.querySelectorAll("[data-optpick]").forEach(b=>b.onclick=()=>{
+    const [cid, val]=b.dataset.optpick.split("|");
+    Engine.setOptionPick(ch, cid, val); update();
+  });
+  main.querySelectorAll("[data-opttext]").forEach(inp=>inp.oninput=()=>{
+    const [cid, fid]=inp.dataset.opttext.split("|");
+    Engine.setOptionPick(ch, cid, inp.value, fid); update(false); refreshNav();
   });
   // Pick controls. `data-sel` is "<kind>|<entryId>|<pickId>|<slot>"; the
   // engine owns distinctness and the slot cap, so a refusal comes back with a
@@ -1019,5 +1088,6 @@ function applyStep(key, delta){
     if (v<0) return; ch.archetypeChoices.disciplines[id]=v;
     if (v===0) delete ch.archetypeChoices.disciplines[id];
   }
+  if (kind==="bp") Engine.placeBasePower(ch, id, delta);
   if (kind==="boost"){ const [type,tid]=[rest[0],rest.slice(1).join("|")]; Engine.addBoost(ch,type,tid,delta); }
 }
