@@ -530,6 +530,7 @@ and the Codex pack itself is built from `private/`.
 | S5 | Sessions: attendance, threads, Next session, the award log, close-out, the Journal, Session 0 | Rule or shape | S8 | No |
 | S13 | The GM screen: Conditions and the Codex first, then the rest of the reference | Fix + content | S9 | No |
 | S14 | The secretary: Find, one search over the table, and Jot, a line kept as a note with its session (W85, Decision 208) | Rule or shape | S5, S8 | No |
+| S10d | Wave Initiative: sides that act in turn, best Combat Sense first; a cast member can fight with the crew (Decision 210) | Rule or shape | S10a | No |
 | S6 | The gazetteer and the crew's places | Content + shape | S3a | No |
 | S7 | Factions and clocks | Rule or shape | S6, S8 | No |
 | S3b | Seats: players, import, the card spread (Health, Awareness, Conditions first), the read-only sheet | Rule or shape | S3a | No |
@@ -753,7 +754,7 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
   Engagement run "as individuals or as sides, in waves"; S10a orders
   individuals only. Deighton runs the players' side, then the enemies'. A
   by-sides turn on an encounter is a session of its own, or a Fix on S10a's
-  turn, when it's picked up. **Drafted as S10d** ([order](gm-mode/S10d-sides.md), Decision 210 reserved): one at a time or **Wave Initiative**, per encounter; sides in order of their best Combat Sense, as many as the fight has; a cast member can fight with the crew.
+  turn, when it's picked up. **Built as S10d** ([order](gm-mode/S10d-sides.md), Decision 210, table schema 0.11, switched off): one at a time or **Wave Initiative**, per encounter; sides in order of their best Combat Sense, as many as the fight has; a cast member can fight with the crew.
 
 ### S11 — CRANK work
 

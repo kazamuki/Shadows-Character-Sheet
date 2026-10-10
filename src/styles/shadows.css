@@ -1253,6 +1253,17 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-health{margin:6px 0 4px; overflow-wrap:anywhere; font-family:var(--mono); font-size:.85rem}
 .enc-down{color:var(--magenta-text)}
 .enc-tied{border-color:var(--magenta)}
+/* Wave Initiative (Decision 210): the mode toggle wraps under the status, a side is a heading with its best and its tie, and everything a GM typed wraps. */
+.enc-turns{display:flex; flex-wrap:wrap; align-items:center; gap:8px; flex-basis:100%}
+.enc-turns .form-toggle{flex-wrap:wrap}
+.enc-turns button, .cast-ally .form-toggle button{min-height:44px}
+.enc-turns [data-tip]{min-width:44px}
+.enc-mode{font-family:var(--mono); font-size:.8rem; color:var(--dim)}
+.enc-side{margin:0 0 14px; min-width:0}
+.enc-side-head{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin:0 0 8px; min-width:0}
+.enc-side-h{margin:0; font-size:1.05rem; overflow-wrap:anywhere; min-width:0}
+.enc-side-more{flex-basis:100%}
+.cast-ally .form-toggle{width:max-content; max-width:100%}
 .enc-conds{list-style:none; margin:6px 0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
 .enc-cond{flex-wrap:wrap; max-width:100%; min-width:0; overflow-wrap:anywhere}
 .enc-src{font-style:italic}

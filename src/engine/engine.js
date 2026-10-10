@@ -3854,6 +3854,8 @@ const Engine = (() => {
     used.add(n.id);
     n.block = _block(n.block);
     n.from = _castFrom(n.from);
+    // Schema 0.11 (Decision 210): Fights with the crew. True only when it is.
+    n.ally = n.ally===true;
     n.created = _isoOrNull(n.created);
     n.updated = _isoOrNull(n.updated);
   }
@@ -3954,7 +3956,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.10";
+  const TABLE_SCHEMA_VERSION = "0.11";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -4026,6 +4028,17 @@ const Engine = (() => {
     //   Schema 0.10 (Decision 208): a note remembers the session it was written in. Nothing is guessed.
     if (typeof arrived!=="string" || _versionNewer("0.10", arrived)){
       for (const n of (Array.isArray(c.notes) ? c.notes : [])) if (_isObj(n)) n.session = null;
+    }
+    //   Schema 0.11 (Decision 210): an encounter runs one at a time and has the crew and one other side;
+    //   a row is on a side by its kind; no cast member is an ally. Nothing is guessed.
+    if (typeof arrived!=="string" || _versionNewer("0.11", arrived)){
+      for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e)){
+        const other = _firstOtherId(e);
+        e.by = "person";
+        e.sides = [{ id:"crew", name:"" }, { id:other, name:"" }];
+        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r)) r.side = r.kind==="pc" ? "crew" : other;
+      }
+      for (const n of (Array.isArray(c.cast) ? c.cast : [])) if (_isObj(n)) n.ally = false;
     }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
@@ -4144,7 +4157,7 @@ const Engine = (() => {
     const used = new Set(t.cast.map(n=>n.id));
     const n = { id:newCastId(used), name:_str((f||{}).name), flavor:_str((f||{}).line), description:"",
                 origin:"", npcRoles:[], affiliations:[], enemyRole:"", tier:null, motivation:"", resources:"", line:"",
-                ifPushed:"", gmNote:"", status:"alive", block:null, from:null, created:now, updated:now };
+                ifPushed:"", gmNote:"", status:"alive", block:null, from:null, ally:false, created:now, updated:now };
     t.cast.unshift(n);
     _tableStamp(t);
     return { ok:true, id:n.id };
@@ -4158,6 +4171,7 @@ const Engine = (() => {
       if ("affiliations" in f) n.affiliations = _roleList(f.affiliations);
       if ("tier" in f) n.tier = _tier(f.tier);
       if ("status" in f && CAST_STATUSES.includes(f.status)) n.status = f.status;
+      if ("ally" in f && typeof f.ally==="boolean") n.ally = f.ally;
     }
     _tableStamp(t, n);
     return { ok:true };
@@ -4986,7 +5000,7 @@ const Engine = (() => {
                 affiliations:[], enemyRole:found.enemyRole ? _str(found.enemyRole.name) : "", tier:_tier(e.tier),
                 motivation:_str(e.motivation), resources:_str(e.resources), line:_str(e.line), ifPushed:_str(e.ifPushed),
                 gmNote:_str(e.gmNote), status:"alive", block:_block(block),
-                from:{ kind:"entry", pack:pack.meta.id, id:e.id, name:_str(e.name) }, created:now, updated:now };
+                from:{ kind:"entry", pack:pack.meta.id, id:e.id, name:_str(e.name) }, ally:false, created:now, updated:now };
   }
   function castFromEntry(t, pack, id){
     const found = _isObj(pack) && _isObj(pack.meta) ? packEntry([pack], pack.meta.id, id) : null;
@@ -5027,6 +5041,44 @@ const Engine = (() => {
     let id;
     do id = `R-${randomChars(8)}`; while (used.has(id));
     return id;
+  }
+  // Sides (Decision 210). The crew is always first and keeps the id "crew"; the others are SD- ids.
+  const SIDE_ID_RE = /^SD-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const MAX_SIDES = 6;
+  function newSideId(used){
+    let id;
+    do id = `SD-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  // The other side a new or old encounter starts with is named from the encounter's own id, so
+  // opening the same old table twice gives the same file.
+  const _firstOtherId = e => _isObj(e) && typeof e.id==="string" && ENCOUNTER_ID_RE.test(e.id) ? `SD-${e.id.slice(3)}` : newSideId(new Set());
+  // An encounter's sides, coerced: the crew first, then at most five others, each once; one other at least.
+  // `mint` makes the id of an other side that has to be added.
+  function _coerceSides(raw, mint){
+    const out = [{ id:"crew", name:"" }], seen = new Set(["crew"]);
+    for (const s of (Array.isArray(raw) ? raw : [])){
+      if (out.length >= MAX_SIDES) break;
+      if (!_isObj(s) || typeof s.id!=="string" || !SIDE_ID_RE.test(s.id) || seen.has(s.id)) continue;
+      seen.add(s.id);
+      out.push({ id:s.id, name:_str(s.name) });
+    }
+    if (out.length===1) out.push({ id:mint(seen), name:"" });
+    return out;
+  }
+  const _sideList = e => _coerceSides(e && e.sides, ()=>"SD-00000000");
+  const _otherSide = e => _sideList(e)[1].id;
+  // A row's side, read: its own when that is one of the encounter's, else by its kind.
+  function _rowSide(e, sides, r){
+    if (typeof r.side==="string" && sides.some(s=>s.id===r.side)) return r.side;
+    return r.kind==="pc" ? "crew" : sides[1].id;
+  }
+  // A side's name as the screen shows it; a blank one reads by its place (SQ11).
+  function sideTitle(e, id){
+    const sides = _sideList(e), i = sides.findIndex(s=>s.id===id);
+    if (i < 0) return "";
+    if (i===0) return "The crew";
+    return _str(sides[i].name).trim() || (i===1 ? "The other side" : `Side ${i + 1}`);
   }
   // A row's Conditions, coerced: the character's entry shape plus a source and rounds.
   // One entry per conditionKey, the first kept.
@@ -5102,6 +5154,10 @@ const Engine = (() => {
       const usedRows = new Set();
       e.rows = (Array.isArray(e.rows) ? e.rows : []).filter(_isObj);
       for (const r of e.rows) _encRow(r, usedRows);
+      // Schema 0.11 (Decision 210): how it runs, its sides, and the side each row is on.
+      e.by = e.by==="wave" ? "wave" : "person";
+      e.sides = _coerceSides(e.sides, ()=>_firstOtherId(e));
+      for (const r of e.rows) r.side = _rowSide(e, e.sides, r);
       // A member is in an encounter once: a second row for one becomes a PC row with its name.
       const inIt = new Set();
       for (const r of e.rows) if (r.kind==="cast" && r.cast){
@@ -5156,6 +5212,7 @@ const Engine = (() => {
     const now = new Date().toISOString();
     const used = new Set(t.encounters.map(e=>e && e.id));
     const e = { id:newEncounterId(used), name:_str((f||{}).name).trim(), status:"planned", round:0, turn:null, acted:[], rows:[], created:now, updated:now };
+    e.by = "person"; e.sides = [{ id:"crew", name:"" }, { id:_firstOtherId(e), name:"" }];
     t.encounters.unshift(e);
     _tableStamp(t);
     return { ok:true, id:e.id };
@@ -5163,9 +5220,50 @@ const Engine = (() => {
   function editEncounter(t, id, f){
     const l = _live(t, id);
     if (l.why) return { ok:false, why:l.why };
+    // A refused press writes nothing, the stamp included.
+    if (_isObj(f) && "by" in f && f.by!=="person" && f.by!=="wave") return { ok:false, why:"Choose one at a time or Wave Initiative." };
     if (_isObj(f) && "name" in f) l.e.name = _str(f.name);
+    // The turn, who has acted and the round are never touched: the turn follows who has acted (189, 210).
+    if (_isObj(f) && "by" in f) l.e.by = f.by;
     _tableStamp(t, l.e);
     return { ok:true };
+  }
+  // Sides (Decision 210). Every writer refuses before it writes.
+  function addSide(t, encId, f){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    const sides = _sideList(l.e);
+    if (sides.length >= MAX_SIDES) return { ok:false, why:"Six sides at most." };
+    const id = newSideId(new Set(sides.map(s=>s.id)));
+    l.e.sides = sides.concat([{ id, name:_str((f||{}).name).trim() }]);
+    _tableStamp(t, l.e);
+    return { ok:true, id };
+  }
+  function renameSide(t, encId, sideId, name){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    if (sideId==="crew") return { ok:false, why:"The crew keeps its name." };
+    const sides = _sideList(l.e), s = sides.find(x=>x.id===sideId);
+    if (!s) return { ok:false, why:"No such side." };
+    s.name = _str(name);
+    l.e.sides = sides;
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+  // Its rows move to the first other side left (SQ9).
+  function removeSide(t, encId, sideId){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    if (sideId==="crew") return { ok:false, why:"The crew stays." };
+    const sides = _sideList(l.e);
+    if (!sides.some(s=>s.id===sideId)) return { ok:false, why:"No such side." };
+    if (sides.length < 3) return { ok:false, why:"A fight needs another side." };
+    const left = sides.filter(s=>s.id!==sideId), to = left[1].id;
+    let moved = 0;
+    for (const r of _rowList(l.e)) if (_rowSide(l.e, sides, r)===sideId){ r.side = to; moved++; }
+    l.e.sides = left;
+    _tableStamp(t, l.e);
+    return { ok:true, moved };
   }
   // The one writer that works on an ended encounter: Delete.
   function removeEncounter(t, id){
@@ -5176,19 +5274,39 @@ const Engine = (() => {
     return { ok:true };
   }
 
-  // The order shown (Decision 189): Combat Sense highest first, a row with no result after those
-  // that have one in the order added, and Goes last after everyone by the same rule.
-  // Ties are shown, never broken. A stable sort keeps the order added.
-  function _encOrder(rows){
-    const key = r => [r.last ? 1 : 0, r.order===null ? 1 : 0, r.order===null ? 0 : -r.order];
+  // The order shown (Decisions 189, 210). One at a time: Combat Sense highest first, a row with no
+  // result after those that have one in the order added, and Goes last after everyone by the same rule.
+  // Wave Initiative: the sides go first, the side holding the best result first (a side with none after
+  // those that have one, in list order), and within a side the same rule. A side's best leaves out a row
+  // that is Out or Goes last (SQ8). Ties are shown, never broken: between rows one at a time, between
+  // sides' bests in waves. A stable sort keeps the order added.
+  function _encOrder(e){
+    if (!_isObj(e)) return { rows:[], tied:()=>false, sides:[] };
+    const rows = _rowList(e), wave = e.by==="wave", sides = _sideList(e);
+    const mine = new Map(sides.map(s=>[s.id, []]));
+    const of = new Map();
+    for (const r of rows){ const id = _rowSide(e, sides, r); of.set(r, id); mine.get(id).push(r); }
+    const info = sides.map((s, i)=>{
+      let best = null;
+      for (const r of mine.get(s.id)) if (!r.out && !r.last && r.order!==null && (best===null || r.order > best)) best = r.order;
+      return { id:s.id, i, best };
+    });
+    const placed = wave ? info.slice().sort((a, b)=>(a.best===null) - (b.best===null) || (a.best!==null ? b.best - a.best : 0) || a.i - b.i) : info;
+    const place = new Map(placed.map((s, p)=>[s.id, p]));
+    const key = r => [wave ? place.get(of.get(r)) : 0, r.last ? 1 : 0, r.order===null ? 1 : 0, r.order===null ? 0 : -r.order];
     const sorted = rows.map((r, i)=>({ r, i })).sort((a, b)=>{
       const x = key(a.r), y = key(b.r);
-      for (let k = 0; k < 3; k++) if (x[k]!==y[k]) return x[k] - y[k];
+      for (let k = 0; k < 4; k++) if (x[k]!==y[k]) return x[k] - y[k];
       return a.i - b.i;
     }).map(o=>o.r);
     const count = new Map();
     for (const r of rows) if (!r.last && r.order!==null) count.set(r.order, (count.get(r.order)||0) + 1);
-    return { rows:sorted, tied:r => !r.last && r.order!==null && count.get(r.order) > 1 };
+    const bests = new Map();
+    for (const s of info) if (s.best!==null) bests.set(s.best, (bests.get(s.best)||0) + 1);
+    return { rows:sorted,
+             tied:r => !wave && !r.last && r.order!==null && count.get(r.order) > 1,
+             sides:placed.map(s=>({ id:s.id, title:sideTitle(e, s.id), best:s.best, tied:wave && s.best!==null && bests.get(s.best) > 1,
+                                    rowIds:sorted.filter(r=>of.get(r)===s.id).map(r=>r.id) })) };
   }
 
   function addParticipant(t, encId, f){
@@ -5196,13 +5314,14 @@ const Engine = (() => {
     if (l.why) return { ok:false, why:l.why };
     f = _isObj(f) ? f : {};
     const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null, kept:null, struck:false,
-      order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
+      order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[], side:"crew" };
     if (f.kind==="cast"){
       const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===f.id);
       if (!m) return { ok:false, why:"No such cast member." };
       if (_rowList(l.e).some(r=>r.kind==="cast" && _isObj(r.cast) && r.cast.id===m.id)) return { ok:false, why:"Already in." };
       const name = _str(m.name).trim() || "Unnamed";
       row.kind = "cast"; row.name = name; row.cast = { kind:"cast", id:m.id, name };
+      if (m.ally!==true) row.side = _otherSide(l.e);
     } else {
       const name = _str(f.name).trim();
       if (!name) return { ok:false, why:"Name them first." };
@@ -5227,7 +5346,7 @@ const Engine = (() => {
     const used = new Set(_rowList(e).map(r=>r.id)), base = _str(entry.name).trim() || "Unnamed";
     return { id:newRowId(used), kind:"entry", name:_numbered(e, base), cast:null,
              from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block), kept:null, struck:false,
-             order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[] };
+             order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[], side:_otherSide(e) };
   }
   function participantFromEntry(t, encId, pack, entryId){
     const l = _live(t, encId);
@@ -5258,7 +5377,10 @@ const Engine = (() => {
     const l = _liveRow(t, encId, rowId);
     if (l.why) return { ok:false, why:l.why };
     const r = l.r;
+    // A refused press writes nothing, the stamp included.
+    if (_isObj(f) && "side" in f && !_sideList(l.e).some(s=>s.id===f.side)) return { ok:false, why:"No such side." };
     if (_isObj(f)){
+      if ("side" in f) r.side = f.side;
       if ("name" in f) r.name = _str(f.name);
       if ("order" in f) r.order = _int(f.order);
       if ("last" in f) r.last = f.last===true;
@@ -5277,7 +5399,7 @@ const Engine = (() => {
   // can neither skip a row nor let one act twice (Decision 189).
   const _actedIds = e => Array.isArray(e.acted) ? e.acted : [];
   function _pick(e){
-    return _encOrder(_rowList(e)).rows.find(r=>!r.out && !_actedIds(e).includes(r.id)) || null;
+    return _encOrder(e).rows.find(r=>!r.out && !_actedIds(e).includes(r.id)) || null;
   }
   function removeParticipant(t, encId, rowId){
     const l = _liveRow(t, encId, rowId);
@@ -5335,7 +5457,7 @@ const Engine = (() => {
     if (e.status!=="planned") return { ok:false, why:`${encounterTitle(e)} is already running.` };
     const other = runningEncounter(t);
     if (other) return { ok:false, why:`${encounterTitle(other)} is still running. End it first.` };
-    const first = _pick({ rows:e.rows, acted:[] });
+    const first = _pick(Object.assign({}, e, { acted:[] }));
     if (!first) return { ok:false, why:"Add someone to the encounter first." };
     e.status = "running"; e.round = 1; e.turn = first.id; e.acted = [];
     _tableStamp(t, e);
@@ -5376,7 +5498,7 @@ const Engine = (() => {
     const src = _isObj(input) && _isObj(input.sources) ? input.sources : {};
     const rows = [];
     let missing = null;   // the first tick with no number: the rows are still all drawn, so the screen can ask
-    for (const r of _encOrder(_rowList(e)).rows){
+    for (const r of _encOrder(e).rows){
       const mine = _isObj(src[r.id]) ? src[r.id] : {};
       const ticks = [], expiring = [], recovery = [];
       let hasDying = false, dyingIndex = null;
@@ -5412,7 +5534,7 @@ const Engine = (() => {
     if (!res.ok) return res;
     const e = _enc(t, encId);
     if (e.turn!==null) return { ok:false, why:"The round isn't over yet." };
-    if (!_pick({ rows:e.rows, acted:[] })) return { ok:false, why:"Everyone's out. Bring someone back or end the encounter." };
+    if (!_pick(Object.assign({}, e, { acted:[] }))) return { ok:false, why:"Everyone's out. Bring someone back or end the encounter." };
     const keep = new Set((_isObj(choices) && Array.isArray(choices.keep) ? choices.keep : [])
       .filter(k=>Array.isArray(k) && typeof k[0]==="string").map(k=>`${k[0]}|${k[1]}`));
     for (const out of res.rows){
@@ -5701,7 +5823,7 @@ const Engine = (() => {
   function encounterView(t, encId, packs){
     const e = _enc(t, encId);
     if (!e) return null;
-    const ord = _encOrder(_rowList(e));
+    const ord = _encOrder(e);
     const rows = ord.rows.map(r=>{
       const conditions = r.conditions.map((c, index)=>{
         const def = conditionById(c.id), loc = c.location ? locationById(c.location) : null;
@@ -5742,12 +5864,12 @@ const Engine = (() => {
       }
       const name = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).name : r.name;
       const gone = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).gone : false;
-      return { row:r, name:_str(name).trim() || "Unnamed", gone, health, awareness, ties:ord.tied(r), active:e.status==="running" && e.turn===r.id,
+      return { row:r, name:_str(name).trim() || "Unnamed", gone, health, awareness, ties:ord.tied(r), side:_rowSide(e, _sideList(e), r), active:e.status==="running" && e.turn===r.id,
                acted:e.status==="running" && _actedIds(e).includes(r.id),
                from:r.kind==="entry" ? entryLink(packs, r.from) : null,
                kept:r.kind==="entry" && r.kept ? linkName(t, r.kept) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
     });
-    return { encounter:e, title:encounterTitle(e), rows, atReset:e.status==="running" && e.turn===null };
+    return { encounter:e, title:encounterTitle(e), by:e.by==="wave" ? "wave" : "person", sides:ord.sides, rows, atReset:e.status==="running" && e.turn===null };
   }
 
 
@@ -5804,7 +5926,7 @@ const Engine = (() => {
     offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
     addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName,
     // Encounters: who is in one, whose turn it is, and what is still on them
-    addEncounter, editEncounter, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,
+    addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
     participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, resolveEncounterReset,
     applyEncounterReset, endEncounter, encounterWrapUp, encounterView, painFor,

@@ -3,7 +3,7 @@
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §1a (Deighton's answers: "wave
 initiative"), §6 S10's *Still open: turns by side*; Decisions 174, 188, 189,
 191, 193; `0530` (the Order of Engagement).
-**Status:** **drafted 2026-10-09 by Claude (Opus)**, after #146 (S14) and
+**Status:** **Built 2026-10-09** (Decision 210, table schema 0.11, switched off; SQ8–SQ12 on their defaults). Drafted 2026-10-09 by Claude (Opus), after #146 (S14) and
 #147 (the Reference's chips, 209) merged (README step 7). **Ken chose this
 session over S6, W86 with W84, and the Reference's additions (2026-10-09).**
 **SQ1–SQ7 answered by Ken 2026-10-09**, and the draft rewritten around them:

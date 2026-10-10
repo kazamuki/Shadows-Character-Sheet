@@ -762,7 +762,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.10");
+  assert.equal(m.meta.tableSchemaVersion, "0.11");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -954,5 +954,35 @@ test("a hostile table's Find results and Jot line show its text as text; a note'
   app.click("#modal [data-modalclose]");
   app.click("[data-tjot]");
   assert.deepEqual(injected(app, "Jot"), []);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Sides are untrusted too (Decision 210, 124) ────────────────────────
+test("a side named markup, and a row named the same on it, render as text in waves; a hostile by, sides, side and ally read their defaults", () => {
+  const t = Engine.migrateTable({
+    meta: { kind: "shadows-table", id: Engine.newTable().meta.id, name: "T", tableSchemaVersion: "0.11" },
+    cast: [{ id: "C-AAAAAAAA", name: P("c"), ally: "yes" }, { id: "C-BBBBBBBB", name: "B", ally: { x: 1 } }],
+    encounters: [{ id: "EN-AAAAAAAA", name: "E", status: "planned", by: "wave",
+      sides: [{ id: "SD-AAAAAAAA", name: P("side") }, { id: "__proto__", name: P("proto") }, { id: "SD-BBBBBBBB", name: { x: 1 } }, null, 7],
+      rows: [{ id: "R-AAAAAAAA", kind: "pc", name: P("row"), side: "SD-AAAAAAAA", order: 5 },
+             { id: "R-BBBBBBBB", kind: "pc", name: "x", side: { a: 1 } }, { id: "R-CCCCCCCC", kind: "pc", name: "y", side: "enemy" }] }],
+  });
+  assert.equal(JSON.stringify(t.cast.map(n => n.ally)), JSON.stringify([false, false]));
+  const e = t.encounters[0];
+  assert.equal(e.by, "wave");
+  assert.equal(JSON.stringify(e.sides.map(s => s.id)), JSON.stringify(["crew", "SD-AAAAAAAA", "SD-BBBBBBBB"]));
+  assert.equal(e.sides[2].name, "");
+  assert.equal(JSON.stringify(e.rows.map(r => r.side)), JSON.stringify(["SD-AAAAAAAA", "crew", "crew"]));
+  assert.equal(Engine.migrateTable({ encounters: [{ by: { x: 1 } }] }).encounters[0].by, "person");
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "encounters", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  app.window.eval(`S.encOpen = "EN-AAAAAAAA"; renderTable();`);
+  for (const d of app.$$("[data-emore] summary")) d.click();
+  const found = injected(app, "a wave encounter");
+  assert.ok(app.$("#main").textContent.includes("data-pwn"), "the payload didn't show as text");
+  assert.ok(app.$$("[data-eside] option").some(o => o.textContent.includes("data-pwn")), "the Side select didn't carry the name as text");
+  assert.equal(app.$("#main img"), null);
+  assert.deepEqual(found, [], "a side's text became markup");
   assert.deepEqual(app.errors, []);
 });
