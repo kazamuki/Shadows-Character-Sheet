@@ -2118,12 +2118,12 @@ function encPageHtml(e){
   const status = running ? `Round ${e.round}` : ended ? (e.round ? `Ended · ${encRounds(e.round)}` : "Ended · not run") : "Planned";
   const bar = `<div class="enc-bar"><b class="enc-status">${esc(status)}</b>
     ${e.status==="planned" ? `<button class="btn primary" data-enc-start>Start</button><button class="btn" data-enc-end>End</button>` : ""}
-    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}
+    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>
     ${!ended && !wrapping ? `<div class="enc-turns"><div class="form-toggle" role="group" aria-label="Turns">
         <button type="button" data-eby="person" class="${v.by==="person"?"on":""}" aria-pressed="${v.by==="person"}">One at a time</button>
         <button type="button" data-eby="wave" class="${v.by==="wave"?"on":""}" aria-pressed="${v.by==="wave"}">Wave Initiative</button></div>
       <button type="button" class="tag" data-tip="wave" data-term="wave" aria-label="What Wave Initiative means">?</button></div>`
-      : ended && v.by==="wave" ? `<span class="enc-mode">Wave Initiative</span>` : ""}</div>`;
+      : ended && v.by==="wave" ? `<p class="enc-turns"><span class="enc-mode">Wave Initiative</span></p>` : ""}`;
   const rows = v.by==="wave" ? v.sides.map(s=>encSideHtml(s, v, e)).join("") + (!ended && v.sides.length < 6 ? `<p><button class="btn" data-eaddside>Add a side</button></p>` : "")
     : v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e, null)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
   return `<p><button class="btn sm" data-enc-back>Back to encounters</button></p>
@@ -2182,7 +2182,7 @@ function bindEncounters(main){
       if (!r.ok){ S.encWrap.err=r.why; redraw(); focus("[data-ew-end]"); return; }
       S.encWrap=null; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; tableChange(()=>{}); focus("[data-enc-new]"); },
     "data-enext": next,
-    "data-eby": b => { const r=Engine.editEncounter(S.table, eid(), { by:b.dataset.eby }); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(attrSel("data-eby", b.dataset.eby)); },
+    "data-eby": b => { if (b.dataset.eby===encOpenNow().by){ focus(attrSel("data-eby", b.dataset.eby)); return; } const r=Engine.editEncounter(S.table, eid(), { by:b.dataset.eby }); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(attrSel("data-eby", b.dataset.eby)); },
     "data-eaddside": () => { const r=Engine.addSide(S.table, eid(), {}); if (!r.ok){ notice(r.why); return; }
       S.encMore=Object.assign(S.encMore||{}, { [r.id]:true }); tableChange(()=>{}); focus(attrSel("data-esidename", r.id)); },
     "data-esiderm": b => { const e=encOpenNow(), r=Engine.removeSide(S.table, e.id, b.dataset.esiderm); if (!r.ok){ notice(r.why); return; }

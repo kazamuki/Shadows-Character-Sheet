@@ -5278,7 +5278,8 @@ const Engine = (() => {
   // result after those that have one in the order added, and Goes last after everyone by the same rule.
   // Wave Initiative: the sides go first, the side holding the best result first (a side with none after
   // those that have one, in list order), and within a side the same rule. A side's best leaves out a row
-  // that is Out or Goes last (SQ8). Ties are shown, never broken: between rows one at a time, between
+  // that is Out or Goes last (SQ8) unless it has acted this round, so a row knocked out or pulled back
+  // halfway through its side's wave doesn't split the wave. Ties are shown, never broken: between rows one at a time, between
   // sides' bests in waves. A stable sort keeps the order added.
   function _encOrder(e){
     if (!_isObj(e)) return { rows:[], tied:()=>false, sides:[] };
@@ -5286,9 +5287,10 @@ const Engine = (() => {
     const mine = new Map(sides.map(s=>[s.id, []]));
     const of = new Map();
     for (const r of rows){ const id = _rowSide(e, sides, r); of.set(r, id); mine.get(id).push(r); }
+    const acted = new Set(_actedIds(e));
     const info = sides.map((s, i)=>{
       let best = null;
-      for (const r of mine.get(s.id)) if (!r.out && !r.last && r.order!==null && (best===null || r.order > best)) best = r.order;
+      for (const r of mine.get(s.id)) if ((!(r.out || r.last) || acted.has(r.id)) && r.order!==null && (best===null || r.order > best)) best = r.order;
       return { id:s.id, i, best };
     });
     const placed = wave ? info.slice().sort((a, b)=>(a.best===null) - (b.best===null) || (a.best!==null ? b.best - a.best : 0) || a.i - b.i) : info;

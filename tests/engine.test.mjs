@@ -6282,6 +6282,25 @@ test("210: switching mid-round keeps who has acted and the turn; Next never offe
   assert.equal(seen.length, 2, "the two who hadn't gone");
 });
 
+test("210: a row that has acted and then goes Out or Goes last doesn't split its side's wave", () => {
+  for (const f of [{ out: true }, { last: true }]) {
+    const t = Engine.newTable("S");
+    const e = Engine.addEncounter(t, {}).id, other = encOf(t, e).sides[1].id;
+    const pc14 = addPc(t, e, "PC14", { order: 14 }), pc8 = addPc(t, e, "PC8", { order: 8 });
+    const mk = (n, o) => addPc(t, e, n, { order: o, side: other });
+    const a = mk("A", 16), b = mk("B", 5), c = mk("C", 4);
+    wave(t, e); Engine.startEncounter(t, e); Engine.nextTurn(t, e);
+    assert.equal(encOf(t, e).turn, b);
+    assert.ok(Engine.editParticipant(t, e, a, f).ok);
+    const seen = [encOf(t, e).turn];
+    for (let n = 0; n < 4; n++) { const r = Engine.nextTurn(t, e); if (r.reset) break; seen.push(encOf(t, e).turn); }
+    eq(seen, [b, c, pc14, pc8], JSON.stringify(f));
+    assert.equal(encOf(t, e).turn, null, "at Reset");
+    assert.ok(Engine.applyEncounterReset(t, e, {}).ok);
+    if (f.out) eq([encOf(t, e).round, encOf(t, e).turn], [2, pc14], "round 2: the Out Tough no longer counts, so the crew's 14 leads");
+  }
+});
+
 test("210: setTurn in waves gives the turn to any side; Next marks it done", () => {
   const { t, e, pcB } = waveTable();
   wave(t, e); Engine.startEncounter(t, e);

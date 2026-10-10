@@ -6686,6 +6686,22 @@ test("210: a cast member who fights with the crew lands under The crew when adde
   assert.deepEqual(app.errors, []);
 });
 
+test("210: the Turns group is outside the sticky bar, planned or running; pressing the mode already on changes nothing", () => {
+  const app = waveApp();
+  const outside = () => { const g = app.$(".enc-turns"); assert.ok(g, "no Turns group"); assert.equal(g.closest(".enc-bar"), null, "the Turns group is inside the sticky bar"); };
+  outside();
+  app.click("[data-enc-start]");
+  outside();
+  app.window.eval(`S.table.meta.updated = "2000-01-01T00:00:00.000Z"; S.table.encounters[0].updated = "2000-01-01T00:00:00.000Z";`);
+  app.$('[data-eby="person"]').click();
+  assert.equal(app.window.eval("S.table.meta.updated"), "2000-01-01T00:00:00.000Z");
+  assert.equal(app.window.eval("S.table.encounters[0].updated"), "2000-01-01T00:00:00.000Z");
+  assert.equal(app.doc.activeElement, app.$('[data-eby="person"]'));
+  app.$('[data-eby="wave"]').click();
+  assert.notEqual(app.window.eval("S.table.meta.updated"), "2000-01-01T00:00:00.000Z", "a real change stamps");
+  assert.deepEqual(app.errors, []);
+});
+
 test("210: switching back to One at a time drops the headings and keeps the numbers", () => {
   const app = waveApp();
   orderOf(app, "Wren", 14);
