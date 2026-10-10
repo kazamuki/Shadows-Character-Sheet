@@ -986,3 +986,27 @@ test("a side named markup, and a row named the same on it, render as text in wav
   assert.deepEqual(found, [], "a side's text became markup");
   assert.deepEqual(app.errors, []);
 });
+
+// ── Adding to a fight draws names as text (Decision 211, 124) ──────────────
+test("a hostile encounter, entry and group name render as text on the Add to buttons, their aria-labels and the Codex search (Decision 211)", () => {
+  const key = "shadows.pack.v1." + PK;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { pack: hostilePack(), imported: "2026-10-05T10:00:00.000Z" } } });
+  app.click("#btn-run-table"); app.$("#tbl-name").value = "Pier"; app.click("#modal [data-nameyes]");
+  app.window.eval(`Engine.addEncounter(S.table, { name: ${JSON.stringify(P("enc.name"))} });`);
+  app.click('[data-tsec="threats"]');
+  const found = injected(app, "the Threats cards");
+  const btn = app.$("[data-tcardenc]");
+  assert.ok(btn.textContent.includes("<i data-pwn=\"enc.name\">"), "the encounter's name wasn't text on the card");
+  assert.ok(btn.getAttribute("aria-label").includes("data-pwn"), "the aria-label lost the name");
+  app.click('[data-tview="group"]');
+  found.push(...injected(app, "the group cards"));
+  assert.ok(app.$("[data-tcardgrp]").getAttribute("aria-label").includes("data-pwn"));
+  app.click('[data-tsec="encounters"]'); app.click("[data-enc-open]");
+  app.click("[data-enc-codex]");
+  const q = app.$("[data-enc-codexq]"); q.value = "<i data-pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(app.$$("[data-enc-addcodex]").length >= 2, "the hostile entry and group weren't found");
+  found.push(...injected(app, "the Codex search"));
+  assert.equal(app.$("#main img"), null);
+  assert.deepEqual(found, [], "a name became markup");
+  assert.deepEqual(app.errors, []);
+});

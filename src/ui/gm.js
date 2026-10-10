@@ -374,7 +374,7 @@ function openFound(kind, id){
   else if (kind==="thread"){ S.tsection="sessions"; S.sessOpen=null; renderTableChrome(); showThread(id); }
   else if (kind==="note") openNote(id);
   else if (kind==="encounter"){
-    S.tsection="encounters"; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ="";
+    S.tsection="encounters"; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     update(); land("[data-enc-h]") || land("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || land("[data-enc-title]") || land("h1");
   }
 }
@@ -621,7 +621,7 @@ function castRolesHtml(n){
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
   const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : "");
-  return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", encTarget())}</p>
+  return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", "")}</p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
     ${castText(n,"name","Name","Who did they meet?")}
@@ -900,9 +900,7 @@ function bindCastPage(main, n){
   });
   const addEnc=main.querySelector("[data-cenc]");
   if (addEnc) addEnc.onclick=()=>{
-    const e=encTarget(); if (!e) return;
-    const r=Engine.addParticipant(S.table, e.id, { kind:"cast", id }); if (!r.ok){ notice(r.why); return; }
-    tableChange(()=>{}, false); notice(`${own().name.trim() || "Unnamed"} is in ${Engine.encounterTitle(e)}.`);
+    encAddPress({ kind:"cast", id }, own().name.trim() || "Unnamed");
   };
   main.querySelector("[data-cback]").onclick=()=>{
     if (S.backEnc && encList().some(e=>e.id===S.backEnc)){
@@ -1605,14 +1603,16 @@ function threatCardHtml({ pack, entry }, multi){
   const key=esc(entryKey(pack.meta.id, entry.id)), bits=entryMetaText(pack, entry, multi);
   return `<li class="roster-card cast-card" data-tcard="${key}">
     <button class="cast-open" data-tentry="${key}">${esc(entry.name.trim() || "Unnamed")}</button>
-    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
+    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}
+    <div class="card-actions"><button class="btn sm" data-tcardcast="${key}" aria-label="Add ${esc(entry.name.trim() || "Unnamed")} to the cast">Add to cast</button>${encAddBtnHtml(`data-tcardenc="${key}"`, entry.name.trim() || "Unnamed", " sm")}</div></li>`;
 }
 function threatGroupCardHtml({ pack, group, members }, multi){
   const key=esc(entryKey(pack.meta.id, group.id)), o=group.origin && pack.origins.find(x=>x.id===group.origin);
   const bits=[ group.ref, o && o.name, members.map(m=>`${m.count}× ${m.entry.name.trim() || "Unnamed"}`).join(" · "), multi ? packName(pack) : "" ].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card cast-card" data-tcard="${key}">
     <button class="cast-open" data-tgroup="${key}">${esc(group.name.trim() || "Unnamed")}</button>
-    <div class="roster-meta cast-meta">${bits}</div></li>`;
+    <div class="roster-meta cast-meta">${bits}</div>
+    <div class="card-actions">${encAddBtnHtml(`data-tcardgrp="${key}"`, group.name.trim() || "Unnamed", " sm")}</div></li>`;
 }
 function threatListHtml(){
   const f=threatFilterNow(), multi=packsMemo.length>1;
@@ -1676,7 +1676,7 @@ function entryPageHtml(found){
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(e.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
     ${e.flavor.trim() ? `<p class="cast-line">${esc(e.flavor)}</p>` : ""}
-    <p><button class="btn primary" data-tuse>Add to cast</button>${encAddBtnHtml("data-tenc", encTarget())}</p>
+    <p><button class="btn primary" data-tuse>Add to cast</button>${encAddBtnHtml("data-tenc", "")}</p>
     ${threatText("Description", e.description)}${threatText("What they want", e.motivation)}${threatText("What they've got", e.resources)}
     ${threatText("Their line", e.line)}${threatText("If pushed", e.ifPushed)}
     ${readBlockHtml(e.block)}
@@ -1685,7 +1685,7 @@ function entryPageHtml(found){
 function groupPageHtml({ pack, group:g, members }){
   const o=g.origin && pack.origins.find(x=>x.id===g.origin);
   const meta=[ g.ref.trim() && esc(g.ref), o && packChipHtml(pack, "origins", o), packsMemo.length>1 && esc(packName(pack)) ].filter(Boolean).join(" · ");
-  return `<p><button class="btn sm" data-tback="group">Back to threats</button>${encAddBtnHtml("data-tgrpenc", encTarget())}</p>
+  return `<p><button class="btn sm" data-tback="group">Back to threats</button>${encAddBtnHtml("data-tgrpenc", "")}</p>
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(g.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
     ${members.length ? `<h2 class="cast-h">Who's in it</h2><ul class="threat-list threat-members">${members.map(m=>
@@ -1727,6 +1727,15 @@ function bindThreatCards(main){
   main.querySelectorAll("[data-tgroup]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); openGroup(b.dataset.tgroup); });
   main.querySelectorAll("[data-tcard]").forEach(li=>li.onclick=ev=>{ if (ev.target.closest("button")) return;
     const b=li.querySelector("[data-tentry], [data-tgroup]"); if (b) b.click(); });
+  main.querySelectorAll("[data-tcardcast]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
+    const [pack, id]=String(b.dataset.tcardcast).split("|"), found=Engine.packEntry(packsMemo, pack, id);
+    if (!found){ notice("No such entry."); return; }
+    const r=Engine.castFromEntry(S.table, found.pack, id); if (!r.ok){ notice(r.why); return; }
+    tableChange(()=>{}, false); notice(`${found.entry.name.trim() || "Unnamed"} is in the cast.`); });
+  main.querySelectorAll("[data-tcardenc]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
+    const [pack, id]=String(b.dataset.tcardenc).split("|"); encAddPress({ kind:"entry", pack, id }, b.dataset.encname); });
+  main.querySelectorAll("[data-tcardgrp]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
+    const [pack, id]=String(b.dataset.tcardgrp).split("|"); encAddPress({ kind:"group", pack, id }, b.dataset.encname); });
   const clear=main.querySelector("[data-tclear]");
   if (clear) clear.onclick=()=>{ S.threatQ=""; S.threatOrigin=""; S.threatRole=""; S.threatEnemy=""; S.threatTier="";
     for (const sel of ["[data-tsearch]","[data-torigin]","[data-trole]","[data-tenemy]","[data-ttier]"]){ const el=main.querySelector(sel); if (el) el.value=""; }
@@ -1773,18 +1782,10 @@ function bindThreatPage(main, back, focusFirst){
   main.querySelectorAll("[data-tmember]").forEach(b=>b.onclick=()=>openThreat(b.dataset.tmember, group));
   const encBtn=main.querySelector("[data-tenc]"), grpBtn=main.querySelector("[data-tgrpenc]");
   // Add to the encounter open on the Encounters tab: one row (a group, all its members), a notice, and the page stays.
-  if (encBtn) encBtn.onclick=()=>{
-    const e=encTarget(), found=Engine.packEntry(packsMemo, entry.pack, entry.id); if (!e) return; if (!found){ notice("No such entry."); return; }
-    const r=Engine.participantFromEntry(S.table, e.id, found.pack, entry.id); if (!r.ok){ notice(r.why); return; }
-    tableChange(()=>{}, false);
-    const row=Engine.encounterView(S.table, e.id, packsMemo).rows.find(x=>x.row.id===r.id);
-    notice(`${row ? row.name : "They"} is in ${Engine.encounterTitle(e)}.`);
-  };
+  if (encBtn) encBtn.onclick=()=>encAddPress({ kind:"entry", pack:entry.pack, id:entry.id }, "They");
   if (grpBtn) grpBtn.onclick=()=>{
-    const e=encTarget(), hit=group && Engine.packGroups(packsMemo, {}).find(x=>x.pack.meta.id===group.pack && x.group.id===group.id); if (!e || !hit) return;
-    const r=Engine.participantsFromGroup(S.table, e.id, hit.pack, group.id); if (!r.ok){ notice(r.why); return; }
-    tableChange(()=>{}, false);
-    notice(`${hit.group.name.trim() || "Unnamed"}: ${r.ids.length} added to ${Engine.encounterTitle(e)}.`);
+    const hit=group && Engine.packGroups(packsMemo, {}).find(x=>x.pack.meta.id===group.pack && x.group.id===group.id);
+    encAddPress({ kind:"group", pack:group && group.pack, id:group && group.id }, hit ? hit.group.name.trim() || "Unnamed" : "They");
   };
   const use=main.querySelector("[data-tuse]");
   if (use) use.onclick=()=>{
@@ -1801,8 +1802,8 @@ function bindThreatPage(main, back, focusFirst){
 // ── The Encounters tab (Decisions 188–190) ─────────────────────────────
 // Who's in an encounter, whose turn it is, and every Condition on everyone. State is on S, so it
 // goes with the open table and no further: S.encOpen (an encounter's id; it stays when the GM
-// moves to Threats or Cast, which name it on their Add buttons), S.encPick and S.encQ (the cast
-// picker), S.encDmg (a Take or Heal field open on a row), S.encHit (the Hit panel open on a row, with
+// moves to Threats or Cast, where it comes first for their Add buttons), S.encPick and S.encQ (the cast
+// picker), S.encCodex and S.encCodexQ (From the Codex), S.encDmg (a Take or Heal field open on a row), S.encHit (the Hit panel open on a row, with
 // its fields and answers), S.encCond (the Add a Condition draft), S.encMore (rows whose More is open)
 // S.encReset (the numbers and Keeps typed at a Reset) and S.encWrap (the wrap-up's draft, Decision 193). One of Take, Hit and the Condition form is
 // open at a time.
@@ -1820,9 +1821,34 @@ function encOpenNow(){
   if (!e) S.encOpen=null;
   return e || null;
 }
-// The encounter an Add to button puts a row in: the one open on the tab, until it ends.
-const encTarget = () => { const e=encOpenNow(); return e && e.status!=="ended" ? e : null; };
-const encAddBtnHtml = (attr, e) => e ? ` <button class="btn" ${attr}>Add to ${esc(Engine.encounterTitle(e))}</button>` : "";
+// The encounter an Add to button means (Decision 211): the one open on the tab, else the running one,
+// else the newest planned, else none (it then makes one). Computed on every draw, never stored.
+const encTarget = () => Engine.encounterFor(S.table, S.encOpen);
+// An Add to button always shows. `subject` names who it adds, for a screen reader, where a list holds many.
+const encAddText = e => e ? `Add to ${Engine.encounterTitle(e)}` : "Add to a new encounter";
+const encAddAria = (subject, e) => `Add ${subject} to ${e ? Engine.encounterTitle(e) : "a new encounter"}`;
+function encAddBtnHtml(attr, subject, cls=""){
+  const e=encTarget();
+  return ` <button class="btn${cls}" data-encadd ${attr}${subject ? ` data-encname="${esc(subject)}" aria-label="${esc(encAddAria(subject, e))}"` : ""}>${esc(encAddText(e))}</button>`;
+}
+// After a press, every Add to button on the page names where the next one goes, in place.
+function encRelabel(){
+  const e=encTarget();
+  $("main").querySelectorAll("[data-encadd]").forEach(b=>{
+    b.textContent=encAddText(e);
+    if (b.dataset.encname) b.setAttribute("aria-label", encAddAria(b.dataset.encname, e));
+  });
+}
+// One press for every Add to button (Decision 211): the engine finds the encounter or makes one.
+function encAddPress(src, name){
+  const r=Engine.addToEncounter(S.table, S.encOpen, src, packsMemo);
+  if (!r.ok){ notice(r.why); return; }
+  tableChange(()=>{}, false);
+  const enc=encList().find(x=>x.id===r.encId), title=enc ? Engine.encounterTitle(enc) : "the encounter", where=r.made ? `a new encounter, ${title}` : title;
+  if (src.kind==="group") notice(`${name}: ${r.ids.length} added to ${where}.`);
+  else { const row=enc && enc.rows.find(x=>x.id===r.ids[0]); notice(`${row ? row.name : name} is in ${where}.`); }
+  encRelabel();
+}
 // Where Back goes from a member's page the encounter sent the GM to.
 const encBackTitle = () => { const e=S.backEnc && encList().find(x=>x.id===S.backEnc); return e ? Engine.encounterTitle(e) : ""; };
 const encRounds = n => `${n} round${n===1?"":"s"}`;
@@ -2093,13 +2119,40 @@ function encPickHtml(e){
       ${inIt.has(n.id) ? `<span class="step-note">Already in</span>` : `<button class="btn sm" data-enc-addcast="${esc(n.id)}" aria-label="Add ${esc(n.name.trim() || "Unnamed")}">Add</button>`}</li>`).join("")}</ul>`
     : `<p class="step-note">${q ? "No one matches." : "No one in the cast yet."}</p>`}</div>`;
 }
+// From the Codex (Decision 211): the slotted packs' entries and groups, from two characters, 25 at most.
+const CODEX_SHOWN = 25;
+function encCodexMatches(){
+  const q=S.encCodexQ||"";
+  if (foldName(q).length<2) return null;
+  // Entries in pack order (SQ4), the book's own order within a pack, then groups.
+  const at=r=>[packsMemo.indexOf(r.pack), r.pack.entries.indexOf(r.entry)];
+  const rows=[...Engine.packFilter(packsMemo, { view:"threat", q }), ...Engine.packFilter(packsMemo, { view:"npc", q })]
+    .sort((a, b)=>{ const x=at(a), y=at(b); return x[0]-y[0] || x[1]-y[1]; })
+    .map(r=>({ kind:"entry", ...r })).concat(Engine.packGroups(packsMemo, { q }).map(r=>({ kind:"group", ...r })));
+  return rows;
+}
+function encCodexHtml(){
+  const rows=encCodexMatches(), multi=packsMemo.length>1;
+  if (!rows) return `<div data-enccodexlist><p class="step-note">Type a name, a role or an origin.</p></div>`;
+  if (!rows.length) return `<div data-enccodexlist><p class="step-note">Nothing matches.</p></div>`;
+  const li=r=>{
+    const isG=r.kind==="group", name=(isG ? r.group.name : r.entry.name).trim() || "Unnamed", key=esc(entryKey(r.pack.meta.id, isG ? r.group.id : r.entry.id));
+    const meta=isG ? r.members.map(m=>`${m.count}× ${m.entry.name.trim() || "Unnamed"}`).map(esc).join(" · ") : entryMetaText(r.pack, r.entry, multi);
+    return `<li class="roster-card enc-pickrow"><span class="enc-name">${esc(name)}${isG ? ` <span class="step-note">Group</span>` : ""}${meta ? `<span class="roster-meta cast-meta">${meta}</span>` : ""}</span>
+      <button class="btn sm" data-enc-addcodex="${key}" data-enc-codexkind="${r.kind}" aria-label="Add ${esc(name)}">Add</button></li>`;
+  };
+  const more=rows.length - CODEX_SHOWN;
+  return `<div data-enccodexlist><ul class="roster-list">${rows.slice(0, CODEX_SHOWN).map(li).join("")}</ul>${more>0 ? `<p class="step-note">${more} more. Keep typing.</p>` : ""}</div>`;
+}
 function encAddHtml(e){
   return `<section class="enc-add"><h2 class="cast-h">Add</h2>
     <p><button class="btn" data-enc-pick aria-expanded="${!!S.encPick}">From the cast</button></p>
     ${S.encPick ? `<label class="field"><span>Search the cast</span><input type="search" data-enc-q value="${esc(S.encQ||"")}" autocomplete="off"></label>${encPickHtml(e)}` : ""}
     <div class="cast-add"><label class="field"><span>PC name</span><input type="text" data-enc-pcname placeholder="Who's at the table?" autocomplete="off"></label>
       <button class="btn" data-enc-addpc>Add a PC</button></div>
-    <p class="step-note">From the Codex: open an entry or a group on Threats.</p></section>`;
+    ${packsMemo.length ? `<p><button class="btn" data-enc-codex aria-expanded="${!!S.encCodex}">From the Codex</button></p>
+    ${S.encCodex ? `<label class="field"><span>Search the Codex</span><input type="search" data-enc-codexq value="${esc(S.encCodexQ||"")}" autocomplete="off"></label>${encCodexHtml()}` : ""}`
+      : `<p class="step-note">From the Codex: slot a pack in on Threats.</p>`}</section>`;
 }
 // A side under Wave Initiative (Decision 210): its heading, its best and a tie between sides, a More
 // for its name and Remove, and its rows. The crew's name and the last other side can't be changed or taken away.
@@ -2144,7 +2197,7 @@ function bindEncounters(main){
   const redraw = () => { renderTable(); };
   const change = fn => { tableChange(fn); };
   const open = id => {
-    S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ="";
+    S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     window.scrollTo(0,0); redraw();
     const e=encOpenNow(); if (!e) return;
     if (e.status==="planned") focus("[data-enc-title]");
@@ -2189,6 +2242,20 @@ function bindEncounters(main){
       tableChange(()=>{}); const to=Engine.sideTitle(encOpenNow(), encOpenNow().sides[1].id);
       notice(r.moved ? `Moved ${r.moved} to ${to}.` : "Side removed. Nobody was on it."); focus("[data-eaddside]") || focus("[data-eby]"); },
     "data-enc-pick": () => { S.encPick=!S.encPick; redraw(); if (S.encPick) focus("[data-enc-q]"); else focus("[data-enc-pick]"); },
+    "data-enc-codex": () => { S.encCodex=!S.encCodex; redraw(); if (S.encCodex) focus("[data-enc-codexq]"); else focus("[data-enc-codex]"); },
+    "data-enc-addcodex": b => { const key=b.dataset.encAddcodex, [pack, id]=key.split("|"), isG=b.dataset.encCodexkind==="group", e=encOpenNow();
+      let r, msg;
+      if (isG){
+        const hit=Engine.packGroups(packsMemo, {}).find(x=>x.pack.meta.id===pack && x.group.id===id);
+        r=hit ? Engine.participantsFromGroup(S.table, e.id, hit.pack, id) : { ok:false, why:"No such group." };
+        if (r.ok) msg=`${hit.group.name.trim() || "Unnamed"}: ${r.ids.length} added to ${Engine.encounterTitle(e)}.`;
+      } else {
+        const found=Engine.packEntry(packsMemo, pack, id);
+        r=found ? Engine.participantFromEntry(S.table, e.id, found.pack, id) : { ok:false, why:"No such entry." };
+        if (r.ok){ const row=encOpenNow().rows.find(x=>x.id===r.id); msg=`${row ? row.name : "They"} is in ${Engine.encounterTitle(e)}.`; }
+      }
+      if (!r.ok){ notice(r.why); return; }
+      tableChange(()=>{}); notice(msg); focus(attrSel("data-enc-addcodex", key)); },
     "data-enc-addcast": b => { const id=b.dataset.encAddcast, after=pickNextAdd(id), r=Engine.addParticipant(S.table, eid(), { kind:"cast", id });
       if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(after ? attrSel("data-enc-addcast", after) : "[data-enc-q]"); },
     "data-enc-addpc": () => addPc(),
@@ -2284,6 +2351,7 @@ function bindEncounters(main){
     else if ("econdRounds" in d) S.encCond.rounds=el.value;
     else if ("ehitDamage" in d){ S.encHit.damage=el.value; S.encHit.err=""; hitLive(); }
     else if ("ehitFrom" in d){ S.encHit.from=el.value; hitLive(); }
+    else if ("encCodexq" in d){ S.encCodexQ=el.value; const box=main.querySelector("[data-enccodexlist]"); if (box) box.outerHTML=encCodexHtml(); }
     else if ("encQ" in d){ S.encQ=el.value; const box=main.querySelector("[data-encpicklist]"); if (box) box.outerHTML=encPickHtml(encOpenNow()); }
     else if ("esrc" in d){
       const [row, i]=d.esrc.split("|"), st=encResetNow(); (st.sources[row]||(st.sources[row]={}))[i]=el.value;

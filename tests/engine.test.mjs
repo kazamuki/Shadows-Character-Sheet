@@ -6405,3 +6405,126 @@ test("210: the order and the view are total over a table whose by, sides, names 
   mig.encounters[0].by = "wave";
   assert.doesNotThrow(() => { Engine.startEncounter(mig, e); Engine.nextTurn(mig, e); Engine.encounterView(mig, e, []); });
 });
+
+// ---- Adding to a fight (211) -------------------------------------------------------------
+
+function fightTable() {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Dez" });
+  return { t, dez: t.cast[0] };
+}
+const fightPacks = () => [Engine.migratePack(syntheticPack())];
+
+test("211: encounterFor is the open one, else the running one, else the newest planned; ended ones are never it", () => {
+  const { t } = fightTable();
+  assert.equal(Engine.encounterFor(t, null), null);
+  const a = Engine.addEncounter(t, { name: "A" }).id, b = Engine.addEncounter(t, { name: "B" }).id;
+  const get = id => t.encounters.find(x => x.id === id);
+  get(a).created = "2026-10-01T00:00:00.000Z"; get(b).created = "2026-10-02T00:00:00.000Z";
+  assert.equal(Engine.encounterFor(t, null).id, b, "the newest planned");
+  get(a).created = "2026-10-03T00:00:00.000Z";
+  assert.equal(Engine.encounterFor(t, null).id, a, "newest by created, not by list position");
+  get(b).created = get(a).created;
+  assert.equal(Engine.encounterFor(t, null).id, b, "a tie goes to the earlier in the list (index 0)");
+  assert.equal(t.encounters[0].id, b);
+  assert.equal(Engine.encounterFor(t, a).id, a, "the open one wins over a newer planned one");
+  Engine.addParticipant(t, a, { kind: "pc", name: "Wren" });
+  assert.ok(Engine.startEncounter(t, a).ok);
+  assert.equal(Engine.encounterFor(t, b).id, b, "an open planned one wins over a running one");
+  assert.equal(Engine.encounterFor(t, null).id, a, "the running one beats a newer planned one");
+  assert.equal(Engine.encounterFor(t, "nope").id, a, "an unknown open id falls through");
+  assert.ok(Engine.endEncounter(t, a).ok);
+  assert.equal(Engine.encounterFor(t, a).id, b, "an open ended one falls through");
+  assert.ok(Engine.removeEncounter(t, b).ok);
+  assert.equal(Engine.encounterFor(t, a), null, "only ended ones → null");
+});
+
+test("211: encounterFor never throws on a hostile table", () => {
+  for (const t of ["x", 7, null, undefined, [], { encounters: {} }, { encounters: [null, 3, "s"] },
+                   { encounters: [{ id: "E1", status: "planned" }, { id: "E2", status: "planned", created: 5 }] }])
+    for (const open of [null, 4, "E1", {}, undefined]) assert.doesNotThrow(() => Engine.encounterFor(t, open));
+  assert.equal(Engine.encounterFor({ encounters: [{ id: "E1", status: "planned" }] }, 4).id, "E1");
+});
+
+test("211: addToEncounter adds a cast member, an entry and a group through the existing writers; the cast is untouched by the last two", () => {
+  const { t, dez } = fightTable();
+  const packs = fightPacks(), enc = Engine.addEncounter(t, { name: "Dock" }).id;
+  const castLen = t.cast.length;
+  const c = Engine.addToEncounter(t, null, { kind: "cast", id: dez.id }, packs);
+  assert.ok(c.ok); assert.equal(c.encId, enc); assert.equal(c.made, false);
+  eq(rowOf(t, enc, c.ids[0]).cast, { kind: "cast", id: dez.id, name: "Dez" });
+  const e = Engine.addToEncounter(t, null, { kind: "entry", pack: PACK_ID, id: "gull" }, packs);
+  assert.ok(e.ok); assert.equal(rowOf(t, enc, e.ids[0]).kind, "entry");
+  const g = Engine.addToEncounter(t, null, { kind: "group", pack: PACK_ID, id: "pier-watch" }, packs);
+  assert.ok(g.ok); assert.equal(g.ids.length, 4);
+  assert.equal(encOf(t, enc).rows.length, 6);
+  assert.equal(t.cast.length, castLen, "an entry or group row is never a cast member (188)");
+});
+
+test("211: with no target, an add makes one planned encounter, and the next add goes to the same one", () => {
+  const { t } = fightTable();
+  const packs = fightPacks();
+  const a = Engine.addToEncounter(t, null, { kind: "entry", pack: PACK_ID, id: "gull" }, packs);
+  assert.ok(a.ok); assert.equal(a.made, true);
+  assert.equal(t.encounters.length, 1);
+  assert.equal(encOf(t, a.encId).status, "planned");
+  assert.equal(encOf(t, a.encId).rows.length, 1);
+  const b = Engine.addToEncounter(t, null, { kind: "entry", pack: PACK_ID, id: "wren" }, packs);
+  assert.equal(b.encId, a.encId); assert.equal(b.made, false);
+  assert.equal(t.encounters.length, 1);
+  assert.equal(encOf(t, a.encId).rows.length, 2);
+});
+
+test("211: a refused add writes nothing: no encounter made, meta.updated unchanged, with or without an encounter already there", () => {
+  const empty = Engine.migratePack(syntheticPack());
+  empty.groups[0].members = [{ entry: "gone", count: 2 }];
+  for (const withEnc of [false, true]) {
+    const { t, dez } = fightTable();
+    const packs = fightPacks();
+    if (withEnc) {
+      const enc = Engine.addEncounter(t, { name: "Dock" }).id;
+      assert.ok(Engine.addParticipant(t, enc, { kind: "cast", id: dez.id }).ok);
+    }
+    const before = JSON.stringify(t);
+    const tries = [
+      [{ kind: "cast", id: "C-ZZZZZZZZ" }, "No such cast member.", packs],
+      [{ kind: "entry", pack: PACK_ID, id: "nobody" }, "No such entry.", packs],
+      [{ kind: "entry", pack: "no-pack", id: "gull" }, "No such entry.", packs],
+      [{ kind: "group", pack: PACK_ID, id: "no-such" }, "No such group.", packs],
+      [{ kind: "group", pack: PACK_ID, id: "pier-watch" }, "Nobody in that group can be found.", [empty]],
+      [{ kind: "x" }, "Nothing to add.", packs],
+      [null, "Nothing to add.", packs],
+    ];
+    if (withEnc) tries.push([{ kind: "cast", id: dez.id }, "Already in.", packs]);
+    for (const [src, why, p] of tries) {
+      const r = Engine.addToEncounter(t, null, src, p);
+      assert.equal(r.ok, false); assert.equal(r.why, why);
+      assert.equal(JSON.stringify(t), before, `${why} wrote something (encounter ${withEnc})`);
+    }
+  }
+});
+
+test("211: the open encounter gets the row even when a newer planned one exists; a running one elsewhere doesn't win", () => {
+  const { t } = fightTable();
+  const packs = fightPacks();
+  const older = Engine.addEncounter(t, { name: "Older" }).id, newer = Engine.addEncounter(t, { name: "Newer" }).id;
+  encOf(t, older).created = "2026-10-01T00:00:00.000Z"; encOf(t, newer).created = "2026-10-05T00:00:00.000Z";
+  const r = Engine.addToEncounter(t, older, { kind: "entry", pack: PACK_ID, id: "gull" }, packs);
+  assert.equal(r.encId, older);
+  assert.equal(encOf(t, newer).rows.length, 0);
+  Engine.addParticipant(t, newer, { kind: "pc", name: "Wren" });
+  assert.ok(Engine.startEncounter(t, newer).ok);
+  assert.equal(Engine.addToEncounter(t, older, { kind: "entry", pack: PACK_ID, id: "gull" }, packs).encId, older);
+  assert.equal(Engine.addToEncounter(t, null, { kind: "entry", pack: PACK_ID, id: "gull" }, packs).encId, newer);
+});
+
+test("211: a group is found by its origin's name; addToEncounter refuses a table that isn't one, writing nothing", () => {
+  const packs = fightPacks();
+  eq(Engine.packGroups(packs, { q: "dock" }).map(x => x.group.id), ["pier-watch"]);
+  assert.equal(Engine.packGroups(packs, { q: "spire" }).length, 0);
+  for (const t of [null, "x", 7, [], {}, { cast: [] }]) {
+    let r; assert.doesNotThrow(() => { r = Engine.addToEncounter(t, null, { kind: "entry", pack: PACK_ID, id: "gull" }, packs); });
+    assert.equal(r.ok, false);
+    assert.equal(JSON.stringify(t) === undefined ? "" : JSON.stringify(t).includes("encounters"), false, "a refusal wrote an encounter");
+  }
+});

@@ -756,6 +756,43 @@ GM's, as with stats and skills.
 
 ### GM mode
 
+**W74 — Search the Codex from inside an encounter.** *Ken · → Decision 211 (switched off)*
+An encounter's **Add** section searches the cast, but for the Codex it says
+"open an entry or a group on Threats". Mid-fight that's three taps out of the
+encounter and back. The wish: a **Search the Codex** field beside *From the
+cast*, listing entries and groups as the Threats tab does (`packFilter`,
+`packGroups`), each with **Add**, putting a row in this encounter the way
+the entry page's **Add to** does.
+*To respect:* Decision 188 (a Codex row is the entry's copy in the encounter;
+nothing goes into the cast until Keep, 193); the encounter page's keyboard places
+(Decision 164).
+
+**W75 — Add to an encounter from anywhere, always.** *Ken · → Decision 211 (switched off)*
+Today **Add to <encounter>** shows on a member's page and a Codex entry's page
+only while an encounter is **open on the Encounters tab** (`encTarget`). Leave
+that tab's encounter and the button disappears, which reads as "it isn't
+there". The wish:
+- **Always shown** on a cast member's page, a Codex entry's page, and each
+  card in the Threats list (entries and groups).
+- **Which encounter** (Ken, 2026-10-08): the one open on the Encounters tab
+  if there is one; else the **running** one; else the most recently made
+  **planned** one. With none at all, the button reads **Add to a new
+  encounter**, which makes one, planned, with this row in it.
+*To respect:* this reopens **Decision 190** in part (*Add to <the encounter
+open on the Encounters tab>*), so it needs a numbered decision. One encounter
+runs at a time (188); a group adds all
+its members as rows, as the entry page does now; the notice stays and the page
+stays put.
+
+**W76 — Add to cast from a card in the Threats list.** *Ken · → Decision 211 (switched off)*
+An entry's page has **Add to cast**; the list doesn't, so adding five
+Codex entries to the cast is five round trips. The wish: **Add to cast** on
+each entry card in the Threats list, doing what the entry page's button does.
+The entry page keeps its own.
+*To respect:* Decisions 182 and 190 (a cast member made from an entry keeps
+`from`, and its name if the pack goes); W75 puts **Add to <encounter>** on the same
+card, so the two share one row of buttons and must fit at 390px.
+
 **W85 — A table's secretary: one search over everything, and a line jotted from any tab.** *Ken, from Deighton · → Decision 208, table schema 0.10: Find in the header, and Jot as a note with its session (switched off)*
 Deighton's one-tool-tomorrow answer was "a secretary, to keep track of the
 details": he forgets the smaller ones, more as time passes; he keeps an
