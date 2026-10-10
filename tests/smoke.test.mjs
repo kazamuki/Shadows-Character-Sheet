@@ -6925,6 +6925,9 @@ test("Decision 212: typing in a member's field shows no toast, makes one entry, 
   app.click("[data-toastclose]");
   for (const v of ["W", "Wa", "Wan", "Want"]) type(app, '[data-cf="motivation"]', v);
   assert.equal(toastText(app), "", "typing showed a toast");
+  // Tabbing away re-sends the same value on `change`: no entry of its own, and no toast.
+  app.$('[data-cf="motivation"]').dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(toastText(app), "", "leaving the field showed a toast");
   assert.deepEqual(auditLabels(app), ["Added Marta to the cast", "Changed Marta"]);
   openActivity212(app);
   assert.match(app.$("#modal [data-act-undo]").textContent, /^Undo: Changed Marta$/);

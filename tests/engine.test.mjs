@@ -6828,3 +6828,94 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   assert.equal(Engine.migrateTable(newer).audit.length, 1);
   assert.ok(Engine.clearTableActivity(t).ok); eq(t.audit, []);
 });
+
+test("212 (review): End on the realistic table, three cast rows each writing a line and two Keeps, is under 4 KB, and undoes whole", () => {
+  const { t } = bigTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const e = Engine.addEncounter(t, { name: "Dock" }).id;
+  const cast = [0, 1, 2].map(i => Engine.addParticipant(t, e, { kind: "cast", id: t.cast[i].id }).id);
+  const gulls = [0, 1].map(() => Engine.participantFromEntry(t, e, pack, "gull").id);
+  Engine.addParticipant(t, e, { kind: "pc", name: "Wren" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const base = plain(t);
+  const rows = {};
+  for (const id of cast) rows[id] = { line: true };
+  for (const id of gulls) rows[id] = { keep: true, line: true, text: "Got away." };
+  const r = recorded(t, () => assert.ok(Engine.endEncounter(t, e, { rows }, [pack]).ok), "Ended Dock");
+  assert.ok(r.ok);
+  assert.equal(t.interactions.length, 150 + 5, "five lines were written");
+  assert.equal(t.cast.length, 42, "two members were kept");
+  const size = JSON.stringify(r.entry).length;
+  assert.ok(size < 4096, `End is ${size} bytes`);
+  assert.ok(!r.entry.patch.some(o => o.op === "set"), "a whole array was stored");
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+});
+
+test("212 (review): a block of records in or out is one op each way, and round-trips", () => {
+  const extras = () => { const x = Engine.newTable("X"); for (const n of ["N1", "N2", "N3"]) Engine.addCastMember(x, { name: n }); return x.cast; };
+  const cases = {
+    "three at the head": [t => t.cast.unshift(...extras()), ["insertAt"], 3],
+    "two at the tail": [t => t.cast.push(...extras().slice(0, 2)), ["insertAt"], 2],
+    "two in the middle": [t => t.cast.splice(2, 0, ...extras().slice(0, 2)), ["insertAt"], 2],
+    "two out of the head": [t => t.cast.splice(0, 2), ["removeAt", "removeAt"], 0],
+    "two out of the middle": [t => t.cast.splice(1, 2), ["removeAt", "removeAt"], 0],
+  };
+  for (const [name, [mutate, ops, count]] of Object.entries(cases)) {
+    const t = Engine.newTable("T");
+    for (let i = 0; i < 5; i++) Engine.addCastMember(t, { name: `m${i}` });
+    const base = plain(t), want = undoBase(t);
+    const r = recorded(t, () => mutate(t), "x", { fold: false });
+    eq(r.entry.patch.map(o => o.op), ops, name);
+    if (count > 1) assert.equal(r.entry.patch[0].count, count, name);
+    assert.ok(Engine.undoTableAction(t).ok);
+    eq(undoBase(t), want, name);
+    assert.ok(base);
+  }
+  // Not contiguous: the whole array, as before.
+  const ops = Engine.diffTable({ cast: [{ id: "a" }, { id: "b" }, { id: "c" }] }, { cast: [{ id: "x" }, { id: "a" }, { id: "b" }, { id: "y" }, { id: "c" }, { id: "z" }] });
+  assert.equal(ops[0].op, "set");
+});
+
+test("212 (review): an insert's count is a whole number of at least 1, or absent", () => {
+  const t = Engine.newTable("T");
+  const entry = count => ({ seq: 1, date: null, label: "x", patch: [Object.assign({ path: ["cast"], type: "array", op: "insertAt", index: 0 }, count === undefined ? {} : { count })] });
+  for (const [c, ok] of [[undefined, true], [1, true], [3, true], [0, false], [-1, false], [1.5, false], ["2", false]]) {
+    t.audit = [entry(c)];
+    assert.equal(Engine.migrateTable(t).audit.length, ok ? 1 : 0, String(c));
+  }
+});
+
+test("212 (review): a stamp-only diff after an entry joins it, and is never an entry of its own", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Marta" });
+  const T0 = Date.parse("2026-10-10T12:00:00Z");
+  let base = plain(t);
+  Engine.editCastMember(t, t.cast[0].id, { motivation: "Want" });
+  assert.ok(Engine.recordTableAction(t, base, undefined, new Date(T0)).ok);
+  // The change handler re-sends the same value: only the stamp moves.
+  base = plain(t);
+  t.cast[0].updated = "2030-01-01T00:00:00.000Z";
+  const r = Engine.recordTableAction(t, base, undefined, new Date(T0 + 1000), { fold: false });
+  assert.ok(r.ok && r.folded, "a stamp-only diff became its own entry");
+  assert.equal(t.audit.length, 1);
+  assert.ok(Engine.undoTableAction(t).ok);
+  assert.equal(t.cast[0].motivation, "");
+  // With nothing to join, it records nothing.
+  const u = Engine.newTable("U");
+  Engine.addCastMember(u, { name: "A" });
+  const b2 = plain(u);
+  u.cast[0].updated = "2030-01-01T00:00:00.000Z";
+  assert.deepEqual(plain(Engine.recordTableAction(u, b2)), { ok: false, noop: true });
+});
+
+test("212 (review): a removal or an add names what came and went; collateral Changed lines drop out", () => {
+  const t = Engine.newTable("T");
+  const id = Engine.addCastMember(t, { name: "Marta" }).id;
+  Engine.addCastMember(t, { name: "Dez" });
+  for (let i = 0; i < 4; i++) Engine.addInteraction(t, { kind: "met", cast: [id], text: `Met ${i}`, date: "2026-10-01" });
+  const L = fn => recorded(t, fn, undefined, { fold: false }).entry.label;
+  assert.equal(L(() => Engine.removeCastMember(t, id)), "Removed Marta");
+  assert.equal(L(() => { Engine.addCastMember(t, { name: "A" }); Engine.addCastMember(t, { name: "B" }); }), "Added B to the cast and 1 more");
+  assert.equal(L(() => { Engine.editCastMember(t, t.cast[0].id, { motivation: "x" }); Engine.editCastMember(t, t.cast[1].id, { motivation: "y" }); }), "Changed B and 1 more");
+});

@@ -918,7 +918,7 @@ commit** — a GM's table must never change under them.
   },
   audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
     seq: 1, date: "<ISO>", label: "",  // the words the toast and Activity show, fixed when made
-    patch: [ { path: ["cast", 0, "name"], type: "scalar", before: "" } ]   // ops as a character's, plus { type: "array", op: "insertAt", index }; never empty
+    patch: [ { path: ["cast", 0, "name"], type: "scalar", before: "" } ]   // ops as a character's, plus { type: "array", op: "insertAt", index, count? } (count absent = 1); never empty
   } ],                               // the gate keeps an entry only if every path starts at a record (or is ["meta","name"]); an older file's trail is emptied
   notes: [ { id: "N-XXXXXXXX", title: "", text: "",
              session: null,        // 0.10: a session's id in this table, or null (Decision 208); a jot takes the one session dated today, the gate converts nothing
@@ -4535,10 +4535,10 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 212. **A table keeps an activity log as a character does: every change one entry, undone last first, with a toast on each press and an Activity list in the menu.**
      *2026-10-10 · Ken + Claude · Touches: table audit, audit, undo, Undo, Activity, Clear activity, tableChange, diffTable, recordTableAction, undoTableAction, insertAt, migrateTable, table schema 0.12, undo toast, notice, Decision 48, Decision 49, Decision 50, Decision 107, Decision 124, Decision 171, Decision 176, W83, GQ9*
-     - **Decided:** Table schema 0.12 adds `audit`: entries of a label and a patch, diffed from the table as it was after the last change, so every writer is covered without naming it. Arrays diff element by element, and an insert is one op. Typing in one field folds into one entry. Undo pops the newest and gates the table afresh; it isn't logged. A press's toast carries Undo; ⋮ → **Activity** lists the rest and clears them. 500 entries kept; a schema step clears them.
-     - **Why:** a GM's slip at the table had no way back but retyping (W83), and the trail was promised in 171 and 176. A table stores inputs, so one diff serves every writer.
+     - **Decided:** Table schema 0.12 adds `audit`: entries of a label and a patch, diffed from the table as it was after the last change, so every writer is covered without naming it. Arrays diff element by element, and a block going in or out is one op. A label names only what came and went. Typing in one field folds into one entry, as does a change that moves only stamps. Undo pops the newest, gates the table afresh, and isn't logged. A press's toast carries Undo; ⋮ → **Activity** lists the rest and clears them. 500 entries kept; a schema step clears them.
+     - **Why:** a GM's slip at the table had no way back but retyping (W83), and 171 and 176 promised a trail. A table stores inputs, so one diff serves every writer.
      - **Rejected:**
-       - The character's `diffChar` as is: every table action stored a whole array, 15–40 KB an entry, over storage within a session.
+       - The character's `diffChar` as is: every action stored a whole array, 15–40 KB, over storage within a session.
        - Recording inside `tableChange`'s callback: most Encounters presses write before it runs.
        - A label written at each of 46 call sites: a new writer would forget, and computing it from the record can't.
        - Undo in any order: 49's reason, dependent state.

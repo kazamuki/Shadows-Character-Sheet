@@ -2787,12 +2787,21 @@ const Engine = (() => {
       for (let i=0;i<b.length;i++) _walk(b[i], a[i], path.concat(i), ops, true);
       return;
     }
-    if (deep && a.length===b.length+1){
-      // One element longer: where it went in. A tail is checked first, as it is cheapest.
-      let at = _eq(a.slice(0, b.length), b) ? b.length : -1;
-      for (let i=0;at<0 && i<a.length;i++) if (_eq(a.slice(0,i).concat(a.slice(i+1)), b)) at = i;
-      if (at >= 0){
-        ops.push({ path:path.slice(), type:"array", op:"insertAt", index:at });
+    if (deep && a.length!==b.length){
+      // A contiguous block went in or out: the common head and tail say where, in one pass.
+      const lo = Math.min(a.length, b.length);
+      let head = 0, tail = 0;
+      while (head<lo && _eq(a[head], b[head])) head++;
+      while (tail<lo-head && _eq(a[a.length-1-tail], b[b.length-1-tail])) tail++;
+      if (a.length > b.length && head+tail===b.length){
+        const op = { path:path.slice(), type:"array", op:"insertAt", index:head };
+        if (a.length-b.length > 1) op.count = a.length-b.length;
+        ops.push(op);
+        return;
+      }
+      if (b.length > a.length && head+tail===a.length){
+        // Highest first, so an undo (which runs them backwards) puts each back at its own index.
+        for (let i=head+(b.length-a.length)-1;i>=head;i--) ops.push({ path:path.slice(), type:"array", op:"removeAt", index:i, item:_clone(b[i]) });
         return;
       }
     }
@@ -2841,7 +2850,7 @@ const Engine = (() => {
     const arr=cont[key];
     if (op.op==="append"){ if (Array.isArray(arr)) arr.length=Math.max(0, arr.length-op.count); }
     else if (op.op==="removeAt"){ if (Array.isArray(arr)) arr.splice(op.index,0,_clone(op.item)); }
-    else if (op.op==="insertAt"){ if (Array.isArray(arr)) arr.splice(op.index,1); }
+    else if (op.op==="insertAt"){ if (Array.isArray(arr)) arr.splice(op.index, Number.isInteger(op.count) && op.count>0 ? op.count : 1); }
     else if (op.op==="set"){ cont[key]=_clone(op.before); }
   }
   function recordAction(ch, kind, label, before){
@@ -4155,7 +4164,8 @@ const Engine = (() => {
         if (!_isObj(op) || !Array.isArray(op.path)) continue;
         if (op.path[0]==="meta") renamed = true; else touched.add(op.path[0]);
       }
-      const found = [];
+      // An add or a remove names only what came and went: the lines a removal renames are collateral.
+      const came = [], changed = [];
       for (const coll of TABLE_RECORDS){
         if (!touched.has(coll)) continue;
         const was = new Map(), now = new Set();
@@ -4163,11 +4173,12 @@ const Engine = (() => {
         for (const r of (_isObj(after) && Array.isArray(after[coll]) ? after[coll] : [])){
           if (!_isObj(r)) continue;
           now.add(r.id);
-          if (!was.has(r.id)) found.push(_recLabel("Added", coll, r));
-          else if (!_eq(was.get(r.id), r)) found.push(_recLabel("Changed", coll, was.get(r.id)));
+          if (!was.has(r.id)) came.push(_recLabel("Added", coll, r));
+          else if (!_eq(was.get(r.id), r)) changed.push(_recLabel("Changed", coll, was.get(r.id)));
         }
-        for (const [id, r] of was) if (!now.has(id)) found.push(_recLabel("Removed", coll, r));
+        for (const [id, r] of was) if (!now.has(id)) came.push(_recLabel("Removed", coll, r));
       }
+      const found = came.length ? came : changed;
       if (!found.length) return renamed ? "Renamed the table" : fallback;
       return found.length===1 ? found[0] : `${found[0]} and ${found.length-1} more`;
     } catch (e) { return fallback; }
@@ -4192,6 +4203,13 @@ const Engine = (() => {
     const isStamp = o => o.path[o.path.length-1]==="updated";
     const core = ops => ops.filter(o=>!isStamp(o));
     const gap = last ? Date.parse(when) - Date.parse(last.date) : NaN;
+    if (!core(patch).length){
+      // Only stamps moved (a field's change handler re-sending what its input events already wrote):
+      // nothing a GM did, so never an entry of its own. The newest takes them, so an undo puts them back.
+      if (!last || !Array.isArray(last.patch)) return { ok:false, noop:true };
+      for (const o of patch) if (!last.patch.some(q=>pathsOf([q])===pathsOf([o]))) last.patch.push(o);
+      return { ok:true, folded:true, entry:last };
+    }
     if (!(opts && opts.fold===false) && last && Array.isArray(last.patch) && scalar(last.patch) && scalar(patch)
         && core(patch).length && gap>=0 && gap<TABLE_FOLD_MS && pathsOf(core(last.patch))===pathsOf(core(patch))){
       let same = !!label && label===last.label;
@@ -4250,7 +4268,7 @@ const Engine = (() => {
     if (op.type!=="array") return false;
     if (op.op==="append") return _wholeNum(op.count);
     if (op.op==="removeAt") return _wholeNum(op.index) && op.item!==undefined;
-    if (op.op==="insertAt") return _wholeNum(op.index);
+    if (op.op==="insertAt") return _wholeNum(op.index) && (op.count===undefined || (_wholeNum(op.count) && op.count>=1));
     if (op.op==="set") return Array.isArray(op.before);
     return false;
   }
