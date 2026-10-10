@@ -4254,14 +4254,11 @@ const Engine = (() => {
     }
     if (!(opts && opts.fold===false) && last && Array.isArray(last.patch) && scalar(last.patch) && scalar(patch)
         && core(patch).length && gap>=0 && gap<TABLE_FOLD_MS && pathsOf(core(last.patch))===pathsOf(core(patch))){
-      let same = !!label && label===last.label;
-      if (!label){
-        // The label names the record as it was before the burst, so a name
-        // being typed doesn't rename its own entry.
-        const orig = _clone(_tableCore(t));
-        for (let i=last.patch.length-1;i>=0;i--) _applyOp(orig, last.patch[i]);
-        same = tableActionLabel(orig, t, patch)===last.label;
-      }
+      // The paths above pin the burst to the same fields of the newest entry's record (the baseline is
+      // rebased after every record and undo, so no index moved between). An explicit label must match;
+      // otherwise the entry keeps the words it got on its first keystroke, naming the record as it was
+      // before the burst, so a name being typed doesn't rename its own entry.
+      const same = label ? label===last.label : true;
       if (same){
         last.date = when;
         for (const o of patch) if (isStamp(o) && !last.patch.some(q=>pathsOf([q])===pathsOf([o]))) last.patch.push(o);

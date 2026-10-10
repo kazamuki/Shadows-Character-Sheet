@@ -6963,3 +6963,22 @@ test("212 (review 2): records are matched by id when a list grew or shrank and w
   t.cast.splice(0, 1); [t.cast[0], t.cast[1]] = [t.cast[1], t.cast[0]];
   assert.equal(Engine.diffTable(base, t).find(o => o.path.join() === "cast").op, "set");
 });
+
+test("212 (review 3): typed and erased back folds and drops whatever the clock does to the record's stamp", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Marta" });
+  t.cast[0].motivation = "Old";
+  const T0 = Date.parse("2026-10-10T12:00:00Z"), stamp = t.cast[0].updated;
+  // The stamp is pinned, as when two keystrokes land in the same millisecond: the patch is the field alone.
+  const press = (v, at) => { const base = plain(t); t.cast[0].motivation = v; t.cast[0].updated = stamp; return Engine.recordTableAction(t, base, undefined, new Date(T0 + at)); };
+  const a = press("X", 0), b = press("Old", 1000);
+  assert.ok(a.ok && !a.folded);
+  assert.ok(a.entry.patch.every(o => o.path[o.path.length - 1] !== "updated"), "the stamp moved; the case isn't pinned");
+  assert.ok(b.ok && b.folded && b.dropped, "typed and erased back left an entry");
+  assert.equal(t.audit.length, 0);
+  // And typed twice over, still one entry.
+  press("X", 2000);
+  assert.ok(press("XY", 3000).folded);
+  assert.equal(t.audit.length, 1);
+  assert.equal(t.audit[0].label, "Changed Marta");
+});
