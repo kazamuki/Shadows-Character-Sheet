@@ -623,11 +623,13 @@ function sectionList(prefix){
 // `filter` adds a search box over the page's [data-filterable] picks (W22);
 // `extra` is anything else the bar should keep in view. `row` (W45) keeps
 // the chips to one line that scrolls sideways, with `extra` outside it.
-function jumpBarHtml(list, { sticky=false, filter=null, extra="", row=false }={}){
+// `wrap` (Decision 209) keeps them in their own box too, but every chip in
+// view: the box takes a line of its own and wraps.
+function jumpBarHtml(list, { sticky=false, filter=null, extra="", row=false, wrap=false }={}){
   const chips = list.map(s=>`<button class="jump" data-jump="${esc(s.id)}">${esc(s.label)}</button>`).join("");
-  return `<nav class="jumpbar${sticky?" sticky":""}${row?" row":""}" aria-label="Jump to a section">${
+  return `<nav class="jumpbar${sticky?" sticky":""}${row?" row":""}${wrap?" wrap":""}" aria-label="Jump to a section">${
     filter?`<input type="search" data-jumpfilter value="${esc(filter.value||"")}" placeholder="${esc(filter.placeholder)}" aria-label="${esc(filter.placeholder)}"><span class="jump-count" data-jumpcount aria-live="polite"></span>`:""}${
-    row ? `<div class="jump-row scroll-row" data-row="jump">${chips}</div>` : chips}${extra}</nav>`;
+    wrap ? `<div class="jump-row jump-wrap">${chips}</div>` : row ? `<div class="jump-row scroll-row" data-row="jump">${chips}</div>` : chips}${extra}</nav>`;
 }
 // W45: a row that scrolls sideways (the vitals bar, a sheet's jump bar)
 // fades on the side with more, as the header's tabs do, and keeps its place
@@ -640,7 +642,17 @@ function bindScrollRows(root){
     if (rowScroll[k]) r.scrollLeft = rowScroll[k];
     tabRowFades(r);
     r.addEventListener("scroll", ()=>{ rowScroll[k]=r.scrollLeft; tabRowFades(r); }, { passive:true });
+    wheelSideways(r);
   });
+}
+// A plain mouse wheel scrolls a sideways row, until it can't. The row hides
+// its scrollbar, so without this a mouse can't reach what's past the edge.
+function wheelSideways(el){
+  el.addEventListener("wheel", e=>{
+    if (Math.abs(e.deltaY)<=Math.abs(e.deltaX)) return;
+    const was=el.scrollLeft; el.scrollLeft+=e.deltaY;
+    if (el.scrollLeft!==was) e.preventDefault();
+  }, { passive:false });
 }
 // Scroll a heading to just under the sticky header (and a sticky bar), then
 // give it focus, so the keyboard carries on from there.
@@ -648,7 +660,9 @@ function jumpTo(id){
   const el=document.getElementById(id); if (!el) return;
   // A sticky bar's own `top` already counts what's pinned above it: the
   // header, and on a narrow wizard the rail's line (Decision 161).
-  const hdr=document.querySelector("header.top"), bar=document.querySelector(".jumpbar.sticky");
+  // A bar that the CSS lets go (the Reference's on a phone, Decision 209) counts for nothing.
+  const hdr=document.querySelector("header.top"), stuck=document.querySelector(".jumpbar.sticky");
+  const bar=stuck && getComputedStyle(stuck).position!=="static" ? stuck : null;
   const barTop=bar ? parseFloat(getComputedStyle(bar).top) : NaN;
   const off=(bar && !isNaN(barTop) ? barTop+bar.offsetHeight : (hdr?hdr.offsetHeight:0)+(bar?bar.offsetHeight:0))+8;
   const calm=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

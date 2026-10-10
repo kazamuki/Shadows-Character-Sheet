@@ -6,7 +6,8 @@ window.SHADOWS_CHANGELOG = [
     "date": null,
     "intro": [],
     "items": [
-      "**A minus sign reads as one.** Negative numbers now show a true minus everywhere: a stat's modifier (BOD 3 reads **−1**), the Conditions' penalties (*Attack/Defense at −5*), a spend in a journal, and a Çredits balance below zero."
+      "**A minus sign reads as one.** Negative numbers now show a true minus everywhere: a stat's modifier (BOD 3 reads **−1**), the Conditions' penalties (*Attack/Defense at −5*), a spend in a journal, and a Çredits balance below zero.",
+      "**The wheel reaches the end of the row.** Where a row of section buttons or vitals runs past the edge of the window, your mouse wheel now scrolls it sideways, as it already did for the tabs."
     ]
   },
   {
