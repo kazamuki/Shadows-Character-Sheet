@@ -145,8 +145,8 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
 | `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
 | `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
-| `F38` | What a Werewolf's Base Powers buy, when it carries every power at Rank 1 (stubbed: shown, spends nothing, Decision 196) | Deighton/Scott |
-| `F39` | How a Vampire spends Base Powers across Innate and Bloodline powers. Stubbed: one is one rank, none above Max Starting Rank (Decision 200) | Deighton/Scott |
+| `F38` | What a Werewolf's Base Powers buy, when it carries every power at Rank 1 (stubbed: shown, spends nothing, Decision 196). **Ruled 2026-10-10:** Innate and the starter power granted, Base Powers are ranks in the Origin's others; closes with W88 | Ken (ruled) |
+| `F39` | How a Vampire spends Base Powers across Innate and Bloodline powers. Stubbed: one is one rank, none above Max Starting Rank (Decision 200). **Ruled 2026-10-10:** Innate granted, Base Powers are Bloodline ranks; closes with W88 | Ken (ruled) |
 | `F41` | Is the Upyr's Built to Last a creation pick, or two powers that don't stack? Stubbed: a pick, as Ken reads it (Decision 200) | Deighton |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
