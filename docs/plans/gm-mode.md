@@ -227,7 +227,7 @@ caution, louder), and S3 measures a realistic table before going on (GQ9).
 | **Work** | CRANK jobs and the generator | S11 |
 | **Notes** | The Session 0 worksheet, freeform notes | S5 |
 
-**As built (S5a, Decision 204; S13a, Decision 207):** the table's tabs are Sessions, Cast, Threats, Encounters, Reference, Notes; Sessions is first, and a new table opens on it.
+**As built (S5a, Decision 204; S13a, Decision 207; S14, Decision 208 adds Find and Jot to the header):** the table's tabs are Sessions, Cast, Threats, Encounters, Reference, Notes; Sessions is first, and a new table opens on it.
 
 The tab list is a design sketch for S3; the order and grouping are Scott's
 and Deighton's call (GQ1).
@@ -529,6 +529,7 @@ and the Codex pack itself is built from `private/`.
 | S10 | The encounter tracker, built around Conditions; PCs by typed name | Rule or shape | S8, S9 | No |
 | S5 | Sessions: attendance, threads, Next session, the award log, close-out, the Journal, Session 0 | Rule or shape | S8 | No |
 | S13 | The GM screen: Conditions and the Codex first, then the rest of the reference | Fix + content | S9 | No |
+| S14 | The secretary: Find, one search over the table, and Jot, a line kept as a note with its session (W85, Decision 208) | Rule or shape | S5, S8 | No |
 | S6 | The gazetteer and the crew's places | Content + shape | S3a | No |
 | S7 | Factions and clocks | Rule or shape | S6, S8 | No |
 | S3b | Seats: players, import, the card spread (Health, Awareness, Conditions first), the read-only sheet | Rule or shape | S3a | No |
@@ -769,6 +770,13 @@ Bound/Changed/Other rule in the builder (its overlap and cap rules are
 arithmetic the builder can do, and a −2 it flags for the GM, as v2 says), the ~28 entries, the lieutenants as
 roster examples, the Site Profiles on places with their tracks and clocks. If
 it turns out to need code, that's a finding about S8 and S9's shape.
+
+### S14 — The secretary (W85)
+
+**Built** (Decision 208, table schema 0.10, switched off; `plans/gm-mode/S14-secretary.md`). From Deighton's answers (§1a): his one
+tool is "a secretary", and what he loses is the small detail, names first. A table's header gains **Find**, one search over the
+cast, sessions, interactions, threads, notes and encounters, and **Jot**, a line kept as a note with the session dated today.
+Packs and the Reference keep their own searches; a session copied out as Markdown for Obsidian is W86.
 
 ### S13 — The GM screen
 

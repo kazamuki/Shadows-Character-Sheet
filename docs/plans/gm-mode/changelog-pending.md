@@ -37,3 +37,5 @@ something a GM can see adds its line here.
 - **A Reference tab.** Conditions, the Codex's tiers, roles and traits,
   defense, checks, modifiers and the rest of the book's quick reference, on
   one page you can search.
+- **Find and Jot, on every page of a table.** Search everything you've
+  written, and jot a line down mid-fight without leaving it.

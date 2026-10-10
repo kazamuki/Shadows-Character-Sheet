@@ -1344,3 +1344,21 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .ref-items li{margin:0 0 6px; max-width:70ch}
 .ref-more{display:block; font-size:.82rem; color:var(--dim)}
 @media (min-width:640px){ .ref-frame table.ref{width:100%} }
+
+/* Find and Jot (Decision 208): two words in the header's first row, beside the menu. */
+.hdr-act{background:none; border:1px solid var(--frame); border-radius:6px; color:var(--dim);
+  height:30px; padding:0 10px; margin-right:6px; font-size:.82rem; cursor:pointer; position:relative}
+.hdr-act:hover{border-color:var(--violet-hi); color:var(--text)}
+.hdr-act::after{content:""; position:absolute; left:50%; top:50%; width:max(100%, 26px); height:max(100%, 26px); transform:translate(-50%, -50%)}
+@media (pointer:coarse){ .hdr-act{min-width:44px} .hdr-act::after{width:max(100%, 44px); height:max(100%, 44px)} }
+.find-h{margin:16px 0 6px; font-size:.95rem}
+.find-n{color:var(--dim); font-weight:400; font-size:.8rem}
+.find-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+.find-hit{display:block; width:100%; text-align:left; background:var(--panel-2); border:1px solid var(--frame); border-radius:6px;
+  color:var(--text); padding:9px 12px; cursor:pointer; min-height:44px; overflow-wrap:anywhere; white-space:normal}
+.find-hit:hover{border-color:var(--violet-hi)}
+.find-title{display:block; font-weight:600}
+.find-field{color:var(--dim); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em}
+.find-snip{font-size:.88rem}
+.find-snip mark{background:var(--violet-hi); color:inherit; border-radius:2px; padding:0 1px}
+.sr-only{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}

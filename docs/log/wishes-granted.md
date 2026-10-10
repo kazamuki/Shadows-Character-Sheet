@@ -753,3 +753,31 @@ already lives in the journal by row id (Decision 154). The cap is IPE's 10 for
 mortals (`ip.rankCap`); Werewolf and Vampire powers stop at their own printed
 maximums. Whether a raise needs anything beyond IP (fiction, a teacher) is the
 GM's, as with stats and skills.
+
+### GM mode
+
+**W85 — A table's secretary: one search over everything, and a line jotted from any tab.** *Ken, from Deighton · → Decision 208, table schema 0.10: Find in the header, and Jot as a note with its session (switched off)*
+Deighton's one-tool-tomorrow answer was "a secretary, to keep track of the
+details": he forgets the smaller ones, more as time passes; he keeps an
+improvised NPC in memory or has a player write it down; and he writes a
+session up "like a police report" when he does it right. The table already
+stores most of it (journals, the cast and their interactions, threads,
+notes, encounters), but each tab filters only its own records, so "who was
+that fixer, three sessions ago?" has no single place to ask. In the
+follow-up he said names go first, then the plot itself; that he'd jot
+mid-session "if it's fast and easy", on whatever device is nearest; and
+that he couldn't say what he'd search for, since every game's details are
+its own. So the search can't be built around fixed fields. Two halves:
+- **Search the whole table:** one field that finds a word in every session's
+  journal, every cast member's record and interaction, every thread, note
+  and encounter, each hit naming where it lives and opening it.
+- **Jot from anywhere:** a line the GM can write without leaving the tab
+  they're on, mid-fight included, kept with the session that's running (or
+  the table, with none) and readable later on that session's page.
+*To respect:* a table stores inputs only (constraint 7), so the search is
+computed, never an index stored in the file; the jot is a new record, which
+is a table-schema bump and a `migrateTable()` step (170); built for a
+tablet (§1a: every control a tap); a found word is shown as text (a table
+is untrusted input, 124). It overlaps S13a's Reference search and the
+Notes tab: decide whether the jot is a note, a journal line or its own kind
+before building.

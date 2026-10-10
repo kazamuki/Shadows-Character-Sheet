@@ -3954,7 +3954,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.9";
+  const TABLE_SCHEMA_VERSION = "0.10";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -4023,17 +4023,11 @@ const Engine = (() => {
     if (typeof arrived!=="string" || _versionNewer("0.9", arrived)){
       for (const x of (Array.isArray(c.sessions) ? c.sessions : [])) if (_isObj(x)) x.close = null;
     }
-    if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
-    const used = new Set();
-    c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
-    for (const n of c.notes){
-      n.title = _str(n.title);
-      n.text = _str(n.text);
-      if (!(typeof n.id==="string" && NOTE_ID_RE.test(n.id)) || used.has(n.id)) n.id = newTableNoteId(used);
-      used.add(n.id);
-      n.created = _isoOrNull(n.created);
-      n.updated = _isoOrNull(n.updated);
+    //   Schema 0.10 (Decision 208): a note remembers the session it was written in. Nothing is guessed.
+    if (typeof arrived!=="string" || _versionNewer("0.10", arrived)){
+      for (const n of (Array.isArray(c.notes) ? c.notes : [])) if (_isObj(n)) n.session = null;
     }
+    if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
     for (const n of c.cast) _castMember(n, usedCast);
@@ -4041,6 +4035,18 @@ const Engine = (() => {
     const usedSession = new Set();
     c.sessions = (Array.isArray(c.sessions) ? c.sessions : []).filter(_isObj);
     for (const x of c.sessions) _session(x, usedSession);
+    // Notes after sessions: a note's session is checked against the ids above (Decision 208).
+    const used = new Set();
+    c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
+    for (const n of c.notes){
+      n.title = _str(n.title);
+      n.text = _str(n.text);
+      n.session = typeof n.session==="string" && usedSession.has(n.session) ? n.session : null;
+      if (!(typeof n.id==="string" && NOTE_ID_RE.test(n.id)) || used.has(n.id)) n.id = newTableNoteId(used);
+      used.add(n.id);
+      n.created = _isoOrNull(n.created);
+      n.updated = _isoOrNull(n.updated);
+    }
     const usedThread = new Set();
     c.threads = (Array.isArray(c.threads) ? c.threads : []).filter(_isObj);
     for (const x of c.threads) _thread(x, usedThread, usedSession);
@@ -4059,10 +4065,20 @@ const Engine = (() => {
       : [];
   }
   const _tableStamp = (t, n) => { const now = new Date().toISOString(); t.meta.updated = now; if (n) n.updated = now; };
+  // The one session dated that day, else null: none, or more than one (Decisions 203, 208).
+  function _sessionOnDay(t, day){
+    const d = _day(day);
+    const days = d ? _sessions(t).filter(e=>e.date===d) : [];
+    return days.length===1 ? days[0].id : null;
+  }
   function addTableNote(t, f){
+    f = _isObj(f) ? f : {};
+    // A jot is a note with a line to say; the Notes tab's New note may still be empty.
+    if (f.jot===true && !_str(f.text).trim()) return { ok:false, why:"Write something first." };
     const now = new Date().toISOString();
     const used = new Set(t.notes.map(n=>n.id));
-    const n = { id:newTableNoteId(used), title:_str((f||{}).title), text:_str((f||{}).text), created:now, updated:now };
+    const session = _sessions(t).some(e=>e.id===f.session) ? f.session : _sessionOnDay(t, f.date);
+    const n = { id:newTableNoteId(used), title:_str(f.title), text:_str(f.text), session, created:now, updated:now };
     t.notes.unshift(n);
     _tableStamp(t);
     return { ok:true, id:n.id };
@@ -4073,6 +4089,7 @@ const Engine = (() => {
     if (_isObj(f)){
       if ("title" in f) n.title = _str(f.title);
       if ("text" in f) n.text = _str(f.text);
+      if ("session" in f && (f.session===null || _sessions(t).some(e=>e.id===f.session))) n.session = f.session;
     }
     _tableStamp(t, n);
     return { ok:true };
@@ -4226,8 +4243,7 @@ const Engine = (() => {
     const used = new Set(t.interactions.map(x=>x && x.id));
     const date = _day(f.date);
     // A new line takes the one session dated that day (Decision 203); a gate never does.
-    const days = date ? _sessions(t).filter(e=>e.date===date) : [];
-    const session = _sessions(t).some(e=>e.id===f.session) ? f.session : days.length===1 ? days[0].id : null;
+    const session = _sessions(t).some(e=>e.id===f.session) ? f.session : _sessionOnDay(t, date);
     const x = { id:newInteractionId(used), kind,
                 cast:_castLinks((Array.isArray(f.cast) ? f.cast : []).filter(id=>typeof id==="string").map(id=>({ kind:"cast", id }))),
                 crew:_roleList(f.crew), text, date, session, created:now, updated:now };
@@ -4264,6 +4280,7 @@ const Engine = (() => {
     return _interactions(t).filter(x=>(Array.isArray(x.cast) ? x.cast : []).some(l=>_isObj(l) && l.id===castId)).sort(_newest);
   }
   const _sessions = t => Array.isArray(t && t.sessions) ? t.sessions.filter(_isObj) : [];
+  const _notes = t => Array.isArray(t && t.notes) ? t.notes.filter(_isObj) : [];
   const _threads = t => Array.isArray(t && t.threads) ? t.threads.filter(_isObj) : [];
   // Who knows what: the same records, from the crew's end. Names that differ
   // only in case or spaces are one person, shown as first spelled. A line with
@@ -4334,6 +4351,7 @@ const Engine = (() => {
     if (!x) return { ok:false, why:"No such session." };
     t.sessions.splice(t.sessions.indexOf(x), 1);
     for (const i of _interactions(t)) if (i.session===id) i.session = null;
+    for (const n of _notes(t)) if (n.session===id) n.session = null;
     for (const h of _threads(t)){ if (h.opened===id) h.opened = null; if (h.closed===id) h.closed = null; }
     _tableStamp(t);
     return { ok:true };
@@ -4350,6 +4368,9 @@ const Engine = (() => {
   function sessionTitle(s){
     return _isObj(s) && Number.isFinite(s.number) ? `Session ${s.number}` : "Session";
   }
+  // The notes jotted in a session, newest first (Decision 208).
+  const sessionNotes = (t, id) => _notes(t).filter(n=>n.session===id && typeof id==="string")
+    .map((n, i)=>({ n, i })).sort((a, b)=>-_made(a.n, b.n) || a.i - b.i).map(e=>e.n);
   const sessionInteractions = (t, id) => _interactions(t).filter(x=>x.session===id).sort(_newest);
   function sessionOffered(t, id){
     const s = _sessions(t).find(e=>e.id===id);
@@ -4413,6 +4434,109 @@ const Engine = (() => {
     const open = all.filter(h=>h.status==="open").sort((a, b)=>(b.current===true) - (a.current===true) || _made(a, b) || older(a, b));
     const shut = all.filter(h=>h.status!=="open").sort((a, b)=>_made({ created:b.updated }, { created:a.updated }) || older(b, a));
     return open.concat(shut);
+  }
+  // ── Find (Decision 208) ─────────────────────────────────────────────────
+  // One search over the whole table, computed on every call and stored nowhere
+  // (constraint 7). Every word must be somewhere in a record; a hit says which
+  // field the first word was in and cuts the words around it.
+  // The fold the snippet needs: every character keeps its place, so an index in
+  // the folded text is an index in the original. A character is lowercased only
+  // when its lowercase is as long as it was; no trim.
+  function _foldPlace(v){
+    let out = "";
+    for (const ch of _str(v)){
+      if (ch==="‘" || ch==="’" || ch==="ʼ"){ out += "'"; continue; }
+      const low = ch.toLowerCase();
+      out += low.length===ch.length ? low : ch;
+    }
+    return out;
+  }
+  const SNIP_REACH = 60;
+  function _snip(text, at, len){
+    let before = text.slice(Math.max(0, at - SNIP_REACH), at), after = text.slice(at + len, at + len + SNIP_REACH);
+    if (at > SNIP_REACH){
+      const i = before.indexOf(" ");
+      if (i >= 0) before = before.slice(i + 1);
+      before = "…" + before;
+    }
+    if (at + len + SNIP_REACH < text.length){
+      const i = after.lastIndexOf(" ");
+      if (i >= 0) after = after.slice(0, i);
+      after += "…";
+    }
+    return { before, hit:text.slice(at, at + len), after };
+  }
+  // The fields of each record, in the order they are searched: [label, text].
+  function _castFields(n){
+    const f = [];
+    const add = (label, v) => { const s = _str(v); if (s) f.push([label, s]); };
+    add("Name", n.name); add("Flavor", n.flavor); add("Description", n.description); add("Origin", n.origin);
+    for (const r of _strList(n.npcRoles)) add("Role", r);
+    add("Enemy role", n.enemyRole);
+    for (const a of _strList(n.affiliations)) add("Affiliation", a);
+    add("Motivation", n.motivation); add("Resources", n.resources); add("Line", n.line);
+    add("If pushed", n.ifPushed); add("GM note", n.gmNote);
+    const b = _isObj(n.block) ? n.block : null;
+    if (b){
+      for (const k of (Array.isArray(b.traits) ? b.traits : [])) if (_isObj(k)){ add("Trait", k.name); add("Trait", k.text); }
+      for (const a of _strList(b.armor)) add("Armor", a);
+      for (const g of _strList(b.gear)) add("Gear", g);
+    }
+    return f;
+  }
+  function _sessionFields(s){
+    const f = [["Session", sessionTitle(s)]];
+    for (const p of _strList(s.present)) f.push(["Who was there", p]);
+    const j = _isObj(s.journal) ? s.journal : {};
+    for (const k of JOURNAL_PARTS) f.push(["journal." + k, _str(j[k])]);
+    for (const l of (_isObj(s.close) && Array.isArray(s.close.lines) ? s.close.lines : [])) if (_isObj(l)){
+      f.push(["Close-out", _str(l.name)]); f.push(["Close-out", _str(l.note)]);
+    }
+    return f;
+  }
+  function _interactionFields(t, x){
+    const f = [["What happened", _str(x.text)]];
+    for (const c of _strList(x.crew)) f.push(["Crew", c]);
+    for (const l of (Array.isArray(x.cast) ? x.cast : [])) f.push(["With", linkName(t, l).name]);
+    return f;
+  }
+  function _encounterFields(t, e){
+    const f = [["Encounter", encounterTitle(e)]];
+    for (const r of _rowList(e)){
+      f.push(["In it", r.kind==="cast" && r.cast ? linkName(t, r.cast).name : _str(r.name)]);
+      for (const c of (Array.isArray(r.conditions) ? r.conditions : [])) if (_isObj(c)){
+        f.push(["Condition", _str(c.note)]); f.push(["Condition", _str(c.source)]);
+      }
+    }
+    return f;
+  }
+  const _byMade = list => list.map((x, i)=>({ x, i })).sort((a, b)=>-_made(a.x, b.x) || a.i - b.i).map(e=>e.x);
+  function tableSearch(t, q){
+    try {
+      if (typeof q!=="string" || !_isObj(t)) return [];
+      const folded = _foldPlace(q).trim();
+      if (folded.length < 2) return [];
+      const words = folded.split(/\s+/).filter(Boolean);
+      const hits = [];
+      const test = (kind, id, title, fields) => {
+        const lows = fields.map(([label, text])=>[label, text, _foldPlace(text)]);
+        if (!words.every(w=>lows.some(e=>e[2].includes(w)))) return;
+        const e = lows.find(x=>x[2].includes(words[0]));
+        hits.push({ kind, id, title, field:e[0], snip:_snip(e[1], e[2].indexOf(words[0]), words[0].length) });
+      };
+      const cast = (Array.isArray(t.cast) ? t.cast : []).filter(_isObj)
+        .map((n, i)=>({ n, i, k:_fold(n.name) })).sort((a, b)=>a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i);
+      for (const { n } of cast) test("cast", n.id, _str(n.name).trim() || "Unnamed", _castFields(n));
+      for (const s of sessionList(t)) test("session", s.id, sessionTitle(s), _sessionFields(s));
+      for (const x of _interactions(t).sort(_newest)){
+        const first = Array.isArray(x.cast) && x.cast.length ? linkName(t, x.cast[0]).name : _strList(x.crew)[0];
+        test("interaction", x.id, first || "A line", _interactionFields(t, x));
+      }
+      for (const h of threadList(t)) test("thread", h.id, _str(h.title).trim() || "Untitled", [["Thread", _str(h.title)], ["Notes", _str(h.notes)]]);
+      for (const n of _byMade(_notes(t))) test("note", n.id, _str(n.title).trim() || "Untitled note", [["Title", _str(n.title)], ["Note", _str(n.text)]]);
+      for (const e of _byMade(_encList(t))) test("encounter", e.id, encounterTitle(e), _encounterFields(t, e));
+      return hits;
+    } catch (e) { return []; }
   }
   // Does a stat block hold a number anywhere: a stat, an authored stat or a skill total?
   function blockHasNumber(b){
@@ -5669,7 +5793,7 @@ const Engine = (() => {
     // Audit trail and undo
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes
-    newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote,
+    newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
     isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
