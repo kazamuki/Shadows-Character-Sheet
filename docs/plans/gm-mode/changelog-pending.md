@@ -45,3 +45,5 @@ something a GM can see adds its line here.
 - **Add anyone to a fight from wherever you are.** Every cast member, Codex
   entry and Threats card names the encounter it goes to, or starts a new one,
   and an encounter searches the Codex itself.
+- **Undo at the table.** Every change to your table, from a hit to a close-out,
+  can be taken back, last first: from the toast, or from Activity in the menu.
