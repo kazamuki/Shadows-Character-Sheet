@@ -913,7 +913,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.10",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.11",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   notes: [ { id: "N-XXXXXXXX", title: "", text: "",
@@ -928,6 +928,7 @@ commit** — a GM's table must never change under them.
     motivation: "", resources: "", line: "", ifPushed: "", gmNote: "",
     status: "alive",                 // alive | dead | missing | gone ("Out of the picture": alive, out of the story)
     block: null,                     // or a stat block, below
+    ally: false,                     // 0.11: Fights with the crew; true only when it is (Decision 210). It sets the side a row starts on, nothing else
     from: null,                      // 0.4: or { kind: "entry", pack: "PK-…", id, name }, where a Use copied it from (182); the name is stored, the pack lives outside the table
     created: "<ISO>", updated: "<ISO>"
   } ],
@@ -973,12 +974,16 @@ commit** — a GM's table must never change under them.
     status: "planned",               // planned | running | ended; any number planned, one running at most (the gate ends all but the newest)
     round: 0, turn: null,            // 1… while running; turn is a row id, null at Reset, planned and ended
     acted: [],                       // row ids that have had their turn this round; kept only while running, cleared at Start and at each Reset
+    by: "person",                    // 0.11: "person" (one at a time) | "wave" (Wave Initiative); anything else reads "person" (Decision 210)
+    sides: [ { id: "crew", name: "" },              // 0.11: the crew first, always, its name never read; then one to five others, each `SD-XXXXXXXX`, at most six in all
+             { id: "SD-XXXXXXXX", name: "" } ],     // a blank name reads by its place: The other side, Side 3…
     rows: [ {
       id: "R-XXXXXXXX",              // unique in its encounter
       kind: "pc",                    // pc (typed name, the GM's scratch copy, 188) | cast (a link, read live) | entry (its own copy of a pack entry's block)
       name: "",
       cast: null,                    // cast rows: { kind: "cast", id, name } (178's link; the name is kept when the member is deleted)
       from: null, block: null,       // entry rows: 182's from, and the row's own stat block
+      side: "crew",                  // 0.11: the id of one of this encounter's sides; anything else reads from the kind (pc: the crew, else the first other side)
       order: null, last: false, out: false,   // Combat Sense result; Goes last; out of it (skipped by Next)
       damage: 0,                     // HP taken
       massive: 0,                    // 0.6: Health Levels gone to Massive damage (Decision 191); every kind of row
@@ -1004,7 +1009,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 ```
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
-one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
+one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
 computed and never written into the file (constraint 7).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
@@ -4241,7 +4246,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Turn Reset (100) and Pain (96) are unchanged; this applies them per row.
      - **Revisit if:** the app rolls checks, S10b's pipeline makes a tick a hit, GQ23 says NPCs don't take Pain, or F24 is answered.
      - **Built:** as 188.
-    → **Superseded in part by Decision 191** — every row also takes a hit; Take and Heal stand.
+    → **Superseded in part by Decisions 191 and 210** — every row also takes a hit (191); in waves, a side's place comes first and ties are flagged between sides (210).
 
 190. **Use has two verbs: Add to cast, and Add to the encounter open on the Encounters tab, on an entry, a group and a cast member.**
      *2026-10-07 · Ken + Claude · Touches: Use, data-tuse, Add to cast, Add to encounter, entry page, group page, cast member page, castFromEntry, Decision 182*
@@ -4493,6 +4498,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. 207 didn't say how its bar laid out; it had borrowed 165's row. SQ8's sticky bar stands from 640px.
      - **Revisit if:** the Reference grows past three rows of chips at 768px, or a GM on a phone misses the bar once scrolled.
      - **Built:** switched off (173); no data or schema bump; log 2026-10-09 (the Reference's chips).
+
+210. **An encounter runs one at a time or in waves: sides act in turn, the side holding the best Combat Sense first, each row on a side the GM can move it off, and a cast member can fight with the crew.**
+     *2026-10-09 · Ken + Claude · Touches: encounter sides, row side, Wave Initiative, Order of Engagement, _encOrder, addSide, removeSide, cast ally, Fights with the crew, Combat Sense, ties, table schema 0.11, Decision 174, Decision 189, GQ30*
+     - **Decided:** An encounter runs **one at a time** (Combat Sense, as 189) or by **Wave Initiative**. It has sides: the crew and one to five others, named by the GM. A row is on one; a PC starts on the crew's, a cast member marked **Fights with the crew** too, everyone else on the first other side. In waves, sides go in order of their best Combat Sense (leaving out Out and Goes last rows that haven't acted this round), a tie between sides flagged for a reroll; each side's rows act in the order the GM taps them. The turn follows who has acted, so switching mid-round skips no one. Table schema 0.11.
+     - **Why:** `0530` allows "individuals or … sides, in waves". Deighton runs fights in waves, Scott one at a time (§1a).
+     - **Rejected:**
+       - Waves for the whole table: one GM runs both ways depending on the fight.
+       - The GM ordering the sides by hand: the table rolls Combat Sense anyway (Ken, SQ2).
+       - Two sides only: a three-way fight needs three (Ken).
+       - Drag and drop between sides: fiddly by touch; a select does it (Ken).
+       - *Side done* in one press: the GM still needs to know who hasn't gone (SQ5).
+     - **Replaces:** Decision 189 in part: in waves, a side's place comes before a row's result, and ties are flagged between sides. It extends 174 (`ally`) and 188 (sides).
+     - **Revisit if:** GQ30 says the book orders sides another way, or seats (S3b) let a player end their own turn.
+     - **Built:** table schema 0.11, switched off (173); log 2026-10-09.
 
 ## 5. Open Flags
 

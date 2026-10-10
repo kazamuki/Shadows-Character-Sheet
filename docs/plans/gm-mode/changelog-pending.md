@@ -39,3 +39,6 @@ something a GM can see adds its line here.
   one page you can search.
 - **Find and Jot, on every page of a table.** Search everything you've
   written, and jot a line down mid-fight without leaving it.
+- **Wave Initiative.** Run a fight the way your table does: one at a time by
+  Combat Sense, or side by side, the best roll's side first, with as many sides
+  as the fight has.

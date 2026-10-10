@@ -632,6 +632,7 @@ function castPageHtml(n){
       <div><label class="field"><span>NPC roles</span><input type="text" data-cf="npcRoles" value="${esc(n.npcRoles.join(" / "))}" placeholder="Separate with / or ," autocomplete="off"></label>${castRolesHtml(n)}</div>
       ${castText(n,"enemyRole","Enemy role","",false,c.enemyRoles.length ? "cast-enemies" : "")}${datalistHtml("cast-enemies", c.enemyRoles)}
       <div><label class="field"><span>Tier</span><input type="number" step="1" min="1" inputmode="numeric" data-cf="tier" value="${numAttr(n.tier)}"></label>${packs ? `<p class="cast-guide" data-ctier hidden></p>` : ""}</div>
+      <div class="field cast-ally"><span>In a fight</span><div class="form-toggle" role="group" aria-label="In a fight"><button type="button" data-cally class="${n.ally?"on":""}" aria-pressed="${n.ally}">Fights with the crew</button></div></div>
       <label class="field"><span>Status</span><select data-cf="status">${["alive","dead","missing","gone"].map(s=>`<option value="${s}"${s===n.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
     </div>
     ${castText(n,"motivation","What they want","",true)}
@@ -838,6 +839,8 @@ function bindCastPage(main, n){
     // On blur a list shows what was stored: trimmed, empties dropped.
     if (key==="affiliations") el.addEventListener("change", ()=>{ el.value=own().affiliations.join(" / "); });
   });
+  const ally=main.querySelector("[data-cally]");
+  if (ally) ally.onclick=()=>{ const on=!own().ally; tableChange(()=>Engine.editCastMember(S.table, id, { ally:on }), false); ally.classList.toggle("on", on); ally.setAttribute("aria-pressed", String(on)); };
   bindInteractions(main, n);
   const fromBtn=main.querySelector("[data-tfrom]");
   if (fromBtn) fromBtn.onclick=()=>openThreat(fromBtn.dataset.tfrom, null, n.id);
@@ -1808,6 +1811,8 @@ TIPS.condition = id => { const d=Engine.conditionById(id); return d && { title:d
 // A trait's text on the active row (Decision 192): keyed row id | index in the block.
 TIPS.enctrait = key => { const [row, i]=String(key).split("|"), e=encOpenNow(), v=e && Engine.encounterView(S.table, e.id, packsMemo).rows.find(x=>x.row.id===row),
   k=v && v.traits.find(x=>String(x.index)===i); return k && { title:k.name.trim() || "Trait", text:k.text }; };
+// What Wave Initiative means (Decision 210): the book's words for it, in the table's.
+TIPS.wave = () => ({ title:"Wave Initiative", text:"Everyone rolls Combat Sense. The side holding the best result acts first, everyone on it, in any order; then the side with the next best, and so on. The book runs a round “as individuals or as sides, in waves”." });
 TIPS.painlevel = lv => { const p=D.resources.healthLevels.painLevels.find(x=>String(x.level)===String(lv)); return p && { title:p.label, text:p.description }; };
 const encList = () => Array.isArray(S.table.encounters) ? S.table.encounters : [];
 function encOpenNow(){
@@ -1952,7 +1957,7 @@ function encCondFormHtml(v){
     <div class="enc-condbtns"><button class="btn sm primary" data-econd-add>Add</button><button class="btn sm" data-econd-cancel>Cancel</button></div>
     ${d.err ? `<p class="enc-err" role="alert">${esc(d.err)}</p>` : ""}</div>`;
 }
-function encRowHtml(v, e){
+function encRowHtml(v, e, sides){
   const r=v.row, id=esc(r.id), ended=e.status==="ended", running=e.status==="running", pc=r.kind==="pc";
   const ref = r.kind==="entry" && v.from && v.from.packId ? (()=>{
     const f=Engine.packEntry(packsMemo, v.from.packId, v.from.id), label=(f && f.entry.ref.trim()) || v.from.name.trim() || "Codex";
@@ -1971,6 +1976,7 @@ function encRowHtml(v, e){
         <div class="form-toggle" role="group" aria-label="${esc(v.name)}">
           <button type="button" data-elast="${id}" class="${r.last?"on":""}" aria-pressed="${r.last}">Goes last</button>
           <button type="button" data-eout="${id}" class="${r.out?"on":""}" aria-pressed="${r.out}">Out</button></div>
+        ${sides ? `<label class="field"><span>Side</span><select data-eside="${id}">${sides.map(s=>`<option value="${esc(s.id)}"${s.id===v.side?" selected":""}>${esc(s.title)}</option>`).join("")}</select></label>` : ""}
         <button class="btn sm danger" data-erm="${id}">Remove</button></details></div>
     ${S.encDmg && S.encDmg.row===r.id ? `<form class="enc-dmg" data-edmgform="${id}">
         <input type="number" min="0" step="1" inputmode="numeric" data-edmgn aria-label="${S.encDmg.sign>0?"HP taken":"HP healed"}">
@@ -2095,13 +2101,31 @@ function encAddHtml(e){
       <button class="btn" data-enc-addpc>Add a PC</button></div>
     <p class="step-note">From the Codex: open an entry or a group on Threats.</p></section>`;
 }
+// A side under Wave Initiative (Decision 210): its heading, its best and a tie between sides, a More
+// for its name and Remove, and its rows. The crew's name and the last other side can't be changed or taken away.
+function encSideHtml(s, v, e){
+  const ended=e.status==="ended", crew=s.id==="crew", id=esc(s.id), others=v.sides.length - 1;
+  const more = ended ? "" : `<details class="enc-more enc-side-more" data-emore="${id}"${S.encMore && S.encMore[s.id] ? " open" : ""}><summary>More</summary>
+      ${crew ? "" : `<label class="field"><span>Name</span><input type="text" data-esidename="${id}" value="${esc(((e.sides || []).find(x=>x.id===s.id) || {}).name || "")}" placeholder="${esc(s.title)}" autocomplete="off"></label>`}
+      ${crew || others < 2 ? "" : `<button class="btn sm danger" data-esiderm="${id}">Remove side</button>`}</details>`;
+  const rows = s.rowIds.map(rid=>v.rows.find(r=>r.row.id===rid)).filter(Boolean);
+  return `<section class="enc-side" data-eside-sec="${id}">
+    <div class="enc-side-head"><h2 class="enc-side-h">${esc(s.title)}</h2>${s.best!==null ? `<span class="enc-num">Best ${esc(s.best)}</span>` : ""}${s.tied ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${more}</div>
+    ${rows.length ? `<ul class="enc-rows">${rows.map(r=>encRowHtml(r, e, ended ? null : v.sides)).join("")}</ul>` : `<p class="step-note">Nobody on this side.</p>`}</section>`;
+}
 function encPageHtml(e){
   const v=Engine.encounterView(S.table, e.id, packsMemo), title=v.title, ended=e.status==="ended", running=e.status==="running", wrapping=!!encWrapNow(e);
   const status = running ? `Round ${e.round}` : ended ? (e.round ? `Ended · ${encRounds(e.round)}` : "Ended · not run") : "Planned";
   const bar = `<div class="enc-bar"><b class="enc-status">${esc(status)}</b>
     ${e.status==="planned" ? `<button class="btn primary" data-enc-start>Start</button><button class="btn" data-enc-end>End</button>` : ""}
-    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
-  const rows = v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
+    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>
+    ${!ended && !wrapping ? `<div class="enc-turns"><div class="form-toggle" role="group" aria-label="Turns">
+        <button type="button" data-eby="person" class="${v.by==="person"?"on":""}" aria-pressed="${v.by==="person"}">One at a time</button>
+        <button type="button" data-eby="wave" class="${v.by==="wave"?"on":""}" aria-pressed="${v.by==="wave"}">Wave Initiative</button></div>
+      <button type="button" class="tag" data-tip="wave" data-term="wave" aria-label="What Wave Initiative means">?</button></div>`
+      : ended && v.by==="wave" ? `<p class="enc-turns"><span class="enc-mode">Wave Initiative</span></p>` : ""}`;
+  const rows = v.by==="wave" ? v.sides.map(s=>encSideHtml(s, v, e)).join("") + (!ended && v.sides.length < 6 ? `<p><button class="btn" data-eaddside>Add a side</button></p>` : "")
+    : v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e, null)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
   return `<p><button class="btn sm" data-enc-back>Back to encounters</button></p>
     ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
       : `<label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>`}
@@ -2158,6 +2182,12 @@ function bindEncounters(main){
       if (!r.ok){ S.encWrap.err=r.why; redraw(); focus("[data-ew-end]"); return; }
       S.encWrap=null; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; tableChange(()=>{}); focus("[data-enc-new]"); },
     "data-enext": next,
+    "data-eby": b => { if (b.dataset.eby===encOpenNow().by){ focus(attrSel("data-eby", b.dataset.eby)); return; } const r=Engine.editEncounter(S.table, eid(), { by:b.dataset.eby }); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(attrSel("data-eby", b.dataset.eby)); },
+    "data-eaddside": () => { const r=Engine.addSide(S.table, eid(), {}); if (!r.ok){ notice(r.why); return; }
+      S.encMore=Object.assign(S.encMore||{}, { [r.id]:true }); tableChange(()=>{}); focus(attrSel("data-esidename", r.id)); },
+    "data-esiderm": b => { const e=encOpenNow(), r=Engine.removeSide(S.table, e.id, b.dataset.esiderm); if (!r.ok){ notice(r.why); return; }
+      tableChange(()=>{}); const to=Engine.sideTitle(encOpenNow(), encOpenNow().sides[1].id);
+      notice(r.moved ? `Moved ${r.moved} to ${to}.` : "Side removed. Nobody was on it."); focus("[data-eaddside]") || focus("[data-eby]"); },
     "data-enc-pick": () => { S.encPick=!S.encPick; redraw(); if (S.encPick) focus("[data-enc-q]"); else focus("[data-enc-pick]"); },
     "data-enc-addcast": b => { const id=b.dataset.encAddcast, after=pickNextAdd(id), r=Engine.addParticipant(S.table, eid(), { kind:"cast", id });
       if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(after ? attrSel("data-enc-addcast", after) : "[data-enc-q]"); },
@@ -2230,6 +2260,10 @@ function bindEncounters(main){
     const row = (key, f) => { edit(el.dataset[key], f(el.value)); focus(attrSel(`data-${key.replace(/[A-Z]/g, c=>"-"+c.toLowerCase())}`, el.dataset[key])); };
     if ("eorder" in d) row("eorder", v=>({ order:v })); else if ("ehp" in d) row("ehp", v=>({ hp:v }));
     else if ("elevels" in d) row("elevels", v=>({ levels:v })); else if ("eaware" in d) row("eaware", v=>({ awareness:v }));
+    else if ("eside" in d){ const r=Engine.editParticipant(S.table, eid(), d.eside, { side:el.value }); if (!r.ok){ notice(r.why); return; }
+      S.encMore=Object.assign(S.encMore||{}, { [d.eside]:true }); tableChange(()=>{}); focus(attrSel("data-eside", d.eside)); }
+    else if ("esidename" in d){ const r=Engine.renameSide(S.table, eid(), d.esidename, el.value); if (!r.ok){ notice(r.why); return; }
+      tableChange(()=>{}); focus(attrSel("data-esidename", d.esidename)); }
     else if ("ename" in d) { edit(d.ename, { name:el.value }); focus(attrSel("data-ename", d.ename)); }
     else if ("econdId" in d){ S.encCond.id=el.value; S.encCond.loc=""; S.encCond.err=""; redraw(); focus("[data-econd-id]"); }
     else if ("econdLoc" in d) S.encCond.loc=el.value;

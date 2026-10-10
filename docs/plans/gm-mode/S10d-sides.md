@@ -3,13 +3,13 @@
 **Plan:** [`../gm-mode.md`](../gm-mode.md) §1a (Deighton's answers: "wave
 initiative"), §6 S10's *Still open: turns by side*; Decisions 174, 188, 189,
 191, 193; `0530` (the Order of Engagement).
-**Status:** **drafted 2026-10-09 by Claude (Opus)**, after #146 (S14) and
+**Status:** **Built 2026-10-09** (Decision 210, table schema 0.11, switched off; SQ8–SQ12 accepted on their defaults by Ken). Drafted 2026-10-09 by Claude (Opus), after #146 (S14) and
 #147 (the Reference's chips, 209) merged (README step 7). **Ken chose this
 session over S6, W86 with W84, and the Reference's additions (2026-10-09).**
 **SQ1–SQ7 answered by Ken 2026-10-09**, and the draft rewritten around them:
 more than two sides, the best Combat Sense picks the side, allies on the cast,
-*Wave Initiative* with a tip. **SQ8–SQ12 are new, each with a default, and
-wait on Ken.**
+*Wave Initiative* with a tip. **SQ8–SQ12 were new, each with a default; Ken
+accepted all five (2026-10-09).**
 **Branch:** from `main` at `b06d629` or later, PR to `main`, switched off
 (Decision 173).
 **Runs alone.** It touches `engine.js` (the cast and encounter sections),
@@ -213,11 +213,11 @@ build time finds another, stop and ask.
 | SQ5 | **A side's turn.** Row by row: tap whoever acts, Next marks them done | **Row by row** | **Default** (Ken) |
 | SQ6 | **The words.** | *By side* | **Ken:** **One at a time** / **Wave Initiative**, with an explainer: a tip (139) on *Wave Initiative* (§8), copy ✎ for a voice pass |
 | SQ7 | **Switching mid-round.** Allowed while planned or running; who has acted and whose turn it is are kept; Next carries on in the new order | **Allowed** | **Default** (Ken) |
-| SQ8 | **A side's best.** The highest Combat Sense among its rows that aren't **Out** and don't **Go last**. A side with no result goes after every side with one, in the order listed (the crew first) | **As listed** | |
-| SQ9 | **Removing a side.** Its rows move to the first other side left, and a toast says how many. The crew can't be removed, nor the last other side | **Move them** | |
-| SQ10 | **How many sides.** Six at most, the crew included | **Six** | |
-| SQ11 | **A side's name.** The crew's is fixed (*The crew*). Another's is the GM's; blank, it reads *The other side* for the first and *Side 3*, *Side 4*… by its place | **As listed** | |
-| SQ12 | **Where Fights with the crew shows.** On a cast member's page, beside **Status**; it changes which side they start on, nothing else (not Find, not the wrap-up) | **As listed** | |
+| SQ8 | **A side's best.** The highest Combat Sense among its rows that aren't **Out** and don't **Go last**. A side with no result goes after every side with one, in the order listed (the crew first) | **As listed** | **Default** (Ken), with the review’s refinement, for Ken to confirm: a row that is Out or Go last but has acted this round still counts toward its side’s best, so a side’s wave isn’t split by someone going Out mid-round |
+| SQ9 | **Removing a side.** Its rows move to the first other side left, and a toast says how many. The crew can't be removed, nor the last other side | **Move them** | **Default** (Ken) |
+| SQ10 | **How many sides.** Six at most, the crew included | **Six** | **Default** (Ken) |
+| SQ11 | **A side's name.** The crew's is fixed (*The crew*). Another's is the GM's; blank, it reads *The other side* for the first and *Side 3*, *Side 4*… by its place | **As listed** | **Default** (Ken) |
+| SQ12 | **Where Fights with the crew shows.** On a cast member's page, beside **Status**; it changes which side they start on, nothing else (not Find, not the wrap-up) | **As listed** | **Default** (Ken) |
 
 ## 5. Read first
 

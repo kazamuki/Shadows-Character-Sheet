@@ -3764,13 +3764,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.10");
+  assert.equal(saved.meta.tableSchemaVersion, "0.11");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4111,7 +4111,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.10");
+  assert.equal(file.meta.tableSchemaVersion, "0.11");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4123,7 +4123,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4500,7 +4500,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.10");
+  assert.equal(file.meta.tableSchemaVersion, "0.11");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -4594,7 +4594,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -5938,7 +5938,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.10");
+  assert.equal(file.meta.tableSchemaVersion, "0.11");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -5951,7 +5951,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.10");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -6562,5 +6562,155 @@ test("Decision 208: a jot on the Notes tab or that session's page appears there;
   app.window.eval(`S.table.sessions.forEach(s => { s.date = localDay(); }); update()`);
   app.click("[data-tjot]");
   assert.match(app.$("#modal").textContent, /More than one session is dated today\./);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Wave Initiative (Decision 210) ─────────────────────────────────────
+function waveApp() {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  encTab(app);
+  newEncounter(app, "Docks");
+  for (const n of ["Wren", "Rook"]) addPcRow(app, n);
+  app.window.eval(`(function(){ const e = S.table.encounters[0], o = e.sides[1].id;
+    for (const n of ["Tough", "Tough 2"]) { const r = Engine.addParticipant(S.table, e.id, { kind: "pc", name: n }); Engine.editParticipant(S.table, e.id, r.id, { side: o }); }
+    renderTable(); })()`);
+  return app;
+}
+const headings = app => app.$$(".enc-side-h").map(h => h.textContent);
+const orderOf = (app, name, v) => changeTo(app, `[data-eorder="${rowId(encRowByName(app, name))}"]`, String(v));
+
+test("210: a planned encounter is One at a time; Wave Initiative groups the rows under their sides and keeps the numbers", () => {
+  const app = waveApp();
+  assert.equal(app.$('[data-eby="person"]').getAttribute("aria-pressed"), "true");
+  assert.equal(app.$$(".enc-side-h").length, 0, "one at a time has no headings");
+  orderOf(app, "Wren", 14); orderOf(app, "Tough", 16);
+  const wave = app.$('[data-eby="wave"]');
+  wave.click();
+  assert.equal(app.doc.activeElement, app.$('[data-eby="wave"]'), "focus left the pressed button");
+  assert.equal(app.$('[data-eby="wave"]').getAttribute("aria-pressed"), "true");
+  assert.deepEqual(headings(app), ["The other side", "The crew"], "16 beats 14");
+  assert.match(app.$(".enc-side").textContent, /Best 16/);
+  assert.ok(app.$("[data-eorder]"), "Combat Sense is still there");
+  assert.equal(app.$$(".enc-tied").length, 0);
+  // The tip.
+  app.$('[data-tip="wave"]').click();
+  assert.match(tipShown(app), /The side holding the best result acts first/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("210: a tie between sides is flagged on both headings and on no row; the order follows the numbers", () => {
+  const app = waveApp();
+  app.$('[data-eby="wave"]').click();
+  orderOf(app, "Wren", 14); orderOf(app, "Tough", 14);
+  assert.equal(app.$$(".enc-side-head .enc-tied").length, 2);
+  assert.equal(app.$$(".enc-row .enc-tied").length, 0);
+  orderOf(app, "Tough", 15);
+  assert.equal(app.$$(".enc-tied").length, 0);
+  assert.deepEqual(headings(app), ["The other side", "The crew"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("210: Start lands on the best side's first row; Next goes through it, then the crew, then Reset", () => {
+  const app = waveApp();
+  app.$('[data-eby="wave"]').click();
+  orderOf(app, "Wren", 14); orderOf(app, "Tough", 16);
+  app.click("[data-enc-start]");
+  const active = () => app.$$("[aria-current=step] .enc-name").map(x => x.textContent).join();
+  assert.equal(active(), "Tough");
+  assert.equal(app.doc.activeElement, app.$("[data-enext]"));
+  const seen = [active()];
+  for (let i = 0; i < 3; i++) { app.click("[data-enext]"); seen.push(active()); }
+  assert.deepEqual(seen, ["Tough", "Tough 2", "Wren", "Rook"]);
+  app.click("[data-enext]");
+  assert.match(app.$("#main").textContent, /Reset: round 1 ends/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("210: a row's Side moves it under the other heading with its More open and focus on its select", () => {
+  const app = waveApp();
+  app.$('[data-eby="wave"]').click();
+  const id = rowId(encRowByName(app, "Rook"));
+  app.$(`[data-emore="${id}"] summary`).click();
+  const sel = `[data-eside="${id}"]`;
+  const other = app.window.eval("S.table.encounters[0].sides[1].id");
+  changeTo(app, sel, other);
+  assert.equal(app.window.eval(`S.table.encounters[0].rows.find(r => r.id === "${id}").side`), other);
+  const sec = app.$(`[data-eside-sec="${other}"]`);
+  assert.ok(sec.querySelector(`[data-erow="${id}"]`), "the row isn't under the other heading");
+  assert.ok(app.$(`[data-emore="${id}"]`).open, "its More closed");
+  assert.equal(app.doc.activeElement, app.$(sel));
+  assert.deepEqual(app.errors, []);
+});
+
+test("210: Add a side opens a third heading with its Name focused; Remove side moves its rows, says so, and focus goes to Add a side", () => {
+  const app = waveApp();
+  app.$('[data-eby="wave"]').click();
+  app.click("[data-eaddside]");
+  assert.deepEqual(headings(app).length, 3);
+  const nm = app.doc.activeElement;
+  assert.ok(nm.matches("[data-esidename]"), "Name wasn't focused");
+  const sid = nm.dataset.esidename;
+  nm.value = "The Saints"; nm.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.ok(headings(app).includes("The Saints"));
+  const rook = rowId(encRowByName(app, "Rook"));
+  app.$(`[data-emore="${rook}"] summary`).click();
+  changeTo(app, `[data-eside="${rook}"]`, sid);
+  app.$(`[data-emore="${sid}"] summary`);
+  app.click(`[data-esiderm="${sid}"]`);
+  assert.equal(headings(app).length, 2);
+  assert.match(app.$(".toast-msg").textContent, /Moved 1 to The other side\./);
+  assert.equal(app.doc.activeElement, app.$("[data-eaddside]"));
+  assert.ok(app.$(`[data-eside-sec="${app.window.eval("S.table.encounters[0].sides[1].id")}"] [data-erow="${rook}"]`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("210: a cast member who fights with the crew lands under The crew when added from their page; the toggle saves at once", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Marta" });`);
+  encTab(app);
+  newEncounter(app, "Docks");
+  app.$('[data-eby="wave"]').click();
+  app.click('[data-tsec="cast"]');
+  app.click("[data-copen]");
+  const tog = app.$("[data-cally]");
+  assert.equal(tog.getAttribute("aria-pressed"), "false");
+  tog.click();
+  assert.equal(app.$("[data-cally]").getAttribute("aria-pressed"), "true");
+  assert.equal(app.window.eval("S.table.cast[0].ally"), true);
+  app.click("[data-cenc]");
+  encTab(app);
+  const sec = app.$$(".enc-side").find(s => s.querySelector(".enc-side-h").textContent === "The crew");
+  assert.ok(sec.textContent.includes("Marta"), "Marta isn't on the crew's side");
+  assert.deepEqual(app.errors, []);
+});
+
+test("210: the Turns group is outside the sticky bar, planned or running; pressing the mode already on changes nothing", () => {
+  const app = waveApp();
+  const outside = () => { const g = app.$(".enc-turns"); assert.ok(g, "no Turns group"); assert.equal(g.closest(".enc-bar"), null, "the Turns group is inside the sticky bar"); };
+  outside();
+  app.click("[data-enc-start]");
+  outside();
+  app.window.eval(`S.table.meta.updated = "2000-01-01T00:00:00.000Z"; S.table.encounters[0].updated = "2000-01-01T00:00:00.000Z";`);
+  app.$('[data-eby="person"]').click();
+  assert.equal(app.window.eval("S.table.meta.updated"), "2000-01-01T00:00:00.000Z");
+  assert.equal(app.window.eval("S.table.encounters[0].updated"), "2000-01-01T00:00:00.000Z");
+  assert.equal(app.doc.activeElement, app.$('[data-eby="person"]'));
+  app.$('[data-eby="wave"]').click();
+  assert.notEqual(app.window.eval("S.table.meta.updated"), "2000-01-01T00:00:00.000Z", "a real change stamps");
+  assert.deepEqual(app.errors, []);
+});
+
+test("210: switching back to One at a time drops the headings and keeps the numbers", () => {
+  const app = waveApp();
+  orderOf(app, "Wren", 14);
+  app.$('[data-eby="wave"]').click();
+  app.$('[data-eby="person"]').click();
+  assert.equal(app.$$(".enc-side-h").length, 0);
+  assert.equal(app.$(`[data-eorder="${rowId(encRowByName(app, "Wren"))}"]`).value, "14");
+  app.$('[data-eby="wave"]').click();
+  for (let i = 0; i < 6; i++) { const b = app.$("[data-eaddside]"); if (b) b.click(); }
+  assert.equal(app.$("[data-eaddside]"), null, "Add a side is hidden at six");
   assert.deepEqual(app.errors, []);
 });
