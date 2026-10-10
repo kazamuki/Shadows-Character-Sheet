@@ -5021,7 +5021,7 @@ test("Decision 190: Add to cast and Add to the encounter open; two planned, the 
   app.window.eval(`Engine.addEncounter(S.table, { name: "First" }); Engine.addEncounter(S.table, { name: "Second" });`);
   entryButton(app, "gull").click();
   assert.equal(app.$("[data-tuse]").textContent, "Add to cast");
-  assert.equal(app.$("[data-tenc]"), null, "an encounter button with none open");
+  assert.equal(app.$("[data-tenc]").textContent, "Add to Second", "with none open, the newest planned (211)");
   app.click('[data-tsec="encounters"]');
   app.$$("[data-enc-open]").find(b => b.textContent === "Second").click();
   app.click('[data-tsec="threats"]');
@@ -5080,7 +5080,7 @@ test("Decision 188: an ended encounter offers no Add to, a cast row survives its
   assert.match(li.textContent, /0 taken/);
   app.click("[data-enc-end]"); app.click("#modal [data-askyes]");
   app.click('[data-tsec="threats"]'); entryButton(app, "gull").click();
-  assert.equal(app.$("[data-tenc]"), null, "an ended encounter is a target");
+  assert.equal(app.$("[data-tenc]").textContent, "Add to a new encounter", "an ended encounter is never a target (211)");
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
   assert.equal(file.encounters.length, 1); assert.equal(file.encounters[0].status, "ended");
@@ -6712,5 +6712,135 @@ test("210: switching back to One at a time drops the headings and keeps the numb
   app.$('[data-eby="wave"]').click();
   for (let i = 0; i < 6; i++) { const b = app.$("[data-eaddside]"); if (b) b.click(); }
   assert.equal(app.$("[data-eaddside]"), null, "Add a side is hidden at six");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Adding to a fight from anywhere (Decision 211) ────────────────────────
+const encRows = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters.map(e => ({ name: e.name, status: e.status, rows: e.rows.map(r => r.name) })))"));
+
+test("Decision 211: with no encounter at all, Add to a new encounter shows on a cast page, an entry page and a group page; a press makes one and relabels in place; a second goes to it", () => {
+  const app = tableWithPack();
+  entryButton(app, "gull").click();
+  const btn = app.$("[data-tenc]"); btn.focus();
+  assert.equal(btn.textContent, "Add to a new encounter");
+  app.click("[data-tenc]");
+  assert.match(app.$("#undotoast").textContent, /Gull is in a new encounter, Encounter \d{4}-\d\d-\d\d\./);
+  assert.equal(app.$("[data-tenc]"), btn, "the page was redrawn under the button");
+  assert.match(btn.textContent, /^Add to Encounter \d{4}-\d\d-\d\d$/);
+  assert.equal(app.doc.activeElement, btn);
+  app.click("[data-tenc]");
+  assert.equal(encRows(app).length, 1);
+  assert.deepEqual(encRows(app)[0].rows, ["Gull", "Gull 2"]);
+  assert.equal(encRows(app)[0].status, "planned");
+  app.click("[data-tback]"); app.click('[data-tview="group"]'); app.click("[data-tgroup]");
+  assert.match(app.$("[data-tgrpenc]").textContent, /^Add to Encounter /);
+  // A cast page, with every encounter ended, reads a new one.
+  app.window.eval(`S.table.encounters[0].status = "ended"`);
+  app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" }); S.tsection = "cast"; S.castOpen = S.table.cast[0].id; S.threatGroup = null; update();`);
+  assert.equal(app.$("[data-cenc]").textContent, "Add to a new encounter");
+  app.click("[data-cenc]");
+  assert.equal(encRows(app).length, 2);
+  assert.match(app.$("[data-cenc]").textContent, /^Add to Encounter /);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 211: a Threats card adds to the cast and the encounter without opening, keeps the search, numbers the rows, and works after a redraw", () => {
+  const app = tableWithPack();
+  app.window.eval(`Engine.addEncounter(S.table, { name: "Dock fight" });`);
+  threatsTab(app);
+  type(app, "[data-tsearch]", "gull");
+  const card = () => app.$(`[data-tcard="${PACK_ID}|gull"]`);
+  assert.equal(card().querySelectorAll("button").length, 3);
+  const castBtn = card().querySelector("[data-tcardcast]"), encBtn = card().querySelector("[data-tcardenc]");
+  assert.equal(castBtn.textContent, "Add to cast"); assert.equal(encBtn.textContent, "Add to Dock fight");
+  assert.equal(encBtn.getAttribute("aria-label"), "Add Gull to Dock fight");
+  assert.equal(castBtn.getAttribute("aria-label"), "Add Gull to the cast");
+  encBtn.focus();
+  for (let i = 0; i < 3; i++) app.click(`[data-tcardenc="${PACK_ID}|gull"]`);
+  assert.equal(app.window.eval("S.threatOpen"), null, "a card press opened the card");
+  assert.equal(app.$("[data-tsearch]").value, "gull");
+  assert.deepEqual(encRows(app)[0].rows, ["Gull", "Gull 2", "Gull 3"]);
+  assert.equal(app.doc.activeElement, encBtn);
+  app.click(`[data-tcardcast="${PACK_ID}|gull"]`);
+  assert.equal(app.window.eval("S.tsection"), "threats");
+  assert.equal(app.window.eval("S.table.cast.length"), 1);
+  assert.match(app.$("#undotoast").textContent, /Gull is in the cast\./);
+  type(app, "[data-tsearch]", "gul");
+  app.click(`[data-tcardenc="${PACK_ID}|gull"]`);
+  assert.equal(encRows(app)[0].rows.length, 4, "a card's button died after the list redrew");
+  app.click('[data-tview="group"]');
+  const g = app.$("[data-tcard] [data-tcardgrp]");
+  assert.equal(g.textContent, "Add to Dock fight");
+  assert.equal(app.$("[data-tcard] [data-tcardcast]"), null, "a group card has no Add to cast");
+  app.click("[data-tcardgrp]");
+  assert.match(app.$("#undotoast").textContent, /Pier Watch: 4 added to Dock fight\./);
+  assert.equal(encRows(app)[0].rows.length, 8);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 211: a card's button names the running encounter, then the newest planned, and the open one first", () => {
+  const app = tableWithPack();
+  app.window.eval(`Engine.addEncounter(S.table, { name: "Old" }); Engine.addEncounter(S.table, { name: "Mid" });
+    const r = Engine.addEncounter(S.table, { name: "Run" }).id; Engine.addParticipant(S.table, r, { kind: "pc", name: "Wren" }); Engine.startEncounter(S.table, r);
+    Engine.addEncounter(S.table, { name: "New" });`);
+  threatsTab(app);
+  const label = () => app.$("[data-tcardenc]").textContent;
+  assert.equal(label(), "Add to Run");
+  app.window.eval(`S.table.encounters.find(e => e.name === "Run").status = "ended"; update();`);
+  assert.equal(label(), "Add to New");
+  app.click('[data-tsec="encounters"]');
+  app.$$("[data-enc-open]").find(b => b.textContent === "Old").click();
+  threatsTab(app);
+  assert.equal(label(), "Add to Old", "the open encounter comes first");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 211: From the Codex searches entries and groups from two characters and adds to this encounter, focus on the same Add", () => {
+  const app = tableWithPack();
+  app.click('[data-tsec="encounters"]'); newEncounter(app, "Dock fight");
+  assert.ok(app.$("[data-enc-codex]"));
+  app.click("[data-enc-codex]");
+  assert.equal(app.$("[data-enc-codex]").getAttribute("aria-expanded"), "true");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-codexq]"));
+  assert.match(app.$("[data-enccodexlist]").textContent, /Type a name, a role or an origin\./);
+  type(app, "[data-enc-codexq]", "g");
+  assert.equal(app.$$("[data-enc-addcodex]").length, 0, "one character listed something");
+  type(app, "[data-enc-codexq]", "gu");
+  const adds = app.$$("[data-enc-addcodex]");
+  assert.deepEqual(adds.map(b => b.dataset.encCodexkind), ["entry", "group"]);
+  assert.match(app.$("[data-enccodexlist]").textContent, /Group/);
+  app.click(`[data-enc-addcodex="${PACK_ID}|gull"]`);
+  assert.deepEqual(encRows(app)[0].rows, ["Gull"]);
+  const again = app.$(`[data-enc-addcodex="${PACK_ID}|gull"]`);
+  assert.equal(app.doc.activeElement, again, "focus left the Add");
+  app.click(`[data-enc-addcodex="${PACK_ID}|gull"]`);
+  assert.deepEqual(encRows(app)[0].rows, ["Gull", "Gull 2"]);
+  app.click(`[data-enc-addcodex="${PACK_ID}|pier-watch"]`);
+  assert.equal(encRows(app)[0].rows.length, 6);
+  assert.equal(app.window.eval("S.table.cast.length"), 0);
+  // Another encounter closes the search.
+  app.click("[data-enc-back]"); newEncounter(app, "Second");
+  assert.equal(app.$("[data-enc-codexq]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 211: the Codex result's Add lands in the encounter it sits in, even with another running", () => {
+  const app = tableWithPack();
+  app.window.eval(`const r = Engine.addEncounter(S.table, { name: "Run" }).id; Engine.addParticipant(S.table, r, { kind: "pc", name: "Wren" }); Engine.startEncounter(S.table, r);
+    Engine.addEncounter(S.table, { name: "Open" });`);
+  app.click('[data-tsec="encounters"]');
+  app.$$("[data-enc-open]").find(b => b.textContent === "Open").click();
+  app.click("[data-enc-codex]"); type(app, "[data-enc-codexq]", "gull");
+  app.click(`[data-enc-addcodex="${PACK_ID}|gull"]`);
+  const by = Object.fromEntries(encRows(app).map(e => [e.name, e.rows]));
+  assert.deepEqual(by.Open, ["Gull"]); assert.deepEqual(by.Run, ["Wren"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 211: with no pack slotted, an encounter's Add says to slot one in", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); encTab(app); newEncounter(app, "E");
+  assert.equal(app.$("[data-enc-codex]"), null);
+  assert.match(app.$(".enc-add").textContent, /From the Codex: slot a pack in on Threats\./);
   assert.deepEqual(app.errors, []);
 });

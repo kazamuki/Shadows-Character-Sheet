@@ -4259,6 +4259,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 182 in part: its button's label, *Use*.
      - **Revisit if:** a third place to copy an entry appears (a session's prep).
      - **Built:** as 188.
+    → **Superseded in part by Decision 211** — Add to <encounter> shows always; with none open it goes to the running encounter, then the newest planned, or makes one.
 
 191. **An encounter row takes a hit: an NPC's through the sheet's own pipeline, standing in as a character, its armor the Gear catalog's piece by name and static (053); a PC's after their armor.**
      *2026-10-07 · Ken + Claude · Touches: hit, NPC adapter, stand-in, resolveHit, applyHit, encounter row, armor, Gear catalog, PROT, RES, static armor, Integrity, scrap, Massive, Withering, PC row, table schema 0.6, massive, armorLoss, scrapped, GQ18, Decision 99, Decision 100, Decision 175, Decision 189*
@@ -4512,6 +4513,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 189 in part: in waves, a side's place comes before a row's result, and ties are flagged between sides. It extends 174 (`ally`) and 188 (sides).
      - **Revisit if:** GQ30 says the book orders sides another way, or seats (S3b) let a player end their own turn.
      - **Built:** table schema 0.11, switched off (173); log 2026-10-09.
+
+211. **Add to an encounter is always on screen, naming where it goes (the encounter open, else the running one, else the newest planned) or making a new one; an encounter searches the Codex itself; and a Threats card adds to the cast and to the encounter.**
+     *2026-10-10 · Ken + Claude · Touches: Add to encounter, Add to a new encounter, encounterFor, addToEncounter, encTarget, Threats card, Add to cast, castFromEntry, From the Codex, encounter Add section, Decision 182, Decision 188, Decision 190, W74, W75, W76*
+     - **Decided:** **Add to <encounter>** shows on a cast member's page, an entry's page, a group's page and every Threats card. It goes to the encounter open on the Encounters tab if it hasn't ended, else the running one, else the newest planned one; with none it reads **Add to a new encounter** and makes a planned one. An entry card's **Add to cast** copies the entry and stays on the list. An encounter's **Add** searches the slotted packs' entries and groups (**From the Codex**). A refused add writes nothing. Nothing is stored.
+     - **Why:** Ken, using S10: a vanished button reads as "it isn't there"; a Codex row mid-fight was three taps out and back; five cast entries were five round trips.
+     - **Rejected:**
+       - 190's rule, the button only while one is open: it vanishes, and reads as missing (W75).
+       - Asking which encounter on every press: two taps for the commonest act (190's own reason).
+       - A card's Add to cast opening the copy, as the page's does: five entries, five round trips (W76).
+       - The Codex search listing every entry before a word is typed: over a hundred entries bury the field on a tablet (SQ3).
+     - **Replaces:** Decision 190 in part: Add to shows always, with the fallback above. 190 rejected the newest planned as invisible; the button now names it, and the open one still comes first. Extends 182.
+     - **Revisit if:** a GM adds to the wrong encounter through the fallback, or W80's action rail gives these buttons one home.
+     - **Built:** switched off (173); log 2026-10-10.
 
 ## 5. Open Flags
 

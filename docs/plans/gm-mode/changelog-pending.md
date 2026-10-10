@@ -42,3 +42,6 @@ something a GM can see adds its line here.
 - **Wave Initiative.** Run a fight the way your table does: one at a time by
   Combat Sense, or side by side, the best roll's side first, with as many sides
   as the fight has.
+- **Add anyone to a fight from wherever you are.** Every cast member, Codex
+  entry and Threats card names the encounter it goes to, or starts a new one,
+  and an encounter searches the Codex itself.

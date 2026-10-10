@@ -378,43 +378,6 @@ interaction's *Session 2*, and Next session's *Last session set up*.
 session already there); the number stays the identity and the sort (Ken,
 S5a's review: "last session" is by number), and the title is text only.
 
-**W74 — Search the Codex from inside an encounter.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
-An encounter's **Add** section searches the cast, but for the Codex it says
-"open an entry or a group on Threats". Mid-fight that's three taps out of the
-encounter and back. The wish: a **Search the Codex** field beside *From the
-cast*, listing entries and groups as the Threats tab does (`packFilter`,
-`packGroups`), each with **Add**, putting a row in this encounter the way
-the entry page's **Add to** does.
-*To respect:* Decision 188 (a Codex row is the entry's copy in the encounter;
-nothing goes into the cast until Keep, 193); the encounter page's keyboard places
-(Decision 164).
-
-**W75 — Add to an encounter from anywhere, always.** *Ken · ⏭ · Rule or shape · raised 2026-10-08*
-Today **Add to <encounter>** shows on a member's page and a Codex entry's page
-only while an encounter is **open on the Encounters tab** (`encTarget`). Leave
-that tab's encounter and the button disappears, which reads as "it isn't
-there". The wish:
-- **Always shown** on a cast member's page, a Codex entry's page, and each
-  card in the Threats list (entries and groups).
-- **Which encounter** (Ken, 2026-10-08): the one open on the Encounters tab
-  if there is one; else the **running** one; else the most recently made
-  **planned** one. With none at all, the button reads **Add to a new
-  encounter**, which makes one, planned, with this row in it.
-*To respect:* this reopens **Decision 190** in part (*Add to <the encounter
-open on the Encounters tab>*), so it needs a numbered decision. One encounter
-runs at a time (188); a group adds all
-its members as rows, as the entry page does now; the notice stays and the page
-stays put.
-
-**W76 — Add to cast from a card in the Threats list.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
-An entry's page has **Add to cast**; the list doesn't, so adding five
-Codex entries to the cast is five round trips. The wish: **Add to cast** on
-each entry card in the Threats list, doing what the entry page's button does.
-The entry page keeps its own.
-*To respect:* Decisions 182 and 190 (a cast member made from an entry keeps
-`from`, and its name if the pack goes); W75 puts **Add to <encounter>** on the same
-card, so the two share one row of buttons and must fit at 390px.
-
 **W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*
 Three things about the page a GM opens mid-scene:
 - **Back and Add to <encounter> always in reach.** They sit at the top today

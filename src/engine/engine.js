@@ -5375,6 +5375,50 @@ const Engine = (() => {
     _tableStamp(t, l.e);
     return { ok:true, ids };
   }
+  // Which encounter an Add to button means (Decision 211): the one open on the tab if it hasn't
+  // ended, else the running one, else the newest planned (by created, ties to the earlier in the list).
+  // Read-only and total; the button's label is computed from it on every draw, never stored.
+  function encounterFor(t, openId){
+    const list = _encList(t), open = typeof openId==="string" ? list.find(e=>e.id===openId) : null;
+    if (open && open.status!=="ended") return open;
+    const running = list.find(e=>e.status==="running");
+    if (running) return running;
+    let best = null;
+    for (const e of list){
+      if (e.status!=="planned") continue;
+      if (!best || _str(e.created) > _str(best.created)) best = e;
+    }
+    return best;
+  }
+  // The one writer behind every Add to (Decision 211). Resolves what's being added, then finds the
+  // encounter or makes one, then adds through the existing writers. A refusal writes nothing, the
+  // new encounter and the stamp included.
+  function addToEncounter(t, openId, src, packs){
+    src = _isObj(src) ? src : {};
+    let pack = null, hit = null;
+    const target = encounterFor(t, openId);
+    if (src.kind==="cast"){
+      const m = (Array.isArray(t && t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===src.id);
+      if (!m) return { ok:false, why:"No such cast member." };
+      if (target && _rowList(target).some(r=>r.kind==="cast" && _isObj(r.cast) && r.cast.id===m.id)) return { ok:false, why:"Already in." };
+    } else if (src.kind==="entry"){
+      hit = packEntry(packs, src.pack, src.id);
+      if (!hit) return { ok:false, why:"No such entry." };
+      pack = hit.pack;
+    } else if (src.kind==="group"){
+      const g = packGroups(packs, {}).find(x=>x.pack.meta.id===src.pack && x.group.id===src.id);
+      if (!g) return { ok:false, why:"No such group." };
+      if (!g.members.length) return { ok:false, why:"Nobody in that group can be found." };
+      pack = g.pack;
+    } else return { ok:false, why:"Nothing to add." };
+    let encId = target ? target.id : null, made = false;
+    if (!encId){ encId = addEncounter(t, {}).id; made = true; }
+    const r = src.kind==="cast" ? addParticipant(t, encId, { kind:"cast", id:src.id })
+            : src.kind==="entry" ? participantFromEntry(t, encId, pack, src.id)
+            : participantsFromGroup(t, encId, pack, src.id);
+    if (!r.ok) return r;
+    return { ok:true, encId, ids:r.ids || [r.id], made };
+  }
   function editParticipant(t, encId, rowId, f){
     const l = _liveRow(t, encId, rowId);
     if (l.why) return { ok:false, why:l.why };
@@ -5928,7 +5972,7 @@ const Engine = (() => {
     offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
     addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName,
     // Encounters: who is in one, whose turn it is, and what is still on them
-    addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterTitle, addParticipant, participantFromEntry,
+    addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
     participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, resolveEncounterReset,
     applyEncounterReset, endEncounter, encounterWrapUp, encounterView, painFor,
