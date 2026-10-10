@@ -753,7 +753,7 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
   Engagement run "as individuals or as sides, in waves"; S10a orders
   individuals only. Deighton runs the players' side, then the enemies'. A
   by-sides turn on an encounter is a session of its own, or a Fix on S10a's
-  turn, when it's picked up.
+  turn, when it's picked up. **Drafted as S10d** ([order](gm-mode/S10d-sides.md), Decision 210 reserved): one at a time or by side, per encounter.
 
 ### S11 — CRANK work
 
@@ -857,3 +857,4 @@ Deighton.
 | GQ28 | Legendary's CRANK pay has no top. What should an off-screen Legendary job pay? | Deighton | Default: 10,000–15,000, editable (`offScreenMax` in the data); S5b's close-out shows it as the range (206). **Deighton, 2026-10-09:** doesn't know CRANK (GQ7) |
 | GQ29 | What's in your reference, and in what order? | Scott | Default: the thirteen panels as built, Conditions and the Codex first; the order is a data edit (`gmReference.panels`, 207). **Deighton, 2026-10-09:** looks up Skills, Powers and Equipment most; adding them "wouldn't take away anything" |
 | GQ22 | Eight trait names on entries aren't in the glossary under that name. The Pointman's *Controlled Violence*, *Clear the Room* and *Take the Hit* have no glossary row. *Ghost Roads* (the Drifter) and *Terrain Native* (the Wraith) are the glossary's *Know the Gaps* under entry names. The Architect's and the Converted's last "trait" are design notes set in bold (*Interface (17) / Programming (17)*, *TOL 7 / WILL 5*). *Sanctified Rosary — if carried* carries a condition in its name; the glossary's row is *Sanctified Rosary*. The Codex pack keeps each as printed. Which is right? Also: the entries print *Handgun*, *Rifle* and *SMG*; the game's skills are *Handguns*, *Rifles* and *SMGs*. The pack matches the plural by one letter | Scott | **Open** (S9c, 186). Each stays as the book prints it until he answers; the builder's trait count reads them as *written*, which is true |
+| GQ30 | Running the Order of Engagement "as sides, in waves" (`0530`): which side goes first? The book doesn't say, nor the order within a side. | Deighton | Default: the GM picks on each encounter, the crew first; within a side, whoever the GM taps (S10d, 210) |
