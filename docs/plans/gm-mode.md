@@ -129,7 +129,7 @@ stay (S6), as a setting to read and search, not a log to keep.
 | NPC armor | Roll PROT + RES ("1d4+2") **or use the average, 5** (GQ18) | Codex v2 *Reading the Enemy Matrix* |
 | Pre-built threats | 42 entries, 29 encounter groups, two drones, ~100 named traits in three kinds (Universal, Origin, Signature) | Codex Parts B–C |
 | Named NPCs | Eleven roster NPCs (Bob and NPC-01 to 10), **moved into the Codex** in v2, in *Motivation · Resources · Their Line · stats · skills · If Pushed* form, each with a **Push Profile**: the Codex entry or encounter group they become when pushed, or none | Codex v2 *NPC Roster* (was `2000` Part VI) |
-| Supernatural threats | **In the Codex draft now**, modifiers still headed "proposed" (GQ17): seven Orders (Undead, Vampiric, Therianthropic, Fae, Spirit, Elemental, Beast) beside Origin; **Bound** (Origin modifiers, one Order trait instead of Order's), **Changed** (both), **Other** (Order only); a +1 both give becomes +1 and an Order trait; −1s cap at −1, a −2 is reviewed by hand; a bodiless Changed takes only Origin's mental and social modifiers | Codex v2 *Origins and Orders* |
+| Supernatural threats | **In the Codex, approved** (GQ17, 2026-10-10): seven Orders (Undead, Vampiric, Therianthropic, Fae, Spirit, Elemental, Beast) beside Origin; **Bound** (Origin modifiers, one Order trait instead of Order's), **Changed** (both), **Other** (Order only); a +1 both give becomes +1 and an Order trait; −1s cap at −1, a −2 is reviewed by hand; a bodiless Changed takes only Origin's mental and social modifiers | Codex v2 *Origins and Orders* |
 | Environmental threats | **Proposed, not approved:** three new fields, named lieutenants, Site Profiles with tracks and clocks | Expansion proposal |
 | Places | Territory → Zone → District → Neighborhood; six Territories with Zones, Supernatural Sites, Business Interests and Factions; eleven places beyond the city | `1000`, `1100` |
 | Powers | Five corporations, the Unseen Court and its houses, the Chrome Berets, the Goblin Market | `1200` |
@@ -301,7 +301,7 @@ One record, from a name on a napkin to an Apex (§2's first row):
 ```
 CastMember: {
   id, name, flavor, description,
-  origin?, order?,                   // origin absent for "Various" (the Patron); order once GQ17 settles
+  origin?, order?,                   // origin absent for "Various" (the Patron); order once S12 builds it (GQ17 approved)
   npcRoles: [ ],                     // "Civilian / Wild Card" is two; nine in v2
   enemyRole?, tier?,                 // absent until they'd fight
   motivation, resources, line,       // "every NPC has a goal, a resource, and a line"
@@ -538,7 +538,7 @@ and the Codex pack itself is built from `private/`.
 | S2 | The dispatch and the inbox | Rule or shape | S1 | Yes, once a GM sends one |
 | S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b, S5 | No |
 | S11 | CRANK work: the generator and the jobs board | Content + shape | S1, S5 | No |
-| S12 | Supernatural Orders and Site Profiles | Content | GQ17 and the Expansion approved; S9, S7 | No |
+| S12 | Supernatural Orders and Site Profiles | Content | GQ17 (approved 2026-10-10) and S9 for the Orders; the Expansion approved and S7 for Site Profiles | No |
 
 **The first point a GM gets real value** is after S10: a table holding a
 cast, the Codex to pull from, and a fight that keeps its Conditions. That is
@@ -764,8 +764,11 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 
 ### S12 — Supernatural Orders and Site Profiles
 
-**Waits on GQ17 and the Expansion being approved.** v2 has put the Orders in
-the Codex itself, which suggests they're close. The shape is already there
+**The Orders are unblocked: GQ17 was approved 2026-10-10** (Ken). The Site
+Profiles half still waits on the Expansion's approval and S7's clocks, so S12
+may split: the Orders first (S9 is built), Site Profiles after S7. Its
+pre-flight checks the mirror's Codex for the "proposed" heading gone and the
+modifiers as approved before anything is copied. The shape is already there
 (`order`, `rules`, `resolution`, `vulnerabilities`, `overrides`, clocks), so
 this should be content: the seven Orders and their modifiers, the
 Bound/Changed/Other rule in the builder (its overlap and cap rules are
@@ -846,7 +849,7 @@ Deighton.
 | GQ14 | Ship S1 (CRANK rep) to main on its own, or keep it on the branch? | Ken | **Built 2026-10-05:** shipped on its own (PR #111) |
 | GQ15 | Bob has his own stat block and also says to use Entry 05's when he's pushed. When a roster NPC turns hostile, do they fight with their own block or their Push Profile's entry? | Scott | The Push Profile's entry; their own block is for social scenes. The cast record keeps both |
 | GQ16 | v2's Enemy Roles table gives each role a tier (Brute is T2), and an entry prints both. Can an entry's tier differ from its role's, a T3 Brute? | Scott | Yes: tier is stored, and the builder notes when it differs from the role's usual |
-| GQ17 | The Orders are in the Codex now, under a "proposed modifier" heading. Are they approved? | Scott | Not yet: the builder offers Origin only until the heading drops "proposed" |
+| GQ17 | The Orders are in the Codex now, under a "proposed modifier" heading. Are they approved? | Scott | **Answered 2026-10-10 (Ken): approved.** The Orders and the Bound/Changed/Other rules are S12's to build; until then the builder offers Origin only |
 | GQ18 | NPC armor is "PROT + RES (1d4+2), or the average (5)". 1d4+2 averages 4.5; is the 5 rounded up on purpose? And is this the players' armor rule simplified for the GM, or its own NPC rule? It touches the RES question in F23 and F25 | Deighton | **Answered 2026-10-07 (Ken, SQ2):** 053 says enemy armor is static and doesn't roll; the static number is the PROT die's average rounded up, plus RES. The Codex's "(5)" is the 1d4 + 2 piece's (Leather and Denim Jacket), not a rule for every NPC (191) |
 | GQ19 | Scott needs Health, Awareness and Conditions on the PCs mid-session, but the GM's copy is a snapshot from the last export. Is the GM keeping a scratch copy as players call out hits enough, or is this where live sync earns its place? | They | A scratch copy in the encounter tracker, never written back; live sync stays §8. **Deighton, 2026-10-09:** needs nothing on a PC mid-session |
 | GQ20 | At an in-person table where the GM says the award aloud, is the award log enough, or do players want a dispatch to import? | They | The award log first (S5); the dispatch (S2, S4) after Scott has used the table, and only if hand entry drifts. **Deighton, 2026-10-09:** players write their own; he says it |
