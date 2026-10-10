@@ -6,7 +6,7 @@ Decisions 182, 188, 190.
 **Status:** **drafted 2026-10-09 by Claude (Opus)**, after #149 (S10d, 210)
 merged (README step 7). **Ken chose this session (2026-10-09)** over table
 undo (W83), export and print (W86 with W84), and the gazetteer (S6).
-**SQ1–SQ5 wait on Ken**, each with a default.
+**SQ1–SQ5 answered by Ken 2026-10-09: every default.**
 **Branch:** from `main` at `4fe267a` or later, PR to `main`, switched off
 (Decision 173).
 **Runs alone.** It touches `engine.js` (the encounter section), `gm.js` (the
@@ -220,11 +220,11 @@ another, stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **The fallback's order.** With none open on the Encounters tab: the running encounter, then the newest planned (by `created`, ties by list order), then a new one. An open encounter that has ended counts as none open | **As listed** (W75's own order, Ken 2026-10-08) | |
-| SQ2 | **A card's Add to cast.** It copies the entry into the cast and **stays on the list**, with a notice (*Street Tough is in the cast.* ✎). The entry page's Add to cast still opens the copy with its name selected (190). Three Toughs from a card are three members all called *Street Tough*; the GM renames them on their pages | **Stays on the list** | |
-| SQ3 | **When the Codex search lists anything.** From two characters, as Find does (208), with at most 25 results shown and *N more. Keep typing.* ✎ below them; before two characters it says *Type a name, a role or an origin.* ✎ | **Two characters, 25 shown** | |
-| SQ4 | **What the Codex search covers.** Threats, people and groups in one list, entries first in pack order, then groups. A group's **Add** adds all its members, as its page's Add to does | **All three, one list** | |
-| SQ5 | **The notice when a press makes an encounter.** *Gull is in a new encounter, Encounter 2026-10-09.* ✎ (a group: *Pier Watch: 4 added to a new encounter, Encounter 2026-10-09.*). The page stays; the Encounters tab lists it as planned | **As listed** | |
+| SQ1 | **The fallback's order.** With none open on the Encounters tab: the running encounter, then the newest planned (by `created`, ties by list order), then a new one. An open encounter that has ended counts as none open | **As listed** (W75's own order, Ken 2026-10-08) | **Default** (Ken) |
+| SQ2 | **A card's Add to cast.** It copies the entry into the cast and **stays on the list**, with a notice (*Street Tough is in the cast.* ✎). The entry page's Add to cast still opens the copy with its name selected (190). Three Toughs from a card are three members all called *Street Tough*; the GM renames them on their pages | **Stays on the list** | **Default** (Ken) |
+| SQ3 | **When the Codex search lists anything.** From two characters, as Find does (208), with at most 25 results shown and *N more. Keep typing.* ✎ below them; before two characters it says *Type a name, a role or an origin.* ✎ | **Two characters, 25 shown** | **Default** (Ken) |
+| SQ4 | **What the Codex search covers.** Threats, people and groups in one list, entries first in pack order, then groups. A group's **Add** adds all its members, as its page's Add to does | **All three, one list** | **Default** (Ken) |
+| SQ5 | **The notice when a press makes an encounter.** *Gull is in a new encounter, Encounter 2026-10-09.* ✎ (a group: *Pier Watch: 4 added to a new encounter, Encounter 2026-10-09.*). The page stays; the Encounters tab lists it as planned | **As listed** | **Default** (Ken) |
 
 ## 5. Read first
 
