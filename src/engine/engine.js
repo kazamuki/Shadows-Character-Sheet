@@ -2764,21 +2764,38 @@ const Engine = (() => {
   }
   const _clone = x => (x===undefined ? undefined : JSON.parse(JSON.stringify(x)));
 
-  function _walk(b, a, path, ops){
+  // `deep` is the table's switch (Decision 212). Off, these are the character's
+  // and their ops are pinned byte for byte; on, a same-length array is walked
+  // element by element and a single insert is one op, so an edit inside a
+  // record stores the field, not the whole list.
+  function _walk(b, a, path, ops, deep){
     const bArr=Array.isArray(b), aArr=Array.isArray(a);
-    if (bArr && aArr) return _arrayDiff(b, a, path, ops);
+    if (bArr && aArr) return _arrayDiff(b, a, path, ops, deep);
     const bObj = b && typeof b==="object" && !bArr;
     const aObj = a && typeof a==="object" && !aArr;
     if (bObj && aObj){
       const keys = new Set([...Object.keys(b), ...Object.keys(a)]);
-      for (const k of keys) _walk(b[k], a[k], path.concat(k), ops);
+      for (const k of keys) _walk(b[k], a[k], path.concat(k), ops, deep);
       return;
     }
     // scalar, or a shape change (object<->array<->scalar): store prior value
     if (!_eq(b, a)) ops.push({ path:path.slice(), type:"scalar", before:_clone(b) });
   }
-  function _arrayDiff(b, a, path, ops){
+  function _arrayDiff(b, a, path, ops, deep){
     if (_eq(b, a)) return;
+    if (deep && a.length===b.length){
+      for (let i=0;i<b.length;i++) _walk(b[i], a[i], path.concat(i), ops, true);
+      return;
+    }
+    if (deep && a.length===b.length+1){
+      // One element longer: where it went in. A tail is checked first, as it is cheapest.
+      let at = _eq(a.slice(0, b.length), b) ? b.length : -1;
+      for (let i=0;at<0 && i<a.length;i++) if (_eq(a.slice(0,i).concat(a.slice(i+1)), b)) at = i;
+      if (at >= 0){
+        ops.push({ path:path.slice(), type:"array", op:"insertAt", index:at });
+        return;
+      }
+    }
     if (a.length > b.length && _eq(a.slice(0, b.length), b)){
       ops.push({ path:path.slice(), type:"array", op:"append", count:a.length-b.length });
       return;
@@ -2824,6 +2841,7 @@ const Engine = (() => {
     const arr=cont[key];
     if (op.op==="append"){ if (Array.isArray(arr)) arr.length=Math.max(0, arr.length-op.count); }
     else if (op.op==="removeAt"){ if (Array.isArray(arr)) arr.splice(op.index,0,_clone(op.item)); }
+    else if (op.op==="insertAt"){ if (Array.isArray(arr)) arr.splice(op.index,1); }
     else if (op.op==="set"){ cont[key]=_clone(op.before); }
   }
   function recordAction(ch, kind, label, before){
@@ -3956,12 +3974,12 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.11";
+  const TABLE_SCHEMA_VERSION = "0.12";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[], cast:[], interactions:[], encounters:[], sessions:[], threads:[] };
+             notes:[], cast:[], interactions:[], encounters:[], sessions:[], threads:[], audit:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -4040,6 +4058,8 @@ const Engine = (() => {
       }
       for (const n of (Array.isArray(c.cast) ? c.cast : [])) if (_isObj(n)) n.ally = false;
     }
+    //   Schema 0.12 (Decision 212): a table keeps an activity log. Nothing is guessed.
+    if (typeof arrived!=="string" || _versionNewer("0.12", arrived)) c.audit = [];
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -4069,6 +4089,9 @@ const Engine = (() => {
     c.interactions = (Array.isArray(c.interactions) ? c.interactions : []).filter(_isObj);
     for (const x of c.interactions) _interaction(x, usedInteraction, usedSession);
     _encounters(c);
+    // Undo never crosses a schema step (Decision 48's Revisit): a file saved by an older
+    // app comes in with an empty trail. Otherwise every entry is gated.
+    c.audit = typeof arrived!=="string" || _versionNewer(TABLE_SCHEMA_VERSION, arrived) ? [] : _tableAuditGate(c.audit);
     return c;
   }
   function tableCheck(t){
@@ -4076,6 +4099,170 @@ const Engine = (() => {
     return _versionNewer(v, TABLE_SCHEMA_VERSION)
       ? ["This table was saved by a newer version of the app. What this version doesn't know is kept, but not shown."]
       : [];
+  }
+  // ════ THE TABLE'S ACTIVITY LOG (Decision 212) ════════════════════════
+  // A table keeps the character's audit model: every change one entry
+  // { seq, date, label, patch }, undone last first. A table stores only inputs
+  // (constraint 7), so one structural diff covers every writer, named or not.
+  // The diff runs against a baseline the caller keeps (the table as it stood
+  // after the last record), because most writers have already run by the time
+  // the UI records.
+  const TABLE_AUDIT_MAX = 500;            // entries kept; the oldest go first
+  const TABLE_FOLD_MS = 5*60*1000;        // typing in one field folds while the last keystroke is this recent
+  // The records a table holds, in the order a label names them.
+  const TABLE_RECORDS = ["encounters", "sessions", "cast", "interactions", "threads", "notes"];
+  const _tableCore = t => { const o = { meta:{ name:_isObj(t) && _isObj(t.meta) ? t.meta.name : undefined } };
+    for (const k of TABLE_RECORDS) o[k] = _isObj(t) ? t[k] : undefined; return o; };
+  // The ops between two tables. Only the records and the table's name: the
+  // stamps and the log itself are not changes a GM made.
+  function diffTable(before, after){
+    const ops = [], b = _tableCore(before), a = _tableCore(after);
+    _walk(b.meta.name, a.meta.name, ["meta", "name"], ops, true);
+    for (const k of TABLE_RECORDS) _walk(b[k], a[k], [k], ops, true);
+    return ops;
+  }
+  const _recName = (coll, r) => coll==="cast" ? (_str(r.name).trim() || "Unnamed")
+    : coll==="sessions" ? sessionTitle(r)
+    : coll==="encounters" ? encounterTitle(r)
+    : coll==="threads" ? (_str(r.title).trim() || "Untitled")
+    : coll==="notes" ? (_str(r.title).trim() || "a note")
+    : "a line";
+  function _recLabel(verb, coll, r){
+    const n = _recName(coll, r);
+    if (coll==="interactions") return `${verb} a line`;
+    if (verb==="Added"){
+      if (coll==="cast") return `Added ${n} to the cast`;
+      if (coll==="threads") return `Added the thread ${n}`;
+      if (coll==="notes") return n==="a note" ? "Added a note" : `Added the note ${n}`;
+      return `Added ${n}`;
+    }
+    if (verb==="Removed"){
+      if (coll==="threads") return `Removed the thread ${n}`;
+      if (coll==="notes") return n==="a note" ? "Removed a note" : `Removed the note ${n}`;
+      return `Removed ${n}`;
+    }
+    return coll==="notes" && n!=="a note" ? `Changed the note ${n}` : `Changed ${n}`;
+  }
+  // The words for an entry, read from the records the patch touches: the verb
+  // from what happened to each, the name from the record. Changes inside an
+  // encounter's rows, sides or Conditions belong to the encounter.
+  function tableActionLabel(before, after, patch){
+    const fallback = "Changed the table";
+    try {
+      const touched = new Set();
+      let renamed = false;
+      for (const op of (Array.isArray(patch) ? patch : [])){
+        if (!_isObj(op) || !Array.isArray(op.path)) continue;
+        if (op.path[0]==="meta") renamed = true; else touched.add(op.path[0]);
+      }
+      const found = [];
+      for (const coll of TABLE_RECORDS){
+        if (!touched.has(coll)) continue;
+        const was = new Map(), now = new Set();
+        for (const r of (_isObj(before) && Array.isArray(before[coll]) ? before[coll] : [])) if (_isObj(r)) was.set(r.id, r);
+        for (const r of (_isObj(after) && Array.isArray(after[coll]) ? after[coll] : [])){
+          if (!_isObj(r)) continue;
+          now.add(r.id);
+          if (!was.has(r.id)) found.push(_recLabel("Added", coll, r));
+          else if (!_eq(was.get(r.id), r)) found.push(_recLabel("Changed", coll, was.get(r.id)));
+        }
+        for (const [id, r] of was) if (!now.has(id)) found.push(_recLabel("Removed", coll, r));
+      }
+      if (!found.length) return renamed ? "Renamed the table" : fallback;
+      return found.length===1 ? found[0] : `${found[0]} and ${found.length-1} more`;
+    } catch (e) { return fallback; }
+  }
+  const _pathGet = (o, path) => { for (const k of path){ if (!o || typeof o!=="object") return undefined; o = o[k]; } return o; };
+  const _nowIso = v => { const d = v==null ? new Date() : new Date(v); return Number.isFinite(d.getTime()) ? d.toISOString() : new Date().toISOString(); };
+  // Record what changed in `t` since `before`, as one entry. Nothing changed:
+  // nothing recorded. Typing in one field folds into one entry while it
+  // touches the same paths under the same label within five minutes, keeping
+  // the first keystroke's `before`; a field that ends where it began leaves
+  // no entry. `opts.fold === false` is for a press, which is never typing.
+  function recordTableAction(t, before, label, now, opts){
+    if (!_isObj(t) || !_isObj(before)) return { ok:false, noop:true };
+    const patch = diffTable(before, t);
+    if (!patch.length) return { ok:false, noop:true };
+    if (!Array.isArray(t.audit)) t.audit = [];
+    const log = t.audit, when = _nowIso(now), last = log[log.length-1];
+    const scalar = ops => ops.every(o=>o.type==="scalar");
+    const pathsOf = ops => ops.map(o=>JSON.stringify(o.path)).sort().join("|");
+    // A record's own `updated` stamp moves with every keystroke, unless two land in one
+    // millisecond: it's not one of the fields a burst is matched on, or kept to.
+    const isStamp = o => o.path[o.path.length-1]==="updated";
+    const core = ops => ops.filter(o=>!isStamp(o));
+    const gap = last ? Date.parse(when) - Date.parse(last.date) : NaN;
+    if (!(opts && opts.fold===false) && last && Array.isArray(last.patch) && scalar(last.patch) && scalar(patch)
+        && core(patch).length && gap>=0 && gap<TABLE_FOLD_MS && pathsOf(core(last.patch))===pathsOf(core(patch))){
+      let same = !!label && label===last.label;
+      if (!label){
+        // The label names the record as it was before the burst, so a name
+        // being typed doesn't rename its own entry.
+        const orig = _clone(_tableCore(t));
+        for (let i=last.patch.length-1;i>=0;i--) _applyOp(orig, last.patch[i]);
+        same = tableActionLabel(orig, t, patch)===last.label;
+      }
+      if (same){
+        last.date = when;
+        for (const o of patch) if (isStamp(o) && !last.patch.some(q=>pathsOf([q])===pathsOf([o]))) last.patch.push(o);
+        if (core(last.patch).every(o=>_eq(o.before, _pathGet(t, o.path)))){ log.pop(); return { ok:true, folded:true, dropped:true, entry:null }; }
+        return { ok:true, folded:true, entry:last };
+      }
+    }
+    const entry = { seq:(last && Number.isInteger(last.seq) ? last.seq : 0) + 1, date:when,
+                    label:label || tableActionLabel(before, t, patch), patch };
+    log.push(entry);
+    while (log.length > TABLE_AUDIT_MAX) log.shift();
+    return { ok:true, entry, folded:false };
+  }
+  // Undo the newest entry, last in first out. It isn't logged. What it restores
+  // came from the file too, so the table is gated afresh, in place: S.table
+  // stays the same object.
+  function undoTableAction(t){
+    if (!_isObj(t) || !_isObj(t.meta) || t.meta.kind!=="shadows-table") return { ok:false, why:"That isn't a table." };
+    const log = Array.isArray(t.audit) ? t.audit : [];
+    if (!log.length) return { ok:false, why:"Nothing to undo." };
+    const entry = log[log.length-1];
+    const patch = Array.isArray(entry && entry.patch) ? entry.patch : [];
+    for (let i=patch.length-1;i>=0;i--) _applyOp(t, patch[i]);
+    log.pop();
+    t.audit = log;
+    const gated = migrateTable(t);
+    for (const k of Object.keys(t)) delete t[k];
+    Object.assign(t, gated);
+    return { ok:true, undone:entry };
+  }
+  function clearTableActivity(t){
+    if (!_isObj(t)) return { ok:false, why:"That isn't a table." };
+    t.audit = [];
+    return { ok:true };
+  }
+  // The gate for a trail that came from a file. An entry survives only if every
+  // op can be applied and lands on a table record (or the table's name): never
+  // meta.id, the version, the stamps or the log itself.
+  const _wholeNum = n => Number.isInteger(n) && n>=0;
+  function _tableOpOk(op){
+    if (!_isObj(op) || !safePath(op.path)) return false;
+    const p = op.path;
+    if (!p.every(k=>typeof k==="string" || _wholeNum(k))) return false;
+    if (!((p.length===2 && p[0]==="meta" && p[1]==="name") || TABLE_RECORDS.includes(p[0]))) return false;
+    if (op.type==="scalar") return true;
+    if (op.type!=="array") return false;
+    if (op.op==="append") return _wholeNum(op.count);
+    if (op.op==="removeAt") return _wholeNum(op.index) && op.item!==undefined;
+    if (op.op==="insertAt") return _wholeNum(op.index);
+    if (op.op==="set") return Array.isArray(op.before);
+    return false;
+  }
+  function _tableAuditGate(list){
+    const out = [];
+    for (const e of (Array.isArray(list) ? list : [])){
+      if (!_isObj(e) || !_wholeNum(e.seq) || typeof e.label!=="string") continue;
+      if (e.date!==null && _isoOrNull(e.date)===null) continue;
+      if (!Array.isArray(e.patch) || !e.patch.length || !e.patch.every(_tableOpOk)) continue;
+      out.push({ seq:e.seq, date:e.date, label:e.label, patch:e.patch });
+    }
+    return out.slice(-TABLE_AUDIT_MAX);
   }
   const _tableStamp = (t, n) => { const now = new Date().toISOString(); t.meta.updated = now; if (n) n.updated = now; };
   // The one session dated that day, else null: none, or more than one (Decisions 203, 208).
@@ -5963,7 +6150,7 @@ const Engine = (() => {
     // Audit trail and undo
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes
-    newTable, isTableId, fileKind, migrateTable, tableCheck, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
+    newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
     isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found

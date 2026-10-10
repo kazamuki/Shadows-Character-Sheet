@@ -913,9 +913,13 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.11",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.12",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
+  audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
+    seq: 1, date: "<ISO>", label: "",  // the words the toast and Activity show, fixed when made
+    patch: [ { path: ["cast", 0, "name"], type: "scalar", before: "" } ]   // ops as a character's, plus { type: "array", op: "insertAt", index }; never empty
+  } ],                               // the gate keeps an entry only if every path starts at a record (or is ["meta","name"]); an older file's trail is emptied
   notes: [ { id: "N-XXXXXXXX", title: "", text: "",
              session: null,        // 0.10: a session's id in this table, or null (Decision 208); a jot takes the one session dated today, the gate converts nothing
              created: "<ISO>", updated: "<ISO>" } ],
@@ -1010,7 +1014,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7).
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step.
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -4007,6 +4011,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** storage fills (GQ9), a GM loses work to a deleted note, or S8 designs the table's audit trail.
      - **Built:** as 170.
      → **Superseded in part by Decisions 176, 181 and 208** — audit trail is S10's; Import reads packs; the header holds Find and Jot beside the menu.
+     → **Superseded in part by Decision 212** — a table is undoable: every change is an entry in its activity log.
 
 172. **GM mode's interface is a fifth classic script, `src/ui/gm.js`, after `sheet.js`; its engine stays in `engine.js`.**
      *2026-10-05 · Ken + Claude · Touches: src/ui/gm.js, script order, index.html, build.test.mjs, BROWSER_JS, CODE_FILES, Decision 86, engine.js, Tables section, harness*
@@ -4073,6 +4078,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM loses work to a deleted member, or GQ1's tab order says otherwise.
      - **Built:** as 174.
     → **Superseded in part by Decision 179** — the list also filters by affiliation, and the tab has a second view.
+    → **Superseded in part by Decision 212** — the table's trail is 212's; Delete still asks.
     → **Superseded in part by Decision 204** — a new table opens on Sessions, not Cast; Cast is second.
 
 177. **A table keeps the crew's interactions with its cast: dated records of what was shared, learned, done or owed, with the crew as typed names until seats exist.**
@@ -4526,6 +4532,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 190 in part: Add to shows always, with the fallback above. 190 rejected the newest planned as invisible; the button now names it, and the open one still comes first. Extends 182.
      - **Revisit if:** a GM adds to the wrong encounter through the fallback, or W80's action rail gives these buttons one home.
      - **Built:** switched off (173); log 2026-10-10.
+
+212. **A table keeps an activity log as a character does: every change one entry, undone last first, with a toast on each press and an Activity list in the menu.**
+     *2026-10-10 · Ken + Claude · Touches: table audit, audit, undo, Undo, Activity, Clear activity, tableChange, diffTable, recordTableAction, undoTableAction, insertAt, migrateTable, table schema 0.12, undo toast, notice, Decision 48, Decision 49, Decision 50, Decision 107, Decision 124, Decision 171, Decision 176, W83, GQ9*
+     - **Decided:** Table schema 0.12 adds `audit`: entries of a label and a patch, diffed from the table as it was after the last change, so every writer is covered without naming it. Arrays diff element by element, and an insert is one op. Typing in one field folds into one entry. Undo pops the newest and gates the table afresh; it isn't logged. A press's toast carries Undo; ⋮ → **Activity** lists the rest and clears them. 500 entries kept; a schema step clears them.
+     - **Why:** a GM's slip at the table had no way back but retyping (W83), and the trail was promised in 171 and 176. A table stores inputs, so one diff serves every writer.
+     - **Rejected:**
+       - The character's `diffChar` as is: every table action stored a whole array, 15–40 KB an entry, over storage within a session.
+       - Recording inside `tableChange`'s callback: most Encounters presses write before it runs.
+       - A label written at each of 46 call sites: a new writer would forget, and computing it from the record can't.
+       - Undo in any order: 49's reason, dependent state.
+       - The trail in browser storage only: the file is the save (GQ9).
+     - **Replaces:** Decision 171 in part (a table is undoable) and 176 in part (its trail is this, not S10's). Extends 48–50, 107 and 124 to a table.
+     - **Revisit if:** a table's trail outgrows storage at 500, a GM asks for redo, or W38's two tabs reach tables.
+     - **Built:** table schema 0.12, switched off (173); log 2026-10-10.
 
 ## 5. Open Flags
 
