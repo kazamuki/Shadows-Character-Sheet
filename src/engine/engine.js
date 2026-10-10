@@ -4864,7 +4864,8 @@ const Engine = (() => {
     const q = _folded((f||{}).q), out = [];
     for (const pack of _packList(packs)) for (const group of _list(pack.groups)){
       const members = _list(group.members).map(x=>({ entry:_byId(pack.entries, x.entry), count:_tier(x.count) || 1 })).filter(x=>x.entry);
-      if (q && ![group.name, group.ref, ...members.map(x=>x.entry.name)].some(x=>_fold(x).includes(q))) continue;
+      const origin = _byId(pack.origins, group.origin);
+      if (q && ![group.name, group.ref, origin && origin.name, ...members.map(x=>x.entry.name)].some(x=>_fold(x).includes(q))) continue;
       out.push({ pack, group, members });
     }
     return out;
@@ -5394,11 +5395,12 @@ const Engine = (() => {
   // encounter or makes one, then adds through the existing writers. A refusal writes nothing, the
   // new encounter and the stamp included.
   function addToEncounter(t, openId, src, packs){
+    if (!_isObj(t) || !_isObj(t.meta)) return { ok:false, why:"Nothing to add." };
     src = _isObj(src) ? src : {};
     let pack = null, hit = null;
     const target = encounterFor(t, openId);
     if (src.kind==="cast"){
-      const m = (Array.isArray(t && t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===src.id);
+      const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===src.id);
       if (!m) return { ok:false, why:"No such cast member." };
       if (target && _rowList(target).some(r=>r.kind==="cast" && _isObj(r.cast) && r.cast.id===m.id)) return { ok:false, why:"Already in." };
     } else if (src.kind==="entry"){

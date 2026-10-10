@@ -2124,7 +2124,10 @@ const CODEX_SHOWN = 25;
 function encCodexMatches(){
   const q=S.encCodexQ||"";
   if (foldName(q).length<2) return null;
+  // Entries in pack order (SQ4), the book's own order within a pack, then groups.
+  const at=r=>[packsMemo.indexOf(r.pack), r.pack.entries.indexOf(r.entry)];
   const rows=[...Engine.packFilter(packsMemo, { view:"threat", q }), ...Engine.packFilter(packsMemo, { view:"npc", q })]
+    .sort((a, b)=>{ const x=at(a), y=at(b); return x[0]-y[0] || x[1]-y[1]; })
     .map(r=>({ kind:"entry", ...r })).concat(Engine.packGroups(packsMemo, { q }).map(r=>({ kind:"group", ...r })));
   return rows;
 }

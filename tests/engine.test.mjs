@@ -6517,3 +6517,14 @@ test("211: the open encounter gets the row even when a newer planned one exists;
   assert.equal(Engine.addToEncounter(t, older, { kind: "entry", pack: PACK_ID, id: "gull" }, packs).encId, older);
   assert.equal(Engine.addToEncounter(t, null, { kind: "entry", pack: PACK_ID, id: "gull" }, packs).encId, newer);
 });
+
+test("211: a group is found by its origin's name; addToEncounter refuses a table that isn't one, writing nothing", () => {
+  const packs = fightPacks();
+  eq(Engine.packGroups(packs, { q: "dock" }).map(x => x.group.id), ["pier-watch"]);
+  assert.equal(Engine.packGroups(packs, { q: "spire" }).length, 0);
+  for (const t of [null, "x", 7, [], {}, { cast: [] }]) {
+    let r; assert.doesNotThrow(() => { r = Engine.addToEncounter(t, null, { kind: "entry", pack: PACK_ID, id: "gull" }, packs); });
+    assert.equal(r.ok, false);
+    assert.equal(JSON.stringify(t) === undefined ? "" : JSON.stringify(t).includes("encounters"), false, "a refusal wrote an encounter");
+  }
+});

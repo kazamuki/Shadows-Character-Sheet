@@ -6844,3 +6844,14 @@ test("Decision 211: with no pack slotted, an encounter's Add says to slot one in
   assert.match(app.$(".enc-add").textContent, /From the Codex: slot a pack in on Threats\./);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 211: From the Codex lists entries in pack order (a person before a threat if the pack says so), then groups, and finds a group by its origin", () => {
+  const pack = syntheticPack();
+  pack.entries = [pack.entries.find(e => e.id === "moss"), ...pack.entries.filter(e => e.id !== "moss")];
+  const app = tableWithPack(pack);
+  app.click('[data-tsec="encounters"]'); newEncounter(app, "Dock fight");
+  app.click("[data-enc-codex]");
+  type(app, "[data-enc-codexq]", "dock");
+  assert.deepEqual(app.$$("[data-enc-addcodex]").map(b => b.dataset.encAddcodex.split("|")[1]), ["moss", "gull", "pier-watch"]);
+  assert.deepEqual(app.errors, []);
+});
