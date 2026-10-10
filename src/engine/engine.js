@@ -2781,6 +2781,47 @@ const Engine = (() => {
     // scalar, or a shape change (object<->array<->scalar): store prior value
     if (!_eq(b, a)) ops.push({ path:path.slice(), type:"scalar", before:_clone(b) });
   }
+  // Records are matched by id when a list grew or shrank and was edited too (End keeps a copy and
+  // marks another member dead): what left, what came in, and each survivor's own edits. Only when
+  // every element is an object with a unique string id on both sides and the survivors kept their
+  // order; anything else is left to the fallbacks. Forward order is removals (highest b index
+  // first), then inserts (lowest a index first, a run as one op), then the survivors' edits at
+  // their a indexes, so an undo, which runs backwards, lands on b exactly.
+  function _idAligned(b, a, path, ops){
+    const ids = list => {
+      const at = new Map();
+      for (let i=0;i<list.length;i++){
+        const r = list[i];
+        if (!r || typeof r!=="object" || Array.isArray(r) || typeof r.id!=="string" || at.has(r.id)) return null;
+        at.set(r.id, i);
+      }
+      return at;
+    };
+    const bAt = ids(b), aAt = ids(a);
+    if (!bAt || !aAt) return false;
+    let last = -1;
+    for (let j=0;j<a.length;j++){
+      const i = bAt.get(a[j].id);
+      if (i===undefined) continue;
+      if (i < last) return false;
+      last = i;
+    }
+    for (let i=b.length-1;i>=0;i--) if (!aAt.has(b[i].id)) ops.push({ path:path.slice(), type:"array", op:"removeAt", index:i, item:_clone(b[i]) });
+    for (let j=0;j<a.length;j++){
+      if (bAt.has(a[j].id)) continue;
+      let k = 1;
+      while (j+k<a.length && !bAt.has(a[j+k].id)) k++;
+      const op = { path:path.slice(), type:"array", op:"insertAt", index:j };
+      if (k > 1) op.count = k;
+      ops.push(op);
+      j += k-1;
+    }
+    for (let j=0;j<a.length;j++){
+      const i = bAt.get(a[j].id);
+      if (i!==undefined) _walk(b[i], a[j], path.concat(j), ops, true);
+    }
+    return true;
+  }
   function _arrayDiff(b, a, path, ops, deep){
     if (_eq(b, a)) return;
     if (deep && a.length===b.length){
@@ -2804,6 +2845,7 @@ const Engine = (() => {
         for (let i=head+(b.length-a.length)-1;i>=head;i--) ops.push({ path:path.slice(), type:"array", op:"removeAt", index:i, item:_clone(b[i]) });
         return;
       }
+      if (_idAligned(b, a, path, ops)) return;
     }
     if (a.length > b.length && _eq(a.slice(0, b.length), b)){
       ops.push({ path:path.slice(), type:"array", op:"append", count:a.length-b.length });

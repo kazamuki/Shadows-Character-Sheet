@@ -6872,8 +6872,8 @@ test("212 (review): a block of records in or out is one op each way, and round-t
     eq(undoBase(t), want, name);
     assert.ok(base);
   }
-  // Not contiguous: the whole array, as before.
-  const ops = Engine.diffTable({ cast: [{ id: "a" }, { id: "b" }, { id: "c" }] }, { cast: [{ id: "x" }, { id: "a" }, { id: "b" }, { id: "y" }, { id: "c" }, { id: "z" }] });
+  // Not contiguous, and not records with ids to match: the whole array, as before.
+  const ops = Engine.diffTable({ cast: [{ n: "a" }, { n: "b" }, { n: "c" }] }, { cast: [{ n: "x" }, { n: "a" }, { n: "b" }, { n: "y" }, { n: "c" }, { n: "z" }] });
   assert.equal(ops[0].op, "set");
 });
 
@@ -6918,4 +6918,48 @@ test("212 (review): a removal or an add names what came and went; collateral Cha
   assert.equal(L(() => Engine.removeCastMember(t, id)), "Removed Marta");
   assert.equal(L(() => { Engine.addCastMember(t, { name: "A" }); Engine.addCastMember(t, { name: "B" }); }), "Added B to the cast and 1 more");
   assert.equal(L(() => { Engine.editCastMember(t, t.cast[0].id, { motivation: "x" }); Engine.editCastMember(t, t.cast[1].id, { motivation: "y" }); }), "Changed B and 1 more");
+});
+
+test("212 (review 2): End that keeps a copy and kills and loses cast members is under 4 KB with no whole array, and undoes whole", () => {
+  const { t } = bigTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const e = Engine.addEncounter(t, { name: "Dock" }).id;
+  const [dez, ivo] = [5, 20].map(i => Engine.addParticipant(t, e, { kind: "cast", id: t.cast[i].id }).id);
+  const gull = Engine.participantFromEntry(t, e, pack, "gull").id;
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const want = undoBase(t);
+  const rows = { [dez]: { line: true, status: "dead" }, [ivo]: { line: true, status: "missing" }, [gull]: { keep: true, line: true, text: "Got away." } };
+  const r = recorded(t, () => assert.ok(Engine.endEncounter(t, e, { rows }, [pack]).ok), "Ended Dock");
+  assert.ok(r.ok);
+  assert.equal(t.cast.length, 41);
+  assert.deepEqual(plain(t.cast.filter(n => n.status !== "alive").map(n => n.status).sort()), ["dead", "missing"]);
+  const size = JSON.stringify(r.entry).length;
+  assert.ok(size < 4096, `End is ${size} bytes`);
+  assert.ok(!r.entry.patch.some(o => o.op === "set"), "a whole array was stored");
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), want);
+});
+
+test("212 (review 2): records are matched by id when a list grew or shrank and was edited too; a reorder still falls back to set", () => {
+  const mk = () => { const t = Engine.newTable("T"); for (let i = 0; i < 6; i++) Engine.addCastMember(t, { name: `m${i}` }); return t; };
+  const extra = n => { const x = Engine.newTable("X"); Engine.addCastMember(x, { name: n }); return x.cast; };
+  const cases = {
+    "insert at the head, edit in the middle": t => { t.cast.unshift(...extra("N1")); t.cast[3].motivation = "edited"; },
+    "removal, edit": t => { t.cast.splice(1, 1); t.cast[3].motivation = "edited"; },
+    "insert, removal, edit": t => { t.cast.splice(4, 1); t.cast.unshift(...extra("N1")); t.cast[3].motivation = "edited"; t.cast[5].name = "renamed"; },
+    "two runs of inserts, edits at both ends": t => { t.cast.unshift(...extra("N1")); t.cast.push(...extra("N2")); t.cast[1].motivation = "a"; t.cast[t.cast.length - 2].motivation = "b"; },
+  };
+  for (const [name, mutate] of Object.entries(cases)) {
+    const t = mk(), want = undoBase(t);
+    const r = recorded(t, () => mutate(t), "x", { fold: false });
+    assert.ok(r.ok, name);
+    assert.ok(!r.entry.patch.some(o => o.op === "set"), `${name}: a whole array was stored`);
+    assert.ok(Engine.undoTableAction(t).ok);
+    eq(undoBase(t), want, name);
+  }
+  // A reorder: the survivors swapped places, so the alignment doesn't apply.
+  const t = mk();
+  const base = plain(t);
+  t.cast.splice(0, 1); [t.cast[0], t.cast[1]] = [t.cast[1], t.cast[0]];
+  assert.equal(Engine.diffTable(base, t).find(o => o.path.join() === "cast").op, "set");
 });
