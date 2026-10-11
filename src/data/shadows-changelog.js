@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.40.0",
-    "date": null,
+    "date": "2026-10-11",
     "intro": [],
     "items": [
       "**Vampire and Werewolf powers work the way the book means.** Your Innate powers are yours at rank 1. Base Powers buy your Bloodline's or Origin's powers, and CP raises any power you hold, 5 CP a rank.",
