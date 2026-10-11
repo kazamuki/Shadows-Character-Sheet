@@ -139,7 +139,7 @@ five fixes were the order's:
   - **164** (a press keeps the keyboard's place): cited for Edit and Done.
   - **208** (Find): cited; `tableSearch` learns the link's name.
   - **212**: cited; nothing here bypasses `tableChange`.
-- **Numbers:** Decision **213** and table schema **0.13** are free on
+- **Numbers:** Decision **214** and table schema **0.13** are free on
   `origin/main` (checked 2026-10-10). #154, the one open PR, reserves
   neither. W79 and W82 are granted. Check again before pasting.
 
@@ -197,7 +197,7 @@ struck through. He taps **Edit** on the second line, fixes *told* to
 - **Table schema:** **0.12 → 0.13**, with a `migrateTable()` step: `encounter`
   is `null` on every line already there. Nothing is guessed.
 - **Character and pack schemas:** unchanged.
-- **Reserved:** Decision **213**. W79 and W82 are granted.
+- **Reserved:** Decision **214**. W79 and W82 are granted.
 
 ## 3. The decision, drafted
 
@@ -206,7 +206,7 @@ Count it with `wc -w`, Touches included; the cap is 350, and it drafts at 337. I
 answers (SQ1–SQ8, every default).
 
 ```
-213. **A line between the crew and the cast reads as a sentence, crew first, in every list; a fight's line links to its encounter and keeps only the figures.**
+214. **A line between the crew and the cast reads as a sentence, crew first, in every list; a fight's line links to its encounter and keeps only the figures.**
      *2026-10-XX · Ken + Claude · Touches: interactions, interactionSentence, kind labels, owed, Between them and the crew, Who knows what, session page, Edit, encounter link, linkName, removeEncounter, _endLine, wrap-up, fought, crewView, tableSearch, table schema 0.13, Decision 178, Decision 179, Decision 193, W79, W82*
      - **Decided:** The engine builds each line's sentence: crew, verb, member, quoted words for *told* and *learned from*, the fight for *fought* and *killed*, the day, then the rest after a colon. *They owe* reads *Bob owes Scott*. Every list of lines reads it; on a member's page **Edit** opens a line's fields as crew, kind, what, when. Table schema 0.13 adds a line's `encounter`, 178's link, which End writes, its text keeping only the figures. Deleting an encounter writes its name into the link. The gate converts no old line.
      - **Why:** Ken reads a line crew first (W79), and a fight's name baked into its text went stale and led nowhere (W82).
@@ -223,14 +223,14 @@ answers (SQ1–SQ8, every default).
 
 **Supersession marks:**
 
-- 178 gets *→ **Superseded in part by Decision 213** — a line links its
+- 178 gets *→ **Superseded in part by Decision 214** — a line links its
   encounter, `{ kind: "encounter", id }`, and deleting the encounter writes
   its name.*
-- 179 gets *→ **Superseded in part by Decision 213** — a line reads as a
+- 179 gets *→ **Superseded in part by Decision 214** — a line reads as a
   sentence; Edit opens it in place.*
-- 193 gets *→ **Superseded in part by Decision 213** — the fight's line keeps
+- 193 gets *→ **Superseded in part by Decision 214** — the fight's line keeps
   the figures and links its encounter.*
-- Their INDEX lines get *→ **superseded in part by 213***.
+- Their INDEX lines get *→ **superseded in part by 214***.
 
 If the ledger search at build time finds another, stop and ask.
 
@@ -392,7 +392,7 @@ now). An open line's fields stack at 390px.
 
 ## 9. Tests
 
-**`tests/engine.test.mjs`**, *A line reads as a sentence (213)*:
+**`tests/engine.test.mjs`**, *A line reads as a sentence (214)*:
 
 - **Each kind's sentence, part by part:** for every kind in
   `INTERACTION_KINDS` and for none, with one crew name and with three, with
@@ -477,7 +477,7 @@ Check each for a second path first:
 `git submodule update --init private`; `npm run verify` before starting and at
 the end; the targeted test files after each step.
 
-1. Confirm 213 and 0.13 are free on `origin/main`. Search the ledger again
+1. Confirm 214 and 0.13 are free on `origin/main`. Search the ledger again
    for the pre-flight's names.
 2. **The shape:** the 0.13 step, the gate's `encounter`, `linkName`'s
    encounter kind, `removeEncounter`'s name. The version pins. Engine tests.
@@ -503,14 +503,14 @@ the end; the targeted test files after each step.
    - Check at **390px**, **768 × 1024** and **1300px**. Run
      `npm run phone-check`.
 10. The mutations (§9).
-11. Ledger (213; 178, 179 and 193 marked), INDEX, SCHEMA §3 (a line's
+11. Ledger (214; 178, 179 and 193 marked), INDEX, SCHEMA §3 (a line's
     `encounter`, 0.13), the plan, STATE, W79 and W82 to
     `log/wishes-granted.md`, docs, close-out (§12).
 
 ## 11. Stop and ask
 
-- 213 or 0.13 is taken.
-- The ledger search finds a decision 213 overrides that the pre-flight
+- 214 or 0.13 is taken.
+- The ledger search finds a decision 214 overrides that the pre-flight
   doesn't name.
 - A line is written anywhere other than `addInteraction` (a writer that
   builds one by hand would skip the link and the gate's shape).
@@ -525,18 +525,18 @@ the end; the targeted test files after each step.
 
 *Rule or shape* tier, switched off, table schema 0.13:
 
-- **SCHEMA:** 213; the marks on 178, 179 and 193; §3's interactions gain
+- **SCHEMA:** 214; the marks on 178, 179 and 193; §3's interactions gain
   `encounter` and 0.13's line.
-- **INDEX:** 213's line under **GM mode**; the lines for 178, 179 and 193
+- **INDEX:** 214's line under **GM mode**; the lines for 178, 179 and 193
   marked.
 - **STATE:**
   - The versions line: table schema 0.13.
   - §1's GM clause gains *and reads each line between the crew and the cast
-    as a sentence, crew first, a fight's line leading to its fight (213)*.
+    as a sentence, crew first, a fight's line leading to its fight (214)*.
   - What's next.
-- **The plan:** the build-order table gains S16 (W79 and W82, Decision 213).
+- **The plan:** the build-order table gains S16 (W79 and W82, Decision 214).
 - **Wishlist:** W79 and W82 move whole to `log/wishes-granted.md`, each
-  heading pointing at *→ Decision 213 (switched off)*.
+  heading pointing at *→ Decision 214 (switched off)*.
 - **`changelog-pending.md`:** ✎ *Every line between the crew and the cast
   reads as a sentence, crew first: Scott told Bob “the lake is on fire”. A
   fight's line names its fight, and a tap opens it.*
@@ -544,7 +544,7 @@ the end; the targeted test files after each step.
   and the return route. **Shipped** row *(switched off)*. README's table:
   S16's row.
 - **PR** titled `feat(gm): a line reads as a sentence, and a fight's line
-  links its fight, switched off (S16, Decision 213)`. Body sections: what
+  links its fight, switched off (S16, Decision 214)`. Body sections: what
   changed; the mutations; the browser check; **Where the order didn't fit**.
 
 ## 13. Review checklist

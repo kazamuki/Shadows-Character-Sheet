@@ -4547,6 +4547,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a table's trail outgrows storage at 500, a GM asks for redo, or W38's two tabs reach tables.
      - **Built:** table schema 0.12, switched off (173); log 2026-10-10.
 
+213. **A Disadvantage's Pain shift and a Milestone's IP roll are data the engine reads.**
+     *2026-10-10 · Ken + Claude · Touches: Pain Sensitive, grants, painLevel grant, painState, fromTraits, painSources, Improved, ipRoll, minorShared, Engine.ipRoll, Engine.ipRollTotal, Take Minor, localDay, W92, W93, W67*
+     - **Decided:** A `grants` entry `{ type: "painLevel", amount, onlyIfHurt: true }` on an Advantage, Disadvantage or Major adds `amount` to the Pain Level when the level from Health Levels, Conditions and Aberrations is already 1 or more, capped at the table's top; `painState` reports it as `fromTraits` (what it actually added) and names its source in `painSources`. A Minor Milestone with `ipRoll: { count, sides, plus }` asks for the dice alone, prints "+ plus IP" beside the box, refuses an empty box, and grants the dice plus `plus`. `Engine.localDay` is the player's local day, the one definition the UI and GM mode share.
+     - **Why:** Pain Sensitive did nothing, and a playtester read "2d10+15, enter the result" as "enter the dice" (W92, W93). Both rules now live as numbers in the data (Decisions 134, 135), so Deighton's rebalanced Improved (3d10+30, W103) is a data edit.
+     - **Rejected:** a `painSensitive` id check in the engine (Decision 135: no ids in code); keeping "enter the total" and only relabelling the box (the wizard's rolls already take the dice and add the base, so Improved was the odd one out); a live total beside the box (PQ1: "+ 15 IP" is the fix, and the IP log shows the total after); taking Improved on an empty box (PQ2: a Milestone taken with no IP is a silent loss); applying the shift at Pain Level 0 (Ken's reading, 2026-10-10: "does not apply if you have no pain levels").
+     - **Replaces:** nothing. Extends 104 (a new `grants` type).
+     - **Revisit if:** another trait shifts Pain unconditionally (`onlyIfHurt: false` is the room left for it), or a Minor's roll needs more than dice plus a flat number.
+     - **Built:** app 0.39.2, game data 0.34, no schema bump. Log 2026-10-10 (P1).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

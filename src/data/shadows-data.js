@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.33",
+    "gamedataVersion": "0.34",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -1784,6 +1784,7 @@ window.SHADOWS_DATA = {
       "name": "Pain Sensitive",
       "pointsGranted": 4,
       "maxRank": 1,
+      "grants": [ { "type": "painLevel", "amount": 1, "onlyIfHurt": true } ],
       "description": "Pain finds you faster. Your Pain Level is always 1 higher than normal.\n\nDoes not apply if you have no pain levels."
     },
     {
@@ -3040,7 +3041,9 @@ window.SHADOWS_DATA = {
        Confirm with D. -- see `majorGeneralNote` near the end of this section.
      REVIEW (F12): `minorShared` is sourced from REF_CRB v3.5; the WIP refers to
        an Advancement Section not yet written. Confirm for v4 (see
-       `minorSharedSource`). Both flags are in SCHEMA.md section 5. */
+       `minorSharedSource`). Both flags are in SCHEMA.md section 5.
+     A Minor with `ipRoll: { count, sides, plus }` asks for the dice rolled and grants them plus `plus`
+       IP (Decision 213); the prompt's "2d10" and "+ 15 IP" are read from it. */
   "milestones": {
     "rules": {
       "milestonePointsPerSession": 1,
@@ -3061,7 +3064,8 @@ window.SHADOWS_DATA = {
       {
         "id": "improved",
         "name": "Improved",
-        "benefit": "Gain 2d10+15 bonus IP. 10's explode as normal."
+        "benefit": "Gain 2d10+15 bonus IP. 10's explode as normal.",
+        "ipRoll": { "count": 2, "sides": 10, "plus": 15 }
       },
       {
         "id": "talented",
