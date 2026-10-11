@@ -287,10 +287,12 @@ door, so build it there or before.
 
 **W106 — A custom power the GM grants.** *Ken · ⏭ · Rule or shape · raised 2026-10-11 · sheet-wishlist P5*
 A GM sometimes gives a character something no book lists. **Raise a Power**
-gets a **Custom power**: a name and a written description, nothing the app
-rolls. Written powers (`powers`, Decision 153) are the write-in archetype's
-only today, behind `hasPowers`; this opens them to every archetype. Its
-price, who gets it and whether it has a rank are P5's PQ3–PQ5.
+(renamed **Buy or Raise a Power**) gets a **Custom power**: a name and a
+written description, nothing the app rolls. Written powers (`powers`,
+Decision 153) are the write-in archetype's only today, behind `hasPowers`;
+this opens them to every archetype. **Ken, 2026-10-11:** 40 IP in play,
+free on Admin; and at creation, for a GM building a character at the table,
+5 CP or free as a GM grant (P5's PQ3, PQ4, PQ6).
 *To respect:* Decision 194 rejected the GM's price for the write-in's **Add
 power**, which stays at `0450`'s 40. A custom power is a different door.
 
