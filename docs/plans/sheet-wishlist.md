@@ -55,9 +55,9 @@ Two differences from GM mode:
 
 | # | Session | Wishes | Tier | Before its order | Status |
 |---|---|---|---|---|---|
-| **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Merged** 2026-10-11 (Decision 213, #158), unreleased for 0.39.2: [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
-| **P2** | CRANK behind a switch | W101 | Rule or shape (small) | Nothing | **Built** (Decision 214, app 0.39.3), #160: [`P02-crank-switch.md`](sheet-wishlist/P02-crank-switch.md) |
-| P3 | Vampire and Werewolf powers at creation | W88, W105 | Rule or shape, character schema | W88's three: a saved Vampire's Base Powers given back, a saved Werewolf's unchosen Origin powers, which cap binds | ⏭ |
+| **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Merged** 2026-10-11 (Decision 213, #158), released in 0.39.3 (#161): [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
+| **P2** | CRANK behind a switch | W101 | Rule or shape (small) | Nothing | **Merged** 2026-10-11 (Decision 214, #160), released in 0.39.3 (#161): [`P02-crank-switch.md`](sheet-wishlist/P02-crank-switch.md) |
+| **P3** | Vampire and Werewolf powers at creation | W88, W105 | Rule or shape, character schema | W88's three: a saved Vampire's Base Powers given back, a saved Werewolf's unchosen Origin powers, which cap binds | **Order approved 2026-10-11** (PQ1–PQ6 on their defaults), ready to build: [`P03-supernatural-powers.md`](sheet-wishlist/P03-supernatural-powers.md) |
 | P4 | The wizard, quick wins | W94 Set all to 4, W96 hide what a Supernatural can't buy, W64 Home from the wizard, W59 steppers say what they change | Fix (UI) | Nothing | ⏭ |
 | P5 | Milestones | W103 (F9, repeats at any time, the rebalanced values) | Rule or shape, data | Nothing (P1 makes the Improved roll data, so +30 is a data edit) | ⏭ |
 | P6 | Luck and the Boost cap | W65, W66 | Rule or shape, data | Nothing | ⏭ |
