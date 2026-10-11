@@ -37,15 +37,10 @@ When P2 is merged:
 - **Tier: Rule or shape.** Withdrawing a released feature is a player-facing
   choice someone could have made otherwise (W101), and it extends 173 and
   amends 169. One numbered decision.
-- **Decision number:** the lowest free number in `SCHEMA.md` §4 on
-  `origin/main` when you build. Today that's **214**, but S16's order
-  (`gm-mode/S16-interaction-sentence.md`, and its row in `gm-mode/README.md`)
-  reserves 214. If S16 hasn't merged by then, take 214 and move S16's
-  reservation to **215** in this PR: every `214` in that order refers to the
-  decision, so it's a plain replace. P1 did the same thing (#158). The ledger
-  test refuses a gap, so P2 can't take 215 while 214 is still empty. If S16
-  has merged, take the next free number and leave S16 alone. The draft below
-  says 214.
+- **Decision number:** the next free number in `SCHEMA.md` §4 on
+  `origin/main` when you build (`CLAUDE.md`, *Decisions*). This order writes
+  it **N**: put the number wherever N appears (the entry, the marks, the
+  INDEX line, the code comments, the tests).
 - **App:** a patch bump (`npm run bump -- X.Y.Z`; the current number is in
   `docs/STATE.md`). A player sees CRANK go.
 - **Game data:** **no bump.** The data doesn't change, and no computed value or
@@ -57,7 +52,7 @@ When P2 is merged:
 ## 3. The decision, drafted
 
 ```
-214. **CRANK sits behind a switch, off, until the team decides whether it stays: a character keeps its rep and ledger, and `?crank=on` shows them.**
+N. **CRANK sits behind a switch, off, until the team decides whether it stays: a character keeps its rep and ledger, and `?crank=on` shows them.**
      *2026-10-1x · Ken + Claude · Touches: CRANK, FEATURES, featureOn, ?crank=on, ?crank=off, shadows.feature.crank, Main CRANK card, alone card, Trackers CRANK section, Admin CRANK rep, print front page, blank sheet, crank tip, launch line, W101, GQ7, F37, GQ28*
      - **Decided:** `FEATURES` gains `crank: false`. Switched off, the sheet shows no CRANK: Main's card and its popover, Trackers' section and ledger, Admin's correction, and the print front page's field (the blank sheet too). `trackers.crank` is still migrated, saved and exported, untouched. On Main, whichever card is left alone on the last row takes the whole row. GM mode's CRANK is unchanged (PQ1). Turning it on for everyone is a release that adds the line **CRANK is back.**
      - **Why:** Deighton wants the team to talk CRANK through before anything changes (rulings Q30), and Ken chose to hide it, as GM mode is hidden, rather than remove it (W101). The switch already exists (173), and the work and players' rep survive either answer.
@@ -67,12 +62,12 @@ When P2 is merged:
      - **Built:** app X.Y.Z, no data or schema bump, PR #…, log 2026-10-1x.
 ```
 
-Marks: 169 gets *→ **Superseded in part by Decision 214**: CRANK shows only
+Marks: 169 gets *→ **Superseded in part by Decision N**: CRANK shows only
 with the switch on, and the card alone on Main's last row is whichever is left
-over.* 173 gets *→ **Superseded in part by Decision 214**: `FEATURES` holds
+over.* 173 gets *→ **Superseded in part by Decision N**: `FEATURES` holds
 `crank` too, a released feature withdrawn.* Their INDEX lines get
-*→ **superseded in part by 214***. The new INDEX §3 line goes beside 173:
-`- **214** *(CRANK behind a switch — sheet-wishlist P2, W101)* — FEATURES.crank
+*→ **superseded in part by N***. The new INDEX §3 line goes beside 173:
+`- **N** *(CRANK behind a switch — sheet-wishlist P2, W101)* — FEATURES.crank
 false: no CRANK on the sheet, print or blank sheet; rep and ledger kept in the
 file; ?crank=on shows it; GM mode's CRANK unchanged.`
 
@@ -126,7 +121,7 @@ file; ?crank=on shows it; GM mode's CRANK unchanged.`
 
 `shared.js`: `const FEATURES = { gm:false, crank:false };`, with the comment
 above it saying a switch is either an unfinished feature (`gm`) or a released
-one withdrawn until a decision (`crank`), per Decision 214.
+one withdrawn until a decision (`crank`), per Decision N.
 `applyFeatureQuery` already loops over `FEATURES`' keys, so `?crank=on` and
 `?crank=off` work with no other change. Check that in a test anyway (§9, test 3).
 
@@ -134,7 +129,7 @@ One helper beside `featureOn`, used by every site below, so the sites read the
 same and a later removal finds them all:
 
 ```js
-// Decision 214: CRANK is shown only with its switch on.
+// Decision N: CRANK is shown only with its switch on.
 const crankOn = () => featureOn("crank");
 ```
 
@@ -154,7 +149,7 @@ Each is a guard around existing markup. Nothing is moved or rewritten.
    | no | off | Çredits | **Çredits** |
    | yes | off | SFR, Çredits | none |
 
-   Rewrite the two comments above the cards to say this, citing 214.
+   Rewrite the two comments above the cards to say this, citing N.
 2. **The popover.** `vitalPopover(ch, "crank")` returns `null` when
    `!crankOn()` (a popover left open from before the switch was turned off
    then just closes). It's belt and braces, because the card is gone.
@@ -195,7 +190,7 @@ it guards against.
 1. Generalise the `FEATURES.gm` guard into one test over a table of launch
    lines: `gm` needs `- **Run a table.**`, `crank` needs `- **CRANK is back.**`
    (PQ4). Each switch set `true` without its line fails. Keep the test's name
-   saying Decision 173, and add 214.
+   saying Decision 173, and add N.
 2. `FEATURES.crank` exists. (The generalised test should fail if `crank` is
    dropped from the object, so a later session can't remove the switch by
    accident and turn CRANK back on.)
@@ -236,7 +231,7 @@ passing unchanged, which is the point.
 
 1. Branch from `main`. `npm ci`, `git submodule update --init private`, then
    `npm run verify` (note the count).
-2. Check the decision number (§2) and, if needed, move S16's reservation.
+2. Take the decision's number (§2).
 3. §7a, then test 1–2 and the query half of test 3. `npm run test:fast`.
 4. §7b, sites 1–5. Switch the existing CRANK smoke tests to `CRANK_ON` (test 3)
    **before** running the suite, so a failure means a real change, not a
@@ -253,8 +248,8 @@ passing unchanged, which is the point.
 
 ## 11. Stop and ask
 
-- If the decision number in §2 is taken in a way the order doesn't cover,
-  don't renumber anyone else's beyond S16's reservation.
+- If another branch takes the same number while you're building, the one
+  that merges second renumbers its own uses only, never anyone else's.
 - If any test outside the CRANK ones fails with the switch off (a test that
   counts Main's cards, say), stop and say which. It may be checking a layout
   this order changes.
@@ -270,7 +265,7 @@ Use the **close-the-session** skill. For this session that means:
   - "**CRANK steps off the sheet.** Your rep and its ledger stay in your
     character file, untouched."
 - `npm run bump -- X.Y.Z` (patch). No `gamedataVersion` bump, no schema bump.
-- **Decision 214** (or the number §2 gives) in `SCHEMA.md` §4, the marks on
+- **Decision N** in `SCHEMA.md` §4, the marks on
   169 and 173, and the INDEX §3 lines (§3 above).
 - **W101** moves whole to `log/wishes-granted.md`, its heading pointing at the
   decision, and out of `WISHLIST.md`.
@@ -295,7 +290,8 @@ For the orchestrator, against the PR:
 - [ ] No change to `engine.js`, `shadows-data.js` or `gm.js`.
 - [ ] The build guard refuses `crank:true` without **CRANK is back.**, and the
       mutation tests are in the PR.
-- [ ] Decision number per §2; 169 and 173 marked; S16's order moved if needed.
+- [ ] The decision took the next free number, and it's written everywhere
+      the order says N; 169 and 173 marked.
 - [ ] Versions: app patch only. CHANGELOG has the line, and `npm run changelog`
       was run.
 - [ ] Run it in a browser: off and on, phone and desktop.

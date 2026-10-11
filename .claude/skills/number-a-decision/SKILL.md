@@ -32,8 +32,10 @@ question to him; don't settle a rules question yourself (see `close-a-flag`).
 
 ## 3. Write the entry, in the same change as the code
 
-- Next number: `grep -n "^[0-9]\{3\}\. \*\*" docs/SCHEMA.md | tail -1`, plus one.
-  Never renumber or delete.
+- Next number: `git fetch`, then the last entry on `origin/main`
+  (`git show origin/main:docs/SCHEMA.md | grep -n "^[0-9]\{3\}\. \*\*" | tail -1`),
+  plus one. A work order's draft says **N**: this is where N gets its number,
+  and it goes everywhere the order wrote N. Never renumber or delete.
 - Append it at the end of §4, just above `## 5. Open Flags`, in the shape
   CLAUDE.md gives: the one-line decision, the `*date · who · Touches: …*` line,
   then Decided · Why · Rejected · Replaces · Revisit if · Built. About 25

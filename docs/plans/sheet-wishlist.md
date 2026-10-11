@@ -34,9 +34,9 @@ Two differences from GM mode:
 - **GM mode runs beside it.** GM sessions live mostly in `gm.js`; these live
   in `wizard.js`, `sheet.js`, the engine and the data. Expect collisions only
   in the version numbers, CHANGELOG's `[Unreleased]` heading, and decision
-  numbers: check `origin/main` and open branches for the next free decision
-  before numbering (the `ids-collide` lesson), and rebase on whichever lands
-  second.
+  numbers. An order never reserves a number: it says "the next free number"
+  and the build takes it (`CLAUDE.md`, *Decisions*). Rebase on whichever
+  lands second.
 
 ## 2. How the sessions are grouped
 
