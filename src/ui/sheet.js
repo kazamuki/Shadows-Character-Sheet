@@ -1255,7 +1255,7 @@ function renderShProgression(){
   if (askSpec){
     const askName = (D.milestones.minorShared.find(m=>m.id===S.askRoll)||{name:S.askRoll}).name;
     h += `<div class="trk"><h2>${esc(askName)}</h2>
-    <span class="sub" style="flex-basis:auto">Roll ${askSpec.count}d${askSpec.sides} at the table. 10s explode: add up every die you rolled, the extra ones too. Enter the dice:</span>
+    <span class="sub" style="flex-basis:auto">Roll ${askSpec.count}d${askSpec.sides} at the table. ${askSpec.sides}s explode: add up every die you rolled, the extra ones too. Enter the dice:</span>
     <input type="number" min="${askSpec.count}" data-improvroll aria-label="${esc(askName)}: the dice you rolled">
     <span class="sub" style="flex-basis:auto">+ ${askSpec.plus} IP</span>
     <button class="btn sm go" data-improvok="1">Take + grant IP</button>
@@ -2974,7 +2974,7 @@ function bindSheet(){
     const id=S.askRoll, spec=id && Engine.ipRoll(id);
     if (!spec){ S.askRoll=null; update(); return; }
     const dice=num(main.querySelector("[data-improvroll]"));
-    if (!(dice>=spec.count)){ notice("Enter the dice you rolled."); return; }
+    if (!(Number.isInteger(dice) && dice>=spec.count)){ notice("Enter the dice you rolled."); return; }
     const nm=(D.milestones.minorShared.find(m=>m.id===id)||{name:id}).name;
     const pre=Engine.takeMilestone(clone(ch),"minor",id);
     if (!pre.ok){ notice(pre.why); S.askRoll=null; update(); return; }

@@ -7,7 +7,7 @@ window.SHADOWS_CHANGELOG = [
     "intro": [],
     "items": [
       "**Pain Sensitive works.** Once you're hurt, your Pain Level is one higher (never past 3), and the Pain line says Pain Sensitive is why.",
-      "**Improved asks for the dice.** Taking it now says \"Roll 2d10, enter the dice, + 15 IP\": type what you rolled and the 15 is added for you.",
+      "**Improved asks for the dice.** Taking it now has you enter the dice you rolled, with the 15 IP printed beside the box and added for you.",
       "**A new session's date is your own today.** In the evening it no longer says tomorrow.",
       "**A minus sign reads as one.** Negative numbers now show a true minus everywhere: a stat's modifier (BOD 3 reads **−1**), the Conditions' penalties (*Attack/Defense at −5*), a spend in a journal, and a Çredits balance below zero.",
       "**The wheel reaches the end of the row.** Where a row of section buttons or vitals runs past the edge of the window, your mouse wheel now scrolls it sideways, as it already did for the tabs."

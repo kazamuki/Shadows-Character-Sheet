@@ -6997,6 +6997,13 @@ test("W67 guard: nothing in src/ turns an instant into a day with toISOString().
   assert.deepEqual(bad, [], "use Engine.localDay(): toISOString is UTC");
 });
 
+test("Decision 213: every painLevel grant says onlyIfHurt, or the engine would ignore it (Decision 135)", () => {
+  const all = [...D.advantages, ...D.disadvantages, ...(D.milestones.majorGeneral || [])];
+  const gs = all.flatMap(e => (e.grants || []).filter(g => g && g.type === "painLevel"));
+  assert.ok(gs.length >= 1, "no painLevel grant to guard");
+  for (const g of gs) assert.equal(g.onlyIfHurt, true, "an unconditional painLevel grant is ignored by grants()");
+});
+
 test("Decision 213: ipRoll reads a Minor's dice from the data; ipRollTotal adds the flat amount", () => {
   assert.deepEqual({ ...Engine.ipRoll("improved") }, { count: 2, sides: 10, plus: 15 });
   assert.equal(Engine.ipRoll("skilled"), null);

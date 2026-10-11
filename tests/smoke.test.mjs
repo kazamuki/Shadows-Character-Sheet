@@ -4132,7 +4132,8 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   assert.deepEqual(app2.errors, []);
 });
 
-test("Decision 177: a day is the GM's local day, not UTC's (localDay is reachable in the page; the engine tests pin its values)", () => {
+// localDay is reachable in the page; the engine tests pin its values.
+test("Decision 177: a day is the GM's local day, not UTC's", () => {
   const app = boot({ storage: GM_ON });
   assert.equal(app.window.eval("localDay(new Date(2026, 9, 5, 0, 30))"), "2026-10-05");
   assert.equal(app.window.eval("localDay(new Date(2026, 11, 31, 23, 59))"), "2026-12-31");
@@ -5457,7 +5458,6 @@ test("Main shifts a Forge Fang: the switch names the HL it costs, Claws and Fang
   assert.match(app.$("#main .cond.hp").textContent, /10 HL × 7/);
   app.click('[data-sec="sessions"]');
   assert.match(app.$("#main").textContent, /Form: Werewolf \(1 HL Withering\)/, "the Activity Log doesn't name the shift and its cost");
-  app.click('[data-sec="sessions"]');
   app.click("button[data-undolast]");
   const back = activeChar(app);
   assert.deepEqual([back.panelData.form || null, back.trackers.damage, back.trackers.witheringDamage], [null, 0, 0]);
@@ -7083,6 +7083,20 @@ test("W93: an empty box takes nothing and says so", () => {
   assert.match(app.$(".toast-msg").textContent, /Enter the dice you rolled\./);
   assert.ok(app.$("[data-improvroll]"), "the prompt closed on a refusal");
   assert.deepEqual(app.errors, []);
+});
+
+test("W93: a roll that isn't a whole number is refused, and the prompt says which die explodes", () => {
+  const ch = lockedCharacter();
+  ch.progression.milestonePoints = 5;
+  const app = openSheet(ch, "progression");
+  app.click('[data-takeminor="improved"]');
+  assert.match(app.$("[data-improvroll]").closest(".trk").textContent, /10s explode/);
+  app.$("[data-improvroll]").value = "14.5";
+  app.click("[data-improvok]");
+  const now = activeChar(app);
+  assert.equal(now.progression.milestones.minor.length, 0, "a decimal roll took the Minor");
+  assert.equal(now.progression.ip.log.length, 0, "a decimal roll granted IP");
+  assert.match(app.$(".toast-msg").textContent, /Enter the dice you rolled\./);
 });
 
 test("W93: the prompt reads its numbers from the data", () => {
