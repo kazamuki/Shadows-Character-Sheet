@@ -4565,7 +4565,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** removing CRANK's code (the team may keep it, and Q30 says so); leaving it visible until the talk (Deighton asked to pause it); hiding it only for characters with no rep (PQ2: two players' sheets would differ for one rule); hiding GM mode's off-screen-job tier (PQ1: that changes how off-screen pay is set); scrubbing old CRANK lines from the Activity Log (PQ3: history stays as it happened).
      - **Replaces:** Decision 169 in part (CRANK shows only with the switch on; the card alone on its row is whichever is left over, not CRANK by name). Decision 173 in part (`FEATURES` holds a second switch, for a released feature withdrawn; its *Revisit if* has happened).
      - **Revisit if:** the team decides CRANK (keep it: the **CRANK is back** release; drop it: a decision to remove the code and keep `trackers.crank` read-only in `migrate()`), or GQ7, F37 or GQ28 is answered.
-     - **Built:** app 0.39.3, no data or schema bump, log 2026-10-11 (P2).
+     - **Built:** app 0.39.3, no data or schema bump, PR #160, log 2026-10-11 (P2).
 
 ## 5. Open Flags
 

@@ -1175,17 +1175,17 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
   // CRANK rep (Decision 169; only with the switch on, 214)
   const crk = Engine.crankState(ch);
   if (crankOn()){
-  h += `<div class="sect"><span data-tip="crank" tabindex="0">CRANK</span></div>
+    h += `<div class="sect"><span data-tip="crank" tabindex="0">CRANK</span></div>
     <div class="trk"><h2>Rep</h2><span class="big">${crk.rep}</span>
     <span class="sub">${esc(crk.tier?crk.tier.name:"")} · ${crankSubHtml(crk)}</span>
     ${crankControlsHtml()}</div>`;
-  const crkLedger = ch.trackers.crank.ledger||[];
-  if (crkLedger.length){
-    h += `<details class="group" open><summary>CRANK ledger (${crkLedger.length})</summary><div class="journal">` +
-      crkLedger.slice().reverse().map(e=>`<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
-        <span class="amt ${e.amount<0?"spend":"grant"}">${signed(e.amount)}</span>
-        <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
-  }
+    const crkLedger = ch.trackers.crank.ledger||[];
+    if (crkLedger.length){
+      h += `<details class="group" open><summary>CRANK ledger (${crkLedger.length})</summary><div class="journal">` +
+        crkLedger.slice().reverse().map(e=>`<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
+          <span class="amt ${e.amount<0?"spend":"grant"}">${signed(e.amount)}</span>
+          <span class="what">${esc(e.note)||"&mdash;"}</span></div>`).join("") + `</div></details>`;
+    }
   }
 
   h += `</div></div>`;
