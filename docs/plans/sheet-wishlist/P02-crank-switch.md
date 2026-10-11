@@ -3,7 +3,8 @@
 **Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3. **W101**
 (`WISHLIST.md`); Decisions 165, 169, 173; `reference/rulings-2026-10-10.md` Q30.
 **Status:** **drafted 2026-10-11 by Claude (Opus)**, pre-flighted against
-`main` at `510e420` (#158, P1, merged). Waiting on Ken: PQ1–PQ4.
+`main` at `510e420` (#158, P1, merged). **Approved by Ken 2026-10-11, PQ1–PQ4
+on their defaults.** Ready to build.
 **Branch:** from `main`; PR to `main`. The switch ships **off**: that's the point.
 **Runs alone.** It touches `shared.js` (`FEATURES`), `sheet.js` (five
 places), the tests and the docs. No engine change, no data change, nothing
@@ -75,10 +76,10 @@ file; ?crank=on shows it; GM mode's CRANK unchanged.`
 
 | Id | Question | Default |
 |---|---|---|
-| PQ1 | GM mode uses CRANK twice: the close-out's off-screen job needs a CRANK tier to set its pay range (206), and the Reference tab has a CRANK panel (207). Hide them too? | **No, leave GM mode as it is.** GM mode is itself switched off, so only Ken and Scott see it, and off-screen pay *is* the CRANK tier in the book (`2000`). Hiding the tier means inventing a new pay rule, which is the team's question. W101 lists the off-screen job, so this is a change from the wish: say if you want the Reference panel hidden anyway (cheap: one `featureOn` check). |
-| PQ2 | Hide CRANK for every character, or keep it showing on characters that already have rep or a ledger line? | **Every character.** One rule for every sheet, and Deighton asked to pause CRANK, not to grandfather it. The rep is safe in the file either way. |
-| PQ3 | The Activity Log keeps entries like *CRANK rep +1 (the Halvorsen job)*, and What's new still has 0.37.0's CRANK line. Hide those? | **No.** They're history, and hiding them would rewrite what happened. Undo on an old CRANK entry still works with the switch off, because undo is a structural diff. |
-| PQ4 | What's the line that turns it back on for everyone? | `- **CRANK is back.**` The build guard (§9, test 1) refuses `crank: true` without it, as it refuses `gm: true` without **Run a table.** |
+| PQ1 | GM mode uses CRANK twice: the close-out's off-screen job needs a CRANK tier to set its pay range (206), and the Reference tab has a CRANK panel (207). Hide them too? | **No, leave GM mode as it is.** GM mode is itself switched off, so only Ken and Scott see it, and off-screen pay *is* the CRANK tier in the book (`2000`). Hiding the tier means inventing a new pay rule, which is the team's question. W101 lists the off-screen job, so this is a change from the wish: say if you want the Reference panel hidden anyway (cheap: one `featureOn` check). **Ken, 2026-10-11: the default** |
+| PQ2 | Hide CRANK for every character, or keep it showing on characters that already have rep or a ledger line? | **Every character.** One rule for every sheet, and Deighton asked to pause CRANK, not to grandfather it. The rep is safe in the file either way. **Ken, 2026-10-11: the default** |
+| PQ3 | The Activity Log keeps entries like *CRANK rep +1 (the Halvorsen job)*, and What's new still has 0.37.0's CRANK line. Hide those? | **No.** They're history, and hiding them would rewrite what happened. Undo on an old CRANK entry still works with the switch off, because undo is a structural diff. **Ken, 2026-10-11: the default** |
+| PQ4 | What's the line that turns it back on for everyone? | `- **CRANK is back.**` The build guard (§9, test 1) refuses `crank: true` without it, as it refuses `gm: true` without **Run a table.** **Ken, 2026-10-11: the default** |
 
 ## 5. Read first
 
