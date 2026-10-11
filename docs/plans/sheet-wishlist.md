@@ -25,6 +25,10 @@ merging, the orchestrator reviews it against the order and runs it in a
 browser, and fixes go back to the session that built it. **The next order is
 written only after the last PR merges.** Work orders live in
 [`sheet-wishlist/`](sheet-wishlist/), one per session, `P01-…` onward.
+From P4 on, each order ends with **Handing it over**: the prompt to paste
+into the building session, with the order's own traps called out. It's
+`gm-mode/README.md`'s prompt, plus what the pre-flight found easy to get
+wrong.
 
 Two differences from GM mode:
 

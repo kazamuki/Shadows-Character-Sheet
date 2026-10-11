@@ -374,3 +374,38 @@ For the orchestrator, against the PR:
       `npm run changelog` was run.
 - [ ] The mutation tests are in the PR.
 - [ ] Run it in a browser: keyboard-only stepper presses, phone and desktop.
+
+## 14. Handing it over
+
+Paste this as the first message of a fresh Sonnet session, once this order
+is on `main`:
+
+> Read `CLAUDE.md`, then `docs/plans/sheet-wishlist/P04-wizard-quick-wins.md`,
+> and build it. Ken approved it on 2026-10-11, with PQ1–PQ3 on their defaults.
+> Follow its steps (§9) in order, and its *Stop and ask* list (§11) exactly. If
+> something isn't covered by the order, stop and ask me rather than choosing.
+> Where the order and the code or the ledger disagree in a way that doesn't
+> stop you, build what the order says and list it in the PR under *Where the
+> order didn't fit*. Open a PR when §13's checklist holds; don't merge it.
+>
+> Five things in this order are easy to get wrong:
+>
+> 1. **W64's wish text is wrong about the Home handler.** The `[data-home]`
+>    handler in `bindMain` is dead: nothing in `#main` draws one. Follow §6c,
+>    not the wish. There must be **one** `homeState()` when you're done: it
+>    moves from `gm.js` to `shared.js`. The UI files share one global scope,
+>    so a second `function homeState` doesn't error, it silently replaces the
+>    first.
+> 2. **Change `stepper()`'s signature first** (§9, step 3), before the other
+>    UI work, so nothing is written twice. All 16 call sites get a name.
+> 3. **Read the 4 from the data.** `statFloor()` reads
+>    `statRules.modifiers`. The number 4 belongs only in tests and copy.
+> 4. **The announcer lives outside `#main`, and must be created once.**
+>    `#main` is replaced on every render. In jsdom, use the `setTimeout(0)`
+>    fallback when `requestAnimationFrame` is missing.
+> 5. **This order adds the wizard to `phone-check`.** It needs a real
+>    Chromium. If you can't run it, say so in the PR. Don't leave the wizard
+>    screen out.
+>
+> Tier: Fix. No numbered decision, no data or schema bump, and a **minor**
+> app bump (PQ1). Use the close-the-session skill at the end.
