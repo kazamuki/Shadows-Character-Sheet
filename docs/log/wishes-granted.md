@@ -698,6 +698,52 @@ what keeps the character safe. A TAGless character has no barcode, so the
 beat needs a version for "Off grid". It plays on the lock and never again: not
 on a reload, a theme switch or a re-render of a sheet that's already locked.
 
+**W94 — Set every stat to 4 in one click.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10 → app 0.41.0: Set all to 4 on the Stats step*
+Every stat starts at a free 1, and below 4 it's a −1 per point (Decision 150,
+`statRules.modifierRuleText`), so nearly everyone's first move on the Stats
+step is eight trips to 4. A **Set all to 4** button raises every stat
+under 4 to 4, spending Stat Points as usual: 3 a stat, 24 at most, out of a
+pool of 41 or more. A stat already above 4 is left alone. It's a shortcut,
+not a rule: the free base stays 1.
+*To respect:* it goes through the same spend as the steppers, so the pool,
+the caps and Undo behave exactly as eight clicks would. If the pool can't
+cover it, it raises what it can, in stat order, and says so.
+
+**W96 — A Supernatural doesn't see the Advantages it can't buy.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10 → app 0.41.0: a Supernatural's CP step lists only what it can buy, plus what it holds*
+On the Advantages step a Vampire or Werewolf scrolls past every non-Universal
+Advantage, shown disabled (`wizard.js`, `gated`), to find the 15 it can take.
+Hide them instead. The rule line already says only Universal Advantages are
+open.
+*To respect:* Decision 152. An Advantage the character **already holds** but
+can't (an archetype changed after buying it, which `validate()` reports)
+stays visible so it can be removed. The jump bar's filter and counts read the
+same list.
+
+**W64 — Go back Home from character creation.** *Ken · ⏭ · raised 2026-10-04 → app 0.41.0: Home in the wizard's header, one homeState()/goHome()*
+In the wizard there's no way back to the Home screen. The sheet has **Home**
+in its ⋮ menu, but the wizard header is empty (`renderTopChrome` clears the
+actions on the wizard screen), so a player who wants their roster, or
+to start over, refreshes the page. Ken's choice: **a Home control in the
+wizard header**, matching the sheet's.
+*To respect:* nothing is lost by leaving. A new character is saved the moment
+the player changes something (`btn-new` in `renderHome`) and appears under
+Your characters, so Home needs no "are you sure?" for a touched character.
+An untouched one was never saved and just disappears, which is fine. The
+control is 44px on a touchscreen (`phone-check` fails below that) and must not
+push the header to a second row. It reuses the `data-home` handler in
+`bindMain`, which the sheet's menu also reaches.
+Worth a look while there: the Home reset sets only `{screen, ch, step,
+maxReached}` in `bindMain` but also `section` and `admin` in the sheet's
+version in `renderTopChrome`; one helper would stop the two drifting.
+
+**W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01 → app 0.41.0: steppers named for what they change, the new value announced*
+Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,
+the stepper helper): the Skills step has 36 buttons that all read "increase,
+button", and the value beside them isn't a live region, so a screen reader
+never hears the new number. *The fix:* name the target ("Raise BOD",
+"Lower Firearms") from the same data the row shows, and announce the value
+after a press, politely, once.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first

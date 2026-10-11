@@ -496,6 +496,29 @@ const Engine = (() => {
   const statSpent = ch => D().stats.reduce((s,st)=>s + statCost(ch.stats[st.id].base), 0);
   // What raising this stat's base by one more point costs.
   const nextStatCost = (ch, id) => statCost(ch.stats[id].base + 1) - statCost(ch.stats[id].base);
+  // The lowest score whose modifier is 0 or more, read from the modifier table.
+  function statFloor(){
+    const R = D().statRules, m = R.modifiers || {};
+    for (let v = R.base; v <= R.max; v++) if (Number(m[String(v)]) >= 0) return v;
+    return R.max;
+  }
+  // "Set all to the floor": raise each stat below it, in stat order, one point
+  // at a time as the stepper would, while the pool pays for the next point.
+  function raiseStatsToFloor(ch){
+    const pool = statPool(ch);
+    if (!pool || pool.total==null) return {ok:false, why:"Enter your Stat Point roll first."};
+    const floor = statFloor(), stats = D().stats;
+    if (!stats.some(s => ch.stats[s.id].base < floor)) return {ok:false, why:"Every stat is already there."};
+    const raised = [], short = [];
+    for (const s of stats){
+      const before = ch.stats[s.id].base;
+      while (ch.stats[s.id].base < floor && nextStatCost(ch, s.id) <= pool.total - statSpent(ch))
+        ch.stats[s.id].base += 1;
+      if (ch.stats[s.id].base > before) raised.push(s.id);
+      if (ch.stats[s.id].base < floor) short.push(s.id);
+    }
+    return {ok:true, raised, short};
+  }
 
   // Decision 150: Skill Points are the level's base plus the scores of its
   // `plusStats` (INT and REF), with no roll. The score counts the archetype's
@@ -6306,7 +6329,7 @@ const Engine = (() => {
     powerPool, basePowerState, placeBasePower, powerCpOf, powerCpSpent, powerCpState, buyPowerRank, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
     feedView, feedGain, feed, goUnfed, goUnrested,
     // Creation: pools, costs, grants and the wizard's checks
-    boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, skillPool, skillSpent,
+    boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, statFloor, raiseStatsToFloor, skillPool, skillSpent,
     advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, validate,
     // Focused Skills and natural advantages (Decision 134)
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,

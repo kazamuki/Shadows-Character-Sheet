@@ -77,6 +77,32 @@ const LEGACY_SECTION = { overview:"main", traits:"character", archetype:"charact
 const normSection = s => s==="admin" ? (S.admin?"admin":"main")
                         : (SHEET_IDS.includes(s) ? s : (LEGACY_SECTION[s] || "main"));
 let S = { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false };
+// One way home (W64): the wizard, the sheet's menu and the GM table all land
+// here. A character is already saved by every update(), so nothing is lost.
+function homeState(){ return { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false }; }
+function goHome(){ S=homeState(); renderHome(); }
+
+// W59: one polite live region, outside #main (which every render replaces),
+// created once. It clears, then sets on the next frame, so the same words
+// twice in a row are still read.
+function announce(text){
+  let el=document.getElementById("announcer");
+  if (!el){
+    el=document.createElement("p");
+    el.id="announcer"; el.className="sr-only"; el.setAttribute("role","status"); el.setAttribute("aria-live","polite");
+    document.body.appendChild(el);
+  }
+  el.textContent="";
+  const set=()=>{ el.textContent=text; };
+  if (typeof requestAnimationFrame==="function") requestAnimationFrame(set); else setTimeout(set,0);
+}
+// After a stepper press has re-rendered: read the pressed stepper's name and
+// its new value, e.g. "Body 5". `dataStep` is the pressed button's data-step.
+function announceStep(dataStep){
+  const b=[...document.querySelectorAll("#main [data-step]")].find(x=>x.dataset.step===dataStep);
+  const st=b && b.closest(".stepper"), val=st && st.querySelector(".val");
+  if (st && val) announce(`${st.dataset.name} ${val.textContent}`);
+}
 
 // Decision 173: an unfinished feature ships switched off. A browser turns
 // one on with ?<name>=on (and off with ?<name>=off); the launch release sets

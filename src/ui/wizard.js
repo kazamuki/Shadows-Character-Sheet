@@ -111,12 +111,16 @@ function wizardRailHtml(ch){
 }
 
 // ── Wizard-only widgets ──────────────────────────────────────────────
-function stepper(val, dataAttr, downOk, upOk){
-  return `<div class="stepper">
-    <button data-step="${dataAttr}|-1" ${downOk?"":"disabled"} aria-label="decrease">−</button>
+// `name` is what the row changes ("Body", "Handguns"): the buttons read
+// "Raise Body", and announceStep() reads it back with the new value (W59).
+function stepper(val, dataAttr, downOk, upOk, name){
+  const n = esc(name);
+  return `<div class="stepper" data-name="${n}">
+    <button data-step="${dataAttr}|-1" ${downOk?"":"disabled"} aria-label="Lower ${n}">−</button>
     <span class="val">${val}</span>
-    <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="increase">+</button></div>`;
+    <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="Raise ${n}">+</button></div>`;
 }
+const statNameOf = id => (D.stats.find(s=>s.id===id)||{}).name || id;
 // The controls for one entry's picks. Rendered off Engine.picksFor,
 // which has already resolved how many slots exist and what may go in them, so
 // this function knows nothing about ranks, categories or archetypes. Used by
@@ -227,19 +231,21 @@ function renderConcept(){
 function renderStats(){
   const ch=S.ch, pool=Engine.statPool(ch);
   const left = pool.total==null?0:pool.total-Engine.statSpent(ch);
-  const rolled = pool.method==="rolled";
+  const rolled = pool.method==="rolled", floor = Engine.statFloor();
+  const note = S.statNote; S.statNote = null;               // one render, then gone
   let h = `<div class="roll-entry">${rolled ? `
     <span class="die">${pool.base}+${pool.rollDie}</span>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="statPoints" value="${pool.roll==null?"":pool.roll}" aria-label="stat point roll">` : ""}
     <span class="pool">Pool <b>${pool.total==null?"—":pool.total}</b> · Remaining <b>${pool.total==null?"—":left}</b></span>
+    <button class="btn sm" data-stat-floor ${pool.total==null || !D.stats.some(s=>ch.stats[s.id].base<floor) ? "disabled" : ""}>Set all to ${floor}</button>
     <span class="dice-note">${esc(D.statRules.buyText)}${rolled?" Roll your dice at the table and enter the result — the app never rolls for you. Explosions do not happen on creation rolls.":""}</span>
-  </div><div class="alloc">`;
+  </div>${note?`<p class="step-note">${esc(note)}</p>`:""}<div class="alloc">`;
   for (const s of D.stats){
     const v = ch.stats[s.id].base, m = Engine.statMod(Engine.statValue(ch,s.id));
     const next = v<D.statRules.max ? Engine.nextStatCost(ch, s.id) : null;
     h += `<div class="alloc-row">
       <div class="name">${esc(s.name)} <small>${esc(s.description)}</small>${next>1?`<small class="next-cost">The next point costs ${next}.</small>`:""}</div>
-      ${stepper(v, "stat|"+s.id, v>D.statRules.base, next!=null && next<=left && pool.total!=null)}
+      ${stepper(v, "stat|"+s.id, v>D.statRules.base, next!=null && next<=left && pool.total!=null, s.name)}
       <span class="mod ${m>0?"pos":m<0?"neg":""}">${modText(m)}</span>
     </div>`;
   }
@@ -325,7 +331,7 @@ function renderArchetype(){
     h += `<div class="alloc">` + focus.map(sid=>{
       const v = ac.focusAllocation[sid]||0;
       return `<div class="alloc-row"><div class="name">${esc(sid)} <small>current ${Engine.statValue(ch,sid)}</small></div>
-        ${stepper(v,"focus|"+sid, v>0, used<total)}<span class="mod"></span></div>`;
+        ${stepper(v,"focus|"+sid, v>0, used<total, statNameOf(sid))}<span class="mod"></span></div>`;
     }).join("") + `</div>`;
   }
 
@@ -352,7 +358,7 @@ function renderArchetype(){
     h += `<div class="alloc">` + D.stats.map(s=>{
       const v = ac.statBonusAllocation[s.id]||0;
       return `<div class="alloc-row"><div class="name">${s.id} <small>current ${Engine.statValue(ch,s.id)}</small></div>
-        ${stepper(v,"wwbonus|"+s.id, v>0, used<total && Engine.statValue(ch,s.id)<D.statRules.max)}<span class="mod"></span></div>`;
+        ${stepper(v,"wwbonus|"+s.id, v>0, used<total && Engine.statValue(ch,s.id)<D.statRules.max, s.name)}<span class="mod"></span></div>`;
     }).join("") + `</div>`;
   }
 
@@ -375,7 +381,7 @@ function renderArchetype(){
         const cur = (ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank;
         return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h2>${esc(def?def.name:p.advantageId)}</h2>
           <span class="cost grant">max rank ${p.maxRank}</span>
-          <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks)}</div></div>
+          <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks, def?def.name:p.advantageId)}</div></div>
           <div class="desc">${esc(def?def.description:"")}</div>
           ${cur>0?picksHtml("advantage",p.advantageId):""}</div>`;
       }).join("");
@@ -431,11 +437,11 @@ function basePowersHtml(ch, sel){
     const up = (st.left==null || st.left > 0) && (r.cap==null || r.placed < r.cap);
     return `<div class="pick ${r.placed?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
       ${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}<span class="cost grant">${r.ranked?`starts at ${r.cap==null?"any rank":"rank "+r.cap+" at most"}`:"no ranks"}</span>
-      <div class="controls">${stepper(r.placed, "bp|"+esc(r.id), r.placed>0, up)}</div></div>
+      <div class="controls">${stepper(r.placed, "bp|"+esc(r.id), r.placed>0, up, "Base Powers in "+r.name)}</div></div>
       <div class="desc">${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
   for (const [title, rows] of groups) if (rows.length) h += `<h3 class="sub-sect">${esc(title)}</h3>` + rows.map(row).join("");
   if (st.stray.length) h += st.stray.map(r=>`<div class="pick"><div class="head"><h2>${esc(r.name)}</h2>
-    <span class="cost">not one of your powers</span><div class="controls">${stepper(r.placed, "bp|"+esc(r.id), true, false)}</div></div></div>`).join("");
+    <span class="cost">not one of your powers</span><div class="controls">${stepper(r.placed, "bp|"+esc(r.id), true, false, "Base Powers in "+r.name)}</div></div></div>`).join("");
   return h;
 }
 
@@ -511,7 +517,7 @@ function renderSkills(){
       const line = Engine.skillLine(ch, s.id), cap = Engine.skillRankCap(ch, s.id);
       h += `<div class="alloc-row">
         <div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} ${skillStatsHtml(line)}<small>${esc(s.description)}</small></div>
-        ${stepper(rank, "skill|"+s.id, rank>0, rank<cap && left>0 && pool.total!=null)}
+        ${stepper(rank, "skill|"+s.id, rank>0, rank<cap && left>0 && pool.total!=null, s.name)}
         <span class="mod ${line.trained?"pos":""}" title="check bonus">+${line.checkBonus}</span>
       </div>`;
       // A trained skill may demand choices of its own — Martial Arts styles
@@ -544,7 +550,7 @@ function renderCP(){
       return `<div class="pick ${cur>0?"selected":""}">${dd.flagged?flagHtml(dd):""}
         <div class="head"><h2>${esc(dd.name)}</h2><span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
         ${constraintHtml("disadvantage",dd.id)}
-        <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank && !lock.locked && req.ok)}</div></div>
+        <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank && !lock.locked && req.ok, dd.name)}</div></div>
         <div class="desc">${esc(dd.description)}</div>
         ${cur>0?picksHtml("disadvantage",dd.id):""}</div>`;
     }).join("") + `</details>`;
@@ -553,9 +559,11 @@ function renderCP(){
   h += secs.sect("Advantages", "Advantages — cost Character Points");
   // A gated classification sees what it can buy first, in the book's order, so a
   // Werewolf doesn't scroll past every Mortal-only Advantage to find its fifteen.
-  const advList = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).concat(D.advantages.filter(ad=>!Engine.canBuyAdvantage(ch, ad))) : D.advantages;
+  const heldAdv = ad => ch.advantages.some(x=>x.id===ad.id && x.source!=="natural" && x.rank>0);
+  const advList = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).concat(D.advantages.filter(ad=>!Engine.canBuyAdvantage(ch, ad) && heldAdv(ad))) : D.advantages;
   const openCount = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).length : D.advantages.length;
-  h += `<details class="group" open data-filterable><summary>${openCount} available${gated?` · ${D.advantages.length-openCount} not open to ${esc(cls.name)}s`:""}</summary>` +
+  const heldClosed = gated ? advList.length-openCount : 0;
+  h += `<details class="group" open data-filterable><summary>${gated?`${openCount} open to ${esc(cls.name)}s${heldClosed?` · ${heldClosed} held that aren't`:""}`:`${openCount} available`}</summary>` +
     advList.map(ad=>{
       const cur = (ch.advantages.find(x=>x.id===ad.id && x.source!=="natural")||{rank:0}).rank;
       const natural = ch.advantages.find(x=>x.id===ad.id && x.source==="natural");
@@ -569,7 +577,7 @@ function renderCP(){
         ${ad.creationOnly?`<span class="cost">creation only</span>`:""}
         ${gated&&ad.universal?`<span class="cost grant">Universal</span>`:""}
         ${constraintHtml("advantage",ad.id)}
-        <div class="controls">${open?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok):cur>0?stepper(cur,"adv|"+ad.id, true, false):`<span class="cost">Not for ${esc(cls.name)}s</span>`}</div></div>
+        <div class="controls">${open?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok, ad.name):cur>0?stepper(cur,"adv|"+ad.id, true, false, ad.name):`<span class="cost">Not for ${esc(cls.name)}s</span>`}</div></div>
         <div class="desc">${esc(ad.description)}</div>
         ${(cur>0||(natural&&natural.rank>0))?picksHtml("advantage",ad.id):""}</div>`;
     }).join("") + `</details>`;
@@ -580,7 +588,7 @@ function renderCP(){
   if (luck.flagged) h += flagHtml(luck);
   h += `<div class="pick"><div class="head"><h2>Buy up LUCK</h2>
     <span class="cost">${luck.cpCostPerPoint} CP/point · exempt from Max Boost</span>
-    <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, bal.left>=luck.cpCostPerPoint)}</div></div>
+    <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, bal.left>=luck.cpCostPerPoint, "LUCK")}</div></div>
     <div class="desc">Everyone starts at ${luck.startingValue}. ${esc(luck.refresh)}</div></div>`;
 
   // Disciplines: price, cap and starting ranks are the data's (Decision 135).
@@ -590,7 +598,7 @@ function renderCP(){
     h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank${cap==null?"":` · cap ${cap}`}`);
     h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h2>${esc(d.name)}</h2>
         <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}</span>
-        <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, (cap==null || d.rank<cap) && bal.left>=per)}</div></div>
+        <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, (cap==null || d.rank<cap) && bal.left>=per, d.name)}</div></div>
         <div class="desc">${esc(d.description)}</div></div>`).join("");
   }
 
@@ -603,7 +611,7 @@ function renderCP(){
     h += secs.sect("Powers", `Powers — ${per} CP per rank`);
     h += pcs.map(r=>`<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
         <span class="cost">${r.start>1||r.cp?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
-        <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, (r.cap==null || r.rank<r.cap) && bal.left>=per)}</div></div></div>`).join("");
+        <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, (r.cap==null || r.rank<r.cap) && bal.left>=per, r.name+" with CP")}</div></div></div>`).join("");
   }
   // CP on a power with no row (a hand-edited file, an undo): take-back only.
   const rowIds = new Set(pcs.map(r=>r.id)), cpOn = Engine.powerCpOf(ch);
@@ -613,7 +621,7 @@ function renderCP(){
     if (!pcs.length) h += secs.sect("Powers", `Powers — ${Engine.powerRankCost()} CP per rank`);
     h += strays.map(id=>{ const p = ((Engine.archetype(ch)||{}).powers||[]).find(x=>x && x.id===id);
       return `<div class="pick"><div class="head"><h2>${esc(p ? p.name : id)}</h2><span class="cost">${held.has(id) ? "no ranks to raise" : "not a power you hold"}</span>
-        <div class="controls">${stepper(cpOn[id],"apow|"+esc(id), true, false)}</div></div></div>`; }).join("");
+        <div class="controls">${stepper(cpOn[id],"apow|"+esc(id), true, false, (p ? p.name : id)+" with CP")}</div></div></div>`; }).join("");
   }
 
   // Starting spells (Decision 111). Here, not on the Archetype step, because
@@ -646,7 +654,7 @@ function renderCP(){
     const times = Engine.boostsFor(ch,"stat",s.id);
     const can = Engine.canBoost(ch,"stat",s.id);
     h += `<div class="alloc-row"><div class="name">${s.id} <small>value ${Engine.statValue(ch,s.id)}</small></div>
-      ${stepper(times,"boost|stat|"+s.id, times>0, can.ok)}<span class="mod" title="${esc(can.ok?"":can.why)}">${can.ok?"":"⛔"}</span></div>`;
+      ${stepper(times,"boost|stat|"+s.id, times>0, can.ok, "boosts to "+s.name)}<span class="mod" title="${esc(can.ok?"":can.why)}">${can.ok?"":"⛔"}</span></div>`;
   }
   h += `</div><div class="alloc" style="margin-top:14px">`;
   for (const id of Object.keys(ch.skills)){
@@ -654,7 +662,7 @@ function renderCP(){
     const times = Engine.boostsFor(ch,"skill",id);
     const can = Engine.canBoost(ch,"skill",id);
     h += `<div class="alloc-row"><div class="name">${esc(def.name)} <small>rank ${Engine.skillLine(ch,id).rank}</small></div>
-      ${stepper(times,"boost|skill|"+id, times>0, can.ok)}<span class="mod" title="${esc(can.ok?"":can.why)}">${can.ok?"":"⛔"}</span></div>`;
+      ${stepper(times,"boost|skill|"+id, times>0, can.ok, "boosts to "+def.name)}<span class="mod" title="${esc(can.ok?"":can.why)}">${can.ok?"":"⛔"}</span></div>`;
   }
   if (!Object.keys(ch.skills).length) h += `<p class="step-note">Train skills in Step 6 to boost them here.</p>`;
   h += `</div>`;
@@ -839,7 +847,6 @@ function bindMain(){
     S.maxReached = Math.max(S.maxReached, S.step);
     window.scrollTo(0,0); update();
   });
-  main.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{ S={screen:"home",ch:null,step:0,maxReached:0}; renderHome(); });
   main.querySelectorAll("[data-importdismiss]").forEach(b=>b.onclick=()=>{ S.importIssues=[]; update(); });
   // selections
   main.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ ch.creation.powerLevel=b.dataset.pl; update(); });
@@ -913,7 +920,23 @@ function bindMain(){
   main.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>{
     const [key,delta]=b.dataset.step.split("|").reduce((acc,part,i,arr)=>{
       if(i===arr.length-1) acc[1]=Number(part); else acc[0]=(acc[0]?acc[0]+"|":"")+part; return acc; },[null,0]);
-    applyStep(key, delta); update();
+    applyStep(key, delta); update(); announceStep(b.dataset.step);
+  });
+  main.querySelectorAll("[data-stat-floor]").forEach(b=>b.onclick=()=>{
+    const r = Engine.raiseStatsToFloor(ch);
+    if (r.ok && r.short.length){
+      const names = r.short.map(statNameOf);
+      S.statNote = `Not enough Stat Points to bring ${names.length>1 ? names.slice(0,-1).join(", ")+" and "+names[names.length-1] : names[0]} up to ${Engine.statFloor()}.`;
+    }
+    const note = S.statNote;
+    update();
+    // The button may now be disabled, which drops focus to <body>: land on the pool line.
+    if (document.activeElement===document.body || !document.activeElement){
+      const pool = main.querySelector(".roll-entry .pool");
+      if (pool){ pool.tabIndex=-1; pool.focus({ preventScroll:true }); }
+    }
+    const left = Engine.statPool(ch).total - Engine.statSpent(ch);
+    announce(`${note || `Every stat is at ${Engine.statFloor()}.`} ${left} Stat Points left.`);
   });
   // dice rolls — re-render main so pool-gated steppers enable, but keep focus on the input
   const rerenderKeepFocus = (selAttr, val) => {

@@ -452,7 +452,7 @@ test("a Werewolf's Character Points step opens the Universal Advantages and no o
   const up = id => app.$(`[data-step="adv|${id}|1"]`), down = id => app.$(`[data-step="adv|${id}|-1"]`);
   assert.ok(up("lucky") && !up("lucky").disabled, "a Universal Advantage can't be bought");
   assert.equal(up("animal-ken"), null, "a Mortal-only Advantage offers a + to a Werewolf");
-  assert.match(app.$("#main").textContent, /Not for Supernaturals/);
+  assert.equal(app.$$("#main .pick h2").some(h => h.textContent === "Animal Ken"), false, "a Mortal-only Advantage is still listed (P4, W96)");
   assert.match(app.$("#main").textContent, /only Universal Advantages are open/);
   const names = app.$$("#main .pick h2").map(h => h.textContent);
   assert.ok(names.indexOf("Time Sense") < names.indexOf("Ambidextrous"),
@@ -7313,4 +7313,163 @@ test("W92 / Decision 213: a Pain Sensitive character at 2 Health Levels lost rea
   assert.match(main, /Lv 2/, "Pain isn't Lv 2");
   assert.match(main, /\+1 Lv from Pain Sensitive/);
   assert.deepEqual(app.errors, []);
+});
+
+// ── P4: the wizard's quick wins (W94, W96, W64, W59) ─────────────────────
+const statsDraft = (set = {}) => onStep("professional", "street", "stats", ch => {
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base;
+  for (const [k, v] of Object.entries(set)) ch.stats[k].base = v;
+});
+const poolText = app => app.$("#main .roll-entry .pool").textContent.replace(/\s+/g, " ").trim();
+const baseOf = app => Object.fromEntries(D.stats.map(s => [s.id, stored(app, { locked: false }).stats[s.id].base]));
+const sName = id => D.stats.find(s => s.id === id).name;
+// S after a render carries bookkeeping (vitalsOpen); every field homeState() sets must match.
+const homeIs = app => app.window.eval("(() => { const h = homeState(); return Object.keys(h).every(k => S[k] === h[k]); })()");
+
+test("P4 (W94): Set all to 4 raises every stat below 4 in one press, spends as the steppers would, and is then disabled", async () => {
+  const floor = Engine.statFloor();
+  const app = statsDraft();
+  const btn = () => app.$("[data-stat-floor]");
+  assert.equal(btn().textContent, `Set all to ${floor}`);
+  assert.match(poolText(app), /Pool 45 · Remaining 45/);
+  btn().focus();
+  app.click("[data-stat-floor]");
+  assert.notEqual(app.doc.activeElement, app.doc.body, "focus fell to <body> when the button disabled itself");
+  assert.deepEqual([...Object.values(baseOf(app))], [...D.stats.map(() => floor)]);
+  assert.match(poolText(app), /Remaining 21/);
+  assert.equal(btn().disabled, true, "the button is live with nothing to do");
+  assert.equal(app.$("#main .roll-entry + .step-note"), null);
+  await new Promise(r => app.window.setTimeout(r, 60));
+  assert.equal(app.$("#announcer").textContent, `Every stat is at ${floor}. 21 Stat Points left.`);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P4 (W94): when the pool runs out it says which stats it couldn't reach, once", () => {
+  const app = statsDraft({ BOD: 10, REF: 10, MOB: 10 });
+  assert.match(poolText(app), /Remaining 6/);
+  app.click("[data-stat-floor]");
+  const b = baseOf(app);
+  assert.equal(b.INT, 4); assert.equal(b.TECH, 4);
+  assert.deepEqual(["COOL", "MAG", "EMP"].map(id => b[id]), [1, 1, 1]);
+  const note = app.$("#main .roll-entry + .step-note");
+  assert.ok(note, "no note about the stats left short");
+  assert.ok(note.textContent.includes(`${sName("COOL")}, ${sName("MAG")} and ${sName("EMP")}`), note.textContent);
+  assert.ok(!note.textContent.includes(sName("INT")), "it names a stat it did raise");
+  app.click('[data-step="stat|BOD|-1"]');                       // any render after
+  assert.equal(app.$("#main .roll-entry + .step-note"), null, "the note outlived its render");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P4 (W64): Home in the wizard header goes back to the roster, keeps a touched character, drops an untouched one", () => {
+  let app = newCharacterApp();
+  assert.ok(app.$("header [data-home]"), "no Home button in the wizard's header");
+  app.click("header [data-home]");
+  assert.match(app.$("#main").textContent, /New character/);
+  assert.ok(homeIs(app), "S isn't homeState()");
+  assert.equal(app.$$("#main .roster-card").length, 0, "an untouched New character was saved");
+  assert.equal(app.$("header [data-home]"), null, "Home has a Home button");
+  app = newCharacterApp();
+  app.click("[data-pl]");
+  app.click("button.primary[data-nav]");
+  type(app, '[data-id="name"]', "Zed Home");
+  app.click("header [data-home]");
+  assert.ok(homeIs(app));
+  assert.ok(card(app, "Zed Home"), "the named character isn't on the roster");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P4 (W64): the sheet's menu Home and the table's Home both land on homeState(); the sheet's menu keeps its Home", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  assert.ok(app.$("#hdrmenu [data-home]"), "the sheet's menu lost Home");
+  assert.equal(app.$("#hdractions > [data-home]"), null, "the sheet grew a header Home button");
+  sheetHome(app);
+  assert.ok(homeIs(app));
+  const [, storage] = seedTable("Tuesday");
+  const gm = boot({ storage: { ...GM_ON, ...storage } });
+  gm.click("#main .tables .roster-card button");
+  tableHome(gm);
+  assert.ok(homeIs(gm));
+  assert.deepEqual([...app.errors, ...gm.errors], []);
+});
+
+test("P4 (W96): a Vampire's CP step lists the 15 Universal Advantages it can buy, plus a held one it can only give back", () => {
+  const universal = D.advantages.filter(a => a.universal === true);
+  assert.equal(universal.length, 15);
+  const advBlock = app => app.$$("#main details[data-filterable]").find(d => /open to Supernaturals/.test(d.querySelector("summary").textContent));
+  const picks = app => [...advBlock(app).querySelectorAll(".pick")];
+  let app = onStep("vampire", "street", "character-points");
+  assert.equal(picks(app).length, 15);
+  assert.equal(advBlock(app).querySelector("summary").textContent.trim(), "15 open to Supernaturals");
+  assert.deepEqual([...picks(app).map(p => p.querySelector("h2").textContent).sort()], [...universal.map(a => a.name).sort()]);
+  // The search box counts within what is drawn.
+  type(app, "[data-jumpfilter]", "sense");
+  const hit = picks(app).filter(p => !p.hidden).length;
+  assert.ok(hit > 0 && hit < 15, `${hit} hits`);
+  const [shown, total] = app.$("[data-jumpcount]").textContent.split(" of ").map(Number);
+  assert.equal(shown, app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).length);
+  assert.equal(total, app.$$("#main [data-filterable] .pick").length);
+  assert.ok(total < D.advantages.length, "the count still includes the Advantages it can't buy");
+  // A held, non-Universal Advantage.
+  const held = D.advantages.find(a => !a.universal);
+  app = onStep("vampire", "street", "character-points", ch => { ch.advantages = [{ id: held.id, rank: 1, notes: "" }]; });
+  assert.equal(picks(app).length, 16);
+  assert.equal(advBlock(app).querySelector("summary").textContent.trim(), "15 open to Supernaturals · 1 held that aren't");
+  const row = picks(app).find(p => p.querySelector("h2").textContent === held.name);
+  assert.equal(row.querySelector('[data-step$="|1"]').disabled, true, "a held, barred Advantage can go up");
+  app.click(`[data-step="adv|${held.id}|-1"]`);
+  assert.equal(picks(app).length, 15, "taking it back left it on the list");
+  // A Mortal still sees all of them.
+  app = onStep("professional", "street", "character-points");
+  const mortal = app.$$("#main details[data-filterable]").find(d => d.querySelector("summary").textContent.trim() === `${D.advantages.length} available`);
+  assert.ok(mortal, "a Mortal's summary changed");
+  assert.equal(mortal.querySelectorAll(".pick").length, D.advantages.length);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P4 (W59): every stepper in the wizard says what it changes", () => {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  let seen = 0;
+  for (const [arch, pl] of [["vampire", "street"], ["professional", "street"], ["arcanist", "street"], ["werewolf", "street"]]) {
+    for (const id of steps) {
+      const app = onStep(arch, pl, id, ch => { if (arch === "vampire") ch.archetypeChoices.specialization = ["strigoi"]; });
+      for (const b of app.$$("#main [data-step]")) {
+        seen++;
+        const l = b.getAttribute("aria-label");
+        assert.match(l || "", /^(Raise|Lower) \S/, `${arch}/${id}: ${b.dataset.step} reads "${l}"`);
+        assert.ok(b.closest(".stepper").dataset.name && !/undefined|null/.test(l), `${b.dataset.step} has no name`);
+      }
+    }
+  }
+  assert.ok(seen > 100, `only ${seen} stepper buttons looked at`);
+  const adm = openSheet(lockedVampire("upyr"), "main");
+  adm.click("[data-menu-toggle]"); adm.click("[data-admin]");
+  const bp = adm.$$('.admin-arch [data-step^="bp|"]');
+  assert.ok(bp.length, "Admin's Base Powers block has no steppers");
+  for (const b of bp) assert.match(b.getAttribute("aria-label"), /^(Raise|Lower) Base Powers in \S/);
+});
+
+test("P4 (W59): a press is announced once, politely, from outside #main, in the wizard and in Admin", async () => {
+  const later = app => new Promise(r => app.window.setTimeout(r, 60));
+  const app = statsDraft();
+  app.click('[data-step="stat|BOD|1"]');
+  await later(app);
+  const a = app.$("#announcer");
+  assert.ok(a, "no announcer");
+  assert.equal(app.$$("#announcer").length, 1);
+  assert.equal(a.getAttribute("role"), "status");
+  assert.equal(a.getAttribute("aria-live"), "polite");
+  assert.ok(!app.$("#main").contains(a), "the announcer is inside #main, which every render replaces");
+  assert.equal(a.textContent, `${sName("BOD")} 2`);
+  app.click('[data-step="stat|BOD|1"]');
+  await later(app);
+  assert.equal(app.$("#announcer"), a, "the announcer was replaced");
+  assert.equal(a.textContent, `${sName("BOD")} 3`);
+
+  const ch = lockedVampire("upyr"); ch.archetypeChoices.basePowers = {}; ch.archetypeChoices.optionPicks = {};
+  const adm = openSheet(ch, "main");
+  adm.click("[data-menu-toggle]"); adm.click("[data-admin]");
+  adm.click('.admin-arch [data-step="bp|iron-hide|1"]');
+  await later(adm);
+  assert.match(adm.$("#announcer").textContent, /^Base Powers in .+ 1$/);
+  assert.deepEqual([...app.errors, ...adm.errors], []);
 });

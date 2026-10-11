@@ -3276,6 +3276,7 @@ function bindSheet(){
   main.querySelectorAll('.admin-arch [data-step^="bp|"]').forEach(b=>b.onclick=()=>{
     const parts=b.dataset.step.split("|"), id=parts.slice(1, -1).join("|"), d=Number(parts[parts.length-1]);
     commit("admin", `Admin: Base Power ${d>0?"on":"off"} ${id}`, ()=>{ Engine.placeBasePower(ch, id, d); });
+    announceStep(b.dataset.step);
   });
   // A written-in archetype's own words (Decision 153), one logged change each.
   const wi = (ch.archetypeChoices||{}).writeIn;

@@ -99,17 +99,6 @@ Q16): Powered Armor is a vehicle, with its own Integrity**, so it's this
 entry's. One MD of Massive damage is 10 Integrity off it, or 1 Health Level to
 the wearer once it gets through (Q6).
 
-**W94 — Set every stat to 4 in one click.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10*
-Every stat starts at a free 1, and below 4 it's a −1 per point (Decision 150,
-`statRules.modifierRuleText`), so nearly everyone's first move on the Stats
-step is eight trips to 4. A **Set all to 4** button raises every stat
-under 4 to 4, spending Stat Points as usual: 3 a stat, 24 at most, out of a
-pool of 41 or more. A stat already above 4 is left alone. It's a shortcut,
-not a rule: the free base stays 1.
-*To respect:* it goes through the same spend as the steppers, so the pool,
-the caps and Undo behave exactly as eight clicks would. If the pool can't
-cover it, it raises what it can, in stat order, and says so.
-
 **W95 — Expert mode: creation that fits on one screen.** *Ken, from Brogan · 🔎 · Fix (UI) · raised 2026-10-10 · touches W59*
 A returning player scrolls past every Skill, Advantage and Disadvantage's full
 text to find the one they want. An **Expert mode** toggle collapses each to
@@ -119,21 +108,11 @@ boosts be **compact**: a **− / +** pair without the count between them,
 taking less room.
 *To respect:* a toggle is view state, remembered in the browser like the
 Character tab's Expand all (Decision 158), never saved in the character.
-W59 is the floor for the compact steppers: a stepper still says what it
+W59 (built, 0.41.0) is the floor for the compact steppers: a stepper still says what it
 changes, and its new value is still announced, even if the number moves out
 from between the buttons. *Questions:* where the boost count goes when it
 leaves the stepper (the rank's total already shows it?); does Expert mode
 reach the Character tab too, or creation only.
-
-**W96 — A Supernatural doesn't see the Advantages it can't buy.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10*
-On the Advantages step a Vampire or Werewolf scrolls past every non-Universal
-Advantage, shown disabled (`wizard.js`, `gated`), to find the 15 it can take.
-Hide them instead. The rule line already says only Universal Advantages are
-open.
-*To respect:* Decision 152. An Advantage the character **already holds** but
-can't (an archetype changed after buying it, which `validate()` reports)
-stays visible so it can be removed. The jump bar's filter and counts read the
-same list.
 
 **W97 — Rate of Use counts what you've spent this turn.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10*
 SFR's description says Rate of Use "limits the maximum SFR channeled in a
@@ -340,8 +319,7 @@ the check that inflicts it, presumably. Confirm that in the work order.
 
 The 2026-09-30 design critique (27/40, snapshot in `.impeccable/critique/`)
 and its 2026-10-01 re-run (29/40) are mostly built: W43, W42, W44, W46, W47
-and W57, then W45 and W58 (Decisions 165 and 166). What's left is W59 and
-the last of W60. Since W43, controls are 44px on a touchscreen and
+and W57, then W45 and W58 (Decisions 165 and 166). What's left is the last of W60. Since W43, controls are 44px on a touchscreen and
 `npm run phone-check` fails on anything smaller, or on text under 11px; since
 W45 it also fails on a vitals bar or a sheet's jump bar of two rows, and on a
 phone's Health card below 30% of the screen. A new control inherits those
@@ -381,31 +359,6 @@ stay** (`maxBoost`, `boosts`, constraint 6), since a saved file may name them.
 Only display text moves, and `docs/VOICE-APP.md` decides the wording. Do it with
 W65, since both touch the Luck row's text. It is a player-visible change, so it
 needs a CHANGELOG line and a patch bump.
-
-**W64 — Go back Home from character creation.** *Ken · ⏭ · raised 2026-10-04*
-In the wizard there's no way back to the Home screen. The sheet has **Home**
-in its ⋮ menu, but the wizard header is empty (`renderTopChrome` clears the
-actions on the wizard screen), so a player who wants their roster, or
-to start over, refreshes the page. Ken's choice: **a Home control in the
-wizard header**, matching the sheet's.
-*To respect:* nothing is lost by leaving. A new character is saved the moment
-the player changes something (`btn-new` in `renderHome`) and appears under
-Your characters, so Home needs no "are you sure?" for a touched character.
-An untouched one was never saved and just disappears, which is fine. The
-control is 44px on a touchscreen (`phone-check` fails below that) and must not
-push the header to a second row. It reuses the `data-home` handler in
-`bindMain`, which the sheet's menu also reaches.
-Worth a look while there: the Home reset sets only `{screen, ch, step,
-maxReached}` in `bindMain` but also `section` and `admin` in the sheet's
-version in `renderTopChrome`; one helper would stop the two drifting.
-
-**W59 — Steppers don't say what they change.** *Claude · 🔎 · critique P2, 2026-10-01*
-Every stepper is `aria-label="decrease"` / `"increase"` (`wizard.js`,
-the stepper helper): the Skills step has 36 buttons that all read "increase,
-button", and the value beside them isn't a live region, so a screen reader
-never hears the new number. *The fix:* name the target ("Raise BOD",
-"Lower Firearms") from the same data the row shows, and announce the value
-after a press, politely, once.
 
 **W60 — Small accessibility and copy fixes from the re-run.** *Claude · 🔎 · critique P2–P3, 2026-10-01 · mostly shipped in 0.36.0*
 Seven of the eight shipped in 0.36.0 (`docs/log/shipped.md`). Pin from Main

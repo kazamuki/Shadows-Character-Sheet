@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.40.0";
+const APP_VERSION = "0.41.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -49,11 +49,12 @@ function renderTopChrome(){
       });
       act.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>{ menu.hidden=true; exportChar(); });
       act.querySelectorAll("[data-print]").forEach(b=>b.onclick=()=>{ menu.hidden=true; printSheet(S.ch); });
-      act.querySelectorAll("[data-home]").forEach(b=>b.onclick=()=>{ S={screen:"home",ch:null,step:0,maxReached:0,section:"main",admin:false}; renderHome(); });
+      act.querySelectorAll("[data-home]").forEach(b=>b.onclick=goHome);
     }
   } else if (S.screen==="wizard"){
     ctx.textContent = charName(S.ch, "Character Intake");
-    nav.innerHTML = ""; if (act) act.innerHTML = "";
+    nav.innerHTML = "";
+    if (act){ act.innerHTML = `<button class="hdr-btn" data-home="1">Home</button>`; act.querySelector("[data-home]").onclick=goHome; }
   } else {
     ctx.textContent = "Character Intake"; nav.innerHTML = ""; if (act) act.innerHTML = "";
   }
