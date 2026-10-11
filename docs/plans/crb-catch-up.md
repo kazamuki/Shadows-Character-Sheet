@@ -63,6 +63,8 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ **0413 Vampire › Blood Frenzy** says "(T7, S1)" where Hunger says "TN 7, TH 1" for the same check. One form.
 - ❓ **0413 Vampire › Day Rest:** "Each day skipped adds +2 to that day's Thirst, cumulative." The Thirst isn't a number. +2 SFR lost on top of half your RoU? The sheet leaves it as text (Decision 201).
 - ❓ **0413 Vampire › Built to Last** (F41, Deighton): "Choose a long shell (Iron Hide) or a short surge (Icebound Resilience). These powers don't stack." The sheet reads it as a creation pick (Ken, VQ25). If that's the rule, say "at character creation", as the Draugur's features do.
+- ⚖ **0413 Vampire › Innate Powers and the Core Mechanic** (F39, Ken's ruling 2026-10-10, from the first playtest). "Every Vampire can learn these" should say every Innate power is **granted at rank 1**, and "Spend your Base Powers on Innate and Bloodline powers" should say **Bloodline powers**: one rank each, none above Max Starting Rank. Character Points raise any held power at 5 a rank. The sheet follows once W88 is built.
+- ⚖ **0414 Werewolf › Powers** (F38, the same ruling). "Doesn't choose its powers; it carries the whole kit" should say the Innate powers and the Origin's **starter power** are granted at rank 1, and **Base Powers buy ranks in the Origin's other powers**, none above Max Starting Rank. Character Points raise any held power. The sheet follows once W88 is built.
 - ☐ **0413 Vampire › the heading still says "(under construction)".** The sheet carries all of it but the Majors (Decisions 200–202). Drop the tag when you agree.
 
 ## 0420–0423: Skills

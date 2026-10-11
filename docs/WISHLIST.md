@@ -22,6 +22,217 @@ items here too, marked as such; Ken triages them.
 
 ## 1. Items
 
+### From the first playtest
+
+Brogan's feedback from the first playtest of the character sheet, written up by
+Ken on 2026-10-10 and shaped with Claude. Thirteen notes. Smartlink modifiers
+are folded into **W69** (below, under Loadout). "A Vampire's Innate powers are
+granted" led Ken to rule F38 and F39 together, for both archetypes, and that
+ruling is built by **W88**.
+
+**W87 — Holding a spell takes its dice off the table.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10*
+Today Concentration is a line in the Spellcraft reference (`spellRules.concentration`)
+and nothing more. A player holding Fog Shroud has to remember that dice are
+missing from every Essence roll until they let it go. Brogan asked for a
+Condition that takes one die off spell casting. Ken ruled to follow the book
+instead: a held spell sets aside **dice equal to its Threshold**, from **every
+Essence roll**, until it's released or the Arcanist falls unconscious. (The
+one die Brogan saw was a cantrip's: TH 1.) The fix is a **Holding** marker,
+set from the Grimoire on a spell tagged `Concentration`, which every place
+showing an Essence pool reads as dice set aside, with a **Release** beside it.
+*To respect:* constraint 7: what's stored is which spell is held, and the
+dice set aside are computed from its TH. A stored field is a save-file shape
+change: a schema bump and a `migrate()` step. It is not a Condition from
+`0540`. Calling it one would put a rule into the Conditions list that the
+book doesn't have there, so it gets its own marker, shown the way a
+Condition is. *Questions before a proposal:* can two spells be held at once,
+with their THs adding up; does Charging interact with it; is falling
+unconscious something the sheet sees (At Zero) and releases on its own, or
+does it only remind.
+
+**W88 — Vampire and Werewolf powers at creation: Innate granted, Bloodline and Origin chosen, CP to raise them.** *Ken, from Brogan · ⏭ · Rule or shape · raised 2026-10-10 · closes F38, F39*
+Brogan expected a Vampire's Innate powers to come free, and expected CP to
+raise Vampire and Werewolf powers the way it raises an Arcanist's
+Disciplines. Neither works today. **Ken's ruling (2026-10-10), for both
+archetypes:**
+- **Every Innate power is granted at rank 1.** A power with no ranks
+  (Preternatural Speed) is simply held.
+- **A Werewolf's Origin starter power is granted at rank 1 too.**
+- **Base Powers are spent on the Bloodline's or the Origin's other powers**,
+  one rank each, none above Max Starting Rank. Two in one power makes it
+  rank 2.
+- **CP raises any held power** at 5 CP a rank (Decision 157's price, which
+  only Disciplines were ever wired to), capped by Max Power Rank. CP doesn't
+  add a Bloodline or Origin power the Base Powers didn't choose; that's IP
+  in play (W72).
+
+What the app does today is each flag's stub. The Vampire spends Base Powers
+on Innate and Bloodline powers alike, and holds only what they placed
+(Decision 200). The Werewolf carries every Innate and Origin power at rank
+1 and spends nothing (Decision 196). So this supersedes both **in part**.
+*To respect:* a numbered decision citing both, closing F38 and F39 (three
+edits each). Decision 135: the granted set and the chooseable set are read
+from the archetype's data, with no archetype id in code. CP spent on powers
+counts in `cp()` beside `disciplineSpent`. *A save-file question for the
+proposal:* `powersBought` changes meaning, so a schema bump and a
+`migrate()` step. A saved Vampire whose Base Powers went into an Innate power
+gets those placements back to spend again. A saved Werewolf holds Origin
+powers it never chose: keep them, or ask? Max Starting Rank and Max Power
+Rank both bind a rank at creation, so the proposal should name which wins
+when they differ. The book says otherwise in both chapters: `0413`'s
+"can learn" and `0414`'s "carries the whole kit". Those fixes are in
+`plans/crb-catch-up.md`.
+
+**W89 — Spend IP on an Advantage, or to buy off a Disadvantage.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10*
+After lock, Advantages and Disadvantages are frozen. The only ways to change
+them in play are the Talented and Redeemed Minor Milestones. `0450`
+prices both: **an Advantage costs its creation point cost × 10 per rank, and a
+Disadvantage comes off the same way, one rank at a time.** A few
+Disadvantages (Pact among them) already say "spend IP to remove" and point
+here.
+*To respect:* constraint 7: the IP journal records the purchase, and the
+held Advantages are read from creation plus the journal, never rewritten.
+Decision 152: a Supernatural still buys only Universal Advantages, and a
+prerequisite still binds. Buying off a Disadvantage takes its rules off the
+sheet but doesn't refund the CP it granted at creation. *Blocked in part:*
+`0450`'s own open questions ask whether each **rank** costs that flat price
+again; Talented's scope is the same question. Build the one-rank case on the
+book's reading and stub the rest behind a flag.
+
+**W90 — Cybernetics.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · blocked on design: F6, F19*
+Playtesters want chrome. The design answer is already set (STATE §3, the
+Cyborg row): the Cyborg archetype was cut, and cybernetics become a list and
+an install mini-game, **Professionals only**. `0470` is still an outline
+(Implants, Upgrades, Replacements, Platforms, with no entries and no costs),
+so there is nothing to build from yet. This entry records that players asked;
+the work is STATE's Cyborg row, which retires `cyborg`, closes F6 and F19, and
+gives the Professional Installed Cybernetics.
+
+**W91 — Vehicles you can buy and own.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*
+There are no vehicles in the app: only the Pilot skill and Machindo. `0460`
+has the chapter: **Grounders** and **Jumpers** (Seats, PROT, RES, INT, Speed,
+Mods, Availability, Cost), **Vehicle Armor Kits**, **Powered Armor** and **Mech
+Suits**. The first cut is a vehicle catalog in Loadout's picker
+(`openCatalog` takes a new `kind`, Decision 118) and an owned vehicle on
+Loadout that reads like a catalog line. *Later:* a vehicle's own damage
+(Integrity, Systems, the Integrity Check and the System Failure table) and its
+mounted weapons.
+*To respect:* constraint 6 for every new id, `gamedataVersion` per Decision 68.
+An owned vehicle is a save-file shape change. Powered Armor is worn and
+amplifies the body (`0460`: the pilot uses their own combat skills), so it's
+W69's subject as much as this one's. Decide which entry it lands in when
+either is picked up.
+
+**W92 — Pain Sensitive does nothing.** *Ken, from Brogan · ⏭ · Content · raised 2026-10-10 · bug*
+The Disadvantage says "Your Pain Level is always 1 higher than normal. Does
+not apply if you have no pain levels." `painState()` never reads it: a Pain
+Sensitive character's Pain Level, penalties and the vitals are those of a
+character without it. Ken's reading (2026-10-10): **+1 once the Pain Level
+is 1 or more**, from any source (Health Levels lost, Agonized, Phantom
+Pain's PL 1 at full health per Decision 109, or Withering under Pain
+Immunity), and clamped to the table's top. At Pain Level 0 it adds nothing.
+*To respect:* the shift is data the engine reads (a `pain` field on the
+Disadvantage, say), not an id in code (Decision 135). `painSources` names it,
+so the sheet says why. Pin the reading in `tests/rules.test.mjs`. Player-
+visible: a CHANGELOG line and a patch bump. If the data field is new, the
+`gamedataVersion` bumps too (a character's computed Pain changes).
+
+**W93 — A roll box with a modifier takes the dice, and says it adds the rest.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10 · bug*
+Taking the **Improved** Minor Milestone asks you to "Roll 2d10+15 … and enter
+the result". Brogan rolled two 7s, typed 14 and expected 29, and got 14. The
+box wants the total, but nothing beside it says so. Brogan's fix: the box takes
+**the dice alone**, with **+ 15** printed after it, and the app adds the
+modifier. The wizard's rolls already work that way: the rolled Stat Point
+pool shows `40+1d10` beside a box for the die and adds the 40 itself, and
+the result shows next to it. Improved is the one that doesn't, so it
+should match them. Check the sheet's other roll boxes (the repair kit's
+die) while there.
+*To respect:* the `+15` is a number in the data the engine adds (Decision 134:
+numbers the engine reads, not formula text). Today it's in the benefit
+prose and hardcoded in `sheet.js`. Exploding 10s still mean the player
+adds up the dice they rolled, explosions included; the label says so.
+Player-visible: a CHANGELOG line and a patch bump.
+
+**W94 — Set every stat to 4 in one click.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10*
+Every stat starts at a free 1, and below 4 it's a −1 per point (Decision 150,
+`statRules.modifierRuleText`), so nearly everyone's first move on the Stats
+step is eight trips to 4. A **Set all to 4** button raises every stat
+under 4 to 4, spending Stat Points as usual: 3 a stat, 24 at most, out of a
+pool of 41 or more. A stat already above 4 is left alone. It's a shortcut,
+not a rule: the free base stays 1.
+*To respect:* it goes through the same spend as the steppers, so the pool,
+the caps and Undo behave exactly as eight clicks would. If the pool can't
+cover it, it raises what it can, in stat order, and says so.
+
+**W95 — Expert mode: creation that fits on one screen.** *Ken, from Brogan · 🔎 · Fix (UI) · raised 2026-10-10 · touches W59*
+A returning player scrolls past every Skill, Advantage and Disadvantage's full
+text to find the one they want. An **Expert mode** toggle collapses each to
+its name, cost and controls, with the text a tap away, so more fits at
+once. Brogan also asked that the Character Points step's stat and skill
+boosts be **compact**: a **− / +** pair without the count between them,
+taking less room.
+*To respect:* a toggle is view state, remembered in the browser like the
+Character tab's Expand all (Decision 158), never saved in the character.
+W59 is the floor for the compact steppers: a stepper still says what it
+changes, and its new value is still announced, even if the number moves out
+from between the buttons. *Questions:* where the boost count goes when it
+leaves the stepper (the rank's total already shows it?); does Expert mode
+reach the Character tab too, or creation only.
+
+**W96 — A Supernatural doesn't see the Advantages it can't buy.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10*
+On the Advantages step a Vampire or Werewolf scrolls past every non-Universal
+Advantage, shown disabled (`wizard.js`, `gated`), to find the 15 it can take.
+Hide them instead. The rule line already says only Universal Advantages are
+open.
+*To respect:* Decision 152. An Advantage the character **already holds** but
+can't (an archetype changed after buying it, which `validate()` reports)
+stays visible so it can be removed. The jump bar's filter and counts read the
+same list.
+
+**W97 — Rate of Use counts what you've spent this turn.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10*
+SFR's description says Rate of Use "limits the maximum SFR channeled in a
+single turn", and sustained powers drain against it each turn. The sheet
+shows RoU but counts nothing against it, so a player can spend a whole pool
+in one turn without the sheet noticing. The ask: count SFR spent since the
+last **Turn Reset** (the button conditions already tick on), warn at RoU,
+and clear the count on Reset.
+*To respect:* constraint 7: what's stored is SFR spent this turn (a tracker
+input). The cap is `rou` read from the scaling row, plus `grants()`' `rou`
+(Werewolf Majors, Decision 199). A new tracker field is a save-file shape
+change. *Questions before a proposal:* **warn or block**. Brogan said
+"warn/block"; a block is the GM's rule taken out of their hands, so the
+proposal should argue for a warning. Do sustained powers need to be marked
+active so Reset charges their drain on its own, or does the player spend it
+each turn? And Feeding: Fresh blood refills SFR. Does gaining SFR touch
+the count?
+
+**W98 — Walk, Run and Sprint on the sheet, from MOB.** *Ken, from Brogan · ⏭ for the paces · Content · raised 2026-10-10 · jump blocked on Deighton*
+MOB's description promises "base running speed, sprint speed, and how far you
+can jump with a running start", and the sheet shows none of them. `0530`
+gives three: **Walk = MOB, Run = MOB × 3 (−1 to attacks), Sprint = MOB × 6
+(−3)**. Fleet of Foot (a Professional's Chi ability) doubles all three. Show
+them on Main beside the combat numbers.
+*To respect:* the quick reference's movement table is display text
+(`"MOB ×3"`). The engine needs the multipliers as numbers (Decision 134),
+read by both. A doubling from Fleet of Foot only counts while it's active.
+**Jump** has no formula anywhere in the book. It's a rules question for
+Deighton, opened as a flag when this is picked up, and until then the sheet
+doesn't show a jump distance.
+
+**W99 — The Character tab's section headings line up.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · reopens Decision 168 in part*
+On the Character tab, sections like **Baseline Traits** and an Arcanist's
+**Aberrations** start wherever the column flow puts them, so their headings
+sit at different heights and the page is hard to scan. Decision 168 chose
+that flow: "parts flow into ~340px columns that break between cards". Ken's
+ask: **a section heading always starts a row, and its cards flow beneath it**
+in as many columns as fit (3, then 2, then 1 as the screen narrows). Every
+section heading lines up at the left, however many columns there are.
+*To respect:* this trades away part of what 168 won (no gaps, the page's
+width filled), so it's a superseding decision when built. Pinned vitals
+still take their columns back. `npm run phone-check` at phone and tablet
+widths. *Question:* is a short section (one card) allowed to sit beside
+the next one when there's room, or does every section get its own row?
+
 ### Loadout & catalog
 
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · 🔎 · Rule or shape · raised 2026-10-08 · touches F23, F25*
@@ -35,7 +246,10 @@ else; a bonus it prints is text the player applies by hand.
 that apply only while it's worn, to **stats, skills, weapons and powers**.
 Weapons are addressed by class, **ranged or melee** and **kinetic or energy**,
 so a modifier can read "+2 ACC to ranged weapons" or "+2 damage to energy
-weapons". Modifiers are **never negative**. A skill modifier adds **ranks
+weapons". **A third address, from the first playtest (Brogan, 2026-10-10):**
+by weapon **feature**, so SMARTLink Gloves (`smartlink-gloves`, "+2 ACC when
+using SMARTLink-compatible weapons", in the catalog today as a note) reaches
+only weapons whose `features` carry `SMART Link`. Modifiers are **never negative**. A skill modifier adds **ranks
 only**: an untrained skill gets the ranks but not its Synergy. A power
 modifier applies only to a power held at **rank 1 or more**, so +2 Evocation
 on a Professional does nothing.
@@ -682,7 +896,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W87.** Everything above is open; W38 has a plan,
+- **Next free number: W100.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
