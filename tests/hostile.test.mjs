@@ -47,6 +47,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
     focusAllocation: { INT: P("focus") }, statBonusAllocation: archetype === "werewolf" ? { BOD: P("sb"), [P("sb.key")]: 1 } : {},
     specialization: [P("spec.id"), archetype === "werewolf" ? "forge-fang" : archetype === "vampire" ? "draugur" : "aethereal-link"],
     basePowers: { [P("bp.key")]: 1, "battleborn-instinct": P("bp"), "bestial-blessings": "2", "deathless-resilience": 1 },
+    powerCp: { [P("pcp.key")]: 1, "battleborn-instinct": P("pcp"), "bestial-blessings": "2", "shadow-play": -3 },
     optionPicks: { "ancient-weapon": "blade", [P("op.key")]: P("op.val"),
       code: { hunt: P("code.hunt"), [P("code.key")]: P("code.val"), word: P("code.word"), bond: 5 } },
     focusedSkillPicks: [P("fskill")], naturalAdvantages: [{ id: P("natadv.id"), rank: P("natadv.rank") }],

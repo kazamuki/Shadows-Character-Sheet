@@ -487,15 +487,18 @@ function renderShCharacter(){
     // Powers edits.
     const parts = [];
     const traits = content.traits.filter(t=>t.name);
+    const specIds = Engine.specializationIds(ch);
     const powers = content.powers.filter(p=>p.name);
     const vulns = content.vulnerabilities.filter(v=>v.name);
     if (traits.length) parts.push(secs.sect("Baseline Traits") + traits.map(tr=>
       `<div class="pick"><div class="head"><h2>${esc(tr.name)}</h2></div>
         <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join(""));
     // An archetype's own powers carry a cost and what a rank adds (Decision
-    // 196); its Base Powers are F38's stub, shown beside them and spending nothing.
-    const allow = Engine.powerAllowance(ch);
-    const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${a.flagged?flagHtml(a):""}` : "";
+    // 196); its Base Powers are shown beside them, and a locked sheet that
+    // still has some to place points at Admin, where they go (Decision 215).
+    const allow = Engine.powerAllowance(ch), bps = Engine.basePowerState(ch);
+    const toPlace = bps && bps.left > 0 && specIds.length ? `<p class="step-note">${bps.left} Base Power${bps.left>1?"s":""} to place, on Admin.</p>` : "";
+    const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${toPlace}` : "";
     if (powers.length) parts.push(secs.sect("Powers") + allowHtml + powers.map(p=>
       `<div class="pick"><div class="head"><h2>${esc(p.name)}</h2>
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
@@ -1999,7 +2002,9 @@ function feedPanelHtml(ch, p){
       `<button class="${st.kind===k.id?"on":""}" aria-pressed="${st.kind===k.id}" data-feedkind="${esc(p.id)}|${esc(k.id)}">${esc(k.name)}</button>`).join("")}</div>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-feedhl="${esc(p.id)}" value="${esc(st.hl)}" placeholder="HL" aria-label="${esc(v.unit||"HL drained")}" style="width:64px">
     <button class="btn sm primary" data-feed="${esc(p.id)}">Feed</button>
-    ${v.unfed?`<button class="btn sm" data-unfed="${esc(p.id)}">${esc(v.unfed.label)} (−${v.unfed.amount})</button>`:""}</div>`;
+    ${v.unfed?`<button class="btn sm" data-unfed="${esc(p.id)}">${esc(v.unfed.label)} (−${v.unfed.amount})</button>`:""}
+    ${v.unrested?`<button class="btn sm" data-unrested="${esc(p.id)}" title="${esc(v.unrested.text)}">${esc(v.unrested.label)} (−${v.unrested.amount})</button>`:""}</div>`;
+  if (v.unrested && v.unrested.text) h += `<p class="step-note">${esc(v.unrested.text)}</p>`;
   return h;
 }
 
@@ -2932,6 +2937,10 @@ function bindSheet(){
     const pid=b.dataset.unfed, v=Engine.feedView(ch, Engine.archPanels(ch).find(x=>x.id===pid)||{});
     commit("tracker", `${v.unfed?v.unfed.label:"A day unfed"}: −${v.unfed?Math.min(v.unfed.amount, v.current||0):0} SFR`, ()=>{ Engine.goUnfed(ch, pid); });
   });
+  main.querySelectorAll("[data-unrested]").forEach(b=>b.onclick=()=>{
+    const pid=b.dataset.unrested, v=Engine.feedView(ch, Engine.archPanels(ch).find(x=>x.id===pid)||{});
+    commit("tracker", `${v.unrested?v.unrested.label:"A day without rest"}: −${v.unrested?Math.min(v.unrested.amount, v.current||0):0} SFR`, ()=>{ Engine.goUnrested(ch, pid); });
+  });
   main.querySelectorAll("[data-trkmax]").forEach(inp=>inp.onchange=()=>{
     const pid=inp.dataset.trkmax, mx=inp.value===""?null:Math.max(0,Number(inp.value));
     commit("tracker", `${pid.toUpperCase()} max → ${mx==null?"—":mx}`, ()=>{
@@ -3253,6 +3262,7 @@ function bindSheet(){
       ac.specialization = v ? [v] : []; ac.optionPicks = {};
       const pool=new Set(Engine.powerPool(ch).map(p=>p.id));
       for (const id of Object.keys(ac.basePowers||{})) if (!pool.has(id)) delete ac.basePowers[id];
+      for (const id of Object.keys(ac.powerCp||{})) if (!pool.has(id)) delete ac.powerCp[id];
     });
   });
   main.querySelectorAll(".admin-arch [data-optpick]").forEach(b=>b.onclick=()=>{

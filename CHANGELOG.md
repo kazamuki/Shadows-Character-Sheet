@@ -23,6 +23,17 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.40.0
+
+- **Vampire and Werewolf powers work the way the book means.** Your Innate
+  powers are yours at rank 1. Base Powers buy your Bloodline's or Origin's
+  powers, and CP raises any power you hold, 5 CP a rank.
+- **Saved Vampires and Werewolves:** Base Powers that need placing again are
+  waiting on Admin.
+- **An Upyr can hold both Iron Hide and Icebound Resilience.** They don't
+  stack: a hit counts the higher.
+- **A day without rest** is on the Thirst panel: half your RoU and 2 more.
+
 ## v0.39.3 — 2026-10-11
 
 - **CRANK steps off the sheet.** Your rep and its ledger stay in your

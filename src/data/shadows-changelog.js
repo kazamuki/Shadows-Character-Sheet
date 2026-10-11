@@ -2,6 +2,17 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.40.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Vampire and Werewolf powers work the way the book means.** Your Innate powers are yours at rank 1. Base Powers buy your Bloodline's or Origin's powers, and CP raises any power you hold, 5 CP a rank.",
+      "**Saved Vampires and Werewolves:** Base Powers that need placing again are waiting on Admin.",
+      "**An Upyr can hold both Iron Hide and Icebound Resilience.** They don't stack: a hit counts the higher.",
+      "**A day without rest** is on the Thirst panel: half your RoU and 2 more."
+    ]
+  },
+  {
     "version": "0.39.3",
     "date": "2026-10-11",
     "intro": [],

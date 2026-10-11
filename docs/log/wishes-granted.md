@@ -793,6 +793,53 @@ builds the day from `getFullYear`, `getMonth` and `getDate` and is the pattern.
 Player-visible, so a CHANGELOG line and a patch bump, and a test that builds the
 date in local time (as S8b's `localDay` test does) and runs under a UTC+ zone.
 
+**W88 — Vampire and Werewolf powers at creation: Innate granted, Bloodline and Origin chosen, CP to raise them.** *Ken, from Brogan · → Decision 215, app 0.40.0: Innate granted, Base Powers on the Bloodline's or Origin's, CP raises any held power*
+Brogan expected a Vampire's Innate powers to come free, and expected CP to
+raise Vampire and Werewolf powers the way it raises an Arcanist's
+Disciplines. Neither works today. **Ken's ruling (2026-10-10), for both
+archetypes:**
+- **Every Innate power is granted at rank 1.** A power with no ranks
+  (Preternatural Speed) is simply held.
+- **A Werewolf's Origin starter power is granted at rank 1 too.**
+- **Base Powers are spent on the Bloodline's or the Origin's other powers**,
+  one rank each, none above Max Starting Rank. Two in one power makes it
+  rank 2.
+- **CP raises any held power** at 5 CP a rank (Decision 157's price, which
+  only Disciplines were ever wired to), capped by Max Power Rank. CP doesn't
+  add a Bloodline or Origin power the Base Powers didn't choose; that's IP
+  in play (W72).
+
+What the app does today is each flag's stub. The Vampire spends Base Powers
+on Innate and Bloodline powers alike, and holds only what they placed
+(Decision 200). The Werewolf carries every Innate and Origin power at rank
+1 and spends nothing (Decision 196). So this supersedes both **in part**.
+*To respect:* a numbered decision citing both, closing F38 and F39 (three
+edits each). Decision 135: the granted set and the chooseable set are read
+from the archetype's data, with no archetype id in code. CP spent on powers
+counts in `cp()` beside `disciplineSpent`. *A save-file question for the
+proposal:* `powersBought` changes meaning, so a schema bump and a
+`migrate()` step. A saved Vampire whose Base Powers went into an Innate power
+gets those placements back to spend again. A saved Werewolf holds Origin
+powers it never chose: keep them, or ask? Max Starting Rank and Max Power
+Rank both bind a rank at creation, so the proposal should name which wins
+when they differ. The book says otherwise in both chapters: `0413`'s
+"can learn" and `0414`'s "carries the whole kit". Those fixes are in
+`plans/crb-catch-up.md`.
+
+**W105 — Deighton's Vampire rulings.** *Ken, from Deighton · → Decision 215, app 0.40.0: an Upyr holds both Built to Last powers; a day without rest on the Thirst*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q20–Q21):
+- **F41:** an Upyr **holds both** Built to Last powers (Iron Hide and Icebound
+  Resilience); they just don't stack. Ken's creation-pick reading (VQ25) is
+  withdrawn: the pick and its bar on Base Powers and IP go, and a saved Upyr
+  keeps the one it chose (`migrate()` needs no step if `optionPicks` is simply
+  no longer read for it; check).
+- **Day Rest:** a day without rest costs **half RoU plus 2 SFR**, and it doesn't
+  rise day to day. The Thirst panel (Decision 201) gains it beside "A day unfed".
+
+*To respect:* a numbered decision superseding Decision 200 in part (Built to
+Last) and adding to 201; `gamedataVersion` for the data. Land it beside W88,
+which also rewrites how a Vampire's powers are held.
+
 ### GM mode
 
 **W74 — Search the Codex from inside an encounter.** *Ken · → Decision 211 (switched off)*
