@@ -822,23 +822,6 @@ encounter, read-only (Decision 188).
 - **Build it with W79**, since both change how a line reads, on a member's
   page, in *Who knows what* (179) and on a session's page (S5a).
 
-**W83 — A table keeps an audit trail, with undo.** *Ken · 🔎 · Rule or shape · raised 2026-10-09 in S5b's order (SQ6)*
-A character records every change as a structural diff and undoes any of
-them (Decisions 48–49, constraint 7). A table records nothing: Delete asks,
-and a GM who writes the wrong close-out, deletes a session or settles the
-wrong thread has only Redo, retyping, or an exported copy. Ken: should a
-close-out have an audit log with undo, as a sheet does?
-*The ledger already promised this and dropped it.* Decision 171 left a table
-without undo, to revisit when "S8 designs the table's audit trail"; 176
-moved that to S10 ("audit trail is S10's"); S10a–c built the encounter and no trail. So the
-question is open in the ledger, not just here. When it's picked up, it covers
-the whole table (cast, interactions, sessions, threads, encounters, close-outs),
-not one record.
-*To respect:* a table stores inputs only (constraint 7), which is what made a
-character's generic diff possible; storage size (GQ9: a long table's trail
-grows); and 176's *Revisit if*. It needs a numbered decision that marks 171
-and 176.
-
 **W84 — Print a cast member, an encounter, a session's journal.** *Ken · 🔎 · Fix (UI) · raised 2026-10-09 in S13a's order (SQ4)*
 The plan's S13 lists printing beside the GM screen: a cast member's page
 (the stat block, If Pushed, their line), an encounter (its rows, Conditions

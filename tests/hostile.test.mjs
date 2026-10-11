@@ -762,7 +762,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1008,5 +1008,34 @@ test("a hostile encounter, entry and group name render as text on the Add to but
   found.push(...injected(app, "the Codex search"));
   assert.equal(app.$("#main img"), null);
   assert.deepEqual(found, [], "a name became markup");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── A table's trail is untrusted too (Decision 212, 124) ───────────────────
+test("a table file's trail draws its labels as text, drops every crafted entry, and Undo writes only inside the table", () => {
+  const id = Engine.newTable().meta.id;
+  const good = { seq: 1, date: "2026-10-10T12:00:00.000Z", label: P("audit"), patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "Before" }] };
+  const crafted = [
+    ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
+  ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
+  const t = Engine.migrateTable({
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.12" },
+    cast: [{ id: "C-AAAAAAAA", name: "After" }],
+    audit: [...crafted, good],
+  });
+  assert.equal(JSON.stringify(t.audit.map(e => e.seq)), JSON.stringify([1]), "a crafted entry survived the gate");
+  const key = "shadows.table.v1." + id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  app.click("[data-menu-toggle]"); app.click("[data-tactivity]");
+  assert.ok(app.$("#modal").textContent.includes("data-pwn"), "the label didn't show as text");
+  const found = injected(app, "Activity");
+  assert.equal(app.$("#modal img"), null);
+  assert.deepEqual(found, [], "a label became markup");
+  app.click("#modal [data-act-undo]");
+  assert.equal(app.window.eval("S.table.cast[0].name"), "Before");
+  assert.equal(app.window.eval("S.table.meta.id"), id);
+  assert.equal(app.window.eval("({}).polluted"), undefined);
+  assert.equal(app.$("img"), null);
   assert.deepEqual(app.errors, []);
 });

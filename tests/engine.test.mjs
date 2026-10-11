@@ -3076,7 +3076,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.11");
+  assert.equal(t.meta.tableSchemaVersion, "0.12");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3151,7 +3151,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.11", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.12", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3203,7 +3203,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3426,7 +3426,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3788,7 +3788,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -3997,7 +3997,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4513,7 +4513,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -4984,7 +4984,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5356,7 +5356,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -5644,7 +5644,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.11");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.12");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -6009,7 +6009,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.11");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.12");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6152,7 +6152,7 @@ const names = (t, e) => Engine.encounterView(t, e, []).rows.map(r => r.name);
 const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.11");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.12");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6163,7 +6163,7 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.11");
+  assert.equal(m.meta.tableSchemaVersion, "0.12");
   eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "" }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
@@ -6527,4 +6527,458 @@ test("211: a group is found by its origin's name; addToEncounter refuses a table
     assert.equal(r.ok, false);
     assert.equal(JSON.stringify(t) === undefined ? "" : JSON.stringify(t).includes("encounters"), false, "a refusal wrote an encounter");
   }
+});
+
+// ---- The table's activity log (212) ------------------------------------------------------
+
+const PIN_CHAR = () => ({ identity: { name: "A" }, damage: { hp: 2 }, stats: { BOD: { base: 5, raises: 0 } }, gear: [{ id: "x" }, { id: "y" }], tags: ["a", "b"] });
+const PIN_EDITS = {
+  damage: a => { a.damage.hp = 5; },
+  raise: a => { a.stats.BOD.raises = 1; a.stats.BOD.base = 6; },
+  gearAppend: a => { a.gear.push({ id: "z" }); },
+  gearRemove: a => { a.gear.splice(0, 1); },
+  gearInsert: a => { a.gear.unshift({ id: "w" }); },
+  gearEdit: a => { a.gear[1].id = "q"; },
+  adminEdit: a => { a.identity.name = "B"; a.tags = ["c"]; delete a.damage; a.extra = 1; },
+};
+// What diffChar gave before 212, pinned byte for byte: a saved character's audit holds these.
+const PIN_OPS = '{"damage":[{"path":["damage","hp"],"type":"scalar","before":2}],"raise":[{"path":["stats","BOD","base"],"type":"scalar","before":5},{"path":["stats","BOD","raises"],"type":"scalar","before":0}],"gearAppend":[{"path":["gear"],"type":"array","op":"append","count":1}],"gearRemove":[{"path":["gear"],"type":"array","op":"removeAt","index":0,"item":{"id":"x"}}],"gearInsert":[{"path":["gear"],"type":"array","op":"set","before":[{"id":"x"},{"id":"y"}]}],"gearEdit":[{"path":["gear"],"type":"array","op":"set","before":[{"id":"x"},{"id":"y"}]}],"adminEdit":[{"path":["identity","name"],"type":"scalar","before":"A"},{"path":["damage"],"type":"scalar","before":{"hp":2}},{"path":["tags"],"type":"array","op":"set","before":["a","b"]},{"path":["extra"],"type":"scalar"}]}';
+
+test("212: a character's audit is untouched: diffChar gives the same ops, byte for byte", () => {
+  const out = {};
+  for (const [k, edit] of Object.entries(PIN_EDITS)) { const a = PIN_CHAR(); edit(a); out[k] = Engine.diffChar(PIN_CHAR(), a); }
+  assert.equal(JSON.stringify(out), PIN_OPS);
+});
+
+/** A table as a GM's would be after a few sessions: 40 cast, 150 lines, a session, a thread, a note. */
+function bigTable() {
+  const t = Engine.newTable("Big");
+  for (let i = 0; i < 40; i++) {
+    const id = Engine.addCastMember(t, { name: `Cast ${i}`, line: "A person with a line about them that runs a little long" }).id;
+    Engine.editCastMember(t, id, { motivation: "Wants the ledger back, and says so to anyone who will stand still for it.", resources: "A van, a debt, a cousin." });
+  }
+  for (let i = 0; i < 150; i++)
+    Engine.addInteraction(t, { kind: "met", cast: [t.cast[i % 40].id], text: `Met on the pier, night ${i}, and they did not say much about it.`, date: "2026-10-01" });
+  const s = Engine.addSession(t, { number: 3, date: "2026-10-01" }).id;
+  Engine.editSession(t, s, { present: ["Wren", "Rook"], hours: 3 });
+  Engine.addThread(t, { title: "The Ledger" });
+  Engine.addTableNote(t, { title: "N", text: "Something" });
+  return { t, s };
+}
+const undoBase = t => { const o = plain(t); delete o.audit; o.meta.updated = null; return o; };
+/** Run `fn` against `t` and record it, the way tableChange does. */
+function recorded(t, fn, label, opts) {
+  const base = plain(t);
+  fn();
+  return Engine.recordTableAction(t, base, label, undefined, opts);
+}
+
+test("212: diffTable is two scalar ops for a rename, one insertAt for an add, a removeAt for a removal; stamps and the log never diff", () => {
+  const { t } = bigTable();
+  const b = plain(t);
+  Engine.editCastMember(t, t.cast[3].id, { name: "Renamed" });
+  const ops = Engine.diffTable(b, t);
+  eq(ops.map(o => [o.path.join("."), o.type]), [["cast.3.name", "scalar"], ["cast.3.updated", "scalar"]], "the record's own stamp is a field; meta.updated is not a change a GM made");
+  const b2 = plain(t);
+  Engine.addCastMember(t, { name: "New" });
+  eq(Engine.diffTable(b2, t), [{ path: ["cast"], type: "array", op: "insertAt", index: 0 }]);
+  const gone = t.cast[1];
+  const b3 = plain(t);
+  Engine.removeCastMember(t, gone.id);
+  const rm = Engine.diffTable(b3, t).find(o => o.path.join(".") === "cast");
+  eq([rm.op, rm.index, rm.item.id], ["removeAt", 1, gone.id]);
+  const b4 = plain(t);
+  t.meta.updated = "2030-01-01T00:00:00.000Z"; t.audit.push({ seq: 1 });
+  eq(Engine.diffTable(b4, t), []);
+  t.meta.name = "Other";
+  eq(Engine.diffTable(b4, t), [{ path: ["meta", "name"], type: "scalar", before: "Big" }]);
+  t.meta.id = "TBL-ZZZZ-ZZZZ-ZZZZ";
+  assert.equal(Engine.diffTable(b4, t).length, 1, "the id is never a diff");
+  eq(Engine.diffTable(null, "x"), []);
+});
+
+
+test("212: every entry on the realistic table is under a kilobyte, the average under 500 bytes, and End's under 4 KB", () => {
+  const { t } = bigTable();
+  const sizes = [];
+  const size = (name, fn) => { const r = recorded(t, fn); assert.ok(r.ok, name); sizes.push([name, JSON.stringify(r.entry).length]); };
+  size("rename", () => Engine.editCastMember(t, t.cast[5].id, { name: "Marta" }));
+  size("add member", () => Engine.addCastMember(t, { name: "Gull" }));
+  size("add line", () => Engine.addInteraction(t, { kind: "met", text: "Talked.", date: "2026-10-02" }));
+  size("remove member", () => Engine.removeCastMember(t, t.cast[7].id));
+  let e, g;
+  size("add encounter", () => { e = Engine.addEncounter(t, { name: "Dock" }).id; });
+  size("add rows", () => { Engine.addParticipant(t, e, { kind: "pc", name: "Wren" }); g = Engine.addParticipant(t, e, { kind: "cast", id: t.cast[2].id }).id; });
+  size("start", () => Engine.startEncounter(t, e));
+  size("hit", () => Engine.participantDamage(t, e, g, 3));
+  size("next turn", () => Engine.nextTurn(t, e));
+  for (const [n, s] of sizes) assert.ok(s < 1024, `${n} is ${s} bytes`);
+  const avg = sizes.reduce((a, [, s]) => a + s, 0) / sizes.length;
+  assert.ok(avg < 500, `average ${avg}`);
+  const x = endTable();
+  const r = recorded(x.t, () => Engine.endEncounter(x.t, x.e, { rows: { [x.gull]: { keep: true, line: true, text: "Got away." } } }, [x.pack]), "Ended");
+  assert.ok(r.ok);
+  assert.ok(JSON.stringify(r.entry).length < 4096, `End is ${JSON.stringify(r.entry).length} bytes`);
+});
+
+test("212: record then undo restores the table exactly, for the cast, lines, sessions with a close-out, threads, notes and a fight", () => {
+  const { t, s } = bigTable();
+  const stepsList = [
+    ["cast add", () => Engine.addCastMember(t, { name: "Marta" })],
+    ["cast edit", () => Engine.editCastMember(t, t.cast[0].id, { motivation: "Money" })],
+    ["cast block", () => Engine.setCastBlock(t, t.cast[0].id, { stats: { BOD: 6 }, skills: [{ name: "Awareness", total: 7, skill: "awareness" }] })],
+    ["cast remove", () => Engine.removeCastMember(t, t.cast[4].id)],
+    ["line", () => Engine.addInteraction(t, { kind: "fought", cast: [t.cast[1].id], text: "Fought.", date: "2026-10-03" })],
+    ["session", () => Engine.addSession(t, { number: 4, date: "2026-10-08" })],
+    ["close-out", () => assert.ok(Engine.writeCloseOut(t, s, { lines: [here("Wren", 5), away("Dez", "novice")] }).ok)],
+    ["session remove", () => Engine.removeSession(t, s)],
+    ["thread", () => Engine.addThread(t, { title: "Another" })],
+    ["thread remove", () => Engine.removeThread(t, t.threads[0].id)],
+    ["note", () => Engine.addTableNote(t, { title: "Hi", text: "there" })],
+    ["note remove", () => Engine.removeTableNote(t, t.notes[0].id)],
+    ["rename", () => { t.meta.name = "Renamed"; }],
+  ];
+  const states = [undoBase(t)];
+  for (const [name, fn] of stepsList) {
+    const r = recorded(t, fn, undefined, { fold: false });
+    assert.ok(r.ok && !r.folded, name);
+    states.push(undoBase(t));
+  }
+  assert.equal(t.audit.length, stepsList.length);
+  for (let i = stepsList.length - 1; i >= 0; i--) {
+    const r = Engine.undoTableAction(t);
+    assert.ok(r.ok, stepsList[i][0]);
+    eq(undoBase(t), states[i], `undo of ${stepsList[i][0]} did not restore the table`);
+  }
+  assert.equal(t.audit.length, 0);
+});
+
+test("212: a fight undoes step by step: a hit, damage, End with a Keep", () => {
+  const x = endTable();
+  const { t, e, gull, wren } = x;
+  const steps = [
+    ["hit", () => assert.ok(Engine.applyEncounterHit(t, e, wren, { damage: 3, damageType: "blade" }, {}).ok)],
+    ["damage", () => Engine.participantDamage(t, e, gull, 2)],
+    ["end", () => assert.ok(Engine.endEncounter(t, e, { rows: { [gull]: { keep: true, line: true, text: "Got away." } } }, [x.pack]).ok)],
+  ];
+  const states = [undoBase(t)];
+  for (const [name, fn] of steps) { assert.ok(recorded(t, fn, name, { fold: false }).ok, name); states.push(undoBase(t)); }
+  assert.equal(t.encounters[0].status, "ended");
+  for (let i = steps.length - 1; i >= 0; i--) { assert.ok(Engine.undoTableAction(t).ok); eq(undoBase(t), states[i], steps[i][0]); }
+  assert.equal(t.encounters[0].status, "running");
+  assert.equal(t.cast.some(n => n.from && n.from.id === "gull"), false, "the kept member went with the undo");
+});
+
+test("212: Reset undoes whole", () => {
+  const { t, e } = encTable();
+  const a = addPc(t, e, "A", { order: 9 });
+  Engine.participantAddCondition(t, e, a, { id: "bleeding", rounds: 2 });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  Engine.nextTurn(t, e);
+  const before = undoBase(t);
+  assert.ok(recorded(t, () => assert.ok(Engine.applyEncounterReset(t, e, {}, {}).ok), "Reset").ok);
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), before);
+});
+
+test("212: undo is last in, first out, isn't recorded, and says so when there is nothing", () => {
+  const t = Engine.newTable("T");
+  eq(Engine.undoTableAction(t), { ok: false, why: "Nothing to undo." });
+  const s0 = undoBase(t);
+  recorded(t, () => Engine.addCastMember(t, { name: "A" }), undefined, { fold: false });
+  const s1 = undoBase(t);
+  recorded(t, () => Engine.addCastMember(t, { name: "B" }), undefined, { fold: false });
+  const s2 = undoBase(t);
+  recorded(t, () => Engine.addCastMember(t, { name: "C" }), undefined, { fold: false });
+  eq(t.audit.map(e => e.seq), [1, 2, 3]);
+  const r = Engine.undoTableAction(t);
+  assert.equal(r.undone.label, "Added C to the cast");
+  eq(undoBase(t), s2);
+  Engine.undoTableAction(t); eq(undoBase(t), s1);
+  assert.equal(t.audit.length, 1, "an undo adds nothing");
+  Engine.undoTableAction(t); eq(undoBase(t), s0);
+  assert.equal(Engine.undoTableAction(t).ok, false);
+  for (const bad of [null, "x", 3, [], {}, { meta: {} }]) assert.equal(Engine.undoTableAction(bad).ok, false);
+});
+
+test("212: labels name the record, from what changed", () => {
+  const t = Engine.newTable("T");
+  const L = fn => recorded(t, fn, undefined, { fold: false }).entry.label;
+  assert.equal(L(() => Engine.addCastMember(t, { name: "Marta" })), "Added Marta to the cast");
+  assert.equal(L(() => Engine.editCastMember(t, t.cast[0].id, { motivation: "x" })), "Changed Marta");
+  assert.equal(L(() => Engine.addInteraction(t, { kind: "met", text: "Hi" })), "Added a line");
+  assert.equal(L(() => Engine.addSession(t, { number: 3 })), "Added Session 3");
+  assert.equal(L(() => Engine.addThread(t, { title: "The Ledger" })), "Added the thread The Ledger");
+  assert.equal(L(() => Engine.addTableNote(t, { title: "", text: "x" })), "Added a note");
+  assert.equal(L(() => { t.meta.name = "New"; }), "Renamed the table");
+  const e = Engine.newTable("E");
+  assert.equal(recorded(e, () => Engine.addEncounter(e, { name: "Dock fight" })).entry.label, "Added Dock fight");
+  assert.equal(L(() => Engine.removeSession(t, t.sessions[0].id)), "Removed Session 3");
+  assert.equal(L(() => { Engine.addCastMember(t, { name: "Q" }); Engine.addSession(t, { number: 9 }); }), "Added Session 9 and 1 more");
+  assert.equal(Engine.tableActionLabel(null, null, null), "Changed the table");
+  assert.equal(Engine.tableActionLabel({}, {}, [{ path: ["cast", 0], type: "scalar" }]), "Changed the table");
+  assert.equal(recorded(t, () => Engine.addCastMember(t, { name: "  " }), "Named by the press").entry.label, "Named by the press");
+});
+
+test("212: typing in one field is one entry, undone to the original; typed and erased is none; later, or elsewhere, is another", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Marta" });
+  Engine.editCastMember(t, t.cast[0].id, { motivation: "Old" });
+  const T0 = Date.parse("2026-10-10T12:00:00Z");
+  const type = (field, v, at) => { const base = plain(t); Engine.editCastMember(t, t.cast[0].id, { [field]: v }); return Engine.recordTableAction(t, base, undefined, new Date(T0 + at)); };
+  const r1 = type("motivation", "N", 0);
+  assert.ok(r1.ok && !r1.folded);
+  for (const [i, v] of ["Ne", "New", "New!", "New!!"].entries()) { const r = type("motivation", v, 1000 * (i + 1)); assert.ok(r.folded, v); }
+  assert.equal(t.audit.length, 1);
+  assert.equal(t.audit[0].label, "Changed Marta");
+  assert.equal(t.audit[0].date, new Date(T0 + 4000).toISOString(), "the date follows the last keystroke");
+  Engine.undoTableAction(t);
+  assert.equal(t.cast[0].motivation, "Old");
+  // Typed and erased back to what it was: nothing is left.
+  const a = type("motivation", "X", 10_000), b = type("motivation", "Old", 11_000);
+  assert.ok(a.ok && b.folded && b.dropped);
+  assert.equal(t.audit.length, 0);
+  // Six minutes later is a new entry; another field is a new entry.
+  type("motivation", "A", 20_000);
+  assert.equal(type("motivation", "AB", 20_000 + 6 * 60_000).folded, false);
+  assert.equal(type("resources", "R", 20_000 + 6 * 60_000 + 1000).folded, false);
+  assert.equal(t.audit.length, 3);
+  // A press never folds.
+  const base = plain(t); Engine.editCastMember(t, t.cast[0].id, { resources: "RR" });
+  assert.equal(Engine.recordTableAction(t, base, undefined, new Date(T0 + 20_000 + 6 * 60_000 + 2000), { fold: false }).folded, false);
+  assert.equal(t.audit.length, 4);
+});
+
+test("212: the log keeps the newest 500, seqs rising", () => {
+  const t = Engine.newTable("T");
+  for (let i = 0; i < 520; i++) recorded(t, () => Engine.addTableNote(t, { title: `n${i}`, text: "x" }), undefined, { fold: false });
+  assert.equal(t.audit.length, 500);
+  assert.equal(t.audit[0].seq, 21);
+  assert.equal(t.audit[499].seq, 520);
+  assert.equal(t.audit[499].label, "Added the note n519");
+});
+
+test("212: a trail in a file is gated: unsafe paths, bad ops and bad numbers are dropped, neighbours kept", () => {
+  const good = (seq, label = "Changed Marta") => ({ seq, date: "2026-10-10T12:00:00.000Z", label, patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "Old" }] });
+  const bad = [
+    ["__proto__", ["__proto__", "x"]], ["meta.id", ["meta", "id"]], ["version", ["meta", "tableSchemaVersion"]],
+    ["audit", ["audit", 0]], ["unknown root", ["evil"]], ["constructor", ["cast", "constructor", "x"]], ["empty", []], ["not a path", "cast"],
+    ["negative index in path", ["cast", -1, "name"]], ["fraction in path", ["cast", 1.5, "name"]],
+  ].map(([n, path], i) => ({ seq: 100 + i, date: null, label: n, patch: [{ path, type: "scalar", before: "x" }] }));
+  const ops = [
+    { path: ["cast"], type: "x" }, { path: ["cast"], type: "array", op: "nope" },
+    { path: ["cast"], type: "array", op: "insertAt", index: -1 }, { path: ["cast"], type: "array", op: "insertAt", index: 1.5 },
+    { path: ["cast"], type: "array", op: "insertAt", index: "2" }, { path: ["cast"], type: "array", op: "append", count: -1 },
+    { path: ["cast"], type: "array", op: "set", before: "no" }, { path: ["cast"], type: "array", op: "removeAt", index: 0 },
+    "no", null, 7,
+  ].map((op, i) => ({ seq: 200 + i, date: null, label: "op", patch: [op] }));
+  const shapes = [{ seq: 300, date: "nope", label: "d", patch: good(1).patch }, { seq: "3", date: null, label: "s", patch: good(1).patch },
+    { seq: 301, date: null, label: 5, patch: good(1).patch }, { seq: 302, date: null, label: "e", patch: [] }, { seq: 303, date: null, label: "e", patch: "x" },
+    null, "x", 4, [], { seq: 304, date: null, label: "mixed", patch: [good(1).patch[0], { path: ["meta", "id"], type: "scalar", before: "x" }] }];
+  const t = Engine.newTable("T");
+  t.audit = [good(1), ...bad, good(2), ...ops, good(3), ...shapes, good(4)];
+  const m = Engine.migrateTable(t);
+  eq(m.audit.map(e => e.seq), [1, 2, 3, 4]);
+  // Entries carry only what they should.
+  t.audit = [{ ...good(1), extra: "kept?" }];
+  eq(Object.keys(Engine.migrateTable(t).audit[0]), ["seq", "date", "label", "patch"]);
+  // The meta name and every record root are allowed.
+  const roots = ["notes", "cast", "interactions", "encounters", "sessions", "threads"].map((r, i) => ({ seq: i + 1, date: null, label: r, patch: [{ path: [r], type: "array", op: "insertAt", index: 0 }] }));
+  t.audit = [...roots, { seq: 9, date: null, label: "n", patch: [{ path: ["meta", "name"], type: "scalar", before: "x" }] }];
+  assert.equal(Engine.migrateTable(t).audit.length, 7);
+  // 700 valid entries keep the newest 500.
+  t.audit = Array.from({ length: 700 }, (_, i) => good(i + 1));
+  const kept = Engine.migrateTable(t).audit;
+  eq([kept.length, kept[0].seq, kept[499].seq], [500, 201, 700]);
+  // Not a list, or not there: an empty one.
+  for (const v of [undefined, null, "x", 3, {}]) { t.audit = v; eq(Engine.migrateTable(t).audit, []); }
+});
+
+test("212: what an undo restores is gated: a number stored as a string comes out a number, and meta.id is never written", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Dez" });
+  Engine.addEncounter(t, { name: "E" });
+  const id = t.meta.id;
+  t.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["encounters", 0, "round"], type: "scalar", before: "5" }] }];
+  assert.ok(Engine.undoTableAction(t).ok);
+  assert.equal(typeof t.encounters[0].round, "number");
+  assert.equal(t.meta.id, id);
+  // A crafted entry that slipped past a load (a hand-built table) still can't leave the id wrong.
+  t.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["meta", "id"], type: "scalar", before: "NOPE" }] }];
+  Engine.undoTableAction(t);
+  assert.equal(Engine.isTableId(t.meta.id), true, "the gate replaces a bad id with a valid one");
+  assert.equal(Object.prototype.polluted, undefined);
+});
+
+test("212: a table saved before 0.12 loads with an empty trail, and a new table round-trips with audit []", () => {
+  const t = Engine.newTable("T");
+  eq(t.audit, []);
+  eq(Engine.migrateTable(t), t);
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.11";
+  old.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "x" }] }];
+  eq(Engine.migrateTable(old).audit, []);
+  delete old.audit; delete old.meta.tableSchemaVersion;
+  eq(Engine.migrateTable(old).audit, []);
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.12");
+  // A file from a newer app keeps its trail gated, not emptied.
+  const newer = plain(t);
+  newer.meta.tableSchemaVersion = "0.13";
+  newer.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "x" }] }];
+  assert.equal(Engine.migrateTable(newer).audit.length, 1);
+  assert.ok(Engine.clearTableActivity(t).ok); eq(t.audit, []);
+});
+
+test("212 (review): End on the realistic table, three cast rows each writing a line and two Keeps, is under 4 KB, and undoes whole", () => {
+  const { t } = bigTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const e = Engine.addEncounter(t, { name: "Dock" }).id;
+  const cast = [0, 1, 2].map(i => Engine.addParticipant(t, e, { kind: "cast", id: t.cast[i].id }).id);
+  const gulls = [0, 1].map(() => Engine.participantFromEntry(t, e, pack, "gull").id);
+  Engine.addParticipant(t, e, { kind: "pc", name: "Wren" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const base = plain(t);
+  const rows = {};
+  for (const id of cast) rows[id] = { line: true };
+  for (const id of gulls) rows[id] = { keep: true, line: true, text: "Got away." };
+  const r = recorded(t, () => assert.ok(Engine.endEncounter(t, e, { rows }, [pack]).ok), "Ended Dock");
+  assert.ok(r.ok);
+  assert.equal(t.interactions.length, 150 + 5, "five lines were written");
+  assert.equal(t.cast.length, 42, "two members were kept");
+  const size = JSON.stringify(r.entry).length;
+  assert.ok(size < 4096, `End is ${size} bytes`);
+  assert.ok(!r.entry.patch.some(o => o.op === "set"), "a whole array was stored");
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+});
+
+test("212 (review): a block of records in or out is one op each way, and round-trips", () => {
+  const extras = () => { const x = Engine.newTable("X"); for (const n of ["N1", "N2", "N3"]) Engine.addCastMember(x, { name: n }); return x.cast; };
+  const cases = {
+    "three at the head": [t => t.cast.unshift(...extras()), ["insertAt"], 3],
+    "two at the tail": [t => t.cast.push(...extras().slice(0, 2)), ["insertAt"], 2],
+    "two in the middle": [t => t.cast.splice(2, 0, ...extras().slice(0, 2)), ["insertAt"], 2],
+    "two out of the head": [t => t.cast.splice(0, 2), ["removeAt", "removeAt"], 0],
+    "two out of the middle": [t => t.cast.splice(1, 2), ["removeAt", "removeAt"], 0],
+  };
+  for (const [name, [mutate, ops, count]] of Object.entries(cases)) {
+    const t = Engine.newTable("T");
+    for (let i = 0; i < 5; i++) Engine.addCastMember(t, { name: `m${i}` });
+    const base = plain(t), want = undoBase(t);
+    const r = recorded(t, () => mutate(t), "x", { fold: false });
+    eq(r.entry.patch.map(o => o.op), ops, name);
+    if (count > 1) assert.equal(r.entry.patch[0].count, count, name);
+    assert.ok(Engine.undoTableAction(t).ok);
+    eq(undoBase(t), want, name);
+    assert.ok(base);
+  }
+  // Not contiguous, and not records with ids to match: the whole array, as before.
+  const ops = Engine.diffTable({ cast: [{ n: "a" }, { n: "b" }, { n: "c" }] }, { cast: [{ n: "x" }, { n: "a" }, { n: "b" }, { n: "y" }, { n: "c" }, { n: "z" }] });
+  assert.equal(ops[0].op, "set");
+});
+
+test("212 (review): an insert's count is a whole number of at least 1, or absent", () => {
+  const t = Engine.newTable("T");
+  const entry = count => ({ seq: 1, date: null, label: "x", patch: [Object.assign({ path: ["cast"], type: "array", op: "insertAt", index: 0 }, count === undefined ? {} : { count })] });
+  for (const [c, ok] of [[undefined, true], [1, true], [3, true], [0, false], [-1, false], [1.5, false], ["2", false]]) {
+    t.audit = [entry(c)];
+    assert.equal(Engine.migrateTable(t).audit.length, ok ? 1 : 0, String(c));
+  }
+});
+
+test("212 (review): a stamp-only diff after an entry joins it, and is never an entry of its own", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Marta" });
+  const T0 = Date.parse("2026-10-10T12:00:00Z");
+  let base = plain(t);
+  Engine.editCastMember(t, t.cast[0].id, { motivation: "Want" });
+  assert.ok(Engine.recordTableAction(t, base, undefined, new Date(T0)).ok);
+  // The change handler re-sends the same value: only the stamp moves.
+  base = plain(t);
+  t.cast[0].updated = "2030-01-01T00:00:00.000Z";
+  const r = Engine.recordTableAction(t, base, undefined, new Date(T0 + 1000), { fold: false });
+  assert.ok(r.ok && r.folded, "a stamp-only diff became its own entry");
+  assert.equal(t.audit.length, 1);
+  assert.ok(Engine.undoTableAction(t).ok);
+  assert.equal(t.cast[0].motivation, "");
+  // With nothing to join, it records nothing.
+  const u = Engine.newTable("U");
+  Engine.addCastMember(u, { name: "A" });
+  const b2 = plain(u);
+  u.cast[0].updated = "2030-01-01T00:00:00.000Z";
+  assert.deepEqual(plain(Engine.recordTableAction(u, b2)), { ok: false, noop: true });
+});
+
+test("212 (review): a removal or an add names what came and went; collateral Changed lines drop out", () => {
+  const t = Engine.newTable("T");
+  const id = Engine.addCastMember(t, { name: "Marta" }).id;
+  Engine.addCastMember(t, { name: "Dez" });
+  for (let i = 0; i < 4; i++) Engine.addInteraction(t, { kind: "met", cast: [id], text: `Met ${i}`, date: "2026-10-01" });
+  const L = fn => recorded(t, fn, undefined, { fold: false }).entry.label;
+  assert.equal(L(() => Engine.removeCastMember(t, id)), "Removed Marta");
+  assert.equal(L(() => { Engine.addCastMember(t, { name: "A" }); Engine.addCastMember(t, { name: "B" }); }), "Added B to the cast and 1 more");
+  assert.equal(L(() => { Engine.editCastMember(t, t.cast[0].id, { motivation: "x" }); Engine.editCastMember(t, t.cast[1].id, { motivation: "y" }); }), "Changed B and 1 more");
+});
+
+test("212 (review 2): End that keeps a copy and kills and loses cast members is under 4 KB with no whole array, and undoes whole", () => {
+  const { t } = bigTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const e = Engine.addEncounter(t, { name: "Dock" }).id;
+  const [dez, ivo] = [5, 20].map(i => Engine.addParticipant(t, e, { kind: "cast", id: t.cast[i].id }).id);
+  const gull = Engine.participantFromEntry(t, e, pack, "gull").id;
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const want = undoBase(t);
+  const rows = { [dez]: { line: true, status: "dead" }, [ivo]: { line: true, status: "missing" }, [gull]: { keep: true, line: true, text: "Got away." } };
+  const r = recorded(t, () => assert.ok(Engine.endEncounter(t, e, { rows }, [pack]).ok), "Ended Dock");
+  assert.ok(r.ok);
+  assert.equal(t.cast.length, 41);
+  assert.deepEqual(plain(t.cast.filter(n => n.status !== "alive").map(n => n.status).sort()), ["dead", "missing"]);
+  const size = JSON.stringify(r.entry).length;
+  assert.ok(size < 4096, `End is ${size} bytes`);
+  assert.ok(!r.entry.patch.some(o => o.op === "set"), "a whole array was stored");
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), want);
+});
+
+test("212 (review 2): records are matched by id when a list grew or shrank and was edited too; a reorder still falls back to set", () => {
+  const mk = () => { const t = Engine.newTable("T"); for (let i = 0; i < 6; i++) Engine.addCastMember(t, { name: `m${i}` }); return t; };
+  const extra = n => { const x = Engine.newTable("X"); Engine.addCastMember(x, { name: n }); return x.cast; };
+  const cases = {
+    "insert at the head, edit in the middle": t => { t.cast.unshift(...extra("N1")); t.cast[3].motivation = "edited"; },
+    "removal, edit": t => { t.cast.splice(1, 1); t.cast[3].motivation = "edited"; },
+    "insert, removal, edit": t => { t.cast.splice(4, 1); t.cast.unshift(...extra("N1")); t.cast[3].motivation = "edited"; t.cast[5].name = "renamed"; },
+    "two runs of inserts, edits at both ends": t => { t.cast.unshift(...extra("N1")); t.cast.push(...extra("N2")); t.cast[1].motivation = "a"; t.cast[t.cast.length - 2].motivation = "b"; },
+  };
+  for (const [name, mutate] of Object.entries(cases)) {
+    const t = mk(), want = undoBase(t);
+    const r = recorded(t, () => mutate(t), "x", { fold: false });
+    assert.ok(r.ok, name);
+    assert.ok(!r.entry.patch.some(o => o.op === "set"), `${name}: a whole array was stored`);
+    assert.ok(Engine.undoTableAction(t).ok);
+    eq(undoBase(t), want, name);
+  }
+  // A reorder: the survivors swapped places, so the alignment doesn't apply.
+  const t = mk();
+  const base = plain(t);
+  t.cast.splice(0, 1); [t.cast[0], t.cast[1]] = [t.cast[1], t.cast[0]];
+  assert.equal(Engine.diffTable(base, t).find(o => o.path.join() === "cast").op, "set");
+});
+
+test("212 (review 3): typed and erased back folds and drops whatever the clock does to the record's stamp", () => {
+  const t = Engine.newTable("T");
+  Engine.addCastMember(t, { name: "Marta" });
+  t.cast[0].motivation = "Old";
+  const T0 = Date.parse("2026-10-10T12:00:00Z"), stamp = t.cast[0].updated;
+  // The stamp is pinned, as when two keystrokes land in the same millisecond: the patch is the field alone.
+  const press = (v, at) => { const base = plain(t); t.cast[0].motivation = v; t.cast[0].updated = stamp; return Engine.recordTableAction(t, base, undefined, new Date(T0 + at)); };
+  const a = press("X", 0), b = press("Old", 1000);
+  assert.ok(a.ok && !a.folded);
+  assert.ok(a.entry.patch.every(o => o.path[o.path.length - 1] !== "updated"), "the stamp moved; the case isn't pinned");
+  assert.ok(b.ok && b.folded && b.dropped, "typed and erased back left an entry");
+  assert.equal(t.audit.length, 0);
+  // And typed twice over, still one entry.
+  press("X", 2000);
+  assert.ok(press("XY", 3000).folded);
+  assert.equal(t.audit.length, 1);
+  assert.equal(t.audit[0].label, "Changed Marta");
 });

@@ -73,18 +73,59 @@ function tableEntries(){
 }
 const tableUnexported = e => !e.exported || e.exported!==e.changed;
 
-// Every change to the open table goes through here: run it, stamp it, save it.
-// `redraw` false keeps the keyboard where it is while a GM types.
-function tableChange(fn, redraw=true){
+// Every change to the open table goes through here: run it, record it, stamp it, save it.
+// `redraw` false keeps the keyboard where it is while a GM types. `label` names a press whose
+// words the diff can't (Decision 212); it is read before the writer runs where the writer has
+// already run, so a few call sites compute it first.
+//
+// The record is a diff against `tableBase`, the table as it stood after the last record or undo,
+// not against a copy taken here: most Encounters presses call their Engine writer first and
+// tableChange(()=>{}) after, so a copy taken now would miss the change.
+let tableBase = null;   // { table, copy }
+const tableCopy = t => clone(Object.assign({}, t, { audit:undefined }));
+function rebaseTable(){ tableBase = S.table ? { table:S.table, copy:tableCopy(S.table) } : null; }
+// Typing is an `input` event on a field; a press that happens while a field still has focus isn't.
+function typingNow(){
+  const ev=lastEvent, el=ev && ev.target;
+  if (!ev || ev.type!=="input" || !el || !el.tagName) return false;
+  const m=$("main");
+  return !!m && m.contains(el) && (el.tagName==="TEXTAREA" || (el.tagName==="INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file)$/.test(el.type)));
+}
+function tableChange(fn, redraw=true, label){
+  const t=S.table;
   fn();
-  S.table.meta.updated=new Date().toISOString();
+  const typing=typingNow();
+  let r=null;
+  if (tableBase && tableBase.table===t) r=Engine.recordTableAction(t, tableBase.copy, label, undefined, { fold:typing });
+  rebaseTable();
+  t.meta.updated=new Date().toISOString();
   update(redraw);
+  // A press shows its Undo; typing shows nothing, and a fold is the same entry.
+  if (r && r.ok && !r.folded && !typing) paintTableToast(r.entry.label, t, r.entry, true);
+}
+// Take back the newest entry if it is `entry` on `table`. Returns its label, or null if it isn't
+// the newest any more (a leftover toast, 107's rule). Used by the toast and by Activity.
+function undoTableEntry(table, entry){
+  if (S.table!==table || !entry) return null;
+  const log=table.audit||[];
+  if (log[log.length-1]!==entry) return null;
+  const r=Engine.undoTableAction(table);
+  if (!r.ok) return null;
+  rebaseTable();
+  table.meta.updated=new Date().toISOString();
+  // Drafts over rows that may have moved close; a draft whose record is gone goes with it.
+  S.encDmg=null; S.encHit=null; S.encCond=null; S.encReset=null; S.encWrap=null;
+  if (S.closeOut && !table.sessions.some(x=>x.id===S.closeOut.id)) S.closeOut=null;
+  if (S.intAdd && S.castOpen && !table.cast.some(x=>x.id===S.castOpen)) S.intAdd=null;
+  update();
+  return entry.label;
 }
 const tableName = (t, none="Untitled table") => String((t && t.meta && t.meta.name) || "").trim() || none;
 function homeState(){ return { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false }; }
 function openTable(t, section){
   lastTableSaved=null; untouched=null;
   S={ screen:"table", ch:null, step:0, maxReached:0, section:"main", admin:false, table:t, tsection:TABLE_SECTIONS.some(s=>s.id===section) ? section : TABLE_SECTIONS[0].id };
+  rebaseTable();
   update();
 }
 function exportTable(t){
@@ -240,6 +281,7 @@ function renderTableChrome(){
     <div class="hdr-menu" id="hdrmenu" hidden>
       <button data-trename="1">Rename</button>
       <button data-texport-open="1">Export .shadows-table.json</button>
+      <button data-tactivity="1">Activity</button>
       <button data-whatsnew="1">What's new</button>
       <button data-thome="1">Home</button>
     </div>`;
@@ -250,6 +292,7 @@ function renderTableChrome(){
   act.querySelector("[data-trename]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false");
     openNameModal({ title:"Rename table", value:t.meta.name, yes:"Save", then:name=>{ tableChange(()=>{ t.meta.name=name; }); const k=document.querySelector("[data-menu-toggle]"); if (k) k.focus(); } }); };
   act.querySelector("[data-texport-open]").onclick=()=>{ menu.hidden=true; exportTable(S.table); };
+  act.querySelector("[data-tactivity]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); openActivity(); };
   act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; S=homeState(); renderHome(); };
 }
 function noteCardHtml(n){
@@ -320,6 +363,44 @@ function bindNotes(main){
         if (el) el.focus();
       } });
   });
+}
+
+// ── Activity (Decision 212) ────────────────────────────────────────────
+// ⋮ → Activity: the table's log, newest first, with an Undo for the newest and a guarded Clear.
+// A modal like Find's, not a tab. The page behind redraws after each Undo.
+const activityTime = iso => {
+  const d=new Date(iso); if (!Number.isFinite(d.getTime())) return "";
+  const time=d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  return d.toDateString()===new Date().toDateString() ? time : `${d.toLocaleDateString([], { month:"short", day:"numeric" })}, ${time}`;
+};
+function activityHtml(){
+  const log=S.table.audit||[];
+  if (!log.length) return `<p class="step-note">Nothing to undo yet. Every change you make to this table shows here.</p>`;
+  const newest=log[log.length-1];
+  return `<p><button type="button" class="btn primary" data-act-undo>Undo: ${esc(newest.label)}</button></p>
+    <ol class="act-list">${log.slice().reverse().map(e=>`<li><span class="act-label">${esc(e.label)}</span> <span class="act-time">${esc(activityTime(e.date))}</span></li>`).join("")}</ol>
+    <p class="step-note">${log.length} action${log.length===1 ? "" : "s"} kept; the oldest go after 500.</p>
+    <p><button type="button" class="btn danger" data-act-clear>Clear activity</button></p>`;
+}
+function openActivity(){
+  openModal({ title:"Activity", returnTo:"[data-menu-toggle]", html:`<div data-act>${activityHtml()}</div>`,
+    bind(body){
+      const draw=()=>{
+        body.querySelector("[data-act]").innerHTML=activityHtml();
+        const u=body.querySelector("[data-act-undo]"), c=body.querySelector("[data-act-clear]");
+        if (u) u.onclick=()=>{
+          const log=S.table.audit||[], label=undoTableEntry(S.table, log[log.length-1]);
+          if (label===null) return;
+          draw(); showTableDone(label);
+          takeFocus(body.querySelector("[data-act-undo]") || document.getElementById("modal-title"), true);
+        };
+        if (c) c.onclick=()=>askFirst({ title:"Clear this table's activity?", text:"You won't be able to undo anything before now.", yes:"Clear activity",
+          then(){ tableChange(()=>Engine.clearTableActivity(S.table), false); openActivity(); takeFocus(document.getElementById("modal-title"), true); } });
+      };
+      draw();
+      // Focus: Undo if there is one, else the close button (openModal's own rule picks the first field).
+      const first=body.querySelector("[data-act-undo]"); if (first) first.focus();
+    } });
 }
 
 // ── Find and Jot (Decision 208) ────────────────────────────────────────
@@ -1374,7 +1455,8 @@ function bindCloseOut(main, s){
     const lines=c.lines.filter(l=>l.present || l.took).map(l=>l.present
       ? { name:l.name, present:true, ip:l.ip, milestone:l.milestone, credits:l.credits, note:l.note }
       : { name:l.name, present:false, ip:null, milestone:false, credits:l.credits, tier:l.tier, note:l.note });
-    let r; tableChange(()=>{ r=Engine.writeCloseOut(S.table, id, { lines }); }, false);
+    const sess=S.table.sessions.find(x=>x.id===id);
+    let r; tableChange(()=>{ r=Engine.writeCloseOut(S.table, id, { lines }); }, false, `Closed out ${Engine.sessionTitle(sess)}`);
     if (!r.ok){
       notice(r.why);
       const at = r.field ? c.lines.findIndex(l=>l.name===r.name) : -1;
@@ -1791,6 +1873,7 @@ function bindThreatPage(main, back, focusFirst){
   if (use) use.onclick=()=>{
     const found=Engine.packEntry(packsMemo, entry.pack, entry.id); if (!found){ notice("No such entry."); return; }
     const r=Engine.castFromEntry(S.table, found.pack, entry.id); if (!r.ok){ notice(r.why); return; }
+    tableChange(()=>{}, false);
     // The copy opens, in the cast, with its name selected: a Street Tough is Vinnie from here. A filter that would hide it is cleared.
     S.tsection="cast"; S.castOpen=r.id; S.castFrom=null; S.intAdd=null; S.castView="cast"; S.threatMember=null;
     if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===r.id)){ S.castQ=""; S.castStatus="inplay"; S.castAff=""; }
@@ -2231,9 +2314,9 @@ function bindEncounters(main){
         const st=S.encWrap.rows[u.row.id]||{}, keep=u.kind==="entry" && !!st.keep;
         rows[u.row.id]={ keep, name:st.name, status:st.status, line:(u.kind==="cast" || keep) && st.line!==false, text:st.text };
       }
-      const id=e.id, r=Engine.endEncounter(S.table, id, { rows }, packsMemo);
+      const id=e.id, title=Engine.encounterTitle(e), r=Engine.endEncounter(S.table, id, { rows }, packsMemo);
       if (!r.ok){ S.encWrap.err=r.why; redraw(); focus("[data-ew-end]"); return; }
-      S.encWrap=null; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; tableChange(()=>{}); focus("[data-enc-new]"); },
+      S.encWrap=null; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; tableChange(()=>{}, true, `Ended ${title}`); focus("[data-enc-new]"); },
     "data-enext": next,
     "data-eby": b => { if (b.dataset.eby===encOpenNow().by){ focus(attrSel("data-eby", b.dataset.eby)); return; } const r=Engine.editEncounter(S.table, eid(), { by:b.dataset.eby }); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(attrSel("data-eby", b.dataset.eby)); },
     "data-eaddside": () => { const r=Engine.addSide(S.table, eid(), {}); if (!r.ok){ notice(r.why); return; }
@@ -2271,9 +2354,10 @@ function bindEncounters(main){
     "data-ehit-apply": () => { const d=S.encHit, row=d.row, r=encHitRow(); if (!r) return;
       const res=Engine.resolveEncounterHit(S.table, eid(), row, encHitInput(d));
       const choices={ shock:d.shock, atZero:d.atZero, conditions: res.ok ? encHitTicked(d, res) : [] };
+      const hitRow=Engine.encounterView(S.table, eid(), packsMemo).rows.find(x=>x.row.id===row), who=hitRow && String(hitRow.name||"").trim() || "a row";
       const a=Engine.applyEncounterHit(S.table, eid(), row, encHitInput(d), choices);
       if (!a.ok){ d.err=a.why; hitLive(); focus("[data-ehit-apply]"); return; }
-      S.encHit=null; tableChange(()=>{}); focus(attrSel("data-ehit", row)); },
+      S.encHit=null; tableChange(()=>{}, true, `Hit ${who}`); focus(attrSel("data-ehit", row)); },
     "data-edmgcancel": () => { const row=S.encDmg && S.encDmg.row, sign=S.encDmg ? S.encDmg.sign : 1; S.encDmg=null; redraw(); focus(attrSel("data-edmg", `${row}|${sign}`)); },
     "data-econdopen": b => { S.encCond={ row:b.dataset.econdopen, id:"", loc:"", source:"", rounds:"", err:"" }; S.encDmg=null; S.encHit=null; redraw(); focus("[data-econd-id]"); },
     "data-econd-cancel": () => { const row=S.encCond.row; S.encCond=null; redraw(); focus(attrSel("data-econdopen", row)); },
@@ -2295,8 +2379,9 @@ function bindEncounters(main){
         const el=after && rowEl(after); if (el) el.focus(); else focus("[data-enc-pcname]"); } }); },
     "data-ekeep": b => { const [row, i, what]=b.dataset.ekeep.split("|"); encResetNow().keep[`${row}|${i}`]= what==="keep"; redraw(); focus(attrSel("data-ekeep", b.dataset.ekeep)); },
     "data-efinish": () => { const st=encResetNow(), keep=Object.keys(st.keep).filter(k=>st.keep[k]).map(k=>{ const [row, i]=k.split("|"); return [row, +i]; });
+      const was=encOpenNow(), words=`Reset ${Engine.encounterTitle(was)}, round ${was.round}`;
       const r=Engine.applyEncounterReset(S.table, eid(), encResetInput(), { keep }); if (!r.ok){ notice(r.why); return; }
-      S.encReset=null; tableChange(()=>{}); focus("[data-enext]"); toActive(); },
+      S.encReset=null; tableChange(()=>{}, true, words); focus("[data-enext]"); toActive(); },
     // Last: a tap on a row's name area makes it active, and a tap on anything with its own job does that job.
     "data-eturn": (el, ev) => { if (ev.target.closest("button, input, select, label, a, summary")) return;
       const r=Engine.setTurn(S.table, eid(), el.dataset.eturn); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); toActive(); },

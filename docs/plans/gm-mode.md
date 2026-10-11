@@ -532,6 +532,7 @@ and the Codex pack itself is built from `private/`.
 | S14 | The secretary: Find, one search over the table, and Jot, a line kept as a note with its session (W85, Decision 208) | Rule or shape | S5, S8 | No |
 | S10d | Wave Initiative: sides that act in turn, best Combat Sense first; a cast member can fight with the crew (Decision 210) | Rule or shape | S10a | No |
 | S10e | Adding to a fight: Add to always on screen, the Codex searchable inside an encounter, Add on a Threats card (W74–W76, Decision 211) | Rule or shape | S10a, S9 | No |
+| S15 | The table's memory: an activity log with undo, a toast on each press, Activity in the menu (W83, Decision 212, table schema 0.12) | Rule or shape | S10 | No |
 | S6 | The gazetteer and the crew's places | Content + shape | S3a | No |
 | S7 | Factions and clocks | Rule or shape | S6, S8 | No |
 | S3b | Seats: players, import, the card spread (Health, Awareness, Conditions first), the read-only sheet | Rule or shape | S3a | No |

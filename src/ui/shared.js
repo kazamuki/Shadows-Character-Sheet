@@ -318,7 +318,7 @@ function toastLanding(){
   takeFocus(m && m.open ? m.querySelector("#modal-title") : document.querySelector("#main h1, #main h2, #main .sect"), true);
 }
 function hideUndoToast(){
-  clearTimeout(toastTimer); toastTimer=null;
+  clearTimeout(toastTimer); toastTimer=null; tableToast=null;
   const el=document.getElementById("undotoast"); if (!el) return;
   const had=el.contains(document.activeElement);
   el.hidden=true; el.innerHTML="";
@@ -342,6 +342,39 @@ function showUndoToast(ch, entry, label, done){
     if (had && !el.contains(document.activeElement)) toastLanding();
   };
   const x=el.querySelector("[data-toastclose]"); if (x) x.onclick=hideUndoToast;
+}
+
+// ── The table's undo toast (Decision 212) ─────────────────────────────
+// The same toast for a table: raised by tableChange (gm.js) when a press
+// recorded an entry, and undoing only while that entry is still the newest
+// (by identity) on the table it was raised on. `fresh` lasts until the next
+// event, so a notice in the same press borrows the toast (its words, Undo kept)
+// and a refusal a few seconds later doesn't.
+let tableToast = null;   // { table, entry, fresh }
+let lastEvent = null;    // the newest click, change, input, keydown or submit: what tableChange asks about typing
+for (const type of ["click", "change", "input", "keydown", "submit"])
+  document.addEventListener(type, ev=>{ lastEvent={ type, target:ev.target }; if (tableToast) tableToast.fresh=false; }, true);
+function paintTableToast(msg, table, entry, fresh){
+  const el=undoToastEl();
+  el.innerHTML=`<span class="toast-msg wrap">${esc(msg)}</span><button class="btn sm" data-toastundo>Undo</button>
+    <button class="toast-x" data-toastclose aria-label="Dismiss">×</button>`;
+  el.hidden=false;
+  clearTimeout(toastTimer); toastTimer=setTimeout(hideUndoToast, TOAST_MS);
+  tableToast={ table, entry, fresh };
+  el.querySelector("[data-toastundo]").onclick=()=>{
+    const had=el.contains(document.activeElement);
+    const label=undoTableEntry(table, entry);   // gm.js: null if it isn't the newest any more
+    if (label===null){ hideUndoToast(); return; }
+    showTableDone(label);
+    if (had && !el.contains(document.activeElement)) toastLanding();
+  };
+  el.querySelector("[data-toastclose]").onclick=hideUndoToast;
+}
+function showTableDone(label){
+  const el=undoToastEl();
+  el.innerHTML=`<span class="toast-msg">Undone: ${esc(label)}</span>`;
+  el.hidden=false; tableToast=null;
+  clearTimeout(toastTimer); toastTimer=setTimeout(hideUndoToast, 2500);
 }
 
 // ── Modal (Decision 111) ──────────────────────────────────────────────
@@ -594,6 +627,8 @@ function sweepTip(){ if (tipState && !tipState.el.isConnected) hideTip(); }
 // page the way alert() did. A step that can't be taken back asks in the
 // modal, with Cancel focused.
 function notice(msg){
+  // A press that recorded a table entry keeps its Undo: the notice is the toast's words (Decision 212).
+  if (tableToast && tableToast.fresh && tableToast.table===S.table && !undoToastEl().hidden){ paintTableToast(msg, tableToast.table, tableToast.entry, true); return; }
   const el=undoToastEl();
   el.innerHTML=`<span class="toast-msg wrap">${esc(msg)}</span><button class="toast-x" data-toastclose aria-label="Dismiss">×</button>`;
   el.hidden=false;

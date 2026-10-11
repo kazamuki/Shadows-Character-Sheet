@@ -818,3 +818,20 @@ tablet (§1a: every control a tap); a found word is shown as text (a table
 is untrusted input, 124). It overlaps S13a's Reference search and the
 Notes tab: decide whether the jot is a note, a journal line or its own kind
 before building.
+
+**W83 — A table keeps an audit trail, with undo.** *Ken · → Decision 212, table schema 0.12: an activity log with undo, a toast on each press and Activity in the menu (switched off)*
+A character records every change as a structural diff and undoes any of
+them (Decisions 48–49, constraint 7). A table records nothing: Delete asks,
+and a GM who writes the wrong close-out, deletes a session or settles the
+wrong thread has only Redo, retyping, or an exported copy. Ken: should a
+close-out have an audit log with undo, as a sheet does?
+*The ledger already promised this and dropped it.* Decision 171 left a table
+without undo, to revisit when "S8 designs the table's audit trail"; 176
+moved that to S10 ("audit trail is S10's"); S10a–c built the encounter and no trail. So the
+question is open in the ledger, not just here. When it's picked up, it covers
+the whole table (cast, interactions, sessions, threads, encounters, close-outs),
+not one record.
+*To respect:* a table stores inputs only (constraint 7), which is what made a
+character's generic diff possible; storage size (GQ9: a long table's trail
+grows); and 176's *Revisit if*. It needs a numbered decision that marks 171
+and 176.

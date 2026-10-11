@@ -3299,7 +3299,7 @@ test("Decision 171: Run a table asks for a name, opens the table, and Home lists
   assert.equal(tableKeys(app).length, 1);
   assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "Threats", "Encounters", "Reference", "Notes"]);
   assert.equal(app.$("#topnav [data-sec]"), null, "the table's tabs are the sheet's");
-  assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "What's new", "Home"]);
+  assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "Activity", "What's new", "Home"]);
   tableHome(app);
   assert.equal(app.window.eval("S.screen"), "home");
   assert.ok(tableCard(app, "Tuesday nights"));
@@ -3764,13 +3764,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.11");
+  assert.equal(saved.meta.tableSchemaVersion, "0.12");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -4111,7 +4111,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.11");
+  assert.equal(file.meta.tableSchemaVersion, "0.12");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -4123,7 +4123,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -4336,7 +4336,7 @@ test("Decision 182: a table has a Threats tab, second; with no pack it says so a
   const downloads = withDownloads(app);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(Object.keys(file).sort().join(), "cast,encounters,interactions,meta,notes,sessions,threads", "the exported table carries more than a table");
+  assert.equal(Object.keys(file).sort().join(), "audit,cast,encounters,interactions,meta,notes,sessions,threads", "the exported table carries more than a table");
   assert.ok(!JSON.stringify(file).includes("Lives high") && !JSON.stringify(file).includes("Test Pack"), "the exported table carries pack content");
   assert.deepEqual(app.errors, []);
 });
@@ -4500,11 +4500,11 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.11");
+  assert.equal(file.meta.tableSchemaVersion, "0.12");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
-  assert.equal(Object.keys(file).sort().join(), "cast,encounters,interactions,meta,notes,sessions,threads");
+  assert.equal(Object.keys(file).sort().join(), "audit,cast,encounters,interactions,meta,notes,sessions,threads");
   const fresh = boot({ storage: GM_ON }); withDownloads(fresh);
   await importFile(fresh, file);
   assert.deepEqual(JSON.parse(fresh.window.eval("JSON.stringify(S.table.cast[0].from)")), { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
@@ -4594,7 +4594,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -5938,7 +5938,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.11");
+  assert.equal(file.meta.tableSchemaVersion, "0.12");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -5951,7 +5951,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.11");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -6854,4 +6854,194 @@ test("Decision 211: From the Codex lists entries in pack order (a person before 
   type(app, "[data-enc-codexq]", "dock");
   assert.deepEqual(app.$$("[data-enc-addcodex]").map(b => b.dataset.encAddcodex.split("|")[1]), ["moss", "gull", "pier-watch"]);
   assert.deepEqual(app.errors, []);
+});
+
+// ── The table's activity log (Decision 212) ───────────────────────────────
+
+const rebase = app => app.window.eval("rebaseTable()");
+const toastText = app => (app.$("#undotoast") && !app.$("#undotoast").hidden ? app.$("#undotoast").textContent : "");
+const auditLabels = app => JSON.parse(app.window.eval("JSON.stringify(S.table.audit.map(e => e.label))"));
+const openActivity212 = app => { app.click("[data-menu-toggle]"); app.click("[data-tactivity]"); };
+
+test("Decision 212: a press that wrote before tableChange is recorded; the toast's Undo takes it back", () => {
+  const app = hitApp();
+  rebase(app);
+  const dez = rowId(encRowByName(app, "Dez"));
+  app.click(`[data-edmg="${dez}|1"]`); app.$("[data-edmgn]").value = "6"; submit(app, "[data-edmgform]");
+  const damage = () => app.window.eval(`S.table.encounters[0].rows.find(r => r.id === "${dez}").damage`);
+  assert.equal(damage(), 6);
+  assert.match(toastText(app), /^Changed Job/);
+  assert.ok(app.$("[data-toastundo]"));
+  app.click("[data-toastundo]");
+  assert.equal(damage(), 0, "the toast's Undo didn't take the damage back");
+  assert.match(toastText(app), /Undone: Changed Job/);
+  assert.equal(auditLabels(app).length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: Add to an encounter shows its own words with Undo, and Undo removes the row", () => {
+  const app = tableWithPack();
+  entryButton(app, "gull").click();
+  rebase(app);
+  app.click("[data-tenc]");
+  assert.match(toastText(app), /Gull is in a new encounter/);
+  assert.ok(app.$("#undotoast [data-toastundo]"), "the notice replaced the toast without Undo");
+  assert.equal(encRows(app).length, 1);
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(encRows(app).length, 0, "Undo left the encounter");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: a refusal a moment later doesn't borrow the leftover toast's Undo", () => {
+  const app = tableWithPack();
+  entryButton(app, "gull").click();
+  rebase(app);
+  app.click("[data-tenc]");
+  assert.ok(app.$("#undotoast [data-toastundo]"));
+  app.doc.body.click();
+  app.window.eval(`notice("Something was refused.")`);
+  assert.equal(app.$("#undotoast [data-toastundo]"), null, "a later notice kept the Undo");
+});
+
+test("Decision 212: Use on an entry page is recorded, and Undo takes the copy out of the cast", () => {
+  const app = tableWithPack();
+  entryButton(app, "gull").click();
+  rebase(app);
+  app.click("[data-tuse]");
+  assert.equal(app.window.eval("S.table.cast.length"), 1);
+  assert.match(auditLabels(app)[0], /^Added Gull to the cast$/);
+  assert.ok(app.$("#undotoast [data-toastundo]"));
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(app.window.eval("S.table.cast.length"), 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: typing in a member's field shows no toast, makes one entry, and Activity's Undo restores the text", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  type(app, "[data-cadd-name]", "Marta"); keyIn(app, "[data-cadd-name]", "Enter");
+  app.click("[data-copen]");
+  rebase(app);
+  app.click("[data-toastclose]");
+  for (const v of ["W", "Wa", "Wan", "Want"]) type(app, '[data-cf="motivation"]', v);
+  assert.equal(toastText(app), "", "typing showed a toast");
+  // Tabbing away re-sends the same value on `change`: no entry of its own, and no toast.
+  app.$('[data-cf="motivation"]').dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(toastText(app), "", "leaving the field showed a toast");
+  assert.deepEqual(auditLabels(app), ["Added Marta to the cast", "Changed Marta"]);
+  openActivity212(app);
+  assert.match(app.$("#modal [data-act-undo]").textContent, /^Undo: Changed Marta$/);
+  app.click("#modal [data-act-undo]");
+  assert.equal(app.window.eval("S.table.cast[0].motivation"), "");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: Activity lists newest first, Undo redraws the page behind and keeps focus on the next Undo; undoing the add of the open member draws the list", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  const add = name => { type(app, "[data-cadd-name]", name); keyIn(app, "[data-cadd-name]", "Enter"); };
+  add("Marta"); add("Dez");
+  assert.deepEqual(auditLabels(app), ["Added Marta to the cast", "Added Dez to the cast"]);
+  openActivity212(app);
+  assert.deepEqual(app.$$("#modal .act-label").map(e => e.textContent), ["Added Dez to the cast", "Added Marta to the cast"]);
+  assert.equal(app.doc.activeElement, app.$("#modal [data-act-undo]"));
+  app.click("#modal [data-act-undo]");
+  assert.match(app.$("#modal [data-act-undo]").textContent, /Undo: Added Marta to the cast/);
+  assert.equal(app.doc.activeElement, app.$("#modal [data-act-undo]"));
+  assert.equal(app.window.eval("S.table.cast.length"), 1);
+  assert.doesNotMatch(app.$("#main").textContent, /Dez/, "the page behind didn't redraw");
+  app.click("#modal [data-act-undo]");
+  assert.equal(app.$("#modal [data-act-undo]"), null);
+  assert.match(app.$("#modal").textContent, /Nothing to undo yet/);
+  assert.equal(app.doc.activeElement, app.$("#modal-title"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: undoing the add of the member whose page is open draws the cast list", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  type(app, "[data-cadd-name]", "Marta"); keyIn(app, "[data-cadd-name]", "Enter");
+  app.click("[data-copen]");
+  assert.ok(app.$("[data-cback]"));
+  openActivity212(app);
+  app.click("#modal [data-act-undo]");
+  assert.ok(app.$("[data-cadd-name]"), "the cast list didn't draw");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: Clear activity asks first, then empties", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  type(app, "[data-cadd-name]", "Marta"); keyIn(app, "[data-cadd-name]", "Enter");
+  openActivity212(app);
+  app.click("#modal [data-act-clear]");
+  assert.match(app.$("#modal").textContent, /Clear this table's activity\?/);
+  assert.equal(auditLabels(app).length, 1, "it cleared before asking");
+  app.click("#modal [data-askyes]");
+  assert.equal(auditLabels(app).length, 0);
+  assert.match(app.$("#modal").textContent, /Nothing to undo yet/);
+  assert.equal(app.window.eval("S.table.cast.length"), 1, "Clear changed the table");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: deleting a session still asks, and Undo brings it back", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  app.click("[data-snew]");
+  app.click("[data-sback]");
+  rebase(app);
+  app.click("[data-sopen]");
+  app.click("[data-sdel]");
+  assert.ok(app.$("#modal [data-askyes]"), "Delete didn't ask");
+  assert.equal(app.window.eval("S.table.sessions.length"), 1);
+  app.click("#modal [data-askyes]");
+  assert.equal(app.window.eval("S.table.sessions.length"), 0);
+  assert.match(toastText(app), /^Removed Session 1/);
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(app.window.eval("S.table.sessions.length"), 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: End with a Keep reads Ended …, and Undo runs the encounter again without the kept member", () => {
+  const app = wrapApp();
+  rebase(app);
+  app.click("[data-enc-end]");
+  const keep = wrapRow(app, "Gull").querySelector("[data-ew-keep]");
+  keep.checked = true; keep.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  app.click("[data-ew-end]");
+  assert.match(toastText(app), /^Ended Job/);
+  assert.equal(app.window.eval("S.table.encounters[0].status"), "ended");
+  assert.equal(app.window.eval("S.table.cast.length"), 2);
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(app.window.eval("S.table.encounters[0].status"), "running");
+  assert.equal(app.window.eval("S.table.cast.length"), 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 212: a leftover toast undoes nothing once a later press has been recorded", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  type(app, "[data-cadd-name]", "Marta"); keyIn(app, "[data-cadd-name]", "Enter");
+  const stale = app.$("#undotoast [data-toastundo]");
+  assert.ok(stale);
+  type(app, "[data-cadd-name]", "Dez"); keyIn(app, "[data-cadd-name]", "Enter");
+  stale.click();
+  assert.equal(app.window.eval("S.table.cast.length"), 2, "a stale toast undid a later action");
+});
+
+test("Decision 212: an exported table carries its trail, and imported fresh, Activity lists it and Undo works", async () => {
+  const app = boot({ storage: GM_ON });
+  const downloads = withDownloads(app);
+  runTable(app, "T");
+  type(app, "[data-cadd-name]", "Marta"); keyIn(app, "[data-cadd-name]", "Enter");
+  app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
+  const file = await tableFile(downloads[0]);
+  assert.equal(file.audit.length, 1);
+  const fresh = boot({ storage: GM_ON }); withDownloads(fresh);
+  await importFile(fresh, file);
+  openActivity212(fresh);
+  assert.deepEqual(fresh.$$("#modal .act-label").map(e => e.textContent), ["Added Marta to the cast"]);
+  fresh.click("#modal [data-act-undo]");
+  assert.equal(fresh.window.eval("S.table.cast.length"), 0);
+  assert.deepEqual([...app.errors, ...fresh.errors], []);
 });
