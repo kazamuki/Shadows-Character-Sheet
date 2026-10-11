@@ -7326,17 +7326,21 @@ const sName = id => D.stats.find(s => s.id === id).name;
 // S after a render carries bookkeeping (vitalsOpen); every field homeState() sets must match.
 const homeIs = app => app.window.eval("(() => { const h = homeState(); return Object.keys(h).every(k => S[k] === h[k]); })()");
 
-test("P4 (W94): Set all to 4 raises every stat below 4 in one press, spends as the steppers would, and is then disabled", () => {
+test("P4 (W94): Set all to 4 raises every stat below 4 in one press, spends as the steppers would, and is then disabled", async () => {
   const floor = Engine.statFloor();
   const app = statsDraft();
   const btn = () => app.$("[data-stat-floor]");
   assert.equal(btn().textContent, `Set all to ${floor}`);
   assert.match(poolText(app), /Pool 45 · Remaining 45/);
+  btn().focus();
   app.click("[data-stat-floor]");
+  assert.notEqual(app.doc.activeElement, app.doc.body, "focus fell to <body> when the button disabled itself");
   assert.deepEqual([...Object.values(baseOf(app))], [...D.stats.map(() => floor)]);
   assert.match(poolText(app), /Remaining 21/);
   assert.equal(btn().disabled, true, "the button is live with nothing to do");
-  assert.equal(app.$("#main .step-note[role=status]"), null);
+  assert.equal(app.$("#main .roll-entry + .step-note"), null);
+  await new Promise(r => app.window.setTimeout(r, 60));
+  assert.equal(app.$("#announcer").textContent, `Every stat is at ${floor}. 21 Stat Points left.`);
   assert.deepEqual(app.errors, []);
 });
 
@@ -7347,12 +7351,12 @@ test("P4 (W94): when the pool runs out it says which stats it couldn't reach, on
   const b = baseOf(app);
   assert.equal(b.INT, 4); assert.equal(b.TECH, 4);
   assert.deepEqual(["COOL", "MAG", "EMP"].map(id => b[id]), [1, 1, 1]);
-  const note = app.$("#main .step-note[role=status]");
+  const note = app.$("#main .roll-entry + .step-note");
   assert.ok(note, "no note about the stats left short");
   assert.ok(note.textContent.includes(`${sName("COOL")}, ${sName("MAG")} and ${sName("EMP")}`), note.textContent);
   assert.ok(!note.textContent.includes(sName("INT")), "it names a stat it did raise");
   app.click('[data-step="stat|BOD|-1"]');                       // any render after
-  assert.equal(app.$("#main .step-note[role=status]"), null, "the note outlived its render");
+  assert.equal(app.$("#main .roll-entry + .step-note"), null, "the note outlived its render");
   assert.deepEqual(app.errors, []);
 });
 

@@ -239,7 +239,7 @@ function renderStats(){
     <span class="pool">Pool <b>${pool.total==null?"—":pool.total}</b> · Remaining <b>${pool.total==null?"—":left}</b></span>
     <button class="btn sm" data-stat-floor ${pool.total==null || !D.stats.some(s=>ch.stats[s.id].base<floor) ? "disabled" : ""}>Set all to ${floor}</button>
     <span class="dice-note">${esc(D.statRules.buyText)}${rolled?" Roll your dice at the table and enter the result — the app never rolls for you. Explosions do not happen on creation rolls.":""}</span>
-  </div>${note?`<p class="step-note" role="status">${esc(note)}</p>`:""}<div class="alloc">`;
+  </div>${note?`<p class="step-note">${esc(note)}</p>`:""}<div class="alloc">`;
   for (const s of D.stats){
     const v = ch.stats[s.id].base, m = Engine.statMod(Engine.statValue(ch,s.id));
     const next = v<D.statRules.max ? Engine.nextStatCost(ch, s.id) : null;
@@ -928,7 +928,15 @@ function bindMain(){
       const names = r.short.map(statNameOf);
       S.statNote = `Not enough Stat Points to bring ${names.length>1 ? names.slice(0,-1).join(", ")+" and "+names[names.length-1] : names[0]} up to ${Engine.statFloor()}.`;
     }
+    const note = S.statNote;
     update();
+    // The button may now be disabled, which drops focus to <body>: land on the pool line.
+    if (document.activeElement===document.body || !document.activeElement){
+      const pool = main.querySelector(".roll-entry .pool");
+      if (pool){ pool.tabIndex=-1; pool.focus({ preventScroll:true }); }
+    }
+    const left = Engine.statPool(ch).total - Engine.statSpent(ch);
+    announce(`${note || `Every stat is at ${Engine.statFloor()}.`} ${left} Stat Points left.`);
   });
   // dice rolls — re-render main so pool-gated steppers enable, but keep focus on the input
   const rerenderKeepFocus = (selAttr, val) => {
