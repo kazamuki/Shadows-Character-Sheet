@@ -231,19 +231,6 @@ today (`"2m"`, `"5m radius"`, range bands in the quick reference), so converting
 them means storing the numbers (Decision 134) before any switch. A view
 setting, remembered in the browser, never in the character.
 
-**W101 — CRANK behind a feature flag until the team decides.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-10*
-Deighton doesn't know CRANK and wants the team to talk it through before
-anything else changes (`reference/rulings-2026-10-10.md` Q30). Ken's call:
-hide it, as GM mode is hidden, and keep the work. CRANK is released (Decision
-169): Main's card, the Progression section with its ledger, its popover, the
-admin −1/+1, and GM mode's off-screen job (206) all show it.
-*To respect:* `FEATURES` (Decision 173) gains `crank:false`, and each of those
-places reads it; `?crank=on` shows it again. A saved character's rep and ledger
-stay in the file, untouched (constraints 7 and 8), and come back when the flag
-is on. Hiding a released feature is player-visible: a CHANGELOG line and a
-patch bump, and a decision, since it's a choice someone could have made
-otherwise. GQ7, F37 and GQ28 wait on the same talk.
-
 **W102 — Deighton's rulings on the hit and on healing.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-10 · closes F18, F23, F24, F25, F36*
 Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q1–Q7), built together
 because they all live in the hit resolver and recovery:

@@ -23,8 +23,10 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.39.2
+## [Unreleased] — app 0.39.3
 
+- **CRANK steps off the sheet.** Your rep and its ledger stay in your
+  character file, untouched.
 - **Pain Sensitive works.** Once you're hurt, your Pain Level is one higher
   (never past 3), and the Pain line says Pain Sensitive is why.
 - **Improved asks for the dice.** Taking it now has you enter the dice you

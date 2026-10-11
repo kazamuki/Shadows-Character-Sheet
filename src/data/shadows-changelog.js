@@ -2,10 +2,11 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.39.2",
+    "version": "0.39.3",
     "date": null,
     "intro": [],
     "items": [
+      "**CRANK steps off the sheet.** Your rep and its ledger stay in your character file, untouched.",
       "**Pain Sensitive works.** Once you're hurt, your Pain Level is one higher (never past 3), and the Pain line says Pain Sensitive is why.",
       "**Improved asks for the dice.** Taking it now has you enter the dice you rolled, with the 15 IP printed beside the box and added for you.",
       "**A new session's date is your own today.** In the evening it no longer says tomorrow.",

@@ -3983,6 +3983,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 165 in part: the card alone on its row is CRANK (with SFR), not Çredits.
      - **Revisit if:** the team links the Reputation Advantage to starting rep (GQ7), F37 is answered (rep below zero), the GM Workshop changes the tier table or the +1/−2, or the GM mode's dispatch needs a rep change the two buttons can't express.
      - **Built:** app 0.37.0, game data 0.29, schema 0.17; PR #111; log 2026-10-05 (CRANK rep).
+     → **Superseded in part by Decision 214**: CRANK shows only with the switch on, and the card alone on Main's last row is whichever is left over.
 
 170. **A GM's table is its own file, `.shadows-table.json`, gated by `migrateTable()`, with its own id and its own schema version.**
      *2026-10-05 · Ken + Claude · Touches: table file, .shadows-table.json, newTable, migrateTable, tableCheck, fileKind, meta.kind, TBL-, tableSchemaVersion, table notes, versions table, import, W29, GQ9*
@@ -4037,6 +4038,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing numbered. It replaces the plan's §7 (one long branch), which was never a decision.
      - **Revisit if:** a second unfinished feature needs hiding at the same time, or a player finding `?gm=on` turns out to matter.
      - **Built:** as 170.
+     → **Superseded in part by Decision 214**: `FEATURES` holds `crank` too, a released feature withdrawn.
 
 174. **A table keeps a cast: one record per NPC, from a name to a stat block, whose Codex vocabulary is the GM's text until a pack names it.**
      *2026-10-05 · Ken + Claude · Touches: cast, cast member, table.cast, C- id, quick-add, origin, npcRoles, enemyRole, tier, motivation, resources, line, ifPushed, gmNote, status, table schema 0.2, migrateTable, W29, GQ6, GQ10*
@@ -4555,6 +4557,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends 104 (a new `grants` type).
      - **Revisit if:** another trait shifts Pain unconditionally (`onlyIfHurt: false` is the room left for it), or a Minor's roll needs more than dice plus a flat number.
      - **Built:** app 0.39.2, game data 0.34, no schema bump. Log 2026-10-10 (P1).
+
+214. **CRANK sits behind a switch, off, until the team decides whether it stays: a character keeps its rep and ledger, and `?crank=on` shows them.**
+     *2026-10-11 · Ken + Claude · Touches: CRANK, FEATURES, featureOn, crankOn, ?crank=on, ?crank=off, shadows.feature.crank, Main CRANK card, alone card, Trackers CRANK section, Admin CRANK rep, print front page, blank sheet, launch line, W101, GQ7, F37, GQ28*
+     - **Decided:** `FEATURES` gains `crank: false`. Switched off, the sheet shows no CRANK: Main's card and its popover, Trackers' section and ledger, Admin's correction, and the print front page's field (the blank sheet too). `trackers.crank` is still migrated, saved and exported, untouched. On Main, whichever card is left alone on the last row takes the whole row. GM mode's CRANK is unchanged (PQ1). Turning it on for everyone is a release that adds the line **CRANK is back.**
+     - **Why:** Deighton wants the team to talk CRANK through before anything changes (rulings Q30), and Ken chose to hide it, as GM mode is hidden, rather than remove it (W101). The switch already exists (173), and the work and players' rep survive either answer.
+     - **Rejected:** removing CRANK's code (the team may keep it, and Q30 says so); leaving it visible until the talk (Deighton asked to pause it); hiding it only for characters with no rep (PQ2: two players' sheets would differ for one rule); hiding GM mode's off-screen-job tier (PQ1: that changes how off-screen pay is set); scrubbing old CRANK lines from the Activity Log (PQ3: history stays as it happened).
+     - **Replaces:** Decision 169 in part (CRANK shows only with the switch on; the card alone on its row is whichever is left over, not CRANK by name). Decision 173 in part (`FEATURES` holds a second switch, for a released feature withdrawn; its *Revisit if* has happened).
+     - **Revisit if:** the team decides CRANK (keep it: the **CRANK is back** release; drop it: a decision to remove the code and keep `trackers.crank` read-only in `migrate()`), or GQ7, F37 or GQ28 is answered.
+     - **Built:** app 0.39.3, no data or schema bump, PR #160, log 2026-10-11 (P2).
 
 ## 5. Open Flags
 

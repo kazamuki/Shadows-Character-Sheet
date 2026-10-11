@@ -1144,7 +1144,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .jump-wrap{flex:1 1 100%; flex-wrap:wrap}
 /* Wrapped on a phone it's five rows, half the screen: it stays at the top of the page. */
 @media (max-width:639px){ .jumpbar.sticky.wrap{position:static} }
-/* W45: in two columns, the card alone on its row (CRANK, with SFR) takes the whole row. */
+/* W45: in two columns, the card alone on its row takes the whole row (Decision 214: whichever is left over). */
 .cond-grid{container-type:inline-size}
 @container (max-width:415px){ .cond-grid > .cond.alone{grid-column:1/-1} }
 /* W45: Pin, from Main, where there's no vitals bar: only on a screen wide

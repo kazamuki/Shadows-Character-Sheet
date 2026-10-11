@@ -515,8 +515,10 @@ test("raising a free advantage's rank does not wipe the picks already made", () 
 
 // ── Conditions (Decision 95) ──────────────────────────────────────────
 
+// Decision 214: CRANK is behind a switch, off; its tests boot with it on.
+const CRANK_ON = { "shadows.feature.crank": "on" };
 function openSheet(ch, section, opts = {}) {
-  const app = boot({ storage: { "shadows.active.v1": { ch, section } }, ...opts });
+  const app = boot({ ...opts, storage: { "shadows.active.v1": { ch, section }, ...(opts.storage || {}) } });
   const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
   open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   app.click(`[data-sec="${section}"]`);
@@ -2756,12 +2758,12 @@ test("W45: the vitals bar and the sheet's jump bars are one row each, with what 
 });
 
 test("W45: CRANK alone takes its row (Decision 169), and Pin is reachable from Main", () => {
-  const app = openSheet(lockedCharacter(), "main", { width: 1400 });   // Pin shows from 1280px
+  const app = openSheet(lockedCharacter(), "main", { width: 1400, storage: CRANK_ON });   // Pin shows from 1280px
   assert.ok(!app.$("#main .cond.sfr"), "the fixture grew an SFR card");
   assert.ok(app.$("#main .cond.cred") && app.$("#main .cond.crank") && !app.$("#main .cond.alone"), "without SFR, Çredits and CRANK share a row");
   // With SFR the row above is full, so CRANK takes the next one alone.
   const sfr = lockedCharacter(); sfr.identity.archetype = "werewolf";
-  const withSfr = openSheet(sfr, "main", { width: 1400 });
+  const withSfr = openSheet(sfr, "main", { width: 1400, storage: CRANK_ON });
   assert.ok(withSfr.$("#main .cond.sfr"), "the werewolf fixture has no SFR card");
   assert.ok(withSfr.$("#main .cond.crank.alone"), "CRANK doesn't know it's alone on its row");
   assert.ok(!withSfr.$("#main .cond.cred.alone"), "Çredits shares the row with SFR");
@@ -3139,7 +3141,7 @@ test("W60: placeholders take a token colour at full strength, so the contrast gu
 
 // ── CRANK rep (Decision 169) ──────────────────────────────────────────
 test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, writes a ledger line, and Undo makes it 0", () => {
-  const app = openSheet(lockedCharacter(), "main");
+  const app = openSheet(lockedCharacter(), "main", { storage: CRANK_ON });
   const card = () => app.$('#main [data-vpop="crank"]');
   assert.ok(card(), "Main has no CRANK card");
   assert.match(card().textContent, /CRANK/);
@@ -3160,7 +3162,7 @@ test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, 
 });
 
 test("CRANK: Walked out at 0 shows -2 and Novice, and the tip carries the unsettled note", () => {
-  const app = openSheet(lockedCharacter(), "trackers");
+  const app = openSheet(lockedCharacter(), "trackers", { storage: CRANK_ON });
   app.click('#main [data-crk="-2"]');
   assert.equal(activeChar(app).trackers.crank.rep, -2);
   assert.match(app.$("#main").textContent, /-2/);
@@ -3179,7 +3181,7 @@ test("CRANK: Walked out at 0 shows -2 and Novice, and the tip carries the unsett
 test("CRANK: the print view has the field, blank and filled", () => {
   const ch = lockedCharacter();
   ch.trackers.crank.rep = 7;
-  const app = openSheet(ch, "main");
+  const app = openSheet(ch, "main", { storage: CRANK_ON });
   const filled = app.window.renderPrintView(ch);
   assert.match(filled, /CRANK<\/span>.*7 · Competent/s);
   const blank = app.window.renderPrintView(null);
@@ -3188,7 +3190,7 @@ test("CRANK: the print view has the field, blank and filled", () => {
 });
 
 test("CRANK: Admin corrects rep through the ledger, and Undo takes a correction back", () => {
-  const app = openSheet(lockedCharacter(), "main");
+  const app = openSheet(lockedCharacter(), "main", { storage: CRANK_ON });
   app.click("[data-menu-toggle]"); app.click("[data-admin]");
   app.click('[data-admin-crank="1"]');
   assert.equal(activeChar(app).trackers.crank.rep, 1);
@@ -3203,7 +3205,7 @@ test("CRANK: Admin corrects rep through the ledger, and Undo takes a correction 
 });
 
 test("CRANK: Main's card label opens the popover, and the tip lives on the tier name inside it", () => {
-  const app = openSheet(lockedCharacter(), "main");
+  const app = openSheet(lockedCharacter(), "main", { storage: CRANK_ON });
   const card = app.$('#main [data-vpop="crank"]');
   assert.ok(!card.querySelector("[data-tip]"), "a tip trigger inside the card's button swallows the tap");
   clickIn(app, card.querySelector(".lab"));
@@ -3212,6 +3214,80 @@ test("CRANK: Main's card label opens the popover, and the tip lives on the tier 
   clickIn(app, app.$('#vpop [data-tip="crank"]'));
   assert.match(tipShown(app), /gray market/, "the tier name didn't open the tip");
   assert.deepEqual(app.errors, []);
+});
+
+// ── CRANK behind a switch (Decision 214) ───────────────────────────────
+const crankLedgered = () => {
+  const ch = lockedCharacter();
+  ch.trackers.crank = { rep: 3, ledger: [
+    { date: "2026-10-01T10:00:00.000Z", amount: 2, note: "the Halvorsen job" },
+    { date: "2026-10-05T10:00:00.000Z", amount: 1, note: "the Kessel job" }] };
+  return Engine.migrate(ch);
+};
+
+test("Decision 214: ?crank=on turns the switch on and keeps it, ?crank=off turns it off", () => {
+  const app = boot();
+  const w = app.window;
+  assert.equal(w.eval('featureOn("crank")'), false, "CRANK ships off");
+  w.eval('applyFeatureQuery("?crank=on")');
+  assert.equal(w.localStorage.getItem("shadows.feature.crank"), "on");
+  assert.equal(w.eval('featureOn("crank")'), true);
+  assert.equal(w.eval('featureOn("gm")'), false, "?crank=on turned GM mode on");
+  w.eval('applyFeatureQuery("?crank=off")');
+  assert.equal(w.localStorage.getItem("shadows.feature.crank"), null);
+  assert.equal(w.eval('featureOn("crank")'), false);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 214: switched off, no CRANK on Main, Trackers, Admin or the print view, and its popover is null", () => {
+  const ch = crankLedgered();
+  const app = openSheet(ch, "main");
+  assert.ok(!app.$("#main .cond.crank") && !app.$('#main [data-vpop="crank"]'), "Main shows a CRANK card");
+  assert.doesNotMatch(app.$("#main").textContent, /CRANK/);
+  assert.equal(app.window.eval('vitalPopover(S.ch, "crank")'), null);
+  app.click('[data-sec="trackers"]');
+  assert.doesNotMatch(app.$("#main").textContent, /CRANK|Halvorsen/, "Trackers shows CRANK");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  assert.ok(!app.$("[data-admin-crank]"), "Admin offers a CRANK correction");
+  assert.doesNotMatch(app.$("#main").textContent, /CRANK/);
+  assert.doesNotMatch(app.window.renderPrintView(ch), /CRANK/);
+  assert.doesNotMatch(app.window.renderPrintView(null), /CRANK/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 214: switched off, rep and ledger survive an export and an import, and come back when it's on", async () => {
+  const ch = crankLedgered();
+  const first = openSheet(ch, "main");
+  const downloads = withDownloads(first);
+  first.window.eval("exportCharacter(S.ch)");
+  const file = JSON.parse(await downloads[0].text());
+  assert.equal(file.trackers.crank.rep, 3, "the export lost the rep");
+  const fresh = boot();
+  await importFile(fresh, file);
+  const kept = fresh.window.eval("S.ch.trackers.crank");
+  assert.equal(kept.rep, 3);
+  assert.deepEqual([...kept.ledger].map(e => e.note), ["the Halvorsen job", "the Kessel job"]);
+  const on = openSheet(file, "trackers", { storage: CRANK_ON });
+  assert.match(on.$("#main").textContent, /Rep\s*3/);
+  assert.match(on.$("#main").textContent, /CRANK ledger \(2\)/);
+  assert.match(on.$("#main").textContent, /Halvorsen/);
+  assert.deepEqual(on.errors, []);
+});
+
+test("Decision 214: whichever card is left alone on Main's last row takes it, with or without SFR and CRANK", () => {
+  const rows = [
+    { sfr: false, crank: true,  alone: null },
+    { sfr: true,  crank: true,  alone: "crank" },
+    { sfr: false, crank: false, alone: "cred" },
+    { sfr: true,  crank: false, alone: null },
+  ];
+  for (const r of rows) {
+    const ch = lockedCharacter(); if (r.sfr) ch.identity.archetype = "werewolf";
+    const app = openSheet(ch, "main", { width: 1400, storage: r.crank ? CRANK_ON : {} });
+    assert.equal(!!app.$("#main .cond.sfr"), r.sfr, "the fixture's SFR card is not as the row says");
+    const alone = app.$$("#main .cond.alone").map(c => c.className.split(/\s+/).find(k => k === "crank" || k === "cred"));
+    assert.deepEqual(alone, r.alone ? [r.alone] : [], `SFR ${r.sfr}, CRANK ${r.crank}`);
+  }
 });
 
 // ── Tables and the feature switch (Decisions 171, 173) ──────────────────
