@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.39.3",
-    "date": null,
+    "date": "2026-10-11",
     "intro": [],
     "items": [
       "**CRANK steps off the sheet.** Your rep and its ledger stay in your character file, untouched.",
