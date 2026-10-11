@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.20");
+  assert.equal(ch.meta.schemaVersion, "0.21");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -157,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.20");
+  assert.equal(old.meta.schemaVersion, "0.21");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -169,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.20");
+  assert.equal(old.meta.schemaVersion, "0.21");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -542,7 +542,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.20");
+  assert.equal(old.meta.schemaVersion, "0.21");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -653,7 +653,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.20");
+  assert.equal(bare.meta.schemaVersion, "0.21");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -889,7 +889,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.20");
+    assert.equal(c.meta.schemaVersion, "0.21");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1163,7 +1163,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.20");
+  assert.equal(old.meta.schemaVersion, "0.21");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1238,7 +1238,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.20");
+  assert.equal(m.meta.schemaVersion, "0.21");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2269,7 +2269,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.20");
+  assert.equal(m.meta.schemaVersion, "0.21");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2355,7 +2355,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.20");
+  assert.equal(m.meta.schemaVersion, "0.21");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2372,7 +2372,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.20");
+  assert.equal(m.meta.schemaVersion, "0.21");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2418,7 +2418,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.20"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.21"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2629,7 +2629,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.20");
+  assert.equal(a.meta.schemaVersion, "0.21");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -2891,12 +2891,12 @@ test("a Werewolf of each Origin holds the Innate five granted, and its Origin's 
   for (const o of WWD().specialization.options) {
     const ch = werewolf(o.id), own = WWD().powers.filter(p => p.origin === o.id).map(p => p.id);
     assert.equal(own.length, 6, `${o.name} has ${own.length} powers`);
-    same(Engine.powerRanks(ch).map(p => `${p.id}:${p.kind}:${p.rank}`), innate.map(id => `${id}:archetype:1`), `${o.name} holds more than the Innate five before a Base Power`);
+    same(Engine.powerRanks(ch).filter(p => !p.learn).map(p => `${p.id}:${p.kind}:${p.rank}`), innate.map(id => `${id}:archetype:1`), `${o.name} holds more than the Innate five before a Base Power`);
     same(Engine.basePowerState(ch).rows.map(r => r.id), own, `${o.name}'s Base Powers don't buy exactly its own powers`);
     assert.ok(Engine.placeBasePower(ch, own[0], 1).ok);
     same(Engine.archetypeContent(ch).powers.map(p => p.id), [...innate, own[0]], `${o.name}'s Character tab lists other powers`);
   }
-  same(Engine.powerRanks(werewolf(null)).map(p => p.id), innate, "a Werewolf with no Origin yet holds an Origin's powers");
+  same(Engine.powerRanks(werewolf(null)).filter(p => !p.learn).map(p => p.id), innate, "a Werewolf with no Origin yet holds an Origin's powers");
 
   const ch = werewolf("trueborn"), P = D.ip.powerIncreaseCost;
   assert.ok(Engine.placeBasePower(ch, "apex-fury", 1).ok);
@@ -3091,7 +3091,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.20");
+  assert.equal(m.meta.schemaVersion, "0.21");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -5231,7 +5231,7 @@ test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's pow
   const st = Engine.basePowerState(ch);
   same([st.count, st.cap, st.spent, st.left], [2, 1, 0, 2]);
   same(st.rows.map(r => r.origin || "innate").filter((x, i, a) => a.indexOf(x) === i), ["strigoi"], "another Bloodline's or an Innate power is offered");
-  const held = () => Engine.powerRanks(ch).filter(p => p.kind === "archetype").map(p => `${p.id}:${p.rank}`);
+  const held = () => Engine.powerRanks(ch).filter(p => p.kind === "archetype" && !p.learn).map(p => `${p.id}:${p.rank}`);
   same(held(), ["bestial-blessings:1", "vitality-surge:1", "preternatural-speed:1", "cursed-evolution:1"], "the Innate four aren't granted at rank 1");
   assert.ok(Engine.placeBasePower(ch, "shadow-play", 1).ok);
   assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /can start at rank 1 at most/);
@@ -5290,9 +5290,11 @@ test("Decisions 200, 215: a power with no ranks is held at 1 and never raised; a
   assert.ok(Engine.spendIP(ch, "power", "battleborn-instinct").ok);
   same([rankOf(ch, "battleborn-instinct").rank, ch.progression.powerIpe["battleborn-instinct"], ch.archetypeChoices.basePowers["battleborn-instinct"]], [3, 1, 2],
     "IP lands on powerIpe, creation's ranks stay put");
-  // An IP rank on a power never placed doesn't hold it.
+  // IP in a power of its own Bloodline holds it, at the ranks the IP bought (Decision 216); another's holds nothing.
   ch.progression.powerIpe["hels-dread"] = 2;
-  assert.equal(Engine.powerRanks(ch).some(p => p.id === "hels-dread"), false);
+  same([rankOf(ch, "hels-dread").rank, rankOf(ch, "hels-dread").learn], [2, undefined]);
+  ch.progression.powerIpe["shadow-play"] = 2;
+  assert.equal(Engine.powerRanks(ch).some(p => p.id === "shadow-play"), false, "another Bloodline's power");
 });
 
 test("Decision 215 (F41): Built to Last is no choice; an Upyr buys either power or both, and a hit counts the higher", () => {
@@ -5317,6 +5319,7 @@ test("Decision 215: Iron Hide and Icebound Resilience are Natural Armor while ru
   assert.equal(Engine.naturalArmor(ch, ["iron-hide"]).total, 3);
   ch.progression.powerIpe["iron-hide"] = 1;
   assert.equal(Engine.naturalArmor(ch, ["iron-hide"]).total, 4, "a rank IP bought adds");
+  ch.progression.powerIpe["iron-hide"] = 0;
   ch.archetypeChoices.basePowers = { "icebound-resilience": 3 };
   same(Engine.naturalArmor(ch).conditional.map(c => `${c.id}:${c.amount}`), ["icebound-resilience:1"], "Icebound's +1 grew with its rank");
   // Both held and running: the higher, never the sum.
@@ -5413,7 +5416,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.20", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.21", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5555,17 +5558,18 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.20", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.21", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.20", {}, {}, { "apex-fury": 2 }]);
-  same(Engine.archetypePowers(wm).map(p => p.id), WWD().powers.filter(p => !p.origin).map(p => p.id), "the Origin's powers are no longer held");
-  // versionCheck names the unheld power, and stops once a Base Power places it (§8).
-  assert.ok(Engine.versionCheck(wm).some(x => /Apex Fury|apex-fury/.test(x) && /power/i.test(x)), Engine.versionCheck(wm).join(" | "));
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.21", {}, {}, { "apex-fury": 2 }]);
+  // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
+  same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
+  assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
+  same(Engine.versionCheck(wm).filter(x => /power/i.test(x)), []);
   assert.ok(Engine.placeBasePower(wm, "apex-fury", 1).ok);
   same(Engine.versionCheck(wm).filter(x => /power/i.test(x)), []);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 3, "1 + 2 IP");
@@ -7242,4 +7246,132 @@ test("Decision 213: ipRoll reads a Minor's dice from the data; ipRollTotal adds 
   assert.equal(Engine.ipRollTotal({ count: 2, sides: 10, plus: 15 }, 14), 29);
   assert.equal(Engine.ipRollTotal({ count: 2, sides: 10, plus: 15 }, "junk"), 15);
   assert.equal(Engine.ipRollTotal(null, 14), 14);
+});
+
+// ── P5: powers learned in play, and custom powers (Decision 216) ─────────
+const learnList = ch => Engine.powerRanks(ch).filter(p => p.learn).map(p => p.id);
+const vampPowers = bl => D.archetypes.find(a => a.id === "vampire").powers.filter(p => (p.origin || null) === bl).map(p => p.id);
+const proChar = () => { const c = subject(); c.identity.archetype = "professional"; return c; };
+
+test("Decision 216: a Strigoi learns an unheld power of its Bloodline for 40 IP, raises it at rank x 20, and one Undo takes it back", () => {
+  const ch = vampire("strigoi", { pl: "street" });
+  ch.archetypeChoices.basePowers = { "shadow-play": 1 };
+  ch.progression.ip.earned = 100;
+  same(learnList(ch), vampPowers("strigoi").filter(id => id !== "shadow-play"), "the Learn list is the Bloodline's unheld powers, no more");
+  const before = JSON.parse(JSON.stringify(ch));
+  assert.ok(Engine.spendIP(ch, "power", "veil-of-night").ok);
+  Engine.recordAction(ch, "ip", "IP: Veil of Night learned", before);
+  const e = ch.progression.ip.log.at(-1);
+  same([rankOf(ch, "veil-of-night").rank, rankOf(ch, "veil-of-night").learn, Engine.ipState(ch).available, e.to, e.amount, e.name], [1, undefined, 60, 1, 40, "Veil of Night (Masked)"]);
+  assert.ok(Engine.archetypeContent(ch).powers.some(p => p.id === "veil-of-night"), "a learned power isn't on the Character tab");
+  assert.equal(learnList(ch).includes("veil-of-night"), false);
+  same(Engine.versionCheck(ch).filter(x => /power/i.test(x)), []);
+  same(Engine.ipCost(ch, "power", "veil-of-night"), { ok: true, cost: 20, from: 1, to: 2, name: "Veil of Night (Masked)" });
+  assert.ok(Engine.undoLastAction(ch).ok);
+  same([learnList(ch).includes("veil-of-night"), Engine.ipState(ch).available], [true, 100]);
+  assert.equal(Engine.archetypeContent(ch).powers.some(p => p.id === "veil-of-night"), false, "an unheld power reached the Character tab");
+});
+
+test("Decision 216: no rank is NaN for a learned power, and a granted Innate or another Bloodline's power is never on the Learn list", () => {
+  const ch = vampire("strigoi", { pl: "street" });
+  ch.progression.powerIpe["veil-of-night"] = 2;
+  for (const p of Engine.archetypePowers(ch)) assert.ok(Number.isInteger(p.rank), `${p.id} rank ${p.rank}`);
+  same(rankOf(ch, "veil-of-night").rank, 2, "IP alone holds it at the ranks it bought");
+  const list = learnList(vampire("strigoi", { pl: "street" }));
+  for (const id of vampPowers(null)) assert.equal(list.includes(id), false, `${id} is granted`);
+  for (const id of [...vampPowers("upyr"), ...vampPowers("draugur")]) assert.equal(list.includes(id), false, `${id} is another Bloodline's`);
+  assert.equal(Engine.powerRanks(vampire(null)).some(p => p.learn), false);
+});
+
+test("Decision 216: a power with no ranks is learned at 40 and is then held, with no ranks to raise", () => {
+  const ch = vampire("draugur", { pl: "street" });
+  ch.progression.ip.earned = 50;
+  assert.ok(learnList(ch).includes("deathless-resilience"));
+  const name = Engine.powerPool(ch).find(p => p.id === "deathless-resilience").name;
+  same(Engine.ipCost(ch, "power", "deathless-resilience"), { ok: true, cost: 40, from: 0, to: 1, name });
+  assert.ok(Engine.spendIP(ch, "power", "deathless-resilience").ok);
+  const held = Engine.archetypePowers(ch).find(p => p.id === "deathless-resilience");
+  same([held.rank, held.ranked, Engine.ipState(ch).available], [1, false, 10]);
+  assert.match(Engine.ipCost(ch, "power", "deathless-resilience").why, /has no ranks/);
+  same(Engine.versionCheck(ch).filter(x => /power/i.test(x)), []);
+});
+
+test("Decision 216: Custom power is open to every archetype: 40 IP in play, free on Admin only, and one Undo", () => {
+  const pro = proChar(); pro.progression.ip.earned = 50;
+  same(Engine.powerRanks(pro), []);
+  const before = JSON.parse(JSON.stringify(pro));
+  const r = Engine.addCustomPower(pro, { name: "Ghost Sight", effect: "Sees the dead." });
+  assert.ok(r.ok, r.why); same(r.cost, 40);
+  Engine.recordAction(pro, "power", "Custom power: Ghost Sight (40 IP)", before);
+  same([Engine.ipState(pro).available, rankOf(pro, r.id).rank, Engine.archetypeContent(pro).powers.map(p => `${p.name}:${p.rank}`)], [10, 1, ["Ghost Sight:1"]]);
+  assert.equal(pro.progression.ip.log.at(-1).name, "Ghost Sight");
+  assert.ok(Engine.undoLastAction(pro).ok);
+  same([pro.powers.length, Engine.ipState(pro).available], [0, 50]);
+
+  const admin = proChar(); admin.progression.ip.earned = 50;
+  const f = Engine.addCustomPower(admin, { name: "Ghost Sight", cost: "" }, { admin: true });
+  same([f.ok, f.cost, Engine.ipState(admin).available, admin.progression.ip.log.length], [true, 0, 50, 0]);
+  // Off Admin a blank cost box means nothing: the price is 40.
+  const off = Engine.addCustomPower(admin, { name: "B", cost: "" });
+  same([off.ok, off.cost], [true, 40]);
+  for (const bad of ["-1", "1.5", "x"]) assert.equal(Engine.addCustomPower(admin, { name: "C", cost: bad }, { admin: true }).ok, false, bad);
+  same(Engine.addCustomPower(admin, { name: "D", cost: "7" }, { admin: true }).cost, 7);
+  // It raises like a written power: 1 + IP, at rank x 20.
+  same(Engine.ipCost(admin, "power", f.id).cost, 20);
+});
+
+test("Decision 216: Custom power refuses a blank name, short IP, and the wrong door for the lock", () => {
+  const pro = proChar(); pro.progression.ip.earned = 30;
+  same(Engine.addCustomPower(pro, { name: "  " }), { ok: false, why: "Give the power a name." });
+  same(Engine.addCustomPower(pro, { name: "Ghost Sight" }), { ok: false, why: "Not enough IP (need 40)." });
+  assert.equal(pro.powers.length, 0);
+  assert.equal(Engine.addCustomPower(pro, { name: "Ghost Sight" }, { creation: true }).ok, false, "a creation call on a locked character");
+  const open = proChar(); open.creation.locked = false;
+  assert.equal(Engine.addCustomPower(open, { name: "Ghost Sight" }).ok, false, "an in-play call on an unlocked one");
+});
+
+test("Decision 216: a custom power at creation costs one power rank's CP unless it's a GM grant, on every archetype, and keeps its mark through a specialization change", () => {
+  const price = D.creationFlow.boostRules.cpPerPowerRank;
+  const cases = { werewolf: werewolf("trueborn"), professional: proChar(), vampire: vampire("strigoi") };
+  for (const [name, ch] of Object.entries(cases)) {
+    ch.creation.locked = false;
+    ch.creation.powerLevel = "heroic";
+    const left = Engine.cp(ch).left;
+    const paid = Engine.addCustomPower(ch, { name: "Moon-Eye" }, { creation: true });
+    assert.ok(paid.ok, `${name}: ${paid.why}`);
+    same([ch.powers[0].boughtWithCp, Engine.cp(ch).left, paid.cost], [true, left - price, price], name);
+    assert.ok(Engine.addCustomPower(ch, { name: "Gift", free: true }, { creation: true }).ok);
+    same([ch.powers[1].boughtWithCp, Engine.cp(ch).left], [false, left - price], `${name}: a GM grant spent CP`);
+  }
+  const w = cases.werewolf, spent = Engine.cp(w).spent;
+  w.archetypeChoices.specialization = ["wildblood"];
+  w.archetypeChoices.powerCp = {};
+  same(Engine.cp(w).spent, spent, "a specialization change made a paid custom power free");
+  // Too little CP left: the paid one is refused and a GM grant isn't.
+  const poor = proChar(); poor.creation.locked = false; poor.creation.powerLevel = "heroic";
+  const bal = Engine.cp(poor).left;
+  poor.creation.boosts.push({ targetType: "stat", targetId: "BOD", times: bal / D.creationFlow.boostRules.cpCostPerPoint });
+  assert.equal(Engine.cp(poor).left, 0);
+  same(Engine.addCustomPower(poor, { name: "X" }, { creation: true }), { ok: false, why: "No Character Points left." });
+  assert.ok(Engine.addCustomPower(poor, { name: "X", free: true }, { creation: true }).ok);
+});
+
+test("Decision 216: newPower and addPower still refuse an archetype with no powers panel, and nothing throws on any archetype", () => {
+  const pro = proChar();
+  assert.equal(Engine.newPower(pro).ok, false);
+  assert.equal(Engine.addPower(pro, { name: "X" }, { free: true }).ok, false);
+  for (const a of D.archetypes) { const c = subject(); c.identity.archetype = a.id; Engine.powerRanks(c); Engine.archetypeContent(c); Engine.cp(c); }
+});
+
+test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only a strict true keeps it", () => {
+  const old = proChar();
+  old.meta.schemaVersion = "0.20";
+  old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
+  const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.21", [false, true]]);
+  for (const v of ["yes", 1, {}, [], null, "true"]) {
+    const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
+    assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
+  }
+  same(Engine.migrate(JSON.parse(JSON.stringify(m))).powers, m.powers, "a round trip moved a row");
 });

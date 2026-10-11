@@ -23,6 +23,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.42.0
+
+- **Raise a Power is now Buy or Raise a Power.** A Vampire or Werewolf can learn a power its Bloodline or Origin has but its creation didn't take, for 40 IP. It starts at rank 1 and raises like the rest. A power with no ranks is simply held once learned.
+- **Your GM can give any character a custom power**: a name and what it does. It costs 40 IP in play, or 5 Character Points when you make your character (free if the GM grants it). It shows with your other powers and raises like them. On Admin, the cost box is open, and blank is free.
+- A saved Werewolf's IP in an Origin power its creation never placed now counts: it holds the power at the ranks that IP bought.
+
 ## v0.41.0 — 2026-10-11
 
 - **Set all to 4** on the Stats step: every stat below 4 goes to 4 in one press,

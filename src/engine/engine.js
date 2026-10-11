@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.20";
+  const SCHEMA_VERSION = "0.21";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -563,11 +563,15 @@ const Engine = (() => {
     return Object.values(ch.archetypeChoices.disciplines||{}).reduce((s,r)=>s + r*cost, 0);
   }
   const disciplineCap = ch => { const spec = disciplineSpec(ch); return spec && spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null; };
+  // The custom powers creation paid CP for (Decision 216): each is one power
+  // rank's price. The mark is on the row, not in powerCp, which the wizard
+  // prunes to the specialization's powers.
+  const customPowerCpSpent = ch => ownPowers(ch).filter(p=>p.boughtWithCp).length * powerRankCost();
   function cp(ch){
     const pl = powerLevel(ch);
     if (!pl) return null;
     const budget = pl.characterPoints + disGranted(ch);
-    const spent  = advSpent(ch) + luckSpent(ch) + boostSpent(ch) + disciplineSpent(ch) + powerCpSpent(ch);
+    const spent  = advSpent(ch) + luckSpent(ch) + boostSpent(ch) + disciplineSpent(ch) + powerCpSpent(ch) + customPowerCpSpent(ch);
     return { base:pl.characterPoints, granted:disGranted(ch), budget, spent, left:budget-spent };
   }
 
@@ -1853,7 +1857,7 @@ const Engine = (() => {
     if (targetType==="power"){
       const p = powerRanks(ch).find(x=>x.id===targetId);
       if (!p) return {ok:false, why:"That power isn't on this sheet."};
-      if (p.ranked===false) return {ok:false, why:`${p.name} has no ranks.`};
+      if (p.ranked===false && p.rank >= 1) return {ok:false, why:`${p.name} has no ranks.`};
       if (p.rank >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
       const price = D().ip.powerIncreaseCost;
       return {ok:true, cost: p.rank===0 ? price.newPower : price.perRank * p.rank, from:p.rank, to:p.rank+1, name:p.name};
@@ -2459,11 +2463,16 @@ const Engine = (() => {
     const a = archetype(ch);
     if (!a || writeInSpec(ch)) return [];
     const bought = isPlainObj(a.powersBought), placed = basePowersOf(ch), cpOn = powerCpOf(ch);
-    return powerPool(ch).filter(p=>!bought || isGranted(a, p) || (placed[p.id] > 0))
+    return powerPool(ch).filter(p=>!bought || isHeld(ch, a, p, placed))
       .map(p=>{ const ranked = p.ranked!==false, ipe = ranked ? powerIpeOf(ch, p.id) : 0;
-        const start = bought && ranked && !isGranted(a, p) ? placed[p.id] : 1, cpR = bought && ranked ? (cpOn[p.id]||0) : 0;
+        // A learned power (Decision 216) has no placement: `|| 0`, or rank is NaN.
+        const start = bought && ranked && !isGranted(a, p) ? (placed[p.id] || 0) : 1, cpR = bought && ranked ? (cpOn[p.id]||0) : 0;
         return Object.assign({}, p, { rank:start+cpR+ipe, start, cp:cpR, ipe, ranked, maxRank: Number(p.maxRank) || null }); });
   }
+  // Under `powersBought` a pool power is held if it is granted, a Base Power
+  // placed a rank in it, or IP learned it (Decision 216). The IP is read raw: an
+  // unranked power's `ipe` shows as 0, but its learning is still IP in the map.
+  const isHeld = (ch, a, p, placed) => isGranted(a, p) || placed[p.id] > 0 || powerIpeOf(ch, p.id) > 0;
   // Whether `powersBought` grants this power outright (Decision 215).
   const isGranted = (a, p) => !!a && isPlainObj(a.powersBought) && a.powersBought.granted==="innate" && !p.origin;
   // The archetype's powers this character could hold: every Innate one (no
@@ -2740,7 +2749,12 @@ const Engine = (() => {
     const arch = archetypePowers(ch).map(p=>({ id:p.id, name:p.name, kind:"archetype", rank:p.rank, ipe:p.ipe, maxRank:p.maxRank, ranked:p.ranked }));
     const own = ownPowers(ch).filter(p=>p.id).map(p=>{ const ipe = powerIpeOf(ch, p.id);
       return { id:p.id, name:p.name || "Unnamed power", kind:"written", rank:1+ipe, ipe }; });
-    return [...ds, ...arch, ...own];
+    // The pool's powers it doesn't hold yet, at rank 0, for Learn a new power
+    // (Decision 216). The modal lists them; archetypeContent never does.
+    const a = archetype(ch), placed = basePowersOf(ch);
+    const learn = isPlainObj(a && a.powersBought) ? powerPool(ch).filter(p=>!isHeld(ch, a, p, placed)).map(p=>
+      ({ id:p.id, name:p.name, kind:"archetype", rank:0, ipe:0, maxRank:Number(p.maxRank) || null, ranked:p.ranked!==false, learn:true })) : [];
+    return [...ds, ...arch, ...learn, ...own];
   }
 
   // ── A write-in archetype (Decision 153) ─────────────────────────────
@@ -2752,7 +2766,8 @@ const Engine = (() => {
   const isPlainObj = o => !!o && typeof o==="object" && !Array.isArray(o);
   const textRow = r => ({ name:txt(r.name), description:txt(r.description) });
   const textRows = v => (Array.isArray(v) ? v : []).filter(isPlainObj).map(textRow);
-  const powerRow = r => ({ id:txt(r.id), custom:true, name:txt(r.name), uses:txt(r.uses), effect:txt(r.effect), notes:txt(r.notes) });
+  // `boughtWithCp` (schema 0.21, Decision 216): creation's CP paid for this row.
+  const powerRow = r => ({ id:txt(r.id), custom:true, name:txt(r.name), uses:txt(r.uses), effect:txt(r.effect), notes:txt(r.notes), boughtWithCp:r.boughtWithCp===true });
   // The mechanics a character ticked, of those its archetype offers.
   function mechanicsOn(ch){
     const spec = writeInSpec(ch);
@@ -2770,8 +2785,11 @@ const Engine = (() => {
              powerUses:(spec.powerUses||[]).slice(),
              classifications:(D().classifications||[]).slice() };
   }
+  // The panel gate (the write-in archetype's Add power, the wizard's blank
+  // row). Reading, Improve, Remove and addCustomPower are open to every
+  // archetype (Decision 216).
   const hasPowers = ch => archPanels(ch).some(p=>p.type==="powers");
-  const ownPowers = ch => hasPowers(ch) ? listOf(ch, "powers").filter(isPlainObj).map(powerRow) : [];
+  const ownPowers = ch => listOf(ch, "powers").filter(isPlainObj).map(powerRow);
   // As read for display: each with its rank, 1 + what IP bought (Decision 194).
   const rankedOwnPowers = ch => ownPowers(ch).map(p=>Object.assign(p, { rank: 1 + powerIpeOf(ch, p.id) }));
   // The one reader for what an archetype is, whichever kind: the Archetype
@@ -2839,11 +2857,40 @@ const Engine = (() => {
     spendOnPower(ch, c.cost, row.id, name, i.note);
     return { ok:true, id:row.id, cost:c.cost };
   }
+  // A custom power (Decision 216): something a GM grants that no book lists, a
+  // name and a description, open to every archetype. Three prices, two doors:
+  // in play it is 0450's new-power price in IP, or on Admin whatever cost Admin
+  // types (blank is free); at creation (not locked) it is one power rank's CP,
+  // marked `boughtWithCp`, or free with `free`, a GM's grant. In play the
+  // spend is a journal entry, so the commit is one Undo.
+  function addCustomPower(ch, input, { admin=false, creation=false }={}){
+    const locked = ch.creation && ch.creation.locked===true;
+    if (creation && locked) return { ok:false, why:"This character is locked. Custom powers are added in play." };
+    if (!creation && !locked) return { ok:false, why:"Custom powers are added in play, once the character is locked." };
+    const i = isPlainObj(input) ? input : {}, name = txt(i.name).trim();
+    if (!name) return { ok:false, why:"Give the power a name." };
+    let cost = 0, boughtWithCp = false;
+    if (creation){
+      if (i.free!==true){
+        const bal = cp(ch);
+        if (bal && bal.left < powerRankCost()) return { ok:false, why:"No Character Points left." };
+        boughtWithCp = true;
+      }
+    } else {
+      const c = admin ? powerCost(ch, i.cost, true) : newPowerCost(ch);
+      if (c.why) return { ok:false, why:c.why };
+      cost = c.cost;
+    }
+    const row = powerRow({ id:newPowerId(ch), name, effect:i.effect, boughtWithCp });
+    if (!Array.isArray(ch.powers)) ch.powers = [];
+    ch.powers.push(row);
+    spendOnPower(ch, cost, row.id, name, i.note);
+    return { ok:true, id:row.id, cost: creation ? (boughtWithCp ? powerRankCost() : 0) : cost };
+  }
   // Decision 154: in play a power's name, uses and effect change only by
   // improving it, for IP; Admin edits them in place. Notes are the player's.
   // The new words and the spend are one commit, one Undo.
   function improvePower(ch, id, input){
-    if (!hasPowers(ch)) return { ok:false, why:"Powers aren't on this sheet." };
     const p = listOf(ch, "powers").find(x=>isPlainObj(x) && x.id===id);
     if (!p) return { ok:false, why:"That power isn't on this sheet." };
     const i = isPlainObj(input) ? input : {};
@@ -6324,7 +6371,7 @@ const Engine = (() => {
     // The character file: create, load, check, export
     newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
     powerPool, basePowerState, placeBasePower, powerCpOf, powerCpSpent, powerCpState, buyPowerRank, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
     feedView, feedGain, feed, goUnfed, goUnrested,

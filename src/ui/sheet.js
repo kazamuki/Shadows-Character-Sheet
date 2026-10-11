@@ -500,6 +500,7 @@ function renderShCharacter(){
     const toPlace = bps && bps.left > 0 && specIds.length ? `<p class="step-note">${bps.left} Base Power${bps.left>1?"s":""} to place, on Admin.</p>` : "";
     const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${toPlace}` : "";
     if (powers.length) parts.push(secs.sect("Powers") + allowHtml + powers.map(p=>
+      p.custom && !content.writeIn ? powerCardHtml(p, []) :
       `<div class="pick"><div class="head"><h2>${esc(p.name)}</h2>
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
         <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join("")
@@ -1233,7 +1234,7 @@ function renderShProgression(){
   h += `<div class="raise-row">
     <button class="btn primary" data-raiseopen="stat">Raise a Stat</button>
     <button class="btn primary" data-raiseopen="skill">Raise a Skill</button>
-    ${Engine.powerRanks(ch).length ? `<button class="btn primary" data-raiseopen="power">Raise a Power</button>` : ""}</div>`;
+    <button class="btn primary" data-raiseopen="power">Buy or Raise a Power</button></div>`;
 
   // IP journal
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
@@ -1537,17 +1538,23 @@ function powerCostHtml(attr, free, priced){
       ${note}
     </div>`;
 }
+// One written power: its fields and Remove on Admin; in play its words, its
+// rank and Improve (Decision 154). The Character tab draws a custom power of
+// an archetype with no powers panel with this too (Decision 216).
+function powerCardHtml(p, uses){
+  const notes = `<label class="field"><span>Notes</span><input type="text" data-pwedit="${esc(p.id)}|notes" value="${esc(p.notes)}"></label>`;
+  return S.admin
+    ? `<div class="pick wi-row">${powerFieldsHtml(k=>`data-pwedit="${esc(p.id)}|${k}"`, p, uses)}${notes}
+        <button class="btn sm danger" data-pwdel="${esc(p.id)}">Remove</button></div>`
+    : `<div class="pick wi-row pw-card"><div class="head"><h2>${esc(p.name)||"Unnamed power"} <span class="chip">rank ${p.rank}</span></h2>${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}
+        <button class="btn sm" data-pwimprove="${esc(p.id)}">Improve</button></div>
+        <div class="desc">${esc(p.effect)||"No effect written."}</div>${notes}</div>`;
+}
 function powersPanelHtml(ch){
   const powers = Engine.archetypeContent(ch).powers.filter(p=>p.custom), wi = Engine.writeInOptions(ch);
   const uses = wi ? wi.powerUses : [], ip = Engine.ipState(ch);
   let h = `<datalist id="power-uses">${uses.map(u=>`<option value="${esc(u)}">`).join("")}</datalist>`;
-  const notes = p => `<label class="field"><span>Notes</span><input type="text" data-pwedit="${esc(p.id)}|notes" value="${esc(p.notes)}"></label>`;
-  h += powers.map(p=> S.admin
-    ? `<div class="pick wi-row">${powerFieldsHtml(k=>`data-pwedit="${esc(p.id)}|${k}"`, p, uses)}${notes(p)}
-        <button class="btn sm danger" data-pwdel="${esc(p.id)}">Remove</button></div>`
-    : `<div class="pick wi-row pw-card"><div class="head"><h2>${esc(p.name)||"Unnamed power"} <span class="chip">rank ${p.rank}</span></h2>${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}
-        <button class="btn sm" data-pwimprove="${esc(p.id)}">Improve</button></div>
-        <div class="desc">${esc(p.effect)||"No effect written."}</div>${notes(p)}</div>`).join("");
+  h += powers.map(p=>powerCardHtml(p, uses)).join("");
   if (!powers.length) h += `<p class="step-note">No powers yet.</p>`;
   h += `<details class="group pw-add"><summary>Add a power</summary><div class="ref-body">
     ${powerFieldsHtml(k=>`data-pwnew="${k}"`, null, uses)}${powerCostHtml(k=>`data-pwnew="${k}"`, S.admin, !S.admin)}
@@ -2500,12 +2507,33 @@ function openCatalog(kind){
 // the ones you'd learn), or every power with a rank, each with its price, and
 // a button that's off with its reason. Each raise is one commit() with its
 // undo toast, and the modal stays open for the next, as the catalog does.
-const RAISE_TITLE = { stat:"Raise a Stat", skill:"Raise a Skill", power:"Raise a Power" };
+const RAISE_TITLE = { stat:"Raise a Stat", skill:"Raise a Skill", power:"Buy or Raise a Power" };
 function raiseIP(ch, type, id){
   const c=Engine.ipCost(ch,type,id);
   const nm = type==="stat" ? id : type==="power" ? (c.name || "a power") : (Engine.skillById(id)||{name:id}).name;
-  const label = c.ok ? `IP: ${nm} ${c.from}→${c.to} (−${c.cost})` : `IP spend: ${nm}`;
+  const label = c.ok ? (type==="power" && c.from===0 ? `IP: ${nm} learned (−${c.cost})` : `IP: ${nm} ${c.from}→${c.to} (−${c.cost})`) : `IP spend: ${nm}`;
   commit("ip", label, ()=>{ const r=Engine.spendIP(ch,type,id,""); if(!r.ok) notice(r.why); });
+}
+// Custom power (Decision 216): a name and what it does, for a new power's
+// price in play, or at Admin's own cost, blank for free.
+function customPowerFormHtml(ch){
+  const ip = Engine.ipState(ch).available;
+  return `<div class="sect">Custom power</div><div class="pw-custom">
+    <label class="field"><span>Name</span><input type="text" data-pwcustom="name"></label>
+    <label class="field"><span>Description</span><textarea rows="2" data-pwcustom="effect"></textarea></label>
+    ${S.admin ? powerCostHtml(k=>`data-pwcustom="${k}"`, true) : ""}
+    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))} You have ${ip} IP.</p>
+    <button class="btn" data-pwcustom-go>Add power</button></div>`;
+}
+function addCustomPowerFrom(body){
+  const input = {}, free = !!S.admin;
+  body.querySelectorAll("[data-pwcustom]").forEach(el=>{ input[el.dataset.pwcustom] = el.value; });
+  // A refusal leaves the form as typed: try it on a copy first.
+  const r = Engine.addCustomPower(clone(S.ch), input, { admin: free });
+  if (!r.ok){ notice(r.why); return false; }
+  const ch = S.ch, name = input.name.trim();
+  commit(free?"admin":"power", `Custom power: ${name} (${r.cost?`${r.cost} IP`:"free"})`, ()=>{ Engine.addCustomPower(ch, input, { admin: free }); });
+  return true;
 }
 function raiseStatusHtml(ch, type){
   const ip = Engine.ipState(ch).available;
@@ -2535,17 +2563,22 @@ function raiseResultsHtml(ch, type){
       <p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p>`;
   }
   if (type==="power"){
-    const rows = Engine.powerRanks(ch).map(p=>{
+    const row = p=>{
       const c = Engine.ipCost(ch,"power",p.id), learn = p.rank===0;
       // VQ14: the book's printed maximum is a creation cap, so a raise past
       // it goes ahead and says so (Decision 196).
       const past = c.ok && p.maxRank && c.to > p.maxRank ? `past the book's ${p.maxRank}` : "";
-      const sub = [p.kind==="discipline" ? "Discipline" : p.kind==="archetype" ? "Archetype power" : "Your power", learn ? "not trained yet" : `rank ${p.rank}`, p.ipe ? `+${p.ipe} from IP` : "", past].filter(Boolean).join(" · ");
+      const sub = [p.kind==="discipline" ? "Discipline" : p.kind==="archetype" ? "Archetype power" : "Your power", learn ? (p.kind==="discipline" ? "not trained yet" : "") : `rank ${p.rank}`, p.ipe ? `+${p.ipe} from IP` : "", past].filter(Boolean).join(" · ");
       return raiseRowHtml({ name: esc(p.name), sub: esc(sub), move: c.ok?`${c.from} → ${c.to}`:`${p.rank}`,
         cost: c.ok?`${c.cost} IP`:"—", btn: learn?"Learn":"Raise", key:`power|${esc(p.id)}`, why: c.ok ? short(c) : c.why });
-    }).join("");
-    return rows ? `<table class="ref spell-results raise-results"><tbody>${rows}</tbody></table>`
-                : `<p class="step-note">No powers to raise.</p>`;
+    };
+    // Held powers, then the ones its own specialization could still teach it
+    // (Decision 216), then a power written in. An empty part is left out.
+    const all = Engine.powerRanks(ch), held = all.filter(p=>!p.learn), learn = all.filter(p=>p.learn);
+    const table = ps => `<table class="ref spell-results raise-results"><tbody>${ps.map(row).join("")}</tbody></table>`;
+    return (held.length ? `<div class="sect">Your powers</div>${table(held)}` : "")
+      + (learn.length ? `<div class="sect">Learn a new power</div>${table(learn)}` : "")
+      + customPowerFormHtml(ch);
   }
   const q = String((S.raisePick||{}).q||"").trim().toLowerCase(), focused = Engine.focusedSkillIds(ch);
   const hit = s => !q || `${s.name} ${s.description||""}`.toLowerCase().includes(q);
@@ -2572,6 +2605,12 @@ function openRaisePicker(type){
     bind: body => {
       const results = body.querySelector("[data-raiseresults]"), status = body.querySelector("[data-raisestatus]");
       const refresh = () => keepPlace(results, ()=>{ results.innerHTML = raiseResultsHtml(S.ch, type); status.innerHTML = raiseStatusHtml(S.ch, type); }, ["#modal-title"]);
+      // The Custom power form is typed into, so a row's click never touches it.
+      results.addEventListener("click", e=>{
+        if (!e.target.closest("[data-pwcustom-go]")) return;
+        e.stopPropagation();
+        if (addCustomPowerFrom(results)) refresh();
+      }, true);
       const q = body.querySelector("[data-raiseq]");
       if (q) q.oninput = e => { S.raisePick.q = e.target.value; refresh(); };
       // W23: a click anywhere on a row is its button's click.

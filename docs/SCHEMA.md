@@ -613,7 +613,8 @@ more (Decision 135): `counts: "down"` shows what's left of the max, and
 Any panel may carry `when` (Decision 153): it names one of a write-in
 archetype's `writeIn.mechanics`, and `Engine.archPanels` leaves the panel out
 unless the character ticked that box. A `powers` panel draws the character's
-own `powers` rows; `Engine.addPower` refuses on an archetype without one.
+own `powers` rows; `Engine.addPower` and `newPower` refuse on an archetype without one.
+Every archetype reads `powers` and can be given a custom one (Decision 216).
 
 A `toggle` stores its option's name in `panelData[id]`. An option may be an
 object whose fields say what being in it does (Decision 195): `stats`
@@ -672,7 +673,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.20",
+    schemaVersion: "0.21",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -736,7 +737,7 @@ It renders on the Character tab (Decision 158).
     // (0.19, Decision 200) Base Powers placed at creation, ranks per archetype
     // power id: a Vampire's { "iron-hide": 2, "rend-and-tear": 1 }. Read
     // only when the archetype declares `powersBought`; a power is held only
-    // with a rank here, or granted (Decision 215). migrate() keeps whole positive counts, at most 10.
+    // with a rank here, granted (Decision 215), or learned with IP (`progression.powerIpe` > 0, Decision 216). migrate() keeps whole positive counts, at most 10.
     basePowers: {},
     // (0.19, Decision 200) What a chosen specialization's `choices` asked for,
     // per choice id: an option id ("ancient-weapon": "blade") or a text
@@ -831,7 +832,10 @@ It renders on the Character tab (Decision 158).
   // targetType "power"); `custom: true` leaves room for a powers catalog,
   // whose rows would reference it by another key, as a Grimoire row's
   // `spellId` does. Every other field is text.
-  powers:  [ { id: "pw-7K2M9QXA", custom: true, name: "Fade", uses: "SFR", effect: "...", notes: "" } ],
+  // (0.21, Decision 216) `boughtWithCp` is true on a custom power creation
+  // paid CP for (one power rank's price, counted by cp()); migrate() gives
+  // every older row, and anything but a strict true, false.
+  powers:  [ { id: "pw-7K2M9QXA", custom: true, name: "Fade", uses: "SFR", effect: "...", notes: "", boughtWithCp: false } ],
   // (0.10, Decision 121) A gear row is a catalog reference (`id` into
   // `equipment`, `qty` carried, `chargesUsed` on a charged Talisman) or typed
   // (`custom: true`, name/type/notes as before). migrate() tags every older
@@ -2582,7 +2586,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     decision replaced them: Decision 18's INDEX line still said "+1 per point
     above 10" after Decision 98, and six more were in the same state (14, 21,
     27, 32, 58, 99), only two of them noted anywhere. So the ledger entry gets
-    `→ **Superseded [in part] by Decision N**` with a clause saying what, the
+    `→ **Superseded [in part] by Decision 216**` with a clause saying what, the
     INDEX line gets `→ **superseded [in part] by N**`, and a wholly replaced
     line is struck through. Entries are never deleted and never renumbered.
     `tests/docs.test.mjs` fails if the two disagree. The old marker "→
@@ -3794,7 +3798,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decision 15's statuses and 152's classifications.
      - **Revisit if:** powers need a catalog, a price or mechanical fields; Deighton rules on Magical being (W53); W48–W50 are wanted.
      - **Built:** schema 0.16, game data 0.27, app 0.33.0 (unreleased). Engine in S2; wizard, sheet and print in S3–S5. Log 2026-09-30 and 2026-10-01.
-     → **Superseded in part by Decisions 154 and 194**: a power's text isn't editable in play, and Improve and Add power cost IP outside Admin (154); a written power has a rank, 1 + what IP bought, which Progression raises (194).
+     → **Superseded in part by Decisions 154, 194 and 216**: a power's text isn't editable in play, and Improve and Add power cost IP outside Admin (154); a written power has a rank, 1 + what IP bought, which Progression raises (194); written powers aren't only the write-in archetype's, since every archetype can be given a custom one (216).
 
 154. **In play a power reads as written: its words change by Improve, for IP, and Admin edits them free.**
      *2026-10-01 · Ken + Claude · Touches: powers, improvePower, addPower, powerCost, Improve, Add power, IP cost, IP journal, Admin mode, Loadout & Powers, notes, powerAddNote, powerAddAdminNote, powerImproveNote, custom archetype*
@@ -4590,6 +4594,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 196 in part (Base Powers buy the Origin's powers). Decision 200 in part (Innate powers granted; Built to Last not a pick). Extends 157 (the one power price) and 201 (the Thirst).
      - **Revisit if:** W72 lets IP learn an unheld power, `0450`'s ceilings change what binds play, or Deighton defines how a power that doesn't stack combines with anything else.
      - **Built:** app 0.40.0, game data 0.35, schema 0.20, PR #163. Log 2026-10-11 (P3).
+     → **Superseded in part by Decision 216**: a held power is placed, granted or learned with IP, not only placed or granted. IP in `powerIpe` on a pool power now holds it.
+
+216. **A Vampire or Werewolf learns an unheld power of its own Bloodline or Origin with IP; any character can be given a custom written power: 40 IP in play or free on Admin, 5 CP at creation or free as a GM grant.**
+     *2026-10-11 · Ken + Claude · Touches: archetypePowers, powerRanks, powerIpe, ipCost, Buy or Raise a Power, Learn a new power, Custom power, addCustomPower, addPower, hasPowers, ownPowers, powerRow, boughtWithCp, cp, CP step, character schema 0.21, W72, W106*
+     - **Decided:** Under `powersBought`, a power of the character's own specialization is held if a Base Power placed a rank in it or IP bought one (`powerIpe` > 0). One never held lists under **Learn a new power** at rank 0; its first rank costs `ip.powerIncreaseCost.newPower`, and a power with no ranks is held once learned. Written powers (`powers`) are open to every archetype: **Custom power** adds one for the new-power price in play (Admin: any cost, blank free), or `powerRankCost()` CP at creation (or free, a GM grant), marked `boughtWithCp`. Schema 0.21.
+     - **Why:** Ken (2026-10-11): what creation didn't buy is learnable in play, as a Discipline is, and a GM grants what no book lists.
+     - **Rejected:** another Bloodline's or Origin's powers (VQ4's door); a separate `learned` list (a schema bump to leave out powers saved Werewolves already paid for); Custom power for supernatural archetypes only; a free-grant box in normal play (Admin is the free path, as 154 has it); a GM-named CP price or CP ranks past 1 (no book price); the CP mark in `powerCp` (the wizard prunes it, making a paid power free); a custom power with no rank (194).
+     - **Replaces:** Decision 215 in part (a held power is placed or learned, not only placed). Decision 153 in part (written powers aren't only the write-in archetype's). Extends 194 and 157.
+     - **Revisit if:** Cursed Evolution or Splice opens another Bloodline's powers (VQ4), or a custom power needs mechanical fields.
+     - **Built:** app 0.42.0, game data 0.35, schema 0.21, PR #170. Log 2026-10-11 (P5).
 
 ## 5. Open Flags
 

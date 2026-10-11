@@ -624,6 +624,26 @@ function renderCP(){
         <div class="controls">${stepper(cpOn[id],"apow|"+esc(id), true, false, (p ? p.name : id)+" with CP")}</div></div></div>`; }).join("");
   }
 
+  // Custom powers (Decision 216): a GM's gift to a character it is building,
+  // for every archetype but the write-in one, whose powers are written free on
+  // the Archetype step. One power rank's CP, or free as a GM grant; rank 1.
+  if (!Engine.writeInOptions(ch)){
+    const per = Engine.powerRankCost(), mine = Engine.ownPowers(ch);
+    h += secs.sect("Custom powers", `Custom powers — a GM's, ${per} CP each, or free`);
+    h += `<p class="step-note">${esc(copy("powerCustomNote"))}</p>`;
+    h += mine.map(p=>`<div class="pick selected"><div class="head"><h2>${esc(p.name)||"Unnamed power"}</h2>
+        <span class="cost">${p.boughtWithCp ? `${per} CP` : "GM grant"}</span>
+        <div class="controls"><button class="toggle" data-pwrm="${esc(p.id)}" aria-label="Remove ${esc(p.name)||"this power"}">Remove</button></div></div>
+        <div class="desc">${esc(p.effect)||"No effect written."}</div></div>`).join("");
+    const short = bal.left < per;
+    h += `<div class="pick wi-row pw-custom">
+      <label class="field"><span>Name</span><input type="text" data-pwcustom="name"></label>
+      <label class="field"><span>Description</span><textarea rows="2" data-pwcustom="effect"></textarea></label>
+      <label class="check"><input type="checkbox" data-pwcustom-free> GM grant (free)</label>
+      <button class="btn" data-pwcustom-go ${short?"disabled":""}>Add power</button>
+      <span class="step-note" data-pwcustom-why ${short?"":"hidden"}>No Character Points left.</span></div>`;
+  }
+
   // Starting spells (Decision 111). Here, not on the Archetype step, because
   // Evocation rank and TOL are only final once this step's ranks and boosts
   // are spent. Buying a rank above opens the next tier in the picker.
@@ -1044,6 +1064,21 @@ function bindWriteIn(main, ch){
     if (Engine.newPower(ch).ok) { update(); focusLast(`[data-pwf$="|name"]`); }
   });
   main.querySelectorAll("[data-pwrm]").forEach(b=>b.onclick=()=>{ Engine.removePower(ch, b.dataset.pwrm); update(); });
+  // Custom power on the CP step (Decision 216): its Add is off, with its
+  // reason, while CP is short and the box (a GM grant) is unticked.
+  const cpFree = main.querySelector("[data-pwcustom-free]"), cpGo = main.querySelector("[data-pwcustom-go]");
+  if (cpFree && cpGo){
+    const gate = () => { const short = cpFree.checked ? false : (Engine.cp(ch).left < Engine.powerRankCost());
+      cpGo.disabled = short; const why = main.querySelector("[data-pwcustom-why]"); if (why) why.hidden = !short; };
+    cpFree.onchange = gate; gate();
+    cpGo.onclick = ()=>{
+      const input = { free: cpFree.checked };
+      main.querySelectorAll("[data-pwcustom]").forEach(el=>{ input[el.dataset.pwcustom] = el.value; });
+      const r = Engine.addCustomPower(ch, input, { creation:true });
+      if (!r.ok){ notice(r.why); return; }
+      update();
+    };
+  }
 }
 
 function refreshNav(){
