@@ -4,7 +4,7 @@
 (`WISHLIST.md`); Decisions 104, 134, 135, 202.
 **Status:** **drafted 2026-10-10 by Claude (Opus)**, pre-flighted against the
 code on the rulings branch (#156). **Approved by Ken 2026-10-10, PQ1 and PQ2
-on their defaults.** Ready to build.
+on their defaults.** **Built 2026-10-10 as Decision 213 (the ledger test needs the numbering unbroken, and 213 was free).**
 **Branch:** from `main` with #156 merged; PR to `main`, not switched off.
 **Runs alone.** It touches `shadows-data.js` (two entries), `engine.js`
 (`grants`, `painState`, a date helper, a roll helper), `sheet.js`, `gm.js`,

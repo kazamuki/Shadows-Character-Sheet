@@ -23,8 +23,14 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.39.1
+## [Unreleased] — app 0.39.2
 
+- **Pain Sensitive works.** Once you're hurt, your Pain Level is one higher
+  (never past 3), and the Pain line says Pain Sensitive is why.
+- **Improved asks for the dice.** Taking it now says "Roll 2d10, enter the
+  dice, + 15 IP": type what you rolled and the 15 is added for you.
+- **A new session's date is your own today.** In the evening it no longer
+  says tomorrow.
 - **A minus sign reads as one.** Negative numbers now show a true minus
   everywhere: a stat's modifier (BOD 3 reads **−1**), the Conditions' penalties
   (*Attack/Defense at −5*), a spend in a journal, and a Çredits balance

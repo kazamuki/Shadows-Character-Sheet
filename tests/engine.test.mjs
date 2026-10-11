@@ -8,7 +8,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
@@ -6981,4 +6981,28 @@ test("212 (review 3): typed and erased back folds and drops whatever the clock d
   assert.ok(press("XY", 3000).folded);
   assert.equal(t.audit.length, 1);
   assert.equal(t.audit[0].label, "Changed Marta");
+});
+
+// ── P1 (sheet-wishlist): the local day (W67) ─────────────────────────
+test("W67: localDay is the player's own day, never UTC's", () => {
+  assert.equal(Engine.localDay(new Date(2026, 9, 5, 23, 30)), "2026-10-05");
+  assert.equal(Engine.localDay(new Date(2026, 11, 31, 23, 59)), "2026-12-31");
+  assert.equal(Engine.localDay(new Date(2026, 0, 1, 0, 5)), "2026-01-01");
+});
+
+test("W67 guard: nothing in src/ turns an instant into a day with toISOString().slice(0, 10)", () => {
+  const walk = d => readdirSync(d, { withFileTypes: true }).flatMap(e =>
+    e.isDirectory() ? walk(join(d, e.name)) : e.name.endsWith(".js") ? [join(d, e.name)] : []);
+  const bad = walk(join(ROOT, "src")).filter(f => /toISOString\(\)\.slice\(0,\s*10\)/.test(readFileSync(f, "utf8")));
+  assert.deepEqual(bad, [], "use Engine.localDay(): toISOString is UTC");
+});
+
+test("Decision 213: ipRoll reads a Minor's dice from the data; ipRollTotal adds the flat amount", () => {
+  assert.deepEqual({ ...Engine.ipRoll("improved") }, { count: 2, sides: 10, plus: 15 });
+  assert.equal(Engine.ipRoll("skilled"), null);
+  assert.equal(Engine.ipRoll("nope"), null);
+  assert.equal(Engine.ipRoll(undefined), null);
+  assert.equal(Engine.ipRollTotal({ count: 2, sides: 10, plus: 15 }, 14), 29);
+  assert.equal(Engine.ipRollTotal({ count: 2, sides: 10, plus: 15 }, "junk"), 15);
+  assert.equal(Engine.ipRollTotal(null, 14), 14);
 });

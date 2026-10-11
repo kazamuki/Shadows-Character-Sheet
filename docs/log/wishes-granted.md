@@ -331,6 +331,20 @@ W45 meets W58 at the toggle: if W45 turns the bar into a sideways scroller,
 focus that returns to the toggle scrolls the bar to it. That's fine, as long
 as the toggle stays in the phone's bar.
 
+**W92 — Pain Sensitive does nothing.** *Ken, from Brogan · → Decision 213, app 0.39.2: a `painLevel` grant adds 1 once you are hurt*
+The Disadvantage says "Your Pain Level is always 1 higher than normal. Does
+not apply if you have no pain levels." `painState()` never reads it: a Pain
+Sensitive character's Pain Level, penalties and the vitals are those of a
+character without it. Ken's reading (2026-10-10): **+1 once the Pain Level
+is 1 or more**, from any source (Health Levels lost, Agonized, Phantom
+Pain's PL 1 at full health per Decision 109, or Withering under Pain
+Immunity), and clamped to the table's top. At Pain Level 0 it adds nothing.
+*To respect:* the shift is data the engine reads (a `pain` field on the
+Disadvantage, say), not an id in code (Decision 135). `painSources` names it,
+so the sheet says why. Pin the reading in `tests/rules.test.mjs`. Player-
+visible: a CHANGELOG line and a patch bump. If the data field is new, the
+`gamedataVersion` bumps too (a character's computed Pain changes).
+
 ### Loadout & catalog
 
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*
@@ -753,6 +767,31 @@ already lives in the journal by row id (Decision 154). The cap is IPE's 10 for
 mortals (`ip.rankCap`); Werewolf and Vampire powers stop at their own printed
 maximums. Whether a raise needs anything beyond IP (fiction, a teacher) is the
 GM's, as with stats and skills.
+
+**W93 — A roll box with a modifier takes the dice, and says it adds the rest.** *Ken, from Brogan · → Decision 213, app 0.39.2: Improved asks for the dice, `ipRoll` adds the 15*
+Taking the **Improved** Minor Milestone asks you to "Roll 2d10+15 … and enter
+the result" (3d10+30 once W103 lands Deighton's rebalanced values). Brogan rolled two 7s, typed 14 and expected 29, and got 14. The
+box wants the total, but nothing beside it says so. Brogan's fix: the box takes
+**the dice alone**, with **+ 15** (+ 30 after W103) printed after it, and the
+app adds the modifier. The wizard's rolls already work that way: the rolled Stat Point
+pool shows `40+1d10` beside a box for the die and adds the 40 itself, and
+the result shows next to it. Improved is the one that doesn't, so it
+should match them. Check the sheet's other roll boxes (the repair kit's
+die) while there.
+*To respect:* the `+15` is a number in the data the engine adds (Decision 134:
+numbers the engine reads, not formula text). Today it's in the benefit
+prose and hardcoded in `sheet.js`. Exploding 10s still mean the player
+adds up the dice they rolled, explosions included; the label says so.
+Player-visible: a CHANGELOG line and a patch bump.
+
+**W67 — The session log's default date is UTC, so it says tomorrow in the evening.** *Claude · → Fix, app 0.39.2: `Engine.localDay` is the one local-day helper*
+`sheet.js` defaults a new session's date with `toISOString().slice(0,10)`,
+which is the UTC day: after 7 pm in New York (or whenever the local day is
+behind UTC's) a player's new session is dated tomorrow. `gm.js`'s `localDay()`
+builds the day from `getFullYear`, `getMonth` and `getDate` and is the pattern.
+*To respect:* a session already saved keeps its date; only the default moves.
+Player-visible, so a CHANGELOG line and a patch bump, and a test that builds the
+date in local time (as S8b's `localDay` test does) and runs under a UTC+ zone.
 
 ### GM mode
 
