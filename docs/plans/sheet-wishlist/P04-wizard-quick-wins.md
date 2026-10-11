@@ -3,7 +3,8 @@
 **Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3. **W94, W96, W64,
 W59** (`WISHLIST.md`); Decisions 150, 152, 86, 172.
 **Status:** **drafted 2026-10-11 by Claude (Opus)**, pre-flighted against
-`main` at `59ee44d` (#163, P3, merged). Waiting on Ken: PQ1–PQ3.
+`main` at `59ee44d` (#163, P3, merged). **Approved by Ken 2026-10-11, PQ1–PQ3
+on their defaults.** Ready to build.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs alone.** It touches `wizard.js`, `app.js`, `shared.js`, `sheet.js` (one
 handler), `gm.js` (one line), `shadows.css`, `engine.js` (one small function),
@@ -60,9 +61,9 @@ When P4 is merged:
 
 | Id | Question | Default |
 |---|---|---|
-| PQ1 | **The version.** The Fix tier's table says "patch" for a visible fix, but the versions table says a new capability is minor. Set all to 4 and Home from the wizard are both new. | **Minor.** The versions table decides the number, and the tier decides the paperwork. Both new controls are things a player couldn't do before. |
-| PQ2 | **Home in the wizard header: a button or a menu?** W64 says "a Home control in the wizard header, matching the sheet's", and the sheet's Home sits in its ⋮ menu. | **A visible Home button**, as a plain text button styled like the ⋮ (same border, same 44px touch target). A ⋮ menu with one item in it is two taps for one choice, and hides the only way out. If the wizard's header gets more actions later, they can move into a ⋮ then. |
-| PQ3 | **Set all to 4 when the pool can't cover every stat.** W94 says to raise what it can "in stat order". The other choice is one point at a time, round-robin, which leaves the stats level instead. Either way this needs a player who already spent most of the pool: the smallest pool is 41 (Street, rolled 40 + 1), and raising all eight from 1 to 4 costs 24. | **Stat order, as W94 says**, from BOD through EMP, each one taken all the way to 4 before the next. It's predictable and matches the order on the page. The step names the stats it couldn't reach. |
+| PQ1 | **The version.** The Fix tier's table says "patch" for a visible fix, but the versions table says a new capability is minor. Set all to 4 and Home from the wizard are both new. | **Minor.** The versions table decides the number, and the tier decides the paperwork. Both new controls are things a player couldn't do before. **Ken, 2026-10-11: the default** |
+| PQ2 | **Home in the wizard header: a button or a menu?** W64 says "a Home control in the wizard header, matching the sheet's", and the sheet's Home sits in its ⋮ menu. | **A visible Home button**, as a plain text button styled like the ⋮ (same border, same 44px touch target). A ⋮ menu with one item in it is two taps for one choice, and hides the only way out. If the wizard's header gets more actions later, they can move into a ⋮ then. **Ken, 2026-10-11: the default** |
+| PQ3 | **Set all to 4 when the pool can't cover every stat.** W94 says to raise what it can "in stat order". The other choice is one point at a time, round-robin, which leaves the stats level instead. Either way this needs a player who already spent most of the pool: the smallest pool is 41 (Street, rolled 40 + 1), and raising all eight from 1 to 4 costs 24. | **Stat order, as W94 says**, from BOD through EMP, each one taken all the way to 4 before the next. It's predictable and matches the order on the page. The step names the stats it couldn't reach. **Ken, 2026-10-11: the default** |
 
 ## 4. Read first
 
