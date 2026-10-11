@@ -30,25 +30,33 @@ are folded into **W69** (below, under Loadout). "A Vampire's Innate powers are
 granted" led Ken to rule F38 and F39 together, for both archetypes, and that
 ruling is built by **W88**.
 
-**W87 — Holding a spell takes its dice off the table.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10*
+**W87 — Holding a spell takes a die off the table.** *Ken, from Brogan · ⏭ · Rule or shape · raised 2026-10-10 · ruled by Deighton 2026-10-10*
 Today Concentration is a line in the Spellcraft reference (`spellRules.concentration`)
-and nothing more. A player holding Fog Shroud has to remember that dice are
-missing from every Essence roll until they let it go. Brogan asked for a
-Condition that takes one die off spell casting. Ken ruled to follow the book
-instead: a held spell sets aside **dice equal to its Threshold**, from **every
-Essence roll**, until it's released or the Arcanist falls unconscious. (The
-one die Brogan saw was a cantrip's: TH 1.) The fix is a **Holding** marker,
-set from the Grimoire on a spell tagged `Concentration`, which every place
-showing an Essence pool reads as dice set aside, with a **Release** beside it.
-*To respect:* constraint 7: what's stored is which spell is held, and the
-dice set aside are computed from its TH. A stored field is a save-file shape
-change: a schema bump and a `migrate()` step. It is not a Condition from
-`0540`. Calling it one would put a rule into the Conditions list that the
-book doesn't have there, so it gets its own marker, shown the way a
-Condition is. *Questions before a proposal:* can two spells be held at once,
-with their THs adding up; does Charging interact with it; is falling
-unconscious something the sheet sees (At Zero) and releases on its own, or
-does it only remind.
+and nothing more. A player holding Fog Shroud has to remember that a die is
+missing from every Essence roll until they let it go. **Deighton's ruling
+(2026-10-10, `reference/rulings-2026-10-10.md` Q17–Q19), which replaces
+`0480`'s "dice equal to its Threshold":**
+- A Concentration spell is held **only once it succeeds**. Then it sets aside
+  **one die** for as long as it's held, from **every Essence roll**: casting,
+  Charging, defending, resisting.
+- An Arcanist can hold **as many spells as their Evocation rank**, a die each.
+- Anything that would sensibly break concentration (taking damage, a Shock,
+  going down) calls for a **WILL Essence check** to keep it. Its **TN and TH
+  aren't set yet**: open a flag when this is built and stub them. The GM decides
+  when a character is unconscious; the sheet never releases a spell on its own.
+- Released at will, any time.
+
+So Brogan's one die was right, and the book and the sheet's reference text
+change. The fix is a **Holding** marker, set from the Grimoire on a spell
+tagged `Concentration`, with **Release** beside it and **Check to keep**
+offered where damage is taken; every place showing an Essence pool shows the
+dice set aside.
+*To respect:* constraint 7: what's stored is which spells are held, and the
+dice set aside are their count. A stored field is a save-file shape change:
+a schema bump and a `migrate()` step. It isn't a Condition from `0540`, so
+it gets its own marker, shown the way a Condition is. `spellRules.concentration`
+is rewritten to the ruling (a `gamedataVersion` bump), and the book's fix is in
+`plans/crb-catch-up.md`.
 
 **W88 — Vampire and Werewolf powers at creation: Innate granted, Bloodline and Origin chosen, CP to raise them.** *Ken, from Brogan · ⏭ · Rule or shape · raised 2026-10-10 · closes F38, F39*
 Brogan expected a Vampire's Innate powers to come free, and expected CP to
@@ -83,7 +91,7 @@ when they differ. The book says otherwise in both chapters: `0413`'s
 "can learn" and `0414`'s "carries the whole kit". Those fixes are in
 `plans/crb-catch-up.md`.
 
-**W89 — Spend IP on an Advantage, or to buy off a Disadvantage.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10*
+**W89 — Spend IP on an Advantage, or to buy off a Disadvantage.** *Ken, from Brogan · ⏭ · Rule or shape · raised 2026-10-10 · priced by Deighton 2026-10-10*
 After lock, Advantages and Disadvantages are frozen. The only ways to change
 them in play are the Talented and Redeemed Minor Milestones. `0450`
 prices both: **an Advantage costs its creation point cost × 10 per rank, and a
@@ -94,10 +102,9 @@ here.
 held Advantages are read from creation plus the journal, never rewritten.
 Decision 152: a Supernatural still buys only Universal Advantages, and a
 prerequisite still binds. Buying off a Disadvantage takes its rules off the
-sheet but doesn't refund the CP it granted at creation. *Blocked in part:*
-`0450`'s own open questions ask whether each **rank** costs that flat price
-again; Talented's scope is the same question. Build the one-rank case on the
-book's reading and stub the rest behind a flag.
+sheet but doesn't refund the CP it granted at creation. **Deighton ruled
+(2026-10-10, `reference/rulings-2026-10-10.md` Q24): every rank costs the same flat price**, and a
+Disadvantage's buy-off follows it. Nothing blocks it now.
 
 **W90 — Cybernetics.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · blocked on design: F6, F19*
 Playtesters want chrome. The design answer is already set (STATE §3, the
@@ -108,7 +115,7 @@ so there is nothing to build from yet. This entry records that players asked;
 the work is STATE's Cyborg row, which retires `cyborg`, closes F6 and F19, and
 gives the Professional Installed Cybernetics.
 
-**W91 — Vehicles you can buy and own.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*
+**W91 — Vehicles you can buy and own, Powered Armor among them.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*
 There are no vehicles in the app: only the Pilot skill and Machindo. `0460`
 has the chapter: **Grounders** and **Jumpers** (Seats, PROT, RES, INT, Speed,
 Mods, Availability, Cost), **Vehicle Armor Kits**, **Powered Armor** and **Mech
@@ -120,8 +127,10 @@ mounted weapons.
 *To respect:* constraint 6 for every new id, `gamedataVersion` per Decision 68.
 An owned vehicle is a save-file shape change. Powered Armor is worn and
 amplifies the body (`0460`: the pilot uses their own combat skills), so it's
-W69's subject as much as this one's. Decide which entry it lands in when
-either is picked up.
+a question between this entry and W69. **Deighton ruled (2026-10-10, `reference/rulings-2026-10-10.md`
+Q16): Powered Armor is a vehicle, with its own Integrity**, so it's this
+entry's. One MD of Massive damage is 10 Integrity off it, or 1 Health Level to
+the wearer once it gets through (Q6).
 
 **W92 — Pain Sensitive does nothing.** *Ken, from Brogan · ⏭ · Content · raised 2026-10-10 · bug*
 The Disadvantage says "Your Pain Level is always 1 higher than normal. Does
@@ -139,10 +148,10 @@ visible: a CHANGELOG line and a patch bump. If the data field is new, the
 
 **W93 — A roll box with a modifier takes the dice, and says it adds the rest.** *Ken, from Brogan · ⏭ · Fix (UI) · raised 2026-10-10 · bug*
 Taking the **Improved** Minor Milestone asks you to "Roll 2d10+15 … and enter
-the result". Brogan rolled two 7s, typed 14 and expected 29, and got 14. The
+the result" (3d10+30 once W103 lands Deighton's rebalanced values). Brogan rolled two 7s, typed 14 and expected 29, and got 14. The
 box wants the total, but nothing beside it says so. Brogan's fix: the box takes
-**the dice alone**, with **+ 15** printed after it, and the app adds the
-modifier. The wizard's rolls already work that way: the rolled Stat Point
+**the dice alone**, with **+ 15** (+ 30 after W103) printed after it, and the
+app adds the modifier. The wizard's rolls already work that way: the rolled Stat Point
 pool shows `40+1d10` beside a box for the die and adds the 40 itself, and
 the result shows next to it. Improved is the one that doesn't, so it
 should match them. Check the sheet's other roll boxes (the repair kit's
@@ -206,7 +215,7 @@ active so Reset charges their drain on its own, or does the player spend it
 each turn? And Feeding: Fresh blood refills SFR. Does gaining SFR touch
 the count?
 
-**W98 — Walk, Run and Sprint on the sheet, from MOB.** *Ken, from Brogan · ⏭ for the paces · Content · raised 2026-10-10 · jump blocked on Deighton*
+**W98 — Walk, Run, Sprint and Jump on the sheet, from MOB.** *Ken, from Brogan · ⏭ · Content · raised 2026-10-10 · jump ruled by Deighton 2026-10-10*
 MOB's description promises "base running speed, sprint speed, and how far you
 can jump with a running start", and the sheet shows none of them. `0530`
 gives three: **Walk = MOB, Run = MOB × 3 (−1 to attacks), Sprint = MOB × 6
@@ -215,9 +224,10 @@ them on Main beside the combat numbers.
 *To respect:* the quick reference's movement table is display text
 (`"MOB ×3"`). The engine needs the multipliers as numbers (Decision 134),
 read by both. A doubling from Fleet of Foot only counts while it's active.
-**Jump** has no formula anywhere in the book. It's a rules question for
-Deighton, opened as a flag when this is picked up, and until then the sheet
-doesn't show a jump distance.
+**Jump** wasn't in the book; **Deighton ruled it (2026-10-10, `reference/rulings-2026-10-10.md` Q23):
+Jump = Sprint ÷ 4, rounded down**, and with Fleet of Foot, Sprint doubles first
+and then divides. The ÷ 4 is a number in the data too. The book's fix is in
+`plans/crb-catch-up.md`.
 
 **W99 — The Character tab's section headings line up.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · reopens Decision 168 in part*
 On the Character tab, sections like **Baseline Traits** and an Arcanist's
@@ -233,9 +243,116 @@ still take their columns back. `npm run phone-check` at phone and tablet
 widths. *Question:* is a short section (one card) allowed to sit beside
 the next one when there's room, or does every section get its own row?
 
+### From Deighton's rulings
+
+Deighton answered every open rules question on 2026-10-10, word for word in
+[`reference/rulings-2026-10-10.md`](reference/rulings-2026-10-10.md). Rulings that
+change what the app does are built from these entries, grouped by where they
+live in the code; the flags they close are in `SCHEMA.md` §5. Rulings that only
+answered an existing wish were written into it (W39, W53, W69, W87, W89, W91,
+W98).
+
+**W100 — Distances in meters or feet.** *Ken · 💡 · Fix (UI) · raised 2026-10-10 with F31's ruling*
+Deighton thinks in feet (the mono-whip reaches "5 or 6 feet"), the sheet in
+meters. Ken's idea: a metric/imperial switch, so a table that plays in feet
+reads every range, reach, radius and movement figure that way.
+*To respect:* display only; the data stays in meters. Most distances are text
+today (`"2m"`, `"5m radius"`, range bands in the quick reference), so converting
+them means storing the numbers (Decision 134) before any switch. A view
+setting, remembered in the browser, never in the character.
+
+**W101 — CRANK behind a feature flag until the team decides.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-10*
+Deighton doesn't know CRANK and wants the team to talk it through before
+anything else changes (`reference/rulings-2026-10-10.md` Q30). Ken's call:
+hide it, as GM mode is hidden, and keep the work. CRANK is released (Decision
+169): Main's card, the Progression section with its ledger, its popover, the
+admin −1/+1, and GM mode's off-screen job (206) all show it.
+*To respect:* `FEATURES` (Decision 173) gains `crank:false`, and each of those
+places reads it; `?crank=on` shows it again. A saved character's rep and ledger
+stay in the file, untouched (constraints 7 and 8), and come back when the flag
+is on. Hiding a released feature is player-visible: a CHANGELOG line and a
+patch bump, and a decision, since it's a choice someone could have made
+otherwise. GQ7, F37 and GQ28 wait on the same talk.
+
+**W102 — Deighton's rulings on the hit and on healing.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-10 · closes F18, F23, F24, F25, F36*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q1–Q7), built together
+because they all live in the hit resolver and recovery:
+- **F23:** Electric and Burning are Energy, as stubbed. The **Resistance**
+  upgrade's 50% is applied, **halving first, then PROT and RES**, instead of
+  the hit panel telling the player to adjust by hand.
+- **F25:** Natural Armor's stub stands, except that **AP on a spell pierces it**.
+- **F24:** ongoing damage on a Dying character at a Reset asks **the WILL
+  check as usual, plus** a Death Mark per ticking source (today a mark stands
+  in for the check).
+- **F36:** **healing counts from 0 HP**; damage past zero shows how bad things
+  are while Dying and is wiped by the first healing. A GM who plays it gritty
+  keeps it: an option, off by default (Ken).
+- **F18 and grenades:** no MD ratings to assign (one MD is 10 points of Massive
+  damage), the extra Health Level when armor drops to 0 stays, and grenades
+  and explosives deal **Massive** (the Thunderclap's and Junk Bomb's 2x+ Injured
+  then follows the rule).
+
+*To respect:* a numbered decision citing Decisions 99, 100, 104 and 151, and
+closing five flags (three edits each). F36's option is a stored choice: on the
+character (a schema bump) or a GM table setting? Decide in the work order;
+prefer the character, since the sheet works without a table. Grenade damage
+types are data (`gamedataVersion`). GM mode's hit (Decisions 191–192) reads
+the same engine, so check it moves with it.
+
+**W103 — Deighton's Milestone rulings.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-10 · closes F9*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q24–Q28, Q32):
+- **F9:** the General Major Milestones are **the Professional's only**. Every
+  archetype will get its own (Ken); until then an Arcanist has none (F32), and
+  a Werewolf keeps only its own. A saved character who took a General one keeps
+  it, with `validate` warning (constraints 7, 8 and 10).
+- **Minor Milestones repeat at any time**, which supersedes Decision 29's "not
+  until all five have been taken once".
+- **The rebalanced values:** Skilled is two Skills, one rank each (was 5 Skill
+  Points); Improved is **3d10+30** IP (was 2d10+15); Redeemed takes a
+  Disadvantage worth 5 points or less (was any). A Minor already taken keeps
+  what it gave.
+- Talented and the cap of 10 stand as the sheet has them.
+
+*To respect:* a numbered decision superseding Decision 29 in part; data changes
+and a `gamedataVersion` bump. W93's roll box should land with or after it, so
+the new +30 is printed beside the dice.
+
+**W104 — Deighton's gear rulings, and the reference text that follows.** *Ken, from Deighton · ⏭ · Content, plus a save shape for F34 · raised 2026-10-10 · closes F26, F30, F31, F34*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q8–Q11, Q33):
+- **F26:** a shotgun takes neither the Scope nor the Angel Mod, as stubbed.
+  Close the flag and say why in the notes.
+- **F30:** Anti-Materiel does nothing extra to people; its glossary text says
+  it means vehicle armor doesn't stop it.
+- **F31:** the Reach column is the weapon's reach, in meters; the tag marks an
+  unusual one (the mono-whip) and adds nothing.
+- **F34:** a partly spent magazine is **kept with its count**. Today a Reload
+  fills from a fresh magazine and the sheet counts whole magazines carried
+  (Decisions 145, 149), so carried magazines need their counts: a save-file
+  shape change, with a decision, a schema bump and a `migrate()` step.
+- **Difficulty names:** Easy / Average / Challenging, replacing easy / medium /
+  hard wherever the data and the copy say them.
+
+*To respect:* F26, F30 and F31 are text and a closed flag each (Content, and
+the `playerNote`s that explained the stand-ins go). F34 is the only part that
+needs a proposal, so it can split into its own session if it grows.
+
+**W105 — Deighton's Vampire rulings.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-10 · closes F41*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q20–Q21):
+- **F41:** an Upyr **holds both** Built to Last powers (Iron Hide and Icebound
+  Resilience); they just don't stack. Ken's creation-pick reading (VQ25) is
+  withdrawn: the pick and its bar on Base Powers and IP go, and a saved Upyr
+  keeps the one it chose (`migrate()` needs no step if `optionPicks` is simply
+  no longer read for it; check).
+- **Day Rest:** a day without rest costs **half RoU plus 2 SFR**, and it doesn't
+  rise day to day. The Thirst panel (Decision 201) gains it beside "A day unfed".
+
+*To respect:* a numbered decision superseding Decision 200 in part (Built to
+Last) and adding to 201; `gamedataVersion` for the data. Land it beside W88,
+which also rewrites how a Vampire's powers are held.
+
 ### Loadout & catalog
 
-**W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · 🔎 · Rule or shape · raised 2026-10-08 · touches F23, F25*
+**W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*
 Deighton's ask: powered armor worn over the body should show its bonuses where
 they land. Armor giving +5 to BOD skills and damage should raise Melee and
 Martial Arts while it's checked as worn, **without touching the BOD bonus**,
@@ -258,14 +375,14 @@ modifiers on **stunts**.
 *To respect:* constraint 7, store inputs: the modifier lives on the catalog
 entry (or the custom row), "worn" is the stored input, and every number it
 moves is computed, never written to the character. Constraint 6 for any new
-catalog key. *Questions before a proposal:* what a stat modifier reaches if
-not the stat's bonus (its skills' checks and damage only, per Deighton? Health
-Levels and WILL/TOL, which BOD feeds?); whether two worn pieces' modifiers to
-one target stack; how "kinetic or energy" maps onto `damageType`, which only
-29 of the 54 weapons carry today (`Normal`, `Ballistic`, `Electric`, `Energy`,
-`Burning`), and whether Electric and Burning count as energy (that's F23's
-question from the other side); and whether the cap of 10 (IPE) binds a worn
-bonus (`0450` says chrome and talismans can carry a score past 10). Prices
+catalog key. **Deighton answered the open questions (2026-10-10, `reference/rulings-2026-10-10.md`
+Q12–Q16):** a stat modifier reaches that stat's **skill checks and damage
+only**, never Health Levels or TOL; two pieces' modifiers to one target
+**stack**; **Electric and Burning count as energy**; a worn bonus **can pass
+10**; and **Powered Armor is a vehicle** (W91), not a worn piece. What's left
+is data work: "kinetic or energy" reads `damageType`, which only 29 of the 54
+weapons carry today (`Normal`, `Ballistic`, `Electric`, `Energy`, `Burning`),
+so the rest need one. Prices
 and caps (`ipCost`, `canBoost`) must keep reading the rank without the worn
 bonus, or taking armor off would change what the next rank costs.
 
@@ -293,15 +410,21 @@ reload. The folded line goes through `Engine.catalogLine` or its custom
 equivalent, so a custom item reads exactly as a catalog one does. Player-
 visible: a CHANGELOG line and a patch bump.
 
-**W39 — Train a Martial Arts style in play, and apply its bonus.** *Claude · 🔎 · the bonus half is Deighton's*
+**W39 — Train a Martial Arts style in play, and apply its bonus.** *Claude · 🔎 · Deighton answered 2026-10-10*
 Raised 2026-09-25, finishing W33. The wizard lets a player choose up to two
 styles, and Martial Arts says "you may train additional styles later in
 play", but a locked sheet has no way to add one: `setSelection` is only
 reached from the wizard, and the pick's two-slot cap is a creation rule. The
 bonuses ("+1 Stun", "+1 Grapple") are shown, never applied, and nothing says
-what +1 Stun adds to. *Needs:* how a style is trained after creation (IP?
-GM's word?) and what each bonus modifies, both Deighton's, before the sheet
-does more than show them.
+what +1 Stun adds to. **Deighton (2026-10-10, `reference/rulings-2026-10-10.md` Q29), with Ken:** a
+new style is learned through the story (a mentor, or the LINK's neural
+training) with an in-game reason, then trained on your own or through
+fighting. It isn't bought with IP: IP raises the Martial Arts skill, which
+makes every Martial Arts check easier. Stun and Grapple are attack
+Conditions, and a style's bonus makes you better at inflicting that
+Condition. So learning a style is the GM's word (an **Add a style** that
+asks no price, logged), and the bonus is the one number left to pin: +1 to
+the check that inflicts it, presumably. Confirm that in the work order.
 
 ### The sheet at the table (from the design critique)
 
@@ -754,11 +877,12 @@ player names would put the form on the sheet.
 A custom archetype has no Major Milestones of its own; the general Majors are
 open to it. The Adjustments ledger covers a GM's custom reward meanwhile.
 
-**W53 — "Magical being" as a classification.** *Ken, from Deighton · 💡 · rules: Deighton*
+**W53 — "Magical being" as a classification.** *Ken, from Deighton · ⏭ · Content · ruled by Deighton 2026-10-10*
 Fae and beings like them: a third axis of power, distinct from Supernatural.
 The plan's **Other** classification, with its own text, covers it until then.
-*Needs:* what a Magical being can buy, Deighton's. Then it's one row in
-`classifications`.
+**Deighton ruled (2026-10-10, `reference/rulings-2026-10-10.md` Q31): Universal Advantages only**,
+like a Supernatural. So it's one row in `classifications`, and a custom
+archetype can pick it.
 
 **W61 — A retired archetype folds its characters into Custom.** *Ken · 🔎 · raised 2026-10-01 with the Cyborg cut; Rule or shape*
 The team has cut the Cyborg (`plans/crb-catch-up.md`), and an id can never
@@ -896,7 +1020,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W100.** Everything above is open; W38 has a plan,
+- **Next free number: W106.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
