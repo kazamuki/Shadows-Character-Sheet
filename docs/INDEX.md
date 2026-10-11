@@ -33,6 +33,7 @@ authority and is never read front to back; §1 below says which section to open.
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `log/2026.md` |
 | Text retired from a live document: the old phase roadmap, `meta.notes`, the closed-flag notes | `log/archive.md` — verbatim, never edited |
+| A designer's ruling in his own words (the answers a flag, a wish or a book fix cites) | `reference/rulings-2026-10-10.md`: Deighton's answers to every open rules question, 2026-10-10 |
 | Whether a string is allowed to say that | `VOICE-APP.md` |
 | Who the app is for, what sets it apart, the accessibility floor: product truth for design work | `../PRODUCT.md` — points back here and at `SCHEMA.md` rather than restating them |
 | The screen's visual system: colour roles, type, layout, components, what to avoid | `../DESIGN.md` (screen only; the print sheet is `print.css` and its plan). `../.impeccable/design.json` is the same system in machine-readable form, for design tools |
@@ -131,23 +132,23 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 |---|---|---|
 | `F5` | Adv/Disadv audit flags — three of four closed by the CRB v4 pass. Remaining: Cyber-Prophe… | Design (after F6) |
 | `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
-| `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… | Ken |
+| `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… **Ruled 2026-10-10:** Professional only. Every archetype will get its own Major Milestones; until then an Arcanist has none (Ken); closes with W103 | Ken/D (ruled) |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
-| `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99), Loadout and recovery done (Decision 100); only the MD1/2/3 ratings are left | Design (small gap) |
+| `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99), Loadout and recovery done (Decision 100); only the MD1/2/3 ratings are left **Ruled 2026-10-10:** no MD1/2/3 ratings to assign: one MD is 10 points of Massive damage, 10 Integrity off the armor or 1 Health Level to whoever is in it,…; closes with W102 | Design (small gap) (ruled) |
 | `F19` | Cyborg install cost mechanism — Sanity erosion vs. temporary Health Level cost, still undecided (Scott unsure which) | Design |
-| `F23` | RES against Electric and Burning (stubbed as Energy), and where the Resistance upgrade's 50% sits (not applied) | Deighton |
-| `F24` | Ongoing damage while Dying at a Reset: one Death Mark per ticking source standing in for the check (stub), or the check plus a mark per source | Deighton |
-| `F25` | How Natural Armor answers a hit: stubbed as flat, after PROT and RES, anywhere, Kinetic unless Warded, ignores AP, skipped by Massive | Deighton |
-| `F26` | Does a shotgun count as a rifle for the Scope and the Angel Mod? Stubbed: no | Deighton |
-| `F30` | Anti-Materiel (weapon tag): what it does to a person | Deighton |
-| `F31` | Reach (weapon tag): what it adds to the Reach column | Deighton |
+| `F23` | RES against Electric and Burning (stubbed as Energy), and where the Resistance upgrade's 50% sits (not applied) **Ruled 2026-10-10:** Electric and Burning are Energy (RES only with Ablative Plating, as stubbed), and the Resistance upgrade halves first, then PROT and RES; closes with W102 | Deighton (ruled) |
+| `F24` | Ongoing damage while Dying at a Reset: one Death Mark per ticking source standing in for the check (stub), or the check plus a mark per source **Ruled 2026-10-10:** the WILL check as usual, plus a Death Mark per ticking source; closes with W102 | Deighton (ruled) |
+| `F25` | How Natural Armor answers a hit: stubbed as flat, after PROT and RES, anywhere, Kinetic unless Warded, ignores AP, skipped by Massive **Ruled 2026-10-10:** the stub stands (Kinetic means bullets and melee weapons, and Massive skips it), except that AP on a spell pierces it (Ken's follow-up); closes with W102 | Deighton (ruled) |
+| `F26` | Does a shotgun count as a rifle for the Scope and the Angel Mod? Stubbed: no **Ruled 2026-10-10:** the stub stands: a shotgun takes neither. Angel Rounds need a box magazine with a power cell, and shotguns don't use scopes; closes with W104 | Deighton (ruled) |
+| `F30` | Anti-Materiel (weapon tag): what it does to a person **Ruled 2026-10-10:** nothing extra against people: it means vehicle armor doesn't stop it, and these weapons carry AP and high damage already; closes with W104 | Deighton (ruled) |
+| `F31` | Reach (weapon tag): what it adds to the Reach column **Ruled 2026-10-10:** the Reach column is how far the weapon reaches, and the tag marks a weapon whose reach is unusual (the mono-whip's); it adds nothing to…; closes with W104 | Deighton (ruled) |
 | `F32` | Arcanist Major Milestones: bring in REF_CRB's, or wait for 0411? | Ken |
-| `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag | Deighton |
-| `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept | Deighton |
+| `F34` | A magazine reloaded or swapped out before it's empty: are its rounds kept? Stubbed: no, a Reload fills from a fresh mag **Ruled 2026-10-10:** kept, with its count; closes with W104 | Deighton (ruled) |
+| `F36` | Is damage past zero kept, or does healing count from 0 HP? Stubbed: kept **Ruled 2026-10-10:** healing counts from 0 HP; damage past zero is a reference for how bad things are while Dying. A GM may keep it for grittier play, and…; closes with W102 | Deighton (ruled) |
 | `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
 | `F38` | What a Werewolf's Base Powers buy, when it carries every power at Rank 1 (stubbed: shown, spends nothing, Decision 196). **Ruled 2026-10-10:** Innate and the starter power granted, Base Powers are ranks in the Origin's others; closes with W88 | Ken (ruled) |
 | `F39` | How a Vampire spends Base Powers across Innate and Bloodline powers. Stubbed: one is one rank, none above Max Starting Rank (Decision 200). **Ruled 2026-10-10:** Innate granted, Base Powers are Bloodline ranks; closes with W88 | Ken (ruled) |
-| `F41` | Is the Upyr's Built to Last a creation pick, or two powers that don't stack? Stubbed: a pick, as Ken reads it (Decision 200) | Deighton |
+| `F41` | Is the Upyr's Built to Last a creation pick, or two powers that don't stack? Stubbed: a pick, as Ken reads it (Decision 200) **Ruled 2026-10-10:** an Upyr holds both; they don't stack. Ken's reading is withdrawn; closes with W105 | Deighton (ruled) |
 
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
