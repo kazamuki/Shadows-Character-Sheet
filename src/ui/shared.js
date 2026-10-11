@@ -81,13 +81,17 @@ let S = { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:fa
 // Decision 173: an unfinished feature ships switched off. A browser turns
 // one on with ?<name>=on (and off with ?<name>=off); the launch release sets
 // it true here. Guarded: without storage, a feature is as the constant says.
-const FEATURES = { gm:false };
+// Decision 214: a switch is either an unfinished feature (gm) or a released
+// one withdrawn until the team decides (crank).
+const FEATURES = { gm:false, crank:false };
 const FEATURE_PREFIX = "shadows.feature.";
 function featureOn(name){
   if (!Object.prototype.hasOwnProperty.call(FEATURES, name)) return false;
   if (FEATURES[name]===true) return true;
   try{ return localStorage.getItem(FEATURE_PREFIX+name)==="on"; }catch(e){ return false; }
 }
+// Decision 214: CRANK is shown only with its switch on.
+const crankOn = () => featureOn("crank");
 function applyFeatureQuery(search){
   let q; try{ q=new URLSearchParams(search||""); }catch(e){ return; }
   for (const name of Object.keys(FEATURES)){

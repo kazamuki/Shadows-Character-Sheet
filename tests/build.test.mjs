@@ -332,13 +332,21 @@ test("no screen blocks the page with alert() or confirm() (C5)", () => {
   }
 });
 
-test("an unfinished feature ships switched off: FEATURES.gm is false unless the launch's changelog line is in (Decision 173)", () => {
+test("a feature ships switched off until its launch line is in: FEATURES.gm and FEATURES.crank (Decisions 173, 214)", () => {
   const src = readFileSync(join(ROOT, "src/ui/shared.js"), "utf8");
   const m = /const FEATURES = \{([^}]*)\}/.exec(src);
   assert.ok(m, "shared.js lost its FEATURES object");
-  const on = /\bgm:\s*true\b/.test(m[1]);
   const log = readFileSync(join(ROOT, "CHANGELOG.md"), "utf8");
   // Anywhere in the file: release:prep renames [Unreleased], so after the launch release the line sits under a version heading.
-  const launched = /^- \*\*Run a table\.\*\*/m.test(log);
-  assert.ok(!on || launched, "FEATURES.gm is true, but CHANGELOG.md has no `- **Run a table.**` line: GM mode's launch needs it");
+  const launches = { gm: "Run a table.", crank: "CRANK is back." };
+  for (const [name, line] of Object.entries(launches)) {
+    assert.match(m[1], new RegExp("\\b" + name + ":\\s*(true|false)\\b"), `FEATURES lost its ${name} switch: dropping it would turn the feature back on for everyone`);
+    const on = new RegExp("\\b" + name + ":\\s*true\\b").test(m[1]);
+    const launched = new RegExp("^- \\*\\*" + line.replace(/\./g, "\\.") + "\\*\\*", "m").test(log);
+    assert.ok(!on || launched, `FEATURES.${name} is true, but CHANGELOG.md has no \`- **${line}**\` line: its launch needs it`);
+  }
+});
+
+test("the blank sheet has no CRANK while the switch is off (Decision 214)", () => {
+  assert.doesNotMatch(buildBlankSheetHtml(), /CRANK/);
 });
