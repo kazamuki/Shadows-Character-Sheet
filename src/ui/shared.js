@@ -12,6 +12,8 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // The currency sign, from the data (Decision 135), escaped once for markup.
 const CR = esc(Engine.creditSymbol());
+// Today as the player lives it, YYYY-MM-DD (not UTC: after 7 pm in New York that says tomorrow).
+const localDay = Engine.localDay;
 // A sign is the true minus, never a hyphen (S13a's SQ7): `signed` leaves zero bare,
 // `modText` gives it a plus, as a stat modifier reads (+0).
 const signed = n => (n>0?"+":n<0?"−":"")+Math.abs(n);

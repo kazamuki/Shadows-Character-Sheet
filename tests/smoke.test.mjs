@@ -4132,7 +4132,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   assert.deepEqual(app2.errors, []);
 });
 
-test("Decision 177: a day is the GM's local day, not UTC's", () => {
+test("Decision 177: a day is the GM's local day, not UTC's (localDay is reachable in the page; the engine tests pin its values)", () => {
   const app = boot({ storage: GM_ON });
   assert.equal(app.window.eval("localDay(new Date(2026, 9, 5, 0, 30))"), "2026-10-05");
   assert.equal(app.window.eval("localDay(new Date(2026, 11, 31, 23, 59))"), "2026-12-31");
@@ -5457,6 +5457,7 @@ test("Main shifts a Forge Fang: the switch names the HL it costs, Claws and Fang
   assert.match(app.$("#main .cond.hp").textContent, /10 HL × 7/);
   app.click('[data-sec="sessions"]');
   assert.match(app.$("#main").textContent, /Form: Werewolf \(1 HL Withering\)/, "the Activity Log doesn't name the shift and its cost");
+  app.click('[data-sec="sessions"]');
   app.click("button[data-undolast]");
   const back = activeChar(app);
   assert.deepEqual([back.panelData.form || null, back.trackers.damage, back.trackers.witheringDamage], [null, 0, 0]);
@@ -7044,4 +7045,66 @@ test("Decision 212: an exported table carries its trail, and imported fresh, Act
   fresh.click("#modal [data-act-undo]");
   assert.equal(fresh.window.eval("S.table.cast.length"), 0);
   assert.deepEqual([...app.errors, ...fresh.errors], []);
+});
+
+// ── P1 (sheet-wishlist): the Improved roll box, Pain Sensitive on Main ──
+test("W93 / Decision 213: Improved asks for the dice, shows + 15 IP, and grants the dice plus 15; Undo takes both back", () => {
+  const ch = lockedCharacter();
+  ch.progression.milestonePoints = 5;
+  const app = openSheet(ch, "progression");
+  app.click('[data-takeminor="improved"]');
+  const prompt = app.$("[data-improvroll]").closest(".trk");
+  assert.match(prompt.textContent, /2d10/, "the prompt doesn't name the dice");
+  assert.match(prompt.textContent, /\+ 15 IP/, "the prompt doesn't show the flat IP");
+  const box = app.$("[data-improvroll]"); box.value = "14";
+  app.click("[data-improvok]");
+  const now = activeChar(app);
+  assert.deepEqual(now.progression.milestones.minor.map(m => m.id), ["improved"]);
+  const grant = now.progression.ip.log.find(e => /Improved/.test(e.note));
+  assert.equal(grant.amount, 29, "14 on the dice and the 15 aren't 29");
+  assert.match(grant.note, /rolled 14/);
+  app.click('[data-sec="sessions"]');
+  app.click("button[data-undolast]");
+  const back = activeChar(app);
+  assert.equal(back.progression.milestones.minor.length, 0, "Undo left the Minor");
+  assert.equal(back.progression.ip.log.filter(e => /Improved/.test(e.note)).length, 0, "Undo left the IP");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W93: an empty box takes nothing and says so", () => {
+  const ch = lockedCharacter();
+  ch.progression.milestonePoints = 5;
+  const app = openSheet(ch, "progression");
+  app.click('[data-takeminor="improved"]');
+  app.click("[data-improvok]");
+  const now = activeChar(app);
+  assert.equal(now.progression.milestones.minor.length, 0, "a Minor was taken with no roll");
+  assert.equal(now.progression.ip.log.length, 0, "IP was granted with no roll");
+  assert.match(app.$(".toast-msg").textContent, /Enter the dice you rolled\./);
+  assert.ok(app.$("[data-improvroll]"), "the prompt closed on a refusal");
+  assert.deepEqual(app.errors, []);
+});
+
+test("W93: the prompt reads its numbers from the data", () => {
+  const ch = lockedCharacter();
+  ch.progression.milestonePoints = 5;
+  const app = openSheet(ch, "progression");
+  app.window.eval(`SHADOWS_DATA.milestones.minorShared.find(m=>m.id==="improved").ipRoll = { count:3, sides:10, plus:30 }`);
+  app.click('[data-takeminor="improved"]');
+  const text = app.$("[data-improvroll]").closest(".trk").textContent;
+  assert.match(text, /3d10/);
+  assert.match(text, /\+ 30 IP/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("W92 / Decision 213: a Pain Sensitive character at 2 Health Levels lost reads Pain Level 2 on Main and names Pain Sensitive", () => {
+  const ch = lockedCharacter();
+  ch.stats.BOD.base = 10;
+  ch.disadvantages = [{ id: "pain-sensitive", rank: 1 }];
+  ch.trackers.damage = 10;
+  const app = openSheet(ch, "main");
+  const main = app.$("#main").textContent;
+  assert.match(main, /Lv 2/, "Pain isn't Lv 2");
+  assert.match(main, /\+1 Lv from Pain Sensitive/);
+  assert.deepEqual(app.errors, []);
 });

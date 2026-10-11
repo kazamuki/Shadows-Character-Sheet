@@ -23,7 +23,7 @@ function sheetHeader(title, note, under){
   return h;
 }
 // Pain on top of Health Levels, from Conditions (Agonized) and Aberrations (Phantom Pain).
-const painExtra = pain => (pain.fromConditions||0) + (pain.fromAberrations||0);
+const painExtra = pain => (pain.fromConditions||0) + (pain.fromAberrations||0) + (pain.fromTraits||0);
 const painChip = pain => pain.level
   ? ` <span class="chip pain">Pain Lv ${pain.level} · ${pain.skillPenalty} skill</span>` : "";
 
@@ -1251,11 +1251,16 @@ function renderShProgression(){
 
   // Minor
   h += `<details class="group" ${ms.minorLeft>0?"open":""}><summary>Minor Milestones ${ms.minorLeft>0?`— <b style="color:var(--green)">${ms.minorLeft} to pick</b>`:""}</summary>`;
-  if (S.askImproved) h += `<div class="trk"><h2>Improved</h2>
-    <span class="sub" style="flex-basis:auto">Roll 2d10+15 at the table (10s explode) and enter the result:</span>
-    <input type="number" min="0" data-improvroll aria-label="Improved milestone IP roll">
+  const askSpec = S.askRoll && Engine.ipRoll(S.askRoll);
+  if (askSpec){
+    const askName = (D.milestones.minorShared.find(m=>m.id===S.askRoll)||{name:S.askRoll}).name;
+    h += `<div class="trk"><h2>${esc(askName)}</h2>
+    <span class="sub" style="flex-basis:auto">Roll ${askSpec.count}d${askSpec.sides} at the table. 10s explode: add up every die you rolled, the extra ones too. Enter the dice:</span>
+    <input type="number" min="${askSpec.count}" data-improvroll aria-label="${esc(askName)}: the dice you rolled">
+    <span class="sub" style="flex-basis:auto">+ ${askSpec.plus} IP</span>
     <button class="btn sm go" data-improvok="1">Take + grant IP</button>
     <button class="btn sm" data-improvcancel="1">Cancel</button></div>`;
+  }
   h += D.milestones.minorShared.map(m=>{
     const taken = ms.minorTaken.filter(t=>t.id===m.id).length;
     const can = Engine.canTakeMinor(ch, m.id);
@@ -1306,7 +1311,7 @@ function renderShSessions(){
   let h = sheetHeader("Session Log", `Logging a session grants <em>${D.ip.perSession} IP</em> (override below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
   h += `<div class="review-block"><h2>Log a session</h2>
     <div class="grid-3">
-      <label class="field"><span>Date</span><input type="date" data-sesdate value="${new Date().toISOString().slice(0,10)}"></label>
+      <label class="field"><span>Date</span><input type="date" data-sesdate value="${localDay()}"></label>
       <label class="field"><span>Title</span><input type="text" data-sestitle placeholder="What the city did to you this time"></label>
       <label class="field"><span>IP earned</span><input type="number" min="0" data-sesip value="${D.ip.perSession}"></label>
     </div>
@@ -2594,7 +2599,7 @@ function openAberrationPicker(mode){
         const b = e.target.closest("[data-abpick]");
         if (!b || b.disabled || !S.abPick) return;
         const entry = { id: b.dataset.abpick, permanence: S.abPick.permanence };
-        if (fromCascade) entry.note = `Cascade, ${new Date().toISOString().slice(0,10)}`;
+        if (fromCascade) entry.note = `Cascade, ${localDay()}`;
         const r = Engine.recordAberration(clone(ch), entry);      // validate without mutating
         if (!r.ok){ notice(r.why); return; }
         commit("aberration", `${fromCascade?"Cascade":"Aberration"}: ${r.name} (${entry.permanence})`, ()=>{ Engine.recordAberration(ch, entry); });
@@ -2961,21 +2966,26 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-takeminor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takeminor;
-    if (id==="improved"){ S.askImproved=true; update(); return; }
+    if (Engine.ipRoll(id)){ S.askRoll=id; update(); return; }
     const nm=(D.milestones.minorShared.find(m=>m.id===id)||{name:id}).name;
     commit("milestone", `Take Minor: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"minor",id); if(!r.ok) notice(r.why); });
   });
   main.querySelectorAll("[data-improvok]").forEach(b=>b.onclick=()=>{
-    const roll=num(main.querySelector("[data-improvroll]"));
-    const pre=Engine.takeMilestone(clone(ch),"minor","improved");
-    if (!pre.ok){ notice(pre.why); S.askImproved=false; update(); return; }
-    commit("milestone", `Take Minor: Improved${roll?` (+${roll} IP)`:""}`, ()=>{
-      Engine.takeMilestone(ch,"minor","improved");
-      if (roll) Engine.grantIP(ch, roll, "Improved milestone (2d10+15)");
+    const id=S.askRoll, spec=id && Engine.ipRoll(id);
+    if (!spec){ S.askRoll=null; update(); return; }
+    const dice=num(main.querySelector("[data-improvroll]"));
+    if (!(dice>=spec.count)){ notice("Enter the dice you rolled."); return; }
+    const nm=(D.milestones.minorShared.find(m=>m.id===id)||{name:id}).name;
+    const pre=Engine.takeMilestone(clone(ch),"minor",id);
+    if (!pre.ok){ notice(pre.why); S.askRoll=null; update(); return; }
+    const total=Engine.ipRollTotal(spec, dice);
+    commit("milestone", `Take Minor: ${nm} (+${total} IP)`, ()=>{
+      Engine.takeMilestone(ch,"minor",id);
+      Engine.grantIP(ch, total, `${nm} milestone (${spec.count}d${spec.sides}+${spec.plus}): rolled ${dice}`);
     });
-    S.askImproved=false; update();
+    S.askRoll=null; update();
   });
-  main.querySelectorAll("[data-improvcancel]").forEach(b=>b.onclick=()=>{ S.askImproved=false; update(); });
+  main.querySelectorAll("[data-improvcancel]").forEach(b=>b.onclick=()=>{ S.askRoll=null; update(); });
   main.querySelectorAll("[data-takemajor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takemajor;
     const nm=(Engine.majorById(ch, id)||{name:id}).name;

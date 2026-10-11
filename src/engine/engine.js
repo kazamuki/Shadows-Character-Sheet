@@ -149,12 +149,19 @@ const Engine = (() => {
   // the character (constraint #7), so buying/selling one just changes what
   // this returns next render.
   function grants(ch){
-    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0 };
+    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0, painLevel:0, painLevelFrom:[] };
     const scan = (list, lookup) => (list||[]).forEach(entry=>{
       const def = entry && lookup(entry.id);
       for (const g of (def && def.grants) || []){
         if (!g) continue;
         if (g.type==="rou" || g.type==="sfrMax"){ out[g.type] += Number(g.amount)||0; continue; }
+        // Decision 213: a shift to the Pain Level, once per entry. Only the
+        // "when hurt" kind is decided; an unconditional one is ignored.
+        if (g.type==="painLevel"){
+          const n = Number(g.amount)||0;
+          if (g.onlyIfHurt===true && n){ out.painLevel += n; out.painLevelFrom.push(txt(def.name)); }
+          continue;
+        }
         if (g.type==="skillPoints") out.skillPoints += (g.perRank||0) * entry.rank;
         else if (g.type==="hpPerLevel") out.hpPerLevel += (g.perRank||0) * entry.rank;
         else if (g.type==="luckCost") out.luckCost[g.spendId] = (out.luckCost[g.spendId]||0) + (g.delta||0);
@@ -749,11 +756,17 @@ const Engine = (() => {
     const painSources = cs.active.filter(a=>a.def && typeof a.def.painLevels==="number").map(a=>a.name)
       .concat(as.active.filter(a=>a.def && typeof a.def.painLevels==="number").map(a=>a.name));
     const top = hl.painLevels.reduce((m,p)=>Math.max(m,p.level), 0);
-    const target = Math.max(0, Math.min(top, band.level + fromConditions + fromAberrations));
+    const base = Math.max(0, Math.min(top, band.level + fromConditions + fromAberrations));
+    // Decision 213: a trait that shifts Pain (Pain Sensitive) does so only
+    // once there's some Pain to shift, and never past the table's top.
+    const tg = grants(ch);
+    const target = Math.min(top, base + (base>=1 ? tg.painLevel : 0));
+    const fromTraits = target - base;               // what the trait actually added
+    if (fromTraits>0) painSources.push(...tg.painLevelFrom);
     const lvl = hl.painLevels.find(p=>p.level===target) || band;
     const pen = hl.painPenaltiesPerLevel;
     return { hlLost, level: lvl.level, label: lvl.label, description: lvl.description,
-             fromHealth: band.level, immunity: immune ? { name:immune.name, banded } : null, fromConditions, fromAberrations, painSources,
+             fromHealth: band.level, immunity: immune ? { name:immune.name, banded } : null, fromConditions, fromAberrations, fromTraits, painSources,
              // `|| 0` normalises the -0 that `0 * -1` produces at Pain Level 0.
              skillPenalty:   lvl.level * pen.skillChecks || 0,
              essencePenalty: lvl.level * pen.essenceCheckDice || 0,
@@ -1952,6 +1965,18 @@ const Engine = (() => {
     const unmet = already ? ["Already taken — Majors are once each.", ...r.unmet] : r.unmet;
     return { met:r.met, unmet, manual:r.manual, ok: unmet.length===0 };
   }
+  // A Minor's IP roll (Decision 213): the dice the player rolls and the flat
+  // amount added to them. null when the Minor has none, or its spec is malformed.
+  function ipRoll(id){
+    const m = ((D().milestones||{}).minorShared||[]).find(x=>x && x.id===id);
+    const r = m && m.ipRoll;
+    if (!isPlainObj(r)) return null;
+    const count = Number(r.count), sides = Number(r.sides), plus = Number(r.plus);
+    if (!(Number.isInteger(count) && count>0 && Number.isInteger(sides) && sides>0 && Number.isInteger(plus) && plus>=0)) return null;
+    return { count, sides, plus };
+  }
+  const ipRollTotal = (spec, dice) => nonNegInt(dice) + nonNegInt(spec && spec.plus);
+
   function takeMilestone(ch, tier, id){
     if (tier==="minor"){
       const c = canTakeMinor(ch, id); if (!c.ok) return c;
@@ -1972,9 +1997,14 @@ const Engine = (() => {
   // ── Sessions ─────────────────────────────────────────────────────────
   // Auto-grants per-session IP (overridable) + 1 Milestone Point, and
   // refreshes LUCK — it only resets "when a session truly ends".
+  // The player's local day, YYYY-MM-DD. Not toISOString(): that is UTC, and in the evening in the Americas it says tomorrow.
+  function localDay(d=new Date()){
+    const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+  }
   function logSession(ch, s){
     ch.sessions.push({
-      date: s.date || new Date().toISOString().slice(0,10),
+      date: s.date || localDay(),
       title: s.title||"",
       ipEarned: Math.max(0, Number(s.ipEarned)||0),
       milestonePoint: s.milestonePoint!==false,
@@ -6201,7 +6231,7 @@ const Engine = (() => {
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP,
     milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorById, formGrants, takeMilestone, untakeMilestone,
-    logSession, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
+    logSession, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,
     // Audit trail and undo

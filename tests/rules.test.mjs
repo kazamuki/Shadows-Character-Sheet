@@ -109,6 +109,28 @@ test('CRB worked example: "taken 6 damage ... lost 1 HL but suffer no penalties"
   assert.equal(p.skillPenalty, 0);
 });
 
+test('Pain Sensitive (W92, Decision 213): one Pain Level higher once you are hurt, capped at 3, nothing at Pain Level 0', () => {
+  const ch = subject({ bod: 10 });
+  ch.disadvantages = [{ id: "pain-sensitive", rank: 1 }];
+  const at = dmg => { ch.trackers.damage = dmg; return Engine.painState(ch); };
+  assert.deepEqual([0, 5, 10, 25, 40].map(d => at(d).level), [0, 0, 2, 3, 3]);
+  assert.deepEqual([0, 5, 10, 25, 40].map(d => at(d).fromTraits), [0, 0, 1, 1, 0], "what it actually added");
+  assert.deepEqual([...at(10).painSources], ["Pain Sensitive"]);
+  assert.deepEqual([...at(40).painSources], [], "the cap left no room, so it is not named");
+  assert.deepEqual([...at(0).painSources], []);
+  assert.equal(at(10).skillPenalty, -2, "the shifted level carries its full penalty");
+});
+
+test("Pain Sensitive stacks on a Condition's Pain, and both are named", () => {
+  const ch = subject({ bod: 10 });
+  ch.disadvantages = [{ id: "pain-sensitive", rank: 1 }];
+  assert.equal(Engine.addCondition(ch, { id: "agonized" }).ok, true);
+  ch.trackers.damage = 0;
+  const p = Engine.painState(ch);
+  assert.equal(p.level, 2);
+  assert.deepEqual([...p.painSources], ["Agonized", "Pain Sensitive"]);
+});
+
 test('CRB: penalties stack per Pain Level — -1 Skill, -1 Essence die, -5% Breaker', () => {
   const ch = subject({ bod: 10 });
   for (const [dmg, lvl] of [[0, 0], [10, 1], [25, 2], [40, 3]]) {

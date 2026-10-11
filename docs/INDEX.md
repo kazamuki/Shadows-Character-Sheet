@@ -263,6 +263,7 @@ The generic archetype structure, and the pick that defines one.
 - **200** *(The Vampire to 0413 — crb-v4-sync P4, VQ20, VQ23–VQ26)* — schema 0.19: `powersBought` holds only the powers Base Powers placed a rank in, none past Max Starting Rank (F39 stubbed); a specialization's `choices` (Built to Last a pick, F41; the Ancient Weapon; the Code as text) in `optionPicks`; the Code a Draugur toggle that silences the weapon; bite, claws and Ancient Weapon on Main; Iron Hide and Icebound Resilience conditional Natural Armor; Admin sets a Bloodline.
 - **201** *(The Thirst — crb-v4-sync P4, VQ21)* — A `feed` panel: Fresh 3 SFR a HL to the max, Stored 2 to half, A day unfed half RoU, Hunger's WILL check at RoU or under; one Undo each, Main and Trackers.
 - **202** *(Pain Immunity — crb-v4-sync P4, VQ22)* — A Vampire's Pain counts only Withering's Health Levels; Conditions add as ever.
+- **213** *(Playtest bugs — sheet-wishlist P1, W92, W93)* — A `painLevel` grant (Pain Sensitive) adds to a Pain Level already 1 or more, as `fromTraits`; a Minor's `ipRoll` asks for the dice and adds `plus` (Improved 2d10 + 15); `Engine.localDay` is the one local-day helper.
 
 ### Character file & migration
 
