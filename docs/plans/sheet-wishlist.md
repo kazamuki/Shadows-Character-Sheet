@@ -57,37 +57,45 @@ Two differences from GM mode:
 
 ## 3. The order
 
+**Renumbered 2026-10-11:** Ken's P5 was inserted, so the sessions that were
+P5–P15 are now P6–P16. The orders for P1–P4 were written before, and cite
+the old numbers (P01's "P5 (W103)" is now P6; P03's "P11" for W72 is P5;
+P04's "P12" is P13 and its "P5" is P6).
+
 | # | Session | Wishes | Tier | Before its order | Status |
 |---|---|---|---|---|---|
 | **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Merged** 2026-10-11 (Decision 213, #158), released in 0.39.3 (#161): [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
 | **P2** | CRANK behind a switch | W101 | Rule or shape (small) | Nothing | **Merged** 2026-10-11 (Decision 214, #160), released in 0.39.3 (#161): [`P02-crank-switch.md`](sheet-wishlist/P02-crank-switch.md) |
 | **P3** | Vampire and Werewolf powers at creation | W88, W105 | Rule or shape, character schema | W88's three: a saved Vampire's Base Powers given back, a saved Werewolf's unchosen Origin powers, which cap binds | **Merged** 2026-10-11 (Decision 215, #163), released in 0.40.0 (#164): [`P03-supernatural-powers.md`](sheet-wishlist/P03-supernatural-powers.md) |
-| **P4** | The wizard, quick wins | W94 Set all to 4, W96 hide what a Supernatural can't buy, W64 Home from the wizard, W59 steppers say what they change | Fix (UI) | Nothing | **Built, #166** (0.41.0; PQ1–PQ3 on their defaults): [`P04-wizard-quick-wins.md`](sheet-wishlist/P04-wizard-quick-wins.md) |
-| P5 | Milestones | W103 (F9, repeats at any time, the rebalanced values) | Rule or shape, data | Nothing (P1 makes the Improved roll data, so +30 is a data edit) | ⏭ |
-| P6 | Luck and the Boost cap | W65, W66 | Rule or shape, data | Nothing | ⏭ |
-| P7 | The hit and healing | W102 (F18, F23, F24, F25, F36, grenades) | Rule or shape | Where F36's gritty option lives: the character or the GM's table | ⏭ |
-| P8 | Gear and reference text | W104 (F26, F30, F31, F34, difficulty names), W53 | Content; F34 is a save shape | Whether F34 splits into its own session | ⏭ |
-| P9 | Holding a spell | W87 | Rule or shape, character schema | The WILL check's TN and TH (stubbed and flagged if Deighton hasn't set them) | ⏭ |
-| P10 | SFR and movement on Main | W97 Rate of Use, W54 a written-in pool's card, W98 Walk/Run/Sprint/Jump | Rule or shape (W97's tracker field) | W97: warn or block (Claude argues warn), and how sustained drains are charged | 🔎 |
-| P11 | Learning in play | W72 a new power with IP, W89 Advantages with IP, W39 a new Martial Arts style | Rule or shape | W39: confirm a style's +1 goes on the check that inflicts the Condition | ⏭ after P3 |
-| P12 | Expert mode | W95 | Fix (UI) | W95's two: where the boost count goes, whether it reaches the Character tab | 🔎 after P4 |
-| P13 | Loadout rows | W70 a custom item folds, W91 vehicles (first cut, Powered Armor included) | Fix + Content, a save shape | W91's first-cut columns | ⏭ |
-| P14 | Worn gear modifiers | W69 | Rule or shape | `damageType` for the 25 weapons without one (data work, first) | ⏭ after P13 |
-| P15 | The Character tab's layout | W99, W60's last item | Rule or shape (supersedes 168 in part) + Fix | W99's question, and the layout pinned exactly in the order | 🔎 |
+| **P4** | The wizard, quick wins | W94 Set all to 4, W96 hide what a Supernatural can't buy, W64 Home from the wizard, W59 steppers say what they change | Fix (UI) | Nothing | **Merged** 2026-10-11 (#166), released in 0.41.0 (#167; PQ1–PQ3 on their defaults): [`P04-wizard-quick-wins.md`](sheet-wishlist/P04-wizard-quick-wins.md) |
+| **P5** | Powers learned in play | W72 learn an unheld Bloodline or Origin power with IP, W106 a custom power the GM grants | Rule or shape | PQ1–PQ5 in the order | **Order drafted** 2026-10-11, waiting on Ken: [`P05-powers-in-play.md`](sheet-wishlist/P05-powers-in-play.md) |
+| P6 | Milestones | W103 (F9, repeats at any time, the rebalanced values) | Rule or shape, data | Nothing (P1 makes the Improved roll data, so +30 is a data edit) | ⏭ |
+| P7 | Luck and the Boost cap | W65, W66 | Rule or shape, data | Nothing | ⏭ |
+| P8 | The hit and healing | W102 (F18, F23, F24, F25, F36, grenades) | Rule or shape | Where F36's gritty option lives: the character or the GM's table | ⏭ |
+| P9 | Gear and reference text | W104 (F26, F30, F31, F34, difficulty names), W53 | Content; F34 is a save shape | Whether F34 splits into its own session | ⏭ |
+| P10 | Holding a spell | W87 | Rule or shape, character schema | The WILL check's TN and TH (stubbed and flagged if Deighton hasn't set them) | ⏭ |
+| P11 | SFR and movement on Main | W97 Rate of Use, W54 a written-in pool's card, W98 Walk/Run/Sprint/Jump | Rule or shape (W97's tracker field) | W97: warn or block (Claude argues warn), and how sustained drains are charged | 🔎 |
+| P12 | Learning in play | W89 Advantages with IP, W39 a new Martial Arts style (W72 moved to P5) | Rule or shape | W39: confirm a style's +1 goes on the check that inflicts the Condition | ⏭ |
+| P13 | Expert mode | W95 | Fix (UI) | W95's two: where the boost count goes, whether it reaches the Character tab | 🔎 after P4 |
+| P14 | Loadout rows | W70 a custom item folds, W91 vehicles (first cut, Powered Armor included) | Fix + Content, a save shape | W91's first-cut columns | ⏭ |
+| P15 | Worn gear modifiers | W69 | Rule or shape | `damageType` for the 25 weapons without one (data work, first) | ⏭ after P14 |
+| P16 | The Character tab's layout | W99, W60's last item | Rule or shape (supersedes 168 in part) + Fix | W99's question, and the layout pinned exactly in the order | 🔎 |
 
 **Why this order.** P1 and P2 are small and want to reach players first: the
 bugs playtesters hit, and CRANK hidden before the next release while the team
 talks it through. P3 comes next because testers are making Vampires and
 Werewolves now, and each one made under the stand-in needs a migration later.
-P4 is the rest of what creation feels like. P5–P9 are Deighton's rulings,
+P4 is the rest of what creation feels like. P5 is Ken's, pulled forward on
+2026-10-11 while P3's powers were fresh: what creation didn't buy, learned
+in play, and what a GM grants. P6–P10 are Deighton's rulings,
 roughly in order of how often a table meets them (Milestones and the hit
-every session, a held spell only for Arcanists). P10 onward is new
-capability, and P15 last because it reopens a layout decision and is the one
+every session, a held spell only for Arcanists). P11 onward is new
+capability, and P16 last because it reopens a layout decision and is the one
 most likely to need a design pass.
 
-**Dependencies.** P11 after P3 (W72 extends P3's power model). P12 after P4
-(the compact steppers sit on W59's labels). P14 after P13 (Powered Armor is
-W91's, and W69 reads weapons' `damageType`). P5 after P1 (P1 moves the
+**Dependencies.** P5 after P3 (W72 extends P3's power model). P13 after P4
+(the compact steppers sit on W59's labels). P15 after P14 (Powered Armor is
+W91's, and W69 reads weapons' `damageType`). P6 after P1 (P1 moves the
 Improved roll's numbers into the data). Everything else can move.
 
 ## 4. Not scheduled
