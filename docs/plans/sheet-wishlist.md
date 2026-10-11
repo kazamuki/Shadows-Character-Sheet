@@ -2,8 +2,8 @@
 
 **Status:** proposed 2026-10-10 by Claude (Opus), after the first playtest
 (W87–W99, #154) and Deighton's rulings (#156,
-`reference/rulings-2026-10-10.md`). **Ken: approve the order (§3), then P1's
-work order.** Nothing here is built.
+`reference/rulings-2026-10-10.md`). **Approved by Ken 2026-10-10** (WQ1: the
+order as §3; WQ2: release often, by ear). Nothing here is built.
 **Tier of this document:** *Docs*. Each session names its own tier.
 
 This plan turns the player sheet's open wishlist into sessions an Opus
@@ -55,7 +55,7 @@ Two differences from GM mode:
 
 | # | Session | Wishes | Tier | Before its order | Status |
 |---|---|---|---|---|---|
-| **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Order drafted:** [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
+| **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Order approved 2026-10-10** (PQ1–PQ2 on their defaults), ready to build: [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
 | P2 | CRANK behind a flag | W101 | Rule or shape (small) | Nothing | ⏭ |
 | P3 | Vampire and Werewolf powers at creation | W88, W105 | Rule or shape, character schema | W88's three: a saved Vampire's Base Powers given back, a saved Werewolf's unchosen Origin powers, which cap binds | ⏭ |
 | P4 | The wizard, quick wins | W94 Set all to 4, W96 hide what a Supernatural can't buy, W64 Home from the wizard, W59 steppers say what they change | Fix (UI) | Nothing | ⏭ |
@@ -102,5 +102,5 @@ Improved roll's numbers into the data). Everything else can move.
 
 | Id | Question | Default |
 |---|---|---|
-| WQ1 | Is this the order? | As §3 |
-| WQ2 | Release after every session, or in batches? P1 and P2 are worth a release of their own, so playtesters get the fixes | A release after P2, then after P5 and every few sessions after |
+| WQ1 | Is this the order? | As §3. **Ken, 2026-10-10: yes** |
+| WQ2 | Release after every session, or in batches? P1 and P2 are worth a release of their own, so playtesters get the fixes | A release after P2, then after P5 and every few sessions after. **Ken, 2026-10-10:** a good starting point; play it by ear and release often, to get features to the playtesters. So when a session's PR merges, the orchestrator asks whether to cut a release rather than waiting for a batch |

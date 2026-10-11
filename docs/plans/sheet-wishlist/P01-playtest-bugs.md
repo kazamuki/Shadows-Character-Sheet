@@ -3,7 +3,8 @@
 **Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3. **W92, W93, W67**
 (`WISHLIST.md`); Decisions 104, 134, 135, 202.
 **Status:** **drafted 2026-10-10 by Claude (Opus)**, pre-flighted against the
-code on the rulings branch (#156). **Ken: approve, or answer PQ1–PQ2 (§4).**
+code on the rulings branch (#156). **Approved by Ken 2026-10-10, PQ1 and PQ2
+on their defaults.** Ready to build.
 **Branch:** from `main` with #156 merged; PR to `main`, not switched off.
 **Runs alone.** It touches `shadows-data.js` (two entries), `engine.js`
 (`grants`, `painState`, a date helper, a roll helper), `sheet.js`, `gm.js`,
@@ -73,8 +74,8 @@ adds `plus` (Improved 2d10 + 15).`
 
 | Id | Question | Default |
 |---|---|---|
-| PQ1 | Should the Improved box show a live total beside it ("= 29") as the player types? | No: "+ 15 IP" is the fix Brogan asked for, and the IP log shows the total after |
-| PQ2 | A box left empty: take Improved with no IP (today's behaviour), or refuse? | Refuse, with "Enter the dice you rolled." A Milestone taken by accident is an Undo away, but one taken with no IP is a silent loss |
+| PQ1 | Should the Improved box show a live total beside it ("= 29") as the player types? | No: "+ 15 IP" is the fix Brogan asked for, and the IP log shows the total after. **Ken, 2026-10-10: the default** |
+| PQ2 | A box left empty: take Improved with no IP (today's behaviour), or refuse? | Refuse, with "Enter the dice you rolled." A Milestone taken by accident is an Undo away, but one taken with no IP is a silent loss. **Ken, 2026-10-10: the default** |
 
 ## 5. Read first
 
