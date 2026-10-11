@@ -643,12 +643,18 @@ when nothing computes it; Main shows the switch and the text. A `feed` panel
 perHL, upToShare? }`), `unfed` (`{ label, share }` of RoU), and `low`
 (`{ at: "rou", name, text }`), said at RoU or under.
 
-An archetype with `powersBought` (`{ countBy, maxRankBy }`, data paths)
-holds only the `powers` its Base Powers placed a rank in (Decision 200); a
-power with `ranked: false` takes one to hold and is never raised. A power's
-`grants` count at its rank. A specialization option's `choices` (`{ id, name,
-type: "power" | "weapon" | "text", options | fields, examples? }`) ask for
-something at creation; a `power` choice bars the options not picked. The
+An archetype with `powersBought` (`{ countBy, maxRankBy, granted? }`, data
+paths; the Vampire and the Werewolf) holds a power if it is granted or its
+Base Powers placed a rank in it (Decisions 200, 215). With `granted: "innate"`
+a power with no `origin` is held at rank 1, and Base Powers place ranks only
+in the specialization's powers; CP raises any held, ranked power
+(`archetypeChoices.powerCp`). A power with `ranked: false` takes one to hold
+and is never raised. A power's `grants` count at its rank; grants that share
+a `noStack` value count once, the highest (Decision 215). A specialization
+option's `choices` (`{ id, name, type: "weapon" | "text", options | fields,
+examples? }`) ask for something at creation. A `feed` panel's `unrested`
+(`{ label, share, plus, text }`) is a day without rest: `share` of RoU and
+`plus` more (Decision 215). The
 archetype's `naturalWeapons` are weapon lines on Main: a trait's, a held
 power's (`power`, `perRank`), or a choice's (`choice`), silenced while a
 toggle is on `offWhen`. A baseline trait's `pain: { healthLevelsFrom:
@@ -728,13 +734,13 @@ It renders on the Character tab (Decision 158).
     disciplines: {},                 // Arcanist: CP-bought ranks { enchantment: 1 } (5 CP each, Decision 157;
                                      // Evocation starting rank from scaling table is NOT stored)
     // (0.19, Decision 200) Base Powers placed at creation, ranks per archetype
-    // power id: a Vampire's { "bestial-blessings": 1, "iron-hide": 1 }. Read
+    // power id: a Vampire's { "iron-hide": 2, "rend-and-tear": 1 }. Read
     // only when the archetype declares `powersBought`; a power is held only
-    // with a rank here. migrate() keeps whole positive counts, at most 10.
+    // with a rank here, or granted (Decision 215). migrate() keeps whole positive counts, at most 10.
     basePowers: {},
     // (0.19, Decision 200) What a chosen specialization's `choices` asked for,
-    // per choice id: an option id ("built-to-last": "iron-hide",
-    // "ancient-weapon": "blade") or a text choice's fields as text
+    // per choice id: an option id ("ancient-weapon": "blade") or a text
+    // choice's fields as text
     // ("code": { hunt, bond, word }). migrate() drops anything else.
     optionPicks: {},
     // (0.20, Decision 215) Ranks CP raised in an archetype power the character
@@ -4577,19 +4583,13 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** app 0.39.3, no data or schema bump, PR #160, log 2026-10-11 (P2).
 
 215. **A Vampire's and a Werewolf's Innate powers are granted at rank 1; Base Powers buy ranks in the Bloodline's or Origin's powers; CP raises any held power; an Upyr holds both Built to Last powers; a day without rest costs half RoU + 2.**
-     *2026-10-11 · Ken + Deighton + Claude · Touches: powersBought, granted, archetypePowers, basePowerState, archetypeChoices.powerCp, buyPowerRank, cp, Built to Last, noStack, naturalArmor, unrested, character schema 0.20, F38, F39, F41*
+     *2026-10-11 · Ken + Deighton + Claude · Touches: powersBought, granted, archetypePowers, powerPool, basePowerState, placeBasePower, archetypeChoices.basePowers, archetypeChoices.powerCp, powerCpSpent, buyPowerRank, cp, Max Starting Rank, Max Power Rank, starterPower, Built to Last, Iron Hide, Icebound Resilience, noStack, naturalArmor, optionPicks, feed panel, unrested, goUnrested, A day without rest, Day Rest, Admin Base Powers, character schema 0.20, F38, F39, F41, W88, W105*
      - **Decided:** Under `powersBought`, a power with no `origin` is granted at rank 1 (`granted: "innate"`); Base Powers place ranks only in the specialization's powers, none past Max Starting Rank or the printed max. The Werewolf buys this way too; its starter power stays the Origin's, unranked. CP raises any held, ranked power at `powerRankCost()` a rank (`archetypeChoices.powerCp`), up to Max Power Rank and the printed max. Built to Last is no choice: both are Upyr powers, and `noStack` counts the higher active one. A day without rest takes half RoU + 2, instead of A day unfed. Schema 0.20 adds `powerCp`.
      - **Why:** Ken's first-playtest ruling (W88) and Deighton's on F41 and Day Rest (Q20, Q21).
-     - **Rejected:**
-       - Max Starting Rank capping CP: it could raise nothing at Street Level.
-       - Grandfathering a saved Werewolf's kit: two rules at one table.
-       - Turning a Vampire's Innate placements into CP ranks: spends CP it may not have.
-       - A rank on the starter power: nothing to raise.
-       - Both Built to Last powers free: no other Bloodline gets two.
-       - A day without rest as +2 beside A day unfed: charges the half twice.
+     - **Rejected:** PQ1–PQ6's alternatives (the P3 order §4): Max Starting Rank capping CP, grandfathering a saved Werewolf, converting Innate placements to CP, a rank on the starter power, both Built to Last powers free, rest as +2 beside unfed.
      - **Replaces:** Decision 196 in part (Base Powers buy the Origin's powers). Decision 200 in part (Innate powers granted; Built to Last not a pick). Extends 157 (the one power price) and 201 (the Thirst).
-     - **Revisit if:** W72 lets IP learn an unheld power, or `0450`'s ceilings change what binds play.
-     - **Built:** app 0.40.0, game data 0.35, schema 0.20. Log 2026-10-11 (P3).
+     - **Revisit if:** W72 lets IP learn an unheld power, `0450`'s ceilings change what binds play, or Deighton defines how a power that doesn't stack combines with anything else.
+     - **Built:** app 0.40.0, game data 0.35, schema 0.20, PR #163. Log 2026-10-11 (P3).
 
 ## 5. Open Flags
 
@@ -4602,7 +4602,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR). · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |

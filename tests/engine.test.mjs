@@ -5443,6 +5443,9 @@ test("Decision 215: validate names CP in a power not held and a rank past the ca
   assert.ok(errs().includes("no-such isn't a power you hold. Take back the CP in it."));
   ch.archetypeChoices.powerCp = { "bestial-blessings": 5 };
   assert.ok(errs().includes("Bestial Blessings is rank 6. It can start at 2 at most."), errs().join(" | "));
+  // CP on a held power with no ranks is not "not held": it has nothing to raise.
+  ch.archetypeChoices.powerCp = { "preternatural-speed": 1 };
+  assert.ok(errs().includes("Preternatural Speed has no ranks to raise. Take back the CP in it."), errs().join(" | "));
   ch.archetypeChoices.powerCp = { "bestial-blessings": 1 };
   same(errs().filter(m => /Take back the CP|can start at/.test(m)), []);
 });

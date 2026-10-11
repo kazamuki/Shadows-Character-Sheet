@@ -392,18 +392,12 @@ function renderArchetype(){
 }
 
 // A specialization's creation choices (Decision 200): one of a list of
-// powers (Built to Last), one of a list of weapons (the Ancient Weapon), or
-// fields the player writes with the GM (the Code), with the book's examples.
+// weapons (the Ancient Weapon), or fields the player writes with the GM (the Code), with the book's examples.
 function optionChoicesHtml(ch){
   return Engine.optionChoices(ch).map(c=>{
     let h = `<div class="sect">${esc(c.name)}</div>${c.flagged?flagHtml(c):""}${c.text?`<p class="step-note">${esc(c.text)}</p>`:""}`;
     const pickBtn = (id, on) => `<div class="controls"><button class="toggle" data-optpick="${esc(c.id)}|${esc(id)}" aria-pressed="${on}">${on?"Chosen":"Choose"}</button></div>`;
-    if (c.type==="power"){
-      const powers = (Engine.archetype(ch).powers||[]);
-      h += (c.options||[]).map(id=>{ const p = powers.find(x=>x && x.id===id) || { name:id }, on = c.value===id;
-        return `<div class="pick ${on?"selected":""}"><div class="head"><h2>${esc(p.name)}</h2>${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}${pickBtn(id, on)}</div>
-          <div class="desc">${esc(p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}</div></div>`; }).join("");
-    } else if (c.type==="weapon"){
+    if (c.type==="weapon"){
       h += (c.options||[]).filter(o=>o && o.id).map(o=>{ const on = c.value===o.id;
         const stats = [o.damage, o.style, o.reach&&`Reach ${o.reach}`, o.parry&&`Parry ${o.parry}`, o.damageType].filter(Boolean).join(" · ");
         return `<div class="pick ${on?"selected":""}"><div class="head"><h2>${esc(o.name)}</h2><span class="cost">${esc(stats)}</span>${pickBtn(o.id, on)}</div>
@@ -610,6 +604,16 @@ function renderCP(){
     h += pcs.map(r=>`<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
         <span class="cost">${r.start>1||r.cp?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
         <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, (r.cap==null || r.rank<r.cap) && bal.left>=per)}</div></div></div>`).join("");
+  }
+  // CP on a power with no row (a hand-edited file, an undo): take-back only.
+  const rowIds = new Set(pcs.map(r=>r.id)), cpOn = Engine.powerCpOf(ch);
+  const strays = Object.keys(cpOn).filter(id=>!rowIds.has(id));
+  const held = new Set(Engine.archetypePowers(ch).map(x=>x.id));
+  if (strays.length){
+    if (!pcs.length) h += secs.sect("Powers", `Powers — ${Engine.powerRankCost()} CP per rank`);
+    h += strays.map(id=>{ const p = ((Engine.archetype(ch)||{}).powers||[]).find(x=>x && x.id===id);
+      return `<div class="pick"><div class="head"><h2>${esc(p ? p.name : id)}</h2><span class="cost">${held.has(id) ? "no ranks to raise" : "not a power you hold"}</span>
+        <div class="controls">${stepper(cpOn[id],"apow|"+esc(id), true, false)}</div></div></div>`; }).join("");
   }
 
   // Starting spells (Decision 111). Here, not on the Archetype step, because

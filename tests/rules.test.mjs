@@ -1409,6 +1409,8 @@ test("R16: each Bloodline's features are the book's, and the Draugur's Ancient W
       // Built to Last is Deighton's F41 ruling (Decision 215): the book's line still reads as a pick
       // until crb-catch-up fixes it, so the data's own words are pinned instead.
       if (f.name === "Built to Last") {
+        assert.match(sect, /\*\*Built to Last:\*\* Choose a long shell \(Iron Hide\) or a short surge \(Icebound Resilience\)\./,
+          "0413's Built to Last changed: if it now says an Upyr holds both, pin the book's words and drop this carve-out");
         assert.equal(f.text, "Iron Hide is a long shell, Icebound Resilience a short surge. You can hold both; they don't stack.");
         continue;
       }

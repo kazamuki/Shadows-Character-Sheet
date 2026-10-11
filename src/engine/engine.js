@@ -891,6 +891,9 @@ const Engine = (() => {
     counted.forEach(c=>{ if (c.noStack && !(best[c.noStack] >= c.amount)) best[c.noStack] = c.amount; });
     const summed = counted.filter(c=>!c.noStack).reduce((n,c)=>n + c.amount, 0) + Object.values(best).reduce((n,v)=>n + v, 0);
     const resAgainst = [...new Set([...(R.resAgainst||[]), ...counted.flatMap(c=>c.resAgainst)])];
+    // `noStack` is honoured in `total` only: every `noStack` grant so far is
+    // conditional (`while`), so `base`, the always-on sum, never holds one. An
+    // always-on one would need it here too.
     return { total: summed, base: always.reduce((n,c)=>n + c.amount, 0),
              always, conditional, resAgainst, ignoresAp: R.ignoresAp===true,
              text: R.text || "", playerNote: R.flagged && R.playerNote ? R.playerNote : null };
@@ -2552,8 +2555,8 @@ const Engine = (() => {
 
   // ── A specialization's creation choices (Decision 200) ──────────────
   // `choices` on a chosen specialization option ask for something at
-  // creation: `power` (one of `options`, power ids, Built to Last), `weapon`
-  // (one of `options`, weapon rows, the Ancient Weapon) or `text` (`fields`
+  // creation: `weapon` (one of `options`, weapon rows, the Ancient Weapon) or
+  // `text` (`fields`
   // the player writes, the Code). Stored in archetypeChoices.optionPicks.
   function optionChoiceDefs(ch){
     return specializationChosen(ch).flatMap(o=>(Array.isArray(o.choices) ? o.choices : [])
@@ -2575,13 +2578,12 @@ const Engine = (() => {
       }
       const ids = opts.map(o=>typeof o==="string" ? o : (isPlainObj(o) ? o.id : null));
       const value = typeof v==="string" && ids.includes(v) ? v : null;
-      const option = value==null ? null : (c.type==="power" ? ((archetype(ch)||{}).powers||[]).find(p=>p && p.id===value) || { id:value, name:value }
-                                                              : opts.find(o=>isPlainObj(o) && o.id===value));
+      const option = value==null ? null : opts.find(o=>isPlainObj(o) && o.id===value);
       return Object.assign({}, c, { value, option: option || null, done: value!=null });
     });
   }
   // Setting one. A text choice takes a field id and its words; any other an
-  // option's id. Ranks placed in a power the pick now bars are taken back.
+  // option's id.
   function setOptionPick(ch, choiceId, value, fieldId){
     const c = optionChoiceDefs(ch).find(x=>x.id===choiceId);
     if (!c) return { ok:false, why:"That isn't a choice your character has." };
@@ -2596,7 +2598,6 @@ const Engine = (() => {
     const ids = (Array.isArray(c.options) ? c.options : []).map(o=>typeof o==="string" ? o : (isPlainObj(o) ? o.id : null));
     if (!ids.includes(value)) return { ok:false, why:"That isn't one of its options." };
     ac.optionPicks[c.id] = value;
-    if (c.type==="power" && isPlainObj(ac.basePowers)) for (const id of ids) if (id!==value) delete ac.basePowers[id];
     return { ok:true };
   }
 
@@ -3782,8 +3783,8 @@ const Engine = (() => {
       // or a Base Power taken back can leave CP where it can't stay.
       const pcs = powerCpState(ch), pcIds = new Set(pcs.map(r=>r.id));
       for (const id of Object.keys(powerCpOf(ch)).filter(id=>!pcIds.has(id))){
-        const p = ((a||{}).powers||[]).find(x=>x && x.id===id);
-        E(`${p ? txt(p.name) : id} isn't a power you hold. Take back the CP in it.`);
+        const p = ((a||{}).powers||[]).find(x=>x && x.id===id), held = archetypePowers(ch).some(x=>x.id===id);
+        E(held ? `${txt(p.name)} has no ranks to raise. Take back the CP in it.` : `${p ? txt(p.name) : id} isn't a power you hold. Take back the CP in it.`);
       }
       for (const r of pcs) if (r.cap!=null && r.rank > r.cap) E(`${r.name} is rank ${r.rank}. It can start at ${r.cap} at most.`);
       // Starting spells (Decision 111). Evocation and TOL are only final on

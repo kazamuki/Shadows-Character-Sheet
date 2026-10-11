@@ -5784,6 +5784,23 @@ test("Decision 215: a Street Strigoi's Bloodline step shows the Innate powers gr
   assert.deepEqual(cp.errors, []);
 });
 
+test("Decision 215: CP left on a power with no row shows a take-back-only row, and one press clears its error", () => {
+  const app = onStep("vampire", "street", "character-points", ch => {
+    ch.archetypeChoices.specialization = ["strigoi"];
+    ch.archetypeChoices.powerCp = { "shadow-play": 1, "preternatural-speed": 1 };
+  });
+  const rows = () => app.$$("#main .pick").filter(p => p.querySelector('[data-step^="apow|"]'));
+  const sp = app.$('[data-step="apow|shadow-play|-1"]'), ps = app.$('[data-step="apow|preternatural-speed|-1"]');
+  assert.ok(sp && ps, "a stray CP has no stepper to take it back");
+  assert.ok(app.$('[data-step="apow|shadow-play|1"]').disabled && app.$('[data-step="apow|preternatural-speed|1"]').disabled, "a stray row can go up");
+  assert.match(sp.closest(".pick").textContent, /not a power you hold/);
+  assert.match(ps.closest(".pick").textContent, /no ranks to raise/);
+  app.click('[data-step="apow|shadow-play|-1"]'); app.click('[data-step="apow|preternatural-speed|-1"]');
+  assert.deepEqual({ ...stored(app, { locked: false }).archetypeChoices.powerCp }, {});
+  assert.equal(app.$('[data-step="apow|shadow-play|-1"]'), null);
+  assert.deepEqual(app.errors, []);
+});
+
 test("Decision 215: a Werewolf's Bloodline step is the Vampire's: the Innate five granted, the Origin's powers bought", () => {
   const app = onArchetypeStep("werewolf", "street");   // 1 Base Power, Max Starting Rank 1
   app.click('[data-spec="trueborn"]');
