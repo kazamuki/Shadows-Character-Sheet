@@ -23,6 +23,17 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.41.0
+
+- **Set all to 4** on the Stats step: every stat below 4 goes to 4 in one press,
+  from your Stat Points. If the points run out, it raises what it can, in order,
+  and names the stats it couldn't reach.
+- **A Vampire or Werewolf sees only the Advantages it can take** when spending
+  Character Points.
+- **Home** is in the header while you make a character. Your character is saved
+  as you go.
+- **Screen readers hear what a + or − changes**, and the new value after a press.
+
 ## v0.40.0 — 2026-10-11
 
 - **Vampire and Werewolf powers work the way the book means.** Your Innate

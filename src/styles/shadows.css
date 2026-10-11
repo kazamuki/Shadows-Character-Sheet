@@ -895,6 +895,10 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .kebab{background:none; border:1px solid var(--frame); border-radius:6px; color:var(--dim);
   width:34px; height:30px; font-size:1.15rem; line-height:1; cursor:pointer; padding:0}
 .kebab:hover{border-color:var(--violet-hi); color:var(--text)}
+/* Home, in the wizard's header where the sheet's menu sits (W64): the kebab's look, with a word in it. */
+.hdr-btn{background:none; border:1px solid var(--frame); border-radius:6px; color:var(--dim);
+  height:30px; padding:0 12px; font:inherit; font-size:.88rem; line-height:1; cursor:pointer}
+.hdr-btn:hover{border-color:var(--violet-hi); color:var(--text)}
 .hdr-menu{position:absolute; top:calc(100% + 8px); right:0; z-index:90; min-width:200px;
   background:var(--panel); border:1px solid var(--frame); border-radius:8px; padding:6px;
   box-shadow:0 16px 38px rgba(0,0,0,.5); display:flex; flex-direction:column; gap:2px}
@@ -1106,9 +1110,9 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
    own keeps the invisible hit area, grown to 44px. A control in a row
    (buttons, chips, tabs, steppers, tags) grows for real, because a hit
    area that overlaps its neighbour is how a thumb lands on the wrong one. */
-.skill-q, .deriv-q, .wn-x, .vdrawer .dclose, .footer .ftoggle, .theme-toggle, .kebab{position:relative}
+.skill-q, .deriv-q, .wn-x, .vdrawer .dclose, .footer .ftoggle, .theme-toggle, .kebab, .hdr-btn{position:relative}
 .skill-q::after, .deriv-q::after, .wn-x::after, .vdrawer .dclose::after, .footer .ftoggle::after,
-.theme-toggle::after, .kebab::after{content:""; position:absolute; left:50%; top:50%;
+.theme-toggle::after, .kebab::after, .hdr-btn::after{content:""; position:absolute; left:50%; top:50%;
   width:max(100%, 26px); height:max(100%, 26px); transform:translate(-50%, -50%)}
 button.x{display:inline-flex; align-items:center; justify-content:center; min-width:24px; min-height:24px}
 .tags .tag{display:inline-flex; align-items:center; min-height:24px}
@@ -1116,9 +1120,10 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .ses-mp{font-size:.84rem}
 @media (pointer:coarse){
   .skill-q::after, .deriv-q::after, .wn-x::after, .vdrawer .dclose::after, .footer .ftoggle::after,
-  .theme-toggle::after, .kebab::after{width:max(100%, 44px); height:max(100%, 44px)}
+  .theme-toggle::after, .kebab::after, .hdr-btn::after{width:max(100%, 44px); height:max(100%, 44px)}
   .btn, .pick .toggle, .jump, .cond-chip, .tab, .hdr-menu button, .form-toggle button, .step-row, .vrow.act{min-height:44px}
   .btn{min-width:44px}
+  .vpill.toggle{min-height:44px}
   button.x{min-width:44px; min-height:44px}
   .stepper button{width:44px; height:44px}
   details.group > summary, .cond-add > summary{padding-block:13px}

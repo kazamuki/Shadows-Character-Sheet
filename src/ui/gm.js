@@ -121,7 +121,6 @@ function undoTableEntry(table, entry){
   return entry.label;
 }
 const tableName = (t, none="Untitled table") => String((t && t.meta && t.meta.name) || "").trim() || none;
-function homeState(){ return { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false }; }
 function openTable(t, section){
   lastTableSaved=null; untouched=null;
   S={ screen:"table", ch:null, step:0, maxReached:0, section:"main", admin:false, table:t, tsection:TABLE_SECTIONS.some(s=>s.id===section) ? section : TABLE_SECTIONS[0].id };
@@ -293,7 +292,7 @@ function renderTableChrome(){
     openNameModal({ title:"Rename table", value:t.meta.name, yes:"Save", then:name=>{ tableChange(()=>{ t.meta.name=name; }); const k=document.querySelector("[data-menu-toggle]"); if (k) k.focus(); } }); };
   act.querySelector("[data-texport-open]").onclick=()=>{ menu.hidden=true; exportTable(S.table); };
   act.querySelector("[data-tactivity]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); openActivity(); };
-  act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; S=homeState(); renderHome(); };
+  act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; goHome(); };
 }
 function noteCardHtml(n){
   const id=esc(n.id);

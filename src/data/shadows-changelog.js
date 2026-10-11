@@ -2,6 +2,17 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.41.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Set all to 4** on the Stats step: every stat below 4 goes to 4 in one press, from your Stat Points. If the points run out, it raises what it can, in order, and names the stats it couldn't reach.",
+      "**A Vampire or Werewolf sees only the Advantages it can take** when spending Character Points.",
+      "**Home** is in the header while you make a character. Your character is saved as you go.",
+      "**Screen readers hear what a + or − changes**, and the new value after a press."
+    ]
+  },
+  {
     "version": "0.40.0",
     "date": "2026-10-11",
     "intro": [],

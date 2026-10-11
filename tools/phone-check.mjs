@@ -13,6 +13,8 @@
  *   - controls smaller than a finger: under 24px anywhere (WCAG 2.2, 2.5.8),
  *     under 44px on the touch phone, counting an invisible ::after hit area;
  *   - text under 11px (W43). Collapsed <details> are opened to look inside;
+ *   - the wizard (P4): a new, named character on its Stats step, the longest
+ *     header the wizard has, with its Home button held to the same finger size;
  *   - the fold (W45): the vitals bar and a sheet's jump bar on one row, and
  *     on a phone Main's Health card within a share of the screen.
  *
@@ -150,6 +152,18 @@ try {
     // A long name is cut short, never allowed to push the page wider.
     await page.evaluate(n => { document.getElementById("brandctx").textContent = n; }, "Maximilian Aurelius Blackwood-Ravenscroft III");
     await measure(LONG);
+    // The wizard, driven through the UI as a player would (the app has no test path in):
+    // a new character, a power level, a name, and Continue to the Stats step.
+    await page.goto(pathToFileURL(file).href);
+    await page.click("#btn-new");
+    await page.click("[data-pl]");
+    await page.click("button:has-text(\"Continue\")");
+    await page.fill('[data-id="name"]', "Phone Check");
+    await page.click("button:has-text(\"Continue\")");
+    await page.waitForSelector("[data-stat-floor]");
+    await measure("wizard: stats");
+    await page.click("header [data-home]");
+    await page.waitForSelector("#btn-new");
     if (errors.length) rows.push({ width: w.name, screen: "(page errors)", header: errors.join("; "), overflow: "", ok: false });
     await ctx.close();
   }

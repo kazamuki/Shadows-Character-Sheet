@@ -2531,6 +2531,73 @@ test("Decision 150: the climbing cost is what overspends, and the + stops where 
   assert.ok(Engine.validate("stats", ch).some(i => i.level === "error" && /overspent by 1/.test(i.msg)), "a 7 cost 1");
 });
 
+test("P4: the stat floor is the lowest score whose modifier is 0, read from the data", () => {
+  assert.equal(Engine.statFloor(), 4);
+  const was = D.statRules.modifiers["4"];
+  try {
+    D.statRules.modifiers["4"] = -1;
+    assert.equal(Engine.statFloor(), 5, "the floor didn't follow the modifier table");
+  } finally { D.statRules.modifiers["4"] = was; }
+  assert.equal(Engine.statFloor(), 4);
+});
+
+test("P4: Set all to the floor spends as the steppers would, in stat order, and stops where the pool does", () => {
+  const street = () => { const c = Engine.newCharacter(); c.creation.powerLevel = "street"; return c; };   // 45
+  const set = (c, o) => { for (const [k, v] of Object.entries(o)) c.stats[k].base = v; };
+  const left = c => Engine.statPool(c).total - Engine.statSpent(c);
+  const ids = D.stats.map(s => s.id);
+
+  let ch = street();
+  let r = Engine.raiseStatsToFloor(ch);
+  assert.equal(r.ok, true);
+  assert.deepEqual(ids.map(id => ch.stats[id].base), ids.map(() => 4));
+  assert.equal(r.raised.length, ids.length);
+  assert.equal(r.short.length, 0);
+  assert.equal(left(ch), 45 - 24);
+
+  // A stat past the floor is left alone; nothing else short.
+  ch = street(); set(ch, { BOD: 10, REF: 6, MOB: 6, INT: 6 });
+  assert.equal(left(ch), 17);
+  r = Engine.raiseStatsToFloor(ch);
+  assert.equal(ch.stats.BOD.base, 10);
+  assert.equal(ch.stats.REF.base, 6);
+  assert.deepEqual([...r.short], []);
+  assert.equal(left(ch), 5);
+
+  // The pool runs out: stat order, the rest named.
+  ch = street(); set(ch, { BOD: 10, REF: 10, MOB: 10 });
+  assert.equal(left(ch), 6);
+  r = Engine.raiseStatsToFloor(ch);
+  assert.deepEqual([...r.short], ["COOL", "MAG", "EMP"]);
+  assert.equal(ch.stats.INT.base, 4);
+  assert.equal(ch.stats.TECH.base, 4);
+  assert.equal(left(ch), 0);
+
+  // With 2 left after INT, TECH gets one point, as the stepper would, and is short.
+  ch = street(); set(ch, { BOD: 10, REF: 10, MOB: 10, INT: 4 });
+  assert.equal(left(ch), 3);
+  set(ch, { COOL: 2 });
+  assert.equal(left(ch), 2);
+  r = Engine.raiseStatsToFloor(ch);
+  assert.equal(ch.stats.TECH.base, 3);
+  assert.deepEqual([...r.short], ["TECH", "COOL", "MAG", "EMP"]);
+  assert.equal(left(ch), 0);
+
+  // Pressed twice, the same as once.
+  const once = JSON.stringify(ch.stats);
+  r = Engine.raiseStatsToFloor(ch);
+  assert.equal(JSON.stringify(ch.stats), once);
+
+  // Nothing below the floor: refused.
+  ch = street(); for (const id of ids) ch.stats[id].base = 4;
+  assert.equal(Engine.raiseStatsToFloor(ch).ok, false);
+
+  // A rolled pool with no roll entered: refused, and nothing moves.
+  ch = street(); ch.creation.statMethod = "rolled"; ch.creation.rolls.statPoints = null;
+  assert.equal(Engine.raiseStatsToFloor(ch).ok, false);
+  assert.ok(ids.every(id => ch.stats[id].base === D.statRules.base));
+});
+
 test("Decision 150: Skill Points count INT and REF with the archetype's bonus and a CP Boost, and a later Boost leaves points to spend", () => {
   const ch = subject();
   ch.stats.INT.base = 5; ch.stats.REF.base = 5;
