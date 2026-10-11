@@ -138,8 +138,9 @@ in the order's header:
 Don't, until the cadence is routine. These sessions share `engine.js`,
 `shadows-data.js`, `sheet.js`, `app.js`, the decision ledger, the versions,
 STATE and the changelog, and most of them depend on the one before. When two
-can run together, the order says so, and the orchestrator reserves their
-decision and flag numbers in advance and does the bookkeeping merge.
+can run together, the order says so, and the orchestrator does the
+bookkeeping merge. Decision and flag numbers are never reserved: each order
+says "the next free number" (`CLAUDE.md`, *Decisions*).
 
 ## The orders
 
@@ -162,7 +163,7 @@ decision and flag numbers in advance and does the bookkeeping merge.
 | [S10d-sides.md](S10d-sides.md) | S10d — Wave Initiative: sides that act in turn, best Combat Sense first (`0530`'s "as sides, in waves"; Deighton's wave initiative, §1a) | **Built 2026-10-09** (Decision 210, table schema 0.11, switched off; SQ8–SQ12 on their defaults); drafted 2026-10-09, after #146 and #147 merged; Ken chose it over S6, W86 with W84, and the Reference's additions. Decision 210 and table schema 0.11 reserved; GQ30 for Deighton. **SQ1–SQ7 answered by Ken 2026-10-09** (one at a time by default; the best Combat Sense picks the side; more than two sides, moved by a select; a cast member can fight with the crew; *Wave Initiative*, with a tip); **SQ8–SQ12 accepted on their defaults by Ken** (SQ8 with the review's refinement: an acted row still counts toward its side's best). Merged in PR #149 after one fix round (a side's wave not split by an acted row going Out; the Turns toggle out of the sticky bar; a no-op mode press writes nothing) |
 | [S10e-add-to-fight.md](S10e-add-to-fight.md) | S10e — Adding to a fight: Add to always on screen, the Codex searchable inside an encounter, Add on a Threats card (W74, W75, W76) | **Built 2026-10-10** (Decision 211, switched off), merged in PR #151 after one fix round (groups found by their origin, the Codex search in pack order, `addToEncounter` refusing a non-table); drafted 2026-10-09 after #149 merged; Ken chose it over table undo (W83), export and print (W86 with W84) and the gazetteer (S6). Decision 211 reserved; no table schema bump. **SQ1–SQ5 answered by Ken 2026-10-09: every default** (the running encounter, then the newest planned, then a new one; a card's Add to cast stays on the list; the Codex search from two characters, 25 shown; threats, people and groups in one list; the new encounter named in the notice) |
 | [S15-table-undo.md](S15-table-undo.md) | S15 — The table's memory: an activity log, with undo (W83) | **Built 2026-10-10** (Decision 212, table schema 0.12, switched off), merged in PR #153 after three fix rounds (a field's change on blur no longer an entry of its own; a block of records in or out one op, and records matched by id when a list also changed inside, so End stays under 4 KB; a label names only what came and went; a burst folds by its paths, not a label rebuilt from the clock); drafted 2026-10-10, after #151 merged; Ken chose it over the interaction sentence (W79 with W82), the GM layout (W80, W77, W78), and export and print (W86 with W84). Decision 212 and table schema 0.12 reserved. **SQ1–SQ7 answered by Ken 2026-10-10: every default** (a toast and Activity in the menu; typing folds; 500 kept; deletes still ask; the trail in the file; computed labels; no redo) |
-| [S16-interaction-sentence.md](S16-interaction-sentence.md) | S16 — A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | **Drafted 2026-10-10**, after #153 merged; Ken chose it over Supernatural Orders (S12a), the GM layout (W80, W77, W78), and export and print (W86 with W84). Decision 214 and table schema 0.13 reserved. **SQ1–SQ8 answered by Ken 2026-10-10: every default** (a sentence with Edit on a member's page; *Bob owes Scott*; old fight lines left as written; Back returns to where the tap came from) |
+| [S16-interaction-sentence.md](S16-interaction-sentence.md) | S16 — A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | **Drafted 2026-10-10**, after #153 merged; Ken chose it over Supernatural Orders (S12a), the GM layout (W80, W77, W78), and export and print (W86 with W84). Table schema 0.13 reserved; the decision takes the next free number when built. **SQ1–SQ8 answered by Ken 2026-10-10: every default** (a sentence with Edit on a member's page; *Bob owes Scott*; old fight lines left as written; Back returns to where the tap came from) |
 
 ## What a work order contains
 
@@ -174,8 +175,9 @@ order. An order that can't fill one isn't ready to hand over; a *Content* or
 
 1. **Goal and Done when.** What a player or GM can do afterwards, and the
    observable checks that prove it.
-2. **Tier, versions, numbers.** The change tier, each version bump, and the
-   decision and flag numbers reserved for it.
+2. **Tier, versions, numbers.** The change tier and each version bump. Its
+   decisions and flags are "the next free number", written **N** in the
+   order and taken when it's built (`CLAUDE.md`, *Decisions*).
 3. **Decisions, drafted in full.** In the ledger's shape, ready to paste. The
    building session doesn't write a decision; it pastes and fills *Built*.
 4. **Questions for Ken.** Anything the order defaults that Ken might not

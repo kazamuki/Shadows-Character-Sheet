@@ -213,6 +213,17 @@ change as the code it describes, with a one-line summary under its topic in
 rule, or a player-facing behaviour someone could have chosen otherwise. A no-op
 version check or a routine fix is a log line, not a decision.
 
+**A number is taken when the work is built, never reserved ahead.** A work
+order says "the next free number" for its decisions and flags, and writes
+**N** (N+1, …) wherever its draft cites one: the entry, the supersession marks,
+the code comments and the tests. The building session takes the lowest free
+number on `origin/main` when it writes the entry, and puts it everywhere the
+order says N. Two branches open at once can still pick the same number; the
+one that merges second renumbers its own uses only. Why: a reserved number
+goes stale as soon as another order lands first, and the ledger refuses a gap
+(`docs.test.mjs`), so P1 had to renumber S16's order, and P2 would have had to
+do it again (2026-10-10).
+
 **Search before you propose.** Before proposing any change, search §4's
 **Touches** lines (and the ledger's text) for the stat, field, rule or UI
 element it touches — by name, not just by topic. If a decision covers it, cite
