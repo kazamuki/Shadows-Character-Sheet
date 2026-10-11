@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.41.0",
-    "date": null,
+    "date": "2026-10-11",
     "intro": [],
     "items": [
       "**Set all to 4** on the Stats step: every stat below 4 goes to 4 in one press, from your Stat Points. If the points run out, it raises what it can, in order, and names the stats it couldn't reach.",
