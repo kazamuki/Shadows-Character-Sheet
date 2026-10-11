@@ -666,7 +666,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.19",
+    schemaVersion: "0.20",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -737,6 +737,13 @@ It renders on the Character tab (Decision 158).
     // "ancient-weapon": "blade") or a text choice's fields as text
     // ("code": { hunt, bond, word }). migrate() drops anything else.
     optionPicks: {},
+    // (0.20, Decision 215) Ranks CP raised in an archetype power the character
+    // holds, per power id: { "bestial-blessings": 1 }, 5 CP a rank. Read only
+    // when the archetype declares `powersBought`. A power's rank is its start
+    // (1 granted, else the Base Powers placed) + this + IP. migrate() keeps
+    // whole positive counts, at most 10, and gives back a Base Power placed in
+    // a granted (Innate) power.
+    powerCp: {},
     // (0.16, Decision 153) What a write-in archetype is, in the player's
     // words. Read only when the archetype declares `writeIn`; every field is
     // text (or null), and migrate() drops anything else.
@@ -4349,6 +4356,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decisions 104 and 143 in part (Resilient Spirit, the one `resAgainst` source, is gone); Decision 126 in part (`additionalPowers` and the phases table are gone; a starter power still renders its table). Extends Decision 194: archetype powers join `powerRanks`.
      - **Revisit if:** Deighton and Scott answer F38, or `0450`'s Supernatural ceilings make the book's 3 bind play.
      - **Built:** app 0.39.0, game data 0.31; R15 reads `0414`'s tables. Log 2026-10-08 (P3).
+    → **Superseded in part by Decision 215** — Innate powers are granted, and Base Powers buy the Origin's.
 
 197. **A Werewolf's Stat Bonus goes on its Focus Stats, BOD, REF and MOB, and can pass 10; a saved one's roll and points move across.**
      *2026-10-08 · Ken + Claude · Touches: focusStatBonusRoll, statBonusRoll, focusStats, focusAllocation, statBonusAllocation, rolls.statBonus, Stat Bonus, Focus Stat bonus, migrate, _statBonusToFocus, Werewolf, crb-v4-sync P3*
@@ -4390,6 +4398,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decisions 196 (`powersBought`), 104 (a power's `grants` are Natural Armor) and 15 (a panel can be one specialization's).
      - **Revisit if:** Deighton and Scott answer F39 or Deighton F41; the Vampire's Majors (P4b) need Splice's or Cursed Evolution's other-Bloodline powers.
      - **Built:** app 0.39.0, game data 0.33, schema 0.19. Log 2026-10-08 (P4).
+    → **Superseded in part by Decision 215** — Innate powers are granted, Base Powers buy only the Bloodline's, and Built to Last is not a pick.
 
 201. **The Thirst is computed: Feed refills SFR by the HL drained, stored blood only to half, A day unfed takes half RoU, and Hunger speaks at RoU or under.**
      *2026-10-08 · Ken + Claude · Touches: feed panel, feedView, feedGain, feed, goUnfed, Feed, A day unfed, Hunger, Blood Frenzy, trackers.sfr.spent, SFR, RoU, Fresh, Stored, perHL, upToShare, Main, Trackers, crb-v4-sync P4, VQ21*
@@ -4567,6 +4576,21 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** the team decides CRANK (keep it: the **CRANK is back** release; drop it: a decision to remove the code and keep `trackers.crank` read-only in `migrate()`), or GQ7, F37 or GQ28 is answered.
      - **Built:** app 0.39.3, no data or schema bump, PR #160, log 2026-10-11 (P2).
 
+215. **A Vampire's and a Werewolf's Innate powers are granted at rank 1; Base Powers buy ranks in the Bloodline's or Origin's powers; CP raises any held power; an Upyr holds both Built to Last powers; a day without rest costs half RoU + 2.**
+     *2026-10-11 · Ken + Deighton + Claude · Touches: powersBought, granted, archetypePowers, basePowerState, archetypeChoices.powerCp, buyPowerRank, cp, Built to Last, noStack, naturalArmor, unrested, character schema 0.20, F38, F39, F41*
+     - **Decided:** Under `powersBought`, a power with no `origin` is granted at rank 1 (`granted: "innate"`); Base Powers place ranks only in the specialization's powers, none past Max Starting Rank or the printed max. The Werewolf buys this way too; its starter power stays the Origin's, unranked. CP raises any held, ranked power at `powerRankCost()` a rank (`archetypeChoices.powerCp`), up to Max Power Rank and the printed max. Built to Last is no choice: both are Upyr powers, and `noStack` counts the higher active one. A day without rest takes half RoU + 2, instead of A day unfed. Schema 0.20 adds `powerCp`.
+     - **Why:** Ken's first-playtest ruling (W88) and Deighton's on F41 and Day Rest (Q20, Q21).
+     - **Rejected:**
+       - Max Starting Rank capping CP: it could raise nothing at Street Level.
+       - Grandfathering a saved Werewolf's kit: two rules at one table.
+       - Turning a Vampire's Innate placements into CP ranks: spends CP it may not have.
+       - A rank on the starter power: nothing to raise.
+       - Both Built to Last powers free: no other Bloodline gets two.
+       - A day without rest as +2 beside A day unfed: charges the half twice.
+     - **Replaces:** Decision 196 in part (Base Powers buy the Origin's powers). Decision 200 in part (Innate powers granted; Built to Last not a pick). Extends 157 (the one power price) and 201 (the Thirst).
+     - **Revisit if:** W72 lets IP learn an unheld power, or `0450`'s ceilings change what binds play.
+     - **Built:** app 0.40.0, game data 0.35, schema 0.20. Log 2026-10-11 (P3).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4578,7 +4602,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR). · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -4599,9 +4623,6 @@ here are in `log/archive.md`.
 | F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 0530 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **kept, with its count**. Closes when W104 is built. | Deighton (ruled) | No |
 | F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 0540 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **healing counts from 0 HP**; damage past zero is a reference for how bad things are while Dying. A GM may keep it for grittier play, and the sheet goes along (Ken). Closes when W102 is built. | Deighton (ruled) | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
-| F38 | **What a Werewolf's Base Powers buy.** `0414` says a Werewolf "doesn't choose its powers; it carries the whole kit", every Innate and Origin power at Rank 1, yet its scaling table has a **Base Powers** column (1 / 2 / 2 / 3) beside Max Starting Rank (1 / 1 / 2 / 2). Extra ranks to place up to Max Starting Rank, or something else? **Stub (Decision 196):** every power held at rank 1, Base Powers and Max Starting Rank shown beside the powers with a `playerNote` saying it's the GM's call, nothing spent at creation. **Ruled 2026-10-10 (Ken, from the first playtest), with F39:** every Innate power and the Origin's starter power are granted at rank 1; the Origin's other powers are chosen, each Base Power one rank in one, none above Max Starting Rank; CP raises any held power at creation (Decision 157). `0414`'s "carries the whole kit" is the book's to fix (`crb-catch-up.md`). **Closes when W88 is built** | Ken (ruled) | No |
-| F39 | **How a Vampire spends Base Powers.** `0413`: "Spend your Base Powers (2 / 3 / 4 / 5) on Innate and Bloodline powers; no power starts above your Max Starting Rank." Is one Base Power one rank, so a Street Vampire places two ranks, none above 1? Ken ruled the other half: Cursed Evolution's second bloodline is bought at `0450`'s New Power price. **Stub (Decision 200, VQ20):** one Base Power is one rank in an Innate power or the Bloodline's, none above Max Starting Rank or the book's printed maximum; a power with no ranks (Preternatural Speed, Deathless Resilience) takes one to hold; a power is held only once a rank is placed. A "one power per Base Power" ruling caps each at 1 and keeps the stored shape. **Ruled 2026-10-10 (Ken, from the first playtest), with F38:** every Innate power is granted at rank 1; each Base Power is one rank in a Bloodline power, none above Max Starting Rank; CP raises any held power at creation (Decision 157). `0413`'s "can learn" is the book's to fix (`crb-catch-up.md`). **Closes when W88 is built** | Ken (ruled) | No |
-| F41 | **Is Built to Last a creation pick?** `0413`'s Upyr: "Choose a long shell (Iron Hide) or a short surge (Icebound Resilience). These powers don't stack." One chosen at creation and the other never held, or two powers that only don't stack while running? **Stub (Decision 200), Ken's reading (VQ25):** a creation pick. The power not chosen can't take Base Powers or IP; choosing again takes back the ranks placed **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **an Upyr holds both; they don't stack**. Ken's reading is withdrawn. Closes when W105 is built. | Deighton (ruled) | No |
 
 F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.
 

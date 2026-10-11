@@ -170,6 +170,22 @@ function onArchetypeStep(archetype, powerLevel = D.powerLevels[0].id) {
   return app;
 }
 
+// The wizard on any step, from a draft (Decision 215 reaches the CP step too).
+function onStep(archetype, powerLevel, stepId, mutate = () => {}) {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = archetype;
+  ch.creation.powerLevel = powerLevel;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
+  mutate(ch);
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf(stepId), maxReached: steps.length - 1 } } });
+  const resume = app.$$("#main button").find(b => /Resume draft/.test(b.textContent));
+  resume.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  return app;
+}
+
 test("Arcanist offers exactly one set of aberration controls (A1)", () => {
   // Was the suite's only todo. The generic specialization block and an
   // Arcanist-specific block both rendered the same six aberrations — six
@@ -378,7 +394,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.19");
+  assert.equal(resumed.meta.schemaVersion, "0.20");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -5540,8 +5556,9 @@ test("Main shifts a Forge Fang: the switch names the HL it costs, Claws and Fang
   assert.deepEqual(app.errors, []);
 });
 
-test("a Trueborn's sheet: the powers with ranks and costs, Base Powers with its note, Raise a Power past the book's 3, Call of the Wild's step, and TECH barred while shifted", () => {
+test("a Trueborn's sheet: the powers with ranks and costs, Base Powers placed, Raise a Power past the book's 3, Call of the Wild's step, and TECH barred while shifted (Decision 215)", () => {
   const ch = wolf("trueborn");
+  ch.archetypeChoices.basePowers = { "apex-fury": 1 };
   ch.progression.powerIpe = { "apex-fury": 2 };
   ch.progression.ip.log.push({ date: "2026-10-08", kind: "spend", amount: 20, targetType: "power", targetId: "apex-fury", from: 1, to: 2, name: "Apex Fury", note: "" },
                              { date: "2026-10-08", kind: "spend", amount: 40, targetType: "power", targetId: "apex-fury", from: 2, to: 3, name: "Apex Fury", note: "" });
@@ -5549,7 +5566,7 @@ test("a Trueborn's sheet: the powers with ranks and costs, Base Powers with its 
   const app = openSheet(ch, "character");
   const text = app.$("#main").textContent;
   assert.match(text, /Base Powers 1 · Max Starting Rank 1/);
-  assert.match(text, /What your Base Powers add on top is your GM's call for now/, "F38's player note isn't beside the powers");
+  assert.doesNotMatch(text, /call for now|Base Powers? to place/, "F38's note, or a Base Power to place, is still beside the powers");
   const apex = app.$$("#main .pick").find(p => /^Apex Fury/.test(p.querySelector("h2").textContent));
   assert.match(apex.textContent, /rank 3.*3 SFR.*Per rank: Rank 2: anywhere\. Rank 3: anytime\./s);
   assert.ok(!/Steel Fangs|Predator's Allure|EMP/.test(text), "a Trueborn sees another Origin's powers or EMP");
@@ -5559,7 +5576,7 @@ test("a Trueborn's sheet: the powers with ranks and costs, Base Powers with its 
   app.click('[data-raiseopen="power"]');
   const row = app.$$("[data-raiseresults] tr").find(r => /Apex Fury/.test(r.textContent));
   assert.match(row.textContent, /Archetype power · rank 3 · \+2 from IP · past the book's 3.*3 → 4.*60 IP/s);
-  assert.equal(app.$$("[data-raiseresults] tr").length, 11, "Raise a Power doesn't list the Innate five and the Trueborn six");
+  assert.equal(app.$$("[data-raiseresults] tr").length, 6, "Raise a Power doesn't list the Innate five and the one Trueborn power placed");
   app.click("#modal [data-modalclose]");
 
   app.click('[data-sec="trackers"]');
@@ -5621,9 +5638,10 @@ test("crb-v4-sync P4: the Bloodline step offers three; a Draugur picks a weapon 
   const hunt = app.$('[data-opttext="code|hunt"]');
   hunt.focus(); hunt.value = "Only the guilty"; hunt.dispatchEvent(new app.window.Event("input", { bubbles: true }));
   assert.equal(app.window.document.activeElement, hunt, "typing a tenet redrew the field");
-  // Innate and the Draugur's own, and no one else's.
+  // The Draugur's own are bought; the Innate four are granted, with no stepper (Decision 215).
   const offered = app.$$('#main [data-step$="|1"]').map(b => b.dataset.step).filter(s => s.startsWith("bp|")).map(s => s.split("|")[1]);
-  assert.ok(offered.includes("bestial-blessings") && offered.includes("odins-aegis") && !offered.includes("shadow-play"), offered.join());
+  assert.ok(offered.includes("odins-aegis") && !offered.includes("bestial-blessings") && !offered.includes("shadow-play"), offered.join());
+  assert.match(main(), /Innate powers.*Bestial Blessings.*granted · rank 1.*Preternatural Speed.*granted(?! ·)/s, "the Innate powers aren't shown granted");
   assert.match(main(), /place 3 Base Powers/);
   app.click('[data-step="bp|odins-aegis|1"]');
   app.click('[data-step="bp|odins-aegis|1"]');
@@ -5637,13 +5655,13 @@ test("crb-v4-sync P4: the Bloodline step offers three; a Draugur picks a weapon 
   const draft = stored(app, { locked: false });
   assert.deepEqual({ ...draft.archetypeChoices.basePowers }, { "odins-aegis": 2, "deathless-resilience": 1 });
   assert.deepEqual(JSON.parse(JSON.stringify(draft.archetypeChoices.optionPicks)), { "ancient-weapon": "spear", code: { hunt: "Only the guilty" } });
-  // Changing Bloodline takes back the old one's ranks and choices; Innate ones stay.
+  // Changing Bloodline takes back the old one's ranks and choices; Built to Last is no choice (F41).
   app.click('[data-step="bp|odins-aegis|-1"]');
-  app.click('[data-step="bp|bestial-blessings|1"]');
   app.click('[data-spec="upyr"]');
   const after = stored(app, { locked: false });
-  assert.deepEqual([{ ...after.archetypeChoices.basePowers }, { ...after.archetypeChoices.optionPicks }], [{ "bestial-blessings": 1 }, {}]);
-  assert.deepEqual(app.$$("#main [data-optpick]").map(b => b.dataset.optpick), ["built-to-last|iron-hide", "built-to-last|icebound-resilience"]);
+  assert.deepEqual([{ ...after.archetypeChoices.basePowers }, { ...after.archetypeChoices.optionPicks }], [{}, {}]);
+  assert.deepEqual(app.$$("#main [data-optpick]").map(b => b.dataset.optpick), []);
+  assert.ok(app.$('[data-step="bp|iron-hide|1"]') && app.$('[data-step="bp|icebound-resilience|1"]'), "an Upyr can't buy both Built to Last powers");
   assert.deepEqual(app.errors, []);
 });
 
@@ -5653,7 +5671,8 @@ function lockedVampire(bloodline = "draugur") {
   ch.creation.powerLevel = "heroic";
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
   ch.archetypeChoices.specialization = [bloodline];
-  ch.archetypeChoices.basePowers = { "bestial-blessings": 2, "battleborn-instinct": 1 };
+  ch.archetypeChoices.basePowers = { "battleborn-instinct": 2, "odins-aegis": 1 };
+  ch.archetypeChoices.powerCp = { "bestial-blessings": 1 };
   ch.archetypeChoices.optionPicks = { "ancient-weapon": "blade", code: { hunt: "Only the guilty", bond: "The crew", word: "Kept" } };
   return ch;
 }
@@ -5662,8 +5681,10 @@ test("crb-v4-sync P4: the Character tab shows the placed powers at their ranks a
   const app = openSheet(lockedVampire(), "character");
   const text = app.$("#main").textContent;
   assert.match(text, /Bestial Blessings\s*rank 2/);
-  assert.match(text, /Battleborn Instinct\s*rank 1/);
-  assert.doesNotMatch(text, /Vitality Surge/, "a power never placed is held");
+  assert.match(text, /Battleborn Instinct\s*rank 2/);
+  assert.match(text, /Vitality Surge\s*rank 1/, "an Innate power isn't granted");
+  assert.ok(!app.$$("#main .pick h2").some(h => /Hel's Dread/.test(h.textContent)), "a power never placed is held");
+  assert.doesNotMatch(text, /Base Powers? to place/, "all three Base Powers are placed");
   assert.match(text, /Base Powers 3 · Max Starting Rank 2/);
   assert.match(text, /The Ancient Weapon: Blade/);
   assert.match(text, /The Hunt: Only the guilty/);
@@ -5725,11 +5746,89 @@ test("crb-v4-sync P4: Admin sets a saved Vampire's Bloodline, its choices and it
   const sel = app.$("[data-admin-spec]");
   sel.value = "upyr"; sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   assert.deepEqual([...stored(app, { locked: true }).archetypeChoices.specialization], ["upyr"]);
-  app.click('.admin-arch [data-optpick="built-to-last|iron-hide"]');
+  assert.equal(app.$('.admin-arch [data-optpick]'), null, "Built to Last is still a pick on Admin");
   app.click('.admin-arch [data-step="bp|iron-hide|1"]');
   assert.deepEqual({ ...stored(app, { locked: true }).archetypeChoices.basePowers }, { "iron-hide": 1 });
   app.click("[data-toastundo]");
   assert.deepEqual({ ...stored(app, { locked: true }).archetypeChoices.basePowers }, {});
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 215: a Street Strigoi's Bloodline step shows the Innate powers granted and the Bloodline's with steppers, and the CP step's Powers raise a rank for 5 CP", () => {
+  const app = onArchetypeStep("vampire", "street");   // 2 Base Powers, Max Starting Rank 1, Max Power Rank 2
+  app.click('[data-spec="strigoi"]');
+  const innate = ["bestial-blessings", "vitality-surge", "preternatural-speed", "cursed-evolution"];
+  for (const id of innate) assert.equal(app.$(`[data-step^="bp|${id}|"]`), null, `${id} has a Base Power stepper`);
+  for (const id of ["shadow-play", "veil-of-night", "bone-spines"]) assert.ok(app.$(`[data-step="bp|${id}|1"]`), `${id} has no stepper`);
+  assert.match(app.$("#main").textContent, /Your Innate powers are yours at rank 1\. Base Powers go into your Bloodline's powers\./);
+  app.click('[data-step="bp|shadow-play|1"]'); app.click('[data-step="bp|veil-of-night|1"]');
+  const draft = stored(app, { locked: false });
+  assert.deepEqual({ ...draft.archetypeChoices.basePowers }, { "shadow-play": 1, "veil-of-night": 1 });
+  assert.deepEqual(app.errors, []);
+
+  const cp = onStep("vampire", "street", "character-points", ch => {
+    ch.archetypeChoices.specialization = ["strigoi"];
+    ch.archetypeChoices.basePowers = { "shadow-play": 1, "veil-of-night": 1 };
+  });
+  const text = () => cp.$("#main").textContent;
+  assert.match(text(), /Powers — 5 CP per rank/);
+  assert.equal(cp.$('[data-step="apow|preternatural-speed|1"]'), null, "a power with no ranks is on the CP step");
+  const left = () => Engine.cp(Engine.migrate(JSON.parse(JSON.stringify(stored(cp, { locked: false }))))).left;
+  const before = left();
+  cp.click('[data-step="apow|bestial-blessings|1"]');
+  assert.deepEqual({ ...stored(cp, { locked: false }).archetypeChoices.powerCp }, { "bestial-blessings": 1 });
+  assert.equal(left(), before - 5, "a press didn't spend 5 CP");
+  assert.ok(cp.$('[data-step="apow|bestial-blessings|1"]').disabled, "CP passed Max Power Rank 2");
+  cp.click('[data-step="apow|bestial-blessings|-1"]');
+  assert.equal(left(), before);
+  assert.deepEqual(cp.errors, []);
+});
+
+test("Decision 215: a Werewolf's Bloodline step is the Vampire's: the Innate five granted, the Origin's powers bought", () => {
+  const app = onArchetypeStep("werewolf", "street");   // 1 Base Power, Max Starting Rank 1
+  app.click('[data-spec="trueborn"]');
+  assert.match(app.$("#main").textContent, /place 1 Base Power/);
+  assert.match(app.$("#main").textContent, /Base Powers go into your Origin's powers/);
+  assert.equal(app.$('[data-step^="bp|primal-leap|"]'), null, "an Innate power has a stepper");
+  assert.match(app.$("#main").textContent, /Innate powers.*Primal Leap.*granted · rank 1/s);
+  assert.ok(app.$('[data-step="bp|apex-fury|1"]'));
+  assert.equal(app.$('[data-step="bp|steel-fangs|1"]'), null, "another Origin's power is offered");
+  app.click('[data-step="bp|apex-fury|1"]');
+  assert.ok(app.$('[data-step="bp|ancestral-wisdom|1"]').disabled, "a second Base Power went in on one");
+  assert.deepEqual({ ...stored(app, { locked: false }).archetypeChoices.basePowers }, { "apex-fury": 1 });
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 215: a saved Vampire with Base Powers to place says how many on its Character tab, and placing one on Admin is one Undo", () => {
+  const ch = lockedVampire("strigoi");
+  ch.archetypeChoices.basePowers = { "shadow-play": 1 };   // 3 Base Powers at Heroic, one placed
+  ch.archetypeChoices.powerCp = {};
+  ch.archetypeChoices.optionPicks = {};
+  const app = openSheet(ch, "character");
+  assert.match(app.$("#main").textContent, /2 Base Powers to place, on Admin\./);
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  app.click('.admin-arch [data-step="bp|veil-of-night|1"]');
+  assert.deepEqual({ ...stored(app, { locked: true }).archetypeChoices.basePowers }, { "shadow-play": 1, "veil-of-night": 1 });
+  app.click("[data-toastundo]");
+  assert.deepEqual({ ...stored(app, { locked: true }).archetypeChoices.basePowers }, { "shadow-play": 1 });
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 215: A day without rest on Main takes half RoU and 2 more, Undo puts it back, and it stops at empty", () => {
+  const ch = lockedVampire("upyr");   // Heroic: RoU 6, so −5
+  const app = openSheet(ch, "main");
+  assert.match(app.$("#main .main-feed").textContent, /A day without rest \(−5\)/);
+  assert.match(app.$("#main .main-feed").textContent, /Instead of A day unfed: the day's Thirst and 2 more\./);
+  app.click('[data-unrested="thirst"]');
+  assert.equal(stored(app, { locked: true }).trackers.sfr.spent, 5);
+  assert.match(app.$("[data-toastundo]").parentElement.textContent, /A day without rest: −5 SFR/);
+  app.click("[data-toastundo]");
+  assert.equal(stored(app, { locked: true }).trackers.sfr.spent, 0, "one Undo didn't take the day back");
+  const max = Engine.sfr(Engine.migrate(JSON.parse(JSON.stringify(ch)))).value;
+  for (let i = 0; i < Math.ceil(max / 5) + 1; i++) app.click('[data-unrested="thirst"]');
+  assert.equal(stored(app, { locked: true }).trackers.sfr.spent, max, "it went past empty");
+  app.click('[data-sec="trackers"]');
+  assert.ok(app.$("#main .trk-feed [data-unrested]"), "Trackers lacks the button");
   assert.deepEqual(app.errors, []);
 });
 

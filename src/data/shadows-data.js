@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.34",
+    "gamedataVersion": "0.35",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2399,9 +2399,6 @@ window.SHADOWS_DATA = {
       "id": "vampire",
       "name": "Vampire",
       "status": "draft",
-      "flagged": true,
-      "flagNote": "F39: how a Vampire's Base Powers (2/3/4/5) are spent across Innate and Bloodline powers. Stubbed as the book reads: one Base Power is one rank, on an Innate power or the Bloodline's, none above Max Starting Rank; a power with no ranks takes one to hold. Deighton/Scott.",
-      "playerNote": "Each Base Power is one rank in an Innate power or one of your Bloodline's, none above your Max Starting Rank. How Base Powers are spent is your GM's call for now.",
       "primaryStats": [
         "BOD",
         "REF",
@@ -2419,7 +2416,7 @@ window.SHADOWS_DATA = {
           "Base Powers",
           "Max Starting Rank"
         ],
-        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10. Spend your Base Powers on Innate and Bloodline powers; no power starts above your Max Starting Rank.",
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10. Innate powers are yours at rank 1. Spend your Base Powers on your Bloodline's powers; none starts above your Max Starting Rank.",
         "focusStats": [
           "BOD",
           "REF",
@@ -2456,12 +2453,15 @@ window.SHADOWS_DATA = {
           }
         }
       },
-      /* Base Powers are spent at creation (F39's stub, Decision 200): each
-         is one rank in a power this archetype lists, held only once a rank
-         is placed. `countBy` and `maxRankBy` are data paths (Decision 135). */
+      /* Base Powers are spent at creation (Decisions 200, 215): each is one
+         rank in a power of the Bloodline, held once a rank is placed. A
+         power with no `origin` is Innate: `granted` holds it at rank 1 and
+         Base Powers never go in it. `countBy` and `maxRankBy` are data
+         paths (Decision 135). */
       "powersBought": {
         "countBy": "campaignPowerScaling.basePowers",
-        "maxRankBy": "campaignPowerScaling.maxStartingRank"
+        "maxRankBy": "campaignPowerScaling.maxStartingRank",
+        "granted": "innate"
       },
       "baselineTraits": [
         {
@@ -2525,19 +2525,7 @@ window.SHADOWS_DATA = {
             "description": "Raw Savagery. \"Blood is Fuel.\" The Upyr come out of the Russian cold, and the cold came with them. They are the street racers, the underground fighters, the enforcers nobody crosses twice. Their powers are the cheapest in the archetype to run and the hardest to hide, and the hungrier an Upyr gets, the more dangerous it becomes.",
             "features": [
               { "name": "Frozen Fire", "text": "At or below half your maximum SFR, your bloodline powers that deal damage gain +2 damage, and Nightmare Visage needs +1 TH to resist. Frenzy checks work as normal." },
-              { "name": "Built to Last", "text": "Choose a long shell (Iron Hide) or a short surge (Icebound Resilience). These powers don't stack." }
-            ],
-            "choices": [
-              {
-                "id": "built-to-last",
-                "name": "Built to Last",
-                "type": "power",
-                "options": ["iron-hide", "icebound-resilience"],
-                "text": "The one you choose is the one your Base Powers and IP can buy.",
-                "flagged": true,
-                "flagNote": "F41: is Built to Last a creation pick (the other power can never be held), or two powers that only don't stack? Stubbed as Ken reads it (VQ25): a creation pick. Deighton.",
-                "playerNote": "Choosing one at creation is how this sheet reads it; your GM has the last word."
-              }
+              { "name": "Built to Last", "text": "Iron Hide is a long shell, Icebound Resilience a short surge. You can hold both; they don't stack." }
             ]
           },
           {
@@ -2610,6 +2598,7 @@ window.SHADOWS_DATA = {
               { "id": "stored", "name": "Stored", "text": "blood bags, the recently dead", "perHL": 2, "upToShare": 0.5 }
             ],
             "unfed": { "label": "A day unfed", "share": 0.5 },
+            "unrested": { "label": "A day without rest", "share": 0.5, "plus": 2, "text": "Instead of A day unfed: the day's Thirst and 2 more." },
             "low": { "at": "rou", "name": "Hunger", "text": "Your SFR is at your RoU or lower. Make a WILL Essence check (TN 7, TH 1) or fall into a Blood Frenzy." }
           },
           {
@@ -2640,9 +2629,9 @@ window.SHADOWS_DATA = {
         /* Iron Hide and Icebound Resilience: Natural Armor while running, asked
            for on a hit (Decision 104's `while`, read off a held power's rank). */
         { "id": "icebound-resilience", "origin": "upyr", "name": "Icebound Resilience", "cost": "Rank + 2", "effect": "For 3 rounds: +2 BOD, +2 REF, +1 Natural Armor, and resistance to extreme cold, knockdown, and slowing.", "perRank": "+1 round (max 4)", "maxRank": 4,
-          "grants": [{ "type": "naturalArmor", "plus": 1, "while": "while Icebound Resilience is running" }] },
+          "grants": [{ "type": "naturalArmor", "plus": 1, "while": "while Icebound Resilience is running", "noStack": "built-to-last" }] },
         { "id": "iron-hide", "origin": "upyr", "name": "Iron Hide", "cost": "Rank per round, sustained", "effect": "Gain Natural Armor equal to rank + 1.", "perRank": "+1 Natural Armor (max 3)", "maxRank": 3,
-          "grants": [{ "type": "naturalArmor", "perRank": 1, "plus": 1, "while": "while Iron Hide is running" }] },
+          "grants": [{ "type": "naturalArmor", "perRank": 1, "plus": 1, "while": "while Iron Hide is running", "noStack": "built-to-last" }] },
         { "id": "rend-and-tear", "origin": "upyr", "name": "Rend and Tear", "cost": "Rank", "effect": "Claws and fangs gain AP 2 and inflict Bleeding for 2 rounds. A kill refunds the SFR spent on this activation.", "perRank": "+1 round of Bleeding (max 5)", "maxRank": 5 },
         { "id": "cold-embrace", "origin": "upyr", "name": "Cold Embrace", "cost": "Rank per round, sustained", "effect": "Enemies within 3 meters make a BOD Essence check (TN 8, TH = rank) each round or take Pain Levels equal to rank. True Faith and other Vampires are unaffected.", "perRank": "+1 TH and +1 Pain Level (max 5)", "maxRank": 5 },
         { "id": "nightmare-visage", "origin": "upyr", "name": "Nightmare Visage", "cost": "Rank + 2", "effect": "Enemies within 5 meters make a WILL Essence check (TN 9, TH = rank) or are Frightened for 1 round. Anyone who resists is immune for the encounter.", "perRank": "+1m and +1 TH (max 3)", "maxRank": 3 },
@@ -2659,7 +2648,7 @@ window.SHADOWS_DATA = {
         { "id": "sunlight", "name": "Sunlight and UV", "description": "Exposure to direct sunlight deals 1d4 Withering damage per round. UV weapons built to mimic natural light, like the Sunburst Grenade, deal Withering damage as well. SFR can't prevent or heal it; it heals only naturally." },
         { "id": "consecration", "name": "Consecration", "description": "Consecrated weapons, from blessed rounds to consecrated arrowheads, deal Withering damage. The blessing has to be in the weapon. A crucifix around a frightened neck is jewelry. Consecrated ground is a WILL Essence check (TN 8, TH 2) to cross and causes 1d4 Withering damage when entering." },
         { "id": "staking", "name": "Staking", "description": "Anything through the heart, of any material, paralyzes you until it's removed." },
-        { "id": "day-rest", "name": "Day Rest", "description": "Vampires must rest each day in a dark, secure place and are helpless while resting. Each day skipped adds +2 to that day's Thirst, cumulative." },
+        { "id": "day-rest", "name": "Day Rest", "description": "Vampires must rest each day in a dark, secure place and are helpless while resting. A day without rest costs half your RoU in SFR and 2 more. It doesn't rise from day to day." },
         { "id": "blood-frenzy", "name": "Blood Frenzy", "description": "When your SFR drops to your RoU or lower, make a WILL Essence check (TN 7, TH 1) to resist your hunger. Success delays the Frenzy for one hour, and each later delay adds +1 TH. Failure triggers it the moment you smell or see fresh blood. In Frenzy you don't tell friend from foe and ignore tactics, attacking and draining the nearest living creature until satiated or subdued; with no one near, you roam in search of prey. You can't stop feeding willingly. It ends with a WILL Essence check (TN 8, TH 2) each round once your SFR is above twice your RoU, by being physically restrained, or by being knocked unconscious at 0 HL." }
       ],
       "growth": {
@@ -2671,9 +2660,6 @@ window.SHADOWS_DATA = {
       "id": "werewolf",
       "name": "Werewolf",
       "status": "draft",
-      "flagged": true,
-      "flagNote": "F38: a Werewolf carries every Innate and Origin power at Rank 1, so what do the table's Base Powers (1/2/2/3) buy? Extra ranks up to Max Starting Rank (1/1/2/2)? Stubbed: shown, spends nothing. Deighton/Scott.",
-      "playerNote": "You carry every power below at Rank 1. What your Base Powers add on top is your GM's call for now.",
       "primaryStats": [
         "BOD",
         "REF",
@@ -2691,7 +2677,7 @@ window.SHADOWS_DATA = {
           "Base Powers",
           "Max Starting Rank"
         ],
-        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10, and Werewolf form adds +2 REF, +2 MOB and +4 BOD on top.",
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10, and Werewolf form adds +2 REF, +2 MOB and +4 BOD on top. Innate powers are yours at rank 1. Spend your Base Powers on your Origin's powers; none starts above your Max Starting Rank.",
         "focusStats": [
           "BOD",
           "REF",
@@ -2727,6 +2713,13 @@ window.SHADOWS_DATA = {
             "maxStartingRank": 2
           }
         }
+      },
+      /* As the Vampire's (Decision 215): Innate powers granted at rank 1,
+         Base Powers buy the Origin's. */
+      "powersBought": {
+        "countBy": "campaignPowerScaling.basePowers",
+        "maxRankBy": "campaignPowerScaling.maxStartingRank",
+        "granted": "innate"
       },
       "baselineTraits": [
         {

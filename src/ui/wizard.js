@@ -418,17 +418,21 @@ function optionChoicesHtml(ch){
     return h;
   }).join("");
 }
-// Base Powers (F39's stub, Decision 200): a rank at a time into the powers
-// the archetype and the chosen specialization offer, none past its cap.
+// Base Powers (Decisions 200, 215): a rank at a time into the powers the
+// chosen specialization offers, none past its cap. Innate powers are
+// granted: listed, with no stepper.
 function basePowersHtml(ch, sel){
   const st = Engine.basePowerState(ch);
   if (!st || !Engine.specializationIds(ch).length) return "";
+  const spec = Engine.specializationChosen(ch), noun = (sel.specialization && sel.specialization.label) || "specialization";
   let h = `<div class="sect">Powers${st.count!=null?` — place ${st.count} Base Power${st.count>1?"s":""}`:""}</div>
-    <p class="step-note">${st.cap!=null?`One Base Power is one rank. No power starts above rank ${st.cap}. `:""}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
-  const spec = Engine.specializationChosen(ch);
-  const groups = [["Innate powers", st.rows.filter(r=>!r.origin)],
-    ...spec.map(o=>[`${o.name} powers`, st.rows.filter(r=>r.origin===o.id)])];
+    <p class="step-note">Your Innate powers are yours at rank 1. Base Powers go into your ${esc(noun)}'s powers. ${st.cap!=null?`One Base Power is one rank. No power starts above rank ${st.cap}. `:""}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
   const defs = sel.powers||[];
+  const innate = Engine.archetypePowers(ch).filter(p=>!p.origin);
+  if (innate.length) h += `<h3 class="sub-sect">Innate powers</h3>` + innate.map(p=>`<div class="pick selected"><div class="head"><h2>${esc(p.name)}</h2>
+      ${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}<span class="cost grant">${p.ranked?"granted · rank 1":"granted"}</span></div>
+      <div class="desc">${esc(p.effect||"")}${p.perRank&&p.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`).join("");
+  const groups = spec.map(o=>[`${o.name} powers`, st.rows.filter(r=>r.origin===o.id)]);
   const row = r => { const p = defs.find(x=>x && x.id===r.id) || {};
     const up = (st.left==null || st.left > 0) && (r.cap==null || r.placed < r.cap);
     return `<div class="pick ${r.placed?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
@@ -594,6 +598,18 @@ function renderCP(){
         <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}</span>
         <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, (cap==null || d.rank<cap) && bal.left>=per)}</div></div>
         <div class="desc">${esc(d.description)}</div></div>`).join("");
+  }
+
+  // Powers CP raises (Decision 215): a held, ranked archetype power, Innate or
+  // bought. The price is the Disciplines'; the cap is Max Power Rank (or the
+  // book's printed maximum), not the lower Max Starting Rank.
+  const pcs = Engine.powerCpState(ch);
+  if (pcs.length){
+    const per = Engine.powerRankCost();
+    h += secs.sect("Powers", `Powers — ${per} CP per rank`);
+    h += pcs.map(r=>`<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
+        <span class="cost">${r.start>1||r.cp?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
+        <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, (r.cap==null || r.rank<r.cap) && bal.left>=per)}</div></div></div>`).join("");
   }
 
   // Starting spells (Decision 111). Here, not on the Archetype step, because
@@ -856,6 +872,7 @@ function bindMain(){
       ac.optionPicks={};
       const pool=new Set(Engine.powerPool(ch).map(p=>p.id));
       for (const id of Object.keys(ac.basePowers||{})) if (!pool.has(id)) delete ac.basePowers[id];
+      for (const id of Object.keys(ac.powerCp||{})) if (!pool.has(id)) delete ac.powerCp[id];
     }
     update();
   });
@@ -1089,5 +1106,6 @@ function applyStep(key, delta){
     if (v===0) delete ch.archetypeChoices.disciplines[id];
   }
   if (kind==="bp") Engine.placeBasePower(ch, id, delta);
+  if (kind==="apow") Engine.buyPowerRank(ch, id, delta);
   if (kind==="boost"){ const [type,tid]=[rest[0],rest.slice(1).join("|")]; Engine.addBoost(ch,type,tid,delta); }
 }

@@ -1361,9 +1361,14 @@ test("R16: the Vampire's Campaign Power Scaling matches 0413, row for row", () =
   assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join());
   assert.match(md, /The Focus Stats for the Vampire are BOD, REF, and MOB/);
   assert.equal(VA().campaignPowerScaling.focusStats.join(" "), "BOD REF MOB");
-  // F39's stub reads the book's sentence: Base Powers, Max Starting Rank.
+  // The book's sentence is still F39's old reading; Ken's ruling (Decision 215, W88) is
+  // that Innate powers are granted and Base Powers buy the Bloodline's, none above Max Starting Rank.
   assert.match(md, /Spend your Base Powers on Innate and Bloodline powers; no power starts above your Max Starting Rank\./);
-  assert.equal(JSON.stringify(VA().powersBought), JSON.stringify({ countBy: "campaignPowerScaling.basePowers", maxRankBy: "campaignPowerScaling.maxStartingRank" }));
+  assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Spend your Base Powers on your Bloodline's powers; none starts above your Max Starting Rank\./);
+  assert.equal(JSON.stringify(VA().powersBought), JSON.stringify({ countBy: "campaignPowerScaling.basePowers", maxRankBy: "campaignPowerScaling.maxStartingRank", granted: "innate" }));
+  // The Werewolf buys the same way, reading the same columns of its own table.
+  assert.equal(JSON.stringify(WW().powersBought), JSON.stringify(VA().powersBought));
+  assert.match(WW().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Spend your Base Powers on your Origin's powers; none starts above your Max Starting Rank\./);
 });
 
 test("R16: every Innate and Bloodline power is the book's, by name, cost, effect, Per Rank and printed maximum", () => {
@@ -1401,6 +1406,12 @@ test("R16: each Bloodline's features are the book's, and the Draugur's Ancient W
   for (const o of opts) {
     const sect = md.slice(md.indexOf(`### ${o.name} —`));
     for (const f of o.features) {
+      // Built to Last is Deighton's F41 ruling (Decision 215): the book's line still reads as a pick
+      // until crb-catch-up fixes it, so the data's own words are pinned instead.
+      if (f.name === "Built to Last") {
+        assert.equal(f.text, "Iron Hide is a long shell, Icebound Resilience a short surge. You can hold both; they don't stack.");
+        continue;
+      }
       const m = new RegExp(`\\*\\*${f.name.replace(/'/g, "’")}:\\*\\* ([^\\n]+)`).exec(sect);
       assert.ok(m, `0413's ${o.name} has no ${f.name}`);
       // The Code's "Some examples are below." is its choice's text, over the table.
@@ -1415,9 +1426,10 @@ test("R16: each Bloodline's features are the book's, and the Draugur's Ancient W
   const codes = pipeRows(md, "The ");
   assert.equal(JSON.stringify(choice("code").examples.map(r => [r.name, ...r.values])), JSON.stringify(codes), "the Code's examples aren't the book's");
   assert.equal(choice("code").fields.map(f => f.name).join(", "), "The Hunt, The Bond, The Word");
-  // Built to Last names its two powers, both Upyr.
-  const btl = opts.find(o => o.id === "upyr").choices.find(c => c.id === "built-to-last");
-  assert.equal(btl.options.map(id => VA().powers.find(p => p.id === id && p.origin === "upyr").name).join(" or "), "Iron Hide or Icebound Resilience");
+  // Built to Last is no choice (F41, Decision 215): both powers are ordinary Upyr powers that don't stack.
+  assert.equal((opts.find(o => o.id === "upyr").choices || []).length, 0);
+  const noStack = VA().powers.filter(p => (p.grants || []).some(g => g.noStack === "built-to-last"));
+  assert.equal(noStack.map(p => `${p.name}@${p.origin}`).join(" and "), "Icebound Resilience@upyr and Iron Hide@upyr");
 });
 
 test("R16: the Thirst is the book's: 3 SFR a fresh HL, 2 a stored one up to half, half RoU a day unfed, Hunger at RoU", () => {
@@ -1428,6 +1440,9 @@ test("R16: the Thirst is the book's: 3 SFR a fresh HL, 2 a stored one up to half
   assert.match(md, /When your SFR falls to your RoU or lower, the monster starts negotiating\. Make a WILL Essence check \(TN 7, TH 1\) or fall into a Blood Frenzy\./);
   const p = VA().coreMechanic.panels.find(x => x.type === "feed");
   assert.equal(JSON.stringify(p.kinds.map(k => [k.id, k.perHL, k.upToShare || null])), JSON.stringify([["fresh", 3, null], ["stored", 2, 0.5]]));
+  // Deighton (Q21, Decision 215): a day without rest is the day's half RoU and 2 more, and it does not rise.
+  assert.equal(JSON.stringify([p.unrested.share, p.unrested.plus]), "[0.5,2]");
+  assert.match(VA().vulnerabilities.find(v => v.id === "day-rest").description, /half your RoU in SFR and 2 more. It doesn't rise/);
   assert.equal(p.unfed.share, 0.5);
   assert.equal(p.low.at, "rou");
   assert.match(p.low.text, /WILL Essence check \(TN 7, TH 1\) or fall into a Blood Frenzy/);
