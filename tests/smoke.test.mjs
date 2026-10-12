@@ -7497,7 +7497,9 @@ test("Buy or Raise a Power: a Strigoi learns a Bloodline power from the modal, r
   assert.equal(veil.textContent, "Learn");
   assert.match(veil.closest("tr").textContent, /40 IP/);
   assert.equal(app.$('#modal [data-raise="power|iron-hide"]'), null, "another Bloodline's power is offered");
+  customForm(app, "Typed", "kept");
   app.click('#modal [data-raise="power|veil-of-night"]');
+  assert.equal(app.$('#modal [data-pwcustom="name"]').value, "Typed", "a purchase wiped the typed name");
   assert.equal(activeChar(app).progression.powerIpe["veil-of-night"], 1);
   assert.match(modal().textContent, /You have 60 IP/);
   assert.equal(app.$('#modal [data-raise="power|veil-of-night"]').textContent, "Raise", "the learned power didn't move to Your powers");
@@ -7518,7 +7520,7 @@ test("Buy or Raise a Power: a Professional adds a Custom power for 40 IP, sees i
   const app = openSheet(ch, "progression");
   app.click('[data-raiseopen="power"]');
   assert.ok(!app.$('#modal [data-pwcustom="cost"]'), "a cost box shows off Admin");
-  assert.match(app.$("#modal").textContent, /40 IP[\s\S]*You have 50 IP/);
+  assert.match(app.$("#modal").textContent, /You have 50 IP[\s\S]*costs 40 IP/);
   app.click("#modal [data-pwcustom-go]");                  // no name
   assert.equal(activeChar(app).powers.length, 0, "a nameless power was added");
   customForm(app, "Ghost Sight", "Sees the dead.");
@@ -7542,6 +7544,8 @@ test("Buy or Raise a Power: a Professional adds a Custom power for 40 IP, sees i
   app.click(`[data-sec="${sec}"]`);
   app.click("#main [data-pwdel]");
   app.click("[data-askyes], #modal [data-yes]");
+  assert.equal(activeChar(app).powers.length, 0, "Admin's Remove left the power");
+  assert.equal(activeChar(app).progression.powerIpe[c.powers[0].id], undefined);
   assert.deepEqual(app.errors, []);
 });
 

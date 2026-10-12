@@ -2516,13 +2516,12 @@ function raiseIP(ch, type, id){
 }
 // Custom power (Decision 216): a name and what it does, for a new power's
 // price in play, or at Admin's own cost, blank for free.
-function customPowerFormHtml(ch){
-  const ip = Engine.ipState(ch).available;
+function customPowerFormHtml(){
   return `<div class="sect">Custom power</div><div class="pw-custom">
     <label class="field"><span>Name</span><input type="text" data-pwcustom="name"></label>
     <label class="field"><span>Description</span><textarea rows="2" data-pwcustom="effect"></textarea></label>
     ${S.admin ? powerCostHtml(k=>`data-pwcustom="${k}"`, true) : ""}
-    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))} You have ${ip} IP.</p>
+    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))}</p>
     <button class="btn" data-pwcustom-go>Add power</button></div>`;
 }
 function addCustomPowerFrom(body){
@@ -2577,8 +2576,7 @@ function raiseResultsHtml(ch, type){
     const all = Engine.powerRanks(ch), held = all.filter(p=>!p.learn), learn = all.filter(p=>p.learn);
     const table = ps => `<table class="ref spell-results raise-results"><tbody>${ps.map(row).join("")}</tbody></table>`;
     return (held.length ? `<div class="sect">Your powers</div>${table(held)}` : "")
-      + (learn.length ? `<div class="sect">Learn a new power</div>${table(learn)}` : "")
-      + customPowerFormHtml(ch);
+      + (learn.length ? `<div class="sect">Learn a new power</div>${table(learn)}` : "");
   }
   const q = String((S.raisePick||{}).q||"").trim().toLowerCase(), focused = Engine.focusedSkillIds(ch);
   const hit = s => !q || `${s.name} ${s.description||""}`.toLowerCase().includes(q);
@@ -2600,17 +2598,19 @@ function openRaisePicker(type){
   const search = type==="skill" ? `<div class="hitrow"><input type="search" data-raiseq placeholder="Search skills" aria-label="Search skills"></div>` : "";
   openModal({ title: RAISE_TITLE[type],
     html: `<div class="spell-pick raise-pick"><div class="pick-head">${search}<p class="pick-status" data-raisestatus aria-live="polite">${raiseStatusHtml(ch, type)}</p></div>
-      <div data-raiseresults>${raiseResultsHtml(ch, type)}</div></div>`,
+      <div data-raiseresults>${raiseResultsHtml(ch, type)}</div>
+      ${type==="power" ? `<div data-pwcustomform>${customPowerFormHtml()}</div>` : ""}</div>`,
     foot: pickerFootHtml(), returnTo: `[data-raiseopen="${type}"]`, onClose: ()=>{ S.raisePick=null; },
     bind: body => {
       const results = body.querySelector("[data-raiseresults]"), status = body.querySelector("[data-raisestatus]");
       const refresh = () => keepPlace(results, ()=>{ results.innerHTML = raiseResultsHtml(S.ch, type); status.innerHTML = raiseStatusHtml(S.ch, type); }, ["#modal-title"]);
-      // The Custom power form is typed into, so a row's click never touches it.
-      results.addEventListener("click", e=>{
+      // The Custom power form sits outside the results, so a purchase's
+      // redraw never wipes what's typed; only a successful Add clears it.
+      const form = body.querySelector("[data-pwcustomform]");
+      if (form) form.onclick = e=>{
         if (!e.target.closest("[data-pwcustom-go]")) return;
-        e.stopPropagation();
-        if (addCustomPowerFrom(results)) refresh();
-      }, true);
+        if (addCustomPowerFrom(form)){ form.innerHTML = customPowerFormHtml(); refresh(); }
+      };
       const q = body.querySelector("[data-raiseq]");
       if (q) q.oninput = e => { S.raisePick.q = e.target.value; refresh(); };
       // W23: a click anywhere on a row is its button's click.

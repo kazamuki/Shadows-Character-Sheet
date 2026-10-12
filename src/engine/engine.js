@@ -2866,6 +2866,7 @@ const Engine = (() => {
   function addCustomPower(ch, input, { admin=false, creation=false }={}){
     const locked = ch.creation && ch.creation.locked===true;
     if (creation && locked) return { ok:false, why:"This character is locked. Custom powers are added in play." };
+    if (creation && (writeInSpec(ch) || !cp(ch))) return { ok:false, why:"Custom powers aren't bought with Character Points here." };
     if (!creation && !locked) return { ok:false, why:"Custom powers are added in play, once the character is locked." };
     const i = isPlainObj(input) ? input : {}, name = txt(i.name).trim();
     if (!name) return { ok:false, why:"Give the power a name." };

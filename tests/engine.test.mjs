@@ -7320,6 +7320,14 @@ test("Decision 216: Custom power is open to every archetype: 40 IP in play, free
   same(Engine.ipCost(admin, "power", f.id).cost, 20);
 });
 
+test("Decision 216: Custom power refuses a creation call on a write-in archetype or a character with no power level", () => {
+  const wi = subject(); wi.identity.archetype = D.archetypes.find(a => a.writeIn).id; wi.creation.locked = false; wi.creation.powerLevel = D.powerLevels[0].id;
+  assert.equal(Engine.addCustomPower(wi, { name: "X" }, { creation: true }).ok, false);
+  const bare = proChar(); bare.creation.locked = false; bare.creation.powerLevel = null;
+  assert.equal(Engine.addCustomPower(bare, { name: "X", free: true }, { creation: true }).ok, false);
+  assert.equal(bare.powers.length, 0);
+});
+
 test("Decision 216: Custom power refuses a blank name, short IP, and the wrong door for the lock", () => {
   const pro = proChar(); pro.progression.ip.earned = 30;
   same(Engine.addCustomPower(pro, { name: "  " }), { ok: false, why: "Give the power a name." });

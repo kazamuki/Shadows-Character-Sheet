@@ -2586,7 +2586,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     decision replaced them: Decision 18's INDEX line still said "+1 per point
     above 10" after Decision 98, and six more were in the same state (14, 21,
     27, 32, 58, 99), only two of them noted anywhere. So the ledger entry gets
-    `→ **Superseded [in part] by Decision 216**` with a clause saying what, the
+    `→ **Superseded [in part] by Decision N**` with a clause saying what, the
     INDEX line gets `→ **superseded [in part] by N**`, and a wholly replaced
     line is struck through. Entries are never deleted and never renumbered.
     `tests/docs.test.mjs` fails if the two disagree. The old marker "→
