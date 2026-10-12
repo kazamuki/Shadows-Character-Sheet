@@ -1040,3 +1040,20 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
   assert.equal(app.$("img"), null);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 216: powerIpe naming another Bloodline's or a nonexistent power holds nothing, and boughtWithCp is a strict true", () => {
+  const c = Engine.newCharacter();
+  c.identity.archetype = "vampire"; c.archetypeChoices.specialization = ["strigoi"];
+  c.creation.powerLevel = D.powerLevels[0].id; c.creation.locked = true;
+  c.progression.powerIpe = { "hels-dread": 2, "no-such-power": 5, [P("pw.id")]: 1, "constructor": 3, "__proto__": 4 };
+  const m = Engine.migrate(JSON.parse(JSON.stringify(c)));
+  let ranks;
+  assert.doesNotThrow(() => { ranks = Engine.powerRanks(m); });
+  for (const id of ["hels-dread", "no-such-power", P("pw.id")]) assert.equal(ranks.some(p => p.id === id && !p.learn), false, id);
+  for (const p of Engine.archetypePowers(m)) assert.ok(Number.isInteger(p.rank), `${p.id} rank ${p.rank}`);
+  for (const v of ["yes", "true", 1, {}, [], null]) {
+    const w = Engine.migrate({ powers: [{ id: "pw-ZZZZZZZZ", name: "X", boughtWithCp: v }] });
+    assert.equal(w.powers[0].boughtWithCp, false, JSON.stringify(v));
+    assert.equal(Engine.cp(Object.assign(w, { creation: Object.assign(w.creation, { powerLevel: D.powerLevels[0].id }) })).spent, 0, "a junk mark cost CP");
+  }
+});

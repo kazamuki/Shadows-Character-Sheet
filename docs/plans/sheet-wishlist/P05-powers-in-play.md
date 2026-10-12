@@ -4,7 +4,7 @@
 (`WISHLIST.md`); Decisions 153, 154, 157, 194, 196, 200, 215.
 **Status:** **drafted 2026-10-11 by Claude (Opus)**, pre-flighted against
 `main` after #167 (0.41.0's release). **Approved by Ken 2026-10-11:** PQ1,
-PQ2 and PQ5 on their defaults; PQ3, PQ4 and PQ6 answered (§4). Ready to build.
+PQ2 and PQ5 on their defaults; PQ3, PQ4 and PQ6 answered (§4). **Built** 2026-10-11 (#170, Decision 216, app 0.42.0, schema 0.21).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs alone.** It touches `engine.js`, `sheet.js` and `wizard.js`, maybe a
 few `appCopy` lines in `shadows-data.js`, plus tests and docs. Nothing in

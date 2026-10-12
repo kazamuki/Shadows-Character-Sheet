@@ -796,6 +796,27 @@ the same way again.
 
 ### Progression
 
+**W72 — Learn an archetype power in play.** *Claude · → Decision 216, app 0.42.0: Buy or Raise a Power lists a Bloodline's or Origin's unheld powers under Learn a new power, at 40 IP*
+A Vampire holds only the powers its Base Powers placed a rank in (Decision 200),
+so **Raise a Power** lists only those: an Innate or Bloodline power it never
+took can't be learned with IP. `0450` prices a new power at 40 IP; Raise a
+Power could list the archetype's unheld powers under **Learn**, as it does an
+untrained Discipline. Stored as `powerIpe` alone, a power learned in play
+would need its rank read as `powerIpe` with no Base Power under it. P4b's
+Splice and Cursed Evolution (another Bloodline's powers, VQ4) want the same
+door, so build it there or before.
+
+**W106 — A custom power the GM grants.** *Ken · → Decision 216, app 0.42.0, schema 0.21: Custom power, 40 IP in play, free on Admin; 5 CP at creation, free as a GM grant*
+A GM sometimes gives a character something no book lists. **Raise a Power**
+(renamed **Buy or Raise a Power**) gets a **Custom power**: a name and a
+written description, nothing the app rolls. Written powers (`powers`,
+Decision 153) are the write-in archetype's only today, behind `hasPowers`;
+this opens them to every archetype. **Ken, 2026-10-11:** 40 IP in play,
+free on Admin; and at creation, for a GM building a character at the table,
+5 CP or free as a GM grant (P5's PQ3, PQ4, PQ6).
+*To respect:* Decision 194 rejected the GM's price for the write-in's **Add
+power**, which stays at `0450`'s 40. A custom power is a different door.
+
 **W71 — Raise a power with IP, and give every power ranks.** *Ken · → Decision 194, app 0.38.0: Raise a Power on Progression, every power ranked*
 Progression offers **Raise a Stat** and **Raise a Skill**, but not a power,
 though `0450_Advancement` prices it: **Power or Discipline, current rank × 20**

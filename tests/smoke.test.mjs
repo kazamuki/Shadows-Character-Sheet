@@ -394,7 +394,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.20");
+  assert.equal(resumed.meta.schemaVersion, "0.21");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -2601,14 +2601,14 @@ test("Progression: Raise a Stat and Raise a Skill open modals, and a raise keeps
   assert.deepEqual(app.errors, []);
 });
 
-test("Raise a Power: a Discipline and a written power rise on Progression, the journal says from what to what, and a Professional has no button (Decision 194)", () => {
+test("Raise a Power: a Discipline and a written power rise on Progression, the journal says from what to what, and a Professional gets Custom power only (Decisions 194, 216)", () => {
   const ch = lockedCharacter();
   ch.progression.ip.earned = 100;
   const evo = Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank;
   const app = openSheet(ch, "progression");
   app.click('[data-raiseopen="power"]');
   const modal = app.$("#modal");
-  assert.ok(modal.open && /Raise a Power/.test(modal.textContent), "Raise a Power didn't open its modal");
+  assert.ok(modal.open && /Buy or Raise a Power/.test(modal.textContent), "Buy or Raise a Power didn't open its modal");
   assert.match(modal.textContent, /Evocation[\s\S]*Enchantment[\s\S]*Alchemy/);
   assert.match(app.$('#modal [data-raise="power|alchemy"]').closest("tr").textContent, /Learn|40 IP/);
   app.click('#modal [data-raise="power|evocation"]');
@@ -2630,7 +2630,10 @@ test("Raise a Power: a Discipline and a written power rise on Progression, the j
   assert.deepEqual(wapp.errors, []);
 
   const pro = lockedCharacter(); pro.identity.archetype = "professional";
-  assert.equal(openSheet(pro, "progression").$('[data-raiseopen="power"]'), null, "a Professional is offered powers to raise");
+  const papp = openSheet(pro, "progression");
+  assert.equal(papp.$('[data-raiseopen="power"]').textContent, "Buy or Raise a Power", "a Professional isn't offered the button");
+  papp.click('[data-raiseopen="power"]');
+  assert.ok(!papp.$("#modal [data-raise]") && papp.$("#modal [data-pwcustom-go]"), "a Professional's modal is more than Custom power");
 });
 
 // Decision 160: the vitals panel pins beside the sheet. The pin is the
@@ -5576,7 +5579,7 @@ test("a Trueborn's sheet: the powers with ranks and costs, Base Powers placed, R
   app.click('[data-raiseopen="power"]');
   const row = app.$$("[data-raiseresults] tr").find(r => /Apex Fury/.test(r.textContent));
   assert.match(row.textContent, /Archetype power · rank 3 · \+2 from IP · past the book's 3.*3 → 4.*60 IP/s);
-  assert.equal(app.$$("[data-raiseresults] tr").length, 6, "Raise a Power doesn't list the Innate five and the one Trueborn power placed");
+  assert.equal(app.$$("[data-raiseresults] tr").filter(r => !r.querySelector("[data-raise]").closest("tr").textContent.includes("Learn")).length, 6, "Raise a Power doesn't list the Innate five and the one Trueborn power placed");
   app.click("#modal [data-modalclose]");
 
   app.click('[data-sec="trackers"]');
@@ -7472,4 +7475,119 @@ test("P4 (W59): a press is announced once, politely, from outside #main, in the 
   await later(adm);
   assert.match(adm.$("#announcer").textContent, /^Base Powers in .+ 1$/);
   assert.deepEqual([...app.errors, ...adm.errors], []);
+});
+
+// ── P5: Buy or Raise a Power (Decision 216) ──────────────────────────────
+const fill = (app, sel, v) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.value = v; el.dispatchEvent(new app.window.Event("input", { bubbles: true })); };
+const customForm = (app, name, effect) => { fill(app, '#modal [data-pwcustom="name"]', name); fill(app, '#modal [data-pwcustom="effect"]', effect || ""); };
+const logLabels = app => (activeChar(app).audit || []).map(e => e.label);
+
+test("Buy or Raise a Power: a Strigoi learns a Bloodline power from the modal, raises it, and Undo takes the learn back (Decision 216)", () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "vampire"; ch.creation.powerLevel = "street";
+  ch.archetypeChoices.specialization = ["strigoi"]; ch.archetypeChoices.basePowers = { "shadow-play": 1 };
+  ch.progression.ip.earned = 100;
+  const app = openSheet(ch, "progression");
+  assert.equal(app.$('[data-raiseopen="power"]').textContent, "Buy or Raise a Power");
+  app.click('[data-raiseopen="power"]');
+  const modal = () => app.$("#modal");
+  assert.match(modal().textContent, /Your powers[\s\S]*Learn a new power[\s\S]*Custom power/);
+  assert.ok(!app.$('#modal [data-raise="power|shadow-play"]').closest("tr").textContent.includes("Learn"), "a held power is on the Learn list");
+  const veil = app.$('#modal [data-raise="power|veil-of-night"]');
+  assert.equal(veil.textContent, "Learn");
+  assert.match(veil.closest("tr").textContent, /40 IP/);
+  assert.equal(app.$('#modal [data-raise="power|iron-hide"]'), null, "another Bloodline's power is offered");
+  customForm(app, "Typed", "kept");
+  app.click('#modal [data-raise="power|veil-of-night"]');
+  assert.equal(app.$('#modal [data-pwcustom="name"]').value, "Typed", "a purchase wiped the typed name");
+  assert.equal(activeChar(app).progression.powerIpe["veil-of-night"], 1);
+  assert.match(modal().textContent, /You have 60 IP/);
+  assert.equal(app.$('#modal [data-raise="power|veil-of-night"]').textContent, "Raise", "the learned power didn't move to Your powers");
+  app.click('#modal [data-raise="power|veil-of-night"]');
+  assert.equal(activeChar(app).progression.powerIpe["veil-of-night"], 2);
+  app.click("#modal [data-modalclose]");
+  assert.match(app.$("#main .journal").textContent, /Veil of Night \(Masked\) 0 → 1/);
+  app.click('[data-sec="sessions"]');
+  app.click("button[data-undolast]");                      // the raise
+  app.click("button[data-undolast]");                      // the learn
+  assert.equal(activeChar(app).progression.powerIpe["veil-of-night"], undefined, "Undo didn't take the learn back");
+  assert.equal(activeChar(app).progression.ip.log.length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Buy or Raise a Power: a Professional adds a Custom power for 40 IP, sees it once on the Character tab, and Admin removes it (Decision 216)", () => {
+  const ch = lockedCharacter(); ch.identity.archetype = "professional"; ch.progression.ip.earned = 50;
+  const app = openSheet(ch, "progression");
+  app.click('[data-raiseopen="power"]');
+  assert.ok(!app.$('#modal [data-pwcustom="cost"]'), "a cost box shows off Admin");
+  assert.match(app.$("#modal").textContent, /You have 50 IP[\s\S]*costs 40 IP/);
+  app.click("#modal [data-pwcustom-go]");                  // no name
+  assert.equal(activeChar(app).powers.length, 0, "a nameless power was added");
+  customForm(app, "Ghost Sight", "Sees the dead.");
+  app.click("#modal [data-pwcustom-go]");
+  const c = activeChar(app);
+  assert.deepEqual([c.powers.length, c.powers[0].name, c.powers[0].boughtWithCp, Engine.ipState(c).available], [1, "Ghost Sight", false, 10]);
+  assert.match(app.$('#modal [data-raise]').closest("tr").textContent, /Ghost Sight[\s\S]*rank 1/, "it isn't under Your powers");
+  assert.deepEqual(logLabels(app).filter(l => /Custom power/.test(l)), ["Custom power: Ghost Sight (40 IP)"]);
+  customForm(app, "Too dear", "");                         // 10 IP left: refused, and the form keeps what was typed
+  app.click("#modal [data-pwcustom-go]");
+  assert.equal(activeChar(app).powers.length, 1);
+  assert.equal(app.$('#modal [data-pwcustom="name"]').value, "Too dear", "a refusal cleared the form");
+  app.click("#modal [data-modalclose]");
+
+  app.click('[data-sec="main"]');                          // the Character tab is where the archetype lives
+  const sec = app.$$("[data-sec]").map(b => b.dataset.sec).find(id => /arch|char/.test(id)) || "archetype";
+  app.click(`[data-sec="${sec}"]`);
+  assert.equal(app.$$("#main .pw-card").filter(el => /Ghost Sight/.test(el.textContent)).length, 1, "the custom power isn't shown exactly once");
+  assert.ok(app.$("#main [data-pwimprove]"), "no Improve on the card");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  app.click(`[data-sec="${sec}"]`);
+  app.click("#main [data-pwdel]");
+  app.click("[data-askyes], #modal [data-yes]");
+  assert.equal(activeChar(app).powers.length, 0, "Admin's Remove left the power");
+  assert.equal(activeChar(app).progression.powerIpe[c.powers[0].id], undefined);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Buy or Raise a Power: on Admin the Custom power form has an IP cost box, and blank is free with no spend (Decision 216)", () => {
+  const ch = lockedCharacter(); ch.identity.archetype = "professional"; ch.progression.ip.earned = 50;
+  const app = openSheet(ch, "progression");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  app.click('[data-sec="progression"]');
+  app.click('[data-raiseopen="power"]');
+  assert.ok(app.$('#modal [data-pwcustom="cost"]'), "Admin has no cost box");
+  customForm(app, "Ghost Sight", "");
+  app.click("#modal [data-pwcustom-go]");
+  const c = activeChar(app);
+  assert.deepEqual([c.powers.length, Engine.ipState(c).available, c.progression.ip.log.length], [1, 50, 0]);
+  assert.deepEqual(logLabels(app).filter(l => /Custom power/.test(l)), ["Custom power: Ghost Sight (free)"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("The CP step's Custom power: 5 CP, or free as a GM grant, and Add is off with its reason when CP is short (Decision 216)", () => {
+  const app = onStep("werewolf", "heroic", "character-points", ch => { ch.archetypeChoices.specialization = ["trueborn"]; });
+  const left = () => Number(/Remaining (\d+) CP/.exec(app.$(".jump-cp").textContent)[1]);
+  assert.match(app.$("#main").textContent, /Custom powers — a GM's, 5 CP each, or free/);
+  assert.match(app.$("#main").textContent, /sheet doesn't roll it/);
+  const before = left();
+  const add = (name, free) => { fill(app, '#main [data-pwcustom="name"]', name); app.$("#main [data-pwcustom-free]").checked = !!free; app.$("#main [data-pwcustom-free]").dispatchEvent(new app.window.Event("change", { bubbles: true })); app.click("#main [data-pwcustom-go]"); };
+  add("Moon-Eye");
+  assert.equal(left(), before - 5, "a paid custom power didn't cost 5 CP");
+  assert.match(app.$("#main").textContent, /Moon-Eye[\s\S]*5 CP/);
+  add("Gift", true);
+  assert.equal(left(), before - 5, "a GM grant cost CP");
+  assert.match(app.$("#main").textContent, /Gift[\s\S]*GM grant/);
+  app.click("#main [data-pwrm]");                          // Moon-Eye comes off: its 5 CP return
+  assert.equal(left(), before);
+  // Out of CP: Add is off and says why; the box turns it back on.
+  app.window.eval("S.ch.trackers.luck.bonus = 99; update();");
+  assert.ok(app.$("#main [data-pwcustom-go]").disabled);
+  assert.ok(!app.$("#main [data-pwcustom-why]").hidden && /No Character Points left/.test(app.$("#main [data-pwcustom-why]").textContent));
+  app.$("#main [data-pwcustom-free]").checked = true;
+  app.$("#main [data-pwcustom-free]").dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.ok(!app.$("#main [data-pwcustom-go]").disabled);
+  assert.deepEqual(app.errors, []);
+  // The write-in archetype writes its powers free on the Archetype step: no form here.
+  const wi = onStep(D.archetypes.find(a => a.writeIn).id, "heroic", "character-points");
+  assert.equal(wi.$("#main [data-pwcustom-go]"), null);
 });
