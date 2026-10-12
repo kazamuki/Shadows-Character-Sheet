@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.42.0",
-    "date": null,
+    "date": "2026-10-12",
     "intro": [],
     "items": [
       "**Raise a Power is now Buy or Raise a Power.** A Vampire or Werewolf can learn a power its Bloodline or Origin has but its creation didn't take, for 40 IP. It starts at rank 1 and raises like the rest. A power with no ranks is simply held once learned.",
