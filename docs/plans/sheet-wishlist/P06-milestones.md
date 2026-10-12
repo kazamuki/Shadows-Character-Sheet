@@ -8,8 +8,8 @@ format of a worked decision. Deighton's rulings are
 `main` after #170. **Ken answered PQ1–PQ7 on 2026-10-12** and added three
 more Minors as choosers (Honed, Redeemed, Talented), which grew the order:
 five Minors now ask a question when taken, a Major can be written in, and
-there is a schema bump. §4 has the answers (PQ8 settled by Deighton's Q25) and PQ9–PQ10, with defaults;
-**not yet approved.**
+there is a schema bump. §4 has every answer (PQ8 settled by Deighton's Q25; PQ9 and PQ10 by Ken on 2026-10-12);
+**approved by Ken 2026-10-12, ready to build.**
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs alone, and is a big one.** It touches `shadows-data.js` (`milestones`), `engine.js` (`majorPool`, `majorOffered`, `canTakeMinor`,
 `takeMilestone`, one new `takeMinorChoice`, `versionCheck`, `migrate`),
@@ -150,8 +150,8 @@ mark on an entry; if one already has a mark, extend it as P5 did with 153.
 | PQ6 | **A chooser with nothing to choose** (Steadied at full SAN with no Massive level lost; Redeemed with no small Disadvantage; Talented with nothing to take). | **Ken, 2026-10-12: the default.** Take is off, with a reason ("Nothing to restore."). A Minor shouldn't be spent on nothing. Undo stays for a mistake. |
 | PQ7 | **Written-in Major: does it use an unlocked slot, and is it free?** | **Ken, 2026-10-12: the default.** It uses a Major slot, costs no IP, and **Admin can add one with no slot**, free, as Admin adds a power (Decision 154). Name and description, no prerequisites, no grants. |
 | PQ8 | **How far does Talented's rank-up reach?** | **Ken, 2026-10-12, after Deighton's Q25 ("Any Advantage"): any Advantage that can be ranked up.** A held Advantage with a rank to spare (below its `maxRank`) is offered at any price; a new one only at 5 points or less per rank. A held one gets a rank, not a new row. No flag: Deighton ruled it. |
-| PQ9 | **What does "5 points or less" measure?** An Advantage's `cost` is per rank; a Disadvantage's `pointsGranted` is per rank too. | **Per rank**, rank 1's price: an Advantage with `cost` ≤ 5 may be taken new; a Disadvantage with `pointsGranted` ≤ 5 may be redeemed, at any held rank. If the book prices the whole stack, say so in the PR and stop and ask. |
-| PQ10 | **Honed on WILL, TOL or LUCK: what is the cap?** Q28 caps Honed and Skilled at 10. WILL and TOL are derived and LUCK starts at 4. | **The same cap, `statRules.max`, read from `statValue`/the derived value.** An Adjustment adds to the final value, as the Adjustments ledger already does (`adjFor`). If a derived stat can already exceed 10 by its formula, don't refuse a raise for that alone: **stop and ask.** |
+| PQ9 | **What does "5 points or less" measure?** An Advantage's `cost` is per rank; a Disadvantage's `pointsGranted` is per rank too. | **Ken, 2026-10-12: yes.** **Per rank**, rank 1's price: an Advantage with `cost` ≤ 5 may be taken new; a Disadvantage with `pointsGranted` ≤ 5 may be redeemed, at any held rank. If the book prices the whole stack, say so in the PR and stop and ask. |
+| PQ10 | **Honed on WILL, TOL or LUCK: what is the cap?** Q28 caps Honed and Skilled at 10. WILL and TOL are derived and LUCK starts at 4. | **Ken, 2026-10-12: the default.** **The same cap, `statRules.max`, read from `statValue`/the derived value.** An Adjustment adds to the final value, as the Adjustments ledger already does (`adjFor`). If a derived stat can already exceed 10 by its formula, don't refuse a raise for that alone: **stop and ask.** |
 
 Consequence to know, not a question: **Vampires lose the General Majors
 today** and have none until P4b writes their own, so **Add one** is what a
@@ -485,7 +485,7 @@ Suggested CHANGELOG lines:
 ## 14. Handing it over
 
 Paste this as the first message of a fresh Sonnet session, once this order
-is on `main` and Ken has answered §4:
+is on `main`:
 
 > Read `CLAUDE.md`, then `docs/plans/sheet-wishlist/P06-milestones.md`, and
 > build it. Ken's answers to PQ1–PQ10 are in its §4 (a blank answer is
