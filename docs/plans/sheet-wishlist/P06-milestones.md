@@ -8,11 +8,10 @@ format of a worked decision. Deighton's rulings are
 `main` after #170. **Ken answered PQ1–PQ7 on 2026-10-12** and added three
 more Minors as choosers (Honed, Redeemed, Talented), which grew the order:
 five Minors now ask a question when taken, a Major can be written in, and
-there is a schema bump. §4 has the answers and PQ8–PQ10, with defaults;
+there is a schema bump. §4 has the answers (PQ8 settled by Deighton's Q25) and PQ9–PQ10, with defaults;
 **not yet approved.**
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
-**Runs alone, and is a big one.** It touches `shadows-data.js` (`milestones`,
-one flagged entry), `engine.js` (`majorPool`, `majorOffered`, `canTakeMinor`,
+**Runs alone, and is a big one.** It touches `shadows-data.js` (`milestones`), `engine.js` (`majorPool`, `majorOffered`, `canTakeMinor`,
 `takeMilestone`, one new `takeMinorChoice`, `versionCheck`, `migrate`),
 `sheet.js` (the Milestones part of Progression, and its choosers), the tests,
 and the docs. Character schema 0.22. Nothing in `gm.js` or `private/` but a
@@ -41,8 +40,8 @@ one session:
   - **Redeemed:** pick a Disadvantage worth 5 points or less; it goes down one
     rank, and is removed at rank 1.
   - **Talented:** pick an Advantage this character can have, worth 5 points
-    or less to take new, or one it holds, to raise one rank. **Flagged:** the
-    book isn't clear how far a rank-up reaches (PQ8).
+    or less to take new, or any one it holds that can still rank up, to raise
+    one rank (Deighton's Q25, PQ8).
   - **Steadied**, the sixth Minor from `0450` (PQ3): restore 10 SAN, **or**
     one Health Level lost to Massive damage. It restores what was lost,
     never a new one.
@@ -116,11 +115,6 @@ When P6 is merged:
 - **F9 closes:** its `SCHEMA.md` §5 row, `flagged` in the data (the
   `majorGeneralNote` and the REVIEW comment above `minorShared`), and its
   `INDEX.md` §2 line. See the **close-a-flag** skill.
-- **A flag opens: F-N**, the next free F-number (Ken, 2026-10-12): how far
-  Talented's rank-up reaches. Use the **close-a-flag** skill's *Opening one*:
-  `flagged` and a `flagNote` on Talented, a `SCHEMA.md` §5 row, an `INDEX.md`
-  §2 line, and STATE's waiting-on lists. Stubbed as PQ8's default; a
-  `playerNote` on Talented says only what the sheet lists, never an F-number.
 - **CHANGELOG** lines under `[Unreleased] — app 0.43.0`, player voice (§12).
 
 ## 3. The decision, drafted
@@ -130,12 +124,12 @@ the Milestones topic, and mark what it replaces.
 
 ```
 N. **Any Minor Milestone repeats at any time; Improved is 3d10+30; Skilled, Honed, Redeemed, Talented and Steadied each ask what they give, by a chooser; the General Majors are the Professional's, and any archetype can write in a Major.**
-     *2026-10-1x · Ken + Claude (Deighton's rulings Q25–Q28, Q32) · Touches: minorShared, canTakeMinor, takeMilestone, takeMinorChoice, Improved, ipRoll, Skilled, Honed, Redeemed, Talented, Steadied, adjustments, majorGeneral, majorPool, majorOffered, majorById, growth.majorMilestones, custom Major, Milestones, versionCheck, migrate, character schema 0.22, F-N, F9, W103*
-     - **Decided:** `canTakeMinor` asks only that a Minor is unlocked. Improved's `ipRoll` is `{ count: 3, sides: 10, plus: 30 }`. A Minor's `choice` in the data names what taking it asks, and `takeMinorChoice` applies it with the Minor, as one change: Skilled `{ type: "skillRanks", count: 2, ranks: 1 }` (two different Skills, free ranks, journalled at 0 IP); Honed `{ type: "statPoint" }` (+1 Adjustment on any Stat, WILL, TOL and LUCK included, capped at the Stat maximum); Redeemed `{ type: "disadvantageRank", maxPoints: 5 }` (one rank down, removed at rank 1); Talented `{ type: "advantageRank", maxPoints: 5 }` (a new Advantage the archetype may buy, or one rank up on a held one: F-N); Steadied `{ type: "restore", options: [{ kind: "san", points: 10 }, { kind: "massiveLevel", levels: 1 }] }`, each clamped to what was lost. A Major is offered from the archetype's own `growth.majorMilestones` list, and from `majorGeneral` only where it is `"general"` (the Professional). A taken Major from either list is still found by id, still counts, still grants. Any archetype can write in a Major (`custom: true`, a name and a benefit, schema 0.22), which uses a Major slot and is text only.
+     *2026-10-1x · Ken + Claude (Deighton's rulings Q25–Q28, Q32) · Touches: minorShared, canTakeMinor, takeMilestone, takeMinorChoice, Improved, ipRoll, Skilled, Honed, Redeemed, Talented, Steadied, adjustments, majorGeneral, majorPool, majorOffered, majorById, growth.majorMilestones, custom Major, Milestones, versionCheck, migrate, character schema 0.22, F9, W103*
+     - **Decided:** `canTakeMinor` asks only that a Minor is unlocked. Improved's `ipRoll` is `{ count: 3, sides: 10, plus: 30 }`. A Minor's `choice` in the data names what taking it asks, and `takeMinorChoice` applies it with the Minor, as one change: Skilled `{ type: "skillRanks", count: 2, ranks: 1 }` (two different Skills, free ranks, journalled at 0 IP); Honed `{ type: "statPoint" }` (+1 Adjustment on any Stat, WILL, TOL and LUCK included, capped at the Stat maximum); Redeemed `{ type: "disadvantageRank", maxPoints: 5 }` (one rank down, removed at rank 1); Talented `{ type: "advantageRank", maxPoints: 5 }` (a new Advantage the archetype may buy, or one rank up on any held one with rank to spare); Steadied `{ type: "restore", options: [{ kind: "san", points: 10 }, { kind: "massiveLevel", levels: 1 }] }`, each clamped to what was lost. A Major is offered from the archetype's own `growth.majorMilestones` list, and from `majorGeneral` only where it is `"general"` (the Professional). A taken Major from either list is still found by id, still counts, still grants. Any archetype can write in a Major (`custom: true`, a name and a benefit, schema 0.22), which uses a Major slot and is text only.
      - **Why:** Deighton (2026-10-10, Q25–Q28, Q32): the rebalanced values stand, any Minor repeats, the General Majors were the Professional's. Ken (2026-10-12): a Minor that gives a choice should ask for it, Steadied restores what was lost, and a GM can write a Major in.
      - **Rejected:** removing a taken General Major from a saved Arcanist, Vampire or Cyborg (a file's choices are never discarded); the General list for everyone "until their own are written" (Deighton ruled it out); a `repeatable` flag per Minor (all repeat: a setting nothing reads, Decision 135); a new `source` value for a Talented Advantage (Decision 142's *Revisit if*; nothing reads it, and a rank on a bought row needs none); Honed as a new stored field (the Adjustments ledger already takes it).
-     - **Replaces:** Decision 29 in part (the Minor repeat floor). Decision 199 in part (a Werewolf's Majors are offered alone, VQ16's "until F9"). Closes F9, opens F-N.
-     - **Revisit if:** another archetype's Majors are written; F-N is ruled; Withering's levels count as lost (PQ5).
+     - **Replaces:** Decision 29 in part (the Minor repeat floor). Decision 199 in part (a Werewolf's Majors are offered alone, VQ16's "until F9"). Closes F9.
+     - **Revisit if:** another archetype's Majors are written; Withering's levels count as lost (PQ5).
      - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #…, log 2026-10-1x.
 ```
 
@@ -155,7 +149,7 @@ mark on an entry; if one already has a mark, extend it as P5 did with 153.
 | PQ5 | **"Something else that removes a Health Level":** the sheet has Massive damage's levels. Withering is HP that can't regenerate. Does Steadied restore a Withering level too? | **Ken, 2026-10-12: Massive levels only.** |
 | PQ6 | **A chooser with nothing to choose** (Steadied at full SAN with no Massive level lost; Redeemed with no small Disadvantage; Talented with nothing to take). | **Ken, 2026-10-12: the default.** Take is off, with a reason ("Nothing to restore."). A Minor shouldn't be spent on nothing. Undo stays for a mistake. |
 | PQ7 | **Written-in Major: does it use an unlocked slot, and is it free?** | **Ken, 2026-10-12: the default.** It uses a Major slot, costs no IP, and **Admin can add one with no slot**, free, as Admin adds a power (Decision 154). Name and description, no prerequisites, no grants. |
-| PQ8 | **How far does Talented's rank-up reach?** The book says "a Rank in an existing Advantage or a new Advantage (5 points or less)". Deighton ruled Q25 (any Advantage you own, the 5-point limit on a new one only), but **Ken, 2026-10-12: the CRB isn't clear whether it means any Advantage that can rank, or only the 5-point multi-rank ones. Flag it.** | **Build Q25's ruling and open a flag, F-N.** A held Advantage with a rank to spare (below its `maxRank`) is offered at any price; a new one only at 5 points or less per rank. Ranks, not new rows, for a held one. The flag asks Deighton and Ken (the CRB's `0450` words) which is meant, and is a one-line change in the data (`maxPoints` on the rank-up) if the answer is "5 or less". |
+| PQ8 | **How far does Talented's rank-up reach?** | **Ken, 2026-10-12, after Deighton's Q25 ("Any Advantage"): any Advantage that can be ranked up.** A held Advantage with a rank to spare (below its `maxRank`) is offered at any price; a new one only at 5 points or less per rank. A held one gets a rank, not a new row. No flag: Deighton ruled it. |
 | PQ9 | **What does "5 points or less" measure?** An Advantage's `cost` is per rank; a Disadvantage's `pointsGranted` is per rank too. | **Per rank**, rank 1's price: an Advantage with `cost` ≤ 5 may be taken new; a Disadvantage with `pointsGranted` ≤ 5 may be redeemed, at any held rank. If the book prices the whole stack, say so in the PR and stop and ask. |
 | PQ10 | **Honed on WILL, TOL or LUCK: what is the cap?** Q28 caps Honed and Skilled at 10. WILL and TOL are derived and LUCK starts at 4. | **The same cap, `statRules.max`, read from `statValue`/the derived value.** An Adjustment adds to the final value, as the Adjustments ledger already does (`adjFor`). If a derived stat can already exceed 10 by its formula, don't refuse a raise for that alone: **stop and ask.** |
 
@@ -197,7 +191,6 @@ list is `[]`). Say so in the PR.
   - Admin's Add advantage and Add disadvantage (`sheet.js` ~3378, ~3395):
     the existing way a locked character gains a row. Talented's new
     Advantage is that row.
-- `docs/SCHEMA.md` §5 and the **close-a-flag** skill, for opening F-N.
 - `src/data/shadows-data.js`: `milestones` (`rules`, `minorShared`,
   `majorGeneral`, `majorGeneralNote`, `minorNote`, `majorNote`,
   `minorSharedSource`), and each archetype's `growth`. The Professional's is
@@ -273,7 +266,6 @@ list is `[]`). Say so in the PR.
      `maxPoints`, `checkPrereqs` met (a prose-only requirement is the
      table's call: allow it, as Take Major does), and not already held; push
      `{ id, rank: 1, notes: "" }`. A held one at its `maxRank` is refused.
-     The data's `flagged` and its `playerNote` for F-N sit on Talented.
    `takeMilestone` for a Minor with a `choice` and no pick refuses "Choose
    what it gives."
 5. **A written-in Major**, `addCustomMajor(ch, { name, benefit }, { admin })`:
@@ -298,10 +290,7 @@ list is `[]`). Say so in the PR.
    words. Each of the five gets its `choice` as the decision says, and
    Steadied is added to `minorShared`, in the book's order. A `choice` is
    read by `takeMinorChoice` and nothing else (Decision 135): no archetype or
-   Minor ids in code. **Talented carries `flagged: true`, a `flagNote` naming
-   F-N, and a `playerNote`** (plain: "Raises one rank of an Advantage you
-   hold, or takes a new one worth 5 points or less. Your GM has the last
-   word on how far a rank can go.").
+   Minor ids in code.
 3. `minorNote` and `majorNote` and `majorGeneralNote` say what is now true
    (Minors repeat; General Majors are the Professional's). The REVIEW
    comment above `minorShared` and `majorGeneralNote`'s F9 are removed with
@@ -329,7 +318,7 @@ list is `[]`). Say so in the PR.
      rank and "rank 2 → 1" or "removed"; one to pick.
    - **Talented:** two sections like Buy or Raise a Power's, **Raise one you
      hold** (rank → rank + 1) and **Take a new one** (its cost), searchable;
-     one to pick. Talented's `playerNote` shows above them.
+     one to pick.
    - **Steadied:** two buttons, each with what it will restore ("Restore 6
      SAN", "Restore 1 Health Level") or its reason when off (PQ6).
    One `commit("milestone", …)` labelled `Take Minor: <name>` and, in the
@@ -406,8 +395,7 @@ list is `[]`). Say so in the PR.
   (if PQ3) are the book's words, and Improved's roll is `0450`'s.
 - **Smoke**: Take Improved twice from the picker; the Improved box shows
   3d10 and +30; each of the five choosers opens, picks, commits once and
-  undoes once (Skilled two picked; Steadied with each option off and on;
-  Talented's flagged note shows); an Arcanist's Progression shows the
+  undoes once (Skilled two picked; Steadied with each option off and on;); an Arcanist's Progression shows the
   plain line and Add one, and adding one puts it in the journal; a saved
   Arcanist's taken Major is still in the journal.
 - **Mutation-test** each guard against the pre-fix code: the offer split
@@ -427,12 +415,12 @@ list is `[]`). Say so in the PR.
    mounted). `npm run test:fast`.
 4. UI §7c, with the smoke tests. **If the session is long, this is the
    place to stop and open the engine-and-data PR first** (Decision N, the
-   flag and the docs go in it); the UI follows in a second one.
+   docs go in it); the UI follows in a second one.
 5. Run it in the dev preview (`shadows-dev-preview`): a Professional takes
    Improved twice, then each chooser once; an Arcanist sees the plain line.
    Screenshot Progression and two choosers.
 6. Decision N, its INDEX line, the two marks; close F9 (three edits) and
-   open F-N (the **close-a-flag** skill, *Opening one*); W103 to
+   W103 to
    `log/wishes-granted.md`; CHANGELOG; the bump.
 7. `npm run verify` and `npm run phone-check`.
 
@@ -486,7 +474,6 @@ Suggested CHANGELOG lines:
 - [ ] `takeMilestone` refuses a Major not offered; a taken one is still found.
 - [ ] No taken Major, Minor or IP entry on a saved file moves; schema 0.22 round-trips and hostile `custom` values come out plain.
 - [ ] Each of the five choosers is one commit, one Undo, and a refusal changes nothing; none adds a Health Level, a rank past a cap, a Stat past 10 or SAN past full.
-- [ ] F-N opened in all its places; Talented carries its flag and its player note.
 - [ ] Every archetype's Major offer is read from the data, no id in code.
 - [ ] The Major group says nothing about the build (constraint 9).
 - [ ] F9 closed in all three places; Decisions 29 and 199 marked.
@@ -530,9 +517,8 @@ is on `main` and Ken has answered §4:
 > 7. **Honed is an Adjustment, not an IPE rank.** `ipCost` refuses WILL and
 >    TOL as "cannot be raised directly", so don't route Honed through
 >    `spendIP`. The Adjustments ledger already adds to every stat.
-> 8. **Talented is flagged.** Build Q25's reading (any held Advantage with a
->    rank to spare; new ones at 5 or less), open F-N with the close-a-flag
->    skill, and never state the open question to the player as a fact.
+> 8. **Talented's rank-up is Deighton's Q25:** any held Advantage with a
+>    rank to spare, at any price; a new one only at 5 points or less. No flag.
 >
 > Tier: Rule or shape. One numbered decision (the next free number), a
 > **minor** app bump, a game data bump, and character schema 0.22. Use the
