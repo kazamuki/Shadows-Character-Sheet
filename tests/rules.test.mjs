@@ -1613,3 +1613,44 @@ test("P8b 8: Dying at a Reset is the check plus a mark per ticking source", () =
   Engine.applyReset(pass, {}, { dyingCheck: "pass" });
   assert.equal(pass.trackers.conditions[0].marks, 1);
 });
+
+// ── P9a: gear text, difficulty names, the Magical being (Deighton's rulings, 2026-10-10 Q8–Q10, Q31, Q33) ──
+const modOf = (ch, index, id) => Engine.weaponModOptions(ch, index).options.find(o => o.id === id);
+const withWeapon = id => { const ch = subject(); Engine.addLoadout(ch, "weapons", id); return ch; };
+
+test("P9a 1: a shotgun refuses the Scope and the Angel Mod, and says why", () => {
+  // Deighton's ruling (2026-10-10, Q8): a shotgun takes neither the Scope nor the Angel Mod.
+  const ch = withWeapon("sg88-siege-breaker");
+  const scope = modOf(ch, 0, "Scope"), angel = modOf(ch, 0, "Angel Mod");
+  assert.equal(scope.ok, false);
+  assert.equal(scope.why, "Shotguns don't take scopes.");
+  assert.equal(angel.ok, false);
+  assert.equal(angel.why, "Angel Rounds need a box magazine with a power cell.");
+  for (const id of ["Scope", "Angel Mod"]) {
+    const g = D.weaponModGlossary.find(m => m.id === id);
+    assert.ok(!g.flagged && !g.flagNote && !g.playerNote, `${id} is still flagged`);
+  }
+});
+
+test("P9a 4: the Razorwhip reaches 2m", () => {
+  // Deighton's ruling (2026-10-10, Q10): the mono-whip reaches "5 or 6 feet", rounded to the sheet's meters.
+  const ch = withWeapon("razorwhip");
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.reach, "2m");
+  assert.ok(l.tags.includes("Reach"), "the Razorwhip lost its Reach tag");
+});
+
+test("P9a 5: the skill-check tiers are Easy, Average and Challenging", () => {
+  // Deighton's ruling (2026-10-10, Q33): 10 / 15 / 20.
+  assert.equal(JSON.stringify(D.skillCheckRules.difficulties), JSON.stringify({ Easy: 10, Average: 15, Challenging: 20 }));
+});
+
+test("P9a 6: a Magical being buys the Universal Advantages only", () => {
+  // Deighton's ruling (2026-10-10, Q31): a classification of its own, like a Supernatural.
+  const custom = D.archetypes.find(a => a.writeIn);
+  const as = cls => { const ch = subject(); ch.identity.archetype = custom.id; Object.assign(ch.archetypeChoices.writeIn, { name: "Fae", classification: cls }); return ch; };
+  const mb = as("magical-being"), sup = as("supernatural");
+  assert.equal(Engine.classification(mb).id, "magical-being");
+  for (const ad of D.advantages) assert.equal(Engine.canBuyAdvantage(mb, ad), Engine.canBuyAdvantage(sup, ad), `${ad.id} differs from a Supernatural`);
+  assert.equal(D.advantages.filter(ad => Engine.canBuyAdvantage(mb, ad)).length, 15);
+});

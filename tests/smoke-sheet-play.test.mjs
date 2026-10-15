@@ -966,3 +966,17 @@ test("P8b 17: Turn Reset while Dying shows the marks and the check", () => {
   assert.equal(activeChar(app).trackers.conditions.find(c => c.id === "dying").marks, 2, "the ticking source's mark and the failed check's");
   assert.deepEqual(app.errors, []);
 });
+
+// ── P9a: a refused mod says why (Deighton's ruling, 2026-10-10 Q8) ───────
+test("P9a 9: the SG-88's mod list says why the Scope won't go on", () => {
+  const ch = lockedCharacter();
+  ch.weapons = [{ id: "sg88-siege-breaker", notes: "", mods: [], roundsSpent: 0 }];
+  const app = openSheet(ch, "loadout");
+  const opt = id => app.$(`[data-wmodpick] option[value="${id}"]`);
+  assert.ok(opt("Scope"), "the mod list has no Scope");
+  assert.equal(opt("Scope").disabled, true);
+  assert.match(opt("Scope").textContent, /Scope \(1 slot\) — Shotguns don't take scopes\./);
+  assert.match(opt("Angel Mod").textContent, /Angel Rounds need a box magazine with a power cell\./);
+  assert.match(opt("Silencer").textContent, /Doesn't go on Shotguns\./, "a refusal with no reason changed");
+  assert.deepEqual(app.errors, []);
+});

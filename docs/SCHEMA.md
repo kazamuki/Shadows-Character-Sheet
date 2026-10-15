@@ -384,7 +384,8 @@ window.SHADOWS_DATA = {
   weaponFeatureGlossary: [ { id: "Scope", description: "..." } ], // 6 entries
   weaponModGlossary: [ { id: "Silencer", slots: 1, description: "..." } ], // 7 entries
   // (0.16, Decision 120) what the engine reads off a mod: grantsTags, aimedAcc
-  // (+ aimedAt, notWith), damageBonus, onlyFor/notFor { categories, weapons }
+  // (+ aimedAt, notWith), damageBonus, onlyFor/notFor { categories, weapons },
+  // refusalText { <weapon category id>: "reason" } (Decision 221: what a refused mod says)
   weaponRules: { rofModes: [ { id: "S", name: "Single", rounds: 1 } ],  // S 1 · B 3 · F 10 (053)
                  reloadNote: "...", modNote: "..." },
   // (game data 0.21, Decision 139) Ammunition and arrowheads are `equipment`
@@ -758,7 +759,7 @@ It renders on the Character tab (Decision 158).
       name: "",                      // "Changeling"; blank shows the archetype's own name
       description: null,             // a sentence or two, optional
       classification: null,          // a classifications id
-      classificationText: "",        // a writeIn classification's own words: "Magical being"
+      classificationText: "",        // a writeIn classification's own words: "Fae"
       mechanics: [],                 // ticked writeIn.mechanics ids: ["sfr"]
       traits: [],                    // [{ name, description }], always on
       vulnerabilities: []            // [{ name, description }], text only
@@ -4660,6 +4661,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a table wants the gritty option for its NPCs, or playtests find the Reset too deadly.
      - **Built:** app 0.44.0 and game data 0.37 (both unreleased, no bump), character schema 0.23, PR #183. Log 2026-10-15 (P8b).
 
+221. **A weapon mod that doesn't fit a weapon's category can say why, from the data.**
+     *2026-10-15 · Ken + Deighton + Claude · Touches: weaponModGlossary, refusalText, weaponModOptions, onlyFor, notFor, Scope, Angel Mod, Silencer, shotguns, mod list, Magical being, magical-being, skillCheckRules, difficulties, Anti-Materiel, Reach, Razorwhip, F26, F30, F31, W53, W104*
+     - **Decided:** A mod may carry `refusalText`, a map from a weapon category id to a short reason. When the mod is refused for not fitting (its `onlyFor` leaves the weapon out, or its `notFor` names its category), `weaponModOptions` returns the reason for the weapon's category as `why`, in place of "Doesn't fit …" or "Doesn't go on …". With no entry for that category, or a junk map, the refusal reads as before. The Scope's and the Angel Mod's carry Deighton's reasons for shotguns (F26 closed). As content beside it: Anti-Materiel and Reach read as rules (F30, F31 closed), the Razorwhip reaches 2m, skill checks read Easy / Average / Challenging (the wear die keeps its names), and `magical-being` buys the Universal Advantages only.
+     - **Why:** Deighton's rulings (2026-10-10, Q8–Q10, Q31, Q33). The Scope's text says it fits rifles, and Deighton calls a shotgun a rifle, so a bare refusal reads as a bug. The reason belongs where the player is refused, not in a description every weapon shows (Ken).
+     - **Rejected:** a sentence added to each mod's description (shown on every weapon, and it edits the book's text); one string per mod (it would tell a handgun that shotguns don't take scopes); a reason per weapon id (Gear's rules are by kind of weapon).
+     - **Replaces:** nothing. It adds to Decision 120's fit data. Three *Revisit if*s fired, none reopens: 149's (F26 keeps the stub; F34 is P9b), 152's (`universal`, one of its two answers) and 153's.
+     - **Revisit if:** a refusal needs a reason by weapon rather than by category, or another kind of refusal (slots, already installed) wants data text.
+     - **Built:** app 0.45.0, game data 0.38, no schema change, PR #PRNUM. Log 2026-10-15 (P9a).
+
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4671,7 +4682,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F24 and F36 (Decision 220: healing counts from 0 HP, and Dying at a Reset is the check plus a mark per ticking source) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F24 and F36 (Decision 220: healing counts from 0 HP, and Dying at a Reset is the check plus a mark per ticking source) · F26, F30 and F31 (Decision 221: a shotgun takes neither the Scope nor the Angel Mod and its refusal says why, Anti-Materiel and Reach read as rules, the Razorwhip reaches 2m) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -4680,12 +4691,9 @@ here are in `log/archive.md`.
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
-| F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** the stub stands: a shotgun takes neither. Angel Rounds need a box magazine with a power cell, and shotguns don't use scopes. Closes when W104 is built. | Deighton (ruled) | No |
-| F30 | **Anti-Materiel (weapon tag).** On the VR-50 'Verdict'. The vehicle rules give it full damage against vehicles; nothing says what it does to a person **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** nothing extra against people: it means vehicle armor doesn't stop it, and these weapons carry AP and high damage already. Closes when W104 is built. | Deighton (ruled) | No |
-| F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** the Reach column is how far the weapon reaches, and the tag marks a weapon whose reach is unusual (the mono-whip's); it adds nothing to the column. Kept in meters, like the rest of the sheet (Ken). Closes when W104 is built. | Deighton (ruled) | No |
 | F32 | **Arcanist Major Milestones.** 0411's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 0411? `growth` stays hidden until then (AQ4) | Ken | No |
 | F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 0530 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **kept, with its count**. Closes when W104 is built. | Deighton (ruled) | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 | F42 | **Which damage Resistance answers.** 0460 names Thermal, Electric and Freezing. The app maps Thermal → Burning and Electric → Electric. No damage type is cold, so Freezing answers nothing yet. Elemental spells (fire, frost, lightning) are magic, so no Resistance answers them; Warding does. Stubbed as written (Decision 219) | Deighton | No |
-F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question, and F37 with Scott, who wrote CRANK.
+F34 (ruled; P9b builds it) and F42 go to Deighton, and F37 with Scott, who wrote CRANK.
 

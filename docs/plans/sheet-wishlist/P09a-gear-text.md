@@ -11,7 +11,7 @@
 - PQ1 takes the alternative: a data shape, "if it means a better app overall".
 - PQ3 takes the alternative: the Razorwhip reaches 2m, and the CRB follows.
 
-**Ready to build.**
+**Built 2026-10-15** (Decision 221; app 0.45.0 and game data 0.38, since 0.44.0 and data 0.37 had been released first).
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 

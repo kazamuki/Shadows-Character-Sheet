@@ -2,6 +2,17 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.45.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**A new classification: Magical being.** The fae and their kind. It buys the Universal Advantages only, like a Supernatural.",
+      "**A mod that won't go on a weapon says why.** A shotgun doesn't take a Scope or an Angel Mod, and now it tells you the reason.",
+      "**Anti-Materiel and Reach say what they do.** Anti-Materiel goes through vehicle armor; Reach marks a weapon that reaches unusually far. The Razorwhip reaches 2m.",
+      "**Skill checks read Easy, Average and Challenging.**"
+    ]
+  },
+  {
     "version": "0.44.0",
     "date": "2026-10-15",
     "intro": [],

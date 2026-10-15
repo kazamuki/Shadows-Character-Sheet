@@ -979,3 +979,22 @@ test("P7 row 8: the dice Boost keeps its name", () => {
     assert.ok(a && /Boost/.test(a.description), `${id}'s Boost wording changed`);
   }
 });
+
+// ── P9a: Magical being (Deighton's ruling, 2026-10-10 Q31) ───────────────
+test("P9a 8: the write-in offers four classifications, and Magical being opens the Universal ones first", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  const cards = () => app.$$("#main [data-wicls]");
+  assert.equal(cards().length, 4, "the write-in doesn't offer four classifications");
+  assert.deepEqual(cards().map(c => c.dataset.wicls), ["mortal", "supernatural", "magical-being", "other"]);
+  assert.doesNotMatch(app.$('[data-wicls="other"]').textContent, /Neither one/, "Other still counts two");
+  app.click('[data-wicls="magical-being"]');
+  const words = app.$('[data-wi="classificationText"]');
+  assert.ok(words, "Magical being has no 'in your words' field");
+  assert.equal(words.getAttribute("placeholder"), "In a word or two");
+  assert.match(words.closest("label").textContent, /Magical being: in your words/);
+  const mb = onStep(custom.id, D.powerLevels[0].id, "character-points", ch => Object.assign(ch.archetypeChoices.writeIn, { name: "Fae", classification: "magical-being", classificationText: "Fae" }));
+  const adv = [...mb.$$("#main details.group summary")].map(s => s.textContent).find(t => /open to/.test(t));
+  assert.match(adv || "", /^15 open to Magical beings/, "the Advantage list doesn't open the Universal ones first");
+  assert.deepEqual(app.errors, []);
+});

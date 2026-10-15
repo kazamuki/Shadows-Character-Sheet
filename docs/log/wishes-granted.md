@@ -1086,3 +1086,12 @@ character (a schema bump) or a GM table setting? Decide in the work order;
 prefer the character, since the sheet works without a table. Grenade damage
 types are data (`gamedataVersion`). GM mode's hit (Decisions 191–192) reads
 the same engine, so check it moves with it.
+
+**W53 — "Magical being" as a classification.** *Ken, from Deighton · → Decision 221, app 0.45.0, game data 0.38: a fourth classification, `magical-being`, buying the Universal Advantages only*
+Fae and beings like them: a third axis of power, distinct from Supernatural.
+The plan's **Other** classification, with its own text, covers it until then.
+**Deighton ruled (2026-10-10, `reference/rulings-2026-10-10.md` Q31): Universal Advantages only**,
+like a Supernatural. So it's one row in `classifications`, and a custom
+archetype can pick it.
+
+*Built as sheet-wishlist P9a (2026-10-15). A character already written in as Other with "Fae" keeps it: a classification is fixed at lock.*
