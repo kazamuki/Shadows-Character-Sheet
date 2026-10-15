@@ -3,14 +3,14 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.44.0",
-    "date": null,
+    "date": "2026-10-15",
     "intro": [],
     "items": [
       "**The Resistance armor upgrade works now.** Pick Thermal, Electric or Freezing when you install it, and Take a hit halves damage of that type before your armor rolls. An older Resistance with no type stops nothing: swap it for one that names its type.",
       "**Armor-piercing magic gets past Natural Armor.** Take a hit asks whether an armor-piercing hit came from a spell.",
       "**Frag grenades and the grenade launcher are Siege weapons**, so their damage is Massive.",
       "**Healing starts from 0 HP.** Damage past zero shows how close you came while you're down (\"7 past zero\", and the HP pill reads −7), and the first healing wipes it: rest a day at 7 past zero and you're back on your feet with what you healed. Rest, Focused Healing, a Nanomed Kit and Heal 1 and Heal 5 all work this way. A GM who plays it gritty can keep it, with a switch in Admin.",
-      "**Dying at a Reset asks the WILL check every time**, and Bleeding or Burning ticking is a Death Mark on top. GM mode's Reset says the same.",
+      "**Dying at a Reset asks the WILL check every time**, and Bleeding or Burning ticking is a Death Mark on top.",
       "**Take a hit no longer calls Electric and fire damage unsettled.** They count as Energy damage, so only Ablative Plating lets armor's RES answer them.",
       "**LUCK bought with Character Points now has a cap**, the same as Stats and Skills: 2 at Street Level, up to 5 at World Coming Down. The 4 everyone starts with doesn't count, and a character already made keeps what it bought. A draft over the cap can't be locked until you take a point back.",
       "**\"Max Boost\" is now called the Max Character Point Boost.** The level cards say Max CP Boost, and the Character Points step's jump bar says **CP Boosts**."
