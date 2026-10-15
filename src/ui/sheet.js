@@ -991,7 +991,7 @@ function resetPanelHtml(ch, st){
 // The result lines of any healing, from heal()'s own before/after (Decision 220):
 // a panel never subtracts for itself, since the engine may wipe damage past zero first.
 function healLines(r){
-  return [r.discarded ? `The ${r.discarded} past zero go first.` : "",
+  return [r.discarded ? `The ${r.discarded} past zero ${r.discarded===1?"goes":"go"} first.` : "",
     r.before!==r.after ? `Damage ${r.before} → ${r.after}.` : ""].filter(Boolean);
 }
 const healLinesHtml = r => healLines(r).map(l=>`<p>${esc(l)}</p>`).join("");
