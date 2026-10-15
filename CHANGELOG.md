@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.43.0
+## v0.43.0 — 2026-10-14
 
 - **Any Minor Milestone can be taken again**, whenever one is unlocked.
 - **Improved is now 3d10+30 IP.** Milestones you've already taken keep what they gave.

@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.43.0",
-    "date": null,
+    "date": "2026-10-14",
     "intro": [],
     "items": [
       "**Any Minor Milestone can be taken again**, whenever one is unlocked.",
