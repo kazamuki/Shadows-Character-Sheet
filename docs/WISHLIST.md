@@ -290,6 +290,35 @@ Condition. So learning a style is the GM's word (an **Add a style** that
 asks no price, logged), and the bonus is the one number left to pin: +1 to
 the check that inflicts it, presumably. Confirm that in the work order.
 
+**W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*
+Raised reviewing P8a. True Warrior's Power Style lists **Death Touch
+[Chi 4]: "Martial Arts attacks are Armor Piercing when not using melee
+weapons."** Today it's a line of text: nothing on the sheet marks a strike
+AP, so the player has to remember. Two gaps sit under it:
+- **There's no unarmed attack on the sheet.** Loadout's attack lines come
+  from carried weapons, and every `martialArts` catalog entry (the bo staff,
+  the kusarigama, the tekko-kagi) is a melee weapon, which is exactly what
+  Death Touch excludes. A Martial Arts character fighting bare-handed has no
+  line to read. That line comes first.
+- **Death Touch has no grant.** Iron Shirt, on the same Power Style, does
+  (`grants: naturalArmor`, with `while`). Death Touch would get one the same
+  way, read by the unarmed line.
+
+**Ken's shape (2026-10-15):** the sheet needs to know the character has the
+Chi ability (the Power Style tweak, already a held specialization), that
+Death Touch is on, and that the attack is a Martial Arts strike.
+**Claude's suggestion for "is on":** don't store it. Decision 104 lists a
+conditional source and never sums it, and the hit modal asks when it
+matters. The strike line reads **"AP with Death Touch"**, and the player
+knows whether they paid the Chi. That keeps it out of the save file (no
+schema bump). Track it only if playtesting shows people forget.
+*To respect:* Decision 104's conditional pattern. Decision 135 (a grant some
+code reads). W39 also wants a Martial Arts strike to hang its style bonus on,
+so build the line once for both. **Separate, and for Deighton:** when someone
+*else's* Death Touch hits a character with Natural Armor, does it pierce it?
+Decision 219 lets only AP from a spell through, and Chi isn't a spell. Ask
+with F42.
+
 ### The sheet at the table (from the design critique)
 
 The 2026-09-30 design critique (27/40, snapshot in `.impeccable/critique/`)
@@ -814,7 +843,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W107.** Everything above is open; W38 has a plan,
+- **Next free number: W108.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
