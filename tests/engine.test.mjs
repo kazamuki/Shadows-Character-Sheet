@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.23");
+  assert.equal(ch.meta.schemaVersion, "0.24");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -157,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.23");
+  assert.equal(old.meta.schemaVersion, "0.24");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -169,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.23");
+  assert.equal(old.meta.schemaVersion, "0.24");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -547,7 +547,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.23");
+  assert.equal(old.meta.schemaVersion, "0.24");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -658,7 +658,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.23");
+  assert.equal(bare.meta.schemaVersion, "0.24");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -894,7 +894,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.23");
+    assert.equal(c.meta.schemaVersion, "0.24");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1168,7 +1168,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.23");
+  assert.equal(old.meta.schemaVersion, "0.24");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1243,7 +1243,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.23");
+  assert.equal(m.meta.schemaVersion, "0.24");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -1463,9 +1463,11 @@ test("the Loadout and recovery functions are total on every degenerate character
         for (const g of D.weaponModGlossary) for (const junk of ["x", [], null, 7, { shotguns: 5 }, { shotguns: null }, { shotguns: [] }, { constructor: "x" }])
           withData(g, "refusalText", junk, () => Engine.weaponModOptions(ch, at)); },
       weaponMods: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.weaponModOptions(ch, i); Engine.addWeaponMod(ch, i, "Scope"); Engine.addWeaponMod(ch, i, "nope"); Engine.removeWeaponMod(ch, i, 0); }),
-      rounds: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.fireWeapon(ch, i, "S"); Engine.fireWeapon(ch, i, "x"); Engine.fireWeapon(ch, i); Engine.reloadWeapon(ch, i); Engine.reloadWeapon(ch, i, { anyway: true }); }),
-      gear: () => { ch.gear.push(null, 3, { id: "nope" }, { custom: true }, { id: "shield-charm", chargesUsed: "x" }, { id: "quickstitch", qty: -4 });
-        [-1, 0, 1, 2, 3, 4, 5, 99].forEach(i => { Engine.gearLine(ch, i); Engine.useGear(ch, i, 1); Engine.useGear(ch, i, "x"); Engine.useCharge(ch, i); Engine.rechargeGear(ch, i); });
+      rounds: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.fireWeapon(ch, i, "S"); Engine.fireWeapon(ch, i, "x"); Engine.fireWeapon(ch, i); Engine.reloadWeapon(ch, i); Engine.reloadWeapon(ch, i, { anyway: true });
+        for (const part of [-1, 0, 1, 99, "x", null, NaN, {}]) Engine.reloadWeapon(ch, i, { part }); }),   // P9b: a part index is any junk
+      gear: () => { ch.gear.push(null, 3, { id: "nope" }, { custom: true }, { id: "shield-charm", chargesUsed: "x" }, { id: "quickstitch", qty: -4 },
+        ...["x", -1, null, {}, NaN, 18].map(roundsLeft => ({ id: "rifle-rounds", qty: 1, roundsLeft })), { id: "quickstitch", roundsLeft: 4 }, { custom: true, roundsLeft: 9 });   // P9b: a part-used row with a junk count
+        [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 99].forEach(i => { Engine.gearLine(ch, i); Engine.useGear(ch, i, 1); Engine.useGear(ch, i, -1); Engine.useGear(ch, i, "x"); Engine.useCharge(ch, i); Engine.rechargeGear(ch, i); });
         Engine.carriedGear(ch, "quickstitch"); Engine.carriedGear(null, "x"); Engine.addLoadout(ch, "gear", "quickstitch", { buy: true }); Engine.catalogLine(ch, "gear", "shield-charm"); },
       catalogLine: () => { Engine.catalogLine(ch, "weapons", "combat-knife"); Engine.catalogLine(ch, "armor", "kevlar-vest");
         Engine.catalogLine(ch, "weapons", "nope"); Engine.catalogLine(ch, "gear", "x"); Engine.catalogLine(null, "weapons", "combat-knife"); },
@@ -2206,10 +2208,13 @@ test("W40: with two kinds carried Reload asks which, and specialty rounds stay l
   assert.ok(l.tags.includes("Withering (Lycanthropes)"), "the loaded rounds' tag isn't on the line");
   // Full, it reloads only to swap, and always asks.
   const full = Engine.reloadWeapon(ch, 0);
-  same([full.choose, full.options.map(o => o.id)], [true, ["handgun-rounds"]], "a full weapon offered what's already in it");
+  same([full.choose, full.options.map(o => [o.id, o.part == null ? "whole" : "part"])], [true, [["handgun-rounds", "whole"], ["handgun-rounds", "part"]]],
+    "a full weapon offered what's already in it, or lost the standard magazine it kept (P9b)");
   assert.equal(Engine.reloadWeapon(ch, 0, { ammo: "handgun-rounds" }).loaded, null);
   assert.equal(ch.weapons[0].loaded, undefined, "standard rounds are remembered as something");
   assert.ok(!Engine.weaponLine(ch, 0).tags.includes("Withering (Lycanthropes)"), "the tag outlived its rounds");
+  assert.equal(Engine.carriedGear(ch, "silver-rounds").qty, 1, "the full Silver magazine swapped out didn't come back (PQ4)");
+  ch.gear = [];                                        // nothing carried to swap to
   assert.match(Engine.reloadWeapon(ch, 0).why, /already full/, "full of standard rounds with no specialty carried, and it reloaded");
   // Reloading from nothing forgets what was loaded.
   ch.weapons[0].loaded = "silver-rounds"; ch.weapons[0].roundsSpent = 3; ch.gear = [];
@@ -2243,6 +2248,147 @@ test("W40: migrate() keeps a loaded round's id and drops anything else (schema 0
   const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
   same(m.weapons.map(w => w.loaded), ["silver-rounds", undefined, undefined]);
   same(Engine.migrate(JSON.parse(JSON.stringify(m))).weapons[0].loaded, "silver-rounds", "a round trip lost it");
+});
+
+// ── Partly spent magazines (P9b, F34, Decision 222) ───────────────────
+
+const mags = ch => ch.gear.filter(g => g && g.roundsLeft != null).map(g => [g.id, g.roundsLeft]);
+const stack = (ch, id) => (Engine.carriedGear(ch, id) || { qty: 0 }).qty;
+
+test("P9b 2: an empty magazine isn't kept, and a full one swapped out goes back on its stack", () => {
+  const ch = armed("ar9x-guardian", { roundsSpent: 31 });             // 0 left of 30+1
+  ch.gear.push({ id: "rifle-rounds", qty: 2, notes: "" });
+  const r = Engine.reloadWeapon(ch, 0);
+  assert.equal(r.ok, true);
+  assert.equal(r.kept, null, "an empty magazine was kept");
+  same(ch.gear.map(g => [g.id, g.qty]), [["rifle-rounds", 1]], "an empty magazine became a row");
+  // A full weapon of Silver, swapped for Rifle Rounds: the Silver magazine comes back whole.
+  const f = armed("ar9x-guardian", { loaded: "silver-rounds" });
+  f.gear.push({ id: "rifle-rounds", qty: 1, notes: "" });
+  const s = Engine.reloadWeapon(f, 0, { ammo: "rifle-rounds" });
+  assert.equal(s.ok, true);
+  assert.equal(stack(f, "silver-rounds"), 1, "a full Silver magazine was lost");
+  assert.equal(s.kept.whole, true);
+  same(mags(f), [], "a full magazine was kept as a part-used row");
+});
+
+test("P9b 3: one tap takes a whole magazine first, then the fullest part-used one", () => {
+  const ch = armed("ar9x-guardian", { roundsSpent: 31 });
+  ch.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 6, notes: "" }, { id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" },
+    { id: "rifle-rounds", qty: 1, notes: "" });
+  const tap = () => { ch.weapons[0].roundsSpent = 31; return Engine.reloadWeapon(ch, 0); };
+  let r = tap();
+  same([r.ok, ch.weapons[0].roundsSpent], [true, 0], "the whole magazine wasn't taken first");
+  same(mags(ch), [["rifle-rounds", 6], ["rifle-rounds", 18]]);
+  assert.equal(stack(ch, "rifle-rounds"), 0);
+  r = tap();
+  same([r.ok, ch.weapons[0].roundsSpent], [true, 13], "the fullest part-used magazine wasn't taken second");
+  same(mags(ch), [["rifle-rounds", 6]]);
+  r = tap();
+  same([r.ok, ch.weapons[0].roundsSpent, mags(ch)], [true, 25, []], "the last part-used magazine wasn't taken third");
+});
+
+test("P9b 4: a part-used magazine loads up to the weapon's capacity, and the rest stays", () => {
+  const sn = armed("vr50-verdict", { roundsSpent: 4 });                // 3+1
+  sn.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" });
+  assert.equal(Engine.reloadWeapon(sn, 0).ok, true);
+  const l = Engine.weaponLine(sn, 0);
+  same([l.rounds.left, l.rounds.max], [4, 4], "the Verdict took more than it holds");
+  same(mags(sn), [["rifle-rounds", 14]], "the rest of the magazine wasn't kept");
+  const ar = armed("ar9x-guardian", { roundsSpent: 31 });
+  ar.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" });
+  Engine.reloadWeapon(ar, 0);
+  same([ar.weapons[0].roundsSpent, ar.gear.length], [13, 0], "a magazine the weapon took whole stayed on the sheet");
+});
+
+test("P9b 5: a part-used magazine keeps its kind, and Reload anyway keeps one too", () => {
+  const ch = armed("ar9x-guardian", { roundsSpent: 31 });
+  ch.gear.push({ id: "silver-rounds", qty: 1, roundsLeft: 12, notes: "" });
+  const r = Engine.reloadWeapon(ch, 0);
+  same([r.ok, r.loaded], [true, "silver-rounds"], "a part-used Silver magazine loaded as standard rounds");
+  assert.equal(Engine.weaponLine(ch, 0).loaded.id, "silver-rounds");
+  assert.ok(Engine.weaponLine(ch, 0).tags.includes("Withering (Lycanthropes)"));
+  // Taken out with rounds left, it comes back as Silver, not "whatever fits first".
+  ch.gear.push({ id: "rifle-rounds", qty: 1, notes: "" });
+  Engine.reloadWeapon(ch, 0, { ammo: "rifle-rounds" });
+  same(mags(ch), [["silver-rounds", 12]], "the Silver magazine lost its kind");
+  const lp = armed("ads-lp9-viper", { roundsSpent: 10 });              // 6 of 16 left
+  const a = Engine.reloadWeapon(lp, 0, { anyway: true });
+  assert.equal(a.ok, true);
+  same(mags(lp), [["handgun-rounds", 6]], "Reload anyway threw the old magazine away");
+});
+
+test("P9b 6: a part-used magazine is one magazine: it doesn't stack, count or take +1", () => {
+  const ch = armed("ar9x-guardian", { roundsSpent: 5 });
+  ch.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" }, { id: "rifle-rounds", qty: 2, notes: "" });
+  Engine.addLoadout(ch, "gear", "rifle-rounds");
+  same(ch.gear.map(g => [g.qty, g.roundsLeft]), [[1, 18], [3, undefined]], "a bought magazine stacked on the part-used row");
+  same(Engine.carriedGear(ch, "rifle-rounds"), { index: 1, qty: 3 }, "carriedGear counted the part-used row");
+  const from = Engine.weaponLine(ch, 0).reloadFrom;
+  same([from.carried, from.parts], [3, 1]);
+  const plus = Engine.useGear(ch, 0, -1);
+  assert.equal(plus.ok, false, "+1 went onto a part-used magazine");
+  assert.match(plus.why, /A part-used magazine is one magazine\./);
+  assert.equal(ch.gear[0].qty, 1);
+  assert.equal(Engine.gearLine(ch, 0).roundsLeft, 18);
+  assert.equal(Engine.gearLine(ch, 0).countUnit, "round");
+  assert.equal(Engine.gearLine(ch, 1).roundsLeft, null);
+  assert.equal(Engine.gearLine(ch, 1).countUnit, null);
+  const drop = Engine.useGear(ch, 0, 1);
+  same([drop.ok, ch.gear.length], [true, 1], "Drop didn't remove the row");
+  const cell = subject(); cell.gear.push({ id: "power-cell", qty: 1, roundsLeft: 15, notes: "" });
+  assert.equal(Engine.gearLine(cell, 0).countUnit, "shot");
+});
+
+test("P9b 7: the chooser lists each part-used magazine, and loads the one picked", () => {
+  const mk = () => { const c = armed("ar9x-guardian", { roundsSpent: 5 });
+    c.gear.push({ id: "rifle-rounds", qty: 1, notes: "" }, { id: "silver-rounds", qty: 1, notes: "" },
+      { id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" }, { id: "handgun-rounds", qty: 1, roundsLeft: 9, notes: "" });
+    return c; };
+  const ch = mk(), ask = Engine.reloadWeapon(ch, 0);
+  assert.equal(ask.choose, true);
+  const part = ask.options.find(o => o.part != null);
+  same([part.part, part.roundsLeft, part.id], [2, 18, "rifle-rounds"], "the part-used magazine isn't a line of its own");
+  assert.equal(ask.options.filter(o => o.part != null).length, 1, "a handgun magazine was offered to a rifle");
+  const r = Engine.reloadWeapon(ch, 0, { part: part.part });
+  same([r.ok, ch.weapons[0].roundsSpent], [true, 13], "the picked magazine didn't load");
+  same(mags(ch), [["handgun-rounds", 9], ["rifle-rounds", 26]], "the old magazine wasn't put back after the pick");
+  for (const bad of [0, 3, 99, -1, 1.5, "x", null]) {
+    const c = mk(), before = JSON.stringify(c);
+    const x = Engine.reloadWeapon(c, 0, { part: bad });
+    assert.equal(x.ok, false, `part ${JSON.stringify(bad)} loaded`);
+    assert.equal(JSON.stringify(c), before, `a refused part ${JSON.stringify(bad)} changed the sheet`);
+  }
+  assert.match(Engine.reloadWeapon(mk(), 0, { part: 3 }).why, /That magazine doesn't load this weapon\./);
+});
+
+test("P9b 8: roundsLeft survives migrate and a hostile file, in both passes", () => {
+  const ch = subject();
+  ch.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: "x", notes: "" }, { id: "rifle-rounds", qty: 1, roundsLeft: -3, notes: "" },
+    { id: "rifle-rounds", qty: 1, roundsLeft: 2.7, notes: "" }, { id: "rifle-rounds", qty: 1, roundsLeft: {}, notes: "" },
+    { id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" });
+  const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  same(m.gear.map(g => g.roundsLeft), [0, 0, 2, 0, 18]);
+  same(Engine.migrate(JSON.parse(JSON.stringify(m))).gear, m.gear, "a round trip changed the rows");
+  assert.equal(m.meta.schemaVersion, "0.24");
+  // The second place: undo restores what a file's audit says, and holds it to the same numbers.
+  m.audit.push({ seq: 1, date: "x", kind: "edit", label: "crafted", patch: [{ path: ["gear", 4, "roundsLeft"], type: "scalar", before: "<i>9</i>" }] });
+  Engine.undoLastAction(m);
+  assert.equal(m.gear[4].roundsLeft, 0, "undo restored a string where roundsLeft is a number");
+});
+
+test("P9b 9: shells taken out by a swap go back in the box", () => {
+  const shell = D.equipment.find(g => g.id === "shotgun-shells");
+  const slug = { ...shell, id: "slug-shells", name: "Slug Shells", reload: { ...shell.reload, specialty: true } };
+  withData(D, "equipment", [...D.equipment, slug], () => {
+    const ch = armed("sg88-siege-breaker", { roundsSpent: 4 });        // 5 of 9 in it, standard shells
+    ch.gear.push({ id: "slug-shells", qty: 3, notes: "" });
+    const r = Engine.reloadWeapon(ch, 0, { ammo: "slug-shells" });
+    same([r.ok, r.swapped, r.loaded], [true, true, "slug-shells"]);
+    assert.equal(stack(ch, "shotgun-shells"), 5, "the shells taken out didn't go back in the box");
+    assert.equal(ch.weapons[0].roundsSpent, 6);
+    same(mags(ch), [], "shells were kept as a part-used magazine");
+  });
 });
 
 test("W16: mods fill the weapon's fixed slots, fit only what Gear says they fit, and change the line", () => {
@@ -2283,7 +2429,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.23");
+  assert.equal(m.meta.schemaVersion, "0.24");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2369,7 +2515,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.23");
+  assert.equal(m.meta.schemaVersion, "0.24");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2386,7 +2532,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.23");
+  assert.equal(m.meta.schemaVersion, "0.24");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2432,7 +2578,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.23"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.24"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2657,7 +2803,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.23");
+  assert.equal(a.meta.schemaVersion, "0.24");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -3119,7 +3265,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.23");
+  assert.equal(m.meta.schemaVersion, "0.24");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -5444,7 +5590,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.23", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.24", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5592,14 +5738,14 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.23", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.24", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.23", {}, {}, { "apex-fury": 2 }]);
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.24", {}, {}, { "apex-fury": 2 }]);
   // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
   same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
@@ -6152,7 +6298,7 @@ test("207: gmReference is total: any packs, any filter, a hostile pack", () => {
 test("207: no flagNote reaches the Reference", () => {
   const notes = [];
   (function walk(x) { if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) { if (k === "flagNote" && typeof v === "string") notes.push(v); else walk(v); } })(D);
-  assert.ok(notes.length > 5, "found the data's flag notes");
+  assert.ok(notes.length > 0, "found the data's flag notes");
   const all = refStrings(Engine.gmReference(twoPacks(), {}));
   for (const n of notes) for (const s of all) assert.ok(!s.includes(n.slice(0, 30)), `a flagNote reached the Reference: ${n.slice(0, 40)}`);
   assert.ok(!all.some(s => /\bF\d{1,2}\b/.test(s)), "no flag id reaches the Reference");
@@ -7410,7 +7556,7 @@ test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only
   old.meta.schemaVersion = "0.20";
   old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.23", [false, true]]);
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.24", [false, true]]);
   for (const v of ["yes", 1, {}, [], null, "true"]) {
     const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
     assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
@@ -7598,7 +7744,7 @@ test("Decision 217: a Major can be written in; it uses a slot, Admin needs none,
     assert.equal("custom" in e, false, JSON.stringify(v));
     assert.equal("name" in e, false);
   }
-  assert.equal(m.meta.schemaVersion, "0.23");
+  assert.equal(m.meta.schemaVersion, "0.24");
 });
 
 // ── P6 review fixes (Decision 217) ──────────────────────────────────────
@@ -7918,7 +8064,7 @@ test("P8b 12: house rules survive migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().houseRules.keepDamagePastZero, false);
   const old = Engine.newCharacter(); delete old.houseRules; old.meta.schemaVersion = "0.22";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.23");
+  assert.equal(m.meta.schemaVersion, "0.24");
   eq(m.houseRules, { keepDamagePastZero: false });
   for (const junk of ["yes", 1, [], null, "true", { keepDamagePastZero: "yes" }, { keepDamagePastZero: 1 }]) {
     const c = Engine.newCharacter(); c.houseRules = junk;

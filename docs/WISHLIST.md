@@ -177,13 +177,6 @@ today (`"2m"`, `"5m radius"`, range bands in the quick reference), so converting
 them means storing the numbers (Decision 134) before any switch. A view
 setting, remembered in the browser, never in the character.
 
-**W104 — A partly spent magazine is kept with its count.** *Ken, from Deighton · ⏭ · a save shape, P9b · raised 2026-10-10 · closes F34*
-Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q11). The rest of W104 (F26, F30, F31 and the difficulty names) was built as P9a, Decision 221, app 0.45.0.
-- **F34:** a partly spent magazine is **kept with its count**. Today a Reload
-  fills from a fresh magazine and the sheet counts whole magazines carried
-  (Decisions 145, 149), so carried magazines need their counts: a save-file
-  shape change, with a decision, a schema bump and a `migrate()` step.
-
 ### Loadout & catalog
 
 **W108 — Magazines sized by the weapon, and combining part-used ones.** *Ken · 💡 · Rule or shape · raised 2026-10-15 with P9b's PQ3 · wants thinking time*

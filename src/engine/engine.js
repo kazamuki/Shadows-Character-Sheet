@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.23";
+  const SCHEMA_VERSION = "0.24";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -1235,11 +1235,15 @@ const Engine = (() => {
     }
     // W30: what Reload would take, and how much of it you carry. W40: every
     // kind carried, and whether one would swap what's loaded.
+    // P9b: `carried` is whole magazines; `parts` the part-used ones, their
+    // rounds apart in `partRounds`, fullest first. A kind counts if either is carried.
     const src = line.rounds && reloadSource(ch, e);
-    if (src){ const have = src.have;
-      line.reloadFrom = { ammo: have.length ? have.map(h=>h.def.name) : src.ammo, carried: have.reduce((n,h)=>n+h.qty, 0),
-                          unit: have.length===1 ? have[0].def.unit||null : null, kinds: have.length,
-                          swap: have.some(h=>loadsAs(h.def)!==loadedOf(e)) };
+    if (src){ const have = src.have, parts = src.parts;
+      const held = [...new Map([...have.map(h=>h.def), ...parts.map(p=>p.def)].map(d=>[d.id, d])).values()];
+      line.reloadFrom = { ammo: held.length ? held.map(d=>d.name) : src.ammo, carried: have.reduce((n,h)=>n+h.qty, 0),
+                          unit: held.length===1 ? held[0].unit||null : null, kinds: held.length,
+                          parts: parts.length, partRounds: parts.map(p=>p.roundsLeft), countUnit: held.length===1 ? countUnitOf(held[0]) : "round",
+                          swap: have.some(h=>loadsAs(h.def)!==loadedOf(e)) || parts.some(p=>loadsAs(p.def)!==loadedOf(e)) };
     }
     return line;
   }
@@ -1298,10 +1302,13 @@ const Engine = (() => {
     const kinds = ammoFor(e && !e.custom && e.id ? weaponDefById(e.id) : null, modsOf(e));
     if (!kinds.length) return null;
     const have = kinds.map(k=>{ const c = carriedGear(ch, k.id); return c && Object.assign({ def:k }, c); }).filter(Boolean);
+    // P9b: the part-used magazines of any kind that fits, fullest first.
+    const parts = kinds.flatMap(k=>partUsedMags(ch, k.id).map(p=>Object.assign({ def:k }, p)))
+      .sort((a, b)=>b.roundsLeft - a.roundsLeft || a.index - b.index);
     // What to say it takes: the standard rounds, or what's left when a mod
     // allows only specialty ones.
     const standard = kinds.filter(k=>!loadsAs(k));
-    return { ammo: (standard.length ? standard : kinds).map(k=>k.name), have };
+    return { ammo: (standard.length ? standard : kinds).map(k=>k.name), have, parts, kinds };
   }
   // W40: what a weapon remembers is in its magazine: a specialty round's id,
   // or nothing for standard rounds. Specialty rounds change the weapon (their
@@ -1311,40 +1318,83 @@ const Engine = (() => {
   const ammoTags = def => def && def.reload && !def.reload.needsMod && Array.isArray(def.tags) ? def.tags : [];
   const ammoOption = (h, loaded) => ({ id:h.def.id, name:h.def.name, qty:h.qty, unit:h.def.unit||null, tags:ammoTags(h.def),
                                        loaded: loadsAs(h.def)===loaded });
+  // The word a part-used magazine's count reads in: a Power Cell's "shot", else "round".
+  const countUnitOf = def => def.reload && typeof def.reload.countUnit==="string" && def.reload.countUnit.trim() ? def.reload.countUnit : "round";
+  const partOption = (p, loaded) => ({ id:p.def.id, part:p.index, roundsLeft:p.roundsLeft, countUnit:countUnitOf(p.def), name:p.def.name, unit:p.def.unit||null,
+                                      tags:ammoTags(p.def), loaded: loadsAs(p.def)===loaded });
   // Reload takes one unit of what fits from what you carry. With none on the
   // sheet it's refused, saying so, unless the player reloads anyway (`anyway`),
   // which the result marks so the audit can say it was. W40: with more than
   // one kind carried it asks which (`choose`, answered with `opts.ammo`), and
-  // a full weapon reloads only to swap kinds (0530). What was left in the
-  // magazine isn't kept (F34's stub).
+  // a full weapon reloads only to swap kinds (0530). P9b (Decision 222, F34): a
+  // part-used magazine is a pick of its own (`opts.part`, a gear row index).
+  // One tap takes a whole magazine when one kind is carried, else the fullest
+  // part-used one. What comes out of the weapon is kept (`kept`), and put
+  // back only after what goes in has come off, so no index held above moves.
   function reloadWeapon(ch, index, opts){
     const e = weaponEntry(ch, index), l = e && weaponLine(ch, index);
     if (!l || l.missing) return { ok:false, why:"That weapon isn't on the sheet." };
     if (!l.rounds) return { ok:false, why:`${l.name||"This weapon"} doesn't track rounds.` };
     const src = reloadSource(ch, e), loaded = loadedOf(e), full = !l.rounds.spent;
-    const done = { ok:true, name:l.name, max:l.rounds.max, left:l.rounds.max };
-    const options = !src ? [] : full ? src.have.filter(h=>loadsAs(h.def)!==loaded) : src.have;
-    if (full && !options.length) return { ok:false, why:"It's already full." };
+    const done = { ok:true, name:l.name, max:l.rounds.max, left:l.rounds.max, kept:null };
+    const wholes = !src ? [] : full ? src.have.filter(h=>loadsAs(h.def)!==loaded) : src.have;
+    const parts = !src ? [] : full ? src.parts.filter(p=>loadsAs(p.def)!==loaded) : src.parts;
+    if (full && !wholes.length && !parts.length) return { ok:false, why:"It's already full." };
     if (!src){ e.roundsSpent = 0; return done; }
-    if (!src.have.length){
+    if (!src.have.length && !src.parts.length){
       if (!(opts && opts.anyway)) return { ok:false, noAmmo:true, ammo:src.ammo, why:`You carry no ${src.ammo.join(" or ")}.` };
+      const kept = putBack(ch, e, l.rounds.max, l.rounds.left, false);
       e.roundsSpent = 0; delete e.loaded;
-      return Object.assign(done, { anyway:true, ammo:src.ammo });
+      return Object.assign(done, { anyway:true, ammo:src.ammo, kept });
     }
     const want = opts && typeof opts.ammo==="string" ? opts.ammo : null;
+    const wantPart = !want && !!opts && opts.part!==undefined;
+    let k = null, p = null;
+    if (want){
+      k = wholes.find(h=>h.def.id===want);
+      if (!k) return { ok:false, why: full ? "It's already loaded with those." : "That doesn't load this weapon." };
+    } else if (wantPart){
+      p = Number.isInteger(opts.part) ? parts.find(x=>x.index===opts.part) : null;
+      if (!p) return { ok:false, why:"That magazine doesn't load this weapon." };
     // Swapping a full magazine is always a choice the player names.
-    const k = want ? options.find(h=>h.def.id===want) : options.length===1 && !full ? options[0] : null;
-    if (want && !k) return { ok:false, why: full ? "It's already loaded with those." : "That doesn't load this weapon." };
-    if (!k) return { ok:false, choose:true, options: options.map(h=>ammoOption(h, loaded)), full, left:l.rounds.left, why:"Choose which rounds to load." };
-    const kind = loadsAs(k.def), swap = kind!==loaded, perRound = k.def.reload.fills==="round";
-    // A swap on a weapon loaded a round at a time empties it first.
-    const empty = perRound && swap ? l.rounds.max : l.rounds.spent;
-    const n = perRound ? Math.min(empty, k.qty) : 1;
-    useGear(ch, k.index, n);
-    e.roundsSpent = perRound ? empty - n : 0;
+    } else if (!full && wholes.length===1) k = wholes[0];
+    else if (!full && !wholes.length && new Set(parts.map(x=>x.def.id)).size===1) p = parts[0];
+    if (!k && !p) return { ok:false, choose:true, full, left:l.rounds.left, why:"Choose which rounds to load.",
+      options: [...wholes.map(h=>ammoOption(h, loaded)), ...parts.map(x=>partOption(x, loaded))] };
+    const def = (k||p).def, kind = loadsAs(def), swap = kind!==loaded, perRound = def.reload.fills==="round", out = l.rounds.left;
+    let res;
+    if (p){
+      // The magazine loads what the weapon takes; the rest stays in its row (PQ3).
+      const n = Math.min(p.roundsLeft, l.rounds.max), rest = p.roundsLeft - n;
+      if (rest>0) ch.gear[p.index].roundsLeft = rest; else ch.gear.splice(p.index, 1);
+      e.roundsSpent = l.rounds.max - n;
+      res = { used:0, ammoLeft:rest, part:{ roundsLeft:p.roundsLeft, loaded:n } };
+    } else {
+      // A swap on a weapon loaded a round at a time empties it first.
+      const empty = perRound && swap ? l.rounds.max : l.rounds.spent;
+      const n = perRound ? Math.min(empty, k.qty) : 1;
+      useGear(ch, k.index, n);
+      e.roundsSpent = perRound ? empty - n : 0;
+      res = { used:n, ammoLeft:k.qty - n };
+    }
+    const kept = putBack(ch, e, l.rounds.max, out, perRound && swap);
     if (kind) e.loaded = kind; else delete e.loaded;
-    return Object.assign(done, { left: l.rounds.max - e.roundsSpent, used:n, ammo:[k.def.name], ammoLeft: k.qty - n, unit: k.def.unit||null,
-                                 loaded: kind, swapped: swap });
+    return Object.assign(done, res, { left: l.rounds.max - e.roundsSpent, ammo:[def.name], unit: def.unit||null, loaded: kind, swapped: swap, kept });
+  }
+  // P9b: the magazine that came out of a weapon, with `left` rounds in it. Its
+  // kind is what was loaded, or else the weapon's standard rounds. None left
+  // and nothing is kept; all of them and it's a whole magazine on that kind's
+  // stack; some, and a part-used row of its own. Shells taken out by a swap
+  // (`shells`) go back in the box (PQ5); a plain top-up takes none out.
+  function putBack(ch, e, max, left, shells){
+    if (!(left>0) || !Array.isArray(ch.gear)) return null;
+    const loadedDef = loadedOf(e) ? equipmentById(loadedOf(e)) : null;
+    const def = loadedDef && loadsAs(loadedDef) ? loadedDef : ammoFor(weaponDefById(e.id), []).find(g=>!loadsAs(g));
+    if (!def) return null;
+    if (def.reload.fills==="round"){ if (shells) stackGear(ch, def.id, left); return null; }
+    const whole = left>=max;
+    if (whole) stackGear(ch, def.id, 1); else ch.gear.push({ id:def.id, qty:1, roundsLeft:left, notes:"" });
+    return { id:def.id, name:def.name, roundsLeft:left, whole };
   }
   // A mod's own reason for a weapon category it doesn't fit (Decision 221): a map
   // from category id to text. Anything else, or no entry, is null and the
@@ -1500,6 +1550,26 @@ const Engine = (() => {
              spellName: def.spellName||null, action:def.action||null, itemNotes:def.notes||null, costText:def.costText||null,
              startsEmpty: !!def.startsEmpty, tags: def.tags||[] };
   }
+  // P9b (Decision 222): a part-used magazine is a catalog row of an ammo entry
+  // that fills by the magazine and holds a `roundsLeft`. The one place that is
+  // written: every reader of a gear row that takes "the first of an id" skips
+  // these. A `roundsLeft` on any other row is ignored.
+  const isPartMag = o => {
+    if (!o || typeof o!=="object" || o.custom || o.roundsLeft==null) return false;
+    const d = equipmentById(o.id);
+    return !!(d && d.reload && d.reload.fills==="magazine");
+  };
+  const wholeGearAt = (list, id) => list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===id && !isPartMag(o));
+  // The part-used magazines of an id with rounds in them, fullest first.
+  function partUsedMags(ch, id){
+    return listOf(ch, "gear").map((o, index)=>isPartMag(o) && o.id===id ? { index, roundsLeft:nonNegInt(o.roundsLeft) } : null)
+      .filter(x=>x && x.roundsLeft>0).sort((a, b)=>b.roundsLeft - a.roundsLeft || a.index - b.index);
+  }
+  // Put n back onto the id's whole row, or start one.
+  function stackGear(ch, id, n){
+    const at = wholeGearAt(ch.gear, id);
+    if (at>=0) ch.gear[at].qty = nonNegInt(ch.gear[at].qty) + n; else ch.gear.push({ id, qty:n, notes:"" });
+  }
   function gearLine(ch, index){
     const e = listOf(ch, "gear")[index];
     if (!e || typeof e!=="object") return null;
@@ -1507,7 +1577,11 @@ const Engine = (() => {
     if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), type:String(e.type||""), notes };
     const def = equipmentById(e.id);
     if (!def) return { index, missing:true, name:String(e.id), notes, qty: nonNegInt(e.qty) };
-    const l = Object.assign({ index, notes, qty: nonNegInt(e.qty) }, gearDefLine(def), { flavorLine: def.flavorLine||null });
+    const part = isPartMag(e);
+    const l = Object.assign({ index, notes, qty: part ? 1 : nonNegInt(e.qty) }, gearDefLine(def), { flavorLine: def.flavorLine||null });
+    // P9b: a part-used magazine says how many it holds, and in what word.
+    l.roundsLeft = part ? nonNegInt(e.roundsLeft) : null;
+    l.countUnit = part ? countUnitOf(def) : null;
     if (l.chargesMax){ const used = Math.min(l.chargesMax, nonNegInt(e.chargesUsed));
       l.charges = { max:l.chargesMax, used, left:l.chargesMax-used }; }
     return l;
@@ -1515,7 +1589,7 @@ const Engine = (() => {
   function addGearEntry(ch, def){
     const list = ch.gear, pack = Math.max(1, nonNegInt(def.pack)||1), charges = nonNegInt(def.charges);
     if (!charges){
-      const at = list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===def.id);
+      const at = wholeGearAt(list, def.id);
       if (at>=0){ list[at].qty = nonNegInt(list[at].qty) + pack; return { ok:true, index:at, stacked:true, added:pack }; }
       list.push({ id:def.id, qty:pack, notes:"" });
     } else list.push({ id:def.id, qty:1, notes:"", chargesUsed: def.startsEmpty ? charges : 0 });
@@ -1525,7 +1599,7 @@ const Engine = (() => {
   // one you carry (a Nanomed Kit, a dose of Speed Heal, a Field Repair Kit).
   function carriedGear(ch, id){
     const list = listOf(ch, "gear");
-    const index = list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===id && nonNegInt(o.qty)>0);
+    const index = list.findIndex(o=>o && typeof o==="object" && !o.custom && o.id===id && nonNegInt(o.qty)>0 && !isPartMag(o));
     return index<0 ? null : { index, qty: nonNegInt(list[index].qty) };
   }
   // Use one (n) of a consumable, or put some back (negative n). A count that
@@ -1535,6 +1609,12 @@ const Engine = (() => {
     if (!l || l.custom || l.missing) return { ok:false, why:"That isn't a catalog item on the sheet." };
     const k = n==null ? 1 : Math.trunc(Number(n));
     if (!k) return { ok:false, why:"Say how many." };
+    // P9b: a part-used magazine is one magazine. Using it drops it; it takes no +1.
+    if (l.roundsLeft!=null){
+      if (k<0) return { ok:false, why:"A part-used magazine is one magazine." };
+      ch.gear.splice(index, 1);
+      return { ok:true, name:l.name, used:1, left:0, removed:true };
+    }
     if (k>0 && !l.consumable) return { ok:false, why:`${l.name} isn't used up.` };
     if (k>l.qty) return { ok:false, why:`You have ${l.qty}.` };
     const left = l.qty - k;
@@ -3427,7 +3507,8 @@ const Engine = (() => {
     if (Array.isArray(c.weapons)) c.weapons.forEach(w=>{ if (isObj(w)) w.roundsSpent = nonNegInt(w.roundsSpent); });
     if (Array.isArray(c.armor)) c.armor.forEach(a=>{ if (isObj(a)) a.integrityLoss = nonNegInt(a.integrityLoss); });
     if (Array.isArray(c.gear)) c.gear.forEach(g=>{ if (isObj(g) && !g.custom){ g.qty = nonNegInt(g.qty);
-      if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed); } });
+      if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed);
+      if (g.roundsLeft!=null) g.roundsLeft = nonNegInt(g.roundsLeft); } });
     if (Array.isArray(c.audit)) c.audit.forEach(e=>{ if (isObj(e)) e.seq = _num(e.seq, 0); });
     return c;
   }
@@ -3536,6 +3617,8 @@ const Engine = (() => {
       if (g.custom || typeof g.id!=="string"){ g.custom = true; return g; }
       g.qty = g.qty==null ? 1 : nonNegInt(g.qty);
       if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed);
+      // Schema 0.24 (Decision 222): a part-used magazine's `roundsLeft`. No row from before has one.
+      if (g.roundsLeft!=null) g.roundsLeft = nonNegInt(g.roundsLeft);
       if (typeof g.notes!=="string") g.notes = "";
       return g;
     });
@@ -6668,7 +6751,7 @@ const Engine = (() => {
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
     weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
-    gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
+    gearLine, carriedGear, partUsedMags, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,

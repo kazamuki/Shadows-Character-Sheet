@@ -1654,3 +1654,19 @@ test("P9a 6: a Magical being buys the Universal Advantages only", () => {
   for (const ad of D.advantages) assert.equal(Engine.canBuyAdvantage(mb, ad), Engine.canBuyAdvantage(sup, ad), `${ad.id} differs from a Supernatural`);
   assert.equal(D.advantages.filter(ad => Engine.canBuyAdvantage(mb, ad)).length, 15);
 });
+
+test("P9b 1: a magazine reloaded before it's empty is kept with its count", () => {
+  // Deighton's ruling (2026-10-10, Q11): when you reload before a magazine is empty, the magazine is kept, with its count.
+  const ch = withWeapon("ar9x-guardian");
+  ch.weapons[0].roundsSpent = 13;                                        // 18 of 31 left
+  ch.gear.push({ id: "rifle-rounds", qty: 2, notes: "" });
+  const r = Engine.reloadWeapon(ch, 0);
+  assert.equal(r.ok, true);
+  assert.equal(ch.weapons[0].roundsSpent, 0, "the weapon isn't full");
+  assert.equal(Engine.carriedGear(ch, "rifle-rounds").qty, 1, "the whole magazine didn't come off the stack");
+  const kept = ch.gear.filter(g => g.id === "rifle-rounds" && g.roundsLeft != null);
+  assert.equal(kept.length, 1, "the 18 rounds were thrown away");
+  assert.equal(kept[0].roundsLeft, 18);
+  assert.equal(r.kept && r.kept.roundsLeft, 18);
+  assert.equal(r.kept.whole, false);
+});

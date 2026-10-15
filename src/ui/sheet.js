@@ -1699,6 +1699,9 @@ function gearRowsHtml(ch){
       ? `<span class="gear-count${l.charges.left?"":" empty"}">${l.charges.left}<small>/${l.charges.max} charges</small></span>
          <button class="btn sm" data-gearcharge="${l.index}" ${l.charges.left?"":"disabled"}>Use a charge</button>
          <button class="btn sm" data-gearrecharge="${l.index}" ${l.charges.used?"":"disabled"}>Recharged</button>`
+      : l.roundsLeft!=null
+      ? `<span class="gear-count">${l.roundsLeft}<small> ${esc(l.countUnit)}${l.roundsLeft===1?"":"s"} left</small></span>
+         <button class="btn sm" data-gearuse="${l.index}">Drop</button>`
       : l.consumable
       ? `<span class="gear-count">×${l.qty}${l.unit?` <small>${esc(l.unit)}${l.qty===1?"":"s"}</small>`:""}</span>
          <button class="btn sm" data-gearuse="${l.index}">Use one</button><button class="btn sm" data-gearplus="${l.index}" aria-label="One more ${esc(l.name)}">+1</button>`
@@ -1729,29 +1732,44 @@ function roundsHtml(l, capacityText){
   return `<span class="rounds${r.left===0?" empty":""}" title="Rounds left of ${r.max}">${r.left}<small>/${r.max}</small></span>
     <span class="fire">${modes.map(f=>`<button class="btn sm" data-fire="${l.index}|${esc(f.id)}" ${r.left<f.rounds?"disabled":""}
       aria-label="Fire ${esc(f.name)}, ${f.rounds} round${f.rounds===1?"":"s"}" title="${esc(f.name)}: ${f.rounds} round${f.rounds===1?"":"s"}">${esc(f.id||"−1")}</button>`).join("")}
-    <button class="btn sm${l.reloadFrom && !l.reloadFrom.carried?" dry":""}" data-reload="${l.index}" ${r.spent || (l.reloadFrom && l.reloadFrom.swap)?"":"disabled"} title="${esc(reloadTitle(l.reloadFrom))}">Reload</button></span>${
+    <button class="btn sm${l.reloadFrom && !l.reloadFrom.carried && !l.reloadFrom.parts?" dry":""}" data-reload="${l.index}" ${r.spent || (l.reloadFrom && l.reloadFrom.swap)?"":"disabled"} title="${esc(reloadTitle(l.reloadFrom))}">Reload</button></span>${
     l.loaded?`<span class="loaded" title="Loaded">${esc(l.loaded.name)}</span>`:""}`;
 }
 // W30: what Reload takes from, and how much of it is on the sheet.
 const plural = (n, unit) => `${n} ${unit||"unit"}${n===1?"":"s"}`;
-const reloadTitle = f => !f ? "Fill the magazine" : f.kinds>1 ? `Carried: ${f.ammo.join(", ")}` : f.carried ? `${f.ammo[0]}: ${plural(f.carried, f.unit)} carried` : `You carry no ${f.ammo.join(" or ")}`;
+const reloadTitle = f => !f ? "Fill the magazine"
+  : f.kinds>1 ? `Carried: ${f.ammo.join(", ")}${f.parts ? `, ${f.parts} part-used` : ""}`
+  : f.carried ? `${f.ammo[0]}: ${plural(f.carried, f.unit)} carried${f.parts ? ` and ${f.parts} part-used` : ""}`
+  : f.parts ? `${f.ammo[0]}: ${f.parts} part-used (${f.partRounds.join(" and ")} ${f.countUnit}s)`
+  : `You carry no ${f.ammo.join(" or ")}`;
+// P9b: what became of the magazine that came out, said in the audit line.
+const keptAudit = k => !k ? "" : k.whole ? ", the full mag back on its stack" : `, the old mag kept with ${plural(k.roundsLeft, "round")}`;
 // W40: the audit line for a reload, naming the rounds when a swap loaded them.
-const reloadAudit = (name, p) => `${p.swapped ? `Loaded ${name} with ${p.ammo[0]}` : `Reloaded ${name}`} (${p.left}/${p.max})${p.used ? `, −${plural(p.used, p.unit)} of ${p.ammo[0]}` : ""}`;
-// W40: more than one kind of rounds fits, so Reload asks which. A swap says
-// what happens to the rounds left, which is still being settled (F34).
+const reloadAudit = (name, p) => `${p.swapped ? `Loaded ${name} with ${p.ammo[0]}` : `Reloaded ${name}`} (${p.left}/${p.max})${p.used ? `, −${plural(p.used, p.unit)} of ${p.ammo[0]}` : ""}${
+  p.part ? `, from a part-used mag of ${plural(p.part.roundsLeft, "round")}` : ""}${keptAudit(p.kept)}`;
+// W40: more than one kind of rounds fits, so Reload asks which. P9b: each
+// part-used magazine is a line of its own, and a swap says the old magazine
+// comes back (Decision 222).
 function reloadChooser(ch, i, name, pre){
   const sw = (D.weaponRules||{}).swap||{};
-  const left = pre.left ? `<p class="step-note">${esc(sw.text||"")} ${plural(pre.left, "round")} left in it now.</p>${sw.flagged ? flagHtml(sw) : ""}` : "";
-  openModal({ title:`Load ${name}`, html: `<div class="ammo-pick">${pre.options.map(o=>`<div class="ammo-opt">
-      <div><b>${esc(o.name)}</b> <span class="sub">${plural(o.qty, o.unit)} carried${o.loaded?" · in it now":""}</span>${o.tags.length?`<div class="tags">${tagChipsHtml(o.tags)}</div>`:""}</div>
-      <button class="btn sm" data-loadammo="${esc(o.id)}">Load</button></div>`).join("")}</div>${left}`,
+  const left = pre.left ? `<p class="step-note">${esc(sw.text||"")} ${plural(pre.left, "round")} left in it now.</p>` : "";
+  const line = o => o.part!=null
+    ? `<div><b>${esc(o.name)}</b> <span class="sub">${plural(o.roundsLeft, o.countUnit)} · part-used</span>${o.tags.length?`<div class="tags">${tagChipsHtml(o.tags)}</div>`:""}</div>
+      <button class="btn sm" data-loadpart="${o.part}">Load</button>`
+    : `<div><b>${esc(o.name)}</b> <span class="sub">${plural(o.qty, o.unit)} carried${o.loaded?" · in it now":""}</span>${o.tags.length?`<div class="tags">${tagChipsHtml(o.tags)}</div>`:""}</div>
+      <button class="btn sm" data-loadammo="${esc(o.id)}">Load</button>`;
+  const load = opts=>{
+    const p=Engine.reloadWeapon(clone(ch), i, opts);
+    closeModal();
+    if (!p.ok){ notice(p.why); return; }
+    commit("loadout", reloadAudit(name, p), ()=>{ Engine.reloadWeapon(ch, i, opts); });
+  };
+  openModal({ title:`Load ${name}`, html: `<div class="ammo-pick">${pre.options.map(o=>`<div class="ammo-opt">${line(o)}</div>`).join("")}</div>${left}`,
     foot:`<button class="btn" data-modalclose>Cancel</button>`,
-    bind: body=>body.querySelectorAll("[data-loadammo]").forEach(b=>b.onclick=()=>{
-      const id=b.dataset.loadammo, p=Engine.reloadWeapon(clone(ch), i, { ammo:id });
-      closeModal();
-      if (!p.ok){ notice(p.why); return; }
-      commit("loadout", reloadAudit(name, p), ()=>{ Engine.reloadWeapon(ch, i, { ammo:id }); });
-    }) });
+    bind: body=>{
+      body.querySelectorAll("[data-loadammo]").forEach(b=>b.onclick=()=>load({ ammo:b.dataset.loadammo }));
+      body.querySelectorAll("[data-loadpart]").forEach(b=>b.onclick=()=>load({ part:Number(b.dataset.loadpart) }));
+    } });
 }
 // A sight's ACC is for aimed shots, and a Scope's only at range (Gear), so
 // they're listed apart from Single's ACC rather than summed into it.
@@ -2407,7 +2425,7 @@ function pWeaponRows(ch){
 // Gear on paper: a catalog row prints its count or charges as its type.
 function pGearRows(ch){
   return (ch.gear||[]).map((e,i)=>Engine.gearLine(ch,i)).filter(Boolean).map(l=>l.custom ? ch.gear[l.index]
-    : { name:l.name, type:[l.categoryName, l.charges?`${l.charges.left}/${l.charges.max} charges`:l.qty>1||l.consumable?`×${l.qty}`:""].filter(Boolean).join(" · "),
+    : { name:l.name, type:[l.categoryName, l.charges?`${l.charges.left}/${l.charges.max} charges`:l.roundsLeft!=null?`${plural(l.roundsLeft, l.countUnit)} left`:l.qty>1||l.consumable?`×${l.qty}`:""].filter(Boolean).join(" · "),
         notes:[l.spellName?`Holds ${l.spellName}`:"", l.notes].filter(Boolean).join(" · ") });
 }
 function pArmorRows(ch){
@@ -3238,9 +3256,10 @@ function bindSheet(){
                                                : ((Engine.armorState(ch).pieces.find(p=>p.index===i)||{}).name||"armor");
   // Gear (Decision 121): Use one, +1, a charge, Recharged — each one commit().
   main.querySelectorAll("[data-gearuse]").forEach(b=>b.onclick=()=>{
-    const i=Number(b.dataset.gearuse), pre=Engine.useGear(clone(ch), i, 1);
+    const i=Number(b.dataset.gearuse), line=Engine.gearLine(ch, i), pre=Engine.useGear(clone(ch), i, 1);
     if (!pre.ok){ notice(pre.why); return; }
-    commit("loadout", `Used ${pre.name} (${pre.left} left)`, ()=>{ Engine.useGear(ch, i, 1); });
+    // A part-used magazine is dropped, and the audit says with how much in it (Decision 222).
+    commit("loadout", line && line.roundsLeft!=null ? `Dropped ${pre.name} (${plural(line.roundsLeft, line.countUnit)} left in it)` : `Used ${pre.name} (${pre.left} left)`, ()=>{ Engine.useGear(ch, i, 1); });
   });
   main.querySelectorAll("[data-gearplus]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.gearplus), pre=Engine.useGear(clone(ch), i, -1);
@@ -3328,7 +3347,7 @@ function bindSheet(){
     // With nothing on the sheet that fits, the player can still reload, and
     // the audit says it came from nowhere (W30).
     if (pre.noAmmo){ askFirst({ title:"Nothing to reload from", text:`${pre.why} Reload anyway?`, yes:"Reload anyway", danger:false,
-      then:()=>commit("loadout", `Reloaded ${name} anyway, no ${pre.ammo.join(" or ")} on the sheet`, ()=>{ Engine.reloadWeapon(ch, i, { anyway:true }); }) }); return; }
+      then:()=>commit("loadout", `Reloaded ${name} anyway, no ${pre.ammo.join(" or ")} on the sheet${keptAudit(Engine.reloadWeapon(clone(ch), i, { anyway:true }).kept)}`, ()=>{ Engine.reloadWeapon(ch, i, { anyway:true }); }) }); return; }
     if (pre.choose){ reloadChooser(ch, i, name, pre); return; }
     if (!pre.ok){ notice(pre.why); return; }
     commit("loadout", reloadAudit(name, pre), ()=>{ Engine.reloadWeapon(ch, i); });
