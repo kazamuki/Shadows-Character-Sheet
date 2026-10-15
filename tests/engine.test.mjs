@@ -7723,6 +7723,14 @@ test("P8a 2: a halved hit PROT stops is still soaked and costs 1 Integrity", () 
   assert.deepEqual([r.halved.to, r.absorbed, r.through, r.soaked, r.integrityLost], [3, 3, 0, true, 1]);
 });
 
+test("P8a 2b: a 1-damage hit halved to 0 is still soaked and costs 1 Integrity, as it does without the lining", () => {
+  const hit = ch => Engine.resolveHit(ch, { damage: 1, damageType: "electric", protRoll: 1 });
+  for (const ch of [vestWith(), vestWith("Resistance — Electric")]) {
+    const r = hit(ch);
+    assert.deepEqual([r.soaked, r.integrityLost], [true, 1]);
+  }
+});
+
 test("P8a 3: Resistance answers its own type only", () => {
   const hit = ch => Engine.resolveHit(ch, { damage: 12, damageType: "burning", protRoll: 2 });
   const e = hit(vestWith("Resistance — Electric"));

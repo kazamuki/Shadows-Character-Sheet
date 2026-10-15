@@ -990,6 +990,7 @@ const Engine = (() => {
   // Everything after the halving counts from the halved damage.
   function mitigateArmor(damage, type, hit, armor, covered){
     let prot = 0, res = 0, resSkipped = null, halved = null;
+    const incoming = damage;      // soaked reads what was thrown, not what the lining left
     if (covered){
       const roll = Math.floor(Number(hit.protRoll));
       if (hit.protRoll==null || hit.protRoll==="" || !(roll>=1)) return { ok:false, why:"Enter the PROT die you rolled." };
@@ -1004,7 +1005,7 @@ const Engine = (() => {
       else res = armor.res;
     }
     const absorbed = Math.min(damage, prot + res), through = damage - absorbed;
-    const soaked = covered && damage>0 && through===0;
+    const soaked = covered && incoming>0 && through===0;
     const intBefore = covered ? armor.integrity : null;
     const integrityLost = soaked && intBefore!=null
       ? Math.min(Number((D().armorRules||{}).soakedIntegrityLoss)||0, intBefore) : 0;
@@ -1096,7 +1097,7 @@ const Engine = (() => {
     // A Resistance (it has `halves`) says its piece in Loadout; on a hit it would speak only if
     // it governed the damage, which Freezing never does yet (F42).
     if (covered) armor.upgrades.forEach(u=>{
-      const g = upgradeById(u); if (g && !g.halves && g.flagged && g.playerNote && !notes.includes(g.playerNote)) notes.push(g.playerNote);
+      const g = upgradeById(u); if (g && g.flagged && g.playerNote && (!g.halves || g.halves.includes(type.id)) && !notes.includes(g.playerNote)) notes.push(g.playerNote);
     });
 
     const intBefore = covered ? armor.integrity : null;

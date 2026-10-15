@@ -1833,7 +1833,7 @@ function armorRowHtml(ch, p){
     h += `<div class="lo-upgrades"><span class="lo-sub">Upgrades${slotsTxt}</span>${chips}
       ${u.slots!==0?`<select data-upgpick="${p.index}" aria-label="Upgrade"><option value="">Install an upgrade…</option>${
         u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)}${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
-      <button class="btn sm" data-upgadd="${p.index}">Install</button>`:""}</div>`;
+      <button class="btn sm" data-upgadd="${p.index}">Install</button>`:""}</div>${(D.armorUpgradeGlossary||[]).filter(g=>g.flagged && p.upgrades.includes(g.id)).map(flagHtml).join("")}`;
     const canRepair = !p.scrapped && p.integrityLoss>0, frk = Engine.carriedGear(ch, "field-repair-kit");
     h += `<div class="hitrow lo-repair">
       <label class="field"><span>Repair kit (${esc(R.repairKitDie||"1d6")})</span><input type="number" min="1" data-repairroll="${p.index}" ${canRepair?"":"disabled"}></label>

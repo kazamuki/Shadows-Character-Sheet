@@ -866,5 +866,12 @@ test("P8a 14: Loadout offers the three typed Resistances", () => {
   for (const t of ["Thermal", "Electric", "Freezing"]) assert.ok(offered.includes(`Resistance — ${t}`), t);
   assert.ok(!offered.includes("Resistance"), "the retired one is offered");
   assert.match(app.$(".lo-upgrades .cond-chip").textContent, /Resistance/, "the installed untyped chip is gone");
+  assert.doesNotMatch(app.$("#main").textContent, new RegExp(D.appCopy.unsettledLabel), "the retired one is flagged");
+  const fz = lockedCharacter();
+  fz.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: ["Resistance — Freezing"] });
+  assert.match(openSheet(fz, "loadout").$("#main").textContent, /Freezing Resistance doesn't halve anything yet/);
+  const el = lockedCharacter();
+  el.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: ["Resistance — Electric"] });
+  assert.doesNotMatch(openSheet(el, "loadout").$("#main").textContent, new RegExp(D.appCopy.unsettledLabel));
   assert.deepEqual(app.errors, []);
 });
