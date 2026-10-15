@@ -17,28 +17,25 @@ stay there.
 ## 1. How it runs
 
 The same cadence as GM mode, written once in
-[`gm-mode/README.md`](gm-mode/README.md) (*The cadence*): an orchestrating
-session (Opus) writes one work order, pre-flights it against the code, Ken
-approves it (the order **is** the proposal *Rule or shape* asks for), a
-building session (Sonnet) builds it on a branch and opens a PR without
-merging, the orchestrator reviews it against the order and runs it in a
-browser, and fixes go back to the session that built it. **The next order is
-written only after the last PR merges.** Work orders live in
-[`sheet-wishlist/`](sheet-wishlist/), one per session, `P01-…` onward.
-From P4 on, each order ends with **Handing it over**: the prompt to paste
-into the building session, with the order's own traps called out. It's
-`gm-mode/README.md`'s prompt, plus what the pre-flight found easy to get
-wrong.
+[`gm-mode/README.md`](gm-mode/README.md) (*The cadence*):
+- An orchestrating session (Opus) writes one work order, with its assumption
+  sweep and its worked examples as named tests, and pre-flights it against
+  the code.
+- Ken approves it: the order **is** the proposal *Rule or shape* asks for.
+- Ken starts a building session (Sonnet, titled `P<n> build`), which builds
+  it on a branch and opens a PR without merging, with evidence for every
+  claim.
+- Ken starts a fresh reviewing session (Opus), which reviews the PR against
+  the order, fixes nits itself, and messages the builder the rest. It
+  re-reviews the fixes narrowly and tells Ken when the PR is ready.
+- **The next order is written only after the last PR merges.**
 
-**From P8a on, on trial** (Ken, 2026-10-14, after #177's review found a
-miss in the order rather than the build): the order carries an **assumption
-sweep** (what's true today that the change makes false, by file and line),
-its **worked examples as named tests** the builder writes first and shows
-failing on `main`, and a rule that **every claim in the PR names its
-evidence**. Ken starts the builder and a fresh reviewer; the reviewer messages
-the builder directly, **fixes nits itself**, and **re-reviews narrowly**
-(the fix commits against its findings). If it holds up over two orders, it
-moves into `gm-mode/README.md`'s cadence.
+Work orders live in [`sheet-wishlist/`](sheet-wishlist/), one per session,
+`P01-…` onward. Each ends with **Handing it over**: the README's two
+prompts, plus the order's own traps. The two-session loop ran on trial for
+P8a and P8b and was adopted on 2026-10-15 (Ken), with two refinements from
+their reviews: the sweep is answered by grepping a field's readers, and
+*Stop and ask* names the breaks it expects.
 
 Two differences from GM mode:
 
@@ -75,6 +72,9 @@ P04's "P12" is P13 and its "P5" is P6).
 **Split 2026-10-14:** P8 became P8a (the hit) and P8b (healing), each with
 its own save-shape or rules change; the later sessions keep their numbers (Ken).
 
+**Split 2026-10-15:** P9 became P9a (the text, Content) and P9b (F34, a save
+shape), so the quick text reaches players without waiting on F34's design (Ken).
+
 | # | Session | Wishes | Tier | Before its order | Status |
 |---|---|---|---|---|---|
 | **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Merged** 2026-10-11 (Decision 213, #158), released in 0.39.3 (#161): [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
@@ -84,9 +84,10 @@ its own save-shape or rules change; the later sessions keep their numbers (Ken).
 | **P5** | Powers learned in play | W72 learn an unheld Bloodline or Origin power with IP, W106 a custom power the GM grants (in play and at creation) | Rule or shape, character schema | Nothing | **Built** 2026-10-11 (#170, Decision 216, app 0.42.0, schema 0.21; PQ1, PQ2, PQ5 on their defaults; PQ3, PQ4, PQ6 answered): [`P05-powers-in-play.md`](sheet-wishlist/P05-powers-in-play.md) |
 | **P6** | Milestones | W103 (F9, repeats at any time, the rebalanced values) | Rule or shape, data, character schema | Nothing | **Merged** 2026-10-14 (Decision 217, #173, app 0.43.0, game data 0.36, schema 0.22; PQ1–PQ10 answered), unreleased: [`P06-milestones.md`](sheet-wishlist/P06-milestones.md) |
 | **P7** | Luck and the Boost cap | W65, W66 | Rule or shape, data | Nothing | **Merged** 2026-10-14 (Decision 218, #177, app 0.43.1, game data 0.37; PQ1–PQ3 on their defaults), unreleased: [`P07-luck-and-the-boost-cap.md`](sheet-wishlist/P07-luck-and-the-boost-cap.md) |
-| **P8a** | The hit | W102's hit half (F18, F23, F25, grenades) | Rule or shape, data | Nothing | **Built** 2026-10-15 (Decision 219, app 0.44.0): [`P08a-the-hit.md`](sheet-wishlist/P08a-the-hit.md) |
-| P8b | Healing | W102's healing half (F24, F36 and its gritty option) | Rule or shape, character schema | Nothing | **Built** 2026-10-15 (Decision 220, app 0.44.0, schema 0.23; PQ1–PQ6 as answered, PQ5 adds the HP pill): [`P08b-healing.md`](sheet-wishlist/P08b-healing.md) |
-| P9 | Gear and reference text | W104 (F26, F30, F31, F34, difficulty names), W53 | Content; F34 is a save shape | Whether F34 splits into its own session | ⏭ |
+| **P8a** | The hit | W102's hit half (F18, F23, F25, grenades) | Rule or shape, data | Nothing | **Merged** 2026-10-15 (Decision 219, #180, app 0.44.0), unreleased: [`P08a-the-hit.md`](sheet-wishlist/P08a-the-hit.md) |
+| **P8b** | Healing | W102's healing half (F24, F36 and its gritty option) | Rule or shape, character schema | Nothing | **Merged** 2026-10-15 (Decision 220, #183, app 0.44.0, schema 0.23; PQ1–PQ6 as answered, PQ5 adds the HP pill), unreleased: [`P08b-healing.md`](sheet-wishlist/P08b-healing.md) |
+| **P9a** | Gear text, difficulty names, the Magical being | W104 without F34 (F26, F30, F31, the skill checks' names), W53 | Rule or shape (small: a mod's `refusalText`) | Nothing | **Approved** 2026-10-15 (PQ2, PQ4, PQ5 on their defaults; PQ1 and PQ3 their alternatives), ready to build: [`P09a-gear-text.md`](sheet-wishlist/P09a-gear-text.md) |
+| P9b | Partly spent magazines | W104's F34 | Rule or shape, character schema | Where a magazine's count lives, and how Reload chooses between magazines | ⏭ after P9a |
 | P10 | Holding a spell | W87 | Rule or shape, character schema | The WILL check's TN and TH (stubbed and flagged if Deighton hasn't set them) | ⏭ |
 | P11 | SFR and movement on Main | W97 Rate of Use, W54 a written-in pool's card, W98 Walk/Run/Sprint/Jump | Rule or shape (W97's tracker field) | W97: warn or block (Claude argues warn), and how sustained drains are charged | 🔎 |
 | P12 | Learning in play | W89 Advantages with IP, W39 a new Martial Arts style (W72 moved to P5) | Rule or shape | W39: confirm a style's +1 goes on the check that inflicts the Condition | ⏭ |

@@ -18,34 +18,51 @@ build it without making a design choice of its own.
 3. **Ken reads and approves it.** The work order *is* the proposal that
    `CLAUDE.md`'s *Rule or shape* tier asks for. Ken edits it, answers its
    questions, or sends it back. Nothing is built from an unapproved order.
-4. **A building session runs it** (Sonnet), in a fresh session, on a branch,
-   following `CLAUDE.md` and the order's steps, and **opens a PR without
-   merging it**.
-5. **The orchestrating session reviews the PR against the order** (its
-   *Review checklist*), and **runs it in a browser**, not only the tests: S1's
-   worst bug passed every test, because the tests checked that the tip opened
-   and nothing checked that the card still did. It re-runs the PR's mutation
-   tests itself, then either approves or lists fixes. Each fix is marked as
-   the order's or the build's: the order's go into the next order's
-   *Carried over* note. A fix that changes what the order specified, not
-   just how it was built, is Ken's call: the review recommends it, and it
-   goes into the prompt once he agrees (S9a's Back to the cast member).
-   When the order builds a shape that later content will fill (a file
-   kind, a data section), the review also checks that shape against the
-   content's source, since the session that fills it is meant to need no
+4. **Ken starts a building session** (Sonnet), titled **`<id> build`**, with
+   the prompt below and the order's own *Handing it over* traps. It builds on
+   a branch, following `CLAUDE.md` and the order's steps, writes the order's
+   worked examples as tests first and shows them failing on `main`, and
+   **opens a PR without merging it**. Every claim the PR makes about how the
+   code behaves names the command or test that shows it.
+5. **Once the PR is open, Ken starts a fresh reviewing session** (Opus), with
+   the reviewer's prompt below. It reviews the PR **against the order, not
+   just the diff**:
+   - It re-does the order's assumption sweep itself and looks for what the
+     sweep missed.
+   - It probes the behaviour on `main` and on the PR, and doesn't take the
+     PR's claims on trust.
+   - It **runs the PR in a browser**, not only the tests. S1's worst bug
+     passed every test: the tests checked that the tip opened, and nothing
+     checked that the card still did.
+   - It re-runs the PR's mutation tests itself.
+
+   It posts must-fix and should-fix findings as inline comments, **fixes nits
+   itself** in a commit on the PR branch, and messages the builder directly
+   (`ListAgents` finds it by its title).
+
+   Each finding is marked as the order's or the build's, and the order's go
+   into the next order's *Carried over* note. A fix that changes what the
+   order specified, not just how it was built, is Ken's call: the review
+   recommends it, and it goes to the builder once he agrees (S9a's Back to the
+   cast member). When the order builds a shape that later content will fill
+   (a file kind, a data section), the review also checks that shape against
+   the content's source, since the session that fills it is meant to need no
    code (S9a's pack against the Codex).
-6. Fixes go back as one pasted prompt **to the session that built the PR**:
-   it already knows the code it wrote (S8a's knew `signed` was taken).
-   Write the prompt self-contained anyway, and start a fresh session only
-   if that one has been compacted or closed. The orchestrator reviews the
-   fix commit the same way; Ken merges.
+6. **The builder fixes and messages back** with its commits and the evidence
+   for each. It already knows the code it wrote (S8a's knew `signed` was
+   taken). The reviewer **re-reviews narrowly**: the fix commits against its
+   findings, and whether a fix touched anything else, never the whole PR
+   again. When nothing must-fix or should-fix is left, it tells Ken, and
+   Ken merges. If the two sessions can't reach each other, Ken relays.
 
    A decision in a PR that **hasn't merged** is reworded in place by the fix
    round, never superseded: nothing has cited it yet (S8a's 176). Once
    merged, the ledger's supersession rules apply.
 
-7. **Only then does the same orchestrating session write the next order**,
-   from `main` with the last PR merged (Ken, 2026-10-06). Never while
+7. **Only then does the orchestrating session write the next order**, from
+   `main` with the last PR merged (Ken, 2026-10-06). The last reviewer is a
+   good choice, since it has just read the code the next order starts from
+   (P9 was drafted that way). Never while
    that PR is open, for three reasons:
    - its *Carried over* note is what the fix round actually changed, not
      what the review expected;
@@ -59,10 +76,14 @@ build it without making a design choice of its own.
 Review sits **before** the merge. It costs much less than the build, and it's
 where a missed decision or an untested guard gets caught.
 
-**The orchestrator reviews against its own assumptions**, which is a blind
-spot that running the app only partly covers. Before the release that
-switches GM mode on for everyone (Decision 173), GM mode gets one
-**fresh-context review** as a whole (the adversarial review, once per batch).
+**Why two sessions** (Ken, on trial from P8a, adopted 2026-10-15 after P8a and
+P8b): an orchestrator that reviews its own order reviews against its own
+assumptions. P7's must-fix was a miss in the order, not the build, and the
+orchestrator's review couldn't see it. A fresh reviewer doesn't share the
+order's assumptions. Talking to the builder directly saves Ken the relay, and
+the narrow re-review keeps the second round cheap. On P8b the loop closed in
+one round. Before the release that switches GM mode on for everyone
+(Decision 173), GM mode still gets one **fresh-context review** as a whole.
 
 ## Shipping while unfinished
 
@@ -99,6 +120,23 @@ in the order's header:
   the line (S1's `_fillDefaults`).
 - **Every test the order changes or might break** is found by grepping for
   what it touches (a label, a class, a key).
+- **The assumption sweep** is a table in the order. For each function,
+  field or note the order changes, it lists what's true today, where (file
+  and line), and what's true after. Two questions are asked of every row:
+  - **Which guards read a value this changes?** P8a missed `soaked` reading
+    the damage the order halved.
+  - **Where does each new or removed note, line or number render?** P8a
+    missed a `playerNote` left with nowhere to render. P8b missed two places
+    that show the same HP number as the pill it changed: the popover the
+    pill opens, and the pinned drawer that hides the pill.
+
+  **Answer both by grepping the field's readers** (`hpLeft`, `playerNote`,
+  `.dying`), never from memory of where it shows. Every miss so far has been
+  a reader nobody remembered, and **twins count**: everywhere that draws the
+  same number is a row.
+- **Probes on `main`** go in the header: what the changed functions return
+  today, for the order's own examples. They become the worked examples'
+  "before".
 
 ### How exact to be
 
@@ -121,17 +159,66 @@ in the order's header:
   as it does here: the document's `scrollWidth` against `clientWidth`, and
   no element in `main` past the viewport's right edge.
 - **Size the order to its tier.** A *Rule or shape* order earns all
-  thirteen sections. A *Content* or *Fix* session (S13, S12) gets a page:
-  goal, tier, scope, tests, review checklist.
+  fifteen sections. A *Content* or *Fix* session (S13, S12) gets a page:
+  goal, tier, scope, the sweep, tests, review checklist and the hand-over.
+- **Say what isn't a stop.** *Stop and ask* names the breaks the order
+  expects, so the builder doesn't have to judge them: the version literals its
+  own bump moves, or a test that asserts a note the order deletes. P8b's
+  builder judged two such breaks correctly, but a rule that invites judgement
+  gets skipped in the one place it matters.
 
-**Prompt for a building session** (paste as the first message):
+**Prompt for a building session** (paste as the first message, with the
+session titled `<id> build`). The order's *Handing it over* adds its own
+traps under it:
 
-> Read `CLAUDE.md`, then `docs/plans/gm-mode/<order>.md`, and build it. Follow
-> its steps in order and its *Stop and ask* list exactly: if something isn't
-> covered by the order, stop and ask me rather than choosing. Where the order
-> and the code or the ledger disagree in a way that doesn't stop you, build
-> what the order says and list it in the PR under *Where the order didn't fit*.
-> Open a PR when its *Done when* is met; don't merge it.
+> Read `CLAUDE.md`, then `docs/plans/<plan>/<order>.md`, and build it. Ken's
+> answers to its questions are in the order. Follow its steps in order and its
+> *Stop and ask* list exactly: if something isn't covered by the order, stop
+> and ask me rather than choosing. Where the order and the code or the ledger
+> disagree in a way that doesn't stop you, build what the order says and list
+> it in the PR under *Where the order didn't fit*. Open a PR when its review
+> checklist holds; don't merge it.
+>
+> **Every claim in the PR about how the code behaves names the command or
+> test that shows it** ("X doesn't run Y: `grep …`", "fails on `main`: test
+> output"). A claim with no evidence is a finding in review.
+>
+> When the PR is open, say so here. A reviewer session will message you with
+> findings. Fix them, push, and message it back with what you changed and the
+> evidence for each.
+
+**Prompt for the reviewing session** (a fresh Opus session, started once the
+PR is open):
+
+> Review PR #<n> adversarially against `docs/plans/<plan>/<order>.md`: the
+> order, not just the diff. Re-do the order's assumption sweep yourself by
+> grepping the readers of everything it changes, and look for what it missed.
+> Run the tests, probe the behaviour on `main` and on the PR, and run it in
+> the dev preview; don't take the PR's claims on trust. First mount the CRB
+> mirror (`git submodule update --init private`): without it, every
+> CRB-mirror test fails for a reason that has nothing to do with the PR.
+>
+> For the mechanical parts, such as running the full suite and sorting
+> environmental failures from real ones, or a read-only sweep like "list
+> every place that writes `trackers.damage`", use a Haiku subagent. Its
+> results are leads, not findings: check anything you report yourself.
+>
+> Post the review on the PR: must-fix and should-fix as inline comments, on
+> lines inside the diff (GitHub refuses others; name the real line in the
+> comment). **Nits you fix yourself in one commit on the PR branch, and say
+> so in the review**; don't send them back. Mutation-test a nit's guard by
+> saving the fixed file and copying it back, never with `git checkout` on a
+> file you just edited, which restores the unfixed version. Probe `main` in a
+> scratch worktree with its own `npm ci`: don't link `node_modules` into it,
+> because removing the worktree deletes through the link.
+>
+> Then find the builder session with `ListAgents` (its title is **<id>
+> build**) and message it that the review is posted, with the must-fix and
+> should-fix items. When it messages back, **re-review narrowly**: its fix
+> commits against your findings, plus whether a fix touched anything else.
+> Don't re-review the whole PR. When nothing must-fix or should-fix is left,
+> tell Ken it's ready to merge. If you can't reach the builder, tell Ken and
+> he'll relay.
 
 ## Running more than one at once
 
@@ -182,20 +269,29 @@ order. An order that can't fill one isn't ready to hand over; a *Content* or
    building session doesn't write a decision; it pastes and fills *Built*.
 4. **Questions for Ken.** Anything the order defaults that Ken might not
    want, each with its default. Answered before the build starts.
-5. **Read first.** The `CLAUDE.md` rules, SCHEMA sections, files, functions
+5. **The assumption sweep.** The pre-flight's table: what's true today, where,
+   and what's true after, with its two questions answered by grep.
+6. **Read first.** The `CLAUDE.md` rules, SCHEMA sections, files, functions
    and primitives that matter, by name.
-6. **Out of scope.** What the session must not do, even if it looks nearby.
-7. **The shapes.** Data keys, the saved-file field, `migrate()`, the engine
+7. **Out of scope.** What the session must not do, even if it looks nearby.
+8. **The shapes.** Data keys, the saved-file field, `migrate()`, the engine
    functions with their signatures and what they return on bad input.
-8. **The UI.** Where each thing goes, what it reuses, what each interaction
+9. **The UI.** Where each thing goes, what it reuses, what each interaction
    must do (behaviour, not markup), and its copy (drafted, marked for a
    voice pass).
-9. **Tests.** By file and name, hostile cases included, and which guards to
-   mutation-test.
-10. **Steps.** In order, with a `npm run verify` checkpoint after each.
-11. **Stop and ask.** The conditions that end the session early.
-12. **Close-out.** The `close-the-session` skill's items for this tier, the
+10. **Worked examples, as named tests.** Each example is a test with its
+    exact name and file. The builder writes these first and shows them
+    failing on `main`, or says why one already passes.
+11. **Tests beyond the examples.** Totality, hostile cases, voice, and which
+    guards to mutation-test.
+12. **Steps.** In order, with a `npm run verify` checkpoint after each, and a
+    run in the dev preview for anything a player sees.
+13. **Stop and ask.** The conditions that end the session early, and the
+    expected breaks that don't.
+14. **Close-out.** The `close-the-session` skill's items for this tier, the
     changelog lines, the PR title, and the PR body's sections, always
-    including **Where the order didn't fit** (empty is a fine answer).
-13. **Review checklist.** What the orchestrator checks in the PR, beyond the
+    including **Where the order didn't fit** (empty is a fine answer). Then
+    the **review checklist**: what the reviewer checks in the PR, beyond the
     tests passing.
+15. **Handing it over.** The builder's and the reviewer's prompts (above),
+    plus this order's own traps: what the pre-flight found easy to get wrong.
