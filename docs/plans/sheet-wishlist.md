@@ -3,7 +3,7 @@
 **Status:** proposed 2026-10-10 by Claude (Opus), after the first playtest
 (W87–W99, #154) and Deighton's rulings (#156,
 `reference/rulings-2026-10-10.md`). **Approved by Ken 2026-10-10** (WQ1: the
-order as §3; WQ2: release often, by ear). Nothing here is built.
+order as §3; WQ2: release often, by ear). Each session's status is its row in §3.
 **Tier of this document:** *Docs*. Each session names its own tier.
 
 This plan turns the player sheet's open wishlist into sessions an Opus

@@ -1,8 +1,9 @@
 # Plan — GM mode: the table, its cast and its city (W29)
 
-**Status:** proposed 2026-10-02, **not approved**. Ken is still in planning:
-it goes to Scott and Deighton before anything is built, since they are the
-GMs who'd use it. Nothing here is a decision until the session that builds
+**Status:** proposed 2026-10-02 and taken to Scott and Deighton first, since
+they are the GMs who'd use it; **approved a session at a time** since S1's
+order (2026-10-02). What's built and what's next is the orders table in
+[`gm-mode/README.md`](gm-mode/README.md). Nothing here is a decision until the session that builds
 it numbers it in `SCHEMA.md` §4. Its open questions are `GQ`_n_ (§9), each
 with the default the build takes if nobody answers first.
 **Revised 2026-10-02, the same day:** Scott answered the GM questionnaire and

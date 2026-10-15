@@ -1,7 +1,7 @@
 # Plan: acting on the 2026-09-24 whole-app audit
 
 **Status:** done 2026-09-25. **Every question is answered** (§5), and **S1–S6 are done** (S1: app 0.24.0, character schema 0.11, game data 0.17; S2: docs only; S3: app 0.25.0, game data 0.18; S4: app 0.25.1; S5: app 0.26.1; S6a: app 0.27.0, game data 0.21; S6b: app 0.27.1; S6c: app 0.28.0), and **S7 is done** (app 0.28.2, character schema 0.13, Ken asked for it as a session of its own). Every finding is closed.
-**Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
+**Covers:** every finding in [`audits/2026-09-24_whole-app-audit.md`](../../audits/2026-09-24_whole-app-audit.md) (A4–A12, B11–B19, C4–C15) and its recommended practices (R1–R13).
 **Sources:** the audit's own probes, `docs/reference/crb/041_Archetypes.md` and `043_Advantages.md` (pulled 2026-09-22/23).
 
 When a session finishes, tick its box in §3 and mark its findings closed in `INDEX.md` §2. When every session is done or dropped, this file gets a one-line "done" header and stays as history.
