@@ -186,6 +186,23 @@ Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q11). The rest of W104 (F26,
 
 ### Loadout & catalog
 
+**W108 — Magazines sized by the weapon, and combining part-used ones.** *Ken · 💡 · Rule or shape · raised 2026-10-15 with P9b's PQ3 · wants thinking time*
+Gear sells rounds by the magazine and Weapon Type, so one Rifle Rounds magazine fills a
+3+1 VR-50 "Verdict" or a 30+1 AR-9X (Decision 145). P9b keeps a part-used magazine
+with its count, which puts the simplification in view: 18 rounds out of an AR load 4
+into the Verdict and leave 14 in the magazine. Ken: it breaks immersion. A magazine
+that belongs to a weapon (or a capacity) would read truer.
+*To respect:* it changes what a bought magazine is, so it starts with the CRB: Gear
+would price magazines per weapon, or say they fit by capacity. 145's *Revisit if*
+already names it ("a weapon takes a magazine another of its type can't").
+**Combining part-used magazines** (Ken, the same day): two Rifle mags of 18 and 6
+into one. It belongs here, not as its own wish, because "full" has no meaning
+until a magazine has a size. Today any whole magazine fills any weapon of its
+type, so a combined one could be called whole at any count. Questions to settle
+first: what size a combined magazine is; whether specialty rounds can be combined
+with standard ones (they can't share a magazine's tags); and whether it costs an
+action at the table. P9b leaves merging out of scope (its §7).
+
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*
 Deighton's ask: powered armor worn over the body should show its bonuses where
 they land. Armor giving +5 to BOD skills and damage should raise Melee and
@@ -796,7 +813,7 @@ lands.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W108.** Everything above is open; W38 has a plan,
+- **Next free number: W109.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
