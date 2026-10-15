@@ -40,7 +40,7 @@ maintains the CRB and builds this app.
 ## Commands
 
 ```bash
-npm run verify     # build check + full test suite — run BEFORE and AFTER every change
+npm run verify     # build check + full test suite — run AFTER every change (and before, see below)
 npm test           # engine units, CRB conformance, hostile files, voice, jsdom smoke, architecture guards
 npm run test:fast  # engine, rules, docs and build only: the inner loop while working. verify still gates
 npm run build      # → dist/shadows-character-sheet.html (the file players get) and the blank sheet
@@ -60,6 +60,12 @@ or stale.
 session, numbering a decision, opening or closing a flag, and cutting a
 release. They carry the steps and commands; the rules they follow are stated
 here, and only here.
+
+**The baseline before a change.** On a branch freshly cut from `origin/main`,
+`npm run test:fast` is enough: CI keeps `main` green, so the full suite there
+has already passed. On a stale or inherited branch, run the full `npm run verify`
+first, so a failure you didn't cause is caught before you start. After a change,
+the full `npm run verify`, always.
 
 `docs/STATE.md` says how many `todo` tests to expect. Any `todo` tests are **confirmed
 defects written as failing assertions on purpose** — they flip green when fixed.
