@@ -419,7 +419,16 @@ Start a fresh Opus session and paste, with the PR number filled in:
 > Check the order's §5 sweep yourself and look for what it missed, the way
 > #177's review found `spendable` losing its power-rank sink. Run the tests
 > and probe the behaviour against `main`; don't take the PR's claims on
-> trust. Post the review on the PR: must-fix and should-fix as inline
+> trust. First mount the CRB mirror (`git submodule update --init private`):
+> a fresh worktree doesn't have it, and without it every CRB-mirror test fails
+> for a reason that has nothing to do with the PR.
+>
+> For the mechanical parts, such as running the full suite and sorting
+> environmental failures from real ones, or a read-only sweep like "list
+> every player-facing string that says Resistance", use a Haiku subagent.
+> Its results are leads, not findings: check anything you report yourself.
+>
+> Post the review on the PR: must-fix and should-fix as inline
 > comments. **Nits you fix yourself in one commit on the PR branch, and say
 > so in the review**; don't send them back.
 >
