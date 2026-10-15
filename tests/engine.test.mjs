@@ -2288,6 +2288,31 @@ test("P9b 3: one tap takes a whole magazine first, then the fullest part-used on
   same([r.ok, ch.weapons[0].roundsSpent, mags(ch)], [true, 25, []], "the last part-used magazine wasn't taken third");
 });
 
+test("P9b 3b: one tap never lowers the weapon's rounds, and holding a second kind asks", () => {
+  // A part of the kind already loaded must hold more than the weapon has; otherwise the tap refuses and changes nothing.
+  const ch = armed("ar9x-guardian", { roundsSpent: 1 });                // 30 of 31
+  ch.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 6, notes: "" });
+  const before = JSON.stringify(ch), r = Engine.reloadWeapon(ch, 0);
+  assert.equal(r.ok, false, "a tap lowered the weapon's rounds");
+  assert.match(r.why, /No magazine you carry holds more than it has./);
+  assert.equal(JSON.stringify(ch), before, "a refused tap changed the sheet");
+  ch.weapons[0].roundsSpent = 13;                                      // 18 of 31, a part of 18 is no gain either
+  ch.gear[0].roundsLeft = 18;
+  assert.equal(Engine.reloadWeapon(ch, 0).ok, false, "a same-size swap went through");
+  ch.gear[0].roundsLeft = 19;
+  assert.equal(Engine.reloadWeapon(ch, 0).ok, true, "a fuller part-used magazine was refused");
+  // A part of another kind is a swap, so it still loads.
+  const sw = armed("ar9x-guardian", { roundsSpent: 1 });
+  sw.gear.push({ id: "silver-rounds", qty: 1, roundsLeft: 6, notes: "" });
+  assert.equal(Engine.reloadWeapon(sw, 0).loaded, "silver-rounds");
+  // Two kinds held, a whole Rifle mag and a Silver part: it asks, rather than loading the Rifle.
+  const two = armed("ar9x-guardian", { roundsSpent: 5 });
+  two.gear.push({ id: "rifle-rounds", qty: 1, notes: "" }, { id: "silver-rounds", qty: 1, roundsLeft: 20, notes: "" });
+  const ask = Engine.reloadWeapon(two, 0);
+  same([ask.ok, ask.choose, ask.options.map(o => o.id)], [false, true, ["rifle-rounds", "silver-rounds"]], "a second kind held didn't ask");
+  assert.equal(two.weapons[0].roundsSpent, 5, "asking changed the weapon");
+});
+
 test("P9b 4: a part-used magazine loads up to the weapon's capacity, and the rest stays", () => {
   const sn = armed("vr50-verdict", { roundsSpent: 4 });                // 3+1
   sn.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" });

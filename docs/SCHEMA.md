@@ -4682,14 +4682,13 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 222. **A magazine taken out before it's empty is kept with its count, as a part-used magazine in your gear.**
      *2026-10-15 · Ken + Deighton + Claude · Touches: reloadWeapon, roundsLeft, part-used magazine, carriedGear, addGearEntry, useGear, gearLine, reloadFrom, weaponRules.swap, Reload anyway, Drop, countUnit, character schema 0.24, F34, W104*
-     - **Decided:** When Reload, a swap or Reload anyway takes a magazine out of a catalog weapon that ammo fits, its rounds are kept: none and nothing; all, and a whole magazine of that kind goes back on its stack; some, and a gear row `{ id, qty: 1, roundsLeft, notes }`, of the kind loaded or else the weapon's standard rounds. A part-used magazine loads up to the weapon's capacity (the rest stays in its row), keeps its kind, and is one magazine: it doesn't stack, count as a whole one or take +1. One tap takes a whole magazine first, else the fullest part-used one; the chooser lists each; Loadout's row says **Drop**. Shells taken out by a swap go back in the box.
+     - **Decided:** When Reload, a swap or Reload anyway takes a magazine out of a catalog weapon that ammo fits, its rounds are kept: none and nothing; all, and a whole magazine of that kind goes back on its stack; some, and a gear row `{ id, qty: 1, roundsLeft, notes }`, of the kind loaded or else the weapon's standard rounds. A part-used magazine loads up to the weapon's capacity (the rest stays in its row), keeps its kind, and is one magazine: it doesn't stack, count as a whole one or take +1. One tap takes a whole magazine first, else the fullest part-used one that adds rounds, and asks when two kinds are held; the chooser lists each; Loadout's row says **Drop**. Shells taken out by a swap go back in the box.
      - **Why:** Deighton's ruling (2026-10-10, Q11): kept, with its count. A detached magazine stores what's left in it, where a weapon stores what's spent (Decision 120). Its own row is the charged Talisman's precedent (Decision 121).
      - **Rejected:**
        - The counts as a list on the whole-magazine row: a row at qty 0 is removed, taking the list with it.
        - A spare magazine stored on the weapon: a magazine fits any weapon of its type (Decision 145).
-       - Keeping only a swapped magazine: Deighton ruled both.
        - Asking at Reload what to do with the old magazine: a tap more in a fight.
-     - **Replaces:** Decision 149 in part (F34's stub: what a swapped or reloaded magazine keeps). Decision 145 stands: Reload still takes one magazine off the carried row.
+     - **Replaces:** Decision 149 in part (F34's stub). Decision 145 stands.
      - **Revisit if:** the CRB sizes magazines per weapon (W108), or a table wants part-used magazines merged.
      - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.24, PR #190. Log 2026-10-15 (P9b).
 

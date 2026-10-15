@@ -1356,8 +1356,14 @@ const Engine = (() => {
     } else if (wantPart){
       p = Number.isInteger(opts.part) ? parts.find(x=>x.index===opts.part) : null;
       if (!p) return { ok:false, why:"That magazine doesn't load this weapon." };
-    } else if (!full && wholes.length===1) k = wholes[0];   // swapping a full magazine is always a choice the player names
-    else if (!full && !wholes.length && new Set(parts.map(x=>x.def.id)).size===1) p = parts[0];
+    } else if (!full && new Set([...wholes, ...parts].map(x=>x.def.id)).size===1){
+      // One kind held: a whole magazine first, else the fullest part-used one. A tap
+      // never lowers the weapon's rounds, so a part of the kind already in it must hold more.
+      if (wholes.length) k = wholes[0];
+      else if (loadsAs(parts[0].def)===loaded && parts[0].roundsLeft<=l.rounds.left)
+        return { ok:false, why:"No magazine you carry holds more than it has." };
+      else p = parts[0];
+    }   // swapping a full magazine, or holding two kinds, is always a choice the player names
     if (!k && !p) return { ok:false, choose:true, full, left:l.rounds.left, why:"Choose which rounds to load.",
       options: [...wholes.map(h=>ammoOption(h, loaded)), ...parts.map(x=>partOption(x, loaded))] };
     const def = (k||p).def, kind = loadsAs(def), swap = kind!==loaded, perRound = def.reload.fills==="round", out = l.rounds.left;
