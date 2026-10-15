@@ -30,6 +30,16 @@ into the building session, with the order's own traps called out. It's
 `gm-mode/README.md`'s prompt, plus what the pre-flight found easy to get
 wrong.
 
+**From P8a on, on trial** (Ken, 2026-10-14, after #177's review found a
+miss in the order rather than the build): the order carries an **assumption
+sweep** (what's true today that the change makes false, by file and line),
+its **worked examples as named tests** the builder writes first and shows
+failing on `main`, and a rule that **every claim in the PR names its
+evidence**. Ken starts the builder and a fresh reviewer; the reviewer messages
+the builder directly, **fixes nits itself**, and **re-reviews narrowly**
+(the fix commits against its findings). If it holds up over two orders, it
+moves into `gm-mode/README.md`'s cadence.
+
 Two differences from GM mode:
 
 - **Nothing here ships switched off** unless an order says so. These are
@@ -62,6 +72,9 @@ P5–P15 are now P6–P16. The orders for P1–P4 were written before, and cite
 the old numbers (P01's "P5 (W103)" is now P6; P03's "P11" for W72 is P5;
 P04's "P12" is P13 and its "P5" is P6).
 
+**Split 2026-10-14:** P8 became P8a (the hit) and P8b (healing), each with
+its own save-shape or rules change; the later sessions keep their numbers (Ken).
+
 | # | Session | Wishes | Tier | Before its order | Status |
 |---|---|---|---|---|---|
 | **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Merged** 2026-10-11 (Decision 213, #158), released in 0.39.3 (#161): [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
@@ -70,8 +83,9 @@ P04's "P12" is P13 and its "P5" is P6).
 | **P4** | The wizard, quick wins | W94 Set all to 4, W96 hide what a Supernatural can't buy, W64 Home from the wizard, W59 steppers say what they change | Fix (UI) | Nothing | **Merged** 2026-10-11 (#166), released in 0.41.0 (#167; PQ1–PQ3 on their defaults): [`P04-wizard-quick-wins.md`](sheet-wishlist/P04-wizard-quick-wins.md) |
 | **P5** | Powers learned in play | W72 learn an unheld Bloodline or Origin power with IP, W106 a custom power the GM grants (in play and at creation) | Rule or shape, character schema | Nothing | **Built** 2026-10-11 (#170, Decision 216, app 0.42.0, schema 0.21; PQ1, PQ2, PQ5 on their defaults; PQ3, PQ4, PQ6 answered): [`P05-powers-in-play.md`](sheet-wishlist/P05-powers-in-play.md) |
 | **P6** | Milestones | W103 (F9, repeats at any time, the rebalanced values) | Rule or shape, data, character schema | Nothing | **Merged** 2026-10-14 (Decision 217, #173, app 0.43.0, game data 0.36, schema 0.22; PQ1–PQ10 answered), unreleased: [`P06-milestones.md`](sheet-wishlist/P06-milestones.md) |
-| **P7** | Luck and the Boost cap | W65, W66 | Rule or shape, data | Nothing | **Built** 2026-10-14 (Decision 218, app 0.43.1, game data 0.37; PQ1–PQ3 on their defaults), PR #177: [`P07-luck-and-the-boost-cap.md`](sheet-wishlist/P07-luck-and-the-boost-cap.md) |
-| P8 | The hit and healing | W102 (F18, F23, F24, F25, F36, grenades) | Rule or shape | Where F36's gritty option lives: the character or the GM's table | ⏭ |
+| **P7** | Luck and the Boost cap | W65, W66 | Rule or shape, data | Nothing | **Merged** 2026-10-14 (Decision 218, #177, app 0.43.1, game data 0.37; PQ1–PQ3 on their defaults), unreleased: [`P07-luck-and-the-boost-cap.md`](sheet-wishlist/P07-luck-and-the-boost-cap.md) |
+| **P8a** | The hit | W102's hit half (F18, F23, F25, grenades) | Rule or shape, data | Nothing | **Approved** 2026-10-14 (PQ1–PQ6 on their defaults), ready to build: [`P08a-the-hit.md`](sheet-wishlist/P08a-the-hit.md) |
+| P8b | Healing | W102's healing half (F24, F36 and its gritty option) | Rule or shape, character schema | Where F36's gritty option lives: the character or the GM's table | ⏭ after P8a |
 | P9 | Gear and reference text | W104 (F26, F30, F31, F34, difficulty names), W53 | Content; F34 is a save shape | Whether F34 splits into its own session | ⏭ |
 | P10 | Holding a spell | W87 | Rule or shape, character schema | The WILL check's TN and TH (stubbed and flagged if Deighton hasn't set them) | ⏭ |
 | P11 | SFR and movement on Main | W97 Rate of Use, W54 a written-in pool's card, W98 Walk/Run/Sprint/Jump | Rule or shape (W97's tracker field) | W97: warn or block (Claude argues warn), and how sustained drains are charged | 🔎 |
