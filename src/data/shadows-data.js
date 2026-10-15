@@ -4159,10 +4159,7 @@ window.SHADOWS_DATA = {
       "condition": "dying",
       "text": "Damage while Dying is an automatic Death Mark.",
       "resetCheck": "WILL Essence Check TN 8 TH 2",
-      "resetText": "You're Dying. Make the check at every Reset, and Pain doesn't apply to it. Fail and it's a Death Mark. Pass and you've bought the round, nothing more.",
-      "flagged": true,
-      "flagNote": "F24 -- 0540 says any damage while Dying is 'an automatic failure and a mark', and that ongoing damage ticking is 'another mark'. At a Reset where Bleeding or Burning ticks, is that one mark (the check fails automatically) or the check plus a mark per source? Stubbed: each ticking source is one mark and stands in for the check, which isn't asked.",
-      "playerNote": "How ongoing damage and the Dying check add up at a Reset is still being settled. For now each source that ticks is one Death Mark, and it takes the place of the check."
+      "resetText": "You're Dying. Make the check at every Reset, and Pain doesn't apply to it. Fail and it's a Death Mark. Pass and you've bought the round, nothing more. Each source that ticks is a Death Mark too."
     }
   },
 

@@ -481,7 +481,7 @@ window.SHADOWS_DATA = {
   // per day of rest and never decides the GM's halving; Focused Healing takes
   // the HP the care restored and is the only path that clears `clears` or
   // restores a Massive level. damageRules.whileDying also gains resetCheck/
-  // resetText (and carries F24).
+  // resetText.
   recoveryRules: {
     naturalHealing: { stat: "BOD", speedHealMultiplier: 2, text: "...", speedHealText: "..." },
     focusedHealing: { clears: ["injured"], text: "...", massiveText: "..." },
@@ -673,7 +673,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.22",
+    schemaVersion: "0.23",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -764,6 +764,13 @@ It renders on the Character tab (Decision 158).
       vulnerabilities: []            // [{ name, description }], text only
     }
   },
+
+  // (0.23, Decision 220) A GM's rule for this character, off by default and
+  // set in Admin, never in the wizard. `keepDamagePastZero` keeps the damage
+  // past zero when healing starts, so healing counts up from the full total.
+  // A strict true: migrate() replaces anything else with false, drops any
+  // other key, and gives a file from before the object.
+  houseRules: { keepDamagePastZero: false },
 
   // Inputs only. base = creation value; ipe = points added via IP after.
   stats:  { BOD: { base: 5, ipe: 0 }, REF: { base: 6, ipe: 0 } /* ... */ },
@@ -2566,7 +2573,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
       while 055 says Focused Healing is required (plan CQ13). The app's
       Focused Healing clears it either way.
     (Ken + Claude, 2026-09-22)
-    → **Superseded in part by Decisions 104, 105 and 219** — the deferred Natural Armor and Nanomed Kit are built; Resistance is no longer one repeatable upgrade but three typed ones, each installed once (219).
+    → **Superseded in part by Decisions 104, 105, 219 and 220** — the deferred Natural Armor and Nanomed Kit are built; Resistance is no longer one repeatable upgrade but three typed ones, each installed once (219); Dying at a Reset is the check plus a mark per ticking source, and F24 is closed (220).
 101. **(Docs)** **The batch board leaves `STATE.md` for `docs/log/shipped.md`,
     and unscheduled ideas get `docs/WISHLIST.md`.** Decision 74 put the board
     in STATE. By 2026-09-22 it was twenty-odd rows of merged history, and STATE
@@ -3781,6 +3788,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It extends Decision 119 (the vitals popovers).
      - **Revisit if:** Deighton rules on F36, or the vitals popovers change shape.
      - **Built:** app 0.33.0, PR (this batch), log 2026-09-30 (W42). One smoke test, mutation-tested.
+     → **Superseded in part by Decision 220** — Heal 1 counts from 0 HP, and F36 is closed.
 
 152. **Every archetype has a classification, and a Supernatural buys Universal Advantages only.**
      *2026-09-30 · Ken + Deighton + Claude · Touches: classifications, classification, canPurchaseAdvantages, universal, Universal Advantages, Mortal, Supernatural, Werewolf, Vampire, canBuyAdvantage, Character Points step, resetArchetypeChoices, validate, F13, plans/custom-archetype.md S1*
@@ -4281,7 +4289,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Turn Reset (100) and Pain (96) are unchanged; this applies them per row.
      - **Revisit if:** the app rolls checks, S10b's pipeline makes a tick a hit, GQ23 says NPCs don't take Pain, or F24 is answered.
      - **Built:** as 188.
-    → **Superseded in part by Decisions 191 and 210** — every row also takes a hit (191); in waves, a side's place comes first and ties are flagged between sides (210).
+    → **Superseded in part by Decisions 191, 210 and 220** — every row also takes a hit (191); in waves, a side's place comes first and ties are flagged between sides (210); a Dying row's Reset asks the check beside the marks, F24 closed, and a row's heal counts from 0 HP (220).
 
 190. **Use has two verbs: Add to cast, and Add to the encounter open on the Encounters tab, on an entry, a group and a cast member.**
      *2026-10-07 · Ken + Claude · Touches: Use, data-tuse, Add to cast, Add to encounter, entry page, group page, cast member page, castFromEntry, Decision 182*
@@ -4643,6 +4651,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** the book names a cold damage type, or rules whether Resistance answers Elemental magic (F42), or playtests find halving first too strong.
      - **Built:** app 0.44.0, game data 0.37 (unreleased, no bump), no schema bump, PR #…. Log 2026-10-15 (P8a).
 
+220. **Healing counts from 0 HP unless the character keeps damage past zero, and Dying at a Reset is the check plus a mark per ticking source.**
+     *2026-10-15 · Ken + Deighton + Claude · Touches: heal, healStep, damage past zero, pastZero, houseRules, keepDamagePastZero, Admin, Rest, Focused Healing, Nanomed Kit, Heal 1, Heal 5, hlState, resolveReset, dyingCheck, whileDying, resolveEncounterReset, participantDamage, Dying, character schema 0.23, F24, F36, W102*
+     - **Decided:** Damage past zero stays stored and shows while the character is down. The first healing that restores HP or a Massive level wipes it, against today's capacity, before the HP comes off and before a restored level raises the capacity (Rest, Focused Healing, a Nanomed Kit, Heal 1 and Heal 5, and a GM's negative Take on a row). A heal that restores nothing wipes nothing. `houseRules.keepDamagePastZero`, off by default and set in Admin, keeps it, so healing counts up from the full total. The typed total, Hurt and Heal all stay raw. While Dying, every Reset asks the WILL check, and each source that ticked is a Death Mark on top.
+     - **Why:** Deighton's rulings of 2026-10-10 (Q4, Q5), and Ken: the sheet goes along with a gritty GM. On the character, since the sheet works without a table.
+     - **Rejected:** capping damage at zero on every write (it loses the reference Deighton wants while Dying); the option on the GM's table (the sheet works without one, and it would need a table-schema bump); wiping on a heal that restores nothing (clearing Bleeding isn't healing); the level coming back before the wipe (3 HP, not 8); a tick standing in for the check (Q5).
+     - **Replaces:** Decision 100 in part (F24 closed). Decision 151 in part (Heal 1 counts from 0 HP; F36 closed). Decision 189 in part (the Reset asks the check beside the marks).
+     - **Revisit if:** a table wants the gritty option for its NPCs, or playtests find the Reset too deadly.
+     - **Built:** app 0.44.0 and game data 0.37 (both unreleased, no bump), character schema 0.23, PR #183. Log 2026-10-15 (P8b).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4654,7 +4671,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F24 and F36 (Decision 220: healing counts from 0 HP, and Dying at a Reset is the check plus a mark per ticking source) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -4663,14 +4680,12 @@ here are in `log/archive.md`.
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
-| F24 | **Ongoing damage while Dying, at a Reset** — 0540 says damage while Dying is "an automatic failure and a mark against you", and that ongoing damage from Burning or Bleeding ticking is "another mark". When Bleeding ticks at a Reset, is that one mark (the check fails automatically) or the WILL check plus a mark per source? Stubbed: each source that ticks is one Death Mark and stands in for the check, which isn't asked; with nothing ticking the check is asked (Decision 100). Worth asking alongside F23 **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **the WILL check as usual, plus** a Death Mark per ticking source. Closes when W102 is built. | Deighton (ruled) | No |
 | F26 | **Does a shotgun count as a rifle for weapon mods?** Gear makes the Scope "compatible with rifles and the ADS TC-1 Strix only", and the Angel Mod fires Angel Rounds only, which the ammunition table lists for "Handgun, Rifle, SMG". The same table files shotgun shells under "Rifle (shotgun)". Stubbed (Decision 120): shotguns take neither; urban combat rifles and sniper rifles take both **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** the stub stands: a shotgun takes neither. Angel Rounds need a box magazine with a power cell, and shotguns don't use scopes. Closes when W104 is built. | Deighton (ruled) | No |
 | F30 | **Anti-Materiel (weapon tag).** On the VR-50 'Verdict'. The vehicle rules give it full damage against vehicles; nothing says what it does to a person **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** nothing extra against people: it means vehicle armor doesn't stop it, and these weapons carry AP and high damage already. Closes when W104 is built. | Deighton (ruled) | No |
 | F31 | **Reach (weapon tag).** On the Razorwhip and the Orion MW-1 'Filament', which already carry a Reach column. What the tag adds to the column is never stated **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** the Reach column is how far the weapon reaches, and the tag marks a weapon whose reach is unusual (the mono-whip's); it adds nothing to the column. Kept in meters, like the rest of the sheet (Ken). Closes when W104 is built. | Deighton (ruled) | No |
 | F32 | **Arcanist Major Milestones.** 0411's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 0411? `growth` stays hidden until then (AQ4) | Ken | No |
 | F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 0530 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **kept, with its count**. Closes when W104 is built. | Deighton (ruled) | No |
-| F36 | **Is damage past zero kept?** The engine stores every point of `damage`, so a character hurt 5 past their last Health Level needs 5 healing before Heal 1 shows a point of HP. 0540 says only that the At Zero and Dying checks run "until you've regained health". Is damage past zero discarded (healing counts from 0 HP), or kept? Stubbed: kept, as the engine always has; Main's Hurt 1 stops at zero and Take a hit asks the check (Decision 151) **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **healing counts from 0 HP**; damage past zero is a reference for how bad things are while Dying. A GM may keep it for grittier play, and the sheet goes along (Ken). Closes when W102 is built. | Deighton (ruled) | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 | F42 | **Which damage Resistance answers.** 0460 names Thermal, Electric and Freezing. The app maps Thermal → Burning and Electric → Electric. No damage type is cold, so Freezing answers nothing yet. Elemental spells (fire, frost, lightning) are magic, so no Resistance answers them; Warding does. Stubbed as written (Decision 219) | Deighton | No |
-F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question; F36 with them, and F37 with Scott, who wrote CRANK.
+F23–F26, F28–F31, F33 and F34 go to Deighton as one grouped question, and F37 with Scott, who wrote CRANK.
 

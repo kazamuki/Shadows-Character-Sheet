@@ -177,34 +177,6 @@ today (`"2m"`, `"5m radius"`, range bands in the quick reference), so converting
 them means storing the numbers (Decision 134) before any switch. A view
 setting, remembered in the browser, never in the character.
 
-**W102 — Deighton's rulings on the hit and on healing.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-10 · closes F18, F23, F24, F25, F36*
-Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q1–Q7), built together
-because they all live in the hit resolver and recovery:
-- **F23:** Electric and Burning are Energy, as stubbed. The **Resistance**
-  upgrade's 50% is applied, **halving first, then PROT and RES**, instead of
-  the hit panel telling the player to adjust by hand.
-- **F25:** Natural Armor's stub stands, except that **AP on a spell pierces it**.
-
-*The hit half (F18, F23, F25, grenades) built as P8a (Decision 219). Healing (F24, F36) is P8b; the wish moves to `wishes-granted.md` with it.*
-
-- **F24:** ongoing damage on a Dying character at a Reset asks **the WILL
-  check as usual, plus** a Death Mark per ticking source (today a mark stands
-  in for the check).
-- **F36:** **healing counts from 0 HP**; damage past zero shows how bad things
-  are while Dying and is wiped by the first healing. A GM who plays it gritty
-  keeps it: an option, off by default (Ken).
-- **F18 and grenades:** no MD ratings to assign (one MD is 10 points of Massive
-  damage), the extra Health Level when armor drops to 0 stays, and grenades
-  and explosives deal **Massive** (the Thunderclap's and Junk Bomb's 2x+ Injured
-  then follows the rule).
-
-*To respect:* a numbered decision citing Decisions 99, 100, 104 and 151, and
-closing five flags (three edits each). F36's option is a stored choice: on the
-character (a schema bump) or a GM table setting? Decide in the work order;
-prefer the character, since the sheet works without a table. Grenade damage
-types are data (`gamedataVersion`). GM mode's hit (Decisions 191–192) reads
-the same engine, so check it moves with it.
-
 **W104 — Deighton's gear rulings, and the reference text that follows.** *Ken, from Deighton · ⏭ · Content, plus a save shape for F34 · raised 2026-10-10 · closes F26, F30, F31, F34*
 Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q8–Q11, Q33):
 - **F26:** a shotgun takes neither the Scope nor the Angel Mod, as stubbed.

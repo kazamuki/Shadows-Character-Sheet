@@ -196,7 +196,7 @@ function sheetVitalsBar(ch){
   // W45: one row that scrolls sideways on a phone; the toggle sits outside
   // it, so what opens the full panel (and Pin) is never scrolled away.
   let h=`<div class="vbar" aria-label="Vitals"><div class="vbar-row scroll-row" data-row="vbar">`;
-  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.hpLeft}<small>/${hp.total}</small>`,"hp");
+  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.pastZero?"−"+pain.pastZero:pain.hpLeft}<small>/${hp.total}</small>`,"hp");
   h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"),"pain");
   const cs=Engine.conditionState(ch);
   if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`,"cond");
@@ -228,7 +228,7 @@ function vitalsPanelHtml(ch){
   h += `<div class="vgroup">`;
   // Each one the vitals bar opens, this opens too, to the left (Decision 160).
   const cs=Engine.conditionState(ch);
-  h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp", "", "hp");
+  h += vrow("HP", (pain.pastZero?"−"+pain.pastZero:pain.hpLeft)+" / "+hp.total, pain.down?"over":"hp", "", "hp");
   h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"", "", "pain");
   if (cs.active.length) h += vrow("Cond", cs.isHelpless?"HELPLESS":cs.active.length, "over", "", "cond");
   h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
@@ -325,7 +325,7 @@ function renderShMain(){
   h += `<div class="main-pin"><button class="btn ghost" data-vitals-pin-main>Pin vitals</button></div>`;
   h += `<div class="cond-grid">`;
   h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
-    `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN":`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
+    `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN"+(pain.pastZero?" · "+pastZeroText(pain):""):`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
   h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
     pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null, "", "pain");
   h += vitalVerbsHtml(ch);     // W42: its own row, straight under Health and Pain
@@ -988,6 +988,13 @@ function resetPanelHtml(ch, st){
     <div class="hitresult">${r.recovery.map(c=>`<p><b>${esc(c.name)}</b> · ${esc(c.recovery)}</p>`).join("")}</div>`;
   return h + actButtons(r.ok && r.hasEffect, "Apply Reset") + `</div>`;
 }
+// The result lines of any healing, from heal()'s own before/after (Decision 220):
+// a panel never subtracts for itself, since the engine may wipe damage past zero first.
+function healLines(r){
+  return [r.discarded ? `The ${r.discarded} past zero ${r.discarded===1?"goes":"go"} first.` : "",
+    r.before!==r.after ? `Damage ${r.before} → ${r.after}.` : ""].filter(Boolean);
+}
+const healLinesHtml = r => healLines(r).map(l=>`<p>${esc(l)}</p>`).join("");
 function restPanelHtml(ch, st){
   const nh=Engine.naturalHealing(ch), inp=actInput(ch, st), hs=Engine.hlState(ch);
   const r=Engine.heal(clone(ch), inp);
@@ -996,7 +1003,7 @@ function restPanelHtml(ch, st){
       <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
       ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP recovered")}</div>${st.speed?gearUseHtml(ch, st, "speed-heal", "fromGear"):""}`;
   if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
-  else h+=`<div class="hitresult"><p>${esc(`Damage ${hs.damage} → ${hs.damage - r.healed}.`)}</p>${
+  else h+=`<div class="hitresult">${healLinesHtml(r)}${
     hs.massive?`<p>${esc("Rest doesn't bring back Health Levels lost to Massive damage. That takes Focused Healing.")}</p>`:""}</div>`;
   return h + actButtons(r.ok, "Rest") + `</div>`;
 }
@@ -1012,7 +1019,7 @@ function focusedPanelHtml(ch, st){
     return `<label class="check"><input type="checkbox" data-act="clear:${i}" ${st.clear[i]?"checked":""}> ${esc(d.name)}${l?` (${esc(l.name)})`:""}</label>`; }).join("") + `</div>`;
   if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
   else {
-    const lines=[r.healed?`Damage ${hs.damage} → ${hs.damage - r.healed}.`:"",
+    const lines=[...healLines(r),
       r.restored?`Massive levels ${hs.massive} → ${hs.massive - r.restored}.`:"",
       ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `Clears ${d?d.name:e.id}${l?` (${l.name})`:""}.`; })].filter(Boolean);
     h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
@@ -1041,7 +1048,7 @@ function nanomedPanelHtml(ch, st){
     <p class="hitnote">${esc(`1 HP every ${kit.everyRounds===1?"round":kit.everyRounds+" rounds"} for ${kit.rounds} rounds. If it's cut short, lower the number.`)}</p>${gearUseHtml(ch, st, "nanomed-kit", "fromGear")}`;
   if (!r.ok) h+=`<p class="hitwhy">${esc(r.why)}</p>`;
   else {
-    const lines=[r.healed?`Damage ${hs.damage} → ${hs.damage - r.healed}.`:"",
+    const lines=[...healLines(r),
       ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id); return `Clears ${d?d.name:e.id}${e.marks?` and its ${e.marks} Death Mark${e.marks===1?"":"s"}`:""}.`; })].filter(Boolean);
     h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
   }
@@ -1089,6 +1096,9 @@ function hlTrackHtml(ch){
       b.cells.map(([c,i])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
       `</div></div>`; }).join("") + `</div>`;
 }
+// Decision 220: the damage past zero, as Trackers' Damage card and Main's Health
+// card say it while the character is down. Empty otherwise.
+const pastZeroText = pain => pain.pastZero>0 ? `${pain.pastZero} past zero` : "";
 // The vitals' controls, drawn by Trackers and by the vitals popovers (W2/W3)
 // alike and bound by one binder (bindVitalControls), so they can't drift.
 function damageStepperHtml(ch){
@@ -1137,7 +1147,7 @@ function vitalPopover(ch, key){
   const pain=Engine.painState(ch), hp=Engine.health(ch);
   const now = (big, cls, sub) => `<div class="pop-now"><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
   if (key==="hp") return { title:"Health",
-    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)) + damageStepperHtml(ch) +
+    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)+(pain.pastZero?" · "+pastZeroText(pain):"")) + damageStepperHtml(ch) +
       `<div class="trk-actions"><button class="btn sm primary" data-pophit>Take a hit</button>
        <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
   if (key==="pain" || key==="cond") return { title:"Pain & Conditions",
@@ -1178,7 +1188,7 @@ function renderShTrackers(){
   // rather than signs on the damage total it edits (W11).
   h += `<div class="trk"><h2>Damage</h2>
     <span class="big ${pain.down?"bad":"hp"}${landedCls("hp")}">${pain.hpLeft} / ${hp.total} HP</span>
-    ${pain.down?'<span class="chip pain">DOWN</span>':""}
+    ${pain.down?'<span class="chip pain">DOWN</span>':""}${pain.pastZero?`<span class="sub pastzero">${pastZeroText(pain)}</span>`:""}
     ${damageStepperHtml(ch)}
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
       hs.massive?` ${hs.massive} of them to Massive damage — gone, not emptied. Resting and Heal all don't bring them back; Focused Healing and a replacement do.`:""}${
@@ -2143,6 +2153,7 @@ function renderShAdmin(){
      + idf("name","Name")+idf("age","Age","number")+idf("build","Build")
      + idf("hair","Hair")+idf("eyes","Eyes")+idf("skin","Skin") + `</div>
     ${taglessToggleHtml(ch, "admin-tagless")}
+    <label class="check"><input type="checkbox" data-admin-keepzero ${ch.houseRules&&ch.houseRules.keepDamagePastZero===true?"checked":""}> Keep damage past zero (grittier: healing counts up from the full total)</label>
     <label class="field"><span>History</span><textarea data-admin-id="history" style="min-height:64px">${esc(ch.identity.history||"")}</textarea></label>`;
 
   // Campaign & archetype (destructive)
@@ -2816,7 +2827,8 @@ function bindVitalControls(root){
   root.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
     if (b.disabled) return;           // a greyed button (W42's Hurt 1 at zero) does nothing
     const d=Number(b.dataset.dmg), keep=document.activeElement===b && b.closest(".vital-verbs");
-    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
+    // A Heal step is the engine's (Decision 220): healing counts from 0 HP. Hurt is a raw correction.
+    commit("damage", `${d>0?"Hurt":"Heal"} ${Math.abs(d)}`, ()=>{ if (d<0) Engine.healStep(ch, -d); else setDamage(Math.max(0,(ch.trackers.damage||0)+d)); });
     // W42: the re-render replaced Main's button, so focus comes back to its
     // twin and Enter can tap again. Once Heal 1 greys out it goes to the
     // Health card, never to Hurt 1: a held Enter on Heal must not start hurting.
@@ -3376,6 +3388,11 @@ function bindSheet(){
     if (!!ch.identity.tagless===v) return;
     const C = (D.tag||{}).choice||{};
     commit("admin", `Admin: ${(C[v?"tagless":"tagged"]||{}).name||(v?"TAGless":"TAG'd")}`, ()=>{ ch.identity.tagless = v; });
+  });
+  main.querySelectorAll("[data-admin-keepzero]").forEach(box=>box.onchange=()=>{
+    const v = box.checked;
+    if ((ch.houseRules&&ch.houseRules.keepDamagePastZero===true)===v) return;
+    commit("admin", v ? "Admin: keep damage past zero" : "Admin: wipe damage past zero when healing", ()=>{ ch.houseRules = { ...(ch.houseRules||{}), keepDamagePastZero: v }; });
   });
   main.querySelectorAll("[data-admin-pl]").forEach(sel=>sel.onchange=()=>{
     const v=sel.value; if (ch.creation.powerLevel===v) return;

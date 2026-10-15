@@ -1950,7 +1950,7 @@ function encListHtml(t){
 // ── A row ──
 function encHealthHtml(v){
   const h=v.health, bits=[];
-  if (h.total!==null) bits.push(h.down ? `<b class="enc-down">Down</b>` : `HP ${h.left} / ${h.total}`);
+  if (h.total!==null) bits.push(h.down ? `<b class="enc-down">Down</b>${h.pastZero ? ` · ${h.pastZero} past zero` : ""}` : `HP ${h.left} / ${h.total}`);
   bits.push(`${h.taken} taken`);
   if (h.levels!==null) bits.push(`${h.levelsLeft} of ${h.levels} Health Levels`);
   if (h.pain) bits.push(`<button type="button" class="tag" data-tip="painlevel" data-term="${esc(h.pain.level)}">${esc(h.pain.label)}</button>`);
@@ -2122,7 +2122,9 @@ function encResetHtml(e, v){
           <button type="button" data-ekeep="${esc(key)}|keep" class="${keep?"on":""}" aria-pressed="${keep}">Keep</button></span></li>`; }).join("");
     const saves = x.recovery.map(k=>`<li><b>${esc(k.name)}:</b> ${esc(k.recovery)}</li>`).join("");
     const dc = x.dyingIndex!==null ? view && view.conditions.find(c=>c.index===x.dyingIndex) : null;
-    const dyingWords = x.dying ? esc(x.dying) : `${esc(x.dyingText)} ${x.dyingMarks} source${x.dyingMarks===1 ? "" : "s"} ticked.`;
+    // Decision 220: the marks first, then the check, which is asked every Reset while Dying.
+    const mk = x.dyingMarks ? `${x.dyingMarks} source${x.dyingMarks===1 ? "" : "s"} ticked: ${x.dyingMarks} Death Mark${x.dyingMarks===1 ? "" : "s"}.` : "";
+    const dyingWords = [mk, x.dying ? (mk ? "Then " : "") + esc(x.dying) + (mk ? "." : "") : ""].filter(Boolean).join(" ");
     const dying = x.dying || x.dyingMarks ? `<li><b>Dying:</b> ${dyingWords}${dc && dc.counter ? ` <span class="enc-marks">${esc(dc.counter.label)} ${dc.marks}/${dc.counter.max}
         <button class="btn sm" data-emarks="${id}|${dc.index}|-1" aria-label="Fewer ${esc(dc.counter.label)}">−</button><button class="btn sm" data-emarks="${id}|${dc.index}|1" aria-label="More ${esc(dc.counter.label)}">+</button></span>` : ""}</li>` : "";
     return `<section class="enc-reset-row"><h3 class="cast-h">${esc(x.name.trim() || "Unnamed")}</h3>

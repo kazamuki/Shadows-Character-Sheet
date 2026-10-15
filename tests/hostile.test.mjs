@@ -41,6 +41,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   ch.creation.rolls = { statPoints: P("roll.stat"), skillPoints: P("roll.skill"), credits: P("roll.credits") };
   ch.creation.boosts = [{ targetType: "stat", targetId: P("boost.target"), times: P("boost.times") }];
   ch.creation.locked = locked;
+  ch.houseRules = { keepDamagePastZero: P("house"), [P("house.key")]: true };   // Decision 220: a strict true or nothing
   for (const s of D.stats) ch.stats[s.id].base = 6;
   ch.stats.BOD.base = P("stat.base"); ch.stats.REF.ipe = P("stat.ipe");
   ch.archetypeChoices = { rolls: { focusStatBonus: P("roll.focus"), startingSpells: P("roll.spells"), statBonus: P("roll.sb") },
@@ -205,6 +206,15 @@ test("migrate() reads every stored number as a number, and drops an undo entry t
   assert.equal(m.trackers.credits.current, 1200);
   assert.equal(m.stats.BOD.base, 7);
   assert.equal(Engine.statValue(m, "BOD"), 7, "\"7\" + 0 would have been \"70\"");
+});
+
+test("a hostile houseRules comes out a plain object with one strict boolean, and heals as off (Decision 220)", () => {
+  const c = Engine.migrate(hostileCharacter());
+  assert.deepEqual(Object.keys(c.houseRules), ["keepDamagePastZero"]);
+  assert.equal(c.houseRules.keepDamagePastZero, false);
+  c.stats.BOD.base = 6; c.trackers.damage = 37;
+  Engine.healStep(c, 1);
+  assert.equal(c.trackers.damage, 29, "healing counted from 0 HP");
 });
 
 test("undo never writes through a prototype, and what it restores is held to the same numbers (B16)", () => {

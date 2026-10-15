@@ -1058,3 +1058,31 @@ the new +30 is printed beside the dice.
 *Built as sheet-wishlist P6 (2026-10-14):* the Minor choosers (Skilled, Honed,
 Redeemed, Talented, Steadied) and a Major written in were Ken's additions on
 2026-10-12.
+
+**W102 — Deighton's rulings on the hit and on healing.** *Ken, from Deighton · → Decisions 219 (the hit, app 0.44.0) and 220 (healing, app 0.44.0, schema 0.23) · closed F18, F23, F24, F25, F36*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q1–Q7), built together
+because they all live in the hit resolver and recovery:
+- **F23:** Electric and Burning are Energy, as stubbed. The **Resistance**
+  upgrade's 50% is applied, **halving first, then PROT and RES**, instead of
+  the hit panel telling the player to adjust by hand.
+- **F25:** Natural Armor's stub stands, except that **AP on a spell pierces it**.
+
+*Built as sheet-wishlist P8a (the hit and grenades, Decision 219) and P8b (healing, Decision 220), both 2026-10-15.*
+
+- **F24:** ongoing damage on a Dying character at a Reset asks **the WILL
+  check as usual, plus** a Death Mark per ticking source (today a mark stands
+  in for the check).
+- **F36:** **healing counts from 0 HP**; damage past zero shows how bad things
+  are while Dying and is wiped by the first healing. A GM who plays it gritty
+  keeps it: an option, off by default (Ken).
+- **F18 and grenades:** no MD ratings to assign (one MD is 10 points of Massive
+  damage), the extra Health Level when armor drops to 0 stays, and grenades
+  and explosives deal **Massive** (the Thunderclap's and Junk Bomb's 2x+ Injured
+  then follows the rule).
+
+*To respect:* a numbered decision citing Decisions 99, 100, 104 and 151, and
+closing five flags (three edits each). F36's option is a stored choice: on the
+character (a schema bump) or a GM table setting? Decide in the work order;
+prefer the character, since the sheet works without a table. Grenade damage
+types are data (`gamedataVersion`). GM mode's hit (Decisions 191–192) reads
+the same engine, so check it moves with it.
