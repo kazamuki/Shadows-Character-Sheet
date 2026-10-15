@@ -698,6 +698,85 @@ function aberrationsHtml(ch){
   return h;
 }
 
+// ── A Minor that asks what it gives (Decision 217) ───────────────────
+// One modal for Skilled, Honed, Redeemed, Talented and Steadied, driven by the
+// Minor's `choice` and the engine's options. Take is one commit(): the Minor
+// and what it did undo together.
+function minorChoiceBodyHtml(ch, st){
+  const v = Engine.minorChoice(ch, st.id);
+  if (!v.ok) return "";
+  const q = String(st.q||"").trim().toLowerCase();
+  const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.sub?`<div class="sub">${esc(o.sub)}</div>`:""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
+    <td class="num" data-k="Gets">${esc(o.move||"")}</td>
+    <td><button class="btn sm ${st.picks.includes(o.id)?"go":"primary"}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""}>${st.picks.includes(o.id)?"Picked":"Pick"}</button></td></tr>`;
+  const table = list => `<table class="ref spell-results raise-results"><tbody>${list.map(rows).join("")}</tbody></table>`;
+  if (v.type==="restore")
+    return `<div class="raise-row">${v.options.map(o=>`<button class="btn ${st.picks.includes(o.id)?"go":"primary"}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""} title="${esc(o.off)}">${esc(o.name)}</button>`).join("")}</div>
+      ${v.options.filter(o=>o.off).map(o=>`<p class="step-note">${esc(o.name)}: ${esc(o.off)}</p>`).join("")}`;
+  if (v.type==="advantageRank"){
+    const hit = o => !q || o.name.toLowerCase().includes(q);
+    const raise = v.options.filter(o=>o.group==="raise" && hit(o)), fresh = v.options.filter(o=>o.group==="new" && hit(o));
+    return (raise.length ? `<div class="sect">Raise one you hold</div>${table(raise)}` : "")
+      + (fresh.length ? `<div class="sect">Take a new one</div>${table(fresh)}` : "")
+      + (!raise.length && !fresh.length ? `<p class="step-note">No Advantage matches that.</p>` : "");
+  }
+  if (v.type==="skillRanks"){
+    const list = v.options.filter(o=>!q || o.name.toLowerCase().includes(q));
+    const have = list.filter(o=>o.trained), fresh = list.filter(o=>!o.trained);
+    return (have.length ? `<div class="sect">Your skills</div>${table(have)}` : "")
+      + (fresh.length ? `<div class="sect">Learn a new skill</div>${table(fresh)}` : "")
+      + (!list.length ? `<p class="step-note">No skill matches that.</p>` : "");
+  }
+  return table(v.options);
+}
+function minorChoiceFootHtml(ch, st){
+  const v = Engine.minorChoice(ch, st.id), nm = (D.milestones.minorShared.find(m=>m.id===st.id)||{name:st.id}).name;
+  const left = v.ok ? v.count - st.picks.length : 0;
+  return `<span class="modal-note">${left>0 ? (v.count>1 ? `Pick ${left} more.` : "Pick one.") : "Ready."}</span>
+    <button class="btn" data-modalclose>Cancel</button>
+    <button class="btn primary" data-mctake="1" ${left>0?"disabled":""}>Take ${esc(nm)}</button>`;
+}
+function openMinorChoice(id){
+  const ch = S.ch, m = ch && D.milestones.minorShared.find(x=>x.id===id); if (!m) return;
+  S.minorPick = { id, picks:[], q:"" };
+  const v = Engine.minorChoice(ch, id), searchable = v.ok && (v.type==="skillRanks" || v.type==="advantageRank");
+  openModal({ title: m.name,
+    html: `<div class="spell-pick raise-pick"><div class="pick-head">${searchable?`<div class="hitrow"><input type="search" data-mcq placeholder="Search" aria-label="Search"></div>`:""}
+      <p class="pick-status">${esc(m.benefit)}</p></div><div data-mcresults>${minorChoiceBodyHtml(ch, S.minorPick)}</div></div>`,
+    foot: minorChoiceFootHtml(ch, S.minorPick), returnTo: `[data-takeminor="${id}"]`, onClose: ()=>{ S.minorPick=null; },
+    bind: (body, foot) => {
+      const results = body.querySelector("[data-mcresults]");
+      const refresh = () => { if (!S.minorPick) return;
+        keepPlace(results, ()=>{ results.innerHTML = minorChoiceBodyHtml(S.ch, S.minorPick); }, ["#modal-title"]);
+        foot.innerHTML = minorChoiceFootHtml(S.ch, S.minorPick); bindFoot(); };
+      const bindFoot = () => foot.querySelectorAll("[data-modalclose]").forEach(b=>b.onclick=closeModal);
+      const take = () => {
+        const st = S.minorPick; if (!st) return;
+        const pick = v.count>1 ? st.picks.slice() : st.picks[0];
+        const pre = Engine.takeMinorChoice(clone(S.ch), id, pick);          // validate without mutating
+        if (!pre.ok){ notice(pre.why); return; }
+        commit("milestone", `Take Minor: ${m.name} (${pre.label})`, ()=>{ Engine.takeMinorChoice(S.ch, id, pick); });
+        closeModal();
+      };
+      foot.onclick = e => { const b = e.target.closest("[data-mctake]"); if (b && !b.disabled) take(); };
+      bindFoot();
+      const q = body.querySelector("[data-mcq]");
+      if (q) q.oninput = e => { S.minorPick.q = e.target.value; refresh(); };
+      results.onclick = e => {
+        let b = e.target.closest("button");
+        if (!b){ const tr = e.target.closest("tr"); b = tr && tr.querySelector("button"); }
+        const st = S.minorPick;
+        if (!st || !b || b.disabled || !b.dataset.mcpick) return;
+        const pid = b.dataset.mcpick, at = st.picks.indexOf(pid);
+        if (at>=0) st.picks.splice(at, 1);
+        else if (v.count>1 && st.picks.length>=v.count){ notice(`You've picked ${v.count}. Unpick one first.`); return; }
+        else if (v.count>1) st.picks.push(pid);
+        else st.picks = [pid];
+        refresh();
+      };
+    } });
+}
+
 // ── The Aberration picker (Decision 115) ─────────────────────────────
 // Every Aberration as a card with its whole text, so a player can read what
 // they might have caught before the GM says which. The same modal for a
@@ -1272,10 +1351,12 @@ function renderShProgression(){
   }
   h += D.milestones.minorShared.map(m=>{
     const taken = ms.minorTaken.filter(t=>t.id===m.id).length;
-    const can = Engine.canTakeMinor(ch, m.id);
-    return `<div class="pick ms ${taken?"taken":""} ${can.ok?"":"locked-ms"}"><div class="head">
+    const can = Engine.canTakeMinor(ch, m.id), pickView = m.choice ? Engine.minorChoice(ch, m.id) : null;
+    const why = can.ok ? (pickView && pickView.none) || "" : can.why;
+    return `<div class="pick ms ${taken?"taken":""} ${why?"locked-ms":""}"><div class="head">
       <h2>${esc(m.name)}${taken?` <span class="chip ok">taken${taken>1?" ×"+taken:""}</span>`:""}</h2>
-      <div class="controls"><button class="toggle" data-takeminor="${m.id}" ${can.ok?"":"disabled"} title="${esc(can.ok?"":can.why)}">Take</button></div></div>
+      <div class="controls"><button class="toggle" data-takeminor="${m.id}" ${why?"disabled":""} title="${esc(why)}">Take</button></div></div>
+      ${why && can.ok ? `<div class="why">${esc(why)}</div>` : ""}
       <div class="desc">${esc(m.benefit)}</div></div>`;
   }).join("");
   if (ms.minorTaken.length) h += `<div class="journal">` + ms.minorTaken.map((t,i)=>{
@@ -1304,12 +1385,20 @@ function renderShProgression(){
       <div class="desc">${esc(m.benefit)}${(Array.isArray(m.details)?m.details:[]).map(d=>"\n"+esc(d)).join("")}</div>
       ${reqs?`<div class="req">${reqs}</div>`:""}</div>`;
   };
-  if (own.length) h += `<div class="sect">${esc(arch?arch.name:"Your archetype")}</div>` + own.map(majorHtml).join("") + `<div class="sect">General</div>`;
-  h += offered.filter(m=>shared.has(m.id)).map(majorHtml).join("");
+  const general = offered.filter(m=>shared.has(m.id));
+  if (own.length) h += `<div class="sect">${esc(arch?arch.name:"Your archetype")}</div>` + own.map(majorHtml).join("") + (general.length ? `<div class="sect">General</div>` : "");
+  h += general.map(majorHtml).join("");
+  if (!offered.length) h += `<p class="step-note">No Major Milestones listed for this archetype.</p>`;
+  h += `<div class="trk"><h2>Add one</h2>
+    <input type="text" data-mmname maxlength="120" placeholder="Name" aria-label="Major Milestone name">
+    <input type="text" data-mmdesc maxlength="2000" placeholder="What it does" aria-label="Major Milestone description">
+    <button class="btn sm" data-mmadd="1">Add</button></div>`;
   if (ms.majorTaken.length) h += `<div class="journal">` + ms.majorTaken.map((t,i)=>{
     const m=Engine.majorById(ch, t.id)||{name:t.id};
+    // A Major that has no card (written in, or kept from a list this archetype no longer has) shows what it does here.
+    const card = offered.some(o=>o.id===t.id), text = !card && typeof m.benefit==="string" ? m.benefit : "";
     return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}</span>
-      <button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
+      ${text?`<span class="note">${esc(text)}</span>`:""}<button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
   return h;
 }
@@ -3020,6 +3109,7 @@ function bindSheet(){
   main.querySelectorAll("[data-takeminor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takeminor;
     if (Engine.ipRoll(id)){ S.askRoll=id; update(); return; }
+    if (Engine.minorChoice(ch, id).ok){ openMinorChoice(id); return; }
     const nm=(D.milestones.minorShared.find(m=>m.id===id)||{name:id}).name;
     commit("milestone", `Take Minor: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"minor",id); if(!r.ok) notice(r.why); });
   });
@@ -3046,6 +3136,12 @@ function bindSheet(){
     if (b.dataset.gm!=="1") return take();
     askFirst({ title:`Take ${nm}?`, text:"This Milestone has prerequisites your table decides (the gold chips). Take it once your GM has signed off.",
       yes:"My GM signed off", danger:false, then:take });
+  });
+  main.querySelectorAll("[data-mmadd]").forEach(b=>b.onclick=()=>{
+    const input={ name:(main.querySelector("[data-mmname]")||{}).value, benefit:(main.querySelector("[data-mmdesc]")||{}).value };
+    const pre=Engine.addCustomMajor(clone(ch), input, { admin:!!S.admin });   // validate without mutating
+    if (!pre.ok){ notice(pre.why); return; }
+    commit("milestone", `Add Major: ${String(input.name).trim()}`, ()=>{ Engine.addCustomMajor(ch, input, { admin:!!S.admin }); });
   });
   main.querySelectorAll("[data-delminor]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.delminor), t=(ch.progression.milestones.minor[i]||{});

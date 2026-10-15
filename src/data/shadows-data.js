@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.35",
+    "gamedataVersion": "0.36",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2922,8 +2922,8 @@ window.SHADOWS_DATA = {
       ],
       "growth": {
         "minorMilestones": "shared",
-        /* 0414's own Majors, offered beside the shared `majorGeneral` (VQ16,
-           until F9). `prerequisites.specialization` names the Origins that
+        /* 0414's own Majors, offered alone (Decision 217: the
+           shared `majorGeneral` is the Professional's). `prerequisites.specialization` names the Origins that
            may take one (any of). A `form` grant changes the form a toggle
            carries (Decision 195): `withering: false` makes its cost ordinary
            damage, `weaponTags` tag its natural weapons, `barsPenalty` turns
@@ -3018,9 +3018,10 @@ window.SHADOWS_DATA = {
   /* MILESTONES -- advancement unlocks driven by Milestone Points (1/session,
      Decision 13). `rules` holds the cadence as numbers (Minor at 5/15/25...,
      Major at 10/20/30...); every "5, 15, 25..." a player reads is written
-     from them (Decisions 67, 135), so the notes don't repeat them. `minorShared` is the pool everyone draws from (no duplicates
-     until all five are taken once, Decision 29). `majorGeneral` is open to all
-     archetypes; archetype-specific majors live on each archetype's `growth`.
+     from them (Decisions 67, 135), so the notes don't repeat them. `minorShared` is the pool everyone draws from, and any Minor repeats
+     (Decision 217). `majorGeneral` is offered where an archetype's
+     `growth.majorMilestones` is "general" (the Professional); every other
+     archetype's Majors live in its own `growth` list.
      `prerequisites` is the machine-enforced gate the app reads:
        majorCount: N            -> requires N majors already taken
        skills: { any:[[id,rank]] / all:[[id,rank]] }  -> skill thresholds by id
@@ -3029,13 +3030,13 @@ window.SHADOWS_DATA = {
        note / skills.note        -> PROSE the app surfaces as a "GM:" confirm chip
      Use real catalog ids in prerequisites; prose `note` is for rules that aren't
      machine-checkable yet.
-     REVIEW (F9): `majorGeneral` is treated as shared across all archetypes (REF
-       says General Majors are open to all; WIP lists them under Professional).
-       Confirm with D. -- see `majorGeneralNote` near the end of this section.
      REVIEW (F12): `minorShared` is sourced from REF_CRB v3.5; the WIP refers to
        an Advancement Section not yet written. Confirm for v4 (see
-       `minorSharedSource`). Both flags are in SCHEMA.md section 5.
-     A Minor with `ipRoll: { count, sides, plus }` asks for the dice rolled and grants them plus `plus`
+       `minorSharedSource`). The flag is in SCHEMA.md section 5.
+     A Minor with a `choice` asks what it gives when taken, by `type`:
+       skillRanks { count, ranks }, statPoint, disadvantageRank / advantageRank
+       { maxPoints } (per rank), restore { options: [{kind:"san",points} |
+       {kind:"massiveLevel",levels}] } (Decision 217). A Minor with `ipRoll: { count, sides, plus }` asks for the dice rolled and grants them plus `plus`
        IP (Decision 213); the prompt's "2d10" and "+ 15 IP" are read from it. */
   "milestones": {
     "rules": {
@@ -3044,36 +3045,46 @@ window.SHADOWS_DATA = {
       "minorEvery": 10,
       "majorFirstAt": 10,
       "majorEvery": 10,
-      "minorNote": "All characters share the same pool; may not duplicate until each Minor Milestone has been selected.",
-      "majorNote": "Taken only once each, in any order, subject to prerequisites. Divided into General (open to all) and Archetype (limited to that Archetype).",
+      "minorNote": "All characters share the same pool. Any Minor can be picked again at any later Minor Milestone.",
+      "majorNote": "Taken only once each, in any order, subject to prerequisites. The General list is the Professional's; every other archetype has its own, and a GM can write one in.",
       "source": "Cadence from REF_CRB Advancement + WIP Professional Growth section."
     },
     "minorShared": [
       {
         "id": "skilled",
         "name": "Skilled",
-        "benefit": "Gain 5 Skill Points, which can be used to increase Skills by 1 rank per point instead of the usual cost."
+        "benefit": "Practice finally pays. Raise two different Skills by 1 rank each.",
+        "choice": { "type": "skillRanks", "count": 2, "ranks": 1 }
       },
       {
         "id": "improved",
         "name": "Improved",
-        "benefit": "Gain 2d10+15 bonus IP. 10's explode as normal.",
-        "ipRoll": { "count": 2, "sides": 10, "plus": 15 }
+        "benefit": "Everything went into the work. Gain 3d10+30 IP. 10s explode.",
+        "ipRoll": { "count": 3, "sides": 10, "plus": 30 }
       },
       {
         "id": "talented",
         "name": "Talented",
-        "benefit": "Gain a Rank in an existing Advantage or acquire a new Advantage (5 points or less) at no IP cost."
+        "benefit": "Something you always had comes into focus. Gain a new Advantage worth 5 points or less, or one rank of an existing Advantage.",
+        "choice": { "type": "advantageRank", "maxPoints": 5 }
       },
       {
         "id": "redeemed",
         "name": "Redeemed",
-        "benefit": "Reduce a Rank (or eliminate entirely) an existing Disadvantage at no IP cost."
+        "benefit": "Something that held you back lets go. Remove one rank of a Disadvantage worth 5 points or less.",
+        "choice": { "type": "disadvantageRank", "maxPoints": 5 }
       },
       {
         "id": "honed",
         "name": "Honed",
-        "benefit": "Gain and place a single Stat point, applicable to any Stat including WILL, LUCK, or TOL."
+        "benefit": "The body or mind settles into a sharper version of itself. Raise one Stat by 1, including WILL, TOL, or Luck.",
+        "choice": { "type": "statPoint" }
+      },
+      {
+        "id": "steadied",
+        "name": "Steadied",
+        "benefit": "The mind finds its footing again, or the body finishes learning its new shape. Restore 10 points of lost Sanity or 1 lost Health Level, never above your maximum.",
+        "choice": { "type": "restore", "options": [ { "kind": "san", "points": 10 }, { "kind": "massiveLevel", "levels": 1 } ] }
       }
     ],
     "minorSharedSource": "REF_CRB (v3.5) - WIP refers to an Advancement Section not yet written. Flagged for v4 confirmation.",
@@ -3461,7 +3472,7 @@ window.SHADOWS_DATA = {
         "benefit": "Upgrade it: +1 Mod Slot (total 4), +1 Upgrade (total 3). Signature Effect: a cinematic combat move or reactive ability once per session (work with GM; e.g. Vampiric weapon, Phasing attack, Surestrike). Attunement: bound to your identity - anyone else using it suffers significant penalties unless ritually attuned or part of your legacy."
       }
     ],
-    "majorGeneralNote": "Listed under the Professional's Growth & Milestones in the WIP, but REF_CRB defines General Major Milestones as open to all archetypes. Treated as shared - flagged for confirmation (F9)."
+    "majorGeneralNote": "The General Major Milestones are the Professional's alone (Deighton's ruling, F9). Every other archetype is offered its own list, as it is written; a character that already took a General Major keeps it."
   },
   /* IMPROVEMENT POINTS (IP) -- post-creation advancement costs (Decision 14).
      `perSession` is the default grant (overridable per session, Decision 23).

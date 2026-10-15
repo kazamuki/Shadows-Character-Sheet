@@ -23,6 +23,14 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.43.0
+
+- **Any Minor Milestone can be taken again**, whenever one is unlocked.
+- **Improved is now 3d10+30 IP.** Milestones you've already taken keep what they gave.
+- **General Major Milestones are the Professional's.** A character that already took one keeps it. Any character can have a Major written in by a GM: **Add one** takes a name and what it does.
+- **Minor Milestones ask what they give.** **Skilled** picks two Skills, one free rank each. **Honed** picks a Stat (WILL, TOL and Luck too). **Redeemed** picks a Disadvantage worth 5 points or less to lower a rank. **Talented** picks an Advantage to raise a rank, or a new one worth 5 points or less. Each is one Take and one Undo.
+- **Steadied**, a new Minor, restores 10 SAN or a Health Level you lost.
+
 ## v0.42.0 — 2026-10-12
 
 - **Raise a Power is now Buy or Raise a Power.** A Vampire or Werewolf can learn a power its Bloodline or Origin has but its creation didn't take, for 40 IP. It starts at rank 1 and raises like the rest. A power with no ranks is simply held once learned.

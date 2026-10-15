@@ -394,7 +394,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.21");
+  assert.equal(resumed.meta.schemaVersion, "0.22");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -2146,10 +2146,13 @@ test("the SFR tracker counts down by its data, and a Major Milestone shows its d
   assert.equal(activeChar(app).trackers.sfr.spent, 1, "spending SFR didn't land on trackers.sfr");
   assert.match(trk().textContent, new RegExp(`${max - 1} / ${max}`));
 
-  app.click('[data-sec="progression"]');
-  const hp = D.milestones.majorGeneral.find(m => (m.details || []).length);
-  assert.ok(app.$("#main").textContent.includes(hp.details[0]), `${hp.name}'s details don't show`);
   assert.deepEqual(app.errors, []);
+  // The General Majors are the Professional's (Decision 217), so a Professional shows their details.
+  const pro = lockedCharacter(); pro.identity.archetype = "professional";
+  const app2 = openSheet(pro, "progression");
+  const hp = D.milestones.majorGeneral.find(m => (m.details || []).length);
+  assert.ok(app2.$("#main").textContent.includes(hp.details[0]), `${hp.name}'s details don't show`);
+  assert.deepEqual(app2.errors, []);
 });
 
 test("the sheet's price and SAN lines are written from the data (Decision 135)", () => {
@@ -5599,7 +5602,8 @@ test("Decision 199: Progression lists a Trueborn's own Majors above the shared o
   ch.progression.milestonePoints = 100;
   const app = openSheet(ch, "progression");
   const text = app.$("#main").textContent;
-  assert.match(text, /Werewolf\s*Tireless.*Swift Change.*Between Forms.*The Calling.*General/s, "the Werewolf's Majors aren't listed before the shared ones");
+  assert.match(text, /Werewolf\s*Tireless.*Swift Change.*Between Forms.*The Calling/s, "the Werewolf's Majors aren't listed");
+  assert.doesNotMatch(text, /General|Specialist|Defensive Dance/, "a Werewolf is offered the General Majors (Decision 217)");
   assert.doesNotMatch(text, /Forge Fang Mark|Wildblood Mark|Off the Leash/, "a Trueborn is offered another Origin's Majors");
   const take = id => app.$(`[data-takemajor="${id}"]`);
   assert.ok(take("between-forms").disabled, "Between Forms is takeable with no Major");
@@ -7249,14 +7253,14 @@ test("W93 / Decision 213: Improved asks for the dice, shows + 15 IP, and grants 
   const app = openSheet(ch, "progression");
   app.click('[data-takeminor="improved"]');
   const prompt = app.$("[data-improvroll]").closest(".trk");
-  assert.match(prompt.textContent, /2d10/, "the prompt doesn't name the dice");
-  assert.match(prompt.textContent, /\+ 15 IP/, "the prompt doesn't show the flat IP");
+  assert.match(prompt.textContent, /3d10/, "the prompt doesn't name the dice");
+  assert.match(prompt.textContent, /\+ 30 IP/, "the prompt doesn't show the flat IP");
   const box = app.$("[data-improvroll]"); box.value = "14";
   app.click("[data-improvok]");
   const now = activeChar(app);
   assert.deepEqual(now.progression.milestones.minor.map(m => m.id), ["improved"]);
   const grant = now.progression.ip.log.find(e => /Improved/.test(e.note));
-  assert.equal(grant.amount, 29, "14 on the dice and the 15 aren't 29");
+  assert.equal(grant.amount, 44, "14 on the dice and the 30 aren't 44");
   assert.match(grant.note, /rolled 14/);
   app.click('[data-sec="sessions"]');
   app.click("button[data-undolast]");
@@ -7590,4 +7594,114 @@ test("The CP step's Custom power: 5 CP, or free as a GM grant, and Add is off wi
   // The write-in archetype writes its powers free on the Archetype step: no form here.
   const wi = onStep(D.archetypes.find(a => a.writeIn).id, "heroic", "character-points");
   assert.equal(wi.$("#main [data-pwcustom-go]"), null);
+});
+
+// ── P6: Milestones (Decision 217) ────────────────────────────────────────
+const p6Char = (arch = "professional", mp = 100) => { const c = lockedCharacter(); c.identity.archetype = arch; c.progression.milestonePoints = mp; return c; };
+const undoLast = app => { app.click('[data-sec="sessions"]'); app.click("button[data-undolast]"); app.click('[data-sec="progression"]'); };
+
+test("Decision 217: any Minor is taken twice from the picker, and Improved asks for 3d10 and adds 30", () => {
+  const app = openSheet(p6Char("professional", 15), "progression");
+  assert.ok(!app.$('[data-takeminor="improved"]').disabled);
+  for (const dice of ["10", "20"]) {
+    app.click('[data-takeminor="improved"]');
+    const prompt = app.$("[data-improvroll]").closest(".trk");
+    assert.match(prompt.textContent, /Roll 3d10/);
+    assert.match(prompt.textContent, /\+ 30 IP/);
+    app.$("[data-improvroll]").value = dice; app.click("[data-improvok]");
+  }
+  const now = activeChar(app);
+  assert.deepEqual(now.progression.milestones.minor.map(m => m.id), ["improved", "improved"]);
+  assert.deepEqual(now.progression.ip.log.map(e => e.amount), [40, 50]);
+  assert.match(app.$("#main").textContent, /taken ×2/);
+  assert.ok(app.$('[data-takeminor="improved"]').disabled, "none left to take, but it's enabled");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 217: Skilled opens a chooser, takes two Skills free in one commit, and one Undo takes it all back", () => {
+  const ch = p6Char("professional", 5); ch.skills.dodge = { rank: 10, ipe: 0 };
+  const app = openSheet(ch, "progression");
+  app.click('[data-takeminor="skilled"]');
+  assert.ok(app.$("#modal").open || app.$("#modal [data-mcresults]"), "no chooser");
+  assert.ok(app.$('#modal [data-mcpick="dodge"]').disabled, "a Skill at 10 is offered");
+  const take = () => app.$("#modal [data-mctake]");
+  assert.ok(take().disabled, "Take is on with nothing picked");
+  app.click('#modal [data-mcpick="handguns"]');
+  assert.ok(take().disabled, "Take is on with one of two");
+  app.click('#modal [data-mcpick="handguns"]');                        // unpick
+  app.click('#modal [data-mcpick="handguns"]'); app.click('#modal [data-mcpick="combat-sense"]');
+  assert.ok(!take().disabled);
+  const before = activeChar(app).progression.ip.log.length;
+  app.click("#modal [data-mctake]");
+  const now = activeChar(app);
+  assert.equal(now.progression.milestones.minor.length, 1);
+  assert.equal(now.progression.ip.log.length, before + 2);
+  assert.equal(now.skills.handguns.ipe, 1);
+  undoLast(app);
+  const back = activeChar(app);
+  assert.equal(back.progression.milestones.minor.length, 0);
+  assert.equal((back.skills.handguns || { ipe: 0 }).ipe, 0);
+  assert.equal(back.progression.ip.log.length, before);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 217: Honed, Redeemed and Talented each open a chooser, commit once and undo once", () => {
+  const ch = p6Char("professional", 100);
+  ch.disadvantages = [{ id: "addiction", rank: 2, notes: "" }];
+  ch.advantages = [{ id: "archery-master", rank: 1, notes: "" }];
+  const app = openSheet(ch, "progression");
+  const run = (minor, pick, check, restore) => {
+    app.click(`[data-takeminor="${minor}"]`);
+    app.click(`#modal [data-mcpick="${pick}"]`);
+    app.click("#modal [data-mctake]");
+    check(activeChar(app));
+    assert.equal(activeChar(app).progression.milestones.minor.length, 1, `${minor} wasn't one commit`);
+    undoLast(app);
+    assert.equal(activeChar(app).progression.milestones.minor.length, 0, `${minor}: Undo left the Minor`);
+    restore(activeChar(app));
+  };
+  run("honed", "WILL", c => assert.deepEqual(c.trackers.adjustments.map(a => [a.target, a.amount]), [["WILL", 1]]), c => assert.equal(c.trackers.adjustments.length, 0));
+  run("redeemed", "addiction", c => assert.equal(c.disadvantages[0].rank, 1), c => assert.equal(c.disadvantages[0].rank, 2));
+  run("talented", "archery-master", c => assert.equal(c.advantages[0].rank, 2), c => assert.equal(c.advantages[0].rank, 1));
+  run("talented", "charismatic", c => assert.equal(c.advantages.length, 2), c => assert.equal(c.advantages.length, 1));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 217: Steadied offers each restore, and says so when there is nothing to restore", () => {
+  const ch = p6Char("professional", 5);
+  const app = openSheet(ch, "progression");
+  assert.ok(app.$('[data-takeminor="steadied"]').disabled);
+  assert.match(app.$('[data-takeminor="steadied"]').closest(".pick").textContent, /Nothing to restore\./);
+  const hurt = p6Char("professional", 5); hurt.trackers.san.loss = 12; hurt.trackers.massiveLevels = 1;
+  const app2 = openSheet(hurt, "progression");
+  app2.click('[data-takeminor="steadied"]');
+  assert.match(app2.$("#modal").textContent, /Restore 10 SAN/);
+  assert.match(app2.$("#modal").textContent, /Restore a Health Level/);
+  app2.click('#modal [data-mcpick="massiveLevel"]'); app2.click("#modal [data-mctake]");
+  const now = activeChar(app2);
+  assert.equal(now.trackers.massiveLevels, 0);
+  assert.equal(now.trackers.san.loss, 12, "the other option moved too");
+  assert.deepEqual(app2.errors, []);
+});
+
+test("Decision 217: an Arcanist sees the plain line and Add one; a written-in Major goes in the journal; a saved General Major stays", () => {
+  const ch = p6Char("arcanist", 10);
+  const app = openSheet(ch, "progression");
+  assert.match(app.$("#main").textContent, /No Major Milestones listed for this archetype\./);
+  assert.doesNotMatch(app.$("#main").textContent, /Specialist|Defensive Dance|coming soon/i);
+  app.$("[data-mmname]").value = "Aetheric Potency"; app.$("[data-mmdesc]").value = "More of it.";
+  app.click("[data-mmadd]");
+  const now = activeChar(app);
+  assert.equal(now.progression.milestones.major.length, 1);
+  assert.match(app.$("#main .journal").textContent, /Aetheric Potency/);
+  assert.match(app.$("#main .journal").textContent, /More of it\./, "a written-in Major's description is not shown");
+  app.$("[data-mmname]").value = "Second";
+  app.click("[data-mmadd]");
+  assert.equal(activeChar(app).progression.milestones.major.length, 1, "a second one used a slot that was not there");
+  assert.equal(app.$("[data-mmname]").value, "Second", "a refusal threw away what was typed");
+
+  const saved = p6Char("arcanist", 10); saved.progression.milestones.major = [{ id: "specialist", date: "2026-10-01" }];
+  const app2 = openSheet(saved, "progression");
+  assert.match(app2.$("#main .journal").textContent, /Specialist/);
+  assert.deepEqual(app2.errors, []);
 });

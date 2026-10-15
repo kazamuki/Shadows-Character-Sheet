@@ -673,7 +673,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.21",
+    schemaVersion: "0.22",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -836,6 +836,11 @@ It renders on the Character tab (Decision 158).
   // paid CP for (one power rank's price, counted by cp()); migrate() gives
   // every older row, and anything but a strict true, false.
   powers:  [ { id: "pw-7K2M9QXA", custom: true, name: "Fade", uses: "SFR", effect: "...", notes: "", boughtWithCp: false } ],
+  // (0.22, Decision 217) A Major a GM wrote in is an entry in
+  // `progression.milestones.major` with a strict `custom: true`, a text `name`
+  // and `benefit`, beside the `id` ("mm-" + 8 characters) and `date` every
+  // entry has. It is text: the app computes nothing from it. migrate() drops
+  // `custom`, `name` and `benefit` from any entry whose `custom` is not true.
   // (0.10, Decision 121) A gear row is a catalog reference (`id` into
   // `equipment`, `qty` carried, `chargesUsed` on a charged Talisman) or typed
   // (`custom: true`, name/type/notes as before). migrate() tags every older
@@ -1207,6 +1212,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     where structured (majorCount, skills any/all, advantages, milestone
     chains) and surfaced as gold "GM:" chips with a confirm step where
     prose (gear, notes, gmApproval).
+    → **Superseded in part by Decision 217**: any Minor repeats at any time; only "none unlocked" refuses one.
 30. **(Phase 3.1)** The locked sheet is **tab-driven**, not a single scroll.
     Once a character locks, the creation ledger (left rail) is dead weight and
     collapses; a horizontal tab bar becomes the primary nav. Nine tabs: **Main ·
@@ -4395,6 +4401,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 104 in part (`grants()` now reads Majors). Extends 29 and 91 (an Origin key in the one prerequisite vocabulary) and 195 (a Major can change a form).
      - **Revisit if:** F9 settles the shared list; the Vampire's Majors (P4b) need a grant this vocabulary can't say; Regeneration gets computed.
      - **Built:** app 0.39.0, game data 0.32; no schema bump. Log 2026-10-08 (P3b).
+     → **Superseded in part by Decision 217**: a Werewolf's Majors are offered alone; the shared list is the Professional's (F9). VQ16's "both, until F9" ends.
 
 200. **A Vampire is `0413`'s: three Bloodlines, Base Powers placed a rank at a time (F39's stub), creation choices a Bloodline asks for, and weapon lines the archetype gives.**
      *2026-10-08 · Ken + Claude · Touches: vampire, powersBought, archetypeChoices.basePowers, basePowerState, placeBasePower, powerPool, archetypePowers, ranked, archetypeChoices.optionPicks, optionChoices, Built to Last, Iron Hide, Icebound Resilience, Ancient Weapon, The Code, effectText, panel origin, naturalWeapons, archetypeWeapons, Bite, Claws, Admin Bloodline, blood-pool, character schema 0.19, F7, F39, F41, crb-v4-sync P4, VQ20, VQ23–VQ26*
@@ -4605,6 +4612,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** Cursed Evolution or Splice opens another Bloodline's powers (VQ4), or a custom power needs mechanical fields.
      - **Built:** app 0.42.0, game data 0.35, schema 0.21, PR #170. Log 2026-10-11 (P5).
 
+217. **Any Minor Milestone repeats; Improved is 3d10+30; five Minors ask what they give by a chooser; the General Majors are the Professional's; any archetype can write in a Major.**
+     *2026-10-14 · Ken + Claude (Deighton's Q25–Q28, Q32) · Touches: minorShared, canTakeMinor, takeMinorChoice, minorChoice, ipRoll, Skilled, Honed, Redeemed, Talented, Steadied, majorGeneral, majorPool, majorListed, majorOffered, custom Major, addCustomMajor, versionCheck, character schema 0.22, F9, W103*
+     - **Decided:** `canTakeMinor` asks only that a Minor is unlocked. A Minor's data `choice` names what taking it asks, and `takeMinorChoice` applies it with the Minor as one change, or refuses and changes nothing. Skilled: two different Skills, a free rank each. Honed: +1 Adjustment on any Stat, WILL, TOL or LUCK; a Basic Stat stops at 10, the other three never, since a formula can pass 10. Redeemed: a Disadvantage worth 5 points or less a rank goes down a rank, removed at 1. Talented: a held Advantage with a rank to spare, or a new one worth 5 or less. Steadied: 10 SAN or a Massive Health Level, clamped to what was lost. `majorListed` (the offer) is the archetype's own list plus `majorGeneral` only where `growth.majorMilestones` is `"general"`; `majorPool` stays the lookup, so a saved General Major is kept, and `versionCheck` says so once. Any archetype can write in a Major (`custom: true`, schema 0.22): a slot, text only; on Admin none now, but it borrows the next unlocked slot.
+     - **Why:** Deighton ruled the values, repeats and F9; Ken added the choosers and the Major.
+     - **Rejected:** removing a taken General Major from a saved file; the General list for everyone; a `repeatable` flag (Decision 135); Honed through `spendIP` (`ipCost` refuses WILL and TOL); Withering's levels for Steadied (Ken); capping WILL, TOL and LUCK at 10 (Ken).
+     - **Replaces:** Decision 29 in part (the Minor repeat floor). Decision 199 in part (a Werewolf's Majors are offered alone). Closes F9.
+     - **Revisit if:** another archetype's Majors are written, or Withering's levels count as lost.
+     - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #…. Log 2026-10-14 (P6).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4616,14 +4632,13 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
 | F5 | Adv/Disadv audit flags — **three of four closed by the CRB v4 pass**. Remaining: Cyber-Prophetical (SAN vs TOL), which waits on F6 | Deighton | No |
 | F6 | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "tbd"` | Ken/D | No |
-| F9 | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors are open to all) or Professional-only? Data file treats them as shared **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** Professional only. Every archetype will get its own Major Milestones; until then an Arcanist has none (Ken). Closes when W103 is built. | Ken/D (ruled) | No |
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F18 | **Weapons/Armor/Defense system** — the catalog half is done: weapons/ammunition/arrowheads/armor merged into game data as Decision 92 (2026-09-12). **The 2026-09-10 meeting (Scott/Deighton) settled the Massive damage formula** (strips armor Integrity equal to the weapon's damage, removes 1 Health Level per 10 points of that damage, +1 additional HL if armor was reduced to zero or there was none; weapons carry an MD1/MD2/MD3 shorthand not yet assigned — Thunderclap/Shockwave/Blackout already exist in the catalog as named grenades with matching stats) **and a first-pass grenade evasion rule** (MOB Essence check, not REF — threshold 2 clears a 5m radius, threshold 3 clears 10m). **The Conditions system is done** (Decisions 95–96, 2026-09-22), and so is **the hit resolver** (PROT/RES/Integrity math, Massive damage, Shock and At Zero — Decision 99, 2026-09-22). **Loadout pickers, weapon lines, the worn toggle and the recovery actions are done too** (Decision 100, 2026-09-22). What's left: assigning MD ratings across the gear list (Design, small) **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** no MD1/2/3 ratings to assign: one MD is 10 points of Massive damage, 10 Integrity off the armor or 1 Health Level to whoever is in it, so a weapon's MD is its damage ÷ 10, and the extra Health Level when armor drops to 0 stays. Grenades and explosives deal Massive. Closes when W102 is built. | Ken/D/Scott (ruled) | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
