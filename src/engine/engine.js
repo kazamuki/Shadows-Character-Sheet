@@ -1346,6 +1346,15 @@ const Engine = (() => {
     return Object.assign(done, { left: l.rounds.max - e.roundsSpent, used:n, ammo:[k.def.name], ammoLeft: k.qty - n, unit: k.def.unit||null,
                                  loaded: kind, swapped: swap });
   }
+  // A mod's own reason for a weapon category it doesn't fit (Decision 221): a map
+  // from category id to text. Anything else, or no entry, is null and the
+  // caller words the refusal as before.
+  function refusalFor(g, def){
+    const map = g.refusalText;
+    if (!map || typeof map!=="object" || Array.isArray(map) || !Object.prototype.hasOwnProperty.call(map, def.category)) return null;
+    const t = map[def.category];
+    return typeof t==="string" && t.trim() ? t : null;
+  }
   // What can go on a catalog weapon: every mod, with the reason one can't.
   function weaponModOptions(ch, index){
     const e = weaponEntry(ch, index);
@@ -1357,8 +1366,8 @@ const Engine = (() => {
       let why = null;
       if (!l.modSlots.slots) why = `${def.name} has no mod slots.`;
       else if (have.includes(g.id)) why = "Already installed.";
-      else if (not && (not.categories||[]).includes(def.category)) why = `Doesn't go on ${categoryName(def.category)}.`;
-      else if (only && !(only.categories||[]).includes(def.category) && !(only.weapons||[]).includes(def.id)) why = `Doesn't fit ${def.name}.`;
+      else if (not && (not.categories||[]).includes(def.category)) why = refusalFor(g, def) || `Doesn't go on ${categoryName(def.category)}.`;
+      else if (only && !(only.categories||[]).includes(def.category) && !(only.weapons||[]).includes(def.id)) why = refusalFor(g, def) || `Doesn't fit ${def.name}.`;
       else if (need>l.modSlots.free) why = need===1 ? "No slot free." : `Needs ${need} slots; ${l.modSlots.free} free.`;
       return { id:g.id, slots:need, ok:!why, why, description:g.description||"" };
     });

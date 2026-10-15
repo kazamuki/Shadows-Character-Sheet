@@ -177,24 +177,12 @@ today (`"2m"`, `"5m radius"`, range bands in the quick reference), so converting
 them means storing the numbers (Decision 134) before any switch. A view
 setting, remembered in the browser, never in the character.
 
-**W104 — Deighton's gear rulings, and the reference text that follows.** *Ken, from Deighton · ⏭ · Content, plus a save shape for F34 · raised 2026-10-10 · closes F26, F30, F31, F34*
-Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q8–Q11, Q33):
-- **F26:** a shotgun takes neither the Scope nor the Angel Mod, as stubbed.
-  Close the flag and say why in the notes.
-- **F30:** Anti-Materiel does nothing extra to people; its glossary text says
-  it means vehicle armor doesn't stop it.
-- **F31:** the Reach column is the weapon's reach, in meters; the tag marks an
-  unusual one (the mono-whip) and adds nothing.
+**W104 — A partly spent magazine is kept with its count.** *Ken, from Deighton · ⏭ · a save shape, P9b · raised 2026-10-10 · closes F34*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q11). The rest of W104 (F26, F30, F31 and the difficulty names) was built as P9a, Decision 221, app 0.45.0.
 - **F34:** a partly spent magazine is **kept with its count**. Today a Reload
   fills from a fresh magazine and the sheet counts whole magazines carried
   (Decisions 145, 149), so carried magazines need their counts: a save-file
   shape change, with a decision, a schema bump and a `migrate()` step.
-- **Difficulty names:** Easy / Average / Challenging, replacing easy / medium /
-  hard wherever the data and the copy say them.
-
-*To respect:* F26, F30 and F31 are text and a closed flag each (Content, and
-the `playerNote`s that explained the stand-ins go). F34 is the only part that
-needs a proposal, so it can split into its own session if it grows.
 
 ### Loadout & catalog
 
@@ -671,13 +659,6 @@ player names would put the form on the sheet.
 **W52 — Written-in Major Milestones.** *Claude · 💡*
 A custom archetype has no Major Milestones of its own; the general Majors are
 open to it. The Adjustments ledger covers a GM's custom reward meanwhile.
-
-**W53 — "Magical being" as a classification.** *Ken, from Deighton · ⏭ · Content · ruled by Deighton 2026-10-10*
-Fae and beings like them: a third axis of power, distinct from Supernatural.
-The plan's **Other** classification, with its own text, covers it until then.
-**Deighton ruled (2026-10-10, `reference/rulings-2026-10-10.md` Q31): Universal Advantages only**,
-like a Supernatural. So it's one row in `classifications`, and a custom
-archetype can pick it.
 
 **W61 — A retired archetype folds its characters into Custom.** *Ken · 🔎 · raised 2026-10-01 with the Cyborg cut; Rule or shape*
 The team has cut the Cyborg (`plans/crb-catch-up.md`), and an id can never

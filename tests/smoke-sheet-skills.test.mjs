@@ -469,7 +469,7 @@ test("W16: install a mod on Loadout, fire a Burst from Main, Reload, and each is
   assert.deepEqual([...activeChar(app).weapons[0].mods], ["Scope"]);
   assert.match(app.$(".lo-weapons").textContent, /Aimed at Long or Extreme range: \+2 ACC \(Scope\)/, "the Scope's ACC isn't shown");
   assert.match(app.$(".lo-weapons").textContent, /0 of 1 slot free/);
-  assert.ok(app.$(".lo-modrow .flag"), "the Scope's unsettled fit isn't said");
+  assert.equal(app.$(".lo-modrow .flag"), null, "an installed Scope still draws a note (F26 is closed)");
 
   app.click('[data-sec="main"]');
   assert.match(app.$(".main-combat .lo-rounds").textContent, /31\s*\/31/, "Main doesn't show the magazine");
@@ -600,7 +600,36 @@ test("W13: Main's Combat column leads with the weapons you carry and the armor t
 // ── Rules a tap away (Decision 139) ───────────────────────────────────
 const withWhip = () => { const ch = lockedCharacter(); ch.weapons = [{ id: "razorwhip", notes: "", mods: [], roundsSpent: 0 }]; return ch; };
 
-test("a tag on Main reads out on a tap, with a flagged tag's player note, and a second tap or Esc puts it away", () => {
+// A flagged tag carries a player note, and the tip draws it. No real tag is
+// flagged now, so the data is seeded before the sheet renders; Reach stands in.
+test("a flagged tag on Main reads out with its player note", () => {
+  const app = boot({ storage: { "shadows.active.v1": { ch: withWhip(), section: "main" } } });
+  app.window.eval(`Object.assign(SHADOWS_DATA.weaponTagGlossary.find(t => t.id === "Reach"), { flagged: true, flagNote: "F0 synthetic maintainer note", playerNote: "A synthetic player note." })`);
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="main"]');
+  clickIn(app, app.$('#main .tag[data-term="Reach"]'));
+  assert.match(tipShown(app), /A synthetic player note\./, "a flagged tag hid its player note");
+  assert.doesNotMatch(tipShown(app), /maintainer/, "the maintainer note reached the tip");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P9a 11: the Reach tip has no unsettled note", () => {
+  const app = openSheet(withWhip(), "main");
+  clickIn(app, app.$('#main .tag[data-term="Reach"]'));
+  assert.match(tipShown(app), /reaches as far as its Reach column says/, "the Reach tip didn't open");
+  assert.equal(app.$("#tip .tip-note"), null, "the Reach tip still draws a note");
+  assert.doesNotMatch(tipShown(app), /isn't written yet/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P9a 10: How a check works reads Easy, Average and Challenging", () => {
+  const app = openSheet(lockedCharacter(), "skills");
+  const chips = app.$$("#main details.group .chip").map(c => c.textContent);
+  for (const t of ["Easy 10", "Average 15", "Challenging 20"]) assert.ok(chips.includes(t), `no "${t}" chip: ${JSON.stringify(chips)}`);
+  assert.deepEqual(app.errors, []);
+});
+
+test("a tag on Main reads out on a tap, and a second tap or Esc puts it away", () => {
   const app = openSheet(withWhip(), "main");
   const ap = app.$('#main .tag[data-term="AP"]');
   assert.ok(ap, "Main's weapon shows no AP chip");
@@ -609,8 +638,7 @@ test("a tag on Main reads out on a tap, with a flagged tag's player note, and a 
   assert.equal(ap.getAttribute("aria-describedby"), "tip");
   clickIn(app, ap);
   assert.equal(tipShown(app), "", "a second tap left it open");
-  clickIn(app, app.$('#main .tag[data-term="Reach"]'));
-  assert.match(tipShown(app), /GM rules on it/, "a flagged tag hid its player note");
+  clickIn(app, ap);
   app.doc.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
   assert.equal(tipShown(app), "", "Esc didn't put it away");
   assert.deepEqual(app.errors, []);

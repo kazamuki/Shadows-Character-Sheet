@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.37",
+    "gamedataVersion": "0.38",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -307,9 +307,9 @@ window.SHADOWS_DATA = {
     "trained": "1d10 + Skill Rank + Primary Stat (full score) + Synergy Bonus (modifier of synergy stat)",
     "untrained": "1d10 + Primary Stat only",
     "difficulties": {
-      "easy": 10,
-      "medium": 15,
-      "hard": 20
+      "Easy": 10,
+      "Average": 15,
+      "Challenging": 20
     },
     "explosion": "Rolling a 10 lets you roll again and add the result; chains on repeated 10s.",
     "botch": "Rolling a 1: the action fails and the situation gets worse."
@@ -1020,8 +1020,8 @@ window.SHADOWS_DATA = {
   /* CLASSIFICATIONS -- what kind of being an archetype is (Decision 152). Every
      archetype names one in `classification`. `advantages` says which Advantages
      it may buy: "all", or "universal" (only those with `universal: true`).
-     `writeIn: true` takes the player's own words for what they are (Other,
-     Decision 153); only a write-in archetype offers a pick of classification.
+     `writeIn: true` takes the player's own words for what they are (Other and
+     Magical being, Decision 153); only a write-in archetype offers a pick of classification.
      Disadvantages are open to every classification. Werewolves and Vampires
      start with a great deal of power; the Mortal-only Advantages close some of
      that gap. */
@@ -1039,9 +1039,16 @@ window.SHADOWS_DATA = {
       "advantages": "universal"
     },
     {
+      "id": "magical-being",
+      "name": "Magical being",
+      "description": "Older than the city, or from somewhere beside it: the fae and their kind. Only the Universal Advantages are open to them.",
+      "advantages": "universal",
+      "writeIn": true
+    },
+    {
       "id": "other",
       "name": "Other",
-      "description": "Neither one, or something the city has no word for. Every Advantage is open to them.",
+      "description": "None of these, or something the city has no word for. Every Advantage is open to them.",
       "advantages": "all",
       "writeIn": true
     }
@@ -3582,8 +3589,9 @@ window.SHADOWS_DATA = {
      give the base-name definition for display; look up by stripping any
      "(...)" suffix. A few tags appear on weapon tables (Suppression, Blast,
      Anti-Materiel, and "Reach" as a tag distinct from the Reach column) with
-     no formal definition anywhere in the source chapter -- carried here with
-     `flagged: true` rather than inventing a rule the CRB doesn't state. */
+     no definition in the source chapter. Anti-Materiel and Reach are defined by
+     Deighton's rulings of 2026-10-10 (Q9, Q10). A tag that still has no rule
+     is carried with `flagged: true` rather than inventing one. */
   "weaponTagGlossary": [
     { "id": "AP", "description": "Armor Piercing. The weapon or round bypasses the target's RES entirely. PROT still rolls -- AP does not make armor irrelevant; it makes the flat damage reduction irrelevant." },
     { "id": "Area", "description": "The weapon affects all targets within the listed radius of the point of impact rather than a single target. One attack roll affects everyone in range. Does not benefit from ACC bonuses." },
@@ -3612,8 +3620,8 @@ window.SHADOWS_DATA = {
     { "id": "Withering", "description": "Damage of this type cannot be regenerated supernaturally -- it must heal at the natural rate regardless of the target's normal recovery. The damage amount is not necessarily greater; the permanence is." },
     { "id": "Suppression", "description": "Sustained fire across an area rather than at a target. Declare the zone: until the start of the firer's next turn, that ground is Difficult Terrain. No attack roll and no damage; the rounds are aimed at the space, not at anyone in it. Whether a target gets hit is a matter of cover and line of sight, as ever. What it costs them is the ability to get anywhere useful." },
     { "id": "Blast", "description": "The weapon detonates at a point and catches everything within the radius: allies, enemies, bystanders and objects alike. The attack is made against the place, at Difficulty 10. Everyone caught Scrambles on a REF Essence Check at TN 8, TH 2, and the Threshold rises by one for every five meters of radius beyond the first five. Damage is the same for all of them; the Scramble decides what it costs. A lobbed blast needs no line of sight and reaches a target in Full Cover. A cone starts at the wielder and reaches only what the wielder can see." },
-    { "id": "Anti-Materiel", "flagged": true, "flagNote": "F30: Appears on the VR-50 'Verdict'. The vehicle-combat rules (same chapter) say weapons with the Anti-Materiel, Siege, or Blast tags deal full damage to vehicles, but no rule defines an Anti-Materiel effect against personal targets -- confirm with Deighton.", "description": "Deals full damage to vehicles (per the vehicle-combat rules); no separate personal-combat effect is defined yet.", "playerNote": "What it does to a person isn't written yet. Your GM rules on it." },
-    { "id": "Reach", "flagged": true, "flagNote": "F31: Appears as a weapon Tag on the Razorwhip and Orion MW-1 'Filament', distinct from the Reach column both weapons already carry. The equipment chapter never explains what the tag adds beyond the column value -- confirm with Deighton.", "description": "The weapon reaches as far as its Reach column says.", "playerNote": "What the tag adds beyond that number isn't written yet. Your GM rules on it." }
+    { "id": "Anti-Materiel", "description": "Vehicle armor doesn't stop it, so it deals full damage to vehicles. Against a person it's the weapon's AP and damage that count, nothing extra." },
+    { "id": "Reach", "description": "The weapon reaches as far as its Reach column says. The tag marks a reach that's unusual for its kind; it adds nothing to the number." }
   ],
   "weaponFeatureGlossary": [
     { "id": "Bipod Mount", "description": "Integrated bipod for stable firing from prone or braced. Satisfies the Mounted tag's requirement without a separate mount." },
@@ -3640,10 +3648,10 @@ window.SHADOWS_DATA = {
     { "id": "Silencer", "slots": 1, "grantsTags": ["Silent"], "notFor": { "categories": ["shotguns", "heavyWeapons"] }, "description": "Grants the Silent tag. Subsonic fire only -- not for shotguns or heavy weapons, and requires subsonic ammunition. Anyone within 6m may make a Combat Sense check to locate the source." },
     { "id": "Laser Sight", "slots": 1, "aimedAcc": 1, "description": "+1 ACC on aimed shots, stacking with other accuracy bonuses. Green lasers can cause Disoriented on direct unprotected eye contact." },
     { "id": "Holo Sight", "slots": 1, "aimedAcc": 1, "description": "+1 ACC on aimed shots, stacking with other accuracy bonuses. Does not stack with SMART Targeting. Displays magazine count in the sight picture." },
-    { "id": "Scope", "slots": 1, "aimedAcc": 2, "aimedAt": "at Long or Extreme range", "notWith": ["Laser Sight", "Holo Sight"], "onlyFor": { "categories": ["urbanRifles", "sniperRifles"], "weapons": ["ads-tc1-strix"] }, "flagged": true, "flagNote": "F26. Gear says a Scope is 'compatible with rifles and the ADS TC-1 Strix only'. The ammunition table files shotgun shells under 'Rifle (shotgun)', so it's unclear whether a shotgun counts as a rifle for the Scope. Stub: urban combat rifles and sniper rifles only, not shotguns. Confirm with Deighton.", "playerNote": "Whether a Scope fits a shotgun is still being settled. For now it goes on rifles and the Strix.", "description": "+2 ACC on aimed shots at Long or Extreme range only; no benefit closer. Does not stack with Holo Sight or Laser Sight. Compatible with rifles and the ADS TC-1 Strix only." },
+    { "id": "Scope", "slots": 1, "aimedAcc": 2, "aimedAt": "at Long or Extreme range", "notWith": ["Laser Sight", "Holo Sight"], "onlyFor": { "categories": ["urbanRifles", "sniperRifles"], "weapons": ["ads-tc1-strix"] }, "refusalText": { "shotguns": "Shotguns don't take scopes." }, "description": "+2 ACC on aimed shots at Long or Extreme range only; no benefit closer. Does not stack with Holo Sight or Laser Sight. Compatible with rifles and the ADS TC-1 Strix only." },
     { "id": "Flashlight", "slots": 1, "description": "Eliminates darkness penalties for shooting and movement. The active light reveals position -- no hiding in darkness while it's on." },
     { "id": "Biometrics", "slots": 2, "description": "Registers the weapon to a single authorized user via biometric data at installation. Anyone else attempting to fire it cannot." },
-    { "id": "Angel Mod", "slots": 2, "damageBonus": 4, "grantsTags": ["AP", "Burning", "Agonized"], "firesOnly": ["angel-rounds"], "onlyFor": { "categories": ["handguns", "smgs", "urbanRifles", "sniperRifles"] }, "flagged": true, "flagNote": "F26. The Angel Mod fires Angel Rounds only, and the ammunition table lists Angel Rounds for 'Handgun, Rifle, SMG'. So it fits handguns, SMGs and rifles; whether shotguns count as rifles is the same question as the Scope's. Stub: not shotguns. Confirm with Deighton.", "playerNote": "Whether an Angel Mod fits a shotgun is still being settled. For now it goes on handguns, SMGs and rifles.", "description": "Plasma-coated projectile system requiring a powered magazine and Angel Rounds. Grants +4 DMG, AP, Burning, and Agonized on every hit. On a botched attack roll, roll 1d100: 50 or below jams, 51+ destroys the weapon. Ammunition/cleaning/magazine costs 5x standard. Requires specialist installation." }
+    { "id": "Angel Mod", "slots": 2, "damageBonus": 4, "grantsTags": ["AP", "Burning", "Agonized"], "firesOnly": ["angel-rounds"], "onlyFor": { "categories": ["handguns", "smgs", "urbanRifles", "sniperRifles"] }, "refusalText": { "shotguns": "Angel Rounds need a box magazine with a power cell." }, "description": "Plasma-coated projectile system requiring a powered magazine and Angel Rounds. Grants +4 DMG, AP, Burning, and Agonized on every hit. On a botched attack roll, roll 1d100: 50 or below jams, 51+ destroys the weapon. Ammunition/cleaning/magazine costs 5x standard. Requires specialist installation." }
   ],
 
   /* Rate of fire and the magazine (W16, Decision 120). 0530: "Ammunition is
@@ -3686,7 +3694,7 @@ window.SHADOWS_DATA = {
     { "id": "combat-knife", "name": "Combat Knife", "category": "melee", "skill": "melee", "damage": "BOD+3", "style": "Blade", "reach": "1m", "damageType": "Normal", "availability": "Common", "cost": 100, "tags": ["Conceal"], "flavorLine": "No frills, no tech, no modifications -- just a sharp edge." },
     { "id": "shock-knucks", "name": "Shock Knucks", "category": "melee", "skill": "melee", "damage": "BOD+4", "style": "Blunt", "reach": "1m", "damageType": "Electric", "availability": "Common", "cost": 350, "tags": ["Stunning"], "flavorLine": "A taser you can punch someone with." },
     { "id": "autobaton", "name": "Autobaton", "category": "melee", "skill": "melee", "damage": "BOD+6", "style": "Blunt", "reach": "2m", "parry": "+1", "damageType": "Normal", "availability": "Uncommon", "cost": 800, "tags": ["Conceal"], "flavorLine": "An extendable security baton that deploys in under a second." },
-    { "id": "razorwhip", "name": "Razorwhip", "category": "melee", "skill": "melee", "damage": "BOD+6", "style": "Blade", "reach": "1m", "damageType": "Normal", "availability": "Rare", "cost": 1600, "tags": ["AP", "Reach"], "flavorLine": "A length of monomolecular-edged cable on a reinforced grip." },
+    { "id": "razorwhip", "name": "Razorwhip", "category": "melee", "skill": "melee", "damage": "BOD+6", "style": "Blade", "reach": "2m", "damageType": "Normal", "availability": "Rare", "cost": 1600, "tags": ["AP", "Reach"], "flavorLine": "A length of monomolecular-edged cable on a reinforced grip." },
     { "id": "crusher", "name": "Crusher", "category": "melee", "skill": "melee", "damage": "BOD+8", "style": "Blunt", "reach": "1m", "parry": "+1", "damageType": "Electric", "availability": "Rare", "cost": 2800, "tags": ["Stunning"], "flavorLine": "An industrial vibration driver with an integrated electric discharge. Hits like a hydraulic press." },
     { "id": "orion-mw1-filament", "name": "Orion MW-1 \"Filament\"", "category": "melee", "skill": "melee", "damage": "BOD+10", "style": "Blade", "reach": "2m", "damageType": "Energy", "availability": "Exotic", "cost": 12000, "tags": ["AP", "Reach"], "flavorLine": "A single monowire filament on a powered reel, nearly invisible in motion." },
 

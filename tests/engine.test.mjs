@@ -258,6 +258,7 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
   for (const g of D.weaponModGlossary || []) {
     for (const id of ((g.onlyFor || {}).weapons || [])) ref("weapon", id, `mod ${g.id}.onlyFor`);
     for (const c of [...((g.onlyFor || {}).categories || []), ...((g.notFor || {}).categories || [])]) ref("weaponCategory", c, `mod ${g.id}`);
+    for (const c of Object.keys(g.refusalText || {})) ref("weaponCategory", c, `mod ${g.id}.refusalText`);
   }
   for (const x of D.armor) { for (const f of x.preInstalledFeatures || []) ref("armorFeature", f, `armor ${x.id}`); ref("armorFeature", x.feature, `armor ${x.id}`); }
   for (const e of D.equipment || []) { ref("equipmentCategory", e.category, `equipment ${e.id}`); ref("spell", e.spell, `equipment ${e.id}`); }
@@ -320,7 +321,8 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
-  /^appCopy\.statusLabel$/]; // keyed by an archetype's `status`, read by statusLabel()
+  /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
+  /^weaponModGlossary\[\]\.refusalText$/]; // keyed by a weapon category id, read by weaponModOptions (Decision 221)
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
 const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$/;
@@ -340,7 +342,10 @@ function dataKeys() {
     for (const [k, x] of Object.entries(v)) {
       if (!isMap) {
         const e = keys.get(k) || { paths: new Set(), values: [] };
-        e.paths.add(path || "(top)"); e.values.push(x); keys.set(k, e);
+        // A map of text is accepted as text only where MAPS lists its path (refusalText, Decision 221):
+        // its values stand in for it, so a non-text value inside still fails the text check.
+        const own = path ? `${path}.${k}` : k;
+        e.paths.add(path || "(top)"); e.values.push(x && typeof x === "object" && !Array.isArray(x) && MAPS.some(re => re.test(own)) ? Object.values(x) : x); keys.set(k, e);
         // `countBy`, `maxRankBy`, `startingRankBy`: Engine.dataPath reads the key it ends in.
         if (/By$/.test(k) && typeof x === "string") for (const seg of x.split(".")) viaPath.add(seg);
         // A pick's `from.optionsFrom` names the list pickOptions reads off its entry (Martial Arts' `styles`).
@@ -1453,6 +1458,10 @@ test("the Loadout and recovery functions are total on every degenerate character
       addLoadout: () => { Engine.addLoadout(ch, "armor", "kevlar-vest", { buy: true }); Engine.addLoadout(ch, "weapons", "nope"); Engine.addLoadout(ch, "gear", "x"); },
       addCustomLoadout: () => { Engine.addCustomLoadout(ch, "armor"); Engine.addCustomLoadout(ch, "weapons"); Engine.addCustomLoadout(ch, "x"); },
       removeLoadout: () => { Engine.removeLoadout(ch, "armor", 99); Engine.removeLoadout(ch, "weapons", 0); },
+      weaponModReasons: () => { // Decision 221: a junk refusalText falls back, never throws
+        ch.weapons.push({ id: "sg88-siege-breaker", notes: "", mods: [], roundsSpent: 0 }); const at = ch.weapons.length - 1;
+        for (const g of D.weaponModGlossary) for (const junk of ["x", [], null, 7, { shotguns: 5 }, { shotguns: null }, { shotguns: [] }, { constructor: "x" }])
+          withData(g, "refusalText", junk, () => Engine.weaponModOptions(ch, at)); },
       weaponMods: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.weaponModOptions(ch, i); Engine.addWeaponMod(ch, i, "Scope"); Engine.addWeaponMod(ch, i, "nope"); Engine.removeWeaponMod(ch, i, 0); }),
       rounds: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.fireWeapon(ch, i, "S"); Engine.fireWeapon(ch, i, "x"); Engine.fireWeapon(ch, i); Engine.reloadWeapon(ch, i); Engine.reloadWeapon(ch, i, { anyway: true }); }),
       gear: () => { ch.gear.push(null, 3, { id: "nope" }, { custom: true }, { id: "shield-charm", chargesUsed: "x" }, { id: "quickstitch", qty: -4 });
@@ -2171,7 +2180,7 @@ test("W30: Reload takes a mag (or a shell a round) of what fits from what you ca
   const s = Engine.reloadWeapon(sg, 0);
   assert.equal(s.used, 3); assert.equal(s.left, 7); assert.equal(sg.weapons[0].roundsSpent, 2);
   assert.equal(Engine.carriedGear(sg, "shotgun-shells"), null);
-  // Rifle Rounds don't load a shotgun (F26's stub), and a beam weapon takes a cell.
+  // Rifle Rounds don't load a shotgun (Deighton, 2026-10-10 Q8), and a beam weapon takes a cell.
   sg.gear.push({ id: "rifle-rounds", qty: 1, notes: "" });
   assert.equal(Engine.reloadWeapon(sg, 0).noAmmo, true);
   const beam = armed("ads-le4-falcon"); beam.weapons[0].roundsSpent = 20;
@@ -2208,14 +2217,14 @@ test("W40: with two kinds carried Reload asks which, and specialty rounds stay l
   assert.equal(ch.weapons[0].loaded, undefined);
 });
 
-test("W40: specialty rounds fit what Gear says, and the Angel Mod fires Angel Rounds only (F26's stub)", () => {
+test("W40: specialty rounds fit what Gear says, and the Angel Mod fires Angel Rounds only (Deighton, 2026-10-10 Q8)", () => {
   const fits = (id, mods = []) => { const ch = armed(id, { mods, roundsSpent: 1 });
     for (const a of ["silver-rounds", "holy-points", "angel-rounds", "handgun-rounds", "rifle-rounds"]) ch.gear.push({ id: a, qty: 1, notes: "" });
     const r = Engine.reloadWeapon(ch, 0);
     return r.choose ? r.options.map(o => o.id) : r.ammo; };
   same(fits("ads-lp9-viper"), ["handgun-rounds", "silver-rounds", "holy-points"]);
   same(fits("vr8-sentinel"), ["rifle-rounds", "silver-rounds"], "Holy Points are handgun only");
-  same(fits("sg88-siege-breaker"), ["Shotgun Shells"], "a shotgun takes no specialty round while F26 stands");
+  same(fits("sg88-siege-breaker"), ["Shotgun Shells"], "a shotgun takes no specialty round (Deighton, 2026-10-10 Q8)");
   same(fits("ads-lp9-viper", ["Angel Mod"]), ["Angel Rounds"], "an Angel Mod loaded something besides Angel Rounds");
   const ch = armed("ads-lp9-viper", { mods: ["Angel Mod"], roundsSpent: 1 });
   ch.gear.push({ id: "handgun-rounds", qty: 1, notes: "" });
@@ -2464,12 +2473,26 @@ test("every tag in the data reads out, bar the few no glossary defines (Decision
   assert.deepEqual(bare, [...BARE].sort());
 });
 
-test("a flagged tag reads as something a player can use, not a note to us (F30–F31)", () => {
-  for (const g of [...D.weaponTagGlossary, ...D.weaponFeatureGlossary, ...D.spellTagGlossary].filter(g => g.flagged)) {
-    assert.ok(g.playerNote, `${g.id}: flagged with no playerNote`);
-    assert.doesNotMatch(g.description, /flagNote|Undefined|CRB|Deighton|\bF\d+\b/, `${g.id}: the description is maintainer text`);
-    assert.equal(Engine.glossary(g.id).note, g.playerNote);
-  }
+// Whatever is flagged (a tag, a feature, a spell tag) must read as something a
+// player can use. No real tag is flagged now, so the checker is also run on a
+// synthetic entry: a good one passes and each way of going wrong fails.
+const flaggedTagProblems = g => {
+  const out = [];
+  if (!g.playerNote) out.push("flagged with no playerNote");
+  if (/flagNote|Undefined|CRB|Deighton|\bF\d+\b/.test(g.description)) out.push("the description is maintainer text");
+  if (Engine.glossary(g.id).note !== g.playerNote) out.push("the tip doesn't carry the playerNote");
+  return out;
+};
+
+test("a flagged tag reads as something a player can use, not a note to us", () => {
+  for (const g of [...D.weaponTagGlossary, ...D.weaponFeatureGlossary, ...D.spellTagGlossary].filter(g => g.flagged))
+    assert.deepEqual(flaggedTagProblems(g), [], g.id);
+  const list = D.weaponTagGlossary, add = e => { list.push(e); return () => list.splice(list.indexOf(e), 1); };
+  const probe = extra => { const undo = add({ id: "__probe", description: "Does a thing.", flagged: true, flagNote: "F0 for us", ...extra }); try { return flaggedTagProblems(list[list.length - 1]); } finally { undo(); } };
+  assert.deepEqual(probe({ playerNote: "Your GM rules on it." }), []);
+  assert.deepEqual(probe({}), ["flagged with no playerNote", "the tip doesn't carry the playerNote"]);
+  assert.deepEqual(probe({ playerNote: "ok", description: "See Deighton, F9." }), ["the description is maintainer text"]);
+  assert.deepEqual(probe({ playerNote: "ok", description: "Stubbed per F30." }), ["the description is maintainer text"], "an F-number alone is maintainer text");
 });
 
 test("a stat's score reads as its range in the book, and past 10 says what changes (Decision 139)", () => {
@@ -7906,4 +7929,38 @@ test("P8b 12: house rules survive migrate and a hostile file", () => {
   eq(Engine.migrate(on).houseRules, { keepDamagePastZero: true }, "true round-trips, unknown keys drop");
   const fresh = Engine.newCharacter();
   eq(Engine.migrate(JSON.parse(JSON.stringify(fresh))).houseRules, fresh.houseRules);
+});
+
+// ── P9a: a mod's refusal says why, from data (Decision 221) ─────────────────
+test("P9a 2: a refusal with no reason for that kind of weapon reads as before", () => {
+  const opt = (ch, id) => Engine.weaponModOptions(ch, 0).options.find(o => o.id === id);
+  const viper = armed("ads-lp9-viper"), sg = armed("sg88-siege-breaker");
+  const scope = D.weaponModGlossary.find(m => m.id === "Scope"), silencer = D.weaponModGlossary.find(m => m.id === "Silencer");
+  assert.match(opt(viper, "Scope").why, /^Doesn't fit ADS LP-9/, "an onlyFor refusal with no entry for handguns");
+  assert.doesNotMatch(opt(viper, "Scope").why, /Shotgun/, "a handgun was told about shotguns");
+  assert.equal(opt(sg, "Silencer").why, "Doesn't go on Shotguns.");
+  withData(silencer, "refusalText", { shotguns: "Too loud." }, () => assert.equal(opt(sg, "Silencer").why, "Too loud.", "a notFor refusal ignored its refusalText"));
+  withData(silencer, "refusalText", { handguns: "Not for this." }, () => assert.equal(opt(sg, "Silencer").why, "Doesn't go on Shotguns.", "another category's reason was used"));
+  for (const junk of ["x", [], null, 7, { shotguns: 5 }, { shotguns: "" }, { shotguns: null }, { shotguns: ["x"] }])
+    withData(scope, "refusalText", junk, () => assert.equal(opt(sg, "Scope").why, `Doesn't fit ${Engine.weaponLine(sg, 0).name}.`, `junk ${JSON.stringify(junk)} wasn't ignored`));
+  withData(scope, "refusalText", { constructor: "x", toString: "y" }, () => assert.match(opt(sg, "Scope").why, /^Doesn't fit/, "an inherited key was read"));
+});
+
+test("P9a 3: Anti-Materiel and Reach read as rules, with no note", () => {
+  // Deighton's rulings (2026-10-10, Q9, Q10).
+  for (const id of ["Anti-Materiel", "Reach"]) {
+    const g = D.weaponTagGlossary.find(t => t.id === id);
+    assert.ok(!g.flagged && !g.flagNote && !g.playerNote, `${id} is still flagged`);
+    assert.equal(Engine.glossary(id).note, null);
+  }
+  assert.match(Engine.glossary("Anti-Materiel").text, /vehicle armor/i);
+  assert.doesNotMatch(Engine.glossary("Reach").text + Engine.glossary("Anti-Materiel").text, /yet|isn't written/);
+});
+
+test("P9a 7: a Magical being says what it is in its own words", () => {
+  const ch = writtenIn({ cls: "magical-being" });
+  const warns = () => Engine.validate("archetype", ch).filter(i => i.level === "warn").map(i => i.msg);
+  assert.ok(warns().some(w => /Say what Magical being means for you/.test(w)), `no warning: ${JSON.stringify(warns())}`);
+  ch.archetypeChoices.writeIn.classificationText = "Fae";
+  assert.ok(!warns().some(w => /Say what/.test(w)), "warned with the words given");
 });

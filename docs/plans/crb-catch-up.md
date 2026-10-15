@@ -21,7 +21,7 @@
 - ✅ ⚖ **Resources › Luck.** The book never says what Luck you start with. **Everyone starts with 4 LUCK** at every Power Level (Decision 157), and more can be bought at creation for **1 CP a point** (Decision 97). A bought point sits on top of the 4.
 - ✅ ❓ **Resources › Credits.** The book never says what Çredits you start with. The sheet rolls **Street 3d4 × 100 · Heroic 4d4 × 100 · Shadows 5d4 × 100 · World Coming Down 5d10 × 100**. Those numbers came from the older REF draft. Confirm they still stand (Ken/D), then put them here or in 0400's table.
 - ☐ ⚖ **A minus is a minus** (Ken, 2026-10-09). Write a negative number with the true minus, `−`, as 0530 already does, not a hyphen. Two places: **Overextension Risk: Essence Checks › Essence Check Outcomes**, the example's *Net Hits = -1* (its `–` there is a separator, and stays), and **Resources › Hit Points & Health Levels**, *Apply -1 modifier to any roll* and the worked example's *(-1 on Skill Checks*. The sheet shows `−` from app 0.39.1.
-- ☐ ⚖ **Action Risk: Skill Checks: the difficulty names** (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). Use **Easy / Average / Challenging** (10 / 15 / 20), as 2130 does, in 0300 too. The sheet follows (W104).
+- ☐ ⚖ **Action Risk: Skill Checks: the difficulty names** (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). Use **Easy / Average / Challenging** (10 / 15 / 20), as 2130 does, in 0300 too. *The sheet has this built (P9a, Decision 221).*
 
 ## 0400_Character_Creation
 
@@ -114,7 +114,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ✅ **Siege** now reads "This weapon deals Massive damage", and the Massive category covers people (CQ4).
 - ✅ **The Conditions table is gone**, leaving a pointer to Conditions & Recovery (CQ8).
 - ✅ **Suppression** and **Blast** now have rules. That answers F28 and F29 from the book's side; the sheet needs to catch up (see the end of this list).
-- ☐ ⚖ **Gear's open questions** (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). **Anti-Materiel** (F30): nothing extra against people; it means vehicle armor doesn't stop the round. **Reach** (F31): the column is how far the weapon reaches, in **meters**; the tag marks an unusual reach (the mono-whip) and adds nothing. **Shotguns** (F26): a shotgun takes neither the Scope (it doesn't use one) nor Angel Rounds (they need a box magazine with a power cell). **Electric and Burning** (F23) are **Energy**, so Ablative Plating covers them, and the **Resistance** upgrade halves the damage **before** PROT and RES. **Powered Armor** is a vehicle with its own Integrity. **A partly spent magazine** (F34) is **kept with its count**; 0530's Reload could say so.
+- ☐ ⚖ **Gear's open questions** (Deighton, 2026-10-10; *the sheet has F26, F30 and F31 built, P9a, Decision 221*; `reference/rulings-2026-10-10.md`). **Anti-Materiel** (F30): nothing extra against people; it means vehicle armor doesn't stop the round. **Reach** (F31): the column is how far the weapon reaches, in **meters**; the tag marks an unusual reach (the mono-whip) and adds nothing. **Shotguns** (F26): a shotgun takes neither the Scope (it doesn't use one) nor Angel Rounds (they need a box magazine with a power cell). **Electric and Burning** (F23) are **Energy**, so Ablative Plating covers them, and the **Resistance** upgrade halves the damage **before** PROT and RES. **Powered Armor** is a vehicle with its own Integrity. **A partly spent magazine** (F34) is **kept with its count**; 0530's Reload could say so. **The sheet is ahead of the book on one number: the Razorwhip's Reach is 2m** (Deighton's "5 or 6 feet" for the mono-whip, rounded to the sheet's meters), where `0460`'s table prints 1m. Ken updates the CRB; the mirror follows.
 
 ## 0480_Magic
 
@@ -197,7 +197,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 These block book text, so send them before you write those sections. Deighton's flags are already grouped as one ask in `STATE.md` §5:
 
-- **Deighton:** ~~F23 + F25~~ (ruled and built, Decision 219), ~~F24 (ongoing damage while Dying)~~ (ruled and built, Decision 220), F26, F30, F31, F33, F34 (does a swapped magazine keep its rounds?), ~~F36 (is damage past zero kept?)~~ (ruled and built, Decision 220), ~~the MD threshold, and whether grenades deal Massive~~ (ruled 2026-10-10; built, Decision 219).
+- **Deighton:** ~~F23 + F25~~ (ruled and built, Decision 219), ~~F24 (ongoing damage while Dying)~~ (ruled and built, Decision 220), ~~F26, F30, F31~~ (ruled and built, Decision 221), F33, F34 (does a swapped magazine keep its rounds?), ~~F36 (is damage past zero kept?)~~ (ruled and built, Decision 220), ~~the MD threshold, and whether grenades deal Massive~~ (ruled 2026-10-10; built, Decision 219).
 - **Team:** whether Minor Milestones can repeat, Talented scope, Advantage rank pricing, Milestones past 10, Supernatural ceilings, and starting Çredits.
 - **Scott:** TN 8 vs. TN 7 on the inscribed Cantrips, and whose 0480 review closes MG-01 and MG-02.
 

@@ -462,7 +462,7 @@ function writeInHtml(ch, wi){
     <button class="card ${cls&&cls.id===c.id?"selected":""}" data-wicls="${esc(c.id)}" aria-pressed="${!!cls&&cls.id===c.id}">
       <h3>${esc(c.name)}</h3><p>${esc(c.description||"")}</p></button>`).join("") + `</div>`;
   if (cls && cls.writeIn) h += `<label class="field"><span>${esc(cls.name)}: in your words</span>
-    <input type="text" data-wi="classificationText" value="${esc(w.classificationText)}" placeholder="Magical being" maxlength="60"></label>`;
+    <input type="text" data-wi="classificationText" value="${esc(w.classificationText)}" placeholder="In a word or two" maxlength="60"></label>`;
   h += `<div class="sect">What it uses</div><div class="wi-mechanics">` + wi.mechanics.map(m=>`
     <label class="check"><input type="checkbox" data-wimech="${esc(m.id)}" ${m.on?"checked":""}>
       <span><b>${esc(m.label)}</b>${m.note?` <small>${esc(m.note)}</small>`:""}</span></label>`).join("") + `</div>`;

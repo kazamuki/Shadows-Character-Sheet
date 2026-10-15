@@ -23,6 +23,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.45.0
+
+- **A new classification: Magical being.** The fae and their kind. It buys the Universal Advantages only, like a Supernatural.
+- **A mod that won't go on a weapon says why.** A shotgun doesn't take a Scope or an Angel Mod, and now it tells you the reason.
+- **Anti-Materiel and Reach say what they do.** Anti-Materiel goes through vehicle armor; Reach marks a weapon that reaches unusually far. The Razorwhip reaches 2m.
+- **Skill checks read Easy, Average and Challenging.**
+
 ## v0.44.0 — 2026-10-15
 
 - **The Resistance armor upgrade works now.** Pick Thermal, Electric or Freezing when you install it, and Take a hit halves damage of that type before your armor rolls. An older Resistance with no type stops nothing: swap it for one that names its type.
