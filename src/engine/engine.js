@@ -1308,7 +1308,7 @@ const Engine = (() => {
     // What to say it takes: the standard rounds, or what's left when a mod
     // allows only specialty ones.
     const standard = kinds.filter(k=>!loadsAs(k));
-    return { ammo: (standard.length ? standard : kinds).map(k=>k.name), have, parts, kinds };
+    return { ammo: (standard.length ? standard : kinds).map(k=>k.name), have, parts };
   }
   // W40: what a weapon remembers is in its magazine: a specialty round's id,
   // or nothing for standard rounds. Specialty rounds change the weapon (their
@@ -1356,8 +1356,7 @@ const Engine = (() => {
     } else if (wantPart){
       p = Number.isInteger(opts.part) ? parts.find(x=>x.index===opts.part) : null;
       if (!p) return { ok:false, why:"That magazine doesn't load this weapon." };
-    // Swapping a full magazine is always a choice the player names.
-    } else if (!full && wholes.length===1) k = wholes[0];
+    } else if (!full && wholes.length===1) k = wholes[0];   // swapping a full magazine is always a choice the player names
     else if (!full && !wholes.length && new Set(parts.map(x=>x.def.id)).size===1) p = parts[0];
     if (!k && !p) return { ok:false, choose:true, full, left:l.rounds.left, why:"Choose which rounds to load.",
       options: [...wholes.map(h=>ammoOption(h, loaded)), ...parts.map(x=>partOption(x, loaded))] };
@@ -6751,7 +6750,7 @@ const Engine = (() => {
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
     weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
-    gearLine, carriedGear, partUsedMags, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
+    gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,
