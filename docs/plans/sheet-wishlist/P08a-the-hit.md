@@ -4,8 +4,8 @@
 hit half (`WISHLIST.md`). Closes **F18, F23, F25**. Opens one flag (§3).
 Decisions 99, 100, 104, 143, 191 and 192.
 **Status:** **drafted 2026-10-14 by Claude (Opus)**, pre-flighted against
-`main` after #177 (P7 merged, 0.43.1 unreleased). **Waiting on Ken: PQ1–PQ6**
-(§4). Each has a default; one left blank is the default.
+`main` after #177 (P7 merged, 0.43.1 unreleased). **Approved by Ken
+2026-10-14, PQ1–PQ6 on their defaults** (§4); ready to build.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **P8 was split** (Ken, 2026-10-14) into this order, the hit, and **P8b**,
 healing (F24 and F36, the gritty option, a character-schema bump). P8b's
@@ -83,7 +83,7 @@ topic Decision 99 is filed under, and the marks in §3a.
 ```
 N. **A hit is halved first by a matching Resistance, AP on a spell pierces Natural Armor, and grenades deal Massive.**
      *2026-10-1x · Ken + Deighton + Claude · Touches: Resistance, Resistance — Thermal, Resistance — Electric, Resistance — Freezing, halves, armorUpgradeGlossary, resolveHit, mitigateArmor, mitigateNatural, naturalArmorRules, spellApPierces, hit.spell, From a spell, AP, Natural Armor, Electric, Burning, Energy, grenades, Siege, Massive, F18, F23, F25, W102*
-     - **Decided:** Resistance comes in three upgrades, one per type, and the untyped one is retired: it stays installed and stops nothing. A hit whose damage type the worn body piece's Resistance answers, on a part it covers, is halved first (rounding <PQ1>), then PROT and RES, then Natural Armor; <PQ2's cases>. AP on a hit the player marks as a spell gets past Natural Armor; any other AP still doesn't. Electric and Burning are Energy. Grenades that deal damage on the throw, and the grenade launcher, carry Siege. There are no MD ratings: one MD is 10 Massive damage, as Decision 99 already computes.
+     - **Decided:** Resistance comes in three upgrades, one per type, and the untyped one is retired: it stays installed and stops nothing. A hit whose damage type the worn body piece's Resistance answers, on a part it covers, is halved first, rounding down, then PROT and RES, then Natural Armor; it doesn't halve Massive or Compromised armor, and AP doesn't affect it. Each typed Resistance installs once. AP on a hit the player marks as a spell gets past Natural Armor; any other AP still doesn't. Electric and Burning are Energy. Grenades that deal damage on the throw, and the grenade launcher, carry Siege. There are no MD ratings: one MD is 10 Massive damage, as Decision 99 already computes.
      - **Why:** Deighton's rulings of 2026-10-10 (Q1–Q3, Q6, Q7) and Ken's follow-up on AP and magic. Three ids follow Decision 143's Warding, so the type is chosen at installation, as 0460 says, with no new save shape.
      - **Rejected:** a type stored on the upgrade entry (every reader filters upgrades to strings, and it needs a schema bump for what three ids say); halving after PROT and RES (Q2); applying it to Massive (Massive skips the armor's answers); a separate "spell" damage type (spells already pick Blunt, Ballistic or a magical type); MD ratings on every weapon (Q6).
      - **Replaces:** Decision 99 in part (Resistance applied; F23 closed). Decision 100 in part (Resistance is no longer one repeatable upgrade). Decision 104 in part (AP on a spell pierces Natural Armor; F25 closed).
@@ -120,14 +120,14 @@ the INDEX line's first mark.
 
 ## 4. Questions for Ken
 
-| Id | Question | Default |
+| Id | Question | Answer |
 |---|---|---|
-| PQ1 | **Rounding.** Halving 13 damage: does 6 or 7 go on to PROT? 0460 doesn't say, and the app has no precedent for halving damage. | **Down** (6). The wearer paid for the lining. Add a line to `crb-catch-up.md` asking the book to say so. |
-| PQ2 | **When the lining doesn't answer.** RES skips Compromised armor and AP. Resistance isn't flat, so the AP glossary ("makes the flat damage reduction irrelevant") doesn't reach it. | **It halves on a covered location only, skips Massive (as PROT and RES do), and skips Compromised or scrap armor (as RES does). AP doesn't affect it.** |
-| PQ3 | **Two of the same type.** 0460: "each Resistance upgrade covers one damage type." Is a second Electric worth anything? | **No.** Each typed Resistance installs once (not `repeatable`). The retired untyped one stays `repeatable`, so a file with two still reads. |
-| PQ4 | **How a spell is marked.** Damage type can't tell: Iron Lance, the one AP spell, is "physical", so the player picks Blunt or Ballistic. | **A "From a spell" tick in the hit modal**, shown only when Armor-piercing is ticked and the character has any Natural Armor (always-on or conditional). GM mode doesn't get it: an NPC has no Natural Armor (Decision 191). |
-| PQ5 | **Which grenades are Massive.** "Grenades/Explosives are massive damage weapons." Some grenades deal no damage (Shockwave, Curtain, Sunburst, Blackout), and two deal theirs per round (Cinder's burn, Star Dust's cloud). | **Siege on Thunderclap, Junk Bomb and the HGL-4 Anvil** (the launcher; the other explosives already carry Siege). Per-round damage is a Condition ticking, not the blast, so Cinder and Star Dust stay as they are. The grenades note says "A grenade's blast is Massive damage." |
-| PQ6 | **An old untyped Resistance in a saved file.** Its type was never recorded. | **Retired, kept, stops nothing.** Its description says to remove it and install a typed one. No migration: the app can't know which type the player meant. |
+| PQ1 | **Rounding.** Halving 13 damage: does 6 or 7 go on to PROT? 0460 doesn't say, and the app has no precedent for halving damage. | **Ken, 2026-10-14: the default.** **Down** (6). The wearer paid for the lining. Add a line to `crb-catch-up.md` asking the book to say so. |
+| PQ2 | **When the lining doesn't answer.** RES skips Compromised armor and AP. Resistance isn't flat, so the AP glossary ("makes the flat damage reduction irrelevant") doesn't reach it. | **Ken, 2026-10-14: the default.** **It halves on a covered location only, skips Massive (as PROT and RES do), and skips Compromised or scrap armor (as RES does). AP doesn't affect it.** |
+| PQ3 | **Two of the same type.** 0460: "each Resistance upgrade covers one damage type." Is a second Electric worth anything? | **Ken, 2026-10-14: the default.** **No.** Each typed Resistance installs once (not `repeatable`). The retired untyped one stays `repeatable`, so a file with two still reads. |
+| PQ4 | **How a spell is marked.** Damage type can't tell: Iron Lance, the one AP spell, is "physical", so the player picks Blunt or Ballistic. | **Ken, 2026-10-14: the default.** **A "From a spell" tick in the hit modal**, shown only when Armor-piercing is ticked and the character has any Natural Armor (always-on or conditional). GM mode doesn't get it: an NPC has no Natural Armor (Decision 191). |
+| PQ5 | **Which grenades are Massive.** "Grenades/Explosives are massive damage weapons." Some grenades deal no damage (Shockwave, Curtain, Sunburst, Blackout), and two deal theirs per round (Cinder's burn, Star Dust's cloud). | **Ken, 2026-10-14: the default.** **Siege on Thunderclap, Junk Bomb and the HGL-4 Anvil** (the launcher; the other explosives already carry Siege). Per-round damage is a Condition ticking, not the blast, so Cinder and Star Dust stay as they are. The grenades note says "A grenade's blast is Massive damage." |
+| PQ6 | **An old untyped Resistance in a saved file.** Its type was never recorded. | **Ken, 2026-10-14: the default.** **Retired, kept, stops nothing.** Its description says to remove it and install a typed one. No migration: the app can't know which type the player meant. |
 
 ## 5. What this changes underneath (the assumption sweep)
 
@@ -375,7 +375,7 @@ They talk to each other directly, and Ken is in both.
 Start it with the title **P8a build**, and paste:
 
 > Read `CLAUDE.md`, then `docs/plans/sheet-wishlist/P08a-the-hit.md`, and
-> build it. Ken's answers to PQ1–PQ6 are in its §4. Follow its steps (§11) in
+> build it. Ken's answers to PQ1–PQ6 are in its §4 (all six on their defaults). Follow its steps (§11) in
 > order and its *Stop and ask* list (§12) exactly. If something isn't covered
 > by the order, stop and ask me rather than choosing. Where the order and the
 > code or the ledger disagree in a way that doesn't stop you, build what the
