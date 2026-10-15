@@ -75,6 +75,24 @@ its own save-shape or rules change; the later sessions keep their numbers (Ken).
 **Split 2026-10-15:** P9 became P9a (the text, Content) and P9b (F34, a save
 shape), so the quick text reaches players without waiting on F34's design (Ken).
 
+**Taken in 2026-10-15:** the two passes [`crb-v4-sync.md`](crb-v4-sync.md)
+still had open, so that every session left for the player sheet is in one
+list (Ken; the plans audit found that no order covered them).
+- **Its P4b** (the Vampire's Major Milestones) is **P17**, run right after
+  P9b. Today a Vampire is offered no Major at all, only one written in:
+  since Decision 217 the General list is the Professional's.
+- **Its P5** (Advancement to `0450`) is mostly built already:
+  - the new Minors and their repeats are P6 (Decision 217);
+  - 5 IP an hour is GM mode's close-out (Decision 206);
+  - `0450`'s pricing questions were Deighton's rulings of 2026-10-10.
+
+  What's left joins **P12**, split in two: **P12a** buys with IP, **P12b**
+  learns without it.
+
+The new session takes the next free number, P17, rather than renumbering
+P10–P16, because five built orders already cite those numbers. Read §3 by
+row order, not by number.
+
 | # | Session | Wishes | Tier | Before its order | Status |
 |---|---|---|---|---|---|
 | **P1** | Playtest bugs | W92 Pain Sensitive, W93 the Improved roll box, W67 the session date | Rule or shape (one small decision: two data shapes) | Nothing | **Merged** 2026-10-11 (Decision 213, #158), released in 0.39.3 (#161): [`P01-playtest-bugs.md`](sheet-wishlist/P01-playtest-bugs.md) |
@@ -86,11 +104,13 @@ shape), so the quick text reaches players without waiting on F34's design (Ken).
 | **P7** | Luck and the Boost cap | W65, W66 | Rule or shape, data | Nothing | **Merged** 2026-10-14 (Decision 218, #177, app 0.43.1, game data 0.37; PQ1–PQ3 on their defaults), unreleased: [`P07-luck-and-the-boost-cap.md`](sheet-wishlist/P07-luck-and-the-boost-cap.md) |
 | **P8a** | The hit | W102's hit half (F18, F23, F25, grenades) | Rule or shape, data | Nothing | **Merged** 2026-10-15 (Decision 219, #180, app 0.44.0), unreleased: [`P08a-the-hit.md`](sheet-wishlist/P08a-the-hit.md) |
 | **P8b** | Healing | W102's healing half (F24, F36 and its gritty option) | Rule or shape, character schema | Nothing | **Merged** 2026-10-15 (Decision 220, #183, app 0.44.0, schema 0.23; PQ1–PQ6 as answered, PQ5 adds the HP pill), unreleased: [`P08b-healing.md`](sheet-wishlist/P08b-healing.md) |
-| **P9a** | Gear text, difficulty names, the Magical being | W104 without F34 (F26, F30, F31, the skill checks' names), W53 | Rule or shape (small: a mod's `refusalText`) | Nothing | **Built** 2026-10-15 (Decision 221, app 0.45.0, game data 0.38; PR #186): [`P09a-gear-text.md`](sheet-wishlist/P09a-gear-text.md) |
-| P9b | Partly spent magazines | W104's F34 | Rule or shape, character schema | Where a magazine's count lives, and how Reload chooses between magazines | ⏭ after P9a |
+| **P9a** | Gear text, difficulty names, the Magical being | W104 without F34 (F26, F30, F31, the skill checks' names), W53 | Rule or shape (small: a mod's `refusalText`) | Nothing | **Merged** 2026-10-15 (Decision 221, #186, app 0.45.0, game data 0.38), unreleased: [`P09a-gear-text.md`](sheet-wishlist/P09a-gear-text.md) |
+| P9b | Partly spent magazines | W104's F34 | Rule or shape, character schema | Where a magazine's count lives, and how Reload chooses between magazines | ⏭ **next** |
+| P17 | The Vampire's Major Milestones | crb-v4-sync's P4b (VQ27): `0413`'s 24 Majors | Rule or shape, data | Nothing new: VQ27 put them on P3b's engine (Decision 199), and VQ4 prices the second Bloodline that Cursed Evolution (an Innate power) opens as a New Power. Splice takes one power from another Bloodline, and Pure Blooded excludes both. So the order settles how they meet Decision 216's "its own Bloodline" and a Major that bars another | ⏭ after P9b |
 | P10 | Holding a spell | W87 | Rule or shape, character schema | The WILL check's TN and TH (stubbed and flagged if Deighton hasn't set them) | ⏭ |
 | P11 | SFR and movement on Main | W97 Rate of Use, W54 a written-in pool's card, W98 Walk/Run/Sprint/Jump | Rule or shape (W97's tracker field) | W97: warn or block (Claude argues warn), and how sustained drains are charged | 🔎 |
-| P12 | Learning in play | W89 Advantages with IP, W39 a new Martial Arts style (W72 moved to P5) | Rule or shape | W39: confirm a style's +1 goes on the check that inflicts the Condition | ⏭ |
+| P12a | IP beyond ranks | W89 an Advantage bought or a Disadvantage bought off with IP, and from crb-v4-sync's P5, `0450`'s restores: SAN at 5 a point and a Health Level at 25, never past the maximum (W72 moved to P5) | Rule or shape (reopens Decision 13, and Decision 206 in part) | Nothing: **Ken answered both on 2026-10-15.** A restored Health Level undoes a Massive one lost, as Steadied's does (Decision 217). The Session Log's flat 10 IP a session is out of date: it asks for hours, at 5 IP each (`0450`, as GM mode's close-out does). That supersedes Decision 13 in part, and Decision 206's "the sheet's own default stays perSession" | ⏭ |
+| P12b | Learning without IP | W39 a new Martial Arts style, by the GM's word. From crb-v4-sync's P5, `0450`'s optional Training: a REF, INT or TECH Skill raised once per Milestone period for Çredits (10 × the rank's IP cost), never past 9 | Rule or shape | W39: confirm a style's +1 goes on the check that inflicts the Condition. Training: a house rule (P8b's `houseRules`) or always offered | ⏭ after P12a |
 | P13 | Expert mode | W95 | Fix (UI) | W95's two: where the boost count goes, whether it reaches the Character tab | 🔎 after P4 |
 | P14 | Loadout rows | W70 a custom item folds, W91 vehicles (first cut, Powered Armor included) | Fix + Content, a save shape | W91's first-cut columns | ⏭ |
 | P15 | Worn gear modifiers | W69 | Rule or shape | `damageType` for the 25 weapons without one (data work, first) | ⏭ after P14 |
@@ -104,11 +124,16 @@ P4 is the rest of what creation feels like. P5 is Ken's, pulled forward on
 2026-10-11 while P3's powers were fresh: what creation didn't buy, learned
 in play, and what a GM grants. P6–P10 are Deighton's rulings,
 roughly in order of how often a table meets them (Milestones and the hit
-every session, a held spell only for Arcanists). P11 onward is new
+every session, a held spell only for Arcanists). P17 runs right after P9b
+for P3's reason: testers play Vampires now, and one who reaches a Major
+Milestone has nothing to pick. P11 onward is new
 capability, and P16 last because it reopens a layout decision and is the one
 most likely to need a design pass.
 
-**Dependencies.** P5 after P3 (W72 extends P3's power model). P13 after P4
+**Dependencies.** P5 after P3 (W72 extends P3's power model). P17 after P6
+(it fills Decision 217's offer; 217's *Revisit if* "another archetype's Majors
+are written" fires) and P5 (Splice meets W72's learn-a-power). P12b after P12a
+(Training prices a rank as P12a's journal does). P13 after P4
 (the compact steppers sit on W59's labels). P15 after P14 (Powered Armor is
 W91's, and W69 reads weapons' `damageType`). P6 after P1 (P1 moves the
 Improved roll's numbers into the data). Everything else can move.
