@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.21";
+  const SCHEMA_VERSION = "0.22";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -183,23 +183,42 @@ const Engine = (() => {
     return out;
   }
 
-  // ── Major Milestones: the pool (Decision 199) ─────────────────────────
-  // The Majors a character can take: the shared list and its archetype's own
-  // (`growth.majorMilestones`, when it's a list). Every lookup of a taken id
-  // goes through here, so one from either list keeps its name.
-  function majorPool(ch){
+  // ── Major Milestones: the lookup and the offer (Decisions 199, N) ───────
+  // Two jobs, kept apart. The LOOKUP is every Major a taken id could name: the
+  // shared list, the archetype's own, and any the character had written in.
+  // Everything that reads a taken Major (grants, prerequisites, the journal)
+  // goes through it, so a saved file's Major keeps its name and its effect.
+  // The OFFER is what Progression lets a character take (majorOffered).
+  const majorOwnList = ch => {
     const a = ch && ch.identity && archetype(ch), g = a && a.growth;
-    const own = g && Array.isArray(g.majorMilestones) ? g.majorMilestones.filter(m=>m && typeof m==="object" && typeof m.id==="string") : [];
-    return (D().milestones.majorGeneral||[]).concat(own);
+    return g && Array.isArray(g.majorMilestones) ? g.majorMilestones.filter(m=>m && typeof m==="object" && typeof m.id==="string") : [];
+  };
+  // Decision 217: the shared list is offered where the archetype's
+  // `growth.majorMilestones` says "general" (a string, not a list). A
+  // character with no archetype yet is offered it, as before one is chosen.
+  const majorGeneralOffered = ch => {
+    const a = ch && ch.identity && archetype(ch);
+    if (!a) return true;
+    return !!a.growth && a.growth.majorMilestones==="general";
+  };
+  // The Majors the character wrote in (Decision 217): text only, read from the
+  // character, never from the data. Nothing here computes anything from them.
+  const customMajors = ch => ((((ch||{}).progression||{}).milestones||{}).major || [])
+    .filter(m=>m && m.custom===true && typeof m.id==="string")
+    .map(m=>({ id:m.id, name:txt(m.name), benefit:txt(m.benefit), custom:true }));
+  function majorPool(ch){
+    return (D().milestones.majorGeneral||[]).concat(majorOwnList(ch), customMajors(ch));
   }
   const majorById = (ch, id) => majorPool(ch).find(m=>m.id===id) || null;
   const majorTakenIds = ch => ((((ch||{}).progression||{}).milestones||{}).major || [])
     .filter(m=>m && typeof m.id==="string").map(m=>m.id);
-  // What Progression offers: the pool without the Majors only another
-  // Origin can take. Before an Origin is chosen, all of them show.
+  // The Majors this archetype's list names, Origin or not.
+  const majorListed = ch => (majorGeneralOffered(ch) ? (D().milestones.majorGeneral||[]) : []).concat(majorOwnList(ch));
+  // What Progression offers: the archetype's list without the Majors only
+  // another Origin can take. Before an Origin is chosen, all of them show.
   function majorOffered(ch){
     const mine = specializationIds(ch);
-    return majorPool(ch).filter(m=>{
+    return majorListed(ch).filter(m=>{
       const only = m.prerequisites && Array.isArray(m.prerequisites.specialization) ? m.prerequisites.specialization : null;
       return !only || !mine.length || only.some(id=>mine.includes(id));
     });
@@ -1927,16 +1946,13 @@ const Engine = (() => {
              minorCadence: cadence(r.minorFirstAt, r.minorEvery), majorCadence: cadence(r.majorFirstAt, r.majorEvery) };
   }
   const noneUnlocked = (tier, at) => `No ${tier} Milestone unlocked${at==null ? "" : ` (next at ${at} MP)`}.`;
+  const minorDef = id => (D().milestones.minorShared||[]).find(m=>m && m.id===id) || null;
+  // Decision 217: any Minor repeats, at any time. The one refusal left is that
+  // none is unlocked (0450: "can be picked again in subsequent Minor Milestones").
   function canTakeMinor(ch, id){
+    if (!minorDef(id)) return {ok:false, why:"Unknown milestone."};
     const st = milestoneState(ch);
     if (st.minorLeft<=0) return {ok:false, why:noneUnlocked("Minor", st.nextMinorAt)};
-    // "May not duplicate until each Minor Milestone has been selected."
-    const counts = {};
-    for (const m of D().milestones.minorShared) counts[m.id]=0;
-    for (const t of st.minorTaken) counts[t.id]=(counts[t.id]||0)+1;
-    const floor = Math.min(...Object.values(counts));
-    if ((counts[id]||0) > floor)
-      return {ok:false, why:"May not repeat a Minor until each has been selected once."};
     return {ok:true};
   }
   // One prerequisite vocabulary, one place it's checked (Decision 91). Milestone
@@ -2019,10 +2035,14 @@ const Engine = (() => {
   function takeMilestone(ch, tier, id){
     if (tier==="minor"){
       const c = canTakeMinor(ch, id); if (!c.ok) return c;
+      if (minorChoiceSpec(id)) return {ok:false, why:"Choose what it gives."};
       ch.progression.milestones.minor.push({id, date:new Date().toISOString()});
     } else {
       const m = majorPool(ch).find(x=>x.id===id);
       if (!m) return {ok:false, why:"Unknown milestone."};
+      // Decision 217: the offer follows the archetype. Hiding a Major in the
+      // sheet isn't enforcing it, so the engine refuses one that isn't listed.
+      if (!majorListed(ch).some(x=>x.id===id)) return {ok:false, why:"That Milestone isn't open to your archetype."};
       const st = milestoneState(ch);
       if (st.majorLeft<=0) return {ok:false, why:noneUnlocked("Major", st.nextMajorAt)};
       const pre = majorPrereqs(ch, m); if (!pre.ok) return {ok:false, why:pre.unmet.join(" ")};
@@ -2032,6 +2052,147 @@ const Engine = (() => {
   }
   const untakeMilestone = (ch, tier, idx) =>
     ch.progression.milestones[tier].splice(idx, 1);
+
+  // A Major a GM wrote in (Decision 217): a name and what it does, kept on the
+  // character as text. It uses a Major slot unless `admin`, costs nothing, and
+  // the app computes nothing from it.
+  function addCustomMajor(ch, input, opts){
+    const name = txt(input && input.name).trim().slice(0, 120), benefit = txt(input && input.benefit).trim().slice(0, 2000);
+    if (!name) return {ok:false, why:"Give it a name."};
+    const st = milestoneState(ch);
+    if (!(opts && opts.admin) && st.majorLeft<=0) return {ok:false, why:noneUnlocked("Major", st.nextMajorAt)};
+    const taken = new Set(majorTakenIds(ch));
+    let id; do { id = `mm-${randomChars(8)}`; } while (taken.has(id));
+    ch.progression.milestones.major.push({ id, custom:true, name, benefit, date:new Date().toISOString() });
+    return {ok:true, id};
+  }
+
+  // ── Minors that ask a question (Decision 217) ───────────────────────────
+  // A Minor's `choice` in the data names what taking it asks: Skilled's two
+  // Skills, Honed's Stat, Redeemed's and Talented's Disadvantage or Advantage,
+  // Steadied's two restores. `minorChoice` lists the options with their reasons,
+  // `takeMinorChoice` validates the pick, applies it and takes the Minor in one
+  // call, or refuses and changes nothing. Nothing here names a Minor.
+  const minorChoiceSpec = id => { const m = minorDef(id); return m && isPlainObj(m.choice) ? m.choice : null; };
+  const choiceCap = () => Math.max(1, Number((D().ip||{}).rankCap)||10);
+  // The eleven Stats Honed can raise: the Basic Stats, then the derived and
+  // pooled ones the Adjustments ledger already takes (TOL, WILL, LUCK).
+  const honedTargets = ch => D().stats.map(s=>({ id:s.id, name:s.name||s.id, value:statValue(ch, s.id), basic:true }))
+    .concat(["WILL","TOL"].map(id=>({ id, name:((D().derived||[]).find(d=>d.id===id)||{}).name||id, value:derived(ch)[id], basic:false })),
+            [{ id:"LUCK", name:"Luck", value:luckState(ch).max, basic:false }]);
+  const heldRow = (ch, kind, id) => (Array.isArray(ch[kind]) ? ch[kind] : []).find(r=>r && r.id===id) || null;
+  // What a choice offers this character: { ok, type, count, options:[{ id,
+  // name, sub, move, group, off }], none }. `off` is the reason one option
+  // can't be picked; `none` is why the Minor can't be taken at all (PQ6), or "".
+  function minorChoice(ch, id){
+    const spec = minorChoiceSpec(id);
+    if (!spec) return { ok:false, why:"That Minor asks nothing." };
+    const out = { ok:true, type:spec.type, count:1, options:[], none:"" };
+    if (spec.type==="skillRanks"){
+      const ranks = Math.max(1, Math.floor(Number(spec.ranks)||1)), cap = choiceCap();
+      out.count = Math.max(1, Math.floor(Number(spec.count)||1)); out.ranks = ranks;
+      for (const s of D().skills){
+        const r = skillLine(ch, s.id).rank;
+        out.options.push({ id:s.id, name:s.name, sub:`rank ${r}`, move:`${r} → ${Math.min(cap, r + ranks)}`, trained:r>0, off: r + ranks > cap ? `Rank cap ${cap}.` : "" });
+      }
+      if (out.options.filter(o=>!o.off).length < out.count) out.none = `Fewer than ${out.count} Skills can go up.`;
+    } else if (spec.type==="statPoint"){
+      const max = D().statRules.max;
+      for (const t of honedTargets(ch))
+        out.options.push({ id:t.id, name:t.name, sub:t.id, move:`${t.value} → ${t.value+1}`, value:t.value, off: t.basic && t.value >= max ? `Stat cap ${max}.` : "" });
+    } else if (spec.type==="disadvantageRank"){
+      const max = Number(spec.maxPoints), seen = new Set();
+      for (const row of ch.disadvantages||[]){
+        const def = row && disById(row.id), rank = Math.max(1, Math.floor(Number(row && row.rank)||1));
+        if (!def || seen.has(def.id) || !(Number(def.pointsGranted) <= max)) continue;
+        seen.add(def.id);
+        out.options.push({ id:def.id, name:def.name, sub:`${def.pointsGranted} a rank · rank ${rank}`, move: rank>1 ? `rank ${rank} → ${rank-1}` : "removed", off:"" });
+      }
+      if (!out.options.length) out.none = "No Disadvantage to redeem.";
+    } else if (spec.type==="advantageRank"){
+      const max = Number(spec.maxPoints), held = new Set();
+      for (const row of ch.advantages||[]){
+        const def = row && advById(row.id);
+        if (!def || held.has(def.id)) continue;
+        held.add(def.id);
+        const rank = Math.max(1, Math.floor(Number(row.rank)||1)), top = Math.max(1, Math.floor(Number(def.maxRank)||1));
+        if (rank < top) out.options.push({ id:def.id, name:def.name, group:"raise", sub:`${def.cost} a rank · rank ${rank}`, move:`rank ${rank} → ${rank+1}`, off:"" });
+      }
+      for (const def of D().advantages){
+        if (held.has(def.id) || !(Number(def.cost) <= max) || !canBuyAdvantage(ch, def) || !checkPrereqs(ch, def.requires).ok) continue;
+        out.options.push({ id:def.id, name:def.name, group:"new", sub:`${def.cost} points`, move:"new, rank 1", off:"" });
+      }
+      if (!out.options.length) out.none = "Nothing to take.";
+    } else if (spec.type==="restore"){
+      const hs = hlState(ch), san = sanState(ch);
+      for (const o of Array.isArray(spec.options) ? spec.options : []){
+        if (o && o.kind==="san"){
+          const n = Math.min(nonNegInt(o.points), san.loss);
+          out.options.push({ id:"san", name: n ? `Restore ${n} SAN` : "Restore SAN", sub:"", amount:n, off: n ? "" : "Nothing to restore." });
+        } else if (o && o.kind==="massiveLevel"){
+          const n = Math.min(Math.max(1, nonNegInt(o.levels)), hs.massive);
+          out.options.push({ id:"massiveLevel", name: n ? `Restore ${n===1?"a Health Level":n+" Health Levels"}` : "Restore a Health Level", sub:"", amount:n, off: n ? "" : "Nothing to restore." });
+        }
+      }
+      if (!out.options.some(o=>!o.off)) out.none = "Nothing to restore.";
+    } else return { ok:false, why:"Unknown choice." };
+    return out;
+  }
+  // Check the pick against the options and build what applying it does. Every
+  // refusal is made here, before anything is written.
+  function planMinorChoice(ch, id, pick){
+    const spec = minorChoiceSpec(id), view = minorChoice(ch, id);
+    if (!spec || !view.ok) return { ok:false, why:"Unknown milestone." };
+    if (view.none) return { ok:false, why:view.none };
+    const find = v => view.options.find(o=>o.id===v);
+    const refuse = why => ({ ok:false, why });
+    const now = () => new Date().toISOString();
+    if (spec.type==="skillRanks"){
+      const ids = Array.isArray(pick) ? pick : [];
+      if (ids.length !== view.count || new Set(ids).size !== ids.length) return refuse(`Choose ${view.count} different Skills.`);
+      for (const sid of ids){
+        const o = typeof sid==="string" && find(sid);
+        if (!o) return refuse("That isn't a Skill.");
+        if (o.off) return refuse(o.off);
+      }
+      return { ok:true, label: ids.map(sid=>find(sid).name).join(", "), apply:()=>{
+        for (const sid of ids){
+          const from = skillLine(ch, sid).rank;
+          if (!ch.skills[sid]) ch.skills[sid] = { rank:0, ipe:0 };
+          ch.skills[sid].ipe += view.ranks;
+          // Free, but journalled at 0 IP so the rank count still balances.
+          ch.progression.ip.log.push({ date:now(), kind:"spend", amount:0, targetType:"skill", targetId:sid, from, to:from + view.ranks, note:minorDef(id).name });
+        }
+      } };
+    }
+    const o = typeof pick==="string" ? find(pick) : null;
+    if (!o) return refuse("Choose one of the options.");
+    if (o.off) return refuse(o.off);
+    if (spec.type==="statPoint")
+      return { ok:true, label:o.id, apply:()=>{ ch.trackers.adjustments.push({ target:o.id, amount:1, note:minorDef(id).name, date:now() }); } };
+    if (spec.type==="disadvantageRank")
+      return { ok:true, label:o.name, apply:()=>{
+        const row = heldRow(ch, "disadvantages", o.id), rank = Math.floor(Number(row.rank)||1);
+        if (rank > 1) row.rank = rank - 1; else ch.disadvantages = ch.disadvantages.filter(r=>r!==row);
+      } };
+    if (spec.type==="advantageRank")
+      return { ok:true, label:o.name, apply:()=>{
+        const row = heldRow(ch, "advantages", o.id);
+        if (row) row.rank = Math.floor(Number(row.rank)||1) + 1; else ch.advantages.push({ id:o.id, rank:1, notes:"" });
+      } };
+    // restore: clamp to what was lost; nothing here ever adds a level or SAN.
+    return { ok:true, label:o.name, apply:()=>{
+      if (o.id==="san") ch.trackers.san.loss = Math.max(0, sanState(ch).loss - o.amount);
+      else ch.trackers.massiveLevels = Math.max(0, hlState(ch).massive - o.amount);
+    } };
+  }
+  function takeMinorChoice(ch, id, pick){
+    const c = canTakeMinor(ch, id); if (!c.ok) return c;
+    const plan = planMinorChoice(ch, id, pick); if (!plan.ok) return plan;
+    plan.apply();
+    ch.progression.milestones.minor.push({id, date:new Date().toISOString()});
+    return { ok:true, label:plan.label };
+  }
 
   // ── Sessions ─────────────────────────────────────────────────────────
   // Auto-grants per-session IP (overridable) + 1 Milestone Point, and
@@ -3279,6 +3440,15 @@ const Engine = (() => {
     const isEntry = e => !!e && typeof e==="object" && typeof e.id==="string";
     for (const k of ["advantages","disadvantages"]) c[k] = Array.isArray(c[k]) ? c[k].filter(isEntry) : [];
     for (const k of ["minor","major"]) pr.milestones[k] = Array.isArray(pr.milestones[k]) ? pr.milestones[k].filter(isEntry) : [];
+    // Schema 0.22 (Decision 217): a Major a GM wrote in is `custom: true` with a
+    // text name and benefit. `custom` is a strict true; anything else is a plain entry.
+    pr.milestones.major.forEach(e=>{
+      if (e.custom===true && typeof e.name==="string" && e.name.trim()){
+        e.name = e.name.trim().slice(0, 120);
+        e.benefit = typeof e.benefit==="string" ? e.benefit.slice(0, 2000) : "";
+        if (typeof e.date!=="string") e.date = "";
+      } else { delete e.custom; delete e.name; delete e.benefit; }
+    });
     if (!Array.isArray(c.sessions)) c.sessions=[];
     c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.armor=c.armor||[];
     // Schema 0.16 (Decision 153): a power is the player's own row, every
@@ -3965,9 +4135,20 @@ const Engine = (() => {
     for (const t of ((c.progression||{}).milestones||{}).minor||[])
       if (!(D().milestones.minorShared||[]).some(m=>m.id===t.id))
         issues.push(`Minor Milestone "${t.id}" no longer exists in game data.`);
-    for (const t of ((c.progression||{}).milestones||{}).major||[])
-      if (!majorById(c, t && t.id))
-        issues.push(`Major Milestone "${t.id}" no longer exists in game data.`);
+    const noted = new Set();
+    for (const t of ((c.progression||{}).milestones||{}).major||[]){
+      if (!majorById(c, t && t.id)){
+        issues.push(`Major Milestone "${t && t.id}" no longer exists in game data.`);
+        continue;
+      }
+      // Decision 217: a General Major on an archetype that isn't offered them
+      // stays on the character; this only says so, once.
+      const g = (D().milestones.majorGeneral||[]).find(m=>m.id===t.id);
+      if (g && !t.custom && !noted.has(t.id) && !majorListed(c).some(m=>m.id===t.id)){
+        noted.add(t.id);
+        issues.push(`${txt(g.name)} isn't on this archetype's Major list any more. The character keeps it.`);
+      }
+    }
     const log = (((c.progression||{}).ip)||{}).log||[];
     const perTarget = {};
     for (const e of log) if (e.kind!=="grant")
@@ -6399,7 +6580,7 @@ const Engine = (() => {
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP,
-    milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorById, formGrants, takeMilestone, untakeMilestone,
+    milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorListed, majorById, formGrants, takeMilestone, untakeMilestone, minorChoice, takeMinorChoice, addCustomMajor,
     logSession, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,

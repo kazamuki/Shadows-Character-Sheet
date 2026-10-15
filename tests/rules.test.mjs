@@ -1508,3 +1508,22 @@ test("CRB: the Reference's book panels are quoted verbatim from the mirror", () 
     }
   }
 });
+
+// ── 0450's Minor Milestones (P6, Decision 217) ──────────────────────────
+test("0450: the six Minor Milestones are the book's words, and Improved's roll is 3d10+30", () => {
+  const md = crb("0450_Advancement.md").replace(/\r/g, "").replace(/\\\[[^\]]*\\\]/g, "").replace(/\*\*/g, "").replace(/\s+/g, " ").replace(/[’]/g, "'");
+  const norm = t => t.replace(/\s+/g, " ").replace(/[’]/g, "'").trim();
+  assert.equal(JSON.stringify(D.milestones.minorShared.map(m => m.id)), JSON.stringify(["skilled", "improved", "talented", "redeemed", "honed", "steadied"]), "the book's order");
+  for (const m of D.milestones.minorShared) {
+    const book = `${m.name}. ${norm(m.benefit)}`;
+    // Talented's printed text carries an editor's bracket; the sentence before it is the book's.
+    const want = m.id === "talented" ? book.replace(/ existing Advantage\.$/, "") : book;
+    assert.ok(md.includes(want), `0450 doesn't say: ${want}`);
+  }
+  assert.match(md, /Improved\. Everything went into the work\. Gain 3d10\+30 IP\. 10s explode\./);
+  assert.deepEqual({ ...Engine.ipRoll("improved") }, { count: 3, sides: 10, plus: 30 });
+  assert.equal(D.milestones.minorShared.find(m => m.id === "redeemed").choice.maxPoints, 5);
+  assert.equal(D.milestones.minorShared.find(m => m.id === "talented").choice.maxPoints, 5);
+  assert.equal(JSON.stringify(D.milestones.minorShared.find(m => m.id === "steadied").choice.options), JSON.stringify([{ kind: "san", points: 10 }, { kind: "massiveLevel", levels: 1 }]));
+  assert.match(md, /Restore 10 points of lost Sanity or 1 lost Health Level/);
+});

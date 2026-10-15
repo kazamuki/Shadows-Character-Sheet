@@ -1001,3 +1001,24 @@ stay in the file, untouched (constraints 7 and 8), and come back when the flag
 is on. Hiding a released feature is player-visible: a CHANGELOG line and a
 patch bump, and a decision, since it's a choice someone could have made
 otherwise. GQ7, F37 and GQ28 wait on the same talk.
+
+**W103 — Deighton's Milestone rulings.** *Ken, from Deighton · → Decision 217 (app 0.43.0) · closed F9*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q24–Q28, Q32):
+- **F9:** the General Major Milestones are **the Professional's only**. Every
+  archetype will get its own (Ken); until then an Arcanist has none (F32), and
+  a Werewolf keeps only its own. A saved character who took a General one keeps
+  it, with `validate` warning (constraints 7, 8 and 10).
+- **Minor Milestones repeat at any time**, which supersedes Decision 29's "not
+  until all five have been taken once".
+- **The rebalanced values:** Skilled is two Skills, one rank each (was 5 Skill
+  Points); Improved is **3d10+30** IP (was 2d10+15); Redeemed takes a
+  Disadvantage worth 5 points or less (was any). A Minor already taken keeps
+  what it gave.
+- Talented and the cap of 10 stand as the sheet has them.
+
+*To respect:* a numbered decision superseding Decision 29 in part; data changes
+and a `gamedataVersion` bump. W93's roll box should land with or after it, so
+the new +30 is printed beside the dice.
+*Built as sheet-wishlist P6 (2026-10-14):* the Minor choosers (Skilled, Honed,
+Redeemed, Talented, Steadied) and a Major written in were Ken's additions on
+2026-10-12.

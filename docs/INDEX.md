@@ -132,7 +132,6 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 |---|---|---|
 | `F5` | Adv/Disadv audit flags — three of four closed by the CRB v4 pass. Remaining: Cyber-Prophe… | Design (after F6) |
 | `F6` | Cyborg rewrite (NCI tiers, Set Bonuses, Kicker Dice, TOL pressure) — ships as `status: "… | Design |
-| `F9` | Are the WIP's "General Milestones" shared across all archetypes (REF says General Majors… **Ruled 2026-10-10:** Professional only. Every archetype will get its own Major Milestones; until then an Arcanist has none (Ken); closes with W103 | Ken/D (ruled) |
 | `F12` | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Sec… | Ken |
 | `F18` | Weapons/Armor/Defense — catalog merged (Decision 92), Conditions done (Decisions 95–96), hit resolver done (Decision 99), Loadout and recovery done (Decision 100); only the MD1/2/3 ratings are left **Ruled 2026-10-10:** no MD1/2/3 ratings to assign: one MD is 10 points of Massive damage, 10 Integrity off the armor or 1 Health Level to whoever is in it,…; closes with W102 | Design (small gap) (ruled) |
 | `F19` | Cyborg install cost mechanism — Sanity erosion vs. temporary Health Level cost, still undecided (Scott unsure which) | Design |
@@ -256,12 +255,13 @@ The generic archetype structure, and the pick that defines one.
 - **195** *(Werewolf form — crb-v4-sync P3, VQ11)* — A toggle option carries what being in it does; shifted, skills, Health Levels and weapon damage read +2 REF, +2 MOB, +4 BOD, WILL/TOL/prices/caps don't; Claws and Fangs on Main; Feral Mind bars TECH skills; a Forge Fang's shift writes 1 HL of Withering, priced in the form entered; Main has the switch.
 - **196** *(The Werewolf to 0414 — crb-v4-sync P3, VQ10, VQ12–VQ15)* — Every Innate power and the Origin's at rank 1 + IP (F38 stubbed); the book's max 3 binds creation only, play stops at 10 (VQ14, may be revisited); three Origins with features, starter powers (tables are reference) and withdrawal; Call of the Wild a stepper; EMP the Forge Fang's; Resilient Spirit retired. Majors are P3b. → **superseded in part by 215**
 - **197** *(Werewolf Focus Stats — crb-v4-sync P3)* — The Werewolf's bonus goes on BOD, REF, MOB and can pass 10; `migrate()` moves a saved Stat Bonus across.
-- **199** *(Werewolf Major Milestones — crb-v4-sync P3b, VQ16–VQ19)* — `0414`'s 29 Majors offered beside the shared ones, another Origin's hidden; `prerequisites.specialization` (any of); `grants()` reads taken Majors: `rou`, `sfrMax` (Tireless, Deep Reserves) and `form` (Hardline Shift Regular, Iron Jaw AP, Clear Head −2 for Feral Mind's bar); the rest text.
+- **199** *(Werewolf Major Milestones — crb-v4-sync P3b, VQ16–VQ19)* — `0414`'s 29 Majors offered beside the shared ones, another Origin's hidden; `prerequisites.specialization` (any of); `grants()` reads taken Majors: `rou`, `sfrMax` (Tireless, Deep Reserves) and `form` (Hardline Shift Regular, Iron Jaw AP, Clear Head −2 for Feral Mind's bar); the rest text. → **superseded in part by 217**
 - **200** *(The Vampire to 0413 — crb-v4-sync P4, VQ20, VQ23–VQ26)* — schema 0.19: `powersBought` holds only the powers Base Powers placed a rank in, none past Max Starting Rank (F39 stubbed); a specialization's `choices` (Built to Last a pick, F41; the Ancient Weapon; the Code as text) in `optionPicks`; the Code a Draugur toggle that silences the weapon; bite, claws and Ancient Weapon on Main; Iron Hide and Icebound Resilience conditional Natural Armor; Admin sets a Bloodline. → **superseded in part by 215**
 - **201** *(The Thirst — crb-v4-sync P4, VQ21)* — A `feed` panel: Fresh 3 SFR a HL to the max, Stored 2 to half, A day unfed half RoU, Hunger's WILL check at RoU or under; one Undo each, Main and Trackers.
 - **202** *(Pain Immunity — crb-v4-sync P4, VQ22)* — A Vampire's Pain counts only Withering's Health Levels; Conditions add as ever.
 - **215** *(Supernatural powers at creation — sheet-wishlist P3, W88, W105)* — Innate powers granted at rank 1; Base Powers buy the Bloodline's or Origin's, Werewolf included; CP raises any held power; an Upyr holds both Built to Last powers, never stacked; a day without rest; schema 0.20. → **superseded in part by 216**
 - **216** *(Powers learned in play, custom powers — sheet-wishlist P5, W72, W106)* — A Vampire or Werewolf learns an unheld power of its own Bloodline or Origin for 40 IP; any character gets a custom written power (40 IP, free on Admin; 5 CP at creation, free as a GM grant); **Buy or Raise a Power**; schema 0.21.
+- **217** *(Milestones — sheet-wishlist P6, W103, F9)* — Any Minor repeats; Improved is 3d10+30; Skilled, Honed, Redeemed, Talented and Steadied ask what they give by a chooser; the General Majors are the Professional's, a taken one is still found; any archetype can write in a Major; schema 0.22.
 - **213** *(Playtest bugs — sheet-wishlist P1, W92, W93)* — A `painLevel` grant (Pain Sensitive) adds to a Pain Level already 1 or more, as `fromTraits`; a Minor's `ipRoll` asks for the dice and adds `plus` (Improved 2d10 + 15); `Engine.localDay` is the one local-day helper.
 
 ### Character file & migration
@@ -311,7 +311,7 @@ The eight-tab running sheet, damage, IP, milestones, sessions.
 - **25** *(Phase 3)* — The Grimoire is a free-entry table. → **superseded in part by 108**
 - **26** *(Phase 3)* — Un-modeled effects (milestone benefits, aberration prose, items) are applied through a manual adjustments ledger: s...
 - **27** *(Phase 3)* — The IP journal is the audit trail: entries are spend or grant; spends update the target's IPE atomically; the last... → **superseded in part by 49**
-- **29** *(Phase 3)* — Milestone enforcement: Minor duplicates blocked until all five have been selected once; Major prerequisites are mac...
+- **29** *(Phase 3)* — Milestone enforcement: Minor duplicates blocked until all five have been selected once; Major prerequisites are mac... → **superseded in part by 217**
 - **30** *(Phase 3.1)* — The locked sheet is tab-driven, not a single scroll. → **superseded in part by 158**
 - **31** *(Phase 3.1)* — Iconography lives in shadows-icons.js (see §1).
 - **32** *(Phase 3.1)* — The Main tab is a full-width "command console" — the duplicated Vitals rail is hidden on Main only (an .app.main-ta... → **superseded in part by 35 and 165**

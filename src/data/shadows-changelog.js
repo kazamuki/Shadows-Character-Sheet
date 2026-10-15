@@ -2,6 +2,18 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.43.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Any Minor Milestone can be taken again**, whenever one is unlocked.",
+      "**Improved is now 3d10+30 IP.** Milestones you've already taken keep what they gave.",
+      "**General Major Milestones are the Professional's.** A character that already took one keeps it. Any character can have a Major written in by a GM: **Add one** takes a name and what it does.",
+      "**Minor Milestones ask what they give.** **Skilled** picks two Skills, one free rank each. **Honed** picks a Stat (WILL, TOL and Luck too). **Redeemed** picks a Disadvantage worth 5 points or less to lower a rank. **Talented** picks an Advantage to raise a rank, or a new one worth 5 points or less. Each is one Take and one Undo.",
+      "**Steadied**, a new Minor, restores 10 SAN or a Health Level you lost."
+    ]
+  },
+  {
     "version": "0.42.0",
     "date": "2026-10-12",
     "intro": [],

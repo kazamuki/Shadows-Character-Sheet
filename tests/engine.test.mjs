@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.21");
+  assert.equal(ch.meta.schemaVersion, "0.22");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -157,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.21");
+  assert.equal(old.meta.schemaVersion, "0.22");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -169,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.21");
+  assert.equal(old.meta.schemaVersion, "0.22");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -426,7 +426,7 @@ test("SAN, starting SFR and the stat IP price are numbers the engine reads (A9, 
 });
 
 test("a Milestone refusal says when the next one unlocks, from the cadence numbers (A9, Decision 135)", () => {
-  const ch = subject();
+  const ch = subject(); ch.identity.archetype = "professional";   // the General Majors are the Professional's (Decision 217)
   const minor = D.milestones.minorShared[0].id, major = D.milestones.majorGeneral[0].id;
   ch.progression.milestonePoints = 0;
   assert.equal(Engine.canTakeMinor(ch, minor).why, "No Minor Milestone unlocked (next at 5 MP).");
@@ -542,7 +542,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.21");
+  assert.equal(old.meta.schemaVersion, "0.22");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -653,7 +653,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.21");
+  assert.equal(bare.meta.schemaVersion, "0.22");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -889,7 +889,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.21");
+    assert.equal(c.meta.schemaVersion, "0.22");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1163,7 +1163,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.21");
+  assert.equal(old.meta.schemaVersion, "0.22");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1238,7 +1238,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.21");
+  assert.equal(m.meta.schemaVersion, "0.22");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2269,7 +2269,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.21");
+  assert.equal(m.meta.schemaVersion, "0.22");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2355,7 +2355,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.21");
+  assert.equal(m.meta.schemaVersion, "0.22");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2372,7 +2372,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.21");
+  assert.equal(m.meta.schemaVersion, "0.22");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2418,7 +2418,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.21"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.22"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2629,7 +2629,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.21");
+  assert.equal(a.meta.schemaVersion, "0.22");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -3091,7 +3091,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.21");
+  assert.equal(m.meta.schemaVersion, "0.22");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -5134,10 +5134,10 @@ test("Decision 199: each Origin is offered the shared Majors, the open and earne
     const own = WWMAJ().filter(m => (m.prerequisites.specialization || []).includes(o.id)).map(m => m.id);
     assert.equal(own.length, 7, `${o.name} has ${own.length} of its own, with its capstone`);
     const offered = Engine.majorOffered(werewolf(o.id)).map(m => m.id);
-    same([...offered].sort(), [...shared, ...WWMAJ().filter(m => anyOrigin.includes(m.id) || own.includes(m.id)).map(m => m.id)].sort(), `${o.name} is offered the wrong Majors`);
+    same([...offered].sort(), [...WWMAJ().filter(m => anyOrigin.includes(m.id) || own.includes(m.id)).map(m => m.id)].sort(), `${o.name} is offered the wrong Majors`);
   }
-  assert.equal(Engine.majorOffered(werewolf(null)).length, shared.length + 29, "a Werewolf with no Origin yet doesn't see all of them");
-  same(Engine.majorOffered(subject()).map(m => m.id), shared, "an Arcanist is offered a Werewolf's Majors");
+  assert.equal(Engine.majorOffered(werewolf(null)).length, 29, "a Werewolf with no Origin yet doesn't see all of them");
+  same(Engine.majorOffered(subject()).map(m => m.id), [], "an Arcanist has no Majors listed yet (Decision 217)");
   const clash = WWMAJ().map(m => m.id).filter(id => shared.includes(id));
   same(clash, [], "a Werewolf Major's id collides with a shared one; progression stores bare ids");
 });
@@ -5416,7 +5416,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.21", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.22", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5558,14 +5558,14 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.21", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.22", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.21", {}, {}, { "apex-fury": 2 }]);
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.22", {}, {}, { "apex-fury": 2 }]);
   // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
   same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
@@ -7239,7 +7239,7 @@ test("Decision 213: every painLevel grant says onlyIfHurt, or the engine would i
 });
 
 test("Decision 213: ipRoll reads a Minor's dice from the data; ipRollTotal adds the flat amount", () => {
-  assert.deepEqual({ ...Engine.ipRoll("improved") }, { count: 2, sides: 10, plus: 15 });
+  assert.deepEqual({ ...Engine.ipRoll("improved") }, { count: 3, sides: 10, plus: 30 });
   assert.equal(Engine.ipRoll("skilled"), null);
   assert.equal(Engine.ipRoll("nope"), null);
   assert.equal(Engine.ipRoll(undefined), null);
@@ -7376,10 +7376,193 @@ test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only
   old.meta.schemaVersion = "0.20";
   old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.21", [false, true]]);
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.22", [false, true]]);
   for (const v of ["yes", 1, {}, [], null, "true"]) {
     const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
     assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
   }
   same(Engine.migrate(JSON.parse(JSON.stringify(m))).powers, m.powers, "a round trip moved a row");
+});
+
+// ── P6: Milestones (Decision 217) ────────────────────────────────────────
+const msChar = (arch = "professional", mp = 100) => { const c = subject(); c.identity.archetype = arch; c.progression.milestonePoints = mp; return c; };
+const snap = c => JSON.stringify(c);
+const refusesAndKeeps = (ch, fn, why) => { const before = snap(ch); const r = fn(); assert.equal(r.ok, false, why); assert.equal(snap(ch), before, `${why}: a refusal changed the character`); return r; };
+
+test("Decision 217: any Minor repeats; the only refusal left is none unlocked", () => {
+  for (const m of D.milestones.minorShared) {
+    const c = msChar("professional", 5);
+    assert.equal(Engine.canTakeMinor(c, m.id).ok, true, m.id);
+    c.progression.milestones.minor.push({ id: m.id });
+    assert.equal(Engine.canTakeMinor(c, m.id).why, "No Minor Milestone unlocked (next at 15 MP).", `${m.id} again with none left`);
+  }
+  const two = msChar("professional", 15);
+  two.progression.milestones.minor.push({ id: "improved" });
+  assert.equal(Engine.canTakeMinor(two, "improved").ok, true, "Improved twice");
+  assert.equal(Engine.canTakeMinor(two, "nope").ok, false);
+});
+
+test("Decision 217: Improved is 3d10+30, and ipRollTotal adds the 30", () => {
+  same(Engine.ipRoll("improved"), { count: 3, sides: 10, plus: 30 });
+  assert.equal(Engine.ipRollTotal(Engine.ipRoll("improved"), 17), 47);
+});
+
+test("Decision 217: only the Professional is offered the General Majors; a taken one is still found, counts and grants", () => {
+  const shared = D.milestones.majorGeneral.map(m => m.id);
+  for (const a of D.archetypes) {
+    const c = msChar(a.id), offered = Engine.majorOffered(c).map(m => m.id);
+    const mm = (a.growth || {}).majorMilestones;
+    const own = Array.isArray(mm) ? mm.map(m => m.id) : [];
+    same([...offered].sort(), [...(mm === "general" ? shared : []), ...own].sort(), `${a.id}: the offer is read from growth.majorMilestones`);
+    if (mm !== "general") for (const id of shared) assert.ok(Engine.majorById(c, id), `${a.id} lost the name of a taken ${id}`);
+  }
+  const arc = msChar("arcanist");
+  same(refusesAndKeeps(arc, () => Engine.takeMilestone(arc, "major", "specialist")).why, "That Milestone isn't open to your archetype.");
+  const saved = withMajors(msChar("arcanist"), "signature-weapon", "iconic-weapon");
+  assert.equal(Engine.majorById(saved, "iconic-weapon").name, D.milestones.majorGeneral.find(m => m.id === "iconic-weapon").name);
+  assert.equal(Engine.majorPrereqs(saved, { id: "x", prerequisites: { milestones: ["signature-weapon"] } }).ok, true);
+  assert.equal(Engine.majorPrereqs(saved, { id: "x", prerequisites: { majorCount: 2 } }).ok, true);
+  assert.doesNotThrow(() => Engine.grants(withMajors(msChar("arcanist"), "specialist")));
+});
+
+test("Decision 217: versionCheck names a taken General Major off the list once, and a Professional's is silent", () => {
+  const arc = withMajors(msChar("arcanist"), "specialist", "specialist", "defensive-dance");
+  const issues = Engine.versionCheck(arc).filter(i => /Major list/.test(i));
+  assert.equal(issues.length, 2, JSON.stringify(issues));
+  assert.match(issues[0], /Specialist isn't on this archetype's Major list any more\. The character keeps it\./);
+  assert.equal(arc.progression.milestones.major.length, 3, "versionCheck removed something");
+  assert.equal(Engine.versionCheck(withMajors(msChar("professional"), "specialist")).filter(i => /Major/.test(i)).length, 0);
+  const hostile = msChar("arcanist");
+  hostile.progression.milestones.major = [null, 7, { id: 5 }, { id: "zzz" }, { id: "specialist", custom: "yes" }];
+  assert.doesNotThrow(() => Engine.versionCheck(hostile));
+});
+
+test("Decision 217: Skilled is two different Skills, one free rank each, journalled at 0 IP, one call", () => {
+  const ch = msChar();
+  ch.skills.evocation = { rank: 3, ipe: 0 }; ch.skills.dodge = { rank: 10, ipe: 0 };
+  assert.ok(Engine.minorChoice(ch, "skilled").options.find(o => o.id === "dodge").off, "a Skill at 10 is offered");
+  const ipBefore = Engine.ipState(ch).available;
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "skilled", ["handguns"]), "one pick");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "skilled", ["handguns", "handguns"]), "a repeated Skill");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "skilled", ["handguns", "dodge"]), "a Skill at the cap");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "skilled", ["handguns", "nope"]), "an unknown id");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "skilled", "handguns"), "a bare string");
+  refusesAndKeeps(ch, () => Engine.takeMilestone(ch, "minor", "skilled"), "takeMilestone with no pick");
+  const before = Engine.skillLine(ch, "handguns").rank;
+  assert.equal(Engine.takeMinorChoice(ch, "skilled", ["handguns", "combat-sense"]).ok, true);
+  assert.equal(Engine.skillLine(ch, "handguns").rank, before + 1);
+  assert.equal(Engine.ipState(ch).available, ipBefore, "Skilled moved IP");
+  assert.equal(ch.progression.ip.log.filter(e => e.amount === 0 && e.targetType === "skill").length, 2);
+  assert.equal(ch.progression.milestones.minor.length, 1);
+  assert.equal(Engine.versionCheck(ch).filter(i => /IPE/.test(i)).length, 0, "the rank count didn't balance");
+  const tampered = JSON.parse(JSON.stringify(ch)); tampered.skills.handguns.ipe += 1;
+  assert.ok(Engine.versionCheck(tampered).some(i => /IPE/.test(i)), "the rank check is live: an extra rank with no row is a hand edit");
+});
+
+test("Decision 217: Steadied restores only what was lost, never below 0, never adds a level", () => {
+  const ch = msChar();
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "steadied", "san"), "full SAN");
+  assert.equal(Engine.minorChoice(ch, "steadied").none, "Nothing to restore.");
+  ch.trackers.san.loss = 12;
+  assert.equal(Engine.takeMinorChoice(ch, "steadied", "san").ok, true);
+  assert.equal(ch.trackers.san.loss, 2);
+  ch.trackers.san.loss = 4;
+  Engine.takeMinorChoice(ch, "steadied", "san");
+  assert.equal(ch.trackers.san.loss, 0, "restored 10, not 4");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "steadied", "massiveLevel"), "no Massive level lost");
+  ch.trackers.massiveLevels = 1;
+  assert.equal(Engine.takeMinorChoice(ch, "steadied", "massiveLevel").ok, true);
+  assert.equal(ch.trackers.massiveLevels, 0);
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "steadied", "withering"), "any other restore");
+});
+
+test("Decision 217: Honed is a +1 Adjustment on any of the eleven Stats; Basic Stats stop at 10", () => {
+  const read = (ch, t) => t === "LUCK" ? Engine.luckState(ch).max : ["WILL", "TOL"].includes(t) ? Engine.derived(ch)[t] : Engine.statValue(ch, t);
+  for (const t of ["BOD", "REF", "WILL", "TOL", "LUCK"]) {
+    const ch = msChar(), before = read(ch, t);
+    assert.equal(Engine.takeMinorChoice(ch, "honed", t).ok, true, t);
+    assert.equal(read(ch, t), before + 1, t);
+    same(ch.trackers.adjustments.map(a => [a.target, a.amount, a.note]), [[t, 1, "Honed"]]);
+  }
+  const top = msChar(); top.stats.BOD.base = 10;
+  assert.equal(refusesAndKeeps(top, () => Engine.takeMinorChoice(top, "honed", "BOD")).why, "Stat cap 10.");
+  refusesAndKeeps(top, () => Engine.takeMinorChoice(top, "honed", "SAN"), "SAN is not a Stat");
+  refusesAndKeeps(top, () => Engine.takeMinorChoice(top, "honed", "__proto__"), "hostile id");
+  const hi = msChar(); for (const s of ["INT", "BOD", "EMP"]) hi.stats[s].base = 10;
+  assert.equal(Engine.takeMinorChoice(hi, "honed", "WILL").ok, true, "a derived WILL past 10 by its formula is not refused");
+});
+
+test("Decision 217: Redeemed lowers a Disadvantage worth 5 or less a rank, and removes it at rank 1", () => {
+  const ch = msChar();
+  ch.disadvantages = [{ id: "addiction", rank: 2, notes: "" }, { id: "age", rank: 1, notes: "" }];
+  same(Engine.minorChoice(ch, "redeemed").options.map(o => o.id), ["addiction"], "a Disadvantage worth 8 a rank was listed");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "redeemed", "age"), "worth over 5");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "redeemed", "cursed"), "not held");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "redeemed", "constructor"), "hostile");
+  const ip = JSON.stringify(Engine.ipState(ch));
+  Engine.takeMinorChoice(ch, "redeemed", "addiction");
+  assert.equal(ch.disadvantages.find(d => d.id === "addiction").rank, 1);
+  Engine.takeMinorChoice(ch, "redeemed", "addiction");
+  assert.equal(ch.disadvantages.some(d => d.id === "addiction"), false);
+  assert.equal(JSON.stringify(Engine.ipState(ch)), ip, "IP moved");
+  const none = msChar(); none.disadvantages = [{ id: "age", rank: 1, notes: "" }];
+  assert.equal(Engine.minorChoice(none, "redeemed").none, "No Disadvantage to redeem.");
+  refusesAndKeeps(none, () => Engine.takeMinorChoice(none, "redeemed", "age"), "nothing to redeem");
+  assert.equal(Engine.versionCheck(ch).filter(i => /Disadvantage/.test(i)).length, 0);
+});
+
+test("Decision 217: Talented raises a held Advantage at any price, or takes a new one worth 5 or less, free", () => {
+  const ch = msChar();
+  ch.advantages = [{ id: "archery-master", rank: 1, notes: "" }, { id: "bullseye", rank: 3, notes: "" }];
+  const view = Engine.minorChoice(ch, "talented").options;
+  assert.ok(view.some(o => o.id === "archery-master" && o.group === "raise"), "a 6-point Advantage with a rank to spare");
+  assert.ok(!view.some(o => o.id === "bullseye"), "one at its maxRank");
+  assert.ok(view.some(o => o.id === "charismatic" && o.group === "new"));
+  assert.ok(!view.some(o => o.id === "gun-master"), "a new one worth 6");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "talented", "gun-master"), "a new one over 5");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "talented", "bullseye"), "at maxRank");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "talented", "nope"), "unknown");
+  const ip = JSON.stringify(Engine.ipState(ch));
+  Engine.takeMinorChoice(ch, "talented", "archery-master");
+  assert.equal(ch.advantages.find(a => a.id === "archery-master").rank, 2);
+  Engine.takeMinorChoice(ch, "talented", "charismatic");
+  same(ch.advantages.find(a => a.id === "charismatic"), { id: "charismatic", rank: 1, notes: "" });
+  assert.equal(ip, JSON.stringify(Engine.ipState(ch)));
+  const v = msChar("vampire"); v.advantages = [{ id: "archery-master", rank: 1, notes: "" }];
+  const vo = Engine.minorChoice(v, "talented").options;
+  assert.ok(vo.some(o => o.id === "archery-master" && o.group === "raise"));
+  for (const o of vo.filter(o => o.group === "new")) assert.equal(D.advantages.find(a => a.id === o.id).universal, true, o.id);
+  refusesAndKeeps(v, () => Engine.takeMinorChoice(v, "talented", "charismatic"), "a non-universal one on a Supernatural");
+});
+
+test("Decision 217: a Minor with no choice is not a choice, and none unlocked refuses first", () => {
+  const ch = msChar("professional", 5);
+  ch.progression.milestones.minor.push({ id: "honed" });
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "honed", "BOD"), "none unlocked");
+  const open = msChar();
+  refusesAndKeeps(open, () => Engine.takeMinorChoice(open, "improved", "x"), "a Minor with no choice");
+  assert.equal(Engine.minorChoice(open, "improved").ok, false);
+});
+
+test("Decision 217: a Major can be written in; it uses a slot, Admin needs none, and migrate keeps only a strict true", () => {
+  const arc = msChar("arcanist", 0);
+  refusesAndKeeps(arc, () => Engine.addCustomMajor(arc, { name: "  ", benefit: "x" }, { admin: true }), "a blank name");
+  refusesAndKeeps(arc, () => Engine.addCustomMajor(arc, { name: "Aetheric Potency", benefit: "x" }), "no slot");
+  assert.equal(Engine.addCustomMajor(arc, { name: "Aetheric Potency", benefit: "More." }, { admin: true }).ok, true);
+  const slot = msChar("arcanist", 10);
+  assert.equal(Engine.addCustomMajor(slot, { name: "Aetheric Potency", benefit: "More." }).ok, true);
+  assert.equal(Engine.milestoneState(slot).majorLeft, 0);
+  const id = slot.progression.milestones.major[0].id;
+  assert.equal(Engine.majorById(slot, id).name, "Aetheric Potency");
+  assert.doesNotThrow(() => Engine.grants(slot));
+  assert.equal(Engine.versionCheck(slot).filter(i => /Major/.test(i)).length, 0, "versionCheck calls a written-in Major gone");
+  const m = Engine.migrate(JSON.parse(JSON.stringify(slot)));
+  same(m.progression.milestones.major[0], slot.progression.milestones.major[0], "a round trip changed it");
+  for (const v of ["yes", 1, {}, [], null, "true", 0]) {
+    const c = JSON.parse(JSON.stringify(slot)); c.progression.milestones.major[0].custom = v;
+    const e = Engine.migrate(c).progression.milestones.major[0];
+    assert.equal("custom" in e, false, JSON.stringify(v));
+    assert.equal("name" in e, false);
+  }
+  assert.equal(m.meta.schemaVersion, "0.22");
 });
