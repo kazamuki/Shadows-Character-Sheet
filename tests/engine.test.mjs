@@ -974,7 +974,7 @@ test("distinctness spans a trait held both free and purchased (review #1)", () =
 test("a free-only trait demands its picks and clears when they are filled", () => {
   // The engine half of review #2 was already right: a natural-mirrored entry
   // does demand its picks. The bug was entirely in the UI, which rendered no
-  // control for it — guarded in tests/smoke.test.mjs. This pins the invariant
+  // control for it — guarded in tests/smoke-sheet-play.test.mjs. This pins the invariant
   // the UI fix has to satisfy.
   const ch = doubleHeld({ natural: 2, purchased: 0 });
   const [st] = Engine.picksFor(ch, "advantage", "favored-skill");
