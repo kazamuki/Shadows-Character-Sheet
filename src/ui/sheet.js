@@ -1395,8 +1395,10 @@ function renderShProgression(){
     <button class="btn sm" data-mmadd="1">Add</button></div>`;
   if (ms.majorTaken.length) h += `<div class="journal">` + ms.majorTaken.map((t,i)=>{
     const m=Engine.majorById(ch, t.id)||{name:t.id};
+    // A Major that has no card (written in, or kept from a list this archetype no longer has) shows what it does here.
+    const card = offered.some(o=>o.id===t.id), text = !card && typeof m.benefit==="string" ? m.benefit : "";
     return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}</span>
-      <button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
+      ${text?`<span class="note">${esc(text)}</span>`:""}<button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
   return h;
 }

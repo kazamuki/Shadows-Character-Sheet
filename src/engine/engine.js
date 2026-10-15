@@ -183,7 +183,7 @@ const Engine = (() => {
     return out;
   }
 
-  // ── Major Milestones: the lookup and the offer (Decisions 199, N) ───────
+  // ── Major Milestones: the lookup and the offer (Decisions 199, 217) ───────
   // Two jobs, kept apart. The LOOKUP is every Major a taken id could name: the
   // shared list, the archetype's own, and any the character had written in.
   // Everything that reads a taken Major (grants, prerequisites, the journal)
@@ -2115,12 +2115,13 @@ const Engine = (() => {
         const def = row && advById(row.id);
         if (!def || held.has(def.id)) continue;
         held.add(def.id);
-        const rank = Math.max(1, Math.floor(Number(row.rank)||1)), top = Math.max(1, Math.floor(Number(def.maxRank)||1));
+        // One trait can sit on two rows (a free Natural Advantage and a bought one): the ranks add up.
+        const rank = Math.max(1, heldRank(ch, "advantage", def.id)), top = Math.max(1, Math.floor(Number(def.maxRank)||1));
         if (rank < top) out.options.push({ id:def.id, name:def.name, group:"raise", sub:`${def.cost} a rank · rank ${rank}`, move:`rank ${rank} → ${rank+1}`, off:"" });
       }
       for (const def of D().advantages){
-        if (held.has(def.id) || !(Number(def.cost) <= max) || !canBuyAdvantage(ch, def) || !checkPrereqs(ch, def.requires).ok) continue;
-        out.options.push({ id:def.id, name:def.name, group:"new", sub:`${def.cost} points`, move:"new, rank 1", off:"" });
+        if (held.has(def.id) || !(Number(def.cost) <= max) || !canBuyAdvantage(ch, def) || !requirementState(ch, "advantage", def.id).ok || optionLock(ch, "advantage", def.id).locked) continue;
+        out.options.push({ id:def.id, name:def.name, group:"new", sub:`${def.cost} point${Number(def.cost)===1?"":"s"}`, move:"new, rank 1", off:"" });
       }
       if (!out.options.length) out.none = "Nothing to take.";
     } else if (spec.type==="restore"){
@@ -2160,8 +2161,9 @@ const Engine = (() => {
           const from = skillLine(ch, sid).rank;
           if (!ch.skills[sid]) ch.skills[sid] = { rank:0, ipe:0 };
           ch.skills[sid].ipe += view.ranks;
-          // Free, but journalled at 0 IP so the rank count still balances.
-          ch.progression.ip.log.push({ date:now(), kind:"spend", amount:0, targetType:"skill", targetId:sid, from, to:from + view.ranks, note:minorDef(id).name });
+          // Free, but journalled at 0 IP, a row per rank, so the rank count still balances.
+          for (let i = 0; i < view.ranks; i++)
+            ch.progression.ip.log.push({ date:now(), kind:"spend", amount:0, targetType:"skill", targetId:sid, from:from + i, to:from + i + 1, note:minorDef(id).name });
         }
       } };
     }
@@ -2174,10 +2176,11 @@ const Engine = (() => {
       return { ok:true, label:o.name, apply:()=>{
         const row = heldRow(ch, "disadvantages", o.id), rank = Math.floor(Number(row.rank)||1);
         if (rank > 1) row.rank = rank - 1; else ch.disadvantages = ch.disadvantages.filter(r=>r!==row);
+        trimSelections(ch, "disadvantage", o.id);
       } };
     if (spec.type==="advantageRank")
       return { ok:true, label:o.name, apply:()=>{
-        const row = heldRow(ch, "advantages", o.id);
+        const row = canonicalEntry(ch, "advantage", o.id);      // the bought row when there is one
         if (row) row.rank = Math.floor(Number(row.rank)||1) + 1; else ch.advantages.push({ id:o.id, rank:1, notes:"" });
       } };
     // restore: clamp to what was lost; nothing here ever adds a level or SAN.

@@ -7566,3 +7566,47 @@ test("Decision 217: a Major can be written in; it uses a slot, Admin needs none,
   }
   assert.equal(m.meta.schemaVersion, "0.22");
 });
+
+// ── P6 review fixes (Decision 217) ──────────────────────────────────────
+test("Decision 217: Talented counts a trait held on two rows (Natural Advantage + bought) and raises the bought one", () => {
+  const ch = msChar();
+  ch.advantages = [{ id: "favored-skill", rank: 1, source: "natural", notes: "" }, { id: "favored-skill", rank: 4, notes: "" }];
+  assert.equal(Engine.minorChoice(ch, "talented").options.some(o => o.id === "favored-skill" && o.group === "raise"), false, "offered at 5 of 5");
+  refusesAndKeeps(ch, () => Engine.takeMinorChoice(ch, "talented", "favored-skill"), "at the summed maxRank");
+  ch.advantages[1].rank = 3;
+  const o = Engine.minorChoice(ch, "talented").options.find(x => x.id === "favored-skill");
+  assert.equal(o.move, "rank 4 → 5", "the summed rank is shown");
+  Engine.takeMinorChoice(ch, "talented", "favored-skill");
+  same(ch.advantages.map(a => a.rank), [1, 4], "the rank landed on the natural row");
+});
+
+test("Decision 217: Redeemed trims the selections a lower rank can no longer show", () => {
+  const ch = msChar();
+  ch.disadvantages = [{ id: "defect-flaw", rank: 2, notes: "", selections: { skill: ["dodge", "handguns"] } }];
+  const pick = D.disadvantages.find(d => d.id === "defect-flaw").picks[0].id;
+  ch.disadvantages[0].selections = { [pick]: ["dodge", "handguns"] };
+  Engine.takeMinorChoice(ch, "redeemed", "defect-flaw");
+  assert.equal(ch.disadvantages[0].rank, 1);
+  assert.equal(ch.disadvantages[0].selections[pick].length, 1, "a rank-1 trait still holds two picks");
+});
+
+test("Decision 217: Skilled writes one 0-IP journal row per rank, whatever the data's ranks", () => {
+  const ch = msChar();
+  const spec = D.milestones.minorShared.find(m => m.id === "skilled").choice;
+  const was = spec.ranks;
+  spec.ranks = 2;
+  try {
+    Engine.takeMinorChoice(ch, "skilled", ["handguns", "combat-sense"]);
+    const rows = ch.progression.ip.log.filter(e => e.targetId === "handguns");
+    same(rows.map(e => [e.from, e.to, e.amount]), [[rows[0].from, rows[0].from + 1, 0], [rows[0].from + 1, rows[0].from + 2, 0]]);
+    assert.equal(Engine.versionCheck(ch).filter(i => /IPE/.test(i)).length, 0, "ranks: 2 reads as edited by hand");
+  } finally { spec.ranks = was; }
+});
+
+test("Decision 217: an Admin-added written-in Major borrows the next unlocked slot", () => {
+  const ch = msChar("arcanist", 0);
+  Engine.addCustomMajor(ch, { name: "Borrowed", benefit: "x" }, { admin: true });
+  assert.equal(Engine.milestoneState(ch).majorLeft, -1);
+  ch.progression.milestonePoints = 10;
+  assert.equal(Engine.milestoneState(ch).majorLeft, 0, "the next unlocked Major is spent on it");
+});

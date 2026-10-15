@@ -7694,6 +7694,7 @@ test("Decision 217: an Arcanist sees the plain line and Add one; a written-in Ma
   const now = activeChar(app);
   assert.equal(now.progression.milestones.major.length, 1);
   assert.match(app.$("#main .journal").textContent, /Aetheric Potency/);
+  assert.match(app.$("#main .journal").textContent, /More of it\./, "a written-in Major's description is not shown");
   app.$("[data-mmname]").value = "Second";
   app.click("[data-mmadd]");
   assert.equal(activeChar(app).progression.milestones.major.length, 1, "a second one used a slot that was not there");
