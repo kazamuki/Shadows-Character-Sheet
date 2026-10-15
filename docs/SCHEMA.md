@@ -2226,7 +2226,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 95. **(Conditions — catalog and schema 0.8, data + engine)** **Conditions
     are a data catalog with structured effects, and the active ones are
     inputs on the character.** Ken signed off the combat plan's §3
-    (`plans/combat-and-conditions.md`) on 2026-09-22: P1–P7 and P9 as
+    (`plans/archive/combat-and-conditions.md`) on 2026-09-22: P1–P7 and P9 as
     written, P8 renamed from "Reset" to **"Turn Reset"** so the button reads
     as an encounter helper. This decision locks only what Session 2 built;
     the rest of §3 locks when the session that builds it numbers it.
@@ -2805,7 +2805,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 108. **(The Grimoire reads the book — magic plan Session 1, schema 0.9,
     data + engine + app)** **A Grimoire row is a book spell or your own, and
     a book spell stores only which spell it is.** Ken agreed the plan
-    (`plans/magic-on-the-sheet.md`, M1–M5 and M10) on 2026-09-23, after
+    (`plans/archive/magic-on-the-sheet.md`, M1–M5 and M10) on 2026-09-23, after
     loading Wren Calloway and finding nothing new for magic. **Replaces
     Decision 25 in part.** Free entry stays for your own spells, and its
     "a catalog slots in without touching the sheet" was wrong. It also does
@@ -2862,7 +2862,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 109. **(Deighton's magic rulings — the magic plan's MQ1–MQ3 and Spell Attack,
     docs)** Deighton answered all four on 2026-09-23, relayed by Ken. **No
     code changes in this entry.** Each answer is built by the plan session
-    that needs it (`plans/magic-on-the-sheet.md` §6 has the questions).
+    that needs it (`plans/archive/magic-on-the-sheet.md` §6 has the questions).
     - **MQ1 — Starting spells can be any tier, gated by Evocation rank.** "A
       new arcanist can start with advanced or superior spells, but they
       would need the ranks in Evocation." The threshold, confirmed by Ken:
@@ -3794,7 +3794,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      → **Superseded in part by Decision 220** — Heal 1 counts from 0 HP, and F36 is closed.
 
 152. **Every archetype has a classification, and a Supernatural buys Universal Advantages only.**
-     *2026-09-30 · Ken + Deighton + Claude · Touches: classifications, classification, canPurchaseAdvantages, universal, Universal Advantages, Mortal, Supernatural, Werewolf, Vampire, canBuyAdvantage, Character Points step, resetArchetypeChoices, validate, F13, plans/custom-archetype.md S1*
+     *2026-09-30 · Ken + Deighton + Claude · Touches: classifications, classification, canPurchaseAdvantages, universal, Universal Advantages, Mortal, Supernatural, Werewolf, Vampire, canBuyAdvantage, Character Points step, resetArchetypeChoices, validate, F13, plans/archive/custom-archetype.md S1*
      - **Decided:** Game data lists `classifications`; each says which Advantages it may buy, `"all"` or `"universal"` (the 15 that carry 043's Universal tag). Professional, Arcanist and Cyborg are Mortal (all); Werewolf and Vampire are Supernatural (Universal only). Disadvantages are open to every classification. `Engine.canBuyAdvantage` is the one reader: the wizard shows what can't be bought and why, changing archetype drops what the new one can't buy, and `validate` refuses a held one. A Professional's free Advantages are exempt.
      - **Why:** Deighton's ruling, relayed by Ken: Werewolves and Vampires start with a great deal of power, and the Mortal-only Advantages exist to close some of that gap. Magic is something a character does, not a classification, so the Arcanist is Mortal.
      - **Rejected:**

@@ -96,9 +96,9 @@ is the authority on a flag's full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Audit remediation** — `plans/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
+| **Audit remediation** — `plans/archive/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
 | **Gear & Combat** — Conditions, damage, armor, mods, equipment | ✅ built, **plan closed** (Decisions 92, 95–100, 103–105, 118, 120–122, 143, 145, 149) | **Deighton ruled them all on 2026-10-10** (`reference/rulings-2026-10-10.md`). **The hit is built (P8a, Decision 219): F18, F23 and F25 are closed**; Resistance, AP on a spell and grenades are in. **Healing is built too (P8b, Decision 220): F24 and F36 are closed.** **P9a is built (Decision 221; app 0.45.0 and data 0.38, unreleased): F26, F30 and F31 are closed**, a mod's refusal says why from its `refusalText`, the skill checks read Easy / Average / Challenging, the Razorwhip reaches 2m ahead of the CRB, and W53's Magical being is a classification. Still to build: **P9b** (W104's F34, partly spent magazines; a save shape). F42 (which damage Resistance answers; Freezing answers nothing yet) is Deighton's. Ken |
-| **Custom archetype & classification** — `plans/custom-archetype.md` | ✅ S1–S5 built (Decisions 152–153, F13 closed), XQ1–XQ6 on their defaults (XQ5's badge reads "off the books") · copy voice-passed · released in v0.33.0 · Ken's playtest feedback built and released in v0.34.0 (Decisions 154–156) | Nobody. W48–W55 are its follow-ons |
+| **Custom archetype & classification** — `plans/archive/custom-archetype.md` | ✅ S1–S5 built (Decisions 152–153, F13 closed), XQ1–XQ6 on their defaults (XQ5's badge reads "off the books") · copy voice-passed · released in v0.33.0 · Ken's playtest feedback built and released in v0.34.0 (Decisions 154–156) | Nobody. W48–W55 are its follow-ons |
 | **Creation-pool economics** — W37 | ✅ Deighton's playtested table and the climbing stat buy built (Decision 150) · F8 and F35 closed · LUCK starts at 4 and a power rank costs 5 CP (Decision 157, W37 granted) | Nobody |
 | **Milestones & doc reconciliation** — F12, F32 | ✅ **P6 built** (Decision 217): any Minor repeats, Improved 3d10+30, Skilled, Honed, Redeemed, Talented and Steadied each ask by a chooser, the General Majors are the Professional's, any archetype can write in a Major · F9 closed · schema 0.22 | Ken: F32 (Arcanist Majors: every archetype gets its own, so bring REF_CRB's in or write new; until then an Arcanist has none, and **Add one** is the stand-in). F12 |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
@@ -149,11 +149,10 @@ in every ⚖ item. It was re-ticked against the 2026-10-07 mirror.
 **The book is ahead of the sheet: `plans/crb-v4-sync.md`.** Ken and Scott
 renumbered the CRB to four digits (`054` is now `0540`; the mapping is in
 `log/2026.md`, 2026-10-08). P0 and P2 (powers with ranks, 194) shipped in
-0.38.0. **P3 and P3b, the Werewolf to `0414` with its Major Milestones, P1,
-the small content, and P4, the Vampire to `0413`, are built, unreleased, for
-0.39.0** (195–202). Next: **P4b**, the Vampire's Major Milestones, on P3b's
-engine, in its own session; then Advancement. W69 (gear modifiers while
-worn) and W70 (a custom item folds when done) are on the wishlist.
+0.38.0; P1, P3 and P3b (the Werewolf) and P4 (the Vampire) in 0.39.0
+(195–202). Left: **P4b**, the Vampire's Major Milestones, and **P5**,
+Advancement, whose Minors are built (217); neither has a session in
+`sheet-wishlist.md` yet. W69 and W70 are its P15 and P14.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `0411` (Decision 110), and Ken expects the Origins subtypes to replace

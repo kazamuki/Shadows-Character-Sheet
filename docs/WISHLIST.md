@@ -628,7 +628,7 @@ action, not a new tab. Out of S14's scope (§6).
 ### Custom characters
 
 Raised 2026-09-30 while planning the custom archetype
-(`plans/custom-archetype.md`), by walking a made-up character through every
+(`plans/archive/custom-archetype.md`), by walking a made-up character through every
 step. Each is a place someone might want to write something in that the plan
 leaves out on purpose. None blocks it.
 
