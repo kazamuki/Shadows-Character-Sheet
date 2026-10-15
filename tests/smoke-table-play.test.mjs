@@ -261,7 +261,7 @@ test("Decision 188: export and import mid-round and at Reset keep the same encou
 });
 
 // ── Fix round (review of #126) ─────────────────────────────────────────
-test("Decision 189 (review): the Encounters tab's listeners on <main> go when the table closes; Done tags who has acted; a negative Take is refused; Dying shows F24's line", () => {
+test("Decision 189 (review): the Encounters tab's listeners on <main> go when the table closes; Done tags who has acted; a negative Take is refused; Dying shows the marks and the check (Decision 220)", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "T"); encTab(app); newEncounter(app, "E");
   const a = addPcRow(app, "A"), b = addPcRow(app, "B");
@@ -281,9 +281,8 @@ test("Decision 189 (review): the Encounters tab's listeners on <main> go when th
   app.click("[data-edmgcancel]");
   app.click("[data-enext]");
   const W = app.D.damageRules.whileDying;
-  assert.match(app.$(".enc-reset").textContent, new RegExp(W.text.slice(0, 20)));
   assert.match(app.$(".enc-reset").textContent, /1 source ticked/);
-  assert.doesNotMatch(app.$(".enc-reset").textContent, new RegExp(W.resetCheck));
+  assert.match(app.$(".enc-reset").textContent, new RegExp(W.resetCheck), "Decision 220: the check is asked beside the marks");
   assert.ok(app.$("main").onclick, "the tab's listener wasn't there to begin with");
   app.click("[data-menu-toggle]"); app.click("[data-thome]");
   for (const k of ["onclick", "onchange", "oninput", "onsubmit", "onkeydown"]) assert.equal(app.$("main")[k], null, `main.${k} survived the table`);
@@ -1964,4 +1963,19 @@ test("Decision 212: an exported table carries its trail, and imported fresh, Act
   fresh.click("#modal [data-act-undo]");
   assert.equal(fresh.window.eval("S.table.cast.length"), 0);
   assert.deepEqual([...app.errors, ...fresh.errors], []);
+});
+
+// ── P8b: GM mode's Reset asks the check beside the marks (Decision 220) ────
+test("P8b 18: GM mode's Reset row shows the marks and the check", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); encTab(app); newEncounter(app, "E");
+  const a = rowId(addPcRow(app, "A"));
+  app.click(`[data-econdopen="${a}"]`); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
+  app.click(`[data-econdopen="${a}"]`); changeTo(app, "[data-econd-id]", "bleeding"); app.click("[data-econd-add]");
+  app.click("[data-enc-start]"); app.click("[data-enext]");
+  const W = app.D.damageRules.whileDying;
+  const text = app.$(".enc-reset").textContent;
+  assert.match(text, /1 source ticked: 1 Death Mark\./);
+  assert.ok(text.includes(W.resetCheck), "the check is asked beside the mark");
+  assert.deepEqual(app.errors, []);
 });

@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.22");
+  assert.equal(ch.meta.schemaVersion, "0.23");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -157,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.22");
+  assert.equal(old.meta.schemaVersion, "0.23");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -169,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.22");
+  assert.equal(old.meta.schemaVersion, "0.23");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -542,7 +542,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.22");
+  assert.equal(old.meta.schemaVersion, "0.23");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -653,7 +653,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.22");
+  assert.equal(bare.meta.schemaVersion, "0.23");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -889,7 +889,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.22");
+    assert.equal(c.meta.schemaVersion, "0.23");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1163,7 +1163,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.22");
+  assert.equal(old.meta.schemaVersion, "0.23");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1238,7 +1238,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.22");
+  assert.equal(m.meta.schemaVersion, "0.23");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -1443,6 +1443,11 @@ test("the Loadout and recovery functions are total on every degenerate character
       nanomedKit: () => [undefined, 0, -3, "x", 2, 99].forEach(d => Engine.nanomedKit(ch, d)),
       nanomed: () => { Engine.heal(ch, { kind: "nanomed", dose: "x", hp: 2 }); Engine.heal(ch, { kind: "nanomed" }); },
       heal: () => { Engine.heal(ch, { kind: "natural", hp: 3 }); Engine.heal(ch, { kind: "focused", hp: "x", clear: [0, 9], massive: 99 }); Engine.heal(ch, {}); },
+      healStep: () => { // Decision 220: junk house rules and damage far past zero
+        for (const rules of ["yes", [], null, 7, { keepDamagePastZero: "yes" }, { keepDamagePastZero: true }]){
+          ch.houseRules = rules; ch.trackers.damage = 9999;
+          Engine.healStep(ch, 5); Engine.healStep(ch, "x"); Engine.healStep(ch, -3); Engine.heal(ch, { kind: "focused", hp: 4, massive: 2 }); Engine.hlState(ch);
+        } },
       resolveReset: () => { Engine.resolveReset(ch); Engine.resolveReset(ch, { sources: { 0: "x" } }); },
       applyReset: () => Engine.applyReset(ch, { sources: { 0: 2, 1: 2, 2: 2, 3: 2 } }, { atZero: "fail", dyingCheck: "fail" }),
       addLoadout: () => { Engine.addLoadout(ch, "armor", "kevlar-vest", { buy: true }); Engine.addLoadout(ch, "weapons", "nope"); Engine.addLoadout(ch, "gear", "x"); },
@@ -2269,7 +2274,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.22");
+  assert.equal(m.meta.schemaVersion, "0.23");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2355,7 +2360,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.22");
+  assert.equal(m.meta.schemaVersion, "0.23");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2372,7 +2377,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.22");
+  assert.equal(m.meta.schemaVersion, "0.23");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2418,7 +2423,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.22"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.23"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2629,7 +2634,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.22");
+  assert.equal(a.meta.schemaVersion, "0.23");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -3091,7 +3096,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.22");
+  assert.equal(m.meta.schemaVersion, "0.23");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -4449,7 +4454,7 @@ test("190: the Condition tip kind is gm.js's alone", () => {
 });
 
 // ── Fix round (review of #126) ─────────────────────────────────────────
-test("189: Dying at Reset follows the sheet's F24 stub: a source that ticks is a mark and stands in for the check", () => {
+test("189: Dying at Reset follows the sheet (Decision 220): the check every time, and a mark per source that ticks", () => {
   const { t, e } = encTable();
   const W = D.damageRules.whileDying;
   const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 }), c = addPc(t, e, "C", { order: 7 });
@@ -4460,14 +4465,14 @@ test("189: Dying at Reset follows the sheet's F24 stub: a source that ticks is a
   const r = Engine.resolveEncounterReset(t, e, { sources: { [c]: { 1: 0 } } });
   assert.ok(r.ok);
   const [ra, rb, rc] = r.rows;
-  assert.equal(ra.dying, null, "Dying + Bleeding: the check isn't asked");
+  assert.equal(ra.dying, W.resetCheck, "Dying + Bleeding: the check is asked beside the mark");
   assert.equal(ra.dyingMarks, 1); assert.equal(ra.dyingText, W.text);
   assert.equal(rb.dying, W.resetCheck, "Dying alone: the check is asked");
   assert.equal(rb.dyingMarks, 0); assert.equal(rb.dyingText, null);
-  assert.equal(rc.dying, W.resetCheck, "Dying + Burning entered as 0: nothing ticked, so the check is asked");
+  assert.equal(rc.dying, W.resetCheck, "Dying + Burning entered as 0: nothing ticked, the check alone");
   assert.equal(rc.dyingMarks, 0);
   const again = Engine.resolveEncounterReset(t, e, { sources: { [c]: { 1: 4 } } }).rows[2];
-  assert.deepEqual([again.dying, again.dyingMarks], [null, 1]);
+  assert.deepEqual([again.dying, again.dyingMarks], [W.resetCheck, 1]);
   assert.ok(!JSON.stringify(r).includes(W.resetText) && !JSON.stringify(r).includes(W.playerNote), "resetText or playerNote reached a row");
   const before = JSON.stringify(t);
   Engine.applyEncounterReset(t, e, {}, {});
@@ -5416,7 +5421,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.22", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.23", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5564,14 +5569,14 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.22", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.23", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.22", {}, {}, { "apex-fury": 2 }]);
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.23", {}, {}, { "apex-fury": 2 }]);
   // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
   same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
@@ -6130,8 +6135,8 @@ test("207: no flagNote reaches the Reference", () => {
   assert.ok(!all.some(s => /\bF\d{1,2}\b/.test(s)), "no flag id reaches the Reference");
   const dying = D.damageRules.whileDying;
   const hits = refPanel(Engine.gmReference([], {}), "hits");
-  assert.ok(refStrings(hits).includes(dying.playerNote), "the player note shows");
-  assert.ok(!refStrings(hits).includes(dying.flagNote));
+  assert.ok(refStrings(hits).includes(dying.resetText), "Dying's Reset text shows (F24 closed: Decision 220, no player note left)");
+  assert.ok(!dying.flagNote && !dying.playerNote && !dying.flagged, "whileDying carries no F24 note");
 });
 
 test("207: Conditions: one item per Condition, in order, with its effect and recovery, then how they work", () => {
@@ -7382,7 +7387,7 @@ test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only
   old.meta.schemaVersion = "0.20";
   old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.22", [false, true]]);
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.23", [false, true]]);
   for (const v of ["yes", 1, {}, [], null, "true"]) {
     const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
     assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
@@ -7570,7 +7575,7 @@ test("Decision 217: a Major can be written in; it uses a slot, Admin needs none,
     assert.equal("custom" in e, false, JSON.stringify(v));
     assert.equal("name" in e, false);
   }
-  assert.equal(m.meta.schemaVersion, "0.22");
+  assert.equal(m.meta.schemaVersion, "0.23");
 });
 
 // ── P6 review fixes (Decision 217) ──────────────────────────────────────
@@ -7792,4 +7797,113 @@ test("P8a: Freezing's note never shows, and the hit is total with the typed upgr
     for (const type of ["electric", "burning", "blade"]) for (const spell of [true, false]) for (const ap of [true, false])
       assert.doesNotThrow(() => Engine.resolveHit(ch, { damage: 9, damageType: type, ap, spell, protRoll: 2 }), `${label} ${type}`);
   }
+});
+
+// ── P8b: healing counts from 0 HP (Decision 220) ───────────────────────────
+// A Professional-sized subject: BOD 6 is 6 Health Levels x 5 = 30 HP. "7 past zero" is damage 37.
+const p8b = (damage, extra = {}) => { const ch = subject({ bod: 6 }); ch.trackers.damage = damage; Object.assign(ch.trackers, extra); return ch; };
+
+test("P8b 2: a character not past zero heals as before", () => {
+  const ch = p8b(12);
+  const r = Engine.heal(ch, { kind: "natural", hp: 5 });
+  assert.deepEqual([ch.trackers.damage, r.discarded, r.healed], [7, 0, 5]);
+});
+
+test("P8b 3: the overflow goes before a Massive level comes back", () => {
+  const ch = p8b(32, { massiveLevels: 1 });                    // capacity 25, so 7 past zero
+  const r = Engine.heal(ch, { kind: "focused", hp: 3, massive: 1 });
+  assert.ok(r.ok);
+  assert.deepEqual([ch.trackers.damage, ch.trackers.massiveLevels, Engine.hlState(ch).hpLeft], [22, 0, 8]);
+  assert.deepEqual([r.discarded, r.healed, r.restored, r.before, r.after], [7, 3, 1, 32, 22]);
+});
+
+test("P8b 4: a heal that restores nothing wipes nothing", () => {
+  const ch = p8b(37, { conditions: [{ id: "bleeding" }, { id: "injured", location: "left-arm" }] });
+  const r = Engine.heal(ch, { kind: "focused", hp: 0, clear: [1] });
+  assert.ok(r.ok);
+  assert.equal(r.discarded, 0);
+  assert.equal(ch.trackers.damage, 37);
+  assert.deepEqual(ch.trackers.conditions.map(c => c.id), ["bleeding"]);
+});
+
+test("P8b 5: Withering past zero is wiped with the rest", () => {
+  const ch = p8b(37, { witheringDamage: 35 });
+  Engine.heal(ch, { kind: "natural", hp: 1 });
+  assert.deepEqual([ch.trackers.damage, ch.trackers.witheringDamage], [29, 29]);
+});
+
+test("P8b 6: keeping damage past zero heals from the full total", () => {
+  const ch = p8b(37);
+  ch.houseRules.keepDamagePastZero = true;
+  const r = Engine.heal(ch, { kind: "natural", hp: 1 });
+  assert.deepEqual([ch.trackers.damage, Engine.hlState(ch).hpLeft, r.discarded, r.before, r.after], [36, 0, 0, 37, 36]);
+  const s = p8b(37); s.houseRules.keepDamagePastZero = true;
+  assert.equal(Engine.healStep(s, 5).discarded, 0);
+  assert.equal(s.trackers.damage, 32);
+});
+
+test("P8b 7: a hit past zero still adds to the total", () => {
+  const ch = p8b(37);
+  const r = Engine.applyHit(ch, { damage: 4, damageType: "blunt", category: "regular", location: LOC });
+  assert.ok(r.ok, r.why);
+  assert.equal(ch.trackers.damage, 41);
+  assert.equal(Engine.hlState(ch).pastZero, 11);
+});
+
+test("P8b 9: Dying with nothing ticking is the check alone", () => {
+  const ch = p8b(30, { conditions: [{ id: "dying", marks: 0 }] });
+  const r = Engine.resolveReset(ch);
+  assert.equal(r.marks, 0);
+  assert.ok(r.prompts.dyingCheck);
+});
+
+test("P8b 10: GM mode's Reset asks the check beside the marks", () => {
+  const { t, e } = encTable();
+  const W = D.damageRules.whileDying;
+  const a = addPc(t, e, "A", { order: 9 }), b = addPc(t, e, "B", { order: 8 });
+  for (const id of [a, b]) Engine.participantAddCondition(t, e, id, { id: "dying" });
+  Engine.participantAddCondition(t, e, a, { id: "bleeding" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const [ra, rb] = Engine.resolveEncounterReset(t, e, {}).rows;
+  assert.equal(ra.dying, W.resetCheck);
+  assert.equal(ra.dyingMarks, 1);
+  assert.equal(ra.dyingText, W.text);
+  assert.equal(rb.dying, W.resetCheck);
+  assert.equal(rb.dyingMarks, 0);
+  assert.equal(rb.dyingText, null);
+});
+
+test("P8b 11: a GM's heal on a row past zero starts at 0 HP", () => {
+  const { t, e, dez } = encTable();
+  const npc = Engine.addParticipant(t, e, { kind: "cast", id: dez.id }).id;       // BOD 6: 30 HP
+  const pc = addPc(t, e, "Wren", { hp: 30, levels: 6 });
+  for (const id of [npc, pc]) {
+    rowOf(t, e, id).damage = 37;
+    assert.equal(viewRow(t, e, id).health.pastZero, 7);
+    assert.ok(Engine.participantDamage(t, e, id, -1).ok);
+    assert.equal(rowOf(t, e, id).damage, 29);
+    assert.equal(viewRow(t, e, id).health.left, 1);
+    assert.equal(viewRow(t, e, id).health.pastZero, 0);
+    // Not past zero: as before.
+    rowOf(t, e, id).damage = 12;
+    Engine.participantDamage(t, e, id, 4); Engine.participantDamage(t, e, id, -4);
+    assert.equal(rowOf(t, e, id).damage, 12);
+  }
+});
+
+test("P8b 12: house rules survive migrate and a hostile file", () => {
+  assert.equal(Engine.newCharacter().houseRules.keepDamagePastZero, false);
+  const old = Engine.newCharacter(); delete old.houseRules; old.meta.schemaVersion = "0.22";
+  const m = Engine.migrate(old);
+  assert.equal(m.meta.schemaVersion, "0.23");
+  eq(m.houseRules, { keepDamagePastZero: false });
+  for (const junk of ["yes", 1, [], null, "true", { keepDamagePastZero: "yes" }, { keepDamagePastZero: 1 }]) {
+    const c = Engine.newCharacter(); c.houseRules = junk;
+    const out = Engine.migrate(c);
+    eq(out.houseRules, { keepDamagePastZero: false }, JSON.stringify(junk));
+  }
+  const on = Engine.newCharacter(); on.houseRules = { keepDamagePastZero: true, extra: 1 };
+  eq(Engine.migrate(on).houseRules, { keepDamagePastZero: true }, "true round-trips, unknown keys drop");
+  const fresh = Engine.newCharacter();
+  eq(Engine.migrate(JSON.parse(JSON.stringify(fresh))).houseRules, fresh.houseRules);
 });

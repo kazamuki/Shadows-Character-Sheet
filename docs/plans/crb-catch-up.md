@@ -138,8 +138,8 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 ## 0540_Conditions_and_Recovery
 
-- ☐ ⚖ **Dying › ongoing damage** (F24) (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). When Bleeding or Burning ticks on a Dying character, they make **the WILL check as usual, plus** take a Death Mark per ticking source. Say both.
-- ☐ ⚖ **Healing past zero** (F36) (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). **Healing counts from 0 HP**; damage taken past zero only shows how bad things are while Dying. A GM can keep it for grittier play, as an optional rule.
+- ☐ ⚖ **Dying › ongoing damage** (F24) (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). When Bleeding or Burning ticks on a Dying character, they make **the WILL check as usual, plus** take a Death Mark per ticking source. Say both. *The sheet has this built (Decision 220); the book still needs to say it.*
+- ☐ ⚖ **Healing past zero** (F36) (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). **Healing counts from 0 HP**; damage taken past zero only shows how bad things are while Dying. A GM can keep it for grittier play, as an optional rule. *The sheet has this built (Decision 220, an Admin option); the book still needs to say it.*
 - ☐ ⚖ **Conditions table.** Add a **Dying** row (CQ9). Effect: Helpless; WILL Essence TN 8 TH 2 at every Reset; a failure or any damage is a Death Mark; three Death Marks and you die. Recovery: Medical (Difficulty 20) or a Nanomed Kit.
 - ☐ ⚖ **Conditions table, Injured** (and 0550, below). 0540 says "Focused Healing or 1 week downtime", but 0550 says Injured "must be resolved through Focused Healing". Make them agree (CQ13). The sheet allows both.
 - ☐ ⚖ **How Conditions Work.** Add two ruled lines (Decision 98, F20, F21, CQ2):
@@ -197,7 +197,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 These block book text, so send them before you write those sections. Deighton's flags are already grouped as one ask in `STATE.md` §5:
 
-- **Deighton:** ~~F23 + F25~~ (ruled and built, Decision 219), F24 (ongoing damage while Dying), F26, F30, F31, F33, F34 (does a swapped magazine keep its rounds?), F36 (is damage past zero kept?), ~~the MD threshold, and whether grenades deal Massive~~ (ruled 2026-10-10; built, Decision 219).
+- **Deighton:** ~~F23 + F25~~ (ruled and built, Decision 219), ~~F24 (ongoing damage while Dying)~~ (ruled and built, Decision 220), F26, F30, F31, F33, F34 (does a swapped magazine keep its rounds?), ~~F36 (is damage past zero kept?)~~ (ruled and built, Decision 220), ~~the MD threshold, and whether grenades deal Massive~~ (ruled 2026-10-10; built, Decision 219).
 - **Team:** whether Minor Milestones can repeat, Talented scope, Advantage rank pricing, Milestones past 10, Supernatural ceilings, and starting Çredits.
 - **Scott:** TN 8 vs. TN 7 on the inscribed Cantrips, and whose 0480 review closes MG-01 and MG-02.
 

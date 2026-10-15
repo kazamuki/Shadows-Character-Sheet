@@ -660,14 +660,14 @@ test('Gear: upgrades take a mod slot each, need their minimum quality, and Tri-W
   assert.equal(Engine.addUpgrade(wearing(subject(), "reinforced-denim-vest"), 0, "EMP Shielding").ok, false, "Low quality has no mod slots");
 });
 
-test('CRB 0540 Dying: ongoing damage "will continue to tick while you\'re dying. Each time you take damage, that\'s another mark" (F24 stub)', () => {
+test('CRB 0540 Dying: ongoing damage "will continue to tick while you\'re dying. Each time you take damage, that\'s another mark" (F24 closed: Decision 220)', () => {
   const ch = subject({ bod: 5 });
   ch.trackers.damage = 25;
   ch.trackers.conditions = [{ id: "dying", marks: 0 }, { id: "bleeding" }];
   const r = Engine.resolveReset(ch);
   assert.equal(r.marks, 1);
-  assert.equal(r.prompts.dyingCheck, null, "the tick stands in for the check (F24 stub)");
-  assert.equal(r.notes.length, 1, "the stub doesn't say so");
+  assert.ok(r.prompts.dyingCheck, "the check is asked beside the mark (Deighton Q5)");
+  assert.equal(r.notes.length, 0, "nothing is unsettled any more");
   Engine.applyReset(ch);
   assert.equal(ch.trackers.conditions[0].marks, 1);
   assert.equal(ch.trackers.damage, 26);
@@ -1582,4 +1582,34 @@ test("P8a 10: the frag grenades and the launcher carry Siege", () => {
   for (const id of ["ig7-cinder", "star-dust-grenade", "sg2-shockwave", "vs3-curtain", "sunburst-grenade", "eg3-blackout"])
     assert.ok(!tags(id).includes("Siege"), id);
   assert.match(D.weaponTagGlossary.find(g => g.id === "Siege").description, /Massive/);
+});
+
+// ── P8b: healing counts from 0 HP; Dying at a Reset (Deighton's rulings, 2026-10-10 Q4, Q5) ──
+test("P8b 1: healing counts from 0 HP", () => {
+  // Deighton's ruling (2026-10-10, Q4): damage past zero is a reference while Dying,
+  // and the first healing wipes it. A Professional at BOD 6 is 6 x 5 = 30 HP.
+  const ch = subject({ bod: 6 });
+  ch.trackers.damage = 37;
+  assert.equal(Engine.hlState(ch).pastZero, 7);
+  const r = Engine.heal(ch, { kind: "natural", hp: 1 });
+  assert.ok(r.ok);
+  assert.deepEqual([r.healed, r.discarded, r.before, r.after], [1, 7, 37, 29]);
+  assert.equal(ch.trackers.damage, 29);
+  assert.equal(Engine.hlState(ch).hpLeft, 1);
+});
+
+test("P8b 8: Dying at a Reset is the check plus a mark per ticking source", () => {
+  // Deighton's ruling (2026-10-10, Q5): the WILL check as usual, and ongoing damage is another mark.
+  const ch = subject({ bod: 6 });
+  ch.trackers.damage = 30;
+  ch.trackers.conditions = [{ id: "dying", marks: 0 }, { id: "bleeding" }];
+  const r = Engine.resolveReset(ch);
+  assert.equal(r.marks, 1);
+  assert.ok(r.prompts.dyingCheck, "the check is asked");
+  assert.equal(r.notes.length, 0, "no unsettled notice");
+  const fail = JSON.parse(JSON.stringify(ch)), pass = JSON.parse(JSON.stringify(ch));
+  Engine.applyReset(fail, {}, { dyingCheck: "fail" });
+  assert.equal(fail.trackers.conditions[0].marks, 2);
+  Engine.applyReset(pass, {}, { dyingCheck: "pass" });
+  assert.equal(pass.trackers.conditions[0].marks, 1);
 });

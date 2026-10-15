@@ -42,7 +42,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.22");
+  assert.equal(resumed.meta.schemaVersion, "0.23");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -873,5 +873,89 @@ test("P8a 14: Loadout offers the three typed Resistances", () => {
   const el = lockedCharacter();
   el.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: ["Resistance — Electric"] });
   assert.doesNotMatch(openSheet(el, "loadout").$("#main").textContent, new RegExp(D.appCopy.unsettledLabel));
+  assert.deepEqual(app.errors, []);
+});
+
+// ── P8b: healing counts from 0 HP (Decision 220) ──────────────────────────
+// BOD 6 is 6 Health Levels x 5 = 30 HP; "7 past zero" is damage 37.
+const pastZeroSubject = (damage, extra = {}) => {
+  const ch = lockedCharacter();
+  ch.stats.BOD.base = 6;
+  ch.trackers.damage = damage;
+  return Object.assign(ch, extra);
+};
+const setField = (app, sel, value) => { const el = app.$(sel); el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
+
+test("P8b 13: Heal 1 from past zero lands on 1 HP", () => {
+  const app = openSheet(pastZeroSubject(37), "main");
+  app.click('.vital-verbs [data-dmg="-1"]');
+  assert.equal(activeChar(app).trackers.damage, 29);
+  assert.match(app.$("#main").textContent, /1\s*\/\s*30/);
+  assert.match(app.$("#undotoast").textContent, /Heal 1/);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.damage, 37);
+  // The Admin option keeps it, so a step comes off the full total.
+  const gritty = openSheet(pastZeroSubject(37, { houseRules: { keepDamagePastZero: true } }), "main");
+  gritty.click('.vital-verbs [data-dmg="-1"]');
+  assert.equal(activeChar(gritty).trackers.damage, 36);
+  assert.match(gritty.$("#main").textContent, /6 past zero/);
+  assert.deepEqual([...app.errors, ...gritty.errors], []);
+});
+
+test("P8b 14: the Rest panel says the overflow goes first", () => {
+  const app = openSheet(pastZeroSubject(37), "trackers");
+  app.click('[data-actopen="rest"]');
+  setField(app, '[data-act="hp"]', "1");
+  const panel = app.$('[data-actpanel="rest"]').textContent;
+  assert.match(panel, /The 7 past zero go first\./);
+  assert.match(panel, /Damage 37 → 29\./);
+  app.click("[data-actapply]");
+  assert.equal(activeChar(app).trackers.damage, 29);
+  assert.match(app.$("#undotoast").textContent, /\+1 HP/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P8b 15: past zero shows only while down and past it", () => {
+  const at = (damage, section) => openSheet(pastZeroSubject(damage), section);
+  const trackers = at(37, "trackers"), main = at(37, "main");
+  assert.match(trackers.$("#main .trk").textContent, /7 past zero/);
+  assert.match(main.$("#main").textContent, /7 past zero/);
+  assert.equal(trackers.$(".vpill.hp").textContent.replace(/\s+/g, ""), "HP−7/30");
+  for (const damage of [30, 12]) {
+    const t = at(damage, "trackers"), m = at(damage, "main");
+    assert.doesNotMatch(t.$("#main").textContent, /past zero/, `damage ${damage} on Trackers`);
+    assert.doesNotMatch(m.$("#main").textContent, /past zero/, `damage ${damage} on Main`);
+  }
+  assert.equal(at(30, "trackers").$(".vpill.hp").textContent.replace(/\s+/g, ""), "HP0/30", "down but not past zero reads as before");
+  assert.deepEqual(trackers.errors, []);
+});
+
+test("P8b 16: Admin keeps damage past zero, undoably", () => {
+  const app = openSheet(pastZeroSubject(37), "main");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  const box = () => app.$("[data-admin-keepzero]");
+  assert.equal(box().checked, false, "off by default");
+  box().checked = true; box().dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(activeChar(app).houseRules.keepDamagePastZero, true);
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Admin: keep damage past zero/);
+  app.click("button[data-undolast]");
+  assert.equal(activeChar(app).houseRules.keepDamagePastZero, false);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P8b 17: Turn Reset while Dying shows the marks and the check", () => {
+  const app = openSheet(pastZeroSubject(30, { trackers: { ...pastZeroSubject(30).trackers, conditions: [{ id: "dying", marks: 0 }, { id: "bleeding" }] } }), "trackers");
+  app.click('[data-actopen="reset"]');
+  const panel = app.$('[data-actpanel="reset"]');
+  assert.match(panel.textContent, /1 Death Mark/);
+  assert.ok(panel.querySelector('[data-act="dyingCheck"]'), "the Dying check is asked beside the mark");
+  assert.doesNotMatch(panel.textContent, new RegExp(D.appCopy.unsettledLabel), "no unsettled notice");
+  app.click("[data-actapply]");
+  assert.match(app.$("#undotoast").textContent, /Mark the Dying check/, "Apply refuses until the check is marked");
+  assert.equal(activeChar(app).trackers.damage, 30, "a refused Apply changed nothing");
+  setField(app, '[data-act="dyingCheck"]', "fail");
+  app.click("[data-actapply]");
+  assert.equal(activeChar(app).trackers.conditions.find(c => c.id === "dying").marks, 2, "the ticking source's mark and the failed check's");
   assert.deepEqual(app.errors, []);
 });

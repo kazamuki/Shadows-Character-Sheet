@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.22";
+  const SCHEMA_VERSION = "0.23";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -66,6 +66,10 @@ const Engine = (() => {
                          writeIn:{ name:"", description:null, classification:null,
                                    classificationText:"", mechanics:[],
                                    traits:[], vulnerabilities:[] } },
+      // Schema 0.23 (Decision 220): a GM's rule for this character, off by default.
+      // `keepDamagePastZero` keeps the damage past zero when healing starts, so
+      // healing counts up from the full total. Set in Admin; never in the wizard.
+      houseRules:{ keepDamagePastZero:false },
       stats: Object.fromEntries(D().stats.map(s=>[s.id,{base:1, ipe:0}])),
       skills:{},                       // id -> {rank, ipe}
       advantages:[], disadvantages:[], // {id, rank, notes, selections?}
@@ -777,9 +781,12 @@ const Engine = (() => {
     const massive = Math.max(0, Math.min(h.levels, Math.floor(Number(pick("massiveLevels"))||0)));
     const emptied = h.hpPer>0 ? Math.max(0, Math.min(h.levels - massive, Math.floor(damage / h.hpPer))) : 0;
     const capacity = Math.max(0, h.total - massive*h.hpPer);
+    // `pastZero` (Decision 220) is the damage beyond what the capacity holds: the
+    // reference while Dying, which the first healing wipes. `hpLeft` floors at 0.
     return { levels:h.levels, hpPer:h.hpPer, total:h.total, capacity, damage, massive,
              emptied, lost: emptied + massive,
              hpLeft: Math.max(0, capacity - damage),
+             pastZero: h.total>0 ? Math.max(0, damage - capacity) : 0,
              down: h.total>0 && damage >= capacity };
   }
 
@@ -831,7 +838,7 @@ const Engine = (() => {
              essenceFloor:   pen.essenceCheckDiceFloor,
              breakerFloor:   pen.breakerCheckPercentFloor,
              penaltyNotes: pen.notes,
-             hpLeft: hs.hpLeft, down: hs.down, massiveLevels: hs.massive };
+             hpLeft: hs.hpLeft, pastZero: hs.pastZero, down: hs.down, massiveLevels: hs.massive };
   }
 
   // ── Armor and taking a hit (combat plan Session 3, Decision 99) ──────
@@ -1704,14 +1711,37 @@ const Engine = (() => {
       : focused ? [...new Set((input.clear||[]).map(Number))]
       .filter(i=>conds[i] && (F.clears||[]).includes(conds[i].id)) : [];
     const massive = focused ? Math.min(nonNegInt(input.massive), hs.massive) : 0;
-    const healed = Math.min(hp, hs.damage);
-    if (!healed && !clear.length && !massive)
-      return { ok:false, why: hs.damage ? "Enter the HP restored." : "There's no damage to heal." };
-    t.damage = hs.damage - healed;
+    const w = _healMath(hs, hp, massive>0, ch.houseRules);
+    if (!w.healed && !clear.length && !massive)
+      return { ok:false, why: !hs.damage ? "There's no damage to heal." : hs.capacity ? "Enter the HP restored." : "Every Health Level is gone. Focused Healing can bring one back." };
+    t.damage = w.after;
     t.witheringDamage = Math.min(nonNegInt(t.witheringDamage), t.damage);
     t.massiveLevels = hs.massive - massive;
     const cleared = clear.sort((a,b)=>b-a).map(i=>{ const e = conds[i]; removeCondition(ch, i); return e; }).reverse();
-    return { ok:true, healed, restored:massive, cleared };
+    return { ok:true, healed:w.healed, restored:massive, cleared, discarded:w.discarded, before:w.before, after:w.after };
+  }
+  // The one place healing's arithmetic lives (Decision 220), so no panel subtracts
+  // on its own. Healing counts from 0 HP: when it restores HP or a Massive level
+  // (`alsoRestoring`), damage past zero is wiped first, against TODAY's capacity,
+  // before the HP comes off and before a restored level raises it. A heal that
+  // restores nothing wipes nothing. `houseRules.keepDamagePastZero` keeps it all.
+  // Pure: it returns the new total; the caller writes it.
+  function _healMath(hs, hp, alsoRestoring, rules){
+    const kept = !!rules && rules.keepDamagePastZero===true;
+    const wiped = kept ? hs.damage : Math.min(hs.damage, hs.capacity);
+    const healed = Math.min(hp, wiped);
+    const base = healed>0 || alsoRestoring ? wiped : hs.damage;
+    return { healed, discarded: hs.damage - base, before:hs.damage, after: base - healed };
+  }
+  // One Heal step from Main's or the popover's stepper: n HP, counted from 0 HP
+  // like any healing, and Withering trimmed to what is left. Refuses nothing --
+  // a step at no damage is the stepper's greyed state, not the engine's.
+  function healStep(ch, n){
+    const t = ch.trackers;
+    const w = _healMath(hlState(ch), nonNegInt(n), false, ch.houseRules);
+    t.damage = w.after;
+    t.witheringDamage = Math.min(nonNegInt(t.witheringDamage), t.damage);
+    return Object.assign({ ok:true }, w);
   }
 
   // Turn Reset (plan P8): a bookkeeping helper, not an automation. Each active
@@ -1720,7 +1750,8 @@ const Engine = (() => {
   // onto the total: it isn't a hit, so armor and Shock don't come into it
   // (0540 asks Shock of "a single hit"), but At Zero and Dying do. `input`:
   //   { sources: { [condition index]: hp } }
-  // Every Condition's recovery is listed as text; no check is run.
+  // Every Condition's recovery is listed as text; the one check run is Dying's,
+  // which is asked (the player marks it) and applyReset adds a failed one's mark.
   function resolveReset(ch, input){
     input = input || {};
     const W = (D().damageRules||{}).whileDying || {};
@@ -1742,12 +1773,12 @@ const Engine = (() => {
     const total = ticks.reduce((n,t)=>n+t.hp, 0);
     const before = hlState(ch), after = hlState(ch, { damage: before.damage + total });
     const d = damagePrompts(ch, before, after);
-    // F24 stub: while Dying, each source that ticks is a Death Mark and takes
-    // the place of the check. With nothing ticking, the check is asked.
+    // Decision 220 (F24 closed, Deighton Q5): while Dying the WILL check is asked
+    // at every Reset, and each source that ticks is a Death Mark on top.
     const ticking = ticks.filter(t=>t.hp>0).length;
     const marks = d.dying ? ticking : 0;
-    const dyingCheck = d.dying && !ticking ? { check:W.resetCheck, text:W.resetText } : null;
-    const notes = d.dying && ticking && W.flagged && W.playerNote ? [W.playerNote] : [];
+    const dyingCheck = d.dying ? { check:W.resetCheck, text:W.resetText } : null;
+    const notes = [];
     return { ok:true, ticks, total, before, after, dying:d.dying, marks,
              prompts: { atZero:d.atZero, dyingCheck }, recovery, notes,
              hasEffect: total>0 || !!dyingCheck };
@@ -3445,6 +3476,9 @@ const Engine = (() => {
     for (const k of ["massiveLevels","witheringDamage"])
       t[k] = nonNegInt(t[k]);
     if (!c.panelData || typeof c.panelData!=="object") c.panelData={};
+    // Schema 0.23 (Decision 220): house rules are a plain object of strict booleans;
+    // anything else is replaced, an unknown key is dropped (Decision 124).
+    c.houseRules = { keepDamagePastZero: isPlainObj(c.houseRules) && c.houseRules.keepDamagePastZero===true };
     const pr = c.progression = Object.assign({milestonePoints:0}, c.progression||{});
     pr.ip = Object.assign({earned:0, log:[]}, pr.ip);
     if (!Array.isArray(pr.ip.log)) pr.ip.log=[];
@@ -5581,7 +5615,7 @@ const Engine = (() => {
       _refPart("Shock", { items:[_refItem("", o("shock").text, [o("shock").check])] }),
       _refPart("At zero", { items:[_refItem("", o("atZero").text, [o("atZero").check, o("atZero").freePass && o("atZero").freePass.text])] }),
       _refPart("Massive", { items:[_refItem("", o("massive").text, [])] }),
-      _refPart("Dying", { items:[_refItem("", o("whileDying").text, [o("whileDying").resetText, o("whileDying").playerNote])] })];
+      _refPart("Dying", { items:[_refItem("", o("whileDying").text, [o("whileDying").resetText])] })];
   }
   function _refRecovery(){
     const r = _isObj(D().recoveryRules) ? D().recoveryRules : {}, o = k => _isObj(r[k]) ? r[k] : {};
@@ -6120,12 +6154,18 @@ const Engine = (() => {
     _tableStamp(t, e);
     return { ok:true };
   }
-  // HP straight onto a row: no armor, no Shock (Decision 189). A negative number heals.
+  // HP straight onto a row: no armor, no Shock (Decision 189). A negative number
+  // heals, from 0 HP like the sheet (Decision 220): damage past zero is wiped to
+  // the row's capacity first. No gritty option for rows.
   function participantDamage(t, encId, rowId, n){
     const l = _liveRow(t, encId, rowId);
     if (l.why) return { ok:false, why:l.why };
     const v = typeof n==="number" || typeof n==="string" ? _int(n) : null;
     if (v===null) return { ok:false, why:"Enter a whole number." };
+    if (v < 0){
+      const cap = _rowCapacity(t, l.r);
+      if (cap!==null) l.r.damage = Math.min(nonNegInt(l.r.damage), cap);
+    }
     l.r.damage = Math.max(0, l.r.damage + v);
     if (v > 0) l.r.struck = true;
     _tableStamp(t, l.e);
@@ -6226,10 +6266,10 @@ const Engine = (() => {
       });
       const gap = ticks.find(x=>x.hp===null);
       if (gap && !missing) missing = { tick:gap, rowName:r.name };
-      // F24's stub, as resolveReset has it: while Dying, each source that ticks is a Death Mark and
-      // stands in for the check; with nothing ticking, the check is asked. The marks are the GM's to press.
+      // As resolveReset has it (Decision 220): while Dying the check is asked every Reset, and each source
+      // that ticks is a Death Mark on top. The marks are the GM's to press.
       const dyingMarks = hasDying ? ticks.filter(x=>x.hp > 0).length : 0;
-      const dying = hasDying && !dyingMarks ? _str(W.resetCheck) || null : null;
+      const dying = hasDying ? _str(W.resetCheck) || null : null;
       const dyingText = dyingMarks ? _str(W.text) : null;
       rows.push({ rowId:r.id, name:r.name, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
                   total:ticks.reduce((n, x)=>n + (x.hp||0), 0) });
@@ -6418,11 +6458,21 @@ const Engine = (() => {
     const pick = k => (over && over[k]!=null) ? over[k] : r[k];
     const damage = nonNegInt(pick("damage"));
     const hp = r.hp, lv = r.levels, whole = hp!==null && lv!==null && hp % lv===0;
-    if (hp===null) return { total:null, left:null, levels:null, levelsLeft:null, lost:null, down:false, massive:nonNegInt(pick("massive")), hpPer:null, damage };
-    if (!whole) return { total:hp, left:Math.max(0, hp - damage), levels:null, levelsLeft:null, lost:null, down:damage >= hp, massive:nonNegInt(pick("massive")), hpPer:null, damage };
+    if (hp===null) return { total:null, left:null, levels:null, levelsLeft:null, lost:null, down:false, massive:nonNegInt(pick("massive")), hpPer:null, damage, pastZero:0 };
+    if (!whole) return { total:hp, left:Math.max(0, hp - damage), levels:null, levelsLeft:null, lost:null, down:damage >= hp, massive:nonNegInt(pick("massive")), hpPer:null, damage, pastZero:Math.max(0, damage - hp) };
     const hpPer = hp / lv, massive = Math.min(lv, nonNegInt(pick("massive")));
     const emptied = Math.max(0, Math.min(lv - massive, Math.floor(damage / hpPer))), capacity = Math.max(0, hp - massive*hpPer);
-    return { total:hp, left:Math.max(0, capacity - damage), levels:lv, levelsLeft:lv - emptied - massive, lost:emptied + massive, down:damage >= capacity, massive, hpPer, damage };
+    return { total:hp, left:Math.max(0, capacity - damage), levels:lv, levelsLeft:lv - emptied - massive, lost:emptied + massive, down:damage >= capacity, massive, hpPer, damage, pastZero:Math.max(0, damage - capacity) };
+  }
+  // The most damage a row holds before it is past zero, or null when it has no Health to count.
+  function _rowCapacity(t, r){
+    if (r.kind==="pc"){
+      const hp = r.hp, lv = r.levels;
+      if (hp===null) return null;
+      return lv!==null && hp % lv===0 ? Math.max(0, hp - Math.min(lv, nonNegInt(r.massive)) * (hp / lv)) : hp;
+    }
+    const s = _standIn(t, r);
+    return s ? hlState(s).capacity : null;
   }
   const NO_BOD = "Their block has no BOD, so there are no Health Levels to hit. Use Take.";
   // A PC row: what got through is the damage; for Massive, the Health Levels the player calls out.
@@ -6546,7 +6596,7 @@ const Engine = (() => {
       let health;
       if (stand){
         const hs = hlState(stand), ps = painState(stand);
-        health = { taken, total:hs.total, left:hs.hpLeft, down:hs.down, levels:hs.levels, levelsLeft:hs.levels - hs.lost, gone:hs.massive,
+        health = { taken, total:hs.total, left:hs.hpLeft, pastZero:hs.pastZero, down:hs.down, levels:hs.levels, levelsLeft:hs.levels - hs.lost, gone:hs.massive,
                    pain:{ level:ps.level, label:ps.label, description:ps.description, fromConditions:ps.fromConditions } };
       } else {
         const ph = r.kind==="pc" ? _pcHealth(r) : { total:null, left:null, down:false, levels:null, lost:null, levelsLeft:null, massive:0 };
@@ -6555,7 +6605,7 @@ const Engine = (() => {
           const p = painFor(ph.lost || 0, condPain);
           pain = { level:p.level, label:p.label, description:p.description, fromConditions:condPain };
         }
-        health = { taken, total:ph.total, left:ph.left, down:ph.down, levels:ph.levels, levelsLeft:ph.levelsLeft,
+        health = { taken, total:ph.total, left:ph.left, pastZero:ph.pastZero||0, down:ph.down, levels:ph.levels, levelsLeft:ph.levelsLeft,
                    gone:ph.levels!==null ? ph.massive : r.massive, pain };
       }
       const wear = r.kind==="pc" ? null : encounterArmor(block);
@@ -6606,7 +6656,7 @@ const Engine = (() => {
     // Vitals: Pain, LUCK, Sanity, Conditions, taking a hit, recovery
     painState, luckState, sanState, conditionState, addCondition, removeCondition, setConditionMarks,
     hlState, armorState, resolveHit, applyHit, naturalArmor, nanomedKit,
-    naturalHealing, heal, resolveReset, applyReset,
+    naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
     weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
     gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
