@@ -812,11 +812,11 @@ function aberrationResultsHtml(ch){
 // asks for, and Apply is one commit(), so the whole hit undoes in one step.
 // S.hit holds the form while it's open; nothing is saved until Apply.
 function newHitForm(){
-  return { damage:"", damageType:"ballistic", category:"regular", ap:false, location:"",
+  return { damage:"", damageType:"ballistic", category:"regular", ap:false, spell:false, location:"",
            protRoll:"", shock:"", atZero:"", conds:{}, nat:{} };
 }
 function hitInput(st){
-  return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap,
+  return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap, spell: !!st.ap && !!st.spell,
            location: st.location || undefined, protRoll: st.protRoll,
            natural: Object.keys(st.nat||{}).filter(k=>st.nat[k]) };
 }
@@ -865,6 +865,7 @@ function hitPanelHtml(ch, r){
   const num=(k, label)=>field(label, `<input type="text" inputmode="numeric" pattern="[0-9]*" data-hit="${k}" value="${esc(st[k])}">`);
   const passFail=k=>`<select data-hit="${k}" aria-label="result">${opt("","Did you pass?",!st[k])}${opt("pass","Passed",st[k]==="pass")}${opt("fail","Failed",st[k]==="fail")}</select>`;
 
+  const hasNat=(n=>n.base>0 || n.conditional.length>0)(Engine.naturalArmor(ch, []));   // "From a spell" needs some Natural Armor to pierce
   let h=`<div data-hitpanel>
     <div class="hitrow">
       ${num("damage","Damage")}
@@ -872,6 +873,7 @@ function hitPanelHtml(ch, r){
       ${field("Kind",`<select data-hit="category">${D.damageCategories.map(c=>opt(c.id,c.name,c.id===st.category)).join("")}</select>`)}
       ${field("Where",`<select data-hit="location">${opt("","Center mass",!st.location)}${D.bodyLocations.map(l=>opt(l.id,l.name,l.id===st.location)).join("")}</select>`)}
       ${bypass?"":`<label class="check"><input type="checkbox" data-hit="ap" ${st.ap?"checked":""}> Armor-piercing</label>`}
+      ${!bypass && st.ap && hasNat?`<label class="check"><input type="checkbox" data-hit="spell" ${st.spell?"checked":""}> From a spell</label>`:""}
     </div>
     <p class="hitnote">${esc(cat.text||"")}</p>`;
 
@@ -901,6 +903,7 @@ function hitPanelHtml(ch, r){
       if (r.covered) lines.push(`Strips ${r.integrityLost} Integrity from ${r.armor.name}${r.scrap?". It's scrap now, and can't be repaired":""}.`);
       lines.push(`Removes ${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} outright.`);
     } else if (r.covered){
+      if (r.halved) lines.push(`${r.halved.by} halves it: ${r.halved.from} → ${r.halved.to}.`);
       const why={ ap:"Armor-piercing skips RES.", compromised:"The armor is Compromised, so no RES.",
                   type:`RES doesn't answer ${r.type.name} damage.` }[r.resSkipped]||"";
       lines.push(`PROT ${r.prot}${r.res?` + RES ${r.res}`:""} stops ${r.absorbed}. ${why}`.trim());
@@ -909,6 +912,7 @@ function hitPanelHtml(ch, r){
     const N=r.natural;
     const natLine = !(N.total>0) ? "" : N.absorbed ? `Natural Armor stops ${N.absorbed}.`
       : N.skipped==="massive" ? "Massive damage goes straight past Natural Armor."
+      : N.skipped==="ap" ? "Armor-piercing magic goes straight past Natural Armor."
       : N.skipped==="type" ? `Natural Armor doesn't answer ${r.type.name} damage.` : "";
     if (natLine) lines.push(natLine);
     if (!r.bypassesArmor && !r.soaked) lines.push(r.through ? `${r.through} gets through.` : "Nothing gets through.");
@@ -1829,7 +1833,7 @@ function armorRowHtml(ch, p){
     h += `<div class="lo-upgrades"><span class="lo-sub">Upgrades${slotsTxt}</span>${chips}
       ${u.slots!==0?`<select data-upgpick="${p.index}" aria-label="Upgrade"><option value="">Install an upgrade…</option>${
         u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)}${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
-      <button class="btn sm" data-upgadd="${p.index}">Install</button>`:""}</div>`;
+      <button class="btn sm" data-upgadd="${p.index}">Install</button>`:""}</div>${(D.armorUpgradeGlossary||[]).filter(g=>g.flagged && p.upgrades.includes(g.id)).map(flagHtml).join("")}`;
     const canRepair = !p.scrapped && p.integrityLoss>0, frk = Engine.carriedGear(ch, "field-repair-kit");
     h += `<div class="hitrow lo-repair">
       <label class="field"><span>Repair kit (${esc(R.repairKitDie||"1d6")})</span><input type="number" min="1" data-repairroll="${p.index}" ${canRepair?"":"disabled"}></label>
@@ -2776,6 +2780,7 @@ function bindHitModal(body, foot){
     if (!S.hit) return;
     if (el.getAttribute("inputmode")==="numeric") el.value=el.value.replace(/[^0-9]/g,"");
     S.hit[el.dataset.hit] = el.type==="checkbox" ? el.checked : el.value;
+    if (el.dataset.hit==="ap" && !el.checked) S.hit.spell = false;   // "From a spell" only means something with AP
     redraw(sel(el, "data-hit"));
   });
   body.querySelectorAll("[data-hitcond]").forEach(el=>el.onchange=()=>{

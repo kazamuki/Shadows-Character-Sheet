@@ -88,6 +88,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ✅ ⚖ **Long-Lived.** Say that ranks **stack**, so rank 3 gives 2 Minor + 1 Major Milestone, and that it's creation-only. The table as printed reads like each rank replaces the last (Decision 97, F17).
 - ✅ ⚖ **Ghost TAG(s).** Add a line saying that the street calls this a Black TAG. *(Or put it in Gear's TAG section, below. One place is enough.)*
 - ✅ The "Ambidextrousa" typo is fixed.
+- ☐ ⚖ **Thick Skin.** "Natural Armor is unaffected by Armor Piercing effects" should add **unless the attack is a spell**: armor-piercing magic gets past Natural Armor (Ken's follow-up to Deighton's Q3, Decision 219). The sheet already does it.
 
 ## 0440_Disadvantages
 
@@ -105,10 +106,11 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 ## 0460_Gear
 
+- ☐ ⚖ **Armor › Upgrades › Resistance** (Decision 219; PQ1). Say that Resistance **halves the damage first, rounding down**, then PROT and RES, and which damage types each covers (Thermal: Burning; Electric: Electric; Freezing: none yet, F42).
 - ☐ ⚖ **Armor › Upgrades › Warding.** Replace the single Warding ("extends RES to magical damage") with **Warding — Elemental, Warding — Spirit, Warding — Aether and Self-mending**, each taking a mod slot, as 0480 Magic's Services already price them (Decision 143).
 - ☐ ⚖ **Equipment › Field & Recovery › Nanomed Kit.** "Clears Bleeding, Poisoned, and Agonized" should add **Paralyzed**, to match 0540 (Decision 105, CQ12).
 - ☐ ⚖ **Introduction › The TAG (Black TAG paragraph).** Say a Black TAG *is* the Ghost TAG(s) Advantage (Decision 146), unless you put it in 0430 instead.
-- ☐ ⚖ **Weapons › Grenades table** (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). **Grenades and explosives deal Massive damage.** Say so in the table (or its lead-in), and the 2x+ Injured stands.
+- ☐ ⚖ **Weapons › Grenades table** (built in the app, Decision 219; the book still to say it) (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). **Grenades and explosives deal Massive damage.** Say so in the table (or its lead-in), and the 2x+ Injured stands.
 - ✅ **Siege** now reads "This weapon deals Massive damage", and the Massive category covers people (CQ4).
 - ✅ **The Conditions table is gone**, leaving a pointer to Conditions & Recovery (CQ8).
 - ✅ **Suppression** and **Blast** now have rules. That answers F28 and F29 from the book's side; the sheet needs to catch up (see the end of this list).
@@ -195,7 +197,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 These block book text, so send them before you write those sections. Deighton's flags are already grouped as one ask in `STATE.md` §5:
 
-- **Deighton:** F23 + F25 (RES class of Electric and Burning, and how Natural Armor answers a hit), F24 (ongoing damage while Dying), F26, F30, F31, F33, F34 (does a swapped magazine keep its rounds?), F36 (is damage past zero kept?), the MD threshold, and whether grenades deal Massive.
+- **Deighton:** ~~F23 + F25~~ (ruled and built, Decision 219), F24 (ongoing damage while Dying), F26, F30, F31, F33, F34 (does a swapped magazine keep its rounds?), F36 (is damage past zero kept?), ~~the MD threshold, and whether grenades deal Massive~~ (ruled 2026-10-10; built, Decision 219).
 - **Team:** whether Minor Milestones can repeat, Talented scope, Advantage rank pricing, Milestones past 10, Supernatural ceilings, and starting Çredits.
 - **Scott:** TN 8 vs. TN 7 on the inscribed Cantrips, and whose 0480 review closes MG-01 and MG-02.
 

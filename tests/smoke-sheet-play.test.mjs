@@ -328,12 +328,12 @@ test("Take a hit: Massive with no armor removes levels, asks at zero, and adds D
   assert.deepEqual(app.errors, []);
 });
 
-test("Take a hit: an Electric hit says its RES rule is unsettled; a Blade hit doesn't", () => {
+test("Take a hit: neither an Electric hit nor a Blade hit calls its RES rule unsettled (F23 closed, Decision 219)", () => {
   const app = openSheet(lockedCharacter(), "trackers");
   app.click("[data-hitopen]");
   setHit(app, "damage", "4");
   setHit(app, "damageType", "electric");
-  assert.match(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
+  assert.doesNotMatch(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
   setHit(app, "damageType", "blade");
   assert.doesNotMatch(app.$("[data-hitpanel]").textContent, new RegExp(D.appCopy.unsettledLabel));
   assert.deepEqual(app.errors, []);
@@ -815,5 +815,63 @@ test("W92 / Decision 213: a Pain Sensitive character at 2 Health Levels lost rea
   const main = app.$("#main").textContent;
   assert.match(main, /Lv 2/, "Pain isn't Lv 2");
   assert.match(main, /\+1 Lv from Pain Sensitive/);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── P8a: the hit (Decision 219) ───────────────────────────────────────
+test("P8a 12: the hit modal says what halved it", () => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: ["Resistance — Electric"] });
+  const app = openSheet(ch, "trackers");
+  app.click("[data-hitopen]");
+  setHit(app, "damageType", "electric");
+  setHit(app, "damage", "13");
+  setHit(app, "protRoll", "2");
+  const panel = app.$("[data-hitpanel]").textContent;
+  assert.match(panel, /Resistance — Electric halves it: 13 → 6\./);
+  assert.doesNotMatch(panel, new RegExp(D.appCopy.unsettledLabel));
+  assert.deepEqual(app.errors, []);
+});
+
+test("P8a 13: From a spell shows only with AP and Natural Armor", () => {
+  const ch = lockedCharacter();
+  ch.advantages.push({ id: "thick-skin", rank: 3 });
+  const app = openSheet(ch, "trackers");
+  app.click("[data-hitopen]");
+  setHit(app, "damage", "8");
+  setHit(app, "damageType", "blunt");
+  assert.equal(app.$('[data-hit="spell"]'), null, "the tick shows before AP");
+  setHit(app, "ap", true);
+  assert.match(app.$("[data-hitpanel]").textContent, /From a spell/);
+  assert.doesNotMatch(app.$(".hitresult").textContent, /goes straight past Natural Armor/);
+  setHit(app, "spell", true);
+  assert.match(app.$(".hitresult").textContent, /Armor-piercing magic goes straight past Natural Armor\./);
+  setHit(app, "ap", false);
+  assert.equal(app.$('[data-hit="spell"]'), null, "the tick stayed after AP came off");
+  setHit(app, "ap", true);
+  assert.equal(app.$('[data-hit="spell"]').checked, false, "spell survived unticking AP");
+  assert.deepEqual(app.errors, []);
+
+  const bare = openSheet(lockedCharacter(), "trackers");
+  bare.click("[data-hitopen]");
+  setHit(bare, "ap", true);
+  assert.equal(bare.$('[data-hit="spell"]'), null, "a character with no Natural Armor sees the tick");
+});
+
+test("P8a 14: Loadout offers the three typed Resistances", () => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: ["Resistance"] });
+  const app = openSheet(ch, "loadout");
+  const offered = [...app.$("[data-upgpick]").options].map(o => o.value);
+  for (const t of ["Thermal", "Electric", "Freezing"]) assert.ok(offered.includes(`Resistance — ${t}`), t);
+  assert.ok(!offered.includes("Resistance"), "the retired one is offered");
+  assert.match(app.$(".lo-upgrades .cond-chip").textContent, /Resistance/, "the installed untyped chip is gone");
+  assert.doesNotMatch(app.$("#main").textContent, new RegExp(D.appCopy.unsettledLabel), "the retired one is flagged");
+  const fz = lockedCharacter();
+  fz.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: ["Resistance — Freezing"] });
+  assert.match(openSheet(fz, "loadout").$("#main").textContent, /Freezing Resistance doesn't halve anything yet/);
+  const el = lockedCharacter();
+  el.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: ["Resistance — Electric"] });
+  assert.doesNotMatch(openSheet(el, "loadout").$("#main").textContent, new RegExp(D.appCopy.unsettledLabel));
   assert.deepEqual(app.errors, []);
 });

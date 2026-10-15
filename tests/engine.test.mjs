@@ -1416,9 +1416,9 @@ test("how a damage category resolves is data, not its id (PR #26 review, finding
   } finally { D.damageCategories.pop(); }
 });
 
-test("F23 surfaces where it bites: an Electric hit carries the stub's player note", () => {
+test("F23 is closed (Decision 219): an Electric hit carries no unsettled note", () => {
   const r = Engine.resolveHit(subject(), { damage: 5, damageType: "electric" });
-  assert.equal(r.notes.length, 1);
+  assert.equal(r.notes.length, 0);
   assert.equal(Engine.resolveHit(subject(), { damage: 5, damageType: "blade" }).notes.length, 0);
 });
 
@@ -1587,7 +1587,7 @@ test("Iron Shirt is conditional: BOD bonus + 1, listed but not counted until it'
   assert.equal(Engine.naturalArmor(ch, ["iron-shirt"]).total, 0);
 });
 
-test("a hit: Natural Armor comes off after worn armor, anywhere, and AP doesn't get past it", () => {
+test("a hit: Natural Armor comes off after worn armor, anywhere, and AP (not from a spell) doesn't get past it", () => {
   const ch = subject({ bod: 10 });
   ch.advantages.push({ id: "thick-skin", rank: 3 });
   const hit = o => Engine.resolveHit(ch, { damage: 10, damageType: "ballistic", ...o });
@@ -1599,7 +1599,7 @@ test("a hit: Natural Armor comes off after worn armor, anywhere, and AP doesn't 
   assert.deepEqual([r.natural.skipped, r.through], ["type", 10], "stub: Kinetic only");
   r = hit({ category: "massive" });
   assert.equal(r.natural.skipped, "massive");
-  assert.ok(r.notes.some(n => /natural armor/i.test(n)), "the stub's playerNote isn't shown");
+  assert.equal(r.notes.length, 0, "F25 is closed (Decision 219): no stub note");
 
   ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
   r = hit({ protRoll: 4 });                             // PROT 4 + RES 2, then skin 3
@@ -7708,4 +7708,88 @@ test("Decision 218 / 162: a buyable power rank still counts as CP to spend once 
   assert.ok(Engine.cp(ch).left >= Engine.powerRankCost(), "the probe needs CP in hand once the powers are capped");
   assert.equal(Engine.powerCpState(ch).some(r => r.cap == null || r.rank < r.cap), false);
   assert.equal(Engine.spendable(ch, "cp"), false, "powers at their cap, LUCK at its cap, nothing else: no CP to spend");
+});
+
+// ── P8a: the hit (Decision 219) ───────────────────────────────────────
+// The Urban Tactics Vest: PROT 1d6, RES 2, Integrity 20, two mod slots, light coverage.
+function vestWith(...upgrades) {
+  const ch = subject({ bod: 6 });
+  ch.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades });
+  return ch;
+}
+
+test("P8a 2: a halved hit PROT stops is still soaked and costs 1 Integrity", () => {
+  const r = Engine.resolveHit(vestWith("Resistance — Electric"), { damage: 6, damageType: "electric", protRoll: 3 });
+  assert.deepEqual([r.halved.to, r.absorbed, r.through, r.soaked, r.integrityLost], [3, 3, 0, true, 1]);
+});
+
+test("P8a 2b: a 1-damage hit halved to 0 is still soaked and costs 1 Integrity, as it does without the lining", () => {
+  const hit = ch => Engine.resolveHit(ch, { damage: 1, damageType: "electric", protRoll: 1 });
+  for (const ch of [vestWith(), vestWith("Resistance — Electric")]) {
+    const r = hit(ch);
+    assert.deepEqual([r.soaked, r.integrityLost], [true, 1]);
+  }
+});
+
+test("P8a 3: Resistance answers its own type only", () => {
+  const hit = ch => Engine.resolveHit(ch, { damage: 12, damageType: "burning", protRoll: 2 });
+  const e = hit(vestWith("Resistance — Electric"));
+  assert.deepEqual([e.halved, e.through], [null, 10], "Electric doesn't answer Burning");
+  const t = hit(vestWith("Resistance — Thermal"));
+  assert.deepEqual([t.halved.to, t.through], [6, 4]);
+  // Electric and Energy share a class; the lining answers only the one type.
+  assert.equal(Engine.resolveHit(vestWith("Resistance — Electric"), { damage: 12, damageType: "energy", protRoll: 2 }).halved, null);
+});
+
+test("P8a 4: Resistance skips Massive, an uncovered part and Compromised armor", () => {
+  const ch = vestWith("Resistance — Electric");
+  const m = Engine.resolveHit(ch, { damage: 20, damageType: "electric", category: "massive" });
+  assert.deepEqual([m.halved, m.integrityLost], [null, 20]);
+  assert.equal(Engine.resolveHit(ch, { damage: 12, damageType: "electric", location: "left-arm", protRoll: 2 }).halved, null, "the vest doesn't cover an arm");
+  ch.armor[0].integrityLoss = 20;
+  const c = Engine.resolveHit(ch, { damage: 12, damageType: "electric", protRoll: 2 });
+  assert.deepEqual([c.armor.compromised, c.halved], [true, null]);
+  ch.armor[0].integrityLoss = 0; ch.armor[0].scrapped = true;
+  assert.equal(Engine.resolveHit(ch, { damage: 12, damageType: "electric", protRoll: 2 }).halved, null, "scrap");
+});
+
+test("P8a 5: AP doesn't touch Resistance", () => {
+  const r = Engine.resolveHit(vestWith("Resistance — Electric"), { damage: 12, damageType: "electric", ap: true, protRoll: 2 });
+  assert.deepEqual([r.halved.to, r.resSkipped, r.through], [6, "ap", 4]);
+});
+
+test("P8a 6: the retired Resistance stops nothing and isn't offered", () => {
+  const ch = vestWith("Resistance");
+  const r = Engine.resolveHit(ch, { damage: 12, damageType: "electric", protRoll: 2 });
+  assert.deepEqual([r.halved, r.through, r.notes.length], [null, 10, 0]);
+  const ids = Engine.upgradeOptions(vestWith(), 0).options.map(o => o.id);
+  assert.ok(!ids.includes("Resistance"));
+  for (const t of ["Thermal", "Electric", "Freezing"]) assert.ok(ids.includes(`Resistance — ${t}`), t);
+  assert.deepEqual(Engine.armorState(vestWith("Resistance", "Resistance")).worn.upgrades, ["Resistance", "Resistance"]);
+});
+
+test("P8a 7: each typed Resistance installs once", () => {
+  const ch = subject({ bod: 6 });
+  ch.armor.push({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  assert.equal(Engine.addUpgrade(ch, 0, "Resistance — Electric").ok, true);
+  assert.match(Engine.addUpgrade(ch, 0, "Resistance — Electric").why, /Already installed/);
+  assert.equal(Engine.addUpgrade(ch, 0, "Resistance — Thermal").ok, true);
+});
+
+test("P8a 11: GM mode's encounter hit is unchanged but for the note", () => {
+  const { t, e, id } = hitTable({ armor: JACKET });
+  const r = Engine.resolveEncounterHit(t, e, id, shot({ damageType: "electric" }));
+  eq([r.prot, r.res, r.absorbed, r.through], [3, 0, 3, 9]);
+  assert.equal(r.notes.length, 0);
+});
+
+test("P8a: Freezing's note never shows, and the hit is total with the typed upgrades on junk armor", () => {
+  const f = Engine.resolveHit(vestWith("Resistance — Freezing"), { damage: 12, damageType: "electric", protRoll: 2 });
+  assert.deepEqual([f.halved, f.notes.length], [null, 0]);
+  for (const [label, ch] of Object.entries(degenerates())) {
+    ch.armor.push(null, 4, { custom: true, worn: true, upgrades: ["Resistance — Electric", "Resistance — Thermal", 7, { id: "Resistance — Electric" }] },
+                  { id: "urban-tactics-vest", worn: true, upgrades: ["Resistance — Electric"] });
+    for (const type of ["electric", "burning", "blade"]) for (const spell of [true, false]) for (const ap of [true, false])
+      assert.doesNotThrow(() => Engine.resolveHit(ch, { damage: 9, damageType: type, ap, spell, protRoll: 2 }), `${label} ${type}`);
+  }
 });

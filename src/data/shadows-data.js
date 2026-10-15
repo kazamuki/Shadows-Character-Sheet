@@ -3670,7 +3670,7 @@ window.SHADOWS_DATA = {
     { "id": "martialArts", "name": "Martial Arts" },
     { "id": "handguns", "name": "Handguns" },
     { "id": "smgs", "name": "Submachine Guns" },
-    { "id": "grenades", "name": "Grenades", "note": "Every grenade escalates on the throw. Each 10 on the Melee check explodes and moves it one step up its column: 1x for the first, 2x+ for the second and any past it. One throw, one result, for everyone who didn't get clear. Damage and duration stack as it climbs; Conditions replace rather than pile up. BOD doesn't add to a grenade's damage." },
+    { "id": "grenades", "name": "Grenades", "note": "Every grenade escalates on the throw. Each 10 on the Melee check explodes and moves it one step up its column: 1x for the first, 2x+ for the second and any past it. One throw, one result, for everyone who didn't get clear. Damage and duration stack as it climbs; Conditions replace rather than pile up. BOD doesn't add to a grenade's damage. A grenade's blast is Massive damage." },
     { "id": "urbanRifles", "name": "Urban Combat Rifles" },
     { "id": "shotguns", "name": "Shotguns" },
     { "id": "sniperRifles", "name": "Sniper Rifles" },
@@ -3711,12 +3711,12 @@ window.SHADOWS_DATA = {
     { "id": "vs12-rampart", "name": "VS-12 \"Rampart\"", "category": "smgs", "skill": "smgs", "damage": 7, "acc": 0, "range": "Medium", "rof": "S/B/F", "capacity": "40+1", "mods": 1, "availability": "Uncommon", "cost": 2400, "tags": [], "flavorLine": "A squad support tool. The drum magazine keeps it running through sustained fire." },
     { "id": "ads-sr1-specter", "name": "ADS SR-1 \"Specter\"", "category": "smgs", "skill": "smgs", "damage": 6, "acc": 2, "range": "Medium", "rof": "S/B/F", "capacity": "30+1", "mods": 2, "availability": "Rare", "cost": 6000, "tags": [], "features": ["Suppressor"], "flavorLine": "Suppressed, accurate, and fully controllable on full-auto." },
 
-    { "id": "fg1-thunderclap", "name": "FG-1 \"Thunderclap\"", "category": "grenades", "skill": "melee", "damage": 10, "radius": "5m", "escalation": { "1x": "+5 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 400, "notes": "Frag", "flavorLine": "Hammerlock's standard fragmentation grenade -- the benchmark other frags are measured against." },
+    { "id": "fg1-thunderclap", "name": "FG-1 \"Thunderclap\"", "category": "grenades", "skill": "melee", "damage": 10, "radius": "5m", "escalation": { "1x": "+5 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 400, "tags": ["Siege"], "notes": "Frag", "flavorLine": "Hammerlock's standard fragmentation grenade -- the benchmark other frags are measured against." },
     { "id": "sg2-shockwave", "name": "SG-2 \"Shockwave\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "Stunned", "2x+": "Unconscious" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 200, "notes": "Disoriented, Non-lethal", "flavorLine": "Non-lethal concussive grenade for incapacitation and crowd control." },
     { "id": "eg3-blackout", "name": "EG-3 \"Blackout\"", "category": "grenades", "skill": "melee", "damage": "EMP", "radius": "5m", "escalation": { "1x": "DeSync", "2x+": "Cyberware offline until repaired" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 600, "notes": "EMP", "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage." },
     { "id": "vs3-curtain", "name": "VS-3 \"Curtain\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 150, "notes": "Smoke, Blinded, 3 rounds", "flavorLine": "A ten-meter obscurement cloud that lasts long enough to matter." },
     { "id": "ig7-cinder", "name": "IG-7 \"Cinder\"", "category": "grenades", "skill": "melee", "damage": "6/round", "radius": "5m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 2", "availability": "Rare", "cost": 800, "notes": "Incendiary, Burning", "flavorLine": "Creates a sustained burn zone for area denial. Hammerlock recommends against indoor use." },
-    { "id": "junk-bomb", "name": "\"Junk Bomb\"", "category": "grenades", "skill": "melee", "damage": "Varies", "radius": "Varies", "escalation": { "1x": "+1d4 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Common", "cost": 75, "notes": "Unstable -- roll 1d4 (1 Frag DMG8/5m, 2 Stun 10m non-lethal, 3 Smoke 10m, 4 Dud)", "flavorLine": "Somebody's best guess at a grenade, assembled from optimism and scavenged casings." },
+    { "id": "junk-bomb", "name": "\"Junk Bomb\"", "category": "grenades", "skill": "melee", "damage": "Varies", "radius": "Varies", "escalation": { "1x": "+1d4 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Common", "cost": 75, "tags": ["Siege"], "notes": "Unstable -- roll 1d4 (1 Frag DMG8/5m, 2 Stun 10m non-lethal, 3 Smoke 10m, 4 Dud)", "flavorLine": "Somebody's best guess at a grenade, assembled from optimism and scavenged casings." },
     { "id": "star-dust-grenade", "name": "Star Dust Grenade", "category": "grenades", "skill": "melee", "damage": "1/round", "radius": "5m cloud", "escalation": { "1x": "+1 min", "2x+": "+2 min" }, "defense": "TN 8 TH 2", "availability": "By Practice", "cost": 600, "tags": ["Withering"], "notes": "Anti-Regen -- disperses a silver-laced cloud making regeneration impossible for 1d4+1 minutes", "flavorLine": "Developed by those who hunt lycanthropes and their kindred." },
     { "id": "sunburst-grenade", "name": "Sunburst Grenade", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "Blinded", "2x+": "Stunned" }, "defense": "TN 8 TH 3", "availability": "By Practice", "cost": 500, "tags": ["Withering", "Stunning"], "notes": "Disoriented, Withering (UV) -- a modified flashbang; the concussive effect hits everyone in range regardless of supernatural status", "flavorLine": "A concentrated burst of UV radiation alongside a standard concussive discharge." },
 
@@ -3732,7 +3732,7 @@ window.SHADOWS_DATA = {
 
     { "id": "vlw6-titan", "name": "VLW-6 \"Titan\"", "category": "heavyWeapons", "skill": "heavy-weapons", "damage": 7, "acc": 0, "range": "Long", "rof": "S/B/F", "capacity": "100 (belt)", "mods": 1, "damageType": "Ballistic", "availability": "Uncommon", "cost": 3500, "tags": ["Suppression"], "features": ["Bipod Mount"], "notes": "Two-Handed", "flavorLine": "Belt-fed, bipod-equipped, built for sustained suppressive fire." },
     { "id": "vhw12-ironwall", "name": "VHW-12 \"Ironwall\"", "category": "heavyWeapons", "skill": "heavy-weapons", "damage": 9, "acc": 0, "range": "Long", "rof": "S/B/F", "capacity": "200 (belt)", "mods": 1, "damageType": "Ballistic", "availability": "Rare", "cost": 9500, "tags": ["Suppression"], "features": ["Vehicle Mount"], "notes": "Two-Handed; requires a proper mount, not just a bipod", "flavorLine": "Larger caliber, higher damage, a 200-round belt that turns a position into a problem." },
-    { "id": "hgl4-anvil", "name": "HGL-4 \"Anvil\"", "category": "heavyWeapons", "skill": "heavy-weapons", "damage": 9, "acc": 1, "range": "Medium", "rof": "S", "capacity": "6", "mods": 1, "damageType": "Ballistic", "availability": "Rare", "cost": 7000, "tags": ["Area (5m)", "Blast"], "notes": "Two-Handed; six-round revolving grenade launcher, ammunition sold in four varieties", "flavorLine": "Area denial and indirect fire -- aim at the vicinity, let the blast radius handle the rest." },
+    { "id": "hgl4-anvil", "name": "HGL-4 \"Anvil\"", "category": "heavyWeapons", "skill": "heavy-weapons", "damage": 9, "acc": 1, "range": "Medium", "rof": "S", "capacity": "6", "mods": 1, "damageType": "Ballistic", "availability": "Rare", "cost": 7000, "tags": ["Area (5m)", "Blast", "Siege"], "notes": "Two-Handed; six-round revolving grenade launcher, ammunition sold in four varieties", "flavorLine": "Area denial and indirect fire -- aim at the vicinity, let the blast radius handle the rest." },
     { "id": "hrl1-thunderhead", "name": "HRL-1 \"Thunderhead\"", "category": "heavyWeapons", "skill": "heavy-weapons", "damage": 15, "acc": 0, "range": "Long", "rof": "S", "capacity": "1", "mods": 0, "availability": "Exotic", "cost": 15000, "tags": ["Blast (10m)", "Siege"], "notes": "Two-Handed; one round, then a full action to reload", "flavorLine": "Single shot, shoulder-fired, built for targets that believe cover will protect them." },
     { "id": "hft3-hellmouth", "name": "HFT-3 \"Hellmouth\"", "category": "heavyWeapons", "skill": "heavy-weapons", "damage": "6/round", "acc": 0, "range": "Low", "rof": "Continuous", "capacity": "10 bursts", "mods": 0, "damageType": "Burning", "availability": "Rare", "cost": 6000, "tags": ["Burning", "Area (cone)"], "notes": "Two-Handed; ongoing damage every round until the target is no longer burning", "flavorLine": "Ten bursts of sustained burning discharge in a forward cone." },
     { "id": "hxc1-absolute", "name": "HXC-1 \"Absolute\"", "category": "heavyWeapons", "skill": "heavy-weapons", "damage": 20, "acc": 0, "range": "Medium", "rof": "S", "capacity": "1", "mods": 0, "availability": "By Contract", "cost": "By Contract", "tags": ["Blast (15m)", "Siege"], "features": ["Vehicle Mount"], "notes": "Two-Handed; a man-portable siege weapon", "flavorLine": "There is no diplomatic way to describe what the Absolute does." },
@@ -3809,12 +3809,10 @@ window.SHADOWS_DATA = {
      (Iron Shirt: BOD bonus + 1); `resAgainst` extends the classes it answers
      (Resilient Spirit: Warding). Read by Engine.naturalArmor()/resolveHit(). */
   "naturalArmorRules": {
-    "flagged": true,
-    "flagNote": "F25 -- the CRB grants Natural Armor in four places but never says how it applies to a hit. Only 'unaffected by Armor Piercing' (Thick Skin) and 'treated as Warding' (Waning Moon) are stated. Stubbed: a flat reduction after PROT and RES, on every body part, Kinetic only (like base RES) unless Warding extends it, ignores AP, skipped by Massive; sources stack.",
-    "playerNote": "How natural armor stops a hit is still being settled. For now it takes a flat amount off Blade, Blunt and Ballistic damage anywhere on the body, after your armor, and armor-piercing doesn't get past it. Massive damage ignores it.",
     "resAgainst": ["kinetic"],
     "ignoresAp": true,
-    "text": "Toughness you don't take off at night. It stops damage after your worn armor does, wherever the hit lands."
+    "spellApPierces": true,
+    "text": "Toughness you don't take off at night. It stops damage after your worn armor does, wherever the hit lands. Armor-piercing magic gets past it; any other armor-piercing hit doesn't."
   },
   "armorFeatureGlossary": [
     { "id": "Concealable", "description": "Thin and lightweight enough to wear discreetly beneath a hoodie or blazer without printing. Standard visual security checks don't detect it; specialized scanning or a Perception check against a threshold may." },
@@ -3832,9 +3830,12 @@ window.SHADOWS_DATA = {
     { "id": "Ablative Plating", "minQuality": "Mid", "resAgainst": "energy", "description": "Grants the armor's full RES bonus against Energy damage in addition to its standard Kinetic application." },
     { "id": "EMP Shielding", "description": "Grants +10% EMP resistance. Reduces cascade failure risk for characters with significant cyberware when hit by EMP sources." },
     { "id": "HUDsync", "description": "Paired with a HUDsync-compatible helmet, displays real-time armor status, weapon systems, and linked device information in the visor." },
-    { "id": "Resistance", "repeatable": true, "description": "Specialized lining granting 50% damage reduction against a specified environmental type (Thermal / Electric / Freezing). Each installation covers one type; multiple can be installed in separate slots.",
-      "flagged": true, "flagNote": "F23 -- where the 50% reduction sits against PROT and RES is unstated. The hit resolver does not apply it; it reminds the player instead.",
-      "playerNote": "The hit calculator doesn't take this lining's 50% off for you yet. Work it out with your GM and adjust the damage by hand." },
+    { "id": "Resistance", "repeatable": true, "retired": true, "description": "An older lining with no type, so it stops nothing. Remove it and install Resistance — Thermal, Electric or Freezing instead." },
+    { "id": "Resistance — Thermal", "halves": ["burning"], "description": "Specialized lining granting 50% damage reduction against heat. It halves the damage first, rounding down, then your armor rolls. Each Resistance covers one type." },
+    { "id": "Resistance — Electric", "halves": ["electric"], "description": "Specialized lining granting 50% damage reduction against electric attacks. It halves the damage first, rounding down, then your armor rolls. Each Resistance covers one type." },
+    { "id": "Resistance — Freezing", "halves": [], "description": "Specialized lining granting 50% damage reduction against cold. Nothing in the damage list is cold yet, so it halves nothing for now. Each Resistance covers one type.",
+      "flagged": true, "flagNote": "F42 -- 0460 names Thermal, Electric and Freezing. The app maps Thermal to Burning and Electric to Electric. No damage type is cold, so Freezing answers nothing. Elemental spells are magic, so no Resistance answers them; Warding does. Stubbed as written. For Deighton.",
+      "playerNote": "Freezing Resistance doesn't halve anything yet: no damage type in the game is cold. Ask your GM how cold damage should work." },
     { "id": "Tri-Weave", "minQuality": "Mid", "integrityBonus": 10, "repeatable": true, "description": "Grants +10 INT to the armor's integrity pool. Can be installed multiple times in separate slots for cumulative effect." },
     { "id": "Warding", "minQuality": "Mid", "resAgainst": ["elemental", "spirit", "aether"], "retired": true, "availability": "By Practice", "description": "Warding against every kind of magic at once: the armor's RES applies to Elemental, Spirit and Aether damage. No longer offered; three separate Wardings replace it." },
     { "id": "Warding — Elemental", "minQuality": "Mid", "resAgainst": "elemental", "availability": "Rare", "description": "The armor's RES applies to Elemental damage. A practitioner's work: 2,500Ç." },
@@ -4110,8 +4111,8 @@ window.SHADOWS_DATA = {
      adds Energy, and each Warding adds its own kind.
      `inflicts` are the Conditions a type CAN cause (offered in the hit
      dialog, never forced); `always` are the ones Gear says it always causes
-     (pre-ticked, still the player's call). Electric and Burning have no stated
-     RES class (F23) and are stubbed as Energy. `damageCategories` is Gear's
+     (pre-ticked, still the player's call). Electric and Burning are Energy
+     by Deighton's ruling (Decision 219). `damageCategories` is Gear's
      Regular/Withering/Massive, and each says how it resolves:
      `bypassesArmor` (skip PROT/RES, strip Integrity, remove Health Levels by
      `damageRules.massive`), `recordsWithering` (what gets through can't
@@ -4122,13 +4123,9 @@ window.SHADOWS_DATA = {
     { "id": "blade",     "name": "Blade",     "resClass": "kinetic", "inflicts": ["bleeding"] },
     { "id": "blunt",     "name": "Blunt",     "resClass": "kinetic", "inflicts": ["stunned", "disoriented", "unconscious"] },
     { "id": "ballistic", "name": "Ballistic", "resClass": "kinetic", "inflicts": ["bleeding"] },
-    { "id": "electric",  "name": "Electric",  "resClass": "energy",  "inflicts": ["stunned", "shocked", "paralyzed"],
-      "flagged": true, "flagNote": "F23 -- the CRB names Kinetic RES (Blade/Blunt/Ballistic) and Energy/Magical via upgrades, but never says which Electric falls under. Stubbed as Energy: no RES without Ablative Plating.",
-      "playerNote": "Whether armor's RES stops Electric damage is still being settled. For now it counts as Energy, so only Ablative Plating lets RES answer it." },
+    { "id": "electric",  "name": "Electric",  "resClass": "energy",  "inflicts": ["stunned", "shocked", "paralyzed"] },
     { "id": "energy",    "name": "Energy",    "resClass": "energy",  "inflicts": ["agonized"] },
-    { "id": "burning",   "name": "Burning",   "resClass": "energy",  "inflicts": ["agonized", "burning"], "always": ["agonized", "burning"],
-      "flagged": true, "flagNote": "F23 -- as Electric: no stated RES class for Burning. Stubbed as Energy (no RES without Ablative Plating).",
-      "playerNote": "Whether armor's RES stops fire is still being settled. For now it counts as Energy, so only Ablative Plating lets RES answer it." },
+    { "id": "burning",   "name": "Burning",   "resClass": "energy",  "inflicts": ["agonized", "burning"], "always": ["agonized", "burning"] },
     { "id": "elemental", "name": "Elemental", "resClass": "elemental", "magical": true, "inflicts": [] },
     { "id": "spirit",    "name": "Spirit",    "resClass": "spirit",    "magical": true, "inflicts": [] },
     { "id": "aether",    "name": "Aether",    "resClass": "aether",    "magical": true, "inflicts": [] }
@@ -4137,7 +4134,7 @@ window.SHADOWS_DATA = {
     { "id": "regular",   "name": "Regular",   "text": "The everyday kind. Armor answers, and what gets through heals the usual ways." },
     { "id": "withering", "name": "Withering", "recordsWithering": true, "text": "Armor answers as normal. What gets through won't regenerate. It heals only with rest and medicine, once you're clear of the source." },
     { "id": "massive",   "name": "Massive",   "bypassesArmor": true, "inflicts": ["injured", "maimed"],
-      "text": "Siege weapons, vehicle guns, big explosives. Skips PROT and RES, strips Integrity equal to the damage, and takes Health Levels away outright." }
+      "text": "Siege weapons, vehicle guns, grenades and other explosives. Skips PROT and RES, strips Integrity equal to the damage, and takes Health Levels away outright." }
   ],
   "damageRules": {
     "massive": {
