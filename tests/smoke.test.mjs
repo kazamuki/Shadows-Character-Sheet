@@ -1246,7 +1246,7 @@ test("W22: step 7's sticky bar filters the picks, keeps what you hold, and survi
   const bar = app.$("#main .jumpbar.sticky");
   assert.ok(bar, "step 7 has no sticky jump bar");
   const labels = app.$$("#main .jumpbar [data-jump]").map(b => b.textContent);
-  for (const l of ["Disadvantages", "Advantages", "Starting spells", "Boosts"]) assert.ok(labels.includes(l), `no jump to ${l}`);
+  for (const l of ["Disadvantages", "Advantages", "Starting spells", "CP Boosts"]) assert.ok(labels.includes(l), `no jump to ${l}`);
   assert.match(bar.textContent, /Remaining \d+ CP/, "the bar doesn't keep the CP left in view");
   const filter = () => app.$("#main [data-jumpfilter]");
   const shown = () => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h2").textContent);
@@ -7704,4 +7704,27 @@ test("Decision 217: an Arcanist sees the plain line and Add one; a written-in Ma
   const app2 = openSheet(saved, "progression");
   assert.match(app2.$("#main .journal").textContent, /Specialist/);
   assert.deepEqual(app2.errors, []);
+});
+
+// ── P7: LUCK and the Max Character Point Boost (Decision 218) ───────────
+test("P7: a Street character's LUCK + goes off after 2 with its reason, and the CP step names the cap", () => {
+  const app = arcanistOnCP();
+  const luckRow = () => app.$$("#main .pick").find(p => /Buy up LUCK/.test(p.textContent));
+  const plus = () => luckRow().querySelector('[data-step="luck|x|1"]');
+  const cap = D.powerLevels.find(p => p.id === "street").maxBoost;
+  for (let i = 0; i < cap; i++) { assert.ok(!plus().disabled, `+ is off after ${i}`); app.click('#main [data-step="luck|x|1"]'); }
+  assert.ok(plus().disabled, "+ stays on past the cap");
+  assert.match(luckRow().querySelector(".mod").title, /Max Character Point Boost reached: 2 each at Street Level\./);
+  assert.match(luckRow().textContent, /up to 2 \(Max Character Point Boost\)/);
+  assert.ok(!luckRow().querySelector('[data-step="luck|x|-1"]').disabled, "− must always work");
+  assert.equal(app.$$("#main .jumpbar [data-jump]").some(b => b.textContent === "CP Boosts"), true);
+  assert.match(app.$("#main").textContent, /Character Point Boosts — leftover CP on Stats & Skills · up to 2 each, LUCK included/);
+  assert.doesNotMatch(app.$("#main").textContent, /Max Boost|exempt/, "the old name or the exemption still shows");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P7: the Campaign Power Level chip reads Max CP Boost", () => {
+  const app = onStep("arcanist", "street", "power-level");
+  assert.match(app.$("#main").textContent, /Max CP Boost\s*2/);
+  assert.doesNotMatch(app.$("#main").textContent, /Max Boost/);
 });

@@ -5495,13 +5495,20 @@ test("Decision 215: a buy CP can't cover is refused, and a power rank leaves spe
   const ch = vampire("strigoi", { pl: "street", locked: false });
   const left = Engine.cp(ch).left;
   ch.advantages = [];
-  // Spend down to one point under a rank's price with LUCK, which costs less.
+  // Spend down to one point under a rank's price with Boosts, each held to the
+  // Max Character Point Boost (Decision 218): this test is about power ranks.
   const luck = D.resources.luck.cpCostPerPoint;
-  ch.trackers.luck.bonus = Math.floor((left - 4) / luck);
+  const cap = Engine.powerLevel(ch).maxBoost;
+  let toSpend = left - 4;
+  for (const t of [...D.stats.map(s => ["stat", s.id]), ...D.skills.map(s => ["skill", s.id])]) {
+    const n = Math.min(cap, toSpend);
+    if (n > 0) { Engine.addBoost(ch, t[0], t[1], n); toSpend -= n; }
+  }
+  assert.equal(toSpend, 0, "not enough Boost targets to drain the CP");
   assert.ok(Engine.cp(ch).left < Engine.powerRankCost() && Engine.cp(ch).left > 0);
   assert.match(Engine.buyPowerRank(ch, "bestial-blessings", 1).why, /No Character Points left/);
   // spendable("cp") is about what a point can still buy: LUCK, a stat, a skill. A power rank costs more than LUCK.
-  assert.equal(Engine.spendable(ch, "cp"), Engine.cp(ch).left >= luck || D.stats.some(s => Engine.canBoost(ch, "stat", s.id).ok) || D.skills.some(s => Engine.canBoost(ch, "skill", s.id).ok));
+  assert.equal(Engine.spendable(ch, "cp"), Engine.canBoost(ch, "luck", "LUCK").ok || D.stats.some(s => Engine.canBoost(ch, "stat", s.id).ok) || D.skills.some(s => Engine.canBoost(ch, "skill", s.id).ok));
   assert.ok(Engine.powerRankCost() > luck, "a power rank no longer costs more than LUCK, so spendable('cp') needs a power term");
 });
 
@@ -7609,4 +7616,76 @@ test("Decision 217: an Admin-added written-in Major borrows the next unlocked sl
   assert.equal(Engine.milestoneState(ch).majorLeft, -1);
   ch.progression.milestonePoints = 10;
   assert.equal(Engine.milestoneState(ch).majorLeft, 0, "the next unlocked Major is spent on it");
+});
+
+// ── P7: LUCK bought with CP counts against the Max Character Point Boost (Decision 218) ──
+function unlockedAt(levelId) {
+  const ch = subject();
+  ch.creation.locked = false;
+  ch.creation.powerLevel = levelId;
+  ch.advantages = [];
+  return ch;
+}
+
+test("Decision 218: LUCK takes exactly maxBoost points at every level, then canBoost refuses", () => {
+  for (const pl of D.powerLevels) {
+    const ch = unlockedAt(pl.id);
+    let bought = 0;
+    while (Engine.canBoost(ch, "luck", "LUCK").ok && bought < 50) { ch.trackers.luck.bonus++; bought++; }
+    assert.equal(bought, pl.maxBoost, `${pl.id}: LUCK bought`);
+    assert.equal(Engine.luckState(ch).max, D.resources.luck.startingValue + pl.maxBoost, `${pl.id}: the starting value sits outside the cap`);
+    const r = Engine.canBoost(ch, "luck", "LUCK");
+    assert.equal(r.why, `Max Character Point Boost reached: ${pl.maxBoost} each at ${pl.name}.`);
+  }
+});
+
+test("Decision 218: canBoost reads LUCK's own price, resources.luck.cpCostPerPoint, not the stat Boost's", () => {
+  const ch = unlockedAt(D.powerLevels[0].id);
+  const bal = Engine.cp(ch).left;
+  ch.creation.boosts = [{ targetType: "stat", targetId: "BOD", times: 0 }];
+  const luckPrice = D.resources.luck.cpCostPerPoint, boostPrice = D.creationFlow.boostRules.cpCostPerPoint;
+  try {
+    D.resources.luck.cpCostPerPoint = bal + 1;
+    assert.equal(Engine.canBoost(ch, "luck", "LUCK").ok, false, "LUCK's price isn't the one read");
+    assert.equal(Engine.canBoost(ch, "luck", "LUCK").why, "No Character Points left.");
+    D.resources.luck.cpCostPerPoint = luckPrice; D.creationFlow.boostRules.cpCostPerPoint = bal + 1;
+    assert.equal(Engine.canBoost(ch, "luck", "LUCK").ok, true, "the stat Boost's price leaked into LUCK");
+  } finally { D.resources.luck.cpCostPerPoint = luckPrice; D.creationFlow.boostRules.cpCostPerPoint = boostPrice; }
+});
+
+test("Decision 218: spendable('cp') is false when only capped LUCK could take the CP", () => {
+  const ch = unlockedAt(D.powerLevels[0].id);
+  const cap = Engine.powerLevel(ch).maxBoost;
+  ch.trackers.luck.bonus = cap;
+  // CP left over, with every stat and skill at its own cap so nothing else can take it.
+  for (const s of D.stats) ch.stats[s.id].base = D.statRules.max;
+  for (const s of D.skills) { const c = Engine.skillRankCap(ch, s.id); if (c != null) ch.skills[s.id] = { rank: c, notes: "" }; }
+  ch.creation.boosts = [];
+  assert.ok(Engine.cp(ch).left >= D.resources.luck.cpCostPerPoint, "the probe needs CP left over");
+  assert.equal(Engine.canBoost(ch, "luck", "LUCK").ok, false);
+  assert.equal(Engine.spendable(ch, "cp"), false, "capped LUCK is CP left to spend");
+  ch.trackers.luck.bonus = cap - 1;
+  assert.equal(Engine.spendable(ch, "cp"), true, "an uncapped LUCK point is");
+});
+
+test("Decision 218: validate names LUCK and a stat or skill over the cap, as errors", () => {
+  const ch = unlockedAt(D.powerLevels[0].id);
+  const pl = Engine.powerLevel(ch), errs = () => Engine.validate("character-points", ch).filter(i => i.level === "error").map(i => i.msg);
+  ch.trackers.luck.bonus = pl.maxBoost;
+  assert.ok(!errs().some(m => /Max Character Point Boost/.test(m)), "LUCK at the cap is fine");
+  ch.trackers.luck.bonus = pl.maxBoost + 1;
+  assert.ok(errs().includes(`LUCK is bought up ${pl.maxBoost + 1}. Max Character Point Boost at ${pl.name} is ${pl.maxBoost}.`), errs().join(" | "));
+  ch.trackers.luck.bonus = 0;
+  ch.creation.boosts = [{ targetType: "stat", targetId: "BOD", times: pl.maxBoost + 1 }];
+  const bod = D.stats.find(s => s.id === "BOD").name;
+  assert.ok(errs().includes(`${bod} is boosted ${pl.maxBoost + 1} times. Max Character Point Boost at ${pl.name} is ${pl.maxBoost}.`), errs().join(" | "));
+});
+
+test("Decision 218: a locked file over the cap loads as it is, and nothing reports it", () => {
+  const ch = subject();                               // locked
+  ch.trackers.luck.bonus = Engine.powerLevel(ch).maxBoost + 1;
+  const back = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  assert.equal(back.trackers.luck.bonus, ch.trackers.luck.bonus, "migrate trimmed a locked file's LUCK");
+  assert.equal(Engine.luckState(back).max, D.resources.luck.startingValue + ch.trackers.luck.bonus);
+  assert.equal(Engine.versionCheck(back).filter(m => /luck/i.test(m)).length, 0, "versionCheck mentions a locked file's LUCK");
 });

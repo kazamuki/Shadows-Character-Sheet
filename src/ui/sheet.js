@@ -2145,7 +2145,7 @@ function renderShAdmin(){
   h += `<div class="sect">Campaign &amp; Archetype</div>`;
   h += `<div class="trk"><h2>Power Level</h2>
     <select data-admin-pl>${D.powerLevels.map(p=>`<option value="${p.id}" ${ch.creation.powerLevel===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
-    <span class="sub">Changes every cap (Max Skill/Power Rank, Max Boost) and the CP budget. Stored values don't move, so the sheet may read "over" until you adjust them.</span></div>`;
+    <span class="sub">Changes every cap (Max Skill Rank, Max Power Rank, Max Character Point Boost) and the CP budget. Stored values don't move, so the sheet may read "over" until you adjust them.</span></div>`;
   h += `<div class="trk"><h2>Archetype</h2>
     <select data-admin-arch><option value="">— none —</option>${D.archetypes.map(a=>`<option value="${a.id}" ${ch.identity.archetype===a.id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>
     <span class="sub" style="color:var(--magenta)">⚠ Changing archetype clears every archetype-specific choice — focus / stat-bonus allocations, specialization, disciplines, natural advantages. One undo brings it all back.</span></div>`;

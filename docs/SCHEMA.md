@@ -115,7 +115,7 @@ window.SHADOWS_DATA = {
   resources: {
     luck: {
       startingValue: 2,
-      cpCostPerPoint: 1              // F1/F2 confirmed 1:1 (Decision 97); bought on its own line, so Max Boost never applies
+      cpCostPerPoint: 1              // F1/F2 confirmed 1:1 (Decision 97); one Boost of LUCK a point, under the Max Character Point Boost (Decision 218)
     },
     healthLevels: {
       maxLevels: 10,                 // 1 Health Level per point of BOD, an invariant (Decision 64)
@@ -1107,18 +1107,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 2. **Terminology:** stat pool = **Stat Points** (old "Character Points"
    column); old "Freebie Points" = **Character Points** (CP). "Max Freebie
    Boost" = **Max Boost**.
+    → **Superseded in part by Decision 218** — the cap is called the Max Character Point Boost wherever a player reads it.
 3. **Max Boost semantics:** after advantages are bought, leftover CP may boost
    powers, skills, or stats — but any single target may be boosted at most
    `maxBoost` times (anti-min-max throttle). Enforced via the `boosts` ledger.
    Table maximums (Max Skill Rank, Max Power Rank, stat cap 10) still apply on
    top.
+    → **Superseded in part by Decision 218** — LUCK bought with CP is a boosted target too.
 4. **Costs at creation:** Stat Points 1:1 (stats start at base 1, max 10).
    Skill Points 1:1 up to Max Skill Rank. Advantages cost CP; disadvantages
    grant CP, **no cap** — design philosophy: do whatever you want, at a cost.
     → **Superseded in part by Decision 150** — a stat point costs 1 up to 6 and 2 from 7 to 10; Skill Points and CP stand.
 5. **LUCK:** everyone starts at 2. Buy-ups use CP, treated like an advantage
    purchase, **exempt from Max Boost**.
-    → **Superseded in part by Decision 157** — everyone starts at 4.
+    → **Superseded in part by Decisions 157 and 218** — everyone starts at 4 (157); bought LUCK is no longer exempt from the cap (218).
 6. **Health Levels:** 1 HL per point of BOD, 5 HP per HL.
 7. **Çredits:** player rolls physically, enters result; pool = table formula.
 8. **Skill checks:** 1d10 + Rank + Primary Stat (full score) + Synergy Bonus
@@ -3855,6 +3857,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 5 in part (start at 4, not 2); Decision 19 in part (5 CP, not 6); Decision 97 in part (a power is no longer boosted at 1 CP a point). Decision 135 stands: the price is still data, now one key for every power. Closes W37.
      - **Revisit if:** LUCK is wanted by Campaign level after all, or a power needs a price of its own.
      - **Built:** app 0.35.0, game data 0.28, no schema bump; `rules.test.mjs` pins both. Log 2026-10-01.
+    → **Superseded in part by Decision 218** — "bought up to 5 becomes 7" holds only for a locked file or a level whose cap allows it.
 
 158. **Traits and Archetype are one Character tab: the archetype, then Advantages beside Disadvantages.**
      *2026-10-01 · Ken + Claude · Touches: Character tab, Traits tab, Archetype tab, SHEET_SECTIONS, LEGACY_SECTION, renderShCharacter, arch-cols, trait-cols, Expand all, Collapse all, traitsOpen, data-gotab, jump bar, Baseline Traits, Powers, Vulnerabilities, Advantages, Disadvantages*
@@ -4620,6 +4623,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 29 in part (the Minor repeat floor). Decision 199 in part (a Werewolf's Majors are offered alone). Closes F9.
      - **Revisit if:** another archetype's Majors are written, or Withering's levels count as lost.
      - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #…. Log 2026-10-14 (P6).
+
+218. **LUCK bought with CP counts against the Max Character Point Boost, and "Max Boost" is called that.**
+     *2026-10-14 · Ken + Deighton + Claude · Touches: LUCK, trackers.luck.bonus, resources.luck.cpCostPerPoint, canBoost, spendable, validate, maxBoost, Max Boost, Max Character Point Boost, Boosts, creationFlow step 7, W65, W66*
+     - **Decided:** At creation, each point of LUCK bought with CP is one Boost of LUCK, held to the Campaign Power Level's `maxBoost` like any stat or skill; the 4 everyone starts with is outside it. `canBoost(ch, "luck")` is the one place it's checked, at LUCK's own price (`resources.luck.cpCostPerPoint`), and `spendable("cp")` asks it. `validate("character-points")` blocks locking while LUCK, a stat or a skill is over the cap (an old draft, or a lower Power Level chosen afterwards). A locked file is never changed or reported, and Admin's LUCK bonus, which writes the same field, is uncapped. The cap's name, wherever a player reads it, is Max Character Point Boost; keys stay `maxBoost` and `boosts`.
+     - **Why:** Ken (2026-10-04), confirmed by Deighton: consistency is the right place to start, so LUCK is capped like everything else. CRB v4 prints no Max Boost; this is their ruling, not the book's words.
+     - **Rejected:** keeping LUCK exempt (Decision 5: the one target with no throttle); counting the starting 4 against the cap (only CP spent counts); trimming a locked file's LUCK to the cap (a file's paid-for points are never discarded, Decision 157); warning instead of blocking; capping Admin's LUCK bonus (Admin bypasses caps); renaming `maxBoost` (constraint 6).
+     - **Replaces:** Decision 2 in part (the name Max Boost). Decision 3 in part (LUCK is a boosted target). Decision 5 in part (no longer exempt). Decision 157 in part (its "bought up to 5 becomes 7" holds only for a locked file or a level whose cap allows it).
+     - **Revisit if:** playtests or player feedback say LUCK should run free, or CRB v4 prints the table with different numbers.
+     - **Built:** app 0.43.1, game data 0.37, no schema bump, PR #…. Log 2026-10-14 (P7).
 
 ## 5. Open Flags
 

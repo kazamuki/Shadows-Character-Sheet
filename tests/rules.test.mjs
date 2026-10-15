@@ -1527,3 +1527,15 @@ test("0450: the six Minor Milestones are the book's words, and Improved's roll i
   assert.equal(JSON.stringify(D.milestones.minorShared.find(m => m.id === "steadied").choice.options), JSON.stringify([{ kind: "san", points: 10 }, { kind: "massiveLevel", levels: 1 }]));
   assert.match(md, /Restore 10 points of lost Sanity or 1 lost Health Level/);
 });
+
+test("Ken's ruling, Deighton confirmed (2026-10-04): LUCK bought with CP is held to the Max Character Point Boost; the starting 4 is outside it (Decision 218)", () => {
+  // CRB v4 prints no Max Boost column, so this is the ruling and not the book's words.
+  for (const pl of D.powerLevels) {
+    const ch = subject();
+    ch.creation.locked = false; ch.creation.powerLevel = pl.id; ch.advantages = [];
+    assert.equal(Engine.luckState(ch).max, 4, `${pl.id}: the 4 everyone starts with`);
+    ch.trackers.luck.bonus = pl.maxBoost;
+    assert.equal(Engine.canBoost(ch, "luck", "LUCK").ok, false, `${pl.id}: LUCK past ${pl.maxBoost} bought`);
+    assert.equal(Engine.luckState(ch).max, 4 + pl.maxBoost);
+  }
+});

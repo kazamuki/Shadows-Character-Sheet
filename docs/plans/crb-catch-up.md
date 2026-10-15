@@ -35,9 +35,9 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ ⚖ **Step 7, "Allocate any remaining points".** The book never says what leftover CP buys. The sheet uses these rules, all of them ruled:
   - Boosting a **stat or skill costs 1 CP per point** (Decision 97).
   - **A power rank costs 5 CP**, for any power: Disciplines today, Vampire powers later. It's capped by **Max Power Rank: 2 / 3 / 4 / 5** (Decision 157).
-  - **Max Boost:** no single stat or skill can be boosted more than **2 / 3 / 4 / 5** times by Power Level, and the table caps (stat 10, Max Skill Rank) still apply (Decision 3).
-  - **LUCK** at 1 CP a point is exempt from Max Boost (Decision 5).
-- ☐ (suggestion) **One Campaign Power Level table.** The numbers are spread over 0400, 0420 and 0430, and two of those three are now wrong. A single table in 0400 would fix that: Stat Points (flat/rolled), Skill Points, Max Skill Rank, CP, Max Power Rank, Max Boost and starting Çredits. 0420 and 0430 would point to it.
+  - **Max Character Point Boost** (the app's name; the book's old column is "Max Freebie Boost" and v4 prints none): no single stat, skill or point of LUCK can be boosted more than **2 / 3 / 4 / 5** times by Power Level, and the table caps (stat 10, Max Skill Rank) still apply (Decisions 3 and 218).
+  - **LUCK** at 1 CP a point counts against that cap: a Street Level character buys at most 2. The 4 everyone starts with is outside it (Decision 218).
+- ☐ (suggestion) **One Campaign Power Level table.** The numbers are spread over 0400, 0420 and 0430, and two of those three are now wrong. A single table in 0400 would fix that: Stat Points (flat/rolled), Skill Points, Max Skill Rank, CP, Max Power Rank, Max Character Point Boost and starting Çredits. 0420 and 0430 would point to it.
 
 ## 0410–0414: Archetypes, Arcanist, Professional, Vampire, Werewolf
 
@@ -92,7 +92,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 ## 0440_Disadvantages
 
 - ✅ **Faultlessly Honest.** The heading reads "Faultlessly Honest**1**", with a stray "1". *(New since the 09-24 mirror.)*
-- ☐ ⚖ **End of the section: buying LUCK with CP.** Add a line on buying extra LUCK at **1 CP a point**, at creation, exempt from Max Boost (Decisions 5, 97). 0300 › Luck states the price, but this is where players spend leftover CP (Ken, 2026-10-04).
+- ☐ ⚖ **End of the section: buying LUCK with CP.** Add a line on buying extra LUCK at **1 CP a point**, at creation, up to the Max Character Point Boost (Decisions 97, 218). 0300 › Luck states the price, but this is where players spend leftover CP (Ken, 2026-10-04).
 - ✅ **Minor Insanity.** "You may spend IP during play to buy out this Disadvantage" should say **between sessions**, matching 0450 and its own callout.
 
 ## 0450_Advancement
