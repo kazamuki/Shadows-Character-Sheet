@@ -129,7 +129,9 @@ src/ui/                 Wizard + sheet + GM mode, as five classic scripts sharin
                         86 and 172.
 src/styles/             shadows.css (brand tokens + screen), print.css, and
                         fonts.css, generated, with its licences in fonts/.
-tests/                  Engine units, CRB conformance, hostile files, voice, smoke, guards.
+tests/                  Engine units, CRB conformance, hostile files, voice, guards, and
+                        the jsdom smoke tests: smoke-<area>.test.mjs, split so they
+                        run in parallel, sharing helpers from smokekit.mjs.
 tools/                  build.mjs (inlines everything into dist/), changelog.mjs,
                         release.mjs (bump, prep, check), fonts.mjs, outputs.mjs,
                         phone-check.mjs, devserver.mjs, session-start.mjs.

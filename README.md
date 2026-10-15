@@ -61,7 +61,7 @@ docs/
   audits/  plans/  log/ Whole-app audits · multi-session plans · session history.
 .claude/                Claude Code's session hook, dev-server launcher, and skills/: the procedures as runbooks.
 .github/workflows/      verify (every PR) and release (one run: check, build, tag, publish, deploy).
-tests/                  Engine units, CRB conformance, hostile files, voice, jsdom smoke, guards.
+tests/                  Engine units, CRB conformance, hostile files, voice, guards; jsdom smoke in smoke-<area>.test.mjs.
 tools/                  build.mjs (the single file), changelog.mjs, release.mjs, and dev helpers.
 ```
 
