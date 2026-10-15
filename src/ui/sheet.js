@@ -228,7 +228,7 @@ function vitalsPanelHtml(ch){
   h += `<div class="vgroup">`;
   // Each one the vitals bar opens, this opens too, to the left (Decision 160).
   const cs=Engine.conditionState(ch);
-  h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp", "", "hp");
+  h += vrow("HP", (pain.pastZero?"−"+pain.pastZero:pain.hpLeft)+" / "+hp.total, pain.down?"over":"hp", "", "hp");
   h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"", "", "pain");
   if (cs.active.length) h += vrow("Cond", cs.isHelpless?"HELPLESS":cs.active.length, "over", "", "cond");
   h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
@@ -1147,7 +1147,7 @@ function vitalPopover(ch, key){
   const pain=Engine.painState(ch), hp=Engine.health(ch);
   const now = (big, cls, sub) => `<div class="pop-now"><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
   if (key==="hp") return { title:"Health",
-    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)) + damageStepperHtml(ch) +
+    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)+(pain.pastZero?" · "+pastZeroText(pain):"")) + damageStepperHtml(ch) +
       `<div class="trk-actions"><button class="btn sm primary" data-pophit>Take a hit</button>
        <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
   if (key==="pain" || key==="cond") return { title:"Pain & Conditions",

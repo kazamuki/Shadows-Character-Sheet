@@ -925,6 +925,9 @@ test("P8b 15: past zero shows only while down and past it", () => {
   assert.match(trackers.$("#main .trk").textContent, /7 past zero/);
   assert.match(main.$("#main").textContent, /7 past zero/);
   assert.equal(trackers.$(".vpill.hp").textContent.replace(/\s+/g, ""), "HP−7/30");
+  assert.equal(trackers.$('#vdrawer [data-vpop="hp"]').textContent.replace(/\s+/g, ""), "HP−7/30", "the pinned drawer's HP row");
+  trackers.click(".vpill.hp");
+  assert.match(trackers.$("#vpop").textContent, /7 past zero/, "the HP popover");
   for (const damage of [30, 12]) {
     const t = at(damage, "trackers"), m = at(damage, "main");
     assert.doesNotMatch(t.$("#main").textContent, /past zero/, `damage ${damage} on Trackers`);
