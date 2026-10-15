@@ -4,8 +4,8 @@
 healing half (`WISHLIST.md`). Closes **F24, F36**. Opens no flag.
 Decisions 100, 105, 151, 189 and 192; P8a's Decision 219 for the shape.
 **Status:** **drafted 2026-10-15 by Claude (Opus)**, pre-flighted against
-`main` after #180 (P8a merged, 0.44.0 unreleased). **Waiting on Ken: PQ1–PQ6**
-(§4).
+`main` after #180 (P8a merged, 0.44.0 unreleased). **Approved by Ken 2026-10-15**: PQ1–PQ4 and PQ6 on their defaults, PQ5 with
+the HP pill added (§4). Ready to build.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **The second order on the two-session trial** (`sheet-wishlist.md`, "From P8a
 on"). If it holds up again, the cadence moves into `gm-mode/README.md` in the
@@ -45,7 +45,7 @@ When P8b is merged:
    Nanomed Kit, and the Heal 1 / Heal 5 steppers (PQ2) wipe damage past zero
    before they add HP. The panel says so in one line.
 2. **Damage past zero shows while you're down.** Trackers' Damage card and
-   Main's Health card read "0 / 30 HP" and **"7 past zero"** (PQ5). Nothing
+   Main's Health card read "0 / 30 HP" and **"7 past zero"**, and the HP pill reads **-7** (PQ5). Nothing
    shows when you're not past zero.
 3. **A gritty option keeps it.** Admin has a toggle, beside TAGless, that
    keeps damage past zero, so healing counts up from the full total as it
@@ -113,14 +113,14 @@ the INDEX line's first mark.
 
 ## 4. Questions for Ken
 
-| Id | Question | Default |
+| Id | Question | Answer |
 |---|---|---|
-| PQ1 | **Where the gritty option lives.** W102 said "prefer the character". | **On the character:** `houseRules: { keepDamagePastZero: false }`, a new top-level object, so the next per-character house rule has a home. Set in Admin beside TAGless (`sheet.js` ~2145, the precedent), audited as `Admin: keep damage past zero` / `… wipe …`. Not in the wizard. |
-| PQ2 | **What counts as "the first healing".** | **Anything that restores HP or a Massive level:** Rest, Focused Healing, a Nanomed Kit, and **Heal 1 / Heal 5** (Main's and the popover's, one binder). **The typed total and Hurt stay raw corrections** (Decision 151), and so does **Heal all** (it sets 0 anyway). A Focused Healing that only clears a Condition (0 HP, no level) wipes nothing. |
-| PQ3 | **Focused Healing with a Massive level, past zero.** Probe: Massive 1, damage 32 on capacity 25. Focused 3 HP + 1 level. | **Wipe first, against today's capacity, then heal, then the level comes back whole:** 32 → 25 → 22, capacity 30, **HP 8**. The other order (the level comes back, then the wipe) gives HP 3, because the overflow eats the restored level. "Healing counts from 0 HP" says the character is at 0 when the care starts. |
-| PQ4 | **GM mode's rows.** A row stores `damage` and heals by a negative Take (`participantDamage`, Decision 189). | **Rows follow the rule:** a negative Take on a row past zero wipes the overflow first. **No gritty option for rows.** A GM who wants it raises a W item. An NPC row's capacity is its stand-in's (`_standIn` → `hlState`); a PC row's is `_pcHealth`'s (`hp − massive × hpPer` when whole, else `hp`). |
-| PQ5 | **Where "past zero" shows.** | **Trackers' Damage card and Main's Health card**, as a line under the headline, only while down and past zero: "7 past zero". Not in the vitals pill (too small), not on the print sheet. GM mode's row shows it where a row shows HP left: "0 HP · 7 past zero". |
-| PQ6 | **Turn Reset's panel while Dying, with something ticking.** | **Both, in this order:** the damage line, then "You're Dying, so that's 1 Death Mark.", then the Dying check box with Passed / Failed. The commit label is unchanged (`Turn Reset: 1 damage, 2 Death Marks`). GM mode's Reset row says "**Dying:** 1 source ticked: 1 Death Mark. Then <the check>." |
+| PQ1 | **Where the gritty option lives.** W102 said "prefer the character". | **Ken, 2026-10-15: the default.** Counting from 0 HP is the rule, as Deighton picked (Q4); keeping damage past zero is the opt-in. Ken first read it the other way round and checked it against the ruling: the default stands. **On the character:** `houseRules: { keepDamagePastZero: false }`, a new top-level object, so the next per-character house rule has a home. Set in Admin beside TAGless (`sheet.js` ~2145, the precedent), audited as `Admin: keep damage past zero` / `… wipe …`. Not in the wizard. |
+| PQ2 | **What counts as "the first healing".** | **Ken, 2026-10-15: the default.** **Anything that restores HP or a Massive level:** Rest, Focused Healing, a Nanomed Kit, and **Heal 1 / Heal 5** (Main's and the popover's, one binder). **The typed total and Hurt stay raw corrections** (Decision 151), and so does **Heal all** (it sets 0 anyway). A Focused Healing that only clears a Condition (0 HP, no level) wipes nothing. |
+| PQ3 | **Focused Healing with a Massive level, past zero.** Probe: Massive 1, damage 32 on capacity 25. Focused 3 HP + 1 level. | **Ken, 2026-10-15: the default.** **Wipe first, against today's capacity, then heal, then the level comes back whole:** 32 → 25 → 22, capacity 30, **HP 8**. The other order (the level comes back, then the wipe) gives HP 3, because the overflow eats the restored level. "Healing counts from 0 HP" says the character is at 0 when the care starts. |
+| PQ4 | **GM mode's rows.** A row stores `damage` and heals by a negative Take (`participantDamage`, Decision 189). | **Ken, 2026-10-15: the default.** **Rows follow the rule:** a negative Take on a row past zero wipes the overflow first. **No gritty option for rows.** A GM who wants it raises a W item. An NPC row's capacity is its stand-in's (`_standIn` → `hlState`); a PC row's is `_pcHealth`'s (`hp − massive × hpPer` when whole, else `hp`). |
+| PQ5 | **Where "past zero" shows.** | **Ken, 2026-10-15: the default, plus the pill.** The HP pill in the vitals bar reads **-7** (over the total, as it reads HP left today: `-7/30`), already red because the character is down. **Trackers' Damage card and Main's Health card**, as a line under the headline, only while down and past zero: "7 past zero". Not on the print sheet. GM mode's row shows it where a row shows HP left: "0 HP · 7 past zero". |
+| PQ6 | **Turn Reset's panel while Dying, with something ticking.** | **Ken, 2026-10-15: the default.** **Both, in this order:** the damage line, then "You're Dying, so that's 1 Death Mark.", then the Dying check box with Passed / Failed. The commit label is unchanged (`Turn Reset: 1 damage, 2 Death Marks`). GM mode's Reset row says "**Dying:** 1 source ticked: 1 Death Mark. Then <the check>." |
 
 ## 5. What this changes underneath (the assumption sweep)
 
@@ -140,7 +140,7 @@ and **where does each new or removed note render?**
 | Heal 1 / Heal 5 grey out at `damage===0` | `sheet.js` ~1097, `vitalVerbsHtml` | Unchanged: past zero, damage is > 0. |
 | `setDamage` trims `witheringDamage` to the new damage | `sheet.js` ~2815 | It still runs after the wipe. `heal()` does the same (~1711). Withering past zero is wiped with the rest: Withering 35 on capacity 30 → 30 after the wipe. Pin it. |
 | `hlState` has no "past zero" number; `hpLeft` floors at 0 | `engine.js` ~772 | Add `pastZero: max(0, damage − capacity)`. Read by the readout (PQ5) and by `heal()`. `down` is unchanged. |
-| Nothing on the sheet shows damage past zero ("0 / 30 HP", DOWN) | `sheet.js` ~1180 (Trackers), Main's Health card | "7 past zero" under the headline, while `pastZero > 0` (PQ5). |
+| Nothing on the sheet shows damage past zero ("0 / 30 HP", DOWN) | `sheet.js` ~1180 (Trackers), Main's Health card, the HP pill (~199) | "7 past zero" under the headline, and the pill shows `-pastZero` in place of `hpLeft`, while `pastZero > 0` (PQ5). |
 | `resolveHit` and `resolveReset` add damage with no ceiling | `engine.js` ~1083, ~1758 | Unchanged: that's the reference. A hit while Dying keeps adding past zero. |
 | `damagePrompts`' At Zero reads `after.down` | `engine.js` ~1038 | Unchanged. A healed character back above zero who's hit again to zero is asked At Zero again, as today. |
 | **F24 stub:** `marks = ticking`, `dyingCheck` only when nothing ticked, the `whileDying.playerNote` pushed when Dying and ticking | `engine.js` ~1752 `resolveReset` | `dyingCheck` whenever Dying. `marks` is still the ticking count. No note: `whileDying` loses `flagged`, `flagNote` and `playerNote`. `applyReset` already adds a failed check's mark to `marks` (~1764): confirm, don't rewrite. |
@@ -271,7 +271,7 @@ The character is a **Professional at BOD 6**: 6 Health Levels × 5 = 30 HP.
 | `P8b 12: house rules survive migrate and a hostile file` | engine | A 0.22 file → `houseRules.keepDamagePastZero` false, schema 0.23. `"yes"`, 1, `[]`, null → false. `true` round-trips. `newCharacter()` round-trips through `migrate()`. |
 | `P8b 13: Heal 1 from past zero lands on 1 HP` | smoke | Main, 7 past zero: Heal 1 → "1 / 30 HP". Undo → 37. With the gritty toggle on → damage 36, "6 past zero". |
 | `P8b 14: the Rest panel says the overflow goes first` | smoke | 7 past zero, Rest 1: "The 7 past zero go first." and "Damage 37 → 29." |
-| `P8b 15: past zero shows only while down and past it` | smoke | Damage 37: Trackers and Main read "7 past zero". Damage 30: down, no line. Damage 12: no line. |
+| `P8b 15: past zero shows only while down and past it` | smoke | Damage 37: Trackers and Main read "7 past zero", and the HP pill reads -7/30. Damage 30: down, no line. Damage 12: no line. |
 | `P8b 16: Admin keeps damage past zero, undoably` | smoke | Admin toggle → `houseRules.keepDamagePastZero` true, the log reads "Admin: keep damage past zero", undo → false. |
 | `P8b 17: Turn Reset while Dying shows the marks and the check` | smoke | Dying + Bleeding: the panel shows "1 Death Mark" and the Dying check; Apply refuses until it's marked; no unsettled notice. |
 | `P8b 18: GM mode's Reset row shows the marks and the check` | smoke-table | Dying + Bleeding row: the Reset screen shows both. |
@@ -363,7 +363,7 @@ and Ken is in both.
 Start it with the title **P8b build**, and paste:
 
 > Read `CLAUDE.md`, then `docs/plans/sheet-wishlist/P08b-healing.md`, and
-> build it. Ken's answers to PQ1–PQ6 are in its §4. Follow its steps (§11) in
+> build it. Ken's answers to PQ1–PQ6 are in its §4 (five on their defaults; PQ5 adds the HP pill). Follow its steps (§11) in
 > order and its *Stop and ask* list (§12) exactly. If something isn't covered
 > by the order, stop and ask me rather than choosing. Where the order and the
 > code or the ledger disagree in a way that doesn't stop you, build what the
