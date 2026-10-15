@@ -103,7 +103,7 @@ is the authority on a flag's full text.
 | **Milestones & doc reconciliation** — F12, F32 | ✅ **P6 built** (Decision 217): any Minor repeats, Improved 3d10+30, Skilled, Honed, Redeemed, Talented and Steadied each ask by a chooser, the General Majors are the Professional's, any archetype can write in a Major · F9 closed · schema 0.22 | Ken: F32 (Arcanist Majors: every archetype gets its own, so bring REF_CRB's in or write new; until then an Arcanist has none, and **Add one** is the stand-in). F12 |
 | **Advantages/Disadvantages fine print** — the lock-out question | 🔶 mostly settled · F17 closed (Decision 97) | Deighton. Nothing in the CRB names an `excludes` pair yet, so none is invented |
 | **Cyborg** — F6, F19 | ⏸ **cut as an archetype** (team meetings, late 2026-09): cybernetics become a list and a mini-game, Professionals only; Arcanists, Vampires and Werewolves can't take them · data still `status: "tbd"` | Design: the cybernetics list and mini-game. Then the app retires `cyborg` (Rule or shape: a numbered decision, and `migrate()` for any saved Cyborg), closes F6 and F19, and moves Installed Cybernetics to the Professional. W61 proposes folding a saved Cyborg into Custom |
-| **Vampire** | ✅ **`0413` built** (P4, Decisions 200–202): Bloodlines and their choices, the Thirst computed, Pain Immunity · F7 closed · **P3 built** (Decision 215): Innate granted, Base Powers on the Bloodline's, CP raises any held power, an Upyr holds both Built to Last powers, a day without rest · F39 and F41 closed · released in 0.40.0 | Ken: P4b, the Vampire's 24 Majors on P3b's engine, a session of its own (VQ27) |
+| **Vampire** | ✅ **`0413` built** (P4, Decisions 200–202): Bloodlines and their choices, the Thirst computed, Pain Immunity · F7 closed · **P3 built** (Decision 215): Innate granted, Base Powers on the Bloodline's, CP raises any held power, an Upyr holds both Built to Last powers, a day without rest · F39 and F41 closed · released in 0.40.0 | Ken: the Vampire's 24 Majors on P3b's engine (VQ27), now sheet-wishlist **P17**, next after P9b; a Vampire is offered no Major until then, only one written in |
 | **Werewolf** | ✅ **`0414` built** (P3 and P3b, Decisions 195–197, 199): Origins, powers with ranks, Form computed, Call of the Wild, Focus Stats, its own Major Milestones · F7's Werewolf half closed · **P3 built** (Decision 215): Innate powers granted, Base Powers buy the Origin's, CP raises any held power · F38 closed · released in 0.40.0 | Nobody. A Werewolf is offered only its own Majors (Decision 217) |
 | **Arcanist / Magic** | 🔶 spell catalog, Cascade and Aberrations, and **magic on the sheet** all built, plan closed · catalog matches the whole 2026-09-24 book, Inscribed Spells included (Decision 136) · Origins still `status: "draft"` | Deighton + Scott + Bill + Ken — Origins (Book/Blood/Bound) and spheres/implements wait on the four-way comparison from the 2026-09-10 meeting; not blocking |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
@@ -150,9 +150,11 @@ in every ⚖ item. It was re-ticked against the 2026-10-07 mirror.
 renumbered the CRB to four digits (`054` is now `0540`; the mapping is in
 `log/2026.md`, 2026-10-08). P0 and P2 (powers with ranks, 194) shipped in
 0.38.0; P1, P3 and P3b (the Werewolf) and P4 (the Vampire) in 0.39.0
-(195–202). Left: **P4b**, the Vampire's Major Milestones, and **P5**,
-Advancement, whose Minors are built (217); neither has a session in
-`sheet-wishlist.md` yet. W69 and W70 are its P15 and P14.
+(195–202). Its last two passes moved to `sheet-wishlist.md` on 2026-10-15:
+**P4b**, the Vampire's Major Milestones, is that plan's **P17**, next after
+P9b. What's left of **P5**, Advancement (its Minors are built, 217), is
+**P12a** (Advantages and buy-offs, SAN, Health Levels) and **P12b**
+(Training). W69 and W70 are its P15 and P14.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `0411` (Decision 110), and Ken expects the Origins subtypes to replace
