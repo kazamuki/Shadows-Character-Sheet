@@ -4658,7 +4658,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** capping damage at zero on every write (it loses the reference Deighton wants while Dying); the option on the GM's table (the sheet works without one, and it would need a table-schema bump); wiping on a heal that restores nothing (clearing Bleeding isn't healing); the level coming back before the wipe (3 HP, not 8); a tick standing in for the check (Q5).
      - **Replaces:** Decision 100 in part (F24 closed). Decision 151 in part (Heal 1 counts from 0 HP; F36 closed). Decision 189 in part (the Reset asks the check beside the marks).
      - **Revisit if:** a table wants the gritty option for its NPCs, or playtests find the Reset too deadly.
-     - **Built:** app 0.44.0 and game data 0.37 (both unreleased, no bump), character schema 0.23, PR #…. Log 2026-10-15 (P8b).
+     - **Built:** app 0.44.0 and game data 0.37 (both unreleased, no bump), character schema 0.23, PR #183. Log 2026-10-15 (P8b).
 
 ## 5. Open Flags
 
