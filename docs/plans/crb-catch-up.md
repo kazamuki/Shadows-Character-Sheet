@@ -88,6 +88,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ✅ ⚖ **Long-Lived.** Say that ranks **stack**, so rank 3 gives 2 Minor + 1 Major Milestone, and that it's creation-only. The table as printed reads like each rank replaces the last (Decision 97, F17).
 - ✅ ⚖ **Ghost TAG(s).** Add a line saying that the street calls this a Black TAG. *(Or put it in Gear's TAG section, below. One place is enough.)*
 - ✅ The "Ambidextrousa" typo is fixed.
+- ☐ ⚖ **Thick Skin.** "Natural Armor is unaffected by Armor Piercing effects" should add **unless the attack is a spell**: armor-piercing magic gets past Natural Armor (Ken's follow-up to Deighton's Q3, Decision 219). The sheet already does it.
 
 ## 0440_Disadvantages
 
@@ -196,7 +197,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 These block book text, so send them before you write those sections. Deighton's flags are already grouped as one ask in `STATE.md` §5:
 
-- **Deighton:** ~~F23 + F25~~ (ruled and built, Decision 219), F24 (ongoing damage while Dying), F26, F30, F31, F33, F34 (does a swapped magazine keep its rounds?), F36 (is damage past zero kept?), the MD threshold, and whether grenades deal Massive.
+- **Deighton:** ~~F23 + F25~~ (ruled and built, Decision 219), F24 (ongoing damage while Dying), F26, F30, F31, F33, F34 (does a swapped magazine keep its rounds?), F36 (is damage past zero kept?), ~~the MD threshold, and whether grenades deal Massive~~ (ruled 2026-10-10; built, Decision 219).
 - **Team:** whether Minor Milestones can repeat, Talented scope, Advantage rank pricing, Milestones past 10, Supernatural ceilings, and starting Çredits.
 - **Scott:** TN 8 vs. TN 7 on the inscribed Cantrips, and whose 0480 review closes MG-01 and MG-02.
 

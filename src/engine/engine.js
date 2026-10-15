@@ -904,8 +904,8 @@ const Engine = (() => {
   // taken) or a chosen specialization option. `stat` + `plus` reads that
   // stat's modifier (Iron Shirt: BOD bonus + 1). A grant with `while` is
   // conditional: listed, never summed, unless its id is in `activeIds` (the
-  // hit panel asks). How it answers a hit is the F25 stub in
-  // `naturalArmorRules` -- which classes, whether AP gets past it.
+  // hit panel asks). How it answers a hit is `naturalArmorRules` (Decisions
+  // 104 and 219) -- which classes, whether AP gets past it.
   function naturalArmor(ch, activeIds){
     const R = D().naturalArmorRules || {};
     const t = statTable(ch), on = new Set(activeIds || []);
