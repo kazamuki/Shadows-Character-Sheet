@@ -4668,7 +4668,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a sentence added to each mod's description (shown on every weapon, and it edits the book's text); one string per mod (it would tell a handgun that shotguns don't take scopes); a reason per weapon id (Gear's rules are by kind of weapon).
      - **Replaces:** nothing. It adds to Decision 120's fit data. Three *Revisit if*s fired, none reopens: 149's (F26 keeps the stub; F34 is P9b), 152's (`universal`, one of its two answers) and 153's.
      - **Revisit if:** a refusal needs a reason by weapon rather than by category, or another kind of refusal (slots, already installed) wants data text.
-     - **Built:** app 0.45.0, game data 0.38, no schema change, PR #PRNUM. Log 2026-10-15 (P9a).
+     - **Built:** app 0.45.0, game data 0.38, no schema change, PR #186. Log 2026-10-15 (P9a).
 
 
 ## 5. Open Flags
