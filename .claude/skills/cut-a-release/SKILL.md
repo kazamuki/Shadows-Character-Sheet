@@ -19,6 +19,7 @@ build test enforces it).
 
 ```bash
 npm run release:prep            # "## [Unreleased] — app X" → "## vX — <today>", regenerates What's new
+# <today> is your local calendar day; --date YYYY-MM-DD overrides it
 ```
 
 Read the section it dated (`node tools/release.mjs notes`): it becomes the

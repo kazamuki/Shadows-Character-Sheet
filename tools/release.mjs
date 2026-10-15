@@ -11,7 +11,7 @@
  *                              or added empty for you to fill). Then
  *                              regenerates What's new.
  *   npm run release:prep       dates the [Unreleased] heading as the release,
- *                              `## vX.Y.Z — <today>` (or --date YYYY-MM-DD),
+ *                              `## vX.Y.Z — <today>` (local day; or --date YYYY-MM-DD),
  *                              and regenerates What's new. Commit, PR, merge.
  *   npm run release:check      what must be true before a tag: one version
  *                              everywhere, a dated CHANGELOG section with
@@ -106,7 +106,15 @@ export function bump(next) {
   return [`app ${cur} → ${next} in ${[...new Set(SITES.map(s => s.file))].join(", ")}`, note, `regenerated ${CHANGELOG_JS}`];
 }
 
-export function prep(date = new Date().toISOString().slice(0, 10)) {
+// The local calendar day, as the engine's localDay() dates a session (W67,
+// Decision 213). toISOString() is the UTC day, which dated v0.43.0, cut at
+// 8:57 pm Pacific on 2026-10-14, as the 15th.
+export function localDay(d = new Date()) {
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+export function prep(date = localDay()) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`--date wants YYYY-MM-DD, got "${date}"`);
   const v = appVersion(), log = read("CHANGELOG.md"), u = UNRELEASED.exec(log);
   if (!u) throw new Error(released(v).test(log) ? `${v} is already dated in CHANGELOG.md` : "CHANGELOG.md has no [Unreleased] heading");
