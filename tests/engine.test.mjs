@@ -342,7 +342,10 @@ function dataKeys() {
     for (const [k, x] of Object.entries(v)) {
       if (!isMap) {
         const e = keys.get(k) || { paths: new Set(), values: [] };
-        e.paths.add(path || "(top)"); e.values.push(x); keys.set(k, e);
+        // A map of text is accepted as text only where MAPS lists its path (refusalText, Decision 221):
+        // its values stand in for it, so a non-text value inside still fails the text check.
+        const own = path ? `${path}.${k}` : k;
+        e.paths.add(path || "(top)"); e.values.push(x && typeof x === "object" && !Array.isArray(x) && MAPS.some(re => re.test(own)) ? Object.values(x) : x); keys.set(k, e);
         // `countBy`, `maxRankBy`, `startingRankBy`: Engine.dataPath reads the key it ends in.
         if (/By$/.test(k) && typeof x === "string") for (const seg of x.split(".")) viaPath.add(seg);
         // A pick's `from.optionsFrom` names the list pickOptions reads off its entry (Martial Arts' `styles`).
@@ -368,9 +371,7 @@ test("every data key is read by code, or named as text (R6 key guard, Decision 1
   const unread = [...keys.keys()].filter(k => !isRead(k) && !TEXT_KEY.test(k) && !(k in NOT_YET_SHOWN))
     .map(k => `${where(k)}.${k}`);
   assert.deepEqual(unread, [], "a data key nothing reads: read it, name it as text (…Text, …Note), or delete it");
-  // Text, a list of text, or a map of text (refusalText: a reason per weapon category, Decision 221).
-  const isText = v => v == null || typeof v === "string" || (Array.isArray(v) && v.every(x => typeof x === "string"))
-    || (typeof v === "object" && Object.values(v).every(x => typeof x === "string"));
+  const isText = v => v == null || typeof v === "string" || (Array.isArray(v) && v.every(x => typeof x === "string"));
   const textButNot = [...keys].filter(([k, e]) => TEXT_KEY.test(k) && !e.values.every(isText)).map(([k]) => `${where(k)}.${k}`);
   assert.deepEqual(textButNot, [], "a key named as text holds something else");
   const stale = Object.keys(NOT_YET_SHOWN).filter(k => !keys.has(k) || isRead(k));
@@ -2478,7 +2479,7 @@ test("every tag in the data reads out, bar the few no glossary defines (Decision
 const flaggedTagProblems = g => {
   const out = [];
   if (!g.playerNote) out.push("flagged with no playerNote");
-  if (/flagNote|Undefined|CRB|Deighton|Fd+/.test(g.description)) out.push("the description is maintainer text");
+  if (/flagNote|Undefined|CRB|Deighton|\bF\d+\b/.test(g.description)) out.push("the description is maintainer text");
   if (Engine.glossary(g.id).note !== g.playerNote) out.push("the tip doesn't carry the playerNote");
   return out;
 };
@@ -2491,6 +2492,7 @@ test("a flagged tag reads as something a player can use, not a note to us", () =
   assert.deepEqual(probe({ playerNote: "Your GM rules on it." }), []);
   assert.deepEqual(probe({}), ["flagged with no playerNote", "the tip doesn't carry the playerNote"]);
   assert.deepEqual(probe({ playerNote: "ok", description: "See Deighton, F9." }), ["the description is maintainer text"]);
+  assert.deepEqual(probe({ playerNote: "ok", description: "Stubbed per F30." }), ["the description is maintainer text"], "an F-number alone is maintainer text");
 });
 
 test("a stat's score reads as its range in the book, and past 10 says what changes (Decision 139)", () => {

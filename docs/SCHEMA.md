@@ -3316,7 +3316,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
       "10 bursts" 10. One that doesn't read (a knife, a grenade) isn't
       tracked. `fireWeapon(ch, i, mode)` refuses a mode the weapon doesn't
       have and a spend the magazine can't pay ("Burst spends 3 rounds, and 2
-      are left. Reload."). `reloadWeapon` empties `roundsSpent`. → **Superseded in part by Decision 145**: Reload takes a unit of fitting ammo from what's carried, and asks before reloading from none. A custom
+      are left. Reload."). `reloadWeapon` empties `roundsSpent`. → **Superseded in part by Decisions 145 and 221**: Reload takes a unit of fitting ammo from what's carried, and asks before reloading from none. A custom
       weapon's typed capacity and RoF count the same way. The buttons (one
       per RoF, then Reload) are on Loadout **and on Main's weapon table**,
       where a fight is run, a step toward W13. Each is one `commit()`: "AR-9X
@@ -3342,6 +3342,8 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
       "Handgun, Rifle, SMG". The ammo table files shotgun shells under
       "Rifle (shotgun)". Stub: shotguns take neither. Both entries are
       `flagged` with a `playerNote`, which shows under a weapon holding one.
+      *(Superseded in part by 221, marked at the top of this entry: F26 is ruled,
+      the stub stands, the flags and notes go, and a refusal says why from `refusalText`.)*
     - **Not W17.** Consumables (a Nanomed Kit coming out of stock) want
       gear with a count, which is its own shape and its own proposal (W17's
       row says so). They don't need to share this bump.
@@ -4666,7 +4668,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Decided:** A mod may carry `refusalText`, a map from a weapon category id to a short reason. When the mod is refused for not fitting (its `onlyFor` leaves the weapon out, or its `notFor` names its category), `weaponModOptions` returns the reason for the weapon's category as `why`, in place of "Doesn't fit …" or "Doesn't go on …". With no entry for that category, or a junk map, the refusal reads as before. The Scope's and the Angel Mod's carry Deighton's reasons for shotguns (F26 closed). As content beside it: Anti-Materiel and Reach read as rules (F30, F31 closed), the Razorwhip reaches 2m, skill checks read Easy / Average / Challenging (the wear die keeps its names), and `magical-being` buys the Universal Advantages only.
      - **Why:** Deighton's rulings (2026-10-10, Q8–Q10, Q31, Q33). The Scope's text says it fits rifles, and Deighton calls a shotgun a rifle, so a bare refusal reads as a bug. The reason belongs where the player is refused, not in a description every weapon shows (Ken).
      - **Rejected:** a sentence added to each mod's description (shown on every weapon, and it edits the book's text); one string per mod (it would tell a handgun that shotguns don't take scopes); a reason per weapon id (Gear's rules are by kind of weapon).
-     - **Replaces:** nothing. It adds to Decision 120's fit data. Three *Revisit if*s fired, none reopens: 149's (F26 keeps the stub; F34 is P9b), 152's (`universal`, one of its two answers) and 153's.
+     - **Replaces:** Decision 120 in part (F26 closed: the stub stands, the flags go, and a refusal can say why). Three *Revisit if*s fired, none reopens: 149's (F26 keeps the stub; F34 is P9b), 152's (`universal`, one of its two answers) and 153's.
      - **Revisit if:** a refusal needs a reason by weapon rather than by category, or another kind of refusal (slots, already installed) wants data text.
      - **Built:** app 0.45.0, game data 0.38, no schema change, PR #186. Log 2026-10-15 (P9a).
 
