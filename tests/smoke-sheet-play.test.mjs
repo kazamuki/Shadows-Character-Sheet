@@ -912,7 +912,11 @@ test("P8b 14: the Rest panel says the overflow goes first", () => {
   app.click("[data-actapply]");
   assert.equal(activeChar(app).trackers.damage, 29);
   assert.match(app.$("#undotoast").textContent, /\+1 HP/);
-  assert.deepEqual(app.errors, []);
+  const one = openSheet(pastZeroSubject(31), "trackers");
+  one.click('[data-actopen="rest"]');
+  setField(one, '[data-act="hp"]', "1");
+  assert.match(one.$('[data-actpanel="rest"]').textContent, /The 1 past zero goes first\./);
+  assert.deepEqual([...app.errors, ...one.errors], []);
 });
 
 test("P8b 15: past zero shows only while down and past it", () => {
