@@ -1539,3 +1539,47 @@ test("Ken's ruling, Deighton confirmed (2026-10-04): LUCK bought with CP is held
     assert.equal(Engine.luckState(ch).max, 4 + pl.maxBoost);
   }
 });
+
+// ── P8a: the hit (Decision 219) ───────────────────────────────────────
+// Deighton's rulings of 2026-10-10 (reference/rulings-2026-10-10.md), Q1–Q3
+// and Q7, plus Ken's follow-up on AP and magic. 0460 gives Resistance no order
+// and no rounding; both are rulings, not quotes.
+const withUpgrades = (ch, ...ups) => { ch.armor.find(a => a.worn).upgrades.push(...ups); return ch; };
+
+test("P8a 1: Electric Resistance halves an Electric hit first, rounding down", () => {
+  // Deighton's ruling (2026-10-10, Q2): "halves first, then PROT and RES". Rounding down is Ken's (PQ1).
+  const ch = withUpgrades(wearing(subject({ bod: 6 }), "urban-tactics-vest"), "Resistance — Electric");
+  const r = Engine.resolveHit(ch, { damage: 13, damageType: "electric", protRoll: 2 });
+  assert.deepEqual({ halved: [r.halved.from, r.halved.to], by: r.halved.by, prot: r.prot, res: r.res, through: r.through },
+                   { halved: [13, 6], by: "Resistance — Electric", prot: 2, res: 0, through: 4 });
+});
+
+test("P8a 8: AP on a spell gets past Natural Armor; other AP doesn't", () => {
+  // Ken's follow-up to Deighton's Q3 (2026-10-10): the stub stands, except AP on a spell pierces it.
+  const ch = subject({ bod: 6 });
+  ch.advantages.push({ id: "thick-skin", rank: 3 });
+  const hit = o => Engine.resolveHit(ch, { damage: 8, damageType: "blunt", ...o });
+  assert.equal(hit({ ap: true }).through, 5, "plain AP");
+  const s = hit({ ap: true, spell: true });
+  assert.deepEqual([s.through, s.natural.skipped], [8, "ap"]);
+  assert.equal(hit({ spell: true }).through, 5, "a spell with no AP");
+});
+
+test("P8a 9: Electric and Burning are Energy, and nothing calls it unsettled", () => {
+  // Deighton's ruling (2026-10-10, Q1): Electric and Burning stay Energy.
+  for (const id of ["electric", "burning"]) {
+    const t = D.damageTypes.find(x => x.id === id);
+    assert.equal(t.resClass, "energy");
+    assert.ok(!t.flagged, `${id} is still flagged`);
+    assert.equal(Engine.resolveHit(subject(), { damage: 5, damageType: id }).notes.length, 0);
+  }
+});
+
+test("P8a 10: the frag grenades and the launcher carry Siege", () => {
+  // Deighton's ruling (2026-10-10, Q7): grenades and explosives are Massive. Siege is the tag that says so.
+  const tags = id => (D.weapons.find(w => w.id === id) || {}).tags || [];
+  for (const id of ["fg1-thunderclap", "junk-bomb", "hgl4-anvil"]) assert.ok(tags(id).includes("Siege"), id);
+  for (const id of ["ig7-cinder", "star-dust-grenade", "sg2-shockwave", "vs3-curtain", "sunburst-grenade", "eg3-blackout"])
+    assert.ok(!tags(id).includes("Siege"), id);
+  assert.match(D.weaponTagGlossary.find(g => g.id === "Siege").description, /Massive/);
+});

@@ -184,6 +184,9 @@ because they all live in the hit resolver and recovery:
   upgrade's 50% is applied, **halving first, then PROT and RES**, instead of
   the hit panel telling the player to adjust by hand.
 - **F25:** Natural Armor's stub stands, except that **AP on a spell pierces it**.
+
+*The hit half (F18, F23, F25, grenades) built as P8a (Decision 219). Healing (F24, F36) is P8b; the wish moves to `wishes-granted.md` with it.*
+
 - **F24:** ongoing damage on a Dying character at a Reset asks **the WILL
   check as usual, plus** a Death Mark per ticking source (today a mark stands
   in for the check).
