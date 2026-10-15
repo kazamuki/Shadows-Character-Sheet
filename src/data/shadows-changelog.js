@@ -6,6 +6,8 @@ window.SHADOWS_CHANGELOG = [
     "date": null,
     "intro": [],
     "items": [
+      "**A magazine you reload before it's empty is kept.** It goes in your gear with what's left in it, ready to load again. A full one you swap out goes back with the rest.",
+      "**Swapping rounds says what happens to the old magazine.**",
       "**A new classification: Magical being.** The fae and their kind. It buys the Universal Advantages only, like a Supernatural.",
       "**A mod that won't go on a weapon says why.** A shotgun doesn't take a Scope or an Angel Mod, and now it tells you the reason.",
       "**Anti-Materiel and Reach say what they do.** Anti-Materiel goes through vehicle armor; Reach marks a weapon that reaches unusually far. The Razorwhip reaches 2m.",

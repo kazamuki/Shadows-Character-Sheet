@@ -674,7 +674,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.23",
+    schemaVersion: "0.24",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -853,8 +853,15 @@ It renders on the Character tab (Decision 158).
   // `equipment`, `qty` carried, `chargesUsed` on a charged Talisman) or typed
   // (`custom: true`, name/type/notes as before). migrate() tags every older
   // row custom and never matches a typed name to the catalog.
+  // (0.24, Decision 222) A magazine taken out of a weapon with rounds left is a
+  // row of its own: `roundsLeft`, a non-negative integer, on an ammo entry
+  // whose `reload.fills` is "magazine" makes it a part-used magazine. It is one
+  // magazine (`qty` is written 1 and ignored), never stacks, counts as no whole
+  // one and takes no +1. `roundsLeft` on any other row is ignored. 0 is empty.
+  // migrate() reads it as a whole number; no row from before has one.
   gear:    [ { id: "quickstitch", qty: 4, notes: "" },
              { id: "shield-charm", qty: 1, chargesUsed: 1, notes: "" },
+             { id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" },
              { custom: true, name, type, notes } ],
   // (0.6) A weapon entry is EITHER a catalog reference (`id` into the new
   // `weapons` game-data array, `notes` only — stats read from the catalog)
@@ -3765,6 +3772,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 145 in part: Reload asks which kind, and a full weapon reloads to swap.
      - **Revisit if:** F34 or F26 is ruled, or the CRB adds a specialty round that fits a weapon its standard kind doesn't.
      - **Built:** app 0.31.0, game data 0.24, character schema 0.14; `engine.test.mjs` and `smoke.test.mjs` (W40), mutation-tested. Log 2026-09-26.
+    → **Superseded in part by Decision 222** — a swapped or reloaded magazine is no longer stubbed as nothing: its rounds are kept in a part-used row (F34 closed).
 
 150. **Stat Points are a flat pool or a rolled one, the GM's pick, and buy stats on a climbing cost; the whole Campaign Power Level table moves to Deighton's playtested numbers.**
      *2026-09-27 · Ken + Deighton + Claude · Touches: creation.statMethod, creation.earlierTable, statPoints.flat, statPoints.rolled, skillPoints.plusStats, statRules.raiseCost, statPool, statCost, skillPool, characterPoints, maxSkillRank, Stats step, Skills step, Admin budgets, character schema 0.15, F8, F35, W34, W35, W36*
@@ -4672,6 +4680,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a refusal needs a reason by weapon rather than by category, or another kind of refusal (slots, already installed) wants data text.
      - **Built:** app 0.45.0, game data 0.38, no schema change, PR #186. Log 2026-10-15 (P9a).
 
+222. **A magazine taken out before it's empty is kept with its count, as a part-used magazine in your gear.**
+     *2026-10-15 · Ken + Deighton + Claude · Touches: reloadWeapon, roundsLeft, part-used magazine, carriedGear, addGearEntry, useGear, gearLine, reloadFrom, weaponRules.swap, Reload anyway, Drop, countUnit, character schema 0.24, F34, W104*
+     - **Decided:** When Reload, a swap or Reload anyway takes a magazine out of a catalog weapon that ammo fits, its rounds are kept: none and nothing; all, and a whole magazine of that kind goes back on its stack; some, and a gear row `{ id, qty: 1, roundsLeft, notes }`, of the kind loaded or else the weapon's standard rounds. A part-used magazine loads up to the weapon's capacity (the rest stays in its row), keeps its kind, and is one magazine: it doesn't stack, count as a whole one or take +1. One tap takes a whole magazine first, else the fullest part-used one that adds rounds, and asks when two kinds are held; the chooser lists each; Loadout's row says **Drop**. Shells taken out by a swap go back in the box.
+     - **Why:** Deighton's ruling (2026-10-10, Q11): kept, with its count. A detached magazine stores what's left in it, where a weapon stores what's spent (Decision 120). Its own row is the charged Talisman's precedent (Decision 121).
+     - **Rejected:**
+       - The counts as a list on the whole-magazine row: a row at qty 0 is removed, taking the list with it.
+       - A spare magazine stored on the weapon: a magazine fits any weapon of its type (Decision 145).
+       - Keeping only a swapped magazine: Deighton ruled both.
+       - Asking at Reload what to do with the old magazine: a tap more in a fight.
+     - **Replaces:** Decision 149 in part (F34's stub). Decision 145 stands.
+     - **Revisit if:** the CRB sizes magazines per weapon (W108), or a table wants part-used magazines merged.
+     - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.24, PR #190. Log 2026-10-15 (P9b).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4683,7 +4704,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F24 and F36 (Decision 220: healing counts from 0 HP, and Dying at a Reset is the check plus a mark per ticking source) · F26, F30 and F31 (Decision 221: a shotgun takes neither the Scope nor the Angel Mod and its refusal says why, Anti-Materiel and Reach read as rules, the Razorwhip reaches 2m) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F24 and F36 (Decision 220: healing counts from 0 HP, and Dying at a Reset is the check plus a mark per ticking source) · F34 (Decision 222: a magazine taken out before it's empty is kept with its count) · F26, F30 and F31 (Decision 221: a shotgun takes neither the Scope nor the Angel Mod and its refusal says why, Anti-Materiel and Reach read as rules, the Razorwhip reaches 2m) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -4693,8 +4714,7 @@ here are in `log/archive.md`.
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 | F32 | **Arcanist Major Milestones.** 0411's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 0411? `growth` stays hidden until then (AQ4) | Ken | No |
-| F34 | **A magazine swapped or reloaded before it's empty: are its rounds kept?** 0530 lets a Reload swap kinds of rounds once a turn, and Gear sells rounds by the magazine. Is a partly spent magazine gone, or kept with its count to load again? Stubbed (Decision 149, and Decision 145 before it): a Reload fills from a fresh magazine and the rounds left aren't kept; the sheet counts whole magazines carried **Ruled 2026-10-10 (Deighton, `reference/rulings-2026-10-10.md`):** **kept, with its count**. Closes when W104 is built. | Deighton (ruled) | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 | F42 | **Which damage Resistance answers.** 0460 names Thermal, Electric and Freezing. The app maps Thermal → Burning and Electric → Electric. No damage type is cold, so Freezing answers nothing yet. Elemental spells (fire, frost, lightning) are magic, so no Resistance answers them; Warding does. Stubbed as written (Decision 219) | Deighton | No |
-F34 (ruled; P9b builds it) and F42 go to Deighton, and F37 with Scott, who wrote CRANK.
+F42 goes to Deighton, and F37 with Scott, who wrote CRANK.
 

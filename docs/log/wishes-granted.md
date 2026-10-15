@@ -490,6 +490,13 @@ What it has to respect:
 - **Spell Power can be null** (no Evocation rank), and the engine is total:
   the book text alone shows then.
 
+**W104 — A partly spent magazine is kept with its count.** *Ken, from Deighton · → Decision 221 (the text, app 0.45.0) and Decision 222 (F34, schema 0.24, app 0.45.0): a magazine taken out before it's empty is kept in your gear with its count; closed F26, F30, F31, F34*
+Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q11). The rest of W104 (F26, F30, F31 and the difficulty names) was built as P9a, Decision 221, app 0.45.0.
+- **F34:** a partly spent magazine is **kept with its count**. Today a Reload
+  fills from a fresh magazine and the sheet counts whole magazines carried
+  (Decisions 145, 149), so carried magazines need their counts: a save-file
+  shape change, with a decision, a schema bump and a `migrate()` step.
+
 ### Theme & polish
 
 **W7 — Primary buttons are unreadable in light mode.** *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*

@@ -402,3 +402,15 @@ test("W41: the Identity step asks TAG'd or TAGless, and Admin changes it later, 
   assert.equal(activeChar(sheet).identity.tagless, false, "undo didn't put the TAG back");
   assert.deepEqual(sheet.errors, []);
 });
+
+test("P9b 12: a part-used magazine prints its rounds", () => {
+  const ch = lockedCharacter();
+  ch.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" }, { id: "power-cell", qty: 1, roundsLeft: 15, notes: "" });
+  const app = openSheet(ch, "main");
+  app.window.print = () => {};
+  app.click("[data-menu-toggle]"); app.click("[data-print]");
+  const p = app.$("#printSheet").textContent;
+  assert.match(p, /18 rounds left/, "the gear row doesn't print its rounds");
+  assert.match(p, /15 shots left/, "a Power Cell doesn't print its shots");
+  assert.deepEqual(app.errors, []);
+});

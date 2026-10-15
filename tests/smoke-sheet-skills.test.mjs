@@ -514,7 +514,8 @@ test("W40: Reload asks which rounds, Silver Rounds stay loaded with their tag, a
   const modal = app.$("#modal");
   assert.ok(modal.open, "no choice of rounds");
   assert.match(modal.textContent, /Rifle Rounds[\s\S]*Silver Rounds[\s\S]*Withering \(Lycanthropes\)/);
-  assert.match(modal.textContent, /still being settled/, "the unsettled swap rule isn't said");
+  assert.doesNotMatch(modal.textContent, /still being settled/, "F34 is closed: the swap says nothing is unsettled");
+  assert.match(modal.textContent, /goes back in your gear with what's left in it/, "the swap doesn't say the old magazine comes back");
   app.click('#modal [data-loadammo="silver-rounds"]');
   const w = activeChar(app).weapons[0];
   assert.deepEqual([w.roundsSpent, w.loaded], [0, "silver-rounds"]);
@@ -529,6 +530,53 @@ test("W40: Reload asks which rounds, Silver Rounds stay loaded with their tag, a
   assert.equal(activeChar(app).weapons[0].loaded, undefined);
   app.click("[data-toastundo]");
   assert.equal(activeChar(app).weapons[0].loaded, "silver-rounds", "undo didn't put the silver back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P9b 10: Reload keeps the old magazine on Loadout, and one undo puts it all back", () => {
+  const ch = lockedCharacter();
+  ch.weapons.push({ id: "ar9x-guardian", notes: "", mods: [], roundsSpent: 13 });   // 18 of 31 left
+  ch.gear.push({ id: "rifle-rounds", qty: 2, notes: "" });
+  const app = openSheet(ch, "main");
+  app.click('.main-combat [data-reload="0"]');
+  assert.match(app.$("#undotoast").textContent, /kept with 18 rounds/, "the toast doesn't say the old magazine was kept");
+  assert.deepEqual(activeChar(app).gear.map(g => [g.id, g.qty, g.roundsLeft]), [["rifle-rounds", 1, undefined], ["rifle-rounds", 1, 18]]);
+  app.click('[data-sec="loadout"]');
+  const row = [...app.$$(".lo-gear-row")].find(r => /18 rounds left/.test(r.textContent));
+  assert.ok(row, "Loadout doesn't read 18 rounds left");
+  assert.ok(row.querySelector("[data-gearuse]") && /Drop/.test(row.querySelector("[data-gearuse]").textContent), "no Drop button");
+  assert.equal(row.querySelector("[data-gearplus]"), null, "a part-used magazine takes +1");
+  assert.ok(!/Use one/.test(row.textContent), "a part-used magazine says Use one");
+  app.click("[data-toastundo]");
+  assert.deepEqual([activeChar(app).weapons[0].roundsSpent, activeChar(app).gear.map(g => [g.qty, g.roundsLeft])], [13, [[2, undefined]]], "one undo didn't restore the weapon and the gear");
+  assert.deepEqual(app.errors, []);
+  // Drop removes the row, and says how much was in it.
+  const c2 = lockedCharacter();
+  c2.gear.push({ id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" });
+  const app2 = openSheet(c2, "loadout");
+  app2.click('[data-gearuse="0"]');
+  assert.equal(activeChar(app2).gear.length, 0);
+  assert.match(app2.$("#undotoast").textContent, /Dropped Rifle Rounds \(18 rounds left in it\)/);
+  assert.deepEqual(app2.errors, []);
+});
+
+test("P9b 11: the swap chooser says the magazine comes back, with no unsettled note", () => {
+  const ch = lockedCharacter();
+  ch.weapons.push({ id: "ar9x-guardian", notes: "", mods: [], roundsSpent: 13 });
+  ch.gear.push({ id: "rifle-rounds", qty: 1, notes: "" }, { id: "silver-rounds", qty: 1, notes: "" }, { id: "rifle-rounds", qty: 1, roundsLeft: 22, notes: "" });
+  const app = openSheet(ch, "main");
+  app.click('.main-combat [data-reload="0"]');
+  const modal = app.$("#modal");
+  assert.ok(modal.open, "no choice of rounds");
+  assert.match(modal.textContent, /22 rounds · part-used/, "the part-used magazine has no line of its own");
+  assert.equal(modal.querySelectorAll('[data-loadammo="rifle-rounds"]').length, 1, "the whole kind's button isn't exactly one");
+  assert.equal(modal.querySelectorAll("[data-loadpart]").length, 1);
+  assert.match(modal.textContent, /goes back in your gear with what's left in it/, "the swap sentence isn't said");
+  assert.equal(modal.querySelector(".flag"), null, "the chooser still draws a flag note");
+  assert.doesNotMatch(modal.textContent, /still being settled/, "the unsettled note is still there");
+  app.click("#modal [data-loadpart]");
+  assert.equal(activeChar(app).weapons[0].roundsSpent, 9, "the part-used magazine didn't load");
+  assert.match(app.$("#undotoast").textContent, /from a part-used mag of 22 rounds.*kept with 18 rounds/);
   assert.deepEqual(app.errors, []);
 });
 
