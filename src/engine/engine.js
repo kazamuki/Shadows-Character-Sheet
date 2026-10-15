@@ -1368,7 +1368,7 @@ const Engine = (() => {
       const n = Math.min(p.roundsLeft, l.rounds.max), rest = p.roundsLeft - n;
       if (rest>0) ch.gear[p.index].roundsLeft = rest; else ch.gear.splice(p.index, 1);
       e.roundsSpent = l.rounds.max - n;
-      res = { used:0, ammoLeft:rest, part:{ roundsLeft:p.roundsLeft, loaded:n } };
+      res = { used:0, ammoLeft:rest, part:{ roundsLeft:p.roundsLeft, loaded:n, countUnit:countUnitOf(def) } };
     } else {
       // A swap on a weapon loaded a round at a time empties it first.
       const empty = perRound && swap ? l.rounds.max : l.rounds.spent;
@@ -1394,7 +1394,7 @@ const Engine = (() => {
     if (def.reload.fills==="round"){ if (shells) stackGear(ch, def.id, left); return null; }
     const whole = left>=max;
     if (whole) stackGear(ch, def.id, 1); else ch.gear.push({ id:def.id, qty:1, roundsLeft:left, notes:"" });
-    return { id:def.id, name:def.name, roundsLeft:left, whole };
+    return { id:def.id, name:def.name, roundsLeft:left, countUnit:countUnitOf(def), whole };
   }
   // A mod's own reason for a weapon category it doesn't fit (Decision 221): a map
   // from category id to text. Anything else, or no entry, is null and the

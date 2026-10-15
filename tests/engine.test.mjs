@@ -2338,6 +2338,10 @@ test("P9b 6: a part-used magazine is one magazine: it doesn't stack, count or ta
   same([drop.ok, ch.gear.length], [true, 1], "Drop didn't remove the row");
   const cell = subject(); cell.gear.push({ id: "power-cell", qty: 1, roundsLeft: 15, notes: "" });
   assert.equal(Engine.gearLine(cell, 0).countUnit, "shot");
+  // A Falcon's cell taken out at 15 of 20 is kept in shots, and the result says so for the audit.
+  const fal = armed("ads-le4-falcon", { roundsSpent: 5 }); fal.gear.push({ id: "power-cell", qty: 1, notes: "" });
+  const kept = Engine.reloadWeapon(fal, 0).kept;
+  same([kept.id, kept.roundsLeft, kept.countUnit, kept.whole], ["power-cell", 15, "shot", false]);
 });
 
 test("P9b 7: the chooser lists each part-used magazine, and loads the one picked", () => {

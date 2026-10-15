@@ -1743,10 +1743,10 @@ const reloadTitle = f => !f ? "Fill the magazine"
   : f.parts ? `${f.ammo[0]}: ${f.parts} part-used (${f.partRounds.join(" and ")} ${f.countUnit}s)`
   : `You carry no ${f.ammo.join(" or ")}`;
 // P9b: what became of the magazine that came out, said in the audit line.
-const keptAudit = k => !k ? "" : k.whole ? ", the full mag back on its stack" : `, the old mag kept with ${plural(k.roundsLeft, "round")}`;
+const keptAudit = k => !k ? "" : k.whole ? ", the full mag back on its stack" : `, the old mag kept with ${plural(k.roundsLeft, k.countUnit||"round")}`;
 // W40: the audit line for a reload, naming the rounds when a swap loaded them.
 const reloadAudit = (name, p) => `${p.swapped ? `Loaded ${name} with ${p.ammo[0]}` : `Reloaded ${name}`} (${p.left}/${p.max})${p.used ? `, −${plural(p.used, p.unit)} of ${p.ammo[0]}` : ""}${
-  p.part ? `, from a part-used mag of ${plural(p.part.roundsLeft, "round")}` : ""}${keptAudit(p.kept)}`;
+  p.part ? `, from a part-used mag of ${plural(p.part.roundsLeft, p.part.countUnit||"round")}` : ""}${keptAudit(p.kept)}`;
 // W40: more than one kind of rounds fits, so Reload asks which. P9b: each
 // part-used magazine is a line of its own, and a swap says the old magazine
 // comes back (Decision 222).
