@@ -4691,7 +4691,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Asking at Reload what to do with the old magazine: a tap more in a fight.
      - **Replaces:** Decision 149 in part (F34's stub: what a swapped or reloaded magazine keeps). Decision 145 stands: Reload still takes one magazine off the carried row.
      - **Revisit if:** the CRB sizes magazines per weapon (W108), or a table wants part-used magazines merged.
-     - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.24, PR #…. Log 2026-10-15 (P9b).
+     - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.24, PR #190. Log 2026-10-15 (P9b).
 
 ## 5. Open Flags
 
