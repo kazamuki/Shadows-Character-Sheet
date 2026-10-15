@@ -598,9 +598,12 @@ const Engine = (() => {
   function canBoost(ch, type, id){
     const pl = powerLevel(ch);
     if (!pl) return {ok:false, why:"No power level."};
-    const times = boostsFor(ch, type, id);
+    // LUCK bought with CP is a Boost of LUCK like any other (Decision 218):
+    // its count is the stored bonus, its price is LUCK's own.
+    const isLuck = type==="luck";
+    const times = isLuck ? nonNegInt(ch.trackers.luck.bonus) : boostsFor(ch, type, id);
     if (times >= pl.maxBoost)
-      return {ok:false, why:`Max Boost reached (${pl.maxBoost}× per target).`};
+      return {ok:false, why:`Max Character Point Boost reached: ${pl.maxBoost} each at ${pl.name}.`};
     if (type==="stat" && statValue(ch,id) >= D().statRules.max)
       return {ok:false, why:`Stat cap ${D().statRules.max}.`};
     if (type==="skill"){
@@ -609,7 +612,8 @@ const Engine = (() => {
       if (rank >= cap) return {ok:false, why:`Max Skill Rank ${cap}.`};
     }
     const bal = cp(ch);
-    if (bal && bal.left < D().creationFlow.boostRules.cpCostPerPoint)
+    const price = isLuck ? D().resources.luck.cpCostPerPoint : D().creationFlow.boostRules.cpCostPerPoint;
+    if (bal && bal.left < price)
       return {ok:false, why:"No Character Points left."};
     return {ok:true};
   }
@@ -3848,11 +3852,16 @@ const Engine = (() => {
     }
     if (pool==="statBonus") return D().stats.some(s => statValue(ch, s.id) < max);
     if (pool==="cp"){
-      // A power rank (Decision 215) costs more than a LUCK point, so whenever
-      // a rank is affordable this is already true: no power term is needed.
-      const bal = cp(ch), luck = D().resources.luck;
+      // LUCK asks canBoost, so a capped LUCK is not CP left to spend (218).
+      // A power rank (Decision 215) and a Discipline's rank (135) are sinks of
+      // their own, at the power rank price: LUCK no longer covers them, now
+      // that it caps out (Decision 162). Custom powers and picks aren't sinks.
+      const bal = cp(ch);
       if (!bal) return false;
-      return bal.left >= luck.cpCostPerPoint
+      const rankOpen = bal.left >= powerRankCost()
+        && (powerCpState(ch).some(r => r.cap==null || r.rank < r.cap)
+            || disciplineRanks(ch).some(d => d.cap==null || d.rank < d.cap));
+      return canBoost(ch, "luck", "LUCK").ok || rankOpen
         || D().stats.some(s => canBoost(ch, "stat", s.id).ok)
         || D().skills.some(s => canBoost(ch, "skill", s.id).ok);
     }
@@ -3874,6 +3883,19 @@ const Engine = (() => {
         const base = Number(s.rank)||0, boosted = base + boostsFor(ch, "skill", id);
         if (!withBoosts && base > cap) E(`${def.name} is rank ${base}. It can start at ${cap} at most.`);
         if (withBoosts && base <= cap && boosted > cap) E(`${def.name} is rank ${boosted} with Boosts. It can start at ${cap} at most.`);
+      }
+    };
+    // The Max Character Point Boost (Decision 218): the steppers stop at it,
+    // so only an old draft or a lower Campaign Power Level leaves a target over.
+    const overBoost = () => {
+      if (!pl) return;
+      const luckBought = nonNegInt(ch.trackers.luck.bonus);
+      if (luckBought > pl.maxBoost)
+        E(`LUCK is bought up ${luckBought}. Max Character Point Boost at ${pl.name} is ${pl.maxBoost}.`);
+      for (const b of ch.creation.boosts){
+        if (b.targetType==="power" || !(b.times > pl.maxBoost)) continue;
+        const def = b.targetType==="stat" ? D().stats.find(x=>x.id===b.targetId) : skillById(b.targetId);
+        E(`${def ? def.name : b.targetId} is boosted ${b.times} times. Max Character Point Boost at ${pl.name} is ${pl.maxBoost}.`);
       }
     };
     if (stepId==="power-level"){ if (!pl) E("Choose a Campaign Power Level."); }
@@ -4012,6 +4034,7 @@ const Engine = (() => {
       else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`, "cp");
       overCap(true);
+      overBoost();
       // Decision 152. A Professional's free Advantages are the archetype's, not bought.
       const cls = classification(ch);
       const barred = ch.advantages.filter(x=>x.source!=="natural" && !canBuyAdvantage(ch, x.id));

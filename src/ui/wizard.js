@@ -199,7 +199,7 @@ function renderPowerLevel(){
         <span>CP <b>${p.characterPoints}</b></span>
         <span>Skill cap <b>${p.maxSkillRank}</b></span>
         <span>Power cap <b>${p.maxPowerRank}</b></span>
-        <span>Max Boost <b>${p.maxBoost}</b></span>
+        <span>Max CP Boost <b>${p.maxBoost}</b></span>
         <span>${CR} <b>${p.startingCredits.roll}×${p.startingCredits.multiplier}</b></span>
       </div>
     </button>`).join("") + `</div>`;
@@ -586,9 +586,10 @@ function renderCP(){
   const luck = D.resources.luck;
   h += secs.sect("LUCK");
   if (luck.flagged) h += flagHtml(luck);
+  const luckCan = Engine.canBoost(ch, "luck", "LUCK");
   h += `<div class="pick"><div class="head"><h2>Buy up LUCK</h2>
-    <span class="cost">${luck.cpCostPerPoint} CP/point · exempt from Max Boost</span>
-    <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, bal.left>=luck.cpCostPerPoint, "LUCK")}</div></div>
+    <span class="cost">${luck.cpCostPerPoint} CP a point · up to ${pl.maxBoost} (Max Character Point Boost)</span>
+    <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, luckCan.ok, "LUCK")}<span class="mod" title="${esc(luckCan.ok?"":luckCan.why)}">${luckCan.ok?"":"⛔"}</span></div></div>
     <div class="desc">Everyone starts at ${luck.startingValue}. ${esc(luck.refresh)}</div></div>`;
 
   // Disciplines: price, cap and starting ranks are the data's (Decision 135).
@@ -667,7 +668,7 @@ function renderCP(){
   }
 
   // Boosts
-  h += secs.sect("Boosts", `Boosts — leftover CP on Stats &amp; Skills · max ${pl.maxBoost}× per target`);
+  h += secs.sect("CP Boosts", `Character Point Boosts — leftover CP on Stats &amp; Skills · up to ${pl.maxBoost} each, LUCK included`);
   if (D.creationFlow.boostRules.flagged) h += flagHtml(D.creationFlow.boostRules);
   h += `<div class="alloc">`;
   for (const s of D.stats){

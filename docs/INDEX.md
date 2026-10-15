@@ -187,10 +187,10 @@ that the ledger and this index agree on both.
 What a number *is*. Change one of these and characters change.
 
 - **1** — Ruleset: CRB v4 per WIP files.
-- **2** — Terminology: stat pool = Stat Points (old "Character Points" column); old "Freebie Points" = Character Points (CP).
-- **3** — Max Boost semantics: after advantages are bought, leftover CP may boost powers, skills, or stats — but any single t...
+- **2** — Terminology: stat pool = Stat Points (old "Character Points" column); old "Freebie Points" = Character Points (CP). → **superseded in part by 218**
+- **3** — Max Boost semantics: after advantages are bought, leftover CP may boost powers, skills, or stats — but any single t... → **superseded in part by 218**
 - **4** — Costs at creation: Stat Points 1:1 (stats start at base 1, max 10). → **superseded in part by 150**
-- **5** — LUCK: everyone starts at 2. → **superseded in part by 157**
+- **5** — LUCK: everyone starts at 2. → **superseded in part by 157 and 218**
 - **6** — Health Levels: 1 HL per point of BOD, 5 HP per HL.
 - **7** — Çredits: player rolls physically, enters result; pool = table formula.
 - **8** — Skill checks: 1d10 + Rank + Primary Stat (full score) + Synergy Bonus (modifier).
@@ -201,7 +201,8 @@ What a number *is*. Change one of these and characters change.
 - **13** — Milestone cadence: 1 Milestone Point per session; Minor at 5/15/25…, Major at 10/20/30…; 10 IP per session (WIP Pro...
 - **150** *(The stat buy and the Power Level table — W34, W35, F8)* — Stat Points are the level's flat pool or a roll, the GM's pick (`creation.statMethod`, schema 0.15); a stat point costs 1 up to 6 and 2 from 7 to 10, from a free 1; Skill Points are base + INT + REF, Boosts included; CP 5/10/15/20, Max Skill Rank 4/5/6/7; a roll is 5 below the flat pool + 1d10. F8 and F35 closed. → **superseded in part by 198**
 - **198** *(The rolled pool as a box — crb-v4-sync P1, VQ1)* — The Power Level cards show the flat Stat Point pool; **Roll for Stat Points instead** is a checkbox, off by default, the GM's call; ticked, the cards and Stats use the rolled pool.
-- **157** *(Starting LUCK and power ranks — W37)* — Everyone starts with 4 LUCK, bought LUCK on top; a power rank costs 5 CP at creation, every power's, Disciplines included (`boostRules.cpPerPowerRank`), capped by Max Power Rank.
+- **157** *(Starting LUCK and power ranks — W37)* — Everyone starts with 4 LUCK, bought LUCK on top; a power rank costs 5 CP at creation, every power's, Disciplines included (`boostRules.cpPerPowerRank`), capped by Max Power Rank. → **superseded in part by 218**
+- **218** *(LUCK and the Max Character Point Boost — sheet-wishlist P7, W65, W66)* — LUCK bought with CP is held to the cap like a stat or skill (the starting 4 is outside it); `canBoost` is the one check; an unlocked character over it can't lock, a locked file is never touched, Admin is uncapped; "Max Boost" is renamed everywhere a player reads it.
 - **152** *(Classification — F13)* — Every archetype is Mortal or Supernatural (`classifications`); a Mortal buys every Advantage, a Supernatural only the 15 Universal ones; Disadvantages are open to all. `canPurchaseAdvantages` is gone; `Engine.canBuyAdvantage` is the one reader.
 - **162** *(Spend every point — W57)* — Review's points left are errors while `Engine.spendable` finds something they can buy, so Lock waits; a point that fits nowhere only warns; each step still only warns.
 - **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via... → **superseded in part by 97**

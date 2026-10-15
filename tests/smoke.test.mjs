@@ -1246,7 +1246,7 @@ test("W22: step 7's sticky bar filters the picks, keeps what you hold, and survi
   const bar = app.$("#main .jumpbar.sticky");
   assert.ok(bar, "step 7 has no sticky jump bar");
   const labels = app.$$("#main .jumpbar [data-jump]").map(b => b.textContent);
-  for (const l of ["Disadvantages", "Advantages", "Starting spells", "Boosts"]) assert.ok(labels.includes(l), `no jump to ${l}`);
+  for (const l of ["Disadvantages", "Advantages", "Starting spells", "CP Boosts"]) assert.ok(labels.includes(l), `no jump to ${l}`);
   assert.match(bar.textContent, /Remaining \d+ CP/, "the bar doesn't keep the CP left in view");
   const filter = () => app.$("#main [data-jumpfilter]");
   const shown = () => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h2").textContent);
@@ -7704,4 +7704,77 @@ test("Decision 217: an Arcanist sees the plain line and Add one; a written-in Ma
   const app2 = openSheet(saved, "progression");
   assert.match(app2.$("#main .journal").textContent, /Specialist/);
   assert.deepEqual(app2.errors, []);
+});
+
+// ── P7: LUCK and the Max Character Point Boost (Decision 218) ───────────
+test("P7: a Street character's LUCK + goes off after 2 with its reason, and the CP step names the cap", () => {
+  const app = arcanistOnCP();
+  const luckRow = () => app.$$("#main .pick").find(p => /Buy up LUCK/.test(p.textContent));
+  const plus = () => luckRow().querySelector('[data-step="luck|x|1"]');
+  const cap = D.powerLevels.find(p => p.id === "street").maxBoost;
+  for (let i = 0; i < cap; i++) { assert.ok(!plus().disabled, `+ is off after ${i}`); app.click('#main [data-step="luck|x|1"]'); }
+  assert.ok(plus().disabled, "+ stays on past the cap");
+  assert.match(luckRow().querySelector(".mod").title, /Max Character Point Boost reached: 2 each at Street Level\./);
+  assert.match(luckRow().textContent, /up to 2 \(Max Character Point Boost\)/);
+  assert.ok(!luckRow().querySelector('[data-step="luck|x|-1"]').disabled, "− must always work");
+  assert.equal(app.$$("#main .jumpbar [data-jump]").some(b => b.textContent === "CP Boosts"), true);
+  assert.match(app.$("#main").textContent, /Character Point Boosts — leftover CP on Stats & Skills · up to 2 each, LUCK included/);
+  assert.doesNotMatch(app.$("#main").textContent, /Max Boost|exempt/, "the old name or the exemption still shows");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P7: the Campaign Power Level chip reads Max CP Boost", () => {
+  const app = onStep("arcanist", "street", "power-level");
+  assert.match(app.$("#main").textContent, /Max CP Boost\s*2/);
+  assert.doesNotMatch(app.$("#main").textContent, /Max Boost/);
+});
+
+// ── P7 §8's lock-level rows (Decision 218) ──────────────────────────────
+// Lowering the Campaign Power Level on step 1 is the only real way over the
+// cap, so each row goes through it.
+const cpStepIndex = D.creationFlow.steps.map(s => s.id).indexOf("character-points");
+const goToCpStep = app => app.window.eval(`S.step = ${cpStepIndex}; update();`);
+const issuesText = app => app.$("#wiz-issues").textContent;
+
+test("P7 row 3: Heroic with 3 LUCK bought, lowered to Street, can't lock until a − clears it; nothing is trimmed", () => {
+  const app = onStep("arcanist", "heroic", "power-level", ch => { ch.trackers.luck.bonus = 3; });
+  app.click('[data-pl="street"]');
+  goToCpStep(app);
+  assert.equal(app.window.eval("S.ch.trackers.luck.bonus"), 3, "the level change trimmed LUCK");
+  assert.match(issuesText(app), /LUCK is bought up 3\. Max Character Point Boost at Street Level is 2\./);
+  assert.equal(app.$('[data-nav="1"]').disabled, true, "Continue is open over the cap");
+  assert.ok(app.window.eval(`Engine.validate("review", S.ch)`).some(i => i.level === "error" && /LUCK is bought up 3/.test(i.msg)) ||
+            app.window.eval(`Engine.validate("character-points", S.ch)`).some(i => i.level === "error" && /LUCK is bought up 3/.test(i.msg)),
+            "no validate step carries the error");
+  app.click('#main [data-step="luck|x|-1"]');
+  assert.equal(app.window.eval("S.ch.trackers.luck.bonus"), 2);
+  assert.doesNotMatch(issuesText(app), /Max Character Point Boost/, "one − didn't clear it");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P7 row 4: BOD boosted 4 at Shadows, lowered to Street, is named on the CP step", () => {
+  const app = onStep("arcanist", "shadows", "power-level", ch => { ch.creation.boosts = [{ targetType: "stat", targetId: "BOD", times: 4 }]; });
+  app.click('[data-pl="street"]');
+  goToCpStep(app);
+  const bod = D.stats.find(s => s.id === "BOD").name;
+  assert.match(issuesText(app), new RegExp(`${bod} is boosted 4 times\. Max Character Point Boost at Street Level is 2\.`));
+  assert.equal(app.$('[data-nav="1"]').disabled, true);
+});
+
+test("P7 row 7: Admin's LUCK bonus goes past the cap on a locked character, with nothing said", () => {
+  const sheet = openSheet(lockedCharacter(), "main");
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-admin]");
+  const cap = D.powerLevels[0].maxBoost;
+  for (let i = 0; i < cap + 1; i++) sheet.click('[data-admin-luck="1"]');
+  assert.equal(sheet.window.eval("S.ch.trackers.luck.bonus"), cap + 1, "Admin was capped");
+  assert.doesNotMatch(sheet.$("#main").textContent, /reached|bought up/, "Admin said something about the cap");
+  assert.deepEqual(sheet.errors, []);
+});
+
+test("P7 row 8: the dice Boost keeps its name", () => {
+  assert.match(D.resources.luck.spend.find(s => s.id === "boost").action, /Boost/);
+  for (const id of ["lucky", "unlucky"]) {
+    const a = [...D.advantages, ...D.disadvantages].find(x => x.id === id);
+    assert.ok(a && /Boost/.test(a.description), `${id}'s Boost wording changed`);
+  }
 });

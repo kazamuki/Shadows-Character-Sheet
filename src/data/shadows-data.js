@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.36",
+    "gamedataVersion": "0.37",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -319,8 +319,9 @@ window.SHADOWS_DATA = {
      `characterPoints`, and `startingCredits` roll. `statPoints` is a
      `flat` pool or a `rolled` one (base + dice), the GM's pick, stored as
      the character's `creation.statMethod` (Decision 150). `skillPoints` is
-     `base` plus the scores of `plusStats`, with no roll. `maxBoost` caps
-     how many times any single target may be CP-boosted (Decision 3). Archetype
+     `base` plus the scores of `plusStats`, with no roll. `maxBoost` (the Max Character Point Boost) caps
+     how many times any single target, LUCK included, may be CP-boosted
+     (Decisions 3 and 218). Archetype
      scaling tables (below) key off these `id`s, so keep the four ids stable.
      `roll` strings are physical dice the player enters -- the app never rolls. */
   "powerLevels": [
@@ -4731,8 +4732,8 @@ window.SHADOWS_DATA = {
      included, up to the power level's Max Power Rank (Decision 157). The rest of the
      boost rules are the engine's, not settings: any one target is boosted at
      most the power level's `maxBoost` times (Decision 3), the stat cap and
-     Max Skill Rank still bound it, and LUCK is bought on its own line, so the
-     cap never touches it. Fields that restated those were deleted (Decision 135;
+     Max Skill Rank still bound it, and LUCK bought with CP is a Boost of
+     LUCK under the same cap (Decision 218). Fields that restated those were deleted (Decision 135;
      Decision 64 is the precedent). Reorder/relabel steps freely; keep
      step `id`s stable if the wizard branches on them. */
   "creationFlow": {
@@ -4779,7 +4780,7 @@ window.SHADOWS_DATA = {
         "n": 7,
         "short": "Character Points",
         "label": "Spend Character Points on Advantages, Disadvantages, and powers. Allocate any remaining points.",
-        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may boost powers, skills, or stats, up to a cap on each. LUCK buy-ups are exempt from that cap."
+        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may buy LUCK or boost skills and stats, up to the Max Character Point Boost on each."
       }
     ],
     "boostRules": {
