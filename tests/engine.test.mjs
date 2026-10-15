@@ -322,7 +322,7 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
   /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
-  /^weaponModGlossary\[\]\.refusalText$/]; // keyed by a weapon category id, read by weaponModOptions (Decision N)
+  /^weaponModGlossary\[\]\.refusalText$/]; // keyed by a weapon category id, read by weaponModOptions (Decision 221)
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
 const TEXT_KEY = /(Text|Note|Notes|Source)$|^(description|example|lore|meaning)$/;
@@ -368,7 +368,7 @@ test("every data key is read by code, or named as text (R6 key guard, Decision 1
   const unread = [...keys.keys()].filter(k => !isRead(k) && !TEXT_KEY.test(k) && !(k in NOT_YET_SHOWN))
     .map(k => `${where(k)}.${k}`);
   assert.deepEqual(unread, [], "a data key nothing reads: read it, name it as text (…Text, …Note), or delete it");
-  // Text, a list of text, or a map of text (refusalText: a reason per weapon category, Decision N).
+  // Text, a list of text, or a map of text (refusalText: a reason per weapon category, Decision 221).
   const isText = v => v == null || typeof v === "string" || (Array.isArray(v) && v.every(x => typeof x === "string"))
     || (typeof v === "object" && Object.values(v).every(x => typeof x === "string"));
   const textButNot = [...keys].filter(([k, e]) => TEXT_KEY.test(k) && !e.values.every(isText)).map(([k]) => `${where(k)}.${k}`);
@@ -1457,7 +1457,7 @@ test("the Loadout and recovery functions are total on every degenerate character
       addLoadout: () => { Engine.addLoadout(ch, "armor", "kevlar-vest", { buy: true }); Engine.addLoadout(ch, "weapons", "nope"); Engine.addLoadout(ch, "gear", "x"); },
       addCustomLoadout: () => { Engine.addCustomLoadout(ch, "armor"); Engine.addCustomLoadout(ch, "weapons"); Engine.addCustomLoadout(ch, "x"); },
       removeLoadout: () => { Engine.removeLoadout(ch, "armor", 99); Engine.removeLoadout(ch, "weapons", 0); },
-      weaponModReasons: () => { // Decision N: a junk refusalText falls back, never throws
+      weaponModReasons: () => { // Decision 221: a junk refusalText falls back, never throws
         ch.weapons.push({ id: "sg88-siege-breaker", notes: "", mods: [], roundsSpent: 0 }); const at = ch.weapons.length - 1;
         for (const g of D.weaponModGlossary) for (const junk of ["x", [], null, 7, { shotguns: 5 }, { shotguns: null }, { shotguns: [] }, { constructor: "x" }])
           withData(g, "refusalText", junk, () => Engine.weaponModOptions(ch, at)); },
@@ -7929,7 +7929,7 @@ test("P8b 12: house rules survive migrate and a hostile file", () => {
   eq(Engine.migrate(JSON.parse(JSON.stringify(fresh))).houseRules, fresh.houseRules);
 });
 
-// ── P9a: a mod's refusal says why, from data (Decision N) ─────────────────
+// ── P9a: a mod's refusal says why, from data (Decision 221) ─────────────────
 test("P9a 2: a refusal with no reason for that kind of weapon reads as before", () => {
   const opt = (ch, id) => Engine.weaponModOptions(ch, 0).options.find(o => o.id === id);
   const viper = armed("ads-lp9-viper"), sg = armed("sg88-siege-breaker");

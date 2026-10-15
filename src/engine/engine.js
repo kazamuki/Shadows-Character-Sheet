@@ -1346,7 +1346,7 @@ const Engine = (() => {
     return Object.assign(done, { left: l.rounds.max - e.roundsSpent, used:n, ammo:[k.def.name], ammoLeft: k.qty - n, unit: k.def.unit||null,
                                  loaded: kind, swapped: swap });
   }
-  // A mod's own reason for a weapon category it doesn't fit (Decision N): a map
+  // A mod's own reason for a weapon category it doesn't fit (Decision 221): a map
   // from category id to text. Anything else, or no entry, is null and the
   // caller words the refusal as before.
   function refusalFor(g, def){

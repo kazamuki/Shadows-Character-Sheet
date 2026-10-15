@@ -4670,7 +4670,6 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a refusal needs a reason by weapon rather than by category, or another kind of refusal (slots, already installed) wants data text.
      - **Built:** app 0.45.0, game data 0.38, no schema change, PR #186. Log 2026-10-15 (P9a).
 
-
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
