@@ -12,6 +12,7 @@ import { readFileSync, readdirSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { buildHtml, buildBlankSheetHtml, ROOT } from "../tools/build.mjs";
+import { localDay } from "../tools/release.mjs";
 
 const BROWSER_JS = [
   "src/ui/theme-init.js",
@@ -349,4 +350,20 @@ test("a feature ships switched off until its launch line is in: FEATURES.gm and 
 
 test("the blank sheet has no CRANK while the switch is off (Decision 214)", () => {
   assert.doesNotMatch(buildBlankSheetHtml(), /CRANK/);
+});
+
+test("release:prep dates a release by the local calendar day, not the UTC one (W67, Decision 213)", () => {
+  // v0.43.0 was cut at 8:57 pm Pacific on 2026-10-14 and the UTC default dated it the 15th.
+  const tz = process.env.TZ;
+  process.env.TZ = "America/Los_Angeles";
+  try {
+    const evening = new Date("2026-10-15T03:57:00Z");
+    assert.equal(evening.getHours(), 20, "the TZ override didn't take, so this test proves nothing");
+    assert.equal(localDay(evening), "2026-10-14");
+  } finally {
+    if (tz === undefined) delete process.env.TZ; else process.env.TZ = tz;
+  }
+  // And prep's default is that day; --date still overrides it.
+  const src = readFileSync(join(ROOT, "tools/release.mjs"), "utf8");
+  assert.match(src, /export function prep\(date = localDay\(\)\)/, "prep() no longer defaults to localDay()");
 });
