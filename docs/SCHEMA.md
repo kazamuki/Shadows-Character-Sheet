@@ -4687,6 +4687,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:**
        - The counts as a list on the whole-magazine row: a row at qty 0 is removed, taking the list with it.
        - A spare magazine stored on the weapon: a magazine fits any weapon of its type (Decision 145).
+       - Keeping only a swapped magazine: Deighton ruled both.
        - Asking at Reload what to do with the old magazine: a tap more in a fight.
      - **Replaces:** Decision 149 in part (F34's stub). Decision 145 stands.
      - **Revisit if:** the CRB sizes magazines per weapon (W108), or a table wants part-used magazines merged.
