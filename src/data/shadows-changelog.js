@@ -7,7 +7,7 @@ window.SHADOWS_CHANGELOG = [
     "intro": [],
     "items": [
       "**LUCK bought with Character Points now has a cap**, the same as Stats and Skills: 2 at Street Level, up to 5 at World Coming Down. The 4 everyone starts with doesn't count, and a character already made keeps what it bought. A draft over the cap can't be locked until you take a point back.",
-      "**\"Max Boost\" is now called the Max Character Point Boost.** The level cards say Max CP Boost, and the Character Points step jumps to **CP Boosts**."
+      "**\"Max Boost\" is now called the Max Character Point Boost.** The level cards say Max CP Boost, and the Character Points step's jump bar says **CP Boosts**."
     ]
   },
   {

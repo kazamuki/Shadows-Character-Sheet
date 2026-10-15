@@ -3857,7 +3857,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 5 in part (start at 4, not 2); Decision 19 in part (5 CP, not 6); Decision 97 in part (a power is no longer boosted at 1 CP a point). Decision 135 stands: the price is still data, now one key for every power. Closes W37.
      - **Revisit if:** LUCK is wanted by Campaign level after all, or a power needs a price of its own.
      - **Built:** app 0.35.0, game data 0.28, no schema bump; `rules.test.mjs` pins both. Log 2026-10-01.
-    → **Superseded in part by Decision 218** — "bought up to 5 becomes 7" holds only for a locked file or a level whose cap allows it.
+     → **Superseded in part by Decision 218** — "bought up to 5 becomes 7" holds only for a locked file or a level whose cap allows it.
 
 158. **Traits and Archetype are one Character tab: the archetype, then Advantages beside Disadvantages.**
      *2026-10-01 · Ken + Claude · Touches: Character tab, Traits tab, Archetype tab, SHEET_SECTIONS, LEGACY_SECTION, renderShCharacter, arch-cols, trait-cols, Expand all, Collapse all, traitsOpen, data-gotab, jump bar, Baseline Traits, Powers, Vulnerabilities, Advantages, Disadvantages*
@@ -4631,7 +4631,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** keeping LUCK exempt (Decision 5: the one target with no throttle); counting the starting 4 against the cap (only CP spent counts); trimming a locked file's LUCK to the cap (a file's paid-for points are never discarded, Decision 157); warning instead of blocking; capping Admin's LUCK bonus (Admin bypasses caps); renaming `maxBoost` (constraint 6).
      - **Replaces:** Decision 2 in part (the name Max Boost). Decision 3 in part (LUCK is a boosted target). Decision 5 in part (no longer exempt). Decision 157 in part (its "bought up to 5 becomes 7" holds only for a locked file or a level whose cap allows it).
      - **Revisit if:** playtests or player feedback say LUCK should run free, or CRB v4 prints the table with different numbers.
-     - **Built:** app 0.43.1, game data 0.37, no schema bump, PR #…. Log 2026-10-14 (P7).
+     - **Built:** app 0.43.1, game data 0.37, no schema bump, PR #177. Log 2026-10-14 (P7).
 
 ## 5. Open Flags
 

@@ -5509,7 +5509,6 @@ test("Decision 215: a buy CP can't cover is refused, and a power rank leaves spe
   assert.match(Engine.buyPowerRank(ch, "bestial-blessings", 1).why, /No Character Points left/);
   // spendable("cp") is about what a point can still buy: LUCK, a stat, a skill. A power rank costs more than LUCK.
   assert.equal(Engine.spendable(ch, "cp"), Engine.canBoost(ch, "luck", "LUCK").ok || D.stats.some(s => Engine.canBoost(ch, "stat", s.id).ok) || D.skills.some(s => Engine.canBoost(ch, "skill", s.id).ok));
-  assert.ok(Engine.powerRankCost() > luck, "a power rank no longer costs more than LUCK, so spendable('cp') needs a power term");
 });
 
 test("Decision 215: validate names CP in a power not held and a rank past the cap", () => {
@@ -7688,4 +7687,25 @@ test("Decision 218: a locked file over the cap loads as it is, and nothing repor
   assert.equal(back.trackers.luck.bonus, ch.trackers.luck.bonus, "migrate trimmed a locked file's LUCK");
   assert.equal(Engine.luckState(back).max, D.resources.luck.startingValue + ch.trackers.luck.bonus);
   assert.equal(Engine.versionCheck(back).filter(m => /luck/i.test(m)).length, 0, "versionCheck mentions a locked file's LUCK");
+});
+
+test("Decision 218 / 162: a buyable power rank still counts as CP to spend once LUCK is capped", () => {
+  const ch = vampire("strigoi", { pl: "street", locked: false });
+  ch.advantages = [];
+  for (const s of D.stats) ch.stats[s.id].base = D.statRules.max;
+  for (const s of D.skills) { const c = Engine.skillRankCap(ch, s.id); if (c != null) ch.skills[s.id] = { rank: c, notes: "" }; }
+  ch.creation.boosts = [];
+  ch.trackers.luck.bonus = Engine.powerLevel(ch).maxBoost;
+  // Disadvantages grant the CP: enough that every held power could be raised to its cap.
+  ch.disadvantages = D.disadvantages.filter(d => d.pointsGranted > 0).slice(0, 4).map(d => ({ id: d.id, rank: 1, notes: "" }));
+  assert.equal(Engine.canBoost(ch, "luck", "LUCK").ok, false);
+  assert.ok(Engine.cp(ch).left >= Engine.powerRankCost(), "the probe needs a rank's worth of CP");
+  assert.ok(Engine.powerCpState(ch).some(r => r.cap == null || r.rank < r.cap), "the probe needs a power with a rank to buy");
+  assert.equal(Engine.spendable(ch, "cp"), true, "a buyable power rank isn't CP left to spend");
+  // Every held power at its cap, CP still in hand: nothing is left to buy.
+  for (const r of Engine.powerCpState(ch)) ch.archetypeChoices.powerCp[r.id] = (ch.archetypeChoices.powerCp[r.id] || 0) + (r.cap - r.rank);
+  ch.disadvantages = D.disadvantages.filter(d => d.pointsGranted > 0).slice(0, 12).map(d => ({ id: d.id, rank: 1, notes: "" }));
+  assert.ok(Engine.cp(ch).left >= Engine.powerRankCost(), "the probe needs CP in hand once the powers are capped");
+  assert.equal(Engine.powerCpState(ch).some(r => r.cap == null || r.rank < r.cap), false);
+  assert.equal(Engine.spendable(ch, "cp"), false, "powers at their cap, LUCK at its cap, nothing else: no CP to spend");
 });

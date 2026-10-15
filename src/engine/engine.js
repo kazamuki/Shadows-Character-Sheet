@@ -3852,12 +3852,16 @@ const Engine = (() => {
     }
     if (pool==="statBonus") return D().stats.some(s => statValue(ch, s.id) < max);
     if (pool==="cp"){
-      // A power rank (Decision 215) costs more than a LUCK point, so whenever
-      // a rank is affordable this is already true: no power term is needed.
       // LUCK asks canBoost, so a capped LUCK is not CP left to spend (218).
+      // A power rank (Decision 215) and a Discipline's rank (135) are sinks of
+      // their own, at the power rank price: LUCK no longer covers them, now
+      // that it caps out (Decision 162). Custom powers and picks aren't sinks.
       const bal = cp(ch);
       if (!bal) return false;
-      return canBoost(ch, "luck", "LUCK").ok
+      const rankOpen = bal.left >= powerRankCost()
+        && (powerCpState(ch).some(r => r.cap==null || r.rank < r.cap)
+            || disciplineRanks(ch).some(d => d.cap==null || d.rank < d.cap));
+      return canBoost(ch, "luck", "LUCK").ok || rankOpen
         || D().stats.some(s => canBoost(ch, "stat", s.id).ok)
         || D().skills.some(s => canBoost(ch, "skill", s.id).ok);
     }
