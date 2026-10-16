@@ -4733,7 +4733,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a block at RoU (the GM's rule, and a mis-tap would need an Admin edit); an Active toggle per sustained power (every cost is text, so it needs a data pass first: W110); the −1 leaving the count alone (a mis-tapped +1 then −1 would read as a spend); spending only on Trackers; a Rate of Use field for a Custom pool; deriving the count from `spent` (the Thirst's daily loss would count as channelled).
      - **Replaces:** nothing. Extends Decision 201's resource and Decision 135's tracker `counts`/`resource` with `turnCap`.
      - **Revisit if:** sustained powers' costs become numbers (W110); a Custom pool needs a Rate of Use; GM mode's encounter Reset (Decision 189) should clear a linked character's count.
-     - **Built:** app 0.47.0, game data 0.40, character schema 0.27, PR #… . Log 2026-10-15 (P11).
+     - **Built:** app 0.47.0, game data 0.40, character schema 0.27, PR #198. Log 2026-10-15 (P11).
 
 226. **Movement is computed from MOB: Walk, Run and Sprint by the book's multipliers, Jump as Sprint ÷ 4 rounded down, and Fleet of Foot doubles Run and Sprint while active.**
      *2026-10-15 · Ken + Claude · Touches: movementRules, movement(), MOB, statTable, Walk, Run, Sprint, Jump, Fleet of Foot, grants type "movement", while, True Warrior, Main's Combat section, Prone, Restrained, the quick reference's movement table, W98*
@@ -4742,7 +4742,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** bare numbers with a flag for the unit (Ken confirmed meters); computing Prone's halving or Restrained's zero (halving's rounding isn't ruled); doubling Walk (the book doesn't); a Fleet of Foot toggle saved on the character (no Chi ability has an active state on the sheet; Iron Shirt is listed the same way); generating the quick reference's rows from the numbers (two readers of one table, for a table nobody edits).
      - **Replaces:** nothing.
      - **Revisit if:** Chi abilities get an active state; a power's or spell's MOB bonus (Preternatural Speed, Wind Walker, Apex Fury) is computed; Prone's halving is ruled with its rounding; W100 (meters or feet).
-     - **Built:** app 0.47.0, game data 0.40, PR #… . Log 2026-10-15 (P11).
+     - **Built:** app 0.47.0, game data 0.40, PR #198. Log 2026-10-15 (P11).
 
 ## 5. Open Flags
 
