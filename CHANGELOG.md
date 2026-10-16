@@ -23,6 +23,10 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.47.1
+
+- **Major Milestones fit a phone.** A prerequisite naming several advantages wraps onto a second line instead of pushing Progression off the side of the screen.
+
 ## v0.47.0 — 2026-10-16
 
 - **Your Rate of Use counts the round.** Spend SFR from Main's SFR card or the Trackers tab, and the sheet counts what you've spent this round. It tells you when you reach your Rate of Use and when you go past it; Turn Reset starts the count again. Feeding and the Thirst don't count as spending.

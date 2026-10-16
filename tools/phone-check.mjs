@@ -16,7 +16,10 @@
  *   - the wizard (P4): a new, named character on its Stats step, the longest
  *     header the wizard has, with its Home button held to the same finger size;
  *   - the fold (W45): the vitals bar and a sheet's jump bar on one row, and
- *     on a phone Main's Health card within a share of the screen.
+ *     on a phone Main's Health card within a share of the screen;
+ *   - Progression with a Major Milestone unlocked, on a Professional, whose
+ *     prerequisite chips are the longest (a chip naming three advantages
+ *     pushed a phone 30px sideways, found 2026-10-16).
  *
  * Outside `npm test` on purpose: it needs a browser, and CI doesn't install
  * one. playwright-core (a devDependency) drives whichever Chromium is here:
@@ -50,11 +53,12 @@ const WIDTHS = [
   { name: "phone, touch", width: 390, height: 844, touch: true },
 ];
 
-function lockedCharacter() {
+function lockedCharacter(archetype = "arcanist", milestonePoints = 0) {
   const { Engine, D } = loadEngine();
   const ch = Engine.newCharacter();
   ch.identity.name = "Phone Check";
-  ch.identity.archetype = "arcanist";
+  ch.identity.archetype = archetype;
+  ch.progression.milestonePoints = milestonePoints;
   ch.creation.powerLevel = D.powerLevels[0].id;
   ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;
@@ -78,17 +82,24 @@ const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
 writeFileSync(file, process.argv[2] ? readFileSync(process.argv[2], "utf8") : buildHtml());
 const seed = JSON.stringify({ ch: lockedCharacter(), section: "main" });
+// A Major unlocks at 10 Milestone Points; the Professional's list has the longest prerequisites.
+const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
+const MAJOR = "progression: a Major";
 
 const browser = await launch();
 const rows = [];
 try {
   for (const w of WIDTHS) {
-    const ctx = await browser.newContext({ viewport: { width: w.width, height: w.height },
-      hasTouch: !!w.touch, isMobile: !!w.touch });
-    await ctx.addInitScript(s => { try { if (!localStorage.getItem("shadows.active.v1")) localStorage.setItem("shadows.active.v1", s); } catch (e) {} }, seed);
-    const page = await ctx.newPage();
     const errors = [];
-    page.on("pageerror", e => errors.push(e.message));
+    const open = async s => {
+      const c = await browser.newContext({ viewport: { width: w.width, height: w.height },
+        hasTouch: !!w.touch, isMobile: !!w.touch });
+      await c.addInitScript(s => { try { if (!localStorage.getItem("shadows.active.v1")) localStorage.setItem("shadows.active.v1", s); } catch (e) {} }, s);
+      const p = await c.newPage();
+      p.on("pageerror", e => errors.push(e.message));
+      return [c, p];
+    };
+    let [ctx, page] = await open(seed);
     const measure = async screen => {
       const m = await page.evaluate(floor => {
         // Small controls and small text (W43). Collapsed sections are opened
@@ -164,6 +175,14 @@ try {
     await measure("wizard: stats");
     await page.click("header [data-home]");
     await page.waitForSelector("#btn-new");
+    await ctx.close();
+    // Progression with a Major to pick: its list opens, prerequisite chips and all.
+    [ctx, page] = await open(majorSeed);
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-open]");
+    await page.click('#topnav [data-sec="progression"]');
+    await page.waitForSelector("[data-majorcard]");
+    await measure(MAJOR);
     if (errors.length) rows.push({ width: w.name, screen: "(page errors)", header: errors.join("; "), overflow: "", ok: false });
     await ctx.close();
   }

@@ -526,6 +526,9 @@ table.edit .x,.journal .x{background:none; border:0; color:var(--dim); font-size
 table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .ms{position:relative}
 .ms .req{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
+/* A prerequisite chip can name three advantages: on a phone it wraps inside
+   itself rather than pushing the page sideways. */
+.ms .req .chip{white-space:normal; overflow-wrap:anywhere; min-width:0}
 .ms.taken{border-color:var(--green)}
 .ms.locked-ms{opacity:.62}
 .bar{height:6px; border-radius:3px; background:var(--panel-2); overflow:hidden; flex:1; min-width:90px}
