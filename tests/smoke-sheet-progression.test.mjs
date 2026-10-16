@@ -449,7 +449,7 @@ test("P12a 10: a new Advantage, a Professional's Natural row left alone, a Vampi
   assert.equal(activeChar(app).advantages.some(a => a.id === "hard-to-kill"), true);
   assert.equal(app.$('#modal [data-ipbuy="advantage|long-lived"]').disabled, true);
   assert.match(app.$('#modal [data-ipbuy="advantage|long-lived"]').closest("tr").textContent, /only be taken when a character is made/);
-  assert.match(app.$('#modal [data-ipbuy="advantage|educated"]').closest("tr").textContent, /can't buy it yet/);
+  assert.match(app.$('#modal [data-ipbuy="advantage|educated"]').closest("tr").textContent, /IP doesn't buy it in play/);
   assert.doesNotMatch(app.$("#modal").textContent, /\bF\d+\b/, "a flag id shows");
   const vamp = p12Char("vampire");
   const app2 = openSheet(vamp, "progression");
@@ -554,4 +554,17 @@ test("P12a: every flagged Advantage the IP buy refuses says why in the entry's o
     assert.ok(app.$(`#modal [data-ipbuy="advantage|${a.id}"]`).closest("tr").textContent.includes(a.playerNote), `${a.id}'s row lacks its note`);
   }
   assert.ok(!app.$("#modal").textContent.includes(D.appCopy.unsettledRule), "the generic fallback line shows");
+});
+
+test("P12a: a flagged Advantage's note reads true on the wizard's Character Points step too, beside the live stepper", () => {
+  const app = onStep("professional", "street", "character-points");
+  const flagged = D.advantages.filter(a => a.flagged);
+  assert.ok(flagged.length >= 2);
+  for (const a of flagged) {
+    const card = app.$$("#main .pick").find(c => c.textContent.includes(a.name) && c.textContent.includes(a.playerNote));
+    assert.ok(card, `${a.name}'s note isn't on the Character Points step`);
+    assert.doesNotMatch(a.playerNote, /yet\. Ask|can't buy it yet/, `${a.id}'s note reads as IP-only news at creation`);
+    assert.match(a.playerNote, /your GM's call/, `${a.id}'s note doesn't hand the table the authority at creation`);
+    assert.match(a.playerNote, /in play/, `${a.id}'s note doesn't say what IP does in play`);
+  }
 });

@@ -1169,7 +1169,7 @@ window.SHADOWS_DATA = {
       "description": "The body is hardware. This is the compatibility patch.\n\nSuffer no Sanity loss when you acquire cybernetics.",
       "flagged": true,
       "flagNote": "F5: open question for D - SAN vs TOL interaction (pending the Biomech rewrite, F6). CRB v4 text is unchanged from the flagged version.",
-      "playerNote": "How this works with SAN and TOL is still being written, so IP can't buy it yet. Ask your GM."
+      "playerNote": "How this works with SAN and TOL is still being written. Until it is, it's your GM's call, and IP doesn't buy it in play."
     },
     {
       "id": "danger-sense",
@@ -1201,7 +1201,7 @@ window.SHADOWS_DATA = {
       "universal": true,
       "flagged": true,
       "flagNote": "F44: Educated's grant is creation Skill Points; after lock there is nothing to spend them on. What does a rank bought in play give? Deighton. Until ruled, the IP buy refuses it. Talented still offers it (Q25).",
-      "playerNote": "What a rank of Educated gives once your character is made isn't settled, so IP can't buy it yet. Ask your GM.",
+      "playerNote": "What a rank of Educated gives once your character is made is still being written. Until it is, it's your GM's call, and IP doesn't buy it in play.",
       "grants": [{ "type": "skillPoints", "perRank": 10 }]
     },
     {
