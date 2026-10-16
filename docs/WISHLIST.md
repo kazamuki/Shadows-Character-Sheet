@@ -848,6 +848,42 @@ Home offers Open, Export and Remove, and no copy, so a second character of the s
 *To respect:* Decision 128 (a TAG is issued once: a copy gets a new one). Whether copying a locked character gives a locked one or an unlocked draft is a
 choice someone could make differently: a numbered decision.
 
+**W123 — Followers and minions get a sheet of their own.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*
+Followers/Minion grants a follower or companion per rank, and today they're a name in a text pick. Ken: taking it should open a mini-sheet per follower,
+and a new area on the character's sheet to see them. GM mode's cast stat block (Decision 175) is the nearest existing shape.
+*To respect:* a save-file shape (schema bump, `migrate()`); the follower's stats are the GM's call ("GM Approval needed"), so the sheet records, never rolls.
+
+**W124 — Poverty's debt as a balance you pay into.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*
+Poverty sets a debt of at least Ç75,000, more each rank, takes half of what the character earns against it, and bars legal gear until it's paid. The
+sheet shows none of it. A debt balance beside the Çredits ledger, with "half of income goes to the debt" applied when Çredits come in, would.
+*To respect:* the Çredits ledger (`addCredits`, which never refuses a negative balance); **a rules question first:** is rank 1's debt Ç75,000 or Ç95,000 ("at least
+Ç75,000 … each Rank raises your outstanding debts by Ç20,000")? Deighton's.
+
+**W125 — Addiction keeps time.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*
+Addiction says how long the character can go without (2 days, 18 hours, 6 hours by rank) and what withdrawal does. Ken: track the time since the last fix,
+and raise a flag the player clears by using or by marking the time as passed, as the Vampire's Thirst does for feeding (P17, Decision 223).
+*To respect:* the sheet has no clock. Time passes by sessions and by what the player says, so this is a tracker the player advances, not a timer.
+Withdrawal's TN and Pain Level effects are P18's table rules until then.
+
+**W126 — Contacts say who they are.** *Ken, from P18's sign-off · 💡 · Content · raised 2026-10-16*
+Contacts (Major) and Contacts (Minor) have no pick, so the player can't write down who the contact is. A text pick per rank, like Followers' and
+Enemies', would let the sheet show "Minor Contacts: Rook (fence), Vee (LINK hacker)".
+*To respect:* Decision 77's picks (`type: "text"`, `perRank`); the Character tab's cards already show picks (`selHtml`). `gamedataVersion` per 68.
+
+**W127 — Cyber-Prophetical, once cybernetics are gear.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*
+Cyber-Prophetical means no Sanity loss from cybernetics, and the sheet can't apply it until it knows a character has them. When cybernetics are gear with
+a Sanity cost, this becomes a computed effect that zeroes it.
+*To respect:* F19 (the cyborg install cost, open) and Cyber Allergy (no cybernetics at all), which reads the same gear. Waits on cybernetics as gear.
+
+**W128 — The sheet knows when an encounter ends.** *Claude, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*
+Many effects run "per encounter", "once per session" or "for 12 rounds": Favored Skill's re-roll, Untouchable's uses, Spirit Guide's calls, Time Sense,
+True Faith's aura, Blood Lust's state after a failed check. Ken wants some of them tracked (Divine Intervention spent, Favors used, Nine Lives counting
+down, True Faith activated for 12 resets). The sheet knows a round (Turn Reset, Decision 225) and a session (Log session), but not an encounter.
+This is the prerequisite for **limited uses**: a counter on an effect with its reset (never, per session, per encounter), and for any state an
+encounter starts and ends.
+*To respect:* the design first: how an encounter starts and ends on a player's sheet (a button? GM mode's encounters, S10, once seats exist?). Then the
+uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
+
 **W119 — The Combat Maneuver line on the printed sheet.** *Claude, from P12b's PQ7 · 💡 · Fix · raised 2026-10-16*
 P12b put each style's Combat Maneuvers (Stun → Stunned · 1d10 + 10 (Karate +1)) under Martial Arts' row on Main and the Skills tab, and left print
 alone (Ken took PQ7's default). A character who plays from paper has the style chips and their "+1 Stun" text and no number to roll. `pSkillCellsHtml` is the
