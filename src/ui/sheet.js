@@ -1279,12 +1279,12 @@ const crankSubHtml = st => st.next ? `${st.toNext} to ${esc(st.next.name)}` : "T
 // `turn` is null for a pool with no Rate of Use (a written-in one), and nothing is said then.
 const sfrPanel = ch => Engine.archPanels(ch).find(x=>x.type==="tracker" && x.resource==="sfr") || null;
 function sfrTurn(ch){ const p=sfrPanel(ch); return p ? Engine.panelTracker(ch, p).turn : null; }
-// The round's line. "short" is the card's: it already names RoU, so below the cap it adds only the count.
-function sfrRoundText(t, short){
+// The round's line, in words: the popover's and the Trackers row's (the card's is sfrCardMeta).
+function sfrRoundText(t){
   if (!t || !t.spent) return "";
   if (t.past) return `${t.spent} this round, ${t.past} past your Rate of Use. Your GM's call.`;
   if (t.at) return `${t.spent} of ${t.cap} this round: that's your Rate of Use`;
-  return short ? `${t.spent} this round` : `${t.spent} of ${t.cap} this round`;
+  return `${t.spent} of ${t.cap} this round`;
 }
 // The card's line never grows into a sentence, so the popover's buttons stay put under the finger;
 // the danger class carries at and past RoU, and the popover and Trackers say it in words.
@@ -1324,7 +1324,7 @@ function vitalPopover(ch, key){
       `<div class="trk-row">${luckControlsHtml(luck)}</div>` }; }
   if (key==="sfr"){ const sf=Engine.sfr(ch), p=sfrPanel(ch);
     if (!sf || sf.value==null || !p) return null;
-    const left=Math.max(0, sf.value-(ch.trackers.sfr.spent||0)), turn=Engine.panelTracker(ch, p).turn, line=sfrRoundText(turn, false);
+    const left=Math.max(0, sf.value-(ch.trackers.sfr.spent||0)), turn=Engine.panelTracker(ch, p).turn, line=sfrRoundText(turn);
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
         `<div class="trk-row"><button class="btn sm" data-trk="${esc(p.id)}|-1">−1</button><button class="btn sm" data-trk="${esc(p.id)}|1">+1</button></div>` +
@@ -1410,7 +1410,7 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
     const t = Engine.panelTracker(ch, p), max = t.max, val = t.count, down = t.down;
     // A pool the player sizes keeps its box once set, so it can be changed; the engine reads the number (W54).
     const effMax = max, manualMax = max==null ? "" : t.manual ? max : null;
-    const roundLine = sfrRoundText(t.turn, false);
+    const roundLine = sfrRoundText(t.turn);
     const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
     h += `<div class="trk"><h2>${esc(p.title)}</h2>
       <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
