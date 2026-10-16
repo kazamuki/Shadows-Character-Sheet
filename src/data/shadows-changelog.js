@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.47.0",
-    "date": null,
+    "date": "2026-10-16",
     "intro": [],
     "items": [
       "**Your Rate of Use counts the round.** Spend SFR from Main's SFR card or the Trackers tab, and the sheet counts what you've spent this round. It tells you when you reach your Rate of Use and when you go past it; Turn Reset starts the count again. Feeding and the Thirst don't count as spending.",
