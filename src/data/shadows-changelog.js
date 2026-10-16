@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.46.0",
-    "date": null,
+    "date": "2026-10-15",
     "intro": [],
     "items": [
       "**Holding a spell takes a die off the table.** Hold a Concentration spell from your Grimoire once it lands; the sheet sets aside one die from every Essence roll while you hold it, up to your Evocation rank in spells. Your casting pool and Beyond your pool count what's left, and Pain's line says what you're holding.",
