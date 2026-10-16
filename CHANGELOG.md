@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.45.0
+## v0.45.0 — 2026-10-15
 
 - **Vampires have their own Major Milestones.** All 22, from Blood Conditioning to Death Rites. The ones that change a number change it on the sheet.
 - **Splice and Cursed Evolution reach into another Bloodline.** Splice asks which power you take; Cursed Evolution opens a second Bloodline whose powers you learn with IP.
