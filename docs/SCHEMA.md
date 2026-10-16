@@ -4709,7 +4709,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** Wither Ward as text; a flag on Pure Blooded's bar; Splice opening its power for 40 IP; a gained Bloodline counting for Majors; refusing to remove Splice; opening a Bloodline on Progression; gained Bloodlines in `powerPool`, where Base Powers would place ranks in them.
      - **Replaces:** Decision 216 in part (another Bloodline's power can be held or learned). Extends 199 (prerequisite and grant types) and 201 (a Major changes a feed kind).
      - **Revisit if:** power SFR costs or damage are computed (Pure Blooded, Dead Warrior); W98 computes movement; `0413`'s Majors change.
-     - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.25, PR #…. Log 2026-10-15 (P17).
+     - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.25, PR #192. Log 2026-10-15 (P17).
 
 ## 5. Open Flags
 
