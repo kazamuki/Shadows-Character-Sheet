@@ -6,7 +6,7 @@
 - **W39:** a new Martial Arts style learned in play, by the GM's word, and each style's bonus applied to the Combat Maneuver it names.
 - **`0450`'s optional Training** (from crb-v4-sync's P5): once per Milestone period, a REF, INT or TECH Skill raised a rank for Çredits, at 10 × the rank's IP cost, never past 9.
 
-**Status:** **drafted 2026-10-16 by Claude (Opus)**, the P12a reviewer. Pre-flighted against `main` at `9c933b1` (P12a, #201, merged; app 0.47.0, game data 0.40 and character schema 0.27, none of them released: `git tag | sort -V | tail -1` is `v0.46.0`). **Waits on Ken: PQ1–PQ9 (§4).** The plan row's two questions are PQ5 (W39's bonus) and PQ1 (Training as a house rule).
+**Status:** **drafted 2026-10-16 by Claude (Opus)**, the P12a reviewer. Pre-flighted against `main` at `9c933b1` (P12a, #201, merged; app 0.47.0, game data 0.40 and character schema 0.27, none of them released: `git tag | sort -V | tail -1` is `v0.46.0`). **Ken answered on 2026-10-16 (§4):** the defaults for PQ1, PQ3–PQ5 and PQ7–PQ9; **PQ6: the bonuses stack**, so there's no flag. **PQ2 (what a Milestone period is) is still open.** The plan row's two questions are PQ5 (W39's bonus) and PQ1 (Training as a house rule).
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -61,7 +61,7 @@ When P12b is merged:
 
 1. **Add a style.** On a locked sheet, Martial Arts' row (on Main's Combat skills and on the Skills tab: one renderer) has **Add a style** while the skill is trained and a style is left to learn. It asks no price and is one commit with its own audit line and one Undo (Q29: the GM's word).
 2. **A Martial Arts skill learned in play can hold a style.** A skill's picks count its rank from every source, not only its creation rank (the probe's need 0).
-3. **The bonuses apply.** Under the chosen styles, the row shows each Combat Maneuver a style improves: "Stun · Stunned · 1d10 + 10 (Karate +1)". The check is Martial Arts' own plus the style's number, unarmed (PQ5). Two styles naming the same maneuver follow PQ6.
+3. **The bonuses apply.** Under the chosen styles, the row shows each Combat Maneuver a style improves: "Stun · Stunned · 1d10 + 10 (Karate +1)". The check is Martial Arts' own plus the style's number, unarmed (PQ5). Two styles naming the same maneuver add up (PQ6): Commando and Karate are +2 on Stun.
 4. **Training.** Where Admin has turned it on for this character (PQ1), Progression has **Train a Skill**:
    - REF, INT and TECH Skills only;
    - Çredits at `0450`'s 10 × the rank's IP cost, refused when the balance is short;
@@ -77,7 +77,7 @@ When P12b is merged:
 - **N**: Martial Arts styles learned in play, and their bonuses;
 - **N+1**: Training.
 
-**One flag (if PQ6 takes its default):** **F-next**, for two styles that improve the same maneuver.
+**No flag:** Ken ruled PQ6 (the bonuses stack).
 
 **Character schema: 0.27 → 0.28.** `houseRules.training` is a new key, and a training journal entry carries `via` and `mp`. `migrate()` needs these steps:
 - keep `houseRules.training` only when it's `true` (today's rebuild at ~4017 drops it);
@@ -102,17 +102,17 @@ Write them as Decisions **N** and **N+1** in `SCHEMA.md` §4. N's INDEX §3 line
 
 ```
 N. **A Martial Arts style is learned in play by the GM's word, with no price; each style's bonus is a number on the Combat Maneuver it names, added to the skill's check for that maneuver.**
-     *2026-10-1x · Ken + Claude (Deighton Q29) · Touches: picks, addInPlay, selections, picksFor, heldRank, setSelection, trimSelections, addPickInPlay, Martial Arts, styles, maneuvers, maneuver, amount, maneuverChecks, skillRowPair, Add a style, Combat Maneuvers, Q29, W39, F-next*
+     *2026-10-1x · Ken + Claude (Deighton Q29) · Touches: picks, addInPlay, selections, picksFor, heldRank, setSelection, trimSelections, addPickInPlay, Martial Arts, styles, maneuvers, maneuver, amount, maneuverChecks, skillRowPair, Add a style, Combat Maneuvers, Q29, W39*
      - **Decided:** A pick marked `addInPlay` takes more answers once the character is locked:
        - its `count` stays the creation cap;
        - `addPickInPlay` fills the first empty slot, or adds one, with no price;
        - it is one commit and one Undo.
 
-       A skill's picks count its rank from every source (creation, IP, boosts), so a skill learned in play can hold one. The skill's data lists its `maneuvers`, each naming the Condition it inflicts. A style names a `maneuver` and an `amount`, and `maneuverChecks` adds that amount to the skill's check for that maneuver. The bonus is unarmed only (PQ5). Two styles on one maneuver: <PQ6>.
+       A skill's picks count its rank from every source (creation, IP, boosts), so a skill learned in play can hold one. The skill's data lists its `maneuvers`, each naming the Condition it inflicts. A style names a `maneuver` and an `amount`, and `maneuverChecks` adds that amount to the skill's check for that maneuver. The bonus is unarmed only (PQ5). Two styles on one maneuver add their amounts (PQ6, Ken).
      - **Why:** W39; Q29: learned through the story, not bought, and the bonus makes you better at inflicting the Condition. `0530` names the four maneuvers and the style bonuses. A Martial Arts skill bought in play held no style.
      - **Rejected:** <PQ alternatives Ken didn't take>; a price for a style (Q29); parsing "+1 Stun" out of the `bonus` text (Decision 134: a number the engine reads is stored); raising `count` (it is the creation cap, Decision 56).
      - **Replaces:** Decision 77 in part (a pick's `count` is the creation cap when it's `addInPlay`; a skill's held rank counts IP and boosts). Builds Decision 56's "more may be trained later in play".
-     - **Revisit if:** Deighton rules on two styles on one maneuver (F-next); W107's unarmed strike line lands (the bonus moves onto it); Salut gets its bonus (Decision 56).
+     - **Revisit if:** Deighton rules otherwise on two styles on one maneuver; W107's unarmed strike line lands (the bonus moves onto it); Salut gets its bonus (Decision 56).
      - **Built:** app …, game data …, schema …, PR #…. Log 2026-10-1x (P12b).
 
 N+1. **Training is a house rule, off until Admin turns it on: once per Milestone period, a REF, INT or TECH Skill rises a rank for Çredits at 10 × that rank's IP cost, never past 9.**
@@ -148,15 +148,15 @@ N+1. **Training is a house rule, off until Admin turns it on: once per Milestone
 
 | Id | Question | Default | Answer |
 |---|---|---|---|
-| PQ1 | **Training: a house rule, or always offered?** | **A house rule, off**, turned on per character in Admin beside *Keep damage past zero* (Decision 220's place). `0450` calls it optional and "with the GM's approval". *Alternative:* always offered, with a "your GM decides" line. No schema bump for the toggle, but every sheet gets a fourth Progression button most tables won't use. | |
-| PQ2 | **What a Milestone period is.** | **The stretch between one Milestone and the next**, counted from Milestone Points against the data's cadence: Minors at 5, 15, 25…, Majors at 10, 20, 30…, so a period is 5 MP. **Long-Lived's extra Milestones don't open a period** (they add no MP). *Alternative:* one per session (each Milestone Point). `0450` doesn't define the term, so this is your CRB call. | |
-| PQ3 | **The price of a Focused skill, and of a skill never trained.** | **10 × whatever `ipCost` charges this character**: a Professional's Focused skill trains at its discount, and a never-trained skill at 10 × 25 = Ç250. *Alternative:* the base price for everyone, and trained skills only. | |
-| PQ4 | **Once per period: refused, or warned?** | **Refused**, with the reason and when the next period opens ("Next at 10 Milestone Points"). Admin still raises anything. *Alternative:* allowed with a warning (the sheet doesn't police "between sessions" either, P12a). | |
-| PQ5 | **W39's bonus: what it adds to, and when.** | **+N to the Martial Arts check for that maneuver, unarmed only.** `0530` gives the style bonus under *Unarmed Attacks*. Under *Weapon Attacks* it says only that a tagged weapon can make the maneuver. *Alternative:* the bonus also applies with a Disarming or Knockdown weapon. | |
-| PQ6 | **Two styles improving the same maneuver** (Commando and Karate are both +1 Stun). | **A rules question, so it's flagged:** F-next for Deighton. Until he rules, the better bonus counts, not both, and the line shows both styles with a `playerNote`. *Alternative:* they stack (+2), or the first chosen counts. | |
-| PQ7 | **Where the maneuver checks show.** | **On Martial Arts' row**, under its style chips: on Main's Combat skills and the Skills tab, which share one renderer (`skillRowPair`). Only maneuvers a held style improves are listed, and only once a style with a number is held. **Print is unchanged** (a W-next). *Alternative:* all four maneuvers always, or print too. | |
-| PQ8 | **Who may Add a style, and from what.** | **Any locked character whose Martial Arts is trained** (any source, §1.2). The styles offered are the ones not held, Custom included (its bonus stays its text). No price, no prerequisite: the story is the GM's (Q29). *Alternative:* Admin only. | |
-| PQ9 | **A skill's picks counting IP and boost ranks** (the probe's need 0). | **Fix it here**, since §1.1 needs it: a Martial Arts learned with IP can't hold a style otherwise. In the wizard nothing changes but a boosted-only Martial Arts can now choose a style, which is right. *Alternative:* its own Fix order. | |
+| PQ1 | **Training: a house rule, or always offered?** | **A house rule, off**, turned on per character in Admin beside *Keep damage past zero* (Decision 220's place). `0450` calls it optional and "with the GM's approval". *Alternative:* always offered, with a "your GM decides" line. No schema bump for the toggle, but every sheet gets a fourth Progression button most tables won't use. |  **Ken, 2026-10-16: the default.** |
+| PQ2 | **What a Milestone period is.** | **The stretch between one Milestone and the next**, counted from Milestone Points against the data's cadence: Minors at 5, 15, 25…, Majors at 10, 20, 30…, so a period is 5 MP. **Long-Lived's extra Milestones don't open a period** (they add no MP). *Alternative:* one per session (each Milestone Point). `0450` doesn't define the term, so this is your CRB call. |  **Open:** Ken's instinct is 5 MP; being worked through on PR #202. |
+| PQ3 | **The price of a Focused skill, and of a skill never trained.** | **10 × whatever `ipCost` charges this character**: a Professional's Focused skill trains at its discount, and a never-trained skill at 10 × 25 = Ç250. *Alternative:* the base price for everyone, and trained skills only. |  **Ken, 2026-10-16: the default.** |
+| PQ4 | **Once per period: refused, or warned?** | **Refused**, with the reason and when the next period opens ("Next at 10 Milestone Points"). Admin still raises anything. *Alternative:* allowed with a warning (the sheet doesn't police "between sessions" either, P12a). |  **Ken, 2026-10-16: the default.** |
+| PQ5 | **W39's bonus: what it adds to, and when.** | **+N to the Martial Arts check for that maneuver, unarmed only.** `0530` gives the style bonus under *Unarmed Attacks*. Under *Weapon Attacks* it says only that a tagged weapon can make the maneuver. *Alternative:* the bonus also applies with a Disarming or Knockdown weapon. |  **Ken, 2026-10-16: the default.** |
+| PQ6 | **Two styles improving the same maneuver** (Commando and Karate are both +1 Stun). | A rules question, so flagged for Deighton (F-next); until he rules, the better bonus counts. *Alternative:* they stack (+2), or the first chosen counts. | **Ken, 2026-10-16: they stack.** Knowing two styles that sharpen one maneuver gives both bonuses (Commando and Karate: +2 Stun). No flag. |
+| PQ7 | **Where the maneuver checks show.** | **On Martial Arts' row**, under its style chips: on Main's Combat skills and the Skills tab, which share one renderer (`skillRowPair`). Only maneuvers a held style improves are listed, and only once a style with a number is held. **Print is unchanged** (a W-next). *Alternative:* all four maneuvers always, or print too. |  **Ken, 2026-10-16: the default.** |
+| PQ8 | **Who may Add a style, and from what.** | **Any locked character whose Martial Arts is trained** (any source, §1.2). The styles offered are the ones not held, Custom included (its bonus stays its text). No price, no prerequisite: the story is the GM's (Q29). *Alternative:* Admin only. |  **Ken, 2026-10-16: the default.** |
+| PQ9 | **A skill's picks counting IP and boost ranks** (the probe's need 0). | **Fix it here**, since §1.1 needs it: a Martial Arts learned with IP can't hold a style otherwise. In the wizard nothing changes but a boosted-only Martial Arts can now choose a style, which is right. *Alternative:* its own Fix order. |  **Ken, 2026-10-16: the default.** |
 
 ## 5. What this changes underneath (the assumption sweep)
 
@@ -229,7 +229,6 @@ These rows were found by grepping the readers of each thing P12b touches, one le
     { "id": "disarm",    "name": "Disarm",    "inflicts": "disarmed" },
     { "id": "stun",      "name": "Stun",      "inflicts": "stunned" }
   ],
-  "maneuverStacking": { "flagged": true, "flagNote": "F-next: …", "playerNote": "…" },   // PQ6 default
   "picks": [{ "id": "style", …, "count": 2, "optional": true, "distinct": true, "addInPlay": true }],
   "styles": [
     { "id": "commando", "name": "Commando", "bonus": "+1 Stun", "maneuver": "stun", "amount": 1 },
@@ -262,7 +261,7 @@ The data-key guard needs every new key read. `teacherText` and `selfText` are na
    - a value already held (`distinct`).
 
    It fills the first null slot, else appends.
-3. **`maneuverChecks(ch, skillId)`** → `[{ id, name, inflicts: <Condition name>, bonus, check, styles: [names], stacked }]`. Only maneuvers a held style improves are listed. `check` is `skillLine(ch, skillId).checkBonus + bonus`. Under PQ6's default, `bonus` is the largest `amount`, and `stacked` is true when two styles named it. A skill with no `maneuvers` gives `[]`.
+3. **`maneuverChecks(ch, skillId)`** → `[{ id, name, inflicts: <Condition name>, bonus, check, styles: [names] }]`. Only maneuvers a held style improves are listed. `check` is `skillLine(ch, skillId).checkBonus + bonus`. `bonus` is the sum of the held styles' `amount`s for it (PQ6), and `styles` names each. A skill with no `maneuvers` gives `[]`.
 4. **`milestonePeriod(ch, mp)`** → a whole number: how many Minor and Major thresholds `mp` has reached (`mp` defaults to `milestoneState(ch).mp`).
 5. **`trainingCost(ch, skillId)`** → `{ ok, credits, from, to, name, teacher, nextAt }` or a refusal. It refuses each of these:
    - Training is off for this character;
@@ -288,7 +287,7 @@ The data-key guard needs every new key read. `teacherText` and `selfText` are na
     - one press adds the style and closes the modal, with an undo toast.
   - **The maneuver line:**
     - "Combat Maneuvers: Stun → Stunned · 1d10 + 10 (Karate +1)", one per improved maneuver;
-    - with two styles on one maneuver (PQ6), "(Commando, Karate: +1)" and the `playerNote` beside it;
+    - with two styles on one maneuver (PQ6), "Stun → Stunned · 1d10 + 11 (Commando +1, Karate +1)";
     - it never repeats the row's own Check: read it beside the Rank and Check cells.
 - **Admin:** a second house-rule checkbox, "Training (optional rule): raise a REF, INT or TECH Skill with Çredits, once per Milestone period".
 - **Progression:** **Train a Skill**, after Raise a Skill, only with the house rule on. Its modal:
@@ -320,7 +319,7 @@ The data-key guard needs every new key read. `teacherText` and `selfText` are na
 | `P12b 1: a style is added in play with no price, past the creation cap` | engine | Locked, Martial Arts rank 2, two styles. `addPickInPlay(…, "commando")` → three styles; `picksFor` shows three; `trimSelections` keeps three; IP and Çredits unchanged. Unlocked → refused. A held style again → refused. |
 | `P12b 2: a Martial Arts learned with IP can hold a style` | engine | `{rank:0, ipe:1}` → `picksFor` need 2, and `addPickInPlay` → ok. **On `main` need is 0.** A boosted-only Martial Arts in an unlocked draft: `setSelection` slot 0 → ok. |
 | `P12b 3: a style's bonus lands on its maneuver's check, unarmed` | rules | Karate held: `maneuverChecks` lists Stun only, check = Martial Arts' `checkBonus` + 1, inflicting Stunned. Per `0530` and Q29. |
-| `P12b 4: two styles on one maneuver count the better one, flagged` | engine | Commando and Karate: Stun's bonus is 1, `stacked` true, and the flag's `playerNote` is non-empty and has no F-number. (PQ6's default; rewrite to its answer.) |
+| `P12b 4: two styles on one maneuver stack` | engine | Commando and Karate: Stun's bonus is 2, its check Martial Arts' `checkBonus` + 2, and `styles` names both. Escrima and Krav Maga: Disarm +2. Karate alone with Jujitsu: Stun +1, Grapple +1. (Ken, PQ6.) |
 | `P12b 5: every style names a real maneuver, and every maneuver a real Condition` | rules | Every non-custom style has a `maneuver` among `maneuvers` and a positive `amount`; its `bonus` text names that maneuver; every `inflicts` is a Condition id. |
 | `P12b 6: Training prices a rank at 10 × its IP cost, never past 9` | rules | Handguns 5 → 6: Ç250 (`0450`'s example). A Focused skill at its discount (PQ3). New skill: Ç250. Rank 9 → refused. A COOL skill → refused. |
 | `P12b 7: a training is one rank, one journal line at 0 IP, one ledger line, and no banner` | engine | `trainSkill` → `ipe + 1`, the entry has `via:"training"` and `mp`, `ipState().spent` unchanged, Çredits −250, and `versionCheck` is `[]` **with an IP raise on the same skill beside it**. |
@@ -334,7 +333,7 @@ The data-key guard needs every new key read. `teacherText` and `selfText` are na
 
 - **Totality:** add a degenerate with `houseRules: null`, a skill entry `{ selections: { style: "x" } }`, and a journal entry `{ via: {}, mp: "x" }`. `maneuverChecks`, `trainingCost`, `trainSkill` and `addPickInPlay` on every degenerate and every junk argument never throw.
 - **Hostile:** a file whose style list holds `"<img onerror>"` renders as text in the chips.
-- **Data-key guard:** `maneuvers`, `inflicts`, `maneuver`, `amount`, `addInPlay`, `maneuverStacking` and every `ip.training` key are read.
+- **Data-key guard:** `maneuvers`, `inflicts`, `maneuver`, `amount`, `addInPlay` and every `ip.training` key are read.
 - **Voice:** the new copy passes `voice.test.mjs`, and no flag id renders (constraint 9).
 - **The A8 guard:** no style, maneuver, skill or Stat id in `src/engine` or `src/ui`.
 - **Phone width:** `npm run phone-check`. Check the Train a Skill modal and Martial Arts' row with three styles and a maneuver line at 375px.
@@ -346,7 +345,7 @@ List them in the PR and the log. Each line says what else could cover it.
 1. `picksFor` reading a skill's `rank` only (P12b 2). **Second path:** none; this is the bug.
 2. `need` capped at `count` on a locked character (P12b 1, asserted on `trimSelections` keeping three).
 3. A style's bonus parsed from `bonus` text, or applied to every maneuver (P12b 3: Grapple isn't listed for Karate).
-4. Two styles stacking (P12b 4).
+4. Two styles on one maneuver taking the better one, not the sum (P12b 4).
 5. Training priced at the base rank × 5 for a Focused skill (P12b 6, PQ3).
 6. A training with no journal entry (P12b 7, the banner). **Second path:** `versionCheck` alone, so assert on the banner, not the entry.
 7. The period counted from `minorAvail` (P12b 8's Long-Lived case).
@@ -375,7 +374,6 @@ List them in the PR and the log. Each line says what else could cover it.
 6. Docs:
    - Decisions N and N+1 with their INDEX lines, and 77's supersession mark;
    - SCHEMA §2 (`maneuvers`, styles, `addInPlay`, `ip.training`) and §3 (`houseRules.training`, the journal's `via` and `mp`, schema 0.28);
-   - F-next (if PQ6's default) in §5 and INDEX §2;
    - W39 to `wishes-granted.md`; a W-next for PQ7's print line;
    - the plan's P12b row;
    - CHANGELOG, then `npm run changelog`; versions per §2.
@@ -397,7 +395,6 @@ List them in the PR and the log. Each line says what else could cover it.
 
 **Close-out:** the close-the-session skill, *Rule or shape* tier. That covers:
 - Decisions N and N+1 and their INDEX lines;
-- the flag, if PQ6's default;
 - the log entry, with the mutants;
 - `shipped.md`'s row;
 - the plan's P12b row; W39 granted;
@@ -436,4 +433,4 @@ The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<plan>/
 > 5. **A Milestone period comes from Milestone Points**, not `minorAvail`: Long-Lived adds a Milestone without adding MP.
 > 6. **`migrate` rebuilds `houseRules` with one key.** Add `training`, or every save drops it. No id in code: `maneuver`, `addInPlay` and `ip.training.stats` decide. Write a regex into a file with the editor, never through a shell heredoc.
 >
-> Tier: Rule or shape. Two numbered decisions, the next free; one flag, F-next (PQ6), if Ken takes the default. Schema 0.28. Versions per §2. Use the close-the-session skill at the end.
+> Tier: Rule or shape. Two numbered decisions, the next free; no flag (Ken ruled PQ6: the bonuses stack). Schema 0.28. Versions per §2. Use the close-the-session skill at the end.
