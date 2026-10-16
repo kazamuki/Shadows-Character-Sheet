@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.47.0
+## v0.47.0 — 2026-10-16
 
 - **Your Rate of Use counts the round.** Spend SFR from Main's SFR card or the Trackers tab, and the sheet counts what you've spent this round. It tells you when you reach your Rate of Use and when you go past it; Turn Reset starts the count again. Feeding and the Thirst don't count as spending.
 - **Main's SFR card opens a popover** with −1 and +1, so spending in a fight doesn't need the Trackers tab. Once you've spent this round, its Turn Reset button takes you straight to Turn Reset.
