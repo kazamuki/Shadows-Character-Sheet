@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.47.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Major Milestones fit a phone.** A prerequisite naming several advantages wraps onto a second line instead of pushing Progression off the side of the screen."
+    ]
+  },
+  {
     "version": "0.47.0",
     "date": "2026-10-16",
     "intro": [],
