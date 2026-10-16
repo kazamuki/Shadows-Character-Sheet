@@ -7,7 +7,7 @@
 - **W54**: a written-in (Custom) archetype's SFR pool gets Main's card. Today it's counted only on Trackers.
 - **W98**: Walk, Run, Sprint and Jump on Main, from MOB (`0530`, and Deighton's Jump ruling, Q23).
 
-**Status:** **drafted 2026-10-15 by Claude (Opus)**, pre-flighted against `main` at `3cc2575` (P10, #195, merged; app 0.46.0, game data 0.39, character schema 0.26). The 0.46.0 release PR (#196) was open when this was written. **PQ1–PQ8 are Ken's** (§4).
+**Status:** **drafted 2026-10-15 by Claude (Opus)**, pre-flighted against `main` at `3cc2575` (P10, #195, merged; app 0.46.0, game data 0.39, character schema 0.26). 0.46.0 was released the same evening (v0.46.0, game data 0.39). **Ken answered PQ1–PQ8 on 2026-10-15** (§4): all eight take their defaults, PQ6 as meters. No flag opens.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -50,7 +50,7 @@ When P11 is merged:
 
 ## 2. Tier, versions, numbers
 
-**Tier: Rule or shape.** A new saved field (W97), two data shapes (W97's per-round cap on a panel; W98's movement numbers and a movement grant), and player-facing behaviour. **Two numbered decisions**, the next free numbers on `origin/main` when you write them: **N** (W97, the round's count) and **N+1** (W98, movement). W54 is a Fix inside the order: no decision of its own; its line goes in N's *Decided*. **No flag** unless PQ6's units aren't answered (see PQ6).
+**Tier: Rule or shape.** A new saved field (W97), two data shapes (W97's per-round cap on a panel; W98's movement numbers and a movement grant), and player-facing behaviour. **Two numbered decisions**, the next free numbers on `origin/main` when you write them: **N** (W97, the round's count) and **N+1** (W98, movement). W54 is a Fix inside the order: no decision of its own; its line goes in N's *Decided*. **No flag:** PQ6 was answered (meters).
 
 **Character schema: 0.26 → 0.27**, with its `migrate()` step in the same commit: `trackers.sfr.turn` is new. (The Custom pool's `trackers.panel.<id>.max` already exists and `migrate` already keeps it as a number or null, `engine.js` ~3709. No step is needed for it.)
 
@@ -96,14 +96,14 @@ N+1. **Movement is computed from MOB: Walk, Run and Sprint by the book's multipl
 
 | Id | Question | Default | Answer |
 |---|---|---|---|
-| PQ1 | **At RoU: warn or block?** (W97's open question) | **Warn.** At the cap: "4 of 4 this round: that's your Rate of Use." Past it: "6 this round, 2 past your Rate of Use. Your GM's call." The +1 still lands. *Alternative:* block the +1 at the cap. But the book's "limits" is the GM's to enforce, a block can't be argued with mid-fight, and a mis-tap past the cap would need an Admin edit. | |
-| PQ2 | **Sustained powers** ("2 SFR per round, sustained", "Rank per round, sustained"). | **The player spends them each round**, with +1 like anything else; the count catches it. A wish (W-next) to mark a power active and have Turn Reset charge it. *Alternative:* an Active toggle per sustained power now. But every cost is text ("Rank + 2 per round"), so that's a data pass over ~10 powers turning costs into numbers (Decision 135) first: a P of its own. | |
-| PQ3 | **What isn't spending.** | **Feeding, A day unfed and A day without rest** move the pool and never the round's count. **The −1** is a correction: it takes back from this round's count first, never below 0. **Undo** restores whatever was saved, count included (it's a structural diff). *Alternative:* −1 leaves the count alone. But then a mis-tap +1 then −1 reads as a spend. | |
-| PQ4 | **Where the count shows, and where you spend.** | **Main's SFR card** gains a sub-line ("RoU 4 · 3 this round") and **opens a popover with the SFR row's −1/+1**, as Luck's does, so a fight doesn't need the Trackers tab. **The Trackers row** shows the same line. *Alternative:* the count on both, spending only on Trackers, as today. Smaller, but P10 put Let go on Main for the same reason: the Trackers tab is a tab away mid-fight. | |
-| PQ5 | **A Custom pool and RoU.** (W54) | **Main's card shows the pool once its max is set, and no RoU line.** A Custom archetype has no Rate of Use in the data, so nothing is counted for it. A wish if a tester asks for a player-set RoU. *Alternative:* a RoU field beside the max on Trackers. Another number for a GM to invent with the player, for a case no tester has raised. | |
-| PQ6 | **Movement's units.** The book never says what MOB measures (`0530` ~190: "Your MOB is the baseline"); range bands are in meters. | **Meters**, written "m" ("Walk 5m · Run 15m"), if Ken confirms it's the book's intent (it's his CRB). *If not answered:* bare numbers and a flag (F-next) for the unit, `playerNote` on `movementRules`. W100 (meters or feet) would build on whichever. | |
-| PQ7 | **Conditions that change movement.** Prone ("Movement halved"), Restrained ("Movement reduced to 0"). | **Named beside the numbers, not computed**: "Prone: movement halved." Halving's rounding isn't ruled, and the numbers stay MOB's. *Alternative:* a `movement: { times }` on each Condition and computed numbers. Neater, but it would round a half nobody ruled. | |
-| PQ8 | **Movement on the print sheet.** | **Not in P11.** Main only; print is unchanged. A wish if the table wants it on paper. *Alternative:* a line on the print sheet's combat card. Print has its own layout decisions; keep P11 to Main. | |
+| PQ1 | **At RoU: warn or block?** (W97's open question) | **Warn.** At the cap: "4 of 4 this round: that's your Rate of Use." Past it: "6 this round, 2 past your Rate of Use. Your GM's call." The +1 still lands. *Alternative:* block the +1 at the cap. But the book's "limits" is the GM's to enforce, a block can't be argued with mid-fight, and a mis-tap past the cap would need an Admin edit. || **Ken, 2026-10-15: the default.** |
+| PQ2 | **Sustained powers** ("2 SFR per round, sustained", "Rank per round, sustained"). | **The player spends them each round**, with +1 like anything else; the count catches it. A wish (W-next) to mark a power active and have Turn Reset charge it. *Alternative:* an Active toggle per sustained power now. But every cost is text ("Rank + 2 per round"), so that's a data pass over ~10 powers turning costs into numbers (Decision 135) first: a P of its own. || **Ken, 2026-10-15: the default.** |
+| PQ3 | **What isn't spending.** | **Feeding, A day unfed and A day without rest** move the pool and never the round's count. **The −1** is a correction: it takes back from this round's count first, never below 0. **Undo** restores whatever was saved, count included (it's a structural diff). *Alternative:* −1 leaves the count alone. But then a mis-tap +1 then −1 reads as a spend. || **Ken, 2026-10-15: the default.** |
+| PQ4 | **Where the count shows, and where you spend.** | **Main's SFR card** gains a sub-line ("RoU 4 · 3 this round") and **opens a popover with the SFR row's −1/+1**, as Luck's does, so a fight doesn't need the Trackers tab. **The Trackers row** shows the same line. *Alternative:* the count on both, spending only on Trackers, as today. Smaller, but P10 put Let go on Main for the same reason: the Trackers tab is a tab away mid-fight. || **Ken, 2026-10-15: the default.** |
+| PQ5 | **A Custom pool and RoU.** (W54) | **Main's card shows the pool once its max is set, and no RoU line.** A Custom archetype has no Rate of Use in the data, so nothing is counted for it. A wish if a tester asks for a player-set RoU. *Alternative:* a RoU field beside the max on Trackers. Another number for a GM to invent with the player, for a case no tester has raised. || **Ken, 2026-10-15: the default.** |
+| PQ6 | **Movement's units.** The book never says what MOB measures (`0530` ~190: "Your MOB is the baseline"); range bands are in meters. | **Meters**, written "m" ("Walk 5m · Run 15m"), if Ken confirms it's the book's intent (it's his CRB). *If not answered:* bare numbers and a flag (F-next) for the unit, `playerNote` on `movementRules`. W100 (meters or feet) would build on whichever. || **Ken, 2026-10-15: meters, the default.** Write "m"; no flag. |
+| PQ7 | **Conditions that change movement.** Prone ("Movement halved"), Restrained ("Movement reduced to 0"). | **Named beside the numbers, not computed**: "Prone: movement halved." Halving's rounding isn't ruled, and the numbers stay MOB's. *Alternative:* a `movement: { times }` on each Condition and computed numbers. Neater, but it would round a half nobody ruled. || **Ken, 2026-10-15: the default.** |
+| PQ8 | **Movement on the print sheet.** | **Not in P11.** Main only; print is unchanged. A wish if the table wants it on paper. *Alternative:* a line on the print sheet's combat card. Print has its own layout decisions; keep P11 to Main. || **Ken, 2026-10-15: the default.** |
 
 ## 5. What this changes underneath (the assumption sweep)
 
@@ -177,7 +177,7 @@ Found by grepping the readers of each thing it touches, **one level further** (t
              { "id": "run", "name": "Run", "times": 3, "attack": -1 },
              { "id": "sprint", "name": "Sprint", "times": 6, "attack": -3 } ],
   "jump": { "name": "Jump", "from": "sprint", "divideBy": 4 },
-  "unit": "m" }                         // PQ6; absent (and a flag) if unanswered
+  "unit": "m" }                         // PQ6: meters (Ken)
 
 // True Warrior's grants, beside Iron Shirt's:
 { "type": "movement", "id": "fleet-of-foot", "name": "Fleet of Foot", "times": 2, "paces": ["run", "sprint"], "while": "while active" }
@@ -260,7 +260,7 @@ List them in the PR and the log. **Second paths were checked in the pre-flight**
 
 ## 12. Steps
 
-1. `git submodule update --init private`, then `npm run test:fast` on a fresh branch from `origin/main`. Note the totals. Read PQ1–PQ8's answers in §4; if PQ6 is blank, plan the flag.
+1. `git submodule update --init private`, then `npm run test:fast` on a fresh branch from `origin/main`. Note the totals. PQ1–PQ8 are answered in §4 (all defaults, PQ6 meters).
 2. Write §9's rows. Run them on `main`'s code and keep the output.
 3. Data (§8), then the engine (§8.1–6), then `migrate`. `npm run test:fast`.
 4. The UI (§8). `npm run verify`.
@@ -273,8 +273,7 @@ List them in the PR and the log. **Second paths were checked in the pre-flight**
    - at phone width: Main's card, the popover and the movement line. Use metrics if the screenshot times out.
 6. Docs:
    - Decisions N and N+1 with their INDEX lines; SCHEMA §2 and §3.
-   - A flag only if PQ6 is unanswered (close-a-flag skill, open).
-   - W97, W54 and W98 to `wishes-granted.md` (W98's "doubles all three" corrected); W-next for PQ2's active powers, if Ken takes the default; the plan's P11 row.
+   - W97, W54 and W98 to `wishes-granted.md` (W98's "doubles all three" corrected); W-next for PQ2's active powers (Ken took the default); the plan's P11 row.
    - CHANGELOG plus `npm run changelog`; versions per §2.
 7. `npm run verify` and `npm run phone-check`.
 
@@ -284,7 +283,7 @@ List them in the PR and the log. **Second paths were checked in the pre-flight**
 - **A code change outside:**
   - the engine functions named in §5 and §8, `migrate` and `newCharacter`;
   - Main's vitals and Combat section, `vitalPopover`, the Trackers tab's tracker rows and handlers, the Turn Reset panel and its Apply, and the vitals bar and panel's SFR line.
-- PQ1–PQ8 unanswered when you start (PQ6 has its own fallback): they're Ken's, not yours.
+- An answer in §4 that reads differently from what you're about to build: they're Ken's, not yours.
 - A test outside these **expected breaks** fails:
   - the `"0.26"` schema literals the bump moves;
   - the data-key guard, until `turnCap`, `movementRules` and the Condition flag are read;
@@ -295,7 +294,6 @@ List them in the PR and the log. **Second paths were checked in the pre-flight**
 
 **Close-out:** the close-the-session skill, *Rule or shape* tier. That covers:
 - Decisions N and N+1 and their INDEX lines;
-- a flag only if PQ6 was unanswered;
 - the log entry, with the mutants;
 - `shipped.md`'s row;
 - the plan's P11 row; W97, W54 and W98 granted;
@@ -328,10 +326,10 @@ The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<plan>/
 > Six things in this order are easy to get wrong:
 >
 > 1. **The round's count is its own field, not a diff of `spent`.** The Thirst's daily loss and Feeding move `spent` too, and they aren't channelling. Only the tracker's +1 counts.
-> 2. **Warn, never block** (PQ1, unless Ken answered otherwise). The +1 past RoU lands.
+> 2. **Warn, never block** (PQ1, Ken's answer). The +1 past RoU lands.
 > 3. **Turn Reset must be pressable for the count alone.** Today `hasEffect` keeps Apply disabled when nothing ticks.
 > 4. **A Custom pool has no RoU.** Every reader that prints `RoU ${…}` must hide it when it's null, or players read "RoU undefined".
 > 5. **Fleet of Foot doubles Run and Sprint, not Walk** (the book, not W98's text), and Jump comes from the doubled Sprint: 15, not 14, at MOB 5.
 > 6. **No archetype, specialization or Condition id in code.** The cap is `turnCap`, Fleet is a grant, a Condition says `movement: true`. Write a regex into a file with the editor, never through a shell heredoc.
 >
-> Tier: Rule or shape. Two numbered decisions, the next free; a flag only if PQ6 is unanswered. Character schema 0.27. Versions per §2. Use the close-the-session skill at the end.
+> Tier: Rule or shape. Two numbered decisions, the next free; no flag (PQ6: meters). Character schema 0.27. Versions per §2. Use the close-the-session skill at the end.
