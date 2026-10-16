@@ -6,6 +6,8 @@ window.SHADOWS_CHANGELOG = [
     "date": null,
     "intro": [],
     "items": [
+      "**Vampires have their own Major Milestones.** All 22, from Blood Conditioning to Death Rites. The ones that change a number change it on the sheet.",
+      "**Splice and Cursed Evolution reach into another Bloodline.** Splice asks which power you take; Cursed Evolution opens a second Bloodline whose powers you learn with IP.",
       "**A magazine you reload before it's empty is kept.** It goes in your gear with what's left in it, ready to load again. A full one you swap out goes back with the rest.",
       "**Swapping rounds says what happens to the old magazine.**",
       "**A new classification: Magical being.** The fae and their kind. It buys the Universal Advantages only, like a Supernatural.",

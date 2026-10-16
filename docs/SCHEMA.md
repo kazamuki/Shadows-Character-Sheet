@@ -674,7 +674,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.24",
+    schemaVersion: "0.25",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -905,7 +905,15 @@ It renders on the Character tab (Decision 158).
       ]
     },
     milestonePoints: 0,              // manual MP only — session MP is computed
-    milestones: { minor: [ { id, date } ], major: [ { id, date } ] },
+    milestones: { minor: [ { id, date } ], major: [ { id, date, power? } ] },
+    // (0.25, Decision 223) A Major row's `power` is the id a Major with a data
+    // `choice` of type `power` (Splice) holds, at rank 1; only a non-empty
+    // string stays, and a reader keeps it only if it is another specialization's
+    // power of this archetype. Taking the row away leaves the IP spent on it.
+    // `specializationsGained` (0.25) is the ids of the other specializations a held
+    // power with `gainsSpecialization` opened (Cursed Evolution): strings, once
+    // each; a reader keeps this archetype's other options, up to the allowance.
+    specializationsGained: [],
     // (0.18, Decision 194) Ranks IP bought, per power id: a Discipline's data
     // id or a written power's row id. A Discipline's rank is its starting rank
     // + CP-bought + this; a written power's is 1 + this. Removing a written
@@ -4634,6 +4642,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 215 in part (a held power is placed or learned, not only placed). Decision 153 in part (written powers aren't only the write-in archetype's). Extends 194 and 157.
      - **Revisit if:** Cursed Evolution or Splice opens another Bloodline's powers (VQ4), or a custom power needs mechanical fields.
      - **Built:** app 0.42.0, game data 0.35, schema 0.21, PR #170. Log 2026-10-11 (P5).
+     → **Superseded in part by Decision 223**: another Bloodline's power can be held (Splice) or learned (a Bloodline Cursed Evolution opened); the rejected "VQ4's door" is open.
 
 217. **Any Minor Milestone repeats; Improved is 3d10+30; five Minors ask what they give by a chooser; the General Majors are the Professional's; any archetype can write in a Major.**
      *2026-10-14 · Ken + Claude (Deighton's Q25–Q28, Q32) · Touches: minorShared, canTakeMinor, takeMinorChoice, minorChoice, ipRoll, Skilled, Honed, Redeemed, Talented, Steadied, majorGeneral, majorPool, majorListed, majorOffered, custom Major, addCustomMajor, versionCheck, character schema 0.22, F9, W103*
@@ -4692,6 +4701,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 149 in part (F34's stub). Decision 145 stands.
      - **Revisit if:** the CRB sizes magazines per weapon (W108), or a table wants part-used magazines merged.
      - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.24, PR #190. Log 2026-10-15 (P9b).
+
+223. **A Vampire's Major Milestones are data on Decision 199's engine; Splice holds one power of another Bloodline, and Cursed Evolution opens one other Bloodline for IP.**
+     *2026-10-15 · Ken + Claude · Touches: growth.majorMilestones, checkPrereqs, notWith, noSpecializationGained, grants(), feed grant, withering grant, feedView, resolveHit, takeMajorChoice, majorChoice, milestones.major[].power, specializationsGained, gainSpecialization, gainsSpecialization, playPool, powerPool, Learn a new power, Wither Ward, Pure Blooded, Splice, Cursed Evolution, character schema 0.25, VQ4, VQ27*
+     - **Decided:** `0413`'s 22 Majors are the Vampire's `growth.majorMilestones`, gated as the Werewolf's are. Five compute: +2 RoU, +6 SFR max, a `feed` grant (fresh +1 per HL; stored to the max) and a `withering` grant halving Withering through a hit, never below 1. `notWith` lists Majors that bar one; `noSpecializationGained` bars Pure Blooded once a Bloodline is opened, and opening once it's taken. Splice holds one other Bloodline's power at rank 1 (the Major's `power`); removing it leaves its IP spent. A power with `gainsSpecialization` opens that many Bloodlines (`specializationsGained`), whose powers are learned at the New Power price; they don't count for Majors. Schema 0.25.
+     - **Why:** `0413` and VQ27, with Ken's defaults (PQ1–PQ6). Every Vampire holds Cursed Evolution (Decision 215), so only using it can bar Pure Blooded.
+     - **Rejected:** Wither Ward as text; a flag on Pure Blooded's bar; Splice opening its power for 40 IP; a gained Bloodline counting for Majors; refusing to remove Splice; opening a Bloodline on Progression; gained Bloodlines in `powerPool`, where Base Powers would place ranks in them.
+     - **Replaces:** Decision 216 in part (another Bloodline's power can be held or learned). Extends 199 (prerequisite and grant types) and 201 (a Major changes a feed kind).
+     - **Revisit if:** power SFR costs or damage are computed (Pure Blooded, Dead Warrior); W98 computes movement; `0413`'s Majors change.
+     - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.25, PR #192. Log 2026-10-15 (P17).
 
 ## 5. Open Flags
 

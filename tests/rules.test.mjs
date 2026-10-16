@@ -1670,3 +1670,41 @@ test("P9b 1: a magazine reloaded before it's empty is kept with its count", () =
   assert.equal(r.kept && r.kept.roundsLeft, 18);
   assert.equal(r.kept.whole, false);
 });
+
+// ── P17: the Vampire's Major Milestones (0413, Growth & Milestones) ───────
+const vamp = (bl = "strigoi", pl = "heroic") => {
+  const ch = Engine.newCharacter();
+  ch.identity.archetype = "vampire"; ch.creation.powerLevel = pl; ch.creation.locked = true;
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+  ch.archetypeChoices.specialization = [bl];
+  ch.progression.milestonePoints = 100;
+  return ch;
+};
+
+test("P17 1: a Vampire is offered 0413's Majors, less another Bloodline's", () => {
+  // 0413 lists 22 Majors under Growth & Milestones; three need a Bloodline.
+  const rows = crb("0413_Vampire.md").split(/^## Growth/m)[1].split("\n").filter(l => /^\| [A-Z]/.test(l)).map(l => l.split("|")[1].trim()).filter(n => n !== "Milestone");
+  assert.equal(rows.length, 22);
+  const all = D.archetypes.find(a => a.id === "vampire").growth.majorMilestones;
+  assert.equal(JSON.stringify(all.map(m => m.name)), JSON.stringify(rows), "the data's Majors aren't 0413's, in its order");
+  const ids = bl => Engine.majorOffered(vamp(bl)).map(m => m.id);
+  const three = ["stolen-face", "breath-of-winter", "returning-strike"];
+  assert.equal(ids("strigoi").length, 20);
+  assert.deepEqual([...three.filter(i => ids("strigoi").includes(i))], ["stolen-face"]);
+  assert.deepEqual([...three.filter(i => ids("upyr").includes(i))], ["breath-of-winter"]);
+  assert.deepEqual([...three.filter(i => ids("draugur").includes(i))], ["returning-strike"]);
+  const pre = (ch, id) => Engine.majorPrereqs(ch, Engine.majorById(ch, id));
+  assert.equal(pre(vamp(), "night-wings").ok, false);
+  assert.equal(Engine.majorById(vamp(), "death-rites").prerequisites.majorCount, 4);
+  assert.deepEqual([...pre(vamp(), "blood-control").unmet], ["Milestone: Frenzy Resistance"]);
+});
+
+test("P17 2: Blood Conditioning and Growing Hunger raise RoU and SFR", () => {
+  // 0413: "+2 RoU." and "+6 maximum SFR."
+  const ch = vamp();
+  const s0 = Engine.sfr(ch);
+  assert.deepEqual([s0.value, s0.rou], [17, 6]);
+  ch.progression.milestones.major.push({ id: "blood-conditioning", date: "2026-10-15" }, { id: "growing-hunger", date: "2026-10-15" });
+  const s1 = Engine.sfr(ch);
+  assert.deepEqual([s1.value, s1.rou], [23, 8]);
+});

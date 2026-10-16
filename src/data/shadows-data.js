@@ -2625,7 +2625,8 @@ window.SHADOWS_DATA = {
         { "id": "bestial-blessings", "name": "Bestial Blessings", "cost": "1 SFR, until dismissed or the encounter ends", "effect": "Retractable claws: BOD+3 melee damage, AP, and +2 MOB for climbing. Claws retract if you are stunned or knocked unconscious.", "perRank": "+1 damage (max 5)", "maxRank": 5 },
         { "id": "vitality-surge", "name": "Vitality Surge", "cost": "2 SFR per HL healed", "effect": "Fast Action: heal up to your rank in HL per round. Can't restore Withering damage. At Rank 5, severed limbs regenerate.", "perRank": "+1 HL per round (max 5)", "maxRank": 5 },
         { "id": "preternatural-speed", "name": "Preternatural Speed", "cost": "2 SFR per round, sustained", "effect": "+2 MOB, +2 to defensive actions (Dodge and Parry), and one extra movement action each turn. Doesn't stack with other speed powers.", "perRank": "None", "ranked": false },
-        { "id": "cursed-evolution", "name": "Cursed Evolution", "cost": "None", "effect": "Drink at least 1 HL of another Vampire's blood and win an opposed WILL Essence check to gain access to the bloodline it was made with. Bloodline powers are bought with IP; one bloodline per Vampire. Not available with Pure Blooded.", "perRank": "+1 Hit (max 3)", "maxRank": 3 },
+        { "id": "cursed-evolution", "name": "Cursed Evolution", "cost": "None", "effect": "Drink at least 1 HL of another Vampire's blood and win an opposed WILL Essence check to gain access to the bloodline it was made with. Bloodline powers are bought with IP; one bloodline per Vampire. Not available with Pure Blooded.", "perRank": "+1 Hit (max 3)", "maxRank": 3, "gainsSpecialization": 1,
+          "gainsSpecializationText": "You drank at least 1 HL of a Vampire of that Bloodline and won the opposed WILL Essence check. Your table settles that; the sheet rolls nothing." },
 
         { "id": "shadow-play", "origin": "strigoi", "name": "Shadow Play (Masked)", "cost": "Rank + 2; rank alone for a glamour on yourself", "effect": "An illusion of an object, person, or scene within WILL meters, real to all senses, lasting 1 hour per WILL. Anyone scrutinizing it makes a WILL Essence check (TN 8, TH = rank) to see through it.", "perRank": "+1 TH (max 5)", "maxRank": 5 },
         { "id": "nightmare-echo", "origin": "strigoi", "name": "Nightmare Echo (Masked)", "cost": "Rank", "effect": "On a bite, the target makes a WILL Essence check (TN 8, TH = rank + 1) or suffers −1 to all combat checks and −5% to SAN checks for 1d4 hours.", "perRank": "+1 TH and −5% (max 5)", "maxRank": 5 },
@@ -2661,7 +2662,37 @@ window.SHADOWS_DATA = {
       ],
       "growth": {
         "minorMilestones": "shared",
-        "majorMilestones": []
+        /* 0413's own Majors, offered alone (Decision 217: the shared `majorGeneral` is the Professional's), on the engine Decision 199
+           built for the Werewolf's. `prerequisites` is the one vocabulary (Decision 91): `majorCount`, `milestones`, `specialization`
+           (the Bloodline you were made with, never one you opened), `notWith` (Major ids that bar this one if taken) and
+           `noSpecializationGained` (barred once another Bloodline is open). A `choice` of type `power` makes taking it ask which
+           power of another Bloodline it holds (the Major's `power`, rank 1). `grants`: `rou` and `sfrMax` as the Werewolf's,
+           `feed` (a Thirst kind's `perHL` added, `upToShare` raised) and `withering` (`halve`: Withering through a hit is halved,
+           never below 1). Decision 223. */
+        "majorMilestones": [
+          { "id": "blood-conditioning", "name": "Blood Conditioning", "prerequisites": {}, "benefit": "+2 RoU.", "grants": [{ "type": "rou", "amount": 2 }] },
+          { "id": "growing-hunger", "name": "Growing Hunger", "prerequisites": {}, "benefit": "+6 maximum SFR.", "grants": [{ "type": "sfrMax", "amount": 6 }] },
+          { "id": "pure-blooded", "name": "Pure Blooded", "prerequisites": { "notWith": ["splice"], "noSpecializationGained": true }, "benefit": "Bloodline powers cost 1 less SFR, to a minimum of 1. Can't be taken with Splice or Cursed Evolution." },
+          { "id": "splice", "name": "Splice", "prerequisites": { "notWith": ["pure-blooded"] }, "benefit": "Select one power from a different bloodline. Can't be taken with Pure Blooded.", "choice": { "type": "power", "from": "otherSpecialization" } },
+          { "id": "dead-warrior", "name": "Dead Warrior", "prerequisites": {}, "benefit": "Bloodline powers that deal damage gain +2 damage." },
+          { "id": "blood-feast", "name": "Blood Feast", "prerequisites": {}, "benefit": "Gain +1 SFR per HL when feeding on fresh blood.", "grants": [{ "type": "feed", "kind": "fresh", "perHL": 1 }] },
+          { "id": "reservoir", "name": "Reservoir", "prerequisites": { "majorCount": 1 }, "benefit": "Carry blood stones that hold blood for you, letting you fuel powers without tapping your own SFR." },
+          { "id": "blood-alchemist", "name": "Blood Alchemist", "prerequisites": { "majorCount": 1 }, "benefit": "Stored blood can fill your SFR to its maximum, still at 2 SFR per HL.", "grants": [{ "type": "feed", "kind": "stored", "upToShare": 1 }] },
+          { "id": "levitation", "name": "Levitation", "prerequisites": {}, "benefit": "Glide soundlessly at your MOB speed, at a height in meters equal to your WILL. Knocked unconscious, you fall." },
+          { "id": "night-wings", "name": "Night Wings", "prerequisites": { "milestones": ["levitation"], "majorCount": 1 }, "benefit": "Levitation becomes flight at 160 kph, with +3 to Acrobatics checks and Defensive Actions in the air." },
+          { "id": "dark-rending", "name": "Dark Rending", "prerequisites": { "majorCount": 1 }, "benefit": "Your Bestial Blessings claws extend into spectral talons that can strike Unbodied creatures, and anything else immune to Physical damage, as though it were solid." },
+          { "id": "frenzy-resistance", "name": "Frenzy Resistance", "prerequisites": { "majorCount": 1 }, "benefit": "+1 Hit on WILL Essence checks to resist Blood Frenzy." },
+          { "id": "blood-control", "name": "Blood Control", "prerequisites": { "milestones": ["frenzy-resistance"] }, "benefit": "In Blood Frenzy, you choose whom to feed from and can spare your allies." },
+          { "id": "stolen-face", "name": "Stolen Face", "prerequisites": { "specialization": ["strigoi"], "majorCount": 1 }, "benefit": "Your Shadow Play glamour can wear the exact face, voice, and mannerisms of anyone you have fed on. Against people who know them, the glamour gains +2 TH to see through." },
+          { "id": "breath-of-winter", "name": "Breath of Winter", "prerequisites": { "specialization": ["upyr"], "majorCount": 1 }, "benefit": "Spend 2 SFR to exhale a 5-meter cone of killing cold. Everyone in it makes a BOD Essence check (TN 8, TH 2) or takes Elemental damage equal to your BOD." },
+          { "id": "returning-strike", "name": "Returning Strike", "prerequisites": { "specialization": ["draugur"], "majorCount": 1 }, "benefit": "Throw your Ancient Weapon as a ranged attack using your Melee skill; it returns to your hand at the end of your turn." },
+          { "id": "defiance-of-sol", "name": "Defiance of Sol", "prerequisites": { "majorCount": 2 }, "benefit": "Indirect sunlight (overcast skies, deep shade, light through glass) deals 1 Withering damage per round. In direct sunlight, spend 2 SFR per round to take no damage that round. Sunlight is still the one pain you feel." },
+          { "id": "wither-ward", "name": "Wither Ward", "prerequisites": { "majorCount": 2 }, "benefit": "All Withering damage you take is halved, never below 1.", "grants": [{ "type": "withering", "halve": true }] },
+          { "id": "life-sense", "name": "Life Sense", "prerequisites": { "majorCount": 2 }, "benefit": "+5 to hearing-based Awareness checks within 20 meters, and +5 to Human Perception, Med Tech, and First Aid when detecting intent or injuries." },
+          { "id": "kiss-of-night", "name": "Kiss of Night", "prerequisites": { "majorCount": 3 }, "benefit": "You know how to make another Vampire: drain your prey nearly dry, then feed them your blood. They make a WILL Essence check (TN 9, TH 3) to survive the change. A botch kills them; fewer than 3 Hits makes a Ghoul; success brings them into your bloodline." },
+          { "id": "unholy-covenant", "name": "Unholy Covenant", "prerequisites": { "majorCount": 3 }, "benefit": "Summon an undead or abyssal minion and share your Bloodline powers with it; it draws on your SFR if it has none of its own. Feed it on its first night or it disintegrates at dawn." },
+          { "id": "death-rites", "name": "Death Rites", "prerequisites": { "majorCount": 4 }, "benefit": "At 0 HL, make a WILL Essence check (TN 8, TH 2; TN 10, TH 5 if Withering killed you). Success brings you back in your cursed form, whole or remade from shadow, and you must feed until your SFR is full or face true death." }
+        ]
       }
     },
     {
