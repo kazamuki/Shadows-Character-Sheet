@@ -8970,3 +8970,19 @@ test("P12b 8: every writer that raises Milestone Points lands a training inside 
   assert.ok(sites.length >= 2, `found only ${sites.length} MP writers: did a name change? ${JSON.stringify(sites)}`);
   same(sites.filter(s => !s.settles).map(s => s.site), [], "a writer of Milestone Points that doesn't land a training");
 });
+
+test("P12b 13: a style added beside junk style ids shows, and a training on a skill Admin removed lands nothing", () => {
+  const ch = p12b({ styles: [] });
+  ch.skills["martial-arts"].selections = { style: ["j1", "j2", "j3", "j4", "j5", "j6", "j7", "j8"] };
+  assert.equal(Engine.addPickInPlay(ch, ...MA, "style", "karate").ok, true);
+  assert.ok(drawStyles(ch).chosen.includes("karate"), "the added style shows");
+  assert.deepEqual(JSON.parse(JSON.stringify(ch.skills["martial-arts"].selections.style)), ["karate"], "junk entries are dropped when one is added");
+  const t = p12b({ mp: 9 });
+  assert.equal(Engine.startTraining(t, "handguns").ok, true);
+  delete t.skills.handguns;                      // Admin removes the skill
+  t.progression.milestonePoints = 10;
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.settleTraining(t))), [], "nothing lands");
+  assert.equal(t.skills.handguns, undefined, "the skill is not brought back");
+  assert.equal(t.progression.training, null, "the training is dropped");
+  assert.equal(t.progression.ip.log.length, 0);
+});

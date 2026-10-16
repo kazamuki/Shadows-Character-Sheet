@@ -2730,7 +2730,8 @@ const Engine = (() => {
     const def = skillById(t.skill), top = Number(trainingRules().maxRank);
     if (!def || !trainable(ch) || !Array.isArray(ch.progression.ip && ch.progression.ip.log)) return [];
     const from = skillLine(ch, def.id).rank;
-    if (Number.isFinite(top) && from >= top) return [];
+    // A skill Admin took away since the start is dropped like one past the cap: training never teaches a skill (PQ3).
+    if (from < 1 || (Number.isFinite(top) && from >= top)) return [];
     if (!isPlainObj(ch.skills[def.id])) ch.skills[def.id] = { rank:0, ipe:0 };
     ch.skills[def.id].ipe = (Number(ch.skills[def.id].ipe)||0) + 1;
     ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:0, targetType:"skill", targetId:def.id,
@@ -4524,10 +4525,14 @@ const Engine = (() => {
     const pick = (def.picks||[]).find(p=>p.id===pickId);
     if (!pick || pick.addInPlay!==true || pick.type==="text") return refuse("That can't be added in play.");
     if (heldRank(ch, kind, id) < 1) return refuse(`You don't have ${def.name}.`);
-    const opt = typeof value==="string" ? pickOptions(pick, def).find(o=>o.id===value && !o.missing) : null;
+    const live = pickOptions(pick, def).filter(o=>!o.missing);
+    const opt = typeof value==="string" ? live.find(o=>o.id===value) : null;
     if (!opt) return refuse("That isn't one of the options.");
     let entry = canonicalEntry(ch, kind, id);
-    const had = entry && isPlainObj(entry.selections) && Array.isArray(entry.selections[pickId]) ? entry.selections[pickId] : [];
+    // What a file holds that isn't a live option never shows (picksFor caps at the options there are), so adding drops it
+    // rather than letting it crowd the new answer out.
+    const had = (entry && isPlainObj(entry.selections) && Array.isArray(entry.selections[pickId]) ? entry.selections[pickId] : [])
+      .filter(v=>v==null || v==="" || live.some(o=>o.id===v));
     if (pick.distinct && had.includes(value)) return refuse(`${opt.name} is already learned.`);
     if (!entry){
       if (kind!=="skill" || !isPlainObj(ch.skills)) return refuse("That isn't on this sheet.");
