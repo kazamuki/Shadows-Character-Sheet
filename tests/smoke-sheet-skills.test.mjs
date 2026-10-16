@@ -836,6 +836,20 @@ test("P17 10b: removing Splice asks first and names the IP that stays spent", ()
   assert.deepEqual(app.errors, []);
 });
 
+test("P17 10c: removing Splice doesn't say the power goes when an opened Bloodline still holds it", () => {
+  const ch = strigoi({ powerIpe: { "iron-hide": 1 }, specializationsGained: ["upyr"] });
+  ch.progression.milestones.major = [{ id: "splice", power: "iron-hide", date: "2026-10-15T00:00:00.000Z" }];
+  ch.progression.ip.log.push({ date: "2026-10-15", kind: "grant", amount: 50, note: "" }, { date: "2026-10-15", kind: "spend", amount: 20, targetType: "power", targetId: "iron-hide", from: 1, to: 2, note: "" });
+  const app = openSheet(ch, "progression");
+  app.click("[data-delmajor]");
+  const text = app.$("#modal").textContent;
+  assert.match(text, /Splice comes off the record\./);
+  assert.doesNotMatch(text, /no longer held|stay spent/, "the confirm says Iron Hide goes, but Upyr's IP still holds it");
+  app.click("#modal [data-askyes]");
+  assert.ok(Engine.archetypePowers(activeChar(app)).some(p => p.id === "iron-hide"), "Iron Hide should still be held");
+  assert.deepEqual(app.errors, []);
+});
+
 test("P17 11: Gained a bloodline opens one, and Learn a new power lists it", () => {
   const ch = strigoi();
   ch.progression.ip.earned = 100;

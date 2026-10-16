@@ -3295,8 +3295,10 @@ function bindSheet(){
   main.querySelectorAll("[data-delmajor]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.delmajor), t=(ch.progression.milestones.major[i]||{});
     const nm=(Engine.majorById(ch, t.id)||{name:t.id||""}).name;
-    const pn = typeof t.power==="string" && (Engine.majorById(ch, t.id)||{}).choice ? powerNameOf(ch, t.power) : "";
-    const kept = pn ? ch.progression.ip.log.filter(e=>e && e.kind==="spend" && e.targetType==="power" && e.targetId===t.power).reduce((n, e)=>n + (Number(e.amount)||0), 0) : 0;
+    // A Bloodline opened since can still hold the power by its IP: then there's nothing to warn about.
+    let pn = typeof t.power==="string" && (Engine.majorById(ch, t.id)||{}).choice ? powerNameOf(ch, t.power) : "";
+    if (pn){ const after = clone(ch); Engine.untakeMilestone(after, "major", i); if (Engine.archetypePowers(after).some(p=>p.id===t.power)) pn = ""; }
+    const kept = pn ?ch.progression.ip.log.filter(e=>e && e.kind==="spend" && e.targetType==="power" && e.targetId===t.power).reduce((n, e)=>n + (Number(e.amount)||0), 0) : 0;
     askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record${pn?`, and ${pn} is no longer held${kept?`. Its ${kept} IP stay spent`:""}`:""}.`, yes:"Remove it",
       then:()=>commit("milestone", `Remove Major: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"major",i); }) });
   });
