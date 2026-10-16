@@ -1304,7 +1304,8 @@ function movementLineHtml(ch){
 }
 
 // W2/W3: what each vital's popover holds. The same five on the vitals bar
-// and on Main's cards; `null` when the key isn't one (the popover closes).
+// and on Main's cards, plus SFR on Main's card only (Decision 225); `null`
+// when the key isn't one (the popover closes).
 function vitalPopover(ch, key){
   const pain=Engine.painState(ch), hp=Engine.health(ch);
   const now = (big, cls, sub) => `<div class="pop-now"><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
