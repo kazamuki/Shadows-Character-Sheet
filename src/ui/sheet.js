@@ -3066,7 +3066,9 @@ function openIpBuy(kind){
   openModal({ title: IPBUY_TITLE[kind],
     html: `<div class="spell-pick raise-pick"><div class="pick-head">${search}<p class="pick-status" data-ipstatus aria-live="polite">${ipBuyStatusHtml(ch, kind)}</p></div>
       <div data-ipresults>${ipBuyResultsHtml(ch, kind)}</div></div>`,
-    foot: pickerFootHtml(), returnTo: `[data-ipopen="${kind}"]`, onClose: ()=>{ S.ipBuy=null; },
+    // Buy off and Restore leave the row once nothing's left to do, so focus falls back to Buy an Advantage, never <body>.
+    foot: pickerFootHtml(), returnTo: `[data-ipopen="${kind}"]`, onClose: ()=>{ S.ipBuy=null;
+      if (!document.querySelector(`[data-ipopen="${kind}"]`)){ const f = document.querySelector('[data-ipopen="advantage"]'); if (f) f.focus(); } },
     bind: body => {
       const results = body.querySelector("[data-ipresults]"), status = body.querySelector("[data-ipstatus]");
       const refresh = () => keepPlace(results, ()=>{ results.innerHTML = ipBuyResultsHtml(S.ch, kind); status.innerHTML = ipBuyStatusHtml(S.ch, kind); }, ["#modal-title"]);

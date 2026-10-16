@@ -2614,7 +2614,7 @@ const Engine = (() => {
   }
 
   // ── Sessions ─────────────────────────────────────────────────────────
-  // Auto-grants per-session IP (overridable) + 1 Milestone Point, and
+  // Records the session's IP (the Session Log fills it from the hours, Decision 228) + 1 Milestone Point, and
   // refreshes LUCK — it only resets "when a session truly ends".
   // The player's local day, YYYY-MM-DD. Not toISOString(): that is UTC, and in the evening in the Americas it says tomorrow.
   function localDay(d=new Date()){

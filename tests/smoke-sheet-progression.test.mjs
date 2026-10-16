@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, lockedCharacter, onStep, CRANK_ON, openSheet, activeChar, clickIn, withDownloads, importFile, card, tipShown, pick, fill } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, onStep, CRANK_ON, openSheet, activeChar, clickIn, withDownloads, importFile, card, tipShown, pick, fill, focused } from "./smokekit.mjs";
 
 // ── CRANK rep (Decision 169) ──────────────────────────────────────────
 test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, writes a ledger line, and Undo makes it 0", () => {
@@ -495,6 +495,21 @@ test("P12a 11: Buy off, Restore SAN and Restore a Health Level are each one comm
   const back = activeChar(app);
   assert.equal(back.trackers.san.loss, 12);
   assert.equal(back.trackers.massiveLevels, 2);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12a 11: once Buy off or Restore has nothing left, closing it puts focus on Buy an Advantage, not the page", () => {
+  const ch = p12Char();
+  ch.disadvantages = [{ id: "minor-insanity", rank: 1, notes: "" }];
+  ch.trackers.massiveLevels = 1;
+  const app = openSheet(ch, "progression");
+  for (const [kind, buy] of [["disadvantage", "disadvantage|minor-insanity"], ["restore", "restore|massiveLevel"]]) {
+    app.click(`[data-ipopen="${kind}"]`);
+    app.click(`#modal [data-ipbuy="${buy}"]`);
+    app.click("#modal [data-modalclose]");
+    assert.equal(app.$(`[data-ipopen="${kind}"]`), null, `${kind}'s button is still there`);
+    assert.equal(focused(app), app.$('[data-ipopen="advantage"]'), `closing ${kind} lost focus`);
+  }
   assert.deepEqual(app.errors, []);
 });
 
