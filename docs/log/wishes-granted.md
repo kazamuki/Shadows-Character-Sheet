@@ -629,6 +629,24 @@ so the synergy number should read as a bonus, not a score. The engine
 already returns both (`skillLine().breakdown`), so this is display only.
 Wizard and sheet.
 
+**W39 — Train a Martial Arts style in play, and apply its bonus.** *Claude · → Decision 229, app 0.47.0 (sheet-wishlist P12b): Add a style on Martial Arts takes one with no price, and each style's bonus is on its Combat Maneuver's check*
+Raised 2026-09-25, finishing W33. The wizard lets a player choose up to two
+styles, and Martial Arts says "you may train additional styles later in
+play", but a locked sheet has no way to add one: `setSelection` is only
+reached from the wizard, and the pick's two-slot cap is a creation rule. The
+bonuses ("+1 Stun", "+1 Grapple") are shown, never applied, and nothing says
+what +1 Stun adds to. **Deighton (2026-10-10, `reference/rulings-2026-10-10.md` Q29), with Ken:** a
+new style is learned through the story (a mentor, or the LINK's neural
+training) with an in-game reason, then trained on your own or through
+fighting. It isn't bought with IP: IP raises the Martial Arts skill, which
+makes every Martial Arts check easier. Stun and Grapple are attack
+Conditions, and a style's bonus makes you better at inflicting that
+Condition. So learning a style is the GM's word (an **Add a style** that
+asks no price, logged), and the bonus is the one number left to pin: +1 to
+the check that inflicts it, presumably. Confirm that in the work order.
+
+*Built as sheet-wishlist P12b (2026-10-16). The bonus is the check for the maneuver it names, unarmed, and two styles on one maneuver add up (Ken).*
+
 ### Wizard
 
 **W22 — A sticky filter and jump bar on the Character Points step.** *Ken · → Decision 114, app 0.20.0: filter, jumps and the CP left, sticky*

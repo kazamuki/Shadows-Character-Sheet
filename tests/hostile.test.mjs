@@ -41,7 +41,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   ch.creation.rolls = { statPoints: P("roll.stat"), skillPoints: P("roll.skill"), credits: P("roll.credits") };
   ch.creation.boosts = [{ targetType: "stat", targetId: P("boost.target"), times: P("boost.times") }];
   ch.creation.locked = locked;
-  ch.houseRules = { keepDamagePastZero: P("house"), [P("house.key")]: true };   // Decision 220: a strict true or nothing
+  ch.houseRules = { keepDamagePastZero: P("house"), training: true, [P("house.key")]: true };   // Decisions 220, N+1: a strict true or nothing
   for (const s of D.stats) ch.stats[s.id].base = 6;
   ch.stats.BOD.base = P("stat.base"); ch.stats.REF.ipe = P("stat.ipe");
   ch.archetypeChoices = { rolls: { focusStatBonus: P("roll.focus"), startingSpells: P("roll.spells"), statBonus: P("roll.sb") },
@@ -58,7 +58,9 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
       vulnerabilities: [{ name: P("wi.vul"), description: P("wi.vuldesc") }] } };
   ch.powers = [{ id: P("pw.id"), custom: true, name: P("pw.name"), uses: P("pw.uses"), effect: P("pw.effect"), notes: P("pw.notes") }];
   ch.skills = { athletics: { rank: P("skill.rank"), ipe: P("skill.ipe") }, [P("skill.id")]: { rank: 1, ipe: 0 },
-    "martial-arts": { rank: 1, ipe: 0, selections: { style: [P("sel.style")] } } };
+    // P12b: three styles on a locked sheet (one learned in play), a payload among them
+    "martial-arts": { rank: 1, ipe: 0, selections: { style: [P("sel.style"), "karate", "commando"] } },
+    handguns: { rank: 3, ipe: 0 } };
   ch.advantages = [{ id: P("adv.id"), rank: P("adv.rank"), notes: P("adv.notes") },
     { id: "favored-skill", rank: 1, notes: "a|b", selections: { skill: [P("sel.skill")] } }];
   ch.disadvantages = [{ id: P("dis.id"), rank: 1, notes: "" },
@@ -99,7 +101,12 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
       // P12a: an Advantage, a buy-off and a restore name a trait or a tracker; every field of them is a payload
       { date: P("ip.date4"), kind: "spend", amount: 50, targetType: "advantage", targetId: P("ip.adv"), name: P("ip.advname"), from: P("ip.advfrom"), to: P("ip.advto"), note: P("ip.advnote") },
       { date: P("ip.date5"), kind: "spend", amount: 10, targetType: "disadvantage", targetId: { x: 1 }, name: P("ip.disname"), from: 2, to: 1, note: "" },
-      { date: P("ip.date6"), kind: "spend", amount: 5, targetType: "restore", targetId: P("ip.restore"), name: P("ip.resname"), from: P("ip.rfrom"), to: [], note: "" }] },
+      { date: P("ip.date6"), kind: "spend", amount: 5, targetType: "restore", targetId: P("ip.restore"), name: P("ip.resname"), from: P("ip.rfrom"), to: [], note: "" },
+      // P12b: a landed training reads "Trained: <Skill> a → b"; its via and mp are strict
+      { date: P("ip.date7"), kind: "spend", amount: 0, targetType: "skill", targetId: "handguns", from: 2, to: 3, note: P("ip.tnote"), via: "training", mp: 10 },
+      { date: P("ip.date8"), kind: "spend", amount: 0, targetType: "skill", targetId: P("ip.tskill"), from: P("ip.tfrom"), to: P("ip.tto"), note: "", via: P("ip.via"), mp: P("ip.mp") }] },
+    // P12b: a training under way; its skill is a payload, its numbers and date are read as the shape they are
+    training: { skill: P("tr.skill"), mp: 3, credits: 250, date: P("tr.date") },
     milestonePoints: P("mp"),
     milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }, { id: "swift-change", date: P("major2.date") }, { id: "hardline-shift", date: P("major3.date") }] },
     powerIpe: { evocation: P("pipe"), [P("pipe.key")]: 2, enchantment: "1e999", alchemy: -4, [P("pw.id")]: "3",
@@ -152,8 +159,8 @@ test(`a hostile ${archetype} file renders as text on every tab, in Admin, in pri
   for (const sec of app.$$("[data-sec]").map(b => b.dataset.sec)) {
     visit(sec, () => app.click(`[data-sec="${sec}"]`));
     // Every modal and popover this tab can open, one at a time.
-    const openers = [...new Set(app.$$("#main [data-hitopen], #main [data-actopen], #main [data-lobrowse], #main [data-spellpickopen], #main [data-abpickopen], #main [data-vpop]")
-      .map(b => [...b.attributes].find(a => /^data-(hitopen|actopen|lobrowse|spellpickopen|abpickopen|vpop)$/.test(a.name)))
+    const openers = [...new Set(app.$$("#main [data-hitopen], #main [data-actopen], #main [data-lobrowse], #main [data-spellpickopen], #main [data-abpickopen], #main [data-vpop], #main [data-trainopen], #main [data-addstyle]")
+      .map(b => [...b.attributes].find(a => /^data-(hitopen|actopen|lobrowse|spellpickopen|abpickopen|vpop|trainopen|addstyle)$/.test(a.name)))
       .map(a => `[${a.name}="${a.value}"]`))];
     for (const sel of openers) visit(`${sec} ${sel}`, () => { const b = app.$(`#main ${sel}`); if (b) app.click(`#main ${sel}`); });
   }
@@ -215,8 +222,9 @@ test("migrate() reads every stored number as a number, and drops an undo entry t
 
 test("a hostile houseRules comes out a plain object with one strict boolean, and heals as off (Decision 220)", () => {
   const c = Engine.migrate(hostileCharacter());
-  assert.deepEqual(Object.keys(c.houseRules), ["keepDamagePastZero"]);
+  assert.deepEqual(Object.keys(c.houseRules), ["keepDamagePastZero", "training"]);
   assert.equal(c.houseRules.keepDamagePastZero, false);
+  assert.equal(c.houseRules.training, true, "a strict true survives; the payload key does not");
   c.stats.BOD.base = 6; c.trackers.damage = 37;
   Engine.healStep(c, 1);
   assert.equal(c.trackers.damage, 29, "healing counted from 0 HP");
@@ -1071,4 +1079,29 @@ test("Decision 216: powerIpe naming another Bloodline's or a nonexistent power h
     assert.equal(w.powers[0].boughtWithCp, false, JSON.stringify(v));
     assert.equal(Engine.cp(Object.assign(w, { creation: Object.assign(w.creation, { powerLevel: D.powerLevels[0].id }) })).spent, 0, "a junk mark cost CP");
   }
+});
+
+const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
+test("P12b 10: migrate keeps the house rule, a running training and a landed entry's fields, and nothing else", () => {
+  const mk = patch => { const c = Engine.newCharacter(); patch(c); return Engine.migrate(JSON.parse(JSON.stringify(c))); };
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.28");
+  assert.equal(mk(c => { c.houseRules.training = true; }).houseRules.training, true, "true survives");
+  for (const junk of ["yes", 1, "true", {}, [], null])
+    assert.equal(mk(c => { c.houseRules.training = junk; }).houseRules.training, false, `houseRules.training ${JSON.stringify(junk)}`);
+  same(Object.keys(mk(c => { c.houseRules = { training: true, extra: 1, keepDamagePastZero: true }; }).houseRules).sort(), ["keepDamagePastZero", "training"]);
+  // A running training: an exact shape, or nothing.
+  const good = { skill: "handguns", mp: 9, credits: 250, date: "2026-10-16T00:00:00.000Z" };
+  same(mk(c => { c.progression.training = good; }).progression.training, good);
+  for (const bad of [{ ...good, skill: {} }, { ...good, mp: "x" }, { ...good, mp: -1 }, { ...good, mp: 1.5 }, { ...good, credits: -5 }, { ...good, credits: "x" },
+                     { ...good, date: 7 }, { skill: "handguns" }, "handguns", 7, [], undefined])
+    assert.equal(mk(c => { c.progression.training = bad; }).progression.training, null, JSON.stringify(bad));
+  same(Object.keys(mk(c => { c.progression.training = { ...good, extra: 1 }; }).progression.training).sort(), ["credits", "date", "mp", "skill"]);
+  // A landed entry's fields.
+  const entry = extra => ({ date: "2026-10-16", kind: "spend", amount: 0, targetType: "skill", targetId: "handguns", from: 5, to: 6, note: "", ...extra });
+  const log = extra => mk(c => { c.progression.ip.log = [entry(extra)]; }).progression.ip.log[0];
+  assert.equal(log({ via: "training", mp: 3 }).via, "training");
+  assert.equal(log({ via: "training", mp: 3 }).mp, 3);
+  for (const via of ["x", {}, 7, null, ["training"]]) assert.equal("via" in log({ via }), false, `via ${JSON.stringify(via)}`);
+  for (const mp of ["3", -1, {}, 1.5, null, NaN]) assert.equal("mp" in log({ via: "training", mp }), false, `mp ${JSON.stringify(mp)}`);
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.28");
 });

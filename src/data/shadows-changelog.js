@@ -14,7 +14,10 @@ window.SHADOWS_CHANGELOG = [
       "**IP brings back what the city took.** **Restore** gives back lost SAN at 5 IP a point, or a Health Level lost to a maiming at 25, never past what you lost.",
       "**A session's IP counts the hours.** The Session Log asks how long you played, at 5 IP an hour, the book's rate. It no longer grants a flat 10.",
       "**Talented no longer offers Long-Lived,** which can only be taken when a character is made.",
-      "**Minor Insanity says IP buys it off between sessions,** as the book does."
+      "**Minor Insanity says IP buys it off between sessions,** as the book does.",
+      "**Learn a new Martial Arts style in play.** When the story teaches you one, **Add a style** on Martial Arts takes it, no IP asked. A Martial Arts bought with IP can hold a style now too.",
+      "**Your style's bonus is on the sheet.** Under Martial Arts, each Combat Maneuver your style sharpens shows its check with the bonus in it: Karate's +1 on Stun, Jujitsu's on Grapple. Two styles on one maneuver add up.",
+      "**Training, if your GM uses it.** Turned on in Admin, **Train a Skill** puts a REF, INT or TECH Skill you already have into training for Çredits, 10 × what the rank would cost in IP. You train one at a time, and the rank arrives at your next Milestone, never past 9."
     ]
   },
   {

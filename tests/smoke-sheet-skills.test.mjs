@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, lockedCharacter, onArchetypeStep, openSheet, activeChar, pickFromCatalog, search, clickIn, arcanistOnCP, card, tipShown, pick, tip, lockedVampire } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, onArchetypeStep, openSheet, activeChar, pickFromCatalog, search, clickIn, arcanistOnCP, card, tipShown, pick, tip, lockedVampire, focused } from "./smokekit.mjs";
 
 // ── Grimoire from the book (Decision 108) ─────────────────────────────
 test("Grimoire: a typed spell links to the book, the picker adds one, Mastering spends IP, and each undoes", () => {
@@ -977,5 +977,80 @@ test("P10 (hostile): a held id with script in it renders as nothing, and nowhere
   assert.equal(app.$("#main img"), null);
   assert.ok(!/img src/.test(app.$("#main").textContent), "the hostile id was shown");
   assert.ok(app.$('[data-letgo="fog-shroud"]'));
+  assert.deepEqual(app.errors, []);
+});
+
+// ── P12b: a style learned in play, and its bonus (Decision N) ─────────────────
+const maChar = (styles = ["karate"], extra = {}) => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "professional";
+  ch.meta.gamedataVersion = D.meta.gamedataVersion;
+  ch.skills["martial-arts"] = { rank: 2, ipe: 0, selections: { style: styles.slice() } };
+  Object.assign(ch, extra);
+  return ch;
+};
+const maRow = app => app.$('#main [data-skillname="martial-arts"]').closest("tr");
+const maChips = app => [...maRow(app).querySelectorAll(".skill-picked .chip")].map(c => c.textContent.replace(/\s+/g, " ").trim());
+
+test("P12b 11: Add a style from Main and from the Skills tab is one commit and one Undo, and the maneuver line carries each bonus", () => {
+  const app = openSheet(maChar(["karate"]), "main");
+  assert.ok(app.$('#main [data-addstyle="martial-arts"]'), "Main's Combat skills have no Add a style");
+  assert.match(app.$('#main [data-addstyle="martial-arts"]').textContent, /Add a style/);
+  assert.match(maRow(app).textContent, /Combat Maneuvers/);
+  assert.match(maRow(app).querySelector("[data-maneuvers]").textContent, /Stun/);
+  assert.doesNotMatch(maRow(app).querySelector("[data-maneuvers]").textContent, /Grapple/, "Karate improves Stun only");
+  const audits = () => activeChar(app).audit.length;
+  const n0 = audits();
+  app.click('#main [data-addstyle="martial-arts"]');
+  assert.ok(app.$("#modal").open, "Add a style didn't open a chooser");
+  assert.ok(!app.$('#modal [data-addpick="karate"]'), "a held style is offered again");
+  assert.match(app.$("#modal").textContent, /\+1 Grapple/, "the style's bonus text shows in the chooser");
+  app.click('#modal [data-addpick="jujitsu"]');
+  assert.equal(app.$("#modal").open, false, "one press adds the style and closes");
+  assert.equal(audits(), n0 + 1, "one commit");
+  assert.deepEqual([...activeChar(app).skills["martial-arts"].selections.style], ["karate", "jujitsu"]);
+  assert.match(app.$("#undotoast").textContent, /Jujitsu/);
+  assert.match(maRow(app).querySelector("[data-maneuvers]").textContent, /Grapple/);
+  assert.match(maRow(app).querySelector("[data-maneuvers]").textContent, /Stun/);
+  // The Skills tab is the same renderer.
+  app.click('[data-sec="skills"]');
+  assert.ok(app.$('#main [data-addstyle="martial-arts"]'), "the Skills tab has no Add a style");
+  app.click('#main [data-addstyle="martial-arts"]');
+  app.click('#modal [data-addpick="commando"]');
+  assert.deepEqual([...activeChar(app).skills["martial-arts"].selections.style], ["karate", "jujitsu", "commando"]);
+  assert.equal(maChips(app).length, 3, "three style chips");
+  const stun = maRow(app).querySelector("[data-maneuvers]").textContent;
+  assert.match(stun, /Commando \+1, Karate \+1|Karate \+1, Commando \+1/, "two styles on Stun stack, each named");
+  const base = Engine.skillLine(activeChar(app), "martial-arts").checkBonus;
+  assert.match(stun, new RegExp(`1d10 \\+ ${base + 2}`));
+  // Undo takes back the third; again, the second.
+  app.click("[data-toastundo]");
+  assert.deepEqual([...activeChar(app).skills["martial-arts"].selections.style], ["karate", "jujitsu"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12b 11b: Add a style is gone once every style is held, and focus lands on the row's name cell, never the page", () => {
+  const all = D.skills.find(s => s.id === "martial-arts").styles.map(s => s.id);
+  const app = openSheet(maChar(all.slice(0, -1)), "main");
+  app.click('#main [data-addstyle="martial-arts"]');
+  app.click(`#modal [data-addpick="${all.at(-1)}"]`);
+  assert.equal(app.$('#main [data-addstyle="martial-arts"]'), null, "the button stayed with nothing left to add");
+  assert.notEqual(focused(app), app.window.document.body, "focus fell to <body>");
+  assert.ok(focused(app).matches('[data-skillname="martial-arts"]'), "focus isn't on the skill's name cell");
+  // A skill that is not trained, or a sheet not locked, has no button.
+  const raw = maChar([]); raw.skills["martial-arts"] = { rank: 0, ipe: 0 };
+  const app2 = openSheet(raw, "skills");
+  assert.equal(app2.$('#main [data-addstyle]'), null, "an untrained Martial Arts offers a style");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12b 11c: a Martial Arts bought with IP takes a first style", () => {
+  const ch = maChar([]);
+  ch.skills["martial-arts"] = { rank: 0, ipe: 1 };
+  const app = openSheet(ch, "skills");
+  app.click('#main [data-addstyle="martial-arts"]');
+  app.click('#modal [data-addpick="kung-fu"]');
+  assert.deepEqual([...activeChar(app).skills["martial-arts"].selections.style], ["kung-fu"]);
+  assert.match(maRow(app).querySelector("[data-maneuvers]").textContent, /Knockdown/);
   assert.deepEqual(app.errors, []);
 });

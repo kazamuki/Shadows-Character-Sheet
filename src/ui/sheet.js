@@ -281,8 +281,31 @@ const skillOptionPicks = (ch, id) => Engine.picksFor(ch, "skill", id).filter(st=
 function skillChosenHtml(ch, id){
   const picked = skillOptionPicks(ch, id).flatMap(st=>st.chosen.filter(Boolean)
     .map(v=>st.options.find(o=>o.id===v) || { name:v, description:"" }));
-  return picked.length ? `<div class="skill-picked">${picked.map(o=>
-    `<span class="chip">${esc(o.name)}${o.description?` <small>${esc(o.description)}</small>`:""}</span>`).join(" ")}</div>` : "";
+  const chips = picked.map(o=>`<span class="chip">${esc(o.name)}${o.description?` <small>${esc(o.description)}</small>`:""}</span>`).join(" ");
+  const add = skillAddHtml(ch, id);
+  return chips || add ? `<div class="skill-picked">${chips}${add}</div>` : "";
+}
+// Learned in play (Decision 229): a pick marked `addInPlay` on a locked sheet, for a skill the character has,
+// while an option is left. The button's words are the pick's own (`addText`).
+function skillAddPick(ch, id){
+  if (!ch.creation || ch.creation.locked!==true) return null;
+  return skillOptionPicks(ch, id).find(st=>st.pick.addInPlay===true && st.need>0
+    && st.options.some(o=>!o.missing && !st.chosen.includes(o.id))) || null;
+}
+const skillAddHtml = (ch, id) => { const st = skillAddPick(ch, id);
+  return st ? `<button class="btn sm" data-addstyle="${esc(id)}" data-addin="${esc(st.pick.id)}">${esc(st.pick.addText || "Add")}</button>` : ""; };
+// The Combat Maneuvers a held style sharpens, beside the Rank and Check cells; the skill's own check is not repeated.
+function maneuverLineHtml(ch, id){
+  const list = Engine.maneuverChecks(ch, id);
+  return list.length ? `<div class="skill-maneuvers" data-maneuvers="${esc(id)}"><b>Combat Maneuvers</b>${list.map(m=>
+    `<div>${esc(m.name)} → ${esc(m.inflicts)} · 1d10 + ${m.check} <small>(${m.parts.map(p=>`${esc(p.name)} +${p.amount}`).join(", ")})</small></div>`).join("")}</div>` : "";
+}
+// A skill in training shows when its rank arrives (Decision 230).
+function trainingChipHtml(ch, id){
+  const t = ch.progression && ch.progression.training;
+  if (!t || t.skill!==id) return "";
+  const at = Engine.nextMilestoneAt(ch, t.mp);
+  return ` <span class="chip cyan">in training${at==null ? "" : ` · ${at} MP`}</span>`;
 }
 function skillDescRow(ch, def, cols, open){
   const covers = Array.isArray(def.covers) ? def.covers.join(", ") : (def.covers||"");
@@ -305,7 +328,7 @@ function skillRowPair(ch, l){
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   // Decision 156: an untrained skill reads at full strength, Rank 0 dimmed.
   let tr = `<tr class="skill-line${l.trained?"":" untrained"}">`;
-  tr += `<td>${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${l.formPenalty?` <span class="chip pain">${l.formPenalty} while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}</td>`;
+  tr += `<td data-skillname="${esc(l.def.id)}" tabindex="-1">${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${trainingChipHtml(ch, l.def.id)}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${l.formPenalty?` <span class="chip pain">${l.formPenalty} while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}${maneuverLineHtml(ch, l.def.id)}</td>`;
   tr += `<td class="num" data-k="Rank">${l.trained?l.rank:0}</td>`;
   tr += `<td class="num" data-k="Check">1d10 + ${l.checkBonus}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
@@ -1503,6 +1526,7 @@ function renderShProgression(){
   h += `<div class="raise-row">
     <button class="btn primary" data-raiseopen="stat">Raise a Stat</button>
     <button class="btn primary" data-raiseopen="skill">Raise a Skill</button>
+    ${(ch.houseRules && ch.houseRules.training===true) || ch.progression.training ? `<button class="btn primary" data-trainopen="1">Train a Skill</button>` : ""}
     <button class="btn primary" data-raiseopen="power">Buy or Raise a Power</button>
     <button class="btn primary" data-ipopen="advantage">Buy an Advantage</button>
     ${(ch.disadvantages||[]).some(r=>r && Engine.disById(r.id)) ? `<button class="btn primary" data-ipopen="disadvantage">Buy off a Disadvantage</button>` : ""}
@@ -1518,7 +1542,7 @@ function renderShProgression(){
       e.targetType==="restore" ? (e.targetId==="massiveLevel" ? `Restored a Health Level` : `Restored ${Number.isFinite(e.from) && Number.isFinite(e.to) && e.from>e.to ? e.from-e.to+" " : ""}SAN`) :
       e.targetType==="power" ? (typeof e.to==="number" ? `${typeof e.name==="string" && e.name ? e.name : "A power"} ${e.from} → ${e.to}`
                                                      : `Power: ${typeof e.name==="string" && e.name ? e.name : "unnamed"}`) :
-      `${e.targetType==="stat"?e.targetId:(Engine.skillById(e.targetId)||{name:e.targetId}).name} ${e.from} → ${e.to}`;
+      `${e.via==="training" ? "Trained: " : ""}${e.targetType==="stat"?e.targetId:(Engine.skillById(e.targetId)||{name:e.targetId}).name} ${e.from} → ${e.to}`;
     return `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
       <span class="amt ${e.kind==="grant"?"grant":"spend"}">${e.kind==="grant"?"+":"−"}${e.amount}</span>
       <span class="what">${esc(what)}</span><span class="note">${esc(e.note)}</span></div>`;
@@ -2368,6 +2392,7 @@ function renderShAdmin(){
      + idf("hair","Hair")+idf("eyes","Eyes")+idf("skin","Skin") + `</div>
     ${taglessToggleHtml(ch, "admin-tagless")}
     <label class="check"><input type="checkbox" data-admin-keepzero ${ch.houseRules&&ch.houseRules.keepDamagePastZero===true?"checked":""}> Keep damage past zero (grittier: healing counts up from the full total)</label>
+    <label class="check"><input type="checkbox" data-admin-training ${ch.houseRules&&ch.houseRules.training===true?"checked":""}> Training (optional rule): train a ${esc(trainingStatsText())} Skill you already have with Çredits; the rank arrives at the next Milestone</label>
     <label class="field"><span>History</span><textarea data-admin-id="history" style="min-height:64px">${esc(ch.identity.history||"")}</textarea></label>`;
 
   // Campaign & archetype (destructive)
@@ -3155,6 +3180,94 @@ function openAberrationPicker(mode){
     } });
 }
 
+// ── Add a style (Decision 229) ───────────────────────────────────────
+// A pick marked `addInPlay` takes one more answer on a locked sheet, with no price: the GM's word is the gate
+// (Q29). One press adds it and closes, as one commit() with its undo toast.
+function addInPlayRowsHtml(st){
+  const left = st.options.filter(o=>!o.missing && !st.chosen.includes(o.id));
+  return left.length ? `<table class="ref spell-results raise-results"><tbody>${left.map(o=>
+    `<tr class="pickrow"><td><b>${esc(o.name)}</b>${o.description?`<div class="sub">${esc(o.description)}</div>`:""}</td>
+      <td><button class="btn sm primary" data-addpick="${esc(o.id)}">Add</button></td></tr>`).join("")}</tbody></table>`
+    : `<p class="step-note">Nothing is left to add.</p>`;
+}
+// Focus never falls to <body>: with nothing left to add the button is gone, so it goes to the row's name cell.
+function focusSkillRow(id){
+  const hit = sel => [...document.querySelectorAll(`[${sel}]`)].find(x=>x.getAttribute(sel)===id);
+  const el = hit("data-addstyle") || hit("data-skillname");
+  if (el) el.focus();
+}
+function openAddInPlay(skillId, pickId){
+  const ch = S.ch; if (!ch) return;
+  const st = Engine.picksFor(ch, "skill", skillId).find(x=>x.pick.id===pickId);
+  if (!st) return;
+  const skill = (Engine.skillById(skillId)||{ name:skillId }).name;
+  openModal({ title: st.pick.addText || "Add",
+    html: `<div class="spell-pick raise-pick"><div class="pick-head"><p class="pick-status">${esc(skill)} · learned through the story, at your GM's word. It costs nothing.</p></div>
+      <div data-addresults>${addInPlayRowsHtml(st)}</div></div>`,
+    foot: `<button class="btn" data-modalclose>Cancel</button>`, returnTo: `[data-addstyle="${skillId}"]`,
+    bind: body => {
+      body.querySelector("[data-addresults]").onclick = e => {
+        const b = e.target.closest("[data-addpick]");
+        if (!b || b.disabled) return;
+        const value = b.dataset.addpick;
+        const pre = Engine.addPickInPlay(clone(S.ch), "skill", skillId, pickId, value);      // validate without mutating
+        if (!pre.ok){ notice(pre.why); return; }
+        commit("skill", `${skill}: ${pre.name} learned`, ()=>{ Engine.addPickInPlay(S.ch, "skill", skillId, pickId, value); });
+        closeModal();
+        if (!document.activeElement || document.activeElement===document.body) focusSkillRow(skillId);
+      };
+    } });
+}
+
+// ── Train a Skill (Decision 230, 0450's optional rule) ───────────────
+// One training at a time. It stays open after a start, every row then off with the reason (Decision 159).
+// "REF, INT or TECH", from the data's own list.
+const trainingStatsText = () => { const l = (D.ip.training||{}).stats || []; return l.length>1 ? l.slice(0, -1).join(", ") + " or " + l[l.length-1] : l.join(""); };
+const landedLabel = trained => (trained||[]).length ? " · " + trained.map(t=>`${t.name} trained to ${t.to}`).join(", ") : "";
+const crText = n => `${CR}${Number(n).toLocaleString("en-US")}`;
+function trainStatusHtml(ch){
+  const T = D.ip.training, t = ch.progression.training;
+  if (t){
+    const def = Engine.skillById(t.skill), at = Engine.nextMilestoneAt(ch, t.mp);
+    const line = def ? Engine.skillLine(ch, def.id) : null;
+    return `<b>${esc(def ? def.name : t.skill)}${line ? ` ${line.rank} → ${line.rank+1}` : ""}</b> is in training.${at==null ? "" : ` It lands at ${at} Milestone Points.`}`;
+  }
+  const at = Engine.nextMilestoneAt(ch);
+  return `You have <b>${crText(Number(ch.trackers.credits.current)||0)}</b> · ${T.creditsPerIP} × the rank's IP cost · one Skill at a time${at==null ? "" : ` · the next Milestone is at ${at} MP`}`;
+}
+function trainResultsHtml(ch){
+  const T = D.ip.training;
+  const rows = D.skills.filter(s=>T.stats.includes(s.primaryStat) && Engine.skillLine(ch, s.id).trained).map(s=>{
+    const line = Engine.skillLine(ch, s.id), c = Engine.trainingCost(ch, s.id);
+    const sub = `rank ${line.rank} · ${(T.teacherStats||[]).includes(s.primaryStat) ? T.teacherText : T.selfText}`;
+    return `<tr class="${c.ok?"pickrow":"off"}"><td><b>${esc(s.name)}</b><div class="sub">${esc(sub)}</div>${c.ok?"":`<div class="why">${esc(c.why)}</div>`}</td>
+      <td class="num" data-k="Raise">${c.ok ? `${c.from} → ${c.to}` : line.rank}</td><td class="num" data-k="Cost">${c.ok ? crText(c.credits) : "—"}</td>
+      <td><button class="btn sm primary" data-train="${esc(s.id)}" ${c.ok?"":"disabled"}>Train</button></td></tr>`;
+  });
+  return rows.length ? `<table class="ref spell-results raise-results"><tbody>${rows.join("")}</tbody></table>`
+    : `<p class="step-note">Training sharpens a Skill you already have. Learn one with IP first, then train it here.</p>`;
+}
+function openTrainPicker(){
+  const ch = S.ch; if (!ch || !D.ip.training) return;
+  openModal({ title: "Train a Skill",
+    html: `<div class="spell-pick raise-pick"><div class="pick-head"><p class="pick-status" data-trainstatus aria-live="polite">${trainStatusHtml(ch)}</p></div>
+      <div data-trainresults>${trainResultsHtml(ch)}</div></div>`,
+    foot: `<span class="modal-note">Paid when it starts. The rank arrives at the Milestone.</span><button class="btn primary" data-modalclose>Done</button>`, returnTo: `[data-trainopen]`,
+    bind: body => {
+      const results = body.querySelector("[data-trainresults]"), status = body.querySelector("[data-trainstatus]");
+      const refresh = () => keepPlace(results, ()=>{ results.innerHTML = trainResultsHtml(S.ch); status.innerHTML = trainStatusHtml(S.ch); }, ["#modal-title"]);
+      results.onclick = e => {
+        let b = e.target.closest("button");
+        if (!b){ const tr = e.target.closest("tr"); b = tr && tr.querySelector("button"); }
+        if (!b || b.disabled || !b.dataset.train) return;
+        const id = b.dataset.train, pre = Engine.startTraining(clone(S.ch), id);              // validate without mutating
+        if (!pre.ok){ notice(pre.why); return; }
+        commit("training", `Training: ${pre.name} ${pre.from}→${pre.to} (−${crText(pre.credits)})`, ()=>{ Engine.startTraining(S.ch, id); });
+        refresh();
+      };
+    } });
+}
+
 // ── Take a hit (Decision 99; a modal since W6) ───────────────────────
 // The form lives in S.hit until Apply, which is one commit(), so the hit, its
 // armor wear and its Conditions undo together. Each change redraws the modal
@@ -3376,6 +3489,7 @@ function bindSheet(){
     try{ localStorage.setItem(TRAITS_OPEN_KEY, open?"open":"closed"); }catch(e){}
   });
   // Skill description toggles (no full re-render — flip the hidden detail row)
+  main.querySelectorAll("[data-addstyle]").forEach(b=>b.onclick=()=>openAddInPlay(b.dataset.addstyle, b.dataset.addin));
   main.querySelectorAll("[data-skilldesc]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.skilldesc; S.openSkills=S.openSkills||new Set();
     const open=!S.openSkills.has(id);
@@ -3530,6 +3644,7 @@ function bindSheet(){
   // IP
   main.querySelectorAll("[data-raiseopen]").forEach(b=>b.onclick=()=>openRaisePicker(b.dataset.raiseopen));
   main.querySelectorAll("[data-ipopen]").forEach(b=>b.onclick=()=>openIpBuy(b.dataset.ipopen));
+  main.querySelectorAll("[data-trainopen]").forEach(b=>b.onclick=()=>openTrainPicker());
   main.querySelectorAll("[data-ipgrant]").forEach(b=>b.onclick=()=>{
     const amt=num(main.querySelector("[data-ipamt]"));
     const note=(main.querySelector("[data-ipnote]")||{}).value||"";
@@ -3541,7 +3656,9 @@ function bindSheet(){
   // Milestones
   main.querySelectorAll("[data-mp]").forEach(b=>b.onclick=()=>{
     const d=Number(b.dataset.mp);
-    commit("milestone", `Manual MP ${signed(d)}`, ()=>{ ch.progression.milestonePoints=Math.max(0,(ch.progression.milestonePoints||0)+d); });
+    const bump = c => { c.progression.milestonePoints=Math.max(0,(c.progression.milestonePoints||0)+d); return Engine.settleTraining(c); };
+    const landed = bump(clone(ch));       // a Milestone this reaches lands a training in the same commit (Decision 230)
+    commit("milestone", `Manual MP ${signed(d)}${landedLabel(landed)}`, ()=>{ bump(ch); });
   });
   main.querySelectorAll("[data-takeminor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takeminor;
@@ -3614,15 +3731,16 @@ function bindSheet(){
   }
   main.querySelectorAll("[data-seslog]").forEach(b=>b.onclick=()=>{
     const title=(main.querySelector("[data-sestitle]")||{}).value||"";
-    commit("session", `Log session${title?`: ${title}`:""}`, ()=>{
-      Engine.logSession(ch, {
-        date:(main.querySelector("[data-sesdate]")||{}).value,
-        title,
-        ipEarned:num(main.querySelector("[data-sesip]")) ?? Math.ceil(Math.max(0, num(main.querySelector("[data-seshours]")) || 0) * D.ip.perHour),
-        milestonePoint:(main.querySelector("[data-sesmp]")||{checked:true}).checked,
-        notes:(main.querySelector("[data-sesnotes]")||{}).value
-      });
-    });
+    const entry = {
+      date:(main.querySelector("[data-sesdate]")||{}).value,
+      title,
+      ipEarned:num(main.querySelector("[data-sesip]")) ?? Math.ceil(Math.max(0, num(main.querySelector("[data-seshours]")) || 0) * D.ip.perHour),
+      milestonePoint:(main.querySelector("[data-sesmp]")||{checked:true}).checked,
+      notes:(main.querySelector("[data-sesnotes]")||{}).value
+    };
+    // The Milestone Point may be the one a training waits for: logging lands it in the same commit (Decision 230).
+    const landed = Engine.logSession(clone(ch), entry).trained;
+    commit("session", `Log session${title?`: ${title}`:""}${landedLabel(landed)}`, ()=>{ Engine.logSession(ch, entry); });
     window.scrollTo(0,0);
   });
   main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
@@ -3843,6 +3961,11 @@ function bindSheet(){
     const v = box.checked;
     if ((ch.houseRules&&ch.houseRules.keepDamagePastZero===true)===v) return;
     commit("admin", v ? "Admin: keep damage past zero" : "Admin: wipe damage past zero when healing", ()=>{ ch.houseRules = { ...(ch.houseRules||{}), keepDamagePastZero: v }; });
+  });
+  main.querySelectorAll("[data-admin-training]").forEach(box=>box.onchange=()=>{
+    const v = box.checked;
+    if ((ch.houseRules&&ch.houseRules.training===true)===v) return;
+    commit("admin", v ? "Admin: Training on" : "Admin: Training off", ()=>{ ch.houseRules = { ...(ch.houseRules||{}), training: v }; });
   });
   main.querySelectorAll("[data-admin-pl]").forEach(sel=>sel.onchange=()=>{
     const v=sel.value; if (ch.creation.powerLevel===v) return;

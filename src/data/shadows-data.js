@@ -520,9 +520,17 @@ window.SHADOWS_DATA = {
           "count": 2,
           "optional": true,
           "distinct": true,
+          "addInPlay": true,
+          "addText": "Add a style",
           "note": "Up to two at creation. More may be trained later in play (Decision 56).",
           "from": { "optionsFrom": "styles" }
         }
+      ],
+      "maneuvers": [
+        { "id": "grapple", "name": "Grapple", "inflicts": "grappled" },
+        { "id": "knockdown", "name": "Knockdown", "inflicts": "prone" },
+        { "id": "disarm", "name": "Disarm", "inflicts": "disarmed" },
+        { "id": "stun", "name": "Stun", "inflicts": "stunned" }
       ],
       "name": "Martial Arts",
       "category": "combat",
@@ -543,32 +551,44 @@ window.SHADOWS_DATA = {
         {
           "id": "commando",
           "name": "Commando",
-          "bonus": "+1 Stun"
+          "bonus": "+1 Stun",
+          "maneuver": "stun",
+          "amount": 1
         },
         {
           "id": "escrima",
           "name": "Escrima",
-          "bonus": "+1 Disarm"
+          "bonus": "+1 Disarm",
+          "maneuver": "disarm",
+          "amount": 1
         },
         {
           "id": "jujitsu",
           "name": "Jujitsu",
-          "bonus": "+1 Grapple"
+          "bonus": "+1 Grapple",
+          "maneuver": "grapple",
+          "amount": 1
         },
         {
           "id": "karate",
           "name": "Karate",
-          "bonus": "+1 Stun"
+          "bonus": "+1 Stun",
+          "maneuver": "stun",
+          "amount": 1
         },
         {
           "id": "krav-maga",
           "name": "Krav Maga",
-          "bonus": "+1 Disarm"
+          "bonus": "+1 Disarm",
+          "maneuver": "disarm",
+          "amount": 1
         },
         {
           "id": "kung-fu",
           "name": "Kung Fu",
-          "bonus": "+1 Knockdown"
+          "bonus": "+1 Knockdown",
+          "maneuver": "knockdown",
+          "amount": 1
         },
         {
           "id": "custom",
@@ -3613,6 +3633,17 @@ window.SHADOWS_DATA = {
       "newPower": 40
     },
     "rankCap": 10,
+    /* 0450, Optional Rule: Training (Decision 230). A REF, INT or TECH Skill the character already has is
+       trained a rank for Çredits: creditsPerIP times that rank's IP cost, never past maxRank. The rank
+       arrives at the next Milestone. teacherStats name the Stats whose Skills need a teacher. */
+    "training": {
+      "creditsPerIP": 10,
+      "maxRank": 9,
+      "stats": ["REF", "INT", "TECH"],
+      "teacherStats": ["REF"],
+      "teacherText": "Needs a teacher, a person or VI who knows the work.",
+      "selfText": "Books, courses and manuals will do."
+    },
     "statCapNote": "Stats are generally capped at 10 for Humans but may be increased via magical or mechanical enhancements, items, etc.",
     "cannotRaiseDirectly": [
       "WILL",
