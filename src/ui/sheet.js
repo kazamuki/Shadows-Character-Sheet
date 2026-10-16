@@ -2042,7 +2042,8 @@ const spellPickMode = {
   sheet: {
     title: "Add from the book",
     status: ch => { const p = Engine.grimoire(ch).pool;
-      return p ? `Your pool is ${p.rolls}d10 (${esc(p.discipline)} ${p.rank}${p.held?`, holding ${p.held}`:""}). You can learn any spell; one marked Beyond your pool needs an exploding 10.` : ""; },
+      return !p ? "" : p.rolls<1 ? `You have no dice left (${esc(p.discipline)} ${p.rank}, holding ${p.held}). You can learn any spell.`
+        : `Your pool is ${p.rolls}d10 (${esc(p.discipline)} ${p.rank}${p.held?`, holding ${p.held}`:""}). You can learn any spell; one marked Beyond your pool needs an exploding 10.`; },
     action: (ch, s, g) => {
       // A book spell you've already typed as your own links that row, not a copy.
       const yours = g.lines.find(l=>l.custom && l.match && l.match.id===s.id);
@@ -2079,7 +2080,7 @@ function spellResultsHtml(ch, mode){
   return `<table class="ref spell-results"><tbody>` + list.map(s=>{ const a = M.action(ch, s, g), f = Engine.spellForm(ch, s);
     return `<tr class="${a.why?"off":"pickrow"}">
       <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(glyphText(s.glyph))}${formNote(f)}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
-      <td class="num">${esc(tnth({ tn:s.tn, th:f.th }))}${mode==="sheet" && pool && f.live && typeof f.th==="number" && f.th>pool.rolls?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
+      <td class="num">${esc(tnth({ tn:s.tn, th:f.th }))}${mode==="sheet" && pool && f.live && typeof f.th==="number" && pool.rolls>0 && f.th>pool.rolls?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
       <td>${esc(s.range||"")}</td><td>${spText((Engine.spAmounts(ch, s, g.spellPower)||{}).effect, s.effect||"")}</td>
       <td>${a.btn}</td></tr>`; }).join("") + `</tbody></table>`;
 }
@@ -2112,7 +2113,7 @@ function grimoireHtml(ch, p){
   const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
   const book = g.lines.filter(l=>!l.custom), own = g.lines.filter(l=>l.custom);
   let h = sp ? `<p class="grim-sp" title="${esc(sp.text)}">Spell Power <b>${sp.value}</b> <span class="sub">${esc(sp.discipline)} ${sp.rank} + ${esc(sp.stat)} ${sp.statValue}</span></p>` : "";
-  if (g.pool && g.pool.held) h += `<p class="grim-sp" title="${esc(g.pool.text)}">Casting pool <b>${g.pool.rolls}</b> <span class="sub">${esc(g.pool.discipline)} ${g.pool.rank} · holding ${g.pool.held}: roll ${g.pool.rolls}</span></p>`;
+  if (g.pool && g.pool.held) h += `<p class="grim-sp" title="${esc(g.pool.text)}">Casting pool <b>${g.pool.rolls}</b> <span class="sub">${esc(g.pool.discipline)} ${g.pool.rank} · holding ${g.pool.held}: ${g.pool.rolls?`roll ${g.pool.rolls}`:"no dice left"}</span></p>`;
   if (sa) h += `<p class="grim-sp" title="${esc(sa.text)}">Spell Attack <b>${sa.value}</b> <span class="sub">${esc(sa.discipline)} ${sa.rank}${sa.parts.map(x=>` + ${esc(x.stat)} ${x.value}`).join("")}</span></p>`;
 
   // From the book

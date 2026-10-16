@@ -1063,7 +1063,7 @@ const Engine = (() => {
     // spell. The sheet only asks; Let go is the player's press, never ours.
     const hs = tookDamage ? heldSpells(ch) : null, R = concentrationRules();
     return { tookDamage, dying,
-      concentration: hs && hs.held.length ? { spells: hs.held, text: (R && R.checkText) || "" } : null,
+      concentration: hs && hs.held.length ? { spells: hs.held, text: (R && (hs.held.length>1 && R.eachCheckText ? R.eachCheckText : R.checkText)) || "" } : null,
       atZero: tookDamage && after.down && !dying
         ? Object.assign({}, DR.atZero, { freePassHeld: !!(freePass && ((ch||{}).advantages||[]).some(a=>a && a.id===freePass.advantage)) })
         : null,
@@ -2751,7 +2751,7 @@ const Engine = (() => {
         : holds.over.some(x=>x.id===s.id) ? { state:"over", why:`Not held: past your ${holds.capName} rank` }
         : Object.assign({ state:"free" }, holdCheck(ch, s.id));
       return { index, id:s.id, name:s.name, notes, mastered, th, printedTH:form.th, noRoll: th===0, form, hold,
-               beyondPool: form.live && !!pool && th!=null && th > pool.rolls,
+               beyondPool: form.live && !!pool && th!=null && pool.rolls>0 && th > pool.rolls,
                tier: (tiers.find(t=>t.id===s.tier)||{name:s.tier}).name, tierId:s.tier,
                domain: (domains.find(d=>d.id===s.domain)||{name:s.domain}).name, domainId:s.domain,
                glyph:s.glyph, tn:s.tn, range:s.range, spellType:s.spellType, damageType:s.damageType,

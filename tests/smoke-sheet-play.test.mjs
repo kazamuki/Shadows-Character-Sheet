@@ -1042,3 +1042,16 @@ test("P10 11b: applying a hit that drops you to zero lets nothing go on its own"
   assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"], "the hold dropped on its own");
   assert.deepEqual(app.errors, []);
 });
+
+test("P10 12: with no dice left the pool line says so, and several holds read the plural check in the hit panel", () => {
+  const ch = holdingCharacter(["fog-shroud", "wind-walker", "blazing-fury"]);
+  ch.panelData.grimoire.push({ spellId: "blazing-fury", stage: "known", notes: "" });
+  const app = openSheet(ch, "loadout");
+  assert.match(app.$("#main").textContent, /holding 3: no dice left/);
+  assert.equal(app.$("#main .beyond"), null, "a spell was marked Beyond your pool with no dice left");
+  app.click('[data-sec="trackers"]');
+  app.click("[data-hitopen]");
+  setHit(app, "damage", "5");
+  assert.match(app.$("#modal [data-concentration]").textContent, /You're holding Fog Shroud, Wind Walker and Blazing Fury\. A WILL Essence check keeps each one\./);
+  assert.deepEqual(app.errors, []);
+});

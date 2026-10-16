@@ -8492,3 +8492,15 @@ test("P10 (mutant 3): the cap reads the discipline the data names", () => {
     assert.equal(Engine.heldSpells(ch).cap, enchant);
   } finally { R.capDiscipline = was; }
 });
+
+test("P10 12: at the cap no dice are left, no spell is marked Beyond your pool, and two holds read the plural check", () => {
+  const ch = holder(2, ["fog-shroud", "wind-walker", "zap"]);
+  Engine.holdSpell(ch, "fog-shroud"); Engine.holdSpell(ch, "wind-walker");
+  const g = Engine.grimoire(ch);
+  same([g.pool.rolls, g.pool.held], [0, 2], "the case needs the cap to leave nothing");
+  same(g.lines.map(l => l.beyondPool), [false, false, false], "a line was marked Beyond your pool with no dice to roll");
+  const r = Engine.resolveHit(ch, shotAt(5));
+  same(r.prompts.concentration.spells.map(s => s.id), ["fog-shroud", "wind-walker"]);
+  assert.equal(r.prompts.concentration.text, D.spellcraftRules.concentration.eachCheckText);
+  assert.match(r.prompts.concentration.text, /keeps each one/);
+});

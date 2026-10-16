@@ -137,7 +137,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F32` | Arcanist Major Milestones: bring in REF_CRB's, or wait for 0411? | Ken |
 | `F37` | Can CRANK rep go below zero? Stubbed: it can, and reads Novice | Scott/Deighton |
 | `F42` | Which damage Resistance answers: Thermal → Burning and Electric → Electric are mapped; no damage type is cold, so Freezing answers nothing, and no Resistance answers Elemental magic. Stubbed as written (Decision 219) | Deighton |
-| `F43` | The TN and TH of the WILL Essence check that keeps a held spell (W87). The prompt says the GM sets them; nothing is decided by the sheet (Decision 224) | Deighton |
+| `F43` | The TN and TH of the WILL Essence check that keeps a held spell (W87). Also: one check or one per spell, and whether no dice left (holds at the Evocation rank) leaves a 1-die floor. The prompt says the GM sets them; nothing is decided by the sheet (Decision 224) | Deighton |
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
 
