@@ -980,7 +980,7 @@ test("P10 (hostile): a held id with script in it renders as nothing, and nowhere
   assert.deepEqual(app.errors, []);
 });
 
-// ── P12b: a style learned in play, and its bonus (Decision N) ─────────────────
+// ── P12b: a style learned in play, and its bonus (Decision 229) ─────────────────
 const maChar = (styles = ["karate"], extra = {}) => {
   const ch = lockedCharacter();
   ch.identity.archetype = "professional";

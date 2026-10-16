@@ -8942,7 +8942,7 @@ test("P12b: Training reads the price before the training is recorded, and is tot
   assert.doesNotThrow(() => Engine.versionCheck(junk));
 });
 
-test("P12b: no style, maneuver or Martial Arts id is named in engine or UI code (A8, Decisions N and N+1)", () => {
+test("P12b: no style, maneuver or Martial Arts id is named in engine or UI code (A8, Decisions 229 and 230)", () => {
   const ma = D.skills.find(s => s.id === "martial-arts");
   const ids = ["martial-arts", ...ma.styles.map(s => s.id).filter(id => id !== "custom"), ...ma.maneuvers.map(m => m.id)];
   assert.ok(ids.length >= 11, `expected the skill, six styles and four maneuvers, got ${ids.length}`);

@@ -41,7 +41,7 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   ch.creation.rolls = { statPoints: P("roll.stat"), skillPoints: P("roll.skill"), credits: P("roll.credits") };
   ch.creation.boosts = [{ targetType: "stat", targetId: P("boost.target"), times: P("boost.times") }];
   ch.creation.locked = locked;
-  ch.houseRules = { keepDamagePastZero: P("house"), training: true, [P("house.key")]: true };   // Decisions 220, N+1: a strict true or nothing
+  ch.houseRules = { keepDamagePastZero: P("house"), training: true, [P("house.key")]: true };   // Decisions 220, 230: a strict true or nothing
   for (const s of D.stats) ch.stats[s.id].base = 6;
   ch.stats.BOD.base = P("stat.base"); ch.stats.REF.ipe = P("stat.ipe");
   ch.archetypeChoices = { rolls: { focusStatBonus: P("roll.focus"), startingSpells: P("roll.spells"), statBonus: P("roll.sb") },

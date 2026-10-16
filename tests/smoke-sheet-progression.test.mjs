@@ -569,7 +569,7 @@ test("P12a: a flagged Advantage's note reads true on the wizard's Character Poin
   }
 });
 
-// ── P12b: Training (Decision N+1) ───────────────────────────────────────────────
+// ── P12b: Training (Decision 230) ───────────────────────────────────────────────
 const trChar = (extra = {}) => {
   const c = lockedCharacter(); c.identity.archetype = "professional";
   c.meta.gamedataVersion = D.meta.gamedataVersion;
