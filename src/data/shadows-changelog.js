@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.45.0",
-    "date": null,
+    "date": "2026-10-15",
     "intro": [],
     "items": [
       "**Vampires have their own Major Milestones.** All 22, from Blood Conditioning to Death Rites. The ones that change a number change it on the sheet.",
