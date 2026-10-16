@@ -148,7 +148,7 @@ Placeholders are a row's own fields, plus `{action}`/`{cost}` for `luckCost` and
 ## 9. Steps
 
 1. `git submodule update --init private`; `npm run test:fast`.
-2. **Read the signed-off text** (the sign-off page's answers, recorded by Ken's session into `P18-effects-draft.json` as `"signed": true` per entry). Stop if any entry is unsigned.
+2. **Read the signed-off text** (recorded by Ken's session into `P18-effects-draft.json` as `"signed": true` per entry, after any disagreement on the page is settled). Stop if any entry is unsigned.
 3. §6's tests, run on `main`.
 4. Data: `effectTags`, then each entry's `rule` rows from the signed text, in `grants` after any computed rows.
 5. Engine: `effectTagsFor`. UI: the CP step and the Character tab.
@@ -190,6 +190,8 @@ The README's two prompts, `<plan>/<order>` = `sheet-wishlist/P18-effects-as-data
 
 ## The sign-off page
 
-A claude.ai page lists all 87 entries with their drafted effects, beside the full text, so each can be approved, edited or questioned in one sitting. It also asks the seven area questions for P19. Answers save to the page's own store. Ken's session reads them back, records the signed text into `P18-effects-draft.json` (`"signed": true`, edits applied), and the seven answers into a `reference/rulings-<date>.md`.
+A claude.ai page lists all 87 entries with their drafted effects, beside the full text, so each can be approved, edited or questioned in one sitting. It also asks the seven area questions for P19. **Each person answers on their own:** one record per person (`answers/<their id>`), which only they can write and everyone with the page can read (the page's access rules). Everyone's answers show by name under each entry and question, and a **Disagreements** filter lists where they differ: a different verdict, or different edited words.
+
+**Reading back.** Ken's session reads every person's record. An entry is signed when everyone who answered it signed the same words. A disagreement goes back to Ken to settle, never resolved by taking the latest answer. Then the session records the signed text into `P18-effects-draft.json` (`"signed": true`, edits applied) and the seven answers, with who gave each, into a `reference/rulings-<date>.md`. To save answers, a person needs Contributor or above; someone outside the organization needs Editor by email invitation, and only while the page isn't also shared by public link.
 
 **Link:** [Effects Sign-off](https://claude.ai/artifact/Ah3WbcFhEGc6UNw5RNtsK8) (private; Ken shares it with Deighton as Editor, so his answers save).
