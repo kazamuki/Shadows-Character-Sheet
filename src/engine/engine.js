@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.25";
+  const SCHEMA_VERSION = "0.26";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -84,6 +84,7 @@ const Engine = (() => {
                  aberrations:[],               // { id, permanence: "temporary"|"permanent", note? }
                  credits:{current:0, ledger:[]},
                  crank:{rep:0, ledger:[]},     // schema 0.17 (Decision 169); the tier is derived, never stored
+                 heldSpells:[],                // schema 0.26 (Decision 224): ids of the Concentration spells being held
                  adjustments:[],               // manual adjustments ledger
                  panel:{} },                   // generic archetype tracker panels
       panelData:{},                            // archetype table/toggle panel content
@@ -1058,7 +1059,11 @@ const Engine = (() => {
     const tookDamage = after.damage>before.damage || after.massive>before.massive;
     const dying = isDying(ch);
     const freePass = (DR.atZero||{}).freePass;
+    // Decision 224 (Q19): damage that gets through asks for a WILL Essence check on each held
+    // spell. The sheet only asks; Let go is the player's press, never ours.
+    const hs = tookDamage ? heldSpells(ch) : null, R = concentrationRules();
     return { tookDamage, dying,
+      concentration: hs && hs.held.length ? { spells: hs.held, text: (R && R.checkText) || "" } : null,
       atZero: tookDamage && after.down && !dying
         ? Object.assign({}, DR.atZero, { freePassHeld: !!(freePass && ((ch||{}).advantages||[]).some(a=>a && a.id===freePass.advantage)) })
         : null,
@@ -1075,7 +1080,7 @@ const Engine = (() => {
     return { lostThisHit, tookDamage: d.tookDamage, dying: d.dying, prompts: {
       shock: d.tookDamage && !after.down && shockAt>0 && lostThisHit >= shockAt
         ? Object.assign({ threshold: shockAt }, DR.shock) : null,
-      atZero: d.atZero, deathMark: d.deathMark,
+      atZero: d.atZero, deathMark: d.deathMark, concentration: d.concentration,
       conditions: offered, always: (type.always||[]).filter(id=>offered.includes(id))
     } };
   }
@@ -1889,7 +1894,7 @@ const Engine = (() => {
     const dyingCheck = d.dying ? { check:W.resetCheck, text:W.resetText } : null;
     const notes = [];
     return { ok:true, ticks, total, before, after, dying:d.dying, marks,
-             prompts: { atZero:d.atZero, dyingCheck }, recovery, notes,
+             prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes,
              hasEffect: total>0 || !!dyingCheck };
   }
   // The one writer, re-resolving from its inputs like applyHit. `choices`:
@@ -2657,17 +2662,72 @@ const Engine = (() => {
   }
   // The dice a live cast rolls: the named Discipline's rank (0480_Magic.md, Step 2).
   // A TH above it can still be cast, but only an exploding 10 reaches it
-  // (Ken, Decision 111). Concentration's held dice are the table's to count.
+  // (Ken, Decision 111). A held Concentration spell sets a die aside from every
+  // Essence roll (Decision 224), so `rolls` is what's left of `rank`.
   function castingPool(ch){
     const R = (D().spellcraftRules||{}).castingPool;
     if (!R) return null;
     const d = disciplineRanks(ch).find(x=>x.id===R.discipline);
-    return d ? { rank: d.rank, discipline: d.name, text: R.beyond||"" } : null;
+    if (!d) return null;
+    const hs = heldSpells(ch);
+    return { rank: d.rank, discipline: d.name, text: R.beyond||"", held: hs.held.length, rolls: Math.max(0, d.rank - hs.dice) };
+  }
+  // ── Holding a spell (Decision 224, W87) ──
+  // `trackers.heldSpells` is the ids the player pressed Hold on. A reader keeps
+  // the book spells in the Grimoire that carry the data's Concentration tag,
+  // each once, in saved order: the first `cap` are held, the rest `over`. It
+  // deletes nothing (constraint 7).
+  const concentrationRules = () => { const R = (D().spellcraftRules||{}).concentration; return isPlainObj(R) ? R : null; };
+  function heldSpells(ch){
+    const none = { held:[], over:[], dice:0, cap:0, capName:"" };
+    const R = concentrationRules(), p = ch && typeof ch==="object" ? grimoirePanel(ch) : null;
+    if (!R || !p) return none;
+    const d = disciplineRanks(ch).find(x=>x.id===R.capDiscipline);
+    const cap = d ? d.rank : 0;
+    const pd = ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
+    const inBook = new Set((Array.isArray(pd[p.id]) ? pd[p.id] : []).filter(r=>r && typeof r.spellId==="string").map(r=>r.spellId));
+    const saved = (ch.trackers||{}).heldSpells;
+    const seen = new Set(), keep = [];
+    for (const id of Array.isArray(saved) ? saved : []){
+      if (typeof id!=="string" || seen.has(id) || !inBook.has(id)) continue;
+      const s = spellById(id);
+      if (!s || !(s.tags||[]).includes(R.tag)) continue;
+      seen.add(id); keep.push({ id, name:s.name });
+    }
+    return { held: keep.slice(0, cap), over: keep.slice(cap), dice: Math.min(keep.length, cap) * (R.diceEach||1), cap, capName: d ? d.name : "" };
+  }
+  // Why a spell can or can't be held right now, in words the engine writes (Decision 224).
+  function holdCheck(ch, id){
+    const R = concentrationRules(), rows = ch && typeof ch==="object" ? grimoireRows(ch) : null;
+    if (!R || !rows) return { ok:false, why:"This archetype keeps no Grimoire." };
+    if (typeof id!=="string" || !rows.some(r=>r && r.spellId===id)) return { ok:false, why:"That spell isn't in your Grimoire." };
+    const s = spellById(id);
+    if (!s || !(s.tags||[]).includes(R.tag)) return { ok:false, why:`${s ? s.name : "That spell"} isn't held; it's cast and released.` };
+    const hs = heldSpells(ch);
+    if (hs.held.some(x=>x.id===id) || hs.over.some(x=>x.id===id)) return { ok:false, why:"You're holding that already." };
+    if (hs.held.length >= hs.cap) return { ok:false, why:`You hold as many as your ${hs.capName || "casting"} rank (${hs.cap}).` };
+    return { ok:true, name:s.name };
+  }
+  function holdSpell(ch, id){
+    const c = holdCheck(ch, id);
+    if (!c.ok) return c;
+    const t = isPlainObj(ch.trackers) ? ch.trackers : (ch.trackers = {});
+    const list = Array.isArray(t.heldSpells) ? t.heldSpells : (t.heldSpells = []);
+    if (!list.includes(id)) list.push(id);
+    return { ok:true, name:c.name };
+  }
+  function releaseSpell(ch, id){
+    const t = ch && typeof ch==="object" ? ch.trackers : null;
+    const list = isPlainObj(t) && Array.isArray(t.heldSpells) ? t.heldSpells : null;
+    if (typeof id!=="string" || !list || !list.includes(id)) return { ok:false, why:"You aren't holding that." };
+    t.heldSpells = list.filter(x=>x!==id);
+    const s = spellById(id);
+    return { ok:true, name: s ? s.name : id };
   }
   function grimoire(ch){
     const p = grimoirePanel(ch);
     if (!p) return { panel:null, lines:[], spellPower:null, spellAttack:null, pool:null };
-    const pool = castingPool(ch), power = spellPower(ch);
+    const pool = castingPool(ch), power = spellPower(ch), holds = heldSpells(ch);
     const pd = ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
     const rows = Array.isArray(pd[p.id]) ? pd[p.id] : [], M = (D().spellcraftRules||{}).mastery || {};
     const held = new Set(rows.filter(r=>r && typeof r.spellId==="string").map(r=>r.spellId));
@@ -2685,8 +2745,13 @@ const Engine = (() => {
       if (!s) return { index, missing:true, spellId:r.spellId, notes };
       const mastered = r.stage==="mastered", form = spellForm(ch, s);
       const th = typeof form.th!=="number" ? null : mastered ? Math.max(0, form.th - (M.thReduction||0)) : form.th;
-      return { index, id:s.id, name:s.name, notes, mastered, th, printedTH:form.th, noRoll: th===0, form,
-               beyondPool: form.live && !!pool && th!=null && th > pool.rank,
+      // Decision 224: a Concentration spell is held, held past the cap (kept, not counted), or free to hold.
+      const hold = !(s.tags||[]).includes((concentrationRules()||{}).tag) ? null
+        : holds.held.some(x=>x.id===s.id) ? { state:"held" }
+        : holds.over.some(x=>x.id===s.id) ? { state:"over", why:`Not held: past your ${holds.capName} rank` }
+        : Object.assign({ state:"free" }, holdCheck(ch, s.id));
+      return { index, id:s.id, name:s.name, notes, mastered, th, printedTH:form.th, noRoll: th===0, form, hold,
+               beyondPool: form.live && !!pool && th!=null && th > pool.rolls,
                tier: (tiers.find(t=>t.id===s.tier)||{name:s.tier}).name, tierId:s.tier,
                domain: (domains.find(d=>d.id===s.domain)||{name:s.domain}).name, domainId:s.domain,
                glyph:s.glyph, tn:s.tn, range:s.range, spellType:s.spellType, damageType:s.damageType,
@@ -2716,7 +2781,12 @@ const Engine = (() => {
   function removeGrimoireRow(ch, index){
     const rows = grimoireRows(ch);
     if (!rows || !(index>=0 && index<rows.length)) return { ok:false, why:"No such row." };
+    const gone = rows[index] && rows[index].spellId;
     rows.splice(index, 1);
+    // Decision 224: a held spell leaves the saved list with its row, so it holds no dead id.
+    const t = ch.trackers;
+    if (typeof gone==="string" && t && Array.isArray(t.heldSpells) && !rows.some(r=>r && r.spellId===gone))
+      t.heldSpells = t.heldSpells.filter(x=>x!==gone);
     return { ok:true };
   }
 
@@ -3696,6 +3766,9 @@ const Engine = (() => {
     t.crank = Object.assign({rep:0, ledger:[]}, t.crank);
     if (!Array.isArray(t.crank.ledger)) t.crank.ledger=[];
     if (!Array.isArray(t.adjustments)) t.adjustments=[];
+    // Schema 0.26 (Decision 224): the ids of held spells. Strings only, each once, at most 20, 120 characters
+    // each. Which of them is a held Concentration spell is read every time (heldSpells), never trusted.
+    t.heldSpells = [...new Set((Array.isArray(t.heldSpells) ? t.heldSpells : []).filter(x=>typeof x==="string" && x).map(x=>x.slice(0, 120)))].slice(0, 20);
     if (!t.panel || typeof t.panel!=="object") t.panel={};
     // Schema 0.8 (Decision 95): Conditions, plus the two damage inputs the hit
     // resolver writes. A hand-edited file can hold junk or a duplicate; keep
@@ -6904,7 +6977,7 @@ const Engine = (() => {
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,
-    spellForms, spellForm, grimoire, spellPower, spAmounts, spellAttack, addSpell, linkSpell, removeGrimoireRow,
+    spellForms, spellForm, grimoire, spellPower, spAmounts, spellAttack, addSpell, linkSpell, removeGrimoireRow, heldSpells, holdSpell, releaseSpell,
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP,

@@ -2,6 +2,16 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.46.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Holding a spell takes a die off the table.** Hold a Concentration spell from your Grimoire once it lands; the sheet sets aside one die from every Essence roll while you hold it, up to your Evocation rank in spells. Your casting pool and Beyond your pool count what's left, and Pain's line says what you're holding.",
+      "**Taking a hit while you hold a spell asks whether you keep it.** The hit panel and the Turn Reset name the WILL Essence check and let you let go of a spell; nothing lets go on its own. You can also let go from the Grimoire or Main.",
+      "**Concentration's rules text follows the book's new ruling:** one die per held spell, not the spell's Threshold. Veil of Shadows and Dread Pulse now carry the Concentration tag."
+    ]
+  },
+  {
     "version": "0.45.0",
     "date": "2026-10-15",
     "intro": [],

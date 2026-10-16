@@ -734,6 +734,8 @@ test("rules text: Lineage and the whole Magic reference on Archetype, How a chec
   for (const t of ["Charging, holding and learning", "Domains and Glyphs", "Enchantment and Alchemy", "The Sovereign Soul", "Copied cold"])
     assert.ok(main().includes(t), `the Magic reference has no ${t}`);
   assert.match(main(), /Once-Living/, "no materials table");
+  assert.match(main(), /Each spell you hold sets aside one die from every Essence roll/, "P10: the Concentration line doesn't say the ruling");
+  assert.ok(!/dice equal to/.test(main()), "P10: the old Threshold text is still shown");
   app.click('[data-sec="skills"]');
   assert.match(main(), /How a check works/);
   assert.ok(main().includes(D.skillCheckRules.botch), "the botch rule is missing");
@@ -918,4 +920,61 @@ test("P17 (hostile): a script-y Splice power and Bloodline are text on Progressi
     assert.equal(app.$$("#main img, #main script").length, 0, `${sec} rendered markup from a saved file`);
     assert.deepEqual(app.errors, []);
   }
+});
+
+// ── Holding a spell (Decision 224, W87) ───────────────────────────────
+function holdingArcanist(rank = 3, ids = ["fog-shroud", "wind-walker", "blazing-fury"]) {
+  const ch = lockedCharacter();
+  const base = Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank;
+  ch.archetypeChoices.disciplines = { evocation: rank - base };
+  ch.panelData.grimoire = ids.map(spellId => ({ spellId, stage: "known", notes: "" }));
+  return ch;
+}
+
+test("P10 9: Hold and Let go on the Grimoire, one undo each", () => {
+  const app = openSheet(holdingArcanist(3), "loadout");
+  assert.equal(app.$('[data-letgo]'), null, "a Let go with nothing held");
+  assert.ok(app.$('[data-hold="fog-shroud"]'), "a Concentration spell has no Hold");
+  assert.equal(app.$('[data-hold="zap"]'), null);
+  assert.ok(!/holding/i.test(app.$("#main").textContent), "the pool line shows with nothing held");
+  app.click('[data-hold="fog-shroud"]');
+  assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"]);
+  assert.ok(app.$('[data-letgo="fog-shroud"]'), "no Let go after Hold");
+  assert.equal(app.window.document.activeElement, app.$('[data-letgo="fog-shroud"]'), "focus didn't go to the row's Let go");
+  assert.match(app.$("#main").textContent, /Evocation 3 · holding 1: roll 2/);
+  assert.match(app.$("#undotoast").textContent, /holding Fog Shroud/);
+  app.click("[data-toastundo]");
+  assert.deepEqual(activeChar(app).trackers.heldSpells, [], "undo didn't take the hold back");
+  app.click('[data-hold="fog-shroud"]');
+  app.click('[data-letgo="fog-shroud"]');
+  assert.deepEqual(activeChar(app).trackers.heldSpells, []);
+  assert.equal(app.window.document.activeElement, app.$('[data-hold="fog-shroud"]'), "focus didn't go back to Hold");
+  app.click("[data-toastundo]");
+  assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"], "undo didn't take the Let go back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P10 9b: past the cap Hold is disabled and says why, and removing a held spell asks first", () => {
+  const app = openSheet(holdingArcanist(1), "loadout");
+  app.click('[data-hold="fog-shroud"]');
+  const second = app.$('[data-hold="wind-walker"]');
+  assert.ok(second.disabled);
+  assert.match(second.title, /You hold as many as your Evocation rank \(1\)/);
+  const idx = activeChar(app).panelData.grimoire.findIndex(r => r.spellId === "fog-shroud");
+  app.click(`[data-spellrm="${idx}"]`);
+  assert.match(app.$("#modal").textContent, /You're holding it. Taking it out of the Grimoire lets it go./, "the confirm doesn't say the hold ends");
+  assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"], "removed before the confirm");
+  app.click("[data-askyes]");
+  assert.deepEqual(activeChar(app).trackers.heldSpells, [], "the saved list kept a dead id");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P10 (hostile): a held id with script in it renders as nothing, and nowhere as markup", () => {
+  const ch = holdingArcanist(3, ["fog-shroud"]);
+  ch.trackers.heldSpells = ["<img src=x onerror=alert(1)>", "fog-shroud"];
+  const app = openSheet(ch, "loadout");
+  assert.equal(app.$("#main img"), null);
+  assert.ok(!/img src/.test(app.$("#main").textContent), "the hostile id was shown");
+  assert.ok(app.$('[data-letgo="fog-shroud"]'));
+  assert.deepEqual(app.errors, []);
 });

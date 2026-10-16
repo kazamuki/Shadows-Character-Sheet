@@ -345,6 +345,34 @@ so the sheet says why. Pin the reading in `tests/rules.test.mjs`. Player-
 visible: a CHANGELOG line and a patch bump. If the data field is new, the
 `gamedataVersion` bumps too (a character's computed Pain changes).
 
+**W87 — Holding a spell takes a die off the table.** *Ken, from Brogan · → Decision 224, app 0.46.0 · F43 holds the check's TN and TH*
+Today Concentration is a line in the Spellcraft reference (`spellRules.concentration`)
+and nothing more. A player holding Fog Shroud has to remember that a die is
+missing from every Essence roll until they let it go. **Deighton's ruling
+(2026-10-10, `reference/rulings-2026-10-10.md` Q17–Q19), which replaces
+`0480`'s "dice equal to its Threshold":**
+- A Concentration spell is held **only once it succeeds**. Then it sets aside
+  **one die** for as long as it's held, from **every Essence roll**: casting,
+  Charging, defending, resisting.
+- An Arcanist can hold **as many spells as their Evocation rank**, a die each.
+- Anything that would sensibly break concentration (taking damage, a Shock,
+  going down) calls for a **WILL Essence check** to keep it. Its **TN and TH
+  aren't set yet**: open a flag when this is built and stub them. The GM decides
+  when a character is unconscious; the sheet never releases a spell on its own.
+- Released at will, any time.
+
+So Brogan's one die was right, and the book and the sheet's reference text
+change. The fix is a **Holding** marker, set from the Grimoire on a spell
+tagged `Concentration`, with **Release** beside it and **Check to keep**
+offered where damage is taken; every place showing an Essence pool shows the
+dice set aside.
+*To respect:* constraint 7: what's stored is which spells are held, and the
+dice set aside are their count. A stored field is a save-file shape change:
+a schema bump and a `migrate()` step. It isn't a Condition from `0540`, so
+it gets its own marker, shown the way a Condition is. `spellRules.concentration`
+is rewritten to the ruling (a `gamedataVersion` bump), and the book's fix is in
+`plans/crb-catch-up.md`.
+
 ### Loadout & catalog
 
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*

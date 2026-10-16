@@ -527,7 +527,8 @@ window.SHADOWS_DATA = {
   // executes any of it (Decision 11: the app never rolls dice).
   spellcraftRules: { rollNote: "...", outcomes: { overflow: "...", manifest: "...", fizzle: "...", rupture: "...", cascade: "..." },
     exhaustion: "...", charging: { standardAction: true, tnReductionPerTurn: 1, maxTurns: 3, floorTN: 5, breakCheck: "..." },
-    concentration: "...", sovereignSoul: { willingConscious: "No modifier", unconsciousAlly: "+1 TH", unwilling: "+3 TH" },
+    concentration: { tag: "Concentration", diceEach: 1, capDiscipline: "evocation", text: "...", checkText: "...", flagged: true, flagNote: "F43" }, // (Decision 224) read by heldSpells and castingPool
+    sovereignSoul: { willingConscious: "No modifier", unconsciousAlly: "+1 TH", unwilling: "+3 TH" },
     castingRequiresVoice: "...", progression: { improvised: "...", known: "...", mastered: "..." },
     teaching: { taught: "...", copiedCold: "..." } },
   enchantmentMaterialCategories: [ { id: "once-living", examples: ["Wood", "Bone", "Leather"], charges: 3,
@@ -674,7 +675,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.25",
+    schemaVersion: "0.26",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -801,6 +802,7 @@ It renders on the Character tab (Decision 158).
     // tracked value (Decision 93).
     credits: { current: 800, ledger: [ { date, amount, note } ] },
     crank: { rep: 0, ledger: [ { date, amount, note } ] },          // (0.17) CRANK rep (Decision 169); tier is derived
+    heldSpells: [ "fog-shroud" ],    // (0.26, Decision 224) ids of Concentration spells the player is holding. migrate keeps strings, each once, at most 20, 120 characters each; heldSpells() keeps only Grimoire book spells with the tag, the first Evocation-rank of them as held, and deletes nothing
     // (0.8) Active Conditions (Decision 95). One entry per id ("you have it or
     // you don't"), except a location-bearing Condition, which is one per body
     // part (Decision 98). Pain, penalties and Helpless are derived, never stored.
@@ -4711,6 +4713,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** power SFR costs or damage are computed (Pure Blooded, Dead Warrior); W98 computes movement; `0413`'s Majors change.
      - **Built:** app 0.45.0 and game data 0.38 (both unreleased, no bump), character schema 0.25, PR #192. Log 2026-10-15 (P17).
 
+224. **A held Concentration spell is recorded on the sheet and sets aside one die from every Essence roll; an Arcanist holds at most their Evocation rank.**
+     *2026-10-15 · Ken + Claude · Touches: trackers.heldSpells, heldSpells, holdSpell, holdCheck, releaseSpell, castingPool, beyondPool, removeGrimoireRow, damagePrompts, hitPrompts, resolveReset, prompts.concentration, spellcraftRules.concentration, the Concentration tag, Grimoire, Hold, Let go, W87, F43*
+     - **Decided:** Deighton's 2026-10-10 ruling (Q17–Q19): a Concentration spell (the data's `Concentration` tag, PQ2) is held once it succeeds; the player presses Hold after the cast. Each hold sets aside one die (`spellcraftRules.concentration.diceEach`) from every Essence roll: the casting pool and Beyond your pool read what's left, and the Pain line names it, apart from Pain's own number (PQ3). Holds are capped at the `capDiscipline` rank; past it a hold is kept and read as not held (PQ4). Damage that gets through, a Shock or going down, and a Turn Reset that ticks, prompt the WILL Essence check (TN and TH: F43) with Let go per spell; nothing drops on its own (Q19). Schema 0.26.
+     - **Why:** W87 (Brogan): a held spell is a die off every roll, and nothing reminded the player.
+     - **Rejected:** the hold as `held: true` on the Grimoire row (it's play state, not what you know); reading `duration` instead of the tag; folding the hold into Pain's number (it would put a floor nobody ruled on it); `migrate` trimming holds past the cap (an Admin rank change doesn't pass through it); holding a written-in spell (PQ7; W109 would revisit); dropping holds automatically at 0 HP (Q19: the GM decides).
+     - **Replaces:** nothing in the ledger. The `castingPool` comment citing Decision 111 ("the table's to count") is rewritten; `spellcraftRules.concentration` becomes an object whose `text` is the ruling, in place of the string that said "dice equal to its Threshold".
+     - **Revisit if:** Deighton sets the check's TN and TH (close F43); an inscribed Concentration spell (a Talisman holds it, `0480`) is tracked; a written-in spell needs to be held (W109).
+     - **Built:** app 0.46.0, game data 0.39, character schema 0.26. Log 2026-10-15 (P10).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4734,5 +4745,6 @@ here are in `log/archive.md`.
 | F32 | **Arcanist Major Milestones.** 0411's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 0411? `growth` stays hidden until then (AQ4) | Ken | No |
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 | F42 | **Which damage Resistance answers.** 0460 names Thermal, Electric and Freezing. The app maps Thermal → Burning and Electric → Electric. No damage type is cold, so Freezing answers nothing yet. Elemental spells (fire, frost, lightning) are magic, so no Resistance answers them; Warding does. Stubbed as written (Decision 219) | Deighton | No |
-F42 goes to Deighton, and F37 with Scott, who wrote CRANK.
+| F43 | **The TN and TH of the WILL Essence check that keeps a held spell** (W87, Q19). Taking damage, a Shock or going down calls for it; the numbers aren't set. Stubbed (Decision 224): the prompt says "A WILL Essence check keeps it. Your GM sets the TN and TH.", and nothing is decided or released by the sheet | Deighton | No |
+F42 and F43 go to Deighton, and F37 with Scott, who wrote CRANK.
 
