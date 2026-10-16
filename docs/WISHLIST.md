@@ -775,9 +775,83 @@ for that kind", not free-form tags. A tag that does nothing would look as if it 
 Start with the kinds that already have a behaviour tag (spells after P10, ammunition),
 then grow the list kind by kind as each behaviour is made data-driven.
 
+### The project itself (from a look at its weak spots)
+
+Ken asked Claude on 2026-10-15 what in the project could cause trouble down
+the road, or has drifted from the norm over 200-plus decisions. These came out
+of that review. They're about how the project is built and run, not what a
+player sees, except W114. Figures are as measured that day: about 23k lines of
+app code, 22k of tests, 13.5k of docs, and 226 decisions with 83 supersession
+marks.
+
+**W111 — Archive the decisions that have been wholly superseded.** *Claude, raised by Ken's review · 🔎 · Docs · raised 2026-10-15*
+SCHEMA §4 keeps every decision forever, so a cold session pays for dead
+entries every time it searches the ledger, and Decision 130's "search before
+you propose" gets slower with each one. Entries wholly replaced by a later
+decision could move to an archive file under `docs/log/`, leaving SCHEMA with
+only the decisions that are true now.
+*To respect:* numbers are never reused or renumbered (578 citations in `src/`
+point at them). `docs.test.mjs` checks the ledger against INDEX §3 and refuses
+a gap, so the archive has to count as part of the ledger, or SCHEMA keeps a
+one-line stub per moved entry. Deciding which of those two is the open
+question. Superseded *in part* stays in place. INDEX keeps its struck-through
+lines, pointing at the archive.
+
+**W112 — Number fewer decisions.** *Claude · 💡 · Docs, process · raised 2026-10-15*
+The bar is "a player-facing behaviour someone could reasonably have chosen
+otherwise", and nearly every UI tweak clears it. So a card's line spacing can
+become a ledger entry, and the entries that govern rules and file shapes get
+buried among them. One option: number rules, data and save-file shapes, and
+architecture. UI choices would live in the PR and the log, with a decision
+only when one is reversed or argued over.
+*To respect:* this changes CLAUDE.md's *Decisions* and *Change tiers*
+sections and Decision 131, so it is itself a decision, proposed before it's
+made. Pairs with W111.
+
+**W113 — Retire guards, not only add them.** *Claude · 💡 · Fix, process · raised 2026-10-15*
+The tests are about as large as the app (`engine.test.mjs` alone is 8.6k
+lines). Every finding that becomes a mutation-tested guard stays forever.
+Several test files read `src/` as text and pattern-match it, which checks how
+the code is written rather than what it does, so a harmless refactor can
+break them. Add a question to the per-batch review: does any guard this batch
+touched still protect something, and could a text guard become a behaviour
+test?
+*To respect:* the guards on CLAUDE.md's hard constraints stay. A `todo` test
+is a known defect, never retired to tidy the output.
+
+**W114 — Cap the character's audit log.** *Claude · 🔎 · Rule or shape · raised 2026-10-15*
+`ch.audit` has no limit. The GM table's log is capped at 500
+(`TABLE_AUDIT_MAX`), but a character's grows with every action for the life
+of the campaign. The whole file is rewritten to `localStorage` on every
+action, and under `file://` Chromium gives every local page one shared
+origin, so all characters share one ~5MB quota. A failed save is already
+reported to the player, so nothing is lost silently. It's still a wall a long
+campaign will hit.
+*To respect:* a cap changes how far back undo reaches, so propose it first.
+Measure bytes per entry and the size of a long campaign before choosing a
+number. Find every reader of `ch.audit`, not only undo. Decision 124 governs
+what undo may write. A cap applied on load is a `migrate()` concern.
+
+**W115 — Split the engine into character and table scripts.** *Claude · 💡 · Rule or shape (architecture) · raised 2026-10-15*
+`src/engine/engine.js` is about 7k lines: character rules, migration, the
+audit, and the whole GM table and encounter engine. The no-modules rule
+doesn't require one file (the UI is already five classic scripts). Two engine
+scripts would give each session a smaller file to hold.
+*To respect:* constraints 2, 4 and 5 (classic scripts, fixed order, no DOM).
+`tools/build.mjs` and the build tests list the scripts. Tests load the engine
+with no DOM, so both halves have to load that way.
+
+**W116 — Could anyone but Ken's sessions change the app?** *Claude · 💡 · Docs · raised 2026-10-15*
+The process docs are written for Claude sessions, and CLAUDE.md alone is
+about 350 lines. "Designers edit these" (`src/data/`) in practice means
+Ken's sessions edit them. That may be fine, but it should be chosen, not just
+happen. If Scott or Deighton should be able to land a number or a line of
+copy themselves, W56's tuning bench is the shape for numbers, and a
+one-page "how to change one thing" guide could be the rest.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W111.** Everything above is open; W38 has a plan,
+- **Next free number: W117.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
