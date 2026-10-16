@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.24";
+  const SCHEMA_VERSION = "0.25";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -91,7 +91,9 @@ const Engine = (() => {
       // Schema 0.18 (Decision 194): `powerIpe` is the ranks IP bought, per
       // power id: a Discipline's data id or a written power's row id.
       progression:{ ip:{earned:0, log:[]}, milestonePoints:0,
-                    milestones:{minor:[], major:[]}, powerIpe:{} },
+                    milestones:{minor:[], major:[]}, powerIpe:{},
+                    // Schema 0.25 (Decision 223): the other specializations a held power opened.
+                    specializationsGained:[] },
       sessions:[], notes:"",
       audit:[]                                 // reversible action log
     };
@@ -156,12 +158,21 @@ const Engine = (() => {
   // the character (constraint #7), so buying/selling one just changes what
   // this returns next render.
   function grants(ch){
-    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0, painLevel:0, painLevelFrom:[] };
+    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0, painLevel:0, painLevelFrom:[], feed:{}, witheringHalvedBy:null };
     const scan = (list, lookup) => (list||[]).forEach(entry=>{
       const def = entry && lookup(entry.id);
       for (const g of (def && def.grants) || []){
         if (!g) continue;
         if (g.type==="rou" || g.type==="sfrMax"){ out[g.type] += Number(g.amount)||0; continue; }
+        // Decision 223: a Thirst kind's numbers. `perHL` adds, `upToShare` is the highest asked for; `by` names who.
+        if (g.type==="feed" && typeof g.kind==="string"){
+          const f = Object.prototype.hasOwnProperty.call(out.feed, g.kind) ? out.feed[g.kind] : (out.feed[g.kind] = { perHL:0, upToShare:0, by:[] });
+          f.perHL += nonNegInt(g.perHL); f.upToShare = Math.max(f.upToShare, Number(g.upToShare)||0);
+          if (!f.by.includes(txt(def.name))) f.by.push(txt(def.name));
+          continue;
+        }
+        // Decision 223: Withering through a hit is halved, never below 1 (resolveHit does it).
+        if (g.type==="withering"){ if (g.halve===true && out.witheringHalvedBy==null) out.witheringHalvedBy = txt(def.name); continue; }
         // Decision 213: a shift to the Pain Level, once per entry. Only the
         // "when hurt" kind is decided; an unconditional one is ignored.
         if (g.type==="painLevel"){
@@ -1093,7 +1104,11 @@ const Engine = (() => {
                                 : mitigateArmor(damage, type, hit, armor, covered);
     if (!m.ok) return m;
     const nat = mitigateNatural(ch, m.through, type, hit, cat);
-    const through = m.through - nat.absorbed;
+    let through = m.through - nat.absorbed;
+    // Decision 223: Wither Ward halves Withering last, after armor and Natural Armor, never below 1.
+    const ward = cat.recordsWithering && through > 0 ? grants(ch).witheringHalvedBy : null;
+    let witherHalved = null;
+    if (ward){ const to = Math.max(1, Math.floor(through / 2)); witherHalved = { by:ward, from:through, to }; through = to; }
 
     const before = hlState(ch);
     const after = hlState(ch, { damage: before.damage + through,
@@ -1115,7 +1130,7 @@ const Engine = (() => {
       armor: armor ? { source: armor.source, name: armor.name, prot: armor.prot, res: armor.res,
                        integrityBefore: intBefore, integrityAfter: intBefore==null ? null : intBefore - m.integrityLost,
                        integrityMax: armor.integrityMax ?? null, compromised: !!armor.compromised } : null,
-      prot: m.prot, res: m.res, resSkipped: m.resSkipped, halved: m.halved, absorbed: m.absorbed, through,
+      prot: m.prot, res: m.res, resSkipped: m.resSkipped, halved: m.halved, absorbed: m.absorbed, through, witherHalved,
       natural: { total: nat.total, absorbed: nat.absorbed, skipped: nat.skipped, sources: nat.sources },
       soaked: m.soaked, integrityLost: m.integrityLost, levelsLost: m.levelsLost, scrap: m.scrap,
       before, after, lostThisHit: c.lostThisHit, tookDamage: c.tookDamage,
@@ -2147,6 +2162,14 @@ const Engine = (() => {
       const name = id => txt((opts.find(o=>o.id===id)||{}).name) || String(id);
       (p.specialization.some(id=>mine.includes(id)) ? met : unmet).push(p.specialization.map(name).join(" or "));
     }
+    // Decision 223: `notWith` lists Majors that bar this one if taken; `noSpecializationGained` bars it once another
+    // specialization is open.
+    if (Array.isArray(p.notWith) && p.notWith.length){
+      const taken = new Set(majorTakenIds(ch)), hit = p.notWith.filter(id=>taken.has(id));
+      if (hit.length) unmet.push(`Can't be taken with ${hit.map(id=>txt((majorById(ch, id)||{}).name) || String(id)).join(" or ")}`);
+    }
+    if (p.noSpecializationGained===true && gainedSpecializations(ch).length)
+      unmet.push(`Can't be taken once another ${specLabel(ch)} is open`);
     if (p.gear) manual.push(typeof p.gear==="string" ? p.gear : "Gear requirement — see text");
     if (p.note) manual.push(p.note);
     if (p.gmApproval) manual.push("Requires GM approval");
@@ -2178,17 +2201,73 @@ const Engine = (() => {
       if (minorChoiceSpec(id)) return {ok:false, why:"Choose what it gives."};
       ch.progression.milestones.minor.push({id, date:new Date().toISOString()});
     } else {
-      const m = majorPool(ch).find(x=>x.id===id);
-      if (!m) return {ok:false, why:"Unknown milestone."};
-      // Decision 217: the offer follows the archetype. Hiding a Major in the
-      // sheet isn't enforcing it, so the engine refuses one that isn't listed.
-      if (!majorListed(ch).some(x=>x.id===id)) return {ok:false, why:"That Milestone isn't open to your archetype."};
-      const st = milestoneState(ch);
-      if (st.majorLeft<=0) return {ok:false, why:noneUnlocked("Major", st.nextMajorAt)};
-      const pre = majorPrereqs(ch, m); if (!pre.ok) return {ok:false, why:pre.unmet.join(" ")};
+      const c = majorTakeCheck(ch, id); if (!c.ok) return c;
+      if (c.m.choice) return {ok:false, why:"Choose what it gives."};
       ch.progression.milestones.major.push({id, date:new Date().toISOString()});
     }
     return {ok:true};
+  }
+  // What every way of taking a Major checks first.
+  function majorTakeCheck(ch, id){
+    const m = majorPool(ch).find(x=>x.id===id);
+    if (!m) return {ok:false, why:"Unknown milestone."};
+    // Decision 217: the offer follows the archetype. Hiding a Major in the
+    // sheet isn't enforcing it, so the engine refuses one that isn't listed.
+    if (!majorListed(ch).some(x=>x.id===id)) return {ok:false, why:"That Milestone isn't open to your archetype."};
+    const st = milestoneState(ch);
+    if (st.majorLeft<=0) return {ok:false, why:noneUnlocked("Major", st.nextMajorAt)};
+    const pre = majorPrereqs(ch, m); if (!pre.ok) return {ok:false, why:pre.unmet.join(" ")};
+    return {ok:true, m};
+  }
+  // ── A Major that asks which power (Decision 223) ───────────────────────────
+  // A Major's `choice` of type `power` makes taking it ask for one power of another specialization of the
+  // archetype. The pick is kept on the Major's row (`power`) and held at rank 1 (splicedPowers); the name of
+  // the specialization comes from the data's `specialization.label`.
+  const specLabel = ch => txt(((archetype(ch)||{}).specialization||{}).label) || "specialization";
+  const specOptionIds = ch => (Array.isArray(((archetype(ch)||{}).specialization||{}).options) ? archetype(ch).specialization.options : [])
+    .filter(o=>isPlainObj(o) && typeof o.id==="string" && o.id).map(o=>o.id);
+  // Every power of one of this archetype's other specializations: not the one it was made with, not an Innate one.
+  function otherSpecPowers(ch){
+    const a = archetype(ch);
+    if (!a || writeInSpec(ch)) return [];
+    const opts = specOptionIds(ch), mine = specializationIds(ch);
+    return (Array.isArray(a.powers) ? a.powers : []).filter(p=>isPlainObj(p) && typeof p.id==="string" && p.id
+      && typeof p.origin==="string" && opts.includes(p.origin) && !mine.includes(p.origin));
+  }
+  // The powers a taken Major's pick holds. A pick that isn't another specialization's power reads as nothing.
+  function splicedPowers(ch){
+    const out = new Set(), rows = ((((ch||{}).progression||{}).milestones||{}).major);
+    if (!Array.isArray(rows) || !rows.length) return out;
+    const valid = new Set(otherSpecPowers(ch).map(p=>p.id));
+    for (const row of rows){
+      if (!isPlainObj(row) || typeof row.power!=="string" || !valid.has(row.power)) continue;
+      const m = majorById(ch, row.id);
+      if (m && isPlainObj(m.choice) && m.choice.type==="power") out.add(row.power);
+    }
+    return out;
+  }
+  // The chooser's view: each other specialization with its powers, and which are held.
+  function majorChoice(ch, id){
+    const m = majorById(ch, id), spec = m && m.choice;
+    if (!isPlainObj(spec) || spec.type!=="power") return {ok:false, why:"That Milestone doesn't ask for anything."};
+    const label = specLabel(ch), held = new Set(archetypePowers(ch).map(p=>p.id)), pool = otherSpecPowers(ch);
+    const groups = (Array.isArray(archetype(ch).specialization.options) ? archetype(ch).specialization.options : [])
+      .filter(o=>isPlainObj(o) && pool.some(p=>p.origin===o.id)).map(o=>({ id:o.id, name:txt(o.name),
+        powers: pool.filter(p=>p.origin===o.id).map(p=>({ id:p.id, name:txt(p.name), cost:txt(p.cost), effect:txt(p.effect),
+          held:held.has(p.id), off: held.has(p.id) ? "You hold that already." : "" })) }));
+    const open = groups.reduce((n, g)=>n + g.powers.filter(p=>!p.held).length, 0);
+    return { ok:true, label, groups, open, none: open ? "" : `You hold every power of the other ${label}s.` };
+  }
+  // Takes a Major that asks, with its pick `{ power }`, or refuses and changes nothing.
+  function takeMajorChoice(ch, id, pick){
+    const c = majorTakeCheck(ch, id); if (!c.ok) return c;
+    if (!isPlainObj(c.m.choice) || c.m.choice.type!=="power") return {ok:false, why:"That Milestone doesn't ask for anything."};
+    const pid = isPlainObj(pick) && typeof pick.power==="string" ? pick.power : "";
+    const p = otherSpecPowers(ch).find(x=>x.id===pid);
+    if (!p) return {ok:false, why:`Choose a power of another ${specLabel(ch)}.`};
+    if (archetypePowers(ch).some(x=>x.id===pid)) return {ok:false, why:"You hold that already."};
+    ch.progression.milestones.major.push({ id, date:new Date().toISOString(), power:pid });
+    return {ok:true, power:{ id:pid, name:txt(p.name) }};
   }
   const untakeMilestone = (ch, tier, idx) =>
     ch.progression.milestones[tier].splice(idx, 1);
@@ -2767,16 +2846,17 @@ const Engine = (() => {
     const a = archetype(ch);
     if (!a || writeInSpec(ch)) return [];
     const bought = isPlainObj(a.powersBought), placed = basePowersOf(ch), cpOn = powerCpOf(ch);
-    return powerPool(ch).filter(p=>!bought || isHeld(ch, a, p, placed))
+    const spliced = splicedPowers(ch);
+    return playPool(ch).filter(p=>!bought || isHeld(ch, a, p, placed))
       .map(p=>{ const ranked = p.ranked!==false, ipe = ranked ? powerIpeOf(ch, p.id) : 0;
-        // A learned power (Decision 216) has no placement: `|| 0`, or rank is NaN.
-        const start = bought && ranked && !isGranted(a, p) ? (placed[p.id] || 0) : 1, cpR = bought && ranked ? (cpOn[p.id]||0) : 0;
+        // A learned power (Decision 216) has no placement: `|| 0`, or rank is NaN. A Major's pick starts at 1 (Decision 223).
+        const start = bought && ranked && !isGranted(a, p) && !spliced.has(p.id) ? (placed[p.id] || 0) : 1, cpR = bought && ranked ? (cpOn[p.id]||0) : 0;
         return Object.assign({}, p, { rank:start+cpR+ipe, start, cp:cpR, ipe, ranked, maxRank: Number(p.maxRank) || null }); });
   }
   // Under `powersBought` a pool power is held if it is granted, a Base Power
   // placed a rank in it, or IP learned it (Decision 216). The IP is read raw: an
   // unranked power's `ipe` shows as 0, but its learning is still IP in the map.
-  const isHeld = (ch, a, p, placed) => isGranted(a, p) || placed[p.id] > 0 || powerIpeOf(ch, p.id) > 0;
+  const isHeld = (ch, a, p, placed) => isGranted(a, p) || placed[p.id] > 0 || powerIpeOf(ch, p.id) > 0 || splicedPowers(ch).has(p.id);
   // Whether `powersBought` grants this power outright (Decision 215).
   const isGranted = (a, p) => !!a && isPlainObj(a.powersBought) && a.powersBought.granted==="innate" && !p.origin;
   // The archetype's powers this character could hold: every Innate one (no
@@ -2787,6 +2867,60 @@ const Engine = (() => {
     const origins = specializationIds(ch);
     return (Array.isArray(a.powers) ? a.powers : [])
       .filter(p=>isPlainObj(p) && typeof p.id==="string" && p.id && (!p.origin || origins.includes(p.origin)));
+  }
+  // What the character can hold in play (Decision 223): powerPool plus every power of a specialization a held power
+  // opened plus each pick a Major holds. `powerPool` stays the Bloodline it was made with: Base Powers and Admin's
+  // prune read that, and place no rank in another's.
+  function playPool(ch){
+    const base = powerPool(ch);
+    if (!archetype(ch) || writeInSpec(ch)) return base;
+    const gained = gainedSpecializations(ch), spliced = splicedPowers(ch);
+    if (!gained.length && !spliced.size) return base;
+    const have = new Set(base.map(p=>p.id));
+    return base.concat(otherSpecPowers(ch).filter(p=>(gained.includes(p.origin) || spliced.has(p.id)) && !have.has(p.id)));
+  }
+  // How many other specializations the held powers open (`gainsSpecialization`), and which are open (Decision 223).
+  function specializationAllowance(ch){
+    const a = archetype(ch);
+    if (!a || writeInSpec(ch)) return 0;
+    const bought = isPlainObj(a.powersBought), placed = basePowersOf(ch);
+    return powerPool(ch).filter(p=>!bought || isHeld(ch, a, p, placed)).reduce((n, p)=>n + nonNegInt(p.gainsSpecialization), 0);
+  }
+  // Only this archetype's other options, once each, up to the allowance. A saved list can hold anything.
+  function gainedSpecializations(ch){
+    const raw = (((ch||{}).progression)||{}).specializationsGained;
+    if (!Array.isArray(raw) || !raw.length || !archetype(ch) || writeInSpec(ch)) return [];
+    const opts = specOptionIds(ch), mine = specializationIds(ch), out = [];
+    for (const id of raw) if (typeof id==="string" && opts.includes(id) && !mine.includes(id) && !out.includes(id)) out.push(id);
+    return out.slice(0, specializationAllowance(ch));
+  }
+  // The Major that bars opening one, if it's taken.
+  const openingBar = ch => majorTakenIds(ch).map(id=>majorById(ch, id)).find(m=>m && isPlainObj(m.prerequisites) && m.prerequisites.noSpecializationGained===true) || null;
+  // What the Archetype tab's card shows: how many may open, which have, which could, and what bars it.
+  function specializationOpening(ch){
+    const a = archetype(ch), allowed = specializationAllowance(ch), gained = gainedSpecializations(ch);
+    const mine = specializationIds(ch), name = id => { const o = ((a && a.specialization && a.specialization.options) || []).find(x=>x && x.id===id); return txt(o && o.name) || id; };
+    const bar = openingBar(ch);
+    const options = allowed > gained.length ? specOptionIds(ch).filter(id=>!mine.includes(id) && !gained.includes(id)).map(id=>({ id, name:name(id) })) : [];
+    const bought = a && isPlainObj(a.powersBought), placed = basePowersOf(ch);
+    const power = a && !writeInSpec(ch) ? powerPool(ch).find(p=>nonNegInt(p.gainsSpecialization) > 0 && (!bought || isHeld(ch, a, p, placed))) : null;
+    return { label:specLabel(ch), allowed, used:gained.length, gained:gained.map(id=>({ id, name:name(id) })), options,
+             barredBy: bar ? txt(bar.name) : null, power: power ? { id:power.id, name:txt(power.name), text:txt(power.gainsSpecializationText) } : null,
+             canOpen: allowed > gained.length && options.length > 0 && !bar };
+  }
+  // Opens one other specialization (Decision 223), or refuses and changes nothing.
+  function gainSpecialization(ch, id){
+    if (!isPlainObj(ch && ch.progression) || specializationAllowance(ch) < 1) return {ok:false, why:"Nothing you hold opens another."};
+    const gained = gainedSpecializations(ch);
+    if (gained.length >= specializationAllowance(ch)) return {ok:false, why:"You've opened as many as you can."};
+    const mine = specializationIds(ch);
+    if (typeof id!=="string" || !specOptionIds(ch).includes(id) || mine.includes(id) || gained.includes(id)) return {ok:false, why:`Choose another ${specLabel(ch)}.`};
+    const bar = openingBar(ch);
+    if (bar) return {ok:false, why:`${txt(bar.name)} bars it.`};
+    if (!Array.isArray(ch.progression.specializationsGained)) ch.progression.specializationsGained = [];
+    ch.progression.specializationsGained.push(id);
+    const o = ((archetype(ch).specialization || {}).options || []).find(x=>x && x.id===id);
+    return {ok:true, name:txt(o && o.name) || id};
   }
   // The ranks Base Powers placed, normalized: an undo can put anything a
   // file's audit holds back into the map.
@@ -2977,9 +3111,14 @@ const Engine = (() => {
     const s = sfr(ch), max = s && s.value!=null ? s.value : null, rou = s && typeof s.rou==="number" ? s.rou : null;
     const store = (ch.trackers||{})[p.resource], spent = nonNegInt(isPlainObj(store) ? store.spent : 0);
     const current = max==null ? null : Math.max(0, max - spent);
-    const kinds = (Array.isArray(p.kinds) ? p.kinds : []).filter(k=>isPlainObj(k) && typeof k.id==="string").map(k=>({
-      id:k.id, name:txt(k.name), text:txt(k.text), perHL: nonNegInt(k.perHL),
-      upTo: max!=null && Number(k.upToShare) > 0 ? Math.floor(max * Number(k.upToShare)) : max }));
+    // Decision 223: a taken Major can add to a kind's `perHL` and raise its `upToShare`; `by` names it.
+    const gf = grants(ch).feed;
+    const kinds = (Array.isArray(p.kinds) ? p.kinds : []).filter(k=>isPlainObj(k) && typeof k.id==="string").map(k=>{
+      const g = Object.prototype.hasOwnProperty.call(gf, k.id) ? gf[k.id] : null;
+      const share = Math.min(1, Math.max(Number(k.upToShare) || 0, g ? g.upToShare : 0));
+      return { id:k.id, name:txt(k.name), text:txt(k.text), perHL: nonNegInt(k.perHL) + (g ? g.perHL : 0),
+        upTo: max!=null && share > 0 ? Math.floor(max * share) : max, by: g ? g.by.slice() : [] };
+    });
     const u = isPlainObj(p.unfed) ? p.unfed : null;
     const unfed = u && rou!=null ? { label:txt(u.label), amount: Math.floor(rou * (Number(u.share)||0)) } : null;
     // A day without rest takes the day's Thirst and `plus` more (Decision 215).
@@ -3050,14 +3189,14 @@ const Engine = (() => {
   // creation's powers are free).
   function powerRanks(ch){
     const ds = disciplineRanks(ch).map(d=>({ id:d.id, name:d.name, kind:"discipline", rank:d.rank, ipe:d.ipe }));
-    const arch = archetypePowers(ch).map(p=>({ id:p.id, name:p.name, kind:"archetype", rank:p.rank, ipe:p.ipe, maxRank:p.maxRank, ranked:p.ranked }));
+    const arch = archetypePowers(ch).map(p=>({ id:p.id, name:p.name, kind:"archetype", rank:p.rank, ipe:p.ipe, maxRank:p.maxRank, ranked:p.ranked, origin:p.origin || null }));
     const own = ownPowers(ch).filter(p=>p.id).map(p=>{ const ipe = powerIpeOf(ch, p.id);
       return { id:p.id, name:p.name || "Unnamed power", kind:"written", rank:1+ipe, ipe }; });
     // The pool's powers it doesn't hold yet, at rank 0, for Learn a new power
     // (Decision 216). The modal lists them; archetypeContent never does.
     const a = archetype(ch), placed = basePowersOf(ch);
-    const learn = isPlainObj(a && a.powersBought) ? powerPool(ch).filter(p=>!isHeld(ch, a, p, placed)).map(p=>
-      ({ id:p.id, name:p.name, kind:"archetype", rank:0, ipe:0, maxRank:Number(p.maxRank) || null, ranked:p.ranked!==false, learn:true })) : [];
+    const learn = isPlainObj(a && a.powersBought) ? playPool(ch).filter(p=>!isHeld(ch, a, p, placed)).map(p=>
+      ({ id:p.id, name:p.name, kind:"archetype", rank:0, ipe:0, maxRank:Number(p.maxRank) || null, ranked:p.ranked!==false, learn:true, origin:p.origin || null })) : [];
     return [...ds, ...arch, ...learn, ...own];
   }
 
@@ -3595,7 +3734,12 @@ const Engine = (() => {
         e.benefit = typeof e.benefit==="string" ? e.benefit.slice(0, 2000) : "";
         if (typeof e.date!=="string") e.date = "";
       } else { delete e.custom; delete e.name; delete e.benefit; }
+      // Schema 0.25 (Decision 223): the power a Major with a choice holds. Only a non-empty string stays.
+      if (typeof e.power==="string" && e.power) e.power = e.power.slice(0, 120); else delete e.power;
     });
+    // Schema 0.25: the specializations a held power opened, as text. The readers keep only this archetype's options.
+    pr.specializationsGained = [...new Set((Array.isArray(pr.specializationsGained) ? pr.specializationsGained : [])
+      .filter(x=>typeof x==="string" && x).map(x=>x.slice(0, 64)))].slice(0, 20);
     if (!Array.isArray(c.sessions)) c.sessions=[];
     c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.armor=c.armor||[];
     // Schema 0.16 (Decision 153): a power is the player's own row, every
@@ -6765,6 +6909,7 @@ const Engine = (() => {
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP,
     milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorListed, majorById, formGrants, takeMilestone, untakeMilestone, minorChoice, takeMinorChoice, addCustomMajor,
+    majorChoice, takeMajorChoice, specializationOpening, gainSpecialization, gainedSpecializations,
     logSession, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,

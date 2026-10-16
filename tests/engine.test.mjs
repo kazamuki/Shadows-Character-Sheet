@@ -35,7 +35,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.24");
+  assert.equal(ch.meta.schemaVersion, "0.25");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -157,7 +157,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.24");
+  assert.equal(old.meta.schemaVersion, "0.25");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -169,7 +169,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.24");
+  assert.equal(old.meta.schemaVersion, "0.25");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -547,7 +547,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.24");
+  assert.equal(old.meta.schemaVersion, "0.25");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -658,7 +658,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.24");
+  assert.equal(bare.meta.schemaVersion, "0.25");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -894,7 +894,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.24");
+    assert.equal(c.meta.schemaVersion, "0.25");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1168,7 +1168,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.24");
+  assert.equal(old.meta.schemaVersion, "0.25");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1243,7 +1243,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2399,7 +2399,7 @@ test("P9b 8: roundsLeft survives migrate and a hostile file, in both passes", ()
   const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
   same(m.gear.map(g => g.roundsLeft), [0, 0, 2, 0, 18]);
   same(Engine.migrate(JSON.parse(JSON.stringify(m))).gear, m.gear, "a round trip changed the rows");
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
   // The second place: undo restores what a file's audit says, and holds it to the same numbers.
   m.audit.push({ seq: 1, date: "x", kind: "edit", label: "crafted", patch: [{ path: ["gear", 4, "roundsLeft"], type: "scalar", before: "<i>9</i>" }] });
   Engine.undoLastAction(m);
@@ -2458,7 +2458,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2544,7 +2544,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2561,7 +2561,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2607,7 +2607,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.24"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.25"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2832,7 +2832,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.24");
+  assert.equal(a.meta.schemaVersion, "0.25");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -3294,7 +3294,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -5619,7 +5619,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.24", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.25", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5767,14 +5767,14 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.24", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.25", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.24", {}, {}, { "apex-fury": 2 }]);
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.25", {}, {}, { "apex-fury": 2 }]);
   // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
   same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
@@ -7585,7 +7585,7 @@ test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only
   old.meta.schemaVersion = "0.20";
   old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.24", [false, true]]);
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.25", [false, true]]);
   for (const v of ["yes", 1, {}, [], null, "true"]) {
     const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
     assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
@@ -7773,7 +7773,7 @@ test("Decision 217: a Major can be written in; it uses a slot, Admin needs none,
     assert.equal("custom" in e, false, JSON.stringify(v));
     assert.equal("name" in e, false);
   }
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
 });
 
 // ── P6 review fixes (Decision 217) ──────────────────────────────────────
@@ -8093,7 +8093,7 @@ test("P8b 12: house rules survive migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().houseRules.keepDamagePastZero, false);
   const old = Engine.newCharacter(); delete old.houseRules; old.meta.schemaVersion = "0.22";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.24");
+  assert.equal(m.meta.schemaVersion, "0.25");
   eq(m.houseRules, { keepDamagePastZero: false });
   for (const junk of ["yes", 1, [], null, "true", { keepDamagePastZero: "yes" }, { keepDamagePastZero: 1 }]) {
     const c = Engine.newCharacter(); c.houseRules = junk;
@@ -8138,4 +8138,213 @@ test("P9a 7: a Magical being says what it is in its own words", () => {
   assert.ok(warns().some(w => /Say what Magical being means for you/.test(w)), `no warning: ${JSON.stringify(warns())}`);
   ch.archetypeChoices.writeIn.classificationText = "Fae";
   assert.ok(!warns().some(w => /Say what/.test(w)), "warned with the words given");
+});
+
+// ── P17: the Vampire's Major Milestones (Decision 223, schema 0.25) ────────
+const vMaj = (bl = "strigoi", { pl = "heroic" } = {}) => { const c = vampire(bl, { pl }); for (const id of Object.keys(c.stats)) c.stats[id].base = 6; c.progression.milestonePoints = 100; return c; };
+const vTake = (ch, ...ids) => { ids.forEach(id => ch.progression.milestones.major.push({ id, date: "2026-10-15" })); return ch; };
+const vThirst = ch => Engine.feedView(ch, Engine.archPanels(ch).find(p => p.type === "feed"));
+const heldIds = ch => Engine.archetypePowers(ch).map(p => p.id);
+const learnIds = ch => Engine.powerRanks(ch).filter(p => p.learn).map(p => p.id);
+const UPYR = () => VAD().powers.filter(p => p.origin === "upyr").map(p => p.id);
+const clone17 = ch => JSON.parse(JSON.stringify(ch));
+
+test("P17 3: Blood Feast and Blood Alchemist change the Thirst", () => {
+  const ch = vMaj();
+  const k = (c, id) => vThirst(c).kinds.find(x => x.id === id);
+  assert.deepEqual([k(ch, "fresh").perHL, k(ch, "stored").upTo], [3, 8], "the baseline moved");
+  ch.trackers.sfr.spent = 17;   // empty, so a feeding has room
+  vTake(ch, "blood-feast");
+  assert.equal(k(ch, "fresh").perHL, 4);
+  assert.equal(k(ch, "stored").perHL, 2, "Blood Feast changed the stored blood too");
+  assert.equal(Engine.feedGain(ch, "thirst", "fresh", 2).gain, 8, "feedGain didn't follow the Thirst");
+  vTake(ch, "reservoir", "blood-alchemist");
+  assert.equal(k(ch, "stored").upTo, 17, "stored blood still stops at half");
+  assert.equal(k(ch, "stored").perHL, 2, "Blood Alchemist is still 2 SFR per HL");
+  assert.equal(Engine.feedGain(ch, "thirst", "stored", 20).gain, 17);
+  same(k(ch, "fresh").by, ["Blood Feast"]);
+  same(k(ch, "stored").by, ["Blood Alchemist"]);
+  const twice = vTake(vMaj(), "blood-feast", "blood-feast");
+  assert.equal(k(twice, "fresh").perHL, 4, "a Major listed twice counted twice");
+  same(k(vMaj(), "fresh").by, [], "nothing changed it and it says something did");
+});
+
+test("P17 4: Wither Ward halves Withering through a hit, never below 1", () => {
+  const hit = (ch, damage, category, extra) => Engine.resolveHit(ch, Object.assign({ damage, damageType: "blade", category }, extra));
+  const ward = vTake(vMaj(), "wither-ward");
+  const r = hit(ward, 7, "withering");
+  same([r.through, r.patch.witheringDamage, r.patch.damage], [3, 3, 3]);
+  same(r.witherHalved, { by: "Wither Ward", from: 7, to: 3 });
+  const one = hit(ward, 1, "withering");
+  same([one.through, one.witherHalved.to], [1, 1], "a point of Withering went to nothing");
+  assert.equal(hit(ward, 0, "withering").through, 0, "nothing through became 1");
+  assert.equal(hit(ward, 0, "withering").witherHalved, null);
+  const reg = hit(ward, 7, "regular");
+  same([reg.through, reg.witherHalved], [7, null], "Wither Ward halved Regular damage");
+  assert.equal(hit(vMaj(), 7, "withering").through, 7);
+  assert.equal(hit(vMaj(), 7, "withering").witherHalved, null);
+  assert.equal(hit(ward, 7, "massive").witherHalved, null);
+  // Last: after Natural Armor. Iron Hide at rank 1 is Natural Armor 2: 12 goes to 10, and half of that is 5 (halving first would give 6 - 2 = 4).
+  const skin = (c) => { c.archetypeChoices.basePowers = { "iron-hide": 1 }; return c; };
+  const withNat = hit(vTake(skin(vMaj("upyr")), "wither-ward"), 12, "withering", { natural: ["iron-hide"] });
+  const plain = hit(skin(vMaj("upyr")), 12, "withering", { natural: ["iron-hide"] });
+  same([plain.through, withNat.through, withNat.witherHalved.from], [10, 5, 10], "Wither Ward halved before Natural Armor");
+});
+
+test("P17 5: Pure Blooded and Splice bar each other, and Pure Blooded bars a second Bloodline", () => {
+  const pre = (ch, id) => Engine.majorPrereqs(ch, Engine.majorById(ch, id));
+  const pb = vTake(vMaj(), "pure-blooded");
+  same(pre(pb, "splice").unmet, ["Can't be taken with Pure Blooded"]);
+  assert.equal(Engine.takeMilestone(pb, "major", "splice").ok, false);
+  const g = Engine.gainSpecialization(pb, "upyr");
+  same([g.ok, g.why], [false, "Pure Blooded bars it."]);
+  same(Engine.gainedSpecializations(pb), []);
+  const sp = vTake(vMaj(), "splice");
+  same(pre(sp, "pure-blooded").unmet, ["Can't be taken with Splice"]);
+  assert.ok(Engine.gainSpecialization(sp, "upyr").ok, "Splice barred opening a Bloodline");
+  // A Bloodline opened bars Pure Blooded; holding Cursed Evolution (every Vampire does) never does.
+  const clean = vMaj();
+  assert.equal(pre(clean, "pure-blooded").ok, true, "holding Cursed Evolution barred Pure Blooded");
+  assert.ok(Engine.gainSpecialization(clean, "upyr").ok);
+  same(pre(clean, "pure-blooded").unmet, ["Can't be taken once another Bloodline is open"]);
+  assert.equal(Engine.takeMilestone(clean, "major", "pure-blooded").ok, false);
+  assert.equal(Engine.takeMilestone(vMaj(), "major", "pure-blooded").ok, true);
+});
+
+test("P17 6: Splice holds one power of another Bloodline at rank 1, and IP raises it", () => {
+  const ch = vMaj();
+  const before = JSON.stringify(ch);
+  for (const [pick, why] of [[undefined, "no pick"], [{}, "empty pick"], [{ power: "shadow-play" }, "a power of the Bloodline it already has"],
+    [{ power: "bestial-blessings" }, "an Innate power"], [{ power: "no-such-power" }, "an unknown id"], [{ power: 7 }, "a number"], [{ power: { id: "x" } }, "an object"]]) {
+    assert.equal(Engine.takeMajorChoice(ch, "splice", pick).ok, false, why);
+    assert.equal(JSON.stringify(ch), before, `${why} changed the character`);
+  }
+  assert.equal(Engine.takeMajorChoice(ch, "splice", { power: "shadow-play" }).why, "Choose a power of another Bloodline.");
+  assert.equal(Engine.takeMilestone(ch, "major", "splice").ok, false, "takeMilestone took Splice without asking");
+  assert.equal(Engine.takeMajorChoice(ch, "blood-conditioning", { power: "iron-hide" }).ok, false, "a Major with no choice took a pick");
+  const locked = vMaj(); locked.progression.milestonePoints = 0;
+  assert.equal(Engine.takeMajorChoice(locked, "splice", { power: "iron-hide" }).ok, false, "no Major unlocked, and it took one");
+  const r = Engine.takeMajorChoice(ch, "splice", { power: "iron-hide" });
+  same([r.ok, r.power.id, r.power.name], [true, "iron-hide", "Iron Hide"]);
+  same(ch.progression.milestones.major.map(m => [m.id, m.power]), [["splice", "iron-hide"]]);
+  const p = Engine.archetypePowers(ch).find(x => x.id === "iron-hide");
+  same([p.rank, p.start, p.ipe], [1, 1, 0]);
+  assert.equal(learnIds(ch).includes("iron-hide"), false, "a held power is listed under Learn a new power");
+  ch.progression.ip.log.push({ date: "2026-10-15", kind: "grant", amount: 500, note: "t" });
+  const c = Engine.ipCost(ch, "power", "iron-hide");
+  same([c.ok, c.cost, c.from, c.to], [true, 20, 1, 2], "IP raises it at rank x 20");
+  assert.ok(Engine.spendIP(ch, "power", "iron-hide").ok);
+  assert.equal(Engine.archetypePowers(ch).find(x => x.id === "iron-hide").rank, 2);
+  // Taking it away leaves the IP spent and the power unheld; taking it again holds it at its old rank.
+  Engine.untakeMilestone(ch, "major", 0);
+  assert.equal(heldIds(ch).includes("iron-hide"), false, "an untaken Splice still holds its power");
+  assert.equal(ch.progression.powerIpe["iron-hide"], 1, "removing Splice wrote into the IP ledger");
+  assert.equal(Engine.takeMajorChoice(ch, "splice", { power: "iron-hide" }).ok, true);
+  assert.equal(Engine.archetypePowers(ch).find(x => x.id === "iron-hide").rank, 2);
+  // Base Powers never see it.
+  assert.equal(Engine.powerPool(ch).some(x => x.id === "iron-hide"), false, "powerPool grew");
+  assert.equal(Engine.basePowerState(ch).rows.some(x => x.id === "iron-hide"), false);
+  // Every other power held: the chooser has nothing to offer, and a pick refuses, saying so. (A Strigoi with Upyr opened and
+  // Draugur's powers out of the data is the case the real data can't reach.)
+  const all = vMaj();
+  all.progression.specializationsGained = ["upyr"];
+  for (const id of UPYR()) all.progression.powerIpe[id] = 1;
+  withData(VAD(), "powers", VAD().powers.filter(x => x.origin !== "draugur"), () => {
+    const none = Engine.majorChoice(all, "splice");
+    same([none.ok, none.open, none.none], [true, 0, "You hold every power of the other Bloodlines."]);
+    const held = Engine.takeMajorChoice(all, "splice", { power: "iron-hide" });
+    same([held.ok, held.why], [false, "You hold that already."]);
+    assert.equal(JSON.stringify(all.progression.milestones.major), "[]");
+  });
+});
+
+test("P17 7: Cursed Evolution opens one other Bloodline, whose powers are learned at the New Power price", () => {
+  const ch = vMaj();
+  same(learnIds(ch).filter(id => UPYR().includes(id)), [], "Upyr's powers were listed before it was opened");
+  const op = Engine.specializationOpening(ch);
+  same([op.allowed, op.used, op.barredBy, op.options.map(o => o.id)], [1, 0, null, ["upyr", "draugur"]]);
+  const r = Engine.gainSpecialization(ch, "upyr");
+  same([r.ok, r.name], [true, "Upyr"]);
+  same(ch.progression.specializationsGained, ["upyr"]);
+  same(learnIds(ch).filter(id => UPYR().includes(id)), UPYR(), "Upyr's six aren't all listed at rank 0");
+  assert.equal(Engine.ipCost(ch, "power", UPYR()[0]).cost, 40, "the New Power price");
+  assert.equal(Engine.powerRanks(ch).find(p => p.id === UPYR()[0]).rank, 0);
+  ch.progression.ip.log.push({ date: "2026-10-15", kind: "grant", amount: 100, note: "t" });
+  assert.ok(Engine.spendIP(ch, "power", UPYR()[0]).ok);
+  assert.equal(Engine.archetypePowers(ch).find(p => p.id === UPYR()[0]).rank, 1);
+  // One, and not the Bloodline it was made with.
+  const again = Engine.gainSpecialization(ch, "draugur");
+  same([again.ok, again.why], [false, "You've opened as many as you can."]);
+  const fresh = vMaj();
+  const self = Engine.gainSpecialization(fresh, "strigoi");
+  same([self.ok, self.why], [false, "Choose another Bloodline."]);
+  assert.equal(Engine.gainSpecialization(fresh, "no-such").ok, false);
+  same(fresh.progression.specializationsGained, []);
+  // Base Powers and powerPool still see only the Bloodline it was made with.
+  same([...new Set(Engine.basePowerState(ch).rows.map(r => r.origin))], ["strigoi"]);
+  assert.equal(Engine.powerPool(ch).some(p => p.origin === "upyr"), false, "a gained Bloodline is in powerPool");
+  // Nothing to do: every option opened leaves nothing to press; a sheet with nothing that opens one refuses.
+  same(Engine.specializationOpening(ch).options, [], "a full set of opened Bloodlines still offers one");
+  const arc = subject();
+  const nothing = Engine.gainSpecialization(arc, "upyr");
+  same([nothing.ok, nothing.why], [false, "Nothing you hold opens another."]);
+  same(Engine.specializationOpening(arc).options, []);
+});
+
+test("P17 8: a gained Bloodline doesn't count for a Bloodline's Majors", () => {
+  const ch = vMaj();
+  assert.ok(Engine.gainSpecialization(ch, "upyr").ok);
+  const offered = () => Engine.majorOffered(ch).map(m => m.id);
+  assert.equal(offered().includes("breath-of-winter"), false, "Upyr's Major was offered to a Strigoi who opened Upyr");
+  assert.equal(offered().includes("stolen-face"), true);
+  assert.equal(Engine.takeMilestone(ch, "major", "breath-of-winter").ok, false);
+  same(Engine.specializationIds(ch), ["strigoi"]);
+});
+
+test("P17 9: the Major's power and the gained Bloodlines survive migrate and a hostile file", () => {
+  same(Engine.newCharacter().progression.specializationsGained, []);
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.25");
+  const ch = vMaj();
+  Engine.takeMajorChoice(ch, "splice", { power: "iron-hide" });
+  Engine.gainSpecialization(ch, "draugur");
+  const round = Engine.migrate(clone17(ch));
+  eq(round.progression, ch.progression);
+  assert.equal(round.meta.schemaVersion, "0.25");
+  const junk = clone17(ch);
+  junk.progression.milestones.major = [{ id: "splice", power: 7 }, { id: "x", power: { a: 1 } }, { id: "y", power: "" }, { id: "z", power: "<b>x</b>" }];
+  junk.progression.specializationsGained = [1, {}, null, "upyr", "upyr", "strigoi", "no-such", "<img src=x>"];
+  const m = Engine.migrate(junk);
+  same(m.progression.milestones.major.map(x => x.power === undefined ? "none" : x.power), ["none", "none", "none", "<b>x</b>"], "a junk power survived migrate");
+  assert.ok(m.progression.specializationsGained.every(x => typeof x === "string"));
+  for (const bad of ["upyr", 7, { upyr: 1 }, null]) {
+    const h = clone17(ch); h.progression.specializationsGained = bad;
+    assert.ok(Array.isArray(Engine.migrate(h).progression.specializationsGained), `${JSON.stringify(bad)} stayed`);
+  }
+  // Readers keep only this archetype's other options, up to what the held powers open.
+  same(Engine.gainedSpecializations(m), ["upyr"], "the made-with, an unknown id or a duplicate counted");
+  const two = vMaj(); two.progression.specializationsGained = ["upyr", "draugur"];
+  same(Engine.gainedSpecializations(two), ["upyr"], "more opened than the powers allow");
+  const bad2 = vMaj(); bad2.progression.milestones.major = [{ id: "splice", power: "bestial-blessings" }, { id: "splice", power: "no-such" }, { id: "splice" }, { id: "splice", power: 7 }];
+  same(heldIds(bad2), heldIds(vMaj()), "a junk Splice held something");
+});
+
+test("P17 (totality): the new readers and writers never throw on a hostile Vampire", () => {
+  const cases = {
+    "junk power": (() => { const c = vMaj(); c.progression.milestones.major = [{ id: "splice", power: 7 }, { id: "splice", power: { a: 1 } }, { id: "splice", power: "__proto__" }]; return c; })(),
+    "junk gained": (() => { const c = vMaj(); c.progression.specializationsGained = "upyr"; return c; })(),
+    "junk gained 2": (() => { const c = vMaj(); c.progression.specializationsGained = [1, {}, null, "constructor", "strigoi"]; return c; })(),
+    "no archetype": Engine.migrate({}),
+    "arcanist": subject(),
+  };
+  for (const [label, ch] of Object.entries(cases)) {
+    for (const f of ["archetypePowers", "powerRanks", "archetypeContent", "gainedSpecializations", "specializationOpening", "grants", "majorOffered", "milestoneState"])
+      assert.doesNotThrow(() => Engine[f](ch), `${f}(${label})`);
+    for (const id of ["splice", "pure-blooded", "no-such", "", null, 7]) {
+      assert.doesNotThrow(() => Engine.majorChoice(ch, id), `majorChoice(${label}, ${id})`);
+      for (const pick of [undefined, null, 7, "x", {}, { power: null }, { power: [] }, { power: "iron-hide" }, { power: "__proto__" }])
+        assert.doesNotThrow(() => Engine.takeMajorChoice(clone17(ch), id, pick), `takeMajorChoice(${label}, ${id}, ${JSON.stringify(pick)})`);
+    }
+    for (const id of ["upyr", "strigoi", null, 7, {}, [], "__proto__", ""])
+      assert.doesNotThrow(() => Engine.gainSpecialization(clone17(ch), id), `gainSpecialization(${label}, ${JSON.stringify(id)})`);
+  }
 });

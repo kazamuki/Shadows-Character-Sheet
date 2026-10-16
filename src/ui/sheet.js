@@ -499,11 +499,13 @@ function renderShCharacter(){
     const allow = Engine.powerAllowance(ch), bps = Engine.basePowerState(ch);
     const toPlace = bps && bps.left > 0 && specIds.length ? `<p class="step-note">${bps.left} Base Power${bps.left>1?"s":""} to place, on Admin.</p>` : "";
     const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${toPlace}` : "";
+    const opening = Engine.specializationOpening(ch);
     if (powers.length) parts.push(secs.sect("Powers") + allowHtml + powers.map(p=>
       p.custom && !content.writeIn ? powerCardHtml(p, []) :
-      `<div class="pick"><div class="head"><h2>${esc(p.name)}</h2>
+      `<div class="pick" ${p.gainsSpecialization?`data-powercard="${esc(p.id)}" tabindex="-1"`:""}><div class="head"><h2>${esc(p.name)}</h2>
+        ${p.origin&&!specIds.includes(p.origin)?`<span class="chip">${esc(specNameOf(ch, p.origin))}</span>`:""}
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
-        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div></div>`).join("")
+        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${p.gainsSpecialization?openingHtml(opening):""}</div>`).join("")
       + (content.powersText ? `<p class="step-note">${esc(content.powersText)}</p>` : ""));
     if (vulns.length) parts.push(secs.sect("Vulnerabilities") + vulns.map(v=>
       `<div class="pick"><div class="head"><h2>${esc(v.name)}</h2></div>
@@ -777,6 +779,103 @@ function openMinorChoice(id){
     } });
 }
 
+// ── A Major that asks which power (Decision 223) ────────────────────────
+// Splice's chooser: the other Bloodlines as groups, each power with its cost and
+// effect. Take is one commit(): the Major and its pick undo together.
+function majorChoiceBodyHtml(ch, st){
+  const v = Engine.majorChoice(ch, st.id);
+  if (!v.ok) return "";
+  const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.cost?`<div class="sub">${esc(o.cost)}</div>`:""}${o.effect?`<div class="sub">${esc(o.effect)}</div>`:""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
+    <td><button class="btn sm ${st.power===o.id?"go":"primary"}" data-mmpick="${esc(o.id)}" aria-pressed="${st.power===o.id}" ${o.off?"disabled":""}>${st.power===o.id?"Picked":"Pick"}</button></td></tr>`;
+  return v.groups.map(g=>`<div class="sect">${esc(g.name)}</div><table class="ref spell-results raise-results"><tbody>${g.powers.map(rows).join("")}</tbody></table>`).join("");
+}
+function majorChoiceFootHtml(ch, st){
+  const nm = (Engine.majorById(ch, st.id)||{name:st.id}).name;
+  return `<span class="modal-note">${st.power?"Ready.":"Pick one."}</span>
+    <button class="btn" data-modalclose>Cancel</button>
+    <button class="btn primary" data-mmtake="1" ${st.power?"":"disabled"}>Take ${esc(nm)}</button>`;
+}
+function openMajorChoice(id){
+  const ch = S.ch, m = ch && Engine.majorById(ch, id); if (!m) return;
+  S.majorPick = { id, power:null };
+  openModal({ title: m.name,
+    html: `<div class="spell-pick raise-pick"><div class="pick-head"><p class="pick-status">${esc(m.benefit)}</p></div><div data-mmresults>${majorChoiceBodyHtml(ch, S.majorPick)}</div></div>`,
+    foot: majorChoiceFootHtml(ch, S.majorPick), returnTo: `[data-takemajor="${id}"]`, onClose: ()=>{ S.majorPick=null; },
+    bind: (body, foot) => {
+      const results = body.querySelector("[data-mmresults]");
+      const refresh = () => { if (!S.majorPick) return;
+        keepPlace(results, ()=>{ results.innerHTML = majorChoiceBodyHtml(S.ch, S.majorPick); }, ["#modal-title"]);
+        foot.innerHTML = majorChoiceFootHtml(S.ch, S.majorPick); bindFoot(); };
+      const bindFoot = () => foot.querySelectorAll("[data-modalclose]").forEach(b=>b.onclick=closeModal);
+      const take = () => {
+        const st = S.majorPick; if (!st || !st.power) return;
+        const pick = { power: st.power };
+        const pre = Engine.takeMajorChoice(clone(S.ch), id, pick);          // validate without mutating
+        if (!pre.ok){ notice(pre.why); return; }
+        commit("milestone", `Take Major: ${m.name} (${pre.power.name})`, ()=>{ Engine.takeMajorChoice(S.ch, id, pick); });
+        closeModal();
+        const taken = document.querySelector(`[data-majorcard="${id}"]`); if (taken) taken.focus();      // the Take button is spent; the card is the place to be
+      };
+      foot.onclick = e => { const b = e.target.closest("[data-mmtake]"); if (b && !b.disabled) take(); };
+      bindFoot();
+      results.onclick = e => {
+        let b = e.target.closest("button");
+        if (!b){ const tr = e.target.closest("tr"); b = tr && tr.querySelector("button"); }
+        if (!S.majorPick || !b || b.disabled || !b.dataset.mmpick) return;
+        S.majorPick.power = S.majorPick.power===b.dataset.mmpick ? null : b.dataset.mmpick;
+        refresh();
+      };
+    } });
+}
+// The name of one power of the archetype, or the id if the data has dropped it.
+function powerNameOf(ch, id){
+  const a = Engine.archetype(ch), p = a && (a.powers||[]).find(x=>x && x.id===id);
+  return p && typeof p.name==="string" ? p.name : String(id);
+}
+function specNameOf(ch, id){
+  const a = Engine.archetype(ch), o = a && a.specialization && (a.specialization.options||[]).find(x=>x && x.id===id);
+  return o && typeof o.name==="string" ? o.name : String(id);
+}
+// ── A power that opens another specialization (Decision 223) ───────────
+// What the power's card shows: what's open, the button while one still can be,
+// or what bars it. Nothing to press shows no button.
+function openingHtml(op){
+  const label = (op.label||"specialization").toLowerCase();
+  let h = "";
+  if (op.gained.length) h += `<p class="step-note">Opened: ${op.gained.map(g=>esc(g.name)).join(", ")}</p>`;
+  if (op.canOpen) h += `<div class="controls"><button class="btn sm" data-gainspec="1">Gained a ${esc(label)}</button></div>`;
+  else if (op.barredBy && !op.gained.length) h += `<p class="step-note">${esc(op.barredBy)} bars it.</p>`;
+  return h;
+}
+function openGainSpecialization(){
+  const ch = S.ch, op = ch && Engine.specializationOpening(ch); if (!op || !op.canOpen) return;
+  S.specPick = { id:null };
+  const label = (op.label||"specialization").toLowerCase();
+  const body = () => `<p class="pick-status">${esc((op.power||{}).text||"")}</p><table class="ref spell-results raise-results"><tbody>${op.options.map(o=>
+    `<tr class="pickrow"><td><b>${esc(o.name)}</b></td><td><button class="btn sm ${S.specPick.id===o.id?"go":"primary"}" data-gspick="${esc(o.id)}" aria-pressed="${S.specPick.id===o.id}">${S.specPick.id===o.id?"Picked":"Pick"}</button></td></tr>`).join("")}</tbody></table>`;
+  const foot = () => `<span class="modal-note">${S.specPick.id?"Ready.":"Pick one."}</span><button class="btn" data-modalclose>Cancel</button>
+    <button class="btn primary" data-gsopen="1" ${S.specPick.id?"":"disabled"}>Open</button>`;
+  openModal({ title: `Gained a ${label}`, html: `<div class="spell-pick raise-pick"><div data-gsresults>${body()}</div></div>`, foot: foot(),
+    returnTo: `[data-powercard="${(op.power||{}).id}"]`, onClose: ()=>{ S.specPick=null; },
+    bind: (bodyEl, footEl) => {
+      const results = bodyEl.querySelector("[data-gsresults]");
+      const refresh = () => { if (!S.specPick) return; keepPlace(results, ()=>{ results.innerHTML = body(); }, ["#modal-title"]); footEl.innerHTML = foot(); bindFoot(); };
+      const bindFoot = () => footEl.querySelectorAll("[data-modalclose]").forEach(b=>b.onclick=closeModal);
+      footEl.onclick = e => {
+        const b = e.target.closest("[data-gsopen]"); if (!b || b.disabled || !S.specPick || !S.specPick.id) return;
+        const id = S.specPick.id, pre = Engine.gainSpecialization(clone(S.ch), id);     // validate without mutating
+        if (!pre.ok){ notice(pre.why); return; }
+        commit("archetype", `Gained a ${label}: ${pre.name}`, ()=>{ Engine.gainSpecialization(S.ch, id); });
+        closeModal();
+      };
+      bindFoot();
+      results.onclick = e => {
+        const b = e.target.closest("button"); if (!b || !b.dataset.gspick || !S.specPick) return;
+        S.specPick.id = S.specPick.id===b.dataset.gspick ? null : b.dataset.gspick; refresh();
+      };
+    } });
+}
+
 // ── The Aberration picker (Decision 115) ─────────────────────────────
 // Every Aberration as a card with its whole text, so a player can read what
 // they might have caught before the GM says which. The same modal for a
@@ -915,6 +1014,7 @@ function hitPanelHtml(ch, r){
       : N.skipped==="ap" ? "Armor-piercing magic goes straight past Natural Armor."
       : N.skipped==="type" ? `Natural Armor doesn't answer ${r.type.name} damage.` : "";
     if (natLine) lines.push(natLine);
+    if (r.witherHalved) lines.push(`${r.witherHalved.by} halves it: ${r.witherHalved.from} → ${r.witherHalved.to}.`);
     if (!r.bypassesArmor && !r.soaked) lines.push(r.through ? `${r.through} gets through.` : "Nothing gets through.");
     if (r.tookDamage) lines.push(`Health Levels lost: ${r.before.lost} → ${r.after.lost}. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
     h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
@@ -1391,7 +1491,7 @@ function renderShProgression(){
     const reqs = pre.met.map(x=>`<span class="chip ok">${esc(x)}</span>`)
       .concat(pre.unmet.filter(x=>!/Already taken/.test(x)).map(x=>`<span class="chip pain">${esc(x)}</span>`))
       .concat(pre.manual.map(x=>`<span class="chip gold">GM: ${esc(x)}</span>`)).join("");
-    return `<div class="pick ms ${taken?"taken":""} ${canTake||taken?"":"locked-ms"}">${m.flagged?flagHtml(m):""}
+    return `<div class="pick ms ${taken?"taken":""} ${canTake||taken?"":"locked-ms"}" data-majorcard="${esc(m.id)}" tabindex="-1">${m.flagged?flagHtml(m):""}
       <div class="head"><h2>${esc(m.name)}${taken?' <span class="chip ok">taken</span>':""}</h2>
       <div class="controls"><button class="toggle" data-takemajor="${m.id}" data-gm="${pre.manual.length?1:0}" ${canTake?"":"disabled"}
         title="${esc(canTake?"":(taken?"Once each.":pre.unmet.concat(ms.majorLeft<=0?["No Major unlocked."]:[]).join(" ")))}">Take</button></div></div>
@@ -1411,7 +1511,8 @@ function renderShProgression(){
     const m=Engine.majorById(ch, t.id)||{name:t.id};
     // A Major that has no card (written in, or kept from a list this archetype no longer has) shows what it does here.
     const card = offered.some(o=>o.id===t.id), text = !card && typeof m.benefit==="string" ? m.benefit : "";
-    return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}</span>
+    const pick =typeof t.power==="string" && m.choice ? powerNameOf(ch, t.power) : "";
+    return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}${pick?`: ${esc(pick)}`:""}</span>
       ${text?`<span class="note">${esc(text)}</span>`:""}<button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
   return h;
@@ -2125,7 +2226,7 @@ function feedPanelHtml(ch, p){
   const v = Engine.feedView(ch, p), st = S.feed && S.feed.panel===p.id ? S.feed : { kind:(v.kinds[0]||{}).id, hl:"" };
   let h = v.low ? noticeHtml(v.lowName || p.title, v.lowText) : "";
   if (v.max==null) return h + `<p class="step-note">Your SFR has no maximum yet.</p>`;
-  h += `<p class="step-note">${v.kinds.map(k=>`<b>${esc(k.name)}</b> (${esc(k.text)}): ${k.perHL} SFR per HL${k.upTo<v.max?`, up to ${k.upTo}`:""}`).join(" · ")}.</p>`;
+  h += `<p class="step-note">${v.kinds.map(k=>`<b>${esc(k.name)}</b> (${esc(k.text)}): ${k.perHL} SFR per HL${k.upTo<v.max?`, up to ${k.upTo}`:""}${k.by.length?` (${k.by.map(esc).join(", ")})`:""}`).join(" · ")}.</p>`;
   h += `<div class="hitrow feed-row"><div class="form-toggle" role="group" aria-label="What you're feeding on">${v.kinds.map(k=>
       `<button class="${st.kind===k.id?"on":""}" aria-pressed="${st.kind===k.id}" data-feedkind="${esc(p.id)}|${esc(k.id)}">${esc(k.name)}</button>`).join("")}</div>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-feedhl="${esc(p.id)}" value="${esc(st.hl)}" placeholder="HL" aria-label="${esc(v.unit||"HL drained")}" style="width:64px">
@@ -2697,8 +2798,12 @@ function raiseResultsHtml(ch, type){
     // (Decision 216), then a power written in. An empty part is left out.
     const all = Engine.powerRanks(ch), held = all.filter(p=>!p.learn), learn = all.filter(p=>p.learn);
     const table = ps => `<table class="ref spell-results raise-results"><tbody>${ps.map(row).join("")}</tbody></table>`;
+    // A gained Bloodline's powers (Decision 223) list under its name; the rest of the pool leads.
+    const mine = new Set(Engine.specializationIds(ch)), foreign = learn.filter(p=>p.origin && !mine.has(p.origin));
+    const foreignHtml = [...new Set(foreign.map(p=>p.origin))].map(o=>`<div class="subsect">${esc(specNameOf(ch, o))}</div>${table(foreign.filter(p=>p.origin===o))}`).join("");
+    const own = learn.filter(p=>!foreign.includes(p));
     return (held.length ? `<div class="sect">Your powers</div>${table(held)}` : "")
-      + (learn.length ? `<div class="sect">Learn a new power</div>${table(learn)}` : "");
+      + (learn.length ? `<div class="sect">Learn a new power</div>${own.length ? table(own) : ""}${foreignHtml}` : "");
   }
   const q = String((S.raisePick||{}).q||"").trim().toLowerCase(), focused = Engine.focusedSkillIds(ch);
   const hit = s => !q || `${s.name} ${s.description||""}`.toLowerCase().includes(q);
@@ -3167,7 +3272,9 @@ function bindSheet(){
   main.querySelectorAll("[data-takemajor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takemajor;
     const nm=(Engine.majorById(ch, id)||{name:id}).name;
-    const take=()=>commit("milestone", `Take Major: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"major",id); if(!r.ok) notice(r.why); });
+    const asks=!!(Engine.majorById(ch, id)||{}).choice;
+    const take=asks ? ()=>{ const v=Engine.majorChoice(ch, id); if (!v.ok) return notice(v.why); if (!v.open) return notice(v.none); openMajorChoice(id); }
+      : ()=>commit("milestone", `Take Major: ${nm}`, ()=>{ const r=Engine.takeMilestone(ch,"major",id); if(!r.ok) notice(r.why); });
     if (b.dataset.gm!=="1") return take();
     askFirst({ title:`Take ${nm}?`, text:"This Milestone has prerequisites your table decides (the gold chips). Take it once your GM has signed off.",
       yes:"My GM signed off", danger:false, then:take });
@@ -3178,6 +3285,7 @@ function bindSheet(){
     if (!pre.ok){ notice(pre.why); return; }
     commit("milestone", `Add Major: ${String(input.name).trim()}`, ()=>{ Engine.addCustomMajor(ch, input, { admin:!!S.admin }); });
   });
+  main.querySelectorAll("[data-gainspec]").forEach(b=>b.onclick=()=>openGainSpecialization());
   main.querySelectorAll("[data-delminor]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.delminor), t=(ch.progression.milestones.minor[i]||{});
     const nm=(D.milestones.minorShared.find(m=>m.id===t.id)||{name:t.id||""}).name;
@@ -3187,7 +3295,9 @@ function bindSheet(){
   main.querySelectorAll("[data-delmajor]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.delmajor), t=(ch.progression.milestones.major[i]||{});
     const nm=(Engine.majorById(ch, t.id)||{name:t.id||""}).name;
-    askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record.`, yes:"Remove it",
+    const pn = typeof t.power==="string" && (Engine.majorById(ch, t.id)||{}).choice ? powerNameOf(ch, t.power) : "";
+    const kept = pn ? ch.progression.ip.log.filter(e=>e && e.kind==="spend" && e.targetType==="power" && e.targetId===t.power).reduce((n, e)=>n + (Number(e.amount)||0), 0) : 0;
+    askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record${pn?`, and ${pn} is no longer held${kept?`. Its ${kept} IP stay spent`:""}`:""}.`, yes:"Remove it",
       then:()=>commit("milestone", `Remove Major: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"major",i); }) });
   });
 

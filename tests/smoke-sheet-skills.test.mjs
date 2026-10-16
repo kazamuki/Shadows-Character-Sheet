@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, lockedCharacter, onArchetypeStep, openSheet, activeChar, pickFromCatalog, search, clickIn, arcanistOnCP, card, tipShown, pick, tip } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, onArchetypeStep, openSheet, activeChar, pickFromCatalog, search, clickIn, arcanistOnCP, card, tipShown, pick, tip, lockedVampire } from "./smokekit.mjs";
 
 // ── Grimoire from the book (Decision 108) ─────────────────────────────
 test("Grimoire: a typed spell links to the book, the picker adds one, Mastering spends IP, and each undoes", () => {
@@ -771,4 +771,137 @@ test("deleting a session asks in the modal: Cancel keeps it, the button deletes 
   app.click("#modal [data-askyes]");
   assert.equal(activeChar(app).sessions.length, 0, "the button didn't delete it");
   assert.deepEqual(app.errors, []);
+});
+
+// ── P17: the Vampire's Major Milestones (Decision 223) ─────────────────────
+const strigoi = (extra = {}) => {
+  const ch = lockedVampire("strigoi");
+  ch.archetypeChoices.basePowers = { "shadow-play": 1, "veil-of-night": 1 };
+  ch.archetypeChoices.optionPicks = {}; ch.archetypeChoices.powerCp = {};
+  ch.progression.milestonePoints = 100;
+  Object.assign(ch.progression, extra);
+  return ch;
+};
+const setHitP17 = (app, key, value) => {
+  const el = app.$(`[data-hit="${key}"]`);
+  assert.ok(el, `the hit form has no ${key} control`);
+  el.value = value;
+  el.dispatchEvent(new app.window.Event(el.getAttribute("inputmode") === "numeric" ? "input" : "change", { bubbles: true }));
+};
+
+test("P17 10: Splice on Progression asks which power, and one undo takes it back", () => {
+  const app = openSheet(strigoi(), "progression");
+  app.click('[data-takemajor="splice"]');
+  const modal = app.$("#modal");
+  assert.ok(modal.open, "Take didn't open a chooser");
+  assert.equal(activeChar(app).progression.milestones.major.length, 0, "Take committed before a power was picked");
+  const picks = [...modal.querySelectorAll("[data-mmpick]")].map(b => b.dataset.mmpick);
+  assert.ok(picks.includes("iron-hide") && picks.includes("hels-dread"), "Upyr's and Draugur's powers aren't listed");
+  assert.ok(!picks.includes("shadow-play") && !picks.includes("bone-spines"), "the Bloodline it was made with is offered");
+  assert.ok(!picks.includes("bestial-blessings"), "an Innate power is offered");
+  assert.match(modal.textContent, /Upyr[\s\S]*Draugur/);
+  assert.ok(modal.querySelector("[data-mmtake]").disabled, "Take is live before a pick");
+  // Cancel changes nothing, and focus goes back to Splice's Take button.
+  app.click("#modal [data-modalclose]");
+  assert.equal(activeChar(app).progression.milestones.major.length, 0);
+  assert.equal(app.window.document.activeElement, app.$('[data-takemajor="splice"]'), "focus didn't return to Splice's Take button");
+  app.click('[data-takemajor="splice"]');
+  app.click('#modal [data-mmpick="iron-hide"]');
+  app.click("#modal [data-mmtake]");
+  assert.deepEqual(activeChar(app).progression.milestones.major.map(m => [m.id, m.power]), [["splice", "iron-hide"]]);
+  assert.equal(activeChar(app).audit.filter(e => /Splice/.test(e.label)).length, 1, "the take is more than one action");
+  assert.match(app.$("#main .journal").textContent, /Splice: Iron Hide/);
+  assert.equal(app.window.document.activeElement, app.$('[data-majorcard="splice"]'), "focus didn't go to Splice's card");
+  assert.ok(app.$('[data-takemajor="pure-blooded"]').disabled && /Can't be taken with Splice/.test(app.$('[data-takemajor="pure-blooded"]').closest(".pick").textContent));
+  app.click('[data-sec="character"]');
+  assert.match(app.$("#main").textContent, /Iron Hide[\s\S]*rank 1/);
+  app.click('[data-sec="sessions"]');
+  app.click("button[data-undolast]");
+  assert.deepEqual(activeChar(app).progression.milestones.major, [], "one undo left the Major");
+  app.click('[data-sec="character"]');
+  assert.ok(!app.$$("#main .pick h2").some(h => /Iron Hide/.test(h.textContent)), "one undo left the power");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P17 10b: removing Splice asks first and names the IP that stays spent", () => {
+  const ch = strigoi({ powerIpe: { "iron-hide": 1 } });
+  ch.progression.milestones.major = [{ id: "splice", power: "iron-hide", date: "2026-10-15T00:00:00.000Z" }];
+  ch.progression.ip.log.push({ date: "2026-10-15", kind: "grant", amount: 50, note: "" }, { date: "2026-10-15", kind: "spend", amount: 20, targetType: "power", targetId: "iron-hide", from: 1, to: 2, note: "" });
+  const app = openSheet(ch, "progression");
+  app.click("[data-delmajor]");
+  assert.match(app.$("#modal").textContent, /Iron Hide is no longer held\. Its 20 IP stay spent/);
+  app.click("#modal [data-askyes]");
+  assert.deepEqual(activeChar(app).progression.milestones.major, []);
+  assert.equal(activeChar(app).progression.powerIpe["iron-hide"], 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P17 11: Gained a bloodline opens one, and Learn a new power lists it", () => {
+  const ch = strigoi();
+  ch.progression.ip.earned = 100;
+  const app = openSheet(ch, "character");
+  const card = () => app.$('[data-powercard="cursed-evolution"]');
+  assert.ok(card().querySelector("[data-gainspec]"), "no Gained a bloodline button");
+  assert.match(card().textContent, /Gained a bloodline/);
+  app.click("[data-gainspec]");
+  assert.match(app.$("#modal").textContent, /won the opposed WILL Essence check/, "the condition isn't said");
+  assert.deepEqual([...app.$$("#modal [data-gspick]")].map(b => b.dataset.gspick), ["upyr", "draugur"]);
+  assert.ok(app.$("#modal [data-gsopen]").disabled);
+  app.click('#modal [data-gspick="upyr"]');
+  app.click("#modal [data-gsopen]");
+  assert.deepEqual([...activeChar(app).progression.specializationsGained], ["upyr"]);
+  assert.match(card().textContent, /Opened: Upyr/);
+  assert.equal(card().querySelector("[data-gainspec]"), null, "a full set still shows the button");
+  assert.equal(app.window.document.activeElement, card(), "focus didn't go to the Cursed Evolution card");
+  app.click('[data-sec="progression"]');
+  app.click('[data-raiseopen="power"]');
+  const modal = app.$("#modal").textContent;
+  assert.match(modal, /Learn a new power[\s\S]*Upyr[\s\S]*Iron Hide/);
+  assert.ok(!app.$('#modal [data-raise="power|hels-dread"]'), "Draugur's powers are offered");
+  assert.match(app.$('#modal [data-raise="power|iron-hide"]').closest("tr").textContent, /40 IP/);
+  app.click('#modal [data-raise="power|iron-hide"]');
+  assert.equal(activeChar(app).progression.powerIpe["iron-hide"], 1);
+  app.click("#modal [data-modalclose]");
+  app.click('[data-sec="character"]');
+  assert.match(app.$("#main").textContent, /Iron Hide/);
+  assert.ok([...app.$$("#main .pick")].find(p => /Iron Hide/.test(p.textContent)).textContent.includes("Upyr"), "the power isn't marked with its Bloodline");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P17 11b: Pure Blooded says it bars a Bloodline instead of showing the button", () => {
+  const ch = strigoi();
+  ch.progression.milestones.major = [{ id: "pure-blooded", date: "2026-10-15T00:00:00.000Z" }];
+  const app = openSheet(ch, "character");
+  const card = app.$('[data-powercard="cursed-evolution"]');
+  assert.equal(card.querySelector("[data-gainspec]"), null);
+  assert.match(card.textContent, /Pure Blooded bars it\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P17 12: the Thirst panel and the hit say which Major changed the number", () => {
+  const ch = strigoi();
+  const at = "2026-10-15T00:00:00.000Z";
+  ch.progression.milestones.major = [{ id: "blood-feast", date: at }, { id: "reservoir", date: at }, { id: "wither-ward", date: at }, { id: "blood-alchemist", date: at }];
+  const app = openSheet(ch, "main");
+  assert.match(app.$("#main .main-feed").textContent, /4 SFR per HL \(Blood Feast\)/);
+  assert.match(app.$("#main .main-feed").textContent, /Stored.*\(Blood Alchemist\)/);
+  app.click("[data-hitopen]");
+  setHitP17(app, "category", "withering");
+  setHitP17(app, "damage", "7");
+  assert.match(app.$(".hitresult").textContent, /Wither Ward halves it: 7 → 3\./);
+  assert.match(app.$(".hitresult").textContent, /3 gets through/);
+  app.click("[data-hitapply]");
+  assert.equal(activeChar(app).trackers.witheringDamage, 3);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P17 (hostile): a script-y Splice power and Bloodline are text on Progression and the Character tab", () => {
+  const ch = strigoi();
+  ch.progression.milestones.major = [{ id: "splice", power: "<img src=x onerror=alert(1)>", date: "2026-10-15T00:00:00.000Z" }];
+  ch.progression.specializationsGained = ["<script>alert(1)</script>"];
+  for (const sec of ["progression", "character"]) {
+    const app = openSheet(JSON.parse(JSON.stringify(ch)), sec);
+    assert.equal(app.$$("#main img, #main script").length, 0, `${sec} rendered markup from a saved file`);
+    assert.deepEqual(app.errors, []);
+  }
 });
