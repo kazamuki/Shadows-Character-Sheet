@@ -935,6 +935,7 @@ test("P10 9: Hold and Let go on the Grimoire, one undo each", () => {
   const app = openSheet(holdingArcanist(3), "loadout");
   assert.equal(app.$('[data-letgo]'), null, "a Let go with nothing held");
   assert.ok(app.$('[data-hold="fog-shroud"]'), "a Concentration spell has no Hold");
+  assert.equal(app.$('[data-hold="fog-shroud"]').getAttribute("aria-label"), "Hold Fog Shroud", "Hold doesn't say which spell, as Let go does");
   assert.equal(app.$('[data-hold="zap"]'), null);
   assert.ok(!/holding/i.test(app.$("#main").textContent), "the pool line shows with nothing held");
   app.click('[data-hold="fog-shroud"]');

@@ -4720,7 +4720,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** the hold as `held: true` on the Grimoire row (it's play state, not what you know); reading `duration` instead of the tag; folding the hold into Pain's number (it would put a floor nobody ruled on it); `migrate` trimming holds past the cap (an Admin rank change doesn't pass through it); holding a written-in spell (PQ7; W109 would revisit); dropping holds automatically at 0 HP (Q19: the GM decides).
      - **Replaces:** nothing in the ledger. The `castingPool` comment citing Decision 111 ("the table's to count") is rewritten; `spellcraftRules.concentration` becomes an object whose `text` is the ruling, in place of the string that said "dice equal to its Threshold".
      - **Revisit if:** Deighton sets the check's TN and TH (close F43); an inscribed Concentration spell (a Talisman holds it, `0480`) is tracked; a written-in spell needs to be held (W109).
-     - **Built:** app 0.46.0, game data 0.39, character schema 0.26. Log 2026-10-15 (P10).
+     - **Built:** app 0.46.0, game data 0.39, character schema 0.26, PR #195. Log 2026-10-15 (P10).
 
 ## 5. Open Flags
 

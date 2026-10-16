@@ -2106,7 +2106,7 @@ function holdControlHtml(l){
   const k = l.hold; if (!k) return "";
   if (k.state==="held") return `<span class="hold"><span class="chip">Held</span> ${letGoBtn(l)}</span>`;
   if (k.state==="over") return `<span class="hold"><span class="chip">${esc(k.why)}</span> ${letGoBtn(l)}</span>`;
-  return `<span class="hold"><button class="btn sm" data-hold="${esc(l.id)}" ${k.ok?'title="After the cast succeeds"':`disabled title="${esc(k.why)}"`}>Hold</button>${k.ok?"":`<span class="why">${esc(k.why)}</span>`}</span>`;
+  return `<span class="hold"><button class="btn sm" data-hold="${esc(l.id)}" aria-label="Hold ${esc(l.name)}" ${k.ok?'title="After the cast succeeds"':`disabled title="${esc(k.why)}"`}>Hold</button>${k.ok?"":`<span class="why">${esc(k.why)}</span>`}</span>`;
 }
 function grimoireHtml(ch, p){
   const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
