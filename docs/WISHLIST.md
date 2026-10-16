@@ -818,6 +818,14 @@ happen. If Scott or Deighton should be able to land a number or a line of
 copy themselves, W56's tuning bench is the shape for numbers, and a
 one-page "how to change one thing" guide could be the rest.
 
+**W120 — What taking it gives, in one line, for Expert mode.** *Ken, from P13's PQ5 · 💡 · Content, a data shape · raised 2026-10-16*
+P13's Expert mode folds an Advantage's or Disadvantage's whole `description`. Ken: where the text has mechanical weight, Expert mode could show just what
+taking it provides, without the prose around it. The data has no such field: each entry is one `description`, and 69 of the 87 run to several paragraphs
+that mix the two (Blood Lust opens "Everyone bleeds. Not everyone stops to watch." before its Sanity Check). Ten are already one short line.
+*To respect:* a named text field (`…Text`, Decision 135), read by Expert mode's folded row. Each line is rules text, cross-checked against the CRB
+(`private/crb/`) before it lands, so a summary can't quietly change what an entry does. Constraint 9: the line is player copy, in `VOICE-APP.md`'s voice.
+Its own order, after P13.
+
 **W119 — The Combat Maneuver line on the printed sheet.** *Claude, from P12b's PQ7 · 💡 · Fix · raised 2026-10-16*
 P12b put each style's Combat Maneuvers (Stun → Stunned · 1d10 + 10 (Karate +1)) under Martial Arts' row on Main and the Skills tab, and left print
 alone (Ken took PQ7's default). A character who plays from paper has the style chips and their "+1 Stun" text and no number to roll. `pSkillCellsHtml` is the
