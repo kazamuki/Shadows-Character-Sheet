@@ -8633,3 +8633,130 @@ test("P11: the SFR round and MOB 0 read without throwing, and a junk delta chang
   const junk = Engine.migrate({ identity: { archetype: "vampire" }, creation: { powerLevel: "street" }, trackers: { sfr: { turn: "x" } } });
   for (const fn of ["sfr", "movement", "resolveReset", "archPanels"]) assert.doesNotThrow(() => Engine[fn](junk), fn);
 });
+
+// ── P12a: IP beyond ranks (Decision N) ──────────────────────────────────────
+function ipSubject(arch = "professional") {
+  const ch = subject();
+  ch.identity.archetype = arch;
+  Engine.grantIP(ch, 2000, "test");
+  return ch;
+}
+
+test("P12a 3: a bought rank and a bought-off row act at once, asserted on the computed values", () => {
+  const ch = ipSubject();
+  const hp = Engine.health(ch).hpPer;
+  assert.equal(Engine.spendIP(ch, "advantage", "hard-to-kill").ok, true);
+  assert.equal(Engine.health(ch).hpPer, hp + 1, "Hard to Kill bought: +1 HP a level");
+  assert.equal(Engine.spendIP(ch, "advantage", "hard-to-kill").ok, true);
+  assert.equal(Engine.health(ch).hpPer, hp + 2, "and again");
+  const luck = ipSubject();
+  luck.disadvantages = [{ id: "unlucky", rank: 1, notes: "" }];
+  const held = JSON.stringify(Engine.grants(luck).luckCost);
+  assert.notEqual(held, "{}", "Unlucky changes a LUCK cost");
+  assert.equal(Engine.spendIP(luck, "disadvantage", "unlucky").ok, true);
+  assert.equal(JSON.stringify(Engine.grants(luck).luckCost), "{}", "Unlucky bought off: its LUCK costs are gone");
+});
+
+test("P12a 5: who may buy what", () => {
+  const vamp = ipSubject("vampire");
+  const nonUniversal = D.advantages.find(a => !a.universal && !a.creationOnly && !a.flagged);
+  refusesAndKeeps(vamp, () => Engine.ipCost(vamp, "advantage", nonUniversal.id), "a Supernatural buying a non-Universal Advantage");
+  refusesAndKeeps(vamp, () => Engine.spendIP(vamp, "advantage", nonUniversal.id), "…and spending on it");
+  const ch = ipSubject();
+  withData(Engine.advById("charismatic"), "requires", { stats: { REF: 9 } }, () => {
+    refusesAndKeeps(ch, () => Engine.ipCost(ch, "advantage", "charismatic"), "an unmet prerequisite");
+    assert.equal(Engine.advantageOffer(ch, Engine.advById("charismatic")).ok, false);
+  });
+  assert.equal(Engine.ipCost(ch, "advantage", "charismatic").ok, true, "and the same Advantage without it");
+  const ll = Engine.advById("long-lived");
+  assert.equal(Engine.advantageOffer(ch, ll).ok, false, "Long-Lived is creation only");
+  refusesAndKeeps(ch, () => Engine.ipCost(ch, "advantage", "long-lived"), "Long-Lived bought with IP");
+  const view = Engine.minorChoice(msChar(), "talented").options;
+  assert.equal(view.some(o => o.id === "long-lived"), false, "Long-Lived is gone from Talented's offer");
+  const tal = msChar();
+  refusesAndKeeps(tal, () => Engine.takeMinorChoice(tal, "talented", "long-lived"), "Talented taking it");
+  const edu = Engine.ipCost(ch, "advantage", "educated");
+  assert.equal(edu.ok, false, "Educated waits on a ruling");
+  assert.ok(edu.why && !/\bF\d+/.test(edu.why), "and says why in the player's words, no flag id");
+  assert.ok(Engine.minorChoice(msChar(), "talented").options.some(o => o.id === "educated"), "Talented is unchanged (Q25)");
+  // A natural row is never the one raised.
+  const nat = ipSubject();
+  nat.advantages = [{ id: "favored-skill", rank: 1, source: "natural", notes: "" }];
+  assert.equal(Engine.spendIP(nat, "advantage", "favored-skill", "", { picks: { skill: "handguns" } }).ok, true);
+  assert.equal(nat.advantages.length, 2, "a second, bought row");
+  assert.equal(nat.advantages[0].rank, 1, "the natural row is untouched");
+  assert.equal(nat.advantages[1].source, undefined, "the bought row carries the rank");
+});
+
+test("P12a 6: a pick is asked and saved with the rank", () => {
+  const ch = ipSubject();
+  const need = Engine.ipCost(ch, "advantage", "favored-skill");
+  assert.equal(need.ok, true);
+  assert.ok(need.picks.length > 0 && need.picks[0].pick.id, "the cost says what the rank asks");
+  refusesAndKeeps(ch, () => Engine.spendIP(ch, "advantage", "favored-skill"), "no pick");
+  refusesAndKeeps(ch, () => Engine.spendIP(ch, "advantage", "favored-skill", "", { picks: { skill: "no-such-skill" } }), "a pick that isn't an option");
+  assert.equal(Engine.spendIP(ch, "advantage", "favored-skill", "", { picks: { skill: "handguns" } }).ok, true);
+  same(ch.advantages[0].selections.skill, ["handguns"]);
+  refusesAndKeeps(ch, () => Engine.spendIP(ch, "advantage", "favored-skill", "", { picks: { skill: "handguns" } }), "the same skill twice (distinct)");
+  assert.equal(Engine.spendIP(ch, "advantage", "favored-skill", "", { picks: { skill: "dodge" } }).ok, true);
+  same(ch.advantages[0].selections.skill, ["handguns", "dodge"]);
+  assert.equal(ch.advantages[0].rank, 2);
+  const imm = ipSubject();
+  assert.equal(Engine.spendIP(imm, "advantage", "immunity", "", { picks: { detail: "" } }).ok, true, "an empty text pick is fine (Decision 78)");
+  const imm2 = ipSubject();
+  assert.equal(Engine.spendIP(imm2, "advantage", "immunity").ok, true, "…and so is none at all");
+});
+
+test("P12a 7: the journal names it and versionCheck doesn't call it a hand edit", () => {
+  const ch = ipSubject();
+  ch.disadvantages = [{ id: "minor-insanity", rank: 1, notes: "" }];
+  ch.trackers.san.loss = 12; ch.trackers.massiveLevels = 2;
+  assert.equal(Engine.spendIP(ch, "advantage", "hard-to-kill").ok, true);
+  assert.equal(Engine.spendIP(ch, "disadvantage", "minor-insanity").ok, true);
+  assert.equal(Engine.spendIP(ch, "restore", "san", "", { count: 5 }).ok, true);
+  assert.equal(Engine.spendIP(ch, "restore", "massiveLevel").ok, true);
+  const kinds = ch.progression.ip.log.filter(e => e.kind === "spend").map(e => e.targetType);
+  same(kinds, ["advantage", "disadvantage", "restore", "restore"]);
+  ch.meta.gamedataVersion = D.meta.gamedataVersion;
+  same(Engine.versionCheck(ch), []);
+  const e = ch.progression.ip.log.find(x => x.kind === "spend");
+  same([e.from, e.to, e.name], [0, 1, "Hard to Kill"]);
+});
+
+test("P12a 8: an unknown kind or id is refused, never priced as a skill", () => {
+  const ch = ipSubject();
+  const skills = JSON.stringify(ch.skills);
+  for (const [t, id] of [["advantage", "nope"], ["disadvantage", "nope"], ["wat", "x"], ["skill", "favored-skill"], ["skill", "nope"], ["", ""], [undefined, undefined], ["restore", "nope"]]) {
+    assert.equal(Engine.ipCost(ch, t, id).ok, false, `${t}/${id} priced`);
+    assert.equal(Engine.spendIP(ch, t, id).ok, false, `${t}/${id} spent`);
+  }
+  assert.equal(JSON.stringify(ch.skills), skills, "a junk skill was written");
+  assert.equal(ch.progression.ip.log.filter(e => e.kind === "spend").length, 0);
+  assert.equal(Engine.ipCost(ch, "skill", "handguns").ok, true, "a real skill still prices");
+});
+
+test("P12a: the new IP kinds are total on junk arguments and a hostile journal", () => {
+  for (const [label, ch] of Object.entries(degenerates())) {
+    for (const [t, id, n] of [["advantage", "nope"], ["advantage", {}], ["disadvantage", []], ["restore", "san", "x"], ["restore", "san", NaN], ["restore", "san", -1],
+                              ["restore", "san", 1.5], ["restore", "san", 1e9], ["restore", "massiveLevel"], ["advantage", "__proto__"], ["disadvantage", "constructor"]]) {
+      assert.doesNotThrow(() => { Engine.ipCost(ch, t, id, n); Engine.spendIP(ch, t, id, "", { count: n, picks: "x" }); }, `${label}: ${t}/${String(id)}/${n}`);
+    }
+  }
+  const bad = Engine.migrate({ progression: { ip: { log: [{ kind: "spend", amount: 5, targetType: "advantage", targetId: {}, from: "x", to: null, name: "<img onerror>" },
+                                                          { kind: "spend", amount: 5, targetType: "restore", targetId: [], from: {}, to: "y" }] } } });
+  assert.doesNotThrow(() => Engine.versionCheck(bad));
+  assert.doesNotThrow(() => Engine.ipState(bad));
+});
+
+test("P12a: a restore is clamped to the loss, and n must be a whole number from 1", () => {
+  const ch = ipSubject();
+  ch.trackers.san.loss = 4;
+  for (const n of [0, -1, 1.5, NaN, "2", "x", null, 5, Infinity]) {
+    assert.equal(Engine.ipCost(ch, "restore", "san", n).ok, false, `n = ${String(n)}`);
+  }
+  assert.equal(Engine.ipCost(ch, "restore", "san").cost, 5, "n defaults to 1");
+  assert.equal(Engine.ipCost(ch, "restore", "san", 4).cost, 20);
+  const poor = subject(); poor.trackers.san.loss = 4;
+  assert.match(Engine.spendIP(poor, "restore", "san", "", { count: 1 }).why, /Not enough IP/);
+  assert.equal(poor.trackers.san.loss, 4);
+});

@@ -2059,7 +2059,44 @@ const Engine = (() => {
     const earned = (ch.progression.ip.earned||0) + fromSessions + grants;
     return { earned, spent, available: earned - spent, log };
   }
-  function ipCost(ch, targetType, targetId){
+  // Decision 227: the one rule for taking a NEW Advantage, shared by Talented and
+  // the IP buy. Decision 152's classification, the prerequisites, an option lock,
+  // and never a creation-only one (Long-Lived). `opts.ip` adds the IP buy's own
+  // gate: an entry whose rule is unsettled (flagged) isn't sold. Pure data decides.
+  const advantageBarred = (def, ip) => {
+    if (def.creationOnly===true) return `${def.name} can only be taken when a character is made.`;
+    if (ip && def.flagged===true) return txt(def.playerNote) || `${def.name} isn't settled yet.`;
+    return "";
+  };
+  function advantageOffer(ch, def, opts){
+    const d = typeof def==="string" ? advById(def) : def;
+    if (!isPlainObj(d)) return {ok:false, why:"That isn't an Advantage."};
+    const barred = advantageBarred(d, !!(opts && opts.ip));
+    if (barred) return {ok:false, why:barred};
+    if (!canBuyAdvantage(ch, d)) return {ok:false, why:`${d.name} isn't one a ${((classification(ch)||{}).name)||"being like you"} can buy.`};
+    const req = requirementState(ch, "advantage", d.id);
+    if (!req.ok) return {ok:false, why:`Needs ${req.unmet.join(", ")}.`};
+    const lock = optionLock(ch, "advantage", d.id);
+    if (lock.locked) return {ok:false, why:`Locked out by ${lock.by}.`};
+    return {ok:true, why:""};
+  }
+  // What the new rank asks for: a skill or option pick per new slot, or a text.
+  // A per-rank pick asks for one slot at the rank it lands on; a flat one asks only
+  // when the trait is new. Resolved with the pick's own options, as picksFor does.
+  function advantageAsks(def, from, to){
+    const out = [];
+    for (const pick of Array.isArray(def.picks) ? def.picks : []){
+      const per = pick.count==null ? 1 : Math.max(1, Math.floor(Number(pick.count)||1));
+      const text = pick.type==="text";
+      if (text){ if (from===0) out.push({ pick, text:true, indices:[0], options:[], optional:pick.optional===true, gmApproval:pick.gmApproval===true }); continue; }
+      if (!pick.perRank && from>0) continue;
+      const start = pick.perRank ? per*(to-1) : 0;
+      out.push({ pick, text:false, indices:Array.from({length:per}, (_,i)=>start+i), options:pickOptions(pick, def),
+                 optional:pick.optional===true, gmApproval:pick.gmApproval===true });
+    }
+    return out;
+  }
+  function ipCost(ch, targetType, targetId, n=1){
     if (targetType==="stat"){
       if (D().ip.cannotRaiseDirectly.includes(targetId))
         return {ok:false, why:`${targetId} cannot be raised directly with IP.`};
@@ -2086,6 +2123,57 @@ const Engine = (() => {
       const price = D().ip.powerIncreaseCost;
       return {ok:true, cost: p.rank===0 ? price.newPower : price.perRank * p.rank, from:p.rank, to:p.rank+1, name:p.name};
     }
+    // Decision 227 (0450, Deighton Q24): an Advantage is its `cost` x timesPoints a
+    // rank, the same at every rank. Held, it goes up a rank on the bought row;
+    // new, it must pass the one eligibility rule Talented shares.
+    if (targetType==="advantage"){
+      const def = typeof targetId==="string" ? advById(targetId) : null;
+      if (!def) return {ok:false, why:"That isn't an Advantage."};
+      const rank = heldRank(ch, "advantage", def.id), top = Math.max(1, Math.floor(Number(def.maxRank)||1));
+      const times = Number(((D().ip||{}).advantageCost||{}).timesPoints), points = Number(def.cost);
+      if (!(times>0) || !(points>=0)) return {ok:false, why:`${def.name} has no price.`};
+      const barred = advantageBarred(def, true);
+      if (barred) return {ok:false, why:barred};
+      if (rank>=top) return {ok:false, why:`${def.name} is at its top rank.`};
+      if (rank===0){
+        const offer = advantageOffer(ch, def, { ip:true });
+        if (!offer.ok) return {ok:false, why:offer.why};
+      }
+      return {ok:true, cost:points*times, from:rank, to:rank+1, name:def.name, isNew:rank===0, picks:advantageAsks(def, rank, rank+1)};
+    }
+    // The cost of buying a Disadvantage off, a rank at a time: its pointsGranted x timesPoints. No CP comes back (0450).
+    if (targetType==="disadvantage"){
+      const def = typeof targetId==="string" ? disById(targetId) : null;
+      if (!def) return {ok:false, why:"That isn't a Disadvantage."};
+      const rank = heldRank(ch, "disadvantage", def.id);
+      if (rank<=0) return {ok:false, why:`You don't have ${def.name}.`};
+      const times = Number(((D().ip||{}).disadvantageBuyOff||{}).timesPoints), points = Number(def.pointsGranted);
+      if (!(times>0) || !(points>=0)) return {ok:false, why:`${def.name} has no price.`};
+      return {ok:true, cost:points*times, from:rank, to:rank-1, name:def.name};
+    }
+    // Lost SAN at sanPerPoint a point, or a Health Level lost to a maiming at healthLevel.
+    // Both are clamped to what was lost: nothing here adds past the maximum. Withering isn't a maiming.
+    if (targetType==="restore"){
+      const R = (D().ip||{}).restore || {};
+      if (targetId==="san"){
+        const loss = sanState(ch).loss, per = Number(R.sanPerPoint);
+        if (!(per>0)) return {ok:false, why:"SAN has no restore price."};
+        if (!loss) return {ok:false, why:"No SAN is lost."};
+        if (typeof n!=="number" || !Number.isInteger(n) || n<1) return {ok:false, why:"Choose a whole number of SAN."};
+        if (n>loss) return {ok:false, why:`Only ${loss} SAN is lost.`};
+        return {ok:true, cost:n*per, from:loss, to:loss-n, count:n};
+      }
+      if (targetId==="massiveLevel"){
+        const massive = hlState(ch).massive, price = Number(R.healthLevel);
+        if (!(price>0)) return {ok:false, why:"A Health Level has no restore price."};
+        if (!massive) return {ok:false, why:"No Health Level is lost to a maiming."};
+        return {ok:true, cost:price, from:massive, to:massive-1};
+      }
+      return {ok:false, why:"That can't be restored."};
+    }
+    // Everything left is a skill. An id that isn't one is refused: it used to be
+    // priced as a new skill, and spendIP would write the junk row.
+    if (!skillById(targetId)) return {ok:false, why:"That isn't on this sheet."};
     const line = skillLine(ch, targetId);
     const cur = line.rank;
     if (cur >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
@@ -2096,9 +2184,18 @@ const Engine = (() => {
     const cost = cur===0 ? price.newSkill : (focused ? price.focusedPerRank : price.perRank) * cur;
     return {ok:true, cost, from:cur, to:cur+1, focused};
   }
-  function spendIP(ch, targetType, targetId, note){
-    const c = ipCost(ch, targetType, targetId);
+  // `extra` is { count } for a SAN restore (default 1), or { picks: { <pickId>: value } }
+  // for an Advantage's new rank. Every refusal is made before anything is written.
+  function spendIP(ch, targetType, targetId, note, extra){
+    const ex = isPlainObj(extra) ? extra : {};
+    const c = ipCost(ch, targetType, targetId, ex.count===undefined ? 1 : ex.count);
     if (!c.ok) return c;
+    let slots = [];
+    if (targetType==="advantage"){
+      const r = resolveAsks(ch, targetId, c, ex.picks);
+      if (!r.ok) return r;
+      slots = r.slots;
+    }
     if (ipState(ch).available < c.cost) return {ok:false, why:`Not enough IP (need ${c.cost}).`};
     if (targetType==="stat") ch.stats[targetId].ipe += 1;
     else if (targetType==="spell") grimoireRows(ch)[c.index].stage = "mastered";
@@ -2107,11 +2204,61 @@ const Engine = (() => {
       if (!isPlainObj(pr.powerIpe)) pr.powerIpe = {};
       pr.powerIpe[targetId] = ipe;
     }
+    else if (targetType==="advantage"){
+      if (!Array.isArray(ch.advantages)) ch.advantages = [];
+      // The bought row takes the rank; a Natural Advantage's free row is never raised (as Talented).
+      const bought = ch.advantages.find(x=>x && x.id===targetId && x.source!=="natural");
+      if (bought) bought.rank = Math.floor(Number(bought.rank)||0) + 1;
+      else {
+        const row = { id:targetId, rank:1, notes:"" }, nat = ch.advantages.find(x=>x && x.id===targetId);
+        if (nat && isPlainObj(nat.selections)) row.selections = JSON.parse(JSON.stringify(nat.selections));
+        ch.advantages.push(row);
+      }
+      for (const s of slots) setSelection(ch, "advantage", targetId, s.pickId, s.index, s.value);
+    }
+    else if (targetType==="disadvantage"){
+      const row = canonicalEntry(ch, "disadvantage", targetId), rank = Math.floor(Number(row.rank)||1);
+      if (rank > 1) row.rank = rank - 1; else ch.disadvantages = ch.disadvantages.filter(r=>r!==row);
+      trimSelections(ch, "disadvantage", targetId);
+    }
+    else if (targetType==="restore"){
+      if (targetId==="san") ch.trackers.san.loss = c.to;
+      else ch.trackers.massiveLevels = Math.max(0, hlState(ch).massive - 1);
+    }
     else { if (!ch.skills[targetId]) ch.skills[targetId]={rank:0, ipe:0}; ch.skills[targetId].ipe += 1; }
-    // A power's entry carries its name, as a written power's Add and Improve do.
+    // A power's or a trait's entry carries its name, as a written power's Add and Improve do.
+    const named = targetType==="power" || targetType==="advantage" || targetType==="disadvantage";
     ch.progression.ip.log.push(Object.assign({ date:new Date().toISOString(), kind:"spend", amount:c.cost,
-      targetType, targetId, from:c.from, to:c.to, note:note||"" }, targetType==="power" ? { name:c.name } : {}));
+      targetType, targetId, from:c.from, to:c.to, note:note||"" }, named ? { name:c.name } : {}));
     return {ok:true, cost:c.cost};
+  }
+  // Check the picks a new Advantage rank asks for against their options, before any write.
+  function resolveAsks(ch, id, c, given){
+    const have = isPlainObj(given) ? given : {}, slots = [];
+    const held = picksFor(ch, "advantage", id);
+    for (const a of c.picks){
+      const label = String(a.pick.label || "choice").toLowerCase(), raw = have[a.pick.id];
+      if (a.text){
+        const v = raw==null ? "" : raw;
+        if (typeof v!=="string") return {ok:false, why:`Write the ${label} as text.`};
+        if (!v.trim() && !a.gmApproval && !a.optional) return {ok:false, why:`Write the ${label}.`};
+        slots.push({ pickId:a.pick.id, index:0, value:v });
+        continue;
+      }
+      const vals = Array.isArray(raw) ? raw : [raw];
+      const taken = new Set((((held.find(h=>h.pick.id===a.pick.id)||{}).chosen)||[]).filter(Boolean));
+      for (let i=0; i<a.indices.length; i++){
+        const v = vals[i];
+        if (v==null || v===""){ if (a.optional) continue; return {ok:false, why:`Choose a ${label}.`}; }
+        if (typeof v!=="string" || !a.options.some(o=>o.id===v && !o.missing)) return {ok:false, why:`That isn't one of the ${label} options.`};
+        if (a.pick.distinct){
+          if (taken.has(v)) return {ok:false, why:`${(a.options.find(o=>o.id===v)||{name:v}).name} is already chosen. This trait takes a different one for each rank.`};
+          taken.add(v);
+        }
+        slots.push({ pickId:a.pick.id, index:a.indices[i], value:v });
+      }
+    }
+    return {ok:true, slots};
   }
   function grantIP(ch, amount, note){
     amount = nonNegInt(amount);
@@ -2389,7 +2536,7 @@ const Engine = (() => {
         if (rank < top) out.options.push({ id:def.id, name:def.name, group:"raise", sub:`${def.cost} a rank · rank ${rank}`, move:`rank ${rank} → ${rank+1}`, off:"" });
       }
       for (const def of D().advantages){
-        if (held.has(def.id) || !(Number(def.cost) <= max) || !canBuyAdvantage(ch, def) || !requirementState(ch, "advantage", def.id).ok || optionLock(ch, "advantage", def.id).locked) continue;
+        if (held.has(def.id) || !(Number(def.cost) <= max) || !advantageOffer(ch, def).ok) continue;
         out.options.push({ id:def.id, name:def.name, group:"new", sub:`${def.cost} point${Number(def.cost)===1?"":"s"}`, move:"new, rank 1", off:"" });
       }
       if (!out.options.length) out.none = "Nothing to take.";
@@ -4617,7 +4764,10 @@ const Engine = (() => {
     }
     const log = (((c.progression||{}).ip)||{}).log||[];
     const perTarget = {};
-    for (const e of log) if (e.kind!=="grant")
+    // An Advantage, a Disadvantage or a restore leaves no IPE to match: the rows and the
+    // trackers are the record (Decision 227), so they are never read as a hand edit.
+    const UNLEDGERED = ["advantage", "disadvantage", "restore"];
+    for (const e of log) if (e.kind!=="grant" && !UNLEDGERED.includes(e.targetType))
       perTarget[e.targetType+"|"+e.targetId] = (perTarget[e.targetType+"|"+e.targetId]||0)+1;
     for (const [k,n] of Object.entries(perTarget)){
       const [type,id] = k.split("|");
@@ -7061,7 +7211,7 @@ const Engine = (() => {
     spellForms, spellForm, grimoire, spellPower, spAmounts, spellAttack, addSpell, linkSpell, removeGrimoireRow, heldSpells, holdSpell, releaseSpell,
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
-    ipState, ipCost, spendIP, grantIP,
+    ipState, ipCost, spendIP, grantIP, advantageOffer,
     milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorListed, majorById, formGrants, takeMilestone, untakeMilestone, minorChoice, takeMinorChoice, addCustomMajor,
     majorChoice, takeMajorChoice, specializationOpening, gainSpecialization, gainedSpecializations,
     logSession, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,

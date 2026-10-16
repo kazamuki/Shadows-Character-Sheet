@@ -29,6 +29,11 @@ own in the footer.
 - **Main's SFR card opens a popover** with −1 and +1, so spending in a fight doesn't need the Trackers tab. Once you've spent this round, its Turn Reset button takes you straight to Turn Reset.
 - **A written-in pool shows on Main.** A Custom archetype that uses SFR gets Main's SFR card once you set its size.
 - **Main shows how far you move.** Walk, Run, Sprint and Jump from your MOB, in meters, with the attack penalty for running and sprinting, and Fleet of Foot's distances for a True Warrior. Prone and Restrained are named beside them.
+- **IP buys Advantages.** On Progression, **Buy an Advantage** takes a new one or a rank of one you hold, at its points × 10 IP a rank. **Buy off a Disadvantage** takes one off a rank at a time, the same way. A rank that needs a choice (a Favored Skill's skill) asks for it in the same buy.
+- **IP brings back what the city took.** **Restore** gives back lost SAN at 5 IP a point, or a Health Level lost to a maiming at 25, never past what you lost.
+- **A session's IP counts the hours.** The Session Log asks how long you played, at 5 IP an hour, the book's rate. It no longer grants a flat 10.
+- **Talented no longer offers Long-Lived,** which can only be taken when a character is made.
+- **Minor Insanity says IP buys it off between sessions,** as the book does.
 
 ## v0.46.0 — 2026-10-15
 

@@ -30,21 +30,6 @@ are folded into **W69** (below, under Loadout). "A Vampire's Innate powers are
 granted" led Ken to rule F38 and F39 together, for both archetypes, and that
 ruling is built by **W88**.
 
-**W89 — Spend IP on an Advantage, or to buy off a Disadvantage.** *Ken, from Brogan · ⏭ · Rule or shape · raised 2026-10-10 · priced by Deighton 2026-10-10*
-After lock, Advantages and Disadvantages are frozen. The only ways to change
-them in play are the Talented and Redeemed Minor Milestones. `0450`
-prices both: **an Advantage costs its creation point cost × 10 per rank, and a
-Disadvantage comes off the same way, one rank at a time.** A few
-Disadvantages (Pact among them) already say "spend IP to remove" and point
-here.
-*To respect:* constraint 7: the IP journal records the purchase, and the
-held Advantages are read from creation plus the journal, never rewritten.
-Decision 152: a Supernatural still buys only Universal Advantages, and a
-prerequisite still binds. Buying off a Disadvantage takes its rules off the
-sheet but doesn't refund the CP it granted at creation. **Deighton ruled
-(2026-10-10, `reference/rulings-2026-10-10.md` Q24): every rank costs the same flat price**, and a
-Disadvantage's buy-off follows it. Nothing blocks it now.
-
 **W90 — Cybernetics.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · blocked on design: F6, F19*
 Playtesters want chrome. The design answer is already set (STATE §3, the
 Cyborg row): the Cyborg archetype was cut, and cybernetics become a list and
@@ -849,9 +834,19 @@ happen. If Scott or Deighton should be able to land a number or a line of
 copy themselves, W56's tuning bench is the shape for numbers, and a
 one-page "how to change one thing" guide could be the rest.
 
+**W117 — A Talented Advantage asks for its pick.** *Claude, from P12a · 💡 · Fix · raised 2026-10-16*
+A locked sheet has nowhere to make a pick. Talented's new Favored Skill, Refined Skill or Common Sense lands with no skill chosen, and does nothing until
+someone finds the Admin edit. The IP buy asks for the pick in the same purchase (Decision 227); Talented's chooser could do the same.
+*To respect:* Decision 217 (Talented is free, and takes a new Advantage worth 5 or less) and Decision 78 (a text pick may stay empty).
+
+**W118 — Show the Advantages bought in play apart from the creation ones.** *Claude, from P12a · 💡 · Rule or shape · raised 2026-10-16*
+Admin's CP echo and the Character tab's "N CP" count an Advantage bought with IP (or by Talented) as Character Points spent. They are reference only and
+Admin says so, but a player reading "20 CP" on a card can't tell which ranks were paid for at creation. A mark on a bought-in-play rank would fix it.
+*To respect:* Decision 227 rejected subtracting the journal's Advantage ranks from `advSpent` (a second source for one number, and Talented's free ranks aren't in the journal).
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W117.** Everything above is open; W38 has a plan,
+- **Next free number: W119.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for

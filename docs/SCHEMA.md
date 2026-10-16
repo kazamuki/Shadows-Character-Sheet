@@ -908,6 +908,9 @@ It renders on the Character tab (Decision 158).
         // { date, kind, amount, targetType, targetId, from, to, note }
         // (0.16) targetType "power" also carries `name`: a written power's
         // Add or Improve has no from/to; a rank bought (0.18) has both.
+        // (Decision 227) targetType "advantage" (from/to are ranks, and `name`), "disadvantage"
+        // (ranks, `name`; to 0 is removed) and "restore" (targetId "san" or "massiveLevel";
+        // from/to are the loss before and after). They leave no IPE: versionCheck skips them.
       ]
     },
     milestonePoints: 0,              // manual MP only — session MP is computed
@@ -1170,6 +1173,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded by Decision 152** — a Supernatural buys the Universal Advantages, and the gate is the archetype's classification.
 13. **Milestone cadence:** 1 Milestone Point per session; Minor at 5/15/25…,
     Major at 10/20/30…; 10 IP per session (WIP Professional).
+    → **Superseded in part by Decision 228** — a session's IP is 5 an hour, rounded up; there is no flat 10.
 14. **IP costs:** stat increase = current value ×10; skill rank = 5× current
     (Focused 3×); skills/powers cap at rank 10 via IPE; WILL and TOL cannot
     be raised directly.
@@ -3916,6 +3920,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 46 in part (the raise lists are modals, not open sections).
      - **Revisit if:** something else is spent with IP often enough to want its own button.
      - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
+     → **Superseded in part by Decision 227** — Progression also has Buy an Advantage, Buy off a Disadvantage and Restore.
 
 160. **On a wide screen the vitals panel can be pinned beside the sheet, and its vitals open their popovers to the left.**
      *2026-10-01 · Ken + Claude · Touches: vitals drawer, vdrawer, Pin, Unpin, vitals-pinned, vitalsPinned, PIN_MEDIA, vitals bar, vbar, vrow, openPopover scope, popTrigger, from-rail, header, Main, footer, toast*
@@ -4526,6 +4531,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** S3b's seats give attendance and tiers, GQ28 is answered, or the CRB changes 5 an hour.
      - **Built:** as 205.
+     → **Superseded in part by Decision 228** — the player default it called its own fix is that decision: the Session Log counts hours and `ip.perSession` is gone.
 
 207. **A table's Reference tab gathers what a GM looks up on one searchable page: Conditions and the Codex first, then the book's combat and check references, each panel a row in the data.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, TABLE_SECTIONS, gmReference, panels, from, parts, bookSource, Engine.gmReference, Conditions, packs, traits glossary, Quick Reference, check table, TN, TH, Defense, Pain Levels, CRANK, jump bar, search, Decision 139, Decision 185, Decision 204, GQ29, W84*
@@ -4658,6 +4664,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 29 in part (the Minor repeat floor). Decision 199 in part (a Werewolf's Majors are offered alone). Closes F9.
      - **Revisit if:** another archetype's Majors are written, or Withering's levels count as lost.
      - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #…. Log 2026-10-14 (P6).
+     → **Superseded in part by Decision 227** — Talented's new-Advantage offer refuses a `creationOnly` one (Long-Lived), through the rule the IP buy shares.
 
 218. **LUCK bought with CP counts against the Max Character Point Boost, and "Max Boost" is called that.**
      *2026-10-14 · Ken + Deighton + Claude · Touches: LUCK, trackers.luck.bonus, resources.luck.cpCostPerPoint, canBoost, spendable, validate, maxBoost, Max Boost, Max Character Point Boost, Boosts, creationFlow step 7, W65, W66*
@@ -4744,6 +4751,29 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** Chi abilities get an active state; a power's or spell's MOB bonus (Preternatural Speed, Wind Walker, Apex Fury) is computed; Prone's halving is ruled with its rounding; W100 (meters or feet).
      - **Built:** app 0.47.0, game data 0.40, PR #198. Log 2026-10-15 (P11).
 
+227. **IP buys an Advantage or a rank of one, buys off a Disadvantage a rank at a time, and restores lost SAN and a maimed Health Level, at `0450`'s prices; one eligibility rule serves IP and Talented.**
+     *2026-10-16 · Ken + Claude (Deighton Q24) · Touches: ipCost, spendIP, ip.advantageCost, ip.disadvantageBuyOff, ip.restore, advantageOffer, creationOnly, Talented, versionCheck, IP Journal, Progression, Minor Insanity, Pact, Educated, Long-Lived, W89, F44*
+     - **Decided:** `ipCost`/`spendIP` take three new kinds:
+       - `"advantage"`: a new Advantage at rank 1, or a held one up a rank, at `cost × ip.advantageCost.timesPoints` a rank (Q24: flat);
+       - `"disadvantage"`: one rank off at `pointsGranted × ip.disadvantageBuyOff.timesPoints`, removed at rank 1, no CP refunded;
+       - `"restore"`: `"san"` at `ip.restore.sanPerPoint` a point, or `"massiveLevel"` at `ip.restore.healthLevel`, clamped to what was lost. Withering isn't restored (as Steadied).
+
+       Rows are written as Talented's are (217); a Natural row is never raised. One spend is one commit and one Undo. `advantageOffer` is the one rule for a new Advantage, shared by Talented: 152's classification, prerequisites, no lock, never `creationOnly` (Long-Lived). The IP buy also refuses a `flagged` entry, saying why from its `playerNote` (Educated, F44). A rank needing a pick asks in the same buy. The skill fallback refuses a non-skill id. `versionCheck` skips the new kinds: the rows are the record.
+     - **Why:** W89 (Brogan); `0450` prices all four; Q24. Talented offered Long-Lived, a creation-only Advantage.
+     - **Rejected:** SAN one point a press; deriving held Advantages from creation plus the journal (two models of one list); a `source` value for an IP-bought row (142); refunding a bought-off Disadvantage's CP; selling Educated with nothing to spend its points on; leaving Talented on the old offer.
+     - **Replaces:** Decision 159 in part (three more buttons; its *Revisit if* fired). Decision 217 in part (Talented refuses `creationOnly`). Extends 14.
+     - **Revisit if:** Deighton rules on Educated in play (F44); a restore past the maximum is ruled.
+     - **Built:** app 0.47.0, game data 0.40, no schema bump, PR #201. Log 2026-10-16 (P12a).
+
+228. **The Session Log counts hours: IP is 5 an hour, rounded up, editable before it's logged; the flat 10 a session is gone.**
+     *2026-10-16 · Ken + Claude · Touches: Session Log, logSession, ipEarned, ip.perSession, ip.perHour, data-seshours, data-sesip, IP rounding, Decision 13, Decision 206*
+     - **Decided:** The Session Log asks for the hours played and fills its IP as `ceil(hours × ip.perHour)`; a typed IP wins over the hours, as GM mode's close-out (206). Hours are a calculator, not stored: the session keeps `ipEarned` as before. Log is off until hours or IP is filled (0 is a value) and says why. `ip.perSession` is removed from the data, and the copy says 5 an hour.
+     - **Why:** `0450`: "Every hour of play earns 5 IP". Ken, 2026-10-15: the flat 10 is out of date, and a player's IP comes only from this log (GM mode's close-out stays in the table file).
+     - **Rejected:** storing `hours` on a session (schema 0.28, and nothing else would read it); an empty field logging 0 silently (the old 10 hid that); keeping `perSession` as a fallback (a number nothing should use, 135).
+     - **Replaces:** Decision 13 in part (its "10 IP per session"). Decision 206 in part (its rejected "changing `ip.perSession` here", which called this its own fix).
+     - **Revisit if:** S3b's seats carry a GM's close-out IP to the character; the CRB changes 5 an hour.
+     - **Built:** as 227.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4768,5 +4798,6 @@ here are in `log/archive.md`.
 | F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton | Scott/Deighton | No |
 | F42 | **Which damage Resistance answers.** 0460 names Thermal, Electric and Freezing. The app maps Thermal → Burning and Electric → Electric. No damage type is cold, so Freezing answers nothing yet. Elemental spells (fire, frost, lightning) are magic, so no Resistance answers them; Warding does. Stubbed as written (Decision 219) | Deighton | No |
 | F43 | **The TN and TH of the WILL Essence check that keeps a held spell** (W87, Q19). Taking damage, a Shock or going down calls for it; the numbers aren't set, nor whether it is one check or one per spell, nor whether an Arcanist holding as many spells as their Evocation rank (no dice left) can still cast or keeps a 1-die floor. Stubbed (Decision 224): at no dice left no spell is marked Beyond your pool and the pool line says so; the prompt says "A WILL Essence check keeps it. Your GM sets the TN and TH.", and nothing is decided or released by the sheet | Deighton | No |
+| F44 | **What a rank of Educated bought after creation gives.** Its grant is 10 Skill Points a rank, and after lock there is nothing to spend them on. Talented offers it (Q25); the IP buy refuses it, and its row says so (`flagged`, Decision 227). Deighton: what should a rank in play give? | Deighton | No |
 F42 and F43 go to Deighton, and F37 with Scott, who wrote CRANK.
 
