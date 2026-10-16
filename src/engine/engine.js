@@ -2156,7 +2156,8 @@ const Engine = (() => {
     if (targetType==="restore"){
       const R = (D().ip||{}).restore || {};
       if (targetId==="san"){
-        const loss = sanState(ch).loss, per = Number(R.sanPerPoint);
+        // Nothing caps the stored loss at the maximum, but SAN below zero isn't lost SAN: only what shows is sold.
+        const st = sanState(ch), loss = Math.min(Math.floor(st.loss), st.max), per = Number(R.sanPerPoint);
         if (!(per>0)) return {ok:false, why:"SAN has no restore price."};
         if (!loss) return {ok:false, why:"No SAN is lost."};
         if (typeof n!=="number" || !Number.isInteger(n) || n<1) return {ok:false, why:"Choose a whole number of SAN."};
@@ -2222,7 +2223,7 @@ const Engine = (() => {
       trimSelections(ch, "disadvantage", targetId);
     }
     else if (targetType==="restore"){
-      if (targetId==="san") ch.trackers.san.loss = c.to;
+      if (targetId==="san") ch.trackers.san.loss = c.to;      // c.to is below the maximum, so the loss it leaves is real
       else ch.trackers.massiveLevels = Math.max(0, hlState(ch).massive - 1);
     }
     else { if (!ch.skills[targetId]) ch.skills[targetId]={rank:0, ipe:0}; ch.skills[targetId].ipe += 1; }

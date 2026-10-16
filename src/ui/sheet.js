@@ -1506,7 +1506,7 @@ function renderShProgression(){
     <button class="btn primary" data-raiseopen="power">Buy or Raise a Power</button>
     <button class="btn primary" data-ipopen="advantage">Buy an Advantage</button>
     ${(ch.disadvantages||[]).some(r=>r && Engine.disById(r.id)) ? `<button class="btn primary" data-ipopen="disadvantage">Buy off a Disadvantage</button>` : ""}
-    ${Engine.sanState(ch).loss>0 || Engine.hlState(ch).massive>0 ? `<button class="btn primary" data-ipopen="restore">Restore</button>` : ""}</div>`;
+    ${Engine.ipCost(ch, "restore", "san", 1).ok || Engine.hlState(ch).massive>0 ? `<button class="btn primary" data-ipopen="restore">Restore</button>` : ""}</div>`;
 
   // IP journal
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
@@ -3031,8 +3031,9 @@ function ipDisadvantagesHtml(ch){
     <p class="step-note">No Character Points come back.</p>`;
 }
 // SAN takes an amount; a Health Level is one a press. Each is clamped to what was lost.
+function ipSanLost(ch){ const c = Engine.ipCost(ch, "restore", "san", 1); return c.ok ? c.from : 0; }
 function ipSanN(ch){
-  const loss = Engine.sanState(ch).loss, n = S.ipBuy.san;
+  const loss = ipSanLost(ch), n = S.ipBuy.san;
   return Math.max(1, Math.min(loss, Number.isInteger(n) ? n : loss));
 }
 function ipSanButton(ch){
@@ -3041,7 +3042,7 @@ function ipSanButton(ch){
   return { text: c.ok ? `Restore ${n} SAN · ${c.cost} IP` : "Restore SAN", why: c.ok ? short : c.why, off: !c.ok || !!short };
 }
 function ipRestoreHtml(ch){
-  const loss = Engine.sanState(ch).loss, massive = Engine.hlState(ch).massive, ip = Engine.ipState(ch).available;
+  const loss = ipSanLost(ch), massive = Engine.hlState(ch).massive, ip = Engine.ipState(ch).available;
   let h = "";
   if (loss>0){
     const b = ipSanButton(ch);

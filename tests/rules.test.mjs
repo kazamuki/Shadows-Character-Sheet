@@ -1788,6 +1788,7 @@ test("P11: the quick reference's Movement table agrees with movementRules", () =
 function ipChar(arch = "professional") {
   const ch = subject();
   ch.identity.archetype = arch;
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;     // SAN max 50, as a played character's
   ch.creation.locked = true;
   return ch;
 }
@@ -1854,4 +1855,21 @@ test("P12a 9: a session's IP is 5 an hour, rounded up (0450: every hour of play 
   assert.equal(D.ip.perHour, 5);
   assert.equal("perSession" in D.ip, false, "the flat 10 is gone from the data");
   // The rounding itself is the Session Log's, pinned through the UI in smoke-sheet-progression (P12a 12).
+});
+
+test("P12a 4b: a SAN loss past the maximum sells only the SAN that shows, and a fraction is floored", () => {
+  const ch = ipChar();
+  fund(ch, 1000);
+  const max = Engine.sanState(ch).max;
+  ch.trackers.san.loss = max + 20;                         // the stepper only floors the loss at 0
+  assert.equal(Engine.sanState(ch).current, 0);
+  assert.equal(Engine.ipCost(ch, "restore", "san", max + 1).ok, false, "SAN below zero was offered");
+  assert.equal(Engine.ipCost(ch, "restore", "san", max).cost, max * 5);
+  assert.equal(Engine.spendIP(ch, "restore", "san", "", { count: 10 }).ok, true);
+  assert.equal(Engine.sanState(ch).current, 10, "10 IP-bought points must show as 10 SAN");
+  const frac = ipChar(); fund(frac, 100);
+  frac.trackers.san.loss = 2.5;
+  assert.equal(Engine.ipCost(frac, "restore", "san", 1).from, 2, "a fractional loss is floored");
+  assert.equal(Engine.spendIP(frac, "restore", "san", "", { count: 2 }).ok, true);
+  assert.equal(Engine.sanState(frac).loss, 0);
 });
