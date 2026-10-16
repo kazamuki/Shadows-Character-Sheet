@@ -14,6 +14,26 @@ function painPenaltyLine(pain, long){
        + ` · ${pain.breakerPenalty}% Breaker${b}`;
 }
 
+// Decision 224 (W87): a held Concentration spell sets a die aside from every Essence roll.
+// Kept apart from Pain's numbers: Pain's floor of 1 is the CRB's, and nothing rules one for a hold.
+function holdingSentence(h){
+  return `Holding ${h.held.length===1 ? h.held[0].name : h.held.length+" spells"}: −${h.dice} Essence ${h.dice===1?"die":"dice"}`;
+}
+const letGoBtn = (s, cls) => `<button class="btn sm${cls?" "+cls:""}" data-letgo="${esc(s.id)}" aria-label="Let go of ${esc(s.name)}">Let go</button>`;
+// The same sentence where Pain's line shows in a popover, Pain 0 included.
+function holdingNoteHtml(ch){
+  const h = Engine.heldSpells(ch);
+  return h.held.length ? `<p class="sub holding-note">${esc(holdingSentence(h))}</p>` : "";
+}
+// Main's line under the vitals: what's held, each with its own Let go.
+function holdingHtml(ch){
+  const h = Engine.heldSpells(ch);
+  if (!h.held.length) return "";
+  return `<section class="main-holding" data-holding><div class="sect">Holding</div>
+    <p class="step-note">${esc(holdingSentence(h))}.</p>
+    <div class="hitrow">${h.held.map(s=>`<span class="hitarmor">${esc(s.name)}</span>${letGoBtn(s)}`).join("")}</div></section>`;
+}
+
 // ════ LIVE SHEET ══════════════════════════════════════════════════════
 // `under` is HTML that sits beneath the title: Main puts the intake number there.
 function sheetHeader(title, note, under){
@@ -304,7 +324,7 @@ function skillTableHtml(ch, cid, cname, {includeUntrained=false}={}){
 // ── Sheet: MAIN (what you need right now) ────────────────────────────
 function renderShMain(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
-  const hp=Engine.health(ch), pain=Engine.painState(ch);
+  const hp=Engine.health(ch), pain=Engine.painState(ch), held=Engine.heldSpells(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch), sf=Engine.sfr(ch);
   const id=ch.identity;
   // The specialization is derived (schema 0.5, Decision 79). This line read
@@ -327,7 +347,8 @@ function renderShMain(){
   h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
     `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN"+(pain.pastZero?" · "+pastZeroText(pain):""):`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
   h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
-    pain.level?`Lv ${pain.level}`:"—", pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties", null, "", "pain");
+    pain.level?`Lv ${pain.level}`:"—", (pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties")
+      + (held.held.length ? `<br>${esc(holdingSentence(held))}` : ""), null, "", "pain");
   h += vitalVerbsHtml(ch);     // W42: its own row, straight under Health and Pain
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
     `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
@@ -346,6 +367,7 @@ function renderShMain(){
   // Decision 169, 214: CRANK shows only with its switch on.
   if (crankOn()) h += cond(aloneLast?"crank alone":"crank", "CRANK", "crank", `${crk.rep}`, esc(crk.tier?crk.tier.name:""), null, "", "crank");
   h += `</div>`;
+  h += holdingHtml(ch);      // Decision 224
   // Feeding (Decision 201) sits under the SFR it refills.
   for (const p of Engine.archPanels(ch).filter(x=>x.type==="feed"))
     h += `<section class="main-feed"><div class="sect">${esc(p.title)}</div>${feedPanelHtml(ch, p)}</section>`;
@@ -647,7 +669,7 @@ function spellcraftWorkings(R){
   const row = (k, v) => v ? `<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>` : "";
   const charge = c.maxTurns ? `${c.standardAction?"A Standard Action each turn":"Each turn"} takes ${c.tnReductionPerTurn} off the spell's TN, for up to ${c.maxTurns} turns, never below TN ${c.floorTN}.` : "";
   return { title:"Charging, holding and learning", html:
-    `<table class="ref"><tbody>${row("Charging", [charge, c.breakCheck].filter(Boolean).join(" "))}${row("Concentration", R.concentration)}</tbody></table>
+    `<table class="ref"><tbody>${row("Charging", [charge, c.breakCheck].filter(Boolean).join(" "))}${row("Concentration", (R.concentration||{}).text)}</tbody></table>
     ${ss.note?`<div class="subsect">The Sovereign Soul</div><p>${esc(ss.note)}</p><table class="ref"><tbody>${
       row("Willing and conscious", ss.willingConscious)}${row("Unconscious ally", ss.unconsciousAlly)}${row("Unwilling", ss.unwilling)}</tbody></table>`:""}
     <div class="subsect">Improvised, Known, Mastered</div><table class="ref"><tbody>${row("Improvised", pr.improvised)}${row("Known", pr.known)}${row("Mastered", pr.mastered)}</tbody></table>
@@ -951,6 +973,12 @@ function hitModalParts(ch){
     <button class="btn primary" data-hitapply="1" ${pending?"disabled":""}>Apply hit</button>`;
   return { body, foot };
 }
+// Decision 224 (Q19): the sheet asks; whether the spell holds is the GM's call, and Let go is the player's press.
+function concentrationCheckHtml(c){
+  const names = c.spells.map(s=>s.name), you = names.length===1 ? names[0] : names.slice(0, -1).join(", ")+" and "+names[names.length-1];
+  return `<div class="hitcheck" data-concentration><b>Concentration</b><p>You're holding ${esc(you)}. ${esc(c.text)}</p>
+    <div class="hitrow">${c.spells.map(s=>`<span class="hitarmor">${esc(s.name)}</span>${letGoBtn(s)}`).join("")}</div></div>`;
+}
 function hitPanelHtml(ch, r){
   const st=S.hit, as=Engine.armorState(ch);
   const opt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
@@ -1025,6 +1053,7 @@ function hitPanelHtml(ch, r){
     if (P.atZero) h+=`<div class="hitcheck bad"><b>At zero</b> · ${esc(P.atZero.check)}<p>${esc(P.atZero.text)}${
       P.atZero.freePassHeld?" "+esc(P.atZero.freePass.text):""}</p>${passFail("atZero")}</div>`;
     if (P.deathMark) h+=`<div class="hitcheck bad"><b>Dying</b><p>${esc(P.deathMark.text)}</p></div>`;
+    if (P.concentration) h+=concentrationCheckHtml(P.concentration);
     if (P.conditions.length){
       const on=id=>st.conds[id]!==undefined ? st.conds[id] : P.always.includes(id);
       h+=`<div class="hitconds"><span>Conditions this hit can cause. Tick what your GM rules:</span>` +
@@ -1083,6 +1112,7 @@ function resetPanelHtml(ch, st){
     if (P.atZero) h+=`<div class="hitcheck bad"><b>At zero</b> · ${esc(P.atZero.check)}<p>${esc(P.atZero.text)}${
       P.atZero.freePassHeld?" "+esc(P.atZero.freePass.text):""}</p>${actPassFail(st,"atZero")}</div>`;
     if (P.dyingCheck) h+=`<div class="hitcheck bad"><b>Dying</b> · ${esc(P.dyingCheck.check)}<p>${esc(P.dyingCheck.text)}</p>${actPassFail(st,"dyingCheck")}</div>`;
+    if (P.concentration) h+=concentrationCheckHtml(P.concentration);
   }
   if (r.recovery.length) h+=`<div class="hitconds"><span>What each Condition needs to end. Your GM calls the checks:</span></div>
     <div class="hitresult">${r.recovery.map(c=>`<p><b>${esc(c.name)}</b> · ${esc(c.recovery)}</p>`).join("")}</div>`;
@@ -1252,7 +1282,7 @@ function vitalPopover(ch, key){
        <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
   if (key==="pain" || key==="cond") return { title:"Pain & Conditions",
     html: now(pain.down?"DOWN":pain.level?`Pain Lv ${pain.level}`:"No Pain", pain.level||pain.down?"bad":"",
-      pain.level?esc(painPenaltyLine(pain,false)):"no penalties") + conditionsHtml(ch, false) };
+      pain.level?esc(painPenaltyLine(pain,false)):"no penalties") + holdingNoteHtml(ch) + conditionsHtml(ch, false) };
   if (key==="san"){ const san=Engine.sanState(ch);
     return { title:"Sanity", html: now(`${san.current} / ${san.max}%`, san.current<=san.max/2?"bad":"san", "") +
       `<div class="trk-row">${sanControlsHtml(ch)}</div>` }; }
@@ -1313,7 +1343,7 @@ function renderShTrackers(){
     + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${esc(pain.label)}</h2>
-    ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}</div>
+    ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}${(h=>h.held.length?`<span class="cost">${esc(holdingSentence(h))}</span>`:"")(Engine.heldSpells(ch))}</div>
     <div class="desc">${esc(pain.description)}${pain.immunity?`
 ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
@@ -2012,7 +2042,8 @@ const spellPickMode = {
   sheet: {
     title: "Add from the book",
     status: ch => { const p = Engine.grimoire(ch).pool;
-      return p ? `Your pool is ${p.rank}d10 (${esc(p.discipline)} ${p.rank}). You can learn any spell; one marked Beyond your pool needs an exploding 10.` : ""; },
+      return !p ? "" : p.rolls<1 ? `You have no dice left (${esc(p.discipline)} ${p.rank}, holding ${p.held}). You can learn any spell.`
+        : `Your pool is ${p.rolls}d10 (${esc(p.discipline)} ${p.rank}${p.held?`, holding ${p.held}`:""}). You can learn any spell; one marked Beyond your pool needs an exploding 10.`; },
     action: (ch, s, g) => {
       // A book spell you've already typed as your own links that row, not a copy.
       const yours = g.lines.find(l=>l.custom && l.match && l.match.id===s.id);
@@ -2049,7 +2080,7 @@ function spellResultsHtml(ch, mode){
   return `<table class="ref spell-results"><tbody>` + list.map(s=>{ const a = M.action(ch, s, g), f = Engine.spellForm(ch, s);
     return `<tr class="${a.why?"off":"pickrow"}">
       <td><b>${esc(s.name)}</b><div class="sub">${esc(tierName(s.tier))} · ${esc(domName(s.domain))} / ${esc(glyphText(s.glyph))}${formNote(f)}</div>${a.why?`<div class="why">${esc(a.why)}</div>`:""}</td>
-      <td class="num">${esc(tnth({ tn:s.tn, th:f.th }))}${mode==="sheet" && pool && f.live && typeof f.th==="number" && f.th>pool.rank?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
+      <td class="num">${esc(tnth({ tn:s.tn, th:f.th }))}${mode==="sheet" && pool && f.live && typeof f.th==="number" && pool.rolls>0 && f.th>pool.rolls?`<div class="beyond" title="${esc(pool.text)}">Beyond your pool</div>`:""}</td>
       <td>${esc(s.range||"")}</td><td>${spText((Engine.spAmounts(ch, s, g.spellPower)||{}).effect, s.effect||"")}</td>
       <td>${a.btn}</td></tr>`; }).join("") + `</tbody></table>`;
 }
@@ -2071,10 +2102,18 @@ function spellPickerHtml(ch, mode){
 // it's made, so the footer says so and closes.
 const pickerFootHtml = () =>
   `<span class="modal-note">Each pick is kept as you make it.</span><button class="btn primary" data-modalclose>Done</button>`;
+// Decision 224: a Concentration spell is held once it succeeds, so Hold is pressed after the cast.
+function holdControlHtml(l){
+  const k = l.hold; if (!k) return "";
+  if (k.state==="held") return `<span class="hold"><span class="chip">Held</span> ${letGoBtn(l)}</span>`;
+  if (k.state==="over") return `<span class="hold"><span class="chip">${esc(k.why)}</span> ${letGoBtn(l)}</span>`;
+  return `<span class="hold"><button class="btn sm" data-hold="${esc(l.id)}" aria-label="Hold ${esc(l.name)}" ${k.ok?'title="After the cast succeeds"':`disabled title="${esc(k.why)}"`}>Hold</button>${k.ok?"":`<span class="why">${esc(k.why)}</span>`}</span>`;
+}
 function grimoireHtml(ch, p){
   const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
   const book = g.lines.filter(l=>!l.custom), own = g.lines.filter(l=>l.custom);
   let h = sp ? `<p class="grim-sp" title="${esc(sp.text)}">Spell Power <b>${sp.value}</b> <span class="sub">${esc(sp.discipline)} ${sp.rank} + ${esc(sp.stat)} ${sp.statValue}</span></p>` : "";
+  if (g.pool && g.pool.held) h += `<p class="grim-sp"${g.pool.rolls?` title="${esc(g.pool.text)}"`:""}>Casting pool <b>${g.pool.rolls}</b> <span class="sub">${esc(g.pool.discipline)} ${g.pool.rank} · holding ${g.pool.held}: ${g.pool.rolls?`roll ${g.pool.rolls}`:"no dice left"}</span></p>`;
   if (sa) h += `<p class="grim-sp" title="${esc(sa.text)}">Spell Attack <b>${sa.value}</b> <span class="sub">${esc(sa.discipline)} ${sa.rank}${sa.parts.map(x=>` + ${esc(x.stat)} ${x.value}`).join("")}</span></p>`;
 
   // From the book
@@ -2086,7 +2125,7 @@ function grimoireHtml(ch, p){
         <b>${esc(l.name)}</b>${l.mastered?` <span class="chip">Mastered</span>`:""}
         <span class="sub">${esc(l.tier)} · ${esc(l.domain)} / ${esc(glyphText(l.glyph))}${formNote(l.form)}</span>
         <span class="num">${esc(tnth(l))}${l.noRoll?" · no roll":""}</span>${l.beyondPool?`<span class="beyond" title="${esc(g.pool.text)}">Beyond your pool</span>`:""}
-        <span class="eff">${spText(l.sp&&l.sp.effect, l.effect||"")}</span></summary>
+        <span class="eff">${spText(l.sp&&l.sp.effect, l.effect||"")}</span>${holdControlHtml(l)}</summary>
       <div class="spell-body">
         ${l.flavorLine?`<p class="flavor">${esc(l.flavorLine)}</p>`:""}
         <p>${[l.range&&`Range ${l.range}`, l.spellType, l.target&&`Target: ${l.target}`, l.duration&&`Duration: ${l.duration}`].filter(Boolean).map(esc).concat(l.defending?[`Defending: ${spText(l.sp&&l.sp.defending, l.defending)}`]:[]).join(" · ")}</p>
@@ -2923,6 +2962,15 @@ function bindHitModal(body, foot){
   body.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
     if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; redraw(sel(el, "data-hitnat"));
   });
+  // Decision 224 (Q19): Let go is its own commit, before or after Apply; the hit itself is untouched.
+  body.querySelectorAll("[data-letgo]").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.letgo, r = Engine.releaseSpell(clone(ch), id);
+    if (!r.ok){ notice(r.why); return; }
+    commit("grimoire", `Let go of ${r.name}`, ()=>{ Engine.releaseSpell(ch, id); });
+    redraw();
+    const next = body.querySelector("[data-letgo]") || foot.querySelector("[data-hitapply]:not([disabled])") || foot.querySelector("[data-hitcancel]");
+    if (next) next.focus();
+  });
   foot.querySelectorAll("[data-hitcancel]").forEach(b=>b.onclick=closeModal);
   foot.querySelectorAll("[data-hitapply]").forEach(b=>b.onclick=()=>{
     const st=S.hit; if (!st) return;
@@ -2945,6 +2993,16 @@ function bindVitalControls(root){
   const num = el => el && el.value!=="" ? Number(el.value) : null;
   // Damage. Withering is the part of `damage` that can't regenerate, so it
   // can never be more than the damage itself — a hand edit down trims it.
+  // Decision 224: Let go, from Main, the Grimoire, the Pain popover or the Trackers tab. Focus goes to
+  // the next Let go on the page, else the Hold that came back, else the vitals' heading.
+  root.querySelectorAll("[data-letgo]").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.letgo, inGrimoire = !!b.closest("details.spell"), r = Engine.releaseSpell(clone(ch), id);
+    if (!r.ok){ notice(r.why); return; }
+    commit("grimoire", `Let go of ${r.name}`, ()=>{ Engine.releaseSpell(ch, id); });
+    const next = inGrimoire ? document.querySelector(attrSel("data-hold", id))
+      : document.querySelector("[data-letgo]") || document.querySelector("[data-actapply]") || document.querySelector("#main h1, .step-title");
+    if (next){ if (!next.matches("button")) next.tabIndex = -1; next.focus(); }
+  });
   const setDamage = v => { ch.trackers.damage=v;
     ch.trackers.witheringDamage=Math.min(v, Math.max(0, Number(ch.trackers.witheringDamage)||0)); };
   root.querySelectorAll("[data-dmg]").forEach(b=>b.onclick=()=>{
@@ -3327,10 +3385,21 @@ function bindSheet(){
   // Grimoire (Decision 108). Adding, linking, removing and Mastering are each
   // one commit(); notes are keystrokes, like the table cells.
   main.querySelectorAll("[data-spelllink]").forEach(b=>b.onclick=()=>linkSpellRow(ch, Number(b.dataset.spelllink)));
+  main.querySelectorAll("[data-hold]").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.hold, c = Engine.holdSpell(clone(ch), id);
+    if (!c.ok){ notice(c.why); return; }
+    commit("grimoire", `Grimoire: holding ${c.name}`, ()=>{ Engine.holdSpell(ch, id); });
+    const again = document.querySelector(attrSel("data-letgo", id)); if (again) again.focus();
+  });
   main.querySelectorAll("[data-spellrm]").forEach(b=>b.onclick=()=>{
     const i = Number(b.dataset.spellrm), line = Engine.grimoire(ch).lines[i];
     const label = line && (line.name || line.spellId || (line.row && Object.values(line.row).find(v=>typeof v==="string" && v))) || "a row";
-    commit("grimoire", `Grimoire: removed ${label}`, ()=>{ Engine.removeGrimoireRow(ch, i); });
+    const remove = () => commit("grimoire", `Grimoire: removed ${label}`, ()=>{ Engine.removeGrimoireRow(ch, i); });
+    // The confirm is computed: the hold on a clone with the row gone, never assumed from the row.
+    const gone = clone(ch); Engine.removeGrimoireRow(gone, i);
+    const ends = line && line.id && Engine.heldSpells(ch).held.some(x=>x.id===line.id) && !Engine.heldSpells(gone).held.some(x=>x.id===line.id);
+    if (ends) askFirst({ title:`Remove ${label}?`, text:`You're holding it. Taking it out of the Grimoire lets it go.`, yes:"Remove it", then:remove });
+    else remove();
   });
   main.querySelectorAll("[data-spellown]").forEach(b=>b.onclick=()=>{
     const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"); if (!p) return;

@@ -1708,3 +1708,34 @@ test("P17 2: Blood Conditioning and Growing Hunger raise RoU and SFR", () => {
   const s1 = Engine.sfr(ch);
   assert.deepEqual([s1.value, s1.rou], [23, 8]);
 });
+
+// ── Holding a spell (reference/rulings-2026-10-10.md Q17–Q19, W87) ─────────────────────────
+
+function holder10(rank, ids) {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  const base = Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank;
+  ch.archetypeChoices.disciplines = { evocation: rank - base };
+  ch.panelData.grimoire = ids.map(spellId => ({ spellId, stage: "known", notes: "" }));
+  return ch;
+}
+
+test("P10 1: a held Concentration spell sets aside one die, not its Threshold (Q17)", () => {
+  // Q17 follow-up: "it takes one die while you hold it, so any other spells you cast you throw 1 less die."
+  const ch = holder10(3, ["fog-shroud"]);
+  assert.equal(D.spells.find(s => s.id === "fog-shroud").th, 2, "the case needs a Threshold that differs from one");
+  assert.ok(Engine.holdSpell(ch, "fog-shroud").ok);
+  const p = Engine.castingPool(ch);
+  assert.deepEqual([p.rank, p.held, p.rolls], [3, 1, 2]);
+});
+
+test("P10 2: an Arcanist holds at most their Evocation rank (Q17)", () => {
+  // Q17 follow-up: "you can only hold up to your Evocation rank in spells at a time."
+  const ch = holder10(2, ["fog-shroud", "wind-walker", "blazing-fury"]);
+  assert.ok(Engine.holdSpell(ch, "fog-shroud").ok);
+  assert.ok(Engine.holdSpell(ch, "wind-walker").ok);
+  const third = Engine.holdSpell(ch, "blazing-fury");
+  assert.equal(third.ok, false);
+  assert.match(third.why, /Evocation rank \(2\)/);
+  assert.equal(JSON.stringify(ch.trackers.heldSpells), JSON.stringify(["fog-shroud", "wind-walker"]));
+});

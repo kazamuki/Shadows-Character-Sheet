@@ -42,7 +42,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.25");
+  assert.equal(resumed.meta.schemaVersion, "0.26");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -978,5 +978,81 @@ test("P9a 9: the SG-88's mod list says why the Scope won't go on", () => {
   assert.match(opt("Scope").textContent, /Scope \(1 slot\) — Shotguns don't take scopes\./);
   assert.match(opt("Angel Mod").textContent, /Angel Rounds need a box magazine with a power cell\./);
   assert.match(opt("Silencer").textContent, /Doesn't go on Shotguns\./, "a refusal with no reason changed");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Holding a spell (Decision 224, W87) ───────────────────────────────
+function holdingCharacter(held = ["fog-shroud"]) {
+  const ch = lockedCharacter();
+  ch.archetypeChoices.disciplines = { evocation: 3 - Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank };
+  ch.panelData.grimoire = ["fog-shroud", "wind-walker"].map(spellId => ({ spellId, stage: "known", notes: "" }));
+  ch.trackers.heldSpells = held;
+  return ch;
+}
+
+test("P10 10: the Pain line and Main say what's held, and Main's Let go releases it", () => {
+  const app = openSheet(holdingCharacter(), "main");
+  assert.match(app.$("[data-holding]").textContent, /Holding Fog Shroud: −1 Essence die/);
+  assert.match(app.$(".cond-grid").textContent, /Holding Fog Shroud: −1 Essence die/, "Pain's card doesn't say it at Pain 0");
+  assert.match(app.$(".cond-grid").textContent, /no penalties/, "the hold changed Pain's own line");
+  app.click('[data-holding] [data-letgo="fog-shroud"]');
+  assert.deepEqual(activeChar(app).trackers.heldSpells, []);
+  assert.equal(app.$("[data-holding]"), null, "the line stayed with nothing held");
+  assert.ok(!/Holding/.test(app.$("#main").textContent));
+  app.click("[data-toastundo]");
+  assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P10 10b: two holds read as dice, and the Trackers tab names them", () => {
+  const app = openSheet(holdingCharacter(["fog-shroud", "wind-walker"]), "trackers");
+  assert.match(app.$("#main").textContent, /Holding 2 spells: −2 Essence dice/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P10 11: the hit panel prompts the check and lets go; Apply still applies the hit", () => {
+  const app = openSheet(holdingCharacter(), "trackers");
+  app.click("[data-hitopen]");
+  setHit(app, "damage", "5");
+  const box = app.$("#modal [data-concentration]");
+  assert.ok(box, "no Concentration prompt on a hit that gets through");
+  assert.match(box.textContent, /You're holding Fog Shroud\. A WILL Essence check keeps it\. Your GM sets the TN and TH\./);
+  assert.ok(!/F\d\d/.test(box.textContent), "a flag id rendered");
+  setHit(app, "damage", "0");
+  assert.equal(app.$("#modal [data-concentration]"), null, "a prompt with nothing through");
+  setHit(app, "damage", "5");
+  app.click('#modal [data-letgo="fog-shroud"]');
+  assert.deepEqual(activeChar(app).trackers.heldSpells, []);
+  assert.equal(activeChar(app).trackers.damage, 0, "Let go applied the hit");
+  assert.equal(app.$("#modal [data-concentration]"), null, "the prompt stayed after Let go");
+  assert.equal(app.window.document.activeElement, app.$("#modal [data-hitapply]"), "focus didn't go to Apply");
+  app.click("[data-hitapply]");
+  assert.ok(activeChar(app).trackers.damage > 0, "Apply no longer applies the hit");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P10 11b: applying a hit that drops you to zero lets nothing go on its own", () => {
+  const app = openSheet(holdingCharacter(), "trackers");
+  app.click("[data-hitopen]");
+  setHit(app, "category", "massive");
+  setHit(app, "damage", "60");
+  setHit(app, "atZero", "pass");
+  assert.ok(app.$("#modal [data-concentration]"), "going down didn't prompt");
+  app.click("[data-hitapply]");
+  assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"], "the hold dropped on its own");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P10 12: with no dice left the pool line says so, and several holds read the plural check in the hit panel", () => {
+  const ch = holdingCharacter(["fog-shroud", "wind-walker", "blazing-fury"]);
+  ch.panelData.grimoire.push({ spellId: "blazing-fury", stage: "known", notes: "" });
+  const app = openSheet(ch, "loadout");
+  assert.match(app.$("#main").textContent, /holding 3: no dice left/);
+  assert.ok(!app.$$("#main .grim-sp").some(p => /exploding 10/.test(p.title)), "the pool line promises an exploding 10 with no dice left");
+  assert.equal(app.$("#main .beyond"), null, "a spell was marked Beyond your pool with no dice left");
+  app.click('[data-sec="trackers"]');
+  app.click("[data-hitopen]");
+  setHit(app, "damage", "5");
+  assert.match(app.$("#modal [data-concentration]").textContent, /You're holding Fog Shroud, Wind Walker and Blazing Fury\. A WILL Essence check keeps each one\./);
   assert.deepEqual(app.errors, []);
 });
