@@ -1286,10 +1286,10 @@ function sfrRoundText(t, short){
   if (t.at) return `${t.spent} of ${t.cap} this round: that's your Rate of Use`;
   return short ? `${t.spent} this round` : `${t.spent} of ${t.cap} this round`;
 }
+// The card's line never grows into a sentence, so the popover's buttons stay put under the finger;
+// the danger class carries at and past RoU, and the popover and Trackers say it in words.
 function sfrCardMeta(sf, t){
-  const line = sfrRoundText(t, true);
-  if (t && (t.at || t.past)) return line;
-  return [sf.rou!=null ? `RoU ${sf.rou}` : "", line].filter(Boolean).join(" · ");
+  return [sf.rou!=null ? `RoU ${sf.rou}` : "", t && t.spent ? `${t.spent} this round` : ""].filter(Boolean).join(" · ");
 }
 // Decision 226: Walk, Run, Sprint and Jump from MOB, at the top of Main's Combat section. A
 // Condition that changes movement is named beside it, never computed (PQ7).
@@ -1299,7 +1299,7 @@ function movementLineHtml(ch){
   const pace = p => `${esc(p.name)} ${p.value}${u}${p.attack ? ` (${signed(p.attack)})` : ""}`;
   let h = `<p class="main-move" data-movement>${m.paces.map(pace).join(" · ")}${m.jump ? ` · ${esc(m.jump.name)} ${m.jump.value}${u}` : ""}`;
   m.conditional.forEach(c=>{ h += `<br><span class="move-while">${esc(c.name)}, ${esc(c.while)}: ${c.paces.map(p=>`${esc(p.name)} ${p.value}${u}`).join(" · ")}${c.jump ? ` · ${esc(c.jump.name)} ${c.jump.value}${u}` : ""}</span>`; });
-  m.conditions.forEach(c=>{ h += `<br><span class="move-cond">${esc(c.name)}: ${esc(c.short)}</span>`; });
+  m.conditions.forEach(c=>{ h += `<br><span class="move-cond">${esc(c.name)}${c.text ? `: ${esc(c.text)}` : ""}</span>`; });
   return h + `</p>`;
 }
 
@@ -1328,7 +1328,8 @@ function vitalPopover(ch, key){
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
         `<div class="trk-row"><button class="btn sm" data-trk="${esc(p.id)}|-1">−1</button><button class="btn sm" data-trk="${esc(p.id)}|1">+1</button></div>` +
-        (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") }; }
+        (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") +
+        (turn && turn.spent ? `<div class="trk-actions"><button class="btn sm" data-popreset>Turn Reset</button></div>` : "") }; }
   if (key==="cred") return { title:"Çredits",
     html: now(`${CR} ${numText(ch.trackers.credits.current)}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
@@ -3154,6 +3155,11 @@ function openVitalPopover(key, scope="#main"){
     bindVitalControls(body);
     body.querySelectorAll("[data-pophit]").forEach(b=>b.onclick=()=>{
       closePopover(true); openHitModal(`${scope} [data-vpop="${key}"]`);
+    });
+    // Decision 225: a new round starts from Main, the same Turn Reset panel and the same one writer.
+    body.querySelectorAll("[data-popreset]").forEach(b=>b.onclick=()=>{
+      closePopover(false); S.hit=null; S.act=Object.assign(newActForm("reset"), { owner: S.ch });
+      S.section=normSection("trackers"); window.scrollTo(0,0); update();
     });
     body.querySelectorAll("[data-popgo]").forEach(b=>b.onclick=()=>{
       closePopover(false); S.section=normSection(b.dataset.popgo); window.scrollTo(0,0); update();

@@ -1072,17 +1072,20 @@ test("P11 10: Main's SFR card counts the round and warns past RoU, and Turn Rese
   app.click('#main [data-vpop="sfr"]');
   for (let i = 0; i < 3; i++) press(app, '#vpop [data-trk="sfr|1"]');
   assert.match(card(), /RoU 4 · 3 this round/);
+  assert.match(app.$("#vpop").textContent, /3 of 4 this round/);
   press(app, '#vpop [data-trk="sfr|1"]');
-  assert.match(card(), /4 of 4 this round: that's your Rate of Use/);
+  assert.match(card(), /RoU 4 · 4 this round/);
+  assert.match(app.$("#vpop").textContent, /4 of 4 this round: that's your Rate of Use/);
   assert.ok(app.$('#main [data-vpop="sfr"]').classList.contains("danger"), "the card didn't go to the danger class at RoU");
   press(app, '#vpop [data-trk="sfr|1"]');
-  assert.match(card(), /5 this round, 1 past your Rate of Use\. Your GM's call\./);
+  assert.match(card(), /RoU 4 · 5 this round/);
+  assert.ok(!/GM's call/.test(card()), "the card's line grew into a sentence, so the popover's +1 moves under the finger");
+  assert.match(app.$("#vpop").textContent, /5 this round, 1 past your Rate of Use\. Your GM's call\./);
   assert.equal(focused(app), app.$('#vpop [data-trk="sfr|1"]'), "focus left the +1");
   assert.deepEqual(activeChar(app).trackers.sfr, { spent: 5, turn: 5 }, "the +1 past RoU was refused");
-  app.window.eval("closePopover(false);");
-  app.click('[data-sec="trackers"]');
+  // The count doesn't outlive the fight: Turn Reset is one press from Main's popover, not only a tab away.
+  app.click("#vpop [data-popreset]");
   assert.match(app.$("#main").textContent, /5 this round, 1 past your Rate of Use/, "the Trackers row doesn't say it");
-  app.click('[data-actopen="reset"]');
   assert.match(app.$('[data-actpanel="reset"]').textContent, /SFR spent this round: 5 → 0/);
   assert.equal(app.$("[data-actapply]").disabled, false, "Apply Reset is disabled with only SFR spent");
   app.click("[data-actapply]");
@@ -1120,6 +1123,7 @@ test("P11 12: Main shows movement, and Fleet of Foot for a True Warrior", () => 
   assert.ok(!/Walk 10/.test(line(app)), "Fleet doubled Walk");
   assert.ok(!/Fleet of Foot/.test(line(openSheet(streetVampire(), "main"))), "a Vampire has Fleet of Foot");
   const prone = lockedCharacter(); prone.trackers.conditions = [{ id: "prone" }];
-  assert.match(line(openSheet(prone, "main")), /Prone: half move/);
+  assert.match(line(openSheet(prone, "main")), /Prone: half move$/);
+  assert.ok(!/attack/i.test(line(openSheet(prone, "main"))), "the movement line repeats the Condition's attack penalty");
   assert.deepEqual(app.errors, []);
 });

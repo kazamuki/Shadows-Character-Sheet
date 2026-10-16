@@ -9,7 +9,7 @@ window.SHADOWS_CHANGELOG = [
       "**Your Rate of Use counts the round.** Spend SFR from Main's SFR card or the Trackers tab, and the sheet counts what you've spent this round. It tells you when you reach your Rate of Use and when you go past it; Turn Reset starts the count again. Feeding and the Thirst don't count as spending.",
       "**Main's SFR card opens a popover** with −1 and +1, so a fight doesn't need the Trackers tab.",
       "**A written-in pool shows on Main.** A Custom archetype that uses SFR gets Main's SFR card once you set its size.",
-      "**Main shows how far you move.** Walk, Run, Sprint and Jump from your MOB, in meters, with the attack penalty for running and sprinting, and Fleet of Foot's distances for a True Warrior. Prone and Restrained are named beside them."
+      "**Main shows how far you move.** Walk, Run, Sprint and Jump from your MOB, in meters, with the attack penalty for running and sprinting, and Fleet of Foot's distances for a True Warrior. Prone and Restrained are named beside them. Main's SFR popover has a Turn Reset button, so a new round starts without leaving Main."
     ]
   },
   {

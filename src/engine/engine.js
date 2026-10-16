@@ -1008,7 +1008,7 @@ const Engine = (() => {
     specializationChosen(ch).forEach(o=>(o.grants||[]).forEach(g=>add(g, o)));
     archetypePowers(ch).forEach(p=>(Array.isArray(p.grants) ? p.grants : []).forEach(g=>add(g, p)));
     const conditions = conditionState(ch).active.filter(c=>c.def && c.def.movement===true)
-      .map(c=>({ name:c.def.name, short:txt(c.def.short) }));
+      .map(c=>({ name:c.def.name, text:txt(c.def.movementText) }));
     return { mob, unit, paces:base, jump:jumpOf(base), conditional, conditions };
   }
 
