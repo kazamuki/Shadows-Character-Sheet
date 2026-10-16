@@ -1168,7 +1168,8 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "The body is hardware. This is the compatibility patch.\n\nSuffer no Sanity loss when you acquire cybernetics.",
       "flagged": true,
-      "flagNote": "F5: open question for D - SAN vs TOL interaction (pending the Biomech rewrite, F6). CRB v4 text is unchanged from the flagged version."
+      "flagNote": "F5: open question for D - SAN vs TOL interaction (pending the Biomech rewrite, F6). CRB v4 text is unchanged from the flagged version.",
+      "playerNote": "How this works with SAN and TOL is still being written. Until it is, it's your GM's call, and IP doesn't buy it in play."
     },
     {
       "id": "danger-sense",
@@ -1198,6 +1199,9 @@ window.SHADOWS_DATA = {
       "maxRank": 5,
       "description": "Each rank grants 10 additional Skill Points.",
       "universal": true,
+      "flagged": true,
+      "flagNote": "F44: Educated's grant is creation Skill Points; after lock there is nothing to spend them on. What does a rank bought in play give? Deighton. Until ruled, the IP buy refuses it. Talented still offers it (Q25).",
+      "playerNote": "What a rank of Educated gives once your character is made is still being written. Until it is, it's your GM's call, and IP doesn't buy it in play.",
       "grants": [{ "type": "skillPoints", "perRank": 10 }]
     },
     {
@@ -1748,7 +1752,7 @@ window.SHADOWS_DATA = {
       "name": "Minor Insanity",
       "pointsGranted": 1,
       "maxRank": 5,
-      "description": "Your grip on the world has cracks in it. Each Rank reduces your Sanity by 5% and expresses a trait you carry: paranoia, a bad temper, compulsive lying, sadistic streaks, impulsiveness. Choose your traits with your GM.\n\nYou may spend IP during play to buy out this Disadvantage."
+      "description": "Your grip on the world has cracks in it. Each Rank reduces your Sanity by 5% and expresses a trait you carry: paranoia, a bad temper, compulsive lying, sadistic streaks, impulsiveness. Choose your traits with your GM.\n\nYou may spend IP between sessions to buy out this Disadvantage."
     },
     {
       "id": "monster-magnet",
@@ -3518,7 +3522,11 @@ window.SHADOWS_DATA = {
     "majorGeneralNote": "The General Major Milestones are the Professional's alone (Deighton's ruling, F9). Every other archetype is offered its own list, as it is written; a character that already took a General Major keeps it."
   },
   /* IMPROVEMENT POINTS (IP) -- post-creation advancement costs (Decision 14).
-     `perSession` is the default grant (overridable per session, Decision 23).
+     `perHour` is the Session Log's rate and GM mode's close-out: 5 IP an hour of
+     play, rounded up (0450, Decisions 206 and 228). `advantageCost` and
+     `disadvantageBuyOff` are points x `timesPoints` a rank, flat by rank (0450,
+     Deighton Q24); `restore` is 5 IP a point of SAN and 25 a Health Level lost
+     to a maiming (0450, Decision 227).
      Stat raise = `statIncreaseCost.perPoint` x the CURRENT value, so it
      scales as the stat grows (Decision 135). Skill raise = `perRank` x current rank, Focused
      skills `focusedPerRank` x current rank (Decision 134: numbers the engine
@@ -3586,9 +3594,11 @@ window.SHADOWS_DATA = {
     "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}."
   },
   "ip": {
-    "perSession": 10,
-    /* GM mode's close-out (Decision 206): 5 IP an hour of play, rounded up (CRB 0450). The sheet's own default stays perSession (Decision 13). */
+    /* 5 IP an hour of play, rounded up (CRB 0450): the Session Log's and GM mode's close-out (Decisions 206, 228). */
     "perHour": 5,
+    "advantageCost": { "timesPoints": 10 },
+    "disadvantageBuyOff": { "timesPoints": 10 },
+    "restore": { "sanPerPoint": 5, "healthLevel": 25 },
     "statIncreaseCost": {
       "perPoint": 10,
       "example": "REF 6 to 7 costs 60 IP; 9 to 10 costs 90 IP."

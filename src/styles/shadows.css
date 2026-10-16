@@ -1398,3 +1398,14 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .act-list li{display:flex; justify-content:space-between; gap:12px; background:var(--panel-2); border:1px solid var(--frame); border-radius:6px; padding:9px 12px; min-height:44px; align-items:center}
 .act-label{min-width:0; overflow-wrap:anywhere}
 .act-time{color:var(--dim); font-size:.8rem; white-space:nowrap}
+
+/* Buy an Advantage, Buy off a Disadvantage, Restore (Decision 227) */
+.ip-pick{display:block; width:100%; margin-top:6px}
+.raise-results details.ip-desc{margin-top:4px; font-size:.78rem}
+.raise-results details.ip-desc .desc{margin-top:4px; color:var(--dim); white-space:pre-line}
+.ip-restore{display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; padding:10px 0; border-bottom:1px solid var(--frame)}
+.ip-restore .ip-what{flex:1 1 160px; min-width:0}
+.ip-restore .why{font-size:.74rem; color:var(--gold); margin-top:2px}
+.ip-restore input[type=number]{width:72px}
+.ip-restore .btn{white-space:normal; text-align:left}
+.raise-results tr.ip-extra td{padding-top:0; border-top:0}

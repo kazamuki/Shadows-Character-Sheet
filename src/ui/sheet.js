@@ -1484,6 +1484,9 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
 }
 
 // ── Sheet: progression (IP + Milestones) ─────────────────────────────
+// A journal entry is untrusted (Decision 124): a trait is named from its id or its stored name, only if they are text.
+const ipTraitName = (e, lookup, fallback) => { const d = typeof e.targetId==="string" ? lookup(e.targetId) : null; return d ? d.name : (typeof e.name==="string" && e.name ? e.name : fallback); };
+const ipMove = e => Number.isFinite(e.from) && Number.isFinite(e.to) ? `${e.from} → ${e.to}` : "";
 function renderShProgression(){
   const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
   let h = sheetHeader("Progression", `Improvement Points and Milestones. Every spend is a journal entry — auditable, undoable, and everything downstream recalculates on its own.`);
@@ -1500,13 +1503,19 @@ function renderShProgression(){
   h += `<div class="raise-row">
     <button class="btn primary" data-raiseopen="stat">Raise a Stat</button>
     <button class="btn primary" data-raiseopen="skill">Raise a Skill</button>
-    <button class="btn primary" data-raiseopen="power">Buy or Raise a Power</button></div>`;
+    <button class="btn primary" data-raiseopen="power">Buy or Raise a Power</button>
+    <button class="btn primary" data-ipopen="advantage">Buy an Advantage</button>
+    ${(ch.disadvantages||[]).some(r=>r && Engine.disById(r.id)) ? `<button class="btn primary" data-ipopen="disadvantage">Buy off a Disadvantage</button>` : ""}
+    ${Engine.ipCost(ch, "restore", "san", 1).ok || Engine.hlState(ch).massive>0 ? `<button class="btn primary" data-ipopen="restore">Restore</button>` : ""}</div>`;
 
   // IP journal
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
   h += ip.log.length ? `<div class="journal">` + ip.log.slice().reverse().map(e=>{
     const what = e.kind==="grant" ? `Grant` :
       e.targetType==="spell" ? `Mastered ${(Engine.spellById(e.targetId)||{name:e.targetId}).name}` :
+      e.targetType==="advantage" ? `Advantage: ${ipTraitName(e, Engine.advById, "an Advantage")} ${ipMove(e)}` :
+      e.targetType==="disadvantage" ? `Bought off: ${ipTraitName(e, Engine.disById, "a Disadvantage")}${e.to>0 ? " "+ipMove(e) : ""}` :
+      e.targetType==="restore" ? (e.targetId==="massiveLevel" ? `Restored a Health Level` : `Restored ${Number.isFinite(e.from) && Number.isFinite(e.to) && e.from>e.to ? e.from-e.to+" " : ""}SAN`) :
       e.targetType==="power" ? (typeof e.to==="number" ? `${typeof e.name==="string" && e.name ? e.name : "A power"} ${e.from} → ${e.to}`
                                                      : `Power: ${typeof e.name==="string" && e.name ? e.name : "unnamed"}`) :
       `${e.targetType==="stat"?e.targetId:(Engine.skillById(e.targetId)||{name:e.targetId}).name} ${e.from} → ${e.to}`;
@@ -1594,17 +1603,21 @@ function renderShProgression(){
 // ── Sheet: sessions ──────────────────────────────────────────────────
 function renderShSessions(){
   const ch=S.ch, ms=Engine.milestoneState(ch), ip=Engine.ipState(ch);
-  let h = sheetHeader("Session Log", `Logging a session grants <em>${D.ip.perSession} IP</em> (override below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
+  let h = sheetHeader("Session Log", `Logging a session grants <em>${D.ip.perHour} IP an hour of play</em> (change it below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
   h += `<div class="review-block"><h2>Log a session</h2>
     <div class="grid-3">
       <label class="field"><span>Date</span><input type="date" data-sesdate value="${localDay()}"></label>
       <label class="field"><span>Title</span><input type="text" data-sestitle placeholder="What the city did to you this time"></label>
-      <label class="field"><span>IP earned</span><input type="number" min="0" data-sesip value="${D.ip.perSession}"></label>
+      <label class="field"><span>Hours played</span><input type="number" min="0" step="0.5" inputmode="decimal" data-seshours></label>
+    </div>
+    <div class="grid-3">
+      <label class="field"><span>IP earned</span><input type="number" min="0" inputmode="numeric" data-sesip></label>
     </div>
     <label class="field"><span>Notes</span><textarea data-sesnotes style="min-height:70px" placeholder="Leads, debts, names to remember"></textarea></label>
     <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap">
       <label class="check ses-mp"><input type="checkbox" data-sesmp checked> Milestone Point</label>
-      <button class="btn go" data-seslog="1">Log session</button>
+      <button class="btn go" data-seslog="1" disabled>Log session</button>
+      <span class="sub" data-seswhy>Enter the hours played or the IP earned.</span>
     </div></div>`;
   h += `<div class="sect">History — ${ch.sessions.length} session${ch.sessions.length===1?"":"s"} · ${ms.mp} MP · ${ip.earned} IP earned</div>`;
   h += ch.sessions.length ? ch.sessions.map((s,i)=>`<div class="pick"><div class="head">
@@ -2934,6 +2947,182 @@ function openRaisePicker(type){
     } });
 }
 
+// ── Buy an Advantage / Buy off a Disadvantage / Restore (Decision 227) ──
+// Three more modals over the same journal, opened from Progression beside
+// Raise a Stat. Each buy is one commit() with its undo toast, and the modal
+// stays open for the next, as the raise modals do (Decision 159). The engine
+// decides who may buy what; this only asks for the pick a new rank needs.
+const IPBUY_TITLE = { advantage:"Buy an Advantage", disadvantage:"Buy off a Disadvantage", restore:"Restore" };
+const heldTraitRank = (rows, id) => (Array.isArray(rows) ? rows : []).reduce((n, r)=>n + (r && r.id===id ? Math.max(0, Math.floor(Number(r.rank)||0)) : 0), 0);
+function ipBuyStatusHtml(ch, kind){
+  const ip = Engine.ipState(ch).available, P = D.ip;
+  if (kind==="advantage") return `You have <b>${ip} IP</b> · an Advantage costs its points × ${P.advantageCost.timesPoints} IP a rank, the same at every rank`;
+  if (kind==="disadvantage") return `You have <b>${ip} IP</b> · a Disadvantage comes off at its points × ${P.disadvantageBuyOff.timesPoints} IP, a rank at a time`;
+  return `You have <b>${ip} IP</b> · SAN ${P.restore.sanPerPoint} IP a point · a Health Level lost to a maiming ${P.restore.healthLevel} IP`;
+}
+// The pick a new rank asks for, drawn in its row. What's chosen waits in S.ipBuy until Buy.
+function ipPickHtml(ch, id, ask){
+  const pid = ask.pick.id, label = ask.pick.label || "Choice", have = (S.ipBuy.picks[id] || {})[pid];
+  if (ask.text) return `<input type="text" class="ip-pick" data-ippick="${esc(pid)}" data-ipfor="${esc(id)}" value="${esc(typeof have==="string" ? have : "")}" placeholder="${esc(label)}" aria-label="${esc(label)}">`;
+  const held = Engine.picksFor(ch, "advantage", id).find(p=>p.pick.id===pid);
+  const taken = ask.pick.distinct && held ? held.chosen.filter(Boolean) : [];
+  const opts = ask.options.filter(o=>!o.missing && !taken.includes(o.id));
+  return ask.indices.map((ix, i)=>{
+    const cur = Array.isArray(have) ? have[i] : "";
+    return `<select class="ip-pick" data-ippick="${esc(pid)}" data-ipslot="${i}" data-ipfor="${esc(id)}" aria-label="${esc(label)}">
+      <option value="">Choose a ${esc(label.toLowerCase())}…</option>${opts.map(o=>`<option value="${esc(o.id)}" ${cur===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select>`;
+  }).join("");
+}
+// The picks typed for a row, in the engine's shape: a value per pick, an array when it asks for several slots.
+function ipPicksFor(id, picks){
+  const have = (S.ipBuy.picks[id] || {}), out = {};
+  for (const a of picks){
+    const v = have[a.pick.id];
+    out[a.pick.id] = a.text ? (typeof v==="string" ? v : "") : (Array.isArray(v) ? (a.indices.length>1 ? v : v[0]) : "");
+  }
+  return out;
+}
+const ipPicksReady = (id, picks) => picks.every(a=>{
+  if (a.text) return a.gmApproval || a.optional || String(((S.ipBuy.picks[id] || {})[a.pick.id])||"").trim()!=="";
+  const v = (S.ipBuy.picks[id] || {})[a.pick.id];
+  return a.optional || (Array.isArray(v) && a.indices.every((_, i)=>v[i]));
+});
+function ipBuyRowHtml({ name, sub, move, cost, btn, key, why, off, extra }){
+  // The pick and a Disadvantage's text get a row of their own, the table's full width: a phone's name column is too narrow for a select.
+  return `<tr class="${why?"off":"pickrow"}"><td><b>${name}</b>${sub?`<div class="sub">${sub}</div>`:""}${why?`<div class="why">${esc(why)}</div>`:""}</td>
+    <td class="num" data-k="Move">${move}</td><td class="num" data-k="Cost">${cost}</td>
+    <td><button class="btn sm primary" data-ipbuy="${key}" ${why||off?"disabled":""}>${btn}</button></td></tr>`
+    + (extra ? `<tr class="ip-extra ${why?"off":""}"><td colspan="4">${extra}</td></tr>` : "");
+}
+function ipAdvantagesHtml(ch){
+  const ip = Engine.ipState(ch).available, q = String(S.ipBuy.q||"").trim().toLowerCase();
+  const heldIds = [...new Set((ch.advantages||[]).filter(r=>r && Engine.advById(r.id)).map(r=>r.id))];
+  const row = def => {
+    const c = Engine.ipCost(ch, "advantage", def.id), rank = heldTraitRank(ch.advantages, def.id);
+    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    const asks = c.ok ? c.picks : [];
+    const pts = Number(def.cost);
+    return ipBuyRowHtml({ name: esc(def.name), sub: esc(`${pts} point${pts===1?"":"s"} a rank${rank?` · rank ${rank}`:""}`),
+      move: c.ok ? `${c.from} → ${c.to}` : `${rank}`, cost: c.ok ? `${c.cost} IP` : "—", btn:"Buy", key:`advantage|${esc(def.id)}`,
+      why: c.ok ? short : c.why, off: c.ok && !short && !ipPicksReady(def.id, asks),
+      extra: asks.map(a=>ipPickHtml(ch, def.id, a)).join("") });
+  };
+  const table = defs => `<table class="ref spell-results raise-results"><tbody>${defs.map(row).join("")}</tbody></table>`;
+  const mine = heldIds.map(Engine.advById).filter(d=>!q || `${d.name} ${d.description||""}`.toLowerCase().includes(q));
+  const rest = D.advantages.filter(d=>!heldIds.includes(d.id) && (!q || `${d.name} ${d.description||""}`.toLowerCase().includes(q)));
+  if (!mine.length && !rest.length) return `<p class="step-note">No Advantage matches that.</p>`;
+  return (mine.length ? `<div class="sect">Your Advantages</div>${table(mine)}` : "")
+    + (rest.length ? `<div class="sect">Take a new one</div>${table(rest)}` : "");
+}
+function ipDisadvantagesHtml(ch){
+  const ip = Engine.ipState(ch).available;
+  const ids = [...new Set((ch.disadvantages||[]).filter(r=>r && Engine.disById(r.id)).map(r=>r.id))];
+  if (!ids.length) return `<p class="step-note">No Disadvantage left to buy off.</p>`;
+  const rows = ids.map(id=>{
+    const def = Engine.disById(id), c = Engine.ipCost(ch, "disadvantage", id), rank = heldTraitRank(ch.disadvantages, id);
+    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    return ipBuyRowHtml({ name: esc(def.name),
+      sub: esc(`${def.pointsGranted} point${Number(def.pointsGranted)===1?"":"s"} a rank · rank ${rank}`),
+      move: c.ok ? (c.to>0 ? `rank ${c.from} → ${c.to}` : "removed") : `${rank}`, cost: c.ok ? `${c.cost} IP` : "—", btn:"Buy off",
+      key:`disadvantage|${esc(id)}`, why: c.ok ? short : c.why,
+      extra: `<details class="ip-desc"><summary>What it says</summary><div class="desc">${esc(def.description||"")}</div></details>` });
+  }).join("");
+  return `<table class="ref spell-results raise-results"><tbody>${rows}</tbody></table>
+    <p class="step-note">No Character Points come back.</p>`;
+}
+// SAN takes an amount; a Health Level is one a press. Each is clamped to what was lost.
+function ipSanLost(ch){ const c = Engine.ipCost(ch, "restore", "san", 1); return c.ok ? c.from : 0; }
+function ipSanN(ch){
+  const loss = ipSanLost(ch), n = S.ipBuy.san;
+  return Math.max(1, Math.min(loss, Number.isInteger(n) ? n : loss));
+}
+function ipSanButton(ch){
+  const n = ipSanN(ch), c = Engine.ipCost(ch, "restore", "san", n), ip = Engine.ipState(ch).available;
+  const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+  return { text: c.ok ? `Restore ${n} SAN · ${c.cost} IP` : "Restore SAN", why: c.ok ? short : c.why, off: !c.ok || !!short };
+}
+function ipRestoreHtml(ch){
+  const loss = ipSanLost(ch), massive = Engine.hlState(ch).massive, ip = Engine.ipState(ch).available;
+  let h = "";
+  if (loss>0){
+    const b = ipSanButton(ch);
+    h += `<div class="ip-restore"><div class="ip-what"><b>SAN</b><div class="sub">${loss} lost</div><div class="why" data-sanwhy>${esc(b.why)}</div></div>
+      <input type="number" min="1" max="${loss}" step="1" inputmode="numeric" data-sann value="${ipSanN(ch)}" aria-label="SAN to restore">
+      <button class="btn sm primary" data-ipbuy="restore|san" data-sanbtn ${b.off?"disabled":""}>${esc(b.text)}</button></div>`;
+  }
+  if (massive>0){
+    const c = Engine.ipCost(ch, "restore", "massiveLevel"), short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    h += `<div class="ip-restore"><div class="ip-what"><b>Health Levels</b><div class="sub">${massive} lost to a maiming</div>${short?`<div class="why">${esc(short)}</div>`:""}</div>
+      <button class="btn sm primary" data-ipbuy="restore|massiveLevel" ${!c.ok||short?"disabled":""}>Restore a Health Level · ${c.ok ? c.cost : ""} IP</button></div>`;
+  }
+  return h || `<p class="step-note">Nothing is lost.</p>`;
+}
+function ipBuyResultsHtml(ch, kind){
+  return kind==="advantage" ? ipAdvantagesHtml(ch) : kind==="disadvantage" ? ipDisadvantagesHtml(ch) : ipRestoreHtml(ch);
+}
+function openIpBuy(kind){
+  const ch = S.ch; if (!ch || !IPBUY_TITLE[kind]) return;
+  S.ipBuy = { kind, q:"", picks:{}, san:null };
+  const search = kind==="advantage" ? `<div class="hitrow"><input type="search" data-ipq placeholder="Search Advantages" aria-label="Search Advantages"></div>` : "";
+  openModal({ title: IPBUY_TITLE[kind],
+    html: `<div class="spell-pick raise-pick"><div class="pick-head">${search}<p class="pick-status" data-ipstatus aria-live="polite">${ipBuyStatusHtml(ch, kind)}</p></div>
+      <div data-ipresults>${ipBuyResultsHtml(ch, kind)}</div></div>`,
+    // Buy off and Restore leave the row once nothing's left to do, so focus falls back to Buy an Advantage, never <body>.
+    foot: pickerFootHtml(), returnTo: `[data-ipopen="${kind}"]`, onClose: ()=>{ S.ipBuy=null;
+      if (!document.querySelector(`[data-ipopen="${kind}"]`)){ const f = document.querySelector('[data-ipopen="advantage"]'); if (f) f.focus(); } },
+    bind: body => {
+      const results = body.querySelector("[data-ipresults]"), status = body.querySelector("[data-ipstatus]");
+      const refresh = () => keepPlace(results, ()=>{ results.innerHTML = ipBuyResultsHtml(S.ch, kind); status.innerHTML = ipBuyStatusHtml(S.ch, kind); }, ["#modal-title"]);
+      const q = body.querySelector("[data-ipq]");
+      if (q) q.oninput = e => { S.ipBuy.q = e.target.value; refresh(); };
+      // A pick waits here until Buy. A select redraws (Buy turns on); typed text does not, so the caret stays.
+      results.onchange = e => {
+        const el = e.target.closest("[data-ippick]");
+        if (!el || el.tagName!=="SELECT") return;
+        const mine = S.ipBuy.picks[el.dataset.ipfor] = S.ipBuy.picks[el.dataset.ipfor] || {};
+        const list = Array.isArray(mine[el.dataset.ippick]) ? mine[el.dataset.ippick].slice() : [];
+        list[Number(el.dataset.ipslot)||0] = el.value;
+        mine[el.dataset.ippick] = list;
+        refresh();
+      };
+      results.oninput = e => {
+        const t = e.target.closest("[data-ippick]"), s = e.target.closest("[data-sann]");
+        if (t && t.tagName==="INPUT"){
+          const mine = S.ipBuy.picks[t.dataset.ipfor] = S.ipBuy.picks[t.dataset.ipfor] || {};
+          mine[t.dataset.ippick] = t.value;
+        } else if (s){
+          // Only this row's button and reason change, so the stepper keeps focus and its caret.
+          const v = s.value.trim();
+          S.ipBuy.san = v==="" ? null : Number(v);
+          const b = ipSanButton(S.ch), btn = results.querySelector("[data-sanbtn]"), why = results.querySelector("[data-sanwhy]");
+          btn.textContent = b.text; btn.disabled = b.off; why.textContent = b.why;
+        }
+      };
+      results.onclick = e => {
+        if (e.target.closest("select, input, textarea, summary, details")) return;
+        let b = e.target.closest("button");
+        if (!b){ const tr = e.target.closest("tr"); b = tr && tr.querySelector("button[data-ipbuy]"); }
+        if (!b || b.disabled || !b.dataset.ipbuy) return;
+        const at = b.dataset.ipbuy.indexOf("|"), t = b.dataset.ipbuy.slice(0, at), id = b.dataset.ipbuy.slice(at+1);
+        if (buyIP(S.ch, t, id)) refresh();
+      };
+    } });
+}
+// One purchase: tried on a copy first, so a refusal leaves the sheet and the typed picks as they were.
+function buyIP(ch, type, id){
+  const c = Engine.ipCost(ch, type, id, type==="restore" && id==="san" ? ipSanN(ch) : 1);
+  const extra = type==="advantage" ? { picks: ipPicksFor(id, c.ok ? c.picks : []) } : type==="restore" && id==="san" ? { count: ipSanN(ch) } : {};
+  const pre = Engine.spendIP(clone(ch), type, id, "", extra);
+  if (!pre.ok){ notice(pre.why); return false; }
+  const label = type==="advantage" ? `IP: ${c.name} ${c.from}→${c.to} (−${c.cost})`
+    : type==="disadvantage" ? `IP: bought off ${c.name} (−${c.cost})`
+    : id==="san" ? `IP: restored ${c.count} SAN (−${c.cost})` : `IP: restored a Health Level (−${c.cost})`;
+  commit("ip", label, ()=>{ Engine.spendIP(ch, type, id, "", extra); });
+  delete S.ipBuy.picks[id];
+  S.ipBuy.san = null;
+  return true;
+}
+
 // ── The Aberration picker (Decision 115) ─────────────────────────────
 // One pick, then it closes: the pick is one commit() with its undo toast. From
 // a Cascade the entry's note says so, which the player can rewrite.
@@ -3340,6 +3529,7 @@ function bindSheet(){
 
   // IP
   main.querySelectorAll("[data-raiseopen]").forEach(b=>b.onclick=()=>openRaisePicker(b.dataset.raiseopen));
+  main.querySelectorAll("[data-ipopen]").forEach(b=>b.onclick=()=>openIpBuy(b.dataset.ipopen));
   main.querySelectorAll("[data-ipgrant]").forEach(b=>b.onclick=()=>{
     const amt=num(main.querySelector("[data-ipamt]"));
     const note=(main.querySelector("[data-ipnote]")||{}).value||"";
@@ -3411,13 +3601,24 @@ function bindSheet(){
   });
 
   // Sessions
+  // The Session Log counts hours: IP fills as 5 an hour, rounded up, until IP is typed itself (Decision 228).
+  const sesHours = main.querySelector("[data-seshours]"), sesIP = main.querySelector("[data-sesip]"), sesGo = main.querySelector("[data-seslog]"), sesWhy = main.querySelector("[data-seswhy]");
+  if (sesHours && sesIP && sesGo){
+    let typed = false;
+    const settle = () => { const ready = sesIP.value!=="" || sesHours.value!==""; sesGo.disabled = !ready; if (sesWhy) sesWhy.hidden = ready; };
+    sesHours.oninput = () => {
+      if (!typed) sesIP.value = sesHours.value==="" ? "" : String(Math.ceil(Math.max(0, Number(sesHours.value)||0) * D.ip.perHour));
+      settle();
+    };
+    sesIP.oninput = () => { typed = sesIP.value!==""; if (!typed && sesHours.value!=="") sesHours.oninput(); settle(); };
+  }
   main.querySelectorAll("[data-seslog]").forEach(b=>b.onclick=()=>{
     const title=(main.querySelector("[data-sestitle]")||{}).value||"";
     commit("session", `Log session${title?`: ${title}`:""}`, ()=>{
       Engine.logSession(ch, {
         date:(main.querySelector("[data-sesdate]")||{}).value,
         title,
-        ipEarned:num(main.querySelector("[data-sesip]")) ?? D.ip.perSession,
+        ipEarned:num(main.querySelector("[data-sesip]")) ?? Math.ceil(Math.max(0, num(main.querySelector("[data-seshours]")) || 0) * D.ip.perHour),
         milestonePoint:(main.querySelector("[data-sesmp]")||{checked:true}).checked,
         notes:(main.querySelector("[data-sesnotes]")||{}).value
       });

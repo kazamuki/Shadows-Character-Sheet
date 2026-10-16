@@ -95,7 +95,11 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
       { date: P("ip.date"), kind: "spend", amount: P("ip.amount"), targetType: "skill", targetId: P("ip.target"),
         from: P("ip.from"), to: P("ip.to"), note: P("ip.note") },
       { date: P("ip.date2"), kind: "grant", amount: P("ip.amount2"), note: P("ip.note2") },
-      { date: P("ip.date3"), kind: "spend", amount: 5, targetType: "power", targetId: P("ip.power"), name: P("ip.powername"), note: "" }] },
+      { date: P("ip.date3"), kind: "spend", amount: 5, targetType: "power", targetId: P("ip.power"), name: P("ip.powername"), note: "" },
+      // P12a: an Advantage, a buy-off and a restore name a trait or a tracker; every field of them is a payload
+      { date: P("ip.date4"), kind: "spend", amount: 50, targetType: "advantage", targetId: P("ip.adv"), name: P("ip.advname"), from: P("ip.advfrom"), to: P("ip.advto"), note: P("ip.advnote") },
+      { date: P("ip.date5"), kind: "spend", amount: 10, targetType: "disadvantage", targetId: { x: 1 }, name: P("ip.disname"), from: 2, to: 1, note: "" },
+      { date: P("ip.date6"), kind: "spend", amount: 5, targetType: "restore", targetId: P("ip.restore"), name: P("ip.resname"), from: P("ip.rfrom"), to: [], note: "" }] },
     milestonePoints: P("mp"),
     milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }, { id: "swift-change", date: P("major2.date") }, { id: "hardline-shift", date: P("major3.date") }] },
     powerIpe: { evocation: P("pipe"), [P("pipe.key")]: 2, enchantment: "1e999", alchemy: -4, [P("pw.id")]: "3",

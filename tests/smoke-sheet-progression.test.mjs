@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, lockedCharacter, onStep, CRANK_ON, openSheet, activeChar, clickIn, withDownloads, importFile, card, tipShown, pick, fill } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, onStep, CRANK_ON, openSheet, activeChar, clickIn, withDownloads, importFile, card, tipShown, pick, fill, focused } from "./smokekit.mjs";
 
 // ── CRANK rep (Decision 169) ──────────────────────────────────────────
 test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, writes a ledger line, and Undo makes it 0", () => {
@@ -387,4 +387,184 @@ test("Decision 217: an Arcanist sees the plain line and Add one; a written-in Ma
   const app2 = openSheet(saved, "progression");
   assert.match(app2.$("#main .journal").textContent, /Specialist/);
   assert.deepEqual(app2.errors, []);
+});
+
+// ── P12a: IP beyond ranks (Decisions 227 and 228) ───────────────────────
+const p12Char = (arch = "professional") => {
+  const c = lockedCharacter(); c.identity.archetype = arch;
+  c.meta.gamedataVersion = D.meta.gamedataVersion;
+  c.progression.ip.earned = 400;
+  return c;
+};
+const jrnl = app => app.$("#main .journal").textContent;
+const banner = app => app.window.loadFindings(activeChar(app)).importIssues;
+
+test("P12a 10: Buy an Advantage from Progression: a rank with its pick, the modal stays open, and one Undo restores it all", () => {
+  const ch = p12Char();
+  ch.advantages = [{ id: "favored-skill", rank: 1, notes: "", selections: { skill: ["handguns"] } }];
+  const app = openSheet(ch, "progression");
+  app.click('[data-ipopen="advantage"]');
+  const buy = () => app.$('#modal [data-ipbuy="advantage|favored-skill"]');
+  assert.ok(buy().disabled, "Buy is on before the pick is chosen");
+  assert.match(buy().closest("tr").textContent, /rank 1 → 2|1 → 2/);
+  assert.match(buy().closest("tr").textContent, /50 IP/);
+  assert.ok(!app.$('#modal [data-ipfor="favored-skill"] option[value="handguns"]'), "the skill already chosen is offered again");
+  const y0 = buy().getBoundingClientRect().y;
+  pick(app, '#modal [data-ipfor="favored-skill"]', "dodge");
+  assert.equal(buy().disabled, false, "Buy stayed off with a pick chosen");
+  app.click('#modal [data-ipbuy="advantage|favored-skill"]');
+  const c = activeChar(app);
+  assert.equal(c.advantages.length, 1);
+  assert.equal(c.advantages[0].rank, 2);
+  assert.deepEqual([...c.advantages[0].selections.skill], ["handguns", "dodge"]);
+  assert.equal(Engine.ipState(c).available, 350);
+  assert.ok(app.$("#modal").open || app.$("#modal [data-ipresults]"), "the modal closed");
+  assert.match(app.$("#modal").textContent, /You have 350 IP/);
+  assert.ok(buy().disabled === true, "the next rank needs its own pick");
+  assert.equal(buy().getBoundingClientRect().y, y0, "Buy moved after a purchase");
+  app.click("#modal [data-modalclose]");
+  assert.match(jrnl(app), /Advantage: Favored Skill 1 → 2/);
+  assert.equal(banner(app).length, 0, "a bought rank reads as a hand edit");
+  undoLast(app);
+  const back = activeChar(app);
+  assert.equal(back.advantages[0].rank, 1);
+  assert.deepEqual([...back.advantages[0].selections.skill], ["handguns"]);
+  assert.equal(back.progression.ip.log.length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12a 10: a new Advantage, a Professional's Natural row left alone, a Vampire's non-Universal one off with its reason", () => {
+  const ch = p12Char();
+  ch.advantages = [{ id: "favored-skill", rank: 1, source: "natural", notes: "" }];
+  const app = openSheet(ch, "progression");
+  app.click('[data-ipopen="advantage"]');
+  pick(app, '#modal [data-ipfor="favored-skill"]', "dodge");
+  app.click('#modal [data-ipbuy="advantage|favored-skill"]');
+  const c = activeChar(app);
+  assert.equal(c.advantages.length, 2, "the rank went onto the natural row");
+  assert.equal(c.advantages[0].rank, 1);
+  assert.equal(c.advantages[0].source, "natural");
+  assert.equal(c.advantages[1].source, undefined);
+  app.click('#modal [data-ipbuy="advantage|hard-to-kill"]');
+  assert.equal(activeChar(app).advantages.some(a => a.id === "hard-to-kill"), true);
+  assert.equal(app.$('#modal [data-ipbuy="advantage|long-lived"]').disabled, true);
+  assert.match(app.$('#modal [data-ipbuy="advantage|long-lived"]').closest("tr").textContent, /only be taken when a character is made/);
+  assert.match(app.$('#modal [data-ipbuy="advantage|educated"]').closest("tr").textContent, /IP doesn't buy it in play/);
+  assert.doesNotMatch(app.$("#modal").textContent, /\bF\d+\b/, "a flag id shows");
+  const vamp = p12Char("vampire");
+  const app2 = openSheet(vamp, "progression");
+  app2.click('[data-ipopen="advantage"]');
+  const off = D.advantages.find(a => !a.universal && !a.creationOnly && !a.flagged);
+  const row = app2.$(`#modal [data-ipbuy="advantage|${off.id}"]`);
+  assert.equal(row.disabled, true);
+  assert.match(row.closest("tr").querySelector(".why").textContent, /can buy/);
+  assert.deepEqual(app.errors, []);
+  assert.deepEqual(app2.errors, []);
+});
+
+test("P12a 11: Buy off, Restore SAN and Restore a Health Level are each one commit with a journal line, no banner, and one Undo", () => {
+  const ch = p12Char();
+  ch.disadvantages = [{ id: "minor-insanity", rank: 2, notes: "" }, { id: "pact", rank: 1, notes: "" }];
+  ch.trackers.san.loss = 12; ch.trackers.massiveLevels = 2;
+  const app = openSheet(ch, "progression");
+  const audits = () => activeChar(app).audit.length;
+  app.click('[data-ipopen="disadvantage"]');
+  assert.match(app.$("#modal").textContent, /No Character Points come back/);
+  assert.match(app.$('#modal [data-ipbuy="disadvantage|pact"]').closest("tr").nextElementSibling.textContent, /Work out the pact|conditions for release/, "Pact's condition isn't readable before Buy off");
+  const a0 = audits();
+  app.click('#modal [data-ipbuy="disadvantage|minor-insanity"]');
+  assert.equal(audits(), a0 + 1, "Buy off wasn't one commit");
+  app.click('#modal [data-ipbuy="disadvantage|minor-insanity"]');
+  assert.equal(activeChar(app).disadvantages.some(d => d.id === "minor-insanity"), false, "removed at rank 1");
+  assert.equal(app.$('#modal [data-ipbuy="disadvantage|minor-insanity"]'), null, "the bought-off row is still listed");
+  app.click("#modal [data-modalclose]");
+  assert.match(jrnl(app), /Bought off: Minor Insanity/);
+  app.click('[data-ipopen="restore"]');
+  fill(app, "#modal [data-sann]", "10");
+  assert.match(app.$("#modal [data-sanbtn]").textContent, /Restore 10 SAN · 50 IP/);
+  app.click("#modal [data-sanbtn]");
+  assert.equal(activeChar(app).trackers.san.loss, 2);
+  assert.equal(app.$("#modal [data-sann]").value, "2", "the stepper didn't reset to what's left");
+  app.click('#modal [data-ipbuy="restore|massiveLevel"]');
+  assert.equal(activeChar(app).trackers.massiveLevels, 1);
+  app.click("#modal [data-modalclose]");
+  assert.match(jrnl(app), /Restored 10 SAN/);
+  assert.match(jrnl(app), /Restored a Health Level/);
+  assert.equal(banner(app).length, 0, "a buy-off or restore reads as a hand edit after a reload");
+  undoLast(app); undoLast(app);
+  const back = activeChar(app);
+  assert.equal(back.trackers.san.loss, 12);
+  assert.equal(back.trackers.massiveLevels, 2);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12a 11: once Buy off or Restore has nothing left, closing it puts focus on Buy an Advantage, not the page", () => {
+  const ch = p12Char();
+  ch.disadvantages = [{ id: "minor-insanity", rank: 1, notes: "" }];
+  ch.trackers.massiveLevels = 1;
+  const app = openSheet(ch, "progression");
+  for (const [kind, buy] of [["disadvantage", "disadvantage|minor-insanity"], ["restore", "restore|massiveLevel"]]) {
+    app.click(`[data-ipopen="${kind}"]`);
+    app.click(`#modal [data-ipbuy="${buy}"]`);
+    app.click("#modal [data-modalclose]");
+    assert.equal(app.$(`[data-ipopen="${kind}"]`), null, `${kind}'s button is still there`);
+    assert.equal(focused(app), app.$('[data-ipopen="advantage"]'), `closing ${kind} lost focus`);
+  }
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12a 11: Restore is off with nothing lost, and Buy off with nothing held", () => {
+  const app = openSheet(p12Char(), "progression");
+  assert.ok(app.$('[data-ipopen="advantage"]'));
+  assert.equal(app.$('[data-ipopen="restore"]'), null);
+  assert.equal(app.$('[data-ipopen="disadvantage"]'), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12a 12: the Session Log counts hours: 3 hours fills 15, a typed IP wins, and neither turns Log off", () => {
+  const app = openSheet(p12Char(), "sessions");
+  const log = () => app.$("[data-seslog]");
+  assert.equal(log().disabled, true, "Log is on with neither hours nor IP");
+  assert.match(app.$("#main").textContent, /Enter the hours played or the IP earned/);
+  assert.doesNotMatch(app.$("#main").textContent, /\b10 IP\b/, "the flat 10 is still in the copy");
+  assert.match(app.$("#main").textContent, /5 IP an hour of play/);
+  fill(app, "[data-seshours]", "3");
+  assert.equal(app.$("[data-sesip]").value, "15");
+  assert.equal(log().disabled, false);
+  fill(app, "[data-seshours]", "2.5");
+  assert.equal(app.$("[data-sesip]").value, "13", "12.5 must round up");
+  fill(app, "[data-sesip]", "20");
+  fill(app, "[data-seshours]", "4");
+  assert.equal(app.$("[data-sesip]").value, "20", "hours overwrote a typed IP");
+  app.click("[data-seslog]");
+  assert.equal(activeChar(app).sessions[0].ipEarned, 20);
+  const zero = openSheet(p12Char(), "sessions");
+  fill(zero, "[data-sesip]", "0");
+  assert.equal(zero.$("[data-seslog]").disabled, false, "0 is a value");
+  zero.click("[data-seslog]");
+  assert.equal(activeChar(zero).sessions[0].ipEarned, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12a: every flagged Advantage the IP buy refuses says why in the entry's own note, never a build-state line", () => {
+  const app = openSheet(p12Char(), "progression");
+  app.click('[data-ipopen="advantage"]');
+  for (const a of D.advantages.filter(a => a.flagged)) {
+    assert.ok(a.playerNote, `${a.id} is flagged with no playerNote`);
+    assert.ok(app.$(`#modal [data-ipbuy="advantage|${a.id}"]`).closest("tr").textContent.includes(a.playerNote), `${a.id}'s row lacks its note`);
+  }
+  assert.ok(!app.$("#modal").textContent.includes(D.appCopy.unsettledRule), "the generic fallback line shows");
+});
+
+test("P12a: a flagged Advantage's note reads true on the wizard's Character Points step too, beside the live stepper", () => {
+  const app = onStep("professional", "street", "character-points");
+  const flagged = D.advantages.filter(a => a.flagged);
+  assert.ok(flagged.length >= 2);
+  for (const a of flagged) {
+    const card = app.$$("#main .pick").find(c => c.textContent.includes(a.name) && c.textContent.includes(a.playerNote));
+    assert.ok(card, `${a.name}'s note isn't on the Character Points step`);
+    assert.doesNotMatch(a.playerNote, /yet\. Ask|can't buy it yet/, `${a.id}'s note reads as IP-only news at creation`);
+    assert.match(a.playerNote, /your GM's call/, `${a.id}'s note doesn't hand the table the authority at creation`);
+    assert.match(a.playerNote, /in play/, `${a.id}'s note doesn't say what IP does in play`);
+  }
 });

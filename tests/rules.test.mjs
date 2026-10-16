@@ -1783,3 +1783,93 @@ test("P11: the quick reference's Movement table agrees with movementRules", () =
     assert.equal(row[2], pace.attack === 0 ? "No penalty" : String(pace.attack).replace("-", "−"));
   }
 });
+
+// ── P12a: IP beyond ranks (0450 Spending Improvement Points; Deighton Q24) ─────
+function ipChar(arch = "professional") {
+  const ch = subject();
+  ch.identity.archetype = arch;
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;     // SAN max 50, as a played character's
+  ch.creation.locked = true;
+  return ch;
+}
+const fund = (ch, n) => Engine.grantIP(ch, n, "test");
+
+test("P12a 1: an Advantage costs its points × 10 a rank, every rank the same (0450, Q24)", () => {
+  const ch = ipChar();
+  const c = Engine.ipCost(ch, "advantage", "favored-skill");
+  assert.deepEqual([c.ok, c.cost, c.from, c.to], [true, 50, 0, 1], "a new Favored Skill (5 points)");
+  for (const rank of [1, 2, 3, 4]) {
+    ch.advantages = [{ id: "favored-skill", rank, notes: "" }];
+    const r = Engine.ipCost(ch, "advantage", "favored-skill");
+    assert.deepEqual([r.ok, r.cost, r.from, r.to], [true, 50, rank, rank + 1], `rank ${rank} → ${rank + 1} costs what rank 0 → 1 does`);
+  }
+  ch.advantages = [{ id: "favored-skill", rank: 5, notes: "" }];
+  assert.equal(Engine.ipCost(ch, "advantage", "favored-skill").ok, false, "past maxRank");
+});
+
+test("P12a 2: a Disadvantage comes off at its points × 10, a rank at a time, and gives no CP back (0450)", () => {
+  const ch = ipChar();
+  ch.disadvantages = [{ id: "minor-insanity", rank: 2, notes: "" }, { id: "pact", rank: 1, notes: "" }];
+  fund(ch, 500);
+  const granted = Engine.cp(ch).granted, budget = Engine.cp(ch).budget;
+  assert.equal(Engine.ipCost(ch, "disadvantage", "pact").cost, 150, "Pact is 15 points");
+  assert.equal(Engine.ipCost(ch, "disadvantage", "minor-insanity").cost, 10);
+  assert.equal(Engine.spendIP(ch, "disadvantage", "minor-insanity").ok, true);
+  assert.equal(ch.disadvantages.find(d => d.id === "minor-insanity").rank, 1);
+  assert.equal(Engine.spendIP(ch, "disadvantage", "minor-insanity").ok, true);
+  assert.equal(ch.disadvantages.some(d => d.id === "minor-insanity"), false, "removed at rank 1, not left at rank 0");
+  assert.equal(Engine.ipState(ch).spent, 20);
+  assert.equal(Engine.cp(ch).granted, granted - 2, "the points the Disadvantage granted are gone");
+  assert.equal(Engine.cp(ch).budget, budget - 2, "and nothing was refunded");
+  assert.equal(Engine.ipCost(ch, "disadvantage", "minor-insanity").ok, false, "no longer held");
+});
+
+test("P12a 4: lost SAN and a maimed Health Level come back at 5 and 25, never past the loss (0450)", () => {
+  const ch = ipChar();
+  fund(ch, 1000);
+  ch.trackers.san.loss = 12;
+  const c = Engine.ipCost(ch, "restore", "san", 10);
+  assert.deepEqual([c.ok, c.cost, c.from, c.to], [true, 50, 12, 2]);
+  assert.equal(Engine.spendIP(ch, "restore", "san", "", { count: 10 }).ok, true);
+  assert.equal(ch.trackers.san.loss, 2);
+  const before = JSON.stringify(ch);
+  assert.equal(Engine.spendIP(ch, "restore", "san", "", { count: 3 }).ok, false, "3 with 2 lost");
+  assert.equal(ch.trackers.san.loss, 2, "asserted on the tracker, not the view");
+  assert.equal(JSON.stringify(ch), before, "a refusal wrote something");
+  assert.equal(Engine.spendIP(ch, "restore", "san", "", { count: 2 }).ok, true);
+  assert.equal(ch.trackers.san.loss, 0);
+  assert.equal(Engine.ipCost(ch, "restore", "san", 1).ok, false, "nothing lost");
+  ch.trackers.massiveLevels = 2; ch.trackers.witheringDamage = 3;
+  const m = Engine.ipCost(ch, "restore", "massiveLevel");
+  assert.deepEqual([m.ok, m.cost, m.from, m.to], [true, 25, 2, 1]);
+  assert.equal(Engine.spendIP(ch, "restore", "massiveLevel").ok, true);
+  assert.equal(ch.trackers.massiveLevels, 1);
+  assert.equal(ch.trackers.witheringDamage, 3, "Withering isn't a maiming");
+  Engine.spendIP(ch, "restore", "massiveLevel");
+  assert.equal(Engine.ipCost(ch, "restore", "massiveLevel").ok, false, "0 Massive levels");
+  assert.equal(ch.trackers.massiveLevels, 0);
+});
+
+test("P12a 9: a session's IP is 5 an hour, rounded up (0450: every hour of play earns 5 IP)", () => {
+  assert.match(crb("0450_Advancement.md"), /every hour of play earns 5 IP/i, "the book's rate moved");
+  assert.equal(D.ip.perHour, 5);
+  assert.equal("perSession" in D.ip, false, "the flat 10 is gone from the data");
+  // The rounding itself is the Session Log's, pinned through the UI in smoke-sheet-progression (P12a 12).
+});
+
+test("P12a 4b: a SAN loss past the maximum sells only the SAN that shows, and a fraction is floored", () => {
+  const ch = ipChar();
+  fund(ch, 1000);
+  const max = Engine.sanState(ch).max;
+  ch.trackers.san.loss = max + 20;                         // the stepper only floors the loss at 0
+  assert.equal(Engine.sanState(ch).current, 0);
+  assert.equal(Engine.ipCost(ch, "restore", "san", max + 1).ok, false, "SAN below zero was offered");
+  assert.equal(Engine.ipCost(ch, "restore", "san", max).cost, max * 5);
+  assert.equal(Engine.spendIP(ch, "restore", "san", "", { count: 10 }).ok, true);
+  assert.equal(Engine.sanState(ch).current, 10, "10 IP-bought points must show as 10 SAN");
+  const frac = ipChar(); fund(frac, 100);
+  frac.trackers.san.loss = 2.5;
+  assert.equal(Engine.ipCost(frac, "restore", "san", 1).from, 2, "a fractional loss is floored");
+  assert.equal(Engine.spendIP(frac, "restore", "san", "", { count: 2 }).ok, true);
+  assert.equal(Engine.sanState(frac).loss, 0);
+});

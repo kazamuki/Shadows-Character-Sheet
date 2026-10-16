@@ -1015,6 +1015,23 @@ Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q20–Q21):
 Last) and adding to 201; `gamedataVersion` for the data. Land it beside W88,
 which also rewrites how a Vampire's powers are held.
 
+**W89 — Spend IP on an Advantage, or to buy off a Disadvantage.** *Ken, from Brogan · → Decision 227, app 0.47.0, game data 0.40: Progression's Buy an Advantage, Buy off a Disadvantage and Restore*
+After lock, Advantages and Disadvantages are frozen. The only ways to change
+them in play are the Talented and Redeemed Minor Milestones. `0450`
+prices both: **an Advantage costs its creation point cost × 10 per rank, and a
+Disadvantage comes off the same way, one rank at a time.** A few
+Disadvantages (Pact among them) already say "spend IP to remove" and point
+here.
+*To respect:* constraint 7: the IP journal records the purchase. (The wish said the held Advantages would be read from creation plus the journal, never
+rewritten; Talented and Redeemed already rewrite the rows, so the build wrote them the same way, Decision 227.)
+Decision 152: a Supernatural still buys only Universal Advantages, and a
+prerequisite still binds. Buying off a Disadvantage takes its rules off the
+sheet but doesn't refund the CP it granted at creation. **Deighton ruled
+(2026-10-10, `reference/rulings-2026-10-10.md` Q24): every rank costs the same flat price**, and a
+Disadvantage's buy-off follows it.
+
+*Built as sheet-wishlist P12a (2026-10-16), with `0450`'s SAN and Health Level restores and the Session Log by the hour (Decision 228).*
+
 ### GM mode
 
 **W74 — Search the Codex from inside an encounter.** *Ken · → Decision 211 (switched off)*
