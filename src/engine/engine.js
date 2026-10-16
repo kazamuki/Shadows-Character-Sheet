@@ -2065,7 +2065,7 @@ const Engine = (() => {
   // gate: an entry whose rule is unsettled (flagged) isn't sold. Pure data decides.
   const advantageBarred = (def, ip) => {
     if (def.creationOnly===true) return `${def.name} can only be taken when a character is made.`;
-    if (ip && def.flagged===true) return txt(def.playerNote) || `${def.name} isn't settled yet.`;
+    if (ip && def.flagged===true) return txt(def.playerNote) || txt((D().appCopy||{}).unsettledRule);
     return "";
   };
   function advantageOffer(ch, def, opts){

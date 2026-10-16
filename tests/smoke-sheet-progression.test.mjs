@@ -449,7 +449,7 @@ test("P12a 10: a new Advantage, a Professional's Natural row left alone, a Vampi
   assert.equal(activeChar(app).advantages.some(a => a.id === "hard-to-kill"), true);
   assert.equal(app.$('#modal [data-ipbuy="advantage|long-lived"]').disabled, true);
   assert.match(app.$('#modal [data-ipbuy="advantage|long-lived"]').closest("tr").textContent, /only be taken when a character is made/);
-  assert.match(app.$('#modal [data-ipbuy="advantage|educated"]').closest("tr").textContent, /isn't settled|can't buy it yet/);
+  assert.match(app.$('#modal [data-ipbuy="advantage|educated"]').closest("tr").textContent, /can't buy it yet/);
   assert.doesNotMatch(app.$("#modal").textContent, /\bF\d+\b/, "a flag id shows");
   const vamp = p12Char("vampire");
   const app2 = openSheet(vamp, "progression");
@@ -544,4 +544,14 @@ test("P12a 12: the Session Log counts hours: 3 hours fills 15, a typed IP wins, 
   zero.click("[data-seslog]");
   assert.equal(activeChar(zero).sessions[0].ipEarned, 0);
   assert.deepEqual(app.errors, []);
+});
+
+test("P12a: every flagged Advantage the IP buy refuses says why in the entry's own note, never a build-state line", () => {
+  const app = openSheet(p12Char(), "progression");
+  app.click('[data-ipopen="advantage"]');
+  for (const a of D.advantages.filter(a => a.flagged)) {
+    assert.ok(a.playerNote, `${a.id} is flagged with no playerNote`);
+    assert.ok(app.$(`#modal [data-ipbuy="advantage|${a.id}"]`).closest("tr").textContent.includes(a.playerNote), `${a.id}'s row lacks its note`);
+  }
+  assert.ok(!app.$("#modal").textContent.includes(D.appCopy.unsettledRule), "the generic fallback line shows");
 });

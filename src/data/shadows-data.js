@@ -1168,7 +1168,8 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "The body is hardware. This is the compatibility patch.\n\nSuffer no Sanity loss when you acquire cybernetics.",
       "flagged": true,
-      "flagNote": "F5: open question for D - SAN vs TOL interaction (pending the Biomech rewrite, F6). CRB v4 text is unchanged from the flagged version."
+      "flagNote": "F5: open question for D - SAN vs TOL interaction (pending the Biomech rewrite, F6). CRB v4 text is unchanged from the flagged version.",
+      "playerNote": "How this works with SAN and TOL is still being written, so IP can't buy it yet. Ask your GM."
     },
     {
       "id": "danger-sense",
