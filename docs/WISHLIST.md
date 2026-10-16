@@ -818,13 +818,35 @@ happen. If Scott or Deighton should be able to land a number or a line of
 copy themselves, W56's tuning bench is the shape for numbers, and a
 one-page "how to change one thing" guide could be the rest.
 
-**W120 — What taking it gives, in one line, for Expert mode.** *Ken, from P13's PQ5 · 💡 · Content, a data shape · raised 2026-10-16*
-P13's Expert mode folds an Advantage's or Disadvantage's whole `description`. Ken: where the text has mechanical weight, Expert mode could show just what
-taking it provides, without the prose around it. The data has no such field: each entry is one `description`, and 69 of the 87 run to several paragraphs
-that mix the two (Blood Lust opens "Everyone bleeds. Not everyone stops to watch." before its Sanity Check). Ten are already one short line.
-*To respect:* a named text field (`…Text`, Decision 135), read by Expert mode's folded row. Each line is rules text, cross-checked against the CRB
-(`private/crb/`) before it lands, so a summary can't quietly change what an entry does. Constraint 9: the line is player copy, in `VOICE-APP.md`'s voice.
-Its own order, after P13.
+**W120 — Every Advantage and Disadvantage's effects as data, shown as tags.** *Ken, from P13's PQ5 · 🔎 · Rule or shape, data · raised 2026-10-16*
+P13's Expert mode folds an entry's whole `description`, and Ken wants a folded entry to show what taking it does, without the prose. Each entry today is one
+`description`; 69 of the 87 run to several paragraphs that mix flavor and rules (Blood Lust opens "Everyone bleeds. Not everyone stops to watch." before its
+Sanity Check). **Ken's shape (2026-10-16): the effects are the entry's `grants`, each with a name and a line of text, and Expert mode shows them as tags.**
+- **A computed effect** is a `grants` row the engine already reads (`hpPerLevel`, `skillPoints`, `luckCost`, `painLevel`, `milestone`, `naturalArmor`…). Its
+  tag text comes from a template per type in the data, filled from the row's own numbers ("+1 HP per Health Level"), so it can't drift from what's computed.
+  Today only 7 of the 87 have any.
+- **A table rule** is a new row type the engine ignores, carrying its own text ("First blood in an encounter: a Sanity Check. Fail, and Combat Sense
+  fails on a natural 2 or 3."). `grants()` already skips a type it doesn't know (engine ~167), and archetype powers share that reader, so the new type
+  must be skipped there too.
+- **The review is the point.** Going through all 87 sorts each effect into computed or table rule, and finds the ones the app should compute but doesn't.
+  Probed on `main`: **Blood Lust's "Sanity is reduced by 5%" isn't applied** (SAN max 50 with it or without), and four more describe a SAN change with no
+  `grants` (Berserker, Fanatic, Faultlessly Honest, Hallucinations). Nothing in the ledger rules on them. Each such effect is a rules question (5 points,
+  or 5% of the max?) for Deighton: stubbed and flagged, never guessed (CLAUDE.md, *Flags*).
+*To respect:* Decision 135 (the type templates and every rule's text live in the data; a data key is read or named as text). Each rule line is rules text,
+cross-checked against the CRB (`private/crb/`) before it lands, so a summary can't quietly change what an entry does; drafted on a sign-off page for Ken and
+Deighton. Constraint 9 (player copy, `VOICE-APP.md`). A newly computed effect changes computed values: `gamedataVersion` (Decision 68). **Its own order,
+before P13** (Ken): Expert mode ships with the tags.
+
+**W121 — Type a number into a stepper.** *Claude, from P13 · 💡 · Fix (UI) · raised 2026-10-16*
+Every rank in the wizard is one click: spending the Skill pool alone is about 30, before stats, boosts and Advantages. An experienced player knows the
+targets. The stepper's value could take a typed number and the arrow keys, held to the same caps and pools as + and −.
+*To respect:* W59 (each control says what it changes, and the new value is announced; a native spinbutton announces itself, so check the two don't double
+up). It touches all 16 `stepper()` calls, so it's its own order.
+
+**W122 — Make a copy of a character, from Home.** *Claude, from P13 · 💡 · Rule or shape · raised 2026-10-16*
+Home offers Open, Export and Remove, and no copy, so a second character of the same archetype, or a variant of one, starts from nothing.
+*To respect:* Decision 128 (a TAG is issued once: a copy gets a new one). Whether copying a locked character gives a locked one or an unlocked draft is a
+choice someone could make differently: a numbered decision.
 
 **W119 — The Combat Maneuver line on the printed sheet.** *Claude, from P12b's PQ7 · 💡 · Fix · raised 2026-10-16*
 P12b put each style's Combat Maneuvers (Stun → Stunned · 1d10 + 10 (Karate +1)) under Martial Arts' row on Main and the Skills tab, and left print
