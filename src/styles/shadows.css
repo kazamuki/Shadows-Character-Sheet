@@ -427,6 +427,11 @@ aside.vitals:empty{display:none}
 .hitrow input[type=number], .hitrow input[inputmode=numeric]{width:84px; text-align:center}
 .hitrow label.check{display:flex; align-items:center; gap:6px; font-size:.82rem; padding-bottom:8px}
 .hitarmor{font-family:var(--mono); font-size:.76rem; color:var(--cyan); padding-bottom:8px}
+/* Decision 226: movement at the top of Main's Combat section. It wraps, never scrolls sideways. */
+.main-move{font-family:var(--mono); font-size:.8rem; line-height:1.5; margin:0 0 10px; overflow-wrap:anywhere}
+.main-move .move-while{color:var(--cyan)}
+.main-move .move-cond{opacity:.85}
+.sfr-round.bad{color:var(--magenta-text)}
 .hitnote{font-size:.76rem; color:var(--dim); margin:4px 0}
 .hitwhy{font-size:.82rem; color:var(--gold); margin:10px 0}
 .hitresult{border-left:2px solid var(--violet); padding:4px 0 4px 12px; margin:10px 0; font-size:.86rem}

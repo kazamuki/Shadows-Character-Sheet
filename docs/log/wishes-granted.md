@@ -373,6 +373,43 @@ it gets its own marker, shown the way a Condition is. `spellRules.concentration`
 is rewritten to the ruling (a `gamedataVersion` bump), and the book's fix is in
 `plans/crb-catch-up.md`.
 
+**W97 — Rate of Use counts what you've spent this turn.** *Ken, from Brogan · → Decision 225, app 0.47.0: SFR spent this round is counted, warned at RoU and cleared by Turn Reset*
+SFR's description says Rate of Use "limits the maximum SFR channeled in a
+single turn", and sustained powers drain against it each turn. The sheet
+shows RoU but counts nothing against it, so a player can spend a whole pool
+in one turn without the sheet noticing. The ask: count SFR spent since the
+last **Turn Reset** (the button conditions already tick on), warn at RoU,
+and clear the count on Reset.
+*To respect:* constraint 7: what's stored is SFR spent this turn (a tracker
+input). The cap is `rou` read from the scaling row, plus `grants()`' `rou`
+(Werewolf Majors, Decision 199). A new tracker field is a save-file shape
+change. *Questions before a proposal:* **warn or block**. Brogan said
+"warn/block"; a block is the GM's rule taken out of their hands, so the
+proposal should argue for a warning. Do sustained powers need to be marked
+active so Reset charges their drain on its own, or does the player spend it
+each turn? And Feeding: Fresh blood refills SFR. Does gaining SFR touch
+the count?
+
+**W98 — Walk, Run, Sprint and Jump on the sheet, from MOB.** *Ken, from Brogan · → Decision 226, app 0.47.0: movement on Main, in meters*
+MOB's description promises "base running speed, sprint speed, and how far you
+can jump with a running start", and the sheet shows none of them. `0530`
+gives three: **Walk = MOB, Run = MOB × 3 (−1 to attacks), Sprint = MOB × 6
+(−3)**. Fleet of Foot (a Professional's Chi ability) doubles Run, Sprint and Jump (corrected on moving: the book, `0412`, doesn't double Walk). Show
+them on Main beside the combat numbers.
+*To respect:* the quick reference's movement table is display text
+(`"MOB ×3"`). The engine needs the multipliers as numbers (Decision 135; this said 134, which is Focused Skills),
+read by both. A doubling from Fleet of Foot only counts while it's active.
+**Jump** wasn't in the book; **Deighton ruled it (2026-10-10, `reference/rulings-2026-10-10.md` Q23):
+Jump = Sprint ÷ 4, rounded down**, and with Fleet of Foot, Sprint doubles first
+and then divides. The ÷ 4 is a number in the data too. The book's fix is in
+`plans/crb-catch-up.md`.
+
+**W54 — Main's SFR card for a written-in pool.** *Claude · → Decision 225, app 0.47.0*
+A Custom character who ticks **Uses SFR** counts its pool on Trackers, but
+Main's SFR card and the vitals read `Engine.sfr()`, which takes its size from
+the archetype's scaling row, and a written-in archetype has none. Main could
+read the tracker panel's player-set max instead.
+
 ### Loadout & catalog
 
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*

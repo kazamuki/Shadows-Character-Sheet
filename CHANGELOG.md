@@ -23,6 +23,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.47.0
+
+- **Your Rate of Use counts the round.** Spend SFR from Main's SFR card or the Trackers tab, and the sheet counts what you've spent this round. It tells you when you reach your Rate of Use and when you go past it; Turn Reset starts the count again. Feeding and the Thirst don't count as spending.
+- **Main's SFR card opens a popover** with −1 and +1, so a fight doesn't need the Trackers tab.
+- **A written-in pool shows on Main.** A Custom archetype that uses SFR gets Main's SFR card once you set its size.
+- **Main shows how far you move.** Walk, Run, Sprint and Jump from your MOB, in meters, with the attack penalty for running and sprinting, and Fleet of Foot's distances for a True Warrior. Prone and Restrained are named beside them.
+
 ## v0.46.0 — 2026-10-15
 
 - **Holding a spell takes a die off the table.** Hold a Concentration spell from your Grimoire once it lands; the sheet sets aside one die from every Essence roll while you hold it, up to your Evocation rank in spells. Your casting pool and Beyond your pool count what's left, and Pain's line says what you're holding.

@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.39",
+    "gamedataVersion": "0.40",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2355,7 +2355,9 @@ window.SHADOWS_DATA = {
               ]
             },
             "grants": [{ "type": "naturalArmor", "id": "iron-shirt", "name": "Iron Shirt",
-                         "stat": "BOD", "plus": 1, "while": "while active" }]
+                         "stat": "BOD", "plus": 1, "while": "while active" },
+                       { "type": "movement", "id": "fleet-of-foot", "name": "Fleet of Foot",
+                         "times": 2, "paces": ["run", "sprint"], "while": "while active" }]
           },
           {
             "id": "wheelman",
@@ -2589,6 +2591,7 @@ window.SHADOWS_DATA = {
             "max": "startingSFR",
             "counts": "down",
             "resource": "sfr",
+            "turnCap": "rou",
             "note": "Counts spend against a computed pool. RoU caps a single round."
           },
           /* Decision 201 (VQ21): feeding refills the pool `resource` names, a
@@ -2887,6 +2890,7 @@ window.SHADOWS_DATA = {
             "max": "startingSFR",
             "counts": "down",
             "resource": "sfr",
+            "turnCap": "rou",
             "note": "Counts spend against a computed pool. RoU caps a single round."
           },
           {
@@ -4175,6 +4179,22 @@ window.SHADOWS_DATA = {
     { "id": "massive",   "name": "Massive",   "bypassesArmor": true, "inflicts": ["injured", "maimed"],
       "text": "Siege weapons, vehicle guns, grenades and other explosives. Skips PROT and RES, strips Integrity equal to the damage, and takes Health Levels away outright." }
   ],
+  /* MOVEMENT (Decision 226) -- 0530 Movement. Each pace is MOB × `times`, with
+     `attack` its penalty to attacks made while moving. `jump` is read from
+     one pace's value, divided and rounded down (Deighton, Q23); a `movement`
+     grant that carries `while` doubles named paces and is listed beside these,
+     never summed in. `unit` is what MOB's number counts (Ken, PQ6). The quick
+     reference's Movement table is text, and a test keeps the two agreeing. */
+  "movementRules": {
+    "stat": "MOB",
+    "paces": [
+      { "id": "walk",   "name": "Walk",   "times": 1, "attack": 0 },
+      { "id": "run",    "name": "Run",    "times": 3, "attack": -1 },
+      { "id": "sprint", "name": "Sprint", "times": 6, "attack": -3 }
+    ],
+    "jump": { "name": "Jump", "from": "sprint", "divideBy": 4 },
+    "unit": "m"
+  },
   "damageRules": {
     "massive": {
       "damagePerLevel": 10,
@@ -4288,11 +4308,13 @@ window.SHADOWS_DATA = {
     { "id": "prone", "name": "Prone", "short": "half move · −3 attack/defense",
       "effect": "Movement halved. Attack/Defense at −3.",
       "recovery": "Spend a Move to stand.",
-      "attackDefense": -3 },
+      "attackDefense": -3,
+      "movement": true },
     { "id": "restrained", "name": "Restrained", "short": "can't move · −5 · no Dodge",
       "effect": "Movement reduced to 0. −5 to all Actions. Cannot Dodge.",
       "recovery": "Remove the source, or BOD or REF Essence TN 8 TH 2 (your choice).",
-      "attackDefense": -5 },
+      "attackDefense": -5,
+      "movement": true },
     { "id": "shocked", "name": "Shocked", "short": "damage each round · −1 to rolls",
       "effect": "Ongoing damage based on the source. −1 to all rolls.",
       "recovery": "Remove the source, then treat as Bleeding.",

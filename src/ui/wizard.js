@@ -104,7 +104,7 @@ function wizardRailHtml(ch){
     h += vrow("Health", unset?dash:hp.levels+" HL · "+hp.total+" HP","hp");
     h += vrow("LUCK", D.resources.luck.startingValue + ch.trackers.luck.bonus);
     const sfr = Engine.sfr(ch);
-    if (sfr && sfr.value!=null) h += vrow("SFR", sfr.value+" · RoU "+sfr.rou);
+    if (sfr && sfr.value!=null) h += vrow("SFR", sfr.value+(sfr.rou!=null ? " · RoU "+sfr.rou : ""));
   }
   h += `</div>`;
   return h;

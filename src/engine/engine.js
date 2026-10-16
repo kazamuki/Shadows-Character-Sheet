@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.26";
+  const SCHEMA_VERSION = "0.27";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -74,7 +74,7 @@ const Engine = (() => {
       skills:{},                       // id -> {rank, ipe}
       advantages:[], disadvantages:[], // {id, rank, notes, selections?}
       trackers:{ damage:0, luck:{bonus:0, spent:0}, san:{loss:0},
-                 sfr:{spent:0},
+                 sfr:{spent:0, turn:0},     // turn: SFR spent since the last Turn Reset (schema 0.27, Decision 225)
                  // Schema 0.8 (Decision 95). Active Conditions are inputs;
                  // their Pain, penalties and the Helpless banner are derived.
                  conditions:[],                // { id, location?, marks?, note? }
@@ -483,7 +483,12 @@ const Engine = (() => {
   // and the tracker then asks for its max instead of inventing one.
   function sfr(ch){
     const row = scalingRow(ch);
-    if (!row || !row.startingSFR) return null;
+    // A pool the player sizes (a Custom archetype that ticks Uses SFR) has no scaling row
+    // to read: its size is what they typed on Trackers, and it has no Rate of Use (Decision 225).
+    if (!row || !row.startingSFR){
+      const own = playerPool(ch);
+      return own==null ? null : { value:own, rou:null, formula:"", setBy:"player" };
+    }
     const f = row.startingSFR;
     const g = grants(ch), rou = typeof row.rou==="number" ? row.rou + g.rou : row.rou;
     if (!isFormula(f)) return { value:null, rou, formula:"" };
@@ -969,6 +974,42 @@ const Engine = (() => {
     return { total: summed, base: always.reduce((n,c)=>n + c.amount, 0),
              always, conditional, resAgainst, ignoresAp: R.ignoresAp===true, spellApPierces: R.spellApPierces===true,
              text: R.text || "" };
+  }
+
+  // Movement (Decision 226, 0530 Movement): each pace is the live MOB times its multiplier, Jump is
+  // one pace divided and rounded down (Q23). A grant of type "movement" with `while` is listed, not
+  // summed: its paces are multiplied and Jump is read from the multiplied pace. A Condition flagged
+  // `movement` is named, never computed (PQ7). Total: a character with no stats reads zeros.
+  function movement(ch){
+    const R = D().movementRules || {}, unit = txt(R.unit);
+    const row = (R.stat && statTable(ch)[normStat(R.stat)]) || null;
+    const mob = row && Number.isFinite(row.value) ? Math.max(0, row.value) : 0;
+    const defs = (Array.isArray(R.paces) ? R.paces : []).filter(p=>isPlainObj(p) && typeof p.id==="string");
+    const paces = times => defs.map(p=>({ id:p.id, name:txt(p.name), attack:Number(p.attack)||0,
+      value: Math.floor(mob * (Number(p.times)||0) * (times && Object.prototype.hasOwnProperty.call(times, p.id) ? times[p.id] : 1)) }));
+    const J = isPlainObj(R.jump) ? R.jump : null, div = J && Number(J.divideBy)>0 ? Number(J.divideBy) : 1;
+    const jumpOf = list => J ? { name:txt(J.name), value: Math.floor(((list.find(p=>p.id===J.from)||{}).value||0) / div) } : null;
+    const base = paces(null);
+    const conditional = [];
+    const add = (g, from) => {
+      if (!isPlainObj(g) || g.type!=="movement" || !g.while) return;
+      const k = Number(g.times)||0, ids = Array.isArray(g.paces) ? g.paces : [], times = {};
+      ids.forEach(id=>{ times[id] = k; });
+      const mine = paces(times).filter(p=>ids.includes(p.id));
+      const all = base.map(p=>mine.find(m=>m.id===p.id) || p);
+      conditional.push({ id:txt(g.id) || from.id, name:txt(g.name) || txt(from.name), while:txt(g.while), paces:mine, jump:jumpOf(all) });
+    };
+    const held = (list, lookup) => (Array.isArray(list) ? list : []).forEach(e=>{ const def = isPlainObj(e) && lookup(e.id); ((def && def.grants) || []).forEach(g=>add(g, def)); });
+    held(ch && ch.advantages, advById);
+    held(ch && ch.disadvantages, disById);
+    const taken = new Set();
+    ((((ch||{}).progression||{}).milestones||{}).major || []).forEach(m=>{ if (m && m.id) taken.add(m.id); });
+    taken.forEach(id=>{ const def = majorById(ch, id); ((def && def.grants) || []).forEach(g=>add(g, def)); });
+    specializationChosen(ch).forEach(o=>(o.grants||[]).forEach(g=>add(g, o)));
+    archetypePowers(ch).forEach(p=>(Array.isArray(p.grants) ? p.grants : []).forEach(g=>add(g, p)));
+    const conditions = conditionState(ch).active.filter(c=>c.def && c.def.movement===true)
+      .map(c=>({ name:c.def.name, short:txt(c.def.short) }));
+    return { mob, unit, paces:base, jump:jumpOf(base), conditional, conditions };
   }
 
   // resolveHit's stages, in the order a hit happens. Each takes what it needs
@@ -1893,9 +1934,12 @@ const Engine = (() => {
     const marks = d.dying ? ticking : 0;
     const dyingCheck = d.dying ? { check:W.resetCheck, text:W.resetText } : null;
     const notes = [];
+    // Decision 225: the SFR spent this round is cleared by a Reset, and that alone is worth applying.
+    const turnSpend = archPanels(ch).filter(p=>p && p.type==="tracker" && p.turnCap && p.resource && turnCount(ch, p)>0)
+      .map(p=>({ title:txt(p.title), spent:turnCount(ch, p) }));
     return { ok:true, ticks, total, before, after, dying:d.dying, marks,
-             prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes,
-             hasEffect: total>0 || !!dyingCheck };
+             prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes, turnSpend,
+             hasEffect: total>0 || !!dyingCheck || turnSpend.length>0 };
   }
   // The one writer, re-resolving from its inputs like applyHit. `choices`:
   //   { atZero: "pass"|"fail", dyingCheck: "pass"|"fail" }
@@ -1905,6 +1949,7 @@ const Engine = (() => {
     choices = choices || {};
     const t = ch.trackers;
     t.damage = r.after.damage;
+    archPanels(ch).forEach(p=>{ if (p && p.type==="tracker" && p.turnCap && p.resource && isPlainObj(t[p.resource])) t[p.resource].turn = 0; });
     const marks = r.marks + (r.prompts.dyingCheck && choices.dyingCheck==="fail" ? 1 : 0);
     const added = [];
     const A = r.prompts.atZero;
@@ -2840,11 +2885,34 @@ const Engine = (() => {
     const on = mechanicsOn(ch), origins = specializationIds(ch);
     return ((a && a.coreMechanic && a.coreMechanic.panels) || []).filter(p=>p && (!p.when || on.includes(p.when)) && (!p.origin || origins.includes(p.origin)));
   };
+  // The size a player typed for a tracker whose data gives none: a number or nothing.
+  const storedMax = (ch, p) => {
+    const panel = ch && ch.trackers && isPlainObj(ch.trackers.panel) ? ch.trackers.panel : null;
+    const v = panel && isPlainObj(panel[p.id]) ? panel[p.id].max : null;
+    return typeof v==="number" && Number.isFinite(v) && v>=0 ? Math.floor(v) : null;
+  };
+  // The SFR pool a panel sizes by hand: a tracker on the `sfr` resource with no max of its own.
+  const playerPool = ch => {
+    const p = archPanels(ch).find(x=>x && x.type==="tracker" && x.resource==="sfr" && x.max==null);
+    return p ? storedMax(ch, p) : null;
+  };
   function panelMax(ch, p){
     if (p.max==="TOL") return derived(ch).TOL;
     if (p.max==="startingSFR"){ const s=sfr(ch); return s && s.value!=null ? s.value : null; }
-    return typeof p.max==="number" ? p.max : null;
+    return typeof p.max==="number" ? p.max : storedMax(ch, p);
   }
+  // A panel's `turnCap` names what caps one round's spend: "rou" is the pool's Rate of Use.
+  // A number (or null) only; the round's count is `trackers.<resource>.turn` (Decision 225).
+  const panelTurnCap = (ch, p) => {
+    if (!p.turnCap || !p.resource) return null;
+    const c = p.turnCap==="rou" ? (sfr(ch)||{}).rou : p.turnCap;
+    return typeof c==="number" && Number.isFinite(c) && c>=0 ? c : null;
+  };
+  const turnCount = (ch, p) => {
+    const o = p.resource && ch && ch.trackers ? ch.trackers[p.resource] : null;
+    const n = isPlainObj(o) ? Number(o.turn) : 0;
+    return Number.isFinite(n) && n>0 ? Math.floor(n) : 0;
+  };
   // A tracker panel's count. It lives on the panel's own entry, or with
   // `resource` on that resource's tracker (SFR's spend is `trackers.sfr`, which
   // Main reads too). `counts: "down"` shows what's left of the max instead of
@@ -2870,7 +2938,10 @@ const Engine = (() => {
   function panelTracker(ch, p){
     const max = panelMax(ch, p), s = panelStore(ch, p, false), count = Number(s.obj[s.key])||0;
     const down = p.counts==="down", st = panelSteps(ch, p);
-    const out = { count, max, down, shown: down ? (max!=null ? Math.max(0, max-count) : null) : count };
+    const out = { count, max, down, shown: down ? (max!=null ? Math.max(0, max-count) : null) : count,
+                  manual: p.max==null && max!=null, turn: null };
+    const cap = panelTurnCap(ch, p);
+    if (cap!=null){ const n = turnCount(ch, p); out.turn = { spent:n, cap, at: n>0 && n===cap, past: Math.max(0, n-cap) }; }
     if (st) Object.assign(out, { need:st.need, step: count>0 ? (st.steps[Math.min(count, st.steps.length)-1] || "") : "" });
     return out;
   }
@@ -2878,10 +2949,18 @@ const Engine = (() => {
     const p = archPanels(ch).find(x=>x.id===panelId && x.type==="tracker");
     if (!p) return { ok:false, why:"That tracker isn't on this sheet." };
     const s = panelStore(ch, p, true);
-    let v = Math.max(0, (Number(s.obj[s.key])||0) + (Number(delta)||0));
+    const d = Number.isFinite(Number(delta)) ? Math.trunc(Number(delta)) : 0;
+    let v = Math.max(0, (Number(s.obj[s.key])||0) + d);
     const max = panelMax(ch, p);
     if (p.stepsFrom && max!=null) v = Math.min(max, v);
     s.obj[s.key] = v;
+    // Only this writer counts a round (Decision 225): a +1 adds to it, a -1 takes back from it first.
+    // Feeding and the Thirst move the pool through their own writers and never reach here.
+    if (p.turnCap && p.resource && s.key==="spent"){
+      const was = turnCount(ch, p), turn = Math.max(0, was + (d>0 ? d : -Math.min(was, -d)));
+      s.obj.turn = turn;
+      return { ok:true, turn, cap:panelTurnCap(ch, p) };
+    }
     return { ok:true };
   }
   function disciplineRanks(ch){
@@ -3689,7 +3768,7 @@ const Engine = (() => {
     const t = c.trackers;
     if (isObj(t)){
       for (const k of ["damage","massiveLevels","witheringDamage"]) fix(t, k, 0);
-      fix(t.luck, "bonus", 0); fix(t.luck, "spent", 0); fix(t.san, "loss", 0); fix(t.sfr, "spent", 0);
+      fix(t.luck, "bonus", 0); fix(t.luck, "spent", 0); fix(t.san, "loss", 0); fix(t.sfr, "spent", 0); fix(t.sfr, "turn", 0);
       if (isObj(t.credits)){
         fix(t.credits, "current", 0);
         t.credits.ledger = rows(t.credits.ledger);
@@ -3760,7 +3839,9 @@ const Engine = (() => {
     delete t.exhaustion;
     t.luck    = Object.assign({bonus:0, spent:0}, t.luck);
     t.san     = Object.assign({loss:0}, t.san);
-    t.sfr     = Object.assign({spent:0}, t.sfr);
+    // Schema 0.27 (Decision 225): the SFR spent since the last Turn Reset. A whole number, 0 or more; junk is 0.
+    t.sfr     = Object.assign({spent:0, turn:0}, isPlainObj(t.sfr) ? t.sfr : {});
+    t.sfr.turn = Number.isFinite(t.sfr.turn) ? nonNegInt(t.sfr.turn) : 0;
     t.credits = Object.assign({current:0, ledger:[]}, t.credits);
     if (!Array.isArray(t.credits.ledger)) t.credits.ledger=[];
     t.crank = Object.assign({rep:0, ledger:[]}, t.crank);
@@ -6983,7 +7064,7 @@ const Engine = (() => {
     ipState, ipCost, spendIP, grantIP,
     milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorListed, majorById, formGrants, takeMilestone, untakeMilestone, minorChoice, takeMinorChoice, addCustomMajor,
     majorChoice, takeMajorChoice, specializationOpening, gainSpecialization, gainedSpecializations,
-    logSession, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker,
+    logSession, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,
     // Audit trail and undo

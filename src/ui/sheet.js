@@ -358,7 +358,9 @@ function renderShMain(){
   const cardsAfterLuck = (hasSfr?1:0) + 1 + (crankOn()?1:0);
   if (hasSfr){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
-    h += cond("sfr","SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`, `RoU ${sf.rou}`, pct(sfLeft,sf.value));
+    const turn = sfrTurn(ch);
+    h += cond(`sfr${turn && (turn.at||turn.past) ? " danger" : ""}`,"SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`,
+      esc(sfrCardMeta(sf, turn)), pct(sfLeft,sf.value), "", "sfr");
   }
   // W45: whichever card is alone on its row in two columns takes the whole row.
   // Decision 214: that is the last of [SFR, Çredits, CRANK] actually shown, when their count is odd.
@@ -384,6 +386,7 @@ function renderShMain(){
   // it was pushing the lines a player actually rolls below the fold.
   h += `<section class="main-combat"><div class="sect">Combat${painChip(pain)}</div>`;
   if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
+  h += movementLineHtml(ch);   // Decision 226
   h += conditionTotalsNote(ch, true);
   // Weapons: a catalog piece is computed (Decision 100); a custom one reads
   // back what was typed.
@@ -1106,6 +1109,7 @@ function resetPanelHtml(ch, st){
     const lines=[];
     if (r.total) lines.push(`${r.total} damage goes on. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
     if (r.marks) lines.push(`You're Dying, so that's ${r.marks} Death Mark${r.marks===1?"":"s"}.`);
+    r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → 0.`));
     if (lines.length) h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
     r.notes.forEach(n=>{ h+=noticeHtml(copy("unsettledLabel"), n); });
     const P=r.prompts;
@@ -1271,6 +1275,34 @@ const crankControlsHtml = () => { const R=D.resources.crank, up=R.jobDone, down=
     <button class="btn sm" data-crk="${down}">Walked out ${sg(down)}</button>`; };
 const crankSubHtml = st => st.next ? `${st.toNext} to ${esc(st.next.name)}` : "Top tier";
 
+// Decision 225: SFR spent this round. The pool's tracker panel is found by its resource, not its id;
+// `turn` is null for a pool with no Rate of Use (a written-in one), and nothing is said then.
+const sfrPanel = ch => Engine.archPanels(ch).find(x=>x.type==="tracker" && x.resource==="sfr") || null;
+function sfrTurn(ch){ const p=sfrPanel(ch); return p ? Engine.panelTracker(ch, p).turn : null; }
+// The round's line. "short" is the card's: it already names RoU, so below the cap it adds only the count.
+function sfrRoundText(t, short){
+  if (!t || !t.spent) return "";
+  if (t.past) return `${t.spent} this round, ${t.past} past your Rate of Use. Your GM's call.`;
+  if (t.at) return `${t.spent} of ${t.cap} this round: that's your Rate of Use`;
+  return short ? `${t.spent} this round` : `${t.spent} of ${t.cap} this round`;
+}
+function sfrCardMeta(sf, t){
+  const line = sfrRoundText(t, true);
+  if (t && (t.at || t.past)) return line;
+  return [sf.rou!=null ? `RoU ${sf.rou}` : "", line].filter(Boolean).join(" · ");
+}
+// Decision 226: Walk, Run, Sprint and Jump from MOB, at the top of Main's Combat section. A
+// Condition that changes movement is named beside it, never computed (PQ7).
+function movementLineHtml(ch){
+  const m=Engine.movement(ch), u=esc(m.unit||"");
+  if (!m.paces.length) return "";
+  const pace = p => `${esc(p.name)} ${p.value}${u}${p.attack ? ` (${signed(p.attack)})` : ""}`;
+  let h = `<p class="main-move" data-movement>${m.paces.map(pace).join(" · ")}${m.jump ? ` · ${esc(m.jump.name)} ${m.jump.value}${u}` : ""}`;
+  m.conditional.forEach(c=>{ h += `<br><span class="move-while">${esc(c.name)}, ${esc(c.while)}: ${c.paces.map(p=>`${esc(p.name)} ${p.value}${u}`).join(" · ")}${c.jump ? ` · ${esc(c.jump.name)} ${c.jump.value}${u}` : ""}</span>`; });
+  m.conditions.forEach(c=>{ h += `<br><span class="move-cond">${esc(c.name)}: ${esc(c.short)}</span>`; });
+  return h + `</p>`;
+}
+
 // W2/W3: what each vital's popover holds. The same five on the vitals bar
 // and on Main's cards; `null` when the key isn't one (the popover closes).
 function vitalPopover(ch, key){
@@ -1289,6 +1321,13 @@ function vitalPopover(ch, key){
   if (key==="luck"){ const luck=Engine.luckState(ch);
     return { title:"LUCK", html: now(`${luck.current} / ${luck.max}`, luck.current===0?"bad":"gold", "") +
       `<div class="trk-row">${luckControlsHtml(luck)}</div>` }; }
+  if (key==="sfr"){ const sf=Engine.sfr(ch), p=sfrPanel(ch);
+    if (!sf || sf.value==null || !p) return null;
+    const left=Math.max(0, sf.value-(ch.trackers.sfr.spent||0)), turn=Engine.panelTracker(ch, p).turn, line=sfrRoundText(turn, false);
+    return { title:"SFR",
+      html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
+        `<div class="trk-row"><button class="btn sm" data-trk="${esc(p.id)}|-1">−1</button><button class="btn sm" data-trk="${esc(p.id)}|1">+1</button></div>` +
+        (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") }; }
   if (key==="cred") return { title:"Çredits",
     html: now(`${CR} ${numText(ch.trackers.credits.current)}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
@@ -1367,15 +1406,17 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
     // Where the count lives and which way it reads are the panel's data
     // (`resource`, `counts`, Decision 135), not its id.
     const t = Engine.panelTracker(ch, p), max = t.max, val = t.count, down = t.down;
-    const manualMax = max==null ? ((ch.trackers.panel[p.id]||{}).max??"") : null;
-    const effMax = max!=null ? max : (manualMax===""?null:Number(manualMax));
+    // A pool the player sizes keeps its box once set, so it can be changed; the engine reads the number (W54).
+    const effMax = max, manualMax = max==null ? "" : t.manual ? max : null;
+    const roundLine = sfrRoundText(t.turn, false);
     const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
     h += `<div class="trk"><h2>${esc(p.title)}</h2>
       <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
       <button class="btn sm" data-trk="${p.id}|-1">−1</button>
       <button class="btn sm" data-trk="${p.id}|1">+1</button>
-      ${max==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
+      ${manualMax!==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
       <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span>
+      ${roundLine?`<span class="sub sfr-round${t.turn.at||t.turn.past?" bad":""}" data-sfrround>${esc(roundLine)}</span>`:""}
       ${t.need!=null?`<span class="sub trk-step">${t.need?`<b>Need:</b> ${esc(t.need)}. `:""}${t.step?`<b>Step ${val}:</b> ${esc(t.step)}`:"No withdrawal."}</span>`:""}</div>`;
     // A tracker that declares `overMax: "cascade"` (the Arcanist's TOL Spent) opens the
     // Cascade panel once it's past its max: TOL below zero (Decision 106).
@@ -3090,6 +3131,12 @@ function bindVitalControls(root){
     commit("credits", `Çredits ${signed(by)}${note?` (${note})`:""}`, ()=>{ Engine.addCredits(ch, by, note); });
   });
 
+  // Generic archetype trackers (SFR / panel trackers): the Trackers row's and Main's SFR popover's, one commit.
+  root.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
+    const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
+    commit("tracker", `${pid.toUpperCase()} ${signed(delta)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
+  });
+
   // CRANK rep (Decision 169): the amount is the data's, never typed.
   root.querySelectorAll("[data-crk]").forEach(b=>b.onclick=()=>{
     const amt=Number(b.dataset.crk), note=(root.querySelector("[data-crknote]")||{}).value||"";
@@ -3194,7 +3241,7 @@ function bindSheet(){
       if (r.prompts.atZero && !st.atZero){ notice("Mark the check at zero as passed or failed first."); return; }
       if (r.prompts.dyingCheck && !st.dyingCheck){ notice("Mark the Dying check as passed or failed first."); return; }
       const marks = r.marks + (r.prompts.dyingCheck && st.dyingCheck==="fail" ? 1 : 0);
-      const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":""].filter(Boolean);
+      const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":"", r.turnSpend.length?"round's SFR cleared":""].filter(Boolean);
       S.act=null;
       commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck }); });
     } else if (st.kind==="rest" || st.kind==="focused" || st.kind==="nanomed"){
@@ -3222,11 +3269,6 @@ function bindSheet(){
     }
   });
 
-  // Generic archetype trackers (SFR / panel trackers)
-  main.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
-    const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
-    commit("tracker", `${pid.toUpperCase()} ${signed(delta)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
-  });
   // Aberrations on the character (Decision 110); adding one, from a Cascade
   // or by hand, is the picker modal (Decision 115).
   const abName = i => { const a=Engine.aberrationState(ch).active.find(x=>x.index===i); return a ? a.name : "Aberration"; };
