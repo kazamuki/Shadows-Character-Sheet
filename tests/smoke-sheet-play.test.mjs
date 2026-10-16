@@ -1048,6 +1048,7 @@ test("P10 12: with no dice left the pool line says so, and several holds read th
   ch.panelData.grimoire.push({ spellId: "blazing-fury", stage: "known", notes: "" });
   const app = openSheet(ch, "loadout");
   assert.match(app.$("#main").textContent, /holding 3: no dice left/);
+  assert.ok(!app.$$("#main .grim-sp").some(p => /exploding 10/.test(p.title)), "the pool line promises an exploding 10 with no dice left");
   assert.equal(app.$("#main .beyond"), null, "a spell was marked Beyond your pool with no dice left");
   app.click('[data-sec="trackers"]');
   app.click("[data-hitopen]");

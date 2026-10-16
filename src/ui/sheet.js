@@ -2113,7 +2113,7 @@ function grimoireHtml(ch, p){
   const g = Engine.grimoire(ch), sp = g.spellPower, sa = g.spellAttack, ip = Engine.ipState(ch).available;
   const book = g.lines.filter(l=>!l.custom), own = g.lines.filter(l=>l.custom);
   let h = sp ? `<p class="grim-sp" title="${esc(sp.text)}">Spell Power <b>${sp.value}</b> <span class="sub">${esc(sp.discipline)} ${sp.rank} + ${esc(sp.stat)} ${sp.statValue}</span></p>` : "";
-  if (g.pool && g.pool.held) h += `<p class="grim-sp" title="${esc(g.pool.text)}">Casting pool <b>${g.pool.rolls}</b> <span class="sub">${esc(g.pool.discipline)} ${g.pool.rank} · holding ${g.pool.held}: ${g.pool.rolls?`roll ${g.pool.rolls}`:"no dice left"}</span></p>`;
+  if (g.pool && g.pool.held) h += `<p class="grim-sp"${g.pool.rolls?` title="${esc(g.pool.text)}"`:""}>Casting pool <b>${g.pool.rolls}</b> <span class="sub">${esc(g.pool.discipline)} ${g.pool.rank} · holding ${g.pool.held}: ${g.pool.rolls?`roll ${g.pool.rolls}`:"no dice left"}</span></p>`;
   if (sa) h += `<p class="grim-sp" title="${esc(sa.text)}">Spell Attack <b>${sa.value}</b> <span class="sub">${esc(sa.discipline)} ${sa.rank}${sa.parts.map(x=>` + ${esc(x.stat)} ${x.value}`).join("")}</span></p>`;
 
   // From the book
