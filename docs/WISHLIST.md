@@ -86,36 +86,8 @@ from between the buttons. *Questions:* where the boost count goes when it
 leaves the stepper (the rank's total already shows it?); does Expert mode
 reach the Character tab too, or creation only.
 
-**W97 — Rate of Use counts what you've spent this turn.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10*
-SFR's description says Rate of Use "limits the maximum SFR channeled in a
-single turn", and sustained powers drain against it each turn. The sheet
-shows RoU but counts nothing against it, so a player can spend a whole pool
-in one turn without the sheet noticing. The ask: count SFR spent since the
-last **Turn Reset** (the button conditions already tick on), warn at RoU,
-and clear the count on Reset.
-*To respect:* constraint 7: what's stored is SFR spent this turn (a tracker
-input). The cap is `rou` read from the scaling row, plus `grants()`' `rou`
-(Werewolf Majors, Decision 199). A new tracker field is a save-file shape
-change. *Questions before a proposal:* **warn or block**. Brogan said
-"warn/block"; a block is the GM's rule taken out of their hands, so the
-proposal should argue for a warning. Do sustained powers need to be marked
-active so Reset charges their drain on its own, or does the player spend it
-each turn? And Feeding: Fresh blood refills SFR. Does gaining SFR touch
-the count?
-
-**W98 — Walk, Run, Sprint and Jump on the sheet, from MOB.** *Ken, from Brogan · ⏭ · Content · raised 2026-10-10 · jump ruled by Deighton 2026-10-10*
-MOB's description promises "base running speed, sprint speed, and how far you
-can jump with a running start", and the sheet shows none of them. `0530`
-gives three: **Walk = MOB, Run = MOB × 3 (−1 to attacks), Sprint = MOB × 6
-(−3)**. Fleet of Foot (a Professional's Chi ability) doubles all three. Show
-them on Main beside the combat numbers.
-*To respect:* the quick reference's movement table is display text
-(`"MOB ×3"`). The engine needs the multipliers as numbers (Decision 134),
-read by both. A doubling from Fleet of Foot only counts while it's active.
-**Jump** wasn't in the book; **Deighton ruled it (2026-10-10, `reference/rulings-2026-10-10.md` Q23):
-Jump = Sprint ÷ 4, rounded down**, and with Fleet of Foot, Sprint doubles first
-and then divides. The ÷ 4 is a number in the data too. The book's fix is in
-`plans/crb-catch-up.md`.
+**W110 — A sustained power is marked active, and Turn Reset charges it.** *Ken, from P11's PQ2 · 💡 · Rule or shape · raised 2026-10-15*
+P11 (Decision 225) counts the SFR a player spends each round, but a sustained power ("2 SFR per round, sustained", "Rank per round, sustained") is still spent by hand with +1 every round. The ask: an Active toggle per sustained power, and Turn Reset charges what is active. *To respect:* every power cost is text today ("Rank + 2 per round"), so this starts with a data pass turning about ten costs into numbers (Decision 135); it is a work order of its own. Ken took the default in PQ2: the player spends it each round for now.
 
 **W99 — The Character tab's section headings line up.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · reopens Decision 168 in part*
 On the Character tab, sections like **Baseline Traits** and an Arcanist's
@@ -805,7 +777,7 @@ then grow the list kind by kind as each behaviour is made data-driven.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W110.** Everything above is open; W38 has a plan,
+- **Next free number: W111.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
@@ -820,12 +792,6 @@ then grow the list kind by kind as each behaviour is made data-driven.
 - Most of these don't touch rules. If one starts to — e.g. it wants to show a
   computed number the engine doesn't have yet — that part stops and goes to
   Deighton.
-
-**W54 — Main's SFR card for a written-in pool.** *Claude · 💡*
-A Custom character who ticks **Uses SFR** counts its pool on Trackers, but
-Main's SFR card and the vitals read `Engine.sfr()`, which takes its size from
-the archetype's scaling row, and a written-in archetype has none. Main could
-read the tracker panel's player-set max instead.
 
 **W55 — Sticky notes on the Notes tab.** *Ken · 💡*
 Small notes a player pins as cards at the top of Notes (a contact's number,

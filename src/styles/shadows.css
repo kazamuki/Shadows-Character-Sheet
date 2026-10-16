@@ -427,6 +427,11 @@ aside.vitals:empty{display:none}
 .hitrow input[type=number], .hitrow input[inputmode=numeric]{width:84px; text-align:center}
 .hitrow label.check{display:flex; align-items:center; gap:6px; font-size:.82rem; padding-bottom:8px}
 .hitarmor{font-family:var(--mono); font-size:.76rem; color:var(--cyan); padding-bottom:8px}
+/* Decision 226: movement at the top of Main's Combat section. It wraps, never scrolls sideways. */
+.main-move{font-family:var(--mono); font-size:.8rem; line-height:1.5; margin:0 0 10px; overflow-wrap:anywhere}
+.main-move .move-while{color:var(--cyan)}
+.main-move .move-cond{opacity:.85}
+.sfr-round.bad{color:var(--magenta-text)}
 .hitnote{font-size:.76rem; color:var(--dim); margin:4px 0}
 .hitwhy{font-size:.82rem; color:var(--gold); margin:10px 0}
 .hitresult{border-left:2px solid var(--violet); padding:4px 0 4px 12px; margin:10px 0; font-size:.86rem}
@@ -573,6 +578,8 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .cond.san .meter i{background:var(--cyan)} .cond.san .big{color:var(--cyan)}
 .cond.luck .big{color:var(--gold)} .cond.luck .meter i{background:var(--gold)}
 .cond.sfr .big{color:var(--violet-text)} .cond.sfr .meter i{background:var(--violet-hi)}
+/* Decision 225: the card reserves two lines for "RoU 4 · N this round", so the popover's +1 never moves under the finger. */
+.cond.sfr .meta{min-height:3.1em}
 .cond.cred .big{color:var(--gold)}
 .cond.danger{border-color:var(--magenta)}
 .cond.danger .big{color:var(--magenta-text)} .cond.danger .meter i{background:var(--magenta)}

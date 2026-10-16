@@ -1739,3 +1739,47 @@ test("P10 2: an Arcanist holds at most their Evocation rank (Q17)", () => {
   assert.match(third.why, /Evocation rank \(2\)/);
   assert.equal(JSON.stringify(ch.trackers.heldSpells), JSON.stringify(["fog-shroud", "wind-walker"]));
 });
+
+// ── Movement (0530 Movement; reference/rulings-2026-10-10.md Q23; 0412 Fleet of Foot) ───────
+
+const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
+function mover(mob, specialization) {
+  const ch = subject();
+  ch.stats.MOB.base = mob;
+  if (specialization) { ch.identity.archetype = "professional"; ch.archetypeChoices.specialization = [specialization]; }
+  return ch;
+}
+
+test("P11 1: Walk, Run and Sprint are MOB ×1, ×3 and ×6, and Jump is Sprint ÷ 4 rounded down", () => {
+  // 0530: "Walk — MOB, no penalty", "Run — MOB ×3, −1 to attacks while moving", "Sprint — MOB ×6, −3 ...".
+  // Q23: "Jump is calculated like this: Sprint / 4. This is rounded down."
+  const row = m => Engine.movement(m).paces.map(p => [p.id, p.value, p.attack]);
+  same(row(mover(5)), [["walk", 5, 0], ["run", 15, -1], ["sprint", 30, -3]]);
+  assert.equal(Engine.movement(mover(5)).jump.value, 7, "30 ÷ 4 rounds down to 7");
+  same(row(mover(1)).map(r => r[1]), [1, 3, 6]);
+  assert.equal(Engine.movement(mover(1)).jump.value, 1, "6 ÷ 4 rounds down to 1");
+});
+
+test("P11 2: Fleet of Foot doubles Run and Sprint, not Walk, and Jump comes from the doubled Sprint", () => {
+  // 0412: "Fleet of Foot [Chi 3]: Run, Sprint, and Jump are doubled." Q23: "multiply the Sprint value by 2 first then divide by 4".
+  const m = Engine.movement(mover(5, "true-warrior"));
+  assert.equal(m.conditional.length, 1);
+  const f = m.conditional[0];
+  same(f.paces.map(p => [p.id, p.value]), [["run", 30], ["sprint", 60]], "Walk is not doubled");
+  assert.equal(f.jump.value, 15, "60 ÷ 4, not 2 × (30 ÷ 4) = 14");
+  assert.equal(f.while, "while active");
+  same(m.paces.map(p => p.value), [5, 15, 30], "a conditional grant was summed into the base paces");
+  same(Engine.movement(mover(5, "mercenary")).conditional, []);
+});
+
+test("P11: the quick reference's Movement table agrees with movementRules", () => {
+  const part = D.gmReference.panels.flatMap(s => s.parts || []).find(p => p.title === "Movement");
+  assert.ok(part, "no Movement table in the quick reference");
+  const rules = D.movementRules;
+  for (const pace of rules.paces) {
+    const row = part.rows.find(r => r[0] === pace.name);
+    assert.ok(row, `${pace.name} has no row`);
+    assert.equal(row[1], pace.times === 1 ? "MOB" : `MOB ×${pace.times}`);
+    assert.equal(row[2], pace.attack === 0 ? "No penalty" : String(pace.attack).replace("-", "−"));
+  }
+});

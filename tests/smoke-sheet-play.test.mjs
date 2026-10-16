@@ -13,7 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, stored } from "./harness.mjs";
-import { Engine, D, lockedCharacter, openSheet, activeChar, pickFromCatalog, search, clickIn, draft, draftOn, wizCss, writtenInCharacter, focused } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, openSheet, activeChar, pickFromCatalog, search, clickIn, draft, draftOn, wizCss, writtenInCharacter, focused, lockedVampire } from "./smokekit.mjs";
 
 // ── Adversarial review of PR #7 — the UI half ─────────────────────────
 
@@ -42,7 +42,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.26");
+  assert.equal(resumed.meta.schemaVersion, "0.27");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1054,5 +1054,76 @@ test("P10 12: with no dice left the pool line says so, and several holds read th
   app.click("[data-hitopen]");
   setHit(app, "damage", "5");
   assert.match(app.$("#modal [data-concentration]").textContent, /You're holding Fog Shroud, Wind Walker and Blazing Fury\. A WILL Essence check keeps each one\./);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── P11: SFR spent this round, a Custom pool on Main, and movement (W97, W54, W98) ───────
+
+function streetVampire() {
+  const ch = lockedVampire("strigoi");
+  ch.creation.powerLevel = "street";
+  return ch;
+}
+
+test("P11 10: Main's SFR card counts the round and warns past RoU, and Turn Reset clears it", () => {
+  const app = openSheet(streetVampire(), "main");
+  const card = () => app.$('#main [data-vpop="sfr"]').textContent;
+  assert.match(card(), /RoU 4/);
+  app.click('#main [data-vpop="sfr"]');
+  for (let i = 0; i < 3; i++) press(app, '#vpop [data-trk="sfr|1"]');
+  assert.match(card(), /RoU 4 · 3 this round/);
+  assert.match(app.$("#vpop").textContent, /3 of 4 this round/);
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.match(card(), /RoU 4 · 4 this round/);
+  assert.match(app.$("#vpop").textContent, /4 of 4 this round: that's your Rate of Use/);
+  assert.ok(app.$('#main [data-vpop="sfr"]').classList.contains("danger"), "the card didn't go to the danger class at RoU");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.match(card(), /RoU 4 · 5 this round/);
+  assert.ok(!/GM's call/.test(card()), "the card's line grew into a sentence, so the popover's +1 moves under the finger");
+  assert.match(app.$("#vpop").textContent, /5 this round, 1 past your Rate of Use\. Your GM's call\./);
+  assert.equal(focused(app), app.$('#vpop [data-trk="sfr|1"]'), "focus left the +1");
+  assert.deepEqual(activeChar(app).trackers.sfr, { spent: 5, turn: 5 }, "the +1 past RoU was refused");
+  // The count doesn't outlive the fight: Turn Reset is one press from Main's popover, not only a tab away.
+  app.click("#vpop [data-popreset]");
+  assert.match(app.$("#main").textContent, /5 this round, 1 past your Rate of Use/, "the Trackers row doesn't say it");
+  assert.match(app.$('[data-actpanel="reset"]').textContent, /SFR spent this round: 5 → 0/);
+  assert.equal(app.$("[data-actapply]").disabled, false, "Apply Reset is disabled with only SFR spent");
+  app.click("[data-actapply]");
+  assert.deepEqual(activeChar(app).trackers.sfr, { spent: 5, turn: 0 });
+  app.click("[data-toastundo]");
+  assert.deepEqual(activeChar(app).trackers.sfr, { spent: 5, turn: 5 }, "one Undo didn't put the count back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P11 11: a Custom pool gets Main's card once its max is set, with no Rate of Use", () => {
+  const app = openSheet(writtenInCharacter(), "trackers");
+  assert.equal(app.$('#main [data-trkmax="sfr"]').value, "");
+  const inp = app.$('#main [data-trkmax="sfr"]');
+  inp.value = "12"; inp.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.ok(app.$('#main [data-trkmax="sfr"]'), "the max box went away once it was set, so it can't be changed");
+  assert.equal(activeChar(app).trackers.panel.sfr.max, 12);
+  app.click('[data-sec="main"]');
+  const card = app.$('#main [data-vpop="sfr"]');
+  assert.ok(card, "no SFR card on Main");
+  assert.match(card.textContent, /12\s*\/12/);
+  assert.ok(!/RoU/.test(card.textContent), "the card says RoU for a pool that has none");
+  assert.ok(!/undefined|null|NaN/.test(card.textContent));
+  assert.equal(app.$$("#main .cond.alone").length, 0, "SFR and Çredits fill a row; neither is alone");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P11 12: Main shows movement, and Fleet of Foot for a True Warrior", () => {
+  const line = app => app.$("#main .main-combat [data-movement]").textContent.replace(/\s+/g, " ");
+  const base = openSheet(lockedCharacter(), "main");
+  assert.match(line(base), /Walk 5m · Run 15m \(−1\) · Sprint 30m \(−3\) · Jump 7m/);
+  const tw = lockedCharacter();
+  tw.identity.archetype = "professional"; tw.archetypeChoices.specialization = ["true-warrior"];
+  const app = openSheet(tw, "main");
+  assert.match(line(app), /Fleet of Foot, while active: Run 30m · Sprint 60m · Jump 15m/);
+  assert.ok(!/Walk 10/.test(line(app)), "Fleet doubled Walk");
+  assert.ok(!/Fleet of Foot/.test(line(openSheet(streetVampire(), "main"))), "a Vampire has Fleet of Foot");
+  const prone = lockedCharacter(); prone.trackers.conditions = [{ id: "prone" }];
+  assert.match(line(openSheet(prone, "main")), /Prone: half move$/);
+  assert.ok(!/attack/i.test(line(openSheet(prone, "main"))), "the movement line repeats the Condition's attack penalty");
   assert.deepEqual(app.errors, []);
 });

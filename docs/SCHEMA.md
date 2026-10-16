@@ -334,7 +334,8 @@ window.SHADOWS_DATA = {
       coreMechanic: { panels: [
         // `when` names a mechanic: the panel shows only while it's ticked.
         { id: "tol-spent", type: "tracker", max: "TOL", overMax: "cascade", when: "magic", ... },
-        { id: "sfr", type: "tracker", counts: "down", resource: "sfr", when: "sfr", ... },  // no max: the player sets it
+        { id: "sfr", type: "tracker", counts: "down", resource: "sfr", when: "sfr", ... },  // no max: the player sets it (trackers.panel.sfr.max); the engine reads it (Decision 225)
+        // Vampire's and Werewolf's SFR tracker also carry turnCap: "rou" (Decision 225): the round's spend is counted against sfr().rou
         { id: "powers", type: "powers", title: "Powers" }   // the character's own powers
       ] } }
   ],
@@ -422,6 +423,9 @@ window.SHADOWS_DATA = {
   // specialization option ({ stat, plus } read as the stat's modifier + plus).
   // A grant with `while` is conditional: shown, never summed; the hit panel
   // asks. `resAgainst` on a grant adds classes it answers (Resilient Spirit).
+  // Decision 226: Walk/Run/Sprint are MOB x times with an attack penalty; Jump is one pace / divideBy, rounded down.
+  // A grant { type: "movement", times, paces, while } is listed beside them, never summed. A Condition with movement: true is named, not computed.
+  movementRules: { stat: "MOB", paces: [ { id, name, times, attack } ], jump: { name, from, divideBy }, unit: "m" },
   naturalArmorRules: { flagged: true, flagNote: "F25 ...", playerNote: "...",
     resAgainst: ["kinetic"], ignoresAp: true, text: "..." },
   armor: [
@@ -675,7 +679,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.26",
+    schemaVersion: "0.27",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -796,7 +800,7 @@ It renders on the Character tab (Decision 158).
     damage: 0,                       // total HP damage taken
     luck:   { bonus: 0, spent: 0 },  // bonus = CP/advantage buy-ups
     san:    { loss: 0 },             // current SAN = computed max − loss
-    sfr:    { spent: 0 },
+    sfr:    { spent: 0, turn: 0 },  // (0.27, Decision 225) turn = SFR channelled since the last Turn Reset: an input, only the tracker's +1 adds to it (Feeding and the Thirst move `spent` alone), Turn Reset zeroes it. migrate makes it a whole number >= 0, junk is 0
     // (0.7) No `exhaustion` field: it was never its own resource. A Rupture
     // spends TOL directly; Exhausted is what 0 TOL is called, not a second
     // tracked value (Decision 93).
@@ -4721,6 +4725,24 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing in the ledger. The `castingPool` comment citing Decision 111 ("the table's to count") is rewritten; `spellcraftRules.concentration` becomes an object whose `text` is the ruling, in place of the string that said "dice equal to its Threshold".
      - **Revisit if:** Deighton sets the check's TN and TH (close F43); an inscribed Concentration spell (a Talisman holds it, `0480`) is tracked; a written-in spell needs to be held (W109).
      - **Built:** app 0.46.0, game data 0.39, character schema 0.26, PR #195. Log 2026-10-15 (P10).
+
+225. **SFR spent this round is counted against Rate of Use and cleared by Turn Reset; the sheet warns at RoU and never blocks.**
+     *2026-10-15 · Ken + Claude · Touches: trackers.sfr.turn, turnCap, adjustPanelTracker, panelTracker, panelMax, resolveReset, applyReset, Turn Reset, hasEffect, turnSpend, sfr(), trackers.panel.<id>.max, Main's SFR card, the SFR popover, Custom (Uses SFR), RoU, W97, W54*
+     - **Decided:** a tracker panel with `turnCap` ("rou": the pool's Rate of Use) counts each +1 into `trackers.<resource>.turn`; the −1 takes back from it first, never below 0. Feeding, A day unfed and A day without rest move `spent` and never `turn`. At the cap Main's card and the Trackers row say so, past it they warn, and the +1 still lands. Turn Reset zeroes `turn` and can be applied for that alone. Main's SFR card opens a popover with −1/+1 and a Turn Reset button that opens the same panel (Rest and a logged session do not clear it: `applyReset` is the one writer). A Custom pool's player-set max is read by the engine (`panelMax`), so `sfr()` returns it with `rou: null` and Main shows its card; with no Rate of Use nothing is counted for it (W54). Schema 0.27.
+     - **Why:** W97 (Brogan): a whole pool spent in one turn went unnoticed. W54: the Custom pool was invisible on Main.
+     - **Rejected:** a block at RoU (the GM's rule, and a mis-tap would need an Admin edit); an Active toggle per sustained power (every cost is text, so it needs a data pass first: W110); the −1 leaving the count alone (a mis-tapped +1 then −1 would read as a spend); spending only on Trackers; deriving the count from `spent` (the Thirst's daily loss would count as channelled).
+     - **Replaces:** nothing. Extends Decisions 201 and 135.
+     - **Revisit if:** sustained powers' costs become numbers (W110); a Custom pool needs a Rate of Use; GM mode's encounter Reset (Decision 189) should clear a linked character's count.
+     - **Built:** app 0.47.0, game data 0.40, character schema 0.27, PR #198. Log 2026-10-15 (P11).
+
+226. **Movement is computed from MOB: Walk, Run and Sprint by the book's multipliers, Jump as Sprint ÷ 4 rounded down, and Fleet of Foot doubles Run and Sprint while active.**
+     *2026-10-15 · Ken + Claude · Touches: movementRules, movement(), MOB, statTable, Walk, Run, Sprint, Jump, Fleet of Foot, grants type "movement", while, True Warrior, Main's Combat section, Prone, Restrained, the quick reference's movement table, W98*
+     - **Decided:** `movementRules` holds each pace's multiplier and attack penalty, Jump's source and divisor, and the unit (meters, "m": Ken, PQ6) as data; `movement(ch)` reads the live MOB (a shifted form counts, Decision 195). A `movement` grant with `while` is listed, never summed (as Natural Armor's conditional grants are, Decision 104): Fleet of Foot doubles Run and Sprint, not Walk (`0412`), and Jump is computed from the doubled Sprint (Deighton, Q23: 15, not 14, at MOB 5). A Condition flagged `movement` is named beside the numbers with its `movementText` ("half move", "can't move"), not computed (PQ7). The quick reference's table stays text, and a test keeps it and `movementRules` agreeing. Main only; print is unchanged (PQ8).
+     - **Why:** W98 (Brogan): MOB promised speeds the sheet never showed.
+     - **Rejected:** bare numbers with a flag for the unit (Ken confirmed meters); computing Prone's halving or Restrained's zero (halving's rounding isn't ruled); doubling Walk (the book doesn't); a Fleet of Foot toggle saved on the character (no Chi ability has an active state on the sheet; Iron Shirt is listed the same way); generating the quick reference's rows from the numbers (two readers of one table, for a table nobody edits).
+     - **Replaces:** nothing.
+     - **Revisit if:** Chi abilities get an active state; a power's or spell's MOB bonus (Preternatural Speed, Wind Walker, Apex Fury) is computed; Prone's halving is ruled with its rounding; W100 (meters or feet).
+     - **Built:** app 0.47.0, game data 0.40, PR #198. Log 2026-10-15 (P11).
 
 ## 5. Open Flags
 
