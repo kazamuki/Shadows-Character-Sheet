@@ -4796,7 +4796,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a price for a style (Q29); parsing "+1 Stun" out of the `bonus` text (134); raising `count` (56); the bonus with a Disarming or Knockdown weapon (PQ5); the better of two styles, with a flag (PQ6); the maneuvers on print (PQ7); Admin alone adding a style (PQ8).
      - **Replaces:** Decision 77 in part (`count` is the creation cap when `addInPlay`; a skill's held rank counts IP and boosts). Builds 56's "more may be trained later in play".
      - **Revisit if:** Deighton rules otherwise on two styles on one maneuver; W107's strike line lands; Salut gets its bonus (56).
-     - **Built:** app 0.47.0, game data 0.40, character schema 0.28, PR #…. Log 2026-10-16 (P12b).
+     - **Built:** app 0.47.0, game data 0.40, character schema 0.28, PR #203. Log 2026-10-16 (P12b).
 
 230. **Training is a house rule, off until Admin turns it on: a REF, INT or TECH Skill the character already has is trained a rank for Çredits at 10 × that rank's IP cost, one at a time, and the rank arrives at the next Milestone; never past 9.**
      *2026-10-16 · Ken + the design team + Claude · Touches: houseRules, progression.training, ip.training, trainingCost, startTraining, settleTraining, nextMilestoneAt, logSession, manual MP, Skilled, ipCost, progression.ip.log, via, mp, Train a Skill, schema 0.28*
@@ -4805,7 +4805,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** the rank at once; a 5-MP clock; training a never-trained skill; deriving the rank from MP on every read (a fifth source for every reader); counting from `minorAvail`; always offering it (PQ1).
      - **Replaces:** nothing. Extends 220's `houseRules`, 27's journal, 159's raise row and 217's Skilled.
      - **Revisit if:** a table wants Training on by default; a training needs stopping or refunding; `0450` changes the price, cap or period.
-     - **Built:** app 0.47.0, game data 0.40, character schema 0.28, PR #…. Log 2026-10-16 (P12b).
+     - **Built:** app 0.47.0, game data 0.40, character schema 0.28, PR #203. Log 2026-10-16 (P12b).
 
 ## 5. Open Flags
 
