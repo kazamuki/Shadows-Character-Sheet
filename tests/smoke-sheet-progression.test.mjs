@@ -568,3 +568,127 @@ test("P12a: a flagged Advantage's note reads true on the wizard's Character Poin
     assert.match(a.playerNote, /in play/, `${a.id}'s note doesn't say what IP does in play`);
   }
 });
+
+// ── P12b: Training (Decision 230) ───────────────────────────────────────────────
+const trChar = (extra = {}) => {
+  const c = lockedCharacter(); c.identity.archetype = "professional";
+  c.meta.gamedataVersion = D.meta.gamedataVersion;
+  c.skills.handguns = { rank: 5, ipe: 0 };
+  c.skills.persuasion = { rank: 2, ipe: 0 };
+  c.progression.milestonePoints = 9;
+  c.trackers.credits.current = 1250;
+  Object.assign(c, extra);
+  return c;
+};
+const trainOn = ch => { ch.houseRules.training = true; return ch; };
+const seeSkillRow = (app, id) => { app.click('[data-sec="skills"]'); return app.$(`#main [data-skillname="${id}"]`).closest("tr"); };
+
+test("P12b 12: Train a Skill from Progression, landed by the Session Log, one Undo takes both back", () => {
+  // Off: no button. Admin turns it on.
+  const app = openSheet(trChar(), "progression");
+  assert.equal(app.$("[data-trainopen]"), null, "Train a Skill shows with the rule off");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  const box = app.$("[data-admin-training]");
+  assert.ok(box, "Admin has no Training checkbox");
+  box.checked = true; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(activeChar(app).houseRules.training, true);
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  app.click('[data-sec="progression"]');
+  assert.ok(app.$("[data-trainopen]"), "Admin on, and still no Train a Skill");
+
+  app.click("[data-trainopen]");
+  assert.match(app.$("#modal").textContent, /You have Ç1,?250/);
+  assert.match(app.$("#modal").textContent, /next Milestone is at 10 MP/, "the status line says when the next Milestone is");
+  assert.ok(app.$('#modal [data-train="handguns"]'));
+  assert.equal(app.$('#modal [data-train="persuasion"]'), null, "a MAG skill is offered");
+  assert.equal(app.$('#modal [data-train="stealth"]'), null, "an untrained skill is offered");
+  assert.match(app.$('#modal [data-train="handguns"]').closest("tr").textContent, /5 → 6/);
+  assert.match(app.$('#modal [data-train="handguns"]').closest("tr").textContent, /Ç250/);
+  assert.match(app.$('#modal [data-train="handguns"]').closest("tr").textContent, /teacher/i);
+  app.click('#modal [data-train="handguns"]');
+  const c1 = activeChar(app);
+  assert.equal(c1.trackers.credits.current, 1000);
+  assert.equal(c1.trackers.credits.ledger.at(-1).note, "Training: Handguns 5 → 6");
+  assert.equal(c1.progression.training.skill, "handguns");
+  assert.ok(app.$("#modal").open, "the modal closed after a start");
+  const rows = [...app.$$("#modal [data-train]")];
+  assert.ok(rows.length > 0 && rows.every(b => b.disabled), "every row is off after a start");
+  assert.match(app.$("#modal").textContent, /Handguns 5 → 6 is in training/);
+  assert.match(app.$("#modal").textContent, /10 Milestone Points/);
+  assert.match(app.$("#modal").textContent, /In training until 10 Milestone Points|Handguns is in training until 10 Milestone Points/);
+  app.click("#modal [data-modalclose]");
+  // Raise a Skill refuses it, with the reason.
+  app.click('[data-raiseopen="skill"]');
+  const rr = app.$('#modal [data-raise="skill|handguns"]');
+  assert.equal(rr.disabled, true);
+  assert.match(rr.closest("tr").textContent, /In training until 10 Milestone Points\./);
+  app.click("#modal [data-modalclose]");
+  // The chip is on the skill's row.
+  assert.match(seeSkillRow(app, "handguns").textContent, /in training · 10 MP/);
+  // Log a session: the training lands, in the same commit.
+  app.click('[data-sec="sessions"]');
+  fill(app, "[data-sesip]", "0");
+  app.click("[data-seslog]");
+  assert.match(app.$("#undotoast").textContent, /Handguns trained to 6/);
+  const c2 = activeChar(app);
+  assert.equal(c2.skills.handguns.ipe, 1);
+  assert.equal(c2.progression.training, null);
+  app.click('[data-sec="progression"]');
+  assert.match(app.$("#main .journal").textContent, /Trained: Handguns 5 → 6/);
+  assert.doesNotMatch(seeSkillRow(app, "handguns").textContent, /in training/);
+  assert.equal(app.window.loadFindings(activeChar(app)).importIssues.length, 0, "a landed training reads as a hand edit");
+  // One Undo: the session and the training come back together.
+  app.click("[data-toastundo]");
+  const c3 = activeChar(app);
+  assert.equal(c3.sessions.length, 0);
+  assert.equal(c3.skills.handguns.ipe, 0);
+  assert.equal(c3.progression.training.skill, "handguns");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P12b 12b: the manual MP stepper lands a training in its own commit, and deleting a session lands nothing", () => {
+  const ch = trainOn(trChar());
+  ch.progression.training = { skill: "handguns", mp: 9, credits: 250, date: "2026-10-16T00:00:00.000Z" };
+  const app = openSheet(ch, "progression");
+  app.click('[data-mp="1"]');
+  const c = activeChar(app);
+  assert.equal(c.skills.handguns.ipe, 1, "the stepper didn't land the training");
+  assert.equal(c.progression.training, null);
+  assert.equal(c.progression.ip.log.at(-1).via, "training");
+  assert.match(app.$("#undotoast").textContent, /Handguns trained to 6/);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).skills.handguns.ipe, 0, "Undo left the rank behind");
+  assert.equal(activeChar(app).progression.milestonePoints, 9);
+  assert.ok(activeChar(app).progression.training, "Undo took the training with it");
+  // A session deleted after a training landed leaves the rank.
+  const landed = trainOn(trChar());
+  Engine.logSession(landed, { title: "x", ipEarned: 0 });                 // MP 10
+  landed.skills.handguns.ipe = 1;
+  const app2 = openSheet(landed, "sessions");
+  app2.click("[data-sesdel]"); app2.click("#modal [data-askyes]");
+  assert.equal(activeChar(app2).skills.handguns.ipe, 1);
+  assert.deepEqual(app.errors, []);
+  assert.deepEqual(app2.errors, []);
+});
+
+test("P12b 12c: Train a Skill stays while one runs after the rule is turned off, and a short purse says so", () => {
+  const ch = trChar();
+  ch.progression.training = { skill: "handguns", mp: 9, credits: 250, date: "2026-10-16T00:00:00.000Z" };
+  const app = openSheet(ch, "progression");
+  assert.ok(app.$("[data-trainopen]"), "a running training hides its own button when the rule is off");
+  app.click("[data-trainopen]");
+  assert.match(app.$("#modal").textContent, /Handguns 5 → 6 is in training/);
+  const poor = trainOn(trChar());
+  poor.trackers.credits.current = 100;
+  const app2 = openSheet(poor, "progression");
+  app2.click("[data-trainopen]");
+  const b = app2.$('#modal [data-train="handguns"]');
+  assert.equal(b.disabled, true);
+  assert.match(b.closest("tr").textContent, /Needs Ç250; you have Ç100/);
+  const none = trainOn(lockedCharacter());
+  none.meta.gamedataVersion = D.meta.gamedataVersion;
+  const app3 = openSheet(none, "progression");
+  app3.click("[data-trainopen]");
+  assert.match(app3.$("#modal").textContent, /sharpens a Skill you already have/);
+  assert.deepEqual(app.errors, []);
+});

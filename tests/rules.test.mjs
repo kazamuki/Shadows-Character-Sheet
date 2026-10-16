@@ -1873,3 +1873,80 @@ test("P12a 4b: a SAN loss past the maximum sells only the SAN that shows, and a 
   assert.equal(Engine.spendIP(frac, "restore", "san", "", { count: 2 }).ok, true);
   assert.equal(Engine.sanState(frac).loss, 0);
 });
+
+// ── P12b: learning without IP (0530 Combat Maneuvers; 0450 Training; rulings-2026-10-10 Q29) ─────
+function p12bChar(styles = []) {
+  const ch = ipChar();
+  ch.skills["martial-arts"] = { rank: 2, ipe: 0, selections: { style: styles.slice() } };
+  ch.skills.handguns = { rank: 5, ipe: 0 };
+  ch.houseRules.training = true;
+  ch.trackers.credits.current = 2000;
+  return ch;
+}
+
+test("P12b 3: a style's bonus lands on its maneuver's check, unarmed (0530, Q29)", () => {
+  // 0530: "bonuses to each technique based on the style ... training in Commando gives a bonus to Stun, ... Krav Maga ... to Disarm."
+  assert.match(crb("0530_Combat_Encounters.md"), /bonuses to each technique based on the style of Martial Arts/);
+  assert.match(crb("0530_Combat_Encounters.md"), /Commando gives a bonus to Stun, whereas training in Krav Maga gives a bonus to Disarm/);
+  const ch = p12bChar(["karate"]);
+  const list = Engine.maneuverChecks(ch, "martial-arts");
+  same(list.map(m => m.id), ["stun"], "Karate improves Stun only");
+  assert.equal(list[0].bonus, 1);
+  assert.equal(list[0].check, Engine.skillLine(ch, "martial-arts").checkBonus + 1);
+  assert.equal(list[0].inflicts, D.conditions.find(c => c.id === "stunned").name);
+  same(list[0].styles, ["Karate"]);
+  same(Engine.maneuverChecks(p12bChar(["custom"]), "martial-arts"), [], "Custom Style has no number: its text is the GM's");
+  same(Engine.maneuverChecks(p12bChar([]), "martial-arts"), []);
+  same(Engine.maneuverChecks(ch, "handguns"), [], "a skill with no maneuvers");
+});
+
+test("P12b 5: every style names a real maneuver, and every maneuver a real Condition", () => {
+  const ma = D.skills.find(s => s.id === "martial-arts");
+  same(ma.maneuvers.map(m => m.id), ["grapple", "knockdown", "disarm", "stun"], "0530's four");
+  for (const m of ma.maneuvers) assert.ok(D.conditions.some(c => c.id === m.inflicts), `${m.id} inflicts ${m.inflicts}`);
+  for (const s of ma.styles) {
+    if (s.id === "custom") { assert.equal(s.maneuver, undefined); assert.equal(s.amount, undefined); continue; }
+    const m = ma.maneuvers.find(x => x.id === s.maneuver);
+    assert.ok(m, `${s.id} names ${s.maneuver}`);
+    assert.ok(Number.isInteger(s.amount) && s.amount > 0, `${s.id} amount`);
+    assert.ok(s.bonus.toLowerCase().includes(m.name.toLowerCase()), `${s.id}: "${s.bonus}" names ${m.name}`);
+    assert.ok(s.bonus.includes(`+${s.amount}`), `${s.id}: "${s.bonus}" carries its number`);
+  }
+  assert.ok(ma.picks.find(p => p.id === "style").addInPlay === true, "Martial Arts' style pick is learned in play");
+  assert.ok(D.ip.training.stats.every(id => D.stats.some(s => s.id === id)), "Training's stats are Stats");
+});
+
+test("P12b 6: Training prices a rank at 10 × its IP cost, never past 9, and only for a skill already trained (0450)", () => {
+  const ch = p12bChar();
+  assert.match(crb("0450_Advancement.md"), /Training costs Çredits equal to 10 × the rank's IP cost/);
+  assert.match(crb("0450_Advancement.md"), /Raising Handgun from 5 to 6 costs 25 IP, or Ç250/);
+  const hg = Engine.trainingCost(ch, "handguns");
+  same([hg.ok, hg.credits, hg.from, hg.to], [true, 250, 5, 6], "0450's own example");
+  // A Focused skill's discount carries: rank 5 at 3 a rank is 15 IP, so Ç150.
+  const foc = p12bChar(); foc.archetypeChoices.focusedSkillPicks = ["handguns"];
+  if (!Engine.focusedSkillIds(foc).includes("handguns")) foc.archetypeChoices.specialization = ["mercenary"];
+  assert.ok(Engine.focusedSkillIds(foc).includes("handguns"), "the fixture makes Handguns Focused");
+  assert.equal(Engine.trainingCost(foc, "handguns").credits, 150);
+  // Never past 9.
+  ch.skills.handguns.rank = 9;
+  assert.equal(Engine.trainingCost(ch, "handguns").ok, false, "9 → 10 is always bought");
+  ch.skills.handguns.rank = 8;
+  assert.equal(Engine.trainingCost(ch, "handguns").to, 9);
+  // Only REF, INT or TECH.
+  ch.skills.persuasion = { rank: 3, ipe: 0 }; ch.skills.athletics = { rank: 3, ipe: 0 };
+  assert.equal(Engine.trainingCost(ch, "persuasion").ok, false, "MAG");
+  assert.equal(Engine.trainingCost(ch, "athletics").ok, false, "BOD");
+  ch.skills.investigation = { rank: 2, ipe: 0 }; ch.skills.cybernetics = { rank: 2, ipe: 0 };
+  assert.equal(Engine.trainingCost(ch, "investigation").ok, true, "INT");
+  assert.equal(Engine.trainingCost(ch, "cybernetics").ok, true, "TECH");
+  assert.equal(Engine.trainingCost(ch, "investigation").teacher, false, "books will do");
+  assert.equal(Engine.trainingCost(ch, "handguns").teacher, true, "a REF skill needs a teacher");
+  // PQ3: an untrained skill is never offered. The same skill at rank 1 from a boost is priced at 10 × 5.
+  assert.equal(Engine.trainingCost(ch, "stealth").ok, false, "untrained REF");
+  assert.match(Engine.trainingCost(ch, "stealth").why, /isn't trained/i);
+  ch.creation.boosts = [{ targetType: "skill", targetId: "stealth", times: 1 }];
+  const boosted = Engine.trainingCost(ch, "stealth");
+  same([boosted.ok, boosted.credits, boosted.from], [true, 50, 1], "any source counts: a boost");
+  ch.skills.demolitions = { rank: 0, ipe: 1 };
+  assert.equal(Engine.trainingCost(ch, "demolitions").ok, true, "any source counts: IP");
+});

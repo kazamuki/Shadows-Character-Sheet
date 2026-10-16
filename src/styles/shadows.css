@@ -883,6 +883,10 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .skill-desc-body .covers{margin-top:5px; font-family:var(--mono); font-size:.72rem; color:var(--dim)}
 .skill-picked{margin-top:3px; display:flex; flex-wrap:wrap; gap:4px}
 .skill-picked small{color:var(--dim)}
+.skill-maneuvers{margin-top:4px; font-size:.82rem; color:var(--dim)}
+.skill-maneuvers b{font-family:var(--mono); font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text)}
+.skill-maneuvers small{color:var(--dim)}
+.skill-picked .btn.sm{margin-left:2px}
 
 /* Light/dark toggle — always present in the header, unlike .hdr-actions which
    the sheet/wizard/home renders clear on every screen change (Decision 90). */

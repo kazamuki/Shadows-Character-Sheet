@@ -173,22 +173,6 @@ reload. The folded line goes through `Engine.catalogLine` or its custom
 equivalent, so a custom item reads exactly as a catalog one does. Player-
 visible: a CHANGELOG line and a patch bump.
 
-**W39 — Train a Martial Arts style in play, and apply its bonus.** *Claude · 🔎 · Deighton answered 2026-10-10*
-Raised 2026-09-25, finishing W33. The wizard lets a player choose up to two
-styles, and Martial Arts says "you may train additional styles later in
-play", but a locked sheet has no way to add one: `setSelection` is only
-reached from the wizard, and the pick's two-slot cap is a creation rule. The
-bonuses ("+1 Stun", "+1 Grapple") are shown, never applied, and nothing says
-what +1 Stun adds to. **Deighton (2026-10-10, `reference/rulings-2026-10-10.md` Q29), with Ken:** a
-new style is learned through the story (a mentor, or the LINK's neural
-training) with an in-game reason, then trained on your own or through
-fighting. It isn't bought with IP: IP raises the Martial Arts skill, which
-makes every Martial Arts check easier. Stun and Grapple are attack
-Conditions, and a style's bonus makes you better at inflicting that
-Condition. So learning a style is the GM's word (an **Add a style** that
-asks no price, logged), and the bonus is the one number left to pin: +1 to
-the check that inflicts it, presumably. Confirm that in the work order.
-
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*
 Raised reviewing P8a. True Warrior's Power Style lists **Death Touch
 [Chi 4]: "Martial Arts attacks are Armor Piercing when not using melee
@@ -833,6 +817,12 @@ Ken's sessions edit them. That may be fine, but it should be chosen, not just
 happen. If Scott or Deighton should be able to land a number or a line of
 copy themselves, W56's tuning bench is the shape for numbers, and a
 one-page "how to change one thing" guide could be the rest.
+
+**W119 — The Combat Maneuver line on the printed sheet.** *Claude, from P12b's PQ7 · 💡 · Fix · raised 2026-10-16*
+P12b put each style's Combat Maneuvers (Stun → Stunned · 1d10 + 10 (Karate +1)) under Martial Arts' row on Main and the Skills tab, and left print
+alone (Ken took PQ7's default). A character who plays from paper has the style chips and their "+1 Stun" text and no number to roll. `pSkillCellsHtml` is the
+print renderer for a skill row; the line is `Engine.maneuverChecks`, so print only draws it. Print's front page is full (Decision 96): put it on the skills page.
+*To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
 **W117 — A Talented Advantage asks for its pick.** *Claude, from P12a · 💡 · Fix · raised 2026-10-16*
 A locked sheet has nowhere to make a pick. Talented's new Favored Skill, Refined Skill or Common Sense lands with no skill chosen, and does nothing until

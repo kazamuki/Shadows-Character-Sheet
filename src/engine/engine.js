@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.27";
+  const SCHEMA_VERSION = "0.28";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -69,7 +69,8 @@ const Engine = (() => {
       // Schema 0.23 (Decision 220): a GM's rule for this character, off by default.
       // `keepDamagePastZero` keeps the damage past zero when healing starts, so
       // healing counts up from the full total. Set in Admin; never in the wizard.
-      houseRules:{ keepDamagePastZero:false },
+      // Schema 0.28 (Decision 230): `training` puts Train a Skill on Progression (0450's optional rule), off by default.
+      houseRules:{ keepDamagePastZero:false, training:false },
       stats: Object.fromEntries(D().stats.map(s=>[s.id,{base:1, ipe:0}])),
       skills:{},                       // id -> {rank, ipe}
       advantages:[], disadvantages:[], // {id, rank, notes, selections?}
@@ -94,7 +95,10 @@ const Engine = (() => {
       progression:{ ip:{earned:0, log:[]}, milestonePoints:0,
                     milestones:{minor:[], major:[]}, powerIpe:{},
                     // Schema 0.25 (Decision 223): the other specializations a held power opened.
-                    specializationsGained:[] },
+                    specializationsGained:[],
+                    // Schema 0.28 (Decision 230): the training under way, { skill, mp, credits, date }, or null.
+                    // `mp` is the Milestone Points it started at; when it lands is read from the cadence.
+                    training:null },
       sessions:[], notes:"",
       audit:[]                                 // reversible action log
     };
@@ -2175,6 +2179,8 @@ const Engine = (() => {
     // Everything left is a skill. An id that isn't one is refused: it used to be
     // priced as a new skill, and spendIP would write the junk row.
     if (!skillById(targetId)) return {ok:false, why:"That isn't on this sheet."};
+    const held = trainingHold(ch, targetId);
+    if (held) return {ok:false, why:held};
     const line = skillLine(ch, targetId);
     const cur = line.rank;
     if (cur >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
@@ -2510,7 +2516,7 @@ const Engine = (() => {
       out.count = Math.max(1, Math.floor(Number(spec.count)||1)); out.ranks = ranks;
       for (const s of D().skills){
         const r = skillLine(ch, s.id).rank;
-        out.options.push({ id:s.id, name:s.name, sub:`rank ${r}`, move:`${r} → ${Math.min(cap, r + ranks)}`, trained:r>0, off: r + ranks > cap ? `Rank cap ${cap}.` : "" });
+        out.options.push({ id:s.id, name:s.name, sub:`rank ${r}`, move:`${r} → ${Math.min(cap, r + ranks)}`, trained:r>0, off: trainingHold(ch, s.id) || (r + ranks > cap ? `Rank cap ${cap}.` : "") });
       }
       if (out.options.filter(o=>!o.off).length < out.count) out.none = `Fewer than ${out.count} Skills can go up.`;
     } else if (spec.type==="statPoint"){
@@ -2631,7 +2637,8 @@ const Engine = (() => {
       notes: s.notes||""
     });
     ch.trackers.luck.spent = 0;
-    return {ok:true};
+    // The Milestone Point this session earned may be the one a training was waiting for (Decision 230).
+    return {ok:true, trained:settleTraining(ch)};
   }
 
   // ── Çredits ──────────────────────────────────────────────────────────
@@ -2641,6 +2648,95 @@ const Engine = (() => {
     ch.trackers.credits.current = (ch.trackers.credits.current||0) + amount;
     ch.trackers.credits.ledger.push({date:new Date().toISOString(), amount, note:note||""});
     return {ok:true};
+  }
+
+
+  // ── Training (Decision 230, 0450's optional rule) ──────────────────────
+  // A REF, INT or TECH Skill the character already has is trained a rank for Çredits, one at a time. The
+  // Çredits come off when it starts; the rank arrives when Milestone Points reach the next Minor or Major
+  // threshold, inside the commit that gets them there (logSession and the manual MP stepper).
+  const trainingRules = () => ((D().ip||{}).training) || {};
+  const trainable = ch => isPlainObj(ch) && isPlainObj(ch.progression) && isPlainObj(ch.trackers) && isPlainObj(ch.creation)
+    && Array.isArray(ch.creation.boosts) && isPlainObj(ch.skills);
+  // The training under way, or null. Anything that isn't the saved shape is no training.
+  const runningTraining = ch => {
+    const t = isPlainObj(ch) && isPlainObj(ch.progression) ? ch.progression.training : null;
+    return isPlainObj(t) && typeof t.skill==="string" && t.skill && Number.isInteger(t.mp) && t.mp>=0 ? t : null;
+  };
+  const mpText = n => `${n} Milestone Point${n===1 ? "" : "s"}`;
+  // The smallest Minor or Major threshold above `mp`, from the cadence and MP alone. Never minorAvail:
+  // Long-Lived adds a Milestone without adding MP, and a training must not land on it.
+  function nextMilestoneAt(ch, mp){
+    const r = (D().milestones||{}).rules || {};
+    const at = typeof mp==="number" && Number.isFinite(mp) ? mp : mp==null && isPlainObj(ch) && isPlainObj(ch.progression) ? milestoneState(ch).mp : 0;
+    const next = (first, every) => !Number.isFinite(first) ? null : at<first ? first : every>0 ? first + (Math.floor((at-first)/every)+1)*every : null;
+    const c = [next(Number(r.minorFirstAt), Number(r.minorEvery)), next(Number(r.majorFirstAt), Number(r.majorEvery))].filter(x=>x!==null);
+    return c.length ? Math.min(...c) : null;
+  }
+  // Why a skill in training can't be raised another way, or "".
+  function trainingHold(ch, skillId){
+    const t = runningTraining(ch);
+    if (!t || t.skill!==skillId) return "";
+    const at = nextMilestoneAt(ch, t.mp);
+    return at==null ? "In training." : `In training until ${mpText(at)}.`;
+  }
+  // What starting a training on this skill would cost and when it lands, or why not. Asked before the
+  // training is recorded: once progression.training names the skill, ipCost refuses it.
+  function trainingCost(ch, skillId){
+    const refuse = why => ({ ok:false, why });
+    if (!trainable(ch)) return refuse("Training isn't available.");
+    const T = trainingRules(), run = runningTraining(ch);
+    if (run){
+      const at = nextMilestoneAt(ch, run.mp), name = (skillById(run.skill)||{ name:run.skill }).name;
+      return refuse(`${name} is in training${at==null ? "" : ` until ${mpText(at)}`}.`);
+    }
+    if (!isPlainObj(ch.houseRules) || ch.houseRules.training!==true) return refuse("Training is off for this character.");
+    const per = Number(T.creditsPerIP), stats = Array.isArray(T.stats) ? T.stats : [];
+    if (!(per>0) || !stats.length) return refuse("Training has no price.");
+    const def = typeof skillId==="string" ? skillById(skillId) : null;
+    if (!def) return refuse("That isn't a Skill.");
+    const stat = normStat(def.primaryStat);
+    if (!stat || !stats.includes(stat))
+      return refuse(`Training takes a ${stats.length>1 ? stats.slice(0, -1).join(", ") + " or " + stats[stats.length-1] : stats[0]} Skill.`);
+    const line = skillLine(ch, def.id);
+    if (!line.trained) return refuse(`${def.name} isn't trained yet. Training sharpens a Skill you already have; learn it with IP.`);
+    const top = Number(T.maxRank);
+    if (Number.isFinite(top) && line.rank >= top) return refuse(`Training stops at rank ${top}. The last rank is always bought.`);
+    const c = ipCost(ch, "skill", def.id);
+    if (!c.ok) return refuse(c.why);
+    const credits = c.cost * per, have = Number((ch.trackers.credits||{}).current) || 0, cr = creditSymbol();
+    if (credits > have) return refuse(`Needs ${cr}${credits.toLocaleString("en-US")}; you have ${cr}${have.toLocaleString("en-US")}.`);
+    const landsAt = nextMilestoneAt(ch);
+    if (landsAt==null) return refuse("No Milestone is ahead.");
+    return { ok:true, credits, from:c.from, to:c.to, name:def.name, teacher:(Array.isArray(T.teacherStats) ? T.teacherStats : []).includes(stat), landsAt, focused:!!c.focused };
+  }
+  // The Çredits off through the ledger and the training recorded, in one call.
+  function startTraining(ch, skillId){
+    const c = trainingCost(ch, skillId);
+    if (!c.ok) return c;
+    const paid = addCredits(ch, -c.credits, `Training: ${c.name} ${c.from} → ${c.to}`);
+    if (!paid.ok) return paid;
+    ch.progression.training = { skill:skillId, mp:milestoneState(ch).mp, credits:c.credits, date:new Date().toISOString() };
+    return c;
+  }
+  // Land a training whose Milestone the character has reached: one rank on the skill's IPE, journalled at
+  // 0 IP so the journal still balances. Idempotent, and blind to the house rule: a started training is paid for.
+  function settleTraining(ch){
+    const t = runningTraining(ch);
+    if (!t) return [];
+    const at = nextMilestoneAt(ch, t.mp);
+    if (at==null || milestoneState(ch).mp < at) return [];
+    ch.progression.training = null;            // it lands, or it's dropped: either way it's done
+    const def = skillById(t.skill), top = Number(trainingRules().maxRank);
+    if (!def || !trainable(ch) || !Array.isArray(ch.progression.ip && ch.progression.ip.log)) return [];
+    const from = skillLine(ch, def.id).rank;
+    // A skill Admin took away since the start is dropped like one past the cap: training never teaches a skill (PQ3).
+    if (from < 1 || (Number.isFinite(top) && from >= top)) return [];
+    if (!isPlainObj(ch.skills[def.id])) ch.skills[def.id] = { rank:0, ipe:0 };
+    ch.skills[def.id].ipe = (Number(ch.skills[def.id].ipe)||0) + 1;
+    ch.progression.ip.log.push({ date:new Date().toISOString(), kind:"spend", amount:0, targetType:"skill", targetId:def.id,
+      from, to:from + 1, note:"", via:"training", mp:milestoneState(ch).mp });
+    return [{ name:def.name, from, to:from + 1 }];
   }
 
   // ── CRANK reputation (Decision 169) ──────────────────────────────────
@@ -4014,10 +4110,25 @@ const Engine = (() => {
     if (!c.panelData || typeof c.panelData!=="object") c.panelData={};
     // Schema 0.23 (Decision 220): house rules are a plain object of strict booleans;
     // anything else is replaced, an unknown key is dropped (Decision 124).
-    c.houseRules = { keepDamagePastZero: isPlainObj(c.houseRules) && c.houseRules.keepDamagePastZero===true };
+    // Schema 0.28 (Decision 230): `training` joins it, the same strict boolean.
+    c.houseRules = { keepDamagePastZero: isPlainObj(c.houseRules) && c.houseRules.keepDamagePastZero===true,
+                     training: isPlainObj(c.houseRules) && c.houseRules.training===true };
     const pr = c.progression = Object.assign({milestonePoints:0}, c.progression||{});
+    // Schema 0.28: a training under way is exactly { skill, mp, credits, date } or nothing. mp is a whole
+    // number of Milestone Points, credits a number, never negative; anything else is no training.
+    const tr = pr.training;
+    pr.training = isPlainObj(tr) && typeof tr.skill==="string" && tr.skill && Number.isInteger(tr.mp) && tr.mp>=0
+      && typeof tr.credits==="number" && Number.isFinite(tr.credits) && tr.credits>=0 && typeof tr.date==="string"
+      ? { skill:tr.skill.slice(0, 120), mp:tr.mp, credits:tr.credits, date:tr.date.slice(0, 64) } : null;
     pr.ip = Object.assign({earned:0, log:[]}, pr.ip);
     if (!Array.isArray(pr.ip.log)) pr.ip.log=[];
+    // Schema 0.28: a landed training's journal line carries `via: "training"` and the `mp` it landed at.
+    // via is that exact string or absent; mp a whole number of Milestone Points or absent.
+    pr.ip.log.forEach(e=>{
+      if (!isPlainObj(e)) return;
+      if (e.via!=="training") delete e.via;
+      if (!Number.isInteger(e.mp) || e.mp<0) delete e.mp;
+    });
     pr.milestones = Object.assign({minor:[], major:[]}, pr.milestones);
     // Schema 0.18 (Decision 194): ranks IP bought, per power id. A file from
     // before has none; a file's own keeps only whole, finite, positive counts.
@@ -4257,8 +4368,11 @@ const Engine = (() => {
     const copies = entryCopies(ch, kind, id);
     return copies.find(x=>x.source!=="natural") || copies[0] || null;
   }
-  const heldRank = (ch, kind, id) =>
-    entryCopies(ch, kind, id).reduce((s,x)=>s + Math.max(0, x.rank||0), 0);
+  // A skill's rank counts every source, as skillLine does: creation, IP and boosts (Decision 229).
+  // Advantages and Disadvantages are their rows' ranks.
+  const heldRank = (ch, kind, id) => kind==="skill"
+    ? Math.max(0, ((entryFor(ch, kind, id) || {}).rank||0) + ((entryFor(ch, kind, id) || {}).ipe||0)) + boostsFor(ch, "skill", id)
+    : entryCopies(ch, kind, id).reduce((s,x)=>s + Math.max(0, x.rank||0), 0);
   const traitName = id => (advById(id) || disById(id) || skillById(id) || {name:id}).name;
   // Skills host picks (Martial Arts styles) same as advantages/disadvantages, so
   // they belong in the held set too — otherwise a skill can never take part in
@@ -4321,13 +4435,18 @@ const Engine = (() => {
     const entry = canonicalEntry(ch, kind, id);
     const rank  = heldRank(ch, kind, id);          // both rows, one trait
     const sel   = (entry && entry.selections && typeof entry.selections==="object") ? entry.selections : {};
+    const locked = !!(ch && ch.creation && ch.creation.locked===true);
     return def.picks.map(pick=>{
       const per  = pick.count==null ? 1 : pick.count;
+      const raw  = sel[pick.id];
       // Rank 0 means the entry is not held, so it asks for nothing.
-      const need = rank<=0 ? 0
+      let need = rank<=0 ? 0
                  : pick.type==="text" ? 1
                  : (pick.perRank ? per*rank : per);
-      const raw  = sel[pick.id];
+      // `count` is the creation cap (Decision 56). A pick marked `addInPlay` on a locked character
+      // holds what was added past it, up to the options there are (Decision 229).
+      if (need>0 && pick.addInPlay===true && locked && Array.isArray(raw))
+        need = Math.max(need, Math.min(raw.length, pickOptions(pick, def).length));
       const text = pick.type==="text";
       const chosen = text ? (typeof raw==="string" ? raw : "")
                           : (Array.isArray(raw) ? raw.slice(0, need) : []);
@@ -4347,7 +4466,11 @@ const Engine = (() => {
   // Mutator, following addBoost: distinctness and the slot cap are rules, and
   // rules live next to the rules, not next to the DOM.
   function setSelection(ch, kind, id, pickId, index, value){
-    const def = defFor(kind, id), entry = canonicalEntry(ch, kind, id);
+    const def = defFor(kind, id);
+    let entry = canonicalEntry(ch, kind, id);
+    // A skill held only by boosts has no entry yet: its first answer makes one, with no rank of its own.
+    if (!entry && def && kind==="skill" && isPlainObj(ch.skills) && heldRank(ch, kind, id)>0 && (def.picks||[]).some(p=>p.id===pickId))
+      entry = ch.skills[id] = { rank:0, ipe:0 };
     if (!def || !entry) return { ok:false, why:"That trait is not taken." };
     const pick = (def.picks||[]).find(p=>p.id===pickId);
     if (!pick) return { ok:false, why:"No such choice on that trait." };
@@ -4388,6 +4511,68 @@ const Engine = (() => {
     }
     if (!Object.keys(entry.selections).length) delete entry.selections;
     return ch;
+  }
+
+
+  // Learned in play, with no price (Decision 229, Q29): a pick marked `addInPlay` takes one more answer on a
+  // locked character, past its creation `count`. The GM's word is the gate; the engine asks only that the
+  // entry is held and the answer is a live option not held yet. The first empty slot, else a new one.
+  function addPickInPlay(ch, kind, id, pickId, value){
+    const refuse = why => ({ ok:false, why });
+    if (!isPlainObj(ch) || !isPlainObj(ch.creation) || ch.creation.locked!==true) return refuse("That is learned in play, once the sheet is locked.");
+    const def = typeof id==="string" ? defFor(kind, id) : null;
+    if (!def) return refuse("That isn't on this sheet.");
+    const pick = (def.picks||[]).find(p=>p.id===pickId);
+    if (!pick || pick.addInPlay!==true || pick.type==="text") return refuse("That can't be added in play.");
+    if (heldRank(ch, kind, id) < 1) return refuse(`You don't have ${def.name}.`);
+    const live = pickOptions(pick, def).filter(o=>!o.missing);
+    const opt = typeof value==="string" ? live.find(o=>o.id===value) : null;
+    if (!opt) return refuse("That isn't one of the options.");
+    let entry = canonicalEntry(ch, kind, id);
+    // What a file holds that isn't a live option never shows (picksFor caps at the options there are), so adding drops it
+    // rather than letting it crowd the new answer out.
+    const had = (entry && isPlainObj(entry.selections) && Array.isArray(entry.selections[pickId]) ? entry.selections[pickId] : [])
+      .filter(v=>v==null || v==="" || live.some(o=>o.id===v));
+    if (pick.distinct && had.includes(value)) return refuse(`${opt.name} is already learned.`);
+    if (!entry){
+      if (kind!=="skill" || !isPlainObj(ch.skills)) return refuse("That isn't on this sheet.");
+      entry = ch.skills[id] = { rank:0, ipe:0 };           // held by boosts alone: its first answer makes the entry
+    }
+    if (!isPlainObj(entry.selections)) entry.selections = {};
+    for (const other of entryCopies(ch, kind, id)) if (other!==entry) delete other.selections;
+    const list = had.slice(), gap = list.findIndex(v=>v==null || v==="");
+    if (gap>=0) list[gap] = value; else list.push(value);
+    entry.selections[pickId] = list;
+    return { ok:true, index: gap>=0 ? gap : list.length-1, name:opt.name };
+  }
+
+  // The Combat Maneuvers a held style sharpens (Decisions 229, 0530): each maneuver the skill lists, with the
+  // sum of its held styles' amounts (two styles on one maneuver stack, Ken's PQ6) added to the skill's own
+  // check. Only maneuvers with a bonus come back. Everything is read from the data: the skill's `maneuvers`
+  // and the `maneuver` and `amount` on the entries a pick draws from (`from.optionsFrom`).
+  function maneuverChecks(ch, skillId){
+    const def = typeof skillId==="string" ? skillById(skillId) : null;
+    if (!def || !Array.isArray(def.maneuvers) || !def.maneuvers.length) return [];
+    const held = new Map(), seen = new Set();
+    for (const st of picksFor(ch, "skill", skillId)){
+      const list = st.pick.from && st.pick.from.optionsFrom;
+      if (typeof list!=="string" || !Array.isArray(def[list])) continue;
+      for (const v of st.chosen){
+        const o = typeof v==="string" && !seen.has(v) ? def[list].find(x=>x && x.id===v) : null;
+        const amount = o ? Number(o.amount) : 0;
+        if (!o || !(amount>0) || !def.maneuvers.some(m=>m && m.id===o.maneuver)) continue;
+        seen.add(v);
+        const h = held.get(o.maneuver) || { bonus:0, styles:[], parts:[] };
+        h.bonus += amount; h.styles.push(o.name); h.parts.push({ name:o.name, amount });
+        held.set(o.maneuver, h);
+      }
+    }
+    if (!held.size) return [];
+    const base = skillLine(ch, skillId).checkBonus;
+    return def.maneuvers.filter(m=>m && held.has(m.id)).map(m=>{
+      const h = held.get(m.id);
+      return { id:m.id, name:m.name, inflicts:(conditionById(m.inflicts)||{ name:m.inflicts }).name, bonus:h.bonus, check:base + h.bonus, styles:h.styles, parts:h.parts };
+    });
   }
 
   // ── A3: one specialization model ─────────────────────────────────────
@@ -7197,7 +7382,7 @@ const Engine = (() => {
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,
     focusedCategoryName, naturalAdvantagePool,
     // Selections and constraints
-    optionLock, requirementState, picksFor, setSelection, trimSelections,
+    optionLock, requirementState, picksFor, setSelection, trimSelections, addPickInPlay, maneuverChecks,
     specializationNeed, specializationIds, specializationChosen, specializationLabel,
     // Vitals: Pain, LUCK, Sanity, Conditions, taking a hit, recovery
     painState, luckState, sanState, conditionState, addCondition, removeCondition, setConditionMarks,
@@ -7215,7 +7400,7 @@ const Engine = (() => {
     ipState, ipCost, spendIP, grantIP, advantageOffer,
     milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorListed, majorById, formGrants, takeMilestone, untakeMilestone, minorChoice, takeMinorChoice, addCustomMajor,
     majorChoice, takeMajorChoice, specializationOpening, gainSpecialization, gainedSpecializations,
-    logSession, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,
+    logSession, nextMilestoneAt, trainingCost, startTraining, settleTraining, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,
     // Audit trail and undo

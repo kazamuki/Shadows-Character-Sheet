@@ -171,11 +171,14 @@ window.SHADOWS_DATA = {
       description: "...",
       covers: [ "..." ],              // bullets behind the skill's "?" expander
       notes: [ "..." ],               // (0.3) optional; the CRB's "Notes" block
-      styles: [ { id: "karate", name: "Karate", bonus: "+1 Stun" } ],  // Martial Arts only
+      styles: [ { id: "karate", name: "Karate", bonus: "+1 Stun", maneuver: "stun", amount: 1 } ],  // Martial Arts only; Custom Style names no maneuver (Decision 229)
+      maneuvers: [ { id: "stun", name: "Stun", inflicts: "stunned" } ],  // Martial Arts only: the Combat Maneuvers (0530); `inflicts` is a Condition id
+      // A style's `maneuver` names one of these and its `amount` is added to the skill's check for it; two styles on one maneuver add up.
       // (0.4) Skills host `picks` on the same terms as adv/disadv. Martial Arts
       // points at its own `styles` array rather than restating it — one list.
+      // `count` is the creation cap; `addInPlay` lets a locked character add more with no price (Decision 229), and `addText` is its button.
       picks: [ { id: "style", type: "option", count: 2, optional: true,
-                 distinct: true, from: { optionsFrom: "styles" } } ]
+                 distinct: true, addInPlay: true, addText: "Add a style", from: { optionsFrom: "styles" } } ]
     }
     // 36 skills: 11 combat / 9 utility / 16 general
   ],
@@ -355,6 +358,9 @@ window.SHADOWS_DATA = {
     skillIncreaseCost: { perRank: 5, focusedPerRank: 3, newSkill: 25 },  // Decisions 97, 134
     powerIncreaseCost: { perRank: 20, newPower: 40 },  // × current rank; rank 0 → 1 is newPower (0450, Decision 194)
     rankCap: 10,                      // skills & powers cap at 10 via IP; an archetype's printed caps are creation caps
+    // 0450, Optional Rule: Training (Decision 230). Çredits = creditsPerIP x the rank's IP cost, never past maxRank;
+    // `stats` are the Stats whose Skills can be trained, `teacherStats` the ones that need a teacher (text from teacherText, selfText).
+    training: { creditsPerIP: 10, maxRank: 9, stats: ["REF", "INT", "TECH"], teacherStats: ["REF"], teacherText: "...", selfText: "..." },
     cannotRaiseDirectly: ["WILL", "TOL"]
   },
 
@@ -679,7 +685,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.27",
+    schemaVersion: "0.28",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -776,7 +782,8 @@ It renders on the Character tab (Decision 158).
   // past zero when healing starts, so healing counts up from the full total.
   // A strict true: migrate() replaces anything else with false, drops any
   // other key, and gives a file from before the object.
-  houseRules: { keepDamagePastZero: false },
+  // (0.28, Decision 230) `training` puts Train a Skill on Progression (0450's optional rule). Same strictness: a true or false.
+  houseRules: { keepDamagePastZero: false, training: false },
 
   // Inputs only. base = creation value; ipe = points added via IP after.
   stats:  { BOD: { base: 5, ipe: 0 }, REF: { base: 6, ipe: 0 } /* ... */ },
@@ -911,6 +918,9 @@ It renders on the Character tab (Decision 158).
         // (Decision 227) targetType "advantage" (from/to are ranks, and `name`), "disadvantage"
         // (ranks, `name`; to 0 is removed) and "restore" (targetId "san" or "massiveLevel";
         // from/to are the loss before and after). They leave no IPE: versionCheck skips them.
+        // (0.28, Decision 230) A landed training is a skill line at amount 0 with `via: "training"` and `mp`, the
+        // Milestone Points it landed at. via is that exact string or absent; mp a whole number >= 0 or absent.
+        // It counts as one rank against IPE, as any non-grant line does.
       ]
     },
     milestonePoints: 0,              // manual MP only — session MP is computed
@@ -923,6 +933,10 @@ It renders on the Character tab (Decision 158).
     // power with `gainsSpecialization` opened (Cursed Evolution): strings, once
     // each; a reader keeps this archetype's other options, up to the allowance.
     specializationsGained: [],
+    // (0.28, Decision 230) The training under way, or null: { skill, mp, credits, date }. `mp` is the Milestone Points
+    // it started at (an input); it lands at the next Minor or Major threshold above that, read from `milestones.rules`.
+    // migrate() keeps exactly that shape (skill a string, mp a whole number >= 0, credits a number >= 0, date a string), else null.
+    training: null,
     // (0.18, Decision 194) Ranks IP bought, per power id: a Discipline's data
     // id or a written power's row id. A Discipline's rank is its starting rank
     // + CP-bought + this; a written power's is 1 + this. Removing a written
@@ -1816,6 +1830,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `picks`, `excludes`, `requires`, `selections`, `optionLock`, Martial Arts styles*
     - **Rejected:** a special case per entry that asks for a choice. Writing an invented `excludes` pair into the data to exercise the machinery, which would resolve a rules question in code; a synthetic test fixture does it instead.
     - **Revisit if:** the CRB asks for a choice none of the three shapes (a fixed list, a category, free text) can say.
+    → **Superseded in part by Decision 229** — a pick marked `addInPlay` takes more than its `count` on a locked character, and a skill's picks count its rank from every source (creation, IP, boosts).
 
 78. **(Batch 3)** **The mechanical picks are the app's business; the fiction is
     the table's.** Ten entries — Immunity, Followers/Minion, Cursed, Fanatic,
@@ -4773,6 +4788,24 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 13 in part (its "10 IP per session"). Decision 206 in part (its rejected "changing `ip.perSession` here", which called this its own fix).
      - **Revisit if:** S3b's seats carry a GM's close-out IP to the character; the CRB changes 5 an hour.
      - **Built:** as 227.
+
+229. **A Martial Arts style is learned in play by the GM's word, with no price; each style's bonus is a number on the Combat Maneuver it names, added to the skill's check for that maneuver.**
+     *2026-10-16 · Ken + Claude (Deighton Q29) · Touches: picks, addInPlay, selections, picksFor, heldRank, setSelection, trimSelections, addPickInPlay, Martial Arts, styles, maneuvers, maneuver, amount, maneuverChecks, skillRowPair, Add a style, Combat Maneuvers, Q29, W39*
+     - **Decided:** A pick marked `addInPlay` takes more answers once the character is locked: `count` stays the creation cap, `addPickInPlay` fills the first empty slot or adds one with no price, as one commit and one Undo. A skill's picks count its rank from every source (creation, IP, boosts). The skill's `maneuvers` each name the Condition they inflict; a style names a `maneuver` and an `amount`, and `maneuverChecks` adds it to the skill's check for that maneuver, unarmed only. Two styles on one maneuver add up (Ken, PQ6).
+     - **Why:** W39; Q29: learned through the story, not bought, and the bonus makes you better at inflicting the Condition. `0530` names the four maneuvers. A Martial Arts bought with IP held no style.
+     - **Rejected:** a price for a style (Q29); parsing "+1 Stun" out of the `bonus` text (134); raising `count` (56); the bonus with a Disarming or Knockdown weapon (PQ5); the better of two styles, with a flag (PQ6); the maneuvers on print (PQ7); Admin alone adding a style (PQ8).
+     - **Replaces:** Decision 77 in part (`count` is the creation cap when `addInPlay`; a skill's held rank counts IP and boosts). Builds 56's "more may be trained later in play".
+     - **Revisit if:** Deighton rules otherwise on two styles on one maneuver; W107's strike line lands; Salut gets its bonus (56).
+     - **Built:** app 0.47.0, game data 0.40, character schema 0.28, PR #203. Log 2026-10-16 (P12b).
+
+230. **Training is a house rule, off until Admin turns it on: a REF, INT or TECH Skill the character already has is trained a rank for Çredits at 10 × that rank's IP cost, one at a time, and the rank arrives at the next Milestone; never past 9.**
+     *2026-10-16 · Ken + the design team + Claude · Touches: houseRules, progression.training, ip.training, teacherStats, trainingCost, startTraining, settleTraining, nextMilestoneAt, logSession, manual MP, Skilled, Raise a Skill, ipCost, progression.ip.log, via, mp, versionCheck, addCredits, Admin, Train a Skill, IP Journal, schema 0.28*
+     - **Decided:** `houseRules.training`, set in Admin, puts **Train a Skill** on Progression. It takes a skill held at rank 1 or more from any source and prices the rank at `ip.training.creditsPerIP` × `ipCost`'s price (a Focused discount carries). Starting pays the Çredits through the ledger and records `progression.training`, so one runs at a time; it refuses a Stat outside `ip.training.stats`, an untrained skill, a rank past `maxRank`, a short balance and a second training. The rank lands when Milestone Points reach the next Minor or Major threshold, not counting Long-Lived's extra Milestones, which add no MP. `settleTraining` adds it to IPE with a 0-IP journal line marked `via: "training"` (as 217's Skilled), inside the two commits that raise MP (logging a session, the manual MP stepper). IP and Skilled skip a skill in training.
+     - **Why:** `0450`: "Ç250 and the patience to wait for the next Milestone period". The design team: the rank comes at the Milestone, and training sharpens a skill you have. Optional, "with the GM's approval", so off (PQ1).
+     - **Rejected:** the rank at once; a 5-MP clock; training a never-trained skill; deriving the rank from MP on every read (a fifth source for every reader); counting from `minorAvail`; always offering it (PQ1).
+     - **Replaces:** nothing. Extends 220's `houseRules`, 27's journal, 159's raise row and 217's Skilled.
+     - **Revisit if:** a table wants Training on by default; a training needs stopping or refunding; `0450` changes the price, cap or period.
+     - **Built:** app 0.47.0, game data 0.40, character schema 0.28, PR #203. Log 2026-10-16 (P12b).
 
 ## 5. Open Flags
 
