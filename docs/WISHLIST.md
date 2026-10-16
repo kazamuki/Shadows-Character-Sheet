@@ -804,9 +804,36 @@ shape* work. Choosing how designer changes reach the data is a workflow choice
 someone could have made differently, so it probably earns a decision when it
 lands.
 
+### Custom rows
+
+**W109 — A custom row can opt into what a book row does.** *Ken · 🔎 · Rule or shape · raised 2026-10-15 with P10's PQ7*
+A written-in spell, piece of gear, weapon or power is text to the engine: the sheet can't
+hold a custom Concentration spell (P10's PQ7), and no other custom row can switch on
+anything a book row's data switches on. Ken: if a tag changes behaviour, a custom
+addition should be able to tick it.
+*Claude's read:* few behaviours are tags today. Ammo tags join a weapon's line on Reload
+(`ammoTags`), and after P10 `Concentration` makes a spell holdable. Most behaviour lives in
+other fields: a weapon's `damageType`, a power's `grants` (Natural Armor), a magazine's
+`reload`. So the shape is "a custom row offers, per kind, the switches the engine reads
+for that kind", not free-form tags. A tag that does nothing would look as if it did.
+*To respect:*
+- **The list comes from the data, never code.** A behaviour tag is declared in its
+  glossary (e.g. `behaviour: true`, with the kinds it applies to), and the custom form
+  offers exactly those (Decision 135: a data field is read by code, or it's text).
+- **A saved tag is an id.** Once a character file stores `"Concentration"` on a custom
+  row, renaming that tag breaks the file (constraint 6), so behaviour tags need ids
+  separate from their display names.
+- **The engine stays total** (constraint 8): a custom row with a junk tag reads as
+  untagged, and `migrate` keeps only strings.
+- **Balance is the table's.** A custom weapon ticking AP is the GM's call, as its damage
+  already is.
+
+Start with the kinds that already have a behaviour tag (spells after P10, ammunition),
+then grow the list kind by kind as each behaviour is made data-driven.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W109.** Everything above is open; W38 has a plan,
+- **Next free number: W110.** Everything above is open; W38 has a plan,
   `plans/two-tabs-one-character.md`, waiting on Ken's TQ1–TQ3. What was
   built is in [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
