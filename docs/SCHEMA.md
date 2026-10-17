@@ -228,8 +228,29 @@ window.SHADOWS_DATA = {
           ruleText: "...",                       // the general line (the wizard, an entry not taken)
           heldText: "... {rank} {v} {choice} ...", // optional: a held entry's own line
           byRank: [4, 6, 8] }                    // optional: one value per rank (rank 2 = byRank[1]), maxRank long
+        // (Decision 233) A trait on a Skill's check. Each names its Skills (`skills: [ids]`) or a pick of the same
+        // entry (`skillsFromPick: "<pickId>"`, the picks cut to the held rank, natural and bought ranks summed). A row
+        // with `whenText` is a MARK, never a number. Read by Engine.skillLine and effectTagsFor; a bad row is skipped.
+        // { type: "checkMod", amount: 3, skills: ["stealth"] }              in skillLine().checkBonus (breakdown.traitParts)
+        // { type: "checkMod", amount: 3, skills: [..], whenText: "when hiding" }   a mark: "+3 when hiding"
+        // { type: "kicker", die: "1d4", skills: [..] }                      beside the number (skillLine().kickers)
+        // { type: "takeX", x: 6, skills: [..] | skillsFromPick, whenText? } X + the whole check (skillLine().takeX)
+        // { type: "failOn", faces: [2, 3], skills: [..], whenText? }        a mark (skillLine().marks)
+        // { type: "explodeOn", faces: [9, 10], skillsFromPick: "skill" }    a mark
+        // { type: "visibility", ignore: ["dim", "dark"], on: ["attacks", "awareness"] }  light levels; Engine.attackNotes
       ] }
   ],
+  // (Decision 233) 0530's light levels, read by a `visibility` row: { id, name, attack } (`attack` is the penalty to
+  // an attack against a target in that light). The book's Stealth bonus per level is not in the data: nothing reads it.
+  visibility: [ { id: "dim", name: "Dim", attack: -1 } ],
+  // (Decision 233) What a Skill's row says, one template per kind: takeX, takeXWhen ({x}, {total} = X + the check,
+  // {whenText}), failOn, failOnWhen ({faces}), explodeOn, checkModWhen ({amount}), visibilityAwareness ({names}, "Dim or
+  // Dark"), visibilityAttacks ({levels}, "Dim −1 and Dark −3"). Read by Engine.skillLine and attackNotes.
+  skillRowText: { takeX: "Take {x}: {total} (choose before you roll)" },
+  // (Decision 234) appCopy.expertTitle: the Expert mode button's tooltip, naming the four steps it folds.
+  // effectTags also holds the Decision 233 types' templates (checkMod, checkModWhen, kicker, takeX, takeXWhen, failOn,
+  // failOnWhen, explodeOn, visibilityAttacks, visibilityAwareness) and `pickedSkill` ("the Skill you choose").
+
   // (Decision 231) One template per computed grants type, filled from the row's own
   // fields: { skillPoints, hpPerLevel, naturalArmor, luckCost, milestone, painLevel,
   // creationOnly }. {placeholders} are the row's fields, {action}/{cost} for luckCost,
@@ -4849,12 +4870,12 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** app 0.48.0 (unreleased), no data or schema bump, PR #209 Log 2026-10-17 (P13).
 
 233. **A trait that changes a Skill's check shows on its row: a number in the check, a kicker beside it, a Take X as its total, and a die-face rule as a mark.**
-     *2026-10-17 · Ken + Deighton + Claude · Touches: skillLine, checkBonus, traitParts, attackNotes, grants checkMod, kicker, takeX, failOn, explodeOn, visibility, effectTags, skillRowText, Skills tab, Main's Combat table, attacks, maneuver check, print, Ghost Step, Defect/Flaw, Dwarf, Field Medic, Hyper Vigilance, Common Sense, Lightning Calculator, Machindo, Sense of Direction, Aura Sight, Distractable, Social Stigma, Gullible, Blood Lust, Refined Skill, Night Vision*
-     - **Decided:** `checkMod`, `kicker`, `takeX`, `failOn`, `explodeOn` and `visibility` are computed `grants` types; a row names its Skills (`skills`) or a pick (`skillsFromPick`, cut to the rank). An unconditional `checkMod` is in `skillLine().checkBonus`, so every reader of the check follows. A row with `whenText` is a mark, never a number. A kicker shows beside the number, never in it. Take X shows as X + the whole check, Pain and Conditions included, to choose before rolling (Deighton). Night Vision names the light levels `0530` sets (`visibility`).
-     - **Why:** The effects sign-off, unanimous: "put them all on the Skill rows". A number the sheet shows and doesn't apply is the drift 231 exists to end, and Take X is only useful as the number you'd get.
-     - **Rejected:** a conditional bonus in the total (wrong on every other roll); the −2 on the Skills tab only (the attack row would disagree); a bare "Take 6" (the player does the sum); marks on the printed page (the front page is full, 96); marks for Hallucinations and Favored Skill's re-roll (not a die face or a number).
+     *2026-10-17 · Ken + Deighton + Claude · Touches: skillLine, checkBonus, attackNotes, grants checkMod, kicker, takeX, failOn, explodeOn, visibility, skillRowText, Skills tab, Main's Combat table, print, Ghost Step, Defect/Flaw, Dwarf, Field Medic, Hyper Vigilance, Common Sense, Lightning Calculator, Machindo, Sense of Direction, Aura Sight, Distractable, Social Stigma, Gullible, Blood Lust, Refined Skill, Night Vision*
+     - **Decided:** `checkMod`, `kicker`, `takeX`, `failOn`, `explodeOn` and `visibility` are computed `grants` types; a row names its Skills (`skills`) or a pick (`skillsFromPick`, cut to the rank). An unconditional `checkMod` is in `skillLine().checkBonus`, so every reader of the check follows. A row with `whenText` is a mark, never a number. A kicker shows beside the number, never in it. Take X shows as X + the whole check, to choose before rolling (Deighton). Night Vision names the light levels `0530` sets (`visibility`).
+     - **Why:** The effects sign-off, unanimous: "put them all on the Skill rows". A number shown and not applied is the drift 231 ends; Take X is useful as the number you'd get.
+     - **Rejected:** a conditional bonus in the total (wrong on every other roll); the −2 on the Skills tab only (the attack would disagree); a bare "Take 6"; marks on the printed page (full, 96). Ken kept Defect/Flaw's −2 in the total though 0440's examples are partial, and a trait's number counts on an untrained Skill too.
      - **Replaces:** Decision 231 in part (16 entries' effects become computed rows). Extends 96 (a trait joins the check) and 229 (a maneuver's check includes it).
-     - **Revisit if:** a Skill can hold two kickers (Ken's stacking question, unanswered) or a kicker and a Take X (a test fails on it); the book gives Awareness a light penalty.
+     - **Revisit if:** a Skill can hold two kickers (Ken's stacking question) or a kicker and a Take X (a test fails on it); the book gives Awareness a light penalty; the Professional Major Specialist ("Your Kicker Die increases by 1 size") meets a held kicker.
      - **Built:** app 0.49.0, game data 0.41, no schema bump, PR #213. Log 2026-10-17 (P19).
 
 234. **Expert mode folds the Stats step too, and its toggle shows on every step of character creation.**

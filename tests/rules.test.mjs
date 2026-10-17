@@ -2146,7 +2146,8 @@ test("P19 1: Ghost Step and Defect/Flaw are in the check, everywhere it's read",
   same(line19(gs, "stealth").breakdown.traitParts, [{ name: "Ghost Step", amount: 3 }]);
   assert.equal(line19(gs, "stealth").breakdown.traits, 3);
   onlyMoved19(base, checks19(gs), ["stealth"], "Ghost Step");
-  // Untrained, it still counts.
+  // Untrained, it still counts (Ken, P19 review): 0420 says an untrained check is the Primary Stat, and Ghost Step's "+3 synergy bonus to Stealth Skill Checks" is on the check, not the training.
+  assert.match(crb("0420_Skills.md"), /[Uu]ntrained/);
   const gu = hold19(subject(), "advantages", "ghost-step");
   assert.equal(Engine.skillLine(gu, "stealth").checkBonus, Engine.skillLine(subject(), "stealth").checkBonus + 3);
   // Defect/Flaw ×2 on Handguns and Dodge: each −2.
