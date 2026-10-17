@@ -218,8 +218,25 @@ window.SHADOWS_DATA = {
           optional: true,              // slots are a CAP, not a demand
           gmApproval: true,            // text picks: warns, never blocks
           note: "..." }                // shown under the control
+      ],
+      // (Decision 231) What the entry does. Every Advantage and Disadvantage has at
+      // least one row. A computed row keeps its numbers and its tag is written from
+      // them by `effectTags[type]`; a rule row is the table's and every reader skips it.
+      grants: [
+        { type: "hpPerLevel", perRank: 1 },       // computed: read by Engine.grants()
+        { type: "rule",
+          ruleText: "...",                       // the general line (the wizard, an entry not taken)
+          heldText: "... {rank} {v} {choice} ...", // optional: a held entry's own line
+          byRank: [4, 6, 8] }                    // optional: one value per rank (rank 2 = byRank[1]), maxRank long
       ] }
   ],
+  // (Decision 231) One template per computed grants type, filled from the row's own
+  // fields: { skillPoints, hpPerLevel, naturalArmor, luckCost, milestone, painLevel,
+  // creationOnly }. {placeholders} are the row's fields, {action}/{cost} for luckCost,
+  // {kind} for milestone. A placeholder with no value drops the tag, never fills "".
+  // heldText's placeholders: {rank}, {v}, {choice}, {choice:<pickId>}; with none to
+  // fill, the tag is the whole ruleText. Read by Engine.effectTagsFor.
+  effectTags: { hpPerLevel: "+{perRank} max HP on every Health Level per rank" },
   disadvantages: [
     { id: "paranoia", name: "Paranoia",
       pointsGranted: 3, maxRank: 1,
@@ -4806,6 +4823,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends 220's `houseRules`, 27's journal, 159's raise row and 217's Skilled.
      - **Revisit if:** a table wants Training on by default; a training needs stopping or refunding; `0450` changes the price, cap or period.
      - **Built:** app 0.47.0, game data 0.40, character schema 0.28, PR #203. Log 2026-10-16 (P12b).
+
+231. **An Advantage's or Disadvantage's effects are its `grants`: computed rows the engine applies, and rule rows the table applies; each shows as a tag.**
+     *2026-10-16 · Ken + Deighton + Claude · Touches: grants, rule, ruleText, heldText, byRank, creationOnly, effectTags, effectTagsFor, tag templates, Advantages, Disadvantages, CP step, Character tab, Expert mode, W120*
+     - **Decided:** Every Advantage and Disadvantage has at least one effect in `grants`. A row of a type the engine computes keeps its numbers, and its tag is written from them by `effectTags[type]`. A `{ type: "rule", ruleText }` row is applied at the table, and every `grants` reader skips it. A held entry's rule tag is its `heldText`, filled with its rank, `byRank`'s value for it (rank 2 reads `byRank[1]`) and its picks, else `ruleText`; `creationOnly` adds a tag. Tags show on the CP step and in the Character tab's card summaries. The 19 effects the sheet shows a number for and never applies stay rule rows until P19 and P20.
+     - **Why:** Ken's shape for W120: one place per effect, the computed ones unable to drift from what the sheet applies, and Expert mode (P13) able to show what an entry does without its prose. The rule lines are the sign-off page's, approved by Ken, Deighton and Scott.
+     - **Rejected:** a free-text `mechanicsText` per entry (a second copy of every rule); a hand-written tag on a computed row (the same drift); splitting `description` at its first paragraph (flavor in some entries, rules in others); computing the 19 here (rules questions); tags on the CP step only; truncating a long rule (a cut-off rule is a wrong rule); print (the front page is full, 96).
+     - **Replaces:** nothing. Extends 199 (Majors' `grants` share the reader, which skips `rule`) and 213 (Pain Sensitive gains a tag). Eleven `description`s move with Deighton's rulings of 2026-10-16.
+     - **Revisit if:** a table rule becomes computable (P19 or P20 moves it to a computed type); the CRB rewrites an entry (its rule rows are rewritten with it).
+     - **Built:** app 0.48.0, no data or schema bump, PR #PRNUM. Log 2026-10-16 (P18).
 
 ## 5. Open Flags
 

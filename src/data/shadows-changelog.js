@@ -2,10 +2,13 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.47.1",
+    "version": "0.48.0",
     "date": null,
     "intro": [],
     "items": [
+      "**Every Advantage and Disadvantage says what it does at a glance.** On the Character Points step and on your Character tab, each one shows its effects as short tags: what the sheet applies for you, and what your table applies. A card you hold says it for you: Bullseye at rank 2 reads +6 damage, Common Sense names your Skill, and Long-Lived says it's creation only.",
+      "**Called Shots get the Advantages' bonuses.** Ambidextrous, Bullseye, Quick Draw and Stunt Rider now work with the Called Shot stunt (the old \"aimed shots\"). Bullseye adds its damage to a Called Shot, and Quick Draw lets you make one as an Action.",
+      "**Rules updates:** Night Vision ignores Dim and Dark for Awareness and attacks. Archery Master counts crossbows, Gun Master beam weapons, and Melee Master Martial Arts and thrown weapons. Riposte works once per round off any parry. Scrapper halves Melee and Martial Arts damage, never below 1. Backfooted answers any Combat Maneuver.",
       "**Major Milestones fit a phone.** A prerequisite naming several advantages wraps onto a second line instead of pushing Progression off the side of the screen."
     ]
   },

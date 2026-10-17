@@ -529,6 +529,22 @@ function renderSkills(){
   return h;
 }
 
+// Decision 231: an entry's effects as tags. A computed one (the sheet applies
+// it) is a chip; a rule (the table applies it) is a plain line. `held` is the
+// character's own row for the entry, so a held entry's tags speak for its rank
+// and picks; an entry not taken passes null and reads its general lines.
+function heldRow(ch, kind, id){
+  const rows = (kind==="disadvantage" ? ch.disadvantages : ch.advantages).filter(x=>x && x.id===id);
+  const rank = rows.reduce((s,x)=>s + Math.max(0, Number(x.rank)||0), 0);
+  if (rank<1) return null;
+  const own = rows.find(x=>x.source!=="natural" && x.selections) || rows.find(x=>x.selections);
+  return { rank, selections: own ? own.selections : null };
+}
+function effectsHtml(ch, kind, id){
+  const tags = Engine.effectTagsFor(kind, id, heldRow(ch, kind, id));
+  return tags.length ? `<span class="effects">${tags.map(t=>`<span class="etag ${t.computed?"computed":"rule"}">${esc(t.text)}</span>`).join("")}</span>` : "";
+}
+
 function renderCP(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const bal = Engine.cp(ch);
@@ -551,6 +567,7 @@ function renderCP(){
         <div class="head"><h2>${esc(dd.name)}</h2><span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
         ${constraintHtml("disadvantage",dd.id)}
         <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank && !lock.locked && req.ok, dd.name)}</div></div>
+        ${effectsHtml(ch,"disadvantage",dd.id)}
         <div class="desc">${esc(dd.description)}</div>
         ${cur>0?picksHtml("disadvantage",dd.id):""}</div>`;
     }).join("") + `</details>`;
@@ -578,6 +595,7 @@ function renderCP(){
         ${gated&&ad.universal?`<span class="cost grant">Universal</span>`:""}
         ${constraintHtml("advantage",ad.id)}
         <div class="controls">${open?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok, ad.name):cur>0?stepper(cur,"adv|"+ad.id, true, false, ad.name):`<span class="cost">Not for ${esc(cls.name)}s</span>`}</div></div>
+        ${effectsHtml(ch,"advantage",ad.id)}
         <div class="desc">${esc(ad.description)}</div>
         ${(cur>0||(natural&&natural.rank>0))?picksHtml("advantage",ad.id):""}</div>`;
     }).join("") + `</details>`;

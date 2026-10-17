@@ -8986,3 +8986,68 @@ test("P12b 13: a style added beside junk style ids shows, and a training on a sk
   assert.equal(t.progression.training, null, "the training is dropped");
   assert.equal(t.progression.ip.log.length, 0);
 });
+
+// ── P18: rule rows are the table's, never the engine's (Decision 231) ──
+const p18Rows = () => [...D.advantages, ...D.disadvantages].filter(d => Array.isArray(d.grants) && d.grants.some(g => g && g.type === "rule"));
+
+// A fixture per way a character can hold these: every entry at rank 1, every
+// entry at its top rank, hurt and unhurt, and on each archetype.
+function p18Characters() {
+  const out = [];
+  for (const arch of D.archetypes) for (const top of [false, true]) for (const hurt of [false, true]) {
+    const ch = subject({ bod: 7 });
+    ch.identity.archetype = arch.id;
+    ch.advantages = D.advantages.map(a => ({ id: a.id, rank: top ? a.maxRank : 1, notes: "" }));
+    ch.disadvantages = D.disadvantages.map(d => ({ id: d.id, rank: top ? d.maxRank : 1, notes: "" }));
+    ch.trackers.damage = hurt ? 12 : 0;
+    ch.trackers.san.loss = hurt ? 7 : 0;
+    ch.trackers.luck.spent = 1;
+    out.push(ch);
+  }
+  return out;
+}
+function p18Readings(ch) {
+  return JSON.stringify({
+    grants: Engine.grants(ch), naturalArmor: Engine.naturalArmor(ch, []), luck: Engine.luckState(ch), pain: Engine.painState(ch),
+    san: Engine.sanState(ch), health: Engine.health(ch), derived: Engine.derived(ch),
+    skills: D.skills.map(s => Engine.skillLine(ch, s.id)),
+  });
+}
+
+test("P18 4: rule rows change nothing the engine computes", () => {
+  const chars = p18Characters(), withRules = chars.map(p18Readings);
+  const had = p18Rows();
+  assert.ok(had.length >= 80, `only ${had.length} entries carry a rule row — is the data in?`);
+  const saved = new Map(had.map(d => [d, d.grants]));
+  try {
+    for (const d of had) d.grants = d.grants.filter(g => !(g && g.type === "rule"));
+    const stripped = chars.map(p18Readings);
+    stripped.forEach((r, i) => assert.equal(withRules[i], r, `character ${i}: a computed value moved with the rule rows in`));
+  } finally { for (const [d, g] of saved) d.grants = g; }
+});
+
+test("P18 5: effectTagsFor is total", () => {
+  const probe = { id: "p18-probe", name: "Probe", cost: 1, pointsGranted: 1, maxRank: 2, description: "x" };
+  const rows = [null, 5, "s", [], { type: "rule" }, { type: "rule", ruleText: 5 }, { type: "rule", ruleText: "ok", heldText: 7, byRank: "no" },
+    { type: "rule", ruleText: "ok", heldText: "{v} {choice}", byRank: [null] }, { type: "hpPerLevel" }, { type: "luckCost", spendId: "nope", delta: 1 },
+    { type: "luckCost" }, { type: "milestone", kind: "other" }, { type: "painLevel", amount: 1 }, { type: "weird" }, { ruleText: "no type" }];
+  const shapes = [undefined, null, "grants", 7, {}, rows];
+  const helds = [undefined, null, 5, "x", [], { rank: "x" }, { rank: -1 }, { rank: 1, selections: 5 }, { rank: 1, selections: { skill: 3 } }, { rank: 2, selections: { skill: { a: 1 } } }, { rank: 1e9 }];
+  for (const pool of [D.advantages, D.disadvantages]) {
+    const kind = pool === D.advantages ? "advantage" : "disadvantage";
+    for (const grants of shapes) for (const held of helds) {
+      const def = Object.assign({}, probe, { grants, picks: [{ id: "skill", type: "skill" }, null, 4] });
+      pool.push(def);
+      try {
+        const tags = Engine.effectTagsFor(kind, "p18-probe", held);
+        assert.ok(Array.isArray(tags));
+        for (const t of tags) assert.ok(typeof t.text === "string" && t.text && typeof t.computed === "boolean", JSON.stringify(t));
+      } finally { pool.pop(); }
+    }
+  }
+  for (const [kind, id] of [["advantage", "no-such"], ["disadvantage", "no-such"], ["nothing", "educated"], [undefined, undefined], [null, null], ["advantage", {}]])
+    assert.equal(JSON.stringify(Engine.effectTagsFor(kind, id, null)), "[]");
+  // A def with no grants at all, and a held row of nonsense on a real entry, give a list.
+  assert.equal(JSON.stringify(Engine.effectTagsFor("advantage", "no-such", { rank: 1 })), "[]");
+  assert.ok(Array.isArray(Engine.effectTagsFor("advantage", "bullseye", { rank: "two", selections: [] })));
+});

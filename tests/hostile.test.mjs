@@ -1105,3 +1105,38 @@ test("P12b 10: migrate keeps the house rule, a running training and a landed ent
   for (const mp of ["3", -1, {}, 1.5, null, NaN]) assert.equal("mp" in log({ via: "training", mp }), false, `mp ${JSON.stringify(mp)}`);
   assert.equal(Engine.migrate({}).meta.schemaVersion, "0.28");
 });
+
+test("a rule's text of markup renders as text on the CP step and a folded Character card (Decision 231)", () => {
+  const { Engine, D } = loadEngine();
+  const pwn = '<img data-pwn="rule" src=x onerror=1>', tpl = '<b data-pwn="tpl">{perRank}</b>';
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe"; ch.identity.archetype = "professional";
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  ch.advantages = [{ id: "hard-to-kill", rank: 1 }, { id: "bullseye", rank: 1 }];
+  ch.disadvantages = [{ id: "blood-lust", rank: 1 }];
+  const tweak = DD => {
+    DD.disadvantages.find(d => d.id === "blood-lust").grants.find(g => g.type === "rule").ruleText = pwn;
+    DD.advantages.find(d => d.id === "bullseye").grants.find(g => g.type === "rule").heldText = pwn;
+    DD.effectTags.hpPerLevel = tpl;
+  };
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const click = (app, el) => el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  let app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("character-points"), maxReached: steps.length - 1 } } });
+  tweak(app.D);
+  click(app, app.$$("#main button").find(b => /Resume draft/.test(b.textContent)));
+  assert.deepEqual(app.$$("[data-pwn]").map(e => e.getAttribute("data-pwn")), [], "tag text became markup on the CP step");
+  assert.ok(app.$("#main").textContent.includes(pwn), "the text isn't shown as text");
+  assert.ok(app.$("#main").textContent.includes(tpl.replace("{perRank}", "1")), "the template isn't shown as text");
+
+  const locked = JSON.parse(JSON.stringify(ch)); locked.creation.locked = true;
+  for (const id of Object.keys(locked.stats)) locked.stats[id].base = 5;
+  app = boot({ storage: { "shadows.active.v1": { ch: locked, section: "character" } } });
+  tweak(app.D);
+  click(app, app.$$("#main button").find(b => /Open sheet/.test(b.textContent)));
+  app.click('[data-sec="character"]');
+  assert.deepEqual(app.$$("[data-pwn]").map(e => e.getAttribute("data-pwn")), [], "tag text became markup on the Character tab");
+  assert.ok(app.$("#main details.pick.trait summary").textContent.length > 0);
+  assert.ok(app.$("#main").textContent.includes(pwn));
+  assert.deepEqual(app.errors, []);
+});

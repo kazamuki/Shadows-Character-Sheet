@@ -1073,6 +1073,20 @@ window.SHADOWS_DATA = {
       "writeIn": true
     }
   ],
+  /* Decision 231: how an Advantage's or Disadvantage's computed `grants` row reads as a tag. One template per
+     grants type, filled from the row's own fields, so the words follow the numbers. `{action}` and `{cost}` are the
+     LUCK spend a `luckCost` row shifts (cost + delta, never below 0); `{kind}` is "Minor" or "Major". A rule row
+     ({ "type": "rule" }) is the table's, carries its own `ruleText`, and the engine skips it. `creationOnly` is read
+     off the entry's own flag. Read by Engine.effectTagsFor. */
+  "effectTags": {
+    "skillPoints": "+{perRank} Skill Points per rank",
+    "hpPerLevel": "+{perRank} max HP on every Health Level per rank",
+    "naturalArmor": "+{perRank} Natural Armor per rank; Armor Piercing doesn't touch it, unless it's a spell",
+    "luckCost": "LUCK: {action} costs {cost}",
+    "milestone": "A {kind} Milestone at rank {atRank}",
+    "painLevel": "Pain Level +{amount} once you're hurt",
+    "creationOnly": "Creation only"
+  },
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
      marks 0430's Universal Advantages, the only ones a classification with
@@ -1093,49 +1107,71 @@ window.SHADOWS_DATA = {
       "name": "Ambidextrous",
       "cost": 1,
       "maxRank": 1,
-      "description": "Retain accuracy bonuses when making aimed shots using your off hand."
+      "description": "You can make the Called Shot stunt with either hand.",
+      "grants": [
+        { "type": "rule", "ruleText": "You can make the Called Shot stunt with either hand." }
+      ]
     },
     {
       "id": "animal-ken",
       "name": "Animal Ken",
       "cost": 2,
       "maxRank": 1,
-      "description": "You have a natural kinship with animals. They aren’t threatened by you and rarely attack. Target Numbers (TN) for MAG Essence Checks to calm, befriend, or interact with an animal are reduced by 2."
+      "description": "You have a natural kinship with animals. They aren’t threatened by you and rarely attack. Target Numbers (TN) for MAG Essence Checks to calm, befriend, or interact with an animal are reduced by 2.",
+      "grants": [
+        { "type": "rule", "ruleText": "MAG Essence Checks to calm, befriend or deal with an animal: TN −2." }
+      ]
     },
     {
       "id": "archery-master",
       "name": "Archery Master",
       "cost": 6,
       "maxRank": 4,
-      "description": "Each rank grants 1 additional attack per round when using Archery Skill weapons.\n\nThis doesn't apply to crossbows."
+      "description": "Each rank grants 1 additional attack per round when using Archery Skill weapons, crossbows included.",
+      "grants": [
+        { "type": "rule", "ruleText": "+1 attack per round per rank with Archery weapons, crossbows included.", "heldText": "Extra attacks per round with Archery weapons, crossbows included: {rank}." }
+      ]
     },
     {
       "id": "aura-sight",
       "name": "Aura Sight",
       "cost": 10,
       "maxRank": 1,
-      "description": "Everyone in NYTE City wears a mask. Aura Sight sees behind it.\n\nYou see the aura of living beings within 30 feet of you. Aura Sight allows you to perceive these energy fields through solid objects and walls. Auras can indicate:\n\n- Power Level\n\n- Mood\n\n- Mental Health\n\n- Physical Health\n\nTake 8 on Intuition Skill Checks if you can perceive the aura of your target."
+      "description": "Everyone in NYTE City wears a mask. Aura Sight sees behind it.\n\nYou see the aura of living beings within 30 feet of you. Aura Sight allows you to perceive these energy fields through solid objects and walls. Auras can indicate:\n\n- Power Level\n\n- Mood\n\n- Mental Health\n\n- Physical Health\n\nTake 8 on Intuition Skill Checks if you can perceive the aura of your target.",
+      "grants": [
+        { "type": "rule", "ruleText": "See the auras of the living within 30 feet, through walls: power, mood, mental and physical health." },
+        { "type": "rule", "ruleText": "Take 8 on Intuition when you can see the target's aura." }
+      ]
     },
     {
       "id": "backfooted",
       "name": "Backfooted",
       "cost": 8,
       "maxRank": 1,
-      "description": "Being on your backfoot is comfortable.\n\nWhen facing attackers who attempt to disable you using a stunt maneuver (trip, throw, grapple, disarm), roll a Martial Arts Skill Check difficulty 18. If successful, the attempted maneuver is completely negated. If your check explodes you gain a single counterattack before the turn ends."
+      "description": "Being on your backfoot is comfortable.\n\nWhen defending against a Combat Maneuver, roll a Martial Arts Skill Check difficulty 18. If successful, the Combat Maneuver is completely negated. If your check explodes you gain a single counterattack before the turn ends.",
+      "grants": [
+        { "type": "rule", "ruleText": "When defending against a Combat Maneuver, make a Martial Arts check at difficulty 18. Success negates the Combat Maneuver. An explosion allows a counterattack." }
+      ]
     },
     {
       "id": "bullseye",
       "name": "Bullseye",
       "cost": 4,
       "maxRank": 3,
-      "description": "Aimed shots apply +4 bonus damage on a successful hit. This applies to ranged weaponry only.\n\nEach Rank after the first gains an additional +2 bonus to damage."
+      "description": "When making a Called Shot, gain +4 bonus damage on a successful hit.\n\nEach Rank after the first gains an additional +2 bonus to damage.",
+      "grants": [
+        { "type": "rule", "ruleText": "When making a Called Shot, gain +4 damage. Each rank grants +2 additional damage.", "heldText": "Called Shots: +{v} damage.", "byRank": [4, 6, 8] }
+      ]
     },
     {
       "id": "charismatic",
       "name": "Charismatic",
       "cost": 3,
       "maxRank": 3,
-      "description": "Each Rank in Charismatic converts a single result of 1 on the die to a 2 when making MAG Essence Checks."
+      "description": "Each Rank in Charismatic converts a single result of 1 on the die to a 2 when making MAG Essence Checks.",
+      "grants": [
+        { "type": "rule", "ruleText": "MAG Essence Checks: each rank turns one die showing 1 into a 2.", "heldText": "MAG Essence Checks: turn up to {rank} of your 1s into 2s." }
+      ]
     },
     {
       "id": "common-sense",
@@ -1155,7 +1191,10 @@ window.SHADOWS_DATA = {
       "cost": 4,
       "maxRank": 4,
       "description": "You have a natural aptitude for seeing what others tend to miss. Choose one of the following skills:\n\n- Investigation\n\n- Awareness\n\n- Basic Tech\n\n- Intuition\n\nTake 6 on the selected skill.\n\nChoose a different Skill for each rank.",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "Take 6 on your chosen Skill: Investigation, Awareness, Basic Tech or Intuition. A different one each rank.", "heldText": "Take 6 on {choice}." }
+      ]
     },
     {
       "id": "combat-cunning",
@@ -1163,7 +1202,10 @@ window.SHADOWS_DATA = {
       "cost": 4,
       "maxRank": 1,
       "description": "You're particularly gifted with fighting. When performing a stunt during combat, rolling a natural 9 or a 10 automatically succeeds but the roll can no longer explode. If the stunt was opposed and the opponent's roll explodes the stunt will have to beat the enemy’s roll as normal.",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "A stunt in combat succeeds on a natural 9 or 10, but can't explode. An opposed roll that explodes still has to be beaten." }
+      ]
     },
     {
       "id": "contacts-major",
@@ -1171,7 +1213,10 @@ window.SHADOWS_DATA = {
       "cost": 3,
       "maxRank": 4,
       "description": "A Major Contact carries significant influence, resources, or access — and uses it when you need them to. Each rank increases the magnitude of that contact's reach and power.\n\nMajor Contacts risk real exposure helping you with illicit activity. They aren't always available. GM's discretion.\n\nEXAMPLES:\n\n- Son to a Hub City senator that knows how to throw his weight around and can get information on people by special request\n\n- A sorcerer in the Daedalus Belt who's well versed in ancient texts and has their own private library regarding arcane topics\n\n- A high corporate mogul who's loaded to the gills and can get you discreet access to weapons and transportation from time to time",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "A Major Contact with real reach, more each rank. Not always available: your GM's call." }
+      ]
     },
     {
       "id": "contacts-minor",
@@ -1179,7 +1224,10 @@ window.SHADOWS_DATA = {
       "cost": 1,
       "maxRank": 4,
       "description": "A Minor Contact has just enough influence, resources, or access to be useful when you need a small assist. Each rank grants one additional Minor Contact. Minor Contacts are available more often, but their reach has limits, and they work harder to deliver.\n\nEXAMPLES:\n\n- A low-grade hacker who can surface data most citizens can't find on the LINK\n\n- A Lowtown fence with access to decent gear under 5,000 credits\n\n- A local scholar with above-average knowledge of the occult and a few rare texts",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "One Minor Contact per rank, for small, reliable help.", "heldText": "Minor Contacts: {rank}." }
+      ]
     },
     {
       "id": "cyber-prophetical",
@@ -1189,28 +1237,40 @@ window.SHADOWS_DATA = {
       "description": "The body is hardware. This is the compatibility patch.\n\nSuffer no Sanity loss when you acquire cybernetics.",
       "flagged": true,
       "flagNote": "F5: open question for D - SAN vs TOL interaction (pending the Biomech rewrite, F6). CRB v4 text is unchanged from the flagged version.",
-      "playerNote": "How this works with SAN and TOL is still being written. Until it is, it's your GM's call, and IP doesn't buy it in play."
+      "playerNote": "How this works with SAN and TOL is still being written. Until it is, it's your GM's call, and IP doesn't buy it in play.",
+      "grants": [
+        { "type": "rule", "ruleText": "No Sanity loss when you get cybernetics." }
+      ]
     },
     {
       "id": "danger-sense",
       "name": "Danger Sense",
       "cost": 3,
       "maxRank": 5,
-      "description": "The city always telegraphs. Most people aren't listening.\n\nYou sense when something or someone threatens you.\n\n- Rank 1 — Effect: Sense danger within 5 feet\n\n- Rank 2 — Effect: Sense danger within 50 feet\n\n- Rank 3 — Effect: Sense danger within 500 feet\n\n- Rank 4 — Effect: Identifies main visible threat\n\n- Rank 5 — Effect: Identifies main threat, both seen and unseen"
+      "description": "The city always telegraphs. Most people aren't listening.\n\nYou sense when something or someone threatens you.\n\n- Rank 1 — Effect: Sense danger within 5 feet\n\n- Rank 2 — Effect: Sense danger within 50 feet\n\n- Rank 3 — Effect: Sense danger within 500 feet\n\n- Rank 4 — Effect: Identifies main visible threat\n\n- Rank 5 — Effect: Identifies main threat, both seen and unseen",
+      "grants": [
+        { "type": "rule", "ruleText": "Sense threats within 5 feet (rank 1), 50 (2) or 500 (3). Rank 4 names the main visible threat; rank 5 the main threat, seen or unseen.", "heldText": "{v}", "byRank": ["Sense threats within 5 feet.", "Sense threats within 50 feet.", "Sense threats within 500 feet.", "Name the main visible threat.", "Name the main threat, seen or unseen."] }
+      ]
     },
     {
       "id": "divine-intervention",
       "name": "Divine Intervention",
       "cost": 8,
       "maxRank": 1,
-      "description": "The gods favor you. Once.\n\nDivine Intervention can restore you to full health, cure toxins, magical illness, or a horrifying curse, or automatically succeed a single Death Save. The form it takes is the GM's call. Once called, it never answers again."
+      "description": "The gods favor you. Once.\n\nDivine Intervention can restore you to full health, cure toxins, magical illness, or a horrifying curse, or automatically succeed a single Death Save. The form it takes is the GM's call. Once called, it never answers again.",
+      "grants": [
+        { "type": "rule", "ruleText": "Once, ever: full health, a cure, a lifted curse, or an automatic Death Save. Your GM picks the form." }
+      ]
     },
     {
       "id": "dream-walker",
       "name": "Dream Walker",
       "cost": 12,
       "maxRank": 1,
-      "description": "The mind is a locked door. Dream Walker is the key.\n\nWalk into the dreams of sleeping targets.\n\nRoll a contested WILL Essence Check to enter the dream of another sleeping person.\n\n- If successful, you enter their Dreamscape. You need to be able to see that individual or have a reference like a photo or video feed to assist you.\n\n- If you fail you can't attempt to enter that person's dream again until they enter a new sleep cycle.\n\nIf the target of your dream walking becomes aware you are an intruder, they can push you out immediately and this will prevent future attempts to enter their dreams."
+      "description": "The mind is a locked door. Dream Walker is the key.\n\nWalk into the dreams of sleeping targets.\n\nRoll a contested WILL Essence Check to enter the dream of another sleeping person.\n\n- If successful, you enter their Dreamscape. You need to be able to see that individual or have a reference like a photo or video feed to assist you.\n\n- If you fail you can't attempt to enter that person's dream again until they enter a new sleep cycle.\n\nIf the target of your dream walking becomes aware you are an intruder, they can push you out immediately and this will prevent future attempts to enter their dreams.",
+      "grants": [
+        { "type": "rule", "ruleText": "Enter a sleeping target's dream with a contested WILL Essence Check; you need to see them, or a photo or feed. Fail, and not again until they sleep anew." }
+      ]
     },
     {
       "id": "educated",
@@ -1229,7 +1289,10 @@ window.SHADOWS_DATA = {
       "name": "Eidetic Memory",
       "cost": 10,
       "maxRank": 1,
-      "description": "In NYTE City, information is currency. Eidetic Memory means you never lose any.\n\nINT Essence checks used for memory recall are automatically successful and unerring.\n\nEidetic Memory does not apply when:\n\n- Incapacitated\n\n- Suffering a head injury\n\n- Under the influence of drugs."
+      "description": "In NYTE City, information is currency. Eidetic Memory means you never lose any.\n\nINT Essence checks used for memory recall are automatically successful and unerring.\n\nEidetic Memory does not apply when:\n\n- Incapacitated\n\n- Suffering a head injury\n\n- Under the influence of drugs.",
+      "grants": [
+        { "type": "rule", "ruleText": "INT Essence Checks to remember succeed automatically, unless you're incapacitated, head-injured or drugged." }
+      ]
     },
     {
       "id": "favored-skill",
@@ -1246,7 +1309,10 @@ window.SHADOWS_DATA = {
       "name": "Favored Skill",
       "cost": 5,
       "maxRank": 5,
-      "description": "Choose a Skill. Once per encounter you may re-roll a botch for that selected skill, taking the second result. LUCK cannot be used to modify this second result.\n\nChoose a new skill for each rank in Favored Skill."
+      "description": "Choose a Skill. Once per encounter you may re-roll a botch for that selected skill, taking the second result. LUCK cannot be used to modify this second result.\n\nChoose a new skill for each rank in Favored Skill.",
+      "grants": [
+        { "type": "rule", "ruleText": "Once per encounter, re-roll a botch on your chosen Skill; no LUCK on the re-roll. A different Skill each rank.", "heldText": "Once per encounter, re-roll a botch on {choice}; no LUCK on the re-roll." }
+      ]
     },
     {
       "id": "favors",
@@ -1254,14 +1320,20 @@ window.SHADOWS_DATA = {
       "cost": 6,
       "maxRank": 3,
       "description": "Gain 1 favor from someone you have helped in the past. Each rank grants an additional favor, and using a favor reduces rank by 1. Favors can be spent and repurchased later, with appropriate cost each time.",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "One favor per rank; spending one lowers the rank by 1.", "heldText": "Favors: {rank}. Spending one lowers the rank by 1." }
+      ]
     },
     {
       "id": "field-medic",
       "name": "Field Medic",
       "cost": 5,
       "maxRank": 1,
-      "description": "The difference between patching and healing is the hands doing it.\n\nAdd an additional 1d4 Kicker Die whenever making a Medical Skill Check.\n\nThis advantage can stack with other kicker die applied to this Skill Check."
+      "description": "The difference between patching and healing is the hands doing it.\n\nAdd an additional 1d4 Kicker Die whenever making a Medical Skill Check.\n\nThis advantage can stack with other kicker die applied to this Skill Check.",
+      "grants": [
+        { "type": "rule", "ruleText": "+1d4 Kicker Die on Medical Skill Checks; stacks with other kickers." }
+      ]
     },
     {
       "id": "followers-minion",
@@ -1277,14 +1349,20 @@ window.SHADOWS_DATA = {
       "cost": 5,
       "maxRank": 3,
       "description": "Gain 1 follower or companion who can assist you. Each rank grants an additional follower or companion. GM Approval needed.\n\nExample:\n\n- Assistant\n\n- Thrall\n\n- Mercenary who follows you",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "One follower or companion per rank, with your GM's approval.", "heldText": "Followers or companions: {rank}." }
+      ]
     },
     {
       "id": "ghost-step",
       "name": "Ghost Step",
       "cost": 6,
       "maxRank": 1,
-      "description": "When you don't want to be seen, you're not.\n\nGain a +3 synergy bonus to Stealth Skill Checks."
+      "description": "When you don't want to be seen, you're not.\n\nGain a +3 synergy bonus to Stealth Skill Checks.",
+      "grants": [
+        { "type": "rule", "ruleText": "+3 to Stealth Skill Checks." }
+      ]
     },
     {
       "id": "ghost-tag-s",
@@ -1293,14 +1371,20 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "In NYTE City, your TAG is your face. A Ghost TAG gives you a different one.\n\nYour Trusted Authentication Gateway (TAG) is a complex high quality counterfeit. When scanned it will provide the false identity you've constructed and tie it to finances, contact info, and a fabricated background.\n\nAn opponent must do an Investigation or Security skill check at 30 difficulty to learn the truth. Using corporate resources like artificial intelligence lowers the difficulty to 27. A successful Investigation or security skill check will only reveal that the TAG is fake, not the holder’s true identity.\n\nOn the street, it’s a Black TAG.",
       "universal": true,
-      "tagReads": { "label": "Ghost TAG", "text": "A counterfeit. The street calls it a Black TAG. Scanned, it shows the life you built. Seeing it's fake takes Investigation or Security at 30 (27 with corporate AI), and even that doesn't say who you are." }
+      "tagReads": { "label": "Ghost TAG", "text": "A counterfeit. The street calls it a Black TAG. Scanned, it shows the life you built. Seeing it's fake takes Investigation or Security at 30 (27 with corporate AI), and even that doesn't say who you are." },
+      "grants": [
+        { "type": "rule", "ruleText": "A counterfeit TAG: seeing through it takes an Investigation or Security check at 30 (27 with corporate AI), and shows only that it's fake." }
+      ]
     },
     {
       "id": "gun-master",
       "name": "Gun Master",
       "cost": 6,
       "maxRank": 4,
-      "description": "Each rank grants 1 additional attack per round when using firearms."
+      "description": "Each rank grants 1 additional attack per round when using firearms, beam weapons included.",
+      "grants": [
+        { "type": "rule", "ruleText": "+1 attack per round per rank with firearms, beam weapons included.", "heldText": "Extra attacks per round with firearms, beam weapons included: {rank}." }
+      ]
     },
     {
       "id": "hard-to-kill",
@@ -1316,7 +1400,10 @@ window.SHADOWS_DATA = {
       "name": "Hyper Vigilance",
       "cost": 6,
       "maxRank": 1,
-      "description": "Combat leaves a mark. This is the useful one.\n\nAdd an additional Kicker Die of 1d4 for Combat Sense Skill Checks."
+      "description": "Combat leaves a mark. This is the useful one.\n\nAdd an additional Kicker Die of 1d4 for Combat Sense Skill Checks.",
+      "grants": [
+        { "type": "rule", "ruleText": "+1d4 Kicker Die on Combat Sense Skill Checks." }
+      ]
     },
     {
       "id": "immunity",
@@ -1331,28 +1418,40 @@ window.SHADOWS_DATA = {
       "name": "Immunity",
       "cost": 10,
       "maxRank": 1,
-      "description": "You are immune to something that is otherwise lethal. GM approval needed."
+      "description": "You are immune to something that is otherwise lethal. GM approval needed.",
+      "grants": [
+        { "type": "rule", "ruleText": "Immune to one otherwise lethal thing, agreed with your GM.", "heldText": "Immune to {choice}." }
+      ]
     },
     {
       "id": "iron-will",
       "name": "Iron Will",
       "cost": 4,
       "maxRank": 1,
-      "description": "NYTE City finds a way to break most people. This is what it looks like when it can't.\n\nReduce Target Number of WILL Essence Checks by 1."
+      "description": "NYTE City finds a way to break most people. This is what it looks like when it can't.\n\nReduce Target Number of WILL Essence Checks by 1.",
+      "grants": [
+        { "type": "rule", "ruleText": "WILL Essence Checks: TN −1." }
+      ]
     },
     {
       "id": "junkyard-genius",
       "name": "Junkyard Genius",
       "cost": 5,
       "maxRank": 1,
-      "description": "NYTE City is full of broken things. Most people see junk. You see potential.\n\nWith your sense of how technology works you can apply it in ways that most people don't. Once per encounter, you can improvise a device using the materials and technology around you. This device offers a +3 synergy bonus to TECH-related skill checks as long as the device is operational.\n\nYou cannot use this Advantage if there is no technology or machinery within reach. This also requires that you have access to basic tools if the gadget is complex enough. At the end of the encounter, the device falls inert but can be properly reconstructed later, if desired."
+      "description": "NYTE City is full of broken things. Most people see junk. You see potential.\n\nWith your sense of how technology works you can apply it in ways that most people don't. Once per encounter, you can improvise a device using the materials and technology around you. This device offers a +3 synergy bonus to TECH-related skill checks as long as the device is operational.\n\nYou cannot use this Advantage if there is no technology or machinery within reach. This also requires that you have access to basic tools if the gadget is complex enough. At the end of the encounter, the device falls inert but can be properly reconstructed later, if desired.",
+      "grants": [
+        { "type": "rule", "ruleText": "Once per encounter, improvise a device from tech in reach: +3 to TECH Skill Checks while it works. A complex one needs basic tools." }
+      ]
     },
     {
       "id": "last-stand",
       "name": "Last Stand",
       "cost": 4,
       "maxRank": 1,
-      "description": "Going down swinging isn't a tactic. It's a personality trait.\n\nWhen your health drops to 0, gain a number of attacks equal to your BOD. Afterwards, you fall unconscious and need to roll to save against dying as normal."
+      "description": "Going down swinging isn't a tactic. It's a personality trait.\n\nWhen your health drops to 0, gain a number of attacks equal to your BOD. Afterwards, you fall unconscious and need to roll to save against dying as normal.",
+      "grants": [
+        { "type": "rule", "ruleText": "At 0 health, make attacks equal to your BOD, then fall unconscious and make Death Saves as normal." }
+      ]
     },
     {
       "id": "lightning-calculator",
@@ -1360,7 +1459,10 @@ window.SHADOWS_DATA = {
       "cost": 1,
       "maxRank": 1,
       "description": "NYTE City runs on numbers. Some people just see them faster.\n\nResolve complex mathematical equations without technology or writing. When applicable, Take 6 on:\n\n- Programming\n\n- Basic Tech\n\n- Engineering\n\nIf you're helping someone using any TECH-related skill they gain a +1 synergy bonus while you're present.\n\nThis Advantage can't be used while you're in combat.",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "Take 6 on Programming, Basic Tech and Engineering; anyone you help with a TECH Skill gets +1. Not in combat." }
+      ]
     },
     {
       "id": "long-lived",
@@ -1372,7 +1474,8 @@ window.SHADOWS_DATA = {
       "grants": [
         { "type": "milestone", "kind": "minor", "atRank": 1 },
         { "type": "milestone", "kind": "minor", "atRank": 2 },
-        { "type": "milestone", "kind": "major", "atRank": 3 }
+        { "type": "milestone", "kind": "major", "atRank": 3 },
+        { "type": "rule", "ruleText": "Older than you look: 70–140 years (rank 1), 110–220 (2), 150–300 (3).", "heldText": "Older than you look: {v} years.", "byRank": ["70–140", "110–220", "150–300"] }
       ]
     },
     {
@@ -1392,64 +1495,92 @@ window.SHADOWS_DATA = {
       "name": "Machindo",
       "cost": 7,
       "maxRank": 1,
-      "description": "Every system has a logic. Machindo means you already know it.\n\nTechnology works for you the way it doesn't for anyone else. When dealing with computers, vehicles, or technology, Take 6 on the following skill checks:\n\n- Basic Tech\n\n- Engineering\n\n- Interface\n\n- Robotics\n\n- Pilot\n\nWhenever making an INT or TECH-based Essence check the Target Number (TN) is reduced by 1 (to a minimum of 1)."
+      "description": "Every system has a logic. Machindo means you already know it.\n\nTechnology works for you the way it doesn't for anyone else. When dealing with computers, vehicles, or technology, Take 6 on the following skill checks:\n\n- Basic Tech\n\n- Engineering\n\n- Interface\n\n- Robotics\n\n- Pilot\n\nWhenever making an INT or TECH-based Essence check the Target Number (TN) is reduced by 1 (to a minimum of 1).",
+      "grants": [
+        { "type": "rule", "ruleText": "With technology, Take 6 on Basic Tech, Engineering, Interface, Robotics and Pilot." },
+        { "type": "rule", "ruleText": "INT and TECH Essence Checks: TN −1 (to a minimum of 1)." }
+      ]
     },
     {
       "id": "magic-bane",
       "name": "Magic Bane",
       "cost": 10,
       "maxRank": 1,
-      "description": "Magic writes its own rules. You're the exception.\n\nAll Magical effects (both positive and negative) are only half as potent on you."
+      "description": "Magic writes its own rules. You're the exception.\n\nAll Magical effects (both positive and negative) are only half as potent on you.",
+      "grants": [
+        { "type": "rule", "ruleText": "Magical effects on you, good or bad, are halved." }
+      ]
     },
     {
       "id": "medium",
       "name": "Medium",
       "cost": 5,
       "maxRank": 1,
-      "description": "The dead don't always stay that way in NYTE City. Neither do their secrets.\n\nThe veil between the living and the dead is thinner for you. You may choose to interact with spirits of the dead and beings from beyond it."
+      "description": "The dead don't always stay that way in NYTE City. Neither do their secrets.\n\nThe veil between the living and the dead is thinner for you. You may choose to interact with spirits of the dead and beings from beyond it.",
+      "grants": [
+        { "type": "rule", "ruleText": "You can deal with spirits of the dead and beings from beyond the veil." }
+      ]
     },
     {
       "id": "melee-master",
       "name": "Melee Master",
       "cost": 5,
       "maxRank": 4,
-      "description": "The first hit starts the fight. The rest of yours end it.\n\nEach rank grants 1 additional attack per round when making melee attacks."
+      "description": "The first hit starts the fight. The rest of yours end it.\n\nEach rank grants 1 additional attack per round when making melee attacks, Martial Arts and thrown weapons included.",
+      "grants": [
+        { "type": "rule", "ruleText": "+1 attack per round per rank with melee attacks, Martial Arts and thrown weapons included.", "heldText": "Extra attacks per round with melee attacks, Martial Arts and thrown weapons included: {rank}." }
+      ]
     },
     {
       "id": "night-vision",
       "name": "Night Vision",
       "cost": 2,
       "maxRank": 1,
-      "description": "NYTE City never fully turns the lights off. But close enough.\n\nNo penalty for visual Awareness checks made in low or no light conditions."
+      "description": "NYTE City never fully turns the lights off. But close enough.\n\nNo penalty on visual Awareness checks or attacks when visibility is Dim or Dark.",
+      "grants": [
+        { "type": "rule", "ruleText": "No penalty on visual Awareness checks or attacks when visibility is Dim or Dark." }
+      ]
     },
     {
       "id": "nine-lives",
       "name": "Nine Lives",
       "cost": 15,
       "maxRank": 1,
-      "description": "Most people get one chance. You get nine. The city will catch up eventually.\n\nWhen called to make a Death Save, roll up to 9 times. Each time a Death Save is rolled it counts against the available pool. This pool of Death Saves can't be replenished. If all extra Death Saves have been rolled the next Death Save check is treated as normal. Unless you've utterly failed all saves and are currently deceased."
+      "description": "Most people get one chance. You get nine. The city will catch up eventually.\n\nWhen called to make a Death Save, roll up to 9 times. Each time a Death Save is rolled it counts against the available pool. This pool of Death Saves can't be replenished. If all extra Death Saves have been rolled the next Death Save check is treated as normal. Unless you've utterly failed all saves and are currently deceased.",
+      "grants": [
+        { "type": "rule", "ruleText": "Nine extra Death Saves in your lifetime: when one fails, roll again from the pool. It never refills." }
+      ]
     },
     {
       "id": "pain-tolerance",
       "name": "Pain Tolerance",
       "cost": 6,
       "maxRank": 3,
-      "description": "Pain is an invoice. You stopped paying full price.\n\nIgnore 1 level of Pain per rank."
+      "description": "Pain is an invoice. You stopped paying full price.\n\nIgnore 1 level of Pain per rank.",
+      "grants": [
+        { "type": "rule", "ruleText": "Ignore 1 Pain Level per rank." }
+      ]
     },
     {
       "id": "quick-draw",
       "name": "Quick Draw",
       "cost": 8,
       "maxRank": 1,
-      "description": "The holster is a formality.\n\nDraw and use a weapon immediately as a free action. Aimed shots retain their full Accuracy bonus.",
-      "universal": true
+      "description": "The holster is a formality.\n\nDraw and use a weapon immediately as a free action. You may make a Called Shot as an Action, instead of a Stunt.",
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "Draw and use a weapon as a free action. You may make a Called Shot as an Action, instead of a Stunt." }
+      ]
     },
     {
       "id": "rapid-healing",
       "name": "Rapid Healing",
       "cost": 5,
       "maxRank": 3,
-      "description": "While out of combat, your body heals faster.\n\n- Rank 1 — Heal Multiplier: x2\n\n- Rank 2 — Heal Multiplier: x3\n\n- Rank 3 — Heal Multiplier: x4"
+      "description": "While out of combat, your body heals faster.\n\n- Rank 1 — Heal Multiplier: x2\n\n- Rank 2 — Heal Multiplier: x3\n\n- Rank 3 — Heal Multiplier: x4",
+      "grants": [
+        { "type": "rule", "ruleText": "Out of combat, heal ×2 (rank 1), ×3 (2) or ×4 (3).", "heldText": "Out of combat, heal ×{v}.", "byRank": [2, 3, 4] }
+      ]
     },
     {
       "id": "refined-skill",
@@ -1466,7 +1597,10 @@ window.SHADOWS_DATA = {
       "name": "Refined Skill",
       "cost": 8,
       "maxRank": 5,
-      "description": "Choose a skill. Refined Skills explode on a natural 9 or 10. The explosion is suppressed when this skill is used with Combat Cunning to perform a stunt.\n\nChoose a different skill for each rank in this advantage."
+      "description": "Choose a skill. Refined Skills explode on a natural 9 or 10. The explosion is suppressed when this skill is used with Combat Cunning to perform a stunt.\n\nChoose a different skill for each rank in this advantage.",
+      "grants": [
+        { "type": "rule", "ruleText": "Your chosen Skill explodes on a natural 9 or 10 (not on a Combat Cunning stunt). A different Skill each rank.", "heldText": "{choice} explodes on a natural 9 or 10 (not on a Combat Cunning stunt)." }
+      ]
     },
     {
       "id": "reputation",
@@ -1474,21 +1608,30 @@ window.SHADOWS_DATA = {
       "cost": 4,
       "maxRank": 4,
       "description": "Reputation travels faster than bullets.\n\nYou are feared, beloved, or both. Each rank expands how far that name reaches. Those who know your name offer deference: discounts, trust, access, vouches from strangers. The further your reputation extends, the more doors open before you touch them.\n\n- Rank 1: A neighborhood or small group knows your name. Quiet respect wherever you're known.\n\n- Rank 2: Your name has reached the LINK. Outside your area, people occasionally recognize you.\n\n- Rank 3: An entire sector knows who you are. On the streets, people approach you.\n\n- Rank 4: Whole territories have heard your name. Strangers have already decided what you are before you speak.",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "Your name opens doors: a neighborhood (rank 1), the LINK (2), a sector (3), whole territories (4).", "heldText": "{v}", "byRank": ["A neighborhood or small group knows your name.", "Your name has reached the LINK.", "An entire sector knows who you are.", "Whole territories have heard your name."] }
+      ]
     },
     {
       "id": "riposte",
       "name": "Riposte",
       "cost": 4,
       "maxRank": 1,
-      "description": "When using a melee weapon, whenever you successfully parry a strike, you may Riposte: apply your weapon’s damage (no BOD bonus) to the attacker. This counterattack counts as a stunt for the turn."
+      "description": "Once per round, whenever you successfully parry a strike, you may Riposte: apply your weapon’s damage (no BOD bonus) to the attacker.",
+      "grants": [
+        { "type": "rule", "ruleText": "Once per round, after a successful parry, deal your weapon's damage (no BOD bonus) to the attacker." }
+      ]
     },
     {
       "id": "scrapper",
       "name": "Scrapper",
       "cost": 10,
       "maxRank": 1,
-      "description": "You've been hit before. These days it's a rounding error.\n\nHand-to-hand damage and blunt melee weapon damage against you are halved, rounded down."
+      "description": "You've been hit before. These days it's a rounding error.\n\nDamage taken from Melee and Martial Arts attacks is halved, rounded down, but not less than 1.",
+      "grants": [
+        { "type": "rule", "ruleText": "Damage taken from Melee and Martial Arts attacks is halved, rounded down, but not less than 1." }
+      ]
     },
     {
       "id": "sense-of-direction",
@@ -1496,28 +1639,40 @@ window.SHADOWS_DATA = {
       "cost": 2,
       "maxRank": 1,
       "description": "You discern all cardinal directions even while blindfolded or underground. Take 6 on Survival Checks used to navigate your surroundings.",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "Always know the cardinal directions; Take 6 on Survival to navigate." }
+      ]
     },
     {
       "id": "snatch",
       "name": "Snatch",
       "cost": 8,
       "maxRank": 1,
-      "description": "If you can perceive an object fired at you, on a successful Parry you snatch the projectile right out of the air."
+      "description": "If you can perceive an object fired at you, on a successful Parry you snatch the projectile right out of the air.",
+      "grants": [
+        { "type": "rule", "ruleText": "On a successful Parry against a projectile you can see, catch it." }
+      ]
     },
     {
       "id": "spirit-guide",
       "name": "Spirit Guide",
       "cost": 7,
       "maxRank": 3,
-      "description": "Something followed you back. It means well. Probably.\n\nA guide from beyond the veil has taken an interest in you. They steer you toward the right course when they can. Spirit Guides wear many forms: angels, disfigured spirits, fey, even dark shadows on the wall. Whatever their shape, their help arrives in strange ways.\n\nMake an EMP Essence Check (Target 8, Threshold 2) to call on your guide. On success, the guide assists — options include:\n\n- Add a 1d4 kicker die to your next Skill Check\n\n- Reveal a small secret unknown to you (GM’s discretion)\n\n- Reduce the difficulty of an unopposed check by 5\n\nCall on your guide once per rank per session."
+      "description": "Something followed you back. It means well. Probably.\n\nA guide from beyond the veil has taken an interest in you. They steer you toward the right course when they can. Spirit Guides wear many forms: angels, disfigured spirits, fey, even dark shadows on the wall. Whatever their shape, their help arrives in strange ways.\n\nMake an EMP Essence Check (Target 8, Threshold 2) to call on your guide. On success, the guide assists — options include:\n\n- Add a 1d4 kicker die to your next Skill Check\n\n- Reveal a small secret unknown to you (GM’s discretion)\n\n- Reduce the difficulty of an unopposed check by 5\n\nCall on your guide once per rank per session.",
+      "grants": [
+        { "type": "rule", "ruleText": "Once per rank per session, an EMP Essence Check (Target 8, Threshold 2) calls your guide: a 1d4 kicker, a small secret, or −5 difficulty on an unopposed check.", "heldText": "Calls per session: {rank}. An EMP Essence Check (Target 8, Threshold 2) calls your guide: a 1d4 kicker, a small secret, or −5 difficulty on an unopposed check." }
+      ]
     },
     {
       "id": "stunt-rider",
       "name": "Stunt Rider",
       "cost": 7,
       "maxRank": 1,
-      "description": "The speedometer is someone else’s problem.\n\nRetain Accuracy bonus with ranged weapons while making aimed shots from a moving vehicle. Stunts performed using this Advantage work as normal.\n\nIf you have the Bullseye Advantage, the damage bonus still applies if the attack successfully hits the target."
+      "description": "The speedometer is someone else’s problem.\n\nYou may make Called Shots from a moving vehicle with no penalties.",
+      "grants": [
+        { "type": "rule", "ruleText": "You may make Called Shots from a moving vehicle with no penalties." }
+      ]
     },
     {
       "id": "thick-skin",
@@ -1532,7 +1687,10 @@ window.SHADOWS_DATA = {
       "name": "Thick Skull",
       "cost": 5,
       "maxRank": 1,
-      "description": "Aim for the head. See where it gets you.\n\nIgnore bonus damage from normal attacks hitting the head. Damage added from an exploded roll still applies."
+      "description": "Aim for the head. See where it gets you.\n\nIgnore bonus damage from normal attacks hitting the head. Damage added from an exploded roll still applies.",
+      "grants": [
+        { "type": "rule", "ruleText": "Ignore the bonus damage from normal hits to the head; exploded damage still counts." }
+      ]
     },
     {
       "id": "time-sense",
@@ -1540,35 +1698,51 @@ window.SHADOWS_DATA = {
       "cost": 1,
       "maxRank": 1,
       "description": "Your sense of time is perfect. Underground, unconscious, or on another plane of existence, you always know the actual time. Once per session, Take 8 on any Skill Check focused on time or timing.",
-      "universal": true
+      "universal": true,
+      "grants": [
+        { "type": "rule", "ruleText": "Always know the time. Once per session, Take 8 on a Skill Check about time or timing." }
+      ]
     },
     {
       "id": "true-faith",
       "name": "True Faith",
       "cost": 15,
       "maxRank": 1,
-      "description": "Whatever’s out there, it blinks first.\n\nThrough sheer faith, you activate an aura that repels supernatural attacks, magic, and psychic assaults for 12 Rounds. This aura applies the following effects:\n\n- Within 10 feet of you, supernatural beings suffer a −3 Pain Penalty on all skill checks even if they're immune to pain effects.\n\n- Reduce Target number of Essence Checks to defend against supernatural abilities and powers by 2.\n\n- Magic and psychic abilities used against you have an 85% chance of failure.\n\nTrue Faith can only be activated once per encounter."
+      "description": "Whatever’s out there, it blinks first.\n\nThrough sheer faith, you activate an aura that repels supernatural attacks, magic, and psychic assaults for 12 Rounds. This aura applies the following effects:\n\n- Within 10 feet of you, supernatural beings suffer a −3 Pain Penalty on all skill checks even if they're immune to pain effects.\n\n- Reduce Target number of Essence Checks to defend against supernatural abilities and powers by 2.\n\n- Magic and psychic abilities used against you have an 85% chance of failure.\n\nTrue Faith can only be activated once per encounter.",
+      "grants": [
+        { "type": "rule", "ruleText": "Once per encounter, a 12-round aura: supernatural beings within 10 feet take a −3 Pain Penalty; your Essence Checks against supernatural powers are TN −2; magic and psychic powers against you fail 85% of the time." }
+      ]
     },
     {
       "id": "unshakeable",
       "name": "Unshakeable",
       "cost": 4,
       "maxRank": 1,
-      "description": "Surprise grants no Synergy Bonus against you."
+      "description": "Surprise grants no Synergy Bonus against you.",
+      "grants": [
+        { "type": "rule", "ruleText": "Surprise gives no Synergy Bonus against you." }
+      ]
     },
     {
       "id": "untouchable",
       "name": "Untouchable",
       "cost": 4,
       "maxRank": 3,
-      "description": "Close only counts to the people missing.\n\nEach rank grants 1 use per combat encounter. Spend a use when making a Dodge Skill Check to add your Acrobatics rank as a Synergy Bonus. A natural 1 on this check doesn’t botch."
+      "description": "Close only counts to the people missing.\n\nEach rank grants 1 use per combat encounter. Spend a use when making a Dodge Skill Check to add your Acrobatics rank as a Synergy Bonus. A natural 1 on this check doesn’t botch.",
+      "grants": [
+        { "type": "rule", "ruleText": "Once per combat per rank, add your Acrobatics rank to a Dodge check; a natural 1 on it doesn't botch.", "heldText": "Uses per combat: {rank}. Spend one to add your Acrobatics rank to a Dodge check; a natural 1 on it doesn't botch." }
+      ]
     },
     {
       "id": "wealthy",
       "name": "Wealthy",
       "cost": 6,
       "maxRank": 4,
-      "description": "Start with an additional 10,000 Ç. Gain an additional 2,000 Ç/per month for each rank."
+      "description": "Start with an additional 10,000 Ç. Gain an additional 2,000 Ç/per month for each rank.",
+      "grants": [
+        { "type": "rule", "ruleText": "+Ç10,000 to start." },
+        { "type": "rule", "ruleText": "+Ç2,000 a month per rank.", "heldText": "+Ç{v} a month.", "byRank": ["2,000", "4,000", "6,000", "8,000"] }
+      ]
     }
   ],
   /* DISADVANTAGES -- the mirror of advantages. `pointsGranted` is CP GRANTED per
@@ -1590,42 +1764,63 @@ window.SHADOWS_DATA = {
       "name": "Addiction",
       "pointsGranted": 3,
       "maxRank": 3,
-      "description": "You have an addiction to a substance of your choice. Each rank upgrades the severity of the addiction, how long you can go without your addiction, and the withdrawal effects should you fail to get a fix in time.\n\n- Rank 1 — Example: Minor. Cigarettes, chewing tobacco · Addiction timeline: 2 days · Withdrawal Effects: Target Number of WILL and COOL Essence checks are increased by 1\n\n- Rank 2 — Example: Moderate. Hard alcoholic, Ketamine · Addiction timeline: 18 hours · Withdrawal Effects: Rank 1 effects and Pain Level +1 for 1 week or until next fix.\n\n- Rank 3 — Example: Major. Heroin, Cocaine · Addiction timeline: 6 hours · Withdrawal Effects: Rank 1 effects and Pain Level +2 for 2 weeks or until next fix."
+      "description": "You have an addiction to a substance of your choice. Each rank upgrades the severity of the addiction, how long you can go without your addiction, and the withdrawal effects should you fail to get a fix in time.\n\n- Rank 1 — Example: Minor. Cigarettes, chewing tobacco · Addiction timeline: 2 days · Withdrawal Effects: Target Number of WILL and COOL Essence checks are increased by 1\n\n- Rank 2 — Example: Moderate. Hard alcoholic, Ketamine · Addiction timeline: 18 hours · Withdrawal Effects: Rank 1 effects and Pain Level +1 for 1 week or until next fix.\n\n- Rank 3 — Example: Major. Heroin, Cocaine · Addiction timeline: 6 hours · Withdrawal Effects: Rank 1 effects and Pain Level +2 for 2 weeks or until next fix.",
+      "grants": [
+        { "type": "rule", "ruleText": "You can go 2 days without (rank 1), 18 hours (2) or 6 hours (3). Withdrawal: WILL and COOL Essence TN +1, and Pain Level +1 for a week (rank 2) or +2 for two weeks (3), until your next fix.", "heldText": "{v}", "byRank": ["Go 2 days without it, or withdrawal: WILL and COOL Essence TN +1 until your next fix.", "Go 18 hours without it, or withdrawal: WILL and COOL Essence TN +1, and Pain Level +1 for a week or until your next fix.", "Go 6 hours without it, or withdrawal: WILL and COOL Essence TN +1, and Pain Level +2 for two weeks or until your next fix."] }
+      ]
     },
     {
       "id": "age",
       "name": "Age",
       "pointsGranted": 8,
       "maxRank": 1,
-      "description": "NYTE City doesn’t wait for you to grow up.\n\nYou're between the ages of 13 to 15. This carries with it social and physical limitations:\n\n- BOD Max: 5\n\n- REF Max: 6\n\n- MOB Max: 6\n\n- You're either dependent to someone or have emancipated yourself.\n\n- Access to certain areas is more heavily restricted by law.\n\n- You're more likely to be targeted for exploitation.\n\nCybernetics push past some of these limits, but Stats cap at human maximum due to your body not being done growing."
+      "description": "NYTE City doesn’t wait for you to grow up.\n\nYou're between the ages of 13 to 15. This carries with it social and physical limitations:\n\n- BOD Max: 5\n\n- REF Max: 6\n\n- MOB Max: 6\n\n- You're either dependent to someone or have emancipated yourself.\n\n- Access to certain areas is more heavily restricted by law.\n\n- You're more likely to be targeted for exploitation.\n\nCybernetics push past some of these limits, but Stats cap at human maximum due to your body not being done growing.",
+      "grants": [
+        { "type": "rule", "ruleText": "BOD max 5, REF max 6, MOB max 6." },
+        { "type": "rule", "ruleText": "You're 13 to 15: dependent or emancipated, kept out of places, and a target." }
+      ]
     },
     {
       "id": "berserker",
       "name": "Berserker",
       "pointsGranted": 7,
       "maxRank": 1,
-      "description": "This isn't just a short temper; there's a brewing storm of fury always within you. It is a challenge to keep it at bay especially if you're in the presence of violence.\n\nSanity is reduced by 15%.\n\nAt the start of combat, roll a Sanity check. Failure means you have lost your ability to keep the beast inside and the following effects are active.\n\n- You're consumed by the need to commit violence. You will attack anyone you consider to be a threat or anyone that attempts to stop you from drawing blood while berserk. This lasts until the end of the encounter and triggers only once per encounter.\n\n- You suffer a −2 penalty to all defensive actions during combat as you aren't concerned about taking injury or avoiding pain.\n\n- Hand to hand attacks with Martial Arts or Melee skills get a +2 to hit and +4 to damage.\n\n- Target Number for other COOL Essence checks increase by 1 while berserk.\n\n- You may attempt to break from berserk once per turn with a COOL Essence Check (Target 9, Threshold 3).\n\n- If you are about to attack an ally, you may make COOL Essence Check (Target 9, Threshold 2) to stop yourself. On a successful check you stop the attack but you're still berserk."
+      "description": "This isn't just a short temper; there's a brewing storm of fury always within you. It is a challenge to keep it at bay especially if you're in the presence of violence.\n\nSanity is reduced by 15%.\n\nAt the start of combat, roll a Sanity check. Failure means you have lost your ability to keep the beast inside and the following effects are active.\n\n- You're consumed by the need to commit violence. You will attack anyone you consider to be a threat or anyone that attempts to stop you from drawing blood while berserk. This lasts until the end of the encounter and triggers only once per encounter.\n\n- You suffer a −2 penalty to all defensive actions during combat as you aren't concerned about taking injury or avoiding pain.\n\n- Hand to hand attacks with Martial Arts or Melee skills get a +2 to hit and +4 to damage.\n\n- Target Number for other COOL Essence checks increase by 1 while berserk.\n\n- You may attempt to break from berserk once per turn with a COOL Essence Check (Target 9, Threshold 3).\n\n- If you are about to attack an ally, you may make COOL Essence Check (Target 9, Threshold 2) to stop yourself. On a successful check you stop the attack but you're still berserk.",
+      "grants": [
+        { "type": "rule", "ruleText": "Sanity −15%." },
+        { "type": "rule", "ruleText": "Start of combat: a Sanity Check. Fail, and you're berserk for the encounter: attack any threat, −2 on defense, +2 to hit and +4 damage hand to hand, COOL TN +1. Break it with COOL (Target 9, Threshold 3) each turn; stop an attack on an ally with COOL (Target 9, Threshold 2)." }
+      ]
     },
     {
       "id": "blood-lust",
       "name": "Blood Lust",
       "pointsGranted": 3,
       "maxRank": 1,
-      "description": "Everyone bleeds. Not everyone stops to watch.\n\nThe sight of blood is intoxicating. When you witness blood there is a wave of euphoria that is disorienting and suspends your sense of your surroundings briefly.\n\nSanity is reduced by 5%.\n\nThe first time blood is drawn during an encounter, roll a Sanity Check.\n\n- If successful: Blood Lust is negated until your next encounter\n\n- If the check fails: For the rest of the encounter, Combat Sense Checks fail automatically on a natural 2 or 3 on the die due to the distraction. Rolling a 1 is still a botch."
+      "description": "Everyone bleeds. Not everyone stops to watch.\n\nThe sight of blood is intoxicating. When you witness blood there is a wave of euphoria that is disorienting and suspends your sense of your surroundings briefly.\n\nSanity is reduced by 5%.\n\nThe first time blood is drawn during an encounter, roll a Sanity Check.\n\n- If successful: Blood Lust is negated until your next encounter\n\n- If the check fails: For the rest of the encounter, Combat Sense Checks fail automatically on a natural 2 or 3 on the die due to the distraction. Rolling a 1 is still a botch.",
+      "grants": [
+        { "type": "rule", "ruleText": "Sanity −5%." },
+        { "type": "rule", "ruleText": "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one. Fail, and Combat Sense Checks fail on a natural 2 or 3 for the rest of it (a 1 still botches)." }
+      ]
     },
     {
       "id": "combat-paralysis",
       "name": "Combat Paralysis",
       "pointsGranted": 8,
       "maxRank": 1,
-      "description": "Everyone's fast until it's real.\n\nYou do not roll initiative. You act last in every combat round. During the first round of combat, you cannot prepare actions; your body hasn’t caught up to the fight yet."
+      "description": "Everyone's fast until it's real.\n\nYou do not roll initiative. You act last in every combat round. During the first round of combat, you cannot prepare actions; your body hasn’t caught up to the fight yet.",
+      "grants": [
+        { "type": "rule", "ruleText": "No initiative roll: you act last every round, and can't prepare actions in the first." }
+      ]
     },
     {
       "id": "coward",
       "name": "Coward",
       "pointsGranted": 12,
       "maxRank": 1,
-      "description": "Courage is a check. This one has a target number.\n\nIn violent, dangerous, or threatening circumstances you have to resist the urge to run in a panic. This threat doesn't even need to be one that actively targets you.\n\nAt the start of combat make a COOL Essence Check (Target 9, Threshold 2) to keep from running in panic:\n\n- If Successful: you remain calm for the rest of the encounter.\n\n- If the Essence check fails: you run in terror, attempting to escape the situation. You cannot take any combat actions and if enemies are in range, they are allowed a single attack against you. You may use non-combat skills to aid in your escape attempts during this time. You may attempt to calm yourself at the end of your turn with a COOL Essence Check (Target 9, Threshold 2)."
+      "description": "Courage is a check. This one has a target number.\n\nIn violent, dangerous, or threatening circumstances you have to resist the urge to run in a panic. This threat doesn't even need to be one that actively targets you.\n\nAt the start of combat make a COOL Essence Check (Target 9, Threshold 2) to keep from running in panic:\n\n- If Successful: you remain calm for the rest of the encounter.\n\n- If the Essence check fails: you run in terror, attempting to escape the situation. You cannot take any combat actions and if enemies are in range, they are allowed a single attack against you. You may use non-combat skills to aid in your escape attempts during this time. You may attempt to calm yourself at the end of your turn with a COOL Essence Check (Target 9, Threshold 2).",
+      "grants": [
+        { "type": "rule", "ruleText": "Start of combat: COOL Essence Check (Target 9, Threshold 2). Fail, and you flee: no combat actions, and enemies in range get an attack on you. Try again at the end of each turn." }
+      ]
     },
     {
       "id": "cursed",
@@ -1640,14 +1835,20 @@ window.SHADOWS_DATA = {
       "name": "Cursed",
       "pointsGranted": 5,
       "maxRank": 3,
-      "description": "Curses don't expire. They mature.\n\nSomething supernatural marked you, and the mark took. Every curse is different, work out its exact effects with your GM. They range from cosmetic to life-altering: a disfigurement you can’t hide, or pain that flares every time you move and answers to no drug or spell. Each rank makes the curse more powerful and harder to conceal.\n\nSome curses can be lifted. If yours can, the method is tied to your history: A ritual of high complexity, a debt repaid, the death of whoever spoke your name. Decide with your GM whether this release exists and what it costs."
+      "description": "Curses don't expire. They mature.\n\nSomething supernatural marked you, and the mark took. Every curse is different, work out its exact effects with your GM. They range from cosmetic to life-altering: a disfigurement you can’t hide, or pain that flares every time you move and answers to no drug or spell. Each rank makes the curse more powerful and harder to conceal.\n\nSome curses can be lifted. If yours can, the method is tied to your history: A ritual of high complexity, a debt repaid, the death of whoever spoke your name. Decide with your GM whether this release exists and what it costs.",
+      "grants": [
+        { "type": "rule", "ruleText": "A supernatural curse worked out with your GM, stronger each rank." }
+      ]
     },
     {
       "id": "cyber-allergy",
       "name": "Cyber Allergy",
       "pointsGranted": 12,
       "maxRank": 1,
-      "description": "The body is hardware. Yours voids the warranty.\n\nYour body rejects all cybernetics and nano-tech. Implants cause rampant illness until removed. Nanites fail automatically, triggering an allergic reaction in the body’s tissues."
+      "description": "The body is hardware. Yours voids the warranty.\n\nYour body rejects all cybernetics and nano-tech. Implants cause rampant illness until removed. Nanites fail automatically, triggering an allergic reaction in the body’s tissues.",
+      "grants": [
+        { "type": "rule", "ruleText": "No cybernetics or nanotech: implants make you ill until they're out, and nanites fail." }
+      ]
     },
     {
       "id": "defect-flaw",
@@ -1671,28 +1872,41 @@ window.SHADOWS_DATA = {
       "name": "Defect/Flaw",
       "pointsGranted": 2,
       "maxRank": 4,
-      "description": "You have a specific flaw or defect that makes things more difficult for you. These can be things like being illiterate, suffering from dyslexia, or color blindness. Discuss what the defect is with your GM when you select this Disadvantage. Relevant skills this Disadvantage affects suffer a −2 penalty. Each Rank purchased for this Disadvantage applies to a different defect and skill(s).\n\nPossible defects could be:\n\n- Color Blindness (visual Awareness Checks)\n\n- Hard of hearing (audio Awareness Checks)\n\n- Uncontrollable Stutter (Persuasion Checks)\n\n- Shaky hands (Combat Skills like Handgun or Melee)\n\n- Vertigo (Acrobatics Checks)\n\n- Missing eye or lack of depth perception (combat skills using firearms or Pilot)"
+      "description": "You have a specific flaw or defect that makes things more difficult for you. These can be things like being illiterate, suffering from dyslexia, or color blindness. Discuss what the defect is with your GM when you select this Disadvantage. Relevant skills this Disadvantage affects suffer a −2 penalty. Each Rank purchased for this Disadvantage applies to a different defect and skill(s).\n\nPossible defects could be:\n\n- Color Blindness (visual Awareness Checks)\n\n- Hard of hearing (audio Awareness Checks)\n\n- Uncontrollable Stutter (Persuasion Checks)\n\n- Shaky hands (Combat Skills like Handgun or Melee)\n\n- Vertigo (Acrobatics Checks)\n\n- Missing eye or lack of depth perception (combat skills using firearms or Pilot)",
+      "grants": [
+        { "type": "rule", "ruleText": "−2 on the Skill your defect hurts; a different defect each rank.", "heldText": "−2 on {choice:skill}." }
+      ]
     },
     {
       "id": "danger-magnet",
       "name": "Danger Magnet",
       "pointsGranted": 3,
       "maxRank": 1,
-      "description": "Trouble has a type.\n\nThere is no shortage of threats in NYTE City. You attract the worst of them.\n\n- Mortal threats start 1 level higher than normal.\n\n- Each additional party member with Danger Magnet adds 1 more threat to the encounter."
+      "description": "Trouble has a type.\n\nThere is no shortage of threats in NYTE City. You attract the worst of them.\n\n- Mortal threats start 1 level higher than normal.\n\n- Each additional party member with Danger Magnet adds 1 more threat to the encounter.",
+      "grants": [
+        { "type": "rule", "ruleText": "Mortal threats start a level higher; each other party member with it adds a threat." }
+      ]
     },
     {
       "id": "distractable",
       "name": "Distractable",
       "pointsGranted": 3,
       "maxRank": 1,
-      "description": "You're easily distracted. With Awareness and Combat Sense Skill Checks you automatically fail if you roll a natural 2 or 3 on the die. Rolling a 1 is still a botch."
+      "description": "You're easily distracted. With Awareness and Combat Sense Skill Checks you automatically fail if you roll a natural 2 or 3 on the die. Rolling a 1 is still a botch.",
+      "grants": [
+        { "type": "rule", "ruleText": "Awareness and Combat Sense Checks fail on a natural 2 or 3 (a 1 still botches)." }
+      ]
     },
     {
       "id": "dwarf",
       "name": "Dwarf",
       "pointsGranted": 5,
       "maxRank": 1,
-      "description": "You're incredibly short. This affects certain physical attributes and skills.\n\n- BOD Max: 8\n\n- MOB Max: 3\n\n- Height Max: 3'6''\n\n- Easily Hidden: +3 Bonus to Stealth when trying to hide."
+      "description": "You're incredibly short. This affects certain physical attributes and skills.\n\n- BOD Max: 8\n\n- MOB Max: 3\n\n- Height Max: 3'6''\n\n- Easily Hidden: +3 Bonus to Stealth when trying to hide.",
+      "grants": [
+        { "type": "rule", "ruleText": "BOD max 8, MOB max 3." },
+        { "type": "rule", "ruleText": "+3 to Stealth when hiding. At most 3'6\" tall." }
+      ]
     },
     {
       "id": "enemies",
@@ -1707,7 +1921,10 @@ window.SHADOWS_DATA = {
       "name": "Enemies",
       "pointsGranted": 1,
       "maxRank": 4,
-      "description": "Everyone in NYTE City is someone's problem. You're several.\n\nEnemies are anyone that will try to hurt, capture, or kill you at the earliest opportunity. It's possible you don't even know that you've made these enemies as well. They may have valid reasons, they may not. Doesn't matter. Each Rank in Enemies increases the power, number, or influence of the enemies you have.\n\n- Rank 1: An individual despises you. They may want to attack you but they're not always able to do this or may not have a lot of resources at their disposal.\n\n- Rank 2: A small group of people who know you and will likely commit to violence if they encounter you.\n\n- Rank 3: An enemy at the agency level like the police or a gang who are always searching for you.\n\n- Rank 4: A powerful authority like a corporation who uses their resources to try to find you and they don't care who they hurt to make sure they're successful."
+      "description": "Everyone in NYTE City is someone's problem. You're several.\n\nEnemies are anyone that will try to hurt, capture, or kill you at the earliest opportunity. It's possible you don't even know that you've made these enemies as well. They may have valid reasons, they may not. Doesn't matter. Each Rank in Enemies increases the power, number, or influence of the enemies you have.\n\n- Rank 1: An individual despises you. They may want to attack you but they're not always able to do this or may not have a lot of resources at their disposal.\n\n- Rank 2: A small group of people who know you and will likely commit to violence if they encounter you.\n\n- Rank 3: An enemy at the agency level like the police or a gang who are always searching for you.\n\n- Rank 4: A powerful authority like a corporation who uses their resources to try to find you and they don't care who they hurt to make sure they're successful.",
+      "grants": [
+        { "type": "rule", "ruleText": "Someone wants you dead: one person (rank 1), a small group (2), an agency or gang (3), a corporation (4).", "heldText": "Wants you dead: {v}.", "byRank": ["one person", "a small group", "an agency or gang", "a corporation"] }
+      ]
     },
     {
       "id": "fanatic",
@@ -1722,42 +1939,64 @@ window.SHADOWS_DATA = {
       "name": "Fanatic",
       "pointsGranted": 4,
       "maxRank": 1,
-      "description": "Fanaticism is a powerful obsession. This describes a psychological rigidity that is nearly impossible to break and is rigorously defended. You decide what the character is fanatical about and discuss it with the GM. It could be a religious belief, an ideal, or personal code of your own making that shapes the way you live your life. Whoever challenges your fanatical beliefs will likely be met with hostility or possibly even violence and it doesn't matter if this person is a friend or loved one.\n\n- Once per encounter, you may make a Sanity Check to stop yourself from overreacting.\n\n- Sanity is reduced by 15%.\n\n- Target Number of all EMP Essence Checks are increased by 1."
+      "description": "Fanaticism is a powerful obsession. This describes a psychological rigidity that is nearly impossible to break and is rigorously defended. You decide what the character is fanatical about and discuss it with the GM. It could be a religious belief, an ideal, or personal code of your own making that shapes the way you live your life. Whoever challenges your fanatical beliefs will likely be met with hostility or possibly even violence and it doesn't matter if this person is a friend or loved one.\n\n- Once per encounter, you may make a Sanity Check to stop yourself from overreacting.\n\n- Sanity is reduced by 15%.\n\n- Target Number of all EMP Essence Checks are increased by 1.",
+      "grants": [
+        { "type": "rule", "ruleText": "Sanity −15%." },
+        { "type": "rule", "ruleText": "EMP Essence Checks: TN +1. Once per encounter, a Sanity Check keeps you from lashing out at whoever challenges your belief." }
+      ]
     },
     {
       "id": "faultlessly-honest",
       "name": "Faultlessly Honest",
       "pointsGranted": 10,
       "maxRank": 1,
-      "description": "Lies are currency. You’re broke.\n\nAnytime you speak you will do your level best to speak the truth. Choosing not to speak is an answer as well. If you attempt to lie, make a MAG Essence check (Target 10, Threshold 3).\n\n- If successful: you can tell your lie, but your Sanity is reduced by 30% for the next 24 hours.\n\n- If the check fails: you cannot tell the lie."
+      "description": "Lies are currency. You’re broke.\n\nAnytime you speak you will do your level best to speak the truth. Choosing not to speak is an answer as well. If you attempt to lie, make a MAG Essence check (Target 10, Threshold 3).\n\n- If successful: you can tell your lie, but your Sanity is reduced by 30% for the next 24 hours.\n\n- If the check fails: you cannot tell the lie.",
+      "grants": [
+        { "type": "rule", "ruleText": "To lie: MAG Essence Check (Target 10, Threshold 3). Pass, and the lie costs 30% Sanity for 24 hours; fail, and you can't." }
+      ]
     },
     {
       "id": "giant",
       "name": "Giant",
       "pointsGranted": 5,
       "maxRank": 1,
-      "description": "You’re bigger than the city plans for. Doors, crowds, firing lines: none of them were measured with you in mind.\n\n- BOD Max: 11\n\n- REF Max: 5\n\n- MOB Max: 8\n\n- Minimum Height: 6'10''\n\n- Easy Target: Opponents gain +1 Accuracy against you with any attack, even when you’re behind cover.\n\n- Heavy Weight: Incoming Melee and Martial Arts damage you receive is reduced by 4 and you gain +2 Automatic Hits for any BOD Essence Checks when grappling smaller opponents."
+      "description": "You’re bigger than the city plans for. Doors, crowds, firing lines: none of them were measured with you in mind.\n\n- BOD Max: 11\n\n- REF Max: 5\n\n- MOB Max: 8\n\n- Minimum Height: 6'10''\n\n- Easy Target: Opponents gain +1 Accuracy against you with any attack, even when you’re behind cover.\n\n- Heavy Weight: Incoming Melee and Martial Arts damage you receive is reduced by 4 and you gain +2 Automatic Hits for any BOD Essence Checks when grappling smaller opponents.",
+      "grants": [
+        { "type": "rule", "ruleText": "BOD max 11, REF max 5, MOB max 8." },
+        { "type": "rule", "ruleText": "Melee and Martial Arts damage to you −4." },
+        { "type": "rule", "ruleText": "Attackers get +1 Accuracy against you, even behind cover. +2 automatic hits on BOD Essence Checks grappling someone smaller. At least 6'10\"." }
+      ]
     },
     {
       "id": "gullible",
       "name": "Gullible",
       "pointsGranted": 5,
       "maxRank": 1,
-      "description": "Lies work on you. Any Intuition Skill Check to detect deceit fails automatically on a natural 2 or 3. A 1 is still a botch.\n\nThis Disadvantage doesn't apply if the lie being told is outrageously preposterous."
+      "description": "Lies work on you. Any Intuition Skill Check to detect deceit fails automatically on a natural 2 or 3. A 1 is still a botch.\n\nThis Disadvantage doesn't apply if the lie being told is outrageously preposterous.",
+      "grants": [
+        { "type": "rule", "ruleText": "Intuition checks to spot a lie fail on a natural 2 or 3 (a 1 still botches), unless the lie is preposterous." }
+      ]
     },
     {
       "id": "hallucinations",
       "name": "Hallucinations",
       "pointsGranted": 4,
       "maxRank": 1,
-      "description": "Hallucinations are sporadic and unpredictable. Your Sanity is reduced by 25%. Failed Sanity Checks adds a hallucination as a condition you suffer. While hallucinating:\n\n- Awareness and combat sense checks fail automatically\n\n- Telling friend from foe requires an EMP Essence Check Target 10, Threshold 1. Fail, and everyone looks the same.\n\nHallucinations last 1d4 rounds. What you see might even be pleasant. That was never the dangerous part."
+      "description": "Hallucinations are sporadic and unpredictable. Your Sanity is reduced by 25%. Failed Sanity Checks adds a hallucination as a condition you suffer. While hallucinating:\n\n- Awareness and combat sense checks fail automatically\n\n- Telling friend from foe requires an EMP Essence Check Target 10, Threshold 1. Fail, and everyone looks the same.\n\nHallucinations last 1d4 rounds. What you see might even be pleasant. That was never the dangerous part.",
+      "grants": [
+        { "type": "rule", "ruleText": "Sanity −25%." },
+        { "type": "rule", "ruleText": "A failed Sanity Check brings a hallucination for 1d4 rounds: Awareness and Combat Sense checks fail, and telling friend from foe takes an EMP Essence Check (Target 10, Threshold 1)." }
+      ]
     },
     {
       "id": "hemophiliac",
       "name": "Hemophiliac",
       "pointsGranted": 10,
       "maxRank": 1,
-      "description": "NYTE City will make you bleed. This makes it count.\n\nAny damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a Medical Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.\n\nUsing Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a Medical Skill Check."
+      "description": "NYTE City will make you bleed. This makes it count.\n\nAny damage that causes bleeding is potentially lethal because your blood doesn't clot. After taking damage, make a Medical Skill Check (Difficulty 18) to stop the bleeding. Succeed and the hemorrhaging stops, but you skip your next turn patching yourself together. Fail and you continue to bleed uncontrollably. You remain active for a number of rounds equal to your BOD before you pass out from blood loss. You may attempt to stop the hemorrhage at the end of each of your turns.\n\nUsing Nano-surgeons, SpeedHeal, or medical tech also stops the bleeding instead of a Medical Skill Check.",
+      "grants": [
+        { "type": "rule", "ruleText": "After bleeding damage, a Medical check at 18 stops it and costs your next turn. Fail, and you pass out after rounds equal to your BOD; try again each turn. Medical tech stops it too." }
+      ]
     },
     {
       "id": "minor-insanity",
@@ -1772,14 +2011,21 @@ window.SHADOWS_DATA = {
       "name": "Minor Insanity",
       "pointsGranted": 1,
       "maxRank": 5,
-      "description": "Your grip on the world has cracks in it. Each Rank reduces your Sanity by 5% and expresses a trait you carry: paranoia, a bad temper, compulsive lying, sadistic streaks, impulsiveness. Choose your traits with your GM.\n\nYou may spend IP between sessions to buy out this Disadvantage."
+      "description": "Your grip on the world has cracks in it. Each Rank reduces your Sanity by 5% and expresses a trait you carry: paranoia, a bad temper, compulsive lying, sadistic streaks, impulsiveness. Choose your traits with your GM.\n\nYou may spend IP between sessions to buy out this Disadvantage.",
+      "grants": [
+        { "type": "rule", "ruleText": "Sanity −5% per rank.", "heldText": "Sanity −{v}%.", "byRank": [5, 10, 15, 20, 25] },
+        { "type": "rule", "ruleText": "A trait per rank (paranoia, a temper, lying…), chosen with your GM. IP buys it off between sessions." }
+      ]
     },
     {
       "id": "monster-magnet",
       "name": "Monster Magnet",
       "pointsGranted": 4,
       "maxRank": 1,
-      "description": "The supernatural doesn’t find everyone. It finds you.\n\nThe supernatural world is violent. You know this personally and end up on the business end of it more than most.\n\n- Supernatural threats start 1 level higher than normal.\n\n- Each additional party member with Monster magnet adds 1 more threat to the encounter."
+      "description": "The supernatural doesn’t find everyone. It finds you.\n\nThe supernatural world is violent. You know this personally and end up on the business end of it more than most.\n\n- Supernatural threats start 1 level higher than normal.\n\n- Each additional party member with Monster magnet adds 1 more threat to the encounter.",
+      "grants": [
+        { "type": "rule", "ruleText": "Supernatural threats start a level higher; each other party member with it adds a threat." }
+      ]
     },
     {
       "id": "notorious",
@@ -1794,7 +2040,10 @@ window.SHADOWS_DATA = {
       "name": "Notorious",
       "pointsGranted": 1,
       "maxRank": 3,
-      "description": "Your name arrives before you do. It doesn’t say nice things.\n\nYou have a reputation, and it isn’t good. What earned it is between you and your GM.\n\nStrangers who know you only by reputation make everything harder:\n\n- Persuasion Checks are 1 Difficulty Level higher\n\n- Relevant MAG Essence Checks gain +1 Threshold\n\nEach Rank beyond the first adds another +1 to both effects.\n\nNotorious does not affect those who know you well or get to know you."
+      "description": "Your name arrives before you do. It doesn’t say nice things.\n\nYou have a reputation, and it isn’t good. What earned it is between you and your GM.\n\nStrangers who know you only by reputation make everything harder:\n\n- Persuasion Checks are 1 Difficulty Level higher\n\n- Relevant MAG Essence Checks gain +1 Threshold\n\nEach Rank beyond the first adds another +1 to both effects.\n\nNotorious does not affect those who know you well or get to know you.",
+      "grants": [
+        { "type": "rule", "ruleText": "With strangers: Persuasion one Difficulty Level harder and MAG Essence Threshold +1, each +1 more per rank after the first.", "heldText": "With strangers: Persuasion Difficulty Level +{rank}, and MAG Essence Threshold +{rank}." }
+      ]
     },
     {
       "id": "pact",
@@ -1809,7 +2058,10 @@ window.SHADOWS_DATA = {
       "name": "Pact",
       "pointsGranted": 15,
       "maxRank": 1,
-      "description": "Some deals get made before you know you’re at the table.\n\nThis is a nearly unbreakable bond with a supernatural being or a mystical oath you've taken. You were tricked or coerced into it. The terms force you against your own nature. Work out the details, and the conditions for release, with your GM. Once the conditions for release are met, you may spend IP to remove this Disadvantage.\n\nIf you choose to go against your pact you have the following consequences until you again follow your pact:\n\n- Lose the ability to use Luck.\n\n- All Essence checks have a +1 to Threshold."
+      "description": "Some deals get made before you know you’re at the table.\n\nThis is a nearly unbreakable bond with a supernatural being or a mystical oath you've taken. You were tricked or coerced into it. The terms force you against your own nature. Work out the details, and the conditions for release, with your GM. Once the conditions for release are met, you may spend IP to remove this Disadvantage.\n\nIf you choose to go against your pact you have the following consequences until you again follow your pact:\n\n- Lose the ability to use Luck.\n\n- All Essence checks have a +1 to Threshold.",
+      "grants": [
+        { "type": "rule", "ruleText": "A supernatural bond on your GM's terms. Go against it, and until you keep it again: no LUCK, and every Essence Check is Threshold +1." }
+      ]
     },
     {
       "id": "pain-sensitive",
@@ -1824,28 +2076,41 @@ window.SHADOWS_DATA = {
       "name": "Passive",
       "pointsGranted": 4,
       "maxRank": 1,
-      "description": "You will fight only if forced into it. At the start of combat, during initiative, make an EMP Essence check (Target 9, Threshold 2). On a failed check you will refuse to fight during combat. You may repeat this check at the end of each of your turns."
+      "description": "You will fight only if forced into it. At the start of combat, during initiative, make an EMP Essence check (Target 9, Threshold 2). On a failed check you will refuse to fight during combat. You may repeat this check at the end of each of your turns.",
+      "grants": [
+        { "type": "rule", "ruleText": "Start of combat: EMP Essence Check (Target 9, Threshold 2), or you refuse to fight. Try again at the end of each turn." }
+      ]
     },
     {
       "id": "poverty",
       "name": "Poverty",
       "pointsGranted": 4,
       "maxRank": 3,
-      "description": "You have to constantly replenish your cash reserves. While you can survive off your universal income everything else is nearly out of reach.\n\n- You have at least Ç75,000 debt to a specific corporation/entity who will hassle you for payment.\n\n- The legal purchase of weapons, armor, and vehicles is prohibited until you have cleared the debt you owe.\n\n- You may still loot gear, or purchase gear from gray or black markets.\n\n- Half of the Çredits you receive from the work you do are automatically withdrawn and counted against your debt.\n\nEach Rank in Poverty raises your outstanding debts by Ç20,000 each."
+      "description": "You have to constantly replenish your cash reserves. While you can survive off your universal income everything else is nearly out of reach.\n\n- You have at least Ç75,000 debt to a specific corporation/entity who will hassle you for payment.\n\n- The legal purchase of weapons, armor, and vehicles is prohibited until you have cleared the debt you owe.\n\n- You may still loot gear, or purchase gear from gray or black markets.\n\n- Half of the Çredits you receive from the work you do are automatically withdrawn and counted against your debt.\n\nEach Rank in Poverty raises your outstanding debts by Ç20,000 each.",
+      "grants": [
+        { "type": "rule", "ruleText": "At least Ç75,000 in debt, Ç20,000 more each rank. No legal weapons, armor or vehicles until it's paid, and half of what you earn goes to it." }
+      ]
     },
     {
       "id": "social-stigma",
       "name": "Social Stigma",
       "pointsGranted": 1,
       "maxRank": 1,
-      "description": "People perceive you in a negative light. It could be the way you look, the way you dress, or the way you talk. Persuasion checks fail automatically on a natural 2 or 3. Rolling a 1 is still a botch."
+      "description": "People perceive you in a negative light. It could be the way you look, the way you dress, or the way you talk. Persuasion checks fail automatically on a natural 2 or 3. Rolling a 1 is still a botch.",
+      "grants": [
+        { "type": "rule", "ruleText": "Persuasion checks fail on a natural 2 or 3 (a 1 still botches)." }
+      ]
     },
     {
       "id": "terminal-disease",
       "name": "Terminal Disease",
       "pointsGranted": 7,
       "maxRank": 1,
-      "description": "Everyone in NYTE City is dying. You’ve got a schedule.\n\nThe disease is terminal. How much time you have left is a matter of when, not if. Maybe as little as six months from the start of play.\n\n- You are always at Pain Level 1. This stacks with Pain Level increases from lost Health Levels.\n\n- Physical Essence Checks (BOD, REF, MOB) have a +1 to Target number.\n\n- Unless you cure your illness, you will die within 5+1d4 months."
+      "description": "Everyone in NYTE City is dying. You’ve got a schedule.\n\nThe disease is terminal. How much time you have left is a matter of when, not if. Maybe as little as six months from the start of play.\n\n- You are always at Pain Level 1. This stacks with Pain Level increases from lost Health Levels.\n\n- Physical Essence Checks (BOD, REF, MOB) have a +1 to Target number.\n\n- Unless you cure your illness, you will die within 5+1d4 months.",
+      "grants": [
+        { "type": "rule", "ruleText": "Always at Pain Level 1, on top of lost Health Levels." },
+        { "type": "rule", "ruleText": "BOD, REF and MOB Essence Checks: TN +1. Without a cure, death in 5 + 1d4 months." }
+      ]
     },
     {
       "id": "unlucky",
@@ -1863,7 +2128,10 @@ window.SHADOWS_DATA = {
       "name": "Weak Willed",
       "pointsGranted": 6,
       "maxRank": 1,
-      "description": "WILL Essence checks have a +1 to target number."
+      "description": "WILL Essence checks have a +1 to target number.",
+      "grants": [
+        { "type": "rule", "ruleText": "WILL Essence Checks: TN +1." }
+      ]
     }
   ],
   /* ARCHETYPES -- 5 entries, all sharing one generic six-block structure
