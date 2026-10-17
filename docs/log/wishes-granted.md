@@ -889,7 +889,7 @@ W65, since both touch the Luck row's text. It is a player-visible change, so it
 needs a CHANGELOG line and a patch bump.
 *Built as sheet-wishlist P7 (2026-10-14).*
 
-**W95 — Expert mode: creation that fits on one screen.** *Ken, from Brogan · → Decision 232, app 0.48.0 (P13, PR #…): folds on Archetype, Skills and CP; compact steppers dropped (PQ3)*
+**W95 — Expert mode: creation that fits on one screen.** *Ken, from Brogan · → Decision 232, app 0.48.0 (P13, PR #209): folds on Archetype, Skills and CP; compact steppers dropped (PQ3)*
 A returning player scrolls past every Skill, Advantage and Disadvantage's full
 text to find the one they want. An **Expert mode** toggle collapses each to
 its name, cost and controls, with the text a tap away, so more fits at

@@ -4699,7 +4699,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** removing a taken General Major from a saved file; the General list for everyone; a `repeatable` flag (Decision 135); Honed through `spendIP` (`ipCost` refuses WILL and TOL); Withering's levels for Steadied (Ken); capping WILL, TOL and LUCK at 10 (Ken).
      - **Replaces:** Decision 29 in part (the Minor repeat floor). Decision 199 in part (a Werewolf's Majors are offered alone). Closes F9.
      - **Revisit if:** another archetype's Majors are written, or Withering's levels count as lost.
-     - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #…. Log 2026-10-14 (P6).
+     - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #209. Log 2026-10-14 (P6).
      → **Superseded in part by Decision 227** — Talented's new-Advantage offer refuses a `creationOnly` one (Long-Lived), through the rule the IP buy shares.
 
 218. **LUCK bought with CP counts against the Max Character Point Boost, and "Max Boost" is called that.**
@@ -4718,7 +4718,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a type stored on the upgrade entry (readers drop non-string upgrades; it needs a schema bump); halving after PROT and RES (Q2); halving Massive; a "spell" damage type; MD ratings (Q6).
      - **Replaces:** Decision 99 in part (Resistance applied; F23 closed). Decision 100 in part (Resistance is no longer one repeatable upgrade). Decision 104 in part (AP on a spell pierces Natural Armor; F25 closed).
      - **Revisit if:** the book names a cold damage type, or rules whether Resistance answers Elemental magic (F42), or playtests find halving first too strong.
-     - **Built:** app 0.44.0, game data 0.37 (unreleased, no bump), no schema bump, PR #…. Log 2026-10-15 (P8a).
+     - **Built:** app 0.44.0, game data 0.37 (unreleased, no bump), no schema bump, PR #209. Log 2026-10-15 (P8a).
 
 220. **Healing counts from 0 HP unless the character keeps damage past zero, and Dying at a Reset is the check plus a mark per ticking source.**
      *2026-10-15 · Ken + Deighton + Claude · Touches: heal, healStep, damage past zero, pastZero, houseRules, keepDamagePastZero, Admin, Rest, Focused Healing, Nanomed Kit, Heal 1, Heal 5, hlState, resolveReset, dyingCheck, whileDying, resolveEncounterReset, participantDamage, Dying, character schema 0.23, F24, F36, W102*
@@ -4845,7 +4845,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** the per-rank line with the total in brackets; Long-Lived's unreached Milestones marked "not yet"; tags for the rank an IP Raise would reach; compact steppers (no height saved); Expert mode on the sheet; "Max Boost +N" (218 renamed it).
      - **Replaces:** Decision 231 in part (a held computed tag no longer reads its general template; the tags reach four more places). Extends 218.
      - **Revisit if:** a computed type's total isn't `perRank` × rank; a player misreads a held total as per-rank; Expert mode is wanted on the sheet.
-     - **Built:** app 0.48.0 (unreleased), no data or schema bump, PR #… Log 2026-10-17 (P13).
+     - **Built:** app 0.48.0 (unreleased), no data or schema bump, PR #209 Log 2026-10-17 (P13).
 
 ## 5. Open Flags
 
