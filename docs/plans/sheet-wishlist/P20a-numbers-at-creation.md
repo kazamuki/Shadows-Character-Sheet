@@ -11,7 +11,7 @@
 
 **Not here: P20b** ([`P20b-numbers-in-play.md`](P20b-numbers-in-play.md)) takes the numbers that move in play: Pain (Terminal Disease, Pain Tolerance), healing (Rapid Healing) and Take a hit (Scrapper, Giant, Thick Skull). They share no code with P20a. Split this way, each PR has one reviewer's worth of rules in it.
 
-**Status:** **drafted 2026-10-17 by Claude (Opus)**, P19's reviewer. Pre-flighted against `main` at `2d38dc9` (#213 merged; app 0.49.0, data 0.41). **PQ1–PQ9 open.**
+**Status:** **drafted 2026-10-17 by Claude (Opus)**, P19's reviewer. Pre-flighted against `main` at `2d38dc9` (#213 merged; app 0.49.0, data 0.41). **Ken answered PQ1–PQ9 on 2026-10-17: the defaults, except PQ2:** a cap binds only during character creation; in play a stat may pass it with IP, gear or Admin.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -47,7 +47,7 @@ When P20a is merged:
 
 1. **A Sanity cut lowers max SAN.** EMP 6 with Berserker: max SAN 45, not 60. Minor Insanity at rank 3: −15. The vitals card, print, the wizard's rail and review, and the SAN breakdown all read the cut max. The breakdown names each cut ("EMP 6 × 10 = 60% − 15 Berserker → 45%").
 2. **Arcane Fortitude adds 2 to TOL.** An Arcanist who took it reads TOL 3 where they read 1, and every reader of TOL follows. The TOL breakdown names it.
-3. **A trait's stat maximum binds.** Dwarf held: MOB stops at 3 in the wizard, CP boosts, IP raises and Honed. The stepper's + is disabled at the cap, and the row says why ("Max 3 (Dwarf)"). Giant: BOD can reach 11. With none held, every cap is `statRules.max` exactly as today.
+3. **A trait's stat maximum binds at creation.** Dwarf held: MOB stops at 3 in the wizard's Stats step, its Focus and bonus allocators, and CP boosts. The stepper's + is disabled at the cap, and the row says why ("Max 3 (Dwarf)"). Giant: BOD can reach 11. **Once locked, a lower trait cap no longer binds** (PQ2): IP raises, Honed, gear and Admin can pass it, and the in-play cap is `statRules.max`, lifted by Giant's 11. With none held, every cap is `statRules.max` exactly as today.
 4. **Taking a cap you're already past is caught.** MOB 5, then Dwarf on the CP step: the card says so, and the lock is refused until MOB is 3 or lower, with an error that names the stat and the Stats step. Nothing lowers a stat on its own.
 5. **Dwarf and Giant can't both be held.** Holding one locks the other on the CP step and in every IP list, with optionLock's existing reason.
 6. **Wealthy starts you Ç10,000 richer.** Held at lock: starting Çredits = the roll × the multiplier + 10,000, in the wizard's review line and on the sheet.
@@ -67,7 +67,7 @@ When P20a is merged:
 | Id | Question | Default |
 |---|---|---|
 | PQ1 | **Age's MOB cap.** Deighton would drop it ("kids are freaking fast", W130). The book still says MOB Max 6. | **Build the book's three caps** (BOD 5, REF 6, MOB 6). If Deighton drops MOB, that's a one-line data edit and a data bump. *Alternative:* leave MOB out now and flag Age (F-number) until he rules. |
-| PQ2 | **Where a cap binds.** The sign-off says "cap them in the wizard"; Ken: "a GM could override this, but that could be after creation, I think?" | **Creation and play:** the wizard, CP boosts, IP raises and Honed all stop at the cap. **Admin** (the GM's override) can set a stat past it, as it can any number. *Alternative:* the wizard only, with IP free to pass it. |
+| PQ2 | **Where a cap binds.** The sign-off says "cap them in the wizard"; Ken: "a GM could override this, but that could be after creation, I think?" | ~~Creation and play~~. **Ken, 2026-10-17: "The cap binds only during character creation. Once you are in the game, you are free to surpass it with IP (or gear or admin updates)."** So the wizard and CP boosts stop at a trait's cap. Once locked, IP, Honed, gear and Admin don't. A lift above `statRules.max` (Giant's BOD 11) still counts in play, or a Giant could never raise BOD to 11 with IP. |
 | PQ3 | **A cap and an archetype's Focus points**, which the wizard says "can push a stat past 10". | **A trait's cap still binds:** Dwarf's MOB 3 is a body, and Focus can push only past the *human* max. Giant's BOD 11 is the ceiling a Giant's Focus reaches. *Alternative:* Focus ignores trait caps as it ignores 10. |
 | PQ4 | **Two caps on one stat** (Age's BOD 5 and Giant's BOD 11; Age and Dwarf). | **The lowest cap wins.** Giant's 11 "lifts the cap" only above `statRules.max`, never above another trait's lower cap. No pair is excluded except Dwarf and Giant. *Alternative:* ask Deighton for an Age/Giant exclusion too. |
 | PQ5 | **Taking a cap you're already past** (MOB 5, then Dwarf). | **Allowed, and the lock is refused** with an error naming the stat, the cap, the trait and the Stats step. The CP card shows the same line. The engine never lowers a stat or refunds points. *Alternative:* refuse the trait until the stat is lowered, which makes the player leave the CP step first. |
@@ -81,11 +81,11 @@ When P20a is merged:
 ```
 N. **A trait's cut or bonus to a derived stat, its cap on a Basic Stat, and Wealthy's starting Çredits are computed: max SAN, TOL, the stats a character can buy, and the lock's Çredits follow them.**
      *2026-10-1x · Ken + Claude · Touches: derived, derivedParts, sanState, statMax, statRules.max, grants derivedMod, statMax, startingCredits, buildExport, optionLock, excludes, Blood Lust, Berserker, Fanatic, Hallucinations, Minor Insanity, Arcane Fortitude, Age, Dwarf, Giant, Wealthy, Stats step, Character Points step, Honed, ipCost, effectTags*
-     - **Decided:** `derivedMod` ({ stat, amount | perRank }) and `statMax` ({ stat, max }) are computed `grants` types, read from Advantages, Disadvantages, taken Majors, specializations and archetype powers. A derived stat's mods apply after its floor and cap; max SAN never drops below 1. `Engine.statMax(ch, id)` is the one cap: the lowest trait cap, else `statRules.max`, and Giant's 11 is a cap like any other. It binds the wizard, CP boosts, IP and Honed; Admin can pass it. A cap already passed refuses the lock. Wealthy's `startingCredits` row adds at lock only. Dwarf and Giant exclude each other.
+     - **Decided:** `derivedMod` ({ stat, amount | perRank }) and `statMax` ({ stat, max }) are computed `grants` types, read from Advantages, Disadvantages, taken Majors, specializations and archetype powers. A derived stat's mods apply after its floor and cap; max SAN never drops below 1. `Engine.statMax(ch, id)` is the one cap. Before the lock it's the lowest trait cap, else `statRules.max`; after it, `statRules.max` lifted by any trait cap above it (Giant's 11). So a lower trait cap binds creation only (Ken), and IP, Honed, gear and Admin pass it in play. A cap already passed at creation refuses the lock. Wealthy's `startingCredits` row adds at lock only. Dwarf and Giant exclude each other.
      - **Why:** The sign-off, unanimous: SAN cuts as points off the max, stat caps in the wizard, Ç10,000 once. A number the sheet shows and doesn't apply is the drift 231 ends.
-     - **Rejected:** (from PQ1–PQ9's alternatives, as answered)
+     - **Rejected:** a trait's cap binding in play too (Ken: once in the game, IP, gear or Admin may pass it); cutting SAN before the cap of 95 (a cut would do nothing at EMP 10); a SAN floor of 10 after cuts (the cut would vanish at low EMP); Focus points ignoring a trait's cap; the highest of two caps winning; refusing a trait whose cap you're past (the lock refuses instead); Wealthy's Ç10,000 when bought in play ("start with").
      - **Replaces:** Decision 231 in part (these entries' effects become computed rows). Extends 77 (the first real `excludes` pair) and 135.
-     - **Revisit if:** Deighton drops Age's MOB cap (W130); a cap must bind only at creation; Wealthy's monthly pay becomes a Milestone payday (W129).
+     - **Revisit if:** Deighton drops Age's MOB cap (W130); a GM needs a trait's cap to hold in play; Wealthy's monthly pay becomes a Milestone payday (W129).
      - **Built:** app 0.50.0, game data 0.42, no schema bump, PR #…. Log 2026-10-1x (P20a).
 ```
 
@@ -104,7 +104,7 @@ Answered by grepping readers (`derived(`, `.SAN`, `.TOL`, `statRules.max`, `opti
 | IP restores SAN "never past the maximum" (Decision 227) | ~2388, ~2835 | Follows on its own: it reads `sanState`. Pin it: Minor Insanity bought off a rank raises the max by 5. |
 | Cascade's TOL deltas, starting spells (counted from TOL), a panel whose max is TOL | ~3059–3083, ~3317, ~3368 | Follow on their own. Pin one: Arcane Fortitude raises the starting-spells count by 2. |
 | `derivedBreakdownStr` rebuilds the number from the data and calls any difference "bonus" (TOL) or "floor / cap" (SAN) | `sheet.js` ~148 | Reads `derivedParts` and names each ("+2 Arcane Fortitude", "−15 Berserker"). A SAN cut no longer reads as "(floor 10 / cap 95)". |
-| `statRules.max` read directly | `engine.js` ~781, ~2332, ~2747, ~4834 | Each reads `Engine.statMax(ch, id)`. The refusal text names the trait ("Max 3 (Dwarf).") through a template, not a typed string. |
+| `statRules.max` read directly | `engine.js` ~781, ~2332, ~2747, ~4834 | Each reads `Engine.statMax(ch, id)`. At creation (the CP boost ~781, `spendable` ~4834) that's the trait cap, and the refusal names it ("Max 3 (Dwarf).") through a template. In play (`ipCost` ~2332, Honed ~2747) it's `statRules.max` or a lift above it (PQ2). |
 | The wizard's stepper and allocators read `D.statRules.max` | `wizard.js` ~248, ~335, ~362, ~368, ~1122 | Read `Engine.statMax`. `renderStats` shows "Max N (Trait)" on a capped row (PQ3, PQ4). The Focus line's "past 10" stays (it's the human max), and a capped stat stops there. |
 | `validate` has no stat-cap check | ~5040–5100 | An **error** for a Basic Stat above its `statMax` (PQ5), naming the stat, cap, trait and the Stats step. Template in `appCopy`. |
 | No entry has `excludes` | data | `dwarf.excludes = ["giant"]` (the lock is symmetric, so Giant needs no entry). Its first real use. The synthetic fixture tests stay. STATE §2's "No entry declares `excludes`" is rewritten. |
@@ -128,7 +128,7 @@ Answered by grepping readers (`derived(`, `.SAN`, `.TOL`, `statRules.max`, `opti
 
 **Engine readers** (total):
 ```
-Engine.statMax(ch, id)       → { max, by: name|null }   lowest held cap, else { max: statRules.max, by: null }
+Engine.statMax(ch, id)       → { max, by: name|null }   unlocked: lowest held cap, else statRules.max; locked: statRules.max or a lift above it (PQ2)
 Engine.derivedParts(ch, id)  → [{ name, amount }]       in data order
 Engine.startingCredits(ch)   → { roll, multiplier, bonus: [{ name, amount }], total|null }
 ```
@@ -181,7 +181,7 @@ appCopy:        statMaxBy "Max {max} ({by})." · statMaxLock "{stat} is {value},
 |---|---|---|
 | `P20a 1: a Sanity cut comes off max SAN, everywhere it's read` | rules | EMP 6, Berserker: `derived.SAN` 45, `sanState.max` 45, `derivedParts` names it. Minor Insanity ranks 1–5: 55/50/45/40/35. EMP 10 with Blood Lust: 90 (PQ7). EMP 1 with Berserker and Hallucinations: 1 (PQ6). With none held, every `derived` value equals `main`'s. **On `main`: fails.** |
 | `P20a 2: Arcane Fortitude adds 2 to TOL` | rules | An Arcanist with the option chosen: TOL +2; the starting-spells count +2; not chosen: as `main`. **On `main`: fails.** |
-| `P20a 3: a trait's cap binds every way a stat goes up` | rules | Dwarf: `statMax(MOB)` = { 3, "Dwarf" }; `cpBoost` at MOB 3 refused with "Max 3 (Dwarf)."; `ipCost` refused; Honed's MOB option `off`. Giant: BOD reaches 11 through IP. Age + Giant: BOD max 5 (PQ4). None held: `statRules.max` everywhere. |
+| `P20a 3: a trait's cap binds at creation, and only a lift binds in play` | rules | Dwarf, unlocked: `statMax(MOB)` = { 3, "Dwarf" }; a CP boost at MOB 3 refused with "Max 3 (Dwarf).". Locked: `ipCost` raises MOB 3 → 4, and Honed's MOB option is on (PQ2). Giant: BOD reaches 11 through IP. Age + Giant: BOD max 5 (PQ4). None held: `statRules.max` everywhere. |
 | `P20a 4: a cap already passed refuses the lock` | rules + smoke-wizard | MOB 5, Dwarf bought: `validate` errors name MOB, 3, Dwarf and Stats; the CP card shows it; lowering MOB to 3 clears it. MOB never changes on its own. |
 | `P20a 5: the Stats step shows and enforces the cap` | smoke-wizard | Dwarf held, back on Stats: MOB's + disabled at 3, "Max 3 (Dwarf)" shown; Expert mode on: the line still shows. |
 | `P20a 6: Dwarf and Giant exclude each other` | rules + smoke-wizard | Dwarf held: Giant locked on the CP step and in the IP buy list, reason "Dwarf"; and the reverse. |
@@ -203,7 +203,8 @@ appCopy:        statMaxBy "Max {max} ({by})." · statMaxLock "{stat} is {value},
 1. A `derivedMod` applied before the cap (P20a 1, EMP 10).
 2. The SAN floor of 1 dropped (P20a 1, EMP 1).
 3. `derivedMod` read only from Advantages and Disadvantages, not specializations (P20a 2).
-4. One `statRules.max` reader left unconverted (each of P20a 3's four refusals).
+4. One `statRules.max` reader left unconverted (P20a 3's CP boost, and Giant's IP to 11).
+4b. A trait's lower cap still binding after the lock (P20a 3, Dwarf's IP raise).
 5. The highest cap winning instead of the lowest (P20a 3, Age + Giant).
 6. The lock check removed (P20a 4).
 7. `excludes` written on both entries' sides, then one removed (P20a 6, in both directions).
@@ -240,7 +241,7 @@ appCopy:        statMaxBy "Max {max} ({by})." · statMaxLock "{stat} is {value},
 Suggested CHANGELOG lines (player voice):
 - **Your Disadvantages cost you Sanity.** Berserker, Blood Lust, Fanatic, Hallucinations and Minor Insanity take their points off your max SAN.
 - **Arcane Fortitude adds 2 to your TOL.**
-- **Age, Dwarf and Giant set how high your stats can go,** and a Giant's BOD can reach 11. Dwarf and Giant can't be taken together.
+- **Age, Dwarf and Giant set how high your stats can go when you make your character,** and a Giant's BOD can reach 11. In play, IP can take you past them. Dwarf and Giant can't be taken together.
 - **Wealthy starts you with Ç10,000 more.**
 
 **Review checklist:**
@@ -261,7 +262,7 @@ The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<plan>/
 >
 > 1. **A derived stat's cut comes after its floor and cap,** and max SAN never drops below 1. The breakdown must say so, not call it "floor / cap".
 > 2. **`statMax` is the one cap.** Grep `statRules.max` when you're done: only `statMax` should read it. A trait's cap and Giant's lift are the same row type.
-> 3. **The lowest cap wins**, and Focus points stop at a trait's cap (PQ3, PQ4).
+> 3. **The lowest cap wins at creation**, and Focus points stop at a trait's cap (PQ3, PQ4). **After the lock, a lower cap is gone** (Ken, PQ2); only a lift above 10 stays.
 > 4. **The engine never lowers a stat.** A cap already passed refuses the lock and says where to fix it.
 > 5. **Read the five sources `naturalArmor()` reads**, not `grants()`'s three. Arcane Fortitude is a specialization option.
 > 6. **Wealthy pays once, at lock, while the ledger is empty.** Not per rank, not when bought in play.

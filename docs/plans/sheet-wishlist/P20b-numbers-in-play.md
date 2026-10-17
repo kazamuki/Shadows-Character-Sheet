@@ -9,7 +9,7 @@
 
 **Not here:** P20a ([`P20a-numbers-at-creation.md`](P20a-numbers-at-creation.md)), the build's numbers. **P21** (the inventory session, 2026-10-17) owns the reductions that run with a power: Odin's Aegis, Null Field, Red Mist, Spectral Veil, Elemental Blood, Silverscar, Battle Hardened's immunity (which needs a saved pick), and Regeneration's per-round healing. P20b builds Take a hit's new stage so they can join it as rows.
 
-**Status:** **drafted 2026-10-17 by Claude (Opus)**, P19's reviewer. Pre-flighted against `main` at `2d38dc9`. **PQ1–PQ10 open.** Builds after P20a, or beside it: they share no file but the data, and no line in it.
+**Status:** **drafted 2026-10-17 by Claude (Opus)**, P19's reviewer. Pre-flighted against `main` at `2d38dc9`. **Ken answered PQ1–PQ10 on 2026-10-17: the defaults**, PQ9 included (Take a hit doubles an unredirected Head hit, and Thick Skull skips it). Builds after P20a, or beside it: they share no file but the data, and no line in it.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -44,7 +44,7 @@ When P20b is merged:
 2. **Pain Tolerance takes it off.** Rank 1 with Terminal Disease, unhurt: Pain 0. Rank 2 at band 3: Pain 1. The check's Pain penalty, the Essence and Breaker penalties and every Pain display follow, and the Pain card names what's ignored ("−1 Pain Tolerance").
 3. **Rest heals faster.** Rapid Healing rank 2: the Rest panel proposes BOD × 3 a day, ×6 with Speed Heal (PQ5). It says why ("×3 Rapid Healing"). Focused Healing and a Nanomed Kit are unchanged.
 4. **Take a hit asks what hit you, when it matters.** A character holding Scrapper or Giant sees "Melee or Martial Arts" on the form. Ticked: Giant takes 4 off what gets through, then Scrapper halves it (never below 1), each named in the result. Unticked, or neither held: the hit resolves as today.
-5. **A head hit follows the book, and Thick Skull answers it** (PQ9's default). An unredirected Head hit doubles (Regular only). With Thick Skull it doesn't, and the result says so.
+5. **A head hit follows the book, and Thick Skull answers it** (PQ9, Ken). An unredirected Head hit doubles (Regular only). With Thick Skull it doesn't, and the result says so.
 6. **The tags follow.** Terminal Disease's Pain, Pain Tolerance, Rapid Healing, Scrapper, Giant's −4 and Thick Skull become computed rows.
 7. **Nothing else moves**, except PQ9's head doubling if Ken takes the default: a character holding none of these computes byte for byte what it does on `main`.
 
@@ -76,9 +76,9 @@ When P20b is merged:
 ```
 N. **Pain, rest and Take a hit read the traits that change them: Terminal Disease adds Pain, Pain Tolerance ignores it, Rapid Healing multiplies rest, and Scrapper, Giant and Thick Skull answer a hit.**
      *2026-10-1x · Ken + Claude · Touches: painState, painLevel grant, onlyIfHurt, painIgnore, fromTraits, painSources, naturalHealing, Rest, Speed Heal, healTimes, naturalHealingTimes, resolveHit, hit.melee, meleeTaken, head doubling, Headshot Defense, Thick Skull, Terminal Disease, Pain Tolerance, Rapid Healing, Fast Metabolism, Scrapper, Giant, Take a hit, GM encounter hit*
-     - **Decided:** `painLevel` with `onlyIfHurt: false` adds always; `painIgnore` ({ perRank }) comes off after the clamp, floor 0. `healTimes` ({ byRank }) and an Aberration's `naturalHealingTimes` multiply rest with Speed Heal. Take a hit takes `melee` when a held trait reads it; `meleeTaken` rows ({ minus } or { halve, floor }) apply after Natural Armor and before Wither Ward, Giant's before Scrapper's. A Head hit not redirected doubles (Regular), unless Thick Skull. (As PQ1–PQ10 are answered.)
+     - **Decided:** `painLevel` with `onlyIfHurt: false` adds always; `painIgnore` ({ perRank }) comes off after the clamp, floor 0. `healTimes` ({ byRank }) and an Aberration's `naturalHealingTimes` multiply rest with Speed Heal. Take a hit takes `melee` when a held trait reads it; `meleeTaken` rows ({ minus } or { halve, floor }) apply after Natural Armor and before Wither Ward, Giant's before Scrapper's. A Head hit not redirected doubles (Regular), unless Thick Skull. 
      - **Why:** The sign-off, unanimous, and Deighton's Scrapper text; 213's own Revisit if.
-     - **Rejected:** (from PQ1–PQ10's alternatives, as answered)
+     - **Rejected:** Pain Tolerance before the clamp; only Health Levels counting as hurt; Pain Tolerance ignoring only Health Levels' Pain; Pain Immunity cancelling Terminal Disease; Speed Heal and Rapid Healing adding; Giant and Scrapper before armor; the melee stage on Massive; leaving the head's doubling to the player; the melee box always shown.
      - **Replaces:** Decision 213 in part (an unconditional Pain shift). Decision 231 in part (these entries' effects become computed rows). Extends 99 and 223 (a stage after Natural Armor) and 220 (rest's proposal).
      - **Revisit if:** P21 adds power reductions to the same stage; Deighton rules the head differently.
      - **Built:** app 0.5x.0, game data 0.4x, no schema bump, PR #…. Log 2026-10-1x (P20b).
@@ -205,7 +205,7 @@ Suggested CHANGELOG lines (player voice):
 - **Terminal Disease keeps you in pain, and Pain Tolerance lets you ignore it.**
 - **Rapid Healing speeds up your rest,** and stacks with Speed Heal.
 - **Take a hit knows a Melee or Martial Arts hit** when you're a Scrapper or a Giant, and takes your trait off it.
-- **A hit to the head doubles, as the book says,** unless your helmet or your Thick Skull says otherwise. (If PQ9's default.)
+- **A hit to the head doubles, as the book says,** unless your helmet or your Thick Skull says otherwise.
 
 **Review checklist:** §10's tests run on `main` (1 and 2 fail there); §5 confirmed; §8 against the book; PQ1–PQ10 in the decision's Rejected; mutants 1–10; phone-check and the dev preview; `npm run verify` green.
 
