@@ -58,7 +58,7 @@ function skillStatsHtml(line){
 // ── State ─────────────────────────────────────────────────────────────
 // `short` names a step in the strip and as its title; a step without one
 // falls back to its whole label (Decision 161).
-const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, short:s.short||s.label, label:s.label, note:s.note}))
+const STEPS = D.creationFlow.steps.map(s=>({id:s.id, n:s.n, short:s.short||s.label, label:s.label, note:s.note, byStatMethod:s.byStatMethod}))
   .concat([{id:"review", n:D.creationFlow.steps.length+1, short:"Review", label:"Review, lock, and export"}]);
 const SHEET_SECTIONS = [
   {id:"main",        label:"Main",        ui:"tab_main"},

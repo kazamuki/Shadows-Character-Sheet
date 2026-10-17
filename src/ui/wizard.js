@@ -181,6 +181,9 @@ function wizNav(stepId){
 // "…assign your Base Stats Explosions do not happen…").
 const sentence = s => /[.?!…]$/.test(s) ? s : s+".";
 function stepHeader(st){
+  // A step can word itself for a rolled Stat Point pool (Stats: roll, or point buy).
+  const v = st.byStatMethod && S.ch && st.byStatMethod[S.ch.creation.statMethod==="rolled" ? "rolled" : "flat"];
+  if (v) st = Object.assign({}, st, v);
   return importIssuesHtml() + `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
     <h1 class="step-title">${esc(st.short)}</h1>
     <p class="step-note">${esc(sentence(st.label))}${st.note?` <em>${esc(st.note)}</em>`:""}</p>${expertHintHtml()}`;

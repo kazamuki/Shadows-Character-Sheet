@@ -5131,8 +5131,11 @@ window.SHADOWS_DATA = {
         "id": "stats",
         "n": 3,
         "short": "Stats",
-        "label": "Roll for your Stat Points and assign your Base Stats",
-        "note": "Explosions do not happen on creation rolls."
+        "label": "Point buy: spend your Stat Points on your Base Stats",
+        /* The line when the table rolls for Stat Points (creation.statMethod, Decision 150). Read by stepHeader. */
+        "byStatMethod": {
+          "rolled": { "label": "Roll for your Stat Points and assign your Base Stats", "note": "Explosions do not happen on creation rolls." }
+        }
       },
       {
         "id": "archetype",

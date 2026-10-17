@@ -1307,3 +1307,20 @@ test("P13 10: the Natural Advantages panel shows the tags, held or general, and 
     }
   }
 });
+
+test("the Stats step's line says point buy unless the table rolls for Stat Points", () => {
+  const line = app => app.$("#main .step-note").textContent;
+  const flat = onStep("professional", "street", "stats");
+  assert.match(line(flat), /point buy/i);
+  assert.doesNotMatch(line(flat), /roll|explosion/i, "a point-buy character is told to roll");
+  const rolled = onStep("professional", "street", "stats", ch => { ch.creation.statMethod = "rolled"; });
+  assert.match(line(rolled), /^Roll for your Stat Points/);
+  assert.match(line(rolled), /Explosions do not happen on creation rolls\./);
+  // Ticking the box on the Power Level step changes the line it leads to.
+  const pl = onStep("professional", "street", "power-level");
+  pl.$("#main [data-stat-rolled]").checked = true;
+  pl.$("#main [data-stat-rolled]").dispatchEvent(new pl.window.Event("change"));
+  pl.window.eval(`S.step = STEPS.findIndex(s => s.id === "stats"); update();`);
+  assert.match(line(pl), /^Roll for your Stat Points/);
+  assert.deepEqual([...flat.errors, ...rolled.errors, ...pl.errors], []);
+});
