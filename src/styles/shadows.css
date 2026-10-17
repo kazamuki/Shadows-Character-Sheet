@@ -1436,3 +1436,10 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .ip-restore input[type=number]{width:72px}
 .ip-restore .btn{white-space:normal; text-align:left}
 .raise-results tr.ip-extra td{padding-top:0; border-top:0}
+
+/* Decision 233: what a trait does to a Skill's check, under the name beside the chips, and the light a trait cancels under Main's attacks. */
+.skill-fx{margin-top:4px; display:flex; flex-direction:column; gap:2px; font-size:.78rem; line-height:1.35; color:var(--text); overflow-wrap:anywhere; min-width:0}
+.skill-fx .fx-line{min-width:0}
+.fx-from{color:var(--dim)}
+.attack-note{margin:6px 0 0; font-size:.78rem; line-height:1.35; color:var(--text); overflow-wrap:anywhere}
+.ref td.bd .trait-part{color:var(--green)}

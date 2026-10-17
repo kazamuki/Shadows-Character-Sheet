@@ -247,7 +247,7 @@ function renderStats(){
     const v = ch.stats[s.id].base, m = Engine.statMod(Engine.statValue(ch,s.id));
     const next = v<D.statRules.max ? Engine.nextStatCost(ch, s.id) : null;
     h += `<div class="alloc-row">
-      <div class="name">${esc(s.name)} <small>${esc(s.description)}</small>${next>1?`<small class="next-cost">The next point costs ${next}.</small>`:""}</div>
+      <div class="name">${esc(s.name)}${foldBtn("stat|"+s.id, s.name)} <small${foldAttr("stat|"+s.id)}>${esc(s.description)}</small>${next>1?`<small class="next-cost">The next point costs ${next}.</small>`:""}</div>
       ${stepper(v, "stat|"+s.id, v>D.statRules.base, next!=null && next<=left && pool.total!=null, s.name)}
       <span class="mod ${m>0?"pos":m<0?"neg":""}">${modText(m)}</span>
     </div>`;

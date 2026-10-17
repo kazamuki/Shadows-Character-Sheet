@@ -678,11 +678,12 @@ function askFirst({ title, text, yes, then, danger=true }){
 
 // ── Expert mode (Decision 232) ────────────────────────────────────────
 // View state of this browser, like Pin and Expand all: never in the character.
-// On the Archetype, Skills and Character Points steps it folds the book's text
-// behind a ? beside each name, and keeps the choosing in view. A press of ?
+// On the Stats, Archetype, Skills and Character Points steps it folds the book's text
+// behind a ? beside each name, and keeps the choosing in view. Its toggle is in the
+// wizard's header on every step (Decision 234); `expertStep` gates the first-sight hint only. A press of ?
 // opens that text in place (no re-render); S.openFolds holds what's open, beside
 // S.cpFilter, so a stepper's re-render keeps it. Storage that throws means off.
-const EXPERT_KEY = "shadows.ui.expert", EXPERT_SEEN_KEY = "shadows.ui.expertSeen", EXPERT_STEPS = ["archetype","skills","character-points"];
+const EXPERT_KEY = "shadows.ui.expert", EXPERT_SEEN_KEY = "shadows.ui.expertSeen", EXPERT_STEPS = ["stats","archetype","skills","character-points"];
 let expertMem = null, expertSeen = false;
 // The hint under a step's title, until the toggle has been pressed once in this browser.
 function expertHintHtml(){

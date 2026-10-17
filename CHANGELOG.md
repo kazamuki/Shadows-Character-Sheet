@@ -23,9 +23,15 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.48.1
+## [Unreleased] — app 0.49.0
 
 - **The Stats step tells you to roll only when your table rolls for Stat Points.** Otherwise it says point buy.
+- **Your Skills count your Advantages and Disadvantages.** Ghost Step adds 3 to Stealth, Defect/Flaw takes 2 off the Skill it hurts, and your attacks follow.
+- **Kicker dice show on the Skill:** Field Medic's Medical reads 1d10 + your bonus + 1d4.
+- **Take X shows what you'd get:** Common Sense on Investigation reads "Take 6: 13". Choose it before you roll.
+- **Your Skills say when they fail or explode early:** Distractable on Awareness and Combat Sense, Refined Skill on the Skill you chose, and the rest.
+- **Night Vision says what it cancels:** Dim −1 and Dark −3 don't touch your attacks.
+- **Expert mode stays in the header through all of character creation,** and now folds the Stats step's descriptions too.
 
 ## v0.48.0 — 2026-10-16
 

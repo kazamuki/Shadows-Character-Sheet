@@ -46,7 +46,7 @@ export function onStep(archetype, powerLevel, stepId, mutate = () => {}, extraSt
   ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
   mutate(ch);
-  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf(stepId), maxReached: steps.length - 1 }, ...extraStorage } });
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: stepId === "review" ? steps.length : steps.indexOf(stepId), maxReached: stepId === "review" ? steps.length : steps.length - 1 }, ...extraStorage } });
   const resume = app.$$("#main button").find(b => /Resume draft/.test(b.textContent));
   resume.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   return app;

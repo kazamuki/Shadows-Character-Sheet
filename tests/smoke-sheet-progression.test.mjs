@@ -711,7 +711,8 @@ test("P13 10: the IP lists and Talented's pick show the tags: held for what the 
   // IP buy-off for Disadvantages: both of Blood Lust's tags, and its fold stays.
   app.click('[data-ipopen="disadvantage"]');
   const bl = D.disadvantages.find(d => d.id === "blood-lust");
-  assert.deepEqual([...tags(app.$("#modal"), "disadvantage|blood-lust")], [...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText)]);
+  // P19: its rule rows, then the chip for the die face it computes.
+  assert.deepEqual([...tags(app.$("#modal"), "disadvantage|blood-lust")], [...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText), "Combat Sense checks fail on a natural 2 or 3 after you fail first blood's Sanity Check, for the encounter (a 1 still botches)"]);
   assert.ok(app.$('#modal [data-ipbuy="disadvantage|blood-lust"]').closest("tr").nextElementSibling.querySelector("details.ip-desc"), "What it says is gone");
   app.click("#modal [data-modalclose]");
   assert.deepEqual(app.errors, []);
@@ -729,6 +730,6 @@ test("P13 10: the IP lists and Talented's pick show the tags: held for what the 
   r.window.eval(`S.ch.disadvantages = [{ id: "blood-lust", rank: 1, notes: "" }]; update();`);
   r.click('[data-takeminor="redeemed"]');
   const rr = [...r.$('#modal [data-mcpick="blood-lust"]').closest("tr").querySelectorAll(".effects .etag")].map(x => x.textContent);
-  assert.deepEqual(rr, [...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText)], "Redeemed's pick has no tags");
+  assert.deepEqual(rr, [...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText), "Combat Sense checks fail on a natural 2 or 3 after you fail first blood's Sanity Check, for the encounter (a 1 still botches)"], "Redeemed's pick has no tags");
   assert.deepEqual(r.errors, []);
 });

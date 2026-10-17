@@ -1176,12 +1176,11 @@ test("P13 5: the CP filter finds an entry by its name, in both modes", () => {
   assert.deepEqual(shownNames(app).sort(), ["Ambidextrous", "Blood Lust", "Bullseye", "Common Sense"]);
 });
 
-test("P13 6: the header's Expert mode toggle shows on three steps and keeps the keyboard's place", () => {
-  const steps = D.creationFlow.steps.map(s => s.id);
+test("P13 6: the header's Expert mode toggle shows on every creation step (P19 9) and keeps the keyboard's place", () => {
+  const steps = [...D.creationFlow.steps.map(s => s.id), "review"];
   for (const id of steps) {
     const app = onStep("professional", "street", id, () => {});
-    const has = !!app.$("#hdractions [data-expert]");
-    assert.equal(has, ["archetype", "skills", "character-points"].includes(id), `${id}: toggle ${has ? "shown" : "absent"}`);
+    assert.ok(app.$("#hdractions [data-expert]"), `${id}: toggle absent`);
     assert.ok(app.$("#hdractions [data-home]"), `${id}: Home was pushed out`);
   }
   const app = onStep("professional", "street", "skills", () => {});
@@ -1323,4 +1322,78 @@ test("the Stats step's line says point buy unless the table rolls for Stat Point
   pl.window.eval(`S.step = STEPS.findIndex(s => s.id === "stats"); update();`);
   assert.match(line(pl), /^Roll for your Stat Points/);
   assert.deepEqual([...flat.errors, ...rolled.errors, ...pl.errors], []);
+});
+
+// ── P19 (the rider): Expert mode reaches the Stats step, and its toggle is in the header on every step (Decision 234) ──
+const ALL_STEPS = [...D.creationFlow.steps.map(s => s.id), "review"];
+
+test("P19 9: the Expert mode toggle is in the header on every step of character creation", () => {
+  assert.equal(ALL_STEPS.length, 8);
+  for (const id of ALL_STEPS) {
+    const app = onStep("professional", "street", id, () => {});
+    const btn = app.$("#hdractions [data-expert]");
+    assert.ok(btn, `${id}: no toggle`);
+    assert.equal(btn.getAttribute("aria-pressed"), "false", id);
+    assert.equal(btn.getAttribute("aria-label"), "Expert mode", id);
+    assert.equal(btn.getAttribute("title"), D.appCopy.expertTitle, `${id}: the title`);
+    assert.match(D.appCopy.expertTitle, /Stats, Archetype, Skills and Character Points/);
+    assert.ok(app.$("#hdractions [data-home]"), `${id}: Home was pushed out`);
+    // The first-sight hint is on the four steps it describes, and nowhere else.
+    const hint = app.$$("#main .expert-hint").length;
+    assert.equal(hint, ["stats", "archetype", "skills", "character-points"].includes(id) ? 1 : 0, `${id}: hint ×${hint}`);
+  }
+  // Off the wizard: Home and the sheet have none.
+  assert.ok(!boot().$("[data-expert]"), "Home has the toggle");
+  assert.ok(!openSheet(lockedCharacter(), "main").$("[data-expert]"), "the sheet has the toggle");
+  // On Concept a press changes the setting and the button, and nothing else you can see.
+  const app = onStep("professional", "street", "concept", () => {});
+  const main0 = app.$("#main").innerHTML, ch0 = JSON.stringify(app.window.eval("S.ch"));
+  app.$("#hdractions [data-expert]").focus();
+  app.click("#hdractions [data-expert]");
+  assert.equal(app.$("#hdractions [data-expert]").getAttribute("aria-pressed"), "true");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.expert"), "on");
+  assert.equal(app.window.document.activeElement, app.$("#hdractions [data-expert]"), "focus left the toggle");
+  assert.equal(app.$("#main").innerHTML, main0, "a press on Concept changed the page");
+  assert.equal(JSON.stringify(app.window.eval("S.ch")), ch0);
+  app.click("#hdractions [data-expert]");
+  assert.equal(app.$("#hdractions [data-expert]").getAttribute("aria-pressed"), "false");
+  assert.equal(app.$("#main").innerHTML, main0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P19 10: Expert mode folds the Stats step's descriptions and keeps every control", () => {
+  const on = onStep("professional", "street", "stats", ch => { ch.stats.BOD.base = 7; }, EXPERT);
+  assert.deepEqual(on.errors, []);
+  const rows = on.$$("#main .alloc-row");
+  assert.equal(rows.length, D.stats.length);
+  const descs = () => on.$$("#main .alloc-row .name small").filter(s => !s.classList.contains("next-cost"));
+  assert.equal(descs().length, 8);
+  assert.ok(descs().every(s => s.hidden), "a description is shown");
+  for (const r of rows) {
+    assert.ok(r.querySelector(".name") && r.querySelector(".stepper .val") && r.querySelector(".mod") && r.querySelector("[data-fold]"), r.textContent);
+    assert.ok(!hiddenIn(r.querySelector(".stepper")) && !hiddenIn(r.querySelector(".mod")));
+  }
+  const body = rows[0];
+  assert.match(body.querySelector(".name").textContent, /^Body/);
+  assert.equal(body.querySelector(".stepper .val").textContent, "7");
+  const next = body.querySelector(".next-cost");
+  assert.ok(next && !hiddenIn(next), "the price folded");
+  assert.match(next.textContent, /^The next point costs 2\.$/);
+  // ? opens Body's text, in place, and a stepper press keeps it open.
+  on.click('[data-fold="stat|BOD"]');
+  assert.equal(on.$('[data-fold="stat|BOD"]').getAttribute("aria-expanded"), "true");
+  assert.equal(descs().filter(s => !s.hidden).length, 1);
+  assert.match(descs().find(s => !s.hidden).textContent, /\S/);
+  on.click('[data-step="stat|BOD|-1"]');
+  assert.equal(descs().filter(s => !s.hidden).length, 1, "a stepper press closed it");
+  assert.equal(on.$$("#main .alloc-row")[0].querySelector(".stepper .val").textContent, "6");
+  // The pool and the buy rule stay.
+  assert.match(on.$("#main .pool").textContent, /Pool/);
+  assert.ok(on.$("#main .dice-note") && !hiddenIn(on.$("#main .dice-note")), "the buy rule folded");
+  // Off: the page is as it was, with no ? and nothing hidden.
+  const off = onStep("professional", "street", "stats", ch => { ch.stats.BOD.base = 7; });
+  assert.equal(off.$$("#main [data-fold], #main [data-foldbody]").length, 0);
+  assert.ok(off.$$("#main .alloc-row .name small").every(s => !s.hidden));
+  assert.equal(off.$$("#main .alloc-row .name small").filter(s => !s.classList.contains("next-cost")).length, 8);
+  assert.deepEqual(off.errors, []);
 });

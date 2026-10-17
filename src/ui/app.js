@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.48.1";
+const APP_VERSION = "0.49.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -55,12 +55,12 @@ function renderTopChrome(){
     ctx.textContent = charName(S.ch, "Character Intake");
     nav.innerHTML = "";
     if (act){
-      // P13 (PQ4): Expert mode is the browser's setting, shown on the three steps it changes.
-      const ex = expertStep() ? `<button class="hdr-btn" data-expert aria-pressed="${expertOn()}" aria-label="Expert mode" title="${esc(copy("expertHint"))}">Expert<span class="long"> mode</span></button>` : "";
+      // Decision 234: Expert mode is the browser's setting, in the header on every step of creation, so the header
+      // doesn't change under a player. The title says where it works; on a step it doesn't fold, a press moves nothing else.
+      const ex = `<button class="hdr-btn" data-expert aria-pressed="${expertOn()}" aria-label="Expert mode" title="${esc(copy("expertTitle"))}">Expert<span class="long"> mode</span></button>`;
       act.innerHTML = `${ex}<button class="hdr-btn" data-home="1">Home</button>`;
       act.querySelector("[data-home]").onclick=goHome;
-      const eb = act.querySelector("[data-expert]");
-      if (eb) eb.onclick=()=>{ setExpert(!expertOn()); anchorKept(()=>update()); };
+      act.querySelector("[data-expert]").onclick=()=>{ setExpert(!expertOn()); anchorKept(()=>update()); };
     }
   } else {
     ctx.textContent = "Character Intake"; nav.innerHTML = ""; if (act) act.innerHTML = "";

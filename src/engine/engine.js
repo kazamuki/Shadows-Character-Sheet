@@ -237,6 +237,65 @@ const Engine = (() => {
     try { opts = pickOptions(pick, def); } catch (e) { opts = []; }
     return raw.filter(v=>typeof v==="string" && v!=="").map(v=>{ const o = opts.find(x=>x.id===v); return txt(o ? o.name : v); }).filter(Boolean).join(", ");
   };
+  // ── A trait on a Skill's check (Decision 233) ──────────────────────────────
+  // Six computed `grants` types, each naming its Skills (`skills`) or a pick (`skillsFromPick`, the picks cut to the
+  // rank, so a row never names a Skill the picker lacks). A row with `whenText` is a MARK, never a number. A bad row
+  // (a number that isn't one, a die that isn't a die, a face off the die, a Skill the data lacks) is skipped, never thrown.
+  const TRAIT_TYPES = ["checkMod","kicker","takeX","failOn","explodeOn","visibility"];
+  const KICKER_DIE = /^\d*d(?:4|6|8|10|12)$/;
+  // The light a `visibility` row's `on` can name, and the template that says it.
+  const VIS_TEXT = { attacks:"visibilityAttacks", awareness:"visibilityAwareness" };
+  const WHEN_KEY = { checkMod:"checkModWhen", takeX:"takeXWhen", failOn:"failOnWhen" };
+  const signedMinus = n => (n<0 ? "−" : "+") + Math.abs(n);
+  const joinList = (items, last) => items.length<2 ? items.join("") : items.slice(0,-1).join(", ") + " " + last + " " + items[items.length-1];
+  // undefined: unconditional; text: a "when"; false: a bad row.
+  const whenOf = g => g.whenText==null ? undefined : (typeof g.whenText==="string" && g.whenText.trim() ? g.whenText.trim() : false);
+  const goodAmount = g => typeof g.amount==="number" && Number.isFinite(g.amount) && g.amount!==0;
+  const goodX = g => typeof g.x==="number" && Number.isFinite(g.x) && g.x>0;
+  const goodFaces = g => Array.isArray(g.faces) && g.faces.length>0 && g.faces.every(f=>Number.isInteger(f) && f>=1 && f<=10);
+  const goodDie = g => typeof g.die==="string" && KICKER_DIE.test(g.die);
+  const cutPick = (pick, rank, list) => {
+    const per = pick.count==null ? 1 : pick.count, need = pick.perRank ? per*rank : per;
+    return list.slice(0, Math.max(0, need)).filter(v=>typeof v==="string" && v);
+  };
+  // The levels a `visibility` row ignores: "Dim or Dark", and "Dim −1 and Dark −3" with the attack penalties.
+  function visLevels(g){
+    const table = Array.isArray(D().visibility) ? D().visibility.filter(isPlainObj) : [];
+    const rows = (Array.isArray(g.ignore) ? g.ignore : []).map(id=>typeof id==="string" ? table.find(v=>v.id===id) : null).filter(Boolean);
+    if (!rows.length) return null;
+    return { names: joinList(rows.map(r=>txt(r.name)).filter(Boolean), "or"),
+             levels: joinList(rows.map(r=>txt(r.name) + (Number.isFinite(r.attack) && r.attack ? " " + signedMinus(r.attack) : "")), "and") };
+  }
+  const visOn = g => (Array.isArray(g.on) ? g.on : []).filter(t=>typeof t==="string" && Object.prototype.hasOwnProperty.call(VIS_TEXT, t));
+  // The Skills a card names on a tag: the row's own, or the picks held (cut to the rank), else "the Skill you choose".
+  function tagSkillNames(def, g, h, T){
+    const name = id => { const s = typeof id==="string" ? skillById(id) : null; return s ? txt(s.name) : ""; };
+    if (Array.isArray(g.skills)){ const n = g.skills.map(name).filter(Boolean); return n.length ? n.join(", ") : null; }
+    if (typeof g.skillsFromPick!=="string") return null;
+    const pick = (Array.isArray(def.picks) ? def.picks : []).find(p=>isPlainObj(p) && p.id===g.skillsFromPick && p.type==="skill");
+    if (!pick) return null;
+    const rank = h ? Math.floor(Number(h.rank)) : NaN, sel = h && isPlainObj(h.selections) ? h.selections[pick.id] : null;
+    const n = rank>=1 && Array.isArray(sel) ? cutPick(pick, rank, sel).map(name).filter(Boolean) : [];
+    return n.length ? n.join(", ") : (typeof T.pickedSkill==="string" && T.pickedSkill ? T.pickedSkill : null);
+  }
+  function traitTags(def, g, h, T){
+    const when = whenOf(g);
+    if (when===false) return [];
+    const tpl = type => T[when ? WHEN_KEY[type] : type];
+    const skills = g.type==="visibility" ? null : tagSkillNames(def, g, h, T);
+    let text = null;
+    if (g.type==="visibility"){
+      const v = visLevels(g);
+      return v ? visOn(g).map(t=>fillTag(T[VIS_TEXT[t]], v)).filter(Boolean) : [];
+    }
+    if (!skills) return [];
+    if (g.type==="checkMod" && goodAmount(g)) text = fillTag(tpl("checkMod"), { amount: signedMinus(g.amount), skills, whenText: when });
+    else if (g.type==="kicker" && goodDie(g) && !when) text = fillTag(tpl("kicker"), { die: g.die, skills });
+    else if (g.type==="takeX" && goodX(g)) text = fillTag(tpl("takeX"), { x: g.x, skills, whenText: when });
+    else if (g.type==="failOn" && goodFaces(g)) text = fillTag(tpl("failOn"), { faces: joinList(g.faces.map(String), "or"), skills, whenText: when });
+    else if (g.type==="explodeOn" && goodFaces(g) && !when) text = fillTag(tpl("explodeOn"), { faces: joinList(g.faces.map(String), "or"), skills });
+    return text ? [text] : [];
+  }
   function effectTagsFor(kind, id, held){
     const out = [];
     const def = kind==="advantage" ? advById(id) : kind==="disadvantage" ? disById(id) : null;
@@ -258,6 +317,11 @@ const Engine = (() => {
           text = fillTag(g.heldText, vars);
         }
         out.push({ computed:false, text: text || g.ruleText });
+        continue;
+      }
+      // Decision 233: a trait on a Skill's check, written from the row's own numbers.
+      if (TRAIT_TYPES.includes(g.type)){
+        for (const t of traitTags(def, g, h, T)) out.push({ computed:true, text:t });
         continue;
       }
       let vars = null, text = null;
@@ -751,6 +815,60 @@ const Engine = (() => {
     return (alias && known(alias)) ? alias : null;
   }
 
+  // The held Advantages and Disadvantages whose `grants` change a Skill's check (Decision 233), one per trait however
+  // many rows hold it (natural and bought ranks sum, heldRank), with the Skills each row names. Total: a row the
+  // data or a file got wrong is not here.
+  function traitRows(ch){
+    const out = [];
+    for (const [kind, list] of [["advantage", ch && ch.advantages], ["disadvantage", ch && ch.disadvantages]]){
+      if (!Array.isArray(list)) continue;
+      const seen = new Set();
+      for (const row of list){
+        if (!isPlainObj(row) || typeof row.id!=="string" || seen.has(row.id)) continue;
+        seen.add(row.id);
+        const def = kind==="advantage" ? advById(row.id) : disById(row.id);
+        if (!isPlainObj(def) || !Array.isArray(def.grants) || !(heldRank(ch, kind, row.id) >= 1)) continue;
+        for (const g of def.grants){
+          if (!isPlainObj(g) || !TRAIT_TYPES.includes(g.type)) continue;
+          let ids = [];
+          if (Array.isArray(g.skills)) ids = g.skills.filter(v=>typeof v==="string" && v);
+          else if (typeof g.skillsFromPick==="string"){
+            const st = picksFor(ch, kind, row.id).find(x=>x.pick.id===g.skillsFromPick);
+            if (st && st.pick.type==="skill") ids = st.chosen.filter(v=>typeof v==="string" && v);
+          }
+          out.push({ g, ids, name: txt(def.name) });
+        }
+      }
+    }
+    return out;
+  }
+  const rowText = () => isPlainObj(D().skillRowText) ? D().skillRowText : {};
+  // What the held traits do to one Skill's check. `parts` are in the number; `kickers` sit beside it; a Take X is
+  // finished by skillLine (it needs the whole check); `marks` change nothing the sheet adds up.
+  function traitEffects(ch, skillId){
+    const fx = { parts:[], kickers:[], takeX:[], marks:[] }, SRT = rowText();
+    const mark = (kind, g, name, tpl, vars, when) => { const text = fillTag(tpl, vars); if (text) fx.marks.push({ kind, text, from:name, whenText: when===undefined ? null : when }); };
+    for (const { g, ids, name } of traitRows(ch)){
+      const when = whenOf(g);
+      if (when===false) continue;
+      if (g.type==="visibility"){
+        const v = visLevels(g);
+        if (v && visOn(g).includes(skillId)) mark("visibility", g, name, SRT[VIS_TEXT[skillId]], v);
+        continue;
+      }
+      if (!ids.includes(skillId)) continue;
+      if (g.type==="checkMod" && goodAmount(g)){
+        if (when===undefined) fx.parts.push({ name, amount:g.amount });
+        else mark("checkMod", g, name, SRT.checkModWhen, { amount: signedMinus(g.amount), whenText: when }, when);
+      }
+      else if (g.type==="kicker" && goodDie(g) && when===undefined) fx.kickers.push({ die:g.die, from:name });
+      else if (g.type==="takeX" && goodX(g)) fx.takeX.push({ x:g.x, from:name, whenText: when===undefined ? null : when });
+      else if (g.type==="failOn" && goodFaces(g)) mark("failOn", g, name, when===undefined ? SRT.failOn : SRT.failOnWhen, { faces: joinList(g.faces.map(String), "or"), whenText: when }, when);
+      else if (g.type==="explodeOn" && goodFaces(g) && when===undefined) mark("explodeOn", g, name, SRT.explodeOn, { faces: joinList(g.faces.map(String), "or") }, when);
+    }
+    return fx;
+  }
+
   // Effective skill data for display: rank incl. boosts + IPE; check preview.
   // The current Pain Level penalty applies to all skill checks and is
   // carried in the breakdown so the sheet can show *why* a total is modified.
@@ -763,8 +881,8 @@ const Engine = (() => {
     // screen iterates ch.skills directly and died on an orphaned id.
     if (!def) return { def:{ id, name:id, category:"", description:"", flavorLine:"",
                              primaryStat:null, synergyStat:null },
-                       rank, trained:rank>0, checkBonus:0,
-                       breakdown:{ rank, primary:{id:null,value:0}, synergy:{id:null,mod:0}, pain:0, conditions:0 },
+                       rank, trained:rank>0, checkBonus:0, kickers:[], takeX:[], marks:[],
+                       breakdown:{ rank, primary:{id:null,value:0}, synergy:{id:null,mod:0}, pain:0, conditions:0, traits:0, traitParts:[] },
                        dataWarning:`Skill "${id}" is no longer in the game data.` };
     const t = statTable(ch);
     const pri = normStat(def.primaryStat), syn = normStat(def.synergyStat);
@@ -781,9 +899,30 @@ const Engine = (() => {
     const form = formState(ch), hit = form && form.bars && pri===form.bars.stat;
     const formPenalty = hit && form.bars.penalty!=null ? form.bars.penalty : 0;
     const barred = hit && form.bars.penalty==null ? (form.bars.name || form.name) : null;
-    return { def, rank, trained:rank>0, checkBonus: base + pain + conditions + formPenalty, barred, formPenalty,
-             breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain, conditions, form:formPenalty },
+    // Decision 233: what the held traits do to this check. A trait's number is in it (so the row, an attack, a
+    // maneuver and print all follow); a kicker sits beside it; Take X is X plus the whole check; a mark changes nothing.
+    const fx = traitEffects(ch, id), traits = fx.parts.reduce((n, p)=>n + p.amount, 0);
+    const checkBonus = base + pain + conditions + formPenalty + traits, SRT = rowText();
+    const takeX = fx.takeX.map(t=>{
+      const total = t.x + checkBonus;
+      return { x:t.x, total, from:t.from, whenText:t.whenText, text: fillTag(t.whenText ? SRT.takeXWhen : SRT.takeX, { x:t.x, total, whenText:t.whenText }) || "" };
+    });
+    const unconditional = list => list.filter(x=>!x.whenText).concat(list.filter(x=>x.whenText));
+    return { def, rank, trained:rank>0, checkBonus, barred, formPenalty,
+             kickers: fx.kickers, takeX: unconditional(takeX), marks: unconditional(fx.marks),
+             breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain, conditions, form:formPenalty, traits, traitParts:fx.parts },
              dataWarning: (pri && syn) ? null : `Skill "${def.name}" references an unknown stat (${!pri?def.primaryStat:def.synergyStat}).` };
+  }
+  // What Night Vision and its kind cancel on an attack (Decision 233): one line per held trait that names attacks,
+  // its light levels and their penalties read from the `visibility` table, never typed here.
+  function attackNotes(ch){
+    const out = [], SRT = rowText();
+    for (const { g, name } of traitRows(ch)){
+      if (g.type!=="visibility" || !visOn(g).includes("attacks")) continue;
+      const v = visLevels(g), text = v ? fillTag(SRT.visibilityAttacks, v) : null;
+      if (text) out.push({ from:name, text });
+    }
+    return out;
   }
 
   // ════ CONDITION, PROGRESSION, SESSIONS ═══════════════════════════════
@@ -7467,7 +7606,7 @@ const Engine = (() => {
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,
     focusedCategoryName, naturalAdvantagePool,
     // Selections and constraints
-    optionLock, requirementState, picksFor, setSelection, trimSelections, addPickInPlay, maneuverChecks,
+    optionLock, requirementState, picksFor, setSelection, trimSelections, addPickInPlay, maneuverChecks, attackNotes,
     specializationNeed, specializationIds, specializationChosen, specializationLabel,
     // Vitals: Pain, LUCK, Sanity, Conditions, taking a hit, recovery
     painState, luckState, sanState, conditionState, addCondition, removeCondition, setConditionMarks,

@@ -15,7 +15,7 @@
  *   - text under 11px (W43). Collapsed <details> are opened to look inside;
  *   - the wizard (P4): a new, named character on its Stats step, the longest
  *     header the wizard has, with its Home button held to the same finger size;
- *   - Expert mode (P13): the Archetype, Skills and Character Points steps, folded, with the
+ *   - Expert mode (P13, P19): the Stats, Archetype, Skills and Character Points steps, folded, with the
  *     header holding both its buttons, and the sticky bar on Skills and Points within a
  *     share of the screen. A Character tab card with three tags at the narrowest width;
  *   - the fold (W45): the vitals bar and a sheet's jump bar on one row, and
@@ -58,7 +58,7 @@ const WIDTHS = [
   { name: "phone, touch", width: 390, height: 844, touch: true },
 ];
 
-function lockedCharacter(archetype = "arcanist", milestonePoints = 0, held = []) {
+function lockedCharacter(archetype = "arcanist", milestonePoints = 0, held = [], skillTraits = false) {
   const { Engine, D } = loadEngine();
   const ch = Engine.newCharacter();
   ch.identity.name = "Phone Check";
@@ -69,6 +69,15 @@ function lockedCharacter(archetype = "arcanist", milestonePoints = 0, held = [])
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;
   // Long-Lived at rank 3 carries three Milestone tags: the card with the most.
   ch.advantages = held.map(id => ({ id, rank: 3, notes: "" }));
+  // P19: the Skills with the most lines under their names. Basic Tech holds three Take X (Common Sense, Machindo,
+  // Lightning Calculator), Awareness and Combat Sense a die-face mark each, Medical a kicker.
+  if (skillTraits) {
+    for (const id of ["basic-tech", "awareness", "combat-sense", "investigation", "medical", "stealth"]) ch.skills[id] = { rank: 3, ipe: 0 };
+    ch.advantages.push({ id: "common-sense", rank: 2, notes: "", selections: { skill: ["basic-tech", "awareness"] } },
+      { id: "machindo", rank: 1, notes: "" }, { id: "lightning-calculator", rank: 1, notes: "" }, { id: "field-medic", rank: 1, notes: "" },
+      { id: "ghost-step", rank: 1, notes: "" }, { id: "night-vision", rank: 1, notes: "" });
+    ch.disadvantages.push({ id: "distractable", rank: 1, notes: "" }, { id: "dwarf", rank: 1, notes: "" });
+  }
   ch.creation.locked = true;
   return JSON.parse(JSON.stringify(ch));   // out of the engine's vm realm
 }
@@ -88,7 +97,7 @@ async function launch() {
 const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
 writeFileSync(file, process.argv[2] ? readFileSync(process.argv[2], "utf8") : buildHtml());
-const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"]), section: "main" });
+const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"], true), section: "main" });
 // A Major unlocks at 10 Milestone Points; the Professional's list has the longest prerequisites.
 const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
 const MAJOR = "progression: a Major";
@@ -186,6 +195,10 @@ try {
     await page.click("button:has-text(\"Continue\")");
     await page.waitForSelector("[data-stat-floor]");
     await measure("wizard: stats");
+    // P19 (Decision 234): Expert mode folds Stats too, and the toggle is in the header on every step.
+    await page.click("header [data-expert]");
+    await measure("wizard: stats, Expert mode", "header.top, .alloc-row .name, .skill-q");
+    await page.click("header [data-expert]");
     // P13: Expert mode on the three steps it changes. Steps are reached as the player would reach
     // them; the toggle is pressed once, in the header, and stays on across them.
     await page.evaluate(() => { S.maxReached = STEPS.length - 1; });

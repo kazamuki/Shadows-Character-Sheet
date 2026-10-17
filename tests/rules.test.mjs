@@ -2026,10 +2026,11 @@ test("P18 3b: a held entry's tags are its rank and picks", () => {
   assert.ok(rule("advantage", "bullseye", held(1))[0].includes("+4 damage"));
   assert.ok(rule("advantage", "bullseye", held(3))[0].includes("+8 damage"));
   assert.equal(rule("advantage", "gun-master", held(3))[0], "Extra attacks per round with firearms, beam weapons included: 3.");
-  assert.equal(rule("advantage", "common-sense", held(1, { skill: ["investigation"] }))[0], "Take 6 on Investigation.");
-  const general = ruleRows(D.advantages.find(a => a.id === "common-sense"))[0].ruleText;
-  assert.equal(rule("advantage", "common-sense", held(1))[0], general, "no pick yet: the whole ruleText, not a half-filled line");
-  assert.equal(rule("advantage", "common-sense", held(1, { skill: [""] }))[0], general);
+  // Common Sense is a computed Take X now (P19 6); Favored Skill is the rule row that still fills its pick.
+  assert.equal(rule("advantage", "favored-skill", held(1, { skill: ["investigation"] }))[0], "Once per encounter, re-roll a botch on Investigation; no LUCK on the re-roll.");
+  const general = ruleRows(D.advantages.find(a => a.id === "favored-skill"))[0].ruleText;
+  assert.equal(rule("advantage", "favored-skill", held(1))[0], general, "no pick yet: the whole ruleText, not a half-filled line");
+  assert.equal(rule("advantage", "favored-skill", held(1, { skill: [""] }))[0], general);
   assert.equal(rule("advantage", "danger-sense", held(4))[0], "Name the main visible threat.");
   // Every byRank has one value per rank.
   for (const [, d] of P18_DEFS) for (const g of ruleRows(d).filter(r => r.byRank !== undefined))
@@ -2081,4 +2082,293 @@ test("P13 11: a held card's computed tags state its total, and leave out the row
   for (const [kind, d] of P18_DEFS) for (const g of d.grants.filter(r => ["skillPoints", "hpPerLevel", "naturalArmor"].includes(r.type)))
     for (let r = 1; r <= d.maxRank; r++)
       assert.ok(comp(d.id, held(r), kind)[0].includes(`+${g.perRank * r} `), `${d.id} at ${r}`);
+});
+
+// ── P19: Skills learn from traits (Decision 233) ─────────────────────────
+// A trait that changes a Skill's check: a number in the check, a kicker beside it, a Take X as its total, a die
+// face as a mark. The book is the source for every "when" (0430, 0440, 0530).
+const clone19 = ch => JSON.parse(JSON.stringify(ch));
+const hold19 = (ch, kind, id, rank = 1, extra = {}) => { ch[kind].push({ id, rank, notes: "", ...extra }); return ch; };
+const line19 = (ch, id) => JSON.parse(JSON.stringify(Engine.skillLine(ch, id)));
+// A character with a spread of Skills, so a trait that moves one number can be shown to leave the rest.
+function plain19() {
+  const ch = subject();
+  for (const [id, rank] of Object.entries({ stealth: 2, handguns: 4, dodge: 3, investigation: 3, "basic-tech": 2, awareness: 1, medical: 2, "combat-sense": 2, persuasion: 1, intuition: 2, "martial-arts": 2, survival: 1 }))
+    ch.skills[id] = { rank, ipe: 0 };
+  ch.skills["martial-arts"].selections = { style: ["karate"] };
+  ch.weapons.push({ id: "vs4-ironside", notes: "" });
+  return ch;
+}
+const checks19 = ch => Object.fromEntries(D.skills.map(s => [s.id, Engine.skillLine(ch, s.id).checkBonus]));
+// Every Skill but these reads exactly as it did.
+const onlyMoved19 = (before, after, moved, msg) => {
+  for (const s of D.skills) if (!moved.includes(s.id)) assert.equal(after[s.id], before[s.id], `${msg}: ${s.id} moved`);
+};
+const withMarks19 = ch => D.skills.filter(s => line19(ch, s.id).marks.length).map(s => s.id);
+
+test("book 0300/0430/0440/0530: the lines P19 computes say what the data says they do", () => {
+  const adv = crb("0430_Advantages.md"), dis = crb("0440_Disadvantages.md"), com = crb("0530_Combat_Encounters.md"), core = crb("0300_Core_Mechanics.md");
+  assert.match(adv, /Gain a \+3 synergy bonus to Stealth Skill Checks/);
+  assert.match(adv, /Add an additional 1d4 Kicker Die whenever making a Medical Skill Check/);
+  assert.match(adv, /Add an additional Kicker Die of 1d4 for Combat Sense Skill Checks/);
+  assert.match(adv, /Take 6 on Survival Checks used to navigate/);
+  assert.match(adv, /Take 8 on Intuition Skill Checks if you can perceive the aura of your target/);
+  assert.match(adv, /This Advantage can't be used while you're in combat/);
+  assert.match(adv, /When dealing with computers, vehicles, or technology, Take 6/);
+  assert.match(adv, /Refined Skills explode on a natural 9 or 10\. The explosion is suppressed/);
+  assert.match(dis, /Easily Hidden: \+3 Bonus to Stealth when trying to hide/);
+  assert.match(dis, /Relevant skills this Disadvantage affects suffer a -2 penalty/);
+  assert.match(dis, /With Awareness and Combat Sense Skill Checks you automatically fail if you roll a natural 2 or 3/);
+  assert.match(dis, /Persuasion checks fail automatically on a natural 2 or 3/);
+  assert.match(dis, /Any Intuition Skill Check to detect deceit fails automatically on a natural 2 or 3/);
+  assert.match(dis, /If the check fails: For the rest of the encounter, Combat Sense Checks fail automatically on a natural 2 or 3/);
+  assert.match(core, /treat the d10 result as X instead of rolling/);
+  assert.match(core, /cannot explode and cannot botch/);
+  // 0530 Visibility: the light levels and their attack penalties.
+  assert.match(com, /Attackers take a \*\*-1 Penalty\*\* to attacks against targets in \*\*Dim\*\*/);
+  assert.match(com, /Attackers take a \*\*-3 Penalty\*\* to attacks against targets in \*\*Dark\*\*/);
+  assert.match(com, /Attackers take a \*\*-5 Penalty\*\* to attacks against targets in \*\*Blind\*\*/);
+  same(D.visibility.map(v => [v.id, v.attack]), [["bright", 0], ["dim", -1], ["dark", -3], ["blind", -5]]);
+});
+
+test("P19 1: Ghost Step and Defect/Flaw are in the check, everywhere it's read", () => {
+  const plain = plain19(), base = checks19(plain);
+  // Neither held: a check is rank + stat + synergy + Pain + Conditions + form, and no trait is in it.
+  for (const s of D.skills) {
+    const l = line19(plain, s.id), b = l.breakdown;
+    assert.equal(l.checkBonus, (l.trained ? b.rank + b.primary.value + b.synergy.mod : b.primary.value) + b.pain + b.conditions + b.form, s.id);
+    assert.equal(b.traits, 0, `${s.id}: a trait in a plain check`);
+    assert.deepEqual(b.traitParts, [], s.id);
+  }
+  // Ghost Step: Stealth +3, nothing else.
+  const gs = hold19(clone19(plain), "advantages", "ghost-step");
+  assert.equal(Engine.skillLine(gs, "stealth").checkBonus, base.stealth + 3);
+  same(line19(gs, "stealth").breakdown.traitParts, [{ name: "Ghost Step", amount: 3 }]);
+  assert.equal(line19(gs, "stealth").breakdown.traits, 3);
+  onlyMoved19(base, checks19(gs), ["stealth"], "Ghost Step");
+  // Untrained, it still counts (Ken, P19 review): 0420 says an untrained check is the Primary Stat, and Ghost Step's "+3 synergy bonus to Stealth Skill Checks" is on the check, not the training.
+  // The two sentences the ruling read: if either moves, the ruling is worth asking again.
+  assert.match(crb("0420_Skills.md"), /^- \*\*Untrained\*\*: Primary Stat\r?$/m);
+  assert.match(crb("0430_Advantages.md"), /Gain a \+3 synergy bonus to Stealth Skill Checks/);
+  const gu = hold19(subject(), "advantages", "ghost-step");
+  assert.equal(Engine.skillLine(gu, "stealth").checkBonus, Engine.skillLine(subject(), "stealth").checkBonus + 3);
+  // Defect/Flaw ×2 on Handguns and Dodge: each −2.
+  const df = clone19(plain);
+  df.disadvantages.push({ id: "defect-flaw", rank: 2, notes: "", selections: { skill: ["handguns", "dodge"], detail: "shaky hands" } });
+  assert.equal(Engine.skillLine(df, "handguns").checkBonus, base.handguns - 2);
+  assert.equal(Engine.skillLine(df, "dodge").checkBonus, base.dodge - 2);
+  same(line19(df, "handguns").breakdown.traitParts, [{ name: "Defect/Flaw", amount: -2 }]);
+  onlyMoved19(base, checks19(df), ["handguns", "dodge"], "Defect/Flaw");
+  // The pick is cut to the rank: one rank, two picks stored, one Skill hurt.
+  const one = clone19(plain);
+  one.disadvantages.push({ id: "defect-flaw", rank: 1, notes: "", selections: { skill: ["handguns", "dodge"], detail: "x" } });
+  assert.equal(Engine.skillLine(one, "handguns").checkBonus, base.handguns - 2);
+  assert.equal(Engine.skillLine(one, "dodge").checkBonus, base.dodge, "a pick past the rank was applied");
+  // …and a rank with no pick yet hurts nothing.
+  const none = clone19(plain);
+  none.disadvantages.push({ id: "defect-flaw", rank: 1, notes: "", selections: {} });
+  same(checks19(none), base, "a Defect/Flaw with no Skill chosen moved a check");
+  // The attack is the Skill's check: a pistol is 2 lower.
+  assert.equal(Engine.weaponLine(plain, 0).attack, base.handguns);
+  assert.equal(Engine.weaponLine(df, 0).attack, base.handguns - 2, "the attack didn't follow the check");
+  // A maneuver's check is the Skill's, plus the style's bonus (Decision 229).
+  const ma = clone19(plain);
+  ma.disadvantages.push({ id: "defect-flaw", rank: 1, notes: "", selections: { skill: ["martial-arts"], detail: "x" } });
+  const m0 = Engine.maneuverChecks(plain, "martial-arts")[0], m1 = Engine.maneuverChecks(ma, "martial-arts")[0];
+  assert.equal(m1.check, m0.check - 2, "the maneuver's check didn't follow");
+  assert.equal(m1.check, Engine.skillLine(ma, "martial-arts").checkBonus + m1.bonus);
+  // What IP buys reads the rank, which never includes a trait.
+  assert.equal(Engine.skillLine(gs, "stealth").rank, Engine.skillLine(plain, "stealth").rank);
+});
+
+test("P19 2: a kicker is on its Skill's row, never in the number", () => {
+  const plain = plain19(), base = checks19(plain);
+  const fm = hold19(clone19(plain), "advantages", "field-medic");
+  same(line19(fm, "medical").kickers, [{ die: "1d4", from: "Field Medic" }]);
+  assert.equal(Engine.skillLine(fm, "medical").checkBonus, base.medical, "a kicker is in the number");
+  same(checks19(fm), base);
+  for (const s of D.skills) if (s.id !== "medical") same(line19(fm, s.id).kickers, [], `${s.id} has a kicker`);
+  const hv = hold19(clone19(plain), "advantages", "hyper-vigilance");
+  same(line19(hv, "combat-sense").kickers, [{ die: "1d4", from: "Hyper Vigilance" }]);
+  same(checks19(hv), base);
+  // Both held: each on its own Skill.
+  const both = hold19(clone19(fm), "advantages", "hyper-vigilance");
+  same(line19(both, "medical").kickers.map(k => k.from), ["Field Medic"]);
+  same(line19(both, "combat-sense").kickers.map(k => k.from), ["Hyper Vigilance"]);
+  same(line19(plain, "medical").kickers, []);
+});
+
+test("P19 3: Take X shows its total, choose-first, with its when", () => {
+  const plain = plain19();
+  const cs = hold19(clone19(plain), "advantages", "common-sense", 1, { selections: { skill: ["investigation"] } });
+  const l = line19(cs, "investigation");
+  assert.equal(l.takeX.length, 1);
+  assert.equal(l.takeX[0].x, 6); assert.equal(l.takeX[0].from, "Common Sense"); assert.equal(l.takeX[0].whenText, null);
+  assert.equal(l.takeX[0].total, 6 + l.checkBonus, "Take X is X plus the check");
+  assert.equal(l.takeX[0].text, `Take 6: ${6 + l.checkBonus} (choose before you roll)`);
+  assert.equal(l.checkBonus, line19(plain, "investigation").checkBonus, "Take X is not in the number");
+  // Pain comes off the total with the check.
+  const hurt = clone19(cs); hurt.trackers.damage = 10;
+  const lh = line19(hurt, "investigation");
+  assert.ok(lh.breakdown.pain < 0, "the fixture isn't hurt");
+  assert.equal(lh.takeX[0].total, 6 + lh.checkBonus);
+  assert.equal(lh.takeX[0].total, l.takeX[0].total + lh.breakdown.pain, "Pain is not in Take X's total");
+  // A Condition's roll penalty too.
+  const cond = clone19(cs); cond.trackers.conditions.push({ id: "stunned" });
+  const lc = line19(cond, "investigation");
+  assert.equal(lc.takeX[0].total, 6 + lc.checkBonus);
+  // Two ranks, two picks: each Skill; the rank cuts the picks (rank 1 with two stored names the first only).
+  const two = hold19(clone19(plain), "advantages", "common-sense", 2, { selections: { skill: ["basic-tech", "awareness"] } });
+  assert.equal(line19(two, "basic-tech").takeX.length, 1);
+  assert.equal(line19(two, "awareness").takeX.length, 1);
+  const cut = hold19(clone19(plain), "advantages", "common-sense", 1, { selections: { skill: ["basic-tech", "awareness"] } });
+  assert.equal(line19(cut, "basic-tech").takeX.length, 1);
+  assert.equal(line19(cut, "awareness").takeX.length, 0, "a pick past the rank was applied");
+  // Basic Tech with Common Sense, Lightning Calculator and Machindo: three lines, the unconditional one first.
+  const bt = clone19(plain);
+  hold19(bt, "advantages", "machindo"); hold19(bt, "advantages", "lightning-calculator");
+  hold19(bt, "advantages", "common-sense", 1, { selections: { skill: ["basic-tech"] } });
+  const t = line19(bt, "basic-tech").takeX;
+  same(t.map(x => x.from), ["Common Sense", "Machindo", "Lightning Calculator"]);
+  same(t.map(x => x.whenText), [null, "with technology", "not in combat"]);
+  assert.ok(t.every(x => x.x === 6 && x.total === 6 + line19(bt, "basic-tech").checkBonus));
+  assert.match(t[1].text, /^Take 6: \d+ with technology \(choose before you roll\)$/);
+  // The other holders, each with its when and its own X.
+  const rest = clone19(plain);
+  for (const id of ["sense-of-direction", "aura-sight"]) hold19(rest, "advantages", id);
+  const sv = line19(rest, "survival").takeX[0], ins = line19(rest, "intuition").takeX[0];
+  same([sv.x, sv.whenText, sv.from], [6, "to navigate", "Sense of Direction"]);
+  same([ins.x, ins.whenText, ins.from], [8, "when you can see their aura", "Aura Sight"]);
+  same(line19(rest, "stealth").takeX, []);
+});
+
+test("P19 4: the die faces are marked on the Skills they touch", () => {
+  const plain = plain19(), base = checks19(plain);
+  const marksOf = (ch, id) => line19(ch, id).marks.map(m => [m.kind, m.from]);
+  const di = hold19(clone19(plain), "disadvantages", "distractable");
+  for (const s of D.skills) same(marksOf(di, s.id), ["awareness", "combat-sense"].includes(s.id) ? [["failOn", "Distractable"]] : [], s.id);
+  assert.equal(line19(di, "awareness").marks[0].text, "Fails on a natural 2 or 3 (a 1 still botches)");
+  same(checks19(di), base, "a die-face rule moved a number");
+  const ss = hold19(clone19(plain), "disadvantages", "social-stigma");
+  same(withMarks19(ss), ["persuasion"]);
+  const gu = hold19(clone19(plain), "disadvantages", "gullible");
+  const gm = line19(gu, "intuition").marks;
+  same(gm.map(m => [m.kind, m.whenText]), [["failOn", "spotting a lie, unless it's preposterous"]]);
+  assert.match(gm[0].text, /spotting a lie, unless it's preposterous/);
+  assert.match(gm[0].text, /1 still botches/);
+  const bl = hold19(clone19(plain), "disadvantages", "blood-lust");
+  same(marksOf(bl, "combat-sense"), [["failOn", "Blood Lust"]]);
+  assert.match(line19(bl, "combat-sense").marks[0].text, /after you fail first blood's Sanity Check, for the encounter/);
+  // Distractable and Blood Lust on Combat Sense: both marks.
+  const both = hold19(clone19(bl), "disadvantages", "distractable");
+  same(marksOf(both, "combat-sense").map(m => m[1]).sort(), ["Blood Lust", "Distractable"]);
+  // Refined Skill: ranks over a natural and a bought row; the picks cut to the rank.
+  const rs = clone19(plain);
+  rs.advantages.push({ id: "refined-skill", rank: 1, notes: "", source: "natural" }, { id: "refined-skill", rank: 1, notes: "", selections: { skill: ["stealth", "medical", "dodge"] } });
+  same(withMarks19(rs), ["medical", "stealth"], "two ranks, two Skills");
+  assert.equal(line19(rs, "stealth").marks[0].text, "Explodes on a natural 9 or 10");
+  assert.equal(line19(rs, "medical").marks[0].kind, "explodeOn");
+  same(checks19(rs), base);
+  // Rank 1 with two picks stored: the first only.
+  const r1 = hold19(clone19(plain), "advantages", "refined-skill", 1, { selections: { skill: ["stealth", "medical"] } });
+  same(withMarks19(r1), ["stealth"], "a pick past the rank was applied");
+});
+
+test("P19 5: Night Vision names the light levels it cancels, from the data", () => {
+  const nv = hold19(plain19(), "advantages", "night-vision");
+  const aw = line19(nv, "awareness").marks;
+  same(aw.map(m => [m.kind, m.from, m.text]), [["visibility", "Night Vision", "No Dim or Dark penalty on visual checks"]]);
+  same(withMarks19(nv), ["awareness"]);
+  same(Engine.attackNotes(nv), [{ from: "Night Vision", text: "Dim −1 and Dark −3 don't apply to your attacks" }]);
+  same(Engine.attackNotes(plain19()), []);
+  // The numbers are the table's: change one and the line follows.
+  const dim = D.visibility.find(v => v.id === "dim"), was = dim.attack;
+  try { dim.attack = -2; assert.match(Engine.attackNotes(nv)[0].text, /^Dim −2 and Dark −3 /); }
+  finally { dim.attack = was; }
+  // Blind isn't cancelled.
+  assert.ok(!/Blind/.test(Engine.attackNotes(nv)[0].text));
+});
+
+test("P19 6: the tags are computed now, held and unheld", () => {
+  const comp = (kind, id, h = null) => tagsOf(kind, id, h).filter(t => t.computed).map(t => t.text);
+  const rule = (kind, id) => tagsOf(kind, id).filter(t => !t.computed).map(t => t.text);
+  const held = (rank, selections) => ({ rank, selections });
+  same(comp("advantage", "ghost-step"), ["+3 on checks with Stealth"]);
+  same(comp("disadvantage", "defect-flaw"), ["−2 on checks with the Skill you choose"]);
+  same(comp("disadvantage", "defect-flaw", held(2, { skill: ["handguns", "dodge"] })), ["−2 on checks with Handguns, Dodge"]);
+  same(comp("disadvantage", "defect-flaw", held(1, { skill: ["handguns", "dodge"] })), ["−2 on checks with Handguns"], "the rank cuts the picks");
+  same(comp("disadvantage", "defect-flaw", held(1, { skill: [] })), ["−2 on checks with the Skill you choose"], "no pick yet: the general line");
+  same(comp("disadvantage", "dwarf"), ["+3 on checks with Stealth when hiding"]);
+  same(comp("advantage", "field-medic"), ["+1d4 Kicker Die on Medical checks"]);
+  same(comp("advantage", "hyper-vigilance"), ["+1d4 Kicker Die on Combat Sense checks"]);
+  same(comp("advantage", "common-sense"), ["Take 6 on the Skill you choose; choose before you roll"]);
+  same(comp("advantage", "common-sense", held(1, { skill: ["investigation"] })), ["Take 6 on Investigation; choose before you roll"]);
+  assert.match(comp("advantage", "lightning-calculator")[0], /^Take 6 on Programming, Basic Tech, Engineering not in combat; choose before you roll$/);
+  assert.match(comp("advantage", "machindo")[0], /with technology/);
+  assert.match(comp("advantage", "sense-of-direction")[0], /^Take 6 on Survival to navigate/);
+  assert.match(comp("advantage", "aura-sight")[0], /^Take 8 on Intuition when you can see their aura/);
+  same(comp("disadvantage", "distractable"), ["Awareness, Combat Sense checks fail on a natural 2 or 3 (a 1 still botches)"]);
+  assert.match(comp("disadvantage", "social-stigma")[0], /^Persuasion checks fail on a natural 2 or 3/);
+  assert.match(comp("disadvantage", "gullible")[0], /spotting a lie, unless it's preposterous/);
+  assert.match(comp("disadvantage", "blood-lust")[0], /after you fail first blood's Sanity Check, for the encounter/);
+  same(comp("advantage", "refined-skill"), ["Explodes on a natural 9 or 10: the Skill you choose"]);
+  same(comp("advantage", "refined-skill", held(2, { skill: ["stealth", "medical"] })), ["Explodes on a natural 9 or 10: Stealth, Medical"]);
+  same(comp("advantage", "night-vision"), ["Dim −1 and Dark −3 don't apply to your attacks", "No Dim or Dark penalty on visual Awareness checks"]);
+  // What stays a rule row, still says its words.
+  same(rule("disadvantage", "dwarf"), ["BOD max 8, MOB max 3.", "At most 3'6\" tall."]);
+  same(rule("advantage", "refined-skill"), ["Not on a Combat Cunning stunt."]);
+  same(rule("advantage", "lightning-calculator"), ["Anyone you help with a TECH Skill gets +1. Not in combat."]);
+  same(rule("advantage", "machindo"), ["INT and TECH Essence Checks: TN −1 (to a minimum of 1)."]);
+  same(rule("advantage", "sense-of-direction"), ["Always know the cardinal directions."]);
+  same(rule("advantage", "field-medic"), ["Stacks with other kickers."]);
+  same(rule("disadvantage", "blood-lust"), ["Sanity −5%.", "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one."]);
+  // Every entry P19 computes reads at least one chip, and none has an unfilled placeholder.
+  const ids = ["ghost-step", "defect-flaw", "dwarf", "field-medic", "hyper-vigilance", "common-sense", "lightning-calculator", "machindo", "sense-of-direction", "aura-sight", "distractable", "social-stigma", "gullible", "blood-lust", "refined-skill", "night-vision"];
+  assert.equal(ids.length, 16);
+  for (const [kind, d] of P18_DEFS.filter(([, d]) => ids.includes(d.id))) {
+    assert.ok(comp(kind, d.id).length >= 1, `${d.id}: no computed tag`);
+    for (const h of [null, held(d.maxRank, { skill: ["stealth", "medical", "dodge", "handguns"] })])
+      for (const t of comp(kind, d.id, h)) assert.ok(!/[{}]|undefined|NaN/.test(t), `${d.id}: "${t}"`);
+  }
+  // Every one of the 16 is a computed row now, and only these 16 use the new types.
+  const types = new Set(["checkMod", "kicker", "takeX", "failOn", "explodeOn", "visibility"]);
+  for (const id of ids) assert.ok(P18_DEFS.find(([, d]) => d.id === id)[1].grants.some(g => types.has(g.type)), `${id} is still a rule row`);
+  const users = P18_DEFS.filter(([, d]) => d.grants.some(g => types.has(g.type))).map(([, d]) => d.id).sort();
+  same(users, [...ids].sort());
+});
+
+test("P19 7: a conditional row is a mark, never a number", () => {
+  const plain = plain19(), base = checks19(plain);
+  const dw = hold19(clone19(plain), "disadvantages", "dwarf");
+  same(checks19(dw), base, "Dwarf's +3 is in a Stealth check");
+  const l = line19(dw, "stealth");
+  assert.equal(l.breakdown.traits, 0);
+  same(l.marks.map(m => [m.kind, m.text, m.from, m.whenText]), [["checkMod", "+3 when hiding", "Dwarf", "when hiding"]]);
+  // The guard's mutant: take the when away and the row is a number.
+  const row = D.disadvantages.find(d => d.id === "dwarf").grants.find(g => g.type === "checkMod"), was = row.whenText;
+  try {
+    delete row.whenText;
+    assert.equal(Engine.skillLine(dw, "stealth").checkBonus, base.stealth + 3);
+    same(line19(dw, "stealth").marks, []);
+  } finally { row.whenText = was; }
+  same(checks19(dw), base);
+});
+
+// Decision 233's Revisit if: no Skill can hold two kickers, or a kicker and a Take X. If data makes one reachable,
+// this fails, and the order says to stop and ask.
+test("P19 7b: no Skill can hold two kickers, or a kicker and a Take X", () => {
+  const reach = new Map();       // skill id -> { kicker:[ids], takeX:[ids] }
+  for (const [, d] of P18_DEFS) for (const g of d.grants) {
+    if (g.type !== "kicker" && g.type !== "takeX") continue;
+    const ids = Array.isArray(g.skills) ? g.skills : (() => {
+      const p = (d.picks || []).find(x => x.id === g.skillsFromPick);
+      return p && p.from && p.from.ids ? p.from.ids : D.skills.map(s => s.id);
+    })();
+    for (const id of ids) { const r = reach.get(id) || { kicker: [], takeX: [] }; r[g.type].push(d.id); reach.set(id, r); }
+  }
+  assert.ok(reach.size >= 10, "found no kickers or Take X: did the types get renamed?");
+  for (const [id, r] of reach) {
+    assert.ok(r.kicker.length <= 1, `${id} can hold two kickers: ${r.kicker}`);
+    assert.ok(!(r.kicker.length && r.takeX.length), `${id} can hold a kicker and a Take X: ${r.kicker} / ${r.takeX}`);
+  }
 });

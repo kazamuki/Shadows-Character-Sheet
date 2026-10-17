@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.40",
+    "gamedataVersion": "0.41",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -1085,7 +1085,39 @@ window.SHADOWS_DATA = {
     "luckCost": "LUCK: {action} costs {cost}",
     "milestone": "A {kind} Milestone at rank {atRank}",
     "painLevel": "Pain Level +{amount} once you're hurt",
-    "creationOnly": "Creation only"
+    "creationOnly": "Creation only",
+    "checkMod": "{amount} on checks with {skills}",
+    "checkModWhen": "{amount} on checks with {skills} {whenText}",
+    "kicker": "+{die} Kicker Die on {skills} checks",
+    "takeX": "Take {x} on {skills}; choose before you roll",
+    "takeXWhen": "Take {x} on {skills} {whenText}; choose before you roll",
+    "failOn": "{skills} checks fail on a natural {faces} (a 1 still botches)",
+    "failOnWhen": "{skills} checks fail on a natural {faces} {whenText} (a 1 still botches)",
+    "explodeOn": "Explodes on a natural {faces}: {skills}",
+    "visibilityAttacks": "{levels} don't apply to your attacks",
+    "visibilityAwareness": "No {names} penalty on visual Awareness checks",
+    "pickedSkill": "the Skill you choose"
+  },
+  /* Decision 233: the light levels 0530 (Visibility) sets, read by a `visibility` grants row (Night Vision), which names
+     the ones it ignores. `attack` is the penalty to an attack against a target in that light. Read by Engine.attackNotes. */
+  "visibility": [
+    { "id": "bright", "name": "Bright", "attack": 0 },
+    { "id": "dim",    "name": "Dim",    "attack": -1 },
+    { "id": "dark",   "name": "Dark",   "attack": -3 },
+    { "id": "blind",  "name": "Blind",  "attack": -5 }
+  ],
+  /* Decision 233: how a Skill's row says what a trait does to its check, filled from the same rows the engine computes
+     from. `{total}` is X plus the whole check; `{names}` the levels a `visibility` row ignores ("Dim or Dark"), `{levels}`
+     those with their attack penalty. Read by Engine.skillLine and Engine.attackNotes. */
+  "skillRowText": {
+    "takeX": "Take {x}: {total} (choose before you roll)",
+    "takeXWhen": "Take {x}: {total} {whenText} (choose before you roll)",
+    "failOn": "Fails on a natural {faces} (a 1 still botches)",
+    "failOnWhen": "Fails on a natural {faces} {whenText} (a 1 still botches)",
+    "explodeOn": "Explodes on a natural {faces}",
+    "checkModWhen": "{amount} {whenText}",
+    "visibilityAwareness": "No {names} penalty on visual checks",
+    "visibilityAttacks": "{levels} don't apply to your attacks"
   },
   /* Decision 232: the same computed tags on a card the character holds, which state its total. `{total}` is the row's
      `perRank` times the held rank (natural and bought ranks summed), `{perRank}` is still the row's own. A type with no
@@ -1148,7 +1180,7 @@ window.SHADOWS_DATA = {
       "description": "Everyone in NYTE City wears a mask. Aura Sight sees behind it.\n\nYou see the aura of living beings within 30 feet of you. Aura Sight allows you to perceive these energy fields through solid objects and walls. Auras can indicate:\n\n- Power Level\n\n- Mood\n\n- Mental Health\n\n- Physical Health\n\nTake 8 on Intuition Skill Checks if you can perceive the aura of your target.",
       "grants": [
         { "type": "rule", "ruleText": "See the auras of the living within 30 feet, through walls: power, mood, mental and physical health." },
-        { "type": "rule", "ruleText": "Take 8 on Intuition when you can see the target's aura." }
+        { "type": "takeX", "x": 8, "skills": ["intuition"], "whenText": "when you can see their aura" }
       ]
     },
     {
@@ -1201,7 +1233,7 @@ window.SHADOWS_DATA = {
       "description": "You have a natural aptitude for seeing what others tend to miss. Choose one of the following skills:\n\n- Investigation\n\n- Awareness\n\n- Basic Tech\n\n- Intuition\n\nTake 6 on the selected skill.\n\nChoose a different Skill for each rank.",
       "universal": true,
       "grants": [
-        { "type": "rule", "ruleText": "Take 6 on your chosen Skill: Investigation, Awareness, Basic Tech or Intuition. A different one each rank.", "heldText": "Take 6 on {choice}." }
+        { "type": "takeX", "x": 6, "skillsFromPick": "skill" }
       ]
     },
     {
@@ -1340,7 +1372,8 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "The difference between patching and healing is the hands doing it.\n\nAdd an additional 1d4 Kicker Die whenever making a Medical Skill Check.\n\nThis advantage can stack with other kicker die applied to this Skill Check.",
       "grants": [
-        { "type": "rule", "ruleText": "+1d4 Kicker Die on Medical Skill Checks; stacks with other kickers." }
+        { "type": "kicker", "die": "1d4", "skills": ["medical"] },
+        { "type": "rule", "ruleText": "Stacks with other kickers." }
       ]
     },
     {
@@ -1369,7 +1402,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "When you don't want to be seen, you're not.\n\nGain a +3 synergy bonus to Stealth Skill Checks.",
       "grants": [
-        { "type": "rule", "ruleText": "+3 to Stealth Skill Checks." }
+        { "type": "checkMod", "amount": 3, "skills": ["stealth"] }
       ]
     },
     {
@@ -1410,7 +1443,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Combat leaves a mark. This is the useful one.\n\nAdd an additional Kicker Die of 1d4 for Combat Sense Skill Checks.",
       "grants": [
-        { "type": "rule", "ruleText": "+1d4 Kicker Die on Combat Sense Skill Checks." }
+        { "type": "kicker", "die": "1d4", "skills": ["combat-sense"] }
       ]
     },
     {
@@ -1469,7 +1502,8 @@ window.SHADOWS_DATA = {
       "description": "NYTE City runs on numbers. Some people just see them faster.\n\nResolve complex mathematical equations without technology or writing. When applicable, Take 6 on:\n\n- Programming\n\n- Basic Tech\n\n- Engineering\n\nIf you're helping someone using any TECH-related skill they gain a +1 synergy bonus while you're present.\n\nThis Advantage can't be used while you're in combat.",
       "universal": true,
       "grants": [
-        { "type": "rule", "ruleText": "Take 6 on Programming, Basic Tech and Engineering; anyone you help with a TECH Skill gets +1. Not in combat." }
+        { "type": "takeX", "x": 6, "skills": ["programming", "basic-tech", "engineering"], "whenText": "not in combat" },
+        { "type": "rule", "ruleText": "Anyone you help with a TECH Skill gets +1. Not in combat." }
       ]
     },
     {
@@ -1505,7 +1539,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Every system has a logic. Machindo means you already know it.\n\nTechnology works for you the way it doesn't for anyone else. When dealing with computers, vehicles, or technology, Take 6 on the following skill checks:\n\n- Basic Tech\n\n- Engineering\n\n- Interface\n\n- Robotics\n\n- Pilot\n\nWhenever making an INT or TECH-based Essence check the Target Number (TN) is reduced by 1 (to a minimum of 1).",
       "grants": [
-        { "type": "rule", "ruleText": "With technology, Take 6 on Basic Tech, Engineering, Interface, Robotics and Pilot." },
+        { "type": "takeX", "x": 6, "skills": ["basic-tech", "engineering", "interface", "robotics", "pilot"], "whenText": "with technology" },
         { "type": "rule", "ruleText": "INT and TECH Essence Checks: TN −1 (to a minimum of 1)." }
       ]
     },
@@ -1546,7 +1580,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "NYTE City never fully turns the lights off. But close enough.\n\nNo penalty on visual Awareness checks or attacks when visibility is Dim or Dark.",
       "grants": [
-        { "type": "rule", "ruleText": "No penalty on visual Awareness checks or attacks when visibility is Dim or Dark." }
+        { "type": "visibility", "ignore": ["dim", "dark"], "on": ["attacks", "awareness"] }
       ]
     },
     {
@@ -1607,7 +1641,8 @@ window.SHADOWS_DATA = {
       "maxRank": 5,
       "description": "Choose a skill. Refined Skills explode on a natural 9 or 10. The explosion is suppressed when this skill is used with Combat Cunning to perform a stunt.\n\nChoose a different skill for each rank in this advantage.",
       "grants": [
-        { "type": "rule", "ruleText": "Your chosen Skill explodes on a natural 9 or 10 (not on a Combat Cunning stunt). A different Skill each rank.", "heldText": "{choice} explodes on a natural 9 or 10 (not on a Combat Cunning stunt)." }
+        { "type": "explodeOn", "faces": [9, 10], "skillsFromPick": "skill" },
+        { "type": "rule", "ruleText": "Not on a Combat Cunning stunt." }
       ]
     },
     {
@@ -1649,7 +1684,8 @@ window.SHADOWS_DATA = {
       "description": "You discern all cardinal directions even while blindfolded or underground. Take 6 on Survival Checks used to navigate your surroundings.",
       "universal": true,
       "grants": [
-        { "type": "rule", "ruleText": "Always know the cardinal directions; Take 6 on Survival to navigate." }
+        { "type": "takeX", "x": 6, "skills": ["survival"], "whenText": "to navigate" },
+        { "type": "rule", "ruleText": "Always know the cardinal directions." }
       ]
     },
     {
@@ -1807,7 +1843,8 @@ window.SHADOWS_DATA = {
       "description": "Everyone bleeds. Not everyone stops to watch.\n\nThe sight of blood is intoxicating. When you witness blood there is a wave of euphoria that is disorienting and suspends your sense of your surroundings briefly.\n\nSanity is reduced by 5%.\n\nThe first time blood is drawn during an encounter, roll a Sanity Check.\n\n- If successful: Blood Lust is negated until your next encounter\n\n- If the check fails: For the rest of the encounter, Combat Sense Checks fail automatically on a natural 2 or 3 on the die due to the distraction. Rolling a 1 is still a botch.",
       "grants": [
         { "type": "rule", "ruleText": "Sanity −5%." },
-        { "type": "rule", "ruleText": "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one. Fail, and Combat Sense Checks fail on a natural 2 or 3 for the rest of it (a 1 still botches)." }
+        { "type": "rule", "ruleText": "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one." },
+        { "type": "failOn", "faces": [2, 3], "skills": ["combat-sense"], "whenText": "after you fail first blood's Sanity Check, for the encounter" }
       ]
     },
     {
@@ -1882,7 +1919,7 @@ window.SHADOWS_DATA = {
       "maxRank": 4,
       "description": "You have a specific flaw or defect that makes things more difficult for you. These can be things like being illiterate, suffering from dyslexia, or color blindness. Discuss what the defect is with your GM when you select this Disadvantage. Relevant skills this Disadvantage affects suffer a −2 penalty. Each Rank purchased for this Disadvantage applies to a different defect and skill(s).\n\nPossible defects could be:\n\n- Color Blindness (visual Awareness Checks)\n\n- Hard of hearing (audio Awareness Checks)\n\n- Uncontrollable Stutter (Persuasion Checks)\n\n- Shaky hands (Combat Skills like Handgun or Melee)\n\n- Vertigo (Acrobatics Checks)\n\n- Missing eye or lack of depth perception (combat skills using firearms or Pilot)",
       "grants": [
-        { "type": "rule", "ruleText": "−2 on the Skill your defect hurts; a different defect each rank.", "heldText": "−2 on {choice:skill}." }
+        { "type": "checkMod", "amount": -2, "skillsFromPick": "skill" }
       ]
     },
     {
@@ -1902,7 +1939,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "You're easily distracted. With Awareness and Combat Sense Skill Checks you automatically fail if you roll a natural 2 or 3 on the die. Rolling a 1 is still a botch.",
       "grants": [
-        { "type": "rule", "ruleText": "Awareness and Combat Sense Checks fail on a natural 2 or 3 (a 1 still botches)." }
+        { "type": "failOn", "faces": [2, 3], "skills": ["awareness", "combat-sense"] }
       ]
     },
     {
@@ -1913,7 +1950,8 @@ window.SHADOWS_DATA = {
       "description": "You're incredibly short. This affects certain physical attributes and skills.\n\n- BOD Max: 8\n\n- MOB Max: 3\n\n- Height Max: 3'6''\n\n- Easily Hidden: +3 Bonus to Stealth when trying to hide.",
       "grants": [
         { "type": "rule", "ruleText": "BOD max 8, MOB max 3." },
-        { "type": "rule", "ruleText": "+3 to Stealth when hiding. At most 3'6\" tall." }
+        { "type": "checkMod", "amount": 3, "skills": ["stealth"], "whenText": "when hiding" },
+        { "type": "rule", "ruleText": "At most 3'6\" tall." }
       ]
     },
     {
@@ -1982,7 +2020,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Lies work on you. Any Intuition Skill Check to detect deceit fails automatically on a natural 2 or 3. A 1 is still a botch.\n\nThis Disadvantage doesn't apply if the lie being told is outrageously preposterous.",
       "grants": [
-        { "type": "rule", "ruleText": "Intuition checks to spot a lie fail on a natural 2 or 3 (a 1 still botches), unless the lie is preposterous." }
+        { "type": "failOn", "faces": [2, 3], "skills": ["intuition"], "whenText": "spotting a lie, unless it's preposterous" }
       ]
     },
     {
@@ -2106,7 +2144,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "People perceive you in a negative light. It could be the way you look, the way you dress, or the way you talk. Persuasion checks fail automatically on a natural 2 or 3. Rolling a 1 is still a botch.",
       "grants": [
-        { "type": "rule", "ruleText": "Persuasion checks fail on a natural 2 or 3 (a 1 still botches)." }
+        { "type": "failOn", "faces": [2, 3], "skills": ["persuasion"] }
       ]
     },
     {
@@ -3865,6 +3903,7 @@ window.SHADOWS_DATA = {
   },
   "appCopy": {
     "expertHint": "Folds each entry to its name and cost. Tap ? to read one.",
+    "expertTitle": "Folds the reading on the Stats, Archetype, Skills and Character Points steps. Tap ? to read one.",
     "unsettledLabel": "Not settled yet",
     "unsettledRule": "This rule is still being written. Until it is, it's your GM's call.",
     "houseRuleLabel": "How this works",
