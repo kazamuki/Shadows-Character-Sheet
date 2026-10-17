@@ -6,16 +6,16 @@
 - a **computed** effect is a `grants` row the engine already applies; its tag text is **filled from the row's own numbers** by a per-type template in the data, so it can't drift from what the sheet does;
 - a **table rule** is a new `grants` row type the engine skips, carrying its own `ruleText`;
 - the tags show on the CP step's entries (both modes) and on the Character tab's cards (visible while folded). P13's Expert mode then folds the prose and keeps the tags;
-- **eleven descriptions move with Deighton's rulings** (2026-10-16): "aimed shots" become the Called Shot stunt (Ambidextrous, Bullseye, Quick Draw, Stunt Rider), Night Vision covers Dim and Dark, Archery Master takes crossbows, Gun Master beam weapons, Melee Master Martial Arts, Riposte is once per round, Scrapper is Melee and Martial Arts with a minimum of 1, Backfooted names Combat Maneuvers. The draft carries each new `description`; the book catches up (`crb-catch-up.md`);
+- **eleven descriptions move with Deighton's rulings** (2026-10-16): "aimed shots" become the Called Shot stunt (Ambidextrous, Bullseye, Quick Draw, Stunt Rider), Night Vision covers Dim and Dark, Archery Master takes crossbows, Gun Master beam weapons, Melee Master Martial Arts and thrown weapons, Riposte is once per round, Scrapper is Melee and Martial Arts with a minimum of 1, Backfooted names Combat Maneuvers. The draft carries each new `description`; the book catches up (`crb-catch-up.md`);
 - **a held entry's tags speak to that character** (Ken, 2026-10-16): its rank (Bullseye at rank 2 is +6, Gun Master's attacks are its rank), its picks ("Take 6 on Investigation"), and "Creation only" from the data's `creationOnly`.
 
 **Not in scope:** computing anything new. The review found **19 effects in 7 areas** that the sheet shows a number for and never applies (the SAN cuts, Terminal Disease's Pain, Ghost Step's +3, Age's stat caps, Wealthy's Çredits…). They go to the sign-off page as questions. The answers become **P19** (a Skill's check: Ghost Step, Defect/Flaw, the kickers, with Take X and the die-face marks) and **P20** (the rest). P18 shows them as table rules, which is what they are today.
 
-**Status:** **drafted 2026-10-16 by Claude (Opus).** Pre-flighted against `main` at `b4935ec` (#206 merged; `[Unreleased] — app 0.47.1`). The 87 entries' effects are in [`P18-effects-draft.json`](P18-effects-draft.json), **signed off on 2026-10-16** by Ken, Deighton and Scott ([`rulings-2026-10-16.md`](../../reference/rulings-2026-10-16.md)): every entry `"signed": true`, Deighton's edits the signed text, signed on the [sign-off page](https://claude.ai/artifact/Ah3WbcFhEGc6UNw5RNtsK8). The build uses the **signed-off** text, never the draft. §3's PQ1–PQ4 wait on Ken; the build waits on them. **Rev 2 (2026-10-16, Ken):** rank-aware and pick-aware tags and the creation-only tag joined; 24 entries' drafts changed after Ken's first pass, and the page marks them to sign again.
+**Status:** **drafted 2026-10-16 by Claude (Opus).** Pre-flighted against `main` at `b4935ec` (#206 merged; `[Unreleased] — app 0.47.1`). The 87 entries' effects are in [`P18-effects-draft.json`](P18-effects-draft.json), **signed off on 2026-10-16** by Ken, Deighton and Scott ([`rulings-2026-10-16.md`](../../reference/rulings-2026-10-16.md)): every entry `"signed": true`, Deighton's edits the signed text, signed on the [sign-off page](https://claude.ai/artifact/Ah3WbcFhEGc6UNw5RNtsK8). The build uses the **signed-off** text, never the draft. **Ken answered PQ1–PQ4 on 2026-10-16: the defaults.** Ready to build. **Rev 2 (2026-10-16, Ken):** rank-aware and pick-aware tags and the creation-only tag joined; 24 entries' drafts changed after Ken's first pass, and the page marks them to sign again.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off. **Runs before P13** (Ken): Expert mode ships with the tags.
 
-**Cadence:** the two-session loop (`gm-mode/README.md`, *The cadence*). Ken starts **P18 build** (Sonnet) once the page is signed off and §3 is answered; a fresh reviewer (Opus) after.
+**Cadence:** the two-session loop (`gm-mode/README.md`, *The cadence*). Ken starts **P18 build** (Sonnet), the page signed off and §3 answered; a fresh reviewer (Opus) after.
 
 **Probes against `main`** (`5875bd5`, rechecked at `b4935ec`; a Professional, every stat 9):
 
@@ -65,10 +65,10 @@ When P18 is merged:
 
 | Id | Question | Default | Answer |
 |---|---|---|---|
-| PQ1 | **Where tags show beyond the wizard.** | **The Character tab's cards too**, in the summary, so a folded card says what it does. *Alternative:* the wizard only. | |
-| PQ2 | **Computed and rule tags, told apart.** | A computed tag is a chip (the sheet applies it); a rule is a plain line under it (the table applies it). The difference is in the shape, not a label. *Alternative:* both as lines, with a small "applied" mark on computed ones. | |
-| PQ3 | **Long rule text.** | Signed-off rules run up to about 200 characters (True Faith). Lines wrap; no truncation, because a cut-off rule is a wrong rule. *Alternative:* truncate with **?** to expand. | |
-| PQ4 | **Print.** | **Out of scope** (a W-next): the front page is full (Decision 96). | |
+| PQ1 | **Where tags show beyond the wizard.** | **The Character tab's cards too**, in the summary, so a folded card says what it does. *Alternative:* the wizard only. || **Ken, 2026-10-16: the default.** |
+| PQ2 | **Computed and rule tags, told apart.** | A computed tag is a chip (the sheet applies it); a rule is a plain line under it (the table applies it). The difference is in the shape, not a label. *Alternative:* both as lines, with a small "applied" mark on computed ones. || **Ken, 2026-10-16: the default.** |
+| PQ3 | **Long rule text.** | Signed-off rules run up to about 200 characters (True Faith). Lines wrap; no truncation, because a cut-off rule is a wrong rule. *Alternative:* truncate with **?** to expand. || **Ken, 2026-10-16: the default.** |
+| PQ4 | **Print.** | **Out of scope** (a W-next): the front page is full (Decision 96). || **Ken, 2026-10-16: the default.** |
 
 ## 3a. The decision, drafted
 
@@ -182,7 +182,7 @@ Placeholders are a row's own fields, plus `{action}`/`{cost}` for `luckCost` and
 
 **CHANGELOG** (player voice):
 - **Called Shots get the Advantages' bonuses.** Ambidextrous, Bullseye, Quick Draw and Stunt Rider now work with the Called Shot stunt (the old "aimed shots"). Bullseye adds its damage to a Called Shot, and Quick Draw lets you make one as an Action.
-- **Rules updates:** Night Vision ignores Dim and Dark for Awareness and attacks. Archery Master counts crossbows, Gun Master beam weapons, and Melee Master Martial Arts. Riposte works once per round off any parry. Scrapper halves Melee and Martial Arts damage, never below 1. Backfooted answers any Combat Maneuver.
+- **Rules updates:** Night Vision ignores Dim and Dark for Awareness and attacks. Archery Master counts crossbows, Gun Master beam weapons, and Melee Master Martial Arts and thrown weapons. Riposte works once per round off any parry. Scrapper halves Melee and Martial Arts damage, never below 1. Backfooted answers any Combat Maneuver.
 - **Every Advantage and Disadvantage says what it does at a glance.** On the Character Points step and on your Character tab, each one shows its effects as short tags: what the sheet applies for you, and what your table applies.
 
 **Review checklist:**

@@ -95,7 +95,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
   - **Quick Draw:** draw and use a weapon as a free action, and make a Called Shot as an Action instead of a Stunt. *(Deighton's line dropped the free-action draw; Ken kept it, 2026-10-16.)*
   - **Stunt Rider:** Called Shots from a moving vehicle with no penalties. The Bullseye sentence can go: Bullseye now applies to any Called Shot.
 - ☐ ⚖ **Night Vision** uses the light levels (0530: Bright, Dim −1, Dark −3, Blind −5): no penalty on visual Awareness checks **or attacks** when visibility is Dim or Dark (Deighton, 2026-10-16).
-- ☐ ⚖ **Archery Master** includes crossbows (the book says it doesn't). **Gun Master** includes beam weapons, and **Melee Master** includes Martial Arts (Ken, 2026-10-16). All three say "per round". ❓ Do thrown weapons count for Melee Master? Ken is asking the group.
+- ☐ ⚖ **Archery Master** includes crossbows (the book says it doesn't). **Gun Master** includes beam weapons, and **Melee Master** includes Martial Arts and thrown weapons (Ken, 2026-10-16, thrown from the group). All three say "per round".
 - ☐ ⚖ **Riposte:** once per round, after any successful parry (melee **or** Martial Arts); no longer a stunt ("I don't think defensive Stunts will work", Deighton, 2026-10-16).
 - ☐ ⚖ **Scrapper:** damage from **Melee and Martial Arts** attacks is halved, rounded down, **but not less than 1** (replaces "hand-to-hand and blunt melee", Deighton, 2026-10-16).
 - ☐ ⚖ **Backfooted:** defending against a **Combat Maneuver** (0530's four), not "a stunt maneuver (trip, throw, grapple, disarm)" (Deighton, 2026-10-16).

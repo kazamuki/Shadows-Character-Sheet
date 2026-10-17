@@ -468,12 +468,12 @@
    "effects": [
     {
      "k": "rule",
-     "text": "+1 attack per round per rank with melee attacks, Martial Arts included.",
-     "heldText": "Extra attacks per round with melee attacks, Martial Arts included: {rank}."
+     "text": "+1 attack per round per rank with melee attacks, Martial Arts and thrown weapons included.",
+     "heldText": "Extra attacks per round with melee attacks, Martial Arts and thrown weapons included: {rank}."
     }
    ],
    "rev": 2,
-   "description": "The first hit starts the fight. The rest of yours end it.\n\nEach rank grants 1 additional attack per round when making melee attacks, Martial Arts included.",
+   "description": "The first hit starts the fight. The rest of yours end it.\n\nEach rank grants 1 additional attack per round when making melee attacks, Martial Arts and thrown weapons included.",
    "signed": true
   },
   {
