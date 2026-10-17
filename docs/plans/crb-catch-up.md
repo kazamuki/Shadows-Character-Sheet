@@ -92,7 +92,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ ⚖ **"Aimed shots" are the Called Shot stunt** (Deighton, 2026-10-16; `reference/rulings-2026-10-16.md`). 0430 still says "aimed shots"; 0530 › Stunts defines the **Called Shot**. Rewrite four entries to it:
   - **Ambidextrous:** you can make the Called Shot stunt with either hand.
   - **Bullseye:** a Called Shot gains +4 damage, +2 more per rank after the first.
-  - **Quick Draw:** draw and use a weapon as a free action, and make a Called Shot as an Action instead of a Stunt. *(Deighton's line dropped the free-action draw; the sheet keeps it, Ken to confirm.)*
+  - **Quick Draw:** draw and use a weapon as a free action, and make a Called Shot as an Action instead of a Stunt. *(Deighton's line dropped the free-action draw; Ken kept it, 2026-10-16.)*
   - **Stunt Rider:** Called Shots from a moving vehicle with no penalties. The Bullseye sentence can go: Bullseye now applies to any Called Shot.
 - ☐ ⚖ **Night Vision** uses the light levels (0530: Bright, Dim −1, Dark −3, Blind −5): no penalty on visual Awareness checks **or attacks** when visibility is Dim or Dark (Deighton, 2026-10-16).
 - ☐ ⚖ **Archery Master** includes crossbows (the book says it doesn't). **Gun Master** includes beam weapons, and **Melee Master** includes Martial Arts (Ken, 2026-10-16). All three say "per round". ❓ Do thrown weapons count for Melee Master? Ken is asking the group.
