@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.48.0
+## v0.48.0 — 2026-10-16
 
 - **Expert mode for making a character.** On the Archetype, Skills and Character Points steps, Expert mode folds the reading away and keeps the choosing: names, costs, buttons, and what each Advantage or Disadvantage does, as tags. Tap **?** to read the full text. Your browser remembers it.
 - **Held only** on the Character Points step shows just what you've taken.
