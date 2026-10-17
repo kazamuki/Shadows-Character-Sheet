@@ -3945,7 +3945,7 @@ window.SHADOWS_DATA = {
     "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}.",
     "statMaxBy": "Max {max} ({by}).",
     "statMaxOver": "{stat} is {value}, over {by}'s max of {max}.",
-    "statMaxLock": "{stat} is {value}, over {by}'s max of {max}. Lower it on the Stats step."
+    "statMaxLock": "{stat} is {value}, over {by}'s max of {max}. Lower it on the {step} step."
   },
   "ip": {
     /* 5 IP an hour of play, rounded up (CRB 0450): the Session Log's and GM mode's close-out (Decisions 206, 228). */

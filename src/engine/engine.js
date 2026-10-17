@@ -282,7 +282,14 @@ const Engine = (() => {
       const m = statMax(ch, s.id);
       if (!m.by || !isPlainObj(ch.stats[s.id])) continue;
       const value = statValue(ch, s.id);
-      if (value > m.max) out.push({ stat:s.id, value, max:m.max, by:m.by });
+      if (!(value > m.max)) continue;
+      // Where the points sit, so the player is sent to a step that can lower them: the Stats step holds the base, the
+      // Archetype step a Focus or Stat Bonus point, the Character Points step a boost. The first that can clear the
+      // excess alone; else the step holding the most.
+      const excess = value - m.max, held = [["character-points", boostsFor(ch, "stat", s.id)], ["archetype", archStatBonus(ch, s.id)], ["stats", Math.max(0, ch.stats[s.id].base - D().statRules.base)]];
+      const pick = held.find(([, n])=>n >= excess) || held.reduce((a, b)=>b[1] > a[1] ? b : a);
+      const st = (D().creationFlow.steps||[]).find(x=>x.id===pick[0]);
+      out.push({ stat:s.id, value, max:m.max, by:m.by, stepId:pick[0], step: st && st.short ? st.short : pick[0] });
     }
     return out;
   }
@@ -5025,11 +5032,12 @@ const Engine = (() => {
         E(`${def ? def.name : b.targetId} is boosted ${b.times} times. Max Character Point Boost at ${pl.name} is ${pl.maxBoost}.`);
       }
     };
+    // Decision 235: a stat past a trait's cap refuses the lock, on the step that can lower it (its base, a Focus or Stat
+    // Bonus point, or a boost), so Continue is only held where the player can clear it. The engine never lowers one.
+    for (const o of statOverCaps(ch)) if (o.stepId===stepId) E(copyOf("statMaxLock", "{stat} is {value}, over {by}'s max of {max}. Lower it on the {step} step.", o));
     if (stepId==="power-level"){ if (!pl) E("Choose a Campaign Power Level."); }
     if (stepId==="concept"){ if (!String((ch.identity||{}).name||"").trim()) E("Your character needs a name."); }
     if (stepId==="stats"){
-      // Decision 235: a stat past a trait's cap refuses the lock and names where to fix it. The engine never lowers one.
-      for (const o of statOverCaps(ch)) E(copyOf("statMaxLock", "{stat} is {value}, over {by}'s max of {max}. Lower it on the Stats step.", o));
       // B7: the pools are null until a power level is chosen. validate() must
       // report that, never throw — a corrupt import or an admin edit gets here
       // even though the wizard gates it.

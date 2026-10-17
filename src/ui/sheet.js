@@ -1451,7 +1451,7 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
   h += `<div class="trk"><h2>Sanity</h2>
     <span class="big ${san.current<=san.max/2?"bad":""}">${san.current} / ${san.max}%</span>
     ${sanControlsHtml(ch)}
-    <span class="sub">Max is ${esc(Engine.formulaText((D.derived.find(d=>d.id==="SAN")||{}).formula))}, computed. Track loss here; recovery is a story, not a button.</span></div>`;
+    <span class="sub">Max is ${esc(Engine.derivedParts(ch,"SAN").length ? derivedBreakdownStr(ch,"SAN") : Engine.formulaText((D.derived.find(d=>d.id==="SAN")||{}).formula))}, computed. Track loss here; recovery is a story, not a button.</span></div>`;
 
   // LUCK
   h += `<div class="trk"><h2>LUCK</h2>

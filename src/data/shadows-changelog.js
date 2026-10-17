@@ -9,7 +9,7 @@ window.SHADOWS_CHANGELOG = [
       "**Your Disadvantages cost you Sanity.** Berserker, Blood Lust, Fanatic, Hallucinations and Minor Insanity take their points off your max SAN, and the breakdown names each one.",
       "**Arcane Fortitude adds 2 to your TOL.**",
       "**Age, Dwarf and Giant set how high your stats can go when you make your character,** and a Giant's BOD can reach 11. The Stats step says what the limit is and why; a stat already past it keeps you from locking until you lower it. In play, IP can take you past them. Dwarf and Giant can't be taken together.",
-      "**Wealthy starts you with Ç10,000 more.** The review shows the sum.",
+      "**Wealthy starts you with Ç10,000 more.** The review shows the sum. It holds for characters made from now on; a character locked earlier adds it on the Çredits tracker.",
       "**The Stats step tells you to roll only when your table rolls for Stat Points.** Otherwise it says point buy.",
       "**Your Skills count your Advantages and Disadvantages.** Ghost Step adds 3 to Stealth, Defect/Flaw takes 2 off the Skill it hurts, and your attacks follow.",
       "**Kicker dice show on the Skill:** Field Medic's Medical reads 1d10 + your bonus + 1d4.",

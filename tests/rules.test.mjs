@@ -2539,9 +2539,19 @@ test("P20a 4: a cap already passed refuses the lock", () => {
   dw.stats.MOB.base = 3;
   same(errs(dw), []);
   assert.ok(!Engine.validate("review", dw).some(i => /over Dwarf/.test(i.msg)));
-  // A Focus point over the cap counts the same: it's the stat's value.
-  const fc = arc20(null, ch => { hold19(ch, "disadvantages", "dwarf"); ch.stats.MOB.base = 3; ch.archetypeChoices.focusAllocation = { MOB: 2 }; });
-  same(errs(fc), ["MOB is 5, over Dwarf's max of 3. Lower it on the Stats step."]);
+  // A Focus point over the cap counts the same (it's the stat's value), and the error is on the step that holds it:
+  // the Stats step can't clear it (Reviewer, P20a), so Continue there isn't held and the Archetype step says where.
+  const fc = arc20(null, ch => { hold19(ch, "disadvantages", "dwarf"); ch.stats.MOB.base = 1; ch.archetypeChoices.focusAllocation = { MOB: 3 }; });
+  same(errs(fc), []);
+  same(Engine.validate("archetype", fc).filter(i => /over Dwarf/.test(i.msg)).map(i => i.msg), ["MOB is 4, over Dwarf's max of 3. Lower it on the Archetype step."]);
+  assert.ok(Engine.validate("review", fc).some(i => i.level === "error" && /Lower it on the Archetype step/.test(i.msg)), "the lock isn't refused");
+  // A CP boost over the cap: the Character Points step.
+  const bc = sub20(ch => { hold19(ch, "disadvantages", "dwarf"); ch.stats.MOB.base = 3; ch.creation.boosts.push({ targetType: "stat", targetId: "MOB", times: 1 }); });
+  same(errs(bc), []);
+  same(Engine.validate("character-points", bc).filter(i => i.level === "error").map(i => i.msg), ["MOB is 4, over Dwarf's max of 3. Lower it on the Character Points step."]);
+  assert.ok(Engine.validate("review", bc).some(i => i.level === "error" && /Lower it on the Character Points step/.test(i.msg)));
+  // Each error is said once, on one step.
+  for (const ch of [dw, fc, bc]) assert.ok(["stats", "archetype", "character-points"].reduce((n, s) => n + Engine.validate(s, ch).filter(i => /over Dwarf/.test(i.msg)).length, 0) <= 1);
   // Locked, the cap is gone and nothing is said.
   assert.ok(!Engine.validate("stats", lock20(hold19(sub20(ch => { ch.stats.MOB.base = 5; }), "disadvantages", "dwarf"))).some(i => /over/.test(i.msg)));
   // The CP card's line is the engine's own, for the same stat.

@@ -1517,6 +1517,12 @@ test("P20a 9: the breakdowns name the parts", () => {
   const low = bd(`c.stats.EMP.base = 1; ${hold("disadvantages", "berserker")}; ${hold("disadvantages", "hallucinations")}`, "SAN");
   assert.equal(low, "EMP 1 × 10 = 10% − 15 Berserker − 25 Hallucinations → 1% (never lower)");
   for (const s of [bd(`c.stats.EMP.base = 6; ${hold("disadvantages", "berserker")}`, "SAN"), low]) assert.doesNotMatch(s, /floor \/ cap/);
+  // The Trackers tab's Sanity says the same, not "EMP × 10" over a cut number (Reviewer, P20a).
+  const berserk = lockedCharacter(); berserk.stats.EMP.base = 6; berserk.disadvantages = [trait20("berserker")];
+  const trk = openSheet(berserk, "trackers");
+  assert.match(trk.$("#main").textContent, /45 \/ 45%/);
+  assert.match(trk.$("#main").textContent, /Max is EMP 6 × 10 = 60% − 15 Berserker → 45%, computed/);
+  assert.deepEqual(trk.errors, []);
   // TOL: the Aberration is named, and the line is the number.
   const tol = bd("c.identity.archetype = 'arcanist'; c.archetypeChoices.specialization = ['arcane-fortitude']; for (const k of Object.keys(c.stats)) c.stats[k].base = 5", "TOL");
   assert.match(tol, /\+ 2 Arcane Fortitude → \d+$/);
