@@ -203,6 +203,79 @@ const Engine = (() => {
     return out;
   }
 
+  // ── Effect tags (Decision 231) ────────────────────────────────────────────
+  // What an Advantage or Disadvantage does, as short lines, read off its
+  // `grants`. A computed row (one grants() applies) is written from the row's
+  // own numbers through `effectTags[type]`, so the words can't drift from the
+  // rule. A `rule` row is the table's: grants() skips it, and it carries its own
+  // `ruleText`. With `held` ({ rank, selections }) a rule row says `heldText`
+  // filled with the held rank (`{rank}`), that rank's `byRank` value (`{v}`,
+  // indexed from 0 for rank 1) and the picks (`{choice}`, `{choice:<pickId>}`);
+  // a placeholder with nothing to fill means the whole `ruleText`, never a
+  // half-filled line. Total: bad data and bad input skip the row.
+  const fillTag = (tpl, vars) => {
+    if (typeof tpl!=="string") return null;
+    let ok = true;
+    const s = tpl.replace(/\{([^{}]+)\}/g, (_, k)=>{
+      const v = Object.prototype.hasOwnProperty.call(vars, k) ? vars[k] : null;
+      if (v==null || v==="" || (typeof v==="number" && !Number.isFinite(v))){ ok = false; return ""; }
+      return String(v);
+    });
+    return ok && s.trim() ? s : null;
+  };
+  // What the player chose on a pick, by name: a skill's or option's name, or the text typed.
+  const chosenNames = (def, pick, selections) => {
+    if (!isPlainObj(pick) || !isPlainObj(selections)) return "";
+    const raw = selections[pick.id];
+    if (pick.type==="text") return typeof raw==="string" ? raw.trim() : "";
+    if (!Array.isArray(raw)) return "";
+    let opts = [];
+    try { opts = pickOptions(pick, def); } catch (e) { opts = []; }
+    return raw.filter(v=>typeof v==="string" && v!=="").map(v=>{ const o = opts.find(x=>x.id===v); return txt(o ? o.name : v); }).filter(Boolean).join(", ");
+  };
+  function effectTagsFor(kind, id, held){
+    const out = [];
+    const def = kind==="advantage" ? advById(id) : kind==="disadvantage" ? disById(id) : null;
+    if (!isPlainObj(def)) return out;
+    const tags = D().effectTags;
+    const T = isPlainObj(tags) ? tags : {};
+    const h = isPlainObj(held) ? held : null;
+    const rank = h ? Math.floor(Number(h.rank)) : NaN;
+    for (const g of Array.isArray(def.grants) ? def.grants : []){
+      if (!isPlainObj(g)) continue;
+      if (g.type==="rule"){
+        if (typeof g.ruleText!=="string" || !g.ruleText.trim()) continue;
+        let text = null;
+        if (h && rank>=1 && typeof g.heldText==="string"){
+          const vars = { rank };
+          if (Array.isArray(g.byRank) && rank<=g.byRank.length && (typeof g.byRank[rank-1]==="string" || typeof g.byRank[rank-1]==="number")) vars.v = g.byRank[rank-1];
+          const picks = Array.isArray(def.picks) ? def.picks.filter(isPlainObj) : [];
+          picks.forEach((p, i)=>{ const names = chosenNames(def, p, h.selections); if (typeof p.id==="string") vars["choice:"+p.id] = names; if (!i) vars.choice = names; });
+          text = fillTag(g.heldText, vars);
+        }
+        out.push({ computed:false, text: text || g.ruleText });
+        continue;
+      }
+      let vars = null;
+      if (g.type==="skillPoints" || g.type==="hpPerLevel" || g.type==="naturalArmor") vars = { perRank: g.perRank };
+      else if (g.type==="luckCost"){
+        const sa = ((D().resources||{}).luck||{}).spend;
+        const s = (Array.isArray(sa) ? sa : []).find(x=>isPlainObj(x) && x.id===g.spendId);
+        if (s) vars = { action: s.action, cost: Math.max(0, (Number(s.cost)||0) + (Number(g.delta)||0)) };
+      }
+      else if (g.type==="milestone" && (g.kind==="minor" || g.kind==="major")) vars = { kind: g.kind==="minor" ? "Minor" : "Major", atRank: g.atRank==null ? 1 : g.atRank };
+      // Only the "once you're hurt" kind is computed (Decision 213).
+      else if (g.type==="painLevel" && g.onlyIfHurt===true) vars = { amount: g.amount };
+      const text = vars && fillTag(T[g.type], vars);
+      if (text) out.push({ computed:true, text });
+    }
+    if (def.creationOnly===true){
+      const text = fillTag(T.creationOnly, {});
+      if (text) out.push({ computed:false, text });
+    }
+    return out;
+  }
+
   // ── Major Milestones: the lookup and the offer (Decisions 199, 217) ───────
   // Two jobs, kept apart. The LOOKUP is every Major a taken id could name: the
   // shared list, the archetype's own, and any the character had written in.
@@ -7377,7 +7450,7 @@ const Engine = (() => {
     feedView, feedGain, feed, goUnfed, goUnrested,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, statFloor, raiseStatsToFloor, skillPool, skillSpent,
-    advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, validate,
+    advSpent, disGranted, luckSpent, boostSpent, disciplineSpent, powerRankCost, cp, grants, effectTagsFor, validate,
     // Focused Skills and natural advantages (Decision 134)
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,
     focusedCategoryName, naturalAdvantagePool,

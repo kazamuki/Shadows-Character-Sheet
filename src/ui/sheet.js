@@ -597,8 +597,8 @@ function renderShCharacter(){
   // is a card that opens on a tap; Expand all opens every one, and the
   // choice is remembered in this browser for the next visit.
   const open = traitsOpen();
-  const traitCard = (name, costHtml, desc, selHtml) =>
-    `<details class="pick trait"${open?" open":""}><summary><span class="th">${esc(name)}</span>${costHtml}</summary>
+  const traitCard = (name, costHtml, desc, selHtml, tagsHtml) =>
+    `<details class="pick trait"${open?" open":""}><summary><span class="th">${esc(name)}</span>${costHtml}${tagsHtml||""}</summary>
       <div class="desc">${esc(desc||"No description on file.")}</div>${selHtml||""}</details>`;
   // What the player actually chose, resolved to names. Without this the sheet
   // states "Favored Skill ×2" and never says which skills.
@@ -611,11 +611,11 @@ function renderShCharacter(){
     const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
     const cost=x.source==="natural" ? '<span class="cost grant">natural</span>'
       : (d2?`<span class="cost">${d2.cost*(x.rank||1)} CP</span>`:"");
-    return traitCard(name, cost, d2?d2.description:"", selHtml("advantage",x.id)); }).join("");
+    return traitCard(name, cost, d2?d2.description:"", selHtml("advantage",x.id), effectsHtml(ch,"advantage",x.id)); }).join("");
   const diss = ch.disadvantages.map(x=>{ const d2=Engine.disById(x.id);
     const name=(d2?d2.name:x.id)+(x.rank>1?" ×"+x.rank:"");
     const cost=d2?`<span class="cost grant">+${d2.pointsGranted*(x.rank||1)} CP</span>`:"";
-    return traitCard(name, cost, d2?d2.description:"", selHtml("disadvantage",x.id)); }).join("");
+    return traitCard(name, cost, d2?d2.description:"", selHtml("disadvantage",x.id), effectsHtml(ch,"disadvantage",x.id)); }).join("");
   const any = ch.advantages.length + ch.disadvantages.length;
   h += `<div class="trait-cols">
     <div class="trait-col">${secs.sect("Advantages")}${advs ? `<div class="trait-grid">${advs}</div>` : `<p class="step-note">No advantages.</p>`}</div>

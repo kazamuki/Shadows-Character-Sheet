@@ -1950,3 +1950,101 @@ test("P12b 6: Training prices a rank at 10 × its IP cost, never past 9, and onl
   ch.skills.demolitions = { rank: 0, ipe: 1 };
   assert.equal(Engine.trainingCost(ch, "demolitions").ok, true, "any source counts: IP");
 });
+
+// ── P18: effects as data (Decision 231) ───────────────────────────────
+// Every Advantage and Disadvantage says what it does in its `grants`: a
+// computed row the engine applies, or a `rule` row the table applies. Both show
+// as tags. A computed tag is written from the row's own numbers, so it can't
+// drift from what the sheet does.
+const P18_DEFS = [...D.advantages.map(d => ["advantage", d]), ...D.disadvantages.map(d => ["disadvantage", d])];
+const ruleRows = d => (Array.isArray(d.grants) ? d.grants : []).filter(g => g && g.type === "rule");
+// The engine runs in its own realm: read its lists as plain data.
+const tagsOf = (kind, id, held = null) => JSON.parse(JSON.stringify(Engine.effectTagsFor(kind, id, held)));
+
+test("P18 1: every Advantage and Disadvantage has an effect", () => {
+  assert.equal(P18_DEFS.length, 87);
+  const none = P18_DEFS.filter(([, d]) => !Array.isArray(d.grants) || !d.grants.length).map(([, d]) => d.id);
+  assert.deepEqual(none, [], "an entry with no effect in its grants");
+  const bad = P18_DEFS.flatMap(([, d]) => ruleRows(d).filter(g => typeof g.ruleText !== "string" || !g.ruleText.trim()).map(() => d.id));
+  assert.deepEqual(bad, [], "a rule row with no ruleText");
+});
+
+test("P18 2: a computed tag is written by its numbers", () => {
+  const text = (kind, id) => tagsOf(kind, id).filter(t => t.computed).map(t => t.text);
+  assert.deepEqual(text("advantage", "hard-to-kill"), ["+1 max HP on every Health Level per rank"]);
+  assert.deepEqual(text("advantage", "educated"), ["+10 Skill Points per rank"]);
+  assert.deepEqual(text("advantage", "lucky"), ["LUCK: Boost the roll costs 1", "LUCK: Explode the roll costs 2"]);
+  assert.deepEqual(text("disadvantage", "unlucky"), ["LUCK: Boost the roll costs 3", "LUCK: Explode the roll costs 4"]);
+  assert.deepEqual(text("advantage", "long-lived"), ["A Minor Milestone at rank 1", "A Minor Milestone at rank 2", "A Major Milestone at rank 3"]);
+  assert.deepEqual(text("disadvantage", "pain-sensitive"), ["Pain Level +1 once you're hurt"]);
+  assert.match(text("advantage", "thick-skin")[0], /^\+1 Natural Armor per rank;/);
+  // Change a row's number in the data and the tag follows it.
+  const htk = D.advantages.find(a => a.id === "hard-to-kill").grants[0], was = htk.perRank;
+  try { htk.perRank = 3; assert.deepEqual(text("advantage", "hard-to-kill"), ["+3 max HP on every Health Level per rank"]); }
+  finally { htk.perRank = was; }
+  const lucky = D.advantages.find(a => a.id === "lucky").grants[0], delta = lucky.delta;
+  try { lucky.delta = -2; assert.equal(text("advantage", "lucky")[0], "LUCK: Boost the roll costs 0"); }
+  finally { lucky.delta = delta; }
+  // No computed tag in the data has an unfilled placeholder.
+  for (const [kind, d] of P18_DEFS) for (const t of tagsOf(kind, d.id).filter(x => x.computed))
+    assert.ok(!/[{}]|undefined|NaN/.test(t.text), `${d.id}: "${t.text}"`);
+  // A computed row with no template stays a computed row of the engine's, and shows nothing.
+  assert.equal(tagsOf("advantage", "educated").filter(t => t.computed).length, 1);
+});
+
+// The numbers a line of text writes, whole: "2,000" is one, "1d4" is a 1 and a 4.
+const numbersIn = s => (String(s).match(/\d+(?:,\d{3})*/g) || []);
+const hasNumber = (text, n) => new RegExp(String.raw`(?<![\d,])${n}(?!\d)`).test(text);
+// Rows whose byRank value is arithmetic on the description rather than a number it prints.
+const BYRANK_PINS = {
+  // "+4 bonus damage ... Each Rank after the first gains an additional +2"
+  bullseye: [4, 6, 8],
+  // "2,000 Ç/per month for each rank"
+  wealthy: ["2,000", "4,000", "6,000", "8,000"],
+  // "Each Rank reduces your Sanity by 5%"
+  "minor-insanity": [5, 10, 15, 20, 25],
+};
+
+test("P18 3: a rule line's numbers are in its entry's own text", () => {
+  const drift = [];
+  for (const [, d] of P18_DEFS) for (const g of ruleRows(d)) {
+    const lines = [g.ruleText, g.heldText, ...(Array.isArray(g.byRank) && !(d.id in BYRANK_PINS) ? g.byRank : [])].filter(s => s != null);
+    for (const line of lines) for (const n of numbersIn(line))
+      if (!hasNumber(d.description, n)) drift.push(`${d.id}: ${n} in "${String(line).slice(0, 60)}"`);
+  }
+  assert.deepEqual(drift, [], "a number a rule line writes that its description doesn't");
+  for (const [id, want] of Object.entries(BYRANK_PINS)) {
+    const d = P18_DEFS.map(x => x[1]).find(x => x.id === id), row = ruleRows(d).find(g => Array.isArray(g.byRank));
+    assert.deepEqual([...row.byRank], want, id);
+  }
+});
+
+test("P18 3b: a held entry's tags are its rank and picks", () => {
+  const rule = (kind, id, held) => tagsOf(kind, id, held).filter(t => !t.computed && t.text !== "Creation only").map(t => t.text);
+  const held = (rank, selections) => ({ rank, selections });
+  assert.ok(rule("advantage", "bullseye", held(2))[0].includes("+6 damage"), rule("advantage", "bullseye", held(2)).join("|"));
+  assert.ok(rule("advantage", "bullseye", held(1))[0].includes("+4 damage"));
+  assert.ok(rule("advantage", "bullseye", held(3))[0].includes("+8 damage"));
+  assert.equal(rule("advantage", "gun-master", held(3))[0], "Extra attacks per round with firearms, beam weapons included: 3.");
+  assert.equal(rule("advantage", "common-sense", held(1, { skill: ["investigation"] }))[0], "Take 6 on Investigation.");
+  const general = ruleRows(D.advantages.find(a => a.id === "common-sense"))[0].ruleText;
+  assert.equal(rule("advantage", "common-sense", held(1))[0], general, "no pick yet: the whole ruleText, not a half-filled line");
+  assert.equal(rule("advantage", "common-sense", held(1, { skill: [""] }))[0], general);
+  assert.equal(rule("advantage", "danger-sense", held(4))[0], "Name the main visible threat.");
+  // Every byRank has one value per rank.
+  for (const [, d] of P18_DEFS) for (const g of ruleRows(d).filter(r => r.byRank !== undefined))
+    assert.equal(g.byRank.length, d.maxRank, `${d.id}: byRank is not maxRank long`);
+  // Past the table's end there is no value to fill: the general line.
+  assert.equal(rule("advantage", "danger-sense", held(9))[0], ruleRows(D.advantages.find(a => a.id === "danger-sense"))[0].ruleText);
+  // Not held: every rule row says its ruleText.
+  for (const [kind, d] of P18_DEFS)
+    assert.deepEqual(rule(kind, d.id, null), [...ruleRows(d).map(g => g.ruleText)], d.id);
+  // Creation only is read off the entry's own flag, and comes last.
+  const ll = tagsOf("advantage", "long-lived", held(1));
+  assert.equal(ll[ll.length - 1].text, "Creation only");
+  assert.equal(ll[ll.length - 1].computed, false);
+  const def = D.advantages.find(a => a.id === "long-lived");
+  try { def.creationOnly = false; assert.ok(!tagsOf("advantage", "long-lived", held(1)).some(t => t.text === "Creation only")); }
+  finally { def.creationOnly = true; }
+  assert.ok(!P18_DEFS.some(([kind, d]) => d.id !== "long-lived" && d.creationOnly && !tagsOf(kind, d.id).some(t => t.text === "Creation only")));
+});

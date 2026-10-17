@@ -801,3 +801,20 @@ test("Decision 215: A day without rest on Main takes half RoU and 2 more, Undo p
   assert.ok(app.$("#main .trk-feed [data-unrested]"), "Trackers lacks the button");
   assert.deepEqual(app.errors, []);
 });
+
+// ── P18: the tags show on a folded Character card (Decision 231) ─────
+test("P18 6: a folded Character card shows its tags, held for its rank and picks", () => {
+  const ch = lockedCharacter();
+  ch.advantages = [{ id: "hard-to-kill", rank: 2 }, { id: "bullseye", rank: 2 }, { id: "common-sense", rank: 1, selections: { skill: ["investigation"] } }];
+  ch.disadvantages = [{ id: "blood-lust", rank: 1 }];
+  const app = openSheet(ch, "character");
+  assert.deepEqual(app.errors, []);
+  const card = name => app.$$("#main details.pick.trait").find(d => d.querySelector(".th").textContent.startsWith(name));
+  const bl = card("Blood Lust");
+  assert.ok(!bl.open, "the card should be folded");
+  const rule = D.disadvantages.find(d => d.id === "blood-lust").grants.find(g => g.type === "rule").ruleText;
+  assert.equal(bl.querySelector("summary .effects .etag.rule").textContent, rule, "the tags aren't in the summary");
+  assert.equal(card("Hard to Kill").querySelector("summary .effects .etag.computed").textContent, "+1 max HP on every Health Level per rank");
+  assert.equal(card("Bullseye").querySelector("summary .effects .etag.rule").textContent, "Called Shots: +6 damage.");
+  assert.equal(card("Common Sense").querySelector("summary .effects .etag.rule").textContent, "Take 6 on Investigation.");
+});

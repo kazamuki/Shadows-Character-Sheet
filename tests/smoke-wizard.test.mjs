@@ -998,3 +998,38 @@ test("P9a 8: the write-in offers four classifications, and Magical being opens t
   assert.match(adv || "", /^15 open to Magical beings/, "the Advantage list doesn't open the Universal ones first");
   assert.deepEqual(app.errors, []);
 });
+
+// ── P18: the effects show as tags on the CP step (Decision 231) ──────
+test("P18 6: the CP step shows a computed chip and a rule line under each entry's name, and a held one speaks for its rank", () => {
+  const pickOf = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
+  const rule = (kind, id) => D[kind === "advantage" ? "advantages" : "disadvantages"].find(d => d.id === id).grants.find(g => g.type === "rule");
+  let app = onStep("professional", "street", "character-points");
+  const bl = pickOf(app, "Blood Lust");
+  assert.ok(bl, "Blood Lust isn't on the CP step");
+  assert.equal(bl.querySelector(".effects .etag.rule").textContent, rule("disadvantage", "blood-lust").ruleText);
+  // The tags sit after the head and before the prose.
+  const kids = [...bl.children].map(c => c.className.split(" ")[0]);
+  assert.ok(kids.indexOf("effects") > kids.indexOf("head") && kids.indexOf("effects") < kids.indexOf("desc"), kids.join(","));
+  const htk = pickOf(app, "Hard to Kill");
+  assert.equal(htk.querySelector(".effects .etag.computed").textContent, "+1 max HP on every Health Level per rank");
+  assert.ok(!htk.querySelector(".effects .etag.rule"), "Hard to Kill has no rule line");
+  // Held at rank 2, Bullseye says +6; not held, it says its general line.
+  assert.equal(pickOf(app, "Bullseye").querySelector(".effects .etag.rule").textContent, rule("advantage", "bullseye").ruleText);
+  app = onStep("professional", "street", "character-points", ch => { ch.advantages = [{ id: "bullseye", rank: 2, notes: "" }]; });
+  assert.equal(pickOf(app, "Bullseye").querySelector(".effects .etag.rule").textContent, "Called Shots: +6 damage.");
+  // Creation only is a tag, read off the data.
+  app = onStep("professional", "street", "character-points");
+  assert.ok([...pickOf(app, "Long-Lived").querySelectorAll(".effects .etag")].some(t => t.textContent === "Creation only"));
+  // The tag replaced the head's old "creation only" chip: the card says it once.
+  assert.equal((pickOf(app, "Long-Lived").textContent.match(/creation only/gi) || []).length, 1, "Long-Lived says creation only twice");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P18 6b: a held tag reads the picks the picker reads: a natural row's answer isn't borrowed by a bought row with none", () => {
+  const general = D.advantages.find(a => a.id === "favored-skill").grants.find(g => g.type === "rule").ruleText;
+  const app = onStep("professional", "street", "character-points", ch => {
+    ch.advantages = [{ id: "favored-skill", rank: 1, source: "natural", selections: { skill: ["stealth"] } }, { id: "favored-skill", rank: 1, notes: "" }];
+  });
+  const p = app.$$("#main .pick").find(x => x.querySelector("h2") && x.querySelector("h2").textContent === "Favored Skill");
+  assert.equal(p.querySelector(".effects .etag.rule").textContent, general);
+});

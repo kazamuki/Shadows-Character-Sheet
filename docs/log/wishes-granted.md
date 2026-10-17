@@ -649,6 +649,25 @@ the check that inflicts it, presumably. Confirm that in the work order.
 
 ### Wizard
 
+**W120 — Every Advantage and Disadvantage's effects as data, shown as tags.** *Ken, from P13's PQ5 · → Decision 231, app 0.48.0: every entry's effects in `grants`, shown as tags on the CP step and the Character tab*
+P13's Expert mode folds an entry's whole `description`, and Ken wants a folded entry to show what taking it does, without the prose. Each entry today is one
+`description`; 69 of the 87 run to several paragraphs that mix flavor and rules (Blood Lust opens "Everyone bleeds. Not everyone stops to watch." before its
+Sanity Check). **Ken's shape (2026-10-16): the effects are the entry's `grants`, each with a name and a line of text, and Expert mode shows them as tags.**
+- **A computed effect** is a `grants` row the engine already reads (`hpPerLevel`, `skillPoints`, `luckCost`, `painLevel`, `milestone`, `naturalArmor`…). Its
+  tag text comes from a template per type in the data, filled from the row's own numbers ("+1 HP per Health Level"), so it can't drift from what's computed.
+  Today only 7 of the 87 have any.
+- **A table rule** is a new row type the engine ignores, carrying its own text ("First blood in an encounter: a Sanity Check. Fail, and Combat Sense
+  fails on a natural 2 or 3."). `grants()` already skips a type it doesn't know (engine ~167), and archetype powers share that reader, so the new type
+  must be skipped there too.
+- **The review is the point.** Going through all 87 sorts each effect into computed or table rule, and finds the ones the app should compute but doesn't.
+  Probed on `main`: **Blood Lust's "Sanity is reduced by 5%" isn't applied** (SAN max 50 with it or without), and four more describe a SAN change with no
+  `grants` (Berserker, Fanatic, Faultlessly Honest, Hallucinations). Nothing in the ledger rules on them. Each such effect is a rules question (5 points,
+  or 5% of the max?) for Deighton: stubbed and flagged, never guessed (CLAUDE.md, *Flags*).
+*To respect:* Decision 135 (the type templates and every rule's text live in the data; a data key is read or named as text). Each rule line is rules text,
+cross-checked against the CRB (`private/crb/`) before it lands, so a summary can't quietly change what an entry does; drafted on a sign-off page for Ken and
+Deighton. Constraint 9 (player copy, `VOICE-APP.md`). A newly computed effect changes computed values: `gamedataVersion` (Decision 68). **Its own order,
+before P13** (Ken): Expert mode ships with the tags.
+
 **W22 — A sticky filter and jump bar on the Character Points step.** *Ken · → Decision 114, app 0.20.0: filter, jumps and the CP left, sticky*
 Step 7 is the longest page in the app: 30 Disadvantages, then every
 Advantage, then LUCK, Disciplines, Starting spells (Decision 111) and

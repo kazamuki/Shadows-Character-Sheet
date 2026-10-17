@@ -231,6 +231,7 @@ Where game text comes from and how it is merged.
 - **113** *(Quick Study's Intuition — F11)* — Quick Study's prerequisite is the Intuition skill at Rank 1, per 041 (now 0412); the old "Intuition Advantage" matched no entry, so no one could take it.
 - **129** *(Hardcore Parkour's prerequisites — F27)* — 1 Major Milestone, Acrobatics 4 and Danger Sense 1; Cat Like Balance becomes Acrobatics 4, Time Sense is dropped (Deighton).
 - **136** *(A spell's forms — the Inscribed Spells)* — A spell lists the Disciplines it can be made with (default: all three, Magic's Three Forms); its tier and `th` stay, and another form's TH and time come from `enchantmentTimeTable`. Inscribed-only spells aren't starting spells, and Mastery prices their own TH.
+- **231** *(Effects as data — sheet-wishlist P18, W120)* — Every Advantage and Disadvantage has `grants` rows: computed ones (written as tags from `effectTags` and the row's numbers), and `rule` rows the table applies and every reader skips (`ruleText`, `heldText` for a held rank and picks, `byRank`); `creationOnly` adds a tag; tags on the CP step and the Character tab's cards; the 19 unapplied numbers stay rules (P19, P20). Extends 199, 213.
 
 ### Archetypes & specialization
 
