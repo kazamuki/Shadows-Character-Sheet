@@ -4834,7 +4834,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Why:** Ken's shape for W120: one place per effect, the computed ones unable to drift from what the sheet applies, and Expert mode (P13) able to show what an entry does without its prose. The rule lines are the sign-off page's, approved by Ken, Deighton and Scott.
      - **Rejected:** a free-text `mechanicsText` per entry (a second copy of every rule); a hand-written tag on a computed row (the same drift); splitting `description` at its first paragraph (flavor in some entries, rules in others); computing the 19 here (rules questions); tags on the CP step only; truncating a long rule (a cut-off rule is a wrong rule); print (the front page is full, 96).
      - **Replaces:** nothing. Extends 199 (Majors' `grants` share the reader, which skips `rule`) and 213 (Pain Sensitive gains a tag). Eleven `description`s move with Deighton's rulings of 2026-10-16.
-     → **Superseded in part by Decision 232** — a held card's computed tag states its total (`effectTagsHeld`), a held Milestone row past the rank is left off, and the tags reach four more places.
+     → **Superseded in part by Decisions 232 and 233** — a held card's computed tag states its total (`effectTagsHeld`), a held Milestone row past the rank is left off, and the tags reach four more places (232); 16 entries' effects are computed rows on a Skill's check, with their own tag templates (233).
      - **Revisit if:** a table rule becomes computable (P19 or P20 moves it to a computed type); the CRB rewrites an entry (its rule rows are rewritten with it).
      - **Built:** app 0.48.0, no data or schema bump, PR #207. Log 2026-10-16 (P18).
 
@@ -4844,8 +4844,27 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Why:** Ken, after P18: a "per rank" chip on a ×2 card didn't speak for its character, and P18 missed places Advantages are chosen. Brogan asked for Expert mode.
      - **Rejected:** the per-rank line with the total in brackets; Long-Lived's unreached Milestones marked "not yet"; tags for the rank an IP Raise would reach; compact steppers; Expert mode on the sheet; "Max Boost +N" (218 renamed it).
      - **Replaces:** Decision 231 in part (a held computed tag no longer reads its general template; the tags reach four more places). Extends 218.
+     → **Superseded in part by Decision 234** — Expert mode folds four creation steps (Stats joins), and its toggle shows on every step of creation, not only the ones it folds.
      - **Revisit if:** a computed type's total isn't `perRank` × rank; a player misreads a held total as per-rank; Expert mode is wanted on the sheet.
      - **Built:** app 0.48.0 (unreleased), no data or schema bump, PR #209 Log 2026-10-17 (P13).
+
+233. **A trait that changes a Skill's check shows on its row: a number in the check, a kicker beside it, a Take X as its total, and a die-face rule as a mark.**
+     *2026-10-17 · Ken + Deighton + Claude · Touches: skillLine, checkBonus, traitParts, kickers, takeX, marks, attackNotes, grants checkMod, kicker, takeX, failOn, explodeOn, visibility, effectTags, skillRowText, visibility table, Skills tab, Main's Combat table, attacks, maneuver check, print, Night Vision*
+     - **Decided:** `checkMod`, `kicker`, `takeX`, `failOn`, `explodeOn` and `visibility` are computed `grants` types; a row names its Skills (`skills`) or a pick (`skillsFromPick`, cut to the rank). An unconditional `checkMod` is in `skillLine().checkBonus`, so the row, attacks, a maneuver's check and print follow. A row with `whenText` is a mark, never a number. A kicker shows beside the number, never in it. Take X shows as X + the whole check, Pain and Conditions included, to choose before rolling (Deighton). Night Vision names the light levels `0530` sets (`visibility`).
+     - **Why:** The effects sign-off, unanimous: "put them all on the Skill rows". A number the sheet shows and doesn't apply is the drift 231 exists to end, and Take X is only useful as the number you'd get.
+     - **Rejected:** a conditional bonus in the total (wrong on every other roll); the −2 on the Skills tab only (the attack row would disagree); a bare "Take 6" (the player does the sum); marks on the printed page (the front page is full, 96); marks for Hallucinations and Favored Skill's re-roll (not a die face or a number).
+     - **Replaces:** Decision 231 in part (these 16 entries' effects are computed rows with their own tag templates). Extends 96 (a trait's number joins Pain and Conditions in the check) and 229 (a maneuver's check includes it).
+     - **Revisit if:** a Skill can hold two kickers (Ken's stacking question, unanswered) or a kicker and a Take X (a test fails on it); the book gives Awareness a light penalty.
+     - **Built:** app 0.49.0, game data 0.41, no schema bump, PR #…. Log 2026-10-17 (P19).
+
+234. **Expert mode folds the Stats step too, and its toggle shows on every step of character creation.**
+     *2026-10-17 · Ken + Claude · Touches: Expert mode, EXPERT_STEPS, renderStats, renderTopChrome, expertStep, expertHintHtml, wizard header, expertTitle, P13 PQ4*
+     - **Decided:** Expert mode folds each stat's description on the Stats step, keeping the name, stepper, modifier and next-point cost. The wizard's header carries its toggle beside Home on every step, Review included, with a tooltip naming the four steps it folds; the first-sight hint shows on those four only. Off the wizard (Home, the sheet, GM mode) there is no toggle.
+     - **Why:** Ken: a button that appears only once it can affect something reads as the header changing under you, and the Stats step's descriptions were the last long text left open in Expert mode.
+     - **Rejected:** P13's PQ4 answer, the toggle only on the steps it changes (the coming and going confused Ken); a toggle that's present but disabled elsewhere (it looks broken, and the setting is still worth changing ahead of the step).
+     - **Replaces:** Decision 232 in part (Expert mode folds four creation steps, not three). It also reverses P13's PQ4 answer (the toggle only where it changes something), which 232 didn't record.
+     - **Revisit if:** players press it on Concept or History and expect something to change, or Expert mode reaches a fourth step.
+     - **Built:** app 0.49.0, with P19, PR #…. Log 2026-10-17 (P19).
 
 ## 5. Open Flags
 

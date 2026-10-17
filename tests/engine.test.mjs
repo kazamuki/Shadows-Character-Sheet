@@ -322,6 +322,7 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
   /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
+  /^skillRowText$/, // keyed by what a Skill's row says (a Take X, a die face, a light level), read by skillLine and attackNotes (Decision 233)
   /^weaponModGlossary\[\]\.refusalText$/]; // keyed by a weapon category id, read by weaponModOptions (Decision 221)
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
@@ -9017,7 +9018,7 @@ function p18Readings(ch) {
 test("P18 4: rule rows change nothing the engine computes", () => {
   const chars = p18Characters(), withRules = chars.map(p18Readings);
   const had = p18Rows();
-  assert.ok(had.length >= 80, `only ${had.length} entries carry a rule row — is the data in?`);
+  assert.ok(had.length >= 70, `only ${had.length} entries carry a rule row — is the data in?`);
   const saved = new Map(had.map(d => [d, d.grants]));
   try {
     for (const d of had) d.grants = d.grants.filter(g => !(g && g.type === "rule"));
@@ -9050,4 +9051,77 @@ test("P18 5: effectTagsFor is total", () => {
   // A def with no grants at all, and a held row of nonsense on a real entry, give a list.
   assert.equal(JSON.stringify(Engine.effectTagsFor("advantage", "no-such", { rank: 1 })), "[]");
   assert.ok(Array.isArray(Engine.effectTagsFor("advantage", "bullseye", { rank: "two", selections: [] })));
+});
+
+// ── P19: skillLine and effectTagsFor are total over hostile rows (Decision 233) ─────────
+test("P19 8: skillLine and effectTagsFor are total over hostile rows", () => {
+  const bad = [
+    { type: "checkMod", amount: 3, skills: "stealth" },                       // skills not an array
+    { type: "checkMod", amount: 3, skills: ["no-such-skill", null, 7, {}] },  // unknown ids, junk entries
+    { type: "checkMod", amount: 3, skillsFromPick: "no-such-pick" },          // names no pick
+    { type: "checkMod", amount: 3, skillsFromPick: "detail" },                // a pick that isn't a Skill pick
+    { type: "checkMod", amount: "3", skills: ["stealth"] },                   // a string amount
+    { type: "checkMod", amount: NaN, skills: ["stealth"] },
+    { type: "checkMod", amount: Infinity, skills: ["stealth"] },
+    { type: "checkMod", skills: ["stealth"] },                                // no amount at all
+    { type: "checkMod", amount: 3, skills: ["stealth"], whenText: 7 },        // a when that isn't text
+    { type: "kicker", die: "1d7", skills: ["medical"] },
+    { type: "kicker", die: "<b>1d4</b>", skills: ["medical"] },
+    { type: "kicker", die: 4, skills: ["medical"] },
+    { type: "kicker", skills: ["medical"] },
+    { type: "takeX", x: "6", skills: ["stealth"] },
+    { type: "takeX", x: NaN, skills: ["stealth"] },
+    { type: "takeX", skills: ["stealth"] },
+    { type: "failOn", faces: [], skills: ["stealth"] },
+    { type: "failOn", faces: ["x"], skills: ["stealth"] },
+    { type: "failOn", faces: "23", skills: ["stealth"] },
+    { type: "failOn", faces: [2, 3, 99], skills: ["stealth"] },
+    { type: "explodeOn", faces: [null], skillsFromPick: "skill" },
+    { type: "visibility", ignore: "dim", on: ["attacks"] },
+    { type: "visibility", ignore: ["no-such-level"], on: ["attacks", "awareness"] },
+    { type: "visibility", ignore: ["dim"], on: "attacks" },
+    { type: "visibility" },
+    null, 7, "checkMod", [],
+  ];
+  const def = { id: "p19-hostile", name: "Hostile", cost: 1, maxRank: 2, description: "x",
+    picks: [{ id: "skill", label: "Skill", type: "skill", count: 1, perRank: true, distinct: true }, { id: "detail", label: "d", type: "text" }],
+    grants: bad };
+  const orphan = { id: "p19-orphan", name: "Orphan", cost: 1, maxRank: 1, description: "x", grants: [{ type: "checkMod", amount: 3, skills: ["no-such-skill"] }, { type: "kicker", die: "1d4", skills: ["no-such-skill"] }] };
+  D.advantages.push(def, orphan);
+  try {
+    const ch = subject();
+    ch.skills.stealth = { rank: 2, ipe: 0 }; ch.skills.medical = { rank: 1, ipe: 0 };
+    ch.skills["no-such-skill"] = { rank: 3, ipe: 0 };                        // an orphaned Skill on the character
+    const before = Object.fromEntries(D.skills.map(s => [s.id, Engine.skillLine(ch, s.id)]));
+    // A pick holding a Skill the data lacks, and a text pick holding a Skill's id.
+    ch.advantages.push({ id: "p19-hostile", rank: 2, notes: "", selections: { skill: ["no-such-skill", null], detail: "stealth" } },
+                       { id: "p19-orphan", rank: 1, notes: "" });
+    for (const sel of [undefined, null, 7, "x", [], { skill: "stealth" }, { skill: [5, {}, "__proto__"] }]) {
+      ch.advantages[ch.advantages.length - 2].selections = sel;
+      for (const s of [...D.skills.map(x => x.id), "no-such-skill", "__proto__", "constructor", "", null, undefined, 7]) {
+        let l;
+        assert.doesNotThrow(() => { l = Engine.skillLine(ch, s); }, `skillLine(${String(s)})`);
+        assert.ok(Number.isFinite(l.checkBonus), `${String(s)}: ${l.checkBonus}`);
+        for (const k of ["kickers", "takeX", "marks"]) assert.ok(Array.isArray(l[k]), `${String(s)}.${k}`);
+        assert.ok(Array.isArray(l.breakdown.traitParts) && Number.isFinite(l.breakdown.traits));
+      }
+      assert.doesNotThrow(() => Engine.attackNotes(ch));
+      for (const h of [null, undefined, 7, {}, { rank: 2 }, { rank: 2, selections: null }, { rank: 2, selections: { skill: "x" } }, { rank: NaN, selections: { skill: ["stealth"] } }, { rank: 2, selections: { skill: [null, "no-such-skill", "stealth"] } }])
+        assert.doesNotThrow(() => Engine.effectTagsFor("advantage", "p19-hostile", h), JSON.stringify(h));
+    }
+    // A row that applies to a real Skill but is bad is skipped: nothing moved.
+    for (const s of D.skills) assert.equal(Engine.skillLine(ch, s.id).checkBonus, before[s.id].checkBonus, `${s.id} moved for a bad row`);
+    for (const t of Engine.effectTagsFor("advantage", "p19-hostile", { rank: 2, selections: { skill: ["stealth", "medical"] } }))
+      assert.ok(!/[{}]|undefined|NaN/.test(t.text), t.text);
+    // The stub for an orphaned Skill is whole.
+    const stub = Engine.skillLine(ch, "no-such-skill");
+    assert.ok(stub.dataWarning && stub.checkBonus === 0);
+    same([stub.kickers, stub.takeX, stub.marks, stub.breakdown.traitParts], [[], [], [], []]);
+    // And a hostile character file: junk advantage rows, junk ranks.
+    const junk = Engine.migrate({ advantages: [null, 7, { id: 5 }, { id: "ghost-step", rank: "x" }, { id: "refined-skill", rank: 1, selections: { skill: "stealth" } }, { id: "common-sense", rank: 9, selections: { skill: [1, 2, 3] } }],
+      disadvantages: [{ id: "defect-flaw", rank: -3, selections: 5 }, { id: "dwarf", rank: 1 }] });
+    for (const s of D.skills) assert.doesNotThrow(() => Engine.skillLine(junk, s.id));
+    assert.doesNotThrow(() => Engine.attackNotes(junk));
+  } finally { D.advantages.splice(D.advantages.indexOf(def), 1); D.advantages.splice(D.advantages.indexOf(orphan), 1); }
+  assert.ok(!D.advantages.some(a => a.id === "p19-hostile" || a.id === "p19-orphan"));
 });

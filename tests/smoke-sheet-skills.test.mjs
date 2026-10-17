@@ -1054,3 +1054,117 @@ test("P12b 11c: a Martial Arts bought with IP takes a first style", () => {
   assert.match(maRow(app).querySelector("[data-maneuvers]").textContent, /Knockdown/);
   assert.deepEqual(app.errors, []);
 });
+
+// ── P19: Skills learn from traits, on the sheet (Decision 233) ────────────
+// A character with Skills trained, then whatever traits the test holds. The Skills tab and Main's Combat table are one renderer.
+const p19Char = mut => {
+  const ch = lockedCharacter();
+  for (const [id, rank] of Object.entries({ stealth: 2, medical: 2, "combat-sense": 2, investigation: 3, "basic-tech": 2, awareness: 2, handguns: 3, intuition: 1, persuasion: 1 })) ch.skills[id] = { rank, ipe: 0 };
+  mut(ch);
+  return ch;
+};
+const p19Hold = (ch, kind, id, rank = 1, extra = {}) => { ch[kind].push({ id, rank, notes: "", ...extra }); };
+const p19Row = (app, id) => app.$(`#main [data-skillname="${id}"]`).closest("tr");
+const p19Fx = (app, id, what) => [...p19Row(app, id).querySelectorAll(`.skill-fx [data-fx="${what}"]`)].map(e => e.textContent.replace(/\s+/g, " ").trim());
+
+test("P19 1 (sheet): a trait's number is in the check, and the breakdown names it", () => {
+  const ch = p19Char(c => { p19Hold(c, "advantages", "ghost-step"); c.disadvantages.push({ id: "defect-flaw", rank: 1, notes: "", selections: { skill: ["handguns"], detail: "x" } }); });
+  const app = openSheet(ch, "skills");
+  const st = Engine.skillLine(ch, "stealth"), hg = Engine.skillLine(ch, "handguns");
+  assert.equal(p19Row(app, "stealth").querySelector('[data-k="Check"]').textContent, `1d10 + ${st.checkBonus}`);
+  assert.match(p19Row(app, "stealth").querySelector(".bd").textContent, /\+3 Ghost Step/);
+  assert.equal(p19Row(app, "handguns").querySelector('[data-k="Check"]').textContent, `1d10 + ${hg.checkBonus}`);
+  assert.match(p19Row(app, "handguns").querySelector(".bd").textContent, /−2 Defect\/Flaw/, "a true minus, named");
+  assert.doesNotMatch(p19Row(app, "medical").querySelector(".bd").textContent, /Ghost|Defect/);
+  // Main's Combat table is the same renderer.
+  const main = openSheet(ch, "main");
+  assert.match(p19Row(main, "handguns").querySelector(".bd").textContent, /−2 Defect\/Flaw/);
+  assert.deepEqual([...app.errors, ...main.errors], []);
+});
+
+test("P19 2 (sheet): a kicker is beside the number on the Skills tab, Main's table and the printed sheet", () => {
+  const ch = p19Char(c => { p19Hold(c, "advantages", "field-medic"); p19Hold(c, "advantages", "hyper-vigilance"); });
+  const med = Engine.skillLine(ch, "medical").checkBonus, cs = Engine.skillLine(ch, "combat-sense").checkBonus;
+  const app = openSheet(ch, "skills");
+  assert.equal(p19Row(app, "medical").querySelector('[data-k="Check"]').textContent, `1d10 + ${med} + 1d4`);
+  assert.equal(p19Row(app, "combat-sense").querySelector('[data-k="Check"]').textContent, `1d10 + ${cs} + 1d4`);
+  assert.equal(p19Row(app, "stealth").querySelector('[data-k="Check"]').textContent.includes("d4"), false, "a kicker on another Skill");
+  const main = openSheet(ch, "main");
+  assert.equal(p19Row(main, "combat-sense").querySelector('[data-k="Check"]').textContent, `1d10 + ${cs} + 1d4`);
+  app.window.print = () => {};
+  app.click("[data-menu-toggle]"); app.click("[data-print]");
+  const flat = e => e.textContent.replace(/\s+/g, "");
+  const cells = app.$$("#printSheet .p-skillcell").map(flat), rows = app.$$("#printSheet tr").map(flat);
+  assert.ok(cells.some(t => t.startsWith("CombatSense") && t.endsWith(`1d10+${cs}+1d4`)), cells.join("|"));
+  assert.ok(rows.some(t => t.startsWith("Medical") && t.includes(`1d10+${med}+1d4`)), rows.filter(t => /Medical/.test(t)).join("|"));
+  assert.ok(rows.some(t => t.startsWith("Stealth") && t.includes("1d10+") && !t.includes("d4")));
+  assert.ok(!cells.some(t => t.startsWith("Dodge") && t.includes("d4")));
+  assert.deepEqual([...app.errors, ...main.errors], []);
+});
+
+test("P19 3 (sheet): Take X reads its total with the choice first, and each source shows", () => {
+  const ch = p19Char(c => {
+    p19Hold(c, "advantages", "machindo"); p19Hold(c, "advantages", "lightning-calculator");
+    p19Hold(c, "advantages", "common-sense", 2, { selections: { skill: ["basic-tech", "investigation"] } });
+  });
+  const app = openSheet(ch, "skills");
+  const inv = Engine.skillLine(ch, "investigation").checkBonus;
+  assert.deepEqual(p19Fx(app, "investigation", "takeX"), [`Take 6: ${6 + inv} (choose before you roll) · Common Sense`]);
+  const bt = Engine.skillLine(ch, "basic-tech").checkBonus;
+  assert.deepEqual(p19Fx(app, "basic-tech", "takeX"), [
+    `Take 6: ${6 + bt} (choose before you roll) · Common Sense`,
+    `Take 6: ${6 + bt} with technology (choose before you roll) · Machindo`,
+    `Take 6: ${6 + bt} not in combat (choose before you roll) · Lightning Calculator`,
+  ]);
+  assert.deepEqual(p19Fx(app, "stealth", "takeX"), []);
+  assert.equal(p19Row(app, "investigation").querySelector('[data-k="Check"]').textContent, `1d10 + ${inv}`, "Take X is not in the number");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P19 4 (sheet): the die faces are marked on the Skills they touch, and nowhere else", () => {
+  const ch = p19Char(c => {
+    p19Hold(c, "disadvantages", "distractable"); p19Hold(c, "disadvantages", "gullible");
+    p19Hold(c, "advantages", "refined-skill", 2, { selections: { skill: ["stealth", "medical"] } });
+  });
+  const app = openSheet(ch, "skills");
+  const marks = id => p19Fx(app, id, "mark");
+  assert.deepEqual(marks("awareness"), ["Fails on a natural 2 or 3 (a 1 still botches) · Distractable"]);
+  assert.deepEqual(marks("combat-sense"), ["Fails on a natural 2 or 3 (a 1 still botches) · Distractable"]);
+  assert.deepEqual(marks("intuition"), ["Fails on a natural 2 or 3 spotting a lie, unless it's preposterous (a 1 still botches) · Gullible"]);
+  assert.deepEqual(marks("stealth"), ["Explodes on a natural 9 or 10 · Refined Skill"]);
+  assert.deepEqual(marks("medical"), ["Explodes on a natural 9 or 10 · Refined Skill"]);
+  assert.deepEqual(marks("handguns"), []);
+  assert.deepEqual(marks("persuasion"), []);
+  assert.equal(app.$$(".skill-fx").length, 5);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P19 5 (sheet): Night Vision names the light it cancels on Awareness and under Main's attacks", () => {
+  const ch = p19Char(c => { p19Hold(c, "advantages", "night-vision"); c.weapons.push({ id: "vs4-ironside", notes: "", mods: [], roundsSpent: 0 }); });
+  const app = openSheet(ch, "skills");
+  assert.deepEqual(p19Fx(app, "awareness", "mark"), ["No Dim or Dark penalty on visual checks · Night Vision"]);
+  const main = openSheet(ch, "main");
+  const note = main.$$(".main-combat [data-attacknote]");
+  assert.equal(note.length, 1);
+  assert.equal(note[0].textContent.replace(/\s+/g, " ").trim(), "Dim −1 and Dark −3 don't apply to your attacks · Night Vision");
+  const table = main.$(".main-combat table.ref:not(.skill-table)");
+  assert.ok(table.compareDocumentPosition(note[0]) & main.window.Node.DOCUMENT_POSITION_FOLLOWING, "the note isn't under the attacks table");
+  // The note follows the data.
+  main.D.visibility.find(v => v.id === "dim").attack = -2;
+  main.window.eval("update()");
+  assert.match(main.$(".main-combat [data-attacknote]").textContent, /^Dim −2 and Dark −3/);
+  // Without Night Vision there is no note, and Awareness has no mark.
+  const bare = openSheet(p19Char(c => { c.weapons.push({ id: "vs4-ironside", notes: "", mods: [], roundsSpent: 0 }); }), "main");
+  assert.equal(bare.$$("[data-attacknote]").length, 0);
+  assert.deepEqual([...app.errors, ...main.errors, ...bare.errors], []);
+});
+
+test("P19 (hostile): a trait's words are text on the Skills tab, never markup", () => {
+  const ch = p19Char(c => p19Hold(c, "advantages", "common-sense", 1, { selections: { skill: ["investigation"] } }));
+  const app = openSheet(ch, "skills");
+  app.D.advantages.find(a => a.id === "common-sense").grants.find(g => g.type === "takeX").whenText = "<img src=x onerror=alert(1)>";
+  app.window.eval("update()");
+  assert.equal(app.$$("#main img").length, 0, "a when became markup");
+  assert.match(p19Fx(app, "investigation", "takeX")[0], /<img src=x onerror=alert\(1\)>/);
+  assert.deepEqual(app.errors, []);
+});

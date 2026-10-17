@@ -300,6 +300,18 @@ function maneuverLineHtml(ch, id){
   return list.length ? `<div class="skill-maneuvers" data-maneuvers="${esc(id)}"><b>Combat Maneuvers</b>${list.map(m=>
     `<div>${esc(m.name)} → ${esc(m.inflicts)} · 1d10 + ${m.check} <small>(${m.parts.map(p=>`${esc(p.name)} +${p.amount}`).join(", ")})</small></div>`).join("")}</div>` : "";
 }
+// What the held traits say about a Skill's check beyond the number (Decision 233): each Take X as its total, to choose
+// before rolling, then each mark (a die face, a conditional bonus, a light level), each with where it comes from.
+// The words are the engine's, filled from the rows; they are text here, never markup.
+function skillFxHtml(l){
+  const line = (what, t) => `<div class="fx-line" data-fx="${what}">${esc(t.text)} <span class="fx-from">· ${esc(t.from)}</span></div>`;
+  const rows = (l.takeX||[]).map(t=>line("takeX", t)).concat((l.marks||[]).map(t=>line("mark", t)));
+  return rows.length ? `<div class="skill-fx">${rows.join("")}</div>` : "";
+}
+// The light a trait cancels on an attack, once under Main's attacks table (Decision 233).
+const attackNotesHtml = ch => Engine.attackNotes(ch).map(n=>`<p class="attack-note" data-attacknote>${esc(n.text)} <span class="fx-from">· ${esc(n.from)}</span></p>`).join("");
+// The check as it reads on a row: 1d10 + the number, then each kicker beside it (Decision 233).
+const checkText = (l, sep) => `1d10${sep}+${sep}${l.checkBonus}` + (l.kickers||[]).map(k=>`${sep}+${sep}${k.die}`).join("");
 // A skill in training shows when its rank arrives (Decision 230).
 function trainingChipHtml(ch, id){
   const t = ch.progression && ch.progression.training;
@@ -324,13 +336,14 @@ function skillRowPair(ch, l){
     : [skillStatsHtml(l), `<span style="color:var(--dim)">untrained</span>`];
   if (b.pain) parts.push(`<span style="color:var(--magenta)">${b.pain} pain</span>`);
   if (b.conditions) parts.push(`<span style="color:var(--magenta)">${b.conditions} conditions</span>`);
+  for (const t of b.traitParts||[]) parts.push(`<span class="trait-part">${modText(t.amount)} ${esc(t.name)}</span>`);
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   // Decision 156: an untrained skill reads at full strength, Rank 0 dimmed.
   let tr = `<tr class="skill-line${l.trained?"":" untrained"}">`;
-  tr += `<td data-skillname="${esc(l.def.id)}" tabindex="-1">${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${trainingChipHtml(ch, l.def.id)}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${l.formPenalty?` <span class="chip pain">${l.formPenalty} while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}${maneuverLineHtml(ch, l.def.id)}</td>`;
+  tr += `<td data-skillname="${esc(l.def.id)}" tabindex="-1">${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${trainingChipHtml(ch, l.def.id)}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${l.formPenalty?` <span class="chip pain">${l.formPenalty} while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}${maneuverLineHtml(ch, l.def.id)}${skillFxHtml(l)}</td>`;
   tr += `<td class="num" data-k="Rank">${l.trained?l.rank:0}</td>`;
-  tr += `<td class="num" data-k="Check">1d10 + ${l.checkBonus}</td>`;
+  tr += `<td class="num" data-k="Check">${checkText(l, " ")}</td>`;
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
   return tr + skillDescRow(ch, l.def, 4, open);
 }
@@ -430,7 +443,7 @@ function renderShMain(){
           <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
           <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td></tr>`;
-      }).join("") + `</tbody></table>`;
+      }).join("") + `</tbody></table>` + attackNotesHtml(ch);
   }
   const worn = Engine.armorState(ch).worn, natMain = naturalArmorText(ch);
   if (worn || natMain) h += `<div class="sect">Armor</div>`;
@@ -2534,7 +2547,7 @@ function pSkillCellsHtml(ch, category){
   return `<div class="p-cellrow">` + D.skills.filter(s=>s.category===category).map(s=>{
     const line = ch ? Engine.skillLine(ch, s.id) : null;
     const icon = iconSvg(s.primaryStat);
-    return `<div class="p-skillcell">${icon?`<span class="p-scicon">${icon}</span>`:""}<span class="p-label">${esc(s.name)}</span>${pLine(line && "1d10+"+line.checkBonus)}</div>`;
+    return `<div class="p-skillcell">${icon?`<span class="p-scicon">${icon}</span>`:""}<span class="p-label">${esc(s.name)}</span>${pLine(line && checkText(line, ""))}</div>`;
   }).join("") + `</div>`;
 }
 // Which Pain Level band a given HL-lost count falls into — the same lookup
@@ -2669,7 +2682,7 @@ function pSkillRowsHtml(ch, groups){
     const rows = g.skills.map(s=>{
       const line = ch ? Engine.skillLine(ch, s.id) : null;
       const rank = !line ? null : (line.trained ? line.rank : "—");
-      const check = line ? "1d10+"+line.checkBonus : null;
+      const check = line ? checkText(line, "") : null;
       return `<tr><td>${esc(s.name)}</td>${pSkillIcons(s)}<td class="num">${pLine(rank)}</td><td class="num">${pLine(check)}</td><td></td></tr>`;
     }).join("");
     return `<tr class="p-cat"><td colspan="5">${esc(g.cname)}</td></tr>${rows}`;
