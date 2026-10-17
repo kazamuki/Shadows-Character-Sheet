@@ -237,6 +237,10 @@ window.SHADOWS_DATA = {
   // heldText's placeholders: {rank}, {v}, {choice}, {choice:<pickId>}; with none to
   // fill, the tag is the whole ruleText. Read by Engine.effectTagsFor.
   effectTags: { hpPerLevel: "+{perRank} max HP on every Health Level per rank" },
+  // (Decision 232) The same computed types on a card the character holds, stating its total:
+  // { skillPoints, hpPerLevel, naturalArmor }, filled with the row's fields and {total}
+  // (perRank × the held rank). A type without one reads effectTags. Read by Engine.effectTagsFor.
+  effectTagsHeld: { hpPerLevel: "+{total} max HP on every Health Level" },
   disadvantages: [
     { id: "paranoia", name: "Paranoia",
       pointsGranted: 3, maxRank: 1,
@@ -4695,7 +4699,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** removing a taken General Major from a saved file; the General list for everyone; a `repeatable` flag (Decision 135); Honed through `spendIP` (`ipCost` refuses WILL and TOL); Withering's levels for Steadied (Ken); capping WILL, TOL and LUCK at 10 (Ken).
      - **Replaces:** Decision 29 in part (the Minor repeat floor). Decision 199 in part (a Werewolf's Majors are offered alone). Closes F9.
      - **Revisit if:** another archetype's Majors are written, or Withering's levels count as lost.
-     - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #…. Log 2026-10-14 (P6).
+     - **Built:** app 0.43.0, game data 0.36, schema 0.22, PR #209. Log 2026-10-14 (P6).
      → **Superseded in part by Decision 227** — Talented's new-Advantage offer refuses a `creationOnly` one (Long-Lived), through the rule the IP buy shares.
 
 218. **LUCK bought with CP counts against the Max Character Point Boost, and "Max Boost" is called that.**
@@ -4714,7 +4718,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a type stored on the upgrade entry (readers drop non-string upgrades; it needs a schema bump); halving after PROT and RES (Q2); halving Massive; a "spell" damage type; MD ratings (Q6).
      - **Replaces:** Decision 99 in part (Resistance applied; F23 closed). Decision 100 in part (Resistance is no longer one repeatable upgrade). Decision 104 in part (AP on a spell pierces Natural Armor; F25 closed).
      - **Revisit if:** the book names a cold damage type, or rules whether Resistance answers Elemental magic (F42), or playtests find halving first too strong.
-     - **Built:** app 0.44.0, game data 0.37 (unreleased, no bump), no schema bump, PR #…. Log 2026-10-15 (P8a).
+     - **Built:** app 0.44.0, game data 0.37 (unreleased, no bump), no schema bump, PR #209. Log 2026-10-15 (P8a).
 
 220. **Healing counts from 0 HP unless the character keeps damage past zero, and Dying at a Reset is the check plus a mark per ticking source.**
      *2026-10-15 · Ken + Deighton + Claude · Touches: heal, healStep, damage past zero, pastZero, houseRules, keepDamagePastZero, Admin, Rest, Focused Healing, Nanomed Kit, Heal 1, Heal 5, hlState, resolveReset, dyingCheck, whileDying, resolveEncounterReset, participantDamage, Dying, character schema 0.23, F24, F36, W102*
@@ -4830,8 +4834,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Why:** Ken's shape for W120: one place per effect, the computed ones unable to drift from what the sheet applies, and Expert mode (P13) able to show what an entry does without its prose. The rule lines are the sign-off page's, approved by Ken, Deighton and Scott.
      - **Rejected:** a free-text `mechanicsText` per entry (a second copy of every rule); a hand-written tag on a computed row (the same drift); splitting `description` at its first paragraph (flavor in some entries, rules in others); computing the 19 here (rules questions); tags on the CP step only; truncating a long rule (a cut-off rule is a wrong rule); print (the front page is full, 96).
      - **Replaces:** nothing. Extends 199 (Majors' `grants` share the reader, which skips `rule`) and 213 (Pain Sensitive gains a tag). Eleven `description`s move with Deighton's rulings of 2026-10-16.
+     → **Superseded in part by Decision 232** — a held card's computed tag states its total (`effectTagsHeld`), a held Milestone row past the rank is left off, and the tags reach four more places.
      - **Revisit if:** a table rule becomes computable (P19 or P20 moves it to a computed type); the CRB rewrites an entry (its rule rows are rewritten with it).
      - **Built:** app 0.48.0, no data or schema bump, PR #207. Log 2026-10-16 (P18).
+
+232. **A held Advantage's or Disadvantage's computed tags state its total for its rank and leave out the rows its rank doesn't reach; the tags show wherever one is chosen; Expert mode folds the book's text on the three creation steps.**
+     *2026-10-17 · Ken + Claude · Touches: effectTags, effectTagsHeld, effectTagsFor, heldRow, effectsHtml, Hard to Kill, Educated, Thick Skin, Long-Lived, CP step, Character tab, Natural Advantages, IP buy list, IP buy-off, Talented, Redeemed, Expert mode, Held only, Skills bar, applyPickFilter, shadows.ui.expert, W95*
+     - **Decided:** With a held row, `effectTagsFor` writes a computed row from `effectTagsHeld[type]` when there is one, filled with the row's fields plus `{total}` (`perRank` × the held rank), else from `effectTags[type]`; a `milestone` row past the held rank gives no tag. An entry not held reads as 231 has it. The tags also show in the Natural Advantages panel, both IP lists and the Talented and Redeemed picks. **Expert mode** is the browser's (`shadows.ui.expert`), never the character's: on the Archetype, Skills and Character Points steps it folds each entry's book text behind a **?**, never a tag, flag note, pick, control or what a choice gives. Held only, a Skills bar and a name-matching CP filter come with it; the Boosts heading reads "Max CP Boost +N".
+     - **Why:** Ken, after P18: a "per rank" chip on a ×2 card didn't speak for its character, and P18 missed places Advantages are chosen. Brogan asked for Expert mode.
+     - **Rejected:** the per-rank line with the total in brackets; Long-Lived's unreached Milestones marked "not yet"; tags for the rank an IP Raise would reach; compact steppers; Expert mode on the sheet; "Max Boost +N" (218 renamed it).
+     - **Replaces:** Decision 231 in part (a held computed tag no longer reads its general template; the tags reach four more places). Extends 218.
+     - **Revisit if:** a computed type's total isn't `perRank` × rank; a player misreads a held total as per-rank; Expert mode is wanted on the sheet.
+     - **Built:** app 0.48.0 (unreleased), no data or schema bump, PR #209 Log 2026-10-17 (P13).
 
 ## 5. Open Flags
 

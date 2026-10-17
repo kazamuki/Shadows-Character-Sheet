@@ -692,3 +692,43 @@ test("P12b 12c: Train a Skill stays while one runs after the rule is turned off,
   assert.match(app3.$("#modal").textContent, /sharpens a Skill you already have/);
   assert.deepEqual(app.errors, []);
 });
+
+// ── P13: the tags wherever an Advantage or Disadvantage is chosen (Decision 232) ──
+test("P13 10: the IP lists and Talented's pick show the tags: held for what the character holds, general for a new one", () => {
+  const rule = (kind, id) => D[kind === "advantage" ? "advantages" : "disadvantages"].find(d => d.id === id).grants.find(g => g.type === "rule").ruleText;
+  const tags = (root, key) => [...root.querySelector(`[data-ipbuy="${key}"]`).closest("tr").querySelectorAll(".effects .etag")].map(t => t.textContent);
+  const ch = p12Char();
+  ch.advantages = [{ id: "bullseye", rank: 2, notes: "" }, { id: "hard-to-kill", rank: 2, notes: "" }];
+  ch.disadvantages = [{ id: "blood-lust", rank: 1, notes: "" }];
+  const app = openSheet(ch, "progression");
+  // IP buy list for Advantages.
+  app.click('[data-ipopen="advantage"]');
+  assert.deepEqual(tags(app.$("#modal"), "advantage|bullseye"), ["Called Shots: +6 damage."]);
+  assert.deepEqual(tags(app.$("#modal"), "advantage|hard-to-kill"), ["+2 max HP on every Health Level"]);
+  assert.deepEqual(tags(app.$("#modal"), "advantage|ambidextrous"), [rule("advantage", "ambidextrous")], "a new one reads its general line");
+  assert.deepEqual(tags(app.$("#modal"), "advantage|educated"), ["+10 Skill Points per rank"], "a new one's computed tag is the per-rank rule");
+  app.click("#modal [data-modalclose]");
+  // IP buy-off for Disadvantages: both of Blood Lust's tags, and its fold stays.
+  app.click('[data-ipopen="disadvantage"]');
+  const bl = D.disadvantages.find(d => d.id === "blood-lust");
+  assert.deepEqual([...tags(app.$("#modal"), "disadvantage|blood-lust")], [...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText)]);
+  assert.ok(app.$('#modal [data-ipbuy="disadvantage|blood-lust"]').closest("tr").nextElementSibling.querySelector("details.ip-desc"), "What it says is gone");
+  app.click("#modal [data-modalclose]");
+  assert.deepEqual(app.errors, []);
+  // Talented's pick: "Raise one you hold" held, "Take a new one" general.
+  const t = openSheet(p6Char("professional", 100), "progression");
+  t.window.eval(`S.ch.advantages = [{ id: "bullseye", rank: 2, notes: "" }]; update();`);
+  t.click('[data-takeminor="talented"]');
+  const row = id => t.$(`#modal [data-mcpick="${id}"]`).closest("tr");
+  const rowTags = id => [...row(id).querySelectorAll(".effects .etag")].map(x => x.textContent);
+  assert.deepEqual(rowTags("bullseye"), ["Called Shots: +6 damage."]);
+  assert.deepEqual(rowTags("ambidextrous"), [rule("advantage", "ambidextrous")]);
+  assert.deepEqual(t.errors, []);
+  // Redeemed's pick (a Disadvantage to lower a rank of) shows the held tags too.
+  const r = openSheet(p6Char("professional", 100), "progression");
+  r.window.eval(`S.ch.disadvantages = [{ id: "blood-lust", rank: 1, notes: "" }]; update();`);
+  r.click('[data-takeminor="redeemed"]');
+  const rr = [...r.$('#modal [data-mcpick="blood-lust"]').closest("tr").querySelectorAll(".effects .etag")].map(x => x.textContent);
+  assert.deepEqual(rr, [...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText)], "Redeemed's pick has no tags");
+  assert.deepEqual(r.errors, []);
+});

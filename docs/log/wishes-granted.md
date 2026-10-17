@@ -889,6 +889,23 @@ W65, since both touch the Luck row's text. It is a player-visible change, so it
 needs a CHANGELOG line and a patch bump.
 *Built as sheet-wishlist P7 (2026-10-14).*
 
+**W95 — Expert mode: creation that fits on one screen.** *Ken, from Brogan · → Decision 232, app 0.48.0 (P13, PR #209): folds on Archetype, Skills and CP; compact steppers dropped (PQ3)*
+A returning player scrolls past every Skill, Advantage and Disadvantage's full
+text to find the one they want. An **Expert mode** toggle collapses each to
+its name, cost and controls, with the text a tap away, so more fits at
+once. Brogan also asked that the Character Points step's stat and skill
+boosts be **compact**: a **− / +** pair without the count between them,
+taking less room.
+*To respect:* a toggle is view state, remembered in the browser like the
+Character tab's Expand all (Decision 158), never saved in the character.
+W59 (built, 0.41.0) is the floor for the compact steppers: a stepper still says what it
+changes, and its new value is still announced, even if the number moves out
+from between the buttons. *Questions:* where the boost count goes when it
+leaves the stepper (the rank's total already shows it?); does Expert mode
+reach the Character tab too, or creation only.
+
+*Built as sheet-wishlist P13.*
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first

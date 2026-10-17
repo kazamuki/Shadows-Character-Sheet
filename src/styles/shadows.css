@@ -904,7 +904,7 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 :root[data-theme="light"] .theme-toggle-icon--moon{display:none}
 
 /* Header overflow (actions) menu */
-.hdr-actions{position:relative; display:flex; align-items:center}
+.hdr-actions{position:relative; display:flex; align-items:center; gap:8px}
 .hdr-actions:empty{display:none}
 .kebab{background:none; border:1px solid var(--frame); border-radius:6px; color:var(--dim);
   width:34px; height:30px; font-size:1.15rem; line-height:1; cursor:pointer; padding:0}
@@ -1108,6 +1108,18 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 /* W47: the card or row a greyed control hands the keyboard to shows where it is. */
 .kept-place[tabindex]:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
 .pick[hidden]{display:none}
+/* P13: Expert mode folds the book's text behind a ?. A hidden fold stays hidden whatever else sets display;
+   a skill row that the filter hides takes its display:contents with it. */
+[data-foldbody][hidden], .alloc-row[hidden], .alloc > .picks[hidden]{display:none !important}
+.pick .head .skill-q, .alloc-row .name .skill-q{flex:none}
+.alloc-row .name .skill-q{margin-left:7px}
+/* An archetype card's ? can't sit inside the card's button, so it sits over the card's corner. */
+.card-fold{position:relative; display:flex}
+.card-fold > .card{flex:1; min-width:0}
+.card-fold > .skill-q{position:absolute; right:10px; bottom:10px; margin:0}
+.hdr-btn[aria-pressed="true"]{border-color:var(--cyan); color:var(--cyan)}
+/* Two buttons in the wizard's header: on a phone the toggle gives up a word, so the name keeps room. */
+@media (max-width:480px){ .hdr-btn .long{display:none} .hdr-actions{gap:6px} .hdr-actions .hdr-btn{padding:0 9px} }
 
 /* ── The roster on Home (R10, Decision 141) ── */
 .roster{margin-top:28px; text-align:left}

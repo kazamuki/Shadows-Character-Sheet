@@ -676,6 +676,89 @@ function askFirst({ title, text, yes, then, danger=true }){
     } });
 }
 
+// ── Expert mode (Decision 232) ────────────────────────────────────────
+// View state of this browser, like Pin and Expand all: never in the character.
+// On the Archetype, Skills and Character Points steps it folds the book's text
+// behind a ? beside each name, and keeps the choosing in view. A press of ?
+// opens that text in place (no re-render); S.openFolds holds what's open, beside
+// S.cpFilter, so a stepper's re-render keeps it. Storage that throws means off.
+const EXPERT_KEY = "shadows.ui.expert", EXPERT_SEEN_KEY = "shadows.ui.expertSeen", EXPERT_STEPS = ["archetype","skills","character-points"];
+let expertMem = null, expertSeen = false;
+// The hint under a step's title, until the toggle has been pressed once in this browser.
+function expertHintHtml(){
+  if (!expertStep() || expertOn() || expertSeen) return "";
+  try{ if (localStorage.getItem(EXPERT_SEEN_KEY)==="1") return ""; }catch(e){}
+  return `<p class="step-note expert-hint">${esc(copy("expertHint"))}</p>`;
+}
+function expertOn(){
+  if (expertMem!==null) return expertMem;
+  try{ return localStorage.getItem(EXPERT_KEY)==="on"; }catch(e){ return false; }
+}
+function setExpert(on){
+  expertMem = !!on;
+  try{ if (on) localStorage.setItem(EXPERT_KEY, "on"); else localStorage.removeItem(EXPERT_KEY); localStorage.setItem(EXPERT_SEEN_KEY, "1"); }catch(e){}
+  expertSeen = true;
+  S.openFolds = new Set();                       // closes what was opened
+}
+const expertStep = () => S.screen==="wizard" && !!STEPS[S.step] && EXPERT_STEPS.includes(STEPS[S.step].id);
+// A text that folds: the attributes for its element, or nothing with Expert mode off.
+function foldAttr(key){
+  if (!expertOn()) return "";
+  return ` data-foldbody="${esc(key)}"${S.openFolds && S.openFolds.has(key) ? "" : " hidden"}`;
+}
+// The ? beside an entry's name that opens its text.
+function foldBtn(key, name){
+  if (!expertOn()) return "";
+  const open = !!(S.openFolds && S.openFolds.has(key));
+  return `<button class="skill-q" type="button" data-fold="${esc(key)}" aria-expanded="${open}" aria-label="Show the text of ${esc(name)}" title="Read the text">?</button>`;
+}
+// A line of what a choice gives (Focused Skills, Benefit): never folds. Marked so a test can tell it from prose.
+const mechAttr = () => expertOn() ? " data-mech" : "";
+function bindFolds(root){
+  root.querySelectorAll("[data-fold]").forEach(b=>b.onclick=()=>{
+    const key=b.dataset.fold;
+    if (!S.openFolds) S.openFolds = new Set();
+    const open=!S.openFolds.has(key);
+    if (open) S.openFolds.add(key); else S.openFolds.delete(key);
+    b.setAttribute("aria-expanded", String(open));
+    root.querySelectorAll("[data-foldbody]").forEach(e=>{ if (e.dataset.foldbody===key) e.hidden=!open; });
+  });
+}
+
+// ── An Advantage's or Disadvantage's effects as tags (Decisions 231, 232) ─────
+// A computed one (the sheet applies it) is a chip; a rule (the table applies
+// it) is a plain line. `held` is the character's own row for the entry, so a
+// held entry's tags speak for its rank and picks; an entry not taken passes
+// null and reads its general lines. Shared by the CP step, the Archetype step's
+// Natural Advantages, the Character tab, both IP lists and Talented's pick.
+function heldRow(ch, kind, id){
+  const rows = (kind==="disadvantage" ? ch.disadvantages : ch.advantages).filter(x=>x && x.id===id);
+  const rank = rows.reduce((s,x)=>s + Math.max(0, Number(x.rank)||0), 0);
+  if (rank<1) return null;
+  // What the picker reads (the bought row's answers, cut to the rank), so a tag never names a pick the picker lacks.
+  const selections = {};
+  for (const p of Engine.picksFor(ch, kind, id)) selections[p.pick.id] = p.chosen;
+  return { rank, selections };
+}
+function effectsHtml(ch, kind, id){
+  const tags = Engine.effectTagsFor(kind, id, heldRow(ch, kind, id));
+  return tags.length ? `<span class="effects">${tags.map(t=>`<span class="etag ${t.computed?"computed":"rule"}">${esc(t.text)}</span>`).join("")}</span>` : "";
+}
+
+// A redraw that changes the page's height (Expert mode folds the text) keeps the
+// entry at the top of the viewport where it was, so the page doesn't jump away
+// from what's being read. The anchor is the first entry (or heading) below the header.
+function anchorKept(draw){
+  const hdr=document.querySelector("header.top"), top=(hdr ? hdr.getBoundingClientRect().bottom : 0) + 1;
+  const sel=".pick, .alloc-row .name, .sect, .card";
+  let list=[...document.querySelectorAll("#main "+sel)], i=list.findIndex(e=>e.getClientRects().length && e.getBoundingClientRect().top>=top);
+  const was = i>=0 ? list[i].getBoundingClientRect().top : 0;
+  draw();
+  if (i<0) return;
+  const el=document.querySelectorAll("#main "+sel)[i];
+  if (el && el.getClientRects().length){ const d=el.getBoundingClientRect().top-was; if (d) window.scrollBy(0, d); }
+}
+
 // ── Jump bar (W5, W22) ────────────────────────────────────────────────
 // Section headings register themselves as a page renders, so a bar jumps to
 // whatever the page actually drew: an archetype's panel shows up on its own
@@ -736,17 +819,26 @@ function jumpTo(id){
   try{ window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: calm?"auto":"smooth" }); }catch(e){}
   el.focus({ preventScroll:true });
 }
-// W22: hide the picks whose name and description don't match. One you hold
-// (.selected) stays, so nothing you've taken disappears.
-function applyPickFilter(root, q){
-  const k=String(q||"").trim().toLowerCase(); let shown=0, total=0;
-  root.querySelectorAll("[data-filterable] .pick").forEach(p=>{
-    total++;
-    const text=`${(p.querySelector("h4")||{}).textContent||""} ${(p.querySelector(".desc")||{}).textContent||""}`.toLowerCase();
-    const hit=!k || p.classList.contains("selected") || text.includes(k);
-    p.hidden=!hit; if (hit) shown++;
+// W22: hide the picks whose name and text don't match. One you hold
+// (data-held: bought or natural ranks) stays, so nothing you've taken disappears. P13: it matches the
+// pick's NAME (its h2: the h4 this read since 2026-10-01 matched nothing) and
+// every .desc, folded or not, since textContent reads text that's hidden. A
+// skill row (.alloc-row) filters the same way, and takes its picks with it.
+// `held` (Held only) hides whatever the character doesn't hold.
+function applyPickFilter(root, q, { held=false }={}){
+  const k=String(q||"").trim().toLowerCase(); let shown=0, total=0, heldN=0;
+  root.querySelectorAll("[data-filterable] .pick, [data-filterable] .alloc-row").forEach(p=>{
+    const isRow = p.classList.contains("alloc-row");
+    const name = ((isRow ? p.querySelector(".name") : p.querySelector(".head h2")) || {}).textContent || "";
+    const text = `${name} ${isRow ? "" : [...p.querySelectorAll(".desc")].map(d=>d.textContent).join(" ")}`.toLowerCase();
+    const mine = !isRow && p.hasAttribute("data-held");   // bought, or held as natural ranks only
+    total++; if (mine) heldN++;
+    const hit = held ? mine : (!k || mine || text.includes(k));
+    p.hidden = !hit; if (hit) shown++;
+    // A skill's picks (Martial Arts styles) follow the row they belong to.
+    if (isRow) for (let n=p.nextElementSibling; n && n.classList.contains("picks"); n=n.nextElementSibling) n.hidden = !hit;
   });
-  return { shown, total, active: !!k };
+  return { shown, total, held: heldN, active: !!k || held };
 }
 
 // ── Vitals row — the one visual atom the creation rail and the sheet's

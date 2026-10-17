@@ -919,7 +919,7 @@ test("P7: a Street character's LUCK + goes off after 2 with its reason, and the 
   assert.match(luckRow().textContent, /up to 2 \(Max Character Point Boost\)/);
   assert.ok(!luckRow().querySelector('[data-step="luck|x|-1"]').disabled, "− must always work");
   assert.equal(app.$$("#main .jumpbar [data-jump]").some(b => b.textContent === "CP Boosts"), true);
-  assert.match(app.$("#main").textContent, /Character Point Boosts — leftover CP on Stats & Skills · up to 2 each, LUCK included/);
+  assert.match(app.$("#main").textContent, /Character Point Boosts — leftover CP on Stats & Skills · Max CP Boost \+2, LUCK included/);
   assert.doesNotMatch(app.$("#main").textContent, /Max Boost|exempt/, "the old name or the exemption still shows");
   assert.deepEqual(app.errors, []);
 });
@@ -1032,4 +1032,278 @@ test("P18 6b: a held tag reads the picks the picker reads: a natural row's answe
   });
   const p = app.$$("#main .pick").find(x => x.querySelector("h2") && x.querySelector("h2").textContent === "Favored Skill");
   assert.equal(p.querySelector(".effects .etag.rule").textContent, general);
+});
+
+// ── P13: Expert mode (Decision 232) ─────────────────────────────────────
+// Folded text is still in the page (so the filter finds it); it is `hidden`
+// until a ? opens it. Each test says what must stay shown as well as what folds.
+const EXPERT = { "shadows.ui.expert": "on" };
+const cpExpert = (mut, store = EXPERT) => onStep("professional", "street", "character-points", mut, store);
+const pickOf13 = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
+const hiddenIn = el => !!el.closest("[hidden]");
+const shownNames = app => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h2").textContent);
+const typeFilter = (app, v) => { const f = app.$("#main [data-jumpfilter]"); f.value = v; f.dispatchEvent(new app.window.Event("input")); };
+const holdThree = ch => {
+  ch.advantages = [{ id: "bullseye", rank: 1, notes: "" }, { id: "common-sense", rank: 1, notes: "", selections: { skill: ["investigation"] } }];
+  ch.disadvantages = [{ id: "blood-lust", rank: 1, notes: "" }];
+};
+
+test("P13 1: Expert mode folds the CP step's book text and keeps every control", () => {
+  const app = cpExpert(ch => {
+    holdThree(ch);
+    ch.advantages.push({ id: "educated", rank: 1, notes: "" });                      // a flagged one, held
+    Engine.addCustomPower(ch, { name: "Sidestep", effect: "Moves where the dice won't look.", free: true }, { creation: true });
+  });
+  assert.deepEqual(app.errors, []);
+  const filterable = app.$$("#main [data-filterable] .pick");
+  assert.equal(filterable.length, 87);
+  for (const p of filterable) {
+    const name = p.querySelector("h2").textContent;
+    assert.ok(p.querySelector(".desc").hidden, `${name}: the book text is shown`);
+    assert.ok(p.querySelector(".cost") && p.querySelector(".stepper"), `${name} lost a cost or stepper`);
+    assert.ok(p.querySelector(".head [data-fold]"), `${name} has no ?`);
+  }
+  // LUCK's line stays folded too; a held entry's tags and picks stay shown.
+  assert.ok(app.$$("#main .pick").find(p => /Buy up LUCK/.test(p.textContent)).querySelector(".desc").hidden, "LUCK's line is shown");
+  const cs = pickOf13(app, "Common Sense");
+  assert.ok(cs.querySelector("select[data-sel]") && !hiddenIn(cs.querySelector("select[data-sel]")), "a held pick's select folded");
+  assert.ok(cs.querySelector(".effects .etag") && !hiddenIn(cs.querySelector(".effects")), "the tags folded");
+  const ed = pickOf13(app, "Educated");
+  assert.ok(ed.querySelector(".flag") && !hiddenIn(ed.querySelector(".flag")), "a flag note folded");
+  const custom = pickOf13(app, "Sidestep");
+  assert.ok(custom && !hiddenIn(custom.querySelector(".desc")) && /won't look/.test(custom.querySelector(".desc").textContent), "a custom power's own text folded");
+  // ? opens one entry; a stepper's re-render keeps it open; the others stay folded.
+  const q = () => app.$('[data-fold="advantage|ambidextrous"]');
+  assert.equal(q().getAttribute("aria-expanded"), "false");
+  app.click('[data-fold="advantage|ambidextrous"]');
+  assert.equal(q().getAttribute("aria-expanded"), "true");
+  assert.ok(!pickOf13(app, "Ambidextrous").querySelector(".desc").hidden, "? didn't open the text");
+  assert.ok(pickOf13(app, "Animal Ken").querySelector(".desc").hidden, "? opened another entry");
+  app.click('[data-step="luck|x|1"]');
+  assert.equal(q().getAttribute("aria-expanded"), "true", "a re-render closed it");
+  assert.ok(!pickOf13(app, "Ambidextrous").querySelector(".desc").hidden, "a re-render re-folded the text");
+  app.click('[data-fold="advantage|ambidextrous"]');
+  assert.ok(pickOf13(app, "Ambidextrous").querySelector(".desc").hidden, "? didn't close it again");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P13 1b: with Expert mode off the CP step shows every text and has no ?", () => {
+  const app = cpExpert(() => {}, {});
+  assert.equal(app.$$("#main [data-fold]").length, 0);
+  assert.equal(app.$$("#main [data-foldbody]").length, 0);
+  assert.ok(app.$$("#main [data-filterable] .pick .desc").every(d => !d.hidden));
+});
+
+test("P13 2: Expert mode folds the Skills step's descriptions and keeps the picks", () => {
+  const app = onStep("professional", "street", "skills", ch => { ch.skills["martial-arts"] = { rank: 2, ipe: 0 }; ch.skills.handguns = { rank: 1, ipe: 0 }; }, EXPERT);
+  assert.deepEqual(app.errors, []);
+  const rows = app.$$("#main .alloc-row");
+  assert.equal(rows.length, D.skills.length);
+  const shown = () => app.$$("#main .alloc-row .name small").filter(s => !s.classList.contains("next-cost") && !s.hidden);
+  assert.deepEqual(shown().map(s => s.textContent), [], "a description is shown");
+  for (const r of rows) assert.ok(r.querySelector(".stepper .val") && r.querySelector(".mod") && r.querySelector("[data-fold]"), r.textContent);
+  assert.ok(app.$$('#main select[data-sel^="skill|martial-arts"]').length, "Martial Arts' style picks are gone");
+  assert.ok(rows.find(r => r.querySelector(".name").textContent.startsWith("Handguns")).querySelector(".skstats"), "the stat line is gone");
+  app.click('[data-fold="skill|handguns"]');
+  assert.equal(shown().length, 1);
+  app.click('[data-step="skill|handguns|1"]');
+  assert.equal(shown().length, 1, "a rank press closed it");
+});
+
+test("P13 3: Expert mode is the browser's, never the character's", () => {
+  const app = onStep("professional", "street", "skills", () => {});
+  const ch0 = JSON.stringify(app.window.eval("S.ch"));
+  const toggle = () => app.$("#hdractions [data-expert]");
+  assert.equal(toggle().getAttribute("aria-pressed"), "false");
+  app.click("#hdractions [data-expert]");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.expert"), "on");
+  assert.equal(toggle().getAttribute("aria-pressed"), "true");
+  assert.equal(JSON.stringify(app.window.eval("S.ch")), ch0, "the character changed");
+  assert.ok(!JSON.stringify(draft(app)).includes("expert"), "it was saved in the character");
+  assert.ok(!app.$$("#main .alloc-row .name small").some(s => !s.classList.contains("next-cost") && !s.hidden));
+  app.click("#hdractions [data-expert]");
+  assert.equal(app.window.localStorage.getItem("shadows.ui.expert"), null);
+  assert.ok(app.$$("#main .alloc-row .name small").filter(s => !s.classList.contains("next-cost")).every(s => !s.hidden));
+  assert.equal(JSON.stringify(app.window.eval("S.ch")), ch0);
+  // A boot with the key set starts folded; storage that throws starts unfolded, with no error.
+  assert.equal(onStep("professional", "street", "skills", () => {}, EXPERT).$$("#main [data-foldbody]:not([hidden])").length, 0);
+  const bad = onStep("professional", "street", "skills", () => {});
+  bad.window.eval(`(()=>{ const g=Storage.prototype.getItem, s=Storage.prototype.setItem;
+    Storage.prototype.getItem=function(k){ if(k==="shadows.ui.expert") throw new Error("denied"); return g.call(this,k); };
+    Storage.prototype.setItem=function(k,v){ if(k==="shadows.ui.expert") throw new Error("denied"); return s.call(this,k,v); }; })()`);
+  bad.window.eval("update()");
+  assert.equal(bad.$$("#main [data-foldbody]").length, 0);
+  bad.click("#hdractions [data-expert]");
+  assert.deepEqual(bad.errors, []);
+});
+
+test("P13 4: the CP Boosts heading names Max CP Boost, and every stepper keeps its count", async () => {
+  for (const pl of D.powerLevels.slice(0, 2)) {
+    for (const store of [{}, EXPERT]) {
+      const app = onStep("professional", pl.id, "character-points", () => {}, store);
+      const h = app.$$("#main .sect").find(s => /Character Point Boosts/.test(s.textContent));
+      assert.ok(h, "no Boosts heading");
+      assert.match(h.textContent, new RegExp(`Max CP Boost \\+${pl.maxBoost}\\b`), `${pl.id}: ${h.textContent}`);
+      assert.doesNotMatch(h.textContent, /up to \d+ each/);
+      for (const s of app.$$("#main .stepper")) {
+        const kids = [...s.children].map(c => c.tagName + (c.className ? "." + c.className : ""));
+        assert.deepEqual(kids, ["BUTTON", "SPAN.val", "BUTTON"]);
+      }
+    }
+  }
+  const app = onStep("professional", "street", "character-points", () => {}, EXPERT);
+  app.click('[data-step="boost|stat|BOD|1"]');
+  await new Promise(r => app.window.setTimeout(r, 60));
+  assert.match(app.$("#announcer").textContent, /^boosts to Body 1$/);
+});
+
+test("P13 5: the CP filter finds an entry by its name, in both modes", () => {
+  for (const store of [{}, EXPERT]) {
+    const app = cpExpert(() => {}, store);
+    typeFilter(app, "Ambidextrous");
+    assert.deepEqual(shownNames(app), ["Ambidextrous"], "the name didn't find its entry");
+    assert.equal(app.$("#main [data-jumpcount]").textContent, "1 of 87");
+    typeFilter(app, "Animal Ken");
+    assert.deepEqual(shownNames(app), ["Animal Ken"]);
+    typeFilter(app, "called shot");                          // only in a description
+    assert.ok(shownNames(app).includes("Bullseye"), "folded text can't be found");
+    typeFilter(app, "");
+    assert.equal(shownNames(app).length, 87);
+  }
+  // Held entries stay, as before.
+  const app = cpExpert(holdThree);
+  typeFilter(app, "Ambidextrous");
+  assert.deepEqual(shownNames(app).sort(), ["Ambidextrous", "Blood Lust", "Bullseye", "Common Sense"]);
+});
+
+test("P13 6: the header's Expert mode toggle shows on three steps and keeps the keyboard's place", () => {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  for (const id of steps) {
+    const app = onStep("professional", "street", id, () => {});
+    const has = !!app.$("#hdractions [data-expert]");
+    assert.equal(has, ["archetype", "skills", "character-points"].includes(id), `${id}: toggle ${has ? "shown" : "absent"}`);
+    assert.ok(app.$("#hdractions [data-home]"), `${id}: Home was pushed out`);
+  }
+  const app = onStep("professional", "street", "skills", () => {});
+  for (const want of ["true", "false", "true"]) {
+    app.$("#hdractions [data-expert]").focus();
+    app.click("#hdractions [data-expert]");
+    assert.equal(app.$("#hdractions [data-expert]").getAttribute("aria-pressed"), want);
+    assert.equal(app.window.document.activeElement, app.$("#hdractions [data-expert]"), "focus left the toggle");
+  }
+  assert.ok(!openSheet(lockedCharacter(), "main").$("[data-expert]"), "the sheet has the toggle");
+});
+
+test("P13 7: Expert mode folds the Archetype step's prose and keeps what each choice gives", () => {
+  for (const [arch, spec] of [["professional", ["mercenary"]], ["arcanist", ["arcane-fortitude"]]]) {
+    const app = onStep(arch, "street", "archetype", ch => { ch.archetypeChoices.specialization = spec; }, EXPERT);
+    assert.deepEqual(app.errors, [], arch);
+    const prose = app.$$("#main [data-foldbody]");
+    assert.ok(prose.length >= 5, `${arch}: only ${prose.length} folded texts`);
+    assert.ok(prose.every(p => p.hidden), `${arch}: prose is shown`);
+    // The archetype cards' summaries fold, each with a ? outside the card button.
+    assert.ok(app.$$("#main [data-arch]").every(b => !b.querySelector("[data-fold]")), "a ? inside a button");
+    assert.ok(app.$$("#main [data-arch]").every(b => hiddenIn(b.querySelector("p"))), "a card summary is shown");
+    const lore = app.$("#main .arch-lore"); assert.ok(lore && hiddenIn(lore), "the lore is shown");
+    const style = app.Engine.archetype(app.window.eval("S.ch")).gameplayStyle;
+    if (style) assert.ok(app.$$("#main .step-note").filter(p => p.textContent.includes(style.slice(0, 40))).every(hiddenIn), "the gameplay style is shown");
+    // What a choice gives stays.
+    const mech = app.$$("#main .desc[data-mech]");
+    assert.ok(mech.length >= 1 && mech.every(m => !hiddenIn(m)), `${arch}: a labelled line folded`);
+    assert.ok(mech.every(m => m.firstElementChild && m.firstElementChild.tagName === "B"), "a prose line is marked as mechanics");
+    const labelled = app.$$("#main .pick .desc").filter(d => d.firstElementChild && d.firstElementChild.tagName === "B");
+    assert.ok(labelled.length && labelled.every(d => d.matches("[data-mech]")), "a labelled line isn't marked");
+    assert.ok(app.$$("#main [data-spec]").length >= 6, "choice controls are gone");
+    const need = app.Engine.specializationNeed(app.window.eval("S.ch"));
+    if (need > 1) assert.match(app.$("#main").textContent, new RegExp(`\\d/${need} chosen`), "the count of choices folded");
+    // ? opens an option's text, in place.
+    const opt = app.$$('#main [data-fold^="spec|"]')[0];
+    assert.ok(opt, `${arch}: an option has no ?`);
+    app.click(`[data-fold="${opt.dataset.fold}"]`);
+    assert.ok(app.$$(`#main [data-foldbody="${opt.dataset.fold}"]`).every(e => !e.hidden));
+    assert.equal(opt.getAttribute("aria-expanded"), "true");
+  }
+  // Off: nothing folded, nothing marked.
+  const off = onStep("professional", "street", "archetype", ch => { ch.archetypeChoices.specialization = ["mercenary"]; });
+  assert.equal(off.$$("#main [data-fold], #main [data-foldbody], #main [data-mech]").length, 0);
+});
+
+test("P13 8: Held only shows the build, and works with the filter", () => {
+  // Educated is held as natural ranks only (a Professional's free ones): it's held, though it has no bought row.
+  const app = cpExpert(ch => { holdThree(ch); ch.advantages.push({ id: "educated", rank: 2, notes: "", source: "natural" }); }, {});
+  const held = ["Blood Lust", "Bullseye", "Common Sense", "Educated"];
+  assert.ok(app.$("#main [data-heldonly]"), "no Held only toggle");
+  assert.equal(app.$("#main [data-heldonly]").getAttribute("aria-pressed"), "false");
+  app.click("#main [data-heldonly]");
+  assert.deepEqual(shownNames(app).sort(), held);
+  assert.equal(app.$("#main [data-jumpcount]").textContent, "4 held");
+  assert.equal(app.$("#main [data-heldonly]").getAttribute("aria-pressed"), "true");
+  typeFilter(app, "ambidextrous");                         // held stay; a match that isn't held doesn't join
+  assert.deepEqual(shownNames(app).sort(), held, "a filter match that isn't held showed under Held only");
+  app.click('[data-step="luck|x|1"]');                     // a re-render keeps both
+  assert.deepEqual(shownNames(app).sort(), held);
+  assert.equal(app.$("#main [data-heldonly]").getAttribute("aria-pressed"), "true");
+  assert.equal(app.$("#main [data-jumpfilter]").value, "ambidextrous");
+  app.click("#main [data-heldonly]");                      // off: the filter is still on
+  assert.deepEqual(shownNames(app).sort(), ["Ambidextrous", ...held].sort());
+  typeFilter(app, "");
+  assert.equal(shownNames(app).length, 87);
+  // It stops being shown once it's no longer held.
+  app.click("#main [data-heldonly]");
+  app.click('[data-step="adv|bullseye|-1"]');
+  assert.deepEqual(shownNames(app).sort(), ["Blood Lust", "Common Sense", "Educated"]);
+  assert.equal(app.$("#main [data-jumpcount]").textContent, "3 held");
+  assert.deepEqual(app.errors, []);
+});
+
+test("P13 9: the Skills step's bar keeps Remaining in view and finds a skill by name", () => {
+  const app = onStep("professional", "street", "skills", ch => { ch.skills.dodge = { rank: 1, ipe: 0 }; });
+  const bar = app.$("#main .jumpbar.sticky");
+  assert.ok(bar, "no sticky bar on Skills");
+  const before = Number(/Remaining (\d+)/.exec(bar.textContent)[1]);
+  app.click('[data-step="skill|handguns|1"]');
+  assert.equal(Number(/Remaining (\d+)/.exec(app.$("#main .jumpbar.sticky").textContent)[1]), before - 1, "Remaining didn't follow a rank press");
+  assert.deepEqual(app.$$("#main .jumpbar [data-jump]").map(b => b.textContent), ["Combat", "Utility", "General"]);
+  const names = () => app.$$("#main .alloc-row").filter(r => !r.hidden).map(r => r.querySelector(".name").firstChild.textContent.trim());
+  const f = app.$("#main [data-jumpfilter]"); f.value = "Handguns"; f.dispatchEvent(new app.window.Event("input"));
+  assert.deepEqual(names(), ["Handguns"]);
+  app.click('[data-step="skill|handguns|1"]');
+  assert.equal(app.$("#main [data-jumpfilter]").value, "Handguns", "a rank press dropped the filter");
+  assert.deepEqual(names(), ["Handguns"]);
+  const g = app.$("#main [data-jumpfilter]"); g.value = ""; g.dispatchEvent(new app.window.Event("input"));
+  assert.equal(names().length, D.skills.length);
+  // The bar is spliced into the page, so a "$" pattern typed in the filter must stay text across a re-render.
+  for (const q of ["$'", "$&", "$`"]) {
+    const h = app.$("#main [data-jumpfilter]"); h.value = q; h.dispatchEvent(new app.window.Event("input"));
+    app.click('[data-step="skill|handguns|1"]');
+    assert.equal(app.$$("#main .alloc-row").length, D.skills.length, `the filter "${q}" duplicated the skills`);
+    assert.equal(app.$("#main [data-jumpfilter]").value, q);
+  }
+  assert.deepEqual(app.errors, []);
+});
+
+test("P13 10: the Natural Advantages panel shows the tags, held or general, and keeps them when its text folds", () => {
+  const general = D.advantages.find(a => a.id === "favored-skill").grants.find(g => g.type === "rule").ruleText;
+  const panel = app => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === "Favored Skill");
+  const setup = ch => { ch.archetypeChoices.specialization = ["mercenary"]; };
+  let app = onStep("professional", "street", "archetype", setup);
+  assert.ok(panel(app), "the Natural Advantages panel has no Favored Skill");
+  assert.equal(panel(app).querySelector(".effects .etag.rule").textContent, general);
+  const kids = [...panel(app).children].map(c => c.className.split(" ")[0]);
+  assert.ok(kids.indexOf("effects") > kids.indexOf("head") && kids.indexOf("effects") < kids.indexOf("desc"), kids.join(","));
+  const held = ch => {
+    setup(ch); ch.archetypeChoices.naturalAdvantages = [{ id: "favored-skill", rank: 1 }];
+    ch.advantages = [{ id: "favored-skill", rank: 1, notes: "", source: "natural", selections: { skill: ["stealth"] } }];
+  };
+  for (const store of [{}, EXPERT]) {
+    app = onStep("professional", "street", "archetype", held, store);
+    const tag = panel(app).querySelector(".effects .etag.rule").textContent;
+    assert.match(tag, /Stealth/, "the held tag doesn't name the pick");
+    assert.notEqual(tag, general);
+    if (store === EXPERT) {
+      assert.ok(hiddenIn(panel(app).querySelector(".desc")), "the panel's text is shown");
+      assert.ok(!hiddenIn(panel(app).querySelector(".effects")), "the panel's tags folded");
+      assert.ok(panel(app).querySelector("[data-fold]"));
+    }
+  }
 });

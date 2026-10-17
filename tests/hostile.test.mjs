@@ -1113,12 +1113,13 @@ test("a rule's text of markup renders as text on the CP step and a folded Charac
   ch.identity.name = "Probe"; ch.identity.archetype = "professional";
   ch.creation.powerLevel = D.powerLevels[0].id;
   ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
-  ch.advantages = [{ id: "hard-to-kill", rank: 1 }, { id: "bullseye", rank: 1 }];
+  ch.advantages = [{ id: "hard-to-kill", rank: 1 }, { id: "bullseye", rank: 1 }];   // Hard to Kill is held: its held template
   ch.disadvantages = [{ id: "blood-lust", rank: 1 }];
   const tweak = DD => {
     DD.disadvantages.find(d => d.id === "blood-lust").grants.find(g => g.type === "rule").ruleText = pwn;
     DD.advantages.find(d => d.id === "bullseye").grants.find(g => g.type === "rule").heldText = pwn;
-    DD.effectTags.hpPerLevel = tpl;
+    DD.effectTags.naturalArmor = tpl;                                         // Thick Skin isn't held: its general line
+    DD.effectTagsHeld.hpPerLevel = '<b data-pwn="held">{total}</b>';              // Decision 232: a held card's template too
   };
   const steps = D.creationFlow.steps.map(s => s.id);
   const click = (app, el) => el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
@@ -1128,6 +1129,7 @@ test("a rule's text of markup renders as text on the CP step and a folded Charac
   assert.deepEqual(app.$$("[data-pwn]").map(e => e.getAttribute("data-pwn")), [], "tag text became markup on the CP step");
   assert.ok(app.$("#main").textContent.includes(pwn), "the text isn't shown as text");
   assert.ok(app.$("#main").textContent.includes(tpl.replace("{perRank}", "1")), "the template isn't shown as text");
+  assert.ok(app.$("#main").textContent.includes('<b data-pwn="held">1</b>'), "the held template isn't shown as text");
 
   const locked = JSON.parse(JSON.stringify(ch)); locked.creation.locked = true;
   for (const id of Object.keys(locked.stats)) locked.stats[id].base = 5;

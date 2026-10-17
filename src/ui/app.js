@@ -54,7 +54,14 @@ function renderTopChrome(){
   } else if (S.screen==="wizard"){
     ctx.textContent = charName(S.ch, "Character Intake");
     nav.innerHTML = "";
-    if (act){ act.innerHTML = `<button class="hdr-btn" data-home="1">Home</button>`; act.querySelector("[data-home]").onclick=goHome; }
+    if (act){
+      // P13 (PQ4): Expert mode is the browser's setting, shown on the three steps it changes.
+      const ex = expertStep() ? `<button class="hdr-btn" data-expert aria-pressed="${expertOn()}" aria-label="Expert mode" title="${esc(copy("expertHint"))}">Expert<span class="long"> mode</span></button>` : "";
+      act.innerHTML = `${ex}<button class="hdr-btn" data-home="1">Home</button>`;
+      act.querySelector("[data-home]").onclick=goHome;
+      const eb = act.querySelector("[data-expert]");
+      if (eb) eb.onclick=()=>{ setExpert(!expertOn()); anchorKept(()=>update()); };
+    }
   } else {
     ctx.textContent = "Character Intake"; nav.innerHTML = ""; if (act) act.innerHTML = "";
   }

@@ -756,7 +756,7 @@ function minorChoiceBodyHtml(ch, st){
   const v = Engine.minorChoice(ch, st.id);
   if (!v.ok) return "";
   const q = String(st.q||"").trim().toLowerCase();
-  const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.sub?`<div class="sub">${esc(o.sub)}</div>`:""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
+  const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.sub?`<div class="sub">${esc(o.sub)}</div>`:""}${v.type==="advantageRank"?effectsHtml(ch, "advantage", o.id):v.type==="disadvantageRank"?effectsHtml(ch, "disadvantage", o.id):""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
     <td class="num" data-k="Gets">${esc(o.move||"")}</td>
     <td><button class="btn sm ${st.picks.includes(o.id)?"go":"primary"}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""}>${st.picks.includes(o.id)?"Picked":"Pick"}</button></td></tr>`;
   const table = list => `<table class="ref spell-results raise-results"><tbody>${list.map(rows).join("")}</tbody></table>`;
@@ -3012,9 +3012,9 @@ const ipPicksReady = (id, picks) => picks.every(a=>{
   const v = (S.ipBuy.picks[id] || {})[a.pick.id];
   return a.optional || (Array.isArray(v) && a.indices.every((_, i)=>v[i]));
 });
-function ipBuyRowHtml({ name, sub, move, cost, btn, key, why, off, extra }){
+function ipBuyRowHtml({ name, sub, tags, move, cost, btn, key, why, off, extra }){
   // The pick and a Disadvantage's text get a row of their own, the table's full width: a phone's name column is too narrow for a select.
-  return `<tr class="${why?"off":"pickrow"}"><td><b>${name}</b>${sub?`<div class="sub">${sub}</div>`:""}${why?`<div class="why">${esc(why)}</div>`:""}</td>
+  return `<tr class="${why?"off":"pickrow"}"><td><b>${name}</b>${sub?`<div class="sub">${sub}</div>`:""}${tags||""}${why?`<div class="why">${esc(why)}</div>`:""}</td>
     <td class="num" data-k="Move">${move}</td><td class="num" data-k="Cost">${cost}</td>
     <td><button class="btn sm primary" data-ipbuy="${key}" ${why||off?"disabled":""}>${btn}</button></td></tr>`
     + (extra ? `<tr class="ip-extra ${why?"off":""}"><td colspan="4">${extra}</td></tr>` : "");
@@ -3027,7 +3027,7 @@ function ipAdvantagesHtml(ch){
     const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
     const asks = c.ok ? c.picks : [];
     const pts = Number(def.cost);
-    return ipBuyRowHtml({ name: esc(def.name), sub: esc(`${pts} point${pts===1?"":"s"} a rank${rank?` · rank ${rank}`:""}`),
+    return ipBuyRowHtml({ name: esc(def.name), sub: esc(`${pts} point${pts===1?"":"s"} a rank${rank?` · rank ${rank}`:""}`), tags: effectsHtml(ch, "advantage", def.id),
       move: c.ok ? `${c.from} → ${c.to}` : `${rank}`, cost: c.ok ? `${c.cost} IP` : "—", btn:"Buy", key:`advantage|${esc(def.id)}`,
       why: c.ok ? short : c.why, off: c.ok && !short && !ipPicksReady(def.id, asks),
       extra: asks.map(a=>ipPickHtml(ch, def.id, a)).join("") });
@@ -3047,7 +3047,7 @@ function ipDisadvantagesHtml(ch){
     const def = Engine.disById(id), c = Engine.ipCost(ch, "disadvantage", id), rank = heldTraitRank(ch.disadvantages, id);
     const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
     return ipBuyRowHtml({ name: esc(def.name),
-      sub: esc(`${def.pointsGranted} point${Number(def.pointsGranted)===1?"":"s"} a rank · rank ${rank}`),
+      sub: esc(`${def.pointsGranted} point${Number(def.pointsGranted)===1?"":"s"} a rank · rank ${rank}`), tags: effectsHtml(ch, "disadvantage", id),
       move: c.ok ? (c.to>0 ? `rank ${c.from} → ${c.to}` : "removed") : `${rank}`, cost: c.ok ? `${c.cost} IP` : "—", btn:"Buy off",
       key:`disadvantage|${esc(id)}`, why: c.ok ? short : c.why,
       extra: `<details class="ip-desc"><summary>What it says</summary><div class="desc">${esc(def.description||"")}</div></details>` });

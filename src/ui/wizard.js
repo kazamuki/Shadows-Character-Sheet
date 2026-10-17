@@ -183,7 +183,7 @@ const sentence = s => /[.?!…]$/.test(s) ? s : s+".";
 function stepHeader(st){
   return importIssuesHtml() + `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
     <h1 class="step-title">${esc(st.short)}</h1>
-    <p class="step-note">${esc(sentence(st.label))}${st.note?` <em>${esc(st.note)}</em>`:""}</p>`;
+    <p class="step-note">${esc(sentence(st.label))}${st.note?` <em>${esc(st.note)}</em>`:""}</p>${expertHintHtml()}`;
 }
 
 function renderPowerLevel(){
@@ -254,20 +254,24 @@ function renderStats(){
 
 function renderArchetype(){
   const ch=S.ch, ac=ch.archetypeChoices, sel=Engine.archetype(ch);
-  let h = `<div class="cards two">` + D.archetypes.map(a=>`
+  let h = `<div class="cards two">` + D.archetypes.map(a=>{
+    const card = `
     <button class="card ${ch.identity.archetype===a.id?"selected":""}" data-arch="${a.id}" aria-pressed="${ch.identity.archetype===a.id}">
       <span class="badge ${a.status}">${esc(statusLabel(a.status))}</span>
       <h3>${esc(a.name)}</h3>
       <div class="sub">${(a.primaryStats||[]).join(" · ")||""}</div>
-      <p>${esc(a.summary||"")}</p>
-    </button>`).join("") + `</div>`;
+      <p${foldAttr("arch|"+a.id)}>${esc(a.summary||"")}</p>
+    </button>`;
+    // A ? can't sit inside the card's button, so it sits beside it (Expert mode only).
+    return expertOn() ? `<div class="card-fold">${card}${foldBtn("arch|"+a.id, a.name)}</div>` : card;
+  }).join("") + `</div>`;
   if (!sel) return h;
   // A write-in archetype (Decision 153) is the player's to describe.
   const wi = Engine.writeInOptions(ch);
   if (wi) return h + writeInHtml(ch, wi);
   if (sel.flagged) h += flagHtml(sel);
-  if (sel.lore) h += `<p class="flavor arch-lore">${esc(sel.lore)}</p>`;
-  if (sel.gameplayStyle) h += `<p class="step-note" style="margin-top:16px">${esc(sel.gameplayStyle)}</p>`;
+  if (sel.lore) h += `<p class="flavor arch-lore"${foldAttr("arch|"+sel.id)}>${esc(sel.lore)}</p>`;
+  if (sel.gameplayStyle) h += `<p class="step-note" style="margin-top:16px"${foldAttr("arch|"+sel.id)}>${esc(sel.gameplayStyle)}</p>`;
 
   const row = Engine.scalingRow(ch);
   const pl = Engine.powerLevel(ch);
@@ -298,13 +302,13 @@ function renderArchetype(){
         req = `<span class="cost ${unmet.length?"":"grant"}">requires ${Object.entries(o.requires.stats).map(([s,r])=>s+" "+r).join(", ")}</span>`;
       }
       return `<div class="pick ${seld?"selected":""}">${o.flagged?flagHtml(o):""}
-        <div class="head"><h2>${esc(o.name)}</h2>${req}
+        <div class="head"><h2>${esc(o.name)}</h2>${o.description?foldBtn("spec|"+o.id, o.name):""}${req}
           <div class="controls"><button class="toggle" data-spec="${o.id}">${need>1?(seld?"Chosen":"Choose"):(seld?"Selected":"Select")}</button></div></div>
-        <div class="desc">${esc(o.description||"")}</div>
-        ${o.focusedSkills?`<div class="desc"><b>Focused Skills:</b> ${esc(focusedSkillsText(o.focusedSkills))}</div>`:""}
-        ${o.tweak?`<div class="desc"><b>Tweak — ${esc(o.tweak.name)}:</b> ${esc(o.tweak.description)} ${(o.tweak.benefits||[]).map(esc).join(" ")}</div>`:""}
-        ${o.benefit?`<div class="desc"><b>Benefit:</b> ${esc(o.benefit)}</div>`:""}
-        ${optionFeatures(o).map(f=>`<div class="desc"><b>${esc(f.name)}:</b> ${esc(f.text)}</div>`).join("")}
+        <div class="desc"${foldAttr("spec|"+o.id)}>${esc(o.description||"")}</div>
+        ${o.focusedSkills?`<div class="desc"${mechAttr()}><b>Focused Skills:</b> ${esc(focusedSkillsText(o.focusedSkills))}</div>`:""}
+        ${o.tweak?`<div class="desc"${mechAttr()}><b>Tweak — ${esc(o.tweak.name)}:</b> ${esc(o.tweak.description)} ${(o.tweak.benefits||[]).map(esc).join(" ")}</div>`:""}
+        ${o.benefit?`<div class="desc"${mechAttr()}><b>Benefit:</b> ${esc(o.benefit)}</div>`:""}
+        ${optionFeatures(o).map(f=>`<div class="desc"${mechAttr()}><b>${esc(f.name)}:</b> ${esc(f.text)}</div>`).join("")}
         ${optionPowersHtml(o)}
       </div>`;
     }).join("");
@@ -379,10 +383,11 @@ function renderArchetype(){
       h += nat.pool.map(p=>{
         const def = Engine.advById(p.advantageId);
         const cur = (ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank;
-        return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h2>${esc(def?def.name:p.advantageId)}</h2>
+        return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h2>${esc(def?def.name:p.advantageId)}</h2>${def&&def.description?foldBtn("nat|"+p.advantageId, def.name):""}
           <span class="cost grant">max rank ${p.maxRank}</span>
           <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks, def?def.name:p.advantageId)}</div></div>
-          <div class="desc">${esc(def?def.description:"")}</div>
+          ${def?effectsHtml(ch,"advantage",p.advantageId):""}
+          <div class="desc"${foldAttr("nat|"+p.advantageId)}>${esc(def?def.description:"")}</div>
           ${cur>0?picksHtml("advantage",p.advantageId):""}</div>`;
       }).join("");
     }
@@ -391,8 +396,8 @@ function renderArchetype(){
   // Baseline traits reference
   if (sel.baselineTraits && sel.baselineTraits.length){
     h += `<details class="group"><summary>Baseline Traits — ${esc(sel.name)}</summary>` +
-      sel.baselineTraits.map(t=>`<div class="pick"><div class="head"><h2>${esc(t.name)}</h2></div>
-        <div class="desc">${esc(t.description||"")}${t.benefit?"\n"+esc(t.benefit):""}${t.effects?"\n• "+t.effects.map(esc).join("\n• "):""}</div></div>`).join("") + `</details>`;
+      sel.baselineTraits.map((t,i)=>`<div class="pick"><div class="head"><h2>${esc(t.name)}</h2>${foldBtn("trait|"+i, t.name)}</div>
+        <div class="desc"${foldAttr("trait|"+i)}>${esc(t.description||"")}${t.benefit?"\n"+esc(t.benefit):""}${t.effects?"\n• "+t.effects.map(esc).join("\n• "):""}</div></div>`).join("") + `</details>`;
   }
   return h;
 }
@@ -509,14 +514,15 @@ function renderSkills(){
   </div>`;
   const dataWarns = D.skills.map(s=>Engine.skillLine(ch,s.id).dataWarning).filter(Boolean);
   if (dataWarns.length) h += `<div class="flag">⚑ Data issue: ${dataWarns.map(esc).join(" ")}</div>`;
-  const cats = [["combat","Combat"],["utility","Utility"],["general","General"]];
+  h += "@@BAR@@BAR";
+  const cats = [["combat","Combat"],["utility","Utility"],["general","General"]], secs = sectionList("sk");
   for (const [cid,cname] of cats){
-    h += `<div class="sect">${cname}</div><div class="alloc">`;
+    h += secs.sect(cname) + `<div class="alloc" data-filterable>`;
     for (const s of D.skills.filter(x=>x.category===cid)){
       const rank = ch.skills[s.id]?ch.skills[s.id].rank:0;
       const line = Engine.skillLine(ch, s.id), cap = Engine.skillRankCap(ch, s.id);
       h += `<div class="alloc-row">
-        <div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} ${skillStatsHtml(line)}<small>${esc(s.description)}</small></div>
+        <div class="name">${esc(s.name)}${focused.includes(s.id)?' <span class="chip gold">focused</span>':""} ${skillStatsHtml(line)}${foldBtn("skill|"+s.id, s.name)}<small${foldAttr("skill|"+s.id)}>${esc(s.description)}</small></div>
         ${stepper(rank, "skill|"+s.id, rank>0, rank<cap && left>0 && pool.total!=null, s.name)}
         <span class="mod ${line.trained?"pos":""}" title="check bonus">+${line.checkBonus}</span>
       </div>`;
@@ -526,25 +532,11 @@ function renderSkills(){
     }
     h += `</div>`;
   }
-  return h;
-}
-
-// Decision 231: an entry's effects as tags. A computed one (the sheet applies
-// it) is a chip; a rule (the table applies it) is a plain line. `held` is the
-// character's own row for the entry, so a held entry's tags speak for its rank
-// and picks; an entry not taken passes null and reads its general lines.
-function heldRow(ch, kind, id){
-  const rows = (kind==="disadvantage" ? ch.disadvantages : ch.advantages).filter(x=>x && x.id===id);
-  const rank = rows.reduce((s,x)=>s + Math.max(0, Number(x.rank)||0), 0);
-  if (rank<1) return null;
-  // What the picker reads (the bought row's answers, cut to the rank), so a tag never names a pick the picker lacks.
-  const selections = {};
-  for (const p of Engine.picksFor(ch, kind, id)) selections[p.pick.id] = p.chosen;
-  return { rank, selections };
-}
-function effectsHtml(ch, kind, id){
-  const tags = Engine.effectTagsFor(kind, id, heldRow(ch, kind, id));
-  return tags.length ? `<span class="effects">${tags.map(t=>`<span class="etag ${t.computed?"computed":"rule"}">${esc(t.text)}</span>`).join("")}</span>` : "";
+  // P13: the CP step's sticky bar comes here: Remaining in view, a filter, and a jump to each group.
+  const bar = jumpBarHtml(secs.list, { sticky:true, filter:{ value:S.skillFilter, placeholder:"Filter skills" },
+    extra:`<span class="jump-cp ${left<0?"over":""}">Remaining <b>${left}</b> Skill Points</span>` });
+  // A function, so a "$&" or "$'" typed in the filter is text, not a replacement pattern.
+  return h.replace("@@BAR@@BAR", ()=>bar);
 }
 
 function renderCP(){
@@ -565,12 +557,12 @@ function renderCP(){
       const cur = (ch.disadvantages.find(x=>x.id===dd.id)||{rank:0}).rank;
       const lock = Engine.optionLock(ch,"disadvantage",dd.id);
       const req  = Engine.requirementState(ch,"disadvantage",dd.id);
-      return `<div class="pick ${cur>0?"selected":""}">${dd.flagged?flagHtml(dd):""}
-        <div class="head"><h2>${esc(dd.name)}</h2><span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
+      return `<div class="pick ${cur>0?"selected":""}"${cur>0?" data-held":""}>${dd.flagged?flagHtml(dd):""}
+        <div class="head"><h2>${esc(dd.name)}</h2>${foldBtn("disadvantage|"+dd.id, dd.name)}<span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
         ${constraintHtml("disadvantage",dd.id)}
         <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank && !lock.locked && req.ok, dd.name)}</div></div>
         ${effectsHtml(ch,"disadvantage",dd.id)}
-        <div class="desc">${esc(dd.description)}</div>
+        <div class="desc"${foldAttr("disadvantage|"+dd.id)}>${esc(dd.description)}</div>
         ${cur>0?picksHtml("disadvantage",dd.id):""}</div>`;
     }).join("") + `</details>`;
 
@@ -590,14 +582,14 @@ function renderCP(){
       const lock = Engine.optionLock(ch,"advantage",ad.id);
       const req  = Engine.requirementState(ch,"advantage",ad.id);
       const open = Engine.canBuyAdvantage(ch, ad);
-      return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad):""}
-        <div class="head"><h2>${esc(ad.name)}</h2><span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
+      return `<div class="pick ${cur>0?"selected":""}"${cur>0||(natural&&natural.rank>0)?" data-held":""}>${ad.flagged?flagHtml(ad):""}
+        <div class="head"><h2>${esc(ad.name)}</h2>${foldBtn("advantage|"+ad.id, ad.name)}<span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
         ${natural?`<span class="cost grant">natural ×${natural.rank}</span>`:""}
         ${gated&&ad.universal?`<span class="cost grant">Universal</span>`:""}
         ${constraintHtml("advantage",ad.id)}
         <div class="controls">${open?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok, ad.name):cur>0?stepper(cur,"adv|"+ad.id, true, false, ad.name):`<span class="cost">Not for ${esc(cls.name)}s</span>`}</div></div>
         ${effectsHtml(ch,"advantage",ad.id)}
-        <div class="desc">${esc(ad.description)}</div>
+        <div class="desc"${foldAttr("advantage|"+ad.id)}>${esc(ad.description)}</div>
         ${(cur>0||(natural&&natural.rank>0))?picksHtml("advantage",ad.id):""}</div>`;
     }).join("") + `</details>`;
 
@@ -606,20 +598,20 @@ function renderCP(){
   h += secs.sect("LUCK");
   if (luck.flagged) h += flagHtml(luck);
   const luckCan = Engine.canBoost(ch, "luck", "LUCK");
-  h += `<div class="pick"><div class="head"><h2>Buy up LUCK</h2>
+  h += `<div class="pick"><div class="head"><h2>Buy up LUCK</h2>${foldBtn("luck", "LUCK")}
     <span class="cost">${luck.cpCostPerPoint} CP a point · up to ${pl.maxBoost} (Max Character Point Boost)</span>
     <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, luckCan.ok, "LUCK")}<span class="mod" title="${esc(luckCan.ok?"":luckCan.why)}">${luckCan.ok?"":"⛔"}</span></div></div>
-    <div class="desc">Everyone starts at ${luck.startingValue}. ${esc(luck.refresh)}</div></div>`;
+    <div class="desc"${foldAttr("luck")}>Everyone starts at ${luck.startingValue}. ${esc(luck.refresh)}</div></div>`;
 
   // Disciplines: price, cap and starting ranks are the data's (Decision 135).
   const discs = Engine.disciplineRanks(ch);
   if (discs.length){
     const per = Engine.powerRankCost(), cap = Engine.disciplineCap(ch);
     h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank${cap==null?"":` · cap ${cap}`}`);
-    h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h2>${esc(d.name)}</h2>
+    h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h2>${esc(d.name)}</h2>${d.description?foldBtn("disc|"+d.id, d.name):""}
         <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}</span>
         <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, (cap==null || d.rank<cap) && bal.left>=per, d.name)}</div></div>
-        <div class="desc">${esc(d.description)}</div></div>`).join("");
+        <div class="desc"${foldAttr("disc|"+d.id)}>${esc(d.description)}</div></div>`).join("");
   }
 
   // Powers CP raises (Decision 215): a held, ranked archetype power, Innate or
@@ -677,17 +669,17 @@ function renderCP(){
       <p class="step-note">${esc(ss.text)}</p>`;
     h += book.map(l=>{
       const over = ss.over.some(o=>o.id===l.id);
-      return `<div class="pick selected"><div class="head"><h2>${esc(l.name)}</h2>
+      return `<div class="pick selected"><div class="head"><h2>${esc(l.name)}</h2>${foldBtn("spell|"+l.index, l.name)}
         <span class="cost">${esc(l.tier)} · TN ${l.tn==null?"—":l.tn} · TH ${l.th==null?"—":l.th}</span>
         ${over?`<span class="cost over">needs ${esc(ss.discipline)} ${l.printedTH}</span>`:""}
         <div class="controls"><button class="toggle" data-startrm="${l.index}">Remove</button></div></div>
-        <div class="desc">${spText(l.sp&&l.sp.effect, l.effect||"")}</div></div>`;
+        <div class="desc"${foldAttr("spell|"+l.index)}>${spText(l.sp&&l.sp.effect, l.effect||"")}</div></div>`;
     }).join("");
     h += `<button class="btn" data-spellpickopen="wizard">Choose from the book</button>`;
   }
 
   // Boosts
-  h += secs.sect("CP Boosts", `Character Point Boosts — leftover CP on Stats &amp; Skills · up to ${pl.maxBoost} each, LUCK included`);
+  h += secs.sect("CP Boosts", `Character Point Boosts — leftover CP on Stats &amp; Skills · Max CP Boost +${pl.maxBoost}, LUCK included`);
   if (D.creationFlow.boostRules.flagged) h += flagHtml(D.creationFlow.boostRules);
   h += `<div class="alloc">`;
   for (const s of D.stats){
@@ -709,7 +701,7 @@ function renderCP(){
   // W22: step 7 is the longest page in the app, so a bar sticks under the
   // header with a filter over the picks, a jump to each section, and the CP
   // still to spend.
-  const left = `<span class="jump-cp ${bal.left<0?"over":""}">Remaining <b>${bal.left}</b> CP</span>`;
+  const left = `<button class="jump" type="button" data-heldonly aria-pressed="${!!S.cpHeld}">Held only</button><span class="jump-cp ${bal.left<0?"over":""}">Remaining <b>${bal.left}</b> CP</span>`;
   return top + jumpBarHtml(secs.list, { sticky:true, filter:{ value:S.cpFilter, placeholder:"Filter Advantages and Disadvantages" }, extra:left }) + h;
 }
 
@@ -999,13 +991,17 @@ function bindMain(){
   // Jump bars (W5, W22). The filter works on the rendered page, so typing
   // keeps focus; S.cpFilter carries it across the re-render a stepper causes.
   main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
-  const jf=main.querySelector("[data-jumpfilter]");
+  // The Skills step's filter is its own (S.skillFilter); Held only is the CP step's.
+  const jf=main.querySelector("[data-jumpfilter]"), heldBtn=main.querySelector("[data-heldonly]");
+  const fkey = STEPS[S.step] && STEPS[S.step].id==="skills" ? "skillFilter" : "cpFilter";
   if (jf){
-    const run=()=>{ const r=applyPickFilter(main, jf.value), c=main.querySelector("[data-jumpcount]");
-      if (c) c.textContent = r.active ? `${r.shown} of ${r.total}` : ""; };
-    jf.oninput=()=>{ S.cpFilter=jf.value; run(); };
+    const run=()=>{ const held=!!S.cpHeld && !!heldBtn, r=applyPickFilter(main, jf.value, { held }), c=main.querySelector("[data-jumpcount]");
+      if (c) c.textContent = held ? `${r.held} held` : r.active ? `${r.shown} of ${r.total}` : ""; };
+    jf.oninput=()=>{ S[fkey]=jf.value; run(); };
+    if (heldBtn) heldBtn.onclick=()=>{ S.cpHeld=!S.cpHeld; heldBtn.setAttribute("aria-pressed", String(!!S.cpHeld)); run(); };
     run();
   }
+  bindFolds(main);
   // The book's spell picker, a modal on the sheet and in the wizard (Decision 111)
   main.querySelectorAll("[data-spellpickopen]").forEach(b=>b.onclick=()=>openSpellPicker(b.dataset.spellpickopen));
   main.querySelectorAll("[data-startrm]").forEach(b=>b.onclick=()=>{ Engine.removeGrimoireRow(ch, Number(b.dataset.startrm)); update(); });
