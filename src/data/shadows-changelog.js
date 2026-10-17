@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.48.0",
-    "date": null,
+    "date": "2026-10-16",
     "intro": [],
     "items": [
       "**Expert mode for making a character.** On the Archetype, Skills and Character Points steps, Expert mode folds the reading away and keeps the choosing: names, costs, buttons, and what each Advantage or Disadvantage does, as tags. Tap **?** to read the full text. Your browser remembers it.",
