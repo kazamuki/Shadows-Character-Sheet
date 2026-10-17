@@ -89,10 +89,24 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ✅ ⚖ **Ghost TAG(s).** Add a line saying that the street calls this a Black TAG. *(Or put it in Gear's TAG section, below. One place is enough.)*
 - ✅ The "Ambidextrousa" typo is fixed.
 - ☐ ⚖ **Thick Skin.** "Natural Armor is unaffected by Armor Piercing effects" should add **unless the attack is a spell**: armor-piercing magic gets past Natural Armor (Ken's follow-up to Deighton's Q3, Decision 219). The sheet already does it.
+- ☐ ⚖ **"Aimed shots" are the Called Shot stunt** (Deighton, 2026-10-16; `reference/rulings-2026-10-16.md`). 0430 still says "aimed shots"; 0530 › Stunts defines the **Called Shot**. Rewrite four entries to it:
+  - **Ambidextrous:** you can make the Called Shot stunt with either hand.
+  - **Bullseye:** a Called Shot gains +4 damage, +2 more per rank after the first.
+  - **Quick Draw:** draw and use a weapon as a free action, and make a Called Shot as an Action instead of a Stunt. *(Deighton's line dropped the free-action draw; the sheet keeps it, Ken to confirm.)*
+  - **Stunt Rider:** Called Shots from a moving vehicle with no penalties. The Bullseye sentence can go: Bullseye now applies to any Called Shot.
+- ☐ ⚖ **Night Vision** uses the light levels (0530: Bright, Dim −1, Dark −3, Blind −5): no penalty on visual Awareness checks **or attacks** when visibility is Dim or Dark (Deighton, 2026-10-16).
+- ☐ ⚖ **Archery Master** includes crossbows (the book says it doesn't). **Gun Master** includes beam weapons, and **Melee Master** includes Martial Arts (Ken, 2026-10-16). All three say "per round". ❓ Do thrown weapons count for Melee Master? Ken is asking the group.
+- ☐ ⚖ **Riposte:** once per round, after any successful parry (melee **or** Martial Arts); no longer a stunt ("I don't think defensive Stunts will work", Deighton, 2026-10-16).
+- ☐ ⚖ **Scrapper:** damage from **Melee and Martial Arts** attacks is halved, rounded down, **but not less than 1** (replaces "hand-to-hand and blunt melee", Deighton, 2026-10-16).
+- ☐ ⚖ **Backfooted:** defending against a **Combat Maneuver** (0530's four), not "a stunt maneuver (trip, throw, grapple, disarm)" (Deighton, 2026-10-16).
+- ☐ ⚖ **Magic Bane** "Magical effects"; **Spirit Guide** "once per rank per session" (wording, Deighton, 2026-10-16).
+- ❓ **Deighton's notes for a design talk** (`reference/rulings-2026-10-16.md`, W130): Favored Skill (take the higher result), Nine Lives, Snatch (deflect), True Faith (12 rounds), Unshakeable (Surprise only grants +1), Medium (needs a mechanical benefit), Favors (a named person), Ghost TAG ("corporate AI"), Dream Walker (range), Reputation (CRANK).
 
 ## 0440_Disadvantages
 
 - ✅ **Faultlessly Honest.** The heading reads "Faultlessly Honest**1**", with a stray "1". *(New since the 09-24 mirror.)*
+- ☐ ⚖ **Dwarf and Giant exclude each other** (Deighton, 2026-10-16). Say so on both.
+- ❓ **Deighton's notes for a design talk** (W130): Age (MOB out of the caps; Werewolves and Vampires), Fanatic (MAG Skill Checks −1?), Gullible (a contested Deception at −2?), Hemophiliac (the Bleeding condition), Poverty (paid off at each Milestone, a named creditor), Addiction (as a whole).
 - ☐ ⚖ **End of the section: buying LUCK with CP.** Add a line on buying extra LUCK at **1 CP a point**, at creation, up to the Max Character Point Boost (Decisions 97, 218). 0300 › Luck states the price, but this is where players spend leftover CP (Ken, 2026-10-04).
 - ✅ **Minor Insanity.** "You may spend IP during play to buy out this Disadvantage" should say **between sessions**, matching 0450 and its own callout.
 

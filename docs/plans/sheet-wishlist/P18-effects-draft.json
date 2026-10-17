@@ -1,5 +1,5 @@
 {
- "about": "P18's draft: every Advantage's and Disadvantage's effects, sorted. Drafted 2026-10-16 by Claude (Opus) from src/data/shadows-data.js and checked against private/crb/0430_Advantages.md and 0440_Disadvantages.md (the rules text matches the book in all 87; the 34 that differ differ only in the book's italic flavor lines and table layout). k: computed = a grants row the engine reads today; rule = text the table applies, which the engine skips; candidate = a number the sheet shows but never applies (probed on main 5875bd5), asked in its area's question. Signed off on the sign-off page; the build reads the signed-off copy, never this draft. Rev 2 (2026-10-16, Ken): a rule may carry heldText, shown for a held entry, with {rank}, {v} (byRank[rank-1]) and {choice} or {choice:<pickId>} (the player's pick); ruleText stays the general line the wizard shows. Entries marked rev 2 changed after the first sign-off.",
+ "about": "P18's draft: every Advantage's and Disadvantage's effects, sorted. Drafted 2026-10-16 by Claude (Opus) from src/data/shadows-data.js and checked against private/crb/0430_Advantages.md and 0440_Disadvantages.md (the rules text matches the book in all 87; the 34 that differ differ only in the book's italic flavor lines and table layout). k: computed = a grants row the engine reads today; rule = text the table applies, which the engine skips; candidate = a number the sheet shows but never applies (probed on main 5875bd5), asked in its area's question. Signed off on the sign-off page; the build reads the signed-off copy, never this draft. Rev 2 (2026-10-16, Ken): a rule may carry heldText, shown for a held entry, with {rank}, {v} (byRank[rank-1]) and {choice} or {choice:<pickId>} (the player's pick); ruleText stays the general line the wizard shows. Entries marked rev 2 changed after the first sign-off. Signed off 2026-10-16 by Ken and Deighton (rulings-2026-10-16.md): every entry \"signed\": true; Deighton's edits are the signed text; an entry with \"description\" carries the description his ruling sets.",
  "areas": {
   "san": {
    "title": "Sanity cuts",
@@ -43,9 +43,11 @@
    "effects": [
     {
      "k": "rule",
-     "text": "Aimed shots with your off hand keep their Accuracy bonus."
+     "text": "You can make the Called Shot stunt with either hand."
     }
-   ]
+   ],
+   "description": "You can make the Called Shot stunt with either hand.",
+   "signed": true
   },
   {
    "id": "animal-ken",
@@ -54,18 +56,21 @@
      "k": "rule",
      "text": "MAG Essence Checks to calm, befriend or deal with an animal: TN −2."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "archery-master",
    "effects": [
     {
      "k": "rule",
-     "text": "+1 attack a round per rank with Archery weapons (not crossbows).",
-     "heldText": "Extra attacks a round with Archery weapons (not crossbows): {rank}."
+     "text": "+1 attack per round per rank with Archery weapons, crossbows included.",
+     "heldText": "Extra attacks per round with Archery weapons, crossbows included: {rank}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "description": "Each rank grants 1 additional attack per round when using Archery Skill weapons, crossbows included.",
+   "signed": true
   },
   {
    "id": "aura-sight",
@@ -78,24 +83,27 @@
      "k": "rule",
      "text": "Take 8 on Intuition when you can see the target's aura."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "backfooted",
    "effects": [
     {
      "k": "rule",
-     "text": "Someone tries to trip, throw, grapple or disarm you: a Martial Arts check at 18 negates it, and an explosion gives you a counterattack."
+     "text": "When defending against a Combat Maneuver, make a Martial Arts check at difficulty 18. Success negates the Combat Maneuver. An explosion allows a counterattack."
     }
-   ]
+   ],
+   "description": "Being on your backfoot is comfortable.\n\nWhen defending against a Combat Maneuver, roll a Martial Arts Skill Check difficulty 18. If successful, the Combat Maneuver is completely negated. If your check explodes you gain a single counterattack before the turn ends.",
+   "signed": true
   },
   {
    "id": "bullseye",
    "effects": [
     {
      "k": "rule",
-     "text": "Aimed ranged shots that hit: +4 damage, and +2 more per rank after the first.",
-     "heldText": "Aimed ranged shots that hit: +{v} damage.",
+     "text": "When making a Called Shot, gain +4 damage. Each rank grants +2 additional damage.",
+     "heldText": "Called Shots: +{v} damage.",
      "byRank": [
       4,
       6,
@@ -103,7 +111,9 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "description": "When making a Called Shot, gain +4 bonus damage on a successful hit.\n\nEach Rank after the first gains an additional +2 bonus to damage.",
+   "signed": true
   },
   {
    "id": "charismatic",
@@ -114,7 +124,8 @@
      "heldText": "MAG Essence Checks: turn up to {rank} of your 1s into 2s."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "common-sense",
@@ -125,7 +136,8 @@
      "heldText": "Take 6 on {choice}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "combat-cunning",
@@ -134,7 +146,8 @@
      "k": "rule",
      "text": "A stunt in combat succeeds on a natural 9 or 10, but can't explode. An opposed roll that explodes still has to be beaten."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "contacts-major",
@@ -143,7 +156,8 @@
      "k": "rule",
      "text": "A Major Contact with real reach, more each rank. Not always available: your GM's call."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "contacts-minor",
@@ -154,7 +168,8 @@
      "heldText": "Minor Contacts: {rank}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "cyber-prophetical",
@@ -163,7 +178,8 @@
      "k": "rule",
      "text": "No Sanity loss when you get cybernetics."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "danger-sense",
@@ -181,7 +197,8 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "divine-intervention",
@@ -190,7 +207,8 @@
      "k": "rule",
      "text": "Once, ever: full health, a cure, a lifted curse, or an automatic Death Save. Your GM picks the form."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "dream-walker",
@@ -199,7 +217,8 @@
      "k": "rule",
      "text": "Enter a sleeping target's dream with a contested WILL Essence Check; you need to see them, or a photo or feed. Fail, and not again until they sleep anew."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "educated",
@@ -209,7 +228,8 @@
      "type": "skillPoints",
      "text": "+10 Skill Points per rank."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "eidetic-memory",
@@ -218,7 +238,8 @@
      "k": "rule",
      "text": "INT Essence Checks to remember succeed automatically, unless you're incapacitated, head-injured or drugged."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "favored-skill",
@@ -229,7 +250,8 @@
      "heldText": "Once per encounter, re-roll a botch on {choice}; no LUCK on the re-roll."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "favors",
@@ -240,7 +262,8 @@
      "heldText": "Favors: {rank}. Spending one lowers the rank by 1."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "field-medic",
@@ -250,7 +273,8 @@
      "area": "check",
      "text": "+1d4 Kicker Die on Medical Skill Checks; stacks with other kickers."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "followers-minion",
@@ -261,7 +285,8 @@
      "heldText": "Followers or companions: {rank}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "ghost-step",
@@ -271,7 +296,8 @@
      "area": "check",
      "text": "+3 to Stealth Skill Checks."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "ghost-tag-s",
@@ -280,18 +306,21 @@
      "k": "rule",
      "text": "A counterfeit TAG: seeing through it takes an Investigation or Security check at 30 (27 with corporate AI), and shows only that it's fake."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "gun-master",
    "effects": [
     {
      "k": "rule",
-     "text": "+1 attack a round per rank with firearms.",
-     "heldText": "Extra attacks a round with firearms: {rank}."
+     "text": "+1 attack per round per rank with firearms, beam weapons included.",
+     "heldText": "Extra attacks per round with firearms, beam weapons included: {rank}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "description": "Each rank grants 1 additional attack per round when using firearms, beam weapons included.",
+   "signed": true
   },
   {
    "id": "hard-to-kill",
@@ -301,7 +330,8 @@
      "type": "hpPerLevel",
      "text": "+1 max HP on every Health Level per rank."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "hyper-vigilance",
@@ -311,7 +341,8 @@
      "area": "check",
      "text": "+1d4 Kicker Die on Combat Sense Skill Checks."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "immunity",
@@ -322,7 +353,8 @@
      "heldText": "Immune to {choice}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "iron-will",
@@ -331,7 +363,8 @@
      "k": "rule",
      "text": "WILL Essence Checks: TN −1."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "junkyard-genius",
@@ -340,7 +373,8 @@
      "k": "rule",
      "text": "Once per encounter, improvise a device from tech in reach: +3 to TECH Skill Checks while it works. A complex one needs basic tools."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "last-stand",
@@ -349,7 +383,8 @@
      "k": "rule",
      "text": "At 0 health, make attacks equal to your BOD, then fall unconscious and make Death Saves as normal."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "lightning-calculator",
@@ -358,7 +393,8 @@
      "k": "rule",
      "text": "Take 6 on Programming, Basic Tech and Engineering; anyone you help with a TECH Skill gets +1. Not in combat."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "long-lived",
@@ -379,7 +415,8 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "lucky",
@@ -389,7 +426,8 @@
      "type": "luckCost",
      "text": "LUCK: a Boost costs 1, an Explode 2."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "machindo",
@@ -402,16 +440,18 @@
      "k": "rule",
      "text": "INT and TECH Essence Checks: TN −1 (to a minimum of 1)."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "magic-bane",
    "effects": [
     {
      "k": "rule",
-     "text": "Magic's effects on you, good or bad, are halved."
+     "text": "Magical effects on you, good or bad, are halved."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "medium",
@@ -420,27 +460,32 @@
      "k": "rule",
      "text": "You can deal with spirits of the dead and beings from beyond the veil."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "melee-master",
    "effects": [
     {
      "k": "rule",
-     "text": "+1 attack a round per rank with melee attacks.",
-     "heldText": "Extra attacks a round with melee attacks: {rank}."
+     "text": "+1 attack per round per rank with melee attacks, Martial Arts included.",
+     "heldText": "Extra attacks per round with melee attacks, Martial Arts included: {rank}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "description": "The first hit starts the fight. The rest of yours end it.\n\nEach rank grants 1 additional attack per round when making melee attacks, Martial Arts included.",
+   "signed": true
   },
   {
    "id": "night-vision",
    "effects": [
     {
      "k": "rule",
-     "text": "No penalty on visual Awareness checks in low or no light."
+     "text": "No penalty on visual Awareness checks or attacks when visibility is Dim or Dark."
     }
-   ]
+   ],
+   "description": "NYTE City never fully turns the lights off. But close enough.\n\nNo penalty on visual Awareness checks or attacks when visibility is Dim or Dark.",
+   "signed": true
   },
   {
    "id": "nine-lives",
@@ -449,7 +494,8 @@
      "k": "rule",
      "text": "Nine extra Death Saves in your lifetime: when one fails, roll again from the pool. It never refills."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "pain-tolerance",
@@ -459,16 +505,20 @@
      "area": "pain",
      "text": "Ignore 1 Pain Level per rank."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "quick-draw",
    "effects": [
     {
      "k": "rule",
-     "text": "Draw and use a weapon as a free action; aimed shots keep their full Accuracy bonus."
+     "text": "Draw and use a weapon as a free action. You may make a Called Shot as an Action, instead of a Stunt."
     }
-   ]
+   ],
+   "description": "The holster is a formality.\n\nDraw and use a weapon immediately as a free action. You may make a Called Shot as an Action, instead of a Stunt.",
+   "signed": true,
+   "merged": "Deighton's edit replaced the whole line; the free-action draw (the Advantage's name) is kept and his Called Shot change added. Ken to confirm."
   },
   {
    "id": "rapid-healing",
@@ -485,7 +535,8 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "refined-skill",
@@ -496,7 +547,8 @@
      "heldText": "{choice} explodes on a natural 9 or 10 (not on a Combat Cunning stunt)."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "reputation",
@@ -513,16 +565,20 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true,
+   "discuss": "Deighton: raise CRANK reputation with it, for higher pay (to the CRANK talk). The text signs as drafted."
   },
   {
    "id": "riposte",
    "effects": [
     {
      "k": "rule",
-     "text": "After a successful melee parry, deal your weapon's damage (no BOD bonus) to the attacker, as your stunt."
+     "text": "Once per round, after a successful parry, deal your weapon's damage (no BOD bonus) to the attacker."
     }
-   ]
+   ],
+   "description": "Once per round, whenever you successfully parry a strike, you may Riposte: apply your weapon’s damage (no BOD bonus) to the attacker.",
+   "signed": true
   },
   {
    "id": "scrapper",
@@ -530,9 +586,11 @@
     {
      "k": "candidate",
      "area": "hit",
-     "text": "Hand-to-hand and blunt melee damage to you is halved, rounded down."
+     "text": "Damage taken from Melee and Martial Arts attacks is halved, rounded down, but not less than 1."
     }
-   ]
+   ],
+   "description": "You've been hit before. These days it's a rounding error.\n\nDamage taken from Melee and Martial Arts attacks is halved, rounded down, but not less than 1.",
+   "signed": true
   },
   {
    "id": "sense-of-direction",
@@ -541,7 +599,8 @@
      "k": "rule",
      "text": "Always know the cardinal directions; Take 6 on Survival to navigate."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "snatch",
@@ -550,27 +609,31 @@
      "k": "rule",
      "text": "On a successful Parry against a projectile you can see, catch it."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "spirit-guide",
    "effects": [
     {
      "k": "rule",
-     "text": "Once per rank a session, an EMP Essence Check (Target 8, Threshold 2) calls your guide: a 1d4 kicker, a small secret, or −5 difficulty on an unopposed check.",
-     "heldText": "Calls a session: {rank}. An EMP Essence Check (Target 8, Threshold 2) calls your guide: a 1d4 kicker, a small secret, or −5 difficulty on an unopposed check."
+     "text": "Once per rank per session, an EMP Essence Check (Target 8, Threshold 2) calls your guide: a 1d4 kicker, a small secret, or −5 difficulty on an unopposed check.",
+     "heldText": "Calls per session: {rank}. An EMP Essence Check (Target 8, Threshold 2) calls your guide: a 1d4 kicker, a small secret, or −5 difficulty on an unopposed check."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "stunt-rider",
    "effects": [
     {
      "k": "rule",
-     "text": "Aimed ranged shots from a moving vehicle keep their Accuracy bonus, and Bullseye's damage."
+     "text": "You may make Called Shots from a moving vehicle with no penalties."
     }
-   ]
+   ],
+   "description": "The speedometer is someone else’s problem.\n\nYou may make Called Shots from a moving vehicle with no penalties.",
+   "signed": true
   },
   {
    "id": "thick-skin",
@@ -578,9 +641,10 @@
     {
      "k": "computed",
      "type": "naturalArmor",
-     "text": "+1 Natural Armor per rank; Armor Piercing doesn't touch it."
+     "text": "+1 Natural Armor per rank; Armor Piercing doesn't touch it, unless it's a spell."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "thick-skull",
@@ -590,7 +654,8 @@
      "area": "hit",
      "text": "Ignore the bonus damage from normal hits to the head; exploded damage still counts."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "time-sense",
@@ -599,7 +664,8 @@
      "k": "rule",
      "text": "Always know the time. Once per session, Take 8 on a Skill Check about time or timing."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "true-faith",
@@ -608,7 +674,8 @@
      "k": "rule",
      "text": "Once per encounter, a 12-round aura: supernatural beings within 10 feet take a −3 Pain Penalty; your Essence Checks against supernatural powers are TN −2; magic and psychic powers against you fail 85% of the time."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "unshakeable",
@@ -617,7 +684,8 @@
      "k": "rule",
      "text": "Surprise gives no Synergy Bonus against you."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "untouchable",
@@ -628,7 +696,8 @@
      "heldText": "Uses per combat: {rank}. Spend one to add your Acrobatics rank to a Dodge check; a natural 1 on it doesn't botch."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "wealthy",
@@ -650,7 +719,8 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "addiction",
@@ -666,7 +736,9 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true,
+   "discuss": "Deighton: the Addiction mechanic wants a discussion as a whole (W125). The text signs as drafted."
   },
   {
    "id": "age",
@@ -680,7 +752,8 @@
      "k": "rule",
      "text": "You're 13 to 15: dependent or emancipated, kept out of places, and a target."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "berserker",
@@ -694,7 +767,8 @@
      "k": "rule",
      "text": "Start of combat: a Sanity Check. Fail, and you're berserk for the encounter: attack any threat, −2 on defense, +2 to hit and +4 damage hand to hand, COOL TN +1. Break it with COOL (Target 9, Threshold 3) each turn; stop an attack on an ally with COOL (Target 9, Threshold 2)."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "blood-lust",
@@ -708,7 +782,8 @@
      "k": "rule",
      "text": "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one. Fail, and Combat Sense Checks fail on a natural 2 or 3 for the rest of it (a 1 still botches)."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "combat-paralysis",
@@ -717,7 +792,8 @@
      "k": "rule",
      "text": "No initiative roll: you act last every round, and can't prepare actions in the first."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "coward",
@@ -726,7 +802,8 @@
      "k": "rule",
      "text": "Start of combat: COOL Essence Check (Target 9, Threshold 2). Fail, and you flee: no combat actions, and enemies in range get an attack on you. Try again at the end of each turn."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "cursed",
@@ -735,7 +812,8 @@
      "k": "rule",
      "text": "A supernatural curse worked out with your GM, stronger each rank."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "cyber-allergy",
@@ -744,7 +822,8 @@
      "k": "rule",
      "text": "No cybernetics or nanotech: implants make you ill until they're out, and nanites fail."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "defect-flaw",
@@ -756,7 +835,8 @@
      "heldText": "−2 on {choice:skill}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "danger-magnet",
@@ -765,7 +845,8 @@
      "k": "rule",
      "text": "Mortal threats start a level higher; each other party member with it adds a threat."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "distractable",
@@ -774,7 +855,8 @@
      "k": "rule",
      "text": "Awareness and Combat Sense Checks fail on a natural 2 or 3 (a 1 still botches)."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "dwarf",
@@ -788,7 +870,8 @@
      "k": "rule",
      "text": "+3 to Stealth when hiding. At most 3'6\" tall."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "enemies",
@@ -805,7 +888,8 @@
      ]
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "fanatic",
@@ -819,7 +903,8 @@
      "k": "rule",
      "text": "EMP Essence Checks: TN +1. Once per encounter, a Sanity Check keeps you from lashing out at whoever challenges your belief."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "faultlessly-honest",
@@ -828,7 +913,8 @@
      "k": "rule",
      "text": "To lie: MAG Essence Check (Target 10, Threshold 3). Pass, and the lie costs 30% Sanity for 24 hours; fail, and you can't."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "giant",
@@ -847,7 +933,8 @@
      "k": "rule",
      "text": "Attackers get +1 Accuracy against you, even behind cover. +2 automatic hits on BOD Essence Checks grappling someone smaller. At least 6'10\"."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "gullible",
@@ -856,7 +943,8 @@
      "k": "rule",
      "text": "Intuition checks to spot a lie fail on a natural 2 or 3 (a 1 still botches), unless the lie is preposterous."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "hallucinations",
@@ -870,7 +958,8 @@
      "k": "rule",
      "text": "A failed Sanity Check brings a hallucination for 1d4 rounds: Awareness and Combat Sense checks fail, and telling friend from foe takes an EMP Essence Check (Target 10, Threshold 1)."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "hemophiliac",
@@ -879,7 +968,8 @@
      "k": "rule",
      "text": "After bleeding damage, a Medical check at 18 stops it and costs your next turn. Fail, and you pass out after rounds equal to your BOD; try again each turn. Medical tech stops it too."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "minor-insanity",
@@ -902,7 +992,8 @@
      "text": "A trait per rank (paranoia, a temper, lying…), chosen with your GM. IP buys it off between sessions."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "monster-magnet",
@@ -911,7 +1002,8 @@
      "k": "rule",
      "text": "Supernatural threats start a level higher; each other party member with it adds a threat."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "notorious",
@@ -922,7 +1014,8 @@
      "heldText": "With strangers: Persuasion Difficulty Level +{rank}, and MAG Essence Threshold +{rank}."
     }
    ],
-   "rev": 2
+   "rev": 2,
+   "signed": true
   },
   {
    "id": "pact",
@@ -931,7 +1024,8 @@
      "k": "rule",
      "text": "A supernatural bond on your GM's terms. Go against it, and until you keep it again: no LUCK, and every Essence Check is Threshold +1."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "pain-sensitive",
@@ -941,7 +1035,8 @@
      "type": "painLevel",
      "text": "Pain Level +1 once you're hurt."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "passive",
@@ -950,7 +1045,8 @@
      "k": "rule",
      "text": "Start of combat: EMP Essence Check (Target 9, Threshold 2), or you refuse to fight. Try again at the end of each turn."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "poverty",
@@ -959,7 +1055,8 @@
      "k": "rule",
      "text": "At least Ç75,000 in debt, Ç20,000 more each rank. No legal weapons, armor or vehicles until it's paid, and half of what you earn goes to it."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "social-stigma",
@@ -968,7 +1065,8 @@
      "k": "rule",
      "text": "Persuasion checks fail on a natural 2 or 3 (a 1 still botches)."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "terminal-disease",
@@ -982,7 +1080,8 @@
      "k": "rule",
      "text": "BOD, REF and MOB Essence Checks: TN +1. Without a cure, death in 5 + 1d4 months."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "unlucky",
@@ -992,7 +1091,8 @@
      "type": "luckCost",
      "text": "LUCK: a Boost costs 3, an Explode 4."
     }
-   ]
+   ],
+   "signed": true
   },
   {
    "id": "weak-willed",
@@ -1001,7 +1101,8 @@
      "k": "rule",
      "text": "WILL Essence Checks: TN +1."
     }
-   ]
+   ],
+   "signed": true
   }
  ]
 }

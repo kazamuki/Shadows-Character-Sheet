@@ -6,11 +6,12 @@
 - a **computed** effect is a `grants` row the engine already applies; its tag text is **filled from the row's own numbers** by a per-type template in the data, so it can't drift from what the sheet does;
 - a **table rule** is a new `grants` row type the engine skips, carrying its own `ruleText`;
 - the tags show on the CP step's entries (both modes) and on the Character tab's cards (visible while folded). P13's Expert mode then folds the prose and keeps the tags;
+- **eleven descriptions move with Deighton's rulings** (2026-10-16): "aimed shots" become the Called Shot stunt (Ambidextrous, Bullseye, Quick Draw, Stunt Rider), Night Vision covers Dim and Dark, Archery Master takes crossbows, Gun Master beam weapons, Melee Master Martial Arts, Riposte is once per round, Scrapper is Melee and Martial Arts with a minimum of 1, Backfooted names Combat Maneuvers. The draft carries each new `description`; the book catches up (`crb-catch-up.md`);
 - **a held entry's tags speak to that character** (Ken, 2026-10-16): its rank (Bullseye at rank 2 is +6, Gun Master's attacks are its rank), its picks ("Take 6 on Investigation"), and "Creation only" from the data's `creationOnly`.
 
 **Not in scope:** computing anything new. The review found **19 effects in 7 areas** that the sheet shows a number for and never applies (the SAN cuts, Terminal Disease's Pain, Ghost Step's +3, Age's stat caps, Wealthy's Çredits…). They go to the sign-off page as questions. The answers become **P19** (a Skill's check: Ghost Step, Defect/Flaw, the kickers, with Take X and the die-face marks) and **P20** (the rest). P18 shows them as table rules, which is what they are today.
 
-**Status:** **drafted 2026-10-16 by Claude (Opus).** Pre-flighted against `main` at `b4935ec` (#206 merged; `[Unreleased] — app 0.47.1`). The 87 entries' effects are drafted in [`P18-effects-draft.json`](P18-effects-draft.json) and **wait on sign-off** on the [sign-off page](https://claude.ai/artifact/Ah3WbcFhEGc6UNw5RNtsK8). The build uses the **signed-off** text, never the draft. §3's PQ1–PQ4 wait on Ken. **Rev 2 (2026-10-16, Ken):** rank-aware and pick-aware tags and the creation-only tag joined; 24 entries' drafts changed after Ken's first pass, and the page marks them to sign again.
+**Status:** **drafted 2026-10-16 by Claude (Opus).** Pre-flighted against `main` at `b4935ec` (#206 merged; `[Unreleased] — app 0.47.1`). The 87 entries' effects are in [`P18-effects-draft.json`](P18-effects-draft.json), **signed off on 2026-10-16** by Ken, Deighton and Scott ([`rulings-2026-10-16.md`](../../reference/rulings-2026-10-16.md)): every entry `"signed": true`, Deighton's edits the signed text, signed on the [sign-off page](https://claude.ai/artifact/Ah3WbcFhEGc6UNw5RNtsK8). The build uses the **signed-off** text, never the draft. §3's PQ1–PQ4 wait on Ken; the build waits on them. **Rev 2 (2026-10-16, Ken):** rank-aware and pick-aware tags and the creation-only tag joined; 24 entries' drafts changed after Ken's first pass, and the page marks them to sign again.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off. **Runs before P13** (Ken): Expert mode ships with the tags.
 
@@ -49,7 +50,8 @@ When P18 is merged:
    - **the Character tab's cards**, inside the card's summary so they show while it's folded (PQ1).
 
    A computed tag looks different from a rule tag (PQ2).
-4. **Nothing computes differently.** No character's numbers move: every existing test of a computed value passes unchanged.
+4. **Eleven descriptions follow the rulings.** Each entry the draft gives a `description` takes it, word for word. The rest keep theirs.
+5. **Nothing computes differently.** No character's numbers move: every existing test of a computed value passes unchanged.
 
 ## 2. Tier, versions, numbers
 
@@ -112,7 +114,7 @@ Answered by grepping every reader of `grants`, **one level further**: a reader t
 "effectTags": {                                    // Decision N: one template per computed type, filled from the row
   "skillPoints":  "+{perRank} Skill Points per rank",
   "hpPerLevel":   "+{perRank} max HP on every Health Level per rank",
-  "naturalArmor": "+{perRank} Natural Armor per rank; Armor Piercing doesn't touch it",
+  "naturalArmor": "+{perRank} Natural Armor per rank; Armor Piercing doesn't touch it, unless it's a spell",   // Decision 219: a spell's AP does
   "luckCost":     "LUCK: {action} costs {cost}",              // {action}, {cost}: the spend in resources.luck.spend, cost + delta, never below 0
   "milestone":    "A {kind} Milestone at rank {atRank}",      // {kind}: "Minor" or "Major"
   "painLevel":    "Pain Level +{amount} once you're hurt",    // only the onlyIfHurt kind is computed (213)
@@ -157,14 +159,14 @@ Placeholders are a row's own fields, plus `{action}`/`{cost}` for `luckCost` and
 - **Computing any of the 19 candidates** (P19 and P20, from the sign-off page's answers).
 - **Archetype powers' and Majors' tags.** Same mechanism, later: their `grants` already exist.
 - **Print** (PQ4), and **Expert mode** itself (P13).
-- **Rewording an entry's `description`.**
+- **Rewording any other `description`** than the eleven the rulings move (§1.4), and **Deighton's proposals** (W130): they go to a design talk first.
 
 ## 9. Steps
 
 1. `git submodule update --init private`; `npm run test:fast`.
 2. **Read the signed-off text** (recorded by Ken's session into `P18-effects-draft.json` as `"signed": true` per entry, after any disagreement on the page is settled). Stop if any entry is unsigned.
 3. §6's tests, run on `main`.
-4. Data: `effectTags`, then each entry's `rule` rows from the signed text, in `grants` after any computed rows.
+4. Data: `effectTags`; each entry's `rule` rows from the signed text, in `grants` after any computed rows; and the eleven `description`s the draft carries.
 5. Engine: `effectTagsFor`. UI: the CP step and the Character tab.
 6. Docs: Decision N with its INDEX line; SCHEMA §2's Advantage and Disadvantage shape; W120 to `wishes-granted.md`; the plan's P18 row; CHANGELOG; the bump.
 7. `npm run verify`, `npm run phone-check`, and the dev preview: a Professional with Blood Lust, Hard to Kill 2 and Lucky, on the CP step and the Character tab, at 375px and desktop.
@@ -179,10 +181,12 @@ Placeholders are a row's own fields, plus `{action}`/`{cost}` for `luckCost` and
 ## 11. Close-out and review checklist
 
 **CHANGELOG** (player voice):
+- **Called Shots get the Advantages' bonuses.** Ambidextrous, Bullseye, Quick Draw and Stunt Rider now work with the Called Shot stunt (the old "aimed shots"). Bullseye adds its damage to a Called Shot, and Quick Draw lets you make one as an Action.
+- **Rules updates:** Night Vision ignores Dim and Dark for Awareness and attacks. Archery Master counts crossbows, Gun Master beam weapons, and Melee Master Martial Arts. Riposte works once per round off any parry. Scrapper halves Melee and Martial Arts damage, never below 1. Backfooted answers any Combat Maneuver.
 - **Every Advantage and Disadvantage says what it does at a glance.** On the Character Points step and on your Character tab, each one shows its effects as short tags: what the sheet applies for you, and what your table applies.
 
 **Review checklist:**
-- [ ] Every `ruleText` matches the signed-off text exactly.
+- [ ] Every `ruleText` and `heldText` matches the signed-off text exactly, and the eleven descriptions match the draft's.
 - [ ] §4's `.grants` readers are each listed in the PR, with how each skips `rule`.
 - [ ] P18 4 holds with the rule rows stripped and present: no computed value moved.
 - [ ] Mutants 1–8 listed in the PR and the log.

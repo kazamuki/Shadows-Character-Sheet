@@ -105,6 +105,7 @@ reads every range, reach, radius and movement figure that way.
 today (`"2m"`, `"5m radius"`, range bands in the quick reference), so converting
 them means storing the numbers (Decision 134) before any switch. A view
 setting, remembered in the browser, never in the character.
+*2026-10-16, the effects sign-off:* Deighton, on Danger Sense: "should be meters" (Ken asked the same). Its 5, 50 and 500 feet, Aura Sight's 30 and True Faith's 10 are this entry's to convert; the numbers aren't picked yet (`reference/rulings-2026-10-16.md`).
 
 ### Loadout & catalog
 
@@ -852,18 +853,21 @@ choice someone could make differently: a numbered decision.
 Followers/Minion grants a follower or companion per rank, and today they're a name in a text pick. Ken: taking it should open a mini-sheet per follower,
 and a new area on the character's sheet to see them. GM mode's cast stat block (Decision 175) is the nearest existing shape.
 *To respect:* a save-file shape (schema bump, `migrate()`); the follower's stats are the GM's call ("GM Approval needed"), so the sheet records, never rolls.
+*2026-10-16:* Deighton: "we'll need to define what a minion or companion is. Are they controlled by GM or player? are they a combatant? What are their stats/skills?" Those answers come before the sheet.
 
 **W124 — Poverty's debt as a balance you pay into.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*
 Poverty sets a debt of at least Ç75,000, more each rank, takes half of what the character earns against it, and bars legal gear until it's paid. The
 sheet shows none of it. A debt balance beside the Çredits ledger, with "half of income goes to the debt" applied when Çredits come in, would.
 *To respect:* the Çredits ledger (`addCredits`, which never refuses a negative balance); **a rules question first:** is rank 1's debt Ç75,000 or Ç95,000 ("at least
 Ç75,000 … each Rank raises your outstanding debts by Ç20,000")? Deighton's.
+*2026-10-16:* Deighton: a tracker, paid off at each Milestone "until it disappears on its own. Like getting garnished", and owed "to a specific person or corporation" (a text pick, as W126 asks for Contacts). Pairs with W129.
 
 **W125 — Addiction keeps time.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*
 Addiction says how long the character can go without (2 days, 18 hours, 6 hours by rank) and what withdrawal does. Ken: track the time since the last fix,
 and raise a flag the player clears by using or by marking the time as passed, as the Vampire's Thirst does for feeding (P17, Decision 223).
 *To respect:* the sheet has no clock. Time passes by sessions and by what the player says, so this is a tracker the player advances, not a timer.
 Withdrawal's TN and Pain Level effects are P18's table rules until then.
+*2026-10-16:* Deighton flagged Addiction to discuss as a whole: "there are a lot of things that relate to Addiction mechanic".
 
 **W126 — Contacts say who they are.** *Ken, from P18's sign-off · 💡 · Content · raised 2026-10-16*
 Contacts (Major) and Contacts (Minor) have no pick, so the player can't write down who the contact is. A text pick per rank, like Followers' and
@@ -883,6 +887,21 @@ This is the prerequisite for **limited uses**: a counter on an effect with its r
 encounter starts and ends.
 *To respect:* the design first: how an encounter starts and ends on a player's sheet (a button? GM mode's encounters, S10, once seats exist?). Then the
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
+
+**W129 — Wealthy pays out at each Milestone.** *Deighton and Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*
+Wealthy grants Ç2,000 a month per rank, and the sheet doesn't track months. Deighton: "I'd love if wealthy paid out at each milestone", and maybe a payday at
+every Minor or Major Milestone for everyone ("UBI or your wealthy advantage or something"). Taking a Milestone could add the Çredits through the ledger.
+*To respect:* a rules change to the book's monthly income (Deighton's, then 0430's text); `addCredits`; W124 pays Poverty's debt down on the same beat.
+Wealthy's starting Ç10,000 is P20's (unanimous: once).
+
+**W130 — Deighton's notes on the Advantages and Disadvantages.** *Deighton, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*
+Signing off P18's effects, Deighton left proposals on entries that work poorly as written: Favored Skill (take the higher result), Nine Lives (spend a life to
+pass a Death Save), Snatch (deflect, not catch, a bullet), True Faith (12 rounds is too long), Unshakeable (Surprise only grants +1), Medium (needs a
+mechanical benefit), Favors (from a named person), Fanatic (MAG Skill Checks −1?), Gullible (a contested Deception at −2?), Hemophiliac (the Bleeding
+condition's numbers), Age (MOB out of its caps; how it meets Werewolves and Vampires), Ghost TAG ("corporate AI"), Dream Walker (range). Each is in his
+words in `reference/rulings-2026-10-16.md`.
+*To respect:* rules changes, so a design talk first, then the book (`crb-catch-up.md`), then the data and P18's tags in one pass each. Age's MOB bears
+on P20's stat caps: ask before P20 is written.
 
 **W119 — The Combat Maneuver line on the printed sheet.** *Claude, from P12b's PQ7 · 💡 · Fix · raised 2026-10-16*
 P12b put each style's Combat Maneuvers (Stun → Stunned · 1d10 + 10 (Karate +1)) under Martial Arts' row on Main and the Skills tab, and left print
