@@ -226,7 +226,7 @@ The sheet can't know the moment: an opponent's roll, an ally's position, a once-
 
 ## (e) Rules questions first — 15 effects, 9 questions
 
-Each is a question for Ken (a reading of his book) or Deighton (a ruling). **None is answered here, and none is opened as a flag.** E1–E3 are flag candidates (Deighton's); E4–E9 can be the order's PQs (Ken's).
+Each is a question for Ken (a reading of his book) or Deighton (a ruling). None is answered here. **Ken, 2026-10-17 (P21's PQs):** E1–E4 go to Deighton as flags P21's build opens and stubs (E1 and E2 as one); E5, E6, E8 and E9 take the order's defaults (the attacks; Life Sense's Awareness half only; God Tier and the `as` Aberrations out of scope); E7 is P20's.
 
 | # | Effects waiting | The question | For |
 |---|---|---|---|

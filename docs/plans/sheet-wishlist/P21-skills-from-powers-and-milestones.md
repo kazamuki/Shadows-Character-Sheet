@@ -12,7 +12,7 @@
 
 That is the inventory's (b) and (c) Skill-row rows: **37 effects**. On top of them comes **Ken's ruling on Take X with a kicker**: "Take 6: 13 + 1d4".
 
-**Status:** **drafted 2026-10-17 by Claude (Opus)**, from the inventory. Pre-flighted against `main` at `2d38dc9` (#213 merged: P19, app 0.49.0 and data 0.41, unreleased). **PQ1–PQ14 wait on Ken.** PQ6–PQ8 are rules readings of his book, and E1–E3 are Deighton's (the plan's WQ3–WQ5).
+**Status:** **drafted 2026-10-17 by Claude (Opus)**, from the inventory. Pre-flighted against `main` at `2d38dc9` (#213 merged: P19, app 0.49.0 and data 0.41, unreleased). **Ken answered PQ1–PQ14 on 2026-10-17:** "Take all the defaults for most questions, here are the differences: PQ7: lets flag that one to ask D / PQ9: lets flag that one for D for kicker die. I believe they combine to the next die size up, but I need confirmation / PQ10: Flag for D". So every PQ is **Default** except **PQ7, PQ9 and PQ10, which are Deighton's**. The build opens them as three flags (§2a), each stubbed as its PQ's default says. Nothing that waits on them is guessed.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -58,26 +58,49 @@ When P21 is merged:
 - **Game data:** bump (Decision 68). A Cleaner's Stealth and a Quick Study holder's Combat Sense compute differently. If `main`'s `gamedataVersion` has already moved since the last release (P20 bumps it too), keep that number rather than bumping twice in one release.
 - **App: minor.** As for the data: if `[Unreleased]` already carries a minor (0.49.0, or P20's), the lines join it.
 - **Character schema: no bump.** Nothing new is saved. Skill Paragon, God Tier, Grace Under Fire, Weapon Expert and Aspect of the Beast, which do need a saved pick, are out of scope (§7).
-- **No flag** opened by the build. E1–E3 (Specialist, Make My Own Luck, stacking) are Deighton's, raised as the plan's WQ3–WQ5. If Ken wants F-numbers before the build, the orchestrator opens them, not the builder.
+- **Three flags, opened by the build** (Ken, PQ7, PQ9, PQ10). Like a decision, each takes the next free F-number on `origin/main` when built, written **FN**, **FN+1**, **FN+2** here. See §2a.
+
+## 2a. The flags (Deighton's)
+
+Open each with the `close-a-flag` skill:
+- **Data:** on the entry named, `flagged: true` and a `flagNote` naming the F-number. Maintainer text: it is never rendered.
+- A **`playerNote`** where the player would otherwise meet a guess (`docs/VOICE-APP.md`: no F-numbers, no "TBD"; marked for a voice pass).
+- A **SCHEMA §5 row** and an **INDEX §2 line**.
+- **STATE's Deighton line**, grouped: one ruling on kickers may clear FN+1 and FN+2 together.
+
+`flagHtml` renders a flagged entry's `playerNote`:
+- on a Major card (`sheet.js` ~1613);
+- on a specialization option in the wizard (`wizard.js` ~307);
+- on an Advantage on the CP step (`wizard.js` ~588).
+
+Check that each one shows, and say where in the PR.
+
+| Flag | The question | On the entry | The stub (the PQ's default) | `playerNote` (drafted) |
+|---|---|---|---|---|
+| **FN** (PQ7, inventory E4) | Concierge's "Whenever making an appraisal of gear, contraband, or any standard items you may add a 1d4 kicker die to the roll to assess their value." No Skill is named: which Skill appraises? | `professional` · `fence` (the option) | The appraisal kicker isn't computed. It stays the tweak's text. Concierge's Take 5 (b2) is built. | "Which Skill an appraisal uses is your GM's call; add the 1d4 when it applies." |
+| **FN+1** (PQ9, E3) | Do kicker dice stack, and if so, do they combine into the next die size up? **Ken believes they combine to the next size up, and needs Deighton's confirmation.** Evidence: Weapon Expert's "If you have a +1d4 already applied … it increases by one die increment to +1d6 instead." | `field-medic` (its rule row says it "stacks with other kickers") | Each kicker shows on its own, as P19 does: the unconditional one in the Check cell, a conditional one as its mark. Nothing combines them, and no die is stepped up. | "When two Kicker Dice meet on one roll, your GM rules how they combine." |
+| **FN+2** (PQ10, E1, E2) | Specialist's "Your Kicker Die increases by 1 size" and Make My Own Luck's "When rolling your Kicker Die, roll twice and take the higher result": which kicker is "your Kicker Die"? Every one the character holds, one they choose, or another? | `specialist` and `make-my-own-luck` (`majorGeneral`) | No kicker changes size or reads "roll twice". The row still shows 1d4 with Specialist taken, and the card says why. | Specialist: "Which Kicker Die grows is your GM's call until the rule is settled." Make My Own Luck: the same, for rolling twice. |
+
+**The build never steps a die, combines kickers, or names an appraisal Skill.** A test pins each stub (§10, P21 10).
 
 ## 3. Questions for Ken
 
-| Id | Question | Default |
-|---|---|---|
-| PQ1 | **Which sources `traitRows` reads.** | **All six:** held Advantages and Disadvantages (today), the chosen specialization options (`grants`), taken Majors (`majorById`), held archetype powers at rank, the archetype's `baselineTraits`, the chosen Origin's `starterPower`, and held Aberrations (`aberrationState(ch).active`). *Alternative:* the first four, leaving Feral Instincts, Pack Mentality, Aetheric Attunement, Active Camouflage and the Aberrations as text. |
-| PQ2 | **A power's bonus, with nothing stored to say it's running.** | **Always a mark**, "+4 while Scent Tracking runs", never in the number. *Alternative:* a "running" tick per power (W110's shape), which turns a mark into a number while ticked. That's its own order. |
-| PQ3 | **Hardcore Parkour's "+3 to the Dodge Skill Check" "when performing a dodge as a defensive action".** Almost every Dodge is one. | **A mark.** A conditional bonus is a mark (Decision 233). *Alternative:* in the number, since Dodge exists to be a Defensive Action. |
-| PQ4 | **Feral Instincts' "+2 to Awareness Skill checks that rely on sight, smell, or hearing".** | **A mark**, for PQ3's reason. *Alternative:* in the number (most Awareness checks rely on one of the three). |
-| PQ5 | **Mimetic Skin's "+3 to Stealth when not wearing heavy armor".** The loadout knows worn armor, and the catalog has `material: "Heavy"`. | **A mark.** Whether `material: "Heavy"` is the book's "heavy armor" is a reading the code shouldn't make. *Alternative:* in the number when no worn piece is `material: "Heavy"`. |
-| PQ6 | **"Combat checks"** (Hunter's Calling, Battleborn Instinct; inventory E5). | **The attacks:** Hunter's Calling marks Archery, Beam Weapons, Handguns, Heavy Weapons, Martial Arts, Melee, Rifles and SMGs; Battleborn Instinct marks Melee (its Ancient Weapon is a Melee weapon). *Alternative:* Dodge and Combat Sense too. *If unanswered:* both stay as text, and the build leaves c1 and c7 out. |
-| PQ7 | **Concierge's appraisal kicker** names no Skill (E4). | **Left out**: it stays tweak text. *Alternative:* name the Skill (Streetwise?) and it's a conditional kicker on that row. |
-| PQ8 | **Life Sense's "Human Perception, Med Tech, and First Aid"** aren't Shadows Skills (E6). | **Only the Awareness half** is computed; the rest stays text until the CRB names Skills. *Alternative:* Intuition (intent) and Medical (injuries). |
-| PQ9 | **Two kickers on one Skill**, now reachable as a kicker beside a conditional one (E3). | **Show each, as P19 does:** the Check cell has the unconditional one, and the mark the other. No flag; Decision N's *Revisit if* names it. *Alternative:* wait for Deighton (WQ5). |
-| PQ10 | **Specialist and Make My Own Luck** (E1, E2): "your Kicker Die". A Professional with Field Medic and Specialist sees 1d4 today. | **No change**, raised with Deighton as WQ3 and WQ4. *Alternative:* a mark on every kicker row, "Specialist: one size larger, if your GM agrees". That's the app narrating an open question, which CLAUDE.md constraint 9 rules out. |
-| PQ11 | **Night Eyes and Nocturnal** (c16, c17) extend `visibility`. | **In**, from the table: Night Eyes shifts a level, Nocturnal adds per level on every check. *Alternative:* text, and leave light to a later order. |
-| PQ12 | **The source a row names.** | **The part's own name:** *Vanish* (not *Cleaner*), *Quick Study*, *Scent Tracking*, *Active Camouflage*, *Night Eyes*. |
-| PQ13 | **Tags on the Major, power and tweak cards** (Decision 231's chips). | **None.** Their text already says it, and P19's `effectTagsFor` reads Advantages only. *Alternative:* chips on every card, a P18-sized change. |
-| PQ14 | **Aberrations "as" an Advantage** (E9: Aura Sight, Danger Sense and six more). | **Out of scope.** Today `as` is display text, and P21 doesn't change that. *Alternative:* the Aberration counts as holding the Advantage, everywhere: grants, prerequisites and `traitRows`. That's its own decision. |
+| Id | Question | Default | Ken, 2026-10-17 |
+|---|---|---|---|
+| PQ1 | **Which sources `traitRows` reads.** | **All six:** held Advantages and Disadvantages (today), the chosen specialization options (`grants`), taken Majors (`majorById`), held archetype powers at rank, the archetype's `baselineTraits`, the chosen Origin's `starterPower`, and held Aberrations (`aberrationState(ch).active`). *Alternative:* the first four, leaving Feral Instincts, Pack Mentality, Aetheric Attunement, Active Camouflage and the Aberrations as text. | Default |
+| PQ2 | **A power's bonus, with nothing stored to say it's running.** | **Always a mark**, "+4 while Scent Tracking runs", never in the number. *Alternative:* a "running" tick per power (W110's shape), which turns a mark into a number while ticked. That's its own order. | Default |
+| PQ3 | **Hardcore Parkour's "+3 to the Dodge Skill Check" "when performing a dodge as a defensive action".** Almost every Dodge is one. | **A mark.** A conditional bonus is a mark (Decision 233). *Alternative:* in the number, since Dodge exists to be a Defensive Action. | Default |
+| PQ4 | **Feral Instincts' "+2 to Awareness Skill checks that rely on sight, smell, or hearing".** | **A mark**, for PQ3's reason. *Alternative:* in the number (most Awareness checks rely on one of the three). | Default |
+| PQ5 | **Mimetic Skin's "+3 to Stealth when not wearing heavy armor".** The loadout knows worn armor, and the catalog has `material: "Heavy"`. | **A mark.** Whether `material: "Heavy"` is the book's "heavy armor" is a reading the code shouldn't make. *Alternative:* in the number when no worn piece is `material: "Heavy"`. | Default |
+| PQ6 | **"Combat checks"** (Hunter's Calling, Battleborn Instinct; inventory E5). | **The attacks:** Hunter's Calling marks Archery, Beam Weapons, Handguns, Heavy Weapons, Martial Arts, Melee, Rifles and SMGs; Battleborn Instinct marks Melee (its Ancient Weapon is a Melee weapon). *Alternative:* Dodge and Combat Sense too. | Default |
+| PQ7 | **Concierge's appraisal kicker** names no Skill (E4). | **Left out**: it stays tweak text. *Alternative:* name the Skill (Streetwise?) and it's a conditional kicker on that row. | **Deighton's: flag FN** (§2a). Stubbed as the default |
+| PQ8 | **Life Sense's "Human Perception, Med Tech, and First Aid"** aren't Shadows Skills (E6). | **Only the Awareness half** is computed; the rest stays text until the CRB names Skills. *Alternative:* Intuition (intent) and Medical (injuries). | Default |
+| PQ9 | **Two kickers on one Skill**, now reachable as a kicker beside a conditional one (E3). | **Show each, as P19 does:** the Check cell has the unconditional one, and the mark the other. *Alternative:* wait for Deighton. | **Deighton's: flag FN+1** (§2a). Ken believes they combine to the next die size up, unconfirmed. Stubbed as the default |
+| PQ10 | **Specialist and Make My Own Luck** (E1, E2): "your Kicker Die". A Professional with Field Medic and Specialist sees 1d4 today. | **No change**, raised with Deighton. *Alternative:* a mark on every kicker row, "Specialist: one size larger, if your GM agrees". That's the app narrating an open question, which CLAUDE.md constraint 9 rules out. | **Deighton's: flag FN+2** (§2a). Stubbed as the default, with a `playerNote` |
+| PQ11 | **Night Eyes and Nocturnal** (c16, c17) extend `visibility`. | **In**, from the table: Night Eyes shifts a level, Nocturnal adds per level on every check. *Alternative:* text, and leave light to a later order. | Default |
+| PQ12 | **The source a row names.** | **The part's own name:** *Vanish* (not *Cleaner*), *Quick Study*, *Scent Tracking*, *Active Camouflage*, *Night Eyes*. | Default |
+| PQ13 | **Tags on the Major, power and tweak cards** (Decision 231's chips). | **None.** Their text already says it, and P19's `effectTagsFor` reads Advantages only. *Alternative:* chips on every card, a P18-sized change. | Default |
+| PQ14 | **Aberrations "as" an Advantage** (E9: Aura Sight, Danger Sense and six more). | **Out of scope.** Today `as` is display text, and P21 doesn't change that. *Alternative:* the Aberration counts as holding the Advantage, everywhere: grants, prerequisites and `traitRows`. That's its own decision. | Default |
 
 ## 3a. The decision, drafted
 
@@ -88,7 +111,7 @@ N. **A tweak's, Major's, power's, trait's or Aberration's effect on a Skill's ch
      - **Why:** P19's review: a Skill row that shows no kicker reads as "nothing applies", and 37 effects from these sources were text. Ken's ruling: a kicker is "always 'add on' to the roll as a modifier", Take X or not.
      - **Rejected:** a power's bonus in the number (nothing says it's running); the subtype's name as the source (the tweak is what the book names); Majors with a pick (Skill Paragon, God Tier) in this order (a schema change of their own); light from Night Eyes typed into a template (the table holds the numbers).
      - **Replaces:** nothing; extends Decision 233 (its sources and types) and answers its *Revisit if* "a kicker and a Take X" (Ken's ruling).
-     - **Revisit if:** Deighton answers kicker stacking or Specialist (WQ3–WQ5); a power's "running" state is stored (W110); an Aberration "as" an Advantage counts as one (PQ14).
+     - **Revisit if:** Deighton rules on flags FN–FN+2 (an appraisal's Skill, kicker stacking, Specialist and Make My Own Luck); a power's "running" state is stored (W110); an Aberration "as" an Advantage counts as one (PQ14).
      - **Built:** app …, game data …, no schema bump, PR #…. Log 2026-10-xx (P21).
 ```
 
@@ -154,7 +177,7 @@ visibilityChecks "{mods} on every check"                                ("+1 in 
 - **Weapon and armor rows** (Tuned Edge, Custom Fit, the Signature line, the natural-weapon powers), **stats while a power runs**, **movement**, **Essence checks**, **SFR and RoU numbers**, **magic** (Tremor, Slow Tide), **Luck** (Stunt Driver's Lucky while piloting). The inventory's (c) "Elsewhere", grouped for later orders.
 - **P20's areas**, sent to P20: Arcane Fortitude's TOL, healing, Take a hit, SAN and Pain.
 - **Adaptive Skeleton's Natural Armor** (b21): `naturalArmor` would need a `starterPower` scan. A one-line follow-up, but not a Skill row.
-- **Specialist, Make My Own Luck, kicker stacking** (PQ9, PQ10), **Aberrations "as" Advantages** (PQ14), **Concierge's appraisal** (PQ7), **Life Sense's old Skill names** (PQ8).
+- **Ruling on** Specialist, Make My Own Luck, kicker stacking or Concierge's appraisal: the build opens flags FN–FN+2 and stubs them (§2a), never more. **Aberrations "as" Advantages** (PQ14) and **Life Sense's old Skill names** (PQ8) stay out.
 - **A "running" state for powers** (PQ2, W110).
 
 ## 8. The entries
@@ -208,6 +231,7 @@ The inventory has each row's exact sentence. **Check every `whenText` against it
 | `P21 6: every source is read: spec, Major, power, trait, starter, Aberration` | rules | One effect from each source on its Skill; remove each source and its effect goes. A Vampire's power id saved on a Werewolf (an orphan) gives nothing. |
 | `P21 7: Night Eyes and Nocturnal read the visibility table` | rules + smoke-sheet-main | Night Eyes' attack line names Dim's −1 and Dark's −3. Change Dim's `attack` in a copy of the data and the line follows. Nocturnal's line reads "+1 in Dim or Dark, −1 in Bright". |
 | `P21 8: traitRows and skillLine are total over hostile sources` | engine | A spec id the data lacks, a Major `{}`, a power with rank "3" or NaN, `perRank` "1", `plus` Infinity, `shift` `{dark:"nope"}`, `mod` `{dim:"x"}`, `skillsFrom:"all"`, `trackers.aberrations` not an array: nothing throws, and bad rows are skipped. |
+| `P21 10: the flagged kicker rules are stubbed, not guessed` | rules + smoke-sheet-main | Specialist taken with Field Medic: Medical's `kickers` is still `[{die:"1d4"}]`, with no "roll twice" anywhere on the row, and the Major card shows its `playerNote` (FN+2). Hyper Vigilance with Unwavering Focus: Combat Sense's Check cell has one 1d4 and the other is a mark; no 1d6 appears (FN+1). A Fence's Skills carry no appraisal kicker on any row, and the option shows its `playerNote` in the wizard (FN). Each entry is `flagged` with a `flagNote` naming an open F-number (`docs.test.mjs`). |
 | `P21 9: the Skills that can hold two kickers, or a kicker and a Take X, are the ones the order names` | rules | Replaces P19 7b (§5). It scans every source and lists the overlaps. They're exactly §5's: Combat Sense and Dodge. |
 
 ## 11. Tests beyond the examples
@@ -230,6 +254,7 @@ The inventory has each row's exact sentence. **Check every `whenText` against it
 8. `skillsFrom:"focused"` marking every Skill (P21 5).
 9. Night Eyes' numbers typed into the template (P21 7).
 10. A taken Major's `kicker` added to Stealth in the data (a new, unlisted overlap) (P21 9).
+11. Specialist stepping Medical's kicker to 1d6 (P21 10).
 
 ## 13. Steps and stop-and-ask
 
@@ -240,11 +265,11 @@ The inventory has each row's exact sentence. **Check every `whenText` against it
 - **A computed value moves for a character holding none of §8's sources** (P21 4).
 - **Anything saved in the character.**
 - **An existing test fails** other than these **expected breaks**: **P19 7b**, rewritten as P21 9 (§5); a P19 test whose fixture holds a kicker and a Take X on one Skill (none known; grep `hyper-vigilance` and `field-medic` beside `takeX`); and any test asserting a §8 source's text *is* its whole effect.
-- **PQ6–PQ8 unanswered:** not a stop. Build without those rows, as the defaults say.
+- **Deighton rules on FN, FN+1 or FN+2 before the build ends:** stop. The ruling becomes its own change, closing the flag; this order builds only the stubs.
 
 ## 14. Close-out and review checklist
 
-- Decision **N** in `SCHEMA.md` §4 and its INDEX §3 line; 233 noted as extended (its *Revisit if* "a kicker and a Take X" answered by Ken's ruling). SCHEMA §2 gains the new fields and sources. STATE rewritten.
+- Decision **N** in `SCHEMA.md` §4 and its INDEX §3 line; 233 noted as extended (its *Revisit if* "a kicker and a Take X" answered by Ken's ruling). SCHEMA §2 gains the new fields and sources. STATE rewritten, with flags FN–FN+2 in its Deighton line. Flags FN–FN+2 opened per §2a: data, SCHEMA §5, INDEX §2.
 - The game data and app versions (§2); CHANGELOG, then `npm run changelog`.
 - The plan's P21 row; a `shipped.md` row; a `log/2026.md` entry.
 - PR title: `P21: Skills learn from powers, tweaks and Milestones (Decision N, …)`. The body includes **Where the order didn't fit**.
@@ -261,7 +286,8 @@ Suggested CHANGELOG lines (player voice):
 - [ ] Every `whenText` matches the book (the inventory quotes it).
 - [ ] `git diff origin/main --stat -- src` touches only `shadows-data.js`, `engine.js`, `sheet.js` (Nocturnal's line) and the generated changelog.
 - [ ] Decision N passes `docs.test.mjs`.
-- [ ] Mutants 1–10 in the PR; P19 7b rewritten as P21 9 and named in the PR.
+- [ ] Flags FN–FN+2 open in all three places, each `playerNote` seen on screen (where, in the PR), and P21 10 pins the stubs.
+- [ ] Mutants 1–11 in the PR; P19 7b rewritten as P21 9 and named in the PR.
 - [ ] Phone-check and the dev preview's measurements in the PR.
 - [ ] `npm run verify` green.
 
@@ -276,4 +302,6 @@ The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<order>
 > 5. **A Major counts once however often the file lists it** (`grants()`'s rule, Decision 199).
 > 6. **The book is the source for every "when"** (the inventory quotes each). The data paraphrases the Professional's tweaks.
 >
-> Tier: **Rule or shape**. One decision (the next free number), a game data bump, an app minor, no schema bump. Use the close-the-session skill at the end.
+> 7. **Three rules wait on Deighton (§2a): never step a kicker up a size, combine two kickers, or name an appraisal Skill.** Open flags FN–FN+2 with their `playerNote`s and stub them; Ken's belief that kickers combine to the next size up is unconfirmed.
+>
+> Tier: **Rule or shape**. One decision and three flags (the next free numbers), a game data bump, an app minor, no schema bump. Use the close-the-session skill at the end.
