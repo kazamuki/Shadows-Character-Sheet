@@ -1024,3 +1024,12 @@ test("P18 6: the CP step shows a computed chip and a rule line under each entry'
   assert.equal((pickOf(app, "Long-Lived").textContent.match(/creation only/gi) || []).length, 1, "Long-Lived says creation only twice");
   assert.deepEqual(app.errors, []);
 });
+
+test("P18 6b: a held tag reads the picks the picker reads: a natural row's answer isn't borrowed by a bought row with none", () => {
+  const general = D.advantages.find(a => a.id === "favored-skill").grants.find(g => g.type === "rule").ruleText;
+  const app = onStep("professional", "street", "character-points", ch => {
+    ch.advantages = [{ id: "favored-skill", rank: 1, source: "natural", selections: { skill: ["stealth"] } }, { id: "favored-skill", rank: 1, notes: "" }];
+  });
+  const p = app.$$("#main .pick").find(x => x.querySelector("h2") && x.querySelector("h2").textContent === "Favored Skill");
+  assert.equal(p.querySelector(".effects .etag.rule").textContent, general);
+});

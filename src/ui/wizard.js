@@ -537,8 +537,10 @@ function heldRow(ch, kind, id){
   const rows = (kind==="disadvantage" ? ch.disadvantages : ch.advantages).filter(x=>x && x.id===id);
   const rank = rows.reduce((s,x)=>s + Math.max(0, Number(x.rank)||0), 0);
   if (rank<1) return null;
-  const own = rows.find(x=>x.source!=="natural" && x.selections) || rows.find(x=>x.selections);
-  return { rank, selections: own ? own.selections : null };
+  // What the picker reads (the bought row's answers, cut to the rank), so a tag never names a pick the picker lacks.
+  const selections = {};
+  for (const p of Engine.picksFor(ch, kind, id)) selections[p.pick.id] = p.chosen;
+  return { rank, selections };
 }
 function effectsHtml(ch, kind, id){
   const tags = Engine.effectTagsFor(kind, id, heldRow(ch, kind, id));
