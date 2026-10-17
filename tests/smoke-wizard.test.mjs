@@ -1463,6 +1463,14 @@ test("P20a 4: a cap already passed shows on the card and refuses the lock; nothi
   assert.deepEqual([app.errors, rev.errors, ok.errors], [[], [], []]);
 });
 
+test("P20a 4: an Advantage's cap, passed, shows on its card as a Disadvantage's does (Decision 135)", () => {
+  const app = onStep("professional", "street", "character-points", ch => { ch.stats.MOB.base = 5; ch.advantages = [trait20("wealthy")]; });
+  app.window.eval(`D.advantages.find(a => a.id === "wealthy").grants.push({ type: "statMax", stat: "MOB", max: 3 }); update();`);
+  const pick = app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === "Wealthy");
+  assert.equal(pick.querySelector(".effects .etag.over").textContent, "MOB is 5, over Wealthy's max of 3.");
+  assert.deepEqual(app.errors, []);
+});
+
 test("P20a 6: Dwarf and Giant lock each other on the CP step", () => {
   const pickOf = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
   for (const [held, other, byName] of [["dwarf", "Giant", "Dwarf"], ["giant", "Dwarf", "Giant"]]) {

@@ -744,7 +744,7 @@ function heldRow(ch, kind, id){
 function effectsHtml(ch, kind, id){
   const tags = Engine.effectTagsFor(kind, id, heldRow(ch, kind, id));
   // A cap this trait set that a stat is already past (Decision 235): said in the tags' place, ahead of them.
-  const over = kind==="disadvantage" ? Engine.statOverCap(ch, id) : "";
+  const over = Engine.statOverCap(ch, id);   // an Advantage can set a cap as a Disadvantage does (Decision 135)
   const chips = (over ? `<span class="etag over">${esc(over)}</span>` : "") + tags.map(t=>`<span class="etag ${t.computed?"computed":"rule"}">${esc(t.text)}</span>`).join("");
   return chips ? `<span class="effects">${chips}</span>` : "";
 }
