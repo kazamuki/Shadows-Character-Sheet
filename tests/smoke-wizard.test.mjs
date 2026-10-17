@@ -13,7 +13,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot, stored } from "./harness.mjs";
-import { Engine, D, lockedCharacter, onArchetypeStep, onStep, openSheet, activeChar, search, arcanistOnCP, draft, card, sheetHome, draftOn, wizCss, GM_ON, seedTable, type, tableHome, lockedVampire } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, onArchetypeStep, onStep, openSheet, activeChar, search, arcanistOnCP, draft, card, sheetHome, draftOn, wizCss, GM_ON, seedTable, type, tableHome, lockedVampire, named, withDownloads } from "./smokekit.mjs";
 
 test("app boots clean and lands on Home", () => {
   const app = boot();
@@ -1396,4 +1396,122 @@ test("P19 10: Expert mode folds the Stats step's descriptions and keeps every co
   assert.ok(off.$$("#main .alloc-row .name small").every(s => !s.hidden));
   assert.equal(off.$$("#main .alloc-row .name small").filter(s => !s.classList.contains("next-cost")).length, 8);
   assert.deepEqual(off.errors, []);
+});
+
+// ── P20a: numbers at creation (Decision 235) ─────────────────────────────
+// Every stat at 3 but the ones named, so the pool has points left and the + is disabled only by a cap.
+const low20 = (extra = {}) => ch => {
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 3;
+  Object.assign(ch.stats.BOD, { base: 3 });
+  for (const [id, v] of Object.entries(extra)) ch.stats[id].base = v;
+};
+const trait20 = (id, rank = 1) => ({ id, rank, notes: "" });
+const upBtn = (app, id) => app.$(`[data-step="stat|${id}|1"]`);
+
+test("P20a 5: the Stats step shows and enforces the cap", () => {
+  const dwarf = ch => { low20({ BOD: 8, MOB: 3 })(ch); ch.disadvantages = [trait20("dwarf")]; };
+  for (const expert of [false, true]) {
+    const app = onStep("professional", "street", "stats", dwarf, expert ? EXPERT : {});
+    assert.deepEqual(app.errors, []);
+    const row = id => upBtn(app, id).closest(".alloc-row");
+    assert.ok(upBtn(app, "MOB").disabled, "MOB's + is open at Dwarf's cap");
+    assert.ok(upBtn(app, "BOD").disabled, "BOD's + is open at 8");
+    assert.ok(!upBtn(app, "REF").disabled, "REF's + is shut with nothing in its way");
+    assert.match(row("MOB").textContent, /Max 3 \(Dwarf\)\./);
+    assert.match(row("BOD").textContent, /Max 8 \(Dwarf\)\./);
+    assert.doesNotMatch(row("REF").textContent, /Max \d/);
+    const line = row("MOB").querySelector(".stat-max");
+    assert.ok(line && line.classList.contains("next-cost") && !line.hidden, `Expert ${expert}: the cap line is hidden or loses its class`);
+    // The press is refused too, not only the button.
+    app.window.eval("applyStep('stat|MOB', 1)");
+    assert.equal(app.window.eval("S.ch.stats.MOB.base"), 3);
+    app.window.eval("applyStep('stat|REF', 1)");
+    assert.equal(app.window.eval("S.ch.stats.REF.base"), 4);
+  }
+  // Nothing held: the stat tops out at 10, as before, and says nothing about a max.
+  const plain = onStep("professional", "street", "stats", low20({ BOD: 10 }));
+  assert.ok(upBtn(plain, "BOD").disabled);
+  assert.equal(plain.$$("#main .stat-max").length, 0);
+  // Giant: BOD can reach 11, REF stops at 5.
+  const giant = onStep("professional", "street", "stats", ch => { low20({ BOD: 10, REF: 5 })(ch); ch.disadvantages = [trait20("giant")]; });
+  assert.ok(!upBtn(giant, "BOD").disabled, "a Giant's BOD stops at 10");
+  assert.ok(upBtn(giant, "REF").disabled);
+  assert.match(upBtn(giant, "BOD").closest(".alloc-row").textContent, /Max 11 \(Giant\)\./);
+  giant.window.eval("applyStep('stat|BOD', 1)");
+  assert.equal(giant.window.eval("S.ch.stats.BOD.base"), 11);
+  giant.window.eval("update()");
+  assert.ok(upBtn(giant, "BOD").disabled, "BOD went past 11");
+});
+
+test("P20a 4: a cap already passed shows on the card and refuses the lock; nothing lowers a stat", () => {
+  const over = ch => { ch.stats.MOB.base = 5; ch.disadvantages = [trait20("dwarf")]; };
+  const app = onStep("professional", "street", "character-points", over);
+  const pick = name => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
+  assert.equal(pick("Dwarf").querySelector(".effects .etag.over").textContent, "MOB is 5, over Dwarf's max of 3.");
+  assert.equal(pick("Giant").querySelector(".etag.over"), null);
+  assert.equal(app.window.eval("S.ch.stats.MOB.base"), 5, "the CP step lowered MOB");
+  // The lock is refused, with the stat, the cap, the trait and where to fix it.
+  const half = named("Over"); half.creation.locked = false; half.stats.MOB.base = 5; half.disadvantages = [trait20("dwarf")];
+  const rev = boot({ storage: { "shadows.draft.v1": { ch: half, step: 7, maxReached: 7 } } });
+  card(rev, "Over").querySelector("[data-open]").click();
+  assert.equal(rev.$("[data-lock]").disabled, true, "Lock was open with MOB over Dwarf's cap");
+  assert.match(rev.$("#wiz-issues").textContent, /MOB is 5, over Dwarf's max of 3\. Lower it on the Stats step\./);
+  assert.equal(rev.window.eval("S.ch.stats.MOB.base"), 5);
+  // At the cap the card is quiet.
+  const ok = onStep("professional", "street", "character-points", ch => { ch.stats.MOB.base = 3; ch.disadvantages = [trait20("dwarf")]; });
+  assert.equal(ok.$$("#main .etag.over").length, 0);
+  assert.deepEqual([app.errors, rev.errors, ok.errors], [[], [], []]);
+});
+
+test("P20a 6: Dwarf and Giant lock each other on the CP step", () => {
+  const pickOf = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
+  for (const [held, other, byName] of [["dwarf", "Giant", "Dwarf"], ["giant", "Dwarf", "Giant"]]) {
+    const app = onStep("professional", "street", "character-points", ch => { ch.disadvantages = [trait20(held)]; });
+    const card = pickOf(app, other);
+    assert.ok(card.querySelector("[data-step^='disadv|'][data-step$='|1']").disabled, `${other}'s + is open`);
+    assert.match(card.querySelector(".head").textContent, new RegExp(`locked by ${byName}`));
+    assert.deepEqual(app.errors, []);
+  }
+});
+
+test("P20a 7: the review line shows Wealthy's Ç10,000 and the lock seeds it, once", () => {
+  const mult = D.powerLevels.find(p => p.id === "street").startingCredits.multiplier;
+  const half = named("Rich"); half.creation.locked = false; half.creation.rolls.credits = 6;
+  half.creation.powerLevel = "street"; half.advantages = [trait20("wealthy", 2)];
+  const app = boot({ storage: { "shadows.draft.v1": { ch: half, step: 7, maxReached: 7 } } });
+  const got = withDownloads(app);
+  card(app, "Rich").querySelector("[data-open]").click();
+  const n = v => v.toLocaleString("en-US");
+  assert.match(app.$("#main .roll-entry .pool").textContent, new RegExp(`Starting .*${n(6 * mult)} \\+ 10,000 Wealthy = ${n(6 * mult + 10000)}`));
+  app.click("[data-lock]");
+  assert.equal(got.length, 1);
+  assert.equal(app.window.eval("S.ch.trackers.credits.current"), 6 * mult + 10000);
+  // A character with none of it reads the plain product, as before.
+  const plain = named("Plain"); plain.creation.locked = false; plain.creation.rolls.credits = 6; plain.creation.powerLevel = "street";
+  const p = boot({ storage: { "shadows.draft.v1": { ch: plain, step: 7, maxReached: 7 } } });
+  card(p, "Plain").querySelector("[data-open]").click();
+  assert.match(p.$("#main .roll-entry .pool").textContent, new RegExp(`Starting .*${6 * mult}\\b(?! \\+)`));
+  assert.doesNotMatch(p.$("#main .roll-entry .pool").textContent, /Wealthy|=/);
+  assert.deepEqual([app.errors, p.errors], [[], []]);
+});
+
+test("P20a 9: the breakdowns name the parts", () => {
+  const app = boot();
+  const bd = (mut, id) => app.window.eval(`(()=>{ const c = Engine.newCharacter(); c.creation.powerLevel = ${JSON.stringify(D.powerLevels[0].id)}; ${mut}; return derivedBreakdownStr(c, ${JSON.stringify(id)}); })()`);
+  const hold = (list, id, rank = 1) => `c.${list}.push({ id: ${JSON.stringify(id)}, rank: ${rank}, notes: "" })`;
+  // Neither a floor nor a cap applies: no "floor / cap" in the line.
+  assert.equal(bd("c.stats.EMP.base = 6", "SAN"), "EMP 6 × 10 = 60%");
+  assert.equal(bd(`c.stats.EMP.base = 6; ${hold("disadvantages", "berserker")}`, "SAN"), "EMP 6 × 10 = 60% − 15 Berserker → 45%");
+  assert.equal(bd(`c.stats.EMP.base = 6; ${hold("disadvantages", "minor-insanity", 3)}`, "SAN"), "EMP 6 × 10 = 60% − 15 Minor Insanity → 45%");
+  // The cap comes first and is named as the cap; the cut comes after it.
+  assert.equal(bd(`c.stats.EMP.base = 10; ${hold("disadvantages", "blood-lust")}`, "SAN"), "EMP 10 × 10 = 100% → 95% (cap 95) − 5 Blood Lust → 90%");
+  // The floor of 1 is its own clause.
+  const low = bd(`c.stats.EMP.base = 1; ${hold("disadvantages", "berserker")}; ${hold("disadvantages", "hallucinations")}`, "SAN");
+  assert.equal(low, "EMP 1 × 10 = 10% − 15 Berserker − 25 Hallucinations → 1% (never lower)");
+  for (const s of [bd(`c.stats.EMP.base = 6; ${hold("disadvantages", "berserker")}`, "SAN"), low]) assert.doesNotMatch(s, /floor \/ cap/);
+  // TOL: the Aberration is named, and the line is the number.
+  const tol = bd("c.identity.archetype = 'arcanist'; c.archetypeChoices.specialization = ['arcane-fortitude']; for (const k of Object.keys(c.stats)) c.stats[k].base = 5", "TOL");
+  assert.match(tol, /\+ 2 Arcane Fortitude → \d+$/);
+  assert.equal(bd("c.identity.archetype = 'arcanist'; c.archetypeChoices.specialization = ['unshakable-mind']; for (const k of Object.keys(c.stats)) c.stats[k].base = 5", "TOL"), "1 + INT 0 + BOD 0 + COOL 0 = 1");
+  assert.deepEqual(app.errors, []);
 });

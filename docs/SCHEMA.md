@@ -108,7 +108,8 @@ window.SHADOWS_DATA = {
     { id: "WILL", name: "Will", type: "sumOfModifiers",
       base: 1, floor: 1, inputs: ["BOD", "INT", "EMP"] },
     { id: "SAN",  name: "Sanity", type: "percent",
-      formula: { stat: "EMP", times: 10 }, floor: 10, cap: 95 }   // stat × times + plus (Decision 135)
+      formula: { stat: "EMP", times: 10 }, floor: 10, cap: 95,   // stat × times + plus (Decision 135)
+      modFloor: 1 }   // (Decision 235) the lowest a trait's cut takes it: a held `derivedMod` comes after floor and cap, and max SAN is never below 1
   ],
 
   // ── Resources ────────────────────────────────────────────
@@ -228,6 +229,14 @@ window.SHADOWS_DATA = {
           ruleText: "...",                       // the general line (the wizard, an entry not taken)
           heldText: "... {rank} {v} {choice} ...", // optional: a held entry's own line
           byRank: [4, 6, 8] }                    // optional: one value per rank (rank 2 = byRank[1]), maxRank long
+        // (Decision 235) A trait's numbers on a build, read by Engine.derivedParts / statMax / startingCredits from the five sources
+        // naturalArmor() scans (not grants()'s three), once per trait with its ranks summed. A bad row is skipped, never thrown.
+        // { type: "derivedMod", stat: "SAN", amount: -15 }   a cut or bonus to a `derived` id, after its floor and cap
+        // { type: "derivedMod", stat: "SAN", perRank: -5 }   times the rank held (Minor Insanity)
+        // { type: "statMax", stat: "MOB", max: 3 }          one row per Basic Stat: the cap while the character is made, and a lift above
+        //                                                    statRules.max (Giant's BOD 11) in play; the lowest cap wins at creation
+        // { type: "startingCredits", amount: 10000 }        added once when the lock seeds Çredits, never to a character locked already
+        // A specialization option's `grants` take the same rows (Arcane Fortitude: derivedMod TOL +2).
         // (Decision 233) A trait on a Skill's check. Each names its Skills (`skills: [ids]`) or a pick of the same
         // entry (`skillsFromPick: "<pickId>"`, the picks cut to the held rank, natural and bought ranks summed). A row
         // with `whenText` is a MARK, never a number. Read by Engine.skillLine and effectTagsFor; a bad row is skipped.
@@ -248,6 +257,9 @@ window.SHADOWS_DATA = {
   // Dark"), visibilityAttacks ({levels}, "Dim −1 and Dark −3"). Read by Engine.skillLine and attackNotes.
   skillRowText: { takeX: "Take {x}: {total} (choose before you roll)" },
   // (Decision 234) appCopy.expertTitle: the Expert mode button's tooltip, naming the four steps it folds.
+  // (Decision 235) effectTags: derivedMod ("Max {stat} {amount}"), derivedModPerRank, statMax ("{stat} max {max}"), startingCredits
+  // ("+Ç{amount} to start"); effectTagsHeld.derivedMod ("Max {stat} {total}"). {stat} is the stat's id. appCopy: statMaxBy ("Max {max} ({by}).",
+  // the Stats step's line and canBoost's refusal), statMaxOver (the CP card's line) and statMaxLock (the lock's error), filled with {stat} {value} {max} {by}.
   // effectTags also holds the Decision 233 types' templates (checkMod, checkModWhen, kicker, takeX, takeXWhen, failOn,
   // failOnWhen, explodeOn, visibilityAttacks, visibilityAwareness) and `pickedSkill` ("the Skill you choose").
 
@@ -1872,6 +1884,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: `picks`, `excludes`, `requires`, `selections`, `optionLock`, Martial Arts styles*
     - **Rejected:** a special case per entry that asks for a choice. Writing an invented `excludes` pair into the data to exercise the machinery, which would resolve a rules question in code; a synthetic test fixture does it instead.
     - **Revisit if:** the CRB asks for a choice none of the three shapes (a fixed list, a category, free text) can say.
+    → **Extended by Decision 235** — Dwarf and Giant are the first real `excludes` pair (Deighton); `requires` still has none.
     → **Superseded in part by Decision 229** — a pick marked `addInPlay` takes more than its `count` on a locked character, and a skill's picks count its rank from every source (creation, IP, boosts).
 
 78. **(Batch 3)** **The mechanical picks are the app's business; the fiction is
@@ -4855,7 +4868,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Why:** Ken's shape for W120: one place per effect, the computed ones unable to drift from what the sheet applies, and Expert mode (P13) able to show what an entry does without its prose. The rule lines are the sign-off page's, approved by Ken, Deighton and Scott.
      - **Rejected:** a free-text `mechanicsText` per entry (a second copy of every rule); a hand-written tag on a computed row (the same drift); splitting `description` at its first paragraph (flavor in some entries, rules in others); computing the 19 here (rules questions); tags on the CP step only; truncating a long rule (a cut-off rule is a wrong rule); print (the front page is full, 96).
      - **Replaces:** nothing. Extends 199 (Majors' `grants` share the reader, which skips `rule`) and 213 (Pain Sensitive gains a tag). Eleven `description`s move with Deighton's rulings of 2026-10-16.
-     → **Superseded in part by Decisions 232 and 233** — a held card's computed tag states its total (`effectTagsHeld`), a held Milestone row past the rank is left off, and the tags reach four more places (232); 16 entries' effects are computed rows on a Skill's check, with their own tag templates (233).
+     → **Superseded in part by Decisions 232, 233 and 235** — nine entries' effects (the five Sanity cuts, Age, Dwarf, Giant, Wealthy's Ç10,000) and Arcane Fortitude's are computed rows (235); a held card's computed tag states its total (`effectTagsHeld`), a held Milestone row past the rank is left off, and the tags reach four more places (232); 16 entries' effects are computed rows on a Skill's check, with their own tag templates (233).
      - **Revisit if:** a table rule becomes computable (P19 or P20 moves it to a computed type); the CRB rewrites an entry (its rule rows are rewritten with it).
      - **Built:** app 0.48.0, no data or schema bump, PR #207. Log 2026-10-16 (P18).
 
@@ -4886,6 +4899,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 232 in part (Expert mode folds four creation steps, not three). It also reverses P13's PQ4 answer (the toggle only where it changes something), which 232 didn't record.
      - **Revisit if:** players press it on Concept or History and expect something to change, or Expert mode reaches a fifth step.
      - **Built:** app 0.49.0, with P19, PR #213. Log 2026-10-17 (P19).
+
+235. **A trait's cut or bonus to a derived stat, its cap on a Basic Stat, and Wealthy's starting Çredits are computed: max SAN, TOL, the stats a character can buy, and the lock's Çredits follow them.**
+     *2026-10-17 · Ken + Claude · Touches: derived, derivedParts, sanState, statMax, statAtCap, statRules.max, grants derivedMod, statMax, startingCredits, buildExport, optionLock, excludes, modFloor, Minor Insanity, Arcane Fortitude, Age, Dwarf, Giant, Wealthy, Honed*
+     - **Decided:** `derivedMod` ({ stat, amount | perRank }) and `statMax` ({ stat, max }) are computed `grants` types, read from the five sources `naturalArmor()` scans, once per trait. A derived stat's mods come after its floor and cap; `modFloor` (SAN's is 1) is the lowest a cut takes it. `Engine.statMax(ch, id)` is the one cap: at creation the lowest a held trait sets, else `statRules.max`; once locked, `statRules.max` or a trait's lift above it (Giant's BOD 11), so a lower cap binds creation only (Ken) and IP, Honed, gear and Admin pass it in play. Focus stops at a trait's cap. A stat past a cap refuses the lock; the engine never lowers one. Wealthy's `startingCredits` is added when the lock seeds Çredits, once for any rank, never after. Dwarf and Giant exclude each other (Deighton).
+     - **Why:** The effects sign-off, unanimous: a number shown and not applied is the drift 231 ends.
+     - **Rejected:** a trait's cap binding in play (Ken); cutting SAN before the cap of 95, or flooring it at 10 after a cut (either makes a cut vanish); Focus points ignoring a trait's cap; the highest of two caps winning; refusing a trait whose cap you're past; Wealthy's Ç10,000 when bought in play; waiting on W130 for Age's MOB 6.
+     - **Replaces:** Decision 231 in part (ten entries' effects become computed rows). Extends 77 (the first real `excludes` pair) and 135 (`modFloor` is read by code).
+     - **Revisit if:** Deighton drops Age's MOB cap (W130); a GM needs a cap to hold in play; Wealthy's monthly pay becomes a Milestone payday (W129).
+     - **Built:** app 0.50.0, game data 0.42, no schema bump, PR #…. Log 2026-10-17 (P20a).
 
 ## 5. Open Flags
 

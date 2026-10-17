@@ -23,8 +23,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.49.0
+## [Unreleased] — app 0.50.0
 
+- **Your Disadvantages cost you Sanity.** Berserker, Blood Lust, Fanatic, Hallucinations and Minor Insanity take their points off your max SAN, and the breakdown names each one.
+- **Arcane Fortitude adds 2 to your TOL.**
+- **Age, Dwarf and Giant set how high your stats can go when you make your character,** and a Giant's BOD can reach 11. The Stats step says what the limit is and why; a stat already past it keeps you from locking until you lower it. In play, IP can take you past them. Dwarf and Giant can't be taken together.
+- **Wealthy starts you with Ç10,000 more.** The review shows the sum.
 - **The Stats step tells you to roll only when your table rolls for Stat Points.** Otherwise it says point buy.
 - **Your Skills count your Advantages and Disadvantages.** Ghost Step adds 3 to Stealth, Defect/Flaw takes 2 off the Skill it hurts, and your attacks follow.
 - **Kicker dice show on the Skill:** Field Medic's Medical reads 1d10 + your bonus + 1d4.

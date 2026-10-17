@@ -2001,8 +2001,7 @@ const BYRANK_PINS = {
   bullseye: [4, 6, 8],
   // "2,000 Ç/per month for each rank"
   wealthy: ["2,000", "4,000", "6,000", "8,000"],
-  // "Each Rank reduces your Sanity by 5%"
-  "minor-insanity": [5, 10, 15, 20, 25],
+  // (Minor Insanity's "Each Rank reduces your Sanity by 5%" is a computed row now: P20a 1 pins 5 a rank.)
 };
 
 test("P18 3: a rule line's numbers are in its entry's own text", () => {
@@ -2298,7 +2297,7 @@ test("P19 6: the tags are computed now, held and unheld", () => {
   same(comp("disadvantage", "defect-flaw", held(2, { skill: ["handguns", "dodge"] })), ["−2 on checks with Handguns, Dodge"]);
   same(comp("disadvantage", "defect-flaw", held(1, { skill: ["handguns", "dodge"] })), ["−2 on checks with Handguns"], "the rank cuts the picks");
   same(comp("disadvantage", "defect-flaw", held(1, { skill: [] })), ["−2 on checks with the Skill you choose"], "no pick yet: the general line");
-  same(comp("disadvantage", "dwarf"), ["+3 on checks with Stealth when hiding"]);
+  same(comp("disadvantage", "dwarf").slice(2), ["+3 on checks with Stealth when hiding"]);   // Dwarf's two caps come first (P20a 8)
   same(comp("advantage", "field-medic"), ["+1d4 Kicker Die on Medical checks"]);
   same(comp("advantage", "hyper-vigilance"), ["+1d4 Kicker Die on Combat Sense checks"]);
   same(comp("advantage", "common-sense"), ["Take 6 on the Skill you choose; choose before you roll"]);
@@ -2310,18 +2309,18 @@ test("P19 6: the tags are computed now, held and unheld", () => {
   same(comp("disadvantage", "distractable"), ["Awareness, Combat Sense checks fail on a natural 2 or 3 (a 1 still botches)"]);
   assert.match(comp("disadvantage", "social-stigma")[0], /^Persuasion checks fail on a natural 2 or 3/);
   assert.match(comp("disadvantage", "gullible")[0], /spotting a lie, unless it's preposterous/);
-  assert.match(comp("disadvantage", "blood-lust")[0], /after you fail first blood's Sanity Check, for the encounter/);
+  assert.match(comp("disadvantage", "blood-lust")[1], /after you fail first blood's Sanity Check, for the encounter/);   // [0] is its Sanity cut (P20a 8)
   same(comp("advantage", "refined-skill"), ["Explodes on a natural 9 or 10: the Skill you choose"]);
   same(comp("advantage", "refined-skill", held(2, { skill: ["stealth", "medical"] })), ["Explodes on a natural 9 or 10: Stealth, Medical"]);
   same(comp("advantage", "night-vision"), ["Dim −1 and Dark −3 don't apply to your attacks", "No Dim or Dark penalty on visual Awareness checks"]);
   // What stays a rule row, still says its words.
-  same(rule("disadvantage", "dwarf"), ["BOD max 8, MOB max 3.", "At most 3'6\" tall."]);
+  same(rule("disadvantage", "dwarf"), ["At most 3'6\" tall."]);
   same(rule("advantage", "refined-skill"), ["Not on a Combat Cunning stunt."]);
   same(rule("advantage", "lightning-calculator"), ["Anyone you help with a TECH Skill gets +1. Not in combat."]);
   same(rule("advantage", "machindo"), ["INT and TECH Essence Checks: TN −1 (to a minimum of 1)."]);
   same(rule("advantage", "sense-of-direction"), ["Always know the cardinal directions."]);
   same(rule("advantage", "field-medic"), ["Stacks with other kickers."]);
-  same(rule("disadvantage", "blood-lust"), ["Sanity −5%.", "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one."]);
+  same(rule("disadvantage", "blood-lust"), ["First blood in an encounter: a Sanity Check. Pass, and it's off until the next one."]);
   // Every entry P19 computes reads at least one chip, and none has an unfilled placeholder.
   const ids = ["ghost-step", "defect-flaw", "dwarf", "field-medic", "hyper-vigilance", "common-sense", "lightning-calculator", "machindo", "sense-of-direction", "aura-sight", "distractable", "social-stigma", "gullible", "blood-lust", "refined-skill", "night-vision"];
   assert.equal(ids.length, 16);
@@ -2371,4 +2370,253 @@ test("P19 7b: no Skill can hold two kickers, or a kicker and a Take X", () => {
     assert.ok(r.kicker.length <= 1, `${id} can hold two kickers: ${r.kicker}`);
     assert.ok(!(r.kicker.length && r.takeX.length), `${id} can hold a kicker and a Take X: ${r.kicker} / ${r.takeX}`);
   }
+});
+
+// ── P20a: numbers at creation (Decision 235) ─────────────────────────────
+// A Sanity cut, Arcane Fortitude's +2 TOL, a trait's cap on a Basic Stat, and Wealthy's Ç10,000: computed, so every
+// reader follows. The book is the source for every number (0440, 0430, 0411).
+const sub20 = mut => { const ch = subject(); if (mut) mut(ch); return ch; };
+const san20 = ch => Engine.derived(ch).SAN;
+const emp20 = n => ch => { ch.stats.EMP.base = n; };
+const arc20 = (spec, mut) => {
+  const ch = subject();
+  ch.identity.archetype = "arcanist";
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;
+  if (spec) ch.archetypeChoices.specialization = [spec];
+  if (mut) mut(ch);
+  return ch;
+};
+const lock20 = ch => { ch.creation.locked = true; return ch; };
+const max20 = (ch, id) => JSON.parse(JSON.stringify(Engine.statMax(ch, id)));
+
+test("book 0440/0430/0411: the numbers P20a computes are the book's", () => {
+  const dis = crb("0440_Disadvantages.md"), adv = crb("0430_Advantages.md");
+  // A Disadvantage's section runs from its **Name** line to the next one.
+  const section = name => { const at = dis.indexOf(`**${name}**`); assert.ok(at >= 0, name); const rest = dis.slice(at + 4), end = rest.search(/\n\n\*\*(?!\d)[^*\n]+\*\*\n/); return end < 0 ? rest : rest.slice(0, end); };
+  assert.match(section("Berserker"), /Sanity is reduced by 15%/);
+  assert.match(section("Blood Lust"), /Sanity is reduced by 5%/);
+  assert.match(section("Fanatic"), /Sanity is reduced by 15%/);
+  assert.match(section("Hallucinations"), /Sanity is reduced by 25%/);
+  assert.match(section("Minor Insanity"), /Each Rank reduces your Sanity by 5%/);
+  for (const [name, lines] of [["Age", ["BOD Max: 5", "REF Max: 6", "MOB Max: 6"]], ["Dwarf", ["BOD Max: 8", "MOB Max: 3"]], ["Giant", ["BOD Max: 11", "REF Max: 5", "MOB Max: 8"]]])
+    for (const l of lines) assert.ok(section(name).includes(l), `${name}: ${l}`);
+  assert.match(adv.slice(adv.indexOf("**Wealthy**")), /Start with an additional 10,000 Ç/);
+  assert.match(crb("0411_Arcanist.md"), /\*\*Arcane Fortitude\*\*:[^\n]*\n\s*\*Benefit:\* Gain \+2 to TOL/);
+  // The rows say what the book says.
+  const rows = (list, id, type) => list.find(d => d.id === id).grants.filter(g => g.type === type);
+  same(["blood-lust", "berserker", "fanatic", "hallucinations"].map(id => rows(D.disadvantages, id, "derivedMod").map(g => [g.stat, g.amount])), [[["SAN", -5]], [["SAN", -15]], [["SAN", -15]], [["SAN", -25]]]);
+  same(rows(D.disadvantages, "minor-insanity", "derivedMod").map(g => [g.stat, g.perRank]), [["SAN", -5]]);
+  same(rows(D.disadvantages, "age", "statMax").map(g => [g.stat, g.max]), [["BOD", 5], ["REF", 6], ["MOB", 6]]);
+  same(rows(D.disadvantages, "dwarf", "statMax").map(g => [g.stat, g.max]), [["BOD", 8], ["MOB", 3]]);
+  same(rows(D.disadvantages, "giant", "statMax").map(g => [g.stat, g.max]), [["BOD", 11], ["REF", 5], ["MOB", 8]]);
+  same(rows(D.advantages, "wealthy", "startingCredits").map(g => g.amount), [10000]);
+  const af = D.archetypes.find(a => a.id === "arcanist").specialization.options.find(o => o.id === "arcane-fortitude");
+  same(af.grants.map(g => [g.type, g.stat, g.amount]), [["derivedMod", "TOL", 2]]);
+});
+
+test("P20a 1: a Sanity cut comes off max SAN, everywhere it's read", () => {
+  const plain = sub20(emp20(6));
+  assert.equal(san20(plain), 60);
+  const bz = hold19(sub20(emp20(6)), "disadvantages", "berserker");
+  assert.equal(san20(bz), 45);
+  assert.equal(Engine.sanState(bz).max, 45);
+  assert.equal(Engine.sanState(bz).current, 45);
+  same(Engine.derivedParts(bz, "SAN"), [{ name: "Berserker", amount: -15 }]);
+  same(Engine.derivedParts(plain, "SAN"), []);
+  // Minor Insanity, a rank at a time.
+  same([1, 2, 3, 4, 5].map(rank => san20(hold19(sub20(emp20(6)), "disadvantages", "minor-insanity", rank))), [55, 50, 45, 40, 35]);
+  same(Engine.derivedParts(hold19(sub20(), "disadvantages", "minor-insanity", 3), "SAN"), [{ name: "Minor Insanity", amount: -15 }]);
+  // The cut comes after the cap of 95 (PQ7): EMP 10 is 95, and Blood Lust takes it to 90.
+  assert.equal(san20(sub20(emp20(10))), 95);
+  assert.equal(san20(hold19(sub20(emp20(10)), "disadvantages", "blood-lust")), 90);
+  // …and after the floor of 10, with max SAN never below 1 (PQ6).
+  const low = hold19(hold19(sub20(emp20(1)), "disadvantages", "berserker"), "disadvantages", "hallucinations");
+  assert.equal(san20(low), 1);
+  assert.equal(Engine.sanState(low).max, 1);
+  assert.equal(san20(hold19(sub20(emp20(1)), "disadvantages", "blood-lust")), 5, "EMP 1 is 10, less 5");
+  // A manual adjustment still reads after the cut.
+  const adj = hold19(sub20(emp20(6)), "disadvantages", "berserker");
+  adj.trackers.adjustments.push({ target: "SAN", amount: 3, note: "x" });
+  assert.equal(san20(adj), 48);
+  // Two cuts add.
+  assert.equal(san20(hold19(hold19(sub20(emp20(6)), "disadvantages", "berserker"), "disadvantages", "blood-lust")), 40);
+  // Lost SAN is taken from the cut max, and a rank bought off gives back its 5 (Decision 227).
+  const ip = lock20(hold19(sub20(emp20(6)), "disadvantages", "minor-insanity", 3));
+  assert.equal(Engine.sanState(ip).max, 45);
+  fund(ip, 500);
+  assert.equal(Engine.spendIP(ip, "disadvantage", "minor-insanity").ok, true);
+  assert.equal(Engine.sanState(ip).max, 50, "a rank bought off raises the max by 5");
+  ip.trackers.san.loss = 80;
+  assert.equal(Engine.sanState(ip).current, 0);
+  // None held: SAN is the formula for every EMP, as on main.
+  for (let emp = 1; emp <= 10; emp++) assert.equal(san20(sub20(emp20(emp))), Math.min(95, Math.max(10, emp * 10)), `EMP ${emp}`);
+});
+
+test("P20a 2: Arcane Fortitude adds 2 to TOL", () => {
+  const other = arc20("unshakable-mind"), none = arc20(null), af = arc20("arcane-fortitude");
+  assert.equal(Engine.derived(af).TOL, Engine.derived(none).TOL + 2);
+  assert.equal(Engine.derived(other).TOL, Engine.derived(none).TOL, "another Aberration adds nothing");
+  same(Engine.derivedParts(af, "TOL"), [{ name: "Arcane Fortitude", amount: 2 }]);
+  // Its benefit text is still what the picker shows.
+  assert.equal(D.archetypes.find(a => a.id === "arcanist").specialization.options.find(o => o.id === "arcane-fortitude").benefit, "Gain +2 to TOL.");
+  // Every reader of TOL follows: the starting spells count is TOL + the roll.
+  for (const ch of [af, none]) ch.archetypeChoices.rolls.startingSpells = 2;
+  assert.equal(Engine.startingSpells(af).count, Engine.startingSpells(none).count + 2);
+  assert.equal(Engine.startingSpells(af).base, Engine.derived(af).TOL);
+  // Only the one stat moved.
+  for (const k of ["WILL", "SAN"]) assert.equal(Engine.derived(af)[k], Engine.derived(none)[k], k);
+});
+
+test("P20a 3: a trait's cap binds at creation, and only a lift binds in play", () => {
+  const one = (id, mut) => hold19(sub20(mut), "disadvantages", id);
+  // Nothing held: statRules.max everywhere.
+  for (const s of D.stats) same(max20(sub20(), s.id), { max: 10, by: null });
+  same(max20(lock20(sub20()), "BOD"), { max: 10, by: null });
+  // Dwarf, unlocked.
+  const dw = one("dwarf", ch => { ch.stats.MOB.base = 3; });
+  same(max20(dw, "MOB"), { max: 3, by: "Dwarf" });
+  same(max20(dw, "BOD"), { max: 8, by: "Dwarf" });
+  same(max20(dw, "REF"), { max: 10, by: null });
+  const boost = Engine.canBoost(dw, "stat", "MOB");
+  assert.deepEqual([boost.ok, boost.why], [false, "Max 3 (Dwarf)."]);
+  assert.equal(Engine.canBoost(dw, "stat", "REF").ok, true);
+  // Locked, a lower cap is gone (PQ2): IP raises MOB 3 to 4, and Honed's MOB option is on.
+  const dl = lock20(one("dwarf", ch => { ch.stats.MOB.base = 3; }));
+  same(max20(dl, "MOB"), { max: 10, by: null });
+  fund(dl, 500);
+  same(["ok", "from", "to"].map(k => Engine.ipCost(dl, "stat", "MOB")[k]), [true, 3, 4]);
+  assert.equal(Engine.spendIP(dl, "stat", "MOB").ok, true);
+  assert.equal(Engine.statValue(dl, "MOB"), 4);
+  assert.equal(Engine.minorChoice(dl, "honed").options.find(o => o.id === "MOB").off, "");
+  assert.equal(Engine.minorChoice(dw, "honed").options.find(o => o.id === "MOB").off, "Stat cap 3.", "unlocked, the cap is still the cap");
+  // Giant: BOD reaches 11 through IP, and not past it.
+  const gi = lock20(one("giant", ch => { ch.stats.BOD.base = 10; }));
+  same(max20(gi, "BOD"), { max: 11, by: "Giant" });
+  same(max20(gi, "REF"), { max: 10, by: null });
+  fund(gi, 500);
+  assert.equal(Engine.spendIP(gi, "stat", "BOD").ok, true);
+  assert.equal(Engine.statValue(gi, "BOD"), 11);
+  assert.equal(Engine.ipCost(gi, "stat", "BOD").ok, false);
+  assert.equal(Engine.minorChoice(gi, "honed").options.find(o => o.id === "BOD").off, "Stat cap 11.");
+  // Unlocked, a Giant's BOD, REF and MOB are 11, 5 and 8.
+  same(["BOD", "REF", "MOB"].map(s => max20(one("giant"), s)), [{ max: 11, by: "Giant" }, { max: 5, by: "Giant" }, { max: 8, by: "Giant" }]);
+  // Two caps: the lowest wins (PQ4). Age + Giant, BOD 5.
+  const ag = hold19(one("age"), "disadvantages", "giant");
+  same(max20(ag, "BOD"), { max: 5, by: "Age" });
+  same(max20(ag, "REF"), { max: 5, by: "Giant" });
+  same(max20(hold19(one("age"), "disadvantages", "dwarf"), "MOB"), { max: 3, by: "Dwarf" });
+  // Focus points stop at a trait's cap (PQ3).
+  const fc = arc20(null, ch => { hold19(ch, "disadvantages", "dwarf"); ch.stats.MOB.base = 2; ch.archetypeChoices.focusAllocation = { MOB: 1 }; });
+  assert.equal(Engine.statValue(fc, "MOB"), 3);
+  assert.equal(Engine.canBoost(fc, "stat", "MOB").ok, false);
+  assert.equal(Engine.statAtCap(fc, "MOB", true), true, "a Focus point went past a trait's cap");
+  assert.equal(Engine.statAtCap(sub20(ch => { ch.stats.REF.base = 10; }), "REF", true), false, "a Focus point stopped at the human maximum");
+  // The creation pools read it: nothing is spendable on stats all at the cap.
+  assert.equal(Engine.spendable(sub20(ch => { for (const s of D.stats) ch.stats[s.id].base = 10; }), "statBonus"), false);
+  // …and under a trait's cap: a Dwarf with every stat at its own cap has nothing left to spend a bonus or a Stat Point on.
+  const capped = sub20(ch => { for (const s of D.stats) ch.stats[s.id].base = 10; ch.stats.BOD.base = 8; ch.stats.MOB.base = 3; ch.creation.rolls.statPoints = 99; });
+  hold19(capped, "disadvantages", "dwarf");
+  assert.equal(Engine.spendable(capped, "statBonus"), false, "a Dwarf at its caps still has bonus to place");
+  assert.equal(Engine.spendable(capped, "stats"), false, "a Dwarf at its caps still has Stat Points to place");
+  capped.stats.MOB.base = 2;
+  assert.equal(Engine.spendable(capped, "statBonus"), true);
+  // statMax is the one cap: nothing else reads statRules.max.
+  const src = n => readFileSync(join(ROOT, n), "utf8");
+  const readers = file => src(file).split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => !/^\s*(\/\/|\*)/.test(l) && /statRules\.max/.test(l));
+  const inEngine = readers("src/engine/engine.js");
+  assert.equal(inEngine.length, 1, "only statMax reads statRules.max: " + inEngine.map(([n]) => n));
+  assert.match(inEngine[0][1], /const base = D\(\)\.statRules\.max, none/);
+  for (const f of ["src/ui/wizard.js", "src/ui/sheet.js", "src/ui/shared.js", "src/ui/app.js", "src/ui/gm.js"]) assert.deepEqual(readers(f), [], `${f} reads statRules.max`);
+});
+
+test("P20a 4: a cap already passed refuses the lock", () => {
+  const dw = hold19(sub20(ch => { ch.stats.MOB.base = 5; ch.stats.BOD.base = 8; }), "disadvantages", "dwarf");
+  const errs = ch => Engine.validate("stats", ch).filter(i => i.level === "error").map(i => i.msg);
+  same(errs(dw), ["MOB is 5, over Dwarf's max of 3. Lower it on the Stats step."]);
+  assert.ok(Engine.validate("review", dw).some(i => i.level === "error" && /MOB is 5, over Dwarf's max of 3/.test(i.msg)), "the lock isn't refused");
+  assert.equal(Engine.statValue(dw, "MOB"), 5, "the engine lowered a stat");
+  assert.equal(dw.stats.MOB.base, 5);
+  dw.stats.MOB.base = 3;
+  same(errs(dw), []);
+  assert.ok(!Engine.validate("review", dw).some(i => /over Dwarf/.test(i.msg)));
+  // A Focus point over the cap counts the same: it's the stat's value.
+  const fc = arc20(null, ch => { hold19(ch, "disadvantages", "dwarf"); ch.stats.MOB.base = 3; ch.archetypeChoices.focusAllocation = { MOB: 2 }; });
+  same(errs(fc), ["MOB is 5, over Dwarf's max of 3. Lower it on the Stats step."]);
+  // Locked, the cap is gone and nothing is said.
+  assert.ok(!Engine.validate("stats", lock20(hold19(sub20(ch => { ch.stats.MOB.base = 5; }), "disadvantages", "dwarf"))).some(i => /over/.test(i.msg)));
+  // The CP card's line is the engine's own, for the same stat.
+  assert.equal(Engine.statOverCap(hold19(sub20(ch => { ch.stats.MOB.base = 5; }), "disadvantages", "dwarf"), "dwarf"), "MOB is 5, over Dwarf's max of 3.");
+  assert.equal(Engine.statOverCap(sub20(), "dwarf"), "");
+});
+
+test("P20a 6: Dwarf and Giant exclude each other", () => {
+  const dwarf = hold19(sub20(), "disadvantages", "dwarf"), giant = hold19(sub20(), "disadvantages", "giant");
+  const lock = (ch, id) => JSON.parse(JSON.stringify(Engine.optionLock(ch, "disadvantage", id)));
+  same(lock(dwarf, "giant"), { locked: true, by: "Dwarf" });
+  same(lock(giant, "dwarf"), { locked: true, by: "Giant" });
+  same(lock(sub20(), "giant"), { locked: false, by: null });
+  same(D.disadvantages.filter(d => (d.excludes || []).length).map(d => [d.id, [...d.excludes]]), [["dwarf", ["giant"]]]);
+  assert.ok(Engine.validate("character-points", hold19(hold19(sub20(), "disadvantages", "dwarf"), "disadvantages", "giant")).some(i => i.level === "error" && /can't be taken together/.test(i.msg)));
+});
+
+test("P20a 7: Wealthy's Ç10,000 is paid once, at lock", () => {
+  const mult = D.powerLevels[0].startingCredits.multiplier;
+  const mk = (rank, locked) => { const ch = sub20(c => { c.creation.rolls.credits = 6; }); if (rank) hold19(ch, "advantages", "wealthy", rank); ch.creation.locked = locked; return ch; };
+  same(Engine.startingCredits(mk(0)), { roll: 6, multiplier: mult, bonus: [], total: 6 * mult });
+  const w = Engine.startingCredits(mk(1));
+  same(w.bonus, [{ name: "Wealthy", amount: 10000 }]);
+  assert.equal(w.total, 6 * mult + 10000);
+  assert.equal(Engine.startingCredits(mk(3)).total, 6 * mult + 10000, "rank 3 is still +10,000");
+  assert.equal(Engine.startingCredits(sub20()).total, null, "no roll: no total");
+  // The lock click seeds it, once.
+  const at = Engine.buildExport(mk(3, true), { lock: true });
+  assert.equal(at.trackers.credits.current, 6 * mult + 10000);
+  // After the lock, an export seeds nothing: the sheet holds what it holds.
+  assert.equal(Engine.buildExport(JSON.parse(JSON.stringify(at))).trackers.credits.current, 6 * mult + 10000);
+  // Bought by IP after the lock: no change (PQ8).
+  const played = Engine.migrate(JSON.parse(JSON.stringify(mk(0, true))));
+  played.trackers.credits.current = 6 * mult;
+  fund(played, 500);
+  assert.equal(Engine.spendIP(played, "advantage", "wealthy").ok, true);
+  assert.equal(Engine.buildExport(played).trackers.credits.current, 6 * mult, "Wealthy bought in play paid the starting bonus");
+  // A ledger with entries: no reseed, even at the lock.
+  const led = mk(1, true); led.trackers.credits.ledger.push({ date: "2026-10-01T00:00:00.000Z", amount: 5, note: "x" }); led.trackers.credits.current = 5;
+  assert.equal(Engine.buildExport(led, { lock: true }).trackers.credits.current, 5);
+  // Not locked, an export still shows the sum (the wizard's Export button).
+  assert.equal(Engine.buildExport(mk(1, false)).trackers.credits.current, 6 * mult + 10000);
+  // Nothing was saved for it: the same keys as a character with no Wealthy.
+  same(Object.keys(at.trackers.credits), Object.keys(Engine.buildExport(mk(0, true), { lock: true }).trackers.credits));
+});
+
+test("P20a 8: the tags are computed, held and unheld", () => {
+  const comp = (kind, id, h = null) => tagsOf(kind, id, h).filter(t => t.computed).map(t => t.text);
+  const rule = (kind, id) => tagsOf(kind, id).filter(t => !t.computed).map(t => t.text);
+  const held = (rank, selections) => ({ rank, selections });
+  assert.equal(comp("disadvantage", "blood-lust")[0], "Max SAN −5");
+  same(comp("disadvantage", "berserker"), ["Max SAN −15"]);
+  same(comp("disadvantage", "fanatic"), ["Max SAN −15"]);
+  same(comp("disadvantage", "hallucinations"), ["Max SAN −25"]);
+  same(comp("disadvantage", "minor-insanity"), ["Max SAN −5 per rank"]);
+  same(comp("disadvantage", "minor-insanity", held(3)), ["Max SAN −15"], "a held card states its total");
+  same(comp("disadvantage", "minor-insanity", held(1)), ["Max SAN −5"]);
+  same(comp("disadvantage", "berserker", held(1)), ["Max SAN −15"]);
+  same(comp("disadvantage", "age"), ["BOD max 5", "REF max 6", "MOB max 6"]);
+  same(comp("disadvantage", "dwarf").slice(0, 2), ["BOD max 8", "MOB max 3"]);
+  assert.ok(comp("disadvantage", "dwarf").includes("+3 on checks with Stealth when hiding"), "P19's chip is still there");
+  same(comp("disadvantage", "giant"), ["BOD max 11", "REF max 5", "MOB max 8"]);
+  same(comp("advantage", "wealthy"), ["+Ç10,000 to start"]);
+  same(comp("advantage", "wealthy", held(2)), ["+Ç10,000 to start"]);
+  // What stays a rule row still says its words; the moved numbers are gone from the rule lines.
+  assert.ok(rule("disadvantage", "berserker")[0].startsWith("Start of combat"));
+  same(rule("advantage", "wealthy"), ["+Ç2,000 a month per rank."]);
+  same(rule("disadvantage", "blood-lust"), ["First blood in an encounter: a Sanity Check. Pass, and it's off until the next one."]);
+  for (const [kind, id] of [["disadvantage", "blood-lust"], ["disadvantage", "berserker"], ["disadvantage", "fanatic"], ["disadvantage", "hallucinations"], ["disadvantage", "minor-insanity"], ["disadvantage", "age"], ["disadvantage", "dwarf"], ["disadvantage", "giant"]])
+    for (const t of tagsOf(kind, id).filter(x => !x.computed)) assert.ok(!/Sanity [−-]\d|\bmax \d/.test(t.text), `${id}: "${t.text}" is still a rule row for a computed number`);
+  for (const [kind, id, rank] of [["disadvantage", "berserker", 1], ["disadvantage", "minor-insanity", 5], ["disadvantage", "giant", 1], ["advantage", "wealthy", 4]])
+    for (const h of [null, held(rank)]) for (const t of comp(kind, id, h)) assert.ok(!/[{}]|undefined|NaN/.test(t), `${id}: "${t}"`);
+  // The types are used by exactly these entries (§8).
+  const users = type => P18_DEFS.filter(([, d]) => d.grants.some(g => g.type === type)).map(([, d]) => d.id).sort();
+  same(users("derivedMod"), ["berserker", "blood-lust", "fanatic", "hallucinations", "minor-insanity"]);
+  same(users("statMax"), ["age", "dwarf", "giant"]);
+  same(users("startingCredits"), ["wealthy"]);
 });

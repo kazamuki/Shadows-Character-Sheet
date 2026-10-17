@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.41",
+    "gamedataVersion": "0.42",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -201,6 +201,7 @@ window.SHADOWS_DATA = {
       },
       "floor": 10,
       "cap": 95,
+      "modFloor": 1,
       "description": "Your connection to reality and its people, based on EMP alone. No one is perfectly sane: maximum SAN is 95%."
     }
   ],
@@ -1096,6 +1097,10 @@ window.SHADOWS_DATA = {
     "explodeOn": "Explodes on a natural {faces}: {skills}",
     "visibilityAttacks": "{levels} don't apply to your attacks",
     "visibilityAwareness": "No {names} penalty on visual Awareness checks",
+    "derivedMod": "Max {stat} {amount}",
+    "derivedModPerRank": "Max {stat} {amount} per rank",
+    "statMax": "{stat} max {max}",
+    "startingCredits": "+Ç{amount} to start",
     "pickedSkill": "the Skill you choose"
   },
   /* Decision 233: the light levels 0530 (Visibility) sets, read by a `visibility` grants row (Night Vision), which names
@@ -1125,7 +1130,8 @@ window.SHADOWS_DATA = {
   "effectTagsHeld": {
     "skillPoints": "+{total} Skill Points",
     "hpPerLevel": "+{total} max HP on every Health Level",
-    "naturalArmor": "+{total} Natural Armor; Armor Piercing doesn't touch it, unless it's a spell"
+    "naturalArmor": "+{total} Natural Armor; Armor Piercing doesn't touch it, unless it's a spell",
+    "derivedMod": "Max {stat} {total}"
   },
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
@@ -1784,7 +1790,7 @@ window.SHADOWS_DATA = {
       "maxRank": 4,
       "description": "Start with an additional 10,000 Ç. Gain an additional 2,000 Ç/per month for each rank.",
       "grants": [
-        { "type": "rule", "ruleText": "+Ç10,000 to start." },
+        { "type": "startingCredits", "amount": 10000 },
         { "type": "rule", "ruleText": "+Ç2,000 a month per rank.", "heldText": "+Ç{v} a month.", "byRank": ["2,000", "4,000", "6,000", "8,000"] }
       ]
     }
@@ -1820,7 +1826,9 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "NYTE City doesn’t wait for you to grow up.\n\nYou're between the ages of 13 to 15. This carries with it social and physical limitations:\n\n- BOD Max: 5\n\n- REF Max: 6\n\n- MOB Max: 6\n\n- You're either dependent to someone or have emancipated yourself.\n\n- Access to certain areas is more heavily restricted by law.\n\n- You're more likely to be targeted for exploitation.\n\nCybernetics push past some of these limits, but Stats cap at human maximum due to your body not being done growing.",
       "grants": [
-        { "type": "rule", "ruleText": "BOD max 5, REF max 6, MOB max 6." },
+        { "type": "statMax", "stat": "BOD", "max": 5 },
+        { "type": "statMax", "stat": "REF", "max": 6 },
+        { "type": "statMax", "stat": "MOB", "max": 6 },
         { "type": "rule", "ruleText": "You're 13 to 15: dependent or emancipated, kept out of places, and a target." }
       ]
     },
@@ -1831,7 +1839,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "This isn't just a short temper; there's a brewing storm of fury always within you. It is a challenge to keep it at bay especially if you're in the presence of violence.\n\nSanity is reduced by 15%.\n\nAt the start of combat, roll a Sanity check. Failure means you have lost your ability to keep the beast inside and the following effects are active.\n\n- You're consumed by the need to commit violence. You will attack anyone you consider to be a threat or anyone that attempts to stop you from drawing blood while berserk. This lasts until the end of the encounter and triggers only once per encounter.\n\n- You suffer a −2 penalty to all defensive actions during combat as you aren't concerned about taking injury or avoiding pain.\n\n- Hand to hand attacks with Martial Arts or Melee skills get a +2 to hit and +4 to damage.\n\n- Target Number for other COOL Essence checks increase by 1 while berserk.\n\n- You may attempt to break from berserk once per turn with a COOL Essence Check (Target 9, Threshold 3).\n\n- If you are about to attack an ally, you may make COOL Essence Check (Target 9, Threshold 2) to stop yourself. On a successful check you stop the attack but you're still berserk.",
       "grants": [
-        { "type": "rule", "ruleText": "Sanity −15%." },
+        { "type": "derivedMod", "stat": "SAN", "amount": -15 },
         { "type": "rule", "ruleText": "Start of combat: a Sanity Check. Fail, and you're berserk for the encounter: attack any threat, −2 on defense, +2 to hit and +4 damage hand to hand, COOL TN +1. Break it with COOL (Target 9, Threshold 3) each turn; stop an attack on an ally with COOL (Target 9, Threshold 2)." }
       ]
     },
@@ -1842,7 +1850,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Everyone bleeds. Not everyone stops to watch.\n\nThe sight of blood is intoxicating. When you witness blood there is a wave of euphoria that is disorienting and suspends your sense of your surroundings briefly.\n\nSanity is reduced by 5%.\n\nThe first time blood is drawn during an encounter, roll a Sanity Check.\n\n- If successful: Blood Lust is negated until your next encounter\n\n- If the check fails: For the rest of the encounter, Combat Sense Checks fail automatically on a natural 2 or 3 on the die due to the distraction. Rolling a 1 is still a botch.",
       "grants": [
-        { "type": "rule", "ruleText": "Sanity −5%." },
+        { "type": "derivedMod", "stat": "SAN", "amount": -5 },
         { "type": "rule", "ruleText": "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one." },
         { "type": "failOn", "faces": [2, 3], "skills": ["combat-sense"], "whenText": "after you fail first blood's Sanity Check, for the encounter" }
       ]
@@ -1945,11 +1953,13 @@ window.SHADOWS_DATA = {
     {
       "id": "dwarf",
       "name": "Dwarf",
+      "excludes": ["giant"],
       "pointsGranted": 5,
       "maxRank": 1,
       "description": "You're incredibly short. This affects certain physical attributes and skills.\n\n- BOD Max: 8\n\n- MOB Max: 3\n\n- Height Max: 3'6''\n\n- Easily Hidden: +3 Bonus to Stealth when trying to hide.",
       "grants": [
-        { "type": "rule", "ruleText": "BOD max 8, MOB max 3." },
+        { "type": "statMax", "stat": "BOD", "max": 8 },
+        { "type": "statMax", "stat": "MOB", "max": 3 },
         { "type": "checkMod", "amount": 3, "skills": ["stealth"], "whenText": "when hiding" },
         { "type": "rule", "ruleText": "At most 3'6\" tall." }
       ]
@@ -1987,7 +1997,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Fanaticism is a powerful obsession. This describes a psychological rigidity that is nearly impossible to break and is rigorously defended. You decide what the character is fanatical about and discuss it with the GM. It could be a religious belief, an ideal, or personal code of your own making that shapes the way you live your life. Whoever challenges your fanatical beliefs will likely be met with hostility or possibly even violence and it doesn't matter if this person is a friend or loved one.\n\n- Once per encounter, you may make a Sanity Check to stop yourself from overreacting.\n\n- Sanity is reduced by 15%.\n\n- Target Number of all EMP Essence Checks are increased by 1.",
       "grants": [
-        { "type": "rule", "ruleText": "Sanity −15%." },
+        { "type": "derivedMod", "stat": "SAN", "amount": -15 },
         { "type": "rule", "ruleText": "EMP Essence Checks: TN +1. Once per encounter, a Sanity Check keeps you from lashing out at whoever challenges your belief." }
       ]
     },
@@ -2008,7 +2018,9 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "You’re bigger than the city plans for. Doors, crowds, firing lines: none of them were measured with you in mind.\n\n- BOD Max: 11\n\n- REF Max: 5\n\n- MOB Max: 8\n\n- Minimum Height: 6'10''\n\n- Easy Target: Opponents gain +1 Accuracy against you with any attack, even when you’re behind cover.\n\n- Heavy Weight: Incoming Melee and Martial Arts damage you receive is reduced by 4 and you gain +2 Automatic Hits for any BOD Essence Checks when grappling smaller opponents.",
       "grants": [
-        { "type": "rule", "ruleText": "BOD max 11, REF max 5, MOB max 8." },
+        { "type": "statMax", "stat": "BOD", "max": 11 },
+        { "type": "statMax", "stat": "REF", "max": 5 },
+        { "type": "statMax", "stat": "MOB", "max": 8 },
         { "type": "rule", "ruleText": "Melee and Martial Arts damage to you −4." },
         { "type": "rule", "ruleText": "Attackers get +1 Accuracy against you, even behind cover. +2 automatic hits on BOD Essence Checks grappling someone smaller. At least 6'10\"." }
       ]
@@ -2030,7 +2042,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Hallucinations are sporadic and unpredictable. Your Sanity is reduced by 25%. Failed Sanity Checks adds a hallucination as a condition you suffer. While hallucinating:\n\n- Awareness and combat sense checks fail automatically\n\n- Telling friend from foe requires an EMP Essence Check Target 10, Threshold 1. Fail, and everyone looks the same.\n\nHallucinations last 1d4 rounds. What you see might even be pleasant. That was never the dangerous part.",
       "grants": [
-        { "type": "rule", "ruleText": "Sanity −25%." },
+        { "type": "derivedMod", "stat": "SAN", "amount": -25 },
         { "type": "rule", "ruleText": "A failed Sanity Check brings a hallucination for 1d4 rounds: Awareness and Combat Sense checks fail, and telling friend from foe takes an EMP Essence Check (Target 10, Threshold 1)." }
       ]
     },
@@ -2059,7 +2071,7 @@ window.SHADOWS_DATA = {
       "maxRank": 5,
       "description": "Your grip on the world has cracks in it. Each Rank reduces your Sanity by 5% and expresses a trait you carry: paranoia, a bad temper, compulsive lying, sadistic streaks, impulsiveness. Choose your traits with your GM.\n\nYou may spend IP between sessions to buy out this Disadvantage.",
       "grants": [
-        { "type": "rule", "ruleText": "Sanity −5% per rank.", "heldText": "Sanity −{v}%.", "byRank": [5, 10, 15, 20, 25] },
+        { "type": "derivedMod", "stat": "SAN", "perRank": -5 },
         { "type": "rule", "ruleText": "A trait per rank (paranoia, a temper, lying…), chosen with your GM. IP buys it off between sessions." }
       ]
     },
@@ -2314,7 +2326,10 @@ window.SHADOWS_DATA = {
             "id": "arcane-fortitude",
             "name": "Arcane Fortitude",
             "description": "You're more tolerant of the cosmic forces that you manipulate on a daily basis.",
-            "benefit": "Gain +2 to TOL."
+            "benefit": "Gain +2 to TOL.",
+            "grants": [
+              { "type": "derivedMod", "stat": "TOL", "amount": 2 }
+            ]
           },
           {
             "id": "unshakable-mind",
@@ -3927,7 +3942,10 @@ window.SHADOWS_DATA = {
     "applyFromText": "Apply these from their text.",
     "ranksAdvanceInPlay": "Ranks rise with IP, on Progression.",
     "lockIssued": "NYTE City knows your name now. {tag}. Your copy is {file}.",
-    "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}."
+    "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}.",
+    "statMaxBy": "Max {max} ({by}).",
+    "statMaxOver": "{stat} is {value}, over {by}'s max of {max}.",
+    "statMaxLock": "{stat} is {value}, over {by}'s max of {max}. Lower it on the Stats step."
   },
   "ip": {
     /* 5 IP an hour of play, rounded up (CRB 0450): the Session Log's and GM mode's close-out (Decisions 206, 228). */

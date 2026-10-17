@@ -937,6 +937,7 @@ details.pick.trait>summary .cost{margin-left:auto}
 .effects .etag{font-size:.78rem; line-height:1.35; overflow-wrap:anywhere; min-width:0}
 .effects .etag.computed{font-family:var(--mono); font-size:.72rem; color:var(--green); border:1px solid var(--green); border-radius:4px; padding:1px 7px}
 .effects .etag.rule{color:var(--text)}
+.effects .etag.over{color:var(--magenta-text)}
 details.pick.trait>summary .effects{flex-basis:100%; margin-top:0}
 
 /* Character (Decisions 158, 168). Every count here follows the width the page

@@ -120,6 +120,8 @@ function stepper(val, dataAttr, downOk, upOk, name){
     <span class="val">${val}</span>
     <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="Raise ${n}">+</button></div>`;
 }
+// A stat a trait caps says so under its name, a price-like line Expert mode never folds (Decision 235).
+const capLine = t => t ? `<small class="next-cost stat-max">${esc(t)}</small>` : "";
 const statNameOf = id => (D.stats.find(s=>s.id===id)||{}).name || id;
 // The controls for one entry's picks. Rendered off Engine.picksFor,
 // which has already resolved how many slots exist and what may go in them, so
@@ -245,9 +247,10 @@ function renderStats(){
   </div>${note?`<p class="step-note">${esc(note)}</p>`:""}<div class="alloc">`;
   for (const s of D.stats){
     const v = ch.stats[s.id].base, m = Engine.statMod(Engine.statValue(ch,s.id));
-    const next = v<D.statRules.max ? Engine.nextStatCost(ch, s.id) : null;
+    const atCap = Engine.statAtCap(ch, s.id), capText = Engine.statMaxText(ch, s.id);
+    const next = atCap ? null : Engine.nextStatCost(ch, s.id);
     h += `<div class="alloc-row">
-      <div class="name">${esc(s.name)}${foldBtn("stat|"+s.id, s.name)} <small${foldAttr("stat|"+s.id)}>${esc(s.description)}</small>${next>1?`<small class="next-cost">The next point costs ${next}.</small>`:""}</div>
+      <div class="name">${esc(s.name)}${foldBtn("stat|"+s.id, s.name)} <small${foldAttr("stat|"+s.id)}>${esc(s.description)}</small>${next>1?`<small class="next-cost">The next point costs ${next}.</small>`:""}${capLine(capText)}</div>
       ${stepper(v, "stat|"+s.id, v>D.statRules.base, next!=null && next<=left && pool.total!=null, s.name)}
       <span class="mod ${m>0?"pos":m<0?"neg":""}">${modText(m)}</span>
     </div>`;
@@ -332,13 +335,13 @@ function renderArchetype(){
     h += `<div class="sect">Focus Stat Bonus</div>
       <div class="roll-entry"><span class="die">${esc(row.focusStatBonusRoll)}</span>
       <input type="text" inputmode="numeric" pattern="[0-9]*" data-archroll="focusStatBonus" value="${ac.rolls.focusStatBonus==null?"":ac.rolls.focusStatBonus}" aria-label="focus stat bonus roll">
-      <span class="pool">Allocate among ${esc(focus.join(" · "))} — these points can push a stat past ${D.statRules.max}.</span></div>`;
+      <span class="pool">Allocate among ${esc(focus.join(" · "))} — these points can push a stat past ${Engine.humanMax()}.</span></div>`;
     const total = ac.rolls.focusStatBonus||0;
     const used = Object.values(ac.focusAllocation).reduce((s,v)=>s+v,0);
     h += `<div class="alloc">` + focus.map(sid=>{
       const v = ac.focusAllocation[sid]||0;
-      return `<div class="alloc-row"><div class="name">${esc(sid)} <small>current ${Engine.statValue(ch,sid)}</small></div>
-        ${stepper(v,"focus|"+sid, v>0, used<total, statNameOf(sid))}<span class="mod"></span></div>`;
+      return `<div class="alloc-row"><div class="name">${esc(sid)} <small>current ${Engine.statValue(ch,sid)}</small>${capLine(Engine.statMaxText(ch,sid))}</div>
+        ${stepper(v,"focus|"+sid, v>0, used<total && !Engine.statAtCap(ch,sid,true), statNameOf(sid))}<span class="mod"></span></div>`;
     }).join("") + `</div>`;
   }
 
@@ -359,13 +362,13 @@ function renderArchetype(){
     h += `<div class="sect">Stat Bonus</div>
       <div class="roll-entry"><span class="die">${esc(row.statBonusRoll)}</span>
       <input type="text" inputmode="numeric" pattern="[0-9]*" data-archroll="statBonus" value="${ac.rolls.statBonus==null?"":ac.rolls.statBonus}" aria-label="stat bonus roll">
-      <span class="pool">Allocate to any Stats (cap ${D.statRules.max}).</span></div>`;
+      <span class="pool">Allocate to any Stats (cap ${Engine.humanMax()}).</span></div>`;
     const total = ac.rolls.statBonus||0;
     const used = Object.values(ac.statBonusAllocation).reduce((s,v)=>s+v,0);
     h += `<div class="alloc">` + D.stats.map(s=>{
       const v = ac.statBonusAllocation[s.id]||0;
-      return `<div class="alloc-row"><div class="name">${s.id} <small>current ${Engine.statValue(ch,s.id)}</small></div>
-        ${stepper(v,"wwbonus|"+s.id, v>0, used<total && Engine.statValue(ch,s.id)<D.statRules.max, s.name)}<span class="mod"></span></div>`;
+      return `<div class="alloc-row"><div class="name">${s.id} <small>current ${Engine.statValue(ch,s.id)}</small>${capLine(Engine.statMaxText(ch,s.id))}</div>
+        ${stepper(v,"wwbonus|"+s.id, v>0, used<total && Engine.statValue(ch,s.id)<Engine.statMax(ch,s.id).max, s.name)}<span class="mod"></span></div>`;
     }).join("") + `</div>`;
   }
 
@@ -708,6 +711,15 @@ function renderCP(){
   return top + jumpBarHtml(secs.list, { sticky:true, filter:{ value:S.cpFilter, placeholder:"Filter Advantages and Disadvantages" }, extra:left }) + h;
 }
 
+// "Starting Ç: 12,000 + 10,000 Wealthy = 22,000": the roll times the multiplier, and what a trait adds at the start.
+function startingCreditsLine(ch){
+  const sc=Engine.startingCredits(ch);
+  if (sc.total==null) return `Starting ${CR} <b>—</b>`;
+  const n=v=>v.toLocaleString("en-US");
+  if (!sc.bonus.length) return `Starting ${CR} <b>${sc.total}</b>`;
+  return `Starting ${CR} <b>${n(sc.roll*sc.multiplier)}</b>${sc.bonus.map(b=>` + <b>${n(b.amount)}</b> ${esc(b.name)}`).join("")} = <b>${n(sc.total)}</b>`;
+}
+
 function renderReview(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const der=Engine.derived(ch), hp=Engine.health(ch), t=Engine.statTable(ch);
@@ -715,7 +727,7 @@ function renderReview(){
   const blocked = issues.some(i=>i.level==="error");
   let h = `<div class="roll-entry"><span class="die">Çredits: ${esc(pl.startingCredits.roll)} × ${pl.startingCredits.multiplier}</span>
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
-    <span class="pool">Starting ${CR} <b>${ch.creation.rolls.credits==null?"—":ch.creation.rolls.credits*pl.startingCredits.multiplier}</b></span></div>`;
+    <span class="pool">${startingCreditsLine(ch)}</span></div>`;
   h += `<div class="review-block"><h2>${esc(charName(ch, "Unnamed"))}</h2>${intakeHtml(ch)}<div class="kv">
     <span class="k">Archetype</span><span class="v">${a?esc(Engine.archetypeContent(ch).name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
     <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
@@ -1023,7 +1035,7 @@ function bindMain(){
     // nothing else is replaced, so nothing is asked. It saves before it
     // exports, so the file holds what's stored and Home shows no marker.
     ch.creation.locked=true;
-    S.ch=Engine.migrate(Engine.buildExport(ch));
+    S.ch=Engine.migrate(Engine.buildExport(ch, { lock:true }));
     S.screen="sheet"; S.section="main"; S.issued=true;
     window.scrollTo(0,0); update();
     // W46 (Decision 163): the export stays in this click, so the download
@@ -1119,7 +1131,7 @@ function applyStep(key, delta){
   const ch=S.ch, [kind,...rest]=key.split("|"), id=rest.join("|");
   if (kind==="stat"){
     const v=ch.stats[id].base+delta;
-    if (v<D.statRules.base || v>D.statRules.max) return;
+    if (v<D.statRules.base || (delta>0 && Engine.statAtCap(ch,id))) return;
     ch.stats[id].base=v;
   }
   if (kind==="skill"){
@@ -1135,7 +1147,7 @@ function applyStep(key, delta){
   }
   if (kind==="focus"){
     const cur=ch.archetypeChoices.focusAllocation[id]||0, v=cur+delta;
-    if (v<0) return; ch.archetypeChoices.focusAllocation[id]=v;
+    if (v<0 || (delta>0 && Engine.statAtCap(ch,id,true))) return; ch.archetypeChoices.focusAllocation[id]=v;
     if (v===0) delete ch.archetypeChoices.focusAllocation[id];
   }
   if (kind==="wwbonus"){

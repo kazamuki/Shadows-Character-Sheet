@@ -203,6 +203,113 @@ const Engine = (() => {
     return out;
   }
 
+  // ── A trait's numbers on a build (Decision 235) ───────────────────────────
+  // `derivedMod` (a cut or bonus to a derived stat), `statMax` (a cap on a Basic Stat) and `startingCredits` are
+  // computed `grants` rows. They are read from the five sources naturalArmor() scans (held Advantages and
+  // Disadvantages, taken Majors, the chosen specialization's options, held archetype powers), not grants()'s three:
+  // Arcane Fortitude is a specialization option. One entry per trait however many rows hold it, with the ranks
+  // summed, so an amount counts once and a `perRank` counts its rank. Total: a row the data or a file got wrong is
+  // skipped; a source that can't be read for a half-made character reads as none.
+  function traitGrants(ch, type){
+    const out = [];
+    if (!isPlainObj(ch)) return out;
+    const add = (def, rank) => {
+      if (!isPlainObj(def) || !Array.isArray(def.grants) || !(rank >= 1)) return;
+      for (const g of def.grants) if (isPlainObj(g) && g.type===type) out.push({ g, name: txt(def.name), rank: Math.floor(rank) });
+    };
+    const safe = fn => { try { fn(); } catch (e) { /* a character migrate() didn't make has no archetype to read */ } };
+    for (const [kind, list, lookup] of [["advantage", ch.advantages, advById], ["disadvantage", ch.disadvantages, disById]]){
+      if (!Array.isArray(list)) continue;
+      const seen = new Set();
+      for (const row of list){
+        if (!isPlainObj(row) || typeof row.id!=="string" || seen.has(row.id)) continue;
+        seen.add(row.id);
+        safe(() => add(lookup(row.id), heldRank(ch, kind, row.id)));
+      }
+    }
+    safe(() => [...new Set(majorTakenIds(ch))].forEach(id=>add(majorById(ch, id), 1)));
+    safe(() => specializationChosen(ch).forEach(o=>add(o, 1)));
+    safe(() => archetypePowers(ch).forEach(p=>add(p, Number(p.rank))));
+    return out;
+  }
+  const goodNum = n => typeof n==="number" && Number.isFinite(n);
+
+  // What moves a derived stat, by name, in data order: [{ name, amount }]. `amount` is a flat number and `perRank`
+  // is times the rank held. A derived stat the data lacks, or a row that isn't a number, is skipped.
+  function derivedParts(ch, id){
+    if (typeof id!=="string" || !(D().derived||[]).some(d=>d.id===id)) return [];
+    const out = [];
+    for (const { g, name, rank } of traitGrants(ch, "derivedMod")){
+      if (g.stat!==id) continue;
+      const n = goodNum(g.amount) ? g.amount : goodNum(g.perRank) ? g.perRank * rank : null;
+      if (n!=null && n!==0) out.push({ name, amount:n });
+    }
+    return out;
+  }
+
+  // The one cap on a Basic Stat. At creation it is the lowest cap a held trait sets (Age's BOD 5 over Giant's 11,
+  // PQ4), else statRules.max. Once the character is locked a lower cap is gone and only a lift above statRules.max
+  // stays (Giant's BOD 11), so IP, Honed, gear and Admin pass a Dwarf's MOB 3 in play. `by` names the trait, or null
+  // when nothing but the human maximum is in the way.
+  function statMax(ch, id){
+    const base = D().statRules.max, none = { max:base, by:null };
+    if (typeof id!=="string" || !D().stats.some(s=>s.id===id)) return none;
+    const rows = traitGrants(ch, "statMax").filter(r=>r.g.stat===id && Number.isInteger(r.g.max) && r.g.max>=1);
+    if (!rows.length) return none;
+    if (!(ch.creation && ch.creation.locked===true)){
+      const low = rows.reduce((a, b)=>b.g.max < a.g.max ? b : a);
+      return { max:low.g.max, by:low.name };
+    }
+    const lift = rows.filter(r=>r.g.max > base).reduce((a, b)=>!a || b.g.max > a.g.max ? b : a, null);
+    return lift ? { max:lift.g.max, by:lift.name } : none;
+  }
+  // Whether the next point on a stat has nowhere to go. Under the human maximum it reads the base, as the Stats step
+  // always did (a Focus point can carry the stat past 10, wizard.js); under a trait's cap the whole value counts
+  // (PQ3: Focus points stop there).
+  // `pastHuman` is a Focus point's question (PQ3): it can carry a stat past the human maximum, so only a trait's cap stops it.
+  function statAtCap(ch, id, pastHuman){
+    const m = statMax(ch, id);
+    return m.by ? statValue(ch, id) >= m.max : !pastHuman && ch.stats[id].base >= m.max;
+  }
+  // What a stat tops out at with no trait in the way, for the Stats step's words about Focus and bonus points.
+  const humanMax = () => statMax(null, (D().stats[0]||{}).id).max;
+  // Basic Stats past the cap a trait set. Only creation has one to be past (Ken, PQ2); the engine reports it and
+  // never lowers the stat or refunds a point (PQ5).
+  function statOverCaps(ch){
+    const out = [];
+    if (!isPlainObj(ch) || !isPlainObj(ch.stats) || (ch.creation && ch.creation.locked===true)) return out;
+    for (const s of D().stats){
+      const m = statMax(ch, s.id);
+      if (!m.by || !isPlainObj(ch.stats[s.id])) continue;
+      const value = statValue(ch, s.id);
+      if (value > m.max) out.push({ stat:s.id, value, max:m.max, by:m.by });
+    }
+    return out;
+  }
+  const copyOf = (key, fallback, vars) => fillTag(((D().appCopy)||{})[key], vars) || fillTag(fallback, vars) || "";
+  const OVER_CAP = "{stat} is {value}, over {by}'s max of {max}.";
+  // "Max 3 (Dwarf)." for a stat a trait caps (the Stats step's line and canBoost's refusal), or "" when only the human maximum is in the way.
+  function statMaxText(ch, id){
+    const m = statMax(ch, id);
+    return m.by ? copyOf("statMaxBy", "Max {max} ({by}).", m) : "";
+  }
+  // The CP card's line for a trait whose cap a stat is already past, or "".
+  function statOverCap(ch, traitId){
+    const def = advById(traitId) || disById(traitId), name = def ? txt(def.name) : "";
+    const hit = name && statOverCaps(ch).find(o=>o.by===name);
+    return hit ? copyOf("statMaxOver", OVER_CAP, hit) : "";
+  }
+
+  // Starting Çredits: the roll times the level's multiplier, plus what a held trait adds at the start. Each trait
+  // counts once however many ranks it has (Wealthy's rank pays its Ç2,000 a month, never the Ç10,000 again).
+  function startingCredits(ch){
+    const made = isPlainObj(ch) && isPlainObj(ch.creation), pl = made ? powerLevel(ch) : null, sc = pl && pl.startingCredits;
+    const raw = made && isPlainObj(ch.creation.rolls) ? ch.creation.rolls.credits : null;
+    const roll = goodNum(raw) ? raw : null, multiplier = sc && goodNum(sc.multiplier) ? sc.multiplier : null;
+    const bonus = traitGrants(ch, "startingCredits").filter(r=>goodNum(r.g.amount) && r.g.amount!==0).map(r=>({ name:r.name, amount:r.g.amount }));
+    return { roll, multiplier, bonus, total: roll==null || multiplier==null ? null : roll * multiplier + bonus.reduce((s, b)=>s + b.amount, 0) };
+  }
+
   // ── Effect tags (Decision 231) ────────────────────────────────────────────
   // What an Advantage or Disadvantage does, as short lines, read off its
   // `grants`. A computed row (one grants() applies) is written from the row's
@@ -342,6 +449,17 @@ const Engine = (() => {
       }
       // Only the "once you're hurt" kind is computed (Decision 213).
       else if (g.type==="painLevel" && g.onlyIfHurt===true) vars = { amount: g.amount };
+      // Decision 235: a cut or bonus to a derived stat, a cap on a Basic Stat, Çredits at the start. A held card
+      // states the total for its rank (a flat amount is its own total).
+      else if (g.type==="derivedMod" && (D().derived||[]).some(d=>d.id===g.stat) && (goodNum(g.amount) || goodNum(g.perRank))){
+        const flat = goodNum(g.amount), n = flat ? g.amount : g.perRank;
+        if (n!==0){
+          if (h && rank>=1) text = fillTag(TH.derivedMod, { stat: g.stat, total: signedMinus(flat ? n : n * rank) });
+          if (!text) text = fillTag(flat ? T.derivedMod : T.derivedModPerRank, { stat: g.stat, amount: signedMinus(n) });
+        }
+      }
+      else if (g.type==="statMax" && D().stats.some(s=>s.id===g.stat) && Number.isInteger(g.max) && g.max>=1) vars = { stat: g.stat, max: g.max };
+      else if (g.type==="startingCredits" && goodNum(g.amount) && g.amount!==0) vars = { amount: String(Math.abs(g.amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ",") };
       if (!text) text = vars && fillTag(T[g.type], vars);
       if (text) out.push({ computed:true, text });
     }
@@ -609,6 +727,14 @@ const Engine = (() => {
     // Structured archetype scaling: Arcanist TOL bonus applies on top
     const row = scalingRow(ch);
     if (row && typeof row.tolBonus === "number") out.TOL += row.tolBonus;
+    // A held trait's cut or bonus (Decision 235) comes after the stat's own floor and cap, and before the manual
+    // adjustments, which still read last. `modFloor` is the lowest a stat can be cut to (max SAN is never 0).
+    for (const d of D().derived){
+      const parts = typeof out[d.id]==="number" ? derivedParts(ch, d.id) : [];
+      if (!parts.length) continue;
+      const v = out[d.id] + parts.reduce((n, p)=>n + p.amount, 0);
+      out[d.id] = typeof d.modFloor==="number" ? Math.max(d.modFloor, v) : v;
+    }
     // Manual adjustments (flat, post-compute)
     out.TOL += adjFor(ch,"TOL"); out.WILL += adjFor(ch,"WILL"); out.SAN += adjFor(ch,"SAN");
     // Aberrations the character has (Decision 110) move a derived stat after
@@ -778,8 +904,11 @@ const Engine = (() => {
     const times = isLuck ? nonNegInt(ch.trackers.luck.bonus) : boostsFor(ch, type, id);
     if (times >= pl.maxBoost)
       return {ok:false, why:`Max Character Point Boost reached: ${pl.maxBoost} each at ${pl.name}.`};
-    if (type==="stat" && statValue(ch,id) >= D().statRules.max)
-      return {ok:false, why:`Stat cap ${D().statRules.max}.`};
+    if (type==="stat"){
+      const cap = statMax(ch, id);
+      if (statValue(ch,id) >= cap.max)
+        return {ok:false, why: statMaxText(ch, id) || `Stat cap ${cap.max}.`};
+    }
     if (type==="skill"){
       const rank = (ch.skills[id] ? ch.skills[id].rank : 0) + times;
       const cap = skillRankCap(ch, id);
@@ -2329,7 +2458,8 @@ const Engine = (() => {
       if (D().ip.cannotRaiseDirectly.includes(targetId))
         return {ok:false, why:`${targetId} cannot be raised directly with IP.`};
       const cur = statValue(ch, targetId);
-      if (cur >= D().statRules.max) return {ok:false, why:`Stat cap ${D().statRules.max}.`};
+      const cap = statMax(ch, targetId).max;
+      if (cur >= cap) return {ok:false, why:`Stat cap ${cap}.`};
       return {ok:true, cost: cur * D().ip.statIncreaseCost.perPoint, from:cur, to:cur+1};
     }
     // Decision 108: Mastering a Known book spell, 30 IP × its printed TH.
@@ -2744,9 +2874,10 @@ const Engine = (() => {
       }
       if (out.options.filter(o=>!o.off).length < out.count) out.none = `Fewer than ${out.count} Skills can go up.`;
     } else if (spec.type==="statPoint"){
-      const max = D().statRules.max;
-      for (const t of honedTargets(ch))
+      for (const t of honedTargets(ch)){
+        const max = t.basic ? statMax(ch, t.id).max : null;
         out.options.push({ id:t.id, name:t.name, sub:t.id, move:`${t.value} → ${t.value+1}`, value:t.value, off: t.basic && t.value >= max ? `Stat cap ${max}.` : "" });
+      }
     } else if (spec.type==="disadvantageRank"){
       const max = Number(spec.maxPoints), seen = new Set();
       for (const row of ch.disadvantages||[]){
@@ -4831,12 +4962,11 @@ const Engine = (() => {
   // buy something, so a player whose last point fits nowhere (a stat's next
   // point costs 2, every skill at its cap) is never stuck.
   function spendable(ch, pool){
-    const max = D().statRules.max;
     if (pool==="stats"){
       const p = statPool(ch);
       if (!p || p.total==null) return false;
       const left = p.total - statSpent(ch);
-      return D().stats.some(s => ch.stats[s.id].base < max && nextStatCost(ch, s.id) <= left);
+      return D().stats.some(s => !statAtCap(ch, s.id) && nextStatCost(ch, s.id) <= left);
     }
     if (pool==="skills") return D().skills.some(s => {
       const cap = skillRankCap(ch, s.id);
@@ -4847,7 +4977,7 @@ const Engine = (() => {
       const st = basePowerState(ch);
       return !!st && st.left > 0 && st.rows.some(r=>r.cap==null || r.placed < r.cap);
     }
-    if (pool==="statBonus") return D().stats.some(s => statValue(ch, s.id) < max);
+    if (pool==="statBonus") return D().stats.some(s => statValue(ch, s.id) < statMax(ch, s.id).max);
     if (pool==="cp"){
       // LUCK asks canBoost, so a capped LUCK is not CP left to spend (218).
       // A power rank (Decision 215) and a Discipline's rank (135) are sinks of
@@ -4898,6 +5028,8 @@ const Engine = (() => {
     if (stepId==="power-level"){ if (!pl) E("Choose a Campaign Power Level."); }
     if (stepId==="concept"){ if (!String((ch.identity||{}).name||"").trim()) E("Your character needs a name."); }
     if (stepId==="stats"){
+      // Decision 235: a stat past a trait's cap refuses the lock and names where to fix it. The engine never lowers one.
+      for (const o of statOverCaps(ch)) E(copyOf("statMaxLock", "{stat} is {value}, over {by}'s max of {max}. Lower it on the Stats step.", o));
       // B7: the pools are null until a power level is chosen. validate() must
       // report that, never throw — a corrupt import or an admin edit gets here
       // even though the wizard gates it.
@@ -5114,15 +5246,19 @@ const Engine = (() => {
     return out;
   }
 
-  function buildExport(ch){
+  // Decision 235: starting Çredits are seeded at the lock (`opts.lock`, the lock click) or while the character is still
+  // being made, and never again once locked. A Wealthy bought in play pays nothing; the ledger is how a locked
+  // character's Çredits move, so an empty one with a locked sheet holds what the lock seeded.
+  function buildExport(ch, opts){
     const c = JSON.parse(JSON.stringify(ch));
     c.meta.updated = new Date().toISOString();
     c.meta.gamedataVersion = D().meta.gamedataVersion;
     const pl = powerLevel(ch);
     // Seed starting Çredits from the creation roll — but never overwrite a
     // tracked total once play transactions exist.
-    if (pl && c.creation.rolls.credits!=null && (c.trackers.credits.ledger||[]).length===0)
-      c.trackers.credits.current = c.creation.rolls.credits * pl.startingCredits.multiplier;
+    const seeding = !(ch.creation && ch.creation.locked===true) || !!(opts && opts.lock===true), total = startingCredits(ch).total;
+    if (pl && seeding && total!=null && (c.trackers.credits.ledger||[]).length===0)
+      c.trackers.credits.current = total;
     return c;
   }
 
@@ -7594,6 +7730,7 @@ const Engine = (() => {
     conditionById, locationById, damageTypeById, damageCategoryById, aberrationById, spellById,
     // The character file: create, load, check, export
     newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
+    statMax, statMaxText, statAtCap, humanMax, statOverCaps, statOverCap, derivedParts, startingCredits,
     // Stats, skills and derived values
     powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
