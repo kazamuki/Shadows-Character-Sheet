@@ -4907,7 +4907,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a trait's cap binding in play (Ken); cutting SAN before the cap of 95, or flooring it at 10 after a cut (either makes a cut vanish); Focus points ignoring a trait's cap; the highest of two caps winning; refusing a trait whose cap you're past; Wealthy's Ç10,000 when bought in play; waiting on W130 for Age's MOB 6.
      - **Replaces:** Decision 231 in part (ten entries' effects become computed rows). Extends 77 (the first real `excludes` pair) and 135 (`modFloor` is read by code).
      - **Revisit if:** Deighton drops Age's MOB cap (W130); a GM needs a cap to hold in play; Wealthy's monthly pay becomes a Milestone payday (W129).
-     - **Built:** app 0.50.0, game data 0.42, no schema bump, PR #…. Log 2026-10-17 (P20a).
+     - **Built:** app 0.50.0, game data 0.42, no schema bump, PR #216. Log 2026-10-17 (P20a).
 
 ## 5. Open Flags
 
