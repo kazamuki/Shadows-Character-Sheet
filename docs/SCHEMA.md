@@ -4831,7 +4831,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a free-text `mechanicsText` per entry (a second copy of every rule); a hand-written tag on a computed row (the same drift); splitting `description` at its first paragraph (flavor in some entries, rules in others); computing the 19 here (rules questions); tags on the CP step only; truncating a long rule (a cut-off rule is a wrong rule); print (the front page is full, 96).
      - **Replaces:** nothing. Extends 199 (Majors' `grants` share the reader, which skips `rule`) and 213 (Pain Sensitive gains a tag). Eleven `description`s move with Deighton's rulings of 2026-10-16.
      - **Revisit if:** a table rule becomes computable (P19 or P20 moves it to a computed type); the CRB rewrites an entry (its rule rows are rewritten with it).
-     - **Built:** app 0.48.0, no data or schema bump, PR #PRNUM. Log 2026-10-16 (P18).
+     - **Built:** app 0.48.0, no data or schema bump, PR #207. Log 2026-10-16 (P18).
 
 ## 5. Open Flags
 
