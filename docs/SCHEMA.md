@@ -4849,11 +4849,11 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** app 0.48.0 (unreleased), no data or schema bump, PR #209 Log 2026-10-17 (P13).
 
 233. **A trait that changes a Skill's check shows on its row: a number in the check, a kicker beside it, a Take X as its total, and a die-face rule as a mark.**
-     *2026-10-17 · Ken + Deighton + Claude · Touches: skillLine, checkBonus, traitParts, kickers, takeX, marks, attackNotes, grants checkMod, kicker, takeX, failOn, explodeOn, visibility, effectTags, skillRowText, visibility table, Skills tab, Main's Combat table, attacks, maneuver check, print, Night Vision*
-     - **Decided:** `checkMod`, `kicker`, `takeX`, `failOn`, `explodeOn` and `visibility` are computed `grants` types; a row names its Skills (`skills`) or a pick (`skillsFromPick`, cut to the rank). An unconditional `checkMod` is in `skillLine().checkBonus`, so the row, attacks, a maneuver's check and print follow. A row with `whenText` is a mark, never a number. A kicker shows beside the number, never in it. Take X shows as X + the whole check, Pain and Conditions included, to choose before rolling (Deighton). Night Vision names the light levels `0530` sets (`visibility`).
+     *2026-10-17 · Ken + Deighton + Claude · Touches: skillLine, checkBonus, traitParts, attackNotes, grants checkMod, kicker, takeX, failOn, explodeOn, visibility, effectTags, skillRowText, Skills tab, Main's Combat table, attacks, maneuver check, print, Ghost Step, Defect/Flaw, Dwarf, Field Medic, Hyper Vigilance, Common Sense, Lightning Calculator, Machindo, Sense of Direction, Aura Sight, Distractable, Social Stigma, Gullible, Blood Lust, Refined Skill, Night Vision*
+     - **Decided:** `checkMod`, `kicker`, `takeX`, `failOn`, `explodeOn` and `visibility` are computed `grants` types; a row names its Skills (`skills`) or a pick (`skillsFromPick`, cut to the rank). An unconditional `checkMod` is in `skillLine().checkBonus`, so every reader of the check follows. A row with `whenText` is a mark, never a number. A kicker shows beside the number, never in it. Take X shows as X + the whole check, Pain and Conditions included, to choose before rolling (Deighton). Night Vision names the light levels `0530` sets (`visibility`).
      - **Why:** The effects sign-off, unanimous: "put them all on the Skill rows". A number the sheet shows and doesn't apply is the drift 231 exists to end, and Take X is only useful as the number you'd get.
      - **Rejected:** a conditional bonus in the total (wrong on every other roll); the −2 on the Skills tab only (the attack row would disagree); a bare "Take 6" (the player does the sum); marks on the printed page (the front page is full, 96); marks for Hallucinations and Favored Skill's re-roll (not a die face or a number).
-     - **Replaces:** Decision 231 in part (these 16 entries' effects are computed rows with their own tag templates). Extends 96 (a trait's number joins Pain and Conditions in the check) and 229 (a maneuver's check includes it).
+     - **Replaces:** Decision 231 in part (16 entries' effects become computed rows). Extends 96 (a trait joins the check) and 229 (a maneuver's check includes it).
      - **Revisit if:** a Skill can hold two kickers (Ken's stacking question, unanswered) or a kicker and a Take X (a test fails on it); the book gives Awareness a light penalty.
      - **Built:** app 0.49.0, game data 0.41, no schema bump, PR #213. Log 2026-10-17 (P19).
 
@@ -4863,7 +4863,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Why:** Ken: a button that appears only once it can affect something reads as the header changing under you, and the Stats step's descriptions were the last long text left open in Expert mode.
      - **Rejected:** P13's PQ4 answer, the toggle only on the steps it changes (the coming and going confused Ken); a toggle that's present but disabled elsewhere (it looks broken, and the setting is still worth changing ahead of the step).
      - **Replaces:** Decision 232 in part (Expert mode folds four creation steps, not three). It also reverses P13's PQ4 answer (the toggle only where it changes something), which 232 didn't record.
-     - **Revisit if:** players press it on Concept or History and expect something to change, or Expert mode reaches a fourth step.
+     - **Revisit if:** players press it on Concept or History and expect something to change, or Expert mode reaches a fifth step.
      - **Built:** app 0.49.0, with P19, PR #213. Log 2026-10-17 (P19).
 
 ## 5. Open Flags
