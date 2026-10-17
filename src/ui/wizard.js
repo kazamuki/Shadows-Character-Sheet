@@ -535,7 +535,8 @@ function renderSkills(){
   // P13: the CP step's sticky bar comes here: Remaining in view, a filter, and a jump to each group.
   const bar = jumpBarHtml(secs.list, { sticky:true, filter:{ value:S.skillFilter, placeholder:"Filter skills" },
     extra:`<span class="jump-cp ${left<0?"over":""}">Remaining <b>${left}</b> Skill Points</span>` });
-  return h.replace("@@BAR@@BAR", bar);
+  // A function, so a "$&" or "$'" typed in the filter is text, not a replacement pattern.
+  return h.replace("@@BAR@@BAR", ()=>bar);
 }
 
 function renderCP(){

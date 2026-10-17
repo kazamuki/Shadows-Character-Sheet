@@ -1269,6 +1269,13 @@ test("P13 9: the Skills step's bar keeps Remaining in view and finds a skill by 
   assert.deepEqual(names(), ["Handguns"]);
   const g = app.$("#main [data-jumpfilter]"); g.value = ""; g.dispatchEvent(new app.window.Event("input"));
   assert.equal(names().length, D.skills.length);
+  // The bar is spliced into the page, so a "$" pattern typed in the filter must stay text across a re-render.
+  for (const q of ["$'", "$&", "$`"]) {
+    const h = app.$("#main [data-jumpfilter]"); h.value = q; h.dispatchEvent(new app.window.Event("input"));
+    app.click('[data-step="skill|handguns|1"]');
+    assert.equal(app.$$("#main .alloc-row").length, D.skills.length, `the filter "${q}" duplicated the skills`);
+    assert.equal(app.$("#main [data-jumpfilter]").value, q);
+  }
   assert.deepEqual(app.errors, []);
 });
 
