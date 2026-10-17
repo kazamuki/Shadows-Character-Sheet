@@ -860,6 +860,20 @@ every Minor or Major Milestone for everyone ("UBI or your wealthy advantage or s
 *To respect:* a rules change to the book's monthly income (Deighton's, then 0430's text); `addCredits`; W124 pays Poverty's debt down on the same beat.
 Wealthy's starting Ç10,000 is P20's (unanimous: once).
 
+**W131 — Expert mode as one long page.** *Ken, after P13 · 💡 · Rule or shape · raised 2026-10-17*
+An experienced player who knows what they want could make a character on one scrolling page: every creation step in order, folded as Expert mode folds
+them, with one sticky bar that jumps between steps and filters, instead of eight screens and seven Continues. P13 and P19 make it plausible: Expert mode
+cuts the Character Points step by about half (34,903 → 16,902px at 375px), and Skills and CP already have a filter and jumps.
+**Claude's read (2026-10-17): worth doing, but two costs decide it.** (1) **Re-rendering.** Every stepper press redraws `#main`, and the CP step alone is
+about 200KB of HTML. One page means the whole wizard on every press, so it needs per-section redraws first; measure a press on a phone-class CPU before
+designing. (2) **One sticky bar, not three:** the Skills bar, the CP bar and the rail's points left would otherwise stack. Also: `validate()` speaks per
+step, so the page needs each step's errors beside its section and Review's lock gate at the end; and a choice that changes what a later step offers
+(Power Level, archetype, specialization) must reflow the sections below without losing the reader's place (`anchorKept`). **A cheaper first cut** may cover
+most of the want: once Power Level and Archetype are chosen, every step is reachable from the rail in any order, with Expert mode on. Ask Ken which pain
+it is, the clicking or not seeing the whole build at once, before writing the order.
+*To respect:* Decision 232 and P19's N+1 (Expert mode is the browser's, never the character's); Decision 161 (the phone rail); Decision 162 (lock waits
+until every point that can buy something is spent); Decision 164 (a press keeps the keyboard's place).
+
 **W130 — Deighton's notes on the Advantages and Disadvantages.** *Deighton, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*
 Signing off P18's effects, Deighton left proposals on entries that work poorly as written: Favored Skill (take the higher result), Nine Lives (spend a life to
 pass a Death Save), Snatch (deflect, not catch, a bullet), True Faith (12 rounds is too long), Unshakeable (Surprise only grants +1), Medium (needs a

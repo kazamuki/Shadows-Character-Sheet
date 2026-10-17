@@ -8,9 +8,9 @@
 - **Take X, as an exact total, chosen first:** "Take 6: 13". Deighton: "they need to choose FIRST". The holders are Common Sense, Lightning Calculator, Machindo, Sense of Direction and Aura Sight; a conditional one carries its "when";
 - **the die faces:** fails on a natural 2 or 3 (Distractable, Social Stigma, Gullible, Blood Lust) and explodes on a natural 9 or 10 (Refined Skill), each marked on the Skills it touches, a conditional one with its "when";
 - **Night Vision:** the light levels it cancels, named from the book (Bright, Dim −1, Dark −3, Blind −5, `0530`).
-- **A rider, not about Skills: the Expert mode toggle shows on every step of character creation** (Ken, 2026-10-17). Today it appears only on the three steps it folds, and Ken found the coming and going confusing. It rides here because it's tomorrow's session, not because it touches P19's Skills (§1.8, PQ9, Decision **N+1**).
+- **A rider, not about Skills: Expert mode reaches the Stats step, and its toggle shows on every step of character creation** (Ken, 2026-10-17). Today the toggle appears only on the three steps it folds, and Ken found the coming and going confusing. Testing, he also found the Stats step's eight descriptions still open in Expert mode. It rides here because it's tomorrow's session, not because it touches P19's Skills (§1.8, PQ9, Decision **N+1**).
 
-**Status:** **drafted 2026-10-16 by Claude (Opus)**, P13's reviewer. Pre-flighted against `main` at `1803b4d` (#211 merged; live site v0.48.0; app 0.48.1 unreleased). **Questions PQ1–PQ8 below are open.** None blocks the shape; each has a default.
+**Status:** **drafted 2026-10-16 by Claude (Opus)**, P13's reviewer. Pre-flighted against `main` at `1803b4d` (#211 merged; live site v0.48.0; app 0.48.1 unreleased). **Ken answered PQ1–PQ8 on 2026-10-17: the defaults.** PQ9 came with the rider after he'd read the list, and stands on its default until he says otherwise.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -51,7 +51,10 @@ When P19 is merged:
 5. **Night Vision names what it cancels.** Awareness: "no Dim or Dark penalty on visual checks". Main's attacks: "Dim −1 and Dark −3 don't apply to your attacks". The numbers come from a new `visibility` table, `0530`'s.
 6. **The CP step and the Character tab follow.** These rows are computed now, so their tags are chips written from the numbers (Decision 231's mechanism, with 232's held reading). Defect/Flaw held on Handguns reads "−2 on checks with Handguns".
 7. **Nothing else moves.** An entry P19 doesn't name reads exactly as today. A character holding none of them computes byte for byte what it does on `main`.
-8. **The Expert mode toggle is always in the wizard's header** (the rider). It's beside Home on all eight steps, Review included, pressed per `shadows.ui.expert`, and still absent on Home, the sheet and GM mode. Its tooltip says what it folds and where: "Folds the reading on the Archetype, Skills and Character Points steps. Tap ? to read one." (PQ9). On a step it doesn't fold, a press changes the setting and the button's pressed state, and nothing else moves. The first-sight hint (`expertHintHtml`) still shows only on the three steps it describes.
+8. **Expert mode folds the Stats step, and its toggle is always in the wizard's header** (the rider).
+   - **Stats:** each stat's description folds behind a **?**, as a skill's does (P13). The name, the stepper, the modifier and the "The next point costs N" line stay, and so do the pool and the buy rule above them.
+   - **The toggle** is beside Home on all eight steps, Review included, pressed per `shadows.ui.expert`, and still absent on Home, the sheet and GM mode. Its tooltip says what it folds and where: "Folds the reading on the Stats, Archetype, Skills and Character Points steps. Tap ? to read one." (PQ9). On a step it doesn't fold (Power Level, Concept, History, Review), a press changes the setting and the button's pressed state, and nothing else moves.
+   - **The first-sight hint** (`expertHintHtml`) shows on the four steps it describes and nowhere else.
 
 ## 2. Tier, versions, numbers
 
@@ -60,7 +63,7 @@ When P19 is merged:
 - **App: minor**, `npm run bump -- 0.49.0` (0.48.1 is unreleased; the bump moves its heading and keeps the Stats line under it). If 0.48.1 has been released by then, it's still `0.49.0`.
 - **Character schema: no bump.** Nothing new is saved. Picks are already stored.
 - **No flag.** Ken's kicker-stacking question is unanswered and unreachable with today's data (PQ6).
-- **The rider is its own decision, N+1.** It reverses P13's PQ4 answer ("shown on the steps it changes"). Decision 232 doesn't record where the toggle shows, so nothing is superseded, but it's a player-facing choice Ken made the other way once, so it's numbered (`CLAUDE.md`, *Decisions*). It adds no version of its own: it ships in 0.49.0.
+- **The rider is its own decision, N+1, superseding 232 in part.** 232 says Expert mode folds "on the three creation steps"; Stats makes four. Where the toggle shows was P13's PQ4 answer, not 232's text, and N+1 reverses that answer too. It adds no version of its own: it ships in 0.49.0.
 
 ## 3. Questions for Ken
 
@@ -74,7 +77,7 @@ When P19 is merged:
 | PQ6 | **Two kickers on one Skill** (Ken: "Does kicker dice stack? if they do, does it move to the next die size up?"). Nobody answered, and no Skill can hold two today. | **Show each** ("+ 1d4 + 1d4"), as each entry says, with no flag, since nothing reaches it. The decision's *Revisit if* names it. *Alternative:* open an F-number now. |
 | PQ7 | **Hallucinations** ("Awareness and Combat Sense checks fail" while hallucinating) and **Favored Skill's re-roll**: marks too? | **No: they stay rule rows.** A Skill that always fails while a state lasts, and a once-per-encounter re-roll, aren't a face of the die or a number. *Alternative:* marks with their "when". |
 | PQ8 | **Several Take X on one Skill** (Basic Tech: Common Sense, Lightning Calculator, Machindo). | **Each shows**, the unconditional one first, each with its source. They all read "Take 6: N", but their whens differ. *Alternative:* one "Take 6: N" with every source named, which hides the conditions. |
-| PQ9 | **The toggle's tooltip** once it shows on steps it doesn't fold (a press on Stats changes nothing you can see). | **Name the steps:** `appCopy.expertTitle`, "Folds the reading on the Archetype, Skills and Character Points steps. Tap ? to read one." It's the button's `title`, marked for a voice pass. `aria-label` stays "Expert mode". *Alternative:* keep today's `expertHint` as the title, which doesn't say where it works. |
+| PQ9 | **The toggle's tooltip** once it shows on steps it doesn't fold (a press on Concept changes nothing you can see). | **Name the steps:** `appCopy.expertTitle`, "Folds the reading on the Stats, Archetype, Skills and Character Points steps. Tap ? to read one." It's the button's `title`, marked for a voice pass. `aria-label` stays "Expert mode". *Alternative:* keep today's `expertHint` as the title, which doesn't say where it works. |
 
 ## 3a. The decision, drafted
 
@@ -90,13 +93,13 @@ N. **A trait that changes a Skill's check shows on its row: a number in the chec
 ```
 
 ```
-N+1. **The Expert mode toggle shows on every step of character creation, not only the three it folds.**
-     *2026-10-1x · Ken + Claude · Touches: Expert mode, renderTopChrome, expertStep, wizard header, expertTitle, P13 PQ4*
-     - **Decided:** The wizard's header carries the Expert mode toggle beside Home on every step, Review included. Its tooltip names the Archetype, Skills and Character Points steps, the ones it folds. The first-sight hint still shows only on those three. Off the wizard (Home, the sheet, GM mode) there is no toggle.
-     - **Why:** Ken: a button that appears only once it can affect something reads as the header changing under you. A setting that stays put is easier to find and trust.
+N+1. **Expert mode folds the Stats step too, and its toggle shows on every step of character creation.**
+     *2026-10-1x · Ken + Claude · Touches: Expert mode, EXPERT_STEPS, renderStats, renderTopChrome, expertStep, expertHintHtml, wizard header, expertTitle, P13 PQ4*
+     - **Decided:** Expert mode folds each stat's description on the Stats step, keeping the name, stepper, modifier and next-point cost. The wizard's header carries its toggle beside Home on every step, Review included, with a tooltip naming the four steps it folds; the first-sight hint shows on those four only. Off the wizard (Home, the sheet, GM mode) there is no toggle.
+     - **Why:** Ken: a button that appears only once it can affect something reads as the header changing under you, and the Stats step's descriptions were the last long text left open in Expert mode.
      - **Rejected:** P13's PQ4 answer, the toggle only on the steps it changes (the coming and going confused Ken); a toggle that's present but disabled elsewhere (it looks broken, and the setting is still worth changing ahead of the step).
-     - **Replaces:** nothing. Decision 232 doesn't record where the toggle shows; P13's PQ4 answer did, and this reverses it.
-     - **Revisit if:** players press it on Stats and expect something to change, or Expert mode reaches a fourth step.
+     - **Replaces:** Decision 232 in part (Expert mode folds four creation steps, not three). It also reverses P13's PQ4 answer (the toggle only where it changes something), which 232 didn't record.
+     - **Revisit if:** players press it on Concept or History and expect something to change, or Expert mode reaches a fourth step.
      - **Built:** app 0.49.0, with P19, PR #…. Log 2026-10-1x (P19).
 ```
 
@@ -123,7 +126,9 @@ Answered by grepping readers (`skillLine(`, `.checkBonus`, `effectTagsFor`, `gra
 | No light levels in the data | — | `visibility`: `0530`'s four, read by Night Vision's `visibility` row. |
 | P18 tests pin some of these as rule rows: `rules` ~2029 (Common Sense's held "Take 6 on Investigation."), ~229 and ~279 (lists including Defect/Flaw and Refined Skill), and the two **P18 6** tests (Common Sense in their fixtures) | `tests/` | **Expected breaks** (§13): each moves to the computed reading in the same change, named in the PR. **P18 4** (rule rows compute nothing) must still pass unchanged. |
 | GM mode | `gm.js` | Reads no `skillLine` (grep). Unchanged. |
-| **The rider.** `renderTopChrome`'s wizard branch draws the toggle only when `expertStep()` | `app.js` ~57 | It draws it on every wizard step. `expertStep()` keeps its other reader, `expertHintHtml` (`shared.js` ~689), unchanged. The button's `title` reads `copy("expertTitle")` (PQ9). |
+| **The rider.** `EXPERT_STEPS` = Archetype, Skills, CP; `expertStep()` reads it for both the toggle and the hint | `shared.js` ~685, ~703 | Gains `"stats"`. `expertStep()` keeps gating the hint (`expertHintHtml`, ~689) and stops gating the toggle. |
+| `renderTopChrome`'s wizard branch draws the toggle only when `expertStep()` | `app.js` ~57 | Draws it on every wizard step. The button's `title` reads `copy("expertTitle")` (PQ9). |
+| `renderStats`: each row's `.name` holds the stat's name, its description `<small>` and, past 6, a `.next-cost` `<small>` | `wizard.js` ~246–253 | The description gets `foldAttr("stat\|"+id)` and a `foldBtn` beside the name, as `renderSkills` does. **`.next-cost` never folds**: it's a price, not prose. `bindFolds` already runs on every step from `bindMain`. |
 | `phone-check` measures the wizard header with both buttons on Archetype, Skills and CP (P13), and with Home alone on Stats (P4) | `tools/phone-check.mjs` | Both buttons now show on every step. The Stats row's header measurement now has two buttons, and must hold its height at 320px. |
 | P13 6 asserts the toggle is present on three steps and absent on the rest | `smoke-wizard` ~1179 | **An expected break** (§14). It now asserts present on all eight steps, and still absent on Home and the sheet. |
 
@@ -234,7 +239,8 @@ skillRowText:   takeX "Take {x}: {total} (choose before you roll)" · takeXWhen 
 | `P19 6: the tags are computed now, held and unheld` | rules | Each §8 entry's computed tags: unheld reads the general template (Defect/Flaw "−2 on checks with the Skill you choose"), held names its picks; a `whenText` row uses its `…When` template; P18 4 still passes. |
 | `P19 7: a conditional row is a mark, never a number` | rules | Dwarf: Stealth's `checkBonus` unchanged, a `checkMod` mark "+3 when hiding". Mutating `whenText` away makes it a number (it's the guard's mutant). |
 | `P19 8: skillLine and effectTagsFor are total over hostile rows` | engine | `skills` not an array, an unknown skill id, `skillsFromPick` naming no pick, `amount` "3" or NaN, `die` "1d7", `faces` [] or ["x"], a pick holding a skill id the data lacks, an orphaned skill on the character: nothing throws; bad rows are skipped. |
-| `P19 9: the Expert mode toggle is in the header on every step of character creation` | smoke-wizard | Present beside Home on all eight steps (Review included), `aria-pressed` per the setting; absent on Home and the sheet. On Stats, a press flips `aria-pressed` and writes `shadows.ui.expert`, focus stays on it, and `#main`'s HTML is unchanged. Its `title` is `appCopy.expertTitle`. The hint is present on Skills (setting off, never pressed) and absent on Stats. **On `main`: fails** (no toggle on Stats). |
+| `P19 9: the Expert mode toggle is in the header on every step of character creation` | smoke-wizard | Present beside Home on all eight steps (Review included), `aria-pressed` per the setting; absent on Home and the sheet. On Concept, a press flips `aria-pressed` and writes `shadows.ui.expert`, focus stays on it, and `#main`'s HTML is unchanged. Its `title` is `appCopy.expertTitle`. The hint is present on Stats (setting off, never pressed) and absent on Concept. **On `main`: fails** (no toggle on Concept). |
+| `P19 10: Expert mode folds the Stats step's descriptions and keeps every control` | smoke-wizard | On: all eight descriptions hidden; each row's name, stepper, `.val`, modifier and (BOD at 7) "The next point costs 2." shown; **?** on Body opens its text with `aria-expanded="true"`, and a stepper press keeps it open. Off: `#main` renders as on `main`. **On `main`: fails.** |
 
 ## 11. Tests beyond the examples
 
@@ -255,8 +261,9 @@ skillRowText:   takeX "Take {x}: {total} (choose before you roll)" · takeXWhen 
 7. `failOn` marked on every Skill (P19 4).
 8. Night Vision's numbers typed into the template instead of read from `visibility` (P19 5).
 9. One of the 16 entries left as a rule row (P19 6).
-10. The toggle back behind `expertStep()` (P19 9, on Stats).
-11. The first-sight hint shown on every step (P19 9, on Stats).
+10. The toggle back behind `expertStep()` (P19 9, on Concept).
+11. The first-sight hint shown on every step (P19 9, on Concept).
+12. The Stats step's `.next-cost` line folded with the description (P19 10).
 
 ## 13. Steps
 
@@ -282,7 +289,7 @@ skillRowText:   takeX "Take {x}: {total} (choose before you roll)" · takeXWhen 
 
 **Close-out** (the close-the-session skill, *Rule or shape*):
 - Decision **N** in `SCHEMA.md` §4, its INDEX §3 line, Decision 231 and its INDEX line marked **superseded in part by N**, and 96 and 229 noted as extended. SCHEMA §2 gains the six `grants` types, `visibility` and `skillRowText`. STATE rewritten.
-- Decision **N+1** (the rider) in `SCHEMA.md` §4 with its INDEX §3 line. Nothing is marked superseded (§2). P13's order, PQ4: a one-line note that N+1 reverses it.
+- Decision **N+1** (the rider) in `SCHEMA.md` §4 with its INDEX §3 line, and Decision 232 and its INDEX line marked **superseded in part by N+1** (four steps, not three). P13's order, PQ4: a one-line note that N+1 reverses it.
 - `gamedataVersion` 0.41; `npm run bump -- 0.49.0`; CHANGELOG, then `npm run changelog`.
 - The plan's P19 row; a `shipped.md` row; a `log/2026.md` entry (versions and what was learned).
 - PR title: `P19: Skills learn from traits (Decision N, app 0.49.0, data 0.41)`. The body includes **Where the order didn't fit**.
@@ -293,19 +300,19 @@ Suggested CHANGELOG lines (player voice):
 - **Take X shows what you'd get:** Common Sense on Investigation reads "Take 6: 13". Choose it before you roll.
 - **Your Skills say when they fail or explode early:** Distractable on Awareness and Combat Sense, Refined Skill on the Skill you chose, and the rest.
 - **Night Vision says what it cancels:** Dim −1 and Dark −3 don't touch your attacks.
-- **Expert mode stays in the header through all of character creation,** so it's where you left it on every step.
+- **Expert mode stays in the header through all of character creation,** and now folds the Stats step's descriptions too.
 
 **Review checklist:**
 - [ ] §10's tests exist with those names, run on `main`'s code in the PR (P19 1 fails there).
 - [ ] §5's rows each confirmed or corrected; the attack and maneuver rows pinned.
 - [ ] §8's whens match the book, not just this order.
-- [ ] `git diff origin/main --stat -- src` touches only `shadows-data.js`, `engine.js`, `sheet.js`, the generated changelog and, for the rider, `app.js` (the wizard header's branch) and `tools/phone-check.mjs`. `wizard.js` and `shared.js` need nothing (their readers follow `checkBonus` and `effectsHtml` on their own, and `expertStep` is unchanged).
+- [ ] `git diff origin/main --stat -- src` touches only `shadows-data.js`, `engine.js`, `sheet.js`, the generated changelog and, for the rider, `app.js` (the wizard header's branch), `shared.js` (`EXPERT_STEPS`), `wizard.js` (`renderStats` only) and `tools/phone-check.mjs`. P19's own readers in `wizard.js` and `shared.js` follow `checkBonus` and `effectsHtml` on their own.
 - [ ] Decision N passes `docs.test.mjs`; 231 marked superseded in part.
 - [ ] P18 4 passes unchanged; the edited existing assertions are exactly §14's list.
 - [ ] Mutants 1–9 in the PR, each with its test.
 - [ ] Phone-check and the dev preview's measurements in the PR.
 - [ ] `npm run verify` green; versions as §2.
-- [ ] The rider: the toggle on all eight steps in the dev preview (Stats and Review included), the header's height at 320px in phone-check, and the hint still only on the three steps.
+- [ ] The rider: the toggle on all eight steps in the dev preview (Concept and Review included), Stats folded at 375px (height off and on, `scrollWidth` = `clientWidth`), the header's height at 320px in phone-check, and the hint only on the four steps.
 
 ## 16. Handing it over
 
@@ -319,6 +326,6 @@ The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<plan>/
 > 4. **The −2 reaches attacks and maneuvers because they read `checkBonus`.** Don't special-case them, and pin them in P19 1.
 > 5. **`skillsFromPick` reads the picks cut to the rank** (`Engine.picksFor`), and ranks sum over natural and bought rows.
 > 6. **The book is the source for every "when", and the rulings page for the light levels.** Moving a sentence into a template is where drift hides: compare each one.
-> 7. **The rider moves the toggle, not the hint.** `expertStep()` stops gating the button and keeps gating `expertHintHtml`. A press on a step it doesn't fold must not re-render `#main` into anything different.
+> 7. **The rider moves the toggle, not the hint, and folds only Stats' prose.** `expertStep()` stops gating the button and keeps gating `expertHintHtml`; a press on a step it doesn't fold must not change `#main`. On Stats, "The next point costs N" is a price and stays open.
 >
 > Tier: **Rule or shape**. Two decisions (the next two free numbers: P19's, then the rider's), game data 0.41, app 0.49.0, no schema bump. Use the close-the-session skill at the end.
