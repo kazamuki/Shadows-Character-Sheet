@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.48.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**The Stats step tells you to roll only when your table rolls for Stat Points.** Otherwise it says point buy."
+    ]
+  },
+  {
     "version": "0.48.0",
     "date": "2026-10-16",
     "intro": [],
