@@ -591,7 +591,6 @@ function renderCP(){
       return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad):""}
         <div class="head"><h2>${esc(ad.name)}</h2><span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
         ${natural?`<span class="cost grant">natural ×${natural.rank}</span>`:""}
-        ${ad.creationOnly?`<span class="cost">creation only</span>`:""}
         ${gated&&ad.universal?`<span class="cost grant">Universal</span>`:""}
         ${constraintHtml("advantage",ad.id)}
         <div class="controls">${open?stepper(cur,"adv|"+ad.id, cur>0, cur<ad.maxRank && affordable && !lock.locked && req.ok, ad.name):cur>0?stepper(cur,"adv|"+ad.id, true, false, ad.name):`<span class="cost">Not for ${esc(cls.name)}s</span>`}</div></div>

@@ -1020,5 +1020,7 @@ test("P18 6: the CP step shows a computed chip and a rule line under each entry'
   // Creation only is a tag, read off the data.
   app = onStep("professional", "street", "character-points");
   assert.ok([...pickOf(app, "Long-Lived").querySelectorAll(".effects .etag")].some(t => t.textContent === "Creation only"));
+  // The tag replaced the head's old "creation only" chip: the card says it once.
+  assert.equal((pickOf(app, "Long-Lived").textContent.match(/creation only/gi) || []).length, 1, "Long-Lived says creation only twice");
   assert.deepEqual(app.errors, []);
 });
