@@ -724,4 +724,11 @@ test("P13 10: the IP lists and Talented's pick show the tags: held for what the 
   assert.deepEqual(rowTags("bullseye"), ["Called Shots: +6 damage."]);
   assert.deepEqual(rowTags("ambidextrous"), [rule("advantage", "ambidextrous")]);
   assert.deepEqual(t.errors, []);
+  // Redeemed's pick (a Disadvantage to lower a rank of) shows the held tags too.
+  const r = openSheet(p6Char("professional", 100), "progression");
+  r.window.eval(`S.ch.disadvantages = [{ id: "blood-lust", rank: 1, notes: "" }]; update();`);
+  r.click('[data-takeminor="redeemed"]');
+  const rr = [...r.$('#modal [data-mcpick="blood-lust"]').closest("tr").querySelectorAll(".effects .etag")].map(x => x.textContent);
+  assert.deepEqual(rr, [...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText)], "Redeemed's pick has no tags");
+  assert.deepEqual(r.errors, []);
 });

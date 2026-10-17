@@ -1205,6 +1205,8 @@ test("P13 7: Expert mode folds the Archetype step's prose and keeps what each ch
     assert.ok(app.$$("#main [data-arch]").every(b => !b.querySelector("[data-fold]")), "a ? inside a button");
     assert.ok(app.$$("#main [data-arch]").every(b => hiddenIn(b.querySelector("p"))), "a card summary is shown");
     const lore = app.$("#main .arch-lore"); assert.ok(lore && hiddenIn(lore), "the lore is shown");
+    const style = app.Engine.archetype(app.window.eval("S.ch")).gameplayStyle;
+    if (style) assert.ok(app.$$("#main .step-note").filter(p => p.textContent.includes(style.slice(0, 40))).every(hiddenIn), "the gameplay style is shown");
     // What a choice gives stays.
     const mech = app.$$("#main .desc[data-mech]");
     assert.ok(mech.length >= 1 && mech.every(m => !hiddenIn(m)), `${arch}: a labelled line folded`);
@@ -1227,13 +1229,14 @@ test("P13 7: Expert mode folds the Archetype step's prose and keeps what each ch
 });
 
 test("P13 8: Held only shows the build, and works with the filter", () => {
-  const app = cpExpert(holdThree, {});
-  const held = ["Blood Lust", "Bullseye", "Common Sense"];
+  // Educated is held as natural ranks only (a Professional's free ones): it's held, though it has no bought row.
+  const app = cpExpert(ch => { holdThree(ch); ch.advantages.push({ id: "educated", rank: 2, notes: "", source: "natural" }); }, {});
+  const held = ["Blood Lust", "Bullseye", "Common Sense", "Educated"];
   assert.ok(app.$("#main [data-heldonly]"), "no Held only toggle");
   assert.equal(app.$("#main [data-heldonly]").getAttribute("aria-pressed"), "false");
   app.click("#main [data-heldonly]");
   assert.deepEqual(shownNames(app).sort(), held);
-  assert.equal(app.$("#main [data-jumpcount]").textContent, "3 held");
+  assert.equal(app.$("#main [data-jumpcount]").textContent, "4 held");
   assert.equal(app.$("#main [data-heldonly]").getAttribute("aria-pressed"), "true");
   typeFilter(app, "ambidextrous");                         // held stay; a match that isn't held doesn't join
   assert.deepEqual(shownNames(app).sort(), held, "a filter match that isn't held showed under Held only");
@@ -1248,8 +1251,8 @@ test("P13 8: Held only shows the build, and works with the filter", () => {
   // It stops being shown once it's no longer held.
   app.click("#main [data-heldonly]");
   app.click('[data-step="adv|bullseye|-1"]');
-  assert.deepEqual(shownNames(app).sort(), ["Blood Lust", "Common Sense"]);
-  assert.equal(app.$("#main [data-jumpcount]").textContent, "2 held");
+  assert.deepEqual(shownNames(app).sort(), ["Blood Lust", "Common Sense", "Educated"]);
+  assert.equal(app.$("#main [data-jumpcount]").textContent, "3 held");
   assert.deepEqual(app.errors, []);
 });
 

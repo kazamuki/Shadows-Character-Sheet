@@ -820,7 +820,7 @@ function jumpTo(id){
   el.focus({ preventScroll:true });
 }
 // W22: hide the picks whose name and text don't match. One you hold
-// (.selected) stays, so nothing you've taken disappears. P13: it matches the
+// (data-held: bought or natural ranks) stays, so nothing you've taken disappears. P13: it matches the
 // pick's NAME (its h2: the h4 this read since 2026-10-01 matched nothing) and
 // every .desc, folded or not, since textContent reads text that's hidden. A
 // skill row (.alloc-row) filters the same way, and takes its picks with it.
@@ -831,7 +831,7 @@ function applyPickFilter(root, q, { held=false }={}){
     const isRow = p.classList.contains("alloc-row");
     const name = ((isRow ? p.querySelector(".name") : p.querySelector(".head h2")) || {}).textContent || "";
     const text = `${name} ${isRow ? "" : [...p.querySelectorAll(".desc")].map(d=>d.textContent).join(" ")}`.toLowerCase();
-    const mine = !isRow && p.classList.contains("selected");
+    const mine = !isRow && p.hasAttribute("data-held");   // bought, or held as natural ranks only
     total++; if (mine) heldN++;
     const hit = held ? mine : (!k || mine || text.includes(k));
     p.hidden = !hit; if (hit) shown++;

@@ -271,7 +271,7 @@ function renderArchetype(){
   if (wi) return h + writeInHtml(ch, wi);
   if (sel.flagged) h += flagHtml(sel);
   if (sel.lore) h += `<p class="flavor arch-lore"${foldAttr("arch|"+sel.id)}>${esc(sel.lore)}</p>`;
-  if (sel.gameplayStyle) h += `<p class="step-note" style="margin-top:16px">${esc(sel.gameplayStyle)}</p>`;
+  if (sel.gameplayStyle) h += `<p class="step-note" style="margin-top:16px"${foldAttr("arch|"+sel.id)}>${esc(sel.gameplayStyle)}</p>`;
 
   const row = Engine.scalingRow(ch);
   const pl = Engine.powerLevel(ch);
@@ -557,7 +557,7 @@ function renderCP(){
       const cur = (ch.disadvantages.find(x=>x.id===dd.id)||{rank:0}).rank;
       const lock = Engine.optionLock(ch,"disadvantage",dd.id);
       const req  = Engine.requirementState(ch,"disadvantage",dd.id);
-      return `<div class="pick ${cur>0?"selected":""}">${dd.flagged?flagHtml(dd):""}
+      return `<div class="pick ${cur>0?"selected":""}"${cur>0?" data-held":""}>${dd.flagged?flagHtml(dd):""}
         <div class="head"><h2>${esc(dd.name)}</h2>${foldBtn("disadvantage|"+dd.id, dd.name)}<span class="cost grant">+${dd.pointsGranted} CP/rank · max ${dd.maxRank}</span>
         ${constraintHtml("disadvantage",dd.id)}
         <div class="controls">${stepper(cur,"disadv|"+dd.id, cur>0, cur<dd.maxRank && !lock.locked && req.ok, dd.name)}</div></div>
@@ -582,7 +582,7 @@ function renderCP(){
       const lock = Engine.optionLock(ch,"advantage",ad.id);
       const req  = Engine.requirementState(ch,"advantage",ad.id);
       const open = Engine.canBuyAdvantage(ch, ad);
-      return `<div class="pick ${cur>0?"selected":""}">${ad.flagged?flagHtml(ad):""}
+      return `<div class="pick ${cur>0?"selected":""}"${cur>0||(natural&&natural.rank>0)?" data-held":""}>${ad.flagged?flagHtml(ad):""}
         <div class="head"><h2>${esc(ad.name)}</h2>${foldBtn("advantage|"+ad.id, ad.name)}<span class="cost">${ad.cost} CP/rank · max ${ad.maxRank}</span>
         ${natural?`<span class="cost grant">natural ×${natural.rank}</span>`:""}
         ${gated&&ad.universal?`<span class="cost grant">Universal</span>`:""}

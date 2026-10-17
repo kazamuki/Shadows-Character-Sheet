@@ -756,7 +756,7 @@ function minorChoiceBodyHtml(ch, st){
   const v = Engine.minorChoice(ch, st.id);
   if (!v.ok) return "";
   const q = String(st.q||"").trim().toLowerCase();
-  const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.sub?`<div class="sub">${esc(o.sub)}</div>`:""}${v.type==="advantageRank"?effectsHtml(ch, "advantage", o.id):""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
+  const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.sub?`<div class="sub">${esc(o.sub)}</div>`:""}${v.type==="advantageRank"?effectsHtml(ch, "advantage", o.id):v.type==="disadvantageRank"?effectsHtml(ch, "disadvantage", o.id):""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
     <td class="num" data-k="Gets">${esc(o.move||"")}</td>
     <td><button class="btn sm ${st.picks.includes(o.id)?"go":"primary"}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""}>${st.picks.includes(o.id)?"Picked":"Pick"}</button></td></tr>`;
   const table = list => `<table class="ref spell-results raise-results"><tbody>${list.map(rows).join("")}</tbody></table>`;
