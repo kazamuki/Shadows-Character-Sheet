@@ -56,21 +56,6 @@ Q16): Powered Armor is a vehicle, with its own Integrity**, so it's this
 entry's. One MD of Massive damage is 10 Integrity off it, or 1 Health Level to
 the wearer once it gets through (Q6).
 
-**W95 — Expert mode: creation that fits on one screen.** *Ken, from Brogan · 🔎 · Fix (UI) · raised 2026-10-10 · touches W59*
-A returning player scrolls past every Skill, Advantage and Disadvantage's full
-text to find the one they want. An **Expert mode** toggle collapses each to
-its name, cost and controls, with the text a tap away, so more fits at
-once. Brogan also asked that the Character Points step's stat and skill
-boosts be **compact**: a **− / +** pair without the count between them,
-taking less room.
-*To respect:* a toggle is view state, remembered in the browser like the
-Character tab's Expand all (Decision 158), never saved in the character.
-W59 (built, 0.41.0) is the floor for the compact steppers: a stepper still says what it
-changes, and its new value is still announced, even if the number moves out
-from between the buttons. *Questions:* where the boost count goes when it
-leaves the stepper (the rank's total already shows it?); does Expert mode
-reach the Character tab too, or creation only.
-
 **W110 — A sustained power is marked active, and Turn Reset charges it.** *Ken, from P11's PQ2 · 💡 · Rule or shape · raised 2026-10-15*
 P11 (Decision 225) counts the SFR a player spends each round, but a sustained power ("2 SFR per round, sustained", "Rank per round, sustained") is still spent by hand with +1 every round. The ask: an Active toggle per sustained power, and Turn Reset charges what is active. *To respect:* every power cost is text today ("Rank + 2 per round"), so this starts with a data pass turning about ten costs into numbers (Decision 135); it is a work order of its own. Ken took the default in PQ2: the player spends it each round for now.
 

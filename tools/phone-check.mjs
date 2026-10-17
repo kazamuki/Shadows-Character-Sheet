@@ -15,6 +15,9 @@
  *   - text under 11px (W43). Collapsed <details> are opened to look inside;
  *   - the wizard (P4): a new, named character on its Stats step, the longest
  *     header the wizard has, with its Home button held to the same finger size;
+ *   - Expert mode (P13): the Archetype, Skills and Character Points steps, folded, with the
+ *     header holding both its buttons, and the sticky bar on Skills and Points within a
+ *     share of the screen. A Character tab card with three tags at the narrowest width;
  *   - the fold (W45): the vitals bar and a sheet's jump bar on one row, and
  *     on a phone Main's Health card within a share of the screen;
  *   - Progression with a Major Milestone unlocked, on a Professional, whose
@@ -45,6 +48,8 @@ const HEADER_MAX_SHARE = 0.2;
 // W45: on a phone, how far down Main's Health card may start, as a share of the screen's
 // height, so HP is read without scrolling past a heading block.
 const HP_MAX_SHARE = 0.3;
+// P13: the sticky bar on the Skills and Points steps may take this share of the screen's height.
+const BAR_MAX_SHARE = 0.34;
 const LONG = "a long name";
 const WIDTHS = [
   { name: "phone", width: 390, height: 844 },
@@ -53,7 +58,7 @@ const WIDTHS = [
   { name: "phone, touch", width: 390, height: 844, touch: true },
 ];
 
-function lockedCharacter(archetype = "arcanist", milestonePoints = 0) {
+function lockedCharacter(archetype = "arcanist", milestonePoints = 0, held = []) {
   const { Engine, D } = loadEngine();
   const ch = Engine.newCharacter();
   ch.identity.name = "Phone Check";
@@ -62,6 +67,8 @@ function lockedCharacter(archetype = "arcanist", milestonePoints = 0) {
   ch.creation.powerLevel = D.powerLevels[0].id;
   ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 5;
+  // Long-Lived at rank 3 carries three Milestone tags: the card with the most.
+  ch.advantages = held.map(id => ({ id, rank: 3, notes: "" }));
   ch.creation.locked = true;
   return JSON.parse(JSON.stringify(ch));   // out of the engine's vm realm
 }
@@ -81,7 +88,7 @@ async function launch() {
 const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
 writeFileSync(file, process.argv[2] ? readFileSync(process.argv[2], "utf8") : buildHtml());
-const seed = JSON.stringify({ ch: lockedCharacter(), section: "main" });
+const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"]), section: "main" });
 // A Major unlocks at 10 Milestone Points; the Professional's list has the longest prerequisites.
 const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
 const MAJOR = "progression: a Major";
@@ -100,13 +107,15 @@ try {
       return [c, p];
     };
     let [ctx, page] = await open(seed);
-    const measure = async screen => {
-      const m = await page.evaluate(floor => {
+    // `scope` limits the controls and text counted to what P13 added: an unfinished character's wizard has
+    // older findings of its own (the issues link, the second-look callout), which are not this row's.
+    const measure = async (screen, scope = null) => {
+      const m = await page.evaluate(([floor, scope]) => {
         // Small controls and small text (W43). Collapsed sections are opened
         // so a palette isn't missed, then closed again.
         const shut = [...document.querySelectorAll("details:not([open])")];
         shut.forEach(d => { d.open = true; });
-        const shown = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]"); };
+        const shown = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]") && (!scope || !!el.closest(scope)); };
         const label = el => `${el.tagName.toLowerCase()}${el.classList.length ? "." + [...el.classList].join(".") : ""}`;
         const small = new Set(), tiny = new Set();
         for (const el of document.querySelectorAll("button, a[href], summary, select, input:not([type=hidden])")) {
@@ -130,24 +139,25 @@ try {
         window.scrollTo(0, 0);
         const lines = sel => new Set([...document.querySelectorAll(sel)].filter(shown).map(e => Math.round(e.getBoundingClientRect().top))).size;
         const hp = document.querySelector("#main .cond-grid");
-        const bars = { vbar: lines("#main .vbar .vpill"), jump: lines("#main .jumpbar .jump"),
-          hp: hp ? Math.round(hp.getBoundingClientRect().top) : null };
+        const sticky = document.querySelector("#main .jumpbar.sticky");
+        const bars = { vbar: lines("#main .vbar .vpill"), jump: lines("#main .jumpbar:not(.sticky) .jump"),
+          hp: hp ? Math.round(hp.getBoundingClientRect().top) : null, sticky: sticky ? Math.round(sticky.getBoundingClientRect().height) : null };
         window.scrollTo(0, document.documentElement.scrollHeight);
         const h = document.querySelector("header.top").getBoundingClientRect();
         const de = document.documentElement;
         const brand = document.querySelector("header.top .brand");
         return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth,
           nameCut: brand.scrollWidth > brand.clientWidth, small: [...small], tiny: [...tiny], bars };
-      }, w.touch ? 44 : 24);
+      }, [w.touch ? 44 : 24, scope]);
       const share = m.header / w.height;
-      const b = m.bars, rowsOk = b.vbar <= 1 && b.jump <= 1, hpOk = b.hp == null || w.width >= 640 || b.hp <= w.height * HP_MAX_SHARE;
+      const b = m.bars, rowsOk = b.vbar <= 1 && b.jump <= 1 && (b.sticky == null || b.sticky <= w.height * BAR_MAX_SHARE), hpOk = b.hp == null || w.width >= 640 || b.hp <= w.height * HP_MAX_SHARE;
       rows.push({ width: w.name, screen, header: `${m.header}px (${Math.round(share * 100)}%)`,
         overflow: m.overflow ? `${m.overflow}px` : "none",
         name: screen === "home" ? "" : m.nameCut ? "cut" : "fits",
         targets: m.small.length ? m.small.join(", ") : "ok",
         text: m.tiny.length ? m.tiny.join(", ") : "ok",
         fold: [b.hp != null ? `HP ${b.hp}px (${Math.round(b.hp / w.height * 100)}%)` : "",
-          b.vbar > 1 ? `vitals ${b.vbar} rows` : "", b.jump > 1 ? `jump ${b.jump} rows` : ""].filter(Boolean).join(", ") || "ok",
+          b.vbar > 1 ? `vitals ${b.vbar} rows` : "", b.jump > 1 ? `jump ${b.jump} rows` : "", b.sticky != null ? `bar ${b.sticky}px (${Math.round(b.sticky / w.height * 100)}%)` : ""].filter(Boolean).join(", ") || "ok",
         ok: rowsOk && hpOk && share <= HEADER_MAX_SHARE && m.overflow <= 0 && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
     };
     const mustFit = screen => screen !== "home" && screen !== LONG;
@@ -160,6 +170,9 @@ try {
       await page.click(`#topnav [data-sec="${sec}"]`);
       await measure(sec);
     }
+    // A Character tab card with three tags (P18 asked for it, and the fixture held no Advantage).
+    await page.click('#topnav [data-sec="character"]');
+    await measure("character: a card with three tags");
     // A long name is cut short, never allowed to push the page wider.
     await page.evaluate(n => { document.getElementById("brandctx").textContent = n; }, "Maximilian Aurelius Blackwood-Ravenscroft III");
     await measure(LONG);
@@ -169,10 +182,25 @@ try {
     await page.click("#btn-new");
     await page.click("[data-pl]");
     await page.click("button:has-text(\"Continue\")");
-    await page.fill('[data-id="name"]', "Phone Check");
+    await page.fill('[data-id="name"]', "Mara Voss");   // short enough to fit beside both header buttons
     await page.click("button:has-text(\"Continue\")");
     await page.waitForSelector("[data-stat-floor]");
     await measure("wizard: stats");
+    // P13: Expert mode on the three steps it changes. Steps are reached as the player would reach
+    // them; the toggle is pressed once, in the header, and stays on across them.
+    await page.evaluate(() => { S.maxReached = STEPS.length - 1; });
+    const goStep = async id => { await page.evaluate(i => { S.step = i; update(); }, await page.evaluate(i => STEPS.findIndex(s => s.id === i), id)); };
+    await goStep("archetype");
+    await page.click('[data-arch="professional"]');
+    await page.click('[data-spec="cleaner"]');
+    await page.click("header [data-expert]");
+    const NEW = "header.top, .jumpbar, .skill-q, .card-fold, .effects";
+    await measure("wizard: archetype, Expert mode", NEW);
+    await goStep("skills");
+    await measure("wizard: skills, Expert mode", NEW);
+    await goStep("character-points");
+    await measure("wizard: points, Expert mode", NEW);
+    await page.click("header [data-expert]");                 // off, so the next run starts as a new player
     await page.click("header [data-home]");
     await page.waitForSelector("#btn-new");
     await ctx.close();

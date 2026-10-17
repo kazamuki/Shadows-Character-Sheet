@@ -2048,3 +2048,37 @@ test("P18 3b: a held entry's tags are its rank and picks", () => {
   finally { def.creationOnly = true; }
   assert.ok(!P18_DEFS.some(([kind, d]) => d.id !== "long-lived" && d.creationOnly && !tagsOf(kind, d.id).some(t => t.text === "Creation only")));
 });
+
+// ── P13: a held card's computed tags state its total (Decision 232) ──────
+test("P13 11: a held card's computed tags state its total, and leave out the rows its rank doesn't reach", () => {
+  const held = (rank, selections) => ({ rank, selections });
+  const comp = (id, h, kind = "advantage") => tagsOf(kind, id, h).filter(t => t.computed).map(t => t.text);
+  assert.deepEqual(comp("hard-to-kill", held(2)), ["+2 max HP on every Health Level"]);
+  assert.deepEqual(comp("hard-to-kill", held(1)), ["+1 max HP on every Health Level"]);
+  assert.deepEqual(comp("educated", held(3)), ["+30 Skill Points"]);
+  assert.match(comp("thick-skin", held(2))[0], /^\+2 Natural Armor;/);
+  // Natural and bought ranks sum before they get here (heldRow), so a total of 2 is 2.
+  assert.deepEqual(comp("hard-to-kill", held(2, {})), ["+2 max HP on every Health Level"]);
+  // Long-Lived: only the Milestones its rank reaches.
+  assert.deepEqual(comp("long-lived", held(1)), ["A Minor Milestone at rank 1"]);
+  assert.deepEqual(comp("long-lived", held(2)), ["A Minor Milestone at rank 1", "A Minor Milestone at rank 2"]);
+  assert.equal(comp("long-lived", held(3)).length, 3);
+  // A type with no held template reads its general line.
+  assert.deepEqual(comp("lucky", held(1)), comp("lucky", null));
+  assert.deepEqual(comp("pain-sensitive", held(1), "disadvantage"), comp("pain-sensitive", null, "disadvantage"));
+  // Not held: every computed tag is P18 2's text, whatever the data holds for a held card.
+  assert.deepEqual(comp("hard-to-kill", null), ["+1 max HP on every Health Level per rank"]);
+  assert.equal(comp("long-lived", null).length, 3);
+  // The total follows the data's perRank.
+  const htk = D.advantages.find(a => a.id === "hard-to-kill").grants[0], was = htk.perRank;
+  try {
+    htk.perRank = 3;
+    assert.deepEqual(comp("hard-to-kill", held(2)), ["+6 max HP on every Health Level"]);
+    delete htk.perRank;                                   // no perRank: the general template, which also has nothing to fill
+    assert.ok(!comp("hard-to-kill", held(2)).some(t => /NaN|undefined|\{/.test(t)), comp("hard-to-kill", held(2)).join("|"));
+  } finally { htk.perRank = was; }
+  // Every held total is perRank × rank, for every computed row in the data (Decision 232's Revisit if).
+  for (const [kind, d] of P18_DEFS) for (const g of d.grants.filter(r => ["skillPoints", "hpPerLevel", "naturalArmor"].includes(r.type)))
+    for (let r = 1; r <= d.maxRank; r++)
+      assert.ok(comp(d.id, held(r), kind)[0].includes(`+${g.perRank * r} `), `${d.id} at ${r}`);
+});

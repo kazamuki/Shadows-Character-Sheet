@@ -1087,6 +1087,14 @@ window.SHADOWS_DATA = {
     "painLevel": "Pain Level +{amount} once you're hurt",
     "creationOnly": "Creation only"
   },
+  /* Decision 232: the same computed tags on a card the character holds, which state its total. `{total}` is the row's
+     `perRank` times the held rank (natural and bought ranks summed), `{perRank}` is still the row's own. A type with no
+     template here (LUCK costs, Pain Level, Milestones) reads its `effectTags` line. Read by Engine.effectTagsFor. */
+  "effectTagsHeld": {
+    "skillPoints": "+{total} Skill Points",
+    "hpPerLevel": "+{total} max HP on every Health Level",
+    "naturalArmor": "+{total} Natural Armor; Armor Piercing doesn't touch it, unless it's a spell"
+  },
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
      marks 0430's Universal Advantages, the only ones a classification with
@@ -3856,6 +3864,7 @@ window.SHADOWS_DATA = {
     "tagless": { "label": "Off grid", "text": "TAGless: no government identity, no 625Ç UBI, business done in skrip." }
   },
   "appCopy": {
+    "expertHint": "Folds each entry to its name and cost. Tap ? to read one.",
     "unsettledLabel": "Not settled yet",
     "unsettledRule": "This rule is still being written. Until it is, it's your GM's call.",
     "houseRuleLabel": "How this works",

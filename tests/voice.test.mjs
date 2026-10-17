@@ -270,7 +270,8 @@ test("P18 7: the effect tags and their templates are player copy (Decision 231)"
     }
     for (const t of Engine.effectTagsFor(kind, d.id, null)) lines.push(t.text);
   }
-  lines.push(...Object.values(D.effectTags));
+  lines.push(...Object.values(D.effectTags), ...Object.values(D.effectTagsHeld));   // Decision 232
+  lines.push(D.appCopy.expertHint);                                                   // P13: the toggle's hint
   const text = lines.filter(s => typeof s === "string").join("\n");
   assert.ok(text.length > 5000, "the tag copy didn't gather");
   for (const [re, why] of [[/\bPhase \d/i, "a phase number"], [/\bTBD\b/, "TBD"], [/\bWIP\b/, "WIP"], [/\bF\d{1,2}\b/, "a flag id"],

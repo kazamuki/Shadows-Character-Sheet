@@ -212,7 +212,11 @@ const Engine = (() => {
   // filled with the held rank (`{rank}`), that rank's `byRank` value (`{v}`,
   // indexed from 0 for rank 1) and the picks (`{choice}`, `{choice:<pickId>}`);
   // a placeholder with nothing to fill means the whole `ruleText`, never a
-  // half-filled line. Total: bad data and bad input skip the row.
+  // half-filled line. Decision 232: a held card's computed row states its total
+  // (`effectTagsHeld[type]`, filled with `{total}` = perRank × the held rank), and
+  // a Milestone row past the held rank isn't the character's yet, so it's left
+  // off; an entry not held reads the general lines, as before. Total: bad data
+  // and bad input skip the row.
   const fillTag = (tpl, vars) => {
     if (typeof tpl!=="string") return null;
     let ok = true;
@@ -237,8 +241,8 @@ const Engine = (() => {
     const out = [];
     const def = kind==="advantage" ? advById(id) : kind==="disadvantage" ? disById(id) : null;
     if (!isPlainObj(def)) return out;
-    const tags = D().effectTags;
-    const T = isPlainObj(tags) ? tags : {};
+    const tags = D().effectTags, heldTags = D().effectTagsHeld;
+    const T = isPlainObj(tags) ? tags : {}, TH = isPlainObj(heldTags) ? heldTags : {};
     const h = isPlainObj(held) ? held : null;
     const rank = h ? Math.floor(Number(h.rank)) : NaN;
     for (const g of Array.isArray(def.grants) ? def.grants : []){
@@ -256,17 +260,25 @@ const Engine = (() => {
         out.push({ computed:false, text: text || g.ruleText });
         continue;
       }
-      let vars = null;
-      if (g.type==="skillPoints" || g.type==="hpPerLevel" || g.type==="naturalArmor") vars = { perRank: g.perRank };
+      let vars = null, text = null;
+      if (g.type==="skillPoints" || g.type==="hpPerLevel" || g.type==="naturalArmor"){
+        vars = { perRank: g.perRank };
+        // A held card says its total; with nothing to total, the general line.
+        if (h && rank>=1) text = fillTag(TH[g.type], { perRank: g.perRank, total: Number(g.perRank) * rank });
+      }
       else if (g.type==="luckCost"){
         const sa = ((D().resources||{}).luck||{}).spend;
         const s = (Array.isArray(sa) ? sa : []).find(x=>isPlainObj(x) && x.id===g.spendId);
         if (s) vars = { action: s.action, cost: Math.max(0, (Number(s.cost)||0) + (Number(g.delta)||0)) };
       }
-      else if (g.type==="milestone" && (g.kind==="minor" || g.kind==="major")) vars = { kind: g.kind==="minor" ? "Minor" : "Major", atRank: g.atRank==null ? 1 : g.atRank };
+      else if (g.type==="milestone" && (g.kind==="minor" || g.kind==="major")){
+        // A held card lists the Milestones its rank has; the rest aren't its own yet.
+        if (h && rank>=1 && (g.atRank==null ? 1 : Number(g.atRank)) > rank) continue;
+        vars = { kind: g.kind==="minor" ? "Minor" : "Major", atRank: g.atRank==null ? 1 : g.atRank };
+      }
       // Only the "once you're hurt" kind is computed (Decision 213).
       else if (g.type==="painLevel" && g.onlyIfHurt===true) vars = { amount: g.amount };
-      const text = vars && fillTag(T[g.type], vars);
+      if (!text) text = vars && fillTag(T[g.type], vars);
       if (text) out.push({ computed:true, text });
     }
     if (def.creationOnly===true){

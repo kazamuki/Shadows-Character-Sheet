@@ -25,6 +25,13 @@ own in the footer.
 
 ## [Unreleased] — app 0.48.0
 
+- **Expert mode for making a character.** On the Archetype, Skills and Character Points steps, Expert mode folds the reading away and keeps the choosing: names, costs, buttons, and what each Advantage or Disadvantage does, as tags. Tap **?** to read the full text. Your browser remembers it.
+- **Held only** on the Character Points step shows just what you've taken.
+- **The Skills step keeps your remaining points in view,** with a filter and jumps to each group.
+- **The boosts heading names your Max CP Boost,** so a + that stops says why.
+- **The Character Points filter finds Advantages and Disadvantages by name.** It was only searching their descriptions.
+- **Your Advantages' tags add up for you.** Hard to Kill at rank 2 reads +2 max HP on every Health Level, and Long-Lived lists only the Milestones your rank has.
+- **The tags show wherever you pick an Advantage:** Natural Advantages on the Archetype step, buying with IP, buying off a Disadvantage, and Talented.
 - **Every Advantage and Disadvantage says what it does at a glance.** On the Character Points step and on your Character tab, each one shows its effects as short tags: what the sheet applies for you, and what your table applies. A card you hold says it for you: Bullseye at rank 2 reads +6 damage, Common Sense names your Skill, and Long-Lived says it's creation only.
 - **Called Shots get the Advantages' bonuses.** Ambidextrous, Bullseye, Quick Draw and Stunt Rider now work with the Called Shot stunt (the old "aimed shots"). Bullseye adds its damage to a Called Shot, and Quick Draw lets you make one as an Action.
 - **Rules updates:** Night Vision ignores Dim and Dark for Awareness and attacks. Archery Master counts crossbows, Gun Master beam weapons, and Melee Master Martial Arts and thrown weapons. Riposte works once per round off any parry. Scrapper halves Melee and Martial Arts damage, never below 1. Backfooted answers any Combat Maneuver.

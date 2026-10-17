@@ -37,7 +37,7 @@ export function onArchetypeStep(archetype, powerLevel = D.powerLevels[0].id) {
 }
 
 // The wizard on any step, from a draft (Decision 215 reaches the CP step too).
-export function onStep(archetype, powerLevel, stepId, mutate = () => {}) {
+export function onStep(archetype, powerLevel, stepId, mutate = () => {}, extraStorage = {}) {
   const steps = D.creationFlow.steps.map(s => s.id);
   const ch = Engine.newCharacter();
   ch.identity.name = "Probe";
@@ -46,7 +46,7 @@ export function onStep(archetype, powerLevel, stepId, mutate = () => {}) {
   ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
   for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
   mutate(ch);
-  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf(stepId), maxReached: steps.length - 1 } } });
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf(stepId), maxReached: steps.length - 1 }, ...extraStorage } });
   const resume = app.$$("#main button").find(b => /Resume draft/.test(b.textContent));
   resume.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   return app;
