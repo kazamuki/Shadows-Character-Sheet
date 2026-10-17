@@ -198,6 +198,9 @@ try {
     // P19 (Decision 234): Expert mode folds Stats too, and the toggle is in the header on every step.
     await page.click("header [data-expert]");
     await measure("wizard: stats, Expert mode", "header.top, .alloc-row .name, .skill-q");
+    // P20a (Decision 235): a Dwarf past its cap says so on the Stats step ("Max 3 (Dwarf).") and on its card on the Points step.
+    await page.evaluate(() => { S.ch.disadvantages.push({ id: "dwarf", rank: 1, notes: "" }); S.ch.stats.MOB.base = 5; update(); });
+    await measure("wizard: stats, Dwarf held, Expert mode", "header.top, .alloc-row .name, .stat-max");
     await page.click("header [data-expert]");
     // P13: Expert mode on the three steps it changes. Steps are reached as the player would reach
     // them; the toggle is pressed once, in the header, and stays on across them.
@@ -213,6 +216,7 @@ try {
     await measure("wizard: skills, Expert mode", NEW);
     await goStep("character-points");
     await measure("wizard: points, Expert mode", NEW);
+    await measure("wizard: points, a cap passed (Dwarf, MOB 5)", ".effects, .etag.over");
     await page.click("header [data-expert]");                 // off, so the next run starts as a new player
     await page.click("header [data-home]");
     await page.waitForSelector("#btn-new");

@@ -223,7 +223,7 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
     for (const e of list) {
       for (const p of e.picks || []) for (const id of ((p.from || {}).ids || [])) ref("skill", id, `${e.id}.picks`);
       prereqs(e.requires, `${e.id}.requires`);
-      for (const x of e.excludes || []) refs.push([S.advantage.has(x) || S.disadvantage.has(x) ? "advantage" : "skill", x, `${e.id}.excludes`]);
+      for (const x of e.excludes || []) refs.push([S.disadvantage.has(x) ? "disadvantage" : S.advantage.has(x) ? "advantage" : "skill", x, `${e.id}.excludes`]);
       for (const g of e.grants || []) if (g.type === "luckCost") ref("luckSpend", g.spendId, `${e.id}.grants`);
     }
   }
@@ -676,7 +676,7 @@ test("no exported reader throws on any character migrate() can return", () => {
                    "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalArmor","naturalHealing","resolveReset","luckState",
                    "sanState","crankState","focusedSkillIds","focusedSkillSpec","focusedPicks","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
-                   "disciplineRanks","buildExport","versionCheck","nextMilestoneAt","aberrationState","spellAttack","spellPower","grimoire","heldSpells","castingPool","movement"];
+                   "disciplineRanks","buildExport","versionCheck","nextMilestoneAt","aberrationState","spellAttack","spellPower","grimoire","heldSpells","castingPool","movement","startingCredits","statOverCaps"];
   const failures = [];
   for (const [label, ch] of Object.entries(degenerates())){
     for (const fn of readers){
@@ -698,10 +698,11 @@ test("no exported reader throws on any character migrate() can return", () => {
 });
 
 // ── Batch 3: selection & constraint system ────────────────────────────
-// The CRB names no mutually exclusive pair yet, so `excludes` and `requires`
-// are exercised against a synthetic entry pushed into the loaded data rather
-// than against a real one. Inventing a lock in the data to make a test pass
-// would be resolving a rules question in code, which this project does not do.
+// The only real `excludes` pair is Dwarf and Giant (Deighton, Decision 235;
+// P20a 6 pins it), and `requires` has none, so both are exercised against a
+// synthetic entry pushed into the loaded data. Inventing a lock in the data to
+// make a test pass would be resolving a rules question in code, which this
+// project does not do.
 function withFixture(fn){
   const adv = { id:"__fixture-a", name:"Fixture A", cost:1, maxRank:2,
                 description:"", excludes:["__fixture-b"],
@@ -9124,4 +9125,53 @@ test("P19 8: skillLine and effectTagsFor are total over hostile rows", () => {
     assert.doesNotThrow(() => Engine.attackNotes(junk));
   } finally { D.advantages.splice(D.advantages.indexOf(def), 1); D.advantages.splice(D.advantages.indexOf(orphan), 1); }
   assert.ok(!D.advantages.some(a => a.id === "p19-hostile" || a.id === "p19-orphan"));
+});
+
+// ── P20a: numbers at creation (Decision 235) ──
+test("P20a 10: the readers are total over hostile rows", () => {
+  const bad = [null, 5, "s", [], {}, { type: "derivedMod" },
+    { type: "derivedMod", stat: "NOPE", amount: -5 }, { type: "derivedMod", stat: "SAN", amount: "5" }, { type: "derivedMod", stat: "SAN", amount: NaN },
+    { type: "derivedMod", stat: "SAN", amount: Infinity }, { type: "derivedMod", stat: "SAN", perRank: "x" }, { type: "derivedMod", stat: 7, amount: 1 },
+    { type: "derivedMod", stat: "BOD", amount: 3 },
+    { type: "statMax", stat: "BOD", max: -3 }, { type: "statMax", stat: "BOD", max: "8" }, { type: "statMax", stat: "BOD", max: NaN },
+    { type: "statMax", stat: "BOD", max: 0 }, { type: "statMax", stat: "NOPE", max: 3 }, { type: "statMax", max: 3 }, { type: "statMax", stat: "BOD" },
+    { type: "startingCredits", amount: "10" }, { type: "startingCredits", amount: NaN }, { type: "startingCredits" }, { type: "startingCredits", amount: -Infinity }];
+  const probe = { id: "p20a-probe", name: "Probe", cost: 1, pointsGranted: 1, maxRank: 3, description: "x", grants: bad };
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.identity.archetype = "arcanist";
+  ch.stats.EMP.base = 6;
+  const before = JSON.stringify({ d: Engine.derived(ch), m: D.stats.map(s => Engine.statMax(ch, s.id)), c: Engine.startingCredits(ch) });
+  D.disadvantages.push(probe); D.advantages.push(probe);
+  try {
+    for (const rank of [0, 1, 3, -2, 1.5, "x", null]) for (const list of ["advantages", "disadvantages"]) {
+      const held = JSON.parse(JSON.stringify(ch));
+      held[list] = [{ id: "p20a-probe", rank, notes: "" }];
+      for (const locked of [false, true]) {
+        held.creation.locked = locked;
+        const read = () => JSON.stringify({ d: Engine.derived(held), m: D.stats.map(s => Engine.statMax(held, s.id)), c: Engine.startingCredits(held),
+          p: ["SAN", "TOL", "WILL", "NOPE", null, 7].map(id => Engine.derivedParts(held, id)), s: Engine.sanState(held) });
+        assert.doesNotThrow(read, `rank ${rank} in ${list}`);
+        for (const step of [...D.creationFlow.steps.map(s => s.id), "review"]) assert.doesNotThrow(() => Engine.validate(step, held), step);
+        assert.doesNotThrow(() => Engine.buildExport(held, { lock: true }));
+        assert.doesNotThrow(() => Engine.buildExport(held));
+        for (const kind of ["advantage", "disadvantage"]) for (const h of [null, { rank: 3 }, { rank: -1 }, { rank: "x" }])
+          assert.doesNotThrow(() => Engine.effectTagsFor(kind, "p20a-probe", h));
+        // Only the one good derivedMod on BOD isn't a derived stat: nothing here moved a value on a held rank 0 or junk rank.
+        if (!(Number(rank) >= 1)) assert.equal(JSON.stringify({ d: Engine.derived(held), m: D.stats.map(s => Engine.statMax(held, s.id)), c: Engine.startingCredits(held) }), before, `rank ${rank}: a bad row moved a value`);
+      }
+    }
+    // Every bad row alone is skipped: SAN and the caps read as if it weren't there.
+    const one = JSON.parse(JSON.stringify(ch));
+    one.disadvantages = [{ id: "p20a-probe", rank: 2, notes: "" }];
+    const after = JSON.stringify({ d: Engine.derived(one), m: D.stats.map(s => Engine.statMax(one, s.id)), c: Engine.startingCredits(one) });
+    assert.equal(after, before, "a hostile row moved a value");
+  } finally { D.disadvantages.pop(); D.advantages.pop(); }
+  // Total over a character migrate() can return, and over none at all.
+  for (const junk of [undefined, null, 5, "x", [], {}, Engine.newCharacter()]) {
+    for (const id of ["BOD", "NOPE", null, undefined, 7, {}]) assert.doesNotThrow(() => Engine.statMax(junk, id));
+    assert.doesNotThrow(() => Engine.derivedParts(junk, "SAN"));
+    assert.doesNotThrow(() => Engine.startingCredits(junk));
+  }
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.statMax(null, "BOD"))), { max: 10, by: null });
 });
