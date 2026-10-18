@@ -15,6 +15,8 @@
 
 **Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). Ken starts **P20b build**, then a fresh reviewer once the PR is open.
 
+**Amended 2026-10-17 after P20a's review** (PR #216). That review found two things P20a's sweep had missed: what a value is made of, and text that restates a rule. Both are now in §5 as **"Also read"** rows, with a P20b 9 test and a close-out line for characters that are already locked.
+
 **Carried over from P19's review:** every choice made without a ruling is a PQ (PQ1–PQ10). The worst one is PQ9: Take a hit doesn't double a head hit today, though `0530` says it does, so Thick Skull has nothing to cancel until that's decided.
 
 **Pre-flight against `main`** (`2d38dc9`):
@@ -90,6 +92,12 @@ N. **Pain, rest and Take a hit read the traits that change them: Terminal Diseas
 
 ## 5. What this changes underneath (the sweep)
 
+**Two kinds of reader that grepping callers misses** (P20a's review, PR #216). P20a's sweep listed every function that read `derived()` and `statRules.max`, and it still missed two things:
+- **What the value is made of.** P20a's cap error said "Lower it on the Stats step", but `statValue` is base + Focus + Stat Bonus + CP boosts, so the excess was often on another step. Before writing a rule against a number, list its parts.
+- **Text that restates the rule.** The Sanity panel's "Max is EMP × 10, computed." called no reader that changed, and a SAN cut made it wrong. Grep the prose and the data's `…Text` fields for the rule's numbers and words, not just the callers.
+
+The **Also read** rows at the end of this table apply both to P20b.
+
 | Today | Where | After P20b |
 |---|---|---|
 | `painState`: band + Conditions + Aberrations, clamp, + 213's shift (only at ≥1), clamp | `engine.js` ~1047 | + `onlyIfHurt: false` shifts with the base (PQ2), clamp, − `painIgnore` (PQ1, PQ3), floor 0. Reports `fromTraits` (signed) and `ignored`, and names each source. |
@@ -102,6 +110,10 @@ N. **Pain, rest and Take a hit read the traits that change them: Terminal Diseas
 | `hit` has no "what hit you" | the form, `hitInput` | `melee: boolean`, shown only when `Engine.hitAsks(ch)` says a held trait reads it (PQ10). Read by `resolveHit`; never saved. |
 | GM mode's encounter hit (`gm.js` ~1987, `engine` ~7470) | gm.js, engine | Passes `melee` through for a PC row; the box shows on a PC row by the same `hitAsks`. An NPC stand-in: no traits, so no box, but **PQ9's doubling applies to it too** (it's the book's rule for anyone). |
 | `effectTagsFor` | ~240 | Fills `painLevel` (both kinds), `painIgnore`, `healTimes`, `meleeTaken`, `headBonus` (Thick Skull), held and unheld. |
+| **Also read:** print's Pain ladder, `pPainBandFor` | `sheet.js` ~2572–2618 | A **second copy of the band lookup**, by HL index, so the blank sheet can show bands. A filled print shows bands from HL lost alone, and its note says "thresholds at 2, 5, 8 HL lost" (a hardcoded copy of the data). With Terminal Disease or Pain Tolerance, the ladder and the Pain the character feels disagree. The blank ladder stays as it is. A filled print with a trait shift names it beside the ladder, as the Pain card does. The note reads its thresholds from `painLevels`. |
+| **Also read:** the Rest panel's proposal | `sheet.js` `actInput` ~1143 | Computed in the UI (`perDay × days × Speed Heal`), not the engine. Move it into one engine reader (`naturalHealing(ch, { days, speed }).proposed`, with the factors named), as P20a's `statMax` became the one cap. The panel, the history label (~3594) and the tests then read the same number. |
+| **Also read:** the Rest panel's text | data `recoveryRules.naturalHealing.text` | "You recover HP equal to your BOD each day" stays the book's base rule. The panel names each multiplier next to it (§9). The sentence itself doesn't change. |
+| **Also read:** what a Pain Level is made of | `painState` | Band (from HL lost, or from Withering's HL under Pain Immunity, Decision 202), Conditions (Agonized), Aberrations (`painLevels`, Phantom Pain), then the traits. Pain Tolerance's "−1" names which of those it took. A source added later must not need a new branch in the UI. |
 
 ## 6. The shapes
 
@@ -162,6 +174,7 @@ appCopy:     hitMelee "Melee or Martial Arts" · hitDoubled "Head: ×2" · hitTh
 | `P20b 6: Take a hit asks what hit you only when it matters` | smoke-sheet-play + smoke-table-play | Scrapper held: the box shows, and ticking it changes `through`. Neither held: no box. A PC row in an encounter: the box shows; an NPC row: none. |
 | `P20b 7: the tags are computed, held and unheld` | rules | Each §8 entry's tags; Pain Tolerance held at 2: "Ignore 2 Pain Levels"; P18 4 passes. |
 | `P20b 8: the readers are total over hostile rows` | engine | `perRank` "1", `byRank` short or holding text, `minus` NaN, `halve` "yes", a hit with `melee: "true"`: nothing throws; bad rows are skipped. |
+| `P20b 9: print and the panels' words follow the traits` | smoke-sheet-* | Terminal Disease, unhurt: a filled print names it beside the ladder; the ladder's note reads its thresholds from the data (mutant: a band threshold edited in data, the note follows). Rapid Healing 2: the Rest panel and its history label read the engine's proposal and name "×3 Rapid Healing". |
 
 ## 11. Tests beyond the examples
 
@@ -207,7 +220,9 @@ Suggested CHANGELOG lines (player voice):
 - **Take a hit knows a Melee or Martial Arts hit** when you're a Scrapper or a Giant, and takes your trait off it.
 - **A hit to the head doubles, as the book says,** unless your helmet or your Thick Skull says otherwise.
 
-**Review checklist:** §10's tests run on `main` (1 and 2 fail there); §5 confirmed; §8 against the book; PQ1–PQ10 in the decision's Rejected; mutants 1–10; phone-check and the dev preview; `npm run verify` green.
+**Characters already locked.** Nothing in P20b is seeded or written at the lock, so a character made before it follows on load: its Pain, its rest and its hits change on their own. Say so in the PR, and probe one. Load a locked character from `main` that holds Terminal Disease, and read its Pain on both builds. P20a's Wealthy was paid only at the lock, so characters made before it never got it, and that gap was found in review. Here there should be none. If one turns up, it goes in the CHANGELOG line and the decision's **Revisit if**.
+
+**Review checklist:** §10's tests run on `main` (1 and 2 fail there); §5 confirmed, its **Also read** rows included; §8 against the book; PQ1–PQ10 in the decision's Rejected; mutants 1–10; phone-check and the dev preview; `npm run verify` green.
 
 ## 16. Handing it over
 
