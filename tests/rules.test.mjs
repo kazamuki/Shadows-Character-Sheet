@@ -2613,7 +2613,7 @@ test("P20a 8: the tags are computed, held and unheld", () => {
   same(comp("disadvantage", "age"), ["BOD max 5", "REF max 6", "MOB max 6"]);
   same(comp("disadvantage", "dwarf").slice(0, 2), ["BOD max 8", "MOB max 3"]);
   assert.ok(comp("disadvantage", "dwarf").includes("+3 on checks with Stealth when hiding"), "P19's chip is still there");
-  same(comp("disadvantage", "giant"), ["BOD max 11", "REF max 5", "MOB max 8"]);
+  same(comp("disadvantage", "giant"), ["BOD max 11", "REF max 5", "MOB max 8", "Melee and Martial Arts damage to you −4"]);   // P20b 7 adds the last
   same(comp("advantage", "wealthy"), ["+Ç10,000 to start"]);
   same(comp("advantage", "wealthy", held(2)), ["+Ç10,000 to start"]);
   // What stays a rule row still says its words; the moved numbers are gone from the rule lines.
@@ -2629,4 +2629,178 @@ test("P20a 8: the tags are computed, held and unheld", () => {
   same(users("derivedMod"), ["berserker", "blood-lust", "fanatic", "hallucinations", "minor-insanity"]);
   same(users("statMax"), ["age", "dwarf", "giant"]);
   same(users("startingCredits"), ["wealthy"]);
+});
+
+// ── P20b: numbers in play (Decision 236) ──────────────────────────────────
+// Pain, rest and Take a hit read the traits that change them. The book is the source (0430, 0440, 0530, 0540).
+const sub20b = (bod = 10) => subject({ bod });
+const pain20b = (ch, damage = 0) => { ch.trackers.damage = damage; return JSON.parse(JSON.stringify(Engine.painState(ch))); };
+// BOD 10 is 5 HP a Health Level: 0, 5, 10, 25, 40 damage is 0, 1, 2, 5, 8 lost, so bands 0, 0, 1, 2, 3.
+const hit20b = (ch, over = {}) => Engine.resolveHit(ch, { damage: 12, damageType: "ballistic", category: "regular", ...over });
+const w20b = (...ids) => { const ch = sub20b(); for (const id of ids) hold19(ch, ["giant", "terminal-disease", "pain-sensitive"].includes(id) ? "disadvantages" : "advantages", id); return ch; };
+
+test("book 0430/0440: the numbers P20b computes are the book's", () => {
+  const dis = crb("0440_Disadvantages.md"), adv = crb("0430_Advantages.md");
+  assert.match(dis, /always at Pain Level 1\. This stacks with Pain Level increases from lost Health Levels/i);
+  assert.match(adv, /Ignore 1 level of Pain per rank/);
+  assert.match(adv, /| 1s+| x2s+|[sS]*| 2s+| x3s+|[sS]*| 3s+| x4s+|/);
+  // Scrapper's data text is Deighton's rewrite (rulings-2026-10-16): Melee and Martial Arts, halved, rounded down, not
+  // less than 1. The mirror's older line ("hand-to-hand ... and blunt melee weapon damage ... halved") has no floor.
+  assert.match(D.advantages.find(a => a.id === "scrapper").description, /Melee and Martial Arts attacks is halved, rounded down, but not less than 1/);
+  assert.match(adv, /Ignore bonus damage from normal attacks hitting the head/);
+  assert.match(dis, /reduced by 4/);
+  const row = (list, id, type) => list.find(d => d.id === id).grants.filter(g => g.type === type);
+  same(row(D.disadvantages, "terminal-disease", "painLevel"), [{ type: "painLevel", amount: 1, onlyIfHurt: false }]);
+  same(row(D.advantages, "pain-tolerance", "painIgnore"), [{ type: "painIgnore", perRank: 1 }]);
+  same(row(D.advantages, "rapid-healing", "healTimes"), [{ type: "healTimes", byRank: [2, 3, 4] }]);
+  same(row(D.advantages, "scrapper", "meleeTaken"), [{ type: "meleeTaken", halve: true, floor: 1 }]);
+  same(row(D.disadvantages, "giant", "meleeTaken"), [{ type: "meleeTaken", minus: 4 }]);
+  same(row(D.advantages, "thick-skull", "headBonus"), [{ type: "headBonus", ignore: true }]);
+  same(D.aberrations.find(a => a.id === "fast-metabolism").naturalHealingTimes, 2);
+});
+
+test("P20b 1: Terminal Disease adds Pain, always", () => {
+  const ladder = [0, 5, 10, 25, 40];
+  const plain = ladder.map(d => pain20b(sub20b(), d));
+  const td = d => pain20b(w20b("terminal-disease"), d);
+  same(ladder.map(d => td(d).level), [1, 1, 2, 3, 3]);
+  same(td(0).painSources, ["Terminal Disease"]);
+  assert.equal(td(0).fromTraits, 1);
+  same(td(40).painSources, [], "the cap left no room, so it is not named");
+  // Every Skill check carries the unhurt Pain.
+  const base = checks19(sub20b()), sick = checks19(w20b("terminal-disease"));
+  for (const id of Object.keys(base)) assert.equal(sick[id], base[id] - 1, `${id}: the disease is in the check`);
+  // Pain Sensitive reads it as hurt (PQ2): unhurt with both is 2.
+  const both = w20b("terminal-disease", "pain-sensitive");
+  assert.equal(pain20b(both, 0).level, 2);
+  same(pain20b(both, 0).painSources, ["Terminal Disease", "Pain Sensitive"]);
+  // Pain Immunity (PQ4): the Health Levels don't count, the disease does.
+  const vamp = w20b("terminal-disease"); vamp.identity.archetype = "vampire";
+  assert.equal(pain20b(vamp, 0).level, 1);
+  // Nothing held: painState is what main computes, for the ladder of Health Levels lost.
+  same(plain.map(p => [p.level, p.fromTraits, p.painSources, p.skillPenalty, p.ignored]), [[0, 0, [], 0, 0], [0, 0, [], 0, 0], [1, 0, [], -1, 0], [2, 0, [], -2, 0], [3, 0, [], -3, 0]]);
+});
+
+test("P20b 2: Pain Tolerance ignores Pain after the clamp", () => {
+  const pt = (rank, ...more) => { const ch = w20b(...more); hold19(ch, "advantages", "pain-tolerance", rank); return ch; };
+  const td = "terminal-disease";
+  assert.equal(pain20b(pt(1, td), 0).level, 0, "rank 1 with Terminal Disease, unhurt");
+  assert.equal(pain20b(pt(2), 40).level, 1, "rank 2 at band 3");
+  assert.equal(pain20b(pt(1, td), 40).level, 2, "band 3 plus the disease clamps to 3, then 1 comes off (PQ1)");
+  assert.equal(pain20b(pt(3), 5).level, 0, "never below 0");
+  assert.equal(pain20b(pt(1, td), 0).ignored, 1);
+  assert.equal(pain20b(pt(2), 40).ignored, 2);
+  assert.equal(pain20b(pt(3), 5).ignored, 0, "it reports what it took, not what it could");
+  same(pain20b(pt(2), 40).ignoredBy, ["Pain Tolerance"]);
+  // Any Pain (PQ3): a Condition's too.
+  const ag = pt(1); assert.equal(Engine.addCondition(ag, { id: "agonized" }).ok, true);
+  assert.equal(pain20b(ag, 0).level, 0);
+  // The penalties follow the level the character feels.
+  const p = pain20b(pt(1, td), 0);
+  assert.deepEqual([p.skillPenalty, p.essencePenalty, p.breakerPenalty], [0, 0, 0]);
+  const base = checks19(pt(1, td)), none = checks19(sub20b());
+  for (const id of Object.keys(base)) assert.equal(base[id], none[id], `${id}: Pain Tolerance took the disease's penalty off`);
+});
+
+test("P20b 3: rest heals by every multiplier", () => {
+  const rh = (rank = 2) => hold19(subject({ bod: 6 }), "advantages", "rapid-healing", rank);
+  const nh = (ch, o) => JSON.parse(JSON.stringify(Engine.naturalHealing(ch, o)));
+  assert.equal(nh(subject({ bod: 6 }), { days: 1 }).proposed, 6, "nothing held is BOD a day");
+  assert.equal(nh(rh(), { days: 1 }).proposed, 18);
+  assert.equal(nh(rh(1), { days: 1 }).proposed, 12);
+  assert.equal(nh(rh(3), { days: 2 }).proposed, 48);
+  assert.equal(nh(rh(), { days: 1, speed: true }).proposed, 36, "the multipliers multiply (PQ5)");
+  const fm = rh(); fm.trackers.aberrations = [{ id: "fast-metabolism", permanence: "temporary" }];
+  assert.equal(nh(fm, { days: 1, speed: true }).proposed, 72);
+  same(nh(fm, { days: 1, speed: true }).factors.map(f => [f.name, f.x]), [["Rapid Healing", 3], ["Fast Metabolism", 2], ["Speed Heal", 2]]);
+  assert.equal(nh(fm, { days: 0 }).proposed, 0);
+  // Focused Healing and a Nanomed Kit take the HP the player enters; the kit's proposal is BOD's.
+  assert.equal(Engine.nanomedKit(rh(), 1).proposed, 6);
+  const hurt = rh(); hurt.trackers.damage = 20;
+  assert.equal(Engine.heal(hurt, { kind: "focused", hp: 5 }).ok, true);
+  assert.equal(hurt.trackers.damage, 15, "Focused Healing took exactly the HP entered");
+});
+
+test("P20b 4: Giant and Scrapper answer Melee and Martial Arts, after Natural Armor", () => {
+  const th = (ch, o) => hit20b(ch, o).through;
+  assert.equal(th(w20b("giant"), { melee: true }), 8);
+  assert.equal(th(w20b("scrapper"), { melee: true }), 6);
+  assert.equal(th(w20b("giant", "scrapper"), { melee: true }), 4, "Giant's 4 comes off first: 12 → 8 → 4");
+  same(hit20b(w20b("giant", "scrapper"), { melee: true }).taken.map(t => [t.name, t.from, t.to]), [["Giant", 12, 8], ["Scrapper", 8, 4]]);
+  // The order is Giant's, whichever the character took first.
+  same(hit20b(w20b("scrapper", "giant"), { melee: true }).taken.map(t => t.name), ["Giant", "Scrapper"]);
+  assert.equal(th(w20b("scrapper"), { melee: true, damage: 1 }), 1, "never below 1");
+  assert.equal(th(w20b("scrapper"), { melee: true, damage: 0 }), 0, "nothing through stays nothing");
+  assert.equal(th(w20b("giant", "scrapper"), { melee: true, damage: 3 }), 0, "Giant took it all, so Scrapper has nothing to raise");
+  // Not melee, or not a boolean: as ever.
+  assert.equal(th(w20b("giant", "scrapper"), {}), 12);
+  assert.equal(th(w20b("giant", "scrapper"), { melee: "true" }), 12);
+  same(hit20b(w20b("giant", "scrapper"), {}).taken, []);
+  // Massive takes Health Levels outright (PQ8).
+  const m = hit20b(w20b("giant", "scrapper"), { melee: true, category: "massive" });
+  assert.equal(m.levelsLost, hit20b(sub20b(), { category: "massive" }).levelsLost);
+  assert.equal(m.taken.length, 0);
+  // After Natural Armor (PQ7): 12, Thick Skin 3 → 9, Giant → 5, Scrapper → 2.
+  const nat = w20b("giant", "scrapper"); hold19(nat, "advantages", "thick-skin", 3);
+  const n = hit20b(nat, { melee: true });
+  same(n.taken.map(t => [t.from, t.to]), [[9, 5], [5, 2]]);
+  assert.equal(n.natural.absorbed, 3);
+  // Withering: halved by Scrapper, and the Wither Ward comes after it (Decision 223).
+  assert.equal(th(w20b("scrapper"), { melee: true, category: "withering" }), 6);
+  assert.equal(JSON.stringify(Engine.hitAsks(w20b("giant"))), JSON.stringify({ melee: true }));
+  assert.equal(JSON.stringify(Engine.hitAsks(w20b("scrapper"))), JSON.stringify({ melee: true }));
+  assert.equal(JSON.stringify(Engine.hitAsks(sub20b())), JSON.stringify({ melee: false }));
+});
+
+test("P20b 5: a head hit doubles unless a helmet or Thick Skull says otherwise", () => {
+  const head = (ch, o = {}) => hit20b(ch, { damage: 6, location: "head", ...o });
+  assert.equal(head(sub20b()).through, 12);
+  same(head(sub20b()).doubled, { from: 6, to: 12 });
+  assert.equal(hit20b(sub20b(), { damage: 6 }).through, 6, "center mass is not the head");
+  assert.equal(hit20b(sub20b(), { damage: 6, location: "torso" }).doubled, null);
+  const skull = w20b("thick-skull");
+  assert.equal(head(skull).through, 6);
+  assert.equal(head(skull).doubled, null);
+  assert.equal(head(skull).headIgnoredBy, "Thick Skull");
+  assert.equal(head(sub20b()).headIgnoredBy, null);
+  assert.equal(head(sub20b(), { category: "withering" }).through, 6, "Regular only (PQ9)");
+  assert.equal(head(sub20b(), { category: "massive" }).doubled, null);
+  // A helmet turns the head shot into a torso hit: not doubled, and the vest answers it.
+  const hat = wearing(wearing(subject({ bod: 10 })), "motorcycle-helmet");
+  const r = head(hat, { protRoll: 3 });
+  assert.deepEqual([r.location, r.covered, r.doubled, r.through], ["torso", true, null, 1]);
+  assert.equal(r.damage, 6); assert.ok(r.redirectedBy);
+  // Resistance halves first, then the head doubles, then PROT and RES (PQ9).
+  const noArm = hit20b(sub20b(), { damage: 7, location: "head" });
+  same(noArm.doubled, { from: 7, to: 14 });
+  assert.equal(noArm.through, 14);
+});
+
+test("P20b 7: the tags are computed, held and unheld", () => {
+  const comp = (kind, id, h = null) => tagsOf(kind, id, h).filter(t => t.computed).map(t => t.text);
+  const rule = (kind, id) => tagsOf(kind, id).filter(t => !t.computed).map(t => t.text);
+  const held = rank => ({ rank });
+  same(comp("disadvantage", "terminal-disease"), ["Always at least Pain Level 1"]);
+  same(comp("advantage", "pain-tolerance"), ["Ignore 1 Pain Level a rank"]);
+  same(comp("advantage", "pain-tolerance", held(2)), ["Ignore 2 Pain Levels"]);
+  same(comp("advantage", "pain-tolerance", held(1)), ["Ignore 1 Pain Level"]);
+  same(comp("advantage", "rapid-healing"), ["Rest heals ×2 (rank 1), ×3 (2) or ×4 (3)"]);
+  same(comp("advantage", "rapid-healing", held(2)), ["Rest heals ×3"]);
+  same(comp("advantage", "scrapper"), ["Melee and Martial Arts damage to you halved (never below 1)"]);
+  same(comp("disadvantage", "giant").slice(-1), ["Melee and Martial Arts damage to you −4"]);
+  same(comp("advantage", "thick-skull"), ["A hit to your head doesn't double"]);
+  // What stays a rule row still says its words; the numbers moved into the computed rows are gone from them.
+  assert.ok(rule("disadvantage", "terminal-disease").every(t => !/Pain Level 1/.test(t)));
+  assert.ok(rule("disadvantage", "giant").every(t => !/−4/.test(t)));
+  assert.equal(rule("advantage", "scrapper").length, 0);
+  assert.equal(rule("advantage", "pain-tolerance").length, 0);
+  assert.equal(rule("advantage", "thick-skull").length, 0);
+  for (const [kind, id, rank] of [["disadvantage", "terminal-disease", 1], ["advantage", "pain-tolerance", 3], ["advantage", "rapid-healing", 3], ["advantage", "scrapper", 1], ["disadvantage", "giant", 1], ["advantage", "thick-skull", 1]])
+    for (const h of [null, held(rank)]) for (const t of comp(kind, id, h)) assert.ok(!/[{}]|undefined|NaN/.test(t), `${id}: "${t}"`);
+  // The types are used by exactly these entries (§8).
+  const users = type => P18_DEFS.filter(([, d]) => d.grants.some(g => g.type === type)).map(([, d]) => d.id).sort();
+  same(users("painIgnore"), ["pain-tolerance"]);
+  same(users("healTimes"), ["rapid-healing"]);
+  same(users("meleeTaken"), ["giant", "scrapper"]);
+  same(users("headBonus"), ["thick-skull"]);
 });

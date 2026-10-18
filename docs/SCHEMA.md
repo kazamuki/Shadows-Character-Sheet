@@ -229,6 +229,12 @@ window.SHADOWS_DATA = {
           ruleText: "...",                       // the general line (the wizard, an entry not taken)
           heldText: "... {rank} {v} {choice} ...", // optional: a held entry's own line
           byRank: [4, 6, 8] }                    // optional: one value per rank (rank 2 = byRank[1]), maxRank long
+        // (Decision 236) A trait's numbers in play, read by Engine.grants() (advantages, disadvantages, taken Majors), a trait counted once.
+        // { type: "painLevel", amount: 1, onlyIfHurt: false }   Pain it holds you at (Terminal Disease); `true` is Pain Sensitive's
+        // { type: "painIgnore", perRank: 1 }                    Pain taken off after the clamp, never below 0 (Pain Tolerance)
+        // { type: "healTimes", byRank: [2, 3, 4] }              multiplies a rest's healing (Rapid Healing); an Aberration has `naturalHealingTimes: 2`
+        // { type: "meleeTaken", minus: 4 } / { halve: true, floor: 1 }   damage that gets through a Melee or Martial Arts hit (Giant, Scrapper)
+        // { type: "headBonus", ignore: true }                   a head hit isn't doubled (Thick Skull)
         // (Decision 235) A trait's numbers on a build, read by Engine.derivedParts / statMax / startingCredits from the five sources
         // naturalArmor() scans (not grants()'s three), once per trait with its ranks summed. A bad row is skipped, never thrown.
         // { type: "derivedMod", stat: "SAN", amount: -15 }   a cut or bonus to a `derived` id, after its floor and cap
@@ -257,6 +263,11 @@ window.SHADOWS_DATA = {
   // Dark"), visibilityAttacks ({levels}, "Dim −1 and Dark −3"). Read by Engine.skillLine and attackNotes.
   skillRowText: { takeX: "Take {x}: {total} (choose before you roll)" },
   // (Decision 234) appCopy.expertTitle: the Expert mode button's tooltip, naming the four steps it folds.
+  // (Decision 236) effectTags: painLevelAlways ("Always at least Pain Level {amount}"), painIgnore ("Ignore {perRank} Pain Level a rank"),
+  // healTimes ("Rest heals {ranks}"), meleeTakenMinus, meleeTakenHalve, headBonus; effectTagsHeld: painIgnoreOne, painIgnoreMany ({total}),
+  // healTimes ("Rest heals ×{v}"). appCopy: hitMelee, hitDoubled, hitThickSkull. painState also returns { ignored, ignoredBy };
+  // naturalHealing(ch, { days, speed }) returns { times, factors, proposed }; hitAsks(ch) is { melee }; resolveHit reads `hit.melee`
+  // (a real boolean, form state, never saved) and returns { doubled: {from,to}|null, headIgnoredBy, taken: [{name,from,to}] }.
   // (Decision 235) effectTags: derivedMod ("Max {stat} {amount}"), derivedModPerRank, statMax ("{stat} max {max}"), startingCredits
   // ("+Ç{amount} to start"); effectTagsHeld.derivedMod ("Max {stat} {total}"). {stat} is the stat's id. appCopy: statMaxBy ("Max {max} ({by}).",
   // the Stats step's line and canBoost's refusal), statMaxOver (the CP card's line) and statMaxLock (the lock's error), filled with {stat} {value} {max} {by}.
@@ -4694,6 +4705,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Why:** Pain Sensitive did nothing, and a playtester read "2d10+15, enter the result" as "enter the dice" (W92, W93). Both rules now live as numbers in the data (Decisions 134, 135), so Deighton's rebalanced Improved (3d10+30, W103) is a data edit.
      - **Rejected:** a `painSensitive` id check in the engine (Decision 135: no ids in code); keeping "enter the total" and only relabelling the box (the wizard's rolls already take the dice and add the base, so Improved was the odd one out); a live total beside the box (PQ1: "+ 15 IP" is the fix, and the IP log shows the total after); taking Improved on an empty box (PQ2: a Milestone taken with no IP is a silent loss); applying the shift at Pain Level 0 (Ken's reading, 2026-10-10: "does not apply if you have no pain levels").
      - **Replaces:** nothing. Extends 104 (a new `grants` type).
+     → **Superseded in part by Decision 236** — a `painLevel` grant with `onlyIfHurt: false` (Terminal Disease) is read: it adds with the rest, counts as hurt for Pain Sensitive, and Pain Tolerance takes Pain off after the clamp.
      - **Revisit if:** another trait shifts Pain unconditionally (`onlyIfHurt: false` is the room left for it), or a Minor's roll needs more than dice plus a flat number.
      - **Built:** app 0.39.2, game data 0.34, no schema bump. Log 2026-10-10 (P1).
 
@@ -4868,7 +4880,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Why:** Ken's shape for W120: one place per effect, the computed ones unable to drift from what the sheet applies, and Expert mode (P13) able to show what an entry does without its prose. The rule lines are the sign-off page's, approved by Ken, Deighton and Scott.
      - **Rejected:** a free-text `mechanicsText` per entry (a second copy of every rule); a hand-written tag on a computed row (the same drift); splitting `description` at its first paragraph (flavor in some entries, rules in others); computing the 19 here (rules questions); tags on the CP step only; truncating a long rule (a cut-off rule is a wrong rule); print (the front page is full, 96).
      - **Replaces:** nothing. Extends 199 (Majors' `grants` share the reader, which skips `rule`) and 213 (Pain Sensitive gains a tag). Eleven `description`s move with Deighton's rulings of 2026-10-16.
-     → **Superseded in part by Decisions 232, 233 and 235** — nine entries' effects (the five Sanity cuts, Age, Dwarf, Giant, Wealthy's Ç10,000) and Arcane Fortitude's are computed rows (235); a held card's computed tag states its total (`effectTagsHeld`), a held Milestone row past the rank is left off, and the tags reach four more places (232); 16 entries' effects are computed rows on a Skill's check, with their own tag templates (233).
+     → **Superseded in part by Decisions 232, 233, 235 and 236** — six more entries' effects (Terminal Disease's Pain, Pain Tolerance, Rapid Healing, Scrapper, Giant's −4, Thick Skull) are computed rows (236); nine entries' effects (the five Sanity cuts, Age, Dwarf, Giant, Wealthy's Ç10,000) and Arcane Fortitude's are computed rows (235); a held card's computed tag states its total (`effectTagsHeld`), a held Milestone row past the rank is left off, and the tags reach four more places (232); 16 entries' effects are computed rows on a Skill's check, with their own tag templates (233).
      - **Revisit if:** a table rule becomes computable (P19 or P20 moves it to a computed type); the CRB rewrites an entry (its rule rows are rewritten with it).
      - **Built:** app 0.48.0, no data or schema bump, PR #207. Log 2026-10-16 (P18).
 
@@ -4908,6 +4920,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 231 in part (ten entries' effects become computed rows). Extends 77 (the first real `excludes` pair) and 135 (`modFloor` is read by code).
      - **Revisit if:** Deighton drops Age's MOB cap (W130); a GM needs a cap to hold in play; Wealthy's monthly pay becomes a Milestone payday (W129); a Wealthy character locked before 0.50.0 should be paid (a `migrate()` question).
      - **Built:** app 0.50.0, game data 0.42, no schema bump, PR #216. Log 2026-10-17 (P20a).
+
+236. **Pain, rest and Take a hit read the traits that change them: Terminal Disease adds Pain, Pain Tolerance ignores it, Rapid Healing multiplies rest, and Scrapper, Giant and Thick Skull answer a hit.**
+     *2026-10-18 · Ken + Claude · Touches: painState, painLevel grant, onlyIfHurt, painIgnore, naturalHealing, Rest, Speed Heal, healTimes, naturalHealingTimes, resolveHit, hit.melee, meleeTaken, hitAsks, head doubling, Thick Skull, Terminal Disease, Pain Tolerance, Rapid Healing, Fast Metabolism, Scrapper, Giant, Take a hit, print Pain ladder*
+     - **Decided:** `painLevel` with `onlyIfHurt: false` adds always and counts as hurt for Pain Sensitive; the sum clamps to the table, then `painIgnore` (per rank) comes off, never below 0 (`painState` reports `ignored`). `healTimes` and an Aberration's `naturalHealingTimes` multiply a rest with each other and Speed Heal, in one reader (`naturalHealing(ch, { days, speed }).proposed`). Take a hit asks "Melee or Martial Arts" (`hit.melee`, form state, never saved) only when a held trait reads it (`hitAsks`); `meleeTaken` rows apply to what has got through, after Natural Armor and before Wither Ward, Giant's cut first, on Regular and Withering. An unredirected Regular Head hit doubles (after Resistance, before PROT) unless Thick Skull (`headBonus`); an NPC stand-in doubles too. Print names a trait's Pain shift beside the ladder.
+     - **Why:** The effects sign-off (rulings-2026-10-16), unanimous, and Deighton's Scrapper text; 213's own Revisit if.
+     - **Rejected:** Pain Tolerance before the clamp; only Health Levels counting as hurt or as what Pain Tolerance ignores; Pain Immunity cancelling Terminal Disease; Speed Heal and Rapid Healing adding; Fast Metabolism left to P21; Giant and Scrapper before armor; the melee stage on Massive; the player doubling a head hit; the melee box always shown.
+     - **Replaces:** Decision 213 in part (an unconditional Pain shift is read). Decision 231 in part (these entries become computed rows). Extends 99, 220 and 223.
+     - **Revisit if:** P21 adds power reductions to the same stage; Deighton rules the head differently; GM mode's PC rows gain a character (S3b), which would let them ask the melee box.
+     - **Built:** app 0.51.0, game data 0.43, no schema bump. Log 2026-10-18 (P20b).
 
 ## 5. Open Flags
 

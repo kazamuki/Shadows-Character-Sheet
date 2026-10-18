@@ -1979,3 +1979,23 @@ test("P8b 18: GM mode's Reset row shows the marks and the check", () => {
   assert.ok(text.includes(W.resetCheck), "the check is asked beside the mark");
   assert.deepEqual(app.errors, []);
 });
+
+// ── P20b: numbers in play (Decision 236) ──
+test("P20b 6c: an encounter hit has no melee box, and an NPC's head hit doubles", () => {
+  const app = hitApp();
+  // A PC row holds a name and the GM's numbers, no character, so there is no trait to ask; an NPC stand-in holds none either.
+  for (const name of ["Dez", "Wren"]) {
+    hitBtn(app, name).click();
+    assert.equal(app.$('[data-ehitpanel] [data-ehit-melee], [data-ehitpanel] [data-hit="melee"]'), null, `${name}'s hit panel asks what hit it`);
+    app.click("[data-ehit-cancel]");
+  }
+  // The book's rule applies to anyone: a head hit on Dez doubles, and the preview says so.
+  hitBtn(app, "Dez").click();
+  changeTo(app, "[data-ehit-loc]", "head");
+  fillHit(app, 6, "blade");
+  assert.match(preview(app), /Head: ×2: 6 → 12/);
+  assert.match(preview(app), /12 through/);
+  changeTo(app, "[data-ehit-loc]", "left-leg");
+  assert.doesNotMatch(preview(app), /×2/);
+  assert.deepEqual(app.errors, []);
+});

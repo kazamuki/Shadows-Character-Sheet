@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.42",
+    "gamedataVersion": "0.43",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -1086,6 +1086,12 @@ window.SHADOWS_DATA = {
     "luckCost": "LUCK: {action} costs {cost}",
     "milestone": "A {kind} Milestone at rank {atRank}",
     "painLevel": "Pain Level +{amount} once you're hurt",
+    "painLevelAlways": "Always at least Pain Level {amount}",
+    "painIgnore": "Ignore {perRank} Pain Level a rank",
+    "healTimes": "Rest heals {ranks}",
+    "meleeTakenMinus": "Melee and Martial Arts damage to you −{minus}",
+    "meleeTakenHalve": "Melee and Martial Arts damage to you halved (never below {floor})",
+    "headBonus": "A hit to your head doesn't double",
     "creationOnly": "Creation only",
     "checkMod": "{amount} on checks with {skills}",
     "checkModWhen": "{amount} on checks with {skills} {whenText}",
@@ -1131,7 +1137,10 @@ window.SHADOWS_DATA = {
     "skillPoints": "+{total} Skill Points",
     "hpPerLevel": "+{total} max HP on every Health Level",
     "naturalArmor": "+{total} Natural Armor; Armor Piercing doesn't touch it, unless it's a spell",
-    "derivedMod": "Max {stat} {total}"
+    "derivedMod": "Max {stat} {total}",
+    "painIgnoreOne": "Ignore {total} Pain Level",
+    "painIgnoreMany": "Ignore {total} Pain Levels",
+    "healTimes": "Rest heals ×{v}"
   },
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
@@ -1606,7 +1615,7 @@ window.SHADOWS_DATA = {
       "maxRank": 3,
       "description": "Pain is an invoice. You stopped paying full price.\n\nIgnore 1 level of Pain per rank.",
       "grants": [
-        { "type": "rule", "ruleText": "Ignore 1 Pain Level per rank." }
+        { "type": "painIgnore", "perRank": 1 }
       ]
     },
     {
@@ -1627,7 +1636,7 @@ window.SHADOWS_DATA = {
       "maxRank": 3,
       "description": "While out of combat, your body heals faster.\n\n- Rank 1 — Heal Multiplier: x2\n\n- Rank 2 — Heal Multiplier: x3\n\n- Rank 3 — Heal Multiplier: x4",
       "grants": [
-        { "type": "rule", "ruleText": "Out of combat, heal ×2 (rank 1), ×3 (2) or ×4 (3).", "heldText": "Out of combat, heal ×{v}.", "byRank": [2, 3, 4] }
+        { "type": "healTimes", "byRank": [2, 3, 4] }
       ]
     },
     {
@@ -1679,7 +1688,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "You've been hit before. These days it's a rounding error.\n\nDamage taken from Melee and Martial Arts attacks is halved, rounded down, but not less than 1.",
       "grants": [
-        { "type": "rule", "ruleText": "Damage taken from Melee and Martial Arts attacks is halved, rounded down, but not less than 1." }
+        { "type": "meleeTaken", "halve": true, "floor": 1 }
       ]
     },
     {
@@ -1739,7 +1748,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Aim for the head. See where it gets you.\n\nIgnore bonus damage from normal attacks hitting the head. Damage added from an exploded roll still applies.",
       "grants": [
-        { "type": "rule", "ruleText": "Ignore the bonus damage from normal hits to the head; exploded damage still counts." }
+        { "type": "headBonus", "ignore": true }
       ]
     },
     {
@@ -2021,7 +2030,7 @@ window.SHADOWS_DATA = {
         { "type": "statMax", "stat": "BOD", "max": 11 },
         { "type": "statMax", "stat": "REF", "max": 5 },
         { "type": "statMax", "stat": "MOB", "max": 8 },
-        { "type": "rule", "ruleText": "Melee and Martial Arts damage to you −4." },
+        { "type": "meleeTaken", "minus": 4 },
         { "type": "rule", "ruleText": "Attackers get +1 Accuracy against you, even behind cover. +2 automatic hits on BOD Essence Checks grappling someone smaller. At least 6'10\"." }
       ]
     },
@@ -2166,7 +2175,7 @@ window.SHADOWS_DATA = {
       "maxRank": 1,
       "description": "Everyone in NYTE City is dying. You’ve got a schedule.\n\nThe disease is terminal. How much time you have left is a matter of when, not if. Maybe as little as six months from the start of play.\n\n- You are always at Pain Level 1. This stacks with Pain Level increases from lost Health Levels.\n\n- Physical Essence Checks (BOD, REF, MOB) have a +1 to Target number.\n\n- Unless you cure your illness, you will die within 5+1d4 months.",
       "grants": [
-        { "type": "rule", "ruleText": "Always at Pain Level 1, on top of lost Health Levels." },
+        { "type": "painLevel", "amount": 1, "onlyIfHurt": false },
         { "type": "rule", "ruleText": "BOD, REF and MOB Essence Checks: TN +1. Without a cure, death in 5 + 1d4 months." }
       ]
     },
@@ -3920,6 +3929,9 @@ window.SHADOWS_DATA = {
     "expertHint": "Folds each entry to its name and cost. Tap ? to read one.",
     "expertTitle": "Folds the reading on the Stats, Archetype, Skills and Character Points steps. Tap ? to read one.",
     "unsettledLabel": "Not settled yet",
+    "hitMelee": "Melee or Martial Arts",
+    "hitDoubled": "Head: ×2",
+    "hitThickSkull": "Head: not doubled (Thick Skull)",
     "unsettledRule": "This rule is still being written. Until it is, it's your GM's call.",
     "houseRuleLabel": "How this works",
     "statusLabel": {
@@ -4926,7 +4938,7 @@ window.SHADOWS_DATA = {
      and a different list. `as` names the Advantage or Disadvantage an entry
      works like, as the CRB prints it; it's display text, not a grant. Once the character has an
      Aberration (`trackers.aberrations`, Decision 110), `painLevels` adds to
-     Pain like a Condition and `adjust` moves a derived stat after its own
+     Pain like a Condition, `naturalHealingTimes` multiplies a rest's healing (Decision 236), and `adjust` moves a derived stat after its own
      floor, down to `aberrationRules.adjustFloor`. */
   "cascadeTable": {
     "die": "1d10",
@@ -4980,7 +4992,7 @@ window.SHADOWS_DATA = {
     {"id": "bioluminescence", "name": "Bioluminescence", "category": "neutral", "description": "A soft glow emanates from part of your body. Roll 1d4 for its trigger: 1 — during or after spellcasting; 2 — at will; 3 — in darkness only; 4 — under emotional or physical stress. The color reflects your bond with the Aether, agreed with the GM. It cannot be suppressed once triggered."},
     {"id": "dense-frame", "name": "Dense Frame", "category": "neutral", "description": "Your body has grown impossibly heavy. +2 dice to resist being pushed, shoved, or knocked Prone. You sink in water and cannot swim."},
     {"id": "elemental-blood", "name": "Elemental Blood", "category": "neutral", "description": "Your blood has taken on an elemental quality. Roll 1d3: 1 — Fire, 2 — Cold, 3 — Lightning. Halve damage you take from that element. Anyone who strikes you unarmed or in melee takes ½ Spell Power Elemental damage.", "sp": { "description": { "times": 0.5 } }},
-    {"id": "fast-metabolism", "name": "Fast Metabolism", "category": "neutral", "description": "Your cellular processes have accelerated. You heal twice as fast from rest and recover from conditions more quickly. Toxins and drugs — helpful ones included — run their course in half the time."},
+    {"id": "fast-metabolism", "name": "Fast Metabolism", "category": "neutral", "naturalHealingTimes": 2, "description": "Your cellular processes have accelerated. You heal twice as fast from rest and recover from conditions more quickly. Toxins and drugs — helpful ones included — run their course in half the time."},
     {"id": "fine-bristles", "name": "Fine Bristles", "category": "neutral", "description": "Thousands of near-invisible hairs register changes in airflow, pressure, and vibration. Within 3 meters, you detect movement and presence regardless of visibility."},
     {"id": "heterochromia", "name": "Heterochromia", "category": "neutral", "description": "Your eyes have become mismatched in color. Entirely cosmetic, but immediately recognizable to anyone who knows the signs."},
     {"id": "light-frame", "name": "Light Frame", "category": "neutral", "description": "Your body has grown impossibly light. Falls deal half damage. Pushes, shoves, and concussive force move you twice as far."},

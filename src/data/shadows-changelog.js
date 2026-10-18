@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.50.0",
+    "version": "0.51.0",
     "date": null,
     "intro": [],
     "items": [
@@ -16,7 +16,11 @@ window.SHADOWS_CHANGELOG = [
       "**Take X shows what you'd get:** Common Sense on Investigation reads \"Take 6: 13\". Choose it before you roll.",
       "**Your Skills say when they fail or explode early:** Distractable on Awareness and Combat Sense, Refined Skill on the Skill you chose, and the rest.",
       "**Night Vision says what it cancels:** Dim −1 and Dark −3 don't touch your attacks.",
-      "**Expert mode stays in the header through all of character creation,** and now folds the Stats step's descriptions too."
+      "**Expert mode stays in the header through all of character creation,** and now folds the Stats step's descriptions too.",
+      "**Terminal Disease keeps you in pain, and Pain Tolerance lets you ignore it.** The Pain card says where your level comes from and what you ignore; the check penalties and the paper sheet follow.",
+      "**Rapid Healing speeds up your rest,** and stacks with Speed Heal. So does Fast Metabolism. The Rest panel shows the sum.",
+      "**Take a hit knows a Melee or Martial Arts hit** when you're a Scrapper or a Giant, and takes your trait off it.",
+      "**A hit to the head doubles, as the book says,** unless your helmet or your Thick Skull says otherwise."
     ]
   },
   {

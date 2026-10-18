@@ -1998,6 +1998,7 @@ function encHitPreview(res, pc){
     if (res.after.levels!==null) bits.push(hlWords(res.lostThisHit));
   } else {
     const a=res.armor;
+    if (res.doubled) bits.push(`${copy("hitDoubled")}: ${res.doubled.from} → ${res.doubled.to}`);
     if (a && a.piece && res.covered){
       bits.push(`${a.name} stops ${res.absorbed} (PROT ${res.prot}${res.res ? ` + RES ${res.res}` : ""})`);
       if (res.resSkipped) bits.push(`RES doesn't apply: ${res.resSkipped==="ap" ? "AP" : res.resSkipped==="compromised" ? "Compromised" : `not against ${res.type.name}`}`);
