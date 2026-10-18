@@ -147,19 +147,38 @@ const STAT_GROUPS = [
 // from shadows-data.js (base + inputs) so it stays correct if a formula changes.
 function derivedBreakdownStr(ch, id){
   const def=(D.derived||[]).find(d=>d.id===id), t=Engine.baseStatTable(ch);   // as derived() reads them (Decision 195)
+  // What a held trait moved it by (Decision 235), after the stat's own floor and cap, each named.
+  const parts=Engine.derivedParts(ch,id), partsSum=parts.reduce((n,p)=>n+p.amount,0);
+  const partsStr=parts.map(p=>` ${p.amount>0?"+":"−"} ${Math.abs(p.amount)} ${p.name}`).join("");
   if (def && def.type==="sumOfModifiers"){
     const sum=def.inputs.reduce((s,sid)=>s+t[sid].mod,0);
     const raw=def.base+sum, core=Math.max(def.floor!=null?def.floor:raw, raw);
-    const total=Engine.derived(ch)[id], bonus=total-core;
+    const total=Engine.derived(ch)[id], bonus=total-core-partsSum;     // the scaling row, manual adjustments, Aberrations
     let s = `${def.base} ` + def.inputs.map(sid=>{ const m=t[sid].mod; return `${m>=0?"+":"−"} ${sid} ${Math.abs(m)}`; }).join(" ") + ` = ${raw}`;
     if (core!==raw) s += ` → floor ${core}`;
-    if (bonus)     s += ` ${bonus>0?"+":"−"} ${Math.abs(bonus)} bonus → ${total}`;
+    s += partsStr;
+    if (bonus)     s += ` ${bonus>0?"+":"−"} ${Math.abs(bonus)} bonus`;
+    if (bonus || parts.length) s += ` → ${total}`;
     return s;
   }
   // A percent is its formula, from the data like everything above (Decision 135).
   if (def && def.type==="percent" && def.formula && t[def.formula.stat]){
     const f=def.formula, v=t[f.stat].value, raw=v*f.times+(Number(f.plus)||0), total=Engine.derived(ch)[id];
-    return `${f.stat} ${v} × ${f.times}${f.plus?` + ${f.plus}`:""} = ${raw}%` + (total!==raw?` → ${total}% (floor ${def.floor} / cap ${def.cap})`:"");
+    const head=`${f.stat} ${v} × ${f.times}${f.plus?` + ${f.plus}`:""} = ${raw}%`;
+    if (!parts.length) return head + (total!==raw ? ` → ${total}% (floor ${def.floor} / cap ${def.cap})` : "");
+    // A trait's cut comes after the floor and the cap, so each is said where it applies and the cut is named.
+    let core=raw;
+    if (def.floor!=null) core=Math.max(def.floor,core);
+    if (def.cap!=null) core=Math.min(def.cap,core);
+    let s=head;
+    if (core!==raw) s += ` → ${core}% (${raw<core?`floor ${def.floor}`:`cap ${def.cap}`})`;
+    s += partsStr;
+    const least=typeof def.modFloor==="number" && core+partsSum<def.modFloor ? def.modFloor : null;
+    const other=total-(least!=null ? least : core+partsSum);
+    if (least!=null) s += ` → ${least}% (never lower)`;
+    if (other)       s += ` ${other>0?"+":"−"} ${Math.abs(other)} bonus`;
+    if (least==null || other) s += ` → ${total}%`;
+    return s;
   }
   return "";
 }
@@ -1432,7 +1451,7 @@ ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""
   h += `<div class="trk"><h2>Sanity</h2>
     <span class="big ${san.current<=san.max/2?"bad":""}">${san.current} / ${san.max}%</span>
     ${sanControlsHtml(ch)}
-    <span class="sub">Max is ${esc(Engine.formulaText((D.derived.find(d=>d.id==="SAN")||{}).formula))}, computed. Track loss here; recovery is a story, not a button.</span></div>`;
+    <span class="sub">Max is ${esc(Engine.derivedParts(ch,"SAN").length ? derivedBreakdownStr(ch,"SAN") : Engine.formulaText((D.derived.find(d=>d.id==="SAN")||{}).formula))}, computed. Track loss here; recovery is a story, not a button.</span></div>`;
 
   // LUCK
   h += `<div class="trk"><h2>LUCK</h2>

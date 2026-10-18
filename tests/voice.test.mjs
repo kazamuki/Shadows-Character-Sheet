@@ -278,6 +278,7 @@ test("P18 7: the effect tags and their templates are player copy (Decision 231)"
     [/\bconfirm with D\b/i, "confirm with D"], [/\bpending a ruling\b/i, "pending a ruling"], [/\bDecision \d+/i, "a decision number"], [/\bundefined\b/, "undefined"]])
     assert.ok(!re.test(text), `player copy has ${why}: ${(re.exec(text) || [""])[0]}`);
   // And on the CP step, where a player reads them: Blood Lust's rule shows.
+  // (Its Sanity cut is a computed row since P20a; the first rule row left is the Sanity Check.)
   const rule = (D.disadvantages.find(d => d.id === "blood-lust").grants.find(g => g.type === "rule") || {}).ruleText;
   assert.ok(rule && CORPUS.includes(rule.slice(0, 40)), "the CP step doesn't show Blood Lust's rule");
 });
