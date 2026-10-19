@@ -185,6 +185,15 @@ try {
     // A long name is cut short, never allowed to push the page wider.
     await page.evaluate(n => { document.getElementById("brandctx").textContent = n; }, "Maximilian Aurelius Blackwood-Ravenscroft III");
     await measure(LONG);
+    // P20b (Decision 236): Take a hit with the "Melee or Martial Arts" box a Scrapper and a Giant are asked, and a head hit that doubles.
+    await page.evaluate(() => { S.ch.advantages.push({ id: "scrapper", rank: 1, notes: "" }); S.ch.disadvantages.push({ id: "giant", rank: 1, notes: "" }); update(); });
+    await page.click('#topnav [data-sec="trackers"]');
+    await page.click("[data-hitopen]");
+    await page.waitForSelector('#modal [data-hit="melee"]');
+    await page.selectOption('#modal [data-hit="location"]', "head");
+    await page.fill('#modal [data-hit="damage"]', "6");
+    await measure("take a hit: the Melee or Martial Arts box", "[data-hitpanel]");
+    await page.keyboard.press("Escape");
     // The wizard, driven through the UI as a player would (the app has no test path in):
     // a new character, a power level, a name, and Continue to the Stats step.
     await page.goto(pathToFileURL(file).href);

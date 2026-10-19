@@ -1156,7 +1156,7 @@ test("P20b 6: Take a hit asks what hit you only when it matters", () => {
   app.click("[data-hitopen]");
   assert.equal(app.$('[data-hit="melee"]').checked, false, "the box carried over to the next hit");
   setHit(app, "location", "head"); setHit(app, "damage", "2");
-  assert.match(app.$(".hitresult").textContent, /Head: ×2: 2 → 4\./);
+  assert.match(app.$(".hitresult").textContent, /Head: ×2 \(2 → 4\)\./);
   assert.deepEqual(app.errors, []);
 });
 
@@ -1164,7 +1164,7 @@ test("P20b 6b: a head hit says it doubles, and says Thick Skull answers it", () 
   const bare = openSheet(lockedCharacter(), "trackers");
   bare.click("[data-hitopen]");
   setHit(bare, "location", "head"); setHit(bare, "damage", "5");
-  assert.match(bare.$(".hitresult").textContent, /Head: ×2: 5 → 10\./);
+  assert.match(bare.$(".hitresult").textContent, /Head: ×2 \(5 → 10\)\./);
   assert.match(bare.$(".hitresult").textContent, /10 gets through/);
   const skull = openSheet(held20b(lockedCharacter(), "advantages", "thick-skull"), "trackers");
   skull.click("[data-hitopen]");

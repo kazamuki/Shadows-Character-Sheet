@@ -1089,7 +1089,7 @@ function hitPanelHtml(ch, r){
     const lines=[];
     if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
     if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}.${skin?"":" Nothing answers the hit."}`);
-    if (r.doubled) lines.push(`${copy("hitDoubled")}: ${r.doubled.from} → ${r.doubled.to}.`);
+    if (r.doubled) lines.push(`${copy("hitDoubled")} (${r.doubled.from} → ${r.doubled.to}).`);
     else if (r.headIgnoredBy) lines.push(`${copy("hitThickSkull")}.`);
     if (r.bypassesArmor){
       if (r.covered) lines.push(`Strips ${r.integrityLost} Integrity from ${r.armor.name}${r.scrap?". It's scrap now, and can't be repaired":""}.`);

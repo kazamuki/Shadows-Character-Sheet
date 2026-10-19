@@ -1993,7 +1993,7 @@ test("P20b 6c: an encounter hit has no melee box, and an NPC's head hit doubles"
   hitBtn(app, "Dez").click();
   changeTo(app, "[data-ehit-loc]", "head");
   fillHit(app, 6, "blade");
-  assert.match(preview(app), /Head: ×2: 6 → 12/);
+  assert.match(preview(app), /Head: ×2 \(6 → 12\)/);
   assert.match(preview(app), /12 through/);
   changeTo(app, "[data-ehit-loc]", "left-leg");
   assert.doesNotMatch(preview(app), /×2/);
