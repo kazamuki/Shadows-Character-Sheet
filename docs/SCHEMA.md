@@ -4928,7 +4928,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** Pain Tolerance before the clamp; only Health Levels counting as hurt or as what Pain Tolerance ignores; Pain Immunity cancelling Terminal Disease; Speed Heal and Rapid Healing adding; Fast Metabolism left to P21; Giant and Scrapper before armor; the melee stage on Massive; the player doubling a head hit; the melee box always shown.
      - **Replaces:** Decision 213 in part (an unconditional Pain shift is read). Decision 231 in part (these entries become computed rows). Extends 99, 220 and 223.
      - **Revisit if:** P21 adds power reductions to the same stage; Deighton rules the head differently; GM mode's PC rows gain a character (S3b), which would let them ask the melee box.
-     - **Built:** app 0.51.0, game data 0.43, no schema bump. Log 2026-10-18 (P20b).
+     - **Built:** app 0.51.0, game data 0.43, no schema bump, PR #218. Log 2026-10-18 (P20b).
 
 ## 5. Open Flags
 
