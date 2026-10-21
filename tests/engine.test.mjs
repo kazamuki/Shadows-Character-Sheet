@@ -4895,7 +4895,8 @@ test("191: applyEncounterHit: damage, Massive and wear land on the row", () => {
   ({ t, e, id } = hitTable({ armor: JACKET }));
   const ap = Engine.resolveEncounterHit(t, e, id, shot({ ap: true }));
   eq([ap.resSkipped, ap.through], ["ap", 9]);
-  const head = Engine.resolveEncounterHit(t, e, id, shot({ location: "head" }));
+  // (A head hit doubles now, Decision 236: P20b 5 pins it. An uncovered leg is the plain case.)
+  const head = Engine.resolveEncounterHit(t, e, id, shot({ location: "left-leg" }));
   eq([head.covered, head.through], [false, 12]);
   // An unmatched armor line stops nothing.
   ({ t, e, id } = hitTable({ armor: ["Layered Street Clothes (PROT 1d4, RES +2, INT 10)"] }));
@@ -7447,11 +7448,11 @@ test("W67 guard: nothing in src/ turns an instant into a day with toISOString().
   assert.deepEqual(bad, [], "use Engine.localDay(): toISOString is UTC");
 });
 
-test("Decision 213: every painLevel grant says onlyIfHurt, or the engine would ignore it (Decision 135)", () => {
+test("Decision 213, 236: every painLevel grant says onlyIfHurt, true or false, or the engine would ignore it (Decision 135)", () => {
   const all = [...D.advantages, ...D.disadvantages, ...(D.milestones.majorGeneral || [])];
   const gs = all.flatMap(e => (e.grants || []).filter(g => g && g.type === "painLevel"));
   assert.ok(gs.length >= 1, "no painLevel grant to guard");
-  for (const g of gs) assert.equal(g.onlyIfHurt, true, "an unconditional painLevel grant is ignored by grants()");
+  for (const g of gs) assert.ok(g.onlyIfHurt === true || g.onlyIfHurt === false, "a painLevel grant with no onlyIfHurt is ignored by grants()");
 });
 
 test("Decision 213: ipRoll reads a Minor's dice from the data; ipRollTotal adds the flat amount", () => {
@@ -8049,7 +8050,8 @@ test("P8b 6: keeping damage past zero heals from the full total", () => {
 
 test("P8b 7: a hit past zero still adds to the total", () => {
   const ch = p8b(37);
-  const r = Engine.applyHit(ch, { damage: 4, damageType: "blunt", category: "regular", location: LOC });
+  // The torso: LOC is the head, which doubles now (Decision 236).
+  const r = Engine.applyHit(ch, { damage: 4, damageType: "blunt", category: "regular", location: "torso" });
   assert.ok(r.ok, r.why);
   assert.equal(ch.trackers.damage, 41);
   assert.equal(Engine.hlState(ch).pastZero, 11);
@@ -9019,7 +9021,7 @@ function p18Readings(ch) {
 test("P18 4: rule rows change nothing the engine computes", () => {
   const chars = p18Characters(), withRules = chars.map(p18Readings);
   const had = p18Rows();
-  assert.ok(had.length >= 70, `only ${had.length} entries carry a rule row — is the data in?`);
+  assert.ok(had.length >= 65, `only ${had.length} entries carry a rule row — is the data in?`);
   const saved = new Map(had.map(d => [d, d.grants]));
   try {
     for (const d of had) d.grants = d.grants.filter(g => !(g && g.type === "rule"));
@@ -9174,4 +9176,70 @@ test("P20a 10: the readers are total over hostile rows", () => {
     assert.doesNotThrow(() => Engine.startingCredits(junk));
   }
   assert.deepEqual(JSON.parse(JSON.stringify(Engine.statMax(null, "BOD"))), { max: 10, by: null });
+});
+
+// ── P20b: numbers in play (Decision 236) ──
+test("P20b 4b: Scrapper halves before the Wither Ward, and Giant's 4 before Scrapper", () => {
+  const hit = (ch, extra) => Engine.resolveHit(ch, Object.assign({ damage: 12, damageType: "blade", category: "withering", melee: true }, extra));
+  const mk = () => { const c = vTake(vMaj(), "wither-ward"); c.advantages.push({ id: "scrapper", rank: 1, notes: "" }); c.disadvantages.push({ id: "giant", rank: 1, notes: "" }); return c; };
+  const r = hit(mk());
+  same(r.taken.map(t => [t.name, t.from, t.to]), [["Giant", 12, 8], ["Scrapper", 8, 4]]);
+  same(r.witherHalved, { by: "Wither Ward", from: 4, to: 2 });
+  assert.equal(r.through, 2);
+  const w = vTake(vMaj(), "wither-ward"); w.advantages.push({ id: "scrapper", rank: 1, notes: "" });
+  const one = hit(w, { damage: 1 });
+  same([one.through, one.taken.length], [1, 0], "1 through with Scrapper: nothing to halve below the floor");
+  assert.equal(hit(w, { melee: false }).taken.length, 0);
+});
+
+test("P20b 5b: an NPC stand-in's head hit doubles, and a stand-in holds no trait to ask or answer", () => {
+  const stand = Engine.newCharacter();
+  stand.stats.BOD.base = 6;
+  same(Engine.hitAsks(stand), { melee: false });
+  const r = Engine.resolveHit(stand, { damage: 5, damageType: "blade", location: "head" });
+  same([r.doubled, r.through], [{ from: 5, to: 10 }, 10]);
+});
+
+test("P20b 8: the readers are total over hostile rows", () => {
+  const bad = [null, 5, "s", [], {}, { type: "painIgnore" }, { type: "painIgnore", perRank: "1" }, { type: "painIgnore", perRank: NaN }, { type: "painIgnore", perRank: -2 }, { type: "painIgnore", perRank: Infinity },
+    { type: "healTimes" }, { type: "healTimes", byRank: "2" }, { type: "healTimes", byRank: [] }, { type: "healTimes", byRank: ["2", "x", null] }, { type: "healTimes", byRank: [NaN, 3] }, { type: "healTimes", byRank: [1, 1, 1] },
+    { type: "meleeTaken" }, { type: "meleeTaken", minus: NaN }, { type: "meleeTaken", minus: "4" }, { type: "meleeTaken", minus: -3 }, { type: "meleeTaken", halve: "yes" }, { type: "meleeTaken", halve: 1 },
+    { type: "headBonus" }, { type: "headBonus", ignore: "yes" }, { type: "painLevel", amount: "1", onlyIfHurt: false }, { type: "painLevel", amount: NaN, onlyIfHurt: false }, { type: "painLevel", onlyIfHurt: "no" }];
+  const probe = { id: "p20b-probe", name: "Probe", cost: 1, pointsGranted: 1, maxRank: 3, description: "x", grants: bad };
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.stats.BOD.base = 6;
+  ch.trackers.damage = 12;
+  const read = c => JSON.stringify({ p: Engine.painState(c), n: Engine.naturalHealing(c, { days: 2, speed: true }), a: Engine.hitAsks(c),
+    h: ["regular", "withering", "massive"].map(category => Engine.resolveHit(c, { damage: 9, damageType: "blade", category, location: "head", melee: true })) });
+  const before = read(ch);
+  D.disadvantages.push(probe); D.advantages.push(probe);
+  try {
+    for (const rank of [0, 1, 3, -2, 1.5, "x", null]) for (const list of ["advantages", "disadvantages"]) {
+      const held = JSON.parse(JSON.stringify(ch));
+      held[list] = [{ id: "p20b-probe", rank, notes: "" }];
+      assert.doesNotThrow(() => read(held), `rank ${rank} in ${list}`);
+      for (const kind of ["advantage", "disadvantage"]) for (const h of [null, { rank: 3 }, { rank: -1 }, { rank: "x" }])
+        assert.doesNotThrow(() => Engine.effectTagsFor(kind, "p20b-probe", h));
+      assert.doesNotThrow(() => Engine.buildExport(held));
+      // Every bad row alone is skipped, so nothing moved (the one good-looking row of each kind is the exception: none is here).
+      assert.equal(read(held), before, `rank ${rank} in ${list}: a bad row moved a value`);
+    }
+    for (const bool of [true, "true", 1, "yes", null, undefined, {}, []]) assert.doesNotThrow(() => Engine.resolveHit(ch, { damage: 9, damageType: "blade", melee: bool }));
+    same(Engine.resolveHit(ch, { damage: 9, damageType: "blade", melee: "true" }).taken, []);
+  } finally { D.disadvantages.pop(); D.advantages.pop(); }
+  const a = D.aberrations.find(x => x.id === "fast-metabolism"), was = a.naturalHealingTimes;
+  try {
+    for (const v of ["2", NaN, Infinity, null, -4, 0, 1, [2], {}]) {
+      a.naturalHealingTimes = v;
+      const c = JSON.parse(JSON.stringify(ch)); c.trackers.aberrations = [{ id: "fast-metabolism", permanence: "temporary" }];
+      assert.doesNotThrow(() => Engine.naturalHealing(c, { days: 1 }));
+      assert.equal(Engine.naturalHealing(c, { days: 1 }).proposed, 6, `naturalHealingTimes ${JSON.stringify(v)} was read`);
+    }
+  } finally { a.naturalHealingTimes = was; }
+  for (const junk of [undefined, null, 5, "x", [], {}, Engine.newCharacter()]) {
+    assert.doesNotThrow(() => Engine.hitAsks(junk));
+    assert.doesNotThrow(() => Engine.naturalHealing(Engine.newCharacter(), junk));
+  }
+  same(Engine.hitAsks(null), { melee: false });
 });

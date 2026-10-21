@@ -44,6 +44,10 @@ function sheetHeader(title, note, under){
 }
 // Pain on top of Health Levels, from Conditions (Agonized) and Aberrations (Phantom Pain).
 const painExtra = pain => (pain.fromConditions||0) + (pain.fromAberrations||0) + (pain.fromTraits||0);
+// Decision 236: what moved Pain off the Health Levels' band, in words, and what Pain Tolerance took back off it.
+const painIgnoredText = pain => pain.ignored ? `${pain.ignoredBy.join(", ")} ${pain.ignoredBy.length===1?"takes":"take"} ${pain.ignored} off` : "";
+const painWhyLine = pain => [painExtra(pain) ? `${signed(painExtra(pain))} Lv from ${pain.painSources.join(", ")}` : "",
+  pain.ignored ? `${signed(-pain.ignored)} Lv ${pain.ignoredBy.join(", ")}` : ""].filter(Boolean).join(" · ");
 const painChip = pain => pain.level
   ? ` <span class="chip pain">Pain Lv ${pain.level} · ${pain.skillPenalty} skill</span>` : "";
 
@@ -402,7 +406,7 @@ function renderShMain(){
   h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
     `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN"+(pain.pastZero?" · "+pastZeroText(pain):""):`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
   h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
-    pain.level?`Lv ${pain.level}`:"—", (pain.level?painPenaltyLine(pain,false)+(painExtra(pain)?` · ${signed(painExtra(pain))} Lv from ${esc(pain.painSources.join(", "))}`:""):"no penalties")
+    pain.level?`Lv ${pain.level}`:"—", (pain.level?painPenaltyLine(pain,false)+(painWhyLine(pain)?` · ${esc(painWhyLine(pain))}`:""):(painWhyLine(pain)?`no penalties · ${esc(painWhyLine(pain))}`:"no penalties"))
       + (held.held.length ? `<br>${esc(holdingSentence(held))}` : ""), null, "", "pain");
   h += vitalVerbsHtml(ch);     // W42: its own row, straight under Health and Pain
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
@@ -991,11 +995,11 @@ function aberrationResultsHtml(ch){
 // asks for, and Apply is one commit(), so the whole hit undoes in one step.
 // S.hit holds the form while it's open; nothing is saved until Apply.
 function newHitForm(){
-  return { damage:"", damageType:"ballistic", category:"regular", ap:false, spell:false, location:"",
+  return { damage:"", damageType:"ballistic", category:"regular", ap:false, spell:false, melee:false, location:"",
            protRoll:"", shock:"", atZero:"", conds:{}, nat:{} };
 }
 function hitInput(st){
-  return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap, spell: !!st.ap && !!st.spell,
+  return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap, spell: !!st.ap && !!st.spell, melee: st.melee===true,
            location: st.location || undefined, protRoll: st.protRoll,
            natural: Object.keys(st.nat||{}).filter(k=>st.nat[k]) };
 }
@@ -1059,6 +1063,7 @@ function hitPanelHtml(ch, r){
       ${field("Where",`<select data-hit="location">${opt("","Center mass",!st.location)}${D.bodyLocations.map(l=>opt(l.id,l.name,l.id===st.location)).join("")}</select>`)}
       ${bypass?"":`<label class="check"><input type="checkbox" data-hit="ap" ${st.ap?"checked":""}> Armor-piercing</label>`}
       ${!bypass && st.ap && hasNat?`<label class="check"><input type="checkbox" data-hit="spell" ${st.spell?"checked":""}> From a spell</label>`:""}
+      ${!bypass && Engine.hitAsks(ch).melee?`<label class="check"><input type="checkbox" data-hit="melee" ${st.melee?"checked":""}> ${esc(copy("hitMelee"))}</label>`:""}
     </div>
     <p class="hitnote">${esc(cat.text||"")}</p>`;
 
@@ -1084,6 +1089,8 @@ function hitPanelHtml(ch, r){
     const lines=[];
     if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
     if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}.${skin?"":" Nothing answers the hit."}`);
+    if (r.doubled) lines.push(`${copy("hitDoubled")} (${r.doubled.from} → ${r.doubled.to}).`);
+    else if (r.headIgnoredBy) lines.push(`${copy("hitThickSkull")}.`);
     if (r.bypassesArmor){
       if (r.covered) lines.push(`Strips ${r.integrityLost} Integrity from ${r.armor.name}${r.scrap?". It's scrap now, and can't be repaired":""}.`);
       lines.push(`Removes ${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} outright.`);
@@ -1100,6 +1107,7 @@ function hitPanelHtml(ch, r){
       : N.skipped==="ap" ? "Armor-piercing magic goes straight past Natural Armor."
       : N.skipped==="type" ? `Natural Armor doesn't answer ${r.type.name} damage.` : "";
     if (natLine) lines.push(natLine);
+    r.taken.forEach(t=>lines.push(`${t.name}: ${t.from} → ${t.to}.`));
     if (r.witherHalved) lines.push(`${r.witherHalved.by} halves it: ${r.witherHalved.from} → ${r.witherHalved.to}.`);
     if (!r.bypassesArmor && !r.soaked) lines.push(r.through ? `${r.through} gets through.` : "Nothing gets through.");
     if (r.tookDamage) lines.push(`Health Levels lost: ${r.before.lost} → ${r.after.lost}. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
@@ -1139,9 +1147,9 @@ const actButtons=(ok, label)=>`<div class="hitrow"><button class="btn primary" d
 function actInput(ch, st){
   if (st.kind==="reset") return { sources: st.sources };
   if (st.kind==="rest"){
-    const nh=Engine.naturalHealing(ch), days=Math.max(0, Math.floor(Number(st.days)||0));
-    const proposed = nh.perDay * days * (st.speed ? nh.speedHealMultiplier : 1);
-    return { kind:"natural", hp: st.hp==="" ? proposed : st.hp, days, proposed };
+    // Decision 236: the engine's one proposal, with each multiplier named (Rapid Healing, Fast Metabolism, Speed Heal).
+    const nh=Engine.naturalHealing(ch, { days: st.days, speed: st.speed });
+    return { kind:"natural", hp: st.hp==="" ? nh.proposed : st.hp, days: nh.days, proposed: nh.proposed, factors: nh.factors };
   }
   if (st.kind==="focused") return { kind:"focused", hp: st.hp,
     clear: Object.keys(st.clear).filter(i=>st.clear[i]).map(Number), massive: st.massive };
@@ -1185,9 +1193,11 @@ function healLines(r){
 }
 const healLinesHtml = r => healLines(r).map(l=>`<p>${esc(l)}</p>`).join("");
 function restPanelHtml(ch, st){
-  const nh=Engine.naturalHealing(ch), inp=actInput(ch, st), hs=Engine.hlState(ch);
+  const nh=Engine.naturalHealing(ch, { days: st.days, speed: st.speed }), inp=actInput(ch, st), hs=Engine.hlState(ch);
   const r=Engine.heal(clone(ch), inp);
-  let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>
+  // "BOD 6 × 3 (Rapid Healing) × 2 (Speed Heal) = 36 a day", when something multiplies it.
+  const sum = nh.factors.length ? `<p class="hitnote" data-restsum>${esc(`${nh.stat} ${nh.perDay}${nh.factors.map(f=>` × ${f.x} (${f.name})`).join("")}${nh.days===1?"":` × ${nh.days} days`} = ${nh.proposed}${nh.days===1?" a day":""}`)}</p>` : "";
+  let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>${sum}
     <div class="hitrow">${actNum(st,"days","Days of rest")}
       <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
       ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP recovered")}</div>${st.speed?gearUseHtml(ch, st, "speed-heal", "fromGear"):""}`;
@@ -1441,7 +1451,8 @@ function renderShTrackers(){
   h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${esc(pain.label)}</h2>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}${(h=>h.held.length?`<span class="cost">${esc(holdingSentence(h))}</span>`:"")(Engine.heldSpells(ch))}</div>
     <div class="desc">${esc(pain.description)}${pain.immunity?`
-${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
+${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.ignored?`
+${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored===1?"":"s"}.`:""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
   // Conditions (Decision 95)
   h += `<div class="sect">Conditions</div>${conditionsHtml(ch, true)}`;
@@ -2613,9 +2624,12 @@ function pHealthHtml(ch){
 
   h += `<div class="p-fieldrow">${pField("Health Levels", hp&&hp.levels)}${pField("Total HP", hp&&hp.total)}${pField("Current HP", hp?Engine.hlState(ch).hpLeft:null)}</div>`;
   const pain = ch ? Engine.painState(ch) : null;
-  h += pain && pain.level>0
-    ? `<p class="p-note">${esc(pain.label)} — ${esc(pain.description)}</p>`
-    : `<p class="p-note">Border weight marks the Pain Level band (thresholds at 2, 5, 8 HL lost).</p>`;
+  // Decision 236: the ladder shows the Health Levels' bands; a trait that moves the Pain Level is named beside it.
+  const moved = pain && painWhyLine(pain) ? ` ${painWhyLine(pain)}.` : "";
+  const thresholds = D.resources.healthLevels.painLevels.map(p=>p.hlLostThreshold).filter(n=>n>0).join(", ");
+  h += pain && (pain.level>0 || moved)
+    ? `<p class="p-note">${esc(pain.label)} — ${esc(pain.description)}${esc(moved)}</p>`
+    : `<p class="p-note">Border weight marks the Pain Level band (thresholds at ${esc(thresholds)} HL lost).</p>`;
   return h;
 }
 // Conditions (Decision 95): the whole catalog as a tick list, so a paper
@@ -3591,7 +3605,7 @@ function bindSheet(){
       if (!r.ok){ notice(r.why); return; }
       const bits=[r.healed?`+${r.healed} HP`:"", r.restored?`${plural(r.restored,"Massive level")} restored`:"",
         ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
-      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${st.speed?" on Speed Heal":""}`
+      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${input.factors.length?" ("+input.factors.map(f=>`×${f.x} ${f.name}`).join(", ")+")":""}`
                   : st.kind==="nanomed" ? "Nanomed Kit" : "Focused Healing";
       // W17: the kit or the dose comes out of your gear in the same action.
       const gearId = st.kind==="nanomed" ? "nanomed-kit" : st.kind==="rest" && st.speed ? "speed-heal" : null;

@@ -1127,3 +1127,101 @@ test("P11 12: Main shows movement, and Fleet of Foot for a True Warrior", () => 
   assert.ok(!/attack/i.test(line(openSheet(prone, "main"))), "the movement line repeats the Condition's attack penalty");
   assert.deepEqual(app.errors, []);
 });
+
+// ── P20b: numbers in play (Decision 236) ──────────────────────────────
+const held20b = (ch, kind, id, rank = 1) => { ch[kind].push({ id, rank, notes: "" }); return ch; };
+
+test("P20b 6: Take a hit asks what hit you only when it matters", () => {
+  const plain = openSheet(lockedCharacter(), "trackers");
+  plain.click("[data-hitopen]");
+  assert.equal(plain.$('[data-hit="melee"]'), null, "the box shows to a character holding neither trait");
+  const ch = held20b(held20b(lockedCharacter(), "advantages", "scrapper"), "disadvantages", "giant");
+  const app = openSheet(ch, "trackers");
+  app.click("[data-hitopen]");
+  const box = app.$('[data-hit="melee"]');
+  assert.ok(box, "a Scrapper and a Giant isn't asked");
+  assert.match(box.closest("label").textContent, /Melee or Martial Arts/);
+  assert.equal(box.checked, false, "the box starts ticked");
+  setHit(app, "damage", "12");
+  assert.match(app.$(".hitresult").textContent, /12 gets through/);
+  setHit(app, "melee", true);
+  const text = app.$(".hitresult").textContent;
+  assert.match(text, /Giant: 12 → 8\./);
+  assert.match(text, /Scrapper: 8 → 4\./);
+  assert.match(text, /4 gets through/);
+  app.click("[data-hitapply]");
+  assert.equal(activeChar(app).trackers.damage, 4);
+  assert.equal(JSON.stringify(activeChar(app)).includes('"melee"'), false, "the box was saved on the character");
+  // A new hit starts unticked: it is form state.
+  app.click("[data-hitopen]");
+  assert.equal(app.$('[data-hit="melee"]').checked, false, "the box carried over to the next hit");
+  setHit(app, "location", "head"); setHit(app, "damage", "2");
+  assert.match(app.$(".hitresult").textContent, /Head: ×2 \(2 → 4\)\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P20b 6b: a head hit says it doubles, and says Thick Skull answers it", () => {
+  const bare = openSheet(lockedCharacter(), "trackers");
+  bare.click("[data-hitopen]");
+  setHit(bare, "location", "head"); setHit(bare, "damage", "5");
+  assert.match(bare.$(".hitresult").textContent, /Head: ×2 \(5 → 10\)\./);
+  assert.match(bare.$(".hitresult").textContent, /10 gets through/);
+  const skull = openSheet(held20b(lockedCharacter(), "advantages", "thick-skull"), "trackers");
+  skull.click("[data-hitopen]");
+  setHit(skull, "location", "head"); setHit(skull, "damage", "5");
+  assert.match(skull.$(".hitresult").textContent, /Head: not doubled \(Thick Skull\)\./);
+  assert.match(skull.$(".hitresult").textContent, /5 gets through/);
+  assert.deepEqual([...bare.errors, ...skull.errors], []);
+});
+
+test("P20b 3b: the Rest panel proposes by every multiplier and names them", () => {
+  const ch = held20b(lockedCharacter(), "advantages", "rapid-healing", 2);
+  ch.trackers.damage = 30;
+  const bod = Engine.statTable(ch).BOD.value;
+  const app = openSheet(ch, "trackers");
+  app.click('[data-actopen="rest"]');
+  assert.equal(app.$('[data-act="hp"]').value, String(bod * 3));
+  assert.match(app.$("[data-restsum]").textContent, new RegExp(`^BOD ${bod} × 3 \\(Rapid Healing\\) = ${bod * 3} a day$`));
+  const speed = app.$('[data-act="speed"]');
+  speed.checked = true; speed.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(app.$('[data-act="hp"]').value, String(bod * 6));
+  assert.match(app.$("[data-restsum]").textContent, new RegExp(`× 3 \\(Rapid Healing\\) × 2 \\(Speed Heal\\) = ${bod * 6} a day`));
+  app.click("[data-actapply]");
+  assert.equal(activeChar(app).trackers.damage, Math.max(0, 30 - bod * 6));
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Rested 1 day \(×3 Rapid Healing, ×2 Speed Heal\)/);
+  // Nothing held: no sum line, and the proposal is BOD.
+  const plain = openSheet(lockedCharacter(), "trackers");
+  plain.click('[data-actopen="rest"]');
+  assert.equal(plain.$("[data-restsum]"), null);
+  assert.equal(plain.$('[data-act="hp"]').value, String(Engine.statTable(lockedCharacter()).BOD.value));
+  // No days of rest heals nothing, and the sum doesn't call 0 a day's healing.
+  const zero = openSheet(held20b(lockedCharacter(), "advantages", "rapid-healing", 2), "trackers");
+  zero.click('[data-actopen="rest"]');
+  const days = zero.$('[data-act="days"]');
+  days.value = "0"; days.dispatchEvent(new zero.window.Event("change", { bubbles: true }));
+  assert.match(zero.$("[data-restsum]").textContent, new RegExp(`^BOD ${bod} × 3 \\(Rapid Healing\\) × 0 days = 0$`));
+  assert.deepEqual([...app.errors, ...plain.errors, ...zero.errors], []);
+});
+
+test("P20b 9: Pain says where it came from, on Main, Trackers and paper", () => {
+  const ch = held20b(lockedCharacter(), "disadvantages", "terminal-disease");
+  const app = openSheet(ch, "main");
+  assert.match(app.$("#main").textContent, /\+1 Lv from Terminal Disease/);
+  const tab = openSheet(JSON.parse(JSON.stringify(ch)), "trackers");
+  assert.match(tab.$("#main").textContent, /Terminal Disease add\w* \+1/);
+  const filled = app.window.renderPrintView(ch);
+  assert.match(filled, /\+1 Lv from Terminal Disease/, "paper doesn't name the trait beside the ladder");
+  // Pain Tolerance takes it back: level 0, and the card says who.
+  held20b(ch, "advantages", "pain-tolerance");
+  const calm = openSheet(JSON.parse(JSON.stringify(ch)), "main");
+  assert.match(calm.$("#main").textContent, /no penalties · \+1 Lv from Terminal Disease · −1 Lv Pain Tolerance/);
+  assert.match(openSheet(JSON.parse(JSON.stringify(ch)), "trackers").$("#main").textContent, /Pain Tolerance takes 1 off: −1 Pain Level\./);
+  assert.match(app.window.renderPrintView(ch), /−1 Lv Pain Tolerance/);
+  // The blank ladder's note reads its thresholds from the data (a mutant edit to the bands moves it).
+  const blank = () => app.window.renderPrintView(null).match(/thresholds at ([^)]*?) HL lost/)[1];
+  assert.equal(blank(), "2, 5, 8");
+  app.window.eval("D.resources.healthLevels.painLevels[1].hlLostThreshold = 3");
+  assert.equal(blank(), "3, 5, 8", "the note is a copy of the data");
+  assert.deepEqual([...app.errors, ...calm.errors, ...tab.errors], []);
+});

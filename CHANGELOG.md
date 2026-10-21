@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.50.0
+## [Unreleased] — app 0.51.0
 
 - **Your Disadvantages cost you Sanity.** Berserker, Blood Lust, Fanatic, Hallucinations and Minor Insanity take their points off your max SAN, and the breakdown names each one.
 - **Arcane Fortitude adds 2 to your TOL.**
@@ -36,6 +36,10 @@ own in the footer.
 - **Your Skills say when they fail or explode early:** Distractable on Awareness and Combat Sense, Refined Skill on the Skill you chose, and the rest.
 - **Night Vision says what it cancels:** Dim −1 and Dark −3 don't touch your attacks.
 - **Expert mode stays in the header through all of character creation,** and now folds the Stats step's descriptions too.
+- **Terminal Disease keeps you in pain, and Pain Tolerance lets you ignore it.** The Pain card says where your level comes from and what you ignore; the check penalties and the paper sheet follow.
+- **Rapid Healing speeds up your rest,** and stacks with Speed Heal. So does Fast Metabolism. The Rest panel shows the sum.
+- **Take a hit knows a Melee or Martial Arts hit** when you're a Scrapper or a Giant, and takes your trait off it.
+- **A hit to the head doubles, as the book says,** unless your helmet or your Thick Skull says otherwise.
 
 ## v0.48.0 — 2026-10-16
 

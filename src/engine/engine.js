@@ -163,7 +163,10 @@ const Engine = (() => {
   // the character (constraint #7), so buying/selling one just changes what
   // this returns next render.
   function grants(ch){
-    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0, painLevel:0, painLevelFrom:[], feed:{}, witheringHalvedBy:null };
+    const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0, painLevel:0, painLevelFrom:[], painLevelAlways:0, painLevelAlwaysFrom:[], painIgnore:0, painIgnoreFrom:[],
+                  healTimes:[], meleeTaken:[], headIgnoredBy:null, feed:{}, witheringHalvedBy:null };
+    // Decision 236: a trait on two rows counts once for the rows that read a rank, its ranks summed.
+    const counted = new Set();
     const scan = (list, lookup) => (list||[]).forEach(entry=>{
       const def = entry && lookup(entry.id);
       for (const g of (def && def.grants) || []){
@@ -178,13 +181,37 @@ const Engine = (() => {
         }
         // Decision 223: Withering through a hit is halved, never below 1 (resolveHit does it).
         if (g.type==="withering"){ if (g.halve===true && out.witheringHalvedBy==null) out.witheringHalvedBy = txt(def.name); continue; }
-        // Decision 213: a shift to the Pain Level, once per entry. Only the
-        // "when hurt" kind is decided; an unconditional one is ignored.
+        // Decision 213: a shift to the Pain Level, once per entry. "Only when hurt" (Pain Sensitive) is one kind;
+        // Decision 236: `onlyIfHurt: false` (Terminal Disease) is the other, and counts as hurt for the first.
         if (g.type==="painLevel"){
           const n = Number(g.amount)||0;
           if (g.onlyIfHurt===true && n){ out.painLevel += n; out.painLevelFrom.push(txt(def.name)); }
+          else if (g.onlyIfHurt===false && typeof g.amount==="number" && Number.isFinite(g.amount) && n){ out.painLevelAlways += n; out.painLevelAlwaysFrom.push(txt(def.name)); }
           continue;
         }
+        // Decision 236: the traits that answer Pain, rest and a hit. Each reads only a number it can trust and skips the rest.
+        // A trait held on two rows (a free natural one and a bought one) counts once, with its ranks summed.
+        const rank = (list||[]).reduce((n, e)=>n + (e && e.id===entry.id ? Math.max(0, Math.floor(Number(e.rank))||0) : 0), 0);
+        if (["painIgnore", "healTimes", "meleeTaken", "headBonus"].includes(g.type)){
+          const key = g.type+":"+entry.id+":"+def.grants.indexOf(g);
+          if (counted.has(key)) continue;
+          counted.add(key);
+        }
+        if (g.type==="painIgnore"){
+          if (typeof g.perRank==="number" && Number.isFinite(g.perRank) && g.perRank>0 && rank>=1){ out.painIgnore += g.perRank * rank; out.painIgnoreFrom.push(txt(def.name)); }
+          continue;
+        }
+        if (g.type==="healTimes"){
+          const x = Array.isArray(g.byRank) && rank>=1 ? g.byRank[rank-1] : null;
+          if (typeof x==="number" && Number.isFinite(x) && x>1) out.healTimes.push({ name: txt(def.name), x });
+          continue;
+        }
+        if (g.type==="meleeTaken"){
+          if (typeof g.minus==="number" && Number.isFinite(g.minus) && g.minus>0) out.meleeTaken.push({ name: txt(def.name), minus: g.minus });
+          else if (g.halve===true) out.meleeTaken.push({ name: txt(def.name), halve: true, floor: typeof g.floor==="number" && Number.isFinite(g.floor) ? Math.max(0, Math.floor(g.floor)) : 1 });
+          continue;
+        }
+        if (g.type==="headBonus"){ if (g.ignore===true && out.headIgnoredBy==null) out.headIgnoredBy = txt(def.name); continue; }
         if (g.type==="skillPoints") out.skillPoints += (g.perRank||0) * entry.rank;
         else if (g.type==="hpPerLevel") out.hpPerLevel += (g.perRank||0) * entry.rank;
         else if (g.type==="luckCost") out.luckCost[g.spendId] = (out.luckCost[g.spendId]||0) + (g.delta||0);
@@ -456,6 +483,19 @@ const Engine = (() => {
       }
       // Only the "once you're hurt" kind is computed (Decision 213).
       else if (g.type==="painLevel" && g.onlyIfHurt===true) vars = { amount: g.amount };
+      // Decision 236: the traits that answer Pain, rest and a hit. A held card states its total where there is one.
+      else if (g.type==="painLevel" && g.onlyIfHurt===false && goodNum(g.amount) && g.amount>0) text = fillTag(T.painLevelAlways, { amount: g.amount });
+      else if (g.type==="painIgnore" && goodNum(g.perRank) && g.perRank>0){
+        if (h && rank>=1){ const total = g.perRank * rank; text = fillTag(total===1 ? TH.painIgnoreOne : TH.painIgnoreMany, { total }); }
+        if (!text) text = fillTag(T.painIgnore, { perRank: g.perRank });
+      }
+      else if (g.type==="healTimes" && Array.isArray(g.byRank) && g.byRank.length && g.byRank.every(x=>goodNum(x) && x>1)){
+        if (h && rank>=1 && rank<=g.byRank.length) text = fillTag(TH.healTimes, { v: g.byRank[rank-1] });
+        if (!text) text = fillTag(T.healTimes, { ranks: joinList(g.byRank.map((x, i)=>i ? `×${x} (${i+1})` : `×${x} (rank 1)`), "or") });
+      }
+      else if (g.type==="meleeTaken" && goodNum(g.minus) && g.minus>0) vars = { minus: g.minus }, text = fillTag(T.meleeTakenMinus, vars);
+      else if (g.type==="meleeTaken" && g.halve===true) text = fillTag(T.meleeTakenHalve, { floor: goodNum(g.floor) ? Math.max(0, Math.floor(g.floor)) : 1 });
+      else if (g.type==="headBonus" && g.ignore===true) text = fillTag(T.headBonus, {});
       // Decision 235: a cut or bonus to a derived stat, a cap on a Basic Stat, Çredits at the start. A held card
       // states the total for its rank (a flat amount is its own total).
       else if (g.type==="derivedMod" && (D().derived||[]).some(d=>d.id===g.stat) && (goodNum(g.amount) || goodNum(g.perRank))){
@@ -1197,17 +1237,25 @@ const Engine = (() => {
     const painSources = cs.active.filter(a=>a.def && typeof a.def.painLevels==="number").map(a=>a.name)
       .concat(as.active.filter(a=>a.def && typeof a.def.painLevels==="number").map(a=>a.name));
     const top = hl.painLevels.reduce((m,p)=>Math.max(m,p.level), 0);
-    const base = Math.max(0, Math.min(top, band.level + fromConditions + fromAberrations));
+    const tg = grants(ch);
+    const clamp = n => Math.max(0, Math.min(top, n));
+    const base = clamp(band.level + fromConditions + fromAberrations);
+    // Decision 236: a trait that holds you at some Pain (Terminal Disease) adds with the rest, and counts as hurt.
+    const held = clamp(band.level + fromConditions + fromAberrations + tg.painLevelAlways);
     // Decision 213: a trait that shifts Pain (Pain Sensitive) does so only
     // once there's some Pain to shift, and never past the table's top.
-    const tg = grants(ch);
-    const target = Math.min(top, base + (base>=1 ? tg.painLevel : 0));
-    const fromTraits = target - base;               // what the trait actually added
-    if (fromTraits>0) painSources.push(...tg.painLevelFrom);
-    const lvl = hl.painLevels.find(p=>p.level===target) || band;
+    const target = clamp(held + (held>=1 ? tg.painLevel : 0));
+    const fromTraits = target - base;               // what the traits actually added
+    if (held>base) painSources.push(...tg.painLevelAlwaysFrom);
+    if (target>held) painSources.push(...tg.painLevelFrom);
+    // Decision 236: Pain Tolerance comes off last, after the clamp, never below 0. `ignored` is what it took.
+    const ignored = Math.min(target, tg.painIgnore);
+    const level = target - ignored;
+    const lvl = hl.painLevels.find(p=>p.level===level) || band;
     const pen = hl.painPenaltiesPerLevel;
     return { hlLost, level: lvl.level, label: lvl.label, description: lvl.description,
              fromHealth: band.level, immunity: immune ? { name:immune.name, banded } : null, fromConditions, fromAberrations, fromTraits, painSources,
+             ignored, ignoredBy: ignored>0 ? tg.painIgnoreFrom.slice() : [],
              // `|| 0` normalises the -0 that `0 * -1` produces at Pain Level 0.
              skillPenalty:   lvl.level * pen.skillChecks || 0,
              essencePenalty: lvl.level * pen.essenceCheckDice || 0,
@@ -1412,9 +1460,12 @@ const Engine = (() => {
   // AP or not), then PROT (the die rolled) + RES if the type matches and the
   // hit isn't AP and the armor isn't Compromised/scrap. Fully soaked costs INT.
   // Everything after the halving counts from the halved damage.
-  function mitigateArmor(damage, type, hit, armor, covered){
-    let prot = 0, res = 0, resSkipped = null, halved = null;
+  function mitigateArmor(damage, type, hit, armor, covered, head){
+    let prot = 0, res = 0, resSkipped = null, halved = null, doubled = null;
     const incoming = damage;      // soaked reads what was thrown, not what the lining left
+    // Decision 236: a head hit not turned aside doubles (0530), after Resistance and before PROT.
+    const double = () => { if (head){ doubled = { from: damage, to: damage * 2 }; damage = doubled.to; } };
+    if (!covered) double();
     if (covered){
       const roll = Math.floor(Number(hit.protRoll));
       if (hit.protRoll==null || hit.protRoll==="" || !(roll>=1)) return { ok:false, why:"Enter the PROT die you rolled." };
@@ -1423,6 +1474,7 @@ const Engine = (() => {
       prot = roll;
       const lining = !(armor.compromised || armor.scrapped) && (armor.halves||[]).find(h=>h.type===type.id);
       if (lining){ halved = { by: lining.by, from: damage, to: Math.floor(damage / 2) }; damage = halved.to; }
+      double();
       if (hit.ap) resSkipped = "ap";
       else if (armor.compromised || armor.scrapped) resSkipped = "compromised";
       else if (!(armor.resAgainst||[]).includes(type.resClass)) resSkipped = "type";
@@ -1433,7 +1485,27 @@ const Engine = (() => {
     const intBefore = covered ? armor.integrity : null;
     const integrityLost = soaked && intBefore!=null
       ? Math.min(Number((D().armorRules||{}).soakedIntegrityLoss)||0, intBefore) : 0;
-    return { ok:true, prot, res, resSkipped, absorbed, through, soaked, integrityLost, levelsLost:0, scrap:false, halved };
+    return { ok:true, prot, res, resSkipped, absorbed, through, soaked, integrityLost, levelsLost:0, scrap:false, halved, doubled };
+  }
+
+  // Decision 236: what a held trait does to Melee and Martial Arts damage that has got through. Giant's flat cut comes
+  // first, then Scrapper's halving (never below its floor while something got through). A hit that isn't flagged
+  // `melee` (a real boolean) is untouched. Total over a row the data or a file got wrong: it is skipped.
+  function mitigateMelee(ch, through, hit, cat){
+    const out = { through, taken: [] };
+    if (hit.melee!==true || cat.bypassesArmor) return out;
+    const rows = grants(ch).meleeTaken;
+    for (const r of rows.filter(x=>x.minus!==undefined).concat(rows.filter(x=>x.halve===true))){
+      if (!(out.through>0)) break;
+      const to = r.halve ? Math.max(r.floor, Math.floor(out.through / 2)) : Math.max(0, out.through - r.minus);
+      if (to!==out.through) out.taken.push({ name: r.name, from: out.through, to });
+      out.through = to;
+    }
+    return out;
+  }
+  // Does Take a hit have a question only a held trait asks? (Decision 236, PQ10)
+  function hitAsks(ch){
+    return { melee: !!ch && typeof ch==="object" && grants(ch).meleeTaken.length>0 };
   }
 
   // Natural Armor (Decision 104): after worn armor, on any body part, when
@@ -1510,11 +1582,15 @@ const Engine = (() => {
     const armor = hitArmor(as);
     const where = hitLocation(as, hit);
     const covered = !!armor && armor.coverage.includes(where.location);
+    // Decision 236: Regular only, and only a head that was not turned aside; Thick Skull answers it.
+    const headHit = where.location==="head" && !where.redirectedBy && !cat.bypassesArmor && !cat.recordsWithering;
+    const skull = headHit ? grants(ch).headIgnoredBy : null;
     const m = cat.bypassesArmor ? mitigateBypass(damage, armor, covered)
-                                : mitigateArmor(damage, type, hit, armor, covered);
+                                : mitigateArmor(damage, type, hit, armor, covered, headHit && !skull);
     if (!m.ok) return m;
     const nat = mitigateNatural(ch, m.through, type, hit, cat);
-    let through = m.through - nat.absorbed;
+    const mel = mitigateMelee(ch, m.through - nat.absorbed, hit, cat);
+    let through = mel.through;
     // Decision 223: Wither Ward halves Withering last, after armor and Natural Armor, never below 1.
     const ward = cat.recordsWithering && through > 0 ? grants(ch).witheringHalvedBy : null;
     let witherHalved = null;
@@ -1541,6 +1617,7 @@ const Engine = (() => {
                        integrityBefore: intBefore, integrityAfter: intBefore==null ? null : intBefore - m.integrityLost,
                        integrityMax: armor.integrityMax ?? null, compromised: !!armor.compromised } : null,
       prot: m.prot, res: m.res, resSkipped: m.resSkipped, halved: m.halved, absorbed: m.absorbed, through, witherHalved,
+      doubled: m.doubled || null, headIgnoredBy: skull || null, taken: mel.taken,
       natural: { total: nat.total, absorbed: nat.absorbed, skipped: nat.skipped, sources: nat.sources },
       soaked: m.soaked, integrityLost: m.integrityLost, levelsLost: m.levelsLost, scrap: m.scrap,
       before, after, lostThisHit: c.lostThisHit, tookDamage: c.tookDamage,
@@ -2190,11 +2267,21 @@ const Engine = (() => {
 
   // Natural Healing (0550): BOD per day of real rest. The engine proposes the
   // number; the GM may halve it for pushing on, so the player can change it.
-  function naturalHealing(ch){
+  // Decision 236: Rapid Healing and Fast Metabolism multiply it (`times`), and with Speed Heal they multiply each other.
+  // `opts` ({ days, speed }) asks for `proposed`, and `factors` names each multiplier that went into it. The Rest panel,
+  // its history label and the tests all read this one number.
+  function naturalHealing(ch, opts){
     const N = ((D().recoveryRules||{}).naturalHealing) || {};
     const stat = normStat(N.stat || "BOD");
-    return { stat, perDay: stat ? Math.max(0, statTable(ch)[stat].value) : 0,
-             speedHealMultiplier: Number(N.speedHealMultiplier)||1,
+    const perDay = stat ? Math.max(0, statTable(ch)[stat].value) : 0;
+    const speedHealMultiplier = Number(N.speedHealMultiplier)||1;
+    const times = grants(ch).healTimes.concat(aberrationState(ch).healTimes).map(t=>({ name:t.name, x:t.x }));
+    const o = isPlainObj(opts) ? opts : {};
+    const days = Math.max(0, Math.floor(Number(o.days))||0);
+    const factors = times.slice();
+    if (o.speed===true && speedHealMultiplier>1) factors.push({ name:"Speed Heal", x:speedHealMultiplier });
+    return { stat, perDay, speedHealMultiplier, times, factors, days,
+             proposed: Math.floor(factors.reduce((n, f)=>n * f.x, perDay * days)),
              text: N.text||"", speedHealText: N.speedHealText||"" };
   }
   // One writer for both kinds of healing. Natural takes HP and nothing else:
@@ -3174,6 +3261,7 @@ const Engine = (() => {
     const raw = (((ch||{}).trackers||{}).aberrations), list = Array.isArray(raw) ? raw : [];
     const active = [], adjust = {};
     let painLevels = 0;
+    const healTimes = [];
     list.forEach((e, index)=>{
       if (!e || typeof e!=="object") return;
       const def = aberrationById(e.id);
@@ -3184,10 +3272,11 @@ const Engine = (() => {
                     note: typeof e.note==="string" ? e.note : "", missing: !def });
       if (!def) return;                 // versionCheck reports the orphan
       if (typeof def.painLevels==="number") painLevels += def.painLevels;
+      if (typeof def.naturalHealingTimes==="number" && Number.isFinite(def.naturalHealingTimes) && def.naturalHealingTimes>1) healTimes.push({ name: def.name, x: def.naturalHealingTimes });
       for (const [k, v] of Object.entries(def.adjust||{})) if (typeof v==="number") adjust[k] = (adjust[k]||0) + v;
     });
     return { active, permanent: active.filter(a=>a.permanence==="permanent"),
-             temporary: active.filter(a=>a.permanence==="temporary"), painLevels, adjust };
+             temporary: active.filter(a=>a.permanence==="temporary"), painLevels, healTimes, adjust };
   }
   // Current TOL doesn't move when an Aberration changes max TOL (MQ2,
   // Decision 109). The sheet stores TOL *Spent* (current = max - spent), so
@@ -7755,7 +7844,7 @@ const Engine = (() => {
     specializationNeed, specializationIds, specializationChosen, specializationLabel,
     // Vitals: Pain, LUCK, Sanity, Conditions, taking a hit, recovery
     painState, luckState, sanState, conditionState, addCondition, removeCondition, setConditionMarks,
-    hlState, armorState, resolveHit, applyHit, naturalArmor, nanomedKit,
+    hlState, armorState, resolveHit, applyHit, hitAsks, naturalArmor, nanomedKit,
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
     weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
