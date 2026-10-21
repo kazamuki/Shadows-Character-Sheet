@@ -12,31 +12,41 @@
 
 That is the inventory's (b) and (c) Skill-row rows: **37 effects**. On top of them comes **Ken's ruling on Take X with a kicker**: "Take 6: 13 + 1d4".
 
+**Rider: Speed Heal lasts 24 hours** (Ken, 2026-10-21, folded in here). P20b's review found it, and it's on `main` too. The Rest panel multiplies **every** day of a rest by Speed Heal's ×2, but the book says *"2× healing rate for 24 hours"* (`0460` Gear) and the panel itself says *"Speed Heal doubles it for 24 hours."* So 3 days on Speed Heal at BOD 6 proposes 36, where the book gives 24 (12 for the dosed day, then 6 and 6). It shares no file with the Skill work except the data's version and the close-out (§1.7, §3 PQ15, §5's Speed Heal rows, §10's P21 11).
+
 **Status:** **drafted 2026-10-17 by Claude (Opus)**, from the inventory. Pre-flighted against `main` at `2d38dc9` (#213 merged: P19, app 0.49.0 and data 0.41, unreleased). **Ken answered PQ1–PQ14 on 2026-10-17:** "Take all the defaults for most questions, here are the differences: PQ7: lets flag that one to ask D / PQ9: lets flag that one for D for kicker die. I believe they combine to the next die size up, but I need confirmation / PQ10: Flag for D". So every PQ is **Default** except **PQ7, PQ9 and PQ10, which are Deighton's**. The build opens them as three flags (§2a), each stubbed as its PQ's default says. Nothing that waits on them is guessed.
+
+**Amended 2026-10-21 by Claude (Opus), P20b's reviewer.** P20a and P20b are merged and released in v0.51.0. The pre-flight was re-run against `main` at `24401f7` (below; every line still holds, and the line numbers moved). Ken folded in the Speed Heal rider, which adds **PQ15, unanswered**: its default is the book's sentence, so a blank answer builds the default (the loop's rule).
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). The order is written after P20 merges (*The next order is written only after the last PR merges*): **re-run the pre-flight then**, since P20 also touches `engine.js` and the data.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). P20 has merged, and the pre-flight below is the re-run. Ken starts **P21 build**, then a fresh reviewer once the PR is open.
 
 **Carried over from P19's review:**
 - **The miss is this order.** P19's sweep found every reader of `checkBonus`, but its scope was "Advantages and Disadvantages", and nobody asked what else carries the same effects. The review asked, and the inventory found 37. **Applied here:** §5 lists every source the sheet stores an archetype effect in, and says for each one whether `traitRows` reads it.
 - **The wrong assumption:** P19's §1 assumed no Skill could hold a Take X and a kicker. This order makes that reachable (Quick Study and Hyper Vigilance, both on Combat Sense), and Ken has ruled on it. **Applied here:** §10 pins it, and §13 names the test lines it changes.
 
-**Pre-flight against `main`** (`2d38dc9`; engine read, probes run with `tests/harness.mjs`):
+**Pre-flight against `main`**, re-run 2026-10-21 at `24401f7` (v0.51.0: P19, P20a and P20b merged and released; engine read). The first draft's was at `2d38dc9`.
 
 ```
-traitRows                   reads ch.advantages and ch.disadvantages only (engine ~821). attackNotes reads it (~918)
-Other scans today           naturalArmor (~1161) and movement (~1211): advantages, disadvantages, taken Majors,
-                            specializationChosen, archetypePowers (at rank). Neither reads baselineTraits, a
-                            starterPower or trackers.aberrations
-Cleaner, Stealth 3          skillLine(ch,"stealth").kickers  →  []   (Vanish's 1d6 not read)
+traitRows                   reads ch.advantages and ch.disadvantages only (engine ~997), via heldRank. attackNotes reads it (~1094)
+Other scans today           traitGrants (~240, Decision 235, new since the draft): advantages, disadvantages (ranks summed), taken
+                            Majors, specializationChosen, archetypePowers (at rank). naturalArmor (~1345) and movement (~1395)
+                            scan the same five. None reads baselineTraits, a starterPower or trackers.aberrations.
+                            grants() (~165) reads three (advantages, disadvantages, taken Majors), ranks summed since P20b
+Cleaner, Stealth 3          skillLine(ch,"stealth").kickers  →  []   (Vanish's 1d6 not read: traitRows never sees a spec option)
 Take X with a kicker        skillLine's takeX[].total = x + checkBonus; takeX[].text never names a kicker;
-                            sheet.js checkText (~314) appends kickers to the Check cell only
-A conditional kicker        traitEffects (~864) drops a kicker with whenText; explodeOn with whenText too (~867)
+                            sheet.js checkText (~337) appends kickers to the Check cell only
+A conditional kicker        traitEffects (~1024) drops a kicker with whenText; explodeOn with whenText too
 Majors' saved shape         milestones.major[] = { id, date, power? }: no Skill or weapon pick (Decision 223)
 Power "running" state       none stored. naturalArmor's activeIds come from the hit panel's ticks (W110 is open)
 Overlaps after P21          Take X + kicker: Combat Sense (Quick Study + Hyper Vigilance). Two kickers: Combat Sense (Hyper Vigilance + Unwavering Focus,
-                            the second conditional); Dodge (Wind Dancing Defense + Survival Instinct, both conditional)
+                            the second conditional); Dodge (Wind Dancing Defense + Survival Instinct, both conditional). P20 added no Skill rows
+Pain in a check             painState now carries Terminal Disease and Pain Tolerance (Decision 236): P21 3's "hurt" case still drops by Pain
+Speed Heal (the rider)      naturalHealing(ch, { days, speed }) (~2273): proposed = BOD × each healTimes × days × 2 with speed, so every
+                            day doubles. BOD 6, 3 days, Speed Heal → 36 (the book: 24). The Rest panel's sum line (sheet ~1199) prints
+                            "× 2 (Speed Heal) × 3 days" under recoveryRules.naturalHealing.speedHealText "Speed Heal doubles it for 24 hours."
+                            The history label (~3608) reads factors; the kit leaves your gear (~3611, one dose) as today
 ```
 
 ---
@@ -50,13 +60,15 @@ When P21 is merged:
 3. **Take X adds a kicker** (Ken, 2026-10-17, verbatim): *"kicker die are always 'add on' to the roll as a modifier. So if I 'take 6' on a skill, that just means the die face of the dice I rolled for the skill is 6, but if I have a kicker die, then I roll that die and add its results to the overall skill check."* Quick Study with Hyper Vigilance: Combat Sense reads **"Take 6: 13 + 1d4 (choose before you roll)"**. `total` stays 6 + the check; only the line gains the kicker. A conditional kicker isn't appended: it stays its own mark.
 4. **A conditional kicker is a mark.** Survival Instinct: Dodge and Melee read "+1d4 once per encounter, on a Defensive Action · Survival Instinct". It is never in the Check cell.
 5. **Light, from the table.** Night Eyes: under Main's attacks, "In Dark, attacks take Dim's −1; in Blind, Dark's −3", and on Awareness, "Dark reads as Dim, Blind as Dark". Nocturnal: one line atop the Skills tab, "+1 to every check in Dim or Dark, −1 in Bright". Every number comes from `visibility`.
-6. **Nothing else moves.** A character holding none of §8's sources computes byte for byte what it does on `main`. Natural Armor, movement, SFR and the Form read exactly as today.
+6. **Nothing else moves**, except the rider (7). A character holding none of §8's sources computes byte for byte what it does on `main`. Natural Armor, movement, SFR and the Form read exactly as today.
+7. **Speed Heal doubles one day of a rest.** BOD 6, 3 days, Speed Heal: the Rest panel proposes **24** (6 × 2 for the dosed day, + 6 + 6), not 36. With Rapid Healing rank 2 it's 18 × 2 + 18 + 18 = **72**, not 108. A one-day rest is unchanged (12; 36 with Rapid Healing 2). The sum line and the session log's label say which day the dose doubled. Nothing else in the panel moves: one tick, one dose out of your gear, Focused Healing and the Nanomed Kit as today.
 
 ## 2. Tier, versions, numbers
 
 - **Tier: Rule or shape.** New source scans in `traitRows`, `perRank` on `checkMod`, a conditional kicker, `skillsFrom`, and two `visibility` fields; 37 effects move from text to computed. One decision, **N** (the next free number on `origin/main` when built), extending 233.
-- **Game data:** bump (Decision 68). A Cleaner's Stealth and a Quick Study holder's Combat Sense compute differently. If `main`'s `gamedataVersion` has already moved since the last release (P20 bumps it too), keep that number rather than bumping twice in one release.
-- **App: minor.** As for the data: if `[Unreleased]` already carries a minor (0.49.0, or P20's), the lines join it.
+- **The rider is Fix-tier inside this order.** Under PQ15's default it's the book's own sentence, which the code got wrong. So it takes no decision: a test, a CHANGELOG line, a log line, and SCHEMA §1's *Healing (055)* prose corrected (it says the panel "multiplies by days and by Speed Heal's ×2", which states the bug). Decision 236's "multiply a rest with each other and Speed Heal" stays true of the dosed day, so nothing is superseded. **If Ken takes PQ15's alternative** (a dose per day), that is a choice, and it takes its own decision, **N+1**.
+- **Game data:** bump (Decision 68), **`0.43` → `0.44`**. `0.43` shipped in v0.51.0, so nothing unreleased is carrying a bump. A Cleaner's Stealth and a Quick Study holder's Combat Sense compute differently. (The rider changes no data.)
+- **App: minor, `0.51.0` → `0.52.0`.** `[Unreleased]` is empty since v0.51.0, so this opens it.
 - **Character schema: no bump.** Nothing new is saved. Skill Paragon, God Tier, Grace Under Fire, Weapon Expert and Aspect of the Beast, which do need a saved pick, are out of scope (§7).
 - **Three flags, opened by the build** (Ken, PQ7, PQ9, PQ10). Like a decision, each takes the next free F-number on `origin/main` when built, written **FN**, **FN+1**, **FN+2** here. See §2a.
 
@@ -101,6 +113,7 @@ Check that each one shows, and say where in the PR.
 | PQ12 | **The source a row names.** | **The part's own name:** *Vanish* (not *Cleaner*), *Quick Study*, *Scent Tracking*, *Active Camouflage*, *Night Eyes*. | Default |
 | PQ13 | **Tags on the Major, power and tweak cards** (Decision 231's chips). | **None.** Their text already says it, and P19's `effectTagsFor` reads Advantages only. *Alternative:* chips on every card, a P18-sized change. | Default |
 | PQ14 | **Aberrations "as" an Advantage** (E9: Aura Sight, Danger Sense and six more). | **Out of scope.** Today `as` is display text, and P21 doesn't change that. *Alternative:* the Aberration counts as holding the Advantage, everywhere: grants, prerequisites and `traitRows`. That's its own decision. | Default |
+| PQ15 | **Speed Heal on a rest longer than a day** (the rider). The panel has one Speed Heal tick, and it takes one dose from your gear. | **The tick is one dose, and it doubles one day** of the rest: the book's "2× healing rate for 24 hours". A longer course is several rests, one dose each, which the session log already records one by one. *Alternative:* a "Doses" number beside the tick (1 up to the days, and up to what you carry), each dose doubling a day and leaving your gear. That's a new control and its own decision (N+1). | *(open; blank builds the default)* |
 
 ## 3a. The decision, drafted
 
@@ -117,7 +130,7 @@ N. **A tweak's, Major's, power's, trait's or Aberration's effect on a Skill's ch
 
 ## 4. Read first
 
-`CLAUDE.md` (constraints 5, 7, 8, 9; *Decisions*; *Watch for mechanical drift*). `SCHEMA.md` §4: Decisions 104, 200, 215, 226, 231, 233 (INDEX §3 finds them). `engine.js`: `traitRows` and `traitEffects` (~821–870), `skillLine` (~875), `attackNotes` (~918), `visLevels`/`visOn` (~265), `naturalArmor` (~1161, for how a power's `perRank` and `plus` read), `specializationChosen` (~4821), `majorById`/`majorTakenIds` (~381), `archetypePowers` (~3462), `aberrationState` (~3035), `focusedSkillIds` (~2252). `sheet.js`: `skillFxHtml`, `attackNotesHtml`, `checkText` (~305–315), `skillRowPair`. The inventory. **The CRB, before writing any `whenText`:** `0412` (tweaks, Majors), `0413`, `0414`, `0411`, `Appendix_Aberrations`, `0530` (*Visibility*; Parry is a Melee check).
+`CLAUDE.md` (constraints 5, 7, 8, 9; *Decisions*; *Watch for mechanical drift*). `SCHEMA.md` §4: Decisions 104, 200, 215, 226, 231, 233 (INDEX §3 finds them). `engine.js` (lines at `24401f7`): `traitRows` and `traitEffects` (~997–1050), `skillLine` (~1051), `attackNotes` (~1094), `visLevels`/`visOn` (~403–410), **`traitGrants` (~240, Decision 235: the five-source walk this order extends)**, `naturalArmor` (~1345, for how a power's `perRank` and `plus` read), `specializationChosen` (~5048), `majorById`/`majorTakenIds` (~546), `archetypePowers` (~3689), `aberrationState` (~3260), `focusedSkillIds` (~2475). `sheet.js`: `skillFxHtml`, `checkText` (~329–337), `skillRowPair` (~353). **The rider:** `naturalHealing` (~2273), `restPanelHtml` (~1195), the rest's history label (~3608); Decision 236 and SCHEMA §1's *Healing (055)*; `0460` Gear (Speed Heal) and `0550`. The inventory. **The CRB, before writing any `whenText`:** `0412` (tweaks, Majors), `0413`, `0414`, `0411`, `Appendix_Aberrations`, `0530` (*Visibility*; Parry is a Melee check).
 
 ## 5. What this changes underneath (the sweep)
 
@@ -125,7 +138,7 @@ Answered by grepping readers (`traitRows(`, `traitEffects(`, `.kickers`, `.takeX
 
 | Today | Where | After P21 |
 |---|---|---|
-| `traitRows(ch)` reads advantages and disadvantages, one per trait, and the rank via `heldRank` | `engine.js` ~821 | Also reads the six sources in PQ1. Each yields `{ g, ids, name, rank }`: `rank` is the power's rank, else 1. `skillsFromPick` stays Advantage-only; `skillsFrom: "focused"` reads `focusedSkillIds(ch)`. Orphans are skipped: an unknown option, Major, power or Aberration, and a power whose archetype isn't the character's. |
+| `traitRows(ch)` reads advantages and disadvantages, one per trait, and the rank via `heldRank` | `engine.js` ~997 | Also reads the six sources in PQ1. **Re-run finding:** `traitGrants` (Decision 235) already walks five of the seven (advantages and disadvantages with ranks summed, taken Majors once each, `specializationChosen`, `archetypePowers` at rank) with the totality guard (`safe`). Factor that walk out so both read it, rather than writing a third scanner beside it and `grants()`. **`traitGrants` keeps its five sources:** `derivedMod`, `statMax` and `startingCredits` must not start reading a baseline trait or an Aberration (P21 4 pins it). `traitRows` takes all seven. Keep `traitRows`' `skillsFromPick`, which reads an Advantage's picks. Each yields `{ g, ids, name, rank }`: `rank` is the power's rank, else 1. `skillsFromPick` stays Advantage-only; `skillsFrom: "focused"` reads `focusedSkillIds(ch)`. Orphans are skipped: an unknown option, Major, power or Aberration, and a power whose archetype isn't the character's. |
 | `traitEffects` takes `checkMod` `amount` | ~860 | `amount`, or `perRank` × rank + `plus` (each finite; a bad row skipped). The amount of a mark is filled the same way. |
 | A `kicker` with `whenText` is dropped | ~864 | A mark: `{ kind:"kicker", text: skillRowText.kickerWhen }`. Never in `kickers`. |
 | `visibility` rows only `ignore` levels; `on` is attacks or awareness | ~854, `visLevels` ~265 | Gains `shift` (`{ dark:"dim", blind:"dark" }`, each level's numbers read from the table) and `mod` (`{ dim:1, dark:1, bright:-1 }`, `on: ["checks"]`). Night Vision's row reads as today. |
@@ -139,6 +152,12 @@ Answered by grepping readers (`traitRows(`, `traitEffects(`, `.kickers`, `.takeX
 | P19's tests | `rules` 2134–2340, `smoke-sheet-skills` ~1091–1168 | **All pass unchanged.** No P19 fixture holds a kicker and a Take X on one Skill. If one does, it's an expected break (§13). |
 | **`P19 7b: no Skill can hold two kickers, or a kicker and a Take X`**: a trip-wire over Advantages and Disadvantages only (`P18_DEFS`) | `rules` ~2359 | It still passes, because it never sees the new sources, and that's the problem: it would stay green while P21 makes both overlaps reachable. **Rewrite it, as an expected break:** scan every source `traitRows` reads, and assert that the overlaps reachable are exactly the ones this order lists (Combat Sense: Hyper Vigilance with Quick Study and with Unwavering Focus; Dodge: Wind Dancing Defense with Survival Instinct). A new overlap then fails it until someone decides how it reads. Rename it `P21 9: the Skills that can hold two kickers, or a kicker and a Take X, are the ones the order names`. |
 | GM mode | `gm.js` | Reads no `skillLine` (grep). Unchanged. |
+| **Rider:** `naturalHealing(ch, { days, speed })` multiplies the whole proposal by Speed Heal's ×2 (`factors` holds it beside Rapid Healing and Fast Metabolism) | `engine.js` ~2273 | `proposed` = `daily × days`, plus one more `daily × (x − 1)` when Speed Heal is ticked and `days ≥ 1`, where `daily` = BOD × each every-day factor. Speed Heal's entry in `factors` gains `days: 1` (the every-day factors carry no `days`), so P20b 3's `factors.map(f => [f.name, f.x])` passes unchanged. One reader still (Decision 236): the panel, its label and the tests read `proposed`. |
+| **Rider:** the Rest panel's sum line, `data-restsum` | `sheet.js` ~1199 | One day: unchanged ("BOD 6 × 3 (Rapid Healing) × 2 (Speed Heal) = 36 a day"). Longer: names the dosed day, e.g. "BOD 6 × 3 (Rapid Healing) = 18 a day × 3 days, + 18 for Speed Heal's day = 72" (drafted, **marked for a voice pass**). It must read from `naturalHealing`'s fields and type no number. |
+| **Rider:** the rest's history label | `sheet.js` ~3608 | One day: unchanged ("Rested 1 day (×3 Rapid Healing, ×2 Speed Heal)"). Longer: "Rested 3 days (×3 Rapid Healing; ×2 Speed Heal for a day)" (drafted). |
+| **Rider, text that restates the rule:** `recoveryRules.naturalHealing.speedHealText` ("Speed Heal doubles it for 24 hours."), the gear's `notes` ("2× healing rate for 24 hours"), and the reference panel (`engine.js` `_refPart("Natural healing", …)`) | data, engine | **Unchanged: they were right all along.** SCHEMA §1's *Healing (055)* ("multiplies by days and by Speed Heal's ×2") is the one that states the bug, and it's corrected in the same change. |
+| **Rider:** Speed Heal leaving your gear (`gearUseHtml`, `gearId` ~3611) | `sheet.js` | **Unchanged:** one tick, one dose (PQ15's default). |
+| **Rider:** P20b's tests that tick Speed Heal | `rules` P20b 3, `smoke-sheet-play` P20b 3b, `engine` P20b 8 | **All pass unchanged:** each ticks it on a one-day rest, and P20b 8 compares a hostile character with a clean one at the same 2 days. Grep `speed: true` and `data-act="speed"` before the build, and name any other hit as an expected break. |
 
 ## 6. The shapes
 
@@ -175,7 +194,8 @@ visibilityChecks "{mods} on every check"                                ("+1 in 
 
 - **Anything that needs a saved pick:** Skill Paragon, God Tier, Grace Under Fire, Weapon Expert (a Major's Skill or weapon), Aspect of the Beast (the spirit), Battle Hardened (the immunity). One later order, with a schema bump. God Tier waits on E8 as well.
 - **Weapon and armor rows** (Tuned Edge, Custom Fit, the Signature line, the natural-weapon powers), **stats while a power runs**, **movement**, **Essence checks**, **SFR and RoU numbers**, **magic** (Tremor, Slow Tide), **Luck** (Stunt Driver's Lucky while piloting). The inventory's (c) "Elsewhere", grouped for later orders.
-- **P20's areas**, sent to P20: Arcane Fortitude's TOL, healing, Take a hit, SAN and Pain.
+- **P20's areas**, built by P20a and P20b (Decisions 235, 236): Arcane Fortitude's TOL, SAN, the stat caps, Pain, rest and the trait half of Take a hit. The rider is the one exception, folded in by Ken.
+- **The power half of Take a hit and healing has no order** (found re-running the pre-flight). The inventory sent Odin's Aegis, Null Field, Red Mist, Spectral Veil's immunity, Elemental Blood, Silverscar, Battle Hardened, Regeneration, Bone and Sinew and Vitality Surge to P20 (c44–c53). P20b's order passed them on: *"P21 … owns the reductions that run with a power"*. This order leaves them to "later orders". Nothing here builds them. **Ken: they want a plan row of their own** (P20b's `meleeTaken` stage after Natural Armor is where they'd join; most need W110's "running" state or a saved pick).
 - **Adaptive Skeleton's Natural Armor** (b21): `naturalArmor` would need a `starterPower` scan. A one-line follow-up, but not a Skill row.
 - **Ruling on** Specialist, Make My Own Luck, kicker stacking or Concierge's appraisal: the build opens flags FN–FN+2 and stubs them (§2a), never more. **Aberrations "as" Advantages** (PQ14) and **Life Sense's old Skill names** (PQ8) stay out.
 - **A "running" state for powers** (PQ2, W110).
@@ -233,6 +253,7 @@ The inventory has each row's exact sentence. **Check every `whenText` against it
 | `P21 8: traitRows and skillLine are total over hostile sources` | engine | A spec id the data lacks, a Major `{}`, a power with rank "3" or NaN, `perRank` "1", `plus` Infinity, `shift` `{dark:"nope"}`, `mod` `{dim:"x"}`, `skillsFrom:"all"`, `trackers.aberrations` not an array: nothing throws, and bad rows are skipped. |
 | `P21 10: the flagged kicker rules are stubbed, not guessed` | rules + smoke-sheet-main | Specialist taken with Field Medic: Medical's `kickers` is still `[{die:"1d4"}]`, with no "roll twice" anywhere on the row, and the Major card shows its `playerNote` (FN+2). Hyper Vigilance with Unwavering Focus: Combat Sense's Check cell has one 1d4 and the other is a mark; no 1d6 appears (FN+1). A Fence's Skills carry no appraisal kicker on any row, and the option shows its `playerNote` in the wizard (FN). Each entry is `flagged` with a `flagNote` naming an open F-number (`docs.test.mjs`). |
 | `P21 9: the Skills that can hold two kickers, or a kicker and a Take X, are the ones the order names` | rules | Replaces P19 7b (§5). It scans every source and lists the overlaps. They're exactly §5's: Combat Sense and Dodge. |
+| `P21 11: Speed Heal doubles one day of a rest` | rules + smoke-sheet-play | BOD 6: 3 days with Speed Heal → **24**; 1 day → 12; 3 days without → 18; 0 days with Speed Heal → 0. Rapid Healing 2, 3 days with Speed Heal → **72**. Speed Heal's `factors` entry has `days: 1`. Smoke: the Rest panel's HP box proposes 24 for 3 days, the sum line names the dosed day and holds no "× 2 (Speed Heal) × 3 days", the label after Apply says "×2 Speed Heal for a day", and one dose leaves your gear. **On `main`: fails** (36). |
 
 ## 11. Tests beyond the examples
 
@@ -255,14 +276,17 @@ The inventory has each row's exact sentence. **Check every `whenText` against it
 9. Night Eyes' numbers typed into the template (P21 7).
 10. A taken Major's `kicker` added to Stealth in the data (a new, unlisted overlap) (P21 9).
 11. Specialist stepping Medical's kicker to 1d6 (P21 10).
+12. Speed Heal back over every day of the rest (P21 11: 36, not 24).
+13. Speed Heal's extra day added with no day rested (P21 11: 0 days proposes 6).
 
 ## 13. Steps and stop-and-ask
 
-**Steps:** (1) Read §4; confirm each §5 row; check §8's whens against the inventory and the book; `npm run test:fast`. (2) Write §10's tests and run them on `main`. (3) Data: the rows, `skillRowText`, the version. (4) Engine: `traitRows`, `traitEffects`, `skillLine`, `attackNotes`; `npm run verify`. (5) UI: Nocturnal's line; the dev preview; `npm run phone-check`. (6) The mutants, scripted. (7) Close-out.
+**Steps:** (1) Read §4; confirm each §5 row; check §8's whens against the inventory and the book; `npm run test:fast`. (2) Write §10's tests and run them on `main`. (3) Data: the rows, `skillRowText`, the version. (4) Engine: `traitRows`, `traitEffects`, `skillLine`, `attackNotes`; `npm run verify`. (5) UI: Nocturnal's line; the dev preview; `npm run phone-check`. (6) **The rider**, after the Skill work is green: P21 11 first (on `main` it fails at 36), then `naturalHealing`, the sum line, the label, SCHEMA §1's prose. (7) The mutants, scripted. (8) Close-out.
 
 **Stop and ask:**
 - **A `whenText` would say less, or more, than the book's sentence.**
-- **A computed value moves for a character holding none of §8's sources** (P21 4).
+- **A computed value moves for a character holding none of §8's sources** (P21 4), other than the rider's: a rest of more than one day on Speed Heal.
+- **Ken hasn't answered PQ15 and the build reaches the rider:** build the default (a blank is "Default"). If he answers the alternative, stop: it needs a new control and decision N+1, and this order doesn't draft them.
 - **Anything saved in the character.**
 - **An existing test fails** other than these **expected breaks**: **P19 7b**, rewritten as P21 9 (§5); a P19 test whose fixture holds a kicker and a Take X on one Skill (none known; grep `hyper-vigilance` and `field-medic` beside `takeX`); and any test asserting a §8 source's text *is* its whole effect.
 - **Deighton rules on FN, FN+1 or FN+2 before the build ends:** stop. The ruling becomes its own change, closing the flag; this order builds only the stubs.
@@ -279,12 +303,15 @@ Suggested CHANGELOG lines (player voice):
 - **Powers say what they add while they run:** Scent Tracking at rank 3 reads +4 on Tracking.
 - **Take X keeps your Kicker Die:** "Take 6: 13 + 1d4".
 - **Night Eyes and Nocturnal say what the light does to you.**
+- **Speed Heal lasts a day, as the dose says.** On a longer rest it doubles one day's healing, not all of them.
 
 **Review checklist:**
 - [ ] §10's tests exist with those names, run on `main` (P21 1 and 3 fail there).
 - [ ] §5's rows confirmed or corrected; the weapon row pinned without a kicker.
 - [ ] Every `whenText` matches the book (the inventory quotes it).
-- [ ] `git diff origin/main --stat -- src` touches only `shadows-data.js`, `engine.js`, `sheet.js` (Nocturnal's line) and the generated changelog.
+- [ ] `git diff origin/main --stat -- src` touches only `shadows-data.js`, `engine.js`, `sheet.js` (Nocturnal's line, the Rest panel's sum line and label) and the generated changelog.
+- [ ] The rider: P21 11 fails on `main` (36) and passes; mutants 12 and 13; SCHEMA §1's *Healing (055)* no longer says every day doubles; a log line; PQ15's answer (or "Default") in the PR.
+- [ ] `traitRows` and `traitGrants` share one source walk, and `traitGrants`' readers (`derivedMod`, `statMax`, `startingCredits`) didn't move (P21 4).
 - [ ] Decision N passes `docs.test.mjs`.
 - [ ] Flags FN–FN+2 open in all three places, each `playerNote` seen on screen (where, in the PR), and P21 10 pins the stubs.
 - [ ] Mutants 1–11 in the PR; P19 7b rewritten as P21 9 and named in the PR.
@@ -303,5 +330,7 @@ The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<order>
 > 6. **The book is the source for every "when"** (the inventory quotes each). The data paraphrases the Professional's tweaks.
 >
 > 7. **Three rules wait on Deighton (§2a): never step a kicker up a size, combine two kickers, or name an appraisal Skill.** Open flags FN–FN+2 with their `playerNote`s and stub them; Ken's belief that kickers combine to the next size up is unconfirmed.
+> 8. **Speed Heal doubles one day, not the rest** (the rider): the book's "for 24 hours". A one-day rest reads exactly as today; zero days heal nothing, Speed Heal or not.
+> 9. **`traitGrants` keeps its five sources.** Share its walk with `traitRows`; don't widen it.
 >
-> Tier: **Rule or shape**. One decision and three flags (the next free numbers), a game data bump, an app minor, no schema bump. Use the close-the-session skill at the end.
+> Tier: **Rule or shape**, with a Fix-tier rider. One decision and three flags (the next free numbers), game data `0.44`, app `0.52.0`, no schema bump. Use the close-the-session skill at the end.
