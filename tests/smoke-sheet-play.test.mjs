@@ -1195,7 +1195,13 @@ test("P20b 3b: the Rest panel proposes by every multiplier and names them", () =
   plain.click('[data-actopen="rest"]');
   assert.equal(plain.$("[data-restsum]"), null);
   assert.equal(plain.$('[data-act="hp"]').value, String(Engine.statTable(lockedCharacter()).BOD.value));
-  assert.deepEqual([...app.errors, ...plain.errors], []);
+  // No days of rest heals nothing, and the sum doesn't call 0 a day's healing.
+  const zero = openSheet(held20b(lockedCharacter(), "advantages", "rapid-healing", 2), "trackers");
+  zero.click('[data-actopen="rest"]');
+  const days = zero.$('[data-act="days"]');
+  days.value = "0"; days.dispatchEvent(new zero.window.Event("change", { bubbles: true }));
+  assert.match(zero.$("[data-restsum]").textContent, new RegExp(`^BOD ${bod} × 3 \\(Rapid Healing\\) × 0 days = 0$`));
+  assert.deepEqual([...app.errors, ...plain.errors, ...zero.errors], []);
 });
 
 test("P20b 9: Pain says where it came from, on Main, Trackers and paper", () => {

@@ -1196,7 +1196,7 @@ function restPanelHtml(ch, st){
   const nh=Engine.naturalHealing(ch, { days: st.days, speed: st.speed }), inp=actInput(ch, st), hs=Engine.hlState(ch);
   const r=Engine.heal(clone(ch), inp);
   // "BOD 6 × 3 (Rapid Healing) × 2 (Speed Heal) = 36 a day", when something multiplies it.
-  const sum = nh.factors.length ? `<p class="hitnote" data-restsum>${esc(`${nh.stat} ${nh.perDay}${nh.factors.map(f=>` × ${f.x} (${f.name})`).join("")}${nh.days>1?` × ${nh.days} days`:""} = ${nh.proposed}${nh.days>1?"":" a day"}`)}</p>` : "";
+  const sum = nh.factors.length ? `<p class="hitnote" data-restsum>${esc(`${nh.stat} ${nh.perDay}${nh.factors.map(f=>` × ${f.x} (${f.name})`).join("")}${nh.days===1?"":` × ${nh.days} days`} = ${nh.proposed}${nh.days===1?" a day":""}`)}</p>` : "";
   let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>${sum}
     <div class="hitrow">${actNum(st,"days","Days of rest")}
       <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
