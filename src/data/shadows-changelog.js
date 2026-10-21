@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.51.0",
-    "date": null,
+    "date": "2026-10-21",
     "intro": [],
     "items": [
       "**Your Disadvantages cost you Sanity.** Berserker, Blood Lust, Fanatic, Hallucinations and Minor Insanity take their points off your max SAN, and the breakdown names each one.",
