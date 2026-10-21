@@ -229,7 +229,7 @@ window.SHADOWS_DATA = {
           ruleText: "...",                       // the general line (the wizard, an entry not taken)
           heldText: "... {rank} {v} {choice} ...", // optional: a held entry's own line
           byRank: [4, 6, 8] }                    // optional: one value per rank (rank 2 = byRank[1]), maxRank long
-        // (Decision 236) A trait's numbers in play, read by Engine.grants() (advantages, disadvantages, taken Majors), a trait counted once.
+        // (Decision 236) A trait's numbers in play, read by Engine.grants() (advantages, disadvantages, taken Majors), a trait on two rows counted once, its ranks summed.
         // { type: "painLevel", amount: 1, onlyIfHurt: false }   Pain it holds you at (Terminal Disease); `true` is Pain Sensitive's
         // { type: "painIgnore", perRank: 1 }                    Pain taken off after the clamp, never below 0 (Pain Tolerance)
         // { type: "healTimes", byRank: [2, 3, 4] }              multiplies a rest's healing (Rapid Healing); an Aberration has `naturalHealingTimes: 2`
@@ -263,7 +263,7 @@ window.SHADOWS_DATA = {
   // Dark"), visibilityAttacks ({levels}, "Dim −1 and Dark −3"). Read by Engine.skillLine and attackNotes.
   skillRowText: { takeX: "Take {x}: {total} (choose before you roll)" },
   // (Decision 234) appCopy.expertTitle: the Expert mode button's tooltip, naming the four steps it folds.
-  // (Decision 236) effectTags: painLevelAlways ("Always at least Pain Level {amount}"), painIgnore ("Ignore {perRank} Pain Level a rank"),
+  // (Decision 236) effectTags: painLevelAlways ("Pain Level +{amount}, hurt or not"), painIgnore ("Ignore {perRank} Pain Level a rank"),
   // healTimes ("Rest heals {ranks}"), meleeTakenMinus, meleeTakenHalve, headBonus; effectTagsHeld: painIgnoreOne, painIgnoreMany ({total}),
   // healTimes ("Rest heals ×{v}"). appCopy: hitMelee, hitDoubled, hitThickSkull. painState also returns { ignored, ignoredBy };
   // naturalHealing(ch, { days, speed }) returns { times, factors, proposed }; hitAsks(ch) is { melee }; resolveHit reads `hit.melee`

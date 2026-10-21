@@ -165,7 +165,7 @@ const Engine = (() => {
   function grants(ch){
     const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0, painLevel:0, painLevelFrom:[], painLevelAlways:0, painLevelAlwaysFrom:[], painIgnore:0, painIgnoreFrom:[],
                   healTimes:[], meleeTaken:[], headIgnoredBy:null, feed:{}, witheringHalvedBy:null };
-    // Decision 236: a trait listed twice in a file counts once for the rows that read a rank.
+    // Decision 236: a trait on two rows counts once for the rows that read a rank, its ranks summed.
     const counted = new Set();
     const scan = (list, lookup) => (list||[]).forEach(entry=>{
       const def = entry && lookup(entry.id);
@@ -190,9 +190,10 @@ const Engine = (() => {
           continue;
         }
         // Decision 236: the traits that answer Pain, rest and a hit. Each reads only a number it can trust and skips the rest.
-        const rank = Math.floor(Number(entry.rank));
+        // A trait held on two rows (a free natural one and a bought one) counts once, with its ranks summed.
+        const rank = (list||[]).reduce((n, e)=>n + (e && e.id===entry.id ? Math.max(0, Math.floor(Number(e.rank))||0) : 0), 0);
         if (["painIgnore", "healTimes", "meleeTaken", "headBonus"].includes(g.type)){
-          const key = g.type+":"+entry.id+":"+JSON.stringify(g);
+          const key = g.type+":"+entry.id+":"+def.grants.indexOf(g);
           if (counted.has(key)) continue;
           counted.add(key);
         }

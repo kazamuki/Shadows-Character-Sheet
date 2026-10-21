@@ -2776,11 +2776,18 @@ test("P20b 5: a head hit doubles unless a helmet or Thick Skull says otherwise",
   assert.equal(noArm.through, 14);
 });
 
+test("P20b 3c: a trait on two rows counts once, its ranks summed", () => {
+  const two = (kind, id) => { const ch = sub20b(); ch[kind].push({ id, rank: 1, notes: "", source: "natural" }, { id, rank: 1, notes: "" }); return ch; };
+  const td = two("advantages", "pain-tolerance"); hold19(td, "disadvantages", "terminal-disease");
+  assert.equal(pain20b(td, 25).ignored, 2, "both ranks of Pain Tolerance count");
+  assert.equal(JSON.stringify(Engine.naturalHealing(two("advantages", "rapid-healing"), { days: 1 }).proposed), String(Engine.statTable(sub20b()).BOD.value * 3));
+});
+
 test("P20b 7: the tags are computed, held and unheld", () => {
   const comp = (kind, id, h = null) => tagsOf(kind, id, h).filter(t => t.computed).map(t => t.text);
   const rule = (kind, id) => tagsOf(kind, id).filter(t => !t.computed).map(t => t.text);
   const held = rank => ({ rank });
-  same(comp("disadvantage", "terminal-disease"), ["Always at least Pain Level 1"]);
+  same(comp("disadvantage", "terminal-disease"), ["Pain Level +1, hurt or not"]);
   same(comp("advantage", "pain-tolerance"), ["Ignore 1 Pain Level a rank"]);
   same(comp("advantage", "pain-tolerance", held(2)), ["Ignore 2 Pain Levels"]);
   same(comp("advantage", "pain-tolerance", held(1)), ["Ignore 1 Pain Level"]);

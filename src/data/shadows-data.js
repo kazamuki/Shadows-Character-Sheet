@@ -1086,7 +1086,7 @@ window.SHADOWS_DATA = {
     "luckCost": "LUCK: {action} costs {cost}",
     "milestone": "A {kind} Milestone at rank {atRank}",
     "painLevel": "Pain Level +{amount} once you're hurt",
-    "painLevelAlways": "Always at least Pain Level {amount}",
+    "painLevelAlways": "Pain Level +{amount}, hurt or not",
     "painIgnore": "Ignore {perRank} Pain Level a rank",
     "healTimes": "Rest heals {ranks}",
     "meleeTakenMinus": "Melee and Martial Arts damage to you −{minus}",
