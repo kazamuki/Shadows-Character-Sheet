@@ -30,14 +30,56 @@ are folded into **W69** (below, under Loadout). "A Vampire's Innate powers are
 granted" led Ken to rule F38 and F39 together, for both archetypes, and that
 ruling is built by **W88**.
 
-**W90 — Cybernetics.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · blocked on design: F6, F19*
-Playtesters want chrome. The design answer is already set (STATE §3, the
-Cyborg row): the Cyborg archetype was cut, and cybernetics become a list and
-an install mini-game, **Professionals only**. `0470` is still an outline
-(Implants, Upgrades, Replacements, Platforms, with no entries and no costs),
-so there is nothing to build from yet. This entry records that players asked;
-the work is STATE's Cyborg row, which retires `cyborg`, closes F6 and F19, and
-gives the Professional Installed Cybernetics.
+**W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*
+Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
+cut (STATE §3); cybernetics are **gear, Professionals only**, and the **Enforcer is the cybernetics
+Professional**, confirmed for the MVP by the Q4 scope freeze (`APPROVED_Q4_Scope_Freeze`). Deighton's
+system is accepted in principle (Ken), and two documents carry it in `private/crb/`:
+
+- **`Cybernetics_Systems`** — the rules. Every system runs through a **Neurocybernetic Interpreter (NCI)**
+  with four functions: an **EM Sheath** (blocks a number of EMP hazards, back 1 an hour), **Auxiliary
+  Power** (a reservoir that stands in for TOL once Exhaustion takes it to 0), a **Firewall** (opposed
+  against Hijack) and a **Neurostatic Buffer** (adds to the System Failure check). Powered systems cost
+  **Energy** (NRG): a weapon draws on TOL until the round resets, a defense commits it until released, and
+  each point past TOL is Exhaustion. **System Failure** is a d100 Breaker Check against Sanity, with an
+  eight-row table from "no penalty" to "incapacitated 1d4 rounds".
+- **`Cybernetics_Worksheet_v2`** — the data. Seven NCI models in five classes (Raptor Z4, Class II, 2,000Ç,
+  to the X-127 Viper, Class V, 10,800Ç) with Efficiency Bonus, Load Capacity, Buffer, Firewall and EMP
+  Resistance; about 80 parts as Augmentations, Features, Implants, Mods and Replacements, each with a
+  **Sanity cost**, Energy, Mod Slots, bonuses, vulnerabilities and a price; cyber weapons and defenses;
+  and the chems. Its hidden "Cyber Sheet Baseline" sheet sketches a sheet: NCI block, a body map, augmented
+  stats, cyber weapons.
+
+What it would give the sheet: an **NCI** card (class, Energy = TOL + its bonus, EMP resist, Firewall,
+Buffer, Load used of Load Capacity), cybernetics as **loadout rows** with a location and their mods,
+their bonuses through `grants` like any trait (a +3 BOD, Natural Armor, a Skill bonus, Take 8), cyber
+weapons on Main's attacks, an Energy tracker beside TOL, and **System Failure** as a roll with its table.
+Installing a part lowers **maximum SAN** by its cost (`APPROVED_SAN_Loss_and_Recovery`), which answers
+F19 and gives W127 (Cyber-Prophetical) and Cyber Allergy something to read. The Enforcer's Duty Grade
+(Interpreter: a free NCI; Hardwired: a 1d4 kicker when a system does the work) waits on this too.
+
+**Questions for Deighton before a plan** (the two documents disagree, or the worksheet is mid-edit):
+1. **The NCI's numbers.** The rules name EM Sheath, Auxiliary Power, Firewall and Buffer; the NCI list
+   has Efficiency Bonus, Load Capacity, Buffer, Firewall and EMP Resistance, and no Auxiliary Power.
+   Is Efficiency Bonus the "NCI bonus" Energy adds (the Enforcer's Interpreter) and the "Power Core"?
+   Is EMP Resistance (+10 to +35) the EM Sheath's count, or a percentage?
+2. **What a Load Capacity counts.** The worksheet lists four options (parts only; parts and mods; a points
+   pool; replacements 3, augments 2, implants 1) and picks none.
+3. **Which list is the rules.** The visible Cybertech sheet and the hidden catalog disagree part by part
+   (Gyro Stabilizers Take 5 or Take 8; TriClaws 12 + BOD or +12; Thunder Plugs against Stun or Daze;
+   Muscle Fiber Reinforcement's mod slots blank; Wrist Rockets 5 or 10 a burst). Several bonuses use words
+   the book doesn't (HP, "HTH Damage", "Death save", "Fragmentation" as a Condition).
+4. **Sanity cost as dice.** Many parts cost 1d4 or 1d6 Sanity: rolled once at install, and is it points
+   or percent of the 10–95% SAN scale?
+5. **Exhaustion's recovery.** "It takes 1 per point of TOL for fully recover": 1 what?
+6. **Stat bonuses past the cap.** +3 BOD and +3 REF parts: do they push past 10, and do they count for
+   Required Stats and Focus caps?
+
+*To respect:* store inputs, compute everything else (constraint 7): a part is a catalog reference on a
+loadout row, never its bonuses copied in. Ids are immutable (constraint 6), so parts get ids before
+anything ships. **Sequence after sheet-wishlist's P14** (loadout rows) and build on its row shape. Retiring
+`cyborg` is W61's question and closes F6; the install cost closes F19. Vampires, Werewolves and Arcanists
+can't take chrome. A rules question stays a flag, never a guess in code.
 
 **W91 — Vehicles you can buy and own, Powered Armor among them.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*
 There are no vehicles in the app: only the Pilot skill and Machindo. `0460`
@@ -859,6 +901,19 @@ Wealthy grants Ç2,000 a month per rank, and the sheet doesn't track months. Dei
 every Minor or Major Milestone for everyone ("UBI or your wealthy advantage or something"). Taking a Milestone could add the Çredits through the ledger.
 *To respect:* a rules change to the book's monthly income (Deighton's, then 0430's text); `addCredits`; W124 pays Poverty's debt down on the same beat.
 Wealthy's starting Ç10,000 is P20's (unanimous: once).
+
+**W134 — Sanity Loss and Recovery on the sheet.** *Claude, from the 2026-10-22 mirror · 💡 · Rule or shape · raised 2026-10-22*
+Scott's Sanity proposal was accepted on 2026-09-29 (`private/crb/APPROVED_SAN_Loss_and_Recovery.md`) and
+is in no chapter yet. The sheet's SAN card counts loss and nothing else. The document gives it three
+things: a failed SAN Breaker Check costs **5%, 10% or 20%** by severity (Minor, Major, Severe) and a
+Condition for the scene; **five bands** below 50% (−1 to WILL Essence checks against fear, then to all
+WILL checks, then Minor Insanity at rank 1 and 2, then −2) that last while SAN sits in them; and recovery
+at **5% a day** of rest (+5% overnight with VR therapy), never past maximum. Maximum SAN drops only with
+cyberware (W90).
+*To respect:* the book should carry it first (a `crb-catch-up.md` item, Ken's), since the sheet follows the
+book. Minor Insanity "gained this way" is a band effect, not a held Disadvantage: it doesn't lower SAN
+again (P20a's cut) and leaves when SAN climbs out. A failed spell charge on a failed SAN check is
+Decision 224's hold. Severity buttons go through `commit()` like every SAN change.
 
 **W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · 💡 · Rule or shape · raised 2026-10-21*
 Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"), Ken had to ask what Dim and Dark were. Decision 139 already puts a rule a hover or tap away (`data-tip`, `TIPS` in `shared.js`), but only for a tag, a stat score and a few fixed panels. A term inside a **sentence the app writes** is plain text: a light level, *Kicker Die*, *Take X*, *Defensive Action*, a Condition named in a mark, *Pain Level*. The player has to know it already, or go and find it.
