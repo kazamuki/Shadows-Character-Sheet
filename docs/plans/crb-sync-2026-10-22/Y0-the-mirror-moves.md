@@ -2,7 +2,8 @@
 
 **Plan:** [`../crb-sync-2026-10-22.md`](../crb-sync-2026-10-22.md) §2, row Y0, **with Y2 folded in** (below).
 **Status:** **drafted 2026-10-22 by Claude (Opus)**, pre-flighted against `main` at `69d3845` (#223 merged,
-docs only) with `private/` moved to `a8d53ab`. Waiting on Ken's approval.
+docs only) with `private/` moved to `a8d53ab`. **Approved by Ken 2026-10-22, as written.** Shadows-Private's `origin/main`
+is at `a8d53ab` (Ken pushed it the same day).
 **Tier: Fix + Content.** No decision, no flag, no schema bump. `gamedataVersion` moves (a new catalog piece).
 **Two repos, two PRs.** A **Shadows-Private** PR (the Codex pack builder, the mirror's README) and a
 **Shadows-Character-Sheet** PR (the `private/` pointer, the guards, the data). The second points at the first.
