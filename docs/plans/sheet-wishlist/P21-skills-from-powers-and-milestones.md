@@ -16,7 +16,7 @@ That is the inventory's (b) and (c) Skill-row rows: **37 effects**. On top of th
 
 **Status:** **drafted 2026-10-17 by Claude (Opus)**, from the inventory. Pre-flighted against `main` at `2d38dc9` (#213 merged: P19, app 0.49.0 and data 0.41, unreleased). **Ken answered PQ1–PQ14 on 2026-10-17:** "Take all the defaults for most questions, here are the differences: PQ7: lets flag that one to ask D / PQ9: lets flag that one for D for kicker die. I believe they combine to the next die size up, but I need confirmation / PQ10: Flag for D". So every PQ is **Default** except **PQ7, PQ9 and PQ10, which are Deighton's**. The build opens them as three flags (§2a), each stubbed as its PQ's default says. Nothing that waits on them is guessed.
 
-**Amended 2026-10-21 by Claude (Opus), P20b's reviewer.** P20a and P20b are merged and released in v0.51.0. The pre-flight was re-run against `main` at `24401f7` (below; every line still holds, and the line numbers moved). Ken folded in the Speed Heal rider, which adds **PQ15, unanswered**: its default is the book's sentence, so a blank answer builds the default (the loop's rule).
+**Amended 2026-10-21 by Claude (Opus), P20b's reviewer.** P20a and P20b are merged and released in v0.51.0. The pre-flight was re-run against `main` at `24401f7` (below; every line still holds, and the line numbers moved). Ken folded in the Speed Heal rider, which adds **PQ15. Ken answered it on 2026-10-21: Default** (one tick is one dose, and it doubles one day).
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -66,7 +66,7 @@ When P21 is merged:
 ## 2. Tier, versions, numbers
 
 - **Tier: Rule or shape.** New source scans in `traitRows`, `perRank` on `checkMod`, a conditional kicker, `skillsFrom`, and two `visibility` fields; 37 effects move from text to computed. One decision, **N** (the next free number on `origin/main` when built), extending 233.
-- **The rider is Fix-tier inside this order.** Under PQ15's default it's the book's own sentence, which the code got wrong. So it takes no decision: a test, a CHANGELOG line, a log line, and SCHEMA §1's *Healing (055)* prose corrected (it says the panel "multiplies by days and by Speed Heal's ×2", which states the bug). Decision 236's "multiply a rest with each other and Speed Heal" stays true of the dosed day, so nothing is superseded. **If Ken takes PQ15's alternative** (a dose per day), that is a choice, and it takes its own decision, **N+1**.
+- **The rider is Fix-tier inside this order.** Ken took PQ15's default, which is the book's own sentence that the code got wrong. So it takes no decision: a test, a CHANGELOG line, a log line, and SCHEMA §1's *Healing (055)* prose corrected (it says the panel "multiplies by days and by Speed Heal's ×2", which states the bug). Decision 236's "multiply a rest with each other and Speed Heal" stays true of the dosed day, so nothing is superseded.
 - **Game data:** bump (Decision 68), **`0.43` → `0.44`**. `0.43` shipped in v0.51.0, so nothing unreleased is carrying a bump. A Cleaner's Stealth and a Quick Study holder's Combat Sense compute differently. (The rider changes no data.)
 - **App: minor, `0.51.0` → `0.52.0`.** `[Unreleased]` is empty since v0.51.0, so this opens it.
 - **Character schema: no bump.** Nothing new is saved. Skill Paragon, God Tier, Grace Under Fire, Weapon Expert and Aspect of the Beast, which do need a saved pick, are out of scope (§7).
@@ -113,7 +113,7 @@ Check that each one shows, and say where in the PR.
 | PQ12 | **The source a row names.** | **The part's own name:** *Vanish* (not *Cleaner*), *Quick Study*, *Scent Tracking*, *Active Camouflage*, *Night Eyes*. | Default |
 | PQ13 | **Tags on the Major, power and tweak cards** (Decision 231's chips). | **None.** Their text already says it, and P19's `effectTagsFor` reads Advantages only. *Alternative:* chips on every card, a P18-sized change. | Default |
 | PQ14 | **Aberrations "as" an Advantage** (E9: Aura Sight, Danger Sense and six more). | **Out of scope.** Today `as` is display text, and P21 doesn't change that. *Alternative:* the Aberration counts as holding the Advantage, everywhere: grants, prerequisites and `traitRows`. That's its own decision. | Default |
-| PQ15 | **Speed Heal on a rest longer than a day** (the rider). The panel has one Speed Heal tick, and it takes one dose from your gear. | **The tick is one dose, and it doubles one day** of the rest: the book's "2× healing rate for 24 hours". A longer course is several rests, one dose each, which the session log already records one by one. *Alternative:* a "Doses" number beside the tick (1 up to the days, and up to what you carry), each dose doubling a day and leaving your gear. That's a new control and its own decision (N+1). | *(open; blank builds the default)* |
+| PQ15 | **Speed Heal on a rest longer than a day** (the rider). The panel has one Speed Heal tick, and it takes one dose from your gear. | **The tick is one dose, and it doubles one day** of the rest: the book's "2× healing rate for 24 hours". A longer course is several rests, one dose each, which the session log already records one by one. *Alternative:* a "Doses" number beside the tick (1 up to the days, and up to what you carry), each dose doubling a day and leaving your gear. That's a new control and its own decision (N+1). | **Default** (2026-10-21: "One Speed Heal tick is one dose and doubles one day of the rest.") |
 
 ## 3a. The decision, drafted
 
@@ -286,7 +286,6 @@ The inventory has each row's exact sentence. **Check every `whenText` against it
 **Stop and ask:**
 - **A `whenText` would say less, or more, than the book's sentence.**
 - **A computed value moves for a character holding none of §8's sources** (P21 4), other than the rider's: a rest of more than one day on Speed Heal.
-- **Ken hasn't answered PQ15 and the build reaches the rider:** build the default (a blank is "Default"). If he answers the alternative, stop: it needs a new control and decision N+1, and this order doesn't draft them.
 - **Anything saved in the character.**
 - **An existing test fails** other than these **expected breaks**: **P19 7b**, rewritten as P21 9 (§5); a P19 test whose fixture holds a kicker and a Take X on one Skill (none known; grep `hyper-vigilance` and `field-medic` beside `takeX`); and any test asserting a §8 source's text *is* its whole effect.
 - **Deighton rules on FN, FN+1 or FN+2 before the build ends:** stop. The ruling becomes its own change, closing the flag; this order builds only the stubs.
@@ -310,7 +309,7 @@ Suggested CHANGELOG lines (player voice):
 - [ ] §5's rows confirmed or corrected; the weapon row pinned without a kicker.
 - [ ] Every `whenText` matches the book (the inventory quotes it).
 - [ ] `git diff origin/main --stat -- src` touches only `shadows-data.js`, `engine.js`, `sheet.js` (Nocturnal's line, the Rest panel's sum line and label) and the generated changelog.
-- [ ] The rider: P21 11 fails on `main` (36) and passes; mutants 12 and 13; SCHEMA §1's *Healing (055)* no longer says every day doubles; a log line; PQ15's answer (or "Default") in the PR.
+- [ ] The rider: P21 11 fails on `main` (36) and passes; mutants 12 and 13; SCHEMA §1's *Healing (055)* no longer says every day doubles; a log line.
 - [ ] `traitRows` and `traitGrants` share one source walk, and `traitGrants`' readers (`derivedMod`, `statMax`, `startingCredits`) didn't move (P21 4).
 - [ ] Decision N passes `docs.test.mjs`.
 - [ ] Flags FN–FN+2 open in all three places, each `playerNote` seen on screen (where, in the PR), and P21 10 pins the stubs.
