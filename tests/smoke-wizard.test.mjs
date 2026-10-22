@@ -1529,3 +1529,11 @@ test("P20a 9: the breakdowns name the parts", () => {
   assert.equal(bd("c.identity.archetype = 'arcanist'; c.archetypeChoices.specialization = ['unshakable-mind']; for (const k of Object.keys(c.stats)) c.stats[k].base = 5", "TOL"), "1 + INT 0 + BOD 0 + COOL 0 = 1");
   assert.deepEqual(app.errors, []);
 });
+
+test("P21 10 (wizard): a Fence's option shows the note a player needs", () => {
+  const arch = onArchetypeStep("professional");
+  const fence = [...arch.$$("#main .pick")].find(p => /Fence/.test(p.querySelector("h2") ? p.querySelector("h2").textContent : ""));
+  assert.ok(fence, "the Fence option isn't on the Archetype step");
+  assert.match(fence.textContent, /Your GM names the Skill an appraisal uses\. Add the 1d4 to that roll\./);
+  assert.deepEqual(arch.errors, []);
+});

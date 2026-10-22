@@ -333,6 +333,8 @@ function skillFxHtml(l){
 }
 // The light a trait cancels on an attack, once under Main's attacks table (Decision 233).
 const attackNotesHtml = ch => Engine.attackNotes(ch).map(n=>`<p class="attack-note" data-attacknote>${esc(n.text)} <span class="fx-from">· ${esc(n.from)}</span></p>`).join("");
+// What the light does to every check, once atop the Skills table (Nocturnal, Decision 237).
+const checkNotesHtml = ch => Engine.checkNotes(ch).map(n=>`<p class="attack-note" data-checknote>${esc(n.text)} <span class="fx-from">· ${esc(n.from)}</span></p>`).join("");
 // The check as it reads on a row: 1d10 + the number, then each kicker beside it (Decision 233).
 const checkText = (l, sep) => `1d10${sep}+${sep}${l.checkBonus}` + (l.kickers||[]).map(k=>`${sep}+${sep}${k.die}`).join("");
 // A skill in training shows when its rank arrives (Decision 230).
@@ -499,7 +501,7 @@ function renderShSkills(){
   S.openSkills = S.openSkills || new Set();
   let h = sheetHeader("Skills", "Every skill, grouped by category. Trained skills roll 1d10 + Rank + Primary Stat + Synergy; untrained roll 1d10 + Primary Stat only. Tap <b>?</b> on any skill for what it covers.");
   if (pain.level) h += `<p class="step-note">${esc(pain.label)} — all skill checks take ${pain.skillPenalty}; the totals below already include it.${painChip(pain)}</p>`;
-  h += conditionTotalsNote(ch, false);
+  h += conditionTotalsNote(ch, false) + checkNotesHtml(ch);
   // Decision 156: every skill, trained or not, in its category, so every
   // character's list reads the same. Two columns from 1000px: the categories
   // in order, the first column taking them until it holds half the skills.
@@ -1195,8 +1197,15 @@ const healLinesHtml = r => healLines(r).map(l=>`<p>${esc(l)}</p>`).join("");
 function restPanelHtml(ch, st){
   const nh=Engine.naturalHealing(ch, { days: st.days, speed: st.speed }), inp=actInput(ch, st), hs=Engine.hlState(ch);
   const r=Engine.heal(clone(ch), inp);
-  // "BOD 6 × 3 (Rapid Healing) × 2 (Speed Heal) = 36 a day", when something multiplies it.
-  const sum = nh.factors.length ? `<p class="hitnote" data-restsum>${esc(`${nh.stat} ${nh.perDay}${nh.factors.map(f=>` × ${f.x} (${f.name})`).join("")}${nh.days===1?"":` × ${nh.days} days`} = ${nh.proposed}${nh.days===1?" a day":""}`)}</p>` : "";
+  // "BOD 6 × 3 (Rapid Healing) × 2 (Speed Heal) = 36 a day", when something multiplies it. On a longer rest the dose
+  // doubles one day (0460: "for 24 hours"), so it is added to the days, not multiplied into them: "BOD 6 × 3 (Rapid
+  // Healing) = 18 a day × 3 days = 54, + 18 (Speed Heal doubles one day) = 72". Every number is the engine's.
+  const dose = nh.days>1 ? nh.factors.find(f=>f.days) : null, everyDay = nh.factors.filter(f=>f!==dose);
+  // With nothing multiplying every day, "BOD 6 a day × 3 days = 18", not "BOD 6 = 6 a day".
+  const sumText = dose
+    ? `${nh.stat} ${nh.perDay}${everyDay.map(f=>` × ${f.x} (${f.name})`).join("")}${everyDay.length ? ` = ${nh.daily}` : ""} a day × ${nh.days} days = ${nh.daily*nh.days}, + ${nh.daily*(dose.x-1)} (${dose.name} doubles one day) = ${nh.proposed}`
+    : `${nh.stat} ${nh.perDay}${nh.factors.map(f=>` × ${f.x} (${f.name})`).join("")}${nh.days===1?"":` × ${nh.days} days`} = ${nh.proposed}${nh.days===1?" a day":""}`;
+  const sum = nh.factors.length ? `<p class="hitnote" data-restsum>${esc(sumText)}</p>` : "";
   let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>${sum}
     <div class="hitrow">${actNum(st,"days","Days of rest")}
       <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
@@ -3605,7 +3614,10 @@ function bindSheet(){
       if (!r.ok){ notice(r.why); return; }
       const bits=[r.healed?`+${r.healed} HP`:"", r.restored?`${plural(r.restored,"Massive level")} restored`:"",
         ...r.cleared.map(e=>{ const d=Engine.conditionById(e.id), l=Engine.locationById(e.location); return `cleared ${d?d.name:e.id}${l?` (${l.name})`:""}`; })].filter(Boolean);
-      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${input.factors.length?" ("+input.factors.map(f=>`×${f.x} ${f.name}`).join(", ")+")":""}`
+      // A dose doubles one day of a longer rest (0460), so its factor says so: "Speed Heal doubled one day".
+      const dosed = (input.factors||[]).filter(f=>f.days && input.days>1), everyDay = (input.factors||[]).filter(f=>!dosed.includes(f));
+      const restBits = [everyDay.map(f=>`×${f.x} ${f.name}`).join(", "), ...dosed.map(f=>`${f.name} doubled one day`)].filter(Boolean);
+      const label = st.kind==="rest" ? `Rested ${plural(input.days,"day")}${restBits.length?" ("+restBits.join("; ")+")":""}`
                   : st.kind==="nanomed" ? "Nanomed Kit" : "Focused Healing";
       // W17: the kit or the dose comes out of your gear in the same action.
       const gearId = st.kind==="nanomed" ? "nanomed-kit" : st.kind==="rest" && st.speed ? "speed-heal" : null;

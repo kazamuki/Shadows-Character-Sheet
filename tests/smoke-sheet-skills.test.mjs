@@ -1059,6 +1059,7 @@ test("P12b 11c: a Martial Arts bought with IP takes a first style", () => {
 // A character with Skills trained, then whatever traits the test holds. The Skills tab and Main's Combat table are one renderer.
 const p19Char = mut => {
   const ch = lockedCharacter();
+  ch.identity.archetype = "professional";      // an Arcanist's Aetheric Attunement is a mark on Awareness (P21)
   for (const [id, rank] of Object.entries({ stealth: 2, medical: 2, "combat-sense": 2, investigation: 3, "basic-tech": 2, awareness: 2, handguns: 3, intuition: 1, persuasion: 1 })) ch.skills[id] = { rank, ipe: 0 };
   mut(ch);
   return ch;
@@ -1166,5 +1167,86 @@ test("P19 (hostile): a trait's words are text on the Skills tab, never markup", 
   app.window.eval("update()");
   assert.equal(app.$$("#main img").length, 0, "a when became markup");
   assert.match(p19Fx(app, "investigation", "takeX")[0], /<img src=x onerror=alert\(1\)>/);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── P21: Skills learn from powers, tweaks and Milestones (Decision 237) ───
+const p21Pro = (spec, ...majors) => p19Char(c => {
+  c.identity.archetype = "professional"; c.archetypeChoices.specialization = spec ? [spec] : [];
+  for (const id of majors) c.progression.milestones.major.push({ id, date: "2026-10-21" });
+});
+
+test("P21 1 (sheet): a Cleaner's Stealth shows Vanish's kicker in the cell and on paper", () => {
+  const ch = p21Pro("cleaner");
+  const st = Engine.skillLine(ch, "stealth").checkBonus;
+  const app = openSheet(ch, "skills");
+  assert.equal(p19Row(app, "stealth").querySelector('[data-k="Check"]').textContent, `1d10 + ${st} + 1d6`);
+  assert.equal(p19Row(app, "medical").querySelector('[data-k="Check"]').textContent.includes("d6"), false);
+  app.window.print = () => {};
+  app.click("[data-menu-toggle]"); app.click("[data-print]");
+  const flat = e => e.textContent.replace(/\s+/g, "");
+  const rows = app.$$("#printSheet tr").map(flat), cells = app.$$("#printSheet .p-skillcell").map(flat);
+  assert.ok(rows.some(t => t.startsWith("Stealth") && t.includes(`1d10+${st}+1d6`)) || cells.some(t => t.startsWith("Stealth") && t.endsWith(`1d10+${st}+1d6`)), "paper lacks the kicker");
+  // A Wheelman's Pilot: the die face and the Take 6 with its when.
+  const wh = openSheet(p21Pro("wheelman"), "skills");
+  assert.deepEqual(p19Fx(wh, "pilot", "mark"), ["Explodes on a natural 9 or 10 · Stunt Driver"]);
+  assert.match(p19Fx(wh, "pilot", "takeX")[0], /^Take 6: \d+ on your next Pilot check, instead of a free stunt, when you declare a stunt for the first time on your turn \(choose before you roll\) · Stunt Driver$/);
+  // Slayer: Handguns' attack row on Main has no die; Hunter's Calling is a mark on the Skills tab.
+  const sl = p21Pro("slayer"); sl.skills.handguns = { rank: 3, ipe: 0 }; sl.weapons.push({ id: "vs4-ironside", notes: "", mods: [], roundsSpent: 0 });
+  const slapp = openSheet(sl, "skills");
+  assert.deepEqual(p19Fx(slapp, "handguns", "mark"), ["+1d6 when facing a supernatural enemy · Hunter's Calling"]);
+  assert.equal(p19Row(slapp, "handguns").querySelector('[data-k="Check"]').textContent.includes("d6"), false);
+  const main = openSheet(sl, "main");
+  assert.equal(main.$(".main-combat table.ref:not(.skill-table)").textContent.includes("+ 1d6"), false, "an attack row gained the die");
+  assert.deepEqual([...app.errors, ...wh.errors, ...slapp.errors, ...main.errors], []);
+});
+
+test("P21 3 (sheet): Take X names the kicker, and the total doesn't change", () => {
+  const ch = p21Pro("true-warrior", "quick-study");
+  p19Hold(ch, "advantages", "hyper-vigilance");
+  const l = Engine.skillLine(ch, "combat-sense");
+  const app = openSheet(ch, "skills");
+  assert.deepEqual(p19Fx(app, "combat-sense", "takeX"), [`Take 6: ${6 + l.checkBonus} + 1d4 (choose before you roll) · Quick Study`]);
+  assert.deepEqual(p19Fx(app, "combat-sense", "mark"), ["+1d4 while Unwavering Focus is active · Unwavering Focus"]);
+  assert.equal(p19Row(app, "combat-sense").querySelector('[data-k="Check"]').textContent, `1d10 + ${l.checkBonus} + 1d4`);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P21 5/6 (sheet): a power's mark carries its rank and its source", () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf"; ch.archetypeChoices.specialization = ["trueborn"];
+  ch.progression.powerIpe = { "scent-tracking": 2 };
+  ch.skills.tracking = { rank: 2, ipe: 0 };
+  const app = openSheet(ch, "skills");
+  assert.deepEqual(p19Fx(app, "tracking", "mark"), ["+4 for creatures within a mile, while Scent Tracking runs · Scent Tracking"]);
+  assert.equal(p19Row(app, "tracking").querySelector('[data-k="Check"]').textContent, `1d10 + ${Engine.skillLine(ch, "tracking").checkBonus}`);
+  assert.deepEqual(app.errors, []);
+});
+
+test("P21 7 (sheet): Night Eyes under Main's attacks and on Awareness, Nocturnal once atop the Skills tab", () => {
+  const ch = p19Char(c => { c.identity.archetype = "professional"; c.trackers.aberrations.push({ id: "night-eyes", permanence: "permanent" }, { id: "nocturnal", permanence: "permanent" }); c.weapons.push({ id: "vs4-ironside", notes: "", mods: [], roundsSpent: 0 }); });
+  const app = openSheet(ch, "skills");
+  assert.deepEqual(p19Fx(app, "awareness", "mark"), ["Dark counts as Dim, and Blind as Dark · Night Eyes"]);
+  const notes = app.$$("[data-checknote]");
+  assert.equal(notes.length, 1);
+  assert.equal(notes[0].textContent.replace(/\s+/g, " ").trim(), "+1 to every check in Dim or Dark, −1 in Bright · Nocturnal");
+  assert.ok(notes[0].compareDocumentPosition(app.$(".skill-cols")) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, "the line isn't above the table");
+  const main = openSheet(ch, "main");
+  const note = main.$$(".main-combat [data-attacknote]");
+  assert.equal(note.length, 1);
+  assert.equal(note[0].textContent.replace(/\s+/g, " ").trim(), "In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5 · Night Eyes");
+  const bare = openSheet(p19Char(() => {}), "skills");
+  assert.equal(bare.$$("[data-checknote]").length, 0);
+  assert.deepEqual([...app.errors, ...main.errors, ...bare.errors], []);
+});
+
+test("P21 10 (sheet): the flagged kicker rules show their notes where a player meets them", () => {
+  // Major cards on Progression.
+  const app = openSheet(p21Pro(null), "progression");
+  for (const id of ["specialist", "make-my-own-luck", "survival-instinct"]) {
+    const card = app.$(`[data-majorcard="${id}"]`);
+    assert.ok(card, `${id} has no card`);
+    assert.match(card.textContent, /(Kicker Die (grows|rolls twice) is your GM's call until the rule is settled|When two Kicker Dice meet on one roll, your GM rules how they combine)/);
+  }
   assert.deepEqual(app.errors, []);
 });

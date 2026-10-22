@@ -253,6 +253,15 @@ window.SHADOWS_DATA = {
         // { type: "failOn", faces: [2, 3], skills: [..], whenText? }        a mark (skillLine().marks)
         // { type: "explodeOn", faces: [9, 10], skillsFromPick: "skill" }    a mark
         // { type: "visibility", ignore: ["dim", "dark"], on: ["attacks", "awareness"] }  light levels; Engine.attackNotes
+        // (Decision 237) The same rows on more sources, read by Engine.traitRows: taken Majors, the chosen specialization's
+        // options, held powers (at their rank), the archetype's baseline traits, the Origin's starter-power rows and held
+        // Aberrations. A row may carry its own `name` (a tweak's ability); a power's rows are marks, so each has a `whenText`.
+        // { type: "checkMod", perRank: 1, plus: 1, skills: [..], whenText }  perRank × rank held + plus, like Iron Hide
+        // { type: "kicker", die: "1d4", skills: [..], whenText }             a conditional kicker is a mark (marks[].kind "kicker")
+        // { type: "kicker", die: "1d4", skillsFrom: "focused", whenText }    the Focused Skills (focusedSkillIds)
+        // { type: "visibility", shift: { dark: "dim", blind: "dark" }, on: ["attacks", "awareness"] }  Night Eyes; Engine.attackNotes
+        // { type: "visibility", mod: { dim: 1, dark: 1, bright: -1 }, on: ["checks"] }  Nocturnal; Engine.checkNotes
+        // Take X's line names each unconditional kicker ("Take 6: 13 + 1d4"); its `total` stays X + the check.
       ] }
   ],
   // (Decision 233) 0530's light levels, read by a `visibility` row: { id, name, attack } (`attack` is the penalty to
@@ -2620,7 +2629,9 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
       `repairArmor` takes the Field Repair Kit's die (`repairKitDie`) or an
       armorer's full restore, and refuses scrap.
     - **Healing (055).** `naturalHealing` proposes BOD per day. The panel
-      multiplies by days and by Speed Heal's ×2, and the player can change
+      multiplies by days, and by each every-day factor (Rapid Healing, Fast
+      Metabolism); Speed Heal's ×2 doubles one day, not all of them (0460:
+      "for 24 hours"), and the player can change
       the number, because "the GM may halve that" is a GM's call, not a
       formula. `heal(ch, {kind})` is one writer. Natural Healing takes HP
       only and never touches Massive levels or a Condition. Focused Healing
@@ -4930,6 +4941,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** P21 adds power reductions to the same stage; Deighton rules the head differently; GM mode's PC rows gain a character (S3b), which would let them ask the melee box.
      - **Built:** app 0.51.0, game data 0.43, no schema bump, PR #218. Log 2026-10-18 (P20b).
 
+237. **A tweak's, Major's, power's, trait's or Aberration's effect on a Skill's check shows on its row, as an Advantage's does; Take X adds a kicker.**
+     *2026-10-21 · Ken + Claude · Touches: traitRows, traitEffects, traitGrants, grantSources, skillLine, attackNotes, checkNotes, checkMod perRank, kicker whenText, skillsFrom, visibility shift, visibility mod, skillRowText, takeX text, naturalHealing, Speed Heal, baselineTraits, starterPower, aberrationState, Vanish, Concierge, Stunt Driver, Hunter's Calling, Unwavering Focus, Wind Dancing Defense, Quick Study, Hardcore Parkour, Survival Instinct, Night Eyes, Nocturnal, F45, F46, F47*
+     - **Decided:** `traitRows` also reads specialization options, taken Majors, powers at rank, baseline traits, the starter power and Aberrations, through `grantSources`, the walk `traitGrants` shares and keeps at its five sources. `checkMod` takes `perRank` × rank + `plus`; a `kicker` with `whenText` is a mark; `skillsFrom: "focused"`; `visibility` takes `shift` or `mod` (`Engine.checkNotes`). A power's effect is a mark. Take X's line adds each unconditional kicker ("Take 6: 13 + 1d4"), its total stays X + the check (Ken, 2026-10-17). Rider: Speed Heal doubles one day of a rest (0460, "for 24 hours").
+     - **Why:** A Skill row showing no kicker reads as "nothing applies"; 37 effects were text. Ken: a kicker is always added to the roll, Take X or not. The rider is the book's sentence.
+     - **Rejected:** a power's bonus in the number (nothing says it's running); the subtype's name as source; Majors with a pick here (a schema change); light typed into a template; a Doses control for Speed Heal.
+     - **Replaces:** nothing; extends Decision 233 (its sources and types) and answers its *Revisit if* "a kicker and a Take X"; Decision 236's Speed Heal stays true of the dosed day.
+     - **Revisit if:** Deighton rules on F45–F47 (an appraisal's Skill, kicker stacking, Specialist and Make My Own Luck); a power's "running" state is stored (W110); an Aberration "as" an Advantage counts as one.
+     - **Built:** app 0.52.0, game data 0.44, no schema bump, PR #221. Log 2026-10-21 (P21).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -4955,5 +4975,8 @@ here are in `log/archive.md`.
 | F42 | **Which damage Resistance answers.** 0460 names Thermal, Electric and Freezing. The app maps Thermal → Burning and Electric → Electric. No damage type is cold, so Freezing answers nothing yet. Elemental spells (fire, frost, lightning) are magic, so no Resistance answers them; Warding does. Stubbed as written (Decision 219) | Deighton | No |
 | F43 | **The TN and TH of the WILL Essence check that keeps a held spell** (W87, Q19). Taking damage, a Shock or going down calls for it; the numbers aren't set, nor whether it is one check or one per spell, nor whether an Arcanist holding as many spells as their Evocation rank (no dice left) can still cast or keeps a 1-die floor. Stubbed (Decision 224): at no dice left no spell is marked Beyond your pool and the pool line says so; the prompt says "A WILL Essence check keeps it. Your GM sets the TN and TH.", and nothing is decided or released by the sheet | Deighton | No |
 | F44 | **What a rank of Educated bought after creation gives.** Its grant is 10 Skill Points a rank, and after lock there is nothing to spend them on. Talented offers it (Q25); the IP buy refuses it, and its row says so (`flagged`, Decision 227). Deighton: what should a rank in play give? | Deighton | No |
+| F45 | **Which Skill appraises?** Concierge (Fence): "Whenever making an appraisal of gear, contraband, or any standard items you may add a 1d4 kicker die to the roll to assess their value." No Skill is named. Stubbed (Decision 237): the kicker isn't computed and stays the tweak's text; the Take 5 is built; the option's `playerNote` says it's the GM's call | Deighton | No |
+| F46 | **Do kicker dice stack, and do two combine into the next die size up?** Field Medic's rule row says it "stacks with other kickers"; the flag sits on Survival Instinct, whose conditional 1d4 makes the overlaps reachable (a flagged Advantage is not sold for IP, Decision 227). Ken believes they combine to the next size up (Weapon Expert's "increases by one die increment to +1d6 instead" is the evidence); unconfirmed. Stubbed (Decision 237): each kicker shows on its own, an unconditional one in the Check cell and a conditional one as its mark; nothing combines. | Deighton | No |
+| F47 | **Which kicker is "your Kicker Die"?** Specialist ("Your Kicker Die increases by 1 size") and Make My Own Luck ("roll twice and take the higher result"): every kicker the character holds, one they choose, or another? Stubbed (Decision 237): no kicker changes size or rolls twice; both Majors are `flagged` and their cards say it's the GM's call | Deighton | No |
 F42 and F43 go to Deighton, and F37 with Scott, who wrote CRANK.
 

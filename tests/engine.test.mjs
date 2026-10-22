@@ -323,6 +323,7 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
   /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
   /^skillRowText$/, // keyed by what a Skill's row says (a Take X, a die face, a light level), read by skillLine and attackNotes (Decision 233)
+  /\.grants\[\]\.(shift|mod)$/, // a `visibility` row's maps, keyed by a light level's id, read by visShifts and visModText (Decision 237)
   /^weaponModGlossary\[\]\.refusalText$/]; // keyed by a weapon category id, read by weaponModOptions (Decision 221)
 // Display and maintainer text by name. A key named like this has to hold text,
 // so a number can't hide behind a *Note name.
@@ -9242,4 +9243,72 @@ test("P20b 8: the readers are total over hostile rows", () => {
     assert.doesNotThrow(() => Engine.naturalHealing(Engine.newCharacter(), junk));
   }
   same(Engine.hitAsks(null), { melee: false });
+});
+
+// ── P21 8: traitRows and skillLine are total over hostile sources (Decision 237) ──
+test("P21 8: Skill rows are total over hostile sources, and a bad row is skipped", () => {
+  const ww = () => { const ch = subject(); ch.identity.archetype = "werewolf"; ch.archetypeChoices.specialization = ["trueborn"]; return ch; };
+  const everyLine = ch => D.skills.map(s => Engine.skillLine(ch, s.id));
+  const base = JSON.stringify(everyLine(ww()).map(l => l.checkBonus));
+  // Hostile characters: a spec id the data lacks, a Major {}, a power rank that is a string or NaN, aberrations not an array.
+  const hostile = [
+    c => { c.archetypeChoices.specialization = ["no-such-option", null, 7]; },
+    c => { c.progression.milestones.major.push({}, null, { id: 5 }, { id: "no-such-major" }); },
+    c => { c.progression.powerIpe = { "scent-tracking": "3" }; },
+    c => { c.progression.powerIpe = { "scent-tracking": NaN }; c.archetypeChoices.basePowers = { "scent-tracking": "x", nope: NaN }; },
+    c => { c.trackers.aberrations = "night-eyes"; },
+    c => { c.trackers.aberrations = [null, 4, { id: {} }, { id: "no-such" }]; },
+    c => { c.identity.archetype = "no-such-archetype"; },
+  ];
+  for (const set of hostile) {
+    const ch = ww(); set(ch);
+    assert.doesNotThrow(() => { everyLine(ch); Engine.attackNotes(ch); Engine.checkNotes(ch); }, String(set));
+  }
+  assert.equal(JSON.stringify(everyLine(ww()).map(l => l.checkBonus)), base);
+  // Hostile data rows: each is skipped, and the rest of the Skill reads as before.
+  const power = D.archetypes.find(a => a.id === "werewolf").powers.find(p => p.id === "scent-tracking");
+  const nocturnal = D.aberrations.find(a => a.id === "nocturnal"), eyes = D.aberrations.find(a => a.id === "night-eyes");
+  const was = [power.grants, nocturnal.grants, eyes.grants];
+  try {
+    for (const row of [
+      { type: "checkMod", perRank: "1", skills: ["tracking"], whenText: "w" },
+      { type: "checkMod", perRank: 1, plus: Infinity, skills: ["tracking"], whenText: "w" },
+      { type: "checkMod", perRank: NaN, skills: ["tracking"], whenText: "w" },
+      { type: "checkMod", plus: null, perRank: null, skills: ["tracking"], whenText: "w" },
+      { type: "checkMod", amount: "3", skills: ["tracking"], whenText: "w" },
+      { type: "kicker", die: "1d7", skills: ["tracking"], whenText: "w" },
+      { type: "kicker", die: "1d4", skillsFrom: "all", whenText: "w" },
+      { type: "takeX", x: -1, skills: ["tracking"] },
+    ]) {
+      power.grants = [row];
+      const ch = ww(), clean = ww();
+      power.grants = [];
+      const before = JSON.stringify(Engine.skillLine(clean, "tracking"));
+      power.grants = [row];
+      assert.equal(JSON.stringify(Engine.skillLine(ch, "tracking")), before, JSON.stringify(row));
+    }
+    eyes.grants = [{ type: "visibility", shift: { dark: "nope", blind: "blind", bright: 5 }, on: ["attacks", "awareness"] }];
+    nocturnal.grants = [{ type: "visibility", mod: { dim: "x", dark: NaN, nope: 1, bright: 0 }, on: ["checks"] }];
+    const ch = ww(); ch.trackers.aberrations = [{ id: "night-eyes" }, { id: "nocturnal" }];
+    assert.deepEqual(JSON.parse(JSON.stringify(Engine.attackNotes(ch))), []);
+    assert.deepEqual(JSON.parse(JSON.stringify(Engine.checkNotes(ch))), []);
+    assert.equal(JSON.stringify(Engine.skillLine(ch, "awareness").marks.filter(m => m.kind === "visibility")), "[]");
+  } finally { [power.grants, nocturnal.grants, eyes.grants] = was; }
+});
+
+// ── P21 8b: an Aberration counts once, and a power's row is always a mark (Decision 237) ──
+test("P21 8b: an Aberration a file holds twice reads once, and every power's Skill row has a when", () => {
+  const ch = subject();
+  ch.trackers.aberrations = [{ id: "mimetic-skin", permanence: "permanent" }, { id: "mimetic-skin", permanence: "temporary" }, { id: "nocturnal" }, { id: "nocturnal" }];
+  assert.equal(Engine.skillLine(ch, "stealth").marks.filter(m => m.from === "Mimetic Skin").length, 1);
+  assert.equal(Engine.checkNotes(ch).length, 1);
+  // Nothing stores that a power runs, so its effect never reaches a number: each Skill row on a power carries a whenText.
+  const rows = [];
+  for (const a of D.archetypes) JSON.stringify(a, (k, v) => {
+    if (k === "powers" && Array.isArray(v)) for (const p of v) for (const g of (p && Array.isArray(p.grants) ? p.grants : []))
+      if (["checkMod", "kicker", "takeX", "failOn", "explodeOn"].includes(g && g.type)) rows.push([a.id, p.id, g]);
+    return v;
+  });
+  assert.ok(rows.length >= 12, `found only ${rows.length} power rows`);
+  for (const [a, p, g] of rows) assert.ok(typeof g.whenText === "string" && g.whenText.trim(), `${a} · ${p}: a power's ${g.type} needs a whenText, or it lands in the number`);
 });

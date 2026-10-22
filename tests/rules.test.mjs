@@ -2353,25 +2353,6 @@ test("P19 7: a conditional row is a mark, never a number", () => {
   same(checks19(dw), base);
 });
 
-// Decision 233's Revisit if: no Skill can hold two kickers, or a kicker and a Take X. If data makes one reachable,
-// this fails, and the order says to stop and ask.
-test("P19 7b: no Skill can hold two kickers, or a kicker and a Take X", () => {
-  const reach = new Map();       // skill id -> { kicker:[ids], takeX:[ids] }
-  for (const [, d] of P18_DEFS) for (const g of d.grants) {
-    if (g.type !== "kicker" && g.type !== "takeX") continue;
-    const ids = Array.isArray(g.skills) ? g.skills : (() => {
-      const p = (d.picks || []).find(x => x.id === g.skillsFromPick);
-      return p && p.from && p.from.ids ? p.from.ids : D.skills.map(s => s.id);
-    })();
-    for (const id of ids) { const r = reach.get(id) || { kicker: [], takeX: [] }; r[g.type].push(d.id); reach.set(id, r); }
-  }
-  assert.ok(reach.size >= 10, "found no kickers or Take X: did the types get renamed?");
-  for (const [id, r] of reach) {
-    assert.ok(r.kicker.length <= 1, `${id} can hold two kickers: ${r.kicker}`);
-    assert.ok(!(r.kicker.length && r.takeX.length), `${id} can hold a kicker and a Take X: ${r.kicker} / ${r.takeX}`);
-  }
-});
-
 // ── P20a: numbers at creation (Decision 235) ─────────────────────────────
 // A Sanity cut, Arcane Fortitude's +2 TOL, a trait's cap on a Basic Stat, and Wealthy's Ç10,000: computed, so every
 // reader follows. The book is the source for every number (0440, 0430, 0411).
@@ -2810,4 +2791,443 @@ test("P20b 7: the tags are computed, held and unheld", () => {
   same(users("healTimes"), ["rapid-healing"]);
   same(users("meleeTaken"), ["giant", "scrapper"]);
   same(users("headBonus"), ["thick-skull"]);
+});
+
+// ── P21: Skills learn from powers, tweaks and Milestones (Decision 237) ───
+// A tweak's, Major's, power's, trait's or Aberration's effect on a Skill's check is on its row, as an Advantage's is
+// (P19). A power's effect is a mark; Take X's line adds an unconditional kicker and its total doesn't. The book is the
+// source for every "when" (0411–0414, Appendix_Aberrations, 0530).
+const arch21 = (arch, spec, ...majors) => {
+  const ch = plain19();
+  ch.identity.archetype = arch;
+  if (spec) ch.archetypeChoices.specialization = Array.isArray(spec) ? spec : [spec];
+  for (const id of majors) ch.progression.milestones.major.push({ id, date: "2026-10-21" });
+  return ch;
+};
+const pro21 = (spec, ...majors) => arch21("professional", spec, ...majors);
+const ww21 = (origin, ...majors) => arch21("werewolf", origin, ...majors);
+const va21 = (line, ...majors) => arch21("vampire", line, ...majors);
+const power21 = (ch, id, rank = 1) => { ch.progression.powerIpe = { ...(ch.progression.powerIpe || {}), [id]: rank - 1 }; return ch; };
+const place21 = (ch, id, n = 1) => { ch.archetypeChoices.basePowers = { ...(ch.archetypeChoices.basePowers || {}), [id]: n }; return ch; };
+const aberr21 = (ch, ...ids) => { for (const id of ids) ch.trackers.aberrations.push({ id, permanence: "permanent" }); return ch; };
+const fx21 = (ch, id) => { const l = line19(ch, id); return { marks: l.marks.map(m => [m.kind, m.text, m.from]), takeX: l.takeX.map(t => [t.x, t.from, t.text]), kickers: l.kickers.map(k => [k.die, k.from]) }; };
+const markText21 = (ch, id, from) => { const m = line19(ch, id).marks.find(x => x.from === from); return m ? m.text : null; };
+const ATTACKS21 = ["archery", "beam-weapons", "handguns", "heavy-weapons", "martial-arts", "melee", "rifles", "smgs"];
+
+test("book 0411–0414, Appendix_Aberrations: the lines P21 computes say what the book says", () => {
+  const pro = crb("0412_Professional.md"), vam = crb("0413_Vampire.md"), wolf = crb("0414_Werewolf.md"), arc = crb("0411_Arcanist.md");
+  assert.match(pro, /Gain a <span class="mark">1d6 Kicker die<\/span> for all Stealth Checks/);
+  assert.match(pro, /You can choose to take 5 on Persuasion checks whenever negotiating prices with other vendors, merchants, and black marketeers/);
+  assert.match(pro, /Pilot Skill Checks explode on a natural 9 or 10\. Moreover, whenever you declare a stunt for the first time on your turn you may do so without it using your stunt action or you can take 6 on your next Pilot check instead/);
+  assert.match(pro, /When facing a supernatural enemy, you gain a \+1d6 kicker die to combat checks against those targets/);
+  assert.match(pro, /Unwavering Focus \*\*\\\[Chi Cost 3\\\]\*\*: Focused Skills gain 1d4 kicker die while active/);
+  assert.match(pro, /Wind Dancing Defense \*\*\\\[Chi Cost 4\\\]\*\*: Gain a 1d6 kicker die when using Dodge during combat/);
+  assert.match(pro, /When needing make a Combat Sense Skill Check, you may Take 6/);
+  assert.match(pro, /When performing Stunts in an encounter that would require an Acrobatics Skill Check, you can Take 6/);
+  assert.match(pro, /Once per encounter, you may add a 1d4 Kicker Die when taking a Defensive Action \(such as Dodge or Parry\)/);
+  assert.match(pro, /Gain \+5 on social skills \(Deception, Intimidation, Persuasion, Seduction\) when the weapon is visible/);
+  assert.match(vam, /with \+3 to Acrobatics checks and Defensive Actions in the air/);
+  assert.match(vam, /\+5 to hearing-based Awareness checks within 20 meters/);
+  assert.match(vam, /Darkness within 20 meters: \+2 Stealth/);
+  assert.match(vam, /\+2 to defensive actions \(Dodge and Parry\)/);
+  assert.match(vam, /With an Ancient Weapon: \+2 to all combat checks/);
+  assert.match(vam, /Semi-ethereal: immune to Physical damage, able to pass through walls, \+2 Stealth/);
+  assert.match(wolf, /\+1 to melee attacks against it/);
+  assert.match(wolf, /\+2 to Tracking checks for creatures within a mile/);
+  assert.match(wolf, /\+2 to Intimidation checks/);
+  assert.match(wolf, /\+3 to Occult Lore checks about supernatural matters/);
+  assert.match(wolf, /\+2 to Persuasion or Seduction checks within 10 meters/);
+  assert.match(wolf, /\+2 to Intuition checks to sense threats or the emotional state of a target within 10 meters/);
+  assert.match(wolf, /\+2 to Stealth checks\./);
+  assert.match(wolf, /gain \+1 to your attacks against it for the scene/);
+  assert.match(wolf, /\+2 to Awareness Skill checks that rely on sight, smell, or hearing/);
+  assert.match(wolf, /\+1 to Close-range Melee and Martial Arts attacks against a target an ally is also attacking in Close range/);
+  assert.match(wolf, /\+2 to Stealth checks, and invisible to electronic surveillance\. Both end the moment you attack/);
+  assert.match(arc, /Gain \+2 for any Occult Check when analyzing magic/);
+  assert.match(arc, /Gain \+3 to any Occult check to discern the properties of any talisman or artifact\. You must make physical contact with the object for at least one minute/);
+  assert.match(arc, /gain a \+5 modifier when attempting to identify or detect magical effects within meters equal to your WILL/);
+  const ab = crb("Appendix_Aberrations.md");
+  assert.match(ab, /\+3 to Stealth when not wearing heavy armor/);
+  assert.match(ab, /−2 to Deception and Disguise to pass as ordinary|-2 to Deception and Disguise to pass as ordinary/);
+  assert.match(ab, /Treat Dark visibility as Dim, and Blind as Dark/);
+  assert.match(ab, /\+1 to all checks in Dim or Dark visibility, (−|-)1 to all checks in Bright/);
+});
+
+test("P21 1: a tweak's kicker, Take X and die face are on its Skill's row", () => {
+  const none = pro21(null), base = checks19(none);
+  // Cleaner: Vanish's 1d6 beside Stealth's number, which doesn't move.
+  const cl = pro21("cleaner");
+  same(line19(cl, "stealth").kickers, [{ die: "1d6", from: "Vanish" }]);
+  same(checks19(cl), base, "a kicker is in a number");
+  same(D.skills.filter(s => line19(cl, s.id).kickers.length).map(s => s.id), ["stealth"]);
+  // Wheelman: Pilot explodes on a 9 or 10, and its Take 6 carries its when.
+  const wh = pro21("wheelman");
+  const p = line19(wh, "pilot");
+  same(p.marks.map(m => [m.kind, m.text, m.from]), [["explodeOn", "Explodes on a natural 9 or 10", "Stunt Driver"]]);
+  assert.equal(p.takeX.length, 1);
+  assert.equal(p.takeX[0].x, 6); assert.equal(p.takeX[0].from, "Stunt Driver"); assert.equal(p.takeX[0].total, 6 + p.checkBonus);
+  assert.match(p.takeX[0].whenText, /next Pilot check/);
+  assert.match(p.takeX[0].whenText, /first time on your turn/);
+  same(checks19(wh), base);
+  // Fence: Persuasion's Take 5 with the book's when. The appraisal kicker is the table's (flag, P21 10).
+  const fe = pro21("fence"), pe = line19(fe, "persuasion");
+  assert.equal(pe.takeX.length, 1);
+  same([pe.takeX[0].x, pe.takeX[0].from], [5, "Concierge"]);
+  assert.match(pe.takeX[0].whenText, /negotiating prices with other vendors, merchants, and black marketeers/);
+  assert.equal(pe.takeX[0].total, 5 + pe.checkBonus);
+  same(checks19(fe), base);
+  // Slayer: Hunter's Calling is a conditional kicker, so a mark; nothing in a check, no attack row gains a die.
+  const sl = pro21("slayer");
+  same(checks19(sl), base);
+  for (const id of [...ATTACKS21, "occult-lore", "tracking"]) {
+    assert.equal(line19(sl, id).kickers.length, 0, id);
+    same(line19(sl, id).marks.map(m => [m.kind, m.from]), [["kicker", "Hunter's Calling"]], id);
+  }
+  assert.equal(markText21(sl, "handguns", "Hunter's Calling"), "+1d6 when facing a supernatural enemy");
+  assert.equal(markText21(sl, "tracking", "Hunter's Calling"), "+1d6 when hunting your quarry");
+  assert.equal(markText21(sl, "occult-lore", "Hunter's Calling"), "+1d6 when hunting your quarry");
+  assert.equal(line19(sl, "dodge").marks.length + line19(sl, "combat-sense").marks.length, 0, "Dodge and Combat Sense are not attacks (PQ6)");
+  // True Warrior: Wind Dancing Defense on Dodge only.
+  const tw = pro21("true-warrior");
+  same(checks19(tw), base);
+  assert.equal(markText21(tw, "dodge", "Wind Dancing Defense"), "+1d6 when using Dodge during combat, while active");
+  // The tweak's name is the source, not the subtype's.
+  for (const l of D.skills.map(s => line19(tw, s.id))) for (const m of l.marks) assert.notEqual(m.from, "True Warrior");
+});
+
+test("P21 2: a taken Major's effect is on the row, and not before it's taken", () => {
+  const none = pro21(null), base = checks19(none);
+  same(line19(none, "combat-sense").takeX, []);
+  const qs = pro21(null, "quick-study");
+  const l = line19(qs, "combat-sense");
+  same([l.takeX.length, l.takeX[0].x, l.takeX[0].from, l.takeX[0].total], [1, 6, "Quick Study", 6 + l.checkBonus]);
+  same(checks19(qs), base);
+  // A Major in the file twice counts once (grants()'s rule, Decision 199).
+  const twice = pro21(null, "quick-study", "quick-study");
+  assert.equal(line19(twice, "combat-sense").takeX.length, 1);
+  // Hardcore Parkour: Acrobatics' Take 6 with its when, and Dodge's +3 as a mark.
+  const hp = pro21(null, "hardcore-parkour");
+  assert.match(line19(hp, "acrobatics").takeX[0].whenText, /performing Stunts in an encounter that would require an Acrobatics Skill Check/);
+  same(line19(hp, "acrobatics").takeX.map(t => [t.x, t.from]), [[6, "Hardcore Parkour"]]);
+  assert.equal(markText21(hp, "dodge", "Hardcore Parkour"), "+3 when performing a dodge as a defensive action");
+  same(checks19(hp), base, "Dodge's +3 is a mark (PQ3)");
+  // Survival Instinct: a conditional kicker, on Dodge and Melee.
+  const si = pro21(null, "survival-instinct");
+  for (const id of ["dodge", "melee"]) same(line19(si, id).marks.map(m => [m.kind, m.text, m.from]), [["kicker", "+1d4 once per encounter, on a Defensive Action (such as Dodge or Parry)", "Survival Instinct"]], id);
+  // Iconic Weapon: four social Skills, +5 as a mark.
+  const ic = pro21(null, "iconic-weapon");
+  same(D.skills.filter(s => markText21(ic, s.id, "Iconic Weapon")).map(s => s.id), ["deception", "intimidation", "persuasion", "seduction"]);
+  assert.equal(markText21(ic, "persuasion", "Iconic Weapon"), "+5 while your Signature weapon is visible");
+  same(checks19(ic), base);
+  // A Vampire's Majors: Night Wings and Life Sense.
+  const vm = va21("strigoi", "night-wings", "life-sense");
+  assert.equal(markText21(vm, "acrobatics", "Night Wings"), "+3 in the air");
+  for (const id of ["dodge", "melee"]) assert.equal(markText21(vm, id, "Night Wings"), "+3 on Defensive Actions in the air", id);
+  assert.equal(markText21(vm, "awareness", "Life Sense"), "+5 on hearing-based checks within 20 meters");
+  // A Major no one took, or one the character's archetype doesn't list, gives nothing.
+  assert.equal(markText21(va21("strigoi"), "awareness", "Life Sense"), null);
+  assert.equal(markText21(ww21("trueborn", "night-wings"), "acrobatics", "Night Wings"), null, "a Vampire's Major on a Werewolf");
+});
+
+test("P21 3: Take X adds the kicker, and its total doesn't", () => {
+  const ch = pro21(null, "quick-study");
+  hold19(ch, "advantages", "hyper-vigilance");
+  const l = line19(ch, "combat-sense");
+  same(l.kickers, [{ die: "1d4", from: "Hyper Vigilance" }]);
+  assert.equal(l.takeX[0].total, 6 + l.checkBonus, "the kicker is in the total");
+  assert.equal(l.takeX[0].text, `Take 6: ${6 + l.checkBonus} + 1d4 (choose before you roll)`);
+  // Hurt: the total drops with Pain, and the kicker stays.
+  const hurt = clone19(ch); hurt.trackers.damage = 10;
+  const lh = line19(hurt, "combat-sense");
+  assert.ok(lh.breakdown.pain < 0, "the fixture isn't hurt");
+  assert.equal(lh.takeX[0].total, 6 + lh.checkBonus);
+  assert.equal(lh.takeX[0].text, `Take 6: ${6 + lh.checkBonus} + 1d4 (choose before you roll)`);
+  same(lh.kickers, l.kickers);
+  // A conditional Take X names the kicker too, after the total and before its when.
+  const hp = pro21(null, "hardcore-parkour");
+  const fm = D.advantages.find(a => a.id === "field-medic").grants.find(g => g.type === "kicker"), wasSkills = fm.skills;
+  try {
+    fm.skills = ["medical", "acrobatics"]; hold19(hp, "advantages", "field-medic");
+    const la = line19(hp, "acrobatics");
+    assert.equal(la.takeX[0].text, `Take 6: ${6 + la.checkBonus} + 1d4 when performing Stunts in an encounter that would require an Acrobatics Skill Check (choose before you roll)`);
+  } finally { fm.skills = wasSkills; }
+  assert.equal(line19(hp, "medical").takeX.length, 0);
+  // Survival Instinct only on Dodge, with no Take X there: nothing changes.
+  const si = pro21(null, "survival-instinct");
+  same(line19(si, "dodge").takeX, []);
+  // A Take X with no unconditional kicker reads as P19's did.
+  const qs = pro21(null, "quick-study"), lq = line19(qs, "combat-sense");
+  assert.equal(lq.takeX[0].text, `Take 6: ${6 + lq.checkBonus} (choose before you roll)`);
+  // A conditional kicker is never in the line (P21 5).
+  const uf = pro21("true-warrior", "quick-study");
+  const lu = line19(uf, "combat-sense");
+  assert.equal(lu.takeX[0].text, `Take 6: ${6 + lu.checkBonus} (choose before you roll)`, "Unwavering Focus is a mark, not a kicker");
+  // Two unconditional kickers would both be named.
+  const two = pro21(null, "quick-study");
+  hold19(two, "advantages", "hyper-vigilance");
+  const row = D.advantages.find(a => a.id === "field-medic").grants.find(g => g.type === "kicker"), was = row.skills;
+  try { row.skills = ["medical", "combat-sense"]; hold19(two, "advantages", "field-medic"); assert.match(line19(two, "combat-sense").takeX[0].text, /: \d+ \+ 1d4 \+ 1d4 \(choose/); }
+  finally { row.skills = was; }
+});
+
+test("P21 4: a power's mark grows with its rank, and nothing else moves", () => {
+  const base = ww21("trueborn"), b0 = checks19(base);
+  const at = rank => power21(ww21("trueborn"), "scent-tracking", rank);
+  assert.match(markText21(at(1), "tracking", "Scent Tracking"), /^\+2 .*within a mile.*Scent Tracking runs/);
+  assert.match(markText21(at(3), "tracking", "Scent Tracking"), /^\+4 /);
+  same(checks19(at(3)), b0, "a power's bonus is in a number");
+  same(checks19(at(1)), b0);
+  // Each power's own constant, at rank 1: +2, and Ancestral Wisdom +3 (perRank × rank + plus).
+  const w = ww21("trueborn");
+  place21(w, "ancestral-wisdom");
+  assert.match(markText21(w, "occult-lore", "Ancestral Wisdom"), /^\+3 .*supernatural matters/);
+  assert.match(markText21(w, "intimidation", "Pheromone Aura"), /^\+2 /);
+  assert.match(markText21(w, "melee", "Predator's Mark"), /^\+1 /);
+  assert.match(markText21(power21(ww21("trueborn"), "predators-mark", 3), "melee", "Predator's Mark"), /^\+3 /);
+  const wl = ww21("wildblood");
+  for (const id of ["predators-allure", "instinctive-awareness", "predators-silence"]) place21(wl, id);
+  for (const [skill, from] of [["persuasion", "Predator's Allure"], ["seduction", "Predator's Allure"], ["intuition", "Instinctive Awareness"], ["stealth", "Predator's Silence"]])
+    assert.match(markText21(wl, skill, from), /^\+2 /, from);
+  const ff = ww21("forge-fang");
+  place21(ff, "combat-analytics");
+  for (const id of ATTACKS21) assert.match(markText21(ff, id, "Combat Analytics"), /^\+1 /, id);
+  // A Vampire's flat and ranked powers.
+  const dr = va21("draugur");
+  place21(dr, "spectral-veil"); place21(dr, "battleborn-instinct");
+  assert.match(markText21(dr, "stealth", "Spectral Veil"), /^\+2 /);
+  assert.match(markText21(dr, "melee", "Battleborn Instinct"), /^\+2 /);
+  assert.match(markText21(power21(dr, "spectral-veil", 3), "stealth", "Spectral Veil"), /^\+4 /);
+  const st = va21("strigoi"); place21(st, "veil-of-night");
+  assert.match(markText21(st, "stealth", "Veil of Night (Masked)"), /^\+2 .*darkness within 20 meters/);
+  assert.match(markText21(va21("upyr"), "dodge", "Preternatural Speed"), /^\+2 /);
+  // A power's effect is a mark whatever it says: nothing in a check, in any archetype's Skills.
+  for (const ch of [w, wl, ff, dr, st, va21("upyr")]) same(checks19(ch), b0);
+  for (const ch of [w, wl, ff, dr, st]) for (const s of D.skills) assert.deepEqual(line19(ch, s.id).breakdown.traitParts, [], s.id);
+});
+
+// What the sources hold none of P21's rows leave alone (Natural Armor, movement, SFR), pinned from `main` before P21.
+const MAIN21 = {
+  ww: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: [8, 3] },
+  wf: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: [8, 3] },
+  va: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: [11, 4] },
+  ar: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: null },
+};
+test("P21 4b: Natural Armor, movement and SFR read exactly as before", () => {
+  const even = (arch, spec) => { const ch = arch21(arch, spec); for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6; for (const s of D.skills) ch.skills[s.id] = { rank: 2, ipe: 0 }; return ch; };
+  const pin = ch => { const na = Engine.naturalArmor(ch), mv = Engine.movement(ch), s = Engine.sfr(ch); return JSON.parse(JSON.stringify({ na: [na.total, na.base, na.always, na.conditional], mv: [mv.paces.map(p => p.value), mv.jump && mv.jump.value, mv.conditional], sfr: s ? [s.value, s.rou] : null })); };
+  same(pin(even("werewolf", "trueborn")), MAIN21.ww);
+  same(pin(even("werewolf", "forge-fang")), MAIN21.wf);
+  same(pin(even("vampire", "draugur")), MAIN21.va);
+  same(pin(even("arcanist", "thaumaturgical-sight")), MAIN21.ar);
+  // The six stats and every Skill are even, so a trait's number anywhere is a Skill that differs.
+  for (const [arch, spec] of [["werewolf", "trueborn"], ["werewolf", "forge-fang"], ["vampire", "draugur"], ["arcanist", "thaumaturgical-sight"], ["professional", "cleaner"]]) {
+    const ch = even(arch, spec);
+    assert.equal(new Set(Object.values(checks19(ch))).size, 1, `${arch}/${spec}: a trait's number is in a check`);
+  }
+});
+
+test("P21 5: a conditional kicker is a mark, never in the Check cell", () => {
+  const si = pro21(null, "survival-instinct");
+  for (const id of ["dodge", "melee"]) {
+    const l = line19(si, id);
+    same(l.kickers, [], id);
+    same(l.marks.map(m => m.kind), ["kicker"], id);
+  }
+  same(D.skills.filter(s => line19(si, s.id).marks.length).map(s => s.id), ["dodge", "melee"]);
+  // Unwavering Focus: each Focused Skill (Engine.focusedSkillIds), and no other Skill.
+  const tw = pro21("true-warrior");
+  const focused = JSON.parse(JSON.stringify(Engine.focusedSkillIds(tw)));
+  assert.ok(focused.length >= 4, "the fixture's Focused Skills");
+  const marked = D.skills.filter(s => line19(tw, s.id).marks.some(m => m.from === "Unwavering Focus")).map(s => s.id);
+  same(marked.sort(), [...focused].sort());
+  for (const id of focused) { same(line19(tw, id).kickers, [], id); assert.equal(markText21(tw, id, "Unwavering Focus"), "+1d4 while Unwavering Focus is active", id); }
+  // A Jack of All Trades' "all" is a price, not a list (focusedSkillIds): no Skill is marked.
+  const ja = pro21("jack-of-all-trades");
+  assert.equal(D.skills.filter(s => line19(ja, s.id).marks.length).length, 0);
+});
+
+test("P21 6: every source is read: spec, Major, power, trait, starter, Aberration", () => {
+  const probe = [
+    ["spec", ch => { ch.identity.archetype = "professional"; ch.archetypeChoices.specialization = ["cleaner"]; }, "stealth", "Vanish", 0],
+    ["spec (Arcanist)", ch => { ch.identity.archetype = "arcanist"; ch.archetypeChoices.specialization = ["thaumaturgical-sight"]; }, "occult-lore", "Thaumaturgical Sight", 0],
+    ["baseline trait", ch => { ch.identity.archetype = "arcanist"; }, "awareness", "Aetheric Attunement", 0],
+    ["Major", ch => { ch.identity.archetype = "professional"; ch.progression.milestones.major.push({ id: "quick-study", date: "2026-10-21" }); }, "combat-sense", "Quick Study", 1],
+    ["power", ch => { ch.identity.archetype = "werewolf"; ch.archetypeChoices.specialization = ["trueborn"]; }, "tracking", "Scent Tracking", 0],
+    ["werewolf trait", ch => { ch.identity.archetype = "werewolf"; ch.archetypeChoices.specialization = ["trueborn"]; }, "awareness", "Feral Instincts", 0],
+    ["starter power", ch => { ch.identity.archetype = "werewolf"; ch.archetypeChoices.specialization = ["forge-fang"]; }, "stealth", "Active Camouflage", 0],
+    ["Aberration", ch => { ch.identity.archetype = "arcanist"; ch.trackers.aberrations.push({ id: "marked", permanence: "permanent" }); }, "disguise", "Marked", 0],
+  ];
+  for (const [what, set, skill, from, takeX] of probe) {
+    const ch = plain19(); set(ch);
+    const l = line19(ch, skill), seen = l.marks.some(m => m.from === from) || l.takeX.some(t => t.from === from) || l.kickers.some(k => k.from === from);
+    assert.ok(seen, `${what}: ${from} is not on ${skill}'s row`);
+  }
+  // Remove each source and its effect goes.
+  const gone = [
+    ["cleaner", ch => { ch.archetypeChoices.specialization = []; }, "stealth"],
+    ["Quick Study", ch => { ch.progression.milestones.major = []; }, "combat-sense"],
+    ["Marked", ch => { ch.trackers.aberrations = []; }, "disguise"],
+  ];
+  const mk = { cleaner: () => pro21("cleaner"), "Quick Study": () => pro21(null, "quick-study"), Marked: () => aberr21(pro21(null), "marked") };
+  for (const [what, strip, skill] of gone) {
+    const ch = mk[what](), before = fx21(ch, skill);
+    assert.ok(JSON.stringify(before) !== JSON.stringify(fx21(plain19(), skill)), `${what}: nothing to remove`);
+    strip(ch);
+    same(fx21(ch, skill), fx21(plain19(), skill), `${what} stays after it is removed`);
+  }
+  // An orphan gives nothing: a Vampire's power id held on a Werewolf, an unknown option, an unknown Major.
+  const orphan = ww21("trueborn");
+  orphan.archetypeChoices.basePowers = { "spectral-veil": 1, nonsense: 2 };
+  orphan.archetypeChoices.specialization = ["trueborn", "no-such-origin"];
+  orphan.progression.milestones.major.push({ id: "no-such-major", date: "2026-10-21" });
+  assert.equal(markText21(orphan, "stealth", "Spectral Veil"), null);
+  // Aberrations count for anyone who has one, and an unknown one is skipped.
+  const ab = aberr21(pro21(null), "mimetic-skin", "no-such-aberration");
+  assert.match(markText21(ab, "stealth", "Mimetic Skin"), /^\+3 when not wearing heavy armor/);
+  // Feral Instincts and Pack Mentality (Werewolf traits); Active Camouflage (Forge Fang's starter power).
+  const w = ww21("trueborn");
+  assert.match(markText21(w, "awareness", "Feral Instincts"), /^\+2 .*sight, smell, or hearing/);
+  for (const id of ["melee", "martial-arts"]) assert.match(markText21(w, id, "Pack Mentality"), /^\+1 .*Close range/, id);
+  assert.match(markText21(ww21("forge-fang"), "stealth", "Active Camouflage"), /^\+2 .*until you attack/);
+  assert.equal(markText21(w, "stealth", "Active Camouflage"), null, "a Trueborn has no CyberWolf Protocol");
+  // Thaumaturgical Sight, Resonant Whispers, Aetheric Attunement: marks, in the Arcanist's Awareness and Occult Lore.
+  const ar = arch21("arcanist", ["thaumaturgical-sight", "resonant-whispers"]);
+  assert.equal(markText21(ar, "occult-lore", "Thaumaturgical Sight"), "+2 when analyzing magic");
+  assert.match(markText21(ar, "occult-lore", "Resonant Whispers"), /^\+3 when discerning the properties of a talisman or artifact, after at least a minute of physical contact with the object/);
+  assert.match(markText21(ar, "awareness", "Aetheric Attunement"), /^\+5 .*identifying or detecting magical effects within meters equal to your WILL/);
+  same(checks19(ar), checks19(pro21(null)));
+  // Mimetic Skin and Marked, from the table.
+  assert.match(markText21(aberr21(pro21(null), "marked"), "deception", "Marked"), /^−2 to pass as ordinary/);
+});
+
+test("P21 7: Night Eyes and Nocturnal read the visibility table", () => {
+  const ne = aberr21(pro21(null), "night-eyes");
+  same(Engine.attackNotes(ne), [{ from: "Night Eyes", text: "In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5" }]);
+  same(line19(ne, "awareness").marks.map(m => [m.kind, m.text, m.from]), [["visibility", "Dark counts as Dim, and Blind as Dark", "Night Eyes"]]);
+  same(withMarks19(ne), ["awareness"]);
+  same(checks19(ne), checks19(pro21(null)));
+  // The numbers are the table's: change one and the line follows.
+  const dim = D.visibility.find(v => v.id === "dim"), was = dim.attack;
+  try { dim.attack = -2; assert.match(Engine.attackNotes(ne)[0].text, /^In Dark, your attacks take −2 instead of −3; in Blind, −3 instead of −5$/); }
+  finally { dim.attack = was; }
+  const dark = D.visibility.find(v => v.id === "dark"), wasDark = dark.attack;
+  try { dark.attack = -4; assert.match(Engine.attackNotes(ne)[0].text, /^In Dark, your attacks take −1 instead of −4; in Blind, −4 instead of −5$/); }
+  finally { dark.attack = wasDark; }
+  // Nocturnal: one line, every check by light, from the table's own level names.
+  const noc = aberr21(pro21(null), "nocturnal");
+  same(Engine.checkNotes(noc), [{ from: "Nocturnal", text: "+1 to every check in Dim or Dark, −1 in Bright" }]);
+  same(Engine.checkNotes(pro21(null)), []);
+  same(checks19(noc), checks19(pro21(null)), "light isn't in the number");
+  same(withMarks19(noc), [], "Nocturnal is one line atop the Skills tab, not a mark on every row");
+  const bright = D.visibility.find(v => v.id === "bright"), wasName = bright.name;
+  try { bright.name = "Daylight"; assert.match(Engine.checkNotes(noc)[0].text, /−1 in Daylight/); }
+  finally { bright.name = wasName; }
+  // Night Vision reads as it did.
+  same(Engine.attackNotes(hold19(plain19(), "advantages", "night-vision")), [{ from: "Night Vision", text: "Dim −1 and Dark −3 don't apply to your attacks" }]);
+});
+
+test("P21 10: the flagged kicker rules are stubbed, not guessed", () => {
+  // FN+2: Specialist doesn't step a kicker up a size, and Make My Own Luck doesn't roll twice.
+  const med = pro21(null, "specialist", "make-my-own-luck");
+  hold19(med, "advantages", "field-medic");
+  same(line19(med, "medical").kickers, [{ die: "1d4", from: "Field Medic" }]);
+  assert.ok(!/roll twice|1d6/.test(JSON.stringify(fx21(med, "medical"))), "a kicker was stepped up or rolled twice");
+  // FN+1: Hyper Vigilance with Unwavering Focus: one 1d4 in the cell, the other a mark; nothing combines.
+  const cs = pro21("true-warrior");
+  hold19(cs, "advantages", "hyper-vigilance");
+  const l = line19(cs, "combat-sense");
+  same(l.kickers, [{ die: "1d4", from: "Hyper Vigilance" }]);
+  same(l.marks.map(m => [m.kind, m.text]), [["kicker", "+1d4 while Unwavering Focus is active"]]);
+  assert.ok(!/1d6|d8/.test(JSON.stringify(l)), "two kickers were combined");
+  // FN: a Fence's Skills carry no appraisal kicker on any row.
+  const fe = pro21("fence");
+  for (const s of D.skills) assert.equal(line19(fe, s.id).kickers.length + line19(fe, s.id).marks.filter(m => m.kind === "kicker").length, 0, s.id);
+  // Field Medic stays unflagged: a flagged Advantage isn't sold for IP (Decision 227), and F46 moved off it.
+  assert.ok(!D.advantages.find(a => a.id === "field-medic").flagged, "Field Medic is flagged, so IP stops selling it");
+  // Each is flagged, names an open F-number, and has the words a player sees.
+  const fence = D.archetypes.find(a => a.id === "professional").specialization.options.find(o => o.id === "fence");
+  const specialist = D.milestones.majorGeneral.find(m => m.id === "specialist"), luck = D.milestones.majorGeneral.find(m => m.id === "make-my-own-luck");
+  const survival = D.milestones.majorGeneral.find(m => m.id === "survival-instinct");
+  for (const [what, e, flag] of [["Fence", fence, "F45"], ["Survival Instinct", survival, "F46"], ["Specialist", specialist, "F47"], ["Make My Own Luck", luck, "F47"]]) {
+    assert.equal(e.flagged, true, what);
+    assert.match(e.flagNote, new RegExp(`\\b${flag}\\b`), what);
+    assert.ok(typeof e.playerNote === "string" && e.playerNote.length > 10, `${what} has no playerNote`);
+    assert.doesNotMatch(e.playerNote, /\bF\d+\b|TBD|confirm with/i, `${what}'s playerNote narrates the build`);
+  }
+});
+
+test("P21 9: the Skills that can hold two kickers, or a kicker and a Take X, are the ones the order names", () => {
+  // Every source that carries a kicker or a Take X, with who can hold it. Two sources can meet on one character unless
+  // they belong to different archetypes, or are different options of one archetype that takes a single option.
+  const all = D.skills.map(s => s.id), rows = [];
+  const add = (label, grants, who, skillsOf) => {
+    for (const g of grants || []) {
+      if (!g || (g.type !== "kicker" && g.type !== "takeX")) continue;
+      const ids = Array.isArray(g.skills) ? g.skills : g.skillsFrom === "focused" ? skillsOf(g) : (() => {
+        const p = ((who.def && who.def.picks) || []).find(x => x.id === g.skillsFromPick);
+        return p && p.from && p.from.ids ? p.from.ids : all;
+      })();
+      rows.push({ label: g.name || label, type: g.type, when: !!g.whenText, ids, ...who });
+    }
+  };
+  const nobody = () => [];
+  for (const d of [...D.advantages, ...D.disadvantages]) add(d.name, d.grants, { arch: null, spec: null, def: d }, nobody);
+  for (const m of D.milestones.majorGeneral) add(m.name, m.grants, { arch: "professional", spec: null, def: m }, nobody);
+  for (const a of D.archetypes) {
+    for (const m of (a.growth && a.growth.majorMilestones) || []) if (Array.isArray(m.grants)) add(m.name, m.grants, { arch: a.id, spec: (m.prerequisites && m.prerequisites.specialization || [])[0] || null, def: m }, nobody);
+    for (const t of a.baselineTraits || []) add(t.name, t.grants, { arch: a.id, spec: null, def: t }, nobody);
+    for (const p of a.powers || []) add(p.name, p.grants, { arch: a.id, spec: p.origin || null, def: p }, nobody);
+    for (const o of (a.specialization && a.specialization.options) || []) {
+      const focused = () => (o.focusedSkills && o.focusedSkills.ids) || [];
+      add(o.tweak ? o.tweak.name : o.name, o.grants, { arch: a.id, spec: o.id, def: o }, focused);
+      for (const r of (o.starterPower && o.starterPower.rows) || []) add(r.augmentation, r.grants, { arch: a.id, spec: o.id, def: r }, nobody);
+    }
+  }
+  for (const ab of D.aberrations) add(ab.name, ab.grants, { arch: null, spec: null, def: ab }, nobody);
+  assert.ok(rows.length >= 15, `found only ${rows.length} kicker or Take X rows`);
+  const meet = (a, b) => a.label !== b.label && !(a.arch && b.arch && a.arch !== b.arch) && !(a.arch && a.arch === b.arch && a.arch !== "arcanist" && a.spec && b.spec && a.spec !== b.spec);
+  const overlaps = {};
+  for (const id of all) {
+    const here = rows.filter(r => r.ids.includes(id));
+    for (const a of here) for (const b of here) {
+      if (a === b || !meet(a, b) || (a.type === "takeX" && b.type === "takeX")) continue;
+      if (a.type === "takeX" && b.type === "kicker") continue;          // counted from the kicker's side
+      (overlaps[id] = overlaps[id] || new Set()).add(a.type === b.type ? [a.label, b.label].sort().join(" + ") : a.label + " + " + b.label);
+    }
+  }
+  const got = Object.fromEntries(Object.entries(overlaps).map(([k, v]) => [k, [...v].sort()]).sort(([a], [b]) => a.localeCompare(b)));
+  same(got, {
+    acrobatics: ["Unwavering Focus + Hardcore Parkour"],
+    "combat-sense": ["Hyper Vigilance + Quick Study", "Hyper Vigilance + Unwavering Focus", "Unwavering Focus + Quick Study"],
+    dodge: ["Survival Instinct + Wind Dancing Defense"],
+    intuition: ["Unwavering Focus + Aura Sight", "Unwavering Focus + Common Sense"],
+    melee: ["Hunter's Calling + Survival Instinct"],
+  }, "a Skill can now hold two kickers, or a kicker and a Take X, that the order doesn't name: decide how the row reads");
+});
+
+// ── The rider: Speed Heal lasts 24 hours (PQ15) ──────────────────────────
+const rest21 = (bod, days, extra = {}) => { const ch = subject({ bod }); return Engine.naturalHealing(ch, { days, ...extra }).proposed; };
+test("P21 11: Speed Heal doubles one day of a rest", () => {
+  // 0460: "2× healing rate for 24 hours". BOD 6 heals BOD a day: 6.
+  assert.equal(rest21(6, 3, { speed: true }), 24, "6 × 2 for the dosed day, + 6 + 6");
+  assert.equal(rest21(6, 1, { speed: true }), 12);
+  assert.equal(rest21(6, 3), 18);
+  assert.equal(rest21(6, 1), 6);
+  assert.equal(rest21(6, 0, { speed: true }), 0, "no day rested, nothing to double");
+  assert.equal(rest21(6, 0), 0);
+  // Rapid Healing 2 (×3) multiplies every day; Speed Heal doubles one of them.
+  const rh = d => { const ch = subject({ bod: 6 }); hold19(ch, "advantages", "rapid-healing", 2); return Engine.naturalHealing(ch, { days: d, speed: true }); };
+  assert.equal(rh(3).proposed, 18 * 2 + 18 + 18);
+  assert.equal(rh(1).proposed, 36);
+  // Speed Heal's entry in `factors` says which days it doubles; the every-day factors carry none.
+  const f = JSON.parse(JSON.stringify(rh(3).factors));
+  same(f.filter(x => x.days === 1).map(x => x.name), ["Speed Heal"]);
+  assert.ok(f.every(x => x.days === 1 || x.days === undefined));
+});
+
+test("P21 10b: Field Medic is still sold for IP (F46 sits on a Major, not on it)", () => {
+  const ch = pro21(null); ch.skills.medical = { rank: 3, ipe: 0 };
+  const c = JSON.parse(JSON.stringify(Engine.ipCost(ch, "advantage", "field-medic")));
+  assert.equal(c.ok, true, JSON.stringify(c));
+  assert.equal(c.cost, 50);
 });
