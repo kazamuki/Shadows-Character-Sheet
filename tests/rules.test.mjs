@@ -3142,11 +3142,13 @@ test("P21 10: the flagged kicker rules are stubbed, not guessed", () => {
   // FN: a Fence's Skills carry no appraisal kicker on any row.
   const fe = pro21("fence");
   for (const s of D.skills) assert.equal(line19(fe, s.id).kickers.length + line19(fe, s.id).marks.filter(m => m.kind === "kicker").length, 0, s.id);
+  // Field Medic stays unflagged: a flagged Advantage isn't sold for IP (Decision 227), and F46 moved off it.
+  assert.ok(!D.advantages.find(a => a.id === "field-medic").flagged, "Field Medic is flagged, so IP stops selling it");
   // Each is flagged, names an open F-number, and has the words a player sees.
   const fence = D.archetypes.find(a => a.id === "professional").specialization.options.find(o => o.id === "fence");
   const specialist = D.milestones.majorGeneral.find(m => m.id === "specialist"), luck = D.milestones.majorGeneral.find(m => m.id === "make-my-own-luck");
-  const fieldMedic = D.advantages.find(a => a.id === "field-medic");
-  for (const [what, e, flag] of [["Fence", fence, "F45"], ["Field Medic", fieldMedic, "F46"], ["Specialist", specialist, "F47"], ["Make My Own Luck", luck, "F47"]]) {
+  const survival = D.milestones.majorGeneral.find(m => m.id === "survival-instinct");
+  for (const [what, e, flag] of [["Fence", fence, "F45"], ["Survival Instinct", survival, "F46"], ["Specialist", specialist, "F47"], ["Make My Own Luck", luck, "F47"]]) {
     assert.equal(e.flagged, true, what);
     assert.match(e.flagNote, new RegExp(`\\b${flag}\\b`), what);
     assert.ok(typeof e.playerNote === "string" && e.playerNote.length > 10, `${what} has no playerNote`);
@@ -3221,4 +3223,11 @@ test("P21 11: Speed Heal doubles one day of a rest", () => {
   const f = JSON.parse(JSON.stringify(rh(3).factors));
   same(f.filter(x => x.days === 1).map(x => x.name), ["Speed Heal"]);
   assert.ok(f.every(x => x.days === 1 || x.days === undefined));
+});
+
+test("P21 10b: Field Medic is still sold for IP (F46 sits on a Major, not on it)", () => {
+  const ch = pro21(null); ch.skills.medical = { rank: 3, ipe: 0 };
+  const c = JSON.parse(JSON.stringify(Engine.ipCost(ch, "advantage", "field-medic")));
+  assert.equal(c.ok, true, JSON.stringify(c));
+  assert.equal(c.cost, 50);
 });

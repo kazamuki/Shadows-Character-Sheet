@@ -140,7 +140,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F43` | The TN and TH of the WILL Essence check that keeps a held spell (W87). Also: one check or one per spell, and whether no dice left (holds at the Evocation rank) leaves a 1-die floor. The prompt says the GM sets them; nothing is decided by the sheet (Decision 224) | Deighton |
 | `F44` | What a rank of Educated bought after creation gives (its grant is creation Skill Points). The IP buy refuses Educated until it's ruled; Talented still offers it (Decision 227) | Deighton |
 | `F45` | Which Skill appraises (Concierge's 1d4 kicker names none). Stubbed: left as the tweak's text (Decision 237) | Deighton |
-| `F46` | Do kicker dice stack, and do two combine into the next die size up (Ken believes so, unconfirmed)? Stubbed: each kicker shows on its own, nothing combines (Decision 237) | Deighton |
+| `F46` | (on Survival Instinct) Do kicker dice stack, and do two combine into the next die size up (Ken believes so, unconfirmed)? Stubbed: each kicker shows on its own, nothing combines (Decision 237) | Deighton |
 | `F47` | Which kicker is "your Kicker Die" for Specialist and Make My Own Luck? Stubbed: no kicker grows or rolls twice (Decision 237) | Deighton |
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).

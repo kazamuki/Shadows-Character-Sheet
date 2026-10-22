@@ -1243,10 +1243,10 @@ test("P21 7 (sheet): Night Eyes under Main's attacks and on Awareness, Nocturnal
 test("P21 10 (sheet): the flagged kicker rules show their notes where a player meets them", () => {
   // Major cards on Progression.
   const app = openSheet(p21Pro(null), "progression");
-  for (const id of ["specialist", "make-my-own-luck"]) {
+  for (const id of ["specialist", "make-my-own-luck", "survival-instinct"]) {
     const card = app.$(`[data-majorcard="${id}"]`);
     assert.ok(card, `${id} has no card`);
-    assert.match(card.textContent, /Kicker Die (grows|rolls twice) is your GM's call until the rule is settled/);
+    assert.match(card.textContent, /(Kicker Die (grows|rolls twice) is your GM's call until the rule is settled|When two Kicker Dice meet on one roll, your GM rules how they combine)/);
   }
   assert.deepEqual(app.errors, []);
 });

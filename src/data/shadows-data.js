@@ -1394,9 +1394,6 @@ window.SHADOWS_DATA = {
       "name": "Field Medic",
       "cost": 5,
       "maxRank": 1,
-      "flagged": true,
-      "flagNote": "F46: do kicker dice stack, and do two combine into the next die size up (Ken believes so; Weapon Expert's text is the evidence)? Each kicker shows on its own until D rules (P21).",
-      "playerNote": "How two Kicker Dice combine on one roll is your GM's call until the rule is settled. IP doesn't buy this in play meanwhile.",
       "description": "The difference between patching and healing is the hands doing it.\n\nAdd an additional 1d4 Kicker Die whenever making a Medical Skill Check.\n\nThis advantage can stack with other kicker die applied to this Skill Check.",
       "grants": [
         { "type": "kicker", "die": "1d4", "skills": ["medical"] },
@@ -3694,6 +3691,9 @@ window.SHADOWS_DATA = {
             ]
           }
         },
+        "flagged": true,
+        "flagNote": "F46: do kicker dice stack, and do two combine into the next die size up (Ken believes so; Weapon Expert's text is the evidence)? Each kicker shows on its own until D rules (P21). On Survival Instinct because its conditional 1d4 is what makes the overlaps reachable; a flagged Advantage would stop IP selling it (Decision 227).",
+        "playerNote": "When two Kicker Dice meet on one roll, your GM rules how they combine.",
         "grants": [{ "type": "kicker", "die": "1d4", "skills": ["dodge", "melee"], "whenText": "once per encounter, on a Defensive Action (such as Dodge or Parry)" }],
         "benefit": "Once per encounter, add a 1d4 Kicker Die when taking a Defensive Action."
       },
