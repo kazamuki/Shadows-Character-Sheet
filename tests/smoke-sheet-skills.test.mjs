@@ -1234,7 +1234,7 @@ test("P21 7 (sheet): Night Eyes under Main's attacks and on Awareness, Nocturnal
   const main = openSheet(ch, "main");
   const note = main.$$(".main-combat [data-attacknote]");
   assert.equal(note.length, 1);
-  assert.equal(note[0].textContent.replace(/\s+/g, " ").trim(), "Your attacks take −1 in Dark, not −3, and −3 in Blind, not −5 · Night Eyes");
+  assert.equal(note[0].textContent.replace(/\s+/g, " ").trim(), "In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5 · Night Eyes");
   const bare = openSheet(p19Char(() => {}), "skills");
   assert.equal(bare.$$("[data-checknote]").length, 0);
   assert.deepEqual([...app.errors, ...main.errors, ...bare.errors], []);

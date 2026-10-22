@@ -1064,8 +1064,10 @@ const Engine = (() => {
                                was: goodNum(from.attack) && from.attack ? signedMinus(from.attack) : null });
       if (t) parts.push(t);
     }
-    // "Your attacks take −1 in Dark, not −3, and −3 in Blind, not −5"; "Dark counts as Dim, and Blind as Dark".
-    return parts.length ? (parts.length<2 ? parts[0] : parts.slice(0, -1).join(", ") + ", and " + parts[parts.length-1]) : null;
+    // "In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"; "Dark counts as Dim, and Blind as Dark".
+    if (!parts.length) return null;
+    if (on==="attacks") return parts.join("; ");
+    return parts.length<2 ? parts[0] : parts.slice(0, -1).join(", ") + ", and " + parts[parts.length-1];
   }
   // `mod`: { level: amount } on every check, grouped by amount, the biggest first ("+1 to every check in Dim or Dark, −1 in Bright").
   function visModText(g){
