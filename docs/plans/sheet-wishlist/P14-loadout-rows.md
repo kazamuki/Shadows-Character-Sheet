@@ -8,7 +8,7 @@
 
 The two share Loadout and its catalog code, and nothing else.
 
-**Status:** **drafted 2026-10-21 by Claude (Opus)**, P21's reviewer, after #221 merged. **PQ1–PQ10 are open for Ken** (§3).
+**Status:** **drafted 2026-10-21 by Claude (Opus)**, P21's reviewer, after #221 merged. **PQ1–PQ8 went to Deighton** (Ken, 2026-10-21: the vehicle and armor calls are his) on the [vehicle rulings page](https://claude.ai/artifact/Pj8TbVShs2UERCRorEABiU): SH1 = PQ1, SH2 = PQ2, SH3 = PQ3, SH4 = PQ4, PA5 = PQ5, SH5 = PQ6, SH6 = PQ7, SH7 = PQ8, each with this order's default marked Recommended. Its 23 rules questions (PA, VD, VK, VO) feed the later damage order and W69, not this one. **PQ9 and PQ10 (W70) are Ken's.** The build waits for both.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
