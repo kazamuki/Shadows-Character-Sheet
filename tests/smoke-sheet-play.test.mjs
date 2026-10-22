@@ -1242,6 +1242,8 @@ test("P21 11 (sheet): Speed Heal doubles one day, the sum line and the log say s
   const sum = app.$("[data-restsum]").textContent;
   assert.match(sum, new RegExp(`for Speed Heal's day = ${bod * 4}$`));
   assert.doesNotMatch(sum, /× 2 \(Speed Heal\) × 3 days/);
+  // Nothing multiplies every day here, so the line starts "BOD 5 a day", not "BOD 5 = 5 a day".
+  assert.match(sum, new RegExp(`^BOD ${bod} a day × 3 days, `));
   app.click("[data-actapply]");
   assert.equal(activeChar(app).trackers.damage, Math.max(0, hp - 1 - bod * 4));
   assert.equal(activeChar(app).gear.find(g => g.id === "speed-heal").qty, 1, "one dose leaves your gear");

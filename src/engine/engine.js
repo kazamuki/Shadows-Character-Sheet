@@ -259,7 +259,8 @@ const Engine = (() => {
         const rows = isPlainObj(o.starterPower) && Array.isArray(o.starterPower.rows) ? o.starterPower.rows : [];
         rows.filter(isPlainObj).forEach(r=>out.push({ def: Object.assign({}, r, { name: r.augmentation }), rank: 1 }));
       }));
-      safe(() => aberrationState(ch).active.forEach(x=>out.push({ def: x.def, rank: 1 })));
+      // Once each, like a Major: recordAberration refuses a second, but a file can hold one twice.
+      safe(() => { const seen = new Set(); aberrationState(ch).active.forEach(x=>{ if (seen.has(x.id)) return; seen.add(x.id); out.push({ def: x.def, rank: 1 }); }); });
     }
     return out;
   }

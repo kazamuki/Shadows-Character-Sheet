@@ -4948,7 +4948,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a power's bonus in the number (nothing says it's running); the subtype's name as source; Majors with a pick here (a schema change); light typed into a template; a Doses control for Speed Heal.
      - **Replaces:** nothing; extends Decision 233 (its sources and types) and answers its *Revisit if* "a kicker and a Take X"; Decision 236's Speed Heal stays true of the dosed day.
      - **Revisit if:** Deighton rules on F45–F47 (an appraisal's Skill, kicker stacking, Specialist and Make My Own Luck); a power's "running" state is stored (W110); an Aberration "as" an Advantage counts as one.
-     - **Built:** app 0.52.0, game data 0.44, no schema bump. Log 2026-10-21 (P21).
+     - **Built:** app 0.52.0, game data 0.44, no schema bump, PR #221. Log 2026-10-21 (P21).
 
 ## 5. Open Flags
 

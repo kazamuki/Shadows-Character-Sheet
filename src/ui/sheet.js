@@ -1200,9 +1200,10 @@ function restPanelHtml(ch, st){
   // "BOD 6 × 3 (Rapid Healing) × 2 (Speed Heal) = 36 a day", when something multiplies it. On a longer rest the dose
   // doubles one day (0460: "for 24 hours"), so it is added to the days, not multiplied into them: "BOD 6 × 3 (Rapid
   // Healing) = 18 a day × 3 days, + 18 for Speed Heal's day = 72". Every number is the engine's.
-  const dose = nh.days>1 ? nh.factors.find(f=>f.days) : null;
+  const dose = nh.days>1 ? nh.factors.find(f=>f.days) : null, everyDay = nh.factors.filter(f=>f!==dose);
+  // With nothing multiplying every day, "BOD 6 a day × 3 days", not "BOD 6 = 6 a day".
   const sumText = dose
-    ? `${nh.stat} ${nh.perDay}${nh.factors.filter(f=>f!==dose).map(f=>` × ${f.x} (${f.name})`).join("")} = ${nh.daily} a day × ${nh.days} days, + ${nh.daily*(dose.x-1)} for ${dose.name}'s day = ${nh.proposed}`
+    ? `${nh.stat} ${nh.perDay}${everyDay.map(f=>` × ${f.x} (${f.name})`).join("")}${everyDay.length ? ` = ${nh.daily}` : ""} a day × ${nh.days} days, + ${nh.daily*(dose.x-1)} for ${dose.name}'s day = ${nh.proposed}`
     : `${nh.stat} ${nh.perDay}${nh.factors.map(f=>` × ${f.x} (${f.name})`).join("")}${nh.days===1?"":` × ${nh.days} days`} = ${nh.proposed}${nh.days===1?" a day":""}`;
   const sum = nh.factors.length ? `<p class="hitnote" data-restsum>${esc(sumText)}</p>` : "";
   let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>${sum}

@@ -9295,3 +9295,20 @@ test("P21 8: Skill rows are total over hostile sources, and a bad row is skipped
     assert.equal(JSON.stringify(Engine.skillLine(ch, "awareness").marks.filter(m => m.kind === "visibility")), "[]");
   } finally { [power.grants, nocturnal.grants, eyes.grants] = was; }
 });
+
+// ── P21 8b: an Aberration counts once, and a power's row is always a mark (Decision 237) ──
+test("P21 8b: an Aberration a file holds twice reads once, and every power's Skill row has a when", () => {
+  const ch = subject();
+  ch.trackers.aberrations = [{ id: "mimetic-skin", permanence: "permanent" }, { id: "mimetic-skin", permanence: "temporary" }, { id: "nocturnal" }, { id: "nocturnal" }];
+  assert.equal(Engine.skillLine(ch, "stealth").marks.filter(m => m.from === "Mimetic Skin").length, 1);
+  assert.equal(Engine.checkNotes(ch).length, 1);
+  // Nothing stores that a power runs, so its effect never reaches a number: each Skill row on a power carries a whenText.
+  const rows = [];
+  for (const a of D.archetypes) JSON.stringify(a, (k, v) => {
+    if (k === "powers" && Array.isArray(v)) for (const p of v) for (const g of (p && Array.isArray(p.grants) ? p.grants : []))
+      if (["checkMod", "kicker", "takeX", "failOn", "explodeOn"].includes(g && g.type)) rows.push([a.id, p.id, g]);
+    return v;
+  });
+  assert.ok(rows.length >= 12, `found only ${rows.length} power rows`);
+  for (const [a, p, g] of rows) assert.ok(typeof g.whenText === "string" && g.whenText.trim(), `${a} · ${p}: a power's ${g.type} needs a whenText, or it lands in the number`);
+});
