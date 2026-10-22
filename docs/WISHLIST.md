@@ -860,6 +860,14 @@ every Minor or Major Milestone for everyone ("UBI or your wealthy advantage or s
 *To respect:* a rules change to the book's monthly income (Deighton's, then 0430's text); `addCredits`; W124 pays Poverty's debt down on the same beat.
 Wealthy's starting Ç10,000 is P20's (unanimous: once).
 
+**W132 — Powers that answer a hit, or heal while they run.** *Ken, from re-running P21's pre-flight · 💡 · Rule or shape · raised 2026-10-21*
+P20b taught Take a hit and Rest what a held **trait** does (Scrapper, Giant, Thick Skull, Rapid Healing). The same jobs done by a **power, Aberration or Major** are still table rules, and the player does the arithmetic. The P21 inventory listed them for P20 (c44–c53). P20b's order passed them to "P21", and P21 leaves them to later orders, so nothing in the sheet-wishlist plan builds them. Ken parked them here so that plan can close (2026-10-21).
+- **The hit:** Odin's Aegis ("Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus + 2 × rank"), Null Field ("Absorbs up to 5 Elemental, Spirit, or Aether damage", +5 a rank), Red Mist and Spectral Veil ("immune to Physical damage" while running), Elemental Blood ("Halve damage you take from that element", rolled 1d3), Silverscar ("Withering damage from silver is halved (never below 1)"), Battle Hardened's immunity to one combat condition (a second and third in place of a Major).
+- **Healing:** Regeneration ("While transformed, regenerate 1 HL per round") and Bone and Sinew (2), Vitality Surge (rank HL a round at 2 SFR each), Blood of Valhalla (rank HL a round, never Withering), Quick Clot (Bleeding ends at the next Reset).
+- **A neighbour:** Adaptive Skeleton's Natural Armor 2 while it runs (inventory b21), which `naturalArmor` misses because it doesn't scan a starter power (P21 §7).
+
+*To respect:* P20b's `meleeTaken` stage (Decision 236: after Natural Armor, before Wither Ward) is where a reduction joins the hit. Most rows need to know a power is **running**, which nothing stores yet (W110, P21's PQ2). Battle Hardened and Elemental Blood need a **saved pick** (a schema bump, with P21 §7's Skill Paragon and Weapon Expert group). Silverscar needs the hit to know **silver**, which `damageTypes` doesn't say. Regeneration reads the Form (Decision 195). Likely two orders: the hit, then healing. Each row's sentence is in `plans/sheet-wishlist/P21-inventory.md` (c44–c53, b21).
+
 **W131 — Expert mode as one long page.** *Ken, after P13 · 💡 · Rule or shape · raised 2026-10-17*
 An experienced player who knows what they want could make a character on one scrolling page: every creation step in order, folded as Expert mode folds
 them, with one sticky bar that jumps between steps and filters, instead of eight screens and seven Continues. P13 and P19 make it plausible: Expert mode
