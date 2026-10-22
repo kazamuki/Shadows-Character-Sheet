@@ -1060,17 +1060,19 @@ const Engine = (() => {
     const SRT = rowText(), parts = [];
     for (const { from, to } of visShifts(g)){
       const tpl = on==="attacks" ? SRT[parts.length ? "visibilityShiftAttacksMore" : "visibilityShiftAttacks"] : SRT[parts.length ? "visibilityShiftAwarenessMore" : "visibilityShiftAwareness"];
-      const t = fillTag(tpl, { from: txt(from.name), to: txt(to.name), penalty: goodNum(to.attack) && to.attack ? signedMinus(to.attack) : null });
+      const t = fillTag(tpl, { from: txt(from.name), to: txt(to.name), penalty: goodNum(to.attack) && to.attack ? signedMinus(to.attack) : null,
+                               was: goodNum(from.attack) && from.attack ? signedMinus(from.attack) : null });
       if (t) parts.push(t);
     }
-    return parts.length ? parts.join(on==="attacks" ? "; " : ", ") : null;
+    // "Your attacks take −1 in Dark, not −3, and −3 in Blind, not −5"; "Dark counts as Dim, and Blind as Dark".
+    return parts.length ? (parts.length<2 ? parts[0] : parts.slice(0, -1).join(", ") + ", and " + parts[parts.length-1]) : null;
   }
-  // `mod`: { level: amount } on every check, grouped by amount, the biggest first ("+1 in Dim or Dark, −1 in Bright").
+  // `mod`: { level: amount } on every check, grouped by amount, the biggest first ("+1 to every check in Dim or Dark, −1 in Bright").
   function visModText(g){
     const SRT = rowText(), rows = visTable().filter(v=>visHas(g.mod, v.id) && goodNum(g.mod[v.id]) && g.mod[v.id]!==0);
     const groups = [...new Set(rows.map(v=>g.mod[v.id]))].sort((a, b)=>b - a)
-      .map(n=>fillTag(SRT.visibilityChecksEach, { amount: signedMinus(n), levels: joinList(rows.filter(v=>g.mod[v.id]===n).map(v=>txt(v.name)).filter(Boolean), "or") })).filter(Boolean);
-    return groups.length ? fillTag(SRT.visibilityChecks, { mods: groups.join(", ") }) : null;
+      .map((n, i)=>fillTag(i ? SRT.visibilityChecksEach : SRT.visibilityChecks, { amount: signedMinus(n), levels: joinList(rows.filter(v=>g.mod[v.id]===n).map(v=>txt(v.name)).filter(Boolean), "or") }));
+    return groups.length && groups.every(Boolean) ? groups.join(", ") : null;
   }
   // What the held traits do to one Skill's check. `parts` are in the number; `kickers` sit beside it; a Take X is
   // finished by skillLine (it needs the whole check); `marks` change nothing the sheet adds up: a conditional bonus or

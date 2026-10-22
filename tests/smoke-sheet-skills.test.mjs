@@ -1226,15 +1226,15 @@ test("P21 5/6 (sheet): a power's mark carries its rank and its source", () => {
 test("P21 7 (sheet): Night Eyes under Main's attacks and on Awareness, Nocturnal once atop the Skills tab", () => {
   const ch = p19Char(c => { c.identity.archetype = "professional"; c.trackers.aberrations.push({ id: "night-eyes", permanence: "permanent" }, { id: "nocturnal", permanence: "permanent" }); c.weapons.push({ id: "vs4-ironside", notes: "", mods: [], roundsSpent: 0 }); });
   const app = openSheet(ch, "skills");
-  assert.deepEqual(p19Fx(app, "awareness", "mark"), ["Dark reads as Dim, Blind as Dark · Night Eyes"]);
+  assert.deepEqual(p19Fx(app, "awareness", "mark"), ["Dark counts as Dim, and Blind as Dark · Night Eyes"]);
   const notes = app.$$("[data-checknote]");
   assert.equal(notes.length, 1);
-  assert.equal(notes[0].textContent.replace(/\s+/g, " ").trim(), "+1 in Dim or Dark, −1 in Bright on every check · Nocturnal");
+  assert.equal(notes[0].textContent.replace(/\s+/g, " ").trim(), "+1 to every check in Dim or Dark, −1 in Bright · Nocturnal");
   assert.ok(notes[0].compareDocumentPosition(app.$(".skill-cols")) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, "the line isn't above the table");
   const main = openSheet(ch, "main");
   const note = main.$$(".main-combat [data-attacknote]");
   assert.equal(note.length, 1);
-  assert.equal(note[0].textContent.replace(/\s+/g, " ").trim(), "In Dark, attacks take Dim's −1; in Blind, Dark's −3 · Night Eyes");
+  assert.equal(note[0].textContent.replace(/\s+/g, " ").trim(), "Your attacks take −1 in Dark, not −3, and −3 in Blind, not −5 · Night Eyes");
   const bare = openSheet(p19Char(() => {}), "skills");
   assert.equal(bare.$$("[data-checknote]").length, 0);
   assert.deepEqual([...app.errors, ...main.errors, ...bare.errors], []);

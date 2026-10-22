@@ -3102,20 +3102,20 @@ test("P21 6: every source is read: spec, Major, power, trait, starter, Aberratio
 
 test("P21 7: Night Eyes and Nocturnal read the visibility table", () => {
   const ne = aberr21(pro21(null), "night-eyes");
-  same(Engine.attackNotes(ne), [{ from: "Night Eyes", text: "In Dark, attacks take Dim's −1; in Blind, Dark's −3" }]);
-  same(line19(ne, "awareness").marks.map(m => [m.kind, m.text, m.from]), [["visibility", "Dark reads as Dim, Blind as Dark", "Night Eyes"]]);
+  same(Engine.attackNotes(ne), [{ from: "Night Eyes", text: "Your attacks take −1 in Dark, not −3, and −3 in Blind, not −5" }]);
+  same(line19(ne, "awareness").marks.map(m => [m.kind, m.text, m.from]), [["visibility", "Dark counts as Dim, and Blind as Dark", "Night Eyes"]]);
   same(withMarks19(ne), ["awareness"]);
   same(checks19(ne), checks19(pro21(null)));
   // The numbers are the table's: change one and the line follows.
   const dim = D.visibility.find(v => v.id === "dim"), was = dim.attack;
-  try { dim.attack = -2; assert.match(Engine.attackNotes(ne)[0].text, /^In Dark, attacks take Dim's −2; in Blind, Dark's −3$/); }
+  try { dim.attack = -2; assert.match(Engine.attackNotes(ne)[0].text, /^Your attacks take −2 in Dark, not −3, and −3 in Blind, not −5$/); }
   finally { dim.attack = was; }
   const dark = D.visibility.find(v => v.id === "dark"), wasDark = dark.attack;
-  try { dark.attack = -4; assert.match(Engine.attackNotes(ne)[0].text, /; in Blind, Dark's −4$/); }
+  try { dark.attack = -4; assert.match(Engine.attackNotes(ne)[0].text, /^Your attacks take −1 in Dark, not −4, and −4 in Blind, not −5$/); }
   finally { dark.attack = wasDark; }
   // Nocturnal: one line, every check by light, from the table's own level names.
   const noc = aberr21(pro21(null), "nocturnal");
-  same(Engine.checkNotes(noc), [{ from: "Nocturnal", text: "+1 in Dim or Dark, −1 in Bright on every check" }]);
+  same(Engine.checkNotes(noc), [{ from: "Nocturnal", text: "+1 to every check in Dim or Dark, −1 in Bright" }]);
   same(Engine.checkNotes(pro21(null)), []);
   same(checks19(noc), checks19(pro21(null)), "light isn't in the number");
   same(withMarks19(noc), [], "Nocturnal is one line atop the Skills tab, not a mark on every row");

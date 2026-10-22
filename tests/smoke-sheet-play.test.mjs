@@ -1240,14 +1240,14 @@ test("P21 11 (sheet): Speed Heal doubles one day, the sum line and the log say s
   speed.checked = true; speed.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   assert.equal(app.$('[data-act="hp"]').value, String(bod * 4), "6 × 2 for the dosed day, + 6 + 6 reads 4 days' worth");
   const sum = app.$("[data-restsum]").textContent;
-  assert.match(sum, new RegExp(`for Speed Heal's day = ${bod * 4}$`));
+  assert.ok(sum.endsWith(`(Speed Heal doubles one day) = ${bod * 4}`), sum);
   assert.doesNotMatch(sum, /× 2 \(Speed Heal\) × 3 days/);
-  // Nothing multiplies every day here, so the line starts "BOD 5 a day", not "BOD 5 = 5 a day".
-  assert.match(sum, new RegExp(`^BOD ${bod} a day × 3 days, `));
+  // Nothing multiplies every day here: "BOD 5 a day × 3 days = 15, + 5 (Speed Heal doubles one day) = 20", not "BOD 5 = 5 a day".
+  assert.equal(sum, `BOD ${bod} a day × 3 days = ${bod * 3}, + ${bod} (Speed Heal doubles one day) = ${bod * 4}`);
   app.click("[data-actapply]");
   assert.equal(activeChar(app).trackers.damage, Math.max(0, hp - 1 - bod * 4));
   assert.equal(activeChar(app).gear.find(g => g.id === "speed-heal").qty, 1, "one dose leaves your gear");
   app.click('[data-sec="sessions"]');
-  assert.match(app.$("#main").textContent, /Rested 3 days \(×2 Speed Heal for a day\)/);
+  assert.match(app.$("#main").textContent, /Rested 3 days \(Speed Heal doubled one day\)/);
   assert.deepEqual(app.errors, []);
 });

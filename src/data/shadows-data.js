@@ -1132,11 +1132,11 @@ window.SHADOWS_DATA = {
     "checkModWhen": "{amount} {whenText}",
     "visibilityAwareness": "No {names} penalty on visual checks",
     "visibilityAttacks": "{levels} don't apply to your attacks",
-    "visibilityShiftAttacks": "In {from}, attacks take {to}'s {penalty}",
-    "visibilityShiftAttacksMore": "in {from}, {to}'s {penalty}",
-    "visibilityShiftAwareness": "{from} reads as {to}",
+    "visibilityShiftAttacks": "Your attacks take {penalty} in {from}, not {was}",
+    "visibilityShiftAttacksMore": "{penalty} in {from}, not {was}",
+    "visibilityShiftAwareness": "{from} counts as {to}",
     "visibilityShiftAwarenessMore": "{from} as {to}",
-    "visibilityChecks": "{mods} on every check",
+    "visibilityChecks": "{amount} to every check in {levels}",
     "visibilityChecksEach": "{amount} in {levels}"
   },
   /* Decision 232: the same computed tags on a card the character holds, which state its total. `{total}` is the row's
@@ -2653,7 +2653,7 @@ window.SHADOWS_DATA = {
             ],
             "flagged": true,
             "flagNote": "F45: Concierge's \"Whenever making an appraisal of gear, contraband, or any standard items you may add a 1d4 kicker die\" names no Skill. Which one appraises? Left as the tweak's text until D rules (P21).",
-            "playerNote": "Which Skill an appraisal uses is your GM's call; add the 1d4 when it applies.",
+            "playerNote": "Your GM names the Skill an appraisal uses. Add the 1d4 to that roll.",
             "focusedSkills": { "ids": ["awareness", "combat-sense", "streetwise", "basic-tech"] },
             "tweak": {
               "name": "Concierge",

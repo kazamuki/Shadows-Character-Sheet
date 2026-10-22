@@ -1534,6 +1534,6 @@ test("P21 10 (wizard): a Fence's option shows the note a player needs", () => {
   const arch = onArchetypeStep("professional");
   const fence = [...arch.$$("#main .pick")].find(p => /Fence/.test(p.querySelector("h2") ? p.querySelector("h2").textContent : ""));
   assert.ok(fence, "the Fence option isn't on the Archetype step");
-  assert.match(fence.textContent, /Which Skill an appraisal uses is your GM's call; add the 1d4 when it applies\./);
+  assert.match(fence.textContent, /Your GM names the Skill an appraisal uses\. Add the 1d4 to that roll\./);
   assert.deepEqual(arch.errors, []);
 });
