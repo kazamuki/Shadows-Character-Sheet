@@ -413,6 +413,13 @@ test("split shape 2: a heading the conversion split over two lines reads as the 
   assert.equal(split.pack.npcRoles.length, 2);
 });
 
+test("a CRLF codex builds the same pack (a Windows checkout)", () => {
+  const src = codex(), ledger = ledgerFor(src), crlf = t => t.replace(/\n/g, "\r\n");
+  const r = build({ human: crlf(src.human), v2: crlf(src.v2), audit: crlf(src.audit) }, ledger);
+  assert.deepEqual(r.problems, []);
+  assert.equal(B.serialize(r.pack), B.serialize(build(src, ledger).pack));
+});
+
 test("split shape 3: the origins are under an Origins heading, and the old heading is no longer read", () => {
   const ledger = ledgerFor(codex());
   assert.deepEqual(once({}, ledger).problems, []);
