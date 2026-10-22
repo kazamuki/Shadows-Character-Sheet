@@ -1529,3 +1529,15 @@ test("P20a 9: the breakdowns name the parts", () => {
   assert.equal(bd("c.identity.archetype = 'arcanist'; c.archetypeChoices.specialization = ['unshakable-mind']; for (const k of Object.keys(c.stats)) c.stats[k].base = 5", "TOL"), "1 + INT 0 + BOD 0 + COOL 0 = 1");
   assert.deepEqual(app.errors, []);
 });
+
+test("P21 10 (wizard): a Fence's option and Field Medic show the note a player needs", () => {
+  const arch = onArchetypeStep("professional");
+  const fence = [...arch.$$("#main .pick")].find(p => /Fence/.test(p.querySelector("h2") ? p.querySelector("h2").textContent : ""));
+  assert.ok(fence, "the Fence option isn't on the Archetype step");
+  assert.match(fence.textContent, /Which Skill an appraisal uses is your GM's call; add the 1d4 when it applies\./);
+  const cp = onStep("professional", "street", "character-points", ch => { ch.archetypeChoices.specialization = ["cleaner"]; });
+  const medic = [...cp.$$("#main .pick")].find(p => /Field Medic/.test(p.querySelector("h2") ? p.querySelector("h2").textContent : ""));
+  assert.ok(medic, "Field Medic isn't on the CP step");
+  assert.match(medic.textContent, /How two Kicker Dice combine on one roll is your GM's call until the rule is settled\./);
+  assert.deepEqual([...arch.errors, ...cp.errors], []);
+});

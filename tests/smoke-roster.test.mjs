@@ -120,7 +120,7 @@ test("B17, 0414: each Origin shows its Shifting, Refuel and Need and its starter
   const shows = (text, o, where) => {
     for (const f of o.features) assert.ok(text.includes(f.text), `${o.name}'s ${f.name} isn't ${where}`);
     assert.ok(text.includes(o.starterPower.name) && text.includes(o.starterPower.description), `${o.name}'s starter power isn't ${where}`);
-    for (const r of o.starterPower.rows || []) for (const v of Object.values(r)) assert.ok(text.includes(v), `${o.starterPower.name}'s row "${v}" isn't ${where}`);
+    for (const r of o.starterPower.rows || []) for (const v of Object.values(r).filter(x => typeof x === "string")) assert.ok(text.includes(v), `${o.starterPower.name}'s row "${v}" isn't ${where}`);
   };
   assert.equal(ww.specialization.options.map(o => o.id).join(" "), "trueborn wildblood forge-fang");
   for (const o of ww.specialization.options){

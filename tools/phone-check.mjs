@@ -77,6 +77,10 @@ function lockedCharacter(archetype = "arcanist", milestonePoints = 0, held = [],
       { id: "machindo", rank: 1, notes: "" }, { id: "lightning-calculator", rank: 1, notes: "" }, { id: "field-medic", rank: 1, notes: "" },
       { id: "ghost-step", rank: 1, notes: "" }, { id: "night-vision", rank: 1, notes: "" });
     ch.disadvantages.push({ id: "distractable", rank: 1, notes: "" }, { id: "dwarf", rank: 1, notes: "" });
+    // P21: Combat Sense with a Take X that names a kicker (Quick Study + Hyper Vigilance), and Nocturnal's line above the table.
+    ch.advantages.push({ id: "hyper-vigilance", rank: 1, notes: "" });
+    ch.progression.milestones.major.push({ id: "quick-study", date: "2026-10-21" });
+    ch.trackers.aberrations.push({ id: "night-eyes", permanence: "permanent" }, { id: "nocturnal", permanence: "permanent" });
   }
   ch.creation.locked = true;
   return JSON.parse(JSON.stringify(ch));   // out of the engine's vm realm

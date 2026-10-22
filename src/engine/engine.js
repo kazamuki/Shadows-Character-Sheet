@@ -230,20 +230,16 @@ const Engine = (() => {
     return out;
   }
 
-  // ── A trait's numbers on a build (Decision 235) ───────────────────────────
-  // `derivedMod` (a cut or bonus to a derived stat), `statMax` (a cap on a Basic Stat) and `startingCredits` are
-  // computed `grants` rows. They are read from the five sources naturalArmor() scans (held Advantages and
-  // Disadvantages, taken Majors, the chosen specialization's options, held archetype powers), not grants()'s three:
-  // Arcane Fortitude is a specialization option. One entry per trait however many rows hold it, with the ranks
-  // summed, so an amount counts once and a `perRank` counts its rank. Total: a row the data or a file got wrong is
-  // skipped; a source that can't be read for a half-made character reads as none.
-  function traitGrants(ch, type){
+  // ── Where a trait's effects are stated (Decisions 235, 237) ───────────────
+  // One walk over the places a character's traits are written: held Advantages and Disadvantages (one entry each,
+  // ranks summed), taken Majors (once each, Decision 199), the chosen specialization's options, and held archetype
+  // powers at their rank. `wide` adds the three the Skill rows read and the numbers don't: the archetype's baseline
+  // traits, the chosen Origin's starter power (a row per augmentation) and held Aberrations. Each is `{ def, rank, kind,
+  // id }`; `kind` is set for an Advantage or Disadvantage only. Total: a source that can't be read for a half-made
+  // character reads as none, and a row the data or a file got wrong is not yielded.
+  function grantSources(ch, wide){
     const out = [];
     if (!isPlainObj(ch)) return out;
-    const add = (def, rank) => {
-      if (!isPlainObj(def) || !Array.isArray(def.grants) || !(rank >= 1)) return;
-      for (const g of def.grants) if (isPlainObj(g) && g.type===type) out.push({ g, name: txt(def.name), rank: Math.floor(rank) });
-    };
     const safe = fn => { try { fn(); } catch (e) { /* a character migrate() didn't make has no archetype to read */ } };
     for (const [kind, list, lookup] of [["advantage", ch.advantages, advById], ["disadvantage", ch.disadvantages, disById]]){
       if (!Array.isArray(list)) continue;
@@ -251,12 +247,36 @@ const Engine = (() => {
       for (const row of list){
         if (!isPlainObj(row) || typeof row.id!=="string" || seen.has(row.id)) continue;
         seen.add(row.id);
-        safe(() => add(lookup(row.id), heldRank(ch, kind, row.id)));
+        safe(() => out.push({ def: lookup(row.id), rank: heldRank(ch, kind, row.id), kind, id: row.id }));
       }
     }
-    safe(() => [...new Set(majorTakenIds(ch))].forEach(id=>add(majorById(ch, id), 1)));
-    safe(() => specializationChosen(ch).forEach(o=>add(o, 1)));
-    safe(() => archetypePowers(ch).forEach(p=>add(p, Number(p.rank))));
+    safe(() => [...new Set(majorTakenIds(ch))].forEach(id=>out.push({ def: majorById(ch, id), rank: 1 })));
+    safe(() => specializationChosen(ch).forEach(o=>out.push({ def: o, rank: 1 })));
+    safe(() => archetypePowers(ch).forEach(p=>out.push({ def: p, rank: Number(p.rank) })));
+    if (wide){
+      safe(() => { const a = archetype(ch); if (a && Array.isArray(a.baselineTraits)) a.baselineTraits.forEach(t=>out.push({ def: t, rank: 1 })); });
+      safe(() => specializationChosen(ch).forEach(o=>{
+        const rows = isPlainObj(o.starterPower) && Array.isArray(o.starterPower.rows) ? o.starterPower.rows : [];
+        rows.filter(isPlainObj).forEach(r=>out.push({ def: Object.assign({}, r, { name: r.augmentation }), rank: 1 }));
+      }));
+      safe(() => aberrationState(ch).active.forEach(x=>out.push({ def: x.def, rank: 1 })));
+    }
+    return out;
+  }
+
+  // ── A trait's numbers on a build (Decision 235) ───────────────────────────
+  // `derivedMod` (a cut or bonus to a derived stat), `statMax` (a cap on a Basic Stat) and `startingCredits` are
+  // computed `grants` rows. They are read from the five sources naturalArmor() scans (held Advantages and
+  // Disadvantages, taken Majors, the chosen specialization's options, held archetype powers), not grants()'s three:
+  // Arcane Fortitude is a specialization option. One entry per trait however many rows hold it, with the ranks
+  // summed, so an amount counts once and a `perRank` counts its rank. They do NOT read a baseline trait, a starter
+  // power or an Aberration (Decision 237): those only reach a Skill's row.
+  function traitGrants(ch, type){
+    const out = [];
+    for (const { def, rank } of grantSources(ch, false)){
+      if (!isPlainObj(def) || !Array.isArray(def.grants) || !(rank >= 1)) continue;
+      for (const g of def.grants) if (isPlainObj(g) && g.type===type) out.push({ g, name: txt(def.name), rank: Math.floor(rank) });
+    }
     return out;
   }
   const goodNum = n => typeof n==="number" && Number.isFinite(n);
@@ -991,53 +1011,93 @@ const Engine = (() => {
     return (alias && known(alias)) ? alias : null;
   }
 
-  // The held Advantages and Disadvantages whose `grants` change a Skill's check (Decision 233), one per trait however
-  // many rows hold it (natural and bought ranks sum, heldRank), with the Skills each row names. Total: a row the
-  // data or a file got wrong is not here.
+  // The traits whose `grants` change a Skill's check (Decisions 233, 237), one per source however many rows hold it
+  // (natural and bought ranks sum, heldRank), with the Skills each row names: held Advantages and Disadvantages, taken
+  // Majors, the chosen specialization's options, held powers (at their rank), the archetype's baseline traits, the
+  // Origin's starter power and held Aberrations. A row's own `name` is its source (a tweak's Chi ability); else the
+  // part's. Total: a row the data or a file got wrong is not here.
   function traitRows(ch){
     const out = [];
-    for (const [kind, list] of [["advantage", ch && ch.advantages], ["disadvantage", ch && ch.disadvantages]]){
-      if (!Array.isArray(list)) continue;
-      const seen = new Set();
-      for (const row of list){
-        if (!isPlainObj(row) || typeof row.id!=="string" || seen.has(row.id)) continue;
-        seen.add(row.id);
-        const def = kind==="advantage" ? advById(row.id) : disById(row.id);
-        if (!isPlainObj(def) || !Array.isArray(def.grants) || !(heldRank(ch, kind, row.id) >= 1)) continue;
-        for (const g of def.grants){
-          if (!isPlainObj(g) || !TRAIT_TYPES.includes(g.type)) continue;
-          let ids = [];
-          if (Array.isArray(g.skills)) ids = g.skills.filter(v=>typeof v==="string" && v);
-          else if (typeof g.skillsFromPick==="string"){
-            const st = picksFor(ch, kind, row.id).find(x=>x.pick.id===g.skillsFromPick);
-            if (st && st.pick.type==="skill") ids = st.chosen.filter(v=>typeof v==="string" && v);
-          }
-          out.push({ g, ids, name: txt(def.name) });
+    for (const { def, rank, kind, id } of grantSources(ch, true)){
+      if (!isPlainObj(def) || !Array.isArray(def.grants) || !(rank >= 1)) continue;
+      for (const g of def.grants){
+        if (!isPlainObj(g) || !TRAIT_TYPES.includes(g.type)) continue;
+        let ids = [];
+        if (Array.isArray(g.skills)) ids = g.skills.filter(v=>typeof v==="string" && v);
+        else if (g.skillsFrom==="focused"){ try { ids = focusedSkillIds(ch).filter(v=>typeof v==="string" && v); } catch (e) { ids = []; } }
+        else if (typeof g.skillsFromPick==="string" && kind){
+          const st = picksFor(ch, kind, id).find(x=>x.pick.id===g.skillsFromPick);
+          if (st && st.pick.type==="skill") ids = st.chosen.filter(v=>typeof v==="string" && v);
         }
+        out.push({ g, ids, name: txt(g.name) || txt(def.name), rank: Math.floor(rank) });
       }
     }
     return out;
   }
   const rowText = () => isPlainObj(D().skillRowText) ? D().skillRowText : {};
+  // A checkMod's number: `amount`, or `perRank` × the rank held + `plus` (how naturalArmor reads Iron Hide, Decision 200).
+  // Each must be a finite number; a bad row has none.
+  function modAmount(g, rank){
+    if (g.amount!=null) return goodAmount(g) ? g.amount : null;
+    if (g.perRank==null && g.plus==null) return null;
+    if ((g.perRank!=null && !goodNum(g.perRank)) || (g.plus!=null && !goodNum(g.plus))) return null;
+    const n = (g.perRank==null ? 0 : g.perRank * rank) + (g.plus==null ? 0 : g.plus);
+    return n!==0 ? n : null;
+  }
+  // The light levels a `visibility` row moves or modifies, read off the table (`visibility`), never typed here.
+  const visTable = () => Array.isArray(D().visibility) ? D().visibility.filter(isPlainObj) : [];
+  const visHas = (o, id) => isPlainObj(o) && Object.prototype.hasOwnProperty.call(o, id);
+  // `shift`: { from: to }, the level a check reads as instead ("Treat Dark visibility as Dim"). An unknown level is skipped.
+  function visShifts(g){
+    const table = visTable();
+    return table.filter(v=>visHas(g.shift, v.id)).map(from=>{
+      const to = table.find(v=>v.id===g.shift[from.id]);
+      return to && to.id!==from.id ? { from, to } : null;
+    }).filter(Boolean);
+  }
+  function visShiftText(g, on){
+    const SRT = rowText(), parts = [];
+    for (const { from, to } of visShifts(g)){
+      const tpl = on==="attacks" ? SRT[parts.length ? "visibilityShiftAttacksMore" : "visibilityShiftAttacks"] : SRT[parts.length ? "visibilityShiftAwarenessMore" : "visibilityShiftAwareness"];
+      const t = fillTag(tpl, { from: txt(from.name), to: txt(to.name), penalty: goodNum(to.attack) && to.attack ? signedMinus(to.attack) : null });
+      if (t) parts.push(t);
+    }
+    return parts.length ? parts.join(on==="attacks" ? "; " : ", ") : null;
+  }
+  // `mod`: { level: amount } on every check, grouped by amount, the biggest first ("+1 in Dim or Dark, −1 in Bright").
+  function visModText(g){
+    const SRT = rowText(), rows = visTable().filter(v=>visHas(g.mod, v.id) && goodNum(g.mod[v.id]) && g.mod[v.id]!==0);
+    const groups = [...new Set(rows.map(v=>g.mod[v.id]))].sort((a, b)=>b - a)
+      .map(n=>fillTag(SRT.visibilityChecksEach, { amount: signedMinus(n), levels: joinList(rows.filter(v=>g.mod[v.id]===n).map(v=>txt(v.name)).filter(Boolean), "or") })).filter(Boolean);
+    return groups.length ? fillTag(SRT.visibilityChecks, { mods: groups.join(", ") }) : null;
+  }
   // What the held traits do to one Skill's check. `parts` are in the number; `kickers` sit beside it; a Take X is
-  // finished by skillLine (it needs the whole check); `marks` change nothing the sheet adds up.
+  // finished by skillLine (it needs the whole check); `marks` change nothing the sheet adds up: a conditional bonus or
+  // kicker, a die face, a light level, and every effect of a power (nothing says it is running, Decision 237).
   function traitEffects(ch, skillId){
     const fx = { parts:[], kickers:[], takeX:[], marks:[] }, SRT = rowText();
     const mark = (kind, g, name, tpl, vars, when) => { const text = fillTag(tpl, vars); if (text) fx.marks.push({ kind, text, from:name, whenText: when===undefined ? null : when }); };
-    for (const { g, ids, name } of traitRows(ch)){
+    for (const { g, ids, name, rank } of traitRows(ch)){
       const when = whenOf(g);
       if (when===false) continue;
       if (g.type==="visibility"){
+        if (!visOn(g).includes(skillId)) continue;
         const v = visLevels(g);
-        if (v && visOn(g).includes(skillId)) mark("visibility", g, name, SRT[VIS_TEXT[skillId]], v);
+        if (v) mark("visibility", g, name, SRT[VIS_TEXT[skillId]], v);
+        const shifted = skillId==="awareness" ? visShiftText(g, "awareness") : null;
+        if (shifted) fx.marks.push({ kind:"visibility", text:shifted, from:name, whenText:null });
         continue;
       }
       if (!ids.includes(skillId)) continue;
-      if (g.type==="checkMod" && goodAmount(g)){
-        if (when===undefined) fx.parts.push({ name, amount:g.amount });
-        else mark("checkMod", g, name, SRT.checkModWhen, { amount: signedMinus(g.amount), whenText: when }, when);
+      const amount = g.type==="checkMod" ? modAmount(g, rank) : null;
+      if (amount!=null){
+        if (when===undefined) fx.parts.push({ name, amount });
+        else mark("checkMod", g, name, SRT.checkModWhen, { amount: signedMinus(amount), whenText: when }, when);
       }
-      else if (g.type==="kicker" && goodDie(g) && when===undefined) fx.kickers.push({ die:g.die, from:name });
+      else if (g.type==="kicker" && goodDie(g)){
+        if (when===undefined) fx.kickers.push({ die:g.die, from:name });
+        else mark("kicker", g, name, SRT.kickerWhen, { die:g.die, whenText: when }, when);
+      }
       else if (g.type==="takeX" && goodX(g)) fx.takeX.push({ x:g.x, from:name, whenText: when===undefined ? null : when });
       else if (g.type==="failOn" && goodFaces(g)) mark("failOn", g, name, when===undefined ? SRT.failOn : SRT.failOnWhen, { faces: joinList(g.faces.map(String), "or"), whenText: when }, when);
       else if (g.type==="explodeOn" && goodFaces(g) && when===undefined) mark("explodeOn", g, name, SRT.explodeOn, { faces: joinList(g.faces.map(String), "or") }, when);
@@ -1079,9 +1139,13 @@ const Engine = (() => {
     // maneuver and print all follow); a kicker sits beside it; Take X is X plus the whole check; a mark changes nothing.
     const fx = traitEffects(ch, id), traits = fx.parts.reduce((n, p)=>n + p.amount, 0);
     const checkBonus = base + pain + conditions + formPenalty + traits, SRT = rowText();
+    // Decision 237 (Ken, 2026-10-17): a kicker is always added to the roll, Take X or not. So the line names each
+    // unconditional kicker ("Take 6: 13 + 1d4"), and the total is still X plus the check; a conditional kicker is a mark.
+    const dice = fx.kickers.map(k=>k.die).join(" + ");
     const takeX = fx.takeX.map(t=>{
-      const total = t.x + checkBonus;
-      return { x:t.x, total, from:t.from, whenText:t.whenText, text: fillTag(t.whenText ? SRT.takeXWhen : SRT.takeX, { x:t.x, total, whenText:t.whenText }) || "" };
+      const total = t.x + checkBonus, vars = { x:t.x, total, whenText:t.whenText, kickers:dice };
+      const tpl = dice ? (t.whenText ? SRT.takeXKickerWhen : SRT.takeXKicker) : (t.whenText ? SRT.takeXWhen : SRT.takeX);
+      return { x:t.x, total, from:t.from, whenText:t.whenText, text: fillTag(tpl, vars) || "" };
     });
     const unconditional = list => list.filter(x=>!x.whenText).concat(list.filter(x=>x.whenText));
     return { def, rank, trained:rank>0, checkBonus, barred, formPenalty,
@@ -1089,13 +1153,24 @@ const Engine = (() => {
              breakdown:{ rank, primary:{id:pri, value:priVal}, synergy:{id:syn, mod:synMod}, pain, conditions, form:formPenalty, traits, traitParts:fx.parts },
              dataWarning: (pri && syn) ? null : `Skill "${def.name}" references an unknown stat (${!pri?def.primaryStat:def.synergyStat}).` };
   }
-  // What Night Vision and its kind cancel on an attack (Decision 233): one line per held trait that names attacks,
-  // its light levels and their penalties read from the `visibility` table, never typed here.
+  // What Night Vision and its kind cancel on an attack (Decision 233), and what Night Eyes shifts (Decision 237): one
+  // line per held trait that names attacks, its light levels and their penalties read from the `visibility` table.
   function attackNotes(ch){
     const out = [], SRT = rowText();
     for (const { g, name } of traitRows(ch)){
       if (g.type!=="visibility" || !visOn(g).includes("attacks")) continue;
-      const v = visLevels(g), text = v ? fillTag(SRT.visibilityAttacks, v) : null;
+      const v = visLevels(g), text = v ? fillTag(SRT.visibilityAttacks, v) : null, shifted = visShiftText(g, "attacks");
+      if (text) out.push({ from:name, text });
+      if (shifted) out.push({ from:name, text:shifted });
+    }
+    return out;
+  }
+  // What a trait does to every check by the light (Nocturnal, Decision 237): one line for the Skills tab, from the table.
+  function checkNotes(ch){
+    const out = [];
+    for (const { g, name } of traitRows(ch)){
+      if (g.type!=="visibility" || !Array.isArray(g.on) || !g.on.includes("checks")) continue;
+      const text = visModText(g);
       if (text) out.push({ from:name, text });
     }
     return out;
@@ -2267,7 +2342,8 @@ const Engine = (() => {
 
   // Natural Healing (0550): BOD per day of real rest. The engine proposes the
   // number; the GM may halve it for pushing on, so the player can change it.
-  // Decision 236: Rapid Healing and Fast Metabolism multiply it (`times`), and with Speed Heal they multiply each other.
+  // Decision 236: Rapid Healing and Fast Metabolism multiply it (`times`), and with Speed Heal they multiply each other
+  // on the day it doubles (a rest of more than one day: Speed Heal doubles one day, not all of them).
   // `opts` ({ days, speed }) asks for `proposed`, and `factors` names each multiplier that went into it. The Rest panel,
   // its history label and the tests all read this one number.
   function naturalHealing(ch, opts){
@@ -2278,10 +2354,14 @@ const Engine = (() => {
     const times = grants(ch).healTimes.concat(aberrationState(ch).healTimes).map(t=>({ name:t.name, x:t.x }));
     const o = isPlainObj(opts) ? opts : {};
     const days = Math.max(0, Math.floor(Number(o.days))||0);
+    // Speed Heal is "2× healing rate for 24 hours" (0460): one dose doubles one day, so its factor carries `days: 1`
+    // and every other factor (no `days`) multiplies each day of the rest.
     const factors = times.slice();
-    if (o.speed===true && speedHealMultiplier>1) factors.push({ name:"Speed Heal", x:speedHealMultiplier });
-    return { stat, perDay, speedHealMultiplier, times, factors, days,
-             proposed: Math.floor(factors.reduce((n, f)=>n * f.x, perDay * days)),
+    const dosed = o.speed===true && speedHealMultiplier>1;
+    if (dosed) factors.push({ name:"Speed Heal", x:speedHealMultiplier, days:1 });
+    const daily = times.reduce((n, f)=>n * f.x, perDay);
+    return { stat, perDay, speedHealMultiplier, times, factors, days, daily,
+             proposed: Math.floor(daily * days + (dosed && days>=1 ? daily * (speedHealMultiplier - 1) : 0)),
              text: N.text||"", speedHealText: N.speedHealText||"" };
   }
   // One writer for both kinds of healing. Natural takes HP and nothing else:
@@ -7840,7 +7920,7 @@ const Engine = (() => {
     focusedSkillIds, focusedSkillSpec, focusedPicks, toggleFocusedPick, focusedPrice,
     focusedCategoryName, naturalAdvantagePool,
     // Selections and constraints
-    optionLock, requirementState, picksFor, setSelection, trimSelections, addPickInPlay, maneuverChecks, attackNotes,
+    optionLock, requirementState, picksFor, setSelection, trimSelections, addPickInPlay, maneuverChecks, attackNotes, checkNotes,
     specializationNeed, specializationIds, specializationChosen, specializationLabel,
     // Vitals: Pain, LUCK, Sanity, Conditions, taking a hit, recovery
     painState, luckState, sanState, conditionState, addCondition, removeCondition, setConditionMarks,

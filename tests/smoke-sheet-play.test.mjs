@@ -1225,3 +1225,27 @@ test("P20b 9: Pain says where it came from, on Main, Trackers and paper", () => 
   assert.equal(blank(), "3, 5, 8", "the note is a copy of the data");
   assert.deepEqual([...app.errors, ...calm.errors, ...tab.errors], []);
 });
+
+test("P21 11 (sheet): Speed Heal doubles one day, the sum line and the log say so, and one dose leaves your gear", () => {
+  const ch = lockedCharacter();
+  const hp = Engine.health(ch).total;
+  ch.trackers.damage = hp - 1;
+  ch.gear.push({ id: "speed-heal", qty: 2, notes: "" });
+  const bod = Engine.statTable(ch).BOD.value;
+  const app = openSheet(ch, "trackers");
+  app.click('[data-actopen="rest"]');
+  const days = app.$('[data-act="days"]');
+  days.value = "3"; days.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  const speed = app.$('[data-act="speed"]');
+  speed.checked = true; speed.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(app.$('[data-act="hp"]').value, String(bod * 4), "6 × 2 for the dosed day, + 6 + 6 reads 4 days' worth");
+  const sum = app.$("[data-restsum]").textContent;
+  assert.match(sum, new RegExp(`for Speed Heal's day = ${bod * 4}$`));
+  assert.doesNotMatch(sum, /× 2 \(Speed Heal\) × 3 days/);
+  app.click("[data-actapply]");
+  assert.equal(activeChar(app).trackers.damage, Math.max(0, hp - 1 - bod * 4));
+  assert.equal(activeChar(app).gear.find(g => g.id === "speed-heal").qty, 1, "one dose leaves your gear");
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Rested 3 days \(×2 Speed Heal for a day\)/);
+  assert.deepEqual(app.errors, []);
+});

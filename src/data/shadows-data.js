@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.43",
+    "gamedataVersion": "0.44",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -1123,12 +1123,21 @@ window.SHADOWS_DATA = {
   "skillRowText": {
     "takeX": "Take {x}: {total} (choose before you roll)",
     "takeXWhen": "Take {x}: {total} {whenText} (choose before you roll)",
+    "takeXKicker": "Take {x}: {total} + {kickers} (choose before you roll)",
+    "takeXKickerWhen": "Take {x}: {total} + {kickers} {whenText} (choose before you roll)",
+    "kickerWhen": "+{die} {whenText}",
     "failOn": "Fails on a natural {faces} (a 1 still botches)",
     "failOnWhen": "Fails on a natural {faces} {whenText} (a 1 still botches)",
     "explodeOn": "Explodes on a natural {faces}",
     "checkModWhen": "{amount} {whenText}",
     "visibilityAwareness": "No {names} penalty on visual checks",
-    "visibilityAttacks": "{levels} don't apply to your attacks"
+    "visibilityAttacks": "{levels} don't apply to your attacks",
+    "visibilityShiftAttacks": "In {from}, attacks take {to}'s {penalty}",
+    "visibilityShiftAttacksMore": "in {from}, {to}'s {penalty}",
+    "visibilityShiftAwareness": "{from} reads as {to}",
+    "visibilityShiftAwarenessMore": "{from} as {to}",
+    "visibilityChecks": "{mods} on every check",
+    "visibilityChecksEach": "{amount} in {levels}"
   },
   /* Decision 232: the same computed tags on a card the character holds, which state its total. `{total}` is the row's
      `perRank` times the held rank (natural and bought ranks summed), `{perRank}` is still the row's own. A type with no
@@ -1385,6 +1394,9 @@ window.SHADOWS_DATA = {
       "name": "Field Medic",
       "cost": 5,
       "maxRank": 1,
+      "flagged": true,
+      "flagNote": "F46: do kicker dice stack, and do two combine into the next die size up (Ken believes so; Weapon Expert's text is the evidence)? Each kicker shows on its own until D rules (P21).",
+      "playerNote": "How two Kicker Dice combine on one roll is your GM's call until the rule is settled. IP doesn't buy this in play meanwhile.",
       "description": "The difference between patching and healing is the hands doing it.\n\nAdd an additional 1d4 Kicker Die whenever making a Medical Skill Check.\n\nThis advantage can stack with other kicker die applied to this Skill Check.",
       "grants": [
         { "type": "kicker", "die": "1d4", "skills": ["medical"] },
@@ -2316,6 +2328,9 @@ window.SHADOWS_DATA = {
           "id": "aetheric-attunement",
           "name": "Aetheric Attunement",
           "description": "Through study and exposure, your body has become sensitive to Aether. You perceive active magical effects, lingering enchantments, and unstable distortions as shifts in light, pressure, or atmosphere.",
+          "grants": [
+            { "type": "checkMod", "amount": 5, "skills": ["awareness"], "whenText": "when identifying or detecting magical effects within meters equal to your WILL" }
+          ],
           "benefit": "You automatically recognize the presence of active magic within range of your Awareness checks and gain a +5 modifier when attempting to identify or detect magical effects within meters equal to your WILL."
         },
         {
@@ -2350,6 +2365,9 @@ window.SHADOWS_DATA = {
             "id": "thaumaturgical-sight",
             "name": "Thaumaturgical Sight",
             "description": "With this Aberration you can see the resonance a spell leaves, even if you have no other sight.",
+            "grants": [
+              { "type": "checkMod", "amount": 2, "skills": ["occult-lore"], "whenText": "when analyzing magic" }
+            ],
             "benefit": "Gain +2 for any Occult Check when analyzing magic; what you see is only visible to you."
           },
           {
@@ -2362,6 +2380,9 @@ window.SHADOWS_DATA = {
             "id": "resonant-whispers",
             "name": "Resonant Whispers",
             "description": "Magic is reactive to some people. When they touch things, it allows them to hear the whispers of magic within.",
+            "grants": [
+              { "type": "checkMod", "amount": 3, "skills": ["occult-lore"], "whenText": "when discerning the properties of a talisman or artifact, after at least a minute of physical contact with the object" }
+            ],
             "benefit": "Gain +3 to any Occult check to discern the properties of any talisman or artifact. Requires physical contact for at least one minute; the effect has audible and visual side effects everyone can see/hear."
           },
           {
@@ -2590,6 +2611,9 @@ window.SHADOWS_DATA = {
               "BOD": 6,
               "REF": 8
             } },
+            "grants": [
+              { "type": "kicker", "die": "1d6", "skills": ["stealth"], "name": "Vanish" }
+            ],
             "focusedSkills": { "ids": ["acrobatics", "combat-sense", "security", "stealth"], "choose": { "count": 2, "category": "combat" } },
             "tweak": {
               "name": "Vanish",
@@ -2627,6 +2651,12 @@ window.SHADOWS_DATA = {
               "INT": 7,
               "MAG": 7
             } },
+            "grants": [
+              { "type": "takeX", "x": 5, "skills": ["persuasion"], "name": "Concierge", "whenText": "when negotiating prices with other vendors, merchants, and black marketeers" }
+            ],
+            "flagged": true,
+            "flagNote": "F45: Concierge's \"Whenever making an appraisal of gear, contraband, or any standard items you may add a 1d4 kicker die\" names no Skill. Which one appraises? Left as the tweak's text until D rules (P21).",
+            "playerNote": "Which Skill an appraisal uses is your GM's call; add the 1d4 when it applies.",
             "focusedSkills": { "ids": ["awareness", "combat-sense", "streetwise", "basic-tech"] },
             "tweak": {
               "name": "Concierge",
@@ -2685,6 +2715,10 @@ window.SHADOWS_DATA = {
               "BOD": 5,
               "EMP": 7
             } },
+            "grants": [
+              { "type": "kicker", "die": "1d6", "skills": ["archery", "beam-weapons", "handguns", "heavy-weapons", "martial-arts", "melee", "rifles", "smgs"], "name": "Hunter's Calling", "whenText": "when facing a supernatural enemy" },
+              { "type": "kicker", "die": "1d6", "skills": ["occult-lore", "tracking"], "name": "Hunter's Calling", "whenText": "when hunting your quarry" }
+            ],
             "focusedSkills": { "ids": ["athletics", "combat-sense", "intuition", "occult-lore", "stealth", "survival", "tracking"] },
             "tweak": {
               "name": "Hunter's Calling",
@@ -2716,7 +2750,9 @@ window.SHADOWS_DATA = {
                 "Flying Talons [Chi 5]: Make 3 throwing attacks using thrown weapons matching your Martial Art style, once per turn, following the same rules as a firearm burst."
               ]
             },
-            "grants": [{ "type": "naturalArmor", "id": "iron-shirt", "name": "Iron Shirt",
+            "grants": [{ "type": "kicker", "die": "1d4", "skillsFrom": "focused", "name": "Unwavering Focus", "whenText": "while Unwavering Focus is active" },
+                       { "type": "kicker", "die": "1d6", "skills": ["dodge"], "name": "Wind Dancing Defense", "whenText": "when using Dodge during combat, while active" },
+                       { "type": "naturalArmor", "id": "iron-shirt", "name": "Iron Shirt",
                          "stat": "BOD", "plus": 1, "while": "while active" },
                        { "type": "movement", "id": "fleet-of-foot", "name": "Fleet of Foot",
                          "times": 2, "paces": ["run", "sprint"], "while": "while active" }]
@@ -2729,6 +2765,10 @@ window.SHADOWS_DATA = {
               "BOD": 6,
               "REF": 9
             } },
+            "grants": [
+              { "type": "explodeOn", "faces": [9, 10], "skills": ["pilot"], "name": "Stunt Driver" },
+              { "type": "takeX", "x": 6, "skills": ["pilot"], "name": "Stunt Driver", "whenText": "on your next Pilot check, instead of a free stunt, when you declare a stunt for the first time on your turn" }
+            ],
             "focusedSkills": { "ids": ["athletics", "awareness", "basic-tech", "combat-sense", "pilot", "deception"] },
             "tweak": {
               "name": "Stunt Driver",
@@ -2989,13 +3029,13 @@ window.SHADOWS_DATA = {
       "powers": [
         { "id": "bestial-blessings", "name": "Bestial Blessings", "cost": "1 SFR, until dismissed or the encounter ends", "effect": "Retractable claws: BOD+3 melee damage, AP, and +2 MOB for climbing. Claws retract if you are stunned or knocked unconscious.", "perRank": "+1 damage (max 5)", "maxRank": 5 },
         { "id": "vitality-surge", "name": "Vitality Surge", "cost": "2 SFR per HL healed", "effect": "Fast Action: heal up to your rank in HL per round. Can't restore Withering damage. At Rank 5, severed limbs regenerate.", "perRank": "+1 HL per round (max 5)", "maxRank": 5 },
-        { "id": "preternatural-speed", "name": "Preternatural Speed", "cost": "2 SFR per round, sustained", "effect": "+2 MOB, +2 to defensive actions (Dodge and Parry), and one extra movement action each turn. Doesn't stack with other speed powers.", "perRank": "None", "ranked": false },
+        { "id": "preternatural-speed", "name": "Preternatural Speed", "cost": "2 SFR per round, sustained", "effect": "+2 MOB, +2 to defensive actions (Dodge and Parry), and one extra movement action each turn. Doesn't stack with other speed powers.", "perRank": "None", "ranked": false, "grants": [{"type": "checkMod", "amount": 2, "skills": ["dodge", "melee"], "whenText": "on defensive actions (Dodge and Parry), while Preternatural Speed runs"}] },
         { "id": "cursed-evolution", "name": "Cursed Evolution", "cost": "None", "effect": "Drink at least 1 HL of another Vampire's blood and win an opposed WILL Essence check to gain access to the bloodline it was made with. Bloodline powers are bought with IP; one bloodline per Vampire. Not available with Pure Blooded.", "perRank": "+1 Hit (max 3)", "maxRank": 3, "gainsSpecialization": 1,
           "gainsSpecializationText": "You drank at least 1 HL of a Vampire of that Bloodline and won the opposed WILL Essence check. Your table settles that; the sheet rolls nothing." },
 
         { "id": "shadow-play", "origin": "strigoi", "name": "Shadow Play (Masked)", "cost": "Rank + 2; rank alone for a glamour on yourself", "effect": "An illusion of an object, person, or scene within WILL meters, real to all senses, lasting 1 hour per WILL. Anyone scrutinizing it makes a WILL Essence check (TN 8, TH = rank) to see through it.", "perRank": "+1 TH (max 5)", "maxRank": 5 },
         { "id": "nightmare-echo", "origin": "strigoi", "name": "Nightmare Echo (Masked)", "cost": "Rank", "effect": "On a bite, the target makes a WILL Essence check (TN 8, TH = rank + 1) or suffers −1 to all combat checks and −5% to SAN checks for 1d4 hours.", "perRank": "+1 TH and −5% (max 5)", "maxRank": 5 },
-        { "id": "veil-of-night", "origin": "strigoi", "name": "Veil of Night (Masked)", "cost": "Rank per round, sustained", "effect": "Darkness within 20 meters: +2 Stealth, and your aura is hidden unless revealed by a WILL Essence check (TN 8, TH = rank + 1). True Faith and magical light pierce it.", "perRank": "+5m and +1 TH (max 5)", "maxRank": 5 },
+        { "id": "veil-of-night", "origin": "strigoi", "name": "Veil of Night (Masked)", "cost": "Rank per round, sustained", "effect": "Darkness within 20 meters: +2 Stealth, and your aura is hidden unless revealed by a WILL Essence check (TN 8, TH = rank + 1). True Faith and magical light pierce it.", "perRank": "+5m and +1 TH (max 5)", "maxRank": 5, "grants": [{"type": "checkMod", "amount": 2, "skills": ["stealth"], "whenText": "in darkness within 20 meters, while Veil of Night runs"}] },
         { "id": "bone-spines", "origin": "strigoi", "name": "Bone Spines (Unmasked)", "cost": "Rank", "effect": "Spines for the encounter: +3 melee damage, +5 while grappling.", "perRank": "+1 damage (max 5)", "maxRank": 5 },
         { "id": "monstrous-maw", "origin": "strigoi", "name": "Monstrous Maw (Unmasked)", "cost": "Rank + 2", "effect": "For 1 round, your bite gains +10 damage and AP 3, and a hit against an unarmored target severs a limb (Maimed).", "perRank": "+1 round (max 5)", "maxRank": 5 },
         { "id": "rending-claws", "origin": "strigoi", "name": "Rending Claws (Unmasked)", "cost": "Rank", "effect": "With Bestial Blessings active, your claw attacks this round gain +2 damage per rank and inflict Bleeding for rounds equal to rank.", "perRank": "+2 damage and +1 round of Bleeding (max 5)", "maxRank": 5 },
@@ -3011,11 +3051,11 @@ window.SHADOWS_DATA = {
         { "id": "nightmare-visage", "origin": "upyr", "name": "Nightmare Visage", "cost": "Rank + 2", "effect": "Enemies within 5 meters make a WILL Essence check (TN 9, TH = rank) or are Frightened for 1 round. Anyone who resists is immune for the encounter.", "perRank": "+1m and +1 TH (max 3)", "maxRank": 3 },
         { "id": "red-mist", "origin": "upyr", "name": "Red Mist", "cost": "3 SFR", "effect": "For 1 minute, you become mist: immune to Physical damage and able to pass through tight spaces, but unable to attack. Sunlight still burns you, and Elemental, Spirit, and Aether damage still affect you.", "perRank": "+1 minute (max 4)", "maxRank": 4 },
 
-        { "id": "battleborn-instinct", "origin": "draugur", "name": "Battleborn Instinct", "cost": "Rank + 2", "effect": "With an Ancient Weapon: +2 to all combat checks and one extra attack per round for WILL rounds. Ends if you are immobilized or incapacitated.", "perRank": "+1 to combat checks (max 5)", "maxRank": 5 },
+        { "id": "battleborn-instinct", "origin": "draugur", "name": "Battleborn Instinct", "cost": "Rank + 2", "effect": "With an Ancient Weapon: +2 to all combat checks and one extra attack per round for WILL rounds. Ends if you are immobilized or incapacitated.", "perRank": "+1 to combat checks (max 5)", "maxRank": 5, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["melee"], "whenText": "with an Ancient Weapon, while Battleborn Instinct runs"}] },
         { "id": "deathless-resilience", "origin": "draugur", "name": "Deathless Resilience", "cost": "3 SFR, once per encounter", "effect": "Always: you don't bleed, need no air, and are immune to fear. As a reaction, when reduced to 0 Health by anything but Withering, rise with 1 HL.", "perRank": "None", "ranked": false },
         { "id": "blood-of-valhalla", "origin": "draugur", "name": "Blood of Valhalla", "cost": "Rank + 2 per round, sustained", "effect": "+2 melee damage and regenerate HL equal to rank each round (never Withering). Vitality Surge can't be used while active. When it ends, −4 to all combat actions for 1d4 rounds, and it can't restart until then.", "perRank": "+1 HL and −1 to the crash penalty (max 4)", "maxRank": 4 },
         { "id": "odins-aegis", "origin": "draugur", "name": "Odin's Aegis", "cost": "Rank, as a reaction", "effect": "Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus + 2 × rank. No effect on physical attacks.", "perRank": "+2 reduction (max 5)", "maxRank": 5 },
-        { "id": "spectral-veil", "origin": "draugur", "name": "Spectral Veil", "cost": "Rank + 2 per round, sustained", "effect": "Semi-ethereal: immune to Physical damage, able to pass through walls, +2 Stealth. You can attack only with your Ancient Weapon, and can't handle any other object. Sunlight still burns you, and Elemental, Spirit, and Aether damage still affect you.", "perRank": "+1 Stealth (max 3)", "maxRank": 3 },
+        { "id": "spectral-veil", "origin": "draugur", "name": "Spectral Veil", "cost": "Rank + 2 per round, sustained", "effect": "Semi-ethereal: immune to Physical damage, able to pass through walls, +2 Stealth. You can attack only with your Ancient Weapon, and can't handle any other object. Sunlight still burns you, and Elemental, Spirit, and Aether damage still affect you.", "perRank": "+1 Stealth (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["stealth"], "whenText": "while Spectral Veil runs"}] },
         { "id": "hels-dread", "origin": "draugur", "name": "Hel's Dread", "cost": "Rank", "effect": "Living creatures within 3 meters make a WILL Essence check (TN 9, TH = rank) or take −3 to all combat checks until they pass the same check at the end of a later turn. No effect on the undead or the fear-immune.", "perRank": "+1 TH (max 5)", "maxRank": 5 }
       ],
       "vulnerabilities": [
@@ -3044,7 +3084,7 @@ window.SHADOWS_DATA = {
           { "id": "reservoir", "name": "Reservoir", "prerequisites": { "majorCount": 1 }, "benefit": "Carry blood stones that hold blood for you, letting you fuel powers without tapping your own SFR." },
           { "id": "blood-alchemist", "name": "Blood Alchemist", "prerequisites": { "majorCount": 1 }, "benefit": "Stored blood can fill your SFR to its maximum, still at 2 SFR per HL.", "grants": [{ "type": "feed", "kind": "stored", "upToShare": 1 }] },
           { "id": "levitation", "name": "Levitation", "prerequisites": {}, "benefit": "Glide soundlessly at your MOB speed, at a height in meters equal to your WILL. Knocked unconscious, you fall." },
-          { "id": "night-wings", "name": "Night Wings", "prerequisites": { "milestones": ["levitation"], "majorCount": 1 }, "benefit": "Levitation becomes flight at 160 kph, with +3 to Acrobatics checks and Defensive Actions in the air." },
+          { "id": "night-wings", "name": "Night Wings", "prerequisites": { "milestones": ["levitation"], "majorCount": 1 }, "benefit": "Levitation becomes flight at 160 kph, with +3 to Acrobatics checks and Defensive Actions in the air.", "grants": [{"type": "checkMod", "amount": 3, "skills": ["acrobatics"], "whenText": "in the air"}, {"type": "checkMod", "amount": 3, "skills": ["dodge", "melee"], "whenText": "on Defensive Actions in the air"}] },
           { "id": "dark-rending", "name": "Dark Rending", "prerequisites": { "majorCount": 1 }, "benefit": "Your Bestial Blessings claws extend into spectral talons that can strike Unbodied creatures, and anything else immune to Physical damage, as though it were solid." },
           { "id": "frenzy-resistance", "name": "Frenzy Resistance", "prerequisites": { "majorCount": 1 }, "benefit": "+1 Hit on WILL Essence checks to resist Blood Frenzy." },
           { "id": "blood-control", "name": "Blood Control", "prerequisites": { "milestones": ["frenzy-resistance"] }, "benefit": "In Blood Frenzy, you choose whom to feed from and can spare your allies." },
@@ -3053,7 +3093,7 @@ window.SHADOWS_DATA = {
           { "id": "returning-strike", "name": "Returning Strike", "prerequisites": { "specialization": ["draugur"], "majorCount": 1 }, "benefit": "Throw your Ancient Weapon as a ranged attack using your Melee skill; it returns to your hand at the end of your turn." },
           { "id": "defiance-of-sol", "name": "Defiance of Sol", "prerequisites": { "majorCount": 2 }, "benefit": "Indirect sunlight (overcast skies, deep shade, light through glass) deals 1 Withering damage per round. In direct sunlight, spend 2 SFR per round to take no damage that round. Sunlight is still the one pain you feel." },
           { "id": "wither-ward", "name": "Wither Ward", "prerequisites": { "majorCount": 2 }, "benefit": "All Withering damage you take is halved, never below 1.", "grants": [{ "type": "withering", "halve": true }] },
-          { "id": "life-sense", "name": "Life Sense", "prerequisites": { "majorCount": 2 }, "benefit": "+5 to hearing-based Awareness checks within 20 meters, and +5 to Human Perception, Med Tech, and First Aid when detecting intent or injuries." },
+          { "id": "life-sense", "name": "Life Sense", "prerequisites": { "majorCount": 2 }, "benefit": "+5 to hearing-based Awareness checks within 20 meters, and +5 to Human Perception, Med Tech, and First Aid when detecting intent or injuries.", "grants": [{"type": "checkMod", "amount": 5, "skills": ["awareness"], "whenText": "on hearing-based checks within 20 meters"}] },
           { "id": "kiss-of-night", "name": "Kiss of Night", "prerequisites": { "majorCount": 3 }, "benefit": "You know how to make another Vampire: drain your prey nearly dry, then feed them your blood. They make a WILL Essence check (TN 9, TH 3) to survive the change. A botch kills them; fewer than 3 Hits makes a Ghoul; success brings them into your bloodline." },
           { "id": "unholy-covenant", "name": "Unholy Covenant", "prerequisites": { "majorCount": 3 }, "benefit": "Summon an undead or abyssal minion and share your Bloodline powers with it; it draws on your SFR if it has none of its own. Feed it on its first night or it disintegrates at dawn." },
           { "id": "death-rites", "name": "Death Rites", "prerequisites": { "majorCount": 4 }, "benefit": "At 0 HL, make a WILL Essence check (TN 8, TH 2; TN 10, TH 5 if Withering killed you). Success brings you back in your cursed form, whole or remade from shadow, and you must feed until your SFR is full or face true death." }
@@ -3139,6 +3179,7 @@ window.SHADOWS_DATA = {
           "id": "feral-instincts",
           "name": "Feral Instincts",
           "description": "Your senses never fully left the wild. Never switches off.",
+          "grants": [{ "type": "checkMod", "amount": 2, "skills": ["awareness"], "whenText": "on checks that rely on sight, smell, or hearing" }],
           "benefit": "+2 to Awareness Skill checks that rely on sight, smell, or hearing."
         },
         {
@@ -3151,6 +3192,7 @@ window.SHADOWS_DATA = {
           "id": "pack-mentality",
           "name": "Pack Mentality",
           "description": "Werewolves hunt best together. Never switches off.",
+          "grants": [{ "type": "checkMod", "amount": 1, "skills": ["melee", "martial-arts"], "whenText": "on Close-range attacks against a target an ally is also attacking in Close range" }],
           "benefit": "+1 to Close-range Melee and Martial Arts attacks against a target an ally is also attacking in Close range. Summons, minions, and constructs count as allies."
         }
       ],
@@ -3235,7 +3277,7 @@ window.SHADOWS_DATA = {
               "rows": [
                 { "augmentation": "Corporate Conditioning", "cost": "Passive", "effect": "+1 Hit on WILL Essence checks against fear or mind control" },
                 { "augmentation": "Adaptive Skeleton", "cost": "2 SFR", "effect": "+2 BOD, +2 REF, and Natural Armor 2 until end of scene" },
-                { "augmentation": "Active Camouflage", "cost": "2 SFR", "effect": "+2 to Stealth checks, and invisible to electronic surveillance. Both end the moment you attack." }
+                { "augmentation": "Active Camouflage", "cost": "2 SFR", "effect": "+2 to Stealth checks, and invisible to electronic surveillance. Both end the moment you attack.", "grants": [{ "type": "checkMod", "amount": 2, "skills": ["stealth"], "whenText": "while Active Camouflage runs, until you attack" }] }
               ]
             }
           }
@@ -3291,22 +3333,22 @@ window.SHADOWS_DATA = {
         ]
       },
       "powers": [
-        { "id": "predators-mark", "name": "Predator's Mark", "cost": "1 SFR", "effect": "Mark one target you can sense: +1 to melee attacks against it until it is removed as a threat or the encounter ends. Regain 2 SFR when you remove it.", "perRank": "+1 to melee attacks (max 3)", "maxRank": 3 },
+        { "id": "predators-mark", "name": "Predator's Mark", "cost": "1 SFR", "effect": "Mark one target you can sense: +1 to melee attacks against it until it is removed as a threat or the encounter ends. Regain 2 SFR when you remove it.", "perRank": "+1 to melee attacks (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "skills": ["melee"], "whenText": "on melee attacks against your marked target, while Predator's Mark runs"}] },
         { "id": "primal-leap", "name": "Primal Leap", "cost": "1 SFR", "effect": "Leap BOD × 2 meters horizontally or BOD meters vertically in one motion.", "perRank": "+2 meters across and +1 meter up (max 3)", "maxRank": 3 },
-        { "id": "scent-tracking", "name": "Scent Tracking", "cost": "1 SFR per scene", "effect": "+2 to Tracking checks for creatures within a mile.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
-        { "id": "pheromone-aura", "name": "Pheromone Aura", "cost": "1 SFR per scene", "effect": "+2 to Intimidation checks.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "scent-tracking", "name": "Scent Tracking", "cost": "1 SFR per scene", "effect": "+2 to Tracking checks for creatures within a mile.", "perRank": "+1 to the check (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["tracking"], "whenText": "for creatures within a mile, while Scent Tracking runs"}] },
+        { "id": "pheromone-aura", "name": "Pheromone Aura", "cost": "1 SFR per scene", "effect": "+2 to Intimidation checks.", "perRank": "+1 to the check (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["intimidation"], "whenText": "while Pheromone Aura runs"}] },
         { "id": "ferocious-howl", "name": "Ferocious Howl", "cost": "2 SFR", "effect": "Allies within 20 meters gain +1 Hit on WILL Essence checks for 1 round.", "perRank": "+1 round (max 3)", "maxRank": 3 },
 
         { "id": "apex-fury", "origin": "trueborn", "name": "Apex Fury", "cost": "3 SFR", "effect": "In Werewolf form under the night sky, gain +2 REF, BOD, and MOB until the encounter ends.", "perRank": "Rank 2: anywhere. Rank 3: anytime.", "maxRank": 3 },
         { "id": "moonlit-vitality", "origin": "trueborn", "name": "Moonlit Vitality", "cost": "None", "effect": "+1 SFR per 10-minute interval under the night sky, on top of your base recovery.", "perRank": "+1 SFR per interval (max 3)", "maxRank": 3 },
-        { "id": "ancestral-wisdom", "origin": "trueborn", "name": "Ancestral Wisdom", "cost": "1 SFR per scene", "effect": "+3 to Occult Lore checks about supernatural matters.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "ancestral-wisdom", "origin": "trueborn", "name": "Ancestral Wisdom", "cost": "1 SFR per scene", "effect": "+3 to Occult Lore checks about supernatural matters.", "perRank": "+1 to the check (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 2, "skills": ["occult-lore"], "whenText": "about supernatural matters, while Ancestral Wisdom runs"}] },
         { "id": "ancestral-dominance", "origin": "trueborn", "name": "Ancestral Dominance", "cost": "Rank", "effect": "Targets within 10 meters make a WILL Essence check (TN 8, TH 2) or gain Frightened for 1 minute.", "perRank": "+1 TH (max 3)", "maxRank": 3 },
         { "id": "spirit-pack", "origin": "trueborn", "name": "Spirit Pack", "cost": "1 SFR per wolf (up to 3)", "effect": "Spirit wolves for recon: unseen by mortals, able to pass through walls, immune to Physical damage, and sharing what they see and smell. They don't attack, but they count as allies for Pack Mentality.", "perRank": "+1 minute (max 3)", "maxRank": 3 },
         { "id": "shield-of-the-tribe", "origin": "trueborn", "name": "Shield of the Tribe", "cost": "Rank, as a reaction", "effect": "When an ally at Close range is hit, take the hit instead and reduce its damage by 2.", "perRank": "+2 reduction (max 3)", "maxRank": 3 },
 
-        { "id": "predators-allure", "origin": "wildblood", "name": "Predator's Allure", "cost": "1 SFR per scene", "effect": "+2 to Persuasion or Seduction checks within 10 meters.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
-        { "id": "instinctive-awareness", "origin": "wildblood", "name": "Instinctive Awareness", "cost": "1 SFR per scene", "effect": "+2 to Intuition checks to sense threats or the emotional state of a target within 10 meters.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
-        { "id": "predators-silence", "origin": "wildblood", "name": "Predator's Silence", "cost": "1 SFR for 5 minutes", "effect": "+2 to Stealth checks.", "perRank": "+1 to the check (max 3)", "maxRank": 3 },
+        { "id": "predators-allure", "origin": "wildblood", "name": "Predator's Allure", "cost": "1 SFR per scene", "effect": "+2 to Persuasion or Seduction checks within 10 meters.", "perRank": "+1 to the check (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["persuasion", "seduction"], "whenText": "within 10 meters, while Predator's Allure runs"}] },
+        { "id": "instinctive-awareness", "origin": "wildblood", "name": "Instinctive Awareness", "cost": "1 SFR per scene", "effect": "+2 to Intuition checks to sense threats or the emotional state of a target within 10 meters.", "perRank": "+1 to the check (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["intuition"], "whenText": "to sense threats or the emotional state of a target within 10 meters, while Instinctive Awareness runs"}] },
+        { "id": "predators-silence", "origin": "wildblood", "name": "Predator's Silence", "cost": "1 SFR for 5 minutes", "effect": "+2 to Stealth checks.", "perRank": "+1 to the check (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["stealth"], "whenText": "while Predator's Silence runs"}] },
         { "id": "shadow-pack", "origin": "wildblood", "name": "Shadow Pack", "cost": "1 SFR per wolf (up to 3)", "effect": "Shadow wolves built for ambush: +2 to attacks in darkness. They dissolve in bright light.", "perRank": "+1 minute (max 3)", "maxRank": 3 },
         { "id": "the-passengers-eyes", "origin": "wildblood", "name": "The Passenger's Eyes", "cost": "1 SFR per scene", "effect": "Let the spirit look out: you see Unbodied spirits, and you can sense where the veil runs thin. Spirits know you can see them.", "perRank": "Rank 2: you can speak with what you see. Rank 3: you sense what holds a spirit here, a glimpse of its anchor or of what it needs to be laid to rest.", "maxRank": 3 },
         { "id": "let-it-loose", "origin": "wildblood", "name": "Let It Loose", "cost": "Rank, sustained", "effect": "While active, the spirit pours into your claws and fangs. Your natural weapons deal Spirit damage instead of Physical and can strike Unbodied creatures.", "perRank": "+1 damage with natural weapons (max 3)", "maxRank": 3 },
@@ -3315,7 +3357,7 @@ window.SHADOWS_DATA = {
         { "id": "serrated-claws", "origin": "forge-fang", "name": "Serrated Claws", "cost": "Rank", "effect": "Extend until retracted or the scene ends: claw attacks cause Bleeding for rounds equal to rank. Extending again costs again.", "perRank": "+1 round of Bleeding (max 3)", "maxRank": 3 },
         { "id": "seta-16-surge", "origin": "forge-fang", "name": "Seta-16 Surge", "cost": "None", "effect": "Once per encounter, regain SFR equal to your rank × 3. When the encounter ends, gain one withdrawal step; no dose clears it until you've had a night's rest.", "perRank": "+3 SFR regained (max 3)", "maxRank": 3 },
         { "id": "drone-pack", "origin": "forge-fang", "name": "Drone Pack", "cost": "1 SFR / drone (up to 3)", "effect": "Wolf drones with Natural Armor 1 and EMP Vulnerable. They power down at the end of the duration, and destroyed drones cost Çredits to replace.", "perRank": "+1 minute (max 3)", "maxRank": 3 },
-        { "id": "combat-analytics", "origin": "forge-fang", "name": "Combat Analytics", "cost": "Rank", "effect": "Scan one target you can see. You learn its defenses, immunities, and vulnerabilities, and gain +1 to your attacks against it for the scene.", "perRank": "+1 to attacks (max 3)", "maxRank": 3 },
+        { "id": "combat-analytics", "origin": "forge-fang", "name": "Combat Analytics", "cost": "Rank", "effect": "Scan one target you can see. You learn its defenses, immunities, and vulnerabilities, and gain +1 to your attacks against it for the scene.", "perRank": "+1 to attacks (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "skills": ["archery", "beam-weapons", "handguns", "heavy-weapons", "martial-arts", "melee", "rifles", "smgs"], "whenText": "on attacks against the scanned target, for the scene"}] },
         { "id": "null-field", "origin": "forge-fang", "name": "Null Field", "cost": "Rank", "effect": "Absorbs up to 5 Elemental, Spirit, or Aether damage, until used up or the scene ends.", "perRank": "+5 absorbed (max 3)", "maxRank": 3 }
       ],
       "powersText": "Each Origin can also summon a pack of allied wolves. Each summoned wolf has 1 HL, Claw (+5 Melee, 5 damage), and Bite (+3 Melee, 8 damage), arrives within 10 meters, and stays for 1 minute. Each Origin's pack has its own nature.",
@@ -3501,6 +3543,9 @@ window.SHADOWS_DATA = {
         "prerequisites": {
           "majorCount": 0
         },
+        "flagged": true,
+        "flagNote": "F47: Which kicker is \"Your Kicker Die\" for Specialist and Make My Own Luck: every kicker the character holds, one they choose, or another? No kicker changes size until D rules (P21).",
+        "playerNote": "Which Kicker Die grows is your GM's call until the rule is settled.",
         "benefit": "Your Kicker Die increases by 1 size (d4 to d6, d6 to d8, or d8 to d10)."
       },
       {
@@ -3649,6 +3694,7 @@ window.SHADOWS_DATA = {
             ]
           }
         },
+        "grants": [{ "type": "kicker", "die": "1d4", "skills": ["dodge", "melee"], "whenText": "once per encounter, on a Defensive Action (such as Dodge or Parry)" }],
         "benefit": "Once per encounter, add a 1d4 Kicker Die when taking a Defensive Action."
       },
       {
@@ -3703,6 +3749,7 @@ window.SHADOWS_DATA = {
             ]
           }
         },
+        "grants": [{ "type": "takeX", "x": 6, "skills": ["combat-sense"] }],
         "benefit": "When making a Combat Sense Skill Check, you may Take 6."
       },
       {
@@ -3728,6 +3775,10 @@ window.SHADOWS_DATA = {
             ]
           }
         },
+        "grants": [
+          { "type": "takeX", "x": 6, "skills": ["acrobatics"], "whenText": "when performing Stunts in an encounter that would require an Acrobatics Skill Check" },
+          { "type": "checkMod", "amount": 3, "skills": ["dodge"], "whenText": "when performing a dodge as a defensive action" }
+        ],
         "benefit": "When performing Stunts requiring an Acrobatics Skill Check, you can Take 6.",
         "details": [
           "Fall damage at 10 meters or less is reduced to 0.",
@@ -3768,6 +3819,9 @@ window.SHADOWS_DATA = {
         "prerequisites": {
           "majorCount": 2
         },
+        "flagged": true,
+        "flagNote": "F47: see Specialist. No kicker rolls twice until D rules which one is \"your Kicker Die\" (P21).",
+        "playerNote": "Which Kicker Die rolls twice is your GM's call until the rule is settled.",
         "benefit": "When rolling your Kicker Die, roll twice and take the higher result."
       },
       {
@@ -3825,6 +3879,7 @@ window.SHADOWS_DATA = {
             "signature-weapon"
           ]
         },
+        "grants": [{ "type": "checkMod", "amount": 5, "skills": ["deception", "intimidation", "persuasion", "seduction"], "whenText": "while your Signature weapon is visible" }],
         "benefit": "Upgrade it: +1 Mod Slot (total 3), +1 Upgrade (total 2). Attunement: Gain +5 on social skills (Deception, Intimidation, Persuasion, Seduction) when the weapon is visible."
       },
       {
@@ -4984,7 +5039,7 @@ window.SHADOWS_DATA = {
     {"id": "electrocytes", "name": "Electrocytes", "category": "good", "description": "Charged nerve cells line your spine, generating a low electrical field. You passively sense electrically active objects and creatures within 3 meters. As a Standard Action, you can discharge it: ½ Spell Power Elemental damage to everything within 2 meters, and augmented targets must make a TECH Essence check or be DeSynced.", "sp": { "description": { "times": 0.5 } }},
     {"id": "inactive-camouflage", "name": "Inactive Camouflage", "category": "good", "description": "Photoreceptors have developed across your skin. While completely still, a REF Essence check, TN 8 TH 2, renders you visually transparent. Clothing and equipment are unaffected. Any movement ends the effect."},
     {"id": "magnetic-grip", "name": "Magnetic Grip", "category": "good", "description": "Your hands and feet cling to metal. You climb metal surfaces at full movement, and metal objects in your grip cannot be Disarmed."},
-    {"id": "night-eyes", "name": "Night Eyes", "category": "good", "description": "Treat Dark visibility as Dim, and Blind as Dark."},
+    {"id": "night-eyes", "name": "Night Eyes", "category": "good", "description": "Treat Dark visibility as Dim, and Blind as Dark.", "grants": [{"type": "visibility", "shift": {"dark": "dim", "blind": "dark"}, "on": ["attacks", "awareness"]}]},
     {"id": "quick-clot", "name": "Quick Clot", "category": "good", "description": "Your blood closes wounds almost as fast as they open. Bleeding ends on its own at the next Reset."},
     {"id": "steady-heart", "name": "Steady Heart", "category": "good", "description": "Mundane sources cannot make you Frightened."},
     {"id": "sure-step", "name": "Sure Step", "category": "good", "description": "Difficult Terrain costs you no extra movement, and does not hinder your Scramble."},
@@ -4997,8 +5052,8 @@ window.SHADOWS_DATA = {
     {"id": "heterochromia", "name": "Heterochromia", "category": "neutral", "description": "Your eyes have become mismatched in color. Entirely cosmetic, but immediately recognizable to anyone who knows the signs."},
     {"id": "light-frame", "name": "Light Frame", "category": "neutral", "description": "Your body has grown impossibly light. Falls deal half damage. Pushes, shoves, and concussive force move you twice as far."},
     {"id": "medium", "name": "Medium", "category": "neutral", "as": "Medium Advantage", "description": "Your sensitivity has extended beyond the physical. You can perceive and, with effort, communicate with spirits and entities behind the veil. This draws the attention of things that notice such openness."},
-    {"id": "mimetic-skin", "name": "Mimetic Skin", "category": "neutral", "description": "Chromatophores across your skin continuously shift to match nearby surfaces. Always active and cannot be suppressed. +3 to Stealth when not wearing heavy armor. This is ambient blending, not the active transparency of Inactive Camouflage."},
-    {"id": "nocturnal", "name": "Nocturnal", "category": "neutral", "description": "Your rhythms have permanently shifted toward the dark. +1 to all checks in Dim or Dark visibility, −1 to all checks in Bright."},
+    {"id": "mimetic-skin", "name": "Mimetic Skin", "category": "neutral", "description": "Chromatophores across your skin continuously shift to match nearby surfaces. Always active and cannot be suppressed. +3 to Stealth when not wearing heavy armor. This is ambient blending, not the active transparency of Inactive Camouflage.", "grants": [{"type": "checkMod", "amount": 3, "skills": ["stealth"], "whenText": "when not wearing heavy armor"}]},
+    {"id": "nocturnal", "name": "Nocturnal", "category": "neutral", "description": "Your rhythms have permanently shifted toward the dark. +1 to all checks in Dim or Dark visibility, −1 to all checks in Bright.", "grants": [{"type": "visibility", "mod": {"dim": 1, "dark": 1, "bright": -1}, "on": ["checks"]}]},
     {"id": "ozone-trail", "name": "Ozone Trail", "category": "neutral", "description": "You carry a scent — ozone, incense, turned earth, something unplaceable. Anyone who has met you recognizes it, and anything that tracks by scent follows you easily."},
     {"id": "static-charge", "name": "Static Charge", "category": "neutral", "description": "Your touch shorts simple, non-hardened electronics, deliberately or not. Handling your own unshielded gear risks it."},
     {"id": "thought-projection", "name": "Thought Projection", "category": "neutral", "description": "Your surface thoughts broadcast involuntarily to Aetherically sensitive beings nearby. You cannot control what leaks, and you don't know what has."},
@@ -5008,7 +5063,7 @@ window.SHADOWS_DATA = {
     {"id": "drained", "name": "Drained", "category": "bad", "adjust": {"TOL": -2}, "description": "Your maximum TOL is reduced by 2."},
     {"id": "glossolalia", "name": "Glossolalia", "category": "bad", "description": "Your speech has fractured. Sound still comes out — words, sentences — but none of it is comprehensible, even to you. Written communication still works. So does Evocation, but whenever Duds appear in an Evocation roll, even on a successful cast, the GM decides how the Aether misread your intent. The effect is adjacent to what you attempted, but not quite it."},
     {"id": "hemophiliac", "name": "Hemophiliac", "category": "bad", "as": "Hemophiliac Disadvantage", "description": "Your blood no longer clots properly. Every wound keeps bleeding until treated."},
-    {"id": "marked", "name": "Marked", "category": "bad", "description": "A visible sign of Aetheric exposure — scarring, discoloration, a pattern beneath the skin — that no makeup, clothing, or disguise fully hides. Anyone familiar with the signs knows what you are. −2 to Deception and Disguise to pass as ordinary. In a city where nobody practices openly, this is a problem."},
+    {"id": "marked", "name": "Marked", "category": "bad", "description": "A visible sign of Aetheric exposure — scarring, discoloration, a pattern beneath the skin — that no makeup, clothing, or disguise fully hides. Anyone familiar with the signs knows what you are. −2 to Deception and Disguise to pass as ordinary. In a city where nobody practices openly, this is a problem.", "grants": [{"type": "checkMod", "amount": -2, "skills": ["deception", "disguise"], "whenText": "to pass as ordinary"}]},
     {"id": "paranoia", "name": "Paranoia", "category": "bad", "as": "Minor Insanity Disadvantage — Paranoia", "description": "Your sensitivity to the Aether has become indistinguishable from threat perception. You are always on edge, and trust comes hard. Something is always watching — and eventually, that may be correct."},
     {"id": "phantom-pain", "name": "Phantom Pain", "category": "bad", "painLevels": 1, "description": "You permanently operate at one Pain Level higher than your Health Levels indicate."},
     {"id": "slow-tide", "name": "Slow Tide", "category": "bad", "description": "TOL recovers at 1 point per 2 hours of rest rather than per hour."},
