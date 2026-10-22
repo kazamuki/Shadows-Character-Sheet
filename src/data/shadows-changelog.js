@@ -11,7 +11,7 @@ window.SHADOWS_CHANGELOG = [
       "**Take X keeps your Kicker Die.** \"Take 6: 13 + 1d4\": the die is added to the roll, and the total is still the 6 plus your check.",
       "**Night Eyes and Nocturnal say what the light does to you.** Night Eyes under your attacks and on Awareness; Nocturnal once above the Skills list.",
       "**Speed Heal lasts a day, as the dose says.** On a longer rest it doubles one day's healing, not every day. A one-day rest reads as before.",
-      "**A few kicker rules are marked as your GM's call** (Specialist, Make My Own Luck, kickers stacking, a Fence's appraisal), until the rules are settled. Field Medic is no longer sold for IP in play for the same reason."
+      "**A few kicker rules are marked as your GM's call** (Specialist, Make My Own Luck, kickers stacking, a Fence's appraisal), until the rules are settled."
     ]
   },
   {
