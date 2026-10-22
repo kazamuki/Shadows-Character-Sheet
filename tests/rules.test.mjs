@@ -1328,8 +1328,8 @@ test("CRB 0414: the Werewolf's 29 Major Milestones, by name, effect and prerequi
   const md = crb("0414_Werewolf.md");
   const at = md.indexOf("## Growth & Milestones");
   assert.ok(at >= 0, "0414 has no Growth & Milestones section");
-  // The table is HTML. A cell's <br /> and the newlines around it are one space; nothing else is
-  // touched, and the comparison below is exact (not through `flat`, which drops periods).
+  // The table is HTML. A cell's <br /> and the newlines around it are one space, any other tag is
+  // dropped, and the comparison below is exact (not through `flat`, which drops periods).
   const table = /<table>[\s\S]*?<\/table>/.exec(md.slice(at));
   assert.ok(table, "0414's Growth & Milestones has no table");
   const rows = [...table[0].matchAll(/<tr>([\s\S]*?)<\/tr>/g)].filter(m => !/<th[ >]/.test(m[1]))
