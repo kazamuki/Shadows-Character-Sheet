@@ -497,7 +497,7 @@ test("Decision 193: End on a running encounter opens the wrap-up, the cast row's
   const dez = wrapRow(app, "Dez");
   assert.match(dez.textContent, /\d+ of 8 Health Levels · Prone/);
   assert.equal(dez.querySelector("[data-ew-line]").checked, true);
-  assert.match(dez.querySelector("[data-ew-text]").value, /^Fought them in Job: \d+ of 8 Health Levels left; Prone\.$/);
+  assert.match(dez.querySelector("[data-ew-text]").value, /^\d+ of 8 Health Levels left; Prone\.$/);
   for (const n of ["Gull", "Gull 2"]) assert.equal(wrapRow(app, n).querySelector("[data-ew-keep]").checked, false);
   assert.equal(wrapRow(app, "Gull").querySelector("[data-ew-name]"), null, "Keep's fields show once it's ticked");
   // How hard was it names the die, and only the PC who was hit.
@@ -530,12 +530,12 @@ test("Decision 193: Keep one, rename it, set another Dead, End the encounter: th
   assert.deepEqual(kept, ["Kept as Old Gull"]);
   app.click("[data-erow] .enc-kept [data-eopencast]");
   assert.match(app.$("#main").textContent, /Old Gull/);
-  assert.match(app.$("#main").textContent, /Fought them/);
+  assert.match(app.$(".int-line").textContent, /fought Old Gull in .+ on /);
   app.click("[data-cback]");
   assert.match(app.$(".enc-status").textContent, /Ended/);
   // Dez's page lists the Killed line.
   app.click("[data-eopencast]");
-  assert.match(app.$("#main").textContent, /Killed them/);
+  assert.match(app.$(".int-line").textContent, /killed Dez in .+ on /);
   assert.deepEqual(app.errors, []);
 });
 
@@ -857,7 +857,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.12");
+  assert.equal(file.meta.tableSchemaVersion, "0.13");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -870,7 +870,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.13");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -1997,5 +1997,115 @@ test("P20b 6c: an encounter hit has no melee box, and an NPC's head hit doubles"
   assert.match(preview(app), /12 through/);
   changeTo(app, "[data-ehit-loc]", "left-leg");
   assert.doesNotMatch(preview(app), /×2/);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── A fight's line links its fight (Decision 241) ──────────────────────
+// wrapApp's table, with a session dated today, and Dez set Dead at End: Dez's line reads "Wren and Rook killed Dez in Job".
+const endedApp = () => {
+  const app = wrapApp();
+  app.window.eval(`Engine.addSession(S.table, { number: 1, date: Engine.localDay() }); renderTable();`);
+  app.click("[data-enc-end]");
+  changeTo(app, `[data-ewrow] [data-ew-status="${wrapRow(app, "Dez").dataset.ewrow}"]`, "dead");
+  app.click("[data-ew-end]");
+  return app;
+};
+const dezId = app => app.window.eval(`S.table.cast.find(n => n.name === "Dez").id`);
+const openDez = app => { app.click('[data-tsec="cast"]'); pick(app, "[data-cstatus]", "all"); app.click(`[data-copen="${dezId(app)}"]`); };
+const linkOf = app => app.window.eval(`S.table.interactions[0].encounter`);
+
+test("241: End writes the link, its text is the figures, and the member's page reads the sentence", () => {
+  const app = endedApp();
+  assert.equal(JSON.stringify(linkOf(app)), JSON.stringify({ kind: "encounter", id: encId(app) }));
+  assert.match(app.window.eval("S.table.interactions[0].text"), /^\d+ of 8 Health Levels left; Prone\.$/);
+  openDez(app);
+  const line = app.$(".int-line");
+  assert.match(line.textContent, /^Wren and Rook killed Dez in Job on \S+: \d+ of 8 Health Levels left; Prone\./);
+  assert.equal(line.querySelector("[data-copen]"), null, "the member's own name is a button on their own page");
+  assert.equal(line.querySelectorAll("[data-eopenline]").length, 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("241: the fight's name opens the ended encounter, and Back returns to the member's page, on the link", () => {
+  const app = endedApp();
+  openDez(app);
+  app.click("[data-eopenline]");
+  assert.equal(app.window.eval("S.tsection"), "encounters");
+  assert.ok(app.doc.activeElement.hasAttribute("data-enc-h"), "focus isn't on the encounter's heading");
+  assert.equal(app.$("[data-enc-back]").textContent, "Back to Dez");
+  app.click("[data-enc-back]");
+  assert.equal(app.window.eval("S.castOpen"), dezId(app));
+  assert.ok(app.doc.activeElement.hasAttribute("data-eopenline"), "focus isn't on the link it came from");
+  assert.deepEqual(app.errors, []);
+});
+
+test("241: the fight's name from Who knows what, and Back returns to the same view", () => {
+  const app = endedApp();
+  app.click('[data-tsec="cast"]'); app.click('[data-cview="crew"]');
+  type(app, "[data-csearch]", "job");
+  const link = app.$(".crew-group .int-line [data-eopenline]");
+  const key = link.dataset.eopenline;
+  link.click();
+  assert.equal(app.$("[data-enc-back]").textContent, "Back to Who knows what");
+  app.click("[data-enc-back]");
+  assert.equal(app.window.eval("S.castView"), "crew");
+  assert.equal(app.window.eval("S.castOpen"), null);
+  assert.ok(app.$(".crew-group"), "Who knows what wasn't drawn");
+  assert.equal(app.$("[data-csearch]").value, "job", "the search was lost");
+  assert.equal(app.doc.activeElement.dataset.eopenline, key);
+  assert.deepEqual(app.errors, []);
+});
+
+test("241: the fight's name from a session's page, and Back returns to that session", () => {
+  const app = endedApp();
+  app.click('[data-tsec="sessions"]'); app.click("[data-sopen]");
+  const sid = app.window.eval("S.sessOpen");
+  const link = app.$("[data-sline] [data-eopenline]");
+  assert.ok(link, "the session's page doesn't show the fight's line");
+  link.click();
+  assert.match(app.$("[data-enc-back]").textContent, /^Back to Session 1/);
+  app.click("[data-enc-back]");
+  assert.equal(app.window.eval("S.tsection"), "sessions");
+  assert.equal(app.window.eval("S.sessOpen"), sid);
+  assert.ok(app.doc.activeElement.hasAttribute("data-eopenline"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("241: reaching an encounter any other way, Back goes to the Encounters list as before", () => {
+  const app = endedApp();
+  openDez(app);
+  app.click("[data-eopenline]");
+  app.click('[data-tsec="encounters"]');            // a tab press clears the route; the encounter stays open
+  assert.equal(app.$("[data-enc-back]").textContent, "Back to encounters");
+  app.click("[data-enc-back]");
+  assert.equal(app.window.eval("S.tsection"), "encounters");
+  assert.equal(app.window.eval("S.encOpen"), null);
+});
+
+test("241: renaming the fight renames the sentence; removing it leaves its name struck through, with no button and no error", () => {
+  const app = endedApp();
+  // An ended encounter is read-only (188), so the rename is made in the data, as an earlier build or a hand edit would.
+  app.window.eval(`S.table.encounters[0].name = "The Pier";`);
+  openDez(app);
+  assert.match(app.$(".int-line").textContent, /killed Dez in The Pier on /);
+  app.click('[data-tsec="encounters"]'); app.click("[data-enc-open]");
+  app.click("[data-enc-del]"); app.click("#modal [data-askyes]");
+  openDez(app);
+  const gone = app.$(".int-line s");
+  assert.equal(gone.textContent, "The Pier");
+  assert.ok(gone.nextElementSibling.classList.contains("vh"));
+  assert.equal(app.$("[data-eopenline]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("241: the wrap-up shows the sentence above each record's text, and it turns to killed when the status is set Dead", () => {
+  const app = wrapApp();
+  app.click("[data-enc-end]");
+  const row = wrapRow(app, "Dez");
+  const sent = () => row.querySelector("[data-ew-sent]").textContent;
+  assert.match(sent(), /^Wren and Rook fought Dez in Job on \S+:$/);
+  changeTo(app, `[data-ew-status="${row.dataset.ewrow}"]`, "dead");
+  assert.match(sent(), /^Wren and Rook killed Dez in Job on \S+:$/);
+  assert.equal(row.querySelector("[data-ew-sent] button"), null, "the preview has buttons");
   assert.deepEqual(app.errors, []);
 });

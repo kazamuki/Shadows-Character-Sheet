@@ -5671,6 +5671,14 @@ const Engine = (() => {
     for (const l of out) if (typeof l.name!=="string") delete l.name;
     return out;
   }
+  // A link to an encounter (Decision N): a fight's line names the encounter it was written at.
+  // A link to none on the table is kept (178); a name rides only as a string. Anything else is no link.
+  function _encounterLink(v){
+    if (!_isObj(v) || v.kind!=="encounter" || typeof v.id!=="string" || !ENCOUNTER_ID_RE.test(v.id)) return null;
+    const out = { kind:"encounter", id:v.id };
+    if (typeof v.name==="string") out.name = v.name;
+    return out;
+  }
   // A session (Decision 203): the number is the GM's, the journal is the Campaign
   // Journal's six parts (227). Unknown keys ride along, never read.
   const JOURNAL_PARTS = ["happened","fallout","threads","impact","reflection","seed"];
@@ -5740,6 +5748,7 @@ const Engine = (() => {
     x.session = typeof x.session==="string" && sessions && sessions.has(x.session) ? x.session : null;
     x.kind = _kind(x.kind);
     x.cast = _castLinks(x.cast);
+    x.encounter = _encounterLink(x.encounter);
     x.crew = _roleList(x.crew);
     x.text = _str(x.text);
     x.date = _day(x.date);
@@ -5749,7 +5758,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.12";
+  const TABLE_SCHEMA_VERSION = "0.13";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -5835,6 +5844,9 @@ const Engine = (() => {
     }
     //   Schema 0.12 (Decision 212): a table keeps an activity log. Nothing is guessed.
     if (typeof arrived!=="string" || _versionNewer("0.12", arrived)) c.audit = [];
+    //   Schema 0.13 (Decision N): a line may link the encounter it was written at. Nothing is guessed (203).
+    if (typeof arrived!=="string" || _versionNewer("0.13", arrived))
+      for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.encounter = null;
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -6204,7 +6216,13 @@ const Engine = (() => {
   // with no target the name it was left, else a stand-in. Never throws.
   function linkName(t, link){
     const id = _isObj(link) ? link.id : null;
-    const n = (Array.isArray(t && t.cast) ? t.cast : []).find(x=>_isObj(x) && x.id===id);
+    if (_isObj(link) && link.kind==="encounter"){
+      const e = _encList(t).find(x=>x.id===id);
+      if (e) return { name:encounterTitle(e), gone:false };
+      const kept = _str(link.name).trim();
+      return { name:kept || "An encounter removed", gone:true };
+    }
+    const n =(Array.isArray(t && t.cast) ? t.cast : []).find(x=>_isObj(x) && x.id===id);
     if (n) return { name:_str(n.name).trim() || "Unnamed", gone:false };
     const kept = _isObj(link) ? _str(link.name).trim() : "";
     return { name:kept || "Someone removed", gone:true };
@@ -6226,9 +6244,11 @@ const Engine = (() => {
     const date = _day(f.date);
     // A new line takes the one session dated that day (Decision 203); a gate never does.
     const session = _sessions(t).some(e=>e.id===f.session) ? f.session : _sessionOnDay(t, date);
+    // Only a fight that is on the table is linked; End is the one caller that passes one (Decision N).
+    const encounter = typeof f.encounter==="string" && _encList(t).some(e=>e.id===f.encounter) ? _encounterLink({ kind:"encounter", id:f.encounter }) : null;
     const x = { id:newInteractionId(used), kind,
                 cast:_castLinks((Array.isArray(f.cast) ? f.cast : []).filter(id=>typeof id==="string").map(id=>({ kind:"cast", id }))),
-                crew:_roleList(f.crew), text, date, session, created:now, updated:now };
+                encounter, crew:_roleList(f.crew), text, date, session, created:now, updated:now };
     t.interactions.unshift(x);
     _killLinked(t, x);
     _tableStamp(t);
@@ -6258,6 +6278,53 @@ const Engine = (() => {
     _tableStamp(t);
     return { ok:true };
   }
+  // A line as one sentence (Decision N): the crew, the verb, the cast, the fight for a fought or
+  // killed line, the day, then the words. Returns parts for the UI to join, since the engine has no
+  // locale: { kind:"text", text } | { kind:"cast"|"encounter", id, name, gone } | { kind:"day", date }.
+  const _SENTENCE_VERBS = { helped:"helped", wronged:"wronged", killed:"killed", fought:"fought" };
+  function _nameList(items, one){
+    const out = [];
+    items.forEach((it, i)=>{
+      if (i > 0) out.push({ kind:"text", text: i===items.length - 1 ? " and " : ", " });
+      out.push(one(it));
+    });
+    return out;
+  }
+  function interactionSentence(t, x){
+    x = _isObj(x) ? x : {};
+    const kind = _kind(x.kind), text = _str(x.text).trim(), date = _day(x.date);
+    const crew = _roleList(x.crew);
+    const members = (Array.isArray(x.cast) ? x.cast : []).filter(l=>_isObj(l)).map(l=>{
+      const n = (Array.isArray(t && t.cast) ? t.cast : []).find(c=>_isObj(c) && c.id===l.id);
+      if (n && !_str(n.name).trim()) return { kind:"cast", id:_str(l.id), name:"them", gone:false };
+      const r = linkName(t, l);
+      return { kind:"cast", id:_str(l.id), name:r.name, gone:r.gone };
+    });
+    const T = s => ({ kind:"text", text:s });
+    const who = crew.length ? _nameList(crew, name=>T(name)) : [T("the crew")];
+    const whom = members.length ? _nameList(members, m=>m) : [T("someone")];
+    const link = _isObj(x.encounter) && x.encounter.kind==="encounter" ? x.encounter : null;
+    const fight = link ? linkName(t, link) : null;
+    const when = date ? [T(" on "), { kind:"day", date }] : [];
+    const tail = text ? [T(`: ${text}`)] : [];
+    let parts;
+    if (kind==="shared" || kind==="learned")
+      parts = [...who, T(kind==="shared" ? " told " : " learned from "), ...whom, ...(text ? [T(` “${text}”`)] : []), ...when];
+    else if (kind==="owes")
+      parts = [...who, T(crew.length > 1 ? " owe " : " owes "), ...whom, ...when, ...tail];
+    else if (kind==="owed")
+      parts = [...whom, T(members.length > 1 ? " owe " : " owes "), ...who, ...when, ...tail];
+    else if (kind)
+      parts = [...who, T(` ${_SENTENCE_VERBS[kind]} `), ...whom,
+               ...(fight && (kind==="killed" || kind==="fought") ? [T(" in "), { kind:"encounter", id:link.id, name:fight.name, gone:fight.gone }] : []),
+               ...when, ...tail];
+    else
+      parts = [...whom, ...(crew.length ? [T(", with "), ..._nameList(crew, name=>T(name))] : []), ...(date ? [T(", on "), { kind:"day", date }] : []), ...tail];
+    // The first word is a capital, whatever stood in for a missing name.
+    const first = parts[0];
+    if (first.kind==="text" && first.text) parts[0] = T(first.text.charAt(0).toUpperCase() + first.text.slice(1));
+    return { parts };
+  }
   function interactionsFor(t, castId){
     return _interactions(t).filter(x=>(Array.isArray(x.cast) ? x.cast : []).some(l=>_isObj(l) && l.id===castId)).sort(_newest);
   }
@@ -6270,7 +6337,8 @@ const Engine = (() => {
   function crewView(t, f){
     const q = _folded((f||{}).q), groups = new Map(), nameless = [];
     const hit = (x, name) => !q || _fold(name).includes(q) || _fold(x.text).includes(q)
-      || (Array.isArray(x.cast) ? x.cast : []).some(l=>_fold(linkName(t, l).name).includes(q));
+      || (Array.isArray(x.cast) ? x.cast : []).some(l=>_fold(linkName(t, l).name).includes(q))
+      || (_isObj(x.encounter) && _fold(linkName(t, x.encounter).name).includes(q));
     for (const x of _interactions(t).reverse()){   // oldest first, so the heading is the spelling first written
       const names = (Array.isArray(x.crew) ? x.crew : []).map(r=>_str(r).trim()).filter(Boolean);
       if (!names.length){ if (hit(x, "")) nameless.push(x); continue; }
@@ -6480,6 +6548,7 @@ const Engine = (() => {
     const f = [["What happened", _str(x.text)]];
     for (const c of _strList(x.crew)) f.push(["Crew", c]);
     for (const l of (Array.isArray(x.cast) ? x.cast : [])) f.push(["With", linkName(t, l).name]);
+    if (_isObj(x.encounter)) f.push(["Fight", linkName(t, x.encounter).name]);
     return f;
   }
   function _encounterFields(t, e){
@@ -7238,6 +7307,9 @@ const Engine = (() => {
   function removeEncounter(t, id){
     const i = Array.isArray(t && t.encounters) ? t.encounters.findIndex(e=>_isObj(e) && e.id===id) : -1;
     if (i < 0) return { ok:false, why:"No such encounter." };
+    // A fight's line keeps its name under the link, as a removed member's does (Decisions 178, N).
+    const name = encounterTitle(t.encounters[i]);
+    for (const x of _interactions(t)) if (_isObj(x.encounter) && x.encounter.id===id) x.encounter.name = name;
     t.encounters.splice(i, 1);
     _tableStamp(t);
     return { ok:true };
@@ -7585,11 +7657,11 @@ const Engine = (() => {
     const dice = (D().armorRules||{}).integrityLossByDifficulty || {};
     return Object.keys(dice).map(id=>({ id, name:_titleCase(id), die:dice[id] }));
   }
-  // The default text of a fight's line, from a row's ended figures.
+  // The default text of a fight's line: the figures alone. The fight is the line's link (Decision N).
   function _endLine(t, e, ended){
-    const conds = ended.conditions.length ? `; ${ended.conditions.join(", ")}` : "";
-    const hl = ended.levels!==null ? `: ${Math.max(0, ended.levelsLeft)} of ${ended.levels} Health Levels left${ended.down ? ", Down" : ""}` : "";
-    return `Fought them in ${encounterTitle(e)}${hl}${conds}.`;
+    const hl = ended.levels!==null ? `${Math.max(0, ended.levelsLeft)} of ${ended.levels} Health Levels left${ended.down ? ", Down" : ""}` : "";
+    const parts = [hl, ended.conditions.join(", ")].filter(Boolean);
+    return parts.length ? `${parts.join("; ")}.` : "";
   }
   function encounterWrapUp(t, encId){
     const out = { rows:[], crew:[], dice:_wearDice(), hit:[] };
@@ -7673,7 +7745,7 @@ const Engine = (() => {
       }
       if (member && p.w.line===true){
         const text = _str(p.w.text).trim() || p.u.line;
-        const a = addInteraction(t, { kind:killed ? "killed" : "fought", cast:[member.id], crew:ups.crew, text, date });
+        const a = addInteraction(t, { kind:killed ? "killed" : "fought", cast:[member.id], encounter:e.id, crew:ups.crew, text, date });
         if (a.ok) out.lines.push(a.id);
       }
     }
@@ -7958,7 +8030,7 @@ const Engine = (() => {
     addSession, editSession, removeSession, sessionList, sessionTitle, sessionInteractions, sessionOffered,
     addThread, editThread, removeThread, threadList, nextSession, blockHasNumber, JOURNAL_PARTS,
     offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
-    addInteraction, editInteraction, removeInteraction, interactionsFor, crewView, linkName,
+    addInteraction, editInteraction, removeInteraction, interactionsFor, interactionSentence, crewView, linkName,
     // Encounters: who is in one, whose turn it is, and what is still on them
     addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,

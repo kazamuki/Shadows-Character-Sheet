@@ -1266,6 +1266,14 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .int-who{display:inline; width:auto}
 .crew-name{overflow-wrap:anywhere}
 .int-line s{color:var(--dim)}
+/* A line reads as its sentence; Edit opens its fields (Decision 241). Colours are theme tokens, never one theme's rgba. */
+.int-line .int-edit{min-height:44px; min-width:44px; margin-left:8px}
+.int-sentence{overflow-wrap:anywhere; min-width:0}
+.int-row .int-sentence{margin:0 0 10px; color:var(--text)}
+.int-row .int-fields{align-items:end}
+.int-row .field{min-width:0; margin-bottom:8px}
+.int-actions{display:flex; flex-wrap:wrap; gap:10px; margin:10px 0 0}
+.int-actions .btn{min-height:44px; min-width:44px}
 
 /* Text a screen reader reads and the screen doesn't show. */
 .vh{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0}

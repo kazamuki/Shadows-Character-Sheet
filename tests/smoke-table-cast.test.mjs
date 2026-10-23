@@ -529,13 +529,13 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.13");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.12");
+  assert.equal(saved.meta.tableSchemaVersion, "0.13");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -606,10 +606,12 @@ test("a number field shows what was stored once it loses focus: a refused value 
 // ── Interactions and affiliations (Decisions 177–179) ───────────────────
 // Synthetic only: Dez, Moth and Orla at the cast; Nyx and Rook as the crew.
 const openFirst = app => app.click("[data-copen]");
-const intTexts = app => app.$$("[data-itext]").map(el => el.value);
+const tableOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table)"));
+// A member's lines read as sentences; one opens at a time with Edit (Decision 241), so the fields are read from the table.
+const intTexts = app => tableOf(app).interactions.map(x => x.text);
+const editLine = (app, xid) => app.click(xid ? `[data-iedit="${xid}"]` : "[data-iedit]");
 const addLine = (app, text) => { type(app, "[data-iwhat]", text); keyIn(app, "[data-iwhat]", "Enter"); };
 const memberWith = (app, name = "Dez") => { castAdd(app, name); openFirst(app); };
-const tableOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table)"));
 
 test("Decision 177: kind once, crew once, then What and Enter three times: three lines, newest first, kind and crew kept, focus in an empty What", () => {
   const app = boot({ storage: GM_ON });
@@ -625,8 +627,8 @@ test("Decision 177: kind once, crew once, then What and Enter three times: three
     assert.equal(app.$("[data-iacrew]").value, "Nyx", "the crew didn't stay");
   }
   assert.deepEqual(intTexts(app), ["three", "two", "one"]);
-  assert.deepEqual(app.$$("[data-icrew]").map(el => el.value), ["Nyx", "Nyx", "Nyx"]);
-  assert.deepEqual(app.$$("[data-ikind].on").map(b => b.dataset.ikind.split("|")[1]), ["learned", "learned", "learned"]);
+  assert.deepEqual(tableOf(app).interactions.map(x => x.crew.join(", ")), ["Nyx", "Nyx", "Nyx"]);
+  assert.deepEqual(tableOf(app).interactions.map(x => x.kind), ["learned", "learned", "learned"]);
   assert.equal(app.$("[data-iadate]").value, app.window.eval("localDay()"), "the date doesn't start as today's");
   assert.deepEqual(app.errors, []);
 });
@@ -675,6 +677,7 @@ test("Decision 177: Killed them chosen on an existing line sets Dead and keeps f
   memberWith(app);
   app.click('[data-iakind="shared"]'); addLine(app, "x");
   const xid = app.$("[data-int]").dataset.int;
+  editLine(app);
   assert.equal(app.$('[data-cf="status"]').value, "alive");
   app.click(`[data-ikind="${xid}|killed"]`);
   assert.equal(app.$('[data-cf="status"]').value, "dead");
@@ -694,6 +697,7 @@ test("Decision 177: a date and a crew field show what was stored after change", 
   memberWith(app);
   app.click('[data-iakind="shared"]'); addLine(app, "x");
   const xid = app.$("[data-int]").dataset.int;
+  editLine(app);
   pick(app, "[data-icrew]", " Nyx , , ");
   assert.equal(app.$("[data-icrew]").value, "Nyx");
   assert.deepEqual(tableOf(app).interactions[0].crew, ["Nyx"]);
@@ -714,11 +718,13 @@ test("Decision 177: a line typed and then Home at once is kept", () => {
   runTable(app, "Home now");
   memberWith(app);
   app.click('[data-iakind="shared"]'); addLine(app, "first");
+  editLine(app);
   type(app, "[data-itext]", "the warehouse is a front");
   type(app, "[data-icrew]", "Nyx");
   tableHome(app);
   tableCard(app, "Home now").querySelector("[data-topen]").click();
   openFirst(app);
+  editLine(app);
   assert.equal(app.$("[data-itext]").value, "the warehouse is a front");
   assert.equal(app.$("[data-icrew]").value, "Nyx");
   assert.deepEqual(app.errors, []);
@@ -731,6 +737,7 @@ test("Decision 177: Delete asks, Cancel keeps, Delete removes, and focus goes to
   app.click('[data-iakind="shared"]');
   for (const t of ["a", "b", "c"]) addLine(app, t);   // c, b, a
   const ids = app.$$("[data-int]").map(el => el.dataset.int);
+  editLine(app, ids[1]);
   app.click(`[data-idel="${ids[1]}"]`);
   assert.ok(app.$("#modal[open]"), "Delete didn't ask");
   assert.match(app.$("#modal").textContent, /Delete this\?/);
@@ -739,7 +746,8 @@ test("Decision 177: Delete asks, Cancel keeps, Delete removes, and focus goes to
   assert.equal(app.$$("[data-int]").length, 3, "Cancel deleted");
   app.click(`[data-idel="${ids[1]}"]`); app.click("#modal [data-askyes]");
   assert.deepEqual(intTexts(app), ["c", "a"]);
-  assert.equal(focusedKey(app), `data-ikind=${ids[2]}|shared`, "focus isn't on the next line's first control");
+  assert.equal(focusedKey(app), `data-iedit=${ids[2]}`, "focus isn't on the next line's Edit");
+  editLine(app, ids[2]);
   app.click(`[data-idel="${ids[2]}"]`); app.click("#modal [data-askyes]");
   assert.ok(app.doc.activeElement.hasAttribute("data-iwhat"), "with no next line, focus isn't on What");
   assert.deepEqual(app.errors, []);
@@ -876,7 +884,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.12");
+  assert.equal(file.meta.tableSchemaVersion, "0.13");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -888,7 +896,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.13");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
@@ -936,6 +944,7 @@ test("S8b review 2: What on the add row survives a redraw a press elsewhere caus
   app.click('[data-iakind="shared"]'); addLine(app, "first");
   type(app, "[data-iwhat]", "half typed");
   const xid = app.$("[data-int]").dataset.int;
+  editLine(app);
   app.click(`[data-ikind="${xid}|helped"]`);
   assert.equal(app.$("[data-iwhat]").value, "half typed", "a kind on a row cost the draft");
   app.click("[data-cskadd]");
@@ -972,6 +981,7 @@ test("S8b review 5: an existing line's What is a wrapping textarea, and Enter in
   runTable(app, "Long");
   castAdd(app, "Dez"); openFirst(app);
   app.click('[data-iakind="shared"]'); addLine(app, "x");
+  editLine(app);
   const el = app.$("[data-itext]");
   assert.equal(el.tagName, "TEXTAREA"); assert.equal(el.getAttribute("rows"), "2");
   type(app, "[data-itext]", "a very long line ".repeat(10));
@@ -1252,7 +1262,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.12");
+  assert.equal(file.meta.tableSchemaVersion, "0.13");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -1346,7 +1356,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.12");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.13");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -1619,4 +1629,75 @@ test("Decision 184 (review): a quick-added member gets modifiers and no note; a 
 test("Decision 184 (review): the note wraps", () => {
   const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
   assert.match(css, /\.cast-guide\{[^}]*overflow-wrap:anywhere/);
+});
+
+// ── A line reads as a sentence (Decision 241) ──────────────────────────
+const auditLen = app => app.window.eval("S.table.audit.length");
+
+test("241: a member's page reads each line as its sentence, with their own name plain and Edit beside it", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Sentences");
+  castAdd(app, "Dez"); openFirst(app);
+  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); type(app, "[data-iadate]", "2026-10-08");
+  addLine(app, "the warehouse is a front");
+  const line = app.$("[data-int]");
+  assert.match(line.textContent, /^Nyx told Dez “the warehouse is a front” on \S+/);
+  assert.equal(line.querySelector("[data-copen]"), null, "Dez is a button on Dez's own page");
+  assert.ok(line.querySelector("[data-iedit]"), "no Edit");
+  assert.equal(line.querySelector("[data-icrew], [data-itext]"), null, "the fields are open without Edit");
+  assert.deepEqual(app.errors, []);
+});
+
+test("241: the add row runs Crew, the kinds, What, When, Add, in document order", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Order");
+  castAdd(app, "Dez"); openFirst(app);
+  const order = [...app.$(".int-add").querySelectorAll("[data-iacrew], [data-iakind], [data-iwhat], [data-iadate], [data-iadd]")]
+    .map(el => el.hasAttribute("data-iacrew") ? "crew" : el.hasAttribute("data-iakind") ? "kind" : el.hasAttribute("data-iwhat") ? "what" : el.hasAttribute("data-iadate") ? "when" : "add");
+  const squeezed = order.filter((x, i) => x !== order[i - 1]);
+  assert.deepEqual(squeezed, ["crew", "kind", "what", "when", "add"]);
+});
+
+test("241: Edit opens one line at a time with Crew focused; typing, then change, makes one Activity entry; Done returns to Edit", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Edits");
+  castAdd(app, "Dez"); openFirst(app);
+  app.click('[data-iakind="shared"]');
+  addLine(app, "one"); addLine(app, "two");
+  const [b, a] = app.$$("[data-int]").map(el => el.dataset.int);   // two, one
+  editLine(app, b);
+  assert.equal(focusedKey(app), `data-icrew=${b}`, "Edit didn't focus Crew");
+  const labels = [...app.$(`[data-int="${b}"]`).querySelectorAll("label span")].map(x => x.textContent);
+  assert.deepEqual(labels, ["Crew", "What", "When"]);
+  const before = auditLen(app);
+  type(app, `[data-icrew="${b}"]`, "Nyx");
+  assert.match(app.$(`[data-isent="${b}"]`).textContent, /^Nyx told Dez “two”/, "the sentence didn't follow the field");
+  assert.equal(auditLen(app), before + 1);
+  pick(app, `[data-icrew="${b}"]`, "Nyx");              // blur re-sends the value: no phantom entry
+  assert.equal(auditLen(app), before + 1, "change made a second entry");
+  assert.equal(app.doc.activeElement, app.$(`[data-icrew="${b}"]`));
+  editLine(app, a);
+  assert.equal(app.$(`[data-icrew="${b}"]`), null, "a second Edit left the first open");
+  assert.ok(app.$(`[data-icrew="${a}"]`));
+  app.click(`[data-idone="${a}"]`);
+  assert.equal(app.$(`[data-icrew="${a}"]`), null, "Done left the line open");
+  assert.equal(focusedKey(app), `data-iedit=${a}`);
+  assert.deepEqual(tableOf(app).interactions.map(x => x.crew.join()), ["Nyx", ""]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("241: the open line's fields are Crew, the kinds, What, When, then Delete and Done, and a kind change keeps it open", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Open order");
+  castAdd(app, "Dez"); openFirst(app);
+  app.click('[data-iakind="owed"]'); type(app, "[data-iacrew]", "Nyx"); addLine(app, "for the van");
+  const xid = app.$("[data-int]").dataset.int;
+  editLine(app);
+  const all = [...app.$(`[data-int="${xid}"]`).querySelectorAll("[data-icrew], [data-ikind], [data-itext], [data-idate], [data-idel], [data-idone]")]
+    .map(el => ["icrew", "ikind", "itext", "idate", "idel", "idone"].find(k => el.hasAttribute("data-" + k)));
+  assert.deepEqual(all.filter((x, i) => x !== all[i - 1]), ["icrew", "ikind", "itext", "idate", "idel", "idone"]);
+  assert.match(app.$(`[data-isent="${xid}"]`).textContent, /^Dez owes Nyx on \S+: for the van/);
+  app.click(`[data-ikind="${xid}|helped"]`);
+  assert.ok(app.$(`[data-icrew="${xid}"]`), "a kind change closed the line");
+  assert.match(app.$(`[data-isent="${xid}"]`).textContent, /^Nyx helped Dez on \S+: for the van/);
 });

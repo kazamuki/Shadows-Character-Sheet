@@ -1238,3 +1238,50 @@ like a Supernatural. So it's one row in `classifications`, and a custom
 archetype can pick it.
 
 *Built as sheet-wishlist P9a (2026-10-15). A character already written in as Other with "Fae" keeps it: a classification is fixed at lock.*
+
+**W79 — An interaction reads as a sentence: who, what they did, with whom, what, when.** *Ken · → Decision 241 (switched off)*
+Today a member's line is chosen kind first (*Told them*), then the crew,
+the day and the text, and it reads in that order. Ken's order, crew first:
+- *Scott told Bob "the lake is on fire" on 10/08/26*
+- *D learned from Bob "snakes can fly" on 10/08/26*
+- *PC helped Bob · PC wronged Bob · PC killed Bob · PC owes Bob · PC fought Bob*
+- *They owe* (`owed`) needs its own wording, crew first if it can be (*PC is
+  owed by Bob*?). **Open; a voice pass decides.**
+
+The member's name goes where *them* is today; an unnamed member is *them*.
+The add row follows the same order: crew, then the verb, then what, then the
+day. *Who knows what* (Decision 179) and a session's page (S5a) read the same
+sentence.
+*To respect:* the kinds' ids never change (`shared`, `learned`, `helped`,
+`wronged`, `killed`, `owes`, `owed`, `fought`; constraint 6). Only their
+labels and the order move. S8b's SQ4 chose labels *from the crew's side*,
+and this keeps that. Decision 177 says interactions are the one place for
+the sentence. The day's format follows `dayText`.
+
+**W82 — A fight's line links to its encounter.** *Ken · → Decision 241 (switched off)*
+Ending an encounter writes a *fought* line for each cast member in it, with
+every PC in the room as its crew (Decision 193). Ken: "awesome". But the
+encounter's name is baked into the text: *Fought them in New for the Crew: 2 of
+4 Health Levels left.* Rename the encounter and every line says the old name,
+and nothing leads back to the fight.
+The wish: the line **links** to the encounter, and its text keeps only the
+figures. It reads crew first, as W79's sentence does for every kind (Ken,
+2026-10-09):
+> **Scott, D** fought **Bob** in **New for the Crew** on 10/08/26: 2 of 4 Health Levels left
+
+The member and the encounter are taps: the member's page, and the ended
+encounter, read-only (Decision 188).
+*To respect:*
+- **Decision 178's links:** `{ kind:"encounter", id }`, a deleted encounter's
+  name kept in the link and shown struck through, never an error.
+  `Engine.linkName` reads cast members only today, so it learns the encounter
+  kind.
+- **A table schema bump** with its `migrateTable()` step. Lines already written
+  keep their text as is; the gate converts nothing (as Decision 203 did for
+  sessions).
+- **Decision 193's** wrap-up stays the one writer, and its default text loses
+  the *Fought them in …* prefix.
+- **Build it with W79**, since both change how a line reads, on a member's
+  page, in *Who knows what* (179) and on a session's page (S5a).
+
+*Built as GM mode S16 (2026-10-23): table schema 0.13, switched off. Ended encounters are read-only, so a fight's name changes only before it ends.*

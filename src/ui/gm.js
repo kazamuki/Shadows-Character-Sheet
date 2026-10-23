@@ -272,7 +272,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -437,6 +437,7 @@ function openFind(){
 }
 // A hit opens its record and lands on its title (Decision 164: focus never falls to <body>).
 function openFound(kind, id){
+  S.backFromLine=null;
   const t=S.table, main=()=>$("main");
   const land=sel=>{ const el=main().querySelector(sel); if (el){ takeFocus(el, true); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); } return el; };
   const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.castFrom=null; S.intAdd=null; };
@@ -561,7 +562,6 @@ const castFilterNow = () => ({ q:S.castQ||"", status:S.castStatus||"inplay", aff
 // The eight kinds, read from the crew's side (Decisions 177, 193), in the order they're pressed.
 const INTERACTION_KINDS = [["shared","Told them"], ["learned","Learned from them"], ["helped","Helped them"], ["wronged","Wronged them"],
   ["killed","Killed them"], ["owes","Owes them"], ["owed","They owe"], ["fought","Fought them"]];
-const interactionLabel = k => (INTERACTION_KINDS.find(x=>x[0]===k)||[])[1] || "";
 const splitList = (v, re) => String(v).split(re).map(s=>s.trim()).filter(Boolean);
 // The add row's draft: kept while the page is open, so three lines in a scene are three Enters.
 const intAdd = () => S.intAdd || (S.intAdd={ kind:null, crew:"", date:localDay(), what:"" });
@@ -589,21 +589,33 @@ function castListHtml(t){
   if (!list.length) return `<p class="step-note">No one matches.</p><p><button class="btn sm" data-cclear>Clear the filter</button></p>`;
   return `<ul class="roster-list">${list.map(castCardHtml).join("")}</ul>`;
 }
-// A gone member is a struck-through name, not a button (Decision 178).
-function linkNameHtml(t, link, where){
-  const r=Engine.linkName(t, link);
-  return r.gone ? `<s>${esc(r.name)}</s><span class="vh">, removed</span>`
-    : `<button class="cast-open int-who" data-copen="${esc(link.id)}" data-cwhere="${esc(where)}">${esc(r.name)}</button>`;
+// A line as the engine's sentence (Decision 241). The engine builds the parts; this only joins them.
+// o.where is the prefix of a name's data-cwhere (Back lands on it), o.own a member shown as plain text
+// on their own page, and o.plain drops every button (the open line's live sentence, the wrap-up's preview).
+const goneHtml = name => `<s>${esc(name)}</s><span class="vh">, removed</span>`;
+function sentenceHtml(t, x, o={}){
+  let ci=0;
+  return Engine.interactionSentence(t, x).parts.map(p=>{
+    if (p.kind==="text") return esc(p.text);
+    if (p.kind==="day") return `<span class="int-date">${esc(dayText(p.date))}</span>`;
+    if (p.kind==="cast"){
+      const i=ci++;
+      if (o.plain) return esc(p.name);
+      if (p.gone) return goneHtml(p.name);
+      if (p.id===o.own) return esc(p.name);
+      return `<button class="cast-open int-who" data-copen="${esc(p.id)}"${o.where ? ` data-cwhere="${esc(o.where+"|"+i)}"` : ""}>${esc(p.name)}</button>`;
+    }
+    if (o.plain) return esc(p.name);
+    return p.gone ? goneHtml(p.name)
+      : `<button class="cast-open int-who int-fight" data-eopenline="${esc(x.id)}|${esc(p.id)}">${esc(p.name)}</button>`;
+  }).join("");
 }
 // Who knows what (Decision 179): the same records, by crew name.
 function crewViewHtml(t){
   const groups=Engine.crewView(t, { q:S.castQ||"" });
   if (!groups.length) return S.castQ && String(S.castQ).trim() ? `<p class="step-note">No one matches.</p>` : `<p class="step-note">Nothing between the crew and anyone yet.</p>`;
   return groups.map(g=>`<section class="crew-group"><h2 class="cast-h crew-name">${esc(g.name || "No one named")}</h2><ul class="int-list">${g.interactions.map(x=>{
-    const who=(x.cast||[]).map((l,li)=>linkNameHtml(t, l, `${g.name.trim().toLowerCase()}|${x.id}|${li}`)).join(", ");
-    const bits=[ interactionLabel(x.kind) ? `<span class="int-kind">${esc(interactionLabel(x.kind))}</span>` : "", who,
-      x.date ? `<span class="int-date">${esc(dayText(x.date))}</span>` : "", x.text ? `<span class="int-text">${esc(x.text)}</span>` : "" ].filter(Boolean);
-    return `<li class="int-line">${bits.join(" ")}</li>`; }).join("")}</ul></section>`).join("");
+    return `<li class="int-line">${sentenceHtml(t, x, { where:`${g.name.trim().toLowerCase()}|${x.id}` })}</li>`; }).join("")}</ul></section>`).join("");
 }
 // A day as the GM's locale shows it. Built from its parts, so it is the day it says in any zone.
 function dayText(day){
@@ -661,17 +673,26 @@ function castStatBlockHtml(n){
     <div class="cast-lines"><span class="cast-sub">Traits</span>${packs ? `<p class="cast-guide" data-ctcount hidden></p><p class="cast-guide" data-ctguide hidden></p>` : ""}${traits}
       <button class="btn sm" data-ctadd>Add a trait</button>${hasTraits ? ` <button class="btn sm" data-ctpick>Add from a pack</button>` : ""}</div>`;
 }
-// What passed between this member and the crew (Decisions 177–179).
-function interactionRowHtml(x){
-  const id=esc(x.id);
+// What passed between this member and the crew (Decisions 177–179, 241): each line reads as its sentence;
+// Edit opens one at a time (S.intEdit), with its fields in the add row's order.
+const intEditId = n => { if (S.intEditOf!==n.id) S.intEdit=null; return S.intEdit; };
+const sentTag = x => { const sess=sessionById(x.session); return sess ? `<span class="int-session">${esc(Engine.sessionTitle(sess))}</span>` : ""; };
+function interactionRowHtml(x, n){
+  const id=esc(x.id), tag=sentTag(x);
+  if (intEditId(n)!==x.id)
+    return `<li class="int-line" data-int="${id}"><span class="int-sentence">${sentenceHtml(S.table, x, { own:n.id })}</span> ${tag}
+      <button type="button" class="btn sm int-edit" data-iedit="${id}" aria-label="Edit this line">Edit</button></li>`;
   return `<li class="int-row" data-int="${id}">
+    <p class="int-sentence" data-isent="${id}">${sentenceHtml(S.table, x, { plain:true })} ${tag}</p>
+    <div class="int-fields">
+      <label class="field"><span>Crew</span><input type="text" data-icrew="${id}" list="crew-names" value="${esc(x.crew.join(", "))}" placeholder="Crew" autocomplete="off"></label>
+    </div>
     ${kindToggleHtml("data-ikind", x.kind, "What kind", x.id+"|")}
     <div class="int-fields">
-      <input type="text" data-icrew="${id}" list="crew-names" value="${esc(x.crew.join(", "))}" placeholder="Crew" aria-label="Crew" autocomplete="off">
-      <input type="date" data-idate="${id}" value="${esc(x.date||"")}" aria-label="When">
-      ${sessionById(x.session) ? `<span class="int-session">${esc(Engine.sessionTitle(sessionById(x.session)))}</span>` : ""}
-      <textarea rows="2" data-itext="${id}" placeholder="What passed between them" aria-label="What">${esc(x.text)}</textarea>
-      <button class="btn sm danger" data-idel="${id}">Delete</button></div></li>`;
+      <label class="field"><span>What</span><textarea rows="2" data-itext="${id}" placeholder="What passed between them">${esc(x.text)}</textarea></label>
+      <label class="field"><span>When</span><input type="date" data-idate="${id}" value="${esc(x.date||"")}"></label></div>
+    <p class="int-actions"><button type="button" class="btn sm danger" data-idel="${id}">Delete</button>
+      <button type="button" class="btn sm primary" data-idone="${id}">Done</button></p></li>`;
 }
 function castInteractionsHtml(n){
   const a=intAdd(), rows=Engine.interactionsFor(S.table, n.id);
@@ -679,13 +700,14 @@ function castInteractionsHtml(n){
   return `<h2 class="cast-h">Between them and the crew</h2>
     <datalist id="crew-names">${names.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
     <div class="int-add">
+      <div class="int-fields">
+        <label class="field"><span>Crew</span><input type="text" data-iacrew list="crew-names" value="${esc(a.crew)}" placeholder="Who from the crew" autocomplete="off"></label></div>
       ${kindToggleHtml("data-iakind", a.kind, "What kind")}
       <div class="int-fields">
-        <label class="field"><span>Crew</span><input type="text" data-iacrew list="crew-names" value="${esc(a.crew)}" placeholder="Who from the crew" autocomplete="off"></label>
-        <label class="field"><span>When</span><input type="date" data-iadate value="${esc(a.date||"")}"></label>
         <label class="field"><span>What</span><input type="text" data-iwhat value="${esc(a.what||"")}" placeholder="What passed between them" autocomplete="off"></label>
+        <label class="field"><span>When</span><input type="date" data-iadate value="${esc(a.date||"")}"></label>
         <button class="btn primary" data-iadd>Add</button></div></div>
-    <ul class="int-list" data-intlist>${rows.map(interactionRowHtml).join("")}</ul>`;
+    <ul class="int-list" data-intlist>${rows.map(x=>interactionRowHtml(x, n)).join("")}</ul>`;
 }
 // The pack's names for the fields the GM types (Decision 184): a list to pick from, and the roles as toggles.
 function castRolesHtml(n){
@@ -731,7 +753,32 @@ function redrawCastList(){
   box.innerHTML=castListHtml(S.table);
   bindCastCards($("main"));
 }
+// A fight's name in a sentence opens that encounter and remembers where it was pressed, so Back returns
+// there, on the link (Decision 241). The route is cleared when the GM leaves the encounter any other way.
+function bindFightLinks(main){
+  main.querySelectorAll("[data-eopenline]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
+    const [line, enc]=b.dataset.eopenline.split("|");
+    if (!encList().some(e=>e.id===enc)) return;
+    S.backFromLine={ line, enc, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
+      backClose:S.backClose, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
+    S.intEdit=null; S.tsection="encounters"; S.encOpen=enc; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
+    window.scrollTo(0,0); update();
+    const h=$("main").querySelector("[data-enc-h]"); if (h) takeFocus(h, true);
+  });
+}
+// Where the fight's Back goes, if the GM came from a line: the page as it was.
+function backFromLineNow(){
+  const r=S.backFromLine;
+  return r && r.enc===S.encOpen ? r : null;
+}
+function backFromLineTitle(){
+  const r=backFromLineNow(); if (!r) return "";
+  if (r.tsection==="sessions" && r.sessOpen){ const s=(S.table.sessions||[]).find(x=>x.id===r.sessOpen); return s ? Engine.sessionTitle(s) : "sessions"; }
+  if (r.castOpen){ const n=S.table.cast.find(x=>x.id===r.castOpen); return n ? (n.name.trim() || "Unnamed") : "the cast"; }
+  return "Who knows what";
+}
 function bindCastCards(main){
+  bindFightLinks(main);
   // A member opened from Who knows what remembers which name it was, so Back lands on it.
   const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.backClose=false; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
@@ -875,7 +922,17 @@ function bindInteractions(main, n){
   main.querySelector("[data-iadd]").onclick=add;
   whatEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
   // The rows are saved on input, with no redraw, so a GM who types and goes Home keeps the words.
-  const edit = (xid, f) => tableChange(()=>Engine.editInteraction(S.table, xid, f), false);
+  // The open line's sentence follows in place, so the fields keep their caret (Decision 241).
+  const edit = (xid, f) => {
+    tableChange(()=>Engine.editInteraction(S.table, xid, f), false);
+    const sent=main.querySelector(attrSel("data-isent", xid)), cur=found(xid);
+    if (sent && cur) sent.innerHTML=sentenceHtml(S.table, cur, { plain:true }) + (sentTag(cur) ? " " + sentTag(cur) : "");
+  };
+  main.querySelectorAll("[data-iedit]").forEach(b=>b.onclick=()=>{
+    S.intEdit=b.dataset.iedit; S.intEditOf=id; renderTable(); focus(attrSel("data-icrew", b.dataset.iedit)); });
+  main.querySelectorAll("[data-idone]").forEach(b=>b.onclick=()=>{
+    S.intEdit=null; renderTable(); focus(attrSel("data-iedit", b.dataset.idone)); });
+  bindCastCards(main);
   main.querySelectorAll("[data-ikind]").forEach(b=>b.onclick=()=>{
     const [xid, k]=b.dataset.ikind.split("|"), cur=found(xid); if (!cur) return;
     edit(xid, { kind: cur.kind===k ? null : k });
@@ -895,8 +952,9 @@ function bindInteractions(main, n){
     const xid=b.dataset.idel, order=Engine.interactionsFor(S.table, id), at=order.findIndex(x=>x.id===xid);
     askFirst({ title:"Delete this?", text:"It goes from the crew's view too.", yes:"Delete",
       then(){
+        S.intEdit=null;
         tableChange(()=>Engine.removeInteraction(S.table, xid));
-        const next=order[at+1], el=next && $("main").querySelector(`[data-ikind^="${next.id}|"]`) || $("main").querySelector("[data-iwhat]");
+        const next=order[at+1], el=next && $("main").querySelector(attrSel("data-iedit", next.id)) || $("main").querySelector("[data-iwhat]");
         if (el) el.focus();
       } });
   });
@@ -1094,11 +1152,7 @@ function sessionsTabHtml(t){
       : `<p class="step-note">No sessions yet.</p>`}`;
 }
 function sessionInteractionHtml(t, x, offered){
-  const who=(x.cast||[]).map((l, i)=>linkNameHtml(t, l, `sess|${x.id}|${i}`)).join(", ");
-  const bits=[ interactionLabel(x.kind) ? `<span class="int-kind">${esc(interactionLabel(x.kind))}</span>` : "", who,
-    (x.crew||[]).length ? `<span class="int-crew">${esc(x.crew.join(", "))}</span>` : "",
-    x.date ? `<span class="int-date">${esc(dayText(x.date))}</span>` : "", x.text ? `<span class="int-text">${esc(x.text)}</span>` : "" ].filter(Boolean);
-  return `<li class="int-line" data-sline="${esc(x.id)}">${bits.join(" ")}${offered ? ` <button type="button" class="btn sm" data-sadd="${esc(x.id)}">Add to this session</button>` : ""}</li>`;
+  return `<li class="int-line" data-sline="${esc(x.id)}">${sentenceHtml(t, x, { where:`sess|${x.id}` })}${offered ? ` <button type="button" class="btn sm" data-sadd="${esc(x.id)}">Add to this session</button>` : ""}</li>`;
 }
 // What was jotted in this session (Decision 208): the text, then the title when it has one.
 function jottedHtml(s){
@@ -1143,6 +1197,7 @@ function bindSessions(main){
 }
 // A Met-last-session name, a thread in Next session, a session in either: the shared taps.
 function bindSessionOpeners(main){
+  bindFightLinks(main);
   main.querySelectorAll("[data-sopen]").forEach(b=>b.onclick=()=>{
     S.sessOpen=b.dataset.sopen; if (S.closeOut) S.closeOut.view=false; window.scrollTo(0,0); update();
     const el=$("main").querySelector("[data-sback]"); if (el) el.focus(); });
@@ -2150,13 +2205,24 @@ function encEndedWords(u){
   if (x.conditions.length) bits.push(x.conditions.join(", "));
   return bits.join(" · ") || "Nothing recorded";
 }
-function encWrapRowHtml(u){
+// What the record will say above the figures (Decision 241): the engine's sentence for the line End will write.
+function encWrapSentence(u, e, crew){
+  const st=S.encWrap.rows[u.row.id]||{}, keep=u.kind!=="cast";
+  const status=st.status ?? (keep ? "alive" : u.status);
+  const killed = keep ? status==="dead" : status==="dead" && u.status!=="dead";
+  const link=!keep && u.row.cast && typeof u.row.cast==="object" ? u.row.cast.id : null;
+  if (!keep && typeof link!=="string") return "";
+  const who = keep ? { kind:"cast", id:"", name:(st.name ?? u.row.name) } : { kind:"cast", id:link };
+  const x={ kind:killed ? "killed" : "fought", cast:[who], crew, encounter:{ kind:"encounter", id:e.id }, date:localDay(), text:"" };
+  return `${sentenceHtml(S.table, x, { plain:true })}:`;
+}
+function encWrapRowHtml(u, e, crew){
   const st=S.encWrap.rows[u.row.id]||{}, id=esc(u.row.id), name=esc(u.name);
   const statusSel = cur => `<label class="field"><span>Status</span><select data-ew-status="${id}">${Object.keys(CAST_STATUS_LABELS).map(k=>
     `<option value="${esc(k)}"${k===cur?" selected":""}>${esc(CAST_STATUS_LABELS[k])}</option>`).join("")}</select></label>`;
   const lineOn = st.line!==false;
   const lineBox = `<label class="enc-check"><input type="checkbox" data-ew-line="${id}"${lineOn?" checked":""}> Add this fight to their record</label>
-    ${lineOn ? `<label class="field"><span>What the record says</span><textarea data-ew-text="${id}" rows="2">${esc(st.text ?? u.line)}</textarea></label>` : ""}`;
+    ${lineOn ? `<p class="step-note" data-ew-sent="${id}">${encWrapSentence(u, e, crew)}</p><label class="field"><span>What the record says</span><textarea data-ew-text="${id}" rows="2">${esc(st.text ?? u.line)}</textarea></label>` : ""}`;
   let body;
   if (u.kind==="cast"){
     body = u.gone ? `<p class="step-note">Removed from the cast, so there is no record to add to.</p>`
@@ -2184,7 +2250,7 @@ function encWrapHtml(e, title){
   const w=Engine.encounterWrapUp(S.table, e.id);
   return `<section class="enc-wrap" aria-labelledby="enc-wrap-h"><h2 class="cast-h" id="enc-wrap-h" data-ew-h tabindex="-1">Wrap up ${esc(title)}</h2>
     <p class="step-note">Nothing is saved until you end it.</p>
-    ${w.rows.length ? `<ul class="enc-rows">${w.rows.map(encWrapRowHtml).join("")}</ul>` : ""}
+    ${w.rows.length ? `<ul class="enc-rows">${w.rows.map(u=>encWrapRowHtml(u, e, w.crew)).join("")}</ul>` : ""}
     ${encWearHtml(w)}
     <p class="enc-condbtns"><button class="btn primary" data-ew-end>End the encounter</button><button class="btn" data-ew-cancel>Cancel</button></p>
     ${S.encWrap.err ? `<p class="enc-err" role="alert">${esc(S.encWrap.err)}</p>` : ""}</section>`;
@@ -2259,7 +2325,8 @@ function encPageHtml(e){
       : ended && v.by==="wave" ? `<p class="enc-turns"><span class="enc-mode">Wave Initiative</span></p>` : ""}`;
   const rows = v.by==="wave" ? v.sides.map(s=>encSideHtml(s, v, e)).join("") + (!ended && v.sides.length < 6 ? `<p><button class="btn" data-eaddside>Add a side</button></p>` : "")
     : v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e, null)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
-  return `<p><button class="btn sm" data-enc-back>Back to encounters</button></p>
+  const from=backFromLineTitle();
+  return `<p><button class="btn sm" data-enc-back>${from ? `Back to ${esc(from)}` : "Back to encounters"}</button></p>
     ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
       : `<label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>`}
     ${bar}
@@ -2277,7 +2344,7 @@ function bindEncounters(main){
   const redraw = () => { renderTable(); };
   const change = fn => { tableChange(fn); };
   const open = id => {
-    S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
+    S.backFromLine=null; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     window.scrollTo(0,0); redraw();
     const e=encOpenNow(); if (!e) return;
     if (e.status==="planned") focus("[data-enc-title]");
@@ -2296,7 +2363,16 @@ function bindEncounters(main){
   const act = {
     "data-enc-new": () => { const input=main.querySelector("[data-enc-name]"); let id; change(()=>{ id=Engine.addEncounter(S.table, { name:input.value }).id; }); open(id); },
     "data-enc-open": b => open(b.dataset.encOpen),
-    "data-enc-back": () => { const id=S.encOpen; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
+    "data-enc-back": () => { const r=backFromLineNow();
+      if (r){
+        S.backFromLine=null; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.intEdit=null;
+        Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose, sessOpen:r.sessOpen, castQ:r.castQ });
+        if (S.closeOut) S.closeOut.view=r.closeView;
+        window.scrollTo(0,0); update();
+        const link=$("main").querySelector(attrSel("data-eopenline", `${r.line}|${r.enc}`)); if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
+        return;
+      }
+      const id=S.encOpen; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
     "data-enc-start": () => { const r=Engine.startEncounter(S.table, eid()); if (!r.ok){ notice(r.why); return; } S.encReset=null; tableChange(()=>{}); focus("[data-enext]"); toActive(); },
     "data-enc-end": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
       if (e.status==="running"){ S.encWrap={ enc:e.id, rows:{}, diff:"", err:"" }; S.encDmg=null; S.encHit=null; S.encCond=null; redraw(); focus("[data-ew-h]"); return; }
@@ -2421,7 +2497,10 @@ function bindEncounters(main){
     else if ("ehitCond" in d){ S.encHit.conds[d.ehitCond]=el.checked; }
     else if ("ewKeep" in d){ encWrapDraft(d.ewKeep).keep=el.checked; redraw(); focus(attrSel("data-ew-keep", d.ewKeep)); }
     else if ("ewLine" in d){ encWrapDraft(d.ewLine).line=el.checked; redraw(); focus(attrSel("data-ew-line", d.ewLine)); }
-    else if ("ewStatus" in d){ encWrapDraft(d.ewStatus).status=el.value; focus(attrSel("data-ew-status", d.ewStatus)); }
+    else if ("ewStatus" in d){ encWrapDraft(d.ewStatus).status=el.value;
+      const e=encOpenNow(), u=e && Engine.encounterWrapUp(S.table, e.id), row=u && u.rows.find(x=>x.row.id===d.ewStatus), box=main.querySelector(attrSel("data-ew-sent", d.ewStatus));
+      if (box && row) box.innerHTML=encWrapSentence(row, e, u.crew);
+      focus(attrSel("data-ew-status", d.ewStatus)); }
     else if ("ewDiff" in d){ S.encWrap.diff=el.value; redraw(); focus("[data-ew-diff]"); }
   };
   main.oninput = ev => {
