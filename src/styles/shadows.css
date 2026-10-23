@@ -297,6 +297,8 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .intake-label{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--magenta-text)}
 .import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
 .import-issues .issues{margin-top:0}
+.focused-owed{border:1px solid var(--frame); border-radius:6px; padding:10px 14px; margin-bottom:14px; background:rgba(17,30,61,.45)}
+.focused-owed .sect{margin-bottom:6px}
 
 /* ── Vitals rail (signature) ────────────────────────────────────────── */
 aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:rgba(17,30,61,.45);

@@ -1054,7 +1054,7 @@ function focusedOwedHtml(ch){
   if (!ch || !ch.creation || ch.creation.locked!==true) return "";
   const lines = focusedOwedLines(Engine.focusedPicks(ch));
   if (!lines.length) return "";
-  return `<div class="import-issues" role="status" data-focused-owed><div class="sect">Focused Skills</div>${
+  return `<div class="focused-owed" role="status" data-focused-owed><div class="sect">Focused Skills</div>${
     lines.map(l=>`<p class="step-note">${esc(l)}</p>`).join("")}${focusedPickHtml(ch, "data-fpick")}</div>`;
 }
 function flagHtml(entry){
