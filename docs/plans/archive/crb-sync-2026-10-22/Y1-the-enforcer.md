@@ -8,7 +8,7 @@ merged. **Approved by Ken 2026-10-23, as written; YQ5–YQ7 on their defaults** 
 **Tier: Rule or shape.** One decision (**N**), the next free number on `origin/main` when it's built (237 is
 the last today). No flag. No schema bump: the save file's shape doesn't move.
 **Branch:** one, cut from `main`. **Runs beside:** nothing. Y4 is drafted after this merges (the README's step 7).
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). Ken starts **Y1 build**
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md). Ken starts **Y1 build**
 (Sonnet), then a fresh reviewer (Opus) once the PR is open.
 
 **Carried over from Y0's review.** Three things, one of them the order's:

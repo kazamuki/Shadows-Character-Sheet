@@ -19,7 +19,8 @@ the World of Shadows (`1000`–`1300`); Scott's *Threat Codex — Intro + Human*
 (front matter, 42 entries, 29 encounter groups, the drone reference, the
 Trait Glossary v3 and the Trait Library); Scott's *Threat Codex v2* (WIP,
 2026-10-02: the front matter rewritten, Orders folded in, the NPC roster
-moved in); Scott's *Threat Codex Expansion* proposal (2026-09-29, unapproved);
+moved in); Scott's *Threat Codex Expansion* (proposed 2026-09-29, approved by 2026-10-22,
+mirrored as `APPROVED_Threat_Codex_Expansion`);
 Scott's questionnaire answers (§1a); Ken's *Origin Matrix* page; Decisions 48,
 49, 68, 115, 118, 124, 128, 135, 137, 139, 141, 150, 153.
 **Tier:** *Rule or shape*, many times over. A second kind of saved file (the
@@ -131,7 +132,7 @@ stay (S6), as a setting to read and search, not a log to keep.
 | Pre-built threats | 42 entries, 29 encounter groups, two drones, ~100 named traits in three kinds (Universal, Origin, Signature) | Codex Parts B–C |
 | Named NPCs | Eleven roster NPCs (Bob and NPC-01 to 10), **moved into the Codex** in v2, in *Motivation · Resources · Their Line · stats · skills · If Pushed* form, each with a **Push Profile**: the Codex entry or encounter group they become when pushed, or none | Codex v2 *NPC Roster* (was `2000` Part VI) |
 | Supernatural threats | **In the Codex, approved** (GQ17, 2026-10-10): seven Orders (Undead, Vampiric, Therianthropic, Fae, Spirit, Elemental, Beast) beside Origin; **Bound** (Origin modifiers, one Order trait instead of Order's), **Changed** (both), **Other** (Order only); a +1 both give becomes +1 and an Order trait; −1s cap at −1, a −2 is reviewed by hand; a bodiless Changed takes only Origin's mental and social modifiers | Codex v2 *Origins and Orders* |
-| Environmental threats | **Proposed, not approved:** three new fields, named lieutenants, Site Profiles with tracks and clocks | Expansion proposal |
+| Environmental threats | **Approved** (the Expansion, mirrored 2026-10-22): three new fields, named lieutenants, Site Profiles with tracks and clocks | Expansion proposal |
 | Places | Territory → Zone → District → Neighborhood; six Territories with Zones, Supernatural Sites, Business Interests and Factions; eleven places beyond the city | `1000`, `1100` |
 | Powers | Five corporations, the Unseen Court and its houses, the Chrome Berets, the Goblin Market | `1200` |
 | GM notes | Four worksheets: **Session 0 Shared Overlap**, **Encounter Design**, **Campaign Journal** (six parts a session), **Faction Tracker** (tipping points, a Hostile↔Allied stance) | `220`, `224`, `227`, `2000` *Tracking* |
@@ -540,7 +541,7 @@ and the Codex pack itself is built from `private/`.
 | S2 | The dispatch and the inbox | Rule or shape | S1 | Yes, once a GM sends one |
 | S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b, S5 | No |
 | S11 | CRANK work: the generator and the jobs board | Content + shape | S1, S5 | No |
-| S12 | Supernatural Orders and Site Profiles | Content | GQ17 (approved 2026-10-10) and S9 for the Orders; the Expansion approved and S7 for Site Profiles | No |
+| S12 | Supernatural Orders and Site Profiles | Content | GQ17 (approved 2026-10-10) and S9 for the Orders; S7 for Site Profiles (the Expansion is approved) | No |
 
 **The first point a GM gets real value** is after S10: a table holding a
 cast, the Codex to pull from, and a fight that keeps its Conditions. That is
@@ -767,7 +768,7 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 ### S12 — Supernatural Orders and Site Profiles
 
 **The Orders are unblocked: GQ17 was approved 2026-10-10** (Ken). The Site
-Profiles half still waits on the Expansion's approval and S7's clocks, so S12
+Profiles half still waits on S7's clocks (the Expansion itself is approved, 2026-10-22), so S12
 may split: the Orders first (S9 is built), Site Profiles after S7. Its
 pre-flight checks the mirror's Codex for the "proposed" heading gone and the
 modifiers as approved before anything is copied. The shape is already there

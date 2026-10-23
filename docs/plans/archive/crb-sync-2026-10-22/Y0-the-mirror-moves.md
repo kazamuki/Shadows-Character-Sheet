@@ -7,7 +7,7 @@ is at `a8d53ab` (Ken pushed it the same day).
 **Tier: Fix + Content.** No decision, no flag, no schema bump. `gamedataVersion` moves (a new catalog piece).
 **Two repos, two PRs.** A **Shadows-Private** PR (the Codex pack builder, the mirror's README) and a
 **Shadows-Character-Sheet** PR (the `private/` pointer, the guards, the data). The second points at the first.
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). Ken starts **Y0 build**
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md). Ken starts **Y0 build**
 (Sonnet), then a fresh reviewer (Opus) once both PRs are open. Nothing ships switched off.
 
 **Why Y2 is folded in.** The plan had Y0 (move the pointer) before Y2 (repair the pack builder). That order
