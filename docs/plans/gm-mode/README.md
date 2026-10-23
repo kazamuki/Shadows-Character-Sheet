@@ -52,8 +52,16 @@ build it without making a design choice of its own.
    for each. It already knows the code it wrote (S8a's knew `signed` was
    taken). The reviewer **re-reviews narrowly**: the fix commits against its
    findings, and whether a fix touched anything else, never the whole PR
-   again. When nothing must-fix or should-fix is left, it tells Ken, and
-   Ken merges. If the two sessions can't reach each other, Ken relays.
+   again. When nothing must-fix or should-fix is left, it tells the
+   conductor, and Ken merges. If the two sessions can't reach each other,
+   the conductor relays.
+
+   **The conductor** is the session that started the two (Ken's
+   orchestrating session). Anything for Ken goes to it, never to the other
+   session: a change to what the order specifies, a choice it doesn't cover,
+   a voice pass, a mismatch with the book. The two sessions message each
+   other directly about everything else (Ken, 2026-10-23: Y1 ran with the
+   conductor relaying every message, and the relay added only latency).
 
    A decision in a PR that **hasn't merged** is reworded in place by the fix
    round, never superseded: nothing has cited it yet (S8a's 176). Once
@@ -122,15 +130,21 @@ in the order's header:
   what it touches (a label, a class, a key).
 - **The assumption sweep** is a table in the order. For each function,
   field or note the order changes, it lists what's true today, where (file
-  and line), and what's true after. Two questions are asked of every row:
+  and line), and what's true after. Three questions are asked of every row:
   - **Which guards read a value this changes?** P8a missed `soaked` reading
     the damage the order halved.
   - **Where does each new or removed note, line or number render?** P8a
     missed a `playerNote` left with nowhere to render. P8b missed two places
     that show the same HP number as the pill it changed: the popover the
     pill opens, and the pinned drawer that hides the pill.
+  - **What text points at what this changes?** Every sentence that names
+    a control's place or a rule's numbers is a reader too. Y1 moved a
+    picker to the top of the tab and kept a line beside its old place
+    that said "Remove it" with nothing below it. Grep the copy, the
+    data's notes and the comments for the rule's words, and give each
+    hit a row.
 
-  **Answer both by grepping the field's readers** (`hpLeft`, `playerNote`,
+  **Answer all three by grepping the field's readers** (`hpLeft`, `playerNote`,
   `.dying`), never from memory of where it shows. Every miss so far has been
   a reader nobody remembered, and **twins count**: everywhere that draws the
   same number is a row.
@@ -186,6 +200,11 @@ traps under it:
 > When the PR is open, say so here. A reviewer session will message you with
 > findings. Fix them, push, and message it back with what you changed and the
 > evidence for each.
+>
+> **Anything for Ken goes to the conductor** (the session that started you),
+> never to the reviewer: a change to what the order specifies, a choice it
+> doesn't cover, a voice pass, a mismatch with the book. Everything else you
+> and the reviewer settle between you.
 
 **Prompt for the reviewing session** (a fresh Opus session, started once the
 PR is open):
@@ -217,8 +236,13 @@ PR is open):
 > should-fix items. When it messages back, **re-review narrowly**: its fix
 > commits against your findings, plus whether a fix touched anything else.
 > Don't re-review the whole PR. When nothing must-fix or should-fix is left,
-> tell Ken it's ready to merge. If you can't reach the builder, tell Ken and
-> he'll relay.
+> say plainly "Ready to merge" and **tell the conductor** (the session that
+> started you); don't merge. If you can't reach the builder, tell the
+> conductor and it will relay.
+>
+> **Anything for Ken goes to the conductor**, never to the builder: a fix
+> that changes what the order specified, a choice the order doesn't cover, a
+> voice pass, a mismatch with the book. Give your recommendation with each.
 
 ## Running more than one at once
 
@@ -270,7 +294,7 @@ order. An order that can't fill one isn't ready to hand over; a *Content* or
 4. **Questions for Ken.** Anything the order defaults that Ken might not
    want, each with its default. Answered before the build starts.
 5. **The assumption sweep.** The pre-flight's table: what's true today, where,
-   and what's true after, with its two questions answered by grep.
+   and what's true after, with its three questions answered by grep.
 6. **Read first.** The `CLAUDE.md` rules, SCHEMA sections, files, functions
    and primitives that matter, by name.
 7. **Out of scope.** What the session must not do, even if it looks nearby.
