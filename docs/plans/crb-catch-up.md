@@ -167,6 +167,11 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 - ☐ ⚖ **Healing › Focused Healing.** Make it agree with 0540 on Injured (CQ13).
 
+## 1100_Places
+
+- ☐ **Greenwall, just above its heading.** An empty `### ` heading sits between The Public Trust (Capital Heights) and `### Greenwall` (the mirror's `1100_Places.md:221`). Delete it. *(Found by S6's pre-flight, 2026-10-23.)*
+- ☐ **Greenwall › its opening paragraph** (the mirror's `1100_Places.md:225`). It ends in a stray fragment, "— old, disturbed, …", left over from an edit. Finish the sentence or cut the fragment. The sheet's gazetteer summary for Greenwall leaves the fragment out. *(S6's pre-flight, 2026-10-23.)*
+
 ## 2530_Customizing_Characters (GM Workshop)
 
 - ☐ **Advantages and Disadvantages, the paragraph on buying off a Disadvantage.** "bought off with IP **during play**" should say **between sessions**, the same fix as 044.

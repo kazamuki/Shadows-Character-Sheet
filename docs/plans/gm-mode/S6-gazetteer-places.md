@@ -6,7 +6,8 @@ and searched); GQ10 (one app). Decisions 68, 135, 170, 177, 178, 203, 207,
 208, 212, 241.
 **Status:** **drafted 2026-10-23 by Claude (Opus)**, the S16 reviewer, after
 #234 (S16, Decision 241) merged (`WORK-ORDERS.md`, step 7). **Ken chose this
-session (2026-10-23).** SQ1–SQ10 are open.
+session (2026-10-23).** **Approved by Ken 2026-10-23** (in the conductor session).
+**SQ1–SQ10 answered by Ken 2026-10-23: every default.** He picked SQ5 and SQ2 by name (a place's history read from its lines; the builder drafts the summaries, Ken voice-passes them in the PR). The two CRB-mirror slips (`1100_Places.md:221`, `:225`) are Ken's to fix in the book, listed in `plans/crb-catch-up.md` under 1100.
 **Branch:** from `main` at `363f23d` or later, PR to `main`, switched off
 (Decision 173).
 **Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md):
@@ -271,17 +272,16 @@ If the ledger search at build time finds another, stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **Where the gazetteer lives.** In `shadows-data.js`, beside `gmReference` (207), shipped to every player and unread by the sheet; in a data file of its own (a change to constraint 4's script order); or in a pack built from `private/`, handed to a GM like the Codex? | **`shadows-data.js`**: the setting is player content (GQ10) | |
-| SQ2 | **Who writes the one-line summaries** (about 155)? The builder drafts each from its own paragraph in the book: one sentence, at most 20 words, saying nothing the paragraph doesn't. The PR lists every one for your voice pass before merge. Or you write them first and the build pastes them | **The builder drafts, you voice-pass in the PR** | |
-| SQ3 | **What the gazetteer covers.** All of `1100` (6 Territories, 34 Zones, 17 Sites, 42 Businesses, 23 Factions, 11 places Beyond), `1200`'s 16 powers, and `1300`'s 5 kinds of ground? Or places only, with factions and powers waiting for S7? | **All of it**: S7 seeds from the same ids, and Deighton reads factions to improvise | |
-| SQ4 | **Three sites name no listed zone**: *Wormwood Swamp* (Okefenokee, southeast of Atlantix), *Birmingham Blight* (Birmingham, AL, which Gulf Coast's line names) and *Elysium Fields* (the Everglades). Territory only, with the book's words in `realWorld`? Or Birmingham Blight in Gulf Coast? | **Territory only for all three**: the data guesses nothing | |
-| SQ5 | **A place's history.** A line names its place (**Where**), and the place's page lists those lines and who was met, read every time? Or a place keeps its own log of visits, each with a date and a note? | **Lines name a place** | |
-| SQ6 | **The tab.** Called **City** (plan §4b), after **Cast**: Sessions, Cast, City, Threats, Encounters, Reference, Notes. Or another name, or after Encounters? | **City, after Cast** | |
-| SQ7 | **Which gazetteer entries a GM can add as a place:** Territories, Zones, Sites, Businesses and the places Beyond. Factions, powers and the kinds of ground can't be added; they're S7's records or a place's tag | **As written** | |
-| SQ8 | **The sentence's word for a place** ✎: *at*, after the member and any fight, before the day. *Scott told Bob “…” at Central Park on 10/23/2026*; *Scott fought Bob in Dock fight at the Pier on …*; a no-kind line *Bob, with Scott, at the Pier, on …: met*. A place's name is read as typed, so *the Pier* stays lowercase mid-sentence; a name that leads a sentence never does (the member or crew always leads) | **As written** | |
-| SQ9 | **Find and the gazetteer.** Find searches the crew's places, not the gazetteer (The city has its own search)? Or Find lists gazetteer entries too, after the table's records? | **The crew's places only** | |
-| SQ10 | **A place's kind of ground**: one or none (the plan: "the environmental kind if it has one")? Or any number? | **One or none** | |
-
+| SQ1 | **Where the gazetteer lives.** In `shadows-data.js`, beside `gmReference` (207), shipped to every player and unread by the sheet; in a data file of its own (a change to constraint 4's script order); or in a pack built from `private/`, handed to a GM like the Codex? | **`shadows-data.js`**: the setting is player content (GQ10) | **Default** (Ken) |
+| SQ2 | **Who writes the one-line summaries** (about 155)? The builder drafts each from its own paragraph in the book: one sentence, at most 20 words, saying nothing the paragraph doesn't. The PR lists every one for your voice pass before merge. Or you write them first and the build pastes them | **The builder drafts, you voice-pass in the PR** | **Default** (Ken) |
+| SQ3 | **What the gazetteer covers.** All of `1100` (6 Territories, 34 Zones, 17 Sites, 42 Businesses, 23 Factions, 11 places Beyond), `1200`'s 16 powers, and `1300`'s 5 kinds of ground? Or places only, with factions and powers waiting for S7? | **All of it**: S7 seeds from the same ids, and Deighton reads factions to improvise | **Default** (Ken) |
+| SQ4 | **Three sites name no listed zone**: *Wormwood Swamp* (Okefenokee, southeast of Atlantix), *Birmingham Blight* (Birmingham, AL, which Gulf Coast's line names) and *Elysium Fields* (the Everglades). Territory only, with the book's words in `realWorld`? Or Birmingham Blight in Gulf Coast? | **Territory only for all three**: the data guesses nothing | **Default** (Ken) |
+| SQ5 | **A place's history.** A line names its place (**Where**), and the place's page lists those lines and who was met, read every time? Or a place keeps its own log of visits, each with a date and a note? | **Lines name a place** | **Default** (Ken) |
+| SQ6 | **The tab.** Called **City** (plan §4b), after **Cast**: Sessions, Cast, City, Threats, Encounters, Reference, Notes. Or another name, or after Encounters? | **City, after Cast** | **Default** (Ken) |
+| SQ7 | **Which gazetteer entries a GM can add as a place:** Territories, Zones, Sites, Businesses and the places Beyond. Factions, powers and the kinds of ground can't be added; they're S7's records or a place's tag | **As written** | **Default** (Ken) |
+| SQ8 | **The sentence's word for a place** ✎: *at*, after the member and any fight, before the day. *Scott told Bob “…” at Central Park on 10/23/2026*; *Scott fought Bob in Dock fight at the Pier on …*; a no-kind line *Bob, with Scott, at the Pier, on …: met*. A place's name is read as typed, so *the Pier* stays lowercase mid-sentence; a name that leads a sentence never does (the member or crew always leads) | **As written** | **Default** (Ken) |
+| SQ9 | **Find and the gazetteer.** Find searches the crew's places, not the gazetteer (The city has its own search)? Or Find lists gazetteer entries too, after the table's records? | **The crew's places only** | **Default** (Ken) |
+| SQ10 | **A place's kind of ground**: one or none (the plan: "the environmental kind if it has one")? Or any number? | **One or none** | **Default** (Ken) |
 ## 5. The assumption sweep
 
 Every reader below was found by grep on `363f23d`. The three questions (which
