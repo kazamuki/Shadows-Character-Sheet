@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.53.0",
-    "date": null,
+    "date": "2026-10-22",
     "intro": [],
     "items": [
       "**CRANK is back.** Your rep and its tier sit beside Çredits on Main again, the ledger of every job is on Trackers, and the print sheet has its field. Rep earned before the pause is still there.",
