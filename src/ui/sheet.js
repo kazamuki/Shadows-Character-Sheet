@@ -1861,7 +1861,7 @@ function adminArchChoicesHtml(ch){
   return `<div class="trk"><h2>${esc(spec.label||"Specialization")}</h2>
     <select data-admin-spec aria-label="${esc(spec.label||"Specialization")}"><option value="">— none —</option>${spec.options.map(o=>`<option value="${esc(o.id)}" ${cur===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select>
     <span class="sub">Changing it clears what the old one asked for, and Base Powers placed in its powers.</span></div>`
-    + `<div class="admin-arch">${optionChoicesHtml(ch)}${basePowersHtml(ch, a)}</div>`;
+    + `<div class="admin-arch">${optionChoicesHtml(ch)}${basePowersHtml(ch, a, false)}</div>`;
 }
 function adminWriteInHtml(ch){
   if (!Engine.writeInOptions(ch)) return "";
