@@ -3783,7 +3783,7 @@ const Engine = (() => {
         return Object.assign({}, p, { rank:start+cpR+ipe, start, cp:cpR, ipe, ranked, maxRank: Number(p.maxRank) || null }); });
   }
   // Under `powersBought` a pool power is held if it is granted, a Base Power
-  // placed a rank in it, or IP learned it (Decision 216). The IP is read raw: an
+  // is placed in it, or IP learned it (Decision 216). The IP is read raw: an
   // unranked power's `ipe` shows as 0, but its learning is still IP in the map.
   const isHeld = (ch, a, p, placed) => isGranted(a, p) || placed[p.id] > 0 || powerIpeOf(ch, p.id) > 0 || splicedPowers(ch).has(p.id);
   // Whether `powersBought` grants this power outright (Decision 215).
@@ -5293,7 +5293,7 @@ const Engine = (() => {
         if (fp.have !== fp.need)
           E(`Choose ${fp.need} ${cat} Skill${fp.need>1?"s":""} for your Focused Skills (${fp.have}/${fp.need}).`);
       }
-      // Base Powers (Decisions 200, 215), once a Bloodline is chosen:
+      // Base Powers (Decisions 200, 240), once a Bloodline is chosen:
       // short warns (the lock wants them spent), over or out of reach blocks.
       const bps = basePowerState(ch);
       if (bps && specializationIds(ch).length){

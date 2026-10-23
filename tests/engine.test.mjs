@@ -5795,8 +5795,14 @@ test("Decision 240: CP raises a held power to Max Starting Rank, not Max Power R
   same(Engine.powerCpState(d).find(r => r.id === "spectral-veil").rank, 3);
   assert.match(Engine.buyPowerRank(d, "spectral-veil", 1).why, /highest starting rank, 3/);
   // Totality: no Power Level, and a scaling row without maxStartingRank, cap at the printed maximum and never NaN.
+  const printedCaps = ch => Engine.powerCpState(ch).map(r => [r.id, r.cap, Engine.archetypePowers(ch).find(p => p.id === r.id).maxRank]);
   const none = vampire("strigoi", { pl: "heroic", locked: false }); none.creation.powerLevel = null;
-  assert.equal(Engine.powerCpState(none).every(r => r.cap == null || Number.isFinite(r.cap)), true);
+  assert.ok(printedCaps(none).length && printedCaps(none).every(([, cap, printed]) => cap === printed), JSON.stringify(printedCaps(none)));
+  const row = D.archetypes.find(a => a.id === "vampire").campaignPowerScaling.byPowerLevel.heroic;
+  withData(row, "maxStartingRank", undefined, () => {
+    const bare = vampire("strigoi", { pl: "heroic", locked: false });
+    assert.ok(printedCaps(bare).every(([, cap, printed]) => cap === printed), JSON.stringify(printedCaps(bare)));
+  });
 });
 
 test("Decision 240 (YQ4): a draft placed under Decision 215 is refused by name; a locked one keeps its ranks", () => {
