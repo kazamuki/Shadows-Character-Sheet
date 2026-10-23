@@ -598,9 +598,9 @@ the end; the targeted test files after each step.
   marked.
 - **STATE:**
   - The versions line: table schema 0.13.
-  - §1's GM clause gains *and reads each line between the crew and the cast
-    as a sentence, crew first, a fight's line leading to its fight (N)*.
-  - What's next.
+  - §1's GM mode line: *built through S16*. Add no clause for what S16 does;
+    that's N's INDEX line (`docs.test.mjs` caps STATE's words).
+  - §3's GM mode row and §5's *Next*: S16 built, and what's next.
 - **The plan:** the build-order table gains S16 (W79 and W82, Decision N).
 - **Wishlist:** W79 and W82 move whole to `log/wishes-granted.md`, each
   heading pointing at *→ Decision N (switched off)*.
