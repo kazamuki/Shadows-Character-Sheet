@@ -5671,7 +5671,7 @@ const Engine = (() => {
     for (const l of out) if (typeof l.name!=="string") delete l.name;
     return out;
   }
-  // A link to an encounter (Decision N): a fight's line names the encounter it was written at.
+  // A link to an encounter (Decision 241): a fight's line names the encounter it was written at.
   // A link to none on the table is kept (178); a name rides only as a string. Anything else is no link.
   function _encounterLink(v){
     if (!_isObj(v) || v.kind!=="encounter" || typeof v.id!=="string" || !ENCOUNTER_ID_RE.test(v.id)) return null;
@@ -5844,7 +5844,7 @@ const Engine = (() => {
     }
     //   Schema 0.12 (Decision 212): a table keeps an activity log. Nothing is guessed.
     if (typeof arrived!=="string" || _versionNewer("0.12", arrived)) c.audit = [];
-    //   Schema 0.13 (Decision N): a line may link the encounter it was written at. Nothing is guessed (203).
+    //   Schema 0.13 (Decision 241): a line may link the encounter it was written at. Nothing is guessed (203).
     if (typeof arrived!=="string" || _versionNewer("0.13", arrived))
       for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.encounter = null;
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
@@ -6222,7 +6222,7 @@ const Engine = (() => {
       const kept = _str(link.name).trim();
       return { name:kept || "An encounter removed", gone:true };
     }
-    const n =(Array.isArray(t && t.cast) ? t.cast : []).find(x=>_isObj(x) && x.id===id);
+    const n = (Array.isArray(t && t.cast) ? t.cast : []).find(x=>_isObj(x) && x.id===id);
     if (n) return { name:_str(n.name).trim() || "Unnamed", gone:false };
     const kept = _isObj(link) ? _str(link.name).trim() : "";
     return { name:kept || "Someone removed", gone:true };
@@ -6244,7 +6244,7 @@ const Engine = (() => {
     const date = _day(f.date);
     // A new line takes the one session dated that day (Decision 203); a gate never does.
     const session = _sessions(t).some(e=>e.id===f.session) ? f.session : _sessionOnDay(t, date);
-    // Only a fight that is on the table is linked; End is the one caller that passes one (Decision N).
+    // Only a fight that is on the table is linked; End is the one caller that passes one (Decision 241).
     const encounter = typeof f.encounter==="string" && _encList(t).some(e=>e.id===f.encounter) ? _encounterLink({ kind:"encounter", id:f.encounter }) : null;
     const x = { id:newInteractionId(used), kind,
                 cast:_castLinks((Array.isArray(f.cast) ? f.cast : []).filter(id=>typeof id==="string").map(id=>({ kind:"cast", id }))),
@@ -6278,7 +6278,7 @@ const Engine = (() => {
     _tableStamp(t);
     return { ok:true };
   }
-  // A line as one sentence (Decision N): the crew, the verb, the cast, the fight for a fought or
+  // A line as one sentence (Decision 241): the crew, the verb, the cast, the fight for a fought or
   // killed line, the day, then the words. Returns parts for the UI to join, since the engine has no
   // locale: { kind:"text", text } | { kind:"cast"|"encounter", id, name, gone } | { kind:"day", date }.
   const _SENTENCE_VERBS = { helped:"helped", wronged:"wronged", killed:"killed", fought:"fought" };
@@ -7307,7 +7307,7 @@ const Engine = (() => {
   function removeEncounter(t, id){
     const i = Array.isArray(t && t.encounters) ? t.encounters.findIndex(e=>_isObj(e) && e.id===id) : -1;
     if (i < 0) return { ok:false, why:"No such encounter." };
-    // A fight's line keeps its name under the link, as a removed member's does (Decisions 178, N).
+    // A fight's line keeps its name under the link, as a removed member's does (Decisions 178, 241).
     const name = encounterTitle(t.encounters[i]);
     for (const x of _interactions(t)) if (_isObj(x.encounter) && x.encounter.id===id) x.encounter.name = name;
     t.encounters.splice(i, 1);
@@ -7657,7 +7657,7 @@ const Engine = (() => {
     const dice = (D().armorRules||{}).integrityLossByDifficulty || {};
     return Object.keys(dice).map(id=>({ id, name:_titleCase(id), die:dice[id] }));
   }
-  // The default text of a fight's line: the figures alone. The fight is the line's link (Decision N).
+  // The default text of a fight's line: the figures alone. The fight is the line's link (Decision 241).
   function _endLine(t, e, ended){
     const hl = ended.levels!==null ? `${Math.max(0, ended.levelsLeft)} of ${ended.levels} Health Levels left${ended.down ? ", Down" : ""}` : "";
     const parts = [hl, ended.conditions.join(", ")].filter(Boolean);

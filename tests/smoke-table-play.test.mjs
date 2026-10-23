@@ -2109,3 +2109,19 @@ test("241: the wrap-up shows the sentence above each record's text, and it turns
   assert.equal(row.querySelector("[data-ew-sent] button"), null, "the preview has buttons");
   assert.deepEqual(app.errors, []);
 });
+
+test("241 (review): the wrap-up's sentence follows a Keep's name as it's typed, and a cleared name reads as the row's, as End writes it", () => {
+  const app = wrapApp();
+  app.click("[data-enc-end]");
+  const keep = wrapRow(app, "Gull").querySelector("[data-ew-keep]");
+  keep.checked = true; keep.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  const rid = keep.dataset.ewKeep, sent = () => app.$(`[data-ew-sent="${rid}"]`).textContent;
+  assert.match(sent(), /^Wren and Rook fought Gull in Job on \S+:$/);
+  type(app, `[data-ew-name="${rid}"]`, "Old Gull");
+  assert.match(sent(), /^Wren and Rook fought Old Gull in Job on /, "the sentence didn't follow the name");
+  type(app, `[data-ew-name="${rid}"]`, "  ");
+  assert.match(sent(), /^Wren and Rook fought Gull in Job on /, "a cleared name didn't read as the row's");
+  app.click(`[data-ew-line="${rid}"]`); app.click(`[data-ew-line="${rid}"]`);   // a redraw reads the draft the same way
+  assert.match(sent(), /^Wren and Rook fought Gull in Job on /);
+  assert.deepEqual(app.errors, []);
+});

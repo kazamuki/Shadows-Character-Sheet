@@ -2212,7 +2212,8 @@ function encWrapSentence(u, e, crew){
   const killed = keep ? status==="dead" : status==="dead" && u.status!=="dead";
   const link=!keep && u.row.cast && typeof u.row.cast==="object" ? u.row.cast.id : null;
   if (!keep && typeof link!=="string") return "";
-  const who = keep ? { kind:"cast", id:"", name:(st.name ?? u.row.name) } : { kind:"cast", id:link };
+  // A Keep's name as End will write it: what's typed, else the row's (castFromRow).
+  const who = keep ? { kind:"cast", id:"", name:String(st.name ?? "").trim() || u.row.name } : { kind:"cast", id:link };
   const x={ kind:killed ? "killed" : "fought", cast:[who], crew, encounter:{ kind:"encounter", id:e.id }, date:localDay(), text:"" };
   return `${sentenceHtml(S.table, x, { plain:true })}:`;
 }
@@ -2343,6 +2344,11 @@ function bindEncounters(main){
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
   const redraw = () => { renderTable(); };
   const change = fn => { tableChange(fn); };
+  // The wrap-up's preview follows a status or a Keep's name as it's set, with no redraw (Decision 241).
+  const wrapSentenceNow = rid => {
+    const e=encOpenNow(), u=e && Engine.encounterWrapUp(S.table, e.id), row=u && u.rows.find(x=>x.row.id===rid), box=main.querySelector(attrSel("data-ew-sent", rid));
+    if (box && row) box.innerHTML=encWrapSentence(row, e, u.crew);
+  };
   const open = id => {
     S.backFromLine=null; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     window.scrollTo(0,0); redraw();
@@ -2497,17 +2503,14 @@ function bindEncounters(main){
     else if ("ehitCond" in d){ S.encHit.conds[d.ehitCond]=el.checked; }
     else if ("ewKeep" in d){ encWrapDraft(d.ewKeep).keep=el.checked; redraw(); focus(attrSel("data-ew-keep", d.ewKeep)); }
     else if ("ewLine" in d){ encWrapDraft(d.ewLine).line=el.checked; redraw(); focus(attrSel("data-ew-line", d.ewLine)); }
-    else if ("ewStatus" in d){ encWrapDraft(d.ewStatus).status=el.value;
-      const e=encOpenNow(), u=e && Engine.encounterWrapUp(S.table, e.id), row=u && u.rows.find(x=>x.row.id===d.ewStatus), box=main.querySelector(attrSel("data-ew-sent", d.ewStatus));
-      if (box && row) box.innerHTML=encWrapSentence(row, e, u.crew);
-      focus(attrSel("data-ew-status", d.ewStatus)); }
+    else if ("ewStatus" in d){ encWrapDraft(d.ewStatus).status=el.value; wrapSentenceNow(d.ewStatus); focus(attrSel("data-ew-status", d.ewStatus)); }
     else if ("ewDiff" in d){ S.encWrap.diff=el.value; redraw(); focus("[data-ew-diff]"); }
   };
   main.oninput = ev => {
     const el=ev.target, d=el.dataset;
     if ("encTitle" in d) tableChange(()=>Engine.editEncounter(S.table, eid(), { name:el.value }), false);
     else if ("ewText" in d) encWrapDraft(d.ewText).text=el.value;
-    else if ("ewName" in d) encWrapDraft(d.ewName).name=el.value;
+    else if ("ewName" in d){ encWrapDraft(d.ewName).name=el.value; wrapSentenceNow(d.ewName); }
     else if ("econdSrc" in d) S.encCond.source=el.value;
     else if ("econdRounds" in d) S.encCond.rounds=el.value;
     else if ("ehitDamage" in d){ S.encHit.damage=el.value; S.encHit.err=""; hitLive(); }

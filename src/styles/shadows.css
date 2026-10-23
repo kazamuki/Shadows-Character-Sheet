@@ -1255,7 +1255,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .int-add{margin-bottom:14px}
 .int-fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px; align-items:end; min-width:0}
 .int-fields .btn{justify-self:start; margin-bottom:14px}
-.int-row .int-fields{gap:8px 14px; align-items:center}
+.int-row .int-fields{gap:8px 14px; align-items:end}
 .int-row .int-fields input, .int-row .int-fields textarea{min-width:0; width:100%}
 .int-row textarea{min-height:0; resize:vertical}
 .int-list{list-style:none; margin:0; padding:0}
@@ -1270,7 +1270,6 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .int-line .int-edit{min-height:44px; min-width:44px; margin-left:8px}
 .int-sentence{overflow-wrap:anywhere; min-width:0}
 .int-row .int-sentence{margin:0 0 10px; color:var(--text)}
-.int-row .int-fields{align-items:end}
 .int-row .field{min-width:0; margin-bottom:8px}
 .int-actions{display:flex; flex-wrap:wrap; gap:10px; margin:10px 0 0}
 .int-actions .btn{min-height:44px; min-width:44px}
