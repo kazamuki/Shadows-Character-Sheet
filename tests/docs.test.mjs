@@ -194,6 +194,13 @@ test("STATE.md is short enough that a cold session actually reads it", () => {
   // something belongs in log/ or SCHEMA.md instead.
   const lines = STATE.split("\n").length;
   assert.ok(lines < 200, `STATE.md is ${lines} lines — move history to docs/log/, reference to SCHEMA.md`);
+  // Lines alone didn't hold it: by 2026-10-23 §1 was one 10,000-character line,
+  // a clause appended per decision, and STATE was 5,358 words under 200 lines
+  // (log/archive.md §4). Words and line length are what a cold session pays for.
+  const words = STATE.split(/\s+/).filter(Boolean).length;
+  assert.ok(words < 2500, `STATE.md is ${words} words — say what's true now; a decision's detail is in INDEX §3, history in log/`);
+  const long = STATE.split("\n").map((l, i) => [i + 1, l.length]).filter(([, n]) => n > 1000);
+  assert.deepEqual(long, [], "a STATE.md line over 1,000 characters is a paragraph growing by appending — rewrite it");
 });
 
 test("INDEX.md lists every decision and every open flag, exactly once", () => {

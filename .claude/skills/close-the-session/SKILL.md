@@ -42,7 +42,11 @@ applies, and nothing above it does.
 - [ ] If the save file's shape moved: `meta.schemaVersion` and a `migrate()`
       step in the same commit, and a round-trip test.
 - [ ] `docs/STATE.md` §1–§5 **rewritten**, not appended, for what's now true
-      and what's next. It has a length limit that `docs.test.mjs` checks.
+      and what's next. **No clause per decision in §1**: it says what exists,
+      and INDEX §3 says what each decision does. Change a line only if it's
+      now false, and §3's row and §5's *Next* if they moved.
+      `docs.test.mjs` caps it at 200 lines, 2,500 words, and 1,000
+      characters a line.
 
 ## The PR
 
