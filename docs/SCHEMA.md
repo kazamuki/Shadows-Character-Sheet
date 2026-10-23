@@ -4994,7 +4994,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - *Scott is owed by Bob*: crew first, but passive.
      - **Replaces:** Decision 178 in part (a second link kind), 179 in part (a line reads as a sentence, opening to edit), 193 in part (the fight's line is figures and a link).
      - **Revisit if:** S3b's seats name the crew, a GM wants a line in their own words, or a voice pass changes a verb.
-     - **Built:** table schema 0.13, switched off (173); log 2026-10-23.
+     - **Built:** table schema 0.13, switched off (173); PR #234; log 2026-10-23.
 
 
 ## 5. Open Flags

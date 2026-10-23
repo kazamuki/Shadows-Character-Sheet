@@ -555,7 +555,7 @@ In the order they merged.
 | S10d | Wave Initiative: sides in turn, best Combat Sense first | 210 | #149 |
 | S10e | Add to a fight from anywhere; the Codex inside an encounter | 211 | #151 |
 | S15 | The table's memory: an activity log, with undo (W83) | 212 | #153 |
-| S16 | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | 241 | PR_NUM |
+| S16 | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | 241 | #234 |
 
 ### Still to build
 
@@ -842,7 +842,7 @@ table is one entry in an activity log, undone last first, with a toast on each p
 
 ### S16 — A line reads as a sentence (W79, W82)
 
-**Built** (Decision 241, table schema 0.13, switched off; `plans/gm-mode/S16-interaction-sentence.md`, PR_NUM; SQ1–SQ8 on
+**Built** (Decision 241, table schema 0.13, switched off; `plans/gm-mode/S16-interaction-sentence.md`, #234; SQ1–SQ8 on
 their defaults). Every line between the crew and the cast reads as one sentence, crew first (*Scott told Bob “the lake
 is on fire” on 10/8/2026*), in all three lists; a member's page shows sentences with Edit; a fight's line links to its
 encounter instead of naming it in its text, and Back returns to where the tap came from. Table schema 0.13.
