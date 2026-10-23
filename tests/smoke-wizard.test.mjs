@@ -498,7 +498,17 @@ test("Decision 238: a complete pick asks nothing, and an invalid one asks to be 
   app.click('[data-fpick="survival"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
   assert.match(app.$("[data-focused-owed]").textContent, ASK);
+  assert.ok(!app.$("[data-focused-owed]").closest("[role=status],[role=alert],[aria-live]"),
+    "the ask is a live region: every re-render of the tab would read its ten buttons out");
   assert.deepEqual(app.errors, []);
+
+  // Total (the order's §11): a draft, no specialization, picks migrate() cleaned of junk.
+  const owed = c => app.window.eval("focusedOwedHtml")(c && Engine.migrate(JSON.parse(JSON.stringify(c))));
+  const draft = lockedEnforcer(); draft.creation.locked = false;
+  const unchosen = lockedEnforcer(); unchosen.archetypeChoices.specialization = [];
+  const junk = lockedEnforcer(); junk.archetypeChoices.focusedSkillPicks = ["rifles", 7, null, {}];
+  for (const [name, c] of [["a draft", draft], ["no specialization", unchosen], ["junk picks", junk], ["no character", null]])
+    assert.equal(owed(c), "", `${name}: asked for a pick`);
 });
 
 // ── Read it or label it (Decision 135) ────────────────────────────────
