@@ -70,12 +70,14 @@ test("243: The city lists the book's places by Territory, searches them, and add
   assert.equal(app.$('[data-gentry="eclipse"] [data-gadd]'), null, "a Faction can't be added");
   type(app, "[data-jumpfilter]", "eclipse");
   assert.deepEqual(app.$$("[data-gentry]").map(e => e.dataset.gentry), ["central-city", "eclipse"]);
+  assert.equal(app.$("[data-jumpcount]").textContent, "2 entries", "the count is the entries shown, not the Territories");
   type(app, "[data-jumpfilter]", "okefenokee");
   assert.ok(app.$('[data-gentry="wormwood-swamp"]'), "found by its real-world name");
   type(app, "[data-jumpfilter]", "qwertyzzz");
   assert.match(app.$("[data-citypanels]").textContent, /Nothing in the city by that name\./);
   type(app, "[data-jumpfilter]", "park");
   assert.ok(app.$('[data-gadd="central-park"]'));
+  assert.equal(app.$('[data-gadd="central-park"]').getAttribute("aria-label"), "Add Central Park to the crew's places", "each of the repeated buttons names its entry");
   app.click('[data-gadd="central-park"]');
   assert.equal(app.$('[data-gadd="central-park"]'), null);
   assert.equal(focusedKey(app), "data-gopen=central-park", "the button turned to Open, and has focus");

@@ -1112,7 +1112,6 @@ const placeRecords = () => Array.isArray(S.table.places) ? S.table.places.filter
 const cityPageNow = () => S.tsection==="city" && S.placeOpen ? placeRecords().find(p=>p.id===S.placeOpen) || null : null;
 function placeBackNow(){ return S.backPlace ? placeRecords().find(p=>p.id===S.backPlace) || null : null; }
 const gazName = id => { const e=Engine.gazetteerEntry(id); return e ? String(e.name||"") : ""; };
-const GAZ_ADDABLE = ["territory", "zone", "site", "business", "region"];
 function placeCardHtml(t, p){
   const n=Engine.placeLines(t, p.id).length;
   const bits=[[gazName(p.zone), gazName(p.territory)].filter(Boolean).join(" · "), p.district, p.neighborhood, gazName(p.environment),
@@ -1128,9 +1127,9 @@ function placeListHtml(t){
 // A gazetteer entry: its name, the real-world place beside it, its line, and the button that makes it a place (SQ7).
 function gazEntryHtml(e, tag){
   const mine=placeRecords().find(p=>p.from && p.from.id===e.id);
-  const act=!GAZ_ADDABLE.includes(e.kind) ? ""
-    : mine ? `<button type="button" class="btn sm" data-gopen="${esc(e.id)}">Open</button>`
-    : `<button type="button" class="btn sm" data-gadd="${esc(e.id)}">Add to the crew's places</button>`;
+  const act=!Engine.PLACE_FROM_KINDS.includes(e.kind) ? ""
+    : mine ? `<button type="button" class="btn sm" data-gopen="${esc(e.id)}" aria-label="Open ${esc(e.name)}">Open</button>`
+    : `<button type="button" class="btn sm" data-gadd="${esc(e.id)}" aria-label="Add ${esc(e.name)} to the crew's places">Add to the crew's places</button>`;
   return `<article class="city-entry" data-gentry="${esc(e.id)}"><${tag} class="city-name"${tag==="h2" ? ` id="gz-${esc(e.id)}" tabindex="-1"` : ""}>${esc(e.name)}${e.realWorld ? ` <span class="city-rw">${esc(e.realWorld)}</span>` : ""}</${tag}>
     <p class="city-sum">${esc(e.summary)}</p>${act}</article>`;
 }
@@ -1264,7 +1263,9 @@ function redrawCity(main){
   const g=Engine.gazetteer({ q:S.cityQ||"" });
   main.querySelector("[data-citypanels]").innerHTML=cityPanelsHtml(g);
   main.querySelector(".jump-row").innerHTML=cityChips(g).map(c=>`<button class="jump" data-jump="${esc(c.id)}">${esc(c.label)}</button>`).join("");
-  const n=main.querySelector("[data-jumpcount]"); if (n) n.textContent=(S.cityQ||"").trim() ? `${cityChips(g).length} ${cityChips(g).length===1 ? "match" : "matches"}` : "";
+  // The entries shown, not the chips: one Territory can hold thirty of them.
+  const k=main.querySelectorAll("[data-gentry]").length;
+  const n=main.querySelector("[data-jumpcount]"); if (n) n.textContent=(S.cityQ||"").trim() ? `${k} ${k===1 ? "entry" : "entries"}` : "";
   bindCityBody(main);
 }
 function bindCityBody(main){

@@ -1,7 +1,7 @@
 // Reads the setting chapters of the CRB mirror (private/crb/) into the shape
 // the gazetteer's data should have, so the conformance test and whoever
 // regenerates the data read the book the same way. Never writes to private/.
-// Summaries are ours (Decision N); everything else here is the book's.
+// Summaries are ours (Decision 242); everything else here is the book's.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

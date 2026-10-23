@@ -9716,6 +9716,10 @@ test("243: a territory that doesn't hold the zone clears it", () => {
   assert.equal(p().zone, "metro-core", "the same Territory holds it");
   Engine.editPlace(t, id, { zone: "garden-state" });
   assert.equal(p().zone, null, "a zone the Territory doesn't hold");
+  Engine.editPlace(t, id, { zone: "eclipse" });
+  assert.equal(p().zone, null, "a Faction in the Territory isn't a Zone");
+  Engine.editPlace(t, id, { zone: "central-city" });
+  assert.equal(p().zone, null, "nor is the Territory itself");
   Engine.editPlace(t, id, { zone: "metro-core" });
   Engine.editPlace(t, id, { territory: null });
   eq([p().territory, p().zone], [null, null]);

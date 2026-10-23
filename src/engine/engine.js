@@ -5686,7 +5686,7 @@ const Engine = (() => {
     if (typeof v.name==="string") out.name = v.name;
     return out;
   }
-  // A link to a place (Decision N+1): a line says where it happened. A link to none on the table
+  // A link to a place (Decision 243): a line says where it happened. A link to none on the table
   // is kept (178); a name rides only as a string. A cast-kind link, or anything else, is no link.
   function _placeLink(v){
     if (!_isObj(v) || v.kind!=="place" || typeof v.id!=="string" || !PLACE_ID_RE.test(v.id)) return null;
@@ -5696,7 +5696,7 @@ const Engine = (() => {
   }
   // A gazetteer id, or nothing. One this version's data doesn't have is kept: a newer app may know it.
   const _gazId = v => typeof v==="string" && GAZETTEER_ID_RE.test(v) ? v : null;
-  // Where a place came from (Decision N+1): the gazetteer entry, and its name as it was when copied.
+  // Where a place came from (Decision 243): the gazetteer entry, and its name as it was when copied.
   function _gazFrom(v){
     const id = _isObj(v) && v.kind==="gazetteer" ? _gazId(v.id) : null;
     if (!id) return null;
@@ -5887,7 +5887,7 @@ const Engine = (() => {
     //   Schema 0.13 (Decision 241): a line may link the encounter it was written at. Nothing is guessed (203).
     if (typeof arrived!=="string" || _versionNewer("0.13", arrived))
       for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.encounter = null;
-    //   Schema 0.14 (Decision N+1): a table keeps places, and a line may say where. Nothing is guessed (203).
+    //   Schema 0.14 (Decision 243): a table keeps places, and a line may say where. Nothing is guessed (203).
     if (typeof arrived!=="string" || _versionNewer("0.14", arrived)){
       if (!Array.isArray(c.places)) c.places = [];
       for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.place = null;
@@ -6301,7 +6301,7 @@ const Engine = (() => {
     const session = _sessions(t).some(e=>e.id===f.session) ? f.session : _sessionOnDay(t, date);
     // Only a fight that is on the table is linked; End is the one caller that passes one (Decision 241).
     const encounter = typeof f.encounter==="string" && _encList(t).some(e=>e.id===f.encounter) ? _encounterLink({ kind:"encounter", id:f.encounter }) : null;
-    // Likewise only a place that is on the table (Decision N+1).
+    // Likewise only a place that is on the table (Decision 243).
     const place = typeof f.place==="string" && _placeRecords(t).some(p=>p.id===f.place) ? _placeLink({ kind:"place", id:f.place }) : null;
     const x = { id:newInteractionId(used), kind,
                 cast:_castLinks((Array.isArray(f.cast) ? f.cast : []).filter(id=>typeof id==="string").map(id=>({ kind:"cast", id }))),
@@ -6421,11 +6421,11 @@ const Engine = (() => {
     return out;
   }
 
-  // ── The gazetteer and the crew's places (Decisions N, N+1) ───────────────
+  // ── The gazetteer and the crew's places (Decisions 242, 243) ───────────────
   // The gazetteer is data (the book's setting, one line each); a place is a record on the table.
   // A place stores only what the GM chose: where it came from, the Territory and Zone ids, the
   // typed District and Neighborhood, one kind of ground, notes. Its history is read from the
-  // lines that name it, never stored (N+1).
+  // lines that name it, never stored (243).
   const _placeRecords = t => Array.isArray(t && t.places) ? t.places.filter(_isObj) : [];
   const _gazData = () => { const g = D().gazetteer; return _isObj(g) ? g : {}; };
   const _gazEntries = () => { const g = _gazData(); return Array.isArray(g.entries) ? g.entries.filter(_isObj) : []; };
@@ -6469,12 +6469,13 @@ const Engine = (() => {
   }
   // What a GM can add as a place: the book's Territories, Zones, Sites, Businesses and the places Beyond (SQ7).
   const PLACE_FROM_KINDS = ["territory", "zone", "site", "business", "region"];
-  // A Territory that doesn't hold the Zone clears it. An id the data doesn't have can't be judged, and stays.
+  // A Territory that doesn't hold the Zone clears it, and so does an entry that isn't a Zone. An id the
+  // data doesn't have can't be judged, and stays.
   function _fitZone(territory, zone){
     if (!zone) return null;
     if (!territory) return null;
     const z = gazetteerEntry(zone);
-    return z && z.territory && z.territory!==territory ? null : zone;
+    return z && (z.kind!=="zone" || z.territory!==territory) ? null : zone;
   }
   // The typed name, else the entry's (read live), else the name kept when it was copied, else a stand-in.
   function placeTitle(t, p){
@@ -6547,7 +6548,7 @@ const Engine = (() => {
       });
     } catch (e) { return []; }
   }
-  // The lines that name it, newest first. Read every time and stored nowhere (N+1).
+  // The lines that name it, newest first. Read every time and stored nowhere (243).
   function placeLines(t, id){
     try { return _interactions(t).filter(x=>_isObj(x.place) && x.place.kind==="place" && x.place.id===id).sort(_newest); }
     catch (e) { return []; }
@@ -8242,7 +8243,7 @@ const Engine = (() => {
     offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
     addInteraction, editInteraction, removeInteraction, interactionsFor, interactionSentence, crewView, linkName,
     // Places: the gazetteer the book names, and the crew's own places
-    gazetteer, gazetteerEntry, addPlace, editPlace, removePlace, placeTitle, placeList, placeLines, placeMet,
+    gazetteer, gazetteerEntry, PLACE_FROM_KINDS, addPlace, editPlace, removePlace, placeTitle, placeList, placeLines, placeMet,
     // Encounters: who is in one, whose turn it is, and what is still on them
     addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
