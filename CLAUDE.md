@@ -57,8 +57,8 @@ npm run fonts          # regenerate src/styles/fonts.css from the font packages 
 or stale.
 
 **Procedures as skills.** `.claude/skills/` holds the runbooks for closing a
-session, numbering a decision, opening or closing a flag, and cutting a
-release. They carry the steps and commands; the rules they follow are stated
+session, numbering a decision, opening or closing a flag, cutting a
+release, and conducting a work order. They carry the steps and commands; the rules they follow are stated
 here, and only here.
 
 **The baseline before a change.** On a branch freshly cut from `origin/main`,
@@ -143,7 +143,7 @@ tools/                  build.mjs (inlines everything into dist/), changelog.mjs
                         phone-check.mjs, devserver.mjs, session-start.mjs.
 .claude/                settings.json (the SessionStart hook), launch.json (the
                         dev server), skills/ (the procedures as runbooks).
-docs/                   STATE, INDEX, SCHEMA, VOICE-APP, WISHLIST, and audits/,
+docs/                   STATE, INDEX, SCHEMA, VOICE-APP, WISHLIST, WORK-ORDERS, and audits/,
                         plans/, log/, reference/ — INDEX §1 says what's in each.
 private/                The CRB mirror and the Threat Codex: a private repo,
                         mounted as a submodule (Decision 167). Never public.
@@ -288,6 +288,17 @@ so group related flags rather than pressing them one at a time.
 shape of the change and its consequences first, not a finished diff to review
 backwards. *Fix* and *Docs* work in scope — a typo, a named audit finding, a
 test — can just be done.
+
+**Planned work runs as a work order and three sessions.** For *Rule or shape*
+work, and *Content* that's more than a data edit, the proposal is a **work
+order**: drafted and pre-flighted against the code, then approved by Ken. A
+**conductor** (Opus, the session Ken talks to) starts a **builder** (Sonnet,
+its own worktree), and then a fresh **reviewer** (Opus) once the PR is open.
+The builder and reviewer message each other directly. Anything for Ken goes
+through the conductor, with a recommendation, and Ken merges. The loop, the
+pre-flight and both prompts are in `docs/WORK-ORDERS.md`. The conductor's steps
+are the `run-a-work-order` skill. No reviewed session has come back clean, so
+don't skip the reviewer to save a round.
 
 **Give the 50,000-foot view first.** Macro-level pattern mismatches before
 line-level notes. If something is wrong at the architecture level, say that

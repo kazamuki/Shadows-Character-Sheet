@@ -16,22 +16,23 @@ stay there.
 
 ## 1. How it runs
 
-The same cadence as GM mode, written once in
-[`gm-mode/README.md`](gm-mode/README.md) (*The cadence*):
+The loop every plan uses, written once in
+[`../WORK-ORDERS.md`](../WORK-ORDERS.md) (Ken, 2026-10-23; it was GM mode's README until then):
 - An orchestrating session (Opus) writes one work order, with its assumption
   sweep and its worked examples as named tests, and pre-flights it against
   the code.
 - Ken approves it: the order **is** the proposal *Rule or shape* asks for.
-- Ken starts a building session (Sonnet, titled `P<n> build`), which builds
-  it on a branch and opens a PR without merging, with evidence for every
-  claim.
-- Ken starts a fresh reviewing session (Opus), which reviews the PR against
-  the order, fixes nits itself, and messages the builder the rest. It
-  re-reviews the fixes narrowly and tells Ken when the PR is ready.
+- A conductor session (Opus), the one Ken talks to, starts a building session
+  (Sonnet, titled `P<n> build`), which builds it on a branch and opens a PR
+  without merging, with evidence for every claim.
+- The conductor then starts a fresh reviewing session (Opus), which reviews the
+  PR against the order, fixes nits itself, and messages the builder the rest. It
+  re-reviews the fixes narrowly and tells the conductor when the PR is ready.
+  Anything for Ken comes to him through the conductor; Ken merges.
 - **The next order is written only after the last PR merges.**
 
 Work orders live in [`sheet-wishlist/`](sheet-wishlist/), one per session,
-`P01-…` onward. Each ends with **Handing it over**: the README's two
+`P01-…` onward. Each ends with **Handing it over**: `WORK-ORDERS.md`'s two
 prompts, plus the order's own traps. The two-session loop ran on trial for
 P8a and P8b and was adopted on 2026-10-15 (Ken), with two refinements from
 their reviews: the sweep is answered by grepping a field's readers, and

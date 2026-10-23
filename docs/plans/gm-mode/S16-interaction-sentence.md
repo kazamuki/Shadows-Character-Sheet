@@ -4,19 +4,28 @@
 (encounters); the wishlist's **W79** and **W82** (Ken, 2026-10-08 and
 2026-10-09); Decisions 177–179, 188, 193, 203, 212.
 **Status:** **drafted 2026-10-10 by Claude (Opus)**, after #153 (S15, 212)
-merged (README step 7). **Ken chose this session (2026-10-10)** over
+merged (`WORK-ORDERS.md`, step 7). **Ken chose this session (2026-10-10)** over
 Supernatural Orders (S12a), the GM layout (W80, W77, W78), and export and
 print (W86 with W84).
+**Re-pre-flighted 2026-10-23** against `main` at `539af9e` (`docs/WORK-ORDERS.md`,
+*An order that waited*): no design change, so SQ1–SQ8 stand. Every line number moved
+(the engine's by about 1,700 lines), `smoke.test.mjs` is now `smoke-table-cast` and
+`smoke-table-play`, and the *Carried over* note gains every review since S15.
+**Refresh approved by Ken 2026-10-23, as written** (read in the conductor session;
+nothing to change).
 **SQ1–SQ8 answered by Ken 2026-10-10: every default** (sentence and Edit on a member's page; *Bob owes Scott*; *Scott, D and Rook*; *The crew*; quotes for told and learned; old fight lines left as written; the wrap-up previews the sentence; Back returns).
-**Branch:** from `main` at `25894e9` or later, PR to `main`, switched off
+**Branch:** from `main` at `539af9e` or later, PR to `main`, switched off
 (Decision 173).
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md): a
+conductor (Opus) starts **S16 build** (Sonnet), then a fresh **S16 review** (Opus) once
+the PR is open. Builder and reviewer message each other directly; anything for Ken goes
+to the conductor. §14 is the hand-over.
 **Runs alone.** It touches `engine.js` (the interaction's gate, a new
 reader, `linkName`, `removeEncounter`, `_endLine`, `crewView`,
 `tableSearch`), `gm.js` (three line renderers, the member page's rows, the
 wrap-up's text field, the encounter's Back), the CSS, the ledger and STATE.
-**Table schema 0.13.** No data, nothing in `private/`. **#154** (docs: the
-playtest's W87–W99) is open and touches STATE, INDEX and WISHLIST but no
-number this order reserves; whichever merges second takes the other's lines.
+**Table schema 0.13** (the next after `main`'s 0.12; check it's still free when you
+build, since numbers are never reserved). No data, nothing in `private/`.
 
 **Carried over from S15's review** (#153, three fix rounds). Four of the
 five fixes were the order's:
@@ -30,7 +39,7 @@ five fixes were the order's:
 - **A field bound to both `input` and `change` gets tested with both.** On
   blur, the change event re-sent the value and made a phantom entry. The
   order's typing test fired only `input`. This order rebuilds the member
-  page's rows, whose crew and date fields bind both (`gm.js:891–899`).
+  page's rows, whose crew and date fields bind both (`gm.js`, `bindInteractions`, ~`:888–895`).
   §9 fires both.
 - **A rule followed literally that reads oddly is flagged in the order, not
   found in review.** *Removed Marta and 4 more* was the order's own label
@@ -40,54 +49,80 @@ five fixes were the order's:
 - The fifth fix (a fold decided by a label rebuilt from the clock) was the
   build's.
 
-**Pre-flight** (README, *The pre-flight*), against `main` at `25894e9`:
+**Carried over from the reviews since** (P8a–P21 and Y0–Y4 on the player
+sheet; none was GM mode's, but each is a lesson about orders like this one):
 
-- **The record** (`engine.js`): `INTERACTION_KINDS` (`:3934`) is
+- **Every sentence that describes what this changes is a reader.** Y1 moved a
+  control and kept a line that pointed at its old place. Y4 rewrote a note
+  and missed a test that pinned the old wording, and a twin of the note
+  rendered on Admin where it no longer applied. Here: grep the tests and the
+  copy for each kind's label (*Told them*, *Fought them*, …), and for
+  `.int-line` read as text. The re-pre-flight's §9 list names the hits.
+- **Check each example's call shape and count against the code and the rest
+  of the order**, so its failure on `main` is for the stated reason, not an
+  `undefined` (Y1's builder).
+- **Run a smoke mutant narrowly**, with `--test-name-pattern` under a
+  `timeout`: a click on an element a mutant removed hangs the whole file
+  (Y1's builder).
+- **A new styled block takes its colours from theme tokens**, never an `rgba`
+  written for one theme, and its own class (Y1: 1.96:1 in the light theme).
+  An open line's fields are a new block: measure its contrast in both themes
+  (§10, step 9).
+- **Every "report it if…" is a review checklist item** (§13), and the PR
+  answers each.
+
+**Pre-flight** (`docs/WORK-ORDERS.md`, *The pre-flight*), first against `25894e9`,
+**re-run against `539af9e` on 2026-10-23**. Every function below was read again: none
+of them changed (`git diff 25894e9 539af9e` names none of `linkName`, `removeEncounter`,
+`_endLine`, `crewView`, `tableSearch`, `addInteraction`), and `gm.js` changed in 15 lines, none of them a line renderer.
+The line numbers are `539af9e`'s:
+
+- **The record** (`engine.js`): `INTERACTION_KINDS` (`:5658`) is
   `shared, learned, helped, wronged, killed, owes, owed, fought`, and `_kind`
-  reads anything else as null. `_interaction(x, used, sessions)` (`:4015`) is
-  the gate: `session`, `kind`, `cast` through `_castLinks` (`:3945`, links of
+  reads anything else as null. `_interaction(x, used, sessions)` (`:5739`) is
+  the gate: `session`, `kind`, `cast` through `_castLinks` (`:5669`, links of
   kind `"cast"` with a `C-` id; a `name` is kept only as a string), `crew`,
   `text`, `date`, the id and the stamps. Unknown keys ride along.
-  `addInteraction` (`:4495`) **unshifts**, sets a *killed* line's members
+  `addInteraction` (`:6219`) **unshifts**, sets a *killed* line's members
   dead (`_killLinked`), and takes the one session on its day.
-  `editInteraction` (`:4513`) edits session, kind, crew, text and date.
+  `editInteraction` (`:6237`) edits session, kind, crew, text and date.
   **Neither knows an encounter.**
-- **The link rule** (`linkName`, `:4481`): it reads `t.cast` only, then a
+- **The link rule** (`linkName`, `:6205`): it reads `t.cast` only, then a
   kept `name`, then *Someone removed*. **It learns the encounter kind here.**
   `removeCastMember` writes the name into links (178). **`removeEncounter`
-  (`:5514`) writes nothing**: it splices and stamps.
-- **The fight's line** (`endEncounter`, `:5905`, and `_endLine`, `:5859`):
+  (`:7238`) writes nothing**: it splices and stamps.
+- **The fight's line** (`endEncounter`, `:7635`, and `_endLine`, `:7589`):
   the wrap-up's default text is
   ``Fought them in ${encounterTitle(e)}${hl}${conds}.`` End writes it with
   `addInteraction(t, { kind: killed ? "killed" : "fought", cast:[member.id],
-  crew:ups.crew, text, date })` (`:5946`). The GM can edit the text in the
+  crew:ups.crew, text, date })` (`:7676`). The GM can edit the text in the
   wrap-up (`[data-ew-text]`) before End. **The encounter is in the text and
   nowhere else.**
 - **Every place a line is read** (`gm.js`):
-  - `INTERACTION_KINDS` labels (`:563`): *Told them*, *Learned from them*,
+  - `INTERACTION_KINDS` labels (`:562`): *Told them*, *Learned from them*,
     *Helped them*, *Wronged them*, *Killed them*, *Owes them*, *They owe*,
     *Fought them*.
-  - **Who knows what** (`crewViewHtml`, `:605`): label, member links, day,
+  - **Who knows what** (`crewViewHtml`, `:599`): label, member links, day,
     text.
-  - **A session's page** (`sessionInteractionHtml`, `:1102`): label, member
+  - **A session's page** (`sessionInteractionHtml`, `:1096`): label, member
     links, crew, day, text, and *Add to this session* when offered.
-  - **A member's page** (`interactionRowHtml`, `:671`): **an always-open
+  - **A member's page** (`interactionRowHtml`, `:665`): **an always-open
     edit form**, not a line: kind toggles, then crew, date, the session tag,
-    the text and Delete. The add row (`castInteractionsHtml`, `:682`) runs
-    kind, crew, when, what, Add. `bindInteractions` (`:859`) saves each
+    the text and Delete. The add row (`castInteractionsHtml`, `:676`) runs
+    kind, crew, when, what, Add. `bindInteractions` (`:853`) saves each
     field as typed through `tableChange(…, false)`. Crew and date bind both
     `input` and `change`.
-  - The close-out's award log (`coLogLine`, `:1354`) **isn't** an
+  - The close-out's award log (`coLogLine`, `:1327`) **isn't** an
     interaction. Untouched.
-- **Search:** `crewView` (`:4546`) matches a crew name, the text and member
-  names. `tableSearch`'s interaction fields (`_interactionFields`, `:4755`)
+- **Search:** `crewView` (`:6270`) matches a crew name, the text and member
+  names. `tableSearch`'s interaction fields (`_interactionFields`, `:6479`)
   are *What happened*, *Crew* and *With*. **Move the encounter's name out of
   the text and both stop finding a fight's line by its fight**, so both learn
   the link (§7).
-- **Opening an encounter from elsewhere:** `openFound` (`:440`, Find) sets
+- **Opening an encounter from elsewhere:** `openFound` (`:439`, Find) sets
   `S.tsection="encounters"`, `S.encOpen=id`, clears the panels, and lands on
   `[data-enc-h]`. Ended ones render read-only under *Past encounters* (188).
-  The encounter's Back (`data-enc-back`, `:2302`) **always goes to the
+  The encounter's Back (`data-enc-back`, `:2262` and `:2299`) **always goes to the
   Encounters list**. Today's return routes are cast → encounter
   (`S.backEnc`), session → member (`S.backSess`), close-out → member
   (`S.backClose`), and threat → encounter (`S.threatEnc`). **Nothing returns
@@ -98,23 +133,33 @@ five fixes were the order's:
   edit made through the new rows records the same diff as today's.
 - **The tests this moves:**
   - **Version pins.** `grep 'tableSchemaVersion.*"0.12"'` gives **14** in
-    `engine.test.mjs`, **2** in `hostile.test.mjs` and **8** in
-    `smoke.test.mjs`, plus `docs.test.mjs`'s STATE check. `engine:1235` is a
-    *character's* `schemaVersion` and doesn't move.
-  - **The fight's text:** `engine:4836` and `:4852` pin
-    `Fought them in Warehouse…`, and `smoke:5353` pins
+    `engine.test.mjs`, **2** in `hostile.test.mjs`, **6** in
+    `smoke-table-cast.test.mjs` and **2** in `smoke-table-play.test.mjs`, plus
+    `docs.test.mjs`'s STATE check (it reads `newTable()`, so it moves with
+    STATE's line).
+  - **The fight's text:** `engine:5120` and `:5136` pin
+    `Fought them in Warehouse…`, and `smoke-table-play:500` pins
     `Fought them in Job: …; Prone.` in `[data-ew-text]`.
   - **The member page's rows:** **8** smoke tests press or type into a row
     (`data-ikind=`, `data-icrew`, `data-itext`, `data-idate`, `data-idel`,
-    `data-int=`). Under SQ1 each gains an **Edit** press first,
-    and nothing else. They are found by
-    `awk '/^test\(/{t=NR} /data-ikind=|data-icrew|data-itext|data-idate|data-idel|data-int=/{print t}' tests/smoke.test.mjs | sort -u`.
+    `data-int=`), all eight in `smoke-table-cast.test.mjs`. Under SQ1 each
+    gains an **Edit** press first, and nothing else. They are found by
+    `awk '/^test\(/{t=NR} /data-ikind=|data-icrew|data-itext|data-idate|data-idel|data-int=/{print t}' tests/smoke-table-cast.test.mjs | sort -u`.
   - **Who knows what and the session page** read `.int-line`. The `s`
-    struck-name assertions (`smoke:4064`, `:4160`) still hold if the gone
-    member renders as `<s>`.
-  - The CSS assertion at `smoke:4145–4146` names `.int-kinds`, `.int-line`
-    and `.int-row .int-fields`. Keep those classes, or move that assertion
-    and list it.
+    struck-name assertions (`smoke-table-cast:829`, `:926`, and
+    `hostile:411`'s `.int-line s + .vh`) still hold if the gone member
+    renders as `<s>` with its hidden *, removed*.
+  - The CSS assertion at `smoke-table-cast:911–912` names `.int-kinds`,
+    `.int-line` and `.int-row .int-fields`. Keep those classes, or move that
+    assertion and list it.
+  - **Text read off a line** (the re-pre-flight's sentence sweep):
+    `smoke-table-cast:925` matches `/told them nothing/` in a `.int-line`,
+    and `smoke-table-play:533` and `:538` match `/Fought them/` and
+    `/Killed them/` in `#main` after End. The first passes unchanged (it's
+    the line's own text, quoted). **The other two would pass vacuously**: the
+    add row's kind toggles carry the same labels, so they'd no longer test
+    the line. Point each at the member's `.int-line` and its sentence
+    (*… fought Old Gull in …*, *… killed Dez in …*), and list both in the PR.
 - **The ledger,** searched by name: *interaction*, *kind*, *Told them*,
   *They owe*, *fought*, *linkName*, *link*, *removeEncounter*, *endEncounter*,
   *wrap-up*, *Who knows what*, *crewView*, *Between them and the crew*,
@@ -139,10 +184,14 @@ five fixes were the order's:
   - **164** (a press keeps the keyboard's place): cited for Edit and Done.
   - **208** (Find): cited; `tableSearch` learns the link's name.
   - **212**: cited; nothing here bypasses `tableChange`.
+  - **Since 212** (re-run 2026-10-23, Touches lines of 213–240): only **220**
+    names an encounter, for Dying at a Reset (`resolveEncounterReset`).
+    Nothing it touches is a line. No other hit.
 - **Numbers:** the decision takes **the next free number** when it's built
   (`CLAUDE.md`, *Decisions*), written **N** in this order. Table schema
-  **0.13** was free on `origin/main` (checked 2026-10-10). W79 and W82 are
-  granted. Check 0.13 again before building.
+  **0.13** was free on `origin/main` (checked 2026-10-10 and again 2026-10-23,
+  at `539af9e`: the table is 0.12). W79 and W82 are granted. Check 0.13 again
+  before building.
 
 ---
 
@@ -393,6 +442,10 @@ now). An open line's fields stack at 390px.
 
 ## 9. Tests
 
+**Write these first and show them failing on `main`**, each for the reason the
+test says (not an `undefined` or a thrown call), and record the output in the PR.
+The ones that pass on `main` by design (a 0.12 line kept as written) say so.
+
 **`tests/engine.test.mjs`**, *A line reads as a sentence (N)*:
 
 - **Each kind's sentence, part by part:** for every kind in
@@ -416,7 +469,7 @@ now). An open line's fields stack at 390px.
   alone. The dead one is *killed*. Then record and undo it (212), and the
   table deep-equals its state before (`undoBase`).
 - **`_endLine`:** figures with levels and Conditions; Conditions only;
-  nothing at all (`""`). **`engine:4836` and `:4852` move** to the new text.
+  nothing at all (`""`). **`engine:5120` and `:5136` move** to the new text.
 - **Search:** `crewView({ q:"Dock" })` finds a fight's line by its
   encounter's name. `tableSearch(t, "Dock")` returns the line with a
   *Fight* field.
@@ -429,7 +482,9 @@ now). An open line's fields stack at 390px.
 - **Version pins:** every `tableSchemaVersion` `"0.12"` assertion moves to
   `"0.13"` (14 here, at the pre-flight).
 
-**`tests/smoke.test.mjs`**, switched on:
+**`tests/smoke-table-cast.test.mjs`** (the member page, Who knows what) and
+**`tests/smoke-table-play.test.mjs`** (End, the wrap-up, the session page),
+switched on:
 
 - **The member page reads sentences:** add *Nyx* told *the warehouse is a
   front*. The line reads *Nyx told Dez “the warehouse is a front” on …*, and
@@ -448,10 +503,11 @@ now). An open line's fields stack at 390px.
   Remove it, and the line shows its name in `<s>` with no button and
   `app.errors` empty.
 - **The wrap-up preview** (SQ7): its sentence shows above the text field and
-  turns to *killed* when the status is set dead. **`smoke:5353` moves** to
-  the figures.
+  turns to *killed* when the status is set dead. **`smoke-table-play:500`
+  moves** to the figures.
 - **The 8 row tests** gain an Edit press, and nothing else changes in them.
-- **Version pins:** the 8 `"0.12"` assertions move to `"0.13"`.
+- **Version pins:** the 8 `"0.12"` assertions (6 in cast, 2 in play) move to
+  `"0.13"`.
 
 **`tests/hostile.test.mjs`:** a table whose lines carry an `encounter` with
 `<img onerror>` as its kept `name`, a `__proto__` id, a cast-kind link and an
@@ -459,7 +515,9 @@ array. It renders the name as text in all three lists, no `img` is in the
 page, `Object.prototype` is untouched, and the 2 version pins move.
 
 **Mutation-test** (record each in the PR with the test that caught it).
-Check each for a second path first:
+Check each for a second path first, and run each mutant narrowly
+(`node --test --test-name-pattern="…" tests/<file>` under a `timeout`), never a
+whole smoke file:
 
 1. **`removeEncounter` writing no name** → engine *the link* (gone with
    *An encounter removed*, not the name), and smoke *rename and remove*.
@@ -504,6 +562,9 @@ the end; the targeted test files after each step.
    - Edit a line, Done, then Undo from the toast.
    - Check at **390px**, **768 × 1024** and **1300px**. Run
      `npm run phone-check`.
+   - **Both themes:** an open line's fields are a new styled block. Measure
+     its text contrast with `data-theme="light"` on `<html>` and without, and
+     put the numbers in the PR. **Report it if** either is under 4.5:1.
 10. The mutations (§9).
 11. Ledger (N; 178, 179 and 193 marked), INDEX, SCHEMA §3 (a line's
     `encounter`, 0.13), the plan, STATE, W79 and W82 to
@@ -518,7 +579,11 @@ the end; the targeted test files after each step.
   builds one by hand would skip the link and the gate's shape).
 - The sentence needs a word for a case §8's table doesn't cover.
 - An existing test needs a change beyond the version pins, the three fight
-  texts, the 8 row tests' Edit press and the CSS assertion named above.
+  texts, the 8 row tests' Edit press, the CSS assertion, and the two
+  `smoke-table-play` text assertions retargeted at the sentence (§ pre-flight).
+- **Not a stop:** the version literals 0.13 moves; `engine.test.mjs`'s
+  *"208: a search over 200 members and 100 sessions is quick"* failing on
+  timing while the dev preview runs, if it passes run alone.
 - Undo's round trip of End isn't deep-equal.
 - The voice test flags any of the new copy.
 - The decision goes over 350 words.
@@ -547,11 +612,14 @@ the end; the targeted test files after each step.
   S16's row.
 - **PR** titled `feat(gm): a line reads as a sentence, and a fight's line
   links its fight, switched off (S16, Decision N)`. Body sections: what
-  changed; the mutations; the browser check; **Where the order didn't fit**.
+  changed; *Evidence* (every claim names its command or test; the §9 tests
+  failing on `main`; each mutation; each changed existing test, by name, with
+  what changed); the browser check with screenshots; *Voice pass* (every ✎
+  string, for Ken through the conductor); **Where the order didn't fit**.
 
 ## 13. Review checklist
 
-- [ ] **In the browser, by the orchestrator:**
+- [ ] **In the browser, by the reviewer** (§10's step 9, by clicking):
   - every kind's sentence on a member's page;
   - End with two cast members, a Keep and a death, read in all three lists;
   - the fight's tap and Back, from each place;
@@ -563,8 +631,39 @@ the end; the targeted test files after each step.
       link renders as text.
 - [ ] Find and Who knows what find a fight's line by its fight.
 - [ ] Only the named tests changed: the version pins, the three fight texts,
-      the 8 row tests' Edit press, and the CSS assertion if moved.
+      the 8 row tests' Edit press, the CSS assertion if moved, and the two
+      `smoke-table-play` assertions retargeted at the sentence (not left
+      matching the kind toggles).
 - [ ] 390px: sentences wrap; an open line's fields stack; nothing scrolls
       sideways.
 - [ ] 178, 179 and 193 marked; table schema 0.13 everywhere it's written.
 - [ ] Two mutations re-run locally.
+- [ ] Every "report it if" has an answer in the PR (the contrast numbers),
+      and *Where the order didn't fit* is there, empty or not.
+- [ ] The final `npm run verify` is on the PR's final commit.
+
+## 14. Handing it over
+
+The conductor starts **S16 build** (Sonnet) with the building prompt in
+`docs/WORK-ORDERS.md` and this order's path, `docs/plans/gm-mode/S16-interaction-sentence.md`,
+and **S16 review** (Opus) once the PR is open, with the reviewing prompt and
+the PR number. The traps, under the builder's prompt:
+
+- **The sentence is the engine's.** `interactionSentence` returns parts, and
+  the three lists only join them. A renderer that builds its own words is the
+  first rejected option.
+- **Only `addInteraction` writes a line**, and only End passes `encounter`.
+  Edit never offers it.
+- **The gate converts nothing** (SQ6). A 0.12 fight line keeps its text and
+  has no link.
+- **Measure End at its realistic worst**: S15's `bigTable()`, three cast
+  rows, a Keep and a death, then undo deep-equal.
+- **Fire `change` as well as `input`** on every field an open line binds.
+- **Sweep the sentences**: §9's text-off-a-line list is what the re-pre-flight
+  found. Grep again for each kind's old label before you call a test failure
+  unexpected.
+- **Numbers aren't reserved:** take the next free decision number and confirm
+  table schema 0.13 is free when you write them.
+- **Preview by clicking**, both themes and three widths, and answer every
+  "Report it if" in the PR.
+- **Verify last.** The final `npm run verify` runs on the commit the PR ends on.
