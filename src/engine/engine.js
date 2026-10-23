@@ -6296,7 +6296,7 @@ const Engine = (() => {
     const crew = _roleList(x.crew);
     const members = (Array.isArray(x.cast) ? x.cast : []).filter(l=>_isObj(l)).map(l=>{
       const n = (Array.isArray(t && t.cast) ? t.cast : []).find(c=>_isObj(c) && c.id===l.id);
-      if (n && !_str(n.name).trim()) return { kind:"cast", id:_str(l.id), name:"them", gone:false };
+      if (n && !_str(n.name).trim()) return { kind:"cast", id:_str(l.id), name:"them", gone:false, standIn:true };
       const r = linkName(t, l);
       return { kind:"cast", id:_str(l.id), name:r.name, gone:r.gone };
     });
@@ -6323,6 +6323,7 @@ const Engine = (() => {
     // The first word is a capital, whatever stood in for a missing name.
     const first = parts[0];
     if (first.kind==="text" && first.text) parts[0] = T(first.text.charAt(0).toUpperCase() + first.text.slice(1));
+    else if (first.kind==="cast" && first.standIn) parts[0] = { ...first, name:"Them" };   // a stand-in, never a real name
     return { parts };
   }
   function interactionsFor(t, castId){

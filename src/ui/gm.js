@@ -607,7 +607,7 @@ function sentenceHtml(t, x, o={}){
     }
     if (o.plain) return esc(p.name);
     return p.gone ? goneHtml(p.name)
-      : `<button class="cast-open int-who int-fight" data-eopenline="${esc(x.id)}|${esc(p.id)}">${esc(p.name)}</button>`;
+      : `<button class="cast-open int-who int-fight" data-eopenline="${esc(x.id)}|${esc(p.id)}${o.where ? "|"+esc(o.where) : ""}">${esc(p.name)}</button>`;
   }).join("");
 }
 // Who knows what (Decision 179): the same records, by crew name.
@@ -757,9 +757,9 @@ function redrawCastList(){
 // there, on the link (Decision 241). The route is cleared when the GM leaves the encounter any other way.
 function bindFightLinks(main){
   main.querySelectorAll("[data-eopenline]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
-    const [line, enc]=b.dataset.eopenline.split("|");
+    const [line, enc]=b.dataset.eopenline.split("|"), key=b.dataset.eopenline;
     if (!encList().some(e=>e.id===enc)) return;
-    S.backFromLine={ line, enc, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
+    S.backFromLine={ line, enc, key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
       backClose:S.backClose, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
     S.intEdit=null; S.tsection="encounters"; S.encOpen=enc; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     window.scrollTo(0,0); update();
@@ -2375,7 +2375,7 @@ function bindEncounters(main){
         Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose, sessOpen:r.sessOpen, castQ:r.castQ });
         if (S.closeOut) S.closeOut.view=r.closeView;
         window.scrollTo(0,0); update();
-        const link=$("main").querySelector(attrSel("data-eopenline", `${r.line}|${r.enc}`)); if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
+        const link=$("main").querySelector(attrSel("data-eopenline", r.key)); if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
         return;
       }
       const id=S.encOpen; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },

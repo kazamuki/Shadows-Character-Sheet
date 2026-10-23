@@ -2043,8 +2043,10 @@ test("241: the fight's name from Who knows what, and Back returns to the same vi
   const app = endedApp();
   app.click('[data-tsec="cast"]'); app.click('[data-cview="crew"]');
   type(app, "[data-csearch]", "job");
-  const link = app.$(".crew-group .int-line [data-eopenline]");
-  const key = link.dataset.eopenline;
+  const copies = app.$$(".crew-group .int-line [data-eopenline]");
+  assert.equal(copies.length, 2, "a line should show once per crew name");
+  const link = copies[1], key = link.dataset.eopenline;
+  assert.notEqual(copies[0].dataset.eopenline, key, "the two copies share a key");
   link.click();
   assert.equal(app.$("[data-enc-back]").textContent, "Back to Who knows what");
   app.click("[data-enc-back]");
@@ -2052,6 +2054,7 @@ test("241: the fight's name from Who knows what, and Back returns to the same vi
   assert.equal(app.window.eval("S.castOpen"), null);
   assert.ok(app.$(".crew-group"), "Who knows what wasn't drawn");
   assert.equal(app.$("[data-csearch]").value, "job", "the search was lost");
+  assert.equal(app.doc.activeElement, app.$$(".crew-group .int-line [data-eopenline]")[1], "focus isn't on the copy that was tapped");
   assert.equal(app.doc.activeElement.dataset.eopenline, key);
   assert.deepEqual(app.errors, []);
 });

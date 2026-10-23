@@ -607,8 +607,10 @@ test("a number field shows what was stored once it loses focus: a refused value 
 // Synthetic only: Dez, Moth and Orla at the cast; Nyx and Rook as the crew.
 const openFirst = app => app.click("[data-copen]");
 const tableOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table)"));
-// A member's lines read as sentences; one opens at a time with Edit (Decision 241), so the fields are read from the table.
-const intTexts = app => tableOf(app).interactions.map(x => x.text);
+// A member's lines read as sentences; one opens at a time with Edit (Decision 241), so the words are read off the drawn sentences.
+// What the page draws, in the order it draws it: each line's words, read back off its sentence.
+const lineWords = el => { const s = el.querySelector(".int-sentence").textContent, q = /“([^”]*)”/.exec(s); if (q) return q[1]; const i = s.indexOf(": "); return i < 0 ? "" : s.slice(i + 2); };
+const intTexts = app => app.$$("[data-int]").map(lineWords);
 const editLine = (app, xid) => app.click(xid ? `[data-iedit="${xid}"]` : "[data-iedit]");
 const addLine = (app, text) => { type(app, "[data-iwhat]", text); keyIn(app, "[data-iwhat]", "Enter"); };
 const memberWith = (app, name = "Dez") => { castAdd(app, name); openFirst(app); };
@@ -627,8 +629,7 @@ test("Decision 177: kind once, crew once, then What and Enter three times: three
     assert.equal(app.$("[data-iacrew]").value, "Nyx", "the crew didn't stay");
   }
   assert.deepEqual(intTexts(app), ["three", "two", "one"]);
-  assert.deepEqual(tableOf(app).interactions.map(x => x.crew.join(", ")), ["Nyx", "Nyx", "Nyx"]);
-  assert.deepEqual(tableOf(app).interactions.map(x => x.kind), ["learned", "learned", "learned"]);
+  assert.deepEqual(app.$$("[data-int] .int-sentence").map(s => /^Nyx learned from Dez “([a-z]+)”/.exec(s.textContent)?.[1]), ["three", "two", "one"], "crew, kind or order drawn wrong");
   assert.equal(app.$("[data-iadate]").value, app.window.eval("localDay()"), "the date doesn't start as today's");
   assert.deepEqual(app.errors, []);
 });
