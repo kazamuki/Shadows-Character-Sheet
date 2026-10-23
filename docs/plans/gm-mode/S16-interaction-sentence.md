@@ -10,8 +10,9 @@ print (W86 with W84).
 **Re-pre-flighted 2026-10-23** against `main` at `539af9e` (`docs/WORK-ORDERS.md`,
 *An order that waited*): no design change, so SQ1–SQ8 stand. Every line number moved
 (the engine's by about 1,700 lines), `smoke.test.mjs` is now `smoke-table-cast` and
-`smoke-table-play`, and the *Carried over* note gains every review since S15. Ken
-reads the refresh before the conductor starts the builder.
+`smoke-table-play`, and the *Carried over* note gains every review since S15.
+**Refresh approved by Ken 2026-10-23, as written** (read in the conductor session;
+nothing to change).
 **SQ1–SQ8 answered by Ken 2026-10-10: every default** (sentence and Edit on a member's page; *Bob owes Scott*; *Scott, D and Rook*; *The crew*; quotes for told and learned; old fight lines left as written; the wrap-up previews the sentence; Back returns).
 **Branch:** from `main` at `539af9e` or later, PR to `main`, switched off
 (Decision 173).

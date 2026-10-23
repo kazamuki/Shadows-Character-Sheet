@@ -563,7 +563,7 @@ not a queue. What Scott's use of the table turns up can reorder it.
 
 | Session | What | Tier | Waits on | Status |
 |---|---|---|---|---|
-| **S16** | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | Rule or shape | Nothing | **Order drafted** 2026-10-10, SQ1–SQ8 answered, re-pre-flighted 2026-10-23 ([order](gm-mode/S16-interaction-sentence.md)). Next to build |
+| **S16** | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | Rule or shape | Nothing | **Order drafted** 2026-10-10, SQ1–SQ8 answered, re-pre-flighted and approved 2026-10-23 ([order](gm-mode/S16-interaction-sentence.md)). Next to build |
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
 | S6 | The gazetteer and the crew's places | Content + shape | Nothing | No order yet |

@@ -73,8 +73,31 @@ start it by `proposal_id` when he says so.
 When the reviewer says "Ready to merge": check the PR's head and CI
 (`gh pr view <n> --json headRefOid,mergeable`, `gh pr checks <n>`), then
 tell Ken, with the head commit, the verify result, and whether CI is green.
-**Ken merges.** Once it's merged, the next order is drafted from `main`
-(`docs/WORK-ORDERS.md`, step 7).
+**Ken merges.**
+
+## 7. The next order
+
+Once the PR has merged, the next order is drafted from `main`
+(`docs/WORK-ORDERS.md`, step 7). **The reviewer drafts it**: it has just read
+the code the next order starts from, and it knows the gotchas this one hit.
+The conductor has the plan's side.
+
+1. Ask Ken which session is next, unless he's said. Recommend one from the
+   plan's *Still to build* table, with why.
+2. Message the reviewer (by its id) to draft it: the plan and the session
+   id; "on a fresh branch from `origin/main`, in your worktree"; the
+   template and pre-flight in `docs/WORK-ORDERS.md`; and a *Carried over*
+   note from this review, split into the order's misses and the build's.
+   Add anything from your notes it didn't see: a stop the builder raised
+   that you settled, and Ken's answers.
+3. When it reports the draft, read the order's header, its questions and
+   its pre-flight commit, then give Ken the questions with their defaults.
+   The order is Ken's to approve, as always. Once he does, write his
+   approval and answers into the order (his words, in this session), and
+   the loop starts again at §1 with a fresh builder.
+
+If the reviewer's session is gone or archived, draft the order here from its
+review comments on the PR instead.
 
 ## If something goes wrong
 

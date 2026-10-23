@@ -31,9 +31,10 @@ makes every decision without the sessions waiting on him to relay.
 | **Builder** | Sonnet | Builds the order on its own branch and worktree, opens the PR, fixes the review's findings | Merges, or asks the reviewer anything that's Ken's |
 | **Reviewer** | Opus, fresh | Reviews the PR against the order, fixes nits itself, re-reviews the fix commits narrowly, says "Ready to merge" | Merges, or shares the order's assumptions |
 
-The orchestrator and the conductor are often one session (the last reviewer
-is a good choice to draft the next order: it has just read the code the order
-starts from). **Ken merges.**
+The orchestrator is usually **the last order's reviewer**, asked by the
+conductor once that PR merges (step 7): it has just read the code the next
+order starts from. With no reviewer to ask, the conductor drafts it.
+**Ken merges.**
 
 ## The cadence
 
@@ -90,8 +91,12 @@ starts from). **Ken merges.**
    merged, the ledger's supersession rules apply.
 
 7. **Only then does the orchestrator write the next order**, from `main` with
-   the last PR merged (Ken, 2026-10-06). Never while that PR is open, for
-   three reasons:
+   the last PR merged (Ken, 2026-10-06). **The last reviewer is the usual
+   orchestrator**: it has just read the code the next order starts from, and
+   the gotchas it found go straight into *Carried over*. The conductor asks
+   Ken which session is next, sends the reviewer the request with its own
+   notes (the stops it settled, Ken's answers), and brings the draft's
+   questions to Ken. Never while that PR is open, for three reasons:
    - its *Carried over* note is what the fix round actually changed, not
      what the review expected;
    - its pre-flight reads the code it will be built from, with no "re-run
