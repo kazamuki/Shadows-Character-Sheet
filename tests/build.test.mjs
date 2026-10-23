@@ -348,8 +348,8 @@ test("a feature ships switched off until its launch line is in: FEATURES.gm and 
   }
 });
 
-test("the blank sheet has no CRANK while the switch is off (Decision 214)", () => {
-  assert.doesNotMatch(buildBlankSheetHtml(), /CRANK/);
+test("the blank sheet has CRANK's field now CRANK is back (Decision 239)", () => {
+  assert.match(buildBlankSheetHtml(), /CRANK/);
 });
 
 test("release:prep dates a release by the local calendar day, not the UTC one (W67, Decision 213)", () => {

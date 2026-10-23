@@ -52,7 +52,7 @@ export function onStep(archetype, powerLevel, stepId, mutate = () => {}, extraSt
   return app;
 }
 
-// Decision 214: CRANK is behind a switch, off; its tests boot with it on.
+// Decision 214: CRANK is behind a switch; Decision 239 turned it on for everyone, so this is a no-op kept for the older tests that pass it.
 export const CRANK_ON = { "shadows.feature.crank": "on" };
 
 export function openSheet(ch, section, opts = {}) {
