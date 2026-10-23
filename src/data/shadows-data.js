@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.45",
+    "gamedataVersion": "0.46",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2624,19 +2624,19 @@ window.SHADOWS_DATA = {
           {
             "id": "enforcer",
             "name": "Enforcer",
-            "description": "Policeman, thug, bodyguard, or vigilante - you ply your trade dealing with threats in a calculated way, looking for a weakness to exploit. Your teacher was life itself.",
+            "description": "Police officer, bodyguard, corporate security, syndicate muscle, or the occasional vigilante. The patch on your shirt changes; the job doesn't. Every Enforcer carries a Neurocybernetic Interpreter (NCI), and almost none of them paid for it.",
             "requires": { "stats": {
-              "REF": 5,
-              "MOB": 7,
-              "BOD": 8
+              "BOD": 8,
+              "COOL": 7
             } },
-            "focusedSkills": { "ids": ["athletics", "combat-sense", "intimidation", "investigation", "survival"] },
+            "focusedSkills": { "ids": ["athletics", "combat-sense", "cybernetics", "intimidation", "investigation"], "choose": { "count": 1, "category": "combat" } },
             "tweak": {
-              "name": "Hard Knock Life",
-              "description": "You've been through the worst that life has to offer, developing incredible fortitude in both mind and body.",
+              "name": "Duty Grade",
+              "description": "Plenty of people in NYTE City carry chrome. You run it. Years of living with the NCI have taught your body to carry hardware the way other people carry an old injury: constantly, and without complaint.",
               "benefits": [
-                "BOD Essence Checks start with 2 Automatic Hits when dealing with death, strength, endurance, injury, or resisting physical conditions (e.g. poison).",
-                "Select 2 implants from the cybernetics list for free. The NCI doesn't count against the implants chosen for this Tweak."
+                "Interpreter. You have an NCI installed at no cost. Your Energy is your TOL plus the NCI bonus, and your systems run at their listed Energy cost.",
+                "Hardwired. Once on each of your turns, when an installed cybernetic system is doing active work in a check, you may choose to add a 1d4 kicker die to that check before you roll: an arm blade in a strike, an optical implant on an Awareness check, a SMARTlink guiding a shot.",
+                "Hardened. When making a TECH Essence check to resist EMP and hardware failure, you may make a BOD Essence Check instead."
               ]
             }
           },

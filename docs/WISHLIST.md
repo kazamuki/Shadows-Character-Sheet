@@ -57,6 +57,8 @@ weapons on Main's attacks, an Energy tracker beside TOL, and **System Failure** 
 Installing a part lowers **maximum SAN** by its cost (`APPROVED_SAN_Loss_and_Recovery`), which answers
 F19 and gives W127 (Cyber-Prophetical) and Cyber Allergy something to read. The Enforcer's Duty Grade
 (Interpreter: a free NCI; Hardwired: a 1d4 kicker when a system does the work) waits on this too.
+Hardened (the Enforcer's Duty Grade) is text until an Enforcer can be made to resist EMP; then it's a
+choice on that check. Issued Hardware, which `0412` leaves as a placeholder, is added here when it's written (YQ3).
 
 **Questions for Deighton before a plan** (the two documents disagree, or the worksheet is mid-edit):
 1. **The NCI's numbers.** The rules name EM Sheath, Auxiliary Power, Firewall and Buffer; the NCI list

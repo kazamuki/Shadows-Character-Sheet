@@ -103,7 +103,7 @@ nav.topnav .tab{padding:7px 12px 12px; flex:none}
 .ver b{color:var(--cyan); font-weight:500}
 
 /* ── Left rail: intake ledger ───────────────────────────────────────── */
-nav.ledger{border-right:1px solid var(--frame); padding:20px 0 28px; background:rgba(17,30,61,.45)}
+nav.ledger{border-right:1px solid var(--frame); padding:20px 0 28px; background:var(--panel)}
 .ledger h2{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.18em;
   text-transform:uppercase; color:var(--dim); padding:0 18px 10px}
 .step-row{display:flex; align-items:center; gap:10px; width:100%; text-align:left;
@@ -297,6 +297,8 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .intake-label{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--magenta-text)}
 .import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
 .import-issues .issues{margin-top:0}
+.focused-owed{border:1px solid var(--frame); border-radius:6px; padding:10px 14px; margin-bottom:14px; background:var(--panel)}
+.focused-owed .sect{margin-bottom:6px}
 
 /* ── Vitals rail (signature) ────────────────────────────────────────── */
 aside.vitals{border-left:1px solid var(--frame); padding:20px 18px; background:rgba(17,30,61,.45);
