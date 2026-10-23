@@ -1453,3 +1453,13 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .fx-from{color:var(--dim)}
 .attack-note{margin:6px 0 0; font-size:.78rem; line-height:1.35; color:var(--text); overflow-wrap:anywhere}
 .ref td.bd .trait-part{color:var(--green)}
+
+/* The City tab (Decisions 242–243). The book's lines and the GM's names wrap; a Territory is a block with a rule above it. */
+.city-terr{border-top:1px solid var(--frame); padding-top:2px}
+.city-entry{margin:0 0 14px; min-width:0}
+.city-name{margin:12px 0 4px; font-size:1rem; overflow-wrap:anywhere; scroll-margin-top:calc(var(--hdr-off) + 64px)}
+h2.city-name{font-size:1.15rem}
+.city-rw{color:var(--dim); font-weight:400; font-size:.85rem; overflow-wrap:anywhere}
+.city-sum{margin:0 0 8px; max-width:62ch; overflow-wrap:anywhere}
+.city-entry .btn{max-width:100%; white-space:normal; text-align:left}
+.place-card .cast-open{display:block}

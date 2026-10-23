@@ -12,6 +12,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
+import { expectedGazetteer, readPlaces, readPowers, readEnvironments, slug } from "./gazetteer-book.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -3357,7 +3358,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.13");
+  assert.equal(t.meta.tableSchemaVersion, "0.14");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3432,7 +3433,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.13", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.14", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3484,7 +3485,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3707,7 +3708,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -4069,7 +4070,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -4278,7 +4279,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4794,7 +4795,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -5268,7 +5269,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5898,7 +5899,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -6186,7 +6187,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.13");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.14");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -6551,7 +6552,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.13");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.14");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6694,7 +6695,7 @@ const names = (t, e) => Engine.encounterView(t, e, []).rows.map(r => r.name);
 const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.13");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.14");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6705,7 +6706,7 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "" }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
@@ -7362,10 +7363,10 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   eq(Engine.migrateTable(old).audit, []);
   delete old.audit; delete old.meta.tableSchemaVersion;
   eq(Engine.migrateTable(old).audit, []);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.13");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.14");
   // A file from a newer app keeps its trail gated, not emptied.
   const newer = plain(t);
-  newer.meta.tableSchemaVersion = "0.13";
+  newer.meta.tableSchemaVersion = "0.14";
   newer.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "x" }] }];
   assert.equal(Engine.migrateTable(newer).audit.length, 1);
   assert.ok(Engine.clearTableActivity(t).ok); eq(t.audit, []);
@@ -9550,7 +9551,7 @@ test("241: the gate keeps a good encounter link, drops a bad one, and converts n
   old.meta.tableSchemaVersion = "0.12";
   old.interactions = [{ ...mk({ kind: "encounter", id: "EN-AAAAAAAA" }), id: "I-AAAAAAAA" }];
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   assert.equal(m.interactions[0].encounter, null);
   assert.equal(m.interactions[0].text, "Fought them in Dock.");
   // constraint 8: new, add, migrate round-trips
@@ -9558,4 +9559,395 @@ test("241: the gate keeps a good encounter link, drops a bad one, and converts n
   const c = Engine.addCastMember(r, { name: "Bob" }).id, en = Engine.addEncounter(r, { name: "Dock" }).id;
   Engine.addInteraction(r, { kind: "fought", cast: [c], crew: ["Scott"], text: "x", encounter: en });
   eq(Engine.migrateTable(r).interactions, r.interactions);
+});
+
+// ── The gazetteer (Decision 242) and the crew's places (Decision 243) ─────────
+const G = () => D.gazetteer;
+const gEntry = id => G().entries.find(e => e.id === id);
+
+test("242: the gazetteer holds every Territory, Zone, Site, Business, Faction and place Beyond in 1100", () => {
+  const book = readPlaces();
+  const want = expectedGazetteer();
+  const count = k => G().entries.filter(e => e.kind === k).length;
+  eq([book.territories.length, count("territory")], [6, 6]);
+  const sum = k => book.territories.reduce((n, t) => n + t[k].length, 0);
+  eq([sum("zones"), count("zone")], [34, 34]);
+  eq([sum("sites"), count("site")], [17, 17]);
+  eq([sum("businesses"), count("business")], [42, 42]);
+  eq([sum("factions"), count("faction")], [23, 23]);
+  eq([book.beyond.length, count("region")], [11, 11]);
+  // by name, kind, Territory, zone and real-world place, in the book's order, with no extras
+  const strip = e => ({ id: e.id, kind: e.kind, name: e.name, territory: e.territory, zone: e.zone, realWorld: e.realWorld, group: e.group });
+  eq(G().entries.map(strip), want.entries.map(strip));
+});
+
+test("242: the powers are 1200's and the kinds of ground are 1300's", () => {
+  const powers = G().entries.filter(e => e.kind === "power");
+  assert.equal(powers.length, 16);
+  eq(powers.map(p => [p.group, p.name]), readPowers().map(p => [p.group, p.name]));
+  eq([...new Set(powers.map(p => p.group))], ["Corporations", "The Unseen Court", "Other Guys"]);
+  assert.equal(powers.filter(p => p.group === "Corporations").length, 5);
+  eq(powers.filter(p => p.group === "The Unseen Court").map(p => p.name), ["The Unseen Court", "Vampire", "Werewolf", "Deadmen", "Fae"]);
+  assert.equal(powers.filter(p => p.group === "Other Guys").length, 6);
+  eq(G().environments.map(e => e.name), readEnvironments());
+  eq(G().environments.map(e => e.name), ["Combat Zones", "Genius Loci", "Convergences", "Thin Places", "Gates"]);
+  assert.ok(G().entries.every(e => e.bookSource === (e.kind === "power" ? "1200" : "1100")) && G().environments.every(e => e.bookSource === "1300"));
+});
+
+test("242: every territory and zone an entry names is one, and every id is unique and shaped", () => {
+  const ids = [...G().entries, ...G().environments].map(e => e.id);
+  assert.equal(new Set(ids).size, ids.length, "an id repeats");
+  for (const id of ids) assert.match(id, /^[a-z0-9]+(-[a-z0-9]+)*$/);
+  for (const e of G().entries) {
+    assert.equal(e.id, slug(e.name), e.name);
+    if (e.territory) assert.equal(gEntry(e.territory)?.kind, "territory", `${e.id}: territory`);
+    if (e.zone) {
+      const z = gEntry(e.zone);
+      assert.equal(z?.kind, "zone", `${e.id}: zone`);
+      assert.equal(z.territory, e.territory, `${e.id}: a zone in another Territory`);
+    }
+    if (["zone", "site", "business", "faction"].includes(e.kind)) assert.ok(e.territory, `${e.id} has no Territory`);
+    else assert.equal(e.territory, null, `${e.id}: ${e.kind} has a Territory`);
+  }
+});
+
+test("242: a zone is set only where the book names a listed one", () => {
+  assert.equal(gEntry("eclipse").zone, "metro-core");
+  assert.equal(gEntry("eclipse").territory, "central-city");
+  assert.equal(gEntry("orion-arms").zone, "riverlands");
+  assert.equal(gEntry("orion-arms").territory, "north-quarter", "HQ in the Daedalus Belt is a qualifier, not the Territory");
+  assert.equal(gEntry("continuum-health").zone, "metro-core");
+  assert.equal(gEntry("reclaim-solutions").zone, "delmarva");
+  assert.equal(gEntry("southern-syndicate").zone, "lowcountry");
+  for (const [id, words] of [["wormwood-swamp", "Okefenokee Swamp, southeast of Atlantix"], ["birmingham-blight", "Birmingham, AL"], ["elysium-fields", "Florida Everglades"]]) {
+    assert.equal(gEntry(id).zone, null, id);
+    assert.equal(gEntry(id).realWorld, words, id);
+    assert.equal(gEntry(id).territory, "southside-consortium");
+  }
+  assert.equal(gEntry("aegis-defense-solutions-ads").name, "Aegis Defense Solutions (ADS)");
+  assert.equal(gEntry("bushido-defenceworks-bdf").name, "Bushido Defenceworks (BDF)");
+});
+
+test("242: every summary is one sentence of at most 20 words", () => {
+  for (const e of [...G().entries, ...G().environments]) {
+    const s = e.summary;
+    assert.equal(typeof s, "string", e.id);
+    const words = s.trim().split(/\s+/).length;
+    assert.ok(words >= 4 && words <= 20, `${e.id}: ${words} words`);
+    assert.match(s, /[.]$/, `${e.id}: one sentence ends with a full stop`);
+    assert.ok(!/[.!?]\s+[A-Z]/.test(s.replace(/St\. /g, "St ")), `${e.id}: more than one sentence`);
+  }
+});
+
+test("242: gazetteer(q) keeps an entry by its name, its line or where it sits, and is total", () => {
+  const all = Engine.gazetteer();
+  assert.equal(all.territories.length, 6);
+  assert.equal(all.beyond.length, 11);
+  eq(all.powers.map(p => p.group), ["Corporations", "The Unseen Court", "Other Guys"]);
+  assert.equal(all.environments.length, 5);
+  const metro = Engine.gazetteer({ q: "metro" });
+  const cc = metro.territories.find(r => r.entry.id === "central-city");
+  assert.ok(cc, "Central City stays while any of its entries match");
+  assert.ok(cc.zones.some(z => z.id === "metro-core"));
+  assert.ok(cc.sites.some(z => z.id === "central-park") && cc.factions.some(z => z.id === "eclipse") && cc.businesses.some(z => z.id === "nexacorp"), "Metro Core's entries come with it");
+  assert.ok(!cc.zones.some(z => z.id === "capital-region"));
+  const ec = Engine.gazetteer({ q: "eclipse" });
+  eq(ec.territories.map(r => r.entry.id), ["central-city"]);
+  eq(ec.territories[0].factions.map(e => e.id), ["eclipse"]);
+  assert.equal(Engine.gazetteer({ q: "okefenokee" }).territories[0].sites[0].id, "wormwood-swamp", "a real-world name finds it");
+  assert.equal(Engine.gazetteer({ q: "qwertyzzz" }).territories.length, 0);
+  for (const f of [null, undefined, 5, "x", [], { q: 5 }, { q: null }]) {
+    const r = Engine.gazetteer(f);
+    assert.ok(Array.isArray(r.territories) && Array.isArray(r.beyond) && Array.isArray(r.powers) && Array.isArray(r.environments), String(f));
+  }
+  const had = D.gazetteer;
+  try {
+    for (const v of [undefined, null, 5, {}, { entries: "x", environments: 3 }]) {
+      D.gazetteer = v;
+      const r = Engine.gazetteer({ q: "metro" });
+      eq([r.territories, r.beyond, r.powers, r.environments], [[], [], [], []]);
+      assert.equal(Engine.gazetteerEntry("eclipse"), null);
+    }
+  } finally { D.gazetteer = had; }
+  assert.equal(Engine.gazetteerEntry("eclipse").name, "Eclipse");
+  assert.equal(Engine.gazetteerEntry("thin-places").name, "Thin Places");
+  for (const v of [null, undefined, 5, {}, [], "__proto__", "constructor"]) assert.equal(Engine.gazetteerEntry(v), null);
+});
+
+const placeTable = () => { const t = Engine.newTable("P"); const bob = Engine.addCastMember(t, { name: "Bob" }).id; return { t, bob }; };
+
+test("243: addPlace from an entry takes its territory and zone; a typed one keeps what it's given", () => {
+  const { t } = placeTable();
+  const cp = Engine.addPlace(t, { from: "central-park" });
+  const p = id => t.places.find(x => x.id === id);
+  assert.ok(cp.ok && /^PL-[0-9A-HJKMNP-TV-Z]{8}$/.test(cp.id));
+  eq([p(cp.id).territory, p(cp.id).zone, p(cp.id).from], ["central-city", "metro-core", { kind: "gazetteer", id: "central-park", name: "Central Park" }]);
+  const mc = Engine.addPlace(t, { from: "metro-core" });
+  eq([p(mc.id).territory, p(mc.id).zone], ["central-city", "metro-core"]);
+  const cc = Engine.addPlace(t, { from: "central-city" });
+  eq([p(cc.id).territory, p(cc.id).zone], ["central-city", null]);
+  const be = Engine.addPlace(t, { from: "cascadia" });
+  eq([p(be.id).territory, p(be.id).zone], [null, null]);
+  const typed = Engine.addPlace(t, { name: "The Rookery", territory: "north-quarter", zone: "riverlands", district: "Old Town", neighborhood: "Dock Row", environment: "thin-places", notes: "Dez's place" });
+  eq(p(typed.id), { ...p(typed.id), name: "The Rookery", from: null, territory: "north-quarter", zone: "riverlands", district: "Old Town", neighborhood: "Dock Row", environment: "thin-places", notes: "Dez's place" });
+  const newest = Engine.addPlace(t, { name: "x" }).id;
+  assert.equal(t.places[0].id, newest, "unshifted: newest first");
+  for (const from of ["eclipse", "thin-places", "nowhere", 5, {}, [], "__proto__"]) {
+    const n = t.places.length;
+    const r = Engine.addPlace(t, { from });
+    assert.equal(r.ok, false, String(from));
+    assert.equal(t.places.length, n, "a refusal adds nothing");
+  }
+  assert.equal(Engine.addPlace(t, { name: "N", territory: "central-city", zone: "riverlands" }).ok, true);
+  assert.equal(t.places[0].zone, null, "a zone in another Territory is not kept");
+});
+
+test("243: a territory that doesn't hold the zone clears it", () => {
+  const { t } = placeTable();
+  const id = Engine.addPlace(t, { from: "central-park" }).id;
+  const p = () => t.places.find(x => x.id === id);
+  Engine.editPlace(t, id, { territory: "daedalus-belt" });
+  eq([p().territory, p().zone], ["daedalus-belt", null]);
+  Engine.editPlace(t, id, { territory: "central-city" });
+  eq([p().territory, p().zone], ["central-city", null], "it does not come back");
+  Engine.editPlace(t, id, { zone: "metro-core" });
+  assert.equal(p().zone, "metro-core");
+  Engine.editPlace(t, id, { territory: "central-city" });
+  assert.equal(p().zone, "metro-core", "the same Territory holds it");
+  Engine.editPlace(t, id, { zone: "garden-state" });
+  assert.equal(p().zone, null, "a zone the Territory doesn't hold");
+  Engine.editPlace(t, id, { zone: "metro-core" });
+  Engine.editPlace(t, id, { territory: null });
+  eq([p().territory, p().zone], [null, null]);
+  Engine.editPlace(t, id, { name: "The Ramble", district: "D", neighborhood: "N", environment: "convergences", notes: "n" });
+  eq([p().name, p().district, p().neighborhood, p().environment, p().notes], ["The Ramble", "D", "N", "convergences", "n"]);
+  Engine.editPlace(t, id, { name: 5, district: null, environment: "Not an id" });
+  eq([p().name, p().district, p().environment], ["", "", null]);
+  assert.equal(Engine.editPlace(t, "PL-AAAAAAAA", { name: "x" }).ok, false);
+});
+
+test("243: placeTitle reads the typed name, then the entry's, then the kept one, then Unnamed place", () => {
+  const { t } = placeTable();
+  const id = Engine.addPlace(t, { from: "central-park" }).id;
+  const p = () => t.places.find(x => x.id === id);
+  assert.equal(Engine.placeTitle(t, p()), "Central Park");
+  Engine.editPlace(t, id, { name: "  the Ramble " });
+  assert.equal(Engine.placeTitle(t, p()), "the Ramble", "as typed, never recased");
+  Engine.editPlace(t, id, { name: "" });
+  p().from = { kind: "gazetteer", id: "retired-entry", name: "Kept Name" };
+  assert.equal(Engine.placeTitle(t, p()), "Kept Name", "an id this data doesn't have reads the kept name");
+  p().from = { kind: "gazetteer", id: "retired-entry" };
+  assert.equal(Engine.placeTitle(t, p()), "Unnamed place");
+  p().from = null;
+  assert.equal(Engine.placeTitle(t, p()), "Unnamed place");
+  for (const v of [null, undefined, 5, "x", [], {}, { name: 5, from: [] }]) assert.equal(typeof Engine.placeTitle(t, v), "string");
+  assert.equal(typeof Engine.placeTitle(null, null), "string");
+});
+
+const PL = (t, name) => Engine.addPlace(t, { name }).id;
+
+test("243: a line names a place; its sentence says at, in each kind's position", () => {
+  const { t, bob } = placeTable();
+  const gull = Engine.addCastMember(t, { name: "Gull" }).id;
+  const pier = PL(t, "the Pier");
+  const day = "2026-10-08";
+  const S = (kind, cast, crew, text, date, enc) => sentenceText(t, { ...L(kind, cast, crew, text, date, enc), place: { kind: "place", id: pier } });
+  eq(S("shared", [bob], ["Scott"], "the lake is on fire", day), "Scott told Bob “the lake is on fire” at the Pier on 2026-10-08");
+  eq(S("learned", [bob], ["Scott"], "", null), "Scott learned from Bob at the Pier");
+  eq(S("helped", [bob], ["Scott"], "carried the bags", day), "Scott helped Bob at the Pier on 2026-10-08: carried the bags");
+  eq(S("wronged", [bob, gull], ["Scott"], "", null), "Scott wronged Bob and Gull at the Pier");
+  eq(S("killed", [bob], ["Scott"], "", day), "Scott killed Bob at the Pier on 2026-10-08");
+  eq(S("owes", [bob], ["Scott", "D"], "a favour", day), "Scott and D owe Bob at the Pier on 2026-10-08: a favour");
+  eq(S("owed", [bob], ["Scott"], "for the van", null), "Bob owes Scott at the Pier: for the van");
+  eq(S(null, [bob], ["Scott"], "met", day), "Bob, with Scott, at the Pier, on 2026-10-08: met");
+  eq(S(null, [bob], [], "met", null), "Bob, at the Pier: met");
+  eq(S(null, [bob], ["Scott"], "", null), "Bob, with Scott, at the Pier");
+  // a fight comes first, then the place
+  const e = Engine.addEncounter(t, { name: "Dock fight" }).id;
+  eq(S("fought", [bob], ["Scott"], "2 of 4", day, { kind: "encounter", id: e }), "Scott fought Bob in Dock fight at the Pier on 2026-10-08: 2 of 4");
+  // the part carries id, name and gone, and never leads
+  const parts = Engine.interactionSentence(t, { ...L("shared", [bob], ["Scott"], "", null), place: { kind: "place", id: pier } }).parts;
+  eq(parts.find(p => p.kind === "place"), { kind: "place", id: pier, name: "the Pier", gone: false });
+  assert.notEqual(parts[0].kind, "place");
+  // added through addInteraction, and the sentence follows a rename
+  const ok = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "x", place: pier });
+  const nope = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "x", place: "PL-AAAAAAAA" });
+  const x = id => t.interactions.find(i => i.id === id);
+  eq(x(ok.id).place, { kind: "place", id: pier });
+  assert.equal(x(nope.id).place, null, "a place not on the table is no link");
+  Engine.editPlace(t, pier, { name: "the Ramble" });
+  assert.equal(sentenceText(t, x(ok.id)), "Scott told Bob “x” at the Ramble");
+  // editInteraction: set, refuse, clear
+  assert.equal(Engine.editInteraction(t, ok.id, { place: "PL-AAAAAAAA" }).ok, false);
+  assert.equal(Engine.editInteraction(t, ok.id, { place: 5 }).ok, false);
+  eq(x(ok.id).place, { kind: "place", id: pier }, "a refusal changes nothing");
+  const other = PL(t, "Elsewhere");
+  assert.ok(Engine.editInteraction(t, ok.id, { place: other }).ok);
+  eq(x(ok.id).place, { kind: "place", id: other });
+  assert.ok(Engine.editInteraction(t, ok.id, { place: null }).ok);
+  assert.equal(x(ok.id).place, null);
+  assert.ok(Engine.editInteraction(t, ok.id, { place: other }).ok);
+  assert.ok(Engine.editInteraction(t, ok.id, { text: "y" }).ok);
+  eq(x(ok.id).place, { kind: "place", id: other }, "an edit that doesn't name a place leaves it alone");
+});
+
+test("243: interactionSentence and linkName are total with a place", () => {
+  const { t, bob } = placeTable();
+  for (const place of [null, 5, "x", [], {}, { kind: "place" }, { kind: "place", id: 5 }, { kind: "place", id: "PL-AAAAAAAA", name: 7 }, { kind: "cast", id: bob }]) {
+    const r = Engine.interactionSentence(t, { ...L("shared", [bob], ["Scott"], "x", null), place });
+    assert.ok(Array.isArray(r.parts) && r.parts.length > 0, JSON.stringify(place));
+    assert.equal(typeof Engine.linkName(t, place).name, "string");
+  }
+  for (const tt of [null, undefined, {}, { places: "x" }, { places: [null, 3] }])
+    assert.equal(typeof Engine.linkName(tt, { kind: "place", id: "PL-AAAAAAAA" }).name, "string");
+});
+
+test("243: removing a place keeps its name in every line, struck, and undo restores it", () => {
+  const { t, bob } = placeTable();
+  const id = Engine.addPlace(t, { from: "central-park" }).id;
+  const a = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "the lake is on fire", place: id, date: "2026-10-23" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "elsewhere" });
+  const base = plain(t);
+  eq(Engine.linkName(t, t.interactions.find(i => i.id === a).place), { name: "Central Park", gone: false });
+  const r = recorded(t, () => assert.ok(Engine.removePlace(t, id).ok));
+  assert.equal(r.entry.label, "Removed Central Park");
+  const link = t.interactions.find(i => i.id === a).place;
+  eq(link, { kind: "place", id, name: "Central Park" });
+  eq(Engine.linkName(t, link), { name: "Central Park", gone: true });
+  eq(Engine.linkName(t, { kind: "place", id: "PL-AAAAAAAA" }), { name: "A place removed", gone: true });
+  assert.equal(sentenceText(t, t.interactions.find(i => i.id === a)), "Scott told Bob “the lake is on fire” at Central Park on 2026-10-23");
+  assert.equal(t.places.length, 0);
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+  assert.equal(Engine.removePlace(t, "PL-AAAAAAAA").ok, false);
+  assert.equal(Engine.removePlace(null, id).ok, false);
+});
+
+test("243: placeLines and placeMet read the lines, newest first, each member once", () => {
+  const { t, bob } = placeTable();
+  const gull = Engine.addCastMember(t, { name: "Gull" }).id;
+  const pier = PL(t, "the Pier"), other = PL(t, "Elsewhere");
+  const l1 = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "one", place: pier, date: "2026-10-01" }).id;
+  const l2 = Engine.addInteraction(t, { kind: "helped", cast: [gull, bob], crew: ["Scott"], text: "two", place: pier, date: "2026-10-05" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "three", place: other, date: "2026-10-07" });
+  eq(Engine.placeLines(t, pier).map(x => x.id), [l2, l1]);
+  eq(Engine.placeMet(t, pier).map(m => m.name), ["Bob", "Gull"], "in the order first met, once each");
+  eq(Engine.placeLines(t, "PL-AAAAAAAA"), []);
+  eq(Engine.placeMet(t, "PL-AAAAAAAA"), []);
+  for (const v of [null, undefined, 5, {}]) { eq(Engine.placeLines(v, pier), []); eq(Engine.placeMet(v, pier), []); }
+  assert.equal(JSON.stringify(t.places).includes(l1), false, "no visit is stored on the place");
+});
+
+test("243: Find finds a place by any field, and a line by its place; Who knows what too", () => {
+  const { t, bob } = placeTable();
+  const cp = Engine.addPlace(t, { from: "central-park", district: "Upper West", neighborhood: "Strawberry Fields", environment: "convergences", notes: "ley lines" }).id;
+  Engine.editPlace(t, cp, { name: "The Ramble" });
+  const line = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "met", place: cp }).id;
+  const kinds = q => Engine.tableSearch(t, q).map(h => [h.kind, h.field]);
+  eq(kinds("ramble"), [["interaction", "Where"], ["place", "Name"]]);
+  eq(kinds("metro core"), [["place", "Zone"]]);
+  eq(kinds("central city"), [["place", "Territory"]]);
+  eq(kinds("upper west"), [["place", "District"]]);
+  eq(kinds("strawberry"), [["place", "Neighborhood"]]);
+  eq(kinds("convergences"), [["place", "Ground"]]);
+  eq(kinds("ley"), [["place", "Notes"]]);
+  const hit = Engine.tableSearch(t, "ramble").find(h => h.kind === "place");
+  assert.equal(hit.id, cp);
+  assert.equal(hit.title, "The Ramble");
+  eq(Engine.crewView(t, { q: "ramble" }).map(g => [g.name, g.interactions.map(x => x.id)]), [["Scott", [line]]]);
+  eq(Engine.crewView(t, { q: "central park" }), []);
+  // a place from the book with no typed name is found by the book's
+  const t2 = Engine.newTable("Q");
+  Engine.addPlace(t2, { from: "central-park" });
+  eq(Engine.tableSearch(t2, "central park").map(h => [h.kind, h.field]), [["place", "Name"]]);
+  // placeList: by title, filtered by words
+  const t3 = Engine.newTable("R");
+  for (const n of ["Zed's", "alpha", "Beta"]) PL(t3, n);
+  eq(Engine.placeList(t3).map(p => p.name), ["alpha", "Beta", "Zed's"]);
+  eq(Engine.placeList(t3, { q: "ZED" }).map(p => p.name), ["Zed's"]);
+  eq(Engine.placeList(t3, { q: 5 }).length, 3);
+  for (const v of [null, undefined, {}, { places: "x" }]) eq(Engine.placeList(v), []);
+});
+
+test("243: the activity log names a place", () => {
+  const { t } = placeTable();
+  let id;
+  assert.equal(recorded(t, () => { id = Engine.addPlace(t, { from: "central-park" }).id; }).entry.label, "Added Central Park");
+  assert.equal(recorded(t, () => Engine.editPlace(t, id, { district: "Upper West" }), null, { fold: false }).entry.label, "Changed Central Park");
+  assert.equal(recorded(t, () => Engine.removePlace(t, id)).entry.label, "Removed Central Park");
+  assert.ok(Engine.diffTable(t, { ...plain(t), places: [{ id: "PL-AAAAAAAA", name: "x" }] }).length > 0, "undo can see a place");
+  // all three undo, last first
+  for (let i = 0; i < 3; i++) assert.ok(Engine.undoTableAction(t).ok);
+  assert.equal(t.places.length, 0);
+  // a crafted op on places in a file is gated like any other record's
+  const good = { seq: 1, date: null, label: "x", patch: [{ path: ["places", 0, "name"], type: "scalar", before: "x" }] };
+  const bad = { seq: 2, date: null, label: "y", patch: [{ path: ["placez", 0, "name"], type: "scalar", before: "x" }] };
+  const m = Engine.migrateTable({ ...plain(t), audit: [good, bad] });
+  eq(m.audit.map(e => e.seq), [1]);
+});
+
+test("243: the gate types places and a line's place, keeps an unknown gazetteer id, and converts nothing", () => {
+  const base = Engine.newTable("G");
+  const bob = Engine.addCastMember(base, { name: "Bob" }).id;
+  const raw = [
+    null, 5, "x", [], { id: "PL-AAAAAAAA", name: "A", district: 5, neighborhood: null, notes: {}, territory: "central-city", zone: "metro-core", environment: "thin-places", from: { kind: "gazetteer", id: "central-park", name: "Central Park" } },
+    { id: "PL-AAAAAAAA", name: "Repeat" },
+    { id: "__proto__", name: "Proto" },
+    { id: "PL-BBBBBBBB", name: 7, from: [], territory: ["central-city"], zone: 5, environment: "Not An Id", extra: 1 },
+    { id: "PL-CCCCCCCC", name: "Newer", from: { kind: "gazetteer", id: "a-newer-entry", name: 9 }, territory: "a-newer-territory" },
+    { id: "PL-DDDDDDDD", name: "Odd kind", from: { kind: "pack", id: "x" } },
+  ];
+  const f = Engine.migrateTable({ ...plain(base), places: raw });
+  assert.equal(f.places.length, 6, "junk records are dropped");
+  const ids = f.places.map(p => p.id);
+  assert.equal(new Set(ids).size, 6);
+  assert.ok(ids.every(i => /^PL-[0-9A-HJKMNP-TV-Z]{8}$/.test(i)));
+  eq([f.places[0].district, f.places[0].neighborhood, f.places[0].notes], ["", "", ""]);
+  eq(f.places[0].from, { kind: "gazetteer", id: "central-park", name: "Central Park" });
+  assert.notEqual(f.places[1].id, "PL-AAAAAAAA", "a repeated id is remade");
+  assert.notEqual(f.places[2].id, "__proto__");
+  eq([f.places[3].name, f.places[3].from, f.places[3].territory, f.places[3].zone, f.places[3].environment, f.places[3].extra], ["", null, null, null, null, 1]);
+  eq([f.places[4].from, f.places[4].territory], [{ kind: "gazetteer", id: "a-newer-entry" }, "a-newer-territory"], "an id this data doesn't have is kept, and reads as nothing");
+  assert.equal(Engine.placeTitle(f, f.places[4]), "Newer");
+  assert.equal(f.places[5].from, null);
+  assert.equal(({}).polluted, undefined);
+  // a line's place
+  const mk = place => ({ kind: "shared", cast: [{ kind: "cast", id: bob }], crew: ["Scott"], text: "x", place });
+  const bad = ["PL-AAAAAAAA", { kind: "cast", id: bob }, { kind: "place", id: "__proto__" }, { kind: "place", id: "PL-1" }, [], 5, true, { kind: "place", id: 7 }];
+  const g = Engine.migrateTable({ ...plain(base), interactions: [...bad.map(mk), mk({ kind: "place", id: "PL-AAAAAAAA", name: 7 }), mk({ kind: "place", id: "PL-AAAAAAAA", name: "Gone", extra: 1 })] });
+  eq(g.interactions.slice(0, bad.length).map(x => x.place), bad.map(() => null));
+  eq(g.interactions[bad.length].place, { kind: "place", id: "PL-AAAAAAAA" }, "a numeric name is dropped, the link kept");
+  eq(g.interactions[bad.length + 1].place, { kind: "place", id: "PL-AAAAAAAA", name: "Gone" }, "a link to no place is kept");
+  // a place link inside cast is still dropped
+  const h = Engine.migrateTable({ ...plain(base), interactions: [{ ...mk(null), cast: [{ kind: "place", id: "PL-AAAAAAAA" }, { kind: "cast", id: bob }] }] });
+  eq(h.interactions[0].cast, [{ kind: "cast", id: bob }]);
+  // a 0.13 table loads with places [] and place null, its text untouched
+  const old = plain(base);
+  old.meta.tableSchemaVersion = "0.13";
+  old.interactions = [{ ...mk(undefined), id: "I-AAAAAAAA", text: "Unchanged." }];
+  old.places = "x";
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  eq(m.places, []);
+  assert.equal(m.interactions[0].place, null);
+  assert.equal(m.interactions[0].text, "Unchanged.");
+  // constraint 8: new, add, migrate round-trips
+  const r = Engine.newTable("R");
+  const pid = Engine.addPlace(r, { from: "central-park", district: "d", notes: "n" }).id;
+  Engine.addInteraction(r, { kind: "shared", cast: [Engine.addCastMember(r, { name: "B" }).id], crew: ["S"], text: "x", place: pid });
+  eq(Engine.migrateTable(r), r);
+  eq(Engine.migrateTable(Engine.newTable("N")).places, []);
+});
+
+test("243: the new readers are total on junk", () => {
+  for (const t of [null, undefined, 5, "x", [], {}, { places: "x" }, { places: [null, 3, "x", { name: 5 }] }, { places: {}, interactions: "x" }]) {
+    assert.ok(Array.isArray(Engine.placeList(t)));
+    assert.ok(Array.isArray(Engine.placeLines(t, "PL-AAAAAAAA")));
+    assert.ok(Array.isArray(Engine.placeMet(t, "PL-AAAAAAAA")));
+    assert.ok(Array.isArray(Engine.tableSearch(t, "park")));
+    assert.equal(typeof Engine.linkName(t, { kind: "place", id: "PL-AAAAAAAA" }).name, "string");
+    assert.equal(Engine.editPlace(t, "PL-AAAAAAAA", {}).ok, false);
+    assert.equal(Engine.removePlace(t, "PL-AAAAAAAA").ok, false);
+  }
+  assert.equal(Engine.addPlace(null, {}).ok, false);
 });
