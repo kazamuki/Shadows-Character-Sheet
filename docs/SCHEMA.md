@@ -1055,7 +1055,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.12",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.13",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
@@ -1086,6 +1086,7 @@ commit** — a GM's table must never change under them.
     text: "",
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     session: null,                   // 0.8: a session's id in this table, or null (Decision 203); a new line takes the one session on its day, the gate converts nothing
+    encounter: null,                 // 0.13: or { kind: "encounter", id: "EN-…", name? } (Decisions 178, 241); only End writes it, removeEncounter adds `name`, the gate keeps a good id and converts nothing
     created: "<ISO>", updated: "<ISO>"
   } ],
   sessions: [ {                      // 0.8: what happened, session by session (Decision 203)
@@ -1156,7 +1157,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step.
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -4269,6 +4270,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** S5 or S7 links a kind whose deletion should cascade.
      - **Built:** as 177.
     → **Superseded in part by Decision 182** — a link to a record outside the table stores its name.
+    → **Superseded in part by Decision 241** — a line links its encounter, `{ kind: "encounter", id }`, and deleting the encounter writes its name.
 
 179. **A member carries affiliations as text; the Cast list filters by one; a member's page lists their interactions; and the Cast tab's second view, Who knows what, lists them by crew name.**
      *2026-10-05 · Ken + Claude · Touches: affiliations, cast filters, affiliation filter, castFilter, Cast tab, member page, Between them and the crew, Who knows what, crewView, quick entry, datalist, Decision 176, W29, GQ1*
@@ -4281,6 +4283,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 176 in part: the list filters by affiliation as well as status, and the tab has a second view.
      - **Revisit if:** S7 makes affiliations faction links, or a GM's crew list outgrows typed names before S3b.
      - **Built:** as 177.
+    → **Superseded in part by Decision 241** — a line reads as a sentence; Edit opens it in place.
 
 180. **A pack is its own file, `.shadows-pack.json`, gated by `migratePack()`, with its own id, a pack schema version, and the author's content version.**
      *2026-10-06 · Ken + Claude · Touches: pack, .shadows-pack.json, migratePack, packCheck, fileKind, meta.kind, PK- id, packSchemaVersion, contentVersion, origins, npcRoles, enemyRoles, tiers, entries, groups, versions table, CLAUDE.md, Decision 170, W63, GQ10*
@@ -4466,6 +4469,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 177 in part: an eighth kind, `fought`, which an encounter's end writes.
      - **Revisit if:** GQ26 says wounds carry, S5's sessions give downtime, or a GM wants to keep someone after the fact.
      - **Built:** table schema 0.7, switched off (173); PR #130; log 2026-10-07 (the encounter's end).
+    → **Superseded in part by Decision 241** — the fight's line keeps the figures and links its encounter.
 
 194. **Every power a character holds has a rank, and Progression raises it with IP at `0450`'s prices; a new power in play costs the book's flat price.**
      *2026-10-08 · Ken + Claude · Touches: powerRanks, progression.powerIpe, disciplineRanks, ipCost, spendIP, ip.powerIncreaseCost, ip.rankCap, Max Power Rank, Raise a Power, IP journal, addPower, removePower, versionCheck, Disciplines, written power, character schema 0.18, W71, VQ5*
@@ -4977,6 +4981,21 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 215 in part: Base Powers placed ranks up to Max Starting Rank, and CP raised to Max Power Rank. 215 rejected Max Starting Rank capping CP; the book now prints it.
      - **Revisit if:** the book gives Base Powers a rank above 1 at a Power Level, or lets CP buy a new power at creation; or a third archetype buys powers this way with a different cap.
      - **Built:** app 0.54.0, game data 0.47, no schema bump, PR #230. Log 2026-10-23 (Y4).
+
+241. **A line between the crew and the cast reads as a sentence, crew first, in every list; a fight's line links to its encounter and keeps only the figures.**
+     *2026-10-23 · Ken + Claude · Touches: interactions, interactionSentence, kind labels, owed, Between them and the crew, Who knows what, session page, Edit, encounter link, linkName, removeEncounter, _endLine, wrap-up, fought, crewView, tableSearch, table schema 0.13, Decision 178, Decision 179, Decision 193, W79, W82*
+     - **Decided:** The engine builds each line's sentence: crew, verb, member, quoted words for *told* and *learned from*, the fight for *fought* and *killed*, the day, then the rest after a colon. *They owe* reads *Bob owes Scott*. Every list of lines reads it; on a member's page **Edit** opens a line's fields as crew, kind, what, when. Table schema 0.13 adds a line's `encounter`, 178's link, which End writes, its text keeping only the figures. Deleting an encounter writes its name into the link. The gate converts no old line.
+     - **Why:** Ken reads a line crew first (W79), and a fight's name baked into its text went stale and led nowhere (W82).
+     - **Rejected:**
+       - The sentence built in each renderer: three lists, three sentences; the engine's is total and tested once.
+       - Rows always open, reordered: a long history is a wall of fields on a tablet, and mid-scene the page is read, not edited.
+       - Old fight lines converted by matching their text: the gate would guess (203).
+       - The encounter's name stored in a live link: a copy that goes stale (178).
+       - *Scott is owed by Bob*: crew first, but passive.
+     - **Replaces:** Decision 178 in part (a second link kind), 179 in part (a line reads as a sentence, opening to edit), 193 in part (the fight's line is figures and a link).
+     - **Revisit if:** S3b's seats name the crew, a GM wants a line in their own words, or a voice pass changes a verb.
+     - **Built:** table schema 0.13, switched off (173); PR #234; log 2026-10-23.
+
 
 ## 5. Open Flags
 

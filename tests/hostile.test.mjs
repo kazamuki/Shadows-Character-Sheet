@@ -413,6 +413,7 @@ test("hostile interactions and affiliations render as text on a member's page, t
   app.click("[data-copen]");
   found.push(...injected(app, "a member's page"));
   assert.ok(app.$$("[data-int]").length >= 2, "the member's interactions weren't drawn");
+  app.click("[data-iedit]");
   for (const el of app.$$("[data-idate]")) assert.ok(el.value === "" || /^\d{4}-\d{2}-\d{2}$/.test(el.value), "a date field read " + el.value);
   assert.ok(app.$$("[data-ikind].on").every(b => /\|(shared|learned|helped|wronged|killed|owes|owed|fought)$/.test(b.dataset.ikind)), "a payload kind was pressed");
   assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a field drew an object as text");
@@ -786,7 +787,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1043,7 +1044,7 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
     ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
   ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
   const t = Engine.migrateTable({
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.12" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.13" },
     cast: [{ id: "C-AAAAAAAA", name: "After" }],
     audit: [...crafted, good],
   });
@@ -1141,4 +1142,37 @@ test("a rule's text of markup renders as text on the CP step and a folded Charac
   assert.ok(app.$("#main details.pick.trait summary").textContent.length > 0);
   assert.ok(app.$("#main").textContent.includes(pwn));
   assert.deepEqual(app.errors, []);
+});
+
+// ── A line's encounter link is untrusted too (Decision 241) ────────────
+test("a line's encounter link renders as text in Who knows what, a member's page and a session's page, and pollutes nothing", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  t.cast = [{ id: "C-ABCDEFGH", name: "Dez" }];
+  t.sessions = [{ id: "SE-AAAAAAAA", number: 1, date: "2026-10-05" }];
+  t.encounters = [{ id: "EN-BBBBBBBB", name: P("enc.live"), status: "ended", rows: [] }];
+  const line = (encounter, text) => ({ kind: "fought", cast: [{ kind: "cast", id: "C-ABCDEFGH" }], crew: ["Rook"], text, date: "2026-10-05", session: "SE-AAAAAAAA", encounter });
+  t.interactions = [
+    line({ kind: "encounter", id: "EN-ZZZZZZZZ", name: P("enc.kept") }, "kept"),
+    line({ kind: "encounter", id: "EN-BBBBBBBB" }, "live"),
+    line({ kind: "encounter", id: "__proto__", name: P("enc.proto") }, "proto"),
+    line({ kind: "cast", id: "C-ABCDEFGH", name: P("enc.cast") }, "cast"),
+    line([P("enc.array")], "array"),
+  ];
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  app.click('[data-cview="crew"]');
+  assert.ok(app.$(".int-line s"), "the kept name wasn't struck through");
+  assert.ok(app.$$(".int-line").some(el => el.textContent.includes(P("enc.kept"))), "the kept name wasn't drawn as text");
+  found.push(...injected(app, "Who knows what"));
+  app.click('[data-cview="cast"]'); app.click("[data-copen]");
+  found.push(...injected(app, "a member's page"));
+  app.click('[data-tsec="sessions"]'); app.click("[data-sopen]");
+  found.push(...injected(app, "a session's page"));
+  assert.equal(app.$$("[data-eopenline]").length, 1, "only the live link is a button");
+  assert.deepEqual(found, [], "an encounter link's name became markup");
+  assert.equal(app.window.eval("({}).polluted"), undefined);
+  assert.equal(app.window.eval("S.table.interactions.filter(x => x.encounter).length"), 2, "the gate kept a bad link");
+  assert.deepEqual(app.errors, [], "the hostile links threw while rendering");
 });

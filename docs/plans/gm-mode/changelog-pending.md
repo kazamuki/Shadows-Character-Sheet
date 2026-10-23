@@ -47,3 +47,4 @@ something a GM can see adds its line here.
   and an encounter searches the Codex itself.
 - **Undo at the table.** Every change to your table, from a hit to a close-out,
   can be taken back, last first: from the toast, or from Activity in the menu.
+- **A line reads as a sentence.** Every line between the crew and the cast reads crew first: *Scott told Bob “the lake is on fire”*. A fight's line names its fight, and a tap opens it; Back returns to where you were.

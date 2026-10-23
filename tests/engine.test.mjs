@@ -3357,7 +3357,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.12");
+  assert.equal(t.meta.tableSchemaVersion, "0.13");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3432,7 +3432,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.12", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.13", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3484,7 +3484,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3707,7 +3707,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -4069,7 +4069,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -4278,7 +4278,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4794,7 +4794,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -5117,7 +5117,7 @@ test("193: encounterWrapUp reads the non-PC rows, the crew, the dice and who was
   eq([d.name, d.status, d.row.id], ["Dez", "alive", dezRow]);
   const hl = Engine.encounterView(t, e, []).rows.find(r => r.row.id === dezRow).health;
   eq([d.ended.left, d.ended.levels, d.ended.levelsLeft, d.ended.down, d.ended.conditions], [hl.left, hl.levels, hl.levelsLeft, hl.down, []]);
-  assert.equal(d.line, `Fought them in Warehouse: ${hl.levelsLeft} of ${hl.levels} Health Levels left.`);
+  assert.equal(d.line, `${hl.levelsLeft} of ${hl.levels} Health Levels left.`);
   eq(w.crew, ["Wren", "Rook"]);
   eq(w.hit, [{ id: wren, name: "Wren" }], "only the PC who took damage");
   eq(w.dice.map(x => x.id), Object.keys(D.armorRules.integrityLossByDifficulty), "the data's order");
@@ -5133,7 +5133,7 @@ test("193: encounterWrapUp reads the non-PC rows, the crew, the dice and who was
   rowOf(t, e, g.row.id).block.stats = {};
   const bare = Engine.encounterWrapUp(t, e).rows[2];
   assert.equal(bare.ended.levels, null);
-  assert.equal(bare.line, "Fought them in Warehouse.");
+  assert.equal(bare.line, "");
   // Planned, ended, unknown: empty lists, same dice.
   const p = encTable();
   for (const [tt, id] of [[p.t, p.e], [p.t, "EN-NOPE0000"], [null, "x"], [{}, "x"]]) {
@@ -5268,7 +5268,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5898,7 +5898,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -6186,7 +6186,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.13");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -6551,7 +6551,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.13");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6694,7 +6694,7 @@ const names = (t, e) => Engine.encounterView(t, e, []).rows.map(r => r.name);
 const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.13");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6705,7 +6705,7 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
   eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "" }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
@@ -7362,7 +7362,7 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   eq(Engine.migrateTable(old).audit, []);
   delete old.audit; delete old.meta.tableSchemaVersion;
   eq(Engine.migrateTable(old).audit, []);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.13");
   // A file from a newer app keeps its trail gated, not emptied.
   const newer = plain(t);
   newer.meta.tableSchemaVersion = "0.13";
@@ -9401,4 +9401,161 @@ test("P21 8b: an Aberration a file holds twice reads once, and every power's Ski
   });
   assert.ok(rows.length >= 12, `found only ${rows.length} power rows`);
   for (const [a, p, g] of rows) assert.ok(typeof g.whenText === "string" && g.whenText.trim(), `${a} · ${p}: a power's ${g.type} needs a whenText, or it lands in the number`);
+});
+
+// ── A line reads as a sentence (Decision 241) ───────────────────────────────
+const sentenceText = (t, x) => Engine.interactionSentence(t, x).parts.map(p => p.kind === "day" ? p.date : p.kind === "text" ? p.text : p.name).join("");
+function sentTable() {
+  const t = Engine.newTable("S");
+  const bob = Engine.addCastMember(t, { name: "Bob" }).id, gull = Engine.addCastMember(t, { name: "Gull" }).id;
+  return { t, bob, gull };
+}
+const L = (kind, cast, crew, text, date, encounter) => ({ kind, cast: cast.map(id => ({ kind: "cast", id })), crew, text, date, encounter: encounter || null });
+
+test("241: interactionSentence reads each kind, crew first, with the words after the day", () => {
+  const { t, bob, gull } = sentTable();
+  const day = "2026-10-08";
+  eq(sentenceText(t, L("shared", [bob], ["Scott"], "the lake is on fire", day)), "Scott told Bob “the lake is on fire” on 2026-10-08");
+  eq(sentenceText(t, L("learned", [bob], ["Scott", "D"], "it is a front", day)), "Scott and D learned from Bob “it is a front” on 2026-10-08");
+  eq(sentenceText(t, L("helped", [bob], ["Scott"], "carried the bags", day)), "Scott helped Bob on 2026-10-08: carried the bags");
+  eq(sentenceText(t, L("wronged", [bob, gull], ["Scott", "D", "Rook"], "", day)), "Scott, D and Rook wronged Bob and Gull on 2026-10-08");
+  eq(sentenceText(t, L("killed", [bob], ["Scott"], "", null)), "Scott killed Bob");
+  eq(sentenceText(t, L("fought", [bob], ["Scott"], "2 of 4 Health Levels left.", day)), "Scott fought Bob on 2026-10-08: 2 of 4 Health Levels left.");
+  // owes agrees with the crew; owed puts the member first and agrees with the members
+  eq(sentenceText(t, L("owes", [bob], ["Scott"], "a favour", day)), "Scott owes Bob on 2026-10-08: a favour");
+  eq(sentenceText(t, L("owes", [bob], ["Scott", "D"], "", null)), "Scott and D owe Bob");
+  eq(sentenceText(t, L("owed", [bob], ["Scott"], "for the van", day)), "Bob owes Scott on 2026-10-08: for the van");
+  eq(sentenceText(t, L("owed", [bob, gull], ["Scott"], "", null)), "Bob and Gull owe Scott");
+  // no kind
+  eq(sentenceText(t, L(null, [bob], ["Scott"], "met at the pier", day)), "Bob, with Scott, on 2026-10-08: met at the pier");
+  eq(sentenceText(t, L(null, [bob], ["Scott"], "met", null)), "Bob, with Scott: met");
+  eq(sentenceText(t, L(null, [bob], [], "met", day)), "Bob, on 2026-10-08: met");
+});
+
+test("241: interactionSentence — no crew, no member, an unnamed one, a gone one, and the part kinds", () => {
+  const { t, bob } = sentTable();
+  eq(sentenceText(t, L("shared", [bob], [], "x", null)), "The crew told Bob “x”");
+  eq(sentenceText(t, L("helped", [], ["Scott"], "", null)), "Scott helped someone");
+  eq(sentenceText(t, L("owed", [], ["Scott"], "", null)), "Someone owes Scott");
+  eq(sentenceText(t, L("owed", [bob], [], "", null)), "Bob owes the crew");
+  const blank = Engine.addCastMember(t, { name: "" }).id;
+  eq(sentenceText(t, L("helped", [blank], ["Scott"], "", null)), "Scott helped them");
+  eq(sentenceText(t, L("owed", [blank], ["Scott"], "", null)), "Unnamed owes Scott");
+  eq(sentenceText(t, L(null, [blank], ["Scott"], "met", null)), "Unnamed, with Scott: met");
+  eq(sentenceText(t, L("owed", [bob], ["Scott"], "", null)), "Bob owes Scott", "a real name is never touched");
+  const gone = Engine.addCastMember(t, { name: "Marta" }).id;
+  Engine.removeCastMember(t, gone);
+  const parts = Engine.interactionSentence(t, { ...L("helped", [bob], ["Scott"], "", "2026-10-08"), cast: [{ kind: "cast", id: gone, name: "Marta" }, { kind: "cast", id: bob }] }).parts;
+  eq(parts.filter(p => p.kind === "cast").map(p => [p.name, p.gone]), [["Marta", true], ["Bob", false]]);
+  eq(parts.find(p => p.kind === "day"), { kind: "day", date: "2026-10-08" });
+  assert.ok(parts.every(p => ["text", "cast", "encounter", "day"].includes(p.kind)));
+});
+
+test("241: interactionSentence is total", () => {
+  const { t } = sentTable();
+  for (const x of [null, undefined, 5, "x", [], {}, { cast: "x" }, { crew: [1, {}] }, { kind: "zap", cast: [null, 3, {}] }, { kind: "fought", encounter: "x" }, { kind: "fought", encounter: { kind: "encounter" } }]) {
+    const r = Engine.interactionSentence(t, x);
+    assert.ok(Array.isArray(r.parts) && r.parts.length > 0, JSON.stringify(x));
+  }
+  for (const tt of [null, undefined, {}, { cast: "x", encounters: 7 }])
+    assert.ok(Engine.interactionSentence(tt, { kind: "fought", cast: [{ kind: "cast", id: "C-X" }], encounter: { kind: "encounter", id: "EN-AAAAAAAA" } }).parts.length > 0);
+});
+
+test("241: a fight's line links its encounter, which follows a rename and survives a removal", () => {
+  const { t, bob } = sentTable();
+  const e = Engine.addEncounter(t, { name: "Dock fight" }).id;
+  const ok = Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "figures", date: "2026-10-08", encounter: e });
+  const nope = Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "x", encounter: "EN-AAAAAAAA" });
+  const x = id => t.interactions.find(i => i.id === id);
+  assert.ok(x(ok.id).encounter, "End's caller passed an encounter and the line has no link");
+  eq(x(ok.id).encounter, { kind: "encounter", id: e });
+  assert.equal(x(nope.id).encounter, null, "an encounter not on the table is no link");
+  eq(Engine.linkName(t, x(ok.id).encounter), { name: "Dock fight", gone: false });
+  assert.equal(sentenceText(t, x(ok.id)), "Scott fought Bob in Dock fight on 2026-10-08: figures");
+  Engine.editEncounter(t, e, { name: "The Pier" });
+  eq(Engine.linkName(t, x(ok.id).encounter), { name: "The Pier", gone: false });
+  assert.ok(Engine.removeEncounter(t, e).ok);
+  eq(x(ok.id).encounter, { kind: "encounter", id: e, name: "The Pier" });
+  eq(Engine.linkName(t, x(ok.id).encounter), { name: "The Pier", gone: true });
+  assert.equal(sentenceText(t, x(ok.id)), "Scott fought Bob in The Pier on 2026-10-08: figures");
+  eq(Engine.linkName(t, { kind: "encounter", id: "EN-AAAAAAAA" }), { name: "An encounter removed", gone: true });
+  // only fought and killed name the fight
+  assert.equal(sentenceText(t, { ...L("helped", [bob], ["Scott"], "", null), encounter: x(ok.id).encounter }), "Scott helped Bob");
+});
+
+test("241: End writes the link on every line it writes, at its realistic worst, and undoes deep-equal", () => {
+  const { t } = bigTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const e = Engine.addEncounter(t, { name: "Dock" }).id;
+  const cast = [0, 1, 2].map(i => Engine.addParticipant(t, e, { kind: "cast", id: t.cast[i].id }).id);
+  const gulls = [0, 1].map(() => Engine.participantFromEntry(t, e, pack, "gull").id);
+  Engine.addParticipant(t, e, { kind: "pc", name: "Wren" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const base = plain(t);
+  const rows = {};
+  for (const id of cast) rows[id] = { line: true };
+  rows[cast[2]] = { line: true, status: "dead" };
+  rows[gulls[0]] = { keep: true, line: true, text: "Got away." };
+  rows[gulls[1]] = { keep: true, line: true, status: "dead" };
+  const r = recorded(t, () => assert.ok(Engine.endEncounter(t, e, { rows }, [pack]).ok), "Ended Dock");
+  assert.ok(r.ok);
+  const written = t.interactions.slice(0, 5);
+  assert.equal(t.interactions.length, 150 + 5);
+  assert.ok(written.every(x => x.encounter && x.encounter.id === e && x.encounter.kind === "encounter"), "every line carries the link");
+  assert.equal(written.filter(x => x.kind === "killed").length, 2, "the two that died");
+  assert.ok(written.every(x => !/Fought them/.test(x.text)), "the text is the figures alone");
+  assert.equal(written.find(x => x.text === "Got away.").kind, "fought");
+  const size = JSON.stringify(r.entry).length;
+  assert.ok(size < 4096, `End is ${size} bytes`);
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+});
+
+test("241: the default text of a fight's line is the figures, then Conditions", () => {
+  const { t, e, dezRow } = endTable();
+  Engine.participantDamage(t, e, dezRow, 7);
+  const hl = Engine.encounterView(t, e, []).rows.find(r => r.row.id === dezRow).health;
+  assert.equal(Engine.encounterWrapUp(t, e).rows[0].line, `${hl.levelsLeft} of ${hl.levels} Health Levels left.`);
+  Engine.participantAddCondition(t, e, dezRow, { id: "bleeding", location: LOC });
+  assert.match(Engine.encounterWrapUp(t, e).rows[0].line, /^\d+ of \d+ Health Levels left; [A-Z][^.]*\.$/);
+});
+
+test("241: Who knows what and Find both find a fight's line by its fight", () => {
+  const { t, bob } = sentTable();
+  const e = Engine.addEncounter(t, { name: "Dock fight" }).id;
+  Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "2 of 4", encounter: e });
+  Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "unrelated" });
+  eq(Engine.crewView(t, { q: "dock" }).map(g => [g.name, g.interactions.length]), [["Scott", 1]]);
+  Engine.editEncounter(t, e, { name: "The Pier" });
+  eq(Engine.crewView(t, { q: "pier" }).map(g => g.interactions.length), [1]);
+  eq(Engine.crewView(t, { q: "dock" }), []);
+  const hits = Engine.tableSearch(t, "Pier");
+  assert.ok(JSON.stringify(hits).includes("Fight"), "the Fight field: " + JSON.stringify(hits));
+});
+
+test("241: the gate keeps a good encounter link, drops a bad one, and converts nothing", () => {
+  const t = Engine.newTable("G");
+  const bob = Engine.addCastMember(t, { name: "Bob" }).id;
+  const mk = enc => ({ kind: "fought", cast: [{ kind: "cast", id: bob }], crew: ["Scott"], text: "Fought them in Dock.", encounter: enc });
+  const bad = ["EN-AAAAAAAA", { kind: "cast", id: bob }, { kind: "encounter", id: "__proto__" }, { kind: "encounter", id: "EN-1" }, [], 5, true];
+  const f = Engine.migrateTable({ ...plain(t), interactions: [...bad.map(mk), mk({ kind: "encounter", id: "EN-AAAAAAAA", name: 7 }), mk({ kind: "encounter", id: "EN-AAAAAAAA", name: "Gone", extra: 1 })] });
+  const links = f.interactions.map(x => x.encounter);
+  eq(links.slice(0, bad.length), bad.map(() => null));
+  eq(links[bad.length], { kind: "encounter", id: "EN-AAAAAAAA" }, "a numeric name is dropped, the link kept");
+  eq(links[bad.length + 1], { kind: "encounter", id: "EN-AAAAAAAA", name: "Gone" });
+  assert.ok(f.interactions.every(x => x.text === "Fought them in Dock." && x.crew[0] === "Scott"), "the neighbours are kept");
+  assert.equal(({}).polluted, undefined);
+  // a 0.12 table loads with encounter: null on every line and its text untouched
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.12";
+  old.interactions = [{ ...mk({ kind: "encounter", id: "EN-AAAAAAAA" }), id: "I-AAAAAAAA" }];
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.interactions[0].encounter, null);
+  assert.equal(m.interactions[0].text, "Fought them in Dock.");
+  // constraint 8: new, add, migrate round-trips
+  const r = Engine.newTable("R");
+  const c = Engine.addCastMember(r, { name: "Bob" }).id, en = Engine.addEncounter(r, { name: "Dock" }).id;
+  Engine.addInteraction(r, { kind: "fought", cast: [c], crew: ["Scott"], text: "x", encounter: en });
+  eq(Engine.migrateTable(r).interactions, r.interactions);
 });
