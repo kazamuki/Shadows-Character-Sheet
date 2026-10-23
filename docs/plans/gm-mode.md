@@ -502,8 +502,8 @@ meets a GM mode sees one new number.
 
 **Each session is built from a work order** in [`gm-mode/`](gm-mode/README.md),
 written one session ahead, approved by Ken, built in a fresh session and
-reviewed against the order before it merges. The README has the cadence and
-the template. **S1's order is approved:** [`gm-mode/S01-crank-rep.md`](gm-mode/S01-crank-rep.md).
+reviewed against the order before it merges. The cadence and the template are
+[`../WORK-ORDERS.md`](../WORK-ORDERS.md); the README keeps the orders table. **S1's order is approved:** [`gm-mode/S01-crank-rep.md`](gm-mode/S01-crank-rep.md).
 
 Each session is one batch, ends with `npm run verify` green and a log entry,
 and leaves the app openable. Each says what it depends on, what decides it,
