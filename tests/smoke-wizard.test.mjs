@@ -444,6 +444,62 @@ test("a locked Mercenary short its pick chooses it on Loadout, as one undoable a
   assert.deepEqual(app.errors, []);
 });
 
+const lockedEnforcer = () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["enforcer"];
+  return ch;
+};
+const ASK = /Choose 1 more Combat Skill to Focus/;
+const askCount = app => (app.$("#main").textContent.match(/Choose 1 more Combat Skill to Focus/g) || []).length;
+
+test("Decision 238: a locked Enforcer short its Combat Skill is asked on whichever tab it opens on, and choosing it there is one undoable action", () => {
+  const app = openSheet(lockedEnforcer(), "skills");
+  const tabs = app.$$("[data-sec]").map(b => b.dataset.sec);
+  assert.ok(tabs.length >= 8, "the sheet's tabs weren't found");
+  const main = app.$("#main");
+  assert.ok(main.innerHTML.indexOf("Choose 1 more Combat Skill") < main.innerHTML.indexOf('class="step-title"'), "the ask isn't above the title");
+  for (const t of tabs) {
+    app.click(`[data-sec="${t}"]`);
+    assert.equal(askCount(app), 1, `${t}: the ask isn't there exactly once`);
+    assert.equal(app.$$('[data-fpick="rifles"]').length, 1, `${t}: not exactly one picker`);
+  }
+  app.click('[data-fpick="rifles"]');
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
+  for (const t of tabs) {
+    app.click(`[data-sec="${t}"]`);
+    assert.equal(askCount(app), 0, `${t}: the ask stays after the pick`);
+    assert.equal(app.$$("[data-fpick]").length, 0, `${t}: a picker stays after the pick`);
+  }
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Focused Skill: Rifles/);
+  app.click("button[data-undolast]");
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
+  assert.equal(askCount(app), 1, "undo didn't bring the ask back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 238: a complete pick asks nothing, and an invalid one asks to be removed", () => {
+  const merc = lockedCharacter();
+  merc.identity.archetype = "professional";
+  merc.archetypeChoices.specialization = ["mercenary"];
+  merc.archetypeChoices.focusedSkillPicks = ["rifles"];
+  const done = openSheet(merc, "main");
+  assert.equal(done.$$("[data-fpick]").length, 0);
+  assert.doesNotMatch(done.$("#main").textContent, /to Focus\./);
+
+  const ch = lockedEnforcer();
+  ch.archetypeChoices.focusedSkillPicks = ["survival"];
+  const app = openSheet(ch, "main");
+  assert.match(app.$("#main").textContent, /can't be a Focused Skill any more/);
+  assert.equal(app.$$('[data-fpick="survival"]').length, 1);
+  assert.equal(app.$('[data-fpick="survival"]').textContent, "Remove");
+  app.click('[data-fpick="survival"]');
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
+  assert.match(app.$("#main").textContent, ASK);
+  assert.deepEqual(app.errors, []);
+});
+
 // ── Read it or label it (Decision 135) ────────────────────────────────
 const withDisciplines = d => d.archetypes.find(a => a.coreMechanic && a.coreMechanic.disciplines);
 

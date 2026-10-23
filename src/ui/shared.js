@@ -1040,6 +1040,23 @@ function focusedPickHtml(ch, attr){
       <div class="controls"><button class="toggle" ${attr}="${esc(id)}" ${!on && !bad && full?"disabled":""}>${bad?"Remove":on?"Chosen":"Choose"}</button></div></div></div>`;
   }).join("");
 }
+// What a locked character is still owed in Focused Skills, in the panel's words
+// and the sheet's header (Decision 238): one helper, so the two can't drift.
+function focusedOwedLines(fp){
+  if (!fp || fp.complete) return [];
+  const more = fp.need - fp.have, cat = Engine.focusedCategoryName(fp.category), out = [];
+  if (more>0) out.push(`Choose ${more} more ${cat} Skill${more===1?"":"s"} to Focus.`);
+  if (fp.invalid.length) out.push("A pick below can't be a Focused Skill any more. Remove it.");
+  return out;
+}
+// The ask at the top of every sheet tab: "" unless a locked character is short a pick.
+function focusedOwedHtml(ch){
+  if (!ch || !ch.creation || ch.creation.locked!==true) return "";
+  const lines = focusedOwedLines(Engine.focusedPicks(ch));
+  if (!lines.length) return "";
+  return `<div class="import-issues" role="status" data-focused-owed><div class="sect">Focused Skills</div>${
+    lines.map(l=>`<p class="step-note">${esc(l)}</p>`).join("")}${focusedPickHtml(ch, "data-fpick")}</div>`;
+}
 function flagHtml(entry){
   return noticeHtml(copy("unsettledLabel"), (entry && entry.playerNote) || copy("unsettledRule"));
 }

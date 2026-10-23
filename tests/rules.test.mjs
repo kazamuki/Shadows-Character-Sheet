@@ -969,6 +969,84 @@ test('CRB 0412, Cleaner: "Acrobatics, Combat Sense, Security, Stealth, and 2 Com
   assert.equal(Engine.focusedSkillIds(ch).length, 6);
 });
 
+/** One Professional subtype's section of 0412, with the mirror's CRLFs and the bold markers gone. */
+function subtypeSection(name) {
+  const md = crb("0412_Professional.md").replace(/\r/g, "");
+  const sections = md.split(/^##### /m).slice(1);
+  const sec = sections.find(s => s.split("\n")[0].trim() === name);
+  assert.ok(sec, `0412 has no "##### ${name}" section: it moved or was renamed`);
+  return sec;
+}
+const professionalOptions = () => D.archetypes.find(a => a.id === "professional").specialization.options;
+
+test("CRB 0412: every Professional subtype requires the stats the book prints", () => {
+  const book = crb("0412_Professional.md").replace(/\r/g, "").split(/^##### /m).slice(1)
+    .map(s => ({ name: s.split("\n")[0].trim(), sec: s })).filter(s => /REQUIRED STATS/.test(s.sec));
+  assert.ok(book.length >= 8, "0412 prints fewer subtypes than the data has: the heading moved");
+  const lineAfter = sec => { const lines = sec.split("\n"); const i = lines.findIndex(l => /REQUIRED STATS/.test(l));
+    return lines.slice(i + 1).find(l => l.trim()).replace(/\\/g, ""); };
+  const seen = [];
+  for (const { name, sec } of book) {
+    const opt = professionalOptions().find(o => o.name === name);
+    assert.ok(opt, `0412 prints a Professional the data doesn't have: ${name}`);
+    const printed = lineAfter(sec).split("|").map(x => x.trim()).sort();
+    const held = Object.entries(opt.requires.stats).map(([k, v]) => `${k} ${v}`).sort();
+    assert.deepEqual(held, printed, `${name}: Required Stats`);
+    seen.push(opt.id);
+  }
+  assert.equal(seen.sort().join(), professionalOptions().filter(o => o.requires).map(o => o.id).sort().join(),
+    "the data holds a Professional with requirements 0412 doesn't print");
+});
+
+test('CRB 0412, Enforcer: "Athletics, Combat Sense, Cybernetics, Intimidation, Investigation, and 1 Combat Skill"', () => {
+  assert.match(subtypeSection("Enforcer"), /Athletics, Combat Sense, Cybernetics, Intimidation, Investigation, and 1 Combat Skill/);
+  const ch = professional("enforcer");
+  assert.equal([...Engine.focusedSkillIds(ch)].sort().join(), "athletics,combat-sense,cybernetics,intimidation,investigation");
+  const p = Engine.focusedPicks(ch);
+  assert.equal(p.need, 1, "the Enforcer's sixth Focused Skill isn't asked for");
+  assert.ok(focusedErrors(ch).some(m => /Choose 1 Combat Skill /.test(m)), "validate doesn't ask for the pick");
+  assert.ok(p.options.every(id => Engine.skillById(id).category === "combat"), "the pick offers a skill that isn't Combat");
+  assert.ok(!p.options.includes("combat-sense"), "the pick offers Combat Sense, which the Enforcer already has");
+  assert.equal(Engine.toggleFocusedPick(ch, "rifles").ok, true);
+  assert.equal(Engine.focusedSkillIds(ch).length, 6);
+  assert.deepEqual(focusedErrors(ch), []);
+  assert.equal(Engine.toggleFocusedPick(ch, "melee").ok, false, "a second pick went through");
+});
+
+test("CRB 0412, Enforcer: Duty Grade is the book's words, without Issued Hardware", () => {
+  const sec = subtypeSection("Enforcer").replace(/\*\*/g, "");
+  assert.match(subtypeSection("Enforcer"), /Issued Hardware\.\*\* \\\[Starting chrome, pending the loadout decision\.\\\]/,
+    "0412 wrote Issued Hardware: add it to Duty Grade (YQ3)");
+  const tweak = professionalOptions().find(o => o.id === "enforcer").tweak;
+  assert.equal(tweak.name, "Duty Grade");
+  assert.equal(tweak.benefits.length, 3);
+  for (const t of [tweak.description, ...tweak.benefits]) {
+    assert.ok(sec.includes(t), `Duty Grade's text isn't 0412's: ${t}`);
+    assert.ok(!/Issued Hardware|\[/.test(t), `Duty Grade carries Issued Hardware's placeholder: ${t}`);
+  }
+});
+
+test("Y1: a saved Enforcer keeps its skills; Survival advances at the standard price and Cybernetics at the Focused one", () => {
+  const ch = professional("enforcer");
+  ch.creation.locked = true;
+  ch.skills.survival = { rank: 3, ipe: 0 };
+  ch.skills.cybernetics = { rank: 2, ipe: 0 };
+  const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  assert.deepEqual([...m.archetypeChoices.focusedSkillPicks], [], "migrate() wrote a pick");
+  assert.equal(m.skills.survival.rank, 3);
+  assert.equal(Engine.ipCost(m, "skill", "survival").cost, 15, "Survival is still Focused");
+  assert.equal(Engine.ipCost(m, "skill", "cybernetics").cost, 6, "Cybernetics isn't Focused");
+});
+
+test("Y1: a draft Enforcer is gated by BOD 8 and COOL 7, not REF and MOB", () => {
+  const ch = professional("enforcer");
+  for (const [k, v] of Object.entries({ REF: 4, MOB: 4, BOD: 8, COOL: 7 })) ch.stats[k].base = v;
+  const errs = () => [...Engine.validate("archetype", ch), ...Engine.validate("stats", ch)].map(i => String(i.msg)).filter(m => /Enforcer requires/.test(m));
+  assert.deepEqual(errs(), []);
+  ch.stats.COOL.base = 5;
+  assert.deepEqual(errs(), ["Enforcer requires COOL 7 (you have 5)."]);
+});
+
 test('CRB 0412: the Focused Skill Max Bonus (+1/+2/+3/+4) raises the starting cap of Focused Skills only (B13)', () => {
   // 0420: "The cap on starting rank is a function of Campaign Power Level.
   // Once the campaign begins, it doesn't apply."

@@ -23,8 +23,10 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.52.1
+## [Unreleased] — app 0.53.0
 
+- **The Enforcer follows the new book:** it requires BOD 8 and COOL 7, Focuses Cybernetics and one Combat Skill you choose in place of Survival, and carries the Duty Grade tweak (Interpreter, Hardwired, Hardened) in place of Hard Knock Life.
+- **A character still owed a Focused Skill is asked for it at the top of the sheet,** whatever tab it opens on. An Enforcer saved before this update picks its Combat Skill there.
 - **Layered Street Clothes are in the armor shop:** everyday clothes that stop a little. PROT 1d4, RES +2, 175Ç.
 - **A Forge Fang's first withdrawal step is named, Talented says it raises an Advantage that has ranks, and Off the Leash names its Difficulty,** as the book now prints them.
 - **Your archetype counts on your Skills.** A Cleaner's Stealth rolls its 1d6 Kicker, a Wheelman's Pilot explodes on a 9 or 10, a Fence's Persuasion can Take 5, and Quick Study's Take 6 shows on Combat Sense. Majors, Werewolf traits, the Arcanist's Aberrations and rolled Aberrations say what they do on the Skill they touch, and which part they come from.

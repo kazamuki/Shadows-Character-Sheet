@@ -3674,7 +3674,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 134. **Focused Skills are data: ids, a category pick and an all-skills price, read by one generic reader.**
      *2026-09-24 · Ken + Claude · Touches: focusedSkills, focusedSkillPicks, Focused Skill Max Bonus, maxSkillRank, skillRankCap, canBoost, ipCost, ip.skillIncreaseCost, Jack of All Trades, Mercenary, Cleaner, Natural Advantages, focusedSkills panel, specializationText panel, A8, B12–B14, F33*
-     - **Decided:** A specialization's `focusedSkills` is `{ ids, choose: { count, category }, all: { throughRank } }`, read for whatever archetype carries it. A pick is a skill of that category the option doesn't already name. `skillRankCap` adds the scaling row's `focusedSkillMaxBonus` to Max Skill Rank for a Focused Skill; it caps starting rank only (042), and `canBoost`, the stepper and `validate` read it. `ipCost` reads `ip.skillIncreaseCost.{perRank, focusedPerRank, newSkill}`. Jack's `throughRank: 4` means ranks bought up to 4, so 4 → 5 is standard (Ken). The sheet's two Professional panels are generic types, and a locked character short of a pick chooses it there.
+     - **Decided:** A specialization's `focusedSkills` is `{ ids, choose: { count, category }, all: { throughRank } }`, read for whatever archetype carries it. A pick is a skill of that category the option doesn't already name. `skillRankCap` adds the scaling row's `focusedSkillMaxBonus` to Max Skill Rank for a Focused Skill; it caps starting rank only (042), and `canBoost`, the stepper and `validate` read it. `ipCost` reads `ip.skillIncreaseCost.{perRank, focusedPerRank, newSkill}`. Jack's `throughRank: 4` means ranks bought up to 4, so 4 → 5 is standard (Ken). The sheet's two Professional panels are generic types, and a locked character short of a pick chooses it there. → **Superseded in part by Decision 238**: a locked character short of a pick is asked at the top of every sheet tab; the panel keeps its line, not the picker.
      - **Why:** Three readers parsed English three ways, and B12–B14 were the result. Each rule is now one field a designer changes (AQ3), and Cyborg and Vampire get a reader, not a branch (Decision 15's Revisit if).
      - **Rejected:**
        - Keeping the strings and fixing the regexes: the parsing was the defect, and a tweak would still be code.
@@ -4949,6 +4949,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing; extends Decision 233 (its sources and types) and answers its *Revisit if* "a kicker and a Take X"; Decision 236's Speed Heal stays true of the dosed day.
      - **Revisit if:** Deighton rules on F45–F47 (an appraisal's Skill, kicker stacking, Specialist and Make My Own Luck); a power's "running" state is stored (W110); an Aberration "as" an Advantage counts as one.
      - **Built:** app 0.52.0, game data 0.44, no schema bump, PR #221. Log 2026-10-21 (P21).
+
+238. **A locked character short of a Focused Skill pick is asked for it at the top of every sheet tab, with the wizard's picker, until it's chosen.**
+     *2026-10-23 · Ken + Claude · Touches: focusedPicks, focusedPickHtml, data-fpick, sheetHeader, importIssuesHtml, focusedSkills panel, toggleFocusedPick, Enforcer, Duty Grade, YQ2, YQ6*
+     - **Decided:** While `Engine.focusedPicks(ch)` is incomplete on a locked character (a pick short, or one the data no longer allows), every sheet tab opens with a block below any load findings that says so in the panel's words and holds the wizard's picker. Choosing there is the one undoable action it already was. It has no Dismiss and goes when the picks are complete. The Focused Skills panel on Loadout & Powers keeps its line and no longer repeats the picker. Nothing prints.
+     - **Why:** The Enforcer's revamp (`0412`, 2026-10-16) owes every saved Enforcer a Combat Skill, and Ken's YQ2 answer is to ask on open. The sheet reopens on the tab it was left on, so a picker in one panel on one tab is one most players never see.
+     - **Rejected:** a modal on open (it blocks the sheet for a choice that can wait a tap); Loadout only, as Decision 134 left it (YQ2 asked for more); a Dismiss (a short pick is an unfinished character, not news, unlike Decision 125's findings); picking one automatically (the player's choice); two pickers on Loadout; naming the Enforcer in code (Decision 135).
+     - **Replaces:** Decision 134 in part: a locked character short of a pick chose it in the Loadout panel; it now chooses it at the top of whichever tab is open, and the panel keeps only its line.
+     - **Revisit if:** another creation choice can go missing on a locked character (a Base Power, a Natural Advantage) and wants the same ask; then the block becomes a list of what's owed.
+     - **Built:** app 0.53.0, game data 0.46, no schema bump, PR #227. Log 2026-10-23 (Y1).
 
 ## 5. Open Flags
 
