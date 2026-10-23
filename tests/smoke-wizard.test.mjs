@@ -451,7 +451,7 @@ const lockedEnforcer = () => {
   return ch;
 };
 const ASK = /Choose 1 more Combat Skill to Focus/;
-const askCount = app => (app.$("#main").textContent.match(/Choose 1 more Combat Skill to Focus/g) || []).length;
+const askCount = app => app.$$("[data-focused-owed]").length;
 
 test("Decision 238: a locked Enforcer short its Combat Skill is asked on whichever tab it opens on, and choosing it there is one undoable action", () => {
   const app = openSheet(lockedEnforcer(), "skills");
@@ -462,6 +462,7 @@ test("Decision 238: a locked Enforcer short its Combat Skill is asked on whichev
   for (const t of tabs) {
     app.click(`[data-sec="${t}"]`);
     assert.equal(askCount(app), 1, `${t}: the ask isn't there exactly once`);
+    assert.match(app.$("[data-focused-owed]").textContent, ASK);
     assert.equal(app.$$('[data-fpick="rifles"]').length, 1, `${t}: not exactly one picker`);
   }
   app.click('[data-fpick="rifles"]');
@@ -496,7 +497,7 @@ test("Decision 238: a complete pick asks nothing, and an invalid one asks to be 
   assert.equal(app.$('[data-fpick="survival"]').textContent, "Remove");
   app.click('[data-fpick="survival"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
-  assert.match(app.$("#main").textContent, ASK);
+  assert.match(app.$("[data-focused-owed]").textContent, ASK);
   assert.deepEqual(app.errors, []);
 });
 
