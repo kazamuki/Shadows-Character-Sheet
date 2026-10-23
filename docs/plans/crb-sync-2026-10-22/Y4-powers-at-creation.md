@@ -26,6 +26,12 @@ Ken starts **Y4 build** (Sonnet), then a fresh reviewer (Opus) once the PR is op
 - **The build's:** the PR didn't report something the order asked to have reported (Enter dropping focus),
   and a test covered one of the two lines it changed. **Every "report it if…" in this order is a review
   checklist item** (§14), and §10's examples name each sentence they pin.
+- **From the Y1 builder** (its own lessons, 2026-10-23), each written into its step below:
+  - an example's count disagreed with another section of the same order (§10's preamble);
+  - an example's call shape was wrong (`ipCost(…, "survival")` for `ipCost(ch, "skill", "survival")`), so its
+    baseline failed on `main` for the wrong reason (§10);
+  - `npm run bump` moves the app version, not the game data's, and README's status line names both (§14);
+  - whole-file mutation runs of a smoke test hang on a click at a missing element (§11).
 - **Environmental:** `engine.test.mjs` *"208: a search over 200 members and 100 sessions is quick"* failed
   at 65 ms with the dev preview's Chromium running. It's GM-table code this order doesn't touch. §13 says
   it isn't a stop when it passes run alone.
@@ -266,7 +272,17 @@ stuck or choosing). The data's notes sentence is reference copy. Mark YQ11's for
 
 ## 10. Worked examples, as named tests
 
-Write these first and show each failing on `main` (or say why it already passes).
+Write these first and show each failing on `main` (or say why it already passes). **Check that each fails
+for the reason given**, not on an `undefined` or a thrown call: Y1's example 4 first failed on a wrong
+signature. The real call shapes, read on `508389c`:
+`Engine.placeBasePower(ch, id, ±1)`, `Engine.buyPowerRank(ch, id, ±1)` (both return `{ ok }` or `{ ok, why }`),
+`Engine.basePowerState(ch)` (`{ count, cap, spent, left, rows, stray }` or `null`), `Engine.powerCpState(ch)`
+(rows `{ id, name, start, cp, rank, cap }`), `Engine.validate(stepId, ch)` (issues `{ level, msg, pool? }`;
+step ids `"archetype"`, `"character-points"`, `"review"`), `Engine.spendable(ch, "cp")`. In the smoke tests the
+steppers are `[data-step="bp|<id>|1"]` / `"|-1"` and `[data-step="apow|<id>|1"]`. **And check each count or
+"not present" against the order's other sections**: Y1's example 6 counted a sentence once per tab while §9
+kept a second copy of it on Loadout. Here, Admin renders the Bloodline step's note too, so count it on the
+wizard's step only.
 
 **`tests/rules.test.mjs`**, after *"R16: …the Vampire's Campaign Power Scaling…"* (~1471):
 
@@ -339,6 +355,10 @@ Write these first and show each failing on `main` (or say why it already passes)
   - example 6: make Admin's `+` ignore the cap (fails).
   Check each for a second path that would keep it green: example 2's `rows.every(cap === 1)` and its
   refusal both see the first mutation, so break each separately.
+- **Run each mutant narrowly:** `node --test --test-name-pattern="Decision N: …" tests/<file>` under a
+  `timeout`, never the whole smoke file. A click on an element a mutant removed hangs the file (Y1's builder).
+  Save the fixed file and copy it back after each mutant; never `git checkout` a file you edited. A full
+  `npm run verify` takes about 7 minutes here: run it at steps 4 and 8, not after each mutant.
 
 ## 12. Steps
 
@@ -397,7 +417,10 @@ The **close-the-session** skill, at the Rule or shape tier:
     Origin power at rank 1, and Character Points raise a power up to your Max Starting Rank. A character
     you've already locked keeps every rank it has; a draft that placed two Base Powers in one power asks you
     to move one."
-- `npm run bump -- <the next minor>`; `gamedataVersion` 0.47. **`README.md`'s status line** moves with them.
+- `npm run bump -- <the next minor>` moves the **app** version only. Set `meta.gamedataVersion` to 0.47 in
+  `shadows-data.js` by hand, and change **both** numbers on **`README.md`'s status line** (app *and* game
+  data) and STATE's versions line: `docs.test.mjs` checks them, and Y1's first verify failed on README's data
+  version alone.
 - **Decision N** in SCHEMA §4 with the 215 marks and the INDEX lines (§3).
 - **The plan:** Y4's row says *built, PR #…*; §1's `0413` and `0414` rows say ✅ Y4.
 - **STATE:** the versions line; §5's *Where to start* (Y4 built; Y3, the close, is next). Rebase first if the
@@ -437,6 +460,12 @@ The building session's prompt is the README's, titled **Y4 build**. Its traps, u
 - **Sweep the sentences.** Every ✎ row in §5 is a sentence about the old rule. Y1 shipped one that pointed at a
   control that had moved.
 - **No `migrate()` step.** A draft's 2 stays a 2 until the player fixes it (YQ4).
+- **The baseline fails for the stated reason.** Check each example's failure on `main` reads as §10 says, not
+  as an `undefined`. The call shapes are in §10's preamble.
+- **No new styled block** (YQ9's default). If you add one anyway: its own class, not a borrowed one (Y1's
+  `.import-issues` was a flex row and squeezed its contents), and colours from theme tokens (`var(--panel)`),
+  never an `rgba` written for the dark theme.
+- **Two version numbers by hand.** `bump` moves the app's; game data and README's line are yours (§14).
 - **Preview by clicking**, and answer every "Report it if" in the PR.
 - **Verify last.** The final `npm run verify` runs on the commit the PR ends on.
 
