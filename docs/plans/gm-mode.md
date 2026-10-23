@@ -501,52 +501,72 @@ meets a GM mode sees one new number.
 ## 6. What ships when: the sessions
 
 **Each session is built from a work order** in [`gm-mode/`](gm-mode/README.md),
-written one session ahead, approved by Ken, built in a fresh session and
-reviewed against the order before it merges. The cadence and the template are
-[`../WORK-ORDERS.md`](../WORK-ORDERS.md); the README keeps the orders table. **S1's order is approved:** [`gm-mode/S01-crank-rep.md`](gm-mode/S01-crank-rep.md).
+drafted from `main` once the last one has merged, approved by Ken, and built and
+reviewed in the three-session loop ([`../WORK-ORDERS.md`](../WORK-ORDERS.md)). The
+README's table lists every order. Each session is one batch, merges **switched off**
+(`FEATURES.gm`, Decision 173), and leaves the app openable.
 
-Each session is one batch, ends with `npm run verify` green and a log entry,
-and leaves the app openable. Each says what it depends on, what decides it,
-and what's done.
+**How to read the ids.** An S-number names a piece of the plan, not its place in
+line: the first draft (2026-10-02) numbered them by risk, and Scott's answers (§1a)
+reordered the work around the cast, the Codex and the fight. The numbers stayed,
+because the log, the ledger and §9 cite them. A session too big for one batch split
+into letters (S8a, S8b), and work found along the way took the next free number
+(S14–S16). So read the two tables below, not the numbers.
 
-**The order changed on 2026-10-02** (§1a). The first draft answered the
-riskiest shapes first (storage, the dispatch, the read-only sheet). Scott's
-answers put the value in NPCs, enemies, Conditions and the campaign's
-memory, none of which needs a seated character. So S3 splits: **S3a** is the
-table file and its storage, which everything needs; **S3b** is seats, the
-card spread and the read-only sheet, which only the character-facing half
-needs. The S-numbers stay as ids, since the log and §9 cite them; the table
-below is in **build order**.
+The Codex never ships in the app (GQ10): S9 built the pack a GM slots in, and the
+Codex pack itself is built from `private/`.
 
-The Codex never ships in the app (GQ10): S9 builds the pack a GM slots in,
-and the Codex pack itself is built from `private/`.
+### Built (all switched off but S1)
 
-| # | Session | Tier | Depends on | Visible to a player? |
+In the order they merged.
+
+| Session | What a GM got | Decisions | PR |
+|---|---|---|---|
+| S1 | CRANK reputation on the player's sheet (on for everyone since Decision 239) | 169 | #111 |
+| S3a | The table file: new, open, export, import, its own gate and `migrateTable()` | 170–173 | #113 |
+| S8a | The cast: a record per NPC, the stat block, the Cast tab | 174–176 | #115 |
+| S8b | Who knows what: interactions, affiliations, the crew's view | 177–179 | #117 |
+| S9a | Packs: a file a GM slots in, and the Threats tab | 180–182 | #119 |
+| S9b | The builder: a cast member's page reads the pack | 183–185 | #121 |
+| S9c | The real Codex pack, built from the mirror with an id ledger | 186–187 | #123 |
+| S10a | Encounters: who's in it, whose turn, Conditions, Reset | 188–190 | #126 |
+| S10b | The hit: armor, Shock, At Zero and Dying for a row | 191–192 | #128 |
+| S10c | The encounter's end: Keep, the fight written to the cast | 193 | #130 |
+| S5a | Sessions and threads, the Journal, Next session | 203–204 | #138 |
+| S5b | The close-out: IP, the Milestone Point, the award log | 205–206 | #141 |
+| S13a | The Reference tab: the rules a GM looks up, on one page | 207 | #144 |
+| S14 | The secretary: Find over the whole table, and Jot (W85) | 208 | #146 |
+| S10d | Wave Initiative: sides in turn, best Combat Sense first | 210 | #149 |
+| S10e | Add to a fight from anywhere; the Codex inside an encounter | 211 | #151 |
+| S15 | The table's memory: an activity log, with undo (W83) | 212 | #153 |
+
+### Still to build
+
+Ken picks the next one when the last has merged; the order below is a suggestion,
+not a queue. What Scott's use of the table turns up can reorder it.
+
+| Session | What | Tier | Waits on | Status |
 |---|---|---|---|---|
-| S0 | This plan, the mirror, the questions page | Docs | — | No |
-| S1 | CRANK reputation on the sheet (independent; can go to main any time, GQ14) | Rule or shape | — | **Yes** |
-| S3a | The table file: new, open, export, import, the storage key, `migrateTable()` | Rule or shape | — | No |
-| S8 | The cast: the record, partial blocks, interactions, affiliation filters, the roster | Rule or shape | S3a | No |
-| S9 | The Threat Codex as a pack: the pack shape and import, rolodex and builder | Content + shape | S8 | No |
-| S10 | The encounter tracker, built around Conditions; PCs by typed name | Rule or shape | S8, S9 | No |
-| S5 | Sessions: attendance, threads, Next session, the award log, close-out, the Journal, Session 0 | Rule or shape | S8 | No |
-| S13 | The GM screen: Conditions and the Codex first, then the rest of the reference | Fix + content | S9 | No |
-| S14 | The secretary: Find, one search over the table, and Jot, a line kept as a note with its session (W85, Decision 208) | Rule or shape | S5, S8 | No |
-| S10d | Wave Initiative: sides that act in turn, best Combat Sense first; a cast member can fight with the crew (Decision 210) | Rule or shape | S10a | No |
-| S10e | Adding to a fight: Add to always on screen, the Codex searchable inside an encounter, Add on a Threats card (W74–W76, Decision 211) | Rule or shape | S10a, S9 | No |
-| S15 | The table's memory: an activity log with undo, a toast on each press, Activity in the menu (W83, Decision 212, table schema 0.12) | Rule or shape | S10 | No |
-| S6 | The gazetteer and the crew's places | Content + shape | S3a | No |
-| S7 | Factions and clocks | Rule or shape | S6, S8 | No |
-| S3b | Seats: players, import, the card spread (Health, Awareness, Conditions first), the read-only sheet | Rule or shape | S3a | No |
-| S2 | The dispatch and the inbox | Rule or shape | S1 | Yes, once a GM sends one |
-| S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b, S5 | No |
-| S11 | CRANK work: the generator and the jobs board | Content + shape | S1, S5 | No |
-| S12 | Supernatural Orders and Site Profiles | Content | GQ17 (approved 2026-10-10) and S9 for the Orders; S7 for Site Profiles (the Expansion is approved) | No |
+| **S16** | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | Rule or shape | Nothing | **Order drafted** 2026-10-10, SQ1–SQ8 answered, re-pre-flighted 2026-10-23 ([order](gm-mode/S16-interaction-sentence.md)). Next to build |
+| S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10) | No order yet |
+| S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
+| S6 | The gazetteer and the crew's places | Content + shape | Nothing | No order yet |
+| S7 | Factions and clocks | Rule or shape | S6 | No order yet |
+| S12b | Site Profiles: places with their tracks and clocks (the Expansion is approved) | Content | S7 | No order yet |
+| S10f | The rest of S10: the Encounter Design worksheet (`2642`), Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | S7 for the clocks | No order yet |
+| S3b | Seats: players, import, the card spread, the read-only sheet | Rule or shape | Nothing | No order yet |
+| S2 | The dispatch and the inbox (a player sees one) | Rule or shape | Nothing (S1 built) | No order yet |
+| S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b | No order yet |
+| S11 | CRANK work: the generator and the jobs board (`2625` revised) | Content + shape | S5 built; S2 for dispatched pay | No order yet |
+| Launch | `FEATURES.gm` on for everyone, with `gm-mode/changelog-pending.md` | Release | Ken and Scott | — |
 
-**The first point a GM gets real value** is after S10: a table holding a
-cast, the Codex to pull from, and a fight that keeps its Conditions. That is
-the natural place to merge the branch (§7) and put it in Scott's hands, and
-his use of it should reorder whatever comes after.
+S12's split into S12a and S12b, and S10f's name, are this table's (2026-10-23), so
+the halves can be picked separately. The sections below still describe each session
+as first drafted, with the splits noted where they happened.
+
+**The first point a GM got real value** was after S10: a table holding a
+cast, the Codex to pull from, and a fight that keeps its Conditions. Scott has
+had it since v0.37.0 with `?gm=on`, and his use of it reorders what's left.
 
 ### S0 — This plan (Docs)
 
@@ -779,13 +799,6 @@ arithmetic the builder can do, and a −2 it flags for the GM, as v2 says), the 
 roster examples, the Site Profiles on places with their tracks and clocks. If
 it turns out to need code, that's a finding about S8 and S9's shape.
 
-### S14 — The secretary (W85)
-
-**Built** (Decision 208, table schema 0.10, switched off; `plans/gm-mode/S14-secretary.md`). From Deighton's answers (§1a): his one
-tool is "a secretary", and what he loses is the small detail, names first. A table's header gains **Find**, one search over the
-cast, sessions, interactions, threads, notes and encounters, and **Jot**, a line kept as a note with the session dated today.
-Packs and the Reference keep their own searches; a session copied out as Markdown for Obsidian is W86.
-
 ### S13 — The GM screen
 
 The reference tips (139) gathered on one screen, **Conditions and the
@@ -794,6 +807,25 @@ Pain Levels, the tier table. Handouts (a dispatch kind).
 Printing a cast member, an encounter, a session's journal.
 
 **Split (S13a, SQ4).** **S13a is built** (Decision 207, switched off): the Reference tab. Handouts wait on S2; printing is **S13b** (W84).
+
+### S14 — The secretary (W85)
+
+**Built** (Decision 208, table schema 0.10, switched off; `plans/gm-mode/S14-secretary.md`). From Deighton's answers (§1a): his one
+tool is "a secretary", and what he loses is the small detail, names first. A table's header gains **Find**, one search over the
+cast, sessions, interactions, threads, notes and encounters, and **Jot**, a line kept as a note with the session dated today.
+Packs and the Reference keep their own searches; a session copied out as Markdown for Obsidian is W86.
+
+### S15 — The table's memory (W83)
+
+**Built** (Decision 212, table schema 0.12, switched off; `plans/gm-mode/S15-table-undo.md`, #153): every change to a
+table is one entry in an activity log, undone last first, with a toast on each press and Activity in the menu.
+
+### S16 — A line reads as a sentence (W79, W82)
+
+**Order drafted 2026-10-10 and re-pre-flighted 2026-10-23** (`plans/gm-mode/S16-interaction-sentence.md`; SQ1–SQ8 on
+their defaults). Every line between the crew and the cast reads as one sentence, crew first (*Scott told Bob “the lake
+is on fire” on 10/8/2026*), in all three lists; a member's page shows sentences with Edit; a fight's line links to its
+encounter instead of naming it in its text, and Back returns to where the tap came from. Table schema 0.13.
 
 ## 7. How the branch works
 
