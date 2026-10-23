@@ -1460,14 +1460,21 @@ test("R16: the Vampire's Campaign Power Scaling matches 0413, row for row", () =
   assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join());
   assert.match(md, /The Focus Stats for the Vampire are BOD, REF, and MOB/);
   assert.equal(VA().campaignPowerScaling.focusStats.join(" "), "BOD REF MOB");
-  // The book now prints the rule Y4 builds (YQ1): every Vampire gets the full set of Innate Powers,
-  // then a number of Bloodline powers at Rank 1. Until Y4, the data's notes below are Decision 215's.
+  // The book prints the rule Decision 240 builds (YQ1): every Vampire gets the full set of Innate Powers,
+  // then a number of Bloodline powers at Rank 1; the next test pins the data's notes to it.
   assert.match(md, /Every Vampire gets the full set of Innate Powers\. You then are granted a number of Bloodline powers during character creation, at Rank 1\./);
-  assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Spend your Base Powers on your Bloodline's powers; none starts above your Max Starting Rank\./);
+  assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
   assert.equal(JSON.stringify(VA().powersBought), JSON.stringify({ countBy: "campaignPowerScaling.basePowers", maxRankBy: "campaignPowerScaling.maxStartingRank", granted: "innate" }));
   // The Werewolf buys the same way, reading the same columns of its own table.
   assert.equal(JSON.stringify(WW().powersBought), JSON.stringify(VA().powersBought));
-  assert.match(WW().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Spend your Base Powers on your Origin's powers; none starts above your Max Starting Rank\./);
+  assert.match(WW().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
+});
+
+test("CRB 0413, 0414: a Base Power takes a power at rank 1, and CP raises it only to Max Starting Rank (Decision 240)", () => {
+  assert.match(crb("0413_Vampire.md"), /You then are granted a number of Bloodline powers during character creation, at Rank 1\. You can raise these up to your Max Starting Rank with Character Points\./);
+  assert.match(crb("0414_Werewolf.md"), /You then are granted a number of Origin powers during character creation, at Rank 1\. You can raise these up to your Max Starting Rank with Character Points\./);
+  assert.match(VA().campaignPowerScaling.notes, /Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
+  assert.match(WW().campaignPowerScaling.notes, /Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
 });
 
 test("R16: every Innate and Bloodline power is the book's, by name, cost, effect, Per Rank and printed maximum", () => {

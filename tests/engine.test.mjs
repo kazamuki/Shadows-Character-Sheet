@@ -5440,7 +5440,7 @@ function vampire(bloodline, { pl = "shadows", bod = 6, locked = true } = {}) {
 }
 const vErrors = ch => Engine.validate("archetype", ch).filter(i => i.level === "error").map(i => i.msg);
 
-test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's powers, never an Innate one, none past Max Starting Rank or the book's own", () => {
+test("Decisions 200, 215, 240: Base Powers take each of the Bloodline's powers once, at rank 1, never an Innate one, whatever Max Starting Rank is", () => {
   const ch = vampire("strigoi", { pl: "street", locked: false });   // 2 Base Powers, Max Starting Rank 1
   const st = Engine.basePowerState(ch);
   same([st.count, st.cap, st.spent, st.left], [2, 1, 0, 2]);
@@ -5448,7 +5448,7 @@ test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's pow
   const held = () => Engine.powerRanks(ch).filter(p => p.kind === "archetype" && !p.learn).map(p => `${p.id}:${p.rank}`);
   same(held(), ["bestial-blessings:1", "vitality-surge:1", "preternatural-speed:1", "cursed-evolution:1"], "the Innate four aren't granted at rank 1");
   assert.ok(Engine.placeBasePower(ch, "shadow-play", 1).ok);
-  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /can start at rank 1 at most/);
+  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /yours already: a Base Power takes a power once, at rank 1/);
   assert.match(Engine.placeBasePower(ch, "iron-hide", 1).why, /isn't one you can take/, "an Upyr power on a Strigoi");
   assert.match(Engine.placeBasePower(ch, "bestial-blessings", 1).why, /Innate powers aren't bought/);
   assert.match(Engine.placeBasePower(ch, "preternatural-speed", 1).why, /Innate powers aren't bought/);
@@ -5460,10 +5460,11 @@ test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's pow
   assert.ok(Engine.placeBasePower(ch, "shadow-play", -1).ok);
   assert.equal("shadow-play" in ch.archetypeChoices.basePowers, false);
 
-  // World Coming Down: 5, up to rank 3, but never past the book's printed max (Iron Hide's 3, Nightmare Visage's 3).
+  // World Coming Down: 5 Base Powers and Max Starting Rank 3, but each power still takes one (Iron Hide went ×3 under Decision 215).
   const w = vampire("upyr", { pl: "wcd", locked: false });
-  for (let i = 0; i < 3; i++) assert.ok(Engine.placeBasePower(w, "iron-hide", 1).ok);
-  assert.match(Engine.placeBasePower(w, "iron-hide", 1).why, /rank 3 at most/);
+  assert.ok(Engine.placeBasePower(w, "iron-hide", 1).ok);
+  assert.match(Engine.placeBasePower(w, "iron-hide", 1).why, /yours already/);
+  same([Engine.basePowerState(w).cap, Engine.basePowerState(w).spent], [3, 1]);
   // A Werewolf buys the same way: its Origin's, never an Innate one (Decision 215).
   const ww = werewolf("trueborn"); ww.creation.locked = false;
   assert.match(Engine.placeBasePower(ww, "primal-leap", 1).why, /Innate powers aren't bought/);
@@ -5471,7 +5472,7 @@ test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's pow
   assert.match(Engine.placeBasePower(ww, "moonlit-vitality", 1).why, /No Base Powers left/, "a Street Werewolf has one Base Power");
 });
 
-test("Decisions 200, 215: validate warns of unplaced Base Powers, blocks over and out of reach, and the lock waits while one can still go", () => {
+test("Decisions 200, 215, 240: validate warns of unplaced Base Powers, blocks over and out of reach, and the lock waits while one can still go", () => {
   const ch = vampire("draugur", { pl: "heroic", locked: false });   // 3 Base Powers, rank 2
   const warn = () => Engine.validate("archetype", ch).filter(i => i.pool === "basePowers").map(i => i.msg);
   same(warn(), ["3 Base Powers unplaced."]);
@@ -5480,13 +5481,13 @@ test("Decisions 200, 215: validate warns of unplaced Base Powers, blocks over an
   ch.archetypeChoices.basePowers = { "battleborn-instinct": 3, "shadow-play": 1, "no-such": 1, "bestial-blessings": 1 };
   const errs = vErrors(ch);
   assert.ok(errs.includes("Base Powers overspent by 3."), errs.join(" | "));
-  assert.ok(errs.includes("Battleborn Instinct is rank 3. It can start at 2 at most."));
+  assert.ok(errs.includes("Battleborn Instinct has 3 Base Powers. One takes it at rank 1: take 2 back, and raise it with CP."));
   assert.ok(errs.includes("Shadow Play (Masked) isn't one of your powers. Take back its Base Power."));
   assert.ok(errs.includes("no-such isn't one of your powers. Take back its Base Power."));
   assert.ok(errs.includes("Bestial Blessings isn't one of your powers. Take back its Base Power."), "a Base Power in an Innate power");
   // A power held only through a stray rank isn't held at all.
   assert.equal(Engine.powerRanks(ch).some(p => p.id === "shadow-play"), false);
-  ch.archetypeChoices.basePowers = { "battleborn-instinct": 2, "deathless-resilience": 1 };
+  ch.archetypeChoices.basePowers = { "battleborn-instinct": 1, "odins-aegis": 1, "deathless-resilience": 1 };
   same(warn(), []);
   assert.equal(Engine.spendable(ch, "basePowers"), false);
   // An archetype that doesn't buy has no state and no check; a Werewolf buys now (Decision 215).
@@ -5512,12 +5513,14 @@ test("Decisions 200, 215: a power with no ranks is held at 1 and never raised; a
 });
 
 test("Decision 215 (F41): Built to Last is no choice; an Upyr buys either power or both, and a hit counts the higher", () => {
-  const ch = vampire("upyr", { pl: "heroic", locked: false });   // 3 Base Powers, rank 2
+  const ch = vampire("upyr", { pl: "heroic", locked: false });   // 3 Base Powers, Max Starting Rank 2
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30 };
   assert.equal(Engine.optionChoices(ch).some(c => c.id === "built-to-last"), false, "Built to Last is still a pick");
   assert.ok(!vErrors(ch).includes("Choose Built to Last."));
   const pool = Engine.powerPool(ch).map(p => p.id);
   assert.ok(pool.includes("iron-hide") && pool.includes("icebound-resilience"), "an Upyr's pool lacks one");
-  assert.ok(Engine.placeBasePower(ch, "iron-hide", 1).ok && Engine.placeBasePower(ch, "iron-hide", 1).ok && Engine.placeBasePower(ch, "icebound-resilience", 1).ok);
+  assert.ok(Engine.placeBasePower(ch, "iron-hide", 1).ok && Engine.placeBasePower(ch, "icebound-resilience", 1).ok);
+  assert.ok(Engine.buyPowerRank(ch, "iron-hide", 1).ok, "CP raises Iron Hide to Max Starting Rank 2");   // Decision 240
   same(Engine.archetypePowers(ch).filter(p => /iron-hide|icebound/.test(p.id)).map(p => `${p.id}:${p.rank}`), ["icebound-resilience:1", "iron-hide:2"]);
   assert.equal(Engine.setOptionPick(ch, "built-to-last", "iron-hide").ok, false);
   assert.equal(Engine.setOptionPick(ch, "ancient-weapon", "blade").ok, false, "an Upyr took a Draugur's choice");
@@ -5664,21 +5667,18 @@ test("Decision 215: a fresh Vampire and Werewolf of each specialization hold eve
   assert.equal(Engine.archetypePowers(vampire("strigoi")).find(p => p.id === "preternatural-speed").ranked, false);
 });
 
-test("Decision 215: CP raises a granted and a bought power at 5 CP a rank, to Max Power Rank or the printed max, never an unranked or unheld one", () => {
-  // Street Strigoi: 2 Base Powers, Max Starting Rank 1, Max Power Rank 2.
-  const ch = vampire("strigoi", { pl: "street", locked: false });
+test("Decisions 215, 240: CP raises a granted and a bought power at 5 CP a rank, to Max Starting Rank or the printed max, never an unranked or unheld one", () => {
+  // Heroic Strigoi: 3 Base Powers, Max Starting Rank 2, Max Power Rank 3 (which no longer binds).
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });
   ch.creation.rolls = { statPoints: 40, skillPoints: 30 };
   const per = Engine.powerRankCost(), before = Engine.cp(ch).spent;
   assert.equal(per, 5);
-  // A Street character has 5 CP, one rank; a Disadvantage's points pay for the rest.
-  const dis = D.disadvantages.find(d => d.pointsGranted >= per);
-  ch.disadvantages = [{ id: dis.id, rank: 1, notes: "" }];
   Engine.placeBasePower(ch, "shadow-play", 1); Engine.placeBasePower(ch, "veil-of-night", 1);
   assert.ok(Engine.buyPowerRank(ch, "bestial-blessings", 1).ok);
   same([Engine.cp(ch).spent - before, ch.archetypeChoices.powerCp], [per, { "bestial-blessings": 1 }]);
   same(Engine.archetypePowers(ch).map(p => `${p.id}:${p.rank}`),
-    ["bestial-blessings:2", "vitality-surge:1", "preternatural-speed:1", "cursed-evolution:1", "shadow-play:1", "veil-of-night:1"], "the worked Street Strigoi");
-  // MSR (1) bound the Base Power, MPR (2) binds CP: a bought power raises to 2 and no further.
+    ["bestial-blessings:2", "vitality-surge:1", "preternatural-speed:1", "cursed-evolution:1", "shadow-play:1", "veil-of-night:1"], "the worked Heroic Strigoi");
+  // Max Starting Rank (2) caps start + CP, Max Power Rank (3) doesn't: a power raises to 2 and no further.
   assert.match(Engine.buyPowerRank(ch, "bestial-blessings", 1).why, /highest starting rank, 2/);
   assert.ok(Engine.buyPowerRank(ch, "shadow-play", 1).ok);
   assert.equal(Engine.buyPowerRank(ch, "shadow-play", 1).ok, false);
@@ -5696,17 +5696,17 @@ test("Decision 215: CP raises a granted and a bought power at 5 CP a rank, to Ma
   assert.ok(Engine.placeBasePower(ch, "shadow-play", -1).ok);
   assert.equal("shadow-play" in ch.archetypeChoices.powerCp, false, "CP stayed on a power nobody holds");
   assert.equal(Engine.validate("character-points", ch).some(i => /Take back the CP/.test(i.msg)), false);
-  // The printed max binds too: Shadows Trueborn (MPR 4), Apex Fury printed 3.
+  // A Shadows Trueborn (Max Starting Rank 2): Apex Fury raises once and stops, short of its printed 3.
   const t = werewolf("trueborn"); t.creation.powerLevel = "shadows"; t.creation.locked = false;
-  Engine.placeBasePower(t, "apex-fury", 1); Engine.placeBasePower(t, "apex-fury", 1);
+  Engine.placeBasePower(t, "apex-fury", 1);
   assert.ok(Engine.buyPowerRank(t, "apex-fury", 1).ok);
-  same(Engine.archetypePowers(t).find(p => p.id === "apex-fury").rank, 3);
-  assert.match(Engine.buyPowerRank(t, "apex-fury", 1).why, /highest starting rank, 3/, "a 4th rank past the printed 3");
+  same(Engine.archetypePowers(t).find(p => p.id === "apex-fury").rank, 2);
+  assert.match(Engine.buyPowerRank(t, "apex-fury", 1).why, /highest starting rank, 2/, "a rank past Max Starting Rank");
   same(Engine.archetypePowers(t).filter(p => !p.origin).map(p => p.rank), [1, 1, 1, 1, 1]);
 });
 
-test("Decision 215: a buy CP can't cover is refused, and a power rank leaves spendable('cp') as it was", () => {
-  const ch = vampire("strigoi", { pl: "street", locked: false });
+test("Decisions 215, 240: a buy CP can't cover is refused, and a power rank leaves spendable('cp') as it was", () => {
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });   // Max Starting Rank 2: the first rank is open, so the budget is what refuses
   const left = Engine.cp(ch).left;
   ch.advantages = [];
   // Spend down to one point under a rank's price with Boosts, each held to the
@@ -5725,19 +5725,107 @@ test("Decision 215: a buy CP can't cover is refused, and a power rank leaves spe
   assert.equal(Engine.spendable(ch, "cp"), Engine.canBoost(ch, "luck", "LUCK").ok || D.stats.some(s => Engine.canBoost(ch, "stat", s.id).ok) || D.skills.some(s => Engine.canBoost(ch, "skill", s.id).ok));
 });
 
-test("Decision 215: validate names CP in a power not held and a rank past the cap", () => {
+test("Decisions 215, 240: validate names CP in a power not held and a rank past the cap", () => {
   const ch = vampire("strigoi", { pl: "street", locked: false });
   const errs = () => Engine.validate("character-points", ch).filter(i => i.level === "error").map(i => i.msg);
   ch.archetypeChoices.powerCp = { "shadow-play": 1, "no-such": 2 };
   assert.ok(errs().includes("Shadow Play (Masked) isn't a power you hold. Take back the CP in it."), errs().join(" | "));
   assert.ok(errs().includes("no-such isn't a power you hold. Take back the CP in it."));
   ch.archetypeChoices.powerCp = { "bestial-blessings": 5 };
-  assert.ok(errs().includes("Bestial Blessings is rank 6. It can start at 2 at most."), errs().join(" | "));
+  assert.ok(errs().includes("Bestial Blessings is rank 6. It can start at 1 at most."), errs().join(" | "));
   // CP on a held power with no ranks is not "not held": it has nothing to raise.
   ch.archetypeChoices.powerCp = { "preternatural-speed": 1 };
   assert.ok(errs().includes("Preternatural Speed has no ranks to raise. Take back the CP in it."), errs().join(" | "));
+  // One rank is within a Heroic character's Max Starting Rank 2.
+  ch.creation.powerLevel = "heroic";
   ch.archetypeChoices.powerCp = { "bestial-blessings": 1 };
   same(errs().filter(m => /Take back the CP|can start at/.test(m)), []);
+});
+
+// ── Decision 240: a Base Power takes a power at rank 1; CP raises it to Max Starting Rank ──
+
+test("Decision 240: a Base Power takes a power once, at rank 1", () => {
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });   // 3 Base Powers, Max Starting Rank 2
+  assert.ok(Engine.placeBasePower(ch, "shadow-play", 1).ok);
+  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /yours already: a Base Power takes a power once, at rank 1/);
+  assert.ok(Engine.placeBasePower(ch, "veil-of-night", 1).ok);
+  assert.ok(Engine.placeBasePower(ch, "bone-spines", 1).ok);
+  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /yours already/, "a fourth placement is refused for the power, not the count");
+  const st = Engine.basePowerState(ch);
+  assert.equal(st.rows.every(r => r.cap === 1), true, "a row's cap isn't 1");
+  assert.equal(st.cap, 2, "the state's own cap is Max Starting Rank, kept for the copy");
+  same(Engine.archetypePowers(ch).filter(p => p.origin).map(p => `${p.id}:${p.rank}`), ["shadow-play:1", "veil-of-night:1", "bone-spines:1"]);
+  assert.ok(Engine.placeBasePower(ch, "shadow-play", -1).ok, "taking one back never refuses");
+  assert.match(Engine.placeBasePower(ch, "no-such", 1).why, /isn't one you can take/);
+  // A World Coming Down Upyr has 5 Base Powers and Max Starting Rank 3, and Iron Hide went ×3 under Decision 215.
+  const w = vampire("upyr", { pl: "wcd", locked: false });
+  assert.ok(Engine.placeBasePower(w, "iron-hide", 1).ok);
+  assert.match(Engine.placeBasePower(w, "iron-hide", 1).why, /yours already: a Base Power takes a power once, at rank 1/);
+  // A power with no ranks keeps its own sentence.
+  const d = vampire("draugur", { pl: "wcd", locked: false });
+  assert.ok(Engine.placeBasePower(d, "deathless-resilience", 1).ok);
+  assert.match(Engine.placeBasePower(d, "deathless-resilience", 1).why, /has no ranks/);
+});
+
+test("Decision 240: CP raises a held power to Max Starting Rank, not Max Power Rank", () => {
+  const heroic = vampire("strigoi", { pl: "heroic", locked: false });   // Max Starting Rank 2, Max Power Rank 3, about 10 CP
+  heroic.creation.rolls = { statPoints: 40, skillPoints: 30 };
+  Engine.placeBasePower(heroic, "shadow-play", 1);
+  assert.ok(Engine.buyPowerRank(heroic, "shadow-play", 1).ok);
+  same(Engine.powerCpState(heroic).find(r => r.id === "shadow-play").rank, 2);
+  assert.match(Engine.buyPowerRank(heroic, "shadow-play", 1).why, /highest starting rank, 2/);
+  // YQ8: an Innate power raises too, and stops at the same cap.
+  assert.ok(Engine.buyPowerRank(heroic, "bestial-blessings", 1).ok);
+  assert.match(Engine.buyPowerRank(heroic, "bestial-blessings", 1).why, /highest starting rank, 2/);
+  // Street: Max Starting Rank 1, so nothing raises.
+  const street = vampire("strigoi", { pl: "street", locked: false });
+  Engine.placeBasePower(street, "shadow-play", 1);
+  assert.equal(Engine.powerCpState(street).every(r => r.rank === r.cap && r.cap === 1), true);
+  assert.match(Engine.buyPowerRank(street, "bestial-blessings", 1).why, /highest starting rank, 1/);
+  assert.match(Engine.buyPowerRank(street, "shadow-play", 1).why, /highest starting rank, 1/);
+  // YQ10: a Werewolf's Max Starting Rank is 1 at Heroic too.
+  const wolf = werewolf("trueborn"); wolf.creation.powerLevel = "heroic"; wolf.creation.locked = false;
+  Engine.placeBasePower(wolf, "apex-fury", 1);
+  assert.match(Engine.buyPowerRank(wolf, "apex-fury", 1).why, /highest starting rank, 1/);
+  // The printed maximum still binds: World Coming Down Max Starting Rank is 3, Spectral Veil prints 3.
+  const d = vampire("draugur", { pl: "wcd", locked: false });
+  d.creation.rolls = { statPoints: 40, skillPoints: 30 };
+  Engine.placeBasePower(d, "spectral-veil", 1);
+  assert.ok(Engine.buyPowerRank(d, "spectral-veil", 1).ok && Engine.buyPowerRank(d, "spectral-veil", 1).ok);
+  same(Engine.powerCpState(d).find(r => r.id === "spectral-veil").rank, 3);
+  assert.match(Engine.buyPowerRank(d, "spectral-veil", 1).why, /highest starting rank, 3/);
+  // Totality: no Power Level, and a scaling row without maxStartingRank, cap at the printed maximum and never NaN.
+  const printedCaps = ch => Engine.powerCpState(ch).map(r => [r.id, r.cap, Engine.archetypePowers(ch).find(p => p.id === r.id).maxRank]);
+  const none = vampire("strigoi", { pl: "heroic", locked: false }); none.creation.powerLevel = null;
+  assert.ok(printedCaps(none).length && printedCaps(none).every(([, cap, printed]) => cap === printed), JSON.stringify(printedCaps(none)));
+  const row = D.archetypes.find(a => a.id === "vampire").campaignPowerScaling.byPowerLevel.heroic;
+  withData(row, "maxStartingRank", undefined, () => {
+    const bare = vampire("strigoi", { pl: "heroic", locked: false });
+    assert.ok(printedCaps(bare).every(([, cap, printed]) => cap === printed), JSON.stringify(printedCaps(bare)));
+  });
+});
+
+test("Decision 240 (YQ4): a draft placed under Decision 215 is refused by name; a locked one keeps its ranks", () => {
+  const msg = ch => Engine.validate("archetype", ch).filter(i => i.level === "error").map(i => i.msg);
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });
+  ch.archetypeChoices.basePowers = { "shadow-play": 2 };
+  assert.ok(msg(ch).includes("Shadow Play (Masked) has 2 Base Powers. One takes it at rank 1: take 1 back, and raise it with CP."), msg(ch).join(" | "));
+  assert.ok(Engine.validate("review", ch).some(i => i.level === "error" && /has 2 Base Powers/.test(i.msg)), "the lock doesn't wait");
+  ch.archetypeChoices.basePowers = { "shadow-play": 1 };
+  ch.archetypeChoices.powerCp = { "bestial-blessings": 2 };
+  assert.ok(Engine.validate("character-points", ch).some(i => i.msg === "Bestial Blessings is rank 3. It can start at 2 at most."));
+  // The same two maps on a locked copy come through migrate() as stored, and the sheet's ranks follow.
+  const locked = vampire("strigoi", { pl: "heroic", locked: true });
+  locked.archetypeChoices.basePowers = { "shadow-play": 2 };
+  locked.archetypeChoices.powerCp = { "bestial-blessings": 2 };
+  const m = Engine.migrate(JSON.parse(JSON.stringify(locked)));
+  same([m.archetypeChoices.basePowers, m.archetypeChoices.powerCp], [{ "shadow-play": 2 }, { "bestial-blessings": 2 }]);
+  const held = Object.fromEntries(Engine.archetypePowers(m).map(p => [p.id, p.rank]));
+  same([held["shadow-play"], held["bestial-blessings"]], [2, 3]);
+  // At Street the cap is 1, so there is nothing to raise and the sentence leaves the clause out.
+  const st = vampire("strigoi", { pl: "street", locked: false });
+  st.archetypeChoices.basePowers = { "shadow-play": 2 };
+  assert.ok(msg(st).includes("Shadow Play (Masked) has 2 Base Powers. One takes it at rank 1: take 1 back."), msg(st).join(" | "));
 });
 
 test("Decision 215: a day without rest takes half RoU and 2 more, stops at empty, and the Thirst panel carries it", () => {
@@ -7904,7 +7992,7 @@ test("Decision 218: a locked file over the cap loads as it is, and nothing repor
 });
 
 test("Decision 218 / 162: a buyable power rank still counts as CP to spend once LUCK is capped", () => {
-  const ch = vampire("strigoi", { pl: "street", locked: false });
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });   // Street's Max Starting Rank 1 leaves no rank to buy (Decision 240)
   ch.advantages = [];
   for (const s of D.stats) ch.stats[s.id].base = D.statRules.max;
   for (const s of D.skills) { const c = Engine.skillRankCap(ch, s.id); if (c != null) ch.skills[s.id] = { rank: c, notes: "" }; }

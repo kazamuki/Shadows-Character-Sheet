@@ -3765,8 +3765,8 @@ const Engine = (() => {
   // The archetype's own powers the character holds (Decision 196): every
   // one of its pool (powerPool, below), at rank 1 + what IP bought. An
   // archetype with `powersBought` (a Vampire, a Werewolf: Decisions 200,
-  // 215) holds a power if it is granted (`granted: "innate"` and no
-  // `origin`: rank 1, nothing spent) or a Base Power placed a rank in it.
+  // 215, 240) holds a power if it is granted (`granted: "innate"` and no
+  // `origin`: rank 1, nothing spent) or a Base Power is placed in it.
   // Its rank is that start + the CP that raised it + what IP bought. A power
   // with `ranked: false` is held or not, at rank 1, and nothing raises it.
   // `maxRank` is the book's printed maximum, a creation cap: play stops at
@@ -3783,7 +3783,7 @@ const Engine = (() => {
         return Object.assign({}, p, { rank:start+cpR+ipe, start, cp:cpR, ipe, ranked, maxRank: Number(p.maxRank) || null }); });
   }
   // Under `powersBought` a pool power is held if it is granted, a Base Power
-  // placed a rank in it, or IP learned it (Decision 216). The IP is read raw: an
+  // is placed in it, or IP learned it (Decision 216). The IP is read raw: an
   // unranked power's `ipe` shows as 0, but its learning is still IP in the map.
   const isHeld = (ch, a, p, placed) => isGranted(a, p) || placed[p.id] > 0 || powerIpeOf(ch, p.id) > 0 || splicedPowers(ch).has(p.id);
   // Whether `powersBought` grants this power outright (Decision 215).
@@ -3858,20 +3858,20 @@ const Engine = (() => {
     if (isPlainObj(m)) for (const k of Object.keys(m)){ const n = nonNegInt(m[k]); if (n > 0) out[k] = n; }
     return out;
   };
-  // Base Powers (Decisions 200, 215): each is one rank in a power of the
-  // chosen specialization, none above Max Starting Rank or the book's own
-  // maximum; a power with no ranks takes one to hold. An Innate power is
+  // Base Powers (Decisions 200, 240): each takes one power of the chosen
+  // specialization, once, at rank 1 (CP raises it to Max Starting Rank, see
+  // powerCpState); a power with no ranks takes one to hold. An Innate power is
   // granted, so it is no row: a placement in one is `stray`. Null for an
   // archetype that doesn't buy.
   function basePowerState(ch){
     const a = archetype(ch), spec = a && !writeInSpec(ch) && isPlainObj(a.powersBought) ? a.powersBought : null;
     if (!spec) return null;
+    // `cap` is Max Starting Rank, kept for the copy: a row's own cap is 1.
     const count = spec.countBy ? dataPath(ch, spec.countBy) : null, cap = spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null;
     const placed = basePowersOf(ch), pool = powerPool(ch).filter(p=>!isGranted(a, p)), ids = new Set(pool.map(p=>p.id));
     const rows = pool.map(p=>{
-      const ranked = p.ranked!==false, printed = Number(p.maxRank) || null;
-      const most = ranked ? Math.min(cap==null ? Infinity : cap, printed || Infinity) : 1;
-      return { id:p.id, name:txt(p.name), origin:p.origin || null, ranked, placed: placed[p.id] || 0, cap: most===Infinity ? null : most };
+      const ranked = p.ranked!==false;
+      return { id:p.id, name:txt(p.name), origin:p.origin || null, ranked, placed: placed[p.id] || 0, cap: 1 };
     });
     const spent = Object.values(placed).reduce((s, n)=>s + n, 0);
     // Ranks placed in a power the character can't hold (another Bloodline's)
@@ -3901,7 +3901,7 @@ const Engine = (() => {
       const a = archetype(ch), p = (a.powers||[]).find(x=>x && x.id===id);
       return { ok:false, why: p && isGranted(a, p) ? `${txt(p.name)} is yours already. Innate powers aren't bought.` : "That power isn't one you can take." };
     }
-    if (row.cap!=null && next > row.cap) return { ok:false, why: row.ranked ? `${row.name} can start at rank ${row.cap} at most.` : `${row.name} has no ranks.` };
+    if (next > row.cap) return { ok:false, why: row.ranked ? `${row.name} is yours already: a Base Power takes a power once, at rank 1.` : `${row.name} has no ranks.` };
     if (st.left!=null && st.left < 1) return { ok:false, why:"No Base Powers left." };
     ac.basePowers[id] = next;
     return { ok:true };
@@ -3921,15 +3921,15 @@ const Engine = (() => {
   };
   // Every held, ranked archetype power with the CP on it. `start` is its
   // rank before CP (1 granted, the Base Powers placed otherwise), `rank` is
-  // start + CP at creation, and `cap` is the lower of Max Power Rank and the
-  // book's printed maximum (PQ1: Max Starting Rank binds Base Powers, this
-  // binds CP). `stray` ids hold CP the character has no power for.
+  // start + CP at creation, and `cap` is the lower of Max Starting Rank
+  // (`powersBought.maxRankBy`, Decision 240) and the book's printed maximum.
+  // `stray` ids hold CP the character has no power for.
   function powerCpState(ch){
     const a = archetype(ch);
     if (!a || writeInSpec(ch) || !isPlainObj(a.powersBought)) return [];
-    const pl = powerLevel(ch), mpr = pl && typeof pl.maxPowerRank==="number" ? pl.maxPowerRank : Infinity;
+    const msr = a.powersBought.maxRankBy ? dataPath(ch, a.powersBought.maxRankBy) : null, most = typeof msr==="number" ? msr : Infinity;
     return archetypePowers(ch).filter(p=>p.ranked).map(p=>{
-      const printed = Number(p.maxRank) || Infinity, cap = Math.min(mpr, printed);
+      const printed = Number(p.maxRank) || Infinity, cap = Math.min(most, printed);
       return { id:p.id, name:txt(p.name), start:p.start, cp:p.cp, rank:p.start + p.cp, cap: cap===Infinity ? null : cap };
     });
   }
@@ -5293,15 +5293,15 @@ const Engine = (() => {
         if (fp.have !== fp.need)
           E(`Choose ${fp.need} ${cat} Skill${fp.need>1?"s":""} for your Focused Skills (${fp.have}/${fp.need}).`);
       }
-      // Base Powers (Decisions 200, 215), once a Bloodline is chosen:
+      // Base Powers (Decisions 200, 240), once a Bloodline is chosen:
       // short warns (the lock wants them spent), over or out of reach blocks.
       const bps = basePowerState(ch);
       if (bps && specializationIds(ch).length){
         if (bps.count==null) E("Choose a Campaign Power Level before placing Base Powers.");
         else if (bps.left < 0) E(`Base Powers overspent by ${-bps.left}.`);
         else if (bps.left > 0) W(`${bps.left} Base Power${bps.left>1?"s":""} unplaced.`, "basePowers");
-        for (const r of bps.rows) if (r.cap!=null && r.placed > r.cap)
-          E(r.ranked ? `${r.name} is rank ${r.placed}. It can start at ${r.cap} at most.` : `${r.name} has no ranks. Place one Base Power in it.`);
+        for (const r of bps.rows) if (r.placed > r.cap)
+          E(r.ranked ? `${r.name} has ${r.placed} Base Powers. One takes it at rank 1: take ${r.placed-1} back${bps.cap>1 ? ", and raise it with CP" : ""}.` : `${r.name} has no ranks. Place one Base Power in it.`);
         for (const r of bps.stray) E(`${r.name} isn't one of your powers. Take back its Base Power${r.placed>1?"s":""}.`);
       }
       // A specialization's creation choices (Decision 200). The Code's

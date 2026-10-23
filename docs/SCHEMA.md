@@ -4738,7 +4738,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 196 in part (Base Powers buy the Origin's powers). Decision 200 in part (Innate powers granted; Built to Last not a pick). Extends 157 (the one power price) and 201 (the Thirst).
      - **Revisit if:** W72 lets IP learn an unheld power, `0450`'s ceilings change what binds play, or Deighton defines how a power that doesn't stack combines with anything else.
      - **Built:** app 0.40.0, game data 0.35, schema 0.20, PR #163. Log 2026-10-11 (P3).
-     → **Superseded in part by Decision 216**: a held power is placed, granted or learned with IP, not only placed or granted. IP in `powerIpe` on a pool power now holds it.
+     → **Superseded in part by Decisions 216 and 240**: 216: a held power is placed, granted or learned with IP, not only placed or granted; IP in `powerIpe` on a pool power now holds it. 240: a Base Power takes a power once, at rank 1, and CP raises a held power only to Max Starting Rank (the book, YQ1).
 
 216. **A Vampire or Werewolf learns an unheld power of its own Bloodline or Origin with IP; any character can be given a custom written power: 40 IP in play or free on Admin, 5 CP at creation or free as a GM grant.**
      *2026-10-11 · Ken + Claude · Touches: archetypePowers, powerRanks, powerIpe, ipCost, Buy or Raise a Power, Learn a new power, Custom power, addCustomPower, addPower, hasPowers, ownPowers, powerRow, boughtWithCp, cp, CP step, character schema 0.21, W72, W106*
@@ -4968,6 +4968,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 214 in part: CRANK is shown, not hidden; its switch, its storage key and its kept data stand.
      - **Revisit if:** F37 (rep below zero), GQ7 (Reputation and starting rep) or GQ28 is answered, or a later decision removes the switch.
      - **Built:** app 0.53.0, no data or schema bump, PR #229. Log 2026-10-23 (CRANK is back).
+
+240. **A Vampire's or Werewolf's Base Power takes one Bloodline or Origin power at rank 1; CP raises a held power only to Max Starting Rank.**
+     *2026-10-23 · Ken + Claude · Touches: powersBought, maxRankBy, Max Starting Rank, Max Power Rank, basePowerState, placeBasePower, powerCpState, buyPowerRank, spendable cp, validate, campaignPowerScaling.notes, Base Powers block, Character Points step, Admin Base Powers, YQ1, YQ4, YQ8–YQ11*
+     - **Decided:** Under `powersBought`, each Base Power holds one power of the chosen specialization at rank 1; a second in the same power is refused. `maxRankBy` (Max Starting Rank) now caps a power's starting rank, Base Power plus CP, with the book's printed maximum; Max Power Rank no longer binds these archetypes at creation. CP raises any held, ranked power, Innate included (YQ8). A draft placed under Decision 215 is refused by the wizard until fixed; a locked character keeps what it holds, and `migrate()` changes nothing.
+     - **Why:** `0413` and `0414` now print the rule ("granted a number of Bloodline powers … at Rank 1. You can raise these up to your Max Starting Rank with Character Points"), and Ken ruled the book is the rule (YQ1).
+     - **Rejected:** keeping Decision 215 and sending the book a catch-up item (YQ1); `migrate()` turning a second placement into CP (it writes a choice the player didn't make, and spends CP they may have put elsewhere); grandfathering drafts (YQ4); a data key for the Base Power's rank (one rule, both archetypes, and the book prints no other).
+     - **Replaces:** Decision 215 in part: Base Powers placed ranks up to Max Starting Rank, and CP raised to Max Power Rank. 215 rejected Max Starting Rank capping CP; the book now prints it.
+     - **Revisit if:** the book gives Base Powers a rank above 1 at a Power Level, or lets CP buy a new power at creation; or a third archetype buys powers this way with a different cap.
+     - **Built:** app 0.54.0, game data 0.47, no schema bump, PR #230. Log 2026-10-23 (Y4).
 
 ## 5. Open Flags
 

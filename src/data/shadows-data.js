@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.46",
+    "gamedataVersion": "0.47",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -2825,7 +2825,7 @@ window.SHADOWS_DATA = {
           "Base Powers",
           "Max Starting Rank"
         ],
-        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10. Innate powers are yours at rank 1. Spend your Base Powers on your Bloodline's powers; none starts above your Max Starting Rank.",
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10. Innate powers are yours at rank 1. Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank.",
         "focusStats": [
           "BOD",
           "REF",
@@ -2862,11 +2862,11 @@ window.SHADOWS_DATA = {
           }
         }
       },
-      /* Base Powers are spent at creation (Decisions 200, 215): each is one
-         rank in a power of the Bloodline, held once a rank is placed. A
-         power with no `origin` is Innate: `granted` holds it at rank 1 and
-         Base Powers never go in it. `countBy` and `maxRankBy` are data
-         paths (Decision 135). */
+      /* Base Powers are spent at creation (Decisions 200, 240): each takes one
+         power of the Bloodline at rank 1, held once placed. A power with no
+         `origin` is Innate: `granted` holds it at rank 1 and Base Powers
+         never go in it. `countBy` and `maxRankBy` are data paths (Decision
+         135); `maxRankBy` caps a power's starting rank, CP included. */
       "powersBought": {
         "countBy": "campaignPowerScaling.basePowers",
         "maxRankBy": "campaignPowerScaling.maxStartingRank",
@@ -3118,7 +3118,7 @@ window.SHADOWS_DATA = {
           "Base Powers",
           "Max Starting Rank"
         ],
-        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10, and Werewolf form adds +2 REF, +2 MOB and +4 BOD on top. Innate powers are yours at rank 1. Spend your Base Powers on your Origin's powers; none starts above your Max Starting Rank.",
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10, and Werewolf form adds +2 REF, +2 MOB and +4 BOD on top. Innate powers are yours at rank 1. Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank.",
         "focusStats": [
           "BOD",
           "REF",
@@ -3155,8 +3155,8 @@ window.SHADOWS_DATA = {
           }
         }
       },
-      /* As the Vampire's (Decision 215): Innate powers granted at rank 1,
-         Base Powers buy the Origin's. */
+      /* As the Vampire's (Decisions 215, 240): Innate powers granted at rank 1,
+         each Base Power takes one of the Origin's at rank 1. */
       "powersBought": {
         "countBy": "campaignPowerScaling.basePowers",
         "maxRankBy": "campaignPowerScaling.maxStartingRank",
