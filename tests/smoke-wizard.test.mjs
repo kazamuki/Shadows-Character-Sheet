@@ -465,6 +465,12 @@ test("Decision 238: a locked Enforcer short its Combat Skill is asked on whichev
     assert.match(app.$("[data-focused-owed]").textContent, ASK);
     assert.equal(app.$$('[data-fpick="rifles"]').length, 1, `${t}: not exactly one picker`);
   }
+  // The Loadout panel's line points at the top of the tab; the block's own words don't.
+  app.click('[data-sec="loadout"]');
+  const panelLine = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && ASK.test(p.textContent));
+  assert.ok(panelLine, "Loadout's panel lost its line");
+  assert.match(panelLine.textContent, /at the top of this tab/);
+  assert.doesNotMatch(app.$("[data-focused-owed]").textContent, /at the top of this tab/);
   app.click('[data-fpick="rifles"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
   for (const t of tabs) {

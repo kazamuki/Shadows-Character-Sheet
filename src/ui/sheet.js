@@ -2327,7 +2327,7 @@ function renderShLoadout(){
       if (f && f.all) h += `<p class="step-note">Every skill advances at ${per}× current rank up to rank ${esc(f.all.throughRank)}.</p>`;
       if (!names.length && !(f && f.all)) h += `<p class="step-note">None.</p>`;
       // The picker is at the top of the tab (Decision 238), not here.
-      h += focusedOwedLines(fp).map(l=>`<p class="step-note">${esc(l)}</p>`).join("");
+      h += focusedOwedLines(fp, true).map(l=>`<p class="step-note">${esc(l)}</p>`).join("");
     }
     if (p.type==="specializationText"){
       const entries = Engine.specializationChosen(ch).map(o=>o[p.field]).filter(x=>x && typeof x==="object");
