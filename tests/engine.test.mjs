@@ -4812,8 +4812,10 @@ test("191: encounterArmor reads the Gear catalog by name, apostrophes folded, an
   a = Engine.encounterArmor({ armor: ["Leather Jacket (PROT 1d4, RES +2) over integrated subdermal plating"] });
   assert.equal(a.extra, "over integrated subdermal plating");
   a = Engine.encounterArmor({ armor: ["Layered Street Clothes (PROT 1d4, RES +2, INT 10)"] });
-  assert.equal(a.piece, null); assert.equal(a.stops, null); assert.equal(a.line, "Layered Street Clothes (PROT 1d4, RES +2, INT 10)");
-  a = Engine.encounterArmor({ armor: ["Layered Street Clothes (PROT 1d4)", "Kevlar Vest (PROT 1d6)", "Leather Jacket (PROT 1d4)"] });
+  assert.equal(a.piece.id, "layered-street-clothes"); eq(a.stops, { prot: 3, res: 2 });
+  a = Engine.encounterArmor({ armor: ["Patched Overcoat (PROT 1d4, RES +2, INT 10)"] });
+  assert.equal(a.piece, null); assert.equal(a.stops, null); assert.equal(a.line, "Patched Overcoat (PROT 1d4, RES +2, INT 10)");
+  a = Engine.encounterArmor({ armor: ["Patched Overcoat (PROT 1d4)", "Kevlar Vest (PROT 1d6)", "Leather Jacket (PROT 1d4)"] });
   assert.equal(a.piece.id, "kevlar-vest", "the first line the catalog knows");
   a = Engine.encounterArmor({ armor: ["Leather Jacket (PROT 1d4)", "Kevlar Vest (PROT 1d6)"] });
   assert.equal(a.piece.id, "leather-jacket", "the first matched wins");
@@ -4900,7 +4902,7 @@ test("191: applyEncounterHit: damage, Massive and wear land on the row", () => {
   const head = Engine.resolveEncounterHit(t, e, id, shot({ location: "left-leg" }));
   eq([head.covered, head.through], [false, 12]);
   // An unmatched armor line stops nothing.
-  ({ t, e, id } = hitTable({ armor: ["Layered Street Clothes (PROT 1d4, RES +2, INT 10)"] }));
+  ({ t, e, id } = hitTable({ armor: ["Patched Overcoat (PROT 1d4, RES +2, INT 10)"] }));
   const bare = Engine.resolveEncounterHit(t, e, id, shot());
   eq([bare.covered, bare.through, bare.armor.piece], [false, 12, null]);
 });

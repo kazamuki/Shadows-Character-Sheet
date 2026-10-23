@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.44",
+    "gamedataVersion": "0.45",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -3263,7 +3263,7 @@ window.SHADOWS_DATA = {
             "withdrawal": {
               "need": "A Seta-16 dose",
               "steps": [
-                "−1 RoU.",
+                "Withdrawal: −1 RoU.",
                 "SFR can't refill above half.",
                 "When wounded, WILL Essence check (TN 7, TH 2) or shift, and you can't shift back until dosed; each time you take damage, one active augmentation is DeSynced."
               ]
@@ -3401,7 +3401,7 @@ window.SHADOWS_DATA = {
           { "id": "silverscar", "name": "Silverscar", "prerequisites": {"majorCount": 2}, "benefit": "Withering damage from silver is halved (never below 1)." },
           { "id": "bone-and-sinew", "name": "Bone and Sinew", "prerequisites": {"majorCount": 2}, "benefit": "Regeneration restores 2 HL per round, and shifting into Werewolf form ends Maimed." },
           { "id": "the-calling", "name": "The Calling", "prerequisites": {"specialization": ["trueborn", "wildblood"], "majorCount": 3}, "benefit": "You can pass the wolf on. Bite someone brought to 0 HL and let the spirit follow. They make a WILL Essence check (TN 9, TH 3). On a success, they rise Wildblood. With fewer than 3 Hits, the spirit doesn't take and the wound heals as a wound. On a botch, the spirit takes them completely, and what gets up is no longer a person." },
-          { "id": "off-the-leash", "name": "Off the Leash", "prerequisites": {"specialization": ["forge-fang"], "majorCount": 3}, "benefit": "You can cook your own Seta-16. Given a night of downtime, a working lab, and a batch of precursors, make a Medical check against 15. On a success, the batch yields 5 doses, plus 1 more for every 5 points you beat the difficulty by. On a failure, the precursors are wasted. On a botch, the batch is tainted: a tainted dose counts as a missed day, and you won't know which ones they are until you take one." }
+          { "id": "off-the-leash", "name": "Off the Leash", "prerequisites": {"specialization": ["forge-fang"], "majorCount": 3}, "benefit": "You can cook your own Seta-16. Given a night of downtime, a working lab, and a batch of precursors, make a Medical check against Difficulty 15. On a success, the batch yields 5 doses, plus 1 more for every 5 points you beat the difficulty by. On a failure, the precursors are wasted. On a botch, the batch is tainted: a tainted dose counts as a missed day, and you won't know which ones they are until you take one." }
         ]
       }
     },
@@ -3509,7 +3509,7 @@ window.SHADOWS_DATA = {
       {
         "id": "talented",
         "name": "Talented",
-        "benefit": "Something you always had comes into focus. Gain a new Advantage worth 5 points or less, or one rank of an existing Advantage.",
+        "benefit": "Something you always had comes into focus. Gain a new Advantage worth 5 points or less, or one rank of an existing Advantage that has multiple ranks.",
         "choice": { "type": "advantageRank", "maxPoints": 5 }
       },
       {
@@ -4348,6 +4348,7 @@ window.SHADOWS_DATA = {
     { "id": "plasteel-weave-jacket", "name": "Plasteel Weave Jacket", "slot": "body", "coverage": "medium", "prot": "1d8", "res": 4, "integrity": 30, "quality": "High", "material": "Medium", "availability": "Uncommon", "mods": 3, "cost": 1800, "preInstalledFeatures": ["Tri-Weave"], "flavorLine": "What you can wear into a business meeting and still feel protected leaving it." },
     { "id": "darksun-nightshade-armor", "name": "DarkSun Nightshade Armor", "slot": "body", "coverage": "medium", "prot": "1d8", "res": 4, "integrity": 30, "quality": "High", "material": "Medium", "availability": "Rare", "mods": 4, "cost": 2200, "preInstalledFeatures": ["Concealable", "Dampening"], "flavorLine": "Passes every visual inspection and most electronic ones." },
 
+    { "id": "layered-street-clothes", "name": "Layered Street Clothes", "slot": "body", "coverage": "full", "prot": "1d4", "res": 2, "integrity": 5, "quality": "Low", "material": "Light", "availability": "Common", "mods": 0, "cost": 175, "flavorLine": "The default outfit of most NYTE City residents who are not looking for trouble." },
     { "id": "motorcycle-leathers", "name": "Motorcycle Leathers", "slot": "body", "coverage": "full", "prot": "1d4", "res": 4, "integrity": 10, "quality": "Low", "material": "Medium", "availability": "Uncommon", "mods": 1, "cost": 275, "flavorLine": "Built around the assumption that the wearer would eventually hit something at speed." },
     { "id": "ganglords-trench", "name": "Ganglord's Trench", "slot": "body", "coverage": "full", "prot": "1d4", "res": 6, "integrity": 10, "quality": "Low", "material": "Heavy", "availability": "Uncommon", "mods": 1, "cost": 300, "flavorLine": "The silhouette is distinctive and the protection is real. That's often the point." },
     { "id": "recon-unit-set", "name": "Recon Unit Set", "slot": "body", "coverage": "full", "prot": "1d6", "res": 2, "integrity": 20, "quality": "Mid", "material": "Light", "availability": "Uncommon", "mods": 2, "cost": 900, "flavorLine": "Built for operators who need to move quickly across difficult terrain while staying protected." },

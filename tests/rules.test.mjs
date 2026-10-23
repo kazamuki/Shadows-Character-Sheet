@@ -1231,7 +1231,7 @@ test("R15: every Innate and Origin power is the book's, by name, cost, effect an
     for (const [name, cost, effect, perRank] of rows) {
       const p = mine.find(x => x.name === name);
       assert.equal(JSON.stringify([flat(p.cost), flat(p.effect), flat(p.perRank)]), JSON.stringify([cost, effect, perRank]), `${name} isn't as 0414 prints it`);
-      assert.equal(p.maxRank, 3, `${name}: "can eventually raise them up to Rank 3"`);
+      assert.equal(p.maxRank, 3, `${name}: its Per Rank column stops at Rank 3`);
       count++;
     }
   }
@@ -1283,6 +1283,23 @@ test("R15: Werewolf form is the book's +2 REF, +2 MOB, +4 BOD, Claws BOD+8 and F
   assert.equal(WW().vulnerabilities.map(v => v.name + (v.origin ? `@${v.origin}` : "")).join(", "), "Silver, Feral Mind, Call of the Wild, EMP@forge-fang");
 });
 
+// ── 0460's Layered Street Clothes (Y0) ─────────────────────────────────
+
+test("CRB 0460: Layered Street Clothes is the book's row", () => {
+  const md = crb("0460_Gear.md");
+  const at = md.indexOf("### Full Coverage");
+  assert.ok(at >= 0, "0460 has no Full Coverage section");
+  const row = md.slice(at, md.indexOf("###", at + 4)).split("\n").find(l => /^\| Layered Street Clothes \|/.test(l));
+  assert.ok(row, "0460's Full Coverage table has no Layered Street Clothes row");
+  const [, prot, res, int, quality, material, availability, mods, cost] = row.split("|").slice(1, -1).map(c => c.trim());
+  const piece = D.armor.find(a => a.name === "Layered Street Clothes");
+  assert.ok(piece, "the armor catalog has no Layered Street Clothes");
+  assert.equal(piece.coverage, "full");
+  assert.deepEqual(
+    [piece.prot, `+${piece.res}`, String(piece.integrity), piece.quality, piece.material, piece.availability, String(piece.mods), `${piece.cost.toLocaleString("en-US")}Ç`],
+    [prot, res, int, quality, material, availability, mods, cost], "the catalog's piece isn't the book's row");
+});
+
 // ── 0460's grenade table (crb-v4-sync P1, VQ8) ─────────────────────────
 
 test("CRB 0460: every grenade carries its 1x / 2x+ column and its Defense as printed", () => {
@@ -1311,8 +1328,12 @@ test("CRB 0414: the Werewolf's 29 Major Milestones, by name, effect and prerequi
   const md = crb("0414_Werewolf.md");
   const at = md.indexOf("## Growth & Milestones");
   assert.ok(at >= 0, "0414 has no Growth & Milestones section");
-  const rows = md.slice(at).split("\n").filter(l => /^\| [A-Z]/.test(l) && !/^\| Milestone \|/.test(l))
-    .map(l => l.split("|").slice(1, -1).map(c => c.trim()));
+  // The table is HTML. A cell's <br /> and the newlines around it are one space, any other tag is
+  // dropped, and the comparison below is exact (not through `flat`, which drops periods).
+  const table = /<table>[\s\S]*?<\/table>/.exec(md.slice(at));
+  assert.ok(table, "0414's Growth & Milestones has no table");
+  const rows = [...table[0].matchAll(/<tr>([\s\S]*?)<\/tr>/g)].filter(m => !/<th[ >]/.test(m[1]))
+    .map(m => [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => c[1].replace(/\s*<br\s*\/?>\s*/g, " ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()));
   const ww = D.archetypes.find(a => a.id === "werewolf");
   const data = ww.growth.majorMilestones;
   assert.equal(data.length, rows.length, "the book and the data list a different number of Majors");
@@ -1361,9 +1382,9 @@ test("R16: the Vampire's Campaign Power Scaling matches 0413, row for row", () =
   assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join());
   assert.match(md, /The Focus Stats for the Vampire are BOD, REF, and MOB/);
   assert.equal(VA().campaignPowerScaling.focusStats.join(" "), "BOD REF MOB");
-  // The book's sentence is still F39's old reading; Ken's ruling (Decision 215, W88) is
-  // that Innate powers are granted and Base Powers buy the Bloodline's, none above Max Starting Rank.
-  assert.match(md, /Spend your Base Powers on Innate and Bloodline powers; no power starts above your Max Starting Rank\./);
+  // The book now prints the rule Y4 builds (YQ1): every Vampire gets the full set of Innate Powers,
+  // then a number of Bloodline powers at Rank 1. Until Y4, the data's notes below are Decision 215's.
+  assert.match(md, /Every Vampire gets the full set of Innate Powers\. You then are granted a number of Bloodline powers during character creation, at Rank 1\./);
   assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Spend your Base Powers on your Bloodline's powers; none starts above your Max Starting Rank\./);
   assert.equal(JSON.stringify(VA().powersBought), JSON.stringify({ countBy: "campaignPowerScaling.basePowers", maxRankBy: "campaignPowerScaling.maxStartingRank", granted: "innate" }));
   // The Werewolf buys the same way, reading the same columns of its own table.
@@ -1516,9 +1537,7 @@ test("0450: the six Minor Milestones are the book's words, and Improved's roll i
   assert.equal(JSON.stringify(D.milestones.minorShared.map(m => m.id)), JSON.stringify(["skilled", "improved", "talented", "redeemed", "honed", "steadied"]), "the book's order");
   for (const m of D.milestones.minorShared) {
     const book = `${m.name}. ${norm(m.benefit)}`;
-    // Talented's printed text carries an editor's bracket; the sentence before it is the book's.
-    const want = m.id === "talented" ? book.replace(/ existing Advantage\.$/, "") : book;
-    assert.ok(md.includes(want), `0450 doesn't say: ${want}`);
+    assert.ok(md.includes(book), `0450 doesn't say: ${book}`);
   }
   assert.match(md, /Improved\. Everything went into the work\. Gain 3d10\+30 IP\. 10s explode\./);
   assert.deepEqual({ ...Engine.ipRoll("improved") }, { count: 3, sides: 10, plus: 30 });

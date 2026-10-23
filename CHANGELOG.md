@@ -23,8 +23,10 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.52.0
+## [Unreleased] — app 0.52.1
 
+- **Layered Street Clothes are in the armor shop:** everyday clothes that stop a little. PROT 1d4, RES +2, 175Ç.
+- **A Forge Fang's first withdrawal step is named, Talented says it raises an Advantage that has ranks, and Off the Leash names its Difficulty,** as the book now prints them.
 - **Your archetype counts on your Skills.** A Cleaner's Stealth rolls its 1d6 Kicker, a Wheelman's Pilot explodes on a 9 or 10, a Fence's Persuasion can Take 5, and Quick Study's Take 6 shows on Combat Sense. Majors, Werewolf traits, the Arcanist's Aberrations and rolled Aberrations say what they do on the Skill they touch, and which part they come from.
 - **Powers say what they add while they run.** Scent Tracking at rank 3 reads +4 on Tracking; Spectral Veil, Battleborn Instinct and the Werewolf powers grow with rank. A power's bonus is a note, never part of the number, since the sheet can't tell whether it is running.
 - **Take X keeps your Kicker Die.** "Take 6: 13 + 1d4": the die is added to the roll, and the total is still the 6 plus your check.
