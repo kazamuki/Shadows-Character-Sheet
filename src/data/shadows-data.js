@@ -2624,7 +2624,7 @@ window.SHADOWS_DATA = {
           {
             "id": "enforcer",
             "name": "Enforcer",
-            "description": "Police officer, bodyguard, corporate security, syndicate muscle, or the occasional vigilante. The patch on your shirt changes; the job doesn't. Every Enforcer carries a Neurocybernetic Interpreter, and almost none of them paid for it.",
+            "description": "Police officer, bodyguard, corporate security, syndicate muscle, or the occasional vigilante. The patch on your shirt changes; the job doesn't. Every Enforcer carries a Neurocybernetic Interpreter (NCI), and almost none of them paid for it.",
             "requires": { "stats": {
               "BOD": 8,
               "COOL": 7
