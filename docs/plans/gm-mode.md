@@ -566,7 +566,7 @@ not a queue. What Scott's use of the table turns up can reorder it.
 |---|---|---|---|---|
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
-| S6 | The gazetteer and the crew's places | Content + shape | Nothing | No order yet |
+| S6 | The gazetteer and the crew's places | Rule or shape | Nothing | **Order drafted** 2026-10-23 ([order](gm-mode/S6-gazetteer-places.md)); SQ1–SQ10 wait on Ken |
 | S7 | Factions and clocks | Rule or shape | S6 | No order yet |
 | S12b | Site Profiles: places with their tracks and clocks (the Expansion is approved) | Content | S7 | No order yet |
 | S10f | The rest of S10: the Encounter Design worksheet, Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | S7 for the clocks | No order yet. **Sources:** the worksheet is `2642` (basics, adversaries, hazards, objectives beyond defeat, escalation, an out, the next scene's hooks); Surprise, Ambush and Delay are `0530` |
