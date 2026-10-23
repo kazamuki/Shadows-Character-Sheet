@@ -2,7 +2,7 @@
 
 **Plan:** [`../crb-sync-2026-10-22.md`](../crb-sync-2026-10-22.md) §2, row Y1.
 **Status:** **drafted 2026-10-23 by Claude (Opus)**, the Y0 reviewer, after #225 and Shadows-Private #2
-merged. **Waiting on Ken's approval and YQ5–YQ7 (§4).** Nothing is built from it until he approves.
+merged. **Approved by Ken 2026-10-23, as written; YQ5–YQ7 on their defaults** (§4).
 **Pre-flight:** against Shadows-Character-Sheet `main` at `e7320f2` (#225 merged), with `private/` at `e6acadc`
 (Shadows-Private `main` is the merge `82ea734`, which contains it). Read and probed 2026-10-23.
 **Tier: Rule or shape.** One decision (**N**), the next free number on `origin/main` when it's built (237 is
@@ -114,14 +114,14 @@ The Enforcer's new data is content following the book, not a choice: no decision
 
 ## 4. Questions for Ken
 
-YQ2 and YQ3 were answered with the plan (ask on open; ship without Issued Hardware). These three are new;
-add them to the plan's §4 table as they're answered.
+YQ2 and YQ3 were answered with the plan (ask on open; ship without Issued Hardware). These three are new,
+and **Ken answered all three on their defaults, 2026-10-23**.
 
 | Id | Question | Default |
 |---|---|---|
-| **YQ5** | The plan's row says Hardened becomes "a computed choice where the sheet names the TECH Essence check against EMP". The pre-flight found **no such place an Enforcer can reach**: the only one is the Forge Fang's EMP vulnerability, and the sheet has no Essence-check roller. Build Hardened as text, or hold it? | **Text, as the book prints it**, like Interpreter and Hardwired. W90 gives it something to compute against when cybernetics bring EMP to an Enforcer; the order adds that sentence to W90 |
-| **YQ6** | Where does the ask sit? (a) **The top of every sheet tab**, the picker in it, the Loadout panel keeping only its line; (b) Main only, with a link from the panel; (c) a modal on open | **(a).** The sheet reopens on any tab. A modal blocks the sheet for a choice that can wait. Ten pick rows push the tab down on a phone until the choice is made, and that's the point |
-| **YQ7** | The Enforcer's one-line `description` (the Specialization step and the Character tab). The book's two paragraphs are long. Ship the draft in §8, or the book's first paragraph whole? | **The draft**, marked for Ken's voice pass in the PR. It keeps the book's sentences, cut to the sheet's length, and names the NCI the tweak then relies on |
+| **YQ5** ✅ | The plan's row says Hardened becomes "a computed choice where the sheet names the TECH Essence check against EMP". The pre-flight found **no such place an Enforcer can reach**: the only one is the Forge Fang's EMP vulnerability, and the sheet has no Essence-check roller. Build Hardened as text, or hold it? | **Text, as the book prints it**, like Interpreter and Hardwired. W90 gives it something to compute against when cybernetics bring EMP to an Enforcer; the order adds that sentence to W90 |
+| **YQ6** ✅ | Where does the ask sit? (a) **The top of every sheet tab**, the picker in it, the Loadout panel keeping only its line; (b) Main only, with a link from the panel; (c) a modal on open | **(a).** The sheet reopens on any tab. A modal blocks the sheet for a choice that can wait. Ten pick rows push the tab down on a phone until the choice is made, and that's the point |
+| **YQ7** ✅ | The Enforcer's one-line `description` (the Specialization step and the Character tab). The book's two paragraphs are long. Ship the draft in §8, or the book's first paragraph whole? | **The draft**, marked for Ken's voice pass in the PR. It keeps the book's sentences, cut to the sheet's length, and names the NCI the tweak then relies on |
 
 ## 5. The assumption sweep
 
@@ -338,7 +338,7 @@ The **close-the-session** skill, at the Rule or shape tier:
 - `npm run bump -- 0.53.0` (or the next minor after what `[Unreleased]` names then). `gamedataVersion` 0.46.
   **`README.md`'s status line** moves with them (docs.test checks it).
 - **Decision N** in SCHEMA §4 with the 134 marks and the INDEX lines (§3).
-- **The plan:** Y1's row says *built, PR #…*. The answered YQ5–YQ7 go in §4. **W90** gets a sentence:
+- **The plan:** Y1's row says *built, PR #…*. **W90** gets a sentence:
   "Hardened (the Enforcer's Duty Grade) is text until an Enforcer can be made to resist EMP; then it's a
   choice on that check."
 - **STATE:** the versions line; §3's Professional status if it names the Enforcer; §5's *Where to start*
