@@ -1463,3 +1463,4 @@ h2.city-name{font-size:1.15rem}
 .city-sum{margin:0 0 8px; max-width:62ch; overflow-wrap:anywhere}
 .city-entry .btn{max-width:100%; white-space:normal; text-align:left}
 .place-card .cast-open{display:block}
+.place-ground .form-toggle{width:auto; max-width:100%; flex-wrap:wrap}

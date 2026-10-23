@@ -1188,7 +1188,7 @@ function placePageHtml(p){
       <label class="field"><span>Neighborhood</span><input type="text" data-pf="neighborhood" list="place-neighborhoods" value="${esc(p.neighborhood)}" autocomplete="off"></label>
     </div>
     ${datalistHtml("place-districts", uniqueTyped("district"))}${datalistHtml("place-neighborhoods", uniqueTyped("neighborhood"))}
-    <div class="field"><span>Kind of ground</span><div class="form-toggle int-kinds" role="group" aria-label="Kind of ground">${g.environments.map(e=>
+    <div class="tag-choice place-ground"><span>Kind of ground</span><div class="form-toggle int-kinds" role="group" aria-label="Kind of ground">${g.environments.map(e=>
       `<button type="button" data-pground="${esc(e.id)}" class="${e.id===p.environment ? "on" : ""}" aria-pressed="${e.id===p.environment}">${esc(e.name)}</button>`).join("")}</div></div>
     <label class="field"><span>Notes</span><textarea data-pf="notes" placeholder="What the crew should remember about it.">${esc(p.notes)}</textarea></label>
     ${entry && entry.summary ? `<h2 class="cast-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
