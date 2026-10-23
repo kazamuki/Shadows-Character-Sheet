@@ -4728,6 +4728,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 169 in part (CRANK shows only with the switch on; the card alone on its row is whichever is left over, not CRANK by name). Decision 173 in part (`FEATURES` holds a second switch, for a released feature withdrawn; its *Revisit if* has happened).
      - **Revisit if:** the team decides CRANK (keep it: the **CRANK is back** release; drop it: a decision to remove the code and keep `trackers.crank` read-only in `migrate()`), or GQ7, F37 or GQ28 is answered.
      - **Built:** app 0.39.3, no data or schema bump, PR #160, log 2026-10-11 (P2).
+     → **Superseded in part by Decision 239**: the team kept CRANK, so `FEATURES.crank` is true and it shows for everyone; the switch and the kept data stand.
 
 215. **A Vampire's and a Werewolf's Innate powers are granted at rank 1; Base Powers buy ranks in the Bloodline's or Origin's powers; CP raises any held power; an Upyr holds both Built to Last powers; a day without rest costs half RoU + 2.**
      *2026-10-11 · Ken + Deighton + Claude · Touches: powersBought, granted, archetypePowers, powerPool, basePowerState, placeBasePower, archetypeChoices.basePowers, archetypeChoices.powerCp, powerCpSpent, buyPowerRank, cp, Max Starting Rank, Max Power Rank, starterPower, Built to Last, Iron Hide, Icebound Resilience, noStack, naturalArmor, optionPicks, feed panel, unrested, goUnrested, A day without rest, Day Rest, Admin Base Powers, character schema 0.20, F38, F39, F41, W88, W105*
@@ -4958,6 +4959,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 134 in part: a locked character short of a pick chose it in the Loadout panel; it now chooses it at the top of whichever tab is open, and the panel keeps a line pointing there.
      - **Revisit if:** another creation choice can go missing on a locked character (a Base Power, a Natural Advantage) and wants the same ask; then the block becomes a list of what's owed.
      - **Built:** app 0.53.0, game data 0.46, no schema bump, PR #227. Log 2026-10-23 (Y1).
+
+239. **CRANK is back: the team kept it, so `FEATURES.crank` is true and every player sees CRANK again.**
+     *2026-10-23 · Ken + Claude · Touches: CRANK, FEATURES, featureOn, crankOn, ?crank=on, ?crank=off, shadows.feature.crank, Main CRANK card, Trackers CRANK section, Admin CRANK rep, print front page, blank sheet, launch line, W101*
+     - **Decided:** The team decided to keep CRANK (Ken, 2026-10-23), so `FEATURES.crank` is `true`: Main's card and popover, Trackers' section and ledger, Admin's correction and the print front page's field show for everyone, the blank sheet's too, and a rep kept while it was hidden is back as stored. The switch stays in `FEATURES`, on; `?crank=off` no longer hides it. CHANGELOG carries the launch line **CRANK is back.**
+     - **Why:** Decision 214 hid CRANK until the team decided whether it stays, and named this release as the answer if it did. Players' rep was kept through the pause, so nothing migrates.
+     - **Rejected:** removing the switch and `crankOn()` now (a cleanup that touches every CRANK reader for no player-visible change; it can follow on its own); waiting for F37, GQ7 and GQ28 first (they are open flags the sheet already surfaces, and the team's go didn't depend on them).
+     - **Replaces:** Decision 214 in part: CRANK is shown, not hidden; its switch, its storage key and its kept data stand.
+     - **Revisit if:** F37 (rep below zero), GQ7 (Reputation and starting rep) or GQ28 is answered, or a later decision removes the switch.
+     - **Built:** app 0.53.0, no data or schema bump, PR #…. Log 2026-10-23 (CRANK is back).
 
 ## 5. Open Flags
 

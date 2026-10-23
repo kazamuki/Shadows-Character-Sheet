@@ -1108,7 +1108,7 @@ test("P11 11: a Custom pool gets Main's card once its max is set, with no Rate o
   assert.match(card.textContent, /12\s*\/12/);
   assert.ok(!/RoU/.test(card.textContent), "the card says RoU for a pool that has none");
   assert.ok(!/undefined|null|NaN/.test(card.textContent));
-  assert.equal(app.$$("#main .cond.alone").length, 0, "SFR and Çredits fill a row; neither is alone");
+  assert.deepEqual(app.$$("#main .cond.alone").map(c => c.classList.contains("crank")), [true], "SFR and Çredits fill a row, and CRANK (on, Decision 239) is alone on the next");
   assert.deepEqual(app.errors, []);
 });
 

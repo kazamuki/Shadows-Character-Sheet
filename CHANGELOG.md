@@ -25,6 +25,7 @@ own in the footer.
 
 ## [Unreleased] — app 0.53.0
 
+- **CRANK is back.** Your rep and its tier sit beside Çredits on Main again, the ledger of every job is on Trackers, and the print sheet has its field. Rep earned before the pause is still there.
 - **The Enforcer follows the new book:** it requires BOD 8 and COOL 7, Focuses Cybernetics and one Combat Skill you choose in place of Survival, and carries the Duty Grade tweak (Interpreter, Hardwired, Hardened) in place of Hard Knock Life.
 - **A character still owed a Focused Skill is asked for it at the top of the sheet,** whatever tab it opens on. An Enforcer saved before this update picks its Combat Skill there.
 - **Layered Street Clothes are in the armor shop:** everyday clothes that stop a little. PROT 1d4, RES +2, 175Ç.

@@ -108,8 +108,9 @@ function announceStep(dataStep){
 // one on with ?<name>=on (and off with ?<name>=off); the launch release sets
 // it true here. Guarded: without storage, a feature is as the constant says.
 // Decision 214: a switch is either an unfinished feature (gm) or a released
-// one withdrawn until the team decides (crank).
-const FEATURES = { gm:false, crank:false };
+// one withdrawn until the team decides (crank). Decision 239: the team kept
+// CRANK, so its switch is on for everyone.
+const FEATURES = { gm:false, crank:true };
 const FEATURE_PREFIX = "shadows.feature.";
 function featureOn(name){
   if (!Object.prototype.hasOwnProperty.call(FEATURES, name)) return false;
