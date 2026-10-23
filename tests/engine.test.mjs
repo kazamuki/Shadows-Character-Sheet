@@ -9638,15 +9638,14 @@ test("242: a zone is set only where the book names a listed one", () => {
   assert.equal(gEntry("bushido-defenceworks-bdf").name, "Bushido Defenceworks (BDF)");
 });
 
-test("242: every summary is one line of at most 20 words, one sentence but for Ken's own wording", () => {
+test("242: every summary is one sentence of at most 20 words", () => {
   for (const e of [...G().entries, ...G().environments]) {
     const s = e.summary;
     assert.equal(typeof s, "string", e.id);
     const words = s.trim().split(/\s+/).length;
     assert.ok(words >= 4 && words <= 20, `${e.id}: ${words} words`);
     assert.match(s, /[.]$/, `${e.id}: one sentence ends with a full stop`);
-    // Ken ruled the Dockside Devils' wording himself (the PR's voice pass, 2026-10-23): two short sentences.
-    if (e.id !== "dockside-devils") assert.ok(!/[.!?]\s+[A-Z]/.test(s.replace(/St\. /g, "St ")), `${e.id}: more than one sentence`);
+    assert.ok(!/[.!?]\s+[A-Z]/.test(s.replace(/St\. /g, "St ")), `${e.id}: more than one sentence`);
   }
 });
 
