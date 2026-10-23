@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.54.0
+## v0.54.0 — 2026-10-23
 
 - **Vampire and Werewolf powers at creation follow the book:** each Base Power takes one Bloodline or Origin power at rank 1, and Character Points raise a power up to your Max Starting Rank. A character you've already locked keeps every rank it has; a draft that placed two Base Powers in one power asks you to move one.
 

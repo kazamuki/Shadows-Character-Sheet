@@ -12,7 +12,7 @@ file's shape doesn't move.
 **Branch:** one, cut from `main`. **Runs beside:** the conductor's CRANK launch PR (`FEATURES` in `shared.js`,
 CHANGELOG, STATE, the log) and its release. Nothing here touches `FEATURES`. If STATE or CHANGELOG collide,
 rebase on `main` before Ken merges and keep both entries.
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md), **with direct messaging
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md), **with direct messaging
 again** (Ken, 2026-10-23): builder and reviewer talk to each other, and anything for Ken goes to the conductor.
 Ken starts **Y4 build** (Sonnet), then a fresh reviewer (Opus) once the PR is open.
 

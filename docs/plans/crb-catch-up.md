@@ -3,7 +3,7 @@
 **Status:** open, Ken's (a CRB writing pass, weekend of 2026-10-03). This is where Ken's CRB fixes live; `STATE.md` §5 points here instead of listing them. Tick an item off here when the book has it, and close the plan once nothing is left unticked or unasked.
 **Compiled:** 2026-10-01, against every `.docx` in `%OneDrive%\Documents\Gaming\Shadows\Core Rule Book\CRB in progress\CRB v4\` as saved that night (0450 included), and game data 0.28 / app 0.36.0. Item ids (`CQ`_n_, F-numbers, Decisions) are the repo's; the Exceptions List's ids (`AD-`, `AR-`, `GR-`…) are the team's tracker in the same folder.
 **Re-checked:** 2026-10-08, against the mirror as pulled 2026-10-07 (`private/` at `cea99a8`), which renamed every chapter to the source's four-digit numbers (`054` is now `0540_Conditions_and_Recovery.md`; the full mapping is in `log/2026.md`, 2026-10-08). Items the pull showed done are ticked, each marked *(10-07)*.
-**Tier:** *Docs*. Nothing here changes the app. The app's own catch-up work moved to `crb-v4-sync.md`, which goes through the usual tiers.
+**Tier:** *Docs*. Nothing here changes the app. The app's own catch-up work went to `crb-v4-sync.md` and then `crb-sync-2026-10-22.md` (both closed, in `archive/`), each pass through the usual tiers.
 
 **How this was checked.** Every chapter was converted and read against `shadows-data.js`. The catalogs were compared by script: all 57 Advantages, 30 Disadvantages, 36 Skills and 125 spells. Costs, max ranks, Universal tags, stat pairs, descriptions, TN/TH and Overflow lines all **match**, apart from the few items listed below. Most of what's left is rules the design team ruled on that the book never got.
 
@@ -217,6 +217,7 @@ These block book text, so send them before you write those sections. Deighton's 
 
 ## Not CRB edits: where the book is ahead of the sheet
 
-Moved on 2026-10-08 to **`plans/crb-v4-sync.md`**, which is the app's side of
+Moved on 2026-10-08 to **`plans/archive/crb-v4-sync.md`** (closed 2026-10-23,
+as is its successor for the 2026-10-22 mirror, `plans/archive/crb-sync-2026-10-22.md`), which is the app's side of
 this plan: every place the 2026-10-07 mirror is ahead of the sheet, sorted into
 passes, each through its own tier. This plan keeps only what the book needs.

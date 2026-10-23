@@ -75,7 +75,7 @@ its own save-shape or rules change; the later sessions keep their numbers (Ken).
 **Split 2026-10-15:** P9 became P9a (the text, Content) and P9b (F34, a save
 shape), so the quick text reaches players without waiting on F34's design (Ken).
 
-**Taken in 2026-10-15:** the two passes [`crb-v4-sync.md`](crb-v4-sync.md)
+**Taken in 2026-10-15:** the two passes [`crb-v4-sync.md`](archive/crb-v4-sync.md)
 still had open, so that every session left for the player sheet is in one
 list (Ken; the plans audit found that no order covered them).
 - **Its P4b** (the Vampire's Major Milestones) is **P17**, run right after

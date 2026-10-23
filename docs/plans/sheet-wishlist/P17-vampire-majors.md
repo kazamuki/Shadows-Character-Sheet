@@ -153,7 +153,7 @@ Found by grepping the readers of each thing it touches, not from memory:
 
 - `CLAUDE.md`, then `docs/STATE.md`.
 - `private/crb/0413_Vampire.md`: *Innate Powers* (~185–232, Cursed Evolution), *Growth & Milestones* (~474–501).
-- `docs/plans/crb-v4-sync.md` VQ4, VQ27; `crb-v4-sync/P3b-werewolf-majors.md` (the engine this builds on).
+- `docs/plans/archive/crb-v4-sync.md` VQ4, VQ27; `archive/crb-v4-sync/P3b-werewolf-majors.md` (the engine this builds on).
 - `SCHEMA.md` §4:
   - **91**: one prerequisite vocabulary;
   - **199**: archetype Majors, Bloodline gates, grants;
