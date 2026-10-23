@@ -9440,8 +9440,8 @@ test("241: interactionSentence — no crew, no member, an unnamed one, a gone on
   eq(sentenceText(t, L("owed", [bob], [], "", null)), "Bob owes the crew");
   const blank = Engine.addCastMember(t, { name: "" }).id;
   eq(sentenceText(t, L("helped", [blank], ["Scott"], "", null)), "Scott helped them");
-  eq(sentenceText(t, L("owed", [blank], ["Scott"], "", null)), "Them owes Scott");
-  eq(sentenceText(t, L(null, [blank], ["Scott"], "met", null)), "Them, with Scott: met");
+  eq(sentenceText(t, L("owed", [blank], ["Scott"], "", null)), "Unnamed owes Scott");
+  eq(sentenceText(t, L(null, [blank], ["Scott"], "met", null)), "Unnamed, with Scott: met");
   eq(sentenceText(t, L("owed", [bob], ["Scott"], "", null)), "Bob owes Scott", "a real name is never touched");
   const gone = Engine.addCastMember(t, { name: "Marta" }).id;
   Engine.removeCastMember(t, gone);

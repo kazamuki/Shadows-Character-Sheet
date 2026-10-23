@@ -6323,7 +6323,7 @@ const Engine = (() => {
     // The first word is a capital, whatever stood in for a missing name.
     const first = parts[0];
     if (first.kind==="text" && first.text) parts[0] = T(first.text.charAt(0).toUpperCase() + first.text.slice(1));
-    else if (first.kind==="cast" && first.standIn) parts[0] = { ...first, name:"Them" };   // a stand-in, never a real name
+    else if (first.kind==="cast" && first.standIn) parts[0] = { ...first, name:"Unnamed" };   // a stand-in leads as the cast list names them (Ken, PR #234); never a real name
     return { parts };
   }
   function interactionsFor(t, castId){
