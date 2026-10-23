@@ -12,7 +12,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
-import { expectedGazetteer, readPlaces, readPowers, readEnvironments, slug } from "./gazetteer-book.mjs";
+import { expectedGazetteer, readPlaces, readPowers, readEnvironments } from "./gazetteer-book.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -9576,9 +9576,12 @@ test("242: the gazetteer holds every Territory, Zone, Site, Business, Faction an
   eq([sum("businesses"), count("business")], [42, 42]);
   eq([sum("factions"), count("faction")], [23, 23]);
   eq([book.beyond.length, count("region")], [11, 11]);
-  // by name, kind, Territory, zone and real-world place, in the book's order, with no extras
-  const strip = e => ({ id: e.id, kind: e.kind, name: e.name, territory: e.territory, zone: e.zone, realWorld: e.realWorld, group: e.group });
-  eq(G().entries.map(strip), want.entries.map(strip));
+  // by name, kind, Territory, zone and real-world place, in the book's order, with no extras. Ids are not compared:
+  // they are permanent (constraint 6), so a rename in the book changes a name here and never an id.
+  const names = list => new Map(list.map(e => [e.id, e.name]));
+  const strip = (e, n) => ({ kind: e.kind, name: e.name, territory: e.territory ? n.get(e.territory) : null, zone: e.zone ? n.get(e.zone) : null, realWorld: e.realWorld, group: e.group });
+  const have = names(G().entries), wantN = names(want.entries);
+  eq(G().entries.map(e => strip(e, have)), want.entries.map(e => strip(e, wantN)));
 });
 
 test("242: the powers are 1200's and the kinds of ground are 1300's", () => {
@@ -9599,7 +9602,6 @@ test("242: every territory and zone an entry names is one, and every id is uniqu
   assert.equal(new Set(ids).size, ids.length, "an id repeats");
   for (const id of ids) assert.match(id, /^[a-z0-9]+(-[a-z0-9]+)*$/);
   for (const e of G().entries) {
-    assert.equal(e.id, slug(e.name), e.name);
     if (e.territory) assert.equal(gEntry(e.territory)?.kind, "territory", `${e.id}: territory`);
     if (e.zone) {
       const z = gEntry(e.zone);
@@ -9609,6 +9611,14 @@ test("242: every territory and zone an entry names is one, and every id is uniqu
     if (["zone", "site", "business", "faction"].includes(e.kind)) assert.ok(e.territory, `${e.id} has no Territory`);
     else assert.equal(e.territory, null, `${e.id}: ${e.kind} has a Territory`);
   }
+});
+
+test("242: every id ever shipped is still there, with the entry it named (constraint 6)", () => {
+  // tests/gazetteer-ids.json is frozen: add a new entry's id to it, never edit or reorder one.
+  const frozen = JSON.parse(readFileSync(join(ROOT, "tests", "gazetteer-ids.json"), "utf8"));
+  const now = [...G().entries, ...G().environments].map(e => e.id);
+  eq(now.slice(0, frozen.length), frozen);
+  for (const id of now.slice(frozen.length)) assert.match(id, /^[a-z0-9]+(-[a-z0-9]+)*$/);
 });
 
 test("242: a zone is set only where the book names a listed one", () => {
