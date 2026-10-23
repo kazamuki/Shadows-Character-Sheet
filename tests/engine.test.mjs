@@ -9464,6 +9464,7 @@ test("241: a fight's line links its encounter, which follows a rename and surviv
   const ok = Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "figures", date: "2026-10-08", encounter: e });
   const nope = Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "x", encounter: "EN-AAAAAAAA" });
   const x = id => t.interactions.find(i => i.id === id);
+  assert.ok(x(ok.id).encounter, "End's caller passed an encounter and the line has no link");
   eq(x(ok.id).encounter, { kind: "encounter", id: e });
   assert.equal(x(nope.id).encounter, null, "an encounter not on the table is no link");
   eq(Engine.linkName(t, x(ok.id).encounter), { name: "Dock fight", gone: false });
