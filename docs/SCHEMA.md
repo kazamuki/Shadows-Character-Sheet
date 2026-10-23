@@ -4738,8 +4738,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 196 in part (Base Powers buy the Origin's powers). Decision 200 in part (Innate powers granted; Built to Last not a pick). Extends 157 (the one power price) and 201 (the Thirst).
      - **Revisit if:** W72 lets IP learn an unheld power, `0450`'s ceilings change what binds play, or Deighton defines how a power that doesn't stack combines with anything else.
      - **Built:** app 0.40.0, game data 0.35, schema 0.20, PR #163. Log 2026-10-11 (P3).
-     → **Superseded in part by Decision 216**: a held power is placed, granted or learned with IP, not only placed or granted. IP in `powerIpe` on a pool power now holds it.
-     → **Superseded in part by Decision 240**: a Base Power takes a power once, at rank 1, and CP raises a held power only to Max Starting Rank (the book, YQ1).
+     → **Superseded in part by Decisions 216 and 240**: 216: a held power is placed, granted or learned with IP, not only placed or granted; IP in `powerIpe` on a pool power now holds it. 240: a Base Power takes a power once, at rank 1, and CP raises a held power only to Max Starting Rank (the book, YQ1).
 
 216. **A Vampire or Werewolf learns an unheld power of its own Bloodline or Origin with IP; any character can be given a custom written power: 40 IP in play or free on Admin, 5 CP at creation or free as a GM grant.**
      *2026-10-11 · Ken + Claude · Touches: archetypePowers, powerRanks, powerIpe, ipCost, Buy or Raise a Power, Learn a new power, Custom power, addCustomPower, addPower, hasPowers, ownPowers, powerRow, boughtWithCp, cp, CP step, character schema 0.21, W72, W106*
