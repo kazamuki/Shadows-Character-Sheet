@@ -4967,7 +4967,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** removing the switch and `crankOn()` now (a cleanup that touches every CRANK reader for no player-visible change; it can follow on its own); waiting for F37, GQ7 and GQ28 first (they are open flags the sheet already surfaces, and the team's go didn't depend on them).
      - **Replaces:** Decision 214 in part: CRANK is shown, not hidden; its switch, its storage key and its kept data stand.
      - **Revisit if:** F37 (rep below zero), GQ7 (Reputation and starting rep) or GQ28 is answered, or a later decision removes the switch.
-     - **Built:** app 0.53.0, no data or schema bump, PR #…. Log 2026-10-23 (CRANK is back).
+     - **Built:** app 0.53.0, no data or schema bump, PR #229. Log 2026-10-23 (CRANK is back).
 
 ## 5. Open Flags
 
