@@ -501,6 +501,9 @@ test("Decision 238: a complete pick asks nothing, and an invalid one asks to be 
   assert.match(app.$("#main").textContent, /can't be a Focused Skill any more/);
   assert.equal(app.$$('[data-fpick="survival"]').length, 1);
   assert.equal(app.$('[data-fpick="survival"]').textContent, "Remove");
+  app.click('[data-sec="loadout"]');
+  const panelBad = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && /can't be a Focused Skill/.test(p.textContent));
+  assert.match(panelBad ? panelBad.textContent : "", /at the top of this tab/, "Loadout's panel sends the player below, where no picker is");
   app.click('[data-fpick="survival"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
   assert.match(app.$("[data-focused-owed]").textContent, ASK);
