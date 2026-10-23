@@ -2,7 +2,7 @@
 
 **Plan:** [`../crb-sync-2026-10-22.md`](../crb-sync-2026-10-22.md) §2, row Y4 (YQ1 and YQ4 answered in §4).
 **Status:** **drafted 2026-10-23 by Claude (Opus)**, the Y1 reviewer, after #227 merged (the README's step 7).
-**Not approved yet:** YQ8–YQ11 (§4) are for Ken.
+**Approved by Ken 2026-10-23, as written; YQ8–YQ11 on their defaults** (§4).
 **Pre-flight:** against Shadows-Character-Sheet `main` at `508389c` (#227 merged), with `private/` at `e6acadc`.
 Read and probed 2026-10-23, and **prototyped**: the two engine lines in §8 were changed in a scratch tree and
 the full suite was run, so §13's list of expected breaks is the suite's own output, not a guess.
@@ -76,7 +76,7 @@ Ledger: Decision 215 is the rule (and rejected "Max Starting Rank capping CP"); 
 1. **A Heroic Werewolf's Max Starting Rank is 1**, so CP raises no Origin power at Street **or Heroic** (the plan
    named Street only). That's the book's table, not a question, but Ken should know (YQ10).
 2. **The book says CP raises "these"**: the Bloodline powers just granted. Decision 215 lets CP raise an
-   Innate power too. YQ8 asks which.
+   Innate power too. YQ8 asked which: Ken kept 215's reach (any held, ranked power).
 3. **The Base Power control** is a stepper today, and under the new rule its `+` stops at 1 on every row. YQ9
    asks whether it stays a stepper.
 4. **Nine existing tests encode Decision 215** and fail under the new rule (§13), plus two `rules.test.mjs`
@@ -119,21 +119,18 @@ power at rank 1, and Character Points raise a held power up to Max Starting Rank
 
 ## 3. Decisions, drafted in full
 
-Paste into `SCHEMA.md` §4 with the number taken, and fill *Built*. YQ8's answer decides one clause, marked.
+Paste into `SCHEMA.md` §4 with the number taken, and fill *Built*. YQ8 was answered on its default.
 
 ```
 N. **A Vampire's or Werewolf's Base Power takes one Bloodline or Origin power at rank 1; CP raises a held power only to Max Starting Rank.**
      *2026-10-23 · Ken + Claude · Touches: powersBought, maxRankBy, Max Starting Rank, Max Power Rank, basePowerState, placeBasePower, powerCpState, buyPowerRank, spendable cp, validate, campaignPowerScaling.notes, Base Powers block, Character Points step, Admin Base Powers, YQ1, YQ4, YQ8–YQ11*
-     - **Decided:** Under `powersBought`, each Base Power holds one power of the chosen specialization at rank 1; a second in the same power is refused. `maxRankBy` (Max Starting Rank) now caps a power's starting rank, Base Power plus CP, with the book's printed maximum; Max Power Rank no longer binds these archetypes at creation. CP raises [YQ8 default: any held, ranked power, Innate included]. A draft placed under Decision 215 is refused by the wizard until fixed; a locked character keeps what it holds, and `migrate()` changes nothing.
+     - **Decided:** Under `powersBought`, each Base Power holds one power of the chosen specialization at rank 1; a second in the same power is refused. `maxRankBy` (Max Starting Rank) now caps a power's starting rank, Base Power plus CP, with the book's printed maximum; Max Power Rank no longer binds these archetypes at creation. CP raises any held, ranked power, Innate included (YQ8). A draft placed under Decision 215 is refused by the wizard until fixed; a locked character keeps what it holds, and `migrate()` changes nothing.
      - **Why:** `0413` and `0414` now print the rule ("granted a number of Bloodline powers … at Rank 1. You can raise these up to your Max Starting Rank with Character Points"), and Ken ruled the book is the rule (YQ1).
      - **Rejected:** keeping Decision 215 and sending the book a catch-up item (YQ1); `migrate()` turning a second placement into CP (it writes a choice the player didn't make, and spends CP they may have put elsewhere); grandfathering drafts (YQ4); a data key for the Base Power's rank (one rule, both archetypes, and the book prints no other).
      - **Replaces:** Decision 215 in part: Base Powers placed ranks up to Max Starting Rank, and CP raised to Max Power Rank. 215 rejected Max Starting Rank capping CP; the book now prints it.
      - **Revisit if:** the book gives Base Powers a rank above 1 at a Power Level, or lets CP buy a new power at creation; or a third archetype buys powers this way with a different cap.
      - **Built:** app X.Y.0, game data 0.47, no schema bump, PR #…. Log 2026-10-2x (Y4).
 ```
-
-If Ken answers YQ8 "Bloodline or Origin powers only", the bracket reads: *only a power a Base Power took;
-an Innate power stays at rank 1 until play*.
 
 Supersession marks (CLAUDE.md, *Decisions*):
 - Decision 215's entry, after its existing 216 mark: `→ **Superseded in part by Decision N**: a Base Power takes a power once, at rank 1, and CP raises a held power only to Max Starting Rank (the book, YQ1).`
@@ -144,14 +141,15 @@ Supersession marks (CLAUDE.md, *Decisions*):
 ## 4. Questions for Ken
 
 YQ1 (the book is the rule) and YQ4 (locked keeps everything; a draft is refused by the wizard; `migrate()`
-untouched) were answered with the plan. These are new.
+untouched) were answered with the plan. These are new, and **Ken answered all four on their defaults,
+2026-10-23**.
 
 | Id | Question | Default |
 |---|---|---|
-| **YQ8** | The book: "You can raise **these** up to your Max Starting Rank with Character Points", where *these* are the Bloodline or Origin powers just granted. Decision 215 lets CP raise an **Innate** power too. Can CP raise an Innate power at creation? | **Yes, any held, ranked power, Innate included** (215's reach kept, only the cap moves). An Innate power is held at rank 1 like a granted Bloodline one, and the book names no other cap for it. The other reading leaves a Heroic Vampire's 10 or so CP with one fewer place to go. Ken is the book's author: if "these" was meant narrowly, say so and the order builds that (§3's bracket) |
-| **YQ9** | Each Base Power row is a stepper today. Under the new rule its `+` stops at 1 on every row, and the number shown is only ever 0 or 1. Keep the stepper, or make it a **Take / Taken** toggle? | **Keep the stepper.** It's the control the wizard and Admin share, its keys and announcements are tested, and the row's pill says "rank 1". A toggle is a UI rework this rule doesn't need: it changes every `bp|` selector in four smoke tests. If the stepper reads as broken in the preview, the reviewer says so and Ken decides then |
-| **YQ10** | A **Werewolf's Max Starting Rank is 1 at Heroic** as well as Street, so at both levels CP raises no Origin or Innate power. The plan named Street only. Build the table as printed? | **Yes, as printed.** The CP goes to stats, skills and Advantages, as YQ1 said of Street. If Heroic's 1 is a typo in `0414`, it's a `crb-catch-up.md` item, not this order |
-| **YQ11** | The wizard's error for a draft made under 215 (two Base Powers in one power). Draft: *"Shadow Play has 2 Base Powers. One takes it at rank 1: take 1 back, and raise it with CP."* (The "raise it with CP" clause only where Max Starting Rank is above 1.) | **The draft**, marked for Ken's voice pass in the PR. It's tool voice (the player is stuck): it names the power, the rule and the fix |
+| **YQ8** ✅ | The book: "You can raise **these** up to your Max Starting Rank with Character Points", where *these* are the Bloodline or Origin powers just granted. Decision 215 lets CP raise an **Innate** power too. Can CP raise an Innate power at creation? | **Yes, any held, ranked power, Innate included** (215's reach kept, only the cap moves). An Innate power is held at rank 1 like a granted Bloodline one, and the book names no other cap for it. The other reading leaves a Heroic Vampire's 10 or so CP with one fewer place to go. |
+| **YQ9** ✅ | Each Base Power row is a stepper today. Under the new rule its `+` stops at 1 on every row, and the number shown is only ever 0 or 1. Keep the stepper, or make it a **Take / Taken** toggle? | **Keep the stepper.** It's the control the wizard and Admin share, its keys and announcements are tested, and the row's pill says "rank 1". A toggle is a UI rework this rule doesn't need: it changes every `bp|` selector in four smoke tests. If the stepper reads as broken in the preview, the reviewer says so and Ken decides then |
+| **YQ10** ✅ | A **Werewolf's Max Starting Rank is 1 at Heroic** as well as Street, so at both levels CP raises no Origin or Innate power. The plan named Street only. Build the table as printed? | **Yes, as printed.** The CP goes to stats, skills and Advantages, as YQ1 said of Street. If Heroic's 1 is a typo in `0414`, it's a `crb-catch-up.md` item, not this order |
+| **YQ11** ✅ | The wizard's error for a draft made under 215 (two Base Powers in one power). Draft: *"Shadow Play has 2 Base Powers. One takes it at rank 1: take 1 back, and raise it with CP."* (The "raise it with CP" clause only where Max Starting Rank is above 1.) | **The draft**, marked for Ken's voice pass in the PR. It's tool voice (the player is stuck): it names the power, the rule and the fix |
 
 ## 5. The assumption sweep
 
@@ -214,7 +212,6 @@ the IP cap text, and nothing in `powerCpState`.
 - Vampire `campaignPowerScaling.notes`, the sentence after "Innate powers are yours at rank 1.":
   `Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank.`
 - Werewolf: the same with `Origin's`.
-- (YQ8 "Bloodline only": `…and Character Points raise those up to your Max Starting Rank.`)
 - The `powersBought` comments: "each takes one power of the Bloodline at rank 1 (Decision N); `maxRankBy`
   caps a power's starting rank, CP included."
 
@@ -225,7 +222,7 @@ the IP cap text, and nothing in `powerCpState`.
 - `placeBasePower`: when `next > row.cap` on a ranked row, refuse with
   `` `${row.name} is yours already: a Base Power takes a power once, at rank 1.` `` (unranked keeps "has no ranks").
 - `powerCpState`: `cap = Math.min(dataPath(ch, a.powersBought.maxRankBy) ?? Infinity, printed)`. Nothing else
-  in it moves; with YQ8 "Bloodline only", filter out rows where `isGranted(a, p)` too.
+  in it moves: Innate powers stay in it (YQ8).
 - `validate("archetype")`: the over-cap line for a ranked row becomes YQ11's sentence:
   `` `${r.name} has ${r.placed} Base Powers. One takes it at rank 1: take ${r.placed-1} back${bps.cap>1?", and raise it with CP":""}.` ``
   The unranked line ("has no ranks. Place one Base Power in it.") is unchanged.
@@ -300,7 +297,7 @@ wizard's step only.
    `basePowerState(ch).rows.every(r => r.cap === 1)`; the state's `cap` is 2. A WCD Upyr: `iron-hide` once,
    then refused (it was ×3 on `main`). **Fails on `main`:** the second placement is ok.
 3. **`Decision N: CP raises a held power to Max Starting Rank, not Max Power Rank`**. Heroic Strigoi with
-   `shadow-play` placed: `buyPowerRank` +1 ok (rank 2), +1 → `/highest starting rank, 2/`. YQ8 default:
+   `shadow-play` placed: `buyPowerRank` +1 ok (rank 2), +1 → `/highest starting rank, 2/`. YQ8:
    `bestial-blessings` +1 ok, +1 refused at 2. A Street Strigoi: every `powerCpState` row has `rank === cap`
    (1), and `buyPowerRank(…, "bestial-blessings", 1).ok` is false. A Heroic Trueborn with `apex-fury`: refused
    at 1 (YQ10). A WCD Draugur with `spectral-veil` (printed 3, MSR 3): raises to 3. **Fails on `main`:**
@@ -348,7 +345,7 @@ wizard's step only.
 - **Voice:** `voice.test.mjs` scans the data notes. Confirm it passes.
 - **Mutation-test** each new guard, and record each in the PR:
   - example 2: put `most` back to `min(cap, printed)` (fails);
-  - example 3: put Max Power Rank back in `powerCpState` (fails); with YQ8's default, filter Innate powers out
+  - example 3: put Max Power Rank back in `powerCpState` (fails); filter Innate powers out
     (the `bestial-blessings` line fails);
   - example 4: drop the `bps.cap>1` clause (the Street half fails);
   - example 5: restore the old note sentence (fails);
@@ -439,7 +436,7 @@ For the reviewer, beyond the suite passing:
 - [ ] Each of the nine updated tests still tests what its name says, and no assertion was simply deleted.
 - [ ] Every ✎ row in §5 reads the new rule in the preview, **and no other sentence in the wizard, Admin or the
       Character tab still describes Base Powers as ranks** (`grep -rn "Base Power" src/`).
-- [ ] The CP cap is Max Starting Rank for an Innate power too (YQ8's answer), and Disciplines still cap at
+- [ ] The CP cap is Max Starting Rank for an Innate power too (YQ8), and Disciplines still cap at
       Max Power Rank (an Arcanist on the CP step).
 - [ ] `migrate()` untouched (`git diff main -- src/engine/engine.js` has no line inside `migrate`); a locked
       Vampire placed 2 round-trips and shows rank 2.
