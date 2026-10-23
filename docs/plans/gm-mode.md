@@ -139,7 +139,7 @@ stay (S6), as a setting to read and search, not a log to keep.
 | Ending a session | About **5 IP an hour, to players present only**; write the consequence log | `2260`, `2420` |
 | An absent player | Their character took a **CRANK job off-screen**: Çredits from the lower half of their tier's range, no rep | `2420`, `2000` *CRANK* |
 | Milestone pacing | A 5-session micro-arc is a Minor Milestone cycle; a 10-session arc a Major | `2400` |
-| Work | **CRANK**: a five-column d10 job generator, and a **personal reputation** with five tiers and payouts | `2000` *Crank and Bank* |
+| Work | **CRANK**: a five-column d10 job generator, and a **personal reputation** with five tiers and payouts | `2625` *CRANK and Bank* (revised 2026-10-22; §4i) |
 | Turn order | Order of Engagement by Combat Sense, ties rerolled; Reset closes the round (bleeding, fire, durations) | `0530` |
 
 **Checked against the engine, 2026-10-02** (a script over the Codex, not a read):
@@ -474,8 +474,24 @@ half:
 location, complication), rolled or picked, as data. A `JobRecord` is a
 generated or written contract with a client (a cast link, or text), a tier,
 a payout, a status (posted, taken, done, failed, abandoned) and the crew on
-it. Closing a job proposes Çredits and **+1 rep** (done) or **−2 rep**
-(abandoned) to each character on it, as a dispatch.
+it. As `2625` was revised for the 2026-10-22 mirror:
+
+- **The payout is the job's, not each operator's**, and the crew splits it
+  however the crew splits things. So closing a job proposes one payout to
+  the crew, and the GM (or the crew) says who takes what. It's never the full
+  payout to each character.
+- **Rep is each character's own**: everyone who sees a job through gets
+  **+1 rep**. Failing costs nothing. **Abandoning mid-job costs −2**, except
+  that walking away from a client who broke the contract first isn't
+  abandonment and costs nothing. So *abandoned* needs a way to say which,
+  perhaps a status of its own (S11's order decides).
+- **The posting's tier is set by the money behind it**, and the **client**
+  column does most of the scaling: the same job type reads differently for
+  a small business owner and a megacorp. **QUORUM** curates every feed, which
+  at the table means the GM chooses what each character sees. There's no
+  board for players to browse.
+
+All of it reaches a character as a dispatch (S2).
 
 ## 5. The player's side
 
@@ -548,20 +564,21 @@ not a queue. What Scott's use of the table turns up can reorder it.
 | Session | What | Tier | Waits on | Status |
 |---|---|---|---|---|
 | **S16** | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | Rule or shape | Nothing | **Order drafted** 2026-10-10, SQ1–SQ8 answered, re-pre-flighted 2026-10-23 ([order](gm-mode/S16-interaction-sentence.md)). Next to build |
-| S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10) | No order yet |
+| S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
 | S6 | The gazetteer and the crew's places | Content + shape | Nothing | No order yet |
 | S7 | Factions and clocks | Rule or shape | S6 | No order yet |
 | S12b | Site Profiles: places with their tracks and clocks (the Expansion is approved) | Content | S7 | No order yet |
-| S10f | The rest of S10: the Encounter Design worksheet (`2642`), Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | S7 for the clocks | No order yet |
+| S10f | The rest of S10: the Encounter Design worksheet, Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | S7 for the clocks | No order yet. **Sources:** the worksheet is `2642` (basics, adversaries, hazards, objectives beyond defeat, escalation, an out, the next scene's hooks); Surprise, Ambush and Delay are `0530` |
+| S17 | The Codex's Shared Rules and card format: a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card | Content + shape | **Scott**: these are in `WIP_Threat_Codex_v2` only. When the entries in `2612` move to v2's format, the pack builder follows first (a Fix in `private/`, the size of Y0's), then this | Waiting on Scott |
 | S3b | Seats: players, import, the card spread, the read-only sheet | Rule or shape | Nothing | No order yet |
 | S2 | The dispatch and the inbox (a player sees one) | Rule or shape | Nothing (S1 built) | No order yet |
 | S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b | No order yet |
 | S11 | CRANK work: the generator and the jobs board (`2625` revised) | Content + shape | S5 built; S2 for dispatched pay | No order yet |
 | Launch | `FEATURES.gm` on for everyone, with `gm-mode/changelog-pending.md` | Release | Ken and Scott | — |
 
-S12's split into S12a and S12b, and S10f's name, are this table's (2026-10-23), so
-the halves can be picked separately. The sections below still describe each session
+S12's split into S12a and S12b, and the names S10f and S17, are this table's
+(2026-10-23), so each piece can be picked on its own. The sections below still describe each session
 as first drafted, with the splits noted where they happened.
 
 **The first point a GM got real value** was after S10: a table holding a
@@ -783,7 +800,10 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 ### S11 — CRANK work
 
 - The generator's five columns as data; roll or pick; a job record; the
-  jobs board; closing a job proposes Çredits and rep by dispatch.
+  jobs board; closing a job proposes one payout to split and each
+  character's rep, by dispatch (§4i, as `2625` was revised 2026-10-22).
+  The board is the GM's: what each character sees is the GM's choice
+  (QUORUM's, in the fiction), not a list the players browse.
 
 ### S12 — Supernatural Orders and Site Profiles
 
