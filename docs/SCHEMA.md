@@ -4976,7 +4976,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** keeping Decision 215 and sending the book a catch-up item (YQ1); `migrate()` turning a second placement into CP (it writes a choice the player didn't make, and spends CP they may have put elsewhere); grandfathering drafts (YQ4); a data key for the Base Power's rank (one rule, both archetypes, and the book prints no other).
      - **Replaces:** Decision 215 in part: Base Powers placed ranks up to Max Starting Rank, and CP raised to Max Power Rank. 215 rejected Max Starting Rank capping CP; the book now prints it.
      - **Revisit if:** the book gives Base Powers a rank above 1 at a Power Level, or lets CP buy a new power at creation; or a third archetype buys powers this way with a different cap.
-     - **Built:** app 0.54.0, game data 0.47, no schema bump, PR #…. Log 2026-10-23 (Y4).
+     - **Built:** app 0.54.0, game data 0.47, no schema bump, PR #230. Log 2026-10-23 (Y4).
 
 ## 5. Open Flags
 
