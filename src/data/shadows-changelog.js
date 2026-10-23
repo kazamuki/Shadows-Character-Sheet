@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.54.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Vampire and Werewolf powers at creation follow the book:** each Base Power takes one Bloodline or Origin power at rank 1, and Character Points raise a power up to your Max Starting Rank. A character you've already locked keeps every rank it has; a draft that placed two Base Powers in one power asks you to move one."
+    ]
+  },
+  {
     "version": "0.53.0",
     "date": "2026-10-22",
     "intro": [],
