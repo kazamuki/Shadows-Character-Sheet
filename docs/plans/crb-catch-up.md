@@ -174,6 +174,10 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ **Suncoast City › its cult's name** (the mirror's `1100_Places.md:293` and `:331`). The zone's paragraph calls it *the Shining Path*; its Factions entry is *The Transcendent Path*. Pick one. The sheet's gazetteer id stays `transcendent-path` whatever the book picks. *(S6's build, 2026-10-23.)*
 - ☐ **Neurodyne Industries › its Overview** (the mirror's `1200_Powers.md:151`). The paragraph is cut off mid-sentence ("…the LINK has never"). Finish it. The sheet's summary says only what comes before the cut. *(S6's build, 2026-10-23.)*
 
+## 2410_Factions_and_City and 2644_Faction_Tracker
+
+- ☐ ❓ **The stance and the positions never mention each other.** The Faction Tracker's *Stance toward the Crew* is a line from *Hostile* to *Allied*; `2410`'s positions are *Neutral*, *Aware* and *Active*. Say whether the second describes how closely the faction watches the crew and the first where it stands, or whether one replaces the other. The sheet keeps both, as the book prints them. *(Found by S7's pre-flight, 2026-10-23.)*
+
 ## 2530_Customizing_Characters (GM Workshop)
 
 - ☐ **Advantages and Disadvantages, the paragraph on buying off a Disadvantage.** "bought off with IP **during play**" should say **between sessions**, the same fix as 044.

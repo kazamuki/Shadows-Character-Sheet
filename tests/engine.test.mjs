@@ -3358,7 +3358,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.14");
+  assert.equal(t.meta.tableSchemaVersion, "0.15");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3433,7 +3433,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.14", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.15", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3485,7 +3485,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3708,7 +3708,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -4070,7 +4070,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -4279,7 +4279,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4795,7 +4795,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -5269,7 +5269,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5899,7 +5899,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -6187,7 +6187,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.14");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.15");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -6552,7 +6552,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.14");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.15");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6695,7 +6695,7 @@ const names = (t, e) => Engine.encounterView(t, e, []).rows.map(r => r.name);
 const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.14");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.15");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6706,7 +6706,7 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "" }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
@@ -7363,10 +7363,10 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   eq(Engine.migrateTable(old).audit, []);
   delete old.audit; delete old.meta.tableSchemaVersion;
   eq(Engine.migrateTable(old).audit, []);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.14");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.15");
   // A file from a newer app keeps its trail gated, not emptied.
   const newer = plain(t);
-  newer.meta.tableSchemaVersion = "0.14";
+  newer.meta.tableSchemaVersion = "0.15";
   newer.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "x" }] }];
   assert.equal(Engine.migrateTable(newer).audit.length, 1);
   assert.ok(Engine.clearTableActivity(t).ok); eq(t.audit, []);
@@ -9551,7 +9551,7 @@ test("241: the gate keeps a good encounter link, drops a bad one, and converts n
   old.meta.tableSchemaVersion = "0.12";
   old.interactions = [{ ...mk({ kind: "encounter", id: "EN-AAAAAAAA" }), id: "I-AAAAAAAA" }];
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   assert.equal(m.interactions[0].encounter, null);
   assert.equal(m.interactions[0].text, "Fought them in Dock.");
   // constraint 8: new, add, migrate round-trips
@@ -9941,7 +9941,7 @@ test("243: the gate types places and a line's place, keeps an unknown gazetteer 
   old.interactions = [{ ...mk(undefined), id: "I-AAAAAAAA", text: "Unchanged." }];
   old.places = "x";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   eq(m.places, []);
   assert.equal(m.interactions[0].place, null);
   assert.equal(m.interactions[0].text, "Unchanged.");
@@ -9964,4 +9964,268 @@ test("243: the new readers are total on junk", () => {
     assert.equal(Engine.removePlace(t, "PL-AAAAAAAA").ok, false);
   }
   assert.equal(Engine.addPlace(null, {}).ok, false);
+});
+
+// ── The crew's factions and clocks (Decisions 244–245) ──────────────────────
+const factionTable = () => { const t = Engine.newTable("F"); const bob = Engine.addCastMember(t, { name: "Bob" }).id; return { t, bob }; };
+
+test("244: addFaction from a gazetteer faction or power takes its name and Territory; anything else is refused", () => {
+  const { t } = factionTable();
+  const e = Engine.addFaction(t, { from: "eclipse" });
+  assert.ok(e.ok && /^FA-[0-9A-HJKMNP-TV-Z]{8}$/.test(e.id));
+  const f = id => t.factions.find(x => x.id === id);
+  eq([f(e.id).from, f(e.id).territory, f(e.id).type, f(e.id).stance, f(e.id).attention], [{ kind: "gazetteer", id: "eclipse", name: "Eclipse" }, "central-city", null, null, null]);
+  const power = Engine.gazetteer().powers.flatMap(g => g.entries)[0];
+  const p = Engine.addFaction(t, { from: power.id });
+  assert.ok(p.ok);
+  eq([f(p.id).territory, f(p.id).from.id], [null, power.id]);
+  for (const from of ["central-park", "central-city", "thin-places", "nowhere", 5, {}, [], "__proto__"]) {
+    const n = t.factions.length;
+    assert.equal(Engine.addFaction(t, { from }).ok, false, String(from));
+    assert.equal(t.factions.length, n);
+  }
+  const typed = Engine.addFaction(t, { name: "Vipers", type: "gang", territory: "north-quarter", base: "A garage", stance: -1, attention: "aware", tippingAgainst: ["x"] });
+  eq([f(typed.id).name, f(typed.id).type, f(typed.id).territory, f(typed.id).base, f(typed.id).stance, f(typed.id).attention, f(typed.id).tippingAgainst], ["Vipers", "gang", "north-quarter", "A garage", -1, "aware", ["x"]]);
+  assert.equal(t.factions[0].id, typed.id, "unshifted: newest first");
+  assert.equal(Engine.addFaction(null, {}).ok, false);
+});
+
+test("244: the type, stance and attention ids are frozen", () => {
+  // These are written to .shadows-table.json files. A label may change; these never do.
+  eq(Engine.FACTION_TYPES, ["gang", "corp", "government", "cult", "collective", "other"]);
+  eq(Engine.FACTION_ATTENTION, ["neutral", "aware", "active"]);
+  eq(Engine.FACTION_STANCES, [-2, -1, 0, 1, 2]);
+  eq(Engine.FACTION_FROM_KINDS, ["faction", "power"]);
+  const base = Engine.newTable("G");
+  const mk = x => ({ id: "FA-AAAAAAAA", name: "x", ...x });
+  const gate = x => Engine.migrateTable({ ...plain(base), factions: [mk(x)] }).factions[0];
+  for (const v of ["hostile", "Gang", ["gang"], 5, {}, null]) assert.equal(gate({ type: v }).type, null, JSON.stringify(v));
+  for (const v of [3, -3, 1.5, "1", "x", [], {}, null, true, 1e9]) assert.equal(gate({ stance: v }).stance, null, JSON.stringify(v));
+  for (const v of ["hostile", "Aware", ["aware"], 1, null]) assert.equal(gate({ attention: v }).attention, null, JSON.stringify(v));
+  for (const v of Engine.FACTION_TYPES) assert.equal(gate({ type: v }).type, v);
+  for (const v of [-2, -1, 0, 1, 2]) assert.equal(gate({ stance: v }).stance, v);
+  for (const v of ["neutral", "aware", "active"]) assert.equal(gate({ attention: v }).attention, v);
+  // the writers gate the same way
+  const { t } = factionTable();
+  const id = Engine.addFaction(t, { name: "A" }).id;
+  Engine.editFaction(t, id, { type: "gang", stance: 2, attention: "active" });
+  eq([t.factions[0].type, t.factions[0].stance, t.factions[0].attention], ["gang", 2, "active"]);
+  Engine.editFaction(t, id, { type: "hostile", stance: 3, attention: "hostile" });
+  eq([t.factions[0].type, t.factions[0].stance, t.factions[0].attention], [null, null, null]);
+});
+
+test("244: factionTitle reads the typed name, then the entry's, then the kept one, then Unnamed faction", () => {
+  const { t } = factionTable();
+  const id = Engine.addFaction(t, { from: "eclipse" }).id;
+  const f = () => t.factions.find(x => x.id === id);
+  assert.equal(Engine.factionTitle(t, f()), "Eclipse");
+  Engine.editFaction(t, id, { name: "The Eclipse Gang" });
+  assert.equal(Engine.factionTitle(t, f()), "The Eclipse Gang");
+  Engine.editFaction(t, id, { name: "  " });
+  f().from = { kind: "gazetteer", id: "a-newer-entry", name: "Kept" };
+  assert.equal(Engine.factionTitle(t, f()), "Kept");
+  f().from = null;
+  assert.equal(Engine.factionTitle(t, f()), "Unnamed faction");
+  for (const x of [null, undefined, 5, "x", [], {}, { name: 5 }]) assert.equal(Engine.factionTitle(t, x), "Unnamed faction");
+});
+
+test("244: a key NPC is a cast link; removing the member keeps their name, and undo restores the link", () => {
+  const { t, bob } = factionTable();
+  const blank = Engine.addCastMember(t, { name: "" }).id;
+  const id = Engine.addFaction(t, { from: "eclipse" }).id;
+  assert.ok(Engine.editFaction(t, id, { addKey: bob }).ok);
+  assert.ok(Engine.editFaction(t, id, { addKey: blank }).ok);
+  assert.ok(Engine.editFaction(t, id, { addKey: bob }).ok, "twice is once");
+  assert.equal(t.factions[0].keyNpcs.length, 2);
+  assert.equal(Engine.editFaction(t, id, { addKey: "C-AAAAAAAA" }).ok, false, "only a member on the table");
+  assert.equal(Engine.editFaction(t, id, { addKey: "__proto__" }).ok, false);
+  eq(Engine.linkName(t, t.factions[0].keyNpcs[0]), { name: "Bob", gone: false });
+  const base = plain(t);
+  const r = recorded(t, () => assert.ok(Engine.removeCastMember(t, bob).ok));
+  assert.ok(r.ok);
+  eq(t.factions[0].keyNpcs[0], { kind: "cast", id: bob, name: "Bob" });
+  eq(Engine.linkName(t, t.factions[0].keyNpcs[0]), { name: "Bob", gone: true });
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+  eq(Engine.linkName(t, t.factions[0].keyNpcs[0]), { name: "Bob", gone: false });
+  Engine.removeCastMember(t, blank);
+  eq(t.factions[0].keyNpcs[1], { kind: "cast", id: blank }, "a blank name leaves no name");
+  eq(Engine.linkName(t, t.factions[0].keyNpcs[1]), { name: "Someone removed", gone: true });
+  Engine.editFaction(t, id, { removeKey: bob });
+  assert.equal(t.factions[0].keyNpcs.length, 1);
+});
+
+test("244: Tied by affiliation reads the cast, folded, and stores nothing", () => {
+  const { t, bob } = factionTable();
+  Engine.editCastMember(t, Engine.addCastMember(t, { name: "Ann" }).id, { affiliations: ["ECLIPSE"] });
+  Engine.editCastMember(t, Engine.addCastMember(t, { name: "Cy" }).id, { affiliations: ["Eclipse’s"] });
+  Engine.editCastMember(t, bob, { affiliations: ["eclipse"] });
+  const id = Engine.addFaction(t, { from: "eclipse" }).id;
+  eq(Engine.factionAffiliated(t, id).map(n => n.name), ["Ann", "Bob"]);
+  Engine.editFaction(t, id, { addKey: bob });
+  eq(Engine.factionAffiliated(t, id).map(n => n.name), ["Ann"], "a key NPC isn't listed twice");
+  const before = plain(t);
+  Engine.factionAffiliated(t, id);
+  eq(t, before, "the read writes nothing");
+  assert.deepEqual(Object.keys(t.factions[0]).sort(), ["attention", "base", "created", "from", "id", "keyNpcs", "name", "notes", "reach", "stance", "territory", "tippingAgainst", "tippingFor", "type", "updated", "wants"]);
+  eq(Engine.factionAffiliated(t, "FA-AAAAAAAA"), []);
+});
+
+test("244: Find finds a faction by any field", () => {
+  const { t, bob } = factionTable();
+  const id = Engine.addFaction(t, { from: "eclipse", type: "gang", base: "Dockside lofts", wants: "the harbour", reach: "muscle", tippingFor: ["pays them"], tippingAgainst: ["the crew talks to NCPD"], notes: "watching" }).id;
+  Engine.editFaction(t, id, { addKey: bob });
+  const find = q => Engine.tableSearch(t, q).filter(h => h.kind === "faction");
+  for (const [q, field] of [["ncpd", "Against the crew"], ["bob", "Key NPC"], ["gang", "Type"], ["lofts", "Base"], ["central city", "Territory"], ["muscle", "Reach"], ["harbour", "Wants"], ["pays", "For the crew"], ["watching", "Notes"], ["eclipse", "Name"]]) {
+    const h = find(q);
+    assert.equal(h.length, 1, q);
+    assert.equal(h[0].id, id);
+    assert.equal(h[0].field, field, q);
+    assert.equal(h[0].title, "Eclipse");
+  }
+  eq(find("zzzz"), []);
+});
+
+test("244: the gate types factions and converts nothing", () => {
+  const base = Engine.newTable("G");
+  const bob = Engine.addCastMember(base, { name: "Bob" }).id;
+  Engine.editCastMember(base, bob, { affiliations: ["Eclipse"] });
+  const raw = [
+    null, 5, "x", [],
+    { id: "FA-AAAAAAAA", name: "A", base: 5, wants: 7, reach: null, notes: {}, type: "gang", territory: "central-city", stance: 2, attention: "active",
+      from: { kind: "gazetteer", id: "eclipse", name: "Eclipse" }, keyNpcs: [{ kind: "cast", id: bob }, { kind: "place", id: "PL-AAAAAAAA" }, { kind: "cast", id: "C-AAAAAAAA", name: "Gone" }, [], "x", { kind: "cast", id: bob, name: 7 }],
+      tippingFor: ["a", 5, null, "", { x: 1 }], tippingAgainst: "single" },
+    { id: "FA-AAAAAAAA", name: "Repeat" },
+    { id: "__proto__", name: "Proto" },
+    { id: "FA-BBBBBBBB", name: 7, from: { kind: "place", id: "central-park" }, type: ["gang"], territory: ["x"], keyNpcs: "x", extra: 1 },
+    { id: "FA-CCCCCCCC", from: { kind: "gazetteer", id: "Not An Id", name: 5 } },
+  ];
+  const f = Engine.migrateTable({ ...plain(base), factions: raw });
+  assert.equal(f.factions.length, 5, "junk records are dropped");
+  assert.equal(new Set(f.factions.map(x => x.id)).size, 5);
+  assert.ok(f.factions.every(x => /^FA-[0-9A-HJKMNP-TV-Z]{8}$/.test(x.id)));
+  const a = f.factions[0];
+  eq([a.base, a.wants, a.reach, a.notes], ["", "", "", ""]);
+  eq([a.type, a.territory, a.stance, a.attention, a.from], ["gang", "central-city", 2, "active", { kind: "gazetteer", id: "eclipse", name: "Eclipse" }]);
+  eq(a.keyNpcs, [{ kind: "cast", id: bob }, { kind: "cast", id: "C-AAAAAAAA", name: "Gone" }, { kind: "cast", id: bob }], "a link to nobody is kept; a place-kind link is no link");
+  eq(a.tippingFor, ["a", ""], "strings only; a blank row is kept");
+  eq(a.tippingAgainst, ["single"]);
+  assert.notEqual(f.factions[1].id, "FA-AAAAAAAA", "a repeated id is remade");
+  assert.notEqual(f.factions[2].id, "__proto__");
+  eq([f.factions[3].name, f.factions[3].from, f.factions[3].type, f.factions[3].territory, f.factions[3].keyNpcs, f.factions[3].extra], ["", null, null, null, [], 1]);
+  assert.equal(f.factions[4].from, null);
+  assert.equal(({}).polluted, undefined);
+  // a 0.14 table loads with factions and clocks [], every affiliation untouched
+  const old = plain(base);
+  old.meta.tableSchemaVersion = "0.14";
+  old.factions = "x"; old.clocks = 5;
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  eq([m.factions, m.clocks], [[], []]);
+  eq(m.cast[0].affiliations, ["Eclipse"]);
+  // constraint 8: new, add, migrate round-trips
+  const r = Engine.newTable("R");
+  const fid = Engine.addFaction(r, { from: "eclipse", type: "cult", stance: 1, tippingFor: ["x"] }).id;
+  Engine.editFaction(r, fid, { addKey: Engine.addCastMember(r, { name: "B" }).id });
+  Engine.addClock(r, { on: { kind: "faction", id: fid }, name: "Heat", segments: 6, filled: 2, advances: "a", whenFull: "b" });
+  eq(Engine.migrateTable(r), r);
+  eq([Engine.migrateTable(Engine.newTable("N")).factions, Engine.migrateTable(Engine.newTable("N")).clocks], [[], []]);
+});
+
+test("244: the new faction readers are total on junk", () => {
+  for (const t of [null, undefined, 5, "x", [], {}, { factions: "x", clocks: "x", cast: 5 }, { factions: [null, 3, "x", { name: 5, keyNpcs: 7 }], clocks: [null, { on: 5 }] }]) {
+    assert.ok(Array.isArray(Engine.factionList(t)));
+    assert.ok(Array.isArray(Engine.factionList(t, { q: "x" })));
+    assert.ok(Array.isArray(Engine.factionsKeyFor(t, "C-AAAAAAAA")));
+    assert.ok(Array.isArray(Engine.factionAffiliated(t, "FA-AAAAAAAA")));
+    assert.ok(Array.isArray(Engine.clocksOn(t, { kind: "faction", id: "FA-AAAAAAAA" })));
+    assert.ok(Array.isArray(Engine.tableSearch(t, "ab")));
+    for (const bad of [null, 5, "x", {}, []]) {
+      assert.ok(Array.isArray(Engine.clocksOn(t, bad)));
+      assert.equal(Engine.editFaction(t, bad, {}).ok, false);
+      assert.equal(Engine.removeFaction(t, bad).ok, false);
+      assert.equal(Engine.editClock(t, bad, {}).ok, false);
+      assert.equal(Engine.removeClock(t, bad).ok, false);
+    }
+  }
+  assert.equal(Engine.addClock(null, {}).ok, false);
+});
+
+test("245: a clock's segments are 2 to 12 and filled stays inside them", () => {
+  const { t } = factionTable();
+  const fid = Engine.addFaction(t, { name: "A" }).id;
+  const on = { kind: "faction", id: fid };
+  const gate = x => Engine.migrateTable({ ...plain(t), clocks: [{ id: "CK-AAAAAAAA", on, ...x }] }).clocks[0];
+  for (const [s, want] of [[1, 4], [13, 4], ["6", 6], [2, 2], [12, 12], [3.5, 4], ["1e9", 4], [{}, 4], [null, 4], [undefined, 4]]) assert.equal(gate({ segments: s }).segments, want, JSON.stringify(s));
+  for (const [fl, want] of [[-1, 0], [9, 4], [2, 2], ["3", 3], [{}, 0], [1.5, 0], [null, 0]]) assert.equal(gate({ segments: 4, filled: fl }).filled, want, JSON.stringify(fl));
+  const c = Engine.addClock(t, { on, name: "Heat", segments: 99, filled: 99 }).id;
+  eq([t.clocks[0].segments, t.clocks[0].filled], [4, 4]);
+  Engine.editClock(t, c, { segments: 3 });
+  eq([t.clocks[0].segments, t.clocks[0].filled], [3, 3], "shrinking pulls filled in");
+  Engine.editClock(t, c, { filled: 99 });
+  assert.equal(t.clocks[0].filled, 3);
+  Engine.editClock(t, c, { filled: -5 });
+  assert.equal(t.clocks[0].filled, 0);
+  Engine.editClock(t, c, { segments: 12, filled: 7 });
+  eq([t.clocks[0].segments, t.clocks[0].filled], [12, 7]);
+  Engine.editClock(t, c, { segments: 1 });
+  eq([t.clocks[0].segments, t.clocks[0].filled], [4, 4]);
+});
+
+test("245: a clock is owned by a faction; removing the faction removes its clocks, and one undo restores both", () => {
+  const { t } = factionTable();
+  const fid = Engine.addFaction(t, { from: "eclipse" }).id;
+  const other = Engine.addFaction(t, { name: "Other" }).id;
+  const on = { kind: "faction", id: fid };
+  Engine.addClock(t, { on, name: "One" }); Engine.addClock(t, { on, name: "Two" });
+  Engine.addClock(t, { on: { kind: "faction", id: other }, name: "Theirs" });
+  eq(Engine.clocksOn(t, on).map(c => c.name), ["One", "Two"], "oldest first");
+  const base = plain(t);
+  const r = recorded(t, () => assert.ok(Engine.removeFaction(t, fid).ok));
+  assert.equal(r.entry.label, "Removed Eclipse");
+  eq(t.clocks.map(c => c.name), ["Theirs"]);
+  assert.equal(t.audit.length, 1, "one entry covers its clocks");
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+  eq(Engine.clocksOn(t, on).map(c => c.name), ["One", "Two"]);
+  assert.equal(Engine.removeClock(t, t.clocks[0].id).ok, true);
+  assert.equal(Engine.removeClock(t, "CK-AAAAAAAA").ok, false);
+});
+
+test("245: addClock refuses an owner that isn't a faction on the table", () => {
+  const { t, bob } = factionTable();
+  const fid = Engine.addFaction(t, { name: "A" }).id;
+  for (const on of [null, undefined, {}, { kind: "faction", id: "FA-AAAAAAAA" }, { kind: "place", id: fid }, { kind: "cast", id: bob }, fid, [], 5, { kind: "faction", id: "__proto__" }]) {
+    assert.equal(Engine.addClock(t, { on }).ok, false, JSON.stringify(on));
+  }
+  assert.equal(t.clocks.length, 0);
+  assert.ok(Engine.addClock(t, { on: { kind: "faction", id: fid } }).ok);
+});
+
+test("245: Find finds a clock by its words and gives its owner", () => {
+  const { t } = factionTable();
+  const fid = Engine.addFaction(t, { from: "eclipse" }).id;
+  const cid = Engine.addClock(t, { on: { kind: "faction", id: fid }, name: "Eclipse notices", advances: "each job in Metro Core", whenFull: "they send someone" }).id;
+  const orphan = plain(t); orphan.clocks.push({ id: "CK-BBBBBBBB", name: "Lost", on: { kind: "faction", id: "FA-AAAAAAAA" } });
+  const h = Engine.tableSearch(t, "send someone").filter(x => x.kind === "clock");
+  eq(h.map(x => [x.id, x.field, x.title, x.owner]), [[cid, "When full", "Eclipse notices", fid]]);
+  eq(Engine.tableSearch(t, "metro core").filter(x => x.kind === "clock").map(x => x.field), ["Advances"]);
+  eq(Engine.tableSearch(orphan, "lost").filter(x => x.kind === "clock"), [], "a clock with no faction on the table is shown nowhere");
+});
+
+test("245: the activity log names a clock and a faction, and a crafted op on them is gated like any record's", () => {
+  const { t } = factionTable();
+  let id, cid;
+  assert.equal(recorded(t, () => { id = Engine.addFaction(t, { from: "eclipse" }).id; }).entry.label, "Added Eclipse");
+  assert.equal(recorded(t, () => { cid = Engine.addClock(t, { on: { kind: "faction", id }, name: "Eclipse notices the crew" }).id; }).entry.label, "Added Eclipse notices the crew");
+  assert.equal(recorded(t, () => Engine.editClock(t, cid, { filled: 1 }), null, { fold: false }).entry.label, "Changed Eclipse notices the crew");
+  assert.equal(recorded(t, () => Engine.editFaction(t, id, { base: "x" }), null, { fold: false }).entry.label, "Changed Eclipse");
+  assert.equal(recorded(t, () => Engine.removeClock(t, cid)).entry.label, "Removed Eclipse notices the crew");
+  assert.ok(Engine.diffTable(t, { ...plain(t), clocks: [{ id: "CK-AAAAAAAA", name: "x" }] }).length > 0, "undo can see a clock");
+  assert.ok(Engine.diffTable(t, { ...plain(t), factions: [{ id: "FA-AAAAAAAA", name: "x" }] }).length > 0, "undo can see a faction");
+  for (let i = 0; i < 5; i++) assert.ok(Engine.undoTableAction(t).ok);
+  eq([t.factions, t.clocks], [[], []]);
+  const mk = (seq, coll) => ({ seq, date: null, label: "x", patch: [{ path: [coll, 0, "name"], type: "scalar", before: "x" }] });
+  const m = Engine.migrateTable({ ...plain(t), audit: [mk(1, "factions"), mk(2, "clocks"), mk(3, "factionz"), mk(4, "clockz")] });
+  eq(m.audit.map(e => e.seq), [1, 2]);
 });

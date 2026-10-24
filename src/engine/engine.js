@@ -5545,6 +5545,8 @@ const Engine = (() => {
   const SESSION_ID_RE = /^SE-[0-9A-HJKMNP-TV-Z]{8}$/;
   const THREAD_ID_RE = /^TH-[0-9A-HJKMNP-TV-Z]{8}$/;
   const PLACE_ID_RE = /^PL-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const FACTION_ID_RE = /^FA-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const CLOCK_ID_RE = /^CK-[0-9A-HJKMNP-TV-Z]{8}$/;
   const GAZETTEER_ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
   const isTableId = v => typeof v==="string" && TABLE_ID_RE.test(v);
   function newTableId(){
@@ -5595,6 +5597,16 @@ const Engine = (() => {
   function newPlaceId(used){
     let id;
     do id = `PL-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newFactionId(used){
+    let id;
+    do id = `FA-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newClockId(used){
+    let id;
+    do id = `CK-${randomChars(8)}`; while (used.has(id));
     return id;
   }
   // A whole number, or null: "6" is 6, and 6.5, {} and "x" are nothing.
@@ -5718,6 +5730,44 @@ const Engine = (() => {
     p.created = _isoOrNull(p.created);
     p.updated = _isoOrNull(p.updated);
   }
+  // A faction and its clocks (Decisions 244–245). The ids below are written to files and never change;
+  // the words a GM reads for them are FACTION_TYPE_LABELS and the UI's.
+  const FACTION_TYPES = ["gang", "corp", "government", "cult", "collective", "other"];
+  const FACTION_TYPE_LABELS = { gang:"Gang", corp:"Corp", government:"Government", cult:"Cult", collective:"Collective", other:"Other" };
+  const FACTION_ATTENTION = ["neutral", "aware", "active"];
+  const FACTION_STANCES = [-2, -1, 0, 1, 2];
+  const FACTION_FROM_KINDS = ["faction", "power"];
+  const CLOCK_SEGMENTS_MIN = 2, CLOCK_SEGMENTS_MAX = 12, CLOCK_SEGMENTS_DEFAULT = 4;
+  const _factionType = v => typeof v==="string" && FACTION_TYPES.includes(v) ? v : null;
+  const _factionAttention = v => typeof v==="string" && FACTION_ATTENTION.includes(v) ? v : null;
+  const _factionStance = v => { const n = typeof v==="string" ? null : _int(v); return n!==null && n>=-2 && n<=2 ? n : null; };
+  const _clockSegments = v => { const n = _int(v); return n!==null && n>=CLOCK_SEGMENTS_MIN && n<=CLOCK_SEGMENTS_MAX ? n : CLOCK_SEGMENTS_DEFAULT; };
+  const _clockFilled = (v, segments) => { const n = _int(v); return n===null ? 0 : Math.max(0, Math.min(segments, n)); };
+  function _faction(f, used){
+    for (const k of ["name", "base", "wants", "reach", "notes"]) f[k] = _str(f[k]);
+    f.from = _gazFrom(f.from);
+    f.type = _factionType(f.type);
+    f.territory = _gazId(f.territory);
+    f.keyNpcs = _castLinks(f.keyNpcs);
+    f.tippingFor = _strList(f.tippingFor);
+    f.tippingAgainst = _strList(f.tippingAgainst);
+    f.stance = _factionStance(f.stance);
+    f.attention = _factionAttention(f.attention);
+    if (!(typeof f.id==="string" && FACTION_ID_RE.test(f.id)) || used.has(f.id)) f.id = newFactionId(used);
+    used.add(f.id);
+    f.created = _isoOrNull(f.created);
+    f.updated = _isoOrNull(f.updated);
+  }
+  function _clock(c, used){
+    for (const k of ["name", "advances", "whenFull"]) c[k] = _str(c[k]);
+    c.segments = _clockSegments(c.segments);
+    c.filled = _clockFilled(c.filled, c.segments);
+    c.on = _isObj(c.on) && c.on.kind==="faction" && typeof c.on.id==="string" && FACTION_ID_RE.test(c.on.id) ? { kind:"faction", id:c.on.id } : null;
+    if (!(typeof c.id==="string" && CLOCK_ID_RE.test(c.id)) || used.has(c.id)) c.id = newClockId(used);
+    used.add(c.id);
+    c.created = _isoOrNull(c.created);
+    c.updated = _isoOrNull(c.updated);
+  }
   // A session (Decision 203): the number is the GM's, the journal is the Campaign
   // Journal's six parts (227). Unknown keys ride along, never read.
   const JOURNAL_PARTS = ["happened","fallout","threads","impact","reflection","seed"];
@@ -5798,12 +5848,12 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.14";
+  const TABLE_SCHEMA_VERSION = "0.15";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[], cast:[], places:[], interactions:[], encounters:[], sessions:[], threads:[], audit:[] };
+             notes:[], cast:[], places:[], factions:[], clocks:[], interactions:[], encounters:[], sessions:[], threads:[], audit:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -5892,6 +5942,11 @@ const Engine = (() => {
       if (!Array.isArray(c.places)) c.places = [];
       for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.place = null;
     }
+    //   Schema 0.15 (Decisions 244–245): a table keeps factions and clocks. Nothing is converted (203).
+    if (typeof arrived!=="string" || _versionNewer("0.15", arrived)){
+      if (!Array.isArray(c.factions)) c.factions = [];
+      if (!Array.isArray(c.clocks)) c.clocks = [];
+    }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -5915,6 +5970,12 @@ const Engine = (() => {
     const usedPlace = new Set();
     c.places = (Array.isArray(c.places) ? c.places : []).filter(_isObj);
     for (const p of c.places) _place(p, usedPlace);
+    const usedFaction = new Set();
+    c.factions = (Array.isArray(c.factions) ? c.factions : []).filter(_isObj);
+    for (const f of c.factions) _faction(f, usedFaction);
+    const usedClock = new Set();
+    c.clocks = (Array.isArray(c.clocks) ? c.clocks : []).filter(_isObj);
+    for (const k of c.clocks) _clock(k, usedClock);
     const usedThread = new Set();
     c.threads = (Array.isArray(c.threads) ? c.threads : []).filter(_isObj);
     for (const x of c.threads) _thread(x, usedThread, usedSession);
@@ -5945,7 +6006,7 @@ const Engine = (() => {
   const TABLE_AUDIT_MAX = 500;            // entries kept; the oldest go first
   const TABLE_FOLD_MS = 5*60*1000;        // typing in one field folds while the last keystroke is this recent
   // The records a table holds, in the order a label names them.
-  const TABLE_RECORDS = ["encounters", "sessions", "cast", "places", "interactions", "threads", "notes"];
+  const TABLE_RECORDS = ["encounters", "sessions", "cast", "places", "factions", "clocks", "interactions", "threads", "notes"];
   const _tableCore = t => { const o = { meta:{ name:_isObj(t) && _isObj(t.meta) ? t.meta.name : undefined } };
     for (const k of TABLE_RECORDS) o[k] = _isObj(t) ? t[k] : undefined; return o; };
   // The ops between two tables. Only the records and the table's name: the
@@ -5960,6 +6021,8 @@ const Engine = (() => {
     : coll==="sessions" ? sessionTitle(r)
     : coll==="encounters" ? encounterTitle(r)
     : coll==="places" ? placeTitle(null, r)
+    : coll==="factions" ? factionTitle(null, r)
+    : coll==="clocks" ? (_str(r.name).trim() || "a clock")
     : coll==="threads" ? (_str(r.title).trim() || "Untitled")
     : coll==="notes" ? (_str(r.title).trim() || "a note")
     : "a line";
@@ -5993,6 +6056,7 @@ const Engine = (() => {
       }
       // An add or a remove names only what came and went: the lines a removal renames are collateral.
       const came = [], changed = [];
+      const goneFactions = new Set();
       for (const coll of TABLE_RECORDS){
         if (!touched.has(coll)) continue;
         const was = new Map(), now = new Set();
@@ -6003,7 +6067,12 @@ const Engine = (() => {
           if (!was.has(r.id)) came.push(_recLabel("Added", coll, r));
           else if (!_eq(was.get(r.id), r)) changed.push(_recLabel("Changed", coll, was.get(r.id)));
         }
-        for (const [id, r] of was) if (!now.has(id)) came.push(_recLabel("Removed", coll, r));
+        // A faction's removal names the faction; the clocks that went with it are collateral (245).
+        for (const [id, r] of was) if (!now.has(id)){
+          if (coll==="factions") goneFactions.add(id);
+          if (coll==="clocks" && _isObj(r.on) && goneFactions.has(r.on.id)) continue;
+          came.push(_recLabel("Removed", coll, r));
+        }
       }
       const found = came.length ? came : changed;
       if (!found.length) return renamed ? "Renamed the table" : fallback;
@@ -6225,6 +6294,7 @@ const Engine = (() => {
         if (_isObj(r.cast) && r.cast.id===id) r.cast.name = name;
         if (_isObj(r.kept) && r.kept.id===id) r.kept.name = name;
       }
+    if (name.trim()) for (const f of _factionRecords(t)) for (const l of (Array.isArray(f.keyNpcs) ? f.keyNpcs : [])) if (_isObj(l) && l.id===id) l.name = name;
     t.cast.splice(i, 1);
     _tableStamp(t);
     return { ok:true };
@@ -6565,6 +6635,153 @@ const Engine = (() => {
     return out;
   }
 
+  // ── Factions and clocks (Decisions 244–245) ─────────────────────────────
+  // A faction is the Faction Tracker worksheet (2644) as typed fields and a stance: nothing derived,
+  // no standing and no score (2410). Who is tied to it by affiliation is read from the cast every time.
+  const _factionRecords = t => Array.isArray(t && t.factions) ? t.factions.filter(_isObj) : [];
+  const _clockRecords = t => Array.isArray(t && t.clocks) ? t.clocks.filter(_isObj) : [];
+  // The typed name, else the entry's (read live), else the name kept when it was copied, else a stand-in.
+  function factionTitle(t, f){
+    try {
+      if (!_isObj(f)) return "Unnamed faction";
+      const typed = _str(f.name).trim();
+      if (typed) return typed;
+      const from = _gazFrom(f.from);
+      const live = from ? _gazName(from.id).trim() : "";
+      return live || (from ? _str(from.name).trim() : "") || "Unnamed faction";
+    } catch (e) { return "Unnamed faction"; }
+  }
+  function addFaction(t, f){
+    f = _isObj(f) ? f : {};
+    if (!_isObj(t)) return { ok:false, why:"That isn't a table." };
+    let from = null, territory = _gazId(f.territory);
+    if (f.from!==undefined && f.from!==null){
+      const e = gazetteerEntry(f.from);
+      if (!e || !FACTION_FROM_KINDS.includes(e.kind)) return { ok:false, why:"No such faction in the city." };
+      from = { kind:"gazetteer", id:e.id, name:_str(e.name) };
+      territory = e.kind==="faction" ? _gazId(e.territory) : null;
+    }
+    if (!Array.isArray(t.factions)) t.factions = [];
+    const now = new Date().toISOString();
+    const r = { id:newFactionId(new Set(t.factions.map(x=>x && x.id))), name:_str(f.name), from, type:_factionType(f.type), territory,
+                base:_str(f.base), keyNpcs:[], wants:_str(f.wants), reach:_str(f.reach), tippingFor:_strList(f.tippingFor),
+                tippingAgainst:_strList(f.tippingAgainst), stance:_factionStance(f.stance), attention:_factionAttention(f.attention),
+                notes:_str(f.notes), created:now, updated:now };
+    t.factions.unshift(r);
+    _tableStamp(t);
+    return { ok:true, id:r.id };
+  }
+  // `addKey` and `removeKey` are cast ids: a key NPC is a cast link (178), so only a member on the table can be added.
+  function editFaction(t, id, f){
+    const r = _factionRecords(t).find(x=>x.id===id);
+    if (!r) return { ok:false, why:"No such faction." };
+    if (_isObj(f)){
+      if ("addKey" in f){
+        const n = (Array.isArray(t.cast) ? t.cast : []).find(x=>_isObj(x) && x.id===f.addKey);
+        if (!n) return { ok:false, why:"No such cast member." };
+        if (!Array.isArray(r.keyNpcs)) r.keyNpcs = [];
+        if (!r.keyNpcs.some(l=>_isObj(l) && l.id===n.id)) r.keyNpcs.push({ kind:"cast", id:n.id });
+      }
+      if ("removeKey" in f && Array.isArray(r.keyNpcs)) r.keyNpcs = r.keyNpcs.filter(l=>!(_isObj(l) && l.id===f.removeKey));
+      for (const k of ["name", "base", "wants", "reach", "notes"]) if (k in f) r[k] = _str(f[k]);
+      if ("type" in f) r.type = _factionType(f.type);
+      if ("territory" in f) r.territory = _gazId(f.territory);
+      if ("stance" in f) r.stance = _factionStance(f.stance);
+      if ("attention" in f) r.attention = _factionAttention(f.attention);
+      for (const k of ["tippingFor", "tippingAgainst"]) if (k in f) r[k] = _strList(f[k]);
+    }
+    _tableStamp(t, r);
+    return { ok:true };
+  }
+  // Its clocks go with it (245): a clock means nothing without its owner.
+  function removeFaction(t, id){
+    const i = _isObj(t) && Array.isArray(t.factions) ? t.factions.findIndex(f=>_isObj(f) && f.id===id) : -1;
+    if (i < 0) return { ok:false, why:"No such faction." };
+    t.factions.splice(i, 1);
+    if (Array.isArray(t.clocks)) t.clocks = t.clocks.filter(c=>!(_isObj(c) && _isObj(c.on) && c.on.kind==="faction" && c.on.id===id));
+    _tableStamp(t);
+    return { ok:true };
+  }
+  function _factionFields(t, f){
+    const f2 = [["Name", factionTitle(t, f)], ["Type", FACTION_TYPE_LABELS[f.type] || ""], ["Territory", _gazName(f.territory)], ["Base", _str(f.base)]];
+    for (const l of (Array.isArray(f.keyNpcs) ? f.keyNpcs : [])) if (_isObj(l)) f2.push(["Key NPC", linkName(t, l).name]);
+    f2.push(["Wants", _str(f.wants)], ["Reach", _str(f.reach)]);
+    for (const s of _strList(f.tippingFor)) f2.push(["For the crew", s]);
+    for (const s of _strList(f.tippingAgainst)) f2.push(["Against the crew", s]);
+    f2.push(["Notes", _str(f.notes)]);
+    return f2.filter(e=>e[1]);
+  }
+  // The crew's factions by title, `f.q` read as Find reads its words.
+  function factionList(t, f){
+    try {
+      const words = _foldPlace(_isObj(f) && typeof f.q==="string" ? f.q : "").trim().split(/\s+/).filter(Boolean);
+      const key = r => _fold(factionTitle(t, r));
+      return _factionRecords(t).map((r, i)=>({ r, i, k:key(r) })).sort((a, b)=>a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i).map(e=>e.r).filter(r=>{
+        if (!words.length) return true;
+        const lows = _factionFields(t, r).map(e=>_foldPlace(e[1]));
+        return words.every(w=>lows.some(l=>l.includes(w)));
+      });
+    } catch (e) { return []; }
+  }
+  // The factions that list that member as a key NPC, by title. Read every time (244).
+  function factionsKeyFor(t, castId){
+    try {
+      return factionList(t).filter(f=>(Array.isArray(f.keyNpcs) ? f.keyNpcs : []).some(l=>_isObj(l) && l.id===castId));
+    } catch (e) { return []; }
+  }
+  // The cast whose affiliations, folded (187), equal the faction's title, not already key NPCs, by name. Read, never stored.
+  function factionAffiliated(t, id){
+    try {
+      const f = _factionRecords(t).find(x=>x.id===id);
+      if (!f) return [];
+      const title = _fold(factionTitle(t, f));
+      if (!title) return [];
+      const keys = new Set((Array.isArray(f.keyNpcs) ? f.keyNpcs : []).filter(_isObj).map(l=>l.id));
+      return (Array.isArray(t.cast) ? t.cast : []).filter(n=>_isObj(n) && !keys.has(n.id) && (Array.isArray(n.affiliations) ? n.affiliations : []).some(a=>_fold(a)===title))
+        .map((n, i)=>({ n, i, k:_fold(n.name) })).sort((a, b)=>a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i).map(e=>e.n);
+    } catch (e) { return []; }
+  }
+  // A clock is owned by a faction on the table (S7); other owners come later. Segments 2 to 12, filled inside them.
+  function addClock(t, f){
+    f = _isObj(f) ? f : {};
+    if (!_isObj(t)) return { ok:false, why:"That isn't a table." };
+    const on = _isObj(f.on) && f.on.kind==="faction" ? f.on.id : null;
+    if (!_factionRecords(t).some(x=>x.id===on)) return { ok:false, why:"No such faction." };
+    if (!Array.isArray(t.clocks)) t.clocks = [];
+    const now = new Date().toISOString(), segments = _clockSegments(f.segments);
+    const c = { id:newClockId(new Set(t.clocks.map(x=>x && x.id))), name:_str(f.name), segments, filled:_clockFilled(f.filled, segments),
+                advances:_str(f.advances), whenFull:_str(f.whenFull), on:{ kind:"faction", id:on }, created:now, updated:now };
+    t.clocks.push(c);
+    _tableStamp(t);
+    return { ok:true, id:c.id };
+  }
+  function editClock(t, id, f){
+    const c = _clockRecords(t).find(x=>x.id===id);
+    if (!c) return { ok:false, why:"No such clock." };
+    if (_isObj(f)){
+      for (const k of ["name", "advances", "whenFull"]) if (k in f) c[k] = _str(f[k]);
+      if ("segments" in f) c.segments = _clockSegments(f.segments);
+      if ("filled" in f) c.filled = _clockFilled(f.filled, c.segments);
+      c.filled = _clockFilled(c.filled, c.segments);
+    }
+    _tableStamp(t, c);
+    return { ok:true };
+  }
+  function removeClock(t, id){
+    const i = _isObj(t) && Array.isArray(t.clocks) ? t.clocks.findIndex(c=>_isObj(c) && c.id===id) : -1;
+    if (i < 0) return { ok:false, why:"No such clock." };
+    t.clocks.splice(i, 1);
+    _tableStamp(t);
+    return { ok:true };
+  }
+  // The clocks that link owns, oldest first. Appended in order, so the list's own order is the age.
+  function clocksOn(t, link){
+    try {
+      if (!_isObj(link)) return [];
+      return _clockRecords(t).filter(c=>_isObj(c.on) && c.on.kind===link.kind && c.on.id===link.id);
+    } catch (e) { return []; }
+  }
+
   // ── Sessions and threads (Decisions 203–204) ────────────────────────────
   // A blank number or hours is null, not a refusal; anything else must be right.
   const _blank = v => v===null || v===undefined || (typeof v==="string" && !v.trim());
@@ -6797,6 +7014,13 @@ const Engine = (() => {
       for (const n of _byMade(_notes(t))) test("note", n.id, _str(n.title).trim() || "Untitled note", [["Title", _str(n.title)], ["Note", _str(n.text)]]);
       for (const e of _byMade(_encList(t))) test("encounter", e.id, encounterTitle(e), _encounterFields(t, e));
       for (const p of placeList(t)) test("place", p.id, placeTitle(t, p), _placeFields(t, p));
+      for (const f of factionList(t)) test("faction", f.id, factionTitle(t, f), _factionFields(t, f));
+      for (const c of _clockRecords(t)){
+        const owner = _isObj(c.on) && c.on.kind==="faction" ? _factionRecords(t).find(f=>f.id===c.on.id) : null;
+        if (!owner) continue;
+        test("clock", c.id, _str(c.name).trim() || "A clock", [["Clock", _str(c.name)], ["Advances", _str(c.advances)], ["When full", _str(c.whenFull)]]);
+        if (hits.length && hits[hits.length-1].kind==="clock" && hits[hits.length-1].id===c.id) hits[hits.length-1].owner = owner.id;
+      }
       return hits;
     } catch (e) { return []; }
   }
@@ -8244,6 +8468,9 @@ const Engine = (() => {
     addInteraction, editInteraction, removeInteraction, interactionsFor, interactionSentence, crewView, linkName,
     // Places: the gazetteer the book names, and the crew's own places
     gazetteer, gazetteerEntry, PLACE_FROM_KINDS, addPlace, editPlace, removePlace, placeTitle, placeList, placeLines, placeMet,
+    // Factions and clocks: the Faction Tracker as a record, and the counters a faction owns
+    FACTION_TYPES, FACTION_TYPE_LABELS, FACTION_ATTENTION, FACTION_STANCES, FACTION_FROM_KINDS, addFaction, editFaction, removeFaction, factionTitle, factionList,
+    factionsKeyFor, factionAffiliated, addClock, editClock, removeClock, clocksOn,
     // Encounters: who is in one, whose turn it is, and what is still on them
     addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
