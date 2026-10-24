@@ -6,7 +6,8 @@ as built), §6 *S12* and *Still to build*'s S12b row; the Expansion row of
 242, 243, 245.
 **Status:** **drafted 2026-10-24 by Claude (Opus)**, the S7 reviewer, after
 #240 (S7, Decisions 244–245) merged (`WORK-ORDERS.md`, step 7). **Ken chose
-this session (2026-10-24).** Not yet approved.
+this session (2026-10-24).** **Approved by Ken 2026-10-24** (in the conductor session), as Rule or shape with its one `private/` commit.
+**SQ0–SQ9 answered by Ken 2026-10-24: every default.** He picked SQ0 (*All 15 from the draft*), SQ3 (*One row per character*) and SQ8 (*Only on a place's page*) by name, and the rest as one set (*Every default*). Scott is to be told the pack builds from his draft (SQ0); Ken tells him.
 **Branch:** from `main` at `6661383` or later, PR to `main`, switched off
 (Decision 173). **Plus one commit in `private/`** (the pack builder and the
 pack, Decision 186), whose pointer the PR bumps.
@@ -311,15 +312,15 @@ If the ledger search at build time finds another, stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ0 | **What to build from.** The fifteen profiles are Scott's draft, *not approved* (`private/crb/README.md:86`); only the pilot's Long Stretch is. Build all fifteen from the draft (GM mode is off; the pack rebuilds when Scott revises it, ids kept by name), with `contentVersion` naming the draft? Build the shape and the Long Stretch only? Or hold S12b until Scott approves the profiles? | **All fifteen from the draft**, `contentVersion` *"Site Profiles draft 2026-10-03"*, and Scott told | |
-| SQ1 | **Where profiles live:** in the Threat Codex pack (private, 167), as a `sites` section? The pack's name stays *Threat Codex (human origins)*, which is still true of its entries? | **In the pack; the name unchanged** | |
-| SQ2 | **One profile a place**, picked from every slotted pack's sites (grouped by category). Picking one sets the place's kind of ground to the profile's category. A gazetteer site (Old Pike) never picks its profile for you (203)? | **As written** | |
-| SQ3 | **What a place stores of a track.** *Disposition* and *Amplification*: the level the GM set, or none for the profile's start. *Exposure*: one row per character, a typed name and a count, with the step reached shown beside it. *What comes through*: the table, no roll. Or Exposure as one crew-wide count? | **As written; Exposure per character** | |
-| SQ4 | **A profile's clock** is copied onto the place when it's picked: the GM's to edit, move or delete. Changing or clearing the profile leaves clocks alone, and clears the level and the Exposure rows (they were the old track's). | **As written** | |
-| SQ5 | **The three clocks with a rule** (*Lost only while Hostile*, *Widening resets to 1*, *Ceasefire counts down*): copied as text, and the app runs none of it. The GM taps − to reset. | **As written** | |
-| SQ6 | **Removing a place removes its clocks** (as a faction's do, 245), asks with the count, and one undo restores all of it. Lines keep its name (178). | **As written** | |
-| SQ7 | **A place's page shows the whole profile** under its own heading (Presence, Rules, Ways in, Layering, the track, the clock, Who's already here, Resolution, GM note), read live. When its pack isn't slotted in, the page names the profile and says so, and keeps the level, the rows and the clocks. | **As written** | |
-| SQ8 | **Where else profiles show.** Only on a place's page? Or also a **Sites** view on the Threats tab, to read them without a place? | **Only on a place's page** | |
+| SQ0 | **What to build from.** The fifteen profiles are Scott's draft, *not approved* (`private/crb/README.md:86`); only the pilot's Long Stretch is. Build all fifteen from the draft (GM mode is off; the pack rebuilds when Scott revises it, ids kept by name), with `contentVersion` naming the draft? Build the shape and the Long Stretch only? Or hold S12b until Scott approves the profiles? | **All fifteen from the draft**, `contentVersion` *"Site Profiles draft 2026-10-03"*, and Scott told | Default (Ken, 2026-10-24) |
+| SQ1 | **Where profiles live:** in the Threat Codex pack (private, 167), as a `sites` section? The pack's name stays *Threat Codex (human origins)*, which is still true of its entries? | **In the pack; the name unchanged** | Default (Ken, 2026-10-24) |
+| SQ2 | **One profile a place**, picked from every slotted pack's sites (grouped by category). Picking one sets the place's kind of ground to the profile's category. A gazetteer site (Old Pike) never picks its profile for you (203)? | **As written** | Default (Ken, 2026-10-24) |
+| SQ3 | **What a place stores of a track.** *Disposition* and *Amplification*: the level the GM set, or none for the profile's start. *Exposure*: one row per character, a typed name and a count, with the step reached shown beside it. *What comes through*: the table, no roll. Or Exposure as one crew-wide count? | **As written; Exposure per character** | Default (Ken, 2026-10-24) |
+| SQ4 | **A profile's clock** is copied onto the place when it's picked: the GM's to edit, move or delete. Changing or clearing the profile leaves clocks alone, and clears the level and the Exposure rows (they were the old track's). | **As written** | Default (Ken, 2026-10-24) |
+| SQ5 | **The three clocks with a rule** (*Lost only while Hostile*, *Widening resets to 1*, *Ceasefire counts down*): copied as text, and the app runs none of it. The GM taps − to reset. | **As written** | Default (Ken, 2026-10-24) |
+| SQ6 | **Removing a place removes its clocks** (as a faction's do, 245), asks with the count, and one undo restores all of it. Lines keep its name (178). | **As written** | Default (Ken, 2026-10-24) |
+| SQ7 | **A place's page shows the whole profile** under its own heading (Presence, Rules, Ways in, Layering, the track, the clock, Who's already here, Resolution, GM note), read live. When its pack isn't slotted in, the page names the profile and says so, and keeps the level, the rows and the clocks. | **As written** | Default (Ken, 2026-10-24) |
+| SQ8 | **Where else profiles show.** Only on a place's page? Or also a **Sites** view on the Threats tab, to read them without a place? | **Only on a place's page** | Default (Ken, 2026-10-24) |
 | SQ9 | **Any place can own clocks**, with or without a profile (Add a clock on every place's page)? Or only a place with a profile? | **Any place** | |
 
 ## 5. The assumption sweep
