@@ -1847,6 +1847,8 @@ function loadoutAddHtml(kind){
 // holds the row objects open this visit, so it follows a row when one above
 // it goes, and a fresh S (another character, a reload) folds every named row.
 // A row drawn open stays open until Done, so naming it doesn't fold it away.
+// An undo replaces the rows with clones (diffChar's same-length "set"), so
+// open rows fold, the way a reload folds them (Ken, 2026-10-23).
 function loOpen(e){
   if (!e || typeof e!=="object") return true;
   if (!S.loOpen) S.loOpen = new WeakSet();
@@ -3923,8 +3925,14 @@ function bindSheet(){
     S.loOpen.add(e); renderMain();
     takeFocus(document.querySelector(loFirst(kind, i)));
   });
+  // An armor field commits on change, which re-renders the card under the
+  // pointer and eats Done's click. So the press keeps focus in the field, and
+  // Done commits the field's edit itself before it folds the row.
+  main.querySelectorAll("[data-lodone]").forEach(b=>b.onmousedown=ev=>ev.preventDefault());
   main.querySelectorAll("[data-lodone]").forEach(b=>b.onclick=()=>{
     const [kind,i]=b.dataset.lodone.split("|"), e=(ch[kind]||[])[Number(i)];
+    const typing = document.activeElement;
+    if (kind==="armor" && typing && typing.matches(`[data-armorfield^="${i}|"]`) && typing.onchange) typing.onchange();
     if (S.loOpen && e && typeof e==="object") S.loOpen.delete(e);
     renderMain();
     takeFocus(document.querySelector(`#main [data-loedit="${kind}|${i}"]`));

@@ -1309,6 +1309,28 @@ test("W70 (sheet): a custom row folds, opens and folds again, and saves nothing"
   plate.value = "Shield"; plate.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   assert.ok(app.$('[data-armorfield="1|name"]'), "naming new armor folded it before Done");
 
+  // Done straight from an armor field it hasn't left: one press keeps focus there, commits the edit once, and folds.
+  const prot = app.$('[data-armorfield="1|prot"]');
+  prot.focus(); prot.value = "1d8";
+  const press = new app.window.MouseEvent("mousedown", { bubbles: true, cancelable: true });
+  app.$('[data-lodone="armor|1"]').dispatchEvent(press);
+  assert.ok(press.defaultPrevented, "pressing Done takes focus out of the field, so the change re-renders under the click");
+  const was = audit();
+  app.click('[data-lodone="armor|1"]');
+  assert.equal(activeChar(app).armor[1].prot, "1d8", "Done dropped the edit it was pressed over");
+  assert.equal(audit(), was + 1, "Done's edit isn't one logged change");
+  assert.equal(app.$('[data-armorfield="1|name"]'), null, "Done didn't fold the armor in one press");
+
+  // An undo puts back copies of the rows, so an open row reads folded after one, without errors.
+  // Ken accepted this: an undo folds open custom rows, the way a reload does.
+  app.click('[data-loedit="weapons|1"]');                       // the revolver
+  const kept = JSON.stringify(activeChar(app).weapons);
+  app.click('[data-fire="1|S"]');
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(JSON.stringify(activeChar(app).weapons), kept, "the undo lost something from the weapons");
+  assert.equal(app.$('[data-cell="weapons|1|name"]'), null, "an undo left a copied row open");
+  assert.deepEqual(app.errors, []);
+
   // The open state follows the row, not its index.
   app.click('[data-loedit="weapons|2"]');                       // Zip Gun
   app.click('[data-lorm="weapons|1"]');                          // the revolver, above it
