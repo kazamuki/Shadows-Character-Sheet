@@ -1,0 +1,4528 @@
+{
+  "meta": {
+    "kind": "shadows-table",
+    "id": "TBL-8E8Z-R2TG-6C8Z",
+    "name": "Dead Air",
+    "tableSchemaVersion": "0.15",
+    "created": "2026-07-18T17:00:00.000Z",
+    "updated": "2026-10-17T23:50:00.000Z"
+  },
+  "audit": [],
+  "notes": [
+    {
+      "id": "N-X61R9SCS",
+      "title": "Campaign pitch: Dead Air",
+      "text": "THE HOOK\nA dead man's last day, recorded on a shard the crew can't hand over. Eleven minutes of dead air at the end of it. Something was listening.\n\nTONE\nCyberpunk-noir with the sound turned down. Paranoia, tabs owed, the Park after dark. Horror in the second act. Violence short and costly. The crew are not heroes; they are people with a package.\n\nSHAPE\nAct 1 (S1 to S3): who wants the shard. Act 2 (S4 to S6): what is on it. Act 3 (S7 on): what to do when it answers.\n\nTHE BIG SECRET\nThe Listener is a Genius Loci in the Phantom Ports, waking. Wren heard it and it learned his voice. His body sat upright because he had been told to wait. See 'The Listener' note.",
+      "session": null,
+      "created": "2026-07-18T18:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "N-2GMB45F3",
+      "title": "Safety and table notes",
+      "text": "Lines: harm to children on screen, sexual violence.\nVeils: torture (fade), the Listener's voice (kept quiet, described not performed).\nJuno's player prefers a slower pace and more NPC conversation. Dex's player likes a good fight every second session. Mara's player likes puzzles and deniable lies.\nCheck-in at the end of S6: everyone good with the horror ramp. Yes.",
+      "session": null,
+      "created": "2026-07-18T18:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "N-D79R2KHY",
+      "title": "The Listener (spoilers)",
+      "text": "WHAT IT IS\nA Genius Loci in the Phantom Ports, a place that woke up. A century of quiet. It listens, repeats, collects voices. Wren was its first conversation in a hundred years.\n\nWHAT IT WANTS\nTo be spoken to. Not to harm. Everyone who speaks becomes a little behind, in how they talk, in how they sleep.\n\nHOW IT SPREADS\nThrough recordings. The shard is a vector; the more it is played the more of it exists elsewhere. The crew should learn this before they sell.\n\nWHAT FENN KNOWS\nShe heard it once, in Maine, thirty years back. Her tape is of that. She does not say so until the shard has been opened in front of her.",
+      "session": "SE-PJB1ZXSS",
+      "created": "2026-07-18T18:00:00.000Z",
+      "updated": "2026-10-17T23:20:00.000Z"
+    },
+    {
+      "id": "N-T9PSS4G7",
+      "title": "House rulings so far",
+      "text": "Wave initiative for three-sided fights. 1 IP per hour played, rounded to the half; Milestones awarded for choices that cost something. Hitting the Park after sunset costs a segment on the Park clock, automatically. Mara's Interface checks against NeuroNet are at +2 TN: their SMARTLink is a tier up.\nDex's moon: tracked by a clock, not a calendar. Roll when the clock fills.",
+      "session": null,
+      "created": "2026-07-18T18:00:00.000Z",
+      "updated": "2026-09-26T23:15:00.000Z"
+    },
+    {
+      "id": "N-DV9PH96S",
+      "title": "Session 6: loose ends",
+      "text": "- Cord: alive, speaking in the Listener's voice. Joss can find him; Teo wants him; the cleaners want him more.\n- Ibarra's invitation (Friday, the Velvet Lung). The crew owes him an answer on Nine.\n- Fenn's tape. She'll lend it if the crew promises to return it.\n- Rook's text. He is watching. He will not shoot at Wharf 17 again.\n- Pearl is packing. Joss is not telling her where she's going.\n- Dex's moon clock is at 6 of 8. S7 needs to hit the clinic once.",
+      "session": "SE-PJB1ZXSS",
+      "created": "2026-07-18T18:00:00.000Z",
+      "updated": "2026-10-17T23:30:00.000Z"
+    },
+    {
+      "id": "N-ESDRQJYG",
+      "title": "Rumors table (d6, Metro Core)",
+      "text": "1. The Park's Ramble has more trees at night than in the day.\n2. NeuroNet stopped the Gateway night shift last month; no reason given.\n3. A man in a gray coat has been seen at three different hotels with the same book.\n4. Eclipse is hiring bodyguards for a man who doesn't leave the Velvet Lung.\n5. Pier 9's tug goes out every morning and comes back with a different crew.\n6. Someone has been leaving cassette tapes in the lockers of Ranger Station Nine.",
+      "session": null,
+      "created": "2026-07-18T18:00:00.000Z",
+      "updated": "2026-08-22T23:00:00.000Z"
+    },
+    {
+      "id": "N-NYC2N9ZW",
+      "title": "Session 4: what the crew told Oyelaran",
+      "text": "They told him they found Wren's file in a cleaning cart. Oyelaran did not write that down. He knows the story is false and the cart is real; he said he could live with it.",
+      "session": "SE-FC4H16S3",
+      "created": "2026-07-18T18:00:00.000Z",
+      "updated": "2026-09-12T23:10:00.000Z"
+    }
+  ],
+  "cast": [
+    {
+      "id": "C-3FPYKJT4",
+      "name": "Pearl Delacroix",
+      "flavor": "Runs the Metro Core fixer's table out of a laundromat that has never once been busy.",
+      "description": "Sixty-something, silver braids pinned up with chopsticks, reading glasses on a chain. Folds towels while she talks business. Knows who is owed what in four Zones and charges for forgetting it.",
+      "origin": "Human",
+      "npcRoles": [
+        "Fixer",
+        "Patron"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "The Night Shift"
+      ],
+      "tier": 2,
+      "motivation": "Keep the table running and the dryers warm. She wants Wren's shard gone from her shop before someone burns the shop to be rid of it.",
+      "resources": "Suds & Duds, the back-room safe, a Rolodex that is actually a Rolodex, three kids who run messages.",
+      "line": "Will not sell out a client who paid in full. Will sell out one who did not.",
+      "ifPushed": "Takes her name off the job, takes the crew's name off the list, and does both politely.",
+      "gmNote": "She did not know what was on the shard. She suspects now, after S4, and has been quietly moving things out of the safe. Her fear is real: she is the weak point the NeuroNet cleanup finds first.",
+      "status": "alive",
+      "block": null,
+      "ally": true,
+      "from": null,
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-R79SH4JZ",
+      "name": "Tobias Wren",
+      "flavor": "A NeuroNet routing engineer whose last good day is on a memory shard.",
+      "description": "Thirty-four, soft hands, a wedding ring on a chain because the company bans visible jewelry. Appears only as recordings until the Ports, where the crew finds what is left.",
+      "origin": "Human",
+      "npcRoles": [
+        "Victim",
+        "Witness"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "NeuroNet"
+      ],
+      "tier": 1,
+      "motivation": "Was trying to get one honest copy of what he heard out of the building. Did.",
+      "resources": "None now. His access badge is in Bracken's desk; his shard is in the crew's.",
+      "line": "Did nothing wrong but listen.",
+      "ifPushed": "He is past pushing.",
+      "gmNote": "Found in the Phantom Ports in S5, sitting upright against a bollard, headphones on, no marks. The coroner's report (Oyelaran has a copy) says 'natural causes' and nothing else. The recording's eleven minutes of silence is what he heard.",
+      "status": "dead",
+      "block": null,
+      "ally": false,
+      "from": null,
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-8FGP6RCT",
+      "name": "Lt. Caz Ibarra",
+      "flavor": "Eclipse's man in Metro Core who prefers a long dinner to a short fight.",
+      "description": "Forties, well-fed, immaculate longcoat, a pocket square the color of a fresh bruise. Chooses the restaurant, orders for the table, and then names a price. He is polite until the check arrives.",
+      "origin": "Human",
+      "npcRoles": [
+        "Boss",
+        "Broker"
+      ],
+      "enemyRole": "Lieutenant",
+      "affiliations": [
+        "Eclipse"
+      ],
+      "tier": 3,
+      "motivation": "Eclipse paid for the shard's contents already. Ibarra has until the quarter closes to deliver, or his place at the table goes to Nine.",
+      "resources": "A dozen street soldiers, the Velvet Lung, three owed favors in the NCPD, a Hammerlock armorer on retainer.",
+      "line": "Will not kill a child or a priest. Everything else is on the menu.",
+      "ifPushed": "Sends flowers. Then sends Nine. Then, if the crew is lucky, sends nothing and lets them wonder.",
+      "gmNote": "His clock is 'Ibarra's patience'. When it fills he does not attack the crew; he burns Suds & Duds with Pearl in it and lets them find out from the news. He would be relieved to be talked out of this.",
+      "status": "alive",
+      "block": {
+        "stats": {
+          "BOD": 5,
+          "REF": 6,
+          "MOB": 5,
+          "INT": 5,
+          "TECH": 3,
+          "COOL": 7,
+          "MAG": 0,
+          "EMP": 4
+        },
+        "authored": {
+          "TOL": 3,
+          "WILL": 4
+        },
+        "skills": [
+          {
+            "skill": "handguns",
+            "name": "Handguns",
+            "total": 11
+          },
+          {
+            "skill": "intimidation",
+            "name": "Intimidation",
+            "total": 12
+          },
+          {
+            "skill": "streetwise",
+            "name": "Streetwise",
+            "total": 11
+          },
+          {
+            "skill": "tactics",
+            "name": "Tactics",
+            "total": 9
+          },
+          {
+            "skill": "dodge",
+            "name": "Dodge",
+            "total": 9
+          }
+        ],
+        "armor": [
+          "Eclipse longcoat (weave, PROT 4)"
+        ],
+        "gear": [
+          "Custom .45 with a silver-chased slide",
+          "Two phones, one real",
+          "Velvet Lung master key"
+        ],
+        "traits": [
+          {
+            "name": "Never raises his voice",
+            "text": "Gets quieter as he gets angrier. At a whisper, someone is already dead."
+          },
+          {
+            "name": "Owed favors",
+            "text": "Three people in Metro Core owe him. He cashes one a session, in the scene he chooses."
+          }
+        ]
+      },
+      "ally": false,
+      "from": null,
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-PRKFTH3Z",
+      "name": "Ines \"Nine\" Baptiste",
+      "flavor": "Ibarra's right hand and left fist. Counts her fights, hence the name.",
+      "description": "Twenties, shaved sides, a lacquered baton, knuckles that have healed wrong so many times they are architecture. Laughs at the right moments and not at the wrong ones.",
+      "origin": "Human",
+      "npcRoles": [
+        "Enforcer"
+      ],
+      "enemyRole": "Bruiser",
+      "affiliations": [
+        "Eclipse"
+      ],
+      "tier": 2,
+      "motivation": "Wants Ibarra's chair. Was happy to lose the shard job to let him fail.",
+      "resources": "A crew of five, a motorbike she names after ex-lovers, Ibarra's trust, up until it wasn't.",
+      "line": "Never leaves a friend on the floor.",
+      "ifPushed": "Doubles down; cannot back off in front of her crew.",
+      "gmNote": "Died at Pier 9 (S3), shot by Rook's contractors while she was still swinging at Dex. The crew did not kill her; Ibarra thinks they did. That misunderstanding is load-bearing: do not clear it up for free.",
+      "status": "dead",
+      "block": {
+        "stats": {
+          "BOD": 7,
+          "REF": 5,
+          "MOB": 6,
+          "INT": 3,
+          "TECH": 2,
+          "COOL": 5,
+          "MAG": 0,
+          "EMP": 2
+        },
+        "authored": {
+          "TOL": 4,
+          "WILL": 3
+        },
+        "skills": [
+          {
+            "skill": "melee",
+            "name": "Melee",
+            "total": 11
+          },
+          {
+            "skill": "martial-arts",
+            "name": "Martial Arts",
+            "total": 10
+          },
+          {
+            "skill": "athletics",
+            "name": "Athletics",
+            "total": 9
+          },
+          {
+            "skill": "intimidation",
+            "name": "Intimidation",
+            "total": 8
+          }
+        ],
+        "armor": [
+          "Ballistic vest (PROT 3)"
+        ],
+        "gear": [
+          "Collapsible baton",
+          "Brass knuckles"
+        ],
+        "traits": [
+          {
+            "name": "Takes it personally",
+            "text": "If a crew member makes it personal, she goes after that one first, tactics be damned."
+          }
+        ]
+      },
+      "ally": false,
+      "from": null,
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-2WD7753T",
+      "name": "Warden Odalys Fenn",
+      "flavor": "A Ranger who talks to the Park as if it could hear her, and has stopped being sure it can't.",
+      "description": "Fifties, weathered, gray-green Parks Service jacket with the patches sewn on by hand. Carries a flashlight longer than her forearm and a rulebook shorter than her patience.",
+      "origin": "Human",
+      "npcRoles": [
+        "Guide",
+        "Ally"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "The Rangers"
+      ],
+      "tier": 2,
+      "motivation": "Keep the Park's other tenants from the crew's trouble. The Park closes at sunset for a reason she cannot put in a report.",
+      "resources": "Ranger Station Nine, two junior wardens, keys to the maintenance tunnels, an old cassette recorder with a very particular tape.",
+      "line": "Will not discuss what the Park is. Will tell you exactly how to be somewhere else at dusk.",
+      "ifPushed": "Closes the Park to the crew, which in practice means the Park opens differently for them.",
+      "gmNote": "She has heard the Listener before, a long time ago, in a different place. She will not say so until the crew has shown her the shard and shown her they are not going to sell it. If she is pushed to a hard no, give the crew the tape anyway.",
+      "status": "alive",
+      "block": null,
+      "ally": true,
+      "from": null,
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-9FSMVHZH",
+      "name": "Silas Bracken",
+      "flavor": "Director of Security Operations at NeuroNet, the kind of man whose title is a euphemism.",
+      "description": "Late forties, a face that was handsome until it got practiced. Never in the same room as the thing he orders done. Speaks in questions that are instructions.",
+      "origin": "Human",
+      "npcRoles": [
+        "Corporate",
+        "Antagonist"
+      ],
+      "enemyRole": "Mastermind",
+      "affiliations": [
+        "NeuroNet"
+      ],
+      "tier": 4,
+      "motivation": "Close the Wren file before the board hears of it. Genuinely does not know what Wren heard. That is what frightens him.",
+      "resources": "The Gateway hub, a Volkov retainer, a Reclaim Solutions cleanup crew on speed-dial, 9,000 employees who will say whatever HR tells them to.",
+      "line": "Will not put anything in writing. Will not be in a room where it happens.",
+      "ifPushed": "Escalates by outsourcing, never by showing up. The crew will not see his face before S8.",
+      "gmNote": "Hired Rook in S2. Hired the Devils (indirectly, via Dolly) in S3. His clock is 'The cleanup'. If the crew contacts him first, he will offer a job; the offer is a trap and also a real job.",
+      "status": "alive",
+      "block": {
+        "stats": {
+          "BOD": 4,
+          "REF": 5,
+          "MOB": 4,
+          "INT": 7,
+          "TECH": 7,
+          "COOL": 7,
+          "MAG": 0,
+          "EMP": 4
+        },
+        "authored": {
+          "TOL": 4,
+          "WILL": 5
+        },
+        "skills": [
+          {
+            "skill": "interface",
+            "name": "Interface",
+            "total": 13
+          },
+          {
+            "skill": "security",
+            "name": "Security",
+            "total": 12
+          },
+          {
+            "skill": "persuasion",
+            "name": "Persuasion",
+            "total": 11
+          },
+          {
+            "skill": "deception",
+            "name": "Deception",
+            "total": 12
+          },
+          {
+            "skill": "handguns",
+            "name": "Handguns",
+            "total": 8
+          }
+        ],
+        "armor": [
+          "Suit lined with slashweave (PROT 2)"
+        ],
+        "gear": [
+          "Corporate SMARTLink, three tiers above the crew's",
+          "Panic button wired to a Reclaim Solutions team"
+        ],
+        "traits": [
+          {
+            "name": "Deniable",
+            "text": "Every instruction he gives is also a request. Nothing he says survives a recording."
+          }
+        ]
+      },
+      "ally": false,
+      "from": null,
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-WJ7QJA9N",
+      "name": "Anton Rook",
+      "flavor": "A Volkov contractor with a pleasant voice and an exit already chosen.",
+      "description": "Thirty-eight, medium everything, a runner's build, a Slovak accent he lets show when it helps. Wears the same gray coat in every country. Sends handwritten apologies after the fact.",
+      "origin": "Human",
+      "npcRoles": [
+        "Hitman"
+      ],
+      "enemyRole": "Assassin",
+      "affiliations": [
+        "The Volkov Group"
+      ],
+      "tier": 4,
+      "motivation": "Collect the NeuroNet fee. Has no opinion about the shard and no interest in the crew's survival either way.",
+      "resources": "Six contractors on call, burners in four languages, a Volkov expense account.",
+      "line": "No bystanders, no children, no payments in crypto he cannot spend.",
+      "ifPushed": "Calls it. If the exit is threatened he leaves, and returns on his own schedule.",
+      "gmNote": "Left Pier 9 (S3) and the Park (S2) with the crew alive both times because both times the exit closed first. He respects Mara more than he should, and has said so in writing. His contract is on a clock.",
+      "status": "alive",
+      "block": {
+        "stats": {
+          "BOD": 5,
+          "REF": 8,
+          "MOB": 7,
+          "INT": 6,
+          "TECH": 5,
+          "COOL": 8,
+          "MAG": 0,
+          "EMP": 3
+        },
+        "authored": {
+          "TOL": 4,
+          "WILL": 5
+        },
+        "skills": [
+          {
+            "skill": "rifles",
+            "name": "Rifles",
+            "total": 13
+          },
+          {
+            "skill": "stealth",
+            "name": "Stealth",
+            "total": 12
+          },
+          {
+            "skill": "tracking",
+            "name": "Tracking",
+            "total": 11
+          },
+          {
+            "skill": "demolitions",
+            "name": "Demolitions",
+            "total": 10
+          },
+          {
+            "skill": "combat-sense",
+            "name": "Combat Sense",
+            "total": 11
+          },
+          {
+            "skill": "tactics",
+            "name": "Tactics",
+            "total": 11
+          }
+        ],
+        "armor": [
+          "Volkov plate carrier (PROT 5, ablative)"
+        ],
+        "gear": [
+          "Suppressed rifle",
+          "Two shaped charges",
+          "A burner for each country"
+        ],
+        "traits": [
+          {
+            "name": "Always has an exit",
+            "text": "Rook picks his exit before he picks his firing position, and retreats when it is threatened. He does not die for a contract."
+          },
+          {
+            "name": "The professional",
+            "text": "He will not hurt a bystander and tells the crew so; it is a calling card, not a kindness."
+          }
+        ]
+      },
+      "ally": false,
+      "from": null,
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-80B3JGJH",
+      "name": "Dolores \"Dolly\" Quint",
+      "flavor": "Keeps the Devils' ledgers and its secrets in the same drawer.",
+      "description": "Sixty, frail-looking, cardigan, clip-on reading lenses. Has outlived four bosses and hired the fifth. The most dangerous person on Pier 9 and the only one who never carries a weapon.",
+      "origin": "Human",
+      "npcRoles": [
+        "Broker",
+        "Bookkeeper"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "The Dockside Devils"
+      ],
+      "tier": 2,
+      "motivation": "Whatever keeps the Devils paid by both NeuroNet and TransitCorp. Told Bracken where the shard was headed because Bracken asked politely and paid early.",
+      "resources": "The ledgers, a key to every berth on Pier 9, an unlisted number into NeuroNet's Gateway hub.",
+      "line": "Does not sell people. Sells information about people, which she insists is different.",
+      "ifPushed": "Opens the ledger and shows you what you owe.",
+      "gmNote": "She is the answer to 'who sent the shard to Pearl': her number was on the delivery note. She did not know what was on it either. She will trade that fact for Cord's life, which she thinks the crew can arrange.",
+      "status": "alive",
+      "block": null,
+      "ally": false,
+      "from": null,
+      "created": "2026-08-22T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-T8ERMYV7",
+      "name": "\"Big Teo\" Marchetti",
+      "flavor": "Runs Pier 9 on a handshake and a boat hook.",
+      "description": "Hulking, silver stubble, fisherman's cap, hands like loaded bags of cement. Calls everyone 'friend' and means it, until they aren't.",
+      "origin": "Human",
+      "npcRoles": [
+        "Boss"
+      ],
+      "enemyRole": "Boss",
+      "affiliations": [
+        "The Dockside Devils"
+      ],
+      "tier": 3,
+      "motivation": "Keep both customers paid and neither one aware of the other. Wants nothing to do with whatever is in the Ports.",
+      "resources": "A hundred dockhands, a tug, the right to say no on Pier 9.",
+      "line": "Pay your tab and you are family. Skip it and you are a story.",
+      "ifPushed": "Lets the crew leave. Sends the tab.",
+      "gmNote": "He is why the Devils take no side: the Devils are hiding from the Ports, not from the crew. If asked directly he will say 'the tide comes in on the wrong days' and nothing else.",
+      "status": "alive",
+      "block": {
+        "stats": {
+          "BOD": 8,
+          "REF": 4,
+          "MOB": 3,
+          "INT": 4,
+          "TECH": 2,
+          "COOL": 6,
+          "MAG": 0,
+          "EMP": 5
+        },
+        "authored": {
+          "TOL": 5,
+          "WILL": 4
+        },
+        "skills": [
+          {
+            "skill": "melee",
+            "name": "Melee",
+            "total": 10
+          },
+          {
+            "skill": "intimidation",
+            "name": "Intimidation",
+            "total": 11
+          },
+          {
+            "skill": "persuasion",
+            "name": "Persuasion",
+            "total": 9
+          },
+          {
+            "skill": "streetwise",
+            "name": "Streetwise",
+            "total": 12
+          }
+        ],
+        "armor": [
+          "Oilskin coat over a flak liner (PROT 3)"
+        ],
+        "gear": [
+          "Boat hook",
+          "Revolver, six rounds, five of them blanks"
+        ],
+        "traits": [
+          {
+            "name": "Counts everything",
+            "text": "Knows to the Çredit what each of his people owes him. Pay him in full and he is a gentleman."
+          }
+        ]
+      },
+      "ally": false,
+      "from": null,
+      "created": "2026-08-22T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-1DYS6JFW",
+      "name": "Dr. Imani Achterberg",
+      "flavor": "A street doctor who treats werewolves as patients and everyone else as a surprise.",
+      "description": "Forties, scrubs under a vintage leather coat, two phones, a stethoscope worn as a scarf. Her clinic's waiting room has a sign: 'We Do Not Ask'.",
+      "origin": "Human",
+      "npcRoles": [
+        "Doc",
+        "Ally"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "The Night Shift"
+      ],
+      "tier": 1,
+      "motivation": "Keep Dex stable between moons, and everyone else alive between clinics.",
+      "resources": "The clinic (Techtopia, ground floor), a freezer of blood, a trauma kit fit for a small war.",
+      "line": "Will not treat for pay what she would treat for free; will not treat for free what you could afford.",
+      "ifPushed": "Bills in kind. Always remembers.",
+      "gmNote": "Dex owes her; the debt is a favor and she will cash it once. Likely at the worst moment. Plan for S8.",
+      "status": "alive",
+      "block": null,
+      "ally": true,
+      "from": null,
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-9C62TFXP",
+      "name": "Little Joss",
+      "flavor": "Fourteen, fast, owed money by half of Metro Core.",
+      "description": "Skinny, sneakers worth more than the rest of the outfit, a phone held together with tape and prayer. Runs messages for Pearl and sells what she overhears to anyone else.",
+      "origin": "Human",
+      "npcRoles": [
+        "Runner",
+        "Informant"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "The Night Shift"
+      ],
+      "tier": 1,
+      "motivation": "A way out of Metro Core before it eats her. Likes Mara, has not said so.",
+      "resources": "Every kid courier's network in two Zones, a stash of burner cards, a very good memory.",
+      "line": "Does not sell Pearl. Does not lie to the crew. Will lie to anyone else for a pastry.",
+      "ifPushed": "Vanishes. Comes back with something unasked-for.",
+      "gmNote": "The 'Joss's network' clock is her; it fills when the crew teaches her something and empties when they put her at risk. Bracken's cleanup would take her too. Ibarra would not.",
+      "status": "alive",
+      "block": null,
+      "ally": true,
+      "from": null,
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-33XBN634",
+      "name": "Det. Hal Oyelaran",
+      "flavor": "A tired NCPD detective who has a coroner's report he should not have.",
+      "description": "Fifties, rumpled, a limp he blames on a chair, a mug that says WORLD'S OKAYEST DAD. Lets a lot go and writes it all down.",
+      "origin": "Human",
+      "npcRoles": [
+        "Cop",
+        "Contact"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "NCPD"
+      ],
+      "tier": 2,
+      "motivation": "Close Wren's death honestly, or quietly enough that nobody gets hurt reopening it. Will take either.",
+      "resources": "A badge, a copy of the file, a friend at the morgue, a grudge against Reclaim Solutions.",
+      "line": "Will not frame anyone. Will happily look the other way for ten minutes.",
+      "ifPushed": "Hands over the file, resigns himself, and goes to lunch.",
+      "gmNote": "Owes the crew after S5 (they got him out of a bad stop). Cashes it at the worst time, by being exactly where they need a cop to be.",
+      "status": "alive",
+      "block": null,
+      "ally": false,
+      "from": null,
+      "created": "2026-09-12T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-0NQEQS4J",
+      "name": "Cordell \"Cord\" Hale",
+      "flavor": "A Devils deckhand who talked, then walked, then vanished.",
+      "description": "Twenty-two, scraggly beard, a fresh Devils tattoo he would like to cover. Spoke to the crew on Pier 9 when the shooting started and has been hiding since.",
+      "origin": "Human",
+      "npcRoles": [
+        "Witness",
+        "Defector"
+      ],
+      "enemyRole": "",
+      "affiliations": [
+        "The Dockside Devils"
+      ],
+      "tier": 1,
+      "motivation": "Get out of Gateway alive. Wants to tell someone about the night the Ports 'turned on'.",
+      "resources": "A cousin in Neo Jersey, a stash of Devils cash, a story.",
+      "line": "Won't name Teo. Will name anyone else.",
+      "ifPushed": "Runs. He is good at it.",
+      "gmNote": "Missing since S5. The Devils are looking for him; so are NeuroNet's cleaners. Joss may know where. The thread is 'Find Cord'.",
+      "status": "missing",
+      "block": null,
+      "ally": false,
+      "from": null,
+      "created": "2026-08-22T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "C-ZJMWPBQT",
+      "name": "The Listener",
+      "flavor": "Something in the Phantom Ports that answers when you stop talking.",
+      "description": "A cold spot with a voice and no throat. Appears as stillness; sounds like the second after a radio cuts. It echoes what it hears, a little behind.",
+      "origin": "Unknown",
+      "npcRoles": [
+        "Entity"
+      ],
+      "enemyRole": "Haunt",
+      "affiliations": [],
+      "tier": 5,
+      "motivation": "Unclear. It attends. It collects what is said near it. Wren's shard is a recording of it listening.",
+      "resources": "The Ports, the dead air, whatever it has swallowed from the crews who walked off the site.",
+      "line": "It cannot leave the Ports. Not yet.",
+      "ifPushed": "Pushes back through anyone speaking in the room. Voices stop. People repeat things they never said.",
+      "gmNote": "A Genius Loci that is waking up (see the Ports clock). Not a villain; a listening thing that has been starved of conversation for a century. What it wants is to be spoken to, and what happens when it is is S8's question.",
+      "status": "alive",
+      "block": null,
+      "ally": false,
+      "from": null,
+      "created": "2026-09-12T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    }
+  ],
+  "places": [
+    {
+      "id": "PL-VQ2X0JVF",
+      "name": "Suds & Duds",
+      "from": null,
+      "territory": "central-city",
+      "zone": "metro-core",
+      "district": "Lower Metro",
+      "neighborhood": "Orchard Street",
+      "environment": null,
+      "notes": "Pearl's laundromat. Front room: six working machines and three that have never run. Back room: the table, the safe, the Rolodex, a hotplate. A bell over the door that rings twice for strangers and once for friends. The crew meets here every session. Burned in the Ibarra clock's worst outcome.",
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "PL-C47FG1SP",
+      "name": "Central Park after sunset",
+      "from": {
+        "kind": "gazetteer",
+        "id": "central-park",
+        "name": "Central Park"
+      },
+      "territory": "central-city",
+      "zone": "metro-core",
+      "district": "Midtown",
+      "neighborhood": "The Ramble",
+      "environment": "thin-places",
+      "notes": "The Park closes at sunset for a reason. S2's chase ran the Ramble to Ranger Station Nine. Fenn's maintenance tunnels run below the Boathouse; one of them comes out somewhere it shouldn't.",
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "PL-GK6B18AH",
+      "name": "The Velvet Lung",
+      "from": null,
+      "territory": "central-city",
+      "zone": "metro-core",
+      "district": "Midtown",
+      "neighborhood": "Theater Row",
+      "environment": null,
+      "notes": "Eclipse's front: a jazz club that sells silence by the hour. Ibarra's table is the third booth, facing the door. The house band stops playing when he stands up. S7's planned meeting is here.",
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "PL-3DVFVH6A",
+      "name": "Achterberg's Clinic",
+      "from": null,
+      "territory": "central-city",
+      "zone": "techtopia",
+      "district": "Techtopia",
+      "neighborhood": "The Annex",
+      "environment": null,
+      "notes": "Ground floor of a shuttered CorpTech annex. 'We Do Not Ask' on the door. Dex's recovery between moons. Three beds, a freezer, a poster of a very large dog.",
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "PL-9B5NDBNR",
+      "name": "Pier 9",
+      "from": null,
+      "territory": "daedalus-belt",
+      "zone": "gateway",
+      "district": "Gateway",
+      "neighborhood": "The Waterfront",
+      "environment": "combat-zones",
+      "notes": "Dockside Devils' hall at the end of the pier. A tug, a corrugated hall, tables where tabs are settled. The crew's first Gateway night (S3) went bad here: shooting started in the shadows between containers.",
+      "created": "2026-08-22T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "PL-33M6NH2C",
+      "name": "NeuroNet Gateway Hub",
+      "from": {
+        "kind": "gazetteer",
+        "id": "neuronet",
+        "name": "NeuroNet"
+      },
+      "territory": "daedalus-belt",
+      "zone": "gateway",
+      "district": "Gateway",
+      "neighborhood": "Freight Row",
+      "environment": null,
+      "notes": "A mirrored cube where the routing AI lives. Night shift is six people and forty drones. Wren worked the fourth floor; his desk is still there with his coffee cup. The crew went in on S5 for the logs.",
+      "created": "2026-09-26T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "PL-S7YSSZ92",
+      "name": "The Phantom Ports",
+      "from": {
+        "kind": "gazetteer",
+        "id": "phantom-ports",
+        "name": "The Phantom Ports"
+      },
+      "territory": "daedalus-belt",
+      "zone": "gateway",
+      "district": "Gateway",
+      "neighborhood": "Wharves 14 to 19",
+      "environment": "genius-loci",
+      "notes": "Derelict wharves nobody will touch. A radio does not work here; a voice does, too well. Wren's body (S5) was against a bollard at Wharf 17. The Listener's place. S6's confrontation ran the length of Wharf 17 to a collapsed warehouse the crew has not entered.",
+      "created": "2026-09-12T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    }
+  ],
+  "factions": [
+    {
+      "id": "FA-T4JZDR0K",
+      "name": "Eclipse",
+      "from": {
+        "kind": "gazetteer",
+        "id": "eclipse",
+        "name": "Eclipse"
+      },
+      "type": "gang",
+      "territory": "central-city",
+      "base": "The Velvet Lung, Theater Row",
+      "keyNpcs": [
+        {
+          "kind": "cast",
+          "id": "C-8FGP6RCT"
+        },
+        {
+          "kind": "cast",
+          "id": "C-PRKFTH3Z",
+          "name": "Ines \"Nine\" Baptiste"
+        }
+      ],
+      "wants": "The shard's contents, delivered before the quarter closes, by any hand that is not theirs.",
+      "reach": "Metro Core's drug trade, laundering, and extortion; three owed favors in the NCPD; whoever's cut of the Park's after-dark traffic.",
+      "tippingFor": [
+        "The crew delivers the shard without a fight",
+        "Ibarra is made to look generous in public"
+      ],
+      "tippingAgainst": [
+        "Pearl is hurt",
+        "Nine's death is laid on the crew (it already is)",
+        "Another gang gets the shard first"
+      ],
+      "stance": -1,
+      "attention": "active",
+      "notes": "Not an enemy by default; an unhappy customer. The crew's best outcome is a deal that gives Ibarra something to bring upstairs. Ibarra's clock is the pressure on the table.",
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "FA-DNP4RY1X",
+      "name": "The Dockside Devils",
+      "from": {
+        "kind": "gazetteer",
+        "id": "dockside-devils",
+        "name": "The Dockside Devils"
+      },
+      "type": "gang",
+      "territory": "daedalus-belt",
+      "base": "Pier 9, Gateway",
+      "keyNpcs": [
+        {
+          "kind": "cast",
+          "id": "C-T8ERMYV7"
+        },
+        {
+          "kind": "cast",
+          "id": "C-80B3JGJH"
+        },
+        {
+          "kind": "cast",
+          "id": "C-0NQEQS4J"
+        }
+      ],
+      "wants": "To stay paid by both NeuroNet and TransitCorp, to stay out of the Ports, and to find Cord before somebody else does.",
+      "reach": "Gateway's waterfront, the dockworkers' union, a tug that goes where it likes.",
+      "tippingFor": [
+        "Cord found alive and brought to Teo",
+        "Tab settled in full"
+      ],
+      "tippingAgainst": [
+        "The crew owes more than it can pay",
+        "NeuroNet learns the Devils talk"
+      ],
+      "stance": 0,
+      "attention": "aware",
+      "notes": "Not hostile. They will sell the crew information and take the money, and sell the crew out to NeuroNet if NeuroNet pays more. Consistent. Dolly is the one to watch.",
+      "created": "2026-08-22T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "FA-BB6KF3FM",
+      "name": "NeuroNet",
+      "from": {
+        "kind": "gazetteer",
+        "id": "neuronet",
+        "name": "NeuroNet"
+      },
+      "type": "corp",
+      "territory": "daedalus-belt",
+      "base": "The Gateway Hub",
+      "keyNpcs": [
+        {
+          "kind": "cast",
+          "id": "C-9FSMVHZH"
+        },
+        {
+          "kind": "cast",
+          "id": "C-R79SH4JZ"
+        }
+      ],
+      "wants": "Wren's file closed, Wren's shard destroyed, and nobody on the board learning what the file contained.",
+      "reach": "Gateway's freight routing, a Volkov retainer, a Reclaim Solutions cleanup crew, 9,000 employees.",
+      "tippingFor": [
+        "The shard is returned or destroyed",
+        "Bracken gets credit for it"
+      ],
+      "tippingAgainst": [
+        "The crew goes public",
+        "Anyone reaches the Ports and comes back talking"
+      ],
+      "stance": -2,
+      "attention": "active",
+      "notes": "A corporation, not a villain. Its ruthlessness is structural: every step of the cleanup is individually defensible. Bracken's the face, though it never meets one.",
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "FA-3TJVKRTV",
+      "name": "The Rangers",
+      "from": {
+        "kind": "gazetteer",
+        "id": "rangers",
+        "name": "The Rangers"
+      },
+      "type": "other",
+      "territory": "central-city",
+      "base": "Ranger Station Nine, Central Park",
+      "keyNpcs": [
+        {
+          "kind": "cast",
+          "id": "C-2WD7753T"
+        }
+      ],
+      "wants": "The Park's tenants undisturbed and its closing hours kept. They would take the shard off the crew's hands, but would rather not.",
+      "reach": "The Park, its tunnels, and whoever the Parks Service still has a friend in.",
+      "tippingFor": [
+        "The crew respects the Park's rules",
+        "The crew brings the Rangers the tape instead of the story"
+      ],
+      "tippingAgainst": [
+        "Anyone breaks the sunset closing",
+        "The crew reveals what the Park is"
+      ],
+      "stance": 1,
+      "attention": "neutral",
+      "notes": "Allies of convenience. Fenn trusts the crew; the Rangers as an organization have not been asked.",
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "FA-R6XD6JSZ",
+      "name": "The Volkov Group",
+      "from": {
+        "kind": "gazetteer",
+        "id": "volkov-group",
+        "name": "The Volkov Group"
+      },
+      "type": "other",
+      "territory": "central-city",
+      "base": "New Bostonia, offices on Beacon Row",
+      "keyNpcs": [
+        {
+          "kind": "cast",
+          "id": "C-WJ7QJA9N"
+        }
+      ],
+      "wants": "To collect NeuroNet's fee. Nothing more. They are not partisans.",
+      "reach": "Six hundred armed personnel, a flexible conscience, and a reputation for clean exits.",
+      "tippingFor": [
+        "NeuroNet's check clears",
+        "The contract is renegotiated"
+      ],
+      "tippingAgainst": [
+        "Bystanders are hurt on Volkov's name",
+        "A contract is reported publicly"
+      ],
+      "stance": -2,
+      "attention": "active",
+      "notes": "Rook is the instrument. Volkov management will sell the crew a counter-contract if the money is right; that offer has not come yet and should come in S8.",
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "FA-515WNYXG",
+      "name": "The Night Shift",
+      "from": null,
+      "type": "collective",
+      "territory": "central-city",
+      "base": "Suds & Duds, the back room",
+      "keyNpcs": [
+        {
+          "kind": "cast",
+          "id": "C-3FPYKJT4"
+        },
+        {
+          "kind": "cast",
+          "id": "C-9C62TFXP"
+        },
+        {
+          "kind": "cast",
+          "id": "C-1DYS6JFW"
+        }
+      ],
+      "wants": "To keep the Lower Metro running without anyone's flag on it.",
+      "reach": "Three kids who run messages, a doc who does not ask, a fixer's table.",
+      "tippingFor": [
+        "The crew keeps their word",
+        "Joss gets out alive"
+      ],
+      "tippingAgainst": [
+        "Ibarra hears about Joss",
+        "The laundromat is exposed"
+      ],
+      "stance": 2,
+      "attention": "neutral",
+      "notes": "The crew's own network, built over three months of small favors. A homegrown faction; not in the gazetteer. They are the reason the crew has a table to come back to.",
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    }
+  ],
+  "clocks": [
+    {
+      "id": "CK-5E4FQG0D",
+      "name": "Ibarra's patience",
+      "segments": 6,
+      "filled": 4,
+      "advances": "A session passes with the shard undelivered. A Nine-related rumor reaches him. The crew is seen in Eclipse territory without paying respects.",
+      "whenFull": "Suds & Duds burns overnight with Pearl inside; Ibarra expresses regret on the news.",
+      "on": {
+        "kind": "faction",
+        "id": "FA-T4JZDR0K"
+      },
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-K4XFPW84",
+      "name": "The cleanup",
+      "segments": 8,
+      "filled": 5,
+      "advances": "A witness talks. A file is found. The crew visits the Hub. Cord is seen in the open.",
+      "whenFull": "Reclaim Solutions arrives at the Hub and the Ports at once. Every trace of Wren is gone, the crew is on a list, and Oyelaran's file is 'lost'.",
+      "on": {
+        "kind": "faction",
+        "id": "FA-BB6KF3FM"
+      },
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-NC8YFP4D",
+      "name": "Rook's contract on Mara",
+      "segments": 4,
+      "filled": 2,
+      "advances": "Mara touches NeuroNet's network. Rook's exit is closed once more.",
+      "whenFull": "Rook lines up a shot he cannot decline, in a place with no exit to choose. He sends the apology before the shot.",
+      "on": {
+        "kind": "faction",
+        "id": "FA-R6XD6JSZ"
+      },
+      "created": "2026-08-22T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-G4WZGT50",
+      "name": "The crew's tab at Pier 9",
+      "segments": 6,
+      "filled": 3,
+      "advances": "A favor is taken from Teo without payment. A Devils man is hurt. Dolly's information is used.",
+      "whenFull": "Teo sends a collector; he is polite; he leaves with something the crew would rather have kept.",
+      "on": {
+        "kind": "faction",
+        "id": "FA-DNP4RY1X"
+      },
+      "created": "2026-08-22T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-VP7AXPVX",
+      "name": "The Park after dark",
+      "segments": 6,
+      "filled": 1,
+      "advances": "The crew is in the Park after sunset. Someone says its name aloud there.",
+      "whenFull": "The Park decides the crew is a tenant. Nobody at the Ranger Station will say what that means.",
+      "on": {
+        "kind": "faction",
+        "id": "FA-3TJVKRTV"
+      },
+      "created": "2026-08-01T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-EQA3W8XR",
+      "name": "Joss's network",
+      "segments": 4,
+      "filled": 3,
+      "advances": "The crew teaches Joss something, pays on time, or keeps a secret for her.",
+      "whenFull": "Joss's runners become the crew's eyes in four Zones. They would die for her; she would let them, once.",
+      "on": {
+        "kind": "faction",
+        "id": "FA-515WNYXG"
+      },
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-QDHW4G42",
+      "name": "The Ports wake",
+      "segments": 12,
+      "filled": 5,
+      "advances": "Anyone speaks in the Ports. A recording is played there. The shard is opened. The Listener repeats a stranger's voice.",
+      "whenFull": "The Listener learns to speak first. Gateway's radios, phones, and routing AI answer it. Every voice at Gateway is a little behind.",
+      "on": null,
+      "created": "2026-09-12T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-T9E5BJ91",
+      "name": "Dex before the full moon",
+      "segments": 8,
+      "filled": 6,
+      "advances": "Each day since the last full moon; a fight; an injury; being near silver.",
+      "whenFull": "Dex turns. Achterberg's clinic is the plan; the plan has a hole in it.",
+      "on": null,
+      "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    }
+  ],
+  "interactions": [
+    {
+      "id": "I-R4FTZSZW",
+      "kind": "shared",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-3FPYKJT4"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex",
+        "Juno"
+      ],
+      "text": "Pearl laid out the job over a hotplate pot of tea: a shard from a NeuroNet engineer to a buyer in Techtopia, two thousand Çredits a head.",
+      "date": "2026-07-18",
+      "session": "SE-DEAZD9A1",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-VQ2X0JVF"
+      },
+      "created": "2026-07-18T22:10:00.000Z",
+      "updated": "2026-07-18T22:10:00.000Z"
+    },
+    {
+      "id": "I-DAK1B7BR",
+      "kind": "learned",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-R79SH4JZ"
+        }
+      ],
+      "crew": [
+        "Mara"
+      ],
+      "text": "Mara read the shard's header. Wren's name, a NeuroNet routing stamp, and eleven minutes of dead channel at the end.",
+      "date": "2026-07-18",
+      "session": "SE-DEAZD9A1",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-VQ2X0JVF"
+      },
+      "created": "2026-07-18T22:10:00.000Z",
+      "updated": "2026-07-18T22:10:00.000Z"
+    },
+    {
+      "id": "I-PR3XKAAJ",
+      "kind": "fought",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-3FPYKJT4"
+        }
+      ],
+      "crew": [
+        "Dex"
+      ],
+      "text": "Three Eclipse soldiers arrived early. Dex threw a dryer at one. Pearl's window did not survive.",
+      "date": "2026-07-18",
+      "session": "SE-DEAZD9A1",
+      "encounter": {
+        "kind": "encounter",
+        "id": "EN-8TPECDDA",
+        "name": "The handoff, Suds & Duds"
+      },
+      "place": {
+        "kind": "place",
+        "id": "PL-VQ2X0JVF"
+      },
+      "created": "2026-07-18T22:10:00.000Z",
+      "updated": "2026-07-18T22:10:00.000Z"
+    },
+    {
+      "id": "I-7VXDNTVA",
+      "kind": "shared",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-1DYS6JFW"
+        },
+        {
+          "kind": "cast",
+          "id": "C-9C62TFXP"
+        }
+      ],
+      "crew": [
+        "Dex"
+      ],
+      "text": "Dex introduced himself to Achterberg's clinic; Joss ran Mara a burner and a pastry.",
+      "date": "2026-07-18",
+      "session": "SE-DEAZD9A1",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-3DVFVH6A"
+      },
+      "created": "2026-07-18T22:10:00.000Z",
+      "updated": "2026-07-18T22:10:00.000Z"
+    },
+    {
+      "id": "I-2EFH22K4",
+      "kind": "learned",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-8FGP6RCT"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Juno"
+      ],
+      "text": "Ibarra's dinner invitation: the Velvet Lung, third booth. He knew Pearl's name, the shard's weight, and what the crew had had for lunch.",
+      "date": "2026-08-01",
+      "session": "SE-9DYZVSQP",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-GK6B18AH"
+      },
+      "created": "2026-08-01T22:10:00.000Z",
+      "updated": "2026-08-01T22:10:00.000Z"
+    },
+    {
+      "id": "I-Y6BENW7Q",
+      "kind": "fought",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-WJ7QJA9N"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex",
+        "Juno"
+      ],
+      "text": "Rook's contractors hit the crew in the Ramble at dusk. Fenn and a junior warden pulled them out.",
+      "date": "2026-08-01",
+      "session": "SE-9DYZVSQP",
+      "encounter": {
+        "kind": "encounter",
+        "id": "EN-5KZT1858",
+        "name": "The Ramble at dusk"
+      },
+      "place": {
+        "kind": "place",
+        "id": "PL-C47FG1SP"
+      },
+      "created": "2026-08-01T22:10:00.000Z",
+      "updated": "2026-08-01T22:10:00.000Z"
+    },
+    {
+      "id": "I-RZ9XSJYH",
+      "kind": "helped",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-2WD7753T"
+        }
+      ],
+      "crew": [
+        "Mara"
+      ],
+      "text": "Fenn fired a flare into the air and the Park's lights came on. Nobody had told the crew what the Park does at night.",
+      "date": "2026-08-01",
+      "session": "SE-9DYZVSQP",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-C47FG1SP"
+      },
+      "created": "2026-08-01T22:10:00.000Z",
+      "updated": "2026-08-01T22:10:00.000Z"
+    },
+    {
+      "id": "I-ZQV2BN4D",
+      "kind": "owes",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-2WD7753T"
+        }
+      ],
+      "crew": [
+        "Juno"
+      ],
+      "text": "The crew owes Fenn one answer, any time, no matter how awkward.",
+      "date": "2026-08-01",
+      "session": "SE-9DYZVSQP",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-C47FG1SP"
+      },
+      "created": "2026-08-01T22:10:00.000Z",
+      "updated": "2026-08-01T22:10:00.000Z"
+    },
+    {
+      "id": "I-X79D1NVZ",
+      "kind": "wronged",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-WJ7QJA9N"
+        }
+      ],
+      "crew": [
+        "Mara"
+      ],
+      "text": "Rook left a handwritten apology on Mara's pillow, with a hotel's bath towel folded around it.",
+      "date": "2026-08-01",
+      "session": "SE-9DYZVSQP",
+      "encounter": null,
+      "place": null,
+      "created": "2026-08-01T22:10:00.000Z",
+      "updated": "2026-08-01T22:10:00.000Z"
+    },
+    {
+      "id": "I-JYHTQM95",
+      "kind": "learned",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-80B3JGJH"
+        }
+      ],
+      "crew": [
+        "Mara"
+      ],
+      "text": "Dolly's number was on the delivery note. She said so over tea and paid for the cups herself.",
+      "date": "2026-08-22",
+      "session": "SE-0DSNNZ7V",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-9B5NDBNR"
+      },
+      "created": "2026-08-22T22:10:00.000Z",
+      "updated": "2026-08-22T22:10:00.000Z"
+    },
+    {
+      "id": "I-JY4M05SD",
+      "kind": "shared",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-T8ERMYV7"
+        }
+      ],
+      "crew": [
+        "Dex",
+        "Juno"
+      ],
+      "text": "Teo shared a bottle and a story about the tide coming in on the wrong days. Would not say more.",
+      "date": "2026-08-22",
+      "session": "SE-0DSNNZ7V",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-9B5NDBNR"
+      },
+      "created": "2026-08-22T22:10:00.000Z",
+      "updated": "2026-08-22T22:10:00.000Z"
+    },
+    {
+      "id": "I-CC5AARTB",
+      "kind": "fought",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-PRKFTH3Z"
+        },
+        {
+          "kind": "cast",
+          "id": "C-WJ7QJA9N"
+        },
+        {
+          "kind": "cast",
+          "id": "C-T8ERMYV7"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex",
+        "Juno"
+      ],
+      "text": "A three-way fight in the shadow of a container. Nine went for Dex and died to Rook's contractors' rounds.",
+      "date": "2026-08-22",
+      "session": "SE-0DSNNZ7V",
+      "encounter": {
+        "kind": "encounter",
+        "id": "EN-5VRQGA6P",
+        "name": "Pier 9: three-way"
+      },
+      "place": {
+        "kind": "place",
+        "id": "PL-9B5NDBNR"
+      },
+      "created": "2026-08-22T22:10:00.000Z",
+      "updated": "2026-08-22T22:10:00.000Z"
+    },
+    {
+      "id": "I-YAPKRD97",
+      "kind": "killed",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-PRKFTH3Z"
+        }
+      ],
+      "crew": [
+        "Dex"
+      ],
+      "text": "Nine died at Dex's feet. The crew did not fire the shot. Ibarra thinks they did.",
+      "date": "2026-08-22",
+      "session": "SE-0DSNNZ7V",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-9B5NDBNR"
+      },
+      "created": "2026-08-22T22:10:00.000Z",
+      "updated": "2026-08-22T22:10:00.000Z"
+    },
+    {
+      "id": "I-VJGKC6E1",
+      "kind": "helped",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-0NQEQS4J"
+        }
+      ],
+      "crew": [
+        "Juno"
+      ],
+      "text": "Juno let Cord run for the tide. He thanked her with a look and no words.",
+      "date": "2026-08-22",
+      "session": "SE-0DSNNZ7V",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-9B5NDBNR"
+      },
+      "created": "2026-08-22T22:10:00.000Z",
+      "updated": "2026-08-22T22:10:00.000Z"
+    },
+    {
+      "id": "I-ZESNE402",
+      "kind": "learned",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-33XBN634"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex"
+      ],
+      "text": "Oyelaran slid a coroner's report across a diner counter: Wren, natural causes, thirty-four. Time of death after the shard left the Hub.",
+      "date": "2026-09-12",
+      "session": "SE-FC4H16S3",
+      "encounter": null,
+      "place": null,
+      "created": "2026-09-12T22:10:00.000Z",
+      "updated": "2026-09-12T22:10:00.000Z"
+    },
+    {
+      "id": "I-1RAYCJ76",
+      "kind": "owed",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-33XBN634"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex"
+      ],
+      "text": "Oyelaran owes the crew a favor, in writing, in a diner napkin.",
+      "date": "2026-09-12",
+      "session": "SE-FC4H16S3",
+      "encounter": null,
+      "place": null,
+      "created": "2026-09-12T22:10:00.000Z",
+      "updated": "2026-09-12T22:10:00.000Z"
+    },
+    {
+      "id": "I-ETYHPMQC",
+      "kind": "helped",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-1DYS6JFW"
+        }
+      ],
+      "crew": [
+        "Dex"
+      ],
+      "text": "Achterberg kept Dex stable through a night he should have turned. Bills in kind, always.",
+      "date": "2026-09-12",
+      "session": "SE-FC4H16S3",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-3DVFVH6A"
+      },
+      "created": "2026-09-12T22:10:00.000Z",
+      "updated": "2026-09-12T22:10:00.000Z"
+    },
+    {
+      "id": "I-1S71MQH9",
+      "kind": "learned",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-9FSMVHZH"
+        }
+      ],
+      "crew": [
+        "Mara"
+      ],
+      "text": "Mara found Bracken's name in a Hub routing log, signing off on a Reclaim Solutions dispatch with Wren's.",
+      "date": "2026-09-12",
+      "session": "SE-FC4H16S3",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-VQ2X0JVF"
+      },
+      "created": "2026-09-12T22:10:00.000Z",
+      "updated": "2026-09-12T22:10:00.000Z"
+    },
+    {
+      "id": "I-QPGM1A10",
+      "kind": "fought",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-9FSMVHZH"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex",
+        "Juno"
+      ],
+      "text": "The crew took the Hub's fourth floor. Drones, guards, a Taser lance in Dex's side. Bracken watched on a screen from elsewhere.",
+      "date": "2026-09-26",
+      "session": "SE-H671NF6W",
+      "encounter": {
+        "kind": "encounter",
+        "id": "EN-PT03TH7M",
+        "name": "NeuroNet Hub, night shift"
+      },
+      "place": {
+        "kind": "place",
+        "id": "PL-33M6NH2C"
+      },
+      "created": "2026-09-26T22:10:00.000Z",
+      "updated": "2026-09-26T22:10:00.000Z"
+    },
+    {
+      "id": "I-JCYXVEE3",
+      "kind": "learned",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-R79SH4JZ"
+        }
+      ],
+      "crew": [
+        "Juno"
+      ],
+      "text": "Wren's body at Wharf 17, headphones on, no marks. His wedding ring on its chain.",
+      "date": "2026-09-26",
+      "session": "SE-H671NF6W",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-S7YSSZ92"
+      },
+      "created": "2026-09-26T22:10:00.000Z",
+      "updated": "2026-09-26T22:10:00.000Z"
+    },
+    {
+      "id": "I-PA96A2PF",
+      "kind": "shared",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-ZJMWPBQT"
+        }
+      ],
+      "crew": [
+        "Juno"
+      ],
+      "text": "Juno spoke in the Ports. It repeated her, a half-beat late, in her own voice.",
+      "date": "2026-09-26",
+      "session": "SE-H671NF6W",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-S7YSSZ92"
+      },
+      "created": "2026-09-26T22:10:00.000Z",
+      "updated": "2026-09-26T22:10:00.000Z"
+    },
+    {
+      "id": "I-SXTD1450",
+      "kind": "helped",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-33XBN634"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex"
+      ],
+      "text": "The crew got Oyelaran out of a stop that was never a stop. He owes them two now.",
+      "date": "2026-09-26",
+      "session": "SE-H671NF6W",
+      "encounter": null,
+      "place": null,
+      "created": "2026-09-26T22:10:00.000Z",
+      "updated": "2026-09-26T22:10:00.000Z"
+    },
+    {
+      "id": "I-47YPSW10",
+      "kind": "shared",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-0NQEQS4J"
+        },
+        {
+          "kind": "cast",
+          "id": "C-ZJMWPBQT"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex",
+        "Juno"
+      ],
+      "text": "Cord in the dark, speaking in the Listener's voice. He said all three of their names, in the order the crew had died in a dream none of them told.",
+      "date": "2026-10-17",
+      "session": "SE-PJB1ZXSS",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-S7YSSZ92"
+      },
+      "created": "2026-10-17T22:10:00.000Z",
+      "updated": "2026-10-17T22:10:00.000Z"
+    },
+    {
+      "id": "I-YVNPE90P",
+      "kind": "fought",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-ZJMWPBQT"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Dex",
+        "Juno"
+      ],
+      "text": "The Listener came through anyone who spoke. They ran the length of Wharf 17 and out. It followed to the ghost-line and stopped.",
+      "date": "2026-10-17",
+      "session": "SE-PJB1ZXSS",
+      "encounter": {
+        "kind": "encounter",
+        "id": "EN-BC0WBX7T",
+        "name": "Wharf 17: the Listener"
+      },
+      "place": {
+        "kind": "place",
+        "id": "PL-S7YSSZ92"
+      },
+      "created": "2026-10-17T22:10:00.000Z",
+      "updated": "2026-10-17T22:10:00.000Z"
+    },
+    {
+      "id": "I-M0QYYBEC",
+      "kind": "wronged",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-WJ7QJA9N"
+        }
+      ],
+      "crew": [
+        "Mara"
+      ],
+      "text": "Rook watched from the next wharf and did not shoot. He sent a text: 'Not today. Not like this.'",
+      "date": "2026-10-17",
+      "session": "SE-PJB1ZXSS",
+      "encounter": null,
+      "place": null,
+      "created": "2026-10-17T22:10:00.000Z",
+      "updated": "2026-10-17T22:10:00.000Z"
+    },
+    {
+      "id": "I-NSA1GMG8",
+      "kind": "owes",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-1DYS6JFW"
+        }
+      ],
+      "crew": [
+        "Dex"
+      ],
+      "text": "Dex owes Achterberg a favor, once, any time. She has not named it.",
+      "date": "2026-10-17",
+      "session": "SE-PJB1ZXSS",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-3DVFVH6A"
+      },
+      "created": "2026-10-17T22:10:00.000Z",
+      "updated": "2026-10-17T22:10:00.000Z"
+    },
+    {
+      "id": "I-G4F4WWJ2",
+      "kind": "owed",
+      "cast": [
+        {
+          "kind": "cast",
+          "id": "C-2WD7753T"
+        }
+      ],
+      "crew": [
+        "Mara",
+        "Juno"
+      ],
+      "text": "Fenn called to say she has a tape that matches the shard, and that she will lend it to the crew if they bring it back.",
+      "date": "2026-10-17",
+      "session": "SE-PJB1ZXSS",
+      "encounter": null,
+      "place": {
+        "kind": "place",
+        "id": "PL-C47FG1SP"
+      },
+      "created": "2026-10-17T22:10:00.000Z",
+      "updated": "2026-10-17T22:10:00.000Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "SE-DEAZD9A1",
+      "number": 1,
+      "date": "2026-07-18",
+      "present": [
+        "Mara Okonkwo",
+        "Dex Villanueva",
+        "Juno Park"
+      ],
+      "hours": 4,
+      "journal": {
+        "happened": "Pearl hired the crew for a courier job: a memory shard from a NeuroNet engineer to a buyer in Techtopia. Mara read the shard's header and found a dead channel: eleven minutes of silence. The handoff at Suds & Duds went sideways when three Eclipse soldiers showed up early.",
+        "fallout": "Eclipse knows the shard exists. The crew kept it and ran. Pearl's shop has a front window that needs replacing.",
+        "threads": "Who sent Wren's shard to Pearl? What is in the silence? Ibarra now wants it.",
+        "impact": "Mara chose to keep the shard rather than hand it over. The crew became Pearl's problem and she theirs.",
+        "reflection": "Great first session: the crew clicked, Dex stole the scene with a dryer. Do more of: Pearl at work. Do less of: me over-explaining Eclipse.",
+        "seed": "Ibarra will send a polite invitation. Fenn will notice the shard's signal from the Park."
+      },
+      "close": {
+        "at": "2026-07-18T23:30:00.000Z",
+        "lines": [
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": false,
+            "credits": 1200,
+            "tier": null,
+            "note": "Read the shard's header; kept it.",
+            "name": "Mara Okonkwo"
+          },
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": false,
+            "credits": 1200,
+            "tier": null,
+            "note": "",
+            "name": "Dex Villanueva"
+          },
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": false,
+            "credits": 1200,
+            "tier": null,
+            "note": "",
+            "name": "Juno Park"
+          }
+        ]
+      },
+      "created": "2026-07-18T17:00:00.000Z",
+      "updated": "2026-07-18T23:00:00.000Z"
+    },
+    {
+      "id": "SE-9DYZVSQP",
+      "number": 2,
+      "date": "2026-08-01",
+      "present": [
+        "Mara Okonkwo",
+        "Dex Villanueva",
+        "Juno Park"
+      ],
+      "hours": 4.5,
+      "journal": {
+        "happened": "Ibarra's invitation was dinner at the Velvet Lung; the crew declined the first course and left. Rook's contractors tried the Park at dusk. Fenn and the Rangers helped the crew out of the Ramble. Fenn recognized the shard's signal and would say nothing about it.",
+        "fallout": "The crew is in Fenn's debt. Ibarra is annoyed, not furious. Bracken has hired the Volkov Group: Rook has Mara's name.",
+        "threads": "What did Fenn hear? Who is Rook working for? Why did the Park open a tunnel?",
+        "impact": "Juno cast in the Park after dusk, breaking the sunset rule; the Park took notice. The 'Park after dark' clock started.",
+        "reflection": "The chase worked as set piece; the Park as character worked better. Let Fenn breathe next time.",
+        "seed": "Rook leaves a handwritten apology on Mara's pillow. Dolly's number appears on the delivery note."
+      },
+      "close": {
+        "at": "2026-08-01T23:30:00.000Z",
+        "lines": [
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": false,
+            "credits": 800,
+            "tier": null,
+            "note": "",
+            "name": "Mara Okonkwo"
+          },
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": false,
+            "credits": 800,
+            "tier": null,
+            "note": "",
+            "name": "Dex Villanueva"
+          },
+          {
+            "present": true,
+            "ip": 5,
+            "milestone": true,
+            "credits": 800,
+            "tier": null,
+            "note": "Cast in the Park after dusk.",
+            "name": "Juno Park"
+          }
+        ]
+      },
+      "created": "2026-08-01T17:00:00.000Z",
+      "updated": "2026-08-01T23:00:00.000Z"
+    },
+    {
+      "id": "SE-0DSNNZ7V",
+      "number": 3,
+      "date": "2026-08-22",
+      "present": [
+        "Mara Okonkwo",
+        "Dex Villanueva",
+        "Juno Park"
+      ],
+      "hours": 3.5,
+      "journal": {
+        "happened": "The delivery note led to Pier 9 and the Dockside Devils. Teo was gracious; Dolly, who the crew mistook for a clerk, gave nothing away. Eclipse (Nine's team) and the Volkov contractors both arrived. A three-way fight broke out. Nine died at Dex's feet. Cord ran for the tide and the crew let him go.",
+        "fallout": "Ibarra believes the crew killed Nine. Rook's exit closed and he withdrew. The Devils are watching; Cord is missing.",
+        "threads": "Dolly's number on the note. Who killed Nine? Where is Cord?",
+        "impact": "Dex held back in the fight and Nine died anyway. He is not sleeping well.",
+        "reflection": "Three-sided fights are great but slow. Wave initiative helped. Next time use fewer rows.",
+        "seed": "Joss sees Cord at a bus station in Neo Jersey. Ibarra schedules a meeting that is not an invitation."
+      },
+      "close": {
+        "at": "2026-08-22T23:30:00.000Z",
+        "lines": [
+          {
+            "present": true,
+            "ip": 3,
+            "milestone": false,
+            "credits": 600,
+            "tier": null,
+            "note": "",
+            "name": "Mara Okonkwo"
+          },
+          {
+            "present": true,
+            "ip": 3,
+            "milestone": true,
+            "credits": 600,
+            "tier": null,
+            "note": "Held back and a friend of Ibarra's died anyway.",
+            "name": "Dex Villanueva"
+          },
+          {
+            "present": true,
+            "ip": 3,
+            "milestone": false,
+            "credits": 600,
+            "tier": null,
+            "note": "",
+            "name": "Juno Park"
+          }
+        ]
+      },
+      "created": "2026-08-22T17:00:00.000Z",
+      "updated": "2026-08-22T23:00:00.000Z"
+    },
+    {
+      "id": "SE-FC4H16S3",
+      "number": 4,
+      "date": "2026-09-12",
+      "present": [
+        "Mara Okonkwo",
+        "Dex Villanueva"
+      ],
+      "hours": 5,
+      "journal": {
+        "happened": "Juno was away (family trouble in Seoul). Mara and Dex met Oyelaran, who had the coroner's report on a body no one had told them was dead: Wren. Mara broke into the Hub's guest network from the laundromat and found a routing log with the same eleven minutes of silence. Dex spent a night in Achterberg's clinic, nearly turning.",
+        "fallout": "Oyelaran owes the crew a favor. Mara's name is on a NeuroNet watchlist. Dex's moon clock jumped two segments.",
+        "threads": "Where is Wren's body? What are the eleven minutes? Why is Dex's moon early?",
+        "impact": "Mara learned how deep the cleanup goes. The 'cleanup' clock moved three.",
+        "reflection": "A two-player session was a pleasure: slower, more talk. Good use of Oyelaran.",
+        "seed": "Wren's body is in the Phantom Ports. Bracken closes a door on Gateway."
+      },
+      "close": {
+        "at": "2026-09-12T23:30:00.000Z",
+        "lines": [
+          {
+            "present": true,
+            "ip": 5,
+            "milestone": false,
+            "credits": 900,
+            "tier": null,
+            "note": "Found the log.",
+            "name": "Mara Okonkwo"
+          },
+          {
+            "present": true,
+            "ip": 5,
+            "milestone": false,
+            "credits": 900,
+            "tier": null,
+            "note": "",
+            "name": "Dex Villanueva"
+          },
+          {
+            "present": false,
+            "ip": 2,
+            "milestone": false,
+            "credits": null,
+            "tier": "competent",
+            "note": "Away in Seoul; off-screen pay at Competent.",
+            "name": "Juno Park"
+          }
+        ]
+      },
+      "created": "2026-09-12T17:00:00.000Z",
+      "updated": "2026-09-12T23:00:00.000Z"
+    },
+    {
+      "id": "SE-H671NF6W",
+      "number": 5,
+      "date": "2026-09-26",
+      "present": [
+        "Mara Okonkwo",
+        "Dex Villanueva",
+        "Juno Park"
+      ],
+      "hours": 4,
+      "journal": {
+        "happened": "The crew infiltrated the NeuroNet Hub at night for Wren's desk and the full log. Drones and guards, a fight on the fourth floor, and a clean exit through the freight elevator. They found Wren's body in the Phantom Ports at Wharf 17, sitting upright, headphones on.",
+        "fallout": "The Hub is hot. The crew has the log and the body's location. Cord has gone to ground. Oyelaran now has a body to explain.",
+        "threads": "What killed Wren? Who else has heard what he heard? What does the shard play when opened in the Ports?",
+        "impact": "Juno heard the Listener for the first time and answered it. It repeated her back.",
+        "reflection": "The Hub was the best set piece of the campaign. The Ports was the best scene.",
+        "seed": "Joss hears Cord is in the Ports. The Listener repeats a name only Mara knows."
+      },
+      "close": {
+        "at": "2026-09-26T23:30:00.000Z",
+        "lines": [
+          {
+            "present": true,
+            "ip": 5,
+            "milestone": false,
+            "credits": 1500,
+            "tier": null,
+            "note": "",
+            "name": "Mara Okonkwo"
+          },
+          {
+            "present": true,
+            "ip": 5,
+            "milestone": false,
+            "credits": 1500,
+            "tier": null,
+            "note": "",
+            "name": "Dex Villanueva"
+          },
+          {
+            "present": true,
+            "ip": 5,
+            "milestone": true,
+            "credits": 1500,
+            "tier": null,
+            "note": "Answered the Listener.",
+            "name": "Juno Park"
+          }
+        ]
+      },
+      "created": "2026-09-26T17:00:00.000Z",
+      "updated": "2026-09-26T23:00:00.000Z"
+    },
+    {
+      "id": "SE-PJB1ZXSS",
+      "number": 6,
+      "date": "2026-10-17",
+      "present": [
+        "Mara Okonkwo",
+        "Dex Villanueva",
+        "Juno Park"
+      ],
+      "hours": 4,
+      "journal": {
+        "happened": "The crew went into the Phantom Ports with the shard. Mara opened it. The Listener answered through Juno, then through Dex, then through Mara. Cord was there, sitting beside Wren, speaking in the Listener's voice. The crew retreated down the length of Wharf 17 and out; the Listener followed to the ghost-line, and stopped.",
+        "fallout": "The Ports clock jumped. Cord is alive but not himself. The crew has the recording and knows what the silence is. Rook arrived late and watched from the next wharf.",
+        "threads": "What does the Listener want? How do we get Cord out? Does Ibarra still want the shard?",
+        "impact": "Mara decided to keep the shard rather than sell it. Juno and Dex disagree.",
+        "reflection": "The best session yet. The three voices through one mouth worked beautifully. Cut the fight; the dread did it.",
+        "seed": "Ibarra's invitation arrives: the Velvet Lung, Friday. Fenn calls with the tape. Pearl is packing."
+      },
+      "close": {
+        "at": "2026-10-17T23:30:00.000Z",
+        "lines": [
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": false,
+            "credits": 400,
+            "tier": null,
+            "note": "Chose to keep the shard.",
+            "name": "Mara Okonkwo"
+          },
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": false,
+            "credits": 400,
+            "tier": null,
+            "note": "",
+            "name": "Dex Villanueva"
+          },
+          {
+            "present": true,
+            "ip": 4,
+            "milestone": true,
+            "credits": 400,
+            "tier": null,
+            "note": "Spoke in the Listener's voice and walked out.",
+            "name": "Juno Park"
+          }
+        ]
+      },
+      "created": "2026-10-17T17:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "SE-HR5CH1JX",
+      "number": 7,
+      "date": "2026-10-31",
+      "present": [],
+      "hours": null,
+      "journal": {
+        "happened": "",
+        "fallout": "",
+        "threads": "",
+        "impact": "",
+        "reflection": "",
+        "seed": "Opens at the Velvet Lung, Friday. Ibarra's invitation, in his hand. Fenn's tape arrives by courier in the morning."
+      },
+      "close": null,
+      "created": "2026-10-17T23:45:00.000Z",
+      "updated": "2026-10-17T23:45:00.000Z"
+    }
+  ],
+  "threads": [
+    {
+      "id": "TH-XZWXEG1X",
+      "title": "Who sent Wren's shard to Pearl?",
+      "notes": "Dolly's number was on the delivery note. She did not know the contents either; Bracken asked her to route the shard through Pearl, expecting it would be lost.",
+      "status": "resolved",
+      "current": false,
+      "opened": "SE-DEAZD9A1",
+      "closed": "SE-H671NF6W",
+      "created": "2026-07-18T23:00:00.000Z",
+      "updated": "2026-09-26T23:00:00.000Z"
+    },
+    {
+      "id": "TH-39WGS53D",
+      "title": "What spoke in the dead air?",
+      "notes": "The eleven minutes on Wren's shard. The Listener. What it wants. What happens when it is spoken to. The Ports clock.",
+      "status": "open",
+      "current": true,
+      "opened": "SE-DEAZD9A1",
+      "closed": null,
+      "created": "2026-07-18T23:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "TH-AYA2YJGM",
+      "title": "Ibarra's price",
+      "notes": "Eclipse wants the shard or a reason. Nine's death is laid on the crew. Find the deal that lets him go upstairs with a win.",
+      "status": "open",
+      "current": false,
+      "opened": "SE-9DYZVSQP",
+      "closed": null,
+      "created": "2026-07-18T23:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "TH-WA240TEA",
+      "title": "Dex owes Achterberg",
+      "notes": "A favor, once. She'll cash it during the next full moon. Plan for the clinic, and for what happens to it.",
+      "status": "open",
+      "current": false,
+      "opened": "SE-FC4H16S3",
+      "closed": null,
+      "created": "2026-07-18T23:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "TH-N16BN4RY",
+      "title": "Rook's contract on Mara",
+      "notes": "He has apologized in writing twice. Watch his exit.",
+      "status": "open",
+      "current": false,
+      "opened": "SE-9DYZVSQP",
+      "closed": null,
+      "created": "2026-07-18T23:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "TH-FKN6KZJR",
+      "title": "Find Cord",
+      "notes": "Alive in the Ports, speaking in the Listener's voice. Joss knows how to reach him; Teo wants him; NeuroNet's cleaners want him more.",
+      "status": "open",
+      "current": false,
+      "opened": "SE-0DSNNZ7V",
+      "closed": null,
+      "created": "2026-07-18T23:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "TH-A3JVXDGQ",
+      "title": "Who burned the laundromat's back window?",
+      "notes": "A stray round from the S1 skirmish. Nobody did anything on purpose. Dropped.",
+      "status": "dropped",
+      "current": false,
+      "opened": "SE-DEAZD9A1",
+      "closed": "SE-0DSNNZ7V",
+      "created": "2026-07-18T23:00:00.000Z",
+      "updated": "2026-08-22T23:00:00.000Z"
+    }
+  ],
+  "encounters": [
+    {
+      "id": "EN-7069Z3C4",
+      "name": "Friday at the Velvet Lung",
+      "status": "planned",
+      "round": 0,
+      "turn": null,
+      "acted": [],
+      "by": "person",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-64FNHY2G",
+          "name": "Eclipse"
+        }
+      ],
+      "rows": [
+        {
+          "id": "R-60YXACGP",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 24,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": []
+        },
+        {
+          "id": "R-ESD9RFJN",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 34,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": []
+        },
+        {
+          "id": "R-S1NSPF65",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 22,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": []
+        },
+        {
+          "id": "R-M18QBYHV",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-8FGP6RCT"
+          },
+          "from": null,
+          "block": null,
+          "side": "SD-64FNHY2G",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-XKK0BTRD",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-64FNHY2G",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-YEZGWD6M",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-64FNHY2G",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-SHK9HC4Y",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-64FNHY2G",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-HMBD5W8C",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-64FNHY2G",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        }
+      ],
+      "created": "2026-10-17T23:40:00.000Z",
+      "updated": "2026-10-17T23:50:00.000Z"
+    },
+    {
+      "id": "EN-YFSVWBYZ",
+      "name": "Rook's last contract (if it comes to that)",
+      "status": "planned",
+      "round": 0,
+      "turn": null,
+      "acted": [],
+      "by": "person",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-379X80WK",
+          "name": "Volkov"
+        }
+      ],
+      "rows": [
+        {
+          "id": "R-SMXCZZEP",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 24,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": []
+        },
+        {
+          "id": "R-PQMZZXCS",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 34,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": []
+        },
+        {
+          "id": "R-N3FZBGPK",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 22,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": []
+        },
+        {
+          "id": "R-P1QKXFEM",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-WJ7QJA9N"
+          },
+          "from": null,
+          "block": null,
+          "side": "SD-379X80WK",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-9STZX116",
+          "kind": "entry",
+          "name": "Volkov contractor",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-379X80WK",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-4484NZVE",
+          "kind": "entry",
+          "name": "Volkov contractor",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-379X80WK",
+          "order": null,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        }
+      ],
+      "created": "2026-10-17T23:42:00.000Z",
+      "updated": "2026-10-17T23:48:00.000Z"
+    },
+    {
+      "id": "EN-BC0WBX7T",
+      "name": "Wharf 17: the Listener",
+      "status": "ended",
+      "round": 5,
+      "turn": null,
+      "acted": [],
+      "by": "wave",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-DMVEK0JW",
+          "name": "The Ports"
+        }
+      ],
+      "rows": [
+        {
+          "id": "R-000M3BNY",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 14,
+          "last": false,
+          "out": false,
+          "damage": 3,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 24,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": [
+            {
+              "id": "frightened",
+              "source": "The Listener",
+              "rounds": null
+            }
+          ]
+        },
+        {
+          "id": "R-4W1310SB",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 15,
+          "last": false,
+          "out": false,
+          "damage": 11,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": 34,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": [
+            {
+              "id": "disoriented",
+              "source": "Voice from nowhere",
+              "rounds": 2
+            }
+          ]
+        },
+        {
+          "id": "R-T408T6VQ",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 11,
+          "last": false,
+          "out": false,
+          "damage": 6,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 22,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": [
+            {
+              "id": "frightened",
+              "source": "The Listener",
+              "rounds": null
+            },
+            {
+              "id": "stunned",
+              "source": "Echoed her own spell",
+              "rounds": 1,
+              "note": "Repeated back, half a beat late"
+            }
+          ]
+        },
+        {
+          "id": "R-P1R0B2ZE",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-ZJMWPBQT"
+          },
+          "from": null,
+          "block": null,
+          "side": "SD-DMVEK0JW",
+          "order": 18,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-CKRBC9JZ",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-0NQEQS4J"
+          },
+          "from": null,
+          "block": null,
+          "side": "SD-DMVEK0JW",
+          "order": 6,
+          "last": false,
+          "out": true,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        }
+      ],
+      "created": "2026-10-17T21:30:00.000Z",
+      "updated": "2026-10-17T23:10:00.000Z"
+    },
+    {
+      "id": "EN-PT03TH7M",
+      "name": "NeuroNet Hub, night shift",
+      "status": "ended",
+      "round": 4,
+      "turn": null,
+      "acted": [],
+      "by": "person",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-49R8JYP0",
+          "name": "NeuroNet security"
+        }
+      ],
+      "rows": [
+        {
+          "id": "R-GECTP3H2",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 17,
+          "last": false,
+          "out": false,
+          "damage": 5,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 24,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": []
+        },
+        {
+          "id": "R-CRF4V7MP",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 14,
+          "last": false,
+          "out": false,
+          "damage": 12,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": 34,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": [
+            {
+              "id": "bleeding",
+              "source": "Taser lance",
+              "rounds": null
+            }
+          ]
+        },
+        {
+          "id": "R-29YD0SYS",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 9,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 22,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": []
+        },
+        {
+          "id": "R-MD35TD1T",
+          "kind": "entry",
+          "name": "Security drone A",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 3,
+              "REF": 7,
+              "MOB": 8,
+              "INT": 2,
+              "TECH": 6,
+              "COOL": 0,
+              "MAG": 0,
+              "EMP": 0
+            },
+            "authored": {
+              "TOL": 1,
+              "WILL": 1
+            },
+            "skills": [
+              {
+                "skill": "beam-weapons",
+                "name": "Beam Weapons",
+                "total": 10
+              },
+              {
+                "skill": "awareness",
+                "name": "Awareness",
+                "total": 9
+              }
+            ],
+            "armor": [
+              "Composite shell (PROT 3)"
+            ],
+            "gear": [
+              "Dazzler array",
+              "Taser lance"
+            ],
+            "traits": [
+              {
+                "name": "Machine",
+                "text": "Does not bleed, sleep, or negotiate. Reboots in four rounds if its core is not smashed."
+              }
+            ]
+          },
+          "side": "SD-49R8JYP0",
+          "order": 18,
+          "last": false,
+          "out": true,
+          "damage": 7,
+          "massive": 0,
+          "armorLoss": 2,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-XR33J6G7",
+          "kind": "entry",
+          "name": "Security drone B",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 3,
+              "REF": 7,
+              "MOB": 8,
+              "INT": 2,
+              "TECH": 6,
+              "COOL": 0,
+              "MAG": 0,
+              "EMP": 0
+            },
+            "authored": {
+              "TOL": 1,
+              "WILL": 1
+            },
+            "skills": [
+              {
+                "skill": "beam-weapons",
+                "name": "Beam Weapons",
+                "total": 10
+              },
+              {
+                "skill": "awareness",
+                "name": "Awareness",
+                "total": 9
+              }
+            ],
+            "armor": [
+              "Composite shell (PROT 3)"
+            ],
+            "gear": [
+              "Dazzler array",
+              "Taser lance"
+            ],
+            "traits": [
+              {
+                "name": "Machine",
+                "text": "Does not bleed, sleep, or negotiate. Reboots in four rounds if its core is not smashed."
+              }
+            ]
+          },
+          "side": "SD-49R8JYP0",
+          "order": 16,
+          "last": false,
+          "out": false,
+          "damage": 4,
+          "massive": 0,
+          "armorLoss": 1,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-6JBRYQMM",
+          "kind": "entry",
+          "name": "Night guard",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 4,
+              "COOL": 5,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 9
+              },
+              {
+                "skill": "security",
+                "name": "Security",
+                "total": 7
+              },
+              {
+                "skill": "awareness",
+                "name": "Awareness",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "NeuroNet security vest (PROT 3)"
+            ],
+            "gear": [
+              "Stun baton",
+              "Pistol",
+              "Badge that opens every door on the floor"
+            ],
+            "traits": []
+          },
+          "side": "SD-49R8JYP0",
+          "order": 8,
+          "last": false,
+          "out": true,
+          "damage": 9,
+          "massive": 0,
+          "armorLoss": 3,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-F9WG38DV",
+          "kind": "entry",
+          "name": "Night guard",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 4,
+              "COOL": 5,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 9
+              },
+              {
+                "skill": "security",
+                "name": "Security",
+                "total": 7
+              },
+              {
+                "skill": "awareness",
+                "name": "Awareness",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "NeuroNet security vest (PROT 3)"
+            ],
+            "gear": [
+              "Stun baton",
+              "Pistol",
+              "Badge that opens every door on the floor"
+            ],
+            "traits": []
+          },
+          "side": "SD-49R8JYP0",
+          "order": 7,
+          "last": false,
+          "out": true,
+          "damage": 14,
+          "massive": 1,
+          "armorLoss": 3,
+          "scrapped": true,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        }
+      ],
+      "created": "2026-09-26T21:30:00.000Z",
+      "updated": "2026-09-26T23:00:00.000Z"
+    },
+    {
+      "id": "EN-5VRQGA6P",
+      "name": "Pier 9: three-way",
+      "status": "ended",
+      "round": 4,
+      "turn": null,
+      "acted": [],
+      "by": "wave",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-S66VX5XQ",
+          "name": "Dockside Devils"
+        },
+        {
+          "id": "SD-MA8DBK81",
+          "name": "Eclipse"
+        },
+        {
+          "id": "SD-XWZ778DT",
+          "name": "Volkov contractors"
+        }
+      ],
+      "rows": [
+        {
+          "id": "R-XEWPPHSV",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 12,
+          "last": false,
+          "out": false,
+          "damage": 4,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 24,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": []
+        },
+        {
+          "id": "R-FERCAAEQ",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 16,
+          "last": false,
+          "out": false,
+          "damage": 9,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": 34,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": [
+            {
+              "id": "injured",
+              "location": "left-arm",
+              "source": "Nine's baton",
+              "rounds": null
+            }
+          ]
+        },
+        {
+          "id": "R-SEZT1QDJ",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 8,
+          "last": false,
+          "out": false,
+          "damage": 2,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 22,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": []
+        },
+        {
+          "id": "R-XNGY6ZKS",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-PRKFTH3Z",
+            "name": "Ines \"Nine\" Baptiste"
+          },
+          "from": null,
+          "block": null,
+          "side": "SD-MA8DBK81",
+          "order": 13,
+          "last": false,
+          "out": true,
+          "damage": 18,
+          "massive": 1,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-PK26HB6N",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-T8ERMYV7"
+          },
+          "from": null,
+          "block": null,
+          "side": "SD-S66VX5XQ",
+          "order": 5,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-CWTVJQNM",
+          "kind": "entry",
+          "name": "Devils deckhand",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 6,
+              "REF": 3,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 3,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 4
+            },
+            "authored": {
+              "TOL": 4,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 7
+              },
+              {
+                "skill": "athletics",
+                "name": "Athletics",
+                "total": 8
+              },
+              {
+                "skill": "streetwise",
+                "name": "Streetwise",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Oilskins (PROT 1)"
+            ],
+            "gear": [
+              "Boat hook",
+              "Chain"
+            ],
+            "traits": []
+          },
+          "side": "SD-S66VX5XQ",
+          "order": 6,
+          "last": false,
+          "out": false,
+          "damage": 5,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-78PZT9JB",
+          "kind": "entry",
+          "name": "Cord (deckhand)",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 6,
+              "REF": 3,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 3,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 4
+            },
+            "authored": {
+              "TOL": 4,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 7
+              },
+              {
+                "skill": "athletics",
+                "name": "Athletics",
+                "total": 8
+              },
+              {
+                "skill": "streetwise",
+                "name": "Streetwise",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Oilskins (PROT 1)"
+            ],
+            "gear": [
+              "Boat hook",
+              "Chain"
+            ],
+            "traits": []
+          },
+          "side": "SD-S66VX5XQ",
+          "order": 4,
+          "last": false,
+          "out": true,
+          "damage": 2,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": {
+            "kind": "cast",
+            "id": "C-0NQEQS4J",
+            "name": "Cordell \"Cord\" Hale"
+          },
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-V4N4SJ2D",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-MA8DBK81",
+          "order": 11,
+          "last": false,
+          "out": true,
+          "damage": 8,
+          "massive": 0,
+          "armorLoss": 2,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-ZBP7FVX6",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-MA8DBK81",
+          "order": 10,
+          "last": false,
+          "out": false,
+          "damage": 6,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-4SYRAWWD",
+          "kind": "entry",
+          "name": "Volkov contractor",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-XWZ778DT",
+          "order": 15,
+          "last": false,
+          "out": false,
+          "damage": 3,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-Y2XQ9V1E",
+          "kind": "entry",
+          "name": "Volkov contractor",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-XWZ778DT",
+          "order": 14,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        }
+      ],
+      "created": "2026-08-22T21:20:00.000Z",
+      "updated": "2026-08-22T22:40:00.000Z"
+    },
+    {
+      "id": "EN-5KZT1858",
+      "name": "The Ramble at dusk",
+      "status": "ended",
+      "round": 3,
+      "turn": null,
+      "acted": [],
+      "by": "person",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-7FRGY5C0",
+          "name": "Volkov contractors"
+        }
+      ],
+      "rows": [
+        {
+          "id": "R-TQAS8E5J",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 14,
+          "last": false,
+          "out": false,
+          "damage": 2,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 24,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": []
+        },
+        {
+          "id": "R-6GGV67C2",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 13,
+          "last": false,
+          "out": false,
+          "damage": 6,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 34,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": []
+        },
+        {
+          "id": "R-6QGEF3WY",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 7,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 22,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": []
+        },
+        {
+          "id": "R-GEZZQJ07",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-2WD7753T"
+          },
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 9,
+          "last": false,
+          "out": false,
+          "damage": 1,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-0ADWK6VQ",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-WJ7QJA9N"
+          },
+          "from": null,
+          "block": null,
+          "side": "SD-7FRGY5C0",
+          "order": 16,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-XPB3E9SJ",
+          "kind": "entry",
+          "name": "Volkov contractor",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-7FRGY5C0",
+          "order": 12,
+          "last": false,
+          "out": true,
+          "damage": 7,
+          "massive": 0,
+          "armorLoss": 2,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-NAYZSHQG",
+          "kind": "entry",
+          "name": "Volkov contractor",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-7FRGY5C0",
+          "order": 10,
+          "last": false,
+          "out": false,
+          "damage": 3,
+          "massive": 0,
+          "armorLoss": 1,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-CCW251PG",
+          "kind": "entry",
+          "name": "Volkov contractor",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-7FRGY5C0",
+          "order": 6,
+          "last": false,
+          "out": true,
+          "damage": 10,
+          "massive": 0,
+          "armorLoss": 3,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        }
+      ],
+      "created": "2026-08-01T21:10:00.000Z",
+      "updated": "2026-08-01T22:30:00.000Z"
+    },
+    {
+      "id": "EN-8TPECDDA",
+      "name": "The handoff, Suds & Duds",
+      "status": "ended",
+      "round": 3,
+      "turn": null,
+      "acted": [],
+      "by": "person",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-QE855GJH",
+          "name": "Eclipse"
+        }
+      ],
+      "rows": [
+        {
+          "id": "R-3PT41M1R",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 11,
+          "last": false,
+          "out": false,
+          "damage": 3,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 24,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": []
+        },
+        {
+          "id": "R-556DZ7Q0",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 13,
+          "last": false,
+          "out": false,
+          "damage": 7,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": 34,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": []
+        },
+        {
+          "id": "R-ECP50TBQ",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 8,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 22,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": []
+        },
+        {
+          "id": "R-G76VSFXB",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-QE855GJH",
+          "order": 10,
+          "last": false,
+          "out": true,
+          "damage": 9,
+          "massive": 0,
+          "armorLoss": 2,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-D4561JF2",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-QE855GJH",
+          "order": 9,
+          "last": false,
+          "out": false,
+          "damage": 4,
+          "massive": 0,
+          "armorLoss": 1,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        },
+        {
+          "id": "R-C6D176EW",
+          "kind": "entry",
+          "name": "Eclipse soldier",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 5,
+              "MOB": 4,
+              "INT": 3,
+              "TECH": 2,
+              "COOL": 4,
+              "MAG": 0,
+              "EMP": 3
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 2
+            },
+            "skills": [
+              {
+                "skill": "handguns",
+                "name": "Handguns",
+                "total": 8
+              },
+              {
+                "skill": "melee",
+                "name": "Melee",
+                "total": 8
+              },
+              {
+                "skill": "intimidation",
+                "name": "Intimidation",
+                "total": 7
+              }
+            ],
+            "armor": [
+              "Leather and weave (PROT 2)"
+            ],
+            "gear": [
+              "Pistol",
+              "Knife"
+            ],
+            "traits": []
+          },
+          "side": "SD-QE855GJH",
+          "order": 5,
+          "last": false,
+          "out": true,
+          "damage": 11,
+          "massive": 0,
+          "armorLoss": 3,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": []
+        }
+      ],
+      "created": "2026-07-18T21:40:00.000Z",
+      "updated": "2026-07-18T22:20:00.000Z"
+    }
+  ]
+}
